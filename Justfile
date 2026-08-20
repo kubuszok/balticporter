@@ -94,6 +94,13 @@ vfx_module    := "ported/sge-vfx"
 ai_module     := "ported/sge-ai"
 textra_module := "ported/sge-textra"
 visui_module  := "ported/sge-visui"
+# VisUI's OTHER gradle module, at its OWN port root and NOT a glob added to `visui_module`. §1.5's
+# rule that an upstream's module count is not the port's count is about modules that "all declare
+# under one package root", and these do not: `com.kotcrab.vis.ui` and `com.kotcrab.vis.usl` are
+# siblings at two independent upstream versions. `corpus/ports/visui-usl/main.conf` carries the
+# whole argument; the short form is that USL imports NO libGDX, so a scope edit would make a
+# build-time tool unbuildable without a rendering engine.
+usl_module    := "ported/sge-visui-usl"
 liqp_module   := "ported/ssg-liquid"
 md_module     := "ported/ssg-md"
 # ssg-md's EXTENSION half, at its OWN port root (`corpus/ports/ssg-md/ext.conf` D-mde-1/2). A run's
@@ -346,6 +353,17 @@ visui_deps    := ""
 visui_ref_tests := "../sge/sge-extension/visui/src/test"
 visui_test_deps := "--dependency org.scalameta::munit:1.0.2"
 visui_closure := "Sizes.scala util/ColorUtils.scala util/OsUtils.scala util/Validators.scala util/InputValidator.scala"
+# USL's own four. `usl_deps` is EMPTY and says why: this library imports nothing outside the JDK,
+# which the lane re-derives on every run rather than trusting this line — a port with genuinely no
+# dependencies is rare enough that the day one appears, that derivation is what says so.
+usl_src       := "../sge/original-src/vis-ui/usl"
+usl_deps      := ""
+# THE ORACLE'S TWO INPUT SETS, and they are not the same kind of evidence (`PROGRESS.md` §10.9.13).
+# `usl_styles` is the 19 shipped `.usl` fixtures the root `build.gradle` compiles the skin FROM;
+# `usl_known_good` is the artifact it compiled — checked into the SIBLING module's resources, which
+# is the whole reason this is a zero-authoring gate rather than a test somebody wrote.
+usl_styles     := "../sge/original-src/vis-ui/usl/styles"
+usl_known_good := "../sge/original-src/vis-ui/ui/src/main/resources/com/kotcrab/vis/ui/skin/x1/uiskin.json"
 # flexmark's one compile-scope coordinate, `org.jetbrains:annotations:24.0.1`, is a FRONTEND input
 # AND a compile one — and this line was written empty on the reasoning that it could not be, which
 # the port's first run disproved in one number. The reasoning was: the annotations are markers,
@@ -1824,6 +1842,110 @@ jbump-measure:
     echo
     echo "-- correlation: nothing to locate (0 errors); the source map is still published --"
     correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/jbumpmeasure.txt \
+      --srcmap "$REPORT/run-latest/srcmap.tsv"
+
+    headline "$ERRORS" "$REPORT"
+
+
+# ---------------------------------------------------------------------------------------------
+# USL — VisUI's skin-language compiler, a STANDALONE port with no base and no resolution roots.
+#
+# `jbump-measure`'s shape, with the four re-derivations this port's scope decision rests on run as
+# part of the measurement rather than trusted from a comment (CLAUDE.md §4.56's instrument-silence
+# rule): a claim in a document rots and a number in a lane does not, and every one of these four is
+# a reason `corpus/ports/visui-usl/main.conf` gives for being its own port root.
+# ---------------------------------------------------------------------------------------------
+[doc("USL — emit, checks, break residue, compile, correlate (VisUI's skin-language compiler)")]
+usl-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+
+    # The finding ids are hashed from paths relative to this root (CLAUDE.md §4.6): set anywhere else
+    # and every finding diffs as removed-and-re-added against a baseline whose counts are identical.
+    write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{visui_src}}"
+    REPORT="$ROOT/port-report/UslMigrate"
+
+    # ABORT if the migration itself did not run. Piping straight into `grep wrote` discards the exit
+    # status, so an engine that failed to COMPILE would leave the lane measuring the PREVIOUS emit.
+    MIGRATE_OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.visuiusl.UslMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    if ! grep -qE "wrote [0-9]+ Scala files" <<<"$MIGRATE_OUT"; then
+      echo "!! MIGRATION DID NOT RUN — refusing to measure stale output"
+      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$MIGRATE_OUT" | head -20
+      exit 1
+    fi
+
+    echo "-- migration (ALL checks, untruncated, as the migration printed them) --"
+    sed -n '/building model over/,/wrote [0-9]* Scala files/p' <<<"$MIGRATE_OUT"
+
+    echo
+    echo "-- checks: persisted, untruncated, diffed against the baseline --"
+    show_check_report "$REPORT"
+    findings_baseline_guard "$REPORT"
+    port_map_guard "$REPORT"
+
+    # -------------------------------------------------------------------------------------------
+    # THE SCOPE DECISION, RE-DERIVED. Four numbers, each of which is a reason this is its own port
+    # root rather than a glob added to `visui-measure` — and each of which a comment would let rot.
+    # -------------------------------------------------------------------------------------------
+    echo
+    echo "-- scope: the four facts the port root rests on, re-derived --"
+    USL_JAVA=$(find {{usl_src}}/src/main/java -name '*.java' | wc -l | tr -d ' ')
+    USL_USES_GDX=$(grep -rl "com\.badlogic\.gdx" {{usl_src}}/src/main/java | wc -l | tr -d ' ')
+    USL_USES_UI=$(grep -rl "com\.kotcrab\.vis\.ui" {{usl_src}}/src/main/java | wc -l | tr -d ' ')
+    UI_USES_USL=$(grep -rl "com\.kotcrab\.vis\.usl" {{visui_src}}/ui/src/main/java | wc -l | tr -d ' ')
+    USL_THIRD_PARTY=$(grep -rhE '^import ' {{usl_src}}/src/main/java | sed 's/.*import \(static \)*//' \
+      | grep -vE '^(java|javax)\.|^com\.kotcrab\.vis\.usl' | sort -u | wc -l | tr -d ' ')
+    HEADERS=$(grep -rl 'Licensed under the Apache License' {{usl_src}}/src/main/java | wc -l | tr -d ' ')
+    echo "usl/ java files: $USL_JAVA   with an Apache header: $HEADERS"
+    echo "usl/ files naming com.badlogic.gdx: $USL_USES_GDX      usl/ files naming com.kotcrab.vis.ui: $USL_USES_UI"
+    echo "ui/ files naming com.kotcrab.vis.usl: $UI_USES_USL      usl/ imports outside the JDK and itself: $USL_THIRD_PARTY"
+    if [ "$USL_USES_GDX" != "0" ] || [ "$USL_USES_UI" != "0" ] || [ "$UI_USES_USL" != "0" ]; then
+      echo "!! THE COUPLING HAS CHANGED — this port is standalone BECAUSE all three of those read 0."
+      echo "   A non-zero reading means the scope decision in corpus/ports/visui-usl/main.conf has to be"
+      echo "   re-taken: a module that references its sibling is not a port with no base."
+      exit 1
+    fi
+    if [ "$USL_THIRD_PARTY" != "0" ]; then
+      echo "!! USL HAS GAINED A DEPENDENCY — \`usl_deps\` is empty and \`input\` names no classpathFile"
+      echo "   BECAUSE this read 0. An unresolvable import does not fail the frontend, it resolves"
+      echo "   WRONGLY (recorded three times: libGDX's junit, Ashley's mockito, simple-graphs')."
+      exit 1
+    fi
+    if [ "$HEADERS" != "$USL_JAVA" ]; then
+      echo "!! A SOURCE HAS LOST ITS APACHE HEADER ($HEADERS of $USL_JAVA) — this port declares NO"
+      echo "   \`notices\` BECAUSE every file carries the notice itself (CLAUDE.md §4.57). With one"
+      echo "   missing, the banner NAMES a licence and reproduces no notice, and nothing else reports it."
+      exit 1
+    fi
+
+    echo
+    break_residue {{usl_module}}/src_managed
+
+    echo "-- compile --"
+    # NOTE the ANSI strip — dropped once, and every line then began with an escape, reporting 0
+    # errors for a port that had 20. A false NEGATIVE on the headline number is the worst failure a
+    # measure lane can have.
+    DEPS="{{usl_deps}}"
+    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+      {{usl_module}}/src_managed/main/scala \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/uslmeasure.txt
+    CLI_STATUS=${PIPESTATUS[0]}
+    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/uslmeasure.txt)
+    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/uslmeasure.txt
+    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/uslmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/uslmeasure.txt))"
+    error_baseline_guard "$ERRORS" "$REPORT"
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/uslmeasure.txt | sort | uniq -c | sort -rn | head
+    echo "-- bare (uncoded) errors by message --"
+    grep -A1 '^-- Error:' "$MEASURE_TMP"/uslmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
+
+    echo
+    echo "-- correlation: every error located to its member and its Java origin --"
+    # Run WHETHER OR NOT it compiled: attributing the wall is what makes it a §1-classifiable list
+    # rather than a pile of typer errors (CLAUDE.md §4.45).
+    correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/uslmeasure.txt \
       --srcmap "$REPORT/run-latest/srcmap.tsv"
 
     headline "$ERRORS" "$REPORT"

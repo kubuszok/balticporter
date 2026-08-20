@@ -1,0 +1,149 @@
+# balticporter port map	schema=3	module=sge-visui-usl	engine=balticporter/0.1.0-SNAPSHOT	sources=ce72175ec59a2697	files=17	policy=e3b0c44298fc1c14
+#kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
+type	com.kotcrab.vis.usl.CollectionUtils	sge.visui.usl.CollectionUtils	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
+type	com.kotcrab.vis.usl.IncludeLoader	sge.visui.usl.IncludeLoader	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public
+type	com.kotcrab.vis.usl.Lexer	sge.visui.usl.Lexer	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
+type	com.kotcrab.vis.usl.LexerContext	sge.visui.usl.LexerContext	Renamed	-		0		form=class primary=(File) primaryKind=unique-root primaryVis=public
+type	com.kotcrab.vis.usl.Main	sge.visui.usl.Main	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
+type	com.kotcrab.vis.usl.Parser	sge.visui.usl.Parser	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public
+type	com.kotcrab.vis.usl.StyleMerger	sge.visui.usl.StyleMerger	Renamed	-		0		form=class primary=(ArrayList,ArrayList,ArrayList) primaryKind=unique-root primaryVis=public
+type	com.kotcrab.vis.usl.Token	sge.visui.usl.Token	Renamed	-		0		companion=yes disambiguator=marker form=class primary=(String,int,Type,String,?) primaryKind=synthesised-primary primaryVis=protected secondaries=(String,int,Type);(String,int,Type,String) statics=Type
+type	com.kotcrab.vis.usl.Token$Type	sge.visui.usl.Token$Type	Renamed	-		0		companion=yes flags=enum form=enum parents=java.lang.Enum primary=() primaryKind=not-funnelled primaryVis=public
+type	com.kotcrab.vis.usl.USL	sge.visui.usl.USL	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
+type	com.kotcrab.vis.usl.USLException	sge.visui.usl.USLException	Renamed	-		0		form=class parents=java.lang.RuntimeException primary=(String,Throwable) primaryKind=widest-root primaryVis=public secondaries=(String);(Throwable)
+type	com.kotcrab.vis.usl.USLJsonWriter	sge.visui.usl.USLJsonWriter	Renamed	-		0		form=class primary=(ArrayList) primaryKind=unique-root primaryVis=public
+type	com.kotcrab.vis.usl.Utils	sge.visui.usl.Utils	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
+type	com.kotcrab.vis.usl.lang.AliasIdentifier	sge.visui.usl.lang.AliasIdentifier	Renamed	-		0		form=class parents=sge.visui.usl.lang.Identifier primary=(String) primaryKind=unique-root primaryVis=public
+type	com.kotcrab.vis.usl.lang.BasicIdentifier	sge.visui.usl.lang.BasicIdentifier	Renamed	-		0		form=class parents=sge.visui.usl.lang.Identifier primary=() primaryKind=no-arg-root primaryVis=public secondaries=(String,String);(BasicIdentifier)
+type	com.kotcrab.vis.usl.lang.GroupIdentifier	sge.visui.usl.lang.GroupIdentifier	Renamed	-		0		form=class parents=sge.visui.usl.lang.Identifier primary=() primaryKind=no-arg-root primaryVis=public secondaries=(GroupIdentifier)
+type	com.kotcrab.vis.usl.lang.Identifier	sge.visui.usl.lang.Identifier	Renamed	-		0		companion=yes disambiguator=marker flags=abstract form=class primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(String);(Identifier)
+type	com.kotcrab.vis.usl.lang.StyleBlock	sge.visui.usl.lang.StyleBlock	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public
+type	com.kotcrab.vis.usl.lang.StyleIdentifier	sge.visui.usl.lang.StyleIdentifier	Renamed	-		0		form=class parents=sge.visui.usl.lang.GroupIdentifier primary=() primaryKind=no-arg-root primaryVis=public secondaries=(StyleIdentifier)
+member	com.kotcrab.vis.usl.CollectionUtils#getCardinalityMap(Collection)	sge.visui.usl.CollectionUtils#getCardinalityMap(Collection<?>)	Renamed	-	com/kotcrab/vis/usl/CollectionUtils.java	72	f05e1bdab94325c0	placement=companion
+member	com.kotcrab.vis.usl.CollectionUtils#getFreq(Object,Map)	sge.visui.usl.CollectionUtils#getFreq(Object,Map<?,?>)	Renamed	-	com/kotcrab/vis/usl/CollectionUtils.java	53	f31ce3d926e7b1ef	placement=companion vis=private
+member	com.kotcrab.vis.usl.CollectionUtils#isEqualCollection(Collection,Collection)	sge.visui.usl.CollectionUtils#isEqualCollection(Collection<?>,Collection<?>)	Renamed	-	com/kotcrab/vis/usl/CollectionUtils.java	32	7ef1100ca2d02cbd	placement=companion
+member	com.kotcrab.vis.usl.additionalIncludeDir	additionalIncludeDir	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	41	9fb099c257b8dc0b	name=additionalIncludeDir$p
+member	com.kotcrab.vis.usl.IncludeLoader#<stmt1>	sge.visui.usl.IncludeLoader#<stmt1>	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	38	2858866261f20560	
+member	com.kotcrab.vis.usl.IncludeLoader#<stmt2>	sge.visui.usl.IncludeLoader#<stmt2>	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	39	9271c3a7ee5c35fa	
+member	com.kotcrab.vis.usl.IncludeLoader#<stmt3>	sge.visui.usl.IncludeLoader#<stmt3>	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	42	532fb1d12638b9dd	
+member	com.kotcrab.vis.usl.IncludeLoader#<stmt4>	sge.visui.usl.IncludeLoader#<stmt4>	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	43	0b263e3964738360	
+member	com.kotcrab.vis.usl.IncludeLoader#<stmt5>	sge.visui.usl.IncludeLoader#<stmt5>	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	44	d7bafeb84de8656f	
+member	com.kotcrab.vis.usl.IncludeLoader#addIncludeSource(String)	sge.visui.usl.IncludeLoader#addIncludeSource(String)	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	102	cfe8e1a8e0aabca6	
+member	com.kotcrab.vis.usl.IncludeLoader#cacheFolder	sge.visui.usl.IncludeLoader#cacheFolder	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	32	d0be2e431533ac09	vis=private
+member	com.kotcrab.vis.usl.IncludeLoader#fileToString(File)	sge.visui.usl.IncludeLoader#fileToString(File)	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	93	4c85b08b09599e56	vis=private
+member	com.kotcrab.vis.usl.IncludeLoader#includeSources	sge.visui.usl.IncludeLoader#includeSources	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	35	42f62e885e7172bb	vis=private
+member	com.kotcrab.vis.usl.IncludeLoader#loadInclude(String)	sge.visui.usl.IncludeLoader#loadInclude(String)	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	47	58dc75f5576a3466	
+member	com.kotcrab.vis.usl.IncludeLoader#loadIncludeFile(String)	sge.visui.usl.IncludeLoader#loadIncludeFile(String)	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	51	19c317bf319276d6	vis=private
+member	com.kotcrab.vis.usl.IncludeLoader#tmpFolder	sge.visui.usl.IncludeLoader#tmpFolder	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	33	e6b83e574a3c68ee	vis=private
+member	com.kotcrab.vis.usl.Lexer#EXTENDS	sge.visui.usl.Lexer#EXTENDS	Renamed	-	com/kotcrab/vis/usl/Lexer.java	28	95e74980ae8c2234	placement=companion vis=private
+member	com.kotcrab.vis.usl.Lexer#INCLUDE	sge.visui.usl.Lexer#INCLUDE	Renamed	-	com/kotcrab/vis/usl/Lexer.java	27	967b44a14fa779d7	placement=companion vis=private
+member	com.kotcrab.vis.usl.Lexer#INHERITS	sge.visui.usl.Lexer#INHERITS	Renamed	-	com/kotcrab/vis/usl/Lexer.java	29	3d3d51fd364bac59	placement=companion vis=private
+member	com.kotcrab.vis.usl.Lexer#PACKAGE	sge.visui.usl.Lexer#PACKAGE	Renamed	-	com/kotcrab/vis/usl/Lexer.java	30	9dd304e95db4dac8	placement=companion vis=private
+member	com.kotcrab.vis.usl.Lexer#addIncludeSource(String)	sge.visui.usl.Lexer#addIncludeSource(String)	Renamed	-	com/kotcrab/vis/usl/Lexer.java	277	490e570fc4ce871e	placement=companion
+member	com.kotcrab.vis.usl.Lexer#checkIdentifierDef(String,int)	sge.visui.usl.Lexer#checkIdentifierDef(String,int)	Renamed	-	com/kotcrab/vis/usl/Lexer.java	199	1aa1911eff875cd8	placement=companion vis=private
+member	com.kotcrab.vis.usl.Lexer#globalStyleRegex	sge.visui.usl.Lexer#globalStyleRegex	Renamed	-	com/kotcrab/vis/usl/Lexer.java	32	92afb84b978eaeca	placement=companion vis=private
+member	com.kotcrab.vis.usl.Lexer#includeLoader	sge.visui.usl.Lexer#includeLoader	Renamed	-	com/kotcrab/vis/usl/Lexer.java	35	d92207af5ca20565	placement=companion vis=private
+member	com.kotcrab.vis.usl.Lexer#lexGlobalStyleDeclaration(LexerContext,String,int)	sge.visui.usl.Lexer#lexGlobalStyleDeclaration(LexerContext,String,int)	Renamed	-	com/kotcrab/vis/usl/Lexer.java	170	4438eb0e98799a75	placement=companion vis=private
+member	com.kotcrab.vis.usl.Lexer#lexIdentifier(LexerContext,String,int)	sge.visui.usl.Lexer#lexIdentifier(LexerContext,String,int)	Renamed	-	com/kotcrab/vis/usl/Lexer.java	127	26963d3d6b1f189f	placement=companion vis=private
+member	com.kotcrab.vis.usl.Lexer#lexIdentifierContent(LexerContext,String,int)	sge.visui.usl.Lexer#lexIdentifierContent(LexerContext,String,int)	Renamed	-	com/kotcrab/vis/usl/Lexer.java	147	fae6f71d82d2cb63	placement=companion vis=private
+member	com.kotcrab.vis.usl.Lexer#lexInherits(String,int,LexerContext,String)	sge.visui.usl.Lexer#lexInherits(String,int,LexerContext,String)	Renamed	-	com/kotcrab/vis/usl/Lexer.java	191	aee83055ca7f333e	placement=companion vis=private
+member	com.kotcrab.vis.usl.Lexer#lexPackage(LexerContext,String,int)	sge.visui.usl.Lexer#lexPackage(LexerContext,String,int)	Renamed	-	com/kotcrab/vis/usl/Lexer.java	120	41e062e40a871a95	placement=companion vis=private
+member	com.kotcrab.vis.usl.Lexer#lexStyleBlock(LexerContext,String,int)	sge.visui.usl.Lexer#lexStyleBlock(LexerContext,String,int)	Renamed	-	com/kotcrab/vis/usl/Lexer.java	214	7b04c70a888d2caa	placement=companion vis=private
+member	com.kotcrab.vis.usl.Lexer#lexStyleBlockOverride(LexerContext,String,int)	sge.visui.usl.Lexer#lexStyleBlockOverride(LexerContext,String,int)	Renamed	-	com/kotcrab/vis/usl/Lexer.java	233	779a596e6363a59e	placement=companion vis=private
+member	com.kotcrab.vis.usl.Lexer#lexUsl(LexerContext,String)	sge.visui.usl.Lexer#lexUsl(LexerContext,String)	Renamed	-	com/kotcrab/vis/usl/Lexer.java	37	6ea595d68f6f14f9	placement=companion
+member	com.kotcrab.vis.usl.Lexer#metaStyleRegex	sge.visui.usl.Lexer#metaStyleRegex	Renamed	-	com/kotcrab/vis/usl/Lexer.java	33	b3ac32c77a155175	placement=companion vis=private
+member	com.kotcrab.vis.usl.Lexer#parseAndLexInclude(LexerContext,String,int)	sge.visui.usl.Lexer#parseAndLexInclude(LexerContext,String,int)	Renamed	-	com/kotcrab/vis/usl/Lexer.java	250	149d333a41abd20d	placement=companion vis=private
+member	com.kotcrab.vis.usl.Lexer#peek(List)	sge.visui.usl.Lexer#peek(List<T>)	Renamed	-	com/kotcrab/vis/usl/Lexer.java	281	99c177d1cfedb51e	placement=companion vis=private
+member	com.kotcrab.vis.usl.Lexer#peek(List,int)	sge.visui.usl.Lexer#peek(List<T>,int)	Renamed	-	com/kotcrab/vis/usl/Lexer.java	285	cd2a0fa5432e34ff	placement=companion vis=private
+member	com.kotcrab.vis.usl.Lexer#removeComments(String)	sge.visui.usl.Lexer#removeComments(String)	Renamed	-	com/kotcrab/vis/usl/Lexer.java	98	69c63b88c95a6b5b	placement=companion vis=private
+member	com.kotcrab.vis.usl.LexerContext#<stmt1>	sge.visui.usl.LexerContext#<stmt1>	Renamed	-	com/kotcrab/vis/usl/LexerContext.java	31	81f33410855f0ca2	
+member	com.kotcrab.vis.usl.LexerContext#curliesLevel	sge.visui.usl.LexerContext#curliesLevel	Renamed	-	com/kotcrab/vis/usl/LexerContext.java	28	e741ddbf41184dd3	
+member	com.kotcrab.vis.usl.LexerContext#tokens	sge.visui.usl.LexerContext#tokens	Renamed	-	com/kotcrab/vis/usl/LexerContext.java	27	046df0cd4993bc96	
+member	com.kotcrab.vis.usl.LexerContext#workingDirectory	sge.visui.usl.LexerContext#workingDirectory	Renamed	-	com/kotcrab/vis/usl/LexerContext.java	25	854a7f4ba99c3df9	
+member	com.kotcrab.vis.usl.Main#main(Array)	sge.visui.usl.Main#main(Array<String>)	Renamed	-	com/kotcrab/vis/usl/Main.java	26	211002e7ca3928fa	placement=companion
+member	com.kotcrab.vis.usl.Parser#currentPackage	sge.visui.usl.Parser#currentPackage	Renamed	-	com/kotcrab/vis/usl/Parser.java	32	52367ce30d538a4b	vis=private
+member	com.kotcrab.vis.usl.Parser#currentPackageEnd	sge.visui.usl.Parser#currentPackageEnd	Renamed	-	com/kotcrab/vis/usl/Parser.java	34	67f9bd983780e20b	vis=private
+member	com.kotcrab.vis.usl.Parser#currentStyleBlock	sge.visui.usl.Parser#currentStyleBlock	Renamed	-	com/kotcrab/vis/usl/Parser.java	33	b9a5da5d8ccc2ead	vis=private
+member	com.kotcrab.vis.usl.Parser#currentStyleBlockEnd	sge.visui.usl.Parser#currentStyleBlockEnd	Renamed	-	com/kotcrab/vis/usl/Parser.java	35	27c7226662901f2e	vis=private
+member	com.kotcrab.vis.usl.Parser#findBlockEnd()	sge.visui.usl.Parser#findBlockEnd()	Renamed	-	com/kotcrab/vis/usl/Parser.java	223	eeec505d0c835801	vis=private
+member	com.kotcrab.vis.usl.Parser#findMatchingStyle(Token,String)	sge.visui.usl.Parser#findMatchingStyle(Token,String)	Renamed	-	com/kotcrab/vis/usl/Parser.java	185	a406e3ceb1651c72	vis=private
+member	com.kotcrab.vis.usl.Parser#getJson(List)	sge.visui.usl.Parser#getJson(List<Token>)	Renamed	-	com/kotcrab/vis/usl/Parser.java	43	58c16218cb790fd4	
+member	com.kotcrab.vis.usl.Parser#globalStyles	sge.visui.usl.Parser#globalStyles	Renamed	-	com/kotcrab/vis/usl/Parser.java	39	0d4cef901d5af5b6	vis=private
+member	com.kotcrab.vis.usl.Parser#i	sge.visui.usl.Parser#i	Renamed	-	com/kotcrab/vis/usl/Parser.java	30	f9d14e8446b062f7	vis=private
+member	com.kotcrab.vis.usl.Parser#identifiers	sge.visui.usl.Parser#identifiers	Renamed	-	com/kotcrab/vis/usl/Parser.java	41	1536fae59f138018	vis=private
+member	com.kotcrab.vis.usl.Parser#out	sge.visui.usl.Parser#out	Renamed	-	com/kotcrab/vis/usl/Parser.java	28	c4e24a9e9912c04b	vis=private
+member	com.kotcrab.vis.usl.Parser#peekNext()	sge.visui.usl.Parser#peekNext()	Renamed	-	com/kotcrab/vis/usl/Parser.java	251	a4586fc4571b9fbd	vis=private
+member	com.kotcrab.vis.usl.Parser#peekPrev()	sge.visui.usl.Parser#peekPrev()	Renamed	-	com/kotcrab/vis/usl/Parser.java	247	be1052b4e2c02e59	vis=private
+member	com.kotcrab.vis.usl.Parser#postCheck()	sge.visui.usl.Parser#postCheck()	Renamed	-	com/kotcrab/vis/usl/Parser.java	258	ac7757e6ef801b8e	vis=private
+member	com.kotcrab.vis.usl.Parser#postCheckId(Identifier)	sge.visui.usl.Parser#postCheckId(Identifier)	Renamed	-	com/kotcrab/vis/usl/Parser.java	281	629248ebad178063	vis=private
+member	com.kotcrab.vis.usl.Parser#postCheckStyleId(StyleIdentifier)	sge.visui.usl.Parser#postCheckStyleId(StyleIdentifier)	Renamed	-	com/kotcrab/vis/usl/Parser.java	273	cd31c154131cdaad	vis=private
+member	com.kotcrab.vis.usl.Parser#styleBlocks	sge.visui.usl.Parser#styleBlocks	Renamed	-	com/kotcrab/vis/usl/Parser.java	37	d2142da27361a121	vis=private
+member	com.kotcrab.vis.usl.Parser#styleBlocksOverride	sge.visui.usl.Parser#styleBlocksOverride	Renamed	-	com/kotcrab/vis/usl/Parser.java	38	b667bd33b0ca3c59	vis=private
+member	com.kotcrab.vis.usl.Parser#throwContainsSpaceException(BasicIdentifier)	sge.visui.usl.Parser#throwContainsSpaceException(BasicIdentifier)	Renamed	-	com/kotcrab/vis/usl/Parser.java	296	8504de207ae894d5	vis=private
+member	com.kotcrab.vis.usl.Parser#throwContainsSpaceException(GroupIdentifier)	sge.visui.usl.Parser#throwContainsSpaceException(GroupIdentifier)	Renamed	-	com/kotcrab/vis/usl/Parser.java	300	dfccf9054793d98f	vis=private
+member	com.kotcrab.vis.usl.Parser#tokens	sge.visui.usl.Parser#tokens	Renamed	-	com/kotcrab/vis/usl/Parser.java	29	27d150462a254299	vis=private
+member	com.kotcrab.vis.usl.StyleMerger#<stmt1>	sge.visui.usl.StyleMerger#<stmt1>	Renamed	-	com/kotcrab/vis/usl/StyleMerger.java	33	74004494e2c965d7	
+member	com.kotcrab.vis.usl.StyleMerger#<stmt2>	sge.visui.usl.StyleMerger#<stmt2>	Renamed	-	com/kotcrab/vis/usl/StyleMerger.java	34	babdec40caec63c8	
+member	com.kotcrab.vis.usl.StyleMerger#<stmt3>	sge.visui.usl.StyleMerger#<stmt3>	Renamed	-	com/kotcrab/vis/usl/StyleMerger.java	35	e2f534567235bfe2	
+member	com.kotcrab.vis.usl.StyleMerger#findBlock(ArrayList,String)	sge.visui.usl.StyleMerger#findBlock(ArrayList<StyleBlock>,String)	Renamed	-	com/kotcrab/vis/usl/StyleMerger.java	163	049fb33fc258f7ba	vis=private
+member	com.kotcrab.vis.usl.StyleMerger#findIdentifier(ArrayList,String)	sge.visui.usl.StyleMerger#findIdentifier(ArrayList<?>,String)	Renamed	-	com/kotcrab/vis/usl/StyleMerger.java	177	ad23fe657df80ce5	vis=private
+member	com.kotcrab.vis.usl.StyleMerger#findStyle(ArrayList,String)	sge.visui.usl.StyleMerger#findStyle(ArrayList<StyleIdentifier>,String)	Renamed	-	com/kotcrab/vis/usl/StyleMerger.java	170	cb64f4074fb4e8f5	vis=private
+member	com.kotcrab.vis.usl.StyleMerger#globalStyles	sge.visui.usl.StyleMerger#globalStyles	Renamed	-	com/kotcrab/vis/usl/StyleMerger.java	28	d009ed312f528b5a	
+member	com.kotcrab.vis.usl.StyleMerger#merge()	sge.visui.usl.StyleMerger#merge()	Renamed	-	com/kotcrab/vis/usl/StyleMerger.java	38	3eb486d17484c3b4	
+member	com.kotcrab.vis.usl.StyleMerger#mergeBlocksExtends(StyleBlock,StyleBlock)	sge.visui.usl.StyleMerger#mergeBlocksExtends(StyleBlock,StyleBlock)	Renamed	-	com/kotcrab/vis/usl/StyleMerger.java	136	190a2e8f6be5e3a4	vis=private
+member	com.kotcrab.vis.usl.StyleMerger#mergeBlocksOverrides()	sge.visui.usl.StyleMerger#mergeBlocksOverrides()	Renamed	-	com/kotcrab/vis/usl/StyleMerger.java	63	88e471ef5632281b	vis=private
+member	com.kotcrab.vis.usl.StyleMerger#mergeGlobalStyles()	sge.visui.usl.StyleMerger#mergeGlobalStyles()	Renamed	-	com/kotcrab/vis/usl/StyleMerger.java	80	440c7edf4429add7	vis=private
+member	com.kotcrab.vis.usl.StyleMerger#mergeGlobalStyles(String,ArrayList,ArrayList)	sge.visui.usl.StyleMerger#mergeGlobalStyles(String,ArrayList<String>,ArrayList<Identifier>)	Renamed	-	com/kotcrab/vis/usl/StyleMerger.java	118	a2fbf15fc813c724	vis=private
+member	com.kotcrab.vis.usl.StyleMerger#mergeGlobalStylesForIds(String,ArrayList)	sge.visui.usl.StyleMerger#mergeGlobalStylesForIds(String,ArrayList<Identifier>)	Renamed	-	com/kotcrab/vis/usl/StyleMerger.java	108	e835b485b6b6c1eb	vis=private
+member	com.kotcrab.vis.usl.StyleMerger#mergeStyles(StyleIdentifier,StyleIdentifier)	sge.visui.usl.StyleMerger#mergeStyles(StyleIdentifier,StyleIdentifier)	Renamed	-	com/kotcrab/vis/usl/StyleMerger.java	149	04cc1ffc9db60bd7	vis=private
+member	com.kotcrab.vis.usl.StyleMerger#mergeStylesContent(StyleIdentifier,StyleIdentifier)	sge.visui.usl.StyleMerger#mergeStylesContent(StyleIdentifier,StyleIdentifier)	Renamed	-	com/kotcrab/vis/usl/StyleMerger.java	156	71e14852bda49733	vis=private
+member	com.kotcrab.vis.usl.StyleMerger#styleBlocks	sge.visui.usl.StyleMerger#styleBlocks	Renamed	-	com/kotcrab/vis/usl/StyleMerger.java	29	830ba2763a0c88b1	
+member	com.kotcrab.vis.usl.StyleMerger#styleBlocksOverride	sge.visui.usl.StyleMerger#styleBlocksOverride	Renamed	-	com/kotcrab/vis/usl/StyleMerger.java	30	cccad44a8c267b90	
+member	com.kotcrab.vis.usl.Token#<init>(String,int,Type)	sge.visui.usl.Token#<init>(String,int,Type)	Renamed	-	com/kotcrab/vis/usl/Token.java	27	4b85839fdfbfc50e	
+member	com.kotcrab.vis.usl.Token#<init>(String,int,Type,String)	sge.visui.usl.Token#<init>(String,int,Type,String)	Renamed	-	com/kotcrab/vis/usl/Token.java	33	3b337b90ab30b347	
+member	com.kotcrab.vis.usl.Token#content	sge.visui.usl.Token#content	Renamed	-	com/kotcrab/vis/usl/Token.java	25	76386c329d1058e7	
+member	com.kotcrab.vis.usl.Token#i	sge.visui.usl.Token#i	Renamed	-	com/kotcrab/vis/usl/Token.java	22	848bd355b2043ee0	
+member	com.kotcrab.vis.usl.Token#type	sge.visui.usl.Token#type	Renamed	-	com/kotcrab/vis/usl/Token.java	24	57b93c3782dc615d	
+member	com.kotcrab.vis.usl.Token#usl	sge.visui.usl.Token#usl	Renamed	-	com/kotcrab/vis/usl/Token.java	21	0b096f7e80a4bb10	
+member	com.kotcrab.vis.usl.USL#CACHE_FOLDER_PATH	sge.visui.usl.USL#CACHE_FOLDER_PATH	Renamed	-	com/kotcrab/vis/usl/USL.java	25	44791fe30d13bd29	placement=companion
+member	com.kotcrab.vis.usl.USL#TMP_FOLDER_PATH	sge.visui.usl.USL#TMP_FOLDER_PATH	Renamed	-	com/kotcrab/vis/usl/USL.java	26	ab66ef7b40e43fcb	placement=companion
+member	com.kotcrab.vis.usl.USL#USER_HOME_PATH	sge.visui.usl.USL#USER_HOME_PATH	Renamed	-	com/kotcrab/vis/usl/USL.java	23	77e625c602a3e720	placement=companion vis=private
+member	com.kotcrab.vis.usl.USL#USL_FOLDER_PATH	sge.visui.usl.USL#USL_FOLDER_PATH	Renamed	-	com/kotcrab/vis/usl/USL.java	24	2129f76b1bd6304a	placement=companion
+member	com.kotcrab.vis.usl.USL#parse(File)	sge.visui.usl.USL#parse(File)	Renamed	-	com/kotcrab/vis/usl/USL.java	28	97a7ef509a7f1e81	placement=companion
+member	com.kotcrab.vis.usl.USL#parse(File,String)	sge.visui.usl.USL#parse(File,String)	Renamed	-	com/kotcrab/vis/usl/USL.java	37	71ea7b7bec0c6919	placement=companion
+member	com.kotcrab.vis.usl.USLException#<init>(String)	sge.visui.usl.USLException#<init>(String)	Renamed	-	com/kotcrab/vis/usl/USLException.java	21	c939427023e6b9e9	
+member	com.kotcrab.vis.usl.USLException#<init>(Throwable)	sge.visui.usl.USLException#<init>(Throwable)	Renamed	-	com/kotcrab/vis/usl/USLException.java	25	5e00f04cfffeb874	
+member	com.kotcrab.vis.usl.USLJsonWriter#<stmt1>	sge.visui.usl.USLJsonWriter#<stmt1>	Renamed	-	com/kotcrab/vis/usl/USLJsonWriter.java	30	6285a61f50fb903d	
+member	com.kotcrab.vis.usl.USLJsonWriter#<stmt2>	sge.visui.usl.USLJsonWriter#<stmt2>	Renamed	-	com/kotcrab/vis/usl/USLJsonWriter.java	31	b2880b9c2b69c050	
+member	com.kotcrab.vis.usl.USLJsonWriter#getJson()	sge.visui.usl.USLJsonWriter#getJson()	Renamed	-	com/kotcrab/vis/usl/USLJsonWriter.java	34	7693ef8abe70e68c	
+member	com.kotcrab.vis.usl.USLJsonWriter#out	sge.visui.usl.USLJsonWriter#out	Renamed	-	com/kotcrab/vis/usl/USLJsonWriter.java	27	285d609adfe52846	
+member	com.kotcrab.vis.usl.USLJsonWriter#styleBlocks	sge.visui.usl.USLJsonWriter#styleBlocks	Renamed	-	com/kotcrab/vis/usl/USLJsonWriter.java	25	830ba2763a0c88b1	
+member	com.kotcrab.vis.usl.USLJsonWriter#writeIdentifiers(ArrayList)	sge.visui.usl.USLJsonWriter#writeIdentifiers(ArrayList<Identifier>)	Renamed	-	com/kotcrab/vis/usl/USLJsonWriter.java	74	fabce3e50e6dd8fc	vis=private
+member	com.kotcrab.vis.usl.Utils#countLines(String)	sge.visui.usl.Utils#countLines(String)	Renamed	-	com/kotcrab/vis/usl/Utils.java	43	cee823b5e63f3f89	placement=companion
+member	com.kotcrab.vis.usl.Utils#readFile(File)	sge.visui.usl.Utils#readFile(File)	Renamed	-	com/kotcrab/vis/usl/Utils.java	26	4410a452c069a8c5	placement=companion
+member	com.kotcrab.vis.usl.Utils#throwException(String,String,int)	sge.visui.usl.Utils#throwException(String,String,int)	Renamed	-	com/kotcrab/vis/usl/Utils.java	39	50c26a06433e8504	placement=companion
+member	com.kotcrab.vis.usl.Utils#throwException(String,Token)	sge.visui.usl.Utils#throwException(String,Token)	Renamed	-	com/kotcrab/vis/usl/Utils.java	35	ff2d1eb6a203bb90	placement=companion
+member	com.kotcrab.vis.usl.lang.BasicIdentifier#<init>(BasicIdentifier)	sge.visui.usl.lang.BasicIdentifier#<init>(BasicIdentifier)	Renamed	-	com/kotcrab/vis/usl/lang/BasicIdentifier.java	31	c2c406b3e7164d88	
+member	com.kotcrab.vis.usl.lang.BasicIdentifier#<init>(String,String)	sge.visui.usl.lang.BasicIdentifier#<init>(String,String)	Renamed	-	com/kotcrab/vis/usl/lang/BasicIdentifier.java	26	8e99c5b210931edc	
+member	com.kotcrab.vis.usl.lang.BasicIdentifier#content	sge.visui.usl.lang.BasicIdentifier#content	Renamed	-	com/kotcrab/vis/usl/lang/BasicIdentifier.java	21	369a0e4ee6d04b9d	
+member	com.kotcrab.vis.usl.lang.BasicIdentifier#equals(Any)	sge.visui.usl.lang.BasicIdentifier#equals(Any)	Renamed	-	com/kotcrab/vis/usl/lang/BasicIdentifier.java	37	bb882e305dca6c84	
+member	com.kotcrab.vis.usl.lang.BasicIdentifier#hashCode()	sge.visui.usl.lang.BasicIdentifier#hashCode()	Renamed	-	com/kotcrab/vis/usl/lang/BasicIdentifier.java	49	86ddd1172d56af9f	
+member	com.kotcrab.vis.usl.lang.GroupIdentifier#<init>(GroupIdentifier)	sge.visui.usl.lang.GroupIdentifier#<init>(GroupIdentifier)	Renamed	-	com/kotcrab/vis/usl/lang/GroupIdentifier.java	31	89b45dccbf440bb3	
+member	com.kotcrab.vis.usl.lang.GroupIdentifier#content	sge.visui.usl.lang.GroupIdentifier#content	Renamed	-	com/kotcrab/vis/usl/lang/GroupIdentifier.java	26	c3ba223bb322c7b9	
+member	com.kotcrab.vis.usl.lang.GroupIdentifier#equals(Any)	sge.visui.usl.lang.GroupIdentifier#equals(Any)	Renamed	-	com/kotcrab/vis/usl/lang/GroupIdentifier.java	45	58ba89db0b465acf	
+member	com.kotcrab.vis.usl.lang.GroupIdentifier#hashCode()	sge.visui.usl.lang.GroupIdentifier#hashCode()	Renamed	-	com/kotcrab/vis/usl/lang/GroupIdentifier.java	58	2da25d7e0c33ea2c	
+member	com.kotcrab.vis.usl.lang.GroupIdentifier#inherits	sge.visui.usl.lang.GroupIdentifier#inherits	Renamed	-	com/kotcrab/vis/usl/lang/GroupIdentifier.java	25	3c98a47a2773da10	
+member	com.kotcrab.vis.usl.lang.Identifier#<init>()	sge.visui.usl.lang.Identifier#<init>()	Renamed	-	com/kotcrab/vis/usl/lang/Identifier.java	23	5479120d51d8b3e5	
+member	com.kotcrab.vis.usl.lang.Identifier#<init>(Identifier)	sge.visui.usl.lang.Identifier#<init>(Identifier)	Renamed	-	com/kotcrab/vis/usl/lang/Identifier.java	30	655734043c4ff8f1	
+member	com.kotcrab.vis.usl.lang.Identifier#<init>(String)	sge.visui.usl.lang.Identifier#<init>(String)	Renamed	-	com/kotcrab/vis/usl/lang/Identifier.java	26	303ee375f356fae9	
+member	com.kotcrab.vis.usl.lang.Identifier#equals(Any)	sge.visui.usl.lang.Identifier#equals(Any)	Renamed	-	com/kotcrab/vis/usl/lang/Identifier.java	35	184773bd7b32c755	
+member	com.kotcrab.vis.usl.lang.Identifier#hashCode()	sge.visui.usl.lang.Identifier#hashCode()	Renamed	-	com/kotcrab/vis/usl/lang/Identifier.java	46	c5b733788145680c	
+member	com.kotcrab.vis.usl.lang.Identifier#name	sge.visui.usl.lang.Identifier#name	Renamed	-	com/kotcrab/vis/usl/lang/Identifier.java	21	998d02440c0ede9f	
+member	com.kotcrab.vis.usl.lang.StyleBlock#extendsInheritOnlyDefinedStyles	sge.visui.usl.lang.StyleBlock#extendsInheritOnlyDefinedStyles	Renamed	-	com/kotcrab/vis/usl/lang/StyleBlock.java	25	4ab68f6fbbffeaea	
+member	com.kotcrab.vis.usl.lang.StyleBlock#extendsStyle	sge.visui.usl.lang.StyleBlock#extendsStyle	Renamed	-	com/kotcrab/vis/usl/lang/StyleBlock.java	24	416e0827d2d5332a	
+member	com.kotcrab.vis.usl.lang.StyleBlock#fullName	sge.visui.usl.lang.StyleBlock#fullName	Renamed	-	com/kotcrab/vis/usl/lang/StyleBlock.java	23	6df014c2b4a4ecb6	
+member	com.kotcrab.vis.usl.lang.StyleBlock#styles	sge.visui.usl.lang.StyleBlock#styles	Renamed	-	com/kotcrab/vis/usl/lang/StyleBlock.java	26	68f2934d7922502a	
+member	com.kotcrab.vis.usl.lang.StyleIdentifier#<init>(StyleIdentifier)	sge.visui.usl.lang.StyleIdentifier#<init>(StyleIdentifier)	Renamed	-	com/kotcrab/vis/usl/lang/StyleIdentifier.java	26	a27f62d8986fb1c5	
+member	com.kotcrab.vis.usl.lang.StyleIdentifier#equals(Any)	sge.visui.usl.lang.StyleIdentifier#equals(Any)	Renamed	-	com/kotcrab/vis/usl/lang/StyleIdentifier.java	32	b4e9cd44ebff85d8	
+member	com.kotcrab.vis.usl.lang.StyleIdentifier#hashCode()	sge.visui.usl.lang.StyleIdentifier#hashCode()	Renamed	-	com/kotcrab/vis/usl/lang/StyleIdentifier.java	44	48a9faf8d9ae93dc	
+member	com.kotcrab.vis.usl.lang.StyleIdentifier#metaStyle	sge.visui.usl.lang.StyleIdentifier#metaStyle	Renamed	-	com/kotcrab/vis/usl/lang/StyleIdentifier.java	21	e66d2b2692e9d3a1	

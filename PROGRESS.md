@@ -6020,7 +6020,8 @@ two excluded are `package-info.java` — javadoc-only placeholders that declare 
 of the two `internal` packages — and the lane re-derives both numbers on every run rather than
 trusting this paragraph.
 
-**`usl/` — 18 files / 1,604 LOC — is OUT OF SCOPE and is the recorded follow-up.** It is a skin-DSL
+**`usl/` — 18 files / 1,604 LOC — is out of THIS port's scope and is now its own SIBLING PORT,
+`ported/sge-visui-usl` (§10.9.13, which states why it is a port root and not a glob added here).** It is a skin-DSL
 compiler (lexer, parser, style merger, JSON writer) and it is the item §1.1 has carried as *"100 %
 absent and undocumented, zero reference implementation"* since the corpus was censused. Three facts
 decide that it can be deferred without the deferral being a drop, and the lane re-derives the first
@@ -6833,6 +6834,72 @@ ported tests.
 a `new`-insertion row or a property-to-setter row for this suite from a reading of the java; both are
 worth zero at the emitted site, for two independent reasons (Scala 3 universal apply, and C15's
 widening).
+
+### 10.9.13 USL — a SIBLING PORT, and the corpus's first library with NO reference port at all
+
+`com.kotcrab.vis.usl.* → sge.visui.usl.*`, Apache-2.0, **18 files / 1,604 LOC**: a lexer, a
+recursive-descent parser, a style merger and a JSON writer for VisUI's skin-definition language.
+`just usl-measure`, report identity `port-report/UslMigrate`, port root
+**`ported/sge-visui-usl`** — its OWN root, and not a glob added to `sge-visui`.
+
+**THE SCOPE DECISION, and why §1.5's rule does not settle it the way it first reads.** §1.5 says an
+upstream splitting one library across N maven modules is ONE port whose scope is a list of globs, and
+that a port root per upstream module is "N names for a module the reference build does not have".
+The test that rule gives is about modules that *"all … declare under one package root"*, and this
+pair does not: `com.kotcrab.vis.ui` and `com.kotcrab.vis.usl` are SIBLINGS — neither a prefix of the
+other — published as two maven coordinates at two independent versions (`vis-ui` 1.5.9-SNAPSHOT
+against `vis-usl` 0.2.2-SNAPSHOT, in two `gradle.properties`). Two artifacts sharing a git repository
+are not one library split across modules. Four further facts, each sufficient on its own:
+
+1. **the decision was already taken, in code.** Wave 4 narrowed `VisUiPolicy.governs` to
+   `com.kotcrab.vis.ui` rather than the organisation namespace, in writing, because "the USL
+   follow-up is exactly such a sibling … so the claim is the sub-namespace this run converts and the
+   follow-up states its own". A scope edit is the one outcome that narrowing forecloses;
+2. **the dependency direction.** `sge-visui` is a DEPENDENT of libGDX core and inherits libGDX's
+   twelve surface phases. USL imports nothing outside the JDK, so merged, a build-time skin
+   compiler could not be built without a rendering engine and 162 scene2d widgets on its classpath —
+   and it would inherit `collections`/`nullability`/`bean-properties` as facts about libGDX's shared
+   surface, over a library whose output is ORDER-SENSITIVE JSON compared LINE BY LINE;
+3. **the emission slots.** A run's identity is (`portRoot`, `sourceSet`) and `PortRun` opens with an
+   unconditional wipe, so one module has exactly two. `sge-visui` spends `main` on `ui/` and holds
+   `test` for §10.9.11 item 4's two upstream `@Test`. USL brings a third and a fourth tree;
+4. **standalone is honest here, not a shortcut.** §1.5 makes a dependent-shaped run with no base a
+   fatal finding; this run has NO resolution roots, so the signature does not arise, and
+   `base = "sge-visui"` would claim a shared surface that exists in NEITHER direction.
+
+§2.1's own question is genuinely OPEN and answered by the same fact rather than dodged: **the
+reference hand port never ported USL**, so no destination spelling exists to match. The name follows
+the reference build's convention for a visui sibling (`build.sbt`'s `sge-visui`).
+
+**THE FOUR SCOPE FACTS ARE RE-DERIVED BY THE LANE, never trusted from the paragraph above** —
+`usl/` files naming `com.badlogic.gdx` (0), naming `com.kotcrab.vis.ui` (0), `ui/` files naming
+`com.kotcrab.vis.usl` (0), and imports outside the JDK and itself (0). Each is fatal if it moves, and
+the reason is stated at the guard: a module that references its sibling is not a port with no base.
+The Apache-header count (**18 of 18**) is a fifth, and it is what licenses declaring NO `notices` —
+§4.57's obligation is met by construction here, which is the OPPOSITE of the sibling's one-file gap.
+
+**FIRST EMIT — 18 files, 147 members, `wrote 18 Scala files`, 30 errors, in exactly TWO families.**
+The manifest was deliberately empty of surface phases at first emit (`VisUiPolicy`'s own rule: "a
+wall measured under invented policy says nothing about the engine"), so the wall names the phases
+rather than the phases hiding the wall:
+
+| n | error | §1 | what it is |
+|---|---|---|---|
+| 24 | `E008 value foreach is not a member of java.util.ArrayList[…]` | **(b)** | java's enhanced `for` over an `ArrayList`, in 9 members across `Parser`, `StyleMerger`, `IncludeLoader` |
+| 6 | `E052 Reassignment to val` | **(b)** | a java parameter is a variable and a scala one is not — `usl`, `i`, `inheritString`, `includeName` |
+
+Both name a phase this corpus already has, and both arrive with the number that justifies them
+rather than as a guess: `collections` and `mutable-params` are exactly the pair jbump declares, and
+`mutable-params` alone is what noise4j carries. `break_residue` was **0** and `trivia` **0** at first
+emit, which is the state to compare any later wave against.
+
+**THE JVM-ONLY RESIDUE — 9 `portability` findings, all in ONE type, and the port does NOT narrow
+`targets`.** Every one is `IncludeLoader`'s REMOTE include downloader (`java.net.URL`,
+`HttpURLConnection`, `java.nio.channels`) plus `Utils`' `java.nio.file.Files` and two
+`System.getProperty`. `remediation` publishes three named remedies for them, and none is taken:
+narrowing `targets` on a library whose upstream ships an `@Ignore`d `RemoteTest` for exactly this
+code path would be a decision priced by nothing, and §1.5 is explicit that narrowing is the exception
+that carries its reason. Stated residue, not a drop.
 
 ### 10.9.11 Next
 
