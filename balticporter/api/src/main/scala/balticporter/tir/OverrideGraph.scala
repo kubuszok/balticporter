@@ -129,6 +129,11 @@ final class OverrideGraph private (
     */
   def closureOf(m: SymId): Closure =
     signatureOf(m) match
+      // …and a PRIVATE member takes the same arm for the same kind of reason: a field does not
+      // override, and a private method is not INHERITED (JLS 8.2), so neither has anything above or
+      // below it that has to move with it — nor any unparsed ancestor that could be declaring what
+      // it overrides. See [[inherited]].
+      case _ if !inherited(m) => Closure(Set(m), Set.empty, baseAnchorsIn(Set(m)), Set.empty)
       case scala.None => Closure(Set(m), Set.empty, baseAnchorsIn(Set(m)), Set.empty)
       case Some(_) =>
         val seen        = collection.mutable.LinkedHashSet.empty[SymId]
@@ -190,14 +195,33 @@ final class OverrideGraph private (
     *
     * Read through the arguments `from` instantiates `a` with — see [[asSeenFrom]]. */
   private def matchingUp(a: SymId, sig: Signature, from: SymId): List[SymId] =
-    membersOf(a).filter(x => signatureOf(x).exists(s => s.matches(sig) || asSeenFrom(s, a, from).matches(sig)))
+    membersOf(a).filter(inherited)
+      .filter(x => signatureOf(x).exists(s => s.matches(sig) || asSeenFrom(s, a, from).matches(sig)))
+
+  /** IS THIS MEMBER IN AN OVERRIDE RELATION AT ALL? — JLS 8.2 and 8.4.8.1, and the one modifier
+    * that answers `no` outright.
+    *
+    * A `private` member is NOT INHERITED (8.2), so it neither overrides nor is overridden nor is
+    * hidden: it is its own component, and no ancestor — parsed or unparsed — can be declaring the
+    * member it overrides, because there is none to declare. Every other modifier still
+    * participates; `static` HIDES rather than overrides and a hiding pair still has to move
+    * together under a rename, so it is deliberately not on this list.
+    *
+    * The wrong answer here is a LEGITIMATE one and that is what makes it expensive: an
+    * over-approximate component reads as *this program may not re-sign these*, which is exactly
+    * what an honest anchor says. Measured on a library whose i18n lookups are `private static`
+    * methods of java `enum`s: five components frozen on `java.lang.Enum#getBundle`, a member
+    * `java.lang.Enum` does not declare and could not inherit from anything if it did. */
+  private def inherited(m: SymId): Boolean =
+    !program.symbolOf(m).exists(_.flags.isPrivate)
 
   /** the members of DESCENDANT `d` that `sig` names, `sig` being declared in ancestor `a`. The
     * mirror of [[matchingUp]]: it is the ANCESTOR's signature that carries the type parameters, so
     * this substitutes `sig` rather than the candidate. */
   private def matchingDown(d: SymId, sig: Signature, a: SymId): List[SymId] =
     val seen = asSeenFrom(sig, a, d)
-    membersOf(d).filter(x => signatureOf(x).exists(s => s.matches(sig) || s.matches(seen)))
+    membersOf(d).filter(inherited)
+      .filter(x => signatureOf(x).exists(s => s.matches(sig) || s.matches(seen)))
 
   /** `sig`, declared in `ancestor`, spelled as the descendant `from` sees it.
     *

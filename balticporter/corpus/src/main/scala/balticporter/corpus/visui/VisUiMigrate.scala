@@ -236,10 +236,24 @@ object VisUiPolicy:
           balticporter.transform.ContextHolderExtension(
             holder = "com.badlogic.gdx.Gdx",
             cache  = Map("com.kotcrab.vis.ui.VisUI" -> "sgeInstance"),
+            //
+            // ==all EIGHT of them, and the second five arrived with the anchor lift==
+            // `Locales$CommonText` and its four siblings look up an i18n bundle from a
+            // `private static getBundle()`, which was FROZEN on `java.lang.Enum#getBundle` until
+            // the graph learned that a `private` member is not inherited (JLS 8.2). Unfreezing it
+            // threads that static and its instance callers then reach the enum as a CLASS — which
+            // is exactly the `lost-clause` the other three had, arriving five more times. That is
+            // `ENGINE-LIMITS.md` CT10's own sequence read forwards: the anchor lift is admissible
+            // once the cached context exists to answer what it uncovers, and not before.
             selfSupplied = Map(
               "com.kotcrab.vis.ui.VisUI$SkinScale"                          -> "sge.visui.VisUI.sgeInstance",
               "com.kotcrab.vis.ui.widget.ButtonBar$ButtonType"              -> "sge.visui.VisUI.sgeInstance",
               "com.kotcrab.vis.ui.building.utilities.layouts.TableLayout"   -> "sge.visui.VisUI.sgeInstance",
+              "com.kotcrab.vis.ui.Locales$CommonText"                       -> "sge.visui.VisUI.sgeInstance",
+              "com.kotcrab.vis.ui.util.dialog.Dialogs$Text"                 -> "sge.visui.VisUI.sgeInstance",
+              "com.kotcrab.vis.ui.widget.color.internal.ColorPickerText"    -> "sge.visui.VisUI.sgeInstance",
+              "com.kotcrab.vis.ui.widget.file.internal.FileChooserText"     -> "sge.visui.VisUI.sgeInstance",
+              "com.kotcrab.vis.ui.widget.tabbedpane.TabbedPane$Text"        -> "sge.visui.VisUI.sgeInstance",
             ),
           ),
         )),

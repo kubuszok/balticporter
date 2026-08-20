@@ -168,6 +168,46 @@ class OverrideGraphSpec extends munit.FunSuite:
     assert(g.closureOf(sym(p, "Text#grid")).isAnchored, "…and the static, on the same evidence")
   }
 
+  test("…and a PRIVATE member of that same enum anchors on NOTHING — JLS 8.2, it is not inherited") {
+    // The other half of the row above, and the half that had been paying for it. An unknown surface
+    // `mayDeclare`s everything ON PURPOSE, which is a statement about what an ancestor might
+    // DECLARE — and a `private` member is not inherited at all, so no ancestor can be declaring the
+    // member it overrides, because there is none to declare. Five components on sge-visui were
+    // frozen this way, all of them `private static` i18n lookups on java enums.
+    // NEGATIVE: drop `inherited` from `closureOf` and this reads `Set((java.lang.Enum, getBundle))`.
+    val (p, g) = graphOf(
+      """
+      enum Text {
+        OK, CANCEL;
+        private static String getBundle() { return "b"; }
+        public String get() { return getBundle(); }
+      }
+      """)
+    val c = g.closureOf(sym(p, "Text#getBundle"))
+    assert(!c.isAnchored, c.externalAnchors.toString)
+    assertEquals(fqns(p, c.members), Set("Text#getBundle"))
+    // …and the PUBLIC sibling in the same enum still anchors, so the narrowing is the modifier and
+    // not the type: an over-refusal lifted for everything would be CT10's measured dead end.
+    assert(g.closureOf(sym(p, "Text#get")).isAnchored)
+  }
+
+  test("a PRIVATE member is nobody's override edge — up or down, and even at the same descriptor") {
+    // `static` is deliberately NOT on the list: it HIDES rather than overrides, and a hiding pair
+    // still has to move together under a rename. `private` is the one modifier java answers `no` to
+    // outright, so the two same-named members below are two members and were one component.
+    val (p, g) = graphOf(
+      """
+      class Base { private int step(int x) { return x; } public int pub(int x) { return x; } }
+      class Sub extends Base { private int step(int x) { return x + 1; } public int pub(int x) { return x + 1; } }
+      """)
+    assertEquals(fqns(p, g.closureOf(sym(p, "Sub#step")).members), Set("Sub#step"))
+    assertEquals(fqns(p, g.closureOf(sym(p, "Base#step")).members), Set("Base#step"))
+    assertEquals(g.overridden(sym(p, "Sub#step")), Nil)
+    assertEquals(g.overriders(sym(p, "Base#step")), Nil)
+    // the CONTROL, one line over in the same pair of classes: the public members are one component.
+    assertEquals(fqns(p, g.closureOf(sym(p, "Sub#pub")).members), Set("Base#pub", "Sub#pub"))
+  }
+
   test("`java.lang.Object` anchors even though no parent list ever names it") {
     // `SpoonTir.superTypes` filters `java.lang.Object` out on purpose, so without the implicit root
     // a rename of `toString` reads as unanchored — and silently breaks every `println` of it.
