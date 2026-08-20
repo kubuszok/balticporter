@@ -526,6 +526,22 @@ object ExternalSurface:
     * is `static`, and a java interface's statics are not inherited at all (JLS 8.4.8), so it is not
     * a member any implementor could be answering for — including it would anchor a field named
     * `compare` on evidence that does not exist.
+    *
+    * ==`java.lang.Enum` IS ABSENT ON PURPOSE, AND FOR NEITHER OF THE TWO REASONS ABOVE==
+    * It is the one candidate whose surface argument is STRONGER than any interface's here and which
+    * is still not stated. JLS 8.1.4 makes it a compile-time error for a class to name `Enum` as its
+    * direct superclass, so the only `extends Enum` edge anywhere is the one the compiler writes for
+    * an `enum` declaration: nothing can add to it, nothing can interpose, and its members are fixed
+    * at the compliance level the frontend PINS. Left out, it anchors every member of every java
+    * enum, because an enum's one unparsed ancestor is `Enum` and an unknown surface `mayDeclare`s
+    * anything — which really does produce refusals naming members `Enum` could never declare
+    * (`java.lang.Enum#getBundle`, `java.lang.Enum#grid`, measured six times on one port). Every
+    * clause of that is true, and the entry is still refused, because stating it MEASURED WORSE:
+    * `ENGINE-LIMITS.md` CT10 has the number (**32 -> 41 errors, 51 member digests**). The anchor is
+    * not what was stopping that family — it was MASKING what was, and lifting it threads half a
+    * call chain whose other half is an `override final toString()` that can take no clause. The id
+    * sits here rather than the option sitting silently missing (`CLAUDE.md` §5); it is admissible
+    * the day CT10's enum-clause half closes, and not before.
     */
   val jdkPlatform: Map[String, Set[Member]] = Map(
     "java.io.Serializable"     -> Set.empty,
@@ -540,6 +556,8 @@ object ExternalSurface:
                                       Member("chars", 0), Member("codePoints", 0)),
     "java.util.Iterator"       -> Set(Member("hasNext", 0), Member("next", 0), Member("remove", 0),
                                       Member("forEachRemaining", 1)),
+    // `java.lang.Enum` is NOT here, and the note above says why — it is a refusal with a number
+    // (`ENGINE-LIMITS.md` CT10), not an omission.
   )
 
   /** the default: `java.lang.Object`, plus the platform interfaces whose surfaces are closed. */

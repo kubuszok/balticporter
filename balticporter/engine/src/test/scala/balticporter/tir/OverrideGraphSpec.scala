@@ -145,6 +145,29 @@ class OverrideGraphSpec extends munit.FunSuite:
     assert(g.closureOf(sym(p, "ByName#getRank")).isAnchored)
   }
 
+  test("a java ENUM's members anchor on `java.lang.Enum` — a REFUSED entry, not a missing one") {
+    // An enum's one unparsed ancestor is `java.lang.Enum`, whose surface is CLOSED harder than any
+    // interface's in `jdkPlatform` (JLS 8.1.4 forbids naming it as a direct superclass), so stating
+    // it here is admissible on this map's own contract and would lift these anchors. It is refused
+    // anyway, with a number: `ENGINE-LIMITS.md` CT10 measured 32 -> 41 errors on sge-visui, because
+    // the anchor was MASKING the enum-constructor clause rather than causing it. This test pins the
+    // refusal so the entry cannot arrive without CT10's other half — and reading it as "the engine
+    // thinks Enum declares getBundle" is exactly backwards.
+    assert(!ExternalSurface.default.isKnown("java.lang.Enum"))
+    val (p, g) = graphOf(
+      """
+      enum Text {
+        OK, CANCEL;
+        public String getBundle() { return "b"; }
+        public static Text grid(int n) { return OK; }
+      }
+      """)
+    val c = g.closureOf(sym(p, "Text#getBundle"))
+    assert(c.isAnchored, "unknown surface anchors — the over-refusal CT10 declines to lift")
+    assertEquals(c.externalAnchors, Set(("java.lang.Enum", "getBundle")))
+    assert(g.closureOf(sym(p, "Text#grid")).isAnchored, "…and the static, on the same evidence")
+  }
+
   test("`java.lang.Object` anchors even though no parent list ever names it") {
     // `SpoonTir.superTypes` filters `java.lang.Object` out on purpose, so without the implicit root
     // a rename of `toString` reads as unanchored — and silently breaks every `println` of it.

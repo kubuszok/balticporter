@@ -12504,6 +12504,80 @@ every check count identical.
 *Fix kind: (a) engine, and the one it leaves for a phase author is also (a), in whatever repository
 owns the phase: implement `SurfacePolicy` and the pair becomes verifiable.*
 
+### CT10. The `java.lang.Enum` ANCHOR is a real over-refusal, and lifting it is measured **32 → 41 errors** — it was MASKING the enum-clause gap, not causing it
+
+**Title, for renumbering: "the enum anchor hides the enum-clause gap; lifting it alone is worse".**
+OPEN, and the half that is open is NOT the anchor. (a) engine.
+
+`sge-visui` arrived at 32 errors with 11 of them `E172 No given sge.Sge`, of which six were reported
+by `context-seam` as `frozen-component` naming **`java.lang.Enum#getBundle`** and
+**`java.lang.Enum#grid`** — members `java.lang.Enum` does not declare. `PROGRESS.md` §10.9.7 wrote
+that up as *the cheapest of the five, and it may take six of the eleven*, explicitly labelled a
+HYPOTHESIS and not a count. It is measured here, and the hypothesis is wrong.
+
+**The observation is correct, and it is worth keeping straight from the outcome.**
+`ExternalSurface.jdkPlatform`'s contract is *a type present here is answered EXACTLY, so an absence
+from its member set is proof*, and `java.lang.Enum` meets it more strongly than any interface in the
+map: JLS 8.1.4 makes it a compile-time error for a class to name `Enum` as its direct superclass, so
+the only `extends Enum` edge that exists anywhere is the one the compiler writes for an `enum`
+declaration — nothing can add to it and nothing can interpose. Its members are then fixed at the
+compliance level `SpoonTir.buildModel` pins (21), which is `java.lang.CharSequence`'s own admission
+argument. So the anchor really is `OverrideGraph`'s deliberate over-refusal landing on a type whose
+surface is not unknown at all, which is `ENGINE-LIMITS.md` C16's shape read at the ANCHOR rather than
+at the EDGE.
+
+**Stated, it costs nine errors and closes nothing.** One entry (eleven members, arity-keyed, read off
+`javap`), `just gdx-measure` then `just visui-measure`:
+
+| | before | after |
+|---|---|---|
+| errors | **32** | **41** |
+| `context-seam` | 42 | 46 |
+| `frozen-component` | 6 | **0** |
+| `lost-clause` | 3 | **8** |
+| `unconstructed-thread` | 4 | **9** |
+| `members.tsv` | — | **51 moved** |
+
+Every other count flat. Read the rows rather than the total: the six refusals did not become six
+threaded members, they became five `lost-clause` and five `unconstructed-thread` refusals — **the
+same sites, one kind further along** — and the port got nine errors worse on the way.
+
+**WHY, and this is the part worth knowing.** With the anchor lifted, `GlobalsToImplicitsTransform`
+threads what it can reach. The enum's COMPANION static gets the clause on the METHOD, exactly as the
+reference hand port writes it:
+
+```scala
+private[Locales] def getBundle()(using sge.Sge): sge.utils.I18NBundle = …
+```
+
+Its callers are the enum's own instance methods, and they do NOT get one, because their route is the
+enum's CONSTRUCTOR and an emitted scala `enum` cannot carry a context clause — the `lost-clause`
+refusal, which is honest and which the `frozen-component` refusal had been standing in front of. So
+`get()`, `format()` and `format(Object[])` now call a member that takes a clause they cannot supply:
+one error each, on five enums.
+
+And the wall behind THAT is one no clause reaches at all. Each of those enums ends in
+
+```java
+@Override public String toString () { return get(); }
+```
+
+`toString()` overrides `java.lang.Object#toString`, so it can never take a clause however far the
+threading gets. Threading `get()` would move the error rather than remove it. That is why
+`PROGRESS.md` §10.9.7's reading of the reference hand port is right and its ordering was not: the
+family needs the hand port's SECOND member — a cached context read as an EXPRESSION
+(`VisUI._sgeInstance`, `selfSupplied`'s shape with an expression the mechanical port cannot currently
+write, CT7/CT8's exits not reaching it) — and the anchor is downstream of that, not upstream.
+
+**What is in the tree.** The entry is NOT stated, and the refusal is visible where the option would
+be — a note at `ExternalSurface.jdkPlatform` carrying this id (`CLAUDE.md` §5's one-spelling rule),
+and `OverrideGraphSpec`'s enum case asserting that the anchor IS taken, so the entry cannot arrive
+without this entry's other half. Do not re-derive the anchor argument; it is correct and it is not
+the question.
+
+*Fix kind: (a) engine — and the open half is the enum's context clause (§12's own family), never the
+external surface. `PROGRESS.md` §10.9.7 family 1 carries the per-site census.*
+
 ## 13. Retyping a PRIMITIVE to an opaque domain type
 
 All five entries below come from the SAME work — Stage P6's attempts to enable an opaque family on

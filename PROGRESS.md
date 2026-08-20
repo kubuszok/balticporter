@@ -6310,6 +6310,22 @@ family reduces to `SkinScale`, `Draggable#BLOCKER` and the two `TableLayout` sit
 hypothesis and not a count** (§1: N failures gated behind one is never a number) — it is the first
 thing the next wave should measure.
 
+> **MEASURED, wave 1, and the hypothesis is WRONG — `ENGINE-LIMITS.md` CT10, `32 -> 41` errors.**
+> The OBSERVATION holds exactly as written: `java.lang.Enum`'s surface is closed harder than any
+> interface already in `jdkPlatform` (JLS 8.1.4 forbids naming it as a direct superclass), the
+> anchor is a genuine over-refusal, and stating the entry does lift all six —
+> `frozen-component 6 -> 0`. **None of the six becomes a threaded member.** They become five
+> `lost-clause` and five `unconstructed-thread` refusals — the same sites, one kind further along —
+> at `context-seam 42 -> 46`, 51 moved member digests and NINE more compile errors. The anchor was
+> MASKING the blocker rather than being it: with it lifted the enum's COMPANION static takes the
+> clause on the METHOD (the hand port's own shape) while its instance callers cannot, because their
+> route is the enum's CONSTRUCTOR; and behind that sits an `@Override public String toString()`
+> calling `get()`, which overrides `java.lang.Object#toString` and can never take a clause however
+> far the threading reaches. So this section's reading of the reference hand port is right and its
+> ORDERING was not: the family needs the SECOND member (the cached context read as an EXPRESSION)
+> FIRST, and the anchor is downstream of it rather than upstream. The entry is not in the tree; the
+> refusal is visible at `ExternalSurface.jdkPlatform` and pinned by `OverrideGraphSpec`.
+
 **FAMILY 2 — `disposableRedirect` DID HALF ITS JOB HERE AND ALL OF IT ELSEWHERE, WHICH IS THE
 WAVE'S ENGINE FINDING.** The base's P1 step (§11.15) retargets `com.badlogic.gdx.utils.Disposable`
 onto `java.lang.AutoCloseable` and renames `dispose` → `close` across the override component —
