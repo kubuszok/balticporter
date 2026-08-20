@@ -6565,6 +6565,34 @@ is measured with `measure-all` rather than with its own lane (§1.5: a base port
 not evidence about its dependents, read here as *a new dependent's green numbers are not evidence
 about its siblings*).
 
+**WAVE 2's arrival is flat the same way, and it is the first change here that touches the BASE.**
+`member-rename`'s empty instance in libGDX core's `mainPhases` moves `PortManifest.fingerprint`, so
+every module in that chain publishes a `port-map.tsv` whose `policy=` header field moved —
+`port_map_guard` refusing eleven maps until they were acknowledged is that artifact working, since it
+is the one committed baseline another RUN reads. Measured by running all eighteen non-libGDX-root
+lanes WITHOUT stopping at the first failure, so ONE pass surfaced the whole fan-out instead of N
+restarts each hiding the next:
+
+- **11 port maps moved, every one `rows: unchanged`, and `policy=` the only header field in all 11**;
+- **all 18 lanes at 0 moved member digests**, every error baseline held, every findings baseline
+  held, every test-discovery figure held, and no lane failed on anything but its port map;
+- the nine lanes with no libGDX in their chain exited 0 untouched — the control that says the blast
+  is exactly the dependency graph and nothing wider.
+
+After acknowledgement, `just measure-all`: **20 of 20 lanes, exit 0**, all twenty at
+`members … : 0`, all twenty at their error baseline (`0` on seventeen, `3` on liqp, `2` on ssg-md,
+**`24` here**), and all **23** published port maps `header and rows unchanged`. Suite totals across
+the eleven lanes that run one: **2,073 passing / 11 failing**. And the ENGINE'S OWN specs, run AFTER
+the lanes and as `testOnly *` rather than `testQuick` (§5.1 — an `assume`-guarded spec whose
+precondition is another run's artifact does not execute in a fresh checkout, so the order is part of
+the measurement): **api 65, engine 850, frontend-spoon 121, testkit 336, corpus 1,382 — 2,754
+passing, 0 failing, 1 ignored**.
+
+*(That last figure CORRECTS the 2,068 / 11 / 2-not-run above rather than moving it: every
+`tests.tsv` baseline held in both passes, so no outcome changed in this wave — the prose number had
+gone stale against lanes added since it was written, which is exactly the drift §5's
+"a number that reaches stdout and not `findings.tsv`" rule is about, met in a status document.)*
+
 ### 10.9.10 Next
 
 1. **The context-seam family**, which is 10 of the 32 errors and one shape. **The `frozen-component`
