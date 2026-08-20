@@ -6860,7 +6860,7 @@ intersected with the six files the port cannot compile:
 | n | files | class | blocker |
 |---|---|---|---|
 | 11 | `VisTextFieldReadOnlyRedSuite` (8), `DraggableKeepWithinParentRedSuite` (3) | **(c) BY THE FLOOR** | the only two whose closure reaches the 8 — `widget/VisTextField.scala` (the three upstream-skew `E007`s) and `widget/Draggable.scala` + `layout/DragPane.scala`. These cannot run until §10.9.10's rows move, whatever fixture exists |
-| 9 | `VisUIResourcesRedSuite` (5), `Iss787FidelitySuite` (2), `TooltipMouseMovedFadeOutRedSuite` (1), `VisImageTextButtonGetTextIss798RedSuite` (1) | **(c) FIXTURE, and behind it §10.9.3** | closure clean of the floor. Each needs `VisUITestFixture.headlessSge()`, which rests on `sge.noop.*` and `sge.files.DesktopFiles` — hand-port types this port does not emit — and each calls `VisUI.load()` in CODE |
+| 9 | `VisUIResourcesRedSuite` (5), `Iss787FidelitySuite` (2), `TooltipMouseMovedFadeOutRedSuite` (1), `VisImageTextButtonGetTextIss798RedSuite` (1) | **(c) A NATIVE LIBRARY — corrected in wave 7, see below** | read as *fixture, and behind it §10.9.3*; MEASURED, the fixture is not the binding blocker and neither is the resource gap |
 | 2 | `VisUISkinStyleRoundTripSuite` | **(b) BLOCKED BY THE HAND PORT** | `VisUISkinReaders`, a reflection-free skin-reader registry the hand port invented; grepped, this port emits no such type. It is the only one that does NOT call `VisUI.load()` |
 | 0 | `VisUITestFixture` | not a candidate | the reference fixture itself |
 
@@ -6876,11 +6876,47 @@ plain grep put `VisUI.load()` inside `VisUISkinStyleRoundTripSuite`, which its o
 comment-masked the count is 0 — §10.7.12's *a comment is not code*, met at an INSTRUMENT this time
 rather than at a text edit.
 
-**WHAT IS DELIBERATELY NOT CLAIMED.** For the 9 fixture-blocked tests, WHICH of the two blockers
-binds — the fixture rewrite or the absent resources — is **UNMEASURED**. Both are present, the
-fixture is nearer, and §3.5's own paragraph is about a census that scoped 75 tests behind a fixture
-and measured 5. So the next wave builds the fixture and RE-CENSUSES; it does not inherit a number
-from here.
+**WAVE 7 ANSWERED THE QUESTION BELOW, AND THE ANSWER IS NEITHER OF THE TWO BLOCKERS IT OFFERED.**
+The paragraph after this one scoped 9 tests behind a FIXTURE with the resource gap behind it, and
+said outright that which of the two binds was UNMEASURED. Measured — one 20-line probe over the base
+port's emitted tree alone, every service `null`, the port's own shipped `uiskin.json` on the
+classpath — it is a third thing, one layer below anything either could reach:
+
+- **the resources are fine.** All four probed files resolve from
+  `ported/sge-visui/src_managed/main/resources` at the upstream paths, with their upstream lengths,
+  through the port's own `FileHandle` classpath path. §10.9.3's gap is closed at RUN TIME and not
+  only byte-for-byte, and `sibling()` on a classpath handle — a thing the census worried about —
+  works, so the skin parses and the atlas loads;
+- **the FIRST PNG DECODE dies in the BASE**, at `Gdx2DPixmap$.<clinit>` →
+  `Optional.orElseThrow` → `NoSuchElementException`. The emitted companion resolves TEN
+  `java.lang.foreign` downcall handles in its object body, each
+  `defaultLookup().find("load"/"newPixmap"/…).orElseThrow()`, and those symbols live in libGDX's
+  NATIVE IMAGE, which nothing in this repository loads. `SharedLibraryLoader.loadLibrary` is emitted
+  and has no caller before that point, because in java the BACKEND's application class loads the
+  natives and a headless port has no backend;
+- **so a fixture unlocks ZERO of the 9.** A stub supplies a SERVICE; this is a symbol lookup in a
+  class initialiser, and no service is on the path to it. Seven of the nine call `VisUI.load()` and
+  die there; the other two (`VisUIResourcesRedSuite`'s last pair) assert only that the i18n bundles
+  and the shaders are ON THE CLASSPATH — which is the deliverable `visui-measure` now gates
+  byte-for-byte and the probe confirms at run time, so copying them would add a count and not
+  evidence, and they sit in a file whose other three cannot run.
+
+`ENGINE-LIMITS.md` X7 carries the rule with the stack. The reference hand port's suite is green over
+there because that port DIVERGED — it decodes PNGs through its own JVM shim over ImageIO rather than
+through the native image — which is §3.5's *solved or skipped* with a third answer, and exactly why
+its green suite is not evidence about this port. **Do NOT open a fixture wave for these nine**: the
+priced exits are a port that puts the native image on `java.library.path` and calls the loader, or a
+§1(c) substitution of the decode path, and both are decisions for a port that intends to run
+graphics headlessly at all.
+
+**AND THE QUESTION IT WAS LEFT AS IS WORTH KEEPING, because the shape of the miss is the lesson.**
+Wave 6 wrote: *"WHICH of the two blockers binds — the fixture rewrite or the absent resources — is
+UNMEASURED. Both are present, the fixture is nearer."* Both halves of that were true, the caution
+was right, and the enumeration was still one item short — the third blocker is in a module neither
+candidate names, and no amount of reasoning about the two would have found it. §3.5's own precedent
+(a census that scoped 75 tests behind a fixture and measured 5) is the same shape, and the rule it
+yields is not *distrust the census* but **probe before you build**: the run that settles it is
+smaller than the fixture it would justify.
 
 Note what the 50 are evidence FOR. They are the first behavioural evidence this port has for
 `Sizes`, `util/ColorUtils`, `util/OsUtils` and `util/Validators` — four of the library's own types,
@@ -7084,11 +7120,14 @@ oracle's 3,654 identical lines are the behavioural half of the same answer.
 
 ### 10.9.11 Next
 
-1. **The FIXTURE**, and a re-census behind it — the rewrite `VisUITestFixture` needs (its six
-   hand-port types have no image here, exactly as `HeadlessTextraSge`'s did) unlocks at most the 9
-   tests of §10.9.12's second row, and how many it really unlocks is the thing to MEASURE rather
-   than predict. `sge.Sge` is a public case class here and `sge.SgeTestFixture` is the
-   absent-service shape, so the fixture is buildable; what sits behind it is item 3.
+1. **THE DECODE PATH, if this port is ever to run graphics headlessly** — which is what wave 7's
+   probe left in place of the fixture item that used to sit here. Nine differential tests and every
+   future one that touches a skin die at `Gdx2DPixmap`'s ten `java.lang.foreign` handles, resolved
+   in an object body against symbols in libGDX's NATIVE IMAGE that nothing loads (§10.9.12,
+   `ENGINE-LIMITS.md` X7). Two priced exits, both decisions rather than translations: put the native
+   image on `java.library.path` and call the emitted `SharedLibraryLoader`, or substitute the decode
+   path §1(c)-style as the reference hand port did with ImageIO. **A fixture is not one of them** and
+   would unlock zero.
 2. **`Draggable#BLOCKER`'s exit**, which is a mechanism the engine does not have and which wave 5
    MEASURED rather than left as a reading (`ENGINE-LIMITS.md` CT11): a deferral whose subject is the
    step-9 SEQUENCE — a static field's initialiser and the `static { }` block beside it — because

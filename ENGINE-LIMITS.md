@@ -9740,6 +9740,58 @@ the emission and neither has a residue.
 applied — and its advice now says which rule class is the exception, because a refusal that has
 stopped being total is a refusal whose text has stopped being true.*
 
+### X7. A HEADLESS FIXTURE CANNOT UNLOCK A SUITE THAT DECODES AN IMAGE — the wall is a NATIVE library the port needs and nothing loads. **MEASURED with a stack; do not build the fixture first**
+
+A census over a hand port's differential suite classified **9 tests** as blocked by a headless
+FIXTURE the mechanical port does not have — six service stubs, a no-op GL, the shape a sibling port
+already ships. Every one of those readings was correct about the java and about the hand port's
+fixture, and the blocker is somewhere else entirely.
+
+**Probed instead of assumed** (`CLAUDE.md` §3.5 — a census's blocker is measured at the EMITTED SITE):
+one 20-line program, the base port's emitted tree alone, every service `null`, and the library's own
+skin file on the classpath. It does not reach a service at all:
+
+```
+resource: exists=true  length=15340  …/skin/x1/uiskin.json      <- the resource half works
+DIED AT: java.lang.ExceptionInInitializerError
+    …g2d.Gdx2DPixmap.<init>            <- the FIRST PNG decode
+    …graphics.Pixmap.<init>
+    …graphics.Texture.<init>
+    …g2d.TextureAtlas.load
+  caused by java.util.NoSuchElementException: No value present
+      java.base/java.util.Optional.orElseThrow
+      …g2d.Gdx2DPixmap$.<clinit>       <- ten `defaultLookup().find(…).orElseThrow()` handles
+```
+
+**The emitted companion resolves TEN `java.lang.foreign` downcall handles in its object body**, each
+`Linker.nativeLinker().defaultLookup().find("load"/"newPixmap"/…).orElseThrow()`, and the symbols
+those name live in the library's own NATIVE image. Nothing in the port loads it: the emitted
+`SharedLibraryLoader.loadLibrary` exists and has no caller before this point, because in java the
+backend's application class loads the natives and a headless port has no backend.
+
+Three things to take from it, none of which is about fixtures:
+
+- **a stub can supply a SERVICE and never a SYMBOL.** Everything a fixture can hand over is an
+  interface the program declares; this is a `SymbolLookup` miss in a `<clinit>`, one layer below
+  anything the program's own types can reach. No amount of fixture makes it go;
+- **the reference hand port runs those tests because it DIVERGED**, which is §3.5's *did they SOLVE
+  it or SKIP it* with a third answer: it decodes PNGs through a hand-written JVM shim over ImageIO
+  rather than through the library's native image. That is a shape a mechanical port has no licence
+  to invent, and it is why quoting the hand port's green suite as evidence about this port is wrong
+  in the expensive direction;
+- **the position of the failure is NOT the same as java's, and the difference is the emission's**:
+  java's `native` methods bind lazily at the first CALL, so a java program that never decodes an
+  image never notices; the emitted object resolves all ten handles at CLASS INITIALISATION, so the
+  first `new Pixmap` dies even for a path that would not have called one. Both fail without the
+  library — this is not a defect the port introduced — but the trigger moved earlier.
+
+**What it costs to know this: one run.** What it would have cost to find out afterwards: a fixture
+wave that ships six stubs, a 162-method GL no-op and a suite adaptation, and unlocks **zero** tests.
+
+*Fix kind: NEITHER (a) nor (b) — a native library is a BUILD input, not a translation. The exits are
+a port that puts the native image on `java.library.path` and calls the loader, or a §1(c) substitution
+of the decode path, and both are decisions for a port that intends to run graphics headlessly.*
+
 ---
 
 ## 7. Measurement discipline — the ones that will mislead you
