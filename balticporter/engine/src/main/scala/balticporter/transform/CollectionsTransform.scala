@@ -3116,6 +3116,37 @@ final class CollectionsTransform(
       case TypeRepr.PolyType(_, TypeRepr.MethodType(_, ret, _)) => ret
     }
 
+  /** is this call a read of a WILDCARD CAPTURE that java answered with `Object`?
+    *
+    * `ENGINE-LIMITS.md` G23's fact at a read: java's unbounded wildcard carries an implicit
+    * `java.lang.Object` upper bound (JLS 4.4), so `Object o = it.next()` on a RAW `Iterator`
+    * type-checks in java with nothing written anywhere. This phase retypes that receiver onto a
+    * `balticporter.runtime` shim whose parameter is UNBOUNDED, so scala's capture is bounded by
+    * `Any` and the same read no longer conforms.
+    *
+    * ==THE EVIDENCE IS STRUCTURAL, AND IT IS A FACT ABOUT THE FOUR TYPES THIS PHASE OWNS==
+    * The caller has already established that the receiver is one of `standaloneTargets` and that
+    * its SOLE type argument is a wildcard. On such a receiver a recorded result of `Object` can
+    * only be java substituting the capture's implicit bound, because **not one of the 76 members
+    * the four standalone shims declare returns a bare `Object`** — `toArray` returns an `Array`,
+    * `size` an `Int`, `iterator()` another shim. That is §4.56's licensed form of reasoning
+    * exactly: a phase concluding something about a type from what the PHASE ITSELF did to it,
+    * rather than from a name or a prefix. It is also why the population is small and enumerable —
+    * the family has one type parameter, so `wildcardElement` admits no `Map`.
+    *
+    * ==AND THE `None` POLARITY IS THE OPPOSITE OF ITS NEIGHBOUR'S, DELIBERATELY==
+    * [[declaredResultIsMapped]] answers FALSE on an unreadable signature because there the class
+    * file would be the evidence and a guess must not stand in for it. Here the class file is a
+    * REFUTER, not the evidence: the structural fact above already establishes the capture, and the
+    * only thing that could overturn it is a signature that positively says `Object`. Measured —
+    * `java.util.Iterator#next()` interns with NO signature at all in this corpus, so an
+    * `exists(...)` polarity fires nowhere and the arm is dead code that reads as live. State the
+    * refutation, not the confirmation, whenever the confirming artifact may simply be absent. */
+  private def capturedObjectRead(t: Tree.Apply)(using p: Program): Boolean =
+    def isObject(x: TypeRepr): Boolean =
+      headSym(x).flatMap(p.symbolOf).exists(_.fullName == CollectionsTransform.ObjectFqn)
+    isObject(t.tpe) && !declaredResult(t).exists(isObject)
+
   /** could the callee's class file be read for a signature at all? The two answers a suppression has
     * to be told apart by: a refusal the CLASS FILE licensed, and one resting on a GUESS. */
   private def signatureReadable(t: Tree.Apply)(using p: Program): Boolean =
@@ -4490,6 +4521,46 @@ final class CollectionsTransform(
       case ("toArray", List(a), _) if onShim =>
         val stripped = arrayArg(a, t)
         Option.when(stripped ne a)(t.copy(args = List(stripped)))
+      // …and the THIRD exception, which is G23's own fact met at a READ instead of at `addAll`,
+      // and which is an exception for `toArray`'s reason rather than `forEach`'s: it reshapes no
+      // call. The name, the arity and the receiver are java's; what is added is the COERCION the
+      // retyping of the receiver made necessary.
+      //
+      // `java.util.Iterator` RAW means `Iterator<? extends Object>` — java's unbounded wildcard
+      // carries an implicit `Object` upper bound (JLS 4.4), so `Object o = it.next()` type-checks
+      // in java with no cast anywhere in the source. This phase retypes that receiver to
+      // `JavaIterator[?]`, whose parameter is UNBOUNDED, so scala's capture is bounded by `Any` —
+      // strictly wider — and the same read reads `Found: it.A / Required: Object`.
+      //
+      // ==WHY THE COERCION AND NOT THE BOUND==
+      // Bounding the shims' parameters (`trait JavaIterator[A <: AnyRef]`) is the obvious fix and
+      // is `ENGINE-LIMITS.md` G24's measured minefield, entered from the other end: in Scala 3
+      // `java.io.Serializable` is rooted at `Any`, so `Serializable </: java.lang.Object` and the
+      // bound would reject a type java admits. And widening what `?` RENDERS as is G2's settled
+      // design space, re-stated by G23 — "do not fix this by changing what `?` renders as". So the
+      // difference is stated at the ONE operation it blocks, exactly as G23 states it at `addAll`,
+      // and the coercion is java's own erasure: a no-op at run time that throws nothing java's own
+      // raw read would not.
+      //
+      // THREE CONJUNCTS, and the third is where this was first written WRONG — which is worth
+      // keeping, because the wrong version is the one that reads as obviously right. `onShim` and
+      // `wildcardElement(recv.tpe)` say the receiver is one of THIS PHASE's targets carrying a sole
+      // wildcard argument — §4.56's rule that a phase may only conclude something about a type from
+      // what the phase itself did to it. The third was `t.tpe.isInstanceOf[TypeBounds]`, *the
+      // result IS the capture*, and it fired NOWHERE: the frontend records java's own answer, so
+      // the node already reads `java.lang.Object` on BOTH sides of the seam. That is CLAUDE.md §1's
+      // sentence exactly — "a position-blind `transformType` has already remapped the reference
+      // node's type, so a check reading node types reports ZERO on exactly the seam the scope
+      // made" — and it is why `collection-boundary` cannot see this one either.
+      //
+      // So the disagreement is stated between the two things that actually differ: the node's
+      // RECORDED result is `Object` (java substituting the capture's implicit bound) while the
+      // callee's DECLARED result is not (a type VARIABLE, read literally off the class file, which
+      // is the one reading §4.56 permits of an unowned signature). A method genuinely declared to
+      // return `Object` fails the second half and takes no ascription, which is what keeps this
+      // from putting an identity cast on every `Object`-returning shim call in the corpus.
+      case _ if onShim && wildcardElement(recv.tpe) && capturedObjectRead(t) =>
+        Some(Tree.Typed(t, TypeTree(t.tpe, t.origin), t.tpe, t.origin))
       case _ if onShim             => None
       // ---- java's BULK DEFAULTS, reached through `super` on a class THIS PHASE RE-PARENTED ----
       //
