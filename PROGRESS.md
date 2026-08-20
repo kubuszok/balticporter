@@ -6738,19 +6738,24 @@ is CHECKED rather than asserted: the lane reads `visui-measure`'s own `errors.ts
 closure file appears in it. It does not; the port's 8 sit in six files, all under `widget/` and
 `layout/`.
 
-**THE CENSUS, TAKEN TWICE.** The typer-only pass compiled all twelve reference files unedited
-against the whole port: 47 errors, of which 8 are the port's floor and 39 are the suites' — 21 in
-`OsUtilsSuite`, 18 in `ValidatorsSuite`, and **0 in `SizesSuite` and `ColorUtilsSuite`, which
-compile UNEDITED**. The second pass compiled the candidate set ALONE at 0 typer errors, so
-`RefChecks` ran, and it moved **nothing**: no file left class (a). That is the opposite of gdx-ai's
-result (four files and 16 tests fell out) and matches TextraTypist's, and the reason is the same
-one — this library's divergence between the two ports is concentrated in the FIXTURE, not in the
-surface.
+**THE CENSUS, TAKEN TWICE — and state the METHOD, because the two passes did not read the same
+population.** All twelve were classified by READING (which members each suite selects, and whether
+this port emits them), which is §10.8.13's method and is a floor twice over. The **four candidates**
+that reading produced were then compiled UNEDITED against the whole port: **47 errors**, of which 8
+are the port's floor and 39 are the suites' — 21 in `OsUtilsSuite`, 18 in `ValidatorsSuite`, and
+**0 in `SizesSuite` and `ColorUtilsSuite`, which compile with no edit at all**. That is the
+typer-only pass, and it is what priced the mapping table. The second pass compiled the candidate set
+ALONE at 0 typer errors, so `RefChecks` ran, and it moved **nothing**: no file left class (a). That
+is the opposite of gdx-ai's result (four files and 16 tests fell out) and matches TextraTypist's,
+and the reason is the same one — this library's divergence between the two ports is concentrated in
+the FIXTURE, not in the surface. The eight non-candidates were never compiled; they are classified
+below by CLOSURE over the emitted tree, which is a structural answer rather than a reading, and two
+of the three classes turn on facts a reading got wrong.
 
-| | typer-only, whole tree | `RefChecks`-honest and RUN |
+| | by reading, then typer-only | `RefChecks`-honest and RUN |
 |---|---|---|
 | (a) runs against this port | 4 files / 50 tests | **4 files / 50 tests — 50 passing** |
-| blocked | 8 files / 22 tests | **8 files / 22 tests**, re-classified below |
+| blocked | 8 files / 22 tests | **8 files / 22 tests**, re-classified below by closure |
 
 | tests | file | mapping rows |
 |---|---|---|
