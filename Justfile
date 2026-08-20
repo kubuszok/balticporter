@@ -364,6 +364,14 @@ usl_deps      := ""
 # is the whole reason this is a zero-authoring gate rather than a test somebody wrote.
 usl_styles     := "../sge/original-src/vis-ui/usl/styles"
 usl_known_good := "../sge/original-src/vis-ui/ui/src/main/resources/com/kotcrab/vis/ui/skin/x1/uiskin.json"
+# …and the suite's own inputs, which are RESOURCES rather than sources and are therefore the one
+# thing the emitted code cannot carry. Every test reads `/test-*.usl` through
+# `getResourceAsStream`, a STRING LITERAL no rename may touch (§4.56) — so the upstream tree has to
+# be handed to the runner at its upstream paths, unchanged. That is `PROGRESS.md` §11's item 7
+# ("the port's own classpath resources are not part of its output, and nothing says so") met at the
+# smallest scale in the corpus: 12 files, and the lane supplying them IS the obligation being paid.
+usl_test_res  := "../sge/original-src/vis-ui/usl/src/test/resources"
+usl_test_deps := "--dependency org.scalameta::munit:1.0.2"
 # flexmark's one compile-scope coordinate, `org.jetbrains:annotations:24.0.1`, is a FRONTEND input
 # AND a compile one — and this line was written empty on the reasoning that it could not be, which
 # the port's first run disproved in one number. The reasoning was: the annotations are markers,
@@ -1948,7 +1956,246 @@ usl-measure:
     correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/uslmeasure.txt \
       --srcmap "$REPORT/run-latest/srcmap.tsv"
 
+    # -------------------------------------------------------------------------------------------
+    # THE CONFORMANCE ORACLE — 19 shipped fixtures, and upstream wrote BOTH SIDES.
+    #
+    # This is jbump's differential probe with a second tier upstream handed us for free, and it is
+    # the strongest behavioural gate in the corpus per line of harness. Two tiers, both with NO
+    # authored expectation anywhere:
+    #
+    #   ABSOLUTE — `usl/styles/*.usl` are the skin templates the root `build.gradle`'s `compileUsl`
+    #     task compiles the shipped skin FROM, and `ui/src/main/resources/.../x1/uiskin.json` is the
+    #     artifact it wrote. So a fixture reproducing that file byte-for-byte is the port
+    #     reproducing a RELEASED ARTIFACT of the library it was made from.
+    #
+    #   DIFFERENTIAL — every fixture's output, port against upstream JAVA, run on the same inputs in
+    #     the same order. The authority is the java, so no expected value is written down and none
+    #     can be written down wrong; the whole assertion is one `diff`.
+    #
+    # WHY BOTH. The absolute tier is the stronger claim and covers only the 7 fixtures that produce
+    # today's skin; the differential tier covers all 19, including twelve OLDER templates whose
+    # (different, older) output nothing has ever checked in. Neither subsumes the other, and a lane
+    # reporting only the first would call twelve fixtures "not applicable" when they are in fact the
+    # widest input this port has.
+    #
+    # THE COUNTS ARE DERIVED ON BOTH SIDES, never listed — `CLAUDE.md` §4.56's instrument rule. WHICH
+    # fixtures reproduce the skin is a fact about upstream's templates, so the java half computes it
+    # and the scala half computes it and the lane compares the two numbers. A hard-coded list would
+    # go stale the first time a template is edited, silently and in the passing direction.
+    # -------------------------------------------------------------------------------------------
+    echo
+    if [ "$ERRORS" != "0" ]; then
+      echo "-- oracle: NOT RUN — the port does not compile, and scalac reaching no backend phase"
+      echo "   writes no class file, so there is nothing to run (CLAUDE.md §3.5). A gate that cannot"
+      echo "   run is not a gate that agreed."
+      headline "$ERRORS" "$REPORT"
+      exit 0
+    fi
+
+    echo "-- oracle: 19 shipped .usl fixtures, port vs upstream java vs the checked-in uiskin.json --"
+    # The include directive is what would make this gate ONLINE and non-deterministic (upstream's own
+    # `RemoteTest` is `@Ignore`d for exactly that reason), so the absence is re-derived rather than
+    # assumed. `gdx.usl` mentions the word in a COMMENT, which is why this greps for the DIRECTIVE.
+    INCLUDES=$(grep -rlE '^[[:space:]]*include[[:space:]]*<' {{usl_styles}} | wc -l | tr -d ' ')
+    if [ "$INCLUDES" != "0" ]; then
+      echo "!! A FIXTURE NOW USES AN \`include <…>\` DIRECTIVE ($INCLUDES file(s)) — this gate is offline"
+      echo "   BECAUSE none did. An include resolves through Lexer.addIncludeSource or DOWNLOADS over"
+      echo "   HTTP, and neither belongs in a measurement lane. Re-take the oracle's design first."
+      exit 1
+    fi
+
+    ORACLE="$MEASURE_TMP/usl-oracle"
+    rm -rf "$ORACLE"; mkdir -p "$ORACLE/classes"
+    javac -nowarn -d "$ORACLE/classes" -sourcepath {{usl_src}}/src/main/java \
+      balticporter/corpus/ports/visui-usl/probe/OracleJava.java > "$ORACLE/javac.txt" 2>&1
+    if [ "$?" != "0" ]; then
+      echo "!! THE AUTHORITY HALF DID NOT COMPILE against the upstream java, so the port half proves"
+      echo "   nothing. Fix balticporter/corpus/ports/visui-usl/probe/OracleJava.java:"
+      grep -v '^Note:' "$ORACLE/javac.txt" | head -20 | sed 's/^/     /'
+      exit 1
+    fi
+    java -cp "$ORACLE/classes" OracleJava {{usl_styles}} {{usl_known_good}} > "$ORACLE/java.txt" 2>&1
+    JAVA_ST=$?
+    # `--main-class Oracle` IS REQUIRED, and the reason is a fact about this library worth keeping:
+    # USL is a command-line TOOL, so the port emits `sge.visui.usl.Main` — a second main class in
+    # the same run. Without the flag scala-cli refuses to choose and exits 1, which the status gate
+    # below would report as "the oracle did not run" rather than as the ambiguity it is.
+    #
+    # …and the transcript is cut from `fixtures:` ONWARD rather than filtered line by line. The port
+    # compiles with 5 deprecation warnings (§4.4's non-local return, `PROGRESS.md` §10.9.13), and a
+    # `grep -v` list of warning shapes is a filter that has to be extended every time scalac phrases
+    # one differently — the same enumerate-the-accepted-forms mistake §4.56's counter rule is about.
+    # The probe's own first line is a marker nothing else emits, so anchoring on it is exact.
+    scala-cli run --scala {{scala_version}} --server=false $DEPS --main-class Oracle \
+      {{usl_module}}/src_managed/main/scala balticporter/corpus/ports/visui-usl/probe/Oracle.scala \
+      -- {{usl_styles}} {{usl_known_good}} \
+      > "$ORACLE/scala-raw.txt" 2>&1
+    SCALA_ST=$?
+    sed 's/\x1b\[[0-9;]*m//g' "$ORACLE/scala-raw.txt" | sed -n '/^fixtures: /,$p' > "$ORACLE/scala.txt"
+    # Both halves must have RUN. A crashed half whose partial output happens to match is the §3 false
+    # green one artifact later, so the exit statuses gate before the diff does.
+    if [ "$JAVA_ST" != "0" ] || [ "$SCALA_ST" != "0" ]; then
+      echo "!! THE ORACLE DID NOT RUN (java exit $JAVA_ST, scala exit $SCALA_ST) — refusing to diff partial output"
+      tail -20 "$ORACLE/scala.txt" | sed 's/^/     /'
+      exit 1
+    fi
+
+    FIXTURES=$(sed -n 's/^fixtures: //p' "$ORACLE/java.txt")
+    J_EXACT=$(grep -c '^known-good: EXACT' "$ORACLE/java.txt")
+    S_EXACT=$(grep -c '^known-good: EXACT' "$ORACLE/scala.txt")
+    S_THREW=$(grep -c '^THREW ' "$ORACLE/scala.txt")
+    J_THREW=$(grep -c '^THREW ' "$ORACLE/java.txt")
+    echo "fixtures compiled: $FIXTURES   reproduce the checked-in uiskin.json — java: $J_EXACT, port: $S_EXACT   threw — java: $J_THREW, port: $S_THREW"
+
+    # TIER 1, the ABSOLUTE gate. Held to the JAVA's number rather than to a literal, so a template
+    # edit upstream moves both sides together and only a real divergence fails.
+    if [ "$S_EXACT" != "$J_EXACT" ]; then
+      echo "!! ABSOLUTE TIER FAILED — the port reproduces the released uiskin.json for $S_EXACT fixture(s)"
+      echo "   where upstream java reproduces it for $J_EXACT."
+      exit 1
+    fi
+    if [ "$J_EXACT" = "0" ]; then
+      echo "!! THE AUTHORITY REPRODUCES THE CHECKED-IN SKIN FOR NO FIXTURE AT ALL. That is not a port"
+      echo "   failure — it means the oracle's own premise is gone (a re-compiled skin, a moved file),"
+      echo "   and a tier that passes by comparing 0 against 0 is exactly the bar CLAUDE.md §5 refuses."
+      exit 1
+    fi
+
+    # TIER 2, the DIFFERENTIAL gate — every byte of every fixture's output, port against java.
+    if diff -u "$ORACLE/java.txt" "$ORACLE/scala.txt" > "$ORACLE/diff.txt"; then
+      LINES=$(grep -c "" "$ORACLE/java.txt")
+      echo "oracle: $FIXTURES fixture(s), $LINES transcript line(s) — emitted Scala IDENTICAL to upstream java,"
+      echo "        and $S_EXACT of them reproduce the RELEASED uiskin.json byte for byte."
+    else
+      echo "!! ORACLE DIVERGED — the port compiles a .usl file differently from the library it was made"
+      echo "   from. Left = upstream java (the authority), right = emitted Scala:"
+      head -60 "$ORACLE/diff.txt" | sed 's/^/     /'
+      echo "   (full diff: $ORACLE/diff.txt)"
+      exit 1
+    fi
+
     headline "$ERRORS" "$REPORT"
+
+
+# ---------------------------------------------------------------------------------------------
+# USL's own JUnit suite — 2 files, 7 `@Test`, SEVEN OF VISUI'S NINE.
+#
+# `sg-measure`'s shape (emit both → checks for both → discovery → break residue → compile both →
+# RUN) with one difference, and it is the one worth reading: THE SUITE'S INPUTS ARE RESOURCES.
+#
+# Every test calls `getResourceAsStream("/test-visui.usl")` and compares against
+# `/test-visui-expected.json` beside it. A classpath string is a STRING LITERAL and no rename may
+# touch one (CLAUDE.md §4.56), so the emitted Scala names the upstream paths and the RUNNER has to
+# supply that tree — which is `PROGRESS.md` §11 item 7's standing obligation ("the port's own
+# classpath resources are not part of its output, and nothing says so") met at the smallest scale
+# the corpus has. Absent, every test fails on a null stream; supplied, the suite is a conformance
+# gate over six real templates whose expected output UPSTREAM WROTE.
+#
+# So this lane and `usl-measure`'s oracle are the same kind of evidence over two populations: six
+# language-exercising templates with checked-in expectations here, nineteen real shipped skins
+# there. Neither is a substitute for the other and both are zero-authoring.
+# ---------------------------------------------------------------------------------------------
+[doc("USL's own suite — 7 @Test over checked-in .usl/.json pairs; emit, compile, RUN")]
+usl-test-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+
+    # The finding ids are hashed from paths relative to this root (CLAUDE.md §4.6): set anywhere else
+    # and every finding diffs as removed-and-re-added against a baseline whose counts are identical.
+    write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{visui_src}}"
+    REPORT="$ROOT/port-report/UslMigrate"
+    TREPORT="$ROOT/port-report/UslTestMigrate"
+
+    for M in UslMigrate UslTestMigrate; do
+      OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.visuiusl.$M" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+      if ! grep -qE "wrote [0-9]+ Scala( test)? files" <<<"$OUT"; then
+        echo "!! $M DID NOT RUN — refusing to measure stale output"
+        grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
+        exit 1
+      fi
+      echo "-- $M (ALL checks, untruncated, as the migration printed them) --"
+      sed -n '/building model over/,/wrote [0-9]* Scala\( test\)\? files/p' <<<"$OUT"
+      echo
+    done
+
+    echo "-- checks: persisted, untruncated, diffed against the baseline --"
+    show_check_report "$REPORT"
+    findings_baseline_guard "$REPORT"
+    port_map_guard "$REPORT"
+    show_check_report "$TREPORT"
+    findings_baseline_guard "$TREPORT"
+    port_map_guard "$TREPORT"
+
+    echo
+    echo "-- test discovery --"
+    # Both frameworks summed: a converted suite is MUnit and any residue is still JUnit, so counting
+    # one under-reports by every converted suite — in the safe-looking direction. A suite with no
+    # discoverable tests runs ZERO and reports SUCCESS.
+    #
+    # `java_test_count` over the WHOLE usl tree, which is what re-derives the 7 — and, beside
+    # `visui-measure`'s own 2, the claim that these are seven of VisUI's nine. A filename census
+    # over the same tree reports 2 (both files end in `Test.java`) and is a different number.
+    JAVA_TESTS=$(java_test_count {{usl_src}}/src/test)
+    JUNIT_LEFT=$(junit_residue {{usl_module}}/src_managed/test/scala)
+    MUNIT_TESTS=$(munit_emitted {{usl_module}}/src_managed/test/scala)
+    SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))
+    echo "@Test in usl/src/test: $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (munit $MUNIT_TESTS + junit $JUNIT_LEFT)"
+    test_discovery_guard "$JAVA_TESTS" "$SCALA_TESTS" "$TREPORT"
+
+    echo
+    break_residue {{usl_module}}/src_managed
+
+    echo "-- compile --"
+    # BOTH source sets on ONE invocation: the main port is RuntimeMode.Vendored, so the shims live
+    # in `src_managed/main` and the suite links against them there. Compiling either alone measures
+    # nothing. `--test` is not optional — without it scala-cli reports on the MAIN scope whatever
+    # directories it is handed, so the test sources' ERRORS are simply not printed and the lane
+    # reports a main-only figure under a two-scope headline (§4.56's instrument rule, measured at
+    # 0 against 6 on identical inputs).
+    DEPS="{{usl_deps}} {{usl_test_deps}}"
+    scala-cli compile --test --scala {{scala_version}} --server=false $DEPS \
+      {{usl_module}}/src_managed/main/scala {{usl_module}}/src_managed/test/scala \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/usltmeasure.txt
+    CLI_STATUS=${PIPESTATUS[0]}
+    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/usltmeasure.txt)
+    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/usltmeasure.txt
+    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/usltmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/usltmeasure.txt))"
+    error_baseline_guard "$ERRORS" "$TREPORT"
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/usltmeasure.txt | sort | uniq -c | sort -rn | head
+    echo "-- bare (uncoded) errors by message --"
+    grep -A1 '^-- Error:' "$MEASURE_TMP"/usltmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
+
+    if [ "$ERRORS" = "0" ]; then
+      echo
+      echo "-- run --"
+      # THE RESOURCE DIRECTORY IS THE LOAD-BEARING ARGUMENT. Every test resolves its input through
+      # `getResourceAsStream("/test-*.usl")`, so without it `readFile` receives a null stream and
+      # all six fail identically — which would read exactly like a conversion defect.
+      scala-cli test --scala {{scala_version}} --server=false $DEPS \
+        --resource-dir {{usl_test_res}} \
+        -Duser.language=en -Duser.country=US \
+        {{usl_module}}/src_managed/main/scala {{usl_module}}/src_managed/test/scala \
+        2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/usltrun.txt
+      reconcile_outcomes "$MEASURE_TMP"/usltrun.txt "$MUNIT_TESTS"; RECONCILED=$?
+      echo
+      echo "-- correlation: test failures located to members and Java origins --"
+      correlate "$TREPORT/run-latest" --tests "$MEASURE_TMP"/usltrun.txt \
+        --srcmap "$REPORT/run-latest/srcmap.tsv" \
+        --srcmap "test=$TREPORT/run-latest/srcmap.tsv"
+      test_outcome_guard "$TREPORT/run-latest" "$RECONCILED" || exit 1
+    else
+      echo
+      echo "-- correlation: every error located to its member and its Java origin --"
+      correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/usltmeasure.txt \
+        --srcmap "$REPORT/run-latest/srcmap.tsv" \
+        --srcmap "test=$TREPORT/run-latest/srcmap.tsv"
+      echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
+    fi
+
+    headline "$ERRORS" "$TREPORT" "$REPORT"
 
 
 # ---------------------------------------------------------------------------------------------
@@ -3320,7 +3567,16 @@ measure-all:
     # `visui-measure` just wrote, AND it reads that run's `errors.tsv` to verify that no file in its
     # scoped compile is one the port cannot compile. Run earlier it would check this engine's suite
     # against the previous engine's emit and the previous engine's error list.
-    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure ai-measure ai-test-measure ai-diff-measure textra-measure textra-diff-measure visui-measure visui-diff-measure; do
+    # The two `usl-*` lanes are LAST and their only ordering constraint is between THEMSELVES: USL is
+    # a STANDALONE port with no base and no resolution roots, so nothing it emits is read by another
+    # lane and nothing another lane emits is read by it. Last is therefore the position that leaves
+    # the twenty-one established lanes' order — and their numbers — untouched by this port's arrival,
+    # which is `ai-measure`'s own reason for being appended rather than slotted in.
+    # `usl-test-measure` follows `usl-measure` for `md-test-measure`'s reason: it is a DEPENDENT of
+    # that source set (`test.conf` has `base = "main.conf"`) and its compile links against the main
+    # `src_managed/`, so run first it would measure the previous engine's emit of the library it
+    # tests. It re-emits BOTH source sets, which is what keeps the pair honest either way round.
+    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure ai-measure ai-test-measure ai-diff-measure textra-measure textra-diff-measure visui-measure visui-diff-measure usl-measure usl-test-measure; do
       echo
       echo "################################################################## just $lane"
       if ! {{just_executable()}} "$lane"; then
