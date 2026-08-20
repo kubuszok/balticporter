@@ -12683,6 +12683,55 @@ the question.
 *Fix kind: (a) engine — and it was a MODIFIER, not an external surface. `PROGRESS.md` §10.9.7
 family 1 carries the per-site census.*
 
+### CT11. `lazy-init` on a static field DOES fire — and it MOVES the `E172` to the `<clinit>` that reads it, measured **8 → 8 at 9 moved digests**
+
+**Title, for renumbering: "deferring the FIELD relocates the seam to the BLOCK".**
+OPEN. (a) engine — a mechanism that does not exist, not a policy anybody can write.
+
+`sge-visui`'s last `unsuppliable-use` is `Draggable#BLOCKER`: a
+`private static final Actor BLOCKER = new Actor();` beside a
+`static { BLOCKER.addListener(new InputListener(){…}); }`. `PROGRESS.md` §10.9.10 recorded the exit
+as UNBUILT with the reason *"`lazy-init` does not reach it: a deferral is planned from ASSIGNMENTS
+and that `<clinit>` calls `addListener` rather than assigning"*. **That reason is wrong, and the
+outcome it predicted is right — which is exactly the pair worth writing down.**
+
+`ContextNeed.fromField` exists for this shape and its doc says so: *a STATIC FIELD CARRYING ITS OWN
+INITIALISER — the shape no read reaches*. `BLOCKER` is static, its `rhs` constructs
+`sge.scenes.scene2d.Actor`, and a dependent's `Program` contains its base's units, so
+`constructsOwned` answers YES. Adding
+`sites = Map("com.kotcrab.vis.ui.widget.Draggable#BLOCKER" -> ContextSite.LazyInit)` therefore FIRES:
+a real `deferred-init` decision, a porter note, and the `E172` at `Draggable.java:77` gone.
+
+**And the count does not move, because the error walks one member over.** Deferring the field makes
+it context-TAKING, and the `static { … }` block READS it — so the seam re-files itself as
+`unsuppliable-use` at `Draggable#<clinit>` (`Draggable.java:111`) and scalac reports `E172` there
+instead. Measured on the full lane:
+
+| | before | after |
+|---|---|---|
+| errors | 8 | **8** |
+| `context-seam` | 39 | **40** (the `deferred-init` row is ADDED; the `unsuppliable-use` MOVES rather than clearing) |
+| `members.tsv` | — | **9 moved** |
+
+Strictly no better and one row noisier, so the entry was reverted and the site stays counted.
+
+**What the shape actually needs**, and why no `sites` value expresses it: java runs the field
+initialiser and the block as ONE step-9 sequence (`CLAUDE.md` §4.4's class-initialiser row), and
+`lazy-init` can defer the half that is a `ValDef` while leaving the half that is a `Block` where it
+was. Either both move — the block becoming part of whatever the deferral mints, so the listener is
+installed at first READ exactly as java installs it at class initialisation — or neither can. A
+value naming the FIELD cannot say that, and a value naming the `<clinit>` selects no site at all
+(`fromInitialiser` scans for assignments and this block has none), which is the third face of
+CT6's never-fired report.
+
+**Do NOT retry** the one-key form. And do not read the `<clinit>`-selects-nothing fact as the
+diagnosis: it is true, it is not why the exit is unbuilt, and believing it would send the next
+attempt at widening `fromInitialiser` — which would plan a deferral for a block with nothing to
+defer *to*, since there is no field of its own to become lazy.
+
+*Fix kind: (a) engine. `PROGRESS.md` §10.9.10 carries the row; the exit is a deferral whose subject
+is a step-9 SEQUENCE rather than a single member.*
+
 ## 13. Retyping a PRIMITIVE to an opaque domain type
 
 All five entries below come from the SAME work — Stage P6's attempts to enable an opaque family on

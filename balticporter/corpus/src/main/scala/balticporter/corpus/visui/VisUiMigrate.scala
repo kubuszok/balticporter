@@ -236,6 +236,16 @@ object VisUiPolicy:
           balticporter.transform.ContextHolderExtension(
             holder = "com.badlogic.gdx.Gdx",
             cache  = Map("com.kotcrab.vis.ui.VisUI" -> "sgeInstance"),
+            // NO `sites` ENTRY FOR `Draggable#BLOCKER`, and the reason is MEASURED rather than
+            // assumed — `ENGINE-LIMITS.md` CT11. `lazy-init` on that field DOES fire (the field is
+            // a static with its own `new Actor()` initialiser, which is exactly the shape
+            // `ContextNeed.fromField` is written for), and it moves the `E172` one member over
+            // instead of closing it: the `static { BLOCKER.addListener(…) }` block then READS a
+            // field that has become context-taking, and a class initialiser has no clause of its
+            // own to supply one. 8 -> 8 errors, `context-seam` 39 -> 40, 9 member digests moved for
+            // zero net. It stays the counted `unsuppliable-use` until a mechanism exists for the
+            // BLOCK.
+
             //
             // ==all EIGHT of them, and the second five arrived with the anchor lift==
             // `Locales$CommonText` and its four siblings look up an i18n bundle from a

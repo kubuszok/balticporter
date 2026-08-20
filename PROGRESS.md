@@ -6366,10 +6366,16 @@ thing the next wave should measure.
 >
 > **The 11th is the one the design named in advance, and `lazy-init` does not answer it either.**
 > `Draggable#BLOCKER` is `private static final Actor BLOCKER = new Actor()` with a `static { }` block
-> that installs a listener on it. A deferral is planned from ASSIGNMENTS in an initialiser, and that
-> `<clinit>` does not assign `BLOCKER` — it CALLS `addListener` on it — so a `lazy-init` key naming
-> the field defers nothing the block needs and one naming the `<clinit>` selects no site. It stays
-> the port's one `unsuppliable-use`, counted, with its exit unbuilt.
+> that installs a listener on it. A `lazy-init` key naming the `<clinit>` selects no site, since a
+> deferral is planned from ASSIGNMENTS in an initialiser and that block CALLS `addListener` rather
+> than assigning. It stays the port's one `unsuppliable-use`, counted, with its exit unbuilt.
+>
+> *(Wave 5 correction: the half of that sentence about the FIELD was wrong and is struck. A
+> `lazy-init` key naming `BLOCKER` fires perfectly — `ContextNeed.fromField` is written for a static
+> carrying its own initialiser — and the `E172` MOVES to the `<clinit>` that reads it rather than
+> clearing: `8 -> 8`, `context-seam` `39 -> 40`, 9 member digests, reverted. The conclusion holds and
+> the reason did not; `ENGINE-LIMITS.md` CT11 carries both, because the wrong reason points the next
+> attempt at the wrong function.)*
 
 **FAMILY 2 — `disposableRedirect` DID HALF ITS JOB HERE AND ALL OF IT ELSEWHERE, WHICH IS THE
 WAVE'S ENGINE FINDING.** The base's P1 step (§11.15) retargets `com.badlogic.gdx.utils.Disposable`
@@ -6688,7 +6694,7 @@ size:
 | 3 | `E134` | `VisScrollPane`, `VisSlider`, `VisWindow` — the dropped `super(args)` | **(a) ENGINE, REFUSED** | `ENGINE-LIMITS.md` C3 exactly: all three constructors are ROOTS and each calls a DIFFERENT `super`, scala lets only the PRIMARY reach one, and there is nothing to replay the other two through. §10.9.7 family 4 says why the LOUD form is strictly the better one |
 | 3 | `E007` | `VisTextField` ×3 — `keyboard.show(true)` at an `OnscreenKeyboard` whose only `show` takes a `TextField` | **NEITHER — an UPSTREAM VERSION SKEW** | new this wave, and it is not the engine's: `vis-ui/build.gradle` declares `gdxVersion = '1.14.0'` and the vendored gdx tree is **1.14.1**, which replaced that member's parameter. javac would reject VisUI's own source against this tree. `CLAUDE.md` §3.5 carries the rule (ask whether the JAVA compiles against the dependency the run supplies) |
 | 1 | `E007` | `DragPane#findActor` — the base's `Group#findActor` returns `T \| Null` at an abstract `T` and this override declares `T` | **(b) on the BASE** | K13's row. The exit is a `NullabilityTransform` question about libGDX core's instance, and `nullability-boundary` reads 0 here because D2 scopes its reporting to the base's declarations |
-| 1 | `E172` | `Draggable#BLOCKER` — the port's one `unsuppliable-use` | **(b) PER-LIBRARY, exit UNBUILT** | a `private static final Actor` whose `static { }` block installs a listener on it. `lazy-init` does not reach it: a deferral is planned from ASSIGNMENTS and that `<clinit>` calls `addListener` rather than assigning |
+| 1 | `E172` | `Draggable#BLOCKER` — the port's one `unsuppliable-use` | **(a) ENGINE, exit UNBUILT** | a `private static final Actor` whose `static { }` block installs a listener on it. **Corrected, and MEASURED — `ENGINE-LIMITS.md` CT11.** The reason recorded here in wave 4 (*"`lazy-init` does not reach it: a deferral is planned from ASSIGNMENTS"*) is wrong: `ContextNeed.fromField` exists for exactly this shape, the key FIRES, and the `E172` merely MOVES to the `<clinit>` that reads the now-deferred field — `8 -> 8`, `context-seam` `39 -> 40`, 9 member digests, reverted. Java runs the field initialiser and the block as ONE step-9 sequence and `lazy-init` can only defer the `ValDef` half, so this is an engine mechanism nobody has built rather than a policy nobody has written |
 
 **The two engine gaps this wave closed on the way are worth naming apart from the context family,**
 because neither is about threading and both are general:
@@ -6830,9 +6836,11 @@ widening).
    tests of §10.9.12's second row, and how many it really unlocks is the thing to MEASURE rather
    than predict. `sge.Sge` is a public case class here and `sge.SgeTestFixture` is the
    absent-service shape, so the fixture is buildable; what sits behind it is item 3.
-2. **`Draggable#BLOCKER`'s exit**, which is a mechanism the engine does not have: a `sites` policy
-   whose subject is a class initialiser that USES a static rather than assigning one. It is 1 of the
-   8, and with `DragPane` it gates 3 differential tests.
+2. **`Draggable#BLOCKER`'s exit**, which is a mechanism the engine does not have and which wave 5
+   MEASURED rather than left as a reading (`ENGINE-LIMITS.md` CT11): a deferral whose subject is the
+   step-9 SEQUENCE — a static field's initialiser and the `static { }` block beside it — because
+   deferring only the field relocates the `E172` to the block. It is 1 of the 8, and with `DragPane`
+   it gates 3 differential tests.
 3. **The resource copy** (§10.9.3) — §1(b), and the port is not shippable without it whatever the
    error count reads. It is now also a MEASURED test blocker rather than only a completeness gap.
 4. **The two upstream `@Test`** (§10.9.1) — a test source set this port does not have yet.
