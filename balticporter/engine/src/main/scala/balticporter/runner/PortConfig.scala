@@ -80,6 +80,16 @@ import scala.jdk.CollectionConverters.*
   *                                             # and every PROVIDER renamed through this port's own
   *                                             # rules. Not inherited (`inject`'s line); a declared
   *                                             # file that is not there is fatal
+  *   resources      = [ { root  = "../upstream/src/main/resources",
+  *                        files = ["p/q/entities.properties"] } ]
+  *                                             # the descriptor's COMPLEMENT: classpath resources
+  *                                             # this module ships VERBATIM, at the upstream paths
+  *                                             # the emitted lookups name. Nothing is rewritten — a
+  *                                             # lookup is a string literal no rename may touch —
+  *                                             # and the files are DECLARED rather than scanned for
+  *                                             # (an upstream resource root also holds the upstream
+  *                                             # BUILD's own files). Not inherited; a declared file
+  *                                             # that is not there is fatal
   *   surface        = [ { transform = "collections" }, { transform = "mutable-params" } ]
   *   resolutions { "com.foo.Bar#baz" = "wrap-checked" }  # PER-LOCATION remedy selection: pick one
   *                                             # of the alternatives a phase or check OFFERED at
@@ -321,6 +331,12 @@ object PortConfig:
       // port's own rename rules. A build fact, so not inherited; empty is the no-op; a declared file
       // that is not there is fatal at the run (ENGINE-LIMITS.md P5).
       serviceProviders = m.strings("serviceProviders").getOrElse(Nil).map(resolvePath(dir, _)),
+      // …and the descriptor's COMPLEMENT: everything else on this module's classpath, copied
+      // VERBATIM at the upstream path the emitted lookup names (DESIGN.md §8.22). Two keys and not
+      // one, because the two acts differ — a descriptor is FQNs and is rewritten, a resource is
+      // bytes the program merely locates and must not be. Same three properties: a build fact so
+      // not inherited, empty is the no-op, a declared file that is not there is fatal at the run.
+      resources      = m.children("resources").getOrElse(Nil).map(resourceEntry(dir)),
       baseReports    = if seen.isEmpty then reports else Nil,
       // WHICH BACKENDS this module is ported for — omitted means all three, which is the semantics
       // `PortabilityCheck` had before it took a parameter. Not inherited (§1.5's right-hand column),
@@ -444,6 +460,20 @@ object PortConfig:
     balticporter.catalog.ArtifactDep(
       entry.requireString("org"), entry.requireString("name"), entry.requireString("rev"), cross,
       entry.string("resolver"))
+
+  /** one `resources = [ { root = "…", files = ["p/q/x.json", …] } ]` entry.
+    *
+    * The ROOT is resolved like every other path here (relative to the conf); the FILES are not paths
+    * on this machine but CLASSPATH paths — the same strings the emitted code names — so they are
+    * carried across as written and joined to the root by the mechanism. A `files` list that is
+    * absent is an empty one, which the run reports rather than treats as "everything": a tree that
+    * ships nothing is indistinguishable from the resource being missing, which is the failure the
+    * key exists to remove, and an engine that read it as "everything under the root" would be the
+    * SCAN this design refuses (DESIGN.md §8.22). */
+  private def resourceEntry(dir: Path)(entry: ConfigView): balticporter.core.ResourceTree =
+    balticporter.core.ResourceTree(
+      resolvePath(dir, entry.requireString("root")),
+      entry.strings("files").getOrElse(Nil))
 
   private def surfaceEntry(registry: TransformRegistry)(entry: ConfigView): balticporter.tir.Phase =
     val name = entry.requireString("transform")

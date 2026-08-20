@@ -5824,3 +5824,73 @@ member, and neither type carried the `SymId` a selection keys on. `SymId.None` i
 nameable declaration takes, and it makes that row UNSELECTABLE rather than selectable by whatever
 else happens to hold that id — a fallback to the enclosing unit would let one key drain every row in
 a file.
+
+### 8.22 `resources` — the descriptor's COMPLEMENT, and the second deliverable that is not `.scala`
+
+§8.17 shipped `serviceProviders` and called it *the one deliverable of a port that is not `.scala`*.
+It was one of two, and the second was raised in the same audit item (`PROGRESS.md` §11 item 7) about
+a different library: a port whose emitted code reads its own classpath resource ships nothing at
+that path, and the failure is the quietest this project has — no compile error, no check count, no
+member digest, just a static initialiser throwing in the CONSUMER's build, or a toolkit that refuses
+to start.
+
+**Two libraries in two families is what makes it (b) rather than a per-port workaround.** One reads
+a single properties table in a `static` initialiser to build an entity map; the next loads its whole
+skin, six i18n bundles and six shaders through hardcoded paths, and its first call is a `load()` that
+cannot work without them. Both were carried by a LANE — a `--resource-dir` flag pointing at the
+upstream tree — which puts bytes on a test JVM's classpath and puts nothing in the port.
+
+**It is a COPY where a descriptor is a REWRITE, and that is the whole design.** §4.56 decides both:
+
+| | what the file CONTAINS | so the act is |
+|---|---|---|
+| `META-INF/services/<X>` | FQNs all the way down — the NAME is an interface's, the LINES are implementations' | REWRITE both namespaces through the port's own rename rules; copied verbatim it advertises a service the port does not declare |
+| every other resource | bytes the program merely LOCATES, found through a STRING LITERAL no rename may touch | COPY, path included; rewritten, the one lookup it exists for stops resolving |
+
+So they are siblings and not variants, a port picks between them by asking what the file contains,
+and each doc says when to reach for the other. Everything else about the two is deliberately
+identical: not inherited (`inject`'s line — a resource lands at ONE classpath path, and a dependent
+that copied its base's list would write a second file there and win or lose by classpath order),
+empty is the no-op, the destination is `SbtGen.managedResources(root, config)` (per SOURCE SET, since
+a resource is on one configuration's classpath), the write is NOT gated on the artifact layer (a
+deliverable that shipped only under a diagnostic switch would be met by accident), and a declared
+file that is not there is FATAL.
+
+**DECLARED, never scanned — §8.17's argument with a sharper measurement.** Which of a library's
+resources are part of the DERIVED WORK is a fact about that library. Measured on the first port to
+take the key: of the **24** files under its upstream resource root, **22** are the library's own and
+**2** belong to the upstream BUILD — a cross-compiler module definition and a native-toolchain
+configuration — and the module definition NAMES the upstream package this port renames, so shipping
+it would advertise sources that do not exist. The reference hand port of that library ships exactly
+those 22, which is the control. A scan ships 24 and says nothing.
+
+**The lane is `resources`, and its residues are what make the declaration honest.** One POSITIVE row
+per file shipped (a lane that only reported trouble could hold its bar at zero by shipping nothing),
+beside:
+
+- **`named-unshipped`** — the emitted code holds a literal naming a path, the file EXISTS under a
+  root this port already declared, and the port did not declare the file. That is the defect itself,
+  seen at PORT time instead of in somebody else's build. It is the one row that required the engine
+  to walk a resource root, and the walk PROPOSES where the declaration DISPOSES: the candidate-list
+  shape §1 already asks of a reflective-sink list, one artifact over, and a scan that only proposes
+  cannot be wrong about the output;
+- **`unnamed`** — shipped, and no emitted literal names it. Legitimate, because a resource routinely
+  names another (an atlas names its image, a skin names its fonts) and no phase can walk a resource's
+  own content — and also exactly what a stale declaration looks like. Stated, never repaired, which
+  is `service-providers`' `unrenamed` row read one key over;
+- **`empty`** — a declared tree that ships no file, which is indistinguishable from the resource
+  being absent.
+
+**What the emitted program NAMES is read off the LITERALS, not off the emitted text.** The question
+is *does this program reference that path*, which is a fact about the program: a text search answers
+it YES for a reproduced upstream COMMENT and for a porter note, both of which name upstream strings
+on purpose (§4.575). Both spellings are asked, because both are ordinary java — a
+`getResourceAsStream` literal carries a leading `/` and a classpath file handle does not — and the
+population is `checkedUnits`, so a dependent does not answer for its base's lookups
+(`ENGINE-LIMITS.md` D2).
+
+**And the RESOURCE TREE is now WIPED with the emitted sources**, which nothing did before: a port
+that stops declaring a file, or moves the path it ships one at, would otherwise leave the previous
+run's copy on the consumer's classpath — a deliverable no declaration accounts for, and the one state
+`src_managed/` exists to make impossible (§5.5). Unconditional, so *this module ships nothing here*
+is a state the tree can reach.

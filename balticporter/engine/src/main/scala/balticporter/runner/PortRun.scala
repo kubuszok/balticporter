@@ -927,6 +927,13 @@ final case class PortRun(
 
     // ---- emission ----
     wipe(emitDir)
+    // …and the RESOURCE tree beside it, for the same reason with one more on top: nothing else ever
+    // removes a resource THIS run does not write. A port that stops declaring a file, or moves the
+    // path it ships one at, would otherwise leave the previous run's copy on the consumer's
+    // classpath — a deliverable no declaration accounts for, and the one state `src_managed/` exists
+    // to make impossible (§5.5). Unconditional, so "this module ships nothing here" is a state the
+    // tree can actually reach; both writers below create what they need.
+    wipe(SbtGen.managedResources(portRoot, sourceSet.configName))
     Files.createDirectories(emitDir)
     if emitDir != outDir then
       // the SENTINEL. A degraded tree that looks like a deliverable one is the single thing this
@@ -1033,6 +1040,49 @@ final case class PortRun(
       say(s"SERVICE PROVIDERS: ${descriptors.size} descriptor(s), " +
         s"${descriptors.map(_.providers.size).sum} provider line(s), rewritten into this port's namespace")
       println(balticporter.tir.ServiceProviders.summary(descriptors))
+
+    // ---- the upstream CLASSPATH RESOURCES, with NEITHER namespace moved (DESIGN.md §8.22) -------
+    // The descriptor's sibling and its complement. A library reads its own resource through a STRING
+    // LITERAL, which no rename may touch (§4.56), so the emitted code asks for the UPSTREAM path and
+    // the bytes have to arrive there verbatim — where the block above REWRITES both namespaces
+    // precisely because a descriptor's name and lines are FQNs. Same silence if it is missing (no
+    // compile error, no check count, no member digest), same fatal-if-declared-and-absent rule, same
+    // two things keeping it scoped: an empty declaration writes nothing, and the destination is
+    // `src_managed/`.
+    val declaredTrees = manifest.map(_.resources).getOrElse(Nil)
+    val plannedRes    = balticporter.tir.PortResources.plan(declaredTrees)
+    plannedRes.foreach { r =>
+      if !Files.isRegularFile(r.source) then
+        sys.error(s"[$label] the manifest declares a resource that is not there: ${r.source}. A " +
+          "classpath resource the port does not ship makes the emitted lookup — a string literal no " +
+          "rename may move — fail at first use, with no compile error, no check count and no " +
+          "finding to say so (DESIGN.md §8.22).")
+    }
+    if declaredTrees.nonEmpty then
+      val wroteRes = balticporter.tir.PortResources.write(
+        plannedRes, SbtGen.managedResources(portRoot, sourceSet.configName))
+      written += wroteRes.size
+      // WHAT THE EMITTED PROGRAM NAMES, read off the LITERALS rather than off the emitted text. The
+      // question is *does this program reference that path*, which is a fact about the program — and
+      // a text search would answer it for a reproduced upstream COMMENT and for a porter note, both
+      // of which name upstream strings ON PURPOSE (§4.575). Over `checkedUnits` for D2's reason: a
+      // dependent does not answer for its base's lookups.
+      val literals = checkedUnits.foldLeft(Set.empty[String]) { (acc, u) =>
+        StandardTraversal.scanClassDef(u, acc) {
+          case (a, Tree.Literal(balticporter.tir.Constant.StringC(s), _, _)) => a + s
+          case (a, _)                                                        => a
+        }(using program)
+      }
+      def namesPath(p: String): Boolean = literals.contains(p) || literals.contains("/" + p)
+      CheckReport.record(balticporter.tir.PortResources.Name,
+        balticporter.tir.PortResources.findings(
+          plannedRes,
+          balticporter.tir.PortResources.candidates(declaredTrees, plannedRes),
+          declaredTrees,
+          namesPath))
+      say(s"RESOURCES: ${plannedRes.size} file(s) copied VERBATIM into this port's resource tree, " +
+        "at the upstream classpath paths the emitted code names")
+      println(balticporter.tir.PortResources.summary(plannedRes))
 
     // Support types a phase RETYPED code onto. Two feeds, one rule: what the phases DECLARE
     // (RequiresRuntime → RuntimePlan) and what a phase that cannot declare it hands over.
@@ -2373,6 +2423,8 @@ final case class PortRun(
   private def requiredChecks: Set[String] =
     PortRun.RequiredChecks ++
       (if manifest.exists(_.serviceProviders.nonEmpty) then Set(balticporter.tir.ServiceProviders.Name) else Set.empty) ++
+      // …and the RESOURCE lane, on the same rule at the sibling declaration.
+      (if manifest.exists(_.resources.nonEmpty) then Set(balticporter.tir.PortResources.Name) else Set.empty) ++
       // …and the four COLLECTION lanes, derived from the PIPELINE rather than from the manifest —
       // the same rule at the other declaration. They were unskippable only by the wiring living
       // beside the omission block, which is exactly the guarantee `RequiredChecks`' own doc says a

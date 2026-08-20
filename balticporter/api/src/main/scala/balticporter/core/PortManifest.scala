@@ -85,6 +85,44 @@ import java.nio.file.Path
   * module nothing depends on, or for the empty manifest that declares "this resolution root is not
   * a ported module" — where there is no policy to protect and [[declaresPolicy]] says so.
   */
+/** ONE UPSTREAM RESOURCE ROOT AND THE FILES UNDER IT THIS MODULE SHIPS — copied **VERBATIM**, at
+  * the path the emitted code already names.
+  *
+  * ==Why nothing here is rewritten, which is the whole of the difference==
+  * A library that reads its own classpath resource does it through a STRING LITERAL — a
+  * `getResourceAsStream("/p/q/table.properties")`, a file handle built from `"p/q/skin.json"` — and
+  * a rename decides ownership STRUCTURALLY, never from a string (`CLAUDE.md` §4.56). So the emitted
+  * code asks for the path the java asked for, whatever this port's types are called, and the bytes
+  * have to arrive at exactly that path.
+  *
+  * That makes this the COMPLEMENT of [[PortManifest.serviceProviders]] and not a variant of it, and
+  * the two are siblings a port chooses between by asking what the file CONTAINS:
+  *
+  *   - a `META-INF/services` descriptor is FQNs all the way down — its NAME is an interface's and
+  *     its LINES are implementations' — so it is REWRITTEN through this port's own rename rules, and
+  *     copied verbatim it would advertise a service the port does not declare;
+  *   - every other resource is bytes the program merely LOCATES, so it is copied and its path is
+  *     left alone, and rewritten it would break the one lookup it exists for.
+  *
+  * ==Why a DECLARATION and not a scan of the root==
+  * `DESIGN.md` §8.17's argument, measured a second time and more sharply: which of a library's
+  * resources are part of the DERIVED WORK is a fact about that library, and an upstream resource
+  * root routinely also holds the upstream BUILD's own descriptors — a cross-compiler module
+  * definition, a native-toolchain configuration — which are not this port's to ship and which name
+  * the upstream namespace this port renames. A scan ships them; a declaration is the port saying
+  * what its output contains. Empty is the no-op, and a declared file that is not there is FATAL
+  * (`Provenance.notices`' rule: a file the port meant to ship and silently did not looks exactly
+  * like one it shipped).
+  *
+  * @param root  the upstream resource root, resolved like every other manifest path (relative to the
+  *              `.conf`, or absolute from a migration program).
+  * @param files the classpath paths under it, `/`-separated. Each is BOTH the path to read from
+  *              `root` and the path the run writes under `src_managed/<config>/resources` — which is
+  *              why it is the same string an emitted literal names, and why the check below can
+  *              compare the two.
+  */
+final case class ResourceTree(root: Path, files: List[String])
+
 final case class PortManifest(
     /** for reports — the module this policy belongs to. */
     name: String,
@@ -171,6 +209,23 @@ final case class PortManifest(
       * and a declared file that is not there is FATAL for that key's reason: a descriptor the port
       * meant to ship and silently did not looks exactly like one it shipped. */
     serviceProviders: List[Path] = Nil,
+    /** THE REST OF THIS MODULE'S CLASSPATH RESOURCES — copied VERBATIM, at the upstream paths the
+      * emitted code already names. See [[ResourceTree]] for why they are a copy where a descriptor
+      * is a rewrite, and `DESIGN.md` §8.22 for the mechanism.
+      *
+      * ==What it closes==
+      * A library that reads its own resource emits the lookup as the STRING LITERAL java wrote
+      * (`CLAUDE.md` §4.56), so the emitted code asks for the upstream path and the run shipped
+      * nothing at it. The failure is `serviceProviders`' own: no compile error, no check count, no
+      * member digest — a static initialiser throws at first use, or a widget toolkit refuses to
+      * start, in the CONSUMER's build rather than in this run.
+      *
+      * ==NOT inherited — [[inject]]'s line at a resource==
+      * Exactly as [[serviceProviders]]: a resource lands at ONE classpath path, and a dependent that
+      * copied its base's list would write a second file there and win or lose by classpath order.
+      *
+      * Empty is the default and the no-op. */
+    resources: List[ResourceTree] = Nil,
     /** the modules this one is a dependent OF, nearest last. */
     bases: List[PortManifest] = Nil,
     /** WHERE THOSE BASES PUBLISHED. Extra directories to look for a base module's `port-map.tsv`
