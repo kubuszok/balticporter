@@ -6498,9 +6498,44 @@ in one direction is wrong in the other.
 > not G21. The discriminator is that `GridTableLayout` is ONE CLASS declaring BOTH — two overloads at
 > one (name, ARITY) — which is `CLAUDE.md` §4.55's over-approximate-key family: *a map from an
 > over-approximate key to a single value is a choice nobody made*, met a second time, and §4.56's
-> `Symbol.fullName`-carries-no-parameter-list beside it. Open; the fix is at whichever index resolves
-> a loose key to one member, and it is a FRONTEND change whose blast radius is every port, so it is
-> measured on `measure-all` and not on this lane.
+> `Symbol.fullName`-carries-no-parameter-list beside it.
+>
+> **LOCATED, and it is the EMITTER rather than the frontend — which is worth stating, because the
+> frontend is where anyone would look.** `SpoonTir` interns both overloads correctly (`memberKey`
+> carries `erasedSig`, each parameter symbol hangs off its own method id, `Symbol.descriptor` is
+> populated from the parser) and the run's own `port-map.tsv` records **two** members,
+> `convertToActor(Array<Actor>)` and `convertToActor(Array<CellWidget<?>>)`. The engine knows the
+> second overload's true signature everywhere except in the text it printed. The pick is
+> `TirEmitter.rawParentAlignment`'s `findUp`, which searches the parent CHAIN with
+> `sym(d.symbol).name == name && d.paramss.map(_.size) == ar` and takes the FIRST hit — the
+> `Array[Actor]` overload, declared three lines earlier in `ActorLayout`.
+>
+> Three things that make it the general shape rather than one site:
+>
+> - **the derivation ALREADY HAS A GUARD for exactly this, and an array pair walks through it.** The
+>   code requires `headSymOf(aligned) == headSymOf(op.tpt.tpe)`, added when `Environment.remove(long)`
+>   aligned onto `remove(BaseLight)` — a guard about two UNRELATED types. Here both formals are
+>   `scala.Array`, so the heads agree and the guard says yes. **A guard written for one collision
+>   shape is not a key**: it excludes the collisions somebody met and admits every pair that differs
+>   only INSIDE its type arguments — which is every vararg pair, and `Foo<A>` beside `Foo<B>`;
+> - **the ALIGNMENT and the CAST are ONE map read twice**, so §5's co-reader rule is already
+>   satisfied on the reader side and the defect is in the derivation: `overrideAlign` is read by the
+>   parameter renderer (the wrong declared type) and by `alignedArgs` (the
+>   `.asInstanceOf[Array[Actor]]` the java never had), plus `givenParam` and `castTarget`;
+> - **there is a SECOND (name, arity) walk in the same file** — `diamondOverrides` keys `concrete`,
+>   `mixins` and `ownKeys` on `(name, paramss.map(_.size))`, with no third guard at all, and emits or
+>   suppresses a `super[X]` forwarder from it. `GridTableLayout` escapes it only by having one parent.
+>   Two more `program.symbols.all.map(s => s.fullName -> s).toMap` maps live in `TypeRedirectTransform`
+>   and `PortMapTransform`, where `fullName` is `owner#name` and one overload's symbol is dropped.
+>
+> The correct key is name + `Symbol.descriptor`, and the honest fix is not to re-key `findUp` but to
+> DELETE it: `OverrideGraph.overridden` is the engine's canonical answer to the question it asks,
+> keyed by name and descriptor with the parent's type variables already substituted through the
+> `extends` clause — and a two-spelling comparison without that substitution would LOSE edges, which
+> is the direction §5 warns about (`ENGINE-LIMITS.md` K28.2 cost 48 moved digests getting it right
+> once). **NOT attempted in this wave**: the change moves an emitter derivation with 27 cited
+> declarations across the corpus, so its gate is `measure-all` and its evidence is the member diffs on
+> the ports it was not aimed at — a full cycle of its own, and it is the next wave's first item.
 
 ### 10.9.8 Residues, named and classified
 
@@ -6541,11 +6576,18 @@ about its siblings*).
    which is `selfSupplied`'s shape with an expression the mechanical port cannot currently write —
    and price §10.8.9's three exits and §10.8.11's fourth against it. The anchor becomes admissible
    once that lands, and not before.
-2. **The resource copy** (§10.9.3) — §1(b), and the port is not shippable without it whatever the
+2. **`rawParentAlignment`'s (name, arity) pick** (§10.9.7 family 5's sibling) — 2 errors here and a
+   §4.55 defect class met a second time, LOCATED: `TirEmitter.rawParentAlignment`'s `findUp` takes the
+   FIRST parent member at (name, arity), its head-constructor guard cannot separate two array formals,
+   and `diamondOverrides` in the same file has the same key with no guard. The fix is to consult
+   `OverrideGraph.overridden` rather than re-key the local walk. It is an EMITTER derivation with 27
+   cited declarations across the corpus, so it is a `measure-all` change with its own cycle and it is
+   the FIRST item rather than a cheap one.
+3. **The resource copy** (§10.9.3) — §1(b), and the port is not shippable without it whatever the
    error count reads.
-3. **The two upstream tests, then the 72-case differential probe** (§10.9.1). Until one lands this
+4. **The two upstream tests, then the 72-case differential probe** (§10.9.1). Until one lands this
    port has no behavioural evidence at all.
-4. **USL**, with its zero-authoring oracle (§10.9.1).
+5. **USL**, with its zero-authoring oracle (§10.9.1).
 
 ---
 

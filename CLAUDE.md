@@ -1467,6 +1467,28 @@ wider than what it overrides and never narrower, so an extra candidate can only 
 shape: nothing is wrong with the loose key, and everything is wrong with resolving it in the index
 rather than at the question.
 
+**…and A `find` IS THAT MAP, so "we build no index here" is not an exemption.** The second occurrence
+is not a `Map` at all: a walk up the parent chain doing
+`methodsOf(c).find(d => d.name == name && d.paramss.map(_.size) == ar)` resolves the same loose key to
+the same single value, by SOURCE ORDER instead of by insertion order, and reads as a lookup rather
+than as an index. A class declaring BOTH overloads of an interface method — `convertToActor(Actor…)`
+beside `convertToActor(CellWidget<?>…)`, which is ordinary java — then had both emitted at the FIRST
+one's formal, with an `asInstanceOf` the source never wrote inserted at the call to make it fit. The
+control that identifies it is worth copying: **the same two overloads declared in the INTERFACE emit
+correctly**, so the wildcard the port supposedly could not write is one it writes two files over, and
+the wave-1 hypothesis blaming a wildcard arm was refuted by reading the emitted output rather than by
+reasoning about it.
+
+**And the tell was already in the file: A GUARD WRITTEN FOR ONE COLLISION SHAPE IS NOT A KEY.** That
+walk carried a guard for exactly this hazard — *require the head constructor to agree*, added when
+`Environment.remove(long)` aligned onto `remove(BaseLight)` — and an array pair walks straight
+through it, because both heads are `scala.Array` and the two members differ only INSIDE their type
+arguments. A guard excludes the collision somebody MET; it admits every pair that collides the other
+way, and every vararg overload set in every library is such a pair. When you find one, read it as
+evidence that the KEY is wrong rather than that the guard is one case short — and then look for the
+SIBLING walks, because a derivation re-implemented once is usually re-implemented twice (this one has
+a second `(name, arity)` walk in the same file, keying a diamond forwarder, with no guard at all).
+
 **…and the SAME sentence governs the opposite conclusion, which is where a PROMOTION drops
 something.** A pass that promotes may also decide two declarations ARE one member and emit only the
 promoted one — an enum's constructor parameter SUPERSEDING a same-named field is the shape, and it is
