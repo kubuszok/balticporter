@@ -6051,11 +6051,10 @@ OUTSIDE that excluded package, matches the include glob by name, `extends VisWin
 zero `@Test`: the demo-app trap with the exclusion missing it, and JUnit reporting it as
 contributing nothing. A further **7** real `@Test` are in `usl/` and are out of scope with it. So a
 filename census over that tree reports 30, a `*Test.java` one reports 3, and only `java_test_count`
-reports 2 — which is why the lane runs it. Two later waves follow, neither taken
-here:
+reports 2 — which is why the lane runs it. Two later waves follow; **the second is taken in
+§10.9.12 and the first is still open**:
 
-1. **the 2 upstream tests**, as a `VisUiTestMigrate` and a lane stage — small, and worth having
-   because it is the port's first behavioural evidence of any kind;
+1. **the 2 upstream tests**, as a `VisUiTestMigrate` and a lane stage — small, and still open;
 2. **the DIFFERENTIAL probe**, which is where the evidence actually is: the reference hand port
    (`../sge/sge-extension/visui/src/test`) wrote **72** MUnit cases over the same library across 12
    files, an 8× richer suite than upstream's 9. That 72 is `munit_emitted`'s number — the shared
@@ -6069,8 +6068,9 @@ here:
    attribution is a FLOOR, since `RefChecks` does not run while any typer error stands), and split a
    compatible file's FIXTURES out of an incompatible one rather than dropping both.
 
-Until one of those lands this port has **no behavioural evidence at all** and every §4.4 form in it
-is UNMEASURED (`CLAUDE.md` §3).
+§10.9.12 took the second and the port's evidence is now **50 of those 72, all passing**, over four of
+its own types. The other 22 are classified there, and every §4.4 form in the 158 files those four do
+not reach is still UNMEASURED (`CLAUDE.md` §3).
 
 ### 10.9.2 The licence is DOUBLE, and the second one is on a PNG
 
@@ -6708,21 +6708,134 @@ because neither is about threading and both are general:
   where the separator is chosen, `?` per parameter, which is what java wrote and what the reference
   hand port renders every raw generic as. `11 -> 8`, 5 member digests.
 
+### 10.9.12 The DIFFERENTIAL gate — 4 of 12 files, 50 of 72 tests, **50 passing at 0 errors**
+
+`just visui-diff-measure`, `port-report/VisUiDifferential`, `ported/sge-visui/src/test/scala`. This
+is the port's FIRST behavioural evidence of any kind: upstream VisUI declares two `@Test` over 162
+files and this port has no test source set yet, so before this lane it had a compile and nothing
+else — the state `CLAUDE.md` §3 says proves nothing.
+
+**THE ANSWER.** Of the reference hand port's **12 files / 72 `test(…)`** — re-derived here with the
+shape-aware counter, which agrees exactly with the naive grep, so this suite has none of the shapes
+§4.56's fourth-occurrence paragraph is about — **4 files / 50 tests** run against the mechanically
+emitted `sge.visui.*`: they compile at **0 errors** and are **50 passing, 0 failing, 0 skipped**,
+with `expected-failures.tsv` EMPTY.
+
+**THE COMPILE IS SCOPED, AND THAT IS THIS LANE'S ONE NEW THING.** gdx-ai and TextraTypist were both
+at ZERO when their differential gates were built. This port stands at its attributed 8-error floor
+(§10.9.10), and §3 then bites twice over: with any typer error outstanding `RefChecks` never runs,
+so the census's second pass would be impossible — and scalac reaching no backend phase writes no
+class file, so nothing could be RUN at all. Compiling the whole tree, the four adapted suites plus
+the port read **47 errors** and no test. So the lane compiles `visui_closure` — the **5 emitted
+files of 162** that the adapted suites transitively name — and the claim that makes that admissible
+is CHECKED rather than asserted: the lane reads `visui-measure`'s own `errors.tsv` and fails if any
+closure file appears in it. It does not; the port's 8 sit in six files, all under `widget/` and
+`layout/`.
+
+**THE CENSUS, TAKEN TWICE.** The typer-only pass compiled all twelve reference files unedited
+against the whole port: 47 errors, of which 8 are the port's floor and 39 are the suites' — 21 in
+`OsUtilsSuite`, 18 in `ValidatorsSuite`, and **0 in `SizesSuite` and `ColorUtilsSuite`, which
+compile UNEDITED**. The second pass compiled the candidate set ALONE at 0 typer errors, so
+`RefChecks` ran, and it moved **nothing**: no file left class (a). That is the opposite of gdx-ai's
+result (four files and 16 tests fell out) and matches TextraTypist's, and the reason is the same
+one — this library's divergence between the two ports is concentrated in the FIXTURE, not in the
+surface.
+
+| | typer-only, whole tree | `RefChecks`-honest and RUN |
+|---|---|---|
+| (a) runs against this port | 4 files / 50 tests | **4 files / 50 tests — 50 passing** |
+| blocked | 8 files / 22 tests | **8 files / 22 tests**, re-classified below |
+
+| tests | file | mapping rows |
+|---|---|---|
+| 30 | `util/ValidatorsSuite` | V2, V3 |
+| 7 | `SizesSuite` | none |
+| 7 | `util/ColorUtilsSuite` | none |
+| 6 | `util/OsUtilsSuite` | V1 |
+
+**THE MAPPING — THREE rows, 23 changed lines, and NO ASSERTION IS EDITED.** Each is a NAME or SHIM
+substitution between the two surfaces, applied to COMMENT-MASKED code and PER RECEIVER
+(§4.56), and a file the rows could not carry is counted as incompatible rather than repaired.
+
+| row | from (hand port) | to (this port) | why |
+|---|---|---|---|
+| **V1** | `OsUtils.isWindows`, `.isMac`, `.isUnix` | `OsUtils.isWindows()`, … | a java parameterless method is emitted `def f()` and Scala 3 requires the parens — gdx-ai's M1 and textra's T1, and again the largest row (14 lines) |
+| **V2** | `…ThanValidator(x, useEquals = b)` | `…ThanValidator(x, inputCanBeEqual = b)` | java's own constructor parameter is `inputCanBeEqual` and the hand port renamed it; the port emits java's name |
+| **V3** | `v.useEquals = b` on a **`LesserThanValidator`** | `v.setUseEquals(b)` | java declares `private boolean equals` on THAT class and `private boolean useEquals` on its sibling. `equals` shadows `Object.equals`, so §4.55 renames it `equals$shadow`; `setUseEquals` is java's own public member on both |
+
+**V3 IS T6's HAZARD AGAIN, AND THIS TIME THE PORT ITSELF MADE THE ASYMMETRY.** One spelling —
+`v.useEquals = true` — appears twice in `ValidatorsSuite` and means two different members: a `var`
+the port emits under that very name on `GreaterThanValidator`, and a `var` the port RENAMED on
+`LesserThanValidator`. Applied by spelling the row would edit a line that compiles perfectly; applied
+per receiver it edits exactly one, and the compiler's own message (`value useEquals is not a member
+of …LesserThanValidator`) is the structural warrant. The two `test("… useEquals can be toggled")`
+NAMES and the four field assignments the row must not touch are all unchanged. V2 is the same
+discipline at the other end: the identical substring inside those test names does not match, because
+the row is anchored on the constructor application.
+
+**AND TWO ROWS THE CENSUS EXPECTED AND MEASURED AWAY.** A `new`-insertion row (`Sizes()` →
+`new Sizes()`, `Validators.IntegerValidator()` → `new …`) was written into the plan and is not
+needed: Scala 3's universal apply methods make `C(args)` mean `new C(args)`, so the hand port's
+constructor spelling is already this port's. And a property-to-setter row for `v.greaterThan = 3.0f`
+and `v.lesserThan = 3.0f` is not needed either, for a reason that belongs to the ENGINE: java
+declares both fields `private`, and `ctor-replay-widening` (`ENGINE-LIMITS.md` C15) emits them
+`public var`, so the hand port's property spelling lands on a member the port put there. Two rows
+priced by reading, both worth zero at the emitted site.
+
+**WHAT BLOCKS THE OTHER 22, MEASURED RATHER THAN READ.** §3.5's rule, and it corrected this census
+twice. The closure of each remaining suite's entry points was computed over the EMITTED tree and
+intersected with the six files the port cannot compile:
+
+| n | files | class | blocker |
+|---|---|---|---|
+| 11 | `VisTextFieldReadOnlyRedSuite` (8), `DraggableKeepWithinParentRedSuite` (3) | **(c) BY THE FLOOR** | the only two whose closure reaches the 8 — `widget/VisTextField.scala` (the three upstream-skew `E007`s) and `widget/Draggable.scala` + `layout/DragPane.scala`. These cannot run until §10.9.10's rows move, whatever fixture exists |
+| 9 | `VisUIResourcesRedSuite` (5), `Iss787FidelitySuite` (2), `TooltipMouseMovedFadeOutRedSuite` (1), `VisImageTextButtonGetTextIss798RedSuite` (1) | **(c) FIXTURE, and behind it §10.9.3** | closure clean of the floor. Each needs `VisUITestFixture.headlessSge()`, which rests on `sge.noop.*` and `sge.files.DesktopFiles` — hand-port types this port does not emit — and each calls `VisUI.load()` in CODE |
+| 2 | `VisUISkinStyleRoundTripSuite` | **(b) BLOCKED BY THE HAND PORT** | `VisUISkinReaders`, a reflection-free skin-reader registry the hand port invented; grepped, this port emits no such type. It is the only one that does NOT call `VisUI.load()` |
+| 0 | `VisUITestFixture` | not a candidate | the reference fixture itself |
+
+(11 + 9 + 2 = 22, and 50 + 22 = 72.)
+
+**THE TWO CORRECTIONS, because each was a reading I was one step from committing.**
+`VisUIResourcesRedSuite`'s own header states that the hand port ships **no** `src/main/resources` at
+all — it is a RED suite written about that. Counted, the reference module ships **22** resources at
+exactly the upstream classpath paths: the header is STALE, that suite is green there, and the
+resource gap is now the MECHANICAL port's alone (§10.9.3: 22 upstream, 9 paths named in emitted
+Scala, **0 shipped**). Quoting the comment would have claimed parity where the port is behind. And a
+plain grep put `VisUI.load()` inside `VisUISkinStyleRoundTripSuite`, which its own prose then denies;
+comment-masked the count is 0 — §10.7.12's *a comment is not code*, met at an INSTRUMENT this time
+rather than at a text edit.
+
+**WHAT IS DELIBERATELY NOT CLAIMED.** For the 9 fixture-blocked tests, WHICH of the two blockers
+binds — the fixture rewrite or the absent resources — is **UNMEASURED**. Both are present, the
+fixture is nearer, and §3.5's own paragraph is about a census that scoped 75 tests behind a fixture
+and measured 5. So the next wave builds the fixture and RE-CENSUSES; it does not inherit a number
+from here.
+
+Note what the 50 are evidence FOR. They are the first behavioural evidence this port has for
+`Sizes`, `util/ColorUtils`, `util/OsUtils` and `util/Validators` — four of the library's own types,
+none of which upstream's two `@Test` reach — and they found no `CLAUDE.md` §4.4 defect and no port
+bug at all. The adapted copies are the port's HAND-WRITTEN half (§5.5) and are never counted as
+ported tests.
+
+**Do NOT retry.** Compiling the whole emitted tree for this lane: it carries the 8-error floor, so
+`RefChecks` cannot run and no class file is written — 47 errors and zero outcomes. And do not price
+a `new`-insertion row or a property-to-setter row for this suite from a reading of the java; both are
+worth zero at the emitted site, for two independent reasons (Scala 3 universal apply, and C15's
+widening).
+
 ### 10.9.11 Next
 
-1. **The differential suite** (§10.9.1) — the reference hand port's own MUnit tests, run against the
-   emitted surface. This port still has NO behavioural evidence of any kind, so every §4.4 form in
-   it is unmeasured and the 8-error floor says nothing about whether it WORKS. The precedent is
-   `sge-ai`'s and `sge-textra`'s: a CENSUS first (which of those assertions the emitted surface can
-   answer at all), taken TWICE because a per-file typer-error attribution is a floor, with every
-   edit a NAME or SHIM substitution from an enumerated table applied per RECEIVER and never to a
-   comment — both traps are `CLAUDE.md` §3.5's own paragraphs, with the numbers that produced them.
+1. **The FIXTURE**, and a re-census behind it — the rewrite `VisUITestFixture` needs (its six
+   hand-port types have no image here, exactly as `HeadlessTextraSge`'s did) unlocks at most the 9
+   tests of §10.9.12's second row, and how many it really unlocks is the thing to MEASURE rather
+   than predict. `sge.Sge` is a public case class here and `sge.SgeTestFixture` is the
+   absent-service shape, so the fixture is buildable; what sits behind it is item 3.
 2. **`Draggable#BLOCKER`'s exit**, which is a mechanism the engine does not have: a `sites` policy
-   whose subject is a class initialiser that USES a static rather than assigning one.
-3. **The two upstream `@Test`** (§10.9.1) — a test source set this port does not have yet, and the
-   smallest behavioural evidence available.
-4. **The resource copy** (§10.9.3) — §1(b), and the port is not shippable without it whatever the
-   error count reads.
+   whose subject is a class initialiser that USES a static rather than assigning one. It is 1 of the
+   8, and with `DragPane` it gates 3 differential tests.
+3. **The resource copy** (§10.9.3) — §1(b), and the port is not shippable without it whatever the
+   error count reads. It is now also a MEASURED test blocker rather than only a completeness gap.
+4. **The two upstream `@Test`** (§10.9.1) — a test source set this port does not have yet.
 5. **USL**, with its zero-authoring oracle (§10.9.1).
 
 ---

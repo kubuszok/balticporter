@@ -854,6 +854,46 @@ blames?* — one probe; *would the JAVA have run under this harness?*; and *does
 comfortable answer, because the environment is somebody else's; it is also the one shape a census can
 be wrong about with every number in it correct.
 
+**…and where the PORT IS NOT AT ZERO, the gate has to SCOPE ITS COMPILE — and the scope's warrant is
+CHECKED, never asserted.** Both differential gates above were built over ports at 0 errors, so
+"compile the emitted tree and the adapted suites together" was free and nobody had to notice it was a
+precondition. It is one. §3's rule bites twice at a port with a floor: with any typer error
+outstanding `RefChecks` never runs, so the census's SECOND pass — the one that moved four files and
+16 tests on gdx-ai — cannot be taken at all; and scalac reaching no backend phase writes no class
+file, so nothing can be RUN either. A whole-tree compile of a port at 8 measured **47 errors and zero
+outcomes**. So the compile carries the TRANSITIVE CLOSURE, over the EMITTED tree, of what the adapted
+suites name — and the one thing that scoping must never hide is a suite whose closure reaches a file
+the port cannot compile. Read the run's OWN `errors.tsv` and fail the lane when it does, rather than
+repeating the floor's file list somewhere a second copy can go stale; then a suite really blocked by
+the floor is classified **(c)-by-the-floor** with the rows cited, and is not quietly narrowed out of
+the scope. Measured: of 8 blocked files, exactly 2 were floor-blocked and 6 were not, which is not
+the split the suite NAMES suggest.
+
+**And the same *measure at the site* rule governs the MAPPING TABLE, where a row priced by reading
+can be worth zero.** The blocker paragraph above is about which suites can run; this is about what
+adapting them costs, and the reading is wrong in the cheap direction — two rows written into one
+plan (`C()` → `new C()`, and a private-field property routed through its setter) turned out to be
+NO-OPS at the emitted site, for two independent reasons neither of which is about the library: Scala
+3's universal apply methods already mean `new`, and a phase had WIDENED the private fields to public
+`var`s. Compile the candidates UNEDITED first and let the errors enumerate the table — it is one run,
+it prices every row, and it is the only version of the table that cannot contain an edit no file
+needed. **And an edit a file does not need is one the census cannot justify**: two of the four
+candidates here changed zero lines.
+
+**…and *a comment is not code* is owed by the CENSUS'S OWN GREPS, not only by its text edits.** The
+rule arrived at a substitution that rewrote a name inside a comment; the same file answered a plain
+`grep -l 'VisUI.load()'` YES on a suite whose own prose says it deliberately does not call it, because
+the mention is in the header. A census classifies FILES on such greps, so an unmasked one puts a
+suite in the wrong class with every count in the table correct. Mask before counting, on both sides.
+
+**…and a REFERENCE SUITE'S OWN HEADER IS DOCUMENTATION, so it goes stale like any other.** A red
+suite states the defect it reproduces — *"the extension ships NO `src/main/resources` at all; the
+directory does not even exist"* — and it is a claim about the hand port on the day it was written.
+Counted, that directory held **22** files: the fix had landed, the suite was green there, and the
+gap was the MECHANICAL port's alone. Quoting the header would have claimed parity on the one axis
+where the port was behind. Re-derive what a header asserts, exactly as §4.56 requires of a
+documented blind spot.
+
 **…and a FOURTH, which is about the two vendored trees rather than about either port: *does the JAVA
 COMPILE against the dependency this run supplies?*** A dependent port parses its base's java as a
 resolution root, so the version of that tree is part of the measurement and nothing states it. Where

@@ -14,6 +14,7 @@
 #   just textra-measure              TextraTypist, compiled WITH libGDX core (a dependent port)
 #   just textra-diff-measure         the REFERENCE hand port's own suite over the emitted sge.textra
 #   just visui-measure               VisUI's ui/ module, compiled WITH libGDX core (a dependent port)
+#   just visui-diff-measure          the REFERENCE hand port's own suite over the emitted sge.visui
 #   just sg-measure                  simple-graphs + its suite
 #   just noise4j-measure             noise4j — emit, checks, break residue, compile, correlate
 #   just jbump-measure               jbump (no suite upstream — the lane re-derives the zero)
@@ -326,6 +327,25 @@ textra_test_deps := "--dependency org.scalameta::munit:1.0.2"
 # RUN published (`declared_dep_flags`) rather than assuming the port declares nothing: an empty
 # variable is this port's fact today and a derived flag is what says so the day it stops being one.
 visui_deps    := ""
+# …and the DIFFERENTIAL lane's three. `visui_ref_tests` is the reference hand port's own MUnit tree
+# — TWO platform source directories (`scala`, `scalajvm`), which is why the census reads the parent
+# and not `…/scala`: both hold suites the census classifies, and a lane that counted one directory
+# would report a population smaller than the one it is classifying (`textra_ref_tests`' lesson).
+# `visui_test_deps` carries munit for the hand-written half.
+#
+# `visui_closure` IS THIS LANE'S ONE UNUSUAL VARIABLE, and it exists because this is the first
+# differential gate over a port that is NOT at zero. §3's rule is that a single typer error skips
+# `RefChecks` for the WHOLE program, so a compile carrying the port's 8-error floor
+# (`PROGRESS.md` §10.9.10) can never take the second, `RefChecks`-honest census pass the two earlier
+# differential lanes both required — and it can never RUN anything either, since scalac reaching no
+# backend phase writes no class file. These five files are the TRANSITIVE CLOSURE, over the emitted
+# tree, of what the adapted suites name; the lane VERIFIES rather than asserts that none of them is
+# one of the 8, by reading the run's own `errors.tsv`. Three guards keep the list from going stale
+# silently: that check, the 0-error requirement (a suite that grew to need a sixth file fails with
+# `Not Found` rather than being quietly narrowed), and the census population gate.
+visui_ref_tests := "../sge/sge-extension/visui/src/test"
+visui_test_deps := "--dependency org.scalameta::munit:1.0.2"
+visui_closure := "Sizes.scala util/ColorUtils.scala util/OsUtils.scala util/Validators.scala util/InputValidator.scala"
 # flexmark's one compile-scope coordinate, `org.jetbrains:annotations:24.0.1`, is a FRONTEND input
 # AND a compile one — and this line was written empty on the reasoning that it could not be, which
 # the port's first run disproved in one number. The reasoning was: the annotations are markers,
@@ -2989,6 +3009,144 @@ visui-measure:
     headline "$ERRORS" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
+# VisUI's DIFFERENTIAL gate — the REFERENCE HAND PORT's own MUnit suite, run against the
+# mechanically emitted `sge.visui.*`.
+#
+# WHY THIS LANE EXISTS. Upstream VisUI declares TWO real `@Test` over 162 files (`visui-measure`
+# re-derives that 2 on every run), so before this lane the port had a compile and NO behavioural
+# evidence at all — the state `CLAUDE.md` §3 says proves nothing, held over a library whose §4.4
+# surface is a widget toolkit. The reference hand port (`../sge/sge-extension/visui`) wrote 72
+# MUnit cases over the same library, an 8x richer suite, and it is hand-written Scala, so a compiled
+# port can be run against it with nothing translated. `ai-diff-measure` and `textra-diff-measure`
+# are the precedents; `PROGRESS.md` §10.9.12 is the census.
+#
+# WHAT IT IS NOT. These are NOT ported tests and are never counted as any (CLAUDE.md §3). Upstream
+# ships two `@Test` for this library and this lane touches neither of them.
+#
+# AND THE COMPILE IS SCOPED, WHICH NO EARLIER DIFFERENTIAL LANE HAD TO BE. gdx-ai and TextraTypist
+# were both at ZERO when their gates were built; this port stands at its attributed 8-error floor
+# (`PROGRESS.md` §10.9.10 — 3 C3 refusals, 3 upstream version skew, 1 K13-base, 1 unsuppliable-use)
+# and nothing on that list is close to moving. §3's rule then bites twice over: with any typer error
+# outstanding `RefChecks` never runs, so the census's second pass would be impossible, and scalac
+# reaching no backend phase writes no class file, so NOTHING could be run at all. So the compile
+# carries `visui_closure` — the five emitted files the adapted suites transitively name — instead of
+# the whole tree, and the lane says so in its own output rather than letting `0 errors` be read as
+# `the port compiles`. The claim that keeps this honest is CHECKED and not asserted: not one of the
+# five is a file the run reported an error in.
+# ---------------------------------------------------------------------------------------------
+[doc("VisUI's DIFFERENTIAL gate — the hand port's own suite, run against the emitted port")]
+visui-diff-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{corpus}}"
+    . scripts/_lib.sh
+
+    REPORT="$ROOT/port-report/VisUiDifferential"
+    TREE="{{visui_module}}/src/test/scala"
+    EMIT="{{visui_module}}/src_managed/main/scala/sge/visui"
+
+    # NO MIGRATION RUNS HERE, so there is no check report and no `show_check_report` — this lane's
+    # subject is emitted code `visui-measure` produced and already checked, and re-printing its
+    # counts here would be two readings of one artifact that can disagree. What this lane owns is
+    # the compile of the hand-written half and the OUTCOMES.
+    echo "-- census population: RE-DERIVED from the reference hand port, never asserted --"
+    REF_FILES=$(find {{visui_ref_tests}} -name '*.scala' | wc -l | tr -d ' ')
+    REF_TESTS=$(munit_emitted {{visui_ref_tests}})
+    ADAPTED_FILES=$(find "$TREE" -name '*Suite.scala' | wc -l | tr -d ' ')
+    ADAPTED_TESTS=$(munit_emitted "$TREE")
+    echo "reference hand port ({{visui_ref_tests}}): $REF_FILES file(s), $REF_TESTS test(…)"
+    echo "adapted here (class (a) of §10.9.12): $ADAPTED_FILES suite file(s), $ADAPTED_TESTS test(…)"
+    # NOT "class (c)": §10.9.12 classified the residue after MEASURING what blocks it. 7 files / 22
+    # tests are class (b) — every one needs `VisUITestFixture.headlessSge()`, which rests on types
+    # this port does not emit, and behind it the skin resources §10.9.3 counts as NAMED-but-unshipped
+    # — and one file declares no test at all (that fixture).
+    echo "not copied, and counted: $((REF_FILES - ADAPTED_FILES)) file(s), $((REF_TESTS - ADAPTED_TESTS)) test(…)"
+    if [ "$REF_FILES" != "12" ] || [ "$REF_TESTS" != "72" ]; then
+      echo "!! THE REFERENCE SUITE MOVED — $REF_FILES files / $REF_TESTS tests, not 12 / 72."
+      echo "   PROGRESS.md §10.9.12's census was taken against 12 / 72 and is now STALE: a file"
+      echo "   added there is a file nobody has classified, and one removed may be one of the four"
+      echo "   this lane copied. Re-run the census before trusting the outcomes below."
+      exit 1
+    fi
+
+    echo
+    echo "-- compile scope: the CLOSURE, because this port is not at zero --"
+    # The whole-tree compile is `visui-measure`'s and its floor is that lane's baseline; what this
+    # one has to establish is that the five files under test are not among the erroring ones, which
+    # is the entire warrant for compiling a subset. Read off the run's OWN artifact rather than a
+    # list repeated here — a second copy of the eight is a second thing to keep in step.
+    ERRTSV="$ROOT/port-report/VisUiMigrate/run-latest/errors.tsv"
+    if [ ! -f "$ERRTSV" ]; then
+      echo "!! no $ERRTSV — run \`just visui-measure\` first; this lane cannot verify its own scope."
+      exit 1
+    fi
+    CLOSURE_ARGS=""
+    OVERLAP=""
+    for f in {{visui_closure}}; do
+      if [ ! -f "$EMIT/$f" ]; then
+        echo "!! closure file $EMIT/$f is not emitted — the port moved and \`visui_closure\` is stale."
+        exit 1
+      fi
+      CLOSURE_ARGS="$CLOSURE_ARGS $EMIT/$f"
+      if cut -f2 "$ERRTSV" | grep -q "/sge/visui/$f\$"; then OVERLAP="$OVERLAP $f"; fi
+    done
+    echo "closure: $(echo {{visui_closure}} | wc -w | tr -d ' ') emitted file(s) of $(find $EMIT -name '*.scala' | wc -l | tr -d ' ')"
+    if [ -n "$OVERLAP" ]; then
+      echo "!! A CLOSURE FILE IS ONE THE PORT CANNOT COMPILE:$OVERLAP"
+      echo "   The subset compile below would be measuring a file the whole-port run reports an"
+      echo "   error in, which is the one thing scoping the compile must never hide. Classify those"
+      echo "   suites (c)-by-the-floor in PROGRESS.md §10.9.12 and drop them from this lane."
+      exit 1
+    fi
+    echo "none of the closure files appears in errors.tsv — the port's 8 are all in widget/ and layout/"
+
+    echo
+    echo "-- compile --"
+    # `--test`: without it `scala-cli` READS the test directory and reports only the MAIN scope, so
+    # a differential suite that does not compile measures 0 (CLAUDE.md §4.56's instrument-invocation
+    # rule). This is also where `RefChecks` runs for the hand-written half, which is why §10.9.12's
+    # census had to be taken twice: a per-file typer count is a FLOOR (CLAUDE.md §3), and on gdx-ai
+    # that difference moved four files and 16 tests in the dangerous direction.
+    DECLARED=$(declared_dep_flags "$ROOT/port-report/VisUiMigrate" | tr '\n' ' ')
+    echo "declared coordinates on the compile line: ${DECLARED:-(none)}"
+    scala-cli compile --test --scala {{scala_version}} --server=false {{visui_test_deps}} $DECLARED \
+      {{gdx_module}}/src_managed/main/scala $CLOSURE_ARGS "$TREE" \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/visuidiffmeasure.txt
+    CLI_STATUS=${PIPESTATUS[0]}
+    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/visuidiffmeasure.txt)
+    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/visuidiffmeasure.txt
+    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/visuidiffmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/visuidiffmeasure.txt))"
+    error_baseline_guard "$ERRORS" "$REPORT"
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/visuidiffmeasure.txt | sort | uniq -c | sort -rn | head
+
+    if [ "$ERRORS" != "0" ]; then
+      echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
+      headline "$ERRORS" "$REPORT"
+      exit 0
+    fi
+
+    echo
+    echo "-- run --"
+    scala-cli test --scala {{scala_version}} --server=false {{visui_test_deps}} $DECLARED \
+      -Duser.language=en -Duser.country=US \
+      {{gdx_module}}/src_managed/main/scala $CLOSURE_ARGS "$TREE" \
+      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/visuidiffrun.txt
+    reconcile_outcomes "$MEASURE_TMP"/visuidiffrun.txt "$ADAPTED_TESTS"; RECONCILED=$?
+
+    echo
+    echo "-- correlation: test failures located to members and Java origins --"
+    # TWO maps and no `test=` one: the suite is HAND-WRITTEN, so it has no source map and cannot
+    # have one. That is the property this lane wants rather than a gap — a failure here anchors
+    # `main-frame`, on the LIBRARY member that threw, which is what a differential suite asks.
+    correlate "$REPORT/run-latest" --tests "$MEASURE_TMP"/visuidiffrun.txt \
+      --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
+      --srcmap "$ROOT/port-report/VisUiMigrate/run-latest/srcmap.tsv"
+    test_outcome_guard "$REPORT/run-latest" "$RECONCILED" || exit 1
+
+    headline "$ERRORS" "$REPORT"
+
+# ---------------------------------------------------------------------------------------------
 # Every lane, SERIALLY, in dependency order — never in parallel.
 #
 # Each lane re-emits into `src_managed/`, so `gdx-test-measure` and `ashley-measure` compile against
@@ -3031,12 +3189,16 @@ measure-all:
     # earlier it would measure the previous engine's emit of the library it probes. Upstream ships no
     # suite for this library, so unlike gdx-ai there is no ported gate for it to sit on top of — this
     # IS the port's behavioural gate, and it is the only one it has.
-    # `visui-measure` is LAST, for the reason `textra-measure` was appended next-to-last: its only
-    # ordering constraint is `gdx-measure`, which is first, so any position after that one is
-    # correct — and the end is the position that leaves the nineteen established lanes' order, and
-    # therefore their numbers, untouched by this port's arrival. It carries no differential lane
-    # yet, so nothing follows it.
-    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure ai-measure ai-test-measure ai-diff-measure textra-measure textra-diff-measure visui-measure; do
+    # `visui-measure` is next-to-LAST, for the reason `textra-measure` was appended next-to-last:
+    # its only ordering constraint is `gdx-measure`, which is first, so any position after that one
+    # is correct — and the end is the position that leaves the nineteen established lanes' order,
+    # and therefore their numbers, untouched by this port's arrival.
+    # `visui-diff-measure` is LAST and follows `visui-measure`, for `textra-diff-measure`'s reason
+    # and one of its own: it compiles the hand-written differential suite against what
+    # `visui-measure` just wrote, AND it reads that run's `errors.tsv` to verify that no file in its
+    # scoped compile is one the port cannot compile. Run earlier it would check this engine's suite
+    # against the previous engine's emit and the previous engine's error list.
+    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure ai-measure ai-test-measure ai-diff-measure textra-measure textra-diff-measure visui-measure visui-diff-measure; do
       echo
       echo "################################################################## just $lane"
       if ! {{just_executable()}} "$lane"; then

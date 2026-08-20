@@ -1,0 +1,24 @@
+# The ESCAPE HATCH, and nothing else. EMPTY is the normal state, and it is the state today.
+#
+# This lane's subject is the REFERENCE HAND PORT's own MUnit suite run against the mechanically
+# emitted `sge.visui.*` (`PROGRESS.md` §10.9.12). It runs NO migration, so it has no
+# `run-latest/dropped-types.tsv` and nothing here can be DERIVED — which is exactly why any row
+# added here has to be stated rather than left to a mechanism, and why each one is a claim someone
+# has to defend.
+#
+# WHY IT IS EMPTY. All 50 adapted tests pass. The four class (a) files assert java's own behaviour
+# over `Sizes`, `util/ColorUtils`, `util/OsUtils` and `util/Validators`, and this port emits java's
+# own behaviour there, so there is no disagreement for a row to record. gdx-ai's lane carries two
+# declared rows because the hand port REDESIGNED `Task`; nothing this suite reaches was redesigned.
+#
+# WHAT WOULD PUT A ROW HERE. A test that fails because this port DELIBERATELY does something java
+# does not — a dropped type, a counted refusal — with the failing frame named, so that a DIFFERENT
+# failure in the same test still counts unexpected.
+#
+# WHAT WOULD NOT. A test blocked by the port's 8-error floor (§10.9.10) or by the absent skin
+# resources (§10.9.3) is not a declared FAILURE — it is a suite this lane does not adapt at all, and
+# §10.9.12's census is where it is counted. A row here for one of those would turn a residue nobody
+# has closed into an exception somebody has excused.
+#
+# `test` may be `*` to declare a whole suite.
+#suite	test	reason	[frame=<ported class>]

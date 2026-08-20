@@ -1,0 +1,51 @@
+#suite	test	status
+sge.visui.SizesSuite	Sizes all fields default to zero	pass
+sge.visui.SizesSuite	Sizes copy constructor copies all fields	pass
+sge.visui.SizesSuite	Sizes copy constructor preserves fractional values	pass
+sge.visui.SizesSuite	Sizes copy is independent of original	pass
+sge.visui.SizesSuite	Sizes default values are zero	pass
+sge.visui.SizesSuite	Sizes double-copy preserves values	pass
+sge.visui.SizesSuite	Sizes fields are independently mutable	pass
+sge.visui.util.ColorUtilsSuite	HSVtoRGB with alpha preserves alpha	pass
+sge.visui.util.ColorUtilsSuite	HSVtoRGB: pure blue (h=240, s=100, v=100)	pass
+sge.visui.util.ColorUtilsSuite	HSVtoRGB: pure green (h=120, s=100, v=100)	pass
+sge.visui.util.ColorUtilsSuite	HSVtoRGB: pure red (h=0, s=100, v=100)	pass
+sge.visui.util.ColorUtilsSuite	HSVtoRGB: white (h=0, s=0, v=100)	pass
+sge.visui.util.ColorUtilsSuite	RGBtoHSV: pure red returns h~0, s=100, v=100	pass
+sge.visui.util.ColorUtilsSuite	RGBtoHSV: round-trip HSV->RGB->HSV	pass
+sge.visui.util.OsUtilsSuite	OS detection is consistent across calls	pass
+sge.visui.util.OsUtilsSuite	at least one desktop OS is detected on standard platforms	pass
+sge.visui.util.OsUtilsSuite	exactly one of isWindows, isMac, isUnix is true (or none on exotic OS)	pass
+sge.visui.util.OsUtilsSuite	on Linux, isUnix is true	pass
+sge.visui.util.OsUtilsSuite	on Windows, isWindows is true	pass
+sge.visui.util.OsUtilsSuite	on macOS, isMac is true	pass
+sge.visui.util.ValidatorsSuite	All validators implement InputValidator	pass
+sge.visui.util.ValidatorsSuite	All validators reject non-numeric garbage	pass
+sge.visui.util.ValidatorsSuite	Exclusive range rejects boundaries	pass
+sge.visui.util.ValidatorsSuite	FLOATS is a FloatValidator instance	pass
+sge.visui.util.ValidatorsSuite	FloatValidator accepts scientific notation	pass
+sge.visui.util.ValidatorsSuite	FloatValidator accepts special values	pass
+sge.visui.util.ValidatorsSuite	FloatValidator accepts strings with leading/trailing whitespace	pass
+sge.visui.util.ValidatorsSuite	FloatValidator accepts valid floats	pass
+sge.visui.util.ValidatorsSuite	FloatValidator rejects non-floats	pass
+sge.visui.util.ValidatorsSuite	GreaterThan and LesserThan combined define a range	pass
+sge.visui.util.ValidatorsSuite	GreaterThanValidator threshold can be changed	pass
+sge.visui.util.ValidatorsSuite	GreaterThanValidator useEquals can be toggled	pass
+sge.visui.util.ValidatorsSuite	GreaterThanValidator with equals	pass
+sge.visui.util.ValidatorsSuite	GreaterThanValidator with negative threshold	pass
+sge.visui.util.ValidatorsSuite	GreaterThanValidator with zero threshold	pass
+sge.visui.util.ValidatorsSuite	GreaterThanValidator without equals	pass
+sge.visui.util.ValidatorsSuite	INTEGERS is an IntegerValidator instance	pass
+sge.visui.util.ValidatorsSuite	IntegerValidator accepts negative int min	pass
+sge.visui.util.ValidatorsSuite	IntegerValidator accepts valid integers	pass
+sge.visui.util.ValidatorsSuite	IntegerValidator rejects hex notation	pass
+sge.visui.util.ValidatorsSuite	IntegerValidator rejects leading/trailing spaces	pass
+sge.visui.util.ValidatorsSuite	IntegerValidator rejects non-integers	pass
+sge.visui.util.ValidatorsSuite	IntegerValidator rejects overflow	pass
+sge.visui.util.ValidatorsSuite	LesserThanValidator threshold can be changed	pass
+sge.visui.util.ValidatorsSuite	LesserThanValidator useEquals can be toggled	pass
+sge.visui.util.ValidatorsSuite	LesserThanValidator with equals	pass
+sge.visui.util.ValidatorsSuite	LesserThanValidator with negative threshold	pass
+sge.visui.util.ValidatorsSuite	LesserThanValidator with zero threshold	pass
+sge.visui.util.ValidatorsSuite	LesserThanValidator without equals	pass
+sge.visui.util.ValidatorsSuite	shared INTEGERS and FLOATS instances work	pass
