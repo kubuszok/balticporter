@@ -16294,7 +16294,7 @@ member	com.badlogic.gdx.utils.CharArray#append(long)	sge.utils.CharArray#append(
 member	com.badlogic.gdx.utils.CharArray#append(long,int)	sge.utils.CharArray#append(long,int)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	639	e180b8f56ea12ec9	
 member	com.badlogic.gdx.utils.CharArray#append(long,int,char)	sge.utils.CharArray#append(long,int,char)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	647	83c4486053c28002	
 member	com.badlogic.gdx.utils.CharArray#appendAll(Array)	sge.utils.CharArray#appendAll(Array<T>)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	818	dd67a60e05cdb2b6	
-member	com.badlogic.gdx.utils.CharArray#appendAll(JavaIterable)	sge.utils.CharArray#appendAll(JavaIterable<?>)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	802	46902be3ae9c5258	
+member	com.badlogic.gdx.utils.CharArray#appendAll(JavaIterable)	sge.utils.CharArray#appendAll(JavaIterable<?>)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	802	fd3dcc96041fa9ae	
 member	com.badlogic.gdx.utils.CharArray#appendAll(JavaIterator)	sge.utils.CharArray#appendAll(JavaIterator<?>)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	810	44d7cadc305f225e	
 member	com.badlogic.gdx.utils.CharArray#appendCodePoint(int)	sge.utils.CharArray#appendCodePoint(int)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	1204	5372077c7c85585d	
 member	com.badlogic.gdx.utils.CharArray#appendFalse(int)	sge.utils.CharArray#appendFalse(int)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	827	5438c1b9d2adfde2	vis=private
