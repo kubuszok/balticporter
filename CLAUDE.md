@@ -515,6 +515,19 @@ two instances holding two halves of one table are not a map. So a parameterised 
   answer for a composition nobody has designed;
 - **a refusal is a finding, never an approximation.** Same key, different value stays two instances
   and is reported with the phase's own sentence for why;
+- **the merge is also the only way a DEPENDENT can place a phase EARLY, which reads as a fact about
+  tables and is a fact about ORDER.** A merged phase sits at the BASE's position; an UNMERGED
+  dependent phase lands at the END of the effective surface. `Pipeline.order` is a min-heap on
+  declaration index, so a `runsBefore` edge written from there does not merely constrain the phase it
+  names — it POSTPONES that phase past every unconstrained phase in between, and the phase that moved
+  is one nobody was thinking about. Measured on the first phase a dependent needed to run early:
+  `context-seam 42 -> 41` with **ZERO emitted bytes changed and the new phase SKIPPED for the
+  measurement**, because `type-redirect` had slid past `globals->implicits` and the threading analysis
+  read a pre-redirect ancestry. So state the POSITION first — a base declares an EMPTY instance of the
+  phase where it belongs, §1(b)'s no-op making that free — and only then the edge; and declare no edge
+  the phase does not need, since a `runsBefore` copied from a phase that needs it is a reordering
+  nothing reports. **An inert phase can be inert on the TREE and not on the PIPELINE**, and the
+  evidence then lands on a check that has nothing to do with it;
 - **the merge lives in the DEPENDENT's pipeline only.** The base manifest a dependent declares must
   stay the base *as the base ran it* or its published map is `BaseMapStale` and every base-surface
   question turns fatal — which is why the fold runs on `policyChain` (a dependent's chain contains

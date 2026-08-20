@@ -183,6 +183,32 @@ object VisUiPolicy:
       // substitution and no redirect keyed on that simple name may reach across — and the way to
       // discharge it is to write none, which is what this manifest does.
       surface = List(
+        // THE ONE MEMBER THIS LIBRARY HAS TO MOVE, AND THE BASE IS WHY (`PROGRESS.md` §10.9.7
+        // family 2, `ENGINE-LIMITS.md` D13).
+        //
+        // libGDX core redirects `com.badlogic.gdx.utils.Disposable` onto `java.lang.AutoCloseable`
+        // and renames `dispose -> close` across the override component. VisUI declares FIVE
+        // `Disposable` implementors, and two of the classes in that component already declare a
+        // `close()` of their own — `VisWindow`'s close-button handler (`addCloseButton`,
+        // `closeOnEscape`), which `ColorPicker` overrides. One emitted class cannot declare
+        // `close()` twice, so `MemberRenamer.OnCollision.Refuse` refused the whole component and
+        // the port emitted five classes claiming `AutoCloseable` and implementing none of it.
+        //
+        // `java.lang.AutoCloseable#close` is not negotiable, so the member that moves is VisUI's
+        // OWN — and which of two members keeps a name is exactly what the engine may not invent
+        // (that refusal is correct and stays). `closeWindow` is this port's answer: it is free
+        // upstream (grepped — the string occurs nowhere in `ui/`), it says what the member does,
+        // and it is the WINDOW half of the pair rather than the `AutoCloseable` half, which is the
+        // only half a consumer can substitute for. The reference hand port keeps `close()` here
+        // and pays for it by NOT retargeting `Disposable` on these types at all — a hand port's
+        // freedom, per CLAUDE.md §3.5, and not a mechanical port's option, since the base has
+        // already dropped `Disposable`.
+        //
+        // The KEY names `VisWindow#close` and the rename takes the component, so `ColorPicker`'s
+        // override moves with it — the whole-or-none guarantee `MemberRenamer` exists for.
+        balticporter.transform.MemberRenameTransform(Map(
+          "com.kotcrab.vis.ui.widget.VisWindow#close" -> "closeWindow",
+        )),
         // LAST, deliberately, for the reason `AshleyPolicy`, `GdxAiPolicy` and `TextraTypistPolicy`
         // state: this reads what the BASE actually emitted and reports a reference the base does
         // not ship, so it must run after any seam that re-points such a reference, or it reports

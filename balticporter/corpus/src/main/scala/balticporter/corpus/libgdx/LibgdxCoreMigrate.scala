@@ -803,7 +803,31 @@ object LibgdxPolicy:
   def mainPhases: List[balticporter.tir.Phase] =
     List(beanProperties, new CollectionsTransform(retarget = comparatorRetarget), new MutableParamsTransform,
          new PanamaFfiTransform(), unwrapReflection, classTable, new GdxSharedIteratorRule,
-         disposableRedirect, textureHandle, nullability, globalsToContext)
+         memberRenames, disposableRedirect, textureHandle, nullability, globalsToContext)
+
+  /** EMPTY, AND IT IS THE POSITION THAT IS THE POLICY — libGDX renames none of its own members.
+    *
+    * `disposableRedirect` below renames `dispose -> close` across the whole override component of
+    * `com.badlogic.gdx.utils.Disposable`, and `java.lang.AutoCloseable#close` is not a name anything
+    * may negotiate. Every DEPENDENT that declares a `Disposable` implementor which already has a
+    * `close()` of its own therefore inherits a collision this base created, and
+    * `MemberRenamer.OnCollision.Refuse` refuses the component whole — correctly, since which of two
+    * members keeps a name is not the engine's to invent (`ENGINE-LIMITS.md` D13). The dependent's
+    * answer is a `member-rename` entry moving ITS OWN member out of the way, and such an entry has
+    * to run BEFORE the redirect.
+    *
+    * A dependent cannot put a phase early in a pipeline it did not write: an unmerged dependent
+    * phase lands at the END of the effective surface, and a `runsBefore` edge from there POSTPONES
+    * the phase it names past everything declared in between — measured on `sge-visui` as
+    * `type-redirect` moving past `globals->implicits`, `context-seam 42 -> 41`, at 0 emitted bytes
+    * (`Pipeline.order`'s own recorded failure shape). What CAN place it is the merge: `SurfaceFold`
+    * puts a merged phase at the BASE's position, so this empty instance IS the position, and a
+    * dependent's table merges into it. `MemberRenameTransform` with no entries is a structural
+    * no-op — §1(b)'s "turned off needs no code path" — so this costs every other port exactly one
+    * fingerprint field and nothing else.
+    */
+  def memberRenames: balticporter.transform.MemberRenameTransform =
+    new balticporter.transform.MemberRenameTransform()
 
   /** `com.badlogic.gdx.Gdx` — eleven `public static` fields read from 100 files — retired into a
     * `sge.Sge` threaded as a `using` parameter (DESIGN.md §8.4).

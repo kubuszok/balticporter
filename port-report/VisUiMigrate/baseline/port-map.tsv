@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-visui	engine=balticporter/0.1.0-SNAPSHOT	sources=7a29c946918c2898	files=162	policy=e9d8215e3f9bd6d4
+# balticporter port map	schema=3	module=sge-visui	engine=balticporter/0.1.0-SNAPSHOT	sources=7a29c946918c2898	files=162	policy=12b8d6ea07ee80b1
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.kotcrab.vis.ui.FocusManager	sge.visui.FocusManager	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
 type	com.kotcrab.vis.ui.Focusable	sge.visui.Focusable	Renamed	-		0		form=trait
@@ -358,7 +358,7 @@ member	com.kotcrab.vis.ui.VisUI#TARGET_GDX_VERSION	sge.visui.VisUI#TARGET_GDX_VE
 member	com.kotcrab.vis.ui.VisUI#checkBeforeLoad(Sge)	sge.visui.VisUI#checkBeforeLoad(Sge)	Renamed	-	com/kotcrab/vis/ui/VisUI.java	96	9f4ebd9066b0f82f	placement=companion vis=private
 member	com.kotcrab.vis.ui.VisUI#defaultTitleAlign	sge.visui.VisUI#defaultTitleAlign	Renamed	-	com/kotcrab/vis/ui/VisUI.java	36	aaa9b0d7261c157c	placement=companion vis=private
 member	com.kotcrab.vis.ui.VisUI#dispose()	sge.visui.VisUI#dispose()	Renamed	-	com/kotcrab/vis/ui/VisUI.java	106	4f857d9f19598170	placement=companion
-member	com.kotcrab.vis.ui.VisUI#dispose(boolean)	sge.visui.VisUI#dispose(boolean)	Renamed	-	com/kotcrab/vis/ui/VisUI.java	114	134ed6216499bf69	placement=companion
+member	com.kotcrab.vis.ui.VisUI#dispose(boolean)	sge.visui.VisUI#dispose(boolean)	Renamed	-	com/kotcrab/vis/ui/VisUI.java	114	8403d4fcb2f32ce9	placement=companion
 member	com.kotcrab.vis.ui.VisUI#getDefaultTitleAlign()	sge.visui.VisUI#getDefaultTitleAlign()	Renamed	-	com/kotcrab/vis/ui/VisUI.java	138	34555374d3d145ad	placement=companion
 member	com.kotcrab.vis.ui.VisUI#getSizes()	sge.visui.VisUI#getSizes()	Renamed	-	com/kotcrab/vis/ui/VisUI.java	130	944aacdb97380532	placement=companion
 member	com.kotcrab.vis.ui.VisUI#getSkin()	sge.visui.VisUI#getSkin()	Renamed	-	com/kotcrab/vis/ui/VisUI.java	121	eab602abf389bb22	placement=companion
@@ -1051,10 +1051,10 @@ member	com.kotcrab.vis.ui.util.dialog.Dialogs$InputDialog#<stmt6>	sge.visui.util
 member	com.kotcrab.vis.ui.util.dialog.Dialogs$InputDialog#<stmt7>	sge.visui.util.dialog.Dialogs$InputDialog#<stmt7>	Renamed	-	com/kotcrab/vis/ui/util/dialog/Dialogs.java	251	e55089cd1ea93552	
 member	com.kotcrab.vis.ui.util.dialog.Dialogs$InputDialog#<stmt8>	sge.visui.util.dialog.Dialogs$InputDialog#<stmt8>	Renamed	-	com/kotcrab/vis/ui/util/dialog/Dialogs.java	255	bbc8306daf10fe61	
 member	com.kotcrab.vis.ui.util.dialog.Dialogs$InputDialog#<stmt9>	sge.visui.util.dialog.Dialogs$InputDialog#<stmt9>	Renamed	-	com/kotcrab/vis/ui/util/dialog/Dialogs.java	260	732e03cd3446a9b5	
-member	com.kotcrab.vis.ui.util.dialog.Dialogs$InputDialog#addListeners()	sge.visui.util.dialog.Dialogs$InputDialog#addListeners()	Renamed	-	com/kotcrab/vis/ui/util/dialog/Dialogs.java	321	bf99237cdba49149	vis=private[Dialogs]
+member	com.kotcrab.vis.ui.util.dialog.Dialogs$InputDialog#addListeners()	sge.visui.util.dialog.Dialogs$InputDialog#addListeners()	Renamed	-	com/kotcrab/vis/ui/util/dialog/Dialogs.java	321	a61e2fc51d815af4	vis=private[Dialogs]
 member	com.kotcrab.vis.ui.util.dialog.Dialogs$InputDialog#addValidatableFieldListener(VisTextField)	sge.visui.util.dialog.Dialogs$InputDialog#addValidatableFieldListener(VisTextField)	Renamed	-	com/kotcrab/vis/ui/util/dialog/Dialogs.java	307	2064330c2b734fb7	vis=private[Dialogs]
 member	com.kotcrab.vis.ui.util.dialog.Dialogs$InputDialog#cancelButton	sge.visui.util.dialog.Dialogs$InputDialog#cancelButton	Renamed	-	com/kotcrab/vis/ui/util/dialog/Dialogs.java	234	85eee56497ecdb50	vis=private[Dialogs]
-member	com.kotcrab.vis.ui.util.dialog.Dialogs$InputDialog#close()	sge.visui.util.dialog.Dialogs$InputDialog#close()	Renamed	-	com/kotcrab/vis/ui/util/dialog/Dialogs.java	280	9074e753893bb3de	
+member	com.kotcrab.vis.ui.util.dialog.Dialogs$InputDialog#closeWindow()	sge.visui.util.dialog.Dialogs$InputDialog#closeWindow()	Renamed	-	com/kotcrab/vis/ui/util/dialog/Dialogs.java	280	31a1b14612d56b7d	
 member	com.kotcrab.vis.ui.util.dialog.Dialogs$InputDialog#field	sge.visui.util.dialog.Dialogs$InputDialog#field	Renamed	-	com/kotcrab/vis/ui/util/dialog/Dialogs.java	232	95bab6b543b7f26a	vis=private[Dialogs]
 member	com.kotcrab.vis.ui.util.dialog.Dialogs$InputDialog#listener	sge.visui.util.dialog.Dialogs$InputDialog#listener	Renamed	-	com/kotcrab/vis/ui/util/dialog/Dialogs.java	231	abd7d0d13359f902	vis=private[Dialogs]
 member	com.kotcrab.vis.ui.util.dialog.Dialogs$InputDialog#okButton	sge.visui.util.dialog.Dialogs$InputDialog#okButton	Renamed	-	com/kotcrab/vis/ui/util/dialog/Dialogs.java	233	5935fb720ef8c718	vis=private[Dialogs]
@@ -2293,11 +2293,11 @@ member	com.kotcrab.vis.ui.widget.VisWindow#<init>(String,String,Sge)	sge.visui.w
 member	com.kotcrab.vis.ui.widget.VisWindow#<init>(String,WindowStyle,Sge)	sge.visui.widget.VisWindow#<init>(String,WindowStyle,Sge)	Renamed	-	com/kotcrab/vis/ui/widget/VisWindow.java	61	2e6b9f8701ac0901	
 member	com.kotcrab.vis.ui.widget.VisWindow#<init>(String,boolean,Sge)	sge.visui.widget.VisWindow#<init>(String,boolean,Sge)	Renamed	-	com/kotcrab/vis/ui/widget/VisWindow.java	51	7b80377b3eaa3d46	
 member	com.kotcrab.vis.ui.widget.VisWindow#FADE_TIME	sge.visui.widget.VisWindow#FADE_TIME	Renamed	-	com/kotcrab/vis/ui/widget/VisWindow.java	39	31241e24baee2d86	placement=companion
-member	com.kotcrab.vis.ui.widget.VisWindow#addCloseButton()	sge.visui.widget.VisWindow#addCloseButton()	Renamed	-	com/kotcrab/vis/ui/widget/VisWindow.java	169	b9743e196a238efc	
+member	com.kotcrab.vis.ui.widget.VisWindow#addCloseButton()	sge.visui.widget.VisWindow#addCloseButton()	Renamed	-	com/kotcrab/vis/ui/widget/VisWindow.java	169	c025c51abad6fa65	
 member	com.kotcrab.vis.ui.widget.VisWindow#centerOnAdd	sge.visui.widget.VisWindow#centerOnAdd	Renamed	-	com/kotcrab/vis/ui/widget/VisWindow.java	41	a961300373210a13	vis=private
 member	com.kotcrab.vis.ui.widget.VisWindow#centerWindow()	sge.visui.widget.VisWindow#centerWindow()	Renamed	-	com/kotcrab/vis/ui/widget/VisWindow.java	76	50a084078d67fc06	
-member	com.kotcrab.vis.ui.widget.VisWindow#close()	sge.visui.widget.VisWindow#close()	Renamed	-	com/kotcrab/vis/ui/widget/VisWindow.java	161	06051bfe0202dc05	
-member	com.kotcrab.vis.ui.widget.VisWindow#closeOnEscape()	sge.visui.widget.VisWindow#closeOnEscape()	Renamed	-	com/kotcrab/vis/ui/widget/VisWindow.java	197	bb244f33b54d35c4	
+member	com.kotcrab.vis.ui.widget.VisWindow#closeOnEscape()	sge.visui.widget.VisWindow#closeOnEscape()	Renamed	-	com/kotcrab/vis/ui/widget/VisWindow.java	197	1b3254d4cd8d16f5	
+member	com.kotcrab.vis.ui.widget.VisWindow#closeWindow()	sge.visui.widget.VisWindow#closeWindow()	Renamed	-	com/kotcrab/vis/ui/widget/VisWindow.java	161	40ac704939f28a94	
 member	com.kotcrab.vis.ui.widget.VisWindow#draw(Batch,float)	sge.visui.widget.VisWindow#draw(Batch,float)	Renamed	-	com/kotcrab/vis/ui/widget/VisWindow.java	230	989c9cb1d948e9af	
 member	com.kotcrab.vis.ui.widget.VisWindow#fadeIn()	sge.visui.widget.VisWindow#fadeIn()	Renamed	-	com/kotcrab/vis/ui/widget/VisWindow.java	152	e50427ea4026b647	
 member	com.kotcrab.vis.ui.widget.VisWindow#fadeIn(float)	sge.visui.widget.VisWindow#fadeIn(float)	Renamed	-	com/kotcrab/vis/ui/widget/VisWindow.java	140	bafd8eb4db73be2a	
@@ -2334,6 +2334,7 @@ member	com.kotcrab.vis.ui.widget.color.BasicColorPicker#HEX_FIELD_WIDTH	sge.visu
 member	com.kotcrab.vis.ui.widget.color.BasicColorPicker#PALETTE_SIZE	sge.visui.widget.color.BasicColorPicker#PALETTE_SIZE	Renamed	-	com/kotcrab/vis/ui/widget/color/BasicColorPicker.java	63	d010a379fbfdf131	placement=companion
 member	com.kotcrab.vis.ui.widget.color.BasicColorPicker#VERTICAL_BAR_WIDTH	sge.visui.widget.color.BasicColorPicker#VERTICAL_BAR_WIDTH	Renamed	-	com/kotcrab/vis/ui/widget/color/BasicColorPicker.java	67	64d7d61e3873dd81	placement=companion vis=private
 member	com.kotcrab.vis.ui.widget.color.BasicColorPicker#allowAlphaEdit	sge.visui.widget.color.BasicColorPicker#allowAlphaEdit	Renamed	-	com/kotcrab/vis/ui/widget/color/BasicColorPicker.java	94	bfc5cee0eea14bf4	vis=private
+member	com.kotcrab.vis.ui.widget.color.BasicColorPicker#close()	sge.visui.widget.color.BasicColorPicker#close()	Renamed	-	com/kotcrab/vis/ui/widget/color/BasicColorPicker.java	331	775cbe6db6d7c538	
 member	com.kotcrab.vis.ui.widget.color.BasicColorPicker#color	sge.visui.widget.color.BasicColorPicker#color	Renamed	-	com/kotcrab/vis/ui/widget/color/BasicColorPicker.java	79	c088f604925c48a7	name=color$shadow
 member	com.kotcrab.vis.ui.widget.color.BasicColorPicker#colorPreviewsTable	sge.visui.widget.color.BasicColorPicker#colorPreviewsTable	Renamed	-	com/kotcrab/vis/ui/widget/color/BasicColorPicker.java	87	c7e45e09606247f1	vis=private
 member	com.kotcrab.vis.ui.widget.color.BasicColorPicker#commons	sge.visui.widget.color.BasicColorPicker#commons	Renamed	-	com/kotcrab/vis/ui/widget/color/BasicColorPicker.java	81	e7a65353efadf9ff	
@@ -2342,7 +2343,6 @@ member	com.kotcrab.vis.ui.widget.color.BasicColorPicker#createColorsPreviewTable
 member	com.kotcrab.vis.ui.widget.color.BasicColorPicker#createHexTable()	sge.visui.widget.color.BasicColorPicker#createHexTable()	Renamed	-	com/kotcrab/vis/ui/widget/color/BasicColorPicker.java	181	c448d49f729df5e9	vis=private
 member	com.kotcrab.vis.ui.widget.color.BasicColorPicker#createUI()	sge.visui.widget.color.BasicColorPicker#createUI()	Renamed	-	com/kotcrab/vis/ui/widget/color/BasicColorPicker.java	133	12b4c9d928366ca8	
 member	com.kotcrab.vis.ui.widget.color.BasicColorPicker#currentColorImg	sge.visui.widget.color.BasicColorPicker#currentColorImg	Renamed	-	com/kotcrab/vis/ui/widget/color/BasicColorPicker.java	91	cdd28f5ebd2f0895	vis=private
-member	com.kotcrab.vis.ui.widget.color.BasicColorPicker#dispose()	sge.visui.widget.color.BasicColorPicker#dispose()	Renamed	-	com/kotcrab/vis/ui/widget/color/BasicColorPicker.java	331	c9e096d4000369d7	
 member	com.kotcrab.vis.ui.widget.color.BasicColorPicker#disposed	sge.visui.widget.color.BasicColorPicker#disposed	Renamed	-	com/kotcrab/vis/ui/widget/color/BasicColorPicker.java	98	3f833972782d1402	vis=private
 member	com.kotcrab.vis.ui.widget.color.BasicColorPicker#draw(Batch,float)	sge.visui.widget.color.BasicColorPicker#draw(Batch,float)	Renamed	-	com/kotcrab/vis/ui/widget/color/BasicColorPicker.java	319	8ef7b44ed72a16a9	
 member	com.kotcrab.vis.ui.widget.color.BasicColorPicker#focusHexField()	sge.visui.widget.color.BasicColorPicker#focusHexField()	Renamed	-	com/kotcrab/vis/ui/widget/color/BasicColorPicker.java	208	c2e30d9a7c495d82	
@@ -2394,11 +2394,11 @@ member	com.kotcrab.vis.ui.widget.color.ColorPicker#<stmt7>	sge.visui.widget.colo
 member	com.kotcrab.vis.ui.widget.color.ColorPicker#<stmt8>	sge.visui.widget.color.ColorPicker#<stmt8>	Renamed	-	com/kotcrab/vis/ui/widget/color/ColorPicker.java	88	e28210918d8825d2	
 member	com.kotcrab.vis.ui.widget.color.ColorPicker#<stmt9>	sge.visui.widget.color.ColorPicker#<stmt9>	Renamed	-	com/kotcrab/vis/ui/widget/color/ColorPicker.java	89	383e1514503cf14f	
 member	com.kotcrab.vis.ui.widget.color.ColorPicker#cancelButton	sge.visui.widget.color.ColorPicker#cancelButton	Renamed	-	com/kotcrab/vis/ui/widget/color/ColorPicker.java	49	388dbe59af212e4d	vis=private
-member	com.kotcrab.vis.ui.widget.color.ColorPicker#close()	sge.visui.widget.color.ColorPicker#close()	Renamed	-	com/kotcrab/vis/ui/widget/color/ColorPicker.java	153	09694189cd03b1d7	
+member	com.kotcrab.vis.ui.widget.color.ColorPicker#close()	sge.visui.widget.color.ColorPicker#close()	Renamed	-	com/kotcrab/vis/ui/widget/color/ColorPicker.java	159	f78ccf04b0030be1	
 member	com.kotcrab.vis.ui.widget.color.ColorPicker#closeAfterPickingFinished	sge.visui.widget.color.ColorPicker#closeAfterPickingFinished	Renamed	-	com/kotcrab/vis/ui/widget/color/ColorPicker.java	52	eac2595e1870f835	vis=private
+member	com.kotcrab.vis.ui.widget.color.ColorPicker#closeWindow()	sge.visui.widget.color.ColorPicker#closeWindow()	Renamed	-	com/kotcrab/vis/ui/widget/color/ColorPicker.java	153	8a4a26df2cbbaedb	
 member	com.kotcrab.vis.ui.widget.color.ColorPicker#createButtons()	sge.visui.widget.color.ColorPicker#createButtons()	Renamed	-	com/kotcrab/vis/ui/widget/color/ColorPicker.java	98	f14e3266e6ae7e21	vis=private
-member	com.kotcrab.vis.ui.widget.color.ColorPicker#createListeners()	sge.visui.widget.color.ColorPicker#createListeners()	Renamed	-	com/kotcrab/vis/ui/widget/color/ColorPicker.java	107	8540238f41999af5	vis=private
-member	com.kotcrab.vis.ui.widget.color.ColorPicker#dispose()	sge.visui.widget.color.ColorPicker#dispose()	Renamed	-	com/kotcrab/vis/ui/widget/color/ColorPicker.java	159	cc71cf59420d8a5f	
+member	com.kotcrab.vis.ui.widget.color.ColorPicker#createListeners()	sge.visui.widget.color.ColorPicker#createListeners()	Renamed	-	com/kotcrab/vis/ui/widget/color/ColorPicker.java	107	94f0e8390aefadd8	vis=private
 member	com.kotcrab.vis.ui.widget.color.ColorPicker#fadeOutDueToCanceled	sge.visui.widget.color.ColorPicker#fadeOutDueToCanceled	Renamed	-	com/kotcrab/vis/ui/widget/color/ColorPicker.java	54	de0af6e88fb9c2c2	vis=private
 member	com.kotcrab.vis.ui.widget.color.ColorPicker#getListener()	sge.visui.widget.color.ColorPicker#getListener()	Renamed	-	com/kotcrab/vis/ui/widget/color/ColorPicker.java	204	0b186a3942db5024	
 member	com.kotcrab.vis.ui.widget.color.ColorPicker#getPicker()	sge.visui.widget.color.ColorPicker#getPicker()	Renamed	-	com/kotcrab/vis/ui/widget/color/ColorPicker.java	164	987c3ba32b952c63	
@@ -2577,8 +2577,8 @@ member	com.kotcrab.vis.ui.widget.color.internal.PickerCommons#<stmt2>	sge.visui.
 member	com.kotcrab.vis.ui.widget.color.internal.PickerCommons#<stmt3>	sge.visui.widget.color.internal.PickerCommons#<stmt3>	Renamed	-	com/kotcrab/vis/ui/widget/color/internal/PickerCommons.java	47	8d4f612a2f471716	
 member	com.kotcrab.vis.ui.widget.color.internal.PickerCommons#<stmt4>	sge.visui.widget.color.internal.PickerCommons#<stmt4>	Renamed	-	com/kotcrab/vis/ui/widget/color/internal/PickerCommons.java	49	0cf1f447fbc670a0	
 member	com.kotcrab.vis.ui.widget.color.internal.PickerCommons#<stmt5>	sge.visui.widget.color.internal.PickerCommons#<stmt5>	Renamed	-	com/kotcrab/vis/ui/widget/color/internal/PickerCommons.java	50	fd0d19a83825f80c	
-member	com.kotcrab.vis.ui.widget.color.internal.PickerCommons#createPixmap()	sge.visui.widget.color.internal.PickerCommons#createPixmap()	Renamed	-	com/kotcrab/vis/ui/widget/color/internal/PickerCommons.java	53	0b7d26be06201752	vis=private
-member	com.kotcrab.vis.ui.widget.color.internal.PickerCommons#dispose()	sge.visui.widget.color.internal.PickerCommons#dispose()	Renamed	-	com/kotcrab/vis/ui/widget/color/internal/PickerCommons.java	102	fe74febe0496c735	
+member	com.kotcrab.vis.ui.widget.color.internal.PickerCommons#close()	sge.visui.widget.color.internal.PickerCommons#close()	Renamed	-	com/kotcrab/vis/ui/widget/color/internal/PickerCommons.java	102	211f088e2facb7b1	
+member	com.kotcrab.vis.ui.widget.color.internal.PickerCommons#createPixmap()	sge.visui.widget.color.internal.PickerCommons#createPixmap()	Renamed	-	com/kotcrab/vis/ui/widget/color/internal/PickerCommons.java	53	9a9cb0ceacd5e981	vis=private
 member	com.kotcrab.vis.ui.widget.color.internal.PickerCommons#getBarShader(int)	sge.visui.widget.color.internal.PickerCommons#getBarShader(int)	Renamed	-	com/kotcrab/vis/ui/widget/color/internal/PickerCommons.java	85	8b31f576c0aa10cb	
 member	com.kotcrab.vis.ui.widget.color.internal.PickerCommons#gridShader	sge.visui.widget.color.internal.PickerCommons#gridShader	Renamed	-	com/kotcrab/vis/ui/widget/color/internal/PickerCommons.java	40	80816cdff0838eeb	
 member	com.kotcrab.vis.ui.widget.color.internal.PickerCommons#hsvShader	sge.visui.widget.color.internal.PickerCommons#hsvShader	Renamed	-	com/kotcrab/vis/ui/widget/color/internal/PickerCommons.java	38	8750d72fea3edd79	
@@ -2627,7 +2627,7 @@ member	com.kotcrab.vis.ui.widget.file.FileChooser#addRecentDirectory(FileHandle)
 member	com.kotcrab.vis.ui.widget.file.FileChooser#buildFileList(Array,IdentityMap,Array,boolean)	sge.visui.widget.file.FileChooser#buildFileList(Array<FileHandle>,IdentityMap<FileHandle,FileHandleMetadata>,Array<FileHandle>,boolean)	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	923	44c1eab172696b6b	vis=private
 member	com.kotcrab.vis.ui.widget.file.FileChooser#chooserWinService	sge.visui.widget.file.FileChooser#chooserWinService	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	100	f06d02e4f06a6355	vis=private
 member	com.kotcrab.vis.ui.widget.file.FileChooser#clearRecentDirectories()	sge.visui.widget.file.FileChooser#clearRecentDirectories()	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	1032	f652ff1642698451	
-member	com.kotcrab.vis.ui.widget.file.FileChooser#close()	sge.visui.widget.file.FileChooser#close()	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	709	d26fdfd8078079ff	
+member	com.kotcrab.vis.ui.widget.file.FileChooser#closeWindow()	sge.visui.widget.file.FileChooser#closeWindow()	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	709	d3ecd1a13a17fb53	
 member	com.kotcrab.vis.ui.widget.file.FileChooser#confirmButton	sge.visui.widget.file.FileChooser#confirmButton	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	155	e1a58770d1c6dbe1	vis=private
 member	com.kotcrab.vis.ui.widget.file.FileChooser#createBottomButtons()	sge.visui.widget.file.FileChooser#createBottomButtons()	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	593	0d1a3586b7baa177	vis=private
 member	com.kotcrab.vis.ui.widget.file.FileChooser#createCenterContentPanel()	sge.visui.widget.file.FileChooser#createCenterContentPanel()	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	451	294511324ece88a4	vis=private
@@ -3387,10 +3387,10 @@ member	com.kotcrab.vis.ui.widget.tabbedpane.Tab#<init>(boolean)	sge.visui.widget
 member	com.kotcrab.vis.ui.widget.tabbedpane.Tab#<init>(boolean,boolean)	sge.visui.widget.tabbedpane.Tab#<init>(boolean,boolean)	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/Tab.java	48	27f81f493b1bc568	
 member	com.kotcrab.vis.ui.widget.tabbedpane.Tab#activeTab	sge.visui.widget.tabbedpane.Tab#activeTab	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/Tab.java	29	b3c3b88bcac84471	vis=private
 member	com.kotcrab.vis.ui.widget.tabbedpane.Tab#checkSavable()	sge.visui.widget.tabbedpane.Tab#checkSavable()	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/Tab.java	125	1f65b0b4cbce094d	vis=private
+member	com.kotcrab.vis.ui.widget.tabbedpane.Tab#close()	sge.visui.widget.tabbedpane.Tab#close()	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/Tab.java	136	5948db60683bb26b	
 member	com.kotcrab.vis.ui.widget.tabbedpane.Tab#closeableByUser	sge.visui.widget.tabbedpane.Tab#closeableByUser	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/Tab.java	32	77711b39641fb195	vis=private
 member	com.kotcrab.vis.ui.widget.tabbedpane.Tab#dirty	sge.visui.widget.tabbedpane.Tab#dirty	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/Tab.java	34	8fee9e98ad7b3fea	name=dirty$field
 member	com.kotcrab.vis.ui.widget.tabbedpane.Tab#dirty()	sge.visui.widget.tabbedpane.Tab#dirty()	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/Tab.java	111	82fddf85f881e9c6	
-member	com.kotcrab.vis.ui.widget.tabbedpane.Tab#dispose()	sge.visui.widget.tabbedpane.Tab#dispose()	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/Tab.java	136	4dfab30e06d7c77a	
 member	com.kotcrab.vis.ui.widget.tabbedpane.Tab#getContentTable()	sge.visui.widget.tabbedpane.Tab#getContentTable()	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/Tab.java	60	8d36ee1483cd32d0	
 member	com.kotcrab.vis.ui.widget.tabbedpane.Tab#getPane()	sge.visui.widget.tabbedpane.Tab#getPane()	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/Tab.java	78	dea329e2caf36ed5	
 member	com.kotcrab.vis.ui.widget.tabbedpane.Tab#getTabTitle()	sge.visui.widget.tabbedpane.Tab#getTabTitle()	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/Tab.java	54	16f65268e9c76bfc	
@@ -3449,9 +3449,9 @@ member	com.kotcrab.vis.ui.widget.tabbedpane.TabbedPane#notifyListenersRemovedAll
 member	com.kotcrab.vis.ui.widget.tabbedpane.TabbedPane#notifyListenersSwitched(Tab)	sge.visui.widget.tabbedpane.TabbedPane#notifyListenersSwitched(Tab)	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/TabbedPane.java	469	602414dca130d6d8	vis=private
 member	com.kotcrab.vis.ui.widget.tabbedpane.TabbedPane#remove(Tab)	sge.visui.widget.tabbedpane.TabbedPane#remove(Tab)	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/TabbedPane.java	337	b578e1656365528b	
 member	com.kotcrab.vis.ui.widget.tabbedpane.TabbedPane#remove(Tab,boolean)	sge.visui.widget.tabbedpane.TabbedPane#remove(Tab,boolean)	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/TabbedPane.java	345	d82bd79b951fa9fc	
-member	com.kotcrab.vis.ui.widget.tabbedpane.TabbedPane#removeAll()	sge.visui.widget.tabbedpane.TabbedPane#removeAll()	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/TabbedPane.java	408	9b1162c2c8a3f2cc	
+member	com.kotcrab.vis.ui.widget.tabbedpane.TabbedPane#removeAll()	sge.visui.widget.tabbedpane.TabbedPane#removeAll()	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/TabbedPane.java	408	670e2aef864c90d7	
 member	com.kotcrab.vis.ui.widget.tabbedpane.TabbedPane#removeListener(TabbedPaneListener)	sge.visui.widget.tabbedpane.TabbedPane#removeListener(TabbedPaneListener)	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/TabbedPane.java	465	cb5b71595849da33	
-member	com.kotcrab.vis.ui.widget.tabbedpane.TabbedPane#removeTab(Tab)	sge.visui.widget.tabbedpane.TabbedPane#removeTab(Tab)	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/TabbedPane.java	373	9269b4773260ec6f	vis=private
+member	com.kotcrab.vis.ui.widget.tabbedpane.TabbedPane#removeTab(Tab)	sge.visui.widget.tabbedpane.TabbedPane#removeTab(Tab)	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/TabbedPane.java	373	6715baa3d5d6a504	vis=private
 member	com.kotcrab.vis.ui.widget.tabbedpane.TabbedPane#selectFirstEnabledTab()	sge.visui.widget.tabbedpane.TabbedPane#selectFirstEnabledTab()	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/TabbedPane.java	311	c1be5d288604a7ac	vis=private
 member	com.kotcrab.vis.ui.widget.tabbedpane.TabbedPane#setAllowTabDeselect(boolean)	sge.visui.widget.tabbedpane.TabbedPane#setAllowTabDeselect(boolean)	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/TabbedPane.java	215	4e064f6cd391cf57	
 member	com.kotcrab.vis.ui.widget.tabbedpane.TabbedPane#sharedCloseActiveButtonStyle	sge.visui.widget.tabbedpane.TabbedPane#sharedCloseActiveButtonStyle	Renamed	-	com/kotcrab/vis/ui/widget/tabbedpane/TabbedPane.java	77	9e8fd9b05b2497cc	

@@ -6384,6 +6384,45 @@ the wave's most valuable finding because two green sibling ports had made it inv
 > library's surface, and there is **no manifest spelling for a member rename today**. That is the
 > next wave's item and it is (b)/(c), not (a).
 >
+> **CLOSED, wave 2 — `32 -> 24`, and the spelling is a §1(b) PHASE rather than a manifest field.**
+> `MemberRenameTransform(Map(key -> newName))` — `member-rename` — is the manifest's way to reach
+> `MemberRenamer`, whose five gap-closing features were all built FOR a policy rename and whose only
+> policy caller was `TypeRedirectTransform`, where the new name is DICTATED by the redirect target
+> rather than chosen. VisUI's entry is one line, `com.kotcrab.vis.ui.widget.VisWindow#close ->
+> closeWindow`, and the rename takes the whole override component — **four** declarations, not the two
+> the refusal named (`Dialogs$InputDialog` and `FileChooser` override it too), which is the
+> whole-or-none guarantee doing its job. All eight `E008` closed; `policy 1 -> 0` as the D13 refusal
+> stops being made; 33 member digests, every one attributable to a `RenamedMember` decision or to a
+> call site of one; every other lane flat.
+>
+> Three rulings, each of which is a difference from an existing consumer of the same machinery, and
+> the third is the one that was measured wrong first:
+>
+> - **`OnCollision.Refuse`**, the opposite of `bean-properties`' `DeferToEmitter`. A bean name is
+>   FORCED by java's `getX`; this one is the port's free choice, so a collision has a one-edit answer
+>   the port holds, and moving a third member the entry never named would be the engine doing what the
+>   refusal it is built on declines to do;
+> - **base-anchored**, unlike the type-redirect rename, which may move a base declaration because the
+>   base declared that rename and already performed it. `SurfaceIntrusion` cannot cover this — it
+>   screens the KEY's owner, and the key names the dependent's own class whose COMPONENT climbs into
+>   the base — so the graph carries the units this run does not emit as `baseUnits`;
+> - **its PIPELINE POSITION comes from the merge, and a `runsBefore` edge alone made things worse.**
+>   Declared last in this port's surface (where an unmerged dependent phase lands) with a
+>   `runsBefore("java-collections->scala")` copied from `bean-properties`, it postponed `type-redirect`
+>   past `globals->implicits`, the threading analysis read a PRE-redirect ancestry, one
+>   `unconstructed-thread` warning stopped firing, and **`context-seam` moved 42 -> 41 with 0 emitted
+>   bytes changed and the phase SKIPPED for the measurement**. The fix is libGDX's base declaring an
+>   EMPTY instance at the position a rename belongs, into which this port's table merges —
+>   `context-seam` back to 42, and the base's own lane 0 errors / 0 members / every count flat with
+>   only `policy=` moving in its published `port-map.tsv`. `CLAUDE.md` §1.5 and `DESIGN.md` §8.13 carry
+>   the rule: an edge added by a late-declared phase is a REORDERING of the phases in between, and an
+>   inert phase can be inert on the tree and not on the pipeline.
+>
+> What this port does NOT do is what the reference hand port does. sge keeps `close()` on `VisWindow`
+> and pays for it by not retargeting `Disposable` on these types at all — a hand port's freedom
+> (`CLAUDE.md` §3.5), and not a mechanical port's option, since the base has already dropped
+> `Disposable` and un-redirecting emits five references to a type that is not there.
+
 > **BOTH gates were wrong and each alone was enough to hide it**, which is part of why the free
 > control misled: `PortRun` collected surface policy reports from `manifest.surface` — the module's
 > OWN declared phases — and this manifest declares no `TypeRedirectTransform` at all, so the phase's
@@ -6458,18 +6497,11 @@ about its siblings*).
    which is `selfSupplied`'s shape with an expression the mechanical port cannot currently write —
    and price §10.8.9's three exits and §10.8.11's fourth against it. The anchor becomes admissible
    once that lands, and not before.
-2. **`disposableRedirect`'s missing member rename** (§10.9.7 family 2) — 8 errors. **DIAGNOSED, and
-   it is not what it looked like**: `OverrideGraph` is correct and the rename refuses on a REAL
-   collision with VisUI's own `VisWindow#close`/`ColorPicker#close`. The (a) half — the refusal
-   reading `policy 0` because the merged phase's key is the base's — is CLOSED (`ENGINE-LIMITS.md`
-   D13). What is left is (b)/(c): `AutoCloseable#close` is not negotiable, so VisUI's own `close()`
-   is the member that must move, and **no manifest spelling for a member rename exists**. Designing
-   one is the item — and it is a BASE-visible mechanism, so it is measured on `measure-all`.
-3. **The resource copy** (§10.9.3) — §1(b), and the port is not shippable without it whatever the
+2. **The resource copy** (§10.9.3) — §1(b), and the port is not shippable without it whatever the
    error count reads.
-4. **The two upstream tests, then the 72-case differential probe** (§10.9.1). Until one lands this
+3. **The two upstream tests, then the 72-case differential probe** (§10.9.1). Until one lands this
    port has no behavioural evidence at all.
-5. **USL**, with its zero-authoring oracle (§10.9.1).
+4. **USL**, with its zero-authoring oracle (§10.9.1).
 
 ---
 

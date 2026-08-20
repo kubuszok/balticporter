@@ -3026,8 +3026,31 @@ the holder's own FQN with an identity member map.
 a hierarchy — `parentsOf`, `childrenOf`, `overridden`, and `closureOf` returning owned members plus
 `externalAnchors` plus `baseAnchors`. **`MemberRenamer`** expands rename requests through those
 closures, refuses anchored ones, checks the new name against **effective names parents-first**, records
-one decision per renamed declaration and applies **one** symbol-table rewrite. Three consumers: the
-property transform, the type-redirect member renames, and §8.4's using-threading.
+one decision per renamed declaration and applies **one** symbol-table rewrite. Four consumers: the
+property transform, the type-redirect member renames, §8.4's using-threading, and `member-rename`.
+
+**`member-rename` is the FOURTH, and it exists because the other three never let a PORT choose a
+name.** Every gap the list below names — override edges, external-anchor refusal, the
+`Reason.Configured` path — was closed *for* a policy rename, and until it shipped the only policy
+caller was the type-redirect one, whose new name is not chosen at all: it is **dictated** by the
+redirect target. That leaves one ordinary configuration with no spelling. A base redirects
+`Disposable -> java.lang.AutoCloseable` renaming `dispose -> close`; a dependent declares a class
+implementing `Disposable` that already has a `close()` of its own; one emitted class cannot declare
+`close()` twice, so `OnCollision.Refuse` refuses the component whole — correctly, because *which of two
+members keeps a name* is not the engine's to invent. `AutoCloseable#close` is not negotiable, so the
+member that moves is the library's own, and a `MemberRenameTransform(Map("owner#member" -> "newName"))`
+is where the port says so. Three rulings distinguish it from the other three consumers:
+
+- **`OnCollision.Refuse`, which is the OPPOSITE of the property transform's `DeferToEmitter`.** A bean
+  property's name is forced by java's `getX`; this one is the port's free choice, so a collision has a
+  one-edit answer the port already holds, and moving a third member the entry never named would be the
+  engine doing exactly what the refusal it is built on declines to do.
+- **BASE-ANCHORED, which the type-redirect rename deliberately is not.** That one may move a base's
+  declaration because the base itself declared the rename and already performed it; a free-form rename
+  has no such agreement, so its graph carries the units this run does not emit as `baseUnits`. Note
+  `SurfaceIntrusion` cannot cover this: it screens the KEY's owner, and the key here names the
+  dependent's own class whose *component* climbs into the base.
+- **its PIPELINE POSITION comes from the merge, not from an edge.** See §8.13's own note.
 
 **The shared core, named precisely: *the set of declarations that must change together, or none of
 them*, plus anchored refusal with a counted decision.** Renaming half a component is a silent contract
@@ -4501,6 +4524,31 @@ reads. A base conf and a dependent conf that each declare `redirects { }` now me
 Scala manifests do. Had the fold been placed in `PortRun` instead of on the manifest, this would
 have been a second truth on the second path — D9 notes the hole was identical on both, so the fix
 had to be.
+
+#### …and the merge is the only way a DEPENDENT can place a phase EARLY — measured
+
+The fold puts a merged phase at the BASE's position, which reads as a detail about tables and is the
+whole of how a dependent gets a phase to run before one it did not write. An UNMERGED dependent phase
+lands at the END of the effective surface, and `Pipeline.order` is a min-heap on declaration index —
+so a `runsBefore` edge from there does not merely constrain the phase it names, it **postpones that
+phase past every unconstrained phase in between**. That is `Pipeline.order`'s own recorded failure
+shape one era later: the FIFO half was fixed by the heap, and this half the heap cannot fix, because
+the constraint is real and the position is wrong.
+
+`member-rename` (§8.5) measured it. Declared last in `sge-visui`'s surface with a
+`runsBefore("java-collections->scala")` copied from `bean-properties` — which needs that edge and this
+phase does not — it pushed `type-redirect` past `globals->implicits`; the threading analysis then read
+a PRE-redirect ancestry, one `unconstructed-thread` warning stopped firing, and **`context-seam` moved
+42 -> 41 with ZERO emitted bytes changed and the phase SKIPPED for the measurement**. The fix is the
+one this section is about: libGDX's base declares an EMPTY `MemberRenameTransform` at the position a
+rename belongs (ahead of its own `disposableRedirect`), the dependent's table merges into it, and the
+`type-redirect` edge is satisfied by declaration order and costs nothing. Every other libGDX port pays
+one fingerprint field — measured as `policy=` alone moving in the base's published `port-map.tsv`, at
+0 rows, 0 errors and every count flat.
+
+The general rule: **an edge added by a late-declared phase is a REORDERING of the phases in between,
+and an inert phase can be inert on the tree and not on the pipeline.** State the phase's position, then
+add the edge.
 
 #### Which phases declare a merge, and which keep the default
 

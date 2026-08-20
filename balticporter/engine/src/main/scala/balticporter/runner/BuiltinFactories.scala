@@ -51,7 +51,8 @@ object BuiltinFactories:
   def all: List[TransformFactory] = List(
     new CollectionsFactory, new MutableParamsFactory, new PanamaFfiFactory,
     new TestFrameworkFactory, new StaticForwarderFactory, new ClassTableFactory,
-    new TypeRedirectFactory, new MethodBodyFactory, new CallSiteSubstitutionFactory,
+    new TypeRedirectFactory, new MemberRenameFactory,
+    new MethodBodyFactory, new CallSiteSubstitutionFactory,
     new PortMapMigrationFactory,
     new PrimitiveToOpaqueFactory, new GlobalsToImplicitsFactory, new BeanPropertyFactory,
     new NullabilityFactory, new PublicFieldAccessorFactory, new RemediationFactory,
@@ -256,6 +257,26 @@ final class BeanPropertyFactory extends TransformFactory:
     new BeanPropertyTransform(
       pairs   = entries.map((k, v, _) => k -> v).toMap,
       targets = entries.collect { case (k, _, t) if t != Target.DefPair => k -> t }.toMap)
+
+/** ```
+  * { transform = "member-rename"
+  *   renames { "a.VisWindow#close"   = "closeWindow"      # every overload of `close`
+  *             "a.Stream#close(int)" = "closeAt" } }      # exactly one of them
+  * ```
+  *
+  * The key is a MEMBER KEY in the upstream namespace and the value is a BARE MEMBER NAME — no
+  * nesting, and deliberately no second shape. A `type-redirect` entry nests its `memberRenames`
+  * under the type it redirects because the owner is already named there and a rename for an
+  * un-redirected type must be unwritable; here the owner is the key's own first half, so a nested
+  * form would be a second spelling of one act (`CLAUDE.md` §5's one-policy-one-spelling rule).
+  *
+  * An absent `renames` is an empty map, which makes the phase a structural no-op — the §1(b)
+  * requirement that "turned off" needs no code path.
+  */
+final class MemberRenameFactory extends TransformFactory:
+  def name = MemberRenameTransform.Name
+  def fromConfig(config: ConfigView): Phase =
+    new MemberRenameTransform(config.stringMap("renames").getOrElse(Map.empty))
 
 /** `{ transform = "method-body", bodies { "a.B#m()" = "{ … }" } }` */
 final class MethodBodyFactory extends TransformFactory:

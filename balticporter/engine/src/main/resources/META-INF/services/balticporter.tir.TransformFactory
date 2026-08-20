@@ -7,6 +7,7 @@ balticporter.runner.TestFrameworkFactory
 balticporter.runner.StaticForwarderFactory
 balticporter.runner.ClassTableFactory
 balticporter.runner.TypeRedirectFactory
+balticporter.runner.MemberRenameFactory
 balticporter.runner.MethodBodyFactory
 balticporter.runner.CallSiteSubstitutionFactory
 balticporter.runner.PortMapMigrationFactory
