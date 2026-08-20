@@ -6236,18 +6236,18 @@ Three first-run readings worth keeping:
   shape that produces a `SelfTyped` population, and `refused = 0` is the number a port meeting the
   bar by converting nothing would print.
 
-### 10.9.7 The 32 errors, classified per §1
+### 10.9.7 The 32 errors, classified per §1 — **24 after wave 2**
 
 All 32 are `EngineGap` — none `Approx`, none `Unmapped`, none `Declared`. Five families, and the
 first two are 19 of the 32:
 
-| n | code | family | §1 |
-|---|---|---|---|
-| 11 | `E172` | `No given sge.Sge` — the context threading, and 10 of the 11 are on a java `enum` | **(b)/(c) PER-LIBRARY** |
-| 8 | `E008` | `value dispose is not a member of` a BASE type — the base's `Disposable → AutoCloseable` retarget not reaching a DEPENDENT | **(a) ENGINE** |
-| 8 | `E007` | three sub-families: 3 boxed `java.lang.Boolean` at a primitive formal, 3 a raw nested type through a generic outer, 1 K13's `Null` at an abstract `T`, 1 an override's parameter | **(a) ENGINE**, one **(b)** |
-| 3 | `E134` | `None of the overloaded alternatives of constructor <Base>` — the dropped `super(args)`, arriving as a compile error | **(a) ENGINE** |
-| 2 | `E006`+`E120` | a static method naming its own class's TYPE PARAMETER, in the companion | **(a) ENGINE** |
+| n | code | family | §1 | state |
+|---|---|---|---|---|
+| 11 | `E172` | `No given sge.Sge` — the context threading, and 10 of the 11 are on a java `enum` | **(b)/(c) PER-LIBRARY** | OPEN |
+| 8 | `E008` | `value dispose is not a member of` a BASE type — the base's `Disposable → AutoCloseable` retarget not reaching a DEPENDENT | **(a) ENGINE**, then **(b)** | **CLOSED, wave 2** |
+| 8 | `E007` | three sub-families: 3 boxed `java.lang.Boolean` at a primitive formal, 3 a raw nested type through a generic outer, 1 K13's `Null` at an abstract `T`, 1 an override's parameter | **(a) ENGINE**, one **(b)** | OPEN |
+| 3 | `E134` | `None of the overloaded alternatives of constructor <Base>` — the dropped `super(args)`, arriving as a compile error | **(a) ENGINE** | REFUSED, `ENGINE-LIMITS.md` C3 |
+| 2 | `E006`+`E120` | a static method naming its own class's TYPE PARAMETER, in the companion | **(a) ENGINE** | OPEN, re-diagnosed |
 
 **FAMILY 1 — THE ENUM IS THIS LIBRARY'S UNIT OF POLICY, AND IT IS THE ONE SHAPE THE THREADING
 CANNOT SERVE.** VisUI puts its i18n lookups on java enums: `Locales$CommonText#getBundle`,
@@ -6450,6 +6450,23 @@ Tree#initialize` and `…ui.Table#obtainCell` are `private` in what the base emi
 constructor replay that reaches them cannot be widened and is refused — the check's own text says
 only the base can widen a member it emits, and it cannot know a future dependent will replay one.
 
+> **DIAGNOSED, wave 2, and it stays REFUSED — the funnel did not decline for a fixable reason.** All
+> three of `VisScrollPane`'s constructors are ROOTS (none calls `this(...)`) and each calls a
+> DIFFERENT `super`: `super(widget, style)`, `super(widget, VisUI.getSkin(), styleName)`,
+> `super(widget, VisUI.getSkin(), "list")`. Scala lets only the PRIMARY reach super, so no choice of
+> primary lets the other two express theirs, and there is nothing to replay them through — which is
+> `ENGINE-LIMITS.md` C3 exactly, recorded at all three with a `DroppedSuperCall` decision and a porter
+> note. `VisSlider` and `VisWindow` are the same shape.
+>
+> **What is new is WHY these three are LOUD while the other 45 sites are silent, and it is one
+> question about the PARENT.** A dropped `super(args)` emits `extends Base` with no arguments. Where
+> the emitted parent HAS a nilary constructor, that compiles, and the port constructs a
+> differently-configured object with no moved count and no finding — §4.4's silent class. Where
+> it does not — `ScrollPane`, `Slider` and `Window` all require arguments — scalac says *none of the
+> overloaded alternatives … match arguments ()* and the loss is visible at the line that caused it.
+> **The loud form is strictly the better one**, so these three errors are C3's residue working, not a
+> regression, and the instinct to read three `E134`s as one is what this note exists to stop.
+
 **FAMILY 5 — a static method naming its class's type parameter.** `CellWidget<Widget extends Actor>`
 declares a STATIC `builder()`, which in java does not see `Widget` at all; the emitted companion's
 `def builder()` renders `CellWidget.of(null.asInstanceOf[Widget])` and the companion has no such
@@ -6457,6 +6474,33 @@ type in scope (`E006`), with the sibling `E120` a conflicting definition on `Gri
 convertToActor`. §4.56's *a member synthesised into a subclass carries the PARENT's scope* read at
 the other end: a static member must NOT carry the class's scope, and the substitution that is exact
 in one direction is wrong in the other.
+
+> **RE-DIAGNOSED, wave 2, and the two halves are NOT one family — the sentence above joined them by
+> their file and not by their cause.**
+>
+> The `E006` half is as written and is sharper than "the companion has no such type". `builder()` is
+> `public static CellWidgetBuilder<Actor> builder() { return of(null); }`, and java infers the callee's
+> `<Widget extends Actor>` as `Actor` from the target type. The port ascribed the `null` to the
+> CALLEE'S OWN PARAMETER NAME — `CellWidget.of(null.asInstanceOf[Widget])` — which is §4.56's rule read
+> at a CALL SITE rather than at a synthesis: an ascription may only name a type the CALL SITE can see,
+> and a method-level type parameter is nameable nowhere outside its own callee. Note the emission would
+> COMPILE with no ascription at all, since scala infers `Widget` from the expected return type; the
+> ascription exists for the `null`-at-a-type-variable family (K13) and is over-applied here.
+>
+> The `E120`+`E007` half is a DIFFERENT family and the wave-1 hypothesis for it — the G21
+> wildcard-resolved-to-bound arm order — is **wrong**, refuted by reading the emitted output rather
+> than by reasoning. `GridTableLayout` declares BOTH of `ActorLayout`'s overloads,
+> `convertToActor(Actor...)` and `convertToActor(CellWidget<?>...)`, and emits the SAME formal
+> (`Array[Actor]`) for both — with a cast the java never had appended in the first one's body to make
+> the call fit. The CONTROL is decisive: **the same two overloads in the INTERFACE emit correctly**
+> (`Array[Actor]` and `Array[CellWidget[?]]`), and so do `TableLayout`'s enum-constant bodies. A `?`
+> the engine renders `CellWidget[?]` two files over is not a `?` the engine cannot write, so this is
+> not G21. The discriminator is that `GridTableLayout` is ONE CLASS declaring BOTH — two overloads at
+> one (name, ARITY) — which is `CLAUDE.md` §4.55's over-approximate-key family: *a map from an
+> over-approximate key to a single value is a choice nobody made*, met a second time, and §4.56's
+> `Symbol.fullName`-carries-no-parameter-list beside it. Open; the fix is at whichever index resolves
+> a loose key to one member, and it is a FRONTEND change whose blast radius is every port, so it is
+> measured on `measure-all` and not on this lane.
 
 ### 10.9.8 Residues, named and classified
 

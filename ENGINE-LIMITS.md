@@ -2063,6 +2063,19 @@ fact.
 `Universal("ctor-funnel/super-args-dropped(C3)")`, and a porter note sits on every affected
 constructor in the emitted file — verified on liqp.*
 
+**AND WHETHER THE REFUSAL IS LOUD OR SILENT IS ONE QUESTION ABOUT THE PARENT, which is worth knowing
+before reading a wall of `E134` as a regression.** A dropped `super(args)` emits `extends Base` with
+no arguments. Where the emitted parent HAS a nilary constructor, that compiles, and the port
+constructs a differently-configured object at 0 errors, 0 moved counts and no finding but the
+`omissions` row — §4.4's silent class. Where it does not, scalac reads *none of the overloaded
+alternatives of constructor Base … match arguments ()* at the line that caused it. `sge-visui`
+carries both faces at once: **45 dropped-super sites of which exactly 3 are errors**
+(`VisScrollPane`, `VisSlider`, `VisWindow`, whose parents `ScrollPane`, `Slider` and `Window` all
+require arguments), each with three roots calling three different `super(...)` and none passing its
+own parameters through — this entry's own shape. **The loud form is strictly the better one**, so
+those three are the refusal working; do not chase them, and do not read the silent 42 as safer than
+the noisy 3.
+
 **AND PART OF THAT COUNT WAS NEVER A WALL — the REPLAY could express it and its own predicate did
 not recognise the SHAPE.** Everything above is about what the funnel cannot NOMINATE. `replayFor`
 is the other answer, and it is admissible exactly when the replay overwrites every field the
