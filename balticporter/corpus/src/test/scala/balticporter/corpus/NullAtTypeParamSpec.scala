@@ -91,7 +91,7 @@ class NullAtTypeParamSpec extends PortSuite:
     assertNotEmits(p, "asInstanceOf[Widget]")
   }
 
-  test("…and the SELF-CALL the arm exists for still casts — the same DECLARATION, not the same name") {
+  test("…and the SELF-CALL the arm exists for still casts — the variable is WRITABLE here") {
     val p = port(
       """package demo;
         |class Node<N> {
@@ -99,9 +99,25 @@ class NullAtTypeParamSpec extends PortSuite:
         |  void clear() { this.put(null); }
         |}
         |""".stripMargin)
-    // `put`'s formal IS this class's `N`, minted at one id, and `N` is in scope in `clear`. Without
-    // the cast the emitted `put(null)` is `Found: Null / Required: N`.
+    // `put`'s formal IS this class's `N`, and `N` is nameable in `clear`. Without the cast the
+    // emitted `put(null)` is `Found: Null / Required: N`.
     assertEmits(p, "this.put(null.asInstanceOf[N])")
+  }
+
+  test("…and an ENCLOSING METHOD's own variable is writable too, though it is a DIFFERENT declaration") {
+    val p = port(
+      """package demo;
+        |class Tree<T> { }
+        |class Library {
+        |  <T> Tree<T> make(String ref, T board) { return null; }
+        |  <T> Tree<T> make(String ref) { return make(ref, null); }
+        |}
+        |""".stripMargin)
+    // the callee's `<T>` and the caller's `<T>` are two declarations with one name, and java infers
+    // the callee's from the caller's return type — so the caller's IS what the slot wants, and it is
+    // in scope. A same-DECLARATION test answers `no` here and costs `Found: Null / Required: T`,
+    // which is what it measured on gdx-ai and on ssg-md before this arm read writability instead.
+    assertEmits(p, "make(ref, null.asInstanceOf[T])")
   }
 
   test("NEGATIVE: a null at an ORDINARY reference formal takes no cast at all") {

@@ -4566,20 +4566,32 @@ object SpoonTir:
           case Some(tp: CtTypeParameterReference) if isNull &&
             classOwned(tp) && recvSubst.get(tp.getSimpleName).exists(tpNameableHere) =>
             cast(recvSubst(tp.getSimpleName))
-          // …and the SAME DECLARATION, never merely the same NAME. The guard here used to be
-          // `resolveTypeParam(name).isDefined`, which was written to keep the `?T` unresolved stub
-          // out of the emitted text — a hazard, not a key (`CLAUDE.md` §4.55) — and it answers YES
-          // for any in-scope parameter that happens to be spelled the same. A generic METHOD
-          // shadowing its class's parameter is ordinary java, and its own `<Widget>` is nameable
-          // nowhere outside itself: `public static CellWidgetBuilder<Actor> builder() { return
-          // of(null); }` inside `class CellWidget<Widget extends Actor>` ascribed the `null` to the
-          // CALLEE's `Widget` and emitted `Not found: type Widget` from a `static` member, where the
-          // class's parameter is not in scope either (JLS 8.4.4). `sameVarInScope` is the engine's
-          // own answer to that question, keyed on the minted ID — so this is the FIRST arm's rule
-          // read at the second: a cast may only name a type the CALL SITE can see. Note the
-          // emission COMPILES with no ascription at all wherever scala can infer the callee's
-          // parameter from the expected type, which is why the narrowing costs nothing there.
-          case Some(tp: CtTypeParameterReference) if isNull && sameVarInScope(tp) =>
+          // …through the BARRIER-AWARE frame, which is the difference between *this name resolves*
+          // and *this name is WRITABLE here*. The guard was `resolveTypeParam(name).isDefined`,
+          // written to keep the `?T` unresolved stub out of the emitted text — a hazard, not a key
+          // (`CLAUDE.md` §4.55) — and `resolveTypeParam` deliberately sees every enclosing scope's
+          // parameters BY NAME, including ones java forbids naming from here. A `static` member
+          // cannot name its class's (JLS 8.4.4), so
+          // `public static CellWidgetBuilder<Actor> builder() { return of(null); }` inside
+          // `class CellWidget<Widget extends Actor>` — whose `of` declares its OWN `<Widget>` —
+          // ascribed the `null` to a `Widget` that is in scope nowhere in that method:
+          // `Not found: type Widget`.
+          //
+          // [[tpAccessibleHere]] is the engine's own answer to the writability question and is used
+          // by every other cast this frontend builds, so this is one derivation asked at a
+          // twelfth site rather than a new predicate. It is deliberately WEAKER than
+          // `sameVarInScope`, which was tried and is wrong here in both directions: an ENCLOSING
+          // METHOD's own `<T>` is a different declaration from the callee's same-named `<T>` and is
+          // exactly what java inferred (`<T> BehaviorTree<T> createBehaviorTree(String) { return
+          // createBehaviorTree(treeReference, null); }`), and a class's variable bound EXPLICITLY at
+          // the call (`new Pair<K, V>(k, null)` inside `OrderedMultiMap<K, V>`) demonstrably is the
+          // one in scope. Requiring the same DECLARATION cost 2 errors on each of two ports that had
+          // 0, on lanes this change was not aimed at — §5's *a narrowing is not exempt*, caught by
+          // the corpus and not by the port.
+          //
+          // Note the emission COMPILES with no ascription at all wherever scala can infer the
+          // callee's parameter from the expected type, which is why declining costs nothing there.
+          case Some(tp: CtTypeParameterReference) if isNull && tpAccessibleHere(tp) =>
             cast(tp)
           case _ => t
 
