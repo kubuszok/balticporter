@@ -854,6 +854,20 @@ blames?* — one probe; *would the JAVA have run under this harness?*; and *does
 comfortable answer, because the environment is somebody else's; it is also the one shape a census can
 be wrong about with every number in it correct.
 
+**…and a FOURTH, which is about the two vendored trees rather than about either port: *does the JAVA
+COMPILE against the dependency this run supplies?*** A dependent port parses its base's java as a
+resolution root, so the version of that tree is part of the measurement and nothing states it. Where
+the two disagree the port faithfully reproduces an error THE JAVA HAS — and it arrives looking
+exactly like an engine gap, because the emitted line is a `Found/Required` at a call the frontend
+could not resolve and therefore rendered defensively. Measured: three `E007`s on
+`OnscreenKeyboard.show(true)`, where the library's own `build.gradle` declares gdx **1.14.0** and the
+vendored gdx tree is **1.14.1**, which replaced that member's parameter. The tell is free and it is
+the upstream's OWN declaration: read the library's build file for the version it targets and compare
+it with the tree the port resolves against, BEFORE reading the error as the engine's. The remedy is
+not a translation — migrating a call across an upstream API break is a decision only the library's
+maintainer makes, and a hand port taking it (`keyboard.show(VisTextField.this)`) is this section's
+own hand-port freedom — so the honest outcome is a counted residue naming both versions.
+
 **But what the reference port EMITTED is evidence; what it implies for a MECHANICAL port is a
 hypothesis, and it is measured before it is policy.** The two are not doing the same thing. A hand
 port adjusts every caller by hand, so it can keep a JDK type in one file and stay consistent

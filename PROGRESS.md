@@ -259,8 +259,9 @@ repository-level NOTICE / THIRD-PARTY files are still hand-maintained and are no
    of this tier's four are now ported by the engine and each closed its named redesign differently:
    `sge-ai` was the first (166 files at 20 errors, the reflective behaviour-tree parser scoped as its
    own decision and deliberately NOT taken in the first emit, §10.7); `sge-textra` is at ZERO with a
-   differential gate at 160 passing (§10.8); and `sge-visui`'s milestone 1 is 162 files at 32 errors
-   with the USL redesign PRICED and deferred rather than assumed (§10.9). What `sge-colorful` should
+   differential gate at 160 passing (§10.8); and `sge-visui` is 162 files at 8 errors, all four
+   remaining families attributed and none of them a translation the engine refuses to write, with
+   the USL redesign PRICED and deferred rather than assumed (§10.9). What `sge-colorful` should
    copy is §10.7.3 — read the dependency direction before believing a drop is a leaf — and §10.9.4:
    check whether the "one construct, two answers" row in §1.1 is actually one construct.
 5. **`ssg-md` (flexmark)** — the largest Java surface. Milestone 1 (core + the eleven `flexmark-util-*`
@@ -6166,13 +6167,17 @@ substitution and no redirect keyed on that name may reach across, and the way to
 write none, which is what `VisUiPolicy` does. Both types translate mechanically and neither
 contributes an error. The §1.1 row is corrected in place.
 
-### 10.9.5 The manifest — three keys, and the reference port makes no deviation to price
+### 10.9.5 The manifest — three keys at milestone 1, five after wave 4, each with its number
 
 One `governs` claim, one `packageRenames` pair, and `PortMapTransform.forBases("sge")` LAST.
-Nothing else: no drop, no substitution, no redirect, no scope, no context extension, no
-`dependencies` (`ui/build.gradle` declares `com.badlogicgames.gdx:gdx` and nothing else — the whole
-external surface of this library is its base's, which is `sge-textra`'s lesson with the sign
-flipped). Everything else — `dropTypes`, `dropMethods`, `com.badlogic.gdx -> sge`, the collections
+Nothing else at the first emit: no drop, no substitution, no redirect, no scope, no context
+extension, no `dependencies` (`ui/build.gradle` declares `com.badlogicgames.gdx:gdx` and nothing
+else — the whole external surface of this library is its base's, which is `sge-textra`'s lesson with
+the sign flipped). Two arrived since, each with the wall that justified it: a
+`MemberRenameTransform` moving `VisWindow#close -> closeWindow` (wave 2, `32 -> 24`, §10.9.7
+family 2) and a `ContextHolderExtension` of the BASE's `com.badlogic.gdx.Gdx` holder carrying one
+`cache` key and eight `selfSupplied` keys (wave 4, `22 -> 8` with two engine fixes between them,
+§10.9.7 family 1). Everything else — `dropTypes`, `dropMethods`, `com.badlogic.gdx -> sge`, the collections
 and mutable-parameter phases — is INHERITED as the base's ONE instance (§1.5), and a second instance
 would be a `SurfaceDivergence` for a composition nobody designed.
 
@@ -6236,18 +6241,18 @@ Three first-run readings worth keeping:
   shape that produces a `SelfTyped` population, and `refused = 0` is the number a port meeting the
   bar by converting nothing would print.
 
-### 10.9.7 The 32 errors, classified per §1 — **24 after wave 2, 22 after wave 3**
+### 10.9.7 The 32 errors, classified per §1 — **24 after wave 2, 22 after wave 3, 8 after wave 4**
 
 All 32 are `EngineGap` — none `Approx`, none `Unmapped`, none `Declared`. Five families, and the
 first two are 19 of the 32:
 
 | n | code | family | §1 | state |
 |---|---|---|---|---|
-| 11 | `E172` | `No given sge.Sge` — the context threading, and 10 of the 11 are on a java `enum` | **(b)/(c) PER-LIBRARY** | OPEN |
+| 11 | `E172` | `No given sge.Sge` — the context threading, and 10 of the 11 are on a java `enum` | **(b)/(c) PER-LIBRARY** | **1 open, wave 4** |
 | 8 | `E008` | `value dispose is not a member of` a BASE type — the base's `Disposable → AutoCloseable` retarget not reaching a DEPENDENT | **(a) ENGINE**, then **(b)** | **CLOSED, wave 2** |
-| 8 | `E007` | three sub-families: 3 boxed `java.lang.Boolean` at a primitive formal, 3 a raw nested type through a generic outer, 1 K13's `Null` at an abstract `T`, 1 an override's parameter | **(a) ENGINE**, one **(b)** | **7 open** — one closed with the `E120` in wave 3 |
+| 8 | `E007` | three sub-families: 3 boxed `java.lang.Boolean` at a primitive formal, 3 a raw nested type through a generic outer, 1 K13's `Null` at an abstract `T`, 1 an override's parameter | **(a) ENGINE**, one **(b)** | **4 open** — one closed in wave 3, three in wave 4 |
 | 3 | `E134` | `None of the overloaded alternatives of constructor <Base>` — the dropped `super(args)`, arriving as a compile error | **(a) ENGINE** | REFUSED, `ENGINE-LIMITS.md` C3 |
-| 2 | `E006`+`E120` | a static method naming its own class's TYPE PARAMETER, in the companion | **(a) ENGINE** | **`E120` CLOSED, wave 3**; the `E006` is a different cause and OPEN |
+| 2 | `E006`+`E120` | a static method naming its own class's TYPE PARAMETER, in the companion | **(a) ENGINE** | **BOTH CLOSED** — `E120` wave 3, `E006` wave 4 |
 
 **FAMILY 1 — THE ENUM IS THIS LIBRARY'S UNIT OF POLICY, AND IT IS THE ONE SHAPE THE THREADING
 CANNOT SERVE.** VisUI puts its i18n lookups on java enums: `Locales$CommonText#getBundle`,
@@ -6325,6 +6330,46 @@ thing the next wave should measure.
 > ORDERING was not: the family needs the SECOND member (the cached context read as an EXPRESSION)
 > FIRST, and the anchor is downstream of it rather than upstream. The entry is not in the tree; the
 > refusal is visible at `ExternalSurface.jdkPlatform` and pinned by `OverrideGraphSpec`.
+
+> **CLOSED, wave 4 — `11 -> 1`, and the anchor was never the thing to lift.** Four steps, of which
+> the third is a nine-error regression stated rather than hidden:
+>
+> - **`ContextHolder.cache` — the FIFTH exit, in the engine.** `retain` names what a CONSTRUCTOR
+>   CLAUSE was handed and rides on `threadedClasses`; `VisUI` is an all-`static` lifecycle holder
+>   whose clause is on its METHODS, is constructed by nobody, and a `retain` key on it is a counted
+>   `NeverMatched` — the right answer to the wrong question. `cache` mints a private holder and a
+>   public THROWING accessor on the emitted companion and prepends `<held> = summon[T]` to every
+>   threaded method the type declares; a `selfSupplied` expression elsewhere reads `<Type>.<name>`.
+>   Its arrival is flat BY CONSTRUCTION — the fingerprint segment is omitted when the key is empty,
+>   so nothing had to be re-accepted for a key no port used (`CLAUDE.md` §1's own new paragraph).
+> - **VisUI states it, with the hand port's name.** One `cache` key (`sgeInstance`) and, at first,
+>   three `selfSupplied` keys: `22 -> 20`, closing exactly the two sites whose summon is in an
+>   INSTANCE member (`SkinScale#getSkinFile`, `ButtonType#getText`).
+> - **A CLASS AND ITS `object` ARE TWO SCOPES, which java's ONE namespace hides.** The third answer
+>   put its `given` at the head of the type's BODY, which reaches no summon in a `static` member:
+>   the statics are lowered into the companion and a companion does not see the class's instance
+>   members. The type takes the answer, the phase records that it landed, a `self-supplied` row is
+>   counted, every other number is flat, and the file says `No given` at every static site — nothing
+>   in the run disagrees with itself. So a self-supplied type gets a SECOND `given`, `private` and
+>   `static`, wherever it declares a static member and is not emitted as a module (one body for both
+>   halves would make every `summon` in it ambiguous). `20 -> 17` here; ONE type in the rest of the
+>   corpus (`AnimationControllerTest`), with gdx-vfx and sge-textra byte-identical.
+> - **CT10's five components are `private static`.** JLS 8.2: a private member is not INHERITED, so
+>   it neither overrides nor is overridden nor is hidden, and no ancestor can be declaring the member
+>   it overrides. `OverrideGraph` reads the modifier; `static` stays off that list because it HIDES
+>   and a hiding pair must still move together under a rename — which is why `TableLayout#grid`, a
+>   `public static`, still anchors. The lift ALONE is **`17 -> 27`**, with exactly the shape CT10
+>   recorded (`frozen-component 6 -> 1`, five `lost-clause`, five more `unconstructed-thread`), and
+>   **`27 -> 12`** with the five `selfSupplied` entries it uncovers. `context-seam` ends at **39** —
+>   the number it had BEFORE the lift. `ExternalSurface.jdkPlatform` still holds no `java.lang.Enum`
+>   entry and the refusal is still pinned; do not add it.
+>
+> **The 11th is the one the design named in advance, and `lazy-init` does not answer it either.**
+> `Draggable#BLOCKER` is `private static final Actor BLOCKER = new Actor()` with a `static { }` block
+> that installs a listener on it. A deferral is planned from ASSIGNMENTS in an initialiser, and that
+> `<clinit>` does not assign `BLOCKER` — it CALLS `addListener` on it — so a `lazy-init` key naming
+> the field defers nothing the block needs and one naming the `<clinit>` selects no site. It stays
+> the port's one `unsuppliable-use`, counted, with its exit unbuilt.
 
 **FAMILY 2 — `disposableRedirect` DID HALF ITS JOB HERE AND ALL OF IT ELSEWHERE, WHICH IS THE
 WAVE'S ENGINE FINDING.** The base's P1 step (§11.15) retargets `com.badlogic.gdx.utils.Disposable`
@@ -6632,70 +6677,52 @@ frontend-spoon 121, testkit 337, corpus 1,382 — 2,755 passing, 0 failing, 1 ig
 `336 -> 337` is this wave's own spec, whose negative was verified by running it against the
 pre-fix emitter and reading the emitted text it produced).
 
-### 10.9.10 Next
+### 10.9.10 The floor after wave 4 — **8 errors**, every one attributed
 
-1. **The context-seam family**, which is 11 of the 22 errors and one shape. **The `frozen-component`
-   probe is DONE and is a dead end — do not retry it** (`ENGINE-LIMITS.md` CT10, `32 -> 41`): the
-   anchor is a genuine over-refusal and lifting it converts six refusals into ten of two other kinds
-   without threading one member, because the blocker it was masking is that an emitted `enum` cannot
-   carry a constructor clause and its `toString()` override can never take one. Start instead at the
-   reference hand port's SECOND member (§10.9.7 family 1) — the cached context read as an EXPRESSION,
-   which is `selfSupplied`'s shape with an expression the mechanical port cannot currently write —
-   and price §10.8.9's three exits and §10.8.11's fourth against it. The anchor becomes admissible
-   once that lands, and not before.
+`22 -> 8`, and what is left is four families of which none is a translation the engine is refusing
+to write. Stated per row, because a residue nobody re-derives is a residue that silently changes
+size:
 
-   **The mechanism is DESIGNED and it is a FIFTH exit, not a fourth one re-used.** §1's own question
-   — *is there no value, or no NAME?* — has a different answer here from `sge-textra`'s, and the
-   difference is WHERE the threading attached. `retain` gives a name to what a CONSTRUCTOR CLAUSE was
-   handed, so it rides on `threadedClasses` and nowhere else; `VisUI` is an all-static holder whose
-   threading is on STATIC METHODS (`load(String)` reads `Gdx.files`, `checkBeforeLoad()` reads
-   `Gdx.app` — read off the upstream, not inferred), so it is in no `threadedClasses` at all and a
-   `retain` key on it emits nothing and is a counted `NeverMatched`. The value exists and it is in a
-   METHOD's clause, live only for that call.
+| n | code | what it is | §1 | why it stands |
+|---|---|---|---|---|
+| 3 | `E134` | `VisScrollPane`, `VisSlider`, `VisWindow` — the dropped `super(args)` | **(a) ENGINE, REFUSED** | `ENGINE-LIMITS.md` C3 exactly: all three constructors are ROOTS and each calls a DIFFERENT `super`, scala lets only the PRIMARY reach one, and there is nothing to replay the other two through. §10.9.7 family 4 says why the LOUD form is strictly the better one |
+| 3 | `E007` | `VisTextField` ×3 — `keyboard.show(true)` at an `OnscreenKeyboard` whose only `show` takes a `TextField` | **NEITHER — an UPSTREAM VERSION SKEW** | new this wave, and it is not the engine's: `vis-ui/build.gradle` declares `gdxVersion = '1.14.0'` and the vendored gdx tree is **1.14.1**, which replaced that member's parameter. javac would reject VisUI's own source against this tree. `CLAUDE.md` §3.5 carries the rule (ask whether the JAVA compiles against the dependency the run supplies) |
+| 1 | `E007` | `DragPane#findActor` — the base's `Group#findActor` returns `T \| Null` at an abstract `T` and this override declares `T` | **(b) on the BASE** | K13's row. The exit is a `NullabilityTransform` question about libGDX core's instance, and `nullability-boundary` reads 0 here because D2 scopes its reporting to the base's declarations |
+| 1 | `E172` | `Draggable#BLOCKER` — the port's one `unsuppliable-use` | **(b) PER-LIBRARY, exit UNBUILT** | a `private static final Actor` whose `static { }` block installs a listener on it. `lazy-init` does not reach it: a deferral is planned from ASSIGNMENTS and that `<clinit>` calls `addListener` rather than assigning |
 
-   So: **`ContextHolder.cache: Map[type FQN, member name]`**, per-declaration exactly as `retain` is
-   — it UNIONS, it is contributable from a `ContextHolderExtension`, and the empty map is both the
-   no-op and the default, which is §1's rule for a phase that ADDS declarations. On a type the
-   closure threaded at the METHOD it mints, on that type's emitted companion, a private mutable
-   holder and a PUBLIC accessor, and it prepends `<held> = summon[<ctx>]` to the body of every
-   threaded method the type declares. A `selfSupplied` expression on anything else then reads
-   `<Type>.<name>` — which is the hand port's `VisUI.sgeInstance` exactly, assigned inside each
-   `load(…)` and read by `ColorPickerText#getBundle` as
-   `Locales.getColorPickerBundle(using VisUI.sgeInstance)`.
+**The two engine gaps this wave closed on the way are worth naming apart from the context family,**
+because neither is about threading and both are general:
 
-   Four things that are decisions rather than detail:
+- **an ASCRIPTION may only name a type the CALL SITE can see.** `nullToTypeParam`'s second arm asked
+  whether the callee's formal RESOLVED BY NAME in the caller's scope — a guard written to keep the
+  `?T` stub out of the text, which answers YES for any in-scope parameter spelled the same. A
+  generic METHOD shadowing its class's parameter is ordinary java, and `static CellWidgetBuilder<Actor>
+  builder() { return of(null); }` emitted `null.asInstanceOf[Widget]` from a `static` member where
+  the class's `Widget` is not in scope either (JLS 8.4.4). It asks `sameVarInScope` now — the same
+  declaration, keyed on the minted id — and the emission needs no ascription at all where scalac
+  infers the callee's parameter from the expected type. `12 -> 11`, 2 member digests;
+- **a projection's PREFIX must be a TYPE.** An inner class of a GENERIC outer referred to RAW from
+  another file emitted `ListView#ListAdapterListener`, which names nothing. `isInnerClass` already
+  knew this and excluded a generic outer — but only on the branch for a type declared in the unit
+  being rendered; the path for one declared ELSEWHERE fell through to `nestedPath`. The fill goes
+  where the separator is chosen, `?` per parameter, which is what java wrote and what the reference
+  hand port renders every raw generic as. `11 -> 8`, 5 member digests.
 
-   - **it is a SEPARATE key and not `retain` deriving a second shape.** The two emit different
-     SURFACES — an instance `val` against a companion `def` over a `var` — and are read by different
-     EXPRESSIONS (`<value>.<name>` against `<Type>.<name>`), so one key would leave the port unable to
-     say which it meant and the phase deciding from the program. §1.5's derived-surface paragraph is
-     that failure with a name: two modules would fingerprint EQUAL and emit differently;
-   - **the accessor THROWS when unset, and the throw is JAVA'S OWN.** `VisUI.getSkin()` already
-     answers this precondition with `IllegalStateException("VisUI is not loaded!")`, so the emission
-     is the contract's own refusal (§1's rule: louder than java, never quieter) rather than a `null`
-     that reaches a caller as a plausible wrong answer;
-   - **the ordering is already measured and does not need re-deriving.** §10.8.11 probed a class-level
-     `given` both ways against scalac 3.8.4: it is initialised LAZILY, so an enum CONSTANT built at
-     module initialisation does not read the cache, and the assignment at the head of `load` runs
-     before `scale.getSkinFile()` — which is the one ordering this library actually exercises;
-   - **CT10's `toString` blocker does not come back**, and that is the point of starting here.
-     `selfSupplied` takes the seven enums OUT of `threadedClasses`, so their constructors keep java's
-     signature (no `lost-clause`), nothing reports `unconstructed-thread` about them, and
-     `override def toString()` needs no clause because the summon inside it resolves from the enum's
-     own body.
+### 10.9.11 Next
 
-   What it does NOT reach is the 11th error, and that is stated rather than absorbed:
-   `Draggable#BLOCKER` is a static field initialiser CONSTRUCTING a threaded `Actor` at class
-   initialisation, before any `load` could have assigned the cache — the `unsuppliable-use` row, whose
-   own exit is a `sites = lazy-init` entry the lane already names.
-2. **The remaining `E007`s and the `E006`** — 3 boxed `java.lang.Boolean` at a primitive formal, 3 a
-   raw nested type through a generic outer, 1 K13's `Null` at an abstract `T`, 1 an override's
-   parameter, and family 5's surviving half (an ascription naming a type the CALL SITE cannot see).
-   §10.9.7 has each one's diagnosis; none of them is the same shape as another.
-3. **The resource copy** (§10.9.3) — §1(b), and the port is not shippable without it whatever the
+1. **The differential suite** (§10.9.1) — the reference hand port's own MUnit tests, run against the
+   emitted surface. This port still has NO behavioural evidence of any kind, so every §4.4 form in
+   it is unmeasured and the 8-error floor says nothing about whether it WORKS. The precedent is
+   `sge-ai`'s and `sge-textra`'s: a CENSUS first (which of those assertions the emitted surface can
+   answer at all), taken TWICE because a per-file typer-error attribution is a floor, with every
+   edit a NAME or SHIM substitution from an enumerated table applied per RECEIVER and never to a
+   comment — both traps are `CLAUDE.md` §3.5's own paragraphs, with the numbers that produced them.
+2. **`Draggable#BLOCKER`'s exit**, which is a mechanism the engine does not have: a `sites` policy
+   whose subject is a class initialiser that USES a static rather than assigning one.
+3. **The two upstream `@Test`** (§10.9.1) — a test source set this port does not have yet, and the
+   smallest behavioural evidence available.
+4. **The resource copy** (§10.9.3) — §1(b), and the port is not shippable without it whatever the
    error count reads.
-4. **The two upstream tests, then the 72-case differential probe** (§10.9.1). Until one lands this
-   port has no behavioural evidence at all.
 5. **USL**, with its zero-authoring oracle (§10.9.1).
 
 ---

@@ -12653,8 +12653,35 @@ and `OverrideGraphSpec`'s enum case asserting that the anchor IS taken, so the e
 without this entry's other half. Do not re-derive the anchor argument; it is correct and it is not
 the question.
 
-*Fix kind: (a) engine — and the open half is the enum's context clause (§12's own family), never the
-external surface. `PROGRESS.md` §10.9.7 family 1 carries the per-site census.*
+> **CLOSED, and the ANCHOR ARGUMENT WAS THE WRONG ONE — the five components are `private static`
+> (`PROGRESS.md` §10.9.7 family 1, wave 4).** Everything above about `java.lang.Enum`'s surface is
+> correct and is not what these rows needed. `Locales$CommonText#getBundle` and its four siblings are
+> `private static I18NBundle getBundle()`, and JLS 8.2 answers a private member outright: it is NOT
+> INHERITED, so it neither overrides nor is overridden nor is hidden, and no ancestor — parsed or
+> unparsed — can be declaring the member it overrides, because there is none to declare.
+> `mayDeclare`'s unknown-surface `yes` is a statement about what an ancestor might DECLARE, and it
+> was being asked about a member with no override relation to declare anything against. So
+> `OverrideGraph` reads the modifier: a private member is its own closure with no external anchor,
+> and `matchingUp`/`matchingDown` skip private candidates. `static` is deliberately NOT on that list
+> — it HIDES rather than overrides and a hiding pair still has to move together under a rename —
+> which is why `TableLayout#grid`, a `public static`, still anchors and is still counted.
+>
+> **The nine-error regression above is REAL and it is a STAGE, not a verdict.** Measured again with
+> the modifier fix in place: `17 -> 27` for the lift alone, with exactly the shape this entry
+> recorded (`frozen-component 6 -> 1`, five `lost-clause`, five more `unconstructed-thread`), and
+> `27 -> 12` once the five enums the lift uncovers take a `selfSupplied` entry reading the cached
+> context. The whole `E172` family closed except `Draggable#BLOCKER`, which is an `unsuppliable-use`
+> and a different question. `context-seam` ended at 39 — the number it had BEFORE the lift.
+>
+> So this entry's own last paragraph is what turned out to be the operative one: the family needs the
+> hand port's SECOND member first, and the anchor is downstream of it. What is new is that the
+> "anchor" was never the thing to lift — `ExternalSurface.jdkPlatform` still holds no
+> `java.lang.Enum` entry, `OverrideGraphSpec`'s all-public enum row still asserts the refusal, and a
+> second row beside it now pins the private one. **Do not add the surface entry**; the argument for
+> it remains correct and remains beside the point.
+
+*Fix kind: (a) engine — and it was a MODIFIER, not an external surface. `PROGRESS.md` §10.9.7
+family 1 carries the per-site census.*
 
 ## 13. Retyping a PRIMITIVE to an opaque domain type
 
