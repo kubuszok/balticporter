@@ -528,6 +528,52 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     assert(clue(f.get.detail).contains("NO method the closure threaded"), f.get.render)
   }
 
+  /** A SELF-SUPPLIED TYPE WHOSE READS ARE ON BOTH SIDES — a `class` and its `object` are two
+    * SCOPES, and java's one namespace is what hides that.
+    *
+    * `Layout` is a java `enum` with a constant BODY that constructs a threaded type, so the closure
+    * reaches the enum as a class and `selfSupplied` answers it. The constant's body is emitted
+    * inside the COMPANION, where a `given` member of the class is not in scope at all — so the type
+    * takes the third answer, is reported as having taken it, and still emits `No given` at the one
+    * site that needed it. Measured on the first port whose framework-instantiated types were java
+    * enums (`PROGRESS.md` §10.9.7 family 1). */
+  private val bothSidesSrc =
+    """package demo;
+      |public class Gdx { public static Graphics graphics; }
+      |public class Graphics { public int getWidth() { return 0; } }
+      |public class Widget { int w; public Widget() { w = Gdx.graphics.getWidth(); } }
+      |public enum Layout {
+      |  ONE { public Widget make() { return new Widget(); } };
+      |  public abstract Widget make();
+      |  public static int probe() { return Gdx.graphics.getWidth(); }
+      |}
+      |""".stripMargin
+
+  test("a self-supplied type gets a COMPANION given too, where its statics are emitted") {
+    // NEGATIVE: pass `companion = false` and the emitted file carries ONE given, in the class body,
+    // while the constant's `make()` — which the emitter puts in the object — has nothing to summon.
+    // No count moves for that: the phase recorded the third answer and believes it landed.
+    val (_, _, _, o) = portedFrom(bothSidesSrc, cacheHolder.copy(
+      selfSupplied = Map("demo.Layout" -> "demo.Boot.demoCtx")))
+    val c = code(o)
+    assertEquals(clue(c).linesIterator.count(_.contains("private given demo.Ctx = demo.Boot.demoCtx")), 2, c)
+    // one in each body, and the ORDER is what says which is which: the class comes first.
+    val cls = c.indexOf("abstract class Layout")
+    val obj = c.indexOf("object Layout")
+    assert(clue(cls) >= 0 && clue(obj) > cls, c)
+    assert(c.indexOf("private given", cls) < obj, c)
+    assert(c.indexOf("private given", obj) > obj, c)
+  }
+
+  test("…and a type with NO static member gets ONE — an unused given is emitted text for nothing") {
+    // §5's over-approximation, the one shape no count can see. `Panel` reads the holder from an
+    // instance method and declares nothing static, so there is no companion for a second to go in.
+    val (_, _, _, o) = portedFrom(cacheSrc, cacheHolder.copy(
+      cache        = Map("demo.Boot"  -> "demoCtx"),
+      selfSupplied = Map("demo.Panel" -> "demo.Boot.demoCtx")))
+    assertEquals(clue(code(o)).linesIterator.count(_.contains("private given demo.Ctx")), 1, code(o))
+  }
+
   test("a `cache` NAME that is not an identifier is MALFORMED, not spliced into a header") {
     val (p, _, _, o) = portedFrom(cacheSrc, cacheHolder.copy(cache = Map("demo.Boot" -> "demo ctx")))
     val f = p.policyReport.findings.find(_.key == "demo.Boot")

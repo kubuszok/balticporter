@@ -609,6 +609,27 @@ final class GlobalsToImplicitsTransform(
             })
         }
 
+      /** DOES THIS TYPE'S COMPANION NEED ONE TOO? — a scala `class` and its `object` are TWO
+        * SCOPES, and java's one namespace is what hides it.
+        *
+        * The third answer emits `private given` at the head of the type's body, which is exactly
+        * right for every summon in an INSTANCE member and reaches not one in a `static` member: the
+        * statics are lowered into the companion, and a companion does not see the class's instance
+        * members. So a java type whose reads are on its static side takes the answer, is reported as
+        * answered, and still emits `No given` at every one of them — measured on the first port
+        * whose framework-instantiated types were java `enum`s (`PROGRESS.md` §10.9.7 family 1).
+        *
+        * Two conjuncts, and the second is what keeps the pair from colliding. A type this program
+        * emits as a MODULE has one body for both halves, so a second given there would be a second
+        * candidate in ONE scope and every `summon` in it ambiguous — the exact failure
+        * `Minter.retainedMember` avoids by not being `given` at all. And a type that declares no
+        * static member has no companion for the given to go in, so emitting one would be text for
+        * nothing (§5's over-approximation, the one shape no count can see). */
+      private def needsStaticGiven(t: Tree.ClassDef)(using p: Program): Boolean =
+        !p.symbolOf(t.symbol).exists(_.flags.isModule) &&
+          t.body.exists { case d: Definition => p.symbolOf(d.symbol).exists(_.flags.isStatic)
+                          case _             => false }
+
       override def transformClassDef(t0: Tree.ClassDef)(using Program): Tree.ClassDef =
         val t = cached(t0)
         // THE THIRD ANSWER (`ENGINE-LIMITS.md` CT7): no clause anywhere, and a `given` member at the
@@ -616,7 +637,8 @@ final class GlobalsToImplicitsTransform(
         // that uses the context before the given is initialised would read `null`, and the reference
         // hand port writes it first for the same reason.
         if need.selfSuppliedClasses(t.symbol) then
-          t.copy(body = mint.givenMember(t.symbol, ctxFqn, ctxRef, selfSource(t.symbol), t.origin) :: t.body)
+          t.copy(body = mint.givenMembers(t.symbol, ctxFqn, ctxRef, selfSource(t.symbol), t.origin,
+                                          companion = needsStaticGiven(t)) ++ t.body)
         else if !need.threadedClasses(t.symbol) then t
         else
           // THE RETAINED MEMBER, at the HEAD for the reason the `given` above is: a class body is a
@@ -1000,6 +1022,28 @@ object GlobalsToImplicitsTransform:
         member("", MemberKey(ctxFqn, "<given>").render, owner, ctxRef,
                Flags(isGiven = true, isPrivate = true)))
       Tree.ValDef(id, TypeTree(ctxRef, at), Some(Tree.Opaque(src, ctxRef, at)), at)
+
+    /** …and the SAME member for the COMPANION, where `companion` says the type has one.
+      *
+      * A scala `class` and its `object` are two SCOPES and java's one namespace is what hides it:
+      * the instance member above answers every summon in an instance method and NOT ONE in a
+      * `static` method, whose emitted home is the companion. Two givens, never one with a choice —
+      * a java type routinely reads the context on both sides, and they are in scopes that cannot
+      * see each other, so neither is a substitute for the other and neither can shadow it.
+      *
+      * The static one is anonymous and `private` for the instance one's reasons, and a SECOND id
+      * for the same owner, since a Scala member belongs to exactly one of the two bodies. */
+    def givenMembers(owner: SymId, ctxFqn: String, ctxRef: TypeRepr, src: String, at: Origin,
+                     companion: Boolean): List[Tree.ValDef] =
+      val inst = givenMember(owner, ctxFqn, ctxRef, src, at)
+      if !companion then List(inst)
+      else
+        val id = staticGivens.getOrElseUpdate(owner,
+          member("", MemberKey(ctxFqn, "<given-static>").render, owner, ctxRef,
+                 Flags(isGiven = true, isPrivate = true, isStatic = true)))
+        List(inst, Tree.ValDef(id, TypeTree(ctxRef, at), Some(Tree.Opaque(src, ctxRef, at)), at))
+
+    private val staticGivens = collection.mutable.Map.empty[SymId, SymId]
 
     /** THE RETAINED CONTEXT: `val <nm>: <ctx> = <the context expression>`, at the head of a threaded
       * type's body ([[ContextHolder.retain]]).
