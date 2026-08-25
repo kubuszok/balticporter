@@ -295,6 +295,12 @@ final case class PortManifest(
       * exactly the "compiles on the platform I happened to test" hole the lane exists to make
       * visible at PORT time rather than at somebody else's build time. */
     dependencies: List[balticporter.catalog.ArtifactDep] = Nil,
+    /** THE REFERENCE HAND PORT for this module — the §1(b) parameter for `ApiParityCheck`.
+      *
+      * NOT inherited. A hand port is a fact about THIS module's destination, not the shared
+      * surface. A dependent does not inherit its base's parity reference — the two have different
+      * hand-port trees. Empty / absent = the check is a no-op AND records nothing. */
+    parity: Option[ParityRef] = None,
     /** Does this manifest INHERIT its [[bases]]' policy, or merely declare that it must AGREE
       * with them?
       *

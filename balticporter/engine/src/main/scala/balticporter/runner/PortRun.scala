@@ -6,6 +6,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
 import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, IdiomCheck, IdiomLog, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, RemedySource, RemedyVocabulary, ResolutionPlan, OverloadRiskCheck, Remediator, RewriteCallSitesCheck, RewriteLog, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
 import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionInternalCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, PublicFieldAccessorTransform, RetargetBoundaryCheck}
+import balticporter.verify.ApiParityCheck
 
 import java.nio.file.{Files, Path, StandardCopyOption}
 import scala.jdk.CollectionConverters.*
@@ -1588,6 +1589,21 @@ final case class PortRun(
     say(s"REWRITE CALL SITES (retyping phases that answer nothing): ${rewriteFindings.size}")
     println(RewriteCallSitesCheck.summary(rewriteFindings, translated.rewrites, program))
 
+    // ---- API PARITY: the reference hand port comparison, when declared ----
+    // Conditional on `manifest.parity` being defined, like `serviceProviders` and `resources`.
+    // Empty / absent = no-op AND records nothing — §1(b)'s rule. NOT inherited.
+    manifest.flatMap(_.parity).foreach { ref =>
+      val parityRenames = if ref.packageMapping.nonEmpty then ref.packageMapping
+                          else manifest.map(_.effectivePackageRenames).getOrElse(Map.empty)
+      val parityFindings = ApiParityCheck.check(ref, emitDir, parityRenames)
+      ApiParityCheck.Families.foreach { family =>
+        val l = ApiParityCheck.lane(family)
+        CheckReport.record(l, parityFindings.filter(_.check == l))
+      }
+      say(s"API PARITY: ${parityFindings.size} divergence(s)")
+      println(ApiParityCheck.summary(parityFindings))
+    }
+
     // Every check this run believes it ran must ALSO have registered itself with the persistence
     // layer, or a number reaches the operator's terminal and never reaches `findings.tsv`. That is
     // the same class of gap as a check nobody invoked, one layer down, and it is invisible without
@@ -2439,7 +2455,10 @@ final case class PortRun(
       // port that carries the phase and converts EVERY construct records 0, which is a fact about
       // that port; a run that stopped asking would otherwise report success with the row gone.
       (if effectivePhases.exists(_.isInstanceOf[balticporter.transform.TestFrameworkTransform])
-       then Set(balticporter.transform.TestFrameworkTransform.Refused) else Set.empty)
+       then Set(balticporter.transform.TestFrameworkTransform.Refused) else Set.empty) ++
+      // …and the API PARITY lanes, derived from `manifest.parity` — the same conditional-lane
+      // pattern as `serviceProviders` and `resources`: required when declared, absent otherwise.
+      (if manifest.exists(_.parity.isDefined) then ApiParityCheck.AllLanes else Set.empty)
 
   private def verifyRecorded(): Unit =
     if CheckReport.enabled then

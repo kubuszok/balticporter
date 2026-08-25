@@ -1,7 +1,7 @@
 package balticporter.runner
 
 import balticporter.catalog.Platform
-import balticporter.core.{AnnotationPolicy, FrontendConfig, PortManifest, Provenance, RealPath, RuntimeMode}
+import balticporter.core.{AnnotationPolicy, FrontendConfig, ParityRef, PortManifest, Provenance, RealPath, RuntimeMode}
 import balticporter.sbtgen.SbtGen
 import balticporter.tir.{ConfigError, ConfigView}
 
@@ -346,6 +346,14 @@ object PortConfig:
       // …and the artifacts this module's build adds because it took a `Verdict.Depend`'s advice.
       // A build fact, so not inherited (`inject`'s line); empty is the no-op and the whole corpus.
       dependencies   = m.children("dependencies").getOrElse(Nil).map(dependencyEntry),
+      // THE REFERENCE HAND PORT for this module. NOT inherited — a hand port is a fact about THIS
+      // module's destination, not the shared surface. Empty / absent = the check is a no-op AND
+      // records nothing (§1(b)'s rule).
+      parity         = m.child("parity").map(p =>
+        ParityRef(
+          roots          = p.strings("roots").getOrElse(Nil).map(resolvePath(dir, _)),
+          packageMapping = p.stringMap("packageMapping").getOrElse(Map.empty),
+        )),
     )
     view.string("base") match
       case scala.None    => own

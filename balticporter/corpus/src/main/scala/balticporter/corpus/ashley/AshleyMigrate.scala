@@ -1,6 +1,6 @@
 package balticporter.corpus.ashley
 
-import balticporter.core.{FrontendConfig, PortManifest, Provenance, RuntimeMode}
+import balticporter.core.{FrontendConfig, ParityRef, PortManifest, Provenance, RuntimeMode}
 import balticporter.corpus.libgdx.LibgdxPolicy
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 
@@ -150,6 +150,10 @@ object AshleyPolicy:
         // and falls back to re-derivation.
         balticporter.transform.PortMapTransform.forBases("sge"),
       ),
+      // THE REFERENCE HAND PORT for sge-ecs. The hand-written Ashley port lives in sge's extension
+      // tree. NOT inherited — the base's parity points at sge's own hand port, not at Ashley's.
+      parity = Some(ParityRef(roots = List(
+        repoRoot.resolve("../sge/sge-extension/ecs/src/main/scala").normalize))),
       dropMethods = Set(
         // `ImmutableArray.toArray(Class<V>)` (`ImmutableArray.java:77-79`) is a one-line forwarder
         // to `Array.toArray(Class)`, which the BASE manifest drops: it is the `ArrayReflection`
