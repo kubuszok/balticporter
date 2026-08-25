@@ -10289,3 +10289,64 @@ coordinate in both places it appears. The measure lane spells the same pair as
   here because a green `testOnly *` from a worktree does not mean this spec passed.
 - **The Auditor has not run over this delivery.** It is expensive (Fable 5) and the **user** runs it,
   once a whole piece of work is delivered (`CLAUDE.md` §4).
+
+## 13. The parity campaign — every module, every sge/ssg adjustment, every limit (decided 2026-08-25)
+
+The goal of this repository is that an agent in sge or ssg regenerates its port from upstream java
+WITHOUT editing this repository. Sixteen java-derived sge modules and both java-derived ssg modules
+have a port; what separates the emitted code from the hand ports is per-module policy those agents
+would otherwise invent, plus every engine gap that keeps such policy from being expressible. The
+maintainer's decisions, binding for every wave until this section is empty:
+
+| question | decision |
+|---|---|
+| scope of "adjustments" | EVERYTHING the hand ports did gets an explicit spelling HERE — a manifest key, a (b) parameter, a plugged-in (c) rule, or an injection. No natural spelling ⇒ engine gap ⇒ fixed here. |
+| done bar per module | DROP-IN: the emitted tree replaces the module's `Ported from` files inside sge/ssg's own `projectMatrix` build; JVM + JS + Native compile, and the full suite (upstream tests + the hand-added tests, copied verbatim) passes on every platform the hand port runs it on. |
+| API parity | EXACT — SGE-/SSG-original files, demos and `sge-it-*` are never edited. The emitted public surface equals the hand port's: names, arity, nullability spelling, packages, companions, operators. Where the hand port's API is an sge-defined type (`Nullable`, `Sge`, `DynamicArray`, `SgeError`) the port targets it by FQN through policy; the type stays sge's. |
+| skipped classes | only with a stated justification (obsolete, better replacement, against sge/ssg goals) recorded in `decisions.tsv`. "The previous porter skipped it" is not one: parity includes porting what sge skipped. |
+| java vs hand-port behaviour | java is the default contract. Every divergence is investigated by the `divergence-investigator` agent (claude-opus-4-6[1m]) over sge/ssg git history, `docs/` and `.rescale/data/*.tsv`: justified ⇒ a NAMED rule/injection here; unjustified ⇒ a hand-port defect, the test adapted or dropped with the finding recorded. |
+| `ENGINE-LIMITS.md` | FIX EVERYTHING. No entry may end open, limit, refused or do-not-retry. An entry with no known mechanism is listed with the approach to try and a measured exit; impossibility is a measured claim at the END of a wave, never a starting assumption. |
+| modules whose hand port is not java | port the java sge KEPT (the `Ported from` / `Original source:` / `Covenant-source-reference:` headers are the census key); the non-java half (Rust freetype, GLFW controllers, Rapier, platform bindings) stays the module's hand-written `src/`. gdx-box2d/bullet are out (nobody ported them); the non-java ssg modules (js, katex, mermaid, sass, minify, highlight) are out by construction. |
+| CI / publishing | sge/ssg's job once they consume; the `just` lanes are the gate here. |
+| vendored upstream trees | re-pinned to the commit sge/ssg's `original-src/` submodule holds, checked by a lane; a mismatch is FATAL (§3.5's fourth question — visui's gdx 1.14.0 against 1.14.1). |
+
+### 13.1 Phases
+
+**Phase 0 — instruments.** `just <module>-dropin` (a disposable worktree of `../sge`/`../ssg` at the
+pinned commit, the module's `Ported from` files replaced by `src_managed/` + the port's `src/`
+through `unmanagedSourceDirectories`, hand-added tests copied, `sbt <module>{JVM,JS,Native}/test`,
+baselined per platform); `api-parity` — an engine check taking the hand-port tree as a (b)
+parameter, one row per public-surface divergence classified by family (null-model, accessor,
+rename, operator, factory, file-merge, visibility, collection-retarget, opaque, behaviour-only,
+hand-port-extra, port-extra); `divergence` — the census that feeds the investigator agent, drained
+into `Decision`s; cross-platform COMPILE (not portability — P1) in every existing lane; a doc truth
+sweep (§0/§6.1's "nine BIR programs" claim, every CLOSED item deleted, `PortMapAcceptanceSpec`'s
+`assume` replaced by a fixture). `sge-ecs` is the probe module for every instrument.
+
+**Phase 1 — parity mechanisms**, each a (b) with an empty no-op default, `SurfacePolicy`,
+`MergeablePolicy` where surface depends on it, the fingerprint segment omitted when empty, and a
+boundary count where it retypes: null-spelling target (`Union | Named(fqn) | Option`, K13 inside);
+accessor shape (whole-program `BeanCollapse` + a scoped nullary-arity drop, §8.5 re-measured
+against K1); renames from the `Migration notes: Renames:` census; symbolic operator renames with
+`@targetName`; `this.type` (I1 re-measured); constructor/factory shape on the funnel; opaque
+domains for every sge opaque type (O3, O4 inside); collection retargets and `CollectionsTransform.
+typeMap` as a fingerprinted parameter; file grouping; the §14 idioms one per wave under §3's
+refusal-enumeration rule; reflection registries (P10 as a (b)) and an injected codec; error-contract
+(c) rules; natives — Panama on the JVM beside `@extern` on Native, with a `nativeLibraries` key.
+
+**Phase 2 — `ENGINE-LIMITS.md` drained.** The checklist is every entry not closed on 2026-08-25:
+OPEN 0.1, 0.2, G24, G33, C11, T7, T8, T9, T22, T23, K6, K9, K14, K15, K18.1, K28, K28.1, K32, K33,
+P9, M10, F7, CT10, CT11, O3, O4, G12, T11.5, T16.5, X4/X5/X6 residues, V1; BY-CONSTRUCTION G8, G10,
+C3, C5, K2, K13, K19, K22 (+face 2), T17, T18, T20, P3, X7, D7/D13/D4; DO-NOT-RETRY G13, G14, G16,
+G17, G21 rider, C6, K16, K5.10 generic form, I9(2); REFUSED IDIOMS I1–I8; CONDITIONAL G4. Plus the
+hygiene that blocks them: the 142 bare catches in `SpoonTir.scala`, `CollectionsTransform.scala`
+split into its four mechanisms at 0 digests, `Tree.Unportable` mint sites, the test framework as
+policy.
+
+**Phase 3 — modules to the drop-in bar**, base first: `sge` core (578 files + the 71 backend-derived
+files into per-platform dirs via a `platformDirs` key); the existing dependents; `sge-colorful`
+(`colorful/` AND `colorful-pure/`, the latter ported unless the investigator finds a recorded
+reason); `sge-freetype`, `sge-controllers`, `sge-tools`, `sge-jvm-platform-android`; `ssg-md`'s
+deferred tier and the 28 hand-port omissions; `ssg-liquid` against the hand parser kept as `src/`.
+
+An item leaves this section by DELETION when its lane holds the bar (§3.7).
