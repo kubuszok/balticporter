@@ -530,6 +530,11 @@ gdx-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/gdxmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
+    # Cross-platform compile gates (ENGINE-LIMITS P1: a COMPILE gate, not a portability gate).
+    # Dependencies are omitted on purpose — JVM-only coordinates cannot resolve for JS/Native.
+    xplat_compile scala-js {{scala_version}} "$REPORT" gdxmeasure {{gdx_module}}/src_managed/main/scala
+    xplat_compile scala-native {{scala_version}} "$REPORT" gdxmeasure {{gdx_module}}/src_managed/main/scala
+
     # A count is not a triage. Join every error back to the member and the JAVA LINE it came from, and
     # split it into "at a region the engine marked approximate" vs "engine gap" (DESIGN.md §6.3).
     # With no markers minted yet everything lands in the second lane — which is the honest answer,
@@ -610,6 +615,14 @@ gdx-test-measure:
     echo "TOTAL ERRORS: $ERRORS"
     error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gdxtestmeasure.txt | sort | uniq -c | sort -rn | head
+
+    # Cross-platform compile gates — same source dirs, no deps (JVM-only coordinates).
+    xplat_compile scala-js {{scala_version}} "$REPORT" gdxtestmeasure \
+      {{gdx_module}}/src_managed/main/scala {{gdx_module}}/src_managed/test/scala \
+      {{gdx_module}}/src/test/scala -- --test
+    xplat_compile scala-native {{scala_version}} "$REPORT" gdxtestmeasure \
+      {{gdx_module}}/src_managed/main/scala {{gdx_module}}/src_managed/test/scala \
+      {{gdx_module}}/src/test/scala -- --test
 
     # -------------------------------------------------------------------------------------------
     # RUN them. Compiling a test suite measures nothing about behaviour, and CLAUDE.md §4.4 lists ten
@@ -716,6 +729,12 @@ ashley-measure:
     error_baseline_guard "$ERRORS" "$TREPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/ashleymeasure.txt | sort | uniq -c | sort -rn | head
 
+    # Cross-platform compile gates — same source dirs, no deps.
+    xplat_compile scala-js {{scala_version}} "$TREPORT" ashleymeasure \
+      {{gdx_module}}/src_managed/main/scala {{ashley_module}}/src_managed/main/scala {{ashley_module}}/src_managed/test/scala -- --test
+    xplat_compile scala-native {{scala_version}} "$TREPORT" ashleymeasure \
+      {{gdx_module}}/src_managed/main/scala {{ashley_module}}/src_managed/main/scala {{ashley_module}}/src_managed/test/scala -- --test
+
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
@@ -818,6 +837,12 @@ anim8-measure:
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/anim8measure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/anim8measure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
+
+    # Cross-platform compile gates — emitted sources only, no deps.
+    xplat_compile scala-js {{scala_version}} "$REPORT" anim8measure \
+      {{gdx_module}}/src_managed/main/scala {{anim8_module}}/src_managed/main/scala
+    xplat_compile scala-native {{scala_version}} "$REPORT" anim8measure \
+      {{gdx_module}}/src_managed/main/scala {{anim8_module}}/src_managed/main/scala
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -939,6 +964,12 @@ gltf-measure:
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gltfmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/gltfmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
+
+    # Cross-platform compile gates — emitted sources only, no deps.
+    xplat_compile scala-js {{scala_version}} "$TREPORT" gltfmeasure \
+      {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala {{gltf_module}}/src_managed/test/scala -- --test
+    xplat_compile scala-native {{scala_version}} "$TREPORT" gltfmeasure \
+      {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala {{gltf_module}}/src_managed/test/scala -- --test
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -1063,6 +1094,12 @@ screens-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/screensmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
+    # Cross-platform compile gates — emitted sources only, no deps.
+    xplat_compile scala-js {{scala_version}} "$REPORT" screensmeasure \
+      {{gdx_module}}/src_managed/main/scala {{screens_module}}/src_managed/main/scala
+    xplat_compile scala-native {{scala_version}} "$REPORT" screensmeasure \
+      {{gdx_module}}/src_managed/main/scala {{screens_module}}/src_managed/main/scala
+
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
@@ -1166,6 +1203,12 @@ vfx-measure:
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/vfxmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/vfxmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
+
+    # Cross-platform compile gates — emitted sources only, no deps.
+    xplat_compile scala-js {{scala_version}} "$REPORT" vfxmeasure \
+      {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala
+    xplat_compile scala-native {{scala_version}} "$REPORT" vfxmeasure \
+      {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -1298,6 +1341,12 @@ ai-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/aimeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
+    # Cross-platform compile gates — emitted sources only, no deps.
+    xplat_compile scala-js {{scala_version}} "$REPORT" aimeasure \
+      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala
+    xplat_compile scala-native {{scala_version}} "$REPORT" aimeasure \
+      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala
+
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
     # Run WHETHER OR NOT it compiled, for `noise4j-measure`'s reason: with no suite there is no
@@ -1393,6 +1442,12 @@ ai-test-measure:
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/aitestmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/aitestmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/aitestmeasure.txt | sort | uniq -c | sort -rn | head
+
+    # Cross-platform compile gates — emitted sources only, no deps.
+    xplat_compile scala-js {{scala_version}} "$REPORT" aitestmeasure \
+      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala {{ai_module}}/src_managed/test/scala -- --test
+    xplat_compile scala-native {{scala_version}} "$REPORT" aitestmeasure \
+      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala {{ai_module}}/src_managed/test/scala -- --test
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -1606,6 +1661,12 @@ sg-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/sgmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
+    # Cross-platform compile gates — emitted sources only, no deps.
+    xplat_compile scala-js {{scala_version}} "$TREPORT" sgmeasure \
+      {{sg_module}}/src_managed/main/scala {{sg_module}}/src_managed/test/scala -- --test
+    xplat_compile scala-native {{scala_version}} "$TREPORT" sgmeasure \
+      {{sg_module}}/src_managed/main/scala {{sg_module}}/src_managed/test/scala -- --test
+
     # -------------------------------------------------------------------------------------------
     # RUN them. Compiling a suite measures nothing about behaviour: CLAUDE.md §4.4 lists ten java forms
     # that translate to VALID scala meaning something else, and not one moves the count above. For this
@@ -1710,6 +1771,12 @@ noise4j-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/n4jmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
+    # Cross-platform compile gates — emitted sources only, no deps.
+    xplat_compile scala-js {{scala_version}} "$REPORT" n4jmeasure \
+      {{n4j_module}}/src_managed/main/scala
+    xplat_compile scala-native {{scala_version}} "$REPORT" n4jmeasure \
+      {{n4j_module}}/src_managed/main/scala
+
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
     # Run WHETHER OR NOT it compiled. With no suite there is no second thing to correlate, so the
@@ -1797,6 +1864,12 @@ jbump-measure:
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/jbumpmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/jbumpmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
+
+    # Cross-platform compile gates — emitted sources only, no deps.
+    xplat_compile scala-js {{scala_version}} "$REPORT" jbumpmeasure \
+      {{jbump_module}}/src_managed/main/scala
+    xplat_compile scala-native {{scala_version}} "$REPORT" jbumpmeasure \
+      {{jbump_module}}/src_managed/main/scala
 
     # -------------------------------------------------------------------------------------------
     # RUN it — differentially, against the upstream Java.
@@ -1957,6 +2030,12 @@ usl-measure:
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/uslmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/uslmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
+
+    # Cross-platform compile gates — emitted sources only, no deps.
+    xplat_compile scala-js {{scala_version}} "$REPORT" uslmeasure \
+      {{usl_module}}/src_managed/main/scala
+    xplat_compile scala-native {{scala_version}} "$REPORT" uslmeasure \
+      {{usl_module}}/src_managed/main/scala
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
@@ -2177,6 +2256,12 @@ usl-test-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/usltmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
+    # Cross-platform compile gates — emitted sources only, no deps.
+    xplat_compile scala-js {{scala_version}} "$TREPORT" usltmeasure \
+      {{usl_module}}/src_managed/main/scala {{usl_module}}/src_managed/test/scala -- --test
+    xplat_compile scala-native {{scala_version}} "$TREPORT" usltmeasure \
+      {{usl_module}}/src_managed/main/scala {{usl_module}}/src_managed/test/scala -- --test
+
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
@@ -2389,6 +2474,12 @@ liqp-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/liqpmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -20
 
+    # Cross-platform compile gates — emitted sources only, no deps, no --jar (JVM class files).
+    xplat_compile scala-js {{scala_version}} "$TREPORT" liqpmeasure \
+      {{liqp_module}}/src_managed/main/scala {{liqp_module}}/src_managed/test/scala -- --test
+    xplat_compile scala-native {{scala_version}} "$TREPORT" liqpmeasure \
+      {{liqp_module}}/src_managed/main/scala {{liqp_module}}/src_managed/test/scala -- --test
+
     # -------------------------------------------------------------------------------------------
     # RUN them. Compiling a suite measures nothing about behaviour: CLAUDE.md §4.4 lists the java
     # forms that translate to VALID scala meaning something else, and not one moves the count above.
@@ -2558,6 +2649,12 @@ md-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/mdmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -20
 
+    # Cross-platform compile gates — emitted sources only, no deps.
+    xplat_compile scala-js {{scala_version}} "$REPORT" mdmeasure \
+      {{md_module}}/src_managed/main/scala
+    xplat_compile scala-native {{scala_version}} "$REPORT" mdmeasure \
+      {{md_module}}/src_managed/main/scala
+
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
     # Run WHETHER OR NOT it compiled. With no suite there is no second thing to correlate, so the
@@ -2667,6 +2764,12 @@ md-test-measure:
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/mdtestmeasure.txt | sort | uniq -c | sort -rn | head -20
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/mdtestmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -20
+
+    # Cross-platform compile gates — emitted sources only, no deps, no --resource-dir.
+    xplat_compile scala-js {{scala_version}} "$TREPORT" mdtestmeasure \
+      {{md_module}}/src_managed/main/scala {{md_module}}/src_managed/test/scala -- --test
+    xplat_compile scala-native {{scala_version}} "$TREPORT" mdtestmeasure \
+      {{md_module}}/src_managed/main/scala {{md_module}}/src_managed/test/scala -- --test
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -2914,6 +3017,12 @@ md-ext-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/mdextmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -20
 
+    # Cross-platform compile gates — emitted sources only, no deps.
+    xplat_compile scala-js {{scala_version}} "$EREPORT" mdextmeasure \
+      {{md_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/test/scala -- --test
+    xplat_compile scala-native {{scala_version}} "$EREPORT" mdextmeasure \
+      {{md_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/test/scala -- --test
+
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
@@ -3090,6 +3199,12 @@ textra-measure:
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/textrameasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/textrameasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
+
+    # Cross-platform compile gates — emitted sources only, no deps.
+    xplat_compile scala-js {{scala_version}} "$REPORT" textrameasure \
+      {{gdx_module}}/src_managed/main/scala {{textra_module}}/src_managed/main/scala
+    xplat_compile scala-native {{scala_version}} "$REPORT" textrameasure \
+      {{gdx_module}}/src_managed/main/scala {{textra_module}}/src_managed/main/scala
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
@@ -3399,6 +3514,12 @@ visui-measure:
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/visuimeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/visuimeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
+
+    # Cross-platform compile gates — emitted sources only, no deps.
+    xplat_compile scala-js {{scala_version}} "$REPORT" visuimeasure \
+      {{gdx_module}}/src_managed/main/scala {{visui_module}}/src_managed/main/scala
+    xplat_compile scala-native {{scala_version}} "$REPORT" visuimeasure \
+      {{gdx_module}}/src_managed/main/scala {{visui_module}}/src_managed/main/scala
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
@@ -4430,6 +4551,30 @@ baseline-accept PORT:
       cp "$DIR/run-latest/errors-count" "$DIR/baseline/expected-errors"
       echo "expected-errors: $(cat "$DIR/baseline/expected-errors")"
     fi
+    # Cross-platform error baselines (CLAUDE.md §5, xplat compile gate): promoted as
+    # expected-errors.js and expected-errors.native, written by xplat_compile on every run.
+    for plat_suffix in js native; do
+      if [ -f "$DIR/run-latest/errors-count.${plat_suffix}" ]; then
+        cp "$DIR/run-latest/errors-count.${plat_suffix}" "$DIR/baseline/expected-errors.${plat_suffix}"
+        echo "expected-errors.${plat_suffix}: $(cat "$DIR/baseline/expected-errors.${plat_suffix}")"
+      fi
+    done
+    # Drop-in baselines: per-platform error counts and test outcomes, written by `ecs-dropin`.
+    # Promoted into `baseline/dropin/` so they do not collide with the measure lane's own baselines.
+    if ls "$DIR/run-latest/errors-count.dropin."* 1>/dev/null 2>&1; then
+      mkdir -p "$DIR/baseline/dropin"
+      for f in "$DIR"/run-latest/errors-count.dropin.*; do
+        platl="${f##*.dropin.}"
+        cp "$f" "$DIR/baseline/dropin/expected-errors.${platl}"
+        echo "dropin expected-errors.${platl}: $(cat "$DIR/baseline/dropin/expected-errors.${platl}")"
+      done
+      for f in "$DIR"/run-latest/tests.*.tsv; do
+        [ -f "$f" ] || continue
+        bn=$(basename "$f")
+        cp "$f" "$DIR/baseline/dropin/$bn"
+        echo "dropin $bn: $(grep -c $'\tpass$' "$f" || true) pass, $(grep -c $'\tfail$' "$f" || true) fail"
+      done
+    fi
     #   tests-lost                 — how many of the library's @Test this port does not emit,
     #                                promoted as `expected-lost`. Same rule as the error count and
     #                                for the same reason: written by `test_discovery_guard` on every
@@ -4754,6 +4899,7 @@ ecs-dropin:
     # not carry the `JVM` suffix because sbt-projectMatrix's `defaultAxes` includes `VirtualAxis.jvm`.
     PLAT_IDS="sge-ecs:jvm:JVM sge-ecsJS:js:JS sge-ecsNative:native:Native"
     ALL_OK=1
+    BASELINE_FAILED=0
     for entry in $PLAT_IDS; do
       sbt_id=$(echo "$entry" | cut -d: -f1)
       platl=$(echo "$entry" | cut -d: -f2)
@@ -4773,8 +4919,8 @@ ecs-dropin:
       SKIP=$(grep -cE '^==> [^X] ' "$LOG")
       echo "  sbt exit: $SBT_STATUS  errors: $ERRORS  pass: $PASS  fail: $FAIL  skip: $SKIP"
       echo "  log: $LOG"
-      # Write per-platform expected-errors
-      echo "$ERRORS" > "$REPORT/run-latest/expected-errors.${platl}"
+      # Write per-platform error count for baseline-accept
+      echo "$ERRORS" > "$REPORT/run-latest/errors-count.dropin.${platl}"
       # Write a summary tests file per platform
       {
         echo "# platform=$plat  pass=$PASS  fail=$FAIL  skip=$SKIP"
@@ -4795,7 +4941,50 @@ ecs-dropin:
         echo "  FIRST ERRORS:"
         grep -E '^\[error\]' "$LOG" | head -20 | sed 's/^/     /'
       fi
+
+      # -- per-platform baseline comparison --
+      local_expected="$REPORT/baseline/dropin/expected-errors.${platl}"
+      if [ -f "$local_expected" ]; then
+        expected_val=$(tr -dc '0-9' < "$local_expected")
+        if [ "$ERRORS" = "$expected_val" ]; then
+          echo "  errors vs baseline (dropin ${platl}): $ERRORS = $expected_val  (unchanged)"
+        elif [ "$ERRORS" -gt "$expected_val" ]; then
+          echo "!! dropin ${platl} ERRORS ROSE — $expected_val -> $ERRORS."
+          BASELINE_FAILED=1
+        else
+          echo "!! dropin ${platl} ERRORS FELL — $expected_val -> $ERRORS. Acknowledge: just baseline-accept AshleyDropIn"
+          BASELINE_FAILED=1
+        fi
+      else
+        echo "  (no dropin error baseline for ${platl} — seed with: just baseline-accept AshleyDropIn)"
+      fi
+
+      local_tests_base="$REPORT/baseline/dropin/tests.${platl}.tsv"
+      if [ -f "$local_tests_base" ]; then
+        # Compare outcome counts — a test that moved pass->fail or appeared/disappeared is a change.
+        base_pass=$(grep -c $'\tpass$' "$local_tests_base" || true)
+        base_fail=$(grep -c $'\tfail$' "$local_tests_base" || true)
+        if [ "$PASS" = "$base_pass" ] && [ "$FAIL" = "$base_fail" ]; then
+          echo "  tests vs baseline (dropin ${platl}): pass=$PASS fail=$FAIL  (unchanged)"
+        else
+          echo "!! dropin ${platl} TESTS MOVED — pass: $base_pass -> $PASS, fail: $base_fail -> $FAIL."
+          echo "   Acknowledge: just baseline-accept AshleyDropIn"
+          BASELINE_FAILED=1
+        fi
+      else
+        echo "  (no dropin test baseline for ${platl} — seed with: just baseline-accept AshleyDropIn)"
+      fi
     done
+
+    # ------------------------------------------------------------------
+    # 4b. Discover scalacOptions from the reference repo
+    # ------------------------------------------------------------------
+    echo
+    echo "-- scalacOptions --"
+    (cd "$DROPIN_DIR" && sbt -batch "show sge-ecs/scalacOptions" 2>&1) \
+      | sed 's/\x1b\[[0-9;]*m//g' | grep '^\[info\] \*' | sed 's/^\[info\] \* //' \
+      > "$REPORT/run-latest/scalacOptions.txt"
+    echo "scalacOptions: $(wc -l < "$REPORT/run-latest/scalacOptions.txt" | tr -d ' ') flags recorded"
 
     echo
     echo "=================================================================="
@@ -4811,6 +5000,10 @@ ecs-dropin:
       printf "  %-8s  errors=%-4s  pass=%-4s  fail=%-4s  skip=%-4s\n" "$plat" "$ERRORS" "$PASS" "$FAIL" "$SKIP"
     done
     echo "=================================================================="
+    if [ "$BASELINE_FAILED" = "1" ]; then
+      echo "!! this lane FAILED its drop-in baseline — see the per-platform lines above"
+      exit 1
+    fi
     if [ "$ALL_OK" != "1" ]; then
       echo "(expected red — the emitted API is not yet at parity)"
     fi

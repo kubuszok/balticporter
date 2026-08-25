@@ -1179,4 +1179,96 @@ headline() {
       exit 1
     fi
   done
+  # …and the CROSS-PLATFORM COMPILE gates — one marker per platform per report dir.
+  for d in "$dir" "${extra[@]}"; do
+    for plat_suffix in js native; do
+      if [ -f "$d/run-latest/errors-baseline-failed.${plat_suffix}" ]; then
+        echo "!! this lane FAILED its ${plat_suffix} error baseline ($d) — see the '${plat_suffix} ERRORS' line above"
+        exit 1
+      fi
+    done
+  done
+}
+
+# xplat_compile <platform> <scala-version> <report-dir> <capture-basename> <source-dirs...> [-- <extra-flags...>]
+#
+# Cross-platform compile gate: runs `scala-cli compile --platform <platform>` over the same
+# source tree the JVM lane just compiled, counts errors, and baselines them.
+#
+# This is a COMPILE gate, not a portability gate (ENGINE-LIMITS P1): the Scala.js and Native
+# compilers type-check against their own javalib, so a `java.lang.reflect.Field` that the JVM
+# has and JS/Native do not is a real compile error here. The portability(all|emitted|injected)
+# lanes stay as the TIR-level API-presence check.
+#
+# DEPENDENCIES ARE OMITTED ON PURPOSE for the cross-platform compile. JVM-only dependencies
+# (junit, mockito, jackson, antlr-runtime) cannot resolve for JS/Native — scala-cli would
+# abort at resolution before compiling anything. The emitted code that names those JVM-only
+# types will fail at compile, which is an EXPECTED error we baseline. Only cross-published
+# dependencies (munit via `%%`) would work, but filtering them is not worth the complexity
+# since we baseline all errors anyway. The `declared_dep_flags` output is JVM-only coordinates.
+#
+# The JS and Native version pins come from `project/plugins.sbt` and match sge's toolchain:
+# Scala.js 1.22.0, Scala Native 0.5.12. scala-cli 1.16.0 defaults to these exact versions,
+# so no explicit version flags are needed.
+xplat_compile() {
+  local platform="$1" scala_ver="$2" report_dir="$3" capture_base="$4"
+  shift 4
+  # Collect source dirs until we hit '--' or run out
+  local -a srcs=()
+  local -a extra_flags=()
+  local past_sep=0
+  for arg in "$@"; do
+    if [ "$arg" = "--" ]; then past_sep=1; continue; fi
+    if [ "$past_sep" = "1" ]; then extra_flags+=("$arg"); else srcs+=("$arg"); fi
+  done
+
+  local plat_suffix
+  case "$platform" in
+    scala-js)     plat_suffix="js" ;;
+    scala-native) plat_suffix="native" ;;
+    *)            echo "!! xplat_compile: unknown platform '$platform'"; return 1 ;;
+  esac
+
+  local cap="$MEASURE_TMP/${capture_base}.${plat_suffix}.txt"
+  echo
+  echo "-- cross-platform compile: ${plat_suffix} --"
+  scala-cli compile --platform "$platform" --scala "$scala_ver" --server=false \
+    "${extra_flags[@]}" "${srcs[@]}" \
+    2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$cap"
+  local cli_st=${PIPESTATUS[0]}
+  local errors
+  errors=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$cap")
+  # compile_guard for the xplat compile — abort/crash detection
+  compile_guard "$cli_st" "$errors" "$cap"
+  echo "TOTAL ERRORS (${plat_suffix}): $errors  (coded $(grep -cE '\[E[0-9]+\].*Error' "$cap") + bare $(grep -cE '^-- Error:' "$cap"))"
+  # top error families
+  grep -oE "\[E[0-9]+\][^:]*Error" "$cap" | sort | uniq -c | sort -rn | head -5
+
+  # baseline guard — same logic as error_baseline_guard but with a platform suffix
+  local expected_file="$report_dir/baseline/expected-errors.${plat_suffix}"
+  local marker="$report_dir/run-latest/errors-baseline-failed.${plat_suffix}"
+  mkdir -p "$report_dir/run-latest" 2>/dev/null
+  echo "$errors" > "$report_dir/run-latest/errors-count.${plat_suffix}"
+  rm -f "$marker"
+  if [ ! -f "$expected_file" ]; then
+    echo "!! NO ${plat_suffix} ERROR BASELINE — $expected_file does not exist."
+    echo "   Seed it: just baseline-accept <port>"
+    : > "$marker"; return 1
+  fi
+  local expected
+  expected=$(tr -dc '0-9' < "$expected_file")
+  if [ -z "$expected" ]; then
+    echo "!! ${plat_suffix} ERROR BASELINE UNREADABLE — $expected_file holds no number."
+    : > "$marker"; return 1
+  fi
+  if [ "$errors" = "$expected" ]; then
+    echo "  errors vs baseline (${plat_suffix}): $errors = $expected  (unchanged)"
+    return 0
+  fi
+  if [ "$errors" -gt "$expected" ]; then
+    echo "!! ${plat_suffix} ERRORS ROSE — $expected -> $errors."
+  else
+    echo "!! ${plat_suffix} ERRORS FELL — $expected -> $errors. Acknowledge: just baseline-accept <port>"
+  fi
+  : > "$marker"; return 1
 }
