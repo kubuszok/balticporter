@@ -1,4 +1,146 @@
 #id	check	kind	owner	path	line	detail
+191954102b84	api-parity(accessor)	accessor	ComponentType#getIndex	/ComponentType	0	def getIndex/0 in emitted port only
+f4079ec170fa	api-parity(accessor)	accessor	ComponentType#index	/ComponentType	0	val index/0 in reference port only
+f1102386f12f	api-parity(accessor)	accessor	EntitySystem#getEngine	/EntitySystem	0	def getEngine/0 in emitted port only
+9b4408a83198	api-parity(accessor)	accessor	EntitySystem#setProcessing	/EntitySystem	0	def setProcessing/1 in emitted port only
+4825c89bbc5c	api-parity(accessor)	accessor	Family#getIndex	/Family	0	def getIndex/0 in emitted port only
+84615ea5e21d	api-parity(accessor)	accessor	Family#index	/Family	0	val index/0 in reference port only
+d11f1ba9ca84	api-parity(accessor)	accessor	IntervalIteratingSystem#getFamily	/IntervalIteratingSystem	0	def getFamily/0 in emitted port only
+d01446ad46bc	api-parity(accessor)	accessor	IntervalSystem#getInterval	/IntervalSystem	0	def getInterval/0 in emitted port only
+6a4a6e575de5	api-parity(accessor)	accessor	IteratingSystem#getFamily	/IteratingSystem	0	def getFamily/0 in emitted port only
+8576dc9d72f3	api-parity(accessor)	accessor	SortedIteratingSystem#getFamily	/SortedIteratingSystem	0	def getFamily/0 in emitted port only
+154650e484b6	api-parity(hand-port-extra)	hand-port-extra	#SystemListener		0	trait SystemListener/0 in reference port only
+bba4fd5159e8	api-parity(hand-port-extra)	hand-port-extra	#Type		0	enum Type/0 in reference port only
+bba4fd5159e8/2	api-parity(hand-port-extra)	hand-port-extra	#Type		0	enum Type/0 in reference port only
+4bbe809778b5	api-parity(hand-port-extra)	hand-port-extra	#clear		0	def clear/0 in reference port only
+9898a89ce621	api-parity(hand-port-extra)	hand-port-extra	#contains		0	def contains/1 in reference port only
+bfbb8f8c3181	api-parity(hand-port-extra)	hand-port-extra	#data		0	val data/0 in reference port only
+89d8d91cbd4c	api-parity(hand-port-extra)	hand-port-extra	#entity		0	var entity/0 in reference port only
+a4c26f56d6ef	api-parity(hand-port-extra)	hand-port-extra	#get		0	def get/1 in reference port only
+75aa74fd5e69	api-parity(hand-port-extra)	hand-port-extra	#getCapacity		0	def getCapacity/0 in reference port only
+e90bb0417c23	api-parity(hand-port-extra)	hand-port-extra	#isEmpty		0	def isEmpty/0 in reference port only
+6009efb3656a	api-parity(hand-port-extra)	hand-port-extra	#isIndexWithinBounds		0	def isIndexWithinBounds/1 in reference port only
+0234599b8dce	api-parity(hand-port-extra)	hand-port-extra	#k		0	var k/0 in reference port only
+5a10059b377e	api-parity(hand-port-extra)	hand-port-extra	#len		0	val len/0 in reference port only
+2fc5fa209f77	api-parity(hand-port-extra)	hand-port-extra	#newCapacity		0	val newCapacity/0 in reference port only
+e7f99095315d	api-parity(hand-port-extra)	hand-port-extra	#oldData		0	val oldData/0 in reference port only
+6872e0e6163d	api-parity(hand-port-extra)	hand-port-extra	#operationType		0	var operationType/0 in reference port only
+656edf011818	api-parity(hand-port-extra)	hand-port-extra	#priority		0	var priority/0 in reference port only
+8dc2a7f358d1	api-parity(hand-port-extra)	hand-port-extra	#removeLast		0	def removeLast/0 in reference port only
+070b70f8ac77	api-parity(hand-port-extra)	hand-port-extra	#reset		0	def reset/0 in reference port only
+8f69d3b7ac0c	api-parity(hand-port-extra)	hand-port-extra	#set		0	def set/2 in reference port only
+581fd598ee58	api-parity(hand-port-extra)	hand-port-extra	#size		0	def size/0 in reference port only
+ff6f1c38c38f	api-parity(hand-port-extra)	hand-port-extra	#sorted		0	val sorted/0 in reference port only
+0666d4cabdbf	api-parity(hand-port-extra)	hand-port-extra	Engine#registerComponentFactory	/Engine	0	def registerComponentFactory/2 in reference port only
+1ef6374bada5	api-parity(hand-port-extra)	hand-port-extra	EntitySystem#engine	/EntitySystem	0	def engine/0 in reference port only
+e358d8b7ad51	api-parity(hand-port-extra)	hand-port-extra	Family$#sb	/Family$	0	val sb/0 in reference port only
+e358d8b7ad51/2	api-parity(hand-port-extra)	hand-port-extra	Family$#sb	/Family$	0	val sb/0 in reference port only
+9d06a5e910f5	api-parity(hand-port-extra)	hand-port-extra	ImmutableArray#apply	/ImmutableArray	0	def apply/1 in reference port only
+d87c971b2ebb	api-parity(hand-port-extra)	hand-port-extra	ImmutableArray#contains	/ImmutableArray	0	def contains/1 in reference port only
+7a5a8192b674	api-parity(hand-port-extra)	hand-port-extra	ImmutableArray#indexOf	/ImmutableArray	0	def indexOf/1 in reference port only
+c1f4253beaa4	api-parity(hand-port-extra)	hand-port-extra	ImmutableArray#lastIndexOf	/ImmutableArray	0	def lastIndexOf/1 in reference port only
+a484617e46c7	api-parity(hand-port-extra)	hand-port-extra	PooledEngine#factory	/PooledEngine	0	val factory/0 in reference port only
+6a816a98fa43	api-parity(hand-port-extra)	hand-port-extra	SortedIteratingSystem#sorted	/SortedIteratingSystem	0	val sorted/0 in reference port only
+6894491fea05	api-parity(hand-port-extra)	hand-port-extra	SystemListener#systemAdded	/SystemListener	0	def systemAdded/1 in reference port only
+e9ad3fb8d2db	api-parity(hand-port-extra)	hand-port-extra	SystemListener#systemRemoved	/SystemListener	0	def systemRemoved/1 in reference port only
+5899e336c3c5	api-parity(hand-port-extra)	hand-port-extra	Type#Add	/Type	0	case Add/0 in reference port only
+5899e336c3c5/2	api-parity(hand-port-extra)	hand-port-extra	Type#Add	/Type	0	case Add/0 in reference port only
+4f306df33a82	api-parity(hand-port-extra)	hand-port-extra	Type#Remove	/Type	0	case Remove/0 in reference port only
+4f306df33a82/2	api-parity(hand-port-extra)	hand-port-extra	Type#Remove	/Type	0	case Remove/0 in reference port only
+54b12faddd42	api-parity(hand-port-extra)	hand-port-extra	Type#RemoveAll	/Type	0	case RemoveAll/0 in reference port only
+8578cc15dd88	api-parity(mutability)	mutability	#entitiesInFamily		0	kind differs: emitted var, reference val
+c5931708c4ec	api-parity(mutability)	mutability	Entity#componentAdded	/Entity	0	kind differs: emitted var, reference val
+77e7ab62ae5e	api-parity(mutability)	mutability	Entity#componentRemoved	/Entity	0	kind differs: emitted var, reference val
+3051cf0b414b	api-parity(mutability)	mutability	EntitySystem#priority	/EntitySystem	0	kind differs: emitted var, reference val
+869ec10074a1	api-parity(mutability)	mutability	IntervalIteratingSystem#family	/IntervalIteratingSystem	0	kind differs: emitted var, reference val
+db37467e9b2b	api-parity(mutability)	mutability	IntervalSystem#interval	/IntervalSystem	0	kind differs: emitted var, reference val
+b2bc5cfde1d4	api-parity(mutability)	mutability	IteratingSystem#family	/IteratingSystem	0	kind differs: emitted var, reference val
+804e8a9ab46d	api-parity(mutability)	mutability	SortedIteratingSystem#family	/SortedIteratingSystem	0	kind differs: emitted var, reference val
+be70be5ca0ed	api-parity(port-extra)	port-extra	#Bag		0	class Bag/0 in emitted port only
+3fdcb8c32cfa	api-parity(port-extra)	port-extra	#ComponentFactories		0	object ComponentFactories/0 in emitted port only
+c8daa644e409	api-parity(port-extra)	port-extra	#ComponentOperationHandler		0	object ComponentOperationHandler/0 in emitted port only
+7e0dc256aad5	api-parity(port-extra)	port-extra	#ComponentPool		0	class ComponentPool/0 in emitted port only
+a73e23f0437f	api-parity(port-extra)	port-extra	#Engine		0	object Engine/0 in emitted port only
+656900bc8f3f	api-parity(port-extra)	port-extra	#EntityManager		0	object EntityManager/0 in emitted port only
+6a4b3c9bc827	api-parity(port-extra)	port-extra	#FamilyManager		0	object FamilyManager/0 in emitted port only
+f1c9297a23d3	api-parity(port-extra)	port-extra	#PooledEngine		0	object PooledEngine/0 in emitted port only
+ab40d5829ef2	api-parity(port-extra)	port-extra	#SystemManager		0	object SystemManager/0 in emitted port only
+1eef08662413	api-parity(port-extra)	port-extra	#delayed		0	var delayed/0 in emitted port only
+3892eebd7305	api-parity(port-extra)	port-extra	#notifying$field		0	var notifying$field/0 in emitted port only
+edf0abe9ea60	api-parity(port-extra)	port-extra	Bag#add	/Bag	0	def add/1 in emitted port only
+177ba7539098	api-parity(port-extra)	port-extra	Bag#clear	/Bag	0	def clear/0 in emitted port only
+0f978fa1a660	api-parity(port-extra)	port-extra	Bag#contains	/Bag	0	def contains/1 in emitted port only
+60a6d8432ab9	api-parity(port-extra)	port-extra	Bag#data	/Bag	0	var data/0 in emitted port only
+3f9fab3d5ecd	api-parity(port-extra)	port-extra	Bag#get	/Bag	0	def get/1 in emitted port only
+54aebe506f2f	api-parity(port-extra)	port-extra	Bag#getCapacity	/Bag	0	def getCapacity/0 in emitted port only
+92c4ee64ee5e	api-parity(port-extra)	port-extra	Bag#isEmpty	/Bag	0	def isEmpty/0 in emitted port only
+98be8b7ef2a1	api-parity(port-extra)	port-extra	Bag#isIndexWithinBounds	/Bag	0	def isIndexWithinBounds/1 in emitted port only
+6d171722721c	api-parity(port-extra)	port-extra	Bag#newCapacity	/Bag	0	val newCapacity/0 in emitted port only
+1f2f7f3d4c36	api-parity(port-extra)	port-extra	Bag#oldData	/Bag	0	val oldData/0 in emitted port only
+9c2fba4bc2f9	api-parity(port-extra)	port-extra	Bag#remove	/Bag	0	def remove/1 in emitted port only
+9c2fba4bc2f9/2	api-parity(port-extra)	port-extra	Bag#remove	/Bag	0	def remove/1 in emitted port only
+7b916af511cb	api-parity(port-extra)	port-extra	Bag#removeLast	/Bag	0	def removeLast/0 in emitted port only
+b604afbec467	api-parity(port-extra)	port-extra	Bag#set	/Bag	0	def set/2 in emitted port only
+b4b0b0f7e80f	api-parity(port-extra)	port-extra	Bag#size	/Bag	0	def size/0 in emitted port only
+435a35fd6afa	api-parity(port-extra)	port-extra	Bag#size$field	/Bag	0	var size$field/0 in emitted port only
+2ac847528a1f	api-parity(port-extra)	port-extra	ComponentFactories$#create	/ComponentFactories$	0	def create/1 in emitted port only
+4c83359cc2cb	api-parity(port-extra)	port-extra	ComponentFactories$#register	/ComponentFactories$	0	def register/2 in emitted port only
+428acbcec55f	api-parity(port-extra)	port-extra	ComponentOperationHandler$#ComponentOperation	/ComponentOperationHandler$	0	object ComponentOperation/0 in emitted port only
+d9aec8e661ae	api-parity(port-extra)	port-extra	ComponentOperationHandler$#ComponentOperationPool	/ComponentOperationHandler$	0	object ComponentOperationPool/0 in emitted port only
+3b51a1a18da0	api-parity(port-extra)	port-extra	ComponentOperationHandler$#entity	/ComponentOperationHandler$	0	var entity/0 in emitted port only
+2ee029a06f47	api-parity(port-extra)	port-extra	ComponentOperationHandler$#makeAdd	/ComponentOperationHandler$	0	def makeAdd/1 in emitted port only
+1e2b4736cd3e	api-parity(port-extra)	port-extra	ComponentOperationHandler$#makeRemove	/ComponentOperationHandler$	0	def makeRemove/1 in emitted port only
+a886d379b114	api-parity(port-extra)	port-extra	ComponentOperationHandler$#reset	/ComponentOperationHandler$	0	def reset/0 in emitted port only
+5e99be60270d	api-parity(port-extra)	port-extra	ComponentOperationHandler$#type	/ComponentOperationHandler$	0	var type/0 in emitted port only
+858ebb95e5df	api-parity(port-extra)	port-extra	ComponentOperationHandler$#value	/ComponentOperationHandler$	0	def value/0 in emitted port only
+7fef8a19aab9	api-parity(port-extra)	port-extra	ComponentOperationHandler$.ComponentOperation$#Type	/ComponentOperationHandler$/ComponentOperation$	0	enum Type/0 in emitted port only
+014c520e8b4d	api-parity(port-extra)	port-extra	ComponentOperationHandler$.ComponentOperation$.Type#Add	/ComponentOperationHandler$/ComponentOperation$/Type	0	case Add/0 in emitted port only
+5993a9e4cdc9	api-parity(port-extra)	port-extra	ComponentOperationHandler$.ComponentOperation$.Type#Remove	/ComponentOperationHandler$/ComponentOperation$/Type	0	case Remove/0 in emitted port only
+39baac947f76	api-parity(port-extra)	port-extra	ComponentPool#clear	/ComponentPool	0	def clear/0 in emitted port only
+c583dc4e81ed	api-parity(port-extra)	port-extra	ComponentPool#free	/ComponentPool	0	def free/1 in emitted port only
+fe2413722998	api-parity(port-extra)	port-extra	ComponentPool#getFree	/ComponentPool	0	def getFree/0 in emitted port only
+597916f9236d	api-parity(port-extra)	port-extra	ComponentPool#obtain	/ComponentPool	0	def obtain/0 in emitted port only
+06c8e5ddfe37	api-parity(port-extra)	port-extra	ComponentType#$prev	/ComponentType	0	val $prev/0 in emitted port only
+8df3f41159cf	api-parity(port-extra)	port-extra	Engine#value	/Engine	0	def value/0 in emitted port only
+1fb3b9885fdc	api-parity(port-extra)	port-extra	EntityManager$#EntityOperation	/EntityManager$	0	object EntityOperation/0 in emitted port only
+7b1e6525eb86	api-parity(port-extra)	port-extra	EntityManager$#EntityOperationPool	/EntityManager$	0	object EntityOperationPool/0 in emitted port only
+fd7aea9b672a	api-parity(port-extra)	port-extra	EntityManager$#entities	/EntityManager$	0	var entities/0 in emitted port only
+74bccde4889b	api-parity(port-extra)	port-extra	EntityManager$#entity	/EntityManager$	0	var entity/0 in emitted port only
+6d264cd9eb07	api-parity(port-extra)	port-extra	EntityManager$#reset	/EntityManager$	0	def reset/0 in emitted port only
+2d49b25142a7	api-parity(port-extra)	port-extra	EntityManager$#type	/EntityManager$	0	var type/0 in emitted port only
+80ef842c94f9	api-parity(port-extra)	port-extra	EntityManager$.EntityOperation$#Type	/EntityManager$/EntityOperation$	0	enum Type/0 in emitted port only
+71bb6db53ab4	api-parity(port-extra)	port-extra	EntityManager$.EntityOperation$.Type#Add	/EntityManager$/EntityOperation$/Type	0	case Add/0 in emitted port only
+9d90f68e3670	api-parity(port-extra)	port-extra	EntityManager$.EntityOperation$.Type#Remove	/EntityManager$/EntityOperation$/Type	0	case Remove/0 in emitted port only
+c4b49195040d	api-parity(port-extra)	port-extra	EntityManager$.EntityOperation$.Type#RemoveAll	/EntityManager$/EntityOperation$/Type	0	case RemoveAll/0 in emitted port only
+7c229f90d760	api-parity(port-extra)	port-extra	Family#$prev	/Family	0	val $prev/0 in emitted port only
+9d7be87e1ca6	api-parity(port-extra)	port-extra	Family$#stringBuilder	/Family$	0	val stringBuilder/0 in emitted port only
+9d7be87e1ca6/2	api-parity(port-extra)	port-extra	Family$#stringBuilder	/Family$	0	val stringBuilder/0 in emitted port only
+85fd6c144cf6	api-parity(port-extra)	port-extra	Family$.Builder#all$field	/Family$/Builder	0	var all$field/0 in emitted port only
+b32a097cc33a	api-parity(port-extra)	port-extra	Family$.Builder#exclude$field	/Family$/Builder	0	var exclude$field/0 in emitted port only
+feb1703034d6	api-parity(port-extra)	port-extra	Family$.Builder#one$field	/Family$/Builder	0	var one$field/0 in emitted port only
+d959d30b92b8	api-parity(port-extra)	port-extra	Family$.Builder#reset	/Family$/Builder	0	def reset/0 in emitted port only
+99f51358c79a	api-parity(port-extra)	port-extra	FamilyManager$#BitsPool	/FamilyManager$	0	object BitsPool/0 in emitted port only
+624229c39a86	api-parity(port-extra)	port-extra	FamilyManager$#listener	/FamilyManager$	0	var listener/0 in emitted port only
+569d076c5c8e	api-parity(port-extra)	port-extra	FamilyManager$#priority	/FamilyManager$	0	var priority/0 in emitted port only
+83cf5064aee7	api-parity(port-extra)	port-extra	ImmutableArray#array	/ImmutableArray	0	var array/0 in emitted port only
+d731b35832e0	api-parity(port-extra)	port-extra	ImmutableArray#contains	/ImmutableArray	0	def contains/2 in emitted port only
+4e19bd20d7ca	api-parity(port-extra)	port-extra	ImmutableArray#get	/ImmutableArray	0	def get/1 in emitted port only
+5f2f668d8fe9	api-parity(port-extra)	port-extra	ImmutableArray#indexOf	/ImmutableArray	0	def indexOf/2 in emitted port only
+3f6985940c67	api-parity(port-extra)	port-extra	ImmutableArray#lastIndexOf	/ImmutableArray	0	def lastIndexOf/2 in emitted port only
+8a27780ee992	api-parity(port-extra)	port-extra	IntervalSystem#accumulator	/IntervalSystem	0	var accumulator/0 in emitted port only
+27f712a085fc	api-parity(port-extra)	port-extra	PooledEngine#EntityPool	/PooledEngine	0	object EntityPool/0 in emitted port only
+78564f63cacb	api-parity(port-extra)	port-extra	PooledEngine#componentPools	/PooledEngine	0	var componentPools/0 in emitted port only
+aa967dda6c99	api-parity(port-extra)	port-extra	PooledEngine#entityPool	/PooledEngine	0	var entityPool/0 in emitted port only
+0aa7a8f01fa8	api-parity(port-extra)	port-extra	PooledEngine#freeAll	/PooledEngine	0	def freeAll/1 in emitted port only
+074e90cae8d2	api-parity(port-extra)	port-extra	PooledEngine#initialSize	/PooledEngine	0	var initialSize/0 in emitted port only
+d058b6e585c8	api-parity(port-extra)	port-extra	PooledEngine#maxSize	/PooledEngine	0	var maxSize/0 in emitted port only
+865617c016b8	api-parity(port-extra)	port-extra	PooledEngine#pools	/PooledEngine	0	var pools/0 in emitted port only
+1e3f75ee8d58	api-parity(port-extra)	port-extra	SortedIteratingSystem#comparator	/SortedIteratingSystem	0	var comparator/0 in emitted port only
+166acbf627f7	api-parity(port-extra)	port-extra	SortedIteratingSystem#entities	/SortedIteratingSystem	0	var entities/0 in emitted port only
+f4a3b1d5f032	api-parity(port-extra)	port-extra	SortedIteratingSystem#sortedEntities	/SortedIteratingSystem	0	var sortedEntities/0 in emitted port only
+95e2deec3c91	api-parity(port-extra)	port-extra	SystemManager$#compare	/SystemManager$	0	def compare/2 in emitted port only
+0ed5ccd2979f	api-parity(port-extra)	port-extra	SystemManager$#systemAdded	/SystemManager$	0	def systemAdded/1 in emitted port only
+8a4e24550196	api-parity(port-extra)	port-extra	SystemManager$#systemRemoved	/SystemManager$	0	def systemRemoved/1 in emitted port only
 a6ccbe5ea0a5	catalog(consulted)	reached	JS-C01	com/badlogic/ashley/core/ComponentMapper.java	46	lowering CtInvocation/Expression — consulted 27070, fired 3539, declarations 0: a Java `static` is INHERITED by every subclass; a Scala companion inherits nothing
 35827d0ceb5b	catalog(consulted)	reached	JS-C02	../../../libgdx/gdx/src/com/badlogic/gdx/graphics/g3d/particles/influencers/DynamicsInfluencer.java	205	lowering CtInvocation/Expression + lowering CtFieldRead/Expression + lowering CtFieldWrite/Expression — consulted 78980, fired 76, declarations 0: interface constants are inherited through `implements`
 e973c59be7b7	catalog(consulted)	reached	JS-C03	-	0	rendering ClassDef — consulted 40, fired 0, declarations 0: static HIDING is resolved by the STATIC type of the qualifier

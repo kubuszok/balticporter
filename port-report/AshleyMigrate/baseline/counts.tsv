@@ -1,4 +1,12 @@
 #check	count
+api-parity(accessor)	10
+api-parity(hand-port-extra)	39
+api-parity(mutability)	8
+api-parity(port-extra)	85
+api-parity(rename)	0
+api-parity(static-placement)	0
+api-parity(unclassified)	0
+api-parity(visibility)	0
 base-surface	0
 break-catch	0
 cast-conversion	0
