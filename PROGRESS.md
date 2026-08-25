@@ -112,10 +112,14 @@ before the rename. What did NOT move is `port-report/<X>/`, which is keyed on th
 | `ssg-liquid-test` | liqp `src/test/java` | 105 → **105** (nothing excluded since T9 closed, §10.5.4) | **637** emitted, **637 run — 636 passing, 1 failing, expected 1 / unexpected 0** (§10.5.4's classification: T16 took the three jackson ones; the last is K18's counted refusal, DECLARED expected by maintainer decision 2026-08-14 — `Map.Entry` stays `Tuple2` and an entry-IMPLEMENTING class is unsupported, scala's custom-comparison idiom being an `Ordering`; `baseline/expected-failures.tsv` carries it, and the test still runs so a pass would be reported as news) | **0** |
 | `ssg-md` | flexmark-java `flexmark` + 11 `flexmark-util-*` | 458 → **468** (0 dropped, 0 injected; 486 in scope, 28 declaration-only) | its suite is THREE upstream modules and a second lane emitting **88** files — **725** registrations from 726 `@Test` (the 1 an OVERRIDE the ancestor's registration dispatches to), **725 passing / 2 failing**, every failure attributed. **CommonMark conformance: 1,870 of 1,870 spec examples on the three versions java runs (100 %), against a MEASURED green java control** — the 42 were ONE refused `super(args)` three classes above the builder (§10.6.7) | **0** main + **0** test after wave 23 (243 at first emit, 131 at the first `RefChecks` run, 42 after wave 19, 34 after wave 20, 27 after wave 21-22; §10.6.3, every one of them classified — the typer reached zero at wave 17 and `RefChecks` has run) |
 
-**A frozen BIR path still exists.** Nine corpus programs — liqp, flexmark, the xwiki-macros cold-port
-closure, jbump and their demos — predate the TIR and run on the string-oriented BIR printer
-(`DESIGN.md` §2.2). Headers on `Bir.scala` / `SpoonFrontend.scala` / `ScalaPrinter.scala` name them.
-The xwiki-macros closure is the furthest that path got: 501 files emitted from a 533-file closure with
+**A frozen BIR path still exists — SEVEN programs, and NOT ONE OF THEM IS A PORT.** `core/Bir.scala`'s
+own header is the list, and it is the authority: `LiqpCorpus`, `LiqpM0`, `FlexmarkCorpus`, `VocabDemo`,
+`BumpDemo`, `XwikiSurvey` and `XwikiProject` (the last two reach it through `runner/M0Pipeline`).
+Five of the seven are SCOUTS and engine gates — a coverage survey, an M0 translate-and-compile gate, a
+cache/ripple gate, a vocabulary/rename gate — that emit into `out/` and are nobody's deliverable; and
+every library they scout is ported through the TIR now
+(`balticporter/corpus/ports/{liqp,ssg-md,jbump}/*.conf`, §10.5/§10.6/§6). The xwiki-macros cold-port
+closure is the only thing on that list with no TIR port: 501 files emitted from a 533-file closure with
 0 untranslated constructs, burned down to roughly 60 compile errors, at which point the mechanical
 per-fix yield was exhausted and the remaining classes needed whole-file overrides. It is not on the
 current pipeline and none of its numbers are comparable with the table above.
@@ -434,9 +438,9 @@ is the only instrument that could have.
 **The order-safety rule is the whole residue.** 146 of 166 refusals are `reason=order` — the value
 was not composed of the constructor's own parameters, literals and operators, so hoisting it into a
 delegation argument list would evaluate it before `super(...)` and before the instance initialisers
-where java evaluated it after both. R1's census predicted 129 non-hoistable CLASSES corpus-wide; on
-libGDX core alone 64 synthesised classes carry at least one refusal, so the order rule grows that set
-substantially rather than marginally. A purity allow-list is the obvious next lever and is not built:
+where java evaluated it after both. The pre-implementation census predicted 129 non-hoistable CLASSES
+corpus-wide; on libGDX core alone 64 synthesised classes carry at least one refusal, so the order
+rule grows that set substantially rather than marginally. A purity allow-list is the obvious next lever and is not built:
 the number says it would be worth designing, which is exactly what the measurement was for.
 
 **And the funnel now says all of that BESIDE THE CODE.** `FunnelledCtor` was excluded from
@@ -3974,9 +3978,14 @@ the four conformance suites died on it — `ExceptionInInitializerError`, then `
 at the second use — and nothing before this wave could see it, because the unit suite never
 unescapes an entity. **The lookup is a STRING LITERAL, which no rename touches (§4.56 — a rename
 decides ownership structurally and never from a string), so the emitted `ssg.md.util.sequence.Html5Entities`
-asks for the UPSTREAM path.** That is the right answer and it is a statement a consumer has to act
-on: a build that consumes this port must ship the upstream resource tree unchanged, at the upstream
-paths, beside the renamed Scala. The lane says so at `md_spec_res`.
+asks for the UPSTREAM path.** That is the right answer, and it leaves an obligation the PORT now
+discharges itself: **`resources 0 -> 1` in wave 7** (`PortManifest.resources`, `DESIGN.md` §8.22 —
+the same mechanism §10.9.3 shipped 22 files through), errors 0 = 0, **0 member digests**. The proof is the
+SUITE, not the count: `md_lib_res` used to point `--resource-dir` at the UPSTREAM tree, which made
+the tests pass while the port shipped nothing; it points at
+`ported/ssg-md/src_managed/main/resources` now and the lane still reads **725 passing / 2 failing
+(both expected)**. The static initialiser that took out three of four conformance suites is fed by
+the port's own deliverable.
 
 **THE FLOOR THIS LEAVES.** 726 java `@Test` → **725 munit registrations**, and the 1 is not a
 loss: `ComboSpecTestCase.testSpecExample` OVERRIDES `FullSpecTestCase`'s, so the port emits one
@@ -7160,72 +7169,52 @@ their porting work maintained by **agents in those repositories**, without this 
 (`CLAUDE.md` §4.45).
 
 The findings below come from an adversarial `porting-auditor` review at commit `8fea564` (2026-07-29),
-with each item's state re-verified against the working tree.
+with each item's state re-verified against the working tree. **NINE of the audit's fourteen items are
+SHIPPED COMPLETE and their rows are deleted** (§3.7 — a list shrinks by deletion): the single-entry
+consumer API and `RequiredChecks` (1.2), the published `balticporter-runtime` (1.3), TIR package
+renaming (1.5), provenance headers on every backend (1.6), the full check report in every lane (2.1),
+the persisted-and-diffed `findings.tsv`/`counts.tsv`/`report.md` artifacts (2.2), `TirPrinter` +
+`DebugEmit` + the debug flags (2.3), the three ad-hoc debugging techniques as flags (2.5), and
+`PortManifest` + `ManifestAgreement` + the port map (3.1). What is left below is what still carries an
+open residue.
 
 | # | finding | state |
 |---|---|---|
-| 1.1 | two engines, each with half of what a consumer needs (BIR vs TIR) | **partly** — the BIR path's operational machinery (action cache with early cutoff, determinism by double-translation, `SbtGen` wiring, provenance) runs on TIR, and BIR is **explicitly frozen** with headers naming its dependents. But **9 corpus programs are still on BIR** and moving them means re-porting three libraries. One framework by declaration, two by deployment |
-| 1.2 | the consumer API was "copy a 253-line file", by explicit instruction | **shipped** — `PortRun` is the single entry point; a migration program is configuration only, and `RequiredChecks` makes a forgotten check fail the run rather than shrink the report |
-| 1.3 | injected runtime must be a published artifact — a CORRECTNESS requirement | **shipped** — `balticporter-runtime` is a published module and `SbtGen` adds the dependency from `RuntimePlan`; source emission survives as the explicit `Vendored` fallback |
+| 1.1 | two engines, each with half of what a consumer needs (BIR vs TIR) | **partly** — the BIR path's operational machinery (action cache with early cutoff, determinism by double-translation, `SbtGen` wiring, provenance) runs on TIR, and BIR is **explicitly frozen** with headers naming its dependents. **7 programs are still on BIR** (`core/Bir.scala`'s header names them) and NONE of them is a port: five are scouts and engine gates, and liqp, flexmark and jbump all port through the TIR. The one library with no TIR port is the xwiki-macros cold-port closure. One framework by declaration, two by deployment |
 | 1.4 | nothing is publishable, and a port cannot pin a known-good engine | **shipped** — `publishTo`, `versionScheme := early-semver`, a version from the environment, and `EnginePin` written into the generated build. Still unproven: **no CI publishing, and nothing has ever resolved the published artifact from sge or ssg** |
-| 1.5 | package renaming did not exist on TIR — blocking for BOTH repos | **shipped** — `PackageRenameTransform`, run last and verified (`CLAUDE.md` §4.56) |
-| 1.6 | `TirEmitter` lost provenance headers — a licence problem | **shipped** — `CLAUDE.md` §4.57 is the rule; every backend carries it |
-| 2.1 | the canonical measure script threw the four checks away | **shipped** — every lane prints the full check report, diffed against the baseline |
-| 2.2 | check results were stdout-only, truncated, never persisted, never diffed | **shipped** — `findings.tsv` / `counts.tsv` / `report.md` / `diff.txt` / `subject.txt` per run, with a promotable baseline |
-| 2.3 | no TIR pretty-printer, no way to run/skip/dump a phase | **shipped** — `TirPrinter` (+ a `canonical` style and `digest`), `DebugEmit` (in `engine`, so it ships), and the five debug flags of `CLAUDE.md` §4.6, each reachable as a `just` recipe and each proven by a spec or by `just debug-selfcheck` |
 | 2.4 | the unportable-marker design's Stage 1, plus a forced test-correlation amendment | **shipped** — source map, member digests, scalac correlation and the **test-failure** correlation lane. **Stage 2 (the marker) is shipped too**: `Tree.Unportable` + `UnportableKind` + `MarkerCheck` + the emission gate + best-effort fences, landed together, with `SpoonTir.unsupported`'s two default arms as the first mint site and `markers.tsv` written for §6.3's marked-region lane to read. Zero markers mint on all fifteen lanes, so it was emission-neutral; what is still owed is the DEFINITION-level `SymTag`, four mint sites whose shape a term wrapper cannot take, and the correlation join — `DESIGN.md` §6.5 names each |
-| 2.5 | three ad-hoc debugging techniques should become first-class | **shipped** — all three are flags or a printer |
-| 3.1 | cross-port composition — blocking at sge's second module | **shipped** — `PortManifest` + `ManifestAgreement` (static and dynamic layers), and beyond the original design, the **port map** (`DESIGN.md` §5): a dependent now reads what its base *emitted*, not only what it *declared* |
 | 3.2 | test-framework coverage was JUnit-4-shaped | **mostly** — `@After`, `@Ignore`, `@BeforeClass`/`@AfterClass` and the assertion set are handled (`ENGINE-LIMITS.md` X5), and the VOCABULARY and SCOPE gaps a second library found are closed too (X6: JUnit 3's two assertion classes, `assertThrows`, and the rewrite no longer skipping a class that declares no `@Test`). The target side is honestly **(b) with exactly one implemented policy value**: `intercept` and the curried `test(name){body}` shape are MUnit facts baked into the phase |
-| 3.3 | incremental TIR runs; unmatched-policy-key reporting; `CollectionsTransform.typeMap` as a parameter | **two of three** — the action cache moved to TIR, and `PolicyReport` now reports a key that never fired (it found a real dead entry in libGDX's manifest the first time it was called). `typeMap` is still a private table, not a (b) parameter, so a divergent *mapping* is invisible to `ManifestAgreement` |
+| 3.3 | incremental TIR runs; unmatched-policy-key reporting; `CollectionsTransform.typeMap` as a parameter | **two of three** — the action cache moved to TIR, and `PolicyReport` now reports a key that never fired (it found a real dead entry in libGDX's manifest the first time it was called). `typeMap` is still a private ENGINE table rather than a (b) parameter — but it is no longer invisible: `CollectionsTransform.mappingDigest` renders it into `surfaceFingerprint` unconditionally |
 
 ### 6.1 What is still NOT done, stated plainly
 
-1. **Nine corpus programs on the frozen BIR path.** Until they move, "the framework" is two frameworks.
+1. **Seven programs on the frozen BIR path — five scouts, two the xwiki-macros cold port.** No PORT
+   runs on BIR: liqp, flexmark and jbump each have a TIR port
+   (`balticporter/corpus/ports/{liqp,ssg-md,jbump}/*.conf`). Until the seven move, "the framework" is
+   two frameworks by deployment; what moving them costs is one cold port, not three re-ports.
 2. **No end-to-end proof that a generated port resolves the published runtime.** `SbtGen` writes the
    right dependency line; nothing has resolved it. That wants an sbt scripted test.
 3. **"Adding a library does not mean editing this repository" is unproven from here.** What this
    repository could close is closed — nothing mechanical remains to copy and no check can be forgotten.
    Proving the rest needs the published artifacts consumed *from* sge or ssg.
 4. **`ManifestAgreement` cannot see a parameterised phase's CONFIGURATION** unless it declares a
-   fingerprint. `ClassTableTransform`, `StaticForwarderTransform` and `PortMapTransform` opt in;
-   `CollectionsTransform` cannot until its `typeMap` becomes a parameter.
-5. **No diamond (two bases sharing a third) has been built, so map composition is untested.** The
-   first half of this item is CLOSED: `sge-ai` is an *extension of libGDX itself* and is ported
-   (§10.7) — and it is the one that shows why the distinction mattered, since a module declaring
-   INSIDE its base's namespace inherits the rename instead of stating one, which no
-   outside-the-namespace dependent could have exercised. vis-ui is still open.
+   fingerprint. **Fourteen transforms opt in now** — `CollectionsTransform` among them, and its
+   `mappingDigest` renders the engine's own `typeMap` into the string UNCONDITIONALLY, so a divergent
+   MAPPING is no longer invisible. What is: every phase that declares none, where
+   `PortManifest.fingerprint` falls back to the phase NAME and two different configurations compare
+   EQUAL. `TestFrameworkTransform` is the named one (`CLAUDE.md` §1(b), `ENGINE-LIMITS.md` CT9) —
+   its `suite` becomes a converted suite's parent and its `testMember` the call every `@Test`
+   becomes, and neither reaches the fingerprint.
+5. **No diamond (two bases sharing a third) has been built, so map composition is untested.** Every
+   dependent in the corpus is ONE hop from libGDX core — vis-ui included, ported in §10.9 and
+   declaring `com.badlogicgames.gdx:gdx` as its only compile coordinate.
 6. **Nothing verifies two ports were built by the same ENGINE at the manifest level.** `EnginePin` is
    wired into the port map's freshness answer, not into `ManifestAgreement`.
-7. **THE PORT'S OWN CLASSPATH RESOURCES ARE NOT PART OF ITS OUTPUT, AND NOTHING SAYS SO.** A ported
-   library that reads a resource — `Class.getResourceAsStream("/com/vladsch/…/entities.properties")`
-   — keeps the UPSTREAM path, because the lookup is a STRING LITERAL and a rename decides ownership
-   structurally and never from a string (`CLAUDE.md` §4.56, and rewriting it would be that rule
-   broken). That is the right emission and it leaves the consumer an obligation nobody states: ship
-   the upstream resource tree, unchanged, at the upstream paths, beside the renamed Scala. Absent,
-   the failure is a static-initialiser exception at first use — no compile error, no check count, no
-   member digest, and on the first port to reach one it took out three of four conformance suites
-   (`§10.6.7`). The SECOND occurrence is what promoted it from a per-port workaround to policy:
-   `sge-visui` (§10.9.3) reads its whole SKIN — 24 resources under its root, 9 distinct classpath
-   paths named in the emitted Scala — and the library refuses to start without them.
-   **CLOSED, wave 7 — `PortManifest.resources` and `DESIGN.md` §8.22, on BOTH occurrences.** More
-   than the report this item asked for: the port SHIPS the files, verbatim, at the upstream paths,
-   into `SbtGen.managedResources` — the descriptor mechanism's complement, a COPY where
-   `serviceProviders` is a REWRITE, because a `META-INF/services` file is FQNs and a resource is
-   bytes the program merely locates. The `resources` lane carries one row per file with two residues
-   (`named-unshipped`, which is the report this item wanted, and `unnamed`), and `SbtGen` already
-   wrote the `unmanagedResourceDirectories` lines this item guessed at.
-   - **`sge-visui`**: `resources 0 -> 22`, errors 8 = 8, 0 member digests, 22 of 22 byte-identical to
-     upstream, and the 2 upstream-BUILD files under that root correctly not shipped;
-   - **`ssg-md`**: `resources 0 -> 1`, errors 0 = 0, 0 member digests — and the proof is the SUITE.
-     `md_lib_res` used to point `--resource-dir` at the upstream tree, which made the tests pass
-     while the port shipped nothing; it points at `ported/ssg-md/src_managed/main/resources` now, and
-     the lane reads **725 passing / 2 failing (both expected)**, unchanged. The static initialiser
-     that took out three of four conformance suites is fed by the port's own deliverable.
-
-   What is still open is one step out and is not this item: nothing checks that a CONSUMER's build
-   puts that directory on its classpath. The generated `build.sbt` does; a hand-written build that
-   ignores `src_managed/<config>/resources` gets the same silence as before.
+7. **Nothing checks that a CONSUMER's build puts the port's resource directory on its classpath.**
+   Shipping the files is CLOSED (§10.9.3 for `sge-visui`'s 22, §10.6.7 for `ssg-md`'s one), and the
+   generated `build.sbt` wires `src_managed/<config>/resources`; a hand-written build that ignores
+   that directory still gets a static-initialiser exception at first use with no compile error, no
+   check count and no member digest to see it.
 
 ### 6.2 What the audit found SOUND — clean verdicts, not courtesy
 
@@ -7444,7 +7433,7 @@ invisible until Stage P4 turns it on, and P4 should not be the first time anyone
 
 | | |
 |---|---|
-| entries declared (R5 §4's block, de-duplicated) | **144** |
+| entries declared (the harvested accessor block, de-duplicated) | **144** |
 | accessor keys that did NOT bind (`NeverMatched`/`Malformed`) | **0** |
 | properties APPLIED | **127** |
 | properties REFUSED, each counted with its cause | **17** |
@@ -7455,8 +7444,8 @@ declarations, and `Drawable`-shaped entries move one per implementor plus one pe
 This is the first large `Configured` rename population in the project; the previous largest was
 libGDX core's 827 `RenamedMember` rows, all `Universal`.
 
-*(R5's prose says "145 properties"; its own block yields 144 distinct keys. The block is what was
-bound — the discrepancy is in the brief's count, not in the policy.)*
+*(An earlier hand count of the same harvest said "145 properties". 144 is the number that BOUND —
+the declared block is what a run reads, and it yields 144 distinct keys.)*
 
 **The 17 refusals, all of them correct, none of them silent — now 5.**
 
@@ -7602,10 +7591,10 @@ argument for class attachment, in numbers.
 | residual holder: fields dropped of 11 | 8 (`app`/`files`/`graphics` keep a reader) | 9 (`app`/`graphics`) |
 | `DeferredInit` sites | 0 | 0 |
 
-Four things follow, none of them re-derivable from R4's census alone:
+Four things follow, none of them re-derivable from the pre-implementation census alone:
 
-- **Class attachment reproduces the reference port's size; method attachment does not.** R4 measured
-  the hand port at **159 attachment files against 97 direct-reader files — 1.6×**. Class mode lands
+- **Class attachment reproduces the reference port's size; method attachment does not.** That census
+  measured the hand port at **159 attachment files against 97 direct-reader files — 1.6×**. Class mode lands
   at 177/97 = **1.8×**; method mode at 324/97 = **3.3×**. The over-approximation method mode pays is
   real and it is roughly double.
 - **`frozen-component` goes to ZERO under class attachment**, which is §8.4's prediction confirmed on
@@ -7613,7 +7602,7 @@ Four things follow, none of them re-derivable from R4's census alone:
   anchored on `java.lang.Runnable`, `Comparable` or an unparsed parent is simply not a problem.
   Method mode refuses 32 declarations across 15 components — `RemoteInput#run`, `Timer$Task`,
   `TextField`'s listener bodies — every one of them a `Runnable`-shaped anchor.
-- **`DeferredInit` is 0 in base, in both modes**, matching R4's census exactly: the corpus's one true
+- **`DeferredInit` is 0 in base, in both modes**, matching that census exactly: the corpus's one true
   class-initialiser read is `gdx-vfx`'s `VfxGLUtils`, a DEPENDENT. The eager→lazy machinery ships
   unexercised by libGDX core on purpose.
 - **The residual holder really does mostly vanish**, derived and not configured: 8 of 11 fields lose
@@ -8817,7 +8806,7 @@ screens half could not.
 
 | | dry run (§11.11) | LIVE |
 |---|---:|---:|
-| entries declared (R5 §4's block) | 144 | **144** |
+| entries declared (the harvested accessor block) | 144 | **144** |
 | accessor keys that did not bind (`NeverMatched`/`Malformed`) | 0 | **0** |
 | properties APPLIED | 127 | **139** |
 | properties REFUSED, each counted | 17 | **5** |
@@ -8885,10 +8874,11 @@ override component (`Texture`/`Cubemap`/`TextureArray`#`managed` all resolve int
 `GLTexture#isManaged`; `AnimatedTiledMapTile`/`StaticTiledMapTile`'s six pairs both resolve into
 `TiledMapTile`). The rename is idempotent and applies once — only the decision log double-counts —
 but collapsing them into the interface entry, exactly as the harvest already did for `Drawable`, is
-a Q30 completion edit.
+an OPEN completion edit on that policy block — nine entries to fold, at no expected change to the 255
+distinct declarations moved.
 
 **And the `Drawable` fan-out expectation is REFUTED by the code, which is worth recording because
-the brief predicted otherwise.** `Drawable` was priced at "4+ implementors"; upstream declares
+the pre-implementation pricing predicted otherwise.** `Drawable` was priced at "4+ implementors"; upstream declares
 `getLeftWidth` in exactly TWO types — the `Drawable` interface and `BaseDrawable` — and every other
 implementor (`TiledDrawable`, `TextureRegionDrawable`, `NinePatchDrawable`, `SpriteDrawable`,
 `TransformDrawable`) inherits it. So each `Drawable` property moves 4 declarations (2 accessors × 2
@@ -10319,9 +10309,8 @@ baselined per platform); `api-parity` — an engine check taking the hand-port t
 parameter, one row per public-surface divergence classified by family (null-model, accessor,
 rename, operator, factory, file-merge, visibility, collection-retarget, opaque, behaviour-only,
 hand-port-extra, port-extra); `divergence` — the census that feeds the investigator agent, drained
-into `Decision`s; cross-platform COMPILE (not portability — P1) in every existing lane; a doc truth
-sweep (§0/§6.1's "nine BIR programs" claim, every CLOSED item deleted, `PortMapAcceptanceSpec`'s
-`assume` replaced by a fixture). `sge-ecs` is the probe module for every instrument.
+into `Decision`s; cross-platform COMPILE (not portability — P1) in every existing lane.
+`sge-ecs` is the probe module for every instrument.
 
 **Phase 1 — parity mechanisms**, each a (b) with an empty no-op default, `SurfacePolicy`,
 `MergeablePolicy` where surface depends on it, the fingerprint segment omitted when empty, and a
