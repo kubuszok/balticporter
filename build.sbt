@@ -1,6 +1,11 @@
 ThisBuild / organization     := "com.kubuszok"
 ThisBuild / organizationName := "Baltic Porter"
-ThisBuild / scalaVersion     := "3.8.4"
+// The one Scala version this build compiles with, named because the `runtime` project matrix has
+// to state it per platform row as well (`ThisBuild / scalaVersion` is not visible to the matrix's
+// axis constructors, which run while the build is being assembled).
+val scalaV = "3.8.4"
+
+ThisBuild / scalaVersion     := scalaV
 
 // ---------------------------------------------------------------------------------------------
 // VERSION SCHEME
@@ -116,19 +121,56 @@ val munit = "org.scalameta" %% "munit" % "1.2.0" % Test
 //   * NOTHING JVM-ONLY. No reflection, no threads, no I/O, no `java.*` beyond what Scala.js and
 //     Native implement (`UnsupportedOperationException` is fine). Emitted ports target the same
 //     platforms sge does.
-//   * The layout is plain `src/main/scala` rather than a `crossProject`'s `shared/src`. Adding
-//     sbt-scalajs / sbt-scala-native and turning this into a `crossProject` is a directory move
-//     plus two plugin lines — no source change — and is deliberately deferred until a port
-//     actually builds for those platforms.
+//   * The layout is plain `src/main/scala`, SHARED by all three rows. That is what a
+//     `projectMatrix` buys over a `crossProject`: the matrix keeps one base directory and one
+//     source tree and varies only the compiler, so there is no `shared/src` and no directory
+//     move — which matters because `engine`'s resource generator VENDORS this exact tree, and a
+//     vendored copy that is one platform's view of the module is not the module.
+//   * The three rows are the platforms sge and ssg publish for (CLAUDE.md §1.5): the JVM row keeps
+//     the artifact name `balticporter-runtime` (`balticporter-runtime_3`), the others take the
+//     platform suffix their linkers key on (`_sjs1_3`, `_native0.5_3`). A port resolving `%%%`
+//     therefore finds the same version of the same types on whichever platform it links for,
+//     which is the whole reason this is a published artifact rather than a per-port source drop.
+//   * The JS and Native rows are the ONLY instrument that checks the first constraint above.
+//     Nothing else in this build can fail when a `java.*` that only the JVM implements arrives
+//     here — the JVM row compiles it, every port compiles against it, and the link error lands
+//     in the consumer's repository (CLAUDE.md §4.45).
 //   * Version-locked to the engine (`ThisBuild / version`); see the version-scheme note above.
+//
+// Project ids: `runtimeJVM`, `runtimeJS`, `runtimeNative`. The Scala version is the only default
+// axis, so the platform is always spelled out — the alternative (JVM as a default axis, giving a
+// bare `runtime`) would make the one row that is NOT checking anything the unmarked case.
 // ---------------------------------------------------------------------------------------------
-lazy val runtime = project
-  .in(file("balticporter/runtime"))
+lazy val runtime = (projectMatrix in file("balticporter/runtime"))
+  .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
   .settings(
     name        := "balticporter-runtime",
     description := "Support types that Baltic-Porter-emitted Scala links against.",
     libraryDependencies += munit,
   )
+  .jvmPlatform(scalaVersions = Seq(scalaV))
+  // `ThisBuild / Test / fork := true` (see the SERIAL TESTS note above) is a JVM statement: the
+  // Scala.js and Native test tasks refuse a forked JVM outright, and neither can be reached by
+  // the system-property contamination that setting exists to prevent — a JS test runs in Node and
+  // a Native one is a linked binary, so there is no shared JVM to contaminate.
+  .jsPlatform(scalaVersions = Seq(scalaV), settings = Seq(Test / fork := false))
+  .nativePlatform(
+    scalaVersions = Seq(scalaV),
+    settings = Seq(
+      Test / fork := false,
+      // munit 1.2.0 is built against scala-native `test-interface` 0.5.8 and the toolchain here is
+      // 0.5.12, which sbt's STRICT eviction reads as a binary-compatibility conflict and refuses.
+      // They are compatible within 0.5.x — `../sge/build.sbt` carries the same downgrade for the
+      // same pair — and the alternative, pinning the test framework to whatever the toolchain
+      // happens to ship, would make a munit bump a toolchain decision.
+      evictionErrorLevel := Level.Warn,
+    ),
+  )
+
+// The JVM row, which is the one every other module means when it says `runtime`: the vendoring
+// resource generator, `BuildVersion.runtimeArtifact` and the source-root lists all read it.
+// Naming it once here keeps those readers from each spelling out a matrix lookup.
+lazy val runtimeJvmRow: Project = runtime.jvm(scalaV)
 
 // ---------------------------------------------------------------------------------------------
 // `balticporter-api` — what a TRANSFORM OR CHECK AUTHOR compiles against, and nothing more.
@@ -196,7 +238,7 @@ lazy val engine = project
            |  val organization: String    = "${organization.value}"
            |  val version: String         = "${version.value}"
            |  val scalaVersion: String    = "${scalaVersion.value}"
-           |  val runtimeArtifact: String = "${(runtime / name).value}"
+           |  val runtimeArtifact: String = "${(runtimeJvmRow / name).value}"
            |""".stripMargin,
       )
       Seq(f)
@@ -206,7 +248,7 @@ lazy val engine = project
     // second text — a divergence between the published trait and the vendored string is exactly
     // the bug the published artifact exists to prevent, one level down.
     Compile / resourceGenerators += Def.task {
-      val srcDir = (runtime / Compile / scalaSource).value
+      val srcDir = (runtimeJvmRow / Compile / scalaSource).value
       val outDir = (Compile / resourceManaged).value / "balticporter" / "vendored-runtime"
       IO.createDirectory(outDir)
       // One file per TYPE, named after it — that is what `RuntimeArtifact` keys the vendored map
@@ -221,7 +263,7 @@ lazy val engine = project
     // …and the path back to the originals, for the test that proves the copy IS a copy.
     Test / resourceGenerators += Def.task {
       val f = (Test / resourceManaged).value / "balticporter" / "runtime-source-dir.txt"
-      IO.write(f, (runtime / Compile / scalaSource).value.getAbsolutePath)
+      IO.write(f, (runtimeJvmRow / Compile / scalaSource).value.getAbsolutePath)
       Seq(f)
     }.taskValue,
     // …and the engine's own source root, for `PolicyKeyLintSpec` — a check whose subject is the
@@ -240,7 +282,7 @@ lazy val engine = project
         (api / Compile / scalaSource).value,
         (Compile / scalaSource).value,
         (`frontend-spoon` / Compile / scalaSource).value,
-        (runtime / Compile / scalaSource).value,
+        (runtimeJvmRow / Compile / scalaSource).value,
       )
       IO.write(f, roots.map(_.getAbsolutePath).mkString("", "\n", "\n"))
       Seq(f)
@@ -326,7 +368,10 @@ lazy val sge = project
 
 lazy val root = project
   .in(file("."))
-  .aggregate(runtime, api, `frontend-spoon`, engine, testkit, corpus)
+  // every row of the runtime matrix, not just the JVM one — `runtime` is a `ProjectMatrix` and
+  // has no single reference, so a build-wide `compile`/`publishLocal` reaches all three or none.
+  .aggregate(runtime.projectRefs *)
+  .aggregate(api, `frontend-spoon`, engine, testkit, corpus)
   .settings(
     name := "balticporter",
     publish / skip := true,

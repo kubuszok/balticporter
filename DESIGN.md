@@ -870,7 +870,8 @@ cache only).
 
 ```
 balticporter/
-  runtime/         // balticporter-runtime: the shims a PORT depends on (JavaIterator, …)
+  runtime/         // balticporter-runtime: the shims a PORT depends on (JavaIterator, …),
+                   // cross-built JVM + Scala.js + Native (`runtimeJVM`/`runtimeJS`/`runtimeNative`)
   api/             // the MODEL and the CONTRACTS a rule author compiles against
   frontend-spoon/  // the ONLY module that sees Spoon types
   engine/          // the MACHINERY: transforms, checks, emitter, vocab, sbt-gen, verify, PortRun
@@ -1099,6 +1100,26 @@ source into each port's `src_managed` puts two divergent bodies at one FQN and i
 Scala.js and Native linkers — which are the platforms the target repos exist for. Source emission
 survives only as an explicit `RuntimeMode.Vendored` fallback for a standalone single-module port.
 `ENGINE-LIMITS.md` K3 is the measured form of this rule.
+
+**…and the dependency is cross-built, because the argument for publishing it is a LINKER argument.**
+The paragraph above rests on the Scala.js and Native linkers rejecting two bodies at one FQN — which
+says nothing at all unless the artifact those linkers resolve actually exists. `runtime` is therefore
+a `projectMatrix` over the three platforms sge and ssg publish for (`CLAUDE.md` §1.5), at sge's own
+toolchain versions, publishing `balticporter-runtime_3`, `balticporter-runtime_sjs1_3` and
+`balticporter-runtime_native0.5_3` from ONE `src/main/scala`: a port resolving `%%%` finds the same
+version of the same types on whichever platform it links for.
+
+Two consequences worth stating, because each is a fact the JVM row cannot produce. **The JS and
+Native rows are the only instrument that checks the module's "nothing JVM-only" rule** — nothing else
+in this build can fail when a `java.*` only the JVM implements arrives here, and the error would
+otherwise land in the consumer's repository (`CLAUDE.md` §4.45). And **what they check is
+REACHABILITY, not compilation**: both backends compile against the real JDK and resolve `java.*`
+against their own javalib when they LINK, so a member naming an unimplemented JDK API builds
+everywhere and refuses only where something calls it. That makes the residue a per-MEMBER fact rather
+than a per-file one, and it is why `RuntimeMode.Vendored`'s flat one-file-per-type drop is the thing
+standing between the engine and an off-JVM `UnsupportedOperationException`: the varying half would
+have to live in a platform source directory the vendored copy does not carry. The measured residue —
+three members, two backends — is in `PROGRESS.md` §13.1.
 
 **And the corollary that decides where a NEW support type may go: only a BASE port can ship one.**
 `RuntimePlan.of` derives a run's required types from the PHASES that ran (`RequiresRuntime`), and a

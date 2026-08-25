@@ -27,7 +27,15 @@
   *
   *   - '''Nothing JVM-only.''' No reflection, no threads, no I/O, no `java.*` beyond what Scala.js
   *     and Native implement. Ports target the same platforms sge does, and this artifact is the
-  *     one piece of them the engine ships rather than generates.
+  *     one piece of them the engine ships rather than generates. This module is cross-built for
+  *     all three (`runtimeJVM`, `runtimeJS`, `runtimeNative`, one shared `src/main/scala`), and
+  *     those two rows are the ONLY instrument that checks this rule — but they check it at LINK
+  *     time and not at compile time, because both backends compile against the real JDK and
+  *     resolve `java.*` against their own javalib when they link. So a member naming an
+  *     unimplemented JDK API builds on every row and refuses only where something REACHES it: the
+  *     residue is per-MEMBER, and the three that exist today are listed in `PROGRESS.md` §13.1
+  *     (`orderedSpliterator`/`distinctSpliterator` on JS; `JavaEnumSet.allOf`/`range`/
+  *     `complementOf` on both). Do not add a fourth without recording it there.
   *   - '''Java's shape, not Scala's collection traits''' (CLAUDE.md §4.5). Java interfaces are
   *     small and orthogonal and a class routinely implements several; Scala's collection traits
   *     are large and interlocking and that shape is illegal under them. Java's method arity is

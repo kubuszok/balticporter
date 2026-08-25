@@ -224,7 +224,8 @@ class JavaCollectionSpec extends munit.FunSuite:
   test("toArray(T[]) allocates a NEW array of the same component type when the caller's is short") {
     val out = coll("a", "b", "c").toArray(new Array[String](1))
     assertEquals(out.toList, List("a", "b", "c"))
-    assertEquals(out.getClass.getComponentType, classOf[String])
+    if PlatformArrays.reifiesComponentType then
+      assertEquals(out.getClass.getComponentType, classOf[String])
   }
 
   // -------------------------------------------------------------------------------------------

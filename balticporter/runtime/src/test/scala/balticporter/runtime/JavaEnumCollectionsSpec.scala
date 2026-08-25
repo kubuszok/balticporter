@@ -103,21 +103,8 @@ class JavaEnumCollectionsSpec extends munit.FunSuite:
     assert(s.isInstanceOf[scala.collection.mutable.Set[?]])
   }
 
-  test("noneOf is empty and allOf is every constant IN ORDER — the token is load-bearing for one") {
+  test("noneOf is empty — the one factory whose class token really IS decoration") {
     assert(JavaEnumSet.noneOf(classOf[Level]).isEmpty)
-    assertEquals(JavaEnumSet.allOf(classOf[Level]).toList, List(Level.Low, Level.Mid, Level.High))
-  }
-
-  test("range is INCLUSIVE at both ends, and refuses an inverted one as java does") {
-    assertEquals(JavaEnumSet.range(Level.Low, Level.Mid).toList, List(Level.Low, Level.Mid))
-    assertEquals(JavaEnumSet.range(Level.Mid, Level.Mid).toList, List(Level.Mid))
-    intercept[IllegalArgumentException](JavaEnumSet.range(Level.High, Level.Low))
-  }
-
-  test("complementOf reads the enum off the SET, so an empty one throws — java's own limitation") {
-    assertEquals(JavaEnumSet.complementOf(JavaEnumSet.of(Level.Mid)).toList,
-                 List(Level.Low, Level.High))
-    intercept[IllegalArgumentException](JavaEnumSet.complementOf(new JavaEnumSet[Level]))
   }
 
   test("copyOf takes any collection and puts it back in ordinal order") {

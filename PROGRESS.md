@@ -10312,6 +10312,40 @@ hand-port-extra, port-extra); `divergence` — the census that feeds the investi
 into `Decision`s; cross-platform COMPILE (not portability — P1) in every existing lane.
 `sge-ecs` is the probe module for every instrument.
 
+**Wave 0.4a — `balticporter-runtime` cross-built (DONE).** The `runtime` module is a `projectMatrix`
+over JVM/JS/Native (`runtimeJVM`, `runtimeJS`, `runtimeNative`; sbt-scalajs 1.22.0 and
+sbt-scala-native 0.5.12, sge's versions), one shared `src/main/scala`, and all three rows
+`publishLocal` (`balticporter-runtime_3`, `_sjs1_3`, `_native0.5_3`), which is what wave 0.4's
+cross-platform compile lane resolves `%%%` against. All twelve main sources COMPILE unchanged on all
+three; the JVM lane is byte-identical (gdx-measure: 0 errors, 0 moved member digests, every check
+count flat, findings and port-map unchanged). Tests: **178 JVM / 172 JS / 172 Native, 0 failing**.
+
+What the two new rows found, which nothing in this build could see before — all three are LINK-time
+(Scala.js and Native compile against the real JDK and check availability when they link), so the
+residue is a member that cannot be REACHED off-JVM rather than a source that cannot be built:
+
+| member | missing on | missing API |
+|---|---|---|
+| `JavaCollections.orderedSpliterator` / `distinctSpliterator` | JS | `java.util.Spliterator`, `java.util.Spliterators` — absent from `scalajs-javalib` as TYPES; Native implements both |
+| `JavaEnumSet.allOf` | JS, Native | `java.lang.Class.getEnumConstants` |
+| `JavaEnumSet.range` / `complementOf` | JS, Native | the same, reached through `java.lang.Enum.getDeclaringClass` (which Native has and JS does not) |
+
+None is repairable inside the runtime as it stands, and the reason is the VENDORING contract rather
+than the shim: `build.sbt` copies `src/main/scala` verbatim into the engine's resources as one file
+per TYPE, so the `UnsupportedOperationException` half would have to live in a platform source
+directory that a `RuntimeMode.Vendored` port would never be handed. Making the enum trio throw
+off-JVM is therefore a change to `RuntimeArtifact`'s vendored map (it would need a closure, not a
+per-type table), and is left to whichever wave needs a cross-platform vendored port. Until then the
+platform's own refusal stands, which names the exact missing JDK member at link time and is louder
+than a throw. The six assertions that reach those members moved to `src/test/scalajvm`.
+
+A FOURTH finding is not a gap at all and is recorded because it looks like one: Scala Native does not
+REIFY a reference array's component type — `new Array[String](0).getClass.getComponentType` is already
+`java.lang.Object` there — so java's `toArray(T[])` contract about the *argument's runtime component
+type* has no answer on that platform, and the four assertions that pin it are guarded by a runtime
+probe (`PlatformArrays.reifiesComponentType`) rather than by a platform source directory. The shims
+are unchanged and do the same thing on all three rows.
+
 **Phase 1 — parity mechanisms**, each a (b) with an empty no-op default, `SurfacePolicy`,
 `MergeablePolicy` where surface depends on it, the fingerprint segment omitted when empty, and a
 boundary count where it retypes: null-spelling target (`Union | Named(fqn) | Option`, K13 inside);
