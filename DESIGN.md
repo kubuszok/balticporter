@@ -5989,6 +5989,20 @@ compile error in these tests.
 **The lane is NOT in `measure-all`.** The drop-in is expected red until the emitted API is at
 parity. `just dropin-all` is the separate aggregator.
 
+**Per-platform baselines.** The lane writes per-platform error counts
+(`run-latest/errors-count.dropin.jvm`, `.js`, `.native`) and test outcome files
+(`run-latest/tests.jvm.tsv`, `.js.tsv`, `.native.tsv`), compared against
+`baseline/dropin/expected-errors.<platform>` and `baseline/dropin/tests.<platform>.tsv` on every
+run. A regression (errors rose or test outcomes changed) fails the lane; an improvement is
+acknowledged by re-accepting (`just baseline-accept <Port>`). The dropin baselines live under
+`baseline/dropin/` to avoid collision with the measure lane's own baselines for the same port
+report directory.
+
+**`scalacOptions` discovery.** The lane runs `sbt -batch "show <project>/scalacOptions"` in the
+disposable clone and records the result to `run-latest/scalacOptions.txt`. The emitted code must
+compile under the reference repo's own compiler flags; a syntax error under `-no-indent` or a
+warning promoted to an error by `-Werror` is the lane's to find, not the consumer's to discover.
+
 ### 8.25 The divergence census and its verdicts
 
 The parity campaign (PROGRESS.md §13) needs every hand-port adjustment turned into a named decision:

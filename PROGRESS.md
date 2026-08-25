@@ -10346,6 +10346,19 @@ type* has no answer on that platform, and the four assertions that pin it are gu
 probe (`PlatformArrays.reifiesComponentType`) rather than by a platform source directory. The shims
 are unchanged and do the same thing on all three rows.
 
+**Wave 0.4 delivered: cross-platform COMPILE gate in every measure lane.** After each lane's JVM
+compile, `xplat_compile` (scripts/_lib.sh) runs `scala-cli compile --platform scala-js` and
+`--platform scala-native` over the same emitted source tree, counts errors, and baselines them
+(`expected-errors.js`, `expected-errors.native`). This is a COMPILE gate, not a portability gate
+(ENGINE-LIMITS P1): the portability lanes stay as the TIR-level check. Dependencies are omitted
+from the xplat compile (JVM-only coordinates cannot resolve for JS/Native); the resulting errors
+are expected and baselined. 20 of 23 lanes carry xplat compiles (the three differential lanes --
+ai-diff-measure, textra-diff-measure, visui-diff-measure -- are skipped because they compile
+hand-port tests, not emitted code). The drop-in lane (`ecs-dropin`) gained per-platform baseline
+comparison for both errors and test outcomes, and `scalacOptions` discovery from the reference
+build (written to `run-latest/scalacOptions.txt`). Per-port per-platform numbers will be recorded
+here after the first full `just measure-all` run seeds the baselines.
+
 **Wave 0.2 delivered: `api-parity` check** (DESIGN.md §8.23). `PortManifest.parity: Option[ParityRef]`
 is the §1(b) parameter. Both sides parsed by scalameta (§4.56), eight families, required-when-declared.
 sge-ecs wired to `../sge/sge-extension/ecs/src/main/scala`, first measurement:

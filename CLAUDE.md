@@ -1217,6 +1217,30 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   number — a hand-edited floor is the one baseline that can disagree with the run that produced it.
   **Fewer errors fails the lane as loudly as more**: a change is acknowledged by re-accepting, and a
   lane that absorbed improvement would let a fix and a regression cancel inside one run.
+- **…AND THE CROSS-PLATFORM COMPILE IS BASELINED BESIDE IT, as `expected-errors.js` and
+  `expected-errors.native`.** After each lane's JVM compile, `xplat_compile` (scripts/_lib.sh) runs
+  `scala-cli compile --platform scala-js` and `--platform scala-native` over the same emitted source
+  tree. This is a COMPILE gate, not a portability gate (`ENGINE-LIMITS.md` P1): the Scala.js and
+  Native compilers type-check against their own javalib, so a `java.lang.reflect.Field` the JVM has
+  and JS/Native do not is a real compile error here, while the `portability(all|emitted|injected)`
+  lanes stay as the TIR-level API-presence check. Dependencies are omitted from the xplat compile on
+  purpose: JVM-only coordinates (junit, mockito, jackson, antlr-runtime) cannot resolve for
+  JS/Native, and the resulting compile errors are expected and baselined. The JS and Native version
+  pins match sge's toolchain (Scala.js 1.22.0, Scala Native 0.5.12) through scala-cli's defaults.
+  `baseline/expected-errors.js` and `baseline/expected-errors.native` are written by the run
+  (`run-latest/errors-count.js`, `errors-count.native`) and promoted by `just baseline-accept`, gated
+  in both directions with the same marker-file deferred-exit pattern as the JVM error count. A
+  platform the port's `targets` excludes is skipped with a printed line. Three differential lanes
+  (ai-diff-measure, textra-diff-measure, visui-diff-measure) do not carry xplat compiles: they
+  compile hand-port tests, not emitted code.
+- **…AND THE DROP-IN LANE IS BASELINED PER PLATFORM.** `ecs-dropin` (and `dropin-all`) writes
+  per-platform error counts (`errors-count.dropin.jvm`, `.js`, `.native`) and test outcome files
+  (`tests.jvm.tsv`, `.js.tsv`, `.native.tsv`) into `run-latest/`, compared against
+  `baseline/dropin/expected-errors.<platform>` and `baseline/dropin/tests.<platform>.tsv`. The lane
+  also discovers and records the reference build's `scalacOptions` into
+  `run-latest/scalacOptions.txt`. A baseline regression fails the lane; seeded by
+  `just baseline-accept <Port>`. The lane is NOT in `measure-all` (expected red until the emitted
+  API is at parity).
 - **…AND SO IS THE NUMBER OF TESTS THE PORT EMITS, for the same reason and with the same file.** The
   error count was not the only measurement nothing compared. Every test lane already counted what
   each framework would DISCOVER in the emitted Scala against the `@Test` count in the upstream java
