@@ -4,22 +4,25 @@ class ApiParityCheckSpec extends munit.FunSuite:
 
   // ---- surface parsing ----
 
-  test("parseSurface extracts public class members") {
+  test("parseSurface extracts public and protected class members, excludes private") {
     val src =
       """package foo
         |class Bar:
         |  def baz(x: Int): String = ???
         |  val qux: Int = 1
+        |  protected def shielded: Int = 3
         |  private def secret: Int = 2
         |""".stripMargin
 
     val result = ApiParityCheck.parseSurface(List(writeTempScala("Bar.scala", src)))
     assert(result.isRight, result.left.getOrElse(""))
     val decls = result.toOption.get
-    // Should have: class Bar, def baz/1, val qux, but NOT private def secret
+    // Should have: class Bar, def baz/1, val qux, protected def shielded, but NOT private def secret
     assert(decls.exists(d => d.kind == "class" && d.name == "Bar"), s"missing class Bar in $decls")
     assert(decls.exists(d => d.kind == "def" && d.name == "baz" && d.arity == 1), s"missing def baz in $decls")
     assert(decls.exists(d => d.kind == "val" && d.name == "qux"), s"missing val qux in $decls")
+    assert(decls.exists(d => d.kind == "def" && d.name == "shielded" && d.accessLevel == "protected"),
+      s"protected member should appear in $decls")
     assert(!decls.exists(d => d.name == "secret"), s"private member should not appear in $decls")
   }
 
@@ -67,6 +70,121 @@ class ApiParityCheckSpec extends munit.FunSuite:
     val decls = result.toOption.get
     assert(decls.exists(d => d.kind == "type" && d.name == "Bar"))
     assert(decls.exists(d => d.kind == "type" && d.name == "Baz"))
+  }
+
+  // ---- type information extraction ----
+
+  test("parseSurface extracts param types and result type") {
+    val src =
+      """class Foo:
+        |  def bar(x: Int, y: String): Boolean = ???
+        |""".stripMargin
+
+    val result = ApiParityCheck.parseSurface(List(writeTempScala("Foo.scala", src)))
+    assert(result.isRight)
+    val bar = result.toOption.get.find(d => d.name == "bar").get
+    assertEquals(bar.paramTypes, List("Int", "String"))
+    assertEquals(bar.resultType, "Boolean")
+  }
+
+  test("parseSurface extracts type params") {
+    val src =
+      """class Container[T]:
+        |  def get[U <: T](key: String): U = ???
+        |""".stripMargin
+
+    val result = ApiParityCheck.parseSurface(List(writeTempScala("Container.scala", src)))
+    assert(result.isRight)
+    val decls = result.toOption.get
+    val container = decls.find(d => d.name == "Container").get
+    assertEquals(container.typeParams, "[T]")
+    val get = decls.find(d => d.name == "get").get
+    assertEquals(get.typeParams, "[U <: T]")
+  }
+
+  test("parseSurface extracts parents") {
+    val src =
+      """trait Base
+        |trait Mixin
+        |class Foo extends Base with Mixin
+        |""".stripMargin
+
+    val result = ApiParityCheck.parseSurface(List(writeTempScala("Foo.scala", src)))
+    assert(result.isRight)
+    val foo = result.toOption.get.find(d => d.name == "Foo").get
+    assertEquals(foo.parents, List("Base", "Mixin"))
+  }
+
+  test("parseSurface extracts modifiers") {
+    val src =
+      """abstract class Foo:
+        |  final def bar(): Int = 1
+        |  override def toString: String = "foo"
+        |  lazy val x: Int = 1
+        |""".stripMargin
+
+    val result = ApiParityCheck.parseSurface(List(writeTempScala("Foo.scala", src)))
+    assert(result.isRight)
+    val decls = result.toOption.get
+    val foo = decls.find(d => d.name == "Foo").get
+    assert(foo.modifiers.contains("abstract"), s"expected abstract, got ${foo.modifiers}")
+    val bar = decls.find(d => d.name == "bar").get
+    assert(bar.modifiers.contains("final"), s"expected final, got ${bar.modifiers}")
+    val ts = decls.find(d => d.name == "toString").get
+    assert(ts.modifiers.contains("override"), s"expected override, got ${ts.modifiers}")
+    val x = decls.find(d => d.name == "x").get
+    assert(x.modifiers.contains("lazy"), s"expected lazy, got ${x.modifiers}")
+  }
+
+  test("parseSurface extracts access level, includes protected") {
+    val src =
+      """class Foo:
+        |  protected def bar(): Int = 1
+        |  def baz(): Int = 2
+        |  private def secret(): Int = 3
+        |""".stripMargin
+
+    val result = ApiParityCheck.parseSurface(List(writeTempScala("Foo.scala", src)))
+    assert(result.isRight)
+    val decls = result.toOption.get
+    // protected members ARE included in the surface (they are part of the API for subclasses)
+    val bar = decls.find(d => d.name == "bar")
+    assert(bar.isDefined, s"protected member should appear in surface")
+    assertEquals(bar.get.accessLevel, "protected")
+    val baz = decls.find(d => d.name == "baz").get
+    assertEquals(baz.accessLevel, "public")
+    // private members are still excluded
+    assert(decls.find(d => d.name == "secret").isEmpty, s"private member should not appear")
+  }
+
+  test("parseSurface extracts @targetName") {
+    val src =
+      """import scala.annotation.targetName
+        |class Foo:
+        |  @targetName("add")
+        |  def +(other: Foo): Foo = ???
+        |""".stripMargin
+
+    val result = ApiParityCheck.parseSurface(List(writeTempScala("Foo.scala", src)))
+    assert(result.isRight)
+    val plus = result.toOption.get.find(d => d.name == "+").get
+    assertEquals(plus.targetName, "add")
+  }
+
+  test("parseSurface extracts val result type") {
+    val src =
+      """class Foo:
+        |  val x: Int = 1
+        |  var y: String = "hi"
+        |""".stripMargin
+
+    val result = ApiParityCheck.parseSurface(List(writeTempScala("Foo.scala", src)))
+    assert(result.isRight)
+    val decls = result.toOption.get
+    val x = decls.find(d => d.name == "x").get
+    assertEquals(x.resultType, "Int")
+    val y = decls.find(d => d.name == "y").get
+    assertEquals(y.resultType, "String")
   }
 
   // ---- accessor classification ----
@@ -140,6 +258,221 @@ class ApiParityCheckSpec extends munit.FunSuite:
     assert(divs.exists(_.family == "port-extra"), s"expected port-extra, got ${divs.map(_.family)}")
   }
 
+  // ---- signature family: type-level divergences ----
+
+  test("signature family: same name+arity but different param types") {
+    val emitted = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "process", 1, paramTypes = List("Int")),
+    )
+    val reference = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "process", 1, paramTypes = List("Long")),
+    )
+    val divs = ApiParityCheck.compare(emitted, reference, Map.empty)
+    assert(divs.exists(_.family == "signature"),
+      s"expected signature family, got ${divs.map(d => (d.family, d.detail))}")
+  }
+
+  test("signature family: same name+arity but different result type") {
+    val emitted = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "get", 0, resultType = "String"),
+    )
+    val reference = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "get", 0, resultType = "Option[String]"),
+    )
+    val divs = ApiParityCheck.compare(emitted, reference, Map.empty)
+    assert(divs.exists(d => d.family == "signature" || d.family == "null-model"),
+      s"expected signature or null-model, got ${divs.map(d => (d.family, d.detail))}")
+  }
+
+  // ---- null-model family ----
+
+  test("null-model family: T | Null vs bare T") {
+    val emitted = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "find", 1, resultType = "Entity | Null"),
+    )
+    val reference = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "find", 1, resultType = "Entity"),
+    )
+    val divs = ApiParityCheck.compare(emitted, reference, Map.empty)
+    assert(divs.exists(_.family == "null-model"),
+      s"expected null-model family, got ${divs.map(d => (d.family, d.detail))}")
+  }
+
+  test("null-model family: Nullable[T] vs bare T") {
+    val emitted = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "find", 1, resultType = "Entity"),
+    )
+    val reference = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "find", 1, resultType = "Nullable[Entity]"),
+    )
+    val divs = ApiParityCheck.compare(emitted, reference, Map.empty)
+    assert(divs.exists(_.family == "null-model"),
+      s"expected null-model family, got ${divs.map(d => (d.family, d.detail))}")
+  }
+
+  test("null-model family: Option[T] vs bare T") {
+    val emitted = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "find", 1, resultType = "Entity"),
+    )
+    val reference = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "find", 1, resultType = "Option[Entity]"),
+    )
+    val divs = ApiParityCheck.compare(emitted, reference, Map.empty)
+    assert(divs.exists(_.family == "null-model"),
+      s"expected null-model family, got ${divs.map(d => (d.family, d.detail))}")
+  }
+
+  // ---- collection-retarget family ----
+
+  test("collection-retarget family: java.util.List vs scala collection") {
+    val emitted = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "items", 0, resultType = "java.util.List[Int]"),
+    )
+    val reference = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "items", 0, resultType = "Buffer[Int]"),
+    )
+    val divs = ApiParityCheck.compare(emitted, reference, Map.empty)
+    assert(divs.exists(_.family == "collection-retarget"),
+      s"expected collection-retarget family, got ${divs.map(d => (d.family, d.detail))}")
+  }
+
+  test("collection-retarget family: java.util.Map vs scala.collection.mutable.HashMap") {
+    val emitted = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "val", "data", 0, resultType = "java.util.Map[String, Int]"),
+    )
+    val reference = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "val", "data", 0, resultType = "scala.collection.mutable.HashMap[String, Int]"),
+    )
+    val divs = ApiParityCheck.compare(emitted, reference, Map.empty)
+    assert(divs.exists(_.family == "collection-retarget"),
+      s"expected collection-retarget family, got ${divs.map(d => (d.family, d.detail))}")
+  }
+
+  // ---- opaque family ----
+
+  test("opaque family: primitive vs non-primitive type") {
+    val emitted = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "handle", 1, paramTypes = List("Int")),
+    )
+    val reference = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "handle", 1, paramTypes = List("Handle")),
+    )
+    val divs = ApiParityCheck.compare(emitted, reference, Map.empty)
+    assert(divs.exists(_.family == "opaque"),
+      s"expected opaque family, got ${divs.map(d => (d.family, d.detail))}")
+  }
+
+  // ---- operator family ----
+
+  test("operator family: @targetName differs") {
+    val emitted = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "add", 1),
+    )
+    val reference = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "add", 1, targetName = "plus"),
+    )
+    val divs = ApiParityCheck.compare(emitted, reference, Map.empty)
+    assert(divs.exists(_.family == "operator"),
+      s"expected operator family, got ${divs.map(d => (d.family, d.detail))}")
+  }
+
+  // ---- factory family ----
+
+  test("factory family: companion apply in reference, type on both sides") {
+    val emitted = List(
+      ApiParityCheck.SurfaceDecl("", "class", "Foo", 0),
+    )
+    val reference = List(
+      ApiParityCheck.SurfaceDecl("", "class", "Foo", 0),
+      ApiParityCheck.SurfaceDecl("/Foo$", "def", "apply", 1),
+    )
+    val divs = ApiParityCheck.compare(emitted, reference, Map.empty)
+    assert(divs.exists(_.family == "factory"),
+      s"expected factory family, got ${divs.map(d => (d.family, d.detail))}")
+  }
+
+  test("factory family: companion create in emitted, type on both sides") {
+    val emitted = List(
+      ApiParityCheck.SurfaceDecl("", "class", "Foo", 0),
+      ApiParityCheck.SurfaceDecl("/Foo$", "def", "create", 0),
+    )
+    val reference = List(
+      ApiParityCheck.SurfaceDecl("", "class", "Foo", 0),
+    )
+    val divs = ApiParityCheck.compare(emitted, reference, Map.empty)
+    assert(divs.exists(_.family == "factory"),
+      s"expected factory family, got ${divs.map(d => (d.family, d.detail))}")
+  }
+
+  // ---- visibility family ----
+
+  test("visibility family: access level differs") {
+    val emitted = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "bar", 0, accessLevel = "public"),
+    )
+    val reference = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "bar", 0, accessLevel = "protected"),
+    )
+    val divs = ApiParityCheck.compare(emitted, reference, Map.empty)
+    assert(divs.exists(_.family == "visibility"),
+      s"expected visibility family, got ${divs.map(d => (d.family, d.detail))}")
+  }
+
+  // ---- rename candidates on hand-port-extra/port-extra ----
+
+  test("hand-port-extra with rename candidates") {
+    val emitted = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "class", "Foo", 0),
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "getItems", 0),
+    )
+    val reference = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "class", "Foo", 0),
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "entries", 0),
+    )
+    val divs = ApiParityCheck.compare(emitted, reference, Map.empty)
+    // entries is hand-port-extra and getItems is port-extra
+    val handExtra = divs.find(d => d.family == "hand-port-extra" && d.reference.exists(_.name == "entries"))
+    assert(handExtra.isDefined, s"expected hand-port-extra for entries, got ${divs.map(d => (d.family, d.detail))}")
+    assert(handExtra.get.renameCandidates.contains("getItems"),
+      s"expected getItems as rename candidate, got '${handExtra.get.renameCandidates}'")
+  }
+
+  // ---- type normalization ----
+
+  test("typesMatch: FQN matches simple name") {
+    assert(ApiParityCheck.typesMatch("scala.Int", "Int"))
+    assert(ApiParityCheck.typesMatch("Int", "scala.Int"))
+    assert(ApiParityCheck.typesMatch("java.lang.String", "String"))
+  }
+
+  test("typesMatch: identical types match") {
+    assert(ApiParityCheck.typesMatch("Int", "Int"))
+    assert(ApiParityCheck.typesMatch("List[Int]", "List[Int]"))
+  }
+
+  test("typesMatch: different types do not match") {
+    assert(!ApiParityCheck.typesMatch("Int", "Long"))
+    assert(!ApiParityCheck.typesMatch("List[Int]", "Array[Int]"))
+  }
+
+  test("typesMatch: empty types match each other") {
+    assert(ApiParityCheck.typesMatch("", ""))
+  }
+
+  test("no divergence when types match despite FQN vs simple name") {
+    val emitted = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "bar", 1,
+        paramTypes = List("scala.Int"), resultType = "java.lang.String"),
+    )
+    val reference = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "bar", 1,
+        paramTypes = List("Int"), resultType = "String"),
+    )
+    val divs = ApiParityCheck.compare(emitted, reference, Map.empty)
+    assert(!divs.exists(d => d.family == "signature"),
+      s"should not have signature divergence for FQN vs simple name: ${divs.map(d => (d.family, d.detail))}")
+  }
+
   // ---- package normalisation ----
 
   test("normalisePath applies longest-prefix-first rename") {
@@ -161,8 +494,8 @@ class ApiParityCheckSpec extends munit.FunSuite:
   test("identical surfaces produce zero divergences") {
     val surface = List(
       ApiParityCheck.SurfaceDecl("/Foo", "class", "Foo", 0),
-      ApiParityCheck.SurfaceDecl("/Foo", "def", "bar", 1),
-      ApiParityCheck.SurfaceDecl("/Foo", "val", "baz", 0),
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "bar", 1, paramTypes = List("Int"), resultType = "String"),
+      ApiParityCheck.SurfaceDecl("/Foo", "val", "baz", 0, resultType = "Int"),
     )
     val divs = ApiParityCheck.compare(surface, surface, Map.empty)
     assertEquals(divs.size, 0, s"expected no divergences, got $divs")
@@ -198,6 +531,34 @@ class ApiParityCheckSpec extends munit.FunSuite:
     findings.foreach { f =>
       assert(f.check.startsWith("api-parity("), s"unexpected check name: ${f.check}")
     }
+  }
+
+  // ---- classification map covers all families ----
+
+  test("every family has a classification string") {
+    ApiParityCheck.Families.foreach { f =>
+      assert(ApiParityCheck.Classification.contains(f),
+        s"missing classification for family '$f'")
+    }
+  }
+
+  // ---- null-model helpers ----
+
+  test("isNullWrapped detects union null") {
+    assert(ApiParityCheck.isNullWrapped("Entity | Null"))
+  }
+
+  test("isNullWrapped detects Nullable wrapper") {
+    assert(ApiParityCheck.isNullWrapped("Nullable[Entity]"))
+  }
+
+  test("isNullWrapped detects Option wrapper") {
+    assert(ApiParityCheck.isNullWrapped("Option[Entity]"))
+  }
+
+  test("isNullWrapped rejects bare type") {
+    assert(!ApiParityCheck.isNullWrapped("Entity"))
+    assert(!ApiParityCheck.isNullWrapped("Int"))
   }
 
   // ---- helpers ----
