@@ -2969,6 +2969,7 @@ md-ext-measure:
 # The compile line carries NO coordinate of its own (`textra_deps` is empty and says why): libGDX
 # arrives as the base's emitted SOURCE, and regexodus is derived from what the run published.
 # ---------------------------------------------------------------------------------------------
+[doc("TextraTypist, compiled WITH libGDX core (a dependent port)")]
 textra-measure:
     #!/usr/bin/env bash
     cd "{{root}}"

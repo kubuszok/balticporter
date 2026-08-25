@@ -995,15 +995,35 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   | `just gdx-measure` | libGDX core — emit, checks, break residue, compile, correlate |
   | `just gdx-test-measure` | libGDX's own suite — the same, then RUN it |
   | `just ashley-measure` | Ashley + its suite, compiled WITH libGDX core (a dependent port) |
-  | `just gltf-measure` | gdx-gltf + both its suites, compiled WITH libGDX core (a dependent port) |
+  | `just anim8-measure` | anim8-gdx, compiled WITH libGDX core (a dependent port) |
+  | `just gltf-measure` | gdx-gltf + its suite, compiled WITH libGDX core (a dependent port) |
+  | `just screens-measure` | libgdx-screenmanager, compiled WITH libGDX core (a dependent port) |
+  | `just vfx-measure` | gdx-vfx, compiled WITH libGDX core (a dependent port) |
+  | `just ai-measure` | gdx-ai, compiled WITH libGDX core (a dependent port) |
+  | `just ai-test-measure` | gdx-ai's own JUnit suite, compiled WITH libGDX core and gdx-ai |
+  | `just ai-diff-measure` | gdx-ai's DIFFERENTIAL gate — the hand port's own suite, run against the emitted port |
   | `just sg-measure` | simple-graphs + its suite |
+  | `just noise4j-measure` | noise4j — emit, checks, break residue, compile, correlate (no test set upstream) |
   | `just jbump-measure` | jbump — a library that ships NO suite, so the lane re-derives that zero |
-  | `just measure-all` | every lane above, SERIALLY, stopping at the first failure |
+  | `just usl-measure` | USL — VisUI's skin-language compiler, its own port root |
+  | `just usl-test-measure` | USL's own suite — 7 `@Test` over checked-in `.usl`/`.json` pairs; emit, compile, RUN |
+  | `just liqp-measure` | liqp + its own 105-file suite — emit, checks, discovery, break residue, compile, RUN when it compiles |
+  | `just md-measure` | flexmark-java core + the eleven util modules |
+  | `just md-test-measure` | flexmark-util's own 730-`@Test` suite — emit, checks, discovery, compile, RUN when it compiles |
+  | `just md-ext-measure` | flexmark's extension modules as ONE dependent port of ssg-md — compile WITH the base, RUN |
+  | `just textra-measure` | TextraTypist, compiled WITH libGDX core (a dependent port) |
+  | `just textra-diff-measure` | TextraTypist's DIFFERENTIAL gate — the hand port's own suite, run against the emitted port |
+  | `just visui-measure` | VisUI's `ui/` module, compiled WITH libGDX core (a dependent port) |
+  | `just visui-diff-measure` | VisUI's DIFFERENTIAL gate — the hand port's own suite, run against the emitted port |
+  | `just measure-all` | every lane above, SERIALLY, in dependency order — never in parallel |
   | `just decision-counts` | `decisions.tsv` row counts by kind, every port |
   | `just members-unchanged` | `members.tsv` against its baseline — the blast radius, before a compile |
   | `just baseline-{list,show,diff,accept}` | the baseline half of the check report |
 
-  `just` with no recipe lists them. The mechanism the lanes share (`java_test_count`,
+  **Twenty-three lanes, and the table is the Justfile's own `[doc]` line for each** — `just` with no
+  recipe lists them, so a lane added without a row here is one an agent will not find, and a row here
+  with no lane behind it is worse. Re-derive both sides
+  (`grep -E '^[a-z0-9-]+-measure[a-z0-9-]*:' Justfile`) rather than trusting this count. The mechanism the lanes share (`java_test_count`,
   `reconcile_outcomes`, `break_residue`, `compile_guard`, `show_check_report`, `correlate`,
   `headline`) is `scripts/_lib.sh`, which every lane sources; the POLICY — which sbt project, which
   upstream tree, which dependencies — is a variable at the top of the `Justfile`. **Never add
