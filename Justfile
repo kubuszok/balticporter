@@ -4423,7 +4423,7 @@ baseline-accept PORT:
     #                                one baseline that can disagree with the run that produced it.
     # srcmap.tsv is deliberately NOT promoted: it is positional by construction and would rewrite
     # itself on every emit. report.md carries the absolute source root and diff.txt is derived.
-    for f in findings.tsv counts.tsv members.tsv tests.tsv port-map.tsv; do
+    for f in findings.tsv counts.tsv members.tsv tests.tsv port-map.tsv divergence.tsv; do
       if [ -f "$DIR/run-latest/$f" ]; then cp "$DIR/run-latest/$f" "$DIR/baseline/"; fi
     done
     if [ -f "$DIR/run-latest/errors-count" ]; then

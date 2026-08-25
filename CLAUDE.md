@@ -925,9 +925,19 @@ manifest entry.
 decision.** The `divergence-investigator` agent (`.claude/agents/divergence-investigator.md`) is the
 instrument: one invocation per divergence row, reading the reference repo's git history, `docs/` and
 `.rescale/data/*.tsv` for a recorded decision. A `justified` verdict names the rule or injection the
-mechanical port must carry; an `unjustified` verdict is a hand-port defect, and the test is adapted
-or dropped with the finding recorded. The verdict file (`ported/<module>/divergence-verdicts.tsv`)
-is the durable record, joined into `divergence.tsv` on every run (DESIGN.md §8.25).
+mechanical port must carry; an `unjustified` verdict is a hand-port defect. **What follows from
+"unjustified" depends on the row's KIND, because the campaign has TWO contracts and they point in
+opposite directions here.** For a BEHAVIOUR or an OMISSION (the hand port does something else, or
+lacks what java has) java wins: the port keeps java's semantics and emits java's members, the
+hand-added test is adapted or dropped with the finding recorded, and no rule is written. For an
+API divergence (a name, an arity, a property, a type at a slot) the bar is EXACT parity with the
+hand port — SGE-/SSG-original files compile against that spelling and are never edited — so the
+port still carries the hand port's spelling, as a rule whose row is marked `unjustified` and whose
+porter note says so: the mechanical port reproduces it and the reference repo is told it has no
+recorded reason. A `not-a-divergence` verdict is a census artefact and is a defect of the
+INSTRUMENT (`api-parity`'s precision), never of either port. The verdict file
+(`ported/<module>/divergence-verdicts.tsv`) is the durable record, joined into `divergence.tsv`
+on every run and promoted to the port's baseline by `just baseline-accept` (DESIGN.md §8.25).
 
 ## 3.6 Where a discovery goes
 
