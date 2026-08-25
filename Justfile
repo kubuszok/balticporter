@@ -4815,6 +4815,42 @@ ecs-dropin:
       echo "(expected red — the emitted API is not yet at parity)"
     fi
 
+# ---------------------------------------------------------------------------------------------
+# The divergence census — every non-surface-only difference between the emitted port and the
+# hand port, enriched with header evidence and joined against a committed verdict file.
+# The census feeds the divergence-investigator agent (one row per invocation), and its verdicts
+# are the durable record of whether a hand-port adjustment was justified.
+#
+# NOT in measure-all: the census reads api-parity findings (which measure-all produces) and
+# does not re-emit anything. NOT in dropin-all: it does not replace files.
+# ---------------------------------------------------------------------------------------------
+
+# sge-ecs divergence policy
+ecs_divergence_verdicts := "ported/sge-ecs/divergence-verdicts.tsv"
+
+[doc("sge-ecs divergence census: every hand-port adjustment, enriched with evidence")]
+ecs-divergence:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    . scripts/_lib.sh
+
+    REF_REPO="$(cd {{ecs_dropin_ref}} && pwd)"
+    MODULE_DIR="{{ecs_dropin_module}}"
+    REPORT="$ROOT/port-report/AshleyMigrate"
+    VERDICT_FILE="$ROOT/{{ecs_divergence_verdicts}}"
+
+    echo "-- sge-ecs divergence census --"
+    echo "   reference repo: $REF_REPO"
+    echo "   verdict file:   $VERDICT_FILE"
+    echo
+
+    divergence_census "$REPORT" "$REF_REPO" "$MODULE_DIR" \
+      "{{ecs_dropin_header}}" "$VERDICT_FILE" "sge-ecs"
+
+    echo
+    divergence_baseline_guard "$REPORT"
+
 # The drop-in aggregator — all drop-in lanes, NOT in measure-all.
 [doc("every drop-in lane — NOT in measure-all (expected red)")]
 dropin-all:

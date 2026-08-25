@@ -10420,3 +10420,52 @@ in the hand-written test suites because the emitted public surface does not yet 
 port's names, types and arities.
 
 An item leaves this section by DELETION when its lane holds the bar (§3.7).
+
+**Wave 0.3b delivered: `divergence` census and verdicts** (DESIGN.md §8.25). `just ecs-divergence`
+reads api-parity findings (families `hand-port-extra`, `port-extra`, `mutability`, `accessor`),
+enriches each row with the hand-port file's Migration notes header evidence, censuses hand-added
+test files, joins with the committed verdict file (`ported/sge-ecs/divergence-verdicts.tsv`), and
+produces `port-report/AshleyMigrate/run-latest/divergence.tsv`. The `divergence-investigator` agent
+was run on every de-duplicated theme (17 API themes + 1 test theme = 18 invocations).
+
+sge-ecs first measurement:
+
+| verdict | count | reading |
+|---|---|---|
+| justified | 75 | documented conventions: accessor collapse (ISS-017, 10 rows), factory registry (ISS-723, platform constraint, 14 rows), type mappings (Array-to-ArrayBuffer, Comparator-to-Ordering, 10 rows), inner class reorganization with documented idioms (9 rows), SAM-to-function-type (3 rows), ImmutableArray redesign (4 rows), hand-written test suites (18 rows, 80b3fc64 initial port + f63eacdc covenant campaign), other convention-backed (7 rows) |
+| unjustified | 30 | no recorded decision: mutability narrowing (8 rows, incl. EntitySystem#priority which Ashley tests reassign), inner class extraction to top-level against conversion-rules.md Step 3 (EntityManager 11 rows, FamilyManager 4 rows), Family Builder singleton-to-fresh-instance (7 rows) |
+| not-a-divergence | 55 | census artefacts: members misattributed to wrong types by the api-parity check (Bag members belonging to ComponentOperation/EntityOperation), block-local post-increment lowering ($prev), visibility-only differences, java inner interfaces counted as additions |
+| **total** | **160** | |
+
+**55 census artefacts** is 34% of the total and signals a deficiency in the api-parity check: it
+counts members without type qualification when the hand port reorganized inner classes, and it
+counts block-local variables promoted by the constructor funnel. Both are fixable in the check
+(scope enumeration to the owning type; exclude block-scoped vals from the member inventory).
+
+The three strongest justified divergences:
+
+1. **PooledEngine factory registry** (14 rows, ISS-723 c12, commit 80b3fc64): java's
+   `ClassReflection.newInstance()` and `ReflectionPool` depend on JVM reflection, which is absent on
+   Scala.js and Scala Native. The hand port replaced them with `Engine.registerComponentFactory()`.
+   The mechanical port already implements this via `ComponentFactories` injection and
+   `MethodBodyTransform` on `Engine#createComponent`. Spelling: (c) library-specific injection
+   (already done).
+
+2. **Accessor collapse** (10 rows, ISS-017, 35+ sge core files carry Fixes: headers): sge replaces
+   every no-logic `getX()/setX(v)` pair with `val x`/`var x`. The mechanical port already has the
+   `BeanCollapse` idiom phase. Spelling: (b) BeanCollapse phase parameter per port.
+
+3. **Type mappings** (10 rows, type-mappings.md, AD-002): `Array -> ArrayBuffer`, `Comparator ->
+   Ordering`, `Bits -> BitSet`. Documented in sge's contributing docs with verification checklist
+   items. Spelling: (b) collection/type-mapping phase parameters.
+
+The sge-ecs **work list** for Phase 1/3 (the 57 justified rows that need mechanical port spellings):
+
+| spelling | rows | mechanism |
+|---|---|---|
+| (b) BeanCollapse idiom phase | 10 | accessor collapse, already designed |
+| (c) library-specific injection | 17 | PooledEngine factory, ComponentPool, ComponentFactories (already done: 3 of 17) |
+| (b) inner class reorganization | 12 | ComponentOperationHandler idiom reorg (enum, pool elimination) |
+| (b) type-mapping convention | 10 | Array-to-ArrayBuffer, Comparator-to-Ordering, Bits-to-BitSet |
+| (b) SAM-to-function-type | 4 | Engine inner class elimination, BooleanInformer lambda |
+| (b) ImmutableArray injection | 4 | ImmutableArray wraps ArrayBuffer, implements Iterable |

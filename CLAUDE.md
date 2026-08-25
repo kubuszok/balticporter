@@ -921,6 +921,14 @@ observation. What was wrong was reading a hand port's freedom as a mechanical po
 quote the reference port for the SHAPE it emitted, and get a number before that shape becomes a
 manifest entry.
 
+**And the default contract is JAVA'S BEHAVIOUR, so a divergence keeps its place only with a recorded
+decision.** The `divergence-investigator` agent (`.claude/agents/divergence-investigator.md`) is the
+instrument: one invocation per divergence row, reading the reference repo's git history, `docs/` and
+`.rescale/data/*.tsv` for a recorded decision. A `justified` verdict names the rule or injection the
+mechanical port must carry; an `unjustified` verdict is a hand-port defect, and the test is adapted
+or dropped with the finding recorded. The verdict file (`ported/<module>/divergence-verdicts.tsv`)
+is the durable record, joined into `divergence.tsv` on every run (DESIGN.md §8.25).
+
 ## 3.6 Where a discovery goes
 
 A lesson that would change how the NEXT library is ported does not belong only in that port's
@@ -1022,9 +1030,10 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   | `just baseline-{list,show,diff,accept}` | the baseline half of the check report |
   | `just upstream-pin` | vendored upstream trees vs sge/ssg submodule pins (mismatch is FATAL) |
   | `just ecs-dropin` | sge-ecs drop-in: emitted port replaces hand port inside sge's own build |
+  | `just ecs-divergence` | sge-ecs divergence census: every hand-port adjustment, enriched with evidence |
   | `just dropin-all` | every drop-in lane (NOT in `measure-all` — expected red until parity) |
 
-  **Twenty-three lanes, and the table is the Justfile's own `[doc]` line for each** — `just` with no
+  **Twenty-four lanes, and the table is the Justfile's own `[doc]` line for each** — `just` with no
   recipe lists them, so a lane added without a row here is one an agent will not find, and a row here
   with no lane behind it is worse. Re-derive both sides
   (`grep -E '^[a-z0-9-]+-measure[a-z0-9-]*:' Justfile`) rather than trusting this count. The mechanism the lanes share (`java_test_count`,

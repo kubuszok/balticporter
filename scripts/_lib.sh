@@ -909,6 +909,214 @@ correlate() {
 # the SUITE's, and then called this with one of them — so a gate that fired on the other wrote a
 # marker nothing read. The headline itself is still about the FIRST dir, which is the one whose
 # compile the error count belongs to.
+# divergence_census <report-dir> <ref-repo> <module-dir> <header-pattern> <verdict-file>
+#
+# THE DIVERGENCE CENSUS — every non-surface-only difference between the emitted port and the
+# hand port, enriched with header evidence and joined against a committed verdict file.
+#
+# Reads api-parity findings from run-latest (preferred) or baseline. Produces divergence.tsv
+# in run-latest/ with columns:
+#   module | kind | subject | java_says | hand_port_says | evidence | status | spelling | decided_by
+#
+# The verdict file (`ported/<module>/divergence-verdicts.tsv`) is JOINED, not consumed: a verdict
+# for a subject the census no longer produces is reported as stale. A census row with no verdict
+# is `open`. The divergence.tsv itself is baselined like findings.tsv (content diff, both directions).
+divergence_census() {
+  local dir="$1" ref_repo="$2" module_dir="$3" header_pattern="$4" verdict_file="$5" module_label="$6"
+  local findings="" out="$dir/run-latest/divergence.tsv"
+  mkdir -p "$dir/run-latest"
+
+  # Prefer run-latest, fall back to baseline
+  if [ -f "$dir/run-latest/findings.tsv" ]; then
+    findings="$dir/run-latest/findings.tsv"
+  elif [ -f "$dir/baseline/findings.tsv" ]; then
+    findings="$dir/baseline/findings.tsv"
+    echo "  (no run-latest/findings.tsv — reading from baseline)"
+  else
+    echo "!! FATAL — no findings.tsv in $dir/run-latest or $dir/baseline"
+    return 1
+  fi
+
+  # ---- Build header evidence map: file -> header lines ----
+  local header_map="$MEASURE_TMP/divergence-headers-$$.tsv"
+  : > "$header_map"
+  local ref_src="$ref_repo/$module_dir/src/main"
+  if [ -d "$ref_src" ]; then
+    find "$ref_src" -name '*.scala' -print0 | while IFS= read -r -d '' f; do
+      local bn
+      bn=$(basename "$f" .scala)
+      # Extract Migration notes sub-keys from the file header (first 60 lines)
+      local notes
+      notes=$(head -60 "$f" | grep -iE '^\s*\*?\s*(Fixes|Improvement|Convention|Idiom|Renames|Breaking|Divergence|Issues?):' | sed 's/^[[:space:]]*\*[[:space:]]*//' | sed 's/"/\\"/g' | tr '\n' '|' | sed 's/|$//')
+      if [ -n "$notes" ]; then
+        printf '%s\t%s\n' "$bn" "$notes" >> "$header_map"
+      fi
+    done
+  fi
+
+  # ---- 1. API divergences from api-parity findings ----
+  local api_rows="$MEASURE_TMP/divergence-api-$$.tsv"
+  : > "$api_rows"
+
+  # Extract relevant families: hand-port-extra, port-extra, mutability, accessor
+  grep -E 'api-parity\((hand-port-extra|port-extra|mutability|accessor)\)' "$findings" | grep -v '^#' | while IFS=$'\t' read -r _id check kind owner path _line detail; do
+    local family
+    family=$(echo "$check" | sed 's/api-parity(\(.*\))/\1/')
+
+    # Determine the kind for divergence.tsv
+    local div_kind="api"
+    case "$family" in
+      hand-port-extra) div_kind="addition" ;;
+      port-extra) div_kind="omission" ;;
+      mutability|accessor) div_kind="api" ;;
+    esac
+
+    # What java says vs what hand port says
+    local java_says="" hand_says=""
+    case "$family" in
+      hand-port-extra)
+        java_says="not present"
+        hand_says="$detail"
+        ;;
+      port-extra)
+        java_says="$detail"
+        hand_says="not present (skipped or redesigned)"
+        ;;
+      mutability)
+        java_says="$detail"
+        hand_says="$detail"
+        ;;
+      accessor)
+        java_says="$detail"
+        hand_says="$detail"
+        ;;
+    esac
+
+    # Look up header evidence by trying to match the owner's type to a file
+    local type_name evidence=""
+    type_name=$(echo "$owner" | sed 's/#.*//' | sed 's/\$$//')
+    if [ -n "$type_name" ]; then
+      evidence=$(grep "^${type_name}	" "$header_map" | head -1 | cut -f2)
+    fi
+
+    printf '%s\t%s\t%s\t%s\t%s\t%s\topen\t\t\n' \
+      "$module_label" "$div_kind" "$owner" "$java_says" "$hand_says" "$evidence" >> "$api_rows"
+  done
+
+  # ---- 2. Hand-added tests ----
+  local test_rows="$MEASURE_TMP/divergence-tests-$$.tsv"
+  : > "$test_rows"
+
+  local ref_test_src="$ref_repo/$module_dir/src/test"
+  if [ -d "$ref_test_src" ]; then
+    find "$ref_test_src" -name '*Suite.scala' -o -name '*Test.scala' -o -name '*Spec.scala' | sort | while IFS= read -r f; do
+      local has_ported
+      has_ported=$(head -5 "$f" | grep -ci 'Ported from' || true)
+      if [ "$has_ported" = "0" ]; then
+        local bn
+        bn=$(basename "$f" .scala)
+        # Check drop-in test results if they exist
+        local test_status="blocked-by-compile"
+        printf '%s\ttest\t%s\tnot applicable\thand-written test suite\t\t%s\t\t\n' \
+          "$module_label" "$bn" "$test_status" >> "$test_rows"
+      fi
+    done
+  fi
+
+  # ---- 3. Write the TSV ----
+  {
+    printf '#module\tkind\tsubject\tjava_says\thand_port_says\tevidence\tstatus\tspelling\tdecided_by\n'
+    # API rows, sorted
+    sort -t$'\t' -k2,2 -k3,3 "$api_rows"
+    # Test rows, sorted
+    sort -t$'\t' -k3,3 "$test_rows"
+  } > "$out"
+
+  # ---- 4. Join with verdict file ----
+  if [ -f "$verdict_file" ]; then
+    # Read verdict file and apply verdicts to matching census rows.
+    # The header line is `#subject<TAB>...` — skip it by matching the exact header.
+    # Data subjects starting with `#` (e.g. `#SystemListener`) are real data, not comments.
+    local stale_count=0
+    while IFS=$'\t' read -r v_subject v_status v_evidence v_spelling v_decided_by; do
+      [ "$v_subject" = "#subject" ] && continue
+      [ -z "$v_subject" ] && continue
+      # Escape special characters in subject for grep/awk
+      local esc_subject
+      esc_subject=$(printf '%s' "$v_subject" | sed 's/[.[\*^$()+?{|\\]/\\&/g')
+      # Use awk for the join: find lines with matching subject (field 3) and status "open" (field 7),
+      # replace status/spelling/decided_by fields
+      # Match census rows whose status is either "open" or "blocked-by-compile" (test rows).
+      # A verdict always wins over these initial statuses.
+      awk -F'\t' -v OFS='\t' -v subj="$v_subject" -v st="$v_status" -v sp="$v_spelling" -v db="$v_decided_by" \
+        '$3 == subj && ($7 == "open" || $7 == "blocked-by-compile") { $7 = st; $8 = sp; $9 = db; found=1 } { print }' "$out" > "$out.tmp"
+      if grep -q "$esc_subject" "$out.tmp" 2>/dev/null; then
+        mv "$out.tmp" "$out"
+      else
+        stale_count=$((stale_count + 1))
+        echo "  !! STALE verdict: $v_subject (no longer in census)"
+        rm -f "$out.tmp"
+      fi
+    done < "$verdict_file"
+    [ "$stale_count" -gt 0 ] && echo "  $stale_count stale verdict(s) — subject no longer produced by census"
+  fi
+
+  # ---- 5. Summary ----
+  # NB: subjects starting with `#` are data, not comments. Only the header line `#module` is a comment.
+  local total api_count test_count
+  total=$(awk -F'\t' 'NR>1 && $1 != ""' "$out" | wc -l | tr -d ' ')
+  api_count=$(awk -F'\t' 'NR>1 && ($2=="api" || $2=="addition" || $2=="omission")' "$out" | wc -l | tr -d ' ')
+  test_count=$(awk -F'\t' 'NR>1 && $2=="test"' "$out" | wc -l | tr -d ' ')
+  local open justified unjustified
+  open=$(awk -F'\t' 'NR>1 && $7=="open"' "$out" | wc -l | tr -d ' ')
+  justified=$(awk -F'\t' 'NR>1 && $7=="justified"' "$out" | wc -l | tr -d ' ')
+  unjustified=$(awk -F'\t' 'NR>1 && $7=="unjustified"' "$out" | wc -l | tr -d ' ')
+  local not_div blocked
+  not_div=$(awk -F'\t' 'NR>1 && $7=="not-a-divergence"' "$out" | wc -l | tr -d ' ')
+  blocked=$(awk -F'\t' 'NR>1 && $7=="blocked-by-compile"' "$out" | wc -l | tr -d ' ')
+  echo "  divergence.tsv: $total rows ($api_count api/addition/omission, $test_count test)"
+  echo "  verdicts: $justified justified, $unjustified unjustified, $not_div not-a-divergence, $blocked blocked-by-compile, $open open"
+  echo "  output: $out"
+
+  rm -f "$header_map" "$api_rows" "$test_rows"
+}
+
+# divergence_baseline_guard <report-dir>
+#
+# The divergence.tsv baseline, following the same pattern as findings_baseline_guard.
+# Content diff (id-free, since divergence.tsv has no id column), both directions.
+divergence_baseline_guard() {
+  local dir="$1"
+  local base="$dir/baseline/divergence.tsv" run="$dir/run-latest/divergence.tsv"
+  local marker="$dir/run-latest/divergence-baseline-failed"
+  mkdir -p "$dir/run-latest" 2>/dev/null
+  rm -f "$marker"
+  if [ ! -f "$run" ]; then
+    echo "  (no divergence.tsv at $dir/run-latest)"
+    return 0
+  fi
+  if [ ! -f "$base" ]; then
+    echo "  !! NO DIVERGENCE BASELINE — seed it: just baseline-accept <port>"
+    return 0  # not fatal on the first run
+  fi
+  local b="$MEASURE_TMP/div-base-$$.tsv" r="$MEASURE_TMP/div-run-$$.tsv"
+  # Skip only the header line (`#module ...`), not data subjects starting with `#`
+  awk 'NR>1' "$base" > "$b"
+  awk 'NR>1' "$run"  > "$r"
+  local moved
+  moved=$(diff "$b" "$r" | grep -c '^[<>]' || true)
+  if [ "$moved" = "0" ]; then
+    echo "  divergence vs baseline: $(grep -c '' < "$r") row(s), content unchanged"
+    rm -f "$b" "$r"; return 0
+  fi
+  echo "!! DIVERGENCE CONTENT MOVED — $moved line(s) differ from baseline."
+  diff "$b" "$r" | grep '^[<>]' | head -10 | sed 's/^/     /'
+  [ "$moved" -gt 10 ] && echo "     ... $((moved - 10)) more"
+  echo "   Acknowledge: just baseline-accept <port>"
+  rm -f "$b" "$r"
+  : > "$marker"; return 1
+}
+
 headline() {
   local errors="$1" dir="$2"
   shift 2

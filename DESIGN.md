@@ -5988,3 +5988,42 @@ compile error in these tests.
 
 **The lane is NOT in `measure-all`.** The drop-in is expected red until the emitted API is at
 parity. `just dropin-all` is the separate aggregator.
+
+### 8.25 The divergence census and its verdicts
+
+The parity campaign (PROGRESS.md §13) needs every hand-port adjustment turned into a named decision:
+justified (a rule/injection the mechanical port must reproduce) or unjustified (a hand-port defect
+the mechanical port should not carry). `just <module>-divergence` is that census.
+
+**What it reads.** The `api-parity` check (§8.23) produces findings classified by family. The
+divergence census reads the families that represent non-surface-only differences -- `hand-port-extra`
+(hand-port additions), `port-extra` (java the hand port skipped), `mutability` (val/var drift),
+`accessor` (getter/setter collapse) -- and enriches each row with the hand-port file's own header
+evidence (`Migration notes:` sub-keys: `Fixes:`, `Improvement:`, `Convention:`, `Idiom:`,
+`Renames:`, `Breaking:`, `Divergence:`, `Issues:`). It also censuses hand-added test files (those
+with no `Ported from` header) and their status against the emitted tree.
+
+**What it produces.** `port-report/<Port>/run-latest/divergence.tsv`, one row per divergence:
+`module | kind (api|behaviour|omission|addition|test) | subject | java_says | hand_port_says |
+evidence | status | spelling | decided_by`. Rows sorted, id-free, baselined like `findings.tsv`
+(content diff both directions).
+
+**How verdicts are resolved.** The `divergence-investigator` agent
+(`.claude/agents/divergence-investigator.md`) is run on each row. It searches the reference repo's
+git history, `docs/`, `.rescale/data/*.tsv` and file headers for a recorded decision, and returns
+one of four verdicts: `justified` (a recorded decision gives a reason), `unjustified` (no recorded
+reason found), `version-skew` (the upstream moved after the pin), `not-a-divergence` (the row is a
+census artefact).
+
+**Where verdicts live.** `ported/<module>/divergence-verdicts.tsv` is the committed file that
+survives re-runs. Columns: `subject | status | evidence | spelling | decided_by`. The lane joins
+this file into the produced `divergence.tsv` on every run: a verdict for a subject the census no
+longer produces is reported as stale. A census row with no verdict is `open`.
+
+**Justified verdicts become policy.** A justified divergence is a named rule -- a manifest key, a
+(b) phase parameter, a (c) rule, or an injection -- that the mechanical port must implement in
+Phase 1/3. An unjustified divergence is a recorded hand-port defect: the test is adapted or dropped
+with the finding recorded, and java's behaviour wins.
+
+**The lane is NOT in `measure-all`.** It reads api-parity findings (which `measure-all` produces)
+and does not re-emit anything. It is NOT in `dropin-all` either.

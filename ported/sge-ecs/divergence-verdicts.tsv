@@ -1,0 +1,158 @@
+#subject	status	evidence	spelling	decided_by
+ComponentType#getIndex	justified	sge ISS-017 resolved; EntitySystem.scala "Idiom: processing as public var (replaces get/set pair)"; 35 sge core files carry Fixes: headers about getter/setter removal	(b) BeanCollapse idiom phase	div-accessor
+ComponentType#index	justified	sge ISS-017 resolved; getter/setter collapse convention	(b) BeanCollapse idiom phase	div-accessor
+EntitySystem#getEngine	justified	sge ISS-017 resolved; getter/setter collapse convention	(b) BeanCollapse idiom phase	div-accessor
+EntitySystem#setProcessing	justified	EntitySystem.scala "Idiom: processing as public var (replaces get/set pair)"	(b) BeanCollapse idiom phase	div-accessor
+Family#getIndex	justified	sge ISS-017 resolved; getter/setter collapse convention	(b) BeanCollapse idiom phase	div-accessor
+Family#index	justified	sge ISS-017 resolved; getter/setter collapse convention	(b) BeanCollapse idiom phase	div-accessor
+IntervalIteratingSystem#getFamily	justified	sge ISS-017 resolved; getter/setter collapse convention	(b) BeanCollapse idiom phase	div-accessor
+IntervalSystem#getInterval	justified	sge ISS-017 resolved; getter/setter collapse convention	(b) BeanCollapse idiom phase	div-accessor
+IteratingSystem#getFamily	justified	sge ISS-017 resolved; getter/setter collapse convention	(b) BeanCollapse idiom phase	div-accessor
+SortedIteratingSystem#getFamily	justified	sge ISS-017 resolved; getter/setter collapse convention	(b) BeanCollapse idiom phase	div-accessor
+Engine#registerComponentFactory	justified	sge 80b3fc64 "ReflectionPool -> factory registry"; ISS-723 c12; platform constraint (no reflection on JS/Native)	(c) library-specific injection	div-pooledengine
+PooledEngine#factory	justified	PooledEngine.scala "Idiom: factory registry approach instead of ReflectionPool"; ISS-723 c12	(c) library-specific injection	div-pooledengine
+#SystemListener	not-a-divergence	Java SystemManager.java:65-67 declares inner interface SystemListener; hand port places it in companion	census artefact	div-systemlistener
+SystemListener#systemAdded	not-a-divergence	Java SystemManager.java:65-67 declares systemAdded in inner interface	census artefact	div-systemlistener
+SystemListener#systemRemoved	not-a-divergence	Java SystemManager.java:65-67 declares systemRemoved in inner interface	census artefact	div-systemlistener
+ImmutableArray#apply	justified	ImmutableArray.scala "Idiom: wraps ArrayBuffer, implements Iterable[A]"; type-mappings.md "Array -> ArrayBuffer"	(b) injection or substitution for ImmutableArray	div-immutablearray
+ImmutableArray#contains	justified	ImmutableArray.scala "Idiom: wraps ArrayBuffer, implements Iterable[A]"; identity param dropped	(b) injection or substitution for ImmutableArray	div-immutablearray
+ImmutableArray#indexOf	justified	ImmutableArray.scala "Idiom: wraps ArrayBuffer, implements Iterable[A]"	(b) injection or substitution for ImmutableArray	div-immutablearray
+ImmutableArray#lastIndexOf	justified	ImmutableArray.scala "Idiom: wraps ArrayBuffer, implements Iterable[A]"	(b) injection or substitution for ImmutableArray	div-immutablearray
+SystemManager$#compare	justified	SystemManager.scala "Idiom: Ordering[EntitySystem] instead of Comparator with inner class"; conversion rule l; AD-002	(b) Comparator-to-Ordering phase	div-systemmanager
+SystemManager$#systemAdded	justified	SystemManager.java:65 inner interface SystemListener; hand port retains in companion	census artefact -- hand port has it	div-systemmanager
+SystemManager$#systemRemoved	justified	SystemManager.java:65 inner interface SystemListener; hand port retains in companion	census artefact -- hand port has it	div-systemmanager
+#ComponentFactories	justified	balticporter ashley-overrides injected file; ENGINE-LIMITS.md P10; sge ISS-723 c12	(c) library-specific injection (already implemented)	div-componentfactories
+ComponentFactories$#create	justified	balticporter ashley-overrides; body substitution on Engine#createComponent	(c) library-specific injection (already implemented)	div-componentfactories
+ComponentFactories$#register	justified	balticporter ashley-overrides; body substitution on Engine#createComponent	(c) library-specific injection (already implemented)	div-componentfactories
+ComponentOperationHandler$#ComponentOperation	justified	ComponentOperationHandler.scala "Idiom: enum instead of inner enum class|Idiom: ArrayBuffer instead of Array + Pool for operations"	(b) inner class reorganization	div-componentophandler
+ComponentOperationHandler$#ComponentOperationPool	justified	ComponentOperationHandler.scala idiom headers; pool elimination	(b) inner class reorganization	div-componentophandler
+#delayed	not-a-divergence	Engine.java: delayed is a METHOD-LOCAL variable, not a field; both ports translate it as local val	census artefact	div-internal-fields
+#notifying$field	not-a-divergence	FamilyManager field, not Engine; mechanical port renames per section 4.55; hand port uses _notifying	census artefact	div-internal-fields
+#entitiesInFamily	unjustified	no recorded decision for mutability narrowing; null-check to Option idiom change	none: hand-port defect	div-mutability
+Entity#componentAdded	not-a-divergence	Java Entity.java:33 declares "public final Signal<Entity> componentAdded" -- val is correct; emitted var is the defect	mechanical port defect (drops final)	div-mutability
+Entity#componentRemoved	not-a-divergence	Java Entity.java:35 declares "public final Signal<Entity> componentRemoved" -- val is correct; emitted var is the defect	mechanical port defect (drops final)	div-mutability
+EntitySystem#priority	unjustified	Java "public int priority" (mutable, no final); Ashley tests reassign it; no recorded decision for narrowing	none: hand-port defect	div-mutability
+IntervalIteratingSystem#family	unjustified	Java private non-final field; hand port narrowed to val without Fixes/Breaking note	none: hand-port defect	div-mutability
+IntervalSystem#interval	unjustified	Java private non-final field; hand port narrowed to val without Fixes/Breaking note	none: hand-port defect	div-mutability
+IteratingSystem#family	unjustified	Java private non-final field; hand port narrowed to val without Fixes/Breaking note	none: hand-port defect	div-mutability
+SortedIteratingSystem#family	unjustified	Java private non-final field; hand port narrowed to val without Fixes/Breaking note	none: hand-port defect	div-mutability
+SortedIteratingSystem#sorted	justified	type-mappings.md "Array -> ArrayBuffer"; Comparator -> Ordering; SortedIteratingSystem.scala 4 Idiom: headers	consequence of collection replacement	div-sortediterating
+SortedIteratingSystem#comparator	justified	SortedIteratingSystem.scala "Idiom: Ordering[Entity] instead of Comparator[Entity]"	(b) type-mapping convention	div-sortediterating
+SortedIteratingSystem#entities	justified	SortedIteratingSystem.scala "Idiom: ArrayBuffer instead of Array for sorted entities"	(b) type-mapping convention	div-sortediterating
+SortedIteratingSystem#sortedEntities	justified	SortedIteratingSystem.scala idiom headers; consequence of ArrayBuffer backing store	(b) type-mapping convention	div-sortediterating
+FamilyManager$	unjustified	conversion-rules.md Step 3 says companion object; hand port extracted to top-level against own convention	none: hand-port defect	div-familymanager
+FamilyManager$#BitsPool	unjustified	conversion-rules.md Step 3; no recorded decision for top-level extraction	none: hand-port defect	div-familymanager
+FamilyManager$#listener	unjustified	conversion-rules.md Step 3; no recorded decision for top-level extraction	none: hand-port defect	div-familymanager
+FamilyManager$#priority	unjustified	conversion-rules.md Step 3; no recorded decision for top-level extraction	none: hand-port defect	div-familymanager
+EntityManager$	unjustified	conversion-rules.md Step 3 says companion object; hand port extracted inner classes to top-level	none: hand-port defect	div-entitymanager
+EntityManager$#EntityOperation	unjustified	conversion-rules.md Step 3; no recorded decision for top-level extraction	none: hand-port defect	div-entitymanager
+EntityManager$#EntityOperationPool	unjustified	conversion-rules.md Step 3; no recorded decision for top-level extraction	none: hand-port defect	div-entitymanager
+EntityManager$#entities	unjustified	conversion-rules.md Step 3; inner class field exposed at wrong scope	none: hand-port defect	div-entitymanager
+EntityManager$#entity	unjustified	conversion-rules.md Step 3; inner class field exposed at wrong scope	none: hand-port defect	div-entitymanager
+EntityManager$#reset	unjustified	conversion-rules.md Step 3; inner class method exposed at wrong scope	none: hand-port defect	div-entitymanager
+EntityManager$#type	unjustified	conversion-rules.md Step 3; inner class field exposed at wrong scope	none: hand-port defect	div-entitymanager
+EntityManager$.EntityOperation$#Type	unjustified	conversion-rules.md Step 3; enum extracted to top-level	none: hand-port defect	div-entitymanager
+EntityManager$.EntityOperation$.Type#Add	unjustified	consequence of inner class extraction	none: hand-port defect	div-entitymanager
+EntityManager$.EntityOperation$.Type#Remove	unjustified	consequence of inner class extraction	none: hand-port defect	div-entitymanager
+EntityManager$.EntityOperation$.Type#RemoveAll	unjustified	consequence of inner class extraction	none: hand-port defect	div-entitymanager
+Family$#sb	unjustified	Family.scala: cosmetic rename from stringBuilder to sb; no recorded convention	none: hand-port defect	div-family
+Family$#stringBuilder	unjustified	Family.scala: emitted name is faithful to java; hand port renamed without record	none: hand-port defect	div-family
+Family$.Builder#all$field	unjustified	Family.scala: field-vs-method clash solved differently; no doc for underscore convention	none: hand-port defect	div-family
+Family$.Builder#exclude$field	unjustified	Family.scala: same field-vs-method clash pattern	none: hand-port defect	div-family
+Family$.Builder#one$field	unjustified	Family.scala: same field-vs-method clash pattern	none: hand-port defect	div-family
+Family$.Builder#reset	unjustified	Family.scala: singleton Builder reset() dropped in favor of fresh instances; no recorded decision	none: hand-port defect	div-family
+Family#$prev	unjustified	Family.scala: promoted constructor local; hand port restructured without record	none: hand-port defect	div-family
+#Type	not-a-divergence	Java inner enum ComponentOperation.Type / EntityOperation.Type; census misattribution	census artefact	div-bag
+#clear	not-a-divergence	member of inner type (ComponentOperation/Bag); census misattribution	census artefact	div-bag
+#contains	not-a-divergence	member of inner type or Bag faithful translation; census misattribution	census artefact	div-bag
+#data	not-a-divergence	member of inner type; census misattribution	census artefact	div-bag
+#entity	not-a-divergence	member of inner type (ComponentOperation.entity / EntityOperation.entity); census misattribution	census artefact	div-bag
+#get	not-a-divergence	member of inner type or Bag faithful translation; census misattribution	census artefact	div-bag
+#getCapacity	not-a-divergence	member of Bag; census misattribution (Bag is faithfully translated)	census artefact	div-bag
+#isEmpty	not-a-divergence	member of Bag faithful translation; census misattribution	census artefact	div-bag
+#isIndexWithinBounds	not-a-divergence	member of Bag faithful translation; census misattribution	census artefact	div-bag
+#k	not-a-divergence	local variable or inner member; census misattribution	census artefact	div-bag
+#len	not-a-divergence	local variable or inner member; census misattribution	census artefact	div-bag
+#newCapacity	not-a-divergence	local variable in Bag.grow(); census misattribution	census artefact	div-bag
+#oldData	not-a-divergence	local variable in Bag.grow(); census misattribution	census artefact	div-bag
+#operationType	not-a-divergence	field of inner type ComponentOperation; census misattribution	census artefact	div-bag
+#priority	not-a-divergence	field of inner type EntityListenerData; census misattribution	census artefact	div-bag
+#removeLast	not-a-divergence	member of Bag faithful translation; census misattribution	census artefact	div-bag
+#reset	not-a-divergence	member of inner type ComponentOperation/EntityOperation; census misattribution	census artefact	div-bag
+#set	not-a-divergence	member of Bag faithful translation; census misattribution	census artefact	div-bag
+#size	not-a-divergence	member of Bag faithful translation; census misattribution	census artefact	div-bag
+#sorted	not-a-divergence	local variable in SortedIteratingSystem; census misattribution	census artefact	div-bag
+#Bag	not-a-divergence	Bag exists in both ports as faithful translation; companion object is mechanical port structure	census artefact	div-bag
+#ComponentOperationHandler	justified	ComponentOperationHandler.scala idiom headers; inner class reorganization	(b) inner class reorganization	div-componentophandler
+#ComponentPool	justified	PooledEngine.scala factory registry approach; ComponentPool is injected replacement	(c) library-specific injection	div-pooledengine
+#Engine	justified	Engine.scala "Idiom: inner classes replaced by private methods/lambdas"; "Idiom: ComponentOperationHandler takes () => Boolean"; 80b3fc64	(b) SAM-to-function-type + inner class elimination	div-engine-companion
+#EntityManager	unjustified	conversion-rules.md Step 3; hand port extracted inner classes to top-level	none: hand-port defect	div-entitymanager
+#FamilyManager	unjustified	conversion-rules.md Step 3; hand port extracted inner classes to top-level	none: hand-port defect	div-familymanager
+#PooledEngine	justified	PooledEngine.scala factory registry approach; companion object structure	(c) library-specific injection	div-pooledengine
+#SystemManager	justified	SystemManager.scala Comparator-to-Ordering; companion object holds java inner classes	(b) convention-driven	div-systemmanager
+ComponentType#$prev	not-a-divergence	block-local post-increment lowering ($prev); not a class member in emitted Scala	census artefact	div-componenttype
+Family#$prev	not-a-divergence	block-local post-increment lowering ($prev); not a class member in emitted Scala	census artefact	div-componenttype
+IntervalSystem#accumulator	not-a-divergence	member exists in both ports; emitted port widens to public via ctor-replay-widening; hand port keeps private	census artefact (visibility difference, not absence)	div-componenttype
+ImmutableArray#array	not-a-divergence	emitted port has var array (widened by ctor funnel); hand port has private val array (ArrayBuffer)	census artefact (visibility/mutability difference)	div-immutablearray
+ImmutableArray#get	not-a-divergence	emitted port keeps java get(int); hand port replaces with apply(int)	covered by ImmutableArray redesign verdict	div-immutablearray
+ImmutableArray#contains	not-a-divergence	emitted 2-param version (boolean identity) vs hand-port 1-param version	covered by ImmutableArray redesign verdict	div-immutablearray
+ImmutableArray#indexOf	not-a-divergence	emitted 2-param version vs hand-port 1-param version	covered by ImmutableArray redesign verdict	div-immutablearray
+ImmutableArray#lastIndexOf	not-a-divergence	emitted 2-param version vs hand-port 1-param version	covered by ImmutableArray redesign verdict	div-immutablearray
+Bag#add	not-a-divergence	Bag is faithfully translated in both ports; member exists in both	census artefact	div-bag
+Bag#clear	not-a-divergence	Bag is faithfully translated; member exists in both	census artefact	div-bag
+Bag#contains	not-a-divergence	Bag is faithfully translated; member exists in both	census artefact	div-bag
+Bag#data	not-a-divergence	Bag field; visibility difference only	census artefact	div-bag
+Bag#get	not-a-divergence	Bag is faithfully translated; member exists in both	census artefact	div-bag
+Bag#getCapacity	not-a-divergence	Bag is faithfully translated; member exists in both	census artefact	div-bag
+Bag#isEmpty	not-a-divergence	Bag is faithfully translated; member exists in both	census artefact	div-bag
+Bag#isIndexWithinBounds	not-a-divergence	Bag is faithfully translated; member exists in both	census artefact	div-bag
+Bag#newCapacity	not-a-divergence	local variable in Bag.grow(); not a class member	census artefact	div-bag
+Bag#oldData	not-a-divergence	local variable in Bag.grow(); not a class member	census artefact	div-bag
+Bag#remove	not-a-divergence	Bag is faithfully translated; member exists in both	census artefact	div-bag
+Bag#removeLast	not-a-divergence	Bag is faithfully translated; member exists in both	census artefact	div-bag
+Bag#set	not-a-divergence	Bag is faithfully translated; member exists in both	census artefact	div-bag
+Bag#size	not-a-divergence	Bag is faithfully translated; member exists in both	census artefact	div-bag
+Bag#size$field	not-a-divergence	field-vs-method rename ($field suffix); Bag has size in both	census artefact	div-bag
+ComponentOperationHandler$#entity	justified	inner class member; ComponentOperationHandler.scala idiom reorganization	(b) inner class reorganization	div-componentophandler
+ComponentOperationHandler$#makeAdd	justified	inner class method; idiom reorganization	(b) inner class reorganization	div-componentophandler
+ComponentOperationHandler$#makeRemove	justified	inner class method; idiom reorganization	(b) inner class reorganization	div-componentophandler
+ComponentOperationHandler$#reset	justified	inner class method; idiom reorganization	(b) inner class reorganization	div-componentophandler
+ComponentOperationHandler$#type	justified	inner class field; idiom reorganization	(b) inner class reorganization	div-componentophandler
+ComponentOperationHandler$#value	justified	inner class accessor; idiom reorganization	(b) inner class reorganization	div-componentophandler
+ComponentOperationHandler$.ComponentOperation$#Type	justified	ComponentOperationHandler.scala "Idiom: enum instead of inner enum class"	(b) inner class reorganization	div-componentophandler
+ComponentOperationHandler$.ComponentOperation$.Type#Add	justified	enum case; idiom reorganization	(b) inner class reorganization	div-componentophandler
+ComponentOperationHandler$.ComponentOperation$.Type#Remove	justified	enum case; idiom reorganization	(b) inner class reorganization	div-componentophandler
+ComponentPool#clear	justified	ComponentPool is injected replacement for ReflectionPool; ISS-723 c12	(c) library-specific injection	div-pooledengine
+ComponentPool#free	justified	ComponentPool injection; Pool trait method	(c) library-specific injection	div-pooledengine
+ComponentPool#getFree	justified	ComponentPool injection; Pool trait method	(c) library-specific injection	div-pooledengine
+ComponentPool#obtain	justified	ComponentPool injection; Pool trait method	(c) library-specific injection	div-pooledengine
+Engine#value	not-a-divergence	emitted port accessor for a promoted field; hand port structured differently	census artefact	div-engine-companion
+PooledEngine#EntityPool	justified	PooledEngine.scala factory registry; EntityPool companion object	(c) library-specific injection	div-pooledengine
+PooledEngine#componentPools	justified	PooledEngine.scala factory registry; replaced ReflectionPool pools	(c) library-specific injection	div-pooledengine
+PooledEngine#entityPool	justified	PooledEngine.scala factory registry; entity pool field	(c) library-specific injection	div-pooledengine
+PooledEngine#freeAll	justified	PooledEngine.scala factory registry; pool management method	(c) library-specific injection	div-pooledengine
+PooledEngine#initialSize	justified	PooledEngine.scala factory registry; pool configuration	(c) library-specific injection	div-pooledengine
+PooledEngine#maxSize	justified	PooledEngine.scala factory registry; pool configuration	(c) library-specific injection	div-pooledengine
+PooledEngine#pools	justified	PooledEngine.scala factory registry; pool map	(c) library-specific injection	div-pooledengine
+EntitySystem#engine	justified	EntitySystem.scala "Idiom: Nullable[Engine] for engine reference"; hand port exposes engine as def	(b) accessor idiom	div-accessor
+Type#Add	not-a-divergence	enum case of inner type; census artefact from inner class reorganization	census artefact	div-componentophandler
+Type#Remove	not-a-divergence	enum case of inner type; census artefact	census artefact	div-componentophandler
+Type#RemoveAll	not-a-divergence	enum case of EntityManager.EntityOperation.Type; census artefact	census artefact	div-entitymanager
+BagSuite	justified	sge 80b3fc64 initial port "115 unit tests ported from Ashley's test suite"; deeper coverage than upstream (12 vs 1)	hand-port test suite, adapt for emitted API	div-tests
+ComponentMapperSuite	justified	sge 80b3fc64 initial port; tests Nullable[A] return from ComponentMapper.get	hand-port test suite, adapt for emitted API	div-tests
+ComponentOperationHandlerSuite	justified	sge f63eacdc covenant-coverage campaign; tests inner class reorganization	hand-port test suite, adapt for emitted API	div-tests
+ComponentTypeSuite	justified	sge 80b3fc64 initial port; tests BitSet-based component type system	hand-port test suite, adapt for emitted API	div-tests
+EngineCreateComponentReflectionRedSuite	justified	ISS-723 c12 red test; pins reflective-instantiation gap; JVM-only	hand-port test suite, adapt for emitted API	div-tests
+EngineSuite	justified	sge 80b3fc64 initial port; tests Nullable returns, factory registry, no Mockito	hand-port test suite, adapt for emitted API	div-tests
+EntityManagerSuite	justified	sge f63eacdc covenant-coverage campaign	hand-port test suite, adapt for emitted API	div-tests
+EntitySuite	justified	sge 80b3fc64 initial port; tests Entity lifecycle and component management	hand-port test suite, adapt for emitted API	div-tests
+FamilyManagerSuite	justified	sge f63eacdc covenant-coverage campaign	hand-port test suite, adapt for emitted API	div-tests
+FamilySuite	justified	sge 80b3fc64 initial port; tests Family builder and matching	hand-port test suite, adapt for emitted API	div-tests
+IntervalIteratingSystemSuite	justified	sge 80b3fc64 initial port; tests interval-based iteration	hand-port test suite, adapt for emitted API	div-tests
+IntervalSystemSuite	justified	sge 80b3fc64 initial port; tests interval accumulation	hand-port test suite, adapt for emitted API	div-tests
+IteratingSystemSuite	justified	sge 80b3fc64 initial port; tests entity iteration patterns	hand-port test suite, adapt for emitted API	div-tests
+PooledEngineSuite	justified	sge 80b3fc64 initial port; tests factory registry and entity pooling	hand-port test suite, adapt for emitted API	div-tests
+SignalSuite	justified	sge 80b3fc64 initial port; tests Signal dispatch and listener management	hand-port test suite, adapt for emitted API	div-tests
+SortedIteratingSystemSuite	justified	sge 80b3fc64 initial port; tests sorted iteration with Ordering	hand-port test suite, adapt for emitted API	div-tests
+SystemManagerSuite	justified	sge f63eacdc covenant-coverage campaign	hand-port test suite, adapt for emitted API	div-tests
+ImmutableArraySuite	justified	sge 80b3fc64 initial port; tests Iterable API on ImmutableArray	hand-port test suite, adapt for emitted API	div-tests
