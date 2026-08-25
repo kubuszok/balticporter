@@ -35,19 +35,35 @@ class PortMapAcceptanceSpec extends munit.FunSuite:
   private val ashley   = repoRoot.resolve("../sge/original-src/ashley/ashley/src").normalize
   private val gdxSrc   = repoRoot.resolve("../sge/original-src/libgdx/gdx/src").normalize
 
-  /** the map as libGDX core last PUBLISHED it — not a fixture. */
-  private def baseMap: Option[PortMap.Map0] =
-    List("run-latest", "baseline").iterator
-      .map(d => repoRoot.resolve(s"port-report/LibgdxCoreMigrate/$d/port-map.tsv"))
-      .filter(Files.isRegularFile(_))
-      .flatMap(p => PortMap.read(p).toOption)
-      .nextOption()
+  /** libGDX core's COMMITTED BASELINE map — the artifact a FRESH CHECKOUT has, and deliberately not
+    * `run-latest`.
+    *
+    * `run-latest` is ANOTHER RUN's output, so a spec keyed on it does not execute until somebody
+    * happens to run the base first — and `sbt <project>/testOnly *` gates on nothing, printing
+    * `Skipped 1` and exiting 0 (`CLAUDE.md` §5.1). That is not hypothetical here: this spec asserted
+    * a `DroppedType` count of **8** while the answer had been **7** since the base gained an injected
+    * `ReflectionException`, and every `corpus/test` in between reported success without executing it.
+    *
+    * The baseline is committed, `just baseline-accept LibgdxCoreMigrate` is what moves it, and every
+    * number below is therefore read off an artifact somebody acknowledged rather than one this
+    * machine happened to produce. A missing or unreadable baseline is FATAL for the same reason a
+    * declared `classpathFile` that is not there is (§4.57): a spec that meant to check this and
+    * silently did not looks exactly like one that checked it. */
+  private val baseMapPath = repoRoot.resolve("port-report/LibgdxCoreMigrate/baseline/port-map.tsv")
+
+  private def baseMap: PortMap.Map0 =
+    if !Files.isRegularFile(baseMapPath) then
+      fail(s"the base's COMMITTED baseline map is missing: $baseMapPath — this spec is not skippable; "
+        + "restore it from git or run `just baseline-accept LibgdxCoreMigrate`")
+    PortMap.read(baseMapPath).fold(e => fail(s"$baseMapPath is unreadable: $e"), identity)
 
   test("ACCEPTANCE: the base's published map reports the forwarder BEFORE emission, naming the base") {
-    assume(Files.isDirectory(ashley) && Files.isDirectory(gdxSrc),
-      "vendored corpus sources absent — run this from a checkout that has ../sge")
+    // The vendored sources are FATAL too, and for §5.1's reason rather than for convenience: this
+    // spec's whole claim is a property of a real library's size and its same-arity overloads, so a
+    // checkout that cannot see them cannot check it, and saying so is the only honest outcome.
+    assert(Files.isDirectory(ashley) && Files.isDirectory(gdxSrc),
+      s"vendored corpus sources absent ($ashley, $gdxSrc) — run this from a checkout that has ../sge")
     val map = baseMap
-    assume(map.isDefined, "libGDX core has not been run in this checkout, so it has published no map")
 
     val files = Files.walk(ashley).iterator().asScala
       .filter(_.toString.endsWith(".java"))
@@ -56,7 +72,7 @@ class PortMapAcceptanceSpec extends munit.FunSuite:
       .toList.sorted
     val types = SpoonTir.buildModel(
       FrontendConfig(ashley, files, Nil, resolutionRoots = List(gdxSrc)), lenient = true)
-    val phase = new PortMapTransform(map.toList)
+    val phase = new PortMapTransform(List(map))
     // NO substitutions: this is Ashley as it stood before it learned the base's decisions, which is
     // the state a dependent's first run is in and the only state where the finding can arise.
     Pipeline.run(SpoonTir.fromTypes(types, Substitutions.none), List(phase))
