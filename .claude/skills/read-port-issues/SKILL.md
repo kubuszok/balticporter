@@ -52,11 +52,14 @@ joined the compiler's output back through `srcmap.tsv` to the member and the Jav
 lane does this for you; run it yourself when you compiled by hand:
 
 ```
-scala-cli compile --scala 3.8.4 --server=false <port>/src_managed/main/scala 2>&1 \
+scala-cli compile --scala 3.8.4 --server=false --test <port>/src_managed/main/scala <port>/src_managed/test/scala 2>&1 \
   | sed 's/\x1b\[[0-9;]*m//g' > .balticporter/c.txt
 just correlate port-report/<Port>/run-latest --scalac .balticporter/c.txt \
      --srcmap port-report/<Port>/run-latest/srcmap.tsv
 ```
+
+`--test` is not optional: without it scala-cli READS the test tree and reports its warnings but not
+its errors (CLAUDE.md §4.56's third occurrence — 0 errors without the flag, 6 with it, on one tree).
 
 Which prints, and writes `run-latest/errors.tsv`:
 
