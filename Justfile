@@ -4621,6 +4621,12 @@ ecs-dropin:
           rm -rf "$DROPIN_DIR"
         }
       fi
+      # Restore the working tree to a clean state: the previous run deleted files and wrote a
+      # project/dropin.scala. Without this reset a re-run at the same commit finds 0 ported files.
+      if [ -d "$DROPIN_DIR" ]; then
+        git -C "$DROPIN_DIR" checkout -- . 2>/dev/null
+        rm -f "$DROPIN_DIR/project/dropin.scala"
+      fi
     fi
     if [ ! -d "$DROPIN_DIR" ]; then
       echo "   creating shared clone at $DROPIN_DIR"
