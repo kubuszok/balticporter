@@ -9948,6 +9948,19 @@ piping into `grep` discarded the status). For a test invocation the marker is `[
 Same failure shape as §5.1's skipped-test lane one level up: a run that did not happen and a run
 that passed are indistinguishable unless something insists on seeing the evidence.
 
+### M5.6c `sbt -batch "a" "b"` JOINS its arguments into ONE command — `"x/testOnly *" "y/testOnly *"` runs x with `y/testOnly` as a test-name GLOB
+
+**Fix kind:** process. Measured 2026-08-25 while landing the runtime cross-build: six quoted
+arguments (`runtimeJVM/testOnly *`, `runtimeJS/testOnly *`, `runtimeNative/testOnly *`, three
+`publishLocal`s) printed ONE `Passed: Total 178` line and exit 0 — the JVM suite ran, the five other
+"arguments" were consumed as `testOnly` globs that matched nothing, and nothing said so. Passed to
+`engine/Test/clean engine/testOnly *` the same wrapper reports `Expected '/'`, which is the loud
+form of the same parse; the test form is the quiet one, and it is M5.6b's shape from a different
+cause (the server was alive). Write several commands as ONE string separated by `;` —
+`sbt -batch "runtimeJS/testOnly *; runtimeNative/testOnly *"` — and count the `Passed:` lines
+against the commands you sent. Every lane in the `Justfile` already spells its sbt invocations this
+way; this entry exists for the hand-run beside a landing.
+
 ### M5.7 An unchanged-tree `testFull` is a cache REPLAY — it proves nothing about flakiness
 
 sbt 2 caches test results, and a replay is a perfect forgery of a run: per-project totals, suite
