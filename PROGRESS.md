@@ -10401,10 +10401,22 @@ noise4j `440388c2`, jbump `6dac3ba9`, gdx-gltf `683054a8`, screenmanager `0c350b
 gdx-vfx `ece6757a`, gdx-ai `6726e345`, textratypist `3fe5c930`, vis-ui `820300c8`,
 liqp `1f0c47e8`, flexmark-java `bcfe84a3`.
 
-**`just ecs-dropin`** (2026-08-25): NOT YET RUN. The lane is built and ready; the first run requires
-`just ashley-measure` to produce the emitted sources at `ported/sge-ecs/src_managed/`. The sge-ecs
-module's census: 24 `Ported from` main files, 0 `Ported from` test files, 18 hand-written test
-files (no port header). The drop-in replaces the 24 ported main files and keeps all 18 hand-written
-test files in place.
+**`just ecs-dropin`** (2026-08-25), first run, measured against sge `75c21f66`:
+
+Census: 24 `Ported from` main files removed, 0 ported test files, 18 hand-written test files kept
+(all have no port header). The drop-in replaces the 24 ported main files with the 21 emitted + 2
+injected files from `ported/sge-ecs/src_managed/main/scala`, and keeps all 18 hand-written test
+files in place.
+
+| platform | scalac errors | pass | fail | skip |
+|---|---|---|---|---|
+| JVM | 409 (408 + 1 scalafmt) | 0 | 0 | 0 |
+| JS | 408 | 0 | 0 | 0 |
+| Native | 408 | 0 | 0 | 0 |
+
+The first errors are in `ComponentFactories.scala` (an injected file whose indentation-sensitive
+syntax does not parse under sge's Scala version/settings), followed by cascading `Not found` errors
+in the hand-written test suites because the emitted public surface does not yet match the hand
+port's names, types and arities.
 
 An item leaves this section by DELETION when its lane holds the bar (§3.7).

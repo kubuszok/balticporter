@@ -4584,7 +4584,7 @@ ecs_dropin_ref       := "../sge"
 ecs_dropin_module    := "sge-extension/ecs"
 ecs_dropin_label     := "sge-ecs"
 ecs_dropin_header    := "Ported from Ashley"
-ecs_dropin_sbt_ids   := "sge-ecsJVM sge-ecsJS sge-ecsNative"
+ecs_dropin_sbt_ids   := "sge-ecs sge-ecsJS sge-ecsNative"
 
 [doc("sge-ecs drop-in: emitted port replaces hand port inside sge's own build")]
 ecs-dropin:
@@ -4601,29 +4601,34 @@ ecs-dropin:
     mkdir -p "$REPORT/run-latest"
 
     # ------------------------------------------------------------------
-    # 1. Create/refresh a disposable worktree of the reference repo
+    # 1. Create/refresh a disposable clone of the reference repo
     # ------------------------------------------------------------------
+    # WHY A CLONE AND NOT A WORKTREE: sbt-git uses jgit, which cannot resolve objects through a
+    # worktree's `.git` file pointing at the parent's `.git/worktrees/<name>`. The error is
+    # `MissingObjectException` on HEAD itself. A `--shared` clone creates a proper `.git/` that
+    # jgit can read while sharing the object store with the original repo (no disk cost for
+    # objects). Submodules are NOT cloned — the lane does not need them.
     DROPIN_DIR="$ROOT/.balticporter/dropin/sge"
     REF_COMMIT=$(git -C "$REF_REPO" rev-parse HEAD)
     echo "-- reference repo: $REF_REPO at $REF_COMMIT --"
     if [ -d "$DROPIN_DIR" ]; then
-      # refresh: make sure the worktree is at the right commit
       CURRENT=$(git -C "$DROPIN_DIR" rev-parse HEAD 2>/dev/null || echo "NONE")
       if [ "$CURRENT" != "$REF_COMMIT" ]; then
-        echo "   worktree exists at $CURRENT, updating to $REF_COMMIT"
+        echo "   clone exists at $CURRENT, updating to $REF_COMMIT"
+        git -C "$DROPIN_DIR" fetch origin 2>/dev/null
         git -C "$DROPIN_DIR" checkout --detach "$REF_COMMIT" 2>/dev/null || {
-          echo "   checkout failed — removing and re-creating"
-          git -C "$REF_REPO" worktree remove --force "$DROPIN_DIR" 2>/dev/null
+          echo "   checkout failed, re-creating clone"
           rm -rf "$DROPIN_DIR"
         }
       fi
     fi
     if [ ! -d "$DROPIN_DIR" ]; then
-      echo "   creating worktree at $DROPIN_DIR"
+      echo "   creating shared clone at $DROPIN_DIR"
       mkdir -p "$(dirname "$DROPIN_DIR")"
-      git -C "$REF_REPO" worktree add --detach "$DROPIN_DIR" "$REF_COMMIT"
+      git clone --shared --no-checkout "$REF_REPO" "$DROPIN_DIR"
+      git -C "$DROPIN_DIR" checkout --detach "$REF_COMMIT"
     fi
-    echo "   worktree ready: $(git -C "$DROPIN_DIR" rev-parse --short HEAD)"
+    echo "   clone ready: $(git -C "$DROPIN_DIR" rev-parse --short HEAD)"
 
     # ------------------------------------------------------------------
     # 2. Census: classify every file in the module by header
@@ -4718,13 +4723,13 @@ ecs-dropin:
       echo ''
       echo '  override def projectSettings = Seq('
       echo '    Compile / unmanagedSourceDirectories ++= {'
-      echo "      if (thisProject.value.base.getName == \"ecs\")"
+      echo "      if (thisProject.value.base.getName.startsWith(\"sge-ecs\"))"
       echo "        Seq(file(\"$EMIT_MAIN\"))"
       echo "          ++ (if (file(\"$INJECT_MAIN\").isDirectory) Seq(file(\"$INJECT_MAIN\")) else Nil)"
       echo '      else Nil'
       echo '    },'
       echo '    Test / unmanagedSourceDirectories ++= {'
-      echo "      if (thisProject.value.base.getName == \"ecs\")"
+      echo "      if (thisProject.value.base.getName.startsWith(\"sge-ecs\"))"
       echo "        Seq(file(\"$EMIT_TEST\"))"
       echo "          ++ (if (file(\"$INJECT_TEST\").isDirectory) Seq(file(\"$INJECT_TEST\")) else Nil)"
       echo '      else Nil'
@@ -4739,15 +4744,19 @@ ecs-dropin:
     # ------------------------------------------------------------------
     echo
     echo "-- compile and test --"
-    PLATFORMS="JVM JS Native"
+    # Project ids: sge-ecs (JVM — no suffix), sge-ecsJS, sge-ecsNative. The JVM project does
+    # not carry the `JVM` suffix because sbt-projectMatrix's `defaultAxes` includes `VirtualAxis.jvm`.
+    PLAT_IDS="sge-ecs:jvm:JVM sge-ecsJS:js:JS sge-ecsNative:native:Native"
     ALL_OK=1
-    for plat in $PLATFORMS; do
-      platl=$(echo "$plat" | tr '[:upper:]' '[:lower:]')
+    for entry in $PLAT_IDS; do
+      sbt_id=$(echo "$entry" | cut -d: -f1)
+      platl=$(echo "$entry" | cut -d: -f2)
+      plat=$(echo "$entry" | cut -d: -f3)
       LOG="$REPORT/run-latest/dropin-${platl}.log"
       echo
-      echo "-- platform: $plat --"
-      # Run sbt in the dropin worktree
-      (cd "$DROPIN_DIR" && sbt -batch "sge-ecs${plat}/test" 2>&1) \
+      echo "-- platform: $plat (sbt: $sbt_id/test) --"
+      # Run sbt in the dropin clone
+      (cd "$DROPIN_DIR" && sbt -batch "${sbt_id}/test" 2>&1) \
         | sed 's/\x1b\[[0-9;]*m//g' > "$LOG"
       SBT_STATUS=${PIPESTATUS[0]}
       # Count errors
@@ -4785,8 +4794,9 @@ ecs-dropin:
     echo
     echo "=================================================================="
     echo "DROP-IN SUMMARY for {{ecs_dropin_label}}"
-    for plat in $PLATFORMS; do
-      platl=$(echo "$plat" | tr '[:upper:]' '[:lower:]')
+    for entry in $PLAT_IDS; do
+      platl=$(echo "$entry" | cut -d: -f2)
+      plat=$(echo "$entry" | cut -d: -f3)
       LOG="$REPORT/run-latest/dropin-${platl}.log"
       ERRORS=$(grep -cE '^\[error\]' "$LOG")
       PASS=$(grep -cE '^  \+ ' "$LOG")
