@@ -5915,3 +5915,40 @@ that stops declaring a file, or moves the path it ships one at, would otherwise 
 run's copy on the consumer's classpath — a deliverable no declaration accounts for, and the one state
 `src_managed/` exists to make impossible (§5.5). Unconditional, so *this module ships nothing here*
 is a state the tree can reach.
+
+### 8.23 `api-parity` — the hand-port surface comparison, and the families that classify it
+
+A §1(b) check: the MECHANISM (parse both Scala surfaces with scalameta, compare, classify each
+divergence into a family) is in the engine; the POLICY (which hand-port source tree, which package
+mapping) is per-library, declared in `PortManifest.parity` as a `ParityRef`. Empty/absent = the
+check is a no-op AND records nothing — §1(b)'s rule.
+
+**Why a check rather than a script.** The parity campaign (PROGRESS.md §13) needs every hand-port API
+choice turned into a counted, classified fact. A script run by hand is a number nobody baselines and
+nobody diffs; a check in the engine is in `findings.tsv`, in `counts.tsv`, in every measure lane's
+baseline, and in `RequiredChecks` (required-when-declared, like `service-providers` and `resources`).
+A port that declares `parity` and then stops recording the lanes fails the run.
+
+**Both sides are parsed by the SAME parser** — scalameta's Scala 3 dialect — which is §4.56's rule
+(two spellings make the edge incomparable). The surface model extracts public/protected declarations:
+kind, name, arity, structural path. Private members are excluded on both sides.
+
+**The families, and their §4.45 classification:**
+
+| family | what it catches | §1 classification |
+|---|---|---|
+| `accessor` | getter/setter collapse (`getX`/`setX` vs `x`/`x_=`) or paren-vs-parenless | §1(a) engine — an idiom phase produces this shape |
+| `static-placement` | class vs companion member placement | §1(a) engine — informational |
+| `mutability` | val vs var vs def drift | §1(a) engine — usually benign (the hand port narrowed mutability) |
+| `rename` | same shape, different name (known renames are non-divergent) | §1(a) engine or §1(b) configured |
+| `visibility` | different access level | §1(a) engine or §1(c) library-specific |
+| `hand-port-extra` | declared only in the hand port (factory methods, helpers, redesigned APIs) | §1(c) library-specific or informational |
+| `port-extra` | declared only in the emitted port (java the hand port skipped) | §1(a) engine or §1(b) configured |
+| `unclassified` | everything else — the work list | unknown — each row is a missing classifier or a real divergence |
+
+Each family is a separate lane (`api-parity(<family>)`), so `unclassified = 0` is the gate and
+the recognised families are the work items a reader can act on one family at a time.
+
+**NOT inherited.** A hand port is a fact about THIS module's destination, not the shared surface.
+A dependent does not inherit its base's parity reference. The `.conf` key is
+`parity { roots = ["…"], packageMapping = { … } }`.

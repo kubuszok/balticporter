@@ -42,6 +42,7 @@ Current examples:
 | `CollectionsTransform(RuleScope)` | retype JDK collections and API-map their call sites | WHICH declarations — a bridge class that must keep the JDK shape opts out |
 | `PrimitiveToOpaqueTransform(OpaqueSpec)` | seed, propagate along pure-move flows, retype, coerce at the boundary | which primitive, what the type is called, where it is minted, which declarations seed it, how far propagation may reach |
 | `PortabilityCheck(targets)` | match a rule against every external symbol the program references, and report each site | WHICH BACKENDS the module is ported for (`PortManifest.targets`) — the rule LIST is derived from them, because JS and Native disagree on nine families and one shared verdict is wrong for one of them either way |
+| `ApiParityCheck(ParityRef)` | parse both sides with scalameta, classify each divergence into a family, report per-family lanes | WHICH hand-port source tree(s) this module's emitted surface is compared against (`PortManifest.parity`). Empty = no-op and records nothing |
 
 **A (b) whose empty parameter is a no-op still needs its DEFAULT chosen against what the phase did
 BEFORE it had one.** The two questions look like one and are not: `Everywhere(Set.empty)` is both
@@ -1110,9 +1111,10 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   `findings.tsv`) failing at the phase that could least afford it.
   Those five are required OF A RUN THAT CARRIES THE PHASE and derived from the pipeline rather
   than listed, which is the conditional-lane pattern the two MANIFEST-derived lanes take at the
-  other declaration — `service-providers` when a port declares a descriptor, and `resources` when it
+  other declaration — `service-providers` when a port declares a descriptor, `resources` when it
   declares a classpath resource tree (`DESIGN.md` §8.17 and §8.22, the deliverables that are not
-  `.scala`):
+  `.scala`), and the eight `api-parity(<family>)` lanes when a port declares a `parity` reference
+  (`DESIGN.md` §8.23, the hand-port surface comparison):
   requiring them of every port would fail every phase-less one, and leaving them out entirely means
   a run that stopped calling one reports success with the row gone. `PortRun.RequiredChecks` is
   asserted against what actually recorded, so a number that reaches stdout and not `findings.tsv`

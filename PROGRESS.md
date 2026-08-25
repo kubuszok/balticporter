@@ -10346,6 +10346,26 @@ type* has no answer on that platform, and the four assertions that pin it are gu
 probe (`PlatformArrays.reifiesComponentType`) rather than by a platform source directory. The shims
 are unchanged and do the same thing on all three rows.
 
+**Wave 0.2 delivered: `api-parity` check** (DESIGN.md §8.23). `PortManifest.parity: Option[ParityRef]`
+is the §1(b) parameter. Both sides parsed by scalameta (§4.56), eight families, required-when-declared.
+sge-ecs wired to `../sge/sge-extension/ecs/src/main/scala`, first measurement:
+
+| family | count | reading |
+|---|---|---|
+| `accessor` | 10 | `getX`/`setX` in emitted, `x`/`x_=` as val/var in hand port |
+| `static-placement` | 0 | no class-vs-companion disagreement |
+| `mutability` | 8 | val vs var drift (the hand port narrowed mutability) |
+| `rename` | 0 | every name agrees after the port's own renames |
+| `visibility` | 0 | no access-level disagreement |
+| `hand-port-extra` | 39 | hand-port additions (factories, `Bag`, `SystemListener`, redesigned APIs) |
+| `port-extra` | 85 | java members the hand port skipped or redesigned away |
+| `unclassified` | 0 | every divergence classified |
+| **total** | **142** | |
+
+`unclassified = 0` is the gate and it holds on the first measurement. Later families
+(`null-model`, `collection-retarget`, `opaque`) require type-level comparison; deferred to the wave
+that builds them.
+
 **Phase 1 — parity mechanisms**, each a (b) with an empty no-op default, `SurfacePolicy`,
 `MergeablePolicy` where surface depends on it, the fingerprint segment omitted when empty, and a
 boundary count where it retypes: null-spelling target (`Union | Named(fqn) | Option`, K13 inside);
