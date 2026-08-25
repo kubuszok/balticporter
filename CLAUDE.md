@@ -1020,6 +1020,9 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   | `just decision-counts` | `decisions.tsv` row counts by kind, every port |
   | `just members-unchanged` | `members.tsv` against its baseline — the blast radius, before a compile |
   | `just baseline-{list,show,diff,accept}` | the baseline half of the check report |
+  | `just upstream-pin` | vendored upstream trees vs sge/ssg submodule pins (mismatch is FATAL) |
+  | `just ecs-dropin` | sge-ecs drop-in: emitted port replaces hand port inside sge's own build |
+  | `just dropin-all` | every drop-in lane (NOT in `measure-all` — expected red until parity) |
 
   **Twenty-three lanes, and the table is the Justfile's own `[doc]` line for each** — `just` with no
   recipe lists them, so a lane added without a row here is one an agent will not find, and a row here

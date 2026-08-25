@@ -4476,3 +4476,336 @@ baseline-accept PORT:
     fi
     echo
     echo "commit port-report/{{PORT}}/baseline/ with the change that produced it."
+
+# ---------------------------------------------------------------------------------------------
+# Upstream pin check — vendored trees vs reference repo submodules (CLAUDE.md §3.5 fourth question).
+#
+# Every vendored upstream tree this repo resolves against lives in sge's or ssg's `original-src/`
+# submodule. A mismatch means the port is resolving against a DIFFERENT VERSION of the upstream
+# than the reference hand port — and the errors that introduces read exactly like engine gaps
+# (measured: three `E007`s on `OnscreenKeyboard.show(true)` from a single minor-version delta).
+#
+# The mapping is: the Justfile variable that names the vendored tree -> the submodule name in
+# sge or ssg -> the commit the reference repo pins. The lane reads both sides and diffs them.
+# A mismatch is FATAL (§13 decision table: "a mismatch is FATAL").
+#
+# WHY NOT RE-PIN AUTOMATICALLY: a re-pin changes what every port resolves against, which is a
+# per-port measurement with its own baseline to acknowledge. The lane reports; the fix is manual.
+# ---------------------------------------------------------------------------------------------
+[doc("check every vendored upstream tree against the reference repo's submodule pin")]
+upstream-pin:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    echo "-- upstream pin check: vendored trees vs sge/ssg submodule pins --"
+    echo
+    MISMATCH=0
+    TOTAL=0
+    # Each row: label, vendored-tree-root (the git checkout), ref-repo, submodule-name
+    while IFS='|' read -r label vendored refrepo submod; do
+      TOTAL=$((TOTAL + 1))
+      vendored_real=$(cd "$vendored" 2>/dev/null && pwd) || vendored_real="$vendored"
+      # the vendored tree may be a subdirectory of the checkout; walk up to the .git
+      vgit="$vendored_real"
+      while [ -n "$vgit" ] && [ ! -d "$vgit/.git" ] && [ ! -f "$vgit/.git" ]; do
+        vgit=$(dirname "$vgit")
+        [ "$vgit" = "/" ] && vgit="" && break
+      done
+      if [ -z "$vgit" ]; then
+        printf "%-20s  %-40s  NOT-A-GIT-REPO\n" "$label" "$vendored"
+        MISMATCH=$((MISMATCH + 1))
+        continue
+      fi
+      v_commit=$(git -C "$vgit" rev-parse HEAD 2>/dev/null || echo "UNKNOWN")
+      # the reference repo's submodule pin
+      ref_commit=$(git -C "$refrepo" submodule status "$submod" 2>/dev/null \
+        | sed 's/^ *//' | cut -d' ' -f1 | tr -d '+' || echo "UNKNOWN")
+      if [ "$v_commit" = "$ref_commit" ]; then
+        printf "%-20s  %-40s  %s  MATCH\n" "$label" "$v_commit" "$ref_commit"
+      else
+        printf "%-20s  %-40s  %s  !! MISMATCH\n" "$label" "$v_commit" "$ref_commit"
+        MISMATCH=$((MISMATCH + 1))
+      fi
+    done <<'PINS'
+    libgdx|{{gdx_src}}|../sge|original-src/libgdx
+    ashley|{{ashley_src}}|../sge|original-src/ashley
+    simple-graphs|{{sg_src}}|../sge|original-src/simple-graphs
+    anim8-gdx|{{anim8_src}}|../sge|original-src/anim8-gdx
+    noise4j|{{n4j_src}}|../sge|original-src/noise4j
+    jbump|{{jbump_src}}|../sge|original-src/jbump
+    gdx-gltf|{{gltf_src}}|../sge|original-src/gdx-gltf
+    screenmanager|{{screens_src}}|../sge|original-src/libgdx-screenmanager
+    gdx-vfx|{{vfx_src}}|../sge|original-src/gdx-vfx
+    gdx-ai|{{ai_src}}|../sge|original-src/gdx-ai
+    textratypist|{{textra_src}}|../sge|original-src/textratypist
+    vis-ui|{{visui_src}}|../sge|original-src/vis-ui
+    liqp|{{liqp_src}}|../ssg|original-src/liqp
+    flexmark-java|{{md_src}}|../ssg|original-src/flexmark-java
+    PINS
+    echo
+    echo "checked $TOTAL vendored trees: $((TOTAL - MISMATCH)) match, $MISMATCH mismatch"
+    if [ "$MISMATCH" != "0" ]; then
+      echo "!! FATAL — $MISMATCH vendored tree(s) do not match the reference repo's pin."
+      echo "   Re-pinning is a per-port decision with a measurement (PROGRESS.md §13)."
+      exit 1
+    fi
+
+# ---------------------------------------------------------------------------------------------
+# The drop-in gate — the EMITTED port replaces the HAND PORT inside the reference repo's own
+# build, and the reference repo's own suite runs against it. This is the §13 "done bar" for
+# every module: the emitted tree can be dropped into sge/ssg in place of the hand-ported files,
+# and the full suite passes on every platform.
+#
+# WHY A WORKTREE OF THE REFERENCE REPO AND NOT THE LIVE CHECKOUT:
+#   - the lane must not leave ../sge (or ../ssg) with files deleted or a broken build;
+#   - the lane must be idempotent — re-running it must not fail because the previous run
+#     already removed files;
+#   - a worktree at a known commit is a reproducible starting point, and the commit is the one
+#     the reference repo currently has checked out (HEAD), so the comparison is fair.
+#
+# WHY `unmanagedSourceDirectories` AND NOT COPYING FILES:
+#   - the emitted tree is a BUILD PRODUCT (§5.5), regenerated by every engine change;
+#   - copying into the worktree would mix emitted code with hand-written code and make
+#     `git status` unable to distinguish the two (§5.5's diagnostic reason);
+#   - `unmanagedSourceDirectories` is the sbt-projectMatrix idiom ../sge/build.sbt already uses
+#     (~8 occurrences), so a `local-dropin.sbt` following that pattern is ordinary.
+#
+# WHAT IS REPLACED: every file whose header matches `Ported from <lib>` (sge spelling) or
+# `Ported from: <path>` (ssg spelling). The census function classifies by header; everything
+# else (SGE-original files, hand-added tests with no port header) stays in place.
+#
+# WHAT IS NOT REPLACED: platform-specific files (scalajvm/, scalajs/, scalanative/) that are
+# SGE-original, and any test file that has no `Ported from` header — those are the module's own
+# hand-written tests and are kept.
+# ---------------------------------------------------------------------------------------------
+
+# sge-ecs drop-in policy
+ecs_dropin_ref       := "../sge"
+ecs_dropin_module    := "sge-extension/ecs"
+ecs_dropin_label     := "sge-ecs"
+ecs_dropin_header    := "Ported from Ashley"
+ecs_dropin_sbt_ids   := "sge-ecsJVM sge-ecsJS sge-ecsNative"
+
+[doc("sge-ecs drop-in: emitted port replaces hand port inside sge's own build")]
+ecs-dropin:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    . scripts/_lib.sh
+
+    REF_REPO="$(cd {{ecs_dropin_ref}} && pwd)"
+    MODULE_DIR="{{ecs_dropin_module}}"
+    HEADER_PATTERN="{{ecs_dropin_header}}"
+    PORT_MODULE="{{ashley_module}}"
+    REPORT="$ROOT/port-report/AshleyDropIn"
+    mkdir -p "$REPORT/run-latest"
+
+    # ------------------------------------------------------------------
+    # 1. Create/refresh a disposable worktree of the reference repo
+    # ------------------------------------------------------------------
+    DROPIN_DIR="$ROOT/.balticporter/dropin/sge"
+    REF_COMMIT=$(git -C "$REF_REPO" rev-parse HEAD)
+    echo "-- reference repo: $REF_REPO at $REF_COMMIT --"
+    if [ -d "$DROPIN_DIR" ]; then
+      # refresh: make sure the worktree is at the right commit
+      CURRENT=$(git -C "$DROPIN_DIR" rev-parse HEAD 2>/dev/null || echo "NONE")
+      if [ "$CURRENT" != "$REF_COMMIT" ]; then
+        echo "   worktree exists at $CURRENT, updating to $REF_COMMIT"
+        git -C "$DROPIN_DIR" checkout --detach "$REF_COMMIT" 2>/dev/null || {
+          echo "   checkout failed — removing and re-creating"
+          git -C "$REF_REPO" worktree remove --force "$DROPIN_DIR" 2>/dev/null
+          rm -rf "$DROPIN_DIR"
+        }
+      fi
+    fi
+    if [ ! -d "$DROPIN_DIR" ]; then
+      echo "   creating worktree at $DROPIN_DIR"
+      mkdir -p "$(dirname "$DROPIN_DIR")"
+      git -C "$REF_REPO" worktree add --detach "$DROPIN_DIR" "$REF_COMMIT"
+    fi
+    echo "   worktree ready: $(git -C "$DROPIN_DIR" rev-parse --short HEAD)"
+
+    # ------------------------------------------------------------------
+    # 2. Census: classify every file in the module by header
+    # ------------------------------------------------------------------
+    echo
+    echo "-- census: classifying files by header --"
+    SRC_BASE="$DROPIN_DIR/$MODULE_DIR/src"
+    PORTED_MAIN=0; PORTED_TEST=0; ORIGINAL_MAIN=0; ORIGINAL_TEST=0
+    NEITHER_MAIN=0; NEITHER_TEST=0
+    PORTED_FILES_MAIN=()
+    PORTED_FILES_TEST=()
+
+    classify_file() {
+      local f="$1" scope="$2"
+      if head -5 "$f" | grep -qi "$HEADER_PATTERN"; then
+        if [ "$scope" = "main" ]; then
+          PORTED_MAIN=$((PORTED_MAIN + 1))
+          PORTED_FILES_MAIN+=("$f")
+        else
+          PORTED_TEST=$((PORTED_TEST + 1))
+          PORTED_FILES_TEST+=("$f")
+        fi
+      elif head -5 "$f" | grep -qi 'Origin: SGE-original\|SGE-original\|Origin:.*SGE'; then
+        if [ "$scope" = "main" ]; then ORIGINAL_MAIN=$((ORIGINAL_MAIN + 1))
+        else ORIGINAL_TEST=$((ORIGINAL_TEST + 1)); fi
+      else
+        if [ "$scope" = "main" ]; then NEITHER_MAIN=$((NEITHER_MAIN + 1))
+        else NEITHER_TEST=$((NEITHER_TEST + 1)); fi
+      fi
+    }
+
+    # main sources: scala/, scalajs/, scalajvm/, scalanative/
+    for subdir in scala scalajs scalajvm scalanative; do
+      dir="$SRC_BASE/main/$subdir"
+      [ -d "$dir" ] || continue
+      while IFS= read -r -d '' f; do
+        classify_file "$f" "main"
+      done < <(find "$dir" -name '*.scala' -print0)
+    done
+
+    # test sources
+    for subdir in scala scalajs scalajvm scalanative; do
+      dir="$SRC_BASE/test/$subdir"
+      [ -d "$dir" ] || continue
+      while IFS= read -r -d '' f; do
+        classify_file "$f" "test"
+      done < <(find "$dir" -name '*.scala' -print0)
+    done
+
+    echo "main:  $PORTED_MAIN ported, $ORIGINAL_MAIN SGE-original, $NEITHER_MAIN other"
+    echo "test:  $PORTED_TEST ported, $ORIGINAL_TEST SGE-original, $NEITHER_TEST other"
+    echo "total: $((PORTED_MAIN + PORTED_TEST)) ported files to replace"
+
+    if [ "$((PORTED_MAIN + PORTED_TEST))" = "0" ]; then
+      echo "!! FATAL — 0 'Ported from' files found in $SRC_BASE"
+      exit 1
+    fi
+
+    # ------------------------------------------------------------------
+    # 3. Remove ported files, wire in emitted sources via local-dropin.sbt
+    # ------------------------------------------------------------------
+    echo
+    echo "-- replacing ported files with emitted sources --"
+    for f in "${PORTED_FILES_MAIN[@]}" "${PORTED_FILES_TEST[@]}"; do
+      rm -f "$f"
+    done
+    echo "   removed $((PORTED_MAIN + PORTED_TEST)) ported file(s)"
+
+    # Verify the emitted source exists
+    EMIT_MAIN="$ROOT/$PORT_MODULE/src_managed/main/scala"
+    EMIT_TEST="$ROOT/$PORT_MODULE/src_managed/test/scala"
+    INJECT_MAIN="$ROOT/$PORT_MODULE/src/main/scala"
+    INJECT_TEST="$ROOT/$PORT_MODULE/src/test/scala"
+    if [ ! -d "$EMIT_MAIN" ]; then
+      echo "!! FATAL — emitted main source not found at $EMIT_MAIN"
+      echo "   Run the ashley-measure lane first to produce it."
+      exit 1
+    fi
+
+    # Write a project/*.scala AutoPlugin that wires the emitted sources into the right projects.
+    # An AutoPlugin is more reliable than a local-dropin.sbt for sbt-projectMatrix: the
+    # `projectSettings` reach ALL platform variants (JVM/JS/Native) through the base directory
+    # name match, which is the sbt-projectMatrix idiom ../sge/build.sbt already uses.
+    mkdir -p "$DROPIN_DIR/project"
+    dropin_scala="$DROPIN_DIR/project/dropin.scala"
+    {
+      echo 'import sbt._'
+      echo 'import sbt.Keys._'
+      echo ''
+      echo 'object DropIn extends AutoPlugin {'
+      echo '  override def trigger = allRequirements'
+      echo ''
+      echo '  override def projectSettings = Seq('
+      echo '    Compile / unmanagedSourceDirectories ++= {'
+      echo "      if (thisProject.value.base.getName == \"ecs\")"
+      echo "        Seq(file(\"$EMIT_MAIN\"))"
+      echo "          ++ (if (file(\"$INJECT_MAIN\").isDirectory) Seq(file(\"$INJECT_MAIN\")) else Nil)"
+      echo '      else Nil'
+      echo '    },'
+      echo '    Test / unmanagedSourceDirectories ++= {'
+      echo "      if (thisProject.value.base.getName == \"ecs\")"
+      echo "        Seq(file(\"$EMIT_TEST\"))"
+      echo "          ++ (if (file(\"$INJECT_TEST\").isDirectory) Seq(file(\"$INJECT_TEST\")) else Nil)"
+      echo '      else Nil'
+      echo '    }'
+      echo '  )'
+      echo '}'
+    } > "$dropin_scala"
+    echo "   wrote $dropin_scala to wire emitted sources"
+
+    # ------------------------------------------------------------------
+    # 4. Compile and test on each platform
+    # ------------------------------------------------------------------
+    echo
+    echo "-- compile and test --"
+    PLATFORMS="JVM JS Native"
+    ALL_OK=1
+    for plat in $PLATFORMS; do
+      platl=$(echo "$plat" | tr '[:upper:]' '[:lower:]')
+      LOG="$REPORT/run-latest/dropin-${platl}.log"
+      echo
+      echo "-- platform: $plat --"
+      # Run sbt in the dropin worktree
+      (cd "$DROPIN_DIR" && sbt -batch "sge-ecs${plat}/test" 2>&1) \
+        | sed 's/\x1b\[[0-9;]*m//g' > "$LOG"
+      SBT_STATUS=${PIPESTATUS[0]}
+      # Count errors
+      ERRORS=$(grep -cE '^\[error\]' "$LOG")
+      # Count test outcomes from the munit markers
+      PASS=$(grep -cE '^  \+ ' "$LOG")
+      FAIL=$(grep -c '^==> X ' "$LOG")
+      SKIP=$(grep -cE '^==> [^X] ' "$LOG")
+      echo "  sbt exit: $SBT_STATUS  errors: $ERRORS  pass: $PASS  fail: $FAIL  skip: $SKIP"
+      echo "  log: $LOG"
+      # Write per-platform expected-errors
+      echo "$ERRORS" > "$REPORT/run-latest/expected-errors.${platl}"
+      # Write a summary tests file per platform
+      {
+        echo "# platform=$plat  pass=$PASS  fail=$FAIL  skip=$SKIP"
+        grep -E '^  \+ ' "$LOG" | sed 's/^  + //' | while read -r line; do
+          echo -e "${line}\tpass"
+        done
+        grep '^==> X ' "$LOG" | sed 's/^==> X //' | while read -r line; do
+          echo -e "${line}\tfail"
+        done
+        grep -E '^==> [^X] ' "$LOG" | sed 's/^==> [^ ]* //' | while read -r line; do
+          echo -e "${line}\tskipped"
+        done
+      } > "$REPORT/run-latest/tests.${platl}.tsv"
+
+      if [ "$SBT_STATUS" != "0" ]; then
+        ALL_OK=0
+        # Show the first few errors
+        echo "  FIRST ERRORS:"
+        grep -E '^\[error\]' "$LOG" | head -20 | sed 's/^/     /'
+      fi
+    done
+
+    echo
+    echo "=================================================================="
+    echo "DROP-IN SUMMARY for {{ecs_dropin_label}}"
+    for plat in $PLATFORMS; do
+      platl=$(echo "$plat" | tr '[:upper:]' '[:lower:]')
+      LOG="$REPORT/run-latest/dropin-${platl}.log"
+      ERRORS=$(grep -cE '^\[error\]' "$LOG")
+      PASS=$(grep -cE '^  \+ ' "$LOG")
+      FAIL=$(grep -c '^==> X ' "$LOG")
+      SKIP=$(grep -cE '^==> [^X] ' "$LOG")
+      printf "  %-8s  errors=%-4s  pass=%-4s  fail=%-4s  skip=%-4s\n" "$plat" "$ERRORS" "$PASS" "$FAIL" "$SKIP"
+    done
+    echo "=================================================================="
+    if [ "$ALL_OK" != "1" ]; then
+      echo "(expected red — the emitted API is not yet at parity)"
+    fi
+
+# The drop-in aggregator — all drop-in lanes, NOT in measure-all.
+[doc("every drop-in lane — NOT in measure-all (expected red)")]
+dropin-all:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    for lane in ecs-dropin; do
+      echo
+      echo "################################################################## just $lane"
+      {{just_executable()}} "$lane" || echo "!! $lane exited non-zero (expected for a red drop-in)"
+    done
