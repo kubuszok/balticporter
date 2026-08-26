@@ -3063,11 +3063,14 @@ state.*
    does not wrap test bodies in a `Tree.Lambda` — it inlines them as a `Tree.Block` argument.
 
    The `EntitySystem#engine` bean pair compiles at **0 errors** on ashley (JVM, JS, Native) with the
-   capture-rename firing correctly. The pair is WITHHELD in `AshleyMigrate` because the BeanDetect
-   auto-detection (`scope = Everywhere()` on the base) also auto-detects 14 other bean pairs on
-   ashley types whose BeanCollapse conversions cause 47 runtime failures — class-init cascades
-   unrelated to C16.1. The baselines must be accepted for the BeanDetect wave before the pair can
-   land; one `api-parity(accessor)` row stays until then.
+   capture-rename firing correctly, and the pair is now ON: it was WITHHELD only while the BeanDetect
+   derivation (`scope = Everywhere()` on the base) was under development, and landed with wave 1.2e
+   once that wave's two guards (`SetterOnlyInterface`, the abstract-only implementation-pair
+   exemption) and its baselines were in. ashley reads **0 errors, 108 / 2 / 2**, and
+   `api-parity(accessor)` **2 -> 1**. The configured entry is redundant for the RENAME — the
+   derivation finds the pair — and is kept as the port's stated policy for the member (the hand port
+   writes `def engine: Nullable[Engine] = _engine`) plus a `neverFired` line if the accessor shape
+   moves upstream.
 
 ### T1. A `CtNewClass` is a SUBTYPE of `CtConstructorCall` — 156 silently dropped bodies
 

@@ -3191,6 +3191,142 @@ than left for an enablement:
   the same name across a subtype edge are an implementation pair, and java cannot produce that shape
   because a java method always has a parameter clause. `ConcreteRelative` above is what makes the
   admission safe, so the two guards compose and neither re-asks the other's question.
+- **…and the exemption is ABSTRACT-ONLY, which only the whole-program derivation could find.** The
+  rule above reads *a parameterless `def` above a field is that field's contract* — true of the
+  shape it was written against (an interface's ABSTRACT `def w` over a collapsed `var w`), and false
+  of the shape the derivation makes common: a CONCRETE parameterless `def` is a def-pair GETTER
+  whose storage is its OWN owner's `$field`, so a descendant's same-name field is java's plain
+  shadow, over unrelated storage, and a `var` cannot override a concrete `def` at all. Exempted, it
+  is `weaker access privileges` / `cannot override` at `RefChecks` — again invisible until the port
+  is at 0 typer errors (§3). The test is therefore `d.paramss.isEmpty && d.rhs.isEmpty`, and the
+  narrowing is what `MemberRenamer.DeferToEmitter` already promised this pass would do:
+  `Sprite#rotation` under `ParticleEmitter`, `Table#skin` under `Dialog` — 2 rows. Note which
+  direction the two guards run in and why they do not collide: `ConcreteRelative` refuses to
+  COLLAPSE under a concrete accessor, and this one refuses to EXEMPT under one.
+
+#### The WHOLE-PROGRAM derivation — one `RuleScope` on the same phase — BUILT, and the ruling it overturns
+
+**The "no second knob" ruling below was right about a TABLE and wrong about a LIBRARY.** Its argument
+is that the pairs map IS the include list, so a scope beside it would give one decision two homes and
+let a pair be listed and then silently scoped out. That holds exactly as long as the policy is
+something a human wrote down one key at a time. libGDX's harvested census is **132** pairs; the
+library DECLARES **1,420** that java's own convention identifies. A 1,420-key include list is not
+policy, it is a transcription of the program — it goes stale on the next upstream release, and every
+key in it restates a rule java already stated. So `BeanPropertyTransform` takes a
+`scope: RuleScope`, and the two knobs are not two homes for one decision: **the map says *this pair,
+spelled THIS way, at THIS target*; the scope says *derive the rest by java's own convention*.** A
+configured key WINS at the same property and at the same accessor METHOD, so a port that has said
+something specific is never overruled by the derivation — which is also what keeps `neverFired`
+honest, since a configured key that stopped matching is still reported even where the derivation
+would have found the pair anyway.
+
+**The default is `Only(Set.empty)`, and it is the no-op — §1(b)'s ADD rule, not its retype rule.** A
+derivation MINTS names, so its unrestricted form is not a safe default at all: `Everywhere()` would
+put `x`/`x_=` on every `getX`/`setX` in every port in the corpus to serve the one port that asked.
+The fingerprint omits the `detect=` segment at the default, so the parameter's arrival is flat by
+construction rather than by twenty acknowledgements. It deliberately does NOT omit it at
+`Everywhere(Set.empty)`, which renders a segment with an empty VALUE: an empty scope is not an empty
+POLICY for a phase whose no-op lies in the other direction, and rendered equal, a port that derives
+over its whole program and a port that does not run the derivation at all would fingerprint the
+same — `ENGINE-LIMITS.md` CT9's recorded failure exactly.
+
+**The scope is asked of the OWNER TYPE, never of the accessor.** `Only(Set("com.foo.Bar"))` reads
+*derive pairs DECLARED in `Bar`*, which is the only reading a port can act on: an accessor's own
+`fullName` is its owner's plus `#getX`, so the two answers coincide for a type entry and diverge for
+a member one, and *derive only `Bar#getW`* is a sentence about a pair the map already spells.
+
+**Five guards, and the population that priced them.** libGDX core at `scope = Everywhere()`:
+**1,420 converted / 235 refused**, one row per site CONSIDERED, in the `BeanDetect` lane of
+`idiom(converted)`/`idiom(refused)`:
+
+| guard | rows | what it saw |
+|---|---|---|
+| `RenameRefused` | 158 | `MemberRenamer` declined the component — an anchored closure, or a name the emitter's passes will not move |
+| `Static` | 28 | a `static` getter; a companion property is out of scope for this phase |
+| `SetterOnlyInterface` | 23 | the SETTER's override component reaches a type that declares the setter and no getter |
+| `FluentSetter` | 21 | `setW` returns `this` — a builder, and `x.w = v` discards the result java's callers chain on |
+| `NonVoidSetter` | 5 | `setW` returns something that is not `this` and not `void` |
+
+**`SetterOnlyInterface` is the one that had to be discovered, and it is a fact about SCALA's
+assignment sugar.** `x.prop = v` is scalac's `x.prop_=(v)`, and the assignment's left-hand side names
+the GETTER symbol — so a receiver typed at an interface that declares only the setter has nothing for
+the LHS to name. Java is perfectly happy: `Cullable` declares `setCullingArea` alone and `Group`
+declares the pair. Converted, the pair emits code that cannot compile through a `Cullable`-typed
+receiver, so the pair is refused **as a unit** — §8.5's own whole-or-none invariant, read at the
+component of the SETTER rather than of the getter. 23 pairs on libGDX (`Cullable` through
+`Group#cullingArea`, `Styleable` through 13 `#style` pairs, `DelegateAction`/`ParallelAction` through
+`Action#actor`/`#target`, `Table` through `Actor#debug`, `TextureRegion#u`/`v`/`u2`/`v2` through
+`Sprite`), closing 2 errors at `Container` and `ScrollPane`; the reference hand port keeps
+`Cullable.setCullingArea` verbatim, which is §3.5 confirming the refusal rather than the conversion.
+The same guard holds a CONFIGURED pair, where it is a counted `policy` refusal naming the interface —
+one guard, two lanes, because the two populations are answered by different artifacts and a reader
+needs to know which produced the row.
+
+**Three collisions the derivation meets that a hand-written map cannot.** Each is a skip, counted, and
+each was a real error on the first `Everywhere()` run: an accessor METHOD already claimed by a
+configured pair (`getDragActor -> currentDragActor` beside a derived `getDragActor -> dragActor`); a
+derived property NAME colliding with a configured key; and two getters in ONE type deriving the same
+property (`isTouchable` and `getTouchable` both answering `touchable` — `E120`). All three are the
+same sentence — *a derived name is only a name if nothing else already holds it* — and none of them
+exists while the policy is a table somebody typed.
+
+#### `NullaryArityTransform` — the `()` drop, off the Rejected list under exact parity — BUILT
+
+**What moved it off the list is a MEASUREMENT, not a change of mind.** The rejection below is
+`Emitter-level beautification` — *rendering `getX()` calls as `x` without renaming symbols
+desynchronises the surface from the source map* — and that is still true of an emitter-level
+rendering. Dropping `()` is not one: it is a phase that changes the DECLARATION's arity in the TIR,
+rewrites every call site through the symbol table, records a `Decision` per declaration and files a
+candidate per site considered. The surface and the source map move together because the symbol moves;
+what the rejection refuses is a printer, and this is not a printer.
+
+**And what asked for it is the exact-parity reading of the hand port.** sge's
+`docs/contributing/conversion-rules.md` states no rule about parentheses at all — the convention is
+EMPIRICAL, read off what the hand port actually writes: **1,358 parenless `def`s beside 1,212 that
+keep `()`** in `../sge/sge/src/main/scala`. That the split is roughly even is the point. There is no
+blanket convention to copy; what sge writes parenless is the population a reader would call an
+accessor, and a mechanical port cannot read intent, so the phase's predicate is STRUCTURAL and
+deliberately narrower than sge's own hand:
+
+> a method with exactly one EMPTY parameter clause, a non-`void` result, a body containing no
+> `Tree.Assign` and no `Tree.IncDec` and no call carrying arguments, whose override component is
+> unanchored and every one of whose members satisfies the same test.
+
+**That over-refuses on purpose.** A call to a pure nullary helper is still a call with a callee this
+phase has not proved anything about, so the body test refuses it; §8.5's anchor policy read at an
+arity rather than at a name — *an over-refusal is a counted skip an agent can see; an under-refusal
+is a silent contract break*, and here the break is silent twice over, because both the parenless and
+the parenful form are valid scala and neither moves an error count.
+
+**An ABSTRACT method is never getter-like, and that is a rule rather than a consequence of having no
+body to read.** Its arity is part of its contract: a SAM ascription reads the interface's declared
+shape, so an interface whose single method loses its `()` stops matching every lambda written against
+it. Measured at **38 errors** — `PoolSupplier.get()`, `Comparator.compare()` and their family —
+before `d.rhs` was made a refusal rather than an unknown.
+
+**Three guards, whole-or-none per component.** libGDX core at `scope = Everywhere()`:
+**176 converted / 1,693 refused** over 1,869 considered.
+
+| guard | rows | what it saw |
+|---|---|---|
+| `ComponentPartial` | 837 | the override component does not qualify WHOLE — `def size` does not implement `def size()`, so half a component is a broken edge |
+| `SideEffectingBody` | 541 | an assignment, an increment, or a call carrying arguments |
+| `AnchoredClosure` | 315 | the component reaches an unparsed or resolution-root declaration — `java.lang.Object#toString`, `java.util.Iterator#hasNext`, every shim family (§4.5) |
+
+`ComponentPartial` being the largest of the three is the derivation telling the truth about a java
+library: most nullary getters in libGDX are declared on an interface and implemented below, and the
+abstract half can never qualify. It is also why the refusal is filed for EVERY member of the declined
+component rather than once for the component — the denominator has to be the sites, or the lane
+reports a ratio nobody can act on.
+
+**Kind, ordering and the surface.** §1(b): the mechanism is universal, the scope is per-library, the
+default `Only(Set.empty)` is the no-op, and `Everywhere()` is what the libGDX base declares. It runs
+AFTER `bean-properties` — which drops `()` for its own pairs and must not compete for the same
+declarations — and BEFORE `package-rename`, which runs last (§4.56). It changes emitted SIGNATURES,
+so it implements `SurfacePolicy` and `MergeablePolicy`: two modules scoping it differently emit
+signatures that each compile alone and cannot compile together (§1.5). `accountedBy` names
+`IdiomCheck.Residue`, so `rewrite-callsites` can see a run in which the phase moved declarations and
+the lane did not record.
 
 #### The design, as written before it was built
 
@@ -3430,16 +3566,26 @@ The config shape extends compatibly rather than replacing: `redirects { "a.B" = 
 inside an entry. Deciding the shape by CATCHING the error the other reader throws would have turned
 a genuine shape mistake into a silent fallback.
 
-**Rejected.** Blanket bean-pair auto-detection (the negative space above). `var x` as the primary target
-(deferred, above). Renaming the setter into an overload of `x` — loses assignment syntax and collides in
-one namespace. **Emitter-level beautification** — rendering `getX()` calls as `x` without renaming
-symbols desynchronises the surface from the source map, and the emitted *surface* is what an adopter
-consumes. A second scope knob beside the pairs map (two homes for one policy) — restated here because
-it keeps being asked for: the pairs map IS the include list, `PolicyBinder` already reports an entry
-that named nothing or named only an external, and a `RuleScope` beside it would give one decision two
-homes and let a pair be listed and then silently scoped out. Per-call-site decisions
-(the diff shows the site; the policy lives at the declaration). Building the graph inside the emitter —
-its copy is post-§4.55, private, unavailable to transforms, and §8.3 wants it too.
+**Rejected.** `var x` as the primary target (deferred, above). Renaming the setter into an overload of
+`x` — loses assignment syntax and collides in one namespace. **Emitter-level beautification** —
+rendering `getX()` calls as `x` without renaming symbols desynchronises the surface from the source
+map, and the emitted *surface* is what an adopter consumes; this is the one that keeps being
+misquoted, so read it precisely: it refuses a PRINTER, and both of the mechanisms above move the
+SYMBOL. Per-call-site decisions (the diff shows the site; the policy lives at the declaration).
+Building the graph inside the emitter — its copy is post-§4.55, private, unavailable to transforms,
+and §8.3 wants it too.
+
+**Two entries LEFT this list, both re-measured under exact parity, and each says what changed.**
+*Blanket bean-pair auto-detection*, and *a second scope knob beside the pairs map* with it: the
+argument was that the pairs map IS the include list, and that argument is about a policy somebody
+types — it does not survive a library that declares 1,420 pairs against a 132-row census, and the
+`RuleScope` is not a second home for the map's decision but a different decision (*derive the rest*),
+with the map winning wherever the two meet. *The `()` drop*, which was never stated as its own line
+and lived inside the sentence *no arity change* in the five-gaps list above: that sentence is a fact
+about the four rename passes in the emitter's constructor and stays true of them, and the arity change
+is now a PHASE, with a structural predicate, three counted guards and its own decision rows. Both
+enablements are measured on the base and on every dependent, and neither is a knob a port gets by
+default.
 
 ### 8.6 Nullability — three stages, union floor first
 

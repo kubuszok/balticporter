@@ -10679,3 +10679,74 @@ member digests moved. 44 specs pass (21 wrapper + 23 union). `nullability-bounda
 `overload-risk 70 -> 112` on gdx-test are pre-existing from 1.1b/1.1c (verified by reverting: both
 counts are the same in the 1.1c-only state). Baselines stale -- the gdx-test-measure lane was never
 re-baselined after waves 1.1b/1.1c.
+
+**Waves 1.2c–1.2f — the accessor surface derived rather than transcribed** (2026-08-27). Four
+commits that turn §8.5's property policy from a table into a derivation, plus the arity half the
+Rejected list had been carrying. Numbers are the libGDX base unless a line names another lane.
+
+**1.2c — `BeanPropertyTransform(scope: RuleScope)`.** The pairs map was an include list somebody
+typed: **132** harvested census rows against the **1,420** accessor pairs libGDX actually declares.
+The scope derives the rest by java's own convention and the map still WINS at the same property or
+the same accessor METHOD, so a stated policy is never overruled and `neverFired` stays honest.
+Default `Only(Set.empty)` is the no-op (§1's ADD rule — a derivation MINTS names); the `detect=`
+fingerprint segment is omitted at the default and deliberately NOT at `Everywhere(Set.empty)`, which
+would make *derives over everything* and *does not run* compare equal (CT9). Three collisions a
+typed map cannot meet, each a counted skip and each a real error on the first run: an accessor
+claimed by a configured key (`getDragActor -> currentDragActor` beside a derived
+`getDragActor -> dragActor`), a derived name colliding with a configured key, and two getters in one
+type deriving one property (`isTouchable`/`getTouchable` → `touchable`, `E120`).
+
+**1.2d — the two engine rules the `Everywhere()` seams needed: gdx `23 -> 0` errors.**
+
+1. **`SetterOnlyInterface`** (in `detect`, and in `validate` for configured pairs): `x.prop = v` is
+   scalac's `x.prop_=(v)` and the assignment's LHS names the GETTER, so a pair whose SETTER
+   component reaches a type declaring the setter without a getter is refused **as a unit**. 23 pairs
+   (`Cullable` via `Group#cullingArea`, `Styleable` via 13 `#style` pairs,
+   `DelegateAction`/`ParallelAction` via `Action#actor`/`#target`, `Table` via `Actor#debug`,
+   `TextureRegion#u`/`v`/`u2`/`v2` via `Sprite`), closing the `Container` and `ScrollPane` errors
+   through a `Cullable`-typed receiver. The hand port keeps `Cullable.setCullingArea` verbatim (§3.5
+   confirming the refusal).
+2. **The implementation-pair exemption is ABSTRACT-ONLY** (`d.paramss.isEmpty && d.rhs.isEmpty` in
+   `TirEmitter.resolveFieldShadowing`). A CONCRETE parameterless `def` is a derived getter over its
+   own owner's `$field`, so a descendant's same-name field is java's plain shadow over unrelated
+   storage, and a `var` cannot override a concrete `def` at all — `Sprite#rotation` under
+   `ParticleEmitter`, `Table#skin` under `Dialog`: 2 rows, and `RefChecks`-only, so invisible until
+   the port is at 0 typer errors (§3).
+
+BeanDetect on the base: **1,420 converted / 235 refused** — 158 `RenameRefused`, 28 `Static`, 23
+`SetterOnlyInterface`, 21 `FluentSetter`, 5 `NonVoidSetter`. BeanCollapse 60 / 77.
+
+**1.2e — C16.1 CLOSED, and `EntitySystem#engine` back on.** Root cause in one sentence: the
+capture-rename pass populated `enclosedBy` only from `transformDefDef`/`transformLambda`, and
+`TestFrameworkTransform` inlines a `@Test` body as `test("…")({ block })` — a curried `Apply` with a
+`Block` argument, neither shape — so anonymous classes inside converted tests had no entry and the
+ambiguity rule was blind to them; a `discoverScope` post-pass over class-body statements now finds
+them, and it runs only where unenclosed anonymous classes exist. The configured pair was withheld
+through 1.2d for exactly this and is re-enabled here: it is redundant for the RENAME (the derivation
+finds it) and kept as the port's stated policy plus a `neverFired` line if the accessor shape moves
+upstream. ashley: **0 errors, 108 / 2 / 2** (unchanged); `api-parity(accessor)` 2 -> 1.
+
+**1.2f — `NullaryArityTransform`.** sge states no rule about parentheses in
+`docs/contributing/conversion-rules.md`; the convention is EMPIRICAL and not uniform — **1,358**
+parenless `def`s beside **1,212** that keep `()` in `../sge/sge/src/main/scala` — so the predicate is
+structural and deliberately narrower than the hand port's own: one empty parameter clause, a
+non-`void` result, no `Tree.Assign`/`Tree.IncDec` and no call carrying arguments in the body, an
+unanchored component, and every member of that component satisfying the same test. An ABSTRACT method
+is never getter-like, as a RULE and not as a consequence of having no body: its arity is what a SAM
+ascription reads, measured at **38 errors** (`PoolSupplier.get()`, `Comparator.compare()`) before
+`d.rhs` became a refusal. Base: **176 converted / 1,693 refused** over 1,869 considered — 837
+`ComponentPartial`, 541 `SideEffectingBody`, 315 `AnchoredClosure`. `ComponentPartial` leading is the
+derivation telling the truth about a java library: most nullary getters are declared on an interface
+and implemented below, and the abstract half can never qualify.
+
+**The wave's numbers.** gdx **0 errors** (JVM/JS/Native), **10,890** base member digests moved (the
+`Everywhere()` blast, which is what a derivation over 1,420 pairs costs and is why it is measured with
+`just measure-all` and not on the port it was aimed at); gdx-test **217 / 4**; ashley **108 / 2 / 2**.
+`idiom(residue)` 0, `policy` 3 = 3. §1 grep gate 0.
+
+**Do NOT retry.** *An emitter-level rendering of `getX()` as `x`* — §8.5's Rejected list still holds
+for a printer, and both mechanisms here move the SYMBOL instead, which is why they were admissible.
+*A blanket derivation with no `RuleScope`* — it would put minted names on every port in the corpus to
+serve one, which is exactly the ADD rule's reason for the `Only(Set.empty)` default. *An
+implementation-pair exemption read off `paramss` alone* — it is the shape a derived CONCRETE getter
+makes common, and it costs 2 `RefChecks` rows that no typer error and no moved count can show.
