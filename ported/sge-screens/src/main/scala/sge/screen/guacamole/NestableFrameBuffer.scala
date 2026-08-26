@@ -54,15 +54,16 @@ class NestableFrameBuffer(
     hasStencil: Boolean,
 )(using sge.Sge) extends sge.graphics.glutils.FrameBuffer(format, width, height, depth, hasStencil):
 
-  def this(format: sge.graphics.Pixmap.Format, width: Int, height: Int, hasDepth: Boolean)(using sge.Sge) =
+  def this(format: sge.graphics.Pixmap.Format, width: Int, height: Int, hasDepth: Boolean)(using sge.Sge) = {
     this(format, width, height, hasDepth, false)
 
+  }
   private var previousFBOHandle: Int      = -1
   private var previousViewport: Array[Int] = new Array[Int](4)
   private var bound: Boolean               = false
 
   /** Binds the framebuffer and sets the viewport, remembering what was bound before. */
-  override def begin(): Unit =
+  override def begin(): Unit = {
     Preconditions.checkState(!bound, "end() has to be called before another draw can begin!")
     bound = true
 
@@ -73,34 +74,40 @@ class NestableFrameBuffer(
     setFrameBufferViewport()
 
   /** Upstream deprecates this — it does not support nesting; `begin()` is the entry point. */
+  }
   @deprecated("does not support nesting — use begin()", "")
-  override def bind(): Unit =
+  override def bind(): Unit = {
     scala.Predef.summon[sge.Sge].graphics.gl20.glBindFramebuffer(sge.graphics.GL20.GL_FRAMEBUFFER, this.framebufferHandle)
 
   /** Rebinds the PREVIOUS framebuffer — not the default one — and restores its viewport. */
-  override def `end`(): Unit =
+  }
+  override def `end`(): Unit = {
     `end`(previousViewport(0), previousViewport(1), previousViewport(2), previousViewport(3))
 
-  override def `end`(x: Int, y: Int, w: Int, h: Int): Unit =
+  }
+  override def `end`(x: Int, y: Int, w: Int, h: Int): Unit = {
     Preconditions.checkState(bound, "begin() has to be called first!")
     bound = false
 
-    if GLUtils.getBoundFboHandle() != this.framebufferHandle then
+    if (GLUtils.getBoundFboHandle() != this.framebufferHandle) {
       throw new IllegalStateException(
         "The currently bound framebuffer (" + GLUtils.getBoundFboHandle() +
           ") doesn't match this one. Make sure the nested framebuffers are closed in the same " +
           "order they were opened in!")
 
+    }
     scala.Predef.summon[sge.Sge].graphics.gl20.glBindFramebuffer(sge.graphics.GL20.GL_FRAMEBUFFER, previousFBOHandle)
     scala.Predef.summon[sge.Sge].graphics.gl20.glViewport(x, y, w, h)
 
   /** Building an FBO binds it; upstream restores what was bound before, and so does this. */
-  override def build(): Unit =
+  }
+  override def build(): Unit = {
     val previous = GLUtils.getBoundFboHandle()
     super.build()
     scala.Predef.summon[sge.Sge].graphics.gl20.glBindFramebuffer(sge.graphics.GL20.GL_FRAMEBUFFER, previous)
 
   /** whether this framebuffer was created with a depth buffer. */
+  }
   def hasDepth(): Boolean = depth
 
   def isBound(): Boolean = bound

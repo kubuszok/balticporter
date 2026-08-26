@@ -18,10 +18,12 @@ trait MessageProvider {
 
 object MessageProvider {
   val DEFAULT: MessageProvider = new MessageProvider {
-    override def message(key: String, defaultText: String, params: Any*): String =
-      if ((params.length > 0) && (defaultText.indexOf('{') >= 0)) then
+    override def message(key: String, defaultText: String, params: Any*): String = {
+      if (((params.length > 0) && (defaultText.indexOf('{') >= 0))) {
         java.text.MessageFormat.format(defaultText, params.map(_.asInstanceOf[AnyRef])*)
+      }
       else defaultText
+    }
   }
 
 }

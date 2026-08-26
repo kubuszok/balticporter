@@ -41,7 +41,7 @@ import sge.screen.transition.{ScreenTransition, TimedTransition}
 import sge.screen.transition.impl.SlidingDirection
 import sge.screen.utils.BasicInputMultiplexer
 
-class ScreenmanagerSuite extends munit.FunSuite:
+class ScreenmanagerSuite extends munit.FunSuite {
 
   /** The base port threads libGDX's `Gdx` global as a `using` context (DESIGN.md §8.4), and
     * `ScreenManager` is one of the classes it threads — so constructing one needs a context. This
@@ -184,7 +184,7 @@ class ScreenmanagerSuite extends munit.FunSuite:
   // The screen and transition lifecycle — pure state, so it runs headless.
   // ---------------------------------------------------------------------------------------
 
-  private class RecordingScreen extends ManagedScreen:
+  private class RecordingScreen extends ManagedScreen {
     val calls = scala.collection.mutable.ArrayBuffer.empty[String]
     override def show(): Unit                          = calls += "show"
     override def hide(): Unit                          = calls += "hide"
@@ -194,6 +194,7 @@ class ScreenmanagerSuite extends munit.FunSuite:
     override def resume(): Unit                        = calls += "resume"
     override def close(): Unit                         = calls += "dispose"
 
+  }
   test("ManagedScreen: the clear colour defaults to BLACK and input processors start empty") {
     val s = new RecordingScreen
     assertEquals(s.getClearColor(), sge.graphics.Color.BLACK)
@@ -310,5 +311,8 @@ class ScreenmanagerSuite extends munit.FunSuite:
     assert(!frag.contains("gl_FragColor"), frag)
   }
 
-  private def assertEqualsFloat(actual: Float, expected: Float, delta: Float)(using munit.Location): Unit =
+  private def assertEqualsFloat(actual: Float, expected: Float, delta: Float)(using munit.Location): Unit = {
     assert(Math.abs(actual - expected) <= delta, s"expected $expected +/- $delta but got $actual")
+
+  }
+}

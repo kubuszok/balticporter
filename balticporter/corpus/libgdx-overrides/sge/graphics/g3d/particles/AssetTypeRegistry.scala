@@ -23,7 +23,7 @@ import scala.collection.mutable
   * Keys come from `Class#getName` (portable on all three backends) — the same expression
   * `AssetData.write` uses to produce them, so a name written by this port always reads back.
   */
-object AssetTypeRegistry:
+object AssetTypeRegistry {
 
   private val byName: mutable.HashMap[String, Class[?]] = mutable.HashMap.empty
 
@@ -46,3 +46,4 @@ object AssetTypeRegistry:
     classOf[sge.graphics.g3d.Model],
     classOf[sge.graphics.g3d.particles.ParticleEffect],
   )
+}

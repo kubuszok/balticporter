@@ -47,7 +47,7 @@ package sge.gltf.data.extensions
   * `GdxRuntimeException` java raised, naming the registry — which is the actionable message, where
   * a reflective retry on Scala.js or Native would be a link error.
   */
-object GLTFExtensionFactories:
+object GLTFExtensionFactories {
 
   private val factories = collection.mutable.Map.empty[Class[?], () => AnyRef]
 
@@ -67,9 +67,11 @@ object GLTFExtensionFactories:
 
   /** The registered factory, or the `GdxRuntimeException` java raised — never a silent `null`. */
   def create[T <: AnyRef](extensionType: Class[T]): T =
-    factories.get(extensionType) match
+    factories.get(extensionType) match {
       case Some(f) => f().asInstanceOf[T]
       case None =>
         throw new sge.utils.GdxRuntimeException(
           "no factory registered for glTF material extension " + extensionType.getName +
             " — register one with GLTFExtensionFactories.register (this port has no reflection)")
+    }
+}

@@ -15,7 +15,7 @@ import sge.vfx.effects.util.{GammaThresholdEffect, MixEffect}
   *
   * Nothing here touches GL: an enum constant's initialisation allocates only the constant.
   */
-class VfxEnumSuite extends munit.FunSuite:
+class VfxEnumSuite extends munit.FunSuite {
 
   test("ordinal() is the DECLARATION INDEX, and CrtEffect's are what its shader is written against") {
     assertEquals(CrtEffect.LineStyle.CROSSLINE_HARD.ordinal(), 0)
@@ -26,8 +26,9 @@ class VfxEnumSuite extends munit.FunSuite:
   }
 
   test("ordinal() agrees with the position in values(), for every enum in the library") {
-    def check[A](vs: scala.Array[A], ordinalOf: A => Int): Unit =
+    def check[A](vs: scala.Array[A], ordinalOf: A => Int): Unit = {
       vs.zipWithIndex.foreach((v, i) => assertEquals(ordinalOf(v), i))
+    }
     check(CrtEffect.LineStyle.values, (x: CrtEffect.LineStyle) => x.ordinal())
     check(CrtEffect.SizeSource.values, (x: CrtEffect.SizeSource) => x.ordinal())
     check(GaussianBlurEffect.BlurType.values, (x: GaussianBlurEffect.BlurType) => x.ordinal())
@@ -83,3 +84,5 @@ class VfxEnumSuite extends munit.FunSuite:
     assertEquals(CrtEffect.LineStyle.VERTICAL_HARD, CrtEffect.LineStyle.VERTICAL_HARD)
     assertNotEquals[Any, Any](CrtEffect.LineStyle.VERTICAL_HARD, CrtEffect.LineStyle.VERTICAL_SMOOTH)
   }
+
+}

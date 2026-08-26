@@ -22,16 +22,18 @@ package sge.vfx.utils
   * `ValueArrayMap` and the dual iterator outright, so it has nothing to say about any of the three
   * (CLAUDE.md §3.5 — a skip is not a solution).
   */
-class PrioritizedArraySuite extends munit.FunSuite:
+class PrioritizedArraySuite extends munit.FunSuite {
 
-  private def of(pairs: (String, Int)*): PrioritizedArray[String] =
+  private def of(pairs: (String, Int)*): PrioritizedArray[String] = {
     val a = new PrioritizedArray[String]()
     pairs.foreach((item, p) => a.add(item, p))
     a
 
-  private def items(a: PrioritizedArray[String]): List[String] =
+  }
+  private def items(a: PrioritizedArray[String]): List[String] = {
     (0 until a.size()).map(a.get).toList
 
+  }
   test("items are ordered by ASCENDING priority, whatever order they arrive in") {
     assertEquals(items(of("low" -> 10, "high" -> 1, "mid" -> 5)), List("high", "mid", "low"))
   }
@@ -122,7 +124,7 @@ class PrioritizedArraySuite extends munit.FunSuite:
     val a  = of("low" -> 10, "high" -> 1, "mid" -> 5)
     val it = a.iterator()
     val seen = List.newBuilder[String]
-    while it.hasNext() do seen += it.next()
+    while (it.hasNext()) seen += it.next()
     assertEquals(seen.result(), List("high", "mid", "low"))
   }
 
@@ -138,11 +140,12 @@ class PrioritizedArraySuite extends munit.FunSuite:
     // consecutive full walks must both see everything — the alternating iterator1/iterator2 dance
     // exists precisely to make that true.
     val a = of("a" -> 1, "b" -> 2)
-    def walk(): List[String] =
+    def walk(): List[String] = {
       val it = a.iterator()
       val b  = List.newBuilder[String]
-      while it.hasNext() do b += it.next()
+      while (it.hasNext()) b += it.next()
       b.result()
+    }
     assertEquals(walk(), List("a", "b"))
     assertEquals(walk(), List("a", "b"))
   }
@@ -169,3 +172,5 @@ class PrioritizedArraySuite extends munit.FunSuite:
     assertEquals(a.toString(), "[y[1], x[2]]")
     assertEquals(a.toString(" | "), "y[1] | x[2]")
   }
+
+}

@@ -45,10 +45,11 @@ final case class Sge(
   net: sge.Net,
 )
 
-object Sge:
+object Sge {
 
   /** Sugar for `summon[Sge]`, so a service reads `sge.Sge().graphics`. The emitted code does NOT
     * use it — `reader = "summon"` is what this port configures, because `summon` needs no import
     * and no companion — but a consumer writing against the port does, and the reference hand port
     * declares exactly this. */
   inline def apply()(using s: Sge): Sge = s
+}

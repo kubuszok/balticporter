@@ -28,11 +28,12 @@ import java.io.{InputStream, Reader, StringWriter, Writer}
   * paths are inert until a codec is wired. That is deliberate — a stub that quietly produced empty
   * objects would be far worse than one that names what is missing.
   */
-class Json:
+class Json {
 
-  def this(outputType: OutputType) =
+  def this(outputType: OutputType) = {
     this()
     setOutputType(outputType)
+  }
 
   private var writer: JsonWriter               = null
   private var reader: JsonReader               = new JsonReader
@@ -66,13 +67,15 @@ class Json:
   def setSortFields(sortFields: Boolean): Unit                   = this.sortFields = sortFields
   def setUsePrototypes(usePrototypes: Boolean): Unit             = this.usePrototypes = usePrototypes
   def setTypeName(typeName: String): Unit                        = this.typeName = typeName
-  def setQuoteLongValues(quoteLongValues: Boolean): Unit =
+  def setQuoteLongValues(quoteLongValues: Boolean): Unit = {
     this.quoteLongValues = quoteLongValues
-    if this.writer != null then this.writer.setQuoteLongValues(quoteLongValues)
+    if (this.writer != null) { this.writer.setQuoteLongValues(quoteLongValues) }
+  }
 
-  def setOutputType(outputType: OutputType): Unit =
+  def setOutputType(outputType: OutputType): Unit = {
     this.outputType = outputType
-    if this.writer != null then this.writer.setOutputType(outputType)
+    if (this.writer != null) { this.writer.setOutputType(outputType) }
+  }
 
   def setDefaultSerializer(defaultSerializer: Json.Serializer[?]): Unit =
     this.defaultSerializer = defaultSerializer
@@ -89,9 +92,10 @@ class Json:
   def getSerializer[T](`type`: Class[T]): Json.Serializer[T] =
     this.classToSerializer.get(`type`).asInstanceOf[Json.Serializer[T]]
 
-  def addClassTag(tag: String, `type`: Class[?]): Unit =
+  def addClassTag(tag: String, `type`: Class[?]): Unit = {
     this.tagToClass.put(tag, `type`)
     this.classToTag.put(`type`, tag)
+  }
 
   def getClass(tag: String): Class[?] = this.tagToClass.get(tag)
   def getTag(`type`: Class[?]): String = this.classToTag.get(`type`)
@@ -100,13 +104,15 @@ class Json:
   def setElementType(`type`: Class[?], fieldName: String, elementType: Class[?]): Unit = ()
   def setDeprecated(`type`: Class[?], fieldName: String, deprecated: Boolean): Unit    = ()
 
-  def setWriter(writer: Writer): Unit =
-    val jw = writer match
+  def setWriter(writer: Writer): Unit = {
+    val jw = writer match {
       case w: JsonWriter => w
       case w             => new JsonWriter(w)
+    }
     jw.setOutputType(this.outputType)
     jw.setQuoteLongValues(this.quoteLongValues)
     this.writer = jw
+  }
 
   def getWriter(): JsonWriter    = this.writer
   def setReader(reader: JsonReader): Unit = this.reader = reader
@@ -115,30 +121,35 @@ class Json:
   // ---- explicit write path (real — drives the ported JsonWriter) ----------
   def writeObjectStart(): Unit                    = this.writer.`object`()
   def writeObjectStart(name: String): Unit        = this.writer.`object`(name)
-  def writeObjectStart(actualType: Class[?], knownType: Class[?]): Unit =
+  def writeObjectStart(actualType: Class[?], knownType: Class[?]): Unit = {
     this.writer.`object`()
-    if knownType == null || knownType != actualType then writeType(actualType)
-  def writeObjectStart(name: String, actualType: Class[?], knownType: Class[?]): Unit =
+    if (knownType == null || knownType != actualType) { writeType(actualType) }
+  }
+  def writeObjectStart(name: String, actualType: Class[?], knownType: Class[?]): Unit = {
     this.writer.name(name)
     writeObjectStart(actualType, knownType)
+  }
   def writeObjectEnd(): Unit  = this.writer.pop()
   def writeArrayStart(): Unit = this.writer.array()
   def writeArrayStart(name: String): Unit = this.writer.array(name)
   def writeArrayEnd(): Unit   = this.writer.pop()
 
-  def writeType(`type`: Class[?]): Unit =
-    if this.typeName != null then
-      val tag = if getTag(`type`) != null then getTag(`type`) else `type`.getName
+  def writeType(`type`: Class[?]): Unit = {
+    if (this.typeName != null) {
+      val tag = if (getTag(`type`) != null) { getTag(`type`) } else { `type`.getName }
       this.writer.set(this.typeName, tag)
+    }
+  }
 
-  def writeValue(value: Object): Unit =
-    if value == null then this.writer.value(null)
-    else writeValue(value, value.getClass, null)
+  def writeValue(value: Object): Unit = {
+    if (value == null) { this.writer.value(null) }
+    else { writeValue(value, value.getClass, null) }
+  }
 
   def writeValue(value: Object, knownType: Class[?]): Unit = writeValue(value, knownType, null)
 
-  def writeValue(value: Object, knownType: Class[?], elementType: Class[?]): Unit =
-    value match
+  def writeValue(value: Object, knownType: Class[?], elementType: Class[?]): Unit = {
+    value match {
       case null                        => this.writer.value(null)
       case v: (String | java.lang.Number | java.lang.Boolean | java.lang.Character) =>
         this.writer.value(v)
@@ -148,21 +159,26 @@ class Json:
         writeObjectEnd()
       case v =>
         val serializer = this.classToSerializer.get(v.getClass)
-        if serializer != null then
+        if (serializer != null) {
           serializer.asInstanceOf[Json.Serializer[Object]].write(this, v, knownType)
-        else codec("Json.writeValue of " + v.getClass.getName)
+        } else { codec("Json.writeValue of " + v.getClass.getName) }
+    }
+  }
 
-  def writeValue(name: String, value: Object): Unit =
+  def writeValue(name: String, value: Object): Unit = {
     this.writer.name(name)
     writeValue(value)
+  }
 
-  def writeValue(name: String, value: Object, knownType: Class[?]): Unit =
+  def writeValue(name: String, value: Object, knownType: Class[?]): Unit = {
     this.writer.name(name)
     writeValue(value, knownType, null)
+  }
 
-  def writeValue(name: String, value: Object, knownType: Class[?], elementType: Class[?]): Unit =
+  def writeValue(name: String, value: Object, knownType: Class[?], elementType: Class[?]): Unit = {
     this.writer.name(name)
     writeValue(value, knownType, elementType)
+  }
 
   // ---- reflective paths (the Kindlings swap point) -----------------------
   def writeFields(`object`: Object): Unit                                        = codec("Json.writeFields")
@@ -225,26 +241,30 @@ class Json:
   // ---- whole-document helpers -------------------------------------------
   def toJson(`object`: Object): String                                       = toJson(`object`, null, null)
   def toJson(`object`: Object, knownType: Class[?]): String                  = toJson(`object`, knownType, null)
-  def toJson(`object`: Object, knownType: Class[?], elementType: Class[?]): String =
+  def toJson(`object`: Object, knownType: Class[?], elementType: Class[?]): String = {
     val buffer = new StringWriter
     toJson(`object`, knownType, elementType, buffer)
     buffer.toString
+  }
 
   def toJson(`object`: Object, file: FileHandle): Unit                                = toJson(`object`, null, null, file)
   def toJson(`object`: Object, knownType: Class[?], file: FileHandle): Unit           = toJson(`object`, knownType, null, file)
-  def toJson(`object`: Object, knownType: Class[?], elementType: Class[?], file: FileHandle): Unit =
+  def toJson(`object`: Object, knownType: Class[?], elementType: Class[?], file: FileHandle): Unit = {
     val buffer = new StringWriter
     toJson(`object`, knownType, elementType, buffer)
     file.writeString(buffer.toString, false)
+  }
 
   def toJson(`object`: Object, writer: Writer): Unit                      = toJson(`object`, null, null, writer)
   def toJson(`object`: Object, knownType: Class[?], writer: Writer): Unit = toJson(`object`, knownType, null, writer)
-  def toJson(`object`: Object, knownType: Class[?], elementType: Class[?], writer: Writer): Unit =
+  def toJson(`object`: Object, knownType: Class[?], elementType: Class[?], writer: Writer): Unit = {
     setWriter(writer)
-    try writeValue(`object`, knownType, elementType)
-    finally
+    try { writeValue(`object`, knownType, elementType) }
+    finally {
       this.writer.close()
       this.writer = null
+    }
+  }
 
   def prettyPrint(`object`: Object): String                  = prettyPrint(`object`, 0)
   def prettyPrint(json: String): String                      = prettyPrint(json, 0)
@@ -256,8 +276,9 @@ class Json:
     prettyPrint(toJson(`object`), settings)
   def prettyPrint(json: String, settings: JsonValue.PrettyPrintSettings): String =
     this.reader.parse(json).prettyPrint(settings)
+}
 
-object Json:
+object Json {
 
   /** a type's custom read/write strategy — the Kindlings codec's counterpart.
     *
@@ -272,15 +293,19 @@ object Json:
     * So the erased contract is not a weakening for convenience; it is the contract libGDX's call
     * sites actually depend on, and writing it down is what lets them port at all. An override
     * MAY still narrow the result (covariant return), and the ported `Color` serializer does. */
-  trait Serializer[T]:
+  trait Serializer[T] {
     def write(json: Json, `object`: T, knownType: Class[?]): Unit
     def read(json: Json, jsonData: JsonValue, `type`: Class[?]): Object
+  }
 
-  abstract class ReadOnlySerializer[T] extends Serializer[T]:
+  abstract class ReadOnlySerializer[T] extends Serializer[T] {
     def write(json: Json, `object`: T, knownType: Class[?]): Unit = ()
     def read(json: Json, jsonData: JsonValue, `type`: Class[?]): Object
+  }
 
   /** implemented by types that serialize themselves — the non-reflective path, kept fully working. */
-  trait Serializable:
+  trait Serializable {
     def write(json: Json): Unit
     def read(json: Json, jsonData: JsonValue): Unit
+  }
+}

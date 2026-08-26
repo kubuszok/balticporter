@@ -17,7 +17,7 @@ import sge.graphics.Pixmap
   * (`../sge/sge-extension/vfx/src/test/.../VfxFrameBufferQueueISS561Suite`); this port has no
   * `Sge` context to stub, so it stops at the GL line instead and says so.
   */
-class VfxFrameBufferSuite extends munit.FunSuite:
+class VfxFrameBufferSuite extends munit.FunSuite {
 
   /** The base port threads libGDX's `Gdx` global as a `using` context (DESIGN.md §8.4), and
     * `VfxFrameBuffer` is one of the classes gdx-vfx inherits that threading into — so constructing
@@ -157,3 +157,5 @@ class VfxFrameBufferSuite extends munit.FunSuite:
     w.initialize(new VfxFrameBuffer(Format), new VfxFrameBuffer(Format))
     intercept[java.lang.IllegalStateException](w.`end`())
   }
+
+}

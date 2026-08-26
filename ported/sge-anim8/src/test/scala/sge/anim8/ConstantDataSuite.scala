@@ -31,7 +31,7 @@ package sge.anim8
   * the wrong values. A skip is not a model and neither is a solved-but-wrong; this port keeps
   * upstream's own embedding, which is also the one that works on Scala.js and Native.
   */
-class ConstantDataSuite extends munit.FunSuite:
+class ConstantDataSuite extends munit.FunSuite {
 
   test("ENCODED_SNUGGLY is 32768 bytes — a byte[0x8000] palette mapping — with the upstream bytes") {
     val d = ConstantData.ENCODED_SNUGGLY
@@ -103,3 +103,5 @@ class ConstantDataSuite extends munit.FunSuite:
       val mean = m.map(_.toDouble).sum / m.length
       assert(mean > 0.8 && mean < 2.0, s"$n mean $mean is not near 1.0")
   }
+
+}

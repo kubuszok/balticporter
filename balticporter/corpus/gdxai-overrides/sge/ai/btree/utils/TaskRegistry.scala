@@ -48,7 +48,7 @@ package sge.ai.btree.utils
   * Mutable and process-global, because the thing it replaces is too: java's answer came from the
   * classpath, which is one per JVM. Register before parsing.
   */
-object TaskRegistry:
+object TaskRegistry {
 
   /** one `@TaskAttribute` slot, as `findMetadata` needs to see it.
     *
@@ -80,14 +80,16 @@ object TaskRegistry:
     *   is not on the classpath, so `openTask`'s own `catch` still turns it into
     *   `GdxRuntimeException("Cannot parse behavior tree!!!", e)` with java's wording.
     */
-  def newTask(className: String): sge.ai.btree.Task[java.lang.Object] =
-    factories.get(className) match
+  def newTask(className: String): sge.ai.btree.Task[java.lang.Object] = {
+    factories.get(className) match {
       case Some(f) => f()
       case None    =>
         throw new sge.utils.reflect.ReflectionException(
           s"no task registered for '$className' — this port resolves task names through " +
             "sge.ai.btree.utils.TaskRegistry rather than through runtime reflection, which the " +
             "libGDX base drops. Register it with TaskRegistry.register(\"" + className + "\", () => …)")
+    }
+  }
 
   /** java's `getAnnotation(clazz, TaskConstraint.class)` + `getFields` + `getDeclaredAnnotation(
     * TaskAttribute.class)`, over the registration table.
@@ -101,30 +103,35 @@ object TaskRegistry:
     * `@TaskConstraint` is found, which `createStackedTask` turns into
     * `"@TaskConstraint annotation not found in '…' class hierarchy"`.
     */
-  def metaOf(clazz: java.lang.Class[?]): Meta =
+  def metaOf(clazz: java.lang.Class[?]): Meta = {
     var c: java.lang.Class[?] = clazz
     var min                   = 0
     var max                   = 0
     var found                 = false
     val attrs                 = scala.collection.mutable.LinkedHashMap.empty[String, Attr]
-    while c != null do
+    while (c != null) {
       val n = c.getName
-      if !found then
+      if (!found) {
         constraints.get(n).foreach { mm => min = mm._1; max = mm._2; found = true }
-      attributes.get(n).foreach(_.foreach(a => if !attrs.contains(a.name) then attrs.put(a.name, a)))
+      }
+      attributes.get(n).foreach(_.foreach(a => if (!attrs.contains(a.name)) { attrs.put(a.name, a) }))
       c = c.getSuperclass.asInstanceOf[java.lang.Class[?]]
-    if found then new Meta(min, max, attrs.values.toArray) else null
+    }
+    if (found) { new Meta(min, max, attrs.values.toArray) } else { null }
+  }
 
   /** java's `ClassReflection.getField(clazz, fieldName)`, restricted to the slots this port knows
     * how to coerce and store. `null` where there is none — `getField`'s substituted body turns that
     * into the `GdxRuntimeException` java raised for a `ReflectionException`. */
-  def fieldOf(clazz: java.lang.Class[?], fieldName: String): TaskField =
+  def fieldOf(clazz: java.lang.Class[?], fieldName: String): TaskField = {
     var c: java.lang.Class[?]  = clazz
     var out: TaskField = null
-    while c != null && out == null do
-      attributes.get(c.getName).foreach(_.foreach(a => if out == null && a.fieldName == fieldName then out = a.field))
+    while (c != null && out == null) {
+      attributes.get(c.getName).foreach(_.foreach(a => if (out == null && a.fieldName == fieldName) { out = a.field }))
       c = c.getSuperclass.asInstanceOf[java.lang.Class[?]]
+    }
     out
+  }
 
   // -------------------------------------------------------------------------------------------
   // registration — what a consumer's own task class needs, and what java needed nothing for
@@ -144,48 +151,54 @@ object TaskRegistry:
   def attribute(className: String, name: String, fieldName: String, required: Boolean,
                 typeName: String,
                 cast: (java.lang.Object, DistributionAdapters) => java.lang.Object,
-                set: (java.lang.Object, java.lang.Object) => Unit): Unit =
+                set: (java.lang.Object, java.lang.Object) => Unit): Unit = {
     val a = new Attr(name, fieldName, required, new TaskField(fieldName, typeName, cast, set))
     attributes.put(className, attributes.getOrElse(className, Nil).filterNot(_.name == name) :+ a)
+  }
 
   // -------------------------------------------------------------------------------------------
   // the coercions — java's `castValue`, one branch per field TYPE rather than one `switch`
   // -------------------------------------------------------------------------------------------
 
   /** `castValue`'s `String` branch (`BehaviorTreeParser.java:437`). */
-  def asString(value: java.lang.Object): java.lang.Object = value match
+  def asString(value: java.lang.Object): java.lang.Object = value match {
     case s: java.lang.String => s
     case _                   => null
+  }
 
   /** `castValue`'s `Boolean` branch (`:433`). */
-  def asBoolean(value: java.lang.Object): java.lang.Object = value match
+  def asBoolean(value: java.lang.Object): java.lang.Object = value match {
     case b: java.lang.Boolean => b
     case _                    => null
+  }
 
   /** `castValue`'s two `Distribution` branches (`:428` for a number, `:442` for a string), which
     * are one function of the target distribution type. The `"constant," + n` spelling is java's
     * own. */
   def asDistribution[T <: sge.ai.utils.random.Distribution](
       value: java.lang.Object, tpe: java.lang.Class[T], adapters: DistributionAdapters,
-  ): java.lang.Object = value match
+  ): java.lang.Object = value match {
     case n: java.lang.Number => adapters.toDistribution("constant," + n, tpe)
     case s: java.lang.String => adapters.toDistribution(s, tpe)
     case _                   => null
+  }
 
   /** `castValue`'s enum branch (`:446`) — the constant whose `name()` equals the string, ignoring
     * case, and `null` where none does. The constants are handed in rather than read off the class,
     * because `Class#getEnumConstants` is reflection and the emitted enum is a sealed hierarchy the
     * JVM does not know is one. */
   def asEnum[T <: java.lang.Object](value: java.lang.Object, constants: Array[T],
-                                    nameOf: T => String): java.lang.Object = value match
+                                    nameOf: T => String): java.lang.Object = value match {
     case s: java.lang.String =>
       var i:   Int              = 0
       var out: java.lang.Object = null
-      while i < constants.length && out == null do
-        if nameOf(constants(i)).equalsIgnoreCase(s) then out = constants(i)
+      while (i < constants.length && out == null) {
+        if (nameOf(constants(i)).equalsIgnoreCase(s)) { out = constants(i) }
         i += 1
+      }
       out
     case _ => null
+  }
 
   // -------------------------------------------------------------------------------------------
   // the built-ins
@@ -201,7 +214,7 @@ object TaskRegistry:
     * so both spellings resolve; the alternative is a library that cannot read its own upstream's
     * data files.
     */
-  private def registerBuiltins(): Unit =
+  private def registerBuiltins(): Unit = {
     // ---- the six @TaskConstraint sites, by their emitted class names ----
     // Task            @TaskConstraint                                  -> defaults (0, MAX_VALUE)
     constrain("sge.ai.btree.Task", 0, java.lang.Integer.MAX_VALUE)
@@ -292,11 +305,14 @@ object TaskRegistry:
       (v, _) => asEnum(v, sge.ai.btree.branch.Parallel.Orchestrator.values(), (o: sge.ai.btree.branch.Parallel.Orchestrator) => o.name()),
       (t, v) => t.asInstanceOf[sge.ai.btree.branch.Parallel[java.lang.Object]].orchestrator =
         v.asInstanceOf[sge.ai.btree.branch.Parallel.Orchestrator])
+  }
 
   /** register one built-in under BOTH the port's emitted FQCN and gdx-ai's upstream one — see
     * [[registerBuiltins]]. */
-  private def both(suffix: String, factory: () => sge.ai.btree.Task[java.lang.Object]): Unit =
+  private def both(suffix: String, factory: () => sge.ai.btree.Task[java.lang.Object]): Unit = {
     register("sge.ai.btree." + suffix, factory)
     register("com.badlogic.gdx.ai.btree." + suffix, factory)
+  }
 
   registerBuiltins()
+}

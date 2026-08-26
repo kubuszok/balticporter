@@ -12,7 +12,7 @@ package sge.vfx.utils
   *
   * The reference hand port does not carry this class, so nothing here is checked against it.
   */
-class CommonUtilsSuite extends munit.FunSuite:
+class CommonUtilsSuite extends munit.FunSuite {
 
   test("compare(int, int) is Integer.compare's three-way answer") {
     assertEquals(CommonUtils.compare(1, 2), -1)
@@ -116,3 +116,5 @@ class CommonUtilsSuite extends munit.FunSuite:
     val xs = scala.Array[java.lang.String]("a", "b", "c")
     (1 to 50).foreach(_ => assert(xs.contains(CommonUtils.random(xs))))
   }
+
+}

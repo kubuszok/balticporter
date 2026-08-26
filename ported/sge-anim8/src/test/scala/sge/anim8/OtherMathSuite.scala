@@ -11,11 +11,12 @@ package sge.anim8
   * Adapted from the reference hand port's own `OtherMathSuite`, with the tolerances kept: these are
   * deliberately approximate functions and the assertions pin them against `java.lang.Math`.
   */
-class OtherMathSuite extends munit.FunSuite:
+class OtherMathSuite extends munit.FunSuite {
 
-  private def near(actual: Float, expected: Float, delta: Float)(using munit.Location): Unit =
+  private def near(actual: Float, expected: Float, delta: Float)(using munit.Location): Unit = {
     assert(Math.abs(actual - expected) <= delta, s"expected $expected +/- $delta but got $actual")
 
+  }
   test("barronSpline maps the unit interval onto itself: 0 -> 0, 1 -> 1") {
     near(OtherMath.barronSpline(0f, 0.5f, 0.5f), 0f, 0.001f)
     near(OtherMath.barronSpline(1f, 0.5f, 0.5f), 1f, 0.001f)
@@ -30,16 +31,18 @@ class OtherMathSuite extends munit.FunSuite:
     // folds everything between.
     var prev = -1f
     var i    = 0
-    while i <= 100 do
+    while (i <= 100) {
       val v = OtherMath.barronSpline(i / 100f, 0.5f, 0.5f)
       assert(v >= prev - 1e-4f, s"barronSpline is not monotonic at ${i / 100f}: $v after $prev")
       prev = v
       i += 1
+    }
   }
 
   test("atan2 approximates Math.atan2 in all four quadrants") {
-    for (y, x) <- List((0f, 1f), (1f, 0f), (1f, 1f), (-1f, 1f), (0f, -1f), (-1f, -1f), (1f, -1f), (-1f, 0f)) do
+    for ((y, x) <- List((0f, 1f), (1f, 0f), (1f, 1f), (-1f, 1f), (0f, -1f), (-1f, -1f), (1f, -1f), (-1f, 0f))) {
       near(OtherMath.atan2(y, x), Math.atan2(y.toDouble, x.toDouble).toFloat, 0.001f)
+    }
   }
 
   test("probit: 0.5 maps to ~0, and it is symmetric about 0.5") {
@@ -52,8 +55,9 @@ class OtherMathSuite extends munit.FunSuite:
 
   test("probitF: 0.5 maps to ~0, and it tracks the double version") {
     assert(Math.abs(OtherMath.probitF(0.5f)) < 0.01f, s"probitF(0.5) was ${OtherMath.probitF(0.5f)}")
-    for p <- List(0.1f, 0.25f, 0.75f, 0.9f) do
+    for (p <- List(0.1f, 0.25f, 0.75f, 0.9f)) {
       near(OtherMath.probitF(p), OtherMath.probit(p.toDouble).toFloat, 0.05f)
+    }
   }
 
   test("cbrt approximates the cube root, including for negatives") {
@@ -71,3 +75,5 @@ class OtherMathSuite extends munit.FunSuite:
     assert(high > 200, s"centralize(255) should stay high, was $high")
     assertEquals(OtherMath.centralize(0.toByte) & 0xff, 0, "centralize(0) must stay at the floor")
   }
+
+}

@@ -6038,6 +6038,18 @@ held to those flags by a fourth compile in every lane (PROGRESS §13, wave 1.0).
 compile under the reference repo's own compiler flags; a syntax error under `-no-indent` or a
 warning promoted to an error by `-Werror` is the lane's to find, not the consumer's to discover.
 
+**The fourth compile — `flags_compile`.** `scripts/_lib.sh` carries `flags_compile`, which runs
+`scala-cli compile` with the reference repo's scalacOptions over the emitted tree, counts errors
+through the same `compile_guard` as the JVM compile, and baselines them as `expected-errors.ref` —
+gated in both directions through `headline` with the same marker-file deferred-exit as the JVM,
+JS and Native compiles. `-Xmacro-settings:*` flags are dropped (macro timeouts, not diagnostics).
+Three flag sets are declared in the Justfile: `sge_strict_flags` (core sge — `SgePlugin.
+defaultScalacOptions` + `strictScalacOptions`), `sge_relaxed_flags` (sge extensions — strict minus
+`-Wunused:…` per `SgePlugin.relaxedSettings`), and `ssg_flags` (ssg ports — `ssg/build.sbt`). 20 of
+23 lanes carry the fourth compile (the three differential lanes are excluded — they compile
+hand-port tests, not emitted code). `baseline-accept` promotes `errors-count.ref` to
+`expected-errors.ref` alongside the other baselines.
+
 ### 8.25 The divergence census and its verdicts
 
 The parity campaign (PROGRESS.md §13) needs every hand-port adjustment turned into a named decision:

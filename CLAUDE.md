@@ -1243,6 +1243,20 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   `run-latest/scalacOptions.txt`. A baseline regression fails the lane; seeded by
   `just baseline-accept <Port>`. The lane is NOT in `measure-all` (expected red until the emitted
   API is at parity).
+- **…AND A FOURTH COMPILE UNDER THE REFERENCE BUILD'S OWN FLAGS, baselined as
+  `expected-errors.ref`.** The reference repo (sge or ssg) compiles with `-no-indent -Werror
+  -Wunused:imports,privates,locals,patvars,nowarn` among others (DESIGN.md §8.24), so a port that is
+  green under scala-cli's defaults and red under those flags is not at the bar. `flags_compile`
+  (`scripts/_lib.sh`) runs `scala-cli compile` with the reference repo's scalacOptions over the same
+  emitted tree, counts errors, and baselines them as `expected-errors.ref` — gated in both directions
+  through `headline` with the same marker-file deferred-exit as the other three compiles.
+  `-Xmacro-settings:*` flags are dropped (macro timeouts, not diagnostics). Three flag sets are
+  declared in the Justfile: `sge_strict_flags` (core sge, from `SgePlugin.strictScalacOptions`),
+  `sge_relaxed_flags` (sge extensions, strict minus `-Wunused:…` per `SgePlugin.relaxedSettings`),
+  and `ssg_flags` (ssg ports, from `ssg/build.sbt`). Every injected shim under
+  `balticporter/corpus/*-overrides/` and `ported/*/src/` and every runtime support file under
+  `balticporter/runtime/` must use brace syntax (`-no-indent`), which is a text change with 0 member
+  digests since injected files are copied, not emitted.
 - **…AND SO IS THE NUMBER OF TESTS THE PORT EMITS, for the same reason and with the same file.** The
   error count was not the only measurement nothing compared. Every test lane already counted what
   each framework would DISCOVER in the emitted Scala against the `@Test` count in the upstream java

@@ -25,25 +25,27 @@ package sge.screen.guacamole
   * `ShaderTransition.resize`, is an instance method of a threaded class, so the context is already
   * in scope there.
   */
-object QuadMeshGenerator:
+object QuadMeshGenerator {
 
-  def createFullScreenQuad(screenWidth: Int, screenHeight: Int, flipY: Boolean)(using sge.Sge): sge.graphics.Mesh =
+  def createFullScreenQuad(screenWidth: Int, screenHeight: Int, flipY: Boolean)(using sge.Sge): sge.graphics.Mesh = {
     createQuad(0, 0, screenWidth.toFloat, screenHeight.toFloat, flipY)
 
-  def createQuad(x: Float, y: Float, width: Float, height: Float, flipY: Boolean)(using sge.Sge): sge.graphics.Mesh =
+  }
+  def createQuad(x: Float, y: Float, width: Float, height: Float, flipY: Boolean)(using sge.Sge): sge.graphics.Mesh = {
     createQuadFromCoordinates(x, y, x + width, y + height, flipY)
 
   /** Coordinate system: y-up. `(x1, y1)` is bottom-left, `(x2, y2)` top-right. */
-  def createQuadFromCoordinates(x1: Float, y1: Float, x2: Float, y2: Float, flipY: Boolean)(using sge.Sge): sge.graphics.Mesh =
+  }
+  def createQuadFromCoordinates(x1: Float, y1: Float, x2: Float, y2: Float, flipY: Boolean)(using sge.Sge): sge.graphics.Mesh = {
     val verts = Array[Float](
       // bottom left
-      x1, y1, 0, 0, if flipY then 0 else 1,
+      x1, y1, 0, 0, if (flipY) 0 else 1,
       // top left
-      x1, y2, 0, 0, if flipY then 1 else 0,
+      x1, y2, 0, 0, if (flipY) 1 else 0,
       // bottom right
-      x2, y1, 0, 1, if flipY then 0 else 1,
+      x2, y1, 0, 1, if (flipY) 0 else 1,
       // top right
-      x2, y2, 0, 1, if flipY then 1 else 0,
+      x2, y2, 0, 1, if (flipY) 1 else 0,
     )
 
     // The attribute list is an ARRAY, not a Scala vararg: the engine emits a Java `T...`
@@ -53,3 +55,6 @@ object QuadMeshGenerator:
       Array(sge.graphics.VertexAttribute.Position(), sge.graphics.VertexAttribute.TexCoords(0)))
     mesh.setVertices(verts)
     mesh
+
+  }
+}

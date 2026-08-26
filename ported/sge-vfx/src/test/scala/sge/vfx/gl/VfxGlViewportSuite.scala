@@ -7,7 +7,7 @@ package sge.vfx.gl
   * The self-returning `set` is what `VfxGLUtils.getViewport()` relies on to hand its shared scratch
   * viewport back to the caller, so "returns THIS instance" is a contract and not a convenience.
   */
-class VfxGlViewportSuite extends munit.FunSuite:
+class VfxGlViewportSuite extends munit.FunSuite {
 
   test("a fresh viewport is all zeroes") {
     val v = new VfxGlViewport()
@@ -40,3 +40,5 @@ class VfxGlViewportSuite extends munit.FunSuite:
     assertEquals(new VfxGlViewport().set(1, 2, 3, 4).toString(),
       "x=1, y=2, width=3, height=4")
   }
+
+}

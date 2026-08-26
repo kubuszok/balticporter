@@ -30,14 +30,15 @@ import java.nio.{ByteBuffer, ByteOrder, IntBuffer}
   * `NestableFrameBuffer`, whose caller IS an instance method of a threaded class: the difference
   * between the two files is entirely the difference between their callers.
   */
-object GLUtils:
+object GLUtils {
 
   /** 16 int elements is the largest reply `glGetIntegerv` can produce. */
-  private val IntBuf: IntBuffer =
+  private val IntBuf: IntBuffer = {
     ByteBuffer.allocateDirect(16 * java.lang.Integer.BYTES).order(ByteOrder.nativeOrder()).asIntBuffer()
 
   /** the name of the currently bound framebuffer (`GL_FRAMEBUFFER_BINDING`); `0` is the default
     * framebuffer. */
+  }
   def getBoundFboHandle(): Int = synchronized {
     sge.Gdx.graphics.gl20.glGetIntegerv(sge.graphics.GL20.GL_FRAMEBUFFER_BINDING, IntBuf)
     IntBuf.get(0)
@@ -48,3 +49,5 @@ object GLUtils:
     sge.Gdx.graphics.gl20.glGetIntegerv(sge.graphics.GL20.GL_VIEWPORT, IntBuf)
     Array(IntBuf.get(0), IntBuf.get(1), IntBuf.get(2), IntBuf.get(3))
   }
+
+}

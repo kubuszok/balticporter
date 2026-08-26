@@ -43,7 +43,7 @@ import sge.gltf.scene3d.model.{CubicQuaternion, CubicVector3, CubicWeightVector,
   * mappings against sge's own `Nullable`-based API; the values are upstream's, the shapes are this
   * port's.
   */
-class GLTFTypesSuite extends munit.FunSuite:
+class GLTFTypesSuite extends munit.FunSuite {
 
   // ---- constants -------------------------------------------------------
   // `static final String`/`int` are constant variables: java INLINES them, and the port emits
@@ -94,13 +94,14 @@ class GLTFTypesSuite extends munit.FunSuite:
 
   // ---- accessor sizes --------------------------------------------------
 
-  private def accessor(t: String, componentType: Int, count: Int = 1): GLTFAccessor =
+  private def accessor(t: String, componentType: Int, count: Int = 1): GLTFAccessor = {
     val a = new GLTFAccessor()
     a.`type` = t
     a.componentType = componentType
     a.count = count
     a
 
+  }
   test("accessorTypeSize counts the elements of each accessor type") {
     assertEquals(GLTFTypes.accessorTypeSize(accessor("SCALAR", GLTFTypes.C_FLOAT)), 1)
     assertEquals(GLTFTypes.accessorTypeSize(accessor("VEC2", GLTFTypes.C_FLOAT)), 2)
@@ -162,10 +163,11 @@ class GLTFTypesSuite extends munit.FunSuite:
     // A `switch` over an enum with a `default:` arm — the fall-out here is a throw the java
     // reaches only for a value neither branch names, so the two false arms and the four true ones
     // must all be read to know the arms did not merge.
-    def sampler(minFilter: java.lang.Integer): sge.gltf.data.texture.GLTFSampler =
+    def sampler(minFilter: java.lang.Integer): sge.gltf.data.texture.GLTFSampler = {
       val s = new sge.gltf.data.texture.GLTFSampler()
       s.minFilter = minFilter
       s
+    }
     assertEquals(GLTFTypes.isMipMapFilter(sampler(9728)), false)
     assertEquals(GLTFTypes.isMipMapFilter(sampler(9729)), false)
     assertEquals(GLTFTypes.isMipMapFilter(sampler(9984)), true)
@@ -265,3 +267,5 @@ class GLTFTypesSuite extends munit.FunSuite:
     val rgba = GLTFTypes.mapColor(Array(0.1f, 0.2f, 0.3f, 0.5f), sge.graphics.Color.BLACK)
     assertEquals(rgba.a, 0.5f)
   }
+
+}

@@ -35,7 +35,7 @@ package sge.utils
   * being the port's own portable `ObjectMap`, so there is no residue for a shared table to drain
   * here either.
   */
-object Pools:
+object Pools {
 
   private final val typePools: ObjectMap[java.lang.Class[?], Pool[?]] =
     new ObjectMap[java.lang.Class[?], Pool[?]]()
@@ -61,7 +61,7 @@ object Pools:
     * context-free global pool registry at all — `Actor.POOLS` and `Actions.ACTION_POOLS` register
     * only context-free types, and its one context-needing pool lives on `SgeHttpClient`, an
     * INSTANCE that already holds the context. */
-  def registerDefaults()(using sge.Sge): Unit =
+  def registerDefaults()(using sge.Sge): Unit = {
     Pools.set(() => new Array[java.lang.Object]())
     Pools.set(() => new sge.scenes.scene2d.utils.ChangeListener.ChangeEvent())
     Pools.set(() => new sge.scenes.scene2d.ui.Table.DebugRect())
@@ -100,6 +100,7 @@ object Pools:
     Pools.set(() => new sge.scenes.scene2d.actions.TimeScaleAction())
     Pools.set(() => new sge.scenes.scene2d.actions.TouchableAction())
     Pools.set(() => new sge.scenes.scene2d.actions.VisibleAction())
+  }
 
   /** Registers an existing pool for the specified type. */
   def set[T <: java.lang.Object](`type`: java.lang.Class[T], pool: Pool[T]): Unit =
@@ -107,12 +108,13 @@ object Pools:
 
   /** Registers a factory-backed pool, keyed by the class of an instance the factory produces.
     * `Pools.set(() => new MyClass, 50)`. */
-  def set[T <: java.lang.Object](factory: () => T, max: Int): Unit =
+  def set[T <: java.lang.Object](factory: () => T, max: Int): Unit = {
     val probe = factory()
     Pools.set(
       probe.asInstanceOf[java.lang.Object].getClass().asInstanceOf[java.lang.Class[T]],
       new DefaultPool[T](() => factory(), 4, max),
     )
+  }
 
   /** Registers a factory-backed pool with the default maximum of 100. */
   def set[T <: java.lang.Object](factory: () => T): Unit = Pools.set(factory, 100)
@@ -124,26 +126,30 @@ object Pools:
   /** The registered pool for `type`. Unlike the Java original this does NOT create one on a miss —
     * a pool cannot construct `T` from a `Class` without reflection. Use the `factory` overload (or
     * `set`) to register one. */
-  def get[T <: java.lang.Object](`type`: java.lang.Class[T]): Pool[T] =
+  def get[T <: java.lang.Object](`type`: java.lang.Class[T]): Pool[T] = {
     val pool = Pools.getOrNull(`type`)
-    if pool == null then
+    if (pool == null) {
       throw new GdxRuntimeException(
         "No Pool registered for " + `type` + " — register one with Pools.set(" +
           `type`.getSimpleName() + "::new), use Pools.get(type, factory), or call " +
           "Pools.registerDefaults() at start-up for the types libGDX itself pools"
       )
+    }
     pool
+  }
 
   /** The registered pool for `type`, creating a factory-backed one on a miss. This is the direct
     * replacement for the Java `get(type, max)` reflective fallback: same shape, but the caller
     * supplies the construction. */
-  def get[T <: java.lang.Object](`type`: java.lang.Class[T], factory: () => T, max: Int): Pool[T] =
+  def get[T <: java.lang.Object](`type`: java.lang.Class[T], factory: () => T, max: Int): Pool[T] = {
     val existing = Pools.getOrNull(`type`)
-    if existing != null then existing
-    else
+    if (existing != null) { existing }
+    else {
       val pool = new DefaultPool[T](() => factory(), 4, max)
       Pools.typePools.put(`type`, pool)
       pool
+    }
+  }
 
   /** As `get(type, factory, max)` with the default maximum of 100. */
   def get[T <: java.lang.Object](`type`: java.lang.Class[T], factory: () => T): Pool[T] = Pools.get(`type`, factory, 100)
@@ -156,27 +162,33 @@ object Pools:
 
   /** Frees an object to the pool registered for its runtime class. `getClass` is supported on every
     * target — only INSTANTIATION from a `Class` is not — so the lookup side is unchanged. */
-  def free(`object`: java.lang.Object): Unit =
-    if `object` == null then throw new java.lang.IllegalArgumentException("object cannot be null.")
+  def free(`object`: java.lang.Object): Unit = {
+    if (`object` == null) { throw new java.lang.IllegalArgumentException("object cannot be null.") }
     val pool = Pools.typePools.get(`object`.getClass())
-    if pool == null then () // Ignore freeing an object that was never retained.
-    else pool.asInstanceOf[Pool[java.lang.Object]].free(`object`)
+    if (pool == null) { () }
+    else { pool.asInstanceOf[Pool[java.lang.Object]].free(`object`) }
+  }
 
   /** Frees the specified objects. Null objects within the array are silently ignored. */
   def freeAll(objects: Array[?]): Unit = Pools.freeAll(objects, false)
 
   /** Frees the specified objects.
     * @param samePool if true the pool is looked up once and reused for every object. */
-  def freeAll(objects: Array[?], samePool: Boolean): Unit =
-    if objects == null then throw new java.lang.IllegalArgumentException("objects cannot be null.")
+  def freeAll(objects: Array[?], samePool: Boolean): Unit = {
+    if (objects == null) { throw new java.lang.IllegalArgumentException("objects cannot be null.") }
     var pool: Pool[?] = null
     var i             = 0
     val n             = objects.size
-    while i < n do
+    while (i < n) {
       val obj = objects.get(i).asInstanceOf[java.lang.Object]
-      if obj != null then
-        if pool == null then pool = Pools.typePools.get(obj.getClass())
-        if pool != null then
+      if (obj != null) {
+        if (pool == null) { pool = Pools.typePools.get(obj.getClass()) }
+        if (pool != null) {
           pool.asInstanceOf[Pool[java.lang.Object]].free(obj)
-          if !samePool then pool = null
+          if (!samePool) { pool = null }
+        }
+      }
       i += 1
+    }
+  }
+}

@@ -24,14 +24,14 @@ package sge.ecs
   * java.lang.Object]` passes its own unbounded `T` straight through. A replacement type must have
   * the shape of the one it replaces, not the shape its uses happen to have.
   */
-final class ComponentPool[T](componentType: Class[T], initialSize: Int, maxSize: Int):
+final class ComponentPool[T](componentType: Class[T], initialSize: Int, maxSize: Int) {
 
   private val free = new java.util.ArrayDeque[T](math.max(initialSize, 1))
 
   /** A pooled instance if one is free, else a new one. Never null for a registered type. */
-  def obtain(): T =
+  def obtain(): T = {
     val pooled = free.pollLast()
-    if pooled != null then pooled
+    if (pooled != null) pooled
     else
       // the cast is where the unbounded parameter is paid for: every runtime use IS a Component
       // (this pool is only ever built from `PooledEngine.ComponentPools`), but the static bound
@@ -40,14 +40,20 @@ final class ComponentPool[T](componentType: Class[T], initialSize: Int, maxSize:
 
   /** Return an instance to the pool, resetting it first when it is `Poolable` — upstream's
     * contract, and the reason a pooled component does not carry state across uses. */
-  def free(obj: T): Unit =
-    if obj != null then
-      obj match
+  }
+  def free(obj: T): Unit = {
+    if (obj != null) {
+      obj match {
         case p: sge.utils.Pool.Poolable => p.reset()
         case _                                       => ()
-      if free.size < maxSize then free.addLast(obj)
+      }
+      if (free.size < maxSize) free.addLast(obj)
 
+    }
+  }
   def clear(): Unit = free.clear()
 
   /** how many instances are currently pooled — upstream's `Pool.getFree`. */
   def getFree: Int = free.size
+
+}

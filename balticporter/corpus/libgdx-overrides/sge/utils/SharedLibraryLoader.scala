@@ -15,15 +15,16 @@ import java.nio.file.Files
   * [[SharedLibraryLoader.load]] with a call into it and add that library as a
   * dependency (Substitutions declares the seam; nothing else in the port changes).
   */
-object SharedLibraryLoader:
+object SharedLibraryLoader {
   /** The platform the JVM is running on, derived from `os.name`. */
-  val os: Os =
+  val os: Os = {
     val n = System.getProperty("os.name", "").toLowerCase
-    if n.contains("windows") then Os.Windows
-    else if n.contains("mac") || n.contains("darwin") then Os.MacOsX
-    else if n.contains("linux") || n.contains("nix") || n.contains("nux") then Os.Linux
-    else if n.contains("ios") then Os.IOS
-    else Os.Linux
+    if (n.contains("windows")) { Os.Windows }
+    else if (n.contains("mac") || n.contains("darwin")) { Os.MacOsX }
+    else if (n.contains("linux") || n.contains("nix") || n.contains("nux")) { Os.Linux }
+    else if (n.contains("ios")) { Os.IOS }
+    else { Os.Linux }
+  }
 
   val isWindows: Boolean = os == Os.Windows
   val isLinux: Boolean   = os == Os.Linux
@@ -31,19 +32,23 @@ object SharedLibraryLoader:
   val isAndroid: Boolean = os == Os.Android
   val isIos: Boolean     = os == Os.IOS
   val is64Bit: Boolean   = System.getProperty("os.arch", "").contains("64")
+}
 
-final class SharedLibraryLoader:
+final class SharedLibraryLoader {
   /** Extract the platform-mapped native artifact for `sharedLibName` from the
     * classpath resources to a temp file and load it; fall back to the JVM library
     * path when it is not bundled as a resource. */
-  def load(sharedLibName: String): Unit =
+  def load(sharedLibName: String): Unit = {
     val mapped = System.mapLibraryName(sharedLibName)
-    Option(getClass.getResourceAsStream("/" + mapped)) match
+    Option(getClass.getResourceAsStream("/" + mapped)) match {
       case Some(in) =>
         val tmp = Files.createTempFile(sharedLibName, mapped)
         tmp.toFile.deleteOnExit()
-        try Files.copy(in, tmp, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
-        finally in.close()
+        try { Files.copy(in, tmp, java.nio.file.StandardCopyOption.REPLACE_EXISTING) }
+        finally { in.close() }
         System.load(tmp.toAbsolutePath.toString)
       case None =>
         System.loadLibrary(sharedLibName)
+    }
+  }
+}

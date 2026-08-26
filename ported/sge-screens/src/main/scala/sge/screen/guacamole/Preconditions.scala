@@ -19,22 +19,30 @@ package sge.screen.guacamole
   * `checkNotEmpty` is upstream's fifth pair and is deliberately absent: nothing in this port calls
   * it, and a shim member with no caller is untested code that reads as verified.
   */
-object Preconditions:
+object Preconditions {
 
-  def checkArgument(expr: Boolean): Unit =
-    if !expr then throw new IllegalArgumentException()
+  def checkArgument(expr: Boolean): Unit = {
+    if (!expr) throw new IllegalArgumentException()
 
-  def checkArgument(expr: Boolean, msg: String): Unit =
-    if !expr then throw new IllegalArgumentException(msg)
+  }
+  def checkArgument(expr: Boolean, msg: String): Unit = {
+    if (!expr) throw new IllegalArgumentException(msg)
 
-  def checkState(expr: Boolean): Unit =
-    if !expr then throw new IllegalStateException()
+  }
+  def checkState(expr: Boolean): Unit = {
+    if (!expr) throw new IllegalStateException()
 
-  def checkState(expr: Boolean, msg: String): Unit =
-    if !expr then throw new IllegalStateException(msg)
+  }
+  def checkState(expr: Boolean, msg: String): Unit = {
+    if (!expr) throw new IllegalStateException(msg)
 
-  def checkNotNull(obj: Object): Unit =
-    if obj == null then throw new NullPointerException()
+  }
+  def checkNotNull(obj: Object): Unit = {
+    if (obj == null) throw new NullPointerException()
 
-  def checkNotNull(obj: Object, msg: String): Unit =
-    if obj == null then throw new NullPointerException(msg)
+  }
+  def checkNotNull(obj: Object, msg: String): Unit = {
+    if (obj == null) throw new NullPointerException(msg)
+
+  }
+}

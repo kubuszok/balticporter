@@ -24,14 +24,16 @@ package sge.screen.guacamole
   * `ShaderTransition`'s own constructor body — a threaded class — so the context is in scope there;
   * `checkCompilation` needs none and does not take one.
   */
-object ShaderProgramFactory:
+object ShaderProgramFactory {
 
-  def fromString(vertexShader: String, fragmentShader: String)(using sge.Sge): sge.graphics.glutils.ShaderProgram =
+  def fromString(vertexShader: String, fragmentShader: String)(using sge.Sge): sge.graphics.glutils.ShaderProgram = {
     fromString(vertexShader, fragmentShader, true)
 
-  def fromString(vertexShader: String, fragmentShader: String, throwException: Boolean)(using sge.Sge): sge.graphics.glutils.ShaderProgram =
+  }
+  def fromString(vertexShader: String, fragmentShader: String, throwException: Boolean)(using sge.Sge): sge.graphics.glutils.ShaderProgram = {
     fromString(vertexShader, fragmentShader, throwException, false)
 
+  }
   def fromString(
       vertexShader: String,
       fragmentShader: String,
@@ -40,24 +42,26 @@ object ShaderProgramFactory:
   )(using sge.Sge): sge.graphics.glutils.ShaderProgram =
     var prependVertexCode: String   = null
     var prependFragmentCode: String = null
-    if ignorePrepend then
+    if (ignorePrepend) {
       prependVertexCode = sge.graphics.glutils.ShaderProgram.prependVertexCode
       sge.graphics.glutils.ShaderProgram.prependVertexCode = null
       prependFragmentCode = sge.graphics.glutils.ShaderProgram.prependFragmentCode
       sge.graphics.glutils.ShaderProgram.prependFragmentCode = null
 
+    }
     val program = new sge.graphics.glutils.ShaderProgram(vertexShader, fragmentShader)
 
-    if ignorePrepend then
+    if (ignorePrepend) {
       sge.graphics.glutils.ShaderProgram.prependVertexCode = prependVertexCode
       sge.graphics.glutils.ShaderProgram.prependFragmentCode = prependFragmentCode
 
-    if throwException then checkCompilation(program)
+    }
+    if (throwException) checkCompilation(program)
     program
 
   /** Throws a `GdxRuntimeException` carrying the compilation log when the program did not build. */
-  def checkCompilation(program: sge.graphics.glutils.ShaderProgram, msg: String = ""): Unit =
-    if !program.isCompiled() then throw new sge.utils.GdxRuntimeException(msg + program.getLog())
+  def checkCompilation(program: sge.graphics.glutils.ShaderProgram, msg: String = ""): Unit = {
+    if (!program.isCompiled()) throw new sge.utils.GdxRuntimeException(msg + program.getLog())
 
 /** Ports GLSL 120 source to GLSL 150 when — and only when — the platform demands it.
   *
@@ -76,41 +80,52 @@ object ShaderProgramFactory:
   * keep a reader in the base's own emitted code, so this is the residual global the base still has
   * rather than one this shim reintroduced.
   */
-object ShaderCompatibilityHelper:
+  }
+}
+object ShaderCompatibilityHelper {
 
-  def fromString(vert: String, frag: String)(using sge.Sge): sge.graphics.glutils.ShaderProgram =
+  def fromString(vert: String, frag: String)(using sge.Sge): sge.graphics.glutils.ShaderProgram = {
     var v = vert
     var f = frag
-    if mustUse32CShader() then
+    if (mustUse32CShader()) {
       v = toVert150(v)
       f = toFrag150(f)
+    }
     ShaderProgramFactory.fromString(
       getDefaultShaderVersionStatement() + v, getDefaultShaderVersionStatement() + f, true, true)
 
-  def toVert150(vert120: String): String =
+  }
+  def toVert150(vert120: String): String = {
     vert120
       .replace("\nattribute ", "\nin ").replace(" attribute ", " in ")
       .replace("\nvarying ", "\nout ").replace(" varying ", " out ")
       .replace("texture2D(", "texture(")
 
-  def toFrag150(frag120: String): String =
+  }
+  def toFrag150(frag120: String): String = {
     var s = frag120
       .replace("\nattribute ", "\nout ").replace(" attribute ", " out ")
       .replace("\nvarying ", "\nin ").replace(" varying ", " in ")
-    if s.contains("gl_FragColor") then
+    if (s.contains("gl_FragColor")) {
       s = s.replace("void main()", "out vec4 fragColor; \nvoid main()").replace("gl_FragColor", "fragColor")
+    }
     s.replace("texture2D(", "texture(").replace("textureCube(", "texture(")
 
   /** `gl30 != null` also rules out ANGLE, which is why it is part of the test and not a tidier
     * platform check. */
-  def mustUse32CShader()(using sge.Sge): Boolean =
+  }
+  def mustUse32CShader()(using sge.Sge): Boolean = {
     (sge.Gdx.app.getType() == sge.Application.ApplicationType.Desktop ||
       sge.Gdx.app.getType() == sge.Application.ApplicationType.HeadlessDesktop) &&
       scala.Predef.summon[sge.Sge].graphics.gl30 != null && sge.scenes.scene2d.utils.UIUtils.isMac
 
-  def getDefaultShaderVersionStatement()(using sge.Sge): String =
-    if mustUse32CShader() then "#version 150\n" // macOS 3.2 core profile
+  }
+  def getDefaultShaderVersionStatement()(using sge.Sge): String = {
+    if (mustUse32CShader()) "#version 150\n" // macOS 3.2 core profile
     else if sge.Gdx.app.getType() != sge.Application.ApplicationType.Desktop &&
       sge.Gdx.app.getType() != sge.Application.ApplicationType.HeadlessDesktop
     then "#version 100\n" // GLSL ES (Android, iOS, WebGL)
     else "" // desktop: no version statement — a stricter compiler and an ANGLE probe avoided
+
+  }
+}

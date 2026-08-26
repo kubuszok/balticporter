@@ -20,10 +20,10 @@ import java.util.zip.CRC32
   * check reports as a residue rather than a gap (5 sites). The reference hand port made the same
   * call — its own `ChunkBufferSuite` lives in `src/test/scalajvm`.
   */
-class ChunkBufferSuite extends munit.FunSuite:
+class ChunkBufferSuite extends munit.FunSuite {
 
   /** the chunk `endChunk` frames: a big-endian length, then the payload, then a big-endian CRC. */
-  private def frame(write: ChunkBuffer => Unit): Array[Byte] =
+  private def frame(write: ChunkBuffer => Unit): Array[Byte] = {
     val chunk = new ChunkBuffer(64)
     write(chunk)
     val out    = new ByteArrayOutputStream()
@@ -32,9 +32,11 @@ class ChunkBufferSuite extends munit.FunSuite:
     target.flush()
     out.toByteArray
 
-  private def be(b: Array[Byte], at: Int): Int =
+  }
+  private def be(b: Array[Byte], at: Int): Int = {
     ((b(at) & 0xff) << 24) | ((b(at + 1) & 0xff) << 16) | ((b(at + 2) & 0xff) << 8) | (b(at + 3) & 0xff)
 
+  }
   test("endChunk frames length, type, payload and CRC — and the SUPER call reached the CheckedOutputStream") {
     val bytes = frame { c => c.writeInt(0x49484452); c.writeInt(100); c.writeInt(200) } // "IHDR", w, h
 
@@ -83,3 +85,5 @@ class ChunkBufferSuite extends munit.FunSuite:
     crc.update(second, 4, 4)
     assertEquals(be(second, 8), crc.getValue.toInt, "the CRC32 was not reset between chunks")
   }
+
+}

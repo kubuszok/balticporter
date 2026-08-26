@@ -10,13 +10,14 @@ package sge.vfx.utils
   * with the pool it served), so there is no second opinion to compare against: these expectations
   * come from the upstream java.
   */
-class ValueArrayMapSuite extends munit.FunSuite:
+class ValueArrayMapSuite extends munit.FunSuite {
 
-  private def of(pairs: (String, String)*): ValueArrayMap[String, String] =
+  private def of(pairs: (String, String)*): ValueArrayMap[String, String] = {
     val m = new ValueArrayMap[String, String]()
     pairs.foreach((k, v) => m.put(k, v))
     m
 
+  }
   test("put then get round-trips, and a MISS is null — not an empty Option") {
     // java's `Map.get` returns null on a miss; the retyped `getOrElse(k, null)` must too. An
     // `Option` leaking out here would be a different type and a different contract.
@@ -111,3 +112,5 @@ class ValueArrayMapSuite extends munit.FunSuite:
     assertEquals(m.get("k17"), "v17")
     assertEquals(m.getValueAt(0), "v1")
   }
+
+}

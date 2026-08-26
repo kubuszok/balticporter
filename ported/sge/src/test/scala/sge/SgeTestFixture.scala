@@ -30,7 +30,7 @@ package sge
   * one service it needs — do not soften this one. A fixture that answers everything is a fixture
   * that can never fail, and then nothing measures whether the threading was right.
   */
-object SgeTestFixture:
+object SgeTestFixture {
 
   /** An `Sge` whose every service is absent. Each parameter is overridable so a suite that really
     * needs one can pass exactly that one and leave the other five absent — which keeps the NPE as
@@ -43,3 +43,5 @@ object SgeTestFixture:
     input: sge.Input = null,
     net: sge.Net = null,
   ): Sge = Sge(application, graphics, audio, files, input, net)
+
+}

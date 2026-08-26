@@ -13,7 +13,7 @@ package sge.anim8
   * `Dithered.DitherAlgorithm` — a Java enum inside an interface is implicitly static, which is a
   * companion-object member in Scala and needs no restructuring.
   */
-class DitherAlgorithmSuite extends munit.FunSuite:
+class DitherAlgorithmSuite extends munit.FunSuite {
 
   import Dithered.DitherAlgorithm
 
@@ -52,3 +52,5 @@ class DitherAlgorithmSuite extends munit.FunSuite:
     assertEquals(DitherAlgorithm.valueOf("WREN"), DitherAlgorithm.WREN)
     intercept[java.lang.IllegalArgumentException](DitherAlgorithm.valueOf("Wren"))
   }
+
+}
