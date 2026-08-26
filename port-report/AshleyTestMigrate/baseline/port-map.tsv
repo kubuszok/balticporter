@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-ecs-test	engine=balticporter/0.1.0-SNAPSHOT	sources=4763fb93c6d8686a	files=18	policy=92eb223b820fa43e
+# balticporter port map	schema=3	module=sge-ecs-test	engine=balticporter/0.1.0-SNAPSHOT	sources=4763fb93c6d8686a	files=18	policy=9125520fa6f8d040
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.ashley.core.ComponentClassFactory	sge.ecs.ComponentClassFactory	Renamed	-		0		form=class parents=java.lang.ClassLoader primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.ashley.core.ComponentOperationHandlerTests	sge.ecs.ComponentOperationHandlerTests	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=BooleanInformerMock,ComponentSpy
@@ -124,8 +124,8 @@ member	com.badlogic.ashley.core.ComponentOperationHandlerTests$BooleanInformerMo
 member	com.badlogic.ashley.core.ComponentOperationHandlerTests$ComponentSpy#called	sge.ecs.ComponentOperationHandlerTests$ComponentSpy#called	Renamed	-	com/badlogic/ashley/core/ComponentOperationHandlerTests.java	23	db3437e7094bb1bf	
 member	com.badlogic.ashley.core.ComponentOperationHandlerTests$ComponentSpy#receive(Signal,Entity)	sge.ecs.ComponentOperationHandlerTests$ComponentSpy#receive(Signal<Entity>,Entity)	Renamed	-	com/badlogic/ashley/core/ComponentOperationHandlerTests.java	26	1b0379460964c06f	
 member	com.badlogic.ashley.core.ComponentTypeTests#<stmt1>	sge.ecs.ComponentTypeTests#<stmt1>	Renamed	-	com/badlogic/ashley/core/ComponentTypeTests.java	37	7c47c9e78a2808c5	
-member	com.badlogic.ashley.core.ComponentTypeTests#<stmt2>	sge.ecs.ComponentTypeTests#<stmt2>	Renamed	-	com/badlogic/ashley/core/ComponentTypeTests.java	43	5ec7948e0e0c07bb	
-member	com.badlogic.ashley.core.ComponentTypeTests#<stmt3>	sge.ecs.ComponentTypeTests#<stmt3>	Renamed	-	com/badlogic/ashley/core/ComponentTypeTests.java	55	ec5b695333a74927	
+member	com.badlogic.ashley.core.ComponentTypeTests#<stmt2>	sge.ecs.ComponentTypeTests#<stmt2>	Renamed	-	com/badlogic/ashley/core/ComponentTypeTests.java	43	4ec919622fc5aadd	
+member	com.badlogic.ashley.core.ComponentTypeTests#<stmt3>	sge.ecs.ComponentTypeTests#<stmt3>	Renamed	-	com/badlogic/ashley/core/ComponentTypeTests.java	55	9a5f9a8e5df11906	
 member	com.badlogic.ashley.core.EngineTests#<stmt10>	sge.ecs.EngineTests#<stmt10>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	367	aa733003223b012c	
 member	com.badlogic.ashley.core.EngineTests#<stmt11>	sge.ecs.EngineTests#<stmt11>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	407	732d9042ea0078af	
 member	com.badlogic.ashley.core.EngineTests#<stmt12>	sge.ecs.EngineTests#<stmt12>	Renamed	-	com/badlogic/ashley/core/EngineTests.java	428	5023f70ca77be53e	
@@ -245,8 +245,8 @@ member	com.badlogic.ashley.core.FamilyTests#<stmt12>	sge.ecs.FamilyTests#<stmt12
 member	com.badlogic.ashley.core.FamilyTests#<stmt13>	sge.ecs.FamilyTests#<stmt13>	Renamed	-	com/badlogic/ashley/core/FamilyTests.java	340	d5c0995fe6f0b6b1	
 member	com.badlogic.ashley.core.FamilyTests#<stmt14>	sge.ecs.FamilyTests#<stmt14>	Renamed	-	com/badlogic/ashley/core/FamilyTests.java	355	753ec3051f077abc	
 member	com.badlogic.ashley.core.FamilyTests#<stmt1>	sge.ecs.FamilyTests#<stmt1>	Renamed	-	com/badlogic/ashley/core/FamilyTests.java	70	4e86c468dc798428	
-member	com.badlogic.ashley.core.FamilyTests#<stmt2>	sge.ecs.FamilyTests#<stmt2>	Renamed	-	com/badlogic/ashley/core/FamilyTests.java	87	53ae858663ff538e	
-member	com.badlogic.ashley.core.FamilyTests#<stmt3>	sge.ecs.FamilyTests#<stmt3>	Renamed	-	com/badlogic/ashley/core/FamilyTests.java	119	e8bd9ae0fed68541	
+member	com.badlogic.ashley.core.FamilyTests#<stmt2>	sge.ecs.FamilyTests#<stmt2>	Renamed	-	com/badlogic/ashley/core/FamilyTests.java	87	7acb344b572b453a	
+member	com.badlogic.ashley.core.FamilyTests#<stmt3>	sge.ecs.FamilyTests#<stmt3>	Renamed	-	com/badlogic/ashley/core/FamilyTests.java	119	715b6b29a7943948	
 member	com.badlogic.ashley.core.FamilyTests#<stmt4>	sge.ecs.FamilyTests#<stmt4>	Renamed	-	com/badlogic/ashley/core/FamilyTests.java	175	bd7aa9e92530ad24	
 member	com.badlogic.ashley.core.FamilyTests#<stmt5>	sge.ecs.FamilyTests#<stmt5>	Renamed	-	com/badlogic/ashley/core/FamilyTests.java	191	5534908e03516712	
 member	com.badlogic.ashley.core.FamilyTests#<stmt6>	sge.ecs.FamilyTests#<stmt6>	Renamed	-	com/badlogic/ashley/core/FamilyTests.java	206	bfe8e7c186d5bb73	
@@ -321,7 +321,7 @@ member	com.badlogic.ashley.systems.IntervalIteratingTest$IntervalIteratingSystem
 member	com.badlogic.ashley.systems.IntervalIteratingTest$IntervalIteratingSystemSpy#processEntity(Entity)	sge.ecs.systems.IntervalIteratingTest$IntervalIteratingSystemSpy#processEntity(Entity)	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingTest.java	55	8bd1244952698be0	
 member	com.badlogic.ashley.systems.IntervalIteratingTest$IntervalIteratingSystemSpy#startProcessing()	sge.ecs.systems.IntervalIteratingTest$IntervalIteratingSystemSpy#startProcessing()	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingTest.java	50	0dd75fd483a3f1bd	
 member	com.badlogic.ashley.systems.IntervalSystemTest#<stmt1>	sge.ecs.systems.IntervalSystemTest#<stmt1>	Renamed	-	com/badlogic/ashley/systems/IntervalSystemTest.java	42	fc707f873fb57794	
-member	com.badlogic.ashley.systems.IntervalSystemTest#<stmt2>	sge.ecs.systems.IntervalSystemTest#<stmt2>	Renamed	-	com/badlogic/ashley/systems/IntervalSystemTest.java	55	71bc220468947736	
+member	com.badlogic.ashley.systems.IntervalSystemTest#<stmt2>	sge.ecs.systems.IntervalSystemTest#<stmt2>	Renamed	-	com/badlogic/ashley/systems/IntervalSystemTest.java	55	5bfd9eb272455b44	
 member	com.badlogic.ashley.systems.IntervalSystemTest#deltaTime	sge.ecs.systems.IntervalSystemTest#deltaTime	Renamed	-	com/badlogic/ashley/systems/IntervalSystemTest.java	26	aa22c973f10ab2e2	placement=companion
 member	com.badlogic.ashley.systems.IntervalSystemTest$IntervalSystemSpy#numUpdates	sge.ecs.systems.IntervalSystemTest$IntervalSystemSpy#numUpdates	Renamed	-	com/badlogic/ashley/systems/IntervalSystemTest.java	29	14088a878263841e	
 member	com.badlogic.ashley.systems.IntervalSystemTest$IntervalSystemSpy#updateInterval()	sge.ecs.systems.IntervalSystemTest$IntervalSystemSpy#updateInterval()	Renamed	-	com/badlogic/ashley/systems/IntervalSystemTest.java	36	027325ce031b351c	

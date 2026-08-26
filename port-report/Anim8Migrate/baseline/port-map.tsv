@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-anim8	engine=balticporter/0.1.0-SNAPSHOT	sources=6b96efbdb888cc69	files=16	policy=b9a8a270acbf47bd
+# balticporter port map	schema=3	module=sge-anim8	engine=balticporter/0.1.0-SNAPSHOT	sources=6b96efbdb888cc69	files=16	policy=4b77483c54203f8b
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.github.tommyettinger.anim8.AnimatedGif	sge.anim8.AnimatedGif	Renamed	-		0		companion=yes form=class parents=sge.anim8.AnimationWriter,sge.anim8.Dithered primary=() primaryKind=unique-root primaryVis=public
 type	com.github.tommyettinger.anim8.AnimatedPNG	sge.anim8.AnimatedPNG	Renamed	-		0		companion=yes form=class parents=sge.anim8.AnimationWriter,java.lang.AutoCloseable primary=(int) primaryKind=unique-root primaryVis=public secondaries=() statics=COLOR_ARGB,COMPRESSION_DEFLATE,FILTER_NONE,IDAT,IEND,IHDR,INTERLACE_NONE,SIGNATURE,acTL,fcTL,fdAT
