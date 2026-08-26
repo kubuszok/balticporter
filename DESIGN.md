@@ -3519,12 +3519,17 @@ four slot kinds the collections coercion uses — argument-vs-formal, declaratio
 assignment-vs-RHS, return-vs-result — *before overload resolution ever runs*: the argument's type is
 already exactly the formal, nothing is inferred and no implicit is consulted. One rewrite is not
 optional: **`x == null` on an opaque wrapper is a compile error**, so every Java null-test on a wrapped
-value becomes `.isEmpty`. The contract is exactly four members — `apply` (null-normalising), `empty`,
-extension `get` (unchecked, NPE on empty, which **is** Java's semantics at a dereference), extension
-`isEmpty` — which the published reference wrapper satisfies verbatim today. Nothing in the contract
-touches that wrapper's `orNull`, which is fake-`@deprecated` as a lint tripwire in repositories
-compiling with `-Werror`; generated code must never emit it. Emission is FQN-only and extensions
-resolve from the companion's implicit scope with no import (§2.5).
+value becomes `.isEmpty`. The contract is exactly five members — `apply` (null-normalising), `empty`,
+extension `get` (unchecked, NPE on empty, which **is** Java's semantics at a DEREFERENCE), extension
+`orNull` (null-preserving unwrap, which **is** Java's semantics at a SLOT that accepts null), and
+extension `isEmpty` — which the published reference wrapper satisfies verbatim today. The
+**slot-nullability rule** decides which unwrap to emit: a dereference (member access, array op) uses
+`.get` because java NPEs on null there; a slot coercion (argument-vs-formal, declaration-vs-init,
+return-vs-result, lambda body) uses `.orNull` because java's default is that every reference slot
+accepts null. The exception is a PRIMITIVE slot (unboxing) where java NPEs, so `.get`. `orNull` is
+fake-`@deprecated` as a lint tripwire in the hand-written repositories, but generated code IS the
+java-interop boundary the deprecation message names. Emission is FQN-only and extensions resolve from
+the companion's implicit scope with no import (§2.5).
 
 **The census bounds the work.** **Seven of eleven upstreams have zero nullability annotations**, so the
 empty-config no-op is the *normal* case — §1(b)'s shape exactly. Where annotations exist the grammar is

@@ -10633,3 +10633,29 @@ digests moved; gdx-test 3 digests, ai 3, visui 3, textra 12. Every other gdx dep
 re-compiled at its committed floor (ashley 0, gltf 3, screens 0, vfx 0, anim8 0). 3034 specs pass
 (engine 926, corpus 1406, testkit 338, runtime 178, frontend-spoon 121, api 65). No
 baseline accepted here — the orchestrator lands through the primary's lanes.
+
+Wave 1.1d — the **slot-nullability rule** (2026-08-26, worktree): `.get` at a SLOT that accepts null
+is a compile-clean-wrong-at-runtime defect (CLAUDE.md section 4.4's class). Measured on ashley:
+`OUTCOMES LOST 4 of 112` at `Family.Builder.get`, where `ObjectMap#get(K)` returns `@Null V` and the
+absent-key sentinel (`null`) was unwrapped with `.get` into a slot that accepts null. The wrapper
+contract grows from four members to five: `orNull` is the null-preserving unwrap at a reference slot,
+`.get` stays for dereferences and primitive slots. Audit of every unwrap site:
+
+| unwrap site | spelling | reason |
+|---|---|---|
+| `coerceTo` direct (slot coercion) | `.orNull` via `slotUnwrap` | java slot accepts null |
+| `coerceTo` `Tree.Typed` (cast operand) | `.orNull` via `slotUnwrap` | reference cast passes null; primitive `.get` |
+| `coerceArgs` no-formal branch | `.orNull` | no annotation info, java default |
+| `unwrapLeaves` (external SAM body) | `.orNull` | external result accepts null |
+| `transformSelect` (member access) | `.get` | dereference, java NPEs on null |
+| `transformApply` (receiver unwrap) | `.get` | dereference, java NPEs on null |
+| `transformTerm` ArrayLength/Access | `.get` | dereference, java NPEs on null |
+
+Suites before -> after: ashley `108 / 2 / 2` (unchanged, `OUTCOMES LOST 0`); gdx-test `208 / 13`
+(3 RECOVERED: `dataTypes`, `earlyEnd`, `testCopyConstructor` -- NPE at `JsonValue` copy ctor; 9
+`JsonMatcherTests` pre-existing from 1.1b/1.1c, verified by reverting: the 1.1c state shows 14
+`JsonMatcherTests` failures, and slot-nullability recovers 5). Base compiles at 0 errors, 2858
+member digests moved. 44 specs pass (21 wrapper + 23 union). `nullability-boundary 0 -> 49` and
+`overload-risk 70 -> 112` on gdx-test are pre-existing from 1.1b/1.1c (verified by reverting: both
+counts are the same in the 1.1c-only state). Baselines stale -- the gdx-test-measure lane was never
+re-baselined after waves 1.1b/1.1c.

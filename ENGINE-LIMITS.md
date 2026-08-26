@@ -5842,6 +5842,19 @@ entries were deleted), and the 12 scope entries + 1 member key (`Group#findActor
 floor required are deleted entirely. On dependents: textra's nullability phase removed (existed only
 for K13 exits), screens' scope removed. The base compiles at **0 errors** with `Named`.
 
+**Wave 1.1d: the slot-nullability rule.** `.get` at a SLOT that accepts null (an unannotated java
+field, parameter, result, or `Object` formal) is a compile-clean-wrong-at-runtime defect (CLAUDE.md
+section 4.4's class): the value flows through unchanged in java, and `.get` throws NPE where java would pass
+`null`. Measured on ashley: `OUTCOMES LOST 4 of 112` at `Family.Builder.get`, where `ObjectMap#get(K)`
+returns `@Null V` and the absent-key sentinel (`null`) was unwrapped with `.get` into a slot that
+accepts null. The fix is the slot-nullability rule: `.orNull` at a reference slot, `.get` only at a
+dereference or a primitive slot. The wrapper contract grows from four members to five (`orNull`
+added). Ashley: `108 / 2 / 2` matches baseline, `OUTCOMES LOST 0`. GDX test: `dataTypes`,
+`earlyEnd`, `testCopyConstructor` RECOVERED (NPE at `JsonValue` copy constructor); 9
+`JsonMatcherTests` are pre-existing from waves 1.1b/1.1c (verified by reverting: the 1.1c state shows
+14 `JsonMatcherTests` failures, and the slot-nullability change recovers 5 of them). Base compiles
+at **0 errors**, 2858 member digests moved (every slot coercion site).
+
 The three exits the union floor offered (scope out, accept errors, stage to `-Yexplicit-nulls`) are
 joined by a FOURTH that closes the class: switch the target. The other three remain available for
 ports that choose `Union`.
