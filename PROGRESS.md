@@ -10647,6 +10647,20 @@ wrapper's `empty` rather than `uninitialized` (JVM null ≠ the sentinel): gdx-t
 digests. A promotion is now gated on `tests.tsv` non-pass rows not increasing — the landing of 1.1b
 had absorbed 14 + 45 + 1 + 4 of them past an errors-and-digests guard.
 
+**Wave 1.3 — the libGDX rename policy, from the census.** 359 `Renames:` lines across 754 annotated
+sge files classify as: package renames (148+, already `packageRenames`), bean pairs (132+, wave
+1.2), `dispose → close` / `Disposable → AutoCloseable` (21+, the redirect), collection retargets
+(24+, `CollectionsTransform`), `Gdx → Sge` (9+, context), `@Null → Nullable` (wave 1.1), call-site
+operator edits on Vector (sge ADDED extensions; upstream members kept — not a rename), type
+replacements (`GdxRuntimeException → SgeError`, drop+inject), and 15+ hand-port freedoms. What
+needed writing: `typeRenames` `List → SgeList` (63 digests), `memberRenames` `InputEvent#type →
+eventType` (a Scala keyword, 5 digests), and `List#toString(T) → itemToString` — REFUSED by the
+engine (its override component reaches `Object#toString`) and kept as a counted `policy` row.
+gdx 0 → 0 errors, 162 digests, policy 3 → 4; every dependent at its floor. **One engine smell to
+carry**: an inherited `memberRenames` key is re-evaluated in every DEPENDENT run and refused there
+(`policy` 0 → 2 on eight ports) — a base's applied key should read as applied downstream, not as a
+second refusal (D7's shape); open item for Phase 2.
+
 | unwrap site | spelling | reason |
 |---|---|---|
 | `coerceTo` direct (slot coercion) | `.orNull` via `slotUnwrap` | java slot accepts null |
