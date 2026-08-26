@@ -362,9 +362,24 @@ object GdxAiPolicy:
           // `createStackedTask` turns into upstream's "annotation not found" message. `Metadata` and
           // `AttrInfo` are the port's own emitted nested classes, built here from the registry's
           // rows exactly as java built them from the annotations.
+          //
+          // …AND THE BASE'S `@Null` SURFACE IS READ OFF THE GENERATED CALLER (`CLAUDE.md` §1). A
+          // hand-written body is outside the threading closure, so when the base moved
+          // `ObjectMap#get(K)` to `lowlevel.Nullable[V]` under the `Named` target nothing threaded
+          // this text and nothing could: the mechanical call sites in this very port took the
+          // engine's `.get` unwrap (`this.pools.get(ref).get`) while this one kept java's spelling
+          // and became `E171 missing argument for parameter defaultValue` — scalac falling through
+          // to the two-argument overload, because the one-argument result no longer conforms.
+          // What it must NOT take is that same `.get`: the wrapper's `get` is the UNCHECKED unwrap
+          // (NPE on empty, which is java's semantics at a DEREFERENCE), and here the empty case is
+          // the normal one — a cache MISS is what the `null` check exists to drive, and every first
+          // lookup is a miss. `isEmpty` is the test, and java's protocol survives unchanged below.
           "com.badlogic.gdx.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#findMetadata(Class)" ->
             """{
-              |    var metadata: sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.Metadata = this.metadataCache.get(clazz)
+              |    val cached: lowlevel.Nullable[sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.Metadata] =
+              |      this.metadataCache.get(clazz)
+              |    var metadata: sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.Metadata =
+              |      if (cached.isEmpty) null else cached.get
               |    if (metadata == null) {
               |      val meta: sge.ai.btree.utils.TaskRegistry.Meta = sge.ai.btree.utils.TaskRegistry.metaOf(clazz)
               |      if (meta != null) {
