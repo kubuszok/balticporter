@@ -225,6 +225,24 @@ md_ext_test_src := "../ssg/original-src/flexmark-java/flexmark-ext-aside/src/tes
 # the compiler every lane measures with — one version, one server-less invocation per lane
 scala_version := "3.8.4"
 
+# Reference-build scalacOptions (DESIGN.md §8.24, PROGRESS.md §13 wave 1.0).
+#
+# The flag list is READ from the reference repo's SgePlugin / ssg's build.sbt, not hand-copied:
+# - `sge_strict_flags`: SgePlugin.defaultScalacOptions ++ SgePlugin.strictScalacOptions, with
+#   -Xmacro-settings:* dropped (macro timeouts, not diagnostics). Source: sge-build/src/main/scala/
+#   sge/sbt/SgePlugin.scala (§8.24). Used by the core `sge` project and every module whose
+#   build.sbt applies `commonSettings` + `strictSettings`.
+# - `sge_relaxed_flags`: the strict set MINUS -Wunused:imports,privates,locals,patvars,nowarn,
+#   which is what `SgePlugin.relaxedSettings` removes. Used by sge extension modules.
+# - `ssg_flags`: ssg/build.sbt's scalacOptions block, with -Xmacro-settings:* dropped.
+#   Source: ssg/build.sbt lines 41-54.
+#
+# ALL THREE are identical today (ssg copied sge's strict set), so a single variable suffices; the
+# three names exist as documentation for where each came from and WHY each lane uses the one it does.
+sge_strict_flags  := "-deprecation -feature -language:implicitConversions -no-indent -Werror -Wimplausible-patterns -Wrecurse-with-default -Wenum-comment-discard -Wunused:imports,privates,locals,patvars,nowarn"
+sge_relaxed_flags := "-deprecation -feature -language:implicitConversions -no-indent -Werror -Wimplausible-patterns -Wrecurse-with-default -Wenum-comment-discard"
+ssg_flags         := "-deprecation -feature -no-indent -Werror -Wimplausible-patterns -Wrecurse-with-default -Wenum-comment-discard -Wunused:imports,privates,locals,patvars,nowarn"
+
 # per-lane compile/test dependencies, verbatim scala-cli flags (word-split on purpose)
 gdx_deps      := "--dependency org.junit.jupiter:junit-jupiter:5.10.2 --dependency junit:junit:4.13.2 --dependency org.scalameta::munit:1.0.2"
 # The libGDX suite's RUN carries the same three coordinates in a DIFFERENT order, and it is kept
@@ -535,6 +553,9 @@ gdx-measure:
     xplat_compile scala-js {{scala_version}} "$REPORT" gdxmeasure {{gdx_module}}/src_managed/main/scala
     xplat_compile scala-native {{scala_version}} "$REPORT" gdxmeasure {{gdx_module}}/src_managed/main/scala
 
+    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
+    flags_compile {{scala_version}} "$REPORT" gdxmeasure "{{sge_strict_flags}}" {{gdx_module}}/src_managed/main/scala
+
     # A count is not a triage. Join every error back to the member and the JAVA LINE it came from, and
     # split it into "at a region the engine marked approximate" vs "engine gap" (DESIGN.md §6.3).
     # With no markers minted yet everything lands in the second lane — which is the honest answer,
@@ -623,6 +644,9 @@ gdx-test-measure:
     xplat_compile scala-native {{scala_version}} "$REPORT" gdxtestmeasure \
       {{gdx_module}}/src_managed/main/scala {{gdx_module}}/src_managed/test/scala \
       {{gdx_module}}/src/test/scala -- --test {{gdx_deps}}
+
+    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
+    flags_compile {{scala_version}} "$REPORT" gdxtestmeasure "{{sge_strict_flags}}" {{gdx_module}}/src_managed/main/scala {{gdx_module}}/src_managed/test/scala {{gdx_module}}/src/test/scala -- --test {{gdx_deps}}
 
     # -------------------------------------------------------------------------------------------
     # RUN them. Compiling a test suite measures nothing about behaviour, and CLAUDE.md §4.4 lists ten
@@ -735,6 +759,9 @@ ashley-measure:
     xplat_compile scala-native {{scala_version}} "$TREPORT" ashleymeasure \
       {{gdx_module}}/src_managed/main/scala {{ashley_module}}/src_managed/main/scala {{ashley_module}}/src_managed/test/scala -- --test {{ashley_deps}}
 
+    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
+    flags_compile {{scala_version}} "$TREPORT" ashleymeasure "{{sge_relaxed_flags}}" {{gdx_module}}/src_managed/main/scala {{ashley_module}}/src_managed/main/scala {{ashley_module}}/src_managed/test/scala -- --test {{ashley_deps}}
+
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
@@ -843,6 +870,9 @@ anim8-measure:
       {{gdx_module}}/src_managed/main/scala {{anim8_module}}/src_managed/main/scala -- {{anim8_deps}}
     xplat_compile scala-native {{scala_version}} "$REPORT" anim8measure \
       {{gdx_module}}/src_managed/main/scala {{anim8_module}}/src_managed/main/scala -- {{anim8_deps}}
+
+    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
+    flags_compile {{scala_version}} "$REPORT" anim8measure "{{sge_relaxed_flags}}" {{gdx_module}}/src_managed/main/scala {{anim8_module}}/src_managed/main/scala -- {{anim8_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -970,6 +1000,9 @@ gltf-measure:
       {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala {{gltf_module}}/src_managed/test/scala -- --test {{gltf_deps}}
     xplat_compile scala-native {{scala_version}} "$TREPORT" gltfmeasure \
       {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala {{gltf_module}}/src_managed/test/scala -- --test {{gltf_deps}}
+
+    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
+    flags_compile {{scala_version}} "$TREPORT" gltfmeasure "{{sge_relaxed_flags}}" {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala {{gltf_module}}/src_managed/test/scala -- --test {{gltf_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -1100,6 +1133,9 @@ screens-measure:
     xplat_compile scala-native {{scala_version}} "$REPORT" screensmeasure \
       {{gdx_module}}/src_managed/main/scala {{screens_module}}/src_managed/main/scala -- {{screens_deps}}
 
+    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
+    flags_compile {{scala_version}} "$REPORT" screensmeasure "{{sge_relaxed_flags}}" {{gdx_module}}/src_managed/main/scala {{screens_module}}/src_managed/main/scala -- {{screens_deps}}
+
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
@@ -1209,6 +1245,9 @@ vfx-measure:
       {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala -- {{vfx_deps}}
     xplat_compile scala-native {{scala_version}} "$REPORT" vfxmeasure \
       {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala -- {{vfx_deps}}
+
+    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
+    flags_compile {{scala_version}} "$REPORT" vfxmeasure "{{sge_relaxed_flags}}" {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala -- {{vfx_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -1347,6 +1386,9 @@ ai-measure:
     xplat_compile scala-native {{scala_version}} "$REPORT" aimeasure \
       {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala
 
+    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
+    flags_compile {{scala_version}} "$REPORT" aimeasure "{{sge_relaxed_flags}}" {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala
+
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
     # Run WHETHER OR NOT it compiled, for `noise4j-measure`'s reason: with no suite there is no
@@ -1448,6 +1490,9 @@ ai-test-measure:
       {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala {{ai_module}}/src_managed/test/scala -- --test {{ai_test_deps}}
     xplat_compile scala-native {{scala_version}} "$REPORT" aitestmeasure \
       {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala {{ai_module}}/src_managed/test/scala -- --test {{ai_test_deps}}
+
+    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
+    flags_compile {{scala_version}} "$REPORT" aitestmeasure "{{sge_relaxed_flags}}" {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala {{ai_module}}/src_managed/test/scala -- --test {{ai_test_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -1667,6 +1712,9 @@ sg-measure:
     xplat_compile scala-native {{scala_version}} "$TREPORT" sgmeasure \
       {{sg_module}}/src_managed/main/scala {{sg_module}}/src_managed/test/scala -- --test {{sg_deps}}
 
+    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
+    flags_compile {{scala_version}} "$TREPORT" sgmeasure "{{sge_relaxed_flags}}" {{sg_module}}/src_managed/main/scala {{sg_module}}/src_managed/test/scala -- --test {{sg_deps}}
+
     # -------------------------------------------------------------------------------------------
     # RUN them. Compiling a suite measures nothing about behaviour: CLAUDE.md §4.4 lists ten java forms
     # that translate to VALID scala meaning something else, and not one moves the count above. For this
@@ -1777,6 +1825,9 @@ noise4j-measure:
     xplat_compile scala-native {{scala_version}} "$REPORT" n4jmeasure \
       {{n4j_module}}/src_managed/main/scala
 
+    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
+    flags_compile {{scala_version}} "$REPORT" n4jmeasure "{{sge_relaxed_flags}}" {{n4j_module}}/src_managed/main/scala
+
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
     # Run WHETHER OR NOT it compiled. With no suite there is no second thing to correlate, so the
@@ -1870,6 +1921,9 @@ jbump-measure:
       {{jbump_module}}/src_managed/main/scala
     xplat_compile scala-native {{scala_version}} "$REPORT" jbumpmeasure \
       {{jbump_module}}/src_managed/main/scala
+
+    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
+    flags_compile {{scala_version}} "$REPORT" jbumpmeasure "{{sge_relaxed_flags}}" {{jbump_module}}/src_managed/main/scala
 
     # -------------------------------------------------------------------------------------------
     # RUN it — differentially, against the upstream Java.
@@ -2036,6 +2090,9 @@ usl-measure:
       {{usl_module}}/src_managed/main/scala
     xplat_compile scala-native {{scala_version}} "$REPORT" uslmeasure \
       {{usl_module}}/src_managed/main/scala
+
+    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
+    flags_compile {{scala_version}} "$REPORT" uslmeasure "{{sge_relaxed_flags}}" {{usl_module}}/src_managed/main/scala
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
@@ -2262,6 +2319,9 @@ usl-test-measure:
     xplat_compile scala-native {{scala_version}} "$TREPORT" usltmeasure \
       {{usl_module}}/src_managed/main/scala {{usl_module}}/src_managed/test/scala -- --test {{usl_test_deps}}
 
+    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
+    flags_compile {{scala_version}} "$TREPORT" usltmeasure "{{sge_relaxed_flags}}" {{usl_module}}/src_managed/main/scala {{usl_module}}/src_managed/test/scala -- --test {{usl_test_deps}}
+
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
@@ -2481,6 +2541,9 @@ liqp-measure:
     xplat_compile scala-native {{scala_version}} "$TREPORT" liqpmeasure \
       {{liqp_module}}/src_managed/main/scala {{liqp_module}}/src_managed/test/scala -- --test $DEPS --jar "{{liqp_parser_classes}}"
 
+    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
+    flags_compile {{scala_version}} "$TREPORT" liqpmeasure "{{ssg_flags}}" {{liqp_module}}/src_managed/main/scala {{liqp_module}}/src_managed/test/scala -- --test $DEPS --jar "{{liqp_parser_classes}}"
+
     # -------------------------------------------------------------------------------------------
     # RUN them. Compiling a suite measures nothing about behaviour: CLAUDE.md §4.4 lists the java
     # forms that translate to VALID scala meaning something else, and not one moves the count above.
@@ -2656,6 +2719,9 @@ md-measure:
     xplat_compile scala-native {{scala_version}} "$REPORT" mdmeasure \
       {{md_module}}/src_managed/main/scala -- {{md_deps}}
 
+    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
+    flags_compile {{scala_version}} "$REPORT" mdmeasure "{{ssg_flags}}" {{md_module}}/src_managed/main/scala -- {{md_deps}}
+
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
     # Run WHETHER OR NOT it compiled. With no suite there is no second thing to correlate, so the
@@ -2771,6 +2837,9 @@ md-test-measure:
       {{md_module}}/src_managed/main/scala {{md_module}}/src_managed/test/scala -- --test {{md_deps}} {{md_test_deps}}
     xplat_compile scala-native {{scala_version}} "$TREPORT" mdtestmeasure \
       {{md_module}}/src_managed/main/scala {{md_module}}/src_managed/test/scala -- --test {{md_deps}} {{md_test_deps}}
+
+    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
+    flags_compile {{scala_version}} "$TREPORT" mdtestmeasure "{{ssg_flags}}" {{md_module}}/src_managed/main/scala {{md_module}}/src_managed/test/scala -- --test {{md_deps}} {{md_test_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -3024,6 +3093,9 @@ md-ext-measure:
     xplat_compile scala-native {{scala_version}} "$EREPORT" mdextmeasure \
       {{md_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/test/scala -- --test {{md_deps}} {{md_test_deps}} {{md_ext_deps}}
 
+    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
+    flags_compile {{scala_version}} "$EREPORT" mdextmeasure "{{ssg_flags}}" {{md_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/test/scala -- --test {{md_deps}} {{md_test_deps}} {{md_ext_deps}}
+
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
@@ -3206,6 +3278,9 @@ textra-measure:
       {{gdx_module}}/src_managed/main/scala {{textra_module}}/src_managed/main/scala -- $DEPS
     xplat_compile scala-native {{scala_version}} "$REPORT" textrameasure \
       {{gdx_module}}/src_managed/main/scala {{textra_module}}/src_managed/main/scala -- $DEPS
+
+    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
+    flags_compile {{scala_version}} "$REPORT" textrameasure "{{sge_relaxed_flags}}" {{gdx_module}}/src_managed/main/scala {{textra_module}}/src_managed/main/scala -- $DEPS
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
@@ -3521,6 +3596,9 @@ visui-measure:
       {{gdx_module}}/src_managed/main/scala {{visui_module}}/src_managed/main/scala -- $DEPS
     xplat_compile scala-native {{scala_version}} "$REPORT" visuimeasure \
       {{gdx_module}}/src_managed/main/scala {{visui_module}}/src_managed/main/scala -- $DEPS
+
+    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
+    flags_compile {{scala_version}} "$REPORT" visuimeasure "{{sge_relaxed_flags}}" {{gdx_module}}/src_managed/main/scala {{visui_module}}/src_managed/main/scala -- $DEPS
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
@@ -4561,6 +4639,12 @@ baseline-accept PORT:
         echo "expected-errors.${plat_suffix}: $(cat "$DIR/baseline/expected-errors.${plat_suffix}")"
       fi
     done
+    # Reference-flags error baseline (CLAUDE.md §5, DESIGN.md §8.24): promoted as
+    # expected-errors.ref, written by flags_compile on every run.
+    if [ -f "$DIR/run-latest/errors-count.ref" ]; then
+      cp "$DIR/run-latest/errors-count.ref" "$DIR/baseline/expected-errors.ref"
+      echo "expected-errors.ref: $(cat "$DIR/baseline/expected-errors.ref")"
+    fi
     # Drop-in baselines: per-platform error counts and test outcomes, written by `ecs-dropin`.
     # Promoted into `baseline/dropin/` so they do not collide with the measure lane's own baselines.
     if ls "$DIR/run-latest/errors-count.dropin."* 1>/dev/null 2>&1; then

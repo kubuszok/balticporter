@@ -1188,6 +1188,13 @@ headline() {
       fi
     done
   done
+  # …and the REFERENCE-FLAGS COMPILE gate — one marker per report dir.
+  for d in "$dir" "${extra[@]}"; do
+    if [ -f "$d/run-latest/errors-baseline-failed.ref" ]; then
+      echo "!! this lane FAILED its ref error baseline ($d) — see the 'ref ERRORS' line above"
+      exit 1
+    fi
+  done
 }
 
 # xplat_compile <platform> <scala-version> <report-dir> <capture-basename> <source-dirs...> [-- <extra-flags...>]
@@ -1277,6 +1284,97 @@ xplat_compile() {
     echo "!! ${plat_suffix} ERRORS ROSE — $expected -> $errors."
   else
     echo "!! ${plat_suffix} ERRORS FELL — $expected -> $errors. Acknowledge: just baseline-accept <port>"
+  fi
+  : > "$marker"; return 1
+}
+
+# flags_compile <scala-version> <report-dir> <capture-basename> <flags-string> <source-dirs...> [-- <extra-flags...>]
+#
+# REFERENCE-BUILD compile gate: runs `scala-cli compile` with the reference repo's own
+# scalacOptions over the emitted tree and counts errors, baselined as `expected-errors.ref`.
+#
+# This is the FOURTH compile in every lane (after JVM, JS, Native). The reference build
+# compiles with `-no-indent -Werror -Wunused:privates,locals,patvars …` — flags that promote
+# warnings to errors and reject indentation syntax. A port that is green under scala-cli's
+# defaults and red under `-no-indent -Werror` is not at the bar (DESIGN.md §8.24).
+#
+# The FLAGS are a whitespace-separated string, read from a Justfile variable that states the
+# source (SgePlugin.strictScalacOptions for sge ports, ssg/build.sbt for ssg ports). Macro
+# settings (`-Xmacro-settings:*`) are dropped — they are timeouts that carry no diagnostic
+# and produce no warning.
+#
+# The compile is run through the correlator so that the resulting `errors.tsv`-style output
+# carries the member column — a `-Werror` row is a scalac diagnostic like any other, and the
+# agent needs to know which Java line produced the unused local.
+#
+# The baseline file is `expected-errors.ref`, the marker file is `errors-baseline-failed.ref`,
+# and both travel through `headline` like the other three compile gates.
+flags_compile() {
+  local scala_ver="$1" report_dir="$2" capture_base="$3" flags_str="$4"
+  shift 4
+  # Collect source dirs until we hit '--' or run out
+  local -a srcs=()
+  local -a extra_flags=()
+  local past_sep=0
+  for arg in "$@"; do
+    if [ "$arg" = "--" ]; then past_sep=1; continue; fi
+    if [ "$past_sep" = "1" ]; then extra_flags+=("$arg"); else srcs+=("$arg"); fi
+  done
+
+  # Parse the flags string, dropping -Xmacro-settings:*
+  local -a ref_flags=()
+  for flag in $flags_str; do
+    case "$flag" in
+      -Xmacro-settings:*) ;; # dropped: macro timeouts, not diagnostics
+      *) ref_flags+=("$flag") ;;
+    esac
+  done
+
+  if [ "${#ref_flags[@]}" = "0" ]; then
+    echo "!! flags_compile: no reference flags — nothing to compile with"
+    return 1
+  fi
+
+  local cap="$MEASURE_TMP/${capture_base}.ref.txt"
+  echo
+  echo "-- reference-flags compile: ${ref_flags[*]} --"
+  scala-cli compile --scala "$scala_ver" --server=false \
+    "${ref_flags[@]}" "${extra_flags[@]}" "${srcs[@]}" \
+    2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$cap"
+  local cli_st=${PIPESTATUS[0]}
+  local errors
+  errors=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$cap")
+  # compile_guard for the ref compile — abort/crash detection
+  compile_guard "$cli_st" "$errors" "$cap"
+  echo "TOTAL ERRORS (ref): $errors  (coded $(grep -cE '\[E[0-9]+\].*Error' "$cap") + bare $(grep -cE '^-- Error:' "$cap"))"
+  # top error families
+  grep -oE "\[E[0-9]+\][^:]*Error" "$cap" | sort | uniq -c | sort -rn | head -5
+
+  # baseline guard — same logic as error_baseline_guard but with a .ref suffix
+  local expected_file="$report_dir/baseline/expected-errors.ref"
+  local marker="$report_dir/run-latest/errors-baseline-failed.ref"
+  mkdir -p "$report_dir/run-latest" 2>/dev/null
+  echo "$errors" > "$report_dir/run-latest/errors-count.ref"
+  rm -f "$marker"
+  if [ ! -f "$expected_file" ]; then
+    echo "!! NO ref ERROR BASELINE — $expected_file does not exist."
+    echo "   Seed it: just baseline-accept <port>"
+    : > "$marker"; return 1
+  fi
+  local expected
+  expected=$(tr -dc '0-9' < "$expected_file")
+  if [ -z "$expected" ]; then
+    echo "!! ref ERROR BASELINE UNREADABLE — $expected_file holds no number."
+    : > "$marker"; return 1
+  fi
+  if [ "$errors" = "$expected" ]; then
+    echo "  errors vs baseline (ref): $errors = $expected  (unchanged)"
+    return 0
+  fi
+  if [ "$errors" -gt "$expected" ]; then
+    echo "!! ref ERRORS ROSE — $expected -> $errors."
+  else
+    echo "!! ref ERRORS FELL — $expected -> $errors. Acknowledge: just baseline-accept <port>"
   fi
   : > "$marker"; return 1
 }
