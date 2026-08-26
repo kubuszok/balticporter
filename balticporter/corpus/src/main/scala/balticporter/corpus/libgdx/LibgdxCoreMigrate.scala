@@ -491,7 +491,7 @@ object LibgdxPolicy:
     * states that for the two engine phases whose names are static, and the list position states the rest.
     */
   def beanProperties: balticporter.transform.BeanPropertyTransform =
-    new balticporter.transform.BeanPropertyTransform(beanPropertyPairs, beanPropertyTargets, scope = balticporter.tir.RuleScope.Only(Set.empty))
+    new balticporter.transform.BeanPropertyTransform(beanPropertyPairs, beanPropertyTargets, scope = balticporter.tir.RuleScope.Everywhere())
 
   /** WHICH pairs collapse to a plain `var`/`val` instead of a `def` pair (`DESIGN.md` §8.5).
     *

@@ -309,8 +309,20 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     val detectedProperties =
       if !scopeActive then Nil
       else
-        val configuredKeys = pairs.keySet
-        val detected = BeanPropertyTransform.detect(program, graph, scope, configuredKeys,
+        // Skip any accessor method already CLAIMED by a configured pair, AND skip any auto-detected
+        // pair whose derived property name collides with a configured pair's property key.
+        // The configured pair's key is `owner#property` and the auto-detected key is
+        // `owner#derivedProperty` — which differ when the configured pair uses a non-standard
+        // property name (e.g., `getDragActor` -> `currentDragActor` instead of `dragActor`).
+        // TWO checks: (1) the accessor NAME is already claimed; (2) the derived PROPERTY NAME is
+        // already taken (e.g., configured `getTouchable` -> `touchable` blocks auto-detected
+        // `isTouchable` -> `touchable`).
+        val configuredAccessors: Set[String] = parsed.flatMap { e =>
+          e.accessors.map(a => MemberKey(e.owner, a).render)
+        }.toSet
+        val configuredPropertyKeys: Set[String] = pairs.keySet
+        val detected = BeanPropertyTransform.detect(program, graph, scope,
+          configuredAccessors, configuredPropertyKeys,
           isVoid = (p, t) => isVoid(p, t), headOf = t => headOf(t),
           callsAreRewritable = (comp, ar) =>
             comp.forall(s => program.usages(s).forall {
@@ -836,7 +848,7 @@ object BeanPropertyTransform:
     * getter, fluent setter, value-position references. A refused candidate is filed as
     * `IdiomKind.BeanDetect` with the guard that refused it. */
   def detect(program: Program, graph: OverrideGraph, scope: RuleScope,
-             configuredKeys: Set[String],
+             configuredAccessors: Set[String], configuredPropertyKeys: Set[String],
              isVoid: (Program, TypeRepr) => Boolean,
              headOf: TypeRepr => Option[SymId],
              callsAreRewritable: (Set[SymId], Int) => Boolean,
@@ -879,13 +891,22 @@ object BeanPropertyTransform:
           }
         }
 
+        // Deduplicate: if two getters in the same type map to the SAME property name
+        // (e.g., `isTouchable()` -> `touchable` and `getTouchable()` -> `touchable`),
+        // skip both — a property has one getter and two is a name collision.
+        val propNameCounts = getterCandidates.groupBy(_._2).view.mapValues(_.size)
+        val ambiguousProps = propNameCounts.collect { case (n, c) if c > 1 => n }.toSet
+
         // For each getter candidate, try to find a matching setter
         getterCandidates.foreach { (getterSym, propName, getterDef) =>
           val key = MemberKey(ownerFqn, propName).render
-          // Skip if there is a configured pair for this key
-          if !configuredKeys.contains(key) then
+          // Skip if the getter method is already claimed by a configured pair. The configured
+          // pair may use a DIFFERENT property name (e.g., `getDragActor` -> `currentDragActor`),
+          // so we check the accessor name, not the property name.
+          val getterKey = MemberKey(ownerFqn, getterSym.name).render
+          if !configuredAccessors.contains(getterKey) && !configuredPropertyKeys.contains(key) &&
+             !ambiguousProps.contains(propName) then
             val getterHead = headOf(getterDef.returnTpt.tpe)
-            val isBoolean = getterSym.name.startsWith("is")
             val getterReturnVoid = isVoid(program, getterDef.returnTpt.tpe)
             val gComp = graph.closureOf(getterSym.id).members
 
