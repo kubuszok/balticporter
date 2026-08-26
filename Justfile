@@ -531,7 +531,7 @@ gdx-measure:
     grep -A1 '^-- Error:' "$MEASURE_TMP"/gdxmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
     # Cross-platform compile gates (ENGINE-LIMITS P1: a COMPILE gate, not a portability gate).
-    # Dependencies are omitted on purpose — JVM-only coordinates cannot resolve for JS/Native.
+    # No deps — the JVM compile for this lane has none either.
     xplat_compile scala-js {{scala_version}} "$REPORT" gdxmeasure {{gdx_module}}/src_managed/main/scala
     xplat_compile scala-native {{scala_version}} "$REPORT" gdxmeasure {{gdx_module}}/src_managed/main/scala
 
@@ -616,13 +616,13 @@ gdx-test-measure:
     error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gdxtestmeasure.txt | sort | uniq -c | sort -rn | head
 
-    # Cross-platform compile gates — same source dirs, no deps (JVM-only coordinates).
+    # Cross-platform compile gates — same source dirs and deps as the JVM compile.
     xplat_compile scala-js {{scala_version}} "$REPORT" gdxtestmeasure \
       {{gdx_module}}/src_managed/main/scala {{gdx_module}}/src_managed/test/scala \
-      {{gdx_module}}/src/test/scala -- --test
+      {{gdx_module}}/src/test/scala -- --test {{gdx_deps}}
     xplat_compile scala-native {{scala_version}} "$REPORT" gdxtestmeasure \
       {{gdx_module}}/src_managed/main/scala {{gdx_module}}/src_managed/test/scala \
-      {{gdx_module}}/src/test/scala -- --test
+      {{gdx_module}}/src/test/scala -- --test {{gdx_deps}}
 
     # -------------------------------------------------------------------------------------------
     # RUN them. Compiling a test suite measures nothing about behaviour, and CLAUDE.md §4.4 lists ten
@@ -729,11 +729,11 @@ ashley-measure:
     error_baseline_guard "$ERRORS" "$TREPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/ashleymeasure.txt | sort | uniq -c | sort -rn | head
 
-    # Cross-platform compile gates — same source dirs, no deps.
+    # Cross-platform compile gates — same source dirs and deps as the JVM compile.
     xplat_compile scala-js {{scala_version}} "$TREPORT" ashleymeasure \
-      {{gdx_module}}/src_managed/main/scala {{ashley_module}}/src_managed/main/scala {{ashley_module}}/src_managed/test/scala -- --test
+      {{gdx_module}}/src_managed/main/scala {{ashley_module}}/src_managed/main/scala {{ashley_module}}/src_managed/test/scala -- --test {{ashley_deps}}
     xplat_compile scala-native {{scala_version}} "$TREPORT" ashleymeasure \
-      {{gdx_module}}/src_managed/main/scala {{ashley_module}}/src_managed/main/scala {{ashley_module}}/src_managed/test/scala -- --test
+      {{gdx_module}}/src_managed/main/scala {{ashley_module}}/src_managed/main/scala {{ashley_module}}/src_managed/test/scala -- --test {{ashley_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -838,11 +838,11 @@ anim8-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/anim8measure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
-    # Cross-platform compile gates — emitted sources only, no deps.
+    # Cross-platform compile gates — same source dirs and deps as the JVM compile.
     xplat_compile scala-js {{scala_version}} "$REPORT" anim8measure \
-      {{gdx_module}}/src_managed/main/scala {{anim8_module}}/src_managed/main/scala
+      {{gdx_module}}/src_managed/main/scala {{anim8_module}}/src_managed/main/scala -- {{anim8_deps}}
     xplat_compile scala-native {{scala_version}} "$REPORT" anim8measure \
-      {{gdx_module}}/src_managed/main/scala {{anim8_module}}/src_managed/main/scala
+      {{gdx_module}}/src_managed/main/scala {{anim8_module}}/src_managed/main/scala -- {{anim8_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -965,11 +965,11 @@ gltf-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/gltfmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
-    # Cross-platform compile gates — emitted sources only, no deps.
+    # Cross-platform compile gates — same source dirs and deps as the JVM compile.
     xplat_compile scala-js {{scala_version}} "$TREPORT" gltfmeasure \
-      {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala {{gltf_module}}/src_managed/test/scala -- --test
+      {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala {{gltf_module}}/src_managed/test/scala -- --test {{gltf_deps}}
     xplat_compile scala-native {{scala_version}} "$TREPORT" gltfmeasure \
-      {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala {{gltf_module}}/src_managed/test/scala -- --test
+      {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala {{gltf_module}}/src_managed/test/scala -- --test {{gltf_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -1094,11 +1094,11 @@ screens-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/screensmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
-    # Cross-platform compile gates — emitted sources only, no deps.
+    # Cross-platform compile gates — same source dirs and deps as the JVM compile.
     xplat_compile scala-js {{scala_version}} "$REPORT" screensmeasure \
-      {{gdx_module}}/src_managed/main/scala {{screens_module}}/src_managed/main/scala
+      {{gdx_module}}/src_managed/main/scala {{screens_module}}/src_managed/main/scala -- {{screens_deps}}
     xplat_compile scala-native {{scala_version}} "$REPORT" screensmeasure \
-      {{gdx_module}}/src_managed/main/scala {{screens_module}}/src_managed/main/scala
+      {{gdx_module}}/src_managed/main/scala {{screens_module}}/src_managed/main/scala -- {{screens_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -1204,11 +1204,11 @@ vfx-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/vfxmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
-    # Cross-platform compile gates — emitted sources only, no deps.
+    # Cross-platform compile gates — same source dirs and deps as the JVM compile.
     xplat_compile scala-js {{scala_version}} "$REPORT" vfxmeasure \
-      {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala
+      {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala -- {{vfx_deps}}
     xplat_compile scala-native {{scala_version}} "$REPORT" vfxmeasure \
-      {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala
+      {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala -- {{vfx_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -1341,7 +1341,7 @@ ai-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/aimeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
-    # Cross-platform compile gates — emitted sources only, no deps.
+    # Cross-platform compile gates — no deps (ai_deps is empty).
     xplat_compile scala-js {{scala_version}} "$REPORT" aimeasure \
       {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala
     xplat_compile scala-native {{scala_version}} "$REPORT" aimeasure \
@@ -1443,11 +1443,11 @@ ai-test-measure:
     error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/aitestmeasure.txt | sort | uniq -c | sort -rn | head
 
-    # Cross-platform compile gates — emitted sources only, no deps.
+    # Cross-platform compile gates — same source dirs and deps as the JVM compile.
     xplat_compile scala-js {{scala_version}} "$REPORT" aitestmeasure \
-      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala {{ai_module}}/src_managed/test/scala -- --test
+      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala {{ai_module}}/src_managed/test/scala -- --test {{ai_test_deps}}
     xplat_compile scala-native {{scala_version}} "$REPORT" aitestmeasure \
-      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala {{ai_module}}/src_managed/test/scala -- --test
+      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala {{ai_module}}/src_managed/test/scala -- --test {{ai_test_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -1661,11 +1661,11 @@ sg-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/sgmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
-    # Cross-platform compile gates — emitted sources only, no deps.
+    # Cross-platform compile gates — same source dirs and deps as the JVM compile.
     xplat_compile scala-js {{scala_version}} "$TREPORT" sgmeasure \
-      {{sg_module}}/src_managed/main/scala {{sg_module}}/src_managed/test/scala -- --test
+      {{sg_module}}/src_managed/main/scala {{sg_module}}/src_managed/test/scala -- --test {{sg_deps}}
     xplat_compile scala-native {{scala_version}} "$TREPORT" sgmeasure \
-      {{sg_module}}/src_managed/main/scala {{sg_module}}/src_managed/test/scala -- --test
+      {{sg_module}}/src_managed/main/scala {{sg_module}}/src_managed/test/scala -- --test {{sg_deps}}
 
     # -------------------------------------------------------------------------------------------
     # RUN them. Compiling a suite measures nothing about behaviour: CLAUDE.md §4.4 lists ten java forms
@@ -1771,7 +1771,7 @@ noise4j-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/n4jmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
-    # Cross-platform compile gates — emitted sources only, no deps.
+    # Cross-platform compile gates — no deps (n4j_deps is empty).
     xplat_compile scala-js {{scala_version}} "$REPORT" n4jmeasure \
       {{n4j_module}}/src_managed/main/scala
     xplat_compile scala-native {{scala_version}} "$REPORT" n4jmeasure \
@@ -1865,7 +1865,7 @@ jbump-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/jbumpmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
-    # Cross-platform compile gates — emitted sources only, no deps.
+    # Cross-platform compile gates — no deps (jbump_deps is empty).
     xplat_compile scala-js {{scala_version}} "$REPORT" jbumpmeasure \
       {{jbump_module}}/src_managed/main/scala
     xplat_compile scala-native {{scala_version}} "$REPORT" jbumpmeasure \
@@ -2031,7 +2031,7 @@ usl-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/uslmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
-    # Cross-platform compile gates — emitted sources only, no deps.
+    # Cross-platform compile gates — no deps (usl_deps is empty).
     xplat_compile scala-js {{scala_version}} "$REPORT" uslmeasure \
       {{usl_module}}/src_managed/main/scala
     xplat_compile scala-native {{scala_version}} "$REPORT" uslmeasure \
@@ -2256,11 +2256,11 @@ usl-test-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/usltmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
-    # Cross-platform compile gates — emitted sources only, no deps.
+    # Cross-platform compile gates — same source dirs and deps as the JVM compile.
     xplat_compile scala-js {{scala_version}} "$TREPORT" usltmeasure \
-      {{usl_module}}/src_managed/main/scala {{usl_module}}/src_managed/test/scala -- --test
+      {{usl_module}}/src_managed/main/scala {{usl_module}}/src_managed/test/scala -- --test {{usl_test_deps}}
     xplat_compile scala-native {{scala_version}} "$TREPORT" usltmeasure \
-      {{usl_module}}/src_managed/main/scala {{usl_module}}/src_managed/test/scala -- --test
+      {{usl_module}}/src_managed/main/scala {{usl_module}}/src_managed/test/scala -- --test {{usl_test_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -2474,11 +2474,12 @@ liqp-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/liqpmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -20
 
-    # Cross-platform compile gates — emitted sources only, no deps, no --jar (JVM class files).
+    # Cross-platform compile gates — same deps as the JVM compile, including --jar for the
+    # ANTLR parser classes (scalac on JS/Native type-checks against JVM class files fine).
     xplat_compile scala-js {{scala_version}} "$TREPORT" liqpmeasure \
-      {{liqp_module}}/src_managed/main/scala {{liqp_module}}/src_managed/test/scala -- --test
+      {{liqp_module}}/src_managed/main/scala {{liqp_module}}/src_managed/test/scala -- --test $DEPS --jar "{{liqp_parser_classes}}"
     xplat_compile scala-native {{scala_version}} "$TREPORT" liqpmeasure \
-      {{liqp_module}}/src_managed/main/scala {{liqp_module}}/src_managed/test/scala -- --test
+      {{liqp_module}}/src_managed/main/scala {{liqp_module}}/src_managed/test/scala -- --test $DEPS --jar "{{liqp_parser_classes}}"
 
     # -------------------------------------------------------------------------------------------
     # RUN them. Compiling a suite measures nothing about behaviour: CLAUDE.md §4.4 lists the java
@@ -2649,11 +2650,11 @@ md-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/mdmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -20
 
-    # Cross-platform compile gates — emitted sources only, no deps.
+    # Cross-platform compile gates — same deps as the JVM compile.
     xplat_compile scala-js {{scala_version}} "$REPORT" mdmeasure \
-      {{md_module}}/src_managed/main/scala
+      {{md_module}}/src_managed/main/scala -- {{md_deps}}
     xplat_compile scala-native {{scala_version}} "$REPORT" mdmeasure \
-      {{md_module}}/src_managed/main/scala
+      {{md_module}}/src_managed/main/scala -- {{md_deps}}
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
@@ -2765,11 +2766,11 @@ md-test-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/mdtestmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -20
 
-    # Cross-platform compile gates — emitted sources only, no deps, no --resource-dir.
+    # Cross-platform compile gates — same deps as the JVM compile, no --resource-dir.
     xplat_compile scala-js {{scala_version}} "$TREPORT" mdtestmeasure \
-      {{md_module}}/src_managed/main/scala {{md_module}}/src_managed/test/scala -- --test
+      {{md_module}}/src_managed/main/scala {{md_module}}/src_managed/test/scala -- --test {{md_deps}} {{md_test_deps}}
     xplat_compile scala-native {{scala_version}} "$TREPORT" mdtestmeasure \
-      {{md_module}}/src_managed/main/scala {{md_module}}/src_managed/test/scala -- --test
+      {{md_module}}/src_managed/main/scala {{md_module}}/src_managed/test/scala -- --test {{md_deps}} {{md_test_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -3017,11 +3018,11 @@ md-ext-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/mdextmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -20
 
-    # Cross-platform compile gates — emitted sources only, no deps.
+    # Cross-platform compile gates — same deps as the JVM compile.
     xplat_compile scala-js {{scala_version}} "$EREPORT" mdextmeasure \
-      {{md_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/test/scala -- --test
+      {{md_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/test/scala -- --test {{md_deps}} {{md_test_deps}} {{md_ext_deps}}
     xplat_compile scala-native {{scala_version}} "$EREPORT" mdextmeasure \
-      {{md_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/test/scala -- --test
+      {{md_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/test/scala -- --test {{md_deps}} {{md_test_deps}} {{md_ext_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -3200,11 +3201,11 @@ textra-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/textrameasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
-    # Cross-platform compile gates — emitted sources only, no deps.
+    # Cross-platform compile gates — same deps as the JVM compile (textra_deps + declared).
     xplat_compile scala-js {{scala_version}} "$REPORT" textrameasure \
-      {{gdx_module}}/src_managed/main/scala {{textra_module}}/src_managed/main/scala
+      {{gdx_module}}/src_managed/main/scala {{textra_module}}/src_managed/main/scala -- $DEPS
     xplat_compile scala-native {{scala_version}} "$REPORT" textrameasure \
-      {{gdx_module}}/src_managed/main/scala {{textra_module}}/src_managed/main/scala
+      {{gdx_module}}/src_managed/main/scala {{textra_module}}/src_managed/main/scala -- $DEPS
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
@@ -3515,11 +3516,11 @@ visui-measure:
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/visuimeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
-    # Cross-platform compile gates — emitted sources only, no deps.
+    # Cross-platform compile gates — same deps as the JVM compile (visui_deps + declared).
     xplat_compile scala-js {{scala_version}} "$REPORT" visuimeasure \
-      {{gdx_module}}/src_managed/main/scala {{visui_module}}/src_managed/main/scala
+      {{gdx_module}}/src_managed/main/scala {{visui_module}}/src_managed/main/scala -- $DEPS
     xplat_compile scala-native {{scala_version}} "$REPORT" visuimeasure \
-      {{gdx_module}}/src_managed/main/scala {{visui_module}}/src_managed/main/scala
+      {{gdx_module}}/src_managed/main/scala {{visui_module}}/src_managed/main/scala -- $DEPS
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"

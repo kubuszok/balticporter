@@ -1200,12 +1200,20 @@ headline() {
 # has and JS/Native do not is a real compile error here. The portability(all|emitted|injected)
 # lanes stay as the TIR-level API-presence check.
 #
-# DEPENDENCIES ARE OMITTED ON PURPOSE for the cross-platform compile. JVM-only dependencies
-# (junit, mockito, jackson, antlr-runtime) cannot resolve for JS/Native — scala-cli would
-# abort at resolution before compiling anything. The emitted code that names those JVM-only
-# types will fail at compile, which is an EXPECTED error we baseline. Only cross-published
-# dependencies (munit via `%%`) would work, but filtering them is not worth the complexity
-# since we baseline all errors anyway. The `declared_dep_flags` output is JVM-only coordinates.
+# DEPENDENCIES are passed through the `--` separator, the SAME classpath the JVM compile gets.
+# Both coordinate forms resolve on JS/Native for TYPE-CHECKING (not linking, which is not what
+# this lane does): a Scala cross-published artifact (`org.scalameta::munit:1.0.2`, the `::`
+# platform form) resolves the platform-specific JAR, and a Java-only artifact
+# (`junit:junit:4.13.2`, the `:` form) resolves the JVM JAR whose class files scalac reads for
+# type signatures. `portability(all|emitted|injected)` stays as the TIR-level check for
+# whether those APIs exist off-JVM (ENGINE-LIMITS P1).
+#
+# `declared_dep_flags` output (explicit JVM coordinates, `org:name_3:rev`) also resolves on
+# JS/Native — scalac type-checks against JVM class files, only linking would fail.
+# `--jar` directories (e.g. liqp_parser_classes) are passed the same way.
+#
+# Each call site in the Justfile passes its lane's deps after `--`, e.g.:
+#   xplat_compile scala-js ... <srcs> -- --test $DEPS
 #
 # The JS and Native version pins come from `project/plugins.sbt` and match sge's toolchain:
 # Scala.js 1.22.0, Scala Native 0.5.12. scala-cli 1.16.0 defaults to these exact versions,

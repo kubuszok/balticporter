@@ -1223,9 +1223,10 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   tree. This is a COMPILE gate, not a portability gate (`ENGINE-LIMITS.md` P1): the Scala.js and
   Native compilers type-check against their own javalib, so a `java.lang.reflect.Field` the JVM has
   and JS/Native do not is a real compile error here, while the `portability(all|emitted|injected)`
-  lanes stay as the TIR-level API-presence check. Dependencies are omitted from the xplat compile on
-  purpose: JVM-only coordinates (junit, mockito, jackson, antlr-runtime) cannot resolve for
-  JS/Native, and the resulting compile errors are expected and baselined. The JS and Native version
+  lanes stay as the TIR-level API-presence check. Dependencies are passed through the `--` separator,
+  the same classpath the JVM compile gets: both `:` (Java) and `::` (Scala cross-published)
+  coordinates resolve on JS/Native for type-checking, and `--jar` directories are accepted too.
+  The JS and Native version
   pins match sge's toolchain (Scala.js 1.22.0, Scala Native 0.5.12) through scala-cli's defaults.
   `baseline/expected-errors.js` and `baseline/expected-errors.native` are written by the run
   (`run-latest/errors-count.js`, `errors-count.native`) and promoted by `just baseline-accept`, gated
