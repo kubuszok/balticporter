@@ -246,6 +246,71 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
+  // SetterOnlyInterface — the Cullable seam (CLAUDE.md §1 b: a pair is applied over its WHOLE
+  // override component or refused as a unit)
+  // -------------------------------------------------------------------------------------------
+
+  /** `Cullable` declares ONLY `setCullingArea`; `Group` declares the pair. The setter component
+    * reaches `Cullable`, `x.cullingArea = v` is scalac's `x.cullingArea_=(v)` with the GETTER on
+    * the LHS, and a `Cullable`-typed receiver has no getter — so the pair is refused whole and
+    * every declaration keeps its java name (23 pairs on libGDX core, 2 errors closed). */
+  private val setterOnlyInterface =
+    """
+    class Rectangle {}
+    interface Cullable { void setCullingArea(Rectangle area); }
+    class Group implements Cullable {
+      private Rectangle cullingArea;
+      public Rectangle getCullingArea() { return cullingArea; }
+      public void setCullingArea(Rectangle area) { this.cullingArea = area; }
+      void use(Cullable c) { c.setCullingArea(null); }
+    }
+    """
+
+  test("a setter-only INTERFACE in the setter's component refuses the auto-detected pair") {
+    val r = ran(setterOnlyInterface, new BeanPropertyTransform(scope = RuleScope.Everywhere()))
+    val refused = detectedRefused(r).filter(_.subject.endsWith("#cullingArea"))
+    assertEquals(clue(refused).size, 1)
+    assert(clue(refused.head.verdict.render).contains("SetterOnlyInterface"))
+    assertEquals(nameOf(r, "Group#getCullingArea"), "getCullingArea")
+    assertEquals(nameOf(r, "Group#setCullingArea"), "setCullingArea")
+    assertEquals(nameOf(r, "Cullable#setCullingArea"), "setCullingArea")
+    assert(clue(r.out).contains("def setCullingArea"))
+    assert(!clue(r.out).contains("cullingArea_="))
+  }
+
+  test("the same guard holds a CONFIGURED pair, as a counted policy refusal") {
+    val ph = new BeanPropertyTransform(pairs = Map("Group#cullingArea" -> "getCullingArea/setCullingArea"))
+    val r  = ran(setterOnlyInterface, ph)
+    assertEquals(nameOf(r, "Cullable#setCullingArea"), "setCullingArea")
+    val f = ph.policyReport.findings.filter(_.key == "Group#cullingArea")
+    assert(clue(f).exists(_.detail.contains("Cullable")))
+  }
+
+  /** `TirEmitter.resolveFieldShadowing`'s implementation-pair exemption is ABSTRACT-only: a concrete
+    * parameterless `def` is a detected getter whose storage is its OWN owner's field, and a
+    * descendant's same-name field is java's plain shadow — a `var` cannot override a concrete
+    * `def`, so it is renamed `$shadow` (Sprite#rotation / ParticleEmitter, Table#skin / Dialog:
+    * 2 RefChecks rows at 0 typer errors). */
+  test("a DESCENDANT's field under a detected concrete getter is a shadow, renamed `$shadow`") {
+    val r = ran(
+      """
+      class Sprite {
+        private float rotation;
+        public float getRotation() { return rotation; }
+        public void setRotation(float r) { this.rotation = r; }
+      }
+      class Emitter extends Sprite {
+        protected float rotation;
+        float twice() { return rotation * 2; }
+      }
+      """,
+      new BeanPropertyTransform(scope = RuleScope.Everywhere()))
+    assertEquals(nameOf(r, "Sprite#getRotation"), "rotation")
+    assert(clue(r.out).contains("var rotation$shadow"))
+    assert(clue(r.out).contains("rotation$shadow * 2"))
+  }
+
+  // -------------------------------------------------------------------------------------------
   // fingerprint
   // -------------------------------------------------------------------------------------------
 
