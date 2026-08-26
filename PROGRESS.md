@@ -10395,6 +10395,48 @@ warning nowhere else. So Phase 1 opens with **wave 1.0 — the reference build's
 compile in every lane** (`scalacOptions` read from the drop-in clone, not copied), because a port
 that is green under scala-cli's defaults and red under `-no-indent -Werror` is not at the bar.
 
+**Wave 1.0 delivered: `flags_compile` — reference-build flags as a fourth compile** (DESIGN.md
+§8.24). `flags_compile` in `scripts/_lib.sh` runs `scala-cli compile` with the reference repo's
+own `scalacOptions` over the emitted tree, counts errors, and baselines as `expected-errors.ref`.
+Three flag sets in the Justfile: `sge_strict_flags` (core sge), `sge_relaxed_flags` (sge
+extensions, strict minus `-Wunused:...`), `ssg_flags`. 20 of 23 lanes carry the fourth compile (3
+differential lanes excluded). Every injected override (10 `corpus/*-overrides` files) and every
+hand-written port file (18 `ported/*/src` files) converted to brace syntax; the 8 runtime support
+files converted with `scalac -rewrite -no-indent`. `members-unchanged`: 0 digests on all 25 ports.
+
+| lane | before | after | lane | before | after |
+|---|---|---|---|---|---|
+| gdx | 1027 | 651 | jbump | 474 | 1 |
+| gdx-test | 1076 | 686 | usl | 484 | 8 |
+| ashley | 1056 | 8 | usl-test | 484 | 8 |
+| anim8 | 1046 | 10 | liqp | 796 | 106 |
+| gltf | 1137 | 3 | md | 861 | 270 |
+| screens | 1061 | 33 | md-test | 1054 | 363 |
+| vfx | 1029 | 18 | md-ext | 994 | 259 |
+| ai | 1121 | 9 | textra | 1111 | 101 |
+| ai-test | 1122 | 9 | visui | 1141 | 7 |
+| sg | 532 | 20 | noise4j | 2 | 2 |
+
+Residue families (the work list for emitter waves that follow):
+
+- **`-Wunused:locals,privates,patvars`** (every port): promoted constructor locals never read
+  (`CtorFunnel`'s `private var` for a reassigned parameter, promoted locals from `Tree.LocalDecl`),
+  `case x` binders in translated switch arms (`SwitchTransform`), private forwarders
+  (`DiamondForwarderTransform`). (a) universal, emitter sites: `TirEmitter.emitLocalDecl`,
+  `TirEmitter.emitSwitch`, `TirEmitter.emitForwarder`.
+- **`-Wunused:imports`** (ssg ports, gdx under strict): emitted FQN references that scalac reads as
+  unused imports when the file is compiled standalone. (a) universal, emitter site:
+  `TirEmitter.emitImports` (the emitter currently writes no imports; these are from the runtime
+  `package.scala` re-exports).
+- **`-Wimplausible-patterns`** (rare): a `match` on a type that scalac considers cannot match. (a)
+  universal, emitter site: `TirEmitter.emitMatch`.
+- **`-no-indent` residue** (4 runtime files): 8 `while/if` patterns in `JavaCollections.scala`,
+  `JavaCollection.scala`, `JavaListIterator.scala`, `JavaEnumSet.scala` that `scalac -rewrite` did
+  not convert. (a) universal, these are the engine's own support files.
+- **screens 33** (c): guacamole's JVM-only logging surface (same as the xplat residue).
+- **noise4j 2**: `java.util.List` / `java.util.Set` missing `foreach` — collection-boundary seam
+  (`CollectionsTransform`), warnings promoted to errors under `-Werror`. (a) universal.
+
 **Wave 0.2 delivered: `api-parity` check** (DESIGN.md §8.23). `PortManifest.parity: Option[ParityRef]`
 is the §1(b) parameter. Both sides parsed by scalameta (§4.56), eight families, required-when-declared.
 sge-ecs wired to `../sge/sge-extension/ecs/src/main/scala`, first measurement:
