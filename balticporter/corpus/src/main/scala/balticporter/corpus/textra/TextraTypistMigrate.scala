@@ -221,7 +221,6 @@ object TextraTypistPolicy:
         balticporter.catalog.ArtifactDep("com.github.tommyettinger", "regexodus", "0.1.21",
                                          balticporter.catalog.CrossKind.Java)),
       surface = List(
-        nullability,
         globals,
         // LAST, deliberately, for the reason `AshleyPolicy` and `GdxAiPolicy` state: this reads what
         // the BASE actually emitted and reports a reference the base does not ship, so it must run
@@ -291,59 +290,10 @@ object TextraTypistPolicy:
       )
     ))
 
-  /** THIS module's half of the K13 exit — a `nullability` scope and NOTHING ELSE.
-    *
-    * ==Why a second INSTANCE, and why it carries no annotation==
-    * `ENGINE-LIMITS.md` K13: `Null` is a subtype of every CONCRETE reference type and NOT of an
-    * abstract `T`, so libGDX's `@Null` union floor is free at a declaration's own signature and
-    * costs at its USES wherever the annotated type is the owner's own type parameter. The base
-    * (`LibgdxPolicy.nullability`) took the scope exit for libGDX's generic containers; the ANNOTATION
-    * is the base's and stays there, so this instance declares an empty `annotations` set and the
-    * merge unions it to exactly the base's one entry. `target` is left at its default for
-    * `ScreensPolicy`'s reason — it is not this module's to choose, the shape must AGREE with the
-    * base's or the merge refuses, and `T | Null` is what libGDX's floor emits.
-    *
-    * `Everywhere` unions its excepts (`NullabilityTransform.mergedWith`), so the effective scope is
-    * `LibgdxPolicy.nullabilityExempt` PLUS the two entries below: libGDX's exemptions are facts about
-    * libGDX's containers and TextraTypist neither adds to nor subtracts from them, and these two are
-    * facts about a TextraTypist widget and have no business in the base's manifest (§1.5).
-    *
-    * Both subjects are inside this module's own `governs`, which is what makes the key admissible at
-    * all — a dependent may not re-scope a declaration its BASE emits (`SurfaceIntrusion`). */
-  def nullability: balticporter.transform.NullabilityTransform =
-    new balticporter.transform.NullabilityTransform(
-      scope = balticporter.tir.RuleScope.Everywhere(nullabilityExempt))
+  // K13 CLOSED: the base's `Named("lowlevel.Nullable")` target means `Nullable[T]` composes at
+  // every `T`, so the abstract-type-parameter class disappears and no scope exit is needed. This
+  // module no longer CONSTRUCTS a `nullability` of its own — no instance, no merge, and every
+  // dependent inherits the base's single entry unchanged.
 
-  /** The K13 exit, MEASURED at the MEMBER and not guessed at the type — `ScreensPolicy`'s shape
-    * rather than `LibgdxPolicy`'s, because the failing set here is two declarations in one class.
-    *
-    * `TextraListBox<T extends TextraLabel>` is the one type in this library that annotates its own
-    * type parameter, and `nullability-boundary` filed **3** `AbstractTypeParameter` rows on it
-    * before any compiler ran — `getSelected`, `setSelected`'s parameter and `getItemAt` — which is
-    * the §4.45 property working: the check named the errors ahead of scalac. The unscoped run put
-    * **4** errors in exactly two of the three:
-    *
-    *   - `getSelected(): T | Null` flows into `items.indexOf(getSelected(), false)` inside the
-    *     promoted constructor's anonymous `InputListener` (twice, `TextraListBox.java:81`);
-    *   - `setSelected(item: T | Null)` flows into `items.contains(item, false)` and
-    *     `selection.set(item)`, whose formals are the plain `T` (twice, line 316).
-    *
-    * **`getItemAt` is deliberately NOT here**, and that is the same line `ScreensPolicy` draws: it
-    * is annotated at an abstract `T` too, it stays COUNTED on `nullability-boundary`, and nothing in
-    * reach uses it in a position `T | Null` does not satisfy. The exit is what the compiler measured,
-    * not every declaration that could in principle have failed — and an entry that binds and holds
-    * back nothing is the dead policy `LibgdxPolicy.nullabilityExempt` records `OrderedMap` for.
-    *
-    * **`TypingListBox` is not here either, and that is the OTHER half of the same rule.** libGDX's
-    * list closes over `Array`'s two subclasses because they RE-STATE the annotation on their own `T`,
-    * and half an override pair is what a scope exit may not emit (35 -> 6 errors). `TypingListBox<T
-    * extends TypingLabel> extends TextraListBox<T>` overrides none of the three and declares no
-    * `@Null` anywhere in the file, so there is no second end to this pair and scoping the parent
-    * settles it.
-    *
-    * Deleted whole, not edited, when `DESIGN.md` §8.6's N2 (`-Yexplicit-nulls`) lands. */
-  def nullabilityExempt: Set[String] = Set(
-    // the bare member name is every OVERLOAD of it, which is what this needs
-    "com.github.tommyettinger.textra.TextraListBox#getSelected",
-    "com.github.tommyettinger.textra.TextraListBox#setSelected",
-  )
+  // K13 CLOSED: the `nullabilityExempt` set was the K13 exit — with `Named` mode, `Nullable[T]`
+  // composes at every `T` and the whole set is deleted, not just emptied.
