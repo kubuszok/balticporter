@@ -13347,20 +13347,32 @@ candidates, 2 confirmed, self-declared under-sampled.
 
 And the remaining gain is nil: `try { … } finally { r.close() }` is already valid, idiomatic Scala.
 
-### I7. null → `Option`, and index-`for` → `Range` — **REFUSED, and both briefs and the engine agree**
+### I7. null → `Option` — **AVAILABLE and off; `Named` is the preferred wrapper target**
 
-- **null → `Option`**: `Some(x)` allocates on a hot path; `NullabilityTransform`'s `T | Null` floor
-  already makes `if (x != null)` the idiomatic consumption of an annotated declaration, so the
-  correct transform for the annotated case is NO transform. The unannotated case — 7 of 11 libraries
-  carry no nullability annotation at all — needs whole-program null-flow analysis no phase has. The
-  hand port is unambiguous: 34 `Option[` against 301 `null` in translated-only files, and `Option`
-  appears only at named seams a human identified, including one (`-1` sentinel → `Option[Int]`) that
-  is undecidable from the java type;
-- **index-`for` → `Range`**: 1,588 sites, concentrated in exactly the pixel/physics/math code the
-  charter names as perf-critical (anim8's 378 are three files of dithering; jbump is a broadphase).
-  In the hot files sampled, indexed `while` is the ONLY loop shape the hand port uses, and the engine
-  and the hand port independently converged on `for` → `while`. Closed by agreement, not open by
-  count.
+`Target.OptionTarget` is built, spec-tested, and available as a spelling. It uses the same
+four-member contract and the same coercion seam as `Named` (`Some.apply`/`None`/`.get`/`.isEmpty`),
+and it CLOSES K13 for the same reason (K13 is about `T | Null` at abstract `T`; `Option[T]` IS a
+concrete type that composes). It stays OFF because:
+
+- **`Some(x)` allocates on a hot path.** An annotated field read inside a tight loop wraps on every
+  access. `Named` avoids this: `lowlevel.Nullable` is an opaque alias over `T | Null` — zero
+  allocation, the same JVM representation.
+- **The hand port is unambiguous**: 34 `Option[` against 301 `null` in translated-only files, and
+  `Option` appears only at named seams a human identified, including one (`-1` sentinel →
+  `Option[Int]`) that is undecidable from the java type.
+- **No standalone corpus library has nullability annotations** (7 of 11 upstreams surveyed carry
+  none), so the Option spelling cannot be measured on a standalone port. On a libGDX-dependent the
+  merge contract would inherit the base's target.
+
+The spelling is available for ports where allocation is acceptable and `Option` is the preferred
+idiom. The allocation cost is the measurement — `Named` with an opaque wrapper is the better answer
+for a hot path, and `Union` is the better answer for a port at the floor.
+
+**index-`for` → `Range`** (unchanged): 1,588 sites, concentrated in exactly the pixel/physics/math
+code the charter names as perf-critical (anim8's 378 are three files of dithering; jbump is a
+broadphase). In the hot files sampled, indexed `while` is the ONLY loop shape the hand port uses,
+and the engine and the hand port independently converged on `for` → `while`. Closed by agreement,
+not open by count.
 
 ### I8. The `getClass()` residue a SAM conversion leaves, which NO guard can close — §1(a), COUNTED
 
