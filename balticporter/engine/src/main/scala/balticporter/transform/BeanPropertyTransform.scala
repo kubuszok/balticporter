@@ -75,7 +75,8 @@ import balticporter.tir.*
   */
 final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
                                   targets: Map[String, BeanPropertyTransform.Target] = Map.empty,
-                                  exposedFields: RuleScope = RuleScope.Only(Set.empty))
+                                  exposedFields: RuleScope = RuleScope.Only(Set.empty),
+                                  scope: RuleScope = RuleScope.Only(Set.empty))
     extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound, IdiomPhase, Rewrite:
 
   def name: String = "bean-properties"
@@ -83,8 +84,16 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
   override def runsBefore: Set[String] = Set("java-collections->scala", "package-rename")
 
   /** the lane that publishes what this phase CONSIDERED — one row per configured pair, `Converted`
-    * or `Refused(guard)`, which IS the collapse's denominator ([[BeanCollapse]]). */
-  def idiomKinds: Set[IdiomKind] = Set(IdiomKind.BeanCollapse)
+    * or `Refused(guard)`, which IS the collapse's denominator ([[BeanCollapse]]).
+    *
+    * [[IdiomKind.BeanDetect]] is declared only when the scope is active, so a run with no scope
+    * does not report a zero that means "the phase is in the pipeline" when the phase could not have
+    * detected anything. A kind is a DECLARED POPULATION, and reporting one for a population the
+    * phase was not configured to look for would make `idiom(refused) = 0` indistinguishable from
+    * "detection off" — which is `CLAUDE.md` §5's own rule about a bar met by doing nothing. */
+  def idiomKinds: Set[IdiomKind] =
+    if scope == RuleScope.Only(Set.empty) then Set(IdiomKind.BeanCollapse)
+    else Set(IdiomKind.BeanCollapse, IdiomKind.BeanDetect)
 
   /** the lane that counts what a collapse MOVED and did not rewrite.
     *
@@ -101,8 +110,8 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     * opposite things, and the only place that can SEE both is the run that assembles the pipeline —
     * so it hands this phase the other phase's own `RuleScope` rather than the port declaring a
     * second copy of it (`PortRun.idiomPhases`). A copy, never a mutation: a phase is a value. */
-  def withExposed(scope: RuleScope): BeanPropertyTransform =
-    new BeanPropertyTransform(pairs, targets, scope)
+  def withExposed(exposed: RuleScope): BeanPropertyTransform =
+    new BeanPropertyTransform(pairs, targets, exposed, scope)
 
   /** WHAT SHAPE this entry asked for — [[BeanPropertyTransform.Target.DefPair]] where it said
     * nothing, which is what every published config already says and what makes the second map a
@@ -120,7 +129,15 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     * declared: a fingerprint whose grammar depends on the value is one whose collisions depend on
     * it too. */
   def surfaceFingerprint: String =
-    pairs.toList.sorted.map((k, v) => s"$k=$v>${targetOf(k).config}").mkString(",")
+    val pairsFp = pairs.toList.sorted.map((k, v) => s"$k=$v>${targetOf(k).config}").mkString(",")
+    // §1(b): omit the scope segment at the default (`Only(Set.empty)`) — an empty parameter
+    // contributes no segment to the fingerprint, so the mechanism's arrival is flat.
+    val isDefault = scope == RuleScope.Only(Set.empty)
+    if isDefault then pairsFp
+    else
+      val scopeFp = scope.fingerprint
+      if pairsFp.isEmpty then s"detect=$scopeFp"
+      else s"$pairsFp;detect=$scopeFp"
 
   /** the port's own pairs table, verbatim — the policy this phase was constructed WITH.
     *
@@ -132,9 +149,14 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     * (§4.6, and `ENGINE-LIMITS.md` K2.5's measured shape of two answers to one question). */
   def pairsTable: Map[String, String] = pairs
 
+  /** the auto-detection scope, exposed for the merge contract (two instances composing their
+    * scopes) and the fingerprint. */
+  def detectScope: RuleScope = scope
+
   /** every type this instance's policy is KEYED on — a key's owner, through the one cut
-    * `MergeablePolicy.subjectOf` owns. */
-  def subjects: Set[String] = pairs.keySet.map(MergeablePolicy.subjectOf)
+    * `MergeablePolicy.subjectOf` owns. The scope entries contribute too, because an auto-detected
+    * pair's property name is a fact about the emitted SURFACE (§1.5). */
+  def subjects: Set[String] = pairs.keySet.map(MergeablePolicy.subjectOf) ++ scope.entries
 
   /** THE MERGE CONTRACT (DESIGN.md §8.13). Independent member keys union; same key with different
     * accessor value is REFUSED.
@@ -183,12 +205,27 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
             val chosen = if mine != BeanPropertyTransform.Target.DefPair then mine else theirs
             if chosen != BeanPropertyTransform.Target.DefPair then Some(k -> chosen) else scala.None
           }.toMap
-          val merged = new BeanPropertyTransform(
-            pairs   = myPairs ++ theirPairs,
-            targets = mergedTargets,
-            exposedFields = exposedFields)
-          val added = b.subjects -- subjects
-          Right(MergeablePolicy.Merged(merged, added))
+          // Merge scopes: two `Only` scopes union their include sets, two `Everywhere` scopes
+          // union their except sets, and a mixed pair is refused — `Everywhere(except) ∩ Only(include)`
+          // has no meaning the enum can hold.
+          val mergedScope: Either[String, RuleScope] = (detectScope, b.detectScope) match
+            case (RuleScope.Only(mine), RuleScope.Only(theirs))             =>
+              Right(RuleScope.Only(mine ++ theirs))
+            case (RuleScope.Everywhere(mine), RuleScope.Everywhere(theirs)) =>
+              Right(RuleScope.Everywhere(mine ++ theirs))
+            case _ =>
+              Left(s"`bean-properties` scope disagrees: one is `Only` and the other is " +
+                "`Everywhere` — the two directions cannot compose")
+          mergedScope match
+            case Left(reason) => Left(reason)
+            case Right(composedScope) =>
+              val merged = new BeanPropertyTransform(
+                pairs   = myPairs ++ theirPairs,
+                targets = mergedTargets,
+                exposedFields = exposedFields,
+                scope   = composedScope)
+              val added = b.subjects -- subjects
+              Right(MergeablePolicy.Merged(merged, added))
     case _ =>
       Left(s"`bean-properties` cannot merge with ${later.getClass.getSimpleName}")
 
@@ -242,7 +279,8 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
 
   override def run(program: Program): Program =
     getters = Map.empty; setters = Map.empty; lhsOf = Map.empty; collapsed = Nil
-    if pairs.isEmpty then return program
+    val scopeActive = scope != RuleScope.Only(Set.empty)
+    if pairs.isEmpty && !scopeActive then return program
 
     val refusals = collection.mutable.ListBuffer.empty[PolicyFinding]
     def refuse(e: BeanPropertyTransform.Entry, why: String): scala.None.type =
@@ -265,13 +303,35 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     val graph = OverrideGraph.build(program)
 
     // ---- 1. shape validation, per entry, on the PRE-rename program -------------------------
-    val properties = parsed.flatMap(e => validate(program, graph, e, refuse))
+    val configuredProperties = parsed.flatMap(e => validate(program, graph, e, refuse))
+
+    // ---- 1b. AUTO-DETECTION: scan owned types in scope for bean accessor pairs ---------------
+    val detectedProperties =
+      if !scopeActive then Nil
+      else
+        val configuredKeys = pairs.keySet
+        val detected = BeanPropertyTransform.detect(program, graph, scope, configuredKeys,
+          isVoid = (p, t) => isVoid(p, t), headOf = t => headOf(t),
+          callsAreRewritable = (comp, ar) =>
+            comp.forall(s => program.usages(s).forall {
+              case Usage(UsageKind.Call, a: Tree.Apply, _) =>
+                a.args.sizeIs == ar && receiverOf(a.fun).isDefined
+              case Usage(UsageKind.Call, _, _) => false
+              case Usage(UsageKind.TermRef, _, _) => false
+              case _ => true
+            }),
+          this)
+        detected
+
+    val properties = configuredProperties ++ detectedProperties
 
     // ---- 2. the rename: both accessors of a pair in ONE group, so half a property is impossible
     val requests = properties.flatMap { p =>
-      MemberRenamer.Request(p.getter, p.property, Reason.Configured(name, p.key), p.key, p.key) ::
+      val reason = if detectedProperties.contains(p) then Reason.Universal("bean-detect")
+                   else Reason.Configured(name, p.key)
+      MemberRenamer.Request(p.getter, p.property, reason, p.key, p.key) ::
         p.setter.map(s =>
-          MemberRenamer.Request(s, p.property + "_=", Reason.Configured(name, p.key), p.key, p.key)).toList
+          MemberRenamer.Request(s, p.property + "_=", reason, p.key, p.key)).toList
     }
     val (renamed, renameRefusals) = MemberRenamer.rename(
       program, graph, requests, MemberRenamer.OnCollision.DeferToEmitter, decisions)
@@ -280,6 +340,12 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     renameRefusals.map(_.request.key).distinct.foreach { k =>
       val why = renameRefusals.find(_.request.key == k).map(_.why).getOrElse("refused")
       parsed.find(_.key == k).foreach(e => refuse(e, why))
+      // auto-detected pairs report their rename refusal through the idiom lane
+      detectedProperties.find(_.key == k).foreach { p =>
+        consider(IdiomCandidate(IdiomKind.BeanDetect,
+          IdiomVerdict.Refused("RenameRefused", why), p.key,
+          s"auto-detected pair `${p.property}`", Decision.originOf(program, p.getter)))
+      }
     }
     ownFindings = ownFindings.filterNot(f => refusals.exists(_.key == f.key)) ++ refusals.toList
 
@@ -740,3 +806,165 @@ object BeanPropertyTransform:
                 "names more accessors than a property has")
     }
     (entries, findings.toList)
+
+  // ---- auto-detection helpers ----------------------------------------------------------------
+
+  /** Derive a property name from a getter method name following the standard JavaBeans convention
+    * (`java.beans.Introspector`): `getX` -> `x`, `getURL` -> `URL`, `isReady` -> `ready`. Returns
+    * `None` if the name does not match `get[A-Z].*` or `is[A-Z].*`. */
+  def propertyNameOf(methodName: String): Option[String] =
+    if methodName.startsWith("get") && methodName.length > 3 && methodName.charAt(3).isUpper then
+      Some(decapitalize(methodName.substring(3)))
+    else if methodName.startsWith("is") && methodName.length > 2 && methodName.charAt(2).isUpper then
+      Some(decapitalize(methodName.substring(2)))
+    else scala.None
+
+  /** The standard `java.beans.Introspector.decapitalize` rule: lowercase the first character UNLESS
+    * the first TWO characters are uppercase, in which case leave the string as-is. */
+  def decapitalize(s: String): String =
+    if s.length > 1 && s.charAt(0).isUpper && s.charAt(1).isUpper then s
+    else if s.nonEmpty then s.updated(0, s.charAt(0).toLower) else s
+
+  /** Scan the program for bean accessor pairs in the types named by `scope`. Each detected pair
+    * yields a [[Property]] that can be merged with the configured ones.
+    *
+    * The scope check is on the OWNER TYPE, not on the method — "auto-detect pairs in type `Bar`"
+    * means every getter/setter pair declared in `Bar`. A configured pair at the same key is
+    * SKIPPED so the configured policy always wins.
+    *
+    * Each candidate goes through the SAME shape checks the configured path applies: static, void
+    * getter, fluent setter, value-position references. A refused candidate is filed as
+    * `IdiomKind.BeanDetect` with the guard that refused it. */
+  def detect(program: Program, graph: OverrideGraph, scope: RuleScope,
+             configuredKeys: Set[String],
+             isVoid: (Program, TypeRepr) => Boolean,
+             headOf: TypeRepr => Option[SymId],
+             callsAreRewritable: (Set[SymId], Int) => Boolean,
+             phase: BeanPropertyTransform): List[Property] =
+    val result = collection.mutable.ListBuffer.empty[Property]
+
+    def defOf(s: SymId): Option[Tree.DefDef] = program.definitionOf(s).collect { case d: Tree.DefDef => d }
+    def isStatic(s: SymId): Boolean = program.symbolOf(s).exists(_.flags.isStatic)
+    def ownerTypeOf(m: SymId): Option[SymId] = program.symbolOf(m).map(_.owner)
+
+    def paramHead(m: SymId): Option[SymId] =
+      defOf(m).flatMap(_.paramss.flatten.headOption).flatMap(v => headOf(v.tpt.tpe))
+
+    // Group owned symbols by their declaring type. Static methods are INCLUDED in the scan so
+    // that the per-getter check can refuse them with a counted `BeanDetect` refusal — filtering
+    // them out here would make them invisible to every instrument.
+    val ownedByType = collection.mutable.Map.empty[SymId, List[Symbol]]
+    program.symbols.all.foreach { s =>
+      if program.owned(s.id) then
+        val owner = s.owner
+        ownedByType.updateWith(owner) {
+          case Some(list) => Some(s :: list)
+          case scala.None => Some(List(s))
+        }
+    }
+
+    ownedByType.foreach { (ownerSym, members) =>
+      // The scope check is on the OWNER TYPE
+      val ownerSymObj = program.symbolOf(ownerSym)
+      if ownerSymObj.exists(o => scope.includes(program, o)) then
+        val ownerFqn = ownerSymObj.map(_.fullName).getOrElse("")
+
+        // Collect getter candidates: nilary methods matching get[A-Z]* or is[A-Z]*
+        val getterCandidates = members.flatMap { s =>
+          propertyNameOf(s.name).flatMap { propName =>
+            defOf(s.id).flatMap { d =>
+              if d.paramss.forall(_.isEmpty) then Some((s, propName, d))
+              else scala.None
+            }
+          }
+        }
+
+        // For each getter candidate, try to find a matching setter
+        getterCandidates.foreach { (getterSym, propName, getterDef) =>
+          val key = MemberKey(ownerFqn, propName).render
+          // Skip if there is a configured pair for this key
+          if !configuredKeys.contains(key) then
+            val getterHead = headOf(getterDef.returnTpt.tpe)
+            val isBoolean = getterSym.name.startsWith("is")
+            val getterReturnVoid = isVoid(program, getterDef.returnTpt.tpe)
+            val gComp = graph.closureOf(getterSym.id).members
+
+            // Shape checks on the getter
+            if isStatic(getterSym.id) then
+              phase.consider(IdiomCandidate(IdiomKind.BeanDetect,
+                IdiomVerdict.Refused("Static", "the getter is static; a companion property is out of scope"),
+                key, s"auto-detected `$propName`", Decision.originOf(program, getterSym.id)))
+            else if getterReturnVoid then
+              phase.consider(IdiomCandidate(IdiomKind.BeanDetect,
+                IdiomVerdict.Refused("VoidGetter", "the getter returns void"),
+                key, s"auto-detected `$propName`", Decision.originOf(program, getterSym.id)))
+            else if !callsAreRewritable(gComp, 0) then
+              phase.consider(IdiomCandidate(IdiomKind.BeanDetect,
+                IdiomVerdict.Refused("ValuePosition",
+                  "the getter is referenced in value position"),
+                key, s"auto-detected `$propName`", Decision.originOf(program, getterSym.id)))
+            else
+              // Check setter candidates. A setter check that refuses files the refusal and
+              // the whole pair is SKIPPED — no getter-only fallback from a refused setter, because
+              // the refusal is about the PAIR, not about the setter alone.
+              val setterName = "set" + propName.updated(0, propName.charAt(0).toUpper)
+              val setterCands = members.filter { s =>
+                s.name == setterName && !s.flags.isStatic &&
+                  defOf(s.id).exists(d => d.paramss.map(_.size).sum == 1 &&
+                    paramHead(s.id) == getterHead)
+              }
+
+              var setterRefused = false
+              val setterOpt = setterCands match
+                case List(s) =>
+                  val sd = defOf(s.id).get
+                  if headOf(sd.returnTpt.tpe).exists(h => ownerTypeOf(s.id).contains(h)) then
+                    phase.consider(IdiomCandidate(IdiomKind.BeanDetect,
+                      IdiomVerdict.Refused("FluentSetter",
+                        "the setter is fluent — returns its own type for chaining"),
+                      key, s"auto-detected `$propName`", Decision.originOf(program, getterSym.id)))
+                    setterRefused = true; scala.None
+                  else if !isVoid(program, sd.returnTpt.tpe) then
+                    phase.consider(IdiomCandidate(IdiomKind.BeanDetect,
+                      IdiomVerdict.Refused("NonVoidSetter",
+                        "the setter returns a value, and an assignment discards it"),
+                      key, s"auto-detected `$propName`", Decision.originOf(program, getterSym.id)))
+                    setterRefused = true; scala.None
+                  else if !callsAreRewritable(graph.closureOf(s.id).members, 1) then
+                    phase.consider(IdiomCandidate(IdiomKind.BeanDetect,
+                      IdiomVerdict.Refused("ValuePosition",
+                        "the setter is referenced in value position"),
+                      key, s"auto-detected `$propName`", Decision.originOf(program, getterSym.id)))
+                    setterRefused = true; scala.None
+                  else Some(s)
+                case _ => scala.None  // 0 or >1 matching setters: get-only pair
+
+              if !setterRefused then
+                val accessorsStr = setterOpt match
+                  case Some(s) => s"${getterSym.name}/${s.name}"
+                  case scala.None => getterSym.name
+
+                val sMembers = setterOpt.map(s => graph.closureOf(s.id).members).getOrElse(Set.empty)
+                val prop = Property(key, propName, getterSym.id, setterOpt.map(_.id), gComp, sMembers)
+
+                // File a converted candidate through the idiom lane
+                phase.consider(IdiomCandidate(IdiomKind.BeanDetect, IdiomVerdict.Converted,
+                  key, s"auto-detected pair `$propName` via `$accessorsStr`",
+                  Decision.originOf(program, getterSym.id)))
+                phase.record(Decision(
+                  kind       = Decision.Kind.RenamedMember,
+                  subject    = getterSym.id,
+                  subjectFqn = key,
+                  detail     = Map(
+                    "property"  -> propName,
+                    "accessors" -> accessorsStr,
+                    "source"    -> "auto-detect",
+                  ),
+                  reason = Reason.Universal("bean-detect"),
+                  origin = Decision.originOf(program, getterSym.id),
+                ))
+                result += prop
+        }
+    }
+    result.toList
+

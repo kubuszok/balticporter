@@ -54,6 +54,11 @@ enum IdiomKind:
   /** a configured bean pair whose backing field could become a `var`/`val` (`DESIGN.md` §8.5's
     * deferred half). */
   case BeanCollapse
+  /** an AUTO-DETECTED bean pair whose getter/setter names follow the Java bean convention and whose
+    * owner type falls inside the phase's `RuleScope`. Separate from [[BeanCollapse]] because the
+    * two populations are different — one is configured, the other derived — and an agent reading the
+    * lane needs to know WHICH produced the row. */
+  case BeanDetect
   /** a method whose every `return` is `this`, whose declared return type could narrow to
     * `this.type`. */
   case NarrowedReturn
