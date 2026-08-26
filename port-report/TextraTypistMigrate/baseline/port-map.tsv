@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-textra	engine=balticporter/0.1.0-SNAPSHOT	sources=9ebd6e69043d4bb1	files=92	policy=20e3423ac6df0c1c
+# balticporter port map	schema=3	module=sge-textra	engine=balticporter/0.1.0-SNAPSHOT	sources=9ebd6e69043d4bb1	files=92	policy=bfef466fd20159d8
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.github.tommyettinger.textra.BitmapFontSupport	sge.textra.BitmapFontSupport	Renamed	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=private
 type	com.github.tommyettinger.textra.BitmapFontSupport$JsonFontData	sge.textra.BitmapFontSupport$JsonFontData	Renamed	-		0		form=class parents=sge.graphics.g2d.BitmapFont$BitmapFontData primary=(String) primaryKind=synthesised-primary primaryVis=protected secondaries=();(FileHandle);(FileHandle,String);(FileHandle,String,boolean)
@@ -192,7 +192,7 @@ member	com.github.tommyettinger.textra.EmojiProcessor#instance	sge.textra.EmojiP
 member	com.github.tommyettinger.textra.FWSkin#<init>(FileHandle,Sge)	sge.textra.FWSkin#<init>(FileHandle,Sge)	Renamed	-	com/github/tommyettinger/textra/FWSkin.java	77	866d54b86bf124e8	
 member	com.github.tommyettinger.textra.FWSkin#<init>(FileHandle,TextureAtlas,Sge)	sge.textra.FWSkin#<init>(FileHandle,TextureAtlas,Sge)	Renamed	-	com/github/tommyettinger/textra/FWSkin.java	87	9727d1887cd484c7	
 member	com.github.tommyettinger.textra.FWSkin#<init>(TextureAtlas,Sge)	sge.textra.FWSkin#<init>(TextureAtlas,Sge)	Renamed	-	com/github/tommyettinger/textra/FWSkin.java	95	e66b204817a3675a	
-member	com.github.tommyettinger.textra.FWSkin#getJsonLoader(FileHandle)	sge.textra.FWSkin#getJsonLoader(FileHandle)	Renamed	-	com/github/tommyettinger/textra/FWSkin.java	108	6d4a840e965854bc	
+member	com.github.tommyettinger.textra.FWSkin#getJsonLoader(FileHandle)	sge.textra.FWSkin#getJsonLoader(FileHandle)	Renamed	-	com/github/tommyettinger/textra/FWSkin.java	108	1e354b8c6b88820c	
 member	com.github.tommyettinger.textra.FWSkin#resizeDistanceFields(float,float)	sge.textra.FWSkin#resizeDistanceFields(float,float)	Renamed	-	com/github/tommyettinger/textra/FWSkin.java	555	66854620e1382e8e	
 member	com.github.tommyettinger.textra.FWSkin#resizeDistanceFields(float,float,Viewport)	sge.textra.FWSkin#resizeDistanceFields(float,float,Viewport)	Renamed	-	com/github/tommyettinger/textra/FWSkin.java	573	4e637e625bb79224	
 member	com.github.tommyettinger.textra.FWSkinLoader#newSkin(TextureAtlas)	sge.textra.FWSkinLoader#newSkin(TextureAtlas)	Renamed	-	com/github/tommyettinger/textra/FWSkinLoader.java	49	b6b43ebbecb6b17c	
@@ -977,7 +977,7 @@ member	com.github.tommyettinger.textra.Styles$ListStyle#<init>(BitmapFont,Color,
 member	com.github.tommyettinger.textra.Styles$ListStyle#<init>(Font,Color,Color,Drawable,Nullable,Nullable,Nullable,Sge)	sge.textra.Styles$ListStyle#<init>(Font,Color,Color,Drawable,Nullable<Drawable>,Nullable<Drawable>,Nullable<Drawable>,Sge)	Renamed	-	com/github/tommyettinger/textra/Styles.java	417	5d513bd8889e9777	
 member	com.github.tommyettinger.textra.Styles$ListStyle#<init>(Font,Color,Color,Drawable,Sge)	sge.textra.Styles$ListStyle#<init>(Font,Color,Color,Drawable,Sge)	Renamed	-	com/github/tommyettinger/textra/Styles.java	393	ad83dace761aea3b	
 member	com.github.tommyettinger.textra.Styles$ListStyle#<init>(ListStyle,Sge)	sge.textra.Styles$ListStyle#<init>(ListStyle,Sge)	Renamed	-	com/github/tommyettinger/textra/Styles.java	428	e7d64a95be9405d7	
-member	com.github.tommyettinger.textra.Styles$ListStyle#<init>(ListStyle,Sge)	sge.textra.Styles$ListStyle#<init>(ListStyle,Sge)	Renamed	-	com/github/tommyettinger/textra/Styles.java	446	4c322f1582119f3b	
+member	com.github.tommyettinger.textra.Styles$ListStyle#<init>(ListStyle,Sge)	sge.textra.Styles$ListStyle#<init>(ListStyle,Sge)	Renamed	-	com/github/tommyettinger/textra/Styles.java	446	a7b3e60cbfce2497	
 member	com.github.tommyettinger.textra.Styles$ListStyle#<init>(Sge)	sge.textra.Styles$ListStyle#<init>(Sge)	Renamed	-	com/github/tommyettinger/textra/Styles.java	390	36e4e0c7b10328c3	
 member	com.github.tommyettinger.textra.Styles$ListStyle#background	sge.textra.Styles$ListStyle#background	Renamed	-	com/github/tommyettinger/textra/Styles.java	388	f28bf8bc460f330b	
 member	com.github.tommyettinger.textra.Styles$ListStyle#down	sge.textra.Styles$ListStyle#down	Renamed	-	com/github/tommyettinger/textra/Styles.java	388	4c73bd46ba3e0f1e	
@@ -986,7 +986,7 @@ member	com.github.tommyettinger.textra.Styles$ListStyle#fontColorSelected	sge.te
 member	com.github.tommyettinger.textra.Styles$ListStyle#fontColorUnselected	sge.textra.Styles$ListStyle#fontColorUnselected	Renamed	-	com/github/tommyettinger/textra/Styles.java	386	7af57014da26aa5b	
 member	com.github.tommyettinger.textra.Styles$ListStyle#over	sge.textra.Styles$ListStyle#over	Renamed	-	com/github/tommyettinger/textra/Styles.java	388	32d41522c4d744c1	
 member	com.github.tommyettinger.textra.Styles$ListStyle#selection	sge.textra.Styles$ListStyle#selection	Renamed	-	com/github/tommyettinger/textra/Styles.java	387	3b6bbc1f8d18e842	
-member	com.github.tommyettinger.textra.Styles$SelectBoxStyle#<init>(BitmapFont,Color,Nullable,ScrollPaneStyle,ListStyle,Sge)	sge.textra.Styles$SelectBoxStyle#<init>(BitmapFont,Color,Nullable<Drawable>,ScrollPaneStyle,ListStyle,Sge)	Renamed	-	com/github/tommyettinger/textra/Styles.java	493	87b3786b9ade70e2	
+member	com.github.tommyettinger.textra.Styles$SelectBoxStyle#<init>(BitmapFont,Color,Nullable,ScrollPaneStyle,ListStyle,Sge)	sge.textra.Styles$SelectBoxStyle#<init>(BitmapFont,Color,Nullable<Drawable>,ScrollPaneStyle,ListStyle,Sge)	Renamed	-	com/github/tommyettinger/textra/Styles.java	493	efe8f6c1a4cbab88	
 member	com.github.tommyettinger.textra.Styles$SelectBoxStyle#<init>(Font,Color,Nullable,ScrollPaneStyle,ListStyle,Sge)	sge.textra.Styles$SelectBoxStyle#<init>(Font,Color,Nullable<Drawable>,ScrollPaneStyle,ListStyle,Sge)	Renamed	-	com/github/tommyettinger/textra/Styles.java	473	5697f8400ca54be8	
 member	com.github.tommyettinger.textra.Styles$SelectBoxStyle#<init>(SelectBoxStyle,Sge)	sge.textra.Styles$SelectBoxStyle#<init>(SelectBoxStyle,Sge)	Renamed	-	com/github/tommyettinger/textra/Styles.java	502	4bfa670e4ba544a9	
 member	com.github.tommyettinger.textra.Styles$SelectBoxStyle#<init>(SelectBoxStyle,Sge)	sge.textra.Styles$SelectBoxStyle#<init>(SelectBoxStyle,Sge)	Renamed	-	com/github/tommyettinger/textra/Styles.java	525	354904b8f893fa66	

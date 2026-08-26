@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-visui	engine=balticporter/0.1.0-SNAPSHOT	sources=7a29c946918c2898	files=162	policy=4302d8c9cddd8bb2
+# balticporter port map	schema=3	module=sge-visui	engine=balticporter/0.1.0-SNAPSHOT	sources=7a29c946918c2898	files=162	policy=cc722056f83934dd
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.kotcrab.vis.ui.FocusManager	sge.visui.FocusManager	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
 type	com.kotcrab.vis.ui.Focusable	sge.visui.Focusable	Renamed	-		0		form=trait
@@ -158,7 +158,7 @@ type	com.kotcrab.vis.ui.widget.VisImageTextButton	sge.visui.widget.VisImageTextB
 type	com.kotcrab.vis.ui.widget.VisImageTextButton$Orientation	sge.visui.widget.VisImageTextButton$Orientation	Renamed	-		0		companion=yes flags=enum form=enum parents=java.lang.Enum primary=() primaryKind=not-funnelled primaryVis=public
 type	com.kotcrab.vis.ui.widget.VisImageTextButton$VisImageTextButtonStyle	sge.visui.widget.VisImageTextButton$VisImageTextButtonStyle	Renamed	-		0		form=class parents=sge.visui.widget.VisTextButton$VisTextButtonStyle primary=() primaryKind=no-arg-root primaryVis=public secondaries=(Drawable,Drawable,Drawable,BitmapFont);(VisImageTextButtonStyle);(VisTextButtonStyle)
 type	com.kotcrab.vis.ui.widget.VisLabel	sge.visui.widget.VisLabel	Renamed	-		0		companion=yes form=class parents=sge.scenes.scene2d.ui.Label primary=() primaryKind=no-arg-root primaryVis=public secondaries=(CharSequence,Color);(CharSequence,int);(CharSequence);(CharSequence,LabelStyle);(CharSequence,String);(CharSequence,String,Color);(CharSequence,String,String)
-type	com.kotcrab.vis.ui.widget.VisList	sge.visui.widget.VisList	Renamed	-		0		companion=yes form=class parents=sge.scenes.scene2d.ui.List primary=() primaryKind=no-arg-root primaryVis=public secondaries=(String);(ListStyle) tparams="[T <: java.lang.Object]"
+type	com.kotcrab.vis.ui.widget.VisList	sge.visui.widget.VisList	Renamed	-		0		companion=yes form=class parents=sge.scenes.scene2d.ui.SgeList primary=() primaryKind=no-arg-root primaryVis=public secondaries=(String);(ListStyle) tparams="[T <: java.lang.Object]"
 type	com.kotcrab.vis.ui.widget.VisProgressBar	sge.visui.widget.VisProgressBar	Renamed	-		0		companion=yes form=class parents=sge.scenes.scene2d.ui.ProgressBar primary=(float,float,float,boolean,ProgressBarStyle) primaryKind=unique-root primaryVis=public secondaries=(float,float,float,boolean);(float,float,float,boolean,String)
 type	com.kotcrab.vis.ui.widget.VisRadioButton	sge.visui.widget.VisRadioButton	Renamed	-		0		companion=yes form=class parents=sge.visui.widget.VisCheckBox primary=(String,VisCheckBoxStyle) primaryKind=unique-root primaryVis=public secondaries=(String)
 type	com.kotcrab.vis.ui.widget.VisScrollPane	sge.visui.widget.VisScrollPane	Renamed	-		0		companion=yes form=class parents=sge.scenes.scene2d.ui.ScrollPane primary=() primaryKind=not-funnelled primaryVis=public secondaries=(Actor,ScrollPaneStyle);(Actor,String);(Actor)
@@ -1964,7 +1964,7 @@ member	com.kotcrab.vis.ui.widget.VisLabel#<init>(CharSequence,String,Color,Sge)	
 member	com.kotcrab.vis.ui.widget.VisLabel#<init>(CharSequence,String,Sge)	sge.visui.widget.VisLabel#<init>(CharSequence,String,Sge)	Renamed	-	com/kotcrab/vis/ui/widget/VisLabel.java	51	9e67528ca8d36f57	
 member	com.kotcrab.vis.ui.widget.VisLabel#<init>(CharSequence,String,String,Sge)	sge.visui.widget.VisLabel#<init>(CharSequence,String,String,Sge)	Renamed	-	com/kotcrab/vis/ui/widget/VisLabel.java	59	382ac07def580de7	
 member	com.kotcrab.vis.ui.widget.VisLabel#<init>(CharSequence,int,Sge)	sge.visui.widget.VisLabel#<init>(CharSequence,int,Sge)	Renamed	-	com/kotcrab/vis/ui/widget/VisLabel.java	38	03eeccbe3777e2f6	
-member	com.kotcrab.vis.ui.widget.VisList#<init>(ListStyle,Sge)	sge.visui.widget.VisList#<init>(ListStyle,Sge)	Renamed	-	com/kotcrab/vis/ui/widget/VisList.java	43	0949c0daf24f868b	
+member	com.kotcrab.vis.ui.widget.VisList#<init>(ListStyle,Sge)	sge.visui.widget.VisList#<init>(ListStyle,Sge)	Renamed	-	com/kotcrab/vis/ui/widget/VisList.java	43	05a2161fc4f1b732	
 member	com.kotcrab.vis.ui.widget.VisList#<init>(String,Sge)	sge.visui.widget.VisList#<init>(String,Sge)	Renamed	-	com/kotcrab/vis/ui/widget/VisList.java	38	b2e8feea553228be	
 member	com.kotcrab.vis.ui.widget.VisList#<stmt1>	sge.visui.widget.VisList#<stmt1>	Renamed	-	com/kotcrab/vis/ui/widget/VisList.java	35	a90a8c696cfb9d9e	
 member	com.kotcrab.vis.ui.widget.VisList#init()	sge.visui.widget.VisList#init()	Renamed	-	com/kotcrab/vis/ui/widget/VisList.java	48	bc1b781958f04205	vis=private
