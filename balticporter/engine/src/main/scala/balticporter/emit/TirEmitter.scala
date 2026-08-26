@@ -6390,16 +6390,36 @@ object TirEmitter:
     /** the member SYMBOLS a body INHERITS. Names alone answer the shadowing question; the ambiguity
       * question needs the symbols, because it has to ask whether the body referenced the INHERITED
       * member — a member the body DECLARES ITSELF is not ambiguous with anything (probed against
-      * scalac 3.8.4: the class's own declaration simply wins). */
+      * scalac 3.8.4: the class's own declaration simply wins).
+      *
+      * Falls back to the SYMBOL TABLE when `declOf` does not have the parent — a parent from a
+      * RESOLUTION ROOT, whose `ClassDef` is not in `p.units` and was therefore never indexed by the
+      * collector. Without this the whole ambiguity rule is blind to inherited members from
+      * resolution-root parents, which is exactly the configuration an ashley test creates: an
+      * anonymous `EntitySystem` subclass inside a test method, where `EntitySystem` comes from the
+      * main source set (a resolution root for the test program). The symbol-table fallback reads
+      * only DIRECT members of that parent — it cannot walk ancestors the program did not parse —
+      * but that covers every rename a surface phase made on the parent's own declarations, which is
+      * the case the corpus has reached. */
     def visibleMembers(parents: List[SymId], seen: Set[SymId]): Set[SymId] =
-      parents.filterNot(seen).flatMap(declOf.get).flatMap(cd =>
-        cd.body.collect {
-          case d: Tree.DefDef if nm(d.symbol) != "<init>" => d.symbol
-          case v: Tree.ValDef                             => v.symbol
-          case c: Tree.ClassDef                           => c.symbol
-        } ++ visibleMembers(
-          cd.parents.flatMap { case tt: TypeTree => headSym(tt.tpe); case tm: Term => headSym(tm.tpe) },
-          seen + cd.symbol)).toSet
+      parents.filterNot(seen).flatMap { pid =>
+        declOf.get(pid) match
+          case Some(cd) =>
+            cd.body.collect {
+              case d: Tree.DefDef if nm(d.symbol) != "<init>" => d.symbol
+              case v: Tree.ValDef                             => v.symbol
+              case c: Tree.ClassDef                           => c.symbol
+            } ++ visibleMembers(
+              cd.parents.flatMap { case tt: TypeTree => headSym(tt.tpe); case tm: Term => headSym(tm.tpe) },
+              seen + cd.symbol)
+          case None =>
+            // resolution root or external parent — read members from the symbol table.
+            // Cannot walk the parent's ancestors (no ClassDef), but a level-1 read covers every
+            // rename a surface phase made on the parent's own declarations.
+            p.symbols.all.collect {
+              case s if s.owner == pid && s.name != "<init>" => s.id
+            }
+      }.toSet
 
     val renames = collection.mutable.Map[SymId, String]()
     bodies.foreach { (bodySym, stats, parents) =>

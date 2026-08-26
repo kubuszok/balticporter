@@ -304,3 +304,84 @@ class CapturedLocalClashSpec extends munit.FunSuite:
         |""".stripMargin)
     assert(!clue(out).contains("$local"))
   }
+
+  // -------------------------------------------------------------------------------------------
+  // RESOLUTION ROOT — the parent's ClassDef is NOT in p.units (it comes from a resolution root,
+  // as a dependent's base does). The fix: visibleMembers falls back to the symbol table.
+  // -------------------------------------------------------------------------------------------
+
+  /** Simulate a resolution-root parent: parse parent and child together, then remove the parent
+    * from `units` while keeping all symbols. This is exactly the shape an ashley test creates:
+    * `EntitySystem` from the main source set (resolution root) with an anonymous subclass in the
+    * test method that has a local named `engine`. */
+  private def emitWithResolutionRoot(parentSrc: String, childSrc: String): String =
+    val full = SpoonTir.fromSources(List("Parent.java" -> parentSrc, "Child.java" -> childSrc))
+    // remove the parent's ClassDef from units — simulates a resolution root where the parent is
+    // in the symbol table but not in the traversed units
+    val childUnits = full.units.filterNot { cd =>
+      val n = full.symbolOf(cd.symbol).map(_.name).getOrElse("")
+      n == "Base" || n == "Parent"
+    }
+    val narrowed = full.rebuilt(units = childUnits)
+    new TirEmitter(narrowed).emit
+
+  test("a parent from a RESOLUTION ROOT triggers the ambiguity rename") {
+    // This is the E049 shape: the parent type (`Base`) is in the symbol table but NOT in p.units.
+    // The anonymous subclass inherits `def x` from Base, and the enclosing method has a local `x`.
+    // Before the fix, visibleMembers returned empty for resolution-root parents, so the ambiguity
+    // was never detected.
+    val out = emitWithResolutionRoot(
+      """package demo;
+        |class Base {
+        |  String x() { return "b"; }
+        |  void run() { }
+        |}
+        |""".stripMargin,
+      """package demo;
+        |class W {
+        |  void go(final String x) {
+        |    new Base() { public void run() { System.out.println(x()); } };
+        |  }
+        |}
+        |""".stripMargin)
+    assert(clue(out).contains("def go(x$local: java.lang.String)"))
+  }
+
+  test("a resolution-root parent's FIELD also triggers the ambiguity rename") {
+    val out = emitWithResolutionRoot(
+      """package demo;
+        |class Parent {
+        |  final String engine;
+        |  Parent(String engine) { this.engine = engine; }
+        |  void run() { }
+        |}
+        |""".stripMargin,
+      """package demo;
+        |class W {
+        |  void go(final String engine) {
+        |    new Parent(engine) { public void run() { System.out.println(engine); } };
+        |  }
+        |}
+        |""".stripMargin)
+    assert(clue(out).contains("def go(engine$local: java.lang.String)"))
+  }
+
+  test("rule (1) also works for resolution-root parents: a captured local is renamed") {
+    val out = emitWithResolutionRoot(
+      """package demo;
+        |interface Base { String filter(String a); }
+        |""".stripMargin,
+      """package demo;
+        |class W {
+        |  String go(final Base filter) {
+        |    Base inner = new Base() {
+        |      public String filter(String a) {
+        |        return filter.filter(a);
+        |      }
+        |    };
+        |    return inner.filter("x");
+        |  }
+        |}
+        |""".stripMargin)
+    assert(clue(out).contains("def go(filter$local: demo.Base)"))
+  }

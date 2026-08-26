@@ -136,11 +136,11 @@ object AshleyPolicy:
         // is the honest form.
         new balticporter.transform.BeanPropertyTransform(
           pairs = Map(
-            // `EntitySystem#engine` is deferred: the rename `getEngine -> engine` introduces an
-            // ambiguity with local variables named `engine` in test methods that create anonymous
-            // `EntitySystem` subclasses. The emitter's capture rename pass (CLAUDE.md §4.55 rule 2)
-            // does not fire in this configuration -- investigation needed.
-            // "com.badlogic.ashley.core.EntitySystem#engine"                -> "getEngine",
+            // `EntitySystem#engine`: the rename `getEngine -> engine` introduces an ambiguity with
+            // local variables named `engine` in test methods that create anonymous `EntitySystem`
+            // subclasses. The emitter's capture rename pass (CLAUDE.md §4.55 rule 2) now handles
+            // resolution-root parents by falling back to the symbol table (wave 1.2b).
+            "com.badlogic.ashley.core.EntitySystem#engine"                -> "getEngine",
             "com.badlogic.ashley.core.ComponentType#index"                -> "getIndex",
             "com.badlogic.ashley.core.Family#index"                      -> "getIndex",
             "com.badlogic.ashley.systems.IteratingSystem#family"          -> "getFamily",
