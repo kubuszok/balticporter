@@ -208,7 +208,12 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
           // Merge scopes: two `Only` scopes union their include sets, two `Everywhere` scopes
           // union their except sets, and a mixed pair is refused — `Everywhere(except) ∩ Only(include)`
           // has no meaning the enum can hold.
+          // `Only(Set.empty)` is the NO-OP default. When one side is the no-op, the other
+          // side's scope wins — a dependent that declared no scope inherits the base's.
+          val noOp = RuleScope.Only(Set.empty)
           val mergedScope: Either[String, RuleScope] = (detectScope, b.detectScope) match
+            case (s, `noOp`) => Right(s)
+            case (`noOp`, s) => Right(s)
             case (RuleScope.Only(mine), RuleScope.Only(theirs))             =>
               Right(RuleScope.Only(mine ++ theirs))
             case (RuleScope.Everywhere(mine), RuleScope.Everywhere(theirs)) =>
