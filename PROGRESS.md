@@ -10581,3 +10581,18 @@ family: 3 new specs (matching `@targetName`, same member without annotation, unm
 classification via `@targetName`). 924 engine + 1394 corpus + 65 api tests green.
 `just gdx-measure`: 0 errors (JVM/JS/Native), 0 member digests, all check counts at baseline,
 findings unchanged, port map unchanged.
+
+**Wave 1.1: `NullabilityTransform` gains a target — `Named` closes K13** (2026-08-26). The
+`Target` enum has three variants: `Union` (the default, today's `T | Null`), `Named(fqn)` (renamed
+from `Wrapper` — a per-library opaque wrapper satisfying the four-member contract; sge's
+`lowlevel.Nullable` is the first policy value), and `OptionTarget` (`scala.Option`, I7 re-measured).
+
+K13 CLOSED: `Nullable[T]` IS a proper type that composes at every abstract `T`, so the
+`AbstractTypeParameter` finding class goes **155 -> 0** and the 12-entry + 1-member-key scope
+exit list is deleted entirely. libGDX base: `nullability-boundary` **146 -> 136**, errors
+**0 -> 0**, `policy` **2 -> 2** (after removing 4 inert resolution entries), 1225 member digests
+moved (every `@Null` declaration retyped from `T | Null` to `lowlevel.Nullable[T]`).
+`dependency-coverage(declared)` **1 -> 2** (lls 0.3.0 added). Dependents: textra's nullability
+phase removed entirely (existed only for K13 exits), screens' scope removed. The merge contract
+now lets a default-target dependent INHERIT the base's non-default target. The fingerprint
+segment is omitted when default (Union). 1394 specs pass.

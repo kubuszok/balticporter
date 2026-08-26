@@ -5766,35 +5766,27 @@ question.
 absence would have been visible there as an absent NAME — which is why the fix is one line and the
 finding is worth an entry.*
 
-### K13. `T | Null` is NOT transparent at an ABSTRACT type parameter — the union floor is free only at CONCRETE types
+### K13. CLOSED — `Named` target makes `T | Null` at an abstract type parameter a non-issue
+
+**CLOSED by `Target.Named`.** `Nullable[T]` IS a proper type that composes at every `T`, so the
+abstract-type-parameter class disappears entirely. What follows is the history and the numbers.
 
 `Null` is a subtype of every concrete reference type, so `String | Null` simplifies at every use and
-the annotation-driven union floor (`DESIGN.md` §8.6) costs nothing there. **It is not a subtype of an
-abstract `T <: Object`** — which is not a corner case but the very fact that makes
-`def m[T <: X](): T = null` a type error and forces the frontend's `null.asInstanceOf[T]`. So
-`T | Null` does not conform to `T`, and every USE of an annotated `T`-typed declaration in a plain
-`T` slot fails.
+the union floor costs nothing there. **It is not a subtype of an abstract `T <: Object`**, so under
+`Target.Union` every USE of an annotated `T`-typed declaration in a plain `T` slot fails. Measured at
+**0 -> 35 errors** from 632 declarations, every one inside a generic container or widget, plus one
+overload-arity movement.
 
-**Measured** by binding libGDX's own `@Null` policy on the reference port, emitting, and compiling —
-**0 → 35 errors**, from **632** retyped declarations:
+Under `Target.Named("lowlevel.Nullable")`, the annotated type is `Nullable[T]` — a concrete applied
+type that conforms in every slot `T` occupies. The `AbstractTypeParameter` finding count went
+**155 -> 0**, `nullability-boundary` **146 -> 136** (the 10 drop is the `ScopedOut` rows whose scope
+entries were deleted), and the 12 scope entries + 1 member key (`Group#findActor`) that the `Union`
+floor required are deleted entirely. On dependents: textra's nullability phase removed (existed only
+for K13 exits), screens' scope removed. The base compiles at **0 errors** with `Named`.
 
-| shape | n |
-|---|---:|
-| `Found: T \| Null / Required: T` | 34 |
-| a defaulted overload losing its one-argument form (`ObjectMap#get`) | 1 |
-
-Every one is inside a generic type — the containers (`IntMap`, `LongMap`, `ObjectMap`, `OrderedMap`,
-`Array`, `Queue`, `AtomicQueue`) and the generic widgets (`Tree`, `List`, `SelectBox`, `Selection`).
-The second shape matters on its own: §8.6 claimed the floor cannot move overload resolution, and it
-did.
-
-**Do NOT "fix" this by refusing to retype at an abstract type.** The refusal would delete exactly the
-thing the floor buys — the generic RETURN is where the placeholder cast lives — and the declaration
-itself is perfectly well-typed. The cost is entirely at the USES, which is why it is COUNTED
-(`NullabilityBoundaryCheck.Issue.AbstractTypeParameter`: 155 occurrences flagged, a deliberate
-over-approximation of the 35 that fail) and left as a policy decision with three exits: scope the
-generic types out of the phase, accept the errors, or stage to `-Yexplicit-nulls
--language:unsafeNulls` (§8.6's N2), under which the whole class disappears.
+The three exits the union floor offered (scope out, accept errors, stage to `-Yexplicit-nulls`) are
+joined by a FOURTH that closes the class: switch the target. The other three remain available for
+ports that choose `Union`.
 
 **And do not trust a probe that used `String`.** The claim this corrects was compiled, not reasoned —
 against concrete types only. A probe for a rule about type conformance has to include an abstract
@@ -5863,7 +5855,8 @@ One thing that shape does NOT record, and it is a provenance gap rather than a l
 that holds back only a PARAMETER produces no `decisions.tsv` row and no porter note, because
 `NullabilityTransform.scopedOut` skips a param and does not attribute to its method (PROGRESS §12.1).
 
-*Fix kind: (b) per-library policy — the engine's part is the number.*
+*CLOSED: `Target.Named` (wave 1.1). The union floor's exits remain for ports that choose `Union`.
+History above is the `Union`-mode scope exit procedure that `Named` replaces.*
 
 ### K14. A RETARGET's subtyping licence is ONE-DIRECTIONAL — the producer side is COUNTED, never coerced
 

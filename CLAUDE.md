@@ -44,6 +44,7 @@ Current examples:
 | `PortabilityCheck(targets)` | match a rule against every external symbol the program references, and report each site | WHICH BACKENDS the module is ported for (`PortManifest.targets`) — the rule LIST is derived from them, because JS and Native disagree on nine families and one shared verdict is wrong for one of them either way |
 | `ApiParityCheck(ParityRef)` | parse both sides with scalameta, classify each divergence into a family, report per-family lanes | WHICH hand-port source tree(s) this module's emitted surface is compared against (`PortManifest.parity`). Empty = no-op and records nothing |
 | `MemberRenameTransform(renames)` | rename a member to a new name (alphanumeric or symbolic with `@targetName`), taking the whole override component or refusing | WHICH members and WHAT they are called — a symbolic target emits `@scala.annotation.targetName` |
+| `NullabilityTransform(annotations, target, scope)` | move a nullability annotation into the type — `T \| Null`, `W[T]` (named wrapper), or `Option[T]` — strip the annotation, coerce at every slot seam, rewrite `== null` / `!= null` | WHICH annotations mark nullability (FQN set), WHICH target shape (`Union` default, `Named(fqn)` closes K13, `OptionTarget`), and a `RuleScope` for opt-out. Empty annotations = no-op |
 
 **A (b) whose empty parameter is a no-op still needs its DEFAULT chosen against what the phase did
 BEFORE it had one.** The two questions look like one and are not: `Everywhere(Set.empty)` is both

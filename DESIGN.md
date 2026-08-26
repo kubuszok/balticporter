@@ -3443,9 +3443,16 @@ its copy is post-§4.55, private, unavailable to transforms, and §8.3 wants it 
 
 ### 8.6 Nullability — three stages, union floor first
 
-**Decision.** One phase, §1(b), default-off, with **two configured targets** — `union` (`T | Null`) and
-`wrapper` (a configured FQN satisfying a four-member contract) — and a three-stage design target of
-which only the first is built:
+**Decision.** One phase, §1(b), default-off, with **three configured targets** — `union` (`T | Null`,
+the default), `named` (a configured FQN satisfying a four-member contract — sge's
+`lowlevel.Nullable` is the first policy value), and `option` (`scala.Option`, whose allocation cost
+I7 re-measured) — and a three-stage design target of which only the first is built. **`Named` CLOSES
+K13**: `Nullable[T]` IS a proper type that composes at every abstract `T`, so the 35-error
+abstract-type-parameter class disappears entirely and the 12-entry scope exit list with it. A
+dependent at the default target (`Union`) INHERITS the base's non-default target through the merge
+contract (§8.13) — it is not the dependent's to choose. The `target` segment is omitted from
+`surfaceFingerprint` when it is the default, so a port that never stated a target contributes no
+segment (§1(b)'s no-op rule at the fingerprint):
 
 | stage | what | prerequisite |
 |---|---|---|
@@ -4625,7 +4632,7 @@ three tables compose three different ways *inside one phase*:
 | table | composes | why |
 |---|---|---|
 | `annotations` | UNION | each FQN independently selects the declarations it marks; nothing about one entry changes what another does, so both inputs keep their behaviour on their own keys by arithmetic |
-| `target` | must AGREE, else REFUSE | it is not a key set, it is the SHAPE every retyped declaration takes. `T \| Null` and `Nullable[T]` are two emitted signatures for one member, so a "merge" of them is a choice |
+| `target` | a DEFAULT (`Union`) INHERITS the other side's target; two non-default targets must AGREE, else REFUSE | it is not a key set, it is the SHAPE every retyped declaration takes. `T \| Null` and `Nullable[T]` are two emitted signatures for one member, so a "merge" of them is a choice — but a dependent that never stated an opinion inherits the base's (§1.5) |
 | `scope` | UNION of ENTRIES, in BOTH directions — REFUSE across directions | below |
 
 **The scope is the part worth writing down.** An entry means *hold this back* under
