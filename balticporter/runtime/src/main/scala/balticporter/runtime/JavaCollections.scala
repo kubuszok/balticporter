@@ -22,7 +22,7 @@ package balticporter.runtime
   * available shape, neither is offered: both compile and both are wrong, and an unmapped static
   * fails to compile under the JDK's own name, which is the honest outcome (ENGINE-LIMITS M6).
   */
-object JavaCollections:
+object JavaCollections {
 
   /** `java.util.Collections.sort(list, cmp)` — IN PLACE, as java's is.
     *
@@ -54,12 +54,14 @@ object JavaCollections:
     * ever written because the caller wants a reproducible one. simple-graphs' `GraphTest` seeds
     * `new Random(123)` and asserts on what follows; a "correct" shuffle that permutes differently
     * would turn a deterministic test into a coin flip, with nothing in the compile to show for it. */
-  def shuffle[A](xs: scala.collection.mutable.Buffer[A], rnd: java.util.Random): Unit =
+  def shuffle[A](xs: scala.collection.mutable.Buffer[A], rnd: java.util.Random): Unit = {
     var i = xs.size
-    while i > 1 do
+    while i > 1 do {
       val j = rnd.nextInt(i)
       val t = xs(i - 1); xs(i - 1) = xs(j); xs(j) = t
       i -= 1
+    }
+  }
 
   /** `java.util.Arrays.asList(a, b, c)` — the ELEMENT form only. Java's `asList` has two shapes
     * with different semantics, and only one of them may ever reach this method:
@@ -112,7 +114,7 @@ object JavaCollections:
     * CLAUDE.md §4.5 is not violated here for the same reason [[FrozenBuffer]] does not violate it:
     * nothing in a port ever EXTENDS this class, so there is no second java interface to satisfy and
     * no ported member for a collection trait's inherited names to collide with. */
-  def asListView[A](arr: Array[A]): scala.collection.mutable.Buffer[A] =
+  def asListView[A](arr: Array[A]): scala.collection.mutable.Buffer[A] = {
     // …and it FAILS FAST, because java's does. `Arrays.asList(T[])` is `new ArrayList<>(a)`, whose
     // constructor is `a = Objects.requireNonNull(array)`, so a null array is an NPE AT THE CALL and
     // the caller never holds anything. Constructed lazily the view throws too — but at the first
@@ -125,6 +127,7 @@ object JavaCollections:
         "java.util.Arrays.asList(T[]): the array is null. Java's own constructor calls " +
           "Objects.requireNonNull, so this throws at the call rather than at the first read")
     new ArrayViewBuffer[A](arr)
+  }
 
   /** `java.util.stream.Stream.noneMatch(Predicate)` — the one short-circuiting terminal with no
     * scala namesake.
@@ -168,10 +171,11 @@ object JavaCollections:
     * The two agree cell for cell, which is why one test serves both. */
   def addAll[E](dst: scala.collection.mutable.Iterable[E] & scala.collection.mutable.Growable[E]
                   & scala.collection.mutable.Shrinkable[E],
-                src: scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean =
+                src: scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean = {
     val before = dst.size
     dst ++= elementsOf(src).map(_.asInstanceOf[E])
     dst.size != before
+  }
 
   /** `java.util.List.addAll(int index, Collection c)` — the POSITIONAL sibling of [[addAll]], which
     * inserts rather than appends and which scala spells `insertAll`.
@@ -189,10 +193,11 @@ object JavaCollections:
     * that appends a pair where java inserted a collection, with a green compile and no count moving
     * (`CLAUDE.md` §4.4's defect class, met at an arity). */
   def insertAll[E](dst: scala.collection.mutable.Buffer[E], index: Int,
-                   src: scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean =
+                   src: scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean = {
     val before = dst.size
     dst.insertAll(index, elementsOf(src).map(_.asInstanceOf[E]))
     dst.size != before
+  }
 
   /** `java.util.Collection.remove(Object)` — removal BY VALUE, which scala's `Buffer` does not have.
     *
@@ -217,9 +222,10 @@ object JavaCollections:
     * narrows it, `java.sql.Timestamp` against `java.util.Date`).
     *
     * Only the FIRST match goes, as java's does. */
-  def removeValue[A](xs: scala.collection.mutable.Buffer[A], o: scala.Any): Boolean =
+  def removeValue[A](xs: scala.collection.mutable.Buffer[A], o: scala.Any): Boolean = {
     val i = xs.indexWhere(e => if o == null then e == null else o.equals(e))
     if i < 0 then false else { xs.remove(i); true }
+  }
 
   /** `java.util.Collection.toArray()` — a FRESH `Object[]` of exactly `size`, in iteration order.
     *
@@ -247,16 +253,18 @@ object JavaCollections:
     * compiles perfectly: `ArraySeq(a, b, c, d, null, null, …)` against `[a, b, c, d]`, no error
     * moved and no check able to see it (`ENGINE-LIMITS.md` K31). The other direction is worse only
     * in being loud — an `ArrayIndexOutOfBoundsException` where java grew the array. */
-  def toArray(xs: scala.collection.Iterable[?]): Array[Object] =
+  def toArray(xs: scala.collection.Iterable[?]): Array[Object] = {
     val r  = new Array[Object](xs.size)
     val it = xs.iterator
     var i  = 0
-    while i < r.length && it.hasNext do
+    while i < r.length && it.hasNext do {
       r(i) = it.next().asInstanceOf[Object]
       i += 1
+    }
     if i < r.length then java.util.Arrays.copyOf(r, i)  // fewer elements than `size()` said
     else if !it.hasNext then r
     else grownFrom(r, i, it)                            // …and more
+  }
 
   /** `AbstractCollection.finishToArray` — the arm for an iterator that outlives `size()`.
     *
@@ -264,14 +272,16 @@ object JavaCollections:
     * is java's shape and not its arithmetic; what IS observable is the component type, which is why
     * every reallocation goes through `java.util.Arrays.copyOf` rather than a fresh `Array[A]` — the
     * same reason the three-part `toArray(a)` contract below gives. */
-  private def grownFrom[A <: AnyRef](r0: Array[A], from: Int, it: Iterator[?]): Array[A] =
+  private def grownFrom[A <: AnyRef](r0: Array[A], from: Int, it: Iterator[?]): Array[A] = {
     var r = r0
     var i = from
-    while it.hasNext do
+    while it.hasNext do {
       if i == r.length then r = java.util.Arrays.copyOf(r, (r.length >> 1) + r.length + 1)
       r(i) = it.next().asInstanceOf[A]
       i += 1
+    }
     if i == r.length then r else java.util.Arrays.copyOf(r, i)
+  }
 
   /** `java.util.Collection.toArray(T[] a)` — java's THREE-part contract, reproduced exactly.
     *
@@ -299,14 +309,15 @@ object JavaCollections:
     * `java.util.Arrays.copyOf` rather than `java.lang.reflect.Array.newInstance`: the two do the
     * same thing here, and only the first survives `PortabilityCheck` (reflection does not exist on
     * Scala.js or Native). */
-  def toArray[A <: AnyRef](xs: scala.collection.Iterable[?], a: Array[A]): Array[A] =
+  def toArray[A <: AnyRef](xs: scala.collection.Iterable[?], a: Array[A]): Array[A] = {
     val n  = xs.size
     val r  = if a.length >= n then a else java.util.Arrays.copyOf(a, n)
     val it = xs.iterator
     var i  = 0
-    while i < r.length && it.hasNext do
+    while i < r.length && it.hasNext do {
       r(i) = it.next().asInstanceOf[A]
       i += 1
+    }
     // …and java's FOURTH part, which is the one the row above states: `size()` is a hint. The
     // terminator goes at the element COUNT and never at what `size()` claimed, and each of java's
     // three early-exit shapes is preserved — write into the caller's own array, trim, or copy back.
@@ -314,10 +325,12 @@ object JavaCollections:
     else if i == r.length then r
     else if a eq r then { r(i) = null.asInstanceOf[A]; r }
     else if a.length < i then java.util.Arrays.copyOf(r, i)
-    else
+    else {
       System.arraycopy(r, 0, a, 0, i)
       if a.length > i then a(i) = null.asInstanceOf[A]
       a
+    }
+  }
 
   // -------------------------------------------------------------------------------------------
   // The IMMUTABLE producers — `emptyList`, `emptyMap`, `emptySet`, `singletonList`,
@@ -417,10 +430,11 @@ object JavaCollections:
     *
     * Java's own bounds are kept — `IndexOutOfBoundsException` for `from < 0`, `to > size` or
     * `from > to` — because a silently clamped range is a wrong answer rather than a loud one. */
-  def subList[A](xs: scala.collection.mutable.Buffer[A], from: Int, to: Int): scala.collection.mutable.Buffer[A] =
+  def subList[A](xs: scala.collection.mutable.Buffer[A], from: Int, to: Int): scala.collection.mutable.Buffer[A] = {
     if from < 0 || to > xs.length || from > to then
       throw new IndexOutOfBoundsException(s"subList($from, $to) on a list of size ${xs.length}")
     new SubBuffer(xs, from, to)
+  }
 
   /** `java.util.Map.putIfAbsent(k, v)` — java's exact definition, which is NOT `getOrElseUpdate`.
     *
@@ -431,11 +445,13 @@ object JavaCollections:
     *
     * The body is `java.util.Map`'s own default implementation, verbatim, including its treatment of
     * a key mapped to `null` as ABSENT (java puts, and still returns `null`). */
-  def putIfAbsent[K, V](m: scala.collection.mutable.Map[K, V], k: K, v: V): V =
-    val cur = m.get(k) match
+  def putIfAbsent[K, V](m: scala.collection.mutable.Map[K, V], k: K, v: V): V = {
+    val cur = m.get(k) match {
       case Some(x) => x
       case None    => null.asInstanceOf[V]
+    }
     if cur == null then { m.put(k, v); null.asInstanceOf[V] } else cur
+  }
 
   /** `java.util.Map.computeIfAbsent(k, f)` — java's own default implementation, which is NOT
     * `getOrElseUpdate`, and the two differ TWICE with no compile error either time.
@@ -453,14 +469,17 @@ object JavaCollections:
     * parameter and forwards it), and a `K => V` formal would reject it while accepting every lambda.
     * A scala lambda SAM-converts to the wildcard-applied form; measured on 3.8.4, both directions. */
   def computeIfAbsent[K, V](m: scala.collection.mutable.Map[K, V], k: K,
-                            f: java.util.function.Function[? >: K, ? <: V]): V =
-    val cur = m.get(k) match
+                            f: java.util.function.Function[? >: K, ? <: V]): V = {
+    val cur = m.get(k) match {
       case Some(x) => x
       case None    => null.asInstanceOf[V]
+    }
     if cur != null then cur
-    else
+    else {
       val v = f.asInstanceOf[java.util.function.Function[K, V]].apply(k)
       if v != null then { m.put(k, v); v } else null.asInstanceOf[V]
+    }
+  }
 
   /** `java.util.Collection.removeIf(p)` on a LIST — removes every element the predicate accepts,
     * and returns whether any went.
@@ -476,13 +495,14 @@ object JavaCollections:
     * flexmark's own shape — removes the right one here and could remove the other through any
     * by-value route. */
   def removeIf[A](xs: scala.collection.mutable.Buffer[A],
-                  p: java.util.function.Predicate[? >: A]): Boolean =
+                  p: java.util.function.Predicate[? >: A]): Boolean = {
     val q = p.asInstanceOf[java.util.function.Predicate[A]]
     var i       = 0
     var removed = false
     while i < xs.length do
       if q.test(xs(i)) then { xs.remove(i); removed = true } else i += 1
     removed
+  }
 
   /** `java.util.Collection.removeIf(p)` on a SET — the same member at the other kind.
     *
@@ -495,11 +515,12 @@ object JavaCollections:
     * during the iteration, which is what java's own default implementation is careful to do through
     * `Iterator.remove` and what a `mutable.Set` gives no equivalent of. */
   def removeIfSet[A](xs: scala.collection.mutable.Set[A],
-                     p: java.util.function.Predicate[? >: A]): Boolean =
+                     p: java.util.function.Predicate[? >: A]): Boolean = {
     val q     = p.asInstanceOf[java.util.function.Predicate[A]]
     val doomed = xs.iterator.filter(q.test).toList
     doomed.foreach(xs -= _)
     doomed.nonEmpty
+  }
 
   /** `java.util.List.spliterator()` — java's own DEFAULT, at java's own CHARACTERISTICS.
     *
@@ -544,13 +565,16 @@ object JavaCollections:
 
   private def spliteratorWith[A](xs: scala.collection.Iterable[A], extra: Int): java.util.Spliterator[A] =
     java.util.Spliterators.spliterator(
-      new java.util.AbstractCollection[A]:
-        def iterator(): java.util.Iterator[A] =
+      new java.util.AbstractCollection[A] {
+        def iterator(): java.util.Iterator[A] = {
           val it = xs.iterator
-          new java.util.Iterator[A]:
+          new java.util.Iterator[A] {
             def hasNext(): Boolean = it.hasNext
             def next(): A          = it.next()
+          }
+        }
         def size(): Int = xs.size
+      }
       ,
       extra)
 
@@ -599,13 +623,15 @@ object JavaCollections:
     * seam [[containsAll]]'s own doc describes, and four members spelling it four times is four
     * places for the two arms to drift. Nothing about the dispatch is per-member. */
   private def elementsOf(c: scala.collection.IterableOnce[?] | JavaIterable[?]): scala.collection.Iterator[Any] =
-    c match
+    c match {
       case it: scala.collection.IterableOnce[?] => it.iterator
       case ji: JavaIterable[?]                  =>
         val jit = ji.iterator()
-        new scala.collection.AbstractIterator[Any]:
+        new scala.collection.AbstractIterator[Any] {
           def hasNext: Boolean = jit.hasNext()
           def next(): Any      = jit.next()
+        }
+    }
 
   // -------------------------------------------------------------------------------------------
   // `java.util.Collection`'s BULK DEFAULTS, at ONE receiver contract
@@ -658,9 +684,10 @@ object JavaCollections:
     * `Iterator.remove` and what scala gives no equivalent of. */
   def removeAll[A](xs: scala.collection.mutable.Iterable[A] & scala.collection.mutable.Growable[A]
                      & scala.collection.mutable.Shrinkable[A],
-                   c: scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean =
+                   c: scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean = {
     val probes = elementsOf(c).toList
     dropWhere(xs, e => probes.exists(o => if e == null then o == null else e.equals(o)))
+  }
 
   /** `java.util.Collection.retainAll(c)` — the same loop with the test negated: every element of the
     * receiver NOT in the argument goes.
@@ -671,15 +698,16 @@ object JavaCollections:
     * so nothing to do", it would be a no-op. */
   def retainAll[A](xs: scala.collection.mutable.Iterable[A] & scala.collection.mutable.Growable[A]
                      & scala.collection.mutable.Shrinkable[A],
-                   c: scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean =
+                   c: scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean = {
     val probes = elementsOf(c).toList
     dropWhere(xs, e => !probes.exists(o => if e == null then o == null else e.equals(o)))
+  }
 
   /** remove every element the predicate dooms and say whether any did — the shared half of
     * [[removeAll]] and [[retainAll]], which differ only in that predicate. */
   private def dropWhere[A](xs: scala.collection.mutable.Iterable[A] & scala.collection.mutable.Growable[A]
                              & scala.collection.mutable.Shrinkable[A],
-                           doomed: A => Boolean): Boolean = xs match
+                           doomed: A => Boolean): Boolean = xs match {
     case b: scala.collection.mutable.Buffer[A @unchecked] =>
       var i       = 0
       var removed = false
@@ -690,6 +718,7 @@ object JavaCollections:
       val gone = xs.iterator.filter(doomed).toList
       gone.foreach(xs -= _)
       gone.nonEmpty
+  }
 
   /** `java.util.ArrayList.ensureCapacity(n)` — a CAPACITY HINT, with no observable semantics.
     *
@@ -699,9 +728,10 @@ object JavaCollections:
     * `ListBuffer` has no capacity to reserve, and a no-op there is exact rather than approximate.
     * This is the one member in this file whose java behaviour a caller cannot observe, which is why
     * it is the one whose "do nothing" arm is admissible. */
-  def ensureCapacity(xs: scala.collection.mutable.Buffer[?], n: scala.Int): Unit = xs match
+  def ensureCapacity(xs: scala.collection.mutable.Buffer[?], n: scala.Int): Unit = xs match {
     case ab: scala.collection.mutable.ArrayBuffer[?] => ab.sizeHint(n)
     case _                                           => ()
+  }
 
   /** `java.util.Optional.orElse(other)` — STRICT, which is the whole reason it needs a member here
     * rather than a rename.
@@ -868,7 +898,7 @@ object JavaCollections:
     * Removal reaches the MAP, which is java's contract and is exactly the capability
     * `scala.collection.Set` cannot express; `add` throws what java's own view throws. */
   def keySetView[K, V](m: scala.collection.mutable.Map[K, V]): scala.collection.mutable.Set[K] =
-    new scala.collection.mutable.AbstractSet[K]:
+    new scala.collection.mutable.AbstractSet[K] {
       def iterator: scala.collection.Iterator[K] = m.keysIterator
       def contains(k: K): Boolean                = m.contains(k)
       def addOne(k: K): this.type =
@@ -878,6 +908,7 @@ object JavaCollections:
       override def knownSize: Int                = m.knownSize
       override def isEmpty: Boolean              = m.isEmpty
       override def clear(): Unit                 = m.clear()
+    }
 
   /** java's `Map.entrySet()` — the LIVE view of the map's mappings as a `Set` of pairs.
     *
@@ -890,18 +921,20 @@ object JavaCollections:
     * `remove` is java's: an entry is removed only when the KEY AND THE VALUE both match, which is
     * what makes it a view of the mappings rather than of the keys. */
   def entrySetView[K, V](m: scala.collection.mutable.Map[K, V]): scala.collection.mutable.Set[(K, V)] =
-    new scala.collection.mutable.AbstractSet[(K, V)]:
+    new scala.collection.mutable.AbstractSet[(K, V)] {
       def iterator: scala.collection.Iterator[(K, V)] = m.iterator
       def contains(e: (K, V)): Boolean                = m.get(e._1).contains(e._2)
       def addOne(e: (K, V)): this.type =
         throw new UnsupportedOperationException("add on an entrySet() view")
-      def subtractOne(e: (K, V)): this.type =
+      def subtractOne(e: (K, V)): this.type = {
         if m.get(e._1).contains(e._2) then m.remove(e._1)
         this
+      }
       override def size: Int          = m.size
       override def knownSize: Int     = m.knownSize
       override def isEmpty: Boolean   = m.isEmpty
       override def clear(): Unit      = m.clear()
+    }
 
   /** a class the port DECLARES that kept java's `Map.Entry` as its parent, at the `Tuple2` slot the
     * mapping gave every USE of that interface — `ENGINE-LIMITS.md` K5.7's other half.
@@ -983,11 +1016,13 @@ object JavaCollections:
     *
     * `AbstractList.removeRange`'s own body: remove at the SAME index `count` times, which is what
     * makes it correct on a list that shifts left after each removal. */
-  def bufferRemoveRange[A](self: scala.collection.mutable.Buffer[A], idx: Int, count: Int): Unit =
+  def bufferRemoveRange[A](self: scala.collection.mutable.Buffer[A], idx: Int, count: Int): Unit = {
     var n = count
-    while n > 0 do
+    while n > 0 do {
       self.remove(idx)
       n -= 1
+    }
+  }
 
   /** `mutable.Buffer.insertAll(idx, elems)` — java's nearest is `addAll(int, Collection)`, whose
     * argument is a `java.util.Collection` and not an `IterableOnce`.
@@ -996,12 +1031,14 @@ object JavaCollections:
     * exactly the detachment K2 refuses, and `elems` may be a one-shot `Iterator`, which no
     * `java.util.Collection` view can be. Insertion order is preserved by advancing the index. */
   def bufferInsertAll[A](self: scala.collection.mutable.Buffer[A], idx: Int,
-                        elems: scala.collection.IterableOnce[A]): Unit =
+                        elems: scala.collection.IterableOnce[A]): Unit = {
     var at = idx
     val it = elems.iterator
-    while it.hasNext do
+    while it.hasNext do {
       self.insert(at, it.next())
       at += 1
+    }
+  }
 
   /** `mutable.Buffer.patchInPlace(from, patch, replaced)` — java has no counterpart at all.
     *
@@ -1009,10 +1046,11 @@ object JavaCollections:
     * which is what `Buffer`'s own implementations do and what keeps a `replaced` past the end from
     * throwing where scala's does not. */
   def bufferPatchInPlace[A](self: scala.collection.mutable.Buffer[A], from: Int,
-                      patch: scala.collection.IterableOnce[A], replaced: Int): Unit =
+                      patch: scala.collection.IterableOnce[A], replaced: Int): Unit = {
     val start = math.max(0, math.min(from, self.length))
     bufferRemoveRange(self, start, math.max(0, math.min(replaced, self.length - start)))
     bufferInsertAll(self, start, patch)
+  }
 
   /** `java.util.Collections.reverse(list)` — in place, as java's is. */
   def reverse[A](xs: scala.collection.mutable.Buffer[A]): Unit = inPlace(xs, xs.toList.reverse)
@@ -1028,8 +1066,9 @@ object JavaCollections:
     * Java's own `swap` is silent about equal indices and throws `IndexOutOfBoundsException`
     * otherwise; both fall out of the two `apply`/`update` calls unchanged, so nothing is
     * approximated here either. */
-  def swap[A](xs: scala.collection.mutable.Buffer[A], i: scala.Int, j: scala.Int): Unit =
+  def swap[A](xs: scala.collection.mutable.Buffer[A], i: scala.Int, j: scala.Int): Unit = {
     val t = xs(i); xs(i) = xs(j); xs(j) = t
+  }
 
   /** Replace a buffer's contents, keeping the IDENTITY the caller holds.
     *
@@ -1038,9 +1077,10 @@ object JavaCollections:
     * `ListBuffer` also satisfies. Sorting a snapshot and writing it back works for every `Buffer`
     * and preserves the one property that matters, that the reference the caller kept sees the
     * change. `sortWith` on a `List` is a stable merge sort, as `java.util.Collections.sort` is. */
-  private def inPlace[A](xs: scala.collection.mutable.Buffer[A], replacement: scala.collection.Seq[A]): Unit =
+  private def inPlace[A](xs: scala.collection.mutable.Buffer[A], replacement: scala.collection.Seq[A]): Unit = {
     xs.clear()
     xs ++= replacement
+  }
 
   /** `java.util.Map.Entry.comparingByKey(cmp)` over the `Tuple2` a `Map.Entry` becomes.
     *
@@ -1087,7 +1127,7 @@ object JavaCollections:
     * java's downcast. `CollectionsTransform` emits these where it retyped the tested/cast type;
     * where the target is a CONCRETE one no live view can produce (`mutable.HashMap`,
     * `ArrayBuffer`, `Tuple2`) it emits nothing and counts the refusal instead. */
-  object Reified:
+  object Reified {
 
     import scala.jdk.CollectionConverters.*
 
@@ -1104,42 +1144,49 @@ object JavaCollections:
       * Transitive, because a chain of coercions is what produces the shape in the first place; and
       * an UNMODIFIABLE wrapper is deliberately not `Wrapping`, so this stops there — see that
       * trait for why handing back the guarded collection would be the worse defect. */
-    private def under(x: Any): Any = x match
+    private def under(x: Any): Any = x match {
       case w: Wrapping => under(w.wrapped)
       case other       => other
+    }
 
     /** java's `x instanceof java.util.Map`. */
-    def isMap(x: Any): Boolean =
+    def isMap(x: Any): Boolean = {
       def test(v: Any) = v.isInstanceOf[scala.collection.mutable.Map[?, ?]] || v.isInstanceOf[java.util.Map[?, ?]]
       test(x) || test(under(x))
+    }
 
     /** java's `x instanceof java.util.List`. */
-    def isBuffer(x: Any): Boolean =
+    def isBuffer(x: Any): Boolean = {
       def test(v: Any) = v.isInstanceOf[scala.collection.mutable.Buffer[?]] || v.isInstanceOf[java.util.List[?]]
       test(x) || test(under(x))
+    }
 
     /** java's `x instanceof java.util.Set`. */
-    def isSet(x: Any): Boolean =
+    def isSet(x: Any): Boolean = {
       def test(v: Any) = v.isInstanceOf[scala.collection.mutable.Set[?]] || v.isInstanceOf[java.util.Set[?]]
       test(x) || test(under(x))
+    }
 
     /** java's `x instanceof java.util.Collection` — the shim target, so the mapped subtypes'
       * targets are named beside it (see the block comment). */
-    def isCollection(x: Any): Boolean =
+    def isCollection(x: Any): Boolean = {
       def test(v: Any) = v.isInstanceOf[JavaCollection[?]] || v.isInstanceOf[scala.collection.mutable.Buffer[?]] ||
         v.isInstanceOf[scala.collection.mutable.Set[?]] || v.isInstanceOf[java.util.Collection[?]]
       test(x) || test(under(x))
+    }
 
     /** java's `x instanceof java.lang.Iterable` — every `Collection` representation plus the
       * `Iterable` shim itself. A java `Map` is not an `Iterable`, so no map is named here. */
-    def isIterable(x: Any): Boolean =
+    def isIterable(x: Any): Boolean = {
       def test(v: Any) = v.isInstanceOf[JavaIterable[?]] || v.isInstanceOf[java.lang.Iterable[?]]
       test(x) || test(under(x)) || isCollection(x)
+    }
 
     /** java's `x instanceof java.util.Iterator`. */
-    def isIterator(x: Any): Boolean =
+    def isIterator(x: Any): Boolean = {
       def test(v: Any) = v.isInstanceOf[JavaIterator[?]] || v.isInstanceOf[java.util.Iterator[?]]
       test(x) || test(under(x))
+    }
 
     // -----------------------------------------------------------------------------------------
     // …and the CAST. Each returns the port's representation, LIVE where the value is java's —
@@ -1155,19 +1202,22 @@ object JavaCollections:
     // `ClassCastException` in a program that compiled and whose every check count was flat.
 
     /** java's `(java.util.Map<K,V>) x`. */
-    def asMap(x: Any): scala.collection.mutable.Map[?, ?] = under(x) match
+    def asMap(x: Any): scala.collection.mutable.Map[?, ?] = under(x) match {
       case m: java.util.Map[?, ?] => m.asInstanceOf[java.util.Map[Any, Any]].asScala
       case m                      => m.asInstanceOf[scala.collection.mutable.Map[?, ?]]
+    }
 
     /** java's `(java.util.List<A>) x`. */
-    def asBuffer(x: Any): scala.collection.mutable.Buffer[?] = under(x) match
+    def asBuffer(x: Any): scala.collection.mutable.Buffer[?] = under(x) match {
       case xs: java.util.List[?] => xs.asInstanceOf[java.util.List[Any]].asScala
       case xs                    => xs.asInstanceOf[scala.collection.mutable.Buffer[?]]
+    }
 
     /** java's `(java.util.Set<A>) x`. */
-    def asSet(x: Any): scala.collection.mutable.Set[?] = under(x) match
+    def asSet(x: Any): scala.collection.mutable.Set[?] = under(x) match {
       case xs: java.util.Set[?] => xs.asInstanceOf[java.util.Set[Any]].asScala
       case xs                   => xs.asInstanceOf[scala.collection.mutable.Set[?]]
+    }
 
     /** java's `(java.util.Collection<A>) x`.
       *
@@ -1179,28 +1229,31 @@ object JavaCollections:
     // The three SHIM targets keep their identity arm FIRST and do not unwrap: a value that already
     // IS the target is what java's identity cast yields, and rebuilding it from the underlying
     // would replace one wrapper with another for no gain.
-    def asCollection(x: Any): JavaCollection[?] = x match
+    def asCollection(x: Any): JavaCollection[?] = x match {
       case c: JavaCollection[?]                       => c
       case xs: scala.collection.mutable.Buffer[?]     => JavaCollection.from(xs.asInstanceOf[scala.collection.mutable.Buffer[Any]])
       case xs: scala.collection.mutable.Set[?]        => JavaCollection.fromSet(xs.asInstanceOf[scala.collection.mutable.Set[Any]])
       case c: java.util.Collection[?]                 => JavaCollection.fromJava(c.asInstanceOf[java.util.Collection[Any]])
       case other                                      => other.asInstanceOf[JavaCollection[?]]
+    }
 
     /** java's `(java.lang.Iterable<A>) x`. */
-    def asIterable(x: Any): JavaIterable[?] = x match
+    def asIterable(x: Any): JavaIterable[?] = x match {
       case i: JavaIterable[?]     => i
       case i: java.lang.Iterable[?] =>
         JavaIterable.from(i.asInstanceOf[java.lang.Iterable[Any]].asScala)
       case xs: scala.collection.Iterable[?] =>
         JavaIterable.from(xs.asInstanceOf[scala.collection.Iterable[Any]])
       case other => other.asInstanceOf[JavaIterable[?]]
+    }
 
     /** java's `(java.util.Iterator<A>) x`. */
-    def asIterator(x: Any): JavaIterator[?] = x match
+    def asIterator(x: Any): JavaIterator[?] = x match {
       case it: JavaIterator[?]      => it
       case it: java.util.Iterator[?] =>
         JavaIterator.from(it.asInstanceOf[java.util.Iterator[Any]].asScala)
       case other => other.asInstanceOf[JavaIterator[?]]
+    }
 
     // -----------------------------------------------------------------------------------------
     // THE EGRESS DIRECTION — `ENGINE-LIMITS.md` K21 face 1
@@ -1262,7 +1315,7 @@ object JavaCollections:
       * Identity for everything this engine did not put there — a `String`, a boxed number, a
       * `java.util.*` the port never touched, a class the port emits — so it is safe to insert
       * wherever a value crosses out and the phase cannot prove the value is harmless. */
-    def toJavaValue(x: Any): java.lang.Object = under(x) match
+    def toJavaValue(x: Any): java.lang.Object = under(x) match {
       case null                             => null
       // …`Map` BEFORE `Iterable`: a scala `Map` is a `scala.collection.Iterable` of pairs, and a
       // java `Map` is not a `java.util.Collection` at all. The wrong order turns every map into a
@@ -1282,6 +1335,7 @@ object JavaCollections:
       case it: JavaIterator[?]              => new ShimIteratorView(it.asInstanceOf[JavaIterator[Any]])
       case a: Array[AnyRef]                 => arrayValue(a, new java.util.IdentityHashMap[AnyRef, AnyRef]())
       case other                            => other.asInstanceOf[java.lang.Object]
+    }
 
     /** java and scala agree about arrays, so the SPINE is already right and only the elements can be
       * wrong. Converted eagerly because an array has no view, and returned AS IT ARRIVED whenever
@@ -1294,85 +1348,103 @@ object JavaCollections:
       * copy of a self-referential array exists. */
     private def arrayValue(a: Array[AnyRef], seen: java.util.IdentityHashMap[AnyRef, AnyRef]): AnyRef =
       if seen.containsKey(a) then a
-      else
+      else {
         seen.put(a, a)
         var moved = false
         val out = new Array[AnyRef](a.length)
         var i = 0
-        while i < a.length do
-          out(i) = a(i) match
+        while i < a.length do {
+          out(i) = a(i) match {
             case n: Array[AnyRef] => arrayValue(n, seen)
             case _                => toJavaValue(a(i))
+          }
           if out(i) ne a(i) then moved = true
           i += 1
+        }
         if moved then out else a
+      }
 
     /** the one entry shape these views need. Not `java.util.AbstractMap.SimpleImmutableEntry`,
       * whose availability is a platform question this module answers for itself; `equals` and
       * `hashCode` are java's own documented contract for `Map.Entry`. */
-    private final class Entry(k: java.lang.Object, v: java.lang.Object) extends java.util.Map.Entry[Any, Any]:
+    private final class Entry(k: java.lang.Object, v: java.lang.Object) extends java.util.Map.Entry[Any, Any] {
       def getKey(): Any = k
       def getValue(): Any = v
       def setValue(value: Any): Any = throw new UnsupportedOperationException("setValue")
-      override def equals(o: Any): Boolean = o match
+      override def equals(o: Any): Boolean = o match {
         case e: java.util.Map.Entry[?, ?] =>
           (if k == null then e.getKey == null else k.equals(e.getKey)) &&
             (if v == null then e.getValue == null else v.equals(e.getValue))
         case _ => false
+      }
       override def hashCode(): Int =
         (if k == null then 0 else k.hashCode) ^ (if v == null then 0 else v.hashCode)
+    }
 
-    private final class MapView(m: scala.collection.Map[Any, Any]) extends java.util.AbstractMap[Any, Any]:
+    private final class MapView(m: scala.collection.Map[Any, Any]) extends java.util.AbstractMap[Any, Any] {
       def entrySet(): java.util.Set[java.util.Map.Entry[Any, Any]] =
-        new java.util.AbstractSet[java.util.Map.Entry[Any, Any]]:
+        new java.util.AbstractSet[java.util.Map.Entry[Any, Any]] {
           def iterator(): java.util.Iterator[java.util.Map.Entry[Any, Any]] =
-            new java.util.Iterator[java.util.Map.Entry[Any, Any]]:
+            new java.util.Iterator[java.util.Map.Entry[Any, Any]] {
               private val it = m.iterator
               def hasNext(): Boolean = it.hasNext
-              def next(): java.util.Map.Entry[Any, Any] =
+              def next(): java.util.Map.Entry[Any, Any] = {
                 val (k, v) = it.next()
                 new Entry(toJavaValue(k), toJavaValue(v))
+              }
+            }
           def size(): Int = m.size
+        }
       // `AbstractMap` derives both from `entrySet`, i.e. in O(n). The map this views has them, and
       // a consumer that looks a key up should not pay for the whole spine.
       override def size(): Int = m.size
       override def isEmpty(): Boolean = m.isEmpty
+    }
 
-    private final class ListView(q: scala.collection.Seq[Any]) extends java.util.AbstractList[Any]:
+    private final class ListView(q: scala.collection.Seq[Any]) extends java.util.AbstractList[Any] {
       def get(i: Int): Any = toJavaValue(q(i))
       override def size(): Int = q.size
+    }
 
-    private final class SetView(s: scala.collection.Set[Any]) extends java.util.AbstractSet[Any]:
+    private final class SetView(s: scala.collection.Set[Any]) extends java.util.AbstractSet[Any] {
       def iterator(): java.util.Iterator[Any] = new IteratorView(s.iterator)
       def size(): Int = s.size
+    }
 
     /** a scala `Iterable` that is neither a `Seq`, a `Set` nor a `Map` — java's nearest honest
       * shape for it is a `Collection` whose `add` throws, which is what `AbstractCollection` is. */
-    private final class IterableView(i: scala.collection.Iterable[Any]) extends java.util.AbstractCollection[Any]:
+    private final class IterableView(i: scala.collection.Iterable[Any]) extends java.util.AbstractCollection[Any] {
       def iterator(): java.util.Iterator[Any] = new IteratorView(i.iterator)
       def size(): Int = i.size
+    }
 
-    private final class IteratorView(it: scala.collection.Iterator[Any]) extends java.util.Iterator[Any]:
+    private final class IteratorView(it: scala.collection.Iterator[Any]) extends java.util.Iterator[Any] {
       def hasNext(): Boolean = it.hasNext
       def next(): Any = toJavaValue(it.next())
+    }
 
-    private final class ShimCollectionView(c: JavaCollection[Any]) extends java.util.AbstractCollection[Any]:
+    private final class ShimCollectionView(c: JavaCollection[Any]) extends java.util.AbstractCollection[Any] {
       def iterator(): java.util.Iterator[Any] = new ShimIteratorView(c.iterator())
       def size(): Int = c.size()
+    }
 
-    private final class ShimIterableView(i: JavaIterable[Any]) extends java.util.AbstractCollection[Any]:
+    private final class ShimIterableView(i: JavaIterable[Any]) extends java.util.AbstractCollection[Any] {
       def iterator(): java.util.Iterator[Any] = new ShimIteratorView(i.iterator())
       // `java.lang.Iterable` has no `size`, so the only honest answer is to count — which is what
       // a java caller asking a `Collection` view of an `Iterable` is asking for.
-      def size(): Int =
+      def size(): Int = {
         val it = i.iterator()
         var n = 0
         while it.hasNext() do { it.next(); n += 1 }
         n
+      }
+    }
 
-    private final class ShimIteratorView(it: JavaIterator[Any]) extends java.util.Iterator[Any]:
+    private final class ShimIteratorView(it: JavaIterator[Any]) extends java.util.Iterator[Any] {
       def hasNext(): Boolean = it.hasNext()
       def next(): Any = toJavaValue(it.next())
+    }
+  }
 
   def comparingByValue[K, V](cmp: java.util.Comparator[? >: V]): java.util.Comparator[(K, V)] =
     (a: (K, V), b: (K, V)) => cmp.compare(a._2, b._2)
@@ -1434,7 +1506,7 @@ object JavaCollections:
   def toMap[A, K, V](
       xs: scala.collection.mutable.Buffer[A],
       key: java.util.function.Function[? >: A, ? <: K],
-      value: java.util.function.Function[? >: A, ? <: V]): scala.collection.mutable.Map[K, V] =
+      value: java.util.function.Function[? >: A, ? <: V]): scala.collection.mutable.Map[K, V] = {
     val m = scala.collection.mutable.HashMap.empty[K, V]
     xs.foreach { x =>
       val k = key.apply(x)
@@ -1442,6 +1514,7 @@ object JavaCollections:
       m(k) = value.apply(x)
     }
     m
+  }
 
   /** `Collectors.toMap(keyFn, valueFn, mergeFn)` — the overload that RESOLVES a duplicate key.
     *
@@ -1454,28 +1527,31 @@ object JavaCollections:
       xs: scala.collection.mutable.Buffer[A],
       key: java.util.function.Function[? >: A, ? <: K],
       value: java.util.function.Function[? >: A, ? <: V],
-      merge: java.util.function.BinaryOperator[V]): scala.collection.mutable.Map[K, V] =
+      merge: java.util.function.BinaryOperator[V]): scala.collection.mutable.Map[K, V] = {
     val m = scala.collection.mutable.HashMap.empty[K, V]
     xs.foreach { x =>
       val k = key.apply(x)
       val v = value.apply(x)
-      m.get(k) match
+      m.get(k) match {
         case Some(old) =>
           val merged = merge.apply(old, v)
           if merged == null then m.remove(k) else m(k) = merged
         case None => m(k) = v
+      }
     }
     m
+  }
 
   /** `Collectors.toCollection(Factory::new)` — build the factory's collection and fill it.
     *
     * `Growable` is the exact bound: it is what "a collection you can add to" is in scala, and it is
     * what every `Collectors.toCollection` target satisfies. */
   def into[A, C <: scala.collection.mutable.Growable[A]](
-      xs: scala.collection.mutable.Buffer[A], factory: () => C): C =
+      xs: scala.collection.mutable.Buffer[A], factory: () => C): C = {
     val c = factory()
     c ++= xs
     c
+  }
 
   /** A `mutable.Buffer` that REFUSES every mutation, as java's immutable lists do.
     *
@@ -1492,7 +1568,7 @@ object JavaCollections:
     * no member of a ported class for the trait's hundreds of inherited names to collide with. The
     * rule's hazard is inheritance in the PORT, and this class is never in one. */
   private final class FrozenBuffer[A](under: scala.collection.Seq[A])
-      extends scala.collection.mutable.AbstractBuffer[A]:
+      extends scala.collection.mutable.AbstractBuffer[A] {
     def apply(i: Int): A                                   = under(i)
     def length: Int                                        = under.length
     override def iterator: scala.collection.Iterator[A]    = under.iterator
@@ -1506,13 +1582,14 @@ object JavaCollections:
     def addOne(elem: A): this.type                         = refuse
     def clear(): Unit                                      = refuse
     override def patchInPlace(from: Int, patch: scala.collection.IterableOnce[A], replaced: Int): this.type = refuse
+  }
 
   /** `java.util.Arrays.asList(T[])`'s live, fixed-size view — see [[asListView]] for the contract.
     *
     * Every size-preserving operation reads or writes the ARRAY; every size-CHANGING one throws, as
     * `java.util.Arrays$ArrayList` does. `refuseFixedSize` rather than [[refuse]] because the reason
     * is a different one and the message a reader gets at run time is the whole value of throwing. */
-  private final class ArrayViewBuffer[A](arr: Array[A]) extends scala.collection.mutable.AbstractBuffer[A]:
+  private final class ArrayViewBuffer[A](arr: Array[A]) extends scala.collection.mutable.AbstractBuffer[A] {
     def apply(i: Int): A                                = arr(i)
     def length: Int                                     = arr.length
     override def knownSize: Int                         = arr.length
@@ -1527,13 +1604,14 @@ object JavaCollections:
     def clear(): Unit                                   = refuseFixedSize
     override def patchInPlace(from: Int, patch: scala.collection.IterableOnce[A], replaced: Int): this.type =
       refuseFixedSize
+  }
 
   /** `java.util.List.subList`'s view — see [[subList]] for the contract and for what is
     * deliberately not reproduced. `until` is a `var` because java's view resizes when you insert or
     * remove THROUGH it. */
   private final class SubBuffer[A](
       under: scala.collection.mutable.Buffer[A], from: Int, private var until: Int)
-      extends scala.collection.mutable.AbstractBuffer[A]:
+      extends scala.collection.mutable.AbstractBuffer[A] {
     def length: Int = until - from
     private def at(i: Int): Int =
       if i < 0 || i >= length then throw new IndexOutOfBoundsException(s"$i (sublist size $length)")
@@ -1545,43 +1623,49 @@ object JavaCollections:
     override def iterator: scala.collection.Iterator[A] = Iterator.range(0, length).map(apply)
     def update(i: Int, elem: A): Unit                   = under(at(i)) = elem
     def insert(idx: Int, elem: A): Unit                 = { under.insert(gap(idx), elem); until += 1 }
-    def insertAll(idx: Int, elems: scala.collection.IterableOnce[A]): Unit =
+    def insertAll(idx: Int, elems: scala.collection.IterableOnce[A]): Unit = {
       val es = scala.collection.immutable.Vector.from(elems)
       under.insertAll(gap(idx), es)
       until += es.size
+    }
     def prepend(elem: A): this.type = { insert(0, elem); this }
     def addOne(elem: A): this.type  = { insert(length, elem); this }
     def remove(idx: Int): A         = { val v = under.remove(at(idx)); until -= 1; v }
-    def remove(idx: Int, count: Int): Unit =
+    def remove(idx: Int, count: Int): Unit = {
       if count < 0 then throw new IllegalArgumentException(s"removing a negative number of elements: $count")
       var n = count
       while n > 0 do { under.remove(at(idx)); until -= 1; n -= 1 }
+    }
     def clear(): Unit = remove(0, length)
-    def patchInPlace(idx: Int, patch: scala.collection.IterableOnce[A], replaced: Int): this.type =
+    def patchInPlace(idx: Int, patch: scala.collection.IterableOnce[A], replaced: Int): this.type = {
       val es = scala.collection.immutable.Vector.from(patch)
       remove(idx, math.min(math.max(replaced, 0), length - idx))
       insertAll(idx, es)
       this
+    }
+  }
 
   /** [[FrozenBuffer]]'s `Set`. */
   private final class FrozenSet[A](under: scala.collection.Set[A])
-      extends scala.collection.mutable.AbstractSet[A]:
+      extends scala.collection.mutable.AbstractSet[A] {
     def contains(elem: A): Boolean                      = under.contains(elem)
     def iterator: scala.collection.Iterator[A]          = under.iterator
     override def knownSize: Int                         = under.size
     def addOne(elem: A): this.type                      = refuse
     def subtractOne(elem: A): this.type                 = refuse
     override def clear(): Unit                          = refuse
+  }
 
   /** [[FrozenBuffer]]'s `Map`. */
   private final class FrozenMap[K, V](under: scala.collection.Map[K, V])
-      extends scala.collection.mutable.AbstractMap[K, V]:
+      extends scala.collection.mutable.AbstractMap[K, V] {
     def get(key: K): Option[V]                          = under.get(key)
     def iterator: scala.collection.Iterator[(K, V)]     = under.iterator
     override def knownSize: Int                         = under.size
     def addOne(kv: (K, V)): this.type                   = refuse
     def subtractOne(k: K): this.type                    = refuse
     override def clear(): Unit                          = refuse
+  }
 
   /** java's own answer at every one of those members — `UnsupportedOperationException`, with the
     * message naming what the value IS, since the alternative a reader will guess is an engine bug. */
@@ -1593,3 +1677,4 @@ object JavaCollections:
     "this collection came from a java factory that returns an IMMUTABLE collection or an " +
       "unmodifiable VIEW (Collections.emptyList/emptyMap/emptySet/singletonList/singletonMap/" +
       "singleton/unmodifiableList/unmodifiableSet/unmodifiableMap); java throws here too")
+}

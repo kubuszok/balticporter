@@ -32,14 +32,15 @@ package balticporter.runtime
   * that shows up as an ordering failure or an NPE somewhere else instead of at the call that made
   * it. Null VALUES are permitted, as java's are.
   */
-final class JavaEnumMap[K <: java.lang.Enum[K], V] extends scala.collection.mutable.AbstractMap[K, V]:
+final class JavaEnumMap[K <: java.lang.Enum[K], V] extends scala.collection.mutable.AbstractMap[K, V] {
   private given byOrdinal: Ordering[K] = Ordering.by((k: K) => k.ordinal)
   private val under = scala.collection.mutable.TreeMap.empty[K, V]
 
   /** java's `typeCheck` — the WRITER's reading of `isValidKey`. */
-  private def requireKey(key: K): K =
+  private def requireKey(key: K): K = {
     if key == null then throw new NullPointerException("EnumMap does not permit a null key")
     key
+  }
 
   /** …and java's `isValidKey` as the READERS use it: not a key this map can hold, so it is absent.
     * Named apart from [[requireKey]] because the two are the same question with two answers, and a
@@ -56,16 +57,19 @@ final class JavaEnumMap[K <: java.lang.Enum[K], V] extends scala.collection.muta
   override def knownSize: Int                = under.knownSize
   override def clear(): Unit                 = under.clear()
   override def contains(key: K): Boolean     = validKey(key) && under.contains(key)
+}
 
-object JavaEnumMap:
+object JavaEnumMap {
   /** the COPY constructor's target — `new EnumMap<>(m)`. */
-  def from[K <: java.lang.Enum[K], V](it: scala.collection.IterableOnce[(K, V)]): JavaEnumMap[K, V] =
+  def from[K <: java.lang.Enum[K], V](it: scala.collection.IterableOnce[(K, V)]): JavaEnumMap[K, V] = {
     val m = new JavaEnumMap[K, V]
     m ++= it
     m
+  }
 
   /** `new EnumMap<>(K.class)` — the class token java needs for its ordinal array and this
     * implementation does not. Taken and IGNORED rather than dropped at the call site, so the
     * emitted code still reads like the java it came from. */
   def ofType[K <: java.lang.Enum[K], V](@annotation.unused cls: Class[K]): JavaEnumMap[K, V] =
     new JavaEnumMap[K, V]
+}

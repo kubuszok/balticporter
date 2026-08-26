@@ -18,8 +18,9 @@ package balticporter.runtime
   * Interop is restored by [[JavaIterable.asScala]] rather than by inheritance, which is
   * the direction that cannot conflict: an extension adds a view, a parent adds members.
   */
-trait JavaIterable[A]:
+trait JavaIterable[A] {
   def iterator(): JavaIterator[A]
+}
 
 /** A SHIM THAT DELEGATES, saying what it delegates TO — `ENGINE-LIMITS.md` K19.
   *
@@ -42,27 +43,33 @@ trait JavaIterable[A]:
   *
   * It does NOT restore reference identity, and nothing can: see K19 for the half that stays open.
   */
-trait Wrapping:
+trait Wrapping {
   /** the value this shim reads and writes THROUGH — never a copy of it. */
   def wrapped: Any
+}
 
-object JavaIterable:
+object JavaIterable {
   /** Adapt a plain scala collection to the java-shaped one. Inserted by the engine at call
     * sites where a shim-typed parameter meets a collection the port ITSELF mapped to scala
     * (`CharArray.appendAll(list)`). `remove()` stays at [[JavaIterator]]'s default —
     * `UnsupportedOperationException` — because a scala iterator genuinely cannot remove,
     * which is what java reports for a non-removable iterator too. */
-  def from[A](xs: scala.collection.Iterable[A]): JavaIterable[A] = new JavaIterable[A] with Wrapping:
+  def from[A](xs: scala.collection.Iterable[A]): JavaIterable[A] = new JavaIterable[A] with Wrapping {
     def wrapped: Any = xs
     def iterator(): JavaIterator[A] = JavaIterator.from(xs.iterator)
+  }
 
-  extension [A](self: JavaIterable[A])
+  extension [A](self: JavaIterable[A]) {
     /** A scala view of this java iterable — `for`, `map`, `foreach` and the rest. */
-    def asScala: scala.collection.Iterable[A] = new scala.collection.Iterable[A]:
+    def asScala: scala.collection.Iterable[A] = new scala.collection.Iterable[A] {
       def iterator: scala.collection.Iterator[A] = self.iterator().asScala
+    }
     /** so `for (x <- xs)` and `xs.foreach(f)` work directly on the java shape. Written as
       * the loop rather than delegating to the iterator: `JavaIterator` deliberately has no
       * `foreach` extension (see there), so there is nothing to delegate to. */
-    def foreach(f: A => Unit): Unit =
+    def foreach(f: A => Unit): Unit = {
       val it = self.iterator()
       while it.hasNext() do f(it.next())
+    }
+  }
+}

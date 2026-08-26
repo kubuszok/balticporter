@@ -17,30 +17,36 @@ package balticporter.runtime
   *
   * Portable: no JVM-only API, nothing reflective.
   */
-trait JavaIterator[A]:
+trait JavaIterator[A] {
   def hasNext(): Boolean
   def next(): A
   /** `java.util.Iterator.remove` — the JDK's own default implementation. */
   def remove(): Unit = throw new UnsupportedOperationException("remove")
+}
 
-object JavaIterator:
+object JavaIterator {
   /** Adapt a `scala.collection.Iterator` to the java-shaped one. `remove()` keeps the
     * default above, which is the truth: there is nothing to remove through. */
-  def from[A](it: scala.collection.Iterator[A]): JavaIterator[A] = it match
+  def from[A](it: scala.collection.Iterator[A]): JavaIterator[A] = it match {
     case ji: JavaIterator[A @unchecked] => ji
-    case _ => new JavaIterator[A] with Wrapping:
+    case _ => new JavaIterator[A] with Wrapping {
       def wrapped: Any = it
       def hasNext(): Boolean = it.hasNext
       def next(): A = it.next()
+    }
+  }
 
-  extension [A](self: JavaIterator[A])
+  extension [A](self: JavaIterator[A]) {
     /** A scala view of this java iterator. `remove()` is not expressible there and is
       * simply not offered — the view is for traversal. */
-    def asScala: scala.collection.Iterator[A] = new scala.collection.Iterator[A]:
+    def asScala: scala.collection.Iterator[A] = new scala.collection.Iterator[A] {
       def hasNext: Boolean = self.hasNext()
       def next(): A = self.next()
+    }
     /** Deliberately NO `foreach` here, though the loop is trivial: a class that is both a
       * java `Iterable` and a java `Iterator` — which is most of libGDX's — would then have
       * two applicable extensions and scala reports the `for` as ambiguous rather than
       * picking one. `foreach` lives on [[JavaIterable]], which is what java's own for-each
       * requires anyway; traverse an iterator with `asScala`. */
+  }
+}
