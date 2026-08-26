@@ -181,18 +181,10 @@ final class NullabilityTransform(
     */
   def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
     case o: NullabilityTransform =>
-      // TARGET: a dependent at the DEFAULT (`Union`) inherits the base's target — it is not this
-      // module's to choose (§1.5). A dependent that explicitly states a non-default target must
-      // AGREE with the base's, or the merge refuses. Both sides non-default and different is a
-      // choice the merge will not make.
-      val mergedTarget = (target, o.target) match
-        case (a, Target.Union) => Right(a)       // dependent inherits
-        case (Target.Union, b) => Right(b)       // base at default, dependent chooses
-        case (a, b) if a == b  => Right(a)       // both agree
-        case (a, b)            => Left(
-          s"""both modules state a nullability TARGET, "${a.tag}" and "${b.tag}" — the """ +
-            "shape every retyped declaration takes is one emitted signature per member, so two " +
-            "answers is a choice and not a composition")
+      val targetClash = Option.when(target != o.target)(
+        s"""both modules state a nullability TARGET, "${target.tag}" and "${o.target.tag}" — the """ +
+          "shape every retyped declaration takes is one emitted signature per member, so two " +
+          "answers is a choice and not a composition")
       val scopeMerged: Either[String, RuleScope] = (scope, o.scope) match
         case (RuleScope.Everywhere(a), RuleScope.Everywhere(b)) => Right(RuleScope.Everywhere(a ++ b))
         case (RuleScope.Only(a), RuleScope.Only(b))             => Right(RuleScope.Only(a ++ b))
@@ -201,12 +193,12 @@ final class NullabilityTransform(
             s"""`${theirs.productPrefix}` — the two point in OPPOSITE directions (an entry EXCLUDES """ +
             "under one and INCLUDES under the other, and `Only` states as much by omission as by " +
             "listing), so no entry set preserves both")
-      (mergedTarget.left.toOption.toList ++ scopeMerged.left.toOption.toList) match
-        case Nil => (for { t <- mergedTarget; s <- scopeMerged } yield
+      (targetClash.toList ++ scopeMerged.left.toOption.toList) match
+        case Nil => scopeMerged.map { s =>
           MergeablePolicy.Merged(
-            new NullabilityTransform(annotations ++ o.annotations, t, s),
+            new NullabilityTransform(annotations ++ o.annotations, target, s),
             o.subjects -- subjects)
-        )
+        }
         case whys => Left(whys.mkString("; "))
     case other =>
       Left(s"`${other.name}` is not a `NullabilityTransform`, so there is no policy to compose")

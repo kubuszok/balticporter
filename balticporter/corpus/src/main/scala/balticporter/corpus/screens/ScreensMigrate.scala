@@ -146,9 +146,16 @@ object ScreensPolicy:
     * Both halves of the merged instance are visible in this port's run: the base's
     * `com.badlogic.gdx.utils.Null` and this entry.
     *
-    * ==K13 CLOSED: `Named` closes the abstract-type-parameter class==
-    * The base's `Named("lowlevel.Nullable")` target wraps as `Nullable[T]` which composes at
-    * every `T`, so the K13 scope exit list is deleted entirely — no scope needed.
+    * ==`target` is left at its default ON PURPOSE==
+    * It is not this module's to choose: the shape must AGREE with the base's or the merge refuses,
+    * and `T | Null` is what libGDX's floor emits.
+    *
+    * ==The `scope` is this module's OWN, and it composes with the base's rather than replacing it==
+    * `Everywhere` unions its excepts, so the merged scope is `LibgdxPolicy.nullabilityExempt` PLUS
+    * the two entries below — libGDX's exemptions are facts about libGDX's generic containers and
+    * screenmanager neither adds to nor subtracts from them, and these two are facts about
+    * screenmanager and have no business in the base's manifest. See [[nullabilityExempt]] for what
+    * they are and what measured them.
     *
     * ==What retires with it==
     * `--dependency org.jspecify:jspecify:0.3.0` leaves `screens_deps` in the same commit. The
@@ -159,7 +166,38 @@ object ScreensPolicy:
     */
   def nullability: balticporter.transform.NullabilityTransform =
     new balticporter.transform.NullabilityTransform(
-      annotations = Set("org.jspecify.annotations.Nullable"))
+      annotations = Set("org.jspecify.annotations.Nullable"),
+      scope       = balticporter.tir.RuleScope.Everywhere(nullabilityExempt))
+
+  /** The K13 exit, screenmanager's half — MEASURED, at the MEMBER, not guessed at the type.
+    *
+    * `ENGINE-LIMITS.md` K13: `Null` is a subtype of every CONCRETE reference type and not of an
+    * abstract `T`, so the floor is free for a declaration's own signature and not for its USES.
+    * `ScreenManager<S extends ManagedScreen, T extends ScreenTransition>` is the one type here that
+    * annotates its own type parameters, and the unscoped run put **3 errors** in it — one
+    * overload-resolution failure at `pushScreen` and two `T | Null` mismatches inside `render`.
+    * These two entries clear all three.
+    *
+    * '''Member-level, and that is the difference from the base's list.''' libGDX's exit names TYPES
+    * because its failing declarations are spread across a container's whole API; here the failing
+    * set is four declarations in one class, so a `RuleScope` can say exactly them and the port pays
+    * nothing for the rest. `ScreenManager#getCurrentScreen` and `#getLastScreen` are annotated at
+    * an abstract `S` too — they are counted (`nullability-boundary`) and are NOT here, because
+    * nothing in reach uses them in a position `S | Null` does not satisfy; the exit is what the
+    * compiler measured, not every declaration that could in principle have failed.
+    *
+    * '''The two travel together.''' The field is assigned from the parameter, so scoping out one
+    * and retyping the other is an assignment of `T | Null` to `T` — the same "half a pair" shape
+    * K13 records for a scoped-out parent beside a retyped override, one level down.
+    *
+    * Deleted whole, not edited, when `DESIGN.md` §8.6's N2 (`-Yexplicit-nulls`) lands.
+    */
+  def nullabilityExempt: Set[String] = Set(
+    "de.eskalon.commons.screen.ScreenManager#transition",
+    // the bare member name is every OVERLOAD of it, which is what this needs: both `pushScreen`
+    // overloads take the annotated `T`
+    "de.eskalon.commons.screen.ScreenManager#pushScreen",
+  )
 
   /** The guacamole seam.
     *

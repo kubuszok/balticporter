@@ -594,28 +594,17 @@ class SurfaceFoldSpec extends munit.FunSuite:
     assertEquals(dep.surfaceFold.refusals, Nil)
   }
 
-  test("a DEFAULT-target dependent INHERITS the base's non-default target") {
-    // A dependent at `Union` (the default) is not stating an opinion, so the base's `Named`
-    // carries through unchanged — the merge takes the non-default side.
-    val b = base(List(nullability(Set("com.demo.Null"), target = NullabilityTransform.Target.Named("com.dep.Opt"))))
+  test("REFUSED: two TARGETS is a choice of emitted shape, not a composition") {
+    val b = base(List(nullability(Set("com.demo.Null"))))
     val dep = b.extendedBy(PortManifest("dep", surface = List(
-      nullability(Set("org.third.Nullable")))))                // Union default, no target opinion
-    assertEquals(dep.effectiveSurface.map(_.name), List("nullability"))
-    assertEquals(nulls(dep).target, NullabilityTransform.Target.Named("com.dep.Opt"))
-    assertEquals(dep.surfaceFold.refusals, Nil)
-  }
-
-  test("REFUSED: two non-default TARGETS is a choice of emitted shape, not a composition") {
-    val b = base(List(nullability(Set("com.demo.Null"), target = NullabilityTransform.Target.Named("com.dep.Opt"))))
-    val dep = b.extendedBy(PortManifest("dep", surface = List(
-      nullability(Set("com.demo.Null"), target = NullabilityTransform.Target.OptionTarget))))
+      nullability(Set("com.demo.Null"), target = NullabilityTransform.Target.Named("com.dep.Opt")))))
     assertEquals(dep.effectiveSurface.size, 2, "a refused pair stays in the pipeline")
     assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Conflict))
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
     assertEquals(f.map(_.kind), List(Kind.SurfaceDivergence))
     assert(Kind.SurfaceDivergence.fatal)
+    assert(clue(f.head.detail).contains("union"))
     assert(clue(f.head.detail).contains("named:com.dep.Opt"))
-    assert(clue(f.head.detail).contains("option"))
   }
 
   test("REFUSED: an `Everywhere` base and an `Only` dependent point in OPPOSITE directions") {
@@ -638,11 +627,9 @@ class SurfaceFoldSpec extends munit.FunSuite:
   }
 
   test("REFUSED: a target clash AND a scope clash are reported TOGETHER, not one at a time") {
-    val b = base(List(nullability(Set("com.demo.Null"),
-      target = NullabilityTransform.Target.Named("com.dep.Opt"),
-      scope = RuleScope.Everywhere(Set("com.demo.Box")))))
+    val b = base(List(nullability(Set("com.demo.Null"), scope = RuleScope.Everywhere(Set("com.demo.Box")))))
     val dep = b.extendedBy(PortManifest("dep", surface = List(nullability(
-      Set("com.demo.Null"), target = NullabilityTransform.Target.OptionTarget,
+      Set("com.demo.Null"), target = NullabilityTransform.Target.Named("com.dep.Opt"),
       scope = RuleScope.Only(Set("org.third.Bag"))))))
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
     assertEquals(f.map(_.kind), List(Kind.SurfaceDivergence))

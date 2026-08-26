@@ -126,12 +126,7 @@ object LibgdxPolicy:
       // `_native0.5_3` are published beside `_3`, so `%%` would ask a JS build for the JVM jar.
       dependencies   = List(
         balticporter.catalog.ArtifactDep("io.github.cquiroz", "scala-java-locales", "1.5.4",
-                                         balticporter.catalog.CrossKind.Platform),
-        // `lowlevel.Nullable` — the opaque wrapper the `Named` nullability target emits into every
-        // annotated declaration's type. The coordinate is the port's to state, never the engine's
-        // (§1), and the version is sge's own `Versions.lls` from its `build.sbt`.
-        balticporter.catalog.ArtifactDep("com.kubuszok", "lls", "0.3.0"),
-      ),
+                                         balticporter.catalog.CrossKind.Platform)),
     )
 
   /** THE BOUNDARY ROWS THIS PORT HAS READ AND ACCEPTS — `DESIGN.md` §8.16.
@@ -181,10 +176,23 @@ object LibgdxPolicy:
     // re-spell every residual read in the library to serve these two.
     "com.badlogic.gdx.graphics.profiling.GLErrorListener#LOGGING_LISTENER" -> "accept-residual-global",
 
-    // K13 CLOSED: the four `accept-scoped-out` and `accept-abstract-type-parameter` entries at
-    // `List$ListStyle#{background,down,over}` and `Skin#optional` were the K13 exit's residual
-    // resolutions — with the `Named` target, `Nullable[T]` composes at every `T` and no scope exit
-    // is needed, so those findings no longer fire and the selections are deleted.
+    // ONE java line — `public @Null Drawable down, over, background;` — and the annotated type is a
+    // CONCRETE `Drawable`, not `List`'s type parameter, so the union floor would be transparent at
+    // every use. They are held back only because [[nullabilityExempt]] names the ENCLOSING type and
+    // `RuleScope.covers` cuts at `$`: this is the over-approximation that entry documents (92 of 632
+    // declarations held back to clear 35 errors). And there is no key that would fix it — an
+    // `Everywhere(except)` scope has an exclusion set and no way to RE-include a nested type — so
+    // accepting is not the easier of two answers here, it is the only one.
+    "com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle#background" -> "accept-scoped-out",
+    "com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle#down"       -> "accept-scoped-out",
+    "com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle#over"       -> "accept-scoped-out",
+
+    // `@Null <T> T optional (String, Class<T>)` — the annotation IS the method's whole contract, and
+    // the retype states it in the type. What this lane counts is what that costs at the USES, and on
+    // this port the compile answers: 0 errors. So the cost is measured and it is zero, while both
+    // spelled alternatives give the contract up — scoping `Skin` out returns it to an unannotated
+    // `T`, and `-Yexplicit-nulls -language:unsafeNulls` erases the distinction library-wide.
+    "com.badlogic.gdx.scenes.scene2d.ui.Skin#optional" -> "accept-abstract-type-parameter",
   )
 
   /** libGDX's own JUnit suite, as a DEPENDENT of [[core]].
@@ -952,29 +960,104 @@ object LibgdxPolicy:
     ))
 
   /** libGDX's own `@Null` moved OUT of an annotation the Scala compiler ignores and INTO the type
-    * — `lowlevel.Nullable[T]`, the hand port's own wrapper (DESIGN.md §8.6's N1).
+    * — the union floor, `T | scala.Null` (DESIGN.md §8.6's N1).
     *
     * ==Why this is the base manifest's business (§1.5)==
-    * A nullable return is a fact about the SHARED SURFACE. A base emitting `Nullable[Actor]` and a
+    * A nullable return is a fact about the SHARED SURFACE. A base emitting `Actor | Null` and a
     * dependent emitting `Actor` for the same member each compile alone and cannot compile together,
     * so the entry lives here once and every dependent inherits it through `extendedBy`. No dependent
     * CONSTRUCTS a `nullability` of its own, so there is one instance in every effective pipeline and
     * nothing has to merge.
     *
-    * ==`Named` CLOSES K13==
-    * The union floor `T | Null` is NOT transparent at an abstract `T` — measured at 35 errors from
-    * 632 declarations, every one inside a generic container, and a scope exit list of 12 entries
-    * maintained by hand. `Nullable[T]` IS a proper type that composes at every `T`: the
-    * abstract-type-parameter class disappears entirely, and the scope exit list with it. The K13
-    * exit that was the union floor's SECOND exit is this target's DEFAULT — no scope needed. */
+    * ==The scope is the policy exit K13 leaves open, and it is not free==
+    * `Null` is a subtype of every CONCRETE reference type, so `String | Null` simplifies at every
+    * use and the floor costs nothing there. It is NOT a subtype of an abstract `T <: Object` —
+    * which is the very fact that makes `def m[T <: X](): T = null` a type error — so every USE of a
+    * declaration whose annotated type mentions a type parameter fails in a plain `T` slot.
+    * `ENGINE-LIMITS.md` K13 measured that unscoped: 632 declarations retyped, **35 compile errors**,
+    * every one inside a generic container or a generic widget, plus one overload-arity movement at a
+    * defaulted `get`. The engine COUNTS the class rather than refusing it
+    * (`NullabilityBoundaryCheck.Issue.AbstractTypeParameter`) and leaves the choice to the port,
+    * which has exactly three exits: accept the errors, scope the generic declarations out, or land
+    * §8.6's N2 (`-Yexplicit-nulls -language:unsafeNulls`, under which the whole class disappears and
+    * this list is deleted).
+    *
+    * This port takes the SECOND exit, because the first fails the measure lane's compile guard and
+    * the third is gated on work that is not done (A1/A2's placeholder removal). The entries below
+    * are the types whose `@Null` members are typed by their OWN type parameter; each keeps its
+    * upstream type, each is a counted `ScopedOut` decision with a porter note at the declaration,
+    * and nothing else in the library is held back. */
   def nullability: balticporter.transform.NullabilityTransform =
     new balticporter.transform.NullabilityTransform(
       annotations = Set("com.badlogic.gdx.utils.Null"),
-      target      = balticporter.transform.NullabilityTransform.Target.Named("lowlevel.Nullable"),
+      target      = balticporter.transform.NullabilityTransform.Target.Union,
+      scope       = balticporter.tir.RuleScope.Everywhere(nullabilityExempt),
     )
 
-  // K13 CLOSED: the `nullabilityExempt` set was the K13 exit for the `Union` floor — with
-  // `Named("lowlevel.Nullable")`, `Nullable[T]` IS a proper type that composes at every `T`, so
-  // the abstract-type-parameter class disappears entirely. The 12 scope entries that held back 92
-  // of 632 declarations to clear 35 errors are deleted, not just emptied — the `Group#findActor`
-  // member key with them. Every generic container and generic widget is now retyped unscopped.
+  /** the types K13's measurement holds back — see [[nullability]] for why, and PROGRESS §11.17 for
+    * what it costs.
+    *
+    * Every entry is a type whose `@Null` members are typed by its OWN type parameter, so the union
+    * the floor would give them does not conform at their uses. The list is MEASURED, not guessed —
+    * it is the eleven types the unscoped run's 35 errors landed in, plus the two subclasses a
+    * second run found (below) and minus the one that turned out to hold back nothing. Every other
+    * generic type in the library — `ArrayMap`, `ObjectSet`, `PooledLinkedList`, `ObjectFloatMap`,
+    * `Pool` and the rest — keeps the floor, because their annotated members are typed CONCRETELY
+    * and `Null` is a subtype of every concrete reference type.
+    *
+    * It is an OVER-APPROXIMATION and the number is the honest part of it: 92 of 632 declarations
+    * held back to clear 35 errors. A type entry is what a `RuleScope` can say; the predicate that would hold
+    * back only the failing declarations is the one the engine already computes and reports
+    * (`Issue.AbstractTypeParameter`, 155 occurrences), and a hand-written list of those would be a
+    * second copy of it that rots the first time upstream moves a member. The whole entry is deleted
+    * — not edited — when §8.6's N2 lands. */
+  def nullabilityExempt: Set[String] = Set(
+    // the generic containers: `V get(K)`, `V put(K, V)`, `T removeIndex(int)` — the annotation is
+    // on the element, which IS the type parameter.
+    "com.badlogic.gdx.utils.Array",
+    // …and `Array`'s two subclasses, which override `replaceFirst`/`replaceAll` and re-state the
+    // annotation on their own `T`. A scope exit on a generic type CLOSES OVER THE SUBCLASSES or it
+    // is not an exit: with these two left in, the parent's members were held back and the children's
+    // moved, which is half an override pair — 35 -> 6 errors, all six in exactly these two types.
+    "com.badlogic.gdx.utils.SnapshotArray",
+    "com.badlogic.gdx.utils.DelayedRemovalArray",
+    "com.badlogic.gdx.utils.AtomicQueue",
+    "com.badlogic.gdx.utils.IntMap",
+    "com.badlogic.gdx.utils.LongMap",
+    "com.badlogic.gdx.utils.ObjectMap",
+    // …and NOT `OrderedMap`, which is where that closure STOPS. It extends `ObjectMap` and
+    // `OrderedMap$OrderedMapValues` overrides an annotated `ObjectMap$Values#toArray`, so the
+    // unscoped run put an error in it and the first draft listed it — but it re-states no
+    // annotation of its own (upstream: zero `@Null` in the whole file), so there is nothing in it
+    // for a scope to hold back and scoping `ObjectMap` out settles both ends of that pair. An
+    // entry here BINDS (the type exists, so `PolicyBinder.bindScope` reports nothing) and holds
+    // back zero declarations: dead policy the never-fired machinery cannot see, found only by the
+    // emitted text being byte-identical with and without it. Close over the subtypes that
+    // ANNOTATE, never over the subtypes that merely inherit.
+    "com.badlogic.gdx.utils.Queue",
+    // the generic widgets: a selection model's item and a tree's node are type parameters too.
+    "com.badlogic.gdx.scenes.scene2d.ui.List",
+    "com.badlogic.gdx.scenes.scene2d.ui.SelectBox",
+    "com.badlogic.gdx.scenes.scene2d.ui.Tree",
+    "com.badlogic.gdx.scenes.scene2d.utils.Selection",
+    // …and ONE MEMBER, which is where this list stops being about TYPES — K13's own rule: spell the
+    // exit at the member when the failing set is not the container's whole API, and a bare member
+    // name is every overload of it (here, one).
+    //
+    // `Group` is not a generic container. Four of its five `@Null` sites are a CONCRETE
+    // `Rectangle`/`Actor`, where the union floor is transparent and costs nothing; only
+    // `@Null <T extends Actor> T findActor(String)` is annotated at an ABSTRACT `T`. Scoping the
+    // TYPE out would hold back those four for nothing and add four `ScopedOut` rows saying so.
+    //
+    // MEASURED ON A DEPENDENT, which is the only place the cost was visible: `sge-visui`'s
+    // `DragPane#findActor` overrides this member declaring plain `T`, and the base's `T | Null` was
+    // that port's last `E007` of this family (`PROGRESS.md` §10.9.10 row 3) — reported NOWHERE,
+    // because `ENGINE-LIMITS.md` D2 scopes a dependent's own `nullability-boundary` to its own
+    // declarations and this declaration is the base's. The exit is therefore the BASE's to take:
+    // the same key written in the dependent's manifest is a §1.5 intrusion the phase refuses.
+    //
+    // No subclass closure is owed. Grepped every vendored upstream: `findActor` has exactly two
+    // declarations, this one and the override, and the override re-states no annotation — so an
+    // entry for it would be the dead policy `OrderedMap` documents above.
+    "com.badlogic.gdx.scenes.scene2d.Group#findActor",
+  )
