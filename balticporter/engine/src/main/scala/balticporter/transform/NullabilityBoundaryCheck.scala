@@ -121,6 +121,12 @@ object NullabilityBoundaryCheck extends RemedySource:
     /** the declaration carries a configured annotation and this port's `nullability` scope
       * deliberately holds it back, so it keeps its upstream type and its upstream marker. */
     case ScopedOut
+    /** WRAPPER mode only: retyping this parameter would make two OVERLOADS of the same member
+      * erase to one descriptor, which java's own erasure kept apart. */
+    case OverloadErasureClash
+    /** WRAPPER mode only: the formal to coerce against names a type variable that is not in scope
+      * where the call stands, so no ascription can be WRITTEN there. */
+    case UnwritableFormal
 
   object Issue:
     /** which of §1's three kinds the fix is — the thing a bare typer error cannot say. */
@@ -178,6 +184,26 @@ object NullabilityBoundaryCheck extends RemedySource:
           "thing that could find a missing entry (`ENGINE-LIMITS.md` K13: 35 errors -> 6 -> 0, the " +
           "six being exactly this shape). A subtype that merely INHERITS an annotated member is not " +
           "reported and needs no entry — adding one is dead policy, which `policy` now reports."
+      case OverloadErasureClash =>
+        "§1(a) REFUSED on purpose, and the refusal is the whole answer: java kept these overloads " +
+          "apart BY ERASURE — `f(Font)` beside `f(BitmapFont)` — and a wrapper erases every one of " +
+          "them to the same descriptor, because erasure drops type arguments and an opaque wrapper " +
+          "drops to `Object`. Retyped, the two declarations are `E120 Conflicting definitions … " +
+          "have the same type … after erasure`, which is a compile error at a member whose name, " +
+          "arity and bodies are all correct. So the parameters that CARRY the distinction keep " +
+          "their upstream type on BOTH members and their upstream marker with it. There is no " +
+          "engine change that makes the pair expressible — scala has one erasure, exactly as java " +
+          "does — and the alternatives are a port's: rename one overload, or scope the wrapper away " +
+          "from this type."
+      case UnwritableFormal =>
+        "§1(a) REFUSED on purpose: the formal this argument would be ascribed to names a type " +
+          "VARIABLE of the CALLEE, and a callee's own type variables do not resolve at the call " +
+          "site (`ENGINE-LIMITS.md` G12). Where the RECEIVER instantiates them the phase " +
+          "substitutes and no ascription is needed at all; where it does not — an inherited " +
+          "callee, a raw receiver, a static member, which sees NONE of its class's type " +
+          "parameters (G20) — there is no expression to write, and emitting the formal verbatim is " +
+          "`E006 Not found: type T` at a line the source never wrote. The argument is left as it " +
+          "stands, which is at worst an ascription too few and never a name that does not exist."
       case ScopedOut =>
         "§1(b) HELD BACK ON PURPOSE, and counted for the reason every other lane here is: this " +
           "declaration carries a configured nullability annotation and the port's `nullability` " +

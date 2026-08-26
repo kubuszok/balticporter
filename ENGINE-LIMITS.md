@@ -5917,6 +5917,64 @@ that holds back only a PARAMETER produces no `decisions.tsv` row and no porter n
 floor's exits remain for ports that choose `Union`; the history above is the `Union`-mode scope exit
 procedure that `Named` replaces.*
 
+### K13.5 A wrapper target's LAST THREE SEAMS ARE ALL ONE SENTENCE — the retype changes a SIGNATURE, so everything java tied to that signature has to move with it
+
+Wave 1.1b closed the base at 0 and each of the three seams below arrived one module out, on a
+DEPENDENT, which is what the shape predicts rather than an accident: a base carrying any of them
+would not compile, so the corpus's bases have none and the whole class is invisible until a second
+module resolves against the first. Measured 2026-08-26 under `Target.Named("lowlevel.Nullable")` —
+**gdx-ai 0 -> 1, TextraTypist 0 -> 2, VisUI 7 -> 8** — and all three are now closed at **ai 1 -> 0,
+textra 2 -> 0, visui 8 -> 7**, at 0 errors on the base with `nullability-boundary 184 -> 169` and 307
+member digests moved there.
+
+**(1) AN OVERRIDE INHERITS THE CONTRACT, and java's marker does not have to say so.** Javac ignores
+the annotation, so an upstream has no reason to repeat it on an override and routinely does not.
+Scala has no such freedom: the retype moves the SIGNATURE, so the override keeping the upstream
+spelling is `E038 … a different signature than the overridden declaration` (TextraTypist's
+`TextraLabel`/`TextraField#setParent`, and **invisible until the port reached 0 typer errors** —
+`RefChecks` does not run before then, `CLAUDE.md` §3) or, at a generic result, `E007 Found: W[T] /
+Required: T` in a body returning exactly what the parent handed it (VisUI's `DragPane#findActor` —
+the very member K13 had carried a scope exemption for under `Union`). The phase's own comment had
+predicted the fix (*"swapping the predicate for the real closure is a one-line change here"*): the
+retype travels `OverrideGraph.overriders` DOWNWARD at the same slot and position, and
+`wrapperCrossesOverride`'s downward disjunct — a `(name, descriptor)` set test, §4.55's loose key —
+goes with it, since the pair can now move together. **Two things that are not optional.** A
+CONSTRUCTOR is not an override edge however the graph matches names: every `<init>` is named
+`<init>`, so a subclass's same-shaped constructor reads as an override of its superclass's, and
+travelling that edge retyped **17 libGDX members and minted 4 spurious erasure-clash rows at 0 errors
+either way** — the shape only `members.tsv` can see. And the refusal is still owed UPWARD, where the
+other end may be a class file nothing can move.
+
+**(2) AN OVERLOAD SET JAVA KEPT APART BY ERASURE COLLAPSES.** `Style(@Null Font)` beside
+`Style(@Null BitmapFont)` is ordinary java — the JVM tells them apart by descriptor — and a wrapper
+erases both to one, because erasure drops type arguments and an opaque wrapper drops to `Object`:
+`E120 Conflicting definitions … have the same type … after erasure`, at two constructors whose names,
+arities and bodies are all correct. REFUSED at PLAN time (`Issue.OverloadErasureClash`), in BOTH
+members and only at the positions where their pre-retype types differ, because refusing one end is an
+arbitrary choice between two declarations and the answer must not depend on which the symbol table
+walked first. The comparison is by HEAD SYMBOL rather than a real erasure, deliberately in the
+UNDER-approximating direction: a missed clash is a loud compile error, an over-approximation silently
+declines a retype nothing was wrong with. 2 rows on TextraTypist, 0 on the base.
+
+**(3) A FORMAL NAMING THE CALLEE'S TYPE VARIABLE CANNOT BE WRITTEN AT THE CALL** (G12, at a
+coercion). `coerceTo`'s ascription arm is the ONE arm that puts a type into the emitted text —
+`wrap` and `unwrap` name only the wrapper's own members — and it was rendering the formal verbatim:
+`item.asInstanceOf[lowlevel.Nullable[T]]` where `T` is `Array`'s, inside a non-generic
+`TextraSelectBox`. `E006 Not found: type T` at a line the source never wrote. Two halves, in the
+order `CLAUDE.md` §1 requires (bridge where you can, count where you cannot): the RECEIVER's own type
+arguments substitute the callee's variables, which is exact and whose commonest outcome is that the
+two types then AGREE and no ascription is emitted at all (6 identity casts removed from libGDX);
+where nothing substitutes — an inherited callee, a raw receiver — the ascription is declined and
+COUNTED (`Issue.UnwritableFormal`, 11 rows on the base). The in-scope test is at UNIT granularity
+because that is what a bottom-up walk carries, and its residue is G20's own — a `static` member sees
+none of its class's type parameters and this test says the unit owns them, a false NEGATIVE and
+therefore loud. **One operand escapes the question entirely and must**: `W.empty` conforms at every
+element type by the wrapper contract, so it is never ascribed — which is the answer for the sites
+where the element is written in a scope the site does not have at all (a companion or `static`
+member, a SUPER-CONSTRUCTOR argument list evaluated before the class's own parameters bind).
+
+*Fix kind: (a). All three closed in `NullabilityTransform`; specs in `NullabilityWrapperSpec`.*
+
 ### K14. A RETARGET's subtyping licence is ONE-DIRECTIONAL — the producer side is COUNTED, never coerced
 
 A `CollectionsTransform(retarget)` entry moves a type and bridges nothing, on a precondition the
@@ -9476,7 +9534,34 @@ Measured: **liqp 3 -> 2** (its test source set 2 -> 1), and across the four gree
 moves emitted TEXT and no outcome — the widening is behaviour-preserving by construction, because
 MUnit compares with `==` at every instantiation.
 
-*Fix kind: (a). Closed in `TestFrameworkTransform`, both halves.*
+**…AND THE THIRD FACE IS NOT THE TRANSFORM'S AT ALL: THE OPERAND TYPE IT READS MUST BE THE ONE THE
+EMITTER RENDERS.** Both widenings above read the two operands' `tpe` and both are exact for as long
+as a node's recorded type is what the emitted Scala has. A `Tree.Typed` breaks that on its own:
+`TirEmitter` renders it from `tpt` (`castTarget`) and every rule downstream reads `tpe`, so the two
+disagreeing is a node that lies to everything but the emitter — `ENGINE-LIMITS.md` §0's rule, arrived
+at from the other end.
+
+`NullabilityTransform` manufactured exactly that under the `Named` target. Java's
+`assertEquals(1, (int) atomicQueue.poll())` is `assertEquals(long, long)`, so the argument is a cast
+to `int` at a `long` slot; the wrapper retype made `poll()` a `Nullable[Integer]`, and `coerceTo`'s
+`Tree.Typed` arm unwrapped the OPERAND under the cast (`.get`, correct) and then set the NODE's type
+to the formal (`x.copy(expr = unwrap(x.expr), tpe = want)` — `scala.Long`). The emitted text still
+said `.asInstanceOf[scala.Int]`. `promote` then read `Long`, widened the literal, and emitted
+`assertEquals(poll().get.asInstanceOf[scala.Int], 1.toLong)` — **`E172 Can't compare Int and Long` at
+4 sites on libGDX's own suite, 0 -> 4 on `gdx-test-measure`**, with every check count flat and only
+those members' digests moved.
+
+The fix is one word at the source of the lie, not a second reading in the consumer: the cast keeps
+its OWN type, because unwrapping the operand under it changes what the cast is APPLIED to and never
+what the cast IS. Its two sibling arms never did this — coercing an `If`'s branches really does make
+the node the target type, and unwrapping under a cast does not — and the same one-line shape sat in
+`unwrapLeaves` beside it (`tpe = elementOf(x.expr.tpe)`, `java.lang.Integer` where the emitted type
+is `scala.Int`); both are corrected, because one derivation stated twice is `CLAUDE.md` §4.56's
+shape. **4 -> 0 on the gdx test lane, 0 member digests and every count flat on the base**, 3 digests
+on the test port (the two suites holding the four sites).
+
+*Fix kind: (a). Closed in `NullabilityTransform.coerceTo` / `unwrapLeaves`; the reader that paid for
+it was `TestFrameworkTransform.promote` and it is unchanged.*
 
 ### X3. CLOSED — a Java `static` test helper emits into the COMPANION OBJECT; use the framework's assertion OBJECT
 

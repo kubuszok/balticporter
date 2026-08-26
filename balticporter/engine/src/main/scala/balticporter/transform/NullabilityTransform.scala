@@ -223,6 +223,14 @@ final class NullabilityTransform(
   /** symbols whose type is now `W[...]` — wrapper mode's own record of what it moved, which is the
     * only thing it is allowed to conclude anything from (§4.56). */
   private var wrapped: Map[SymId, TypeRepr] = Map.empty
+  /** every TYPE-VARIABLE symbol in this program, by NAME — a type parameter's `info` is a
+    * `TypeBounds` and nothing else's is (the same structural test [[mentionsTypeParam]] makes).
+    *
+    * Captured for the WALK, which has to ask *can this type be WRITTEN here* at a node whose
+    * coercion helpers take no `Program` — and passing one would turn `coerceTo` into a context
+    * function at the one call site that hands it over as a VALUE (`mapReturns`). The name is kept
+    * beside the id because it is what the refusal has to say: a reader needs `T`, not an id. */
+  private var typeVars: Map[SymId, (String, SymId)] = Map.empty
 
   private var wrapperSym, applySym, emptySym, getSym, isEmptySym, notSym, boolSym = SymId.None
   /** the unit currently being walked — see the walk in [[run]] for why a seam cannot be attributed
@@ -247,7 +255,7 @@ final class NullabilityTransform(
     // (`Determinism.Full` does exactly that, and a port with two source sets shares one phase list)
     // and a cached answer from the first run is a wrong answer in the second (§5.1).
     issues.clear(); intrusions.clear(); observedEntries.clear(); planned = false
-    newTypes = Map.empty; wrapped = Map.empty; overridingRead = false
+    newTypes = Map.empty; wrapped = Map.empty; overridingRead = false; typeVars = Map.empty
     // §1(b): an empty policy needs no code path. Nothing bound — no annotation configured, or every
     // configured one named nothing — and the program is returned untouched.
     if boundAnnots.isEmpty then return program
@@ -344,6 +352,76 @@ final class NullabilityTransform(
     // The plan walked every symbol, so `observedEntries` is complete and the never-fired complement
     // is meaningful. Before this point it is not, which is what `planned` says.
     planned = true
+
+    // ---- THE OVERRIDE EDGE THE ANNOTATION TRAVELS DOWN (wrapper mode only) ----------------------
+    //
+    // Java's nullability annotation is a fact about the MEMBER, and an override inherits the
+    // contract whether or not it repeats the marker — javac ignores both, so an upstream has no
+    // reason to write it twice and routinely does not. Scala has no such freedom: a wrapper retype
+    // changes the SIGNATURE, and an override that keeps the upstream spelling is
+    // `E038 method … has a different signature than the overridden declaration` — or, at a generic
+    // result, `E007 Found: W[T] / Required: T` in a body that returns exactly what the parent gave
+    // it.
+    //
+    // NEITHER IS VISIBLE UNTIL THE PORT IS AT 0 TYPER ERRORS for the first of them (`RefChecks` does
+    // not run before that, `CLAUDE.md` §3), and the shape is a DEPENDENT's by nature: a base with an
+    // unannotated override of its own annotated member would not compile, so the corpus's bases have
+    // none and the whole class arrives one module out — TextraTypist's `setParent` ×2 and VisUI's
+    // `DragPane#findActor`, three errors that no count and no member digest could see.
+    //
+    // So the retype travels the override graph DOWNWARD, at the same slot and the same position,
+    // and every derived entry passes the same gates the annotated one did (scope, primitives,
+    // varargs, already-nullable). It carries the ANNOTATED member's key, because that is the entry
+    // an agent edits to change the outcome, and no annotation to consume — the overrider has none
+    // to strip.
+    def paramIndexOf(s: Symbol): Int =
+      program.definitionOf(s.owner).collect { case d: Tree.DefDef =>
+        d.paramss.flatten.indexWhere(_.symbol == s.id)
+      }.getOrElse(-1)
+
+    if target != Target.Union then
+      val graph   = OverrideGraph.build(program)
+      val claimed = collection.mutable.Set.from(plan.iterator.map(_.sym.id))
+      plan.toList.foreach { x =>
+        val (member, pos) =
+          if x.slot == Slot.Param then (x.sym.owner, paramIndexOf(x.sym)) else (x.sym.id, -1)
+        // …AND ONLY WHERE JAVA HAS AN OVERRIDE EDGE AT ALL. `OverrideGraph` matches members DOWN
+        // the subclass chain by name and signature, which is exactly right for a method and is a
+        // FABRICATED edge for a CONSTRUCTOR: every `<init>` is named `<init>`, so `ImageButton`'s
+        // one-`Drawable` constructor reads as an "override" of `Button`'s and the annotation
+        // travels an edge java does not have. Measured: 17 member digests and 4 spurious
+        // `OverloadErasureClash` rows on libGDX core, at 0 errors either way — the shape §3 says a
+        // green compile cannot see. A `static` method is excluded for the same reason (JLS 8.4.8.2
+        // hides, it does not override), and a `final` one has no overriders to find.
+        val overridable = program.symbolOf(member).exists(m =>
+          m.name != "<init>" && !m.flags.isStatic && !m.flags.isFinal)
+        if member != SymId.None && overridable && (x.slot != Slot.Param || pos >= 0) then
+          graph.overriders(member).foreach { d =>
+            val tgt =
+              if pos < 0 then program.symbolOf(d)
+              else program.definitionOf(d).collect { case dd: Tree.DefDef =>
+                dd.paramss.flatten.lift(pos).map(_.symbol)
+              }.flatten.flatMap(program.symbolOf)
+            tgt.foreach { s =>
+              if !claimed.contains(s.id) && program.owns(s.id) && scope.includes(program, s) then
+                slotOf(program, s) match
+                  case Some((slot, was)) if slot == x.slot && !alreadyNullable(was) &&
+                                            !isPrimitive(program, was) &&
+                                            !(s.flags.isParam && s.flags.isVararg) =>
+                    claimed += s.id
+                    plan += Planned(s, x.key, slot, was, Nil)
+                  case _ => ()
+            }
+          }
+      }
+
+    // ---- …and the third: an OVERLOAD SET the retype would ERASE FLAT (wrapper mode only) ----
+    // Java kept `f(Font)` and `f(BitmapFont)` apart BY ERASURE; a wrapper erases both to one
+    // descriptor, so the pair becomes `E120 Conflicting definitions` at two members that are
+    // otherwise perfect translations. Refused HERE, before anything is retyped, because the two
+    // declarations have to move or stay TOGETHER and only the plan can see both.
+    val kept = if target == Target.Union then plan.toList else refuseErasureClashes(program, plan.toList)
+    plan.clear(); plan ++= kept
     scopedOutParents(program, plan.toList)
     if plan.isEmpty then return program
 
@@ -393,6 +471,9 @@ final class NullabilityTransform(
     val symbols = SymbolTable(retyped)
 
     given Program = program.rebuilt(symbols = symbols)
+    typeVars = symbols.all.iterator.collect {
+      case v if v.info.isInstanceOf[TypeRepr.TypeBounds] => v.id -> (v.name, unitOf(summon[Program], v.id))
+    }.toMap
     recordDecisions(program, plan.toList, symbols)
     // The unit is carried WHILE it is walked, because a seam found inside a call has no other way
     // to say which module owns it: the callee is an EXTERNAL symbol whose owner chain ends outside
@@ -424,6 +505,68 @@ final class NullabilityTransform(
       // a method LOCAL: not surface, and Java's own `@Target` normally allows it. Recorded rather
       // than retyped — a local's type is an implementation detail no consumer can see.
       case _                                                     => scala.None
+
+  /** THE OVERLOAD SETS A WRAPPER WOULD COLLAPSE — refused, in both members, at the positions that
+    * carry java's distinction.
+    *
+    * Java resolves overloads on the SOURCE signature and the JVM keeps them apart on the ERASED
+    * one; scala has the same one erasure, so a pair java could write is a pair scala can write too
+    * — until a phase retypes a parameter to something whose erasure is WIDER than what it replaced.
+    * A wrapper is exactly that: erasure drops type arguments, so `W[Font]` and `W[BitmapFont]`
+    * arrive at one descriptor (an opaque `W` drops all the way to `Object`) and scalac reports
+    * `E120 Conflicting definitions … have the same type … after erasure` — at two constructors
+    * whose names, arities and bodies are all correct, with nothing else in the run able to see it.
+    * Measured on TextraTypist's `Styles.TextButtonStyle`, whose `(Drawable, Drawable, Drawable,
+    * Font)` and `(Drawable, Drawable, Drawable, BitmapFont)` constructors are ordinary java.
+    *
+    * WHAT IS REFUSED is the minimum that restores the distinction: the planned parameters at every
+    * position where the two members' PRE-retype types differ. Both sides, because refusing one is
+    * an arbitrary choice between two declarations neither of which is more the port's than the
+    * other, and because the answer must not depend on which member the symbol table walked first.
+    * A position the two already agree on carries no distinction and keeps its wrapper.
+    *
+    * The comparison is by HEAD SYMBOL and not by a real erasure, which is deliberately the
+    * UNDER-approximating direction: two types this test calls different may still erase together
+    * (a type variable and its bound), and the residue of that is a compile error, which is loud.
+    * An over-approximation would silently decline a retype nothing was wrong with. */
+  private def refuseErasureClashes(p: Program, plan: List[Planned]): List[Planned] =
+    val plannedParam: Map[SymId, Planned] =
+      plan.iterator.filter(_.slot == Slot.Param).map(x => x.sym.id -> x).toMap
+    if plannedParam.isEmpty then return plan
+
+    /** the erasure-ish key of a parameter's CURRENT type — its head symbol, or the type itself
+      * where there is no head to read. */
+    def key(t: TypeRepr): String =
+      headSym(t).flatMap(p.symbolOf).map(_.fullName).getOrElse(t.toString)
+
+    // every OWNED method, with its parameter symbols and their declared types, in order.
+    val methods: List[(Symbol, List[(SymId, TypeRepr)])] =
+      p.symbols.all.toList.sortBy(_.id.raw).flatMap { m =>
+        p.definitionOf(m.id).collect { case d: Tree.DefDef =>
+          m -> d.paramss.flatten.map(v => v.symbol -> v.tpt.tpe)
+        }
+      }
+
+    val refused = collection.mutable.Set[SymId]()
+    methods.groupBy((m, ps) => (m.owner, m.name, ps.size)).valuesIterator.foreach { group =>
+      val members = group.sortBy((m, _) => m.id.raw)
+      for
+        i <- members.indices; j <- (i + 1) until members.size
+        (_, as) = members(i); (_, bs) = members(j)
+      do
+        val differ = as.indices.filter(k => key(as(k)._2) != key(bs(k)._2))
+        // a POST-retype key: every planned parameter arrives at the wrapper's own erasure, which is
+        // one token whatever its element was — that is the whole of the collapse.
+        def post(x: (SymId, TypeRepr)) = if plannedParam.contains(x._1) then "<wrapper>" else key(x._2)
+        val collapses = differ.nonEmpty && as.indices.forall(k => post(as(k)) == post(bs(k)))
+        if collapses then
+          differ.foreach { k =>
+            List(as(k)._1, bs(k)._1).foreach(id => plannedParam.get(id).foreach { pl =>
+              if refused.add(id) then refuse(p, pl.sym, pl.key, Issue.OverloadErasureClash)
+            })
+          }
+    }
+    plan.filterNot(x => refused.contains(x.sym.id))
 
   /** does this type mention an ABSTRACT TYPE PARAMETER anywhere?
     *
@@ -464,7 +607,7 @@ final class NullabilityTransform(
     else crosses(p, s)
 
   private def crosses(p: Program, s: Symbol): Boolean =
-    s.flags.isOverride || overriding(p).contains(s.name -> s.descriptor)
+    s.flags.isOverride
 
   private var overridingCache: Set[(String, Option[Descriptor])] = Set.empty
   private var overridingRead  = false
@@ -894,7 +1037,12 @@ final class NullabilityTransform(
     case x: Tree.Block     => x.copy(expr = unwrapLeaves(x.expr))
     case x: Tree.If        => x.copy(thenp = unwrapLeaves(x.thenp), elsep = unwrapLeaves(x.elsep))
     case x: Tree.Match     => x.copy(cases = x.cases.map(c => c.copy(body = unwrapLeaves(c.body))))
-    case x: Tree.Typed if isWrapped(x.expr) => x.copy(expr = unwrap(x.expr), tpe = elementOf(x.expr.tpe))
+    // the same rule as [[coerceTo]]'s own `Tree.Typed` arm, at the leaf walk: the unwrap is the
+    // OPERAND's and the cast keeps its own type, which is `tpt` and never the wrapper's element —
+    // `(int) poll()` over a `Nullable[Integer]` emits `.asInstanceOf[scala.Int]` and the element is
+    // `java.lang.Integer`. One derivation stated twice is `CLAUDE.md` §4.56's shape, so both arms
+    // are here rather than one being fixed and the other left to be met again.
+    case x: Tree.Typed if isWrapped(x.expr) => x.copy(expr = unwrap(x.expr))
     case other             => other
 
   override def transformTerm(t: Term)(using Program): Term = t match
@@ -949,6 +1097,13 @@ final class NullabilityTransform(
   private def unwrap(e: Term): Term =
     Tree.Select(e, getSym, elementOf(e.tpe), e.origin)
 
+  /** the wrapper's own ABSENT value, however this target spells it — `W.empty` for a `Named`
+    * wrapper, `None` for `Option`. */
+  private def isEmptyOfWrapper(e: Term): Boolean = e match
+    case Tree.Select(_, m, _, _) => m == emptySym && emptySym != SymId.None
+    case Tree.Ident(m, _, _)     => m == emptySym && emptySym != SymId.None
+    case _                       => false
+
   private def isNullLiteral(e: Term): Boolean = e match
     case Tree.Literal(Constant.NullC, _, _)    => true
     case Tree.Typed(inner, _, _, _)            => isNullLiteral(inner)
@@ -959,14 +1114,80 @@ final class NullabilityTransform(
     else if isWrapperType(want) && !isWrapped(e) then wrap(want, e)
     else if !isWrapperType(want) && isWrapped(e) && want != TypeRepr.NoType then unwrap(e)
     else if isWrapperType(want) && isWrapped(e) && e.tpe != want then
-      Tree.Typed(e, TypeTree(want, e.origin), want, e.origin)
+      // …UNLESS THE FORMAL CANNOT BE WRITTEN HERE. This is the one arm that puts a TYPE into the
+      // emitted text (`wrap` and `unwrap` name only the wrapper's own members), so it is the one
+      // arm that owes the question. A formal naming the CALLEE's type variable does not resolve at
+      // the call site (`ENGINE-LIMITS.md` G12): `coerceArgs` substitutes what the RECEIVER
+      // instantiated wherever it can, and where it cannot the honest emission is no ascription at
+      // all — `item.asInstanceOf[lowlevel.Nullable[T]]` is `E006 Not found: type T` at a line the
+      // source never wrote (TextraTypist's `TextraSelectBox#setSelected`, 1 error).
+      // …AND THE PHASE'S OWN `empty` NEEDS NO ASCRIPTION AT ALL. `W.empty` is the wrapper's absent
+      // value and the contract makes it conform at EVERY element type — the emitter already relies
+      // on that at every `return lowlevel.Nullable.empty` in a `Nullable[X]` result. Ascribing it is
+      // therefore never load-bearing, and it is the one operand that reaches a slot whose element is
+      // written in a scope the site does not have: a companion or `static` member sees NONE of its
+      // class's type parameters (`ENGINE-LIMITS.md` G20) and a SUPER-CONSTRUCTOR argument list is
+      // evaluated before the class's own parameters bind, so `Nullable.empty.asInstanceOf[
+      // Nullable[T]]` is `E006 Not found: type T` at sites the unit-level test below cannot see (the
+      // variable's unit IS the unit being walked). Structural, and it needs no scope question at
+      // all: the text `lowlevel.Nullable.empty` is correct wherever the slot is.
+      if isEmptyOfWrapper(e) then e
+      else typeVarsIn(want) match
+        case Nil => Tree.Typed(e, TypeTree(want, e.origin), want, e.origin)
+        case vs  =>
+          issues += Finding(Issue.UnwritableFormal, vs.distinct.mkString(", "),
+            "the formal this argument would be ascribed to names a type variable that is not in " +
+              "scope where the call stands, so no ascription can be written — the argument is left " +
+              "as it is", e.origin, currentUnit)
+          e
     else if !isWrapperType(want) && want != TypeRepr.NoType then e match
       case x: Tree.If    => x.copy(thenp = coerceTo(want, x.thenp), elsep = coerceTo(want, x.elsep))
       case x: Tree.Match => x.copy(cases = x.cases.map(c => c.copy(body = coerceTo(want, c.body))))
       case x: Tree.Block => x.copy(expr = coerceTo(want, x.expr))
-      case x: Tree.Typed if isWrapped(x.expr) => x.copy(expr = unwrap(x.expr), tpe = want)
+      // …AND THE CAST KEEPS ITS OWN TYPE. What the unwrap changes is the OPERAND under the cast;
+      // the cast itself is untouched, and the emitter renders it from `tpt` (`TirEmitter.castTarget`)
+      // — so `(int) poll()` still emits `.asInstanceOf[scala.Int]` however wide the slot is.
+      // Recording `want` here — the FORMAL, `long` at junit's `assertEquals(long, long)` — put a
+      // type on the node that the emitted Scala does not have (`ENGINE-LIMITS.md` §0), and the
+      // sibling arms above never did: coercing an `If`'s branches really does make the node `want`,
+      // and unwrapping under a cast does not. Every later rule that consults `tpe` then reasons
+      // about the wrong type; the one that did is `TestFrameworkTransform.promote`, which re-applies
+      // java's binary numeric promotion (JS-E07) by widening the NARROWER operand — it read `Long`
+      // here, widened the literal to `1.toLong`, and left the cast at `Int`: `E172 Can't compare
+      // Int and Long` at 4 sites on libGDX's own suite, with no other count moving. Note the slot
+      // is not lost by keeping the honest type: java widened `int` to `long` implicitly at the
+      // call, and so does scala.
+      case x: Tree.Typed if isWrapped(x.expr) => x.copy(expr = unwrap(x.expr))
       case _             => e
     else e
+
+  /** THE CALLEE'S OWN TYPE VARIABLES, replaced by what the RECEIVER instantiated them with.
+    *
+    * A formal is written in the DECLARING class's scope, and this phase reads formals to coerce
+    * against — so a wrapped formal at a generic callee is `W[T]` in the callee's `T`, which is not
+    * in scope at the call. The `extends`-free half of `CLAUDE.md` §4.56's substitution rule: the
+    * receiver's own type arguments say exactly what those variables are, so the substitution is
+    * EXACT and the commonest outcome is that the formal and the argument then agree and NO
+    * ascription is emitted at all.
+    *
+    * Empty where nothing can be said — a raw or non-generic receiver, an arity that does not line
+    * up, or a callee INHERITED from an ancestor whose variables the receiver's head does not
+    * declare. Those fall through to [[coerceTo]]'s own refusal, which counts them. */
+  private def receiverSubst(t: Tree.Apply)(using p: Program): Map[SymId, TypeRepr] =
+    val recv = t.fun match
+      case s: Tree.Select => s.qual.tpe
+      case _              => TypeRepr.NoType
+    recv match
+      case TypeRepr.AppliedType(tc, args) =>
+        val owner = p.symbolOf(t.method).map(_.owner)
+        headSym(tc) match
+          case Some(h) if owner.contains(h) =>
+            p.definitionOf(h) match
+              case Some(cd: Tree.ClassDef) if cd.tparams.sizeIs == args.size =>
+                cd.tparams.map(_.symbol).zip(args).toMap
+              case _ => Map.empty
+          case _ => Map.empty
+      case _ => Map.empty
 
   private def coerceArgs(t: Tree.Apply)(using p: Program): Term =
     // An EXTERNAL callee is excluded BEFORE the formals are read, and that exclusion is the whole
@@ -997,7 +1218,8 @@ final class NullabilityTransform(
                   "accepts null",
                 a.origin, currentUnit)
           }
-        t.copy(args = t.args.zip(fs).map((a, f) => coerceTo(f, a)))
+        val sub = receiverSubst(t)
+        t.copy(args = t.args.zip(fs).map((a, f) => coerceTo(ParentSubst.subst(f, sub), a)))
       case _ =>
         t.args.filter(isWrapped).foreach { a =>
           issues += Finding(Issue.UncoercibleSeam, p.symbolOf(t.method).map(_.fullName).getOrElse("?"),
@@ -1059,6 +1281,28 @@ final class NullabilityTransform(
                                         finalizer = x.finalizer.map(mapReturns(want, _, f)))
     case x: Tree.Match        => x.copy(cases = x.cases.map(c => c.copy(body = mapReturns(want, c.body, f))))
     case other                => other
+
+  /** the type variables a type mentions THAT THIS UNIT CANNOT NAME — [[mentionsTypeParam]]'s
+    * question asked without a `Program`, off the table this run captured, and narrowed to the ones
+    * that are actually out of reach.
+    *
+    * A variable declared by the unit being walked (or by anything nested inside it) IS writable
+    * where a node of that unit stands: `Tooltip[T]`'s own `T` is in scope in every member of
+    * `Tooltip`, including an anonymous listener's, and refusing there would decline five correct
+    * ascriptions on libGDX alone. What is NOT writable is a variable belonging to ANOTHER unit —
+    * the CALLEE's own, which is what `ENGINE-LIMITS.md` G12 is about.
+    *
+    * The unit is the granularity because it is the one the walk carries ([[currentUnit]]); a
+    * bottom-up traversal reaches a `DefDef` after its body, so there is no enclosing-declaration
+    * stack to ask a finer question of. The residue that leaves is G20's — a STATIC member sees none
+    * of its class's type parameters, and this test says the unit owns them — which is a false
+    * NEGATIVE, i.e. an ascription too many, and loud. */
+  private def typeVarsIn(t: TypeRepr): List[String] = t match
+    case TypeRepr.TypeRef(_, s)       => typeVars.get(s).filterNot(_._2 == currentUnit).map(_._1).toList
+    case TypeRepr.AppliedType(tc, as) => typeVarsIn(tc) ++ as.flatMap(typeVarsIn)
+    case TypeRepr.OrType(l, r)        => typeVarsIn(l) ++ typeVarsIn(r)
+    case TypeRepr.AndType(l, r)       => typeVarsIn(l) ++ typeVarsIn(r)
+    case _                            => Nil
 
   private def headSym(t: TypeRepr): Option[SymId] = t match
     case TypeRepr.TypeRef(_, s)      => Some(s)

@@ -10619,3 +10619,17 @@ moved (every `@Null` declaration retyped from `T | Null` to `lowlevel.Nullable[T
 phase removed entirely (existed only for K13 exits), screens' scope removed. The merge contract
 now lets a default-target dependent INHERIT the base's non-default target. The fingerprint
 segment is omitted when default (Union). 1394 specs pass.
+
+Wave 1.1c — the four seams the `Named` switch left on the DEPENDENTS, all closed in the engine:
+`gdx-test 4 -> 0` (a `Tree.Typed` whose recorded type was the SLOT's while its emitted text was the
+CAST's, so `TestFrameworkTransform.promote` widened the wrong operand — ENGINE-LIMITS X2's third
+face), `sge-ai 1 -> 0` (a `MethodBodyTransform` body a human wrote, read off the generated caller —
+`ObjectMap#get(K)` now returns `Nullable[V]`, and the `null` protocol survives as `isEmpty`, never
+as the unchecked `.get`), `sge-textra 2 -> 0` and `sge-visui 8 -> 7` (the override closure, the
+erasure-flat overload set and the unwritable callee formal — ENGINE-LIMITS K13.5). libGDX base
+`0 -> 0` errors with `nullability-boundary 184 -> 169` (`OverrideCrossing` 79 -> 45,
+`UncoercibleSeam` 39 -> 45, new `OverloadErasureClash` 2 and `UnwritableFormal` 11) and 307 member
+digests moved; gdx-test 3 digests, ai 3, visui 3, textra 12. Every other gdx dependent re-emitted and
+re-compiled at its committed floor (ashley 0, gltf 3, screens 0, vfx 0, anim8 0). 3034 specs pass
+(engine 926, corpus 1406, testkit 338, runtime 178, frontend-spoon 121, api 65). No
+baseline accepted here — the orchestrator lands through the primary's lanes.
