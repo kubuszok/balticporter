@@ -5999,7 +5999,11 @@ acknowledged by re-accepting (`just baseline-accept <Port>`). The dropin baselin
 report directory.
 
 **`scalacOptions` discovery.** The lane runs `sbt -batch "show <project>/scalacOptions"` in the
-disposable clone and records the result to `run-latest/scalacOptions.txt`. The emitted code must
+disposable clone and records the result to `run-latest/scalacOptions.txt`. Measured on sge:
+`-no-indent -Werror -Wunused:imports,privates,locals,patvars,nowarn` among others, so a file that
+is green under scala-cli's defaults can be a syntax error (indentation syntax) or a fatal warning
+(an unused promoted local) inside the reference build; the emitter and every injected file are
+held to those flags by a fourth compile in every lane (PROGRESS §13, wave 1.0). The emitted code must
 compile under the reference repo's own compiler flags; a syntax error under `-no-indent` or a
 warning promoted to an error by `-Werror` is the lane's to find, not the consumer's to discover.
 

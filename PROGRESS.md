@@ -10350,14 +10350,50 @@ are unchanged and do the same thing on all three rows.
 compile, `xplat_compile` (scripts/_lib.sh) runs `scala-cli compile --platform scala-js` and
 `--platform scala-native` over the same emitted source tree, counts errors, and baselines them
 (`expected-errors.js`, `expected-errors.native`). This is a COMPILE gate, not a portability gate
-(ENGINE-LIMITS P1): the portability lanes stay as the TIR-level check. Dependencies are omitted
-from the xplat compile (JVM-only coordinates cannot resolve for JS/Native); the resulting errors
-are expected and baselined. 20 of 23 lanes carry xplat compiles (the three differential lanes --
-ai-diff-measure, textra-diff-measure, visui-diff-measure -- are skipped because they compile
-hand-port tests, not emitted code). The drop-in lane (`ecs-dropin`) gained per-platform baseline
-comparison for both errors and test outcomes, and `scalacOptions` discovery from the reference
-build (written to `run-latest/scalacOptions.txt`). Per-port per-platform numbers will be recorded
-here after the first full `just measure-all` run seeds the baselines.
+(ENGINE-LIMITS P1): the portability lanes stay as the TIR-level check. 20 of 23 lanes carry
+xplat compiles (the three differential lanes -- ai-diff-measure, textra-diff-measure,
+visui-diff-measure -- are skipped because they compile hand-port tests, not emitted code). The
+drop-in lane (`ecs-dropin`) gained per-platform baseline comparison for both errors and test
+outcomes, and `scalacOptions` discovery from the reference build (`run-latest/scalacOptions.txt`).
+
+**Wave 0.4b — the instrument corrected, and the first honest 20×3 table (2026-08-26).** Wave 0.4
+OMITTED every dependency from the off-JVM compile, and the first seeded baselines measured that
+omission and nothing else: JS == Native on every lane (the tell), gdx-test 1155 = `Not found: munit`
+914 + `test` 221, flexmark 1941 = `org.jetbrains` 1938, liqp-test 2293 = hamcrest 887 + munit + the
+ANTLR package, screens 33 = guacamole, textra 111 = regexodus. scalac on JS/Native TYPE-CHECKS
+against JVM class files (only linking would fail, and this lane does not link), so `xplat_compile`
+now takes the SAME classpath the JVM compile gets — `::` for a cross-published Scala artifact, the
+jar for a java one — and the 40 baselines were re-seeded from a run with it:
+
+| lane | JVM | JS | Native | lane | JVM | JS | Native |
+|---|---|---|---|---|---|---|---|
+| gdx | 0 | 0 | 0 | jbump | 0 | 0 | 0 |
+| gdx-test | 0 | 0 | 0 | usl / usl-test | 0 / 0 | 0 / 0 | 0 / 0 |
+| ashley (+test) | 0 | 0 | 0 | liqp (+test) | 0 | 0 | 0 |
+| anim8 | 0 | 0 | 0 | md | 0 | 0 | 0 |
+| gltf (+test) | 3 | 3 | 3 | md-test | 0 | **5** | 0 |
+| screens | 0 | **33** | **33** | md-ext (+test) | 0 | 0 | 0 |
+| vfx | 0 | 0 | 0 | textra | 0 | 0 | 0 |
+| ai / ai-test | 0 | 0 | 0 | visui | 7 | 7 | 7 |
+| sg (+test) | 0 | **2** | 0 | noise4j | 2 | 2 | 2 |
+
+Families, read against the JVM column: **screens 33** — guacamole's JVM-only logging surface,
+(c) per-library (the dependency the corpus resolves and does not port, §9.3); **sg 2 and md-test 5
+on JS only** — `java.util.function.Function` / `Predicate` absent from the Scala.js javalib while
+Native has them, (a) universal and one redirect table away (Phase 2, P3's shape); everything else
+equals the JVM count, i.e. the port's own floor. The first instrument said 1155 where the truth is
+0, which is §4.56's rule about an instrument's own invocation being part of the measurement.
+
+**The drop-in's `scalacOptions` finding.** sge compiles with `-deprecation -feature
+-language:implicitConversions -no-indent -Werror -Wimplausible-patterns -Wrecurse-with-default
+-Wenum-comment-discard -Wunused:imports,privates,locals,patvars,nowarn` (plus two macro
+timeouts). `-no-indent` is why the injected `ComponentFactories.scala` — indentation syntax,
+green under scala-cli — is a syntax error inside sge's build, and it is the head of the 408-error
+cascade `ecs-dropin` baselines. `-Werror -Wunused:privates,locals,patvars` reaches EVERY emitted
+file: an unused promoted local or a private the funnel widened is a compile error there and a
+warning nowhere else. So Phase 1 opens with **wave 1.0 — the reference build's flags as a fourth
+compile in every lane** (`scalacOptions` read from the drop-in clone, not copied), because a port
+that is green under scala-cli's defaults and red under `-no-indent -Werror` is not at the bar.
 
 **Wave 0.2 delivered: `api-parity` check** (DESIGN.md §8.23). `PortManifest.parity: Option[ParityRef]`
 is the §1(b) parameter. Both sides parsed by scalameta (§4.56), eight families, required-when-declared.
@@ -10375,9 +10411,15 @@ sge-ecs wired to `../sge/sge-extension/ecs/src/main/scala`, first measurement:
 | `unclassified` | 0 | every divergence classified |
 | **total** | **142** | |
 
-`unclassified = 0` is the gate and it holds on the first measurement. Later families
-(`null-model`, `collection-retarget`, `opaque`) require type-level comparison; deferred to the wave
-that builds them.
+`unclassified = 0` is the gate and it holds on the first measurement. **Wave 0.2b** put TYPES in the
+surface model (param/result types, bounds, parents, modifiers, `@targetName`) and seven families
+beside those eight: on sge-ecs the census went **142 → 241** — `visibility` 0 → 12 (protected
+members are surface), `hand-port-extra` 39 → 50, `port-extra` 85 → 88, `null-model` 5, `opaque` 1,
+`signature` 67 (the type-level catch-all, kept apart from `unclassified` so it cannot hide),
+`collection-retarget`/`operator`/`factory`/`file-merge` 0 (`file-merge` is not yet detected — it
+needs cross-file FQN tracking), `unclassified` 0. FQN-vs-import spelling is reconciled by suffix
+match at a `.` boundary, which is conservative in the direction of missing a same-named type in a
+different package; a row that cannot be made comparable says so in its detail.
 
 **Phase 1 — parity mechanisms**, each a (b) with an empty no-op default, `SurfacePolicy`,
 `MergeablePolicy` where surface depends on it, the fingerprint segment omitted when empty, and a
