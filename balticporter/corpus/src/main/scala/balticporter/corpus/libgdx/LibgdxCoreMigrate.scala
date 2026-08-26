@@ -107,6 +107,12 @@ object LibgdxPolicy:
       // The keys of every OTHER policy — dropTypes, dropMethods, the forwarder and class-table
       // maps — stay upstream, because they are consulted at the frontend, before this runs.
       packageRenames = Map("com.badlogic.gdx" -> "sge"),
+      // ---- wave 1.3: type renames from the `Migration notes: Renames:` census ----
+      // sge renamed `List` to `SgeList` to avoid the clash with `scala.List` (1 file). The
+      // upstream FQN is the key; a bare simple name renames in place.
+      typeRenames    = Map(
+        "com.badlogic.gdx.scenes.scene2d.ui.List" -> "SgeList", // avoids clash with scala.List (1 sge file)
+      ),
       resolutions    = reviewedBoundaries,
       // THE ARTIFACT THIS MODULE'S BUILD ADDS — what a `Verdict.Depend` is answered WITH
       // (CLAUDE.md §1.5). This manifest declares no `targets`, so it claims all three, and 37 sites
@@ -819,7 +825,21 @@ object LibgdxPolicy:
     * fingerprint field and nothing else.
     */
   def memberRenames: balticporter.transform.MemberRenameTransform =
-    new balticporter.transform.MemberRenameTransform()
+    new balticporter.transform.MemberRenameTransform(
+      // ---- wave 1.3: member renames from the `Migration notes: Renames:` census ----
+      // Each entry is traceable to sge's documented Renames: line on the type's source file.
+      // The key is the upstream FQN#member in the UPSTREAM namespace (§4.56).
+      renames = Map(
+        // `type` is a Scala reserved word; sge renamed the field to `eventType` (1 sge file).
+        // The `getType`/`setType` bean pair is handled separately by `beanProperties`.
+        "com.badlogic.gdx.scenes.scene2d.InputEvent#type" -> "eventType",
+        // `toString(T)` clashes with `Any.toString()` at the same name; sge renamed it to
+        // `itemToString` (1 sge file). REFUSED (policy 3 -> 4): the override component reaches
+        // `java.lang.Object#toString`, which the program cannot move. The rename is declared so
+        // `api-parity` can trace the intent; the refusal is a counted `policy` finding.
+        "com.badlogic.gdx.scenes.scene2d.ui.List#toString(T)" -> "itemToString",
+      ),
+    )
 
   /** `com.badlogic.gdx.Gdx` — eleven `public static` fields read from 100 files — retired into a
     * `sge.Sge` threaded as a `using` parameter (DESIGN.md §8.4).
