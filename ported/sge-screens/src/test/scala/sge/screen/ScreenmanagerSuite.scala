@@ -197,7 +197,7 @@ class ScreenmanagerSuite extends munit.FunSuite {
   }
   test("ManagedScreen: the clear colour defaults to BLACK and input processors start empty") {
     val s = new RecordingScreen
-    assertEquals(s.getClearColor(), sge.graphics.Color.BLACK)
+    assertEquals(s.getClearColor().get, sge.graphics.Color.BLACK)
     assertEquals(s.getInputProcessors().size, 0)
     s.addInputProcessor(new sge.InputAdapter())
     assertEquals(s.getInputProcessors().size, 1)
@@ -210,7 +210,7 @@ class ScreenmanagerSuite extends munit.FunSuite {
     b.show(); b.render(0.016f); b.resize(800, 600); b.pause(); b.resume(); b.hide(); b.close()
     val a = new ManagedScreenAdapter()
     a.show(); a.render(0.016f); a.resize(1, 1); a.hide(); a.close()
-    assertEquals(a.getClearColor(), sge.graphics.Color.BLACK)
+    assertEquals(a.getClearColor().get, sge.graphics.Color.BLACK)
   }
 
   test("ScreenTransition: show/hide default to no-ops and the clear colour defaults to BLACK") {
@@ -221,7 +221,7 @@ class ScreenmanagerSuite extends munit.FunSuite {
       override def close(): Unit                         = ()
     t.show()
     t.hide()
-    assertEquals(t.getClearColor(), sge.graphics.Color.BLACK)
+    assertEquals(t.getClearColor().get, sge.graphics.Color.BLACK)
   }
 
   // ---------------------------------------------------------------------------------------
@@ -239,7 +239,7 @@ class ScreenmanagerSuite extends munit.FunSuite {
     // The two `pushScreen` overloads are both reachable with two nulls, so the screen argument is
     // ascribed. Java resolved this by the same rule and never had to say so — an overload set that
     // is unambiguous in Java and ambiguous in Scala is a translation fact worth a line here.
-    intercept[NullPointerException](sm.pushScreen(null.asInstanceOf[ManagedScreen], null))
+    intercept[NullPointerException](sm.pushScreen(null.asInstanceOf[ManagedScreen], lowlevel.Nullable.empty))
   }
 
   test("ScreenManager: using it before initialize() is an IllegalStateException, not an argument error") {
@@ -256,7 +256,7 @@ class ScreenmanagerSuite extends munit.FunSuite {
     // `Tuple2` substitution would compile at the declaration and fail at every use.
     val screen = new RecordingScreen
     val sm     = new ScreenManager[ManagedScreen, ScreenTransition]()
-    sm.pushScreen(screen, null)
+    sm.pushScreen(screen, lowlevel.Nullable.empty)
     assertEquals(sm.transitionQueue.size, 1)
     val queued = sm.transitionQueue.head
     assertEquals(queued.y.get().asInstanceOf[AnyRef], screen.asInstanceOf[AnyRef])
