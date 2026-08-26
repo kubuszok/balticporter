@@ -24,9 +24,9 @@ idiom(residue)	0
 jdk-surface	3
 manifest	0
 markers	0
-nullability-boundary	0
+nullability-boundary	49
 omissions	3
-overload-risk	70
+overload-risk	112
 policy	0
 port-map	0
 portability(all)	168
