@@ -182,6 +182,15 @@ object MemberRenamer:
       * Re-running is also what makes the answer honest: `collidersOf` reads PENDING assignments
       * through `eff`, so with fewer of them a member may keep its original name and collide
       * differently. The caller loops until no new refusal appears. */
+    // members of a request GROUP getting the SAME target name — OVERLOADS of the same java member,
+    // which java already ensures have distinct erasures. These are NOT colliders; they are
+    // overloads that will coexist under the new name just as they coexisted under the old one.
+    val sameGroupMembers = collection.mutable.Map.empty[String, Set[SymId]]
+    closures.foreach { (r, c) =>
+      val key = r.group + "=" + r.newName
+      sameGroupMembers(key) = sameGroupMembers.getOrElse(key, Set.empty) ++ c.members
+    }
+
     def collisionPass(): Unit =
       assign.clear()
       val live = ordered.filterNot((r, _) => refusals.contains(r))
@@ -191,9 +200,12 @@ object MemberRenamer:
       live.foreach { (r, c) =>
         val owners  = c.members.map(graph.ownerOf).filter(_ != SymId.None).toList.distinct
         val visible = owners.flatMap(graph.relativesOf).distinct
+        // members of the SAME group+target are overloads of one java member — not colliders.
+        val groupKey  = r.group + "=" + r.newName
+        val siblings  = sameGroupMembers.getOrElse(groupKey, Set.empty)
         def collidersOf(nm: String): List[SymId] =
           visible.flatMap(t => graph.membersOf(t)).distinct
-            .filterNot(c.members.contains)
+            .filterNot(m => c.members.contains(m) || siblings.contains(m))
             .filter(m => eff(m) == nm)
         onCollision match
           case OnCollision.SuffixUntilFree =>
@@ -272,3 +284,52 @@ object MemberRenamer:
     * neither: it emits into the companion, which neither pass reaches. */
   private def isMovableField(p: Program, m: SymId): Boolean =
     p.symbolOf(m).exists(s => !PolicyBinder.isExecutable(s.info) && !s.flags.isStatic)
+
+  // ---- SYMBOLIC NAME SUPPORT — `@scala.annotation.targetName` (CLAUDE.md §1(b)) ----
+
+  /** Is this a SYMBOLIC Scala member name — one composed entirely of operator characters, or a
+    * `unary_` prefix name?
+    *
+    * Scala has two kinds of identifiers: ALPHANUMERIC (letter/digit/underscore) and SYMBOLIC (a
+    * sequence of "operator characters" as defined by `scala.Char.isUnicodeIdentifierPart` inverted
+    * against the alphanumeric set). A symbolic name on the JVM must carry `@targetName` for binary
+    * compatibility and `-Werror`-clean output. */
+  def isSymbolic(name: String): Boolean =
+    name.nonEmpty && (isOperatorName(name) || isUnaryName(name))
+
+  /** A name composed entirely of Scala's operator characters — `+`, `*`, `<=`, `+=`, etc.
+    *
+    * SLS 1.1: an operator character is a Unicode Sm/So character, or one of the seven ASCII
+    * symbols `!#%&*+-/<=>?@\^|~` that are not letters, digits, underscores, whitespace, or
+    * delimiters. */
+  private def isOperatorName(name: String): Boolean =
+    name.nonEmpty && name.forall(isOperatorChar)
+
+  /** The four prefix operator names: `unary_-`, `unary_+`, `unary_!`, `unary_~`. */
+  def isUnaryName(name: String): Boolean =
+    name.startsWith("unary_") && name.length == 7 && isOperatorChar(name.charAt(6))
+
+  /** Is this character a Scala operator character?
+    *
+    * Deliberately a WHITELIST matching SLS 1.1 rather than a blacklist of what is NOT an operator:
+    * a blacklist is what `isPlain` was, and the failure mode of getting it wrong is a name that
+    * reaches the symbol table and emits text the parser cannot read. */
+  private def isOperatorChar(c: Char): Boolean =
+    // the seven ASCII operator characters
+    "!#%&*+-/<=>?@\\^|~".indexOf(c) >= 0 ||
+      // Unicode math/symbol categories (Sm, So) — what Scala's spec includes
+      (Character.getType(c) == Character.MATH_SYMBOL.toInt ||
+       Character.getType(c) == Character.OTHER_SYMBOL.toInt)
+
+  /** Is this a valid Scala MEMBER NAME — either an alphanumeric identifier (letter/digit/`_`/`$`)
+    * or a symbolic one, or one of the `unary_` prefix names?
+    *
+    * Used by [[MemberRenameTransform]] to validate the rename target. This replaces the old
+    * `isPlain` and admits both families. */
+  def isValidMemberName(name: String): Boolean =
+    isAlphanumericName(name) || isSymbolic(name)
+
+  /** An ALPHANUMERIC member name — the shape `isPlain` used to test for. */
+  private[tir] def isAlphanumericName(name: String): Boolean =
+    name.nonEmpty && !name.head.isDigit && name.forall(c => c.isLetterOrDigit || c == '_' || c == '$')
+

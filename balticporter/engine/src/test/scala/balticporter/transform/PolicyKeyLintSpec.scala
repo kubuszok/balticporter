@@ -78,6 +78,12 @@ class PolicyKeyLintSpec extends munit.FunSuite:
         ("renaming a twinned member's own `fullName` by replacing its owner's prefix, carrying the " +
           "`#`/`$` separators across verbatim (§4.56) rather than re-deriving them"),
     ),
+    "MemberRenameTransform.scala" -> Map(
+      "fullName ==" ->
+        ("`scala.annotation.targetName` is a WELL-KNOWN external annotation type the program never " +
+          "declares; this is a find-or-create for the annotation's TypeRef, which only has a fullName " +
+          "to key on — the same mint-or-reuse question as PublicFieldAccessorTransform's `Object`"),
+    ),
     "PackageRenameTransform.scala" -> Map(
       "fullName.startsWith" ->
         ("this phase IS the prefix rule §4.56 is about; it owns the separator cut and is specced " +

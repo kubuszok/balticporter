@@ -262,3 +262,169 @@ class MemberRenameTransformSpec extends munit.FunSuite:
     assertEquals(order.map(_.name),
       List("collections", "a", "b", "globals->implicits", "member-rename", "type-redirect"))
   }
+
+  // ---- 6. SYMBOLIC NAMES with @targetName (CLAUDE.md §1(b)) ------------------------------------
+
+  /** A Vec2 hierarchy with `add/sub/scl/dot/len2`, overloads, and an override chain — the shape a
+    * game-engine math library actually has. The reference hand port (`sge.math.Vector2`) renames
+    * `add` to `+`, `sub` to `-`, etc. with `@targetName`. */
+  private val vectors =
+    """package com.math;
+      |
+      |class Vec2 {
+      |  float x, y;
+      |  /** the component-wise sum. */
+      |  Vec2 add(Vec2 other) { x += other.x; y += other.y; return this; }
+      |  Vec2 add(float dx, float dy) { x += dx; y += dy; return this; }
+      |  Vec2 sub(Vec2 other) { x -= other.x; y -= other.y; return this; }
+      |  float dot(Vec2 other) { return x * other.x + y * other.y; }
+      |  float len2() { return x * x + y * y; }
+      |  Vec2 scl(float s) { x *= s; y *= s; return this; }
+      |  Vec2 negate() { x = -x; y = -y; return this; }
+      |}
+      |
+      |class Vec3 extends Vec2 {
+      |  float z;
+      |  Vec2 add(Vec2 other) { super.add(other); return this; }
+      |}
+      |
+      |class User {
+      |  float dist2(Vec2 a, Vec2 b) { Vec2 d = new Vec2(); d.add(a); d.sub(b); return d.dot(d); }
+      |}
+      |""".stripMargin
+
+  test("a symbolic rename emits @targetName and the whole override component follows") {
+    val ph = new MemberRenameTransform(Map("com.math.Vec2#add" -> "+"))
+    val r  = run(vectors, ph)
+
+    assertEquals(ph.policyReport.findings, Nil, ph.policyReport.render)
+    // ALL overloads of `add` are renamed to `+`
+    assertEquals(r.nameOf("com.math.Vec2#add"), Some("+"))
+    // the override in Vec3 follows the component
+    assertEquals(r.nameOf("com.math.Vec3#add"), Some("+"))
+    // `sub` is NOT renamed — it is a different member
+    assertEquals(r.nameOf("com.math.Vec2#sub"), Some("sub"))
+
+    // the emitted code carries `@scala.annotation.targetName("add")`
+    val c = r.out
+    assert(clue(c).contains("@scala.annotation.targetName(\"add\")"), c)
+    // the member is emitted with the symbolic name
+    assert(clue(code(c)).contains("def +("), c)
+    // …and the call site in User.dist2 follows through the symbol table rewrite
+    assert(clue(code(c)).contains(".+("), s"call site not rewritten:\n$c")
+    // one RenamedMember decision per renamed DECLARATION
+    val renamed = r.log.all.filter(_.kind == Decision.Kind.RenamedMember)
+    // Vec2#add (both overloads = 2) + Vec3#add (1) = 3 declarations
+    assertEquals(clue(renamed).size, 3)
+  }
+
+  test("multiple operators: `add` -> `+`, `sub` -> `-`, `scl` -> `*`") {
+    val ph = new MemberRenameTransform(Map(
+      "com.math.Vec2#add" -> "+",
+      "com.math.Vec2#sub" -> "-",
+      "com.math.Vec2#scl" -> "*",
+    ))
+    val r = run(vectors, ph)
+    assertEquals(ph.policyReport.findings, Nil, ph.policyReport.render)
+    assertEquals(r.nameOf("com.math.Vec2#add"), Some("+"))
+    assertEquals(r.nameOf("com.math.Vec2#sub"), Some("-"))
+    assertEquals(r.nameOf("com.math.Vec2#scl"), Some("*"))
+    // each carries its own @targetName with its OWN original name
+    assert(r.out.contains("@scala.annotation.targetName(\"add\")"), r.out)
+    assert(r.out.contains("@scala.annotation.targetName(\"sub\")"), r.out)
+    assert(r.out.contains("@scala.annotation.targetName(\"scl\")"), r.out)
+  }
+
+  test("a precise key names ONE overload with a symbolic name") {
+    val ph = new MemberRenameTransform(Map("com.math.Vec2#add(Vec2)" -> "+"))
+    val r  = run(vectors, ph)
+    assertEquals(ph.policyReport.findings, Nil, ph.policyReport.render)
+    // the (Vec2) overload is renamed to `+` with @targetName
+    val c = code(r.out)
+    assert(c.contains("def +(other"), r.out)
+    // the (float,float) overload keeps its name `add`
+    assert(c.contains("def add(dx"), r.out)
+    // the @targetName only appears on the renamed overload
+    assert(r.out.contains("@scala.annotation.targetName(\"add\")"), r.out)
+  }
+
+  test("`unary_-` is valid for a NULLARY method, and emits @targetName") {
+    val ph = new MemberRenameTransform(Map("com.math.Vec2#negate" -> "unary_-"))
+    val r  = run(vectors, ph)
+    assertEquals(ph.policyReport.findings, Nil, ph.policyReport.render)
+    assertEquals(r.nameOf("com.math.Vec2#negate"), Some("unary_-"))
+    assert(r.out.contains("@scala.annotation.targetName(\"negate\")"), r.out)
+    assert(code(r.out).contains("def unary_-"), r.out)
+  }
+
+  test("`unary_-` on a method with PARAMETERS is refused as malformed") {
+    // `add(Vec2)` takes a parameter, so `unary_-` is not valid
+    val ph = new MemberRenameTransform(Map("com.math.Vec2#add" -> "unary_-"))
+    run(vectors, ph)
+    val f = ph.policyReport.findings
+    assertEquals(clue(f).size, 1)
+    assertEquals(f.head.issue, PolicyIssue.Malformed)
+    assert(f.head.detail.contains("prefix operator"), f.head.detail)
+    assert(f.head.detail.contains("nullary"), f.head.detail)
+  }
+
+  test("an alphanumeric name does NOT emit @targetName — only symbolic ones do") {
+    val ph = new MemberRenameTransform(Map("com.math.Vec2#add" -> "plus"))
+    val r  = run(vectors, ph)
+    assertEquals(ph.policyReport.findings, Nil, ph.policyReport.render)
+    assertEquals(r.nameOf("com.math.Vec2#add"), Some("plus"))
+    // no @targetName annotation since `plus` is alphanumeric
+    assert(!r.out.contains("@scala.annotation.targetName"), r.out)
+  }
+
+  test("the merge contract unions symbolic entries and refuses a disagreement") {
+    // independent symbolic names merge cleanly
+    val m = merge(Map("com.math.Vec2#add" -> "+"), Map("com.math.Vec2#sub" -> "-"))
+    assert(m.isRight, m.toString)
+    // same member, different symbols refuses
+    val l = merge(Map("com.math.Vec2#add" -> "+"), Map("com.math.Vec2#add" -> "*"))
+    assert(clue(l).isLeft)
+  }
+
+  test("fingerprint segment is empty for an empty table — §1(b) no-op") {
+    assertEquals(new MemberRenameTransform().surfaceFingerprint, "")
+    // …and non-empty when entries exist
+    assert(new MemberRenameTransform(Map("a#b" -> "+")).surfaceFingerprint.nonEmpty)
+  }
+
+  test("MemberRenamer.isSymbolic classifies names correctly") {
+    // symbolic operators
+    assert(MemberRenamer.isSymbolic("+"))
+    assert(MemberRenamer.isSymbolic("*"))
+    assert(MemberRenamer.isSymbolic("<="))
+    assert(MemberRenamer.isSymbolic("+="))
+    assert(MemberRenamer.isSymbolic("++"))
+    // prefix operators
+    assert(MemberRenamer.isSymbolic("unary_-"))
+    assert(MemberRenamer.isSymbolic("unary_!"))
+    assert(MemberRenamer.isSymbolic("unary_~"))
+    // NOT symbolic
+    assert(!MemberRenamer.isSymbolic("add"))
+    assert(!MemberRenamer.isSymbolic("close"))
+    assert(!MemberRenamer.isSymbolic("closeWindow"))
+    assert(!MemberRenamer.isSymbolic(""))
+    // edge: `unary_` alone is NOT a valid prefix name (no trailing operator char)
+    assert(!MemberRenamer.isSymbolic("unary_"))
+    // edge: `unary_ab` is not valid (more than one char after the prefix)
+    assert(!MemberRenamer.isSymbolic("unary_ab"))
+  }
+
+  test("MemberRenamer.isValidMemberName accepts both families") {
+    // alphanumeric
+    assert(MemberRenamer.isValidMemberName("add"))
+    assert(MemberRenamer.isValidMemberName("closeWindow"))
+    assert(MemberRenamer.isValidMemberName("style$shadow"))
+    // symbolic
+    assert(MemberRenamer.isValidMemberName("+"))
+    assert(MemberRenamer.isValidMemberName("unary_-"))
+    // invalid
+    assert(!MemberRenamer.isValidMemberName(""))
+    assert(!MemberRenamer.isValidMemberName("a.b"))
+    assert(!MemberRenamer.isValidMemberName("a b"))
+    assert(!MemberRenamer.isValidMemberName("2close"))
+  }

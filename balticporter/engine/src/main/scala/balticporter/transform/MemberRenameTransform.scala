@@ -170,17 +170,34 @@ final class MemberRenameTransform(val renames: Map[String, String] = Map.empty)
       MemberKey.parse(key) match
         case Left(m)                                       => refuse(m.what)
         case Right(_) if newName.isEmpty                   => refuse("the new name is empty, which names nothing")
-        case Right(_) if !MemberRenameTransform.isPlain(newName) =>
-          refuse(s"`$newName` is not a bare member name — this phase changes NAMES and never " +
-            "shapes, so a value carrying a `#`, a parameter list, a `.` or whitespace names an act " +
-            "it does not perform (an arity change is `bean-properties`; a re-point is `type-redirect`)")
+        case Right(_) if !MemberRenamer.isValidMemberName(newName) =>
+          refuse(s"`$newName` is not a valid Scala member name — this phase changes NAMES and " +
+            "never shapes, so a value must be either an alphanumeric identifier, a symbolic operator " +
+            "(`+`, `*`, `<=`), or a prefix operator (`unary_-`). A value carrying a `#`, a parameter " +
+            "list, a `.` or whitespace names an act it does not perform (an arity change is " +
+            "`bean-properties`; a re-point is `type-redirect`)")
         case Right(mk) =>
           // `flatMap(_.sym)` and not `map`: a hit with no symbol is a member the port DROPPED, which
           // the binder counts as having FIRED and which there is nothing left to rename. Empty hits
           // are therefore a no-op rather than a finding — `TypeRedirectTransform`'s own reading.
           val hits = binder.bindMembers(name, MemberRenameTransform.Setting, mk.render)
             .toOption.getOrElse(Nil).flatMap(_.sym)
-          List(MemberRenameTransform.Entry(mk.render, newName, hits))
+          // `unary_-` (and the other three prefix operators) is only valid on a NULLARY method.
+          // Scala's spec says `unary_` names are prefix operators and a prefix form must take no
+          // arguments — so `def unary_-(other: Vec)` is a parse error, not a prefix operator.
+          if MemberRenamer.isUnaryName(newName) then
+            val nonNullary = hits.flatMap(binder.program.symbolOf).filter { s =>
+              s.info match
+                case TypeRepr.MethodType(params, _, _) => params.nonEmpty
+                case _                                 => false
+            }
+            if nonNullary.nonEmpty then
+              refuse(s"`$newName` is a prefix operator and may only target a nullary method, " +
+                s"but ${nonNullary.map(_.fullName).sorted.mkString(", ")} " +
+                s"${if nonNullary.sizeIs == 1 then "takes" else "take"} parameters")
+            else List(MemberRenameTransform.Entry(mk.render, newName, hits))
+          else
+            List(MemberRenameTransform.Entry(mk.render, newName, hits))
     }
     ownFindings = bad.toList
     records = binder.recordsFor(name)
@@ -214,7 +231,7 @@ final class MemberRenameTransform(val renames: Map[String, String] = Map.empty)
       val graph     = OverrideGraph.build(program, baseUnits = baseUnits)
       val requests  = live.flatMap(e => e.hits.map(h =>
         MemberRenamer.Request(h, e.newName, Reason.Configured(name, e.key), e.key, e.key)))
-      val (out, refusals) = MemberRenamer.rename(
+      val (renamed, refusals) = MemberRenamer.rename(
         program, graph, requests, MemberRenamer.OnCollision.Refuse, decisions)
       refusals.map(_.request.key).distinct.foreach { k =>
         val why = refusals.find(_.request.key == k).map(_.why).getOrElse("refused")
@@ -222,7 +239,14 @@ final class MemberRenameTransform(val renames: Map[String, String] = Map.empty)
           s"$why — so this rename did NOT happen and the member keeps its upstream name",
           PolicyFinding.About.ThisRun)
       }
-      out
+      // ---- @targetName for symbolic renames ----
+      // A symbolic member name (`+`, `*`, `unary_-`) must carry `@scala.annotation.targetName` with
+      // the ORIGINAL java name — the JVM name stays java's for binary compatibility and
+      // `-Werror`-clean output.
+      val applied = live.filter(e => !refusals.exists(_.request.key == e.key))
+      val symbolicEntries = applied.filter(e => MemberRenamer.isSymbolic(e.newName))
+      if symbolicEntries.isEmpty then renamed
+      else MemberRenameTransform.addTargetNameAnnotations(renamed, program, symbolicEntries)
 
 object MemberRenameTransform:
 
@@ -239,6 +263,54 @@ object MemberRenameTransform:
   /** is this value a bare member name? Deliberately a WHITELIST of what a Scala member name may be
     * here rather than a blacklist of the separators that would make it something else: a blacklist
     * is a list somebody has to keep complete, and the failure mode is a value that reaches the
-    * symbol table and emits text nobody can parse. */
+    * symbol table and emits text nobody can parse.
+    *
+    * DEPRECATED in favour of [[MemberRenamer.isValidMemberName]], which also admits symbolic names.
+    * Kept for any caller that still needs the narrow alphanumeric test. */
   private[transform] def isPlain(v: String): Boolean =
     v.nonEmpty && !v.head.isDigit && v.forall(c => c.isLetterOrDigit || c == '_' || c == '$')
+
+  /** Add `@scala.annotation.targetName("<javaName>")` to every symbol that was renamed to a
+    * SYMBOLIC name.
+    *
+    * The java name is read from the ORIGINAL program (before the rename), which is why both are
+    * needed. The annotation preserves the JVM name for binary compatibility with any class file a
+    * consumer compiled against, and produces `-Werror`-clean output (scalac warns on symbolic names
+    * without `@targetName`). */
+  private[transform] def addTargetNameAnnotations(
+      renamed: Program,
+      original: Program,
+      symbolicEntries: List[Entry],
+  ): Program =
+    // find or create a symbol for `scala.annotation.targetName` in the table.
+    val existingId = renamed.symbols.all.find(_.fullName == "scala.annotation.targetName").map(_.id)
+    val targetNameSym = existingId.getOrElse {
+      // allocate a fresh id above every existing one — a negative value close to SymId.None would
+      // collide with the sentinel; a high positive value would collide with the minter's counter.
+      // Use min of all ids minus 10 (but never 0 or positive to stay away from the minter).
+      val minId = renamed.symbols.all.map(_.id.raw).minOption.getOrElse(0)
+      SymId(math.min(minId - 1, -2))
+    }
+    // build the set of symIds that were renamed to symbolic names
+    val renamedSymIds = symbolicEntries.flatMap(_.hits).toSet
+    // build annotations: one per renamed symbol, with the ORIGINAL name as the targetName value
+    val annotated = renamed.symbols.all.map { s =>
+      if renamedSymIds.contains(s.id) then
+        val origName = original.symbolOf(s.id).map(_.name).getOrElse(s.name)
+        val annot = Annot(
+          tpe    = TypeRepr.TypeRef(TypeRepr.NoPrefix, targetNameSym),
+          args   = List("value" -> Tree.Literal(
+            Constant.StringC(origName),
+            TypeRepr.TypeRef(TypeRepr.NoPrefix, SymId.None),
+            Origin.synthetic)),
+          origin = Origin.synthetic,
+        )
+        s.copy(annotations = s.annotations :+ annot)
+      else s
+    }
+    // if the targetName symbol did not exist, add it
+    val allSyms = if existingId.isDefined then annotated
+                  else annotated ++ List(Symbol(
+                    targetNameSym, "targetName", "scala.annotation.targetName",
+                    Flags(), SymId.None, TypeRepr.NoType))
+    renamed.rebuilt(symbols = SymbolTable(allSyms))
