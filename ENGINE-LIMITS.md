@@ -5930,6 +5930,21 @@ that holds back only a PARAMETER produces no `decisions.tsv` row and no porter n
 floor's exits remain for ports that choose `Union`; the history above is the `Union`-mode scope exit
 procedure that `Named` replaces.*
 
+**Wave 1.1e — the wrapper's EMPTY is not the JVM's null (2026-08-26).** Green at compile on every
+lane and red at RUN TIME in four suites — CLAUDE.md §4.4's shape, found only by diffing `tests.tsv`
+against the committed baselines before committing a promotion: gdx-test 217/4 → 217/13 (9
+`JsonMatcherTests`), ashley 108/2/2 → 45 outcomes lost (`Engine$.<clinit>`), screens 16/0 → 15/1,
+textra-diff 165/0 → 161/4. Two causes, both universal: an unwrap spelled `.get` at a SLOT where
+java's null flows through (wave 1.1d: `.orNull` at every non-primitive slot, `.get` only at a
+DEREFERENCE); and a `@Null` field with no initializer emitted as `scala.compiletime.uninitialized`
+— JVM null — under a wrapper whose empty is its own sentinel (`NestedNone`), so `isEmpty` read
+false on a never-assigned `prev`/`next`/`backtrack` in the Ragel parser and the next dereference
+threw (wave 1.1e: such a field is initialised to `W.empty`; 1,429 base digests). Every suite is back
+at its committed outcomes. The rule for the next wrapper target: whatever the target's empty IS, the
+emitted program must never manufacture the JVM's null in its place — `uninitialized`, a
+`null` literal through an `Object` slot, an array cell — and a suite, not a compile, is the only
+instrument that sees it.
+
 ### K13.5 A wrapper target's LAST THREE SEAMS ARE ALL ONE SENTENCE — the retype changes a SIGNATURE, so everything java tied to that signature has to move with it
 
 Wave 1.1b closed the base at 0 and each of the three seams below arrived one module out, on a
