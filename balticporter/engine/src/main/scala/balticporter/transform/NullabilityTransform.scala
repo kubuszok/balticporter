@@ -918,12 +918,28 @@ final class NullabilityTransform(
   // the tree
   // -------------------------------------------------------------------------
 
-  override def transformValDef(v: Tree.ValDef)(using Program): Tree.ValDef =
+  override def transformValDef(v: Tree.ValDef)(using p: Program): Tree.ValDef =
     newTypes.get(v.symbol) match
       case scala.None    => if isWrapper then v.copy(rhs = v.rhs.map(coerceTo(v.tpt.tpe, _))) else v
       case Some(t) =>
         val out = v.copy(tpt = TypeTree(t, v.origin))
-        if isWrapper then out.copy(rhs = out.rhs.map(coerceTo(t, _))) else out
+        if isWrapper then out.rhs match
+          // A @Null FIELD with no initialiser defaults to JVM null in Java, and the emitter
+          // renders the absent rhs as `scala.compiletime.uninitialized` — which is JVM null.
+          // Under an opaque wrapper (Nullable uses a NestedNone sentinel), JVM null is NOT
+          // the wrapper's empty value: `isEmpty` returns FALSE, `orNull` returns null after
+          // the guard passes, and every consumer of the isEmpty/orNull pair NPEs.
+          // Measured: 9 JsonMatcherTests failures on @Null Node prev/next in a Ragel state
+          // machine — the backward walk tested `prev.isEmpty` (false on JVM null), read
+          // `prev.orNull` (null), then dereferenced. Init to W.empty so the wrapper's own
+          // sentinel is in place from the start, matching Java's `null` default.
+          // NOT applied to PARAMETERS: a parameter has no field to initialise, and giving it
+          // a default value would change the method's calling convention.
+          case scala.None if !p.symbolOf(v.symbol).exists(_.flags.isParam) =>
+            out.copy(rhs = Some(wrap(t, Tree.Literal(Constant.NullC, TypeRepr.NoType, v.origin))))
+          case _ =>
+            out.copy(rhs = out.rhs.map(coerceTo(t, _)))
+        else out
 
   override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef =
     val ret = newTypes.get(d.symbol)

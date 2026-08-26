@@ -50,6 +50,15 @@ class NullabilityWrapperSpec extends PortSuite:
     assertEmits(ported, s"def give(): $W[demo.Actor]")
   }
 
+  test("an uninitialized @Null FIELD starts as W.empty, NOT `uninitialized` — JVM null != sentinel") {
+    // `Nullable` is an opaque type using a NestedNone sentinel; JVM null is NOT `Nullable.empty`.
+    // Under `scala.compiletime.uninitialized`, `isEmpty` returns false (JVM null != NestedNone(0))
+    // and `orNull` returns null after the guard passes — every isEmpty/orNull consumer NPEs.
+    // Measured: 9 JsonMatcherTests failures from @Null Node prev/next in a Ragel state machine.
+    assertEmits(ported, s"var parent: $W[demo.Actor] = $W.empty")
+    assertNotEmits(ported, "parent: " + W + "[demo.Actor] = scala.compiletime.uninitialized")
+  }
+
   test("declaration-vs-init and argument-vs-formal unwrap with `.orNull` — java's slots accept null") {
     assertEmits(ported, "val a: demo.Actor = this.parent.orNull")
     assertEmits(ported, "this.take(this.parent.orNull)")
