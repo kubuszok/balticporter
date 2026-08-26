@@ -680,8 +680,19 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
                       else if !callsAreRewritable(graph.closureOf(s).members, 1) then
                         refuse(e, s"`$sn` is referenced in VALUE position; an eta-expanded `x_=` is " +
                           "not the SAM java saw")
-                      else Some(BeanPropertyTransform.Property(e.key, e.property, g, Some(s),
-                        gComp, graph.closureOf(s).members))
+                      else {
+                        val sComp = graph.closureOf(s).members
+                        val getterOwners = gComp.flatMap(gg => p.symbolOf(gg).map(_.owner))
+                        val setterOnly = sComp.flatMap(sm => p.symbolOf(sm).map(_.owner))
+                          .filterNot(getterOwners.contains)
+                          .flatMap(o => p.symbolOf(o).map(_.fullName)).toList.distinct.sorted
+                        if setterOnly.nonEmpty then
+                          refuse(e, s"the setter's override component reaches " +
+                            s"${setterOnly.mkString(", ")} which declares the setter without a " +
+                            "getter — `x.prop = v` needs `prop` in scope on the receiver")
+                        else Some(BeanPropertyTransform.Property(e.key, e.property, g, Some(s),
+                          gComp, sComp))
+                      }
 
   private def ownerTypeOf(p: Program, m: SymId): Option[SymId] = p.symbolOf(m).map(_.owner)
 
@@ -971,25 +982,48 @@ object BeanPropertyTransform:
                   case scala.None => getterSym.name
 
                 val sMembers = setterOpt.map(s => graph.closureOf(s.id).members).getOrElse(Set.empty)
-                val prop = Property(key, propName, getterSym.id, setterOpt.map(_.id), gComp, sMembers)
 
-                // File a converted candidate through the idiom lane
-                phase.consider(IdiomCandidate(IdiomKind.BeanDetect, IdiomVerdict.Converted,
-                  key, s"auto-detected pair `$propName` via `$accessorsStr`",
-                  Decision.originOf(program, getterSym.id)))
-                phase.record(Decision(
-                  kind       = Decision.Kind.RenamedMember,
-                  subject    = getterSym.id,
-                  subjectFqn = key,
-                  detail     = Map(
-                    "property"  -> propName,
-                    "accessors" -> accessorsStr,
-                    "source"    -> "auto-detect",
-                  ),
-                  reason = Reason.Universal("bean-detect"),
-                  origin = Decision.originOf(program, getterSym.id),
-                ))
-                result += prop
+                // A setter whose override component reaches a type that declares the setter
+                // WITHOUT a corresponding getter is a seam: `x.cullingArea = v` desugars to a
+                // call of `cullingArea_=`, and the ASSIGNMENT's LHS names the GETTER symbol.
+                // With no getter at that type, the LHS names a member the receiver does not have.
+                // Measured at 2 errors on libGDX (Cullable: setter-only interface, Container and
+                // ScrollPane call through a Cullable-typed reference).
+                val setterOnlyOwners = setterOpt.toList.flatMap { s =>
+                  val sComp = graph.closureOf(s.id).members
+                  val getterOwners = gComp.flatMap(g => program.symbolOf(g).map(_.owner))
+                  sComp.flatMap { sm =>
+                    program.symbolOf(sm).map(_.owner).filterNot(getterOwners.contains)
+                  }.flatMap(o => program.symbolOf(o).map(_.fullName)).toList.distinct.sorted
+                }
+                if setterOnlyOwners.nonEmpty then
+                  phase.consider(IdiomCandidate(IdiomKind.BeanDetect,
+                    IdiomVerdict.Refused("SetterOnlyInterface",
+                      s"the setter's override component reaches ${setterOnlyOwners.mkString(", ")} " +
+                      "which declares the setter without a getter — `x.prop = v` needs " +
+                      "`prop` in scope on the receiver, and the interface has none"),
+                    key, s"auto-detected `$propName`", Decision.originOf(program, getterSym.id)))
+                else {
+                  val prop = Property(key, propName, getterSym.id, setterOpt.map(_.id), gComp, sMembers)
+
+                  // File a converted candidate through the idiom lane
+                  phase.consider(IdiomCandidate(IdiomKind.BeanDetect, IdiomVerdict.Converted,
+                    key, s"auto-detected pair `$propName` via `$accessorsStr`",
+                    Decision.originOf(program, getterSym.id)))
+                  phase.record(Decision(
+                    kind       = Decision.Kind.RenamedMember,
+                    subject    = getterSym.id,
+                    subjectFqn = key,
+                    detail     = Map(
+                      "property"  -> propName,
+                      "accessors" -> accessorsStr,
+                      "source"    -> "auto-detect",
+                    ),
+                    reason = Reason.Universal("bean-detect"),
+                    origin = Decision.originOf(program, getterSym.id),
+                  ))
+                  result += prop
+                }
         }
     }
     result.toList

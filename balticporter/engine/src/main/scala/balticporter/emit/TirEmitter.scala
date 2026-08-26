@@ -6087,8 +6087,15 @@ object TirEmitter:
       def implementsInherited(v: Tree.ValDef): Boolean =
         val n    = nm(v.symbol)
         val same = inheritedDecls.filter(s => eff(s) == n)
+        // ABSTRACT only. A concrete parameterless `def` is a def-pair GETTER whose storage is its
+        // own owner's `$field` (a `bean-detect` rename, not a collapse); the field under it in a
+        // DESCENDANT is java's plain same-name shadow — a different namespace, unrelated storage —
+        // and a `var` cannot override a concrete `def` anyway. Leaving it is `weaker access
+        // privileges` / `cannot override` at `RefChecks` (Sprite#rotation / ParticleEmitter,
+        // Table#skin / Dialog: 2 errors at 0 typer errors). Renaming it `$shadow` is what
+        // `MemberRenamer.DeferToEmitter` already promised this pass would do.
         same.exists(s => p.definitionOf(s) match
-          case Some(d: Tree.DefDef) => d.paramss.isEmpty
+          case Some(d: Tree.DefDef) => d.paramss.isEmpty && d.rhs.isEmpty
           case _                    => false)
 
       cd.body.foreach {
