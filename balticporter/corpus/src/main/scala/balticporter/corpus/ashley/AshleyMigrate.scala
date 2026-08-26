@@ -139,13 +139,13 @@ object AshleyPolicy:
             // `EntitySystem#engine` — C16.1 is CLOSED at the ENGINE level: the `discoverScope`
             // post-pass in `resolveCapturedLocalClashes` now sees anonymous classes inside
             // converted test bodies (blocks inlined by TestFrameworkTransform), so the
-            // capture-rename fires for the shape. WITHHELD here because the BeanDetect
-            // auto-detection (scope = Everywhere() on the base) also auto-detects 14 OTHER
-            // bean pairs on ashley types (Engine#entities, Entity#components, etc.) whose
-            // BeanCollapse conversions cause 47 runtime failures — class-init cascades and
-            // NullPointerExceptions unrelated to this pair. The baselines must be accepted
-            // for the BeanDetect wave before this pair can land; one api-parity(accessor) row.
-            // "com.badlogic.ashley.core.EntitySystem#engine"             -> "getEngine",
+            // capture-rename fires for the shape. The BeanDetect auto-detection (scope =
+            // Everywhere() on the base) also auto-detects this pair, so the configured entry
+            // is redundant for the RENAME — but it is kept as the port's STATED POLICY for
+            // this member: the hand port writes `def engine: Nullable[Engine] = _engine`
+            // (a def-pair, not a var), and this entry records the decision. It also gives the
+            // binder a `neverFired` line if the accessor shape changes upstream.
+            "com.badlogic.ashley.core.EntitySystem#engine"               -> "getEngine",
             // NO `#entities` pair on the three iterating systems: the hand port KEEPS `getEntities`
             // (parenless, IteratingSystem.scala:58) over a PRIVATE `entities` field, so a collapse
             // there would be the opposite of parity — measured 2026-08-26 as 3 `getEntities` rows in
