@@ -4,7 +4,8 @@ import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyRep
 import balticporter.tir.*
 
 /** Move a library's NULLABILITY ANNOTATIONS out of an annotation the Scala compiler ignores and
-  * INTO THE TYPE — `T | Null` (the floor), or a configured wrapper `W[T]`.
+  * INTO THE TYPE — `T | Null` (the union floor), `W[T]` (a configured named wrapper), or
+  * `Option[T]`.
   *
   * ==Why this is a §1(b) and not a §1(a)==
   * WHICH annotation states nullability is a fact about one library: libGDX declares its own
@@ -122,8 +123,13 @@ final class NullabilityTransform(
   /** Nullability is a fact about the SHARED SURFACE: a base that emits `Actor | Null` and a
     * dependent that emits `Actor` for the same member each compile alone and cannot compile
     * together (§1.5). The target shape and the scope are part of it for the same reason. */
+  /** §1(b)'s no-op rule at the FINGERPRINT: the `target` segment is omitted when it is the
+    * default (`Union`), so a port that never stated a target contributes NO segment for one —
+    * an unstated key and a default one render the same string. A non-default one always
+    * contributes, so the mechanism's arrival is flat by construction. */
   def surfaceFingerprint: String =
-    s"${annotations.toList.sorted.mkString(",")}|${target.tag}|${scope.fingerprint}"
+    val targetSeg = target match { case Target.Union => ""; case t => s"|${t.tag}" }
+    s"${annotations.toList.sorted.mkString(",")}$targetSeg|${scope.fingerprint}"
 
   /** every shared-surface SUBJECT this instance's policy is keyed on — the annotation FQNs and the
     * scope's declared entries, each through [[MergeablePolicy.subjectOf]].
@@ -253,7 +259,7 @@ final class NullabilityTransform(
 
     target match
       case Target.Union => ()
-      case Target.Wrapper(fqn) =>
+      case Target.Named(fqn) =>
         wrapperSym = mintOrReuse(fqn, fqn.split('.').last)
         applySym   = mintOrReuse(fqn + ".apply", "apply", wrapperSym)
         emptySym   = mintOrReuse(fqn + ".empty", "empty", wrapperSym)
@@ -261,11 +267,20 @@ final class NullabilityTransform(
         isEmptySym = mintOrReuse(fqn + ".isEmpty", "isEmpty", wrapperSym)
         notSym     = mintOrReuse(NotOp, "unary_!")
         boolSym    = mintOrReuse("scala.Boolean", "Boolean")
+      case Target.OptionTarget =>
+        wrapperSym = mintOrReuse(OptionFqn, "Option")
+        applySym   = mintOrReuse(OptionFqn + ".apply", "apply", wrapperSym)
+        emptySym   = mintOrReuse(NoneFqn, "None")
+        getSym     = mintOrReuse(OptionFqn + ".get", "get", wrapperSym)
+        isEmptySym = mintOrReuse(OptionFqn + ".isEmpty", "isEmpty", wrapperSym)
+        notSym     = mintOrReuse(NotOp, "unary_!")
+        boolSym    = mintOrReuse("scala.Boolean", "Boolean")
 
     /** the target shape, applied to the annotated occurrence's CURRENT type. */
     def nullable(t: TypeRepr): TypeRepr = target match
-      case Target.Union       => TypeRepr.OrType(t, nullRef)
-      case Target.Wrapper(_)  => TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, wrapperSym), List(t))
+      case Target.Union        => TypeRepr.OrType(t, nullRef)
+      case Target.Named(_) | Target.OptionTarget =>
+        TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, wrapperSym), List(t))
 
     def alreadyNullable(t: TypeRepr): Boolean = t match
       case TypeRepr.OrType(_, TypeRepr.TypeRef(_, s))        => s == nullSym
@@ -436,7 +451,7 @@ final class NullabilityTransform(
     * safe and counts it — never the other way round. Swapping the predicate for the real closure is
     * a one-line change here and nothing else. */
   private def wrapperCrossesOverride(p: Program, s: Symbol): Boolean =
-    if target == Target.Union then false
+    if !target.isWrapper then false
     else if s.flags.isParam then p.symbolOf(s.owner).exists(m => crosses(p, m))
     else crosses(p, s)
 
@@ -798,7 +813,7 @@ final class NullabilityTransform(
   // wrapper-mode coercion — attack the SLOT (K2), never the type
   // -------------------------------------------------------------------------
 
-  private def isWrapper: Boolean = target != Target.Union
+  private def isWrapper: Boolean = target.isWrapper
 
   private def isWrapped(t: Term): Boolean = headSym(t.tpe).contains(wrapperSym) && wrapperSym != SymId.None
   private def isWrapperType(t: TypeRepr): Boolean = headSym(t).contains(wrapperSym) && wrapperSym != SymId.None
@@ -808,10 +823,14 @@ final class NullabilityTransform(
     case TypeRepr.AppliedType(_, List(a)) => a
     case _                                => TypeRepr.NoType
 
-  /** `W.apply(e)`, or `W.empty` for a bare `null` — the two directions of the wrap half. */
+  /** `W.apply(e)`, or `W.empty`/`None` for a bare `null` — the two directions of the wrap half.
+    *
+    * For `OptionTarget`, `None` is a top-level object, not a member of `Option` — so it is
+    * emitted as `Ident(noneSym)` rather than `Select(Ident(wrapperSym), emptySym)`. */
   private def wrap(want: TypeRepr, e: Term): Term = e match
     case Tree.Literal(Constant.NullC, _, o) =>
-      Tree.Select(Tree.Ident(wrapperSym, TypeRepr.NoType, o), emptySym, want, o)
+      if target == Target.OptionTarget then Tree.Ident(emptySym, want, o)
+      else Tree.Select(Tree.Ident(wrapperSym, TypeRepr.NoType, o), emptySym, want, o)
     case _ =>
       Tree.Apply(Tree.Ident(wrapperSym, TypeRepr.NoType, e.origin), List(e), applySym, want, e.origin)
 
@@ -949,8 +968,10 @@ object NullabilityTransform:
     * key, which is one identity on purpose. */
   val Name = "nullability"
 
-  private val NullFqn = "scala.Null"
-  private val NotOp   = "scala.<op>#unary_!"
+  private val NullFqn   = "scala.Null"
+  private val OptionFqn = "scala.Option"
+  private val NoneFqn   = "scala.None"
+  private val NotOp     = "scala.<op>#unary_!"
 
   /** the engine's synthetic operator namespace, minted by the frontend under exactly this owner. */
   private val OperatorOwners = Set("scala.<op>")
@@ -963,16 +984,44 @@ object NullabilityTransform:
   enum Slot:
     case Return, Field, Param
 
-  /** The SHAPE the contract takes in the emitted type.
+  /** The SHAPE the contract takes in the emitted type — `T | Null` (the union floor),
+    * `W[T]` (a configured wrapper satisfying the four-member contract), or `Option[T]`.
     *
-    * Two, and not a boolean, because the second one carries the wrapper's FQN — which is
-    * configuration and not an engine constant: two hand ports of the same ecosystem chose
-    * differently (one `T | Null`, one `Nullable[T]`), so the engine has no standing to pick.
+    * Three, because the second and third carry DIFFERENT wrapper semantics — `Named` uses a
+    * per-library opaque wrapper whose FQN is a fact about the port (two hand ports of one
+    * ecosystem chose differently: one `T | Null`, one `Nullable[T]`), and `Option` uses
+    * `scala.Option` whose allocation cost (I7) and semantics (`Option(null) == None`,
+    * null-normalising by construction) are different from both.
+    *
+    * ==`Named` CLOSES K13==
+    * `T | Null` is transparent at every CONCRETE reference type but NOT at an abstract `T`, which
+    * is what K13 measured: 35 compile errors from 632 declarations, every one inside a generic
+    * container, and a scope exit list that has to be maintained by hand. A named wrapper `W[T]`
+    * IS a proper type that composes at every `T` — the abstract-type-parameter class disappears
+    * entirely, and the scope exit list with it. `Option[T]` has the same property.
+    *
+    * ==The four-member contract==
+    * Both `Named` and `Option` rely on the same four members — `apply` (null-normalising),
+    * `empty`, extension `get` (unchecked, NPE on empty, which IS Java's semantics at a
+    * dereference) and extension `isEmpty`. For `Option` these are `Some.apply`/`None`/`.get`/
+    * `.isEmpty` — the same shape, different types.
     */
   enum Target:
+    /** `T | Null` — the union floor. Free at every concrete reference type, NOT transparent at
+      * an abstract `T` (K13). */
     case Union
-    case Wrapper(fqn: String)
+    /** `W[T]` — a per-library opaque wrapper satisfying the four-member contract. The FQN is
+      * the port's to state, never the engine's; sge's `lowlevel.Nullable` is the first policy
+      * value. CLOSES K13: `W[T]` composes at every `T`. */
+    case Named(fqn: String)
+    /** `Option[T]` — `scala.Option`, whose allocation cost (I7) is measured separately. CLOSES
+      * K13 for the same reason as `Named`. */
+    case OptionTarget
 
     def tag: String = this match
-      case Union      => "union"
-      case Wrapper(f) => s"wrapper:$f"
+      case Union         => "union"
+      case Named(f)      => s"named:$f"
+      case OptionTarget  => "option"
+
+    /** is this a wrapper mode (Named or Option) as opposed to the union floor? */
+    def isWrapper: Boolean = this != Union

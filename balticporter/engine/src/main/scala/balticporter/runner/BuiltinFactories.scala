@@ -355,34 +355,42 @@ final class PrimitiveToOpaqueFactory extends TransformFactory:
 /** ```
   * { transform    = "nullability"
   *   annotations  = ["com.foo.Null"]        # FQN set, UPSTREAM namespace; empty = no-op
-  *   target       = "union"                 # "union" (T | Null) | "wrapper"
-  *   wrapper      = "lowlevel.Nullable"     # required iff target = "wrapper", refused otherwise
+  *   target       = "union"                 # "union" (T | Null) | "named" | "option"
+  *   wrapper      = "lowlevel.Nullable"     # required iff target = "named", refused otherwise
   *   scope { except = ["com.foo.Bridge"] } }
   * ```
   *
-  * `wrapper` is REFUSED under `target = "union"` rather than ignored: a config that names a wrapper
-  * and gets a union has been silently overruled, which is the §1(b) failure this SPI exists to
-  * prevent. It is read unconditionally so that the loader's unread-key check cannot fire on it
-  * before this refusal does — the refusal names the actual mistake, "unknown key" does not.
+  * `wrapper` is REFUSED under `target = "union"` or `target = "option"` rather than ignored: a
+  * config that names a wrapper and gets a union has been silently overruled, which is the §1(b)
+  * failure this SPI exists to prevent. It is read unconditionally so that the loader's unread-key
+  * check cannot fire on it before this refusal does — the refusal names the actual mistake,
+  * "unknown key" does not. `target = "option"` uses `scala.Option` and needs no wrapper FQN.
   */
 final class NullabilityFactory extends TransformFactory:
   def name = NullabilityTransform.Name
   def fromConfig(config: ConfigView): Phase =
     val wrapper = config.string("wrapper")
-    val union   = config.enumerated("target", Map("union" -> false, "wrapper" -> true)).getOrElse(false)
-    val target = (union, wrapper) match
-      case (true, Some(w))  => NullabilityTransform.Target.Wrapper(w)
-      case (true, scala.None) =>
+    val targetKey = config.enumerated("target",
+      Map("union" -> "union", "named" -> "named", "wrapper" -> "named", "option" -> "option"))
+      .getOrElse("union")
+    val target = (targetKey, wrapper) match
+      case ("named", Some(w))  => NullabilityTransform.Target.Named(w)
+      case ("named", scala.None) =>
         throw ConfigError(config.at("wrapper"),
-          "required when `target = \"wrapper\"`, and absent — the engine ships no default wrapper " +
+          "required when `target = \"named\"`, and absent — the engine ships no default wrapper " +
             "because two hand ports of one ecosystem chose differently (`T | Null` and `Nullable[T]`), " +
             "so it has no standing to pick. Name a type satisfying the four-member contract " +
             "(apply, empty, extension get, extension isEmpty).")
-      case (false, Some(_)) =>
+      case ("option", Some(_)) =>
+        throw ConfigError(config.at("wrapper"),
+          "a wrapper is named but `target` is `option`, which uses `scala.Option` — remove the " +
+            "`wrapper` key, or say `target = \"named\"`")
+      case ("option", scala.None) => NullabilityTransform.Target.OptionTarget
+      case (_, Some(_)) =>
         throw ConfigError(config.at("wrapper"),
           "a wrapper is named but `target` is `union`, which would ignore it — say " +
-            "`target = \"wrapper\"`, or remove this key")
-      case (false, scala.None) => NullabilityTransform.Target.Union
+            "`target = \"named\"`, or remove this key")
+      case (_, scala.None) => NullabilityTransform.Target.Union
     new NullabilityTransform(
       annotations = config.strings("annotations").getOrElse(Nil).toSet,
       target      = target,

@@ -164,9 +164,10 @@ object NullabilityBoundaryCheck extends RemedySource:
           "but it is NOT a subtype of an ABSTRACT `T`, which is the very reason a `return null` at " +
           "a `T` return needs a cast in the first place. So `T | Null` does not conform to `T`, and " +
           "every use of this declaration in a plain `T` slot is a compile error. The cost lands on " +
-          "the USES and is invisible here, which is why it is a number. Three ways out, all policy: " +
-          "scope this port's generic types out of `nullability`; accept the errors; or stage to " +
-          "`-Yexplicit-nulls -language:unsafeNulls`, under which the whole class disappears."
+          "the USES and is invisible here, which is why it is a number. FOUR ways out, all policy: " +
+          "switch to a `named` or `option` target (a wrapper `W[T]` composes at every `T` — K13 " +
+          "CLOSED); scope this port's generic types out of `nullability`; accept the errors; or " +
+          "stage to `-Yexplicit-nulls -language:unsafeNulls`, under which the whole class disappears."
       case ScopedOutParent =>
         "§1(b) A SCOPE EXIT THAT DID NOT CLOSE: an ANCESTOR of this declaration is held back by one " +
           "of this port's own `nullability` scope entries, and it declares a member of the same " +

@@ -41,7 +41,7 @@ class NullabilityWrapperSpec extends PortSuite:
       |}
       |""".stripMargin
 
-  private def phase = new NullabilityTransform(Set("demo.Null"), Target.Wrapper(W))
+  private def phase = new NullabilityTransform(Set("demo.Null"), Target.Named(W))
 
   private lazy val ported = port(java, phase)
 
@@ -106,7 +106,7 @@ class NullabilityWrapperSpec extends PortSuite:
       |""".stripMargin
 
   test("WRAPPER mode REFUSES an override-crossing member and counts it; UNION mode moves it") {
-    val w = new NullabilityTransform(Set("demo.Null"), Target.Wrapper(W))
+    val w = new NullabilityTransform(Set("demo.Null"), Target.Named(W))
     val (afterW, logW) = Pipeline.runTraced(PortFixture.parse(overriding), List(w))
     assertEquals(w.boundary(afterW.units).map(_.issue), List(Issue.OverrideCrossing))
     assertEquals(logW.of(Decision.Kind.RetypedSignature), Nil)

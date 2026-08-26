@@ -597,14 +597,14 @@ class SurfaceFoldSpec extends munit.FunSuite:
   test("REFUSED: two TARGETS is a choice of emitted shape, not a composition") {
     val b = base(List(nullability(Set("com.demo.Null"))))
     val dep = b.extendedBy(PortManifest("dep", surface = List(
-      nullability(Set("com.demo.Null"), target = NullabilityTransform.Target.Wrapper("com.dep.Opt")))))
+      nullability(Set("com.demo.Null"), target = NullabilityTransform.Target.Named("com.dep.Opt")))))
     assertEquals(dep.effectiveSurface.size, 2, "a refused pair stays in the pipeline")
     assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.Conflict))
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
     assertEquals(f.map(_.kind), List(Kind.SurfaceDivergence))
     assert(Kind.SurfaceDivergence.fatal)
     assert(clue(f.head.detail).contains("union"))
-    assert(clue(f.head.detail).contains("wrapper:com.dep.Opt"))
+    assert(clue(f.head.detail).contains("named:com.dep.Opt"))
   }
 
   test("REFUSED: an `Everywhere` base and an `Only` dependent point in OPPOSITE directions") {
@@ -629,7 +629,7 @@ class SurfaceFoldSpec extends munit.FunSuite:
   test("REFUSED: a target clash AND a scope clash are reported TOGETHER, not one at a time") {
     val b = base(List(nullability(Set("com.demo.Null"), scope = RuleScope.Everywhere(Set("com.demo.Box")))))
     val dep = b.extendedBy(PortManifest("dep", surface = List(nullability(
-      Set("com.demo.Null"), target = NullabilityTransform.Target.Wrapper("com.dep.Opt"),
+      Set("com.demo.Null"), target = NullabilityTransform.Target.Named("com.dep.Opt"),
       scope = RuleScope.Only(Set("org.third.Bag"))))))
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
     assertEquals(f.map(_.kind), List(Kind.SurfaceDivergence))

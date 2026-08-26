@@ -337,9 +337,13 @@ class NullabilitySpec extends PortSuite:
   }
 
   test("the SURFACE fingerprint carries the annotations, the target and the scope") {
-    assertEquals(phase().surfaceFingerprint, "demo.Null|union|")
-    assertEquals(phase(target = Target.Wrapper("lowlevel.Nullable")).surfaceFingerprint,
-                 "demo.Null|wrapper:lowlevel.Nullable|")
+    // §1(b)'s no-op rule at the fingerprint: the target segment is OMITTED when default (Union),
+    // so a port that never stated a target contributes no segment for one.
+    assertEquals(phase().surfaceFingerprint, "demo.Null|")
+    assertEquals(phase(target = Target.Named("lowlevel.Nullable")).surfaceFingerprint,
+                 "demo.Null|named:lowlevel.Nullable|")
+    assertEquals(phase(target = Target.OptionTarget).surfaceFingerprint,
+                 "demo.Null|option|")
   }
 
   // -------------------------------------------------------------------------
