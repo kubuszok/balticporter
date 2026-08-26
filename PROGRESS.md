@@ -10596,6 +10596,20 @@ wave that re-enables the switch closes them with the base lane as its gate, not 
 K13 is therefore still OPEN. `lls 0.3.0` and the `declared_dep_flags` on the lanes were reverted with
 it and return with the switch.
 
+**Wave 1.1b — the switch RE-ENABLED, the seams closed in the engine (2026-08-26, worktree; the base
+lane confirms).** `661 -> 268 -> 236 -> 73 -> 17 -> 8 -> 0` on gdx, per family: E007 356 -> 0, E134
+117 -> 0, E171 50 -> 0, E008 45 -> 0, E051 30 -> 0, E172 28 -> 0, E120 24 -> 0, E050 11 -> 0 (8
+warnings remain: 5 E030 unreachable-case, 3 E129). Five `ScopedOut` types are the counted residue —
+`CharArray` (22 E120 + 28 E051) and `Image` (2 E120) as the invariant-opaque erasure limit, `Json` and
+`Pools` as injected shims agreed by hand, `TemporalAction` (2) as the funnel's `(null: Nullable[T])`
+delegation gap (ENGINE-LIMITS K13). `AbstractTypeParameter` 155 -> 0; `nullability-boundary` now
+carries the `UncoercibleSeam` rows for external callees and class-file SAMs. Digests: gdx 2706 moved
+against the `Union` baseline, and 2706 = 2706 across the lambda coercion. Dependents measured by
+migration + compile in the worktree: screens 7 -> 0 (one `ScreenManager#pushScreen` lambda seam in the
+engine, five `.get` and two `Nullable.empty` in the hand-written suite). `lls 0.3.0` and
+`declared_dep_flags` return with the switch. No baseline accepted here — the orchestrator lands
+through the primary's lanes.
+
 K13 CLOSED: `Nullable[T]` IS a proper type that composes at every abstract `T`, so the
 `AbstractTypeParameter` finding class goes **155 -> 0** and the 12-entry + 1-member-key scope
 exit list is deleted entirely. libGDX base: `nullability-boundary` **146 -> 136**, errors

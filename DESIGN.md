@@ -3454,6 +3454,23 @@ contract (§8.13) — it is not the dependent's to choose. The `target` segment 
 `surfaceFingerprint` when it is the default, so a port that never stated a target contributes no
 segment (§1(b)'s no-op rule at the fingerprint):
 
+**A wrapper target owes a coercion at FIVE seams the union floor never had**, because `Nullable[T]`
+is a different type where `T | Null` simplified away. Each is universal (§1(a)) and lives in the phase;
+each was measured on the libGDX base at `661 -> 0` (ENGINE-LIMITS K13's table): (1) the CALL RESULT —
+`transformApply` re-types the node from the retyped signature, so every downstream slot (a `val`, an
+`Assign`, a `return`, a `Select`, a null test) sees a wrapped value and `coerceTo` reads through
+`Tree.Typed` and into If/Match/Block branches; (2) the EXTERNAL CALLEE — a class-file `MethodType` is
+coerced against where interned and unwrapped where not, and counted either way (`UncoercibleSeam`),
+since a class file carries no nullability; (3) the REIFIED positions — `== null`/`eq null` become
+`.isEmpty`, and `ArrayLength`/`ArrayAccess`, which are not `Select`s, unwrap their operand; (4) the
+LAMBDA BODY — a SAM result slot, read from `resultTpt`, a `FunctionN`'s last argument or an OWNED
+interface's abstract method in the retyped table, else unwrapped and counted; (5) ERASURE — an opaque
+wrapper erases to its underlying, so an overload set differing only in a `@Null` reference type
+collides (`CharArray#append` ×10, `Image` ×3 ctors); that is the wrapper's limit, not the engine's,
+and the port holds the type back as a counted `ScopedOut`. An injected shim over a dropped type is a
+sixth position with no phase: its formals are agreed BY HAND (`Json`, `Pools`), and a funnel-minted
+`this(…)` delegation is a seventh the emitter owes (`TemporalAction`, K13).
+
 | stage | what | prerequisite |
 |---|---|---|
 | **N1** | annotation-driven `T \| Null` floor, **no compiler flag** | none |
