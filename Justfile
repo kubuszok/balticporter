@@ -244,22 +244,22 @@ sge_relaxed_flags := "-deprecation -feature -language:implicitConversions -no-in
 ssg_flags         := "-deprecation -feature -no-indent -Werror -Wimplausible-patterns -Wrecurse-with-default -Wenum-comment-discard -Wunused:imports,privates,locals,patvars,nowarn"
 
 # per-lane compile/test dependencies, verbatim scala-cli flags (word-split on purpose)
-gdx_deps      := "--dependency org.junit.jupiter:junit-jupiter:5.10.2 --dependency junit:junit:4.13.2 --dependency org.scalameta::munit:1.0.2"
+gdx_deps      := "--dependency org.junit.jupiter:junit-jupiter:5.10.2 --dependency junit:junit:4.13.2 --dependency org.scalameta::munit:1.0.2 --dependency com.kubuszok::lls:0.3.0"
 # The libGDX suite's RUN carries the same three coordinates in a DIFFERENT order, and it is kept
 # that way on purpose: this is the order the run that produced the committed `tests.tsv` used, and
 # the order of `--dependency` flags is an input to scala-cli's classpath — with junit4, jupiter and
 # munit all present, which runner claims a suite is decided by scanning it. Reordering may well be
 # harmless; it is not something this file is entitled to change silently, and the lane that would
 # discover it costs 221 tests to run.
-gdx_run_deps  := "--dependency org.scalameta::munit:1.0.2 --dependency junit:junit:4.13.2 --dependency org.junit.jupiter:junit-jupiter:5.10.2"
+gdx_run_deps  := "--dependency org.scalameta::munit:1.0.2 --dependency junit:junit:4.13.2 --dependency org.junit.jupiter:junit-jupiter:5.10.2 --dependency com.kubuszok::lls:0.3.0"
 # Mockito 1.10.19, NOT a 2.x/5.x: Ashley's `ComponentClassFactory` uses `org.mockito.asm`, removed
 # in 2.0. Read from Ashley's own build.gradle rather than guessed — guessing it cost a full cycle.
-ashley_deps   := "--dependency junit:junit:4.13.2 --dependency org.mockito:mockito-all:1.10.19 --dependency org.scalameta::munit:1.0.2"
+ashley_deps   := "--dependency junit:junit:4.13.2 --dependency org.mockito:mockito-all:1.10.19 --dependency org.scalameta::munit:1.0.2 --dependency com.kubuszok::lls:0.3.0"
 sg_deps       := "--dependency junit:junit:4.12 --dependency org.scalameta::munit:1.0.2"
 # anim8 upstream declares NO test framework at all (its `src/test/java` is a set of lwjgl3 demo
 # apps, not a suite — see Anim8Migrate's scope note), so the only coordinate this lane needs is the
 # one its HAND-WRITTEN suite is written in.
-anim8_deps    := "--dependency org.scalameta::munit:1.0.2"
+anim8_deps    := "--dependency org.scalameta::munit:1.0.2 --dependency com.kubuszok::lls:0.3.0"
 # noise4j declares NO dependencies — its `build.gradle` has an empty `dependencies` block and the
 # 12 sources import nothing outside `java.lang`, `java.math` and `java.util`. Stated as an empty
 # variable rather than omitted from the lane, so the lane reads the same as every other one and the
@@ -301,7 +301,7 @@ liqp_test_deps := "--dependency junit:junit:4.13.1 --dependency org.scalameta::m
 # other lanes happen to use. The suite is converted to MUnit by `TestFrameworkTransform`, so the
 # junit coordinate is not what RUNS it; it is here because scala-cli must resolve the same surface
 # the frontend did, and because a port resolves what the library DECLARES (see `ashley_deps`).
-gltf_deps     := "--dependency junit:junit:4.12 --dependency org.scalameta::munit:1.0.2"
+gltf_deps     := "--dependency junit:junit:4.12 --dependency org.scalameta::munit:1.0.2 --dependency com.kubuszok::lls:0.3.0"
 # libgdx-screenmanager's `build.gradle` declares gdx 1.13.5 and `com.github.crykn.guacamole:gdx`.
 # libGDX arrives as EMITTED SCALA on this compile, not as a jar, and guacamole is replaced by the
 # hand-written Scala in `ported/sge-screens/src/main/scala`. The annotation jar was the third coordinate
@@ -309,18 +309,18 @@ gltf_deps     := "--dependency junit:junit:4.12 --dependency org.scalameta::muni
 # the TYPE, so no emitted declaration names it and nothing is left to resolve. That retirement is
 # the PROOF, not a tidy-up — a jar still on the compile line would let a surviving annotation
 # resolve and the port would look converted while it was not. munit is for the hand-written suite.
-screens_deps  := "--dependency org.scalameta::munit:1.0.2"
+screens_deps  := "--dependency org.scalameta::munit:1.0.2 --dependency com.kubuszok::lls:0.3.0"
 # gdx-vfx's only compile dependency is libGDX itself, which this lane supplies as the SOURCE the
 # base port emitted rather than as a coordinate. So the only coordinate here is the one its
 # HAND-WRITTEN suite is written in — the same shape, and for the same reason, as anim8's.
-vfx_deps      := "--dependency org.scalameta::munit:1.0.2"
+vfx_deps      := "--dependency org.scalameta::munit:1.0.2 --dependency com.kubuszok::lls:0.3.0"
 # gdx-ai's only compile dependency is libGDX itself (`gdx-ai/build.gradle`: one `api
 # "com.badlogicgames.gdx:gdx"` and JUnit for tests), which this lane supplies as the SOURCE the base
 # port emitted rather than as a coordinate. Milestone 1 compiles ONE source set and has no
 # hand-written suite, so there is no test coordinate to add either — and this line stays empty
 # rather than carrying munit speculatively: a dependency on the compile line that nothing needs is a
 # dependency nobody can later prove was required.
-ai_deps       := ""
+ai_deps       := "--dependency com.kubuszok::lls:0.3.0"
 # …and the TEST lane's, which is not empty: the emitted suite is MUnit and any UNCONVERTED residue
 # is still JUnit, so both runners have to be resolvable or a refused conversion is a compile error
 # instead of a counted refusal. JUnit 4.12 is gdx-ai's OWN declared version
@@ -328,7 +328,7 @@ ai_deps       := ""
 # `ashley_deps` for what guessing a version costs. MUnit FIRST, for `gdx_run_deps`' reason: with
 # two runners present, which one claims a suite is decided by scanning it, and the flag order is an
 # input to that classpath.
-ai_test_deps  := "--dependency org.scalameta::munit:1.0.2 --dependency junit:junit:4.12"
+ai_test_deps  := "--dependency org.scalameta::munit:1.0.2 --dependency junit:junit:4.12 --dependency com.kubuszok::lls:0.3.0"
 # TextraTypist declares TWO `api` coordinates and this lane names NEITHER. libGDX arrives as the
 # SOURCE the base port emitted rather than as a jar, exactly as it does for every other dependent;
 # and `com.github.tommyettinger:regexodus` — which the emitted Scala names outright, six classes of
@@ -337,7 +337,7 @@ ai_test_deps  := "--dependency org.scalameta::munit:1.0.2 --dependency junit:jun
 # `liqp_deps`' own lesson: a revision bumped in the manifest and not in the lane compiles the port
 # against a DIFFERENT JAR with every check count, every member digest and every outcome flat. There
 # is no hand-written suite either, so this stays empty rather than carrying munit speculatively.
-textra_deps   := ""
+textra_deps   := "--dependency com.kubuszok::lls:0.3.0"
 # …and the DIFFERENTIAL lane's two. `textra_ref_tests` is the reference hand port's own MUnit tree —
 # THREE platform source directories (`scala`, `scalajvm`, `scalanative`), which is why the census
 # reads the parent and not `…/scala`: two of the three hold suites the census classifies, and a lane
@@ -345,13 +345,13 @@ textra_deps   := ""
 # `textra_test_deps` carries munit for the hand-written half; regexodus is DERIVED from what the
 # port published, exactly as `textra-measure` derives it (`declared_dep_flags`).
 textra_ref_tests := "../sge/sge-extension/textra/src/test"
-textra_test_deps := "--dependency org.scalameta::munit:1.0.2"
+textra_test_deps := "--dependency org.scalameta::munit:1.0.2 --dependency com.kubuszok::lls:0.3.0"
 # VisUI's `ui/build.gradle` declares ONE compile coordinate — `com.badlogicgames.gdx:gdx` — which
 # arrives as the SOURCE the base port emitted rather than as a jar, exactly as it does for every
 # other libGDX dependent. So this is empty and stays empty, and the lane still derives whatever the
 # RUN published (`declared_dep_flags`) rather than assuming the port declares nothing: an empty
 # variable is this port's fact today and a derived flag is what says so the day it stops being one.
-visui_deps    := ""
+visui_deps    := "--dependency com.kubuszok::lls:0.3.0"
 # …and the DIFFERENTIAL lane's three. `visui_ref_tests` is the reference hand port's own MUnit tree
 # — TWO platform source directories (`scala`, `scalajvm`), which is why the census reads the parent
 # and not `…/scala`: both hold suites the census classifies, and a lane that counted one directory
@@ -369,7 +369,7 @@ visui_deps    := ""
 # silently: that check, the 0-error requirement (a suite that grew to need a sixth file fails with
 # `Not Found` rather than being quietly narrowed), and the census population gate.
 visui_ref_tests := "../sge/sge-extension/visui/src/test"
-visui_test_deps := "--dependency org.scalameta::munit:1.0.2"
+visui_test_deps := "--dependency org.scalameta::munit:1.0.2 --dependency com.kubuszok::lls:0.3.0"
 visui_closure := "Sizes.scala util/ColorUtils.scala util/OsUtils.scala util/Validators.scala util/InputValidator.scala"
 # USL's own four. `usl_deps` is EMPTY and says why: this library imports nothing outside the JDK,
 # which the lane re-derives on every run rather than trusting this line — a port with genuinely no
@@ -536,7 +536,11 @@ gdx-measure:
     break_residue {{gdx_module}}/src_managed/main/scala
 
     echo "-- compile --"
-    scala-cli compile --scala {{scala_version}} --server=false {{gdx_module}}/src_managed/main/scala 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gdxmeasure.txt
+    # DECLARED is whatever the port's own manifest published (`declared_dep_flags`, scripts/_lib.sh).
+    # Before the Named target this was empty and the compile was standalone; now it carries `lls`,
+    # because the emitted types reference `lowlevel.Nullable`.
+    DECLARED=$(declared_dep_flags "$REPORT" | tr '\n' ' ')
+    scala-cli compile --scala {{scala_version}} --server=false $DECLARED {{gdx_module}}/src_managed/main/scala 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gdxmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
     # count ALL errors: coded `-- [Exxx] ... Error` AND bare `-- Error:` (e.g. "secondary constructor
     # must call a preceding constructor" carries no code). The coded-only count silently undercounts.
@@ -549,9 +553,9 @@ gdx-measure:
     grep -A1 '^-- Error:' "$MEASURE_TMP"/gdxmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
     # Cross-platform compile gates (ENGINE-LIMITS P1: a COMPILE gate, not a portability gate).
-    # No deps — the JVM compile for this lane has none either.
-    xplat_compile scala-js {{scala_version}} "$REPORT" gdxmeasure {{gdx_module}}/src_managed/main/scala
-    xplat_compile scala-native {{scala_version}} "$REPORT" gdxmeasure {{gdx_module}}/src_managed/main/scala
+    # Same deps as the JVM compile — the emitted types reference `lowlevel.Nullable`.
+    xplat_compile scala-js {{scala_version}} "$REPORT" gdxmeasure {{gdx_module}}/src_managed/main/scala -- $DECLARED
+    xplat_compile scala-native {{scala_version}} "$REPORT" gdxmeasure {{gdx_module}}/src_managed/main/scala -- $DECLARED
 
     # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
     flags_compile {{scala_version}} "$REPORT" gdxmeasure "{{sge_strict_flags}}" {{gdx_module}}/src_managed/main/scala

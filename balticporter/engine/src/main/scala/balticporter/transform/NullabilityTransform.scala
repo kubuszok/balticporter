@@ -181,10 +181,18 @@ final class NullabilityTransform(
     */
   def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
     case o: NullabilityTransform =>
-      val targetClash = Option.when(target != o.target)(
-        s"""both modules state a nullability TARGET, "${target.tag}" and "${o.target.tag}" — the """ +
-          "shape every retyped declaration takes is one emitted signature per member, so two " +
-          "answers is a choice and not a composition")
+      // TARGET: a dependent at the DEFAULT (`Union`) inherits the base's target — it is not this
+      // module's to choose (§1.5). A dependent that explicitly states a non-default target must
+      // AGREE with the base's, or the merge refuses. Both sides non-default and different is a
+      // choice the merge will not make.
+      val mergedTarget = (target, o.target) match
+        case (a, Target.Union) => Right(a)       // dependent inherits
+        case (Target.Union, b) => Right(b)       // base at default, dependent chooses
+        case (a, b) if a == b  => Right(a)       // both agree
+        case (a, b)            => Left(
+          s"""both modules state a nullability TARGET, "${a.tag}" and "${b.tag}" — the """ +
+            "shape every retyped declaration takes is one emitted signature per member, so two " +
+            "answers is a choice and not a composition")
       val scopeMerged: Either[String, RuleScope] = (scope, o.scope) match
         case (RuleScope.Everywhere(a), RuleScope.Everywhere(b)) => Right(RuleScope.Everywhere(a ++ b))
         case (RuleScope.Only(a), RuleScope.Only(b))             => Right(RuleScope.Only(a ++ b))
@@ -193,12 +201,12 @@ final class NullabilityTransform(
             s"""`${theirs.productPrefix}` — the two point in OPPOSITE directions (an entry EXCLUDES """ +
             "under one and INCLUDES under the other, and `Only` states as much by omission as by " +
             "listing), so no entry set preserves both")
-      (targetClash.toList ++ scopeMerged.left.toOption.toList) match
-        case Nil => scopeMerged.map { s =>
+      (mergedTarget.left.toOption.toList ++ scopeMerged.left.toOption.toList) match
+        case Nil => (for { t <- mergedTarget; s <- scopeMerged } yield
           MergeablePolicy.Merged(
-            new NullabilityTransform(annotations ++ o.annotations, target, s),
+            new NullabilityTransform(annotations ++ o.annotations, t, s),
             o.subjects -- subjects)
-        }
+        )
         case whys => Left(whys.mkString("; "))
     case other =>
       Left(s"`${other.name}` is not a `NullabilityTransform`, so there is no policy to compose")
@@ -797,17 +805,34 @@ final class NullabilityTransform(
   override def transformApply(t: Tree.Apply)(using p: Program): Term =
     if !isWrapper then t
     else
-      nullTest(t).getOrElse {
+      val result = nullTest(t).getOrElse {
         val recvFixed = t.fun match
-          case f @ Tree.Select(recv, m, _, _) if isWrapped(recv) && !isWrapperMember(m) && !isOperator(p, m) =>
+          case f @ Tree.Select(recv, m, _, _) if isWrapped(recv) && !isWrapperMember(m)
+            && (!isOperator(p, m) || !isNullTestOp(p, m)) =>
             t.copy(fun = f.copy(qual = unwrap(recv)))
           case _ => t
         coerceArgs(recvFixed)
       }
+      result match
+        case a: Tree.Apply if newTypes.contains(a.method) && !isWrapperType(a.tpe) && a.tpe != TypeRepr.NoType =>
+          a.copy(tpe = TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, wrapperSym), List(a.tpe)))
+        case a: Tree.Apply if !newTypes.contains(a.method) && a.tpe != TypeRepr.NoType =>
+          val methodSym = summon[Program].symbolOf(a.method)
+          val retWrapped = methodSym.map(_.info).exists {
+            case TypeRepr.MethodType(_, r, _)                       => isWrapperType(r)
+            case TypeRepr.PolyType(_, TypeRepr.MethodType(_, r, _)) => isWrapperType(r)
+            case _                                                  => false
+          }
+          if retWrapped && !isWrapperType(a.tpe) then
+            a.copy(tpe = TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, wrapperSym), List(a.tpe)))
+          else result
+        case _ => result
 
   override def transformTerm(t: Term)(using Program): Term = t match
-    case a: Tree.Assign if isWrapper => a.copy(rhs = coerceTo(a.lhs.tpe, a.rhs))
-    case other                       => other
+    case a: Tree.Assign      if isWrapper => a.copy(rhs = coerceTo(a.lhs.tpe, a.rhs))
+    case a: Tree.ArrayLength if isWrapper && isWrapped(a.array) => a.copy(array = unwrap(a.array))
+    case a: Tree.ArrayAccess if isWrapper && isWrapped(a.array) => a.copy(array = unwrap(a.array))
+    case other => other
 
   // -------------------------------------------------------------------------
   // wrapper-mode coercion — attack the SLOT (K2), never the type
@@ -831,6 +856,21 @@ final class NullabilityTransform(
     case Tree.Literal(Constant.NullC, _, o) =>
       if target == Target.OptionTarget then Tree.Ident(emptySym, want, o)
       else Tree.Select(Tree.Ident(wrapperSym, TypeRepr.NoType, o), emptySym, want, o)
+    case Tree.Typed(Tree.Literal(Constant.NullC, _, _), _, _, o) =>
+      if target == Target.OptionTarget then Tree.Ident(emptySym, want, o)
+      else Tree.Select(Tree.Ident(wrapperSym, TypeRepr.NoType, o), emptySym, want, o)
+    case x: Tree.If =>
+      val elem = elementOf(want)
+      val coerced = x.copy(thenp = coerceTo(elem, x.thenp), elsep = coerceTo(elem, x.elsep))
+      Tree.Apply(Tree.Ident(wrapperSym, TypeRepr.NoType, e.origin), List(coerced), applySym, want, e.origin)
+    case x: Tree.Match =>
+      val elem = elementOf(want)
+      val coerced = x.copy(cases = x.cases.map(c => c.copy(body = coerceTo(elem, c.body))))
+      Tree.Apply(Tree.Ident(wrapperSym, TypeRepr.NoType, e.origin), List(coerced), applySym, want, e.origin)
+    case x: Tree.Block =>
+      val elem = elementOf(want)
+      val coerced = x.copy(expr = coerceTo(elem, x.expr))
+      Tree.Apply(Tree.Ident(wrapperSym, TypeRepr.NoType, e.origin), List(coerced), applySym, want, e.origin)
     case _ =>
       Tree.Apply(Tree.Ident(wrapperSym, TypeRepr.NoType, e.origin), List(e), applySym, want, e.origin)
 
@@ -840,9 +880,23 @@ final class NullabilityTransform(
   private def unwrap(e: Term): Term =
     Tree.Select(e, getSym, elementOf(e.tpe), e.origin)
 
+  private def isNullLiteral(e: Term): Boolean = e match
+    case Tree.Literal(Constant.NullC, _, _)    => true
+    case Tree.Typed(inner, _, _, _)            => isNullLiteral(inner)
+    case _                                     => false
+
   private def coerceTo(want: TypeRepr, e: Term): Term =
-    if isWrapperType(want) && !isWrapped(e) then wrap(want, e)
+    if isWrapperType(want) && isNullLiteral(e) then wrap(want, e)
+    else if isWrapperType(want) && !isWrapped(e) then wrap(want, e)
     else if !isWrapperType(want) && isWrapped(e) && want != TypeRepr.NoType then unwrap(e)
+    else if isWrapperType(want) && isWrapped(e) && e.tpe != want then
+      Tree.Typed(e, TypeTree(want, e.origin), want, e.origin)
+    else if !isWrapperType(want) && want != TypeRepr.NoType then e match
+      case x: Tree.If    => x.copy(thenp = coerceTo(want, x.thenp), elsep = coerceTo(want, x.elsep))
+      case x: Tree.Match => x.copy(cases = x.cases.map(c => c.copy(body = coerceTo(want, c.body))))
+      case x: Tree.Block => x.copy(expr = coerceTo(want, x.expr))
+      case x: Tree.Typed if isWrapped(x.expr) => x.copy(expr = unwrap(x.expr), tpe = want)
+      case _             => e
     else e
 
   private def coerceArgs(t: Tree.Apply)(using p: Program): Term =
@@ -858,25 +912,31 @@ final class NullabilityTransform(
     // `println(anAbsentValue)`, which java prints as "null" and the port would THROW on: a §4.4
     // behaviour change with no compile error and no count moving. So the seam stays COUNTED, and
     // the count now says which of the two facts is missing.
-    val formals = Option.when(p.owns(t.method))(p.symbolOf(t.method).map(_.info)).flatten.collect {
+    val formals = p.symbolOf(t.method).map(_.info).collect {
       case TypeRepr.MethodType(ps, _, _)                       => ps.map(_._2)
       case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
     }
+    val owned = p.owns(t.method)
     formals match
-      case Some(fs) if fs.sizeIs == t.args.size => t.copy(args = t.args.zip(fs).map((a, f) => coerceTo(f, a)))
+      case Some(fs) if fs.sizeIs == t.args.size =>
+        if !owned then
+          t.args.zip(fs).foreach { (a, f) =>
+            if isWrapped(a) && !isWrapperType(f) then
+              issues += Finding(Issue.UncoercibleSeam, p.symbolOf(t.method).map(_.fullName).getOrElse("?"),
+                "a wrapped argument reaches an external callee — unwrapped at the slot because a " +
+                  "class file carries no annotation the engine reads and every java reference slot " +
+                  "accepts null",
+                a.origin, currentUnit)
+          }
+        t.copy(args = t.args.zip(fs).map((a, f) => coerceTo(f, a)))
       case _ =>
-        // THE ONE SLOT WITH NO NULLABILITY TO COMPARE AGAINST — there is nothing to coerce to and
-        // nothing that could honestly be inserted. Counted rather than guessed: a wrapped value
-        // reaching a slot the engine cannot see is exactly the seam a wrapper mode creates, and a
-        // seam that moved no number would be worse than no wrapper (`CollectionBoundaryCheck`
-        // counts its own for the same reason).
         t.args.filter(isWrapped).foreach { a =>
           issues += Finding(Issue.UncoercibleSeam, p.symbolOf(t.method).map(_.fullName).getOrElse("?"),
-            "a wrapped argument reaches a callee whose NULLABILITY this program does not have — a " +
-              "class file carries no annotation the engine reads, so its type is not evidence here",
+            "a wrapped argument reaches a callee whose signature this program does not have — a " +
+              "class file could not be read for this symbol, so there is no formal to coerce against",
             a.origin, currentUnit)
         }
-        t
+        t.copy(args = t.args.map(a => if isWrapped(a) then unwrap(a) else a))
 
   /** `x == null` / `x != null` on a wrapped value → `x.isEmpty` / `!x.isEmpty`.
     *
@@ -889,8 +949,8 @@ final class NullabilityTransform(
       val opName = p.symbolOf(op).filter(s => OperatorOwners(ownerNameOf(s))).map(_.name)
       def isNullLit(e: Term) = e match { case Tree.Literal(Constant.NullC, _, _) => true; case _ => false }
       (opName, t.args) match
-        case (Some("=="), List(a)) if isWrapped(recv) && isNullLit(a) => Some(isEmpty(recv, o))
-        case (Some("!="), List(a)) if isWrapped(recv) && isNullLit(a) => Some(negate(isEmpty(recv, o), o))
+        case (Some("==" | "eq"), List(a)) if isWrapped(recv) && isNullLit(a) => Some(isEmpty(recv, o))
+        case (Some("!=" | "ne"), List(a)) if isWrapped(recv) && isNullLit(a) => Some(negate(isEmpty(recv, o), o))
         case _ => scala.None
     case _ => scala.None
 
@@ -942,6 +1002,9 @@ final class NullabilityTransform(
     * that owner? Engine identity, never a policy key. */
   private def isOperator(p: Program, s: SymId): Boolean =
     p.symbolOf(s).exists(x => OperatorOwners(ownerNameOf(x)))
+
+  private def isNullTestOp(p: Program, s: SymId): Boolean =
+    p.symbolOf(s).exists(x => x.name == "==" || x.name == "!=")
 
   /** the TOP-LEVEL unit a symbol belongs to — how a finding is held to the module that emits it. */
   private def unitOf(p: Program, id: SymId, fuel: Int = 64): SymId =
