@@ -114,6 +114,44 @@ object AshleyPolicy:
       // replacement file, and libGDX core ships the ones for the types IT dropped.
       inject  = List(repoRoot.resolve("balticporter/corpus/ashley-overrides")),
       surface = List(
+        // ASHLEY'S OWN BEAN PROPERTY PAIRS — merged into the base's `bean-properties` phase through
+        // `MergeablePolicy`, so the pair runs at the base's position in the pipeline (before every
+        // retyping phase, which is where it reads java's own descriptor shapes). Each key names an
+        // ashley declaration in the UPSTREAM namespace. The accessor pattern is java's own:
+        // `getX()` -> property `x`, with the backing field as the trivial body.
+        //
+        // `EntitySystem#engine` is `def engine` (def-pair): the field is assigned at runtime by
+        // `addedToEngineInternal`, so `val` would be wrong and `var` would publish a setter java
+        // never had. The hand port writes `def engine: Nullable[Engine] = _engine`.
+        //
+        // The `getFamily()`/`getInterval()`/`getEntities()` families are here too. The hand port
+        // RESTRUCTURED them into CONSTRUCTOR PARAMETERS (`val family: Family`), which the mechanical
+        // port cannot reproduce — the constructor signature would change. Bean-property keeps the
+        // declaration in the body as `def family` (the `def-pair` target), which does not match the
+        // hand port's constructor val. These remain as `accessor` api-parity rows, classified as
+        // `justified` (hand-port design decision: constructor promotion).
+        //
+        // `ComponentType#index` and `Family#index` are the same shape as the family entries: their
+        // backing storage is constructor-assigned, so `MutableStorage` refuses `val` and `def-pair`
+        // is the honest form.
+        new balticporter.transform.BeanPropertyTransform(
+          pairs = Map(
+            // `EntitySystem#engine` is deferred: the rename `getEngine -> engine` introduces an
+            // ambiguity with local variables named `engine` in test methods that create anonymous
+            // `EntitySystem` subclasses. The emitter's capture rename pass (CLAUDE.md §4.55 rule 2)
+            // does not fire in this configuration -- investigation needed.
+            // "com.badlogic.ashley.core.EntitySystem#engine"                -> "getEngine",
+            "com.badlogic.ashley.core.ComponentType#index"                -> "getIndex",
+            "com.badlogic.ashley.core.Family#index"                      -> "getIndex",
+            "com.badlogic.ashley.systems.IteratingSystem#family"          -> "getFamily",
+            "com.badlogic.ashley.systems.IteratingSystem#entities"        -> "getEntities",
+            "com.badlogic.ashley.systems.SortedIteratingSystem#family"    -> "getFamily",
+            "com.badlogic.ashley.systems.SortedIteratingSystem#entities"  -> "getEntities",
+            "com.badlogic.ashley.systems.IntervalIteratingSystem#family"  -> "getFamily",
+            "com.badlogic.ashley.systems.IntervalIteratingSystem#entities" -> "getEntities",
+            "com.badlogic.ashley.systems.IntervalSystem#interval"        -> "getInterval",
+          ),
+        ),
         // `PooledEngine.ComponentPools` uses `ReflectionPool` as a TYPE — a field's type, a local's
         // type, a `new`, and several cast targets — so no body seam can reach it. The base drops
         // the type outright (every libGDX use went with the drop; Ashley's did not), and a

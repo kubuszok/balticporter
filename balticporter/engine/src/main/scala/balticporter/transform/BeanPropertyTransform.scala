@@ -1,6 +1,6 @@
 package balticporter.transform
 
-import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
+import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
 import balticporter.tir.*
 
 /** Turn a named JavaBean ACCESSOR PAIR into a Scala property — `def x` and `def x_=(v)` — and
@@ -76,7 +76,7 @@ import balticporter.tir.*
 final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
                                   targets: Map[String, BeanPropertyTransform.Target] = Map.empty,
                                   exposedFields: RuleScope = RuleScope.Only(Set.empty))
-    extends Phase, PolicySource, SurfacePolicy, PolicyBound, IdiomPhase, Rewrite:
+    extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound, IdiomPhase, Rewrite:
 
   def name: String = "bean-properties"
 
@@ -132,6 +132,65 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     * (§4.6, and `ENGINE-LIMITS.md` K2.5's measured shape of two answers to one question). */
   def pairsTable: Map[String, String] = pairs
 
+  /** every type this instance's policy is KEYED on — a key's owner, through the one cut
+    * `MergeablePolicy.subjectOf` owns. */
+  def subjects: Set[String] = pairs.keySet.map(MergeablePolicy.subjectOf)
+
+  /** THE MERGE CONTRACT (DESIGN.md §8.13). Independent member keys union; same key with different
+    * accessor value is REFUSED.
+    *
+    * ==Why this is now owed==
+    * A DEPENDENT can now declare its own `bean-properties` entries — ashley's `getEngine` ->
+    * `engine` is a fact about ashley, not about libGDX. The §1.5 instance-count question
+    * (`grep -rn 'BeanPropertyTransform' balticporter/corpus`) now answers >1, so the merge contract
+    * is owed. The merge is a union of independent keys, which is the contract `MemberRenameTransform`
+    * establishes for the same shape (a map of member keys to per-key policy). A key appearing in
+    * BOTH with DIFFERENT values is refused, which is §1.5's "same key, different value stays two
+    * instances and is reported".
+    *
+    * The TARGET map merges the same way: an entry in both with different targets is refused (a pair
+    * is a `var` or a `val`, and two modules cannot disagree about that). An absent target on one side
+    * (= `DefPair`, the default) yields to the other side's explicit target.
+    */
+  def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
+    case b: BeanPropertyTransform =>
+      val myPairs    = pairsTable
+      val theirPairs = b.pairsTable
+      val conflicts  = (myPairs.keySet intersect theirPairs.keySet).filter(k => myPairs(k) != theirPairs(k))
+      if conflicts.nonEmpty then
+        Left(s"`bean-properties` has ${conflicts.size} key(s) with different accessor spellings: " +
+          conflicts.toList.sorted.take(3).map(k =>
+            s"`$k` (${myPairs(k)} vs ${theirPairs(k)})").mkString("; "))
+      else
+        // Compare targets through `targetOf` — the public accessor that defaults `DefPair`.
+        // Two entries that BOTH default are equal; an absent target on one side yields to the other.
+        val allKeys = myPairs.keySet ++ theirPairs.keySet
+        val targetConflicts = allKeys.filter { k =>
+          val mine   = targetOf(k)
+          val theirs = b.targetOf(k)
+          mine != theirs && mine != BeanPropertyTransform.Target.DefPair &&
+            theirs != BeanPropertyTransform.Target.DefPair
+        }
+        if targetConflicts.nonEmpty then
+          Left(s"`bean-properties` has ${targetConflicts.size} key(s) with different targets: " +
+            targetConflicts.toList.sorted.take(3).map(k =>
+              s"`$k` (${targetOf(k).config} vs ${b.targetOf(k).config})").mkString("; "))
+        else
+          // Merge targets: the non-default side wins. Both default -> omit from the map.
+          val mergedTargets = allKeys.flatMap { k =>
+            val mine   = targetOf(k)
+            val theirs = b.targetOf(k)
+            val chosen = if mine != BeanPropertyTransform.Target.DefPair then mine else theirs
+            if chosen != BeanPropertyTransform.Target.DefPair then Some(k -> chosen) else scala.None
+          }.toMap
+          val merged = new BeanPropertyTransform(
+            pairs   = myPairs ++ theirPairs,
+            targets = mergedTargets,
+            exposedFields = exposedFields)
+          val added = b.subjects -- subjects
+          Right(MergeablePolicy.Merged(merged, added))
+    case _ =>
+      Left(s"`bean-properties` cannot merge with ${later.getClass.getSimpleName}")
 
   // ---- policy, bound before the pipeline starts ---------------------------------------------
 
