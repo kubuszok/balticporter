@@ -1342,13 +1342,21 @@ flags_compile() {
     "${ref_flags[@]}" "${extra_flags[@]}" "${srcs[@]}" \
     2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$cap"
   local cli_st=${PIPESTATUS[0]}
-  local errors
+  local errors werrors=0
   errors=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$cap")
+  # Under -Werror EVERY warning diagnostic is an error in the reference build: scalac still prints
+  # them as `-- Warning:` / `-- [Exxx] … Warning:` and adds ONE closing error, `No warnings can be
+  # incurred under -Werror`, which matches no Error pattern above — so a tree with 307 warnings
+  # and no real error counted 0 and compile_guard refused to report it (measured on anim8,
+  # 2026-08-26). The warnings ARE the count; the closing line is not a diagnostic of its own.
+  case " ${ref_flags[*]} " in
+    *" -Werror "*) werrors=$(grep -cE '^-- (\[E[0-9]+\] )?.*Warning' "$cap"); errors=$((errors + werrors)) ;;
+  esac
   # compile_guard for the ref compile — abort/crash detection
   compile_guard "$cli_st" "$errors" "$cap"
-  echo "TOTAL ERRORS (ref): $errors  (coded $(grep -cE '\[E[0-9]+\].*Error' "$cap") + bare $(grep -cE '^-- Error:' "$cap"))"
-  # top error families
-  grep -oE "\[E[0-9]+\][^:]*Error" "$cap" | sort | uniq -c | sort -rn | head -5
+  echo "TOTAL ERRORS (ref): $errors  (coded $(grep -cE '\[E[0-9]+\].*Error' "$cap") + bare $(grep -cE '^-- Error:' "$cap") + warnings-under-Werror $werrors)"
+  # top families, warnings included — under -Werror they are the population
+  grep -oE "\[E[0-9]+\][^:]*(Error|Warning)|^-- (Error|Warning)" "$cap" | sort | uniq -c | sort -rn | head -6
 
   # baseline guard — same logic as error_baseline_guard but with a .ref suffix
   local expected_file="$report_dir/baseline/expected-errors.ref"
