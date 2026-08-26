@@ -804,6 +804,10 @@ object ApiParityCheck:
         o.kind == d.kind && o.name == d.name && o.arity == d.arity
     ) then
       return "static-placement"
+    // operator: this member's @targetName matches the other side's name, or the other side's
+    // @targetName matches this member's name — a symbolic rename (`add` -> `+` with @targetName).
+    // The JVM name is what a consumer's class file sees, so these are the SAME member.
+    if isOperatorRename(d, otherSide) then return "operator"
     defaultFamily
 
   private def tryClassifyMissing(d: SurfaceDecl, otherSide: List[SurfaceDecl], defaultFamily: String): String =
@@ -822,7 +826,23 @@ object ApiParityCheck:
         o.kind == d.kind && o.name == d.name && o.arity == d.arity
     ) then
       return "static-placement"
+    // operator: same as tryClassifyExtra — a @targetName links the two names.
+    if isOperatorRename(d, otherSide) then return "operator"
     defaultFamily
+
+  /** Does `d` have a counterpart on `otherSide` connected by `@targetName`?
+    *
+    * Two shapes: (1) this member's `@targetName` is the other side's name, or (2) the other side
+    * carries a `@targetName` that is this member's name. Either way they are the SAME member on the
+    * JVM — the `@targetName` is the JVM name a consumer's class file sees — and the difference is
+    * a symbolic rename (`add` -> `+`), which is the `operator` family. */
+  private def isOperatorRename(d: SurfaceDecl, otherSide: List[SurfaceDecl]): Boolean =
+    otherSide.exists { o =>
+      o.path == d.path && o.kind == d.kind && o.arity == d.arity && o.name != d.name &&
+        ((d.targetName.nonEmpty && d.targetName == o.name) ||
+         (o.targetName.nonEmpty && o.targetName == d.name) ||
+         (d.targetName.nonEmpty && o.targetName.nonEmpty && d.targetName == o.targetName))
+    }
 
   private def accessorPropName(name: String): Option[String] =
     List("get", "is").collectFirst {

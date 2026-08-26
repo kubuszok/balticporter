@@ -10524,3 +10524,18 @@ The sge-ecs **work list** for Phase 1/3 (the 57 justified rows that need mechani
 | (b) type-mapping convention | 10 | Array-to-ArrayBuffer, Comparator-to-Ordering, Bits-to-BitSet |
 | (b) SAM-to-function-type | 4 | Engine inner class elimination, BooleanInformer lambda |
 | (b) ImmutableArray injection | 4 | ImmutableArray wraps ArrayBuffer, implements Iterable |
+
+**Wave 1.4: `MemberRenameTransform` symbolic targets with `@targetName`** (2026-08-26). The rename
+table's VALUE may now be a symbolic operator name (`+`, `*`, `unary_-`) and the phase emits
+`@scala.annotation.targetName("<javaName>")`. Mechanism only — no libGDX policy (wave 1.3 writes
+the table from the `Migration notes: Renames:` census).
+
+Fixture: a `Vec2`/`Vec3` hierarchy with `add/sub/scl/dot/len2/negate`, overloads, an override chain,
+and a caller. 24 spec assertions (10 new): symbolic rename with override components, multiple
+operators, precise overload keys with symbols, `unary_-` on nullary, `unary_-` refusal on
+non-nullary, alphanumeric names NOT getting `@targetName`, merge contract with symbols, fingerprint
+no-op, `isSymbolic` classification, `isValidMemberName` classification. ApiParityCheck `operator`
+family: 3 new specs (matching `@targetName`, same member without annotation, unmatched-name
+classification via `@targetName`). 924 engine + 1394 corpus + 65 api tests green.
+`just gdx-measure`: 0 errors (JVM/JS/Native), 0 member digests, all check counts at baseline,
+findings unchanged, port map unchanged.

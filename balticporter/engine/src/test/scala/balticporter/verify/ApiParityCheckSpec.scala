@@ -376,6 +376,54 @@ class ApiParityCheckSpec extends munit.FunSuite:
       s"expected operator family, got ${divs.map(d => (d.family, d.detail))}")
   }
 
+  test("operator family: emitted `@targetName(\"add\") def +` AGREES with hand-port `@targetName(\"add\") def +`") {
+    // Both sides have the same symbolic name AND the same @targetName — full agreement, no divergence.
+    val emitted = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "+", 1, targetName = "add"),
+    )
+    val reference = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "+", 1, targetName = "add"),
+    )
+    val divs = ApiParityCheck.compare(emitted, reference, Map.empty)
+    assert(divs.isEmpty, s"matching symbolic + @targetName should produce no divergence, got ${divs.map(d => (d.family, d.detail))}")
+  }
+
+  test("operator family: emitted `def +` WITHOUT @targetName vs hand-port `@targetName(\"add\") def +` is the SAME MEMBER") {
+    // Both sides have `+` as the name — they MATCH by matchKey. The only divergence is the annotation
+    // difference, classified as `operator`. The JVM name is what a consumer's class file sees.
+    val emitted = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "+", 1),
+    )
+    val reference = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "+", 1, targetName = "add"),
+    )
+    val divs = ApiParityCheck.compare(emitted, reference, Map.empty)
+    // they ARE matched (same name `+`, same arity), so neither is "extra" or "missing"
+    assert(!divs.exists(d => d.detail.contains("only")),
+      s"should not be extra/missing — they match by name: ${divs.map(d => (d.family, d.detail))}")
+    // the annotation difference IS reported as `operator`
+    assert(divs.exists(_.family == "operator"),
+      s"expected operator family for @targetName difference, got ${divs.map(d => (d.family, d.detail))}")
+  }
+
+  test("operator family: emitted `def add` vs hand-port `@targetName(\"add\") def +` classified as operator rename") {
+    // Unmatched by name: emitted has `add/1`, reference has `+/1`. The reference's @targetName("add")
+    // matches the emitted name — so the classification is `operator`, not `port-extra`/`hand-port-extra`.
+    val emitted = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "add", 1),
+    )
+    val reference = List(
+      ApiParityCheck.SurfaceDecl("/Foo", "def", "+", 1, targetName = "add"),
+    )
+    val divs = ApiParityCheck.compare(emitted, reference, Map.empty)
+    val families = divs.map(_.family).toSet
+    assert(families.contains("operator"),
+      s"expected operator family for symbolic rename, got ${divs.map(d => (d.family, d.detail))}")
+    // both sides are reported — one extra, one missing — but both classified as `operator`
+    assert(divs.forall(_.family == "operator"),
+      s"all divergences should be operator family: ${divs.map(d => (d.family, d.detail))}")
+  }
+
   // ---- factory family ----
 
   test("factory family: companion apply in reference, type on both sides") {

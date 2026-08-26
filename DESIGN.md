@@ -3122,6 +3122,37 @@ the def-pair whenever a guard fails**, so every refusal is a port that keeps wor
 not a synthesis. The audit found the hand port **authored** getters to complete pairs; that is
 authoring, permanently outside mechanism scope.
 
+#### Symbolic targets and `@targetName` — BUILT
+
+The rename table's VALUE may be a **symbolic operator name** (`+`, `*`, `-`, `<=`, `+=`, `unary_-`)
+and the phase emits `@scala.annotation.targetName("<javaName>")` on every renamed declaration. The
+JVM name stays java's original for binary compatibility with any class file a consumer compiled
+against, and the annotation produces `-Werror`-clean output (scalac warns on symbolic names without
+`@targetName`). The `@targetName` value is the member's name in the ORIGINAL program (before the
+rename), read once and carried across the symbol-table rewrite. Five rules:
+
+1. **Overloads from the same key are NOT colliders.** A bare key `Vec2#add` names every overload;
+   both `add(Vec2)` and `add(float,float)` are renamed to `+` and must coexist under the new name.
+   The collision check excludes members of the same request GROUP with the same target name. This is
+   safe because java forbids two methods with the same erasure in one class (JLS 8.4.2), so
+   overloads that coexisted under `add` coexist under `+`.
+2. **The whole override component moves or none of it does** — `MemberRenamer`'s existing contract,
+   unchanged.
+3. **Call sites follow** through the single symbol-table rewrite — `MemberRenamer`'s existing
+   §4.55 exactness argument, unchanged. Emitted form is `a.+(b)` (method syntax); a beautifier
+   could convert to infix `a + b` and is not part of this mechanism.
+4. **`unary_-` only for nullary.** The four prefix operator names (`unary_-`, `unary_+`, `unary_!`,
+   `unary_~`) are valid only on a method that takes no parameters. A non-nullary target is refused
+   as `Malformed` at bind time — a prefix form with arguments is a parse error, not a prefix
+   operator.
+5. **`MergeablePolicy`:** keys union; same key, different value refuses (existing). Fingerprint
+   segment omitted when empty — §1(b)'s no-op rule (existing).
+
+The annotation is added to the program's `SymbolTable` after `MemberRenamer.rename` returns, by
+`MemberRenameTransform.addTargetNameAnnotations`. The `scala.annotation.targetName` symbol is
+found-or-created in the table (a well-known external type the program never declares — the same
+mint-or-reuse question as `PublicFieldAccessorTransform`'s `java.lang.Object`).
+
 #### The `var`/`val` collapse — BUILT, and what building it settled
 
 **Five things the design below left open or got slightly wrong**, each fixed in the mechanism rather

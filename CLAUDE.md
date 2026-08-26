@@ -43,6 +43,7 @@ Current examples:
 | `PrimitiveToOpaqueTransform(OpaqueSpec)` | seed, propagate along pure-move flows, retype, coerce at the boundary | which primitive, what the type is called, where it is minted, which declarations seed it, how far propagation may reach |
 | `PortabilityCheck(targets)` | match a rule against every external symbol the program references, and report each site | WHICH BACKENDS the module is ported for (`PortManifest.targets`) — the rule LIST is derived from them, because JS and Native disagree on nine families and one shared verdict is wrong for one of them either way |
 | `ApiParityCheck(ParityRef)` | parse both sides with scalameta, classify each divergence into a family, report per-family lanes | WHICH hand-port source tree(s) this module's emitted surface is compared against (`PortManifest.parity`). Empty = no-op and records nothing |
+| `MemberRenameTransform(renames)` | rename a member to a new name (alphanumeric or symbolic with `@targetName`), taking the whole override component or refusing | WHICH members and WHAT they are called — a symbolic target emits `@scala.annotation.targetName` |
 
 **A (b) whose empty parameter is a no-op still needs its DEFAULT chosen against what the phase did
 BEFORE it had one.** The two questions look like one and are not: `Everywhere(Set.empty)` is both
