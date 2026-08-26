@@ -38,11 +38,19 @@ object ClasspathCache:
   private def sidecar(cache: Path): Path = cache.resolveSibling(cache.getFileName.toString + ".coords")
 
   /** is this cache reusable FOR THESE COORDINATES — a non-empty line, resolved from this exact
-    * invocation? A file with no sidecar is a line from before this check existed, and is refetched
-    * once rather than trusted. */
+    * invocation, EVERY ENTRY OF WHICH STILL EXISTS? A file with no sidecar is a line from before
+    * this check existed, and is refetched once rather than trusted.
+    *
+    * The third conjunct is the second lesson this file learned the hard way: the line names jars
+    * inside a cache the port does not own (`~/Library/Caches/Coursier`), and a cache is evicted —
+    * measured 2026-08-26, the whole `com/github/tommyettinger/` tree gone, so two ports (textra,
+    * screens) reported `DID NOT RUN` with Spoon's `InvalidClassPathException` as the only witness,
+    * and a seeding script then promoted their STALE `run-latest` into the baseline (CLAUDE.md §5.1).
+    * A line whose jars are gone is not a cache hit; it is refetched, which `cs` answers in seconds. */
   def fresh(cache: Path, key: String): Boolean =
     Files.exists(cache) && Files.readString(cache).trim.nonEmpty &&
-      Files.exists(sidecar(cache)) && Files.readString(sidecar(cache)).trim == key
+      Files.exists(sidecar(cache)) && Files.readString(sidecar(cache)).trim == key &&
+      Files.readString(cache).trim.split(File.pathSeparator).forall(e => Files.exists(Path.of(e)))
 
   /** write the line and the invocation that produced it, in that order — a line without its
     * fingerprint is refetched, which is the safe direction to be interrupted in. */

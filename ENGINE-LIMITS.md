@@ -9961,6 +9961,22 @@ cause (the server was alive). Write several commands as ONE string separated by 
 against the commands you sent. Every lane in the `Justfile` already spells its sbt invocations this
 way; this entry exists for the hand-run beside a landing.
 
+### M5.6d A classpath cache keyed on its COORDINATES is a cache keyed on nothing the resolver owns — the jars are in SOMEBODY ELSE'S cache
+
+**Fix kind:** (a) corpus mechanism (`ClasspathCache.fresh`). Measured 2026-08-26: two ports
+(`sge-textra`, `sge-screens`) reported `!! <Port> DID NOT RUN — refusing to measure stale output`
+with NOTHING under it — the recipe greps `OUT` for scalac error lines and the only witness was
+Spoon's `InvalidClassPathException` naming a jar under `~/Library/Caches/Coursier/…/regexodus/0.1.21/`
+whose whole `com/github/tommyettinger/` tree was gone. `fresh` compared the coordinates sidecar and
+the line's non-emptiness and never asked whether the entries EXIST, so a resolver-cache eviction
+turned a cache HIT into a model Spoon refuses to build. Worse than the miss: a seeding script that
+ran `baseline-accept` after each lane then promoted the port's STALE `run-latest` (a port map from
+before the base's K13 key) into the committed baseline, and only `git status` on `port-map.tsv` saw
+it (CLAUDE.md §5.1's stale-accept hazard, reached through a lane that had not run). The predicate
+now requires every entry to exist; `cs` answers the refetch in seconds. Two rules fall out: a
+recipe's `DID NOT RUN` arm prints the LAST 20 lines of `OUT`, not only the scalac-shaped ones; and a
+lane that did not run must never be followed by an accept.
+
 ### M5.7 An unchanged-tree `testFull` is a cache REPLAY — it proves nothing about flakiness
 
 sbt 2 caches test results, and a replay is a perfect forgery of a run: per-project totals, suite

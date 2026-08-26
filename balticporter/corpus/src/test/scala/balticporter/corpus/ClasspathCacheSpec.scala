@@ -18,11 +18,25 @@ class ClasspathCacheSpec extends munit.FunSuite:
     d.toFile.deleteOnExit()
     d.resolve(name)
 
+  /** a jar that EXISTS, because freshness now asks that of every entry */
+  private def jar(name: String): String =
+    val f = Files.createTempFile("bp-classpath-cache", name); f.toFile.deleteOnExit(); f.toString
+
   test("a line written for THESE coordinates is reused") {
     val f = tmp("cp.txt")
     val k = ClasspathCache.key(List("junit:junit:4.12"))
-    ClasspathCache.write(f, "/jars/junit-4.12.jar", k)
+    ClasspathCache.write(f, jar("junit-4.12.jar"), k)
     assert(ClasspathCache.fresh(f, k))
+  }
+
+  test("a line whose jar has been EVICTED from the resolver cache is NOT reused — the coordinates agree and the file is gone") {
+    val f = tmp("cp.txt")
+    val k = ClasspathCache.key(List("com.github.tommyettinger:regexodus:0.1.21"))
+    val gone = jar("regexodus-0.1.21.jar")
+    ClasspathCache.write(f, jar("kept.jar") + java.io.File.pathSeparator + gone, k)
+    assert(ClasspathCache.fresh(f, k))
+    Files.delete(Path.of(gone))
+    assert(!ClasspathCache.fresh(f, k), "one missing entry is a miss: Spoon refuses the whole model on it")
   }
 
   test("a line written for DIFFERENT coordinates is NOT reused — the whole point") {
