@@ -10641,6 +10641,12 @@ absent-key sentinel (`null`) was unwrapped with `.get` into a slot that accepts 
 contract grows from four members to five: `orNull` is the null-preserving unwrap at a reference slot,
 `.get` stays for dereferences and primitive slots. Audit of every unwrap site:
 
+**Wave 1.1e — runtime parity restored.** `@Null` fields without an initializer now start as the
+wrapper's `empty` rather than `uninitialized` (JVM null ≠ the sentinel): gdx-test 217/13 → 217/4
+(committed), screens 15/1 → 16/0, textra-diff 161/4 → 165/0, ashley 108/2/2; base 0 errors, 1,429
+digests. A promotion is now gated on `tests.tsv` non-pass rows not increasing — the landing of 1.1b
+had absorbed 14 + 45 + 1 + 4 of them past an errors-and-digests guard.
+
 | unwrap site | spelling | reason |
 |---|---|---|
 | `coerceTo` direct (slot coercion) | `.orNull` via `slotUnwrap` | java slot accepts null |
