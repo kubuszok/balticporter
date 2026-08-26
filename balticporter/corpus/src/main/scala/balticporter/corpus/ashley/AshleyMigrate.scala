@@ -136,11 +136,14 @@ object AshleyPolicy:
         // is the honest form.
         new balticporter.transform.BeanPropertyTransform(
           pairs = Map(
-            // `EntitySystem#engine`: the rename `getEngine -> engine` introduces an ambiguity with
-            // local variables named `engine` in test methods that create anonymous `EntitySystem`
-            // subclasses. The emitter's capture rename pass (CLAUDE.md §4.55 rule 2) now handles
-            // resolution-root parents by falling back to the symbol table (wave 1.2b).
-            "com.badlogic.ashley.core.EntitySystem#engine"                -> "getEngine",
+            // `EntitySystem#engine` is WITHHELD (ENGINE-LIMITS C16.1): the rename `getEngine ->
+            // engine` makes a test method's local `engine` AMBIGUOUS with the member an anonymous
+            // `EntitySystem` subclass inherits (CLAUDE.md §4.55, second rule). Wave 1.2b taught the
+            // capture-rename pass to read a RESOLUTION-ROOT parent's direct members (spec-proven),
+            // and the ashley lane still reads 2 × E049 at the real site — measured in the primary,
+            // 2026-08-26 — so the pair stays off until that measurement reads 0. One api-parity
+            // `accessor` row is the price.
+            // "com.badlogic.ashley.core.EntitySystem#engine"             -> "getEngine",
             "com.badlogic.ashley.core.ComponentType#index"                -> "getIndex",
             "com.badlogic.ashley.core.Family#index"                      -> "getIndex",
             "com.badlogic.ashley.systems.IteratingSystem#family"          -> "getFamily",

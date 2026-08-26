@@ -3041,6 +3041,21 @@ state.*
 
 ## 3. `this`, inner classes and anonymous classes
 
+### C16.1 The resolution-root parent — the ambiguity pass reads DIRECT members now, and the ashley site still says E049
+
+**Fix kind:** (a) engine, OPEN. Wave 1.2b (2026-08-26): `resolveCapturedLocalClashes`' second rule
+built its inherited set through `declOf`, which is populated from `p.units` only, so an anonymous
+subclass of a parent that lives in a RESOLUTION ROOT (ashley's test program lists `ashleySrc` as
+one; `EntitySystem` is there) contributed NOTHING and the local `engine` beside an inherited
+`def engine` was never renamed. The fix falls back to the symbol table for that parent's direct
+members and is spec-proven (`CapturedLocalClashSpec`, 3 resolution-root cases). The ashley lane in
+the primary still reads **2 × E049** with the `EntitySystem#engine` bean pair enabled — JVM, JS and
+Native alike, ref 8 -> 10 — so either the inherited member arrives through an ANCESTOR the fallback
+cannot walk (no `ClassDef` to read the parent chain from), or the rename lands and a second reference
+shape keeps the old name. Not diagnosed at the site yet; the pair is withheld in `AshleyMigrate`
+(one `api-parity(accessor)` row stays) and this entry is the work item. The claim "code complete,
+verification blocked" is exactly what the primary's lane exists to refute.
+
 ### T1. A `CtNewClass` is a SUBTYPE of `CtConstructorCall` — 156 silently dropped bodies
 
 Translating a `CtConstructorCall` without asking whether the node is the `CtNewClass` subtype emits
