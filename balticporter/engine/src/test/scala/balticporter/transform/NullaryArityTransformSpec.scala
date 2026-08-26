@@ -1,0 +1,399 @@
+package balticporter.transform
+
+import balticporter.emit.TirEmitter
+import balticporter.frontend.spoon.SpoonTir
+import balticporter.tir.*
+
+/** [[NullaryArityTransform]] — dropping `()` from a getter-like nullary method, and the four
+  * guards that decline.
+  *
+  * ==Why the refusals carry the spec and the conversion is one test==
+  * CLAUDE.md §3: an idiom transform's safety argument is a REFUSAL ENUMERATION, never a suite
+  * result. The faithful translation (`def x(): R`, called `o.x()`) already compiles and already
+  * behaves identically, so a green suite is what this phase produces whether or not its guards
+  * work. What can only be shown by a fixture is that each guard DECLINES the shape it was written
+  * for — and that the declining is COUNTED, in `idiom(refused)`, naming the guard.
+  *
+  * One fixture per guard, one positive, plus the §1(b) contract (`Only(Set.empty)` is the no-op,
+  * the fingerprint segment is omitted at the default, `MergeablePolicy` unions and refuses).
+  */
+class NullaryArityTransformSpec extends munit.FunSuite:
+
+  // ---- harness ------------------------------------------------------------------------------
+
+  private case class Ran(before: Program, after: Program, phase: NullaryArityTransform,
+                         log: DecisionLog, idioms: IdiomLog):
+    def out: String = new TirEmitter(after).emit
+
+  private def ran(java: String, phase: NullaryArityTransform): Ran =
+    val before   = SpoonTir.fromSource(java)
+    val idioms   = new IdiomLog
+    val rewrites = RewriteLog()
+    val (after, log) = Pipeline.runTraced(before, List(phase),
+      new PolicyBinder(before, before.members), balticporter.catalog.CatalogLog.discarding,
+      rewrites, idioms)
+    Ran(before, after, phase, log, idioms)
+
+  private def converted(r: Ran): List[IdiomCandidate] =
+    r.idioms.all.filter(c => c.kind == IdiomKind.NullaryArity && c.verdict == IdiomVerdict.Converted)
+
+  private def refused(r: Ran): List[IdiomCandidate] =
+    r.idioms.all.filter(c => c.kind == IdiomKind.NullaryArity && c.verdict.lane == "refused")
+
+  private def guards(r: Ran): Set[String] =
+    refused(r).map(_.verdict).collect { case IdiomVerdict.Refused(g, _) => g }.toSet
+
+  private def refusedFor(r: Ran, member: String): List[IdiomCandidate] =
+    refused(r).filter(_.subject.endsWith(member))
+
+  /** the member's name in the OUTPUT program, read through its pre-run identity. */
+  private def nameOf(r: Ran, fqn: String): String =
+    r.before.symbols.all.find(_.fullName == fqn).map(_.id)
+      .flatMap(r.after.symbolOf).map(_.name).getOrElse(s"<no $fqn>")
+
+  private val everywhere = RuleScope.Everywhere()
+
+  // -------------------------------------------------------------------------------------------
+  // §1(b): the no-op default, and the fingerprint segment that is OMITTED at it
+  // -------------------------------------------------------------------------------------------
+
+  test("scope = Only(Set.empty) is the no-op — the same program, identically") {
+    val src = """
+      class Thing {
+        private int w;
+        public int w() { return w; }
+      }
+    """
+    val phase  = new NullaryArityTransform()
+    val before = SpoonTir.fromSource(src)
+    assert(phase.run(before) eq before, "Only(Set.empty) must return the SAME program")
+  }
+
+  test("the no-op files no candidate at all — no converted row, no refused row") {
+    val r = ran(
+      """
+      class Thing { private int w; public int w() { return w; } }
+      """,
+      new NullaryArityTransform())
+    assertEquals(clue(converted(r)).size, 0)
+    assertEquals(clue(refused(r)).size, 0)
+    assertEquals(nameOf(r, "Thing#w"), "w")
+    assert(clue(r.out).contains("def w()"), "the arity must survive the no-op")
+  }
+
+  test("surfaceFingerprint OMITS the segment at the default — §1(b) at the fingerprint") {
+    assertEquals(new NullaryArityTransform().surfaceFingerprint, "")
+    assertEquals(new NullaryArityTransform(RuleScope.Only(Set.empty)).surfaceFingerprint, "")
+  }
+
+  test("surfaceFingerprint carries the scope once it is non-empty") {
+    val a = new NullaryArityTransform(RuleScope.Only(Set("com.foo")))
+    assert(clue(a.surfaceFingerprint).contains("scope="))
+    assert(a.surfaceFingerprint.contains("only:com.foo"))
+    val b = new NullaryArityTransform(RuleScope.Everywhere(Set("com.bar")))
+    assert(clue(b.surfaceFingerprint).contains("except:com.bar"))
+  }
+
+  /** `Everywhere(Set.empty)` is the WHOLE-PROGRAM derivation, not the no-op — this phase ADDS a
+    * declaration shape, so §1(b)'s adds-vs-retypes rule puts its no-op at `Only(Set.empty)`. The
+    * two must therefore FINGERPRINT DIFFERENTLY: rendered equal, `SurfaceMissing` could not tell a
+    * port that runs the phase over everything from one that does not run it at all
+    * (`ENGINE-LIMITS.md` CT9). That is why the empty-segment omission stops here — an empty scope
+    * is not an empty POLICY for a phase whose default is the other direction. */
+  test("Everywhere() is NOT the no-op, and does NOT fingerprint equal to it") {
+    val on  = new NullaryArityTransform(everywhere)
+    val off = new NullaryArityTransform()
+    assert(clue(on.surfaceFingerprint).nonEmpty)
+    assertNotEquals(on.surfaceFingerprint, off.surfaceFingerprint)
+    assertEquals(on.idiomKinds, Set(IdiomKind.NullaryArity))
+    assertEquals(off.idiomKinds, Set.empty)
+  }
+
+  test("idiomKinds is empty at the no-op and NullaryArity once scoped") {
+    assertEquals(new NullaryArityTransform().idiomKinds, Set.empty)
+    assertEquals(new NullaryArityTransform(RuleScope.Only(Set("com.foo"))).idiomKinds,
+      Set(IdiomKind.NullaryArity))
+  }
+
+  test("subjects is the declared entries — what SurfaceIntrusion screens") {
+    assertEquals(new NullaryArityTransform(RuleScope.Only(Set("com.foo", "com.bar"))).subjects,
+      Set("com.foo", "com.bar"))
+    assertEquals(new NullaryArityTransform().subjects, Set.empty)
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // the positive: the declaration loses `()`, every call site loses it too, and a decision says so
+  // -------------------------------------------------------------------------------------------
+
+  test("a getter-like nullary method drops `()`, and every call site is rewritten") {
+    val r = ran(
+      """
+      class Layer {
+        private float opacity;
+        public float opacity() { return opacity; }
+      }
+      class Use {
+        float go(Layer l) { return l.opacity(); }
+      }
+      """,
+      new NullaryArityTransform(RuleScope.Only(Set("Layer"))))
+    assert(clue(r.out).contains("def opacity:"), "the declaration must lose its clause")
+    assert(!r.out.contains("def opacity()"))
+    assert(clue(r.out).contains("l.opacity"), "the call site must lose its clause")
+    assert(!r.out.contains("l.opacity()"))
+    assertEquals(clue(converted(r)).size, 1)
+    assertEquals(converted(r).head.subject, "Layer#opacity")
+  }
+
+  test("the conversion records a ParenlessConversion decision with from/to and a Universal reason") {
+    val r = ran(
+      """
+      class Layer { private float opacity; public float opacity() { return opacity; } }
+      """,
+      new NullaryArityTransform(RuleScope.Only(Set("Layer"))))
+    val ds = r.log.of(Decision.Kind.ParenlessConversion)
+    assertEquals(clue(ds).size, 1)
+    assertEquals(ds.head.subjectFqn, "Layer#opacity")
+    assertEquals(ds.head.detail.get("from"), Some("opacity()"))
+    assertEquals(ds.head.detail.get("to"), Some("opacity"))
+    assertEquals(ds.head.reason, Reason.Universal("nullary-arity"))
+  }
+
+  test("a type OUTSIDE the scope is not scanned and files no candidate") {
+    val r = ran(
+      """
+      class Inside  { private int w; public int w() { return w; } }
+      class Outside { private int h; public int h() { return h; } }
+      """,
+      new NullaryArityTransform(RuleScope.Only(Set("Inside"))))
+    assert(clue(r.out).contains("def w:"))
+    assert(clue(r.out).contains("def h()"), "the out-of-scope declaration keeps its clause")
+    assertEquals(converted(r).map(_.subject), List("Inside#w"))
+    assertEquals(refusedFor(r, "Outside#h"), Nil)
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // guard 1 — SideEffectingBody: an ASSIGNMENT in the body
+  // -------------------------------------------------------------------------------------------
+
+  /** `next()` mutates and returns. Parenless, `c.next` reads as a value access and every reader
+    * of the emitted surface would be wrong about what the call DOES — java's own `()` is the only
+    * thing distinguishing "read a value" from "do something and answer". */
+  test("SideEffectingBody: an assignment in the body keeps `()`") {
+    val r = ran(
+      """
+      class Counter {
+        private int n;
+        public int next() { n = n + 1; return n; }
+      }
+      """,
+      new NullaryArityTransform(everywhere))
+    assertEquals(nameOf(r, "Counter#next"), "next")
+    assert(clue(r.out).contains("def next()"))
+    assertEquals(clue(converted(r)), Nil)
+    assertEquals(clue(guards(r)), Set("SideEffectingBody"))
+  }
+
+  test("SideEffectingBody: a call to a NON-NULLARY member keeps `()`") {
+    val r = ran(
+      """
+      class Calc {
+        private int a;
+        int plus(int x) { return a + x; }
+        public int total() { return plus(1); }
+      }
+      """,
+      new NullaryArityTransform(everywhere))
+    assert(clue(r.out).contains("def total()"))
+    val rows = refusedFor(r, "Calc#total")
+    assertEquals(clue(rows).size, 1)
+    assert(clue(rows.head.verdict.render).contains("SideEffectingBody"))
+    assertEquals(converted(r).map(_.subject), Nil)
+  }
+
+  test("the refusal names the guard AND says why — §4.45's classification obligation") {
+    val r = ran(
+      """
+      class Counter { private int n; public int next() { n = n + 1; return n; } }
+      """,
+      new NullaryArityTransform(everywhere))
+    val why = refused(r).map(_.verdict).collect { case IdiomVerdict.Refused(_, w) => w }
+    assert(clue(why).exists(_.contains("assignments")),
+      "the sentence must say what the guard saw, not merely that it declined")
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // guard 2 — AnchoredClosure: the component reaches a declaration this program cannot move
+  // -------------------------------------------------------------------------------------------
+
+  /** `java.lang.Object` is above every type whether or not the parse lists it, so a `toString()`
+    * override is anchored by a declaration no port may re-arity. Dropped, `o.toString` would still
+    * compile — scala's own `toString` is parenless — while the emitted OVERRIDE would no longer
+    * match what it overrides. */
+  test("AnchoredClosure: an override of `java.lang.Object#toString` keeps `()`") {
+    val r = ran(
+      """
+      class Named {
+        private String n;
+        public String toString() { return n; }
+      }
+      """,
+      new NullaryArityTransform(everywhere))
+    assertEquals(nameOf(r, "Named#toString"), "toString")
+    assertEquals(clue(converted(r)), Nil)
+    assertEquals(clue(guards(r)), Set("AnchoredClosure"))
+    val why = refused(r).map(_.verdict).collect { case IdiomVerdict.Refused(_, w) => w }
+    assert(clue(why).exists(_.contains("java.lang.Object")),
+      "the anchor's own FQN is what an agent classifies the row by")
+  }
+
+  /** The SHIM FAMILY (CLAUDE.md §4.5): a library's own class implementing a java collection
+    * interface keeps JAVA's arity, because the interface is a class file no phase can move.
+    * `hasNext()` is the shape every collection library is made of. */
+  test("the shim family: `hasNext()` under `java.util.Iterator` stays `hasNext()`") {
+    val r = ran(
+      """
+      import java.util.Iterator;
+      class Cursor implements Iterator<String> {
+        private int i;
+        private String[] items;
+        public boolean hasNext() { return i < items.length; }
+        public String next() { return items[i]; }
+        public void remove() {}
+      }
+      """,
+      new NullaryArityTransform(everywhere))
+    assertEquals(nameOf(r, "Cursor#hasNext"), "hasNext")
+    assert(clue(r.out).contains("def hasNext()"))
+    assert(clue(guards(r)).contains("AnchoredClosure"))
+    assert(clue(refusedFor(r, "Cursor#hasNext")).nonEmpty)
+    assertEquals(converted(r).map(_.subject), Nil)
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // guard 3 — ComponentPartial: an override component that cannot move WHOLE
+  // -------------------------------------------------------------------------------------------
+
+  /** An ABSTRACT member has no body to inspect, so it is never getter-like — and its arity is
+    * part of its contract (a SAM ascription reads it). The concrete implementor is therefore in a
+    * component that cannot move whole, and moving HALF a component breaks the override edge:
+    * `def size` does not implement `def size()`. */
+  test("ComponentPartial: a concrete getter under an ABSTRACT declaration keeps `()`") {
+    val r = ran(
+      """
+      interface Shape { int size(); }
+      class Box implements Shape {
+        private int n;
+        public int size() { return n; }
+      }
+      """,
+      new NullaryArityTransform(everywhere))
+    assertEquals(nameOf(r, "Box#size"), "size")
+    assertEquals(nameOf(r, "Shape#size"), "size")
+    assert(clue(r.out).contains("def size()"))
+    assert(!r.out.contains("def size:"))
+    assertEquals(clue(converted(r)), Nil)
+    assertEquals(clue(refusedFor(r, "Box#size")).size, 1)
+    assert(clue(refusedFor(r, "Box#size").head.verdict.render).contains("ComponentPartial"))
+  }
+
+  test("the abstract member itself is refused too, so the component's every row is counted") {
+    val r = ran(
+      """
+      interface Shape { int size(); }
+      class Box implements Shape { private int n; public int size() { return n; } }
+      """,
+      new NullaryArityTransform(everywhere))
+    assertEquals(clue(refusedFor(r, "Shape#size")).size, 1)
+    assertEquals(clue(guards(r)), Set("SideEffectingBody", "ComponentPartial"))
+  }
+
+  /** …and the same component with BOTH halves concrete and getter-like moves WHOLE. That is what
+    * makes the guard above a component test rather than an abstractness test. */
+  test("a component whose every member qualifies is converted WHOLE") {
+    val r = ran(
+      """
+      class Base { protected int n; public int size() { return n; } }
+      class Sub extends Base { public int size() { return n; } }
+      class Use { int go(Base b) { return b.size(); } }
+      """,
+      new NullaryArityTransform(everywhere))
+    assertEquals(clue(converted(r)).map(_.subject).sorted, List("Base#size", "Sub#size"))
+    assert(clue(r.out).contains("b.size"))
+    assert(!r.out.contains("def size()"))
+    assertEquals(clue(refused(r)), Nil)
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // a VOID nullary method is not a getter at all, and files nothing
+  // -------------------------------------------------------------------------------------------
+
+  test("a void nullary method is not a candidate — no row in either lane") {
+    val r = ran(
+      """
+      class Res { public void close() {} }
+      """,
+      new NullaryArityTransform(everywhere))
+    assert(clue(r.out).contains("def close()"))
+    assertEquals(clue(converted(r)), Nil)
+    assertEquals(clue(refused(r)), Nil)
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // MergeablePolicy — §1.5: two modules scoping this differently emit signatures that cannot
+  // compile together, so the composition is the PHASE's answer and a disagreement is a finding
+  // -------------------------------------------------------------------------------------------
+
+  test("mergedWith unions two Only scopes") {
+    val a = new NullaryArityTransform(RuleScope.Only(Set("com.a")))
+    val b = new NullaryArityTransform(RuleScope.Only(Set("com.b")))
+    val merged = a.mergedWith(b)
+    assert(clue(merged).isRight)
+    val mp = merged.toOption.get.phase.asInstanceOf[NullaryArityTransform]
+    assertEquals(mp.arityScope, RuleScope.Only(Set("com.a", "com.b")))
+    assertEquals(merged.toOption.get.added, Set("com.b"))
+  }
+
+  test("mergedWith unions two Everywhere opt-out lists") {
+    val a = new NullaryArityTransform(RuleScope.Everywhere(Set("com.a")))
+    val b = new NullaryArityTransform(RuleScope.Everywhere(Set("com.b")))
+    val mp = a.mergedWith(b).toOption.get.phase.asInstanceOf[NullaryArityTransform]
+    assertEquals(mp.arityScope, RuleScope.Everywhere(Set("com.a", "com.b")))
+  }
+
+  test("mergedWith lets the no-op side defer — an empty dependent inherits the base's scope") {
+    val base = new NullaryArityTransform(everywhere)
+    val dep  = new NullaryArityTransform()
+    assertEquals(base.mergedWith(dep).toOption.get.phase
+      .asInstanceOf[NullaryArityTransform].arityScope, everywhere)
+    assertEquals(dep.mergedWith(base).toOption.get.phase
+      .asInstanceOf[NullaryArityTransform].arityScope, everywhere)
+  }
+
+  test("mergedWith REFUSES a mixed Only/Everywhere pair, naming the disagreement") {
+    val a = new NullaryArityTransform(RuleScope.Only(Set("com.a")))
+    val b = new NullaryArityTransform(RuleScope.Everywhere(Set("com.b")))
+    val merged = a.mergedWith(b)
+    assert(clue(merged).isLeft)
+    assert(clue(merged.swap.toOption.get).contains("disagrees"))
+  }
+
+  test("mergedWith refuses a phase that is not a NullaryArityTransform") {
+    val a = new NullaryArityTransform(everywhere)
+    assert(a.mergedWith(new BeanPropertyTransform()).isLeft)
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // ordering and the retyping contract
+  // -------------------------------------------------------------------------------------------
+
+  test("the phase runs AFTER bean-properties and BEFORE package-rename") {
+    val p = new NullaryArityTransform(everywhere)
+    assert(clue(p.runsAfter).contains("bean-properties"))
+    assert(clue(p.runsBefore).contains("package-rename"))
+    assertEquals(p.name, NullaryArityTransform.PhaseName)
+  }
+
+  test("accountedBy names the lane that counts this phase's residue") {
+    assertEquals(new NullaryArityTransform(everywhere).accountedBy, Set(IdiomCheck.Residue))
+  }
