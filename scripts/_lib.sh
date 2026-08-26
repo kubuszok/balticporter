@@ -1342,21 +1342,33 @@ flags_compile() {
     "${ref_flags[@]}" "${extra_flags[@]}" "${srcs[@]}" \
     2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$cap"
   local cli_st=${PIPESTATUS[0]}
-  local errors werrors=0
-  errors=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$cap")
+  # SCOPE: count only diagnostics in the MODULE THIS LANE MEASURES. A dependent lane passes its
+  # base's emitted tree as SOURCES (scala-cli has no jar of it), so the base's own `-Werror`
+  # warnings would land in the dependent's count a second time — measured 2026-08-26: anim8 read
+  # 307 of which 262 were the base's deprecations, already counted as gdx's 651. The module is the
+  # root of the LAST source dir (everything up to `/src_managed` or `/src`); its main and test trees
+  # are both "own", the base's tree is not, and the excluded count is printed so nobody reads 0.
+  local own_root; own_root="${srcs[${#srcs[@]}-1]}"
+  own_root="${own_root%%/src_managed/*}"; own_root="${own_root%%/src/*}"
+  local own_cap="$cap.own"
+  awk -v root="$own_root/" 'BEGIN{keep=0} /^-- /{keep=index($0, root)>0} {if(keep)print}' "$cap" > "$own_cap"
+  local errors werrors=0 excluded
+  errors=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$own_cap")
+  excluded=$(( $(grep -cE '^-- (\[E[0-9]+\] )?.*(Error|Warning)' "$cap") - $(grep -cE '^-- (\[E[0-9]+\] )?.*(Error|Warning)' "$own_cap") ))
+  echo "   (scoped to $own_root — $excluded diagnostic(s) in other trees on the source path are the BASE's and counted by its own lane)"
   # Under -Werror EVERY warning diagnostic is an error in the reference build: scalac still prints
   # them as `-- Warning:` / `-- [Exxx] … Warning:` and adds ONE closing error, `No warnings can be
   # incurred under -Werror`, which matches no Error pattern above — so a tree with 307 warnings
   # and no real error counted 0 and compile_guard refused to report it (measured on anim8,
   # 2026-08-26). The warnings ARE the count; the closing line is not a diagnostic of its own.
   case " ${ref_flags[*]} " in
-    *" -Werror "*) werrors=$(grep -cE '^-- (\[E[0-9]+\] )?.*Warning' "$cap"); errors=$((errors + werrors)) ;;
+    *" -Werror "*) werrors=$(grep -cE '^-- (\[E[0-9]+\] )?.*Warning' "$own_cap"); errors=$((errors + werrors)) ;;
   esac
   # compile_guard for the ref compile — abort/crash detection
-  compile_guard "$cli_st" "$errors" "$cap"
-  echo "TOTAL ERRORS (ref): $errors  (coded $(grep -cE '\[E[0-9]+\].*Error' "$cap") + bare $(grep -cE '^-- Error:' "$cap") + warnings-under-Werror $werrors)"
+  compile_guard "$cli_st" "$((errors + excluded))" "$cap"
+  echo "TOTAL ERRORS (ref): $errors  (coded $(grep -cE '\[E[0-9]+\].*Error' "$own_cap") + bare $(grep -cE '^-- Error:' "$own_cap") + warnings-under-Werror $werrors)"
   # top families, warnings included — under -Werror they are the population
-  grep -oE "\[E[0-9]+\][^:]*(Error|Warning)|^-- (Error|Warning)" "$cap" | sort | uniq -c | sort -rn | head -6
+  grep -oE "\[E[0-9]+\][^:]*(Error|Warning)|^-- (Error|Warning)" "$own_cap" | sort | uniq -c | sort -rn | head -6
 
   # baseline guard — same logic as error_baseline_guard but with a .ref suffix
   local expected_file="$report_dir/baseline/expected-errors.ref"
