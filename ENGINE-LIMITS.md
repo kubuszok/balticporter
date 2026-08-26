@@ -5781,25 +5781,53 @@ question.
 absence would have been visible there as an absent NAME — which is why the fix is one line and the
 finding is worth an entry.*
 
-### K13. `T | Null` is NOT transparent at an ABSTRACT type parameter — `Named` target BUILT, enablement measured at 0 -> 661, switch WITHHELD
+### K13. `T | Null` is NOT transparent at an ABSTRACT type parameter — CLOSED by `Target.Named`, with a COUNTED residue of five scope-outs
 
-**Status 2026-08-26: OPEN, with the mechanism landed.** `Target.Named("lowlevel.Nullable")` on the
-libGDX base makes the abstract-type-parameter class disappear (155 -> 0 findings, below) and was
-reported at 0 errors from a worktree compile; measured in the primary by the base lane after the
-merge it read **0 -> 661 errors at 2,450 moved digests**, and the switch was reverted the same day
-(the mechanism, the `Named`/`OptionTarget` spellings and the merge rule stay). The 661 are the
-wrapper's SEAMS — exactly the populations CLAUDE.md §1 says a retyping owes a coercion at, and the
-work list of the wave that re-enables it: `Found: lowlevel.Nullable.Impl[T]` at a plain `T` slot
-(E007 ×356 — a `Nullable` value handed to a slot the phase did not retype, so the UNWRAP is missing
-at the use), `Conflicting definitions` ×24 (an overload pair `f(T)`/`f(Nullable[T])` erases to one
-descriptor — the opaque type erases to its underlying, and §4.55's implementation-pair rule reads
-them as two members), `None of the overloaded alternatives of readValue/writeValue in Json` ×106 (the
-INJECTED `Json` shim still speaks `T | Null`, so a Named base and a Union shim disagree at every
-call — an injected file is surface too), `missing argument for parameter defaultValue of Obj.get`
-×50 (a retyped RESULT changed which overload the call resolves to), `Values of types Nullable.Impl[…]
-and Null cannot be compared` ×14 (the `== null` reified position, §1's rule about a retyping owing an
-answer there). None of these is visible to a spec, and all of them are visible to one lane run.
-What follows is the history and the numbers the mechanism does produce.
+**Status 2026-08-26: CLOSED for the abstract-type-parameter class (`AbstractTypeParameter` 155 -> 0),
+at 0 errors on the base lane and 0 on screens.** `Target.Named("lowlevel.Nullable")` on the libGDX
+base was first measured at **0 -> 661 errors at 2,450 moved digests** and reverted the same day; the
+661 were the wrapper's SEAMS, and the re-enablement closed them in the ENGINE rather than by scope —
+`661 -> 268 -> 236 -> 73 -> 17 -> 8 -> 0`, each step one coercion the position-blind retyping owed:
+
+| seam (family, count at 661) | what was missing | fix |
+|---|---|---|
+| `Found: Nullable.Impl[T]` at a plain `T` slot (E007 ×356, E050 ×11, E171 ×50) | the Apply NODE kept the callee's OLD result type, so every downstream slot read an unwrapped value and `coerceTo` did nothing | `transformApply` re-types the node from the retyped signature (`newTypes`, and the symbol's own `info` for a generic overload whose id differs); `coerceTo` then unwraps, and reads THROUGH `Tree.Typed` and into If/Match/Block branches, and a lambda BODY is a slot (`transformLambda`) |
+| member access on a wrapped value (E008 ×45) | `ArrayLength`/`ArrayAccess` are not `Select`; `eq`/`ne` sit in the operator namespace the `==` guard reserves for `nullTest` | unwrap the array operand; `nullTest` rewrites `eq null`/`ne null` and only `==`/`!=` are held back |
+| `== null` on a wrapped result (E172 ×28) | the reified position never saw a wrapped receiver, for the Apply-type reason above | same fix; `x == null` -> `x.isEmpty` |
+| external callee (part of E007/E134) | `coerceArgs` COUNTED a class-file formal and inserted nothing | coerce against the class-file `MethodType` where one was interned, unwrap where none was — and still count (`UncoercibleSeam`), because a class file says nothing about null |
+| injected `Json` shim (E134 ×106) | the injection replaces a DROPPED type whose java formals the phase retyped, so callers and shim disagreed | `Json` scoped out: the phase leaves the dropped java untouched and unwraps callers' arguments against its plain formals; the shim's own `ObjectMap.get` reads take `.isEmpty`/`.get` |
+| `Conflicting definitions` (E120 ×24) and the E051 ×30 beside them | an opaque wrapper ERASES to its underlying, so `f(@Null String)`/`f(@Null Object)` share a descriptor and `Nullable.apply`'s polymorphic result makes every call to the pair ambiguous | REFUSED and COUNTED — see the residue below |
+
+**The residue is FIVE scope-outs, each a `ScopedOut` row with its number**
+(`LibgdxCoreMigrate.nullabilityErasureExempt`; PROGRESS §13 — a refusal carries its count):
+
+- **`CharArray` (22 E120 + 28 E051) and `Image` (2 E120)** — an INVARIANT OPAQUE TYPE limit, not
+  the engine's. `Nullable[A]`'s underlying is `A | NestedNone`, so `append(Nullable[String])` and
+  `append(Nullable[Object])` erase to one `append(Object)`; a `@targetName` does not separate
+  descriptors that java's own overloading kept apart. Only `lls` can lift this (a variant or a
+  non-erasing spelling); until it does, the phase's honest answer at an overload set whose members
+  differ only in a `@Null` reference type is to hold the TYPE back;
+- **`Json` and `Pools`** — INJECTED SHIMS over dropped types: the retype lands on java the port never
+  emits, so the shim and the callers must agree by hand, and the agreement chosen is *plain formals,
+  callers unwrap* (`Json`) and *shim unwraps what `ObjectMap.get` now returns* (`Pools`, which also
+  needed the scope entry only for its own `@Null` fields);
+- **`TemporalAction`** — a FUNNEL GAP with its own line: `CtorFunnel` synthesises the secondary
+  constructors' `this(…)` delegation in the EMITTER, after every phase has run, and renders a null
+  slot as `(null: <slot type>)` — which for a slot the phase retyped is `(null: Nullable[T])`, a
+  type error. The delegation never passes through `transformApply`, so no coercion can reach it;
+  the funnel owes `Nullable.empty` (or the target's empty spelling) at a wrapper-typed slot. Two
+  sites.
+
+**On a dependent the same seam arrives one node kind further out.** screens' `pushScreen(S, @Nullable
+T)` captures the wrapped parameter in a `Supplier<T>` lambda; the lambda body is the SAM's result
+slot, and `transformLambda` coerces it (recorded `resultTpt`, then a `scala.FunctionN`'s last argument,
+then an OWNED interface's abstract method read from the RETYPED table — so an interface the phase
+itself annotated keeps the body wrapped — and a class-file SAM unwraps and counts). screens `1 -> 0`;
+gdx `0 -> 0` at **2706 -> 2706** moved digests, i.e. no gdx lambda reaches the seam. The hand-written
+screens suite took five `.get` and two `Nullable.empty` — the port's half is outside the closure
+(CLAUDE.md §1) and adapts by name substitution.
+
+What follows is the history and the numbers the mechanism produced under `Union`.
 
 `Null` is a subtype of every concrete reference type, so `String | Null` simplifies at every use and
 the union floor costs nothing there. **It is not a subtype of an abstract `T <: Object`**, so under
@@ -5885,8 +5913,9 @@ One thing that shape does NOT record, and it is a provenance gap rather than a l
 that holds back only a PARAMETER produces no `decisions.tsv` row and no porter note, because
 `NullabilityTransform.scopedOut` skips a param and does not attribute to its method (PROGRESS §12.1).
 
-*CLOSED: `Target.Named` (wave 1.1). The union floor's exits remain for ports that choose `Union`.
-History above is the `Union`-mode scope exit procedure that `Named` replaces.*
+*CLOSED for the abstract-type-parameter class: `Target.Named` (wave 1.1b), residue counted above. The union
+floor's exits remain for ports that choose `Union`; the history above is the `Union`-mode scope exit
+procedure that `Named` replaces.*
 
 ### K14. A RETARGET's subtyping licence is ONE-DIRECTIONAL — the producer side is COUNTED, never coerced
 
