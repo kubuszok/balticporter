@@ -236,7 +236,12 @@ object ApiParityCheck:
     }
     val errs = errors.result()
     if errs.nonEmpty then Left(errs.mkString("; "))
-    else Right(decls.result().sortBy(d => (d.path, d.kind, d.name, d.arity)))
+    // A `$` in a member name is never java's and never the hand port's: it is a name a PHASE
+    // minted (`index$field`, the backing store a bean collapse renames away from its accessor;
+    // `x$shadow`, `x$p`) or scalac's own (`$anon`). Neither side wrote it, so it is not surface
+    // and a row for it is an instrument artefact — measured 2026-08-26 as 10 `X#index$field`
+    // omission rows the moment the first bean pairs landed on sge-ecs.
+    else Right(decls.result().filterNot(_.name.contains('$')).sortBy(d => (d.path, d.kind, d.name, d.arity)))
 
   private def collectDecls(tree: Tree, path: String, out: collection.mutable.Builder[SurfaceDecl, List[SurfaceDecl]]): Unit =
     /** Public OR protected — both are part of the API surface for subclassing.  Protected members

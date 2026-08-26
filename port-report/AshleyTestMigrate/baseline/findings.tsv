@@ -32,7 +32,7 @@ b3182ff658d9	catalog(consulted)	reached	JS-C40	-	0	rendering ClassDef — consul
 430da3194fe4	catalog(consulted)	reached	JS-C43	-	0	rendering ClassDef — consulted 91, fired 0, declarations 0: Java `record`
 20cd6004f3e8	catalog(consulted)	reached	JS-C44	-	0	rendering ClassDef — consulted 91, fired 0, declarations 0: `sealed` / `non-sealed` / `permits`
 a765b28be6af	catalog(consulted)	reached	JS-C45	com/badlogic/ashley/systems/IntervalIteratingTest.java	31	rendering ValDef — consulted 585, fired 6, declarations 0: a `final` field's JMM safe-publication guarantee
-18e21c4978ac	catalog(consulted)	reached	JS-C46	-	0	phase member-clash — consulted 0, fired 0, declarations 236: Java has TWO name namespaces and Scala has one
+689b7271ff33	catalog(consulted)	reached	JS-C46	-	0	phase member-clash — consulted 0, fired 0, declarations 233: Java has TWO name namespaces and Scala has one
 359e74c5ddb4	catalog(consulted)	reached	JS-C47	com/badlogic/ashley/core/EngineTests.java	909	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 773, fired 8, declarations 0: package-private becomes `private[pkg]`
 42617d206910	catalog(consulted)	reached	JS-C48	com/badlogic/ashley/core/EngineTests.java	577	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 773, fired 4, declarations 0: Java's `protected` also grants SAME-PACKAGE access, and accessibility is an input to overload resolution
 9a319823bf58	catalog(consulted)	reached	JS-C49	com/badlogic/ashley/core/EngineTests.java	142	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 773, fired 12, declarations 0: Java's `private` reaches the whole enclosing TOP-LEVEL class; Scala's reaches only the template

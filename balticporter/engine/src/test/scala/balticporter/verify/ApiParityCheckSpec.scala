@@ -26,6 +26,19 @@ class ApiParityCheckSpec extends munit.FunSuite:
     assert(!decls.exists(d => d.name == "secret"), s"private member should not appear in $decls")
   }
 
+  test("parseSurface excludes PHASE-MINTED names — a `$` in a member name is neither java's nor the hand port's") {
+    val src =
+      """package foo
+        |class Bar:
+        |  var index$field: Int = 0
+        |  def index: Int = index$field
+        |  def x$shadow: Int = 1
+        |""".stripMargin
+    val decls = ApiParityCheck.parseSurface(List(writeTempScala("Bar.scala", src))).toOption.get
+    assert(decls.exists(d => d.kind == "def" && d.name == "index"), s"the accessor is surface: $decls")
+    assert(!decls.exists(_.name.contains('$')), s"a minted name is an instrument artefact, not surface: $decls")
+  }
+
   test("parseSurface extracts companion object members") {
     val src =
       """class Foo

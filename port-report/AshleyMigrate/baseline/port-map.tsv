@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-ecs	engine=balticporter/0.1.0-SNAPSHOT	sources=181dec8c688f5a38	files=20	policy=b72dc5876667fd7b
+# balticporter port map	schema=3	module=sge-ecs	engine=balticporter/0.1.0-SNAPSHOT	sources=181dec8c688f5a38	files=20	policy=47b284c09ee5bb42
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.ashley.core.Component	sge.ecs.Component	Renamed	-		0		form=trait
 type	com.badlogic.ashley.core.ComponentMapper	sge.ecs.ComponentMapper	Renamed	-		0		companion=yes flags=final form=class primary=(Class) primaryKind=unique-root primaryVis=private statics=getFor tparams="[T <: sge.ecs.Component]"
@@ -298,15 +298,15 @@ member	com.badlogic.ashley.signals.Signal#remove(Listener)	sge.ecs.signals.Signa
 member	com.badlogic.ashley.signals.Signal#removeAllListeners()	sge.ecs.signals.Signal#removeAllListeners()	Renamed	-	com/badlogic/ashley/signals/Signal.java	50	c93cc2c4c4674b32	
 member	com.badlogic.ashley.systems.IntervalIteratingSystem#<init>(Family,float)	sge.ecs.systems.IntervalIteratingSystem#<init>(Family,float)	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	38	e205a5fb85955bdf	
 member	com.badlogic.ashley.systems.IntervalIteratingSystem#<stmt1>	sge.ecs.systems.IntervalIteratingSystem#<stmt1>	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	49	3e9fe8083013ac37	
-member	com.badlogic.ashley.systems.IntervalIteratingSystem#addedToEngine(Engine)	sge.ecs.systems.IntervalIteratingSystem#addedToEngine(Engine)	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	53	024b481653c9d0b4	
+member	com.badlogic.ashley.systems.IntervalIteratingSystem#addedToEngine(Engine)	sge.ecs.systems.IntervalIteratingSystem#addedToEngine(Engine)	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	53	5dc6060f5073cebb	
 member	com.badlogic.ashley.systems.IntervalIteratingSystem#endProcessing()	sge.ecs.systems.IntervalIteratingSystem#endProcessing()	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	96	bbe9434b85dcaea7	
-member	com.badlogic.ashley.systems.IntervalIteratingSystem#entities	sge.ecs.systems.IntervalIteratingSystem#entities	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	32	848fe83d9b18a8c2	name=entities$field
-member	com.badlogic.ashley.systems.IntervalIteratingSystem#entities()	sge.ecs.systems.IntervalIteratingSystem#entities()	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	69	c0b65a7807c1ee81	
+member	com.badlogic.ashley.systems.IntervalIteratingSystem#entities	sge.ecs.systems.IntervalIteratingSystem#entities	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	32	65b159924770786e	vis=private
 member	com.badlogic.ashley.systems.IntervalIteratingSystem#family	sge.ecs.systems.IntervalIteratingSystem#family	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	31	2ad7cb78506879cd	name=family$field
 member	com.badlogic.ashley.systems.IntervalIteratingSystem#family()	sge.ecs.systems.IntervalIteratingSystem#family()	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	76	bfbcc4f9342362ea	
+member	com.badlogic.ashley.systems.IntervalIteratingSystem#getEntities()	sge.ecs.systems.IntervalIteratingSystem#getEntities()	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	69	f674efea5fbab4db	
 member	com.badlogic.ashley.systems.IntervalIteratingSystem#processEntity(Entity)	sge.ecs.systems.IntervalIteratingSystem#processEntity(Entity)	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	84	343ec383f2d2894b	
 member	com.badlogic.ashley.systems.IntervalIteratingSystem#startProcessing()	sge.ecs.systems.IntervalIteratingSystem#startProcessing()	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	90	fe1ec348163df205	
-member	com.badlogic.ashley.systems.IntervalIteratingSystem#updateInterval()	sge.ecs.systems.IntervalIteratingSystem#updateInterval()	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	58	007eca129499d447	
+member	com.badlogic.ashley.systems.IntervalIteratingSystem#updateInterval()	sge.ecs.systems.IntervalIteratingSystem#updateInterval()	Renamed	-	com/badlogic/ashley/systems/IntervalIteratingSystem.java	58	00f69c75515eee91	
 member	com.badlogic.ashley.systems.IntervalSystem#<init>(float)	sge.ecs.systems.IntervalSystem#<init>(float)	Renamed	-	com/badlogic/ashley/systems/IntervalSystem.java	33	92267b862c3f5fdc	
 member	com.badlogic.ashley.systems.IntervalSystem#<stmt1>	sge.ecs.systems.IntervalSystem#<stmt1>	Renamed	-	com/badlogic/ashley/systems/IntervalSystem.java	43	11f372c135d82bba	
 member	com.badlogic.ashley.systems.IntervalSystem#<stmt2>	sge.ecs.systems.IntervalSystem#<stmt2>	Renamed	-	com/badlogic/ashley/systems/IntervalSystem.java	44	efb840fbc448893a	
@@ -317,31 +317,31 @@ member	com.badlogic.ashley.systems.IntervalSystem#update(float)	sge.ecs.systems.
 member	com.badlogic.ashley.systems.IntervalSystem#updateInterval()	sge.ecs.systems.IntervalSystem#updateInterval()	Renamed	-	com/badlogic/ashley/systems/IntervalSystem.java	64	4c59f9706002dc46	
 member	com.badlogic.ashley.systems.IteratingSystem#<init>(Family)	sge.ecs.systems.IteratingSystem#<init>(Family)	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	38	bf85d2388b963637	
 member	com.badlogic.ashley.systems.IteratingSystem#<stmt1>	sge.ecs.systems.IteratingSystem#<stmt1>	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	50	3e9fe8083013ac37	
-member	com.badlogic.ashley.systems.IteratingSystem#addedToEngine(Engine)	sge.ecs.systems.IteratingSystem#addedToEngine(Engine)	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	54	024b481653c9d0b4	
+member	com.badlogic.ashley.systems.IteratingSystem#addedToEngine(Engine)	sge.ecs.systems.IteratingSystem#addedToEngine(Engine)	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	54	5dc6060f5073cebb	
 member	com.badlogic.ashley.systems.IteratingSystem#endProcessing()	sge.ecs.systems.IteratingSystem#endProcessing()	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	104	bbe9434b85dcaea7	
-member	com.badlogic.ashley.systems.IteratingSystem#entities	sge.ecs.systems.IteratingSystem#entities	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	32	5ea58dce94b729dc	name=entities$field
-member	com.badlogic.ashley.systems.IteratingSystem#entities()	sge.ecs.systems.IteratingSystem#entities()	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	75	a6d6a796bcd6c094	
+member	com.badlogic.ashley.systems.IteratingSystem#entities	sge.ecs.systems.IteratingSystem#entities	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	32	65b159924770786e	vis=private
 member	com.badlogic.ashley.systems.IteratingSystem#family	sge.ecs.systems.IteratingSystem#family	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	31	9b49c81473a7fd76	name=family$field
 member	com.badlogic.ashley.systems.IteratingSystem#family()	sge.ecs.systems.IteratingSystem#family()	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	82	89b8ee7f592ae13e	
+member	com.badlogic.ashley.systems.IteratingSystem#getEntities()	sge.ecs.systems.IteratingSystem#getEntities()	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	75	f674efea5fbab4db	
 member	com.badlogic.ashley.systems.IteratingSystem#processEntity(Entity,float)	sge.ecs.systems.IteratingSystem#processEntity(Entity,float)	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	92	37bd0f707d1450e0	
-member	com.badlogic.ashley.systems.IteratingSystem#removedFromEngine(Engine)	sge.ecs.systems.IteratingSystem#removedFromEngine(Engine)	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	59	cd5d032552ef141f	
+member	com.badlogic.ashley.systems.IteratingSystem#removedFromEngine(Engine)	sge.ecs.systems.IteratingSystem#removedFromEngine(Engine)	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	59	aefef9a3ed4e319a	
 member	com.badlogic.ashley.systems.IteratingSystem#startProcessing()	sge.ecs.systems.IteratingSystem#startProcessing()	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	98	fe1ec348163df205	
-member	com.badlogic.ashley.systems.IteratingSystem#update(float)	sge.ecs.systems.IteratingSystem#update(float)	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	64	f6ed1a046926fc14	
+member	com.badlogic.ashley.systems.IteratingSystem#update(float)	sge.ecs.systems.IteratingSystem#update(float)	Renamed	-	com/badlogic/ashley/systems/IteratingSystem.java	64	d0339cea2eb95088	
 member	com.badlogic.ashley.systems.SortedIteratingSystem#<init>(Family,Ordering)	sge.ecs.systems.SortedIteratingSystem#<init>(Family,Ordering<Entity>)	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	47	021727c2a517f1ca	
 member	com.badlogic.ashley.systems.SortedIteratingSystem#<stmt1>	sge.ecs.systems.SortedIteratingSystem#<stmt1>	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	60	3e9fe8083013ac37	
 member	com.badlogic.ashley.systems.SortedIteratingSystem#<stmt2>	sge.ecs.systems.SortedIteratingSystem#<stmt2>	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	61	f6d15a49022a7412	
-member	com.badlogic.ashley.systems.SortedIteratingSystem#<stmt3>	sge.ecs.systems.SortedIteratingSystem#<stmt3>	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	62	d22ac1414deff7eb	
+member	com.badlogic.ashley.systems.SortedIteratingSystem#<stmt3>	sge.ecs.systems.SortedIteratingSystem#<stmt3>	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	62	45e649d02bce8cac	
 member	com.badlogic.ashley.systems.SortedIteratingSystem#<stmt4>	sge.ecs.systems.SortedIteratingSystem#<stmt4>	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	63	077ab04352e4b0b0	
 member	com.badlogic.ashley.systems.SortedIteratingSystem#addedToEngine(Engine)	sge.ecs.systems.SortedIteratingSystem#addedToEngine(Engine)	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	81	19e38602b24fd79a	
 member	com.badlogic.ashley.systems.SortedIteratingSystem#comparator	sge.ecs.systems.SortedIteratingSystem#comparator	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	40	f60058396b94b4d6	
 member	com.badlogic.ashley.systems.SortedIteratingSystem#endProcessing()	sge.ecs.systems.SortedIteratingSystem#endProcessing()	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	156	bbe9434b85dcaea7	
-member	com.badlogic.ashley.systems.SortedIteratingSystem#entities	sge.ecs.systems.SortedIteratingSystem#entities	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	38	f94dfec4fe544324	name=entities$field
-member	com.badlogic.ashley.systems.SortedIteratingSystem#entities()	sge.ecs.systems.SortedIteratingSystem#entities()	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	126	8409e57624a17c89	
+member	com.badlogic.ashley.systems.SortedIteratingSystem#entities	sge.ecs.systems.SortedIteratingSystem#entities	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	38	e4aea5727d6d4b6f	
 member	com.badlogic.ashley.systems.SortedIteratingSystem#entityAdded(Entity)	sge.ecs.systems.SortedIteratingSystem#entityAdded(Entity)	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	102	f8640da04c26eb7e	
 member	com.badlogic.ashley.systems.SortedIteratingSystem#entityRemoved(Entity)	sge.ecs.systems.SortedIteratingSystem#entityRemoved(Entity)	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	108	804cf8a672eb6f00	
 member	com.badlogic.ashley.systems.SortedIteratingSystem#family	sge.ecs.systems.SortedIteratingSystem#family	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	36	51d667d2b884b19b	name=family$field
 member	com.badlogic.ashley.systems.SortedIteratingSystem#family()	sge.ecs.systems.SortedIteratingSystem#family()	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	134	5dfebbe042e774b6	
 member	com.badlogic.ashley.systems.SortedIteratingSystem#forceSort()	sge.ecs.systems.SortedIteratingSystem#forceSort()	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	69	08bb28cc86f09ad8	
+member	com.badlogic.ashley.systems.SortedIteratingSystem#getEntities()	sge.ecs.systems.SortedIteratingSystem#getEntities()	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	126	cd7f5bfc48290aa5	
 member	com.badlogic.ashley.systems.SortedIteratingSystem#processEntity(Entity,float)	sge.ecs.systems.SortedIteratingSystem#processEntity(Entity,float)	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	144	37bd0f707d1450e0	
 member	com.badlogic.ashley.systems.SortedIteratingSystem#removedFromEngine(Engine)	sge.ecs.systems.SortedIteratingSystem#removedFromEngine(Engine)	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	95	2eb32004b2e003ad	
 member	com.badlogic.ashley.systems.SortedIteratingSystem#shouldSort	sge.ecs.systems.SortedIteratingSystem#shouldSort	Renamed	-	com/badlogic/ashley/systems/SortedIteratingSystem.java	39	41bb8a578e3b04db	vis=private

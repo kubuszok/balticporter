@@ -144,14 +144,15 @@ object AshleyPolicy:
             // 2026-08-26 — so the pair stays off until that measurement reads 0. One api-parity
             // `accessor` row is the price.
             // "com.badlogic.ashley.core.EntitySystem#engine"             -> "getEngine",
+            // NO `#entities` pair on the three iterating systems: the hand port KEEPS `getEntities`
+            // (parenless, IteratingSystem.scala:58) over a PRIVATE `entities` field, so a collapse
+            // there would be the opposite of parity — measured 2026-08-26 as 3 `getEntities` rows in
+            // the reference port only plus 3 `entities` rows in the emitted port only.
             "com.badlogic.ashley.core.ComponentType#index"                -> "getIndex",
             "com.badlogic.ashley.core.Family#index"                      -> "getIndex",
             "com.badlogic.ashley.systems.IteratingSystem#family"          -> "getFamily",
-            "com.badlogic.ashley.systems.IteratingSystem#entities"        -> "getEntities",
             "com.badlogic.ashley.systems.SortedIteratingSystem#family"    -> "getFamily",
-            "com.badlogic.ashley.systems.SortedIteratingSystem#entities"  -> "getEntities",
             "com.badlogic.ashley.systems.IntervalIteratingSystem#family"  -> "getFamily",
-            "com.badlogic.ashley.systems.IntervalIteratingSystem#entities" -> "getEntities",
             "com.badlogic.ashley.systems.IntervalSystem#interval"        -> "getInterval",
           ),
         ),

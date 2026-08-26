@@ -1,14 +1,8 @@
 #subject	status	evidence	spelling	decided_by
-ComponentType#getIndex	justified	sge ISS-017 resolved; EntitySystem.scala "Idiom: processing as public var (replaces get/set pair)"; 35 sge core files carry Fixes: headers about getter/setter removal	(b) BeanCollapse idiom phase	div-accessor
 ComponentType#index	justified	sge ISS-017 resolved; getter/setter collapse convention	(b) BeanCollapse idiom phase	div-accessor
 EntitySystem#getEngine	justified	sge ISS-017 resolved; getter/setter collapse convention	(b) BeanCollapse idiom phase	div-accessor
 EntitySystem#setProcessing	justified	EntitySystem.scala "Idiom: processing as public var (replaces get/set pair)"	(b) BeanCollapse idiom phase	div-accessor
-Family#getIndex	justified	sge ISS-017 resolved; getter/setter collapse convention	(b) BeanCollapse idiom phase	div-accessor
 Family#index	justified	sge ISS-017 resolved; getter/setter collapse convention	(b) BeanCollapse idiom phase	div-accessor
-IntervalIteratingSystem#getFamily	justified	sge ISS-017 resolved; getter/setter collapse convention	(b) BeanCollapse idiom phase	div-accessor
-IntervalSystem#getInterval	justified	sge ISS-017 resolved; getter/setter collapse convention	(b) BeanCollapse idiom phase	div-accessor
-IteratingSystem#getFamily	justified	sge ISS-017 resolved; getter/setter collapse convention	(b) BeanCollapse idiom phase	div-accessor
-SortedIteratingSystem#getFamily	justified	sge ISS-017 resolved; getter/setter collapse convention	(b) BeanCollapse idiom phase	div-accessor
 Engine#registerComponentFactory	justified	sge 80b3fc64 "ReflectionPool -> factory registry"; ISS-723 c12; platform constraint (no reflection on JS/Native)	(c) library-specific injection	div-pooledengine
 PooledEngine#factory	justified	PooledEngine.scala "Idiom: factory registry approach instead of ReflectionPool"; ISS-723 c12	(c) library-specific injection	div-pooledengine
 #SystemListener	not-a-divergence	Java SystemManager.java:65-67 declares inner interface SystemListener; hand port places it in companion	census artefact	div-systemlistener
@@ -27,7 +21,6 @@ ComponentFactories$#register	justified	balticporter ashley-overrides; body subst
 ComponentOperationHandler$#ComponentOperation	justified	ComponentOperationHandler.scala "Idiom: enum instead of inner enum class|Idiom: ArrayBuffer instead of Array + Pool for operations"	(b) inner class reorganization	div-componentophandler
 ComponentOperationHandler$#ComponentOperationPool	justified	ComponentOperationHandler.scala idiom headers; pool elimination	(b) inner class reorganization	div-componentophandler
 #delayed	not-a-divergence	Engine.java: delayed is a METHOD-LOCAL variable, not a field; both ports translate it as local val	census artefact	div-internal-fields
-#notifying$field	not-a-divergence	FamilyManager field, not Engine; mechanical port renames per section 4.55; hand port uses _notifying	census artefact	div-internal-fields
 #entitiesInFamily	unjustified	no recorded decision for mutability narrowing; null-check to Option idiom change	none: hand-port defect	div-mutability
 Entity#componentAdded	not-a-divergence	Java Entity.java:33 declares "public final Signal<Entity> componentAdded" -- val is correct; emitted var is the defect	mechanical port defect (drops final)	div-mutability
 Entity#componentRemoved	not-a-divergence	Java Entity.java:35 declares "public final Signal<Entity> componentRemoved" -- val is correct; emitted var is the defect	mechanical port defect (drops final)	div-mutability
@@ -57,11 +50,7 @@ EntityManager$.EntityOperation$.Type#Remove	unjustified	consequence of inner cla
 EntityManager$.EntityOperation$.Type#RemoveAll	unjustified	consequence of inner class extraction	none: hand-port defect	div-entitymanager
 Family$#sb	unjustified	Family.scala: cosmetic rename from stringBuilder to sb; no recorded convention	none: hand-port defect	div-family
 Family$#stringBuilder	unjustified	Family.scala: emitted name is faithful to java; hand port renamed without record	none: hand-port defect	div-family
-Family$.Builder#all$field	unjustified	Family.scala: field-vs-method clash solved differently; no doc for underscore convention	none: hand-port defect	div-family
-Family$.Builder#exclude$field	unjustified	Family.scala: same field-vs-method clash pattern	none: hand-port defect	div-family
-Family$.Builder#one$field	unjustified	Family.scala: same field-vs-method clash pattern	none: hand-port defect	div-family
 Family$.Builder#reset	unjustified	Family.scala: singleton Builder reset() dropped in favor of fresh instances; no recorded decision	none: hand-port defect	div-family
-Family#$prev	unjustified	Family.scala: promoted constructor local; hand port restructured without record	none: hand-port defect	div-family
 #Type	not-a-divergence	Java inner enum ComponentOperation.Type / EntityOperation.Type; census misattribution	census artefact	div-bag
 #clear	not-a-divergence	member of inner type (ComponentOperation/Bag); census misattribution	census artefact	div-bag
 #contains	not-a-divergence	member of inner type or Bag faithful translation; census misattribution	census artefact	div-bag
@@ -90,8 +79,6 @@ Family#$prev	unjustified	Family.scala: promoted constructor local; hand port res
 #FamilyManager	unjustified	conversion-rules.md Step 3; hand port extracted inner classes to top-level	none: hand-port defect	div-familymanager
 #PooledEngine	justified	PooledEngine.scala factory registry approach; companion object structure	(c) library-specific injection	div-pooledengine
 #SystemManager	justified	SystemManager.scala Comparator-to-Ordering; companion object holds java inner classes	(b) convention-driven	div-systemmanager
-ComponentType#$prev	not-a-divergence	block-local post-increment lowering ($prev); not a class member in emitted Scala	census artefact	div-componenttype
-Family#$prev	not-a-divergence	block-local post-increment lowering ($prev); not a class member in emitted Scala	census artefact	div-componenttype
 IntervalSystem#accumulator	not-a-divergence	member exists in both ports; emitted port widens to public via ctor-replay-widening; hand port keeps private	census artefact (visibility difference, not absence)	div-componenttype
 ImmutableArray#array	not-a-divergence	emitted port has var array (widened by ctor funnel); hand port has private val array (ArrayBuffer)	census artefact (visibility/mutability difference)	div-immutablearray
 ImmutableArray#get	not-a-divergence	emitted port keeps java get(int); hand port replaces with apply(int)	covered by ImmutableArray redesign verdict	div-immutablearray
@@ -112,7 +99,6 @@ Bag#remove	not-a-divergence	Bag is faithfully translated; member exists in both	
 Bag#removeLast	not-a-divergence	Bag is faithfully translated; member exists in both	census artefact	div-bag
 Bag#set	not-a-divergence	Bag is faithfully translated; member exists in both	census artefact	div-bag
 Bag#size	not-a-divergence	Bag is faithfully translated; member exists in both	census artefact	div-bag
-Bag#size$field	not-a-divergence	field-vs-method rename ($field suffix); Bag has size in both	census artefact	div-bag
 ComponentOperationHandler$#entity	justified	inner class member; ComponentOperationHandler.scala idiom reorganization	(b) inner class reorganization	div-componentophandler
 ComponentOperationHandler$#makeAdd	justified	inner class method; idiom reorganization	(b) inner class reorganization	div-componentophandler
 ComponentOperationHandler$#makeRemove	justified	inner class method; idiom reorganization	(b) inner class reorganization	div-componentophandler
