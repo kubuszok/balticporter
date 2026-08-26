@@ -12,7 +12,7 @@ import balticporter.transform.NullabilityTransform.Target
   * overloaded call, and the annotation-heaviest upstream is also the overload-heaviest), so the
   * seam is attacked at the SLOT — before overload resolution ever runs, with the argument's type
   * already exactly the formal. The negative half of that claim is asserted here as plainly as the
-  * positive: nothing in the output is a conversion, and nothing in it is the wrapper's `orNull`.
+  * positive: nothing in the output is a conversion; `.orNull` is now the SLOT spelling (see below).
   */
 class NullabilityWrapperSpec extends PortSuite:
 
@@ -50,9 +50,9 @@ class NullabilityWrapperSpec extends PortSuite:
     assertEmits(ported, s"def give(): $W[demo.Actor]")
   }
 
-  test("declaration-vs-init and argument-vs-formal unwrap with `.get` — never with a conversion") {
-    assertEmits(ported, "val a: demo.Actor = this.parent.get")
-    assertEmits(ported, "this.take(this.parent.get)")
+  test("declaration-vs-init and argument-vs-formal unwrap with `.orNull` — java's slots accept null") {
+    assertEmits(ported, "val a: demo.Actor = this.parent.orNull")
+    assertEmits(ported, "this.take(this.parent.orNull)")
   }
 
   test("member selection on a wrapped receiver unwraps first") {
@@ -85,10 +85,49 @@ class NullabilityWrapperSpec extends PortSuite:
     assertEquals(seams.size, 1)
   }
 
-  test("nothing in the output is a CONVERSION, and nothing in it is `orNull`") {
+  test("nothing in the output is a CONVERSION — `orNull` is the SLOT spelling, not a conversion") {
     assertNotEmits(ported, "given Conversion")
     assertNotEmits(ported, "Conversion[")
-    assertNotEmits(ported, ".orNull")
+    // `.orNull` IS emitted at slot coercions — that is the faithful spelling for java slots that
+    // accept null. What is NOT emitted is `given Conversion`, which is the measured dead end (K2).
+    assertEmits(ported, ".orNull")
+  }
+
+  // -------------------------------------------------------------------------
+  // the SLOT-NULLABILITY RULE — `.get` at a dereference, `.orNull` at a slot
+  // -------------------------------------------------------------------------
+
+  test("member selection on a wrapped receiver uses `.get` — java NPEs on null dereference") {
+    assertEmits(ported, "this.parent.get.child")
+    assertNotEmits(ported, "this.parent.orNull.child")
+  }
+
+  test("slot coercion uses `.orNull` — java's unannotated slots accept null") {
+    // declaration-vs-init: the val is an unannotated reference type, java accepts null
+    assertEmits(ported, "this.parent.orNull")
+    assertNotEmits(ported, "val a: demo.Actor = this.parent.get")
+    // argument-vs-formal: `take(Actor a)` is unannotated, java accepts null
+    assertEmits(ported, "this.take(this.parent.orNull)")
+    assertNotEmits(ported, "this.take(this.parent.get)")
+  }
+
+  private val primitiveSlot =
+    """package demo;
+      |import java.lang.annotation.*;
+      |@Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
+      |@interface Null {}
+      |class Num {
+      |  @Null Integer wrapped() { return null; }
+      |  void primSlot() { int x = wrapped(); }
+      |  void refSlot() { Object o = wrapped(); }
+      |}
+      |""".stripMargin
+
+  test("a PRIMITIVE slot gets `.get` — unboxing null NPEs in java, and `.orNull` would widen") {
+    val p = port(primitiveSlot, phase)
+    assertEmits(p, "this.wrapped().get")
+    // the reference slot gets `.orNull` — java's `Object` accepts null
+    assertEmits(p, "val o: java.lang.Object = this.wrapped().orNull")
   }
 
   // -------------------------------------------------------------------------
@@ -145,7 +184,7 @@ class NullabilityWrapperSpec extends PortSuite:
     val ph = phase
     val (after, _) = Pipeline.runTraced(PortFixture.parse(lambdas), List(ph))
     val p = port(lambdas, phase)
-    assertEmits(p, "this.push(() => transition.get)")
+    assertEmits(p, "this.push(() => transition.orNull)")
     val seams = ph.boundary(after.units).filter(_.issue == Issue.UncoercibleSeam)
     assertEquals(seams.map(_.subject), List("java.util.function.Supplier"))
   }
@@ -269,7 +308,7 @@ class NullabilityWrapperSpec extends PortSuite:
     val p = portAll(List("Cache.java" -> baseUnit, "Reader.java" -> dependentUnit),
                     new NullabilityTransform(Set("base.Null"), Target.Named(W)))
     assertEmits(p, s"def get(key: K): $W[V]")
-    assertEmits(p, "val r: Reader = this.cache.get(name).get")
+    assertEmits(p, "val r: Reader = this.cache.get(name).orNull")
     // and NOT the bare call, which resolves against `get(K, V)` and reports `E171 missing argument
     // for parameter defaultValue` — an overload message for a nullability fact.
     assertNotEmits(p, "val r: Reader = this.cache.get(name)\n")

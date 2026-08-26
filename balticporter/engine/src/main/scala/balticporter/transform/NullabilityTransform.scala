@@ -45,11 +45,17 @@ import balticporter.tir.*
   *
   * One rewrite is not optional: `x == null` on an opaque wrapper is a COMPILE ERROR (no `CanEqual`),
   * so every Java null test on a wrapped value becomes `.isEmpty`. The wrapper contract is exactly
-  * four members — `apply` (null-normalising), `empty`, extension `get` (unchecked, NPE on empty,
-  * which IS Java's semantics at a dereference) and extension `isEmpty`. Nothing in it touches
-  * `orNull`, which is fake-`@deprecated` as a lint tripwire in the repositories that publish such a
-  * wrapper, so generated code must never emit it — and does not. Emission is FQN-only (§6) and the
-  * extensions resolve from the companion's implicit scope with no import.
+  * five members — `apply` (null-normalising), `empty`, extension `get` (unchecked, NPE on empty,
+  * which IS Java's semantics at a DEREFERENCE), extension `orNull` (null-preserving unwrap, which
+  * IS Java's semantics at a SLOT that accepts null — an unannotated field, parameter, result, or
+  * `Object` formal), and extension `isEmpty`. The SLOT-NULLABILITY RULE decides which unwrap to
+  * emit: a dereference (member access, array op) uses `.get` because java NPEs on null there; a
+  * slot coercion (argument-vs-formal, declaration-vs-init, return-vs-result, lambda body) uses
+  * `.orNull` because java's default is that every reference slot accepts null. The exception is a
+  * PRIMITIVE slot (unboxing) where java NPEs, so `.get`. `orNull` is fake-`@deprecated` as a lint
+  * tripwire in the hand-written repositories, but this generated code is the java-interop boundary
+  * the deprecation message names. Emission is FQN-only (§6) and the extensions resolve from the
+  * companion's implicit scope with no import.
   *
   * ==Ordering==
   * AFTER the collections family, because their retypes must land first — an annotated
@@ -232,7 +238,10 @@ final class NullabilityTransform(
     * beside the id because it is what the refusal has to say: a reader needs `T`, not an id. */
   private var typeVars: Map[SymId, (String, SymId)] = Map.empty
 
-  private var wrapperSym, applySym, emptySym, getSym, isEmptySym, notSym, boolSym = SymId.None
+  private var wrapperSym, applySym, emptySym, getSym, orNullSym, isEmptySym, notSym, boolSym = SymId.None
+  /** the primitive symbol IDs — cached at RUN time so [[coerceTo]] can decide `.get` vs `.orNull`
+    * without threading a `Program` through a function passed as a value. */
+  private var primSyms: Set[SymId] = Set.empty
   /** the unit currently being walked — see the walk in [[run]] for why a seam cannot be attributed
     * to the callee it was found at. */
   private var currentUnit: SymId = SymId.None
@@ -256,6 +265,7 @@ final class NullabilityTransform(
     // and a cached answer from the first run is a wrong answer in the second (§5.1).
     issues.clear(); intrusions.clear(); observedEntries.clear(); planned = false
     newTypes = Map.empty; wrapped = Map.empty; overridingRead = false; typeVars = Map.empty
+    primSyms = Set.empty
     // §1(b): an empty policy needs no code path. Nothing bound — no annotation configured, or every
     // configured one named nothing — and the program is returned untouched.
     if boundAnnots.isEmpty then return program
@@ -280,6 +290,7 @@ final class NullabilityTransform(
         applySym   = mintOrReuse(fqn + ".apply", "apply", wrapperSym)
         emptySym   = mintOrReuse(fqn + ".empty", "empty", wrapperSym)
         getSym     = mintOrReuse(fqn + ".get", "get", wrapperSym)
+        orNullSym  = mintOrReuse(fqn + ".orNull", "orNull", wrapperSym)
         isEmptySym = mintOrReuse(fqn + ".isEmpty", "isEmpty", wrapperSym)
         notSym     = mintOrReuse(NotOp, "unary_!")
         boolSym    = mintOrReuse("scala.Boolean", "Boolean")
@@ -288,9 +299,13 @@ final class NullabilityTransform(
         applySym   = mintOrReuse(OptionFqn + ".apply", "apply", wrapperSym)
         emptySym   = mintOrReuse(NoneFqn, "None")
         getSym     = mintOrReuse(OptionFqn + ".get", "get", wrapperSym)
+        orNullSym  = mintOrReuse(OptionFqn + ".orNull", "orNull", wrapperSym)
         isEmptySym = mintOrReuse(OptionFqn + ".isEmpty", "isEmpty", wrapperSym)
         notSym     = mintOrReuse(NotOp, "unary_!")
         boolSym    = mintOrReuse("scala.Boolean", "Boolean")
+
+    // cache primitive symbol IDs so `coerceTo` can decide `.get` vs `.orNull` without `Program`
+    primSyms = program.symbols.all.iterator.filter(s => PrimitiveNames(s.fullName)).map(_.id).toSet
 
     /** the target shape, applied to the annotated occurrence's CURRENT type. */
     def nullable(t: TypeRepr): TypeRepr = target match
@@ -1030,19 +1045,21 @@ final class NullabilityTransform(
     case x: Tree.Typed => bodyIsWrapped(x.expr)
     case other         => isWrapped(other)
 
-  /** `.get` at every LEAF of a value-producing expression — the unwrap half of [[coerceTo]] where
-    * no target type is available to name. */
+  /** `.orNull` at every LEAF of a value-producing expression — the unwrap half of [[coerceTo]]
+    * where no target type is available to name. These are lambda bodies going to external SAM
+    * results, which in java accept null by default, so the null-preserving `.orNull` is the
+    * faithful spelling. A primitive CAST target is the exception — unboxing null NPEs in java. */
   private def unwrapLeaves(e: Term): Term = e match
-    case x if isWrapped(x) => unwrap(x)
+    case x if isWrapped(x) => unwrapOrNull(x)
     case x: Tree.Block     => x.copy(expr = unwrapLeaves(x.expr))
     case x: Tree.If        => x.copy(thenp = unwrapLeaves(x.thenp), elsep = unwrapLeaves(x.elsep))
     case x: Tree.Match     => x.copy(cases = x.cases.map(c => c.copy(body = unwrapLeaves(c.body))))
     // the same rule as [[coerceTo]]'s own `Tree.Typed` arm, at the leaf walk: the unwrap is the
     // OPERAND's and the cast keeps its own type, which is `tpt` and never the wrapper's element —
     // `(int) poll()` over a `Nullable[Integer]` emits `.asInstanceOf[scala.Int]` and the element is
-    // `java.lang.Integer`. One derivation stated twice is `CLAUDE.md` §4.56's shape, so both arms
-    // are here rather than one being fixed and the other left to be met again.
-    case x: Tree.Typed if isWrapped(x.expr) => x.copy(expr = unwrap(x.expr))
+    // `java.lang.Integer`. A primitive cast is an unboxing — java NPEs there, so `.get`. A
+    // reference cast passes null through, so `.orNull`.
+    case x: Tree.Typed if isWrapped(x.expr) => x.copy(expr = slotUnwrap(x.tpt.tpe, x.expr))
     case other             => other
 
   override def transformTerm(t: Term)(using Program): Term = t match
@@ -1059,7 +1076,7 @@ final class NullabilityTransform(
 
   private def isWrapped(t: Term): Boolean = headSym(t.tpe).contains(wrapperSym) && wrapperSym != SymId.None
   private def isWrapperType(t: TypeRepr): Boolean = headSym(t).contains(wrapperSym) && wrapperSym != SymId.None
-  private def isWrapperMember(s: SymId): Boolean = Set(applySym, emptySym, getSym, isEmptySym).contains(s)
+  private def isWrapperMember(s: SymId): Boolean = Set(applySym, emptySym, getSym, orNullSym, isEmptySym).contains(s)
 
   private def elementOf(t: TypeRepr): TypeRepr = t match
     case TypeRepr.AppliedType(_, List(a)) => a
@@ -1091,11 +1108,39 @@ final class NullabilityTransform(
     case _ =>
       Tree.Apply(Tree.Ident(wrapperSym, TypeRepr.NoType, e.origin), List(e), applySym, want, e.origin)
 
-  /** `e.get` — the unchecked unwrap. NPE on empty IS Java's semantics at a dereference, which is
-    * why the contract asks for this member and never for the wrapper's `orNull` (fake-deprecated
-    * as a lint tripwire wherever such a wrapper is published). */
+  /** `e.get` — the unchecked unwrap. NPE on empty IS Java's semantics at a DEREFERENCE (member
+    * access, method call, array element/length), and the contract asks for this member for exactly
+    * that case. See [[unwrapOrNull]] for the slot-coercion counterpart. */
   private def unwrap(e: Term): Term =
     Tree.Select(e, getSym, elementOf(e.tpe), e.origin)
+
+  /** `e.orNull` — the null-preserving unwrap. Java's value flows through unchanged: an empty
+    * wrapper becomes `null`, which is what the java slot received. This is the faithful spelling
+    * at a SLOT that ACCEPTS null — an unannotated java field, local, parameter, result, or
+    * `Object` formal — which is the default in java. See [[slotUnwrap]] for the decision rule
+    * and [[unwrap]] for the dereference counterpart. */
+  private def unwrapOrNull(e: Term): Term =
+    Tree.Select(e, orNullSym, elementOf(e.tpe), e.origin)
+
+  /** the SLOT-NULLABILITY RULE: `.get` when the target slot is provably non-null (a primitive after
+    * unboxing), `.orNull` when the slot accepts null (the java default for every reference type).
+    *
+    * The two faces of the unwrap — a DEREFERENCE (member access, array op) throws on null because
+    * java does too; a SLOT COERCION preserves null because an unannotated java slot accepts it.
+    * Without this distinction, `ObjectMap#get(K)` returning `@Null V` is retyped to `Nullable[V]`,
+    * and every consumer that reads the absent-key sentinel receives an NPE instead of `null` — a
+    * §4.4 compile-clean-wrong-at-runtime defect. Measured: ashley `OUTCOMES LOST — 4 of 112`,
+    * `ExceptionInInitializerError` at `Family.Builder.get`. */
+  private def slotUnwrap(want: TypeRepr, e: Term): Term =
+    if isPrimitiveSlot(want) then unwrap(e) else unwrapOrNull(e)
+
+  /** is the target slot a PRIMITIVE — the one non-null-accepting slot kind that survives to
+    * [[coerceTo]] (the planning phase already refused annotated primitives, so this is about a
+    * slot's FORMAL being primitive, not the annotated declaration). Checked against the cached
+    * [[primSyms]] set so no `Program` is needed, which is what lets [[coerceTo]] remain a plain
+    * `(TypeRepr, Term) => Term` passable to [[mapReturns]]. */
+  private def isPrimitiveSlot(t: TypeRepr): Boolean =
+    headSym(t).exists(primSyms.contains)
 
   /** the wrapper's own ABSENT value, however this target spells it — `W.empty` for a `Named`
     * wrapper, `None` for `Option`. */
@@ -1112,7 +1157,7 @@ final class NullabilityTransform(
   private def coerceTo(want: TypeRepr, e: Term): Term =
     if isWrapperType(want) && isNullLiteral(e) then wrap(want, e)
     else if isWrapperType(want) && !isWrapped(e) then wrap(want, e)
-    else if !isWrapperType(want) && isWrapped(e) && want != TypeRepr.NoType then unwrap(e)
+    else if !isWrapperType(want) && isWrapped(e) && want != TypeRepr.NoType then slotUnwrap(want, e)
     else if isWrapperType(want) && isWrapped(e) && e.tpe != want then
       // …UNLESS THE FORMAL CANNOT BE WRITTEN HERE. This is the one arm that puts a TYPE into the
       // emitted text (`wrap` and `unwrap` name only the wrapper's own members), so it is the one
@@ -1157,7 +1202,9 @@ final class NullabilityTransform(
       // Int and Long` at 4 sites on libGDX's own suite, with no other count moving. Note the slot
       // is not lost by keeping the honest type: java widened `int` to `long` implicitly at the
       // call, and so does scala.
-      case x: Tree.Typed if isWrapped(x.expr) => x.copy(expr = unwrap(x.expr))
+      // the cast's own TARGET type decides the unwrap — a primitive cast (unboxing) is a
+      // dereference where java NPEs, so `.get`; a reference cast passes null through, so `.orNull`
+      case x: Tree.Typed if isWrapped(x.expr) => x.copy(expr = slotUnwrap(x.tpt.tpe, x.expr))
       case _             => e
     else e
 
@@ -1198,9 +1245,8 @@ final class NullabilityTransform(
     // `CollectionsTransform` asks "what TYPE does this slot want", which a class file answers;
     // this phase has to ask "does this slot accept null", which a class file does not answer at
     // all — no annotation is read from one, and every reference type in a java signature accepts
-    // null unless something says otherwise. Coercing on the type alone would emit `.get` at
-    // `println(anAbsentValue)`, which java prints as "null" and the port would THROW on: a §4.4
-    // behaviour change with no compile error and no count moving. So the seam stays COUNTED, and
+    // null unless something says otherwise. The slot-nullability rule uses `.orNull` for external
+    // callees, which preserves null faithfully — java's default. The seam stays COUNTED, and
     // the count now says which of the two facts is missing.
     val formals = p.symbolOf(t.method).map(_.info).collect {
       case TypeRepr.MethodType(ps, _, _)                       => ps.map(_._2)
@@ -1227,7 +1273,9 @@ final class NullabilityTransform(
               "class file could not be read for this symbol, so there is no formal to coerce against",
             a.origin, currentUnit)
         }
-        t.copy(args = t.args.map(a => if isWrapped(a) then unwrap(a) else a))
+        // no formal to coerce against: unwrap with `.orNull` — java's default is that every
+        // reference slot accepts null, and the missing formal says nothing about nullability
+        t.copy(args = t.args.map(a => if isWrapped(a) then unwrapOrNull(a) else a))
 
   /** `x == null` / `x != null` on a wrapped value → `x.isEmpty` / `!x.isEmpty`.
     *
@@ -1379,17 +1427,18 @@ object NullabilityTransform:
     * IS a proper type that composes at every `T` — the abstract-type-parameter class disappears
     * entirely, and the scope exit list with it. `Option[T]` has the same property.
     *
-    * ==The four-member contract==
-    * Both `Named` and `Option` rely on the same four members — `apply` (null-normalising),
+    * ==The five-member contract==
+    * Both `Named` and `Option` rely on the same five members — `apply` (null-normalising),
     * `empty`, extension `get` (unchecked, NPE on empty, which IS Java's semantics at a
-    * dereference) and extension `isEmpty`. For `Option` these are `Some.apply`/`None`/`.get`/
-    * `.isEmpty` — the same shape, different types.
+    * dereference), extension `orNull` (null-preserving unwrap, Java's semantics at a slot that
+    * accepts null), and extension `isEmpty`. For `Option` these are `Some.apply`/`None`/`.get`/
+    * `.orNull`/`.isEmpty` — the same shape, different types.
     */
   enum Target:
     /** `T | Null` — the union floor. Free at every concrete reference type, NOT transparent at
       * an abstract `T` (K13). */
     case Union
-    /** `W[T]` — a per-library opaque wrapper satisfying the four-member contract. The FQN is
+    /** `W[T]` — a per-library opaque wrapper satisfying the five-member contract. The FQN is
       * the port's to state, never the engine's; sge's `lowlevel.Nullable` is the first policy
       * value. CLOSES K13: `W[T]` composes at every `T`. */
     case Named(fqn: String)
