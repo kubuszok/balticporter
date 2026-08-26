@@ -120,8 +120,10 @@ object Pools {
   def set[T <: java.lang.Object](factory: () => T): Unit = Pools.set(factory, 100)
 
   /** The registered pool for `type`, or `null` if there is none. */
-  def getOrNull[T <: java.lang.Object](`type`: java.lang.Class[T]): Pool[T] =
-    Pools.typePools.get(`type`).asInstanceOf[Pool[T]]
+  def getOrNull[T <: java.lang.Object](`type`: java.lang.Class[T]): Pool[T] = {
+    val p = Pools.typePools.get(`type`)
+    if (p.isEmpty) null else p.get.asInstanceOf[Pool[T]]
+  }
 
   /** The registered pool for `type`. Unlike the Java original this does NOT create one on a miss —
     * a pool cannot construct `T` from a `Class` without reflection. Use the `factory` overload (or
@@ -142,7 +144,7 @@ object Pools {
     * replacement for the Java `get(type, max)` reflective fallback: same shape, but the caller
     * supplies the construction. */
   def get[T <: java.lang.Object](`type`: java.lang.Class[T], factory: () => T, max: Int): Pool[T] = {
-    val existing = Pools.getOrNull(`type`)
+    val existing: Pool[T] = Pools.getOrNull(`type`)
     if (existing != null) { existing }
     else {
       val pool = new DefaultPool[T](() => factory(), 4, max)
@@ -165,8 +167,8 @@ object Pools {
   def free(`object`: java.lang.Object): Unit = {
     if (`object` == null) { throw new java.lang.IllegalArgumentException("object cannot be null.") }
     val pool = Pools.typePools.get(`object`.getClass())
-    if (pool == null) { () }
-    else { pool.asInstanceOf[Pool[java.lang.Object]].free(`object`) }
+    if (pool.isEmpty) { () }
+    else { pool.get.asInstanceOf[Pool[java.lang.Object]].free(`object`) }
   }
 
   /** Frees the specified objects. Null objects within the array are silently ignored. */
@@ -176,16 +178,16 @@ object Pools {
     * @param samePool if true the pool is looked up once and reused for every object. */
   def freeAll(objects: Array[?], samePool: Boolean): Unit = {
     if (objects == null) { throw new java.lang.IllegalArgumentException("objects cannot be null.") }
-    var pool: Pool[?] = null
+    var pool: lowlevel.Nullable[Pool[?]] = lowlevel.Nullable.empty
     var i             = 0
     val n             = objects.size
     while (i < n) {
       val obj = objects.get(i).asInstanceOf[java.lang.Object]
       if (obj != null) {
-        if (pool == null) { pool = Pools.typePools.get(obj.getClass()) }
-        if (pool != null) {
-          pool.asInstanceOf[Pool[java.lang.Object]].free(obj)
-          if (!samePool) { pool = null }
+        if (pool.isEmpty) { pool = Pools.typePools.get(obj.getClass()) }
+        if (!pool.isEmpty) {
+          pool.get.asInstanceOf[Pool[java.lang.Object]].free(obj)
+          if (!samePool) { pool = lowlevel.Nullable.empty }
         }
       }
       i += 1

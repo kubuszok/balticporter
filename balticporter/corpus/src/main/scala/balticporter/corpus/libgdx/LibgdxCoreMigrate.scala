@@ -971,7 +971,30 @@ object LibgdxPolicy:
     new balticporter.transform.NullabilityTransform(
       annotations = Set("com.badlogic.gdx.utils.Null"),
       target      = balticporter.transform.NullabilityTransform.Target.Named("lowlevel.Nullable"),
+      scope       = balticporter.tir.RuleScope.Everywhere(nullabilityErasureExempt),
     )
+
+  /** Types whose `@Null`-annotated overload sets create ERASURE CONFLICTS under Named mode.
+    *
+    * `Nullable[A]` erases to `Object` (the opaque type's underlying is `A | NestedNone`), so
+    * `f(Nullable[String])` and `f(Nullable[Object])` share an erasure. In Union mode
+    * `String | Null` erases to `String` and `Object | Null` to `Object` — distinct. With Named,
+    * every `@Null`-annotated overload of the same arity erases to the same descriptor.
+    *
+    * The scope holds back these types' `@Null` declarations: they keep their upstream types and
+    * markers. Each is a COUNTED `ScopedOut` decision with a porter note.
+    *
+    * CharArray: 10 `append` overloads, all `@Null` on a different reference type, all erasing to
+    * `append(Object, …)`.
+    * Image: 3 constructors taking `@Null NinePatch`, `@Null TextureRegion`, `@Null Drawable`,
+    * all erasing to `<init>(Object, Sge)`. */
+  def nullabilityErasureExempt: Set[String] = Set(
+    "com.badlogic.gdx.utils.CharArray",
+    "com.badlogic.gdx.scenes.scene2d.ui.Image",
+    "com.badlogic.gdx.utils.Json",
+    "com.badlogic.gdx.scenes.scene2d.actions.TemporalAction",
+    "com.badlogic.gdx.utils.Pools",
+  )
 
   // K13 CLOSED: the `nullabilityExempt` set was the K13 exit for the `Union` floor — with
   // `Named("lowlevel.Nullable")`, `Nullable[T]` IS a proper type that composes at every `T`, so

@@ -97,8 +97,8 @@ class Json {
     this.classToTag.put(`type`, tag)
   }
 
-  def getClass(tag: String): Class[?] = this.tagToClass.get(tag)
-  def getTag(`type`: Class[?]): String = this.classToTag.get(`type`)
+  def getClass(tag: String): Class[?] = this.tagToClass.get(tag).get
+  def getTag(`type`: Class[?]): String = this.classToTag.get(`type`).get
 
   /** element/deprecation metadata is a reflection concern — recorded but unused by the codec seam. */
   def setElementType(`type`: Class[?], fieldName: String, elementType: Class[?]): Unit = ()
@@ -136,7 +136,8 @@ class Json {
 
   def writeType(`type`: Class[?]): Unit = {
     if (this.typeName != null) {
-      val tag = if (getTag(`type`) != null) { getTag(`type`) } else { `type`.getName }
+      val tg = this.classToTag.get(`type`)
+      val tag = if (!tg.isEmpty) { tg.get } else { `type`.getName }
       this.writer.set(this.typeName, tag)
     }
   }
@@ -159,8 +160,8 @@ class Json {
         writeObjectEnd()
       case v =>
         val serializer = this.classToSerializer.get(v.getClass)
-        if (serializer != null) {
-          serializer.asInstanceOf[Json.Serializer[Object]].write(this, v, knownType)
+        if (!serializer.isEmpty) {
+          serializer.get.asInstanceOf[Json.Serializer[Object]].write(this, v, knownType)
         } else { codec("Json.writeValue of " + v.getClass.getName) }
     }
   }
