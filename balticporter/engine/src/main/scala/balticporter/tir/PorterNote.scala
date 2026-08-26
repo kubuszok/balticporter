@@ -134,7 +134,12 @@ object PorterNote:
         // emitted text is a field initialiser that has apparently been DELETED, a java `final` that
         // has become a `var`, and a `def` in no java file — three edits with one cause, which is a
         // difference between two test frameworks and is written down in neither file.
-        RebuiltPerTest)
+        RebuiltPerTest,
+        // …and a nullary method whose `()` was dropped. Here because a parameterless `def` and a
+        // nilary `def ()` look identical in the emitted Scala except for the missing parens, and a
+        // reader diffing against the java sees a call that is `o.x` rather than `o.x()` — the note
+        // is what says the conversion was deliberate rather than an engine defect.
+        ParenlessConversion)
 
   /** WHERE each rendered kind's note goes, which is not a style question: the three answers are
     * three different pieces of machinery and a kind in the wrong one is a note that never appears.

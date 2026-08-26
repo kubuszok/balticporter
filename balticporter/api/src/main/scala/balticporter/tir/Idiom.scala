@@ -62,6 +62,11 @@ enum IdiomKind:
   /** a method whose every `return` is `this`, whose declared return type could narrow to
     * `this.type`. */
   case NarrowedReturn
+  /** a nullary java method that is getter-like (returns a value, body free of side effects) and
+    * whose owner type falls inside the phase's `RuleScope` — its `()` is dropped, making it a
+    * scala parameterless `def`. The sge reference port's empirical convention, no written rule in
+    * `conversion-rules.md`. */
+  case NullaryArity
 
 /** …and WHAT was done about it. */
 enum IdiomVerdict:

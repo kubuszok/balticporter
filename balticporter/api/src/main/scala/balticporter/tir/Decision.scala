@@ -328,6 +328,13 @@ object Decision:
       * which ancestor the member chains to, because "this class rebuilds its state" and "this class
       * rebuilds its state AND its base's" are different claims with the same emitted shape. */
     case RebuiltPerTest
+    /** a nullary java method whose `()` was dropped, making it a scala PARAMETERLESS `def` — the
+      * sge reference port's empirical convention for getter-like members. Like [[SamLambda]] and
+      * [[CollapsedProperty]], the mechanical translation (the nilary form) already compiles and
+      * already behaves identically, so the reader at the line is owed the reason the port went
+      * the other way. The DETAIL carries `from` (the original `name()` spelling) and `to` (the
+      * parameterless `name`). */
+    case ParenlessConversion
 
   val Header ="#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 

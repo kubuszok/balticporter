@@ -140,6 +140,12 @@ class PolicyKeyLintSpec extends munit.FunSuite:
           "declares and has no symbol to bind, so \"did the frontend write void here\" has no other " +
           "instrument. The phase's KEYS all go through `PolicyBinder`."),
     ),
+    "NullaryArityTransform.scala" -> Map(
+      "fullName ==" ->
+        ("`scala.Unit` is the ENGINE's own rendering of java `void` — an external this program never " +
+          "declares and has no symbol to bind, so \"did the frontend write void here\" has no other " +
+          "instrument. Same rationale as `BeanPropertyTransform`."),
+    ),
     "NullabilityTransform.scala" -> Map(
       "fullName ==" ->
         ("`scala.Null`, the engine's synthetic operator namespace and the CONFIGURED wrapper are " +

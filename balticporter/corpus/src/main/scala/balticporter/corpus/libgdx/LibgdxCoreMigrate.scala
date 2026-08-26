@@ -799,9 +799,20 @@ object LibgdxPolicy:
     * then the one §1(c) rule libGDX plugs in from OUTSIDE the engine
     * ([[GdxSharedIteratorRule]]). */
   def mainPhases: List[balticporter.tir.Phase] =
-    List(beanProperties, new CollectionsTransform(retarget = comparatorRetarget), new MutableParamsTransform,
+    List(beanProperties, nullaryArity,
+         new CollectionsTransform(retarget = comparatorRetarget), new MutableParamsTransform,
          new PanamaFfiTransform(), unwrapReflection, classTable, new GdxSharedIteratorRule,
          memberRenames, disposableRedirect, textureHandle, nullability, globalsToContext)
+
+  /** Drop `()` from nullary getter-like methods — sge's empirical convention, no written rule in
+    * `conversion-rules.md`. Enabled with `Everywhere()` because the convention is whole-library:
+    * the sge hand port strips parens from EVERY getter-like method, not from a named list.
+    *
+    * AFTER `bean-properties`, which has already claimed its own getters and dropped their parens.
+    * The `runsAfter` edge is on the phase; the list position is the pipeline's contract.
+    */
+  def nullaryArity: balticporter.transform.NullaryArityTransform =
+    new balticporter.transform.NullaryArityTransform(scope = balticporter.tir.RuleScope.Everywhere())
 
   /** EMPTY, AND IT IS THE POSITION THAT IS THE POLICY — libGDX renames none of its own members.
     *
