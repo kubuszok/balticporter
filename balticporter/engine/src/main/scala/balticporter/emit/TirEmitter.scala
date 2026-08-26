@@ -6344,6 +6344,29 @@ object TirEmitter:
       * the hooks cannot see it. Each method instead re-walks its OWN body once and claims what it
       * finds, which reads the same edge from the other end and needs no ordering at all. */
     val enclosedBy = collection.mutable.Map[SymId, Set[SymId]]()
+    /** Discover the enclosing method scope for anonymous classes inside a term that is NEITHER a
+      * `DefDef` rhs NOR a `Lambda` body. `TestFrameworkTransform` inlines a `@Test` body into
+      * `test("…")({ block })` — a curried `Tree.Apply` with a `Tree.Block` argument — so the
+      * locals inside that block still carry the ORIGINAL method symbol as owner, but no
+      * `transformDefDef` ever fires for that symbol. This function walks the term, finds locals
+      * whose owner is an unknown method, and maps any anonymous classes to it.
+      * Measured at 2 E049 on ashley: `EngineTests.cascadedRemoveEntity` (C16.1). */
+    def discoverScope(t: Term)(using p0: Program): Unit =
+      val localOwners = collection.mutable.Set[SymId]()
+      val innerBodies = collection.mutable.Set[SymId]()
+      val ownerScan = new Phase:
+        def name: String = "tir-emitter/scope-scan"
+        override def transformValDef(v: Tree.ValDef)(using p: Program): Tree.ValDef =
+          val ow = p.symbolOf(v.symbol).map(_.owner).getOrElse(SymId.None)
+          if ow != SymId.None && !declOf.contains(ow) && !methods.contains(ow) then localOwners += ow
+          v
+        override def transformClassDef(c: Tree.ClassDef)(using Program): Tree.ClassDef = { innerBodies += c.symbol; c }
+        override def transformNew(n: Tree.New)(using Program): Term = { n.anon.foreach(a => innerBodies += a.symbol); n }
+      StandardTraversal.mapTerm(ownerScan, t)
+      if localOwners.nonEmpty && innerBodies.nonEmpty then
+        localOwners.foreach(methods += _)
+        innerBodies.foreach(b => localOwners.foreach(m =>
+          enclosedBy(b) = enclosedBy.getOrElse(b, Set.empty) + m))
     val collector = new Phase:
       def name: String = "tir-emitter/captured-local-scan"
       override def transformClassDef(t: Tree.ClassDef)(using Program): Tree.ClassDef =
@@ -6364,7 +6387,35 @@ object TirEmitter:
         t.rhs.foreach(r => StandardTraversal.mapTerm(scan, r))
         inner.foreach(b => enclosedBy(b) = enclosedBy.getOrElse(b, Set.empty) + t.symbol)
         t
+      override def transformLambda(t: Tree.Lambda)(using p0: Program): Term =
+        discoverScope(t.body)
+        t.params.foreach { v =>
+          val ow = p.symbolOf(v.symbol).map(_.owner).getOrElse(SymId.None)
+          if ow != SymId.None && !declOf.contains(ow) && !methods.contains(ow) then methods += ow
+        }
+        t
     p.units.foreach(StandardTraversal.mapClassDef(collector, _))
+
+    /** POST-PASS: bodies the collector found (through `transformNew`) that have no `enclosedBy`
+      * entry. These are anonymous classes inside scopes that are neither `DefDef` nor `Lambda` —
+      * the shape `TestFrameworkTransform` produces when it inlines a `@Test` body into
+      * `test("…")({ block })`. The locals inside that block still carry the ORIGINAL method
+      * symbol as owner, so we discover them by walking the class body of the unit that owns them.
+      *
+      * This is deliberately a POST-PASS rather than a `transformBlock` hook: a `transformBlock`
+      * would fire for every block in the program and re-walk it, while this scans only the class
+      * bodies that contain unenclosed anonymous classes — which is the exact population that needs
+      * attention (C16.1). */
+    val unenclosed = bodies.collect { case (sym, _, _) if !enclosedBy.contains(sym) && !declOf.contains(sym) => sym }.toSet
+    if unenclosed.nonEmpty then
+      for u <- p.units do
+        // walk every class body in the program, not just top-level units — the test class is nested
+        StandardTraversal.allClassDefs(u)(using p).foreach { cd =>
+          for stat <- cd.body do
+            stat match
+              case t: Term => discoverScope(t)(using p)
+              case _ =>
+        }
 
     /** the parameters and locals each method owns — the enclosing SCOPE a nested body sits in.
       * Ownership is the structural fact (§4.56): the frontend interns a field under the CLASS and a

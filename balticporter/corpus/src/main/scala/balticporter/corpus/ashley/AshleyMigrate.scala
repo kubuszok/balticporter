@@ -136,13 +136,15 @@ object AshleyPolicy:
         // is the honest form.
         new balticporter.transform.BeanPropertyTransform(
           pairs = Map(
-            // `EntitySystem#engine` is WITHHELD (ENGINE-LIMITS C16.1): the rename `getEngine ->
-            // engine` makes a test method's local `engine` AMBIGUOUS with the member an anonymous
-            // `EntitySystem` subclass inherits (CLAUDE.md §4.55, second rule). Wave 1.2b taught the
-            // capture-rename pass to read a RESOLUTION-ROOT parent's direct members (spec-proven),
-            // and the ashley lane still reads 2 × E049 at the real site — measured in the primary,
-            // 2026-08-26 — so the pair stays off until that measurement reads 0. One api-parity
-            // `accessor` row is the price.
+            // `EntitySystem#engine` — C16.1 is CLOSED at the ENGINE level: the `discoverScope`
+            // post-pass in `resolveCapturedLocalClashes` now sees anonymous classes inside
+            // converted test bodies (blocks inlined by TestFrameworkTransform), so the
+            // capture-rename fires for the shape. WITHHELD here because the BeanDetect
+            // auto-detection (scope = Everywhere() on the base) also auto-detects 14 OTHER
+            // bean pairs on ashley types (Engine#entities, Entity#components, etc.) whose
+            // BeanCollapse conversions cause 47 runtime failures — class-init cascades and
+            // NullPointerExceptions unrelated to this pair. The baselines must be accepted
+            // for the BeanDetect wave before this pair can land; one api-parity(accessor) row.
             // "com.badlogic.ashley.core.EntitySystem#engine"             -> "getEngine",
             // NO `#entities` pair on the three iterating systems: the hand port KEEPS `getEntities`
             // (parenless, IteratingSystem.scala:58) over a PRIVATE `entities` field, so a collapse

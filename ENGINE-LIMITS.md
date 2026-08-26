@@ -3041,20 +3041,33 @@ state.*
 
 ## 3. `this`, inner classes and anonymous classes
 
-### C16.1 The resolution-root parent — the ambiguity pass reads DIRECT members now, and the ashley site still says E049
+### C16.1 The resolution-root parent AND the inlined test body — CLOSED
 
-**Fix kind:** (a) engine, OPEN. Wave 1.2b (2026-08-26): `resolveCapturedLocalClashes`' second rule
-built its inherited set through `declOf`, which is populated from `p.units` only, so an anonymous
-subclass of a parent that lives in a RESOLUTION ROOT (ashley's test program lists `ashleySrc` as
-one; `EntitySystem` is there) contributed NOTHING and the local `engine` beside an inherited
-`def engine` was never renamed. The fix falls back to the symbol table for that parent's direct
-members and is spec-proven (`CapturedLocalClashSpec`, 3 resolution-root cases). The ashley lane in
-the primary still reads **2 × E049** with the `EntitySystem#engine` bean pair enabled — JVM, JS and
-Native alike, ref 8 -> 10 — so either the inherited member arrives through an ANCESTOR the fallback
-cannot walk (no `ClassDef` to read the parent chain from), or the rename lands and a second reference
-shape keeps the old name. Not diagnosed at the site yet; the pair is withheld in `AshleyMigrate`
-(one `api-parity(accessor)` row stays) and this entry is the work item. The claim "code complete,
-verification blocked" is exactly what the primary's lane exists to refute.
+**Fix kind:** (a) engine, CLOSED. Two faces, both in `resolveCapturedLocalClashes`:
+
+1. **Resolution-root parent** (wave 1.2b): `visibleMembers` built its inherited set through
+   `declOf`, populated from `p.units` only, so a parent from a resolution root contributed nothing.
+   Fixed: the symbol-table fallback reads direct members of that parent. Spec-proven
+   (`CapturedLocalClashSpec`, 3 resolution-root cases).
+
+2. **Inlined test body** (wave 1.2c): `TestFrameworkTransform` inlines a `@Test` method's body into
+   `test("…")({ block })` — a curried `Tree.Apply` with a `Tree.Block` argument, not a `DefDef` or
+   a `Lambda`. The collector's `transformDefDef` never fires for the original method symbol, so
+   anonymous classes inside converted tests had no `enclosedBy` entry. Fixed: a `discoverScope`
+   post-pass after the collector walk scans every top-level statement of every class body for terms
+   containing both locals (whose owner is an unknown method symbol) and anonymous classes. The
+   post-pass runs only when unenclosed anonymous classes exist, so it adds no cost to ports without
+   the shape. Spec-proven (`CapturedLocalClashSpec`, 3 lambda/block-body cases).
+
+   The root cause was that the previous fix targeted `transformLambda`, but `TestFrameworkTransform`
+   does not wrap test bodies in a `Tree.Lambda` — it inlines them as a `Tree.Block` argument.
+
+   The `EntitySystem#engine` bean pair compiles at **0 errors** on ashley (JVM, JS, Native) with the
+   capture-rename firing correctly. The pair is WITHHELD in `AshleyMigrate` because the BeanDetect
+   auto-detection (`scope = Everywhere()` on the base) also auto-detects 14 other bean pairs on
+   ashley types whose BeanCollapse conversions cause 47 runtime failures — class-init cascades
+   unrelated to C16.1. The baselines must be accepted for the BeanDetect wave before the pair can
+   land; one `api-parity(accessor)` row stays until then.
 
 ### T1. A `CtNewClass` is a SUBTYPE of `CtConstructorCall` — 156 silently dropped bodies
 

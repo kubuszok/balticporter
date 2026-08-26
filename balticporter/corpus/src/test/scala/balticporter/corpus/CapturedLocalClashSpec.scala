@@ -306,6 +306,68 @@ class CapturedLocalClashSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
+  // LAMBDA BODY — the shape `TestFrameworkTransform` creates (ENGINE-LIMITS C16.1)
+  //
+  // A converted `@Test` method is a `test("…") { body }` call, whose body is a lambda. The
+  // collector's `transformDefDef` never sees it, so without `transformLambda` every anonymous
+  // class inside a converted test is invisible to both the shadowing and ambiguity rules.
+  // Measured at 2 E049 on ashley: `EngineTests.cascadedRemoveEntity`.
+  // -------------------------------------------------------------------------------------------
+
+  test("a local inside a LAMBDA body that shadows an inherited member is renamed (C16.1)") {
+    val out = emit(
+      """package demo;
+        |class Base {
+        |  final String engine;
+        |  Base(String engine) { this.engine = engine; }
+        |  void run() { }
+        |}
+        |class W {
+        |  void go(final String engine) {
+        |    Runnable r = () -> {
+        |      new Base(engine) { public void run() { System.out.println(engine); } };
+        |    };
+        |    r.run();
+        |  }
+        |}
+        |""".stripMargin)
+    assert(clue(out).contains("engine$local"))
+  }
+
+  test("rule (1) inside a LAMBDA body: a captured local shadowed by the nested class's own member") {
+    val out = emit(
+      """package demo;
+        |interface Filter { String filter(String a); }
+        |class W {
+        |  void go(final Filter filter) {
+        |    Runnable r = () -> {
+        |      Filter inner = new Filter() {
+        |        public String filter(String a) {
+        |          return filter.filter(a);
+        |        }
+        |      };
+        |    };
+        |    r.run();
+        |  }
+        |}
+        |""".stripMargin)
+    assert(clue(out).contains("filter$local"))
+  }
+
+  test("NEGATIVE: a lambda with no nested class moves nothing") {
+    val out = emit(
+      """package demo;
+        |class W {
+        |  void go(final String engine) {
+        |    Runnable r = () -> { System.out.println(engine); };
+        |    r.run();
+        |  }
+        |}
+        |""".stripMargin)
+    assert(!clue(out).contains("engine$local"))
+  }
+
+  // -------------------------------------------------------------------------------------------
   // RESOLUTION ROOT — the parent's ClassDef is NOT in p.units (it comes from a resolution root,
   // as a dependent's base does). The fix: visibleMembers falls back to the symbol table.
   // -------------------------------------------------------------------------------------------
