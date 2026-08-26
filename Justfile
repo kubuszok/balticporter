@@ -4517,7 +4517,8 @@ baseline-accept PORT:
     # operator towards hand-writing `expected-errors` — the one baseline CLAUDE.md §5 says must
     # never be typed, because a hand-edited floor can disagree with the run that produced it.
     [ -f "$DIR/run-latest/findings.tsv" ] || [ -f "$DIR/run-latest/tests.tsv" ] || \
-      { echo "no run-latest for {{PORT}} — run its lane first (a migration writes findings.tsv; a differential lane writes tests.tsv)"; exit 1; }
+      ls "$DIR/run-latest/errors-count.dropin."* 1>/dev/null 2>&1 || \
+      { echo "no run-latest for {{PORT}} — run its lane first (a migration writes findings.tsv; a differential lane writes tests.tsv; a dropin lane writes errors-count.dropin.*)"; exit 1; }
     mkdir -p "$DIR/baseline"
     # Only DETERMINISTIC, position-free files are promoted:
     #   findings.tsv / counts.tsv  — every check. `counts.tsv` is gated by `show_check_report` and
