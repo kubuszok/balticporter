@@ -118,3 +118,40 @@ class NullabilityWrapperSpec extends PortSuite:
     val (_, logU) = Pipeline.runTraced(PortFixture.parse(overriding), List(u))
     assertEquals(logU.of(Decision.Kind.RetypedSignature).map(_.subjectFqn), List("demo.Sub#find"))
   }
+
+  // -------------------------------------------------------------------------
+  // a LAMBDA BODY is a slot — the function's result (screens' `pushScreen` seam)
+  // -------------------------------------------------------------------------
+
+  private val lambdas =
+    """package demo;
+      |import java.lang.annotation.*;
+      |import java.util.function.Supplier;
+      |@Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
+      |@interface Null {}
+      |class Transition {}
+      |interface Own<T> { @Null T give(); }
+      |class Manager<T extends Transition> {
+      |  void push(Supplier<T> s) {}
+      |  void hold(Own<T> o) {}
+      |  void go(@Null T transition) {
+      |    push(() -> transition);
+      |    hold(() -> transition);
+      |  }
+      |}
+      |""".stripMargin
+
+  test("a wrapped value captured as a CLASS-FILE SAM's result is unwrapped at the body and COUNTED") {
+    val ph = phase
+    val (after, _) = Pipeline.runTraced(PortFixture.parse(lambdas), List(ph))
+    val p = port(lambdas, phase)
+    assertEmits(p, "this.push(() => transition.get)")
+    val seams = ph.boundary(after.units).filter(_.issue == Issue.UncoercibleSeam)
+    assertEquals(seams.map(_.subject), List("java.util.function.Supplier"))
+  }
+
+  test("…and one captured as an OWNED, annotated SAM's result stays wrapped — that slot is ours") {
+    val p = port(lambdas, phase)
+    assertEmits(p, "this.hold(() => transition.asInstanceOf[lowlevel.Nullable[T]])")
+    assertNotEmits(p, "transition.get.asInstanceOf")
+  }

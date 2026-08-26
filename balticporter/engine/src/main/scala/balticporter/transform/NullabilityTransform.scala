@@ -828,6 +828,75 @@ final class NullabilityTransform(
           else result
         case _ => result
 
+  /** A LAMBDA BODY IS A SLOT — the function's result, exactly as a `return` is a method's.
+    *
+    * Universal (§1(a)): java's lambda body flows into the SAM's result type, so a value this phase
+    * wrapped at its DECLARATION (`@Null T transition`, captured as `() -> transition`) arrives at a
+    * slot the phase did not retype. The If/Match/Block coercion in [[coerceTo]] is the same seam one
+    * node kind further out — measured on the first dependent to hit it (`ScreenManager#pushScreen`,
+    * one E007 at a `Supplier[T]` whose `T` is the class's own parameter).
+    *
+    * WHAT THE SLOT IS, in the order the evidence is available:
+    *   - the lambda's recorded `resultTpt` — set by the frontend where it could state the SAM's
+    *     result in the target's context;
+    *   - a `scala.FunctionN` type's last argument — the emitter's own spelling of a function;
+    *   - the SAM method of an OWNED interface, read from the retyped table, so an interface the
+    *     phase itself retyped (`@Null T get()`) keeps the body WRAPPED — it is one of ours;
+    *   - otherwise the SAM is a CLASS FILE's: the formal cannot say whether it accepts null, so a
+    *     wrapped body is unwrapped AND counted, exactly as [[coerceArgs]] treats an external
+    *     callee's argument.
+    */
+  override def transformLambda(t: Tree.Lambda)(using p: Program): Term =
+    if !isWrapper then t
+    else lambdaResult(p, t) match
+      case Some(r) =>
+        t.copy(body = mapReturns(r, coerceTo(r, t.body), coerceTo))
+      case scala.None =>
+        if bodyIsWrapped(t.body) then
+          issues += Finding(Issue.UncoercibleSeam,
+            headSym(t.tpe).flatMap(p.symbolOf).map(_.fullName).getOrElse("?"),
+            "a wrapped value is the RESULT of a lambda whose functional interface is a class file — " +
+              "its SAM result carries no annotation the engine reads, so the body is unwrapped at the " +
+              "slot on java's own rule (every reference result accepts null)",
+            t.body.origin, currentUnit)
+        t.copy(body = mapReturns(TypeRepr.NoType, unwrapLeaves(t.body), (_, e) => unwrapLeaves(e)))
+
+  /** the type a lambda's body has to produce, where this phase can read one — see [[transformLambda]]. */
+  private def lambdaResult(p: Program, t: Tree.Lambda): Option[TypeRepr] =
+    t.resultTpt.map(_.tpe).orElse {
+      t.tpe match
+        case TypeRepr.AppliedType(tc, args) =>
+          headSym(tc).flatMap(p.symbolOf) match
+            case Some(s) if FunctionNames(s.fullName) && args.nonEmpty => Some(args.last)
+            case Some(s) if p.owns(s.id) =>
+              // an OWNED functional interface: its one abstract method's RETYPED result decides
+              p.symbols.all.iterator.filter(m => m.owner == s.id && m.flags.isAbstract).toList match
+                case m :: Nil => m.info match
+                  case TypeRepr.MethodType(_, r, _)                       => Some(r)
+                  case TypeRepr.PolyType(_, TypeRepr.MethodType(_, r, _)) => Some(r)
+                  case _                                                  => scala.None
+                case _ => scala.None
+            case _ => scala.None
+        case _ => scala.None
+    }
+
+  private def bodyIsWrapped(e: Term): Boolean = e match
+    case x: Tree.Block => bodyIsWrapped(x.expr)
+    case x: Tree.If    => bodyIsWrapped(x.thenp) || bodyIsWrapped(x.elsep)
+    case x: Tree.Match => x.cases.exists(c => bodyIsWrapped(c.body))
+    case x: Tree.Typed => bodyIsWrapped(x.expr)
+    case other         => isWrapped(other)
+
+  /** `.get` at every LEAF of a value-producing expression — the unwrap half of [[coerceTo]] where
+    * no target type is available to name. */
+  private def unwrapLeaves(e: Term): Term = e match
+    case x if isWrapped(x) => unwrap(x)
+    case x: Tree.Block     => x.copy(expr = unwrapLeaves(x.expr))
+    case x: Tree.If        => x.copy(thenp = unwrapLeaves(x.thenp), elsep = unwrapLeaves(x.elsep))
+    case x: Tree.Match     => x.copy(cases = x.cases.map(c => c.copy(body = unwrapLeaves(c.body))))
+    case x: Tree.Typed if isWrapped(x.expr) => x.copy(expr = unwrap(x.expr), tpe = elementOf(x.expr.tpe))
+    case other             => other
+
   override def transformTerm(t: Term)(using Program): Term = t match
     case a: Tree.Assign      if isWrapper => a.copy(rhs = coerceTo(a.lhs.tpe, a.rhs))
     case a: Tree.ArrayLength if isWrapper && isWrapped(a.array) => a.copy(array = unwrap(a.array))
@@ -1038,6 +1107,9 @@ object NullabilityTransform:
 
   /** the engine's synthetic operator namespace, minted by the frontend under exactly this owner. */
   private val OperatorOwners = Set("scala.<op>")
+
+  /** the emitter's own spelling of a function type — engine identity, like [[PrimitiveNames]]. */
+  private val FunctionNames = (0 to 22).map(n => s"scala.Function$n").toSet
 
   private val PrimitiveNames = Set(
     "scala.Boolean", "scala.Byte", "scala.Short", "scala.Char",
