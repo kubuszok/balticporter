@@ -5766,10 +5766,25 @@ question.
 absence would have been visible there as an absent NAME — which is why the fix is one line and the
 finding is worth an entry.*
 
-### K13. CLOSED — `Named` target makes `T | Null` at an abstract type parameter a non-issue
+### K13. `T | Null` is NOT transparent at an ABSTRACT type parameter — `Named` target BUILT, enablement measured at 0 -> 661, switch WITHHELD
 
-**CLOSED by `Target.Named`.** `Nullable[T]` IS a proper type that composes at every `T`, so the
-abstract-type-parameter class disappears entirely. What follows is the history and the numbers.
+**Status 2026-08-26: OPEN, with the mechanism landed.** `Target.Named("lowlevel.Nullable")` on the
+libGDX base makes the abstract-type-parameter class disappear (155 -> 0 findings, below) and was
+reported at 0 errors from a worktree compile; measured in the primary by the base lane after the
+merge it read **0 -> 661 errors at 2,450 moved digests**, and the switch was reverted the same day
+(the mechanism, the `Named`/`OptionTarget` spellings and the merge rule stay). The 661 are the
+wrapper's SEAMS — exactly the populations CLAUDE.md §1 says a retyping owes a coercion at, and the
+work list of the wave that re-enables it: `Found: lowlevel.Nullable.Impl[T]` at a plain `T` slot
+(E007 ×356 — a `Nullable` value handed to a slot the phase did not retype, so the UNWRAP is missing
+at the use), `Conflicting definitions` ×24 (an overload pair `f(T)`/`f(Nullable[T])` erases to one
+descriptor — the opaque type erases to its underlying, and §4.55's implementation-pair rule reads
+them as two members), `None of the overloaded alternatives of readValue/writeValue in Json` ×106 (the
+INJECTED `Json` shim still speaks `T | Null`, so a Named base and a Union shim disagree at every
+call — an injected file is surface too), `missing argument for parameter defaultValue of Obj.get`
+×50 (a retyped RESULT changed which overload the call resolves to), `Values of types Nullable.Impl[…]
+and Null cannot be compared` ×14 (the `== null` reified position, §1's rule about a retyping owing an
+answer there). None of these is visible to a spec, and all of them are visible to one lane run.
+What follows is the history and the numbers the mechanism does produce.
 
 `Null` is a subtype of every concrete reference type, so `String | Null` simplifies at every use and
 the union floor costs nothing there. **It is not a subtype of an abstract `T <: Object`**, so under

@@ -10587,6 +10587,15 @@ findings unchanged, port map unchanged.
 from `Wrapper` — a per-library opaque wrapper satisfying the four-member contract; sge's
 `lowlevel.Nullable` is the first policy value), and `OptionTarget` (`scala.Option`, I7 re-measured).
 
+**Wave 1.1 — measured in the primary, the switch WITHHELD (2026-08-26).** The `Named` target's
+worktree measurement did not survive the merge: `just gdx-measure` on master read **0 -> 661 errors,
+2,450 members moved**, so the enablement commit was reverted (`7dfbb877`) and the mechanism kept —
+`Target.Named`/`OptionTarget`, the merge rule, the fingerprint omission and the docs stand. The 661
+are five seam families, each one of §1's owed coercions (the list is in ENGINE-LIMITS K13); the
+wave that re-enables the switch closes them with the base lane as its gate, not a worktree compile.
+K13 is therefore still OPEN. `lls 0.3.0` and the `declared_dep_flags` on the lanes were reverted with
+it and return with the switch.
+
 K13 CLOSED: `Nullable[T]` IS a proper type that composes at every abstract `T`, so the
 `AbstractTypeParameter` finding class goes **155 -> 0** and the 12-entry + 1-member-key scope
 exit list is deleted entirely. libGDX base: `nullability-boundary` **146 -> 136**, errors
