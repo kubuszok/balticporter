@@ -1185,6 +1185,32 @@ final case class PortRun(
     // that omits it claims the port emitted a type it did not.
     def emittedFqns(cd: Tree.ClassDef): List[String] =
       StandardTraversal.allClassDefs(cd)(using program).flatMap(c => program.symbolOf(c.symbol).map(_.fullName))
+    // ---- member originals: the mapping from POST-rename member FQN to the ORIGINAL java FQN ----
+    // Built from the DecisionLog's `RenamedMember` entries. Each decision carries `subjectFqn`
+    // (the pre-rename FQN, in the pre-package-rename namespace) and `detail("to")` (the new simple
+    // name). The source map records the EMITTED FQN (post-bean-rename, post-package-rename), and
+    // `PortMap.of` needs to map it back to the JAVA FQN for the `upstream` column.
+    //
+    // The mapping is: emittedMemberFqn -> originalJavaMemberFqn, where both sides are in the
+    // UPSTREAM namespace (pre-package-rename), because `PortMap.upstreamOf` applies the package
+    // un-rename separately. The source map's `e.member` is in the EMITTED namespace, but
+    // `upstreamOf` maps it back to the upstream package, so `memberOriginals` needs to be keyed
+    // on the upstream-namespace post-rename FQN.
+    val memberOriginals: Map[String, String] = translated.decisions.all.flatMap { d =>
+      if d.kind == Decision.Kind.RenamedMember then
+        val from = d.detail.getOrElse("from", "")
+        val to   = d.detail.getOrElse("to", "")
+        val fqn  = d.subjectFqn // pre-rename FQN in upstream namespace
+        if from.nonEmpty && to.nonEmpty && fqn.contains('#') then
+          // subjectFqn = "com.badlogic.gdx...Group#isTransform"
+          // post-rename FQN = "com.badlogic.gdx...Group#transform"
+          val cut = fqn.lastIndexOf('#')
+          val postRenameFqn = fqn.substring(0, cut + 1) + to
+          Some(postRenameFqn -> fqn)
+        else scala.None
+      else scala.None
+    }.toMap
+
     val portMap = PortMap.of(
       module       = label,
       engine       = balticporter.core.EngineInfo.fingerprint,
@@ -1214,6 +1240,7 @@ final case class PortRun(
       // …and the members this run REFUSED. A policy drop is already a `Dropped` row; an engine
       // refusal was published nowhere at all — see `refusedMembers` for what that cost.
       refusedMembers = refusedMembers(program, translated),
+      memberOriginals = memberOriginals,
     )
     // …and written only when the ARTIFACT LAYER IS ON, like every other file this run produces.
     //

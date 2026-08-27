@@ -368,6 +368,12 @@ object PortMap:
       memberShapes: scala.collection.Map[String, String] = Map.empty,
       policy: String = "",
       refusedMembers: scala.collection.Map[String, String] = Map.empty,
+      /** MEMBER RENAMES from the phase pipeline: maps a member's CURRENT fullName (after
+        * MemberRenamer) to its ORIGINAL java fullName (before the rename). Used to write the
+        * UPSTREAM column with java's member name rather than the renamed one, matching the contract
+        * type entries already follow. Without this, the upstream column carries the post-rename
+        * name and a dependent's `PortMapTransform` cannot match it to program symbols. */
+      memberOriginals: scala.collection.Map[String, String] = Map.empty,
   ): Map0 =
     // emitted FQN -> the java file it came from, so `upstreamOf` can use the ORIGIN.
     val originOf: scala.collection.Map[String, String] =
@@ -423,7 +429,28 @@ object PortMap:
         // which is a stored field, so the member key the source map records already spells Java's
         // name (`…FileHandle#file`, never `#file$field`) and the join key is right by construction.
         // The EMITTED name is the half that was missing, and it is in `shape`'s `name=`.
-        val upstream = erase(upstreamOf(e.member, e.javaPath, renames))
+        //
+        // A BEAN/NULLARY rename DOES update `fullName` (via `MemberRenamer`), so the source map
+        // records the RENAMED name. `memberOriginals` carries the reverse mapping: the original
+        // java FQN before the rename. This is the same contract type entries follow — `upstream`
+        // is java's own spelling, `emitted` is scala's.
+        val emittedUpstream = erase(upstreamOf(e.member, e.javaPath, renames))
+        // Look up the bare FQN (without parentheses/parameters) in memberOriginals, because the
+        // decision log records the FQN without a descriptor and the source map includes one.
+        val bareUpstream = emittedUpstream.indexOf('(') match
+          case i if i > 0 => emittedUpstream.substring(0, i)
+          case _          => emittedUpstream
+        val upstream = memberOriginals.get(bareUpstream).map { orig =>
+          // The original FQN is also bare. Append the parameter part from emittedUpstream.
+          val params = if emittedUpstream.length > bareUpstream.length then emittedUpstream.substring(bareUpstream.length) else ""
+          // The original java name replaces the member part, keeping the same owner
+          val origCut = orig.lastIndexOf('#')
+          val upCut   = bareUpstream.lastIndexOf('#')
+          if origCut >= 0 && upCut >= 0 then
+            // owner from the upstream (already un-renamed) + original member name + params
+            bareUpstream.substring(0, upCut + 1) + orig.substring(origCut + 1) + params
+          else emittedUpstream
+        }.getOrElse(emittedUpstream)
         Entry("member", upstream, e.member,
           if upstream != erase(e.member) then Disposition.Renamed else Disposition.Ported,
           body = bodyKeys(upstream) || bodyKeys(e.member),
