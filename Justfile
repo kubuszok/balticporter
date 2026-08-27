@@ -1386,12 +1386,12 @@ ai-measure:
 
     # Cross-platform compile gates — no deps (ai_deps is empty).
     xplat_compile scala-js {{scala_version}} "$REPORT" aimeasure \
-      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala
+      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala -- {{ai_deps}}
     xplat_compile scala-native {{scala_version}} "$REPORT" aimeasure \
-      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala
+      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala -- {{ai_deps}}
 
     # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$REPORT" aimeasure "{{sge_relaxed_flags}}" {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala
+    flags_compile {{scala_version}} "$REPORT" aimeasure "{{sge_relaxed_flags}}" {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala -- {{ai_deps}}
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
