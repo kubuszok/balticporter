@@ -224,7 +224,7 @@ object GdxAiPolicy:
         // runs; the BODY is spliced verbatim into emitted code, so it is written in the port's
         // FINAL namespace — including the EMITTED SPELLING of any member a §4.55 rename moved
         // (`CircularBuffer.size` collides with `size()` and emits as `size$field`, which is why
-        // the body below reads it through the accessor `this.size()` rather than through the
+        // the body below reads it through the accessor `this.size` rather than through the
         // field: the accessor's name is java's own and cannot move under it).
         new balticporter.transform.MethodBodyTransform(Map(
           // `ArrayReflection.newInstance(items.getClass().getComponentType(), n)` — the generic
@@ -239,14 +239,14 @@ object GdxAiPolicy:
               |    val newItems: scala.Array[T] =
               |      new scala.Array[java.lang.Object](newCapacity).asInstanceOf[scala.Array[T]]
               |    if (this.tail > this.head) {
-              |      java.lang.System.arraycopy(this.items, this.head, newItems, 0, this.size())
-              |    } else if (this.size() > 0) {
+              |      java.lang.System.arraycopy(this.items, this.head, newItems, 0, this.size)
+              |    } else if (this.size > 0) {
               |      // NOTE: when head == tail the buffer can be empty or full
               |      java.lang.System.arraycopy(this.items, this.head, newItems, 0, this.items.length - this.head)
               |      java.lang.System.arraycopy(this.items, 0, newItems, this.items.length - this.head, this.tail)
               |    }
               |    this.head = 0
-              |    this.tail = this.size()
+              |    this.tail = this.size
               |    this.items = newItems
               |  }""".stripMargin,
 
@@ -322,7 +322,7 @@ object GdxAiPolicy:
               |        this.indent = 0
               |      } else {
               |        if (!isGuard) {
-              |          val stackedTask: sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.StackedTask[E] = this.getPrevTask()
+              |          val stackedTask: sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.StackedTask[E] = this.prevTask
               |          this.indent = this.indent - this.currentTreeStartIndent
               |          if (stackedTask.task eq this.currentTree.rootTask) {
               |            this.step = this.indent
@@ -341,8 +341,8 @@ object GdxAiPolicy:
               |          // Check the max number of children of the parent
               |          val stackedParent: sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.StackedTask[E] = this.stack.peek()
               |          val maxChildren: scala.Int = stackedParent.metadata.maxChildren
-              |          if (stackedParent.task.getChildCount() >= maxChildren) {
-              |            throw this.stackedTaskException(stackedParent, ((("max number of children exceeded (" + (stackedParent.task.getChildCount() + 1)) + " > ") + maxChildren) + ")")
+              |          if (stackedParent.task.childCount >= maxChildren) {
+              |            throw this.stackedTaskException(stackedParent, ((("max number of children exceeded (" + (stackedParent.task.childCount + 1)) + " > ") + maxChildren) + ")")
               |          } else ()
               |          // Add child task to the parent
               |          stackedParent.task.addChild(task)
@@ -424,7 +424,7 @@ object GdxAiPolicy:
             """{
               |    val valueObject: java.lang.Object = this.castValue(field, value)
               |    if (valueObject == null) {
-              |      this.throwAttributeTypeException(this.getCurrentTask().name, field.getName(), field.getTypeName())
+              |      this.throwAttributeTypeException(this.currentTask.name, field.getName(), field.getTypeName())
               |    } else ()
               |    field.set(task, valueObject)
               |  }""".stripMargin,
