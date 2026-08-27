@@ -1241,6 +1241,11 @@ final case class PortRun(
       // refusal was published nowhere at all — see `refusedMembers` for what that cost.
       refusedMembers = refusedMembers(program, translated),
       memberOriginals = memberOriginals,
+      // …and the FOURTH fingerprint (schema 4). The frontend read this base's external parents,
+      // members and modifiers out of THIS JVM's class files, so which JVM it was is part of what
+      // the map describes — and it is the one part `engine=`, `sources=` and `policy=` all agree
+      // through (`ENGINE-LIMITS.md` M5.10).
+      jdk           = balticporter.core.JvmInfo.specification,
     )
     // …and written only when the ARTIFACT LAYER IS ON, like every other file this run produces.
     //
@@ -2650,11 +2655,17 @@ final case class PortRun(
             pub.map match
               case Left(err) => ManifestAgreement.BasePort(b, scala.None, pub.source, stale = List(err))
               case Right(m0) =>
+                // …and the FOURTH fingerprint, which is neither the engine's, the base's java's nor
+                // its manifest's: the JDK this run reads class files with. `JvmInfo.specification`
+                // is the one input to emitted text that the other three agree through
+                // (`ENGINE-LIMITS.md` M5.10).
                 PortMap.freshness(m0, balticporter.core.EngineInfo.fingerprint, roots,
-                                  basePolicyFingerprint(b)) match
+                                  basePolicyFingerprint(b), balticporter.core.JvmInfo.specification) match
                   case PortMap.Freshness.Fresh          => ManifestAgreement.BasePort(b, Some(m0), pub.source)
                   case PortMap.Freshness.Stale(r)       => ManifestAgreement.BasePort(b, scala.None, pub.source, stale = List(r))
                   case PortMap.Freshness.Unverified(r)  => ManifestAgreement.BasePort(b, Some(m0), pub.source, unverified = List(r))
+                  case PortMap.Freshness.JdkMismatch(published, running) =>
+                    ManifestAgreement.BasePort(b, scala.None, pub.source, jdk = Some(published -> running))
       }
 
   /** Every type this run RESOLVED AGAINST but did not convert — the shared surface, as this run

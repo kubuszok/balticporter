@@ -1315,6 +1315,25 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   moved `policy=` read as a raw diff is two sixteen-character digests. A run that published NO map
   while a baseline exists fails it too: `PortMap.discoverIn` then silently hands its dependents the
   COMMITTED map instead.
+- **THE JDK IS AN INPUT TO THE MEASUREMENT, AND THERE ARE TWO OF THEM.** Every number here rests on
+  two JVMs: the FRONTEND's, which resolves an external symbol's parents, members and modifiers out of
+  a CLASS FILE — so the emitted text is a function of the JDK exactly as it is of the manifest and
+  the engine — and the COMPILE's, which `scala-cli` selects independently. Both were ambient. A
+  migration on GraalVM **24** (a launchd job with no `JAVA_HOME`, so `/usr/bin/java` takes the NEWEST
+  installed JDK) emitted `override def getChars` on `sge.utils.CharArray` — `java.lang.CharSequence`
+  gained the member in 23 — and the JDK-22 compile answered `E037 … overrides nothing` at a member
+  whose name, formals and body are a perfect translation. Every check count, every finding, every
+  other member digest and all three of the port map's fingerprints stayed flat, *correctly*: the
+  engine, the java and the policy really were unchanged. So the compile half is PINNED (`jdk_version`
+  in the `Justfile`, one exported variable, `--jvm` on every `scala-cli` a lane runs) and the
+  frontend half is RECORDED, because a lane cannot pin it — `sbt -client` forks the migration from a
+  server whose JVM was chosen earlier, which is §4.6's boundary and takes §4.6's remedy: the run
+  WRITES `run-latest/jvm.txt` where an environment variable would not arrive. `jdk_guard` prints
+  `frontend jdk N / compile jdk M` on every lane and fails when they differ; ACROSS runs the same
+  question is the port map's `jdk=` header, whose mismatch is fatal (`ENGINE-LIMITS.md` M5.10). Read
+  a bare `overrides nothing` at a faithful translation as a JDK split before reading it as an engine
+  gap — and never "fix" a split by moving `jdk_version`, which is a change to the measurement and is
+  acknowledged by re-accepting every baseline.
 - **WIDENING A GUARD IS MEASURED ON THE PORTS IT WAS NOT AIMED AT, because an OVER-APPROXIMATION is
   invisible to every count.** Narrowing a predicate breaks something and a count says so. Widening
   one is the opposite shape and has no instrument pointed at it: the extra sites take a translation

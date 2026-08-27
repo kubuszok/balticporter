@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-visui	engine=balticporter/0.1.0-SNAPSHOT	sources=7a29c946918c2898	files=162	policy=cc722056f83934dd
+# balticporter port map	schema=4	module=sge-visui	engine=balticporter/0.1.0-SNAPSHOT	sources=7a29c946918c2898	files=162	policy=cc722056f83934dd	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.kotcrab.vis.ui.FocusManager	sge.visui.FocusManager	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
 type	com.kotcrab.vis.ui.Focusable	sge.visui.Focusable	Renamed	-		0		form=trait

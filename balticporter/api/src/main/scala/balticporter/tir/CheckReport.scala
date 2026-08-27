@@ -242,6 +242,12 @@ object CheckReport:
     Files.writeString(out.resolve("counts.tsv"),
       ("#check\tcount" :: findings.map((c, fs) => s"$c\t${fs.size}").sorted).mkString("", "\n", "\n"))
     Files.writeString(out.resolve("report.md"), reportMd(findings))
+    // WHICH JVM THIS RUN RAN ON — the input to the emitted text that no artifact named until a
+    // migration on JDK 24 emitted an `override` the JDK-22 compile rejected (`JvmInfo`'s scaladoc
+    // carries the measurement). Written here rather than in `PortRun` for the reason every other
+    // artifact is: this is the layer that knows a run directory exists and is gated on the artifact
+    // layer, so a spec's forked JVM cannot publish one into the checkout.
+    Files.writeString(out.resolve("jvm.txt"), balticporter.core.JvmInfo.render)
     val d = diff(parseAll(baselineDir.resolve("findings.tsv")), all,
                  baselineChecks(baselineDir), findings.map(_._1).toSet,
                  hasBaseline = Files.isRegularFile(baselineDir.resolve("findings.tsv")))
@@ -266,6 +272,10 @@ object CheckReport:
     // not answerable after the fact from anything else — `just debug-flags PORT` reads this line.
     // Recorded even when empty: "(none)" is the answer to that question as often as a flag is.
     sb.append(s"debug flags: ${DebugFlags.active match { case Nil => "(none)"; case on => on.mkString(" ") }}\n\n")
+    // …and the JVM, for the same reason and in the same document: `jvm.txt` is what a guard reads,
+    // and this is what an operator reads when a port map's `jdk=` disagrees with a compile.
+    sb.append(s"jvm: ${balticporter.core.JvmInfo.version} (${balticporter.core.JvmInfo.vendor}), " +
+      s"spec ${balticporter.core.JvmInfo.specification}, java.home `${balticporter.core.JvmInfo.home}`\n\n")
     sb.append("| check | findings |\n|---|---|\n")
     findings.map((c, fs) => s"| $c | ${fs.size} |").sorted.foreach(l => sb.append(l).append('\n'))
     findings.sortBy(_._1).foreach { (c, fs) =>

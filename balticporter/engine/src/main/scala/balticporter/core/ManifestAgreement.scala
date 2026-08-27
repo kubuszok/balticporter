@@ -106,6 +106,13 @@ object ManifestAgreement:
     * @param source   `run-latest` / `baseline` — which artifact was read.
     * @param stale    reasons the map was refused. Non-empty ⇒ `map` is `scala.None`.
     * @param unverified reasons freshness could not be established. The map IS used.
+    * @param jdk      `(published, running)` where the base's map was published by a JVM of a
+    *                 different JDK SPECIFICATION than this run's. Non-empty ⇒ `map` is
+    *                 `scala.None`, and the finding is FATAL: unlike every other refusal here, the
+    *                 fallback does not help — re-deriving the base's decisions re-derives them from
+    *                 the same class files THIS JVM holds, while the Scala the dependent is about to
+    *                 compile against was emitted from the OTHER JVM's. Both halves are carried
+    *                 because the finding must name both (see [[PortMap.Freshness.JdkMismatch]]).
     */
   final case class BasePort(
       manifest: PortManifest,
@@ -113,6 +120,7 @@ object ManifestAgreement:
       source: String = "",
       stale: List[String] = Nil,
       unverified: List[String] = Nil,
+      jdk: Option[(String, String)] = scala.None,
   ):
     def name: String = manifest.name
     /** does this base declare ANY shared-surface policy? An empty manifest is the documented way to
@@ -266,6 +274,24 @@ object ManifestAgreement:
         "from its manifest — which cannot see the base's emitted output, its nested-type drops, or " +
         "the configuration of any phase that does not implement `SurfacePolicy`. Re-run the base " +
         "port to restore the stronger check.")
+    /** the base's map was published by a JVM of a DIFFERENT JDK specification than this run's.
+      *
+      * FATAL, and the only member of this family that is. Every other map verdict here degrades to
+      * a WEAKER but still valid check: `Stale` and `Missing` fall back to re-deriving the base's
+      * decisions from its manifest, which is honest because the re-derivation and the base's own
+      * run would agree if the base were re-run. A JDK mismatch breaks that: the base's EMITTED
+      * SCALA — the artifact this module actually compiles against — was produced by a frontend
+      * reading a different set of class files, and no amount of re-derivation on THIS JVM produces
+      * it. So there is nothing weaker to fall back TO, and the run must stop rather than emit a
+      * module against a base whose surface it cannot reproduce. */
+    case BaseMapJdk extends Kind(true,
+      "§1(b) PER-LIBRARY, OPERATIONAL: the base's port map was published by a JVM implementing a " +
+        "DIFFERENT JDK specification than this run's, so the Scala this module is about to compile " +
+        "against was emitted from class files this run cannot read. Nothing else can see it — the " +
+        "engine, source and policy fingerprints all match, because the engine, the java and the " +
+        "policy really are unchanged. Re-run the base port ON THIS JDK, or run this port on the " +
+        "base's (`ENGINE-LIMITS.md` M5.10; a lane's own `jdk_guard` is the same question asked of " +
+        "the COMPILER instead of the base).")
     /** freshness could not be established either way. The map WAS used. */
     case BaseMapUnverified extends Kind(false,
       "§1(b) PER-LIBRARY, OPERATIONAL: the base's published map was used but its freshness could " +
@@ -356,9 +382,15 @@ object ManifestAgreement:
     * to share no types with it, because the NEXT change to that base is when it matters. */
   private def mapHealth(ports: List[BasePort]): List[Finding] =
     ports.sortBy(_.name).flatMap { p =>
-      p.stale.map(r => Finding(Kind.BaseMapStale, p.name, s"${p.name} port map", r)) ++
+      p.jdk.map((published, running) => Finding(Kind.BaseMapJdk, p.name, s"${p.name} port map",
+        s"published by a JVM on JDK $published; this run is on JDK $running")).toList ++
+        p.stale.map(r => Finding(Kind.BaseMapStale, p.name, s"${p.name} port map", r)) ++
         p.unverified.map(r => Finding(Kind.BaseMapUnverified, p.name, s"${p.name} port map", r)) ++
-        (if p.map.isEmpty && p.stale.isEmpty && p.declaresPolicy then
+        // …and NOT "missing" as well. A map refused for a STATED reason — stale, or published on
+        // another JDK — is one this run read and declined, which is a different sentence from "this
+        // base has never been run", and reporting both puts two remedies in front of a reader for
+        // one artifact.
+        (if p.map.isEmpty && p.stale.isEmpty && p.jdk.isEmpty && p.declaresPolicy then
            List(Finding(Kind.BaseMapMissing, p.name, s"${p.name} port map",
              "no port map published by this base; the shared surface below is re-derived from its manifest"))
          else Nil)

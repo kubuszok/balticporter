@@ -10396,6 +10396,57 @@ Native has them, (a) universal and one redirect table away (Phase 2, P3's shape)
 equals the JVM count, i.e. the port's own floor. The first instrument said 1155 where the truth is
 0, which is §4.56's rule about an instrument's own invocation being part of the measurement.
 
+**Wave 0.6 delivered: the JDK is recorded, pinned and GUARDED (2026-08-27).** The third instrument
+defect of this campaign, and the first that reaches an EMITTED BYTE. Measured in the primary
+checkout: a migration JVM on **GraalVM 24** — a launchd job with no `JAVA_HOME`, so `/usr/bin/java`
+asks `java_home` for the newest installed JDK — emitted `override def getChars` on
+`sge.utils.CharArray`, because `java.lang.CharSequence` gained `getChars` in JDK 23; the same
+sources on JDK 22 emit no `override`, and `scala-cli` on 22 answered one
+`E037 … overrides nothing`. Every check count, every finding, every other member digest and all
+three port-map fingerprints were flat, correctly — the engine, the java and the policy really were
+unchanged. `errors.tsv` classified it `EngineGap`, i.e. the honest answer to the wrong question.
+
+Two ambient JVMs stood behind every number this repository quotes, and the fix splits along which
+one a lane can control:
+
+- **the COMPILE half is pinned.** `jdk_version := "22"` at the top of the `Justfile`, exported, and
+  passed as `--jvm` by all 41 `scala-cli` invocations in the lanes plus `scripts/_lib.sh`'s own two
+  (`xplat_compile`, `flags_compile`). 22 is the state every committed baseline was measured on, not
+  a number read off the reference build — sge's `-release 17` is a bytecode target and pins no JDK
+  (`DESIGN.md` §8.23b);
+- **the FRONTEND half is recorded, because a lane cannot pin it.** `sbt -client` forks the migration
+  from a server whose JVM was chosen when the server started, so an exported `JAVA_HOME` never
+  arrives — `CLAUDE.md` §4.6's boundary, and §4.6's remedy: `CheckReport` writes
+  `run-latest/jvm.txt` (`specification`, `version`, `vendor`, `home`) on every run, gated on the
+  artifact layer and never promoted to a baseline (a JDK path is machine-specific).
+
+`jdk_guard` (`scripts/_lib.sh`, called by all 24 lanes that compile) reads the recorded
+specification beside the compiler's own, derived by RUNNING `scala-cli` with the lane's `--jvm` over
+a one-line java probe — the same binary and the same flag, never a `java -version` or a coursier
+path, which would be the second derivation §4.56 is about. It prints `frontend jdk N / compile jdk M`
+on every run and exits immediately on a split, `compile_guard`-style, because a correlation computed
+over a tree emitted by the wrong JVM is a second wrong number rather than a diagnosis. Three cases
+are pinned in `lane-selfcheck`: agreement, a split (fails, naming both), and a missing `jvm.txt`
+(fails — "nothing compared this" reads exactly like "this compares clean").
+
+Across RUNS the same question is the port map's, and it needed a fourth fingerprint: **schema 4 adds
+`jdk=`**, `PortMap.freshness` answers `JdkMismatch(published, running)`, and
+`ManifestAgreement.Kind.BaseMapJdk` reports it **fatal** — the only map verdict in that family that
+is, because it is the only one with nothing weaker to fall back to (`DESIGN.md` §5.4,
+`ENGINE-LIMITS.md` M5.10).
+
+**Blast, measured.** `just jbump-measure` green end to end with the guard printing
+`frontend jdk 22 / compile jdk 22`: **0 errors** (JVM, JS, Native all unchanged; ref 1 = 1),
+**0 moved member digests**, findings content unchanged, every check count at its baseline, and the
+differential probe identical over 44 transcript lines — so pinning the compile JVM to a
+coursier-managed JDK 22 moved nothing. The ONLY artifact that moved is the port-map header, on all
+25 ports: `schema= 3 -> 4` and `jdk= -> 22`, rows unchanged. The 24 baselines other than jbump's
+were rewritten mechanically (`schema=3` → `schema=4`, `\tjdk=22` appended) rather than re-run, and
+the warrant for that is jbump's own: its baseline was edited by the same rule and then reproduced
+BYTE-IDENTICALLY by the run. If any port's frontend was in fact not on 22, the instrument this wave
+adds is exactly what says so on the next `measure-all` — the risk is visible rather than absorbed.
+Suites: engine 990, corpus 1414, api 65, frontend-spoon 121, testkit 338, all green.
+
 **The drop-in's `scalacOptions` finding.** sge compiles with `-deprecation -feature
 -language:implicitConversions -no-indent -Werror -Wimplausible-patterns -Wrecurse-with-default
 -Wenum-comment-discard -Wunused:imports,privates,locals,patvars,nowarn` (plus two macro

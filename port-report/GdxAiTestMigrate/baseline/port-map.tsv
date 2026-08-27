@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-ai-test	engine=balticporter/0.1.0-SNAPSHOT	sources=430a6fde5872b03a	files=2	policy=fd6ff22cb5e8788c
+# balticporter port map	schema=4	module=sge-ai-test	engine=balticporter/0.1.0-SNAPSHOT	sources=430a6fde5872b03a	files=2	policy=fd6ff22cb5e8788c	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.ai.btree.branch.ParallelTest	sge.ai.btree.branch.ParallelTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.ai.btree.branch.ParallelTest$TestTask	sge.ai.btree.branch.ParallelTest$TestTask	Renamed	-		0		companion=yes form=class parents=sge.ai.btree.LeafTask primary=() primaryKind=unique-root primaryVis=private[ParallelTest]

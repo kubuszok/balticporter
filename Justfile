@@ -225,6 +225,28 @@ md_ext_test_src := "../ssg/original-src/flexmark-java/flexmark-ext-aside/src/tes
 # the compiler every lane measures with — one version, one server-less invocation per lane
 scala_version := "3.8.4"
 
+# …AND THE JDK EVERY LANE COMPILES WITH — the OTHER half of "one compiler", and the half that was
+# ambient until it broke a measurement (`ENGINE-LIMITS.md` M5.10, `scripts/_lib.sh`'s `jdk_guard`).
+#
+# `scala-cli` picks its JVM from `--jvm`, then `JAVA_HOME`, then the system default — so with no
+# flag the lanes compiled on whatever JDK the operator's shell happened to hold, and the migration
+# they measure ran on whatever JDK the sbt SERVER happened to hold. Those are two independent
+# ambient choices over one measurement. This pins the half a lane can pin; `jdk_guard` compares it
+# against the half it cannot (a `JAVA_HOME` exported by a recipe does not reach a `sbt -client`
+# fork) and fails the lane when the two specification versions differ.
+#
+# WHY 22 AND NOT 17. The reference build compiles with `-release 17` (`../sge/build.sbt`), which is
+# a statement about the BYTECODE the sge artifacts target and not about the JDK anything is built
+# on; `-release 17` on a JDK 22 is exactly what that build does. What this variable decides is which
+# JDK's CLASS FILES scalac reads for `java.*` signatures, and 22 is the state every committed
+# baseline in this repository was measured on. Moving it is a change to the measurement and is
+# ACKNOWLEDGED by re-accepting every baseline (§5) — not absorbed. `DESIGN.md` §8.24 records the
+# delta between the two numbers.
+#
+# EXPORTED, so `scripts/_lib.sh`'s own two `scala-cli` invocations (`xplat_compile`, `flags_compile`)
+# and `jdk_guard`'s probe read the SAME variable rather than a second copy that can drift.
+export jdk_version := "22"
+
 # Reference-build scalacOptions (DESIGN.md §8.24, PROGRESS.md §13 wave 1.0).
 #
 # The flag list is READ from the reference repo's SgePlugin / ssg's build.sbt, not hand-copied:
@@ -535,12 +557,16 @@ gdx-measure:
     echo
     break_residue {{gdx_module}}/src_managed/main/scala
 
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$REPORT"
     echo "-- compile --"
     # DECLARED is whatever the port's own manifest published (`declared_dep_flags`, scripts/_lib.sh).
     # Before the Named target this was empty and the compile was standalone; now it carries `lls`,
     # because the emitted types reference `lowlevel.Nullable`.
     DECLARED=$(declared_dep_flags "$REPORT" | tr '\n' ' ')
-    scala-cli compile --scala {{scala_version}} --server=false $DECLARED {{gdx_module}}/src_managed/main/scala 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gdxmeasure.txt
+    scala-cli compile --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DECLARED {{gdx_module}}/src_managed/main/scala 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gdxmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
     # count ALL errors: coded `-- [Exxx] ... Error` AND bare `-- Error:` (e.g. "secondary constructor
     # must call a preceding constructor" carries no code). The coded-only count silently undercounts.
@@ -624,6 +650,10 @@ gdx-test-measure:
     echo
     break_residue {{gdx_module}}/src_managed/test/scala
 
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$REPORT"
     echo "-- compile --"
     # `{{gdx_module}}/src/test/scala` is the HAND-WRITTEN half of this port's test source set, and it
     # is on the line for the same reason `ported/sge-screens/src` and `ported/sge-vfx/src` are on theirs: an
@@ -631,7 +661,7 @@ gdx-test-measure:
     # sge.SgeTestFixture.testSge()`, and the fixture is a `src/` file a human may write where the
     # generated one is not (CLAUDE.md §5.5, `ENGINE-LIMITS.md` CT7). Leaving it off compiles the
     # emitted suite against a fixture that is not there — one error, and it is the port's own.
-    scala-cli compile --test --scala {{scala_version}} --server=false {{gdx_deps}} \
+    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} {{gdx_deps}} \
       {{gdx_module}}/src_managed/main/scala {{gdx_module}}/src_managed/test/scala \
       {{gdx_module}}/src/test/scala 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gdxtestmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
@@ -661,7 +691,7 @@ gdx-test-measure:
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
-      scala-cli test --scala {{scala_version}} --server=false {{gdx_run_deps}} \
+      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} {{gdx_run_deps}} \
         -Duser.language=en -Duser.country=US \
         {{gdx_module}}/src_managed/main/scala {{gdx_module}}/src_managed/test/scala \
         {{gdx_module}}/src/test/scala 2>&1 |
@@ -744,10 +774,14 @@ ashley-measure:
     echo
     break_residue {{ashley_module}}/src_managed
 
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$REPORT"
     echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a port
     # that does not compile — a false NEGATIVE on the headline number.
-    scala-cli compile --test --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
       {{gdx_module}}/src_managed/main/scala {{ashley_module}}/src_managed/main/scala {{ashley_module}}/src_managed/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/ashleymeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
@@ -769,7 +803,7 @@ ashley-measure:
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
-      scala-cli test --scala {{scala_version}} --server=false $DEPS -Duser.language=en -Duser.country=US \
+      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS -Duser.language=en -Duser.country=US \
         {{gdx_module}}/src_managed/main/scala {{ashley_module}}/src_managed/main/scala {{ashley_module}}/src_managed/test/scala \
         2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/ashleyrun.txt
       reconcile_outcomes "$MEASURE_TMP"/ashleyrun.txt "$MUNIT_TESTS"; RECONCILED=$?
@@ -853,11 +887,15 @@ anim8-measure:
     echo
     break_residue {{anim8_module}}/src_managed
 
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$REPORT"
     echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
     DEPS="{{anim8_deps}}"
-    scala-cli compile --test --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
       {{gdx_module}}/src_managed/main/scala {{anim8_module}}/src_managed/main/scala {{anim8_module}}/src/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/anim8measure.txt
     CLI_STATUS=${PIPESTATUS[0]}
@@ -881,7 +919,7 @@ anim8-measure:
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
-      scala-cli test --scala {{scala_version}} --server=false $DEPS -Duser.language=en -Duser.country=US \
+      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS -Duser.language=en -Duser.country=US \
         {{gdx_module}}/src_managed/main/scala {{anim8_module}}/src_managed/main/scala {{anim8_module}}/src/test/scala \
         2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/anim8run.txt
       reconcile_outcomes "$MEASURE_TMP"/anim8run.txt "$HAND_TESTS"; RECONCILED=$?
@@ -983,10 +1021,14 @@ gltf-measure:
     echo
     break_residue {{gltf_module}}/src_managed
 
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$REPORT"
     echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a port
     # that does not compile — a false NEGATIVE on the headline number.
-    scala-cli compile --test --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
       {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala \
       {{gltf_module}}/src_managed/test/scala {{gltf_module}}/src/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gltfmeasure.txt
@@ -1011,7 +1053,7 @@ gltf-measure:
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
-      scala-cli test --scala {{scala_version}} --server=false $DEPS -Duser.language=en -Duser.country=US \
+      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS -Duser.language=en -Duser.country=US \
         {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala \
         {{gltf_module}}/src_managed/test/scala {{gltf_module}}/src/test/scala \
         2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gltfrun.txt
@@ -1108,6 +1150,10 @@ screens-measure:
     echo "-- hand-written support sources (CLAUDE.md §5.5: src/ is the hand-written half) --"
     echo "$(find {{screens_module}}/src/main/scala -name '*.scala' | wc -l | tr -d ' ') file(s), $(cat $(find {{screens_module}}/src/main/scala -name '*.scala') | wc -l | tr -d ' ') lines — the guacamole replacements TypeRedirectTransform points at"
 
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$REPORT"
     echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
@@ -1117,7 +1163,7 @@ screens-measure:
     # hand-written suite has to construct one — the same fixture the base's own `selfSupplied` suite
     # is given, rather than a third copy of it in every dependent (CLAUDE.md §1.5's spirit, one
     # artifact down: a value the dependent imports, never policy it repeats).
-    scala-cli compile --test --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
       {{gdx_module}}/src_managed/main/scala {{screens_module}}/src_managed/main/scala \
       {{screens_module}}/src/main/scala {{screens_module}}/src/test/scala \
       {{gdx_module}}/src/test/scala \
@@ -1143,7 +1189,7 @@ screens-measure:
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
-      scala-cli test --scala {{scala_version}} --server=false $DEPS -Duser.language=en -Duser.country=US \
+      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS -Duser.language=en -Duser.country=US \
         {{gdx_module}}/src_managed/main/scala {{screens_module}}/src_managed/main/scala \
         {{screens_module}}/src/main/scala {{screens_module}}/src/test/scala \
         {{gdx_module}}/src/test/scala \
@@ -1226,12 +1272,16 @@ vfx-measure:
     echo
     break_residue {{vfx_module}}/src_managed
 
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$REPORT"
     echo "-- compile --"
     DEPS="{{vfx_deps}}"
     # `{{gdx_module}}/src/test/scala` is the BASE port's hand-written test fixture
     # (`sge.SgeTestFixture`), on this line for the reason `screens-measure` states: the base retires
     # `Gdx` into a threaded context and this port's hand-written suite has to construct one.
-    scala-cli compile --test --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
       {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala {{vfx_module}}/src/test/scala \
       {{gdx_module}}/src/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/vfxmeasure.txt
@@ -1256,7 +1306,7 @@ vfx-measure:
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
-      scala-cli test --scala {{scala_version}} --server=false $DEPS -Duser.language=en -Duser.country=US \
+      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS -Duser.language=en -Duser.country=US \
         {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala {{vfx_module}}/src/test/scala \
         {{gdx_module}}/src/test/scala \
         2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/vfxrun.txt
@@ -1363,6 +1413,10 @@ ai-measure:
     echo
     break_residue {{ai_module}}/src_managed
 
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$REPORT"
     echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
@@ -1372,7 +1426,7 @@ ai-measure:
     # directories it is handed, so a test tree added here without `--test` would have its errors read
     # and not reported (CLAUDE.md §4.56).
     DEPS="{{ai_deps}}"
-    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
       {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/aimeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
@@ -1474,11 +1528,15 @@ ai-test-measure:
     echo
     break_residue {{ai_module}}/src_managed/test/scala
 
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$REPORT"
     echo "-- compile --"
     # `--test`: without it `scala-cli` READS the test directories and reports only the MAIN scope,
     # so a suite that does not compile measures 0 (§4.56's instrument-invocation rule — measured at
     # 0 against 6 on the one port whose test scope had stopped compiling).
-    scala-cli compile --test --scala {{scala_version}} --server=false {{ai_test_deps}} \
+    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} {{ai_test_deps}} \
       {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala \
       {{ai_module}}/src_managed/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/aitestmeasure.txt
@@ -1501,7 +1559,7 @@ ai-test-measure:
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
-      scala-cli test --scala {{scala_version}} --server=false {{ai_test_deps}} \
+      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} {{ai_test_deps}} \
         -Duser.language=en -Duser.country=US \
         {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala \
         {{ai_module}}/src_managed/test/scala \
@@ -1586,6 +1644,10 @@ ai-diff-measure:
     fi
 
     echo
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$ROOT/port-report/GdxAiMigrate"
     echo "-- compile --"
     # `--test`: without it `scala-cli` READS the test directory and reports only the MAIN scope, so
     # a differential suite that does not compile measures 0 (CLAUDE.md §4.56's instrument-invocation
@@ -1596,7 +1658,7 @@ ai-diff-measure:
     # (CLAUDE.md §3), and two files that typed clean turned out to declare 18 unimplemented members
     # and an override of nothing between them. A census read off the typer alone would have shipped
     # both.
-    scala-cli compile --test --scala {{scala_version}} --server=false {{ai_test_deps}} \
+    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} {{ai_test_deps}} \
       {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala "$TREE" \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/aidiffmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
@@ -1614,7 +1676,7 @@ ai-diff-measure:
 
     echo
     echo "-- run --"
-    scala-cli test --scala {{scala_version}} --server=false {{ai_test_deps}} \
+    scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} {{ai_test_deps}} \
       -Duser.language=en -Duser.country=US \
       {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala "$TREE" \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/aidiffrun.txt
@@ -1691,6 +1753,10 @@ sg-measure:
     echo
     break_residue {{sg_module}}/src_managed
 
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$REPORT"
     echo "-- compile --"
     # NOTE the ANSI strip. Dropped once, and `grep -cE '^-- .*Error'` then matched nothing because every
     # line begins with a colour escape — reporting 0 errors for a port that had 20. A false NEGATIVE on
@@ -1698,7 +1764,7 @@ sg-measure:
     # BOTH source sets on one invocation: the main port is RuntimeMode.Vendored, so the shims live in
     # `src_managed/main` and the suite links against them there. Compiling either alone measures nothing.
     DEPS="{{sg_deps}}"
-    scala-cli compile --test --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
       {{sg_module}}/src_managed/main/scala {{sg_module}}/src_managed/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/sgmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
@@ -1728,7 +1794,7 @@ sg-measure:
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
-      scala-cli test --scala {{scala_version}} --server=false $DEPS -Duser.language=en -Duser.country=US \
+      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS -Duser.language=en -Duser.country=US \
         {{sg_module}}/src_managed/main/scala {{sg_module}}/src_managed/test/scala \
         2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/sgrun.txt
       reconcile_outcomes "$MEASURE_TMP"/sgrun.txt "$MUNIT_TESTS"; RECONCILED=$?
@@ -1807,11 +1873,15 @@ noise4j-measure:
     echo
     break_residue {{n4j_module}}/src_managed
 
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$REPORT"
     echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a port
     # that does not compile — a false NEGATIVE on the headline number.
     DEPS="{{n4j_deps}}"
-    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
       {{n4j_module}}/src_managed/main/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/n4jmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
@@ -1903,12 +1973,16 @@ jbump-measure:
     echo
     break_residue {{jbump_module}}/src_managed
 
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$REPORT"
     echo "-- compile --"
     # NOTE the ANSI strip — dropped once, and every line then began with an escape, reporting 0
     # errors for a port that had 20. A false NEGATIVE on the headline number is the worst failure a
     # measure lane can have.
     DEPS="{{jbump_deps}}"
-    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
       {{jbump_module}}/src_managed/main/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/jbumpmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
@@ -1965,7 +2039,7 @@ jbump-measure:
     fi
     java -cp "$PROBE/classes" ProbeJava > "$PROBE/java.txt" 2>&1
     JAVA_ST=$?
-    scala-cli run --scala {{scala_version}} --server=false $DEPS \
+    scala-cli run --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
       {{jbump_module}}/src_managed/main/scala balticporter/corpus/ports/jbump/probe/Probe.scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' \
       | grep -vE '^Warning: setting |deprecation warning|^[0-9]+ warning' > "$PROBE/scala.txt"
@@ -2072,12 +2146,16 @@ usl-measure:
     echo
     break_residue {{usl_module}}/src_managed
 
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$REPORT"
     echo "-- compile --"
     # NOTE the ANSI strip — dropped once, and every line then began with an escape, reporting 0
     # errors for a port that had 20. A false NEGATIVE on the headline number is the worst failure a
     # measure lane can have.
     DEPS="{{usl_deps}}"
-    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
       {{usl_module}}/src_managed/main/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/uslmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
@@ -2175,7 +2253,7 @@ usl-measure:
     # `grep -v` list of warning shapes is a filter that has to be extended every time scalac phrases
     # one differently — the same enumerate-the-accepted-forms mistake §4.56's counter rule is about.
     # The probe's own first line is a marker nothing else emits, so anchoring on it is exact.
-    scala-cli run --scala {{scala_version}} --server=false $DEPS --main-class Oracle \
+    scala-cli run --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS --main-class Oracle \
       {{usl_module}}/src_managed/main/scala balticporter/corpus/ports/visui-usl/probe/Oracle.scala \
       -- {{usl_styles}} {{usl_known_good}} \
       > "$ORACLE/scala-raw.txt" 2>&1
@@ -2297,6 +2375,10 @@ usl-test-measure:
     echo
     break_residue {{usl_module}}/src_managed
 
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$TREPORT"
     echo "-- compile --"
     # BOTH source sets on ONE invocation: the main port is RuntimeMode.Vendored, so the shims live
     # in `src_managed/main` and the suite links against them there. Compiling either alone measures
@@ -2305,7 +2387,7 @@ usl-test-measure:
     # reports a main-only figure under a two-scope headline (§4.56's instrument rule, measured at
     # 0 against 6 on identical inputs).
     DEPS="{{usl_deps}} {{usl_test_deps}}"
-    scala-cli compile --test --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
       {{usl_module}}/src_managed/main/scala {{usl_module}}/src_managed/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/usltmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
@@ -2332,7 +2414,7 @@ usl-test-measure:
       # THE RESOURCE DIRECTORY IS THE LOAD-BEARING ARGUMENT. Every test resolves its input through
       # `getResourceAsStream("/test-*.usl")`, so without it `readFile` receives a null stream and
       # all six fail identically — which would read exactly like a conversion defect.
-      scala-cli test --scala {{scala_version}} --server=false $DEPS \
+      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
         --resource-dir {{usl_test_res}} \
         -Duser.language=en -Duser.country=US \
         {{usl_module}}/src_managed/main/scala {{usl_module}}/src_managed/test/scala \
@@ -2488,6 +2570,10 @@ liqp-measure:
     echo
     break_residue {{liqp_module}}/src_managed
 
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$REPORT"
     echo "-- compile --"
     # The generated parser is a directory of CLASS FILES the frontend already read (D-liqp-1). If
     # scalac does not read the same `liquid.parser.v4` the two halves of the port disagree about
@@ -2518,7 +2604,7 @@ liqp-measure:
     echo "-- declared coordinates, from the run's own dependencies.tsv --"
     echo "   $DECLARED"
     DEPS="{{liqp_deps}} {{liqp_test_deps}} $DECLARED"
-    scala-cli compile --test --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
       --jar "{{liqp_parser_classes}}" \
       {{liqp_module}}/src_managed/main/scala {{liqp_module}}/src_managed/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/liqpmeasure.txt
@@ -2571,7 +2657,7 @@ liqp-measure:
       # `src_managed/main/resources` because the descriptor is a build product the run writes from
       # the port's `serviceProviders` key — it was a hand-written `src/main/resources` file until
       # that key existed, which is the state P5's second half described.
-      ( cd "$FIX" && scala-cli test --workspace "$FIX" --scala {{scala_version}} --server=false $DEPS \
+      ( cd "$FIX" && scala-cli test --workspace "$FIX" --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
           -Duser.language=en -Duser.country=US \
           --jar "$ROOT/{{liqp_parser_classes}}" \
           --resource-dir "$ROOT/{{liqp_module}}/src_managed/main/resources" \
@@ -2701,11 +2787,15 @@ md-measure:
     echo
     break_residue {{md_module}}/src_managed
 
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$REPORT"
     echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a port
     # that does not compile — a false NEGATIVE on the headline number.
     DEPS="{{md_deps}}"
-    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
       {{md_module}}/src_managed/main/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/mdmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
@@ -2812,6 +2902,10 @@ md-test-measure:
     echo
     break_residue {{md_module}}/src_managed/test
 
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$TREPORT"
     echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
@@ -2819,7 +2913,7 @@ md-test-measure:
     # `src_managed/main` and the suite links against them there. Compiling either alone measures
     # nothing.
     DEPS="{{md_deps}} {{md_test_deps}}"
-    scala-cli compile --test --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
       {{md_module}}/src_managed/main/scala {{md_module}}/src_managed/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/mdtestmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
@@ -2852,7 +2946,7 @@ md-test-measure:
       # harness marker on the test JVM's classpath; see `md_spec_res` for all three, for why the
       # harness's two are the upstream's own bytes at the upstream's own paths, and for why the
       # library's own is now the PORT's output instead (`DESIGN.md` §8.22).
-      scala-cli test --scala {{scala_version}} --server=false $DEPS \
+      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
         --resource-dir "$ROOT/{{md_spec_res}}" \
         --resource-dir "$ROOT/{{md_lib_res}}" \
         --resource-dir "$ROOT/{{md_tutil_res}}" \
@@ -3051,6 +3145,10 @@ md-ext-measure:
     echo
     break_residue {{md_ext_module}}/src_managed
 
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$EREPORT"
     echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
@@ -3070,7 +3168,7 @@ md-ext-measure:
     # `md_ext_deps` is this lane's and not the base's — see its own comment: the emitted extension
     # code NAMES `org.nibor.autolink`, and the base names nothing from it.
     DEPS="{{md_deps}} {{md_test_deps}} {{md_ext_deps}}"
-    scala-cli compile --test --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
       {{md_module}}/src_managed/main/scala \
       {{md_ext_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/test/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/mdextmeasure.txt
@@ -3110,7 +3208,7 @@ md-ext-measure:
       # `ExceptionInInitializerError` that no compile, check or count can see. Pointed at upstream
       # this flag made the suite pass while the port shipped nothing. The spec files and the harness
       # marker are `md-test-measure`'s and are not on this lane's path.
-      scala-cli test --scala {{scala_version}} --server=false $DEPS \
+      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
         --resource-dir "$ROOT/{{md_lib_res}}" \
         {{md_module}}/src_managed/main/scala \
         {{md_ext_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/test/scala \
@@ -3255,6 +3353,10 @@ textra-measure:
     echo
     break_residue {{textra_module}}/src_managed
 
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$REPORT"
     echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
@@ -3265,7 +3367,7 @@ textra-measure:
     DECLARED=$(declared_dep_flags "$REPORT" | tr '\n' ' ')
     echo "declared coordinates on the compile line: ${DECLARED:-(none)}"
     DEPS="{{textra_deps}} $DECLARED"
-    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
       {{gdx_module}}/src_managed/main/scala {{textra_module}}/src_managed/main/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/textrameasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
@@ -3359,6 +3461,10 @@ textra-diff-measure:
     fi
 
     echo
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$ROOT/port-report/TextraTypistMigrate"
     echo "-- compile --"
     # `--test`: without it `scala-cli` READS the test directory and reports only the MAIN scope, so a
     # differential suite that does not compile measures 0 (CLAUDE.md §4.56's instrument-invocation
@@ -3372,7 +3478,7 @@ textra-diff-measure:
     # with every count flat.
     DECLARED=$(declared_dep_flags "$ROOT/port-report/TextraTypistMigrate" | tr '\n' ' ')
     echo "declared coordinates on the compile line: ${DECLARED:-(none)}"
-    scala-cli compile --test --scala {{scala_version}} --server=false {{textra_test_deps}} $DECLARED \
+    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} {{textra_test_deps}} $DECLARED \
       {{gdx_module}}/src_managed/main/scala {{textra_module}}/src_managed/main/scala "$TREE" \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/textradiffmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
@@ -3390,7 +3496,7 @@ textra-diff-measure:
 
     echo
     echo "-- run --"
-    scala-cli test --scala {{scala_version}} --server=false {{textra_test_deps}} $DECLARED \
+    scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} {{textra_test_deps}} $DECLARED \
       -Duser.language=en -Duser.country=US \
       {{gdx_module}}/src_managed/main/scala {{textra_module}}/src_managed/main/scala "$TREE" \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/textradiffrun.txt
@@ -3573,6 +3679,10 @@ visui-measure:
     echo
     break_residue {{visui_module}}/src_managed
 
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$REPORT"
     echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
@@ -3583,7 +3693,7 @@ visui-measure:
     DECLARED=$(declared_dep_flags "$REPORT" | tr '\n' ' ')
     echo "declared coordinates on the compile line: ${DECLARED:-(none)}"
     DEPS="{{visui_deps}} $DECLARED"
-    scala-cli compile --scala {{scala_version}} --server=false $DEPS \
+    scala-cli compile --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
       {{gdx_module}}/src_managed/main/scala {{visui_module}}/src_managed/main/scala \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/visuimeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
@@ -3680,6 +3790,10 @@ visui-diff-measure:
     fi
 
     echo
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$ROOT/port-report/VisUiMigrate"
     echo "-- compile scope: the CLOSURE, because this port is not at zero --"
     # The whole-tree compile is `visui-measure`'s and its floor is that lane's baseline; what this
     # one has to establish is that the five files under test are not among the erroring ones, which
@@ -3719,7 +3833,7 @@ visui-diff-measure:
     # that difference moved four files and 16 tests in the dangerous direction.
     DECLARED=$(declared_dep_flags "$ROOT/port-report/VisUiMigrate" | tr '\n' ' ')
     echo "declared coordinates on the compile line: ${DECLARED:-(none)}"
-    scala-cli compile --test --scala {{scala_version}} --server=false {{visui_test_deps}} $DECLARED \
+    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} {{visui_test_deps}} $DECLARED \
       {{gdx_module}}/src_managed/main/scala $CLOSURE_ARGS "$TREE" \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/visuidiffmeasure.txt
     CLI_STATUS=${PIPESTATUS[0]}
@@ -3737,7 +3851,7 @@ visui-diff-measure:
 
     echo
     echo "-- run --"
-    scala-cli test --scala {{scala_version}} --server=false {{visui_test_deps}} $DECLARED \
+    scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} {{visui_test_deps}} $DECLARED \
       -Duser.language=en -Duser.country=US \
       {{gdx_module}}/src_managed/main/scala $CLOSURE_ARGS "$TREE" \
       2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/visuidiffrun.txt
@@ -4112,7 +4226,7 @@ correlate OUT *ARGS:
       echo "  CLAUDE.md §5.1: never open an emitted file to work out which member an error is in."
       echo "  The lanes do this for you; this is the same command for a compile you ran by hand."
       echo
-      echo "  scala-cli compile --scala 3.8.4 --server=false <port>/src_managed/main/scala > /tmp/c.txt"
+      echo "  scala-cli compile --scala 3.8.4 --server=false --jvm {{jdk_version}} <port>/src_managed/main/scala > /tmp/c.txt"
       echo "  just correlate port-report/<Port>/run-latest --scalac /tmp/c.txt \\"
       echo "       --srcmap port-report/<Port>/run-latest/srcmap.tsv"
       echo
@@ -4301,6 +4415,29 @@ lane-selfcheck:
     out=$(test_outcome_guard "$T" 0 2>&1); rc=$?
     want "a test that DISAPPEARED from the artifact fails the lane" "$rc" "1"
     case "$out" in *"baseline-accept"*) ok "…and names the promotion command" ;; *) bad "…names the promotion command" ;; esac
+
+    echo "-- jdk_guard --"
+    # THE JDK IS AN INPUT TO THE MEASUREMENT (ENGINE-LIMITS M5.10). The three cases below are the
+    # three answers the guard can give, and the middle one is why it exists at all: a frontend on a
+    # JDK the compiler does not have produces a port that fails to compile with every check count,
+    # every finding and every port-map fingerprint flat.
+    J="$T/jdk"; mkdir -p "$J/run-latest"
+    # the compile half, derived the way the guard derives it, so this selfcheck asserts a RELATION
+    # and never a number — a machine on another `jdk_version` must still be able to run it.
+    printf 'specification\t%s\nversion\tx\nvendor\tx\nhome\tx\n' "{{jdk_version}}" > "$J/run-latest/jvm.txt"
+    out=$(jdk_guard "$J" 2>&1); rc=$?
+    want "a run recorded on the lane's own jdk_version passes" "$rc" "0"
+    case "$out" in *"frontend jdk"*"compile jdk"*) ok "…and PRINTS both halves on every run" ;; *) bad "…prints both halves" ;; esac
+
+    printf 'specification\tnot-a-jdk\nversion\tx\nvendor\tx\nhome\tx\n' > "$J/run-latest/jvm.txt"
+    out=$(jdk_guard "$J" 2>&1); rc=$?
+    want "a frontend on ANOTHER jdk FAILS the lane" "$rc" "1"
+    case "$out" in *"JDK SPLIT"*) ok "…and names both versions" ;; *) bad "…names both versions" ;; esac
+
+    rm -f "$J/run-latest/jvm.txt"
+    out=$(jdk_guard "$J" 2>&1); rc=$?
+    want "a MISSING jvm.txt is fatal, never clean" "$rc" "1"
+    case "$out" in *"NO JVM RECORD"*) ok "…because 'nothing compared this' reads exactly like 'this compares clean'" ;; *) bad "…says which comparison never happened" ;; esac
 
     echo "-- reconcile_outcomes --"
     printf '  + a 0.0s\n  + b 0.0s\n' > "$T/run.txt"
@@ -4984,6 +5121,10 @@ ecs-dropin:
     # 4. Compile and test on each platform
     # ------------------------------------------------------------------
     echo
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$ROOT/port-report/AshleyMigrate"
     echo "-- compile and test --"
     # Project ids: sge-ecs (JVM — no suffix), sge-ecsJS, sge-ecsNative. The JVM project does
     # not carry the `JVM` suffix because sbt-projectMatrix's `defaultAxes` includes `VirtualAxis.jvm`.

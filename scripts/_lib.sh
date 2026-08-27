@@ -33,6 +33,107 @@
 MEASURE_TMP="$(pwd)/.balticporter/tmp"
 mkdir -p "$MEASURE_TMP"
 
+# ---------------------------------------------------------------------------------------------
+# THE JDK IS AN INPUT TO THE MEASUREMENT, AND UNTIL NOW NOTHING RECORDED IT.
+#
+# The frontend resolves an EXTERNAL symbol's parents, members and modifiers out of a CLASS FILE,
+# so which JDK the migration JVM happens to be decides the emitted text — exactly as the manifest
+# and the engine do. The compile is a SECOND JVM, chosen independently by `scala-cli`. Nothing
+# compared the two.
+#
+# Measured 2026-08-27 in the primary checkout: a migration JVM on GraalVM **24** (a launchd job with
+# no `JAVA_HOME`, so `/usr/bin/java` asks `java_home` for the NEWEST installed JDK) emitted
+# `override def getChars` on `sge.utils.CharArray` — `java.lang.CharSequence` gained `getChars` in
+# JDK 23 — where the same sources under JDK 22 emit no `override` at all. `scala-cli` then compiled
+# on 22 and reported `E037 … overrides nothing`. Every check count was flat, every finding
+# identical, and all three of the port map's fingerprints matched: the engine, the java and the
+# policy really were unchanged. The only artifact that could have said so did not exist.
+#
+# So two things, and the guard is the one that does the work:
+#
+#  - the RUN records what it ran on (`PortRun` -> `run-latest/jvm.txt`, via `CheckReport`), because
+#    a lane CANNOT force the frontend's JVM: `sbt -client` talks to a long-running server whose JVM
+#    was chosen when the server started, so a `JAVA_HOME` exported here never reaches the forked
+#    migration. That is the same boundary CLAUDE.md §4.6 records for a `-D` flag, with the same
+#    remedy — something the run WRITES crosses it where an environment variable does not;
+#  - the COMPILE is pinned (`jdk_version` in the `Justfile`, one variable, passed as `--jvm` to
+#    every `scala-cli` invocation in a lane), so the half a lane CAN control is not ambient.
+#
+# jdk_guard <report-dir>
+#
+# Reads the run's recorded specification version, derives the compiler's THE SAME WAY THE LANE
+# INVOKES IT — by running `scala-cli` with the lane's own `--jvm` flag, never by reading `java
+# -version` or a coursier path, which is a second derivation free to disagree (§4.56) — prints both
+# on every run, and FAILS the lane when they differ.
+#
+# FATAL, AND IMMEDIATELY, unlike the error and test-discovery baselines that defer their exit to
+# `headline`: those defer so that a regression still gets its correlation printed, and a correlation
+# computed over a tree emitted by the wrong JVM is not a diagnosis, it is a second wrong number.
+# `compile_guard`'s precedent — refuse to report rather than report something unreadable.
+#
+# A MISSING `jvm.txt` is FATAL for `error_baseline_guard`'s reason: "nothing is comparing this" and
+# "this compares clean" are indistinguishable from the outside, and this guard's whole subject is a
+# defect that every other artifact reads clean on.
+jdk_guard() {
+  local dir="$1"
+  local jvm="$dir/run-latest/jvm.txt"
+  if [ ! -f "$jvm" ]; then
+    echo "!! NO JVM RECORD — this run did not say which JDK its frontend read class files with."
+    echo "   $jvm does not exist, so a frontend on JDK 24 emitting an \`override\` that the JDK-22"
+    echo "   compile below rejects would print as an ordinary engine gap (ENGINE-LIMITS M5.10)."
+    echo "   Every migration writes it; a run that did not is one whose artifact layer was off."
+    exit 1
+  fi
+  local frontend
+  frontend=$(grep '^specification'$'\t' "$jvm" | head -1 | cut -f2)
+  if [ -z "$frontend" ]; then
+    echo "!! JVM RECORD UNREADABLE — $jvm holds no \`specification\` row."
+    exit 1
+  fi
+
+  # The compiler's half, derived by ASKING THE COMPILER'S OWN LAUNCHER. A `.java` probe and not a
+  # `.scala` one: scala-cli hands a pure-Java project straight to that JVM's javac and runs it, so
+  # this costs ~0.4s rather than a Scala compilation, and it answers about the JVM `scala-cli`
+  # ACTUALLY selects — which is the question, `--jvm` overriding `JAVA_HOME` and both overriding the
+  # system default.
+  local probe="$MEASURE_TMP/BpJdkProbe.java"
+  cat > "$probe" <<'PROBE'
+public class BpJdkProbe {
+  public static void main(String[] a) { System.out.println(System.getProperty("java.specification.version")); }
+}
+PROBE
+  local compile
+  compile=$(scala-cli run --server=false ${jdk_version:+--jvm "$jdk_version"} "$probe" 2>/dev/null \
+            | sed 's/\x1b\[[0-9;]*m//g' | grep -E '^[0-9]+(\.[0-9]+)*$' | tail -1)
+  if [ -z "$compile" ]; then
+    echo "!! COULD NOT DERIVE THE COMPILE JDK — \`scala-cli run\` over a one-line java probe printed"
+    echo "   no version. The frontend recorded JDK $frontend; the compiler's half is UNKNOWN, and"
+    echo "   'I could not check' is not 'they agree' (CLAUDE.md §3)."
+    exit 1
+  fi
+
+  if [ "$frontend" = "$compile" ]; then
+    echo "  frontend jdk $frontend / compile jdk $compile"
+    return 0
+  fi
+  echo "!! JDK SPLIT — frontend jdk $frontend / compile jdk $compile"
+  echo "   The migration read its class files on JDK $frontend and this lane compiles on JDK $compile,"
+  echo "   so the emitted Scala is a function of a JDK the compiler does not have. It arrives as an"
+  echo "   ordinary typer error at a member whose translation is perfect — measured as one"
+  echo "   \`E037 … overrides nothing\` on \`sge.utils.CharArray\` (ENGINE-LIMITS M5.10), with every"
+  echo "   check count, every finding and all three port-map fingerprints flat."
+  echo
+  echo "   WHAT TO DO — make the two agree, then re-run this lane:"
+  echo "     the COMPILE half is pinned by \`jdk_version\` at the top of the Justfile (currently"
+  echo "     '${jdk_version:-<unset>}'); the FRONTEND half is whatever JVM the sbt SERVER held when"
+  echo "     the MIGRATION ran, and a JAVA_HOME exported by this lane does not reach it. Restart the"
+  echo "     server under a JDK $compile JAVA_HOME (\`sbt -client shutdown\`, then set JAVA_HOME and"
+  echo "     run one sbt command) and RE-RUN the lane that emitted this tree — for a differential or"
+  echo "     drop-in lane that is the MIGRATE lane, not this one. Changing \`jdk_version\` instead is a"
+  echo "     change to the measurement and is ACKNOWLEDGED by re-accepting every baseline, not absorbed."
+  exit 1
+}
+
 # write_run_props <repo-root> <key=value>...
 # Replaces .balticporter/run.properties wholesale. A hand-written .balticporter/debug.properties is
 # read AFTER it and wins, so an operator's own flags survive a measure run.
@@ -818,7 +919,7 @@ port_map_guard() {
   if [ "$hdr" = "1" ]; then
     echo "   header:"
     local f bv rv why named=0
-    for f in schema module engine sources files policy; do
+    for f in schema module engine sources files policy jdk; do
       bv=$(tr '\t' '\n' <<<"$bh" | grep "^$f=" | head -1 | cut -d= -f2-)
       rv=$(tr '\t' '\n' <<<"$rh" | grep "^$f=" | head -1 | cut -d= -f2-)
       [ "$bv" = "$rv" ] && continue
@@ -829,6 +930,7 @@ port_map_guard() {
         sources) why="the base's JAVA changed (content digest, not paths)" ;;
         files)   why="how many java files that digest covers" ;;
         policy)  why="the base's MANIFEST changed — the field nine dependents carried stale" ;;
+        jdk)     why="the JVM that PUBLISHED this map implements a different JDK specification, and the frontend reads external members out of ITS class files (ENGINE-LIMITS M5.10)" ;;
       esac
       echo "     $f=  $bv  ->  $rv"
       echo "         $why"
@@ -1247,7 +1349,7 @@ xplat_compile() {
   local cap="$MEASURE_TMP/${capture_base}.${plat_suffix}.txt"
   echo
   echo "-- cross-platform compile: ${plat_suffix} --"
-  scala-cli compile --platform "$platform" --scala "$scala_ver" --server=false \
+  scala-cli compile --platform "$platform" --scala "$scala_ver" --server=false ${jdk_version:+--jvm "$jdk_version"} \
     "${extra_flags[@]}" "${srcs[@]}" \
     2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$cap"
   local cli_st=${PIPESTATUS[0]}
@@ -1338,7 +1440,7 @@ flags_compile() {
   local cap="$MEASURE_TMP/${capture_base}.ref.txt"
   echo
   echo "-- reference-flags compile: ${ref_flags[*]} --"
-  scala-cli compile --scala "$scala_ver" --server=false \
+  scala-cli compile --scala "$scala_ver" --server=false ${jdk_version:+--jvm "$jdk_version"} \
     "${ref_flags[@]}" "${extra_flags[@]}" "${srcs[@]}" \
     2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$cap"
   local cli_st=${PIPESTATUS[0]}

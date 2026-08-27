@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=ssg-md-test	engine=balticporter/0.1.0-SNAPSHOT	sources=6c78407df8b7fa09	files=79	policy=a9366a29e9f1e4ab
+# balticporter port map	schema=4	module=ssg-md-test	engine=balticporter/0.1.0-SNAPSHOT	sources=6c78407df8b7fa09	files=79	policy=a9366a29e9f1e4ab	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.vladsch.flexmark.core.test.util.renderer.FullOrigSpec027CoreTest	ssg.md.core.test.util.renderer.FullOrigSpec027CoreTest	Renamed	-		0		companion=yes flags=final form=class parents=ssg.md.core.test.util.renderer.OrigSpecCoreTest primary=() primaryKind=unique-root primaryVis=public statics=OPTIONS,RESOURCE_LOCATION,SPEC_RESOURCE
 type	com.vladsch.flexmark.core.test.util.renderer.FullOrigSpec028CoreTest	ssg.md.core.test.util.renderer.FullOrigSpec028CoreTest	Renamed	-		0		companion=yes flags=final form=class parents=ssg.md.core.test.util.renderer.OrigSpecCoreTest primary=() primaryKind=unique-root primaryVis=public statics=OPTIONS,RESOURCE_LOCATION,SPEC_RESOURCE

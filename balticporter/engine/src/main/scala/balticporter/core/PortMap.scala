@@ -57,8 +57,14 @@ object PortMap:
     *     port EMITTED for each type and member in the porter-note `k=v` grammar; and one new header
     *     field, `policy=`, the base's sorted `SurfacePolicy` fingerprint. The two land together on
     *     purpose: a schema that changes twice regenerates every committed baseline twice, for one
-    *     design that was known at the first bump. */
-  val Schema = 3
+    *     design that was known at the first bump.
+    * 4 — one new header field, `jdk=`, the `java.specification.version` of the JVM that PUBLISHED
+    *     the map. The FOURTH fingerprint, and the one the other three provably cannot stand in
+    *     for: the frontend reads an external type's members out of a CLASS FILE, so the emitted
+    *     text is a function of the JDK — and `engine=`, `sources=` and `policy=` all match exactly
+    *     when only the JDK moved. Measured at one `E037 … overrides nothing` on `sge.utils.CharArray`
+    *     with every check count flat (`ENGINE-LIMITS.md` M5.10, `JvmInfo`). */
+  val Schema = 4
 
   enum Disposition:
     /** translated mechanically, at the same fully-qualified name. */
@@ -124,6 +130,11 @@ object PortMap:
     *                different qualifier). Without it the map is `Fresh` and WRONG — D4's signature
     *                failure re-entering through the artifact built to prevent it. Empty only for a
     *                map published by a pre-schema-3 engine.
+    * @param jdk     `java.specification.version` of the JVM that PUBLISHED this map — the FOURTH
+    *                fingerprint (see [[Schema]] 4 and [[JvmInfo]]). Empty only for a map published
+    *                by a pre-schema-4 engine, which is why an empty one is `Unverified` and never
+    *                an agreement: "the field did not exist yet" and "we ran on the same JDK" are
+    *                different answers.
     * @param schema  the schema the map was READ at, so a consumer can say "published by an older
     *                engine" per question instead of refusing the file (`DESIGN.md` §8.3).
     */
@@ -135,6 +146,7 @@ object PortMap:
       files: Int = 0,
       policy: String = "",
       schema: Int = Schema,
+      jdk: String = "",
   ):
     def types: List[Entry]   = entries.filter(_.kind == "type")
     def members: List[Entry] = entries.filter(_.kind == "member")
@@ -374,6 +386,14 @@ object PortMap:
         * type entries already follow. Without this, the upstream column carries the post-rename
         * name and a dependent's `PortMapTransform` cannot match it to program symbols. */
       memberOriginals: scala.collection.Map[String, String] = Map.empty,
+      /** the publishing JVM's `java.specification.version` — schema 4's fourth fingerprint.
+        *
+        * PASSED IN rather than read from `JvmInfo` here, and the default is `""` rather than the
+        * ambient answer. A default that reads the process would make every caller that did not think
+        * about it — a spec, a snippet, a fixture — publish a map ASSERTING a JDK it never meant to
+        * claim, and an assertion nobody made is exactly what CLAUDE.md §4.6 calls a fabricated fact.
+        * `""` means "this publisher did not say", which `freshness` reports as `Unverified`. */
+      jdk: String = "",
   ): Map0 =
     // emitted FQN -> the java file it came from, so `upstreamOf` can use the ORIGIN.
     val originOf: scala.collection.Map[String, String] =
@@ -482,7 +502,7 @@ object PortMap:
 
     val bare = Map0(module, engine,
                     typeEntries ++ droppedEntries ++ added ++ memberEntries ++ droppedMembers ++ refusedEntries,
-                    policy = policy)
+                    policy = policy, jdk = jdk)
     sourceRoot match
       case scala.None => bare
       case Some(root) =>
@@ -491,7 +511,7 @@ object PortMap:
 
   def render(m: Map0): String =
     val head = s"# balticporter port map\tschema=$Schema\tmodule=${m.module}\tengine=${m.engine}" +
-      s"\tsources=${m.sources}\tfiles=${m.files}\tpolicy=${m.policy}\n"
+      s"\tsources=${m.sources}\tfiles=${m.files}\tpolicy=${m.policy}\tjdk=${m.jdk}\n"
     (head + Header + "\n" + m.entries.map(_.tsv).mkString("\n") + "\n")
 
   // -------------------------------------------------------------------------
@@ -551,6 +571,16 @@ object PortMap:
     /** not proven either way — no fingerprint in the map, or sources this run cannot see. The map
       * IS used (absence of proof is not proof) and the gap is reported. */
     case Unverified(reason: String)
+    /** the map was published by a JVM of a DIFFERENT JDK SPECIFICATION than the one running now.
+      *
+      * A case of its own, and not a [[Stale]] with a different sentence, because the two ask
+      * different things of their reader. `Stale` means *the base changed* and its remedy is to
+      * re-run the base; this means *nothing changed and the answer is still not this one's* — the
+      * base's Java, manifest and engine are all provably identical, and the emitted text still
+      * differs, because the frontend read `java.lang.CharSequence`'s members out of a different
+      * class file. Its remedy names a JVM rather than a port, which is why the two VERSIONS are
+      * carried as data instead of baked into a string: the finding has to name both. */
+    case JdkMismatch(published: String, running: String)
 
   /** Compare a published map against the engine now running, the sources now on disk, and the
     * POLICY this run inherited from the module that published it.
@@ -559,10 +589,25 @@ object PortMap:
     *               `resolutionRoots`, which by construction include the base's Java.
     * @param policy what [[policyDigest]] says about the base's manifest AS THIS RUN INHERITED IT
     *               (§1.5 — a value, not a build). Empty skips the comparison, which is what a caller
-    *               with no manifest (a spec, a snippet) should pass. */
-  def freshness(m: Map0, engine: String, roots: List[Path], policy: String = ""): Freshness =
+    *               with no manifest (a spec, a snippet) should pass.
+    * @param jdk    the `java.specification.version` THIS run's frontend is reading class files with
+    *               ([[JvmInfo.specification]]). Empty skips the comparison, for `policy`'s reason
+    *               exactly — a caller that cannot state it must not be made to assert one. */
+  def freshness(m: Map0, engine: String, roots: List[Path], policy: String = "",
+                jdk: String = ""): Freshness =
     if m.engine.nonEmpty && m.engine != engine then
       Freshness.Stale(s"published by engine ${m.engine}; this run is $engine — re-run the base port")
+    // …and the JDK, BEFORE the policy and the sources for the reason the policy check states one
+    // notch further down: this is the mismatch every other fingerprint agrees through, so a
+    // comparison that reached the source digest first would answer `Fresh` and hide it. It is also
+    // the only one whose remedy is not "re-run the base" but "re-run the base ON THIS JDK".
+    else if jdk.nonEmpty && m.jdk.nonEmpty && m.jdk != jdk then
+      Freshness.JdkMismatch(m.jdk, jdk)
+    else if jdk.nonEmpty && m.jdk.isEmpty then
+      Freshness.Unverified(
+        s"the map carries no `jdk=` fingerprint (published by an engine before schema $Schema), so a " +
+          "base emitted under a different JDK cannot be detected — its emitted text is a function of " +
+          "the class files its frontend read")
     // …before the source digest, deliberately: a policy mismatch is PROVEN staleness and a source
     // digest that matches would otherwise report `Fresh` first and hide it. That ordering IS the
     // finding — every source digest matching is the whole point of this comparison existing.
@@ -640,6 +685,7 @@ object PortMap:
           val sources = field(meta, "sources").getOrElse("")
           val files   = field(meta, "files").flatMap(_.toIntOption).getOrElse(0)
           val policy  = field(meta, "policy").getOrElse("")
+          val jdk     = field(meta, "jdk").getOrElse("")
           val es = lines.filterNot(l => l.startsWith("#") || l.isBlank).flatMap { l =>
             // `-1` keeps TRAILING empty fields. Without it Scala's `split` drops them, so every
             // `type` row — which has no javaPath, line or digest — arrived with 5 columns instead
@@ -657,7 +703,7 @@ object PortMap:
                 Some(Entry(k, up, em, Disposition.valueOf(d), b == "body", jp, jl.toIntOption.getOrElse(0), dg))
               case _ => None
           }
-          Right(Map0(module, engine, es, sources, files, policy, s))
+          Right(Map0(module, engine, es, sources, files, policy, s, jdk))
 
   /** one `key=value` out of the metadata line. Tab-delimited, so a value may contain `=`. */
   private def field(meta: String, key: String): Option[String] =

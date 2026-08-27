@@ -1,4 +1,4 @@
-# balticporter port map	schema=3	module=sge-visui-usl-test	engine=balticporter/0.1.0-SNAPSHOT	sources=1aae8bd77c0fb096	files=2	policy=a9366a29e9f1e4ab
+# balticporter port map	schema=4	module=sge-visui-usl-test	engine=balticporter/0.1.0-SNAPSHOT	sources=1aae8bd77c0fb096	files=2	policy=a9366a29e9f1e4ab	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.kotcrab.vis.usl.test.RemoteTest	sge.visui.usl.test.RemoteTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.kotcrab.vis.usl.test.TemplateBasedParserTest	sge.visui.usl.test.TemplateBasedParserTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public

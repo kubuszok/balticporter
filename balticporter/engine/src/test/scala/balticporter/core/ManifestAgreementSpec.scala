@@ -114,6 +114,23 @@ class ManifestAgreementSpec extends munit.FunSuite:
     assert(!Kind.BaseMapStale.fatal, "staleness is operational — it must not abort a run that is otherwise coherent")
   }
 
+  test("a map published on ANOTHER JDK is FATAL, names both versions, and has nothing to fall back to") {
+    // The one map verdict here that must stop the run. `Stale` and `Missing` degrade to
+    // re-deriving the base's decisions from its manifest — honest, because a re-run of the base
+    // WOULD produce what the re-derivation says. A JDK mismatch breaks exactly that: the base's
+    // emitted Scala, which this module compiles against, came out of a frontend reading class
+    // files this run does not have, and no re-derivation on THIS JVM reproduces it
+    // (`ENGINE-LIMITS.md` M5.10).
+    val sh = List(SharedType("up.Missing", "up.Missing", substituted = false))
+    val fs = run(sh, List(BasePort(base, scala.None, "run-latest", jdk = Some("24" -> "22"))))
+    assertEquals(kinds(fs), List(Kind.BaseMapJdk))
+    assert(Kind.BaseMapJdk.fatal, "there is no weaker check to fall back to — the run must stop")
+    // BOTH versions, because neither alone is actionable: the published one says which JVM the
+    // artifact came from and the running one says which JVM would have to change.
+    assert(clue(fs.head.detail).contains("JDK 24"))
+    assert(clue(fs.head.detail).contains("JDK 22"))
+  }
+
   test("an UNVERIFIED map is used, and said so — absence of proof is not proof") {
     val m  = mapOf(emitted = List("up.Kept"), dropTypes = Set("up.Gone"))
     val sh = List(SharedType("up.Missing", "up.Missing", substituted = false))

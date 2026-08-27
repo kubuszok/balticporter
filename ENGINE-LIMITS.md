@@ -10252,6 +10252,61 @@ worktree-side integrations. Fix: realpath both operands, normalize as the not-ex
 (§5.4's rule verbatim); pinned by `ProvenanceHeaderSpec`'s symlink case, which was negative-proofed
 against the lexical code (the naive temp-dir layout does NOT discriminate — the root's own parent
 must contain the marker, `…/mylib/mylib/`).
+### M5.10 The JDK is an INPUT to the measurement — a frontend on one JDK and a compile on another
+
+**Title, for renumbering: "the two ambient JVMs behind one number".** CLOSED — (a) universal, and
+the first measurement input this project had that NO artifact named.
+
+Every number here rests on two JVMs. The **frontend** runs inside a migration forked by sbt, and it
+resolves an EXTERNAL symbol's parents, members and modifiers out of a CLASS FILE — so which JDK it
+is decides the emitted text, exactly as the manifest and the engine do. The **compile** is a second
+JVM, selected independently by `scala-cli` (`--jvm`, else `JAVA_HOME`, else the system default).
+Both were ambient, and nothing compared them.
+
+Measured 2026-08-27 in the primary checkout. A migration JVM on **GraalVM 24** — a launchd job with
+no `JAVA_HOME`, so `/usr/bin/java` asks `java_home` for the NEWEST installed JDK — emitted
+`override def getChars` on `sge.utils.CharArray`, because `java.lang.CharSequence` gained
+`getChars` in JDK 23. The same sources under **JDK 22** emit no `override` at all. `scala-cli` then
+compiled on 22 and reported **one `E037 … overrides nothing`** at a member whose name, formals and
+body are a perfect translation.
+
+**What makes it a rule is what stayed FLAT.** Every check count, every finding, every member digest
+of every other member, and all three of the port map's fingerprints — `engine=`, `sources=`,
+`policy=` — were identical, *correctly*: the engine, the java and the policy really were unchanged.
+The only thing that moved was an input nothing recorded. `errors.tsv` classifies it `EngineGap`,
+which is the honest answer to the wrong question, and an agent reading it goes looking for a
+frontend defect in a member the frontend translated exactly right.
+
+Two halves of the fix, and the SECOND is the one that does the work:
+
+- **the compile half is PINNED.** `jdk_version` at the top of the `Justfile` (22, the state every
+  committed baseline was measured on) is passed as `--jvm` by every `scala-cli` invocation in a
+  lane, `scripts/_lib.sh`'s two included. One variable, exported, so no second copy can drift.
+- **the frontend half is RECORDED, because it cannot be pinned from a lane.** `sbt -client` talks to
+  a long-running server whose JVM was chosen when the server started, so a `JAVA_HOME` exported by a
+  recipe never reaches the forked migration — `CLAUDE.md` §4.6's own boundary, with §4.6's own
+  remedy: something the run WRITES crosses it where an environment variable does not. `CheckReport`
+  writes `run-latest/jvm.txt` (`specification`, `version`, `vendor`, `home`) on every run, and
+  `jdk_guard` reads it beside the compiler's own answer — derived by RUNNING `scala-cli` with the
+  lane's `--jvm` flag over a one-line java probe, never by reading `java -version` or a coursier
+  path, which is the second derivation §4.56 is about. It prints `frontend jdk N / compile jdk M` on
+  every run and fails the lane when they differ.
+
+**And the same disagreement exists ACROSS runs, where no lane can see it at all.** A dependent
+compiles against Scala its BASE emitted, from a base run that may have happened on another JDK
+entirely. `PortMap` schema **4** adds `jdk=` for exactly that — the FOURTH fingerprint, and the one
+the other three agree through — and `PortMap.freshness` answers `JdkMismatch(published, running)`,
+which `ManifestAgreement.Kind.BaseMapJdk` reports **fatal**. It is the only map verdict in that
+family that is, and the reason is that there is nothing weaker to fall back TO: `Stale` and
+`Missing` degrade to re-deriving the base's decisions from its manifest, which is honest because a
+re-run of the base would agree with the re-derivation — while the base's emitted Scala came out of a
+frontend reading class files this run does not have, and no re-derivation on THIS JVM reproduces it.
+
+**Do NOT** read a bare `overrides nothing` / `does not override anything` at a faithful translation
+as an engine gap before asking which JDK each half of the run used. And do not "fix" a JDK split by
+moving `jdk_version`: that is a change to the measurement, acknowledged by re-accepting every
+baseline, not absorbed.
+
 ### M6. Refuse and COUNT rather than approximate
 
 Three places where the port deliberately carries a number instead of a guess, and each is the right

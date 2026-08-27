@@ -130,6 +130,45 @@ class CheckReportSpec extends munit.FunSuite:
       Files.walk(tmp).sorted(java.util.Comparator.reverseOrder()).forEach(Files.delete(_))
   }
 
+  test("every written run records WHICH JVM it ran on — the input to emitted text nothing else names") {
+    // `ENGINE-LIMITS.md` M5.10: the frontend reads an external type's members out of a CLASS FILE,
+    // so the JDK decides the emitted text — and a lane cannot force the migration's JVM, because
+    // `sbt -client` forks it from a server whose JVM was chosen earlier (§4.6's marker-file
+    // boundary). Recording it is what makes `jdk_guard` possible at all.
+    val tmp = Files.createTempDirectory("bp-report-jvm")
+    try
+      withProps("balticporter.report" -> "on", "balticporter.reportDir" -> tmp.toString) {
+        CheckReport.reset()
+        CheckReport.record("signature", Nil)
+        val out = tmp.resolve("run-latest")
+        CheckReport.write(out)
+        val jvm = Files.readString(out.resolve("jvm.txt"))
+        // one `key\tvalue` per line, because the reader is a shell guard extracting a FIELD.
+        assertEquals(jvm.linesIterator.map(_.split('\t').head).toList,
+                     List("specification", "version", "vendor", "home"))
+        assertEquals(jvm.linesIterator.find(_.startsWith("specification\t")).map(_.split('\t')(1)),
+                     Some(balticporter.core.JvmInfo.specification))
+        // …and the operator document says it too, for the reader who is holding a moved `jdk=`.
+        assert(clue(Files.readString(out.resolve("report.md"))).contains(
+          s"spec ${balticporter.core.JvmInfo.specification}"))
+      }
+    finally
+      CheckReport.reset()
+      Files.walk(tmp).sorted(java.util.Comparator.reverseOrder()).forEach(Files.delete(_))
+  }
+
+  test("an ABSENT system property is `?` and never empty — an empty spec version means 'do not compare'") {
+    // §4.6: a default the caller cannot distinguish from a real answer is a fabricated fact. `""`
+    // is the value `PortMap.freshness` reads as "published before the field existed", i.e. DO NOT
+    // COMPARE, so a JVM that would not say must not be able to produce it.
+    assert(balticporter.core.JvmInfo.specification.nonEmpty)
+    assert(balticporter.core.JvmInfo.version.nonEmpty)
+    assert(balticporter.core.JvmInfo.vendor.nonEmpty)
+    assert(balticporter.core.JvmInfo.home.nonEmpty)
+    assertEquals(balticporter.core.JvmInfo.specification,
+                 System.getProperty("java.specification.version"))
+  }
+
   test("recording is a no-op when reporting is off — a check stays a pure function") {
     withProps("balticporter.report" -> "off") {
       CheckReport.reset()

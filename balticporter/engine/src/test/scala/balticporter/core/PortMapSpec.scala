@@ -333,6 +333,43 @@ class PortMapSpec extends munit.FunSuite:
       case other                           => fail(s"expected Unverified, got $other")
   }
 
+  test("schema 4: `jdk=` round-trips, and it is the ONE header field the other three agree through") {
+    // The measured defect (`ENGINE-LIMITS.md` M5.10): a frontend on JDK 24 emitted
+    // `override def getChars` where the same sources on 22 emit none, because
+    // `java.lang.CharSequence` gained the member in 23. The engine, the java and the policy were
+    // all provably unchanged — so this spec asserts exactly that shape, with the other three
+    // fingerprints held EQUAL and only the JDK moved.
+    val m = build(emitted = List("p.C"), members = List(member("p.C", "p.C#f()")))
+      .copy(jdk = "22")
+    assert(clue(PortMap.render(m)).contains("\tjdk=22"))
+    val tmp = Files.createTempDirectory("portmap-jdk")
+    Files.writeString(tmp.resolve("port-map.tsv"), PortMap.render(m))
+    val back = PortMap.read(tmp.resolve("port-map.tsv")).toOption.get
+    assertEquals(back.jdk, "22")
+    assertEquals(back.schema, PortMap.Schema)
+  }
+
+  test("a map published on ANOTHER JDK is a verdict of its OWN — both versions named, and it is not `Stale`") {
+    val (root, _, m0) = basePort("package p; class C { int f() { return 1; } }")
+    val m = m0.copy(jdk = "24")
+    // every other fingerprint agrees: same engine, same java on disk, same (absent) policy.
+    assertEquals(PortMap.freshness(m, "eng", List(root)), PortMap.Freshness.Fresh,
+                 "with no JDK to compare against, nothing is claimed")
+    assertEquals(PortMap.freshness(m, "eng", List(root), jdk = "24"), PortMap.Freshness.Fresh)
+    // …and the mismatch is a case of its own, carrying BOTH versions as data. A `Stale(String)`
+    // could not, and its remedy ("re-run the base") is not this one's ("re-run it on this JDK").
+    assertEquals(PortMap.freshness(m, "eng", List(root), jdk = "22"),
+                 PortMap.Freshness.JdkMismatch("24", "22"))
+  }
+
+  test("a map with NO `jdk=` is UNVERIFIED, never agreement — 'the field did not exist' is not 'we agreed'") {
+    val (root, _, m0) = basePort("package p; class C { int f() { return 1; } }")
+    assertEquals(m0.jdk, "", "`PortMap.of` asserts no JDK its caller did not state (§4.6)")
+    PortMap.freshness(m0, "eng", List(root), jdk = "22") match
+      case PortMap.Freshness.Unverified(r) => assert(clue(r).contains("no `jdk=` fingerprint"))
+      case other                           => fail(s"expected Unverified, got $other")
+  }
+
   // ---------------------------------------------------------------------------
   // R1 — the map goes stale against the base's emitted output
   // ---------------------------------------------------------------------------

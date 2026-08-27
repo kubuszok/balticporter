@@ -1387,13 +1387,37 @@ between the last two is the point:
 
 | answer | meaning | what the consumer does |
 |---|---|---|
-| `Fresh` | engine and sources match | uses the map |
-| `Stale` | engine differs, or the base's Java has changed | **refuses** it, reports, re-derives |
+| `Fresh` | engine, sources, policy and JDK all match | uses the map |
+| `Stale` | engine differs, or the base's Java has changed, or its MANIFEST has | **refuses** it, reports, re-derives |
+| `JdkMismatch` | published by a JVM implementing another JDK specification | **refuses** it, reports, and the run STOPS |
 | `Unverified` | no fingerprint, or sources outside this run's resolution roots | uses it, reports |
 
 Three non-fatal but LOUD finding kinds keep the fallback from ever being silent: `BaseMapStale`,
 `BaseMapUnverified`, `BaseMapMissing`. An **empty** base manifest — the documented way to declare a
 resolution root that is not a ported module — is exempt and claims no namespace.
+
+**`jdk=` is schema 4's header field, and the FOURTH fingerprint** — `java.specification.version` of
+the JVM that published the map. It exists because the other three provably cannot stand in for it:
+the frontend resolves an external type's parents, members and modifiers out of a CLASS FILE, so the
+emitted text is a function of the JDK, and when only the JDK moves `engine=`, `sources=` and
+`policy=` all match — correctly, because the engine, the java and the policy really are unchanged.
+Measured at one `E037 … overrides nothing` on `sge.utils.CharArray` (`java.lang.CharSequence` gained
+`getChars` in JDK 23) with every check count, every finding and every other member digest flat
+(`ENGINE-LIMITS.md` M5.10).
+
+Its verdict is a case of its OWN rather than a `Stale` with a different sentence, for two reasons.
+The two carry different data — a mismatch has to name BOTH versions, which a `Stale(String)` cannot
+do without baking them into prose — and they have different remedies: `Stale` means *re-run the
+base*, this means *re-run the base ON THIS JDK*. And `ManifestAgreement.Kind.BaseMapJdk` is the one
+member of that family that is **fatal**, because it is the one with nothing weaker to fall back to:
+`Stale` and `Missing` degrade to re-deriving the base's decisions from its manifest, which is honest
+because a re-run of the base would agree with the re-derivation — while the base's emitted Scala,
+the artifact a dependent actually compiles against, came out of a frontend reading class files this
+run does not have, and no re-derivation on THIS JVM reproduces it.
+
+The same disagreement WITHIN one lane — a frontend on one JDK and a `scala-cli` compile on another —
+is not a map question and is not visible here at all; `scripts/_lib.sh`'s `jdk_guard` is that half,
+reading `run-latest/jvm.txt` against the JDK the lane's own `--jvm` flag selects.
 
 **Ordering.** A map-consuming phase runs **LAST** in a dependent's surface. It is a RESIDUE check,
 exactly like `PortabilityCheck`: what is left once this module's own policy has been applied. Run
@@ -6233,6 +6257,26 @@ the recognised families are the work items a reader can act on one family at a t
 **NOT inherited.** A hand port is a fact about THIS module's destination, not the shared surface.
 A dependent does not inherit its base's parity reference. The `.conf` key is
 `parity { roots = ["…"], packageMapping = { … } }`.
+### 8.23b The JDK a lane compiles with — `jdk_version`, and why `-release 17` is a different number
+
+`../sge/build.sbt` compiles with `-release 17`, and it is tempting to read that as the JDK this
+repository's lanes should use. It is a different fact. `-release 17` is a statement about the
+BYTECODE and the API surface the published sge artifacts target; `-release 17` running on a JDK 22
+is exactly what that build does, and nothing in it pins a JDK at all.
+
+What a measure lane's JDK decides is which class files scalac reads for `java.*` signatures, and —
+one layer earlier and far more consequentially — which class files the FRONTEND reads to resolve an
+external type's members and modifiers. So the `Justfile` carries **`jdk_version := "22"`**, exported,
+passed as `--jvm` by every `scala-cli` invocation in a lane and read by `jdk_guard`'s probe and by
+`scripts/_lib.sh`'s own two compiles. 22 is not a target chosen from the reference build; it is the
+state every committed baseline in this repository was measured on, and moving it is a change to the
+measurement that is acknowledged by re-accepting every baseline rather than absorbed.
+
+The delta between the two numbers is therefore real and deliberate: the reference build targets 17
+and this corpus is measured on 22. Nothing in the port depends on the gap — `flags_compile` already
+compiles every port under the reference build's own `scalacOptions`, and `-release` is not among
+them because it is a packaging decision rather than a diagnostic one.
+
 ### 8.24 The drop-in gate — the emitted port INSIDE the reference repo's own build
 
 The parity campaign's done bar (`PROGRESS.md` §13) is that the emitted tree can replace the module's
