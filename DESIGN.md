@@ -2864,6 +2864,34 @@ re-derives every base class's primary the pre-§8.3 way. That is not a hypotheti
 first dependent run, on exactly the two units this item fixes, and the determinism gate is what
 caught it.
 
+#### 8.3.1 Following the base's MEMBER renames — the port map as the base's answer
+
+A dependent's inherited phases (`BeanPropertyTransform`, `NullaryArityTransform`) detect on the
+whole program, including base declarations. Guards that pass in the base's smaller program can fail
+in the dependent's wider one — a base member's override component now includes dependent overrides
+whose bodies, call sites or arity do not meet the guard, and the whole component is refused. The
+fix has TWO pieces, and the port map carries the first.
+
+**The port map's `upstream` column carries JAVA's member name, not the renamed one.** Before wave
+1.2h, the `upstream` column for a member renamed by `BeanPropertyTransform` or `NullaryArityTransform`
+carried the POST-rename name (e.g., `Group#transform()` for what was java's `Group#isTransform()`),
+because `MemberRenamer.rename` updates `Symbol.fullName` and the emitter reads the current value.
+`PortRun` now builds a `memberOriginals` map from the `DecisionLog`'s `RenamedMember` entries and
+passes it to `PortMap.of`, which writes java's own FQN in the `upstream` column. 918 member rows
+moved on the libGDX base. `form=parenless` marks members whose `()` was dropped by NullaryArity, and
+the emitted column drops `()` so the two columns disagree exactly where the shape says.
+
+**`PortMapTransform.followMemberRenames` reads the base's port map and applies the same renames in
+the dependent.** For every member entry where the upstream simple name differs from the emitted one
+(a bean pair rename) or where `form=parenless` (an arity change), the method matches the upstream FQN
+against program symbols — translated through the package rename map, since the program's symbols are
+in the emitted namespace after `repoint` — and applies the rename via `MemberRenamer`. The override
+component carries the rename to the dependent's own overrides, and the call-site rewrite (for
+parenless: stripping `()` from `Apply` nodes across the whole override component) reaches the
+dependent's own code. The base's REFUSALS have no `name=`/`form=` row, so they are left alone by
+construction. Measured at visui 164 -> 7 (floor), closing the whole of the dependent regression the
+switches produced (six ports).
+
 ### 8.4 Globals → context — replace the core, keep the shell
 
 **Decision.** The existing globals transform's **closure and boundary handling are replaced**; its

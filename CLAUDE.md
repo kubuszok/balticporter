@@ -640,6 +640,19 @@ own source root — the structural signature of a dependent — with no base dec
 finding. If a resolution root is genuinely NOT a ported module, declare an empty manifest for it and
 say so; that is a statement, not a loophole.
 
+**And a dependent FOLLOWS the base's member renames rather than re-deciding them.** The base's
+published port map carries every member the base renamed (`upstream` = java's FQN, `emitted` = the
+scala spelling) and every member whose arity changed (`form=parenless`).
+`PortMapTransform.followMemberRenames` reads these entries, matches them against the dependent's
+program symbols by upstream FQN (translated through the package rename map), and applies the same
+rename via `MemberRenamer` — so the override component carries the rename to the dependent's own
+overrides and the call-site rewrite reaches the dependent's own code. The dependent's own
+`BeanPropertyTransform` and `NullaryArityTransform` still detect on the whole program (including
+base symbols), and `followMemberRenames` corrects what their guards refuse in the dependent's wider
+context (`ENGINE-LIMITS.md` D14). A `MethodBodyTransform` body is verbatim text injected after all
+phases, so it must use the base's emitted accessor names — each such body is adapted when the base's
+surface changes, which is the expected cost of a surface change on the port's hand-written half.
+
 ---
 
 ## 2. Adding a library to the corpus

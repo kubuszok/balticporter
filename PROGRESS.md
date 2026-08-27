@@ -10902,3 +10902,67 @@ catch { case _: Throwable => Nil }` became
 **Gate: 0 emitted bytes moved.** Measured on gdx (605 files), ashley (21 files), liqp (147 files),
 flexmark (470 files) — all four byte-identical to the unmodified code. frontend-spoon 121/121,
 engine 984/984, corpus 1414/1414 green. Grep gate 0.
+
+### 13.4 Wave 1.2h — dependent surface follow for bean/nullary switches
+
+The base's `BeanPropertyTransform(scope = Everywhere())` and
+`NullaryArityTransform(scope = Everywhere())` collapse accessor pairs (`getX`/`setX` -> `x`/`x_=`)
+and drop `()` from getter-like methods across the whole library. Six dependent ports regressed:
+visui 7 -> 309, vfx 0 -> 41, screens 0 -> 19, textra 0 -> 13, gdx-ai 0 -> 7, gltf-test 3 -> 6.
+Two populations:
+
+**Hand-written files** adapted to the base's new surface:
+
+| file | receiver | old | new |
+|---|---|---|---|
+| `ScreenmanagerSuite.scala` | `BasicInputMultiplexer` | `getProcessors()` | `processors` |
+| `ScreenmanagerSuite.scala` | `TimedTransition` | `isDone()` | `done` |
+| `ScreenmanagerSuite.scala` | `ManagedScreen` | `getClearColor()` | `clearColor` |
+| `ScreenmanagerSuite.scala` | `ManagedScreen` | `getInputProcessors()` | `inputProcessors` |
+| `ScreenmanagerSuite.scala` | `ScreenTransition` | `isDone()` | `done` |
+| `ScreenmanagerSuite.scala` | `ScreenTransition`/`ManagedScreenAdapter` | `getClearColor()` | `clearColor` |
+| `Logger.scala` | `Application` | `getLogLevel()` | `logLevel` |
+| `ShaderProgramFactory.scala` | `ShaderProgram` | `isCompiled()` | `compiled` |
+| `ShaderProgramFactory.scala` | `ShaderProgram` | `getLog()` | `log` |
+| `ShaderProgramFactory.scala` | `Application` | `getType()` | `` `type` `` |
+| `VfxFrameBufferSuite.scala` | `VfxFrameBufferQueue` | `getCurrent()` | `current` |
+| `VfxFrameBufferSuite.scala` | `VfxFrameBuffer` | `isInitialized()` | `initialized` |
+| `VfxFrameBufferSuite.scala` | `VfxFrameBuffer` | `isDrawing()` | `drawing` |
+| `VfxFrameBufferSuite.scala` | `VfxFrameBuffer` | `getPixelFormat()` | `pixelFormat` |
+| `VfxFrameBufferSuite.scala` | `VfxFrameBuffer` | `getFbo()` | `fbo` |
+| `VfxFrameBufferSuite.scala` | `VfxPingPongWrapper` | `isInitialized()` | `initialized` |
+| `VfxFrameBufferSuite.scala` | `VfxPingPongWrapper` | `isCapturing()` | `capturing` |
+| `VfxFrameBufferSuite.scala` | `VfxPingPongWrapper` | `getSrcBuffer()` | `srcBuffer` |
+| `VfxFrameBufferSuite.scala` | `VfxPingPongWrapper` | `getDstBuffer()` | `dstBuffer` |
+| `ValueArrayMapSuite.scala` | `ValueArrayMap` | `size()` | `size` |
+| `ValueArrayMapSuite.scala` | `ValueArrayMap` | `getKeys()` | `keys` |
+| `PrioritizedArraySuite.scala` | `PrioritizedArray` | `size()` | `size` |
+| `VfxMigrate.scala` (body) | `VfxGlExtension` | `getBoundFboHandle()` | `boundFboHandle` |
+| `GdxAiMigrate.scala` (body) | `CircularBuffer` | `size()` | `size` |
+| `GdxAiMigrate.scala` (body) | `DefaultBehaviorTreeReader` | `getCurrentTask()` | `currentTask` |
+| `GdxAiMigrate.scala` (body) | `DefaultBehaviorTreeReader` | `getPrevTask()` | `prevTask` |
+| `GdxAiMigrate.scala` (body) | `Task` | `getChildCount()` | `childCount` |
+
+**Engine fixes** (emitted code):
+
+1. `BeanPropertyTransform.detect`: the `SetterOnlyInterface` guard refused a pair when a subclass
+   overrode only the setter (e.g., `VfxWidgetGroup.setTransform` without `isTransform`). A subclass
+   that INHERITS the getter through the type hierarchy is now excluded from the setter-only set,
+   provided it descends from a type that declares BOTH getter and setter.
+
+2. `NullabilityTransform`: a bean pair is ONE SLOT — when the getter's return type is widened to
+   `Nullable[T]`, the setter's parameter is widened too (placed before override propagation so
+   `Group.stage_=` and `SelectBox.stage_=` also widen). Without this, 13 base errors from the type
+   mismatch (`Nullable[Stage]` vs `Stage`).
+
+3. Port map writer: the `upstream` column now carries java's original member name, not the
+   post-bean/nullary rename. 918 member rows moved on the libGDX base. `form=parenless` marks
+   NullaryArity-converted members, and the emitted column drops `()`.
+
+4. `PortMapTransform.followMemberRenames`: for every member entry in the base's port map where the
+   member was renamed, matches the upstream FQN against program symbols (translated through the
+   package rename map) and applies the rename via `MemberRenamer`. For parenless members, strips
+   `()` across the full override component. Measured: visui 164 -> 7 (floor).
+
+**Result with switches ON:** base 0, gdx-test 217/4, ashley 108/2/2, screens 0/16-0, vfx 0/64-0,
+ai 0, textra 0, gltf 0, visui 7 (floor). Engine 984, corpus 1414.
