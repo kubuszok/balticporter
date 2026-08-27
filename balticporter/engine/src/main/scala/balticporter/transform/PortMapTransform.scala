@@ -134,7 +134,8 @@ final class PortMapTransform(maps: List[PortMap.Map0] = Nil) extends Phase, Poli
     val theirs = PortMapTransform.ownedByBase(program, typeEntries.keySet)
     found = scan(program, theirs)
     recordRepoints(program, theirs)
-    repoint(program)
+    val repointed0 = repoint(program)
+    followMemberRenames(repointed0)
 
   /** DECISION PROVENANCE for the re-pointing below: one row per (DECLARATION OF THIS MODULE,
     * re-pointed type).
@@ -214,6 +215,99 @@ final class PortMapTransform(maps: List[PortMap.Map0] = Nil) extends Phase, Poli
       // Trees and the xref are keyed by `SymId` and stay valid verbatim — renaming the SYMBOL is
       // what makes a rename reach every reference, including ones no textual rewrite could find.
       program.rebuilt(symbols = table)
+
+  /** FOLLOW THE BASE'S MEMBER RENAMES: for every member entry in the base's port map where the
+    * member was renamed (the upstream and emitted simple names disagree), find the symbol in the
+    * program by its UPSTREAM FQN and rename it to the EMITTED simple name.
+    *
+    * This is the dependent-side follow mechanism: the base collapsed `getX`/`setX` into `x`/`x_=`
+    * and dropped `()` from `getWidth` -> `getWidth` (parenless). Without this, the dependent's
+    * own bean/nullary phases would have to re-derive these decisions, and guards that passed in the
+    * base's smaller program can fail in the dependent's wider one (e.g., VfxWidgetGroup overriding
+    * setTransform without isTransform, or MimicActor's non-getter getWidth body blocking the
+    * whole Actor.getWidth component — 309 errors on visui, 41 on vfx).
+    *
+    * Uses `MemberRenamer` so the whole override component moves: a dependent's own override of a
+    * base's renamed getter is renamed too, and its call sites are rewritten.
+    *
+    * After this method the bean/nullary phases' own detection runs only over symbols THIS RUN emits
+    * (through `RunScope`), adding the dependent's own pairs/conversions without re-evaluating the
+    * base's. */
+  private def followMemberRenames(program: Program): Program =
+    // Collect member entries where the simple name changed (a rename by bean-properties,
+    // NullaryArity, or memberRenames). Each such entry has:
+    //   upstream = java's FQN (e.g., Group#isTransform())
+    //   emitted  = scala's FQN (e.g., sge.scenes.scene2d.Group#transform())
+    //   shape    = form=var|val|parenless (or name=...)
+    val memberRenameEntries = maps.flatMap(_.members).filter { e =>
+      e.upstream.nonEmpty && e.emitted.nonEmpty && e.disposition == PortMap.Disposition.Renamed && {
+        val upSimple   = PortMapTransform.simpleNameOf(PortMapTransform.bareKey(e.upstream))
+        val emitSimple = PortMapTransform.simpleNameOf(PortMapTransform.bareKey(e.emitted))
+        // A member with a NAME change (bean pair rename) or a FORM change (parenless, collapsed)
+        upSimple != emitSimple || e.memberShape.form.nonEmpty
+      }
+    }
+    if memberRenameEntries.isEmpty then return program
+
+    val graph = OverrideGraph.build(program)
+    val byFullName = program.symbols.all.iterator.map(s => s.fullName -> s).toMap
+
+    // Build MemberRenamer requests from the port map entries. For each entry, find the symbol
+    // by its UPSTREAM FQN (which is now java's own name) and request a rename to the emitted name.
+    val requests = memberRenameEntries.flatMap { e =>
+      val upBare   = PortMapTransform.bareKey(e.upstream)
+      val emitBare = PortMapTransform.bareKey(e.emitted)
+      val newName  = PortMapTransform.simpleNameOf(emitBare)
+      // The program's symbols are in the EMITTED namespace (after `repoint`), so translate the
+      // upstream FQN through the same package renames `repoint` used.
+      val inEmitNs = PackageRenameTransform.renamed(upBare, renames.toMap)
+      byFullName.get(inEmitNs).filter(_.name != newName).map { sym =>
+        // Only create a request if the symbol still has the OLD name (the dependent's phases
+        // refused the rename). If the dependent already renamed it, sym.name == newName.
+        MemberRenamer.Request(sym.id, newName,
+          Reason.Configured(name, s"${e.upstream} -> ${e.emitted}"),
+          e.upstream, e.upstream)
+      }
+    }
+    if requests.isEmpty then return program
+
+    // Deduplicate: multiple entries may point to the same symbol (e.g., getter and setter of
+    // the same pair are in the same override component).
+    val deduped = requests.distinctBy(_.member)
+
+    val (renamed, _) = MemberRenamer.rename(program, graph, deduped,
+      MemberRenamer.OnCollision.DeferToEmitter, decisions)
+
+    // For parenless members: strip `()` from the DefDef's paramss and rewrite call sites,
+    // matching what the base did. MemberRenamer renames the symbol name but does NOT change
+    // the arity. Expand to the full OVERRIDE COMPONENT so a dependent's own override of a
+    // parenless base getter also drops `()` and its call sites are rewritten.
+    val graph2 = OverrideGraph.build(renamed)
+    val parenlessRoots = memberRenameEntries.filter(_.memberShape.form == "parenless")
+      .flatMap { e =>
+        val inEmitNs = PackageRenameTransform.renamed(PortMapTransform.bareKey(e.upstream), renames.toMap)
+        val emitBare = PortMapTransform.bareKey(e.emitted)
+        renamed.symbols.all.iterator.find(s => s.fullName == inEmitNs || s.fullName == emitBare).map(_.id)
+      }.toSet
+    val parenlessSyms = parenlessRoots.flatMap(r => graph2.closureOf(r).members)
+
+    if parenlessSyms.isEmpty then renamed
+    else
+      given Program = renamed
+      renamed.rebuilt(units = renamed.units.map { u =>
+        StandardTraversal.mapClassDef(new Phase {
+          def name = "port-map-follow-parenless"
+          override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef =
+            if parenlessSyms.contains(t.symbol) then t.copy(paramss = Nil) else t
+          override def transformApply(t: Tree.Apply)(using Program): Term =
+            if parenlessSyms.contains(t.method) && t.args.isEmpty then
+              t.fun match
+                case _: Tree.Ident            => Tree.Ident(t.method, t.tpe, t.origin)
+                case Tree.Select(q, _, _, _)  => Tree.Select(q, t.method, t.tpe, t.origin)
+                case _                        => t
+            else t
+        }, u)
+      })
 
   // ---------------------------------------------------------------------------
   // reporting — what the dependent references that the base did not emit
