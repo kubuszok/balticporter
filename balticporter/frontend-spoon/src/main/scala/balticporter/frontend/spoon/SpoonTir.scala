@@ -918,7 +918,7 @@ object SpoonTir:
       def walk(r: CtTypeReference[?], fuel: Int): Unit =
         if r != null && fuel > 0 && !acc.contains(r.getQualifiedName) then
           acc += r.getQualifiedName
-          val d = try r.getTypeDeclaration catch { case _: Throwable => null }
+          val d = typeDeclarationOf(r).orNull
           if d != null then
             val ups: List[CtTypeReference[?]] =
               (d match { case c: CtClass[?] => Option(c.getSuperclass).toList; case _ => Nil }) ++
@@ -945,7 +945,7 @@ object SpoonTir:
       val out = collection.mutable.ListBuffer[(String, String, CtTypeReference[?])]()
       def walk(r: CtTypeReference[?], fuel: Int): Unit =
         if r != null && fuel > 0 then
-          val decl = try r.getTypeDeclaration catch { case _: Throwable => null }
+          val decl = typeDeclarationOf(r).orNull
           if decl != null then
             val fs = decl.getFormalCtTypeParameters.asScala.toList
             val as = r.getActualTypeArguments.asScala.toList
@@ -996,7 +996,7 @@ object SpoonTir:
       def walk(r: CtTypeReference[?], fuel: Int): Unit =
         if r != null && fuel > 0 && !acc.contains(r.getQualifiedName) then
           acc += r.getQualifiedName
-          val d = try r.getTypeDeclaration catch { case _: Throwable => null }
+          val d = typeDeclarationOf(r).orNull
           if d != null then
             val ups: List[CtTypeReference[?]] =
               (d match { case c: CtClass[?] => Option(c.getSuperclass).toList; case _ => Nil }) ++
@@ -1043,8 +1043,7 @@ object SpoonTir:
       * checked (`ENGINE-LIMITS.md` G30). */
     private def nameFilledArgs(r: CtTypeReference[?], resolve: String => Option[SymId],
                                resolveDecl: String => Option[CtTypeParameter]): Option[List[TypeRepr]] =
-      val formals = try Option(r.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
-                    catch { case _: Throwable => Nil }
+      val formals = typeDeclarationOf(r).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
       if formals.isEmpty then None
       else
         val ok = licensedFills(formals, resolveDecl)
@@ -1169,7 +1168,7 @@ object SpoonTir:
         case TypeShape.Variable(tv) =>
           if seen(tv.getSimpleName) then TypeBounds(NoType, NoType)
           else
-            val d = try Option(tv.getDeclaration) catch { case _: Throwable => None }
+            val d = typeParamDeclOf(tv)
             d.map(erasureOfFormal(_, seen + tv.getSimpleName, 2)).getOrElse(objectT)
         case TypeShape.Arr(_, c) =>
           AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")),
@@ -1185,8 +1184,7 @@ object SpoonTir:
           val head = TypeRef(NoPrefix, typeSym(r))
           s.args match
             case Nil =>
-              val formals = try Option(r.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
-                            catch { case _: Throwable => Nil }
+              val formals = typeDeclarationOf(r).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
               if formals.isEmpty then head
               else AppliedType(head, formals.map { ff =>
                 // `seen` breaks F-bounded cycles (`N extends Node<N,…>`); depth bounds the rest
@@ -1212,7 +1210,7 @@ object SpoonTir:
                              named: Map[String, TypeRepr] = Map.empty): TypeRepr = f match
       case tv: CtTypeParameterReference =>
         subst.getOrElse(tv.getSimpleName, {
-          val d = try Option(tv.getDeclaration) catch { case _: Throwable => None }
+          val d = typeParamDeclOf(tv)
           d.map(erasureOfFormal(_, Set.empty, 2)).getOrElse(objectT)
         })
       case r if subst.nonEmpty && rawFormalsOf(r).exists(n => subst.contains(n)) =>
@@ -1226,8 +1224,7 @@ object SpoonTir:
       if r == null || r.isPrimitive || r.isInstanceOf[CtWildcardReference] ||
          r.isInstanceOf[CtArrayTypeReference[?]] ||
          (try r.getActualTypeArguments.size catch { case _: Throwable => 1 }) > 0 then Nil
-      else try Option(r.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
-           catch { case _: Throwable => Nil }
+      else typeDeclarationOf(r).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
 
     private def rawFormalsOf(r: CtTypeReference[?]): List[String] = rawFormalNodes(r).map(_.getSimpleName)
 
@@ -1312,6 +1309,25 @@ object SpoonTir:
     private def typeDeclarationOf(r: CtTypeReference[?]): Option[spoon.reflect.declaration.CtType[?]] =
       if r == null then scala.None
       else try Option(r.getTypeDeclaration) catch { case _: Throwable => scala.None }
+
+    /** the ONE Spoon lookup for a type variable's declaration where an absent value is normal —
+      * the type variable belongs to an external generic whose declaration is not on the classpath.
+      * Callers treat `None` as "unknown/external"; see [[typeDeclarationOf]] for the same argument
+      * at the type level.  `CLAUDE.md` §4.6: one function, one doc, one `catch`. */
+    private def typeParamDeclOf(tv: CtTypeParameterReference): Option[CtTypeParameter] =
+      try Option(tv.getDeclaration) catch { case _: Throwable => scala.None }
+
+    /** the ONE Spoon lookup for an executable's declaration where an absent value is normal —
+      * the method is external and its source declaration is not on the classpath.  Callers that
+      * receive `None` decline the rule they were about to apply, which is the correct fallback
+      * for an unknowable signature.  `CLAUDE.md` §4.6. */
+    private def execDeclOf(ex: CtExecutableReference[?]): Option[CtExecutable[?]] =
+      try Option(ex.getExecutableDeclaration) catch { case _: Throwable => scala.None }
+
+    /** the ONE Spoon lookup for an annotation's type reference where an absent value is normal —
+      * the annotation class might not be on the classpath.  `CLAUDE.md` §4.6. */
+    private def annotationTypeRefOf(a: CtAnnotation[?]): Option[CtTypeReference[?]] =
+      try Option(a.getAnnotationType) catch { case _: Throwable => scala.None }
 
     /** JAVA'S FUNCTIONAL-INTERFACE QUESTION (JLS 9.8), asked of the class file — the ONE place it
       * is asked, and the ONLY place it can be.
@@ -1608,7 +1624,7 @@ object SpoonTir:
       case TypeShape.Wildcard(_, _, _) => false
       case TypeShape.Variable(tv) if sameVarInScope(tv) => true
       case TypeShape.Variable(tv) =>
-        (try Option(tv.getDeclaration) catch { case _: Throwable => None }).exists { d =>
+        (typeParamDeclOf(tv)).exists { d =>
           d.getParent.isInstanceOf[CtExecutable[?]]
         }
       case TypeShape.Arr(_, c) => calleeBounded(c)
@@ -1625,7 +1641,7 @@ object SpoonTir:
       case TypeShape.Wildcard(_, _, _) => objectT
       case TypeShape.Variable(tv) if sameVarInScope(tv) => tpe(tv)
       case TypeShape.Variable(tv) =>
-        (try Option(tv.getDeclaration) catch { case _: Throwable => None })
+        (typeParamDeclOf(tv))
           .map(erasureOfFormal(_, Set.empty, 2)).getOrElse(objectT)
       case TypeShape.Arr(_, c) =>
         AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")),
@@ -1735,7 +1751,7 @@ object SpoonTir:
       * (`<owner qualified name>$$T`, see [[mintTypeParams]]) makes the identity exact. Method-level
       * parameters are never the same parameter — they exist only inside the callee. */
     private def sameTypeParamHere(tv: CtTypeParameterReference): Boolean =
-      val owner = (try Option(tv.getDeclaration) catch { case _: Throwable => None })
+      val owner = (typeParamDeclOf(tv))
         .flatMap(d => Option(d.getParent)).collect { case ct: CtType[?] => ct.getQualifiedName }
       owner.exists(o => accessibleTp(tv.getSimpleName).exists(id =>
         minter.fullNameOf(id) == o + "$$" + tv.getSimpleName))
@@ -2422,7 +2438,7 @@ object SpoonTir:
         def declares(t: CtTypeReference[?], subst: Map[String, String], fuel: Int): Boolean =
           if t == null || fuel <= 0 then false
           else
-            val decl = try t.getTypeDeclaration catch { case _: Throwable => null }
+            val decl = typeDeclarationOf(t).orNull
             if decl == null then false
             else
               // this declaration's own frame: its formal parameters bound to the arguments the
@@ -2703,7 +2719,7 @@ object SpoonTir:
         try el.getAnnotations.asScala.toList
         catch { case _: Throwable => dropped += SpoonTir.UnreadableAnnotations; Nil }
       as.foreach { a =>
-        val ref = try a.getAnnotationType catch { case _: Throwable => null }
+        val ref = annotationTypeRefOf(a).orNull
         if ref == null then dropped += SpoonTir.UnresolvedAnnotation
         else
           val fqn = ref.getQualifiedName
@@ -2766,9 +2782,8 @@ object SpoonTir:
       if e.isInstanceOf[CtNewArray[?]] then t
       else
         val declared =
-          try Option(ref.getTypeDeclaration).flatMap(d =>
+          typeDeclarationOf(ref).flatMap(d =>
                 d.getAllMethods.asScala.find(_.getSimpleName == key).flatMap(m => Option(m.getType)))
-          catch { case _: Throwable => None }
         declared match
           case Some(arr: CtArrayTypeReference[?]) =>
             val ct = tpe(arr.getComponentType)
@@ -3351,8 +3366,7 @@ object SpoonTir:
         * port exactly where it was rather than interposing a view on evidence nobody has (§4.6). */
       private def fboundWildcardUse(r: CtTypeReference[?]): Boolean = TypeShape.of(r) match
         case TypeShape.Named(_, as) if as.nonEmpty =>
-          val formals = try Option(r.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
-                        catch { case _: Throwable => Nil }
+          val formals = typeDeclarationOf(r).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
           formals.zip(as).exists { (f, a) =>
             TypeShape.of(a).isInstanceOf[TypeShape.Wildcard] &&
               (try Option(f.getSuperclass).exists(b => mentionedTypeVarNames(b)(f.getSimpleName))
@@ -3367,7 +3381,7 @@ object SpoonTir:
           if ref == null || fuel <= 0 then scala.None
           else if ref.getQualifiedName == "java.lang.Iterable" then Some(ref)
           else
-            val d = try ref.getTypeDeclaration catch { case _: Throwable => null }
+            val d = typeDeclarationOf(ref).orNull
             if d == null then scala.None
             else
               val ups = (d match { case c: CtClass[?] => Option(c.getSuperclass).toList; case _ => Nil }) ++
@@ -3743,7 +3757,7 @@ object SpoonTir:
           case TypeShape.Wildcard(_, _, _) => scala.None
           case TypeShape.Variable(tv) =>
             for
-              d     <- (try Option(tv.getDeclaration) catch { case _: Throwable => scala.None })
+              d     <- typeParamDeclOf(tv)
               owner <- (d.getParent match { case ct: CtType[?] => Some(ct.getQualifiedName); case _ => scala.None })
               if ancestorFqns.headOption.getOrElse(Set.empty).contains(owner)
               arg   <- inheritedByDecl.headOption.flatMap(_.get(owner -> tv.getSimpleName))
@@ -4220,9 +4234,8 @@ object SpoonTir:
         * `ex` that is not synthesised. An anonymous class over an INTERFACE invokes `Object()`, has
         * no parameter to match and falls out here, which is the right answer and not a decline. */
       private def declParams(ex: CtExecutableReference[?]): Option[List[CtParameter[?]]] =
-        try anonSuperCtor(ex).orElse(Option(ex.getExecutableDeclaration))
+        anonSuperCtor(ex).orElse(execDeclOf(ex))
               .map(_.getParameters.asScala.toList)
-        catch { case _: Throwable => scala.None }
 
       /** the SUPERCLASS constructor an anonymous-class construction really invokes — see
         * [[declParams]]. `scala.None` for every executable that is not one, which is every call in a
@@ -4485,8 +4498,7 @@ object SpoonTir:
         if rt == null || rt.isPrimitive || rt.isInstanceOf[CtArrayTypeReference[?]] ||
            rt.isInstanceOf[CtTypeParameterReference] || rt.isInstanceOf[CtWildcardReference] then Map.empty
         else
-          val formals = try Option(rt.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
-                        catch { case _: Throwable => Nil }
+          val formals = typeDeclarationOf(rt).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
           val actuals = try rt.getActualTypeArguments.asScala.toList catch { case _: Throwable => Nil }
           if formals.nonEmpty && actuals.sizeIs == formals.size &&
              actuals.forall(a => !a.isInstanceOf[CtWildcardReference] && tpNameableHere(a))
@@ -5044,7 +5056,7 @@ object SpoonTir:
         val ref = try Option(selector.getType) catch { case _: Throwable => None }
         ref.exists { r =>
           !r.isPrimitive && !ClassicSelectorTypes.contains(r.getQualifiedName) && {
-            val decl = try Option(r.getTypeDeclaration) catch { case _: Throwable => None }
+            val decl = typeDeclarationOf(r)
             decl.exists {
               case _: CtEnum[?]                       => false
               case _: CtClass[?] | _: CtInterface[?]  => true
@@ -5484,7 +5496,7 @@ object SpoonTir:
           if f <= 0 || here == null then scala.None
           else if here.getQualifiedName == owner then subst.get(tv)
           else
-            val decl = try Option(here.getTypeDeclaration) catch { case _: Throwable => scala.None }
+            val decl = typeDeclarationOf(here)
             val supers = decl.toList.flatMap { d =>
               (try d.getSuperInterfaces.asScala.toList catch { case _: Throwable => Nil }) ++
                 (try Option(d.getSuperclass).toList catch { case _: Throwable => Nil })
@@ -5492,8 +5504,7 @@ object SpoonTir:
             supers.iterator.map { s =>
               // `s`'s actuals are written in `here`'s scope, so they are read THROUGH `subst`
               // before they become `s`'s own frame.
-              val formals = try Option(s.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList.map(_.getSimpleName)).getOrElse(Nil)
-                            catch { case _: Throwable => Nil }
+              val formals = typeDeclarationOf(s).map(_.getFormalCtTypeParameters.asScala.toList.map(_.getSimpleName)).getOrElse(Nil)
               val actuals = (try s.getActualTypeArguments.asScala.toList catch { case _: Throwable => Nil })
                 .map { case tp: CtTypeParameterReference => subst.getOrElse(tp.getSimpleName, tp); case o => o }
               val frame = if formals.sizeIs == actuals.size then formals.zip(actuals).toMap else Map.empty
@@ -5606,8 +5617,7 @@ object SpoonTir:
         if rt == null || rt.isPrimitive || rt.isInstanceOf[CtArrayTypeReference[?]] ||
            rt.isInstanceOf[CtTypeParameterReference] || rt.isInstanceOf[CtWildcardReference] then None
         else
-          val formals = try Option(rt.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
-                        catch { case _: Throwable => Nil }
+          val formals = typeDeclarationOf(rt).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
           val actuals = try rt.getActualTypeArguments.asScala.toList catch { case _: Throwable => Nil }
           // a BOUNDED wildcard (`IntMap<? extends V> map`) still gives a usable capture — `map.zeroValue`
           // conforms to `V` — so only a raw use or an UNBOUNDED `?` needs the erased view here.
@@ -5673,7 +5683,7 @@ object SpoonTir:
         val seen  = collection.mutable.Set[String]()
         val queue = collection.mutable.Queue[CtType[?]]()
         def decl(r: CtTypeReference[?]): CtType[?] =
-          try r.getTypeDeclaration catch { case _: Throwable => null }
+          typeDeclarationOf(r).orNull
         Option(decl(accessed)).foreach(queue.enqueue)
         while queue.nonEmpty do
           val t = queue.dequeue()
@@ -5757,16 +5767,14 @@ object SpoonTir:
             else if rt == null || rt.isPrimitive || rt.isInstanceOf[CtArrayTypeReference[?]]
                || rt.isInstanceOf[CtTypeParameterReference] || rt.isInstanceOf[CtWildcardReference] then None
             else
-              val formals = try Option(rt.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
-                            catch { case _: Throwable => Nil }
+              val formals = typeDeclarationOf(rt).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
               val actuals = rt.getActualTypeArguments.asScala.toList
               val unknown = formals.nonEmpty && (actuals.isEmpty || actuals.exists(_.isInstanceOf[CtWildcardReference]))
               val names   = formals.map(_.getSimpleName).toSet
               val depends =
-                try Option(ex.getExecutableDeclaration)
+                execDeclOf(ex)
                       .map(_.getParameters.asScala.toList.map(_.getType))
                       .exists(_.exists(p => p != null && mentionsTypeVarFilled(p, names)))
-                catch { case _: Throwable => false }
               // Only an F-BOUNDED class needs this: there the erasure has no Scala image at all,
               // so the name-directed fill is the only expressible reading. Everywhere else the
               // erasure is load-bearing and preferring in-scope names by NAME measured 2 -> 9.
@@ -5848,8 +5856,7 @@ object SpoonTir:
       ): List[Term] =
         if nm.isEmpty then args
         else
-          val ps = try Option(ex.getExecutableDeclaration).map(_.getParameters.asScala.toList.map(_.getType))
-                   catch { case _: Throwable => None }
+          val ps = execDeclOf(ex).map(_.getParameters.asScala.toList.map(_.getType))
           ps match
             case Some(l) if l.sizeIs == args.size && argEs.sizeIs == args.size =>
               args.zipWithIndex.map { (t, i) =>
@@ -5869,8 +5876,7 @@ object SpoonTir:
           named: Map[String, TypeRepr] = Map.empty,
       ): List[Term] =
         val names = subst.keySet
-        val ps = try Option(ex.getExecutableDeclaration).map(_.getParameters.asScala.toList.map(_.getType))
-                 catch { case _: Throwable => None }
+        val ps = execDeclOf(ex).map(_.getParameters.asScala.toList.map(_.getType))
         ps match
           case Some(l) if l.sizeIs == args.size && argEs.sizeIs == args.size =>
             args.zipWithIndex.map { (t, i) =>
@@ -5906,8 +5912,7 @@ object SpoonTir:
         if rt == null || rt.isPrimitive || rt.isInstanceOf[CtArrayTypeReference[?]] ||
            rt.isInstanceOf[CtTypeParameterReference] || rt.isInstanceOf[CtWildcardReference] then args
         else
-          val formals = try Option(rt.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
-                        catch { case _: Throwable => Nil }
+          val formals = typeDeclarationOf(rt).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
           val actuals = rt.getActualTypeArguments.asScala.toList
           // fully KNOWN instantiation: same arity, no wildcards, every variable nameable here
           // A WILDCARD actual is admitted too. It cannot drive the original cast (that one needs a
@@ -5916,8 +5921,7 @@ object SpoonTir:
           // an `AssetLoader[?, ?]` while the value at hand is an `AssetLoader[T, P]`. Java converts
           // silently at the wildcard; Scala needs it written. See the per-argument guard below.
           val known = formals.nonEmpty && actuals.sizeIs == formals.size && actuals.forall(tpResolvable)
-          val ps = try Option(inv.getExecutable.getExecutableDeclaration).map(_.getParameters.asScala.toList.map(_.getType))
-                   catch { case _: Throwable => None }
+          val ps = execDeclOf(inv.getExecutable).map(_.getParameters.asScala.toList.map(_.getType))
           (known, ps) match
             case (true, Some(l)) if l.sizeIs == args.size && argEs.sizeIs == args.size =>
               // A FIELD receiver's arguments must be rendered as the FIELD's declaration rendered
@@ -5975,13 +5979,12 @@ object SpoonTir:
           case t    => (try t.getType catch { case _: Throwable => null }) match
             case tv: CtTypeParameterReference =>
               // only a RAW-generic bound erases the members; a properly applied bound does not.
-              val d = try Option(tv.getDeclaration) catch { case _: Throwable => None }
+              val d = typeParamDeclOf(tv)
               d.flatMap(x => Option(x.getSuperclass)).exists(isRawGenericUse)
             case _ => false
         if !recvIsTypeVar then args
         else
-          val ps = try Option(inv.getExecutable.getExecutableDeclaration).map(_.getParameters.asScala.toList.map(_.getType))
-                   catch { case _: Throwable => None }
+          val ps = execDeclOf(inv.getExecutable).map(_.getParameters.asScala.toList.map(_.getType))
           ps match
             case Some(l) if l.sizeIs == args.size && argEs.sizeIs == args.size =>
               args.zipWithIndex.map { (t, i) =>
@@ -6022,10 +6025,9 @@ object SpoonTir:
         // (G29, the ordinary case), while one no formal mentions is constrained only by its BOUND —
         // which java resolves TO that bound and scala resolves to `Nothing` (G30). Read off the
         // callee's DECLARATION, which is where java read them, and not by re-running the pin.
-        val calleeTpNames = try Option(ex.getExecutableDeclaration)
+        val calleeTpNames = execDeclOf(ex)
                                   .collect { case m: CtMethod[?] => m.getFormalCtTypeParameters.asScala.toList }
                                   .getOrElse(Nil).map(_.getSimpleName).toSet
-                            catch { case _: Throwable => Set.empty[String] }
         val constrained = calleeTpNames.nonEmpty && (try
             Option(ex.getExecutableDeclaration).exists(
               _.getParameters.asScala.exists(p => mentionsTypeVar(p.getType, calleeTpNames)))
@@ -6099,9 +6101,8 @@ object SpoonTir:
       ): Term = recv match
         case None => app
         case Some((_, subst, _)) =>
-          val declRet = try Option(inv.getExecutable.getExecutableDeclaration)
+          val declRet = execDeclOf(inv.getExecutable)
                               .collect { case m: CtMethod[?] => m.getType }
-                        catch { case _: Throwable => None }
           // The un-erased reading comes from the receiver's DECLARED arguments, not from Spoon's
           // type for the call: through a wildcard receiver Spoon reports the CAPTURE (`map.V`),
           // which has no Scala name. `OrderedMap<T, ? extends V> map` says `V ↦ ? extends V`, and
@@ -6459,8 +6460,7 @@ object SpoonTir:
       private def rawCtorArgs(cc: CtConstructorCall[?], argEs: List[CtExpression[?]], args: List[Term]): List[Term] =
         if !isRawGenericUse(cc.getType) then args
         else
-          val ps = try Option(cc.getExecutable.getExecutableDeclaration).map(_.getParameters.asScala.toList.map(_.getType))
-                   catch { case _: Throwable => None }
+          val ps = execDeclOf(cc.getExecutable).map(_.getParameters.asScala.toList.map(_.getType))
           ps match
             case Some(l) if l.sizeIs == args.size && argEs.sizeIs == args.size =>
               val specialised = rawCtorSpecialisation(cc, l, argEs, args)
@@ -6496,9 +6496,8 @@ object SpoonTir:
       private def rawCtorSpecialisation(
           cc: CtConstructorCall[?], l: List[CtTypeReference[?]], argEs: List[CtExpression[?]], args: List[Term],
       ): Map[Int, TypeRepr] =
-        val clsFormals = try Option(cc.getType.getTypeDeclaration)
+        val clsFormals = Option(cc.getType).flatMap(typeDeclarationOf)
                                .map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
-                         catch { case _: Throwable => Nil }
         if clsFormals.sizeIs != 1 then Map.empty
         else
           val v = clsFormals.head.getSimpleName
@@ -6563,11 +6562,9 @@ object SpoonTir:
         * subtype argument is left alone. */
       private def appliedCtorArgs(cc: CtConstructorCall[?], argEs: List[CtExpression[?]], args: List[Term]): List[Term] =
         val actuals = try cc.getType.getActualTypeArguments.asScala.toList catch { case _: Throwable => Nil }
-        val formals = try Option(cc.getType.getTypeDeclaration)
+        val formals = Option(cc.getType).flatMap(typeDeclarationOf)
                             .map(_.getFormalCtTypeParameters.asScala.toList.map(_.getSimpleName)).getOrElse(Nil)
-                      catch { case _: Throwable => Nil }
-        val ps = try Option(cc.getExecutable.getExecutableDeclaration).map(_.getParameters.asScala.toList.map(_.getType))
-                 catch { case _: Throwable => None }
+        val ps = execDeclOf(cc.getExecutable).map(_.getParameters.asScala.toList.map(_.getType))
         if actuals.isEmpty || actuals.sizeIs != formals.size || !tpAccessibleHere(cc.getType) then args
         else ps match
           case Some(l) if l.sizeIs == args.size && argEs.sizeIs == args.size =>

@@ -106,6 +106,15 @@ case belongs to the classpath, not to the `catch`.
 *Fix kind: (a). The tiers are what to price: a refusal costs a FILE, a silent degradation costs a
 construct and is invisible, and the second is worse.*
 
+**Wave 2.1 census (2026-08-27).** The file had **143** bare `catch { case _: Throwable => <default> }`
+blocks. **35 removed** in wave 2.1 — all class (A), wrapping the four resolution-dependent lookups
+where absent is normal (`getTypeDeclaration`, `tv.getDeclaration`, `getExecutableDeclaration`,
+`getAnnotationType`), now consolidated into named helpers (`typeDeclarationOf`, `typeParamDeclOf`,
+`execDeclOf`, `annotationTypeRefOf`). Each chain that previously wrapped BOTH a resolution AND a
+computation now wraps only the resolution. **108 remaining** — predominantly class (B) fabricated
+facts: `Nil` (25), `false` (33), `null` (14), `None`/`scala.None` (15), and smaller groups.
+`PROGRESS.md` §13.3 carries the full census table. Measured at 0 emitted bytes moved on four ports.
+
 ### 0.2 `Symbol.isUnresolvedTypeVar` is `startsWith("?")`, and **10,417 libGDX symbols match it**
 
 OPEN, and found by RUNNING the lane written to measure something else — which is the only way it

@@ -10829,3 +10829,71 @@ handle families sge PUBLISHES and does not apply to any ported declaration (a co
 layer whose home is `GLHandleOps` — configuring one emits a surface the reference port deliberately
 does not have) and 12 SGE-original measurement/audio types with no java counterpart at all, which
 have nothing to seed and which a port that minted them would be inventing.
+
+### 13.3 Wave 2.1 — `SpoonTir.scala` bare-catch census (Phase 2 hygiene)
+
+**Census** (2026-08-27). `SpoonTir.scala` had **143** `catch { case _: Throwable => <default> }`
+blocks, every one a `CLAUDE.md` §4.6 candidate. No other file in `frontend-spoon` has any. The
+catches are classified into three kinds per `ENGINE-LIMITS.md` §0.1:
+
+| class | count | what it means |
+|---|---|---|
+| **(A) ABSENT-IS-NORMAL** | 35 | the lookup wraps a resolution that legitimately fails for external types; the default is an honest "unknown" the caller reads as such |
+| **(B) FABRICATED FACT** | ~90 | the default is indistinguishable from a real answer — `Nil` = "non-generic", `false` = "not static", `0` = arity zero |
+| **(C) CRASH-HIDING** | ~18 | NPE/ClassCast from Spoon's model swallowed; the default pretends nothing happened |
+
+**By default value** (all 143):
+
+| default | sites | class | what the caller hears |
+|---|---|---|---|
+| `Nil` | 36 | B | "no type arguments" / "no parents" / "no parameters" / "no bounds" |
+| `false` | 34 | B | "not primitive" / "not static" / "not private" / "not a subtype" |
+| `null` | 21 | A/B | A for `getTypeDeclaration`; B for `getType` chains |
+| `None`/`scala.None` | 30 | A/B | A for `tv.getDeclaration`, `getExecutableDeclaration`; B elsewhere |
+| `()` | 4 | C | side-effect walk silenced |
+| `"?"` | 3 | B | sentinel collision (`ENGINE-LIMITS.md` §0.2) |
+| `NoType` | 3 | B | "no type" for expressions that have one |
+| `Set.empty[String]` | 2 | B | "mentions no type vars" |
+| `0` | 2 | B | arity zero (the §4.6 worked example; already fixed) |
+| `1` | 1 | B | "has one argument" |
+| `t`/`fun`/`app` | 3 | C | transform returns input unchanged on failure |
+| `""` | 1 | B | empty qualified name |
+| `Sam.Answer.Unreadable` | 1 | A | explicit honest sentinel |
+| `dropped += ...; Nil` | 1 | A | counted degradation |
+| `Map.empty` | 1 | B/C | "no type-param frame" |
+
+**By Spoon API** (the lookup the catch wraps):
+
+| API | sites | predominant class |
+|---|---|---|
+| `getType` (and chains) | 29 | B — `null`/`false`/`NoType` for an expression that has a type |
+| `getTypeDeclaration` (and chains) | 22 | A — type is external; `null`/`None` is honest |
+| `getActualTypeArguments` | 14 | B — `Nil` means "non-generic" |
+| `getSuperInterfaces` | 12 | B — `Nil` means "no parents" |
+| `getParameters` (and chains) | 9 | A/B — A when via `getExecutableDeclaration` |
+| `tv.getDeclaration` | 8 | A — type variable is external |
+| `getQualifiedName` | 3 | B — `"?"` collides with sentinel |
+| `isPrimitive` | 2 | B — `false` is a real answer |
+| `isStatic` | 2 | B — `false` is a real answer |
+| other (31 complex expressions) | 31 | mixed B/C |
+
+**Wave 2.1 delivery: 35 catches removed, 108 remaining.** The 35 are all class (A) — the catches
+wrapping resolution-dependent lookups where absent is normal. Each was replaced by a call to one of
+four named helpers:
+
+| helper | wraps | doc |
+|---|---|---|
+| `typeDeclarationOf(r)` | `r.getTypeDeclaration` | **pre-existing** (the `formalArity` worked example) |
+| `typeParamDeclOf(tv)` | `tv.getDeclaration` | **new** — type variable from an external generic |
+| `execDeclOf(ex)` | `ex.getExecutableDeclaration` | **new** — method is external |
+| `annotationTypeRefOf(a)` | `a.getAnnotationType` | **new** — annotation class not on classpath |
+
+Every chain that previously wrapped BOTH a resolution lookup AND a computation on its result now
+wraps only the lookup (via the helper) and lets the computation propagate. Example:
+`try Option(r.getTypeDeclaration).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
+catch { case _: Throwable => Nil }` became
+`typeDeclarationOf(r).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)`.
+
+**Gate: 0 emitted bytes moved.** Measured on gdx (605 files), ashley (21 files), liqp (147 files),
+flexmark (470 files) — all four byte-identical to the unmodified code. frontend-spoon 121/121,
+engine 984/984, corpus 1414/1414 green. Grep gate 0.
