@@ -379,7 +379,7 @@ published surface, which now carries visibility) and nothing else.
 | screens | 0 (16 / 16) | 34 | — | — | — |
 | simple-graphs | 0 (16 / 16) | 129 | — | — | — |
 | sg-test | 0 | 8 | — | — | — |
-| noise4j | 2 (pre-existing, §5.4) | 57 | 2 | 2 | — |
+| noise4j | 0 (was 2, then 7 RefChecks riser, then 0 — §5.4) | 57 | 2 | 2 | — |
 | jbump | 0, differential probe **IDENTICAL** | 31 | — | — | — |
 
 **192 residual rows corpus-wide, of which 20 are the pre-existing `ctor-replay-widening`** — so the
@@ -898,7 +898,7 @@ inside a doubly-nested `for`; and `java.util` mutation through `Iterator.remove(
 
 | gate | `noise4j` |
 |---|---|
-| compile errors (scala-cli, Scala 3.8.4) | **2** — both one cause, §5.4 |
+| compile errors (scala-cli, Scala 3.8.4) | **0** — was 2 (K9, wave 2.4), then 7 (RefChecks riser, T8), then 0 (T8 CLOSED, wave 2.5) |
 | files emitted | **12** (12 upstream units; 0 dropped, 0 injected) |
 | model | 12 units / 1,032 symbols |
 | signature consistency | 0 |
@@ -940,19 +940,24 @@ the chained `a = b = -1`, `continue` as a `boundary` around the loop BODY with t
 
 | gap | kind | cost when wrong |
 |---|---|---|
-| an enum constant's class body was harvested for METHODS only — its fields were dropped silently | **(a)**, fixed | **4 of 6 errors**; `ENGINE-LIMITS.md` T8 predicted it and this port is the first to hit it |
-| a Java enhanced-for over a JDK `Iterable` emits `for (x <- xs)`, which needs Scala's `foreach` | **(a)**, open | **2 errors**, §5.4 |
+| an enum constant's class body was harvested for METHODS only — its fields were dropped silently | **(a)**, CLOSED (wave 2.3) | **4 of 6 errors**; `ENGINE-LIMITS.md` T8 |
+| a Java enhanced-for over a JDK `Iterable` emits `for (x <- xs)`, which needs Scala's `foreach` | **(a)**, CLOSED (wave 2.4) | **2 errors** — K9 |
+| enum constant body methods lacked `override` keyword — `overridesInherited(m)` not passed | **(a)**, CLOSED (wave 2.5) | **7 E164 errors** (the RefChecks riser after K9 closed the 2); `ENGINE-LIMITS.md` T8 |
 | assignment used as a VALUE re-evaluates its left-hand side | **(a)**, open | 0 errors here — 7 sites, all with a pure index. §5.6 |
 
-The enum fix is `SpoonTir.enumCase`, spec-pinned by `EnumConstantBodySpec` in `testkit` (two positive
-tests, two negative). It moved **0 members** in every other port, so no baseline elsewhere changed.
+The enum fix is `SpoonTir.enumCase`, spec-pinned by `EnumConstantBodySpec` in `testkit` (five tests:
+three positive, two negative). It moved **6 member digests** on noise4j (the three enum types and
+their enclosing classes) and **0 members** in every other port.
 
-### 5.4 The 2 errors, and why the port does NOT run `CollectionsTransform`
+### 5.4 The floor, and its history
 
-Both errors are one cause: `for (final Room r : rooms)` over a `java.util.List` and
+The floor reached **0** in wave 2.5 (T8 CLOSED). History: 2 errors (K9, foreach over JDK Iterable),
+then 7 (RefChecks riser after K9: 7 E164 `overrides nothing` on three enum constant bodies), then 0
+(T8: `overridesInherited(m)` passed to `execDef` in `enumCase`).
+
+noise4j does NOT run `CollectionsTransform`. The original 2 errors were one cause: `for (final Room r : rooms)` over a `java.util.List` and
 `for (final Integer region : regions)` over a `java.util.Set` emit as `for (r <- rooms)`, and a JDK
-collection has no `foreach`. The correlator classifies both as **EngineGap — (a)**; the rule is
-`ENGINE-LIMITS.md` K9.
+collection has no `foreach`. K9 CLOSED that by emitting the iterator protocol.
 
 The port keeps `java.util` deliberately, and the alternative is measured rather than assumed:
 
@@ -11023,3 +11028,22 @@ Two populations:
 
 **Result with switches ON:** base 0, gdx-test 217/4, ashley 108/2/2, screens 0/16-0, vfx 0/64-0,
 ai 0, textra 0, gltf 0, visui 7 (floor). Engine 984, corpus 1414.
+
+### 13.5 Wave 2.5 — T8 CLOSED, T23 CLOSED: enum constant body override; noise4j 7 -> 0
+
+Three fixes, all (a) universal:
+
+1. **T8 override.** `SpoonTir.enumCase` called `execDef(caseId, m, m.getSimpleName)` with the default
+   `overrides = false`. Changed to `overrides = overridesInherited(m)`, matching the anonymous class
+   handler. Also added `CtAnonymousExecutable` arm (instance init blocks) and a `dropped` list for
+   unhandled member types, with `sortBy(posKey)` for textual-order fidelity.
+
+2. **T23 grammar.** `MemberKey.parse` used `indexOf('#')` and refused a second `#`. Changed to
+   `lastIndexOf('#')` so `Enum#CONSTANT#member` parses as owner `Enum#CONSTANT`, member `member`.
+
+3. **T23 traversal.** `MethodBodyTransform.rewrite` walked `cd.body` but not `cd.enumCases`.
+   Extracted `rewriteDef` helper and applied it to both.
+
+**noise4j: 7 -> 0.** 6 member digests (the three enum types and their enclosing classes). Every
+check count flat. Spec: `EnumConstantBodySpec` five tests (three positive, two negative).
+`MemberKeySpec` updated for two-`#` parsing. Engine 997, frontend-spoon 121, corpus 1414.
