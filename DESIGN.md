@@ -214,11 +214,24 @@ another repository constructs it) declares all of them:
   to, so "this primitive cannot work" is unrepresentable rather than a runtime check somebody has to
   remember. `fromScalaName` is the loud door for a caller holding a string. All eight work: the
   mechanism is `opaque type T = P` plus `apply`/`unwrap` and is indifferent to `P`.
-- **the seeds** — `hints` (the port's own predicate, §1(c) in its purest form) and `extraHints` (the
+- **the seeds** — `hints` (the port's own seed set, §1(c) in its purest form) and `extraHints` (the
   agent-in-the-loop escape hatch after a failed compile) — **and a `RuleScope` fencing both.** The
   fence matters because a pure-move chain crosses type boundaries freely: one hint on a field
   propagates through a call into another class's field, which the spec measures. A fence a named
   entry could step over is not a fence, so an `extraHints` entry outside the scope does not fire.
+
+  **Both are a `Set[String]` of exact FQNs, matched against `Symbol.fullName`, and `hints` used to
+  be a `Symbol => Boolean`.** That is a CONTRACT change and not a convenience: a lambda has no
+  stable rendering, so the one field a port edits to seed a different family was invisible to
+  `surfaceFingerprint` and two specs differing only in their seeds compared EQUAL
+  (`ENGINE-LIMITS.md` §13 O4). Three things fell out of deleting the predicate, and each is a
+  reason to prefer the renderable structure over the expressive one anywhere else the question comes
+  up: the fingerprint now compares everything the spec declares; the `.conf` path (§5.7) stopped
+  REFUSING `hints`, so a config-written port is no longer restricted to `extraHints`, which is
+  §1.5's same-constructor rule holding where it previously could not; and O5's spanning-hints
+  hazard — a predicate like `_.name == "handle"` matching a dependent's own field and minting one
+  FQN in two modules — can no longer be WRITTEN. The predicate's expressiveness was never used:
+  every port in the corpus wrote an exact FQN comparison by hand.
 
 **Two instances in one pipeline must compose, and an overlap FAILS THE RUN.** One symbol cannot be
 two opaque types, and the silent failure is order-dependent: whichever instance runs second finds
@@ -248,9 +261,18 @@ owing all four. Each is now built, each was measured by the family that exposed 
   the signature and leaves member identity alone — which is the invariant, verified rather than
   assumed.
 - **a hint the MECHANISM cannot reach is REPORTED, and says (a) engine.** An `OpaqueSpec` seeds a
-  symbol whose own type is the primitive, so a family landing on a container's ELEMENT is
+  symbol whose own type is the primitive, so a family landing on a container's ELEMENT was
   unreachable — and it used to be unreachable SILENTLY, which reads exactly like a typo. It is now a
   `policy` finding whose detail names `ENGINE-LIMITS.md` §13 O3 and says no respelling helps.
+
+  **The ARRAY is no longer in that population, and WHY it came out is the rule to carry.** An opaque
+  type over `Int` ERASES to `Int`, so `Array[Opaque.T]` *is* `Array[Int]` on the JVM and the
+  companion's `wrapArray`/`unwrapArray` are compile-time identities — spelled as method calls only
+  so the typer sees the transition, exactly as `apply`/`unwrap` are. A DEEPER container has no such
+  identity at any level: an element-wise map is a COPY, which detaches both directions, so
+  `List[int[]]` and `DynamicArray[T]` stay reported. The eligibility question is therefore *is there
+  an erasure identity for this shape*, not *is this a container* — which is why the answer is one
+  container deep and stops there rather than being a partial implementation of a general fix.
 - **the SYNTHESISED unit belongs to ONE module, and it is the one that owns the declarations it was
   minted FOR.** The fourth is not about translation at all, which is why it survived a delivery whose
   base read 0 errors with all 21 check counts flat. This phase adds a top-level unit, `PortRun`
@@ -273,8 +295,9 @@ owing all four. Each is now built, each was measured by the family that exposed 
 
 **And the spec is SHARED SURFACE, so the phase implements `SurfacePolicy`** — CLAUDE.md §1's standing
 obligation for anything that retypes declarations under a `RuleScope`, unmet here until now. The
-fingerprint renders the FQN, the primitive, the sorted `extraHints` and the scope. `hints` is a
-predicate and cannot be rendered; that residue is `ENGINE-LIMITS.md` §13 O4. **`MergeablePolicy` is
+fingerprint renders the FQN, the primitive, the sorted `hints`, the sorted `extraHints` and the
+scope — everything the spec declares, since O4 replaced the unrenderable predicate.
+**`MergeablePolicy` is
 deliberately NOT implemented**, and the argument is §1.5's instance-count question answered rather
 than assumed: no corpus dependent constructs this phase, so there is one instance inherited through
 `extendedBy` and nothing to fold. Two same-NAME instances would mean the same opaque type configured
@@ -282,6 +305,30 @@ twice — the phase's name is `primitive->opaque:<fqn>` — which is two answers
 this type", and OR-ing two predicates would silently widen the shared surface. `SurfaceDivergence`
 is the right answer for a composition nobody has designed; a merge is what to build when a dependent
 first needs one, not before.
+
+**And what the mechanism can express is now a MEASUREMENT, taken against the reference port's whole
+opaque surface rather than against the one family that was configured.** sge declares **39**
+`opaque type`s; asking of each *does it type a declaration libGDX declares, and can an `OpaqueSpec`
+say so* splits them six ways, and only three of the six are the mechanism's:
+
+| family | n | expressible? | why / why not |
+|---|---:|---|---|
+| a scalar primitive on a ported FIELD — `TextureHandle` | 1 | **yes, shipped** | one hint, `GLTexture#glHandle`; 30 coercions, 0 errors (§11.25) |
+| a scalar primitive on ported PARAMS/RESULTS — `UniformLocation` | 1 | **yes, unconfigured** | 32 type positions in `ShaderProgram`/`BaseShader`; nothing measured the step. §11.25's table said "no" and was wrong |
+| an ARRAY element — `AttributeLocation` | 1 | **yes, since O3** | `Array[Opaque.T]` erases to `Array[Int]`; 33 type positions in `Mesh`/`VertexBufferObjectWithVAO` |
+| a typed layer sge publishes and does NOT apply — `BufferHandle`, `ShaderHandle`, `ProgramHandle`, `FramebufferHandle`, `RenderbufferHandle` | 5 | **n/a** | the ported declarations keep `Int`; their home is `GLHandleOps`, extension methods on `GL20`. Configuring one emits a surface the reference port deliberately does not have |
+| an opaque type standing where java has a CLASS — `Align`, `Input.Key`, `Input.Button`, `HttpStatus` | 4 | **NO — O6** | the definition is an INJECTION and the mint always makes a new companion at that FQN; there is no "retype against an existing type" parameter, and two definitions of one FQN is what `PortRun.claimedSynthetic` makes fatal |
+| a GL parameter VOCABULARY — `GLEnum.scala`'s 14 plus `Pixels` | 15 | **NO — O7** | the point of these is the NAMED CONSTANTS (`ShaderType.Vertex`), derived from `GL20`'s 309 `GL_*` fields; this phase retypes declarations and mints no vocabulary. They also sit behind `TextureHandle`'s own fence |
+| SGE-original measurement/audio types with no java counterpart — `WorldUnits`, `Seconds`, `Millis`, `Nanos`, `Degrees`, `Radians`, `Epsilon`, `Volume`, `Pan`, `Pitch`, `Position`, `SoundId` | 12 | **n/a** | nothing to seed; a port that minted them would be inventing API |
+
+Two things that table is here to say, neither of which the single configured family could. **The
+mechanism's real reach is 3 of the 39 and its gap is 19**, which is the honest denominator for
+deciding what to build next — and the two gaps are DIFFERENT MECHANISMS, not one general one: O6
+needs the mint to become optional (a definition supplied by `inject`), O7 needs a mint that produces
+MORE than `T`/`apply`/`unwrap`. And **the two n/a buckets are 17 of the 39**, which is the number
+that keeps this phase from being scoped by ambition: a family the hand port declares is not a family
+the port owes, and §1's balance tips toward doing nothing where the reference port's own declarations
+keep the primitive.
 
 ### 2.1.3 Java primitives → Scala primitives is (a) UNIVERSAL, with nothing to scope
 

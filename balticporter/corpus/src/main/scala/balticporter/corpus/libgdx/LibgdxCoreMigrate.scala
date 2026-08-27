@@ -956,15 +956,18 @@ object LibgdxPolicy:
     * declaration (`GLTexture.scala:42`).
     *
     * ==Why ONE family and not the eight sge declares (§1c, and it is a MEASUREMENT)==
-    * `TextureHandle` is the only one of sge's handle types that types a declaration libGDX itself
-    * declares. `ProgramHandle`/`ShaderHandle` (`ShaderProgram` keeps `private var program: Int`),
-    * `FramebufferHandle`/`RenderbufferHandle` (`GLFrameBuffer` keeps `Int`), `BufferHandle` and
-    * `UniformLocation` are a typed layer offered to CONSUMERS beside the raw one — their home is
-    * `GLHandleOps`, extension methods on `GL20`, and `GL20.scala:89` keeps `def glGenTexture(): Int`
-    * to prove it. Configuring them would emit a surface the reference port deliberately does not
-    * have. `GLEnum` is a third shape again: sge's ~200 `GL_*` values are hand-authored constants with
-    * no Java counterpart, and this mechanism retypes declarations rather than minting a vocabulary.
-    * PROGRESS §11.25 holds the evidence table; do not re-derive it.
+    * `TextureHandle` is the only one of sge's handle types CONFIGURED here, and the census behind
+    * that has been corrected once — read PROGRESS §11.25's table, not this list, and note which rows
+    * it retracts. `ProgramHandle`/`ShaderHandle` (`ShaderProgram` keeps `private var program: Int`),
+    * `FramebufferHandle`/`RenderbufferHandle` (`GLFrameBuffer` keeps `Int`) and `BufferHandle` are a
+    * typed layer offered to CONSUMERS beside the raw one — their home is `GLHandleOps`, extension
+    * methods on `GL20`, and `GL20.scala:89` keeps `def glGenTexture(): Int` to prove it.
+    * Configuring those five would emit a surface the reference port deliberately does not have.
+    * `UniformLocation` is NOT one of them (it types 32 positions in `ShaderProgram`/`BaseShader`, all
+    * ported declarations) and is expressible with this mechanism as it stands — unconfigured because
+    * nothing has measured the step, not because it was declined. `GLEnum` is a third shape again:
+    * sge types `GL20`/`GL30` FORMALS with 15 families and MINTS a named vocabulary for them, which
+    * this mechanism cannot do — `ENGINE-LIMITS.md` §13 O7, an open (b) with an exit criterion.
     *
     * ==The FENCE is load-bearing, and its reason is structural rather than measured==
     * `FlowPropagation.refSym` admits a NULLARY CALL, so `glHandle = Gdx.gl.glGenTexture()` is a real

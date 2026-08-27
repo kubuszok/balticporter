@@ -13233,10 +13233,11 @@ only one of the two is what a given consumer reads.*
 
 ### O3. An opaque family that lands on an ARRAY ELEMENT is INEXPRESSIBLE — not refused, unreachable
 
-OPEN. (a) engine, in the phase's eligibility test. Found while harvesting P6's policy; not counted
-in the 6 errors above, because the family it blocks was never configurable in the first place.
+**CLOSED for the ARRAY, and the DEEPER containers stay reported** — which is the shape of the answer
+rather than a partial fix, because the two are expressible for different reasons and only one of
+them holds. (a) engine, in the phase's eligibility test, its retype loop and its coercion.
 
-An `OpaqueSpec` names a primitive and the phase seeds symbols whose OWN info is that primitive:
+An `OpaqueSpec` names a primitive and the phase seeded symbols whose OWN info is that primitive:
 
 ```scala
 private def taggablePrim(info: TypeRepr): Boolean = info match
@@ -13245,62 +13246,100 @@ private def taggablePrim(info: TypeRepr): Boolean = info match
   case _                              => false
 ```
 
-`int[]` is not `scala.Int`, so a declaration whose element is the domain value is invisible to
+`int[]` is not `scala.Int`, so a declaration whose element is the domain value was invisible to
 seeding — and to propagation as well, because `FlowPropagation`'s edges run between SYMBOLS and an
 array's element has none. The measured case is libGDX's `void bind(ShaderProgram, int[] locations,
 int[] instanceLocations)`, which the reference hand port types `Array[AttributeLocation]`: a real
-retype of a real ported declaration that no `OpaqueSpec` can currently ask for.
+retype of real ported declarations (33 type positions across `Mesh.scala` and
+`VertexBufferObjectWithVAO.scala`) that no `OpaqueSpec` could ask for.
 
-The failure is quiet in the way that matters — a hint naming such a declaration does not throw and
-does not refuse, it simply matches nothing and is reported as never-fired, which reads identically
-to a typo. Any fix has to decide how far the element type travels (an `Array[T]` element, a
-collection's type argument, both) and what a coercion at an array boundary even is — a per-element
-map is not a wrap — so this is a design question, not an oversight to patch.
+**The fix, and the reason it stops at ONE container.** `taggablePrim` now recognises
+`AppliedType(scala.Array, [Prim])` beside the scalar; a seed of that shape retypes to
+`Array[Opaque.T]` rather than to `Opaque.T`, in the symbol table, in the enclosing `MethodType`'s
+parameter slots (O2's rule, unchanged) and at every reference node; and the minted companion gains
+`wrapArray`/`unwrapArray` beside `apply`/`unwrap`, which every coercion site reaches through the
+same `carriesOpaque`/`coerce` pair O1 built.
 
-**STILL OPEN — but no longer QUIET, which was the half that made it expensive.** The refusal stands
-and the report is new: the phase now reports every hint that named a real declaration of this
-program, inside the fence, whose VALUE TYPE mentions the spec's primitive without being it
-(`reportUnreachable`, a `PolicyIssue.Malformed` row in the `policy` check). Three things about the
-shape, each a decision:
+What licenses that coercion is an ERASURE fact and nothing about arrays being special: **an opaque
+type over `Int` erases to `Int`, so `Array[Opaque.T]` IS `Array[Int]` on the JVM** and
+`wrapArray`/`unwrapArray` are compile-time identities — spelled as method calls only so the scalac
+typer sees the transition, exactly as `apply`/`unwrap` are. That is precisely what a DEEPER
+container does not have. `List[int[]]`, or the `DynamicArray[AttributeLocation]` the hand port also
+writes, has no identity available at any level: an element-wise map is a COPY, which detaches the
+two directions (§4.4's own rule for a collection bridge), and the phase would be silently changing
+aliasing at every boundary rather than retyping a declaration. So those stay `Malformed` rows in the
+`policy` check, with the same sentence and the same (a)-engine classification O3 shipped.
 
-- **`Malformed`, not `NeverMatched`.** The key named something, so "your key matches nothing" is the
-  wrong sentence, and `PolicyReport`'s three answers already hold the right one — *it could never
-  have named anything the phase can act on*. The enum gains no case, which its own doc asks for.
-- **the detail says (a) ENGINE, explicitly**, because `PolicyFinding.render` appends §1(b)
-  unconditionally and here that is false: no respelling of the key reaches a container's element,
-  and the exits are to drop the hint or to widen the mechanism. §4.45's rule — a finding whose
-  reader cannot classify it costs a full investigation — is what makes the override worth the words.
-- **the report's DOMAIN is exactly the seeding rule's domain** — a method's RESULT, anything else's
-  own `info`. A hint naming a METHOD whose PARAMETER is the primitive is a different mistake with a
-  real policy exit (name the parameter), and reporting it here would send its author to the engine.
+**Measured, and the flatness is what makes it readable.** Engine specs **984 = 984**, corpus
+**430 = 430** (`PrimitiveToOpaqueTransformSpec` 26 → 27 — the single "reported" test split into
+"an array element is expressible" plus "a deeper container is still reported";
+`OpaqueMintOwnershipSpec` 10 = 10). libGDX core: **0 errors**, every check COUNT identical, every
+suite outcome identical, and the whole blast is the two members the mint now adds —
+`members.tsv` moves **3** rows (the `TextureHandle` class digest plus `wrapArray` and `unwrapArray`
+as new), `port-map.tsv` gains **2** member rows, and `findings.tsv`'s only movement is
+`catalog(consulted)` counting `11738 → 11740` DefDefs and renumbering the ids that quote it. libGDX
+configures no array hint, so this is the MECHANISM arriving flat; the family that wants it is
+`AttributeLocation`, and opening it is §13's O6/O7 census work rather than this entry's.
 
-*Fix kind: (a) engine — `taggablePrim` plus whatever `FlowPropagation` would need to carry an edge
-into a container's element. No policy exit: the spec has no vocabulary for "the element of".*
+*Fix kind: (a) engine — `taggablePrim`, the retype loop, and two more minted companion members. The
+residue that remains is (a) as well and has no policy exit: the spec still has no vocabulary for
+"the element of", and for a deeper container there is no coercion for one to name.*
 
 ### O4. An `OpaqueSpec`'s `hints` is a PREDICATE, so the surface fingerprint cannot see it
 
-OPEN, and it is the residue left by closing a bigger hole rather than a new one. The phase RETYPES
-declarations under a `RuleScope` and did not implement `SurfacePolicy`, so `PortManifest.fingerprint`
-compared two instances by NAME — and the name is `primitive->opaque:<fqn>`, which means a base and a
-dependent seeding the SAME opaque type from different declarations compared EQUAL, in
-`ManifestAgreement` and in every published port map. That is closed: the fingerprint now renders the
-spec's `fqn`, its primitive, its sorted `extraHints` and its `RuleScope.fingerprint`.
+**CLOSED.** (a) engine, in the SPEC's own type. The phase RETYPES declarations under a `RuleScope`
+and did not implement `SurfacePolicy`, so `PortManifest.fingerprint` compared two instances by NAME
+— and the name is `primitive->opaque:<fqn>`, which means a base and a dependent seeding the SAME
+opaque type from different declarations compared EQUAL, in `ManifestAgreement` and in every
+published port map. Closing that left one residue, and the residue was the seeds themselves:
 
-**`hints` is a `Symbol => Boolean` and has no stable rendering, so two specs differing only in their
-predicate still compare equal.** This is the same blind spot `PortManifest.fingerprint`'s own doc
-names one level up, one level down: opt-in, and the alternative — reflecting over a lambda — would
-compare things that are not policy. What is left is strictly smaller than what it replaces, and the
-part a port actually EDITS after a failed compile (`extraHints`) is inside the fingerprint.
+```scala
+hints: Symbol => Boolean = _ => false
+```
 
-**Nothing depends on it today, and that is a MEASUREMENT rather than a hope** (§1.5's instance-count
-question): no dependent in the corpus constructs a `primitive->opaque` phase, so there is one
-instance, inherited through `extendedBy`, and every dependent's effective surface agrees by
-construction. The exit when one does, and the reason it is not built yet, are in `DESIGN.md` §8.13.
+A lambda has no stable rendering, so two specs differing ONLY in which declarations they seed
+fingerprinted equal — the one field a port edits when it wants a different family, invisible to the
+one artifact that exists to notice a moved surface. Reflecting over the lambda was the alternative
+and it is worse: it compares things that are not policy.
 
-*Fix kind: (a) engine, if it is worth building — an `OpaqueSpec` field naming the predicate, which
-is policy the port would have to keep honest by hand, or a fingerprint over what the phase SEEDED,
-which is not available at fold time and would not be pure. Neither is obviously better than the
-named residue.*
+**The fix deletes the predicate rather than rendering it.** `hints` is now a `Set[String]` of exact
+FQNs matched against `Symbol.fullName` — the same shape `extraHints` already had, which is what
+makes this a simplification and not a second spelling — and the sorted set is rendered into the
+fingerprint segment beside the FQN, the primitive, `extraHints` and the scope. Everything the spec
+declares is now compared.
+
+Three things that came with it, none of them incidental:
+
+- **the config path stopped refusing.** `primitive-to-opaque` from a `.conf` (DESIGN.md §5.7) could
+  not express a predicate, so it refused `hints` outright and a config-written port could only ever
+  seed through `extraHints`. It now takes a string list, which is §1.5's own rule — the config path
+  constructs the same value through the same constructor — holding where it previously could not.
+- **the FENCE got stricter for free, and that is a correctness change rather than a rendering one.**
+  O5's spanning-hints refusal reads the bound hints with `exists`, and its own entry names the
+  hazard the predicate type INVITED: `_.name == "handle"` matches whatever a dependent happens to
+  have called a field, making one FQN mint in two modules. An exact-FQN set cannot straddle by
+  construction, so the shape that needed a guard can no longer be written.
+- **the unreachable report names the OFFENDING KEY.** `reportUnreachable` said
+  `OpaqueSpec(<fqn>).hints`; with a set it says `OpaqueSpec(<fqn>).hints(<the FQN>)`, which is the
+  string an agent edits (§4.575's rule at a finding rather than at a note).
+
+**Measured: the arrival is a FINGERPRINT move and nothing else.** Every port inheriting the phase
+through `extendedBy` moves its `policy=` header — gdx, gdx-test, ashley (main + test), gltf
+(main + test), anim8 and the dependents behind them — at **0 errors moved, 0 check counts moved, 0
+suite outcomes moved** and, apart from O3's two minted members, **0 member digests**. That is the
+`policy=` header doing exactly the job §5's `port_map_guard` exists for: a surface fact changed, and
+every downstream baseline had to say so.
+
+**And `MergeablePolicy` is STILL deliberately not implemented**, unchanged by this: §1.5's
+instance-count question is the one that governs, no corpus dependent CONSTRUCTS this phase, so
+there is one instance inherited through `extendedBy` and nothing to fold. What the renderable
+`hints` buys is that when a dependent first does construct one, `SurfaceDivergence` will be able to
+SEE the disagreement it is refusing.
+
+*Fix kind: (a) engine, and the shape to carry: a §1(b) parameter that cannot be RENDERED is a
+parameter the surface contract cannot hold an opinion about, so prefer the data structure a
+fingerprint can read over the predicate that is nicer to write. The predicate's expressiveness was
+never used — every port in the corpus wrote an exact FQN comparison by hand.*
 
 ### O5. A MINTED unit has no origin, so EVERY module in the pipeline emits it — was 24 errors, six suites stopped
 
@@ -13405,12 +13444,15 @@ this does not answer; the corpus has none. And the general rule is CLAUDE.md §1
 SYNTHESISES a declaration owes the same one-module answer `inject` does.*
 
 **…AND THE FENCE ADMITTED A HINT SET THAT SPANS TWO MODULES — closed by the checkpoint-4 audit.**
-The fence reads the hints, which is right; it read them with `exists`, which is not. `hints` is a
-`Symbol => Boolean` predicate, and while libGDX's is an exact FQN (`_.fullName == "…GLTexture#glHandle"`,
-which cannot straddle), the type invites `_.name == "handle"` — the form that reads naturally and
-matches whatever a dependent happens to have called a field. **One such match inside a dependent's
-own units makes `exists` true THERE, and the base's own hints make it true in the BASE.** Both
-modules then mint one FQN: O5 in full, with the fence in place and answering.
+The fence reads the hints, which is right; it read them with `exists`, which is not. `hints` was a
+`Symbol => Boolean` predicate at the time, and while libGDX's was an exact FQN
+(`_.fullName == "…GLTexture#glHandle"`, which cannot straddle), the type invited `_.name == "handle"`
+— the form that reads naturally and matches whatever a dependent happens to have called a field.
+**One such match inside a dependent's own units makes `exists` true THERE, and the base's own hints
+make it true in the BASE.** Both modules then mint one FQN: O5 in full, with the fence in place and
+answering. (O4 has since replaced the predicate with a `Set[String]` of exact FQNs, so the inviting
+form can no longer be WRITTEN; the refusal below stays, because a set of two FQNs in two modules
+straddles just as well and is what a port would reach for next.)
 
 The belt behind it does not close this, and the reason is worth stating because it is an ASYMMETRY:
 `PortRun.claimedSynthetic(_, _, Nil)` is `Nil`, so a base with no published map — or one proven
@@ -13431,6 +13473,159 @@ spanning name pattern refuses from BOTH modules' side, the same pattern over ONE
 normally (the rule is about the line, not about patterns), and an exact-FQN hint over the same
 two-module tree is untouched — which is the measurement behind "zero corpus movement" rather than an
 assertion about it. All 13 ports: 0 members changed, every check count identical.
+
+### O6. An opaque family that REPLACES a java CLASS is inexpressible — the mint always makes a NEW companion
+
+**OPEN. (b) engine — a `PrimitiveToOpaqueTransform` that retypes against an EXISTING/injected opaque
+type instead of minting one, with the FQN as its parameter.** Found by the sge opaque-type census
+(below); **4 families**, and none of them costs an error today because none of them can be
+configured at all.
+
+The census of the reference hand port's 39 `opaque type` declarations splits six ways, and this
+entry is one of the two buckets the mechanism has no vocabulary for:
+
+| family (sge) | n | expressible today? |
+|---|---|---|
+| `TextureHandle` — a scalar `int` on a ported FIELD | 1 | **yes** — configured and shipped |
+| `UniformLocation` — a scalar `int` on ported params/results (`ShaderProgram`, `BaseShader`; 32 type positions) | 1 | **yes** — expressible, not yet configured |
+| `AttributeLocation` — an `int[]` ELEMENT (`Mesh#bind`, `VertexBufferObjectWithVAO`; 33 type positions) | 1 | **yes, since O3** |
+| GL handle families sge DECLARES and does not apply (`BufferHandle`, `ShaderHandle`, `ProgramHandle`, `FramebufferHandle`, `RenderbufferHandle`) | 5 | n/a — no ported declaration to seed |
+| an opaque type standing where java has a CLASS (`Align`, `Input.Key`, `Input.Button`, `HttpStatus`) | 4 | **NO — this entry** |
+| GL parameter families typing `GL20`/`GL30` FORMALS (`GLEnum.scala`'s 14, plus `Pixels`) | 15 | **NO — O7** |
+| SGE-original measurement/audio types with no java counterpart (`WorldUnits`, `Seconds`, `Millis`, `Nanos`, `Degrees`, `Radians`, `Epsilon`, `Volume`, `Pan`, `Pitch`, `Position`, `SoundId`) | 12 | n/a — nothing to seed |
+
+**What the four have in common is that java declares a CLASS and sge declares an opaque type at that
+name.** `com.badlogic.gdx.utils.Align` is a `public class` whose entire body is
+`static public final int center = 1 << 0; …`; sge's `sge.utils.Align` is `opaque type Align = Int`
+plus extension methods, and every ported declaration that java typed `int align` is typed `Align`.
+`Input.Keys` and `Input.Buttons` are the same shape at a NESTED class. `HttpStatus` is one step
+further — a java class with a real instance field (`int statusCode`) and a constructor — collapsed
+to `opaque type HttpStatus = Int`.
+
+**The port CAN drop the java class and inject the Scala; what it cannot do is point the retype at
+it.** The two halves of the act have two different homes and only one exists:
+
+- the definition: `dropTypes` + `inject`, which the manifest already spells, and which is where an
+  opaque type standing at a java FQN belongs — `Align` has extension methods, named constants and a
+  hand-written body that no mint could derive;
+- the retype: every `int align` parameter in `Table`, `Container`, `Actor`, `HorizontalGroup`,
+  `VerticalGroup`, `TiledDrawable`, `MoveToAction` … has to become `Align`, with coercions at each
+  boundary. That is exactly `PrimitiveToOpaqueTransform`'s mechanism — seed, propagate along
+  pure-move flows, retype, coerce — and the phase MINTS `object <fqn>` with its own `T`,
+  `apply`/`unwrap` unconditionally. Two definitions of one FQN, which is the failure O5 built
+  `PortRun.claimedSynthetic` to make FATAL rather than silent. There is no knob that says *do not
+  mint; the type is already there*.
+
+**Why the missing piece is a (b) and not a widening of the existing one.** The mechanics are
+identical for every library — retype the seeds against a NAMED opaque type and coerce through its
+declared constructor/accessor — and what differs is which FQN and what the two coercion members are
+called. So the parameter is the FQN of an EXISTING type plus the names of its wrap and unwrap
+(`Align(raw)` / `.toInt` in sge's spelling, not `apply`/`unwrap`), and the phase's mint becomes the
+`None` arm of that parameter — §1(b)'s empty-parameter rule read at a definition site rather than at
+a table. Three things a design has to settle before it is written, each of which the mint currently
+answers by construction and would stop answering:
+
+- **the opaque type is not in the program.** Every `foreignOpaque` and `refuseOverlap` question is
+  asked of symbols the run holds; an injected file is Scala the frontend never parsed, so the target
+  is an EXTERNAL symbol with no `Flags(isOpaque)` and no members to resolve the coercion against.
+  The phase would be trusting a name, which is §4.56's own hazard — and unlike the mint, there is no
+  structural fact it can check. The honest shape is probably the shape `TypeRedirectTransform` takes
+  for its targets: a stated surface, whose errors are both loud;
+- **`Input.Key` is NESTED**, and `OpaqueSpec.fqn` requires a TOP-LEVEL name (it `require`s no `#`
+  and no `$`, because the mint writes a top-level unit and the emitter derives the package from the
+  prefix). `fqn = "sge.Input.Key"` would mint `object Key` in a package `sge.Input` that is not a
+  package. Retyping against an existing type has no such constraint — the target is whatever the
+  injected file declares — so the FQN grammar of the two parameters is genuinely different and one
+  field cannot hold both;
+- **the surface fingerprint has to render the TARGET, not the mint.** Two modules disagreeing about
+  which existing type a family retypes to is §1.5's two-ports-that-cannot-compile-together, and O4
+  is the precedent for it being renderable from the day the key lands.
+
+**Exit criterion.** `Align` configured on the libGDX base: every ported declaration java typed
+`int align` emits `sge.utils.Align`, the injected `Align.scala` is the only definition of that FQN
+in the corpus (`PortRun.claimedSynthetic` still fatal, still not firing), the `api-parity` opaque
+family reports **0** rows for `Align` against the hand port, and the libGDX suite is unchanged. Then
+`Key`/`Button` (the nested-FQN half) and `HttpStatus` (the java class with a real field, whose
+`statusCode` accessor has to become the unwrap) as the two shapes that prove the parameter and not
+just the one case.
+
+### O7. A GL ENUM FAMILY is a VOCABULARY, and this mechanism retypes declarations rather than minting one
+
+**OPEN. (b) engine — a `ConstantsAs(enumFqn, …)` form that mints NAMED CONSTANTS on an opaque
+companion from a java interface's `static final` fields.** Found by the same census; **15
+families**, the largest bucket in it and the one the current phase is furthest from.
+
+The 15 are `GLEnum.scala`'s fourteen — `ShaderType`, `StencilOp`, `CompareFunc`, `BlendFactor`,
+`BlendEquation`, `PrimitiveMode`, `BufferTarget`, `BufferUsage`, `PixelFormat`, `DataType`,
+`ClearMask`, `CullFace`, `EnableCap`, `TextureTarget` — plus `Pixels`, which types the same
+formals. Measured at the SIGNATURES they exist for, in sge's `GL20.scala` + `GL30.scala`:
+`TextureTarget` 22 formals, `DataType` 18, `BufferTarget` 12, `PixelFormat` 10, `Pixels` 10,
+`PrimitiveMode` 8, `CullFace` 4, `CompareFunc` 3, `EnableCap` 3, `ShaderType` 2, `StencilOp` 2,
+`BlendFactor` 2, `BlendEquation` 2, `ClearMask` 2, `BufferUsage` 1.
+
+**These are exactly the declarations `TextureHandle`'s scope FENCES OUT, which is why they have been
+invisible.** The libGDX base scopes `RuleScope.Everywhere(except = Set(GL20, GL30, GL31, GL32))`,
+and the doc comment on that spec says why: `FlowPropagation.refSym` admits a nullary call, so
+`glHandle = Gdx.gl.glGenTexture()` is a real flow edge into the GL interface, and unfenced the seed
+set would retype it — which sge does not do FOR THAT FAMILY. What the fence also does is put every
+GL formal out of reach of any spec at all, so the fifteen families sge DOES apply there are behind
+a decision taken for a different reason.
+
+**The shape is not a retype with a different target; it is a MINT with different content.** sge's
+`ShaderType` is:
+
+```scala
+opaque type ShaderType = Int
+object ShaderType {
+  def apply(raw: Int): ShaderType = raw
+  val Vertex:   ShaderType = 0x8b31 // GL_VERTEX_SHADER
+  val Fragment: ShaderType = 0x8b30 // GL_FRAGMENT_SHADER
+  given MkArray.OfInts[ShaderType] = MkArray.ofIntAs[ShaderType]
+  extension (s: ShaderType) { inline def toInt: Int = s }
+}
+```
+
+Two facts about that which decide the mechanism. First, the named constants are the WHOLE POINT and
+they have a java source: `GL20.GL_VERTEX_SHADER` is a `public static final int` on the ported
+interface, so the vocabulary is DERIVABLE — a per-family list of java constant FQNs, renamed, minted
+onto the companion. That is a (b) with the java constants as its parameter, and it is what
+`PROGRESS.md` §11.25's "sge's ~200 `GL_*` values are hand-authored constants with no Java
+counterpart" got wrong: they are hand-SPELLED, and every one carries the java name it came from in a
+trailing comment. Second, **sge KEEPS the raw constants** (`GL20.GL_VERTEX_SHADER` stays an `Int`),
+so this is an ADDITION to the emitted surface and not a replacement — which is the sharp difference
+from O6, where the java class GOES, and the reason the two are separate entries rather than one.
+
+Three parts, in the order a wave would build them:
+
+- **the vocabulary.** `ConstantsAs(enumFqn, constants: Map[javaConstantFqn, scalaName])` minting
+  `val <scalaName>: T = <the constant's value>` on the companion. The values must come from the
+  java DECLARATION and not be transcribed — §4.59's rule, since a transcribed hex literal is a
+  fabricated fact with a green compile;
+- **the retype**, which is the existing mechanism at the existing seeds — but seeded from the
+  FORMALS of an interface rather than from a field, and fenced to that interface, which is the
+  inverse of `TextureHandle`'s fence. Whether one spec can hold both directions is the design
+  question;
+- **the ARRAY givens and the extension.** `MkArray.OfInts[ShaderType]` and `inline def toInt` are
+  sge-shaped and would be per-library injections, not mint content — the mint's `apply`/`unwrap` is
+  already the coercion pair, and adding a second spelling is §5's one-policy-one-spelling rule.
+
+**Two things this entry is NOT, recorded so they are not re-derived.** The 5 declared-and-unapplied
+GL handle families (`BufferHandle`, `ShaderHandle`, `ProgramHandle`, `FramebufferHandle`,
+`RenderbufferHandle`) are a CONSUMER-side typed layer: sge publishes them and its own ported
+declarations keep `Int` (`VertexBufferObjectWithVAO.bufferHandle: Int`, `GLFrameBuffer`'s three
+handle fields, `InstanceBufferObject.bufferHandle: Int`), so there is no ported declaration to seed
+and configuring them would emit a surface the reference port deliberately does not have. And the 12
+SGE-original measurement/audio types have no java counterpart at all — nothing seeds them, and a
+port that minted them would be inventing API. **Note one correction to §11.25's table while it is
+being read: `UniformLocation` is listed there with the consumer-side five and is NOT one of them** —
+it types 32 declaration positions in `ShaderProgram` and `BaseShader`, both ported libGDX classes,
+which makes it a scalar `int` family expressible with the mechanism exactly as it stands.
+
+**Exit criterion.** One family end to end — `ShaderType` is the smallest at 2 constants and 2
+formals — with its constants derived from `GL20`'s own declarations, the raw `GL20.GL_*` constants
+still emitted as `Int` beside it, `api-parity`'s opaque family at **0** rows for that type, and the
+libGDX suite unchanged. Then `TextureTarget` (22 formals, the largest) as the one that proves the
+fence composes with `TextureHandle`'s rather than fighting it.
 
 ## 14. The IDIOM layer — what was REFUSED, with its number
 

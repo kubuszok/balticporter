@@ -9309,15 +9309,24 @@ libGDX declares, and re-read against the hand port the two are not the same set:
 | `TextureHandle` | **YES** | `GLTexture.scala:42` — `abstract class GLTexture(val glTarget: TextureTarget, private[graphics] var glHandle: TextureHandle)`, `def textureObjectHandle: TextureHandle` |
 | `ProgramHandle`, `ShaderHandle` | no | `ShaderProgram.scala:96,99,102` — `private var program: Int`, `vertexShaderHandle: Int`, `fragmentShaderHandle: Int` |
 | `FramebufferHandle`, `RenderbufferHandle` | no | `GLFrameBuffer.scala:73,79` — `depthStencilPackedBufferHandle: Int`, `colorBufferHandles: DynamicArray[Int]` |
-| `BufferHandle`, `UniformLocation` | no | `GLHandle.scala:125` — the family's real home is `GLHandleOps`, EXTENSION methods on `GL20` |
+| `BufferHandle` | no | `GLHandle.scala:125` — the family's real home is `GLHandleOps`, EXTENSION methods on `GL20` |
+| `UniformLocation` | **YES — this row was WRONG, corrected 2026-08-27** | `ShaderProgram.scala:230,233,262…` — sge types java's `private int fetchUniformLocation(String)` as `: UniformLocation` and every `setUniformi(int location, …)` as `(location: UniformLocation, …)`. 32 type positions across `ShaderProgram.scala` and `BaseShader.scala`, both ported libGDX classes |
 | `AttributeLocation` | yes, but **INEXPRESSIBLE** — see below | `Mesh.scala:555` types libGDX's `void bind(ShaderProgram, int[], int[])` as `Array[AttributeLocation]` |
 
-So six of the eight handle types are a typed layer offered to CONSUMERS beside the raw one, and
-`GL20.scala:89` keeps `def glGenTexture(): Int` to prove it. The `GLEnum` family is a second shape
-again: sge types GL20's PARAMETERS (`glCreateShader(type: ShaderType)`) but its ~200 `GL_*` values
-are hand-authored named constants with no Java counterpart, and this mechanism retypes declarations
-— it does not mint a constant vocabulary. §11.9's sentence about that layer being ecosystem
-infrastructure is now a measurement rather than an impression.
+So FIVE of the eight handle types are a typed layer offered to CONSUMERS beside the raw one, and
+`GL20.scala:89` keeps `def glGenTexture(): Int` to prove it. **`UniformLocation` was miscounted into
+that five and is not in it** — the re-census in `ENGINE-LIMITS.md` §13 O6 caught it, by asking the
+question at TYPE POSITIONS in the emitted hand port rather than at one line of `GLHandle.scala`, and
+it makes `UniformLocation` a scalar `int` family expressible with the mechanism exactly as it stands
+(the second such family, beside `TextureHandle`). The `GLEnum` family is a second shape again: sge
+types GL20's PARAMETERS (`glCreateShader(type: ShaderType)`) and this mechanism retypes declarations
+— it does not mint a constant vocabulary. **The clause that used to sit here — "its ~200 `GL_*`
+values are hand-authored named constants with no Java counterpart" — is ALSO wrong and is retracted
+in the same re-census**: `GL20.java` declares **309** `public static final int GL_*` fields, and
+every one of sge's typed constants carries the java name it was derived from in a trailing comment
+(`val Vertex: ShaderType = 0x8b31 // GL_VERTEX_SHADER`). The vocabulary is DERIVABLE, which is what
+makes `ENGINE-LIMITS.md` §13 O7 a (b) parameter rather than a refusal. §11.9's sentence about that
+layer being ecosystem infrastructure is now a measurement rather than an impression.
 
 **Configuring those would have emitted a surface the reference port deliberately does not have.**
 That is the §1(c)-written-from-a-wish failure, and the reason the GL half of this step is one
@@ -9412,11 +9421,14 @@ first.
 
 ##### Do NOT retry
 
-- **Do not configure `GLEnum`, `ProgramHandle`/`ShaderHandle`/`FramebufferHandle`/
-  `RenderbufferHandle`/`BufferHandle`, or `UniformLocation` on libGDX.** The reference port applies
-  none of them to a ported declaration; the table above is the evidence, and re-deriving it costs a
-  session. This does NOT extend to `Pixels`/`Seconds`, which are a different case entirely — see
-  above.
+- **Do not configure `ProgramHandle`/`ShaderHandle`/`FramebufferHandle`/`RenderbufferHandle`/
+  `BufferHandle` on libGDX.** The reference port applies none of THOSE FIVE to a ported declaration;
+  the table above is the evidence, and re-deriving it costs a session. This does NOT extend to
+  `Pixels`/`Seconds`, which are a different case entirely — see above. **`UniformLocation` and
+  `GLEnum` were on this list and are OFF it (2026-08-27)**: the table row above was wrong about the
+  first (32 applied type positions) and the "no Java counterpart" argument was wrong about the
+  second (309 `GL_*` constants in `GL20.java`). `UniformLocation` is expressible today;
+  `GLEnum` is `ENGINE-LIMITS.md` §13 O7, an OPEN (b) with an exit criterion, not a do-not-retry.
 - **Do not re-derive the 6 errors of attempt 1, or the 24 of attempt 2.** They were O1, O2 and O5,
   all three closed, and the five columns above are the proof.
 - **Do not measure a family of this phase on libgdx-core alone.** A libgdx-core-only run reproduces
@@ -10750,3 +10762,70 @@ for a printer, and both mechanisms here move the SYMBOL instead, which is why th
 serve one, which is exactly the ADD rule's reason for the `Only(Set.empty)` default. *An
 implementation-pair exemption read off `paramss` alone* — it is the shape a derived CONCRETE getter
 makes common, and it costs 2 `RefChecks` rows that no typer error and no moved count can show.
+
+**Wave 1.7 — the opaque phase's two engine gaps CLOSED, and the census that says what is left**
+(2026-08-27). `ENGINE-LIMITS.md` §13 **O3** and **O4** both close, in one engine commit, and the
+measurement that matters is how little moved:
+
+- **O4** — `OpaqueSpec.hints` was a `Symbol => Boolean`, so two specs differing only in which
+  declarations they seed fingerprinted EQUAL: the one field a port edits, invisible to the artifact
+  that exists to notice a moved surface. It is now a `Set[String]` of exact FQNs (the shape
+  `extraHints` already had), rendered sorted into the `policy=` segment. Three things came with it —
+  the `.conf` path stopped REFUSING `hints`, so a config-written port is no longer restricted to
+  `extraHints`; O5's spanning-hints hazard (`_.name == "handle"` matching a dependent's own field)
+  can no longer be written; and `reportUnreachable` now names the offending FQN rather than the key.
+- **O3** — `taggablePrim` recognises `AppliedType(scala.Array, [Prim])` beside the scalar, so an
+  `int[]` seed retypes to `Array[Opaque.T]` and the companion mints `wrapArray`/`unwrapArray`. What
+  licenses that is ERASURE and not arrays: an opaque type over `Int` erases to `Int`, so
+  `Array[Opaque.T]` IS `Array[Int]` on the JVM and both coercions are compile-time identities. A
+  deeper container has no identity at any level — an element-wise map is a COPY, which detaches both
+  directions — so `List[int[]]` stays a `Malformed` `policy` row with the same (a)-engine sentence.
+
+**Measured against the withheld base** (the accessor switch is not in this branch, so every number
+below is this step's alone): specs engine **984 = 984**, corpus **430 = 430**
+(`PrimitiveToOpaqueTransformSpec` 26 → 27, the one "reported" test split into "an array element is
+expressible" + "a deeper container is still reported"; `OpaqueMintOwnershipSpec` 10 = 10, unchanged
+because the ownership fence is orthogonal). Lanes: gdx **0 = 0**, gdx-test **217 / 4** (unchanged,
+221 of 221 emitted), ashley **108 / 2 + 2 skips** (unchanged, 112 of 112), anim8 **23 / 0**, gltf
+**3 = 3**. The whole emitted blast is the two members the mint now adds — `members.tsv` moves **3**
+rows on gdx (the `TextureHandle` class digest, `wrapArray` and `unwrapArray` as new), `port-map.tsv`
+gains **2** member rows there, and `findings.tsv`'s only movement is `catalog(consulted)` counting
+`11738 → 11740` DefDefs and renumbering the ids that quote it. **The `policy=` header moves on every
+port that inherits the phase** — gdx, gdx-test, ashley (main + test), gltf (main + test), anim8, and
+the dependents behind them — which is the fingerprint doing exactly what O4 built it to do, and is
+why the acknowledgement is a corpus-wide baseline promotion for a change with two moved members in
+it.
+
+**The census, and the two mechanisms it opens.** With the two gaps shut, "what can this phase
+express" was asked of the reference port's WHOLE opaque surface instead of the one configured
+family: **39** `opaque type`s in sge, splitting six ways (`DESIGN.md` §2.1.2 holds the table). The
+mechanism's real reach is **3** — `TextureHandle` (shipped), `UniformLocation` (expressible,
+unconfigured) and `AttributeLocation` (expressible since O3) — its n/a bucket is **17**, and its gap
+is **19**, in two shapes that are two different mechanisms:
+
+- **`ENGINE-LIMITS.md` §13 O6, 4 families** (`Align`, `Input.Key`, `Input.Button`, `HttpStatus`) —
+  an opaque type standing where java declares a CLASS. The definition belongs to `dropTypes` +
+  `inject`; what is missing is a way to point the RETYPE at an existing/injected type, because the
+  mint always makes a new companion at that FQN and two definitions of one FQN is what
+  `PortRun.claimedSynthetic` makes fatal. A (b) with the target FQN as its parameter.
+- **`ENGINE-LIMITS.md` §13 O7, 15 families** (`GLEnum.scala`'s 14 plus `Pixels`) — the GL parameter
+  vocabulary. These type `GL20`/`GL30` FORMALS, which is exactly what `TextureHandle`'s
+  `Everywhere(except = GL20…GL32)` fence scopes out, so they have been invisible behind a decision
+  taken for another family. The point of them is the NAMED CONSTANTS, and those are derivable: a
+  `ConstantsAs(enumFqn, …)` form minting them from java's own `static final` fields, also a (b).
+
+**Two rows of §11.25's own census were WRONG and are retracted there** — found by re-asking the
+question at TYPE POSITIONS in the emitted hand port rather than at one line of `GLHandle.scala`.
+`UniformLocation` was listed with the consumer-side layer and is not in it (32 applied positions in
+`ShaderProgram` and `BaseShader`, both ported classes), and "sge's ~200 `GL_*` values are
+hand-authored constants with no Java counterpart" is false (`GL20.java` declares **309**
+`public static final int GL_*`, and every sge constant carries the java name it came from in a
+trailing comment). Both were on the §11.25 **Do NOT retry** list; both are off it. That is §5's rule
+about a documented blind spot read at a CENSUS: the argument that a family is out of reach is
+re-derived per wave, in the wave that is about to rely on it.
+
+The remaining n/a **17** are the number that keeps this phase from being scoped by ambition: 5 GL
+handle families sge PUBLISHES and does not apply to any ported declaration (a consumer-side typed
+layer whose home is `GLHandleOps` — configuring one emits a surface the reference port deliberately
+does not have) and 12 SGE-original measurement/audio types with no java counterpart at all, which
+have nothing to seed and which a port that minted them would be inventing.
