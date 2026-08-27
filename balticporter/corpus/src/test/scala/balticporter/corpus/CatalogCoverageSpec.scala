@@ -32,11 +32,12 @@ class CatalogCoverageSpec extends munit.FunSuite:
     given CatalogLog = log
     Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin, node) {
       Obligations.consult(JS.E(3), origin)(scala.None)
+      Obligations.consult(JS.E(17), origin)(scala.None)
     }
-    // JS-E17 also attaches to this kind (at BOTH dispatches) and is `Open`, so it is a DECLARED
-    // hole here and not a defect — the work list, which is what that lane is. What this test is
-    // about is JS-E03, and consulting it leaves nothing owed.
+    // Both JS-E03 and JS-E17 attach to this (kind, dispatch) and both are `Handled`, so
+    // consulting both leaves nothing owed.
     assert(!log.undischarged.map(_.id).contains(JS.E(3)))
+    assert(!log.undischarged.map(_.id).contains(JS.E(17)))
     assertEquals(log.consulted(JS.E(3)), 1)
     assertEquals(log.fired(JS.E(3)), 0)
   }
@@ -49,13 +50,12 @@ class CatalogCoverageSpec extends munit.FunSuite:
     given CatalogLog = log
     Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin, node)(())
     val holes = log.undischarged
-    // two rows attach at this (kind, dispatch): JS-E03, which the registry says is handled — so its
-    // hole is an ENGINE GAP — and JS-E17, which the registry itself calls `Open`, so its hole is
-    // DECLARED. The lane keeps them apart by the `kind` column and this is the pair that shows it.
+    // two rows attach at this (kind, dispatch): JS-E03 and JS-E17, both `Handled` — so both
+    // holes are ENGINE GAPs.
     assertEquals(holes.map(_.id), List(JS.E(3), JS.E(17)))
     assertEquals(holes.head.kind, "CtOperatorAssignment")
     assertEquals(holes.head.dispatch, Dispatch.Statement)
-    assertEquals(CatalogCheck.undischarged(log).map(_.kind), List("ENGINE GAP", "declared open"))
+    assertEquals(CatalogCheck.undischarged(log).map(_.kind), List("ENGINE GAP", "ENGINE GAP"))
   }
 
   test("…and the hole is one finding per ROW, however many sites produced it") {
@@ -114,22 +114,21 @@ class CatalogCoverageSpec extends munit.FunSuite:
     assertEquals(Differences.owedAt("CtLiteral", Dispatch.Expression), Nil)
   }
 
-  test("FATAL mode raises on a hole the registry claims is handled, and never on a declared-open row") {
+  test("FATAL mode raises on a hole the registry claims is handled") {
     val fatal = new CatalogLog(fatal = true)
     intercept[AssertionError] {
       given CatalogLog = fatal
       Lowering.of("CtOperatorAssignment", Dispatch.Statement, origin, node)(())
     }
-    // JS-E17 is `Open`. It attaches at BOTH dispatches, no arm consults it, and a testkit run must
-    // NOT die on it — it is the work list, and a mode that died on the work list would make the
-    // work list unrunnable. This is the one exemption, and it is derived from the row's own status,
-    // which is why the body below discharges the HANDLED row beside it and still does not raise.
+    // Both JS-E03 and JS-E17 are `Handled` now, so an expression dispatch that consults both
+    // leaves nothing owed and does not raise.
     val alsoFatal = new CatalogLog(fatal = true)
     given CatalogLog = alsoFatal
     Lowering.of("CtOperatorAssignment", Dispatch.Expression, origin, node) {
       Obligations.consult(JS.E(4), origin)(scala.None)
+      Obligations.consult(JS.E(17), origin)(scala.None)
     }
-    assertEquals(alsoFatal.undischarged.map(_.id), List(JS.E(17)))
+    assertEquals(alsoFatal.undischarged.map(_.id), Nil)
   }
 
   // -------------------------------------------------------------------------------------------

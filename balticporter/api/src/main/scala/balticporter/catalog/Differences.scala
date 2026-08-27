@@ -245,15 +245,16 @@ object Differences:
       NoImpact, Handled, InCode("SpoonTir.exprNoCast's CtAssignment arm carries the argument in a comment"),
       Universal, "SpoonTir.exprNoCast's CtAssignment arm -> Tree.Block(List(Assign), lhs)", Lowered("CtAssignment", Dispatch.Expression)),
     // The row JS-E02/E03/E04 each cover HALF of. Those three are about the VALUE and the NARROWING;
-    // this one is about how many times the LVALUE is evaluated, and no arm asks it — every one of
-    // them translates the lvalue once and uses the translation on both sides of the store. Attached
-    // at `Either` because both dispatches lower the same node and both do it, and left OPEN because
-    // the honest fix binds temporaries and moves emitted text at 161 sites (`ENGINE-LIMITS.md` F7).
+    // this one is about how many times the LVALUE is evaluated. Attached at `Either` because both
+    // dispatches lower the same node and both owe it. The frontend consults, and the emitter binds
+    // each non-trivial lvalue subexpression to a temporary so each is evaluated exactly once
+    // (`ENGINE-LIMITS.md` F7 — CLOSED). Simple lvalues (every subexpression is an ident/this/literal)
+    // keep the direct form: no semantic difference, no digest churn.
     Difference(eId(17), "a compound assignment and `++`/`--` evaluate the LVALUE ONCE — its array reference, its index, its target",
       "JLS 15.26.2, 15.14.2, 15.15.1",
       "SLS 6.12.4 — `l op= r` expands to `l = l op r`, and every occurrence of `l` is evaluated",
-      Silent, Open, el("F7"), Universal,
-      "SpoonTir.stmtArm's CtOperatorAssignment and CtUnaryOperator arms, and exprArm's twins — each translates the lvalue once and USES the translation twice",
+      Silent, Handled, el("F7"), Universal,
+      "SpoonTir.stmtArm's CtOperatorAssignment arm and exprArm's twin consult; TirEmitter.termArm's Assign and IncDec arms bind non-trivial lvalues",
       Lowered("CtOperatorAssignment", Dispatch.Either)),
     // A row that exists because a SUSPICION was priced, and the price was zero. `CtTextBlock` was
     // filed as ABSORBED SILENTLY — `SpoonKinds`' own "dangerous one" — on the true observation that

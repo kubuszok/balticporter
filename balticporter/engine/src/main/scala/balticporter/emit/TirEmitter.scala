@@ -3476,6 +3476,9 @@ final class TirEmitter(
     * conversions in `Cubemap` and `Pixmap` renamed `TextField`'s three `body$N` — which is small
     * only because the construct is rare, and it is the same defect at any size. */
   private var lambdaSeq = 0
+  /** counter for lvalue-binding temporaries (`$lv1`, `$lv2`, …), scoped identically to
+    * `lambdaSeq` — a compound-assignment temporary in one member must not consume another's. */
+  private var lvSeq = 0
 
   /** run `f` with the synthetic-name counters SAVED, reset, and restored.
     *
@@ -3486,8 +3489,10 @@ final class TirEmitter(
     * tidier one. */
   private def inDeclaration[A](f: => A): A =
     val saved = lambdaSeq
+    val savedLv = lvSeq
     lambdaSeq = 0
-    try f finally lambdaSeq = saved
+    lvSeq = 0
+    try f finally { lambdaSeq = saved; lvSeq = savedLv }
   private def inLoop[A](brk: Option[String], cont: Option[String])(f: => A): A =
     val (sb, sc) = (breakTarget, contTarget)
     breakTarget = brk; contTarget = cont
@@ -4226,7 +4231,21 @@ final class TirEmitter(
         Option.when(args.exists(_.isInstanceOf[Tree.Repeated]))(()))
       applyStr(fun, args, i)
     case Tree.TypeApply(fun, targs, _, _) => s"${term(fun, i)}[${targs.map(a => tpe(a.tpe)).mkString(", ")}]"
-    case Tree.Assign(l, r, _, _)        => s"${term(l, i)} = ${term(r, i)}"
+    case Tree.Assign(l, r, _, _) =>
+      // F7 (CLAUDE.md §4.4, JLS 15.26.2): a COMPOUND ASSIGNMENT evaluates the lvalue ONCE; the
+      // direct rendering evaluates it TWICE (once on each side). When the lvalue has non-trivial
+      // subexpressions, bind each to a temporary so each is evaluated exactly once.
+      // Simple lvalues (all subexpressions are idents/this/literals) keep the direct form — no
+      // semantic difference, no digest churn.
+      compoundAssignParts(l, r) match
+        case Some((op, rhsArgs, narrow)) if hasNonTrivialSubexpr(l) =>
+          val (bindings, lv) = bindLvalue(l, i)
+          val rhsStr = rhsArgs.map(operand(_, i)).mkString(", ")
+          val expr = s"$lv $op $rhsStr"
+          val rhs = narrow.fold(expr)(nt => s"($expr: ${tpe(nt)})")
+          s"{ ${bindings.mkString("; ")}; $lv = $rhs }"
+        case _ =>
+          s"${term(l, i)} = ${term(r, i)}"
     case Tree.Block(stats, expr, _, _, tr) => block(stats, expr, tr, i)
     case lam @ Tree.Lambda(ps, body, _, _, _) =>
       val head = s"(${ps.map(param).mkString(", ")}) => "
@@ -4616,8 +4635,16 @@ final class TirEmitter(
     // temporary is what makes the post-form exact; the target is still re-evaluated for the
     // assignment, exactly as the pre-form already did.
     case Tree.IncDec(tgt, op, post, _, _) =>
-      if post then s"{ val ${'$'}prev = ${term(tgt, i)}; ${term(tgt, i)} $op= 1; ${'$'}prev }"
-      else s"{ ${term(tgt, i)} $op= 1; ${term(tgt, i)} }"
+      // F7 (CLAUDE.md §4.4, JLS 15.14.2/15.15.1): same lvalue-once rule as compound assignment.
+      // The target is rendered multiple times; bind its subexpressions when non-trivial.
+      if hasNonTrivialSubexpr(tgt) then
+        val (bindings, lv) = bindLvalue(tgt, i)
+        val prefix = bindings.mkString("; ")
+        if post then s"{ $prefix; val ${'$'}prev = $lv; $lv $op= 1; ${'$'}prev }"
+        else s"{ $prefix; $lv $op= 1; $lv }"
+      else
+        if post then s"{ val ${'$'}prev = ${term(tgt, i)}; ${term(tgt, i)} $op= 1; ${'$'}prev }"
+        else s"{ ${term(tgt, i)} $op= 1; ${term(tgt, i)} }"
     case Tree.DoWhile(b, c, _, _, lbl)  => // Scala 3 has no do-while
       // JS-S18 — Scala 3 REMOVED `do`-`while`, so there is no counterpart keyword and the body must
       // be lifted into the condition. Always fires: every `do` in java needs the image, which is
@@ -4729,6 +4756,61 @@ final class TirEmitter(
     case _: Tree.Ident | _: Tree.This | _: Tree.Literal => true
     case Tree.Select(q, _, _, _)                        => effectFree(q)
     case _                                              => false
+
+  // -- F7 lvalue binding (CLAUDE.md §4.4, JLS 15.26.2 / 15.14.2 / 15.15.1) ---------------------
+
+  /** Does this lvalue contain a subexpression whose re-evaluation could have an effect?
+    *
+    * `effectFree` conservatively returns `false` for every `ArrayAccess`, but `arr(0)` with both
+    * `arr` and `0` effect-free does not need binding — evaluating them twice is evaluating them
+    * once. This function looks ONE LEVEL inside an assignable form and asks whether any
+    * constituent subexpression is non-trivial, which is the question the compound-assignment and
+    * increment arms need. */
+  private def hasNonTrivialSubexpr(lv: Term): Boolean = lv match
+    case _: Tree.Ident | _: Tree.This | _: Tree.Literal => false
+    case Tree.Select(q, _, _, _)                        => !effectFree(q)
+    case Tree.ArrayAccess(arr, idx, _, _)               => !effectFree(arr) || !effectFree(idx)
+    case _                                              => true
+
+  /** Bind the non-trivial subexpressions of an assignable lvalue to temporaries, returning
+    * (list-of-val-bindings, bound-lvalue-string).
+    *
+    * For `arr(f())`: `(List("val $lv1 = f()"), "arr($lv1)")`
+    * For `g().field`: `(List("val $lv1 = g()"), "$lv1.field")` */
+  private def bindLvalue(lv: Term, i: Int): (List[String], String) = lv match
+    case Tree.ArrayAccess(arr, idx, _, _) =>
+      val bindings = List.newBuilder[String]
+      val arrStr =
+        if effectFree(arr) then term(arr, i)
+        else { lvSeq += 1; val n = s"$$lv$lvSeq"; bindings += s"val $n = ${term(arr, i)}"; n }
+      val idxStr =
+        if effectFree(idx) then term(idx, i)
+        else { lvSeq += 1; val n = s"$$lv$lvSeq"; bindings += s"val $n = ${term(idx, i)}"; n }
+      (bindings.result(), s"$arrStr($idxStr)")
+    case Tree.Select(qual, fld, _, _) =>
+      lvSeq += 1
+      val n = s"$$lv$lvSeq"
+      (List(s"val $n = ${term(qual, i)}"), s"$n.${local(fld)}")
+    case _ =>
+      // fallback: bind the whole thing
+      lvSeq += 1
+      val n = s"$$lv$lvSeq"
+      (List(s"val $n = ${term(lv, i)}"), n)
+
+  /** Detect a COMPOUND ASSIGNMENT — `Tree.Assign(l, r)` where `r = l.op(rhs)`, possibly wrapped
+    * in a `Tree.Typed` for the implicit narrowing cast (JLS 15.26.2).
+    *
+    * Returns `Some((operatorName, rhsArgs, optionalNarrowType))` when the RHS contains the LHS.
+    * Compared by STRUCTURAL EQUALITY (`==`) rather than by reference identity (`eq`), because a
+    * phase that maps terms copies the `Tree.Assign` and both its children — the shared reference
+    * the frontend created does not survive the pipeline. */
+  private def compoundAssignParts(l: Term, r: Term): Option[(String, List[Term], Option[TypeRepr])] =
+    r match
+      case Tree.Apply(Tree.Select(q, opSym, _, _), args, _, _, _) if q == l =>
+        Some((sym(opSym).name, args, None))
+      case Tree.Typed(Tree.Apply(Tree.Select(q, opSym, _, _), args, _, _, _), _, narrowT, _) if q == l =>
+        Some((sym(opSym).name, args, Some(narrowT)))
+      case _ => None
 
   /** A `Tree.Repeated` in an ARGUMENT position is the argument list's TAIL, not one argument.
     *

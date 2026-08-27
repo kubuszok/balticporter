@@ -127,13 +127,106 @@ class CatalogAreaESpec extends PortSuite:
     assertNotConsults(p, JS.E(4))
   }
 
-  test("JS-E04 is discharged, and JS-E17 beside it is the whole remaining work list at this kind") {
-    // JS-E17 is `Open` for a reason that is MEASURED rather than overlooked — the lvalue's single
-    // evaluation, 161 duplicated sites in the corpus of which 0 misbehave today
-    // (`ENGINE-LIMITS.md` F7) — so it stays a COUNTED hole, which is what makes
-    // `catalog(undischarged)` a work list and not a defect count.
+  test("JS-E04 is discharged, and JS-E17 beside it is discharged too — no remaining work at this kind") {
+    // JS-E17 (lvalue single evaluation, F7) is now `Handled`: the emitter binds non-trivial
+    // lvalue subexpressions so each is evaluated exactly once. Both rows are consulted and the
+    // undischarged list is empty.
     val p = port("public class D { int f(byte b) { return (b += 3); } }")
-    assertEquals(p.catalog.undischarged.map(_.id), List(JS.E(17)))
+    assertEquals(p.catalog.undischarged.map(_.id), Nil)
+  }
+
+  // -- JS-E17: compound assignment and ++/-- evaluate the LVALUE ONCE (F7) -----------------------
+
+  test("JS-E17 — array index with a CALL: subexpressions bound, each evaluated once") {
+    val p = port("""
+      public class E17a {
+        int[] a; int seq;
+        int next() { return seq++; }
+        void f() { a[next()] += 5; }
+      }""")
+    assertConsults(p, JS.E(17), fired = true)
+    // the index `next()` is bound to a temporary
+    assertEmits(p, "$lv1")
+    // the lvalue rendered with the temporary, not with the call repeated
+    assertNotEmits(p, "this.a(this.next()) = this.a(this.next())")
+  }
+
+  test("JS-E17 — field select through a CALL: qualifier bound") {
+    val p = port("""
+      public class E17b {
+        int x;
+        static E17b get() { return new E17b(); }
+        static void f() { get().x += 3; }
+      }""")
+    assertConsults(p, JS.E(17), fired = true)
+    assertEmits(p, "$lv1")
+  }
+
+  test("JS-E17 — post-increment in EXPRESSION position with non-trivial target") {
+    // The expression path goes through CtUnaryOperator -> incDecOf -> Tree.IncDec.
+    // JS-E17 is NOT owed at CtUnaryOperator (it attaches to CtOperatorAssignment), but the
+    // emitter's Tree.IncDec arm still binds the target. Assert on emitted text.
+    val p = port("""
+      public class E17c {
+        int[] a; int seq;
+        int next() { return seq++; }
+        int f() { return a[next()]++; }
+      }""")
+    // the IncDec arm binds the target
+    assertEmits(p, "$lv1")
+    // post-increment yields the value BEFORE the update
+    assertEmits(p, "$prev")
+  }
+
+  test("JS-E17 — pre-increment with non-trivial target") {
+    val p = port("""
+      public class E17d {
+        int[] a;
+        int next() { return 0; }
+        int f() { return ++a[next()]; }
+      }""")
+    assertEmits(p, "$lv1")
+    // pre-increment: the bound lvalue is incremented then read back
+    assertEmits(p, "this.a($lv1) += 1; this.a($lv1)")
+  }
+
+  test("JS-E17 — simple lvalue left DIRECT: no binding, no digest churn") {
+    val p = port("""
+      public class E17e {
+        int x;
+        void f() { x += 5; }
+      }""")
+    assertConsults(p, JS.E(17), fired = true)
+    // no temporaries minted for a simple ident lvalue
+    assertNotEmits(p, "$lv")
+    assertEmits(p, "this.x = this.x + 5")
+  }
+
+  test("JS-E17 — field.items compound multiply: non-trivial index bound") {
+    val p = port("""
+      public class E17g {
+        float[] items;
+        int colOffset;
+        void f(int o) {
+          items[(o + colOffset) + 1] *= 0.5f;
+        }
+      }""")
+    assertConsults(p, JS.E(17), fired = true)
+    // the index expression (o + colOffset) + 1 is non-trivial, so binding occurs
+    assertEmits(p, "$lv")
+  }
+
+  test("JS-E17 — narrowing cast preserved with bound lvalue") {
+    val p = port("""
+      public class E17f {
+        byte[] a; int seq;
+        int next() { return seq++; }
+        void f() { a[next()] += 3; }
+      }""")
+    assertConsults(p, JS.E(17), fired = true)
+    assertEmits(p, "$lv1")
+    // the narrowing cast must survive
+    assertEmits(p, "scala.Byte")
   }
 
   // -- JS-E05: the conditional operator's type is COMPUTED, not the lub of its branches -----------

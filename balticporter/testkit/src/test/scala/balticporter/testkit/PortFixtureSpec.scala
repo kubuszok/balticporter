@@ -62,17 +62,16 @@ class PortFixtureSpec extends PortSuite:
     // none).
     val (_, log) = PortFixture.parseWith("package demo; public class P { void f(byte b) { b += 3; } }")
     assert(log.fatal, "the frontend-only fixture must enforce what the porting ones enforce")
-    // JS-E03 is discharged; what is left is the DECLARED-open work list (JS-E17 attaches to the
-    // same kind), which a fatal log counts rather than raising on.
-    assertEquals(log.undischarged.map(_.id), List(balticporter.catalog.JS.E(17)))
+    // JS-E03 and JS-E17 are both discharged; nothing is left.
+    assertEquals(log.undischarged.map(_.id), Nil)
     assert(log.consulted(balticporter.catalog.JS.E(3)) > 0, "the log is not even live")
+    assert(log.consulted(balticporter.catalog.JS.E(17)) > 0, "JS-E17 must be consulted")
 
-    // …and the exemption, through the same path: a row the registry itself calls `Open` is the WORK
-    // LIST, so it is COUNTED here and does not raise. A mode that died on the work list would make
-    // the work list unrunnable — and this is the assertion that says the log is fatal AND correct
-    // rather than merely quiet.
+    // …and at the expression dispatch: JS-E04 and JS-E17 are both discharged too.
     val (_, open) = PortFixture.parseWith("package demo; public class Q { int f(byte b) { return (b += 3); } }")
-    assertEquals(open.undischarged.map(_.id), List(balticporter.catalog.JS.E(17)))
+    assertEquals(open.undischarged.map(_.id), Nil)
     assert(open.consulted(balticporter.catalog.JS.E(4)) > 0,
-      "the expression dispatch owes JS-E04 and discharges it; only the Open row is left")
+      "the expression dispatch owes JS-E04 and discharges it")
+    assert(open.consulted(balticporter.catalog.JS.E(17)) > 0,
+      "JS-E17 is consulted at the expression dispatch too")
   }

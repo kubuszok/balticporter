@@ -3199,6 +3199,10 @@ object SpoonTir:
           // makes the consult a decision the coverage lane can count rather than a formality.
           val out = Obligations.consult(JS.E(3), originOf(a))(compoundNarrow(a))
             .fold(res)(t => Tree.Typed(res, tt(tpe(t), a), tpe(t), originOf(a)))
+          // JS-E17 — the lvalue's single evaluation (F7). The frontend creates a `Tree.Assign` with
+          // the same `lhs` object on both sides; the emitter binds non-trivial subexpressions so
+          // each is evaluated exactly once. Always fires: every compound assignment is the construct.
+          Obligations.consult(JS.E(17), originOf(a))(Some(()))
           Tree.Assign(lhs, out, unitT, originOf(a))
         case a: CtAssignment[?, ?] =>
           val tgt = Option(a.getAssigned.getType)
@@ -5203,6 +5207,8 @@ object SpoonTir:
           // `int` into a `byte` slot, which is the LOUD half of the row.
           val rhs2 = Obligations.consult(JS.E(4), originOf(a))(compoundNarrow(a))
             .fold(res)(t => Tree.Typed(res, tt(tpe(t), a), tpe(t), originOf(a)))
+          // JS-E17 — lvalue single evaluation (F7), expression dispatch. Same as the statement arm.
+          Obligations.consult(JS.E(17), originOf(a))(Some(()))
           val st  = Tree.Assign(lhs, rhs2, unitT, originOf(a))
           Tree.Block(List(st), lhs, ty(a), originOf(a))
         case a: CtAssignment[?, ?] =>

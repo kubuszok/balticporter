@@ -11819,54 +11819,38 @@ gate could see, and a repair whose whole cost is one arm each. `JsonValue` alone
 
 ---
 
-### F7. A compound assignment evaluates its LVALUE ONCE; the emitted form evaluates it TWICE — OPEN, measured at 161 duplicated sites and 0 that misbehave today
+### F7. A compound assignment evaluates its LVALUE ONCE; the emitted form evaluates it TWICE — CLOSED
 
-**The defect is in the ENGINE and it has not fired in the CORPUS. Both halves are the finding.**
+**The defect was in the ENGINE and had not fired in the CORPUS. Both halves were the finding.**
 
 JLS 15.26.2 is explicit: for `E1 op= E2`, the array reference and the index (or the field's target
 reference) are evaluated ONCE, before the value is read, and the result is stored back through THAT
-SAME reference. JLS 15.14.2/15.15.1 say the same of `++`/`--`. Every arm that lowers one of these
-translates the lvalue and then USES THE TRANSLATION TWICE:
+SAME reference. JLS 15.14.2/15.15.1 say the same of `++`/`--`. Every arm that lowered one of these
+translated the lvalue and then USED THE TRANSLATION TWICE.
 
-```java
-void stmtCompound() { a[next()] += 5; }     // java: next() runs ONCE
-int  exprInc()      { return a[next()]++; }
-```
+**The fix.** `TirEmitter.termArm`'s `Tree.Assign` arm detects a compound assignment (the RHS
+contains the LHS by reference equality, possibly wrapped in `Tree.Typed` for the implicit narrowing
+cast) and, when the lvalue has a non-trivial subexpression (`hasNonTrivialSubexpr` — an array
+index or a field-select qualifier that is not a plain ident, `this` or literal), binds each
+subexpression to a `val` so it is evaluated exactly once:
+
 ```scala
-private[demo] def stmtCompound(): scala.Unit = { this.a(this.next()) = this.a(this.next()) + 5 }
-private[demo] def exprInc(): scala.Int =
-  { val $prev = this.a(this.next()); this.a(this.next()) += 1; $prev }
+// a[f()] += 5    — java: f() runs ONCE
+{ val $lv1 = this.next(); this.a($lv1) = this.a($lv1) + 5 }
+// a[f()]++       — expression position, java: f() runs ONCE, yields value BEFORE
+{ val $lv1 = this.next(); val $prev = this.a($lv1); this.a($lv1) += 1; $prev }
 ```
 
-Measured on the fixture, `next()` calls per java-source occurrence: statement compound **2**,
-statement `++` **2**, expression `++` **3**, expression compound **3** (whose value is also a
-RE-READ of the element rather than the value that was stored), `o.a[next()] |= 2` **2**. A §4.4-class
-defect exactly: valid Scala meaning something else, no compile error, no count.
+Simple lvalues (every subexpression is an ident/`this`/literal) keep the direct form — no semantic
+difference, no digest churn. The `Tree.IncDec` arm applies the same binding when its target is
+non-trivial.
 
-**And what the corpus says, which is why it is recorded rather than fixed or refused.** Scanned over
-every emitted tree: **161** statement-position sites duplicate a non-trivial lvalue, of which **4**
-repeat a nested call — and all four are pure (`glyphItems(ii).asInstanceOf[Glyph].page`,
-`vertices.items((o + colOffset) + 1)`): an extra READ, no extra effect. The expression form is
-cleaner still: **632** increment-as-value sites, **0** with a non-trivial operand. So there is no
-behavioural failure to point at, which is precisely why every suite passes and why nothing here can
-be trusted to stay true — the first library whose `a[next()] += x` calls a method is the one that
-finds it.
+The frontend's `CtOperatorAssignment` arms (both dispatches) consult `JS-E17` at every site; the
+emitter decides whether binding is needed. The `CtUnaryOperator` statement arm produces a
+`Tree.Assign` with the same shared lvalue and is covered by the emitter's `Tree.Assign` fix; the
+expression arm produces a `Tree.IncDec` and is covered by the emitter's `Tree.IncDec` fix.
 
-**Neither available answer was taken, and each for a measured reason.** MINTING AN OPEN MARKER would
-refuse emission (the §6.4 gate) at 161 sites whose translation is correct today — a port that
-compiles and passes would stop shipping for a defect it does not have. FIXING it moves emitted text
-at those same 161 sites for no behavioural gain now, and the fix is a design step of its own: the
-faithful lowering binds each lvalue subexpression to a temporary ONCE
-(`{ val $r = arr; val $i = next(); $r($i) = $r($i) + 5 }`), which means minting local symbols in the
-frontend or a dedicated TIR node — `Tree.IncDec` is the precedent for the second, and it lowers in
-the EMITTER, which is where the `$prev` temporary already comes from. Do that in a wave that can
-measure the blast, not at the end of another one.
-
-What ships instead: `JS-E17`, `Open`, twinned here — so the difference is DATA rather than prose, and
-`catalog(undischarged)` counts it on every port that lowers a compound assignment. The count is the
-work list; this entry is what it points at.
-
-*Fix kind: (a). Universal — java's evaluation order is not a per-library question.*
+*Fix kind: (a). Universal — java's evaluation order is not a per-library question. catalog: `JS-E17`.*
 
 ---
 
@@ -11898,7 +11882,7 @@ The fix is that the predicate is ONE function both dispatches call (`SpoonTir.co
 copies would have been the same defect with a longer fuse — which is exactly what the two arms were.
 
 *Fix kind: (a). catalog: `JS-E04`. Note `JS-E17` sits on the same node and asks a different
-question — how many times the LVALUE is evaluated — and is still OPEN (F7 above).*
+question — how many times the LVALUE is evaluated — now CLOSED (F7 above).*
 
 ---
 
