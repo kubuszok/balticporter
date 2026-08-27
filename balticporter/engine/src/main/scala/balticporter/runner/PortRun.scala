@@ -2850,13 +2850,20 @@ final case class PortRun(
     * so nothing a phase asks can refuse anything.
     */
   private def runScope(parsed: Program): RunScope =
+    // …and the FOURTH fact a phase cannot derive: which types the base SUBSTITUTED — dropped and
+    // replaced by a hand-written injection. Detection phases (`BeanPropertyTransform`,
+    // `NullaryArityTransform`) skip these owners so they do not rename members the injected file
+    // never renamed (D14, §1.5). Read from `PortMapTransform` instances in the effective surface,
+    // which is the same source `followMemberRenames` uses.
+    val substituted = effectivePhases.collect { case p: PortMapTransform => p.substitutedOwnerTypes }.flatten.toSet
     RunScope.of(partitionUnits(parsed)._1.map(_.symbol).toSet,
                 manifest.map(_.contributedSubjects).getOrElse(Map.empty),
                 // …and the THIRD fact a phase cannot derive: which backends this module is ported
                 // for. `targets` and `verdictOverrides` are read HERE, off the same two accessors
                 // `portabilityRules` reads, so a phase that reasons about portability inside the
                 // pipeline asks exactly the question this run reports on afterwards.
-                RunScope.PlatformPolicy(targets, verdictOverrides))
+                RunScope.PlatformPolicy(targets, verdictOverrides),
+                substituted)
 
   private def partitionUnits(program: Program): (List[Tree.ClassDef], List[Tree.ClassDef]) =
     if frontend.resolutionRoots.isEmpty then (program.units, Nil)

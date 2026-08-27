@@ -378,3 +378,68 @@ class BeanPropertyTransformSpec extends munit.FunSuite:
     assert(a.subjects.contains("com.foo.Bar"))
     assert(a.subjects.contains("com.baz"))
   }
+
+  // -------------------------------------------------------------------------------------------
+  // substituted-owner filter (D14, §1.5)
+  // -------------------------------------------------------------------------------------------
+
+  test("auto-detection skips owner types in baseSubstitutedOwners") {
+    val src = """
+      class Json {
+        private boolean ignoreUnknownFields;
+        public void setIgnoreUnknownFields(boolean v) { this.ignoreUnknownFields = v; }
+        public boolean getIgnoreUnknownFields() { return this.ignoreUnknownFields; }
+      }
+    """
+    val phase = new BeanPropertyTransform(scope = RuleScope.Everywhere())
+    val before = SpoonTir.fromSource(src)
+    // simulate a dependent run where Json is a substituted type from the base's port map
+    val scope = RunScope.of(before.units.map(_.symbol).toSet,
+                            Map.empty,
+                            substituted = Set("Json"))
+    val idioms   = new IdiomLog
+    val rewrites = RewriteLog()
+    val (after, _) = Pipeline.runTraced(before, List(phase),
+      new PolicyBinder(before, before.members, scope), balticporter.catalog.CatalogLog.discarding,
+      rewrites, idioms)
+    // the pair should NOT be detected — the owner is substituted
+    val converted = idioms.all.filter(c =>
+      c.kind == IdiomKind.BeanDetect && c.verdict == IdiomVerdict.Converted)
+    assertEquals(clue(converted.size), 0,
+      "a substituted owner's pairs must not be auto-detected")
+    // the method names should be unchanged
+    val sym = after.symbols.all.find(_.fullName.endsWith("getIgnoreUnknownFields"))
+    assert(sym.isDefined, "getIgnoreUnknownFields must keep its java name")
+  }
+
+  test("auto-detection still works for non-substituted owners alongside substituted ones") {
+    val src = """
+      class Json {
+        private boolean ignoreUnknownFields;
+        public void setIgnoreUnknownFields(boolean v) { this.ignoreUnknownFields = v; }
+        public boolean getIgnoreUnknownFields() { return this.ignoreUnknownFields; }
+      }
+      class Config {
+        private int count;
+        public int getCount() { return this.count; }
+        public void setCount(int v) { this.count = v; }
+      }
+    """
+    val phase = new BeanPropertyTransform(scope = RuleScope.Everywhere())
+    val before = SpoonTir.fromSource(src)
+    // Json is substituted but Config is not
+    val scope = RunScope.of(before.units.map(_.symbol).toSet,
+                            Map.empty,
+                            substituted = Set("Json"))
+    val idioms   = new IdiomLog
+    val rewrites = RewriteLog()
+    val (after, _) = Pipeline.runTraced(before, List(phase),
+      new PolicyBinder(before, before.members, scope), balticporter.catalog.CatalogLog.discarding,
+      rewrites, idioms)
+    val converted = idioms.all.filter(c =>
+      c.kind == IdiomKind.BeanDetect && c.verdict == IdiomVerdict.Converted)
+    // Config's pair should be detected, Json's should not
+    assertEquals(clue(converted.size), 1,
+      "only the non-substituted owner's pair should be auto-detected")
+    assertEquals(converted.head.subject, "Config#count")
+  }

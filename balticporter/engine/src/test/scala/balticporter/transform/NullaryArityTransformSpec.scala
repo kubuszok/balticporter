@@ -438,3 +438,34 @@ class NullaryArityTransformSpec extends munit.FunSuite:
   test("accountedBy names the lane that counts this phase's residue") {
     assertEquals(new NullaryArityTransform(everywhere).accountedBy, Set(IdiomCheck.Residue))
   }
+
+  // -------------------------------------------------------------------------------------------
+  // substituted-owner filter (D14, §1.5)
+  // -------------------------------------------------------------------------------------------
+
+  test("candidates on a substituted owner type are skipped") {
+    val src = """
+      class Json {
+        private boolean ignoreUnknownFields;
+        public boolean getIgnoreUnknownFields() { return this.ignoreUnknownFields; }
+      }
+    """
+    val phase  = new NullaryArityTransform(everywhere)
+    val before = SpoonTir.fromSource(src)
+    // simulate a dependent run where Json is a substituted type
+    val scope  = RunScope.of(before.units.map(_.symbol).toSet, Map.empty,
+                             substituted = Set("Json"))
+    val idioms   = new IdiomLog
+    val rewrites = RewriteLog()
+    val (after, _) = Pipeline.runTraced(before, List(phase),
+      new PolicyBinder(before, before.members, scope), balticporter.catalog.CatalogLog.discarding,
+      rewrites, idioms)
+    val conv = idioms.all.filter(c =>
+      c.kind == IdiomKind.NullaryArity && c.verdict == IdiomVerdict.Converted)
+    assertEquals(clue(conv.size), 0,
+      "a substituted owner's members must not be converted")
+    // the method should keep its `()`
+    val sym = after.symbols.all.find(_.fullName.contains("getIgnoreUnknownFields"))
+    val defn = sym.flatMap(s => after.definitionOf(s.id)).collect { case d: Tree.DefDef => d }
+    assert(defn.exists(_.paramss.nonEmpty), "the method must keep its empty parameter clause")
+  }

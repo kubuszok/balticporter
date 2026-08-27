@@ -240,8 +240,11 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
   private var bound: Map[String, List[PolicyBinder.Hit]] = Map.empty
   private var records: List[PolicyBinder.Record]         = Nil
   private var ownFindings: List[PolicyFinding]           = Nil
+  /** Types the base SUBSTITUTED — detection skips these owners (D14, §1.5). */
+  private var substitutedOwners: Set[String]             = Set.empty
 
   def bindPolicy(binder: PolicyBinder): Unit =
+    substitutedOwners = binder.run.baseSubstitutedOwners
     val (entries, malformed) = BeanPropertyTransform.parse(pairs)
     parsed      = entries
     ownFindings = malformed
@@ -328,6 +331,7 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
         val configuredPropertyKeys: Set[String] = pairs.keySet
         val detected = BeanPropertyTransform.detect(program, graph, scope,
           configuredAccessors, configuredPropertyKeys,
+          substitutedOwners,
           isVoid = (p, t) => isVoid(p, t), headOf = t => headOf(t),
           callsAreRewritable = (comp, ar) =>
             comp.forall(s => program.usages(s).forall {
@@ -863,8 +867,11 @@ object BeanPropertyTransform:
     * Each candidate goes through the SAME shape checks the configured path applies: static, void
     * getter, fluent setter, value-position references. A refused candidate is filed as
     * `IdiomKind.BeanDetect` with the guard that refused it. */
+  /** @param substitutedOwners upstream FQNs of types the base SUBSTITUTED — detection skips these
+    *                           so a rename the injected file did not perform is not applied (D14). */
   def detect(program: Program, graph: OverrideGraph, scope: RuleScope,
              configuredAccessors: Set[String], configuredPropertyKeys: Set[String],
+             substitutedOwners: Set[String],
              isVoid: (Program, TypeRepr) => Boolean,
              headOf: TypeRepr => Option[SymId],
              callsAreRewritable: (Set[SymId], Int) => Boolean,
@@ -894,8 +901,12 @@ object BeanPropertyTransform:
     ownedByType.foreach { (ownerSym, members) =>
       // The scope check is on the OWNER TYPE
       val ownerSymObj = program.symbolOf(ownerSym)
-      if ownerSymObj.exists(o => scope.includes(program, o)) then
-        val ownerFqn = ownerSymObj.map(_.fullName).getOrElse("")
+      val ownerFqn = ownerSymObj.map(_.fullName).getOrElse("")
+      // Skip types the base SUBSTITUTED — their members are from the JAVA source, not from the
+      // injected Scala, so a rename the detection plans is a rename the injected file never
+      // performed. The dependent's emitted code would call a property the shim never declared
+      // (D14, §1.5). Skipped silently — `followMemberRenames` handles the base's published renames.
+      if !substitutedOwners.contains(ownerFqn) && ownerSymObj.exists(o => scope.includes(program, o)) then
 
         // Collect getter candidates: nilary methods matching get[A-Z]* or is[A-Z]*
         val getterCandidates = members.flatMap { s =>

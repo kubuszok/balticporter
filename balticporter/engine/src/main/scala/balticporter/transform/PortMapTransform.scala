@@ -94,6 +94,15 @@ final class PortMapTransform(maps: List[PortMap.Map0] = Nil) extends Phase, Poli
   private var found: List[PortMapTransform.Finding] = Nil
   private var repointed: Int = 0
 
+  /** Types the base SUBSTITUTED — dropped and replaced by a hand-written injection. A dependent's
+    * detection phases (`BeanPropertyTransform`, `NullaryArityTransform`) skip these owners so they
+    * do not rename members the injected file never renamed (D14, CLAUDE.md §1.5).
+    *
+    * Read BEFORE the pipeline runs, to populate `RunScope.baseSubstitutedOwners`. */
+  def substitutedOwnerTypes: Set[String] = maps.flatMap(_.types).collect {
+    case e if e.disposition == PortMap.Disposition.Substituted && e.upstream.nonEmpty => e.upstream
+  }.toSet
+
   /** What the maps say about this program, in a stable order. Read by the orchestrator AFTER the
     * pipeline has run; empty before the first [[run]] and for an empty policy. */
   def findings: List[PortMapTransform.Finding] = found

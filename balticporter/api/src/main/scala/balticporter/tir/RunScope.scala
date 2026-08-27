@@ -65,6 +65,18 @@ trait RunScope:
     * behaviour — every question the check asked before it had a target set (`CLAUDE.md` §1(b)). */
   def platform: RunScope.PlatformPolicy = RunScope.PlatformPolicy.everyPlatform
 
+  /** Types the base port SUBSTITUTED — dropped and replaced by a hand-written injection.
+    *
+    * A dependent's `Program` contains its base (D2), so a detection phase like `BeanPropertyTransform`
+    * or `NullaryArityTransform` sees the base's members and may auto-detect pairs on a type the base
+    * REPLACED by an injected file. Those members are from the JAVA source, not from the injected Scala,
+    * so a rename the detection plans is a rename the injected file did not perform — the dependent's
+    * emitted code calls a property the shim never declared.
+    *
+    * The set is populated from the base's published port map (`PortMap.Disposition.Substituted`) and
+    * is empty for a base port, a single-module port and every spec. */
+  def baseSubstitutedOwners: Set[String] = Set.empty
+
   /** …the SAME question asked of a MEMBER, which is what a phase actually holds.
     *
     * [[emits]] takes a top-level unit because that is the granularity the run classifies at; every
@@ -114,14 +126,20 @@ object RunScope:
     def emits(unit: SymId): Boolean                     = true
     def contributed(phase: String): Option[Set[String]] = scala.None
 
-  /** @param emitted  the top-level unit symbols this run converts.
-    * @param own      phase name → the subjects THIS manifest contributed to that phase's policy.
-    * @param platform the manifest's own platform declaration, defaulted to the pre-parameterised
-    *                 answer so every existing construction keeps its behaviour exactly. */
+  /** @param emitted       the top-level unit symbols this run converts.
+    * @param own            phase name → the subjects THIS manifest contributed to that phase's policy.
+    * @param platform       the manifest's own platform declaration, defaulted to the pre-parameterised
+    *                       answer so every existing construction keeps its behaviour exactly.
+    * @param substituted    upstream FQNs of types the base SUBSTITUTED — dropped and replaced by an
+    *                       injected file. Detection phases skip these owners so they do not rename
+    *                       members the injected file never renamed (D14, §1.5). Empty for a base port. */
   def of(emitted: Set[SymId], own: Map[String, Set[String]],
-         platform: PlatformPolicy = PlatformPolicy.everyPlatform): RunScope =
+         platform: PlatformPolicy = PlatformPolicy.everyPlatform,
+         substituted: Set[String] = Set.empty): RunScope =
     val p = platform
+    val s = substituted
     new RunScope:
       def emits(unit: SymId): Boolean                     = emitted(unit)
       def contributed(phase: String): Option[Set[String]] = own.get(phase)
       override def platform: PlatformPolicy               = p
+      override def baseSubstitutedOwners: Set[String]     = s

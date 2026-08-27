@@ -39,7 +39,7 @@ import balticporter.tir.*
   * signatures that each compile alone and cannot compile together (section 1.5).
   */
 final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
-    extends Phase, SurfacePolicy, MergeablePolicy, IdiomPhase, Rewrite:
+    extends Phase, SurfacePolicy, MergeablePolicy, IdiomPhase, Rewrite, PolicyBound:
 
   def name: String = "nullary-arity"
 
@@ -81,6 +81,14 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
     case _ =>
       Left(s"`nullary-arity` cannot merge with ${later.getClass.getSimpleName}")
 
+  // ---- policy, bound before the pipeline starts ---------------------------------------------
+
+  /** Types the base SUBSTITUTED — detection skips these owners (D14, §1.5). */
+  private var substitutedOwners: Set[String] = Set.empty
+
+  def bindPolicy(binder: PolicyBinder): Unit =
+    substitutedOwners = binder.run.baseSubstitutedOwners
+
   // ---- the run --------------------------------------------------------------------------
 
   /** the methods whose `()` this run stripped — keyed by SymId, with the property name for
@@ -97,7 +105,11 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
     val candidates = collection.mutable.ListBuffer.empty[SymId]
 
     program.symbols.all.foreach { s =>
-      if program.owned(s.id) && !s.flags.isStatic &&
+      // Skip members whose owner type the base SUBSTITUTED — the injected file's members are
+      // hand-written and were never renamed, so dropping `()` here produces a call shape the
+      // shim does not have (D14, §1.5).
+      val ownerFqn = program.symbolOf(s.owner).map(_.fullName).getOrElse("")
+      if program.owned(s.id) && !s.flags.isStatic && !substitutedOwners.contains(ownerFqn) &&
          PolicyBinder.isExecutable(s.info) && scope.includes(program, s) then
         program.definitionOf(s.id) match
           case Some(d: Tree.DefDef) if isNilary(d) && !isVoid(program, d.returnTpt.tpe) =>
