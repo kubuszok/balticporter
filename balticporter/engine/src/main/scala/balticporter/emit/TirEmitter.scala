@@ -617,6 +617,10 @@ final class TirEmitter(
       case d if d.kind == Decision.Kind.CollapsedProperty && d.subject != SymId.None &&
                 d.detail.get("form").exists(_.nonEmpty) =>
         d.subject -> d.detail("form")
+      // NullaryArity: a getter whose `()` was dropped is `form=parenless`, so a dependent
+      // reading the port map knows the arity changed and can follow the base's shape.
+      case d if d.kind == Decision.Kind.ParenlessConversion && d.subject != SymId.None =>
+        d.subject -> "parenless"
     }.toMap
 
   /** A member's stable identity. `owner#name` for anything that has a symbol — the form the rest

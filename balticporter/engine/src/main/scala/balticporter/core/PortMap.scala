@@ -451,11 +451,18 @@ object PortMap:
             bareUpstream.substring(0, upCut + 1) + orig.substring(origCut + 1) + params
           else emittedUpstream
         }.getOrElse(emittedUpstream)
-        Entry("member", upstream, e.member,
-          if upstream != erase(e.member) then Disposition.Renamed else Disposition.Ported,
-          body = bodyKeys(upstream) || bodyKeys(e.member),
+        val shape = memberShapes.getOrElse(e.member, "")
+        // A PARENLESS member's emitted column drops `()` so the two columns disagree exactly
+        // where `form=parenless` says they do. The source map key still has `()` (it is the
+        // member's identity in the source map); only the port map column moves.
+        val emitted =
+          if shape.contains("form=parenless") && e.member.endsWith("()") then e.member.stripSuffix("()")
+          else e.member
+        Entry("member", upstream, emitted,
+          if upstream != erase(emitted) then Disposition.Renamed else Disposition.Ported,
+          body = bodyKeys(upstream) || bodyKeys(e.member) || bodyKeys(emitted),
           javaPath = e.javaPath, javaLine = e.javaLine, digest = e.digest,
-          shape = memberShapes.getOrElse(e.member, ""))
+          shape = shape)
       }
 
     val droppedMembers = dropMethods.toList.sorted.map(k => Entry("member", k, "", Disposition.Dropped))
