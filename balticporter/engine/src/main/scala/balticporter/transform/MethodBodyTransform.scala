@@ -134,47 +134,54 @@ final class MethodBodyTransform(bodies: Map[String, String] = Map.empty)
 
     val done = collection.mutable.ListBuffer.empty[String]
 
+    def rewriteDef(d: Tree.DefDef, owner: String): Tree.DefDef =
+      bySym.get(d.symbol) match
+        case None => d
+        case Some(k) =>
+          val nm = program.symbolOf(d.symbol).map(_.name).getOrElse("")
+          // The refusal is REPORTED by `policyReport`, from the binding; here it only declines
+          // to rewrite.
+          if nm == "<init>" then d
+          else
+            done += k
+            // DECISION PROVENANCE, one row per REPLACED MEMBER. Already declaration-level by
+            // construction — this phase's unit of work IS a member — so there is nothing to
+            // group. The signature is deliberately absent from `detail`: it did not move (that
+            // is the phase's contract), and a call site cannot see from it that the behaviour
+            // behind it is not upstream's. This row is the only place that says so.
+            record(Decision(
+              kind       = Decision.Kind.SubstitutedBody,
+              subject    = d.symbol,
+              subjectFqn = MemberKey(owner, nm).render,
+              detail     = Map(
+                "key"  -> k,
+                "from" -> "the mechanically translated java body",
+                "to"   -> "hand-written Scala from MethodBodyTransform(bodies)",
+                "why"  -> ("the signature is UNCHANGED and every call site still type-checks; " +
+                  "only the behaviour behind it is this port's rather than upstream's"),
+              ),
+              reason = Reason.Configured(name, k),
+              origin = d.origin,
+            ))
+            d.copy(rhs = Some(Tree.Opaque(bodies(k), d.returnTpt.tpe, d.origin)))
+
     def rewrite(cd: Tree.ClassDef): Tree.ClassDef =
       val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("")
       val body = cd.body.map {
-        case d: Tree.DefDef =>
-          // The member is identified by its SYMBOL, bound before the pipeline ran. What this
-          // replaces rebuilt `owner#name(P1,P2)` from the `DefDef`'s own parameter TREES and looked
-          // the string up — a second key grammar, in the emitted namespace, that spelled an array
-          // `Array` where every manifest spells it `int[]`.
-          bySym.get(d.symbol) match
-            case None => d
-            case Some(k) =>
-              val nm = program.symbolOf(d.symbol).map(_.name).getOrElse("")
-              // The refusal is REPORTED by `policyReport`, from the binding; here it only declines
-              // to rewrite.
-              if nm == "<init>" then d
-              else
-                done += k
-                // DECISION PROVENANCE, one row per REPLACED MEMBER. Already declaration-level by
-                // construction — this phase's unit of work IS a member — so there is nothing to
-                // group. The signature is deliberately absent from `detail`: it did not move (that
-                // is the phase's contract), and a call site cannot see from it that the behaviour
-                // behind it is not upstream's. This row is the only place that says so.
-                record(Decision(
-                  kind       = Decision.Kind.SubstitutedBody,
-                  subject    = d.symbol,
-                  subjectFqn = MemberKey(owner, nm).render,
-                  detail     = Map(
-                    "key"  -> k,
-                    "from" -> "the mechanically translated java body",
-                    "to"   -> "hand-written Scala from MethodBodyTransform(bodies)",
-                    "why"  -> ("the signature is UNCHANGED and every call site still type-checks; " +
-                      "only the behaviour behind it is this port's rather than upstream's"),
-                  ),
-                  reason = Reason.Configured(name, k),
-                  origin = d.origin,
-                ))
-                d.copy(rhs = Some(Tree.Opaque(bodies(k), d.returnTpt.tpe, d.origin)))
+        case d: Tree.DefDef   => rewriteDef(d, owner)
         case c: Tree.ClassDef => rewrite(c)
         case other            => other
       }
-      cd.copy(body = body)
+      // Walk enum constant bodies too — a constant's body is a SEPARATE field (`EnumCase.body`),
+      // and without this a key naming a member inside a constant is matched by the binder but never
+      // visited by the rewriter (ENGINE-LIMITS.md T23).
+      val cases = cd.enumCases.map { ec =>
+        ec.copy(body = ec.body.map {
+          case d: Tree.DefDef => rewriteDef(d, owner)
+          case other          => other
+        })
+      }
+      cd.copy(body = body, enumCases = cases)
 
     val units = program.units.map(rewrite)
     applied = done.toList

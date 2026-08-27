@@ -3220,36 +3220,35 @@ while a genuine redeclaration keeps the most specific.
 *Fix kind: (a) — shipped for the diamond forwarder; the TIR node is an (a) prerequisite for
 anything more.*
 
-### T8. Enum constants with class bodies — FIELDS closed, initializer blocks still open
+### T8. Enum constants with class bodies — CLOSED
 
 The shape works: a Java enum whose constants carry class bodies emits as a `sealed abstract class`
 plus one `case object` per constant, with the per-constant overrides in the object's body. noise4j
 is the first corpus library to have any (three independent ones — `GenerationMode`,
 `DefaultRoomType`, `Direction`), and confirmed it.
 
-**The FIELD half was the predicted hole, and it fired.** This entry used to say a field in a constant
-body "would be dropped silently, with no omission finding … zero sites in libGDX core". noise4j has
-two: `DefaultRoomType.CASTLE { public static final int MIN_SIZE = 7, MIN_TOWER = 3; … }` and
-`CROSS { public static final int MIN_SIZE = 3; … }`, read UNQUALIFIED by the same constant's own
-methods. JLS 8.1.3 permits statics in an anonymous class body when they are constant variables, and
-that is exactly the form a library uses to keep a magic number beside the constant that needs it.
-Cost: **4 of the port's 6 errors** — and the prediction about invisibility held, because the
-omissions check counts what the TIR CARRIES and these never reached it.
+**Three halves, all built.**
 
-The fix is a frontend harvest, not an emitter change: a Scala `case object`'s body IS the constant's
-scope, so `SpoonTir.enumCase` now collects `CtField` alongside `CtMethod` and the field emits as an
-ordinary member (`inline val MIN_SIZE = 7`, through the same `static final` constant path as
-anywhere else). **0 members changed** in libGDX, libGDX-test, Ashley, Ashley-test, simple-graphs and
-its suite — a body with no field harvests exactly what it did before. Spec: `EnumConstantBodySpec`
-in `testkit`, two positive and two negative.
+1. **FIELDS** (closed wave 2.3). `DefaultRoomType.CASTLE { public static final int MIN_SIZE = 7 }`
+   — fields in a constant body were dropped silently. The fix is a frontend harvest:
+   `SpoonTir.enumCase` now collects `CtField` alongside `CtMethod`. **4 of the port's 6 errors.**
 
-**Still open, and still unobserved:** an *instance-initializer block* in a constant body, and a
-*nested type* in one, are both dropped with no finding. Zero sites across four corpus libraries. If
-you hit one, the shape of the fix is the same one line — `enumCase` mirrors `anonClass`, which
-already handles the block case — and `anonClass`'s `dropped` list is the model for reporting what is
-left.
+2. **OVERRIDE on body methods** (closed wave 2.4). The call to `execDef` in `enumCase` used the
+   default `overrides = false`, so every constant body method was emitted without `override`.
+   Compare with `anonClass`, which correctly passes `overridesInherited(m)`. Cost: **7 E164
+   `overrides nothing` errors** on noise4j (all three enums, every constant body method).
+   The fix is one parameter: `overrides = overridesInherited(m)`.
 
-*Fix kind: (a). Field half BUILT; initializer-block and nested-type halves unbuilt.*
+3. **INITIALIZER BLOCKS and NESTED TYPES** (built wave 2.4). `enumCase` now mirrors `anonClass`:
+   it handles `CtAnonymousExecutable` (instance initializer blocks) and reports unhandled member
+   types through a `dropped` list, with `sortBy(posKey)` for textual-order fidelity. Zero sites
+   across the corpus; the arms are ready for the first library that has them.
+
+**noise4j: 7 -> 0 errors.** 6 member digests changed (the three enum types and their enclosing
+classes), every check count flat, `catalog(consulted) JS-C25` fired count `29 -> 50` (the 21 newly
+marked overrides).
+
+*Fix kind: (a). CLOSED.*
 
 ### T9. A method-LOCAL named class is refused by the frontend outright — **CLOSED; the arm was twenty lines and the cost was twenty-eight OTHER walks**
 
@@ -4282,45 +4281,30 @@ does not move.
 (which replaced `AbsorbedProbeSpec`, the probe written to fail when this was fixed). OPEN for
 RETENTION, above. `PROGRESS.md` §10.7.5 family 3 has the per-site diagnosis.*
 
-### T23. NO POLICY KEY CAN NAME A MEMBER INSIDE AN ENUM CONSTANT'S BODY — the seam is unreachable twice over, and the wall is silent
+### T23. A policy key CAN now name a member inside an enum constant's body — CLOSED
 
 A java enum constant may carry a class body (`TreeTask(null) { … }`, JLS 8.9.1), and every method in
-it is an ordinary member the emitter renders. **No `Substitutions.dropMethods`, `MethodBodyTransform`
-or `PortMapTransform` key can name one**, for two independent reasons that must both be closed:
+it is an ordinary member the emitter renders. Both halves closed:
 
 - **the KEY GRAMMAR.** The constant's symbol is `qualified(enumId, name)` = `Owner$Enum#TreeTask`, so
-  its members spell `Owner$Enum#TreeTask#attribute(…)` — and `MemberKey.parse` refuses a second `#`
-  outright ("more than one `#`: `owner#name` has exactly one"). That refusal is right for what it is
-  about; the key simply has no spelling for a member two levels of `#` down;
-- **the TRAVERSAL.** `MethodBodyTransform.rewrite` maps `cd.body` and recurses into a nested
-  `Tree.ClassDef`. `Tree.ClassDef.enumCases` is a SEPARATE FIELD (`Tree.EnumCase`, holding its own
-  `body`), so a constant's members are never visited even if a key could name them — the hand-rolled
-  recursion CLAUDE.md §3 warns about, one node kind short. `StandardTraversal.mapClassDef` walks
-  `enumCases` and would have reached them.
-
-**Nothing reports it.** A key that names nothing is a `PolicyReport.NeverMatched`, which reads as a
-typo; a key that is malformed is a `PolicyIssue.Malformed`, which reads as a mistake in the key. Both
-are honest about the KEY and neither says *this position is unaddressable*, so an agent reads the
-finding, re-spells the key, and gets the same answer.
+  its members spell `Owner$Enum#TreeTask#attribute(…)`. `MemberKey.parse` now splits at the LAST `#`
+  instead of refusing a second one, so `Owner$Enum#TreeTask#attribute(int)` parses as owner
+  `Owner$Enum#TreeTask`, member `attribute(int)`. This does not touch `Symbol.fullName` — the
+  descriptor is still a separate field, and the split is at the GRAMMAR, not at the interning key.
+- **the TRAVERSAL.** `MethodBodyTransform.rewrite` now maps `cd.enumCases` in addition to `cd.body`,
+  applying the same `rewriteDef` helper to the `DefDef`s inside each `EnumCase.body`.
 
 **Where it was met and what it decided.** gdx-ai's `DefaultBehaviorTreeReader` names the base's
 dropped `reflect.Field` in three signatures, and `PROGRESS.md` §10.7.8's member table concluded those
 three needed `dropMethods` — which would have left the three CALL SITES, all inside the enum constant
 `Statement.TreeTask`, as a `substitution(dangling)` the port itself caused, with no seam able to
 repair it. The cut taken instead is a `TypeRedirectTransform` on the TYPE, which fixes all three
-signatures at once and leaves the constant's body mechanically translated: `errors 10 → 0`,
-`port-map 12 → 0`, `substitution(dangling) 0`.
+signatures at once and leaves the constant's body mechanically translated: `errors 10 -> 0`,
+`port-map 12 -> 0`, `substitution(dangling) 0`. The redirect remains the better cut wherever the wall
+is a TYPE; T23's fix is for the case where the wall is a BODY that only an enum constant declares.
 
-**Do not close half of it.** Widening the traversal alone gives the phase a member it still cannot be
-handed a key for; widening the grammar alone gives it a key it cannot reach. And widening
-`MemberKey`'s grammar is not a local change — `Symbol.fullName` is what a finding's stable id, a
-`decisions.tsv` subject and every cache key hash, so giving an enum constant a `$` separator instead
-moves every row of every promoted artifact on every lane (`MemberKey`'s own note on why the
-descriptor is a separate field).
-
-*Fix kind: (a), UNBUILT and not needed by any port today — the redirect is the better cut wherever
-the wall is a TYPE. It becomes real the first time a port must replace a BODY that only an enum
-constant declares.*
+*Fix kind: (a). CLOSED — both the grammar (`MemberKey.parse` last-`#`) and the traversal
+(`MethodBodyTransform.rewrite` over `enumCases`) are built.*
 
 ---
 

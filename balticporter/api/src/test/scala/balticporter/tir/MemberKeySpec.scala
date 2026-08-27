@@ -116,7 +116,10 @@ class MemberKeySpec extends munit.FunSuite:
     assert(clue(why("com.foo.Bar#baz(int")).contains("unclosed"))
     assert(clue(why("com.foo.Bar#baz(int,)")).contains("empty parameter"))
     assert(clue(why("com.foo.Bar#baz(int,,String)")).contains("empty parameter"))
-    assert(clue(why("com.foo.Bar#b#z")).contains("more than one `#`"))
+    // A key with two `#`s now splits at the LAST one — `com.foo.Bar#b#z` is owner `com.foo.Bar#b`,
+    // member `z`. This is how an enum constant's body member is named (T23).
+    assertEquals(clue(MemberKey.parse("com.foo.Bar#b#z")),
+      Right(MemberKey("com.foo.Bar#b", "z", scala.None)))
     assert(clue(why("com.foo.Bar#baz(?)")).contains("unreadable"))
   }
 

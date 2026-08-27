@@ -74,6 +74,7 @@ object MemberKey:
     * com.foo.Bar#baz(int,String)  exactly one overload
     * com.foo.Bar#baz()            the NO-ARGUMENT overload — not the same as the bare form
     * com.foo.Outer$Inner#<init>(int)   a nested owner, a constructor
+    * com.foo.Enum#CONSTANT#member      an enum constant's body member — the LAST `#` separates
     * }}}
     *
     * A type ARGUMENT is the one refusal worth naming precisely: `X#m(Class<T>)` is what an author
@@ -106,9 +107,8 @@ object MemberKey:
       if nm.startsWith("<") && nm.endsWith(">") && nm.length > 2 then scala.None
       else noTypeArgs(nm, 0, "member name")
 
-    val hash = key.indexOf('#')
+    val hash = key.lastIndexOf('#')
     if hash < 0 then bad("no `#`: a member key is `owner#name`, or `owner#name(P1,P2)` for one overload")
-    else if key.indexOf('#', hash + 1) >= 0 then bad("more than one `#`: `owner#name` has exactly one")
     else
       val owner = key.substring(0, hash)
       val rest  = key.substring(hash + 1)

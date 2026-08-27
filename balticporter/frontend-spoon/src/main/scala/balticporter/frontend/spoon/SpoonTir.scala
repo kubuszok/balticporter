@@ -2291,9 +2291,16 @@ object SpoonTir:
       val (args, body) = v.getDefaultExpression match
         case nc: CtNewClass[?] =>
           val a = nc.getArguments.asScala.toList.map(bt.exprOf)
-          val b = Option(nc.getAnonymousClass).toList.flatMap(_.getTypeMembers.asScala.toList).collect {
-            case f: CtField[?]  => fieldDef(caseId, f)
-            case m: CtMethod[?] => execDef(caseId, m, m.getSimpleName)
+          val dropped = List.newBuilder[String]
+          val b = Option(nc.getAnonymousClass).toList.flatMap(_.getTypeMembers.asScala.toList.sortBy(posKey)).flatMap {
+            case f: CtField[?]  => List(fieldDef(caseId, f))
+            case m: CtMethod[?] => List(execDef(caseId, m, m.getSimpleName, overrides = overridesInherited(m)))
+            case c: CtConstructor[?] if c.isImplicit => Nil // compiler-synthesised anonymous ctor
+            case a: CtAnonymousExecutable if !a.hasModifier(ModifierKind.STATIC) =>
+              List(execDef(caseId, a, "<initblock>"))
+            case other =>
+              dropped += s"${other.getClass.getSimpleName.stripSuffix("Impl")} ${other.getSimpleName}"
+              Nil
           }
           (a, b)
         case cc: CtConstructorCall[?] => (cc.getArguments.asScala.toList.map(bt.exprOf), Nil)

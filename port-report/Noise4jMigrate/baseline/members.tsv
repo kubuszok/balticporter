@@ -94,11 +94,11 @@ sge.noise.generator.AbstractGenerator	sge.noise.generator.AbstractGenerator#getM
 sge.noise.generator.AbstractGenerator	sge.noise.generator.AbstractGenerator#mode	val	64d35bf8122c6bb4
 sge.noise.generator.AbstractGenerator	sge.noise.generator.AbstractGenerator#modifyCell(Grid,int,int,float)	def	3028fc832c14b0f5
 sge.noise.generator.AbstractGenerator	sge.noise.generator.AbstractGenerator#setMode(GenerationMode)	def	112180b2092c8ea8
-sge.noise.generator.Generator	sge.noise.generator.Generator	class	3c34ef0a6cde23b2
+sge.noise.generator.Generator	sge.noise.generator.Generator	class	5ff3a21bfd4458eb
 sge.noise.generator.Generator	sge.noise.generator.Generator#generate(Grid)	def	a66640720c505ee9
 sge.noise.generator.Generator	sge.noise.generator.Generator#getMode()	def	c375e3e8d8938e96
 sge.noise.generator.Generator	sge.noise.generator.Generator#setMode(GenerationMode)	def	a52cfcd79d628e68
-sge.noise.generator.Generator	sge.noise.generator.Generator$GenerationMode	class	38248ef0c5d929e9
+sge.noise.generator.Generator	sge.noise.generator.Generator$GenerationMode	class	0c630dd364967786
 sge.noise.generator.Generator	sge.noise.generator.Generator$GenerationMode#modify(Grid,int,int,float)	def	c27e97197894754f
 sge.noise.generator.cellular.CellularAutomataGenerator	sge.noise.generator.cellular.CellularAutomataGenerator	class	dd095eb7944c6f0a
 sge.noise.generator.cellular.CellularAutomataGenerator	sge.noise.generator.cellular.CellularAutomataGenerator#INSTANCE	val	b336cf7f902048d1
@@ -208,10 +208,10 @@ sge.noise.generator.room.AbstractRoomGenerator	sge.noise.generator.room.Abstract
 sge.noise.generator.room.AbstractRoomGenerator	sge.noise.generator.room.AbstractRoomGenerator$Room#width	val	12db5102ff648320
 sge.noise.generator.room.AbstractRoomGenerator	sge.noise.generator.room.AbstractRoomGenerator$Room#x	val	ec288e09c075be2c
 sge.noise.generator.room.AbstractRoomGenerator	sge.noise.generator.room.AbstractRoomGenerator$Room#y	val	34890d2c45697aec
-sge.noise.generator.room.RoomType	sge.noise.generator.room.RoomType	class	d3976c7acd248dec
+sge.noise.generator.room.RoomType	sge.noise.generator.room.RoomType	class	1e58534df2e326ea
 sge.noise.generator.room.RoomType	sge.noise.generator.room.RoomType#carve(Room,Grid,float)	def	39e5be00260d940e
 sge.noise.generator.room.RoomType	sge.noise.generator.room.RoomType#isValid(Room)	def	d5151fa0f61087fc
-sge.noise.generator.room.RoomType	sge.noise.generator.room.RoomType$DefaultRoomType	class	e6e626556e6caeea
+sge.noise.generator.room.RoomType	sge.noise.generator.room.RoomType$DefaultRoomType	class	6b8bea2486ff81d6
 sge.noise.generator.room.RoomType	sge.noise.generator.room.RoomType$DefaultRoomType#isValid(Room)	def	4bbd6b129a1f2434
 sge.noise.generator.room.RoomType	sge.noise.generator.room.RoomType$Interceptor	class	f8476f26d21630d2
 sge.noise.generator.room.RoomType	sge.noise.generator.room.RoomType$Interceptor#<stmt1>	stmt	3cee554c1a79c2d4
@@ -220,7 +220,7 @@ sge.noise.generator.room.RoomType	sge.noise.generator.room.RoomType$Interceptor#
 sge.noise.generator.room.RoomType	sge.noise.generator.room.RoomType$Interceptor#isValid(Room)	def	5587be9f4037e222
 sge.noise.generator.room.RoomType	sge.noise.generator.room.RoomType$Interceptor#type	val	4c7b94d4426988d2
 sge.noise.generator.room.RoomType	sge.noise.generator.room.RoomType$Interceptor#value	val	64b09f3af343445f
-sge.noise.generator.room.dungeon.DungeonGenerator	sge.noise.generator.room.dungeon.DungeonGenerator	class	95753626ebbeb32e
+sge.noise.generator.room.dungeon.DungeonGenerator	sge.noise.generator.room.dungeon.DungeonGenerator	class	d09f76d9b3facd45
 sge.noise.generator.room.dungeon.DungeonGenerator	sge.noise.generator.room.dungeon.DungeonGenerator#INSTANCE	val	0bd99f8525d0f117
 sge.noise.generator.room.dungeon.DungeonGenerator	sge.noise.generator.room.dungeon.DungeonGenerator#addConnector(Grid,Map<Point,Set<Integer>>,int,int)	def	abc75e8ee854091d
 sge.noise.generator.room.dungeon.DungeonGenerator	sge.noise.generator.room.dungeon.DungeonGenerator#carveConnector(Grid,int,int)	def	2a2c7f85c3ecb111
@@ -275,7 +275,7 @@ sge.noise.generator.room.dungeon.DungeonGenerator	sge.noise.generator.room.dunge
 sge.noise.generator.room.dungeon.DungeonGenerator	sge.noise.generator.room.dungeon.DungeonGenerator#validateRoomSizes()	def	c9ce660891472183
 sge.noise.generator.room.dungeon.DungeonGenerator	sge.noise.generator.room.dungeon.DungeonGenerator#wallThreshold	val	f19704962b2a3a8a
 sge.noise.generator.room.dungeon.DungeonGenerator	sge.noise.generator.room.dungeon.DungeonGenerator#windingChance	val	4ad0816bd767e271
-sge.noise.generator.room.dungeon.DungeonGenerator	sge.noise.generator.room.dungeon.DungeonGenerator$Direction	class	bac5a8f25063750f
+sge.noise.generator.room.dungeon.DungeonGenerator	sge.noise.generator.room.dungeon.DungeonGenerator$Direction	class	392e612ff9a0ca37
 sge.noise.generator.room.dungeon.DungeonGenerator	sge.noise.generator.room.dungeon.DungeonGenerator$Direction#next(Point)	def	29463ccf218b8216
 sge.noise.generator.room.dungeon.DungeonGenerator	sge.noise.generator.room.dungeon.DungeonGenerator$Direction#nextX(int)	def	30164defff835d53
 sge.noise.generator.room.dungeon.DungeonGenerator	sge.noise.generator.room.dungeon.DungeonGenerator$Direction#nextX(int,int)	def	314f023733447fb4
