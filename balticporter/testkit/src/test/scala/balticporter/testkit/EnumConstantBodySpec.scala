@@ -62,6 +62,18 @@ class EnumConstantBodySpec extends PortSuite:
     assert(!squareBody.contains("val "), clue(squareBody))
   }
 
+  test("a constant body method with @Override gets the `override` keyword (T8)") {
+    // Java @Override in a constant body is an anonymous class body. The frontend must pass
+    // `overridesInherited(m)` to `execDef`, or the emitted method has @java.lang.Override but
+    // no `override` keyword, which is E164 "overrides nothing" in scala.
+    val p = port(castle)
+    // CASTLE overrides both `area` and `valid`; SQUARE overrides only `area`.
+    assertEmits(p, "override def area(side: scala.Int)")
+    assertEmits(p, "override def valid(side: scala.Int)")
+    // The synthesised `ordinal()` override must also be present.
+    assertEmits(p, "override def ordinal(): scala.Int")
+  }
+
   test("NEGATIVE: an enum constant with no body at all contributes nothing of its OWN") {
     // The braces are not the test either. An enum with NO constant body is expressible as a scala 3
     // `enum` (`ENGINE-LIMITS.md` T21), so its constants are cases with no template at all — and
