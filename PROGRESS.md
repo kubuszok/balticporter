@@ -10937,6 +10937,12 @@ liqp/flexmark.** Kill-switch probe over all 106: 104 never fire on the corpus; t
 (`boundMentions`, StackOverflowError ×3 on flexmark) keeps its conservative `false`. ENGINE-LIMITS
 §0.1 has the per-default table; §0.2 (`isUnresolvedTypeVar`) is the next item in this family.
 
+**Wave 2.3 — F7 CLOSED** (compound assignment / `++` evaluate each lvalue subexpression once; the
+operator is carried on `Tree.Assign.compound`, never reconstructed from shape; 34 gdx sites bound,
+suites unchanged, `JS-E17` lowered). **Wave 2.4 — K9 CLOSED** (enhanced-for over a kept JDK
+`Iterable` → java's own `iterator()` loop; noise4j 2 → 0 on the construct, floor 2 → 7 as RefChecks
+starts reporting the enum-constant-body overrides T8 owns).
+
 | helper | wraps | doc |
 |---|---|---|
 | `typeDeclarationOf(r)` | `r.getTypeDeclaration` | **pre-existing** (the `formalArity` worked example) |

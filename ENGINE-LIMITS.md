@@ -5568,7 +5568,20 @@ Distinguish on `Flags.isStatic`, and take the synthesised lambda's arity from th
 
 *Fix kind: (a).*
 
-### K9. A java enhanced-for over a JDK `Iterable` has no `foreach` — 2 errors, and why the obvious fix is worse
+### K9. CLOSED (wave 2.4, 2026-08-27) — a java enhanced-for over a JDK `Iterable` the port KEPT emits java's own desugaring; noise4j 2 -> 0 on the construct, and the typer gate then lifted to 7 RefChecks rows
+
+**Closed.** The emitter's for-each arm reads the iterable's POST-pipeline type: an EXTERNAL head
+symbol in the `java.*`/`javax.*` namespace that no phase retyped emits `val it = xs.iterator();
+while (it.hasNext()) { val x = it.next(); … }` (JLS 14.14.2) — the form ssg-liquid writes by hand
+for every JDK collection it kept — so `break`/`continue` lowering is unchanged and no runtime
+extension is needed (§4.5's ambiguity for a class that is both Iterable and Iterator never arises).
+A retyped iterable is no longer in `java.*` at emission and takes the scala `for`; arrays are never
+a `TypeRef`. 8 specs. noise4j: the 2 `foreach is not a member` rows are gone and the lane now reads
+**7** — all E164 `overrides nothing` in enum constant bodies (`RoomType$DefaultRoomType#isValid`
+×3, `DungeonGenerator$Direction#nextX/nextY` ×4), the RefChecks population CLAUDE.md §3 says a
+port learns one riser at a time and which T8 owns. Every other port runs `CollectionsTransform`
+and has 0 sites. The original entry follows for the record.
+
 
 `Tree.ForEach` emits `for (x <- xs)`, which needs Scala's `foreach`. That is correct for an ARRAY,
 for anything the port owns that ends up under `balticporter.runtime.JavaIterable` (whose companion
