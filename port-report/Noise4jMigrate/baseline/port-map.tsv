@@ -41,13 +41,13 @@ member	com.github.czyzby.noise4j.map.Grid#<stmt1>	sge.noise.Grid#<stmt1>	Renamed
 member	com.github.czyzby.noise4j.map.Grid#<stmt2>	sge.noise.Grid#<stmt2>	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	38	9c79ad231bd64119	
 member	com.github.czyzby.noise4j.map.Grid#add(Grid)	sge.noise.Grid#add(Grid)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	150	5a8084b849a7907f	
 member	com.github.czyzby.noise4j.map.Grid#add(float)	sge.noise.Grid#add(float)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	237	877ad561c03316e4	
-member	com.github.czyzby.noise4j.map.Grid#add(int,int,float)	sge.noise.Grid#add(int,int,float)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	68	555f7ff6401e4809	
+member	com.github.czyzby.noise4j.map.Grid#add(int,int,float)	sge.noise.Grid#add(int,int,float)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	68	10ee49c0b1a57f6d	
 member	com.github.czyzby.noise4j.map.Grid#clamp(float,float)	sge.noise.Grid#clamp(float,float)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	301	8af08652091c91e6	
 member	com.github.czyzby.noise4j.map.Grid#copy()	sge.noise.Grid#copy()	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	355	1f1336965b81948f	
 member	com.github.czyzby.noise4j.map.Grid#decrement()	sge.noise.Grid#decrement()	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	334	00c8208fb5501dfa	
 member	com.github.czyzby.noise4j.map.Grid#divide(Grid)	sge.noise.Grid#divide(Grid)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	174	0bdbcf2bb1c06b97	
 member	com.github.czyzby.noise4j.map.Grid#divide(float)	sge.noise.Grid#divide(float)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	270	a64d94ae5857d9fc	
-member	com.github.czyzby.noise4j.map.Grid#divide(int,int,float)	sge.noise.Grid#divide(int,int,float)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	92	3ff36f269a4b0ef0	
+member	com.github.czyzby.noise4j.map.Grid#divide(int,int,float)	sge.noise.Grid#divide(int,int,float)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	92	7ee21a9543f47384	
 member	com.github.czyzby.noise4j.map.Grid#equals(Any)	sge.noise.Grid#equals(Any)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	342	fa6c59dfaca77cec	
 member	com.github.czyzby.noise4j.map.Grid#fill(float)	sge.noise.Grid#fill(float)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	205	619d2cc4445807c9	
 member	com.github.czyzby.noise4j.map.Grid#fillColumn(int,float)	sge.noise.Grid#fillColumn(int,float)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	214	eaff7240885de6ad	
@@ -62,10 +62,10 @@ member	com.github.czyzby.noise4j.map.Grid#hashCode()	sge.noise.Grid#hashCode()	R
 member	com.github.czyzby.noise4j.map.Grid#increment()	sge.noise.Grid#increment()	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	324	300fa78c9e784d41	
 member	com.github.czyzby.noise4j.map.Grid#iterate(CellConsumer,int,int)	sge.noise.Grid#iterate(CellConsumer,int,int)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	135	7188be257b5c067c	
 member	com.github.czyzby.noise4j.map.Grid#modulo(float)	sge.noise.Grid#modulo(float)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	281	7ff0b483eb5616ea	
-member	com.github.czyzby.noise4j.map.Grid#modulo(int,int,float)	sge.noise.Grid#modulo(int,int,float)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	100	658c9910111ac1c4	
+member	com.github.czyzby.noise4j.map.Grid#modulo(int,int,float)	sge.noise.Grid#modulo(int,int,float)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	100	9c71aec0c86881a7	
 member	com.github.czyzby.noise4j.map.Grid#multiply(Grid)	sge.noise.Grid#multiply(Grid)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	166	6351fcf7fa81e08b	
 member	com.github.czyzby.noise4j.map.Grid#multiply(float)	sge.noise.Grid#multiply(float)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	259	91eb8f51ae8c4676	
-member	com.github.czyzby.noise4j.map.Grid#multiply(int,int,float)	sge.noise.Grid#multiply(int,int,float)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	84	a0a3476041b7083b	
+member	com.github.czyzby.noise4j.map.Grid#multiply(int,int,float)	sge.noise.Grid#multiply(int,int,float)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	84	dc3bc5ebfaeef74a	
 member	com.github.czyzby.noise4j.map.Grid#negate()	sge.noise.Grid#negate()	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	291	04ffeb92d0bf28b0	
 member	com.github.czyzby.noise4j.map.Grid#replace(float,float)	sge.noise.Grid#replace(float,float)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	312	095dbdf3d8b83bee	
 member	com.github.czyzby.noise4j.map.Grid#set(Grid)	sge.noise.Grid#set(Grid)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	144	9e86d819fed65988	
@@ -73,7 +73,7 @@ member	com.github.czyzby.noise4j.map.Grid#set(float)	sge.noise.Grid#set(float)	R
 member	com.github.czyzby.noise4j.map.Grid#set(int,int,float)	sge.noise.Grid#set(int,int,float)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	60	74e5c3321f4d0c04	
 member	com.github.czyzby.noise4j.map.Grid#subtract(Grid)	sge.noise.Grid#subtract(Grid)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	158	77a365e6631bfaf7	
 member	com.github.czyzby.noise4j.map.Grid#subtract(float)	sge.noise.Grid#subtract(float)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	248	c327d9363a9b5e1d	
-member	com.github.czyzby.noise4j.map.Grid#subtract(int,int,float)	sge.noise.Grid#subtract(int,int,float)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	76	952a6d4b0d794076	
+member	com.github.czyzby.noise4j.map.Grid#subtract(int,int,float)	sge.noise.Grid#subtract(int,int,float)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	76	da04d9093e50fbdb	
 member	com.github.czyzby.noise4j.map.Grid#toString()	sge.noise.Grid#toString()	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	362	ef8cea3b23e16ace	
 member	com.github.czyzby.noise4j.map.Grid#validateGrid(Grid)	sge.noise.Grid#validateGrid(Grid)	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	183	daf791ffd78887a0	
 member	com.github.czyzby.noise4j.map.Grid$CellConsumer#BREAK	sge.noise.Grid$CellConsumer#BREAK	Renamed	-	com/github/czyzby/noise4j/map/Grid.java	384	98f22ba55cd2de8f	placement=companion
@@ -256,12 +256,12 @@ member	com.github.czyzby.noise4j.map.generator.room.dungeon.DungeonGenerator#isC
 member	com.github.czyzby.noise4j.map.generator.room.dungeon.DungeonGenerator#isCorridor(int,int)	sge.noise.generator.room.dungeon.DungeonGenerator#isCorridor(int,int)	Renamed	-	com/github/czyzby/noise4j/map/generator/room/dungeon/DungeonGenerator.java	453	577ac8c2b490c9fb	
 member	com.github.czyzby.noise4j.map.generator.room.dungeon.DungeonGenerator#isDeadEnd(Grid,int,int)	sge.noise.generator.room.dungeon.DungeonGenerator#isDeadEnd(Grid,int,int)	Renamed	-	com/github/czyzby/noise4j/map/generator/room/dungeon/DungeonGenerator.java	432	868a0f622d466fbf	
 member	com.github.czyzby.noise4j.map.generator.room.dungeon.DungeonGenerator#isWall(Grid,int,int)	sge.noise.generator.room.dungeon.DungeonGenerator#isWall(Grid,int,int)	Renamed	-	com/github/czyzby/noise4j/map/generator/room/dungeon/DungeonGenerator.java	187	b3d61356ef1672c8	
-member	com.github.czyzby.noise4j.map.generator.room.dungeon.DungeonGenerator#joinRegions(Grid)	sge.noise.generator.room.dungeon.DungeonGenerator#joinRegions(Grid)	Renamed	-	com/github/czyzby/noise4j/map/generator/room/dungeon/DungeonGenerator.java	258	fbec179b182362bb	
+member	com.github.czyzby.noise4j.map.generator.room.dungeon.DungeonGenerator#joinRegions(Grid)	sge.noise.generator.room.dungeon.DungeonGenerator#joinRegions(Grid)	Renamed	-	com/github/czyzby/noise4j/map/generator/room/dungeon/DungeonGenerator.java	258	3e8464d42318ac1d	
 member	com.github.czyzby.noise4j.map.generator.room.dungeon.DungeonGenerator#lastRoomRegion	sge.noise.generator.room.dungeon.DungeonGenerator#lastRoomRegion	Renamed	-	com/github/czyzby/noise4j/map/generator/room/dungeon/DungeonGenerator.java	77	7d161332571ea6df	vis=private
 member	com.github.czyzby.noise4j.map.generator.room.dungeon.DungeonGenerator#nextRegion()	sge.noise.generator.room.dungeon.DungeonGenerator#nextRegion()	Renamed	-	com/github/czyzby/noise4j/map/generator/room/dungeon/DungeonGenerator.java	126	434db03551c1b7d4	
 member	com.github.czyzby.noise4j.map.generator.room.dungeon.DungeonGenerator#normalizePosition(int)	sge.noise.generator.room.dungeon.DungeonGenerator#normalizePosition(int)	Renamed	-	com/github/czyzby/noise4j/map/generator/room/dungeon/DungeonGenerator.java	458	3a402c84104dadf4	
 member	com.github.czyzby.noise4j.map.generator.room.dungeon.DungeonGenerator#normalizeSize(int)	sge.noise.generator.room.dungeon.DungeonGenerator#normalizeSize(int)	Renamed	-	com/github/czyzby/noise4j/map/generator/room/dungeon/DungeonGenerator.java	466	4d1225a16b011244	
-member	com.github.czyzby.noise4j.map.generator.room.dungeon.DungeonGenerator#overlapsAny(Room)	sge.noise.generator.room.dungeon.DungeonGenerator#overlapsAny(Room)	Renamed	-	com/github/czyzby/noise4j/map/generator/room/dungeon/DungeonGenerator.java	163	1785f5c6e7611f62	
+member	com.github.czyzby.noise4j.map.generator.room.dungeon.DungeonGenerator#overlapsAny(Room)	sge.noise.generator.room.dungeon.DungeonGenerator#overlapsAny(Room)	Renamed	-	com/github/czyzby/noise4j/map/generator/room/dungeon/DungeonGenerator.java	163	45ab78fe39da3bf2	
 member	com.github.czyzby.noise4j.map.generator.room.dungeon.DungeonGenerator#randomConnectorChance	sge.noise.generator.room.dungeon.DungeonGenerator#randomConnectorChance	Renamed	-	com/github/czyzby/noise4j/map/generator/room/dungeon/DungeonGenerator.java	69	d4e3d7a189b81af9	vis=private
 member	com.github.czyzby.noise4j.map.generator.room.dungeon.DungeonGenerator#regions	sge.noise.generator.room.dungeon.DungeonGenerator#regions	Renamed	-	com/github/czyzby/noise4j/map/generator/room/dungeon/DungeonGenerator.java	75	401f73da1fe45fa6	vis=private
 member	com.github.czyzby.noise4j.map.generator.room.dungeon.DungeonGenerator#removeDeadEnds(Grid)	sge.noise.generator.room.dungeon.DungeonGenerator#removeDeadEnds(Grid)	Renamed	-	com/github/czyzby/noise4j/map/generator/room/dungeon/DungeonGenerator.java	386	1964202b3b1d45c2	
