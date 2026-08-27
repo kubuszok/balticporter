@@ -11450,6 +11450,27 @@ freshness half, CLOSED in `Map0.packageRelative` + `freshness`, measured at 422 
 positive that still reports `Stale` when the file really changes, the two-roots ambiguity that must
 decline, and the package-root port whose alternative set is EMPTY.*
 
+### D14. A dependent RE-DETECTS the base's bean/nullary pairs over the whole program, and `followMemberRenames` corrects what the re-detection refuses — **visui 7 -> 408 when scoping was tried without the reorder**
+
+§1(b) — the fix is an engine change (reorder `followMemberRenames` to run BEFORE per-phase detection).
+
+A dependent's `BeanPropertyTransform` and `NullaryArityTransform` detect on ALL `program.owned`
+symbols, including the base's. Guards that pass in the base's smaller program can fail in the
+dependent's wider one — a base member's override component in the dependent includes a dependent
+override that has a non-getter-like body (visui's `MimicActor.getWidth`: 157 errors), or a setter
+without a corresponding getter (`VfxWidgetGroup.setTransform`: 3 errors). The `SetterOnlyInterface`
+guard was narrowed (wave 1.2h) and `PortMapTransform.followMemberRenames` corrects the remaining
+refusals by applying the base's published renames after the phases run. Together they land every
+dependent at its floor.
+
+Scoping the per-phase detection to `RunScope.emitsSymbol` (only own declarations) was measured at
+**visui 7 -> 408**: the bean phase, detecting only on visui's own declarations, doesn't see the
+base's pairs in the override component, so the dependent's own overrides are not renamed. Then
+`followMemberRenames` renames the base symbols but `MemberRenamer` cannot propagate to
+already-renamed dependent overrides. The ordering fix — run `followMemberRenames` BEFORE the
+bean/nullary phases, then scope detection to owned declarations — is the open design. Wave 1.3's
+`policy 0 -> 2` refusals on dependents are the visible residue of the current re-detection.
+
 ## 9.5 Control flow — what a `break` really leaves, and the boundary that steals it
 
 ### F1. A java LABEL sits on ANY statement, not only a loop. **55 → 10 residues**
