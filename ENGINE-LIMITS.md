@@ -115,6 +115,21 @@ computation now wraps only the resolution. **108 remaining** — predominantly c
 facts: `Nil` (25), `false` (33), `null` (14), `None`/`scala.None` (15), and smaller groups.
 `PROGRESS.md` §13.3 carries the full census table. Measured at 0 emitted bytes moved on four ports.
 
+**Wave 2.2 (2026-08-27) — 88 more removed by kill-switch probe, 106 → 18.** Every remaining catch
+was tagged with a file-writing probe and gdx, ashley, liqp and flexmark were migrated: **104 never
+fired**, 1 fired (`boundMentions`, a `StackOverflowError` in Spoon's recursive bound resolution,
+3× on flexmark — kept, conservative `false`), 1 was a code example in a comment. The 88 dead ones
+(`Nil` ×24, `false` ×33, `null` ×14, `()` ×4, `NoType` ×3, `"?"` ×3, identity ×3, `Set.empty`,
+`Map.empty`, `""`, `0`) are gone; three `getType()` chains that returned `null` on in-memory
+fixtures became `Option(x).exists/map`. 0 digests on all four ports — so no fabricated default had
+ever reached emitted text on this corpus, and a library that trips one of those calls tomorrow gets
+a stack trace naming the construct rather than a silent fact. The 17 that remain are honest
+sentinels (`None`, `Sam.Answer.Unreadable`, `UnreadableAnnotations`, the four wave-2.1 helpers).
+One trap the removal met: under significant-indentation syntax deleting a `try` keyword without
+de-indenting its body re-parents the body into the previous scope — 7 digests moved before it was
+caught, which is what the digest gate is for. Still open here: 0.2 (`isUnresolvedTypeVar` is a
+`startsWith("?")` sentinel test).
+
 ### 0.2 `Symbol.isUnresolvedTypeVar` is `startsWith("?")`, and **10,417 libGDX symbols match it**
 
 OPEN, and found by RUNNING the lane written to measure something else — which is the only way it

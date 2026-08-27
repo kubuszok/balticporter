@@ -10881,6 +10881,11 @@ catches are classified into three kinds per `ENGINE-LIMITS.md` §0.1:
 wrapping resolution-dependent lookups where absent is normal. Each was replaced by a call to one of
 four named helpers:
 
+**Wave 2.2 delivery: 88 removed, 18 remaining (17 honest + 1 comment), 0 digests on gdx/ashley/
+liqp/flexmark.** Kill-switch probe over all 106: 104 never fire on the corpus; the one that does
+(`boundMentions`, StackOverflowError ×3 on flexmark) keeps its conservative `false`. ENGINE-LIMITS
+§0.1 has the per-default table; §0.2 (`isUnresolvedTypeVar`) is the next item in this family.
+
 | helper | wraps | doc |
 |---|---|---|
 | `typeDeclarationOf(r)` | `r.getTypeDeclaration` | **pre-existing** (the `formalArity` worked example) |
