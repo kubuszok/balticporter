@@ -33,7 +33,11 @@ class EmitterBindingAndReturnSpec extends PortSuite:
         |class B { void each(List<String> xs) { for (Object e : xs) { e.hashCode(); } } }
         |""".stripMargin
     )
-    assertEmits(p, "for (e$e <- xs) { val e: java.lang.Object = e$e.asInstanceOf[java.lang.Object];")
+    // K9: `xs` is a `java.util.List` the pipeline kept, so the emitter uses java's own desugaring
+    // (JLS 14.14.2) — a while-loop over `iterator()`/`hasNext()`/`next()` — rather than `for`,
+    // which would fail with "value foreach is not a member of java.util.List".
+    assertEmits(p, "e$it = xs.iterator()")
+    assertEmits(p, "val e: java.lang.Object = e$it.next().asInstanceOf[java.lang.Object]")
     // the alias is INSIDE the body, so it is re-bound each iteration exactly as java's is.
     assertNotEmits(p, "for (e <- xs)")
   }
@@ -65,9 +69,11 @@ class EmitterBindingAndReturnSpec extends PortSuite:
         |class B { void each(List<String> xs) { for (Object object : xs) { object.hashCode(); } } }
         |""".stripMargin
     )
-    assertEmits(p, "for (object$e <- xs)")
-    assertEmits(p, "val `object`: java.lang.Object = object$e.asInstanceOf[java.lang.Object]")
-    assertNotEmits(p, "`object`$e")
+    // K9: `xs` is a `java.util.List` the pipeline kept, so the while-loop form is emitted.
+    // The iterator variable derives from the RAW name: `object$it`, not `` `object`$it ``.
+    assertEmits(p, "object$it = xs.iterator()")
+    assertEmits(p, "val `object`: java.lang.Object = object$it.next().asInstanceOf[java.lang.Object]")
+    assertNotEmits(p, "`object`$it")
   }
 
   // -------------------------------------------------------------------------------------------

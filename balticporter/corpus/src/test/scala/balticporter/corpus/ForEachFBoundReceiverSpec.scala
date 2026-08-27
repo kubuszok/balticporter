@@ -36,7 +36,10 @@ class ForEachFBoundReceiverSpec extends PortSuite:
         |}
         |""".stripMargin
     )
-    assertEmits(p, "<- builder.asInstanceOf[java.lang.Iterable[java.lang.Object]]")
+    // K9: the F-bound fix casts the receiver to `java.lang.Iterable[Object]`, and that type is a
+    // kept JDK iterable — so the emitter uses the while-loop form (JLS 14.14.2). The upcast still
+    // appears inside the iterator binding, which is correct: it evaluates the iterable once.
+    assertEmits(p, "builder.asInstanceOf[java.lang.Iterable[java.lang.Object]].iterator()")
   }
 
   test("an ORDINARY bounded wildcard capture-converts, so no view is interposed") {

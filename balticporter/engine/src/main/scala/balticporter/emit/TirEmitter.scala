@@ -3578,6 +3578,29 @@ final class TirEmitter(
     case TypeRepr.AppliedType(_, List(el)) => Some(el)
     case _                                 => scala.None
 
+  /** ENGINE-LIMITS K9: is the iterable's POST-PIPELINE type a JDK `Iterable` the pipeline left in
+    * the java namespace? Such a type has no scala `foreach`, so `for (x <- xs)` does not compile.
+    *
+    * Decided from the NODE (§4.56 — what the phase DID, not what the type is CALLED):
+    *   - the head symbol is EXTERNAL (not program-owned) — a type the program declares has its own
+    *     `foreach`, or does not, and that is the port's business;
+    *   - its FQN is in the JDK namespace (`java.*` / `javax.*`), which is a NAMESPACE selection and
+    *     not a structural conclusion about the type (same distinction `JdkSurfaceCheck.inJdk` draws);
+    *   - arrays are never `TypeRef` and are iterated natively by scala, so they are excluded by
+    *     construction — `headSymOf` returns `None` for a non-applied, non-`TypeRef` type.
+    *
+    * A retyped type (`java.util.List` → `scala.collection.mutable.Buffer`) is no longer in `java.*`
+    * by the time the emitter runs, so the check naturally excludes it. The runtime shim
+    * `balticporter.runtime.JavaIterable` has its own `foreach` extension and is not in `java.*`
+    * either. Both directions correct, from one test. */
+  private def isKeptJdkIterable(iterableTpe: TypeRepr): Boolean =
+    headSymOf(iterableTpe).flatMap(program.symbolOf).exists { s =>
+      !program.owns(s.id) && {
+        val fqn = s.fullName
+        fqn.startsWith("java.") || fqn.startsWith("javax.")
+      }
+    }
+
   private def loopWithJumps(body: Tree, label: Option[String], render: (=> String) => String,
                             bodyStr: => String)(using Obligations): String =
     val lblB = label.filter(l => jumpsTo(body, l, brk = true))
@@ -4412,9 +4435,32 @@ final class TirEmitter(
       Obligations.consult(JS.G(4), b.origin)(Option.when(it.tpe match
         case TypeRepr.AppliedType(_, args) => args.exists(_.isInstanceOf[TypeRepr.TypeBounds])
         case _                             => false)(()))
-      (widenedBinding(b, it), mutable) match
-        case (None, false) => loopWithJumps(body, lbl, bd => s"for ($name <- ${term(it, i)}) $bd", term(body, i))
-        case (widened, _) =>
+      // K9 — a JDK `Iterable` the pipeline LEFT in the java namespace has no scala `foreach`, so
+      // `for (x <- xs)` does not compile. Emit java's OWN desugaring (JLS 14.14.2) instead: a
+      // while-loop over `iterator()`/`hasNext()`/`next()`, which is the shape the reference hand
+      // ports use for every JDK collection they kept (ssg-liquid: `Insertions`, `Filters`, `Json`).
+      // Decided from the POST-PIPELINE type — what a phase DID, not what a type is called (§4.56):
+      // a retyped `java.util.List` is `scala.collection.mutable.Buffer` here and already has
+      // `foreach`; a `balticporter.runtime.JavaIterable` has the extension. Only an EXTERNAL type
+      // still in `java.*` / `javax.*` needs the protocol. Arrays are never `TypeRef` and are
+      // iterated natively by scala, so they are excluded by construction.
+      val keptJdk = isKeptJdkIterable(it.tpe)
+      (widenedBinding(b, it), mutable, keptJdk) match
+        case (None, false, false) => loopWithJumps(body, lbl, bd => s"for ($name <- ${term(it, i)}) $bd", term(body, i))
+        case (_, _, true) =>
+          // JLS 14.14.2's own desugaring: evaluate the iterable ONCE, obtain its iterator, and loop
+          // with hasNext()/next(). The iterable expression is interpolated exactly once (JS-S15),
+          // the binding is re-bound each iteration (the `next()` call), and break/continue go
+          // through `loopWithJumps` exactly as the `for` form does — a `while` is a loop the jump
+          // lowering already handles.
+          val itVar = esc(s"$raw$$it")
+          val widened = widenedBinding(b, it)
+          val decl = widened.getOrElse(tpe(b.tpt.tpe))
+          val nextExpr = if widened.isDefined then s"$itVar.next().asInstanceOf[$decl]" else s"$itVar.next()"
+          loopWithJumps(body, lbl,
+            bd => s"{ val $itVar = ${term(it, i)}.iterator(); while ($itVar.hasNext()) { $kw $name: $decl = $nextExpr; $bd } }",
+            term(body, i))
+        case (widened, _, _) =>
           // the alias is INSIDE the loop body, so it is re-bound each iteration exactly as java's is,
           // and outside any `continue` boundary `loopWithJumps` adds — which is where java runs it.
           // A reassignment therefore cannot leak into the next iteration, which is java's semantics

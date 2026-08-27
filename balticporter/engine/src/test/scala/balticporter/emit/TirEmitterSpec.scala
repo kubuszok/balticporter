@@ -279,6 +279,111 @@ class TirEmitterSpec extends munit.FunSuite:
     assert(!text.contains("obj$e"), clue(text))
   }
 
+  // -- K9: enhanced-for over a KEPT JDK Iterable -----------------------------------------------
+  //
+  // A JDK `java.util.List` (or `Set`, `Collection`, ...) the pipeline left in the java namespace
+  // has no scala `foreach`, so `for (x <- xs)` does not compile. The emitter detects this from the
+  // POST-PIPELINE type and emits java's own desugaring (JLS 14.14.2): a while-loop over
+  // `iterator()`/`hasNext()`/`next()`. Arrays and program-owned types keep the `for` form.
+
+  /** build a ForEach loop over an iterable whose head type has the given FQN. */
+  private def k9ForEach(
+      iterableFqn: String,
+      owned: Boolean = false,
+      assignBinding: Boolean = false,
+      withBreak: Boolean = false,
+      sideEffectIterable: Boolean = false,
+  ): String =
+    val CLS  = SymId(101)
+    val M    = SymId(102)
+    val LIST = SymId(103)
+    val BND  = SymId(104)
+    val STR  = SymId(105)
+    val SIDE = SymId(106)
+    val strT = TypeRef(NoPrefix, STR)
+    val listT = AppliedType(TypeRef(NoPrefix, LIST), List(strT))
+
+    val bind = Tree.ValDef(BND, tt(strT), rhs = None, origin = O)
+    val bodyStmts = collection.mutable.ListBuffer.empty[Statement]
+    if assignBinding then
+      bodyStmts += Tree.Assign(Tree.Ident(BND, strT, O), Tree.Literal(Constant.NullC, strT, O), NoType, O)
+    if withBreak then
+      bodyStmts += Tree.Break(None, NoType, O)
+    val bodyTerm = Tree.Ident(BND, strT, O)
+    val body = Tree.Block(bodyStmts.toList, bodyTerm, strT, O)
+
+    val iterable: Term =
+      if sideEffectIterable then
+        Tree.Apply(Tree.Select(Tree.This(CLS, TypeRef(NoPrefix, CLS), O), SIDE, listT, O), Nil, SIDE, listT, O)
+      else
+        Tree.Ident(LIST, listT, O)
+
+    val loop = Tree.ForEach(bind, iterable, body, NoType, O)
+    val d = Tree.DefDef(M, paramss = List(Nil), returnTpt = tt(NoType),
+      rhs = Some(Tree.Block(List(loop), Tree.Literal(Constant.UnitC, NoType, O), NoType, O)), origin = O)
+    val cd = Tree.ClassDef(CLS, parents = Nil, selfType = None, body = List(d), origin = O)
+
+    val ownerOfList = if owned then CLS else SymId.None
+    val listSymbol = Symbol(LIST, iterableFqn.split('.').last, iterableFqn, Flags(), ownerOfList, listT)
+    val syms = SymbolTable(List(
+      Symbol(CLS, "Rooms", "demo.Rooms", Flags(), SymId.None, TypeRef(NoPrefix, CLS)),
+      Symbol(M, "go", "demo.Rooms#go", Flags(), CLS, MethodType(Nil, NoType)),
+      listSymbol,
+      Symbol(BND, "r", "demo.Rooms#go$r", Flags(), M, strT),
+      Symbol(STR, "String", "java.lang.String", Flags(), SymId.None, NoType),
+      Symbol(SIDE, "getList", "demo.Rooms#getList", Flags(), CLS, MethodType(Nil, listT)),
+    ))
+    new TirEmitter(new Program(List(cd), syms, Xref.build(List(cd)), MemberIndex.empty)).emit
+
+  test("K9: a for-each over a KEPT java.util.List emits a while-loop over iterator()/hasNext()/next()") {
+    val text = k9ForEach("java.util.List")
+    assert(clue(text).contains(".iterator()"), clue(text))
+    assert(text.contains(".hasNext()"), clue(text))
+    assert(text.contains(".next()"), clue(text))
+    assert(!text.contains("for ("), clue(text))
+  }
+
+  test("K9: a for-each over a KEPT java.util.Set emits the same while-loop form") {
+    val text = k9ForEach("java.util.Set")
+    assert(clue(text).contains(".iterator()"), clue(text))
+    assert(text.contains(".hasNext()"), clue(text))
+    assert(!text.contains("for ("), clue(text))
+  }
+
+  test("K9: a break inside a kept-JDK for-each emits a boundary around the while-loop") {
+    val text = k9ForEach("java.util.List", withBreak = true)
+    assert(clue(text).contains("scala.util.boundary"), clue(text))
+    assert(text.contains(".iterator()"), clue(text))
+    assert(text.contains(".hasNext()"), clue(text))
+  }
+
+  test("K9: a side-effecting iterable expression is evaluated ONCE — bound to the iterator variable") {
+    val text = k9ForEach("java.util.List", sideEffectIterable = true)
+    // the iterable expression `getList()` appears exactly once, inside the iterator binding
+    val count = "getList\\(\\)".r.findAllIn(text).size
+    assertEquals(clue(count), 1, clue(text))
+    assert(text.contains(".iterator()"), clue(text))
+  }
+
+  test("K9: a reassigned binding in a kept-JDK for-each becomes a `var`") {
+    val text = k9ForEach("java.util.List", assignBinding = true)
+    assert(clue(text).contains("var r:"), clue(text))
+    assert(text.contains(".next()"), clue(text))
+    assert(!text.contains("for ("), clue(text))
+  }
+
+  test("K9 NEGATIVE: a PROGRAM-OWNED iterable keeps the `for` form") {
+    val text = k9ForEach("demo.OwnIterable", owned = true)
+    assert(clue(text).contains("for ("), clue(text))
+    assert(!text.contains(".iterator()"), clue(text))
+  }
+
+  test("K9 NEGATIVE: a non-JDK external iterable (e.g. scala.collection) keeps the `for` form") {
+    val text = k9ForEach("scala.collection.immutable.List")
+    assert(clue(text).contains("for ("), clue(text))
+    assert(!text.contains(".iterator()"), clue(text))
+  }
+
   // -- a CASE's GUARD ---------------------------------------------------------------------------
   //
   // `Tree.CaseDef.guard` reached the emitter, was carried by `Phase.mapTerm`'s `Match` arm and
