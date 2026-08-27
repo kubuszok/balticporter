@@ -10948,6 +10948,18 @@ suites unchanged, `JS-E17` lowered). **Wave 2.4 — K9 CLOSED** (enhanced-for ov
 `Iterable` → java's own `iterator()` loop; noise4j 2 → 0 on the construct, floor 2 → 7 as RefChecks
 starts reporting the enum-constant-body overrides T8 owns).
 
+**Wave 2.6 — O6: `OpaqueSpec.Target.Existing`** (retype against an INJECTED opaque type; the java
+class is dropped+injected by `Substitutions`, the two mechanisms meet at one seam each). First policy
+`Align` on the libGDX base: 13 hints → 123 declarations retyped, gdx **0 → 7 → 0** — the 7 were two
+engine gaps, both universal: `FlowPropagation` stopped at `Tree.Commented` (an inline-commented call
+was invisible to every propagation, 6 sites) and a BOXED primitive at an opaque boundary (`Cell.align:
+Integer`, null = unset). gdx-test 217/4 and ashley 108/2/2 unchanged. Remaining O6 families are
+different mechanisms and stay OPEN with their reasons: `Input.Key`/`Button` need a member ADDED to an
+emitted companion (injection copies whole files), `HttpStatus` is a real class collapsed to an opaque
+(a type redirect + ctor/accessor rewrite, not a primitive retype). **Open beside it**: the two opaque
+phases declare no `accountedBy` lane (`rewrite-callsites` 2 → 3) — an opaque boundary lane is owed
+(§1's rule that a retyping phase names the lane that counts its residue).
+
 | helper | wraps | doc |
 |---|---|---|
 | `typeDeclarationOf(r)` | `r.getTypeDeclaration` | **pre-existing** (the `formalArity` worked example) |
