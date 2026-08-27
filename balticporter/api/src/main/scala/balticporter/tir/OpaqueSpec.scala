@@ -191,15 +191,15 @@ object OpaqueSpec:
     * domain value with one inhabitant is not a domain value.
     *
     * [[fromScalaName]] is the loud door for a caller holding a string. */
-  enum Primitive(val scalaFqn: String):
-    case Int     extends Primitive("scala.Int")
-    case Long    extends Primitive("scala.Long")
-    case Float   extends Primitive("scala.Float")
-    case Double  extends Primitive("scala.Double")
-    case Byte    extends Primitive("scala.Byte")
-    case Short   extends Primitive("scala.Short")
-    case Char    extends Primitive("scala.Char")
-    case Boolean extends Primitive("scala.Boolean")
+  enum Primitive(val scalaFqn: String, val boxedFqn: String):
+    case Int     extends Primitive("scala.Int",     "java.lang.Integer")
+    case Long    extends Primitive("scala.Long",    "java.lang.Long")
+    case Float   extends Primitive("scala.Float",   "java.lang.Float")
+    case Double  extends Primitive("scala.Double",  "java.lang.Double")
+    case Byte    extends Primitive("scala.Byte",    "java.lang.Byte")
+    case Short   extends Primitive("scala.Short",   "java.lang.Short")
+    case Char    extends Primitive("scala.Char",    "java.lang.Character")
+    case Boolean extends Primitive("scala.Boolean", "java.lang.Boolean")
 
   object Primitive:
     /** `"scala.Int"` / `"Int"` → [[Primitive.Int]]. Anything else THROWS, naming what is

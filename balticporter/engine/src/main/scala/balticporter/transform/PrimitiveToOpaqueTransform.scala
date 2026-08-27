@@ -135,7 +135,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
 
   def policyReport: PolicyReport = PolicyReport(unreachable.toList)
 
-  private var objSym, opaqueSym, applySym, unwrapSym, wrapArraySym, unwrapArraySym, primSym, arraySym: SymId = SymId.None
+  private var objSym, opaqueSym, applySym, unwrapSym, wrapArraySym, unwrapArraySym, primSym, boxedPrimSym, arraySym: SymId = SymId.None
   private var seeds: Set[SymId]   = Set.empty
   private var opaqueRef: TypeRepr = TypeRepr.NoType
   private var primRef: TypeRepr   = TypeRepr.NoType
@@ -167,6 +167,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     primSym = program.symbols.all.find(_.fullName == spec.underlyingFqn).map(_.id).getOrElse(SymId.None)
     if primSym == SymId.None then return program
     primRef = TypeRepr.TypeRef(TypeRepr.NoType, primSym)
+    boxedPrimSym = program.symbols.all.find(_.fullName == spec.underlying.boxedFqn).map(_.id).getOrElse(SymId.None)
     arraySym = program.symbols.all.find(_.fullName == "scala.Array").map(_.id).getOrElse(SymId.None)
 
     // The SCOPE fences seeding as well as propagation: a fence a named entry could step over is not
@@ -668,8 +669,15 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     if carriesOpaque(e) then coerce(e, opaqueRef, l => if carriesOpaque(l) then l else wrapCall(l))
     else wrapCall(e)
 
+  /** Emit the wrap: `OpaqueCompanion(value)`. Handles the BOXED form of the primitive too: Java's
+    * auto-unbox from `Integer` to `int` is implicit in the TIR, so a `wrapCall` that only handles
+    * the unboxed form leaves a boxed slot (`Cell.align: Integer`) unreachable — the argument sits
+    * between two opaque coercions and no explicit unbox node exists. Because an opaque type IS
+    * the primitive at the JVM level, `Align(integerValue)` auto-unboxes the same way java's
+    * `int x = integerValue` does, so the wrap is the same call. */
   private def wrapCall(e: Term): Term =
-    if isPrim(e.tpe) then Tree.Apply(Tree.Ident(objSym, TypeRepr.NoType, e.origin), List(e), applySym, opaqueRef, e.origin)
+    if isPrim(e.tpe) || isBoxedPrim(e.tpe) then
+      Tree.Apply(Tree.Ident(objSym, TypeRepr.NoType, e.origin), List(e), applySym, opaqueRef, e.origin)
     else e
 
   private def unwrapCall(e: Term): Term =
@@ -714,6 +722,9 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
       s == arraySym && e == opaqueSym
     case _ => false
   private def isPrim(t: TypeRepr): Boolean = headSym(t).contains(primSym)
+  /** Is this the BOXED form of the spec's primitive — `java.lang.Integer` for `Int`, etc.? A value
+    * of this type auto-unboxes to the primitive, so `Align(integerValue)` is valid. */
+  private def isBoxedPrim(t: TypeRepr): Boolean = boxedPrimSym != SymId.None && headSym(t).contains(boxedPrimSym)
 
   /** The retyped type for a seed: `Prim` -> `Opaque.T`, `Array[Prim]` -> `Array[Opaque.T]`. */
   private def seedTypeRef(origType: TypeRepr): TypeRepr =

@@ -45,8 +45,11 @@ import balticporter.tir.*
   * incomplete and is not allowed to be wrong, and it is written to fail on that side.
   *
   * Known and unclosed, for the same reason: bodies reached only through a `Lambda`, an anonymous
-  * class (`Tree.New.anon`), a `Try`, a `Match`, a `for`/`foreach` or a `Tree.Commented` wrapper
+  * class (`Tree.New.anon`), a `Try`, a `Match`, or a `for`/`foreach`
   * contribute no edges. Each is a missed edge, never a wrong one.
+  * `Tree.Commented` is CLOSED — a comment wrapper does not change flow semantics, and not
+  * descending into it silently broke 6 edges on `TiledDrawable`'s `isCenterVertical`/
+  * `isCenterHorizontal` calls, which happened to sit behind a `// Left center partials` comment.
   *
   * ==Why this is in `api` and not in `engine`==
   * DESIGN.md §3.2's criterion is operational: *a §1(c) rule and its spec must compile against `api`
@@ -110,6 +113,7 @@ object FlowPropagation:
       case Tree.Ident(s, _, _)         => Some(s)
       case Tree.Select(_, s, _, _)     => Some(s)
       case Tree.Apply(_, Nil, m, _, _) => Some(m)
+      case Tree.Commented(_, inner)    => refSym(inner)
       case _                           => scala.None
 
     def walkTerm(t: Term, encl: SymId): Unit = t match
@@ -128,6 +132,7 @@ object FlowPropagation:
         walkTerm(fun, encl); args.foreach(walkTerm(_, encl))
       case Tree.If(c, a, b, _, _)    => walkTerm(c, encl); walkTerm(a, encl); walkTerm(b, encl)
       case Tree.While(c, b, _, _, _) => walkTerm(c, encl); walkTerm(b, encl)
+      case Tree.Commented(_, inner)  => walkTerm(inner, encl)
       case Tree.Select(q, _, _, _)   => walkTerm(q, encl)
       case _                         => ()
 
@@ -141,9 +146,10 @@ object FlowPropagation:
     /** references returnable from a method body's TAIL (a bare-expression body, or the last
       * expression of a block), which flow to the method's own symbol exactly as a `return` does. */
     def tailRefs(t: Term): List[SymId] = t match
-      case Tree.Block(_, e, _, _, _) => tailRefs(e)
-      case Tree.If(_, a, b, _, _) => tailRefs(a) ++ tailRefs(b)
-      case other                  => refSym(other).toList
+      case Tree.Block(_, e, _, _, _)  => tailRefs(e)
+      case Tree.If(_, a, b, _, _)     => tailRefs(a) ++ tailRefs(b)
+      case Tree.Commented(_, inner)   => tailRefs(inner)
+      case other                      => refSym(other).toList
 
     program.units.foreach(walkStat(_, SymId.None))
     out.toList
