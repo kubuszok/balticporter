@@ -293,6 +293,12 @@ object LibgdxPolicy:
       // (`ENGINE-LIMITS.md` D8). There is nothing to inject — the target is the JDK's own type,
       // which already exists everywhere the port compiles.
       "com.badlogic.gdx.utils.Disposable",
+      // O6 CLOSED: `Align` is a class of `static final int` constants, replaced by an injected
+      // `opaque type Align = Int` (sge's convention). The retype is handled by
+      // `PrimitiveToOpaqueTransform(Existing)` below; this drop prevents the java class from being
+      // emitted alongside the injection. The class is still PARSED — its static members are visible
+      // to every reference in the ported code.
+      "com.badlogic.gdx.utils.Align",
     ),
     // libGDX itself deprecated `setEnabledReflection` (superseded by the typed
     // `setEnabled(Styleable, Boolean)`, already ported); its private `findMethod` helper was the
@@ -807,7 +813,7 @@ object LibgdxPolicy:
     List(beanProperties, nullaryArity,
          new CollectionsTransform(retarget = comparatorRetarget), new MutableParamsTransform,
          new PanamaFfiTransform(), unwrapReflection, classTable, new GdxSharedIteratorRule,
-         memberRenames, disposableRedirect, textureHandle, nullability, globalsToContext)
+         memberRenames, disposableRedirect, textureHandle, align, nullability, globalsToContext)
 
   /** Drop `()` from nullary getter-like methods — sge's empirical convention, no written rule in
     * `conversion-rules.md`. Enabled with `Everywhere()` because the convention is whole-library:
@@ -991,6 +997,58 @@ object LibgdxPolicy:
       scope      = balticporter.tir.RuleScope.Everywhere(except = Set(
         "com.badlogic.gdx.graphics.GL20", "com.badlogic.gdx.graphics.GL30",
         "com.badlogic.gdx.graphics.GL31", "com.badlogic.gdx.graphics.GL32")),
+    ))
+
+  /** libGDX's `Align` — a class of `static final int` constants — as an opaque type.
+    *
+    * ==O6 CLOSED: retype against an EXISTING/injected type==
+    * `com.badlogic.gdx.utils.Align` is a java class whose entire body is
+    * `static public final int center = 1 << 0; …`. sge's `sge.utils.Align` is
+    * `opaque type Align = Int` plus extension methods, and every ported declaration that java
+    * typed `int align` is typed `Align`.
+    *
+    * Two mechanisms, one seam each, no new one:
+    *   - the DEFINITION: `Substitutions.dropTypes` drops the java class, `inject` supplies the
+    *     hand-written `Align.scala` (copied from sge's own file, stripped of sge-specific imports).
+    *   - the RETYPE: `PrimitiveToOpaqueTransform(OpaqueSpec(target = Existing(…)))` seeds from the
+    *     align-typed FIELDS, propagates to their getters/setters/parameters, and coerces at every
+    *     boundary through `Align(rawInt)` / `Align.toInt(value)`.
+    *
+    * ==CENSUS: 13 field hints, propagation discovers the rest==
+    * Each field hint is the fully-qualified name of a `private int align`-typed field. The flow
+    * propagation grows the seed set to every getter/setter/parameter reachable by a pure-move flow
+    * from these fields. The METHODS (`setAlign(int)`, `getX(int alignment)`, etc.) and their
+    * PARAMETERS are discovered, not listed.
+    *
+    * ==Shared surface, one instance (§1.5)==
+    * Inherited through `extendedBy`, same as `textureHandle`. No dependent constructs this phase. */
+  def align: balticporter.transform.PrimitiveToOpaqueTransform =
+    new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+      fqn        = "com.badlogic.gdx.utils.Align",
+      target     = balticporter.tir.OpaqueSpec.Target.Existing(
+        typeFqn    = "sge.utils.Align",
+        wrapName   = "apply",
+        unwrapName = "toInt",
+      ),
+      hints      = Set(
+        // 13 fields typed `int align` / `int alignment` / `int columnAlign` / `int rowAlign` /
+        // `int labelAlign` / `int lineAlign` across the scene2d UI types. Each is a seed; the
+        // propagation discovers every getter, setter, and parameter reachable from them.
+        "com.badlogic.gdx.scenes.scene2d.ui.Image#align",
+        "com.badlogic.gdx.scenes.scene2d.ui.Label#labelAlign",
+        "com.badlogic.gdx.scenes.scene2d.ui.Label#lineAlign",
+        "com.badlogic.gdx.scenes.scene2d.ui.List#alignment",
+        "com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#align",
+        "com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup#columnAlign",
+        "com.badlogic.gdx.scenes.scene2d.ui.Table#align",
+        "com.badlogic.gdx.scenes.scene2d.ui.SelectBox#alignment",
+        "com.badlogic.gdx.scenes.scene2d.ui.Container#align",
+        "com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#align",
+        "com.badlogic.gdx.scenes.scene2d.ui.HorizontalGroup#rowAlign",
+        "com.badlogic.gdx.scenes.scene2d.utils.TiledDrawable#align",
+        "com.badlogic.gdx.scenes.scene2d.actions.MoveToAction#alignment",
+      ),
+      underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
     ))
 
   /** libGDX's own `@Null` moved OUT of an annotation the Scala compiler ignores and INTO the type

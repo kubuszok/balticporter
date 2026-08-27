@@ -465,3 +465,130 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     assert(e.getMessage.contains("Reading"))
     assert(e.getMessage.contains("§1(c)"), "the reader's first question is which repository the fix is in")
   }
+
+  // -------------------------------------------------------------------------
+  // O6 CLOSED — the Existing form: retype against an EXISTING/injected opaque type
+  //
+  // The opaque type already exists (an injected file declares it), and the java class it replaces
+  // is handled by `Substitutions` (drop + inject). The phase retypes declarations to the existing
+  // type's FQN and coerces through its declared wrap/unwrap methods. No companion is minted.
+  // -------------------------------------------------------------------------
+
+  private def existingSpec(scope: RuleScope = RuleScope.Everywhere()) =
+    OpaqueSpec(
+      fqn = "demo.Sprite",  // the java class being replaced (used as phase name key)
+      target = OpaqueSpec.Target.Existing(
+        typeFqn = "mylib.Layer",
+        wrapName = "apply",
+        unwrapName = "toInt",
+      ),
+      hints = Set("demo.Sprite#layer"),
+      scope = scope,
+    )
+
+  test("O6: Existing form retypes declarations to the target's FQN, not to a minted `.T`") {
+    val ph = new PrimitiveToOpaqueTransform(existingSpec())
+    val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(ph))).emit
+    // the type is `mylib.Layer`, NOT `mylib.Layer.T` and NOT `demo.Sprite.T`
+    assert(clue(emitted).contains("var layer: mylib.Layer"))
+    assert(emitted.contains("def getLayer(): mylib.Layer"))
+    // the parameter type is propagated; the exact rendering depends on whether the parameter
+    // symbol was also a seed (which it should be via flow propagation from `this.layer = layer`).
+    assert(clue(emitted).contains("mylib.Layer"), "setLayer's parameter type is the opaque type")
+    assert(emitted.contains("def setLayer("))
+  }
+
+  test("O6: Existing form does NOT mint a companion — no `opaque type T` in the output") {
+    val ph = new PrimitiveToOpaqueTransform(existingSpec())
+    val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(ph))).emit
+    assert(!clue(emitted).contains("opaque type"), "no unit minted — the definition is the injected file")
+    assert(!emitted.contains("object Layer"), "the companion is NOT synthesised")
+  }
+
+  test("O6: Existing form uses the specified wrap/unwrap names in coercions") {
+    val ph = new PrimitiveToOpaqueTransform(existingSpec())
+    val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(ph))).emit
+    // wrap uses the spec's wrapName ("apply") — rendered as `mylib.Layer(0)`
+    assert(clue(emitted).contains("mylib.Layer(0)"), "wrap coercion uses the companion's apply")
+    // unwrap uses the spec's unwrapName ("toInt") — rendered as `mylib.Layer.toInt(…)`
+    assert(emitted.contains("mylib.Layer.toInt("), "unwrap coercion uses the specified method name")
+    // NOT the Mint form's `unwrap`:
+    assert(!emitted.contains("mylib.Layer.unwrap("))
+  }
+
+  test("O6: Existing form propagation works the same way — getter/setter/local discovered") {
+    val ph = new PrimitiveToOpaqueTransform(existingSpec())
+    val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(ph))).emit
+    assert(clue(emitted).contains("var layer: mylib.Layer"))
+    assert(emitted.contains("def getLayer(): mylib.Layer"))
+    assert(emitted.contains("def setLayer(layer: mylib.Layer)"))
+    assert(emitted.contains("val l: mylib.Layer"))
+  }
+
+  test("O6: Existing form coerces compound expressions the same way as Mint") {
+    val ph = new PrimitiveToOpaqueTransform(OpaqueSpec(
+      fqn = "demo.Tex",
+      target = OpaqueSpec.Target.Existing(typeFqn = "mylib.Handle", wrapName = "apply", unwrapName = "value"),
+      hints = Set("demo.Tex#handle"),
+    ))
+    val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(ternary), List(ph))).emit
+    assert(clue(emitted).contains("mylib.Handle.value("), "unwrap through compound expression")
+  }
+
+  test("O6: Existing form's fingerprint renders the target, not just the mint FQN") {
+    import balticporter.core.PortManifest.fingerprint
+    def ph(s: OpaqueSpec) = new PrimitiveToOpaqueTransform(s)
+    val mint = OpaqueSpec(fqn = "Layer", hints = Set("demo.Sprite#layer"))
+    val existing = OpaqueSpec(fqn = "Layer", hints = Set("demo.Sprite#layer"),
+      target = OpaqueSpec.Target.Existing(typeFqn = "mylib.Layer", wrapName = "apply", unwrapName = "toInt"))
+
+    // Mint and Existing must NOT compare equal — they are different targets
+    assertNotEquals(clue(fingerprint(ph(mint))), fingerprint(ph(existing)))
+
+    // two Existing specs with different targets must NOT compare equal
+    val existing2 = OpaqueSpec(fqn = "Layer", hints = Set("demo.Sprite#layer"),
+      target = OpaqueSpec.Target.Existing(typeFqn = "other.Layer", wrapName = "apply", unwrapName = "toInt"))
+    assertNotEquals(clue(fingerprint(ph(existing))), fingerprint(ph(existing2)))
+
+    // two Existing specs with different unwrap names must NOT compare equal
+    val existing3 = OpaqueSpec(fqn = "Layer", hints = Set("demo.Sprite#layer"),
+      target = OpaqueSpec.Target.Existing(typeFqn = "mylib.Layer", wrapName = "apply", unwrapName = "value"))
+    assertNotEquals(clue(fingerprint(ph(existing))), fingerprint(ph(existing3)))
+
+    // identical Existing specs compare equal
+    val existingSame = OpaqueSpec(fqn = "Layer", hints = Set("demo.Sprite#layer"),
+      target = OpaqueSpec.Target.Existing(typeFqn = "mylib.Layer", wrapName = "apply", unwrapName = "toInt"))
+    assertEquals(clue(fingerprint(ph(existing))), fingerprint(ph(existingSame)))
+  }
+
+  test("O6: Existing form allows nested FQNs that the Mint form refuses") {
+    // The Mint form refuses `$` and `#` because it mints a TOP-LEVEL unit. The Existing form has no
+    // such constraint — the target is whatever the injected file declares.
+    val nested = OpaqueSpec(
+      fqn = "demo.Sprite",
+      target = OpaqueSpec.Target.Existing(typeFqn = "sge.Input.Key", wrapName = "apply", unwrapName = "toInt"),
+      hints = Set("demo.Sprite#layer"),
+    )
+    val ph = new PrimitiveToOpaqueTransform(nested)
+    val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(ph))).emit
+    assert(clue(emitted).contains("sge.Input.Key"), "nested FQN is rendered correctly")
+  }
+
+  test("O6: Existing target validation refuses empty fields") {
+    intercept[IllegalArgumentException](
+      OpaqueSpec.Target.Existing(typeFqn = "", wrapName = "apply", unwrapName = "toInt"))
+    intercept[IllegalArgumentException](
+      OpaqueSpec.Target.Existing(typeFqn = "sge.Align", wrapName = "", unwrapName = "toInt"))
+    intercept[IllegalArgumentException](
+      OpaqueSpec.Target.Existing(typeFqn = "sge.Align", wrapName = "apply", unwrapName = ""))
+  }
+
+  test("O6: decision provenance records §1(c) for Existing form too") {
+    val ph  = new PrimitiveToOpaqueTransform(existingSpec())
+    val log = Pipeline.runTraced(SpoonTir.fromSource(src), List(ph))._2
+    val ds  = log.of(balticporter.tir.Decision.Kind.RetypedSignature)
+    assert(clue(ds).nonEmpty)
+    assert(ds.forall(_.reason == balticporter.tir.Reason.LibraryRule("primitive->opaque:demo.Sprite")))
+    // the detail shows the target type, not the mint
+    assert(ds.exists(_.detail("to").contains("mylib.Layer")))
+  }

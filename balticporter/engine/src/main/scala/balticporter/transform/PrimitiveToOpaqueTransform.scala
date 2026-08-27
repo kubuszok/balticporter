@@ -113,12 +113,20 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     * (O4 CLOSED — the predecessor was a `Symbol => Boolean` with no stable rendering, so two specs
     * differing only in their predicate compared equal). The fence, the definition site, the
     * primitive, every hint and every agent-supplied `extraHints` entry are all compared.
+    *
+    * O6 CLOSED: when the target is `Existing`, the TARGET FQN is rendered instead of (or beside)
+    * the mint FQN. Two modules disagreeing about which existing type a family retypes to is §1.5's
+    * two-ports-that-cannot-compile-together. The segment is empty when `target = Mint` and renders
+    * unconditionally when `target = Existing`, so §1(b)'s fingerprint no-op rule holds.
     */
   def surfaceFingerprint: String =
     val seeds  = if spec.hints.isEmpty then "" else s";hints=${spec.hints.toList.sorted.mkString(",")}"
     val extras = if spec.extraHints.isEmpty then "" else s";extra=${spec.extraHints.toList.sorted.mkString(",")}"
     val fence  = spec.scope.fingerprint
-    s"${spec.fqn}:${spec.underlyingFqn}$seeds$extras${if fence.isEmpty then "" else s";$fence"}"
+    val tgt = spec.target match
+      case OpaqueSpec.Target.Mint => ""
+      case OpaqueSpec.Target.Existing(t, w, u) => s";target=$t;wrap=$w;unwrap=$u"
+    s"${spec.fqn}:${spec.underlyingFqn}$seeds$extras${if fence.isEmpty then "" else s";$fence"}$tgt"
 
   /** Hints the mechanism CANNOT REACH — see [[reportUnreachable]]. Empty policy in, empty report
     * out, and cleared at the head of every run so a reused instance never reports the previous
@@ -177,7 +185,9 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     // the shape that used to look exactly like a typo (see [[reportUnreachable]]).
     reportUnreachable(program, named.filter(fenced))
     if hints.isEmpty then return program
-    refuseSpanningHints(program, hints) // …and the ones that name TWO modules' declarations
+    // The spanning-hints check and mint-ownership logic only apply when MINTING — an Existing target
+    // has no unit to collide on, because the definition is supplied by `Substitutions` (drop+inject).
+    if spec.isMint then refuseSpanningHints(program, hints)
     seeds = propagate(program, hints) // grow the seed set along pure-move flows
     refuseOverlap(program)
     if seeds.isEmpty then return program
@@ -187,50 +197,87 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
       val id = SymId(next); next += 1
       minted += Symbol(id, name, full, flags, owner, info)
       id
-    // The object is a TOP-LEVEL unit whose `fullName` is the spec's FQN, and that FQN is the whole
-    // of "where is it defined": the emitter derives the `package` clause from the name's prefix and
-    // the file from the package. An FQN with no `.` is the default package, which is what the
-    // Int-only predecessor did with its bare `typeName`.
-    objSym    = mint(spec.objectName, spec.fqn, Flags(isModule = true))
-    // owner = the object, so the emitter renders references as the path-dependent `Name.T`
-    // (an object's type member; a `Name#T` projection would need `Name` to be a type).
-    opaqueSym = mint("T", spec.typeFqn, Flags(isOpaque = true), objSym)
-    opaqueRef = TypeRepr.TypeRef(TypeRepr.NoType, opaqueSym)
-    // O3: the array-typed references, computed AFTER the opaque symbol is minted.
-    val arrayTC = TypeRepr.TypeRef(TypeRepr.NoType, arraySym)
-    opaqueArrayRef = if arraySym == SymId.None then TypeRepr.NoType
-                     else TypeRepr.AppliedType(arrayTC, List(opaqueRef))
-    primArrayRef   = if arraySym == SymId.None then TypeRepr.NoType
-                     else TypeRepr.AppliedType(arrayTC, List(primRef))
-    val vWrap   = mint("v", "v", Flags(isParam = true), info = primRef)
-    val vUnwrap = mint("v", "v", Flags(isParam = true), info = opaqueRef)
-    applySym  = mint("apply",  s"${spec.fqn}.apply",  Flags(), objSym, TypeRepr.MethodType(List("v" -> primRef), opaqueRef))
-    unwrapSym = mint("unwrap", s"${spec.fqn}.unwrap", Flags(), objSym, TypeRepr.MethodType(List("v" -> opaqueRef), primRef))
 
-    // O3: array wrap/unwrap — an opaque over `Int` erases to `Int`, so `Array[T]` is `Array[Int]`
-    // at the JVM level. The coercion is a compile-time identity, spelled as a method call so the
-    // scalac typer sees the transition. Minted only when the array symbol is available.
-    val arrayMembers = if arraySym == SymId.None then Nil else
-      val vaw = mint("v", "v", Flags(isParam = true), info = primArrayRef)
-      val vau = mint("v", "v", Flags(isParam = true), info = opaqueArrayRef)
-      wrapArraySym   = mint("wrapArray",   s"${spec.fqn}.wrapArray",   Flags(), objSym,
-        TypeRepr.MethodType(List("v" -> primArrayRef), opaqueArrayRef))
-      unwrapArraySym = mint("unwrapArray", s"${spec.fqn}.unwrapArray", Flags(), objSym,
-        TypeRepr.MethodType(List("v" -> opaqueArrayRef), primArrayRef))
-      List(
-        Tree.DefDef(wrapArraySym, List(List(Tree.ValDef(vaw, TypeTree(primArrayRef, Origin.synthetic), None, Origin.synthetic))),
-          TypeTree(opaqueArrayRef, Origin.synthetic), Some(Tree.Ident(vaw, primArrayRef, Origin.synthetic)), Origin.synthetic),
-        Tree.DefDef(unwrapArraySym, List(List(Tree.ValDef(vau, TypeTree(opaqueArrayRef, Origin.synthetic), None, Origin.synthetic))),
-          TypeTree(primArrayRef, Origin.synthetic), Some(Tree.Ident(vau, opaqueArrayRef, Origin.synthetic)), Origin.synthetic),
-      )
+    // The SYNTHESIS of the opaque type's symbols depends on the target form. Both paths mint the
+    // same PHANTOM SYMBOLS (objSym, opaqueSym, applySym, unwrapSym) so the coercion code below is
+    // one path. The difference is that `Mint` creates a full ClassDef unit and `Existing` does not.
+    val synthUnit: Option[Tree.ClassDef] = spec.target match
+      case OpaqueSpec.Target.Mint =>
+        // The object is a TOP-LEVEL unit whose `fullName` is the spec's FQN, and that FQN is the
+        // whole of "where is it defined": the emitter derives the `package` clause from the name's
+        // prefix and the file from the package.
+        objSym    = mint(spec.objectName, spec.fqn, Flags(isModule = true))
+        // owner = the object, so the emitter renders references as the path-dependent `Name.T`
+        opaqueSym = mint("T", spec.typeFqn, Flags(isOpaque = true), objSym)
+        opaqueRef = TypeRepr.TypeRef(TypeRepr.NoType, opaqueSym)
+        val arrayTC = TypeRepr.TypeRef(TypeRepr.NoType, arraySym)
+        opaqueArrayRef = if arraySym == SymId.None then TypeRepr.NoType
+                         else TypeRepr.AppliedType(arrayTC, List(opaqueRef))
+        primArrayRef   = if arraySym == SymId.None then TypeRepr.NoType
+                         else TypeRepr.AppliedType(arrayTC, List(primRef))
+        val vWrap   = mint("v", "v", Flags(isParam = true), info = primRef)
+        val vUnwrap = mint("v", "v", Flags(isParam = true), info = opaqueRef)
+        applySym  = mint("apply",  s"${spec.fqn}.apply",  Flags(), objSym, TypeRepr.MethodType(List("v" -> primRef), opaqueRef))
+        unwrapSym = mint("unwrap", s"${spec.fqn}.unwrap", Flags(), objSym, TypeRepr.MethodType(List("v" -> opaqueRef), primRef))
 
-    val o = Origin.synthetic
-    val typeDef  = Tree.TypeDef(opaqueSym, TypeTree(primRef, o), o)
-    val applyDef = Tree.DefDef(applySym, List(List(Tree.ValDef(vWrap, TypeTree(primRef, o), None, o))),
-      TypeTree(opaqueRef, o), Some(Tree.Ident(vWrap, primRef, o)), o)
-    val unwrapDef = Tree.DefDef(unwrapSym, List(List(Tree.ValDef(vUnwrap, TypeTree(opaqueRef, o), None, o))),
-      TypeTree(primRef, o), Some(Tree.Ident(vUnwrap, opaqueRef, o)), o)
-    val synthUnit = Tree.ClassDef(objSym, Nil, None, List(typeDef, applyDef, unwrapDef) ++ arrayMembers, o)
+        // O3: array wrap/unwrap
+        val arrayMembers = if arraySym == SymId.None then Nil else
+          val vaw = mint("v", "v", Flags(isParam = true), info = primArrayRef)
+          val vau = mint("v", "v", Flags(isParam = true), info = opaqueArrayRef)
+          wrapArraySym   = mint("wrapArray",   s"${spec.fqn}.wrapArray",   Flags(), objSym,
+            TypeRepr.MethodType(List("v" -> primArrayRef), opaqueArrayRef))
+          unwrapArraySym = mint("unwrapArray", s"${spec.fqn}.unwrapArray", Flags(), objSym,
+            TypeRepr.MethodType(List("v" -> opaqueArrayRef), primArrayRef))
+          List(
+            Tree.DefDef(wrapArraySym, List(List(Tree.ValDef(vaw, TypeTree(primArrayRef, Origin.synthetic), None, Origin.synthetic))),
+              TypeTree(opaqueArrayRef, Origin.synthetic), Some(Tree.Ident(vaw, primArrayRef, Origin.synthetic)), Origin.synthetic),
+            Tree.DefDef(unwrapArraySym, List(List(Tree.ValDef(vau, TypeTree(opaqueArrayRef, Origin.synthetic), None, Origin.synthetic))),
+              TypeTree(primArrayRef, Origin.synthetic), Some(Tree.Ident(vau, opaqueArrayRef, Origin.synthetic)), Origin.synthetic),
+          )
+
+        val o = Origin.synthetic
+        val typeDef  = Tree.TypeDef(opaqueSym, TypeTree(primRef, o), o)
+        val applyDef = Tree.DefDef(applySym, List(List(Tree.ValDef(vWrap, TypeTree(primRef, o), None, o))),
+          TypeTree(opaqueRef, o), Some(Tree.Ident(vWrap, primRef, o)), o)
+        val unwrapDef = Tree.DefDef(unwrapSym, List(List(Tree.ValDef(vUnwrap, TypeTree(opaqueRef, o), None, o))),
+          TypeTree(primRef, o), Some(Tree.Ident(vUnwrap, opaqueRef, o)), o)
+        Some(Tree.ClassDef(objSym, Nil, None, List(typeDef, applyDef, unwrapDef) ++ arrayMembers, o))
+
+      case OpaqueSpec.Target.Existing(typeFqn, wrapName, unwrapName) =>
+        // O6 CLOSED: the opaque type ALREADY EXISTS (an injected replacement). Mint PHANTOM symbols
+        // for the existing type's companion, type, and coercion methods — the same shape
+        // `NullabilityTransform.Target.Named` uses for its five members. No ClassDef is synthesised.
+        //
+        // The symbols are phantom: they carry the FQN so the emitter renders fully-qualified
+        // references, but no unit is created — the definition is supplied by `Substitutions`
+        // (drop + inject), and the injected file is what scalac compiles against.
+        val companionFqn = typeFqn // opaque companion shares the type's path
+        objSym    = mint(spec.objectName, companionFqn, Flags(isModule = true))
+        // For an Existing target, the type IS the FQN (e.g. `sge.utils.Align`), not a member `T`.
+        // The opaque symbol must NOT be owned by the companion, because the emitter renders
+        // `owner.name` for a module member — which would produce `Align.Align` instead of `Align`.
+        // With no owner, the emitter falls through to `nestedPath`, which renders the fullName
+        // directly (and for a name without `$`, that is `escPath(fullName)` = the FQN as-is).
+        opaqueSym = mint(spec.objectName, typeFqn, Flags(isOpaque = true))
+        opaqueRef = TypeRepr.TypeRef(TypeRepr.NoType, opaqueSym)
+        val arrayTC = TypeRepr.TypeRef(TypeRepr.NoType, arraySym)
+        opaqueArrayRef = if arraySym == SymId.None then TypeRepr.NoType
+                         else TypeRepr.AppliedType(arrayTC, List(opaqueRef))
+        primArrayRef   = if arraySym == SymId.None then TypeRepr.NoType
+                         else TypeRepr.AppliedType(arrayTC, List(primRef))
+        applySym  = mint(wrapName,   s"$companionFqn.$wrapName",   Flags(), objSym,
+          TypeRepr.MethodType(List("v" -> primRef), opaqueRef))
+        unwrapSym = mint(unwrapName, s"$companionFqn.$unwrapName", Flags(), objSym,
+          TypeRepr.MethodType(List("v" -> opaqueRef), primRef))
+
+        // O3: array coercions for the Existing form too — the same erasure identity applies.
+        if arraySym != SymId.None then
+          wrapArraySym   = mint("wrapArray",   s"$companionFqn.wrapArray",   Flags(), objSym,
+            TypeRepr.MethodType(List("v" -> primArrayRef), opaqueArrayRef))
+          unwrapArraySym = mint("unwrapArray", s"$companionFqn.unwrapArray", Flags(), objSym,
+            TypeRepr.MethodType(List("v" -> opaqueArrayRef), primArrayRef))
+
+        None // no unit minted — the definition is the injected file
 
     // A retyped PARAMETER's own METHOD, by POSITION — `ENGINE-LIMITS.md` §13 O2.
     //
@@ -316,8 +363,13 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     // every boundary is coerced. What a module that owns none of the tagged declarations must NOT do
     // is WRITE the object, because `PortRun.converted` emits an origin-less unit and would then
     // write one copy per module of an FQN that cannot be duplicated even harmlessly.
+    //
+    // For the Existing form (O6), there is no unit to mint at all — the definition is the injected
+    // file. The walked tree is the entire result.
     val walked = program.units.map(u => StandardTraversal.mapClassDef(this, u))
-    val units  = if mintsHere(program, hints) then walked :+ synthUnit else walked
+    val units = synthUnit match
+      case Some(su) if mintsHere(program, hints) => walked :+ su
+      case _ => walked
     program.rebuilt(units, symbols)
 
   /** Does THIS module own the declarations the spec named? Read through [[RunScope.emits]], which is
