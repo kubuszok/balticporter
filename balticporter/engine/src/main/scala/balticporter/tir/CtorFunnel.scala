@@ -612,7 +612,7 @@ object CtorFunnel:
         def name = "ctor-field-writes-program"
         override def transformTerm(t: Term)(using Program): Term =
           t match
-            case Tree.Assign(lhs, _, _, _)  => targeted(lhs).foreach(s => acc(s) += 1)
+            case Tree.Assign(lhs, _, _, _, _)  => targeted(lhs).foreach(s => acc(s) += 1)
             case Tree.IncDec(tg, _, _, _, _) => targeted(tg).foreach(s => acc(s) += 1)
             case _                           => ()
           t
@@ -1233,8 +1233,8 @@ object CtorFunnel:
     /** the field a top-level statement assigns, when it is a plain `this.f = <e>` / `f = <e>`. */
     private def assignedField(st: Statement): Option[SymId] = st match
       case Tree.Commented(_, s)                                 => assignedField(s)
-      case Tree.Assign(Tree.Ident(f, _, _), _, _, _)            => Some(f)
-      case Tree.Assign(Tree.Select(_: Tree.This, f, _, _), _, _, _) => Some(f)
+      case Tree.Assign(Tree.Ident(f, _, _), _, _, _, _)            => Some(f)
+      case Tree.Assign(Tree.Select(_: Tree.This, f, _, _), _, _, _, _) => Some(f)
       case _                                                    => scala.None
 
     /** Every field this statement CAN write — and `None` the moment it does anything ELSE.
@@ -2475,8 +2475,8 @@ object CtorFunnel:
     * value is what becomes a delegation argument. */
   private def assignment(st: Statement): Option[(SymId, Term)] = st match
     case Tree.Commented(_, s)                                          => assignment(s)
-    case Tree.Assign(Tree.Ident(f, _, _), rhs, _, _)                   => Some((f, rhs))
-    case Tree.Assign(Tree.Select(_: Tree.This, f, _, _), rhs, _, _)    => Some((f, rhs))
+    case Tree.Assign(Tree.Ident(f, _, _), rhs, _, _, _)                   => Some((f, rhs))
+    case Tree.Assign(Tree.Select(_: Tree.This, f, _, _), rhs, _, _, _)    => Some((f, rhs))
     case _                                                             => scala.None
 
   /** is this the symbol of one of scala's own operators, as the frontend interns them? An operator
@@ -2548,7 +2548,7 @@ object CtorFunnel:
       def name = "ctor-field-writes"
       override def transformTerm(t: Term)(using Program): Term =
         t match
-          case Tree.Assign(lhs, _, _, _) if targets(lhs) => n += 1
+          case Tree.Assign(lhs, _, _, _, _) if targets(lhs) => n += 1
           case Tree.IncDec(tg, _, _, _, _) if targets(tg) => n += 1
           case _                                          => ()
         t

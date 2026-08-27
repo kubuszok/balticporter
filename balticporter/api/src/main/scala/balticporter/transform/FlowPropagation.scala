@@ -114,7 +114,7 @@ object FlowPropagation:
 
     def walkTerm(t: Term, encl: SymId): Unit = t match
       case Tree.Block(stats, e, _, _, _) => stats.foreach(walkStat(_, encl)); walkTerm(e, encl)
-      case Tree.Assign(l, r, _, _) =>
+      case Tree.Assign(l, r, _, _, _) =>
         for a <- refSym(l); b <- refSym(r) do out += ((a, b))
         walkTerm(l, encl); walkTerm(r, encl)
       case Tree.Return(Some(e), _, _) =>

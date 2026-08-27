@@ -421,6 +421,7 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
     probe(Tree.Assign(refA, iLit(1), tUnit, O), hostTerm)(
       "lhs" -> Tree.Assign(refB, iLit(1), tUnit, O),
       "rhs" -> Tree.Assign(refA, iLit(2), tUnit, O),
+      "compound" -> Tree.Assign(refA, iLit(1), tUnit, O, compound = Some(("+", None))),
     )("tpe" -> tpeIsMetadata, "origin" -> originIsMetadata),
 
     // ---- Block --------------------------------------------------------------------------------

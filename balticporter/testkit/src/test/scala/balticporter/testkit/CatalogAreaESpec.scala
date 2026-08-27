@@ -229,6 +229,28 @@ class CatalogAreaESpec extends PortSuite:
     assertEmits(p, "scala.Byte")
   }
 
+  test("JS-E17 — a phase that REBUILDS a compound Assign via copy preserves the compound field") {
+    // The coordinator's hazard: a phase that `.copy(rhs = ...)` an Assign must carry `compound`
+    // through, or the emitter silently reverts to the direct form and the lvalue is evaluated twice.
+    // This test runs a no-op phase (whose `mapTerm` rebuilds every node via `copy`) and checks that
+    // the binding still fires.
+    import balticporter.tir.Phase
+    val identity = new Phase:
+      val name = "identity-rebuild"
+      // override transformTerm to trigger mapTerm's copy path on every node
+      override def transformTerm(t: Term)(using Program): Term = t
+    val p = port("""
+      public class E17h {
+        int[] a; int seq;
+        int next() { return seq++; }
+        void f() { a[next()] += 5; }
+      }""", identity)
+    assertConsults(p, JS.E(17), fired = true)
+    // the compound field survived the phase rebuild, so binding still fires
+    assertEmits(p, "$lv1")
+    assertNotEmits(p, "this.a(this.next()) = this.a(this.next())")
+  }
+
   // -- JS-E05: the conditional operator's type is COMPUTED, not the lub of its branches -----------
 
   test("JS-E05 — a null branch is ascribed to the conditional's own type") {

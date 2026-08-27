@@ -2257,7 +2257,7 @@ object SpoonTir:
           case b: Tree.Block => b.stats
           case other         => List(other)
         }.collect {
-          case Tree.Assign(Tree.Select(_: Tree.This, f, _, _), Tree.Ident(p, _, _), _, _) => p -> f
+          case Tree.Assign(Tree.Select(_: Tree.This, f, _, _), Tree.Ident(p, _, _), _, _, _) => p -> f
         }.toMap
         val want = comps.map(_.field)
         val inOrder = want.flatMap(f => ps.find(p => assignedTo.get(p.symbol).contains(f)))
@@ -3191,19 +3191,19 @@ object SpoonTir:
         case a: CtOperatorAssignment[?, ?] =>
           // Java compound assignment narrows implicitly: `int += float` means `= (int)(i + f)`.
           val lhs = expr(a.getAssigned)
-          val res = opText(a.getKind).fold(unknownOp(a.getKind, a, ty(a)))(
-            op => binApply(op, lhs, expr(a.getAssignment), ty(a)))
+          val rhs = expr(a.getAssignment)
+          val op  = opText(a.getKind).getOrElse { unknownOp(a.getKind, a, ty(a)); "?" }
           // JS-E03, CONSULTED rather than merely done: the catalog attaches it to this dispatch, so
           // the wrapper reports an arm that returns without asking. `compoundNarrow` is the whole
           // predicate — `Some(target)` when java's implicit narrowing applies here — which is what
           // makes the consult a decision the coverage lane can count rather than a formality.
-          val out = Obligations.consult(JS.E(3), originOf(a))(compoundNarrow(a))
-            .fold(res)(t => Tree.Typed(res, tt(tpe(t), a), tpe(t), originOf(a)))
-          // JS-E17 — the lvalue's single evaluation (F7). The frontend creates a `Tree.Assign` with
-          // the same `lhs` object on both sides; the emitter binds non-trivial subexpressions so
-          // each is evaluated exactly once. Always fires: every compound assignment is the construct.
+          val narrow = Obligations.consult(JS.E(3), originOf(a))(compoundNarrow(a))
+            .map(t => tpe(t))
+          // JS-E17 — the lvalue's single evaluation (F7). The `compound` field carries the operator
+          // and optional narrowing on the IR node; the emitter binds non-trivial lvalue
+          // subexpressions so each is evaluated exactly once.
           Obligations.consult(JS.E(17), originOf(a))(Some(()))
-          Tree.Assign(lhs, out, unitT, originOf(a))
+          Tree.Assign(lhs, rhs, unitT, originOf(a), compound = Some((op, narrow)))
         case a: CtAssignment[?, ?] =>
           val tgt = Option(a.getAssigned.getType)
           val rhs = a.getAssignment
@@ -3283,8 +3283,14 @@ object SpoonTir:
           import UnaryOperatorKind.*
           val one = Tree.Literal(Constant.IntC(1), ty(u), originOf(u))
           u.getKind match
-            case POSTINC | PREINC => val t = expr(u.getOperand); Tree.Assign(t, incNarrow(u.getOperand, binApply("+", t, one, ty(u))), unitT, originOf(u))
-            case POSTDEC | PREDEC => val t = expr(u.getOperand); Tree.Assign(t, incNarrow(u.getOperand, binApply("-", t, one, ty(u))), unitT, originOf(u))
+            case POSTINC | PREINC =>
+              val t = expr(u.getOperand)
+              val narrow = incNarrowType(u.getOperand)
+              Tree.Assign(t, one, unitT, originOf(u), compound = Some(("+", narrow)))
+            case POSTDEC | PREDEC =>
+              val t = expr(u.getOperand)
+              val narrow = incNarrowType(u.getOperand)
+              Tree.Assign(t, one, unitT, originOf(u), compound = Some(("-", narrow)))
             case _                => expr(u)
         // A free-floating comment arriving as a STATEMENT. `stmts` folds these into the statement
         // that follows, so one reaching here is a body that is ONLY a comment (`if (x) /* no-op */;`)
@@ -5197,19 +5203,18 @@ object SpoonTir:
         // Java yields the assigned value, Scala's `=` is Unit — lower to `{ lhs = rhs; lhs }`.
         case a: CtOperatorAssignment[?, ?] =>
           val lhs = expr(a.getAssigned)
-          val res = opText(a.getKind).fold(unknownOp(a.getKind, a, ty(a)))(
-            op => binApply(op, lhs, expr(a.getAssignment), ty(a)))
+          val rhs = expr(a.getAssignment)
+          val op  = opText(a.getKind).getOrElse { unknownOp(a.getKind, a, ty(a)); "?" }
           // JS-E04 — the same difference as JS-E03 at the other dispatch, and the same PREDICATE.
           // `compoundNarrow` is one function precisely because this pair is what the catalog splits
           // into two rows: the narrowing is java's implicit cast back to the left-hand type
           // (JLS 15.26.2), and it is owed wherever the assignment happens — the position only
-          // decides whether the resulting value is also used. Without it the emitted store is an
-          // `int` into a `byte` slot, which is the LOUD half of the row.
-          val rhs2 = Obligations.consult(JS.E(4), originOf(a))(compoundNarrow(a))
-            .fold(res)(t => Tree.Typed(res, tt(tpe(t), a), tpe(t), originOf(a)))
+          // decides whether the resulting value is also used.
+          val narrow = Obligations.consult(JS.E(4), originOf(a))(compoundNarrow(a))
+            .map(t => tpe(t))
           // JS-E17 — lvalue single evaluation (F7), expression dispatch. Same as the statement arm.
           Obligations.consult(JS.E(17), originOf(a))(Some(()))
-          val st  = Tree.Assign(lhs, rhs2, unitT, originOf(a))
+          val st  = Tree.Assign(lhs, rhs, unitT, originOf(a), compound = Some((op, narrow)))
           Tree.Block(List(st), lhs, ty(a), originOf(a))
         case a: CtAssignment[?, ?] =>
           // Java's assignment-as-EXPRESSION needs the same coercion as the statement form. It did
@@ -6624,6 +6629,14 @@ object SpoonTir:
         val ot = opnd.getType
         if ot != null && ot.isPrimitive && Set("byte", "short", "char").contains(ot.getSimpleName)
         then Tree.Typed(res, tt(tpe(ot), opnd), tpe(ot), originOf(opnd)) else res
+
+      /** The narrowing TYPE for an increment, or `None` — the same predicate as `incNarrow`, returning
+        * the type rather than wrapping. Used by the statement arm where the narrowing is carried on
+        * `Tree.Assign.compound` rather than wrapped in `Tree.Typed`. */
+      private def incNarrowType(opnd: CtExpression[?]): Option[TypeRepr] =
+        val ot = opnd.getType
+        if ot != null && ot.isPrimitive && Set("byte", "short", "char").contains(ot.getSimpleName)
+        then Some(tpe(ot)) else scala.None
 
       private def isStringConcat(b: CtBinaryOperator[?]): Boolean =
         Option(b.getType).exists(_.getQualifiedName == "java.lang.String")

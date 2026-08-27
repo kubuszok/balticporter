@@ -115,7 +115,7 @@ final class DeferredInit(
     val moved = ds.map(_.field).toSet
     def isMoved(t: Statement): Boolean = t match
       case x: Term => Tree.uncomment(x) match
-        case Tree.Assign(lhs, _, _, _) => lhsSym(lhs).exists(moved.contains)
+        case Tree.Assign(lhs, _, _, _, _) => lhsSym(lhs).exists(moved.contains)
         case _                         => false
       case _ => false
     d.rhs.map(Tree.uncomment) match

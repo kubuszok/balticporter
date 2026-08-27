@@ -267,7 +267,8 @@ object TirPrinter:
       line(sb, indent, s"TypeApply [${x.targs.map(a => tpe(a.tpe, style)).mkString(", ")}]${ofType(x.tpe, style)}${origin(x.origin, style)}")
       sub(sb, indent + 1, "fun", x.fun, style)
     case x: Tree.Assign =>
-      line(sb, indent, s"Assign${ofType(x.tpe, style)}${origin(x.origin, style)}")
+      val cmp = x.compound.fold("")((op, n) => s" compound=$op${n.fold("")(t => s" narrow=${ofType(t, style)}")}")
+      line(sb, indent, s"Assign$cmp${ofType(x.tpe, style)}${origin(x.origin, style)}")
       sub(sb, indent + 1, "lhs", x.lhs, style)
       sub(sb, indent + 1, "rhs", x.rhs, style)
     case x: Tree.Block =>

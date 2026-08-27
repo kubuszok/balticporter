@@ -1663,7 +1663,7 @@ final class TirEmitter(
           def name: String = "emit/mutated-primary-params"
           override def transformTerm(t: Term)(using Program): Term =
             t match
-              case Tree.Assign(Tree.Ident(sy, _, _), _, _, _) if ps(sy) => acc += sy
+              case Tree.Assign(Tree.Ident(sy, _, _), _, _, _, _) if ps(sy) => acc += sy
               case _                                                    => ()
             t
         StandardTraversal.mapClassDef(scan, cd.copy(body = loweredBody))(using source)
@@ -2087,8 +2087,8 @@ final class TirEmitter(
           def name: String = "emit/written-enum-params"
           override def transformTerm(t: Term)(using Program): Term =
             t match
-              case Tree.Assign(Tree.Ident(sy, _, _), _, _, _) if watched(sy)                 => acc += sy
-              case Tree.Assign(Tree.Select(_: Tree.This, sy, _, _), _, _, _) if watched(sy)  => acc += sy
+              case Tree.Assign(Tree.Ident(sy, _, _), _, _, _, _) if watched(sy)                 => acc += sy
+              case Tree.Assign(Tree.Select(_: Tree.This, sy, _, _), _, _, _, _) if watched(sy)  => acc += sy
               case _                                                                          => ()
             t
         StandardTraversal.mapClassDef(scan, cd.copy(body = instance ++ ctorStats))(using source)
@@ -3565,7 +3565,7 @@ final class TirEmitter(
     body match
       case t: Term => StandardTraversal.scanTerm(t, false) { (found, x) =>
         x match
-          case Tree.Assign(Tree.Ident(s, _, _), _, _, _) if s == binding    => true
+          case Tree.Assign(Tree.Ident(s, _, _), _, _, _, _) if s == binding    => true
           case Tree.IncDec(Tree.Ident(s, _, _), _, _, _, _) if s == binding => true
           case _                                                            => found
       }
@@ -4231,20 +4231,26 @@ final class TirEmitter(
         Option.when(args.exists(_.isInstanceOf[Tree.Repeated]))(()))
       applyStr(fun, args, i)
     case Tree.TypeApply(fun, targs, _, _) => s"${term(fun, i)}[${targs.map(a => tpe(a.tpe)).mkString(", ")}]"
-    case Tree.Assign(l, r, _, _) =>
+    case Tree.Assign(l, r, _, _, compoundOp) =>
       // F7 (CLAUDE.md §4.4, JLS 15.26.2): a COMPOUND ASSIGNMENT evaluates the lvalue ONCE; the
-      // direct rendering evaluates it TWICE (once on each side). When the lvalue has non-trivial
+      // direct rendering evaluates it TWICE (once on each side). The `compound` field carries the
+      // fact from the frontend — no shape reconstruction needed. When the lvalue has non-trivial
       // subexpressions, bind each to a temporary so each is evaluated exactly once.
       // Simple lvalues (all subexpressions are idents/this/literals) keep the direct form — no
       // semantic difference, no digest churn.
-      compoundAssignParts(l, r) match
-        case Some((op, rhsArgs, narrow)) if hasNonTrivialSubexpr(l) =>
+      compoundOp match
+        case Some((op, narrow)) if hasNonTrivialSubexpr(l) =>
           val (bindings, lv) = bindLvalue(l, i)
-          val rhsStr = rhsArgs.map(operand(_, i)).mkString(", ")
+          val rhsStr = operand(r, i)
           val expr = s"$lv $op $rhsStr"
-          val rhs = narrow.fold(expr)(nt => s"($expr: ${tpe(nt)})")
+          val rhs = narrow.fold(expr)(nt => s"($expr).asInstanceOf[${tpe(nt)}]")
           s"{ ${bindings.mkString("; ")}; $lv = $rhs }"
-        case _ =>
+        case Some((op, narrow)) =>
+          // compound but simple lvalue: direct form, lhs rendered twice
+          val expr = s"${term(l, i)} $op ${operand(r, i)}"
+          val rhs = narrow.fold(expr)(nt => s"($expr).asInstanceOf[${tpe(nt)}]")
+          s"${term(l, i)} = $rhs"
+        case None =>
           s"${term(l, i)} = ${term(r, i)}"
     case Tree.Block(stats, expr, _, _, tr) => block(stats, expr, tr, i)
     case lam @ Tree.Lambda(ps, body, _, _, _) =>
@@ -4797,20 +4803,8 @@ final class TirEmitter(
       val n = s"$$lv$lvSeq"
       (List(s"val $n = ${term(lv, i)}"), n)
 
-  /** Detect a COMPOUND ASSIGNMENT — `Tree.Assign(l, r)` where `r = l.op(rhs)`, possibly wrapped
-    * in a `Tree.Typed` for the implicit narrowing cast (JLS 15.26.2).
-    *
-    * Returns `Some((operatorName, rhsArgs, optionalNarrowType))` when the RHS contains the LHS.
-    * Compared by STRUCTURAL EQUALITY (`==`) rather than by reference identity (`eq`), because a
-    * phase that maps terms copies the `Tree.Assign` and both its children — the shared reference
-    * the frontend created does not survive the pipeline. */
-  private def compoundAssignParts(l: Term, r: Term): Option[(String, List[Term], Option[TypeRepr])] =
-    r match
-      case Tree.Apply(Tree.Select(q, opSym, _, _), args, _, _, _) if q == l =>
-        Some((sym(opSym).name, args, None))
-      case Tree.Typed(Tree.Apply(Tree.Select(q, opSym, _, _), args, _, _, _), _, narrowT, _) if q == l =>
-        Some((sym(opSym).name, args, Some(narrowT)))
-      case _ => None
+  // `compoundAssignParts` removed — the compound-assignment fact is now carried on `Tree.Assign`'s
+  // `compound` field, set by the frontend. No shape reconstruction needed.
 
   /** A `Tree.Repeated` in an ARGUMENT position is the argument list's TAIL, not one argument.
     *

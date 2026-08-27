@@ -452,7 +452,16 @@ object Tree:
   final case class New(tpt: TypeTree, tpe: TypeRepr, origin: Origin, anon: Option[AnonClass] = None) extends Term
   final case class Apply(fun: Term, args: List[Term], method: SymId, tpe: TypeRepr, origin: Origin) extends Term
   final case class TypeApply(fun: Term, targs: List[TypeTree], tpe: TypeRepr, origin: Origin)       extends Term
-  final case class Assign(lhs: Term, rhs: Term, tpe: TypeRepr, origin: Origin)          extends Term
+  /** @param compound
+    *   `Some((op, narrowOpt))` when this is a COMPOUND ASSIGNMENT (`lhs op= rhs`): `op` is the
+    *   binary operator name ("+", "*", …) and `narrowOpt` is the implicit narrowing type
+    *   (JLS 15.26.2) when the compound result must be cast back to the lvalue's type (`byte += int`
+    *   computes an `int` and narrows to `byte`). `rhs` is the right-hand OPERAND only (not
+    *   `lhs.op(rhs)`), and `lhs` appears exactly once in the node — the fact CLAUDE.md §4.4's
+    *   switch-expression row mandates ("carry the java construct on the node"). `None` for a plain
+    *   assignment. */
+  final case class Assign(lhs: Term, rhs: Term, tpe: TypeRepr, origin: Origin,
+                          compound: Option[(String, Option[TypeRepr])] = None)          extends Term
   /** @param trailing
     *   comments written at the END of the block, after the last statement — the one comment
     *   position java has and the TIR had no carrier for.

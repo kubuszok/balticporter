@@ -301,7 +301,7 @@ final class ContextNeed(
     val owner = program.symbolOf(d.symbol).map(_.owner).getOrElse(SymId.None)
     statementsOf(d.rhs).flatMap {
       case t: Term => Tree.uncomment(t) match
-        case Tree.Assign(lhs, rhs, _, _) =>
+        case Tree.Assign(lhs, rhs, _, _, _) =>
           lhsSym(lhs)
             .filter(f => program.symbolOf(f).exists(x => x.flags.isStatic && x.owner == owner))
             .filter(_ => needsContext(rhs))

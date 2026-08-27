@@ -209,7 +209,7 @@ object BeanCollapse:
       def name = "bean-collapse/writes"
       override def transformTerm(t: Term)(using Program): Term =
         t match
-          case Tree.Assign(lhs, _, _, _)   => target(lhs)
+          case Tree.Assign(lhs, _, _, _, _)   => target(lhs)
           case Tree.IncDec(tg, _, _, _, _) => target(tg)
           case _                           => ()
         t
@@ -235,7 +235,7 @@ object BeanCollapse:
   def trivialSetterField(p: Program, setter: SymId): Option[SymId] =
     p.definitionOf(setter).collect { case d: Tree.DefDef => d }.flatMap(_.rhs)
       .flatMap(soleStatement).flatMap {
-        case Tree.Assign(lhs, _, _, _)               => selectedField(lhs)
+        case Tree.Assign(lhs, _, _, _, _)               => selectedField(lhs)
         case Tree.Return(Some(a: Tree.Assign), _, _) => selectedField(a.lhs)
         case _                                       => scala.None
       }

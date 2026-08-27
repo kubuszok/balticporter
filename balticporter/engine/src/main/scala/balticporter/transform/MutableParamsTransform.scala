@@ -168,7 +168,7 @@ final class MutableParamsTransform extends Phase:
   private def reassignedIn(t: Term, params: Set[SymId])(using Program): Set[SymId] =
     StandardTraversal.scanTerm(t, Set.empty[SymId]) { (found, x) =>
       x match
-        case Tree.Assign(Tree.Ident(s, _, _), _, _, _) if params(s)   => found + s
+        case Tree.Assign(Tree.Ident(s, _, _), _, _, _, _) if params(s)   => found + s
         case Tree.IncDec(Tree.Ident(s, _, _), _, _, _, _) if params(s) => found + s // `p++`/`p--`
         case _                                                         => found
     }

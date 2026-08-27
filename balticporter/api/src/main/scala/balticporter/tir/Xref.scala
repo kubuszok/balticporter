@@ -135,7 +135,7 @@ object Xref:
       // captured separately via `walkType`'s `ThisType` case.
       case _: Tree.This | _: Tree.Super     => ()
       case Tree.Typed(expr, tpt, _, _)      => walkTerm(expr); walkType(tpt.tpe, UsageKind.TypeRefPos, tpt)
-      case Tree.Assign(lhs, rhs, _, _)      => walkTerm(lhs); walkTerm(rhs)
+      case Tree.Assign(lhs, rhs, _, _, _)      => walkTerm(lhs); walkTerm(rhs)
       case Tree.Block(stats, expr, _, _, _) => stats.foreach(walkStat); walkTerm(expr)
       // the SAM method's result type is a type the EMITTED code names (the nested `def`'s), so it
       // is a usage exactly as an ascription's target is — and registering it is what keeps the

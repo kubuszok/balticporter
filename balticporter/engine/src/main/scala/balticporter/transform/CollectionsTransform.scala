@@ -2808,7 +2808,7 @@ final class CollectionsTransform(
       def name = "binding-reassignment"
       override def transformTerm(x: Term)(using Program): Term =
         x match
-          case Tree.Assign(Tree.Ident(`s`, _, _), _, _, _) => hit = true; x
+          case Tree.Assign(Tree.Ident(`s`, _, _), _, _, _, _) => hit = true; x
           case _                                           => x
     StandardTraversal.mapTerm(scan, body)
     hit
