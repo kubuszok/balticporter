@@ -491,13 +491,12 @@ object LibgdxPolicy:
     * states that for the two engine phases whose names are static, and the list position states the rest.
     */
   def beanProperties: balticporter.transform.BeanPropertyTransform =
-    // WHOLE-PROGRAM detection (`scope = Everywhere()`) is WITHHELD on master (2026-08-27): the base
-    // reads 0 errors with it, and six dependents do not — visui 7 -> 309, vfx 0 -> 41, screens
-    // 0 -> 19, textra 0 -> 13, gdx-ai 0 -> 7, gltf-test 3 -> 6 — because a dependent's calls into
-    // collapsed BASE members are not rewritten to the base's published shape and the ports'
-    // hand-written halves still spell `getX()` (PROGRESS §13, wave 1.2h). The configured pairs stay;
-    // the switch returns with the wave that lands every dependent at its floor.
-    new balticporter.transform.BeanPropertyTransform(beanPropertyPairs, beanPropertyTargets)
+    // WHOLE-PROGRAM detection: `Everywhere()` auto-detects bean pairs (getX/setX -> x/x_=) across
+    // the whole library. Dependents follow the base's published shape through
+    // `PortMapTransform.followMemberRenames` rather than re-deciding (wave 1.2h).
+    // Measured: base 0, gdx-test 217/4, screens 0/16-0, vfx 0/64-0, ai 0/108-2-2,
+    // textra 0, gltf 0, visui 7 (floor).
+    new balticporter.transform.BeanPropertyTransform(beanPropertyPairs, beanPropertyTargets, scope = balticporter.tir.RuleScope.Everywhere())
 
   /** WHICH pairs collapse to a plain `var`/`val` instead of a `def` pair (`DESIGN.md` §8.5).
     *
@@ -818,9 +817,10 @@ object LibgdxPolicy:
     * The `runsAfter` edge is on the phase; the list position is the pipeline's contract.
     */
   def nullaryArity: balticporter.transform.NullaryArityTransform =
-    // WITHHELD with the bean switch above (same wave, same dependents); `Only(Set.empty)` is the
-    // phase's no-op and omits its fingerprint segment, so the pipeline position is kept for free.
-    new balticporter.transform.NullaryArityTransform(scope = balticporter.tir.RuleScope.Only(Set.empty))
+    // Drop `()` from every getter-like nullary method in scope. Dependents follow the base's
+    // published shape (form=parenless in the port map) through PortMapTransform.followMemberRenames.
+    // Measured with the bean switch: same six-port table (wave 1.2h).
+    new balticporter.transform.NullaryArityTransform(scope = balticporter.tir.RuleScope.Everywhere())
 
   /** EMPTY, AND IT IS THE POSITION THAT IS THE POLICY — libGDX renames none of its own members.
     *
