@@ -41,8 +41,8 @@ class VfxFrameBufferSuite extends munit.FunSuite {
 
   test("the queue holds exactly fboAmount buffers and starts at the first") {
     val q     = new VfxFrameBufferQueue(Format, 3)
-    val first = q.getCurrent()
-    assert(first ne null)
+    val first = q.current
+    assert(first ne null, "first buffer must be non-null")
     val second = q.changeToNext()
     val third  = q.changeToNext()
     assert(second ne first)
@@ -52,14 +52,14 @@ class VfxFrameBufferSuite extends munit.FunSuite {
 
   test("changeToNext WRAPS with a modulo — dropping it is IndexOutOfBounds, not a re-scan") {
     val q     = new VfxFrameBufferQueue(Format, 3)
-    val first = q.getCurrent()
+    val first = q.current
     q.changeToNext(); q.changeToNext()
     assert(q.changeToNext() eq first)
   }
 
   test("a single-buffer queue keeps returning the same buffer") {
     val q = new VfxFrameBufferQueue(Format, 1)
-    val b = q.getCurrent()
+    val b = q.current
     assert(q.changeToNext() eq b)
     assert(q.changeToNext() eq b)
   }
@@ -85,10 +85,10 @@ class VfxFrameBufferSuite extends munit.FunSuite {
 
   test("a fresh VfxFrameBuffer is neither initialised nor drawing, and keeps its pixel format") {
     val b = new VfxFrameBuffer(Format)
-    assert(!b.isInitialized())
-    assert(!b.isDrawing())
-    assertEquals(b.getPixelFormat(), Format)
-    assertEquals(b.getFbo(), null)
+    assert(!b.initialized)
+    assert(!b.drawing)
+    assertEquals(b.pixelFormat, Format)
+    assertEquals(b.fbo, null)
   }
 
   test("buffer nesting starts at zero and is a STATIC counter shared by every instance") {
@@ -100,8 +100,8 @@ class VfxFrameBufferSuite extends munit.FunSuite {
 
   test("the ping-pong wrapper starts uninitialised and not capturing") {
     val w = new VfxPingPongWrapper()
-    assert(!w.isInitialized())
-    assert(!w.isCapturing())
+    assert(!w.initialized)
+    assert(!w.capturing)
   }
 
   test("initialize(src, dst) assigns BOTH ends — and the parameter order is src first") {
@@ -113,9 +113,9 @@ class VfxFrameBufferSuite extends munit.FunSuite {
     val b = new VfxFrameBuffer(Format)
     val w = new VfxPingPongWrapper()
     w.initialize(a, b)
-    assert(w.isInitialized())
-    assert(w.getSrcBuffer() eq a)
-    assert(w.getDstBuffer() eq b)
+    assert(w.initialized)
+    assert(w.srcBuffer eq a)
+    assert(w.dstBuffer eq b)
   }
 
   test("swap exchanges src and dst, and is legal OUTSIDE capturing") {
@@ -124,10 +124,10 @@ class VfxFrameBufferSuite extends munit.FunSuite {
     val w = new VfxPingPongWrapper()
     w.initialize(a, b)
     w.swap()
-    assert(w.getSrcBuffer() eq b)
-    assert(w.getDstBuffer() eq a)
+    assert(w.srcBuffer eq b)
+    assert(w.dstBuffer eq a)
     w.swap()
-    assert(w.getSrcBuffer() eq a)
+    assert(w.srcBuffer eq a)
   }
 
   test("reset clears both ends and leaves the wrapper reusable") {
@@ -136,9 +136,9 @@ class VfxFrameBufferSuite extends munit.FunSuite {
     val w = new VfxPingPongWrapper()
     w.initialize(a, b)
     w.reset()
-    assert(!w.isInitialized())
+    assert(!w.initialized)
     w.initialize(a, b)
-    assert(w.isInitialized())
+    assert(w.initialized)
   }
 
   test("re-initialising an INITIALISED wrapper resets it first rather than leaking a buffer") {
@@ -148,8 +148,8 @@ class VfxFrameBufferSuite extends munit.FunSuite {
     val w = new VfxPingPongWrapper()
     w.initialize(a, b)
     w.initialize(c, a)
-    assert(w.getSrcBuffer() eq c)
-    assert(w.getDstBuffer() eq a)
+    assert(w.srcBuffer eq c)
+    assert(w.dstBuffer eq a)
   }
 
   test("`end()` before `begin()` is an IllegalStateException, not a null dereference") {

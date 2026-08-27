@@ -31,7 +31,7 @@ class PrioritizedArraySuite extends munit.FunSuite {
 
   }
   private def items(a: PrioritizedArray[String]): List[String] = {
-    (0 until a.size()).map(a.get).toList
+    (0 until a.size).map(a.get).toList
 
   }
   test("items are ordered by ASCENDING priority, whatever order they arrive in") {
@@ -42,7 +42,7 @@ class PrioritizedArraySuite extends munit.FunSuite {
     val a = new PrioritizedArray[String]()
     a.add("first")
     a.add("second")
-    assertEquals(a.size(), 2)
+    assertEquals(a.size, 2)
     assertEquals(items(a), List("first", "second"))
   }
 
@@ -64,7 +64,7 @@ class PrioritizedArraySuite extends munit.FunSuite {
     val a = of("a" -> 1, "b" -> 2, "c" -> 3)
     a.remove("b")
     assertEquals(items(a), List("a", "c"))
-    assertEquals(a.size(), 2)
+    assertEquals(a.size, 2)
   }
 
   test("remove(T) on an absent item is a no-op, not a throw") {
@@ -83,7 +83,7 @@ class PrioritizedArraySuite extends munit.FunSuite {
     a.add(java.lang.Integer.valueOf(11), 1)
     a.add(java.lang.Integer.valueOf(12), 2)
     a.remove(1)
-    assertEquals(a.size(), 2)
+    assertEquals(a.size, 2)
     assertEquals(a.get(0), java.lang.Integer.valueOf(10))
     assertEquals(a.get(1), java.lang.Integer.valueOf(12))
   }
@@ -94,7 +94,7 @@ class PrioritizedArraySuite extends munit.FunSuite {
     a.add(java.lang.Integer.valueOf(11), 1)
     a.add(java.lang.Integer.valueOf(12), 2)
     a.remove(java.lang.Integer.valueOf(11))
-    assertEquals(a.size(), 2)
+    assertEquals(a.size, 2)
     assertEquals(a.get(0), java.lang.Integer.valueOf(10))
     assertEquals(a.get(1), java.lang.Integer.valueOf(12))
   }
@@ -112,7 +112,7 @@ class PrioritizedArraySuite extends munit.FunSuite {
   test("clear empties it and leaves it usable") {
     val a = of("a" -> 1, "b" -> 2)
     a.clear()
-    assertEquals(a.size(), 0)
+    assertEquals(a.size, 0)
     a.add("c", 1)
     assertEquals(items(a), List("c"))
   }
@@ -162,7 +162,7 @@ class PrioritizedArraySuite extends munit.FunSuite {
     // the port supplies java's own default load factor. A wrong load factor is not a compile error.
     val a = new PrioritizedArray[String](1)
     (1 to 40).foreach(i => a.add("item" + i, 41 - i))
-    assertEquals(a.size(), 40)
+    assertEquals(a.size, 40)
     assertEquals(a.get(0), "item40")
     assertEquals(a.get(39), "item1")
   }

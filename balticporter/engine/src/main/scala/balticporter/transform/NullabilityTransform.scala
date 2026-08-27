@@ -397,6 +397,38 @@ final class NullabilityTransform(
     if target != Target.Union then
       val graph   = OverrideGraph.build(program)
       val claimed = collection.mutable.Set.from(plan.iterator.map(_.sym.id))
+
+      // ---- BEAN PAIR: a getter/setter pair is ONE SLOT (BEFORE override propagation) ----------
+      //
+      // A bean pair collapsed by `BeanPropertyTransform` is a property with ONE backing store:
+      // `def stage: T` / `def stage_=(v: T)`. If the getter's return type carries `@Null` and is
+      // widened to `Nullable[T]`, the setter's parameter must widen too — java's unannotated
+      // `setStage(Stage)` accepts null anyway (JLS 4.1), so widening the setter is faithful, and
+      // leaving it un-widened makes `x.stage = x.stage` a type error (13 errors in
+      // Group/Stage/Dialog/SelectBox, measured). Placed BEFORE the override propagation so the
+      // widened setter parameter propagates to overrides too (Group.stage_=, SelectBox.stage_=).
+      plan.toList.filter(_.slot == Slot.Return).foreach { x =>
+        val setterName = x.sym.name + "_="
+        val getterOwner = x.sym.owner
+        program.definitionOf(getterOwner).collect { case cd: Tree.ClassDef =>
+          cd.body.collectFirst {
+            case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == setterName) =>
+              d.paramss.flatten.headOption.foreach { param =>
+                program.symbolOf(param.symbol).foreach { paramSym =>
+                  if !claimed.contains(paramSym.id) && program.owns(paramSym.id) then
+                    slotOf(program, paramSym) match
+                      case Some((Slot.Param, was)) if !alreadyNullable(was) &&
+                        !isPrimitive(program, was) &&
+                        !(paramSym.flags.isParam && paramSym.flags.isVararg) =>
+                        claimed += paramSym.id
+                        plan += Planned(paramSym, x.key, Slot.Param, was, Nil)
+                      case _ => ()
+                }
+              }
+          }
+        }
+      }
+
       plan.toList.foreach { x =>
         val (member, pos) =
           if x.slot == Slot.Param then (x.sym.owner, paramIndexOf(x.sym)) else (x.sym.id, -1)

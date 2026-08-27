@@ -63,25 +63,25 @@ class ScreenmanagerSuite extends munit.FunSuite {
 
   test("BasicInputMultiplexer: batch and single add/remove (upstream)") {
     val i = new BasicInputMultiplexer()
-    assertEquals(i.getProcessors().size, 0)
+    assertEquals(i.processors.size, 0)
 
     val inputProcessors = new sge.utils.Array[sge.InputProcessor](4)
     inputProcessors.add(new sge.InputAdapter())
     inputProcessors.add(new sge.InputAdapter())
 
     i.addProcessors(inputProcessors)
-    assertEquals(i.getProcessors().size, 2)
+    assertEquals(i.processors.size, 2)
 
     i.removeProcessors(inputProcessors)
-    assertEquals(i.getProcessors().size, 0)
+    assertEquals(i.processors.size, 0)
 
     i.addProcessor(new sge.InputAdapter())
     i.addProcessor(new sge.InputAdapter())
     i.addProcessor(new sge.InputAdapter())
-    assertEquals(i.getProcessors().size, 3)
+    assertEquals(i.processors.size, 3)
 
     i.removeProcessors()
-    assertEquals(i.getProcessors().size, 0)
+    assertEquals(i.processors.size, 0)
   }
 
   // ---------------------------------------------------------------------------------------
@@ -110,20 +110,20 @@ class ScreenmanagerSuite extends munit.FunSuite {
     val t = new RecordingTimedTransition(5)
 
     t.render(1, null, null)
-    assert(!t.isDone())
+    assert(!t.done)
 
     t.render(1, null, null)
     t.render(1, null, null)
     t.render(1, null, null)
     t.resize(12, 15)
     t.render(1, null, null)
-    assert(t.isDone())
+    assert(t.done)
 
     t.render(1, null, null)
-    assert(t.isDone())
+    assert(t.done)
 
     t.show()
-    assert(!t.isDone())
+    assert(!t.done)
   }
 
   test("TimedTransition: progress is timePassed/duration and clamps at 1") {
@@ -197,10 +197,10 @@ class ScreenmanagerSuite extends munit.FunSuite {
   }
   test("ManagedScreen: the clear colour defaults to BLACK and input processors start empty") {
     val s = new RecordingScreen
-    assertEquals(s.getClearColor().get, sge.graphics.Color.BLACK)
-    assertEquals(s.getInputProcessors().size, 0)
+    assertEquals(s.clearColor.get, sge.graphics.Color.BLACK)
+    assertEquals(s.inputProcessors.size, 0)
     s.addInputProcessor(new sge.InputAdapter())
-    assertEquals(s.getInputProcessors().size, 1)
+    assertEquals(s.inputProcessors.size, 1)
   }
 
   test("ManagedScreenAdapter and BlankScreen: every lifecycle method is a no-op that returns") {
@@ -210,18 +210,18 @@ class ScreenmanagerSuite extends munit.FunSuite {
     b.show(); b.render(0.016f); b.resize(800, 600); b.pause(); b.resume(); b.hide(); b.close()
     val a = new ManagedScreenAdapter()
     a.show(); a.render(0.016f); a.resize(1, 1); a.hide(); a.close()
-    assertEquals(a.getClearColor().get, sge.graphics.Color.BLACK)
+    assertEquals(a.clearColor.get, sge.graphics.Color.BLACK)
   }
 
   test("ScreenTransition: show/hide default to no-ops and the clear colour defaults to BLACK") {
     val t = new ScreenTransition:
       override def render(d: Float, l: sge.graphics.g2d.TextureRegion, c: sge.graphics.g2d.TextureRegion): Unit = ()
-      override def isDone(): Boolean                     = true
+      override def done: Boolean                           = true
       override def resize(width: Int, height: Int): Unit = ()
       override def close(): Unit                         = ()
     t.show()
     t.hide()
-    assertEquals(t.getClearColor().get, sge.graphics.Color.BLACK)
+    assertEquals(t.clearColor.get, sge.graphics.Color.BLACK)
   }
 
   // ---------------------------------------------------------------------------------------

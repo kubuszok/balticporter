@@ -59,7 +59,7 @@ object LoggerService {
 
   def getLogger(clazz: Class[?]): Logger = new Logger(clazz.getName)
 
-  private def level: Int = if (sge.Gdx.app == null) -1 else sge.Gdx.app.getLogLevel()
+  private def level: Int = if (sge.Gdx.app == null) -1 else sge.Gdx.app.logLevel
 
   def isErrorEnabled(): Boolean = level >= sge.Application.LOG_ERROR
   def isWarnEnabled(): Boolean  = level >= sge.Application.LOG_ERROR

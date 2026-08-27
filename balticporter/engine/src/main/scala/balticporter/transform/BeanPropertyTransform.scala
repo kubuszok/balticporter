@@ -907,6 +907,7 @@ object BeanPropertyTransform:
           }
         }
 
+
         // Deduplicate: if two getters in the same type map to the SAME property name
         // (e.g., `isTouchable()` -> `touchable` and `getTouchable()` -> `touchable`),
         // skip both — a property has one getter and two is a name collision.
@@ -989,11 +990,37 @@ object BeanPropertyTransform:
                 // With no getter at that type, the LHS names a member the receiver does not have.
                 // Measured at 2 errors on libGDX (Cullable: setter-only interface, Container and
                 // ScrollPane call through a Cullable-typed reference).
+                //
+                // But a SUBCLASS that overrides only the setter INHERITS the getter through the
+                // type hierarchy, so `x.prop` still works — exclude setter-only owners that are
+                // descendants of a getter owner, because the getter is accessible there by
+                // inheritance. Measured at 3 errors on vfx's VfxWidgetGroup (overrides
+                // setTransform but not isTransform; the getter is inherited from Group).
+                //
+                // But only exclude them where the inherited GETTER is the SAME PAIR — a type
+                // that inherits `getStage()` returning `Nullable[Stage]` and overrides
+                // `setStage(Stage)` is NOT the same pair, and the refusal is legitimate.
                 val setterOnlyOwners = setterOpt.toList.flatMap { s =>
                   val sComp = graph.closureOf(s.id).members
                   val getterOwners = gComp.flatMap(g => program.symbolOf(g).map(_.owner))
                   sComp.flatMap { sm =>
                     program.symbolOf(sm).map(_.owner).filterNot(getterOwners.contains)
+                  }.filterNot { owner =>
+                    // A subclass that overrides only the setter still INHERITS the getter — so
+                    // if this owner is a descendant of a type that declares BOTH getter AND setter
+                    // (a "pair owner"), the getter is reachable through inheritance and the
+                    // property desugaring works.
+                    //
+                    // Only exclude where the setter override IN THIS OWNER agrees with the
+                    // getter's return type (same head). A type that overrides `setStage(Stage)`
+                    // under a getter returning `Nullable[Stage]` (after nullability) is a type
+                    // mismatch the pair cannot resolve, and the refusal is legitimate.
+                    // Measured: VfxWidgetGroup.setTransform (from Group, both boolean — correct);
+                    // Group.setStage (from Actor, getter Nullable vs setter Stage — refused).
+                    val pairOwners = getterOwners.filter { go =>
+                      sComp.exists(sm => program.symbolOf(sm).exists(_.owner == go))
+                    }
+                    pairOwners.exists(d => d == owner || graph.ancestorsOf(owner).contains(d))
                   }.flatMap(o => program.symbolOf(o).map(_.fullName)).toList.distinct.sorted
                 }
                 if setterOnlyOwners.nonEmpty then

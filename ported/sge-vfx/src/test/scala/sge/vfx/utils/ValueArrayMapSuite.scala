@@ -28,7 +28,7 @@ class ValueArrayMapSuite extends munit.FunSuite {
 
   test("values keep INSERTION order and are addressable by index") {
     val m = of("a" -> "1", "b" -> "2", "c" -> "3")
-    assertEquals(m.size(), 3)
+    assertEquals(m.size, 3)
     assertEquals(m.getValueAt(0), "1")
     assertEquals(m.getValueAt(2), "3")
   }
@@ -40,7 +40,7 @@ class ValueArrayMapSuite extends munit.FunSuite {
     // and hand back a stale value from `getValueAt`.
     val m = of("a" -> "1", "b" -> "2")
     assertEquals(m.remove("a"), "1")
-    assertEquals(m.size(), 1)
+    assertEquals(m.size, 1)
     assertEquals(m.getValueAt(0), "2")
     assertEquals(m.get("a"), null)
   }
@@ -48,7 +48,7 @@ class ValueArrayMapSuite extends munit.FunSuite {
   test("removing an ABSENT key returns null and touches nothing") {
     val m = of("a" -> "1")
     assertEquals(m.remove("zzz"), null)
-    assertEquals(m.size(), 1)
+    assertEquals(m.size, 1)
   }
 
   test("findKey compares by IDENTITY — java's `entry.getValue() == value`") {
@@ -68,7 +68,7 @@ class ValueArrayMapSuite extends munit.FunSuite {
     val m = new ValueArrayMap[String, String]()
     m.put("k", shared)
     assertEquals(m.removeByValue(shared), shared)
-    assertEquals(m.size(), 0)
+    assertEquals(m.size, 0)
   }
 
   test("contains is the map's `containsKey` — EQUALITY, not identity") {
@@ -82,8 +82,8 @@ class ValueArrayMapSuite extends munit.FunSuite {
     // and refilled. A port that allocated a fresh array each time would be tidier and would change
     // an aliasing contract nothing else can see.
     val m = of("a" -> "1", "b" -> "2")
-    val first  = m.getKeys()
-    val second = m.getKeys()
+    val first  = m.keys
+    val second = m.keys
     assert(first eq second)
     assertEquals(second.size, 2)
   }
@@ -99,16 +99,16 @@ class ValueArrayMapSuite extends munit.FunSuite {
   test("clear empties both halves") {
     val m = of("a" -> "1", "b" -> "2")
     m.clear()
-    assertEquals(m.size(), 0)
+    assertEquals(m.size, 0)
     assertEquals(m.get("a"), null)
-    assertEquals(m.getKeys().size, 0)
+    assertEquals(m.keys.size, 0)
   }
 
   test("a capacity-constructed map behaves identically to a default one") {
     // the capacity reaches `new HashMap<>(n)`, which scala has no one-argument constructor for.
     val m = new ValueArrayMap[String, String](2)
     (1 to 32).foreach(i => m.put("k" + i, "v" + i))
-    assertEquals(m.size(), 32)
+    assertEquals(m.size, 32)
     assertEquals(m.get("k17"), "v17")
     assertEquals(m.getValueAt(0), "v1")
   }

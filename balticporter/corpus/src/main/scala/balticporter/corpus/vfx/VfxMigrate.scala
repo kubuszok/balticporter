@@ -249,7 +249,7 @@ object VfxPolicy:
               |        "needs the sge.Sge context and a class initialiser has no clause to take it from. " +
               |        "It is initialised on the first VfxFrameBuffer bind (VfxFrameBuffer.getBoundFboHandle); " +
               |        "bind one first, or assign VfxGLUtils.glExtension yourself.")
-              |  sge.vfx.gl.VfxGLUtils.glExtension.getBoundFboHandle()
+              |  sge.vfx.gl.VfxGLUtils.glExtension.boundFboHandle
               |}""".stripMargin,
         )),
         // WHAT A DEPENDENT ADDS TO THE BASE'S CONTEXT HOLDER — `ENGINE-LIMITS.md` CT8.

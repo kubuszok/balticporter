@@ -61,7 +61,7 @@ object ShaderProgramFactory {
 
   /** Throws a `GdxRuntimeException` carrying the compilation log when the program did not build. */
   def checkCompilation(program: sge.graphics.glutils.ShaderProgram, msg: String = ""): Unit = {
-    if (!program.isCompiled()) throw new sge.utils.GdxRuntimeException(msg + program.getLog())
+    if (!program.compiled) throw new sge.utils.GdxRuntimeException(msg + program.log)
 
 /** Ports GLSL 120 source to GLSL 150 when — and only when — the platform demands it.
   *
@@ -115,15 +115,15 @@ object ShaderCompatibilityHelper {
     * platform check. */
   }
   def mustUse32CShader()(using sge.Sge): Boolean = {
-    (sge.Gdx.app.getType() == sge.Application.ApplicationType.Desktop ||
-      sge.Gdx.app.getType() == sge.Application.ApplicationType.HeadlessDesktop) &&
+    (sge.Gdx.app.`type` == sge.Application.ApplicationType.Desktop ||
+      sge.Gdx.app.`type` == sge.Application.ApplicationType.HeadlessDesktop) &&
       scala.Predef.summon[sge.Sge].graphics.gl30 != null && sge.scenes.scene2d.utils.UIUtils.isMac
 
   }
   def getDefaultShaderVersionStatement()(using sge.Sge): String = {
     if (mustUse32CShader()) "#version 150\n" // macOS 3.2 core profile
-    else if sge.Gdx.app.getType() != sge.Application.ApplicationType.Desktop &&
-      sge.Gdx.app.getType() != sge.Application.ApplicationType.HeadlessDesktop
+    else if sge.Gdx.app.`type` != sge.Application.ApplicationType.Desktop &&
+      sge.Gdx.app.`type` != sge.Application.ApplicationType.HeadlessDesktop
     then "#version 100\n" // GLSL ES (Android, iOS, WebGL)
     else "" // desktop: no version statement — a stricter compiler and an ANGLE probe avoided
 
