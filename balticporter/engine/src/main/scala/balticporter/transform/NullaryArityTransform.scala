@@ -114,6 +114,11 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
               refuse(program, s.id, "UnrewritableCallSite",
                 "a call site uses a shape this phase cannot rewrite (a method reference, " +
                 "a value-position usage, or an unowned call)")
+            else if hasOverloadedSibling(program, s) then
+              refuse(program, s.id, "Overloaded",
+                "the owner type declares another method with the same name that takes parameters — " +
+                "dropping `()` would make `o.m(arg)` resolve to the parenless `m` applied to `arg` " +
+                "rather than calling the parameterful overload")
             else
               candidates += s.id
           case _ => () // not a nilary method or no definition
@@ -240,6 +245,35 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
       case _ => ()
     scan(t)
     found
+
+  /** Does the owner type declare another method with the same name that takes PARAMETERS?
+    *
+    * Dropping `()` from `toArray()` when `toArray(Class)` exists makes `a.toArray(classOf[X])`
+    * resolve to the parenless `toArray` APPLIED to the argument — which is valid Scala asking a
+    * completely different question. The guard fires at the DECLARATION rather than at the call site,
+    * because the ambiguity is structural: any call to the parameterful overload that passes one arg
+    * will bind to the wrong member.
+    *
+    * The check scans the owner's MEMBERS (using `OverrideGraph.membersOf`, which is the declared
+    * body members) and looks for a same-named sibling whose `info` takes parameters. That is
+    * deliberately OVER-approximate — a sibling with one parameter is always an ambiguity, and a
+    * sibling with two parameters is also an ambiguity because Scala 3's auto-tupling can bind
+    * a `(a, b)` tuple to the parenless `def`. Conservative: a false positive is a method that
+    * keeps its `()`, which is the faithful translation and always correct. */
+  private def hasOverloadedSibling(p: Program, s: Symbol): Boolean =
+    val siblings = p.symbols.all.filter(sib =>
+      sib.id != s.id &&
+      sib.name == s.name &&
+      sib.owner == s.owner &&
+      PolicyBinder.isExecutable(sib.info) &&
+      hasParams(sib.info))
+    siblings.nonEmpty
+
+  /** does this method type take at least one parameter? */
+  private def hasParams(info: TypeRepr): Boolean = info match
+    case TypeRepr.MethodType(ps, _, _) => ps.nonEmpty
+    case TypeRepr.PolyType(_, r)       => hasParams(r)
+    case _                             => false
 
   /** can every call site of every member in the component be rewritten? */
   private def callSitesRewritable(p: Program, comp: Set[SymId]): Boolean =

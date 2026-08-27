@@ -239,8 +239,19 @@ final class PortMapTransform(maps: List[PortMap.Map0] = Nil) extends Phase, Poli
     //   upstream = java's FQN (e.g., Group#isTransform())
     //   emitted  = scala's FQN (e.g., sge.scenes.scene2d.Group#transform())
     //   shape    = form=var|val|parenless (or name=...)
+    // Types the base SUBSTITUTED (dropped and injected a hand-written replacement) — their members
+    // are emitted from the INJECTED file, not from the phase pipeline, so a rename the pipeline
+    // planned is a rename the injected file did not perform. Renaming the dependent's references
+    // to match the plan produces a call to a name the injected file does not have.
+    val substitutedTypes: Set[String] = maps.flatMap(_.types).collect {
+      case e if e.disposition == PortMap.Disposition.Substituted && e.upstream.nonEmpty => e.upstream
+    }.toSet
+
     val memberRenameEntries = maps.flatMap(_.members).filter { e =>
       e.upstream.nonEmpty && e.emitted.nonEmpty && e.disposition == PortMap.Disposition.Renamed && {
+        val ownerFqn = PortMapTransform.ownerOf(e.upstream)
+        !substitutedTypes.contains(ownerFqn)
+      } && {
         val upSimple   = PortMapTransform.simpleNameOf(PortMapTransform.bareKey(e.upstream))
         val emitSimple = PortMapTransform.simpleNameOf(PortMapTransform.bareKey(e.emitted))
         // A member with a NAME change (bean pair rename) or a FORM change (parenless, collapsed)
@@ -254,29 +265,90 @@ final class PortMapTransform(maps: List[PortMap.Map0] = Nil) extends Phase, Poli
 
     // Build MemberRenamer requests from the port map entries. For each entry, find the symbol
     // by its UPSTREAM FQN (which is now java's own name) and request a rename to the emitted name.
-    val requests = memberRenameEntries.flatMap { e =>
+    case class FollowEntry(sym: Symbol, newName: String, entry: PortMap.Entry)
+    val followEntries = memberRenameEntries.flatMap { e =>
       val upBare   = PortMapTransform.bareKey(e.upstream)
       val emitBare = PortMapTransform.bareKey(e.emitted)
       val newName  = PortMapTransform.simpleNameOf(emitBare)
-      // The program's symbols are in the EMITTED namespace (after `repoint`), so translate the
-      // upstream FQN through the same package renames `repoint` used.
+      // The program's symbols are in the EMITTED namespace (after `repoint`) for OWNED symbols,
+      // but unowned symbols (base members) keep their UPSTREAM FQN because `repoint` only moves
+      // owned ones. Try the repointed name first, then the UPSTREAM bare name, so a call into a
+      // base member reached through a context (Gdx.app.getType()) finds its symbol.
       val inEmitNs = PackageRenameTransform.renamed(upBare, renames.toMap)
-      byFullName.get(inEmitNs).filter(_.name != newName).map { sym =>
-        // Only create a request if the symbol still has the OLD name (the dependent's phases
-        // refused the rename). If the dependent already renamed it, sym.name == newName.
-        MemberRenamer.Request(sym.id, newName,
-          Reason.Configured(name, s"${e.upstream} -> ${e.emitted}"),
-          e.upstream, e.upstream)
+      val sym = byFullName.get(inEmitNs).orElse(byFullName.get(upBare))
+      sym.filter(_.name != newName).map { s =>
+        FollowEntry(s, newName, e)
       }
     }
-    if requests.isEmpty then return program
+    // ---- FALLBACK for lazily-interned external symbols ----
+    // The Spoon frontend interns an external method reference with a NUMERIC owner (e.g.,
+    // `@55620#getType()`) when the owner type could not be resolved. Such a symbol cannot be
+    // found by `byFullName` because its fullName does not contain the owner's FQN.
+    // For UNMATCHED entries, try to find the symbol by (owner, name): walk all symbols whose
+    // name matches the method name, and check if their owner's fullName matches the expected
+    // owner FQN (in either the upstream or the emitted namespace).
+    val followEntriesWithFallback: List[FollowEntry] =
+      if followEntries.size >= memberRenameEntries.size then followEntries
+      else
+        val matched = followEntries.map(_.sym.id).toSet
+        val extra = collection.mutable.ListBuffer.empty[FollowEntry]
+        val byName = program.symbols.all.groupBy(_.name)
+        memberRenameEntries.foreach { e =>
+          val upBare   = PortMapTransform.bareKey(e.upstream)
+          val emitBare = PortMapTransform.bareKey(e.emitted)
+          val newName  = PortMapTransform.simpleNameOf(emitBare)
+          val upName   = PortMapTransform.simpleNameOf(upBare)
+          val ownerFqn = PortMapTransform.ownerOf(upBare)
+          val inEmitNs = PackageRenameTransform.renamed(upBare, renames.toMap)
+          // Skip entries already found by the fullName lookup
+          if !byFullName.contains(inEmitNs) && !byFullName.contains(upBare) then
+            val ownerEmit = PackageRenameTransform.renamed(ownerFqn, renames.toMap)
+            byName.getOrElse(upName, Nil).foreach { s =>
+              if !matched.contains(s.id) && s.name != newName then
+                val ownerSym = program.symbolOf(s.owner)
+                val ownerMatch = ownerSym.exists(o =>
+                  o.fullName == ownerFqn || o.fullName == ownerEmit)
+                if ownerMatch then
+                  extra += FollowEntry(s, newName, e)
+            }
+        }
+        followEntries ++ extra.toList
 
-    // Deduplicate: multiple entries may point to the same symbol (e.g., getter and setter of
-    // the same pair are in the same override component).
-    val deduped = requests.distinctBy(_.member)
+    if followEntriesWithFallback.isEmpty then return program
 
-    val (renamed, _) = MemberRenamer.rename(program, graph, deduped,
-      MemberRenamer.OnCollision.DeferToEmitter, decisions)
+    // ---- SPLIT: owned symbols go through MemberRenamer (full override-component handling);
+    //             UNOWNED symbols (base members) are renamed directly in the symbol table,
+    //             because MemberRenamer refuses symbols this program does not declare. A call on
+    //             a base member reached through a context, a field, or a global (Gdx.app.getType())
+    //             references an EXTERNAL symbol — renaming its name in the table makes every
+    //             reference resolve to the emitted name without touching the override graph. ----
+    val (owned, unowned) = followEntriesWithFallback.partition(fe => program.owns(fe.sym.id))
+
+    // ---- rename UNOWNED symbols directly ----
+    val direct = unowned.distinctBy(_.sym.id)
+    val directTable = direct.foldLeft(program.symbols) { (t, fe) =>
+      t.updated(fe.sym.copy(name = fe.newName))
+    }
+    val program1 = if direct.isEmpty then program else program.rebuilt(symbols = directTable)
+
+    // ---- rename OWNED symbols through MemberRenamer ----
+    val requests = owned.map { fe =>
+      MemberRenamer.Request(fe.sym.id, fe.newName,
+        Reason.Configured(name, s"${fe.entry.upstream} -> ${fe.entry.emitted}"),
+        fe.entry.upstream, fe.entry.upstream)
+    }
+
+    val program2 = if requests.isEmpty then program1
+    else
+      val graph1 = if direct.isEmpty then graph else OverrideGraph.build(program1)
+      // Deduplicate: multiple entries may point to the same symbol (e.g., getter and setter of
+      // the same pair are in the same override component).
+      val deduped = requests.distinctBy(_.member)
+      val (r, _) = MemberRenamer.rename(program1, graph1, deduped,
+        MemberRenamer.OnCollision.DeferToEmitter, decisions)
+      r
+
+    val renamed = program2
 
     // For parenless members: strip `()` from the DefDef's paramss and rewrite call sites,
     // matching what the base did. MemberRenamer renames the symbol name but does NOT change
@@ -285,9 +357,11 @@ final class PortMapTransform(maps: List[PortMap.Map0] = Nil) extends Phase, Poli
     val graph2 = OverrideGraph.build(renamed)
     val parenlessRoots = memberRenameEntries.filter(_.memberShape.form == "parenless")
       .flatMap { e =>
-        val inEmitNs = PackageRenameTransform.renamed(PortMapTransform.bareKey(e.upstream), renames.toMap)
+        val upBare   = PortMapTransform.bareKey(e.upstream)
+        val inEmitNs = PackageRenameTransform.renamed(upBare, renames.toMap)
         val emitBare = PortMapTransform.bareKey(e.emitted)
-        renamed.symbols.all.iterator.find(s => s.fullName == inEmitNs || s.fullName == emitBare).map(_.id)
+        renamed.symbols.all.iterator.find(s =>
+          s.fullName == inEmitNs || s.fullName == emitBare || s.fullName == upBare).map(_.id)
       }.toSet
     val parenlessSyms = parenlessRoots.flatMap(r => graph2.closureOf(r).members)
 
@@ -569,6 +643,11 @@ object PortMapTransform:
     arity match
       case scala.None => candidates
       case Some(n)    => candidates.filter((_, e) => arityOf(e.upstream).forall(_ == n))
+
+  /** the OWNER type of a member key: everything before `#`. `X.Y#m(P)` -> `X.Y`. */
+  private[transform] def ownerOf(key: String): String =
+    val i = key.indexOf('#')
+    if i < 0 then key else key.substring(0, i)
 
   /** the last segment of a qualified name, at any of `.`, `$`, `#`. */
   private[transform] def simpleNameOf(q: String): String =

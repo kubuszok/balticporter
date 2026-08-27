@@ -340,6 +340,47 @@ class NullaryArityTransformSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
+  // guard 4 — Overloaded: the owner declares a parameterful method of the same name
+  // -------------------------------------------------------------------------------------------
+
+  /** `toArray()` beside `toArray(Class)`: dropping `()` from the nilary one makes
+    * `a.toArray(classOf[X])` resolve to the parenless `toArray` APPLIED to the argument, rather
+    * than calling the 1-arg overload. The guard fires at the DECLARATION. */
+  test("Overloaded: a nilary method whose owner also declares a parameterful overload keeps `()`") {
+    val r = ran(
+      """
+      class Arr {
+        private int[] data;
+        public int[] toArray() { return data; }
+        public int[] toArray(int[] target) { System.arraycopy(data, 0, target, 0, data.length); return target; }
+      }
+      """,
+      new NullaryArityTransform(everywhere))
+    assertEquals(nameOf(r, "Arr#toArray"), "toArray")
+    assert(clue(r.out).contains("def toArray()"), "the nilary overload must keep its clause")
+    assertEquals(clue(converted(r)), Nil)
+    val rows = refusedFor(r, "Arr#toArray")
+    assertEquals(clue(rows).size, 1)
+    assert(clue(rows.head.verdict.render).contains("Overloaded"))
+  }
+
+  /** The ABSENCE of a parameterful sibling means no ambiguity: a nilary method on its own is safe
+    * to convert. This test verifies the guard does NOT fire when no overload exists. */
+  test("a nilary method with NO parameterful sibling is NOT refused by Overloaded") {
+    val r = ran(
+      """
+      class Layer {
+        private float opacity;
+        public float opacity() { return opacity; }
+      }
+      """,
+      new NullaryArityTransform(everywhere))
+    assert(clue(r.out).contains("def opacity:"), "should be converted")
+    assertEquals(clue(converted(r)).size, 1)
+    assert(!clue(guards(r)).contains("Overloaded"))
+  }
+
+  // -------------------------------------------------------------------------------------------
   // MergeablePolicy — §1.5: two modules scoping this differently emit signatures that cannot
   // compile together, so the composition is the PHASE's answer and a disagreement is a finding
   // -------------------------------------------------------------------------------------------
