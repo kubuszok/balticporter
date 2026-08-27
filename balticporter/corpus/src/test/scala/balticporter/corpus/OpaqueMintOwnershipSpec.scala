@@ -83,7 +83,7 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
     * `extendedBy` and cannot subtract it (§1.5). The hint names a BASE declaration. */
   private def phase = new PrimitiveToOpaqueTransform(OpaqueSpec(
     fqn   = "p.Handle",
-    hints = _.fullName == "p.Gpu#handle",
+    hints = Set("p.Gpu#handle"),
   ))
 
   private def manifest(ph: PrimitiveToOpaqueTransform): PortManifest =
@@ -189,7 +189,7 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
     assert(grown.exists(id => mine.contains(unitOf(id))),
       "the fixture no longer exercises the trap — no propagated seed is in a dependent-owned unit")
     // …while no HINT is, which is the difference the fence reads.
-    val hinted = after.symbols.all.filter(s => ph.spec.hints(s)).map(_.id)
+    val hinted = after.symbols.all.filter(s => ph.spec.hints(s.fullName)).map(_.id)
     assert(clue(hinted).nonEmpty)
     assert(hinted.forall(id => !mine.contains(unitOf(id))))
   }
@@ -198,9 +198,10 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
   // …and a hint set that STRADDLES the two modules is refused, not resolved by `exists`
   // -------------------------------------------------------------------------
 
-  /** the same two-module tree, plus a dependent declaration a NAME PATTERN also matches. `hints` is
-    * a `Symbol => Boolean`, and `_.name == "handle"` is the form that reads naturally and is exactly
-    * the form that stops being about one module the moment a dependent names a field the same. */
+  /** the same two-module tree, plus a dependent declaration that the SAME HINT SET explicitly names.
+    * With `hints` as a `Set[String]`, spanning is expressed by listing FQNs from BOTH modules —
+    * `p.Gpu#handle` (base) and `q.Own#handle` (dependent). The test verifies that the fence rejects
+    * this explicitly-stated straddling, the same shape the predicate form used to create silently. */
   private val depWithOwnField = dep + ("q/Own.java" -> """package q;
     |public class Own {
     |  private int handle;
@@ -209,7 +210,7 @@ class OpaqueMintOwnershipSpec extends munit.FunSuite:
 
   private def patternPhase = new PrimitiveToOpaqueTransform(OpaqueSpec(
     fqn   = "p.Handle",
-    hints = s => s.name == "handle" && !s.flags.isParam,
+    hints = Set("p.Gpu#handle", "q.Own#handle"),
   ))
 
   test("SPANNING hints FAIL THE RUN — `exists` would have minted in BOTH modules") {

@@ -109,17 +109,16 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     * `primitive->opaque:<fqn>`, so a base and a dependent seeding the same opaque type from
     * different declarations compared EQUAL.
     *
-    * Everything DECLARATIVE in the spec is rendered, sorted. '''[[OpaqueSpec.hints]] is not, and
-    * cannot be''' — it is a `Symbol => Boolean`, and a lambda has no stable rendering; two specs
-    * differing only in their predicate therefore still compare equal. That residue is named in
-    * `ENGINE-LIMITS.md` §13 rather than hidden, and it is strictly smaller than the hole it
-    * replaces: the fence, the definition site, the primitive and every agent-supplied
-    * `extraHints` entry — which is where a predicate's misses are corrected — are all now compared.
+    * Everything in the spec is rendered, sorted. `hints` is now a `Set[String]` of exact FQNs
+    * (O4 CLOSED — the predecessor was a `Symbol => Boolean` with no stable rendering, so two specs
+    * differing only in their predicate compared equal). The fence, the definition site, the
+    * primitive, every hint and every agent-supplied `extraHints` entry are all compared.
     */
   def surfaceFingerprint: String =
+    val seeds  = if spec.hints.isEmpty then "" else s";hints=${spec.hints.toList.sorted.mkString(",")}"
     val extras = if spec.extraHints.isEmpty then "" else s";extra=${spec.extraHints.toList.sorted.mkString(",")}"
     val fence  = spec.scope.fingerprint
-    s"${spec.fqn}:${spec.underlyingFqn}$extras${if fence.isEmpty then "" else s";$fence"}"
+    s"${spec.fqn}:${spec.underlyingFqn}$seeds$extras${if fence.isEmpty then "" else s";$fence"}"
 
   /** Hints the mechanism CANNOT REACH — see [[reportUnreachable]]. Empty policy in, empty report
     * out, and cleared at the head of every run so a reused instance never reports the previous
@@ -128,10 +127,14 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
 
   def policyReport: PolicyReport = PolicyReport(unreachable.toList)
 
-  private var objSym, opaqueSym, applySym, unwrapSym, primSym: SymId = SymId.None
+  private var objSym, opaqueSym, applySym, unwrapSym, wrapArraySym, unwrapArraySym, primSym, arraySym: SymId = SymId.None
   private var seeds: Set[SymId]   = Set.empty
   private var opaqueRef: TypeRepr = TypeRepr.NoType
   private var primRef: TypeRepr   = TypeRepr.NoType
+  /** `Array[Opaque.T]` — what an `int[]` seed becomes after retyping. */
+  private var opaqueArrayRef: TypeRepr = TypeRepr.NoType
+  /** `Array[Int]` — the JVM-level array type the coercion wraps/unwraps. */
+  private var primArrayRef: TypeRepr   = TypeRepr.NoType
   private val minted = collection.mutable.ListBuffer[Symbol]()
 
   /** what the RUN knows about ITSELF — which top-level units it EMITS. Not derivable from the
@@ -147,14 +150,16 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
   def bindPolicy(binder: PolicyBinder): Unit = runScope = binder.run
 
   /** the detected old→new type mapping: every primitive symbol retyped to the opaque type. A
-    * reusable trace (also what a semantic-diff of this phase would report). */
-  def typeMapping: Map[SymId, TypeRepr] = seeds.iterator.map(_ -> opaqueRef).toMap
+    * reusable trace (also what a semantic-diff of this phase would report).
+    * O3: array seeds map to `Array[Opaque.T]` rather than `Opaque.T`. */
+  def typeMapping: Map[SymId, TypeRepr] = seeds.iterator.map(id => id -> opaqueRef).toMap
 
   override def run(program: Program): Program =
     unreachable.clear()
     primSym = program.symbols.all.find(_.fullName == spec.underlyingFqn).map(_.id).getOrElse(SymId.None)
     if primSym == SymId.None then return program
     primRef = TypeRepr.TypeRef(TypeRepr.NoType, primSym)
+    arraySym = program.symbols.all.find(_.fullName == "scala.Array").map(_.id).getOrElse(SymId.None)
 
     // The SCOPE fences seeding as well as propagation: a fence a named entry could step over is not
     // a fence, and a pure-move chain crosses type boundaries freely enough that one careless hint
@@ -164,7 +169,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     // A hint may also name something a SIBLING spec has already claimed — admitted here on purpose
     // so `refuseOverlap` can see it. Filtered out silently (which is what "it is no longer of my
     // primitive" would do) the second instance would simply find nothing and return.
-    val named = program.symbols.all.filter(s => spec.hints(s) || spec.extraHints(s.fullName))
+    val named = program.symbols.all.filter(s => spec.hints(s.fullName) || spec.extraHints(s.fullName))
     val hints = named
       .filter(s => fenced(s) && (taggablePrim(s.info) || foreignOpaque(program, s.info).isDefined))
       .map(_.id).toSet
@@ -191,10 +196,33 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     // (an object's type member; a `Name#T` projection would need `Name` to be a type).
     opaqueSym = mint("T", spec.typeFqn, Flags(isOpaque = true), objSym)
     opaqueRef = TypeRepr.TypeRef(TypeRepr.NoType, opaqueSym)
+    // O3: the array-typed references, computed AFTER the opaque symbol is minted.
+    val arrayTC = TypeRepr.TypeRef(TypeRepr.NoType, arraySym)
+    opaqueArrayRef = if arraySym == SymId.None then TypeRepr.NoType
+                     else TypeRepr.AppliedType(arrayTC, List(opaqueRef))
+    primArrayRef   = if arraySym == SymId.None then TypeRepr.NoType
+                     else TypeRepr.AppliedType(arrayTC, List(primRef))
     val vWrap   = mint("v", "v", Flags(isParam = true), info = primRef)
     val vUnwrap = mint("v", "v", Flags(isParam = true), info = opaqueRef)
     applySym  = mint("apply",  s"${spec.fqn}.apply",  Flags(), objSym, TypeRepr.MethodType(List("v" -> primRef), opaqueRef))
     unwrapSym = mint("unwrap", s"${spec.fqn}.unwrap", Flags(), objSym, TypeRepr.MethodType(List("v" -> opaqueRef), primRef))
+
+    // O3: array wrap/unwrap — an opaque over `Int` erases to `Int`, so `Array[T]` is `Array[Int]`
+    // at the JVM level. The coercion is a compile-time identity, spelled as a method call so the
+    // scalac typer sees the transition. Minted only when the array symbol is available.
+    val arrayMembers = if arraySym == SymId.None then Nil else
+      val vaw = mint("v", "v", Flags(isParam = true), info = primArrayRef)
+      val vau = mint("v", "v", Flags(isParam = true), info = opaqueArrayRef)
+      wrapArraySym   = mint("wrapArray",   s"${spec.fqn}.wrapArray",   Flags(), objSym,
+        TypeRepr.MethodType(List("v" -> primArrayRef), opaqueArrayRef))
+      unwrapArraySym = mint("unwrapArray", s"${spec.fqn}.unwrapArray", Flags(), objSym,
+        TypeRepr.MethodType(List("v" -> opaqueArrayRef), primArrayRef))
+      List(
+        Tree.DefDef(wrapArraySym, List(List(Tree.ValDef(vaw, TypeTree(primArrayRef, Origin.synthetic), None, Origin.synthetic))),
+          TypeTree(opaqueArrayRef, Origin.synthetic), Some(Tree.Ident(vaw, primArrayRef, Origin.synthetic)), Origin.synthetic),
+        Tree.DefDef(unwrapArraySym, List(List(Tree.ValDef(vau, TypeTree(opaqueArrayRef, Origin.synthetic), None, Origin.synthetic))),
+          TypeTree(primArrayRef, Origin.synthetic), Some(Tree.Ident(vau, opaqueArrayRef, Origin.synthetic)), Origin.synthetic),
+      )
 
     val o = Origin.synthetic
     val typeDef  = Tree.TypeDef(opaqueSym, TypeTree(primRef, o), o)
@@ -202,7 +230,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
       TypeTree(opaqueRef, o), Some(Tree.Ident(vWrap, primRef, o)), o)
     val unwrapDef = Tree.DefDef(unwrapSym, List(List(Tree.ValDef(vUnwrap, TypeTree(opaqueRef, o), None, o))),
       TypeTree(primRef, o), Some(Tree.Ident(vUnwrap, opaqueRef, o)), o)
-    val synthUnit = Tree.ClassDef(objSym, Nil, None, List(typeDef, applyDef, unwrapDef), o)
+    val synthUnit = Tree.ClassDef(objSym, Nil, None, List(typeDef, applyDef, unwrapDef) ++ arrayMembers, o)
 
     // A retyped PARAMETER's own METHOD, by POSITION — `ENGINE-LIMITS.md` §13 O2.
     //
@@ -225,19 +253,23 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
 
     /** ONE method's signature: every seeded parameter slot, plus the result when the method itself
       * is a seed. Both halves in one place, because they are two faces of one declaration and a
-      * consumer reads whichever it reads. */
+      * consumer reads whichever it reads. O3: an array parameter/result is retyped too. */
     def methodType(id: SymId, mt: TypeRepr.MethodType): TypeRepr.MethodType =
       val slots = seedParamSlots.getOrElse(id, Set.empty)
+      def retypeSlot(t: TypeRepr): TypeRepr =
+        if isPrim(t) then opaqueRef else if isArrayOfPrim(t) then opaqueArrayRef else t
       TypeRepr.MethodType(
-        mt.params.zipWithIndex.map((nt, i) => if slots(i) then nt._1 -> opaqueRef else nt),
-        if seeds(id) && isPrim(mt.result) then opaqueRef else mt.result,
+        mt.params.zipWithIndex.map((nt, i) => if slots(i) then nt._1 -> retypeSlot(nt._2) else nt),
+        if seeds(id) then retypeSlot(mt.result) else mt.result,
         mt.isImplicit)
 
     // retype seed symbol infos primitive → opaque (value seeds) / return → opaque (method seeds)
     // / the parameter slots of ANY method — seed or not — one of whose parameters is a seed.
+    // O3: array seeds are retyped Array[Prim] → Array[Opaque.T].
     val retyped = program.symbols.all.map { s =>
       s.info match
         case r if seeds(s.id) && isPrim(r)                   => s.copy(info = opaqueRef)
+        case r if seeds(s.id) && isArrayOfPrim(r)            => s.copy(info = opaqueArrayRef)
         case mt: TypeRepr.MethodType                         =>
           val next = methodType(s.id, mt); if next == mt then s else s.copy(info = next)
         case TypeRepr.PolyType(tps, mt: TypeRepr.MethodType) =>
@@ -398,8 +430,8 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
       val value = valueTypeOf(s.info)
       if !taggablePrim(s.info) && foreignOpaque(program, s.info).isEmpty && mentionsPrim(value) then
         val setting =
-          if spec.extraHints(s.fullName) then s"OpaqueSpec(${spec.fqn}).extraHints"
-          else s"OpaqueSpec(${spec.fqn}).hints"
+          if spec.extraHints(s.fullName) then s"OpaqueSpec(${spec.fqn}).extraHints(${s.fullName})"
+          else s"OpaqueSpec(${spec.fqn}).hints(${s.fullName})"
         unreachable += PolicyFinding(name, setting, s.fullName, PolicyIssue.Malformed,
           s"this declaration's value type is `${TirPrinter.tpe(value, TirPrinter.Style.canonical)}`, " +
             s"which MENTIONS `${spec.underlyingFqn}` without BEING it — the domain value sits inside a " +
@@ -482,22 +514,26 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
   // is a boundary precisely BECAUSE `h1` is correctly not a seed: an `if` is not a pure move, so
   // `FlowPropagation` builds no edge to it and the local rightly keeps `int`).
   override def transformValDef(v: Tree.ValDef)(using Program): Tree.ValDef =
-    if seeds(v.symbol) then v.copy(tpt = TypeTree(opaqueRef, v.origin), rhs = v.rhs.map(wrap))
+    if seeds(v.symbol) then
+      val ref = seedTypeRef(v.tpt.tpe)
+      v.copy(tpt = TypeTree(ref, v.origin), rhs = v.rhs.map(e => wrapFor(e, v.tpt.tpe)))
     else v.copy(rhs = v.rhs.map(unwrapIfOpaque))
 
   override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef =
-    if seeds(d.symbol) then d.copy(returnTpt = TypeTree(opaqueRef, d.origin), rhs = d.rhs.map(wrapReturns))
+    if seeds(d.symbol) then
+      val ref = seedTypeRef(d.returnTpt.tpe)
+      d.copy(returnTpt = TypeTree(ref, d.origin), rhs = d.rhs.map(wrapReturns))
     else d.copy(rhs = d.rhs.map(unwrapReturns))
 
   // retype seed REFERENCES so boundary detection reads a consistent `tpe` (the populator left
   // a seed reference's node `tpe` as `Int`; only the declaration was retyped above).
   override def transformIdent(t: Tree.Ident)(using Program): Term =
-    if seeds(t.sym) then t.copy(tpe = opaqueRef) else t
+    if seeds(t.sym) then t.copy(tpe = seedTypeRef(t.tpe)) else t
   override def transformSelect(t: Tree.Select)(using Program): Term =
-    if seeds(t.sym) then t.copy(tpe = opaqueRef) else t
+    if seeds(t.sym) then t.copy(tpe = seedTypeRef(t.tpe)) else t
 
   override def transformApply(t0: Tree.Apply)(using Program): Term =
-    val t = if isSeedMethod(t0.method) then t0.copy(tpe = opaqueRef) else t0 // seed getter returns opaque
+    val t = if isSeedMethod(t0.method) then t0.copy(tpe = seedMethodRetType(t0.method)) else t0
     t.fun match
       // operator operands consumed as Int (`layer + 1`, `layer < other`) → unwrap the seed sides.
       case Tree.Select(recv, m, st, so) if summon[Program].symbolOf(m).exists(_.fullName.startsWith("scala.<op>#")) =>
@@ -511,7 +547,8 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     // The DECLARATION on the left decides, not the node type on the right: `layer = c ? 0 : x` has
     // an `Assign` whose rhs node is still `Int` and whose value is half a seed's.
     case a: Tree.Assign =>
-      if carriesOpaque(a.lhs) then a.copy(rhs = wrap(a.rhs)) else a.copy(rhs = unwrapIfOpaque(a.rhs))
+      if carriesOpaque(a.lhs) then a.copy(rhs = wrapFor(a.rhs, lhsDeclType(a.lhs)))
+      else a.copy(rhs = unwrapIfOpaque(a.rhs))
     case x: Tree.ArrayAccess => x.copy(index = unwrapIfOpaque(x.index))
     case other => other
 
@@ -524,7 +561,8 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
         val params = d.paramss.flatten
         if params.length != t.args.length then t
         else t.copy(args = t.args.zip(params).map { (arg, p) =>
-          if seeds(p.symbol) then wrap(arg) else unwrapIfOpaque(arg)
+          if seeds(p.symbol) then wrapFor(arg, summon[Program].symbolOf(p.symbol).map(_.info).getOrElse(TypeRepr.NoType))
+          else unwrapIfOpaque(arg)
         })
       case _ => t
 
@@ -552,10 +590,10 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     case Tree.If(_, a, b, _, _)       => carriesOpaque(a) || carriesOpaque(b)
     case Tree.Block(_, x, _, _, _)    => carriesOpaque(x)
     case Tree.Match(_, cases, _, _, _, _) => cases.exists(c => carriesOpaque(c.body))
-    case Tree.Ident(s, _, _)          => seeds(s) || isOpaque(e)
-    case Tree.Select(_, s, _, _)      => seeds(s) || isOpaque(e)
-    case Tree.Apply(_, _, m, _, _)    => isSeedMethod(m) || isOpaque(e)
-    case other                        => isOpaque(other)
+    case Tree.Ident(s, _, _)          => seeds(s) || isOpaque(e) || isOpaqueArray(e)
+    case Tree.Select(_, s, _, _)      => seeds(s) || isOpaque(e) || isOpaqueArray(e)
+    case Tree.Apply(_, _, m, _, _)    => isSeedMethod(m) || isOpaque(e) || isOpaqueArray(e)
+    case other                        => isOpaque(other) || isOpaqueArray(other)
 
   /** Insert `f` WHERE THE VALUE IS — at each leaf of a carrying expression, never around the whole.
     *
@@ -587,10 +625,15 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
       List(e), unwrapSym, primRef, e.origin)
 
   /** COERCE OUT of it — a no-op unless the value really is a seed's, which is what makes this safe
-    * to ask at every boundary rather than only at the ones a node type made visible. */
+    * to ask at every boundary rather than only at the ones a node type made visible.
+    * O3: an array-of-opaque value is unwrapped with `unwrapArray`. */
   private def unwrapIfOpaque(e: Term)(using Program): Term =
     if !carriesOpaque(e) then e
-    else coerce(e, primRef, l => if carriesOpaque(l) then unwrapCall(l) else l)
+    else if isOpaqueArray(e) then unwrapArrayCall(e)
+    else coerce(e, primRef, l =>
+      if isOpaqueArray(l) then unwrapArrayCall(l)
+      else if carriesOpaque(l) then unwrapCall(l)
+      else l)
 
   private def wrapReturns(body: Term)(using Program): Term = body match
     case Tree.Return(Some(e), tp, o) if isPrim(e.tpe) => Tree.Return(Some(wrap(e)), tp, o)
@@ -614,11 +657,56 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     walk(body, true)
 
   private def isOpaque(t: Term): Boolean   = headSym(t.tpe).contains(opaqueSym)
+  private def isOpaqueArray(t: Term): Boolean = t.tpe match
+    case TypeRepr.AppliedType(TypeRepr.TypeRef(_, s), List(TypeRepr.TypeRef(_, e))) =>
+      s == arraySym && e == opaqueSym
+    case _ => false
   private def isPrim(t: TypeRepr): Boolean = headSym(t).contains(primSym)
+
+  /** The retyped type for a seed: `Prim` -> `Opaque.T`, `Array[Prim]` -> `Array[Opaque.T]`. */
+  private def seedTypeRef(origType: TypeRepr): TypeRepr =
+    if isArrayOfPrim(origType) then opaqueArrayRef else opaqueRef
+
+  /** The return type of a seed method, retyped. */
+  private def seedMethodRetType(m: SymId)(using p: Program): TypeRepr =
+    p.symbolOf(m).map(_.info) match
+      case Some(TypeRepr.MethodType(_, ret, _)) =>
+        if isArrayOfPrim(ret) then opaqueArrayRef else opaqueRef
+      case _ => opaqueRef
+
+  /** Wrap a value for assignment to a seed. Dispatches scalar vs array coercion (O3). */
+  private def wrapFor(e: Term, origDeclType: TypeRepr)(using Program): Term =
+    if isArrayOfPrim(origDeclType) then wrapArrayCall(e) else wrap(e)
+
+  /** The declared type of the LHS of an assignment — read from the DECLARATION, not the node. */
+  private def lhsDeclType(lhs: Term)(using p: Program): TypeRepr = lhs match
+    case Tree.Ident(s, _, _)     => p.symbolOf(s).map(_.info).getOrElse(TypeRepr.NoType)
+    case Tree.Select(_, s, _, _) => p.symbolOf(s).map(_.info).getOrElse(TypeRepr.NoType)
+    case _                       => TypeRepr.NoType
+
+  // O3: array coercion — wrapArray/unwrapArray calls.
+  private def wrapArrayCall(e: Term): Term =
+    Tree.Apply(Tree.Select(Tree.Ident(objSym, TypeRepr.NoType, e.origin), wrapArraySym, TypeRepr.NoType, e.origin),
+      List(e), wrapArraySym, opaqueArrayRef, e.origin)
+
+  private def unwrapArrayCall(e: Term): Term =
+    Tree.Apply(Tree.Select(Tree.Ident(objSym, TypeRepr.NoType, e.origin), unwrapArraySym, TypeRepr.NoType, e.origin),
+      List(e), unwrapArraySym, primArrayRef, e.origin)
+
+
+  /** Is this type `Array[Prim]` — an array whose element is the spec's primitive? */
+  private def isArrayOfPrim(t: TypeRepr): Boolean = t match
+    case TypeRepr.AppliedType(TypeRepr.TypeRef(_, s), List(elem)) =>
+      s == arraySym && isPrim(elem)
+    case _ => false
+
+  /** Is this a taggable type — either the primitive itself or `Array[Prim]` (O3)?
+    * A method's RESULT is what decides; a parameter is not independently taggable. */
   private def taggablePrim(info: TypeRepr): Boolean = info match
-    case r if isPrim(r)                 => true
-    case TypeRepr.MethodType(_, ret, _) => isPrim(ret)
-    case _                              => false
+    case r if isPrim(r)                              => true
+    case r if isArrayOfPrim(r)                       => true
+    case TypeRepr.MethodType(_, ret, _)              => isPrim(ret) || isArrayOfPrim(ret)
+    case _                                           => false
 
   private def headSym(t: TypeRepr): Option[SymId] = t match
     case TypeRepr.TypeRef(_, s)      => Some(s)

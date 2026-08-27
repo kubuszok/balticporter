@@ -26,7 +26,7 @@ import balticporter.transform.*
   * so nothing depends on there being one instance.
   *
   * ==The one thing config cannot express, stated once==
-  * Three of these phases take a `Symbol => Boolean` in Scala: `PrimitiveToOpaqueTransform.hints`,
+  * Two of these phases take a `Symbol => Boolean` in Scala:
   * `GlobalsToImplicitsTransform.isContext`, `PanamaFfiTransform.isNative`. A predicate is CODE, and
   * a config format that grew a way to write one would have become a scripting language with the
   * engine as its interpreter. So each is handled the same way:
@@ -34,10 +34,8 @@ import balticporter.transform.*
   *   - where the predicate has a universal default that needs no policy, config uses it
   *     (`isNative` is `_.flags.isNative` — a fact about Java, not about a library);
   *   - where the port must name things, config names them AS DATA and the factory closes over the
-  *     data (`globals-to-implicits` takes `contextClasses`, a set of FQNs);
-  *   - where the port genuinely needs an arbitrary predicate, config REFUSES and says so, naming
-  *     the escape hatch — a factory of the port's own, in the port's own repository, in Scala
-  *     (`primitive-to-opaque`'s `hints`).
+  *     data (`globals-to-implicits` takes `contextClasses`, a set of FQNs;
+  *     `primitive-to-opaque` takes `hints`, a set of FQNs — O4 CLOSED);
   *
   * That third case is the §1.5 line held: the conf path constructs the same values the Scala path
   * constructs, and anything a value needs that config cannot express arrives as SPI-discovered
@@ -324,28 +322,18 @@ final class PortMapMigrationFactory extends TransformFactory:
   *   scope { only = ["sge.gl"] } }
   * ```
   *
-  * `hints` — `OpaqueSpec`'s own predicate, §1(c) in its purest form — is REFUSED here rather than
-  * ignored. A port whose seeds cannot be listed by name registers its own factory and constructs
-  * the `OpaqueSpec` with the predicate in Scala; that is one class in the port's repository, and it
-  * is the only sanctioned way for behaviour to enter a run from configuration.
-  *
-  * `extraHints` is the field it fills, spelled exactly as `OpaqueSpec` spells it. A second, friendlier
-  * name for the same set would be two homes for one policy, which is the cost DESIGN.md §5.6 warns
-  * about, paid for nothing.
+  * `hints` is a `Set[String]` of exact FQNs matched against `Symbol.fullName` — the port's own
+  * seeds, §1(c) in its purest form. Both `hints` and `extraHints` are fully-qualified names and
+  * both reach the surface fingerprint (O4 CLOSED); the two are kept apart so that a port's
+  * own policy (which an agent reviews once) and an agent's additions (which arrive after a compile
+  * failure) are visibly different artifacts.
   */
 final class PrimitiveToOpaqueFactory extends TransformFactory:
   def name = "primitive-to-opaque"
   def fromConfig(config: ConfigView): Phase =
-    if config.keys.contains("hints") then
-      throw ConfigError(config.at("hints"),
-        "`OpaqueSpec.hints` is a `Symbol => Boolean` and a configuration file cannot hold one — a " +
-          "predicate written as a string would be code the engine interprets, which is precisely " +
-          "what this SPI exists to avoid (CLAUDE.md §1.5). List the seeds by fully-qualified name " +
-          "in `extraHints`, or register a `balticporter.tir.TransformFactory` of your own that " +
-          "builds the `OpaqueSpec` with the predicate in Scala.")
     new PrimitiveToOpaqueTransform(OpaqueSpec(
       fqn        = config.requireString("fqn"),
-      hints      = _ => false,
+      hints      = config.strings("hints").getOrElse(Nil).toSet,
       underlying = config.string("underlying")
                      .map(OpaqueSpec.Primitive.fromScalaName)
                      .getOrElse(OpaqueSpec.Primitive.Int),

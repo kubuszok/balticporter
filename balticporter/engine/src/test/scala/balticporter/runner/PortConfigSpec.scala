@@ -503,12 +503,12 @@ class PortConfigSpec extends munit.FunSuite:
     assert(clue(e.getMessage).contains("expected a list of strings"))
   }
 
-  test("`hints` refuses to be data, and names the escape hatch") {
+  test("`hints` is a list of FQNs — a plain string is a shape error (O4 CLOSED)") {
     val f = fixture(Minimal.replace("""manifest { name = "demo" }""",
       """manifest { name = "demo", surface = [
-        |  { transform = "primitive-to-opaque", fqn = "port.Handle", hints = "x => true" } ] }""".stripMargin))
+        |  { transform = "primitive-to-opaque", fqn = "port.Handle", hints = "not-a-list" } ] }""".stripMargin))
     val e = intercept[ConfigError](PortConfig.load(f))
-    assert(clue(e.getMessage).contains("TransformFactory"))
+    assert(clue(e.getMessage).contains("expected a list"))
   }
 
   test("a scope declaring both directions is refused") {

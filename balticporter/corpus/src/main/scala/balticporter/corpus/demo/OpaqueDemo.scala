@@ -31,7 +31,7 @@ object OpaqueDemo:
     * param, and the local `l` in `slot` — is DISCOVERED by flow propagation. `underlying` and
     * `scope` are left at their defaults: `scala.Int`, and a fence that fences nothing. */
   private val transform = new PrimitiveToOpaqueTransform(
-    OpaqueSpec(fqn = "Layer", hints = s => s.name == "layer" && !s.flags.isParam))
+    OpaqueSpec(fqn = "Layer", hints = Set("demo.Sprite#layer")))
 
   def main(args: Array[String]): Unit =
     val before = SpoonTir.fromSource(src)

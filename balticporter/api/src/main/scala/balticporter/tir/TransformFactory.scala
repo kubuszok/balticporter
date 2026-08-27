@@ -16,8 +16,8 @@ package balticporter.tir
   * worked example. What a factory adds is one sanctioned indirection: a STABLE NAME resolving,
   * through `java.util.ServiceLoader`, to a class the consumer's own build already put on the
   * classpath. There is no classname-in-a-string, no reflective construction of a lambda, and no way
-  * for a config file to express a predicate. A port that needs a predicate — `OpaqueSpec.hints` is
-  * the canonical one — writes a factory that closes over it, in its own repository, in Scala.
+  * for a config file to express a predicate. A port that needs a predicate writes a factory that
+  * closes over it, in its own repository, in Scala.
   *
   * ==Why the config type is [[ConfigView]] and not a HOCON `Config`==
   * `balticporter-api` depends on NOTHING (DESIGN.md §3.2), and that property is what makes a §1(c)

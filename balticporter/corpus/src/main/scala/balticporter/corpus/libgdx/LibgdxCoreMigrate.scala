@@ -983,7 +983,7 @@ object LibgdxPolicy:
   def textureHandle: balticporter.transform.PrimitiveToOpaqueTransform =
     new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
       fqn        = "com.badlogic.gdx.graphics.TextureHandle",
-      hints      = _.fullName == "com.badlogic.gdx.graphics.GLTexture#glHandle",
+      hints      = Set("com.badlogic.gdx.graphics.GLTexture#glHandle"),
       underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
       scope      = balticporter.tir.RuleScope.Everywhere(except = Set(
         "com.badlogic.gdx.graphics.GL20", "com.badlogic.gdx.graphics.GL30",

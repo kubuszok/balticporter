@@ -10,7 +10,7 @@ package balticporter.tir
   * {{{
   * OpaqueSpec(
   *   fqn        = "sge.gl.GlHandle",           // object GlHandle; the type is GlHandle.T
-  *   hints      = s => s.fullName.endsWith("#glHandle"),
+  *   hints      = Set("com.example.GLTexture#glHandle"),
   *   underlying = OpaqueSpec.Primitive.Int,
   *   scope      = RuleScope.Only(Set("sge.gl")),
   * )
@@ -26,11 +26,14 @@ package balticporter.tir
   * `IntToOpaqueTransform("Layer", …)` did and is the default this replaces.
   *
   * ==Seeds and the fence==
-  *   - [[hints]] is the port's own predicate — §1(c) in its purest form, since WHICH `int`s are
-  *     really a GL handle is knowledge about one library and nothing else.
+  *   - [[hints]] is the port's own seed set — fully-qualified names matched against
+  *     `Symbol.fullName`. This is §1(c) in its purest form, since WHICH `int`s are really a GL
+  *     handle is knowledge about one library and nothing else. The set is RENDERABLE into the
+  *     surface fingerprint, closing `ENGINE-LIMITS.md` §13 O4 (the predicate form that preceded
+  *     this had no stable rendering and made two specs differing only in their seeds compare equal).
   *   - [[extraHints]] is the agent-in-the-loop escape hatch: when the emitted Scala fails to
   *     compile, an agent reads the error, adds the fully-qualified name of the missed declaration,
-  *     and the next run re-propagates with it.
+  *     and the next run re-propagates with it. Same format as `hints` — both are exact FQNs.
   *   - [[scope]] FENCES both. A `RuleScope` here bounds where the propagation may reach and which
   *     seeds may fire at all, so a port can say "these ints are handles, but only inside `sge.gl`"
   *     — which matters because a pure-move chain crosses type boundaries freely and one careless
@@ -44,8 +47,8 @@ package balticporter.tir
 final case class OpaqueSpec(
     /** the generated `object`'s fully-qualified name; the opaque type is `<fqn>.T`. */
     fqn: String,
-    /** the port's own seed predicate — §1(c). */
-    hints: Symbol => Boolean,
+    /** the port's own seed set — exact FQNs matched against `Symbol.fullName`. §1(c). */
+    hints: Set[String] = Set.empty,
     /** what the opaque type is a view OF. */
     underlying: OpaqueSpec.Primitive = OpaqueSpec.Primitive.Int,
     /** fully-qualified names an agent adds after reading a compile error. */

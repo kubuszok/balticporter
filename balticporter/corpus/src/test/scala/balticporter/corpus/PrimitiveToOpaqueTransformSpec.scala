@@ -30,7 +30,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
 
   // the ONLY hint is the `layer` FIELD; everything else is discovered by flow propagation.
   private def layerSpec(scope: RuleScope = RuleScope.Everywhere()) =
-    OpaqueSpec(fqn = "Layer", hints = s => s.name == "layer" && !s.flags.isParam, scope = scope)
+    OpaqueSpec(fqn = "Layer", hints = Set("demo.Sprite#layer"), scope = scope)
 
   private val transform = new PrimitiveToOpaqueTransform(layerSpec())
   private val before = SpoonTir.fromSource(src)
@@ -81,7 +81,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
   }
 
   test("a program with no tagged int records nothing — an unmatched hint is silent as well as inert") {
-    val ph  = new PrimitiveToOpaqueTransform(OpaqueSpec(fqn = "Layer", hints = _.name == "noSuchField"))
+    val ph  = new PrimitiveToOpaqueTransform(OpaqueSpec(fqn = "Layer", hints = Set("demo.noSuchField")))
     val log = Pipeline.runTraced(SpoonTir.fromSource(src), List(ph))._2
     assertEquals(log.all, Nil)
   }
@@ -107,7 +107,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
 
   test("a NON-Int primitive works the same way — the mechanism never depended on Int") {
     val ph = new PrimitiveToOpaqueTransform(OpaqueSpec(
-      fqn = "Width", hints = s => s.name == "width" && !s.flags.isParam,
+      fqn = "Width", hints = Set("demo.Box#width"),
       underlying = OpaqueSpec.Primitive.Float))
     val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(boxes), List(ph))).emit
     assert(clue(emitted).contains("opaque type T = scala.Float"))
@@ -118,7 +118,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
 
   test("the DEFINITION SITE is the spec's FQN — the object lands in that package") {
     val ph = new PrimitiveToOpaqueTransform(OpaqueSpec(
-      fqn = "sge.gl.Layer", hints = s => s.name == "layer" && !s.flags.isParam))
+      fqn = "sge.gl.Layer", hints = Set("demo.Sprite#layer")))
     val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), List(ph))).emit
     assert(clue(emitted).contains("package sge.gl"))
     assert(emitted.contains("object Layer"))
@@ -126,10 +126,10 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
   }
 
   test("an fqn that cannot be a package path is REFUSED at construction, not silently emitted") {
-    intercept[IllegalArgumentException](OpaqueSpec(fqn = "", hints = _ => true))
-    intercept[IllegalArgumentException](OpaqueSpec(fqn = "a..b", hints = _ => true))
-    intercept[IllegalArgumentException](OpaqueSpec(fqn = "a.B#c", hints = _ => true))
-    intercept[IllegalArgumentException](OpaqueSpec(fqn = "a.B$C", hints = _ => true))
+    intercept[IllegalArgumentException](OpaqueSpec(fqn = "", hints = Set("x")))
+    intercept[IllegalArgumentException](OpaqueSpec(fqn = "a..b", hints = Set("x")))
+    intercept[IllegalArgumentException](OpaqueSpec(fqn = "a.B#c", hints = Set("x")))
+    intercept[IllegalArgumentException](OpaqueSpec(fqn = "a.B$C", hints = Set("x")))
   }
 
   test("a primitive an opaque type cannot be a view of is REFUSED loudly, naming what is available") {
@@ -156,14 +156,14 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
 
   test("an unfenced propagation crosses type boundaries — which is exactly why a fence exists") {
     val ph = new PrimitiveToOpaqueTransform(OpaqueSpec(
-      fqn = "Layer", hints = s => s.fullName == "demo.Sprite#layer"))
+      fqn = "Layer", hints = Set("demo.Sprite#layer")))
     val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(twoTypes), List(ph))).emit
     assert(clue(emitted).contains("var reading: Layer.T"), "one hint reached the other class")
   }
 
   test("RuleScope.Only fences it — the propagation stops at the boundary the port drew") {
     val ph = new PrimitiveToOpaqueTransform(OpaqueSpec(
-      fqn = "Layer", hints = s => s.fullName == "demo.Sprite#layer",
+      fqn = "Layer", hints = Set("demo.Sprite#layer"),
       scope = RuleScope.Only(Set("demo.Sprite"))))
     val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(twoTypes), List(ph))).emit
     assert(clue(emitted).contains("var layer: Layer.T"))
@@ -172,7 +172,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
 
   test("RuleScope.Everywhere(except) fences it from the other side") {
     val ph = new PrimitiveToOpaqueTransform(OpaqueSpec(
-      fqn = "Layer", hints = s => s.fullName == "demo.Sprite#layer",
+      fqn = "Layer", hints = Set("demo.Sprite#layer"),
       scope = RuleScope.Everywhere(Set("demo.Meter"))))
     val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(twoTypes), List(ph))).emit
     assert(clue(emitted).contains("var layer: Layer.T"))
@@ -181,7 +181,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
 
   test("a hint OUTSIDE the fence does not fire — a fence a named entry could step over is not one") {
     val ph = new PrimitiveToOpaqueTransform(OpaqueSpec(
-      fqn = "Layer", hints = s => s.fullName == "demo.Meter#reading",
+      fqn = "Layer", hints = Set("demo.Meter#reading"),
       scope = RuleScope.Only(Set("demo.Sprite"))))
     val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(twoTypes), List(ph))).emit
     assert(!clue(emitted).contains("opaque type"), "no seed fired, so nothing was minted")
@@ -215,7 +215,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
       |}
       |""".stripMargin
 
-  private val handleSpec = OpaqueSpec(fqn = "Handle", hints = _.fullName == "demo.Tex#handle")
+  private val handleSpec = OpaqueSpec(fqn = "Handle", hints = Set("demo.Tex#handle"))
   private lazy val ternaryOut =
     new TirEmitter(Pipeline.run(SpoonTir.fromSource(ternary), List(new PrimitiveToOpaqueTransform(handleSpec)))).emit
 
@@ -257,7 +257,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
         |}
         |""".stripMargin
     val ph = new PrimitiveToOpaqueTransform(OpaqueSpec(
-      fqn = "Handle", hints = _.fullName == "demo.Tex#handle"))
+      fqn = "Handle", hints = Set("demo.Tex#handle")))
     val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(mixed), List(ph))).emit
     // `spare = handle` IS a pure move, so `spare` is a seed and the `if` mixes the two types. Only
     // the plain branch is wrapped; wrapping the whole would hand `Handle.apply` an argument that is
@@ -277,7 +277,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
         |}
         |""".stripMargin
     val ph = new PrimitiveToOpaqueTransform(OpaqueSpec(
-      fqn = "Handle", hints = _.fullName == "demo.Tex#handle"))
+      fqn = "Handle", hints = Set("demo.Tex#handle")))
     val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(uniform), List(ph))).emit
     // `other` never reaches `handle` by a pure move (an assignment through an `if` is not one), so
     // both branches are plain and the pre-O1 answer — one coercion around the carrier — is right.
@@ -305,7 +305,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
 
   private def inheritedRun =
     val ph = new PrimitiveToOpaqueTransform(OpaqueSpec(
-      fqn = "Handle", hints = _.fullName == "demo.Base#handle"))
+      fqn = "Handle", hints = Set("demo.Base#handle")))
     val after = Pipeline.run(SpoonTir.fromSource(inherited), List(ph))
     (after, new TirEmitter(after).emit)
 
@@ -339,30 +339,46 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------
-  // O3 — a family that lands on a container's ELEMENT is UNREACHABLE, and says so
+  // O3 — an array-of-prim is now EXPRESSIBLE (O3 CLOSED). The seed reaches
+  // `Array[Prim]` declarations, retypes them to `Array[Opaque.T]`, and mints
+  // `wrapArray`/`unwrapArray` on the companion.
   // -------------------------------------------------------------------------
 
-  test("a hint naming a declaration whose primitive is inside a CONTAINER is REPORTED, not silent") {
+  test("O3 CLOSED: an int[] declaration seeded by a hint becomes Array[Opaque.T]") {
     val arrays =
       """package demo;
         |class Mesh {
         |  private int[] locations = new int[4];
-        |  public void bind(int[] extra) { }
+        |  public int[] getLocations() { return locations; }
+        |  public void bind(int[] locs) { }
         |}
         |""".stripMargin
     val ph = new PrimitiveToOpaqueTransform(OpaqueSpec(
-      fqn = "Loc", hints = _.fullName == "demo.Mesh#locations"))
-    Pipeline.run(SpoonTir.fromSource(arrays), List(ph))
+      fqn = "Loc", hints = Set("demo.Mesh#locations")))
+    val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(arrays), List(ph))).emit
+    // the field is retyped to Array[Loc.T]
+    assert(clue(emitted).contains("var locations: scala.Array[Loc.T]"))
+    // wrapArray and unwrapArray are minted
+    assert(emitted.contains("def wrapArray("))
+    assert(emitted.contains("def unwrapArray("))
+    // no unreachable report — this is now a legitimate seed
+    assertEquals(clue(ph.policyReport.findings), Nil)
+  }
+
+  test("a hint naming a DEEPER container (e.g. List[int[]]) is still REPORTED — only Array[Prim] is expressible") {
+    val nested =
+      """package demo;
+        |import java.util.List;
+        |class Mesh {
+        |  private List<int[]> batches;
+        |}
+        |""".stripMargin
+    val ph = new PrimitiveToOpaqueTransform(OpaqueSpec(
+      fqn = "Loc", hints = Set("demo.Mesh#batches")))
+    Pipeline.run(SpoonTir.fromSource(nested), List(ph))
     val fs = ph.policyReport.findings
     assertEquals(clue(fs).size, 1)
-    assertEquals(fs.head.key, "demo.Mesh#locations")
     assertEquals(fs.head.issue, balticporter.core.PolicyIssue.Malformed)
-    assertEquals(fs.head.setting, "OpaqueSpec(Loc).hints")
-    // the reader's first question is which of §1's three kinds the fix is, and the honest answer
-    // here is (a) ENGINE — no respelling of the key can reach a container's element.
-    assert(clue(fs.head.detail).contains("§1(a) ENGINE"))
-    assert(fs.head.detail.contains("O3"))
-    assert(fs.head.detail.contains("NOT a typo"))
   }
 
   test("a hint the mechanism CAN reach reports nothing — empty policy in, empty report out") {
@@ -370,21 +386,22 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     Pipeline.run(SpoonTir.fromSource(src), List(ph))
     assertEquals(clue(ph.policyReport.findings), Nil)
     // …and a hint naming a declaration with no `int` in it anywhere is an ordinary miss, not this.
-    val other = new PrimitiveToOpaqueTransform(OpaqueSpec(fqn = "L", hints = _.name == "noSuchField"))
+    val other = new PrimitiveToOpaqueTransform(OpaqueSpec(fqn = "L", hints = Set("demo.noSuchField")))
     Pipeline.run(SpoonTir.fromSource(src), List(other))
     assertEquals(clue(other.policyReport.findings), Nil)
   }
 
   test("a report is THIS run's — a reused instance never carries the previous translation's") {
-    val arrays =
+    val nested =
       """package demo;
-        |class Mesh { private int[] locations = new int[4]; }
+        |import java.util.List;
+        |class Mesh { private List<int[]> batches; }
         |""".stripMargin
     val ph = new PrimitiveToOpaqueTransform(OpaqueSpec(
-      fqn = "Loc", hints = _.fullName == "demo.Mesh#locations"))
-    Pipeline.run(SpoonTir.fromSource(arrays), List(ph))
+      fqn = "Loc", hints = Set("demo.Mesh#batches")))
+    Pipeline.run(SpoonTir.fromSource(nested), List(ph))
     assertEquals(ph.policyReport.findings.size, 1)
-    Pipeline.run(SpoonTir.fromSource(arrays), List(ph))
+    Pipeline.run(SpoonTir.fromSource(nested), List(ph))
     assertEquals(clue(ph.policyReport.findings).size, 1, "cleared at the head of each run, not accumulated")
   }
 
@@ -395,8 +412,8 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
   test("the fingerprint separates two differently-configured instances (§1.5)") {
     import balticporter.core.PortManifest.fingerprint
     def ph(s: OpaqueSpec) = new PrimitiveToOpaqueTransform(s)
-    val base  = OpaqueSpec(fqn = "Layer", hints = _.name == "layer")
-    val same  = OpaqueSpec(fqn = "Layer", hints = _.name == "layer")
+    val base  = OpaqueSpec(fqn = "Layer", hints = Set("demo.Sprite#layer"))
+    val same  = OpaqueSpec(fqn = "Layer", hints = Set("demo.Sprite#layer"))
     assertEquals(clue(fingerprint(ph(base))), fingerprint(ph(same)), "two ports that AGREE compare equal")
 
     // the fence is emitted SURFACE — a base whose `Meter` kept the primitive and a dependent whose
@@ -404,10 +421,14 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     assertNotEquals(fingerprint(ph(base)), fingerprint(ph(base.copy(scope = RuleScope.Only(Set("demo.Sprite"))))))
     assertNotEquals(fingerprint(ph(base.copy(scope = RuleScope.Only(Set("a"))))),
                     fingerprint(ph(base.copy(scope = RuleScope.Everywhere(Set("a"))))))
-    // …and so are the primitive and every agent-supplied extra hint.
+    // …and so are the primitive, the HINTS THEMSELVES (O4 CLOSED), and every agent-supplied extra hint.
     assertNotEquals(fingerprint(ph(base)), fingerprint(ph(base.copy(underlying = OpaqueSpec.Primitive.Long))))
+    assertNotEquals(fingerprint(ph(base)), fingerprint(ph(base.copy(hints = Set("demo.Meter#reading")))),
+      "O4: two specs differing in their hints must compare UNEQUAL — the predicate form could not see this")
     assertNotEquals(fingerprint(ph(base)), fingerprint(ph(base.copy(extraHints = Set("demo.Sprite#z")))))
     // order-independent, or two ports that agree compare unequal on a HashSet's iteration order
+    assertEquals(fingerprint(ph(base.copy(hints = Set("b", "a")))),
+                 fingerprint(ph(base.copy(hints = Set("a", "b")))))
     assertEquals(fingerprint(ph(base.copy(extraHints = Set("b", "a")))),
                  fingerprint(ph(base.copy(extraHints = Set("a", "b")))))
     // a DIFFERENT opaque type is a different phase NAME, so the two never meet in a fold at all
@@ -418,10 +439,10 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
 
   test("two specs COMPOSE when their propagated seed sets are disjoint") {
     val layers = new PrimitiveToOpaqueTransform(OpaqueSpec(
-      fqn = "Layer", hints = s => s.fullName == "demo.Sprite#layer",
+      fqn = "Layer", hints = Set("demo.Sprite#layer"),
       scope = RuleScope.Only(Set("demo.Sprite"))))
     val meters = new PrimitiveToOpaqueTransform(OpaqueSpec(
-      fqn = "Reading", hints = s => s.fullName == "demo.Meter#reading",
+      fqn = "Reading", hints = Set("demo.Meter#reading"),
       scope = RuleScope.Only(Set("demo.Meter"))))
     val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(twoTypes), List(layers, meters))).emit
     assert(clue(emitted).contains("var layer: Layer.T"))
@@ -434,9 +455,9 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     // it as ineligible, and emit a port with half of `Reading` missing — a green compile, no count
     // moved, and no row anywhere saying so.
     val layers = new PrimitiveToOpaqueTransform(OpaqueSpec(
-      fqn = "Layer", hints = s => s.fullName == "demo.Sprite#layer"))
+      fqn = "Layer", hints = Set("demo.Sprite#layer")))
     val meters = new PrimitiveToOpaqueTransform(OpaqueSpec(
-      fqn = "Reading", hints = s => s.fullName == "demo.Meter#reading"))
+      fqn = "Reading", hints = Set("demo.Meter#reading")))
     val e = intercept[IllegalStateException](
       Pipeline.run(SpoonTir.fromSource(twoTypes), List(layers, meters)))
     assert(clue(e.getMessage).contains("demo.Meter#reading"))
