@@ -13555,12 +13555,22 @@ normally (the rule is about the line, not about patterns), and an exact-FQN hint
 two-module tree is untouched — which is the measurement behind "zero corpus movement" rather than an
 assertion about it. All 13 ports: 0 members changed, every check count identical.
 
-### O6. An opaque family that REPLACES a java CLASS is inexpressible — the mint always makes a NEW companion
+### O6. An opaque family that REPLACES a java CLASS — Align CLOSED, nested/class-to-opaque OPEN
 
-**OPEN. (b) engine — a `PrimitiveToOpaqueTransform` that retypes against an EXISTING/injected opaque
-type instead of minting one, with the FQN as its parameter.** Found by the sge opaque-type census
-(below); **4 families**, and none of them costs an error today because none of them can be
-configured at all.
+**PARTIALLY CLOSED.** The `Existing` target form is delivered and `Align` is green (gdx 7 -> 0,
+gdx-test 217/4 unchanged, ashley 0). Two engine fixes closed it:
+
+- `FlowPropagation` now walks through `Tree.Commented` nodes. The 6 TiledDrawable errors were
+  caused by `isCenterVertical`/`isCenterHorizontal` calls wrapped in comment nodes (`// Left center
+  partials`) that stopped the flow walk at `case _ => ()`. The 4 `isLeft`/`isRight`/`isTop`/
+  `isBottom` calls had no comment wrapper, so their parameters got seeded. A `Commented` carries no
+  flow semantics.
+- `PrimitiveToOpaqueTransform.wrapCall` handles the BOXED form of the primitive (`java.lang.Integer`
+  for `Int`). `Cell.align` is `Integer` (null = unset), and Java's auto-unbox is implicit in the
+  TIR. `OpaqueSpec.Primitive` now carries `boxedFqn`.
+
+**Three of four families remain OPEN** because each requires a shape the mechanism has no vocabulary
+for:
 
 The census of the reference hand port's 39 `opaque type` declarations splits six ways, and this
 entry is one of the two buckets the mechanism has no vocabulary for:
@@ -13571,7 +13581,8 @@ entry is one of the two buckets the mechanism has no vocabulary for:
 | `UniformLocation` — a scalar `int` on ported params/results (`ShaderProgram`, `BaseShader`; 32 type positions) | 1 | **yes** — expressible, not yet configured |
 | `AttributeLocation` — an `int[]` ELEMENT (`Mesh#bind`, `VertexBufferObjectWithVAO`; 33 type positions) | 1 | **yes, since O3** |
 | GL handle families sge DECLARES and does not apply (`BufferHandle`, `ShaderHandle`, `ProgramHandle`, `FramebufferHandle`, `RenderbufferHandle`) | 5 | n/a — no ported declaration to seed |
-| an opaque type standing where java has a CLASS (`Align`, `Input.Key`, `Input.Button`, `HttpStatus`) | 4 | **NO — this entry** |
+| `Align` — a class of `static final int` constants, replaced by an injected opaque type | 1 | **yes, since O6** — `Existing` target, gdx 7 -> 0 |
+| an opaque type standing where java has a NESTED CLASS or a real-field class (`Input.Key`, `Input.Button`, `HttpStatus`) | 3 | **NO — this entry** |
 | GL parameter families typing `GL20`/`GL30` FORMALS (`GLEnum.scala`'s 14, plus `Pixels`) | 15 | **NO — O7** |
 | SGE-original measurement/audio types with no java counterpart (`WorldUnits`, `Seconds`, `Millis`, `Nanos`, `Degrees`, `Radians`, `Epsilon`, `Volume`, `Pan`, `Pitch`, `Position`, `SoundId`) | 12 | n/a — nothing to seed |
 
@@ -13622,13 +13633,17 @@ answers by construction and would stop answering:
   which existing type a family retypes to is §1.5's two-ports-that-cannot-compile-together, and O4
   is the precedent for it being renderable from the day the key lands.
 
-**Exit criterion.** `Align` configured on the libGDX base: every ported declaration java typed
-`int align` emits `sge.utils.Align`, the injected `Align.scala` is the only definition of that FQN
-in the corpus (`PortRun.claimedSynthetic` still fatal, still not firing), the `api-parity` opaque
-family reports **0** rows for `Align` against the hand port, and the libGDX suite is unchanged. Then
-`Key`/`Button` (the nested-FQN half) and `HttpStatus` (the java class with a real field, whose
-`statusCode` accessor has to become the unwrap) as the two shapes that prove the parameter and not
-just the one case.
+**Exit criterion (Align — MET).** `Align` configured on the libGDX base: 123 ported declarations
+retyped to `sge.utils.Align`, gdx at 0, gdx-test 217/4 unchanged, ashley 0 with
+`api-parity(opaque)` 1 -> 1.
+
+**Remaining exit criteria.** `Key`/`Button` require injecting opaque types INTO an existing emitted
+companion — the `Input` interface's companion `object Input` is mechanically emitted from the
+Java interface's statics, and Scala 3 does not allow companion splitting across files. The
+mechanism needs either whole-type replacement (drop `Input` entirely) or a companion-extension
+injection form. `HttpStatus` is a CLASS-to-opaque collapse: the java class has a constructor and
+an instance field, so the transform is not a primitive-retype but a type-redirect combined with
+constructor/accessor rewriting — a different mechanism from `PrimitiveToOpaqueTransform`.
 
 ### O7. A GL ENUM FAMILY is a VOCABULARY, and this mechanism retypes declarations rather than minting one
 
