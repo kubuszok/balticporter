@@ -302,6 +302,9 @@ object LibgdxPolicy:
       // emitted alongside the injection. The class is still PARSED — its static members are visible
       // to every reference in the ported code.
       "com.badlogic.gdx.utils.Align",
+      // wave 3.1a: retargetted to mutable.BitSet (sge type-mappings.md: "Bits -> mutable.BitSet").
+      // 0 callers in gdx/src; the retarget serves dependents (ashley uses Bits for entity masks).
+      "com.badlogic.gdx.utils.Bits",
     ),
     // libGDX itself deprecated `setEnabledReflection` (superseded by the typed
     // `setEnabled(Styleable, Boolean)`, already ported); its private `findMethod` helper was the
@@ -403,6 +406,29 @@ object LibgdxPolicy:
     * what `ENGINE-LIMITS.md` D9 closes for a base with dependents. */
   def comparatorRetarget: Map[String, String] =
     Map("java.util.Comparator" -> "scala.math.Ordering")
+
+  /** `com.badlogic.gdx.utils.Bits` -> `scala.collection.mutable.BitSet`.
+    *
+    * sge's type-mappings.md: "Bits -> mutable.BitSet". 0 callers in gdx/src; the retarget sits
+    * on the base so dependents (ashley uses Bits for entity masks) inherit it through
+    * `extendedBy`. Dropped from `substitutions.dropTypes` so the java class is not emitted.
+    *
+    * The `retargetRewrites` table maps the member names that differ between `Bits` and `BitSet`:
+    * `get(i)` -> `apply(i)`, `set(i)` -> `addOne(i)`, `clear(i)` -> `subtractOne(i)`, etc.
+    * These fire only on dependents that actually call them; the base has 0 callers. */
+  def bitsRetarget: Map[String, String] =
+    Map("com.badlogic.gdx.utils.Bits" -> "scala.collection.mutable.BitSet")
+
+  def bitsRetargetRewrites: Map[String, Map[(String, Int), balticporter.transform.CollectionsTransform.RetargetRewrite]] =
+    import balticporter.transform.CollectionsTransform.RetargetRewrite.*
+    Map("com.badlogic.gdx.utils.Bits" -> Map(
+      ("get", 1)          -> Rename("apply"),        // bits.get(i) -> bits(i)
+      ("set", 1)          -> Rename("addOne"),        // bits.set(i) -> bits.addOne(i), rendered bits += i
+      ("clear", 1)        -> Rename("subtractOne"),   // bits.clear(i) -> bits -= i
+      ("and", 1)          -> Rename("&="),            // bits.and(other) -> bits &= other
+      ("or", 1)           -> Rename("|="),            // bits.or(other) -> bits |= other
+      ("andNot", 1)       -> Rename("&~="),           // bits.andNot(other) -> bits &~= other
+    ))
 
   /** `com.badlogic.gdx.utils.Disposable` → `java.lang.AutoCloseable`, with `dispose` → `close`.
     *
@@ -814,7 +840,8 @@ object LibgdxPolicy:
     * ([[GdxSharedIteratorRule]]). */
   def mainPhases: List[balticporter.tir.Phase] =
     List(beanProperties, nullaryArity,
-         new CollectionsTransform(retarget = comparatorRetarget), new MutableParamsTransform,
+         new CollectionsTransform(retarget = comparatorRetarget ++ bitsRetarget,
+                                  retargetRewrites = bitsRetargetRewrites), new MutableParamsTransform,
          new PanamaFfiTransform(), unwrapReflection, classTable, new GdxSharedIteratorRule,
          memberRenames, disposableRedirect, textureHandle, align, uniformLocation,
          nullability, globalsToContext)

@@ -100,10 +100,10 @@ final class CollectionsFactory extends TransformFactory:
   def name = "collections"
   def fromConfig(config: ConfigView): Phase =
     new CollectionsTransform(
-      TransformFactory.scopeOf(config),
-      config.stringMap("retarget").getOrElse(Map.empty),
-      config.strings("reifiedCarriers").getOrElse(Nil).toSet,
-      config.strings("reflectiveSinks").getOrElse(Nil).toSet)
+      scope           = TransformFactory.scopeOf(config),
+      retarget        = config.stringMap("retarget").getOrElse(Map.empty),
+      reifiedCarriers = config.strings("reifiedCarriers").getOrElse(Nil).toSet,
+      reflectiveSinks = config.strings("reflectiveSinks").getOrElse(Nil).toSet)
 
 /** ```
   * { transform = "public-field-accessors", scope { only = ["com.foo.Model"] } }

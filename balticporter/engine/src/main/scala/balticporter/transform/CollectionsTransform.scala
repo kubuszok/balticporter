@@ -76,6 +76,21 @@ final class CollectionsTransform(
       * is a rewrite whose outcome depends on which table was read, which is not a thing a policy
       * author can reason about. Empty is the default and makes this a no-op with no code path. */
     val retarget: Map[String, String] = Map.empty,
+    /** PER-RETARGET MEMBER REWRITES — source FQN -> member rewrite table.
+      *
+      * The `retarget` parameter swaps the TYPE; this parameter rewrites CALL SITES on that
+      * retarget's target. Keyed on the retarget's SOURCE FQN (the java type being retargetted);
+      * a key with no `retarget` entry is ignored.
+      *
+      * Each entry maps `(memberName, arity)` to a [[CollectionsTransform.RetargetRewrite]]:
+      *   - `Rename("apply")` renames the call: `arr.get(i)` -> `arr.apply(i)` (rendered `arr(i)`)
+      *   - `BoolDispatch(1, "removeValueByRef", "removeValue")` dispatches on a literal boolean
+      *     argument: when `true` calls onTrue with remaining args, when `false` calls onFalse,
+      *     otherwise refuses and counts on the existing `collection-retarget` lane.
+      *
+      * Empty is the default and the no-op. The fingerprint segment is omitted when empty.
+      * `MergeablePolicy` unions independent keys; same source with different target refuses. */
+    val retargetRewrites: Map[String, Map[(String, Int), CollectionsTransform.RetargetRewrite]] = Map.empty,
     /** REIFIED CARRIERS — external generic types whose type ARGUMENTS a third party reads back out
       * of the class file's generic signature at run time (`ENGINE-LIMITS.md` K20).
       *
@@ -242,6 +257,12 @@ final class CollectionsTransform(
       Some("mapping=" + CollectionsTransform.mappingDigest),
       scala.Option.when(retarget.nonEmpty)(
         "retarget=" + retarget.toList.sorted.map((k, v) => s"$k->$v").mkString(",")),
+      // A RETARGET REWRITE is the same surface fact as a retarget, one member name in: a base whose
+      // `Bits.get(i)` became `apply(i)` and a dependent whose did not emit call sites that cannot
+      // compile together. Segment omitted when empty, so a port that declares none has the
+      // fingerprint it always had (§1(b)'s fingerprint rule).
+      scala.Option.when(retargetRewrites.nonEmpty)(
+        "retargetRewrites=" + retargetRewritesDigest),
       // A CARRIER is the same fact one type argument in, and it is surface for the plainest reason
       // there is: `TypeReference<Map<String,Object>>` is the emitted type of a `public static final`
       // field. A base that preserves it and a dependent that does not emit two signatures that each
@@ -289,9 +310,12 @@ final class CollectionsTransform(
         .filter(k =>
           scope.entries.intersect(Set(retarget(k))).nonEmpty !=
           o.scope.entries.intersect(Set(o.retarget(k))).nonEmpty) // rough — retargets do not have per-entry scopes
+      // --- retargetRewrites clashes: same source FQN, different rewrite table ---
+      val rewriteClash = (retargetRewrites.keySet & o.retargetRewrites.keySet)
+        .filter(k => retargetRewrites(k) != o.retargetRewrites(k))
       // --- carrier/sink disagreements are NOT surface and therefore NOT a refusal ---
       if retargetClash.nonEmpty || familyClash.nonEmpty || crossClash.nonEmpty ||
-          scopeClash.nonEmpty then
+          scopeClash.nonEmpty || rewriteClash.nonEmpty then
         Left(
           (retargetClash.toList.sorted.map(k =>
              s"""both modules retarget "$k", to "${retarget(k)}" and "${o.retarget(k)}"""") ++
@@ -303,11 +327,14 @@ final class CollectionsTransform(
            scopeClash.map(k =>
              s"""both modules scope the family "$k" and disagree — """ +
                s""""${familyScopeOf(k).fingerprint}" and "${o.familyScopeOf(k).fingerprint}"; a scope """ +
-               "decides which declarations carry the family type in their signatures"))
+               "decides which declarations carry the family type in their signatures") ++
+           rewriteClash.toList.sorted.map(k =>
+             s"""both modules declare retarget rewrites for "$k" and disagree"""))
             .mkString("; ") +
             " — two answers for one key is a rewrite whose outcome depends on which manifest was read")
       else
         val mergedRetarget = retarget ++ o.retarget
+        val mergedRewrites = retargetRewrites ++ o.retargetRewrites
         val mergedFamilies = families ++ o.families
         val mergedFamilyScopes = familyScopes ++ o.familyScopes
         // carriers and sinks: union without a clash (they are not surface)
@@ -317,12 +344,13 @@ final class CollectionsTransform(
         val addedFamilySubjects = (o.families.keySet -- families.keySet).map(MergeablePolicy.subjectOf)
         Right(MergeablePolicy.Merged(
           new CollectionsTransform(
-            scope          = scope, // the base's scope — inherited
-            retarget       = mergedRetarget,
-            reifiedCarriers = mergedCarriers,
-            reflectiveSinks = mergedSinks,
-            families       = mergedFamilies,
-            familyScopes   = mergedFamilyScopes),
+            scope            = scope, // the base's scope — inherited
+            retarget         = mergedRetarget,
+            retargetRewrites = mergedRewrites,
+            reifiedCarriers  = mergedCarriers,
+            reflectiveSinks  = mergedSinks,
+            families         = mergedFamilies,
+            familyScopes     = mergedFamilyScopes),
           addedRetargetSubjects ++ addedFamilySubjects))
     case other =>
       Left(s"`${other.name}` is not a `CollectionsTransform`, so there is no table to compose")
@@ -345,6 +373,10 @@ final class CollectionsTransform(
     require(retargetClash.isEmpty,
       s"CollectionsTransform: families key(s) ${retargetClash.mkString(", ")} also appear in " +
         "retarget — two answers for one type is not a thing a policy author can reason about")
+    val orphanRewrites = retargetRewrites.keySet -- retarget.keySet
+    require(orphanRewrites.isEmpty,
+      s"CollectionsTransform: retargetRewrites key(s) ${orphanRewrites.mkString(", ")} have no " +
+        "matching retarget entry — a rewrite table for a type this phase does not retarget is dead code")
   }
 
   /** java fully-qualified name → (scala fully-qualified name, collection kind).
@@ -368,6 +400,14 @@ final class CollectionsTransform(
     balticporter.tir.TirPrinter.sha256(
       families.toList.map((k, v) => s"$k->${v._1}:${v._2};scope=${familyScopeOf(k).fingerprint}")
         .sorted.mkString(",")).take(16)
+
+  /** digest of the `retargetRewrites` table — sorted by source FQN then by (member, arity).
+    * Used only when `retargetRewrites.nonEmpty`. */
+  private def retargetRewritesDigest: String =
+    balticporter.tir.TirPrinter.sha256(
+      retargetRewrites.toList.sortBy(_._1).flatMap { (src, tbl) =>
+        tbl.toList.sortBy(_._1.toString).map { case ((m, ar), rw) => s"$src#$m/$ar->$rw" }
+      }.mkString(",")).take(16)
 
   /** the java types this phase retypes — its POLICY, read back so a CHECK can ask what the phase
     * did rather than guessing from a name (CLAUDE.md §4.56). Both checks below take it as a
@@ -558,6 +598,11 @@ final class CollectionsTransform(
   private var enumSetSyms: Map[String, SymId] = Map.empty
   /** this run's symbol for a scala/shim FQN, or `SymId.None` where the program never names it. */
   private var byScalaSyms: Map[String, SymId] = Map.empty
+  /** retarget target SymId -> source FQN, so `retargetRewrite` can look up the rewrite table
+    * from a receiver whose head symbol is a retarget target. Built in `run`. */
+  private var retargetTargetToSource: Map[SymId, String] = Map.empty
+  /** minted symbols for retarget rewrite target member names: `(sourceFqn, memberName)` -> SymId. */
+  private var retargetRewriteSyms: Map[(String, String), SymId] = Map.empty
   private def byScalaSym(fqn: String): SymId = byScalaSyms.getOrElse(fqn, SymId.None)
   private def enumSetSym(n: String): SymId   = enumSetSyms.getOrElse(n, SymId.None)
   /** java 8 `Collection.forEach(Consumer)` — scala's is `foreach`, differing only in case, which
@@ -964,6 +1009,21 @@ final class CollectionsTransform(
     someSym             = mint("Some", "scala.Some")
     noneSym             = mint("None", "scala.None")
     byScalaSyms         = byScala.toMap
+    // retarget rewrite wiring: build reverse map from target SymId to source FQN, and mint
+    // symbols for each rewrite target member name.
+    retargetTargetToSource = effectiveRetarget.flatMap { (src, tgt) =>
+      byScala.get(tgt).map(sym => sym -> src)
+    }
+    retargetRewriteSyms = retargetRewrites.flatMap { (src, tbl) =>
+      tbl.values.flatMap {
+        case CollectionsTransform.RetargetRewrite.Rename(target) =>
+          List((src, target) -> mint(target, s"$src#retargetRewrite:$target"))
+        case CollectionsTransform.RetargetRewrite.BoolDispatch(_, onTrue, onFalse) =>
+          List(
+            (src, onTrue)  -> mint(onTrue, s"$src#retargetRewrite:$onTrue"),
+            (src, onFalse) -> mint(onFalse, s"$src#retargetRewrite:$onFalse"))
+      }
+    }
     enumMapOfTypeSym    = mint("ofType", s"${CollectionsTransform.JavaEnumMapFqn}.ofType")
     enumSetSyms = List("noneOf", "allOf", "of", "copyOf", "range", "complementOf")
       .map(n => n -> mint(n, s"${CollectionsTransform.JavaEnumSetFqn}.$n")).toMap
@@ -3069,7 +3129,9 @@ final class CollectionsTransform(
           case Some(k) => rewrite(k, recv, m, so, t2).getOrElse(t2)
           // NEITHER answered, so java resolved a member the CLASS declares — and the class may be
           // one this phase gave a scala parent, whose own members are now beside it.
-          case None    => pinnedByObject(recv, m, t2).getOrElse(t2)
+          // A RETARGET REWRITE comes first: a call on a retarget target whose member name and arity
+          // have an entry in `retargetRewrites` is renamed/dispatched before `pinnedByObject`.
+          case None    => retargetRewrite(recv, m, so, t2).orElse(pinnedByObject(recv, m, t2)).getOrElse(t2)
         case _ => t2
     }
     // …and the seam arms see only what NOTHING ELSE REWROTE. Ordering them before the rewrites
@@ -5980,6 +6042,44 @@ final class CollectionsTransform(
     * answers. The refusal leaves the `E051` exactly where it was, a compile error naming the two
     * alternatives, so it is the one shape in this family whose residue cannot be silent and §3's
     * count-the-refusal rule is met by the compiler rather than by a lane. */
+  /** Rewrite a call on a retarget target — `bits.get(i)` -> `bits.apply(i)` — when the receiver's
+    * head symbol is a retarget target AND the member name+arity has an entry in `retargetRewrites`.
+    *
+    * For `Rename`: substitutes the member symbol.
+    * For `BoolDispatch`: inspects the boolean argument at `flagIndex` — if literal `true`/`false`,
+    * strips the flag arg and calls the appropriate target; otherwise returns `None` (the call stays
+    * unchanged and `RetargetBoundaryCheck` counts it on the existing `collection-retarget` lane). */
+  private def retargetRewrite(recv: Term, m: SymId, so: Origin, t: Tree.Apply)(using p: Program): Option[Term] =
+    if retargetRewrites.isEmpty then return scala.None
+    headSym(recv.tpe).flatMap(retargetTargetToSource.get).flatMap { srcFqn =>
+      val mName = methodName(m)
+      val arity = t.args.size
+      retargetRewrites.get(srcFqn).flatMap(_.get((mName, arity))).flatMap {
+        case CollectionsTransform.RetargetRewrite.Rename(target) =>
+          retargetRewriteSyms.get((srcFqn, target)).map { tgtSym =>
+            call(recv, tgtSym, t.args, t, so)
+          }
+        case CollectionsTransform.RetargetRewrite.BoolDispatch(flagIndex, onTrue, onFalse) =>
+          if flagIndex < 0 || flagIndex >= t.args.size then scala.None
+          else
+            val flagArg = t.args(flagIndex)
+            val remaining = t.args.take(flagIndex) ++ t.args.drop(flagIndex + 1)
+            flagArg match
+              case Tree.Literal(balticporter.tir.Constant.BoolC(true), _, _) =>
+                retargetRewriteSyms.get((srcFqn, onTrue)).map { tgtSym =>
+                  call(recv, tgtSym, remaining, t, so)
+                }
+              case Tree.Literal(balticporter.tir.Constant.BoolC(false), _, _) =>
+                retargetRewriteSyms.get((srcFqn, onFalse)).map { tgtSym =>
+                  call(recv, tgtSym, remaining, t, so)
+                }
+              case _ =>
+                // non-literal boolean: cannot dispatch statically — return None so it stays unchanged
+                // and is counted on the `collection-retarget` lane by RetargetBoundaryCheck.
+                scala.None
+      }
+    }
+
   private def pinnedByObject(recv: Term, m: SymId, t: Tree.Apply)(using p: Program): Option[Term] =
     /** is this parent's probe position `java.lang.Object` HERE — written so, or instantiated so? */
     def probeIsObject(probe: TypeRepr, mp: MintedParents, recvTpe: TypeRepr): Boolean =
@@ -6074,6 +6174,18 @@ object CollectionsTransform:
       case Tree.Select(_, s, _, _) if scopedOut(s)   => declared(s, isCall = false)
       case Tree.Apply(_, _, m, _, _) if scopedOut(m) => declared(m, isCall = true)
       case _                                         => scala.None
+
+  /** A call-site rewrite for a retarget entry's member.
+    *
+    * `retarget` swaps the TYPE; `retargetRewrites` rewrites CALL SITES on that retarget's target.
+    * Keyed on the retarget's SOURCE FQN; each entry maps `(memberName, arity)` to one of these. */
+  sealed trait RetargetRewrite
+  object RetargetRewrite:
+    /** Simple rename: `recv.old(args)` -> `recv.new(args)`. */
+    case class Rename(target: String) extends RetargetRewrite
+    /** Boolean-dispatched: inspect `args(flagIndex)` — literal `true` calls `onTrue(remaining)`,
+      * literal `false` calls `onFalse(remaining)`, non-literal is refused and counted. */
+    case class BoolDispatch(flagIndex: Int, onTrue: String, onFalse: String) extends RetargetRewrite
 
   /** the shape of a collection, which decides the call rewrite (a `Seq` `get` is `apply`,
     * a `Map` `get` is `getOrElse`). */
