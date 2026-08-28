@@ -13765,32 +13765,47 @@ fence composes with `TextureHandle`'s rather than fighting it.
 
 ### O8. `FlowPropagation` does not follow an ARRAY ELEMENT READ — `UniformLocation` 0 -> 37 as `Mint`, 0 -> 19 as `Existing`
 
-**OPEN. (a) engine — one missing edge in `FlowPropagation.refSym`, priced on the first family that
-holds its handles in an `int[]`.** sge's `GLHandle.scala:96` writes `opaque type UniformLocation`
-by hand, with `apply`, `toInt`, `notFound = -1` and comparison/arithmetic extensions. Seeds:
+**CLOSED. (a) engine — two propagation edges and three coercion rules, priced on the first family
+that holds its handles in an `int[]`.** 0 -> 37 as `Mint`, 0 -> 19 as `Existing` (propagation
+gap), **19 -> 0** (coercion gap).
+
+sge's `GLHandle.scala:96` writes `opaque type UniformLocation` by hand, with `apply`, `toInt`,
+`notFound = -1` and comparison/arithmetic extensions. Seeds:
 `ShaderProgram#fetchUniformLocation(String)` — the PRIVATE overload, so the hint carries its
 descriptor, because a hint without one matched nothing on the first run — and `BaseShader#locations`
 (`int[]`), fenced to the same GL20–GL32 scope as `textureHandle`.
 
-Two measurements, one cause:
+Three measurements, two causes:
 
 - as a `Mint` target the base went **0 -> 37**, every row `value >= is not a member of
   sge.graphics.UniformLocation.T`: java compares locations (`if (location < 0)`) and a minted type
   carries no extensions. That is a fact about `Mint`, and the Align precedent (O6) already says what
   to do — `Target.Existing` with the port injecting the type and its extensions;
-- as `Existing` with an injected `sge/graphics/UniformLocation.scala`, **0 -> 19**, and the 19 are
-  one shape. `BaseShader.loc(int)` is `return locations[inputID]` — an element read from the seeded
-  array — and `refSym` has no arm for `Tree.ArrayAccess`, so `loc` is never seeded, its result stays
-  `Int`, and every `program.setUniformf(loc(id), …)` hands an `Int` to a `UniformLocation.T` formal
-  (15 overload-resolution rows); `BaseShader.init`'s element assignments disagree the other way (4).
+- as `Existing` with an injected `sge/graphics/UniformLocation.scala`, **0 -> 19**: `FlowPropagation`
+  did not follow the element read, so `loc` was never seeded — TWO missing edges. `refSym` had no
+  arm for `Tree.ArrayAccess`, and `walkTerm(Return)` used `refSym(e)` where `tailRefs(e)` was needed
+  (a `return if (…) arr[i] else -1` passes through an `If` that `refSym` cannot see);
+- with propagation fixed, the 19 **shifted** to COERCION BOUNDARIES at array-element positions, then
+  **19 -> 0**: `carriesOpaque` did not recognise `Tree.ArrayAccess` as carrying the scalar opaque
+  type when the array is a retyped `Array[Opaque.T]`, `lhsDeclType` had no arm for an `ArrayAccess`
+  LHS so an element-write assignment saw `NoType`, and `wrapFor` did not handle the case where the
+  declared type is already `Array[Opaque]` (read from the retyped symbol table rather than the
+  original). Three fixes: (a) `carriesOpaque` gains an `ArrayAccess` arm reading the array's opaque
+  status; (b) `lhsDeclType` extracts the element type from the array's declaration; (c) `wrapFor`
+  dispatches array coercion on `isArrayOfOpaque` beside `isArrayOfPrim`. With these, element reads
+  are NOT double-wrapped (the value is already opaque), element writes from plain values ARE wrapped,
+  and mixed-branch joins coerce per-branch through the existing `coerce` mechanism.
 
-**Not landed**: a base at 19 cascades to nine dependents. The spec and the injected file are parked
-on branch `w2-uniform-wip`. The fix is the EDGE — an element read of a seeded `Array[Prim]` is a
-pure move of the element, exactly as O3 made the array itself one — and not an `extraHints` row for
-`loc`, which would seed one accessor and leave every other `arr[i]` read in every port unseeded.
-Exit: gdx 0 errors with `opaque-boundary` rows read one by one, and the corpus measured for the
-widening (an array-element edge fires wherever a seeded array is indexed, so the blast is on the
-ports this was not aimed at).
+**Measured**: gdx 0 errors (JVM/JS/Native), `opaque-boundary 0`, 20 moved member digests — all in
+`BaseShader` and all attributed to the UniformLocation seeds: `loc` (return type), `init` (array
+creation + element assignments), `has`/`close` (element reads), 15 `set` overloads (element reads
+at external callee boundaries). jbump/usl/noise4j (ports with no seeded arrays): 0 moved members.
+`FlowPropagationSpec` 8 -> 11 (3 array-element tests); `PrimitiveToOpaqueTransformSpec` 36 -> 39
+(3 coercion tests).
+
+*Fix kind: (a) engine — `FlowPropagation.refSym` (ArrayAccess arm), `walkTerm` (ArrayAccess descent
++ Return with tailRefs), `carriesOpaque` (ArrayAccess arm), `lhsDeclType` (ArrayAccess element type),
+`wrapFor` (isArrayOfOpaque dispatch), and `isArrayOfOpaque` (new helper).*
 
 ## 14. The IDIOM layer — what was REFUSED, with its number
 

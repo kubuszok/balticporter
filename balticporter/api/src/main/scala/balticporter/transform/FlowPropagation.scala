@@ -108,11 +108,17 @@ object FlowPropagation:
     val out = collection.mutable.ListBuffer[(SymId, SymId)]()
 
     /** the symbol a term REFERS to, when it is a bare reference. A nullary call is one: `x = o.get()`
-      * moves whatever `get` returns, and the method's own symbol is what carries that type. */
+      * moves whatever `get` returns, and the method's own symbol is what carries that type.
+      *
+      * An ARRAY ELEMENT READ (`arr[i]`) returns the ARRAY's symbol, because the element is a pure
+      * move of what the array holds — exactly as O3 made the array itself a carrier of its element
+      * type. The mirror direction (element WRITE: `arr[i] = v`) also flows through `refSym` when
+      * the `ArrayAccess` appears as the LHS of an `Assign`. */
     def refSym(t: Term): Option[SymId] = t match
       case Tree.Ident(s, _, _)         => Some(s)
       case Tree.Select(_, s, _, _)     => Some(s)
       case Tree.Apply(_, Nil, m, _, _) => Some(m)
+      case Tree.ArrayAccess(arr, _, _, _) => refSym(arr)
       case Tree.Commented(_, inner)    => refSym(inner)
       case _                           => scala.None
 
@@ -122,7 +128,7 @@ object FlowPropagation:
         for a <- refSym(l); b <- refSym(r) do out += ((a, b))
         walkTerm(l, encl); walkTerm(r, encl)
       case Tree.Return(Some(e), _, _) =>
-        if encl != SymId.None then refSym(e).foreach(s => out += ((encl, s)))
+        if encl != SymId.None then tailRefs(e).foreach(s => out += ((encl, s)))
         walkTerm(e, encl)
       case Tree.Apply(fun, args, m, _, _) =>
         program.definitionOf(m) match
@@ -134,6 +140,7 @@ object FlowPropagation:
       case Tree.While(c, b, _, _, _) => walkTerm(c, encl); walkTerm(b, encl)
       case Tree.Commented(_, inner)  => walkTerm(inner, encl)
       case Tree.Select(q, _, _, _)   => walkTerm(q, encl)
+      case Tree.ArrayAccess(a, i, _, _) => walkTerm(a, encl); walkTerm(i, encl)
       case _                         => ()
 
     def walkStat(s: Statement, encl: SymId): Unit = s match

@@ -11121,13 +11121,11 @@ on the same run is baseline STALENESS: the primary checkout's own `run-latest` a
 values on 2026-08-27 07:19, before O6 and before either wave 1.2k or 2.7 existed — acknowledged at
 the promotion, attributed to nobody in this wave.
 
-**Open — `UniformLocation`** (`ENGINE-LIMITS.md` O8). sge's `GLHandle.scala:96` writes the opaque
-type by hand with its comparison/arithmetic extensions. As a `Mint` target the base went
-**0 -> 37** (`value >= is not a member of UniformLocation.T` — a minted type has no extensions); as
-`Target.Existing` with an injected `sge/graphics/UniformLocation.scala`, **0 -> 19**, and the 19 are
-one engine gap: `FlowPropagation.refSym` does not follow `Tree.ArrayAccess`, so `BaseShader.loc(int)`
-(`return locations[inputID]`, an element read from the seeded `int[]`) is never seeded, every
-`program.setUniformf(loc(id), …)` then hands an `Int` to a `UniformLocation.T` formal (15 overload
-errors), and `BaseShader.init`'s array assignments disagree by element (4). Not landed: a base at
-19 errors cascades to every dependent. The spec and the injected file are parked on branch
-`w2-uniform-wip`; the fix is the propagation edge, not an `extraHints` row per array read.
+**`UniformLocation` — O8 CLOSED, 0 -> 37 -> 19 -> 0** (`ENGINE-LIMITS.md` O8). Two propagation
+edges (`FlowPropagation.refSym` ArrayAccess arm, `walkTerm(Return)` using `tailRefs`), three coercion
+rules (`carriesOpaque` ArrayAccess arm, `lhsDeclType` element type, `wrapFor` + `isArrayOfOpaque`
+dispatch). gdx 0 errors (JVM/JS/Native), `opaque-boundary 0`, 20 moved member digests all in
+`BaseShader` attributed to UniformLocation seeds; jbump/usl/noise4j 0 moved members.
+`FlowPropagationSpec` 8 -> 11, `PrimitiveToOpaqueTransformSpec` 36 -> 39. Injected
+`sge/graphics/UniformLocation.scala` with `apply`, `toInt`, `notFound`, `wrapArray`/`unwrapArray`
+and comparison extensions.

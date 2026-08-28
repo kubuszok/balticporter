@@ -689,6 +689,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     case Tree.If(_, a, b, _, _)       => carriesOpaque(a) || carriesOpaque(b)
     case Tree.Block(_, x, _, _, _)    => carriesOpaque(x)
     case Tree.Match(_, cases, _, _, _, _) => cases.exists(c => carriesOpaque(c.body))
+    case Tree.ArrayAccess(arr, _, _, _) => isOpaqueArray(arr) || carriesOpaque(arr)
     case Tree.Ident(s, _, _)          => seeds(s) || isOpaque(e) || isOpaqueArray(e)
     case Tree.Select(_, s, _, _)      => seeds(s) || isOpaque(e) || isOpaqueArray(e)
     case Tree.Apply(_, _, m, _, _)    => isSeedMethod(m) || isOpaque(e) || isOpaqueArray(e)
@@ -783,14 +784,22 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
         if isArrayOfPrim(ret) then opaqueArrayRef else opaqueRef
       case _ => opaqueRef
 
-  /** Wrap a value for assignment to a seed. Dispatches scalar vs array coercion (O3). */
+  /** Wrap a value for assignment to a seed. Dispatches scalar vs array coercion (O3).
+    * O8: when the declared type is already `Array[Opaque]` (read from the retyped symbol table at
+    * an Assign LHS), array coercion applies — the same shape as `Array[Prim]`, read after the
+    * retype rather than before it. */
   private def wrapFor(e: Term, origDeclType: TypeRepr)(using Program): Term =
-    if isArrayOfPrim(origDeclType) then wrapArrayCall(e) else wrap(e)
+    if isArrayOfPrim(origDeclType) || isArrayOfOpaque(origDeclType) then wrapArrayCall(e) else wrap(e)
 
-  /** The declared type of the LHS of an assignment — read from the DECLARATION, not the node. */
+  /** The declared type of the LHS of an assignment — read from the DECLARATION, not the node.
+    * O8: an `ArrayAccess` LHS reads the ELEMENT type of the array's declaration. */
   private def lhsDeclType(lhs: Term)(using p: Program): TypeRepr = lhs match
     case Tree.Ident(s, _, _)     => p.symbolOf(s).map(_.info).getOrElse(TypeRepr.NoType)
     case Tree.Select(_, s, _, _) => p.symbolOf(s).map(_.info).getOrElse(TypeRepr.NoType)
+    case Tree.ArrayAccess(arr, _, _, _) =>
+      lhsDeclType(arr) match
+        case TypeRepr.AppliedType(_, List(elem)) => elem
+        case other => other
     case _                       => TypeRepr.NoType
 
   // O3: array coercion — wrapArray/unwrapArray calls.
@@ -807,6 +816,14 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
   private def isArrayOfPrim(t: TypeRepr): Boolean = t match
     case TypeRepr.AppliedType(TypeRepr.TypeRef(_, s), List(elem)) =>
       s == arraySym && isPrim(elem)
+    case _ => false
+
+  /** Is this type `Array[Opaque]` — an array whose element is the opaque type? O8: the retyped
+    * symbol table reads `Array[Opaque]` where the original had `Array[Prim]`, and `wrapFor` at an
+    * Assign LHS needs to dispatch array coercion on the retyped shape. */
+  private def isArrayOfOpaque(t: TypeRepr): Boolean = t match
+    case TypeRepr.AppliedType(TypeRepr.TypeRef(_, s), List(TypeRepr.TypeRef(_, e))) =>
+      s == arraySym && e == opaqueSym
     case _ => false
 
   /** Is this a taggable type — either the primitive itself or `Array[Prim]` (O3)?

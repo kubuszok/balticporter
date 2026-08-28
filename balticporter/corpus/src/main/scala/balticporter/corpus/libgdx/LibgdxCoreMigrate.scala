@@ -813,7 +813,8 @@ object LibgdxPolicy:
     List(beanProperties, nullaryArity,
          new CollectionsTransform(retarget = comparatorRetarget), new MutableParamsTransform,
          new PanamaFfiTransform(), unwrapReflection, classTable, new GdxSharedIteratorRule,
-         memberRenames, disposableRedirect, textureHandle, align, nullability, globalsToContext)
+         memberRenames, disposableRedirect, textureHandle, align, uniformLocation,
+         nullability, globalsToContext)
 
   /** Drop `()` from nullary getter-like methods — sge's empirical convention, no written rule in
     * `conversion-rules.md`. Enabled with `Everywhere()` because the convention is whole-library:
@@ -970,8 +971,8 @@ object LibgdxPolicy:
     * methods on `GL20`, and `GL20.scala:89` keeps `def glGenTexture(): Int` to prove it.
     * Configuring those five would emit a surface the reference port deliberately does not have.
     * `UniformLocation` is NOT one of them (it types 32 positions in `ShaderProgram`/`BaseShader`, all
-    * ported declarations) and is expressible with this mechanism as it stands — unconfigured because
-    * nothing has measured the step, not because it was declined. `GLEnum` is a third shape again:
+    * ported declarations) — now configured as [[uniformLocation]], wave 2.7. `GLEnum` is a third
+    * shape again:
     * sge types `GL20`/`GL30` FORMALS with 15 families and MINTS a named vocabulary for them, which
     * this mechanism cannot do — `ENGINE-LIMITS.md` §13 O7, an open (b) with an exit criterion.
     *
@@ -1049,6 +1050,45 @@ object LibgdxPolicy:
         "com.badlogic.gdx.scenes.scene2d.actions.MoveToAction#alignment",
       ),
       underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
+    ))
+
+  /** GL uniform locations — the `int` that is really a distinct domain value, given a real type.
+    *
+    * ==Census from sge (CLAUDE.md §3.5)==
+    * `sge.graphics.GLHandle.scala:96` declares `opaque type UniformLocation = Int` with `apply`,
+    * `toInt`, `notFound = -1`, and arithmetic extensions (`+`, `-`, `>=`, `<`). `ShaderProgram`
+    * stores them as `MutableMap[String, UniformLocation]` (java: `ObjectIntMap<String> uniforms`)
+    * and every `setUniform*` overload that takes a location by `int` takes it by `UniformLocation`.
+    * `BaseShader.locations` is `Array[UniformLocation]` (java: `int locations[]`).
+    *
+    * ==Existing target, following the Align pattern==
+    * There is no java class `UniformLocation`, so nothing is dropped. The opaque type is injected
+    * as `sge.graphics.UniformLocation` under `libgdx-overrides/` and the OpaqueSpec uses
+    * `Target.Existing(typeFqn = "sge.graphics.UniformLocation", …)` to retype against it. The
+    * injected file carries the comparison extensions (`>=`, `<`, `+`, `-`) that sge declares.
+    *
+    * ==SEED: `fetchUniformLocation` — the return value seeds, propagation discovers the rest==
+    * The one method that PRODUCES uniform locations. Both overloads are overloaded, so the fullName
+    * includes the descriptor. `BaseShader#locations` is a second seed (`int[]`, O3).
+    *
+    * ==FENCE: same as textureHandle==
+    * The GL interfaces are scoped out, preventing propagation into `GL20#glGetUniformLocation`. */
+  def uniformLocation: balticporter.transform.PrimitiveToOpaqueTransform =
+    new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+      fqn        = "com.badlogic.gdx.graphics.UniformLocation",
+      target     = balticporter.tir.OpaqueSpec.Target.Existing(
+        typeFqn    = "sge.graphics.UniformLocation",
+        wrapName   = "apply",
+        unwrapName = "toInt",
+      ),
+      hints      = Set(
+        "com.badlogic.gdx.graphics.glutils.ShaderProgram#fetchUniformLocation(String)",
+        "com.badlogic.gdx.graphics.g3d.shaders.BaseShader#locations",
+      ),
+      underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
+      scope      = balticporter.tir.RuleScope.Everywhere(except = Set(
+        "com.badlogic.gdx.graphics.GL20", "com.badlogic.gdx.graphics.GL30",
+        "com.badlogic.gdx.graphics.GL31", "com.badlogic.gdx.graphics.GL32")),
     ))
 
   /** libGDX's own `@Null` moved OUT of an annotation the Scala compiler ignores and INTO the type

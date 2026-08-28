@@ -33,12 +33,18 @@ class FlowPropagationSpec extends PortSuite:
     p.symbolOf(id).exists(s =>
       s.info match
         case TypeRepr.TypeRef(_, t)            => p.symbolOf(t).exists(_.fullName == "scala.Int")
-        case TypeRepr.MethodType(_, r, _)      => headIsInt(p, r)
-        case _                                 => false)
+        case TypeRepr.MethodType(_, r, _)      => isIntType(p, r)
+        case t                                 => isIntType(p, t))
 
-  private def headIsInt(p: Program, t: TypeRepr): Boolean = t match
+  private def isIntType(p: Program, t: TypeRepr): Boolean = t match
     case TypeRepr.TypeRef(_, s) => p.symbolOf(s).exists(_.fullName == "scala.Int")
-    case _                      => false
+    case TypeRepr.AppliedType(tc, List(elem)) =>
+      isArrayHead(p, tc) && isIntType(p, elem)
+    case _ => false
+
+  private def isArrayHead(p: Program, t: TypeRepr): Boolean = t match
+    case TypeRepr.TypeRef(_, s) => p.symbolOf(s).exists(_.fullName == "scala.Array")
+    case _ => false
 
   private def idOf(p: Program, fqn: String): SymId =
     p.symbols.all.find(_.fullName == fqn).map(_.id).getOrElse(SymId.None)
@@ -104,4 +110,39 @@ class FlowPropagationSpec extends PortSuite:
     val setter = idOf(p, "demo.Sprite#setLayer")
     val param  = p.symbols.all.find(s => s.owner == setter && s.name == "l").map(_.id).get
     assert(clue(es).contains((field, param)), "`this.layer = l` is an assignment edge")
+  }
+
+  // ---- O8: array element read/write is a pure move of the ELEMENT ----
+
+  private val arraySrc =
+    """package demo;
+      |class Shader {
+      |  private int[] locations = new int[16];
+      |  private int unrelated = 0;
+      |  public int loc(int i) { return (i >= 0 && i < locations.length) ? locations[i] : -1; }
+      |  public void store(int i, int v) { locations[i] = v; }
+      |}
+      |""".stripMargin
+
+  private def arrayProgram: Program = balticporter.testkit.PortFixture.parse(arraySrc)
+
+  test("an ELEMENT READ from a seeded array reaches the method — O8's return direction") {
+    val p = arrayProgram
+    // `return locations[i]` is a pure move of the element: refSym sees through ArrayAccess to
+    // the array's symbol, and the tail-ref edge connects `loc` to `locations`.
+    val grown = grownFrom(p, "demo.Shader#locations")
+    assert(clue(grown).contains("demo.Shader#loc"), "loc must be reached from the seeded array")
+  }
+
+  test("an ELEMENT WRITE to a seeded array reaches the value's source — O8's assignment direction") {
+    val p = arrayProgram
+    // `locations[i] = v` creates an edge between `locations` and `v`.  Growing from `locations`
+    // reaches the setter's parameter.
+    val grown = grownFrom(p, "demo.Shader#locations")
+    assert(clue(grown).contains("?#v"), "the stored value's parameter must be reached")
+  }
+
+  test("array element flow does NOT leak to unrelated declarations of the same type") {
+    val p = arrayProgram
+    assert(!clue(grownFrom(p, "demo.Shader#locations")).contains("demo.Shader#unrelated"))
   }

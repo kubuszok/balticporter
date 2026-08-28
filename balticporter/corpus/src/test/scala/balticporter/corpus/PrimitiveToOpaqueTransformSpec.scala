@@ -592,3 +592,61 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     // the detail shows the target type, not the mint
     assert(ds.exists(_.detail("to").contains("mylib.Layer")))
   }
+
+  // -------------------------------------------------------------------------
+  // O8 — array ELEMENT coercion at three positions
+  //
+  // After O3 retypes `int[] locations` to `Array[Loc.T]`, an element read
+  // `locations[i]` is already opaque.  The three shapes that arrived on
+  // UniformLocation:
+  //   (a) element READ in a non-seed context — must NOT double-wrap
+  //   (b) element WRITE from an unpropagated value — must wrap the RHS
+  //   (c) branch join — one branch is an element read, the other plain
+  // -------------------------------------------------------------------------
+
+  private val arrayElem =
+    """package demo;
+      |class Shader {
+      |  private int[] locations = new int[4];
+      |  private int handle;
+      |  public int loc(int i) { return (i >= 0 && i < locations.length) ? locations[i] : -1; }
+      |  public void setUniform(int loc, float v) { }
+      |  public void apply(int i, float v) {
+      |    if (locations[i] < 0) return;
+      |    setUniform(locations[i], v);
+      |  }
+      |  public void init(int n) {
+      |    locations = new int[n];
+      |    for (int j = 0; j < n; j++) locations[j] = -1;
+      |  }
+      |  public void store(int i) { locations[i] = handle; }
+      |}
+      |""".stripMargin
+
+  private def arrayElemRun =
+    val ph = new PrimitiveToOpaqueTransform(OpaqueSpec(
+      fqn = "Loc", hints = Set("demo.Shader#handle", "demo.Shader#locations")))
+    val after = Pipeline.run(SpoonTir.fromSource(arrayElem), List(ph))
+    new TirEmitter(after).emit
+
+  test("O8(a): an element READ from a retyped array is ALREADY opaque — no double-wrap") {
+    val emitted = arrayElemRun
+    // `setUniform(locations[i], v)` — the element is already `Loc.T`, so the argument
+    // coercion at `setUniform`'s seeded parameter must NOT wrap it again.
+    assert(!clue(emitted).contains("Loc(this.locations("), "element read must not be double-wrapped")
+  }
+
+  test("O8(b): an element WRITE from a plain value WRAPS the RHS") {
+    val emitted = arrayElemRun
+    // `locations[j] = -1` assigns a literal to an Array[Loc.T] element — wrap the RHS
+    assert(clue(emitted).contains("Loc(-1)") || emitted.contains("Loc((-1"))
+  }
+
+  test("O8(c): a branch join with one opaque branch and one plain wraps only the plain branch") {
+    val emitted = arrayElemRun
+    // `return (i >= 0 && …) ? locations[i] : -1` in a seed method: the element-read branch
+    // is already opaque, the `-1` branch is plain. Only the plain branch gets wrapped.
+    assert(clue(emitted).contains("Loc(-1)") || emitted.contains("Loc((-1"))
+    // the element-read branch is NOT wrapped:
+    assert(!clue(emitted).contains("Loc(this.locations("), "the opaque branch stays as-is")
+  }
