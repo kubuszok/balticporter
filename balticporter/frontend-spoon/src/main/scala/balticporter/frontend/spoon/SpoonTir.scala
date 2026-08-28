@@ -4020,6 +4020,21 @@ object SpoonTir:
         if et != null && !et.isPrimitive && target.isPrimitive && wrapperOf.values.toSet(et.getQualifiedName)
           && wrapperOf.get(target.getSimpleName).exists(_ != et.getQualifiedName) then
           return unbox(t, et.getQualifiedName, target.getSimpleName, e)
+        // a LOSSY WIDENING primitive conversion — java widens implicitly (JLS 5.1.2), but Scala's
+        // implicit conversions `int2float`, `long2float` and `long2double` are deprecated since
+        // 2.13.1 because they lose precision. Emit the explicit `.toFloat`/`.toDouble` — the same
+        // spelling the deprecation message requests. This is a (a)-universal rule: a fact about Java
+        // and Scala, true of every codebase.
+        if et != null && et.isPrimitive && target.isPrimitive then
+          val pair = (et.getSimpleName, target.getSimpleName)
+          val lossyTarget = pair match
+            case ("int", "float") | ("long", "float")  => Some(("toFloat", "scala.Float"))
+            case ("long", "double")                    => Some(("toDouble", "scala.Double"))
+            case _                                     => scala.None
+          lossyTarget.foreach { (method, resultFqn) =>
+            val msym = minter.external(s"scala.${primName(et.getSimpleName)}#$method", method)
+            return Tree.Select(t, msym, TypeRef(NoPrefix, minter.external(resultFqn, resultFqn.split('.').last)), originOf(e))
+          }
         // a type-parameter value flowing into a genuinely-`Object` slot (a return/assignment/var-init
         // where the target type is really `java.lang.Object`, not an erased formal — call args are
         // handled by `typeParamToObject` off the DECLARED formal, so this stays off that path):
