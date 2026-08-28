@@ -335,6 +335,18 @@ object Decision:
       * the other way. The DETAIL carries `from` (the original `name()` spelling) and `to` (the
       * parameterless `name`). */
     case ParenlessConversion
+    /** the mechanical port added `@scala.annotation.nowarn("msg=deprecated")` to a member
+      * declaration whose body calls a METHOD the target library deliberately DEPRECIATES AS LINT —
+      * sge's `orNull` on `lowlevel.Nullable` is the first instance: the lint drives callers toward
+      * `fold`/`foreach`/`getOrElse`, and every interop boundary suppresses it with `@nowarn`. The
+      * port's slot coercion calls `.orNull` at every non-primitive unwrap, so the same annotation is
+      * owed on every member where one lands.
+      *
+      * A kind of its own rather than folded into [[RetypedSignature]], because the ANNOTATION is not
+      * about the member's type or body — it is about a USAGE the member happens to contain, and a
+      * reader of the emitted `@nowarn` is owed the reason it is there. The DETAIL says which method
+      * triggered the suppression. */
+    case SuppressedWarning
 
   val Header ="#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 

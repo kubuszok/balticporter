@@ -139,7 +139,12 @@ object PorterNote:
         // nilary `def ()` look identical in the emitted Scala except for the missing parens, and a
         // reader diffing against the java sees a call that is `o.x` rather than `o.x()` — the note
         // is what says the conversion was deliberate rather than an engine defect.
-        ParenlessConversion)
+        ParenlessConversion,
+        // …and a DEPRECATED LINT CALL suppressed with `@nowarn`. Here because a reader of the
+        // emitted `@scala.annotation.nowarn("msg=deprecated")` is owed the reason it is there —
+        // the method the body calls is deprecated as a lint measure by the target library, the same
+        // pattern sge uses at every Java interop boundary (`nullable-guide.md`).
+        SuppressedWarning)
 
   /** WHERE each rendered kind's note goes, which is not a style question: the three answers are
     * three different pieces of machinery and a kind in the wrong one is a note that never appears.
