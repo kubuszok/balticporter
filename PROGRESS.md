@@ -11129,3 +11129,37 @@ dispatch). gdx 0 errors (JVM/JS/Native), `opaque-boundary 0`, 20 moved member di
 `FlowPropagationSpec` 8 -> 11, `PrimitiveToOpaqueTransformSpec` 36 -> 39. Injected
 `sge/graphics/UniformLocation.scala` with `apply`, `toInt`, `notFound`, `wrapArray`/`unwrapArray`
 and comparison extensions.
+
+### 13.8 Wave 2.9 — differential suites re-derived for bean/nullary surface
+
+The base's waves 1.2h-1.2k (`BeanPropertyTransform` + `NullaryArityTransform` on sge and followed
+on dependents) moved the emitted surface past the adapted differential suites. The old mapping
+tables substituted sge's property spellings BACK to java accessors (e.g. `getStatus` -> `getStatus()`
+with parens); now the port emits sge's spelling, so those rows are removed and new rows are added
+for the bean-collapsed names the port emits but sge spells differently.
+
+**ai-diff: 72 -> 0 errors, 93 pass / 2 fail (unchanged)**. 8 files edited of 10 adapted (11 total
+including `Fixtures.scala`); `ArithmeticUtilsSuite` and `SchedulerSuite` need no mapping. The old
+M1 (parenless -> parens) rows are removed. New rows: M4 (bean-collapsed property names:
+`getStatus` -> `status`, `getCount` -> `count`, `getObject` -> `` `object` ``, `getCurrentState` ->
+`currentState`, `getPreviousState` -> `previousState`, `getGlobalState` -> `globalState`,
+`getToNode` -> `toNode`, `getNodeCount` -> `nodeCount`, `getChildCount` -> `childCount`), M7
+(property setter: `setGlobalState(x)` -> `globalState = x`), M8 (`is`-prefix dropped on
+CircularBuffer: `isEmpty` -> `empty`, `isFull` -> `full`), M9/M10 (Nullable return value unwrap).
+Test-name baseline re-accepted: `StateMachineEmptyProbeIss730RedSuite`'s 5 test names restored to
+the reference's own spelling (`currentState` not `getCurrentState`).
+
+**textra-diff: 24 -> 0 errors, 165 pass / 0 fail (unchanged)**. 2 suite files + `HeadlessSge.scala`
+fixture. Old T1 (parenless -> parens) rows removed for `width`/`height`/`lines`/`peekLine`/
+`countGlyphs`/`hasNext(Values)`. New T9: `isEmpty` -> `empty` on `FloatArray` and
+`CaseInsensitiveIntMap` (`is`-prefix dropped). `HeadlessSge.scala` fixture updated for the base's
+bean-collapsed `Application`/`Files` interfaces (`getType()` -> `` `type` ``,
+`getGraphics()` -> `graphics`, `setLogLevel()` -> `logLevel_=`,
+`getExternalStoragePath()` -> `externalStoragePath`, `exists()` -> `exists` (parenless), etc.).
+Note: `Entries.hasNext()` and `Keys.hasNext()` KEEP parens (java arity per CLAUDE.md section 4.5)
+while `Values.hasNext` is parenless — the substitution is per RECEIVER as section 4.56 requires.
+
+**visui-diff: 0 errors, 50 pass / 0 fail — no changes needed.** The visui port's emitted surface
+still uses `isWindows()`, `setUseEquals()` etc. (no bean-collapse on visui yet), so the adapted
+suites (identical to reference) compile as-is.
+
