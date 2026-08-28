@@ -1153,7 +1153,8 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   than listed, which is the conditional-lane pattern the two MANIFEST-derived lanes take at the
   other declaration — `service-providers` when a port declares a descriptor, `resources` when it
   declares a classpath resource tree (`DESIGN.md` §8.17 and §8.22, the deliverables that are not
-  `.scala`), and the eight `api-parity(<family>)` lanes when a port declares a `parity` reference
+  `.scala`), and one `api-parity(<family>)` lane per family in `ApiParityCheck.Families` (fifteen
+  today — derive the count from the enum, never from this sentence) when a port declares a `parity` reference
   (`DESIGN.md` §8.23, the hand-port surface comparison):
   requiring them of every port would fail every phase-less one, and leaving them out entirely means
   a run that stopped calling one reports success with the row gone. `PortRun.RequiredChecks` is

@@ -6260,10 +6260,21 @@ kind, name, arity, structural path. Private members are excluded on both sides.
 | `visibility` | different access level | §1(a) engine or §1(c) library-specific |
 | `hand-port-extra` | declared only in the hand port (factory methods, helpers, redesigned APIs) | §1(c) library-specific or informational |
 | `port-extra` | declared only in the emitted port (java the hand port skipped) | §1(a) engine or §1(b) configured |
+| `null-model` | a nullability spelling that differs (`T \| Null` / `Nullable[T]` / bare) | §1(b) `NullabilityTransform` target and scope |
+| `collection-retarget` | a JDK/libGDX collection retyped to a different family than the hand port chose | §1(b) `CollectionsTransform` retarget / `TypeRedirectTransform` |
+| `opaque` | a primitive the hand port made an opaque type (or the reverse) | §1(b) `PrimitiveToOpaqueTransform` spec |
+| `operator` | a symbolic name (`+`, `*`) against an alphanumeric one | §1(b) `MemberRenameTransform` symbolic target |
+| `factory` | constructor vs companion `apply`/`from`/`wrap` | §1(b) `CtorFunnel` factory policy (Phase 1.6) |
+| `file-merge` | a unit the hand port nests or merges into another file | §1(b) `fileGroups` (Phase 1.9) — compile-neutral |
+| `signature` | same member, different parameter or result TYPE at a slot | §1(a) engine or §1(b) the retyping phase that owns the slot |
 | `unclassified` | everything else — the work list | unknown — each row is a missing classifier or a real divergence |
 
-Each family is a separate lane (`api-parity(<family>)`), so `unclassified = 0` is the gate and
-the recognised families are the work items a reader can act on one family at a time.
+**The family LIST is derived from `ApiParityCheck.Families`, never counted in prose**: this table
+had eight rows while the enum had fifteen, and CLAUDE.md §5 repeated "eight" — a family added to
+the enum is one edit there and a lane that appears by construction. Each family is a separate lane
+(`api-parity(<family>)`), so `unclassified = 0` is the gate and the recognised families are the
+work items a reader can act on one family at a time. First corpus-wide census (PROGRESS §13.13):
+libGDX core 15,548 rows over eleven non-zero families at `unclassified = 0`.
 
 **NOT inherited.** A hand port is a fact about THIS module's destination, not the shared surface.
 A dependent does not inherit its base's parity reference. The `.conf` key is
