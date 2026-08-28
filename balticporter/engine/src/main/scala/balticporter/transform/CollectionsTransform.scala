@@ -629,6 +629,11 @@ final class CollectionsTransform(
     * no second lowering can appear under an `a0$` that is already bound. */
   private var recvBindSym: SymId = SymId.None
   private var argParamSyms: Vector[SymId] = Vector.empty
+  /** pre-minted lambda parameter symbols for the [[retargetForEach]] lowering.
+    * Reused across all lowered for-each loops: each lambda is a separate scope. */
+  private var forEachKeySym: SymId = SymId.None
+  private var forEachValSym: SymId = SymId.None
+  private var forEachElemSym: SymId = SymId.None
   /** the scala side of a BRIDGED member (`ENGINE-LIMITS.md` K28.1) — the types its signature is
     * written in, and the two `asScala` views its body reaches java's answer through.
     *
@@ -999,6 +1004,9 @@ final class CollectionsTransform(
     }.toSet
     toJavaValueSym = mint("toJavaValue", s"${CollectionsTransform.ReifiedFqn}.toJavaValue")
     foreachSym          = mint("foreach", "foreach")
+    forEachKeySym       = mint("k$fe", "k$fe")
+    forEachValSym       = mint("v$fe", "v$fe")
+    forEachElemSym      = mint("x$fe", "x$fe")
     removeHeadOptionSym = mint("removeHeadOption", "removeHeadOption")
     headOptionSym       = mint("headOption", "headOption")
     orNullSym           = mint("orNull", "orNull")
@@ -1025,6 +1033,8 @@ final class CollectionsTransform(
         case CollectionsTransform.RetargetRewrite.Construct(companionFqn, factoryMethod) =>
           val fqn = s"$companionFqn.$factoryMethod"
           List((src, fqn) -> mint(factoryMethod, fqn))
+        case CollectionsTransform.RetargetRewrite.ForEach(targetMethod, _) =>
+          List((src, targetMethod) -> mint(targetMethod, s"$src#retargetRewrite:$targetMethod"))
       }
     }
     enumMapOfTypeSym    = mint("ofType", s"${CollectionsTransform.JavaEnumMapFqn}.ofType")
@@ -2684,7 +2694,7 @@ final class CollectionsTransform(
     case ty: Tree.Typed if impossibleShimCast(ty) => ty.expr
     case ty: Tree.Typed   => reifiedCast(ty)
     case io: Tree.InstanceOf => reifiedTest(io)
-    case fe: Tree.ForEach => writeThroughEntries(fe)
+    case fe: Tree.ForEach => retargetForEach(fe).getOrElse(writeThroughEntries(fe))
     case mr: Tree.MethodRef => lowerMethodRef(mr)
     case sel: Tree.Select => staticFieldRewrite(sel).getOrElse(externalFieldProducer(sel))
     case other          => other
@@ -3035,6 +3045,128 @@ final class CollectionsTransform(
     * What stays refused is the case with no loop and no map — a class holding a detached entry in a
     * FIELD, where the only way to make the body compile is to write to a copy. That is K2's refusal
     * and it keeps it, now with a reason that says which of the two cases it is. */
+  /** Lower a for-each over a retarget target's `entries()/keys()/values()` into a lambda-based
+    * iteration method on the lls type — `recv.foreachEntry((k, v) => body)` etc.
+    *
+    * ==Why this is a structural rewrite==
+    * lls's `ObjectMap`/`ObjectSet`/etc. iterate ONLY through inline `foreachEntry`/`foreachKey`/
+    * `foreachValue` lambdas — they have no `entries()/keys()/values()` returning an inner iterator
+    * type. So a for-each whose iterable calls one of those on a retarget target must be lowered to
+    * the lambda form entirely.
+    *
+    * ==Delta enumeration (CLAUDE.md §3)==
+    * The for-each body becomes a LAMBDA body, changing the control-flow semantics:
+    *
+    *   - `continue` -> a `boundary` around the lambda body; `break(())` exits one iteration.
+    *     Emitted by `TirEmitter.loopWithJumps` — but here we are in the PHASE, so the emitter
+    *     sees a `Tree.Apply` with a `Tree.Lambda`, not a `Tree.ForEach`. The emitter's standard
+    *     `.foreach` desugaring already handles this shape.
+    *   - `break` -> a `boundary` around the call; `break(())` exits the whole foreach. Same:
+    *     the emitter already handles `break` in a lambda's enclosing block.
+    *   - `return` -> REFUSED and COUNTED. A `return` inside the for-each body would become a
+    *     non-local return from the lambda (CLAUDE.md §4.4, F9). The faithful image requires an
+    *     explicit iterator `while` loop, and lls provides no iterator. The for-each is left
+    *     unchanged and counted on `collection-retarget`.
+    *
+    * For arity-2 (entry iteration), the for-each binding's `.key`/`.value` FIELD SELECTS are
+    * rewritten to the lambda's first/second parameter. A usage of the binding that is NOT a
+    * `.key`/`.value` select is a reference to the whole entry, which has no lls image — the
+    * for-each is left unchanged and counted. */
+  private def retargetForEach(fe: Tree.ForEach)(using p: Program): Option[Term] =
+    if retargetRewrites.isEmpty then return scala.None
+    // extract the receiver and member from the iterable — must be a call `recv.member()`
+    val (recv, memberSym, srcFqn) = fe.iterable match
+      case Tree.Apply(Tree.Select(r, m, _, _), Nil, _, _, _) =>
+        headSym(r.tpe).flatMap(retargetTargetToSource.get) match
+          case Some(src) => (r, m, src)
+          case _         => return scala.None
+      case _ => return scala.None
+    val mName = methodName(memberSym)
+    val rewrite = retargetRewrites.get(srcFqn).flatMap(_.get((mName, 0))) match
+      case Some(rw: CollectionsTransform.RetargetRewrite.ForEach) => rw
+      case _ => return scala.None
+    // REFUSE if the body contains a `return` — F9's while-loop lowering is unavailable here
+    // because lls provides no explicit iterator. Counted on collection-retarget.
+    if returnsInForEach(fe.body) then return scala.None
+    // for arity-2 (entry iteration), check that the binding is ONLY used via .key/.value selects
+    // and that it is not reassigned
+    val bound = fe.binding.symbol
+    if bound == SymId.None then return scala.None
+    if rewrite.arity == 2 then
+      // scan the body for any usage of the binding that is NOT a .key or .value select
+      if hasNonFieldUsage(bound, fe.body) then return scala.None
+    // look up the minted symbol for the target method
+    val tgtSym = retargetRewriteSyms.getOrElse((srcFqn, rewrite.targetMethod), SymId.None)
+    if tgtSym == SymId.None then return scala.None
+    val so = fe.origin
+    if rewrite.arity == 2 then
+      // entry iteration: build `recv.foreachEntry((k, v) => body')`
+      val kTpe = keyType(recv.tpe).getOrElse(TypeRepr.NoType)
+      val vTpe = valueType(recv.tpe).getOrElse(TypeRepr.NoType)
+      val kParam = Tree.ValDef(forEachKeySym, TypeTree(kTpe, so), scala.None, so)
+      val vParam = Tree.ValDef(forEachValSym, TypeTree(vTpe, so), scala.None, so)
+      // rewrite .key/.value selects on the binding to k/v idents
+      val rewrittenBody = rewriteEntrySelects(bound, forEachKeySym, kTpe, forEachValSym, vTpe, fe.body, so)
+      val lambda = Tree.Lambda(List(kParam, vParam), rewrittenBody, unitTpe, so)
+      Some(Tree.Apply(Tree.Select(recv, tgtSym, TypeRepr.NoType, so), List(lambda), tgtSym, unitTpe, so))
+    else
+      // keys/values iteration: build `recv.foreachKey(k => body)` or `recv.foreachValue(v => body)`
+      val paramTpe = fe.binding.tpt.tpe
+      val param = Tree.ValDef(forEachElemSym, TypeTree(paramTpe, so), scala.None, so)
+      // rewrite all references to the binding as references to the lambda parameter
+      val rewrittenBody = rewriteBindingRefs(bound, forEachElemSym, paramTpe, fe.body, so)
+      val lambda = Tree.Lambda(List(param), rewrittenBody, unitTpe, so)
+      Some(Tree.Apply(Tree.Select(recv, tgtSym, TypeRepr.NoType, so), List(lambda), tgtSym, unitTpe, so))
+
+  /** does the for-each body contain a `return`? Stops at lambdas, nested defs, anonymous classes. */
+  private def returnsInForEach(t: Any): Boolean = t match
+    case _: Tree.Return                                     => true
+    case _: Tree.Lambda | _: Tree.DefDef | _: Tree.AnonClass => false
+    case xs: Iterable[?]                                    => xs.exists(returnsInForEach)
+    case Some(x)                                            => returnsInForEach(x)
+    case p: Product                                         => p.productIterator.exists(returnsInForEach)
+    case _                                                  => false
+
+  /** does the body reference `bound` in a way that is NOT a `.key` or `.value` select?
+    * A bare use of the entry (e.g. `list.add(entry)`) has no lls image. */
+  private def hasNonFieldUsage(bound: SymId, body: Term)(using Program): Boolean =
+    var found = false
+    val scan = new Phase:
+      def name = "non-field-usage"
+      override def transformTerm(x: Term)(using Program): Term = x match
+        case Tree.Select(Tree.Ident(`bound`, _, _), m, _, _) =>
+          val mn = methodName(m)
+          if mn != "key" && mn != "value" && mn != "getKey" && mn != "getValue" then found = true
+          x
+        case Tree.Ident(`bound`, _, _) => found = true; x
+        case _ => x
+    StandardTraversal.mapTerm(scan, body)
+    found
+
+  /** rewrite `.key`/`.value` selects on `bound` to `kSym`/`vSym` idents. */
+  private def rewriteEntrySelects(bound: SymId, kSym: SymId, kTpe: TypeRepr,
+      vSym: SymId, vTpe: TypeRepr, body: Term, so: Origin)(using Program): Term =
+    val rw = new Phase:
+      def name = "entry-select-rewrite"
+      override def transformTerm(x: Term)(using Program): Term = x match
+        case Tree.Select(Tree.Ident(`bound`, _, _), m, _, _) =>
+          val mn = methodName(m)
+          if mn == "key" || mn == "getKey" then Tree.Ident(kSym, kTpe, so)
+          else if mn == "value" || mn == "getValue" then Tree.Ident(vSym, vTpe, so)
+          else x
+        case _ => x
+    StandardTraversal.mapTerm(rw, body)
+
+  /** rewrite all references to `bound` as references to `paramSym`. */
+  private def rewriteBindingRefs(bound: SymId, paramSym: SymId, paramTpe: TypeRepr,
+      body: Term, so: Origin)(using Program): Term =
+    val rw = new Phase:
+      def name = "binding-ref-rewrite"
+      override def transformTerm(x: Term)(using Program): Term = x match
+        case Tree.Ident(`bound`, _, _) => Tree.Ident(paramSym, paramTpe, so)
+        case _ => x
+    StandardTraversal.mapTerm(rw, body)
+
   private def writeThroughEntries(fe: Tree.ForEach)(using p: Program): Tree.ForEach =
     entrySource(fe.iterable).filter(purePath) match
     case scala.None      => fe
@@ -6086,6 +6218,10 @@ final class CollectionsTransform(
         // anonymous subclass / super-call that retargetConstruct could not match — return None so
         // the call stays unchanged and RetargetBoundaryCheck counts it.
         case _: CollectionsTransform.RetargetRewrite.Construct => scala.None
+        // ForEach entries are handled in transformTerm on the enclosing Tree.ForEach; if the call
+        // reaches HERE it is a standalone usage of entries()/keys()/values() NOT in a for-each
+        // header — no lls image, return None so RetargetBoundaryCheck counts it.
+        case _: CollectionsTransform.RetargetRewrite.ForEach => scala.None
       }
     }
 
@@ -6232,6 +6368,28 @@ object CollectionsTransform:
       * `collection-retarget` lane. Threading via `CtorFunnel`/context-threading is the eventual
       * answer; this variant enables it to be wired when that mechanism is ready. */
     case class Construct(companionFqn: String, factoryMethod: String) extends RetargetRewrite
+
+    /** For-each structural rewrite: a `for (E e : recv.sourceMethod())` over a retarget target
+      * is lowered to `recv.targetMethod(e => body)` (single-parameter lambda) or
+      * `recv.targetMethod((k, v) => body)` (two-parameter lambda for entry iteration).
+      *
+      * The rewrite fires in `transformTerm` on a `Tree.ForEach` whose iterable is a call to
+      * `sourceMethod()` on a retarget target. The body becomes a lambda, so java's loop-control
+      * constructs need translation:
+      *
+      *   - `continue` -> `boundary` around the lambda BODY (a `break(())` exits one iteration)
+      *   - `break` -> `boundary` around the CALL (a `break(())` exits the whole foreach)
+      *   - `return` -> F9's answer is unavailable (no explicit iterator), so a `boundary`
+      *     returning the value out of the lambda, then out of the method. REFUSED and COUNTED
+      *     on `collection-retarget` — the faithful image requires restructuring the caller.
+      *
+      * `arity` is the lambda parameter count: 2 for entry iteration (key + value), 1 for
+      * keys-only or values-only. For arity 2, the for-each binding's `.key`/`.value` field
+      * selects are rewritten to the lambda's first/second parameter.
+      *
+      * A usage of `sourceMethod()` NOT in a for-each header (stored, passed, assigned) has no
+      * lls image and is a counted refusal on `collection-retarget`. */
+    case class ForEach(targetMethod: String, arity: Int) extends RetargetRewrite
 
   /** the shape of a collection, which decides the call rewrite (a `Seq` `get` is `apply`,
     * a `Map` `get` is `getOrElse`). */

@@ -198,4 +198,65 @@ class CollectionsRetargetRewriteSpec extends munit.FunSuite {
     // so subjects already covers them through the retarget entry.
     assert(ct.subjects.nonEmpty)
   }
+
+  // ---- ForEach variant ----
+
+  test("ForEach toString is readable") {
+    assertEquals(ForEach("foreachEntry", 2).toString,
+      "ForEach(foreachEntry,2)")
+  }
+
+  test("ForEach changes the fingerprint") {
+    val base = new CollectionsTransform(
+      retarget = Map("com.a.X" -> "scala.X"))
+    val withFE = new CollectionsTransform(
+      retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(
+        ("entries", 0) -> ForEach("foreachEntry", 2))))
+    assertNotEquals(base.surfaceFingerprint, withFE.surfaceFingerprint)
+  }
+
+  test("ForEach with same values has the same fingerprint") {
+    val a = new CollectionsTransform(
+      retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(
+        ("entries", 0) -> ForEach("foreachEntry", 2))))
+    val b = new CollectionsTransform(
+      retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(
+        ("entries", 0) -> ForEach("foreachEntry", 2))))
+    assertEquals(a.surfaceFingerprint, b.surfaceFingerprint)
+  }
+
+  test("different ForEach target methods produce different fingerprints") {
+    val a = new CollectionsTransform(
+      retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(
+        ("entries", 0) -> ForEach("foreachEntry", 2))))
+    val b = new CollectionsTransform(
+      retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(
+        ("entries", 0) -> ForEach("foreachKey", 1))))
+    assertNotEquals(a.surfaceFingerprint, b.surfaceFingerprint)
+  }
+
+  test("mergeWith unions ForEach entries from independent sources") {
+    val base = new CollectionsTransform(
+      retarget = Map("com.a.X" -> "scala.X", "com.b.Y" -> "scala.Y"),
+      retargetRewrites = Map("com.a.X" -> Map(
+        ("entries", 0) -> ForEach("foreachEntry", 2))))
+    val dep = new CollectionsTransform(
+      retarget = Map("com.b.Y" -> "scala.Y"),
+      retargetRewrites = Map("com.b.Y" -> Map(
+        ("keys", 0) -> ForEach("foreachKey", 1))))
+    val merged = base.mergedWith(dep)
+    assert(clue(merged).isRight)
+    val ct = merged.toOption.get.phase.asInstanceOf[CollectionsTransform]
+    assert(ct.retargetRewrites.contains("com.a.X"))
+    assert(ct.retargetRewrites.contains("com.b.Y"))
+    assertEquals(ct.retargetRewrites("com.a.X")(("entries", 0)),
+      ForEach("foreachEntry", 2))
+    assertEquals(ct.retargetRewrites("com.b.Y")(("keys", 0)),
+      ForEach("foreachKey", 1))
+  }
 }

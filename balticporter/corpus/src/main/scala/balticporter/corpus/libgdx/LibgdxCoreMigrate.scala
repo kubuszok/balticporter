@@ -305,6 +305,24 @@ object LibgdxPolicy:
       // wave 3.1a: retargetted to mutable.BitSet (sge type-mappings.md: "Bits -> mutable.BitSet").
       // 0 callers in gdx/src; the retarget serves dependents (ashley uses Bits for entity masks).
       "com.badlogic.gdx.utils.Bits",
+      // wave 3.1a: retargetted to lowlevel.util.ObjectMap (lls 0.3.0). sge type-mappings.md:
+      // "ObjectMap -> ObjectMap[K,V]" (extracted to lls). Same member API (get, put, containsKey,
+      // remove, putAll, clear, size, isEmpty, etc. — verified via javap on lls_3-0.3.0.jar), so
+      // retarget only — no Kind-based rewrites needed. lls's constructor is PRIVATE, so the
+      // Construct rewrite routes `new ObjectMap(args)` through the companion's transparent inline
+      // `apply` (in TASTy, erased from bytecode). Inner types (Entry, Keys, Values, Entries) are
+      // NOT in lls — references to them from non-dropped files are compile errors, COUNTED.
+      "com.badlogic.gdx.utils.ObjectMap",
+      // wave 3.1a: retargetted to lowlevel.util.ObjectSet (lls 0.3.0). Same pattern as ObjectMap.
+      "com.badlogic.gdx.utils.ObjectSet",
+      // wave 3.1b: ObjectMap/ObjectSet SUBCLASSES — retargetted to their lls equivalents.
+      // lls's ObjectMap is `final class`, so gdx subclasses cannot extend it; they are independent
+      // types in lls. sge type-mappings.md: "OrderedMap -> OrderedMap[K,V]",
+      // "OrderedSet -> OrderedSet[A]", "IdentityMap -> ArrayMap[K,V]" (lls has no IdentityMap;
+      // ArrayMap with identity semantics is the closest equivalent).
+      "com.badlogic.gdx.utils.OrderedMap",
+      "com.badlogic.gdx.utils.OrderedSet",
+      "com.badlogic.gdx.utils.IdentityMap",
     ),
     // libGDX itself deprecated `setEnabledReflection` (superseded by the typed
     // `setEnabled(Styleable, Boolean)`, already ported); its private `findMethod` helper was the
@@ -429,6 +447,86 @@ object LibgdxPolicy:
       ("or", 1)           -> Rename("|="),            // bits.or(other) -> bits |= other
       ("andNot", 1)       -> Rename("&~="),           // bits.andNot(other) -> bits &~= other
     ))
+
+  /** `ObjectMap` and `ObjectSet` retargetted to their lls equivalents.
+    *
+    * sge type-mappings.md: "ObjectMap -> ObjectMap[K,V]", "ObjectSet -> ObjectSet[A]" (extracted
+    * to lls). Same member API (get, put, containsKey, remove, add, contains, etc. — verified via
+    * `javap` on lls_3-0.3.0.jar), so retarget only — no Kind-based rewrites needed.
+    *
+    * lls's constructor is PRIVATE, so `new ObjectMap(args)` must be routed through the companion's
+    * transparent inline `apply` (exists in TASTy, erased from JVM bytecode). The `Construct`
+    * rewrite emits `lowlevel.util.ObjectMap.apply[K,V](args)`, which the Scala compiler resolves
+    * from the TASTy and inlines. Three arities:
+    *   - `("<init>", 0)` → `apply()` — default capacity 51, loadFactor 0.8
+    *   - `("<init>", 1)` → `apply(capacity)` — all gdx/src uses are int-typed (capacity)
+    *   - `("<init>", 2)` → `apply(capacity, loadFactor)`
+    * The copy constructor `ObjectMap(ObjectMap)` at arity 1 does NOT appear in gdx/src outside
+    * dropped files; if a dependent needs it, `from` is the companion's public factory for copies.
+    *
+    * Inner types (`ObjectMap.Entry`, `ObjectMap.Keys`, `ObjectMap.Values`, `ObjectMap.Entries`)
+    * are NOT present in lls — references to them from non-dropped files are compile errors,
+    * COUNTED on the `collection-retarget` lane. */
+  def libCollectionRetargets: Map[String, String] = Map(
+    "com.badlogic.gdx.utils.ObjectMap" -> "lowlevel.util.ObjectMap",
+    "com.badlogic.gdx.utils.ObjectSet" -> "lowlevel.util.ObjectSet",
+    // subclasses: lls ObjectMap is final, so OrderedMap/IdentityMap/OrderedSet are standalone types
+    "com.badlogic.gdx.utils.OrderedMap" -> "lowlevel.util.OrderedMap",
+    "com.badlogic.gdx.utils.OrderedSet" -> "lowlevel.util.OrderedSet",
+    // sge type-mappings.md maps IdentityMap to ArrayMap (lls has no IdentityMap)
+    "com.badlogic.gdx.utils.IdentityMap" -> "lowlevel.util.ArrayMap",
+    // ObjectMap.Entry -> Tuple2: same image as JDK Map.Entry -> Tuple2 already in the phase.
+    // .key -> ._1, .value -> ._2 field rewrites are NOT expressible through retargetRewrites
+    // (which handles Tree.Apply, not bare Tree.Select field accesses). The field rename needs
+    // MemberRenameTransform or a phase-level Entry->Tuple2 handler -- HANDOFF to next wave.
+    // COUNTED on collection-retarget until then.
+    "com.badlogic.gdx.utils.ObjectMap$Entry" -> "scala.Tuple2",
+  )
+
+  def libCollectionConstructRewrites: Map[String, Map[(String, Int), balticporter.transform.CollectionsTransform.RetargetRewrite]] =
+    import balticporter.transform.CollectionsTransform.RetargetRewrite.*
+    Map(
+      "com.badlogic.gdx.utils.ObjectMap" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("notEmpty", 0) -> Rename("nonEmpty"),
+        // ForEach: for (Entry e : map.entries()) -> map.foreachEntry((k, v) => body)
+        ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("keys", 0)    -> ForEach("foreachKey", 1),
+        ("values", 0)  -> ForEach("foreachValue", 1),
+      ),
+      "com.badlogic.gdx.utils.ObjectSet" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.ObjectSet", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.ObjectSet", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.ObjectSet", "apply"),
+        ("notEmpty", 0) -> Rename("nonEmpty"),
+      ),
+      "com.badlogic.gdx.utils.OrderedMap" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.OrderedMap", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.OrderedMap", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.OrderedMap", "apply"),
+        ("notEmpty", 0) -> Rename("nonEmpty"),
+        ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("keys", 0)    -> ForEach("foreachKey", 1),
+        ("values", 0)  -> ForEach("foreachValue", 1),
+      ),
+      "com.badlogic.gdx.utils.OrderedSet" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.OrderedSet", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.OrderedSet", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.OrderedSet", "apply"),
+        ("notEmpty", 0) -> Rename("nonEmpty"),
+      ),
+      "com.badlogic.gdx.utils.IdentityMap" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.ArrayMap", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.ArrayMap", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.ArrayMap", "apply"),
+        ("notEmpty", 0) -> Rename("nonEmpty"),
+        ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("keys", 0)    -> ForEach("foreachKey", 1),
+        ("values", 0)  -> ForEach("foreachValue", 1),
+      ),
+    )
 
   /** `com.badlogic.gdx.utils.Disposable` → `java.lang.AutoCloseable`, with `dispose` → `close`.
     *
@@ -840,8 +938,8 @@ object LibgdxPolicy:
     * ([[GdxSharedIteratorRule]]). */
   def mainPhases: List[balticporter.tir.Phase] =
     List(beanProperties, nullaryArity,
-         new CollectionsTransform(retarget = comparatorRetarget ++ bitsRetarget,
-                                  retargetRewrites = bitsRetargetRewrites), new MutableParamsTransform,
+         new CollectionsTransform(retarget = comparatorRetarget ++ bitsRetarget ++ libCollectionRetargets,
+                                  retargetRewrites = bitsRetargetRewrites ++ libCollectionConstructRewrites), new MutableParamsTransform,
          new PanamaFfiTransform(), unwrapReflection, classTable, new GdxSharedIteratorRule,
          memberRenames, disposableRedirect, textureHandle, align, uniformLocation,
          nullability, globalsToContext)
