@@ -634,6 +634,13 @@ final class CollectionsTransform(
   private var forEachKeySym: SymId = SymId.None
   private var forEachValSym: SymId = SymId.None
   private var forEachElemSym: SymId = SymId.None
+  /** sequence counter for return-boundary labels in [[retargetForEach]]. */
+  private var retFeSeq: Int = 0
+  /** Apply nodes produced by [[retargetForEach]] that need a value-carrying boundary wrapper.
+    * Keyed on the Apply's identity (the object itself); value is the label name used for the
+    * `boundary.break` calls inside the lambda body. [[transformDefDef]] reads this to wrap
+    * the Apply + its sibling Return in a `boundary[R]`. */
+  private var retFeReturnApplies: java.util.IdentityHashMap[Term, String] = new java.util.IdentityHashMap()
   /** the scala side of a BRIDGED member (`ENGINE-LIMITS.md` K28.1) — the types its signature is
     * written in, and the two `asScala` views its body reaches java's answer through.
     *
@@ -3085,9 +3092,7 @@ final class CollectionsTransform(
     val rewrite = retargetRewrites.get(srcFqn).flatMap(_.get((mName, 0))) match
       case Some(rw: CollectionsTransform.RetargetRewrite.ForEach) => rw
       case _ => return scala.None
-    // REFUSE if the body contains a `return` — F9's while-loop lowering is unavailable here
-    // because lls provides no explicit iterator. Counted on collection-retarget.
-    if returnsInForEach(fe.body) then return scala.None
+    val hasReturn = returnsInForEach(fe.body)
     // for arity-2 (entry iteration), check that the binding is ONLY used via .key/.value selects
     // and that it is not reassigned
     val bound = fe.binding.symbol
@@ -3099,24 +3104,31 @@ final class CollectionsTransform(
     val tgtSym = retargetRewriteSyms.getOrElse((srcFqn, rewrite.targetMethod), SymId.None)
     if tgtSym == SymId.None then return scala.None
     val so = fe.origin
-    if rewrite.arity == 2 then
-      // entry iteration: build `recv.foreachEntry((k, v) => body')`
-      val kTpe = keyType(recv.tpe).getOrElse(TypeRepr.NoType)
-      val vTpe = valueType(recv.tpe).getOrElse(TypeRepr.NoType)
-      val kParam = Tree.ValDef(forEachKeySym, TypeTree(kTpe, so), scala.None, so)
-      val vParam = Tree.ValDef(forEachValSym, TypeTree(vTpe, so), scala.None, so)
-      // rewrite .key/.value selects on the binding to k/v idents
-      val rewrittenBody = rewriteEntrySelects(bound, forEachKeySym, kTpe, forEachValSym, vTpe, fe.body, so)
-      val lambda = Tree.Lambda(List(kParam, vParam), rewrittenBody, unitTpe, so)
-      Some(Tree.Apply(Tree.Select(recv, tgtSym, TypeRepr.NoType, so), List(lambda), tgtSym, unitTpe, so))
-    else
-      // keys/values iteration: build `recv.foreachKey(k => body)` or `recv.foreachValue(v => body)`
-      val paramTpe = fe.binding.tpt.tpe
-      val param = Tree.ValDef(forEachElemSym, TypeTree(paramTpe, so), scala.None, so)
-      // rewrite all references to the binding as references to the lambda parameter
-      val rewrittenBody = rewriteBindingRefs(bound, forEachElemSym, paramTpe, fe.body, so)
-      val lambda = Tree.Lambda(List(param), rewrittenBody, unitTpe, so)
-      Some(Tree.Apply(Tree.Select(recv, tgtSym, TypeRepr.NoType, so), List(lambda), tgtSym, unitTpe, so))
+    // when the body has a `return`, replace each Return(Some(v)) with an Opaque
+    // `boundary.break(v)(using retFe$N)` and register the Apply for wrapping in transformDefDef.
+    val label = if hasReturn then { retFeSeq += 1; Some(s"retFe$$$retFeSeq") } else scala.None
+    def bodyWithBreaks(body: Term): Term =
+      if !hasReturn then body
+      else rewriteReturnsToBreaks(body, label.get, so)
+    val apply =
+      if rewrite.arity == 2 then
+        // entry iteration: build `recv.foreachEntry((k, v) => body')`
+        val kTpe = keyType(recv.tpe).getOrElse(TypeRepr.NoType)
+        val vTpe = valueType(recv.tpe).getOrElse(TypeRepr.NoType)
+        val kParam = Tree.ValDef(forEachKeySym, TypeTree(kTpe, so), scala.None, so)
+        val vParam = Tree.ValDef(forEachValSym, TypeTree(vTpe, so), scala.None, so)
+        val rewrittenBody = rewriteEntrySelects(bound, forEachKeySym, kTpe, forEachValSym, vTpe, fe.body, so)
+        val lambda = Tree.Lambda(List(kParam, vParam), bodyWithBreaks(rewrittenBody), unitTpe, so)
+        Tree.Apply(Tree.Select(recv, tgtSym, TypeRepr.NoType, so), List(lambda), tgtSym, unitTpe, so)
+      else
+        // keys/values iteration: build `recv.foreachKey(k => body)` or `recv.foreachValue(v => body)`
+        val paramTpe = fe.binding.tpt.tpe
+        val param = Tree.ValDef(forEachElemSym, TypeTree(paramTpe, so), scala.None, so)
+        val rewrittenBody = rewriteBindingRefs(bound, forEachElemSym, paramTpe, fe.body, so)
+        val lambda = Tree.Lambda(List(param), bodyWithBreaks(rewrittenBody), unitTpe, so)
+        Tree.Apply(Tree.Select(recv, tgtSym, TypeRepr.NoType, so), List(lambda), tgtSym, unitTpe, so)
+    if hasReturn then retFeReturnApplies.put(apply, label.get)
+    Some(apply)
 
   /** does the for-each body contain a `return`? Stops at lambdas, nested defs, anonymous classes. */
   private def returnsInForEach(t: Any): Boolean = t match
@@ -3126,6 +3138,61 @@ final class CollectionsTransform(
     case Some(x)                                            => returnsInForEach(x)
     case p: Product                                         => p.productIterator.exists(returnsInForEach)
     case _                                                  => false
+
+  /** Replace `Return(Some(v))` with `Opaque("boundary.break(v)(using label)")` inside the
+    * for-each body. The emitter renders the Opaque as-is; the boundary wrapper is produced by
+    * [[wrapReturnBoundary]] in [[transformDefDef]].
+    *
+    * Stops at lambdas, nested defs and anonymous classes — the same scope boundary as
+    * [[returnsInForEach]]. A `Return(None)` (void return) becomes `break(())(using label)`. */
+  private def rewriteReturnsToBreaks(body: Term, label: String, so: Origin)(using Program): Term =
+    val rw = new Phase:
+      def name = "return-to-break"
+      override def transformTerm(t: Term)(using Program): Term = t match
+        case r: Tree.Return =>
+          val v = r.expr.getOrElse(Tree.Opaque("()", unitTpe, so))
+          Tree.Opaque.spliced(
+            List(s"scala.util.boundary.break(", s")(using $label)"),
+            List(v),
+            unitTpe,
+            so
+          )
+        case _ => t
+      // stop at lambdas, nested defs, anonymous classes — they open their own return scope
+      override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef = t
+    // cannot use StandardTraversal.mapTerm because it descends into lambdas by default;
+    // use the Phase override to stop at DefDef, and walk Lambda/AnonClass manually
+    rewriteReturnsToBreaksWalk(rw, body)
+
+  /** walk the body replacing returns, but stop at lambdas, nested defs, anon classes. */
+  private def rewriteReturnsToBreaksWalk(rw: Phase, t: Term)(using Program): Term = t match
+    case _: Tree.Lambda => t // lambdas open their own return scope
+    case r: Tree.Return => rw.transformTerm(r)
+    case x: Tree.Block =>
+      x.copy(
+        stats = x.stats.map {
+          case s: Term => rewriteReturnsToBreaksWalk(rw, s)
+          case other   => other
+        },
+        expr = rewriteReturnsToBreaksWalk(rw, x.expr)
+      )
+    case x: Tree.If =>
+      x.copy(thenp = rewriteReturnsToBreaksWalk(rw, x.thenp),
+             elsep = rewriteReturnsToBreaksWalk(rw, x.elsep))
+    case x: Tree.While    => x.copy(body = rewriteReturnsToBreaksWalk(rw, x.body))
+    case x: Tree.DoWhile  => x.copy(body = rewriteReturnsToBreaksWalk(rw, x.body))
+    case x: Tree.For      => x.copy(body = rewriteReturnsToBreaksWalk(rw, x.body))
+    case x: Tree.ForEach  => x.copy(body = rewriteReturnsToBreaksWalk(rw, x.body))
+    case x: Tree.Synchronized => x.copy(body = rewriteReturnsToBreaksWalk(rw, x.body))
+    case x: Tree.Labeled  => x.copy(stmt = rewriteReturnsToBreaksWalk(rw, x.stmt))
+    case x: Tree.Commented => x.copy(stmt = rewriteReturnsToBreaksWalk(rw, x.stmt))
+    case x: Tree.Try =>
+      x.copy(body = rewriteReturnsToBreaksWalk(rw, x.body),
+             catches = x.catches.map(c => c.copy(body = rewriteReturnsToBreaksWalk(rw, c.body))),
+             finalizer = x.finalizer.map(rewriteReturnsToBreaksWalk(rw, _)))
+    case x: Tree.Match =>
+      x.copy(cases = x.cases.map(c => c.copy(body = rewriteReturnsToBreaksWalk(rw, c.body))))
+    case other => other
 
   /** does the body reference `bound` in a way that is NOT a `.key` or `.value` select?
     * A bare use of the entry (e.g. `list.add(entry)`) has no lls image.
@@ -4590,7 +4657,9 @@ final class CollectionsTransform(
     * the tail to a bare expression would need one more case here. */
   override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef =
     citeIfReified(t.symbol)
-    t.copy(rhs = t.rhs.map(coerceReturns(t.returnTpt.tpe, _)))
+    val coerced = t.copy(rhs = t.rhs.map(coerceReturns(t.returnTpt.tpe, _)))
+    if retFeReturnApplies.isEmpty then coerced
+    else coerced.copy(rhs = coerced.rhs.map(wrapReturnBoundary(t.returnTpt.tpe, _)))
 
   private def coerceReturns(want: TypeRepr, t: Term)(using Program): Term = t match
     case x: Tree.Return       => x.copy(expr = x.expr.map(coerce(want, _)))
@@ -4617,6 +4686,113 @@ final class CollectionsTransform(
   private def coerceReturnsIn(want: TypeRepr, s: Statement)(using Program): Statement = s match
     case t: Term => coerceReturns(want, t)
     case other   => other
+
+  /** Wrap Apply nodes registered in [[retFeReturnApplies]] with a `boundary[R]` whose
+    * fallthrough value is whatever code follows the Apply in the enclosing Block.
+    *
+    * The pattern:
+    * {{{
+    *   // before:
+    *   Block(stats = [..., Apply(foreachValue(lambda-with-breaks)), ...tail-stats...], expr = Return(v))
+    *   // after:
+    *   Block(stats = [...], expr = Opaque("boundary[R] { label ?=> $apply; $tail; $fallthrough }"))
+    * }}}
+    *
+    * The `Return` nodes inside the lambda body have already been rewritten to
+    * `boundary.break(v)(using label)` by [[rewriteReturnsToBreaks]]. The `Return` in the
+    * tail becomes the boundary's fallthrough expression (its `expr` stripped of the `Return`
+    * wrapper, since control flow exits the boundary rather than the method). */
+  private def wrapReturnBoundary(retType: TypeRepr, body: Term)(using p: Program): Term = body match
+    case b: Tree.Block =>
+      // scan stats for a registered Apply
+      val idx = b.stats.indexWhere {
+        case t: Term => retFeReturnApplies.containsKey(t)
+        case _       => false
+      }
+      if idx < 0 then
+        // not found at this level — recurse into statement-carrying nodes
+        b.copy(
+          stats = b.stats.map {
+            case t: Term => wrapReturnBoundary(retType, t)
+            case other   => other
+          },
+          expr = wrapReturnBoundary(retType, b.expr)
+        )
+      else
+        val applyNode = b.stats(idx).asInstanceOf[Term]
+        val label = retFeReturnApplies.get(applyNode)
+        retFeReturnApplies.remove(applyNode)
+        val so = applyNode.origin
+        // gather tail: everything after the Apply in the Block
+        val tailStats = b.stats.drop(idx + 1)
+        val tailExpr  = b.expr
+        // build the fallthrough: the tail statements with Return stripped.
+        // In Java TIR, every method exits through `Tree.Return`, so `Block.expr` is `()`.
+        // If the last tail stat IS a Return, that Return's value IS the boundary's fallthrough
+        // and the block's `()` expr is NOT included (it would widen the type to Unit).
+        // If there is no Return in the tail (the for-each is the last statement), the block's
+        // expr IS the fallthrough (typically `()` for a void method, wrapped in boundary[Unit]).
+        val tailHasReturn = tailStats.exists {
+          case _: Tree.Return => true
+          case _ => false
+        }
+        val fallthroughParts =
+          if tailHasReturn then
+            // include tail stats (with Return stripped), drop the block's trailing ()
+            tailStats.collect { case t: Term => stripReturn(t) }
+          else
+            // no Return — the block's expr IS the boundary's value
+            tailStats.collect { case t: Term => stripReturn(t) } :+ stripReturn(tailExpr)
+        // assemble the boundary body: the Apply, then the tail, then the fallthrough
+        val retTypeName = renderTypeForBoundary(retType)
+        val allHoles    = applyNode :: fallthroughParts
+        // boundary[R] { (label: Label[R]) ?=> hole0; hole1; ...; holeN }
+        val parts       = new collection.mutable.ListBuffer[String]
+        parts += s"scala.util.boundary[$retTypeName] { ($label: scala.util.boundary.Label[$retTypeName]) ?=> "
+        for i <- 0 until allHoles.size - 1 do parts += "; "
+        parts += " }"
+        val boundaryNode = Tree.Opaque.spliced(parts.toList, allHoles, retType, so)
+        // replace the Apply + tail with the boundary
+        val prefix = b.stats.take(idx).map {
+          case t: Term => wrapReturnBoundary(retType, t)
+          case other   => other
+        }
+        if prefix.isEmpty then boundaryNode
+        else Tree.Block(prefix.toList, boundaryNode, retType, so)
+    case x: Tree.If =>
+      x.copy(thenp = wrapReturnBoundary(retType, x.thenp),
+             elsep = wrapReturnBoundary(retType, x.elsep))
+    case x: Tree.Labeled => x.copy(stmt = wrapReturnBoundary(retType, x.stmt))
+    case x: Tree.Commented => x.copy(stmt = wrapReturnBoundary(retType, x.stmt))
+    case x: Tree.Synchronized => x.copy(body = wrapReturnBoundary(retType, x.body))
+    case x: Tree.Try =>
+      x.copy(body = wrapReturnBoundary(retType, x.body))
+    case _ => body
+
+  /** Strip a `Return` wrapper, keeping only its value expression. Used to convert a method-level
+    * `return false` into the boundary's fallthrough `false`. */
+  private def stripReturn(t: Term): Term = t match
+    case Tree.Return(Some(v), _, _) => v
+    case Tree.Return(scala.None, _, so) => Tree.Opaque("()", unitTpe, so)
+    case other => other
+
+  /** Strip a `Return` wrapper from a Statement. */
+  private def stripReturn(s: Statement): Term = s match
+    case t: Term => stripReturn(t)
+    case _ => Tree.Opaque("()", unitTpe, Origin.synthetic)
+
+  /** Render a TypeRepr as a fully-qualified name for the boundary's type parameter.
+    * Only needs to handle the return types that java methods actually produce — primitives,
+    * classes, applied generics. A type that cannot be rendered falls back to `scala.Any`,
+    * which is the conservative answer (the boundary accepts any value). */
+  private def renderTypeForBoundary(t: TypeRepr)(using p: Program): String = t match
+    case TypeRepr.TypeRef(_, s) =>
+      p.symbolOf(s).map(_.fullName).getOrElse("scala.Any")
+    case TypeRepr.AppliedType(tc, args) =>
+      val baseName = renderTypeForBoundary(tc)
+      s"$baseName[${args.map(renderTypeForBoundary).mkString(", ")}]"
+    case TypeRepr.NoType => "scala.Any"
+    case _ => "scala.Any"
 
   /** Bridge a scala collection into a SHIM-TYPED SLOT — an argument, a declared `val`, an
     * assignment target, a RETURN. Nothing else in the phase decides this; every position routes

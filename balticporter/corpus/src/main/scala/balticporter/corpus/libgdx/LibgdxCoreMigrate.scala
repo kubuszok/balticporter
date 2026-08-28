@@ -323,6 +323,28 @@ object LibgdxPolicy:
       "com.badlogic.gdx.utils.OrderedMap",
       "com.badlogic.gdx.utils.OrderedSet",
       "com.badlogic.gdx.utils.IdentityMap",
+      // wave 3.1d: the remaining MAP family — all retargetted to lowlevel.util.ObjectMap.
+      // sge type-mappings.md: "IntMap, IntIntMap, IntFloatMap, LongMap, ObjectIntMap, ObjectFloatMap,
+      // ObjectLongMap -> ObjectMap[K,V]". lls has no primitive-keyed specialisations; the runtime
+      // cost of boxing is accepted (same as sge's choice). These types' own static `tableSize` and
+      // references to `ObjectMap.dummy` disappear with the type itself — every remaining caller is
+      // inside one of these dropped files.
+      "com.badlogic.gdx.utils.IntMap",
+      "com.badlogic.gdx.utils.LongMap",
+      "com.badlogic.gdx.utils.IntIntMap",
+      "com.badlogic.gdx.utils.IntFloatMap",
+      "com.badlogic.gdx.utils.ObjectIntMap",
+      "com.badlogic.gdx.utils.ObjectFloatMap",
+      "com.badlogic.gdx.utils.ObjectLongMap",
+      // wave 3.1d: gdx's ArrayMap retargetted to lowlevel.util.ArrayMap.
+      // sge type-mappings.md: "ArrayMap, IdentityMap -> ArrayMap[K,V]". IdentityMap already
+      // retargetted in wave 3.1b; gdx's own ArrayMap is the same lls type. Deprecated
+      // constructors taking Class already in dropMethods.
+      "com.badlogic.gdx.utils.ArrayMap",
+      // wave 3.1d: IntSet retargetted to lowlevel.util.ObjectSet.
+      // sge type-mappings.md: "ObjectSet, IntSet -> ObjectSet[A]". lls has no primitive-element
+      // set specialisation; IntSet -> ObjectSet[Int] with boxing accepted.
+      "com.badlogic.gdx.utils.IntSet",
     ),
     // libGDX itself deprecated `setEnabledReflection` (superseded by the typed
     // `setEnabled(Styleable, Boolean)`, already ported); its private `findMethod` helper was the
@@ -481,6 +503,22 @@ object LibgdxPolicy:
     // MemberRenameTransform or a phase-level Entry->Tuple2 handler -- HANDOFF to next wave.
     // COUNTED on collection-retarget until then.
     "com.badlogic.gdx.utils.ObjectMap$Entry" -> "scala.Tuple2",
+    // wave 3.1d: remaining MAP family retargets
+    "com.badlogic.gdx.utils.IntMap" -> "lowlevel.util.ObjectMap",
+    "com.badlogic.gdx.utils.LongMap" -> "lowlevel.util.ObjectMap",
+    "com.badlogic.gdx.utils.IntIntMap" -> "lowlevel.util.ObjectMap",
+    "com.badlogic.gdx.utils.IntFloatMap" -> "lowlevel.util.ObjectMap",
+    "com.badlogic.gdx.utils.ObjectIntMap" -> "lowlevel.util.ObjectMap",
+    "com.badlogic.gdx.utils.ObjectFloatMap" -> "lowlevel.util.ObjectMap",
+    "com.badlogic.gdx.utils.ObjectLongMap" -> "lowlevel.util.ObjectMap",
+    "com.badlogic.gdx.utils.ArrayMap" -> "lowlevel.util.ArrayMap",
+    "com.badlogic.gdx.utils.IntSet" -> "lowlevel.util.ObjectSet",
+    // Inner Entry types for the map family — same Tuple2 mapping as ObjectMap.Entry
+    "com.badlogic.gdx.utils.IntMap$Entry" -> "scala.Tuple2",
+    "com.badlogic.gdx.utils.LongMap$Entry" -> "scala.Tuple2",
+    "com.badlogic.gdx.utils.ObjectIntMap$Entry" -> "scala.Tuple2",
+    "com.badlogic.gdx.utils.ObjectFloatMap$Entry" -> "scala.Tuple2",
+    "com.badlogic.gdx.utils.ObjectLongMap$Entry" -> "scala.Tuple2",
   )
 
   def libCollectionConstructRewrites: Map[String, Map[(String, Int), balticporter.transform.CollectionsTransform.RetargetRewrite]] =
@@ -525,6 +563,92 @@ object LibgdxPolicy:
         ("entries", 0) -> ForEach("foreachEntry", 2),
         ("keys", 0)    -> ForEach("foreachKey", 1),
         ("values", 0)  -> ForEach("foreachValue", 1),
+      ),
+      // wave 3.1d: remaining MAP family — all to ObjectMap, same Construct + ForEach pattern.
+      // IntMap<V> -> ObjectMap[Int, V], LongMap<V> -> ObjectMap[Long, V],
+      // IntIntMap -> ObjectMap[Int, Int], IntFloatMap -> ObjectMap[Int, Float],
+      // ObjectIntMap<K> -> ObjectMap[K, Int], ObjectFloatMap<K> -> ObjectMap[K, Float],
+      // ObjectLongMap<K> -> ObjectMap[K, Long].
+      "com.badlogic.gdx.utils.IntMap" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("notEmpty", 0) -> Rename("nonEmpty"),
+        ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("keys", 0)    -> ForEach("foreachKey", 1),
+        ("values", 0)  -> ForEach("foreachValue", 1),
+      ),
+      "com.badlogic.gdx.utils.LongMap" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("notEmpty", 0) -> Rename("nonEmpty"),
+        ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("keys", 0)    -> ForEach("foreachKey", 1),
+        ("values", 0)  -> ForEach("foreachValue", 1),
+      ),
+      "com.badlogic.gdx.utils.IntIntMap" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("notEmpty", 0) -> Rename("nonEmpty"),
+        ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("keys", 0)    -> ForEach("foreachKey", 1),
+        ("values", 0)  -> ForEach("foreachValue", 1),
+      ),
+      "com.badlogic.gdx.utils.IntFloatMap" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("notEmpty", 0) -> Rename("nonEmpty"),
+        ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("keys", 0)    -> ForEach("foreachKey", 1),
+        ("values", 0)  -> ForEach("foreachValue", 1),
+      ),
+      "com.badlogic.gdx.utils.ObjectIntMap" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("notEmpty", 0) -> Rename("nonEmpty"),
+        ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("keys", 0)    -> ForEach("foreachKey", 1),
+        ("values", 0)  -> ForEach("foreachValue", 1),
+      ),
+      "com.badlogic.gdx.utils.ObjectFloatMap" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("notEmpty", 0) -> Rename("nonEmpty"),
+        ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("keys", 0)    -> ForEach("foreachKey", 1),
+        ("values", 0)  -> ForEach("foreachValue", 1),
+      ),
+      "com.badlogic.gdx.utils.ObjectLongMap" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
+        ("notEmpty", 0) -> Rename("nonEmpty"),
+        ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("keys", 0)    -> ForEach("foreachKey", 1),
+        ("values", 0)  -> ForEach("foreachValue", 1),
+      ),
+      // wave 3.1d: gdx's ArrayMap -> lowlevel.util.ArrayMap (same as IdentityMap's target)
+      "com.badlogic.gdx.utils.ArrayMap" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.ArrayMap", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.ArrayMap", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.ArrayMap", "apply"),
+        ("notEmpty", 0) -> Rename("nonEmpty"),
+        ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("keys", 0)    -> ForEach("foreachKey", 1),
+        ("values", 0)  -> ForEach("foreachValue", 1),
+      ),
+      // wave 3.1d: IntSet -> ObjectSet. No entries/keys/values — sets iterate through
+      // themselves (Iterable<Integer>), lowered to foreachKey by the phase when applicable.
+      "com.badlogic.gdx.utils.IntSet" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.ObjectSet", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.ObjectSet", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.ObjectSet", "apply"),
+        ("notEmpty", 0) -> Rename("nonEmpty"),
       ),
     )
 
