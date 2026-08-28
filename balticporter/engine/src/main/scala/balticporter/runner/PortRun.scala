@@ -2498,6 +2498,10 @@ final case class PortRun(
          Set(CollectionClosureCheck.Name, CollectionBoundaryCheck.Name,
              RetargetBoundaryCheck.Name, CollectionInternalCheck.Name)
        else Set.empty) ++
+      // …and the NULLABILITY boundary lane, on the same rule. A port whose pipeline configures no
+      // nullability annotation has no boundary to police; requiring it would fail every such port.
+      (if effectivePhases.exists(_.isInstanceOf[NullabilityTransform]) then
+         Set(NullabilityBoundaryCheck.Name) else Set.empty) ++
       // …and the test-framework refusal population, on the same rule at the same declaration. A
       // port that carries the phase and converts EVERY construct records 0, which is a fact about
       // that port; a run that stopped asking would otherwise report success with the row gone.
