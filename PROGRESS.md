@@ -11072,11 +11072,23 @@ the draft carried are replaced by the established pattern: `typeDeclarationOf` (
 absence is normal), parents through declarations. Spec: `MethodResolutionSpec` (3 tests).
 
 Measured: gdx 0 = 0 errors, every check count at its headline (baselines stale from O6 Align
-rebase, not from this fix). gltf 5 errors (3 D4/C3 floor + 2 D14 rename from O6 Align's
-`BeanPropertyTransform` on `Application#getType` -> `type`). The G34 fix improved the DIAGNOSTIC:
-the error now names `sge.Application` instead of `java.lang.reflect.Field`.
+rebase, not from this fix). gltf 5 -> 3 = D4/C3 floor: the 2 `getType` errors were in
+`MethodBodyTransform` body substitutions (`PixmapBinaryLoaderHack#load`,
+`GLTFBinaryExporter#savePNG`) that called `sge.Gdx.app.getType()` -- the base renamed `getType` to
+`type` via `BeanPropertyTransform` (O6 Align), and the bodies must use the emitted accessor names
+per CLAUDE.md section 1.5. Updated to `sge.Gdx.app.\`type\``.
+
+**`base-surface 0 -> 79` on gltf.** All 79 rows are "this run COLLAPSED a pair on a type the base
+emits, and the base's map carries no member row for it" -- `BeanPropertyTransform` collapses from
+the O6 Align wave. Subjects: `GLProfiler#listener`, `Map#layers`, `Map#properties`,
+`MapLayer#name`/`objects`/`parallaxX`/`parallaxY`/`properties`/`visible`,
+`MapObject#color`/`name`/`opacity`/`properties`/`visible`, and 65 more -- all bean property pairs.
+Zero `getType` or `nullary` or G34 subjects among them. O6 Align staleness, acknowledged at the
+corpus-wide promotion.
 
 **`expected-errors.ref` 1651 -> 1655.** The 4 new ref errors are `eq`/`ne` infix warnings treated
 as errors under `-Werror` by the O6 Align nullable opaque changes (commits `321c81e9`..`4b5ecbfd`
 on master). Each is a `.get eq this` or `.get ne null` pattern on a field whose type became
-`lowlevel.Nullable[Group]`. Not G34; the opaque boundary lane owns these.
+`lowlevel.Nullable[Group]`. This is a defect the EMITTER owes: an `eq` on a `Nullable` wrapper the
+port unwrapped is exactly a seam, and the emitter should render `.eq(this)` method syntax rather
+than infix. Fix belongs to the opaque-lane wave, not this one.

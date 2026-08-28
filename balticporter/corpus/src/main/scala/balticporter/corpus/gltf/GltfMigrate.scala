@@ -162,7 +162,7 @@ object GltfPolicy:
           // 1. `new Pixmap(bytes, off, len)`, reached through `getConstructor(…).newInstance(…)`.
           "net.mgsx.gltf.loaders.shared.texture.PixmapBinaryLoaderHack#load" ->
             """{
-              |  if (sge.Gdx.app.getType() eq sge.Application.ApplicationType.WebGL) {
+              |  if (sge.Gdx.app.`type` eq sge.Application.ApplicationType.WebGL) {
               |    throw new sge.gltf.loaders.exceptions.GLTFUnsupportedException(
               |      "load pixmap from bytes not supported for WebGL")
               |  } else {
@@ -173,7 +173,7 @@ object GltfPolicy:
           //    `PixmapIO` is ported and portable, so the facade bought nothing here either.
           "net.mgsx.gltf.exporters.GLTFBinaryExporter#savePNG" ->
             """{
-              |  if (sge.Gdx.app.getType() eq sge.Application.ApplicationType.WebGL) {
+              |  if (sge.Gdx.app.`type` eq sge.Application.ApplicationType.WebGL) {
               |    throw new sge.gltf.loaders.exceptions.GLTFUnsupportedException(
               |      "saving pixmap not supported for WebGL")
               |  } else {
