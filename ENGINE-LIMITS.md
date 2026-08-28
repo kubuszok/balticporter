@@ -10408,6 +10408,22 @@ as an engine gap before asking which JDK each half of the run used. And do not "
 moving `jdk_version`: that is a change to the measurement, acknowledged by re-accepting every
 baseline, not absorbed.
 
+### M5.11 `sbt -client` in a git WORKTREE connects to ANOTHER worktree's server — a run that writes its artifacts into someone else's checkout
+
+**Measured 2026-08-28 (wave 3.2d).** A `just gdx-measure` run from worktree `w13-nullable-members`
+reported its port-map diff against `…/w7-uniform-deps/port-report/LibgdxCoreMigrate/baseline/port-map.tsv`
+— the migration had been forked by the sbt SERVER of a different worktree, wrote `run-latest/`
+there, and the lane then compared one checkout's output with another's baselines. `sbtn` resolves
+"the" server for a project root, and the worktrees of one repository resolve to each other; with
+several agents each holding a server, which one answers is a race. Two consequences this session
+had already paid for without the cause: two promotion runs hung inside an `sbtn -client` that had
+nothing to talk to (`long-runs-need-launchd`, 3.5 h and 44 min at 0% CPU), and orphan servers of
+REMOVED worktrees stayed alive for days. **Every measure lane's migrator invocation is now
+`{{sbt_migrate}}` = `sbt -batch`** — a server per invocation in THIS directory (M5.6b's
+dead-server caveat is met by the lanes' own `wrote` guard), and a recipe-exported `JAVA_HOME`
+reaches the fork, which `-client` never let through (M5.10). Cost: one JVM start per migration.
+(b) instrument; the engine is untouched.
+
 ### M6. Refuse and COUNT rather than approximate
 
 Three places where the port deliberately carries a number instead of a guess, and each is the right

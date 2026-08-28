@@ -247,6 +247,13 @@ scala_version := "3.8.4"
 # and `jdk_guard`'s probe read the SAME variable rather than a second copy that can drift.
 export jdk_version := "22"
 
+# The MIGRATOR invocation. `sbt -client` connects to "a" running server — and in a checkout with
+# git worktrees it connected to ANOTHER worktree's server (measured 2026-08-28: a run from
+# w13-nullable-members wrote its run-latest/ into w7-uniform-deps/port-report/, and two promotion
+# runs hung inside an `sbtn` that had nothing to talk to — ENGINE-LIMITS M5.11). `-batch` starts a
+# server per invocation, in THIS directory, and a recipe-exported JAVA_HOME reaches the fork.
+sbt_migrate := "sbt -batch"
+
 # Reference-build scalacOptions (DESIGN.md §8.24, PROGRESS.md §13 wave 1.0).
 #
 # The flag list is READ from the reference repo's SgePlugin / ssg's build.sbt, not hand-copied:
@@ -535,7 +542,7 @@ gdx-measure:
     # status, so an engine that failed to COMPILE printed nothing and the lane went on to measure the
     # PREVIOUS emit — reporting a stale number as a result. Two consecutive measurements were read as
     # "no change" when the change had never been built.
-    MIGRATE_OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxCoreMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxCoreMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$MIGRATE_OUT"; then
       echo "!! MIGRATION DID NOT RUN — refusing to measure stale output"
       grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$MIGRATE_OUT" | head -20
@@ -617,7 +624,7 @@ gdx-test-measure:
     # ABORT if the migration did not run — the same stale-output defect fixed in `gdx-measure`: piping
     # into grep discards the exit status, so an engine that fails to COMPILE measures the PREVIOUS emit
     # and reports it as a result.
-    MIGRATE_OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxTestMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxTestMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala test files" <<<"$MIGRATE_OUT"; then
       echo "!! TEST MIGRATION DID NOT RUN — refusing to measure stale output"
       grep -E "^\[error\].*\.scala:[0-9]+" <<<"$MIGRATE_OUT" | head -20
@@ -736,7 +743,7 @@ ashley-measure:
     TREPORT="$ROOT/port-report/AshleyTestMigrate"
 
     for M in AshleyMigrate AshleyTestMigrate; do
-      OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.ashley.$M" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+      OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.ashley.$M" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
       if ! grep -qE "wrote [0-9]+ Scala( test)? files" <<<"$OUT"; then
         echo "!! $M DID NOT RUN — refusing to measure stale output"
         grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
@@ -853,7 +860,7 @@ anim8-measure:
     write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{anim8_src}}"
     REPORT="$ROOT/port-report/Anim8Migrate"
 
-    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.anim8.Anim8Migrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.anim8.Anim8Migrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$OUT"; then
       echo "!! Anim8Migrate DID NOT RUN — refusing to measure stale output"
       grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
@@ -975,7 +982,7 @@ gltf-measure:
     TREPORT="$ROOT/port-report/GltfTestMigrate"
 
     for M in GltfMigrate GltfTestMigrate; do
-      OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.gltf.$M" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+      OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.gltf.$M" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
       if ! grep -qE "wrote [0-9]+ Scala( test)? files" <<<"$OUT"; then
         echo "!! $M DID NOT RUN — refusing to measure stale output"
         grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
@@ -1117,7 +1124,7 @@ screens-measure:
     write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{screens_src}}"
     REPORT="$ROOT/port-report/ScreensMigrate"
 
-    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.screens.ScreensMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.screens.ScreensMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$OUT"; then
       echo "!! ScreensMigrate DID NOT RUN — refusing to measure stale output"
       grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
@@ -1244,7 +1251,7 @@ vfx-measure:
     write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{vfx_src}}"
     REPORT="$ROOT/port-report/VfxMigrate"
 
-    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.vfx.VfxMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.vfx.VfxMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$OUT"; then
       echo "!! VfxMigrate DID NOT RUN — refusing to measure stale output"
       grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
@@ -1369,7 +1376,7 @@ ai-measure:
     write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{ai_src}}"
     REPORT="$ROOT/port-report/GdxAiMigrate"
 
-    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.gdxai.GdxAiMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.gdxai.GdxAiMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$OUT"; then
       echo "!! GdxAiMigrate DID NOT RUN — refusing to measure stale output"
       grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
@@ -1493,7 +1500,7 @@ ai-test-measure:
     write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{ai_src}}"
     REPORT="$ROOT/port-report/GdxAiTestMigrate"
 
-    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.gdxai.GdxAiTestMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.gdxai.GdxAiTestMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala test files" <<<"$OUT"; then
       echo "!! GdxAiTestMigrate DID NOT RUN — refusing to measure stale output"
       grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
@@ -1717,7 +1724,7 @@ sg-measure:
     TREPORT="$ROOT/port-report/SimpleGraphsTestMigrate"
 
     for M in SimpleGraphsMigrate SimpleGraphsTestMigrate; do
-      OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.simplegraphs.$M" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+      OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.simplegraphs.$M" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
       if ! grep -qE "wrote [0-9]+ Scala( test)? files" <<<"$OUT"; then
         echo "!! $M DID NOT RUN — refusing to measure stale output"
         grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
@@ -1846,7 +1853,7 @@ noise4j-measure:
 
     # ABORT if the migration itself did not run, or the lane measures the PREVIOUS emit and reports a
     # stale number as a result.
-    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.noise4j.Noise4jMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.noise4j.Noise4jMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$OUT"; then
       echo "!! Noise4jMigrate DID NOT RUN — refusing to measure stale output"
       grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
@@ -1941,7 +1948,7 @@ jbump-measure:
 
     # ABORT if the migration itself did not run. Piping straight into `grep wrote` discards the exit
     # status, so an engine that failed to COMPILE would leave the lane measuring the PREVIOUS emit.
-    MIGRATE_OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.jbump.JbumpMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.jbump.JbumpMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$MIGRATE_OUT"; then
       echo "!! MIGRATION DID NOT RUN — refusing to measure stale output"
       grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$MIGRATE_OUT" | head -20
@@ -2092,7 +2099,7 @@ usl-measure:
 
     # ABORT if the migration itself did not run. Piping straight into `grep wrote` discards the exit
     # status, so an engine that failed to COMPILE would leave the lane measuring the PREVIOUS emit.
-    MIGRATE_OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.visuiusl.UslMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.visuiusl.UslMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$MIGRATE_OUT"; then
       echo "!! MIGRATION DID NOT RUN — refusing to measure stale output"
       grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$MIGRATE_OUT" | head -20
@@ -2337,7 +2344,7 @@ usl-test-measure:
     TREPORT="$ROOT/port-report/UslTestMigrate"
 
     for M in UslMigrate UslTestMigrate; do
-      OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.visuiusl.$M" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+      OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.visuiusl.$M" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
       if ! grep -qE "wrote [0-9]+ Scala( test)? files" <<<"$OUT"; then
         echo "!! $M DID NOT RUN — refusing to measure stale output"
         grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
@@ -2503,7 +2510,7 @@ liqp-measure:
     # stale number as a result. The test port is a DEPENDENT (`test.conf` has `base = "main.conf"`),
     # so the order is not arbitrary: it resolves against the base's Java and inherits its manifest.
     for M in LiqpMigrate LiqpTestMigrate; do
-      OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.liqp.$M" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+      OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.liqp.$M" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
       if ! grep -qE "wrote [0-9]+ Scala( test)? files" <<<"$OUT"; then
         echo "!! $M DID NOT RUN — refusing to measure stale output"
         grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\||IllegalStateException|\[ssg-liquid\]" <<<"$OUT" | head -30
@@ -2739,7 +2746,7 @@ md-measure:
 
     # ABORT if the migration itself did not run, or the lane measures the PREVIOUS emit and reports a
     # stale number as a result.
-    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.flexmark.FlexmarkMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.flexmark.FlexmarkMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$OUT"; then
       echo "!! FlexmarkMigrate DID NOT RUN — refusing to measure stale output"
       grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\||IllegalStateException|\[ssg-md\]" <<<"$OUT" | head -30
@@ -2872,7 +2879,7 @@ md-test-measure:
     # ABORT if the migration did not run, or the lane measures the PREVIOUS emit and reports a stale
     # number as a result. Only the TEST port runs here: `md-measure` precedes this lane in
     # `measure-all` and has already re-emitted the main source set this compiles against.
-    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.flexmark.FlexmarkTestMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.flexmark.FlexmarkTestMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala( test)? files" <<<"$OUT"; then
       echo "!! FlexmarkTestMigrate DID NOT RUN — refusing to measure stale output"
       grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\||IllegalStateException|\[ssg-md\]" <<<"$OUT" | head -30
@@ -3086,7 +3093,7 @@ md-ext-measure:
     # stale number as a result. The order is a dependency order: `ext-test.conf` declares
     # `base = "ext.conf"`, which declares `base = "main.conf"` — the corpus's first three-link chain.
     for M in FlexmarkExtMigrate FlexmarkExtTestMigrate; do
-      OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.flexmark.$M" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+      OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.flexmark.$M" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
       if ! grep -qE "wrote [0-9]+ Scala( test)? files" <<<"$OUT"; then
         echo "!! $M DID NOT RUN — refusing to measure stale output"
         grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\||IllegalStateException|\[ssg-md-ext" <<<"$OUT" | head -30
@@ -3266,7 +3273,7 @@ textra-measure:
     write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{textra_src}}"
     REPORT="$ROOT/port-report/TextraTypistMigrate"
 
-    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.textra.TextraTypistMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.textra.TextraTypistMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$OUT"; then
       echo "!! TextraTypistMigrate DID NOT RUN — refusing to measure stale output"
       grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
@@ -3540,7 +3547,7 @@ visui-measure:
     write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{visui_src}}"
     REPORT="$ROOT/port-report/VisUiMigrate"
 
-    OUT=$(sbt -client "{{corpus}}/runMain balticporter.corpus.visui.VisUiMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.visui.VisUiMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$OUT"; then
       echo "!! VisUiMigrate DID NOT RUN — refusing to measure stale output"
       grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$OUT" | head -20
@@ -4128,7 +4135,7 @@ debug-flags PORT="":
     CAP=".balticporter/tmp/debug-flags-$$.txt"
     ARGS="--root {{bp_root}}"
     [ -n "{{PORT}}" ] && ARGS="$ARGS --port {{PORT}}"
-    sbt -client "{{core_project}}/runMain balticporter.tir.DebugFlagsMain $ARGS" 2>&1 |
+    {{sbt_migrate}} "{{core_project}}/runMain balticporter.tir.DebugFlagsMain $ARGS" 2>&1 |
       sed $'s/\033\\[[0-9;]*[a-zA-Z]//g' > "$CAP"
     st=${PIPESTATUS[0]}
     # from the report's own first line, so sbt's preamble is dropped without dropping the report:
@@ -4200,7 +4207,7 @@ debug-emit ROOT FQN PHASES="" *FLAGS:
     echo "   library, at the cost of resolution fidelity; --include <substr> narrows what is converted)"
     mkdir -p .balticporter/tmp
     CAP=".balticporter/tmp/debug-emit-$$.txt"
-    sbt -client "{{core_project}}/runMain balticporter.runner.DebugEmit $ARGS {{FLAGS}}" 2>&1 |
+    {{sbt_migrate}} "{{core_project}}/runMain balticporter.runner.DebugEmit $ARGS {{FLAGS}}" 2>&1 |
       sed $'s/\033\\[[0-9;]*[a-zA-Z]//g' > "$CAP"
     st=${PIPESTATUS[0]}
     # from the tool's own first line. `index`, not a regex: the marker is `[debug-emit]`, and as a
