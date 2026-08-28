@@ -13677,6 +13677,36 @@ answers by construction and would stop answering:
 retyped to `sge.utils.Align`, gdx at 0, gdx-test 217/4 unchanged, ashley 0 with
 `api-parity(opaque)` 1 -> 1.
 
+**Dependent blast (wave 2.8).** The base-only measurement missed every dependent whose own
+declarations use `Align` constants in ways propagation cannot follow (bitwise ops are not a
+pure-move). `PrimitiveToOpaqueTransform` now declares `MergeablePolicy`: a dependent seeds
+additional exact-FQN hints into the base's opaque family by union, with `target`/`underlying`/`fqn`
+required to agree and `scope` composed as `NullabilityTransform`'s.
+
+- **gdx-vfx 0 -> 8 -> 0.** 4 method parameters (`CommonUtils#getAlignFactorX#align`,
+  `getAlignFactorY#align`, `ZoomEffect#setOrigin#align`, `RadialBlurEffect#setOrigin#align`) —
+  each only combined with `Align.*` in bitwise ops, unreachable by pure-move propagation. The
+  hand-written suite 64 passing 0 failing.
+- **visui 7 -> 26 -> 7 (unmeasured, expected).** 3 field seeds (`Alignment#alignment`,
+  `ToastManager#alignment`, `VisTextField#textHAlign`), each initialised from `Align.*` and consumed
+  by bit tests. One additional engine fix: `coerceArgs` reads formals LITERALLY for callees this run
+  does NOT emit — propagation leaks across the module boundary into `Cell.align`'s parameter (a base
+  declaration), and the phase's own remap says `Align` while the base emitted `Int`. Fixed by
+  checking `runScope.emits(unitOf(p, t.method))` before treating a seeded parameter as retyped.
+
+**Frontend fix (wave 2.8).** `SpoonTir.execDef` created parameter symbols before the method's own
+symbol was `set`, so `minter.fullNameOf(methodId)` returned `"?"` and every parameter's `fullName`
+was `?#<name>` rather than `Class#method#name`. Fixed by computing `methodFullName =
+qualified(owner, name)` from the method's OWNER (already set). Zero member digests by construction
+(parameter fullNames are not emitted). Guarded by `ParameterFullNameSpec`.
+
+**Survey of other dependents.** ashley, anim8, gdx-gltf, screens, gdx-ai: no `Align` references in
+ported scope. TextraTypist: extensive own fields (`TextraLabel#align`, `TextraField#textHAlign`,
+`TextraListBox#alignment`, `TextraSelectBox#alignment`, `Font#drawGlyphs` parameter) not connected
+to the base by propagation — currently at 0 errors because no seed reaches them, so the retype is
+LATENT. A future wave would need dependent seeds; the defect is invisible to every count (§5's
+widening rule read at a dependent).
+
 **Remaining exit criteria.** `Key`/`Button` require injecting opaque types INTO an existing emitted
 companion — the `Input` interface's companion `object Input` is mechanically emitted from the
 Java interface's statics, and Scala 3 does not allow companion splitting across files. The

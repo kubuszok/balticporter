@@ -11191,3 +11191,51 @@ decides.
 Note: gdx-ai declares no `parity` reference (`api-parity` counts 0 lanes on `GdxAiMigrate` against
 15 on Ashley), so nothing in the run can count these today. That sentence is the finding.
 
+
+### 13.9 Wave 2.8 — MergeablePolicy on PrimitiveToOpaqueTransform, dependent Align seeds
+
+**The defect.** Wave 2.6 added the `Align` opaque type to the libGDX base (`OpaqueSpec` with
+`Target.Existing` against the injected `sge.utils.Align`) and measured only the BASE. The corpus
+promotion (`bp-promote12`) measured every dependent and two refused: gdx-vfx 0 -> 8 and visui
+7 -> 26. Both are `Found: sge.utils.Align, Required: Int` at declarations the base's propagation
+could not reach — method parameters and fields whose only connection to the Align family is
+bitwise ops (`(align & Align.left) != 0`), which are not pure-move flows.
+
+**Three engine changes, one corpus change.**
+
+1. `PrimitiveToOpaqueTransform` declares `MergeablePolicy`: a dependent seeds additional declarations
+   into the base's opaque family by UNION of exact-FQN hints, with `target`/`underlying`/`fqn`
+   required to agree and `scope` composed as `NullabilityTransform`'s. `subjects` exposes each hint's
+   leading type FQN for the intrusion screen.
+
+2. `SpoonTir.execDef` parameter fullName fix: parameters' fullNames were `?#name` instead of
+   `Class#method#name` because `minter.fullNameOf(methodId)` was called before `minter.set`. Fixed
+   by computing `methodFullName = qualified(owner, name)` from the method's OWNER. Guarded by
+   `ParameterFullNameSpec` (2 tests). Zero member digests by construction.
+
+3. `coerceArgs` reads formals LITERALLY for callees this run does NOT emit: propagation leaks across
+   the module boundary into `Cell.align`'s parameter (a base declaration), and the phase's own remap
+   says `Align` while the base emitted `Int`. Fixed by checking `runScope.emits(unitOf(p, t.method))`
+   before treating a seeded parameter as retyped.
+
+**Measurements.**
+
+| lane | before | after | notes |
+|---|---|---|---|
+| gdx-measure | 0 | 0 | base port unchanged |
+| vfx-measure | 8 | 0 | 4 parameter seeds; hand-written suite 64 passing 0 failing |
+| visui-measure | 26 | 7 (unmeasured, expected) | 3 field seeds + coerceArgs literal-formal fix |
+
+**Survey of other libGDX dependents for the same shape.**
+
+| library | Align references | action |
+|---|---|---|
+| ashley, anim8, gdx-gltf, screens | none | none needed |
+| gdx-ai | `Alignment` (steering behavior), not `Align` | none needed |
+| TextraTypist | own fields (`TextraLabel#align`, `TextraField#textHAlign`, `TextraListBox#alignment`, `TextraSelectBox#alignment`, `Font#drawGlyphs` parameter) not connected to base | LATENT: at 0 errors because no seed reaches them; needs dependent seeds in a future wave |
+
+**TextraTypist's latent case** is a retype invisible to every count: propagation from the base does
+not reach `TextraLabel.align` (a `Widget` subclass, not `Label`), so the field stays `Int` and
+compiles. A hand-written differential suite calling these methods with `Align` values would expose
+it. This is §5's widening rule read at a dependent: a retype that reaches no dependent field is
+invisible to every instrument the dependent's lane has.
