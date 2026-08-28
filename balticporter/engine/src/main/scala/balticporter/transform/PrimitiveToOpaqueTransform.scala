@@ -711,10 +711,19 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
       case Some(d: Tree.DefDef) =>
         val params = d.paramss.flatten
         if params.length != t.args.length then t
-        else t.copy(args = t.args.zip(params).map { (arg, param) =>
-          if seeds(param.symbol) then wrapFor(arg, p.symbolOf(param.symbol).map(_.info).getOrElse(TypeRepr.NoType))
-          else unwrapIfOpaque(arg)
-        })
+        else
+          // A FORMAL THAT STAYS JAVA IS READ LITERALLY (CLAUDE.md §1(b)). A dependent's program
+          // CONTAINS its base's units, so propagation may grow the seed set INTO a base declaration
+          // whose emitted form THIS RUN does not control. A seeded parameter on a method this run
+          // does NOT emit is a parameter the BASE emitted at `Int`, regardless of what the
+          // dependent's own retyping did to the TIR — so the argument must be UNWRAPPED to the
+          // primitive, not passed through as if the formal had been retyped.
+          val calleeEmitted = runScope.emits(unitOf(p, t.method))
+          t.copy(args = t.args.zip(params).map { (arg, param) =>
+            if seeds(param.symbol) && calleeEmitted then
+              wrapFor(arg, p.symbolOf(param.symbol).map(_.info).getOrElse(TypeRepr.NoType))
+            else unwrapIfOpaque(arg)
+          })
       case _ =>
         // EXTERNAL CALLEE — no definition in the program. If any argument carries the opaque type,
         // the class-file formal still expects the primitive, and `coerceArgs` cannot read that
