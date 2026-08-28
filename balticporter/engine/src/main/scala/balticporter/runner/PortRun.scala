@@ -2880,6 +2880,20 @@ final case class PortRun(
     // never renamed (D14, §1.5). Read from `PortMapTransform` instances in the effective surface,
     // which is the same source `followMemberRenames` uses.
     val substituted = effectivePhases.collect { case p: PortMapTransform => p.substitutedOwnerTypes }.flatten.toSet
+    // …and the FIFTH, for the opaque phase's dependent coercion (O8 wave 2.11): every member's
+    // UPSTREAM descriptor from the base's published port map, so a retyping phase can read what
+    // the base EMITTED rather than re-deriving it. Uses the same discovery path as
+    // `ManifestAgreement` (`PortMap.discover`) — not from `PortMapTransform` instances, which a
+    // simple dependent may not carry. A base with no published map contributes nothing (an empty
+    // set falls through to `calleeEmitted` which is false, so the phase unwraps — the conservative
+    // answer for a dependent that has never seen a base map, already a `ManifestAgreement` finding).
+    val memberUp = {
+      val mine = manifest.map(_.name).toSet
+      PortMap.discover(PortMap.reportRoot, exclude = mine,
+                       configured = manifest.map(_.baseReports).getOrElse(Nil))
+        .flatMap(p => p.map.toOption.toList.flatMap(_.members.map(_.upstream)))
+        .toSet
+    }
     RunScope.of(partitionUnits(parsed)._1.map(_.symbol).toSet,
                 manifest.map(_.contributedSubjects).getOrElse(Map.empty),
                 // …and the THIRD fact a phase cannot derive: which backends this module is ported
@@ -2887,7 +2901,8 @@ final case class PortRun(
                 // `portabilityRules` reads, so a phase that reasons about portability inside the
                 // pipeline asks exactly the question this run reports on afterwards.
                 RunScope.PlatformPolicy(targets, verdictOverrides),
-                substituted)
+                substituted,
+                memberUp)
 
   private def partitionUnits(program: Program): (List[Tree.ClassDef], List[Tree.ClassDef]) =
     if frontend.resolutionRoots.isEmpty then (program.units, Nil)

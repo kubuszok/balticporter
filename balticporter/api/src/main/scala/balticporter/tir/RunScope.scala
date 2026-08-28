@@ -77,6 +77,15 @@ trait RunScope:
     * is empty for a base port, a single-module port and every spec. */
   def baseSubstitutedOwners: Set[String] = Set.empty
 
+  /** UPSTREAM member descriptors from the base's PUBLISHED PORT MAP — the set a dependent phase
+    * reads to decide whether the base RETYPED a parameter (O8 dependent blast, wave 2.11).
+    *
+    * Each string is the `upstream` column of a member row:
+    * `com.badlogic.gdx.graphics.glutils.ShaderProgram#setUniformf(UniformLocation,float)`. A
+    * retyping phase checks whether any entry for the callee's method mentions its own opaque FQN,
+    * which is a direct read of what the base published and not a re-derivation (CLAUDE.md §4.55). */
+  def baseMemberUpstream: Set[String] = Set.empty
+
   /** …the SAME question asked of a MEMBER, which is what a phase actually holds.
     *
     * [[emits]] takes a top-level unit because that is the granularity the run classifies at; every
@@ -135,11 +144,14 @@ object RunScope:
     *                       members the injected file never renamed (D14, §1.5). Empty for a base port. */
   def of(emitted: Set[SymId], own: Map[String, Set[String]],
          platform: PlatformPolicy = PlatformPolicy.everyPlatform,
-         substituted: Set[String] = Set.empty): RunScope =
+         substituted: Set[String] = Set.empty,
+         memberUpstream: Set[String] = Set.empty): RunScope =
     val p = platform
     val s = substituted
+    val mu = memberUpstream
     new RunScope:
       def emits(unit: SymId): Boolean                     = emitted(unit)
       def contributed(phase: String): Option[Set[String]] = own.get(phase)
       override def platform: PlatformPolicy               = p
       override def baseSubstitutedOwners: Set[String]     = s
+      override def baseMemberUpstream: Set[String]        = mu

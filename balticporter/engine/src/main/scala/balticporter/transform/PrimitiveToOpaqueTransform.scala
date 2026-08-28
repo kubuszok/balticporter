@@ -234,6 +234,10 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
 
   private var objSym, opaqueSym, applySym, unwrapSym, wrapArraySym, unwrapArraySym, primSym, boxedPrimSym, arraySym: SymId = SymId.None
   private var seeds: Set[SymId]   = Set.empty
+  /** Method fullNames whose base port map UPSTREAM descriptor mentions this spec's opaque FQN.
+    * Built from `RunScope.baseMemberUpstream` at `bindPolicy` time — a DIRECT READ of what the
+    * base published, not a re-derivation (O8 dependent blast, wave 2.11; CLAUDE.md §4.55). */
+  private var baseRetypedMethods: Set[String] = Set.empty
   private var opaqueRef: TypeRepr = TypeRepr.NoType
   private var primRef: TypeRepr   = TypeRepr.NoType
   /** `Array[Opaque.T]` — what an `int[]` seed becomes after retyping. */
@@ -252,7 +256,21 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     * the binder resolves. What it is here for is [[runScope]] — `PolicyBinder` is already the one
     * object the run hands every phase before the pipeline starts, and a second channel would be a
     * second thing a caller must remember. */
-  def bindPolicy(binder: PolicyBinder): Unit = runScope = binder.run
+  def bindPolicy(binder: PolicyBinder): Unit =
+    runScope = binder.run
+    // Build the set of method fullNames whose base port-map upstream descriptor mentions this
+    // spec's opaque FQN. A callee in this set had its parameter retyped BY THE BASE, so the
+    // compiled class file expects the opaque type and `coerceArgs` must NOT unwrap.
+    // The simple-name check is intentional: the port map uses the SIMPLE name in the descriptor
+    // (e.g., `UniformLocation` not the full `com.badlogic.gdx.graphics.UniformLocation`),
+    // which is what the emitter renders into the upstream column.
+    val opaqueSimple = spec.target match
+      case OpaqueSpec.Target.Existing(fqn, _, _) => fqn.split('.').last
+      case OpaqueSpec.Target.Mint                => spec.fqn.split('.').last
+    baseRetypedMethods = binder.run.baseMemberUpstream
+      .filter(u => u.contains(s"($opaqueSimple") || u.contains(s",$opaqueSimple"))
+      .map(u => u.takeWhile(_ != '('))
+      .toSet
 
   /** the detected old→new type mapping: every primitive symbol retyped to the opaque type. A
     * reusable trace (also what a semantic-diff of this phase would report).
@@ -287,7 +305,8 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     // The spanning-hints check and mint-ownership logic only apply when MINTING — an Existing target
     // has no unit to collide on, because the definition is supplied by `Substitutions` (drop+inject).
     if spec.isMint then refuseSpanningHints(program, hints)
-    seeds = propagate(program, hints) // grow the seed set along pure-move flows
+    seeds = FlowPropagation.grow(program, hints, id => program.symbolOf(id).exists(s =>
+      (taggablePrim(s.info) || foreignOpaque(program, s.info).isDefined) && spec.scope.includes(program, s)))
     refuseOverlap(program)
     if seeds.isEmpty then return program
 
@@ -540,19 +559,6 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
       case Some(s) if s.owner != SymId.None && fuel > 0 => unitOf(p, s.owner, fuel - 1)
       case _                                            => id
 
-  /** Seed detection — [[FlowPropagation]] over the symbols of this spec's primitive, with the
-    * hints as roots.
-    *
-    * The mechanism is SHARED rather than owned here: "a rewritten declaration carries every
-    * reference and call site with it" is the second half of every retyping rule, not a fact about
-    * opaque types (`CollectionsTransform` grows a `RuleScope.Only` the same way). What stays here
-    * is the eligibility test, which is this phase's own record of what it retypes — and it admits
-    * one thing beyond its own primitive on purpose: a SIBLING'S OPAQUE TYPE. See [[refuseOverlap]];
-    * an overlap the propagation refused to walk into is an overlap nobody can see. */
-  private def propagate(p: Program, hints: Set[SymId]): Set[SymId] =
-    FlowPropagation.grow(p, hints, id => p.symbolOf(id).exists(s =>
-      (taggablePrim(s.info) || foreignOpaque(p, s.info).isDefined) && spec.scope.includes(p, s)))
-
   /** A HINT THE MECHANISM CANNOT REACH — `ENGINE-LIMITS.md` §13 O3, made loud.
     *
     * [[taggablePrim]] tests a symbol's OWN info against the spec's primitive, so a declaration
@@ -636,7 +642,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     * compile, no count moved, and a `decisions.tsv` whose only evidence is a row that is not there.
     * Precisely the shape CLAUDE.md §3 is about.
     *
-    * So the propagation is allowed to WALK INTO a sibling's opaque type (see [[propagate]]) and the
+    * So the propagation is allowed to WALK INTO a sibling's opaque type (see `FlowPropagation.grow`) and the
     * overlap is refused here, naming the symbol and both specs. Exactly one instance detects each
     * overlap — the one that runs after the other — which is what makes the message deterministic
     * for a given pipeline order.
@@ -714,13 +720,30 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
         else
           // A FORMAL THAT STAYS JAVA IS READ LITERALLY (CLAUDE.md §1(b)). A dependent's program
           // CONTAINS its base's units, so propagation may grow the seed set INTO a base declaration
-          // whose emitted form THIS RUN does not control. A seeded parameter on a method this run
-          // does NOT emit is a parameter the BASE emitted at `Int`, regardless of what the
-          // dependent's own retyping did to the TIR — so the argument must be UNWRAPPED to the
-          // primitive, not passed through as if the formal had been retyped.
+          // whose emitted form THIS RUN does not control. Two cases for a seeded parameter on a
+          // method this run does NOT emit:
+          //
+          //   1. The base's PORT MAP says it retyped that method (`baseRetypedMethods`): the
+          //      compiled class file expects the opaque type. The argument must be WRAPPED (or
+          //      left alone if already opaque). This is a DIRECT READ of the base's published
+          //      answer, not a re-derivation (CLAUDE.md §4.55, §1.5).
+          //
+          //   2. The base's port map does NOT mention this spec's opaque FQN on that method: the
+          //      base emitted `Int` there. The argument must be UNWRAPPED to the primitive.
+          //
+          // O8 dependent blast (wave 2.11): without this distinction, every dependent that inherits
+          // an opaque spec unwraps at callees the base retyped — gltf 3 -> 18, screens 0 -> 4.
           val calleeEmitted = runScope.emits(unitOf(p, t.method))
+          val calleeFqn     = p.symbolOf(t.method).map(_.fullName).getOrElse("")
+          val calleeOwner   = calleeFqn.indexOf('#') match { case -1 => calleeFqn; case i => calleeFqn.take(i) }
+          val baseRetyped   = baseRetypedMethods.exists(m =>
+            m.startsWith(calleeOwner) && m.contains('#') && {
+              val mName = m.drop(m.indexOf('#') + 1)
+              val cName = calleeFqn.drop(calleeFqn.indexOf('#') + 1)
+              mName == cName
+            })
           t.copy(args = t.args.zip(params).map { (arg, param) =>
-            if seeds(param.symbol) && calleeEmitted then
+            if seeds(param.symbol) && (calleeEmitted || baseRetyped) then
               wrapFor(arg, p.symbolOf(param.symbol).map(_.info).getOrElse(TypeRepr.NoType))
             else unwrapIfOpaque(arg)
           })

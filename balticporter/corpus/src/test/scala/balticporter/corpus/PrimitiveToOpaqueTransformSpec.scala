@@ -2,7 +2,7 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{OpaqueSpec, Pipeline, RuleScope}
+import balticporter.tir.{OpaqueSpec, Pipeline, PolicyBinder, RuleScope, RunScope}
 import balticporter.transform.PrimitiveToOpaqueTransform
 
 /** The primitive → opaque-type transform: a semantically-tagged primitive becomes an `opaque type`
@@ -649,4 +649,94 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     assert(clue(emitted).contains("Loc(-1)") || emitted.contains("Loc((-1"))
     // the element-read branch is NOT wrapped:
     assert(!clue(emitted).contains("Loc(this.locations("), "the opaque branch stays as-is")
+  }
+
+  // -------------------------------------------------------------------------
+  // O8 DEPENDENT BLAST (wave 2.11): a dependent calling a base method whose
+  // parameter the base retyped must NOT unwrap its opaque argument — the
+  // compiled class file ALSO has the opaque formal.
+  // -------------------------------------------------------------------------
+
+  private val depBase =
+    """package demo;
+      |class Shader {
+      |  private int[] locations = new int[4];
+      |  private int handle;
+      |  public int loc(int i) { return locations[i]; }
+      |  public void setUniform(int loc, float v) { }
+      |  public void apply(int i, float v) { setUniform(locations[i], v); }
+      |}
+      |""".stripMargin
+
+  private val depExt =
+    """package demo;
+      |class PBRShader extends Shader {
+      |  private int u_lod;
+      |  private int[] u_csm = new int[4];
+      |  public void init() {
+      |    u_lod = loc(0);
+      |    for (int i = 0; i < 4; i++) u_csm[i] = loc(i);
+      |  }
+      |  public void render(float bias) { setUniform(u_lod, bias); }
+      |  public void renderCsm(int i, float v) { setUniform(u_csm[i], v); }
+      |}
+      |""".stripMargin
+
+  test("O8 dependent: a callee the base ALSO retyped does not unwrap — the compiled formal is opaque") {
+    val ph = new PrimitiveToOpaqueTransform(OpaqueSpec(
+      fqn = "Loc", hints = Set("demo.Shader#handle", "demo.Shader#locations"),
+      target = OpaqueSpec.Target.Existing(typeFqn = "Loc.T", wrapName = "apply", unwrapName = "toInt"),
+    ))
+    val p = SpoonTir.fromSources(List("Shader.java" -> depBase, "PBRShader.java" -> depExt))
+    // build a RunScope where only PBRShader is "emitted" — Shader is a resolution root.
+    // The base's port map says `setUniform(Loc,float)` — the base RETYPED the first param.
+    val depUnit = p.units.find(u => p.symbolOf(u.symbol).exists(_.fullName == "demo.PBRShader")).get
+    val baseUpstream = Set("demo.Shader#setUniform(Loc,float)")
+    val scope   = RunScope.of(Set(depUnit.symbol), Map.empty, memberUpstream = baseUpstream)
+    val binder  = new PolicyBinder(p, p.members, scope)
+    val after   = Pipeline.runTraced(p, List(ph), binder)._1
+    val emitted = new TirEmitter(after).emit
+    // `setUniform(u_lod, bias)` — u_lod is propagated to Loc.T, the formal is ALSO Loc.T
+    // in the base's compiled code. The argument must NOT be unwrapped.
+    assert(!clue(emitted).contains("Loc.toInt(this.u_lod)"), "propagated arg at a base-retyped formal must not unwrap")
+    // `setUniform(u_csm[i], v)` — the array element also flows through to the base's retyped formal
+    assert(!emitted.contains("Loc.toInt(this.u_csm("), "array-element arg at a base-retyped formal must not unwrap")
+  }
+
+  test("O8 dependent: a callee the base did NOT retype still unwraps — Align's case (wave 2.8)") {
+    // `bump` takes int, and only the DEPENDENT's propagation reaches it (via `render`'s
+    // local). The base's own code has no flow edge to `bump`'s parameter. The argument
+    // must be UNWRAPPED because the compiled formal is still `int`.
+    // The base port map says `bump(int)` — no opaque FQN, so the base did NOT retype.
+    val bumpBase =
+      """package demo;
+        |class Widget {
+        |  private int align = 0;
+        |  public int getAlign() { return align; }
+        |  public void setAlign(int a) { align = a; }
+        |  public void bump(int x) { align = align | x; }
+        |}
+        |""".stripMargin
+    val bumpExt =
+      """package demo;
+        |class MyWidget extends Widget {
+        |  private int local;
+        |  public void init() { local = getAlign(); }
+        |  public void apply() { bump(local); }
+        |}
+        |""".stripMargin
+    val ph = new PrimitiveToOpaqueTransform(OpaqueSpec(
+      fqn = "Al", hints = Set("demo.Widget#align")))
+    val p = SpoonTir.fromSources(List("Widget.java" -> bumpBase, "MyWidget.java" -> bumpExt))
+    val depUnit = p.units.find(u => p.symbolOf(u.symbol).exists(_.fullName == "demo.MyWidget")).get
+    // base port map shows `bump(int)` — no opaque FQN, base kept it as Int
+    val baseUpstream = Set("demo.Widget#bump(int)")
+    val scope   = RunScope.of(Set(depUnit.symbol), Map.empty, memberUpstream = baseUpstream)
+    val binder  = new PolicyBinder(p, p.members, scope)
+    val after   = Pipeline.runTraced(p, List(ph), binder)._1
+    val emitted = new TirEmitter(after).emit
+    // `bump(local)` — local is propagated to Al.T, but bump's parameter is NOT in the base's
+    // retyped set (port map says `int`). The argument must be unwrapped.
+    assert(clue(emitted).contains("Al.unwrap(this.local)"),
+      "propagated arg at a base-NOT-retyped formal must unwrap")
   }
