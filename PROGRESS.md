@@ -11059,3 +11059,24 @@ Three fixes, all (a) universal:
 **noise4j: 7 -> 0.** 6 member digests (the three enum types and their enclosing classes). Every
 check count flat. Spec: `EnumConstantBodySpec` five tests (three positive, two negative).
 `MemberKeySpec` updated for two-`#` parsing. Engine 997, frontend-spoon 121, corpus 1414.
+
+### 13.6 Wave 1.2k — G34 CLOSED: noClasspath method resolution guard
+
+One fix, (a) universal:
+
+**G34.** Under `noClasspath`, Spoon's `getExecutableDeclaration` resolved `Gdx.app.getType()`
+(receiver: `Application`) to `java.lang.reflect.Field#getType` by name match alone.
+`SpoonTir.declAgrees` + `isSupertypeOf` validates the declaration's owner is the receiver's type or
+a supertype; on disagreement the call falls through to the reference branch. The five bare catches
+the draft carried are replaced by the established pattern: `typeDeclarationOf` (the ONE lookup where
+absence is normal), parents through declarations. Spec: `MethodResolutionSpec` (3 tests).
+
+Measured: gdx 0 = 0 errors, every check count at its headline (baselines stale from O6 Align
+rebase, not from this fix). gltf 5 errors (3 D4/C3 floor + 2 D14 rename from O6 Align's
+`BeanPropertyTransform` on `Application#getType` -> `type`). The G34 fix improved the DIAGNOSTIC:
+the error now names `sge.Application` instead of `java.lang.reflect.Field`.
+
+**`expected-errors.ref` 1651 -> 1655.** The 4 new ref errors are `eq`/`ne` infix warnings treated
+as errors under `-Werror` by the O6 Align nullable opaque changes (commits `321c81e9`..`4b5ecbfd`
+on master). Each is a `.get eq this` or `.get ne null` pattern on a field whose type became
+`lowlevel.Nullable[Group]`. Not G34; the opaque boundary lane owns these.
