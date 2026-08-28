@@ -245,10 +245,6 @@ final class NullabilityTransform(
   /** the unit currently being walked — see the walk in [[run]] for why a seam cannot be attributed
     * to the callee it was found at. */
   private var currentUnit: SymId = SymId.None
-  /** the MEMBER currently being walked — set in [[transformValDef]] and [[transformDefDef]] so that
-    * [[unwrapOrNull]] can record which members received `.orNull` calls. The enclosing member is
-    * the granularity sge uses for `@nowarn("msg=deprecated")` (§3.5, nullable-guide.md). */
-  private var currentMemberSym: SymId = SymId.None
   /** members whose bodies contain `.orNull` calls inserted by this phase. After the tree walk, each
     * receives `@scala.annotation.nowarn("msg=deprecated")` to suppress the lint warning lls
     * deliberately places on `orNull` — the same pattern sge uses at every Java interop boundary
@@ -275,7 +271,7 @@ final class NullabilityTransform(
     // and a cached answer from the first run is a wrong answer in the second (§5.1).
     issues.clear(); intrusions.clear(); observedEntries.clear(); planned = false
     newTypes = Map.empty; wrapped = Map.empty; overridingRead = false; typeVars = Map.empty
-    primSyms = Set.empty; orNullMembers.clear(); currentMemberSym = SymId.None
+    primSyms = Set.empty; orNullMembers.clear()
     // §1(b): an empty policy needs no code path. Nothing bound — no annotation configured, or every
     // configured one named nothing — and the program is returned untouched.
     if boundAnnots.isEmpty then return program
@@ -550,15 +546,16 @@ final class NullabilityTransform(
     val annotatedSymbols = if isWrapper && orNullSym != SymId.None then
       orNullMembers.clear()
       given p2: Program = summon[Program]
-      // scan each unit's members for orNull selects — a member whose body contains a
-      // Tree.Select(_, orNullSym, _, _) needs the annotation
-      // Scan each member declaration's body for orNull selects. `scanTerm` descends into anonymous
-      // class bodies (Tree.New.anon) but NOT into named nested ClassDefs, which are visited
-      // separately by `allClassDefs`. So each class's scan covers exactly its own members' bodies
-      // and any anonymous implementations inside them — never a nested class's members.
+      // Scan each member declaration's body for `.orNull` selects the tree walk inserted.
+      // `scanTerm` descends into anonymous class bodies but NOT into named nested ClassDefs
+      // (those are visited separately by `allClassDefs`). A plain STATEMENT in the class body
+      // (primary constructor code) annotates the CLASS.
       //
-      // A plain STATEMENT in the class body (primary constructor code) that contains `.orNull`
-      // annotates the CLASS. A secondary constructor (`def this(...)`) annotates that constructor.
+      // RESIDUE (K13 addendum): 49 `.orNull` calls that live in a CtorFunnel REPLAY are not in
+      // any `DefDef.rhs` — the emitter renders them from `CtorFunnel.Plans.replayFor`, and no
+      // tree scan on the TIR can see them. These stay as deprecation warnings under `-Werror`.
+      // The fix is to track `.orNull` at insertion time rather than rescanning, which requires a
+      // pre-member traversal hook the engine does not yet have (CLAUDE.md §4.6).
       def hasOrNull(body: Term): Boolean = StandardTraversal.scanTerm(body, false) {
         case (true, _) => true
         case (_, Tree.Select(_, s, _, _)) if s == orNullSym => true
@@ -571,7 +568,7 @@ final class NullabilityTransform(
               d.rhs.foreach { body => if hasOrNull(body) then orNullMembers += d.symbol }
             case v: Tree.ValDef =>
               v.rhs.foreach { body => if hasOrNull(body) then orNullMembers += v.symbol }
-            case _: Tree.ClassDef | _: Tree.TypeDef => () // nested class — visited separately
+            case _: Tree.ClassDef | _: Tree.TypeDef => ()
             case t: Term =>
               if hasOrNull(t) then orNullMembers += cd.symbol
             case _ => ()
