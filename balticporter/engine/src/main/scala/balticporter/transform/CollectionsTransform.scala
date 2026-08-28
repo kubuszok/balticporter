@@ -3128,20 +3128,27 @@ final class CollectionsTransform(
     case _                                                  => false
 
   /** does the body reference `bound` in a way that is NOT a `.key` or `.value` select?
-    * A bare use of the entry (e.g. `list.add(entry)`) has no lls image. */
-  private def hasNonFieldUsage(bound: SymId, body: Term)(using Program): Boolean =
-    var found = false
-    val scan = new Phase:
-      def name = "non-field-usage"
-      override def transformTerm(x: Term)(using Program): Term = x match
-        case Tree.Select(Tree.Ident(`bound`, _, _), m, _, _) =>
-          val mn = methodName(m)
-          if mn != "key" && mn != "value" && mn != "getKey" && mn != "getValue" then found = true
-          x
-        case Tree.Ident(`bound`, _, _) => found = true; x
-        case _ => x
-    StandardTraversal.mapTerm(scan, body)
-    found
+    * A bare use of the entry (e.g. `list.add(entry)`) has no lls image.
+    *
+    * Cannot use `StandardTraversal.mapTerm` here because it visits BOTTOM-UP: the child
+    * `Ident(bound)` is visited before its parent `Select(Ident(bound), key)`, so every
+    * `.key`/`.value` access would be flagged as a bare ident. Instead, walk TOP-DOWN with
+    * Product reflection (the same technique as [[Jumps]]). */
+  private def hasNonFieldUsage(bound: SymId, body: Term)(using p: Program): Boolean =
+    def walk(t: Any): Boolean = t match
+      // a .key/.value select on the bound entry — this is the ALLOWED usage, skip the inner Ident
+      case Tree.Select(Tree.Ident(`bound`, _, _), m, _, _) =>
+        val mn = methodName(m)
+        mn != "key" && mn != "value" && mn != "getKey" && mn != "getValue"
+      // a bare ident reference to bound — NOT allowed, the entry has no lls image
+      case Tree.Ident(`bound`, _, _) => true
+      // stop at constructs that rebind (lambdas, nested defs, anonymous classes)
+      case _: Tree.Lambda | _: Tree.DefDef | _: Tree.AnonClass => false
+      case xs: Iterable[?]     => xs.exists(walk)
+      case Some(x)             => walk(x)
+      case p: Product          => p.productIterator.exists(walk)
+      case _                   => false
+    walk(body)
 
   /** rewrite `.key`/`.value` selects on `bound` to `kSym`/`vSym` idents. */
   private def rewriteEntrySelects(bound: SymId, kSym: SymId, kTpe: TypeRepr,
