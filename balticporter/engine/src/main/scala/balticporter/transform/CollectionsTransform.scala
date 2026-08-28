@@ -6081,6 +6081,11 @@ final class CollectionsTransform(
                 // non-literal boolean: cannot dispatch statically — return None so it stays unchanged
                 // and is counted on the `collection-retarget` lane by RetargetBoundaryCheck.
                 scala.None
+        // Construct entries are handled by retargetConstruct (Tree.New path); if the call reaches
+        // HERE it is a method call whose (name, arity) collides with an "<init>" entry, or an
+        // anonymous subclass / super-call that retargetConstruct could not match — return None so
+        // the call stays unchanged and RetargetBoundaryCheck counts it.
+        case _: CollectionsTransform.RetargetRewrite.Construct => scala.None
       }
     }
 
