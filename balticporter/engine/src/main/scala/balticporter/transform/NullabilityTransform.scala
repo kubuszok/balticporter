@@ -600,7 +600,17 @@ final class NullabilityTransform(
       def scanBody(members: List[Statement], ownerFallback: SymId): Unit =
         members.foreach {
           case d: Tree.DefDef =>
-            d.rhs.foreach { body => if hasOrNull(body) then orNullMembers += d.symbol }
+            d.rhs.foreach { body => if hasOrNull(body) then
+              orNullMembers += d.symbol
+              // ALSO annotate the CLASS, because TestFrameworkTransform may later REMOVE this
+              // DefDef and replace it with a `test("...") { body }` statement — the `@nowarn`
+              // on the DefDef symbol is then lost (the symbol has no declaration node to render
+              // on). The class-level annotation survives the conversion and suppresses the
+              // deprecation warning wherever the `.orNull` ends up in the class body. Measured:
+              // ashley .ref 3 -> 31 without this, 3 -> 3 with it (28 `.orNull` calls in
+              // converted test bodies).
+              orNullMembers += ownerFallback
+            }
           case v: Tree.ValDef =>
             v.rhs.foreach { body => if hasOrNull(body) then orNullMembers += v.symbol }
           case _: Tree.ClassDef | _: Tree.TypeDef => ()
