@@ -114,7 +114,7 @@ class TryResourceSpec extends PortSuite:
     val out = p.out
     // the java `catch` is OUTSIDE the resource block: `r.close()` comes before it in the text
     val close = out.indexOf("r.close()")
-    val arm   = out.indexOf("case e: java.lang.Exception")
+    val arm   = out.indexOf("case _: java.lang.Exception")
     assert(close > 0 && arm > 0, out)
     assert(close < arm, s"the resource must close before this try's own catch runs\n$out")
   }

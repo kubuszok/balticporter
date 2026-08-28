@@ -11371,3 +11371,38 @@ nested-class constructors (K13 residue), 6 JDK deprecation (3 `Character.isSpace
 1 `DataInputStream.readLine`), 5 E030 match case unreachable, 3 E129 pure expression.
 
 Engine specs: 1002 passing, 0 failures.
+
+### 13.15 Wave 2.13 — `val` for unset vars + orNull anonymous-class fix on libGDX core
+
+One commit (`b9fc78c4`). The `.ref` population at entry was **370** (from wave 2.12).
+
+Two families closed:
+
+- **`val` for never-written locals and fields** (E198 "unset local/private var"). The emitter now
+  checks a whole-program write set (`BeanCollapse.writtenSymbols` pattern) and emits `val` instead
+  of `var` for any `ValDef` with an initialiser whose symbol is never assigned. A normalised-owner
+  fallback guards against the frontend's anonymous-class SymId mismatch (measured:
+  `SplitPane$113#draggingPointer`, SymId 38377 vs 38384). gdx: 197 unset local -> 45,
+  40 unset private -> 0. The 45 remaining locals are conservatively kept `var` because another
+  variable with the same normalised `owner#name` IS written elsewhere in the program.
+- **`@nowarn("msg=deprecated")` on orNull in anonymous class methods and CtorFunnel replays** (K13
+  addendum, CLOSED). The NullabilityTransform rescan now walks `allAnonClasses` alongside
+  `allClassDefs`. The emitter emits `@nowarn` on a constructor whose replay statements contain
+  `.orNull`. gdx deprecated: 55 -> 12 (6 JDK + 6 orNull in primary constructor bodies scalac does
+  not suppress with `@nowarn` on the class).
+
+| lane | JVM | JS | Native | `.ref` | notes |
+|---|---|---|---|---|---|
+| gdx | 0 = 0 | 0 = 0 | 0 = 0 | 370 -> 138 | val opt 192 sites, orNull fix 40 sites |
+
+gdx `.ref` residue (**138**): 115 E198 (45 unset local, 31 unused private member, 28 unused local
+def, 9 mutated-but-not-read, 2 other), 12 deprecation (6 orNull + 6 JDK), 5 E030 unreachable case,
+3 E129 pure expression, 3 bare `-Wrecurse-with-default` warning.
+
+OPEN: unused private member (31), unused local def (28), mutated-but-not-read (9) — these need
+`@nowarn("msg=unused")` as a recorded `SuppressedWarning` decision. E030 unreachable case (5) —
+exhaustive enum switches where the emitter adds a `case _ => ()` fall-out arm. E129 pure expression
+(3) — empty while-loop bodies emitting `{ { () }; step }`. JDK deprecations (6) — `Character.isSpace`
+x3, `Locale` ctor x2, `DataInputStream.readLine`. 3 bare warnings from `-Wrecurse-with-default`.
+
+Engine specs: 2628 passing (65 api + 1002 engine + 1435 corpus + 126 frontend-spoon), 0 failures.

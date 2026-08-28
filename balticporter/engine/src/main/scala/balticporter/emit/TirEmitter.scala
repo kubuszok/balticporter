@@ -130,6 +130,48 @@ final class TirEmitter(
     * of the emitted call is looking at. */
   private[balticporter] lazy val overloads = new balticporter.tir.OverloadRiskCheck.Overloads(program)
 
+  /** every symbol the whole program assigns or increments — a `ValDef` whose symbol is NOT in this
+    * set is never written after its declaration and may be emitted `val` instead of `var`.
+    *
+    * Uses the SAME whole-program scan as `BeanCollapse.writtenSymbols` / `CtorFunnel.writesPerField`
+    * (CLAUDE.md §4.55: ONE derivation pattern, through `StandardTraversal`). The scan walks EVERY
+    * unit in the program, including anonymous class bodies and lambdas.
+    *
+    * The set includes BOTH the SymId and the `owner#name` key of each written target, because the
+    * frontend may intern a field DECLARATION and its REFERENCES with different SymIds — measured on
+    * `SplitPane$113#draggingPointer` (SymId 38377 vs 38384). A ValDef is writable when either its
+    * SymId or its `owner#name` is in this set. */
+  private lazy val writtenSyms: Set[SymId] =
+    balticporter.transform.BeanCollapse.writtenSymbols(program)
+  /** Is this `ValDef` written anywhere in the program? The primary check is by SymId. The fallback
+    * matches by normalised `ownerKey#name`, where the owner key strips anonymous-class numbering
+    * (`SplitPane$113` and `SplitPane$1` both become `SplitPane$`). This guards against the frontend
+    * interning a field DECLARATION and its REFERENCES with different SymIds in anonymous classes
+    * — measured on `SplitPane$113#draggingPointer` (SymId 38377 vs 38384, whose owners are
+    * `SplitPane$113` and `SplitPane$1`, two numberings for the same anonymous class).
+    *
+    * For LOCALS (owner is a method), the SymId always matches and the fallback is not needed. */
+  private lazy val writtenByNormKey: Set[String] = {
+    writtenSyms.flatMap { id =>
+      program.symbolOf(id).map { s =>
+        val ownerFqn = program.symbolOf(s.owner).map(_.fullName).getOrElse("")
+        s"${normaliseAnonOwner(ownerFqn)}#${s.name}"
+      }
+    }
+  }
+  /** strip trailing `$NNN` from an anonymous class name — `SplitPane$113` and `SplitPane$1` both
+    * become `SplitPane$`. Named classes pass through unchanged. */
+  private def normaliseAnonOwner(fqn: String): String =
+    val i = fqn.lastIndexOf('$')
+    if i >= 0 && i < fqn.length - 1 && fqn.substring(i + 1).forall(_.isDigit) then fqn.substring(0, i + 1)
+    else fqn
+  private def isWritten(v: Tree.ValDef): Boolean =
+    writtenSyms.contains(v.symbol) || {
+      val s = sym(v.symbol)
+      val ownerFqn = program.symbolOf(s.owner).map(_.fullName).getOrElse("")
+      writtenByNormKey.contains(s"${normaliseAnonOwner(ownerFqn)}#${s.name}")
+    }
+
   /** Java's four access levels, decided once over the whole program — DESIGN §8.7, and the doc on
     * [[Visibility]] for why the LEVEL is decided there and the QUALIFIER supplied here. Computed at
     * construction like the renames above it, so its residual widenings travel with
@@ -3438,7 +3480,33 @@ final class TirEmitter(
     // decision and the trivia is the upstream's documentation (a licence among them, §4.58) — a
     // note above the Javadoc reads as part of it and displaces the thing the port is obliged to
     // reproduce, so the order here is a rule and not a preference.
-    s"${leading(d.leading, i)}${declNotes(d.symbol, i)}${annots(s, i)}${ind(i)}${mods(s, privateQualifier(s.owner))}def $name$tps$pss$ret$rhs"
+    // A constructor whose REPLAY contains `.orNull` needs `@nowarn("msg=deprecated")` even when
+    // the constructor's own symbol has none — the NullabilityTransform annotated the PARENT class's
+    // constructor (where the `.orNull` calls were inserted), but the replay copies those statements
+    // into THIS secondary constructor. The annotation is rendered BEFORE the `def` keyword.
+    val replayNowarn =
+      if isCtor && !s.annotations.exists(_.args.exists(_._2 match {
+        case Tree.Literal(Constant.StringC(v), _, _) => v.contains("deprecated"); case _ => false }))
+      then
+        val replay = currentClass.flatMap(plans.replayFor(_, d)).getOrElse(Nil)
+        if replay.nonEmpty && replayHasOrNull(replay) then s"${ind(i)}@scala.annotation.nowarn(\"msg=deprecated\")\n"
+        else ""
+      else ""
+    s"${leading(d.leading, i)}${declNotes(d.symbol, i)}${annots(s, i)}$replayNowarn${ind(i)}${mods(s, privateQualifier(s.owner))}def $name$tps$pss$ret$rhs"
+
+  /** does a list of replay statements contain a `.orNull` call? Checked once per secondary
+    * constructor that carries a replay, so the emitter can emit `@nowarn("msg=deprecated")` on it. */
+  private def replayHasOrNull(stmts: List[Statement]): Boolean =
+    given Program = program
+    stmts.exists {
+      case t: Term =>
+        StandardTraversal.scanTerm(t, false) {
+          case (true, _)                                               => true
+          case (_, Tree.Select(_, m, _, _)) if sym(m).name == "orNull" => true
+          case (acc, _)                                                => acc
+        }
+      case _ => false
+    }
 
   /** does this loop body contain an unlabelled `break` that belongs to THIS loop?
     *
@@ -3989,7 +4057,18 @@ final class TirEmitter(
         // note WITHOUT the type ascription, which would defeat the constant type.
         s"${ind(i)}${mods(s).replace("final ", "")}inline val ${esc(s.name)} = ${constAt(r, v.tpt.tpe)}"
       case Some(r) =>
-        val kw = if s.flags.isMutable then "var" else "val"
+        // A non-final java local or PRIVATE field whose symbol is never ASSIGNED in the whole
+        // program is emitted `val` instead of `var` — the same choice sge makes for every such
+        // declaration. The write set is `BeanCollapse.writtenSymbols`, built once over the whole
+        // program through `StandardTraversal` (CLAUDE.md §4.55).
+        //
+        // NON-PRIVATE fields stay `var` even when this run's write set says they are unwritten,
+        // because a DEPENDENT port may write to them from its own code — and the dependent's
+        // writes are not in THIS run's program (§1.5). Measured: gltf 3 -> 12 when a base field
+        // `Mask` was emitted `val` and the dependent assigned it.
+        val isField = program.definitionOf(s.owner).exists(_.isInstanceOf[Tree.ClassDef])
+        val kw = if s.flags.isMutable && (isWritten(v) || (isField && !s.flags.isPrivate))
+                 then "var" else "val"
         val q  = privateQualifier(s.owner)
         val m  = if kw == "var" then mods(s, q).replace("final ", "") else mods(s, q)
         s"${ind(i)}$m$kw ${esc(s.name)}: ${tpe(v.tpt.tpe)} = ${term(r, i)}"

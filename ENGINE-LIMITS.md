@@ -6067,22 +6067,24 @@ phase and key. gdx `.ref` **1331 -> 370** for the orNull + int2float families to
 `@nowarn("msg=deprecated")` suppresses ALL deprecation warnings in the annotated member, so
 `int2float` warnings in the same member are also covered).
 
-**The residue is 49 `orNull` calls in NESTED CLASS CONSTRUCTORS** — `CheckBoxStyle`, `TextButtonStyle`
-and twelve others. The scan walks each `DefDef.rhs` and each `ValDef.rhs` in `allClassDefs`, and a
-plain `Term` statement in the class body annotates the class. It MISSES an `orNull` that
-`CtorFunnel`'s PROMOTION moved: a promoted constructor's body is REPLAYED by the emitter from
-`CtorFunnel.stmtsOf` and `Plans.residualBody`, not rendered from `DefDef.rhs` — so the `orNull`
-is in the TIR's `DefDef.rhs` exactly where the scan looks, but the emitter renders the secondary
-constructor from the PLAN rather than from the tree. The annotation goes on the `DefDef` symbol, and
-the emitter sees it, but the 49 calls are in constructor bodies whose statements the CtorFunnel
-renders from a different path.
+**The residue WAS 49 `orNull` calls in NESTED CLASS CONSTRUCTORS — CLOSED by two fixes (wave 2.13).**
 
-**The fix is NOT a wider scan — it is to use the INSERTION RECORD.** The transform already knows
-every member where it inserted `.orNull` (it builds the `Tree.Select` node). Rescanning the tree is
-the second derivation `CLAUDE.md` §4.6 warns about: the transform has the fact, and a scan that
-re-derives it from the tree can disagree wherever the tree and the emission path diverge — which is
-exactly what happened. Track `orNull` usage at `unwrapOrNull` and accumulate the enclosing member's
-symbol, rather than walking the tree after the fact.
+The original 49 had two INDEPENDENT causes masked as one:
+
+1. **Anonymous class methods (18 of the 49).** `allClassDefs` does not reach `Tree.AnonClass`,
+   so every `.orNull` inside an anonymous class's method body was unsuppressed. Fixed by adding
+   `StandardTraversal.allAnonClasses(cd)` to the rescan — the same walk, one node kind wider.
+2. **CtorFunnel replay statements (31 of the 49).** A promoted constructor's body is REPLAYED by the
+   emitter from `CtorFunnel.Plans.replayFor`, not rendered from `DefDef.rhs`. The rescan annotated
+   the PARENT's constructor DefDef, but the replay copies those statements into a SUBCLASS's
+   secondary constructor. Fixed in the emitter: `TirEmitter.defDef` checks if a constructor's
+   replay statements contain `.orNull` and emits `@nowarn("msg=deprecated")` on that constructor.
+
+The remaining 12 deprecation warnings on gdx are 6 `.orNull` calls in primary constructor bodies
+that the rescan correctly annotates on the CLASS symbol — but scalac does not suppress a deprecation
+in a class body with `@nowarn` on the class. These are interleaved with field initialisers that
+scalac reads as the constructor. Plus 6 JDK deprecations (`Character.isSpace` x3, `Locale` ctor x2,
+`DataInputStream.readLine`), which are not orNull.
 
 ### K13.5 A wrapper target's LAST THREE SEAMS ARE ALL ONE SENTENCE — the retype changes a SIGNATURE, so everything java tied to that signature has to move with it
 

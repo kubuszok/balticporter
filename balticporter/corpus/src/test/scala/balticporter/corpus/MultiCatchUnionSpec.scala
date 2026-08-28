@@ -44,8 +44,8 @@ class MultiCatchUnionSpec extends PortSuite:
 
   test("a multi-catch renders a PARENTHESISED union in the typed pattern") {
     assert(clue(out).contains(
-      "case e: (java.lang.NumberFormatException | java.lang.IndexOutOfBoundsException) =>"))
-    assert(!out.contains("case e: java.lang.NumberFormatException | "))
+      "case _: (java.lang.NumberFormatException | java.lang.IndexOutOfBoundsException) =>"))
+    assert(!out.contains("case _: java.lang.NumberFormatException | "))
   }
 
   test("NEGATIVE — a single-type catch is unparenthesised, exactly as it always was") {

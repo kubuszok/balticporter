@@ -112,7 +112,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(boxes), List(ph))).emit
     assert(clue(emitted).contains("opaque type T = scala.Float"))
     assert(emitted.contains("def apply(v: scala.Float): Width.T"))
-    assert(emitted.contains("var width: Width.T = Width("))
+    assert(emitted.contains("val width: Width.T = Width("))
     assert(emitted.contains("def getWidth(): Width.T"), "propagation is indifferent to the primitive")
   }
 
@@ -166,7 +166,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
       fqn = "Layer", hints = Set("demo.Sprite#layer"),
       scope = RuleScope.Only(Set("demo.Sprite"))))
     val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(twoTypes), List(ph))).emit
-    assert(clue(emitted).contains("var layer: Layer.T"))
+    assert(clue(emitted).contains("val layer: Layer.T"))
     assert(emitted.contains("var reading: scala.Int"), "Meter is outside the fence and keeps the primitive")
   }
 
@@ -175,7 +175,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
       fqn = "Layer", hints = Set("demo.Sprite#layer"),
       scope = RuleScope.Everywhere(Set("demo.Meter"))))
     val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(twoTypes), List(ph))).emit
-    assert(clue(emitted).contains("var layer: Layer.T"))
+    assert(clue(emitted).contains("val layer: Layer.T"))
     assert(emitted.contains("var reading: scala.Int"))
   }
 
@@ -357,7 +357,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
       fqn = "Loc", hints = Set("demo.Mesh#locations")))
     val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(arrays), List(ph))).emit
     // the field is retyped to Array[Loc.T]
-    assert(clue(emitted).contains("var locations: scala.Array[Loc.T]"))
+    assert(clue(emitted).contains("val locations: scala.Array[Loc.T]"))
     // wrapArray and unwrapArray are minted
     assert(emitted.contains("def wrapArray("))
     assert(emitted.contains("def unwrapArray("))
@@ -445,7 +445,7 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
       fqn = "Reading", hints = Set("demo.Meter#reading"),
       scope = RuleScope.Only(Set("demo.Meter"))))
     val emitted = new TirEmitter(Pipeline.run(SpoonTir.fromSource(twoTypes), List(layers, meters))).emit
-    assert(clue(emitted).contains("var layer: Layer.T"))
+    assert(clue(emitted).contains("val layer: Layer.T"))
     assert(emitted.contains("var reading: Reading.T"))
   }
 

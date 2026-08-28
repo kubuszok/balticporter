@@ -561,17 +561,26 @@ final class NullabilityTransform(
         case (_, Tree.Select(_, s, _, _)) if s == orNullSym => true
         case (acc, _) => acc
       }
+      def scanBody(members: List[Statement], ownerFallback: SymId): Unit =
+        members.foreach {
+          case d: Tree.DefDef =>
+            d.rhs.foreach { body => if hasOrNull(body) then orNullMembers += d.symbol }
+          case v: Tree.ValDef =>
+            v.rhs.foreach { body => if hasOrNull(body) then orNullMembers += v.symbol }
+          case _: Tree.ClassDef | _: Tree.TypeDef => ()
+          case t: Term =>
+            if hasOrNull(t) then orNullMembers += ownerFallback
+          case _ => ()
+        }
       units.foreach { u =>
         StandardTraversal.allClassDefs(u).foreach { cd =>
-          cd.body.foreach {
-            case d: Tree.DefDef =>
-              d.rhs.foreach { body => if hasOrNull(body) then orNullMembers += d.symbol }
-            case v: Tree.ValDef =>
-              v.rhs.foreach { body => if hasOrNull(body) then orNullMembers += v.symbol }
-            case _: Tree.ClassDef | _: Tree.TypeDef => ()
-            case t: Term =>
-              if hasOrNull(t) then orNullMembers += cd.symbol
-            case _ => ()
+          scanBody(cd.body, cd.symbol)
+          // ANONYMOUS class bodies are NOT ClassDefs, so `allClassDefs` does not reach them.
+          // Their methods may contain `.orNull` calls the phase inserted, and the same annotation
+          // is owed. Without this, every orNull inside an anonymous class method was a deprecation
+          // warning under `-Werror` (measured: 18 on libGDX core).
+          StandardTraversal.allAnonClasses(cd).foreach { (anon, _) =>
+            scanBody(anon.body, anon.symbol)
           }
         }
       }

@@ -102,20 +102,20 @@ class CollectionsScopeSpec extends PortSuite:
 
   test("an excluded TYPE keeps its JDK collection while the rest of the port moves") {
     val (_, _, out) = ported(RuleScope.Everywhere(Set("demo.Bridge")))
-    assert(clue(out).contains(s"var raw: $JList"), "the excluded field kept java.util.List")
+    assert(clue(out).contains(s"val raw: $JList"), "the excluded field kept java.util.List")
     assert(out.contains("new java.util.ArrayList["), "…and its initialiser was not rewritten either")
-    assert(out.contains(s"var items: $Buffer"), "the rest of the port still moved")
+    assert(out.contains(s"val items: $Buffer"), "the rest of the port still moved")
   }
 
   test("the SEPARATOR CUT holds in the exclusion direction — demo.Bridge does not carry demo.BridgeHelper") {
     val (_, _, out) = ported(RuleScope.Everywhere(Set("demo.Bridge")))
-    assert(clue(out).contains(s"var helped: $Buffer"), "BridgeHelper is a different type and is in scope")
+    assert(clue(out).contains(s"val helped: $Buffer"), "BridgeHelper is a different type and is in scope")
   }
 
   test("a MEMBER entry excludes one field and leaves its siblings alone") {
     val (_, _, out) = ported(RuleScope.Everywhere(Set("demo.Model#legacy")))
-    assert(clue(out).contains(s"var legacy: $JList"))
-    assert(out.contains(s"var items: $Buffer"))
+    assert(clue(out).contains(s"val legacy: $JList"))
+    assert(out.contains(s"val items: $Buffer"))
   }
 
   test("an excluded METHOD keeps its signature AND its body — half a rewritten body is not a translation") {
@@ -130,30 +130,30 @@ class CollectionsScopeSpec extends PortSuite:
 
   test("Only(type) rewrites that type and NOTHING else") {
     val (_, _, out) = ported(RuleScope.Only(Set("demo.Model")))
-    assert(clue(out).contains(s"var items: $Buffer"))
-    assert(out.contains(s"var raw: $JList"), "Bridge was never named and is left whole")
-    assert(out.contains(s"var helped: $JList"))
+    assert(clue(out).contains(s"val items: $Buffer"))
+    assert(out.contains(s"val raw: $JList"), "Bridge was never named and is left whole")
+    assert(out.contains(s"val helped: $JList"))
   }
 
   test("Only(field) PROPAGATES to the getter that returns it — the call sites follow the declaration") {
     val (_, _, out) = ported(RuleScope.Only(Set("demo.Model#items")))
-    assert(clue(out).contains(s"var items: $Buffer"))
+    assert(clue(out).contains(s"val items: $Buffer"))
     assert(out.contains(s"def getItems(): $Buffer"), "`return items` is a pure move, so the getter follows")
     // …and it follows TRANSITIVELY, across types: `Client.feed` passes `getItems()` to `take`, so
     // `take`'s parameter joins — and `Client.reuse` passes `getLegacy()` to the same parameter, so
     // `legacy` joins through it. That chain is what a scope of one field would otherwise leave as
     // four compile errors, and it is why an opt-in is a SEED rather than a list.
     assert(out.contains(s"def take(more: $Buffer)"))
-    assert(out.contains(s"var legacy: $Buffer"), "reached through take's parameter, transitively")
+    assert(out.contains(s"val legacy: $Buffer"), "reached through take's parameter, transitively")
     // …while a declaration no flow connects is untouched, whatever its type.
-    assert(out.contains(s"var raw: $JList"))
-    assert(out.contains(s"var helped: $JList"))
+    assert(out.contains(s"val raw: $JList"))
+    assert(out.contains(s"val helped: $JList"))
   }
 
   test("Only(Set.empty) rewrites nothing at all — the honest reading of 'only these' of nothing") {
     val (_, _, out) = ported(RuleScope.Only(Set.empty))
     assert(!clue(out).contains("scala.collection.mutable"))
-    assert(out.contains(s"var items: $JList"))
+    assert(out.contains(s"val items: $JList"))
   }
 
   // -------------------------------------------------------------------------

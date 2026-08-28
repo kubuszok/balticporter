@@ -106,7 +106,7 @@ class CtorFunnelExternalReplaySpec extends munit.FunSuite:
     * TEXT rather than off the planner's set, so the assertion fails against an engine that computes
     * the set and never renders it. */
   private def declOf(field: String): String =
-    out.linesIterator.find(l => l.contains(s"var $field:"))
+    out.linesIterator.find(l => l.contains(s"var $field:") || l.contains(s"val $field:"))
       .getOrElse(fail(s"no declaration of `$field` in\n$out"))
 
   test("a private field a PARAMFUL constructor writes loses `private` — the C15 widening") {
