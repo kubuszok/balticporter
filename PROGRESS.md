@@ -11482,6 +11482,6 @@ and infers the arity from their overrides.
 | sg | 6 -> 0 | 2 = 2 | 0 = 0 | 20 -> 0 | F9 fix — all 6 arity errors closed, 16/16 tests passing |
 | gdx | 0 = 0 | 0 = 0 | 0 = 0 | 93 = 93 | F9's original sites unchanged |
 | textra | 0 = 0 | 0 = 0 | 0 = 0 | 3 = 3 | `InternalToken.fromName` unchanged |
-| liqp | 0 = 0 | 0 = 0 | 0 = 0 | -- | unchanged |
+| liqp | 0 = 0 | 0 = 0 | 0 = 0 | 106 -> 76 | F9 fix: 30 `.ref` arity errors closed |
 
 Engine specs: 2635 passing (65 api + 1002 engine + 1440 corpus + 128 frontend-spoon), 0 failures.
