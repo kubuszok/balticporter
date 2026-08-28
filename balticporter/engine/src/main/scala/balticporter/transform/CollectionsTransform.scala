@@ -483,6 +483,10 @@ final class CollectionsTransform(
 
   // prepared in `run`, read by the hooks.
   private var remap: Map[SymId, SymId]    = Map.empty
+  /** source SymId -> java FQN, for remap entries that came from [[families]] (not JDK typeMap, not
+    * retarget). Built in [[run]], read by [[finishRun]] to determine the per-entry scope for the
+    * multi-pass traversal (D12). */
+  private var familyRemapSources: Map[SymId, String] = Map.empty
   /** every class this program declares, by symbol — the one thing [[classTparams]] needs and the
     * only place the IR keeps a class's own type parameters. */
   private var classDefsBySym: Map[SymId, Tree.ClassDef] = Map.empty
@@ -842,6 +846,13 @@ final class CollectionsTransform(
         s.id -> byScala.getOrElseUpdate(sc, mint(sc.substring(sc.lastIndexOf('.') + 1), sc))
       }
     }.toMap
+    // …and the reverse map for per-entry family scoping (D12): which remap entries came from
+    // `families` (not the JDK companion typeMap, not retarget). Used by `finishRun` to narrow
+    // the mapping per pass, so a dependent's family entries only retype its own declarations.
+    familyRemapSources = program.symbols.all.flatMap { s =>
+      if remap.contains(s.id) && families.contains(s.fullName) then Some(s.id -> s.fullName)
+      else scala.None
+    }.toMap
     kindOf = program.symbols.all.flatMap { s =>
       typeMap.get(s.fullName).map { case (sc, k) => byScala(sc) -> k }
     }.toMap
@@ -1028,10 +1039,63 @@ final class CollectionsTransform(
   private def finishRun(program: Program, symbols: SymbolTable): Program =
     given Program = program.rebuilt(symbols = symbols)
     ownedSym = summon[Program].owned
-    val units    = program.units.map(u =>
+
+    // ---- per-entry family scoping (D12, following TypeRedirectTransform.scopes) ----
+    // Family entries with a non-Everywhere scope must only retype declarations WITHIN that scope,
+    // so a dependent's families do not reach its base's declarations. The mechanism is a multi-pass
+    // traversal: one pass for JDK + everywhere-scoped families (the existing code path with
+    // applyScope/restoreExcluded), then one pass per distinct non-everywhere family scope with a
+    // narrowed `remap`.
+    val fullRemap = remap
+    val scopedFamilyIds: Set[SymId] = familyRemapSources.collect {
+      case (srcId, fqn) if !familyScopeOf(fqn).isUnrestricted => srcId
+    }.toSet
+
+    // Pass 1: JDK entries + everywhere-scoped families (exclude scoped families from remap).
+    // When no families have per-entry scopes this is the full remap and nothing changes.
+    remap = if scopedFamilyIds.isEmpty then fullRemap
+            else fullRemap.filterNot { (k, _) => scopedFamilyIds(k) }
+    var units: List[Tree.ClassDef] = program.units.map(u =>
       dropSubsumedParents(
         restoreUninheritableParents(u, restoreExcluded(u, StandardTraversal.mapClassDef(this, u)))))
-    val symbols2 = mapSignatures(symbols) // retype signatures too
+
+    // Pass 2+: one pass per distinct non-everywhere family scope — same pattern as
+    // TypeRedirectTransform: narrow `remap` to the entries governed by that scope, transform only
+    // in-scope units. The JDK entries have already been processed in pass 1, so passes compose
+    // because each rewrites only its own source symbols.
+    if scopedFamilyIds.nonEmpty then
+      val scopedGroups = scopedFamilyIds.toList.groupBy(id => familyScopeOf(familyRemapSources(id)))
+      val scopedP = summon[Program] // the Program the scope is asked against
+      scopedGroups.toList.sortBy(_._1.fingerprint).foreach { (sc, srcIds) =>
+        remap = fullRemap.view.filterKeys(srcIds.toSet).toMap
+        units = units.map { u =>
+          if inFamilyScope(sc, scopedP, u.symbol) then
+            dropSubsumedParents(
+              restoreUninheritableParents(u, StandardTraversal.mapClassDef(this, u)))
+          else u
+        }
+      }
+    remap = fullRemap // restore for signature processing, recordings, and checks
+
+    // Signature pass — also multi-pass when family scopes exist.
+    val symbols2 =
+      if scopedFamilyIds.isEmpty then mapSignatures(symbols) // unchanged code path
+      else
+        // Pass 1: JDK + everywhere families
+        remap = fullRemap.filterNot { (k, _) => scopedFamilyIds(k) }
+        var tbl = mapSignatures(symbols)
+        // Pass 2+: scoped families, only on in-scope symbols
+        val scopedGroups = scopedFamilyIds.toList.groupBy(id => familyScopeOf(familyRemapSources(id)))
+        val scopedP = summon[Program]
+        scopedGroups.toList.sortBy(_._1.fingerprint).foreach { (sc, srcIds) =>
+          remap = fullRemap.view.filterKeys(srcIds.toSet).toMap
+          tbl = tbl.all.foldLeft(tbl) { (t, s) =>
+            if literal(s.id) || !scopedP.owns(s.id) || !inFamilyScope(sc, scopedP, s.id) then t
+            else t.updated(s.copy(info = StandardTraversal.mapType(this, s.info)))
+          }
+        }
+        remap = fullRemap
+        tbl
     // …and the MODIFIER the re-parenting invalidated (K28). Decided over `symbols2` because
     // `graph.signatureOf` reads a symbol's `descriptor` — the frontend's, taken from the parser
     // before any retyping — so the two tables are asked in java's own spelling either way; applied
@@ -1078,6 +1142,18 @@ final class CollectionsTransform(
     * Eligibility for the growth is this phase's OWN record — "does `typeMap` cover the head of this
     * symbol's type" — never a name test, which is CLAUDE.md §4.56's general form.
     */
+  /** is this symbol one the given scope admits? The same question `TypeRedirectTransform.inScope`
+    * answers, and carrying the same conservative arms: IN for `Everywhere` (the pre-scope code
+    * path), OUT for `Only` (rewrites nothing unasked). Used by the per-entry family scope pass
+    * (D12), where a family scoped `Only(pkg)` must leave base-owned declarations untouched. */
+  private def inFamilyScope(sc: RuleScope, p: Program, id: SymId): Boolean =
+    if sc.isUnrestricted then true
+    else p.symbolOf(id) match
+      case Some(s)    => sc.includes(p, s)
+      case scala.None => sc match
+        case RuleScope.Everywhere(_) => true
+        case RuleScope.Only(_)       => false
+
   private def applyScope(p: Program): Unit =
     excluded = Set.empty; admittedBy = Map.empty; report = PolicyReport.empty
     if scope.isUnrestricted then return

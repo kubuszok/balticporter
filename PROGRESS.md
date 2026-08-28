@@ -11525,3 +11525,49 @@ needs either a new `Kind` or a `retarget` with per-member body substitutions.
 
 Drop-in census (2026-08-25): 360 JVM errors, of which 72 are the five missing types
 (`Bits` 32, `Array` 20, `ObjectMap` 14, `SnapshotArray` 4, `ObjectSet` 2), remainder cascading.
+
+### 13.16.1 Wave 3.2c — per-entry family scope in the traversal (D12)
+
+**Engine change (Step 1b).** `familyScopes` existed as a data accessor and fingerprint contributor
+(wave 3.2b, 24 specs) but the traversal applied the phase-level `scope` uniformly. The per-entry
+scope now participates in the actual traversal, following `TypeRedirectTransform.scopes`'s pattern:
+
+- `familyRemapSources: Map[SymId, String]` — built in `run()`, maps each remap entry back to its
+  source java FQN when that FQN is in `families` (not JDK typeMap, not retarget).
+- `inFamilyScope(sc, p, id)` — the same question `TypeRedirectTransform.inScope` answers.
+- `finishRun` multi-pass: when `familyScopes` contains non-`Everywhere` entries, the traversal splits
+  into passes. Pass 1 processes JDK + everywhere-scoped entries (the existing `applyScope`/
+  `restoreExcluded` code path unchanged). Pass 2+ processes each distinct non-everywhere family
+  scope: narrowed `remap`, only in-scope units transformed, no `restoreExcluded` (the scope is
+  handled by unit-level filtering, not by the excluded-member mechanism).
+- `mapSignatures` follows the same multi-pass: JDK entries first with the existing path, then
+  scoped families narrowed to in-scope symbols.
+- When no families have per-entry scopes (`scopedFamilyIds.isEmpty`), the code path is unchanged.
+  Every existing port fingerprints identically.
+
+**Flatness proof.** Engine specs: 1026 passing, 0 failures. ashley-measure: 0 = 0
+(JVM/JS/Native), every check count at baseline.
+
+**Step 2 finding: SurfaceIntrusion blocks the five Ashley family entries on the DEPENDENT.**
+
+The five libGDX collection types (`Array`, `ObjectMap`, `ObjectSet`, `SnapshotArray`, `Bits`) are
+EMITTED by the base port — they are part of libGDX's own collection library, translated
+mechanically. CLAUDE.md §1.5's rule ("no key a DEPENDENT declares may edit what a base EMITS")
+applies: a dependent's family entry would retype its own references to `ArrayBuffer` while the
+base emits the `Array` class, producing a type mismatch at every seam between the two ports.
+`ManifestAgreement.SurfaceIntrusion` correctly refuses the configuration.
+
+**The entries need to go on the BASE's manifest** — which requires the base to DROP the five types
+first (the hand port sge does not ship them; the mechanical base port currently does). This is a
+base manifest change:
+
+1. Add `com.badlogic.gdx.utils.{Array, ObjectMap, ObjectSet, SnapshotArray, Bits}` to the base's
+   `dropTypes` (in `LibgdxPolicy.core`).
+2. Add corresponding `families` entries to the base's `CollectionsTransform` — with scope
+   `Everywhere(Set.empty)` (the pre-scope code path, since these are base-level policy).
+3. Re-measure every lane: `just measure-all`.
+
+Step 1 changes the base's emitted surface significantly (the five types plus their inner classes are
+~30 types). Once the base drops them, dependents inherit the families automatically (§1.5), so
+Ashley needs NO manifest entry — the per-entry scope mechanism is for a dependent that adds a
+DIFFERENT family the base does not carry.
