@@ -1,6 +1,6 @@
 package balticporter.transform
 
-import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource, RequiresRuntime, RuntimeArtifact, SurfacePolicy}
+import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource, RequiresRuntime, RuntimeArtifact, SurfacePolicy}
 import balticporter.tir.*
 
 /** `java.util` collections → `scala.collection.mutable`. A whole-program [[Phase]] — the
@@ -132,7 +132,33 @@ final class CollectionsTransform(
       * bodies and no signature, so a base and a dependent that declare different sinks still emit
       * surfaces that compile together — which is the question that fingerprint answers. */
     val reflectiveSinks: Set[String] = Set.empty,
-) extends Phase, Rewrite, RequiresRuntime, PolicySource, SurfacePolicy, PolicyBound:
+    /** ADDITIONAL COLLECTION FAMILIES — java FQN -> (scala FQN, Kind), retyped and API-mapped
+      * alongside the JDK entries in [[CollectionsTransform.typeMap]].
+      *
+      * ==Why this is a SECOND table and not part of the companion's `typeMap`==
+      * `typeMap` is a §1(a) constant — the JDK collections, true of every codebase. THIS table is
+      * §1(b) policy: WHICH library types are also collections, and what their scala targets are, is
+      * knowledge about that library. A libGDX `Array` is `mutable.ArrayBuffer`; a Guava
+      * `ImmutableList` might be `List`. The engine owns the MECHANISM (retype, rewrite kind-aware,
+      * coerce at seams); the manifest owns WHICH types enter it.
+      *
+      * Entries are merged INTO [[typeMap]] at construction time, so every arm that reads `typeMap`
+      * — `remap`, `kindOf`, `mappedTypes`, `targetOf`, every `Kind`-keyed rewrite — sees these
+      * entries by construction with no new guard anywhere. A key that collides with a JDK entry or
+      * with a `retarget` key is REFUSED at construction, the same rule `retarget` applies.
+      *
+      * Empty is the default and the no-op: no entry, no retype, no rewrite, no fingerprint segment,
+      * and the code path is the JDK-only path by the same arithmetic (§1(b)'s rule). */
+    val families: Map[String, (String, CollectionsTransform.Kind)] = Map.empty,
+    /** PER-ENTRY SCOPES for [[families]] — java source FQN -> `RuleScope`.
+      *
+      * Follows the `TypeRedirectTransform.scopes` pattern for `ENGINE-LIMITS.md` D12's reason: a
+      * base states a whole-program family, a dependent states one scoped to its own declarations,
+      * and `surfaceFold` merges the two into ONE phase, so a single scope on the phase cannot serve
+      * both. Keyed by the family's SOURCE FQN; a key with no family entry is ignored. Default
+      * `Everywhere(Set.empty)` — the pre-scope code path. */
+    val familyScopes: Map[String, RuleScope] = Map.empty,
+) extends Phase, Rewrite, RequiresRuntime, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound:
   def name = "java-collections->scala"
 
   /** THE THREE LANES that count what this retyping opened and could not close (`Rewrite`).
@@ -170,6 +196,11 @@ final class CollectionsTransform(
     * with no exception: a sink is by construction a type the program only REFERENCES. */
   private var boundSinks: Map[String, Binding[SymId]] = Map.empty
 
+  /** …and each declared FAMILY SOURCE. [[Ownership.Either]] for the same reason a retarget takes
+    * it: a family source is a type this program REFERENCES but usually does not declare — a
+    * library's own collection class, resolved from the resolution roots. */
+  private var boundFamilies: Map[String, Binding[SymId]] = Map.empty
+
   def bindPolicy(binder: PolicyBinder): Unit =
     val setting = s"CollectionsTransform(scope) ${scope.productPrefix} entry"
     boundScope = scope.entries.toList.sorted.map(e => e -> binder.bindScope(name, setting, e)).toMap
@@ -179,6 +210,8 @@ final class CollectionsTransform(
       .map(k => k -> binder.bindType(name, CarrierSetting, k, Ownership.Either)).toMap
     boundSinks = reflectiveSinks.toList.sorted
       .map(k => k -> binder.bindType(name, SinkSetting, k, Ownership.Either)).toMap
+    boundFamilies = families.keys.toList.sorted
+      .map(k => k -> binder.bindType(name, FamilySetting, k, Ownership.Either)).toMap
 
   /** Two modules that scope this phase differently emit incompatible signatures for the shared
     * surface — a `java.util.List` parameter in the base against a `Buffer` argument in the
@@ -215,10 +248,84 @@ final class CollectionsTransform(
       // compile alone and cannot compile together — SurfacePolicy's case exactly (§1.5).
       scala.Option.when(reifiedCarriers.nonEmpty)(
         "carriers=" + reifiedCarriers.toList.sorted.mkString(",")),
+      // A FAMILY is the same surface fact as the JDK mapping, one library further out: a base whose
+      // `com.badlogic.gdx.utils.Array` fields became `ArrayBuffer` and a dependent whose did not
+      // emit signatures that cannot meet. Segment omitted when empty, so a port that declares no
+      // families has the fingerprint it always had and no baseline moves (§1(b)'s fingerprint rule).
+      scala.Option.when(families.nonEmpty)(
+        "families=" + familiesDigest),
     ).flatten
-    // `retarget` and `carriers` are rendered only when non-empty, so a port that declares neither
-    // adds nothing; `mapping` is always there, which is why there is no longer an empty case.
+    // `retarget`, `carriers` and `families` are rendered only when non-empty, so a port that
+    // declares none adds nothing; `mapping` is always there, which is why there is no longer an
+    // empty case.
     s"${scope.fingerprint};${parts.mkString(";")}"
+
+  // ---- MergeablePolicy: HOW this table composes with a nearer manifest's instance ----
+
+  /** Every shared-surface SUBJECT this instance's policy is keyed on.
+    *
+    * The JDK entries are NOT subjects: they are §1(a) universal, present in every instance, and
+    * screening them would make every family key a `SurfaceIntrusion` against the base's `governs`.
+    * Retargets and families ARE subjects — each is keyed on a name that may be in the shared
+    * surface. Carriers and sinks are not surface (they change bodies, not signatures). */
+  def subjects: Set[String] =
+    (retarget.keySet ++ families.keySet).map(MergeablePolicy.subjectOf)
+
+  /** Merge `later` into this. A dependent ADDS families and retargets; same source with a different
+    * target refuses with the phase's sentence. Scopes on the SAME family source must agree. */
+  def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
+    case o: CollectionsTransform =>
+      // --- retarget clashes ---
+      val retargetClash = (retarget.keySet & o.retarget.keySet).filter(k => retarget(k) != o.retarget(k))
+      // --- family clashes: same source, different (target, kind) ---
+      val familyClash = (families.keySet & o.families.keySet).filter(k => families(k) != o.families(k))
+      // --- family/retarget cross-clash: a key in both tables ---
+      val crossClash = (families.keySet & o.retarget.keySet) ++ (retarget.keySet & o.families.keySet)
+      // --- scope clashes on families both sides declare ---
+      val scopeClash = (families.keySet & o.families.keySet).toList.sorted
+        .filter(k => familyScopeOf(k) != o.familyScopeOf(k))
+      // --- scope clashes on retargets both sides declare ---
+      val retargetScopeClash = (retarget.keySet & o.retarget.keySet).toList.sorted
+        .filter(k =>
+          scope.entries.intersect(Set(retarget(k))).nonEmpty !=
+          o.scope.entries.intersect(Set(o.retarget(k))).nonEmpty) // rough — retargets do not have per-entry scopes
+      // --- carrier/sink disagreements are NOT surface and therefore NOT a refusal ---
+      if retargetClash.nonEmpty || familyClash.nonEmpty || crossClash.nonEmpty ||
+          scopeClash.nonEmpty then
+        Left(
+          (retargetClash.toList.sorted.map(k =>
+             s"""both modules retarget "$k", to "${retarget(k)}" and "${o.retarget(k)}"""") ++
+           familyClash.toList.sorted.map(k =>
+             s"""both modules declare a family for "$k", """ +
+               s"""to (${families(k)._1}, ${families(k)._2}) and (${o.families(k)._1}, ${o.families(k)._2})""") ++
+           crossClash.toList.sorted.map(k =>
+             s""""$k" appears in families on one side and retarget on the other — two answers for one type""") ++
+           scopeClash.map(k =>
+             s"""both modules scope the family "$k" and disagree — """ +
+               s""""${familyScopeOf(k).fingerprint}" and "${o.familyScopeOf(k).fingerprint}"; a scope """ +
+               "decides which declarations carry the family type in their signatures"))
+            .mkString("; ") +
+            " — two answers for one key is a rewrite whose outcome depends on which manifest was read")
+      else
+        val mergedRetarget = retarget ++ o.retarget
+        val mergedFamilies = families ++ o.families
+        val mergedFamilyScopes = familyScopes ++ o.familyScopes
+        // carriers and sinks: union without a clash (they are not surface)
+        val mergedCarriers = reifiedCarriers ++ o.reifiedCarriers
+        val mergedSinks = reflectiveSinks ++ o.reflectiveSinks
+        val addedRetargetSubjects = (o.retarget.keySet -- retarget.keySet).map(MergeablePolicy.subjectOf)
+        val addedFamilySubjects = (o.families.keySet -- families.keySet).map(MergeablePolicy.subjectOf)
+        Right(MergeablePolicy.Merged(
+          new CollectionsTransform(
+            scope          = scope, // the base's scope — inherited
+            retarget       = mergedRetarget,
+            reifiedCarriers = mergedCarriers,
+            reflectiveSinks = mergedSinks,
+            families       = mergedFamilies,
+            familyScopes   = mergedFamilyScopes),
+          addedRetargetSubjects ++ addedFamilySubjects))
+    case other =>
+      Left(s"`${other.name}` is not a `CollectionsTransform`, so there is no table to compose")
 
   /** this phase retypes onto `balticporter.runtime` — declared once, so the run derives the port's
     * dependency, its vendored sources and the emitter's external-parent table from it. */
@@ -226,13 +333,41 @@ final class CollectionsTransform(
 
   import CollectionsTransform.{JavaCollectionFqn, JavaCollectionsFqn, JavaIterableFqn, JavaIteratorFqn, Kind}
 
+  // ---- COLLISION CHECK: a family key that also appears in the JDK table or in `retarget` is
+  // refused at construction, the same rule `retarget` applies — two answers for one type is a
+  // rewrite whose outcome depends on which table was read ----
+  locally {
+    val jdkClash = families.keySet & CollectionsTransform.typeMap.keySet
+    require(jdkClash.isEmpty,
+      s"CollectionsTransform: families key(s) ${jdkClash.mkString(", ")} also appear in the JDK " +
+        "typeMap — two answers for one type is not a thing a policy author can reason about")
+    val retargetClash = families.keySet & retarget.keySet
+    require(retargetClash.isEmpty,
+      s"CollectionsTransform: families key(s) ${retargetClash.mkString(", ")} also appear in " +
+        "retarget — two answers for one type is not a thing a policy author can reason about")
+  }
+
   /** java fully-qualified name → (scala fully-qualified name, collection kind).
     *
-    * The table itself lives in the COMPANION ([[CollectionsTransform.typeMap]]) — it is a constant
-    * and nothing about it depends on an instance, and `JdkSurfaceCheck` has to be able to ask what
-    * this phase retypes without constructing one (§4.56: a check concludes from what a phase DID,
-    * which means the phase's record has to be reachable). */
-  private val typeMap: Map[String, (String, Kind)] = CollectionsTransform.typeMap
+    * The JDK table lives in the COMPANION ([[CollectionsTransform.typeMap]]) — it is a §1(a)
+    * constant and `JdkSurfaceCheck` has to be able to read it without constructing a phase (§4.56).
+    * FAMILIES are merged in here, so every arm that reads `typeMap` — `remap`, `kindOf`,
+    * `mappedTypes`, `targetOf`, every `Kind`-keyed rewrite — sees both JDK and family entries by
+    * construction with no new guard anywhere. */
+  private val typeMap: Map[String, (String, Kind)] = CollectionsTransform.typeMap ++ families
+
+  /** the RuleScope a FAMILY ENTRY declares — `Everywhere(Set.empty)` (the pre-scope code path)
+    * when the source FQN has no explicit scope. JDK entries are not scoped through this map;
+    * they use the phase-level `scope` as they always have. */
+  def familyScopeOf(from: String): RuleScope = familyScopes.getOrElse(from, RuleScope.everywhere)
+
+  /** digest of the `families` table — sorted by source FQN, carrying the target and kind. The
+    * scope is part of the fingerprint too (a scope difference is a surface difference), so it joins
+    * the sorted string. Used only when `families.nonEmpty`. */
+  private def familiesDigest: String =
+    balticporter.tir.TirPrinter.sha256(
+      families.toList.map((k, v) => s"$k->${v._1}:${v._2};scope=${familyScopeOf(k).fingerprint}")
+        .sorted.mkString(",")).take(16)
 
   /** the java types this phase retypes — its POLICY, read back so a CHECK can ask what the phase
     * did rather than guessing from a name (CLAUDE.md §4.56). Both checks below take it as a
@@ -615,6 +750,9 @@ final class CollectionsTransform(
   /** …and for a reflective sink. */
   private val SinkSetting = "CollectionsTransform(reflectiveSinks) entry"
 
+  /** …and for a collection family entry. */
+  private val FamilySetting = "CollectionsTransform(families) entry"
+
   /** the carriers that actually RUN — what the port declared plus the one java guarantees. A `val`,
     * so [[preservesTypeArgsOf]], the recorder and the fingerprint cannot disagree. */
   private val effectiveCarriers: Set[String] = reifiedCarriers ++ CollectionsTransform.UniversalCarriers
@@ -672,6 +810,8 @@ final class CollectionsTransform(
       PolicyBinder.Record(name, RetargetSetting, k, b.forget)
     }) ++ PolicyReport.fromBindings(boundCarriers.toList.sortBy(_._1).map { (k, b) =>
       PolicyBinder.Record(name, CarrierSetting, k, b.forget)
+    }) ++ PolicyReport.fromBindings(boundFamilies.toList.sortBy(_._1).map { (k, b) =>
+      PolicyBinder.Record(name, FamilySetting, k, b.forget)
     }) ++ PolicyReport(
       retarget.keys.toList.sorted.filter(typeMap.contains).map { k =>
         PolicyFinding(name, RetargetSetting, k, PolicyIssue.Malformed,
