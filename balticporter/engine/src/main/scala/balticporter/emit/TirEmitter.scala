@@ -4435,6 +4435,10 @@ final class TirEmitter(
       Obligations.consult(JS.G(4), b.origin)(Option.when(it.tpe match
         case TypeRepr.AppliedType(_, args) => args.exists(_.isInstanceOf[TypeRepr.TypeBounds])
         case _                             => false)(()))
+      // JS-S26 — a `return` inside an enhanced-for body becomes a NON-LOCAL RETURN in Scala's
+      // `.foreach` desugaring. Consulted at every ForEach, fires where a `return` really occurs
+      // in the body. The lowering avoids the lambda by emitting a while loop instead.
+      Obligations.consult(JS.S(26), body.origin)(Option.when(returnsIn(body))(()))
       // K9 — a JDK `Iterable` the pipeline LEFT in the java namespace has no scala `foreach`, so
       // `for (x <- xs)` does not compile. Emit java's OWN desugaring (JLS 14.14.2) instead: a
       // while-loop over `iterator()`/`hasNext()`/`next()`, which is the shape the reference hand
@@ -4445,9 +4449,16 @@ final class TirEmitter(
       // still in `java.*` / `javax.*` needs the protocol. Arrays are never `TypeRef` and are
       // iterated natively by scala, so they are excluded by construction.
       val keptJdk = isKeptJdkIterable(it.tpe)
-      (widenedBinding(b, it), mutable, keptJdk) match
-        case (None, false, false) => loopWithJumps(body, lbl, bd => s"for ($name <- ${term(it, i)}) $bd", term(body, i))
-        case (_, _, true) =>
+      // A `return` inside a `for (x <- xs)` body is a NON-LOCAL RETURN, because scala desugars it
+      // to `.foreach(x => ...)` — the `return` is inside a lambda. Under `-Werror`, scalac 3.x
+      // treats non-local returns as errors. Lower to a while loop instead, which avoids the lambda
+      // and keeps `return` at the method level. Scala-style calls (`.iterator`, `.hasNext` without
+      // parens) because the iterable is a scala type or an array with `ArrayOps`. The keptJdk case
+      // already handles JDK iterables with Java-style parens.
+      val hasReturn = returnsIn(body)
+      (widenedBinding(b, it), mutable, keptJdk, hasReturn) match
+        case (None, false, false, false) => loopWithJumps(body, lbl, bd => s"for ($name <- ${term(it, i)}) $bd", term(body, i))
+        case (_, _, true, _) =>
           // JLS 14.14.2's own desugaring: evaluate the iterable ONCE, obtain its iterator, and loop
           // with hasNext()/next(). The iterable expression is interpolated exactly once (JS-S15),
           // the binding is re-bound each iteration (the `next()` call), and break/continue go
@@ -4460,7 +4471,25 @@ final class TirEmitter(
           loopWithJumps(body, lbl,
             bd => s"{ val $itVar = ${term(it, i)}.iterator(); while ($itVar.hasNext()) { $kw $name: $decl = $nextExpr; $bd } }",
             term(body, i))
-        case (widened, _, _) =>
+        case (_, _, _, true) =>
+          // A `return` inside a for-each body: lower to a while loop to avoid the non-local return
+          // that the `.foreach` lambda desugaring would produce. Handles widened bindings and
+          // mutable re-bindings too.
+          // PARENS: a PROGRAM-DECLARED iterable (libGDX's `Array`, `ObjectMap.Values`) declares its
+          // `iterator()` and `hasNext()` as java methods WITH parameter lists; an EXTERNAL one
+          // (scala `Array` via `ArrayOps`, scala `Iterator`) declares them WITHOUT. Using the wrong
+          // convention is an E100 Syntax Error in either direction.
+          val owned = headSymOf(it.tpe).exists(program.owns)
+          val iterCall = if owned then ".iterator()" else ".iterator"
+          val hasNextCall = if owned then ".hasNext()" else ".hasNext"
+          val itVar = esc(s"$raw$$it")
+          val widened = widenedBinding(b, it)
+          val decl = widened.getOrElse(tpe(b.tpt.tpe))
+          val nextExpr = if widened.isDefined then s"$itVar.next().asInstanceOf[$decl]" else s"$itVar.next()"
+          loopWithJumps(body, lbl,
+            bd => s"{ val $itVar = ${term(it, i)}$iterCall; while ($itVar$hasNextCall) { $kw $name: $decl = $nextExpr; $bd } }",
+            term(body, i))
+        case (widened, _, _, _) =>
           // the alias is INSIDE the loop body, so it is re-bound each iteration exactly as java's is,
           // and outside any `continue` boundary `loopWithJumps` adds — which is where java runs it.
           // A reassignment therefore cannot leak into the next iteration, which is java's semantics
@@ -4511,11 +4540,16 @@ final class TirEmitter(
           case _                                                     => false
         case _ => false))(()))
       // JS-G33 — SAM CONVERSION eligibility. `samAscribed` is the one place that asks it, and it is
-      // reached from the constructor-reference and unbound-instance forms; the static form is a
-      // qualified NAME and needs no conversion at all, which is what the negative half records.
+      // reached from every `Left` form: constructor, unbound-instance AND static — the static form
+      // is now an explicit LAMBDA (avoiding eta-expansion warnings), so it goes through
+      // `samAscribed` like every other arm. The `Right` (bound-instance) form also needs it.
       Obligations.consult(JS.G(33), mr.origin)(Option.when(q match
-        case Left(_) => isCtor || !isStaticRef
+        case Left(_) => true
         case Right(_) => true)(()))
+      // JS-C52 — `@FunctionalInterface` governs eta-expansion warnings. The static MethodRef arm
+      // now emits explicit lambdas at EVERY arity to avoid the warning entirely, so this fires at
+      // every static reference. The annotation preservation (SpoonFrontend) is the other half.
+      Obligations.consult(JS.C(52), mr.origin)(Option.when(isStaticRef && !isCtor)(()))
       q match
         // an ARRAY constructor reference `T[]::new` is an `IntFunction[T[]]` — `(size) => new T[size]`
         // (Scala arrays need a length), NOT a no-arg supplier. One-layer element = the array's row type.
@@ -4560,7 +4594,25 @@ final class TirEmitter(
         // fourteen ports whose static references all carry parameters.
         case Left(tt) if isStaticRef && referent == Referent.Static(0) =>
           samAscribed(s"(() => ${tpe(tt.tpe)}.${local(s)}())", mrT, tt.tpe)
-        case Left(tt) if isStaticRef => s"${tpe(tt.tpe)}.${local(s)}"
+        // A static method reference at NON-ZERO arity: `Type::method` where `method` takes
+        // parameters. Where the TARGET SAM type carries `@FunctionalInterface`, scalac's
+        // eta-expansion is warning-free and the bare name is emitted — the annotation silences it.
+        // Where the target LACKS the annotation — or its annotations could not be read (an
+        // external type with no class file) — an explicit lambda avoids the eta-expansion warning
+        // that `-Werror` turns into an error.
+        // REFUTER polarity (CLAUDE.md §4.56): an unreadable annotation set is treated as
+        // UNANNOTATED, because the safe direction is to emit the lambda nobody warns about, and
+        // the unsafe one is to emit a bare name scalac then rejects.
+        case Left(tt) if isStaticRef && targetHasFunctionalInterface(mrT) =>
+          s"${tpe(tt.tpe)}.${local(s)}"
+        case Left(tt) if isStaticRef =>
+          val arity = referent match { case Referent.Static(n) => n; case _ => 0 }
+          val formals = methodParams(s)
+          val named = formals.sizeIs == arity && !hasWildcardArg(tt.tpe)
+          val ps = (0 until arity).map(k =>
+            if named then s"a$k$$: ${tpe(formals(k))}" else s"a$k$$").mkString(", ")
+          val as = (0 until arity).map(k => s"a$k$$").mkString(", ")
+          samAscribed(s"(($ps) => ${tpe(tt.tpe)}.${local(s)}($as))", mrT, tt.tpe)
         case Left(tt) =>
           val self  = "self$"
           // the ARITY is java's, off the node (`Tree.MethodRef.referent`); the parameter TYPES are
@@ -4777,6 +4829,18 @@ final class TirEmitter(
     * functional interface: the type must be concrete (no type variables, no `NoType`) and must not
     * be the constructed type itself. Anything else falls back to the bare lambda — the previous
     * behaviour — so this can only ever narrow, never mis-type. */
+  /** Does the TARGET SAM type carry `@FunctionalInterface`?
+    *
+    * REFUTER polarity (CLAUDE.md §4.56): an unreadable annotation set — an external type the
+    * frontend could not intern with its annotations — is treated as UNANNOTATED, because the
+    * safe direction is to emit the explicit lambda nobody warns about (correct everywhere),
+    * and the unsafe direction is to emit a bare name scalac then rejects under `-Werror`. */
+  private def targetHasFunctionalInterface(target: TypeRepr): Boolean =
+    headSymOf(target).flatMap(program.symbolOf).exists(
+      _.annotations.exists(_.tpe match
+        case TypeRepr.TypeRef(_, a) => sym(a).fullName == "java.lang.FunctionalInterface"
+        case _                     => false))
+
   private def samAscribed(fn: String, target: TypeRepr, ctor: TypeRepr): String =
     def headOf(t: TypeRepr): Option[SymId] = t match
       case TypeRepr.TypeRef(_, s)      => Some(s)

@@ -153,3 +153,44 @@ class EmitterBindingAndReturnSpec extends PortSuite:
     assertEquals(clue(p.out).sliding("def body$".length).count(_ == "def body$"), 1)
     assertEmits(p, "val inner: java.lang.Runnable = () => { def body$1(): scala.Unit =")
   }
+
+  // -------------------------------------------------------------------------------------------
+  // a `return` inside an ENHANCED-FOR body — JS-S26
+  // -------------------------------------------------------------------------------------------
+
+  test("a `return` inside an enhanced-for body lowers to a while loop — avoiding a non-local return") {
+    // Java's enhanced-for desugars to `.foreach(x => ...)` in Scala, so `return` inside the body
+    // becomes a non-local return from the enclosing method. Under `-Werror`, this is an error.
+    // The fix: lower to a while loop over `.iterator/.hasNext/.next()`, which avoids the lambda.
+    val p = port(
+      """package demo;
+        |enum Token { A, B, C;
+        |  static Token fromName(String name) {
+        |    for (Token t : values()) { if (name.equals(t.name())) return t; }
+        |    return null;
+        |  }
+        |}
+        |""".stripMargin
+    )
+    // must NOT emit `for (t <- ...)` — that desugars to a lambda
+    assertNotEmits(p, "for (t <-")
+    // must emit a while loop with Scala-style iterator calls (no parens on .iterator/.hasNext)
+    assertEmits(p, ".iterator;")
+    assertEmits(p, ".hasNext)")
+    assertEmits(p, ".next()")
+    // the `return` stays as a plain method-level return — NOT a boundary.break
+    assertEmits(p, "return t")
+  }
+
+  test("an enhanced-for body with NO return keeps the `for` form — the lowering is not free") {
+    val p = port(
+      """package demo;
+        |class C {
+        |  void each(String[] xs) { for (String x : xs) { System.out.println(x); } }
+        |}
+        |""".stripMargin
+    )
+    // no return => plain `for` comprehension, NOT a while loop
+    assertEmits(p, "for (x <-")
+    assertNotEmits(p, ".iterator")
+  }

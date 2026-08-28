@@ -405,6 +405,11 @@ object Differences:
       "JLS 14.21", "UNCITED — Scala has no unreachable-statement rule",
       Silent, Handled, InCode("TirEmitter.endsInInfiniteLoop states the composition in its own comment"),
       Universal, "TirEmitter.endsInInfiniteLoop, each arm excluding a loop that breaks out", Rendered("DefDef")),
+    Difference(sId(26), "a `return` inside an enhanced-for body becomes a NON-LOCAL RETURN in Scala's `.foreach` desugaring",
+      "JLS 14.14.2", "UNCITED — Scala's `for (x <- xs) { ... }` desugars to `.foreach(x => ...)` and `return` inside the lambda is a non-local return, deprecated/errored under `-Werror`",
+      Mixed, Handled, Predicted, Universal,
+      "TirEmitter's Tree.ForEach arm: returnsIn(body) triggers while-loop lowering with scala-style .iterator/.hasNext/.next()",
+      Rendered("ForEach")),
   )
 
   // -------------------------------------------------------------------------------------------
@@ -715,6 +720,11 @@ object Differences:
       "JLS 14.17, 8.8.7", "UNCITED — a scala class body is not a method, so `return` is rejected outright",
       Loud, Handled, NoTwin, Universal,
       "TirEmitter.classBodyStats + returnsIn -> a local `def` around plan.primaryBody", Rendered("ClassDef")),
+    Difference(cId(52), "`@FunctionalInterface` governs Scala's eta-expansion warning — a static method reference at a non-annotated SAM warns under `-Werror`",
+      "JLS 9.8", "SLS — Scala SAM conversion warns when the target type lacks `@FunctionalInterface`",
+      Loud, Handled, Predicted, Universal,
+      "SpoonFrontend.preservedAnnotations carries @FunctionalInterface; TirEmitter's static MethodRef arm emits an explicit lambda to avoid eta-expansion entirely",
+      Rendered("MethodRef")),
   )
 
   // -------------------------------------------------------------------------------------------

@@ -260,9 +260,10 @@ object SpoonTir:
       * history of the project, so they never fired once. Ownership still terminates at `SymId.None`
       * one level up, so nothing that climbs the chain changes answer. */
     def external(key: String, name: String, owner: SymId = SymId.None,
-                 descriptor: Option[Descriptor] = None, info: TypeRepr = NoType): SymId =
+                 descriptor: Option[Descriptor] = None, info: TypeRepr = NoType,
+                 annotations: List[Annot] = Nil): SymId =
       val id = resolve(key)
-      if !syms.contains(id) then syms(id) = Symbol(id, name, key, Flags(), owner, info, descriptor = descriptor)
+      if !syms.contains(id) then syms(id) = Symbol(id, name, key, Flags(), owner, info, descriptor = descriptor, annotations = annotations)
       else
         // `external` NEVER clobbers, so a stub interned by an earlier, UNRESOLVED reference would
         // otherwise keep its empty descriptor for the whole run while a later, resolved one knew the
@@ -272,9 +273,11 @@ object SpoonTir:
         // `info` fills the same way and for the same reason — and only ever a HOLE. A member the
         // program DECLARES gets its real signature from `execDef`, through `define`, which does
         // clobber; the fill here can therefore never overwrite a declaration, only precede one.
+        // `annotations` fills the same way: empty is a stub, non-empty is an answer.
         var s = syms(id)
         if descriptor.isDefined && s.descriptor.isEmpty then s = s.copy(descriptor = descriptor)
         if info != NoType && s.info == NoType then s = s.copy(info = info)
+        if annotations.nonEmpty && s.annotations.isEmpty then s = s.copy(annotations = annotations)
         syms(id) = s
       id
 
@@ -1914,8 +1917,23 @@ object SpoonTir:
                   })
           case args => AppliedType(head, args.map(tpe))
 
-    /** id of a referenced class type — our own (already defined) or an external stub. */
-    private def typeSym(r: CtTypeReference[?]): SymId = minter.external(typeKey(r), r.getSimpleName)
+    /** id of a referenced class type — our own (already defined) or an external stub.
+      *
+      * Carries `@FunctionalInterface` from the CLASS FILE into the TIR symbol when the declaration
+      * is readable. The emitter reads this to decide whether a static method reference needs an
+      * explicit lambda (JS-C52): scalac warns on eta-expansion at a non-annotated SAM. REFUTER
+      * polarity (CLAUDE.md §4.56): an unreadable class file leaves the symbol without the
+      * annotation, so the emitter emits the lambda — the safe direction is the one nobody warns
+      * about, and the unsafe direction is a bare name scalac then rejects under `-Werror`. */
+    private def typeSym(r: CtTypeReference[?]): SymId =
+      val anns = try
+        val td = r.getTypeDeclaration
+        if td != null && td.getAnnotations.asScala.exists(
+          _.getAnnotationType.getQualifiedName == "java.lang.FunctionalInterface")
+        then List(Annot(TypeRef(NoPrefix, minter.external("java.lang.FunctionalInterface", "FunctionalInterface")), Nil, Origin.synthetic))
+        else Nil
+      catch case _: Exception => Nil // unreadable class file — refuter polarity: treat as unannotated
+      minter.external(typeKey(r), r.getSimpleName, annotations = anns)
 
     private def primName(j: String): String = j match
       case "int"     => "Int";  case "long"    => "Long";  case "short"  => "Short"

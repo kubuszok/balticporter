@@ -36,7 +36,9 @@ class StaticMethodRefAritySpec extends PortSuite:
     assertNotEmits(p, "return Uses.compute\n")
   }
 
-  test("a static reference WITH parameters keeps the qualified NAME — the negative") {
+  test("a static reference at an @FunctionalInterface target keeps the bare name — eta-expansion is safe there") {
+    // JS-C52: `java.util.function.Function` carries `@FunctionalInterface` in its class file, so
+    // the frontend reads the annotation and the emitter keeps the bare qualified name.
     val p = port(
       """package demo;
         |import java.util.function.Function;
@@ -45,10 +47,42 @@ class StaticMethodRefAritySpec extends PortSuite:
         |  Function<String, String> go() { return Uses::twice; }
         |}
         |""".stripMargin)
-    // scala eta-expands this one against the target exactly as javac did, so the arity-0 arm must
-    // not claim it: a lambda here would be a rewrite for no reason on every port in the corpus.
+    // the target IS @FunctionalInterface — bare name, no explicit lambda
     assertEmits(p, "return Uses.twice")
-    assertNotEmits(p, "() => Uses.twice()")
+    assertNotEmits(p, "=> Uses.twice(a0$)")
+  }
+
+  test("a static reference at a NON-@FunctionalInterface SAM becomes an explicit lambda") {
+    // JS-C52: `Mapper` has no `@FunctionalInterface`, so scalac would warn on eta-expansion
+    // under `-Werror`. The emitter produces an explicit lambda to avoid it.
+    val p = port(
+      """package demo;
+        |interface Mapper { String map(String s); }
+        |class Uses {
+        |  static String upper(String s) { return s.toUpperCase(); }
+        |  Mapper go() { return Uses::upper; }
+        |}
+        |""".stripMargin)
+    assertEmits(p, "=> Uses.upper(a0$)")
+    assertNotEmits(p, "return Uses.upper\n")
+  }
+
+  test("@FunctionalInterface is PRESERVED on the emitted trait — scalac uses it to suppress eta-expansion warnings") {
+    // JS-C52: the annotation was in `ignoredAnnotations` and dropped. Now it is preserved so
+    // interfaces that DECLARE it get the annotation in the emitted Scala, and scalac does not warn
+    // when a method reference targets them.
+    val p = port(
+      """package demo;
+        |@FunctionalInterface
+        |interface Mapper { String map(String s); }
+        |class Uses { Mapper go() { return Uses::upper; } static String upper(String s) { return s.toUpperCase(); } }
+        |""".stripMargin)
+    assertEmits(p, "@java.lang.FunctionalInterface")
+    assertEmits(p, "trait Mapper")
+    // the method reference targeting the annotated interface keeps the BARE NAME — no explicit
+    // lambda needed, because the annotation silences the eta-expansion warning.
+    assertEmits(p, "return Uses.upper")
+    assertNotEmits(p, "=> Uses.upper(a0$)")
   }
 
   test("an UNBOUND INSTANCE reference to a nilary method is still the receiver lambda") {

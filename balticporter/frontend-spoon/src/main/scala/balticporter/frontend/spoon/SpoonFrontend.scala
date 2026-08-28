@@ -224,7 +224,7 @@ private final class UnitBuilder(sourcePath: String, source: String,
 
   private val ignoredAnnotations = Set(
     "java.lang.Override", "java.lang.SuppressWarnings", "java.lang.SafeVarargs",
-    "java.lang.FunctionalInterface", // Scala SAM conversion needs no marker
+    "java.lang.FunctionalInterface", // preserved — scalac warns on eta-expansion without it
     "java.lang.Deprecated",          // mapped to scala.deprecated in preservedAnnotations
   )
 
@@ -245,7 +245,8 @@ private final class UnitBuilder(sourcePath: String, source: String,
     el.getAnnotations.asScala.toList
       .filter(a =>
         preservedAnnotationPrefixes.exists(a.getAnnotationType.getQualifiedName.startsWith)
-          || a.getAnnotationType.getQualifiedName == "java.lang.Deprecated")
+          || a.getAnnotationType.getQualifiedName == "java.lang.Deprecated"
+          || a.getAnnotationType.getQualifiedName == "java.lang.FunctionalInterface")
       .map { a =>
         val q = a.getAnnotationType.getQualifiedName
         if q == "java.lang.Deprecated" then BAnnotation("scala.deprecated", Nil)

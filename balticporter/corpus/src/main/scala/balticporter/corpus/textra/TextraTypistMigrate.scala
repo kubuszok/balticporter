@@ -222,6 +222,35 @@ object TextraTypistPolicy:
                                          balticporter.catalog.CrossKind.Java)),
       surface = List(
         globals,
+        // DEPENDENT OPAQUE SEEDS for the Align family — five declarations propagation cannot reach
+        // because their connection to Align is bitwise ops (not pure-move flows). Wave 2.8
+        // (`PROGRESS.md` §13.9) surveyed these as LATENT: at 0 errors because no seed reaches them,
+        // invisible to every count. The seeds fold into the base's ONE `PrimitiveToOpaqueTransform`
+        // instance via `MergeablePolicy` — `hints` union, identity fields (`fqn`, `target`,
+        // `underlying`) must agree with `LibgdxPolicy.core`'s entry exactly.
+        //
+        // Four FIELDS and one PARAMETER, all upstream FQNs (the rename runs last, §4.56):
+        //   - `TextraLabel#align`        — the base widget's alignment field
+        //   - `TextraField#textHAlign`    — horizontal text alignment
+        //   - `TextraListBox#alignment`   — list-box alignment
+        //   - `TextraSelectBox#alignment` — select-box alignment
+        //   - `Font#drawGlyphs#align`     — parameter on both overloads
+        new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+          fqn        = "com.badlogic.gdx.utils.Align",
+          target     = balticporter.tir.OpaqueSpec.Target.Existing(
+            typeFqn    = "sge.utils.Align",
+            wrapName   = "apply",
+            unwrapName = "toInt",
+          ),
+          hints      = Set(
+            "com.github.tommyettinger.textra.TextraLabel#align",
+            "com.github.tommyettinger.textra.TextraField#textHAlign",
+            "com.github.tommyettinger.textra.TextraListBox#alignment",
+            "com.github.tommyettinger.textra.TextraSelectBox#alignment",
+            "com.github.tommyettinger.textra.Font#drawGlyphs#align",
+          ),
+          underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
+        )),
         // LAST, deliberately, for the reason `AshleyPolicy` and `GdxAiPolicy` state: this reads what
         // the BASE actually emitted and reports a reference the base does not ship, so it must run
         // after any seam that re-points such a reference, or it reports the very sites the next
