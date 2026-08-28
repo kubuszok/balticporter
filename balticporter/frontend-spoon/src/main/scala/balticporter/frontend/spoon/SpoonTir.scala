@@ -241,6 +241,14 @@ object SpoonTir:
 
     def set(id: SymId, sym: Symbol): Unit = syms(id) = sym
 
+    /** Register a SECOND key for an existing SymId — so `resolve(alias)` and `external(alias, …)`
+      * return `id` rather than minting a new one. The canonical use is anonymous classes: `anonClass`
+      * creates the symbol under an internal key (`@{owner}#<anon>N`) while `fieldSym`/`methodSym`
+      * look up the owner by Spoon's `getQualifiedName` (`SplitPane$1`). Without the alias the two
+      * keys yield two SymIds for one class, and a field's declaration and its references disagree.
+      * Measured: `SplitPane$113#draggingPointer` SymId 38377 vs 38384 (PROGRESS.md §13.15). */
+    def alias(key: String, id: SymId): Unit = byKey(key) = id
+
     def define(key: String)(mk: SymId => Symbol): SymId =
       val id = resolve(key)
       syms(id) = mk(id)
@@ -2360,6 +2368,10 @@ object SpoonTir:
         // the name Spoon gives the anonymous class (`DragAndDrop$1`) — how a `this` inside the body
         // that means the ANONYMOUS instance is recognised.
         val qname = ac.getQualifiedName
+        // register Spoon's qualified name as an ALIAS of the same SymId, so `fieldSym`/`methodSym`
+        // — which resolve the owner via `minter.external(ownerQ, …)` where ownerQ is
+        // `getQualifiedName` — find THIS symbol instead of minting a second one.
+        minter.alias(qname, id)
         val dropped = List.newBuilder[String]
         val members = ac.getTypeMembers.asScala.toList.sortBy(posKey).flatMap {
           case f: CtField[?]  => List(fieldDef(id, f, enclosing, outerVars, id, qname))

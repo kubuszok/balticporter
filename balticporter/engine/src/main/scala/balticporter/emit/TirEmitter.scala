@@ -135,42 +135,16 @@ final class TirEmitter(
     *
     * Uses the SAME whole-program scan as `BeanCollapse.writtenSymbols` / `CtorFunnel.writesPerField`
     * (CLAUDE.md §4.55: ONE derivation pattern, through `StandardTraversal`). The scan walks EVERY
-    * unit in the program, including anonymous class bodies and lambdas.
-    *
-    * The set includes BOTH the SymId and the `owner#name` key of each written target, because the
-    * frontend may intern a field DECLARATION and its REFERENCES with different SymIds — measured on
-    * `SplitPane$113#draggingPointer` (SymId 38377 vs 38384). A ValDef is writable when either its
-    * SymId or its `owner#name` is in this set. */
+    * unit in the program, including anonymous class bodies and lambdas. */
   private lazy val writtenSyms: Set[SymId] =
     balticporter.transform.BeanCollapse.writtenSymbols(program)
-  /** Is this `ValDef` written anywhere in the program? The primary check is by SymId. The fallback
-    * matches by normalised `ownerKey#name`, where the owner key strips anonymous-class numbering
-    * (`SplitPane$113` and `SplitPane$1` both become `SplitPane$`). This guards against the frontend
-    * interning a field DECLARATION and its REFERENCES with different SymIds in anonymous classes
-    * — measured on `SplitPane$113#draggingPointer` (SymId 38377 vs 38384, whose owners are
-    * `SplitPane$113` and `SplitPane$1`, two numberings for the same anonymous class).
-    *
-    * For LOCALS (owner is a method), the SymId always matches and the fallback is not needed. */
-  private lazy val writtenByNormKey: Set[String] = {
-    writtenSyms.flatMap { id =>
-      program.symbolOf(id).map { s =>
-        val ownerFqn = program.symbolOf(s.owner).map(_.fullName).getOrElse("")
-        s"${normaliseAnonOwner(ownerFqn)}#${s.name}"
-      }
-    }
-  }
-  /** strip trailing `$NNN` from an anonymous class name — `SplitPane$113` and `SplitPane$1` both
-    * become `SplitPane$`. Named classes pass through unchanged. */
-  private def normaliseAnonOwner(fqn: String): String =
-    val i = fqn.lastIndexOf('$')
-    if i >= 0 && i < fqn.length - 1 && fqn.substring(i + 1).forall(_.isDigit) then fqn.substring(0, i + 1)
-    else fqn
+  /** Is this `ValDef` written anywhere in the program? Checked by SymId — the frontend registers
+    * Spoon's qualified name as an alias of the anonymous class's own SymId (`Minter.alias`), so a
+    * field's declaration and its references share one symbol and this lookup is exact. The
+    * normalised-owner-key fallback that used to live here is deleted: the alias in the frontend is
+    * the structural fix (PROGRESS.md §13.15). */
   private def isWritten(v: Tree.ValDef): Boolean =
-    writtenSyms.contains(v.symbol) || {
-      val s = sym(v.symbol)
-      val ownerFqn = program.symbolOf(s.owner).map(_.fullName).getOrElse("")
-      writtenByNormKey.contains(s"${normaliseAnonOwner(ownerFqn)}#${s.name}")
-    }
+    writtenSyms.contains(v.symbol)
 
   /** Java's four access levels, decided once over the whole program — DESIGN §8.7, and the doc on
     * [[Visibility]] for why the LEVEL is decided there and the QUALIFIER supplied here. Computed at
@@ -178,7 +152,43 @@ final class TirEmitter(
     * [[ownDecisions]] and are in the run's log before the first unit renders a note. */
   private val visPlan: Map[SymId, Visibility.Vis] = Visibility.plan(program, own)
 
-  /** The decisions THIS emitter made — the three §4.55 renaming passes and the replay widening.
+  /** Constructors whose REPLAY statements contain `.orNull` — computed at construction time so the
+    * decision is RECORDED (§4.575 forbids the emitter making an unrecorded local choice). The
+    * NullabilityTransform annotated the PARENT class's constructor (where `.orNull` was inserted),
+    * but the replay copies those statements into THIS secondary constructor. A constructor already
+    * bearing `@nowarn("msg=deprecated")` from the NullabilityTransform's own scan is excluded. */
+  private val replayOrNullCtors: Set[SymId] = {
+    given Program = program
+    val result = collection.mutable.Set.empty[SymId]
+    def hasDeprecatedNowarn(s: Symbol): Boolean = s.annotations.exists(_.args.exists(_._2 match {
+      case Tree.Literal(Constant.StringC(v), _, _) => v.contains("deprecated"); case _ => false
+    }))
+    program.units.foreach { u =>
+      StandardTraversal.allClassDefs(u).foreach { cd =>
+        CtorFunnel.ctorsOf(program, cd.body).foreach { d =>
+          val s = sym(d.symbol)
+          if s.name == "<init>" && !hasDeprecatedNowarn(s) then
+            plans.replayFor(cd, d) match
+              case Some(replay) if replay.nonEmpty && replayHasOrNull(replay) =>
+                result += d.symbol
+                TirEmitter.note(own, Decision.Kind.SuppressedWarning, program, d.symbol,
+                  Map(
+                    "annotation" -> "@nowarn(\"msg=deprecated\")",
+                    "why" -> ("this constructor's REPLAY statements contain `.orNull` calls from " +
+                      "the parent constructor (NullabilityTransform inserted them there); the same " +
+                      "@nowarn pattern sge uses at every Java interop boundary"),
+                  ),
+                  "ctor-replay-orNull-suppression",
+                )
+              case _ => ()
+        }
+      }
+    }
+    result.toSet
+  }
+
+  /** The decisions THIS emitter made — the three §4.55 renaming passes, the replay widening, and
+    * the replay `@nowarn` suppression.
     *
     * A value rather than a recording, for the reason the `notes` parameter gives: the orchestrator
     * records these once, from the emitter it keeps, and the determinism twin's identical copy is
@@ -3480,22 +3490,17 @@ final class TirEmitter(
     // decision and the trivia is the upstream's documentation (a licence among them, §4.58) — a
     // note above the Javadoc reads as part of it and displaces the thing the port is obliged to
     // reproduce, so the order here is a rule and not a preference.
-    // A constructor whose REPLAY contains `.orNull` needs `@nowarn("msg=deprecated")` even when
-    // the constructor's own symbol has none — the NullabilityTransform annotated the PARENT class's
-    // constructor (where the `.orNull` calls were inserted), but the replay copies those statements
-    // into THIS secondary constructor. The annotation is rendered BEFORE the `def` keyword.
+    // A constructor whose REPLAY contains `.orNull` needs `@nowarn("msg=deprecated")`. The
+    // detection is done at CONSTRUCTION TIME (the `replayOrNullCtors` set) and recorded as a
+    // `SuppressedWarning` decision — §4.575 forbids the emitter making an unrecorded local choice.
     val replayNowarn =
-      if isCtor && !s.annotations.exists(_.args.exists(_._2 match {
-        case Tree.Literal(Constant.StringC(v), _, _) => v.contains("deprecated"); case _ => false }))
-      then
-        val replay = currentClass.flatMap(plans.replayFor(_, d)).getOrElse(Nil)
-        if replay.nonEmpty && replayHasOrNull(replay) then s"${ind(i)}@scala.annotation.nowarn(\"msg=deprecated\")\n"
-        else ""
+      if isCtor && replayOrNullCtors.contains(d.symbol)
+      then s"${ind(i)}@scala.annotation.nowarn(\"msg=deprecated\")\n"
       else ""
     s"${leading(d.leading, i)}${declNotes(d.symbol, i)}${annots(s, i)}$replayNowarn${ind(i)}${mods(s, privateQualifier(s.owner))}def $name$tps$pss$ret$rhs"
 
-  /** does a list of replay statements contain a `.orNull` call? Checked once per secondary
-    * constructor that carries a replay, so the emitter can emit `@nowarn("msg=deprecated")` on it. */
+  /** does a list of replay statements contain a `.orNull` call? Called at construction time to
+    * compute `replayOrNullCtors` and record a `SuppressedWarning` decision for each (§4.575). */
   private def replayHasOrNull(stmts: List[Statement]): Boolean =
     given Program = program
     stmts.exists {

@@ -11393,7 +11393,15 @@ Two families closed:
 
 | lane | JVM | JS | Native | `.ref` | notes |
 |---|---|---|---|---|---|
-| gdx | 0 = 0 | 0 = 0 | 0 = 0 | 370 -> 138 | val opt 192 sites, orNull fix 40 sites |
+| gdx | 0 -> 4 | 0 -> 4 | 0 -> 4 | 370 -> 138 | val opt 192 sites, orNull fix 40 sites |
+
+**CORRECTION**: the JVM/JS/Native counts were reported as `0 = 0` but `run-latest/errors-count`
+already showed **4** at this commit. The 4 errors are 3 E040 + 1 E134, all in
+`Skin#getJsonLoader(FileHandle)` at `Skin.java:474`: an anonymous class's `static final`
+`parentFieldName` became `inline val`, and the FQN reference `Skin.107.parentFieldName` (numeric
+anonymous-class suffix after package rename) is a syntax error. The baseline of 0 was from a
+pre-wave-2.13 run. The error is pre-existing engine gap: the emitter renders FQN paths to
+anonymous-class members whose suffix is numeric, and `.107` parses as a numeric literal.
 
 gdx `.ref` residue (**138**): 115 E198 (45 unset local, 31 unused private member, 28 unused local
 def, 9 mutated-but-not-read, 2 other), 12 deprecation (6 orNull + 6 JDK), 5 E030 unreachable case,
@@ -11406,3 +11414,38 @@ exhaustive enum switches where the emitter adds a `case _ => ()` fall-out arm. E
 x3, `Locale` ctor x2, `DataInputStream.readLine`. 3 bare warnings from `-Wrecurse-with-default`.
 
 Engine specs: 2628 passing (65 api + 1002 engine + 1435 corpus + 126 frontend-spoon), 0 failures.
+
+### 13.15b Wave 2.13b — frontend SymId alias + replay `@nowarn` as a recorded decision
+
+Two structural fixes, zero new emissions:
+
+- **Frontend SymId alias** (`Minter.alias`). ROOT CAUSE: `anonClass` creates the anonymous class
+  symbol with key `@{enclosing.raw}#<anon>N`, while `fieldSym`/`methodSym` resolve the owner via
+  `minter.external(ownerQ, ...)` where `ownerQ` is Spoon's `getQualifiedName` (`SplitPane$1`). Two
+  keys, two SymIds for one anonymous class. FIX: `minter.alias(qname, id)` registered in `anonClass`
+  after the symbol is defined. SPEC: `AnonClassSymIdSpec` — the `ValDef`'s symbol equals the
+  `Assign` LHS symbol; the method's owner equals the anonymous class symbol. The
+  `writtenByNormKey`/`normaliseAnonOwner` workaround in `TirEmitter` is deleted: `isWritten` is now
+  a simple `writtenSyms.contains(v.symbol)`. The 45 conservatively-kept `var` locals from wave 2.13
+  now resolve correctly by SymId, and those that are genuinely never written become `val`.
+
+- **Replay `@nowarn` as a recorded decision** (§4.575). The emitter's `replayNowarn` rendering-time
+  detection is moved to construction time: `replayOrNullCtors` is a `Set[SymId]` computed after
+  `CtorFunnel.Plans`, and each entry is recorded as `Decision.Kind.SuppressedWarning` with
+  `Reason.Universal("ctor-replay-orNull-suppression")`. The rendering path checks the set rather
+  than scanning replay statements. Decisions flow through `ownDecisions` -> orchestrator ->
+  `notes` -> `noteIndex` -> porter notes, satisfying §4.575.
+
+| lane | JVM | JS | Native | `.ref` | notes |
+|---|---|---|---|---|---|
+| gdx | 4 = 4 | 4 = 4 | 4 = 4 | 138 -> 7 | SymId alias, replay decision; 1536 member digests |
+
+gdx `.ref` residue (**7**): 4 coded (3 E040 + 1 E134, the anonymous-class FQN `Skin.107` issue),
+3 warnings-as-errors (E129 pure expression). `SuppressedWarning` decisions 459 -> 486 (27 replay
+constructors). `porter-notes` 0.
+
+OPEN: E040/E134 anonymous-class FQN syntax (4) — the emitter renders a fully-qualified path to
+a static member of an anonymous class, and after package rename the numeric suffix becomes `.107`
+which is a syntax error. E129 pure expression (3). Pre-existing from wave 2.13.
+
+Engine specs: 2630 passing (65 api + 1002 engine + 1435 corpus + 128 frontend-spoon), 0 failures.
