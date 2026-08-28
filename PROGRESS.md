@@ -7189,7 +7189,7 @@ open residue.
 | 1.4 | nothing is publishable, and a port cannot pin a known-good engine | **shipped** — `publishTo`, `versionScheme := early-semver`, a version from the environment, and `EnginePin` written into the generated build. Still unproven: **no CI publishing, and nothing has ever resolved the published artifact from sge or ssg** |
 | 2.4 | the unportable-marker design's Stage 1, plus a forced test-correlation amendment | **shipped** — source map, member digests, scalac correlation and the **test-failure** correlation lane. **Stage 2 (the marker) is shipped too**: `Tree.Unportable` + `UnportableKind` + `MarkerCheck` + the emission gate + best-effort fences, landed together, with `SpoonTir.unsupported`'s two default arms as the first mint site and `markers.tsv` written for §6.3's marked-region lane to read. Zero markers mint on all fifteen lanes, so it was emission-neutral; what is still owed is the DEFINITION-level `SymTag`, four mint sites whose shape a term wrapper cannot take, and the correlation join — `DESIGN.md` §6.5 names each |
 | 3.2 | test-framework coverage was JUnit-4-shaped | **mostly** — `@After`, `@Ignore`, `@BeforeClass`/`@AfterClass` and the assertion set are handled (`ENGINE-LIMITS.md` X5), and the VOCABULARY and SCOPE gaps a second library found are closed too (X6: JUnit 3's two assertion classes, `assertThrows`, and the rewrite no longer skipping a class that declares no `@Test`). The target side is honestly **(b) with exactly one implemented policy value**: `intercept` and the curried `test(name){body}` shape are MUnit facts baked into the phase |
-| 3.3 | incremental TIR runs; unmatched-policy-key reporting; `CollectionsTransform.typeMap` as a parameter | **two of three** — the action cache moved to TIR, and `PolicyReport` now reports a key that never fired (it found a real dead entry in libGDX's manifest the first time it was called). `typeMap` is still a private ENGINE table rather than a (b) parameter — but it is no longer invisible: `CollectionsTransform.mappingDigest` renders it into `surfaceFingerprint` unconditionally |
+| 3.3 | incremental TIR runs; unmatched-policy-key reporting; `CollectionsTransform.typeMap` as a parameter | **shipped** — the action cache moved to TIR, `PolicyReport` reports a key that never fired, and `typeMap` is now a fingerprinted (b) parameter: `families` constructor parameter, `MergeablePolicy`, per-entry `RuleScope` (D12), segment omitted when empty so every existing port's `policy=` is flat. See §13.16 |
 
 ### 6.1 What is still NOT done, stated plainly
 
@@ -11485,3 +11485,43 @@ and infers the arity from their overrides.
 | liqp | 0 = 0 | 0 = 0 | 0 = 0 | 106 -> 76 | F9 fix: 30 `.ref` arity errors closed |
 
 Engine specs: 2635 passing (65 api + 1002 engine + 1440 corpus + 128 frontend-spoon), 0 failures.
+
+### 13.16 Wave 3.2b — `CollectionsTransform.families` promoted to a fingerprinted (b) parameter
+
+Phase 1.8 (from the §13.1 work list): `CollectionsTransform.typeMap` is now extensible via a
+`families` constructor parameter, with `MergeablePolicy` and per-entry `RuleScope` (D12).
+
+**Engine change (Step 1).** The JDK family table is a §1(a) constant in the companion; `families`
+adds per-library entries alongside it, each getting the same kind-aware call rewrites, coercions,
+and boundary counts. Design:
+
+- `families: Map[String, (String, Kind)]` default `Map.empty` -- merged into `typeMap` at
+  construction. Every arm that reads `typeMap` (remap, kindOf, rewrite, coerce, checks) sees family
+  entries by construction with no new guard.
+- `familyScopes: Map[String, RuleScope]` -- per-ENTRY scope (D12 pattern from
+  `TypeRedirectTransform.scopes`), so a dependent's added family applies only to its own
+  declarations while a base's applies to the whole program.
+- `MergeablePolicy` implementation: a dependent ADDS families; same source with different target
+  refuses with the phase's sentence; scope disagreement on the same source refuses;
+  cross-clash between families and retarget refuses.
+- Fingerprint: `families=<digest>` segment omitted when empty, so every existing port's `policy=`
+  is unchanged. Collision check at construction: a family key overlapping JDK `typeMap` or
+  `retarget` is refused (require).
+
+**Flatness proof.** ashley-measure: `policy=` fingerprint `295520cb25a1f7be` = baseline (unchanged).
+JVM/JS/Native errors 0 = 0. 24 new specs in `CollectionsFamiliesSpec` (collision check, merging,
+fingerprinting, per-entry scopes, subjects, refusals). Engine specs: 2656 passing (65 api + 1026
+engine + 1437 corpus + 128 frontend-spoon), 0 failures.
+
+**Step 2 (Ashley families) is OPEN.** The five justified collection verdicts
+(`Bits->mutable.BitSet`, `Array->ArrayBuffer`, `ObjectMap->HashMap`, `ObjectSet->HashSet`,
+`SnapshotArray->ArrayBuffer`) are the entries. The per-entry scope traversal integration --
+making family entries participate in the `applyScope`/`restoreExcluded` machinery alongside the
+existing phase-level scope -- is the remaining engine work before the entries can land on a
+dependent. Without it, a dependent's family entries retype the base's declarations too, which
+produces `base-surface` findings (D12's scenario exactly). `Bits->mutable.BitSet` is additionally
+not a collection `Kind` at all (its API is `get/set/clear`, not `add/remove/contains`), so it
+needs either a new `Kind` or a `retarget` with per-member body substitutions.
+
+Drop-in census (2026-08-25): 360 JVM errors, of which 72 are the five missing types
+(`Bits` 32, `Array` 20, `ObjectMap` 14, `SnapshotArray` 4, `ObjectSet` 2), remainder cascading.
