@@ -11361,6 +11361,13 @@ redirect that does not exist — the second measured wrong turn).
 `Everywhere(Set.empty)` is the pre-scope code path, so every port that states no scope is
 byte-identical and fingerprints exactly as before.*
 
+**And the base's published map is what a dependent's COERCION reads for "did the base retype this
+formal".** O8's dependent blast (wave 2.11) is the same sentence at a coercion: `coerceArgs` asked
+"does this run emit the callee?" to decide wrap vs unwrap, but a dependent's run does NOT emit the
+base's units while the base's phase DID retype their formals. The answer is in the base's port map —
+one reader: `PortMap.discover` through `RunScope.baseMemberUpstream`, the same discovery path
+`ManifestAgreement` uses.
+
 ---
 
 ## 9. Asserted, not measured
@@ -13836,6 +13843,23 @@ at external callee boundaries). jbump/usl/noise4j (ports with no seeded arrays):
 *Fix kind: (a) engine — `FlowPropagation.refSym` (ArrayAccess arm), `walkTerm` (ArrayAccess descent
 + Return with tailRefs), `carriesOpaque` (ArrayAccess arm), `lhsDeclType` (ArrayAccess element type),
 `wrapFor` (isArrayOfOpaque dispatch), and `isArrayOfOpaque` (new helper).*
+
+**Dependent blast (wave 2.11).** O8 measured only the base and three ports with no seeded arrays.
+The corpus promotion at `5cfcf8ae` measured every dependent: gltf-test **3 -> 18**, screens **0 ->
+4**, textra **0 -> 40**, visui **7 -> 34** — four lanes above their floors. All four are the same
+defect: wave 2.8's `coerceArgs` literal-read (`76de0bce`) unwrapped EVERY opaque argument at a
+non-emitted callee, including callees whose formals the BASE genuinely retyped. A dependent calling
+`program.setUniformf(u_lod, v)` produced `Int` at a compiled `UniformLocation` formal.
+
+The fix reads the base's PUBLISHED PORT MAP (`PortMap.discover`, the same path `ManifestAgreement`
+uses) through `RunScope.baseMemberUpstream`. If the base's upstream descriptor for the callee
+mentions this spec's opaque FQN, the base retyped it and the argument must not be unwrapped. A
+direct read of what the base published, not a re-derivation (CLAUDE.md §4.55, §1.5, D12).
+
+Measured: gltf-test **18 -> 3**, screens **4 -> 0**, textra **40 -> 0**, visui **34 -> 7** — all
+four back to their committed floors. `PrimitiveToOpaqueTransformSpec` 39 -> 41 (two dependent
+coercion tests). *Fix kind: (a) engine — `coerceArgs` port-map check,
+`RunScope.baseMemberUpstream`, `PortRun` discovery.*
 
 ## 14. The IDIOM layer — what was REFUSED, with its number
 

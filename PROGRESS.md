@@ -11240,6 +11240,32 @@ compiles. A hand-written differential suite calling these methods with `Align` v
 it. This is §5's widening rule read at a dependent: a retype that reaches no dependent field is
 invisible to every instrument the dependent's lane has.
 
+### 13.11 Wave 2.11 — O8 dependent blast, coerceArgs port-map fix
+
+**The defect.** O8 (UniformLocation opaque type, wave 2.7) measured only the base and three ports
+with no seeded arrays. The corpus promotion bp-promote13 at `5cfcf8ae` measured every dependent:
+gltf-test 3 -> 18, screens 0 -> 4, textra 0 -> 40, visui 7 -> 34 -- all four above their floors,
+all four the same defect. Wave 2.8's `coerceArgs` literal-read (`76de0bce`) unwrapped EVERY opaque
+argument at a non-emitted callee, including callees whose formals the BASE genuinely retyped. That
+commit was measured on no dependent; the defect reached the promotion through four lanes.
+
+**The fix.** `coerceArgs` reads the base's PUBLISHED PORT MAP (`PortMap.discover`, the same path
+`ManifestAgreement` uses) through `RunScope.baseMemberUpstream` to decide whether the base retyped
+a callee's formal. If the base's upstream descriptor mentions this spec's opaque FQN, the base
+retyped it and the argument must not be unwrapped. A direct read of what the base published, not a
+re-derivation (`ENGINE-LIMITS.md` D12, O8 dependent paragraph).
+
+| lane | before (bp-promote13) | after | floor |
+|---|---|---|---|
+| gdx-measure | 0 | 0 | 0 |
+| gltf-measure | 18 | 3 | 3 |
+| screens-measure | 4 | 0 | 0 |
+| textra-measure | 40 | 0 | 0 |
+| visui-measure | 34 | 7 | 7 |
+
+Engine suites: 2624 passing (api 65, engine 1002, corpus 1431, frontend-spoon 126).
+`PrimitiveToOpaqueTransformSpec` 39 -> 41 (two dependent coercion tests).
+
 ### 13.10 Residues measured by promotion bp-promote12 (master `0c35a135`) that no wave owns yet
 
 - **TextraTypist `.ref` 402 -> 404**, refused at the floor. The lane's three bare `-Werror`
