@@ -1452,6 +1452,32 @@ final class NullabilityTransform(
           case _ => Map.empty
       case _ => Map.empty
 
+  /** Is the receiver's type head an EXTERNAL type while the method symbol belongs to an OWNED one?
+    *
+    * When `CollectionsTransform.retarget` rewrites a type — e.g. `com.badlogic.gdx.utils.ObjectMap`
+    * to `lowlevel.util.ObjectMap` — the call node still references the JAVA method symbol, whose
+    * `@Null`-annotated parameters this phase has already wrapped in `Nullable[V]`. But scalac
+    * resolves the call against the RETARGET TARGET's own API (from TASTy or class file), which has
+    * its own nullability model. Coercing against the java formals is then wrong: lls's
+    * `ObjectMap.put(K, V)` takes bare `V`, not `Nullable[V]`.
+    *
+    * The structural signal is precise: the RECEIVER's head symbol is NOT owned by this program
+    * (it is the retarget target — an external type) while the METHOD's owner IS owned (the original
+    * java type this program parsed). This excludes ordinary inheritance (both sides owned) and
+    * external-to-external calls (neither side owned), catching exactly the retarget shape.
+    *
+    * §4.56's rule at a phase interaction: "a phase may only conclude something about a type from
+    * what the PHASE ITSELF did to that type" — and this phase did not retarget the receiver. */
+  private def isRetargetted(t: Tree.Apply)(using p: Program): Boolean =
+    val recvHead = t.fun match
+      case s: Tree.Select => headSym(s.qual.tpe)
+      case _              => scala.None
+    val methodOwner = p.symbolOf(t.method).map(_.owner)
+    (recvHead, methodOwner) match
+      case (Some(rh), Some(mo)) =>
+        rh != SymId.None && mo != SymId.None && rh != mo && !p.owns(rh) && p.owns(mo)
+      case _ => false
+
   private def coerceArgs(t: Tree.Apply)(using p: Program): Term =
     // An EXTERNAL callee is excluded BEFORE the formals are read, and that exclusion is the whole
     // difference between this phase's seam and the collection boundary's.
@@ -1464,11 +1490,31 @@ final class NullabilityTransform(
     // null unless something says otherwise. The slot-nullability rule uses `.orNull` for external
     // callees, which preserves null faithfully — java's default. The seam stays COUNTED, and
     // the count now says which of the two facts is missing.
+    //
+    // A RETARGETTED RECEIVER — one whose head symbol differs from the method's owner — means the
+    // call will be resolved by scalac against the retarget TARGET's API, not the java method's.
+    // The java formals (which this phase wrapped at plan time) are the wrong evidence here: the
+    // target has its own nullability model. Treat the call as an external callee: unwrap wrapped
+    // arguments with `.orNull` and do NOT wrap based on the java's `@Null` annotations.
+    val retargetted = isRetargetted(t)
     val formals = p.symbolOf(t.method).map(_.info).collect {
       case TypeRepr.MethodType(ps, _, _)                       => ps.map(_._2)
       case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
     }
     val owned = p.owns(t.method)
+    if retargetted then
+      // The method symbol belongs to the JAVA type but the receiver is the retarget TARGET.
+      // The java's `@Null` formals do not describe the target's API. Unwrap any wrapped
+      // arguments — the target takes bare values — and count the seam.
+      t.args.filter(isWrapped).foreach { a =>
+        issues += Finding(Issue.UncoercibleSeam, p.symbolOf(t.method).map(_.fullName).getOrElse("?"),
+          "a wrapped argument reaches a retargetted callee — unwrapped because the receiver's " +
+            "type was retargetted and the java method's @Null annotations do not describe the " +
+            "target's API",
+          a.origin, currentUnit)
+      }
+      t.copy(args = t.args.map(a => if isWrapped(a) then unwrapOrNull(a) else a))
+    else
     formals match
       case Some(fs) if fs.sizeIs == t.args.size =>
         if !owned then
