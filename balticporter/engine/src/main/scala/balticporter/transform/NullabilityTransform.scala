@@ -75,6 +75,26 @@ final class NullabilityTransform(
     val annotations: Set[String] = Set.empty,
     val target: NullabilityTransform.Target = NullabilityTransform.Target.Union,
     val scope: RuleScope = RuleScope.Everywhere(),
+    /** Members whose return (or field) type is nullable even though the java source carries NO
+      * nullability annotation. Exact FQNs matched against `Symbol.fullName` at BIND TIME — the same
+      * key discipline as `OpaqueSpec.hints` (`ENGINE-LIMITS.md` O4): `Class#member` for a unique
+      * member, `Class#member(desc)` where the member is overloaded.
+      *
+      * The mechanism is the SAME for every member: the same target shape, the same slot coercions at
+      * every use, the same `== null` / `!= null` rewrites, the same override-component rule
+      * (whole-or-none per the phase's existing component logic), the same `nullability-boundary` count.
+      * What differs is HOW the member is selected — by FQN instead of by annotation.
+      *
+      * Empty is the no-op. A non-empty set contributes a fingerprint segment, and each entry is a
+      * `PolicyBinder.bindMember` at bind time: a key that names nothing is reported as never-matched
+      * exactly as an annotation FQN would be.
+      *
+      * ==Why this is a (b) and not a (c)==
+      * The MECHANISM (retype, coerce, propagate) is the engine's — the same code path the annotation-
+      * based selection takes. What differs is WHICH members, and that is §1(c) knowledge: sge wrapped
+      * six Ashley returns in `Nullable` from its migration notes, and Ashley's java carries no
+      * annotation. The key set is a value a port hands the engine, exactly as `OpaqueSpec.hints` is. */
+    val nullableMembers: Set[String] = Set.empty,
 ) extends Phase, Rewrite, PolicySource, MergeablePolicy, PolicyBound:
 
   import NullabilityTransform.*
@@ -101,6 +121,10 @@ final class NullabilityTransform(
     * string an agent edits (§4.575). Empty when nothing bound, which is the no-op. */
   private var boundAnnots: Map[SymId, String] = Map.empty
   private var records: List[PolicyBinder.Record] = Nil
+  /** `nullableMembers` entries that actually matched at least one symbol during [[run]], tracked for
+    * never-matched reporting. Populated at run time, not at bind time, because earlier phases
+    * (BeanPropertyTransform) may rename the members this set targets. */
+  private val matchedMembers = collection.mutable.Set.empty[String]
 
   /** what the RUN knows about itself — which units it EMITS, and which of this (possibly MERGED)
     * instance's keys THIS manifest contributed. Both are needed by [[intrudesOnBase]] and neither
@@ -124,7 +148,7 @@ final class NullabilityTransform(
     ownSubjects = binder.run.contributed(name)
 
   def policyReport: PolicyReport =
-    PolicyReport.fromBindings(records) ++ PolicyReport(baseIntrusionFindings ++ deadScopeFindings)
+    PolicyReport.fromBindings(records) ++ PolicyReport(baseIntrusionFindings ++ deadScopeFindings ++ deadMemberFindings)
 
   /** Nullability is a fact about the SHARED SURFACE: a base that emits `Actor | Null` and a
     * dependent that emits `Actor` for the same member each compile alone and cannot compile
@@ -133,9 +157,13 @@ final class NullabilityTransform(
     * default (`Union`), so a port that never stated a target contributes NO segment for one —
     * an unstated key and a default one render the same string. A non-default one always
     * contributes, so the mechanism's arrival is flat by construction. */
+  /** §1(b)'s no-op rule at the FINGERPRINT: the `nullableMembers` segment is omitted when empty,
+    * so a port that never stated a member contributes NO segment for one — an unstated key and an
+    * empty one render the same string. */
   def surfaceFingerprint: String =
     val targetSeg = target match { case Target.Union => ""; case t => s"|${t.tag}" }
-    s"${annotations.toList.sorted.mkString(",")}$targetSeg|${scope.fingerprint}"
+    val memberSeg = if nullableMembers.isEmpty then "" else s"|members=${nullableMembers.toList.sorted.mkString(",")}"
+    s"${annotations.toList.sorted.mkString(",")}$targetSeg|${scope.fingerprint}$memberSeg"
 
   /** every shared-surface SUBJECT this instance's policy is keyed on — the annotation FQNs and the
     * scope's declared entries, each through [[MergeablePolicy.subjectOf]].
@@ -150,7 +178,7 @@ final class NullabilityTransform(
     * how the base's own marker is read, and a port that means it can say so by naming the base's
     * drop.
     */
-  def subjects: Set[String] = (annotations ++ scope.entries).map(MergeablePolicy.subjectOf)
+  def subjects: Set[String] = (annotations ++ nullableMembers ++ scope.entries).map(MergeablePolicy.subjectOf)
 
   /** THE MERGE CONTRACT (DESIGN.md §8.13). Three tables, and each composes differently — which is
     * the whole reason `MergeablePolicy` is a contract the PHASE answers rather than a union the
@@ -210,7 +238,8 @@ final class NullabilityTransform(
       (mergedTarget.left.toOption.toList ++ scopeMerged.left.toOption.toList) match
         case Nil => (for { t <- mergedTarget; s <- scopeMerged } yield
           MergeablePolicy.Merged(
-            new NullabilityTransform(annotations ++ o.annotations, t, s),
+            new NullabilityTransform(annotations ++ o.annotations, t, s,
+              nullableMembers ++ o.nullableMembers),
             o.subjects -- subjects)
         )
         case whys => Left(whys.mkString("; "))
@@ -271,10 +300,10 @@ final class NullabilityTransform(
     // and a cached answer from the first run is a wrong answer in the second (§5.1).
     issues.clear(); intrusions.clear(); observedEntries.clear(); planned = false
     newTypes = Map.empty; wrapped = Map.empty; overridingRead = false; typeVars = Map.empty
-    primSyms = Set.empty; orNullMembers.clear()
-    // §1(b): an empty policy needs no code path. Nothing bound — no annotation configured, or every
-    // configured one named nothing — and the program is returned untouched.
-    if boundAnnots.isEmpty then return program
+    primSyms = Set.empty; orNullMembers.clear(); matchedMembers.clear()
+    // §1(b): an empty policy needs no code path. Nothing bound — no annotation configured (or every
+    // configured one named nothing) AND no nullableMembers — and the program is returned untouched.
+    if boundAnnots.isEmpty && nullableMembers.isEmpty then return program
 
     var table = program.symbols
     var next  = program.symbols.all.map(_.id.raw).maxOption.getOrElse(-1) + 1
@@ -331,8 +360,15 @@ final class NullabilityTransform(
     val plan = collection.mutable.ListBuffer[Planned]()
     program.symbols.all.toList.sortBy(_.id.raw).foreach { s =>
       val hits = s.annotations.filter(a => headSym(a.tpe).exists(boundAnnots.contains))
-      if hits.nonEmpty && program.owns(s.id) then
-        val key = hits.flatMap(a => headSym(a.tpe)).flatMap(boundAnnots.get).sorted.head
+      // A member is selected by EITHER an annotation OR an explicit `nullableMembers` entry.
+      // Annotations take precedence (they carry `hits` to strip); `nullableMembers` is the fallback
+      // for a member whose java carries no annotation but whose hand port wraps in Nullable.
+      val memberHit = if hits.nonEmpty then scala.None
+                      else nullableMembers.find(_ == s.fullName)
+      if (hits.nonEmpty || memberHit.isDefined) && program.owns(s.id) then
+        val key = if hits.nonEmpty
+                  then hits.flatMap(a => headSym(a.tpe)).flatMap(boundAnnots.get).sorted.head
+                  else { matchedMembers += memberHit.get; memberHit.get }
         // THE ONE KEY KIND THAT CAN SELECT A BASE'S DECLARATIONS WITHOUT NAMING A BASE FQN.
         // Refused before anything else is asked, because the alternative is a §1.5 divergence
         // nothing else in the run can see — see `intrudesOnBase`.
@@ -848,6 +884,24 @@ final class NullabilityTransform(
             "`PolicyBinder.bindScope` cannot see this: it asks whether the REGION exists, which a " +
             "real type answers whether or not it is annotated. Delete the entry, or fix the FQN if " +
             "it was meant to name a different type.")
+      }
+
+  /** A `nullableMembers` ENTRY THAT NAMED NO DECLARATION — reported after the plan loop, so only
+    * entries that matched no symbol are here. Like [[deadScopeFindings]], this is the one §1(b) no-op
+    * nothing else in the run can see: a key that names nothing costs zero emitted bytes and zero
+    * diagnostics. Unmatched entries are reported rather than silently ignored.
+    *
+    * Reported only after the plan loop ran (`planned`), because a run that skipped the walk has no
+    * data to say "nothing matched". */
+  private def deadMemberFindings: List[PolicyFinding] =
+    if !planned || nullableMembers.isEmpty then Nil
+    else
+      (nullableMembers -- matchedMembers).toList.sorted.map { e =>
+        PolicyFinding(name, "NullabilityTransform(nullableMembers) entry", e,
+          PolicyIssue.NeverMatched,
+          "the entry names a member that no symbol's `fullName` matched at run time. Either the " +
+            "FQN is misspelled, the member was renamed by an earlier phase (use the post-rename name), " +
+            "or the member does not exist in this program. Delete the entry, or fix the FQN.")
       }
 
   /** THE CLOSURE A `RuleScope` DOES NOT COMPUTE — a scoped-out PARENT beside a retyped CHILD.

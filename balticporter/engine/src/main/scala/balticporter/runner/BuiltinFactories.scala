@@ -381,9 +381,10 @@ final class NullabilityFactory extends TransformFactory:
             "`target = \"named\"`, or remove this key")
       case (_, scala.None) => NullabilityTransform.Target.Union
     new NullabilityTransform(
-      annotations = config.strings("annotations").getOrElse(Nil).toSet,
-      target      = target,
-      scope       = TransformFactory.scopeOf(config),
+      annotations     = config.strings("annotations").getOrElse(Nil).toSet,
+      target          = target,
+      scope           = TransformFactory.scopeOf(config),
+      nullableMembers = config.strings("nullableMembers").getOrElse(Nil).toSet,
     )
 
 /** {{{

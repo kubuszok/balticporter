@@ -178,9 +178,42 @@ object AshleyPolicy:
         // into emitted code and the rename never sees it, so it must already be written in the
         // port's FINAL namespace. Getting that backwards is one compile error naming `com.badlogic`
         // in a file that declares `package sge.ecs`.
+        // The body wraps in `Nullable(…)` because the return type moved from `T` to `Nullable[T]`
+        // after `nullableMembers` retyped the declaration. `Nullable(null)` normalises to
+        // `Nullable.empty`, which is exactly what the hand port does.
         "com.badlogic.ashley.core.Engine#createComponent(Class)" ->
-          "sge.ecs.ComponentFactories.create(componentType)",
+          "lowlevel.Nullable(sge.ecs.ComponentFactories.create(componentType))",
         )),
+        // SIX MEMBERS WHOSE RETURN TYPE IS NULLABLE — knowledge from sge's migration notes, not from
+        // any annotation the java carries. Each member's hand port wraps the return in `Nullable[T]`:
+        //
+        //   Engine.scala:10:   "Idiom: Nullable[A] for createComponent return"
+        //   Engine.scala:168:  `def getSystem[T <: EntitySystem](…): Nullable[T]`
+        //   Entity.scala:13:   "Idiom: Nullable[A] in public getComponent return type"
+        //   Entity.scala:94:   `def remove[T <: Component](…): Nullable[T]`
+        //   EntitySystem.scala:10: "Idiom: Nullable[Engine] for engine reference"
+        //   PooledEngine.scala:72: `override def createComponent[T <: Component](…): Nullable[T]`
+        //
+        // The keys use the name as it exists when NullabilityTransform runs — AFTER bean collapse
+        // has renamed `getEngine()` to `engine`. The member FQNs are in the UPSTREAM namespace
+        // (before package-rename, which runs later). `Entity#getComponent` names BOTH overloads
+        // (public and package-private) because `Symbol.fullName` does not include the descriptor and
+        // the hand port wraps both.
+        //
+        // MERGED with the base's `NullabilityTransform` through `MergeablePolicy`: `nullableMembers`
+        // unions, the base's `annotations`/`target`/`scope` are inherited. Ashley is the first
+        // dependent to construct its own `NullabilityTransform` instance (the K13 doc's "no dependent
+        // constructs a nullability of its own" is superseded by this entry).
+        new balticporter.transform.NullabilityTransform(
+          nullableMembers = Set(
+            "com.badlogic.ashley.core.Engine#createComponent",
+            "com.badlogic.ashley.core.Engine#getSystem",
+            "com.badlogic.ashley.core.Entity#getComponent",
+            "com.badlogic.ashley.core.Entity#remove",
+            "com.badlogic.ashley.core.EntitySystem#engine",
+            "com.badlogic.ashley.core.PooledEngine#createComponent",
+          ),
+        ),
         // LAST, deliberately. This reads what the BASE actually emitted and reports a reference the
         // base does not ship — so it must run AFTER the seams that re-point those references, or it
         // reports the very sites the next phase repairs. It is a RESIDUE check, exactly like
