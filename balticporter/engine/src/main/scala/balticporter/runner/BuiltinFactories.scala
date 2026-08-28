@@ -77,6 +77,21 @@ final class PanamaFfiFactory extends TransformFactory:
   * { transform = "collections"
   *   scope { except = ["com.foo.Bridge"] }
   *   retarget { "java.util.Comparator" = "scala.math.Ordering" }
+  *   retargetRewrites {
+  *     "com.example.Bits" {
+  *       "get/1" = "apply"                               # Rename
+  *       "set/1" = "addOne"                              # Rename
+  *       "removeValue/2" {                               # BoolDispatch
+  *         boolDispatch = 1
+  *         onTrue = "removeValueByRef"
+  *         onFalse = "removeValue"
+  *       }
+  *       "<init>/0" {                                    # Construct
+  *         companion = "lowlevel.util.ObjectMap"
+  *         factory = "apply"
+  *       }
+  *     }
+  *   }
   *   reifiedCarriers = ["com.fasterxml.jackson.core.type.TypeReference"]
   *   reflectiveSinks = ["com.fasterxml.jackson.databind.ObjectMapper"] }
   * ```
@@ -84,6 +99,11 @@ final class PanamaFfiFactory extends TransformFactory:
   * `retarget` is the type-only half: java FQN → scala FQN, retyped everywhere and API-mapped
   * nowhere. Legal exactly where the scala target is usable wherever the java source was — see the
   * constructor parameter for the precondition and why the engine cannot check it.
+  *
+  * `retargetRewrites` maps per-retarget member rewrites. The outer key is the source FQN (must
+  * match a `retarget` key). Each inner key is `"memberName/arity"`. A string value is a `Rename`;
+  * an object with `boolDispatch` is a `BoolDispatch`; an object with `companion` + `factory` is a
+  * `Construct` (construction rewrite: `new Source(args)` -> `Target.factory(args)`).
   *
   * `reifiedCarriers` names the external generic types whose type ARGUMENTS a third party reads back
   * out of the class file at run time and constructs from — a super-type token
@@ -99,11 +119,44 @@ final class PanamaFfiFactory extends TransformFactory:
 final class CollectionsFactory extends TransformFactory:
   def name = "collections"
   def fromConfig(config: ConfigView): Phase =
+    import CollectionsTransform.RetargetRewrite
+    val retarget = config.stringMap("retarget").getOrElse(Map.empty)
+    val rewrites = config.child("retargetRewrites").map { rr =>
+      rr.keys.map { srcFqn =>
+        val tbl = rr.requireChild(srcFqn)
+        srcFqn -> tbl.keys.map { memberArity =>
+          val parts = memberArity.split("/", 2)
+          if parts.length != 2 then throw ConfigError(rr.at(srcFqn),
+            s"retargetRewrites key '$memberArity' must be 'memberName/arity'")
+          val (mName, arity) = (parts(0), parts(1).toInt)
+          val rw =
+            if tbl.isObject(memberArity) then
+              val c = tbl.requireChild(memberArity)
+              // Distinguish BoolDispatch from Construct by the presence of "boolDispatch" vs
+              // "companion".  Both are objects; the key that is present decides the variant.
+              if c.int("boolDispatch").isDefined then
+                RetargetRewrite.BoolDispatch(
+                  c.int("boolDispatch").get,
+                  c.requireString("onTrue"),
+                  c.requireString("onFalse"))
+              else if c.string("companion").isDefined then
+                RetargetRewrite.Construct(
+                  c.requireString("companion"),
+                  c.requireString("factory"))
+              else throw ConfigError(tbl.at(memberArity),
+                "object entry must have either 'boolDispatch' (BoolDispatch) or 'companion' (Construct)")
+            else
+              RetargetRewrite.Rename(tbl.requireString(memberArity))
+          (mName, arity) -> rw
+        }.toMap
+      }.toMap
+    }.getOrElse(Map.empty)
     new CollectionsTransform(
-      scope           = TransformFactory.scopeOf(config),
-      retarget        = config.stringMap("retarget").getOrElse(Map.empty),
-      reifiedCarriers = config.strings("reifiedCarriers").getOrElse(Nil).toSet,
-      reflectiveSinks = config.strings("reflectiveSinks").getOrElse(Nil).toSet)
+      scope            = TransformFactory.scopeOf(config),
+      retarget         = retarget,
+      retargetRewrites = rewrites,
+      reifiedCarriers  = config.strings("reifiedCarriers").getOrElse(Nil).toSet,
+      reflectiveSinks  = config.strings("reflectiveSinks").getOrElse(Nil).toSet)
 
 /** ```
   * { transform = "public-field-accessors", scope { only = ["com.foo.Model"] } }

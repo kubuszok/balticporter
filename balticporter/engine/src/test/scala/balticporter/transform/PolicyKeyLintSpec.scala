@@ -94,6 +94,10 @@ class PolicyKeyLintSpec extends munit.FunSuite:
       "fullName ==" ->
         ("the JDK side of this phase is a TYPE MAPPING keyed by FQN, which is what the map IS — the " +
           "declarations it selects go through `RuleScope` and `Program.owned`"),
+      "interpolated #" ->
+        ("the `#` in `retargetRewriteSyms` and `retargetRewritesDigest` separates a SOURCE FQN from " +
+          "a rewrite-target name or a member/arity — it names no member, it is a synthetic symbol " +
+          "namespace for minted SymIds and a fingerprint rendering format"),
     ),
     "PublicFieldAccessorTransform.scala" -> Map(
       "fullName ==" ->

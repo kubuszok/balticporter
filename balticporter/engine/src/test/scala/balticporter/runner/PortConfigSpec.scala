@@ -179,6 +179,64 @@ class PortConfigSpec extends munit.FunSuite:
   }
 
   // -------------------------------------------------------------------------------------------
+  // retargetRewrites config parsing
+  // -------------------------------------------------------------------------------------------
+
+  test("retargetRewrites with Rename entries are parsed from config") {
+    val conf = Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", surface = [ { transform = "collections",
+        |  retarget { "com.demo.Widget" = "scala.X" }
+        |  retargetRewrites { "com.demo.Widget" { "get/1" = "apply", "set/1" = "addOne" } }
+        |} ] }""".stripMargin)
+    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
+      .collectFirst { case c: CollectionsTransform => c }.get
+    assertEquals(ct.retargetRewrites.size, 1)
+    val tbl = ct.retargetRewrites("com.demo.Widget")
+    assertEquals(tbl(("get", 1)), CollectionsTransform.RetargetRewrite.Rename("apply"))
+    assertEquals(tbl(("set", 1)), CollectionsTransform.RetargetRewrite.Rename("addOne"))
+  }
+
+  test("retargetRewrites with BoolDispatch entries are parsed from config") {
+    val conf = Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", surface = [ { transform = "collections",
+        |  retarget { "com.demo.Widget" = "scala.X" }
+        |  retargetRewrites { "com.demo.Widget" {
+        |    "removeValue/2" { boolDispatch = 1, onTrue = "removeByRef", onFalse = "removeByVal" }
+        |  } }
+        |} ] }""".stripMargin)
+    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
+      .collectFirst { case c: CollectionsTransform => c }.get
+    val tbl = ct.retargetRewrites("com.demo.Widget")
+    assertEquals(tbl(("removeValue", 2)),
+      CollectionsTransform.RetargetRewrite.BoolDispatch(1, "removeByRef", "removeByVal"))
+  }
+
+  test("retargetRewrites with Construct entries are parsed from config") {
+    val conf = Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", surface = [ { transform = "collections",
+        |  retarget { "com.demo.Widget" = "lowlevel.X" }
+        |  retargetRewrites { "com.demo.Widget" {
+        |    "<init>/0" { companion = "lowlevel.X", factory = "apply" }
+        |  } }
+        |} ] }""".stripMargin)
+    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
+      .collectFirst { case c: CollectionsTransform => c }.get
+    val tbl = ct.retargetRewrites("com.demo.Widget")
+    assertEquals(tbl(("<init>", 0)),
+      CollectionsTransform.RetargetRewrite.Construct("lowlevel.X", "apply"))
+  }
+
+  test("empty retargetRewrites is the default when not specified") {
+    val conf = Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", surface = [ { transform = "collections",
+        |  retarget { "com.demo.Widget" = "scala.X" }
+        |} ] }""".stripMargin)
+    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
+      .collectFirst { case c: CollectionsTransform => c }.get
+    assert(ct.retargetRewrites.isEmpty)
+  }
+
+  // -------------------------------------------------------------------------------------------
   // inheritance
   // -------------------------------------------------------------------------------------------
 

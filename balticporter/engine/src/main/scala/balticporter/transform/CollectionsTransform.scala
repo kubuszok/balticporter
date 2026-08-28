@@ -1022,6 +1022,9 @@ final class CollectionsTransform(
           List(
             (src, onTrue)  -> mint(onTrue, s"$src#retargetRewrite:$onTrue"),
             (src, onFalse) -> mint(onFalse, s"$src#retargetRewrite:$onFalse"))
+        case CollectionsTransform.RetargetRewrite.Construct(companionFqn, factoryMethod) =>
+          val fqn = s"$companionFqn.$factoryMethod"
+          List((src, fqn) -> mint(factoryMethod, fqn))
       }
     }
     enumMapOfTypeSym    = mint("ofType", s"${CollectionsTransform.JavaEnumMapFqn}.ofType")
@@ -3123,6 +3126,7 @@ final class CollectionsTransform(
   override def transformApply(t: Tree.Apply)(using Program): Term =
     val t2 = wrapIterableArgs(t)
     val out = tokenConstructor(t2).orElse(copyConstructor(t2)).orElse(capacityConstructor(t2))
+      .orElse(retargetConstruct(t2))
       .orElse(staticRewrite(t2)).getOrElse {
       t2.fun match
         case Tree.Select(recv, m, _, so) => kindAt(recv).orElse(inheritedKind(recv, m)) match
@@ -6080,6 +6084,27 @@ final class CollectionsTransform(
       }
     }
 
+  /** Rewrite a CONSTRUCTION of a retarget target — `new Source[A](args)` -> `Target.factory[A](args)`.
+    *
+    * Fires when the `Tree.New`'s head symbol is a retarget target AND the retargetRewrites table
+    * has a `Construct` entry for `("<init>", arity)`. Replaces the `Tree.New` with a companion
+    * factory call via a minted symbol whose fullName is `companionFqn.factoryMethod`. */
+  private def retargetConstruct(t: Tree.Apply)(using p: Program): Option[Term] = t.fun match
+    case n: Tree.New if retargetRewrites.nonEmpty =>
+      headSym(n.tpe).flatMap(retargetTargetToSource.get).flatMap { srcFqn =>
+        val arity = t.args.size
+        retargetRewrites.get(srcFqn).flatMap(_.get(("<init>", arity))).flatMap {
+          case CollectionsTransform.RetargetRewrite.Construct(companionFqn, factoryMethod) =>
+            val fqn = s"$companionFqn.$factoryMethod"
+            retargetRewriteSyms.get((srcFqn, fqn)).map { factorySym =>
+              // the result is typed as the TARGET — what the new would have produced.
+              Tree.Apply(Tree.Ident(factorySym, TypeRepr.NoType, t.origin), t.args, factorySym, n.tpe, t.origin)
+            }
+          case _ => scala.None // Rename/BoolDispatch at <init> is meaningless; ignore
+        }
+      }
+    case _ => scala.None
+
   private def pinnedByObject(recv: Term, m: SymId, t: Tree.Apply)(using p: Program): Option[Term] =
     /** is this parent's probe position `java.lang.Object` HERE — written so, or instantiated so? */
     def probeIsObject(probe: TypeRepr, mp: MintedParents, recvTpe: TypeRepr): Boolean =
@@ -6186,6 +6211,22 @@ object CollectionsTransform:
     /** Boolean-dispatched: inspect `args(flagIndex)` — literal `true` calls `onTrue(remaining)`,
       * literal `false` calls `onFalse(remaining)`, non-literal is refused and counted. */
     case class BoolDispatch(flagIndex: Int, onTrue: String, onFalse: String) extends RetargetRewrite
+    /** Construction rewrite: `new Source[A](args)` -> `Target.factoryMethod[A](args)`.
+      *
+      * The retarget already swaps the type of the `Tree.New` node; this variant replaces
+      * `new Target[A](args)` with a companion FACTORY CALL `Target.factoryMethod[A](args)`,
+      * keyed on `("<init>", arity)` where `arity` is the constructor's argument count.
+      *
+      * The `companionFqn` is the companion object's FQN (e.g. `"lowlevel.util.ObjectMap"`),
+      * the `factoryMethod` is the factory name (e.g. `"apply"` or `"from"`). The phase mints
+      * a symbol for `companionFqn.factoryMethod` and replaces `Tree.New` with a
+      * `Tree.Ident(factorySym)` so the emitter renders `lowlevel.util.ObjectMap.apply[K,V](args)`.
+      *
+      * Where the element type is a TYPE PARAMETER of the enclosing class, the factory's inline
+      * givens may not resolve — that construction is COUNTED on the existing
+      * `collection-retarget` lane. Threading via `CtorFunnel`/context-threading is the eventual
+      * answer; this variant enables it to be wired when that mechanism is ready. */
+    case class Construct(companionFqn: String, factoryMethod: String) extends RetargetRewrite
 
   /** the shape of a collection, which decides the call rewrite (a `Seq` `get` is `apply`,
     * a `Map` `get` is `getOrElse`). */

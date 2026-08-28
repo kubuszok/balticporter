@@ -126,6 +126,68 @@ class CollectionsRetargetRewriteSpec extends munit.FunSuite {
     assert(r.toString.contains("removeByRef"))
   }
 
+  test("Construct toString is readable") {
+    val r: RetargetRewrite = Construct("lowlevel.util.ObjectMap", "apply")
+    assert(r.toString.contains("ObjectMap"))
+    assert(r.toString.contains("apply"))
+  }
+
+  // ---- Construct fingerprinting ----
+
+  test("Construct changes the fingerprint") {
+    val base = new CollectionsTransform(
+      retarget = Map("com.example.Foo" -> "com.example.Bar"))
+    val withConstruct = new CollectionsTransform(
+      retarget = Map("com.example.Foo" -> "com.example.Bar"),
+      retargetRewrites = Map("com.example.Foo" -> Map(
+        ("<init>", 0) -> Construct("com.example.Bar", "apply"))))
+    assert(clue(withConstruct.surfaceFingerprint).contains("retargetRewrites="))
+    assertNotEquals(base.surfaceFingerprint, withConstruct.surfaceFingerprint)
+  }
+
+  test("Construct with same values has the same fingerprint") {
+    val a = new CollectionsTransform(
+      retarget = Map("com.example.Foo" -> "com.example.Bar"),
+      retargetRewrites = Map("com.example.Foo" -> Map(
+        ("<init>", 0) -> Construct("com.example.Bar", "apply"))))
+    val b = new CollectionsTransform(
+      retarget = Map("com.example.Foo" -> "com.example.Bar"),
+      retargetRewrites = Map("com.example.Foo" -> Map(
+        ("<init>", 0) -> Construct("com.example.Bar", "apply"))))
+    assertEquals(a.surfaceFingerprint, b.surfaceFingerprint)
+  }
+
+  test("different Construct factory methods produce different fingerprints") {
+    val a = new CollectionsTransform(
+      retarget = Map("com.example.Foo" -> "com.example.Bar"),
+      retargetRewrites = Map("com.example.Foo" -> Map(
+        ("<init>", 0) -> Construct("com.example.Bar", "apply"))))
+    val b = new CollectionsTransform(
+      retarget = Map("com.example.Foo" -> "com.example.Bar"),
+      retargetRewrites = Map("com.example.Foo" -> Map(
+        ("<init>", 0) -> Construct("com.example.Bar", "from"))))
+    assertNotEquals(a.surfaceFingerprint, b.surfaceFingerprint)
+  }
+
+  // ---- Construct merging ----
+
+  test("mergeWith unions Construct entries from independent sources") {
+    val base = new CollectionsTransform(
+      retarget = Map("com.a.X" -> "scala.X", "com.b.Y" -> "scala.Y"),
+      retargetRewrites = Map("com.a.X" -> Map(("get", 1) -> Rename("apply"))))
+    val dep = new CollectionsTransform(
+      retarget = Map("com.b.Y" -> "scala.Y"),
+      retargetRewrites = Map("com.b.Y" -> Map(
+        ("<init>", 0) -> Construct("scala.Y", "apply"))))
+    val merged = base.mergedWith(dep)
+    assert(clue(merged).isRight)
+    val ct = merged.toOption.get.phase.asInstanceOf[CollectionsTransform]
+    assert(ct.retargetRewrites.contains("com.a.X"))
+    assert(ct.retargetRewrites.contains("com.b.Y"))
+    assertEquals(ct.retargetRewrites("com.b.Y")(("<init>", 0)),
+      Construct("scala.Y", "apply"))
+  }
+
   // ---- subjects: retargetRewrites keys are covered by retarget keys ----
 
   test("subjects includes retarget keys but not retargetRewrites separately") {
