@@ -151,10 +151,25 @@ final class CollectionsFactory extends TransformFactory:
         }.toMap
       }.toMap
     }.getOrElse(Map.empty)
+    val typeArgs = config.child("retargetTypeArgs").map { ta =>
+      import CollectionsTransform.RetargetArg
+      ta.keys.map { srcFqn =>
+        val argList = ta.strings(srcFqn).getOrElse(
+          throw ConfigError(ta.at(srcFqn),
+            "expected a list of arg mappings, e.g. [\"arg(0)\", \"scala.Int\"]"))
+        srcFqn -> argList.map { v =>
+          if v.startsWith("arg(") && v.endsWith(")") then
+            RetargetArg.SourceArg(v.drop(4).dropRight(1).toInt)
+          else
+            RetargetArg.FixedType(v)
+        }
+      }.toMap
+    }.getOrElse(Map.empty)
     new CollectionsTransform(
       scope            = TransformFactory.scopeOf(config),
       retarget         = retarget,
       retargetRewrites = rewrites,
+      retargetTypeArgs = typeArgs,
       reifiedCarriers  = config.strings("reifiedCarriers").getOrElse(Nil).toSet,
       reflectiveSinks  = config.strings("reflectiveSinks").getOrElse(Nil).toSet)
 

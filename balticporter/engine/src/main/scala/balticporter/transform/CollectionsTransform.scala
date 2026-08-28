@@ -91,6 +91,21 @@ final class CollectionsTransform(
       * Empty is the default and the no-op. The fingerprint segment is omitted when empty.
       * `MergeablePolicy` unions independent keys; same source with different target refuses. */
     val retargetRewrites: Map[String, Map[(String, Int), CollectionsTransform.RetargetRewrite]] = Map.empty,
+    /** TYPE ARGUMENT MAPPING for arity-changing retargets — source FQN -> target arg template.
+      *
+      * When a retarget changes the type parameter count (e.g. `IntMap<V>` (1 param) ->
+      * `ObjectMap[K,V]` (2 params)), this parameter describes how to construct the target's
+      * type arguments from the source's. Each element of the list is either:
+      *   - `SourceArg(i)` — carry the source type's i-th argument
+      *   - `FixedType(fqn)` — insert a fixed type (e.g. `"scala.Int"`)
+      *
+      * The list length MUST equal the target type's arity. A source with matching arity
+      * needs no entry here — its arguments pass through unchanged.
+      *
+      * A key with no matching `retarget` entry is refused at construction.
+      * Empty is the default and the no-op. The fingerprint segment is omitted when empty.
+      * `MergeablePolicy` unions independent keys; same source with different mapping refuses. */
+    val retargetTypeArgs: Map[String, List[CollectionsTransform.RetargetArg]] = Map.empty,
     /** REIFIED CARRIERS — external generic types whose type ARGUMENTS a third party reads back out
       * of the class file's generic signature at run time (`ENGINE-LIMITS.md` K20).
       *
@@ -263,6 +278,11 @@ final class CollectionsTransform(
       // fingerprint it always had (§1(b)'s fingerprint rule).
       scala.Option.when(retargetRewrites.nonEmpty)(
         "retargetRewrites=" + retargetRewritesDigest),
+      // A RETARGET TYPE ARG MAPPING is the same surface fact: a base whose `IntMap` fields became
+      // `ObjectMap[Int,V]` and a dependent whose became `ObjectMap[V]` emit incompatible signatures.
+      // Segment omitted when empty, so a port that declares none has the fingerprint it always had.
+      scala.Option.when(retargetTypeArgs.nonEmpty)(
+        "retargetTypeArgs=" + retargetTypeArgsDigest),
       // A CARRIER is the same fact one type argument in, and it is surface for the plainest reason
       // there is: `TypeReference<Map<String,Object>>` is the emitted type of a `public static final`
       // field. A base that preserves it and a dependent that does not emit two signatures that each
@@ -313,9 +333,12 @@ final class CollectionsTransform(
       // --- retargetRewrites clashes: same source FQN, different rewrite table ---
       val rewriteClash = (retargetRewrites.keySet & o.retargetRewrites.keySet)
         .filter(k => retargetRewrites(k) != o.retargetRewrites(k))
+      // --- retargetTypeArgs clashes: same source FQN, different arg mapping ---
+      val typeArgsClash = (retargetTypeArgs.keySet & o.retargetTypeArgs.keySet)
+        .filter(k => retargetTypeArgs(k) != o.retargetTypeArgs(k))
       // --- carrier/sink disagreements are NOT surface and therefore NOT a refusal ---
       if retargetClash.nonEmpty || familyClash.nonEmpty || crossClash.nonEmpty ||
-          scopeClash.nonEmpty || rewriteClash.nonEmpty then
+          scopeClash.nonEmpty || rewriteClash.nonEmpty || typeArgsClash.nonEmpty then
         Left(
           (retargetClash.toList.sorted.map(k =>
              s"""both modules retarget "$k", to "${retarget(k)}" and "${o.retarget(k)}"""") ++
@@ -329,12 +352,15 @@ final class CollectionsTransform(
                s""""${familyScopeOf(k).fingerprint}" and "${o.familyScopeOf(k).fingerprint}"; a scope """ +
                "decides which declarations carry the family type in their signatures") ++
            rewriteClash.toList.sorted.map(k =>
-             s"""both modules declare retarget rewrites for "$k" and disagree"""))
+             s"""both modules declare retarget rewrites for "$k" and disagree""") ++
+           typeArgsClash.toList.sorted.map(k =>
+             s"""both modules declare retarget type args for "$k" and disagree"""))
             .mkString("; ") +
             " — two answers for one key is a rewrite whose outcome depends on which manifest was read")
       else
         val mergedRetarget = retarget ++ o.retarget
         val mergedRewrites = retargetRewrites ++ o.retargetRewrites
+        val mergedTypeArgs = retargetTypeArgs ++ o.retargetTypeArgs
         val mergedFamilies = families ++ o.families
         val mergedFamilyScopes = familyScopes ++ o.familyScopes
         // carriers and sinks: union without a clash (they are not surface)
@@ -347,6 +373,7 @@ final class CollectionsTransform(
             scope            = scope, // the base's scope — inherited
             retarget         = mergedRetarget,
             retargetRewrites = mergedRewrites,
+            retargetTypeArgs = mergedTypeArgs,
             reifiedCarriers  = mergedCarriers,
             reflectiveSinks  = mergedSinks,
             families         = mergedFamilies,
@@ -377,6 +404,10 @@ final class CollectionsTransform(
     require(orphanRewrites.isEmpty,
       s"CollectionsTransform: retargetRewrites key(s) ${orphanRewrites.mkString(", ")} have no " +
         "matching retarget entry — a rewrite table for a type this phase does not retarget is dead code")
+    val orphanTypeArgs = retargetTypeArgs.keySet -- retarget.keySet
+    require(orphanTypeArgs.isEmpty,
+      s"CollectionsTransform: retargetTypeArgs key(s) ${orphanTypeArgs.mkString(", ")} have no " +
+        "matching retarget entry — an arg mapping for a type this phase does not retarget is dead code")
   }
 
   /** java fully-qualified name → (scala fully-qualified name, collection kind).
@@ -408,6 +439,17 @@ final class CollectionsTransform(
       retargetRewrites.toList.sortBy(_._1).flatMap { (src, tbl) =>
         tbl.toList.sortBy(_._1.toString).map { case ((m, ar), rw) => s"$src#$m/$ar->$rw" }
       }.mkString(",")).take(16)
+
+  /** digest of the `retargetTypeArgs` table — sorted by source FQN, each arg rendered as
+    * `arg(i)` or `fixed(fqn)`. Used only when `retargetTypeArgs.nonEmpty`. */
+  private def retargetTypeArgsDigest: String =
+    balticporter.tir.TirPrinter.sha256(
+      retargetTypeArgs.toList.sortBy(_._1).map { (src, args) =>
+        s"$src->${args.map {
+          case CollectionsTransform.RetargetArg.SourceArg(i) => s"arg($i)"
+          case CollectionsTransform.RetargetArg.FixedType(fqn) => s"fixed($fqn)"
+        }.mkString(",")}"
+      }.mkString(";")).take(16)
 
   /** the java types this phase retypes — its POLICY, read back so a CHECK can ask what the phase
     * did rather than guessing from a name (CLAUDE.md §4.56). Both checks below take it as a
@@ -603,6 +645,12 @@ final class CollectionsTransform(
   private var retargetTargetToSource: Map[SymId, String] = Map.empty
   /** minted symbols for retarget rewrite target member names: `(sourceFqn, memberName)` -> SymId. */
   private var retargetRewriteSyms: Map[(String, String), SymId] = Map.empty
+  /** source SymId -> arg mapping, for arity-changing retargets (keyed by the ORIGINAL symbol). */
+  private var retargetArgsBySource: Map[SymId, List[CollectionsTransform.RetargetArg]] = Map.empty
+  /** target (minted) SymId -> arg mapping, for the AppliedType case in transformType. */
+  private var retargetArgsByTarget: Map[SymId, List[CollectionsTransform.RetargetArg]] = Map.empty
+  /** minted SymIds for FixedType FQNs in retargetTypeArgs. */
+  private var retargetFixedTypeSyms: Map[String, SymId] = Map.empty
   private def byScalaSym(fqn: String): SymId = byScalaSyms.getOrElse(fqn, SymId.None)
   private def enumSetSym(n: String): SymId   = enumSetSyms.getOrElse(n, SymId.None)
   /** java 8 `Collection.forEach(Consumer)` — scala's is `foreach`, differing only in case, which
@@ -899,9 +947,17 @@ final class CollectionsTransform(
     remap = program.symbols.all.flatMap { s =>
       // …RETARGET first, so a key the port also finds in `typeMap` cannot silently take the
       // collection answer: `effectiveRetarget` has already removed any such key and reported it.
-      effectiveRetarget.get(s.fullName).orElse(typeMap.get(s.fullName).map(_._1)).map { sc =>
+      effectiveRetarget.get(s.fullName).map { sc =>
+        // Arity-changing retargets: each source gets its OWN minted symbol (different SymId, same
+        // FQN) so transformType can identify which source produced the args via retargetArgsByTarget.
+        val sym = if retargetTypeArgs.contains(s.fullName) then
+          mint(sc.substring(sc.lastIndexOf('.') + 1), sc)
+        else
+          byScala.getOrElseUpdate(sc, mint(sc.substring(sc.lastIndexOf('.') + 1), sc))
+        s.id -> sym
+      }.orElse(typeMap.get(s.fullName).map(_._1).map { sc =>
         s.id -> byScala.getOrElseUpdate(sc, mint(sc.substring(sc.lastIndexOf('.') + 1), sc))
-      }
+      })
     }.toMap
     // …and the reverse map for per-entry family scoping (D12): which remap entries came from
     // `families` (not the JDK companion typeMap, not retarget). Used by `finishRun` to narrow
@@ -1026,8 +1082,25 @@ final class CollectionsTransform(
     byScalaSyms         = byScala.toMap
     // retarget rewrite wiring: build reverse map from target SymId to source FQN, and mint
     // symbols for each rewrite target member name.
-    retargetTargetToSource = effectiveRetarget.flatMap { (src, tgt) =>
-      byScala.get(tgt).map(sym => sym -> src)
+    // retarget reverse map: target SymId -> source FQN. Built from `remap` so that per-source
+    // minted symbols (arity-changing retargets) are included — `byScala` does not hold those.
+    retargetTargetToSource = program.symbols.all.flatMap { s =>
+      effectiveRetarget.get(s.fullName).flatMap(_ => remap.get(s.id).map(tgtSym => tgtSym -> s.fullName))
+    }.toMap
+
+    // resolve FixedType FQNs to minted symbols
+    retargetFixedTypeSyms = retargetTypeArgs.values.flatten.collect {
+      case CollectionsTransform.RetargetArg.FixedType(fqn) => fqn
+    }.toSet.map { fqn =>
+      fqn -> byScala.getOrElseUpdate(fqn, mint(fqn.substring(fqn.lastIndexOf('.') + 1), fqn))
+    }.toMap
+
+    // build per-source and per-target arg mappings
+    retargetArgsBySource = program.symbols.all.flatMap { s =>
+      retargetTypeArgs.get(s.fullName).map(args => s.id -> args)
+    }.toMap
+    retargetArgsByTarget = retargetArgsBySource.flatMap { (srcId, args) =>
+      remap.get(srcId).map(tgtId => tgtId -> args)
     }
     retargetRewriteSyms = retargetRewrites.flatMap { (src, tbl) =>
       tbl.values.flatMap {
@@ -2509,8 +2582,40 @@ final class CollectionsTransform(
       seen.toSet
 
   override def transformType(t: TypeRepr)(using Program): TypeRepr = t match
-    case TypeRepr.TypeRef(prefix, s) if remap.contains(s) => TypeRepr.TypeRef(prefix, remap(s))
-    case other                                            => other
+    case TypeRepr.TypeRef(prefix, s) if remap.contains(s) =>
+      val newSym = remap(s)
+      retargetArgsBySource.get(s) match
+        case Some(mapping) if mapping.forall(_.isInstanceOf[CollectionsTransform.RetargetArg.FixedType]) =>
+          // Arity-changing retarget where the source had ZERO type params (e.g. IntIntMap -> ObjectMap[Int,Int]):
+          // every target arg is a FixedType, so this TypeRef can never appear as the tycon of an
+          // AppliedType (the frontend leaves a 0-param raw type as a bare TypeRef). Fill the target
+          // arity directly. This is the ONLY case where transformType may return an AppliedType for
+          // a TypeRef — the source's 0 arity guarantees no double-wrapping.
+          val args = mapping.map(resolveRetargetArg(_, Nil))
+          TypeRepr.AppliedType(TypeRepr.TypeRef(prefix, newSym), args)
+        case _ =>
+          // Same-arity retarget, or arity-changing with SourceArg entries: the source had type
+          // params, so the frontend filled them and this TypeRef is the tycon of an AppliedType.
+          // Return a bare TypeRef; the AppliedType case below handles the arg rearrangement.
+          TypeRepr.TypeRef(prefix, newSym)
+    case TypeRepr.AppliedType(TypeRepr.TypeRef(prefix, s), existingArgs) if retargetArgsByTarget.contains(s) =>
+      // Arity-changing retarget with existing type args: rearrange the args according to the
+      // mapping. By the time this runs, `s` is already the TARGET sym (mapType recurses into the
+      // tycon first and transformType swaps it above), and the args have already been recursed into.
+      val mapping = retargetArgsByTarget(s)
+      val newArgs = mapping.map(resolveRetargetArg(_, existingArgs))
+      TypeRepr.AppliedType(TypeRepr.TypeRef(prefix, s), newArgs)
+    case other => other
+
+  private def resolveRetargetArg(arg: CollectionsTransform.RetargetArg, sourceArgs: List[TypeRepr]): TypeRepr =
+    arg match
+      case CollectionsTransform.RetargetArg.SourceArg(i) =>
+        if i < sourceArgs.size then sourceArgs(i)
+        else TypeRepr.AnyBounds // raw source — fill with ?
+      case CollectionsTransform.RetargetArg.FixedType(fqn) =>
+        retargetFixedTypeSyms.get(fqn) match
+          case Some(sym) => TypeRepr.TypeRef(TypeRepr.NoPrefix, sym)
+          case None      => TypeRepr.AnyBounds // should not happen if validated
 
   // -------------------------------------------------------------------------------------------
   // THE THIRD REIFIED POSITION — a type ARGUMENT a third party reads out of the class file (K20)
@@ -6573,6 +6678,21 @@ object CollectionsTransform:
       * A usage of `sourceMethod()` NOT in a for-each header (stored, passed, assigned) has no
       * lls image and is a counted refusal on `collection-retarget`. */
     case class ForEach(targetMethod: String, arity: Int) extends RetargetRewrite
+
+  /** How to construct a retarget target's type arguments from the source type's.
+    * Each element produces one argument in the target type — so a `List[RetargetArg]` of length N
+    * says the target takes N type parameters.
+    *
+    * Used for arity-changing retargets: `IntMap<V>` (1 param) -> `ObjectMap[K,V]` (2 params)
+    * needs `List(FixedType("scala.Int"), SourceArg(0))` — the first arg is always `Int`, the
+    * second is carried from the source's only type parameter. */
+  sealed trait RetargetArg
+  object RetargetArg:
+    /** Carry the source type's i-th argument to this position. */
+    case class SourceArg(index: Int) extends RetargetArg
+    /** Insert a fixed type at this position — `fqn` is the fully qualified name
+      * (e.g. `"scala.Int"`), resolved to a minted symbol at run time. */
+    case class FixedType(fqn: String) extends RetargetArg
 
   /** the shape of a collection, which decides the call rewrite (a `Seq` `get` is `apply`,
     * a `Map` `get` is `getOrElse`). */

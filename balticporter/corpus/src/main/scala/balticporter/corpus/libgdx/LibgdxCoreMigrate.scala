@@ -521,6 +521,26 @@ object LibgdxPolicy:
     "com.badlogic.gdx.utils.ObjectLongMap$Entry" -> "scala.Tuple2",
   )
 
+  /** TYPE ARGUMENT MAPPING for arity-changing retargets — describes how to fill the target type's
+    * type arguments from the source type's when the arities differ.
+    *
+    * `IntMap<V>` (1 param) -> `ObjectMap[K,V]` (2 params): first arg is always `Int`, second is
+    * carried from the source's only type parameter. `IntIntMap` (0 params) -> `ObjectMap[K,V]`
+    * (2 params): both args are fixed. Without this mapping, the retarget would emit
+    * `ObjectMap[V]` (1 arg for a 2-param target) or bare `ObjectMap` (0 args for IntIntMap). */
+  def libCollectionRetargetTypeArgs: Map[String, List[balticporter.transform.CollectionsTransform.RetargetArg]] =
+    import balticporter.transform.CollectionsTransform.RetargetArg.*
+    Map(
+      "com.badlogic.gdx.utils.IntMap"        -> List(FixedType("scala.Int"), SourceArg(0)),
+      "com.badlogic.gdx.utils.LongMap"       -> List(FixedType("scala.Long"), SourceArg(0)),
+      "com.badlogic.gdx.utils.IntIntMap"      -> List(FixedType("scala.Int"), FixedType("scala.Int")),
+      "com.badlogic.gdx.utils.IntFloatMap"    -> List(FixedType("scala.Int"), FixedType("scala.Float")),
+      "com.badlogic.gdx.utils.ObjectIntMap"   -> List(SourceArg(0), FixedType("scala.Int")),
+      "com.badlogic.gdx.utils.ObjectFloatMap" -> List(SourceArg(0), FixedType("scala.Float")),
+      "com.badlogic.gdx.utils.ObjectLongMap"  -> List(SourceArg(0), FixedType("scala.Long")),
+      "com.badlogic.gdx.utils.IntSet"         -> List(FixedType("scala.Int")),
+    )
+
   def libCollectionConstructRewrites: Map[String, Map[(String, Int), balticporter.transform.CollectionsTransform.RetargetRewrite]] =
     import balticporter.transform.CollectionsTransform.RetargetRewrite.*
     Map(
@@ -1063,7 +1083,8 @@ object LibgdxPolicy:
   def mainPhases: List[balticporter.tir.Phase] =
     List(beanProperties, nullaryArity,
          new CollectionsTransform(retarget = comparatorRetarget ++ bitsRetarget ++ libCollectionRetargets,
-                                  retargetRewrites = bitsRetargetRewrites ++ libCollectionConstructRewrites), new MutableParamsTransform,
+                                  retargetRewrites = bitsRetargetRewrites ++ libCollectionConstructRewrites,
+                                  retargetTypeArgs = libCollectionRetargetTypeArgs), new MutableParamsTransform,
          new PanamaFfiTransform(), unwrapReflection, classTable, new GdxSharedIteratorRule,
          memberRenames, disposableRedirect, textureHandle, align, uniformLocation,
          nullability, globalsToContext)
