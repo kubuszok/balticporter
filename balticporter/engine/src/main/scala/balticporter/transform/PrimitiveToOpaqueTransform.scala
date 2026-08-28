@@ -1,6 +1,6 @@
 package balticporter.transform
 
-import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
+import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
 import balticporter.tir.*
 
 /** Retype a semantically-tagged PRIMITIVE to an `opaque type` (+companion) everywhere it flows,
@@ -99,7 +99,7 @@ import balticporter.tir.*
   * FAILS THE RUN, which is what catches the next phase that mints without asking.
   */
 final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
-    extends Phase, Rewrite, PolicySource, SurfacePolicy, PolicyBound:
+    extends Phase, Rewrite, PolicySource, MergeablePolicy, PolicyBound:
   def name = s"primitive->opaque:${spec.fqn}"
 
   /** The check lane that counts every seam this phase's retyping opened and could not close.
@@ -139,6 +139,78 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
       case OpaqueSpec.Target.Mint => ""
       case OpaqueSpec.Target.Existing(t, w, u) => s";target=$t;wrap=$w;unwrap=$u"
     s"${spec.fqn}:${spec.underlyingFqn}$seeds$extras${if fence.isEmpty then "" else s";$fence"}$tgt"
+
+  /** Every shared-surface SUBJECT this instance's policy is keyed on — the leading type FQN of each
+    * hint and each scope entry, through [[MergeablePolicy.subjectOf]].
+    *
+    * A hint like `com.badlogic.gdx.scenes.scene2d.ui.Image#align` has `subjectOf` =
+    * `com.badlogic.gdx.scenes.scene2d.ui.Image`, which is the type whose emitted surface the
+    * retyping changes. Over-approximate: a subject listed here that turns out to be harmless costs a
+    * refusal a port answers by naming the base's drop, while one omitted is a hole exactly where the
+    * screen exists (§1.5).
+    */
+  def subjects: Set[String] =
+    (spec.hints ++ spec.extraHints ++ spec.scope.entries).map(MergeablePolicy.subjectOf)
+
+  /** THE MERGE CONTRACT for same-FQN opaque specs across a base/dependent chain.
+    *
+    * Two instances of `primitive->opaque:X` in one pipeline compose by UNION of seed sets. The
+    * contract:
+    *
+    *   - '''`fqn`, `target`, `underlying` must AGREE, or the merge refuses.''' These are the
+    *     IDENTITY of the opaque family — which type it IS, which primitive it wraps, and whether it
+    *     mints or targets an existing type. Two answers is a choice, and a choice is the thing a
+    *     refusal exists to prevent.
+    *   - '''`hints` and `extraHints` UNION.''' Each FQN independently selects the declarations it
+    *     seeds, and nothing about one hint changes what another does. Both inputs keep their
+    *     behaviour on their own keys, which is `SurfaceFold`'s first obligation, satisfied by
+    *     arithmetic.
+    *   - '''`scope` composes by the same rule as `NullabilityTransform`'s.''' `Everywhere` entries
+    *     union (the excluded region grows), `Only` entries union (the included region grows), and
+    *     the two REFUSE — they point in opposite directions and no entry set preserves both.
+    *
+    * `added` is the SUBJECT side of what the later instance contributes — the hint FQNs' leading
+    * type FQNs that this instance did not already hold.
+    */
+  def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
+    case o: PrimitiveToOpaqueTransform =>
+      // IDENTITY: fqn must be the same (already guaranteed by name-matching in the fold), but
+      // target and underlying must agree too.
+      val targetCheck: Option[String] = (spec.target, o.spec.target) match
+        case (a, b) if a == b => None
+        case (a, b)           => Some(
+          s"""both modules state a different `target` for `${spec.fqn}` — the retyping's """ +
+            "destination type is one emitted signature per member, so two answers is a choice and " +
+            "not a composition")
+      val underlyingCheck: Option[String] =
+        if spec.underlying == o.spec.underlying then None
+        else Some(
+          s"""both modules state a different `underlying` for `${spec.fqn}` — """ +
+            s""""${spec.underlying}" and "${o.spec.underlying}" — the opaque type wraps one """ +
+            "primitive, not two")
+      val scopeMerged: Either[String, RuleScope] = (spec.scope, o.spec.scope) match
+        case (RuleScope.Everywhere(a), RuleScope.Everywhere(b)) => Right(RuleScope.Everywhere(a ++ b))
+        case (RuleScope.Only(a), RuleScope.Only(b))             => Right(RuleScope.Only(a ++ b))
+        case (mine, theirs)                                     => Left(
+          s"""both modules scope `$name`, one `${mine.productPrefix}` and one """ +
+            s"""`${theirs.productPrefix}` — the two point in OPPOSITE directions (an entry EXCLUDES """ +
+            "under one and INCLUDES under the other), so no entry set preserves both")
+      val refusals = targetCheck.toList ++ underlyingCheck.toList ++ scopeMerged.left.toOption.toList
+      refusals match
+        case Nil =>
+          val mergedScope = scopeMerged.getOrElse(spec.scope) // safe: Nil means Right
+          val merged = new PrimitiveToOpaqueTransform(OpaqueSpec(
+            fqn        = spec.fqn,
+            hints      = spec.hints ++ o.spec.hints,
+            underlying = spec.underlying,
+            extraHints = spec.extraHints ++ o.spec.extraHints,
+            scope      = mergedScope,
+            target     = spec.target,
+          ))
+          Right(MergeablePolicy.Merged(merged, o.subjects -- subjects))
+        case whys => Left(whys.mkString("; "))
+    case other =>
+      Left(s"`${other.name}` is not a `PrimitiveToOpaqueTransform`, so there is no policy to compose")
 
   /** Hints the mechanism CANNOT REACH — see [[reportUnreachable]]. Empty policy in, empty report
     * out, and cleared at the head of every run so a reused instance never reports the previous

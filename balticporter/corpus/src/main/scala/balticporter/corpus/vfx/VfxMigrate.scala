@@ -284,6 +284,41 @@ object VfxPolicy:
             ),
           )
         )),
+        // DEPENDENT SEEDS for the base's `Align` opaque family — `MergeablePolicy` on the phase
+        // folds this instance with the base's at the base's pipeline position, so the merged spec
+        // unions the seed sets and the retyping reaches gdx-vfx's own align-typed declarations.
+        //
+        // The four PARAMETERS are the seeds. Propagation follows pure-move flows and does NOT
+        // follow a bitwise test (`(align & Align.left) != 0`), so these parameters — which are
+        // only combined with `Align.*` constants in bitwise ops — are never reachable from the
+        // base's field hints (CLAUDE.md §1(b), `ENGINE-LIMITS.md` O6). The hand port confirms
+        // the shape: sge does not carry `CommonUtils` at all, but the two effects' `setOrigin`
+        // methods take `align: Align` in sge's own code.
+        //
+        // Each hint is the fully-qualified name of the PARAMETER symbol (§4.56: the frontend
+        // interns a parameter under its method, as `<method-fqn>#<param-name>`). The spec's
+        // identity (`fqn`, `target`, `underlying`) matches the base's so `mergedWith` composes.
+        new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+          fqn        = "com.badlogic.gdx.utils.Align",
+          target     = balticporter.tir.OpaqueSpec.Target.Existing(
+            typeFqn    = "sge.utils.Align",
+            wrapName   = "apply",
+            unwrapName = "toInt",
+          ),
+          hints      = Set(
+            // `CommonUtils.getAlignFactorX(int align)` / `getAlignFactorY(int align)` — the two
+            // pure-arithmetic helpers whose `align` parameter is semantically an `Align` value.
+            // The hand-written suite calls them with `sge.utils.Align.left` etc.
+            "com.crashinvaders.vfx.utils.CommonUtils#getAlignFactorX#align",
+            "com.crashinvaders.vfx.utils.CommonUtils#getAlignFactorY#align",
+            // `ZoomEffect.setOrigin(int align)` / `RadialBlurEffect.setOrigin(int align)` — each
+            // overloaded beside `setOrigin(float, float)`, the `int` form existing precisely so
+            // callers can pass `Align` constants. Both do bit tests on the value.
+            "com.crashinvaders.vfx.effects.ZoomEffect#setOrigin#align",
+            "com.crashinvaders.vfx.effects.RadialBlurEffect#setOrigin#align",
+          ),
+          underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
+        )),
         // LAST, deliberately, for the reason AshleyPolicy states: this reads what the BASE actually
         // emitted and reports a reference the base does not ship, so it must run after any seam
         // that re-points such a reference, or it reports the very sites the next phase repairs. A

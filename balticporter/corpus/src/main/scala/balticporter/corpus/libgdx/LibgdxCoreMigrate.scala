@@ -1021,8 +1021,12 @@ object LibgdxPolicy:
     * from these fields. The METHODS (`setAlign(int)`, `getX(int alignment)`, etc.) and their
     * PARAMETERS are discovered, not listed.
     *
-    * ==Shared surface, one instance (§1.5)==
-    * Inherited through `extendedBy`, same as `textureHandle`. No dependent constructs this phase. */
+    * ==Shared surface, composed via `MergeablePolicy` (§1.5)==
+    * Inherited through `extendedBy`. A dependent that needs to seed ADDITIONAL declarations (ones
+    * propagation cannot reach from the base's field hints) constructs its own instance with the same
+    * `fqn`/`target`/`underlying` and its own `hints`; `surfaceFold` merges the two by union. gdx-vfx
+    * is the first (4 parameters whose only connection to the family is bitwise ops against `Align`
+    * constants). */
   def align: balticporter.transform.PrimitiveToOpaqueTransform =
     new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
       fqn        = "com.badlogic.gdx.utils.Align",

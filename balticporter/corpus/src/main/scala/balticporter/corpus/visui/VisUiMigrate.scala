@@ -331,6 +331,35 @@ object VisUiPolicy:
             ),
           ),
         )),
+        // DEPENDENT SEEDS for the base's `Align` opaque family — the same `MergeablePolicy` merge
+        // VfxPolicy uses, for the same reason: propagation follows pure-move flows and does NOT
+        // follow a bitwise test (`(alignment & Align.left) != 0`), so VisUI's own `int alignment`
+        // fields — which are only ever compared against `Align.*` constants or passed to the base's
+        // `Cell.align(int)` — are never reachable from the base's field hints alone.
+        //
+        // Three fields, each initialised from `Align.*` and consumed by bit tests or by the base's
+        // `Cell.align`. Propagation discovers the constructors, getters, and setters from them.
+        new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+          fqn        = "com.badlogic.gdx.utils.Align",
+          target     = balticporter.tir.OpaqueSpec.Target.Existing(
+            typeFqn    = "sge.utils.Align",
+            wrapName   = "apply",
+            unwrapName = "toInt",
+          ),
+          hints      = Set(
+            // `Alignment` enum's sole field — `private final int alignment`, initialised from
+            // `Align.center`, `Align.top`, etc. Seeding it causes propagation to reach the
+            // constructor parameter, `getAlignment()`, and the enum constant arguments.
+            "com.kotcrab.vis.ui.building.utilities.Alignment#alignment",
+            // `ToastManager`'s own field — `protected int alignment = Align.topRight`, with
+            // `setAlignment(int)` and `getAlignment()` beside it.
+            "com.kotcrab.vis.ui.util.ToastManager#alignment",
+            // `VisTextField`'s own field — `private int textHAlign = Align.left`, with
+            // `setAlignment(int)` writing it and layout code reading it through bit tests.
+            "com.kotcrab.vis.ui.widget.VisTextField#textHAlign",
+          ),
+          underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
+        )),
         // LAST, deliberately, for the reason `AshleyPolicy`, `GdxAiPolicy` and `TextraTypistPolicy`
         // state: this reads what the BASE actually emitted and reports a reference the base does
         // not ship, so it must run after any seam that re-points such a reference, or it reports
