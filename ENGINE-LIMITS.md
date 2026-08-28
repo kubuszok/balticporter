@@ -4342,6 +4342,23 @@ is a TYPE; T23's fix is for the case where the wall is a BODY that only an enum 
 
 ---
 
+### T24. A java method reference at a SAM the port emits as a plain trait is ETA-EXPANDED, and the reference build refuses it — CLOSED (catalog `JS-C52`)
+
+**(a) engine.** Under sge's own flags (`-Werror`, `DESIGN.md` §8.24) scalac warns *method X is
+eta-expanded even though T does not have the `@FunctionalInterface` annotation* wherever a java
+method reference (`ColorUtils::lookupInColors`) is assigned to a SAM type. Two halves, both owed:
+`@FunctionalInterface` was an annotation the frontend DROPPED, so an interface java declares as a
+functional interface arrived as a plain trait; and where java never declared it (java needs no
+annotation to use a SAM), the honest emission is the explicit lambda scalac asks for. The
+annotation is preserved (`SpoonFrontend.preservedAnnotations`), read for EXTERNAL types from the
+class file and carried on the interned symbol (`Minter.external(annotations = …)`), and the emitter
+writes `((a: A) => T.m(a))` ONLY where the target SAM carries no annotation — an unreadable class
+file counts as unannotated, the refuter polarity §4.56 asks for. The first cut wrote the lambda at
+EVERY static reference and moved 139 gdx port-map rows; narrowed to unannotated targets and reading
+JDK annotations from class files it moves **0** member digests for the reference change. Measured:
+gdx `.ref` 1362 -> 1331, ashley byte-identical, liqp `.ref` 106 -> 100 (the F9 half), textra
+`.ref` 402 -> 401.
+
 ## 4. Collections, shims and the JDK boundary
 
 ### K1. Never model a Java interface on a Scala COLLECTION trait — the governing rule is `CLAUDE.md` §4.5
@@ -11952,6 +11969,20 @@ share is a fraction of that. Nothing else moved: compile errors 0 on all four la
 check count unchanged, determinism green, `srcmap` unit and member COUNTS identical (594 / 19 257 on
 libGDX) — only 7 159 of those 19 257 member digests, which is exactly the members that gained a
 comment.
+
+### F9. A `return` inside an enhanced-`for` body is a NON-LOCAL RETURN once the loop is a `foreach` lambda — CLOSED (catalog `JS-S26`)
+
+**(a) engine — §3's "refuse loudly" shape, made loud by the reference flags.** `for (T x : xs) {
+… return x; }` was emitted as a `for` comprehension, which desugars to `xs.foreach(x => …)`, so the
+`return` became scala's non-local return from the enclosing method: valid Scala 3.3, a deprecation
+under scala-cli's defaults, and *Non local returns are no longer supported* under sge's `-Werror`
+(`TextraTypist InternalToken.fromName`). Where `returnsIn(body)` finds a `return`, the emitter lowers
+the loop to `while (it.hasNext) { val x = it.next(); … }` over an explicit iterator — java's own
+shape, with the `return` at method level — and decides the ARITY of `iterator/hasNext/next` by
+`program.owns` (a program-declared iterable keeps java's `()`, CLAUDE.md §4.5; a scala/JDK one is
+parenless). Measured: textra `.ref` 402 -> 401 for the one site; liqp `.ref` 106 -> 100 at 0 member
+digests moved outside the lowered members; 58 gdx port-map rows moved, all members holding such a
+loop. Specs in `EmitterBindingAndReturnSpec`.
 
 ### V1. A comment the FRONTEND claimed and dropped, and one the EMISSION consumes. **222 → 100 → 0 lost**
 

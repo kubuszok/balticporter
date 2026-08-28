@@ -11266,17 +11266,29 @@ re-derivation (`ENGINE-LIMITS.md` D12, O8 dependent paragraph).
 Engine suites: 2624 passing (api 65, engine 1002, corpus 1431, frontend-spoon 126).
 `PrimitiveToOpaqueTransformSpec` 39 -> 41 (two dependent coercion tests).
 
+### 13.12 Wave 2.10 — `@FunctionalInterface` (T24), `return` in a `for`-each (F9), TextraTypist Align seeds
+
+Commit `c564d2dd`. Three items: `ENGINE-LIMITS.md` T24 (annotation preserved, read from class files
+for external SAMs, explicit lambda only at an unannotated target — 0 member digests from the
+reference change after narrowing from 139 gdx port-map rows), F9 (a `return` inside an enhanced-for
+lowers the loop to an explicit iterator `while`, arity by `program.owns`), and the five TextraTypist
+Align seeds §13.9 had left latent (`TextraLabel#align`, `TextraField#textHAlign`,
+`TextraListBox#alignment`, `TextraSelectBox#alignment`, `Font#drawGlyphs#align`) folded into the
+base's opaque instance through `MergeablePolicy`.
+
+| lane | JVM/JS/Native | `.ref` | notes |
+|---|---|---|---|
+| gdx | 0 = 0 | 1362 -> 1331 | 58 port-map rows, all F9 loop members + 2 catalog rows |
+| ashley | 0 = 0 | 8 = 8 | byte-identical |
+| liqp | 0 = 0 | 106 -> 100 | F9, 0 digests outside lowered members |
+| textra | 0 = 0 | 402 -> 401 | Align seeds land as a retype, suite 165 passing (textra-diff) |
+
+Engine suites 2561 passing. `.ref` residues on textra (401) and gdx (1331) are now the reference
+build's real `-Werror` verdict on the emitted tree — `E198` unused symbols above all — and are the
+next `.ref` wave's population.
+
 ### 13.10 Residues measured by promotion bp-promote12 (master `0c35a135`) that no wave owns yet
 
-- **TextraTypist `.ref` 402 -> 404**, refused at the floor. The lane's three bare `-Werror`
-  warnings are the candidates and two of them are new: `ColorLookup.scala:65,74` — `final val
-  INSTANCE: ColorLookup = ColorUtils.lookupInColors` is *eta-expanded even though `ColorLookup` does
-  not have the `@FunctionalInterface` annotation* (a java method reference assigned to a SAM the
-  port emits as a plain trait; the emitter owes either the annotation where java's interface is a
-  functional interface, or an explicit lambda), and `InternalToken.scala:130` — *Non local returns
-  are no longer supported* at a `return` inside a function literal (CLAUDE.md §3's "refuse loudly"
-  lambda-`return` shape, which the reference flags turn from a silent divergence into an error).
-  Both are (a) engine; the first is the cheaper and the more common in libGDX-family code.
 - **gdx-ai declares no `parity` reference** (`api-parity` records 0 lanes on `GdxAiMigrate`
   against 15 on `AshleyMigrate`), which is why the fifteen API divergences §13.8 recorded are
   visible only through the differential suite's substitution table. Phase 3.2's gdx-ai module wave
