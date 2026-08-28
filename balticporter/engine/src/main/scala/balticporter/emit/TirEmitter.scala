@@ -5295,7 +5295,18 @@ final class TirEmitter(
     def catchTpe(t: TypeRepr): String = t match
       case _: TypeRepr.OrType => s"(${tpe(t)})"
       case _                  => tpe(t)
-    val cs = catches.map(c => s"${ind(i + 1)}case ${esc(sym(c.param.symbol).name)}: ${catchTpe(c.param.tpt.tpe)} => ${term(c.body, i + 1)}").mkString("\n")
+    val cs = catches.map { c =>
+      // an unused catch variable is emitted as `_` — java commonly declares one it never reads
+      // (`catch (Exception ignored)`), and `-Wunused:patvars` flags the name under `-Werror`.
+      // The test: does any Ident in the body reference this symbol?
+      val paramUsed = StandardTraversal.scanTerm(c.body, false) {
+        case (true, _) => true
+        case (_, Tree.Ident(s, _, _)) if s == c.param.symbol => true
+        case (acc, _) => acc
+      }(using program)
+      val pname = if paramUsed then esc(sym(c.param.symbol).name) else "_"
+      s"${ind(i + 1)}case $pname: ${catchTpe(c.param.tpt.tpe)} => ${term(c.body, i + 1)}"
+    }.mkString("\n")
     val cl = if catches.isEmpty then "" else s" catch {\n$guard$cs\n${ind(i)}}"
     val fl = fin.map(f => s" finally ${term(f, i)}").getOrElse("")
     // The RESOURCES wrap the BODY and nothing else — JLS 14.20.3.2 defines an extended
