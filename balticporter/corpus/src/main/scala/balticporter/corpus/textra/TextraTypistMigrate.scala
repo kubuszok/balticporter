@@ -1,6 +1,6 @@
 package balticporter.corpus.textra
 
-import balticporter.core.{FrontendConfig, PortManifest, Provenance, RuntimeMode}
+import balticporter.core.{FrontendConfig, ParityRef, PortManifest, Provenance, RuntimeMode}
 import balticporter.corpus.ClasspathCache
 import balticporter.corpus.libgdx.LibgdxPolicy
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
@@ -258,6 +258,9 @@ object TextraTypistPolicy:
         // seam, which is the point — the rows it files ARE the wave's finding.
         balticporter.transform.PortMapTransform.forBases("sge"),
       ),
+      // THE REFERENCE HAND PORT for sge-textra. NOT inherited (DESIGN.md §8.23).
+      parity = Some(ParityRef(roots = List(
+        repoRoot.resolve("../sge/sge-extension/textra/src/main/scala").normalize))),
     ))
 
   /** WHAT A DEPENDENT ADDS TO THE BASE'S CONTEXT HOLDER — `ENGINE-LIMITS.md` CT8, and this port's

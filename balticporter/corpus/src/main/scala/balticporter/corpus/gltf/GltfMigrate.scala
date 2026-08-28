@@ -1,6 +1,6 @@
 package balticporter.corpus.gltf
 
-import balticporter.core.{FrontendConfig, PortManifest, Provenance, RuntimeMode}
+import balticporter.core.{FrontendConfig, ParityRef, PortManifest, Provenance, RuntimeMode}
 import balticporter.corpus.libgdx.LibgdxPolicy
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 
@@ -232,6 +232,9 @@ object GltfPolicy:
         // repairs. A residue check, exactly like `PortabilityCheck`.
         balticporter.transform.PortMapTransform.forBases("sge"),
       ),
+      // THE REFERENCE HAND PORT for sge-gltf. NOT inherited (DESIGN.md §8.23).
+      parity = Some(ParityRef(roots = List(
+        repoRoot.resolve("../sge/sge-extension/gltf/src/main/scala").normalize))),
     ))
 
   /** gdx-gltf's own JUnit suite, as a dependent of [[core]]. */

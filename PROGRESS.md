@@ -11296,3 +11296,42 @@ next `.ref` wave's population.
 - **The five `tests.tsv` rows of `GdxAiDifferential` that "disappeared"** are the previous
   adaptation's `()`-suffixed test NAMES; §13.8 restored the reference's exact names, so the next
   promotion acknowledges five removed and five added rows with identical outcomes.
+
+### 13.13 Wave 3.0 — `api-parity` instrument turned on for every port with a hand-port twin (Phase 3.1)
+
+Declared `PortManifest.parity` on every corpus port that has a hand-port twin and lacked it.
+Pure instrumentation: 0 member digests moved on every measured port, every error floor unchanged,
+every JVM/JS/Native compile unchanged. `unclassified = 0` on every lane that produced data —
+no instrument residues for ENGINE-LIMITS.
+
+**The parity check produces FIFTEEN families** (derived from `ApiParityCheck.Families` in the
+engine — a family added tomorrow is one entry there): `accessor`, `static-placement`, `mutability`,
+`rename`, `visibility`, `hand-port-extra`, `port-extra`, `null-model`, `collection-retarget`,
+`opaque`, `operator`, `factory`, `file-merge`, `signature`, `unclassified`.
+
+**Per-port family counts (the Phase 3 census).** libGDX core is the campaign headline.
+Three lanes (gdx-ai, anim8, gltf) had their porting run killed by a stuck sbt `-client` process
+in this worktree and produced no `run-latest`; the promotion re-runs them. Ashley already declared
+parity (wave 0.1) and was not re-measured.
+
+| port | accessor | static-placement | mutability | rename | visibility | hand-port-extra | port-extra | null-model | collection-retarget | opaque | operator | factory | file-merge | signature | unclassified |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| **libgdx core** | **246** | **154** | **279** | **0** | **634** | **3773** | **5675** | **330** | **0** | **1047** | **0** | **7** | **0** | **3403** | **0** |
+| gdx-ai | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| anim8 | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| gltf | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| screens | 0 | 0 | 4 | 0 | 21 | 22 | 32 | 0 | 0 | 33 | 0 | 0 | 0 | 16 | 0 |
+| vfx | 2 | 1 | 14 | 0 | 21 | 56 | 168 | 6 | 0 | 4 | 0 | 1 | 0 | 33 | 0 |
+| textra | 1 | 26 | 24 | 0 | 183 | 1136 | 634 | 43 | 0 | 12 | 0 | 0 | 0 | 472 | 0 |
+| visui | 62 | 57 | 25 | 0 | 149 | 646 | 891 | 120 | 0 | 57 | 0 | 0 | 0 | 245 | 0 |
+| simple-graphs | 45 | 1 | 8 | 0 | 2 | 108 | 389 | 0 | 0 | 4 | 0 | 6 | 0 | 50 | 0 |
+| noise4j | 68 | 0 | 5 | 0 | 41 | 59 | 118 | 0 | 2 | 0 | 0 | 0 | 0 | 16 | 0 |
+| jbump | 4 | 4 | 13 | 0 | 1 | 4 | 554 | 14 | 0 | 0 | 0 | 0 | 0 | 38 | 0 |
+| liqp | 25 | 0 | 50 | 0 | 14 | 425 | 646 | 4 | 0 | 0 | 0 | 3 | 0 | 359 | 0 |
+| flexmark (main) | 668 | 321 | 374 | 0 | 204 | 3612 | 1383 | 518 | 38 | 13 | 0 | 30 | 0 | 2131 | 0 |
+| flexmark (ext) | 420 | 18 | 150 | 0 | 123 | 8286 | 529 | 60 | 4 | 0 | 0 | 2 | 0 | 795 | 0 |
+
+**The `--` rows** (gdx-ai, anim8, gltf) are a known sbt 2.x server contention issue: `sbt -client`
+hangs when a second `sbtn` client tries to connect to an idle server, reproducibly in this
+worktree. The porting run was killed before `run-latest/` was written. The promotion re-runs all
+lanes from a clean sbt server and produces the missing counts.

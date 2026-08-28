@@ -1,6 +1,6 @@
 package balticporter.corpus.visui
 
-import balticporter.core.{FrontendConfig, PortManifest, Provenance, RuntimeMode}
+import balticporter.core.{FrontendConfig, ParityRef, PortManifest, Provenance, RuntimeMode}
 import balticporter.corpus.libgdx.LibgdxPolicy
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 
@@ -367,4 +367,7 @@ object VisUiPolicy:
         // This wave has no such seam, which is the point — the rows it files ARE the wave's finding.
         balticporter.transform.PortMapTransform.forBases("sge"),
       ),
+      // THE REFERENCE HAND PORT for sge-visui. NOT inherited (DESIGN.md §8.23).
+      parity = Some(ParityRef(roots = List(
+        repoRoot.resolve("../sge/sge-extension/visui/src/main/scala").normalize))),
     ))

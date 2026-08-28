@@ -1,6 +1,6 @@
 package balticporter.corpus.libgdx
 
-import balticporter.core.{FrontendConfig, PortManifest, Provenance, RuntimeMode, Substitutions}
+import balticporter.core.{FrontendConfig, ParityRef, PortManifest, Provenance, RuntimeMode, Substitutions}
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 import balticporter.transform.{ClassTableTransform, CollectionsTransform, MutableParamsTransform, PanamaFfiTransform, StaticForwarderTransform, TestFrameworkTransform}
 
@@ -138,6 +138,9 @@ object LibgdxPolicy:
         // (§1), and the version is sge's own `Versions.lls` from its `build.sbt`.
         balticporter.catalog.ArtifactDep("com.kubuszok", "lls", "0.3.0"),
       ),
+      // THE REFERENCE HAND PORT for sge. NOT inherited (DESIGN.md §8.23).
+      parity = Some(ParityRef(roots = List(
+        repoRoot.resolve("../sge/sge/src/main/scala").normalize))),
     )
 
   /** THE BOUNDARY ROWS THIS PORT HAS READ AND ACCEPTS — `DESIGN.md` §8.16.

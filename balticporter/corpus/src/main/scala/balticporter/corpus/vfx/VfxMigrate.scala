@@ -1,6 +1,6 @@
 package balticporter.corpus.vfx
 
-import balticporter.core.{FrontendConfig, PortManifest, Provenance, RuntimeMode}
+import balticporter.core.{FrontendConfig, ParityRef, PortManifest, Provenance, RuntimeMode}
 import balticporter.corpus.libgdx.LibgdxPolicy
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 
@@ -325,4 +325,7 @@ object VfxPolicy:
         // residue check, exactly like `PortabilityCheck`.
         balticporter.transform.PortMapTransform.forBases("sge"),
       ),
+      // THE REFERENCE HAND PORT for sge-vfx. NOT inherited (DESIGN.md §8.23).
+      parity = Some(ParityRef(roots = List(
+        repoRoot.resolve("../sge/sge-extension/vfx/src/main/scala").normalize))),
     ))

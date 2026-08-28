@@ -1,7 +1,7 @@
 package balticporter.corpus.screens
 
 import balticporter.corpus.ClasspathCache
-import balticporter.core.{FrontendConfig, PortManifest, Provenance, RuntimeMode}
+import balticporter.core.{FrontendConfig, ParityRef, PortManifest, Provenance, RuntimeMode}
 import balticporter.corpus.libgdx.LibgdxPolicy
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 import balticporter.transform.TypeRedirectTransform
@@ -132,6 +132,9 @@ object ScreensPolicy:
         "de.eskalon.commons.utils"  -> "sge.screen.utils",
       ),
       surface = List(guacamole, nullability),
+      // THE REFERENCE HAND PORT for sge-screens. NOT inherited (DESIGN.md §8.23).
+      parity = Some(ParityRef(roots = List(
+        repoRoot.resolve("../sge/sge-extension/screens/src/main/scala").normalize))),
     ))
 
   /** screenmanager's OWN nullability annotation — `org.jspecify.annotations.Nullable`, which is a

@@ -1,6 +1,6 @@
 package balticporter.corpus.gdxai
 
-import balticporter.core.{FrontendConfig, PortManifest, Provenance, RuntimeMode}
+import balticporter.core.{FrontendConfig, ParityRef, PortManifest, Provenance, RuntimeMode}
 import balticporter.corpus.libgdx.LibgdxPolicy
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 
@@ -486,6 +486,9 @@ object GdxAiPolicy:
       // and it is deliberately NOT inherited by `test` below: exactly one module ships each file or
       // the FQN is defined twice.
       inject    = List(repoRoot.resolve("balticporter/corpus/gdxai-overrides")),
+      // THE REFERENCE HAND PORT for sge-ai. NOT inherited (DESIGN.md §8.23).
+      parity = Some(ParityRef(roots = List(
+        repoRoot.resolve("../sge/sge-extension/ai/src/main/scala").normalize))),
     ))
 
   /** …and the TEST source set's, which is `core` EXTENDED and adds exactly one phase.
