@@ -59,11 +59,11 @@ class FlowPropagationSpec extends PortSuite:
     assert(grown.contains("demo.Sprite#getLayer"))       // `return layer`
     assert(grown.contains("demo.Sprite#copy"))           // `return c`, the local's own chain
     assert(grown.contains("c"))                          // `int c = layer` — a local, named bare
-    // …and the setter's PARAMETER. Note the name it arrives under: the frontend qualifies a
-    // parameter against its method BEFORE the method's own record is set, so a parameter's
-    // `fullName` is `?#l` — see [[balticporter.tir.RuleScope]] for why a scope must therefore be
-    // decided through the OWNER chain and never from a symbol's own name.
-    assert(clue(grown).contains("?#l"))
+    // …and the setter's PARAMETER, under its full name `Class#method#param` (until wave 2.8 the
+    // frontend qualified a parameter against its method BEFORE the method's own record was set and
+    // the name was `?#l`; [[balticporter.tir.RuleScope]] decides scope through the OWNER chain and
+    // never from a symbol's own name, which is why that defect was invisible to every scope).
+    assert(clue(grown).contains("demo.Sprite#setLayer#l"))
   }
 
   test("ARITHMETIC is not a pure move — the chain BREAKS, which is the whole point") {
@@ -139,7 +139,7 @@ class FlowPropagationSpec extends PortSuite:
     // `locations[i] = v` creates an edge between `locations` and `v`.  Growing from `locations`
     // reaches the setter's parameter.
     val grown = grownFrom(p, "demo.Shader#locations")
-    assert(clue(grown).contains("?#v"), "the stored value's parameter must be reached")
+    assert(clue(grown).contains("demo.Shader#store#v"), "the stored value's parameter must be reached")
   }
 
   test("array element flow does NOT leak to unrelated declarations of the same type") {

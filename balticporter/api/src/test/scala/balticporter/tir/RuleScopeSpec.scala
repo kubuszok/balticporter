@@ -99,7 +99,9 @@ class RuleScopeSpec extends munit.FunSuite:
 
   /** a four-level table, with the two names the frontend actually produces for the kinds a name-only
     * test cannot place (both established by running `FlowPropagationSpec` against `SpoonTir`, not by
-    * reading it): a PARAMETER is `?#p`, and a method-LOCAL is its bare simple name. */
+    * reading it): a PARAMETER was `?#p` before wave 2.8's frontend fix (it is `Class#method#p` now — this
+    * fixture keeps the old spelling on purpose, because the scope rule must not READ it), and a
+    * method-LOCAL is its bare simple name. */
   private def program: Program =
     val cls   = Symbol(SymId(1), "Bar", "com.foo.Bar", Flags(), SymId.None, TypeRepr.NoType)
     val meth  = Symbol(SymId(2), "m", "com.foo.Bar#m", Flags(), cls.id, TypeRepr.MethodType(Nil, TypeRepr.NoType))
