@@ -352,8 +352,8 @@ sge.jbump.util.IntArray	sge.jbump.util.IntArray#toString()	def	12784f7e02de6765
 sge.jbump.util.IntArray	sge.jbump.util.IntArray#toString(String)	def	08a5ecf340e66381
 sge.jbump.util.IntArray	sge.jbump.util.IntArray#truncate(int)	def	571f533b6451dc08
 sge.jbump.util.IntArray	sge.jbump.util.IntArray#with(Array<int>)	def	d60b599d2cb29535
-sge.jbump.util.IntIntMap	@101#<init>(int,float)#initialCapacity	val	b46a457eb0ff2d75
 sge.jbump.util.IntIntMap	sge.jbump.util.IntIntMap	class	d09c68178120ea12
+sge.jbump.util.IntIntMap	sge.jbump.util.IntIntMap#<init>#initialCapacity	val	b46a457eb0ff2d75
 sge.jbump.util.IntIntMap	sge.jbump.util.IntIntMap#<init>()	ctor	a6900d1deddd58e2
 sge.jbump.util.IntIntMap	sge.jbump.util.IntIntMap#<init>(IntIntMap)	ctor	2389955c4a4fa259
 sge.jbump.util.IntIntMap	sge.jbump.util.IntIntMap#<init>(int)	ctor	2e3e37df1a47a1ea

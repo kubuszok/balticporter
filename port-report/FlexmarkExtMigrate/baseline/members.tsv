@@ -2997,8 +2997,8 @@ ssg.md.ext.toc.internal.TocOptionTypes	ssg.md.ext.toc.internal.TocOptionTypes$Co
 ssg.md.ext.toc.internal.TocOptionTypes	ssg.md.ext.toc.internal.TocOptionTypes$Constants#OPTION_SORTED	val	40dcc91ab903cdb8
 ssg.md.ext.toc.internal.TocOptionTypes	ssg.md.ext.toc.internal.TocOptionTypes$Constants#OPTION_SORTED_REVERSED	val	21bca4dbffd0adfc
 ssg.md.ext.toc.internal.TocOptionTypes	ssg.md.ext.toc.internal.TocOptionTypes$Constants#OPTION_TEXT	val	1959ca923c59ea68
-ssg.md.ext.toc.internal.TocOptions	@6543#<init>(int,boolean,boolean,boolean,int,java.lang.CharSequence,com.vladsch.flexmark.ext.toc.internal.TocOptions$ListType,boolean,boolean,java.lang.CharSequence,java.lang.CharSequence,boolean)#titleLevel	val	12e5afc268b384ac
 ssg.md.ext.toc.internal.TocOptions	ssg.md.ext.toc.internal.TocOptions	class	b294b7d2a8971e01
+ssg.md.ext.toc.internal.TocOptions	ssg.md.ext.toc.internal.TocOptions#<init>#titleLevel	val	12e5afc268b384ac
 ssg.md.ext.toc.internal.TocOptions	ssg.md.ext.toc.internal.TocOptions#<init>()	ctor	2f070374fecac531
 ssg.md.ext.toc.internal.TocOptions	ssg.md.ext.toc.internal.TocOptions#<init>(AsMutable)	ctor	6511db351f94835d
 ssg.md.ext.toc.internal.TocOptions	ssg.md.ext.toc.internal.TocOptions#<init>(DataHolder,boolean)	ctor	5f11065a55d1e461

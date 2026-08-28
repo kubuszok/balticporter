@@ -6636,9 +6636,9 @@ ssg.md.util.options.OptionsParser	ssg.md.util.options.OptionsParser#optionName	v
 ssg.md.util.options.OptionsParser	ssg.md.util.options.OptionsParser#optionValueDelimiter	val	08a9fda5d99fc713
 ssg.md.util.options.OptionsParser	ssg.md.util.options.OptionsParser#parseOption(BasedSequence,T,MessageProvider)	def	ca5215f1bf29f255
 ssg.md.util.options.OptionsParser	ssg.md.util.options.OptionsParser#parseableOptions	val	2afa127a86fc8d0b
-ssg.md.util.options.ParsedOption	@7882#<init>(com.vladsch.flexmark.util.sequence.BasedSequence,com.vladsch.flexmark.util.options.OptionParser,com.vladsch.flexmark.util.options.ParsedOptionStatus,java.util.List,java.util.List)#messages	val	a6ab28512b8fa66f
-ssg.md.util.options.ParsedOption	@7882#<init>(com.vladsch.flexmark.util.sequence.BasedSequence,com.vladsch.flexmark.util.options.OptionParser,com.vladsch.flexmark.util.options.ParsedOptionStatus,java.util.List,java.util.List)#optionResult	val	f245f0316df4fa3f
 ssg.md.util.options.ParsedOption	ssg.md.util.options.ParsedOption	class	d6d8a60223cc40b6
+ssg.md.util.options.ParsedOption	ssg.md.util.options.ParsedOption#<init>#messages	val	a6ab28512b8fa66f
+ssg.md.util.options.ParsedOption	ssg.md.util.options.ParsedOption#<init>#optionResult	val	f245f0316df4fa3f
 ssg.md.util.options.ParsedOption	ssg.md.util.options.ParsedOption#<init>(BasedSequence,OptionParser<T>,ParsedOptionStatus)	ctor	3e7a2899c8c79e30
 ssg.md.util.options.ParsedOption	ssg.md.util.options.ParsedOption#<init>(BasedSequence,OptionParser<T>,ParsedOptionStatus,Buffer<ParserMessage>)	ctor	bb70d78caa2b2531
 ssg.md.util.options.ParsedOption	ssg.md.util.options.ParsedOption#<init>(BasedSequence,OptionParser<T>,ParsedOptionStatus,ParserMessage)	ctor	052fee355396b011
@@ -8298,9 +8298,9 @@ ssg.md.util.sequence.RichSequenceImpl	ssg.md.util.sequence.RichSequenceImpl#of(C
 ssg.md.util.sequence.RichSequenceImpl	ssg.md.util.sequence.RichSequenceImpl#sequenceOf(CharSequence,int,int)	def	2cc0f12f50e971d3
 ssg.md.util.sequence.RichSequenceImpl	ssg.md.util.sequence.RichSequenceImpl#subSequence(int,int)	def	3d82f5708cdd6be4
 ssg.md.util.sequence.RichSequenceImpl	ssg.md.util.sequence.RichSequenceImpl#toMapped(CharMapper)	def	6c184487c0450e81
-ssg.md.util.sequence.SegmentedSequence	?#endOffset	val	23b2738063589a02
-ssg.md.util.sequence.SegmentedSequence	?#startOffset	val	72f2250a04a0c5c2
 ssg.md.util.sequence.SegmentedSequence	ssg.md.util.sequence.SegmentedSequence	class	cfbe5a16af2e0dbd
+ssg.md.util.sequence.SegmentedSequence	ssg.md.util.sequence.SegmentedSequence#<init>#endOffset	val	23b2738063589a02
+ssg.md.util.sequence.SegmentedSequence	ssg.md.util.sequence.SegmentedSequence#<init>#startOffset	val	72f2250a04a0c5c2
 ssg.md.util.sequence.SegmentedSequence	ssg.md.util.sequence.SegmentedSequence#<stmt1>	stmt	8215e5793f163488
 ssg.md.util.sequence.SegmentedSequence	ssg.md.util.sequence.SegmentedSequence#<stmt2>	stmt	aadf2a2e61a13218
 ssg.md.util.sequence.SegmentedSequence	ssg.md.util.sequence.SegmentedSequence#<stmt3>	stmt	fbd0f20f4f57f58d
@@ -9089,8 +9089,6 @@ ssg.md.util.sequence.builder.tree.OffsetInfo	ssg.md.util.sequence.builder.tree.O
 ssg.md.util.sequence.builder.tree.OffsetInfo	ssg.md.util.sequence.builder.tree.OffsetInfo#pos	val	c3e4f18021976b51
 ssg.md.util.sequence.builder.tree.OffsetInfo	ssg.md.util.sequence.builder.tree.OffsetInfo#startIndex	val	b9bbc9773aa529e3
 ssg.md.util.sequence.builder.tree.OffsetInfo	ssg.md.util.sequence.builder.tree.OffsetInfo#toString()	def	bf188fd5059d9179
-ssg.md.util.sequence.builder.tree.Segment	@13715#<init>(int,byte[],int,int,com.vladsch.flexmark.util.sequence.BasedSequence)#byteOffset	val	482811badea2b7f8
-ssg.md.util.sequence.builder.tree.Segment	@13717#<init>(int,byte[],int,int)#byteOffset	val	cc7557aefffc0eb0
 ssg.md.util.sequence.builder.tree.Segment	length	val	da5683d059c548e3
 ssg.md.util.sequence.builder.tree.Segment	segTypeMask	val	39f4d84a93940ae1
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment	class	1ddd531dc9d46b79
@@ -9159,6 +9157,7 @@ ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segm
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment#startIndex	val	37d4c530a468f665
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment#toString()	def	7d331cc8a2c38223
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Base	class	3078b288613d331d
+ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Base#<init>#byteOffset	val	482811badea2b7f8
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Base#<stmt1>	stmt	fc427d631397bcf2
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Base#<stmt2>	stmt	4d9cd03f5dccc083
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Base#baseSeq	val	88b209c09bbcc67f
@@ -9185,6 +9184,7 @@ ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segm
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$SegType#hasLength()	def	90710081b802e138
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$SegType#hasOffset()	def	7c27490532e47dc1
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Text	class	a0c486fbdd97168d
+ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Text#<init>#byteOffset	val	cc7557aefffc0eb0
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Text#<stmt1>	stmt	7ba7e8b7ef42017a
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Text#<stmt2>	stmt	6f84095627f00263
 ssg.md.util.sequence.builder.tree.Segment	ssg.md.util.sequence.builder.tree.Segment$Text#charAt(int)	def	c887696de9f5b829

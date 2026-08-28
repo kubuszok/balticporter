@@ -372,7 +372,7 @@ member	com.dongbat.jbump.util.IntArray#toString()	sge.jbump.util.IntArray#toStri
 member	com.dongbat.jbump.util.IntArray#toString(String)	sge.jbump.util.IntArray#toString(String)	Renamed	-	com/dongbat/jbump/util/IntArray.java	356	08a5ecf340e66381	
 member	com.dongbat.jbump.util.IntArray#truncate(int)	sge.jbump.util.IntArray#truncate(int)	Renamed	-	com/dongbat/jbump/util/IntArray.java	302	571f533b6451dc08	
 member	com.dongbat.jbump.util.IntArray#with(Array)	sge.jbump.util.IntArray#with(Array<int>)	Renamed	-	com/dongbat/jbump/util/IntArray.java	369	d60b599d2cb29535	placement=companion
-member	com.dongbat.jbump.util.@101#<init>(int,float)#initialCapacity	@101#<init>(int,float)#initialCapacity	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	60	b46a457eb0ff2d75	name=initialCapacity$p
+member	com.dongbat.jbump.util.IntIntMap#<init>#initialCapacity	sge.jbump.util.IntIntMap#<init>#initialCapacity	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	60	b46a457eb0ff2d75	name=initialCapacity$p
 member	com.dongbat.jbump.util.IntIntMap#<init>()	sge.jbump.util.IntIntMap#<init>()	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	47	a6900d1deddd58e2	
 member	com.dongbat.jbump.util.IntIntMap#<init>(IntIntMap)	sge.jbump.util.IntIntMap#<init>(IntIntMap)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	80	2389955c4a4fa259	
 member	com.dongbat.jbump.util.IntIntMap#<init>(int)	sge.jbump.util.IntIntMap#<init>(int)	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	53	2e3e37df1a47a1ea	

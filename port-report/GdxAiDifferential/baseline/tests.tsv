@@ -34,11 +34,11 @@ sge.ai.btree.TaskSuite	task transitions from FRESH to RUNNING	pass
 sge.ai.btree.TaskSuite	task transitions from FRESH to SUCCEEDED	pass
 sge.ai.btree.TaskSuite	task transitions from RUNNING to FAILED on subsequent step	pass
 sge.ai.btree.TaskSuite	task transitions from RUNNING to SUCCEEDED on subsequent step	pass
-sge.ai.fsm.StateMachineEmptyProbeIss730RedSuite	ISS-730 c3: DefaultStateMachine.getCurrentState() on an empty machine returns null-equivalent, not a crash	pass
-sge.ai.fsm.StateMachineEmptyProbeIss730RedSuite	ISS-730 c3: DefaultStateMachine.getGlobalState() on an empty machine returns null-equivalent, not a crash	pass
-sge.ai.fsm.StateMachineEmptyProbeIss730RedSuite	ISS-730 c3: DefaultStateMachine.getPreviousState() on an empty machine returns null-equivalent, not a crash	pass
-sge.ai.fsm.StateMachineEmptyProbeIss730RedSuite	ISS-730 c3: StackStateMachine.getCurrentState() on an empty machine returns null-equivalent, not a crash	pass
-sge.ai.fsm.StateMachineEmptyProbeIss730RedSuite	ISS-730 c3: StackStateMachine.getPreviousState() on an empty stack returns null-equivalent, not a crash	pass
+sge.ai.fsm.StateMachineEmptyProbeIss730RedSuite	ISS-730 c3: DefaultStateMachine.getCurrentState on an empty machine returns null-equivalent, not a crash	pass
+sge.ai.fsm.StateMachineEmptyProbeIss730RedSuite	ISS-730 c3: DefaultStateMachine.getGlobalState on an empty machine returns null-equivalent, not a crash	pass
+sge.ai.fsm.StateMachineEmptyProbeIss730RedSuite	ISS-730 c3: DefaultStateMachine.getPreviousState on an empty machine returns null-equivalent, not a crash	pass
+sge.ai.fsm.StateMachineEmptyProbeIss730RedSuite	ISS-730 c3: StackStateMachine.getCurrentState on an empty machine returns null-equivalent, not a crash	pass
+sge.ai.fsm.StateMachineEmptyProbeIss730RedSuite	ISS-730 c3: StackStateMachine.getPreviousState on an empty stack returns null-equivalent, not a crash	pass
 sge.ai.fsm.StateMachineStateAccessorsIss843CoverageSuite	ISS-843: getCurrentState/getPreviousState/getGlobalState return the EXACT expected instance at each step	pass
 sge.ai.fsm.StateMachineSuite	StackStateMachine: push and pop states	pass
 sge.ai.fsm.StateMachineSuite	StackStateMachine: update delegates to current state	pass
