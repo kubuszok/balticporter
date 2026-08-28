@@ -5155,7 +5155,13 @@ only when their phase does, which that set cannot express).
 `primitive->opaque` (7 declarations) and `type-redirect` (15). Both hold a `PolicyReport`, which is
 why neither looked silent: `policy` counts DECLARED KEYS THAT NEVER FIRED, which is a different
 residue from a seam, and naming it in `accountedBy` would be exactly the suppression the lane exists
-to prevent. They stay counted; the count is the work list.
+to prevent. **Both have answered (wave 2.7, `rewrite-callsites 2 -> 0` on libGDX core):**
+`primitive->opaque` names the new conditional `opaque-boundary` lane (`OpaqueBoundaryCheck` —
+`ExternalCallee` / `ScopedOut` / `BoxedPrimitive`, 0 rows on libGDX core because the GL scope fence
+coerces every opaque value before a class-file formal); `type-redirect` names `base-surface`,
+because a complete in-scope swap leaves no residue at a slot and its seam is between MODULES
+(`DESIGN.md` §8.14 records why a cross-program lane is a legitimate `accountedBy`). Neither answer
+moved a member digest.
 
 **AND THE GENERIC FORM IS REFUSED, ON A NUMBER.** The design this came from had the standing check
 as `usagesOf(s) \ callSites` for every retyped `s` — every usage the phase did not also rewrite. That
@@ -13756,6 +13762,35 @@ formals — with its constants derived from `GL20`'s own declarations, the raw `
 still emitted as `Int` beside it, `api-parity`'s opaque family at **0** rows for that type, and the
 libGDX suite unchanged. Then `TextureTarget` (22 formals, the largest) as the one that proves the
 fence composes with `TextureHandle`'s rather than fighting it.
+
+### O8. `FlowPropagation` does not follow an ARRAY ELEMENT READ — `UniformLocation` 0 -> 37 as `Mint`, 0 -> 19 as `Existing`
+
+**OPEN. (a) engine — one missing edge in `FlowPropagation.refSym`, priced on the first family that
+holds its handles in an `int[]`.** sge's `GLHandle.scala:96` writes `opaque type UniformLocation`
+by hand, with `apply`, `toInt`, `notFound = -1` and comparison/arithmetic extensions. Seeds:
+`ShaderProgram#fetchUniformLocation(String)` — the PRIVATE overload, so the hint carries its
+descriptor, because a hint without one matched nothing on the first run — and `BaseShader#locations`
+(`int[]`), fenced to the same GL20–GL32 scope as `textureHandle`.
+
+Two measurements, one cause:
+
+- as a `Mint` target the base went **0 -> 37**, every row `value >= is not a member of
+  sge.graphics.UniformLocation.T`: java compares locations (`if (location < 0)`) and a minted type
+  carries no extensions. That is a fact about `Mint`, and the Align precedent (O6) already says what
+  to do — `Target.Existing` with the port injecting the type and its extensions;
+- as `Existing` with an injected `sge/graphics/UniformLocation.scala`, **0 -> 19**, and the 19 are
+  one shape. `BaseShader.loc(int)` is `return locations[inputID]` — an element read from the seeded
+  array — and `refSym` has no arm for `Tree.ArrayAccess`, so `loc` is never seeded, its result stays
+  `Int`, and every `program.setUniformf(loc(id), …)` hands an `Int` to a `UniformLocation.T` formal
+  (15 overload-resolution rows); `BaseShader.init`'s element assignments disagree the other way (4).
+
+**Not landed**: a base at 19 cascades to nine dependents. The spec and the injected file are parked
+on branch `w2-uniform-wip`. The fix is the EDGE — an element read of a seeded `Array[Prim]` is a
+pure move of the element, exactly as O3 made the array itself one — and not an `extraHints` row for
+`loc`, which would seed one accessor and leave every other `arr[i]` read in every port unseeded.
+Exit: gdx 0 errors with `opaque-boundary` rows read one by one, and the corpus measured for the
+widening (an array-element edge fires wherever a seeded array is indexed, so the blast is on the
+ports this was not aimed at).
 
 ## 14. The IDIOM layer — what was REFUSED, with its number
 

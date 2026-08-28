@@ -11086,9 +11086,45 @@ the O6 Align wave. Subjects: `GLProfiler#listener`, `Map#layers`, `Map#propertie
 Zero `getType` or `nullary` or G34 subjects among them. O6 Align staleness, acknowledged at the
 corpus-wide promotion.
 
-**`expected-errors.ref` 1651 -> 1655.** The 4 new ref errors are `eq`/`ne` infix warnings treated
-as errors under `-Werror` by the O6 Align nullable opaque changes (commits `321c81e9`..`4b5ecbfd`
-on master). Each is a `.get eq this` or `.get ne null` pattern on a field whose type became
-`lowlevel.Nullable[Group]`. This is a defect the EMITTER owes: an `eq` on a `Nullable` wrapper the
-port unwrapped is exactly a seam, and the emitter should render `.eq(this)` method syntax rather
-than infix. Fix belongs to the opaque-lane wave, not this one.
+**`expected-errors.ref` 1651 -> 1655 — an INSTRUMENT defect, and the floor itself was one.** The
+four risers were first read as `eq`/`ne` infix warnings and an emitter change was written for them
+(rendering every `x eq y` in every port as `x.eq(y)`); that read was refuted by the ref compile's
+own rows and the change reverted before landing. Each of the four is `E006 Not found: lowlevel` at a
+site where `NullabilityTransform` inserted a `lowlevel.Nullable(...)` wrap (`Actor.scala:151`,
+`ArrayMap.scala:515`, `IntMap.scala:497`, `LongMap.scala:496`, `ObjectMap.scala:434`) — and so are
+most of the 1,627 `E006`s under the floor: `gdx-measure`'s `flags_compile` was the ONE compile in
+the lane invoked without `-- $DECLARED`, so the `lls` dependency the JVM, JS and Native compiles
+carry never reached the reference-flags compile (CLAUDE.md §4.56's third occurrence: a lane's own
+command line is part of the measurement). Fixed in the `Justfile`; the honest `.ref` count for
+libGDX core is whatever the next promotion measures, and it is acknowledged there as an instrument
+change, not absorbed as an improvement.
+
+### 13.7 Wave 2.7 — the `opaque-boundary` lane, two `accountedBy` answers, `UniformLocation` open
+
+**Built** (`7d0da897`, `32121029`): `OpaqueBoundaryCheck` — conditional lane `opaque-boundary`,
+recorded whenever `PrimitiveToOpaqueTransform` is in the pipeline, added to `PortRun`'s
+conditional required set; three kinds with their §1 classification — `ExternalCallee` (an opaque
+value reaching a class-file formal uncoerced; the scope fence is the defence), `ScopedOut` (a seam
+the port's own `RuleScope` held back, counted so a residue nobody counts cannot grow) and
+`BoxedPrimitive` (the wave-2.6 shape, engine gap). `PrimitiveToOpaqueTransform extends Rewrite`
+with `accountedBy = {opaque-boundary}`; `TypeRedirectTransform extends Rewrite` with
+`accountedBy = {base-surface}` (`DESIGN.md` §8.14: its residue lives BETWEEN MODULES, not at a slot).
+`NullabilityBoundaryCheck` joined the conditional required set, which CLAUDE.md §5 had claimed and
+`PortRun` had not enforced.
+
+**Measured** on libGDX core: `rewrite-callsites 2 -> 0`, `opaque-boundary 0`, errors 0 = 0, 0 member
+digests (a check adds no emitted text). `idiom(converted) 83 -> 1693` / `idiom(refused) 918 -> 2825`
+on the same run is baseline STALENESS: the primary checkout's own `run-latest` already read those
+values on 2026-08-27 07:19, before O6 and before either wave 1.2k or 2.7 existed — acknowledged at
+the promotion, attributed to nobody in this wave.
+
+**Open — `UniformLocation`** (`ENGINE-LIMITS.md` O8). sge's `GLHandle.scala:96` writes the opaque
+type by hand with its comparison/arithmetic extensions. As a `Mint` target the base went
+**0 -> 37** (`value >= is not a member of UniformLocation.T` — a minted type has no extensions); as
+`Target.Existing` with an injected `sge/graphics/UniformLocation.scala`, **0 -> 19**, and the 19 are
+one engine gap: `FlowPropagation.refSym` does not follow `Tree.ArrayAccess`, so `BaseShader.loc(int)`
+(`return locations[inputID]`, an element read from the seeded `int[]`) is never seeded, every
+`program.setUniformf(loc(id), …)` then hands an `Int` to a `UniformLocation.T` formal (15 overload
+errors), and `BaseShader.init`'s array assignments disagree by element (4). Not landed: a base at
+19 errors cascades to every dependent. The spec and the injected file are parked on branch
+`w2-uniform-wip`; the fix is the propagation edge, not an `extraHints` row per array read.

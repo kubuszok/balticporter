@@ -584,7 +584,7 @@ gdx-measure:
     xplat_compile scala-native {{scala_version}} "$REPORT" gdxmeasure {{gdx_module}}/src_managed/main/scala -- $DECLARED
 
     # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$REPORT" gdxmeasure "{{sge_strict_flags}}" {{gdx_module}}/src_managed/main/scala
+    flags_compile {{scala_version}} "$REPORT" gdxmeasure "{{sge_strict_flags}}" {{gdx_module}}/src_managed/main/scala -- $DECLARED
 
     # A count is not a triage. Join every error back to the member and the JAVA LINE it came from, and
     # split it into "at a region the engine marked approximate" vs "engine gap" (DESIGN.md §6.3).

@@ -5075,11 +5075,22 @@ harness) where a phase author would first meet it. `None` is "the question canno
 `Unaccounted` lane is unaffected, because it reads the pipeline's own observation and no artifact
 switch touches that.
 
-**What the first run found.** Two retyping phases had never answered — `PrimitiveToOpaqueTransform`
-and `TypeRedirectTransform`. Both hold a `PolicyReport`, which is why neither looked silent, and
-naming `policy` in `accountedBy` would have been the suppression the lane exists to prevent: a
-declared key that never fired is a different residue from a slot two sides of which disagree. They
-stay counted, and the count is the work list — derived, not guessed.
+**What the first run found, and the two answers.** Two retyping phases had never answered —
+`PrimitiveToOpaqueTransform` and `TypeRedirectTransform`. Both hold a `PolicyReport`, which is why
+neither looked silent, and naming `policy` in `accountedBy` would have been the suppression the lane
+exists to prevent: a declared key that never fired is a different residue from a slot two sides of
+which disagree. The count was the work list, and it is now zero on libGDX core (`2 -> 0`):
+
+- `PrimitiveToOpaqueTransform` names `opaque-boundary` (`OpaqueBoundaryCheck`), a conditional lane
+  of the same shape as `collection-boundary` and `nullability-boundary` — one row per seam the
+  retype created and could not coerce, read through the declaration;
+- `TypeRedirectTransform` names `base-surface`, **which is a lane of a different shape, and that is
+  the decision**: a redirect is a complete swap inside its scope, so both sides of every slot it
+  reaches move together and there is no position-blind residue AT A SLOT. Its residue is BETWEEN
+  MODULES — a dependent's redirected signature against the base's published map (§1.5, the D12
+  measurement) — and `base-surface` is the lane built to count exactly that. So `accountedBy` does
+  not mean "a boundary lane"; it means "the lane that counts where THIS phase's seams live", and a
+  phase whose seams live between programs names the cross-program lane.
 
 ### 8.15 The IDIOM layer — what licenses it, and the three lanes that hold it to that licence
 
