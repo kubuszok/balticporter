@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
 import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, IdiomCheck, IdiomLog, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, RemedySource, RemedyVocabulary, ResolutionPlan, OverloadRiskCheck, Remediator, RewriteCallSitesCheck, RewriteLog, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
-import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionInternalCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, PackageRenameTransform, PortMapTransform, PublicFieldAccessorTransform, RetargetBoundaryCheck}
+import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionInternalCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, OpaqueBoundaryCheck, PackageRenameTransform, PortMapTransform, PrimitiveToOpaqueTransform, PublicFieldAccessorTransform, RetargetBoundaryCheck}
 import balticporter.verify.ApiParityCheck
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -446,6 +446,21 @@ final case class PortRun(
       say(s"NULLABILITY BOUNDARY (sites refused, wrapper seams left open, retypes the language " +
         s"does not make transparent): ${bnd.size}")
       println(NullabilityBoundaryCheck.summary(bnd))
+    }
+
+    // ---- the OPAQUE BOUNDARY: seams the primitive-to-opaque retyping opened and could not close ----
+    // Recorded only when the phase RAN, for the same reason the collection and nullability checks
+    // are: a port that retypes no primitive has no opaque boundary to police. Over `checkedUnits`
+    // for ENGINE-LIMITS D2. Collected from ALL instances (a pipeline may carry several specs —
+    // textureHandle, align, uniformLocation) and recorded ONCE, because `CheckReport.record`
+    // replaces rather than appends.
+    locally {
+      val opaques = effectivePhases.collect { case o: PrimitiveToOpaqueTransform => o }
+      if opaques.nonEmpty then
+        val bnd = opaques.flatMap(_.boundary(checkedUnits))
+        CheckReport.record(OpaqueBoundaryCheck.Name, bnd.map(_.report))
+        say(s"OPAQUE BOUNDARY (seams the primitive-to-opaque retyping could not close): ${bnd.size}")
+        println(OpaqueBoundaryCheck.summary(bnd))
     }
 
     // ---- the TEST-FRAMEWORK constructs the conversion left alone ----
@@ -2490,7 +2505,12 @@ final case class PortRun(
        then Set(balticporter.transform.TestFrameworkTransform.Refused) else Set.empty) ++
       // …and the API PARITY lanes, derived from `manifest.parity` — the same conditional-lane
       // pattern as `serviceProviders` and `resources`: required when declared, absent otherwise.
-      (if manifest.exists(_.parity.isDefined) then ApiParityCheck.AllLanes else Set.empty)
+      (if manifest.exists(_.parity.isDefined) then ApiParityCheck.AllLanes else Set.empty) ++
+      // …and the OPAQUE BOUNDARY lane, derived from the pipeline: required when
+      // `PrimitiveToOpaqueTransform` is present, absent otherwise. A port whose pipeline retypes no
+      // primitive has no opaque boundary to police, and requiring the lane would fail every such port.
+      (if effectivePhases.exists(_.isInstanceOf[PrimitiveToOpaqueTransform]) then
+         Set(OpaqueBoundaryCheck.Name) else Set.empty)
 
   private def verifyRecorded(): Unit =
     if CheckReport.enabled then

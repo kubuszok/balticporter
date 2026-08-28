@@ -1134,7 +1134,8 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   `cast-conversion`, `overload-risk` and `markers` record on every run,
   `collection-closure`/`collection-boundary`/`collection-retarget`/`collection-internal` record when
   `CollectionsTransform` is in the pipeline, `nullability-boundary` when
-  `NullabilityTransform` is, and `test-framework(refused)` when `TestFrameworkTransform` is.
+  `NullabilityTransform` is, `opaque-boundary` when `PrimitiveToOpaqueTransform` is, and
+  `test-framework(refused)` when `TestFrameworkTransform` is.
   **A retype has TWO directions and a subtyping argument
   licenses only one of them**: `collection-retarget` counts the other — every value the JDK
   PRODUCES at a type the port retargets, which the boundary check cannot see, because the

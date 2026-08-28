@@ -99,8 +99,20 @@ import balticporter.tir.*
   * FAILS THE RUN, which is what catches the next phase that mints without asking.
   */
 final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
-    extends Phase, PolicySource, SurfacePolicy, PolicyBound:
+    extends Phase, Rewrite, PolicySource, SurfacePolicy, PolicyBound:
   def name = s"primitive->opaque:${spec.fqn}"
+
+  /** The check lane that counts every seam this phase's retyping opened and could not close.
+    *
+    * [[OpaqueBoundaryCheck]] is this phase's own lane, following the pattern `CollectionsTransform`
+    * -> `CollectionBoundaryCheck`, `NullabilityTransform` -> `NullabilityBoundaryCheck`. It counts
+    * the three populations CLAUDE.md §1 requires: external callees whose class-file formals this
+    * phase cannot read, scope boundaries where the opaque type meets the primitive, and
+    * boxed-primitive slots the inline coercion could not reach.
+    *
+    * Named as a symbol rather than as a string so a renamed lane is a compile error and not a
+    * silently unwired claim. */
+  def accountedBy: Set[String] = Set(OpaqueBoundaryCheck.Name)
 
   /** This phase RETYPES declarations under a [[RuleScope]], so two modules configuring it
     * differently emit signatures that each compile alone and cannot compile together — CLAUDE.md
@@ -133,6 +145,19 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     * translation's findings. */
   private val unreachable = collection.mutable.ListBuffer.empty[PolicyFinding]
 
+  /** Boundary findings accumulated during [[run]] — the seams this phase opened and could not
+    * close. Cleared at the head of every run so a reused instance never reports the previous
+    * translation's findings. */
+  private val boundaryIssues = collection.mutable.ListBuffer.empty[OpaqueBoundaryCheck.Finding]
+
+  /** Every boundary site this phase opened and could not close, restricted to the units this run
+    * actually EMITS — `ENGINE-LIMITS.md` D2. A base port passes `program.units`; a dependent
+    * passes `checkedUnits`. */
+  def boundary(units: List[Tree.ClassDef]): List[OpaqueBoundaryCheck.Finding] =
+    val emitted = units.map(_.symbol).toSet
+    boundaryIssues.toList.filter(f => emitted(f.unit))
+      .sortBy(f => (f.origin.javaPath, f.origin.line, f.subject, f.issue.toString))
+
   def policyReport: PolicyReport = PolicyReport(unreachable.toList)
 
   private var objSym, opaqueSym, applySym, unwrapSym, wrapArraySym, unwrapArraySym, primSym, boxedPrimSym, arraySym: SymId = SymId.None
@@ -164,6 +189,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
 
   override def run(program: Program): Program =
     unreachable.clear()
+    boundaryIssues.clear()
     primSym = program.symbols.all.find(_.fullName == spec.underlyingFqn).map(_.id).getOrElse(SymId.None)
     if primSym == SymId.None then return program
     primRef = TypeRepr.TypeRef(TypeRepr.NoType, primSym)
@@ -608,16 +634,36 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
   private def isSeedMethod(m: SymId)(using p: Program): Boolean =
     seeds(m) && p.symbolOf(m).exists(_.info.isInstanceOf[TypeRepr.MethodType])
 
-  private def coerceArgs(t: Tree.Apply)(using Program): Term =
-    summon[Program].definitionOf(t.method) match
+  private def coerceArgs(t: Tree.Apply)(using p: Program): Term =
+    p.definitionOf(t.method) match
       case Some(d: Tree.DefDef) =>
         val params = d.paramss.flatten
         if params.length != t.args.length then t
-        else t.copy(args = t.args.zip(params).map { (arg, p) =>
-          if seeds(p.symbol) then wrapFor(arg, summon[Program].symbolOf(p.symbol).map(_.info).getOrElse(TypeRepr.NoType))
+        else t.copy(args = t.args.zip(params).map { (arg, param) =>
+          if seeds(param.symbol) then wrapFor(arg, p.symbolOf(param.symbol).map(_.info).getOrElse(TypeRepr.NoType))
           else unwrapIfOpaque(arg)
         })
-      case _ => t
+      case _ =>
+        // EXTERNAL CALLEE — no definition in the program. If any argument carries the opaque type,
+        // the class-file formal still expects the primitive, and `coerceArgs` cannot read that
+        // formal. The SCOPE FENCE is the configured defence: with the fenced types' declarations
+        // outside the seed set, the arguments reaching this call are still primitives and no
+        // coercion is needed. Where an argument IS opaque and no coercion was possible, record
+        // a boundary finding.
+        val calleeFqn = p.symbolOf(t.method).map(_.fullName).getOrElse("?")
+        t.args.foreach { arg =>
+          if carriesOpaque(arg) then
+            val encl = p.symbolOf(t.method).map(_.owner).getOrElse(SymId.None)
+            boundaryIssues += OpaqueBoundaryCheck.Finding(
+              issue   = OpaqueBoundaryCheck.Issue.ExternalCallee,
+              subject = calleeFqn,
+              detail  = s"an opaque-typed argument reaches an external callee whose formal this " +
+                s"program does not have — the scope fence is the defence (spec: ${spec.fqn})",
+              origin  = t.origin,
+              unit    = unitOf(p, encl),
+            )
+        }
+        t
 
   // -------------------------------------------------------------------------
   // THE BOUNDARY, read through the DECLARATION — `ENGINE-LIMITS.md` §13 O1.

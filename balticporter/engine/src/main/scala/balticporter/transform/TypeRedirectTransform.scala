@@ -103,12 +103,32 @@ final class TypeRedirectTransform(
     val memberRenames: Map[String, Map[String, String]] = Map.empty,
     val external: ExternalSurface = ExternalSurface.default,
     val scopes: Map[String, RuleScope] = Map.empty,
-) extends Phase, PolicySource, MergeablePolicy, PolicyBound:
+) extends Phase, Rewrite, PolicySource, MergeablePolicy, PolicyBound:
 
   /** the scope of ONE redirect entry — absent means [[RuleScope.everywhere]], which is the phase's
     * pre-scope behaviour and the reason no existing port had to say anything. */
   def scopeOf(from: String): RuleScope = scopes.getOrElse(from, RuleScope.everywhere)
   def name: String = "type-redirect"
+
+  /** The lane that counts this phase's seams is `base-surface`.
+    *
+    * ==Why `base-surface` and not a lane of its own==
+    * This phase does a COMPLETE TYPE SWAP: every occurrence of type A is replaced by type B, within
+    * scope. The seams it creates are fundamentally about the base/dependent surface agreement:
+    *
+    *   - a dependent re-pointing a type the base dropped produces signatures the base's published
+    *     map does not expect — that is a `base-surface` finding, measured at one FATAL gap on the
+    *     first port that hit it (the class doc above names the shape);
+    *   - a scope that splits the redirected type between "in scope" and "held back" is the same
+    *     surface-agreement question: the held-back declarations keep the old type, and the base's
+    *     map says what the right answer is.
+    *
+    * Neither population is a compile-error seam in the way `collection-boundary`'s is. The redirect
+    * is total within scope — ALL references move — so there is no position-blind residue of the
+    * kind the four retyping phases' boundary checks count. The seam is between MODULES, and
+    * `base-surface` is the lane built to count that. An empty `redirects` map is a no-op: no symbol
+    * moves, `base-surface` reports nothing about it, and the empty set is the no-op by arithmetic. */
+  def accountedBy: Set[String] = Set(balticporter.runner.PortRun.BaseSurface)
 
   /** What the RUN resolved each declared SOURCE type to, before the pipeline started (§8.1).
     *
