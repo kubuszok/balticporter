@@ -1952,6 +1952,40 @@ corpus-wide exactly ONE other declaration (libGDX `CharArray#appendAll(JavaItera
 `Iterator` shape) at 0 -> 0 errors, 2 member digests, and every check COUNT flat — so `findings.tsv`
 is the artifact that saw it.*
 
+### G34. Under `noClasspath`, Spoon's `getExecutableDeclaration` resolves to an UNRELATED type's method that shares the name — **gltf 5 errors, 2 of which are D14's; gdx 0 = 0. CLOSED**
+
+§1(a) — a fact about the parser's `noClasspath` mode, true of every codebase.
+
+`Gdx.app.getType()` on a receiver typed `Application` resolved to `java.lang.reflect.Field#getType`
+because Spoon's lenient resolution matched by name alone. The frontend then interned the call under
+`Field`, so the emitted code referenced an unrelated type and the error message named a member the
+program never called.
+
+The guard is STRUCTURAL: `declAgrees` validates that the declaration's declaring type is the
+receiver's static type or a SUPERTYPE of it (an inherited method is a valid resolution — BFS over
+the hierarchy through `typeDeclarationOf`, the same walk as `selfAndAncestors`). When the resolution
+disagrees, the call falls through to the reference branch and is interned under the RECEIVER's
+declaring type with the erased signature, which is what the call names (`CLAUDE.md` section 4.56).
+`false` is the safe direction for an unresolvable hierarchy: a mis-resolution then reaches the
+reference branch rather than silently binding a call to a stranger's method.
+
+No bare `catch` — the five that the draft carried were replaced by the established pattern:
+`typeDeclarationOf` (the ONE Spoon lookup where absence is normal, `CLAUDE.md` section 4.6), parents
+accessed through declarations, and `getQualifiedName` called directly on type references (99 usages
+in the file, none guarded).
+
+Measured: gdx 0 = 0 errors, every check count flat, member digests moved by O6 Align (not by this
+fix). gltf 5 errors: 3 are the D4/C3 floor and 2 are D14 (the base renamed `getType` to `type` via
+`BeanPropertyTransform`, and the dependent's call sites were not updated by `followMemberRenames`).
+The G34 fix improved the DIAGNOSTIC: the error now names the right type (`Application`) instead of
+an unrelated one (`Field`).
+
+Spec: `MethodResolutionSpec` — three cases (direct interface call, inherited method, unrelated
+same-named method must NOT bind).
+
+*Fix kind: (a) engine — `SpoonTir.declAgrees` + `isSupertypeOf`, structural guard on `methodSym`.
+Measured: gdx 0 = 0, gltf unchanged at the D4/C3 floor plus 2 D14 renames.*
+
 ---
 
 ## 2. Constructors

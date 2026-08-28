@@ -6570,9 +6570,18 @@ object SpoonTir:
 
       /** SymId of a called executable — via its declaration (keyed identically to how we
         * define our own methods, so call sites and defs share one symbol) or, for
-        * unresolved externals, by its reference. */
+        * unresolved externals, by its reference.
+        *
+        * Under `noClasspath`, `getExecutableDeclaration` can resolve to an UNRELATED type's method
+        * that happens to share the name — e.g. `Gdx.app.getType()` (receiver: `Application`)
+        * resolved to `java.lang.reflect.Field#getType`. The guard is STRUCTURAL: the declaration's
+        * declaring type must be the receiver's static type or one of its SUPERTYPES (an inherited
+        * method still agrees; an unrelated same-named method does not). When the resolution
+        * disagrees, fall through to the reference branch — intern under the RECEIVER's declaring
+        * type with the erased signature, which is what the call names (`CLAUDE.md` §4.56).
+        * `ENGINE-LIMITS.md` G34. */
       private def methodSym(ex: CtExecutableReference[?]): SymId =
-        Option(ex.getExecutableDeclaration) match
+        Option(ex.getExecutableDeclaration).filter(decl => declAgrees(decl, ex)) match
           case Some(decl) =>
             val (q, s) = declType(decl)
             val ownerId = minter.external(q, s)
@@ -6589,6 +6598,67 @@ object SpoonTir:
             // This is the design's admitted residue: the failure is LOUD at bind time — an unbound
             // key naming a real member — instead of a silent degrade to arity at match time.
             externalMember(ownerId, s"$nm($sig)", nm)
+
+      /** Does the resolved declaration's declaring type agree with the reference's declaring type?
+        *
+        * The declaration's owner must be the SAME type as the reference's declaring type, or a
+        * SUPERTYPE of it (an inherited method is a valid resolution). An unrelated type sharing a
+        * name — `Field#getType` for a call on `Application` — does not agree.
+        *
+        * Where no declaring type is available on the REFERENCE (null), the check cannot be
+        * performed, so the declaration is accepted — the alternative is to reject every untyped
+        * reference, which is the more dangerous direction (§4.56: state the refutation).
+        *
+        * The hierarchy walk uses [[typeDeclarationOf]] and the superclass/superinterface chain,
+        * the same mechanism [[declaringStaticType]] uses for static field inheritance. */
+      private def declAgrees(decl: CtExecutable[?], ref: CtExecutableReference[?]): Boolean =
+        val refDeclType = Option(ref.getDeclaringType)
+        refDeclType match
+          case scala.None => true // no reference type to compare — accept the declaration
+          case Some(refType) =>
+            val (declQ, _) = declType(decl)
+            val refQ = refType.getQualifiedName
+            // same type — the common case
+            if declQ == refQ then true
+            // the declaration's type is a supertype of the reference's type — inherited method
+            else isSupertypeOf(refType, declQ)
+
+      /** Is `targetQ` a supertype of `start`?  BFS over the hierarchy the frontend already has —
+        * superclass then superinterfaces — the same shape as [[selfAndAncestors]].
+        *
+        * Where the hierarchy is unreadable (shadow types whose parents are not on the classpath),
+        * the walk stops at that node and the answer is `false`, which is the safe direction: a
+        * mis-resolution is then caught and falls through to the reference branch.
+        *
+        * No bare `catch` — parents are accessed through [[typeDeclarationOf]] (the ONE Spoon lookup
+        * where absence is normal, `CLAUDE.md` §4.6), and `getQualifiedName` on a `CtTypeReference`
+        * is a string accessor that does not resolve (`CLAUDE.md` §4.6: name the one lookup). */
+      private def isSupertypeOf(start: CtTypeReference[?], targetQ: String): Boolean =
+        val seen  = collection.mutable.Set[String]()
+        val queue = collection.mutable.Queue[CtTypeReference[?]]()
+        queue.enqueue(start)
+        var found = false
+        while queue.nonEmpty && !found do
+          val r = queue.dequeue()
+          if r != null then
+            val q = r.getQualifiedName
+            if q != null && seen.add(q) then
+              typeDeclarationOf(r) match
+                case Some(t) =>
+                  val parents: List[CtTypeReference[?]] =
+                    (t match { case c: CtClass[?] => Option(c.getSuperclass).toList; case _ => Nil }) ++
+                      t.getSuperInterfaces.asScala.toList
+                  parents.foreach { p =>
+                    if p != null then
+                      if p.getQualifiedName == targetQ then found = true
+                      else queue.enqueue(p)
+                  }
+                case scala.None =>
+                  // no declaration available — stop the walk at this node.
+                  // The safe direction (§4.56): an unresolvable hierarchy cannot confirm the
+                  // declaration agrees, so we decline and fall through to the reference branch.
+                  ()
+        found
 
       private def declType(decl: CtExecutable[?]): (String, String) = decl match
         case tm: CtTypeMember if tm.getDeclaringType != null => (tm.getDeclaringType.getQualifiedName, tm.getDeclaringType.getSimpleName)
