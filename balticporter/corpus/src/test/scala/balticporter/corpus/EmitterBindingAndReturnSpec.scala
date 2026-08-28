@@ -1,6 +1,7 @@
 package balticporter.corpus
 
 import balticporter.testkit.PortSuite
+import balticporter.transform.CollectionsTransform
 
 /** Two emitter seams that had no spec at all, pinned THROUGH THE PIPELINE — a java snippet in, the
   * emitted Scala asserted. Both are §4.4's defect class (valid Scala meaning something else), and
@@ -193,4 +194,80 @@ class EmitterBindingAndReturnSpec extends PortSuite:
     // no return => plain `for` comprehension, NOT a while loop
     assertEmits(p, "for (x <-")
     assertNotEmits(p, ".iterator")
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // F9 arity: iterator/hasNext parens decided from the CALLEE SYMBOL, never `program.owns`
+  // -------------------------------------------------------------------------------------------
+
+  test("F9: a program-declared iterable keeps java arity — iterator()/hasNext() with parens") {
+    // A class implementing `Iterable<T>` declares `iterator()` with `()`. After the for-each is
+    // lowered to a while loop, the emitted `iterator()/hasNext()` must carry parens because the
+    // callee SYMBOL declares them. `program.owns` happened to get this right; the callee-symbol
+    // rule must preserve it.
+    val p = port(
+      """package demo;
+        |import java.util.Iterator;
+        |class Items implements Iterable<String> {
+        |  public Iterator<String> iterator() { return null; }
+        |  static String find(Items xs) {
+        |    for (String s : xs) { if (s.length() > 0) return s; }
+        |    return null;
+        |  }
+        |}
+        |""".stripMargin
+    )
+    assertNotEmits(p, "for (s <-")
+    // program-declared iterator()/hasNext() — must have parens
+    assertEmits(p, ".iterator()")
+    assertEmits(p, ".hasNext()")
+    assertEmits(p, ".next()")
+  }
+
+  test("F9: a scala Array uses parenless iterator/hasNext — extension methods have no parens") {
+    // `Token.values()` returns a `Token[]` → `scala.Array[Token]`. The `iterator` comes from
+    // `ArrayOps` (an extension method), which is parenless. The existing test above already covers
+    // this; this test pins the assertion explicitly at the arity level.
+    val p = port(
+      """package demo;
+        |class C {
+        |  static String find(String[] xs) {
+        |    for (String s : xs) { if (s.length() > 0) return s; }
+        |    return null;
+        |  }
+        |}
+        |""".stripMargin
+    )
+    assertNotEmits(p, "for (s <-")
+    // scala Array — parenless iterator/hasNext (extension methods via ArrayOps)
+    assertEmits(p, ".iterator;")
+    assertEmits(p, ".hasNext)")
+    assertNotEmits(p, ".iterator()")
+    assertNotEmits(p, ".hasNext()")
+    assertEmits(p, ".next()")
+  }
+
+  test("F9: a runtime shim receiver (JavaIterable) uses java arity — iterator()/hasNext() with parens") {
+    // After CollectionsTransform, a program-declared class extending `java.lang.Iterable` is
+    // re-parented to `JavaIterable`. The shim's `iterator()` and `JavaIterator.hasNext()` are
+    // declared WITH `()` (CLAUDE.md §4.5). The old `program.owns` heuristic returned `false` for
+    // these external types and emitted parenless calls — the defect F9 corrects.
+    val p = port(
+      """package demo;
+        |import java.util.Iterator;
+        |class Items implements Iterable<String> {
+        |  public Iterator<String> iterator() { return null; }
+        |  static String find(Items xs) {
+        |    for (String s : xs) { if (s.length() > 0) return s; }
+        |    return null;
+        |  }
+        |}
+        |""".stripMargin,
+      new CollectionsTransform()
+    )
+    assertNotEmits(p, "for (s <-")
+    // After CollectionsTransform, the type is now JavaIterable — must keep java arity
+    assertEmits(p, ".iterator()")
+    assertEmits(p, ".hasNext()")
+    assertEmits(p, ".next()")
   }

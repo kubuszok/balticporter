@@ -1259,6 +1259,78 @@ final class TirEmitter(
     case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
     case _                                                   => Nil
 
+  /** members indexed by `(owner, name)` — the lookup the F9 for-each lowering needs to resolve
+    * `iterator`/`hasNext`/`next` arity from the CALLEE SYMBOL rather than from `program.owns`
+    * (CLAUDE.md §4.56: the arity is a fact about the callee, never about receiver ownership). */
+  private lazy val membersByOwnerName: Map[(SymId, String), List[SymId]] =
+    val buf = collection.mutable.Map.empty[(SymId, String), List[SymId]]
+    program.symbols.all.foreach { s =>
+      if s.owner != SymId.None && s.name.nonEmpty then
+        val key = (s.owner, s.name)
+        buf(key) = s.id :: buf.getOrElse(key, Nil)
+    }
+    buf.toMap
+
+  /** Does the CALLEE SYMBOL for a member named `memberName` on type `typeSym` declare an empty
+    * parameter clause — i.e., should the call include `()`?
+    *
+    * Decided from the callee's DECLARATION, not from receiver ownership (§4.56). For a
+    * program-declared member the tree's `paramss` is authoritative (NullaryArityTransform strips
+    * paramss but leaves `info` as `MethodType`, so `info` alone is wrong after that phase). For an
+    * external member the `info` is the only source: `MethodType` means `()`.
+    *
+    * Walks the type's ancestry through `parentsBySym` (program-declared ancestors). For external
+    * types not reachable that way, checks program-declared SUBTYPES of the external type — if a
+    * subtype declares the member with parens, the parent must also have it.
+    *
+    * Default: `false` (parenless). An unresolvable member is most likely provided by an extension
+    * method (scala's `ArrayOps.iterator`, `IterableOps.iterator`), which is parenless. */
+  private def calleeHasParens(typeSym: SymId, memberName: String): Boolean =
+    def checkMember(owner: SymId): Option[Boolean] =
+      membersByOwnerName.get((owner, memberName)).flatMap { ids =>
+        ids.collectFirst {
+          case id if program.owns(id) =>
+            program.definitionOf(id) match
+              case Some(d: Tree.DefDef) => d.paramss.nonEmpty
+              case _                    => true
+          case id =>
+            sym(id).info match
+              case _: TypeRepr.MethodType => true
+              case _                     => false
+        }
+      }
+
+    def walkAncestors(s: SymId, seen: Set[SymId]): Option[Boolean] =
+      if seen(s) || s == SymId.None then None
+      else
+        checkMember(s).orElse {
+          val newSeen = seen + s
+          parentsBySym.getOrElse(s, Nil).iterator
+            .filterNot(newSeen)
+            .flatMap(a => walkAncestors(a, newSeen))
+            .nextOption()
+        }
+
+    walkAncestors(typeSym, Set.empty).getOrElse {
+      // The walk stopped without finding the member. For EXTERNAL types, `parentsBySym` has no
+      // entry (no ClassDef), so the walk could not reach the external type's own parents
+      // (e.g. `JavaCollection extends JavaIterable` where `iterator()` is on `JavaIterable`).
+      //
+      // Fix: check program-declared types that list `typeSym` (or one of its ancestors from
+      // the walk) as a PARENT. If such a subtype declares `memberName` with parens, the parent
+      // type must also have it (an override matches its parent's arity). This works because
+      // CollectionsTransform re-parents program types onto the runtime shims, so a program
+      // type like `NodeCollection extends JavaCollection` declares `override def iterator()`.
+      if program.owns(typeSym) then false
+      else
+        val visited = ancestorsOf(typeSym) + typeSym
+        // Find program-declared types that extend any type in `visited`
+        parentsBySym.iterator.exists { case (child, parents) =>
+          program.owns(child) && parents.exists(visited) &&
+            checkMember(child).contains(true)
+        }
+    }
+
   /** backtick an identifier that collides with a Scala keyword. */
   private def esc(name: String): String = TirEmitter.esc(name)
 
@@ -4576,13 +4648,24 @@ final class TirEmitter(
           // A `return` inside a for-each body: lower to a while loop to avoid the non-local return
           // that the `.foreach` lambda desugaring would produce. Handles widened bindings and
           // mutable re-bindings too.
-          // PARENS: a PROGRAM-DECLARED iterable (libGDX's `Array`, `ObjectMap.Values`) declares its
-          // `iterator()` and `hasNext()` as java methods WITH parameter lists; an EXTERNAL one
-          // (scala `Array` via `ArrayOps`, scala `Iterator`) declares them WITHOUT. Using the wrong
-          // convention is an E100 Syntax Error in either direction.
-          val owned = headSymOf(it.tpe).exists(program.owns)
-          val iterCall = if owned then ".iterator()" else ".iterator"
-          val hasNextCall = if owned then ".hasNext()" else ".hasNext"
+          // PARENS: decided from the CALLEE SYMBOL's declaration, not from receiver ownership
+          // (§4.56). `program.owns` was wrong in both directions — the runtime shims
+          // `JavaIterable`/`JavaIterator` are not program-owned but declare `()`, and a
+          // program-owned type whose `iterator` was converted to parenless by NullaryArityTransform
+          // is program-owned but should NOT have `()`. Read the resolved member's arity instead.
+          val iterHeadSym = headSymOf(it.tpe).getOrElse(SymId.None)
+          val iterHasParens = calleeHasParens(iterHeadSym, "iterator")
+          val iterCall = if iterHasParens then ".iterator()" else ".iterator"
+          // `hasNext` arity follows the `iterator` arity: within one protocol (java or scala) the
+          // convention is consistent. `JavaIterable.iterator()` returns `JavaIterator` whose
+          // `hasNext()` has parens; `scala.Iterable.iterator` (parenless) returns
+          // `scala.Iterator` whose `hasNext` is parenless. Deriving the iterator type from the
+          // member's return type and looking up `hasNext` there works when the iterator type's
+          // members are in the symbol table, but they may NOT be — the frontend only interns
+          // members it encounters as call targets, and the for-each lowering generates these calls
+          // AFTER all frontend work. So use the protocol-consistent rule: the `iterator` member's
+          // arity decides the whole protocol.
+          val hasNextCall = if iterHasParens then ".hasNext()" else ".hasNext"
           val itVar = esc(s"$raw$$it")
           val widened = widenedBinding(b, it)
           val decl = widened.getOrElse(tpe(b.tpt.tpe))

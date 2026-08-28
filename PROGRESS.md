@@ -11463,3 +11463,25 @@ exhaustive enum switches where the emitter adds a `case _ => ()` fall-out arm. E
 x3, `Locale` ctor x2, `DataInputStream.readLine`. 3 bare warnings from `-Wrecurse-with-default`.
 
 Engine specs: 2632 passing (65 api + 1002 engine + 1437 corpus + 128 frontend-spoon), 0 failures.
+
+### 13.17 Wave 2.14 — F9 callee-arity fix (for-each return lowering)
+
+The F9 for-each-with-return lowering decided `iterator`/`hasNext` arity by `program.owns` (wave
+2.10), which was wrong in BOTH directions: the runtime shims `JavaIterable`/`JavaIterator` are
+external but declare `()` (**6 errors** on simple-graphs, **7** on ssg-md), and a program-owned type
+whose `iterator` was converted to parenless by `NullaryArityTransform` is owned but should not have
+`()` (ssg-md `OrderedSet`). The fix reads the CALLEE SYMBOL's declaration: for program-declared
+members the tree's `paramss` is authoritative, for external members the `info` says `MethodType`
+for `()`. `hasNext` follows `iterator`'s arity (the protocol is consistent within one family). For
+external types whose member is inherited from a parent not in `parentsBySym` (e.g. `JavaCollection`
+inheriting from `JavaIterable`), the lookup checks program-declared subtypes of the external type
+and infers the arity from their overrides.
+
+| lane | JVM | JS | Native | `.ref` | notes |
+|---|---|---|---|---|---|
+| sg | 6 -> 0 | 2 = 2 | 0 = 0 | 20 -> 0 | F9 fix — all 6 arity errors closed, 16/16 tests passing |
+| gdx | 0 = 0 | 0 = 0 | 0 = 0 | 93 = 93 | F9's original sites unchanged |
+| textra | 0 = 0 | 0 = 0 | 0 = 0 | 3 = 3 | `InternalToken.fromName` unchanged |
+| liqp | 0 = 0 | 0 = 0 | 0 = 0 | -- | unchanged |
+
+Engine specs: 2635 passing (65 api + 1002 engine + 1440 corpus + 128 frontend-spoon), 0 failures.

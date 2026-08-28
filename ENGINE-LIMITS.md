@@ -12025,11 +12025,21 @@ comment.
 under scala-cli's defaults, and *Non local returns are no longer supported* under sge's `-Werror`
 (`TextraTypist InternalToken.fromName`). Where `returnsIn(body)` finds a `return`, the emitter lowers
 the loop to `while (it.hasNext) { val x = it.next(); … }` over an explicit iterator — java's own
-shape, with the `return` at method level — and decides the ARITY of `iterator/hasNext/next` by
-`program.owns` (a program-declared iterable keeps java's `()`, CLAUDE.md §4.5; a scala/JDK one is
-parenless). Measured: textra `.ref` 402 -> 401 for the one site; liqp `.ref` 106 -> 100 at 0 member
-digests moved outside the lowered members; 58 gdx port-map rows moved, all members holding such a
-loop. Specs in `EmitterBindingAndReturnSpec`.
+shape, with the `return` at method level — and decides the ARITY of `iterator`/`hasNext`/`next` from
+the CALLEE SYMBOL's declaration (§4.56): a program-declared member's tree `paramss` is authoritative
+(NullaryArityTransform may have stripped it to parenless), and an external member's `info` says
+`MethodType` for `()`. `hasNext` follows `iterator`'s arity (the protocol is consistent within one
+family, and the frontend may not have interned the iterator type's members — the for-each lowering
+generates those calls AFTER all frontend work). Default: parenless (an unresolvable member is most
+likely an extension method like `ArrayOps.iterator`).
+
+The previous heuristic — `program.owns(receiverType)` — was wrong in BOTH directions: the runtime
+shims `JavaIterable`/`JavaIterator` are not program-owned but declare `()` (**6 errors** on
+simple-graphs, **7** on ssg-md), and a program-owned type whose `iterator` was converted to
+parenless by `NullaryArityTransform` is program-owned but should NOT have `()` (ssg-md
+`OrderedSet`). Measured: textra `.ref` 402 -> 401 for the one site; liqp `.ref` 106 -> 100 at 0
+member digests moved outside the lowered members; 58 gdx port-map rows moved, all members holding
+such a loop. Specs in `EmitterBindingAndReturnSpec`.
 
 
 ### F10. A LOSSY WIDENING PRIMITIVE CONVERSION (`int→float`, `long→float`, `long→double`) relies on Scala's deprecated implicit conversion — CLOSED
