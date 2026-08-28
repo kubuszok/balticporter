@@ -2,11 +2,11 @@
 base-surface	0
 break-catch	0
 cast-conversion	0
-catalog(consulted)	95
+catalog(consulted)	96
 catalog(uncited)	122
-catalog(undischarged)	5
+catalog(undischarged)	4
 catalog(unmechanised)	1
-catalog(unreached)	17
+catalog(unreached)	16
 class-init-trigger	0
 collection-boundary	17
 collection-closure	0
@@ -31,7 +31,7 @@ portability(emitted)	55
 portability(injected)	0
 porter-notes	0
 remediation	17
-rewrite-callsites	1
+rewrite-callsites	0
 service-providers	3
 signature	0
 substitution(dangling)	0

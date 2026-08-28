@@ -1,12 +1,12 @@
 #check	count
-base-surface	0
+base-surface	79
 break-catch	0
 cast-conversion	0
-catalog(consulted)	82
+catalog(consulted)	83
 catalog(uncited)	122
-catalog(undischarged)	3
+catalog(undischarged)	2
 catalog(unmechanised)	1
-catalog(unreached)	30
+catalog(unreached)	29
 class-init-trigger	0
 collection-boundary	0
 collection-closure	0
@@ -26,6 +26,7 @@ manifest	0
 markers	0
 nullability-boundary	0
 omissions	0
+opaque-boundary	0
 overload-risk	0
 policy	2
 port-map	0
@@ -34,7 +35,7 @@ portability(emitted)	0
 portability(injected)	0
 porter-notes	0
 remediation	0
-rewrite-callsites	2
+rewrite-callsites	0
 signature	1
 substitution(dangling)	0
 substitution(emitted)	0

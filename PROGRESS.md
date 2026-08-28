@@ -11095,9 +11095,12 @@ site where `NullabilityTransform` inserted a `lowlevel.Nullable(...)` wrap (`Act
 most of the 1,627 `E006`s under the floor: `gdx-measure`'s `flags_compile` was the ONE compile in
 the lane invoked without `-- $DECLARED`, so the `lls` dependency the JVM, JS and Native compiles
 carry never reached the reference-flags compile (CLAUDE.md §4.56's third occurrence: a lane's own
-command line is part of the measurement). Fixed in the `Justfile`; the honest `.ref` count for
-libGDX core is whatever the next promotion measures, and it is acknowledged there as an instrument
-change, not absorbed as an improvement.
+command line is part of the measurement). Fixed in the `Justfile` and measured at the next
+promotion: **`.ref` 1651 -> 1362 = coded 1627 -> 1, warnings-under-`-Werror` 24 -> 1361** (352
+`E198` unused symbol, 5 `E030` unreachable case, 3 `E129`, the rest bare `-- Warning` rows). The
+`E006`s were all the missing dependency; what they hid is the reference build's real verdict on the
+emitted tree, and that 1361 is now the number the drop-in bar is measured against. Acknowledged as
+an instrument change, not absorbed as an improvement.
 
 ### 13.7 Wave 2.7 — the `opaque-boundary` lane, two `accountedBy` answers, `UniformLocation` open
 

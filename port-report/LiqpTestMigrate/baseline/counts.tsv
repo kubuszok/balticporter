@@ -3,11 +3,11 @@ base-surface	0
 bean-exposure	0
 break-catch	0
 cast-conversion	0
-catalog(consulted)	94
+catalog(consulted)	95
 catalog(uncited)	122
-catalog(undischarged)	5
+catalog(undischarged)	4
 catalog(unmechanised)	1
-catalog(unreached)	18
+catalog(unreached)	17
 class-init-trigger	0
 collection-boundary	9
 collection-closure	0
@@ -32,7 +32,7 @@ portability(emitted)	1549
 portability(injected)	0
 porter-notes	0
 remediation	11
-rewrite-callsites	1
+rewrite-callsites	0
 signature	0
 substitution(dangling)	0
 substitution(emitted)	0

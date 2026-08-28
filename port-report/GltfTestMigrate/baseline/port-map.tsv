@@ -1,7 +1,8 @@
-# balticporter port map	schema=4	module=sge-gltf-test	engine=balticporter/0.1.0-SNAPSHOT	sources=b4b23a0b3f213f16	files=1	policy=3f290210b5f03a71	jdk=22
+# balticporter port map	schema=4	module=sge-gltf-test	engine=balticporter/0.1.0-SNAPSHOT	sources=b4b23a0b3f213f16	files=1	policy=b6268f3c18efbf63	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	net.mgsx.gltf.scene3d.attributes.AttributesCompareTest	sge.gltf.scene3d.attributes.AttributesCompareTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.net.NetJavaImpl		Dropped	-		0		
+type	com.badlogic.gdx.utils.Align		Dropped	-		0		
 type	com.badlogic.gdx.utils.Disposable		Dropped	-		0		
 type	com.badlogic.gdx.utils.Json		Dropped	-		0		
 type	com.badlogic.gdx.utils.Pools		Dropped	-		0		
