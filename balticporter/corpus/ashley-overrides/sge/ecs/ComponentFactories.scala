@@ -39,25 +39,30 @@ package sge.ecs
   *     component's constructor threw" into "returned null" — a defect that compiles, passes review
   *     and behaves differently (CLAUDE.md §4.4). It is rethrown unwrapped.
   */
-object ComponentFactories:
+object ComponentFactories {
 
   private val factories = new java.util.concurrent.ConcurrentHashMap[Class[?], () => Component]()
 
   /** Register the cross-platform way to build a component. Required on Scala.js and Scala Native,
     * where the reflective fallback below cannot exist. */
-  def register[T <: Component](componentType: Class[T], factory: () => T): Unit =
+  def register[T <: Component](componentType: Class[T], factory: () => T): Unit = {
     factories.put(componentType, factory.asInstanceOf[() => Component])
+  }
 
   /** A registered factory if there is one, else the JVM reflective path, else `null` — exactly the
     * three outcomes `Engine.createComponent` already had. */
-  def create[T <: Component](componentType: Class[T]): T =
+  def create[T <: Component](componentType: Class[T]): T = {
     val f = factories.get(componentType)
-    if f != null then f().asInstanceOf[T]
-    else reflectively(componentType)
+    if (f != null) { f().asInstanceOf[T] }
+    else { reflectively(componentType) }
+  }
 
-  private def reflectively[T <: Component](componentType: Class[T]): T =
-    try componentType.getConstructor().newInstance()
-    catch
+  private def reflectively[T <: Component](componentType: Class[T]): T = {
+    try { componentType.getConstructor().newInstance() }
+    catch {
       case _: NoSuchMethodException | _: InstantiationException | _: IllegalAccessException =>
         null.asInstanceOf[T]
       case e: java.lang.reflect.InvocationTargetException => throw e.getCause
+    }
+  }
+}
