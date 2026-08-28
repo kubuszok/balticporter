@@ -4051,7 +4051,7 @@ final class TirEmitter(
         return s"${ind(i)}$m$kw ${esc(s.name)}: ${tpe(v.tpt.tpe)} = ${fs.name}"
       case None => ()
     v.rhs match
-      case Some(r) if isJavaConstant(v, s) =>
+      case Some(r) if isJavaConstant(v, s) && !isAnonOwner(s.owner) =>
         // Java calls this a CONSTANT VARIABLE (JLS 4.12.4): `static final` of primitive or String
         // type with a constant initialiser. javac INLINES every use, so reading `Matrix4.M00` does
         // NOT trigger `Matrix4`'s class initialiser — which is the only reason libgdx's static
@@ -4060,6 +4060,11 @@ final class TirEmitter(
         // creates a `Vector3` that is still half-built, and the JVM throws
         // `ExceptionInInitializerError`. Scala's equivalent of the java rule is `inline val` —
         // note WITHOUT the type ascription, which would defeat the constant type.
+        //
+        // An ANONYMOUS CLASS has no companion object, so `inline val` cannot be placed there — the
+        // constant stays an ordinary `val` in the anonymous body. References inside that body use
+        // the bare name, which is what Java resolved too (§4.56: decide "is this owner nameable"
+        // from the symbol's `<anon>` name, never from the `$NNN` in its fullName).
         s"${ind(i)}${mods(s).replace("final ", "")}inline val ${esc(s.name)} = ${constAt(r, v.tpt.tpe)}"
       case Some(r) =>
         // A non-final java local or PRIVATE field whose symbol is never ASSIGNED in the whole
@@ -4249,11 +4254,23 @@ final class TirEmitter(
     else if currentDeclared(id) || inheritedNested(s.owner) then esc(s.name)
     else escPath(s.fullName).replace('$', '.')
 
+  /** Is the given symbol an anonymous class? Decided from the symbol's `<anon>` NAME (the frontend
+    * creates anonymous class symbols with `name = "<anon>"`), never from the `$NNN` suffix in its
+    * `fullName` — §4.56: decide from the symbol's anonymous flag, not from a string pattern. */
+  private def isAnonOwner(id: SymId): Boolean =
+    id != SymId.None && program.symbolOf(id).exists(_.name == "<anon>")
+
   /** a static member lives in the companion `object`; even inside its own class it must be
-    * named `Owner.member`, since a Scala class doesn't see its companion's members unqualified. */
+    * named `Owner.member`, since a Scala class doesn't see its companion's members unqualified.
+    *
+    * An ANONYMOUS CLASS has no nameable path: its FQN contains a numeric suffix (`Skin$107`) that
+    * after package rename becomes `Skin.107` (a syntax error). Members of anonymous classes are
+    * rendered bare — exactly what Java resolved inside that body. Decided from the symbol's
+    * `<anon>` name (§4.56), never from a `$NNN` in its fullName. */
   private def staticRef(s: SymId): String =
     val sm = sym(s)
-    if sm.flags.isStatic && sm.owner != SymId.None && program.symbolOf(sm.owner).exists(_.info.isInstanceOf[TypeRepr.TypeRef])
+    if sm.flags.isStatic && sm.owner != SymId.None && !isAnonOwner(sm.owner) &&
+       program.symbolOf(sm.owner).exists(_.info.isInstanceOf[TypeRepr.TypeRef])
     then s"${typeValue(sm.owner)}.${esc(sm.name)}"
     else if shadowedByCompanionStatic(s) then s"this.${esc(sm.name)}"
     else local(s)

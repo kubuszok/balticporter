@@ -11415,9 +11415,9 @@ x3, `Locale` ctor x2, `DataInputStream.readLine`. 3 bare warnings from `-Wrecurs
 
 Engine specs: 2628 passing (65 api + 1002 engine + 1435 corpus + 126 frontend-spoon), 0 failures.
 
-### 13.15b Wave 2.13b — frontend SymId alias + replay `@nowarn` as a recorded decision
+### 13.15b Wave 2.13b — frontend SymId alias + replay `@nowarn` + anonymous-class FQN fix
 
-Two structural fixes, zero new emissions:
+Three structural fixes:
 
 - **Frontend SymId alias** (`Minter.alias`). ROOT CAUSE: `anonClass` creates the anonymous class
   symbol with key `@{enclosing.raw}#<anon>N`, while `fieldSym`/`methodSym` resolve the owner via
@@ -11429,23 +11429,37 @@ Two structural fixes, zero new emissions:
   a simple `writtenSyms.contains(v.symbol)`. The 45 conservatively-kept `var` locals from wave 2.13
   now resolve correctly by SymId, and those that are genuinely never written become `val`.
 
-- **Replay `@nowarn` as a recorded decision** (§4.575). The emitter's `replayNowarn` rendering-time
-  detection is moved to construction time: `replayOrNullCtors` is a `Set[SymId]` computed after
-  `CtorFunnel.Plans`, and each entry is recorded as `Decision.Kind.SuppressedWarning` with
-  `Reason.Universal("ctor-replay-orNull-suppression")`. The rendering path checks the set rather
-  than scanning replay statements. Decisions flow through `ownDecisions` -> orchestrator ->
-  `notes` -> `noteIndex` -> porter notes, satisfying §4.575.
+- **Replay `@nowarn` as a recorded decision** (section 4.575). The emitter's `replayNowarn`
+  rendering-time detection is moved to construction time: `replayOrNullCtors` is a `Set[SymId]`
+  computed after `CtorFunnel.Plans`, and each entry is recorded as
+  `Decision.Kind.SuppressedWarning` with `Reason.Universal("ctor-replay-orNull-suppression")`. The
+  rendering path checks the set rather than scanning replay statements. `SuppressedWarning`
+  decisions 459 -> 486 (27 replay constructors). `porter-notes` 0.
+
+- **Anonymous-class FQN fix** (section 4.56). An anonymous class has no nameable path — its FQN
+  contains a numeric suffix (`Skin$107`) that after package rename becomes `Skin.107` (a syntax
+  error). Two fixes: (a) `isJavaConstant` excludes anonymous-class owners, so a `static final`
+  constant stays an ordinary `val` (not `inline val` in a non-existent companion); (b) `staticRef`
+  detects anonymous owners by the symbol's `<anon>` name and renders the bare name instead of a
+  FQN. `isAnonOwner` helper decides from the symbol's name, never from a `$NNN` pattern.
+  SPEC: `AnonClassEmitSpec` — no `inline val`, no numeric FQN suffix in references. The 4 JVM
+  errors (`Skin#getJsonLoader`, 3 E040 + 1 E134) from wave 2.13's `val`-for-unset-vars are
+  CLOSED.
 
 | lane | JVM | JS | Native | `.ref` | notes |
 |---|---|---|---|---|---|
-| gdx | 4 = 4 | 4 = 4 | 4 = 4 | 138 -> 7 | SymId alias, replay decision; 1536 member digests |
+| gdx | 0 = 0 | 0 = 0 | 0 = 0 | 1362 -> 93 | SymId alias, anon-class FQN fix, replay decision |
+| ashley | 0 = 0 | 0 = 0 | 0 = 0 | 8 = 8 | byte-identical |
+| gltf | 3 = 3 | 3 = 3 | 3 = 3 | 3 = 3 | unchanged |
+| textra | 0 = 0 | 0 = 0 | 0 = 0 | 402 -> 3 | base `@nowarn` propagates through `Named` target |
 
-gdx `.ref` residue (**7**): 4 coded (3 E040 + 1 E134, the anonymous-class FQN `Skin.107` issue),
-3 warnings-as-errors (E129 pure expression). `SuppressedWarning` decisions 459 -> 486 (27 replay
-constructors). `porter-notes` 0.
+gdx `.ref` residue (**93**): 0 coded errors, 93 warnings-under-Werror (E198 unused symbol + E129
+pure expression + `-Wrecurse-with-default`).
 
-OPEN: E040/E134 anonymous-class FQN syntax (4) — the emitter renders a fully-qualified path to
-a static member of an anonymous class, and after package rename the numeric suffix becomes `.107`
-which is a syntax error. E129 pure expression (3). Pre-existing from wave 2.13.
+OPEN: unused private member (31), unused local def (28), mutated-but-not-read (9) — these need
+`@nowarn("msg=unused")` as a recorded `SuppressedWarning` decision. E030 unreachable case (5) —
+exhaustive enum switches where the emitter adds a `case _ => ()` fall-out arm. E129 pure expression
+(3) — empty while-loop bodies emitting `{ { () }; step }`. JDK deprecations (6) — `Character.isSpace`
+x3, `Locale` ctor x2, `DataInputStream.readLine`. 3 bare warnings from `-Wrecurse-with-default`.
 
-Engine specs: 2630 passing (65 api + 1002 engine + 1435 corpus + 128 frontend-spoon), 0 failures.
+Engine specs: 2632 passing (65 api + 1002 engine + 1437 corpus + 128 frontend-spoon), 0 failures.

@@ -10,7 +10,9 @@ import balticporter.tir.*
   * keys yield two SymIds for one class, and a `ValDef` written inside the anonymous class body
   * is not found by `isWritten` — conservatively emitting `var` where `val` was correct.
   *
-  * FIX: `Minter.alias(qname, id)` registered in `anonClass` after the symbol is defined. */
+  * FIX: `Minter.alias(qname, id)` registered in `anonClass` after the symbol is defined.
+  * Emission-side tests (no `inline val`, bare reference) are in `AnonClassEmitSpec` under corpus,
+  * which depends on both engine and frontend-spoon. */
 class AnonClassSymIdSpec extends munit.FunSuite:
 
   private val src =
