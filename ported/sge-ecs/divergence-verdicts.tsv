@@ -1,6 +1,5 @@
 #subject	status	evidence	spelling	decided_by
 ComponentType#index	justified	sge ISS-017 resolved; getter/setter collapse convention	(b) BeanCollapse idiom phase	div-accessor
-EntitySystem#getEngine	justified	sge ISS-017 resolved; getter/setter collapse convention	(b) BeanCollapse idiom phase	div-accessor
 EntitySystem#setProcessing	justified	EntitySystem.scala "Idiom: processing as public var (replaces get/set pair)"	(b) BeanCollapse idiom phase	div-accessor
 Family#index	justified	sge ISS-017 resolved; getter/setter collapse convention	(b) BeanCollapse idiom phase	div-accessor
 Engine#registerComponentFactory	justified	sge 80b3fc64 "ReflectionPool -> factory registry"; ISS-723 c12; platform constraint (no reflection on JS/Native)	(c) library-specific injection	div-pooledengine
@@ -90,8 +89,6 @@ Bag#clear	not-a-divergence	Bag is faithfully translated; member exists in both	c
 Bag#contains	not-a-divergence	Bag is faithfully translated; member exists in both	census artefact	div-bag
 Bag#data	not-a-divergence	Bag field; visibility difference only	census artefact	div-bag
 Bag#get	not-a-divergence	Bag is faithfully translated; member exists in both	census artefact	div-bag
-Bag#getCapacity	not-a-divergence	Bag is faithfully translated; member exists in both	census artefact	div-bag
-Bag#isEmpty	not-a-divergence	Bag is faithfully translated; member exists in both	census artefact	div-bag
 Bag#isIndexWithinBounds	not-a-divergence	Bag is faithfully translated; member exists in both	census artefact	div-bag
 Bag#newCapacity	not-a-divergence	local variable in Bag.grow(); not a class member	census artefact	div-bag
 Bag#oldData	not-a-divergence	local variable in Bag.grow(); not a class member	census artefact	div-bag
@@ -120,7 +117,6 @@ PooledEngine#freeAll	justified	PooledEngine.scala factory registry; pool managem
 PooledEngine#initialSize	justified	PooledEngine.scala factory registry; pool configuration	(c) library-specific injection	div-pooledengine
 PooledEngine#maxSize	justified	PooledEngine.scala factory registry; pool configuration	(c) library-specific injection	div-pooledengine
 PooledEngine#pools	justified	PooledEngine.scala factory registry; pool map	(c) library-specific injection	div-pooledengine
-EntitySystem#engine	justified	EntitySystem.scala "Idiom: Nullable[Engine] for engine reference"; hand port exposes engine as def	(b) accessor idiom	div-accessor
 Type#Add	not-a-divergence	enum case of inner type; census artefact from inner class reorganization	census artefact	div-componentophandler
 Type#Remove	not-a-divergence	enum case of inner type; census artefact	census artefact	div-componentophandler
 Type#RemoveAll	not-a-divergence	enum case of EntityManager.EntityOperation.Type; census artefact	census artefact	div-entitymanager
@@ -151,3 +147,10 @@ Engine#componentFactories	justified	sge ISS-723 c12, commit 80b3fc64: reflective
 EntityManager$#newObject	not-a-divergence	sge sge-extension/ecs/src/main/scala/sge/ecs/EntityManager.scala:176 "override protected def newObject(): EntityOperation = new EntityOperation()" in top-level `private[ecs] class EntityOperationPool`	none: census artefact — owner mismatch	divergence-investigator
 FamilyManager$#newObject	not-a-divergence	sge sge-extension/ecs/src/main/scala/sge/ecs/FamilyManager.scala:208 "override protected def newObject(): mutable.BitSet = mutable.BitSet()" in top-level `private[ecs] class BitSetPool`	none: census artefact — owner mismatch	divergence-investigator
 ComponentOperationHandler$#newObject	justified	sge ComponentOperationHandler.scala:11 "Idiom: ArrayBuffer instead of Array + Pool for operations"; :18 Covenant-baseline-methods excludes newObject/ComponentOperationPool/operationPool; present since 80b3fc64	none: java's private pool is kept (a `private static class` is not surface; PROGRESS §13: java wins on omissions) — the hand port's ArrayBuffer idiom is recorded, not reproduced	divergence-investigator
+Engine#getEntities	justified	upstream Engine.java:132 declares getEntities(); hand port keeps the name; emitted port auto-detected as bean getter and renamed to entities	(b) BeanPropertyTransform auto-detect excludes or explicit pair	div-getentities
+Engine#getSystems	justified	upstream Engine.java:170 declares getSystems(); hand port keeps the name; emitted port auto-detected as bean getter and renamed to systems	(b) BeanPropertyTransform auto-detect excludes or explicit pair	div-getsystems
+Bits->mutable.BitSet	justified	Entity.scala migration note: "Idiom: mutable.BitSet instead of Bits"; sge.utils.Bits dropped by base port (no file exists in sge/src/main/scala/sge/utils/); cross-platform: Bits wraps java.util.BitSet which exists on all platforms but the hand port chose stdlib BitSet	(b) TypeRedirectTransform or CollectionsTransform retarget with member mapping	div-bits-bitset
+Array->ArrayBuffer	justified	Entity.scala migration note: "Idiom: ArrayBuffer instead of Array for componentsArray"; sge.utils.Array dropped by base port; all ecs files use ArrayBuffer/HashMap/HashSet instead of libGDX collection types	(b) TypeRedirectTransform or CollectionsTransform retarget with member mapping	div-array-arraybuffer
+ObjectMap->HashMap	justified	FamilyManager.scala migration note: "Idiom: HashMap instead of ObjectMap"; sge.utils.ObjectMap dropped by base port	(b) TypeRedirectTransform or CollectionsTransform retarget with member mapping	div-array-arraybuffer
+ObjectSet->HashSet	justified	EntityManager.scala migration note: "Idiom: HashSet instead of ObjectSet"; sge.utils.ObjectSet dropped by base port	(b) TypeRedirectTransform or CollectionsTransform retarget with member mapping	div-array-arraybuffer
+SnapshotArray->ArrayBuffer	justified	FamilyManager.scala migration note: "Idiom: snapshot copy during listener notification (replaces SnapshotArray.begin/end)"; sge.utils.SnapshotArray dropped by base port	(b) TypeRedirectTransform or CollectionsTransform retarget with member mapping	div-array-arraybuffer
