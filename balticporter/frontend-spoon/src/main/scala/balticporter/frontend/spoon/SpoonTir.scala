@@ -2635,11 +2635,17 @@ object SpoonTir:
       // With the body translator in scope, exactly as for a METHOD: an annotation carrying
       // arguments is then carried whole instead of being reported as undroppable, which is the
       // difference between `@A(x)` and `@A` — a different annotation (see `annotationsOf`).
+      // The method's fullName, computed from its OWNER whose symbol is already set. This is
+      // `minter.fullNameOf(owner) + "#" + name`, not `minter.fullNameOf(id)` — the latter returns
+      // `"?"` here because the method's own symbol has not been set yet (`minter.set` is below).
+      // Parameters' fullNames are derived from it, so they need it to be known now, not after.
+      val methodFullName = qualified(owner, name)
       val pvs = ps.map { p =>
         val pt  = anyForEquals(p)
         val (panns, pannDropped) = annotationsOf(p, Some(bt))
+        val paramFullName = methodFullName + "#" + p.getSimpleName
         val pid = minter.define(minterKeyOf(id) + "%" + p.getSimpleName)(sid =>
-          Symbol(sid, p.getSimpleName, qualified(id, p.getSimpleName), Flags(isParam = true, isVararg = p.isVarArgs), id, pt,
+          Symbol(sid, p.getSimpleName, paramFullName, Flags(isParam = true, isVararg = p.isVarArgs), id, pt,
                  annotations = panns, droppedAnnotations = pannDropped)
         )
         bt.registerVar(p, pid)
