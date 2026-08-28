@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-gltf-test	engine=balticporter/0.1.0-SNAPSHOT	sources=b4b23a0b3f213f16	files=1	policy=b6268f3c18efbf63	jdk=22
+# balticporter port map	schema=4	module=sge-gltf-test	engine=balticporter/0.1.0-SNAPSHOT	sources=b4b23a0b3f213f16	files=1	policy=b08dee0e3a7c6034	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	net.mgsx.gltf.scene3d.attributes.AttributesCompareTest	sge.gltf.scene3d.attributes.AttributesCompareTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.net.NetJavaImpl		Dropped	-		0		
@@ -25,14 +25,14 @@ type		balticporter.runtime.JavaOptionalDouble	Added	-		0
 type		balticporter.runtime.JavaOptionalInt	Added	-		0		
 type		balticporter.runtime.JavaOptionalLong	Added	-		0		
 type		balticporter.runtime.JavaStack	Added	-		0		
-member	net.mgsx.gltf.scene3d.attributes.AttributesCompareTest#<stmt1>	sge.gltf.scene3d.attributes.AttributesCompareTest#<stmt1>	Renamed	-	net/mgsx/gltf/scene3d/attributes/AttributesCompareTest.java	12	cf25fee29ab93b80	
-member	net.mgsx.gltf.scene3d.attributes.AttributesCompareTest#<stmt2>	sge.gltf.scene3d.attributes.AttributesCompareTest#<stmt2>	Renamed	-	net/mgsx/gltf/scene3d/attributes/AttributesCompareTest.java	18	39c0ce94e2b9ebe8	
-member	net.mgsx.gltf.scene3d.attributes.AttributesCompareTest#<stmt3>	sge.gltf.scene3d.attributes.AttributesCompareTest#<stmt3>	Renamed	-	net/mgsx/gltf/scene3d/attributes/AttributesCompareTest.java	26	4ecd1abf3a38f7c1	
-member	net.mgsx.gltf.scene3d.attributes.AttributesCompareTest#<stmt4>	sge.gltf.scene3d.attributes.AttributesCompareTest#<stmt4>	Renamed	-	net/mgsx/gltf/scene3d/attributes/AttributesCompareTest.java	32	503414237d17ec38	
-member	net.mgsx.gltf.scene3d.attributes.AttributesCompareTest#<stmt5>	sge.gltf.scene3d.attributes.AttributesCompareTest#<stmt5>	Renamed	-	net/mgsx/gltf/scene3d/attributes/AttributesCompareTest.java	40	0be63b340564fd25	
-member	net.mgsx.gltf.scene3d.attributes.AttributesCompareTest#<stmt6>	sge.gltf.scene3d.attributes.AttributesCompareTest#<stmt6>	Renamed	-	net/mgsx/gltf/scene3d/attributes/AttributesCompareTest.java	46	9150ea458d95d03c	
+member	net.mgsx.gltf.scene3d.attributes.AttributesCompareTest#<stmt1>	sge.gltf.scene3d.attributes.AttributesCompareTest#<stmt1>	Renamed	-	net/mgsx/gltf/scene3d/attributes/AttributesCompareTest.java	12	973e1172a0057d1b	
+member	net.mgsx.gltf.scene3d.attributes.AttributesCompareTest#<stmt2>	sge.gltf.scene3d.attributes.AttributesCompareTest#<stmt2>	Renamed	-	net/mgsx/gltf/scene3d/attributes/AttributesCompareTest.java	18	04259590d79455b5	
+member	net.mgsx.gltf.scene3d.attributes.AttributesCompareTest#<stmt3>	sge.gltf.scene3d.attributes.AttributesCompareTest#<stmt3>	Renamed	-	net/mgsx/gltf/scene3d/attributes/AttributesCompareTest.java	26	c8603b940698eff8	
+member	net.mgsx.gltf.scene3d.attributes.AttributesCompareTest#<stmt4>	sge.gltf.scene3d.attributes.AttributesCompareTest#<stmt4>	Renamed	-	net/mgsx/gltf/scene3d/attributes/AttributesCompareTest.java	32	78e99ace1cb24a55	
+member	net.mgsx.gltf.scene3d.attributes.AttributesCompareTest#<stmt5>	sge.gltf.scene3d.attributes.AttributesCompareTest#<stmt5>	Renamed	-	net/mgsx/gltf/scene3d/attributes/AttributesCompareTest.java	40	694264024b18784f	
+member	net.mgsx.gltf.scene3d.attributes.AttributesCompareTest#<stmt6>	sge.gltf.scene3d.attributes.AttributesCompareTest#<stmt6>	Renamed	-	net/mgsx/gltf/scene3d/attributes/AttributesCompareTest.java	46	ec2328b0c740b168	
 member	net.mgsx.gltf.scene3d.attributes.AttributesCompareTest#<stmt7>	sge.gltf.scene3d.attributes.AttributesCompareTest#<stmt7>	Renamed	-	net/mgsx/gltf/scene3d/attributes/AttributesCompareTest.java	54	351c7c2b08e30919	
-member	net.mgsx.gltf.scene3d.attributes.AttributesCompareTest#<stmt8>	sge.gltf.scene3d.attributes.AttributesCompareTest#<stmt8>	Renamed	-	net/mgsx/gltf/scene3d/attributes/AttributesCompareTest.java	65	17a06ebb0a8c895f	
+member	net.mgsx.gltf.scene3d.attributes.AttributesCompareTest#<stmt8>	sge.gltf.scene3d.attributes.AttributesCompareTest#<stmt8>	Renamed	-	net/mgsx/gltf/scene3d/attributes/AttributesCompareTest.java	65	ecb0592938ac73c7	
 member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray$ChannelDescriptor#<init>(int,Class,int)		Dropped	-		0		
 member	com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch#<init>(Class)		Dropped	-		0		
 member	com.badlogic.gdx.scenes.scene2d.ui.Skin#findMethod		Dropped	-		0		

@@ -16,7 +16,7 @@ sge.ai.btree.branch.ParallelTest	sge.ai.btree.branch.ParallelTest$TestTask#copyT
 sge.ai.btree.branch.ParallelTest	sge.ai.btree.branch.ParallelTest$TestTask#execute()	def	9c2e13f114f12afd
 sge.ai.btree.branch.ParallelTest	sge.ai.btree.branch.ParallelTest$TestTask#executions	val	e4dc4049e766bd1b
 sge.ai.btree.branch.ParallelTest	sge.ai.btree.branch.ParallelTest$TestTask#status	val	f006b5169427f7b0
-sge.ai.pfa.indexed.IndexedAStarPathFinderTest	sge.ai.pfa.indexed.IndexedAStarPathFinderTest	class	6bcd20f5e70e0903
+sge.ai.pfa.indexed.IndexedAStarPathFinderTest	sge.ai.pfa.indexed.IndexedAStarPathFinderTest	class	a64d0d7be7496419
 sge.ai.pfa.indexed.IndexedAStarPathFinderTest	sge.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt1>	stmt	b39835179fd9906b
 sge.ai.pfa.indexed.IndexedAStarPathFinderTest	sge.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt2>	stmt	5fa85421e9518fbe
 sge.ai.pfa.indexed.IndexedAStarPathFinderTest	sge.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt3>	stmt	8cae32981f358bcc
@@ -24,8 +24,8 @@ sge.ai.pfa.indexed.IndexedAStarPathFinderTest	sge.ai.pfa.indexed.IndexedAStarPat
 sge.ai.pfa.indexed.IndexedAStarPathFinderTest	sge.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt5>	stmt	a402f68ec3efcb38
 sge.ai.pfa.indexed.IndexedAStarPathFinderTest	sge.ai.pfa.indexed.IndexedAStarPathFinderTest#createGraphFromTextRepresentation(String)	def	931078a41bfe47c4
 sge.ai.pfa.indexed.IndexedAStarPathFinderTest	sge.ai.pfa.indexed.IndexedAStarPathFinderTest#createStringTilesFromGraphTextRepresentation(String)	def	8f415e4459d6e625
-sge.ai.pfa.indexed.IndexedAStarPathFinderTest	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$ManhattanDistance	class	4bcbb48110e3c6a5
-sge.ai.pfa.indexed.IndexedAStarPathFinderTest	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$ManhattanDistance#estimate(MyNode,MyNode)	def	eed03d6eb9b32543
+sge.ai.pfa.indexed.IndexedAStarPathFinderTest	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$ManhattanDistance	class	66acc3b15604a1ff
+sge.ai.pfa.indexed.IndexedAStarPathFinderTest	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$ManhattanDistance#estimate(MyNode,MyNode)	def	5694965f3c53e713
 sge.ai.pfa.indexed.IndexedAStarPathFinderTest	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyDynamicGraph	class	32e3edd5c2b2b407
 sge.ai.pfa.indexed.IndexedAStarPathFinderTest	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyDynamicGraph#<stmt1>	stmt	23212f88b02e07f3
 sge.ai.pfa.indexed.IndexedAStarPathFinderTest	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyDynamicGraph#<stmt2>	stmt	b45e24226d307d16

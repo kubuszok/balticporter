@@ -1,4 +1,425 @@
 #id	check	kind	owner	path	line	detail
+96bc04d64812	api-parity(hand-port-extra)	hand-port-extra	#ConstantData		0	object ConstantData/0 in reference port only
+109ea1e8e0e6	api-parity(hand-port-extra)	hand-port-extra	#DitherAlgorithm		0	enum DitherAlgorithm/0 in reference port only
+66b32a3c6843	api-parity(hand-port-extra)	hand-port-extra	#DitherAlgorithm		0	object DitherAlgorithm/0 in reference port only
+e2d18e2564c0	api-parity(hand-port-extra)	hand-port-extra	#continueOuter		0	var continueOuter/0 in reference port only [rename candidates: c, disp, ent, fcode, hshift, hsize_reg, i, i, i, imgH, imgW, initCodeSize, pixArray]
+01ffaf8524b4	api-parity(hand-port-extra)	hand-port-extra	#done		0	var done/0 in reference port only [rename candidates: c, disp, ent, fcode, hshift, hsize_reg, i, i, i, imgH, imgW, initCodeSize, pixArray]
+b8a560169a07	api-parity(hand-port-extra)	hand-port-extra	#encode		0	def encode/1 in reference port only [rename candidates: endChunk]
+4da35725a836	api-parity(hand-port-extra)	hand-port-extra	#searching		0	var searching/0 in reference port only [rename candidates: c, disp, ent, fcode, hshift, hsize_reg, i, i, i, imgH, imgW, initCodeSize, pixArray]
+53fd57c627cc	api-parity(hand-port-extra)	hand-port-extra	AnimatedGif#_clearPalette	/AnimatedGif	0	var _clearPalette/0 in reference port only [rename candidates: clearPalette, closeStream, colorDepth, colorTab, delay, dispose, fastAnalysis, firstFrame, height, image, indexedPixels, out, palSize, repeat, seq, sizeSet, started, transIndex, usedEntry, width, x, y]
+9f0b83e8fbfc	api-parity(hand-port-extra)	hand-port-extra	AnimatedGif#_ditherStrength	/AnimatedGif	0	var _ditherStrength/0 in reference port only [rename candidates: clearPalette, closeStream, colorDepth, colorTab, delay, dispose, fastAnalysis, firstFrame, height, image, indexedPixels, out, palSize, repeat, seq, sizeSet, started, transIndex, usedEntry, width, x, y]
+64c278dc3b36	api-parity(hand-port-extra)	hand-port-extra	AnimatedGif#flipY	/AnimatedGif	0	var flipY/0 in reference port only [rename candidates: clearPalette, closeStream, colorDepth, colorTab, delay, dispose, fastAnalysis, firstFrame, height, image, indexedPixels, out, palSize, repeat, seq, sizeSet, started, transIndex, usedEntry, width, x, y]
+19fd1fcde5e4	api-parity(hand-port-extra)	hand-port-extra	AnimatedGif#isFlipY	/AnimatedGif	0	def isFlipY/0 in reference port only [rename candidates: analyzeAdditive, analyzeBanter, analyzeBlue, analyzeBlunt, analyzeBurkes, analyzeChaotic, analyzeDiffusion, analyzeDodgy, analyzeGourd, analyzeGradient, analyzeLoaf, analyzeMarten, analyzeNeue, analyzeNone, analyzeOceanic, analyzeOverboard, analyzePattern, analyzePixels, analyzeRoberts, analyzeScatter, analyzeSeaside, analyzeWoven, analyzeWren, analyzeWrenOriginal, ditherAlgorithm, ditherStrength, finish, flipY, getImagePixels, isFastAnalysis, palette, writeGraphicCtrlExt, writeImageDesc, writeLSD, writeNetscapeExt, writePalette, writePixels]
+ee5b11dfea38	api-parity(hand-port-extra)	hand-port-extra	AnimatedGif#setFlipY	/AnimatedGif	0	def setFlipY/1 in reference port only [rename candidates: addFrame, ditherAlgorithm_=, ditherStrength_=, flipY_=, palette_=, setDelay, setDispose, setFastAnalysis, setFrameRate, setRepeat, start, writeShort, writeString]
+f02f71bb223a	api-parity(hand-port-extra)	hand-port-extra	ConstantData$#ENCODED_SNUGGLY	/ConstantData$	0	val ENCODED_SNUGGLY/0 in reference port only
+6408d5931eb4	api-parity(hand-port-extra)	hand-port-extra	ConstantData$#TRI_BLUE_NOISE	/ConstantData$	0	val TRI_BLUE_NOISE/0 in reference port only
+857bc4eb6788	api-parity(hand-port-extra)	hand-port-extra	ConstantData$#TRI_BLUE_NOISE_B	/ConstantData$	0	val TRI_BLUE_NOISE_B/0 in reference port only
+7119924b5c8e	api-parity(hand-port-extra)	hand-port-extra	ConstantData$#TRI_BLUE_NOISE_C	/ConstantData$	0	val TRI_BLUE_NOISE_C/0 in reference port only
+10df1bcffb2c	api-parity(hand-port-extra)	hand-port-extra	ConstantData$#TRI_BLUE_NOISE_MULTIPLIERS	/ConstantData$	0	val TRI_BLUE_NOISE_MULTIPLIERS/0 in reference port only
+c4f364824191	api-parity(hand-port-extra)	hand-port-extra	ConstantData$#TRI_BLUE_NOISE_MULTIPLIERS_B	/ConstantData$	0	val TRI_BLUE_NOISE_MULTIPLIERS_B/0 in reference port only
+b26ab56d38ae	api-parity(hand-port-extra)	hand-port-extra	ConstantData$#TRI_BLUE_NOISE_MULTIPLIERS_C	/ConstantData$	0	val TRI_BLUE_NOISE_MULTIPLIERS_C/0 in reference port only
+d170fa037041	api-parity(hand-port-extra)	hand-port-extra	ConstantData$#arr	/ConstantData$	0	val arr/0 in reference port only
+447367d5cde6	api-parity(hand-port-extra)	hand-port-extra	ConstantData$#i	/ConstantData$	0	var i/0 in reference port only
+ebde84041303	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#ADDITIVE	/DitherAlgorithm	0	case ADDITIVE/0 in reference port only
+f5d409b40709	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#BANTER	/DitherAlgorithm	0	case BANTER/0 in reference port only
+9d7c9e28234c	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#BLUE_NOISE	/DitherAlgorithm	0	case BLUE_NOISE/0 in reference port only
+7a068cd30761	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#BLUNT	/DitherAlgorithm	0	case BLUNT/0 in reference port only
+22fe379ba5da	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#BURKES	/DitherAlgorithm	0	case BURKES/0 in reference port only
+3d63fa9f5466	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#CHAOTIC_NOISE	/DitherAlgorithm	0	case CHAOTIC_NOISE/0 in reference port only
+d2cd65c84383	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#DIFFUSION	/DitherAlgorithm	0	case DIFFUSION/0 in reference port only
+ebde6afde227	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#DODGY	/DitherAlgorithm	0	case DODGY/0 in reference port only
+b104d6b88c7b	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#GOURD	/DitherAlgorithm	0	case GOURD/0 in reference port only
+4cd58b8ec2bd	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#GRADIENT_NOISE	/DitherAlgorithm	0	case GRADIENT_NOISE/0 in reference port only
+0f3eac17f256	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#LOAF	/DitherAlgorithm	0	case LOAF/0 in reference port only
+1b022a125cfc	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#MARTEN	/DitherAlgorithm	0	case MARTEN/0 in reference port only
+f1b5418eb26b	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#NEUE	/DitherAlgorithm	0	case NEUE/0 in reference port only
+579f0f98a3b8	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#NONE	/DitherAlgorithm	0	case NONE/0 in reference port only
+4c6d2c01023a	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#OCEANIC	/DitherAlgorithm	0	case OCEANIC/0 in reference port only
+a4e557843f75	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#OVERBOARD	/DitherAlgorithm	0	case OVERBOARD/0 in reference port only
+a1b4f7e91a73	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#PATTERN	/DitherAlgorithm	0	case PATTERN/0 in reference port only
+8c074ec70b5f	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#ROBERTS	/DitherAlgorithm	0	case ROBERTS/0 in reference port only
+5cfcecc730be	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#SCATTER	/DitherAlgorithm	0	case SCATTER/0 in reference port only
+efd542a90898	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#SEASIDE	/DitherAlgorithm	0	case SEASIDE/0 in reference port only
+a51db4e8a3c2	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#WOVEN	/DitherAlgorithm	0	case WOVEN/0 in reference port only
+c58cd4d48a46	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#WREN	/DitherAlgorithm	0	case WREN/0 in reference port only
+6e5e7b319747	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#legibleName	/DitherAlgorithm	0	val legibleName/0 in reference port only
+0775d0df4777	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm#toString	/DitherAlgorithm	0	def toString/0 in reference port only
+39e98243cac5	api-parity(hand-port-extra)	hand-port-extra	DitherAlgorithm$#ALL	/DitherAlgorithm$	0	val ALL/0 in reference port only
+e5518d003215	api-parity(hand-port-extra)	hand-port-extra	PNG8#_ditherStrength	/PNG8	0	var _ditherStrength/0 in reference port only [rename candidates: buffer, deflater]
+7ebaf4c1f8b1	api-parity(hand-port-extra)	hand-port-extra	PNG8#bb	/PNG8	0	val bb/0 in reference port only
+4c3f653938d0	api-parity(hand-port-extra)	hand-port-extra	PNG8#color	/PNG8	0	val color/0 in reference port only
+a70e1da58302	api-parity(hand-port-extra)	hand-port-extra	PNG8#curLine	/PNG8	0	val curLine/0 in reference port only
+a70e1da58302/2	api-parity(hand-port-extra)	hand-port-extra	PNG8#curLine	/PNG8	0	val curLine/0 in reference port only
+c260e34f799f	api-parity(hand-port-extra)	hand-port-extra	PNG8#dataOutput	/PNG8	0	val dataOutput/0 in reference port only
+c260e34f799f/2	api-parity(hand-port-extra)	hand-port-extra	PNG8#dataOutput	/PNG8	0	val dataOutput/0 in reference port only
+5255fc10834a	api-parity(hand-port-extra)	hand-port-extra	PNG8#deflaterOutput	/PNG8	0	val deflaterOutput/0 in reference port only
+5255fc10834a/2	api-parity(hand-port-extra)	hand-port-extra	PNG8#deflaterOutput	/PNG8	0	val deflaterOutput/0 in reference port only
+d2e619614dc1	api-parity(hand-port-extra)	hand-port-extra	PNG8#dispose	/PNG8	0	def dispose/0 in reference port only [rename candidates: close, ditherAlgorithm, ditherStrength, palette]
+e3828ad92d63	api-parity(hand-port-extra)	hand-port-extra	PNG8#fi	/PNG8	0	var fi/0 in reference port only [rename candidates: buffer, deflater]
+e3828ad92d63/2	api-parity(hand-port-extra)	hand-port-extra	PNG8#fi	/PNG8	0	var fi/0 in reference port only [rename candidates: buffer, deflater]
+2d93674c9fae	api-parity(hand-port-extra)	hand-port-extra	PNG8#gg	/PNG8	0	val gg/0 in reference port only
+bb49b99db80d	api-parity(hand-port-extra)	hand-port-extra	PNG8#hasTransparent	/PNG8	0	val hasTransparent/0 in reference port only
+bb49b99db80d/2	api-parity(hand-port-extra)	hand-port-extra	PNG8#hasTransparent	/PNG8	0	val hasTransparent/0 in reference port only
+bb49b99db80d/3	api-parity(hand-port-extra)	hand-port-extra	PNG8#hasTransparent	/PNG8	0	val hasTransparent/0 in reference port only
+bb49b99db80d/4	api-parity(hand-port-extra)	hand-port-extra	PNG8#hasTransparent	/PNG8	0	val hasTransparent/0 in reference port only
+71ab72b21d50	api-parity(hand-port-extra)	hand-port-extra	PNG8#height	/PNG8	0	val height/0 in reference port only
+71ab72b21d50/2	api-parity(hand-port-extra)	hand-port-extra	PNG8#height	/PNG8	0	val height/0 in reference port only
+13f690247e22	api-parity(hand-port-extra)	hand-port-extra	PNG8#p	/PNG8	0	val p/0 in reference port only
+b17bbb0e063d	api-parity(hand-port-extra)	hand-port-extra	PNG8#pair	/PNG8	0	val pair/0 in reference port only
+b17bbb0e063d/2	api-parity(hand-port-extra)	hand-port-extra	PNG8#pair	/PNG8	0	val pair/0 in reference port only
+4127ee234b04	api-parity(hand-port-extra)	hand-port-extra	PNG8#pal	/PNG8	0	val pal/0 in reference port only
+292c5e5b05f5	api-parity(hand-port-extra)	hand-port-extra	PNG8#paletteArray	/PNG8	0	val paletteArray/0 in reference port only
+292c5e5b05f5/2	api-parity(hand-port-extra)	hand-port-extra	PNG8#paletteArray	/PNG8	0	val paletteArray/0 in reference port only
+ae8e1a3cb0fe	api-parity(hand-port-extra)	hand-port-extra	PNG8#paletteMapping	/PNG8	0	val paletteMapping/0 in reference port only
+e277dba85fcc	api-parity(hand-port-extra)	hand-port-extra	PNG8#pi	/PNG8	0	var pi/0 in reference port only [rename candidates: buffer, deflater]
+99e7146fc632	api-parity(hand-port-extra)	hand-port-extra	PNG8#pixmap	/PNG8	0	var pixmap/0 in reference port only [rename candidates: buffer, deflater]
+99e7146fc632/2	api-parity(hand-port-extra)	hand-port-extra	PNG8#pixmap	/PNG8	0	var pixmap/0 in reference port only [rename candidates: buffer, deflater]
+054e34c0a7d1	api-parity(hand-port-extra)	hand-port-extra	PNG8#px	/PNG8	0	var px/0 in reference port only [rename candidates: buffer, deflater]
+a571df0d9067	api-parity(hand-port-extra)	hand-port-extra	PNG8#py	/PNG8	0	val py/0 in reference port only
+c295ada9b6f9	api-parity(hand-port-extra)	hand-port-extra	PNG8#rr	/PNG8	0	val rr/0 in reference port only
+eba2686ccdab	api-parity(hand-port-extra)	hand-port-extra	PNG8#seq	/PNG8	0	var seq/0 in reference port only [rename candidates: buffer, deflater]
+eba2686ccdab/2	api-parity(hand-port-extra)	hand-port-extra	PNG8#seq	/PNG8	0	var seq/0 in reference port only [rename candidates: buffer, deflater]
+61f38380b07f	api-parity(hand-port-extra)	hand-port-extra	PNG8#width	/PNG8	0	val width/0 in reference port only
+61f38380b07f/2	api-parity(hand-port-extra)	hand-port-extra	PNG8#width	/PNG8	0	val width/0 in reference port only
+01048e41f086	api-parity(hand-port-extra)	hand-port-extra	PNG8#y	/PNG8	0	var y/0 in reference port only [rename candidates: buffer, deflater]
+01048e41f086/2	api-parity(hand-port-extra)	hand-port-extra	PNG8#y	/PNG8	0	var y/0 in reference port only [rename candidates: buffer, deflater]
+e294d309cd0a	api-parity(hand-port-extra)	hand-port-extra	PaletteReducer#dA	/PaletteReducer	0	val dA/0 in reference port only [rename candidates: candidates, paletteArray, paletteMapping]
+d5d4e3bab9ef	api-parity(hand-port-extra)	hand-port-extra	PaletteReducer#dB	/PaletteReducer	0	val dB/0 in reference port only [rename candidates: candidates, paletteArray, paletteMapping]
+4d5d8a9aeb9a	api-parity(hand-port-extra)	hand-port-extra	PaletteReducer#dL	/PaletteReducer	0	val dL/0 in reference port only [rename candidates: candidates, paletteArray, paletteMapping]
+fe0453ec47a4	api-parity(hand-port-extra)	hand-port-extra	PaletteReducer#ensureErrorCapacity	/PaletteReducer	0	def ensureErrorCapacity/1 in reference port only [rename candidates: alterBigPalette, alterColorsLightness, alterColorsSaturation, analyze, analyze, analyzeHueWise, analyzeReductive, analyzeReductive, ditherStrength_=, exact, exact, hueShift, populationBias_=, randomColor, randomColorIndex, reduce, reduceAdditive, reduceBanter, reduceBlueNoise, reduceBlunt, reduceBurkes, reduceChaoticNoise, reduceDodgy, reduceFloat, reduceFloydSteinberg, reduceGourd, reduceIgneous, reduceInPlace, reduceIndex, reduceJimenez, reduceKnoll, reduceKnollRoberts, reduceLoaf, reduceMarten, reduceNeue, reduceOceanic, reduceOverboard, reduceRoberts, reduceScatter, reduceSeaside, reduceSierraLite, reduceSingle, reduceSolid, reduceWoven, reduceWren, reduceWrenOriginal, writeBigPalette, writePreloadFile]
+3cd5276ce42d	api-parity(hand-port-extra)	hand-port-extra	PaletteReducer#getDitherStrength	/PaletteReducer	0	def getDitherStrength/0 in reference port only [rename candidates: buildBigPalette, ditherStrength, hueShift, populationBias, setDefaultPalette]
+15918dc6bd08	api-parity(hand-port-extra)	hand-port-extra	PaletteReducer#getPopulationBias	/PaletteReducer	0	def getPopulationBias/0 in reference port only [rename candidates: buildBigPalette, ditherStrength, hueShift, populationBias, setDefaultPalette]
+0d343629e2e8	api-parity(hand-port-extra)	hand-port-extra	PaletteReducer#populationBias	/PaletteReducer	0	var populationBias/0 in reference port only [rename candidates: colorCount, curErrorBlueFloats, curErrorGreenFloats, curErrorRedFloats, nextErrorBlueFloats, nextErrorGreenFloats, nextErrorRedFloats]
+4f6209a61e95	api-parity(hand-port-extra)	hand-port-extra	PaletteReducer#setDitherStrength	/PaletteReducer	0	def setDitherStrength/1 in reference port only [rename candidates: alterBigPalette, alterColorsLightness, alterColorsSaturation, analyze, analyze, analyzeHueWise, analyzeReductive, analyzeReductive, ditherStrength_=, exact, exact, hueShift, populationBias_=, randomColor, randomColorIndex, reduce, reduceAdditive, reduceBanter, reduceBlueNoise, reduceBlunt, reduceBurkes, reduceChaoticNoise, reduceDodgy, reduceFloat, reduceFloydSteinberg, reduceGourd, reduceIgneous, reduceInPlace, reduceIndex, reduceJimenez, reduceKnoll, reduceKnollRoberts, reduceLoaf, reduceMarten, reduceNeue, reduceOceanic, reduceOverboard, reduceRoberts, reduceScatter, reduceSeaside, reduceSierraLite, reduceSingle, reduceSolid, reduceWoven, reduceWren, reduceWrenOriginal, writeBigPalette, writePreloadFile]
+0c761fd7475d	api-parity(hand-port-extra)	hand-port-extra	PaletteReducer#setPopulationBias	/PaletteReducer	0	def setPopulationBias/1 in reference port only [rename candidates: alterBigPalette, alterColorsLightness, alterColorsSaturation, analyze, analyze, analyzeHueWise, analyzeReductive, analyzeReductive, ditherStrength_=, exact, exact, hueShift, populationBias_=, randomColor, randomColorIndex, reduce, reduceAdditive, reduceBanter, reduceBlueNoise, reduceBlunt, reduceBurkes, reduceChaoticNoise, reduceDodgy, reduceFloat, reduceFloydSteinberg, reduceGourd, reduceIgneous, reduceInPlace, reduceIndex, reduceJimenez, reduceKnoll, reduceKnollRoberts, reduceLoaf, reduceMarten, reduceNeue, reduceOceanic, reduceOverboard, reduceRoberts, reduceScatter, reduceSeaside, reduceSierraLite, reduceSingle, reduceSolid, reduceWoven, reduceWren, reduceWrenOriginal, writeBigPalette, writePreloadFile]
+de2e9bd07e5d	api-parity(hand-port-extra)	hand-port-extra	PaletteReducer$#r	/PaletteReducer$	0	val r/0 in reference port only [rename candidates: AURORA, BIG_PALETTE, HALTONIC, OKLAB, SNUGGLY, TBM_BITS, TBM_MASK, TRIANGULAR_BYTE_LOOKUP, TRI_BAYER_MATRIX_128, TRI_BLUE_NOISE, TRI_BLUE_NOISE_B, TRI_BLUE_NOISE_C, TRI_BLUE_NOISE_MULTIPLIERS, TRI_BLUE_NOISE_MULTIPLIERS_B, TRI_BLUE_NOISE_MULTIPLIERS_C, entryComparator, first2, firstValue, fromLinearLUT, half, half, hueComparator, last2, lastIndex, levelArray, lightnessComparator, middle, middle, middle2, n, small, small, tempThresholdMatrix, thresholdMatrix16, thresholdMatrix64, thresholdMatrix8, toLinearLUT]
+de2e9bd07e5d/2	api-parity(hand-port-extra)	hand-port-extra	PaletteReducer$#r	/PaletteReducer$	0	val r/0 in reference port only [rename candidates: AURORA, BIG_PALETTE, HALTONIC, OKLAB, SNUGGLY, TBM_BITS, TBM_MASK, TRIANGULAR_BYTE_LOOKUP, TRI_BAYER_MATRIX_128, TRI_BLUE_NOISE, TRI_BLUE_NOISE_B, TRI_BLUE_NOISE_C, TRI_BLUE_NOISE_MULTIPLIERS, TRI_BLUE_NOISE_MULTIPLIERS_B, TRI_BLUE_NOISE_MULTIPLIERS_C, entryComparator, first2, firstValue, fromLinearLUT, half, half, hueComparator, last2, lastIndex, levelArray, lightnessComparator, middle, middle, middle2, n, small, small, tempThresholdMatrix, thresholdMatrix16, thresholdMatrix64, thresholdMatrix8, toLinearLUT]
+de2e9bd07e5d/3	api-parity(hand-port-extra)	hand-port-extra	PaletteReducer$#r	/PaletteReducer$	0	val r/0 in reference port only [rename candidates: AURORA, BIG_PALETTE, HALTONIC, OKLAB, SNUGGLY, TBM_BITS, TBM_MASK, TRIANGULAR_BYTE_LOOKUP, TRI_BAYER_MATRIX_128, TRI_BLUE_NOISE, TRI_BLUE_NOISE_B, TRI_BLUE_NOISE_C, TRI_BLUE_NOISE_MULTIPLIERS, TRI_BLUE_NOISE_MULTIPLIERS_B, TRI_BLUE_NOISE_MULTIPLIERS_C, entryComparator, first2, firstValue, fromLinearLUT, half, half, hueComparator, last2, lastIndex, levelArray, lightnessComparator, middle, middle, middle2, n, small, small, tempThresholdMatrix, thresholdMatrix16, thresholdMatrix64, thresholdMatrix8, toLinearLUT]
+841542d805bc	api-parity(hand-port-extra)	hand-port-extra	PaletteReducer$#sort16	/PaletteReducer$	0	def sort16/1 in reference port only [rename candidates: colorsFrom, forwardLight, loadPreloadFile, reverseLight, reverseShortBits, shrink, stretch]
+92ea8ac6ed79	api-parity(hand-port-extra)	hand-port-extra	PaletteReducer$#sort8	/PaletteReducer$	0	def sort8/1 in reference port only [rename candidates: colorsFrom, forwardLight, loadPreloadFile, reverseLight, reverseShortBits, shrink, stretch]
+e109d4223060	api-parity(hand-port-extra)	hand-port-extra	PaletteReducer$#sortInts	/PaletteReducer$	0	def sortInts/4 in reference port only [rename candidates: oklabToRGB, sort]
+5ab094c25c15	api-parity(hand-port-extra)	hand-port-extra	PaletteReducer$#v	/PaletteReducer$	0	var v/0 in reference port only [rename candidates: bf, bi, bigPaletteLoaded, bigPaletteMapping, first1, firstCut, from, from, gf, gi, i, i, i, i, i, idx, inner, j, last1, len, len, lf, mf, mid, rf, ri, secondCut, sf, span, x, y]
+64e48f3898c9	api-parity(mutability)	mutability	OtherMath$.BiasGain#shape	/OtherMath$/BiasGain	0	kind differs: emitted var, reference val
+861e5e8220a1	api-parity(mutability)	mutability	OtherMath$.BiasGain#turning	/OtherMath$/BiasGain	0	kind differs: emitted var, reference val
+1838bb9708ea	api-parity(mutability)	mutability	PaletteReducer$#mid	/PaletteReducer$	0	kind differs: emitted var, reference val
+106cdc9045e3	api-parity(null-model)	null-model	AnimatedGif#image	/AnimatedGif	0	result type differs: emitted 'sge.graphics.Pixmap', reference 'Pixmap | Null'
+b13ee917b6ce	api-parity(null-model)	null-model	AnimatedGif#out	/AnimatedGif	0	result type differs: emitted 'java.io.OutputStream', reference 'OutputStream | Null'
+3c760e3f5fb8	api-parity(null-model)	null-model	AnimatedGif#palette	/AnimatedGif	0	result type differs: emitted 'sge.anim8.PaletteReducer', reference 'PaletteReducer | Null'
+992238381ac2	api-parity(null-model)	null-model	AnimatedGif#palette_=	/AnimatedGif	0	param 0 type differs: emitted 'sge.anim8.PaletteReducer', reference 'PaletteReducer | Null'
+6f936d7a2d12	api-parity(null-model)	null-model	Dithered#palette	/Dithered	0	result type differs: emitted 'sge.anim8.PaletteReducer', reference 'PaletteReducer | Null'
+c06b264cb5da	api-parity(null-model)	null-model	Dithered#palette_=	/Dithered	0	param 0 type differs: emitted 'sge.anim8.PaletteReducer', reference 'PaletteReducer | Null'
+7aa0f920bc02	api-parity(null-model)	null-model	PNG8#palette	/PNG8	0	result type differs: emitted 'sge.anim8.PaletteReducer', reference 'PaletteReducer | Null'
+cb81bbd597ad	api-parity(null-model)	null-model	PNG8#palette_=	/PNG8	0	param 0 type differs: emitted 'sge.anim8.PaletteReducer', reference 'PaletteReducer | Null'
+48be318b273d	api-parity(null-model)	null-model	PaletteReducer#writeBigPalette	/PaletteReducer	0	param 0 type differs: emitted 'sge.files.FileHandle', reference 'FileHandle | Null'
+59a6418c48e9	api-parity(port-extra)	port-extra	#AnimatedGif		0	object AnimatedGif/0 in emitted port only
+eed10b07653d	api-parity(port-extra)	port-extra	#AnimatedPNG		0	object AnimatedPNG/0 in emitted port only
+71c80f66f965	api-parity(port-extra)	port-extra	#Dithered		0	object Dithered/0 in emitted port only
+eb811060aeed	api-parity(port-extra)	port-extra	#FastAPNG		0	class FastAPNG/0 in emitted port only
+9f116fd83544	api-parity(port-extra)	port-extra	#FastAPNG		0	object FastAPNG/0 in emitted port only
+f3eb5f51c17d	api-parity(port-extra)	port-extra	#FastGif		0	object FastGif/0 in emitted port only
+8ad5e1f55457	api-parity(port-extra)	port-extra	#FastPNG		0	object FastPNG/0 in emitted port only
+53f0369f9ebe	api-parity(port-extra)	port-extra	#FastPNG8		0	object FastPNG8/0 in emitted port only
+d2acc0e7a7c9	api-parity(port-extra)	port-extra	#FastPalette		0	object FastPalette/0 in emitted port only
+78120caeff73	api-parity(port-extra)	port-extra	#LZWEncoder		0	object LZWEncoder/0 in emitted port only
+663fcc9dfe5a	api-parity(port-extra)	port-extra	#QualityPalette		0	object QualityPalette/0 in emitted port only
+dfe4f58086d1	api-parity(port-extra)	port-extra	#imgH		0	var imgH/0 in emitted port only [rename candidates: c, continueOuter, disp, done, ent, fcode, hshift, hsize_reg, i, i, searching]
+dcb504a0ef2e	api-parity(port-extra)	port-extra	#imgW		0	var imgW/0 in emitted port only [rename candidates: c, continueOuter, disp, done, ent, fcode, hshift, hsize_reg, i, i, searching]
+c6ee7975f757	api-parity(port-extra)	port-extra	#initCodeSize		0	var initCodeSize/0 in emitted port only [rename candidates: c, continueOuter, disp, done, ent, fcode, hshift, hsize_reg, i, i, searching]
+ad9bfb8bea87	api-parity(port-extra)	port-extra	#pixArray		0	var pixArray/0 in emitted port only [rename candidates: c, continueOuter, disp, done, ent, fcode, hshift, hsize_reg, i, i, searching]
+ff1aba0c2d11	api-parity(port-extra)	port-extra	AnimatedGif#analyzeWrenOriginal	/AnimatedGif	0	def analyzeWrenOriginal/0 in emitted port only [rename candidates: analyzeAdditive, analyzeBanter, analyzeBlue, analyzeBlunt, analyzeBurkes, analyzeChaotic, analyzeDiffusion, analyzeDodgy, analyzeGourd, analyzeGradient, analyzeLoaf, analyzeMarten, analyzeNeue, analyzeNone, analyzeOceanic, analyzeOverboard, analyzePattern, analyzePixels, analyzeRoberts, analyzeScatter, analyzeSeaside, analyzeWoven, analyzeWren, ditherAlgorithm, ditherStrength, finish, getImagePixels, isFastAnalysis, isFlipY, palette, writeGraphicCtrlExt, writeImageDesc, writeLSD, writeNetscapeExt, writePalette, writePixels]
+e9a4796e77d4	api-parity(port-extra)	port-extra	AnimatedGif#clearPalette	/AnimatedGif	0	var clearPalette/0 in emitted port only [rename candidates: _clearPalette, _ditherStrength, closeStream, colorDepth, colorTab, delay, dispose, fastAnalysis, firstFrame, flipY, height, image, indexedPixels, out, palSize, repeat, seq, sizeSet, started, transIndex, usedEntry, width, x, y]
+8d0064808c6b	api-parity(port-extra)	port-extra	AnimatedGif#flipY	/AnimatedGif	0	def flipY/0 in emitted port only [rename candidates: analyzeAdditive, analyzeBanter, analyzeBlue, analyzeBlunt, analyzeBurkes, analyzeChaotic, analyzeDiffusion, analyzeDodgy, analyzeGourd, analyzeGradient, analyzeLoaf, analyzeMarten, analyzeNeue, analyzeNone, analyzeOceanic, analyzeOverboard, analyzePattern, analyzePixels, analyzeRoberts, analyzeScatter, analyzeSeaside, analyzeWoven, analyzeWren, ditherAlgorithm, ditherStrength, finish, getImagePixels, isFastAnalysis, isFlipY, palette, writeGraphicCtrlExt, writeImageDesc, writeLSD, writeNetscapeExt, writePalette, writePixels]
+3f6497b21ffb	api-parity(port-extra)	port-extra	AnimatedGif#flipY_=	/AnimatedGif	0	def flipY_=/1 in emitted port only [rename candidates: addFrame, ditherAlgorithm_=, ditherStrength_=, palette_=, setDelay, setDispose, setFastAnalysis, setFlipY, setFrameRate, setRepeat, start, writeShort, writeString]
+50dfdf6b6f31	api-parity(port-extra)	port-extra	AnimatedPNG#buffer	/AnimatedPNG	0	var buffer/0 in emitted port only
+6cd48e1ba4c9	api-parity(port-extra)	port-extra	AnimatedPNG#deflater	/AnimatedPNG	0	var deflater/0 in emitted port only
+e5a1e18b58dd	api-parity(port-extra)	port-extra	Dithered$#DitherAlgorithm	/Dithered$	0	class DitherAlgorithm/0 in emitted port only
+19f1f6438cb4	api-parity(port-extra)	port-extra	Dithered$#DitherAlgorithm	/Dithered$	0	object DitherAlgorithm/0 in emitted port only
+c4f85ecdc799	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm#legibleName	/Dithered$/DitherAlgorithm	0	var legibleName/0 in emitted port only
+b9225d086fe2	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm#name	/Dithered$/DitherAlgorithm	0	var name/0 in emitted port only
+cf82e096aa59	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm#ordinal	/Dithered$/DitherAlgorithm	0	def ordinal/0 in emitted port only
+31384e9a9a0c	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm#toString	/Dithered$/DitherAlgorithm	0	def toString/0 in emitted port only
+9e0e2203d691	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#ADDITIVE	/Dithered$/DitherAlgorithm$	0	object ADDITIVE/0 in emitted port only
+0bb2fda19d39	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#ALL	/Dithered$/DitherAlgorithm$	0	val ALL/0 in emitted port only
+5f47cc37dde5	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#BANTER	/Dithered$/DitherAlgorithm$	0	object BANTER/0 in emitted port only
+1b218a8231ec	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#BLUE_NOISE	/Dithered$/DitherAlgorithm$	0	object BLUE_NOISE/0 in emitted port only
+0e1cc071f3da	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#BLUNT	/Dithered$/DitherAlgorithm$	0	object BLUNT/0 in emitted port only
+35191ba96bde	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#BURKES	/Dithered$/DitherAlgorithm$	0	object BURKES/0 in emitted port only
+5c75ae61dcbb	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#CHAOTIC_NOISE	/Dithered$/DitherAlgorithm$	0	object CHAOTIC_NOISE/0 in emitted port only
+9bb6b14adaaf	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#DIFFUSION	/Dithered$/DitherAlgorithm$	0	object DIFFUSION/0 in emitted port only
+2839cd2c2710	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#DODGY	/Dithered$/DitherAlgorithm$	0	object DODGY/0 in emitted port only
+2c83a8fa535b	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#GOURD	/Dithered$/DitherAlgorithm$	0	object GOURD/0 in emitted port only
+f9c783e89fe3	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#GRADIENT_NOISE	/Dithered$/DitherAlgorithm$	0	object GRADIENT_NOISE/0 in emitted port only
+d0551d4bac19	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#LOAF	/Dithered$/DitherAlgorithm$	0	object LOAF/0 in emitted port only
+0c7e52d558b2	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#MARTEN	/Dithered$/DitherAlgorithm$	0	object MARTEN/0 in emitted port only
+512f3054bad3	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#NEUE	/Dithered$/DitherAlgorithm$	0	object NEUE/0 in emitted port only
+43f3c7fe360f	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#NONE	/Dithered$/DitherAlgorithm$	0	object NONE/0 in emitted port only
+ff8607599fdb	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#OCEANIC	/Dithered$/DitherAlgorithm$	0	object OCEANIC/0 in emitted port only
+1132fed33940	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#OVERBOARD	/Dithered$/DitherAlgorithm$	0	object OVERBOARD/0 in emitted port only
+b4a94a7f0112	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#PATTERN	/Dithered$/DitherAlgorithm$	0	object PATTERN/0 in emitted port only
+9a3dbac8f527	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#ROBERTS	/Dithered$/DitherAlgorithm$	0	object ROBERTS/0 in emitted port only
+554ddd6dc442	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#SCATTER	/Dithered$/DitherAlgorithm$	0	object SCATTER/0 in emitted port only
+4d04f741dc6c	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#SEASIDE	/Dithered$/DitherAlgorithm$	0	object SEASIDE/0 in emitted port only
+e4520898f4d9	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#WOVEN	/Dithered$/DitherAlgorithm$	0	object WOVEN/0 in emitted port only
+87f04d7f0c43	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#WREN	/Dithered$/DitherAlgorithm$	0	object WREN/0 in emitted port only
+48a16ac4dfcc	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#valueOf	/Dithered$/DitherAlgorithm$	0	def valueOf/1 in emitted port only
+e7dbb3ab2b94	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$#values	/Dithered$/DitherAlgorithm$	0	def values/0 in emitted port only
+2f6b4cd6e96f	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.ADDITIVE$#ordinal	/Dithered$/DitherAlgorithm$/ADDITIVE$	0	def ordinal/0 in emitted port only
+a1a6aceed65c	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.BANTER$#ordinal	/Dithered$/DitherAlgorithm$/BANTER$	0	def ordinal/0 in emitted port only
+1b5f728f04c9	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.BLUE_NOISE$#ordinal	/Dithered$/DitherAlgorithm$/BLUE_NOISE$	0	def ordinal/0 in emitted port only
+97d4f17c363f	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.BLUNT$#ordinal	/Dithered$/DitherAlgorithm$/BLUNT$	0	def ordinal/0 in emitted port only
+8c1a0514c5ea	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.BURKES$#ordinal	/Dithered$/DitherAlgorithm$/BURKES$	0	def ordinal/0 in emitted port only
+6130af62551b	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.CHAOTIC_NOISE$#ordinal	/Dithered$/DitherAlgorithm$/CHAOTIC_NOISE$	0	def ordinal/0 in emitted port only
+d88729540dec	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.DIFFUSION$#ordinal	/Dithered$/DitherAlgorithm$/DIFFUSION$	0	def ordinal/0 in emitted port only
+4ee3d3019ec8	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.DODGY$#ordinal	/Dithered$/DitherAlgorithm$/DODGY$	0	def ordinal/0 in emitted port only
+849b3f767de5	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.GOURD$#ordinal	/Dithered$/DitherAlgorithm$/GOURD$	0	def ordinal/0 in emitted port only
+846f31a88218	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.GRADIENT_NOISE$#ordinal	/Dithered$/DitherAlgorithm$/GRADIENT_NOISE$	0	def ordinal/0 in emitted port only
+7f9ba7429896	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.LOAF$#ordinal	/Dithered$/DitherAlgorithm$/LOAF$	0	def ordinal/0 in emitted port only
+f0afd4f9aa85	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.MARTEN$#ordinal	/Dithered$/DitherAlgorithm$/MARTEN$	0	def ordinal/0 in emitted port only
+e02ed4158cbc	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.NEUE$#ordinal	/Dithered$/DitherAlgorithm$/NEUE$	0	def ordinal/0 in emitted port only
+540258390e0c	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.NONE$#ordinal	/Dithered$/DitherAlgorithm$/NONE$	0	def ordinal/0 in emitted port only
+b265a54cc21b	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.OCEANIC$#ordinal	/Dithered$/DitherAlgorithm$/OCEANIC$	0	def ordinal/0 in emitted port only
+4fd630f38995	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.OVERBOARD$#ordinal	/Dithered$/DitherAlgorithm$/OVERBOARD$	0	def ordinal/0 in emitted port only
+cf4e4248a476	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.PATTERN$#ordinal	/Dithered$/DitherAlgorithm$/PATTERN$	0	def ordinal/0 in emitted port only
+e4a2bb847006	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.ROBERTS$#ordinal	/Dithered$/DitherAlgorithm$/ROBERTS$	0	def ordinal/0 in emitted port only
+649c9ca1b1d8	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.SCATTER$#ordinal	/Dithered$/DitherAlgorithm$/SCATTER$	0	def ordinal/0 in emitted port only
+3a25cb5d32fa	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.SEASIDE$#ordinal	/Dithered$/DitherAlgorithm$/SEASIDE$	0	def ordinal/0 in emitted port only
+66813b6002ff	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.WOVEN$#ordinal	/Dithered$/DitherAlgorithm$/WOVEN$	0	def ordinal/0 in emitted port only
+3b92345403e2	api-parity(port-extra)	port-extra	Dithered$.DitherAlgorithm$.WREN$#ordinal	/Dithered$/DitherAlgorithm$/WREN$	0	def ordinal/0 in emitted port only
+924dc7641b16	api-parity(port-extra)	port-extra	FastAPNG$#Funnel	/FastAPNG$	0	class Funnel/0 in emitted port only
+8ba324fa9ad8	api-parity(port-extra)	port-extra	FastPNG#buffer	/FastPNG	0	var buffer/0 in emitted port only
+7d45548c2ef1	api-parity(port-extra)	port-extra	FastPNG#deflater	/FastPNG	0	var deflater/0 in emitted port only
+44e181be94e2	api-parity(port-extra)	port-extra	FastPalette$#Funnel	/FastPalette$	0	class Funnel/0 in emitted port only
+ddcaa5a48a4a	api-parity(port-extra)	port-extra	OtherMath$#BiasGain	/OtherMath$	0	object BiasGain/0 in emitted port only
+77c73ca829b8	api-parity(port-extra)	port-extra	PNG8#buffer	/PNG8	0	var buffer/0 in emitted port only [rename candidates: _ditherStrength, fi, fi, pi, pixmap, pixmap, px, seq, seq, y, y]
+db4e0bf1402d	api-parity(port-extra)	port-extra	PNG8#deflater	/PNG8	0	var deflater/0 in emitted port only [rename candidates: _ditherStrength, fi, fi, pi, pixmap, pixmap, px, seq, seq, y, y]
+c4987f49b96b	api-parity(port-extra)	port-extra	PNG8#writeWrenOriginalDithered	/PNG8	0	def writeWrenOriginalDithered/3 in emitted port only [rename candidates: write, write, write, write, writeAdditiveDithered, writeBanterDithered, writeBlueNoiseDithered, writeBluntDithered, writeBurkesDithered, writeChaoticNoiseDithered, writeDiffusionDithered, writeDodgyDithered, writeGourdDithered, writeGradientDithered, writeLoafDithered, writeMartenDithered, writeNeueDithered, writeOceanicDithered, writeOverboardDithered, writePatternDithered, writePrecisely, writePrecisely, writeRobertsDithered, writeScatterDithered, writeSeasideDithered, writeSolid, writeWovenDithered, writeWrenDithered]
+7f8a5435d8be	api-parity(port-extra)	port-extra	PaletteReducer#ditherStrength	/PaletteReducer	0	def ditherStrength/0 in emitted port only [rename candidates: buildBigPalette, getDitherStrength, getPopulationBias, hueShift, setDefaultPalette]
+cbc9a6d228c8	api-parity(port-extra)	port-extra	PaletteReducer#ditherStrength_=	/PaletteReducer	0	def ditherStrength_=/1 in emitted port only [rename candidates: alterBigPalette, alterColorsLightness, alterColorsSaturation, analyze, analyze, analyzeHueWise, analyzeReductive, analyzeReductive, colorsFrom, ensureErrorCapacity, exact, exact, hueShift, loadPreloadFile, randomColor, randomColorIndex, reduce, reduceAdditive, reduceBanter, reduceBlueNoise, reduceBlunt, reduceBurkes, reduceChaoticNoise, reduceDodgy, reduceFloat, reduceFloydSteinberg, reduceGourd, reduceIgneous, reduceInPlace, reduceIndex, reduceJimenez, reduceKnoll, reduceKnollRoberts, reduceLoaf, reduceMarten, reduceNeue, reduceOceanic, reduceOverboard, reduceRoberts, reduceScatter, reduceSeaside, reduceSierraLite, reduceSingle, reduceSolid, reduceWoven, reduceWren, reduceWrenOriginal, setDitherStrength, setPopulationBias, writeBigPalette, writePreloadFile]
+1f78620e344f	api-parity(port-extra)	port-extra	PaletteReducer#populationBias	/PaletteReducer	0	def populationBias/0 in emitted port only [rename candidates: buildBigPalette, getDitherStrength, getPopulationBias, hueShift, setDefaultPalette]
+b02b24fc8eb1	api-parity(port-extra)	port-extra	PaletteReducer#populationBias_=	/PaletteReducer	0	def populationBias_=/1 in emitted port only [rename candidates: alterBigPalette, alterColorsLightness, alterColorsSaturation, analyze, analyze, analyzeHueWise, analyzeReductive, analyzeReductive, colorsFrom, ensureErrorCapacity, exact, exact, hueShift, loadPreloadFile, randomColor, randomColorIndex, reduce, reduceAdditive, reduceBanter, reduceBlueNoise, reduceBlunt, reduceBurkes, reduceChaoticNoise, reduceDodgy, reduceFloat, reduceFloydSteinberg, reduceGourd, reduceIgneous, reduceInPlace, reduceIndex, reduceJimenez, reduceKnoll, reduceKnollRoberts, reduceLoaf, reduceMarten, reduceNeue, reduceOceanic, reduceOverboard, reduceRoberts, reduceScatter, reduceSeaside, reduceSierraLite, reduceSingle, reduceSolid, reduceWoven, reduceWren, reduceWrenOriginal, setDitherStrength, setPopulationBias, writeBigPalette, writePreloadFile]
+f2c63a37ffed	api-parity(port-extra)	port-extra	PaletteReducer$#AURORA	/PaletteReducer$	0	val AURORA/0 in emitted port only [rename candidates: BIG_PALETTE, OKLAB, SNUGGLY, TBM_BITS, TBM_MASK, TRIANGULAR_BYTE_LOOKUP, TRI_BAYER_MATRIX_128, TRI_BLUE_NOISE, TRI_BLUE_NOISE_B, TRI_BLUE_NOISE_C, TRI_BLUE_NOISE_MULTIPLIERS, TRI_BLUE_NOISE_MULTIPLIERS_B, TRI_BLUE_NOISE_MULTIPLIERS_C, first2, firstValue, fromLinearLUT, half, half, hueComparator, last2, lightnessComparator, mid, middle, middle, middle2, r, r, r, tempThresholdMatrix, thresholdMatrix16, thresholdMatrix64, toLinearLUT]
+d676acb4661a	api-parity(port-extra)	port-extra	PaletteReducer$#Funnel	/PaletteReducer$	0	class Funnel/0 in emitted port only
+00e428435860	api-parity(port-extra)	port-extra	PaletteReducer$#HALTONIC	/PaletteReducer$	0	val HALTONIC/0 in emitted port only [rename candidates: BIG_PALETTE, OKLAB, SNUGGLY, TBM_BITS, TBM_MASK, TRIANGULAR_BYTE_LOOKUP, TRI_BAYER_MATRIX_128, TRI_BLUE_NOISE, TRI_BLUE_NOISE_B, TRI_BLUE_NOISE_C, TRI_BLUE_NOISE_MULTIPLIERS, TRI_BLUE_NOISE_MULTIPLIERS_B, TRI_BLUE_NOISE_MULTIPLIERS_C, first2, firstValue, fromLinearLUT, half, half, hueComparator, last2, lightnessComparator, mid, middle, middle, middle2, r, r, r, tempThresholdMatrix, thresholdMatrix16, thresholdMatrix64, toLinearLUT]
+0f15d436b27b	api-parity(port-extra)	port-extra	PaletteReducer$#IntComparator	/PaletteReducer$	0	trait IntComparator/0 in emitted port only
+209396266e54	api-parity(port-extra)	port-extra	PaletteReducer$#bf	/PaletteReducer$	0	var bf/0 in emitted port only [rename candidates: bigPaletteLoaded, bigPaletteMapping, first1, firstCut, from, from, last1, len, len, secondCut, v, x, y]
+7c8447258624	api-parity(port-extra)	port-extra	PaletteReducer$#bi	/PaletteReducer$	0	var bi/0 in emitted port only [rename candidates: bigPaletteLoaded, bigPaletteMapping, first1, firstCut, from, from, last1, len, len, secondCut, v, x, y]
+3190ef61eccc	api-parity(port-extra)	port-extra	PaletteReducer$#entryComparator	/PaletteReducer$	0	val entryComparator/0 in emitted port only [rename candidates: BIG_PALETTE, OKLAB, SNUGGLY, TBM_BITS, TBM_MASK, TRIANGULAR_BYTE_LOOKUP, TRI_BAYER_MATRIX_128, TRI_BLUE_NOISE, TRI_BLUE_NOISE_B, TRI_BLUE_NOISE_C, TRI_BLUE_NOISE_MULTIPLIERS, TRI_BLUE_NOISE_MULTIPLIERS_B, TRI_BLUE_NOISE_MULTIPLIERS_C, first2, firstValue, fromLinearLUT, half, half, hueComparator, last2, lightnessComparator, mid, middle, middle, middle2, r, r, r, tempThresholdMatrix, thresholdMatrix16, thresholdMatrix64, toLinearLUT]
+da5b4e9d8ddf	api-parity(port-extra)	port-extra	PaletteReducer$#gf	/PaletteReducer$	0	var gf/0 in emitted port only [rename candidates: bigPaletteLoaded, bigPaletteMapping, first1, firstCut, from, from, last1, len, len, secondCut, v, x, y]
+de6e9f36ae7b	api-parity(port-extra)	port-extra	PaletteReducer$#gi	/PaletteReducer$	0	var gi/0 in emitted port only [rename candidates: bigPaletteLoaded, bigPaletteMapping, first1, firstCut, from, from, last1, len, len, secondCut, v, x, y]
+04d32cdcda5c	api-parity(port-extra)	port-extra	PaletteReducer$#i	/PaletteReducer$	0	var i/0 in emitted port only [rename candidates: bigPaletteLoaded, bigPaletteMapping, first1, firstCut, from, from, last1, len, len, secondCut, v, x, y]
+04d32cdcda5c/2	api-parity(port-extra)	port-extra	PaletteReducer$#i	/PaletteReducer$	0	var i/0 in emitted port only [rename candidates: bigPaletteLoaded, bigPaletteMapping, first1, firstCut, from, from, last1, len, len, secondCut, v, x, y]
+04d32cdcda5c/3	api-parity(port-extra)	port-extra	PaletteReducer$#i	/PaletteReducer$	0	var i/0 in emitted port only [rename candidates: bigPaletteLoaded, bigPaletteMapping, first1, firstCut, from, from, last1, len, len, secondCut, v, x, y]
+04d32cdcda5c/4	api-parity(port-extra)	port-extra	PaletteReducer$#i	/PaletteReducer$	0	var i/0 in emitted port only [rename candidates: bigPaletteLoaded, bigPaletteMapping, first1, firstCut, from, from, last1, len, len, secondCut, v, x, y]
+04d32cdcda5c/5	api-parity(port-extra)	port-extra	PaletteReducer$#i	/PaletteReducer$	0	var i/0 in emitted port only [rename candidates: bigPaletteLoaded, bigPaletteMapping, first1, firstCut, from, from, last1, len, len, secondCut, v, x, y]
+7df07f7b3014	api-parity(port-extra)	port-extra	PaletteReducer$#idx	/PaletteReducer$	0	var idx/0 in emitted port only [rename candidates: bigPaletteLoaded, bigPaletteMapping, first1, firstCut, from, from, last1, len, len, secondCut, v, x, y]
+145b6acee014	api-parity(port-extra)	port-extra	PaletteReducer$#inner	/PaletteReducer$	0	var inner/0 in emitted port only [rename candidates: bigPaletteLoaded, bigPaletteMapping, first1, firstCut, from, from, last1, len, len, secondCut, v, x, y]
+2b7012ef15a1	api-parity(port-extra)	port-extra	PaletteReducer$#interleaveBytes	/PaletteReducer$	0	def interleaveBytes/2 in emitted port only
+63cc5fea6520	api-parity(port-extra)	port-extra	PaletteReducer$#j	/PaletteReducer$	0	var j/0 in emitted port only [rename candidates: bigPaletteLoaded, bigPaletteMapping, first1, firstCut, from, from, last1, len, len, secondCut, v, x, y]
+241d972db6a5	api-parity(port-extra)	port-extra	PaletteReducer$#lastIndex	/PaletteReducer$	0	val lastIndex/0 in emitted port only [rename candidates: BIG_PALETTE, OKLAB, SNUGGLY, TBM_BITS, TBM_MASK, TRIANGULAR_BYTE_LOOKUP, TRI_BAYER_MATRIX_128, TRI_BLUE_NOISE, TRI_BLUE_NOISE_B, TRI_BLUE_NOISE_C, TRI_BLUE_NOISE_MULTIPLIERS, TRI_BLUE_NOISE_MULTIPLIERS_B, TRI_BLUE_NOISE_MULTIPLIERS_C, first2, firstValue, fromLinearLUT, half, half, hueComparator, last2, lightnessComparator, mid, middle, middle, middle2, r, r, r, tempThresholdMatrix, thresholdMatrix16, thresholdMatrix64, toLinearLUT]
+601d3ba9a13f	api-parity(port-extra)	port-extra	PaletteReducer$#levelArray	/PaletteReducer$	0	val levelArray/0 in emitted port only [rename candidates: BIG_PALETTE, OKLAB, SNUGGLY, TBM_BITS, TBM_MASK, TRIANGULAR_BYTE_LOOKUP, TRI_BAYER_MATRIX_128, TRI_BLUE_NOISE, TRI_BLUE_NOISE_B, TRI_BLUE_NOISE_C, TRI_BLUE_NOISE_MULTIPLIERS, TRI_BLUE_NOISE_MULTIPLIERS_B, TRI_BLUE_NOISE_MULTIPLIERS_C, first2, firstValue, fromLinearLUT, half, half, hueComparator, last2, lightnessComparator, mid, middle, middle, middle2, r, r, r, tempThresholdMatrix, thresholdMatrix16, thresholdMatrix64, toLinearLUT]
+043163f7e3cb	api-parity(port-extra)	port-extra	PaletteReducer$#lf	/PaletteReducer$	0	var lf/0 in emitted port only [rename candidates: bigPaletteLoaded, bigPaletteMapping, first1, firstCut, from, from, last1, len, len, secondCut, v, x, y]
+6af7a0fccaeb	api-parity(port-extra)	port-extra	PaletteReducer$#mf	/PaletteReducer$	0	var mf/0 in emitted port only [rename candidates: bigPaletteLoaded, bigPaletteMapping, first1, firstCut, from, from, last1, len, len, secondCut, v, x, y]
+ca7569180d91	api-parity(port-extra)	port-extra	PaletteReducer$#n	/PaletteReducer$	0	val n/0 in emitted port only [rename candidates: BIG_PALETTE, OKLAB, SNUGGLY, TBM_BITS, TBM_MASK, TRIANGULAR_BYTE_LOOKUP, TRI_BAYER_MATRIX_128, TRI_BLUE_NOISE, TRI_BLUE_NOISE_B, TRI_BLUE_NOISE_C, TRI_BLUE_NOISE_MULTIPLIERS, TRI_BLUE_NOISE_MULTIPLIERS_B, TRI_BLUE_NOISE_MULTIPLIERS_C, first2, firstValue, fromLinearLUT, half, half, hueComparator, last2, lightnessComparator, mid, middle, middle, middle2, r, r, r, tempThresholdMatrix, thresholdMatrix16, thresholdMatrix64, toLinearLUT]
+3fc28a061c6f	api-parity(port-extra)	port-extra	PaletteReducer$#reverseShortBits	/PaletteReducer$	0	def reverseShortBits/1 in emitted port only [rename candidates: forwardLight, reverseLight, shrink, sort16, sort8, stretch]
+079a545223f0	api-parity(port-extra)	port-extra	PaletteReducer$#rf	/PaletteReducer$	0	var rf/0 in emitted port only [rename candidates: bigPaletteLoaded, bigPaletteMapping, first1, firstCut, from, from, last1, len, len, secondCut, v, x, y]
+a2e41cb53be5	api-parity(port-extra)	port-extra	PaletteReducer$#ri	/PaletteReducer$	0	var ri/0 in emitted port only [rename candidates: bigPaletteLoaded, bigPaletteMapping, first1, firstCut, from, from, last1, len, len, secondCut, v, x, y]
+24c2c083bb08	api-parity(port-extra)	port-extra	PaletteReducer$#sf	/PaletteReducer$	0	var sf/0 in emitted port only [rename candidates: bigPaletteLoaded, bigPaletteMapping, first1, firstCut, from, from, last1, len, len, secondCut, v, x, y]
+99b02da97da5	api-parity(port-extra)	port-extra	PaletteReducer$#small	/PaletteReducer$	0	val small/0 in emitted port only [rename candidates: BIG_PALETTE, OKLAB, SNUGGLY, TBM_BITS, TBM_MASK, TRIANGULAR_BYTE_LOOKUP, TRI_BAYER_MATRIX_128, TRI_BLUE_NOISE, TRI_BLUE_NOISE_B, TRI_BLUE_NOISE_C, TRI_BLUE_NOISE_MULTIPLIERS, TRI_BLUE_NOISE_MULTIPLIERS_B, TRI_BLUE_NOISE_MULTIPLIERS_C, first2, firstValue, fromLinearLUT, half, half, hueComparator, last2, lightnessComparator, mid, middle, middle, middle2, r, r, r, tempThresholdMatrix, thresholdMatrix16, thresholdMatrix64, toLinearLUT]
+99b02da97da5/2	api-parity(port-extra)	port-extra	PaletteReducer$#small	/PaletteReducer$	0	val small/0 in emitted port only [rename candidates: BIG_PALETTE, OKLAB, SNUGGLY, TBM_BITS, TBM_MASK, TRIANGULAR_BYTE_LOOKUP, TRI_BAYER_MATRIX_128, TRI_BLUE_NOISE, TRI_BLUE_NOISE_B, TRI_BLUE_NOISE_C, TRI_BLUE_NOISE_MULTIPLIERS, TRI_BLUE_NOISE_MULTIPLIERS_B, TRI_BLUE_NOISE_MULTIPLIERS_C, first2, firstValue, fromLinearLUT, half, half, hueComparator, last2, lightnessComparator, mid, middle, middle, middle2, r, r, r, tempThresholdMatrix, thresholdMatrix16, thresholdMatrix64, toLinearLUT]
+972553f057be	api-parity(port-extra)	port-extra	PaletteReducer$#sort	/PaletteReducer$	0	def sort/2 in emitted port only
+c9d2a8e7eb44	api-parity(port-extra)	port-extra	PaletteReducer$#sort	/PaletteReducer$	0	def sort/4 in emitted port only [rename candidates: oklabToRGB, sortInts]
+9ccae9082b80	api-parity(port-extra)	port-extra	PaletteReducer$#span	/PaletteReducer$	0	var span/0 in emitted port only [rename candidates: bigPaletteLoaded, bigPaletteMapping, first1, firstCut, from, from, last1, len, len, secondCut, v, x, y]
+9bf66eda28bd	api-parity(port-extra)	port-extra	PaletteReducer$.IntComparator#compare	/PaletteReducer$/IntComparator	0	def compare/2 in emitted port only
+2c8ff418f1fe	api-parity(port-extra)	port-extra	QualityPalette$#Funnel	/QualityPalette$	0	class Funnel/0 in emitted port only
+dd4fed3bc2cf	api-parity(port-extra)	port-extra	QualityPalette$#forwardLight	/QualityPalette$	0	def forwardLight/1 in emitted port only
+5c72324a7928	api-parity(port-extra)	port-extra	QualityPalette$#reverseLight	/QualityPalette$	0	def reverseLight/1 in emitted port only
+210db3a6e20e	api-parity(signature)	signature	AnimatedGif#colorTab	/AnimatedGif	0	result type differs: emitted 'scala.Array[scala.Byte]', reference 'Array[Byte] | Null'
+451ee2b197b3	api-parity(signature)	signature	AnimatedGif#indexedPixels	/AnimatedGif	0	result type differs: emitted 'scala.Array[scala.Byte]', reference 'Array[Byte] | Null'
+4f083da7e4ed	api-parity(signature)	signature	AnimatedGif#usedEntry	/AnimatedGif	0	result type differs: emitted 'scala.Array[scala.Boolean]', reference 'Array[Boolean]'
+3a96a8473445	api-parity(signature)	signature	AnimatedGif#write	/AnimatedGif	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+3a96a8473445/2	api-parity(signature)	signature	AnimatedGif#write	/AnimatedGif	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+3a96a8473445/3	api-parity(signature)	signature	AnimatedGif#write	/AnimatedGif	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+59188306c639	api-parity(signature)	signature	AnimatedPNG#write	/AnimatedPNG	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+59188306c639/2	api-parity(signature)	signature	AnimatedPNG#write	/AnimatedPNG	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+59188306c639/3	api-parity(signature)	signature	AnimatedPNG#write	/AnimatedPNG	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+df2b52c8b50c	api-parity(signature)	signature	AnimationWriter#write	/AnimationWriter	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+df2b52c8b50c/2	api-parity(signature)	signature	AnimationWriter#write	/AnimationWriter	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+df2b52c8b50c/3	api-parity(signature)	signature	AnimationWriter#write	/AnimationWriter	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+4503d14557ff	api-parity(signature)	signature	FastGif#write	/FastGif	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+6ff00fa5cc3b	api-parity(signature)	signature	FastPNG8#write	/FastPNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+6226bcb5940c	api-parity(signature)	signature	PNG8#write	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+6226bcb5940c/2	api-parity(signature)	signature	PNG8#write	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+6226bcb5940c/3	api-parity(signature)	signature	PNG8#write	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+6226bcb5940c/4	api-parity(signature)	signature	PNG8#write	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+6226bcb5940c/5	api-parity(signature)	signature	PNG8#write	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+24acceb1b616	api-parity(signature)	signature	PNG8#writeAdditiveDithered	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+88b14eea6c40	api-parity(signature)	signature	PNG8#writeBanterDithered	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+6589dce5c0e0	api-parity(signature)	signature	PNG8#writeBlueNoiseDithered	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+74ed8e4cd6f4	api-parity(signature)	signature	PNG8#writeBluntDithered	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+d49c23657ad9	api-parity(signature)	signature	PNG8#writeBurkesDithered	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+31bed777b03f	api-parity(signature)	signature	PNG8#writeChaoticNoiseDithered	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+ee98c28d872a	api-parity(signature)	signature	PNG8#writeDiffusionDithered	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+89bf3bf1b70d	api-parity(signature)	signature	PNG8#writeDodgyDithered	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+59d5c3e9b342	api-parity(signature)	signature	PNG8#writeGourdDithered	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+9bb8997a31bb	api-parity(signature)	signature	PNG8#writeGradientDithered	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+e1478800920f	api-parity(signature)	signature	PNG8#writeLoafDithered	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+7c6b05b53cb0	api-parity(signature)	signature	PNG8#writeMartenDithered	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+4f68a057ec3e	api-parity(signature)	signature	PNG8#writeNeueDithered	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+9f22f1b0ee19	api-parity(signature)	signature	PNG8#writeOceanicDithered	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+ae661c0a7bb6	api-parity(signature)	signature	PNG8#writeOverboardDithered	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+4794805c3426	api-parity(signature)	signature	PNG8#writePatternDithered	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+2169d0582469	api-parity(signature)	signature	PNG8#writePreciseSection	/PNG8	0	param 2 type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int] | Null'
+9fe29dd3ce5d	api-parity(signature)	signature	PNG8#writePreciseSection	/PNG8	0	param 2 type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
+899160bd12a4	api-parity(signature)	signature	PNG8#writePrecisely	/PNG8	0	param 2 type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int] | Null'
+899160bd12a4/2	api-parity(signature)	signature	PNG8#writePrecisely	/PNG8	0	param 2 type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int] | Null'
+712e95490639	api-parity(signature)	signature	PNG8#writeRobertsDithered	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+0ab2fff09ccb	api-parity(signature)	signature	PNG8#writeScatterDithered	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+5b2efa5b92ff	api-parity(signature)	signature	PNG8#writeSeasideDithered	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+29b2ee623f61	api-parity(signature)	signature	PNG8#writeSolid	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+51990d347533	api-parity(signature)	signature	PNG8#writeWovenDithered	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+40509fe5f9b8	api-parity(signature)	signature	PNG8#writeWrenDithered	/PNG8	0	param 1 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+e54a7d564832	api-parity(signature)	signature	PNG8$#readChunks	/PNG8$	0	result type differs: emitted 'sge.utils.OrderedMap[java.lang.String, scala.Array[scala.Byte]]', reference 'scala.collection.mutable.LinkedHashMap[String, Array[Byte]]'
+3e0b02a87d7f	api-parity(signature)	signature	PNG8$#swapPalette	/PNG8$	0	param 2 type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
+f926139a17db	api-parity(signature)	signature	PNG8$#writeChunks	/PNG8$	0	param 1 type differs: emitted 'sge.utils.OrderedMap[java.lang.String, scala.Array[scala.Byte]]', reference 'scala.collection.mutable.LinkedHashMap[String, Array[Byte]]'
+0d2896d6f2ce	api-parity(signature)	signature	PaletteReducer#alterBigPalette	/PaletteReducer	0	param 0 type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
+ac5978f69582	api-parity(signature)	signature	PaletteReducer#analyze	/PaletteReducer	0	param 0 type differs: emitted 'scala.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+f7697dd3ea36	api-parity(signature)	signature	PaletteReducer#analyze	/PaletteReducer	0	param 0 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+f7697dd3ea36/2	api-parity(signature)	signature	PaletteReducer#analyze	/PaletteReducer	0	param 0 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+f7697dd3ea36/3	api-parity(signature)	signature	PaletteReducer#analyze	/PaletteReducer	0	param 0 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+fdf7fba57e37	api-parity(signature)	signature	PaletteReducer#analyzeHueWise	/PaletteReducer	0	param 0 type differs: emitted 'scala.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+1f4e340b0426	api-parity(signature)	signature	PaletteReducer#analyzeHueWise	/PaletteReducer	0	param 0 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+1f4e340b0426/2	api-parity(signature)	signature	PaletteReducer#analyzeHueWise	/PaletteReducer	0	param 0 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+1f4e340b0426/3	api-parity(signature)	signature	PaletteReducer#analyzeHueWise	/PaletteReducer	0	param 0 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+40833b28faab	api-parity(signature)	signature	PaletteReducer#analyzeReductive	/PaletteReducer	0	param 0 type differs: emitted 'scala.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+4d5b38a9a1a6	api-parity(signature)	signature	PaletteReducer#analyzeReductive	/PaletteReducer	0	param 0 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+4d5b38a9a1a6/2	api-parity(signature)	signature	PaletteReducer#analyzeReductive	/PaletteReducer	0	param 0 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+4d5b38a9a1a6/3	api-parity(signature)	signature	PaletteReducer#analyzeReductive	/PaletteReducer	0	param 0 type differs: emitted 'sge.utils.Array[sge.graphics.Pixmap]', reference 'Array[Pixmap]'
+e12f76aca09c	api-parity(signature)	signature	PaletteReducer#candidates	/PaletteReducer	0	modifiers differ: emitted final, reference
+d942c796b01c	api-parity(signature)	signature	PaletteReducer#candidates	/PaletteReducer	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
+84cac54e34fa	api-parity(signature)	signature	PaletteReducer#curErrorBlueFloats	/PaletteReducer	0	result type differs: emitted 'sge.utils.FloatArray', reference 'Array[Float] | Null'
+872519c9f0dc	api-parity(signature)	signature	PaletteReducer#curErrorGreenFloats	/PaletteReducer	0	result type differs: emitted 'sge.utils.FloatArray', reference 'Array[Float] | Null'
+ea19f87c418f	api-parity(signature)	signature	PaletteReducer#curErrorRedFloats	/PaletteReducer	0	result type differs: emitted 'sge.utils.FloatArray', reference 'Array[Float] | Null'
+aae5431d5630	api-parity(signature)	signature	PaletteReducer#exact	/PaletteReducer	0	param 0 type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
+aae5431d5630/2	api-parity(signature)	signature	PaletteReducer#exact	/PaletteReducer	0	param 0 type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
+aae5431d5630/3	api-parity(signature)	signature	PaletteReducer#exact	/PaletteReducer	0	param 0 type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
+2ee7015f1311	api-parity(signature)	signature	PaletteReducer#exact	/PaletteReducer	0	param 0 type differs: emitted 'scala.Array[sge.graphics.Color]', reference 'Array[Color]'
+2ee7015f1311/2	api-parity(signature)	signature	PaletteReducer#exact	/PaletteReducer	0	param 0 type differs: emitted 'scala.Array[sge.graphics.Color]', reference 'Array[Color]'
+b1070420b91c	api-parity(signature)	signature	PaletteReducer#exact	/PaletteReducer	0	param 1 type differs: emitted 'scala.Array[scala.Byte]', reference 'Array[Byte]'
+6ef87cdb22ae	api-parity(signature)	signature	PaletteReducer#loadBigPalette	/PaletteReducer	0	param 1 type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
+7d61176e993a	api-parity(signature)	signature	PaletteReducer#nextErrorBlueFloats	/PaletteReducer	0	result type differs: emitted 'sge.utils.FloatArray', reference 'Array[Float] | Null'
+09ab96856269	api-parity(signature)	signature	PaletteReducer#nextErrorGreenFloats	/PaletteReducer	0	result type differs: emitted 'sge.utils.FloatArray', reference 'Array[Float] | Null'
+2eaa68a99df8	api-parity(signature)	signature	PaletteReducer#nextErrorRedFloats	/PaletteReducer	0	result type differs: emitted 'sge.utils.FloatArray', reference 'Array[Float] | Null'
+4f36a178a5d2	api-parity(signature)	signature	PaletteReducer#paletteArray	/PaletteReducer	0	modifiers differ: emitted final, reference
+f44e225206fc	api-parity(signature)	signature	PaletteReducer#paletteArray	/PaletteReducer	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
+8072ff2e64e3	api-parity(signature)	signature	PaletteReducer#paletteMapping	/PaletteReducer	0	modifiers differ: emitted final, reference
+fb74add31252	api-parity(signature)	signature	PaletteReducer#paletteMapping	/PaletteReducer	0	result type differs: emitted 'scala.Array[scala.Byte]', reference 'Array[Byte]'
+abe78ad1d663	api-parity(signature)	signature	PaletteReducer$#BIG_PALETTE	/PaletteReducer$	0	modifiers differ: emitted final, reference
+7803880e068d	api-parity(signature)	signature	PaletteReducer$#BIG_PALETTE	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
+c3853271ea88	api-parity(signature)	signature	PaletteReducer$#OKLAB	/PaletteReducer$	0	modifiers differ: emitted final, reference
+659158c77ff8	api-parity(signature)	signature	PaletteReducer$#OKLAB	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Array[scala.Float]]', reference 'Array[Array[Float]]'
+859e0b1b4396	api-parity(signature)	signature	PaletteReducer$#SNUGGLY	/PaletteReducer$	0	modifiers differ: emitted final, reference
+1a90f1e9be7b	api-parity(signature)	signature	PaletteReducer$#SNUGGLY	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
+efb9d4cd0b9e	api-parity(signature)	signature	PaletteReducer$#TBM_BITS	/PaletteReducer$	0	modifiers differ: emitted inline, reference
+8ab87de7e794	api-parity(signature)	signature	PaletteReducer$#TBM_MASK	/PaletteReducer$	0	modifiers differ: emitted final, reference
+b2389a1a65c6	api-parity(signature)	signature	PaletteReducer$#TRIANGULAR_BYTE_LOOKUP	/PaletteReducer$	0	modifiers differ: emitted final, reference
+e8b0c6156e11	api-parity(signature)	signature	PaletteReducer$#TRIANGULAR_BYTE_LOOKUP	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
+fe1bf5af22a1	api-parity(signature)	signature	PaletteReducer$#TRI_BAYER_MATRIX_128	/PaletteReducer$	0	modifiers differ: emitted final, reference
+5fdb2ac11d13	api-parity(signature)	signature	PaletteReducer$#TRI_BAYER_MATRIX_128	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Byte]', reference 'Array[Byte]'
+fe0bba2ef7fd	api-parity(signature)	signature	PaletteReducer$#TRI_BLUE_NOISE	/PaletteReducer$	0	modifiers differ: emitted final, reference
+6c3917dadff7	api-parity(signature)	signature	PaletteReducer$#TRI_BLUE_NOISE	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Byte]', reference 'Array[Byte]'
+be1b9981de66	api-parity(signature)	signature	PaletteReducer$#TRI_BLUE_NOISE_B	/PaletteReducer$	0	modifiers differ: emitted final, reference
+04c998e4f077	api-parity(signature)	signature	PaletteReducer$#TRI_BLUE_NOISE_B	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Byte]', reference 'Array[Byte]'
+a09ca50908b4	api-parity(signature)	signature	PaletteReducer$#TRI_BLUE_NOISE_C	/PaletteReducer$	0	modifiers differ: emitted final, reference
+569faca0f48d	api-parity(signature)	signature	PaletteReducer$#TRI_BLUE_NOISE_C	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Byte]', reference 'Array[Byte]'
+56a4aa04bc46	api-parity(signature)	signature	PaletteReducer$#TRI_BLUE_NOISE_MULTIPLIERS	/PaletteReducer$	0	modifiers differ: emitted final, reference
+29897158081c	api-parity(signature)	signature	PaletteReducer$#TRI_BLUE_NOISE_MULTIPLIERS	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
+2208551f493f	api-parity(signature)	signature	PaletteReducer$#TRI_BLUE_NOISE_MULTIPLIERS_B	/PaletteReducer$	0	modifiers differ: emitted final, reference
+e332021f0be5	api-parity(signature)	signature	PaletteReducer$#TRI_BLUE_NOISE_MULTIPLIERS_B	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
+8f86f7a37d88	api-parity(signature)	signature	PaletteReducer$#TRI_BLUE_NOISE_MULTIPLIERS_C	/PaletteReducer$	0	modifiers differ: emitted final, reference
+9477fc129fad	api-parity(signature)	signature	PaletteReducer$#TRI_BLUE_NOISE_MULTIPLIERS_C	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
+0945ef4afad3	api-parity(signature)	signature	PaletteReducer$#bigPaletteMapping	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Char]', reference 'Array[Char]'
+e28cc24d137a	api-parity(signature)	signature	PaletteReducer$#compareSwap	/PaletteReducer$	0	param 0 type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
+bdb7fc10fbf0	api-parity(signature)	signature	PaletteReducer$#fromLinearLUT	/PaletteReducer$	0	modifiers differ: emitted final, reference
+7ac1f8719e26	api-parity(signature)	signature	PaletteReducer$#fromLinearLUT	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Byte]', reference 'Array[Byte]'
+c5305eb5b63d	api-parity(signature)	signature	PaletteReducer$#hueComparator	/PaletteReducer$	0	modifiers differ: emitted final, reference
+f938faba635c	api-parity(signature)	signature	PaletteReducer$#hueComparator	/PaletteReducer$	0	result type differs: emitted 'sge.anim8.PaletteReducer.IntComparator', reference '(Int, Int) => Int'
+6babc707177c	api-parity(signature)	signature	PaletteReducer$#lightnessComparator	/PaletteReducer$	0	modifiers differ: emitted final, reference
+6fe789e928ae	api-parity(signature)	signature	PaletteReducer$#lightnessComparator	/PaletteReducer$	0	result type differs: emitted 'sge.anim8.PaletteReducer.IntComparator', reference '(Int, Int) => Int'
+4791571a62dd	api-parity(signature)	signature	PaletteReducer$#tempThresholdMatrix	/PaletteReducer$	0	modifiers differ: emitted final, reference
+d9133ebbaa07	api-parity(signature)	signature	PaletteReducer$#tempThresholdMatrix	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
+03b16802862a	api-parity(signature)	signature	PaletteReducer$#thresholdMatrix16	/PaletteReducer$	0	modifiers differ: emitted final, reference
+a609f1c10f8b	api-parity(signature)	signature	PaletteReducer$#thresholdMatrix16	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
+e9e69833dc53	api-parity(signature)	signature	PaletteReducer$#thresholdMatrix64	/PaletteReducer$	0	modifiers differ: emitted final, reference
+02ed60ce6b99	api-parity(signature)	signature	PaletteReducer$#thresholdMatrix64	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
+f85ee4e8f2eb	api-parity(signature)	signature	PaletteReducer$#toLinearLUT	/PaletteReducer$	0	modifiers differ: emitted final, reference
+e79666a76cc5	api-parity(signature)	signature	PaletteReducer$#toLinearLUT	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
+b5f27f91fba6	api-parity(static-placement)	static-placement	PaletteReducer#colorsFrom	/PaletteReducer	0	def colorsFrom/1 in reference port only
+a83c98d68bb6	api-parity(static-placement)	static-placement	PaletteReducer#colorsFrom	/PaletteReducer	0	def colorsFrom/2 in reference port only
+b161a517b078	api-parity(static-placement)	static-placement	PaletteReducer#loadPreloadFile	/PaletteReducer	0	def loadPreloadFile/1 in reference port only
+7b943e08d4b7	api-parity(static-placement)	static-placement	PaletteReducer#thresholdMatrix8	/PaletteReducer	0	val thresholdMatrix8/0 in reference port only
+4134b9f744cd	api-parity(static-placement)	static-placement	PaletteReducer$#colorsFrom	/PaletteReducer$	0	def colorsFrom/1 in emitted port only
+c9b571c64e52	api-parity(static-placement)	static-placement	PaletteReducer$#colorsFrom	/PaletteReducer$	0	def colorsFrom/2 in emitted port only
+9c56f9f52a4e	api-parity(static-placement)	static-placement	PaletteReducer$#loadPreloadFile	/PaletteReducer$	0	def loadPreloadFile/1 in emitted port only
+408866abb08f	api-parity(static-placement)	static-placement	PaletteReducer$#thresholdMatrix8	/PaletteReducer$	0	val thresholdMatrix8/0 in emitted port only
+2470586872ef	api-parity(visibility)	visibility	AnimatedGif#analyzeAdditive	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+1886a152fd11	api-parity(visibility)	visibility	AnimatedGif#analyzeBanter	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+53a240b4600e	api-parity(visibility)	visibility	AnimatedGif#analyzeBlue	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+b1f4098347a1	api-parity(visibility)	visibility	AnimatedGif#analyzeBlunt	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+8a2937926ad3	api-parity(visibility)	visibility	AnimatedGif#analyzeBurkes	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+4e432eeeee9e	api-parity(visibility)	visibility	AnimatedGif#analyzeChaotic	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+5a143d22ffda	api-parity(visibility)	visibility	AnimatedGif#analyzeDiffusion	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+8b9b09c9f804	api-parity(visibility)	visibility	AnimatedGif#analyzeDodgy	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+fffa5fcbc1d0	api-parity(visibility)	visibility	AnimatedGif#analyzeGourd	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+27a3298116de	api-parity(visibility)	visibility	AnimatedGif#analyzeGradient	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+9a1bc29c9e66	api-parity(visibility)	visibility	AnimatedGif#analyzeLoaf	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+6bd2b599d615	api-parity(visibility)	visibility	AnimatedGif#analyzeMarten	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+c11628fe86a2	api-parity(visibility)	visibility	AnimatedGif#analyzeNeue	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+2caa7f0d0dcd	api-parity(visibility)	visibility	AnimatedGif#analyzeNone	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+e9385f41c8cd	api-parity(visibility)	visibility	AnimatedGif#analyzeOceanic	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+d08eb2dd5739	api-parity(visibility)	visibility	AnimatedGif#analyzeOverboard	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+a57b055152cb	api-parity(visibility)	visibility	AnimatedGif#analyzePattern	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+b774f1fb2796	api-parity(visibility)	visibility	AnimatedGif#analyzePixels	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+cc6ddb9c76ee	api-parity(visibility)	visibility	AnimatedGif#analyzeRoberts	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+5de995f79c6f	api-parity(visibility)	visibility	AnimatedGif#analyzeScatter	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+a511a5af3c77	api-parity(visibility)	visibility	AnimatedGif#analyzeSeaside	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+407a44926739	api-parity(visibility)	visibility	AnimatedGif#analyzeWoven	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+ec77f0648c3f	api-parity(visibility)	visibility	AnimatedGif#analyzeWren	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+21bf197635fc	api-parity(visibility)	visibility	AnimatedGif#closeStream	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+c0ee7c0758ae	api-parity(visibility)	visibility	AnimatedGif#colorDepth	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+f5525e309c46	api-parity(visibility)	visibility	AnimatedGif#colorTab	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+d0fa9626f912	api-parity(visibility)	visibility	AnimatedGif#delay	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+7506c5ab6c67	api-parity(visibility)	visibility	AnimatedGif#dispose	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+d1f08a050f9b	api-parity(visibility)	visibility	AnimatedGif#firstFrame	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+83cdc168aa8c	api-parity(visibility)	visibility	AnimatedGif#getImagePixels	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+97389ec4dd5e	api-parity(visibility)	visibility	AnimatedGif#height	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+3480aa0110f7	api-parity(visibility)	visibility	AnimatedGif#image	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+86eb6f721fd9	api-parity(visibility)	visibility	AnimatedGif#indexedPixels	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+7497dcf3c2df	api-parity(visibility)	visibility	AnimatedGif#out	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+b2189e0ef6a8	api-parity(visibility)	visibility	AnimatedGif#palSize	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+c1e10ceeb365	api-parity(visibility)	visibility	AnimatedGif#repeat	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+d7d8c45cc59b	api-parity(visibility)	visibility	AnimatedGif#seq	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+c6c5d527537a	api-parity(visibility)	visibility	AnimatedGif#sizeSet	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+fdb73f2b381a	api-parity(visibility)	visibility	AnimatedGif#started	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+ba654120b52c	api-parity(visibility)	visibility	AnimatedGif#transIndex	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+868007f8ea3b	api-parity(visibility)	visibility	AnimatedGif#usedEntry	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+485e28a449ab	api-parity(visibility)	visibility	AnimatedGif#width	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+9a7c846fb0d6	api-parity(visibility)	visibility	AnimatedGif#writeGraphicCtrlExt	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+a00fa57ff04a	api-parity(visibility)	visibility	AnimatedGif#writeImageDesc	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+a4dc193c8cb2	api-parity(visibility)	visibility	AnimatedGif#writeLSD	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+d7b836f6764e	api-parity(visibility)	visibility	AnimatedGif#writeNetscapeExt	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+04f1c17fc5b6	api-parity(visibility)	visibility	AnimatedGif#writePalette	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+b6d4ca637c88	api-parity(visibility)	visibility	AnimatedGif#writePixels	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+c9f4f28162c3	api-parity(visibility)	visibility	AnimatedGif#writeShort	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+1c2646d6107e	api-parity(visibility)	visibility	AnimatedGif#writeString	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+4d54230feb34	api-parity(visibility)	visibility	AnimatedGif#x	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+5df9c570e5f7	api-parity(visibility)	visibility	AnimatedGif#y	/AnimatedGif	0	access differs: emitted 'protected[anim8]', reference 'protected'
+ee7e2905d08d	api-parity(visibility)	visibility	PaletteReducer#candidates	/PaletteReducer	0	access differs: emitted 'protected[anim8]', reference 'public'
+17396f56005f	api-parity(visibility)	visibility	PaletteReducer#curErrorBlueFloats	/PaletteReducer	0	access differs: emitted 'protected[anim8]', reference 'public'
+97ec3205db92	api-parity(visibility)	visibility	PaletteReducer#curErrorGreenFloats	/PaletteReducer	0	access differs: emitted 'protected[anim8]', reference 'public'
+1ac2fa553449	api-parity(visibility)	visibility	PaletteReducer#curErrorRedFloats	/PaletteReducer	0	access differs: emitted 'protected[anim8]', reference 'public'
+9972506f74b4	api-parity(visibility)	visibility	PaletteReducer#nextErrorBlueFloats	/PaletteReducer	0	access differs: emitted 'protected[anim8]', reference 'public'
+c773c837f628	api-parity(visibility)	visibility	PaletteReducer#nextErrorGreenFloats	/PaletteReducer	0	access differs: emitted 'protected[anim8]', reference 'public'
+f20bc484cdff	api-parity(visibility)	visibility	PaletteReducer#nextErrorRedFloats	/PaletteReducer	0	access differs: emitted 'protected[anim8]', reference 'public'
 492d56b5924a	base-surface	unanswered	com.badlogic.gdx.graphics.profiling.GLProfiler#listener		0	this run COLLAPSED a pair on a type the base emits, and the base's map carries no member row for it — so a collapsed `var` could not be checked against what the base published. Assuming the base did not collapse it would be a fabricated fact  [base: sge]  [§1(b) PER-LIBRARY, OPERATIONAL: re-run the base port with this engine so its port map carries a `form=` row for this member]
 cc8b1df3d47b	base-surface	unanswered	com.badlogic.gdx.maps.Map#layers		0	this run COLLAPSED a pair on a type the base emits, and the base's map carries no member row for it — so a collapsed `val` could not be checked against what the base published. Assuming the base did not collapse it would be a fabricated fact  [base: sge]  [§1(b) PER-LIBRARY, OPERATIONAL: re-run the base port with this engine so its port map carries a `form=` row for this member]
 8b0851c1653c	base-surface	unanswered	com.badlogic.gdx.maps.Map#properties		0	this run COLLAPSED a pair on a type the base emits, and the base's map carries no member row for it — so a collapsed `val` could not be checked against what the base published. Assuming the base did not collapse it would be a fabricated fact  [base: sge]  [§1(b) PER-LIBRARY, OPERATIONAL: re-run the base port with this engine so its port map carries a `form=` row for this member]
@@ -99,7 +520,7 @@ eb359d4b8c3b	catalog(consulted)	reached	JS-C16	com/github/tommyettinger/anim8/Co
 680f302e3a64	catalog(consulted)	reached	JS-C22	-	0	rendering Apply — consulted 15465, fired 0, declarations 0: Java's THREE-PHASE applicability (strict, then loose, then varargs) has no Scala counterpart
 e6449eea9b25	catalog(consulted)	reached	JS-C23	-	0	rendering Apply — consulted 15465, fired 0, declarations 0: most-specific tie-break: Scala prefers a NON-GENERIC alternative and Java does not
 77e6680a420f	catalog(consulted)	reached	JS-C25	com/github/tommyettinger/anim8/AnimatedGif.java	74	rendering DefDef — consulted 365, fired 46, declarations 0: `override` is mandatory in Scala and absent in Java
-fb09c0ec4dbd	catalog(consulted)	reached	JS-C29	com/github/tommyettinger/anim8/AnimatedGif.java	134	rendering-type TypeRef — consulted 7391, fired 90, declarations 0: a static NESTED class and an INNER class are different types, and only one is path-dependent
+f7ebbf310c10	catalog(consulted)	reached	JS-C29	com/github/tommyettinger/anim8/AnimatedGif.java	134	rendering-type TypeRef — consulted 7400, fired 90, declarations 0: a static NESTED class and an INNER class are different types, and only one is path-dependent
 15273dc03e64	catalog(consulted)	reached	JS-C31	com/github/tommyettinger/anim8/PaletteReducer.java	1568	lowering CtNewClass/Expression — consulted 4343, fired 160, declarations 0: anonymous class construction and capture
 362d6f2be439	catalog(consulted)	reached	JS-C33	com/github/tommyettinger/anim8/AnimatedGif.java	66	rendering ClassDef — consulted 19, fired 3, declarations 0: the interface default-method diamond is resolved by JLS's two rules, not by trait linearization
 dabc37575a4c	catalog(consulted)	reached	JS-C34	com/github/tommyettinger/anim8/AnimatedGif.java	66	rendering ClassDef — consulted 19, fired 8, declarations 0: interface statics are not inherited AT ALL, not even by an implementor
@@ -132,12 +553,12 @@ bae897cd95ee	catalog(consulted)	reached	JS-E17	com/github/tommyettinger/anim8/An
 74b58f137810	catalog(consulted)	reached	JS-G04	-	0	rendering ForEach — consulted 19, fired 0, declarations 0: a captured wildcard on ITERATION has no nameable type
 343ee0943934	catalog(consulted)	reached	JS-G05	-	0	rendering ClassDef — consulted 19, fired 0, declarations 0: a wildcard in an `extends` clause takes the parameter's DECLARED bound
 b44adc035c9a	catalog(consulted)	reached	JS-G06	-	0	phase raw-parent-alignment — consulted 0, fired 0, declarations 26: a de-wildcarded raw PARENT and its overrides must agree
-94e95514efb3	catalog(consulted)	reached	JS-G07	<synthetic>	0	lowering-type CtTypeReference — consulted 474540, fired 5149, declarations 0: a RAW type erases the REFERENCE's generics, not the class's
-ae142da9be53	catalog(consulted)	reached	JS-G08	<synthetic>	0	lowering-type CtTypeReference — consulted 474540, fired 1212, declarations 0: the same raw Java type renders DIFFERENTLY per scope, and correctly so
+a606db589856	catalog(consulted)	reached	JS-G07	<synthetic>	0	lowering-type CtTypeReference — consulted 472104, fired 5149, declarations 0: a RAW type erases the REFERENCE's generics, not the class's
+04a24722cf03	catalog(consulted)	reached	JS-G08	<synthetic>	0	lowering-type CtTypeReference — consulted 472104, fired 1212, declarations 0: the same raw Java type renders DIFFERENTLY per scope, and correctly so
 fe39aa2e9218	catalog(consulted)	reached	JS-G09	../../../../libgdx/gdx/src/com/badlogic/gdx/InputMultiplexer.java	26	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 81064, fired 1206, declarations 0: UNCHECKED CONVERSION at a raw type is legal in Java and is not in Scala
 11f7d9769f1f	catalog(consulted)	reached	JS-G10	../../../../libgdx/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java	67	lowering CtNewClass/Expression — consulted 4343, fired 4, declarations 0: a RAW anonymous class WITH a body
 f2f790a84da9	catalog(consulted)	reached	JS-G11	com/github/tommyettinger/anim8/Dithered.java	108	rendering ClassDef — consulted 19, fired 1, declarations 0: a partially-nameable F-BOUNDED raw fill
-f6bac1a1e6dc	catalog(consulted)	reached	JS-G12	<synthetic>	0	lowering-type CtTypeParameterReference + rendering-type TypeRef — consulted 18808, fired 577, declarations 0: a diamond's inference variable has NO NAMEABLE type
+347a9598e31e	catalog(consulted)	reached	JS-G12	<synthetic>	0	lowering-type CtTypeParameterReference + rendering-type TypeRef — consulted 18817, fired 577, declarations 0: a diamond's inference variable has NO NAMEABLE type
 9e3d58f825a4	catalog(consulted)	reached	JS-G13	../../../../libgdx/gdx/src/com/badlogic/gdx/InputMultiplexer.java	32	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 81064, fired 192, declarations 0: Java arrays are COVARIANT, with a runtime `ArrayStoreException`; Scala's are invariant
 c97d668490bb	catalog(consulted)	reached	JS-G14	../../../../libgdx/gdx/src/com/badlogic/gdx/graphics/g3d/loader/ObjLoader.java	150	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 81064, fired 112, declarations 0: a primitive at a generic slot boxes to the WRAPPER, not to the formal
 ac562596e434	catalog(consulted)	reached	JS-G15	../../../../libgdx/gdx/src/com/badlogic/gdx/utils/IntMap.java	98	lowering CtNewArray/Expression — consulted 516, fired 19, declarations 0: GENERIC ARRAY CREATION is illegal in Java, so only the cast idiom reaches the engine
@@ -394,8 +815,8 @@ fc36bc50fb23	jdk-surface	unhandled	java.util.Arrays#copyOf(byte[],int)	com/githu
 708b3f36701b	jdk-surface	unhandled	java.util.Arrays#fill(int[],int)	com/github/tommyettinger/anim8/PaletteReducer.java	1443	java.util.Arrays#fill(int[],int) — retyped to java.util.Arrays, no rewrite (14 site(s))
 acffc2186258	jdk-surface	unhandled	java.util.Arrays#fill(int[],int,int,int)	com/github/tommyettinger/anim8/PaletteReducer.java	2449	java.util.Arrays#fill(int[],int,int,int) — retyped to java.util.Arrays, no rewrite (2 site(s))
 4fe272b69bc2	jdk-surface	unhandled	java.util.Arrays#sort(int[],int,int)	com/github/tommyettinger/anim8/PaletteReducer.java	1765	java.util.Arrays#sort(int[],int,int) — retyped to java.util.Arrays, no rewrite (1 site(s))
-55337d6b070f	nullability-boundary	UncoercibleSeam	@1001#update(byte[],int,int)	com/github/tommyettinger/anim8/PNG8.java	8021	a wrapped argument reaches an external callee — unwrapped at the slot because a class file carries no annotation the engine reads and every java reference slot accepts null
-8de169fb7c85	nullability-boundary	UncoercibleSeam	@962#write(byte[])	com/github/tommyettinger/anim8/PNG8.java	8020	a wrapped argument reaches an external callee — unwrapped at the slot because a class file carries no annotation the engine reads and every java reference slot accepts null
+6cf913dfe6c6	nullability-boundary	UncoercibleSeam	@1002#update(byte[],int,int)	com/github/tommyettinger/anim8/PNG8.java	8021	a wrapped argument reaches an external callee — unwrapped at the slot because a class file carries no annotation the engine reads and every java reference slot accepts null
+d2f88ab49f14	nullability-boundary	UncoercibleSeam	@963#write(byte[])	com/github/tommyettinger/anim8/PNG8.java	8020	a wrapped argument reaches an external callee — unwrapped at the slot because a class file carries no annotation the engine reads and every java reference slot accepts null
 ab9127a17417	omissions	enum emitted without its java.lang.Enum supertype	sge.anim8.Dithered$DitherAlgorithm	com/github/tommyettinger/anim8/Dithered.java	108	`name` collides with a member java.lang.Enum declares final (or with the scala 3 enum's own companion) — emitted as a sealed abstract class, which is not a `java.lang.Enum`, so no `<E extends Enum<E>>` bound, `EnumSet`, `EnumMap` or `Comparable<E>` accepts it
 b687122bcf78	policy	matched, but unverifiable	member-rename	MemberRenameTransform(renames)	0	com.badlogic.gdx.scenes.scene2d.InputEvent#type — the component reaches 1 declaration(s) owned by a resolution root rather than by this module: com.badlogic.gdx.scenes.scene2d.InputEvent#type — so this rename did NOT happen and the member keeps its upstream name
 f3c296f35719	policy	matched, but unverifiable	member-rename	MemberRenameTransform(renames)	0	com.badlogic.gdx.scenes.scene2d.ui.List#toString(T) — the component reaches 1 unparsed declaration(s) (java.lang.Object#toString) and 2 owned by a resolution root (com.badlogic.gdx.scenes.scene2d.ui.List#toString, com.badlogic.gdx.scenes.scene2d.ui.SelectBox$SelectBoxScrollPane$109#toString) — so this rename did NOT happen and the member keeps its upstream name

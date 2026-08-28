@@ -1,4 +1,313 @@
 #id	check	kind	owner	path	line	detail
+16ff70a66a9c	api-parity(accessor)	accessor	AbstractGenerator#getMode	/AbstractGenerator	0	def getMode/0 in emitted port only
+1ae35a65822c	api-parity(accessor)	accessor	AbstractGenerator#setMode	/AbstractGenerator	0	def setMode/1 in emitted port only
+0a96bacf899c	api-parity(accessor)	accessor	AbstractRoomGenerator#getMaxRoomSize	/AbstractRoomGenerator	0	def getMaxRoomSize/0 in emitted port only
+514f4c32c1a2	api-parity(accessor)	accessor	AbstractRoomGenerator#getMaxRoomsAmount	/AbstractRoomGenerator	0	def getMaxRoomsAmount/0 in emitted port only
+c77ae2529173	api-parity(accessor)	accessor	AbstractRoomGenerator#getMinRoomSize	/AbstractRoomGenerator	0	def getMinRoomSize/0 in emitted port only
+f221f5384359	api-parity(accessor)	accessor	AbstractRoomGenerator#getTolerance	/AbstractRoomGenerator	0	def getTolerance/0 in emitted port only
+f3bcf7b97b79	api-parity(accessor)	accessor	AbstractRoomGenerator#maxRoomsAmount	/AbstractRoomGenerator	0	var maxRoomsAmount/0 in reference port only
+0ef81fcde3af	api-parity(accessor)	accessor	AbstractRoomGenerator#setMaxRoomSize	/AbstractRoomGenerator	0	def setMaxRoomSize/1 in emitted port only
+8afb9422d0dc	api-parity(accessor)	accessor	AbstractRoomGenerator#setMaxRoomsAmount	/AbstractRoomGenerator	0	def setMaxRoomsAmount/1 in emitted port only
+216cea605e3d	api-parity(accessor)	accessor	AbstractRoomGenerator#setMinRoomSize	/AbstractRoomGenerator	0	def setMinRoomSize/1 in emitted port only
+5a543ae284ce	api-parity(accessor)	accessor	AbstractRoomGenerator#setTolerance	/AbstractRoomGenerator	0	def setTolerance/1 in emitted port only
+c5221583e8f7	api-parity(accessor)	accessor	AbstractRoomGenerator#tolerance	/AbstractRoomGenerator	0	var tolerance/0 in reference port only
+ca5c9cd8333b	api-parity(accessor)	accessor	AbstractRoomGenerator$.Room#getHeight	/AbstractRoomGenerator$/Room	0	def getHeight/0 in emitted port only
+2253be507ecd	api-parity(accessor)	accessor	AbstractRoomGenerator$.Room#getWidth	/AbstractRoomGenerator$/Room	0	def getWidth/0 in emitted port only
+c67154497132	api-parity(accessor)	accessor	AbstractRoomGenerator$.Room#getX	/AbstractRoomGenerator$/Room	0	def getX/0 in emitted port only
+47a7c68a8431	api-parity(accessor)	accessor	AbstractRoomGenerator$.Room#getY	/AbstractRoomGenerator$/Room	0	def getY/0 in emitted port only
+092fa2998faa	api-parity(accessor)	accessor	CellularAutomataGenerator#aliveChance	/CellularAutomataGenerator	0	var aliveChance/0 in reference port only
+ee88906bf4ca	api-parity(accessor)	accessor	CellularAutomataGenerator#birthLimit	/CellularAutomataGenerator	0	var birthLimit/0 in reference port only
+b3ca5c25744a	api-parity(accessor)	accessor	CellularAutomataGenerator#deathLimit	/CellularAutomataGenerator	0	var deathLimit/0 in reference port only
+dc0a4504a258	api-parity(accessor)	accessor	CellularAutomataGenerator#getAliveChance	/CellularAutomataGenerator	0	def getAliveChance/0 in emitted port only
+92c857e18518	api-parity(accessor)	accessor	CellularAutomataGenerator#getBirthLimit	/CellularAutomataGenerator	0	def getBirthLimit/0 in emitted port only
+c6bd3e44d850	api-parity(accessor)	accessor	CellularAutomataGenerator#getDeathLimit	/CellularAutomataGenerator	0	def getDeathLimit/0 in emitted port only
+e507efbfba6c	api-parity(accessor)	accessor	CellularAutomataGenerator#getIterationsAmount	/CellularAutomataGenerator	0	def getIterationsAmount/0 in emitted port only
+ceeec178ff62	api-parity(accessor)	accessor	CellularAutomataGenerator#getMarker	/CellularAutomataGenerator	0	def getMarker/0 in emitted port only
+3b0b544414ff	api-parity(accessor)	accessor	CellularAutomataGenerator#getRadius	/CellularAutomataGenerator	0	def getRadius/0 in emitted port only
+124add53dc33	api-parity(accessor)	accessor	CellularAutomataGenerator#iterationsAmount	/CellularAutomataGenerator	0	var iterationsAmount/0 in reference port only
+3805eaeb2a2a	api-parity(accessor)	accessor	CellularAutomataGenerator#marker	/CellularAutomataGenerator	0	var marker/0 in reference port only
+648707786f0d	api-parity(accessor)	accessor	CellularAutomataGenerator#radius	/CellularAutomataGenerator	0	var radius/0 in reference port only
+5aafd25fe854	api-parity(accessor)	accessor	CellularAutomataGenerator#setAliveChance	/CellularAutomataGenerator	0	def setAliveChance/1 in emitted port only
+3e7018b892bb	api-parity(accessor)	accessor	CellularAutomataGenerator#setBirthLimit	/CellularAutomataGenerator	0	def setBirthLimit/1 in emitted port only
+84e65abff3e4	api-parity(accessor)	accessor	CellularAutomataGenerator#setDeathLimit	/CellularAutomataGenerator	0	def setDeathLimit/1 in emitted port only
+444d564b11d6	api-parity(accessor)	accessor	CellularAutomataGenerator#setInitiate	/CellularAutomataGenerator	0	def setInitiate/1 in emitted port only
+7880f39b3cb3	api-parity(accessor)	accessor	CellularAutomataGenerator#setIterationsAmount	/CellularAutomataGenerator	0	def setIterationsAmount/1 in emitted port only
+2cb6b586563e	api-parity(accessor)	accessor	CellularAutomataGenerator#setMarker	/CellularAutomataGenerator	0	def setMarker/1 in emitted port only
+f9ff9785d784	api-parity(accessor)	accessor	CellularAutomataGenerator#setRadius	/CellularAutomataGenerator	0	def setRadius/1 in emitted port only
+1177cd6a04ac	api-parity(accessor)	accessor	DungeonGenerator#corridorThreshold	/DungeonGenerator	0	var corridorThreshold/0 in reference port only
+695a7f85156a	api-parity(accessor)	accessor	DungeonGenerator#deadEndRemovalIterations	/DungeonGenerator	0	var deadEndRemovalIterations/0 in reference port only
+4ac801dad9f2	api-parity(accessor)	accessor	DungeonGenerator#floorThreshold	/DungeonGenerator	0	var floorThreshold/0 in reference port only
+204ef020953a	api-parity(accessor)	accessor	DungeonGenerator#getCorridorThreshold	/DungeonGenerator	0	def getCorridorThreshold/0 in emitted port only
+90379fcf934d	api-parity(accessor)	accessor	DungeonGenerator#getDeadEndRemovalIterations	/DungeonGenerator	0	def getDeadEndRemovalIterations/0 in emitted port only
+66a20d4abfc6	api-parity(accessor)	accessor	DungeonGenerator#getFloorThreshold	/DungeonGenerator	0	def getFloorThreshold/0 in emitted port only
+a46144d481a6	api-parity(accessor)	accessor	DungeonGenerator#getRandomConnectorChance	/DungeonGenerator	0	def getRandomConnectorChance/0 in emitted port only
+cd16d9906c0f	api-parity(accessor)	accessor	DungeonGenerator#getRoomGenerationAttempts	/DungeonGenerator	0	def getRoomGenerationAttempts/0 in emitted port only
+196da849c014	api-parity(accessor)	accessor	DungeonGenerator#getWallThreshold	/DungeonGenerator	0	def getWallThreshold/0 in emitted port only
+326a63272082	api-parity(accessor)	accessor	DungeonGenerator#getWindingChance	/DungeonGenerator	0	def getWindingChance/0 in emitted port only
+0ebbc110f64e	api-parity(accessor)	accessor	DungeonGenerator#randomConnectorChance	/DungeonGenerator	0	var randomConnectorChance/0 in reference port only
+b4ec9b93bcaf	api-parity(accessor)	accessor	DungeonGenerator#roomGenerationAttempts	/DungeonGenerator	0	var roomGenerationAttempts/0 in reference port only
+e4215ee48385	api-parity(accessor)	accessor	DungeonGenerator#setCorridorThreshold	/DungeonGenerator	0	def setCorridorThreshold/1 in emitted port only
+d9b1c960b837	api-parity(accessor)	accessor	DungeonGenerator#setDeadEndRemovalIterations	/DungeonGenerator	0	def setDeadEndRemovalIterations/1 in emitted port only
+7b45e711bcea	api-parity(accessor)	accessor	DungeonGenerator#setFloorThreshold	/DungeonGenerator	0	def setFloorThreshold/1 in emitted port only
+6be60b468856	api-parity(accessor)	accessor	DungeonGenerator#setRandomConnectorChance	/DungeonGenerator	0	def setRandomConnectorChance/1 in emitted port only
+b90b453f42a3	api-parity(accessor)	accessor	DungeonGenerator#setRoomGenerationAttempts	/DungeonGenerator	0	def setRoomGenerationAttempts/1 in emitted port only
+9944117f6bee	api-parity(accessor)	accessor	DungeonGenerator#setWallThreshold	/DungeonGenerator	0	def setWallThreshold/1 in emitted port only
+511c9a25be6e	api-parity(accessor)	accessor	DungeonGenerator#setWindingChance	/DungeonGenerator	0	def setWindingChance/1 in emitted port only
+cff5ba1728b9	api-parity(accessor)	accessor	DungeonGenerator#wallThreshold	/DungeonGenerator	0	var wallThreshold/0 in reference port only
+636c8dfe6df0	api-parity(accessor)	accessor	DungeonGenerator#windingChance	/DungeonGenerator	0	var windingChance/0 in reference port only
+f2225f19fa62	api-parity(accessor)	accessor	Generator#getMode	/Generator	0	def getMode/0 in emitted port only
+03f71e026663	api-parity(accessor)	accessor	Generator#setMode	/Generator	0	def setMode/1 in emitted port only
+566e80a24739	api-parity(accessor)	accessor	NoiseGenerator#getModifier	/NoiseGenerator	0	def getModifier/0 in emitted port only
+529d3f5dd627	api-parity(accessor)	accessor	NoiseGenerator#getRadius	/NoiseGenerator	0	def getRadius/0 in emitted port only
+50b8e06e78f0	api-parity(accessor)	accessor	NoiseGenerator#getSeed	/NoiseGenerator	0	def getSeed/0 in emitted port only
+ffa494c95d9f	api-parity(accessor)	accessor	NoiseGenerator#modifier	/NoiseGenerator	0	var modifier/0 in reference port only
+250aaf1bb199	api-parity(accessor)	accessor	NoiseGenerator#radius	/NoiseGenerator	0	var radius/0 in reference port only
+28053388483f	api-parity(accessor)	accessor	NoiseGenerator#seed	/NoiseGenerator	0	var seed/0 in reference port only
+e56b3fdd9533	api-parity(accessor)	accessor	NoiseGenerator#setAlgorithmProvider	/NoiseGenerator	0	def setAlgorithmProvider/1 in emitted port only
+6ba00ec93007	api-parity(accessor)	accessor	NoiseGenerator#setModifier	/NoiseGenerator	0	def setModifier/1 in emitted port only
+8e4ec4152c99	api-parity(accessor)	accessor	NoiseGenerator#setRadius	/NoiseGenerator	0	def setRadius/1 in emitted port only
+adfa358de850	api-parity(accessor)	accessor	NoiseGenerator#setSeed	/NoiseGenerator	0	def setSeed/1 in emitted port only
+8e8be6762238	api-parity(collection-retarget)	collection-retarget	DungeonGenerator#addConnector	/DungeonGenerator	0	param 1 type differs: emitted 'java.util.Map[sge.noise.generator.room.dungeon.DungeonGenerator.Point, java.util.Set[java.lang.Integer]]', reference 'HashMap[DungeonGenerator.Point, HashSet[Int]]'
+8cf3c06cee3a	api-parity(collection-retarget)	collection-retarget	DungeonGenerator#findConnectors	/DungeonGenerator	0	result type differs: emitted 'java.util.Map[sge.noise.generator.room.dungeon.DungeonGenerator.Point, java.util.Set[java.lang.Integer]]', reference 'HashMap[DungeonGenerator.Point, HashSet[Int]]'
+40eeccef25f8	api-parity(hand-port-extra)	hand-port-extra	#DOWN		0	case DOWN/0 in reference port only
+549fc72ca1b5	api-parity(hand-port-extra)	hand-port-extra	#GenerationMode		0	enum GenerationMode/0 in reference port only
+d86b1f4a5139	api-parity(hand-port-extra)	hand-port-extra	#LEFT		0	case LEFT/0 in reference port only
+7bc53ce9bde6	api-parity(hand-port-extra)	hand-port-extra	#RIGHT		0	case RIGHT/0 in reference port only
+e14942cec53f	api-parity(hand-port-extra)	hand-port-extra	#UP		0	case UP/0 in reference port only
+73935b938dcb	api-parity(hand-port-extra)	hand-port-extra	#next		0	def next/1 in reference port only
+e301b2d3156b	api-parity(hand-port-extra)	hand-port-extra	#nextX		0	def nextX/1 in reference port only
+c59bf531ea41	api-parity(hand-port-extra)	hand-port-extra	#nextX		0	def nextX/2 in reference port only
+f7348e955ae3	api-parity(hand-port-extra)	hand-port-extra	#nextY		0	def nextY/1 in reference port only
+167e595494d1	api-parity(hand-port-extra)	hand-port-extra	#nextY		0	def nextY/2 in reference port only
+e44dcb1b2cbf	api-parity(hand-port-extra)	hand-port-extra	AbstractGenerator#mode	/AbstractGenerator	0	def mode/0 in reference port only [rename candidates: getMode]
+b0a45d1f6443	api-parity(hand-port-extra)	hand-port-extra	AbstractGenerator#mode_=	/AbstractGenerator	0	def mode_=/1 in reference port only [rename candidates: setMode]
+3ffdf65eaade	api-parity(hand-port-extra)	hand-port-extra	AbstractRoomGenerator#maxRoomSize	/AbstractRoomGenerator	0	def maxRoomSize/0 in reference port only [rename candidates: getMaxRoomSize, getMaxRoomsAmount, getMinRoomSize, getRoomTypes, getTolerance, randomSize]
+df5b90149f78	api-parity(hand-port-extra)	hand-port-extra	AbstractRoomGenerator#maxRoomSize_=	/AbstractRoomGenerator	0	def maxRoomSize_=/1 in reference port only [rename candidates: addRoomType, addRoomTypes, getRandomRoom, normalizePosition, normalizeSize, randomSize, setMaxRoomSize, setMaxRoomsAmount, setMinRoomSize, setTolerance]
+895a53777d53	api-parity(hand-port-extra)	hand-port-extra	AbstractRoomGenerator#minRoomSize	/AbstractRoomGenerator	0	def minRoomSize/0 in reference port only [rename candidates: getMaxRoomSize, getMaxRoomsAmount, getMinRoomSize, getRoomTypes, getTolerance, randomSize]
+9f59dbe22033	api-parity(hand-port-extra)	hand-port-extra	AbstractRoomGenerator#minRoomSize_=	/AbstractRoomGenerator	0	def minRoomSize_=/1 in reference port only [rename candidates: addRoomType, addRoomTypes, getRandomRoom, normalizePosition, normalizeSize, randomSize, setMaxRoomSize, setMaxRoomsAmount, setMinRoomSize, setTolerance]
+188c40827054	api-parity(hand-port-extra)	hand-port-extra	CellularAutomataGenerator#initiate	/CellularAutomataGenerator	0	var initiate/0 in reference port only
+43b57ead5cd9	api-parity(hand-port-extra)	hand-port-extra	DungeonGenerator#di	/DungeonGenerator	0	var di/0 in reference port only
+634adb4134d6	api-parity(hand-port-extra)	hand-port-extra	DungeonGenerator#dirValues	/DungeonGenerator	0	val dirValues/0 in reference port only [rename candidates: direction]
+1351dcc3f9dd	api-parity(hand-port-extra)	hand-port-extra	DungeonGenerator#found	/DungeonGenerator	0	var found/0 in reference port only
+a2cbe960a2ba	api-parity(hand-port-extra)	hand-port-extra	DungeonGenerator#nx	/DungeonGenerator	0	val nx/0 in reference port only [rename candidates: direction]
+b3feb47f0a2f	api-parity(hand-port-extra)	hand-port-extra	DungeonGenerator#ny	/DungeonGenerator	0	val ny/0 in reference port only [rename candidates: direction]
+ab99d73f2930	api-parity(hand-port-extra)	hand-port-extra	DungeonGenerator$.Point#x	/DungeonGenerator$/Point	0	var x/0 in reference port only
+f208c63c2ac8	api-parity(hand-port-extra)	hand-port-extra	DungeonGenerator$.Point#y	/DungeonGenerator$/Point	0	var y/0 in reference port only
+75b2f96206cc	api-parity(hand-port-extra)	hand-port-extra	GenerationMode#ADD	/GenerationMode	0	case ADD/0 in reference port only
+b9e8c9b618b4	api-parity(hand-port-extra)	hand-port-extra	GenerationMode#DIVIDE	/GenerationMode	0	case DIVIDE/0 in reference port only
+2d9552359a77	api-parity(hand-port-extra)	hand-port-extra	GenerationMode#MULTIPLY	/GenerationMode	0	case MULTIPLY/0 in reference port only
+c04e277a39d7	api-parity(hand-port-extra)	hand-port-extra	GenerationMode#REPLACE	/GenerationMode	0	case REPLACE/0 in reference port only
+1de80599c6bf	api-parity(hand-port-extra)	hand-port-extra	GenerationMode#SUBTRACT	/GenerationMode	0	case SUBTRACT/0 in reference port only
+f7f5caf11fc3	api-parity(hand-port-extra)	hand-port-extra	GenerationMode#modify	/GenerationMode	0	def modify/4 in reference port only
+802374b636f4	api-parity(hand-port-extra)	hand-port-extra	Generator#mode	/Generator	0	def mode/0 in reference port only [rename candidates: getMode]
+8cbf8f5bd3ce	api-parity(hand-port-extra)	hand-port-extra	Generator#mode_=	/Generator	0	def mode_=/1 in reference port only [rename candidates: generate, setMode]
+93b118be5b90	api-parity(hand-port-extra)	hand-port-extra	Generators$#DefaultSeedBitLength	/Generators$	0	val DefaultSeedBitLength/0 in reference port only [rename candidates: DEFAULT_SEED_BIT_LENGTH]
+dc96780ac6f9	api-parity(hand-port-extra)	hand-port-extra	Grid#height	/Grid	0	val height/0 in reference port only
+7a365803616b	api-parity(hand-port-extra)	hand-port-extra	Grid#isIndexValid	/Grid	0	def isIndexValid/2 in reference port only [rename candidates: clamp, fillColumn, fillRow, get, replace]
+436e9a87364e	api-parity(hand-port-extra)	hand-port-extra	Grid#toIndex	/Grid	0	def toIndex/2 in reference port only [rename candidates: clamp, fillColumn, fillRow, get, replace]
+be40a640d426	api-parity(hand-port-extra)	hand-port-extra	Grid#toX	/Grid	0	def toX/1 in reference port only [rename candidates: add, add, divide, divide, equals, fill, forEach, modulo, multiply, multiply, set, set, subtract, subtract, validateGrid]
+324d27c7a7f0	api-parity(hand-port-extra)	hand-port-extra	Grid#toY	/Grid	0	def toY/1 in reference port only [rename candidates: add, add, divide, divide, equals, fill, forEach, modulo, multiply, multiply, set, set, subtract, subtract, validateGrid]
+ce9b0a3d1135	api-parity(hand-port-extra)	hand-port-extra	Grid#width	/Grid	0	val width/0 in reference port only
+ff374631e626	api-parity(hand-port-extra)	hand-port-extra	Grid$.CellConsumer$#Break	/Grid$/CellConsumer$	0	val Break/0 in reference port only [rename candidates: BREAK, CONTINUE]
+ee840c86a7b4	api-parity(hand-port-extra)	hand-port-extra	Grid$.CellConsumer$#Continue	/Grid$/CellConsumer$	0	val Continue/0 in reference port only [rename candidates: BREAK, CONTINUE]
+1e28968abd8d	api-parity(hand-port-extra)	hand-port-extra	Int2dArray#height	/Int2dArray	0	val height/0 in reference port only
+096a7c66a2b6	api-parity(hand-port-extra)	hand-port-extra	Int2dArray#isIndexValid	/Int2dArray	0	def isIndexValid/2 in reference port only [rename candidates: get]
+dcf08c3562c4	api-parity(hand-port-extra)	hand-port-extra	Int2dArray#toIndex	/Int2dArray	0	def toIndex/2 in reference port only [rename candidates: get]
+e013231d56ac	api-parity(hand-port-extra)	hand-port-extra	Int2dArray#width	/Int2dArray	0	val width/0 in reference port only
+cbbda1d1adf4	api-parity(hand-port-extra)	hand-port-extra	NoiseGenerator#algorithmProvider	/NoiseGenerator	0	def algorithmProvider/0 in reference port only [rename candidates: getModifier, getRadius, getSeed]
+2ad81f0993ad	api-parity(hand-port-extra)	hand-port-extra	NoiseGenerator#algorithmProvider_=	/NoiseGenerator	0	def algorithmProvider_=/1 in reference port only [rename candidates: generate, setAlgorithmProvider, setModifier, setRadius, setSeed]
+9faadb3393f7	api-parity(hand-port-extra)	hand-port-extra	NoiseGenerator$#gen	/NoiseGenerator$	0	val gen/0 in reference port only [rename candidates: generator]
+a37c5881d453	api-parity(hand-port-extra)	hand-port-extra	RoomType$#DefaultRoomType	/RoomType$	0	enum DefaultRoomType/0 in reference port only
+7cc120098c79	api-parity(hand-port-extra)	hand-port-extra	RoomType$.DefaultRoomType#CASTLE	/RoomType$/DefaultRoomType	0	case CASTLE/0 in reference port only
+433d92b7c7c5	api-parity(hand-port-extra)	hand-port-extra	RoomType$.DefaultRoomType#CROSS	/RoomType$/DefaultRoomType	0	case CROSS/0 in reference port only
+11fee6313ec8	api-parity(hand-port-extra)	hand-port-extra	RoomType$.DefaultRoomType#DIAMOND	/RoomType$/DefaultRoomType	0	case DIAMOND/0 in reference port only
+b6af97433998	api-parity(hand-port-extra)	hand-port-extra	RoomType$.DefaultRoomType#ROUNDED	/RoomType$/DefaultRoomType	0	case ROUNDED/0 in reference port only
+8acd03fb8c1a	api-parity(hand-port-extra)	hand-port-extra	RoomType$.DefaultRoomType#SQUARE	/RoomType$/DefaultRoomType	0	case SQUARE/0 in reference port only
+787d1e94c4f6	api-parity(hand-port-extra)	hand-port-extra	RoomType$.DefaultRoomType#carve	/RoomType$/DefaultRoomType	0	def carve/3 in reference port only
+31c9f6606c81	api-parity(hand-port-extra)	hand-port-extra	RoomType$.DefaultRoomType$#CastleMinSize	/RoomType$/DefaultRoomType$	0	val CastleMinSize/0 in reference port only
+09699758722d	api-parity(hand-port-extra)	hand-port-extra	RoomType$.DefaultRoomType$#CastleMinTower	/RoomType$/DefaultRoomType$	0	val CastleMinTower/0 in reference port only
+cf634784f69a	api-parity(hand-port-extra)	hand-port-extra	RoomType$.DefaultRoomType$#CrossMinSize	/RoomType$/DefaultRoomType$	0	val CrossMinSize/0 in reference port only
+5bd0d23fba9c	api-parity(hand-port-extra)	hand-port-extra	RoomType$.Interceptor#roomType	/RoomType$/Interceptor	0	val roomType/0 in reference port only
+61e38afc05a5	api-parity(mutability)	mutability	AbstractRoomGenerator$.Room#height	/AbstractRoomGenerator$/Room	0	kind differs: emitted var, reference val
+6ce4ca191685	api-parity(mutability)	mutability	AbstractRoomGenerator$.Room#width	/AbstractRoomGenerator$/Room	0	kind differs: emitted var, reference val
+0322ae6c9d6a	api-parity(mutability)	mutability	AbstractRoomGenerator$.Room#x	/AbstractRoomGenerator$/Room	0	kind differs: emitted var, reference val
+cfb7a6eb50af	api-parity(mutability)	mutability	AbstractRoomGenerator$.Room#y	/AbstractRoomGenerator$/Room	0	kind differs: emitted var, reference val
+207d73b78322	api-parity(mutability)	mutability	RoomType$.Interceptor#value	/RoomType$/Interceptor	0	kind differs: emitted var, reference val
+0eaf78a735c8	api-parity(port-extra)	port-extra	#AbstractGenerator		0	object AbstractGenerator/0 in emitted port only
+b5f8bb1010e9	api-parity(port-extra)	port-extra	#Array2D		0	class Array2D/0 in emitted port only
+0ae578b116da	api-parity(port-extra)	port-extra	#Generator		0	object Generator/0 in emitted port only
+7d94f6061e9c	api-parity(port-extra)	port-extra	#Object2dArray		0	class Object2dArray/0 in emitted port only
+0851792e552f	api-parity(port-extra)	port-extra	#Object2dArray		0	object Object2dArray/0 in emitted port only
+430d9eab7394	api-parity(port-extra)	port-extra	Array2D#getHeight	/Array2D	0	def getHeight/0 in emitted port only
+4018dec65ad8	api-parity(port-extra)	port-extra	Array2D#getWidth	/Array2D	0	def getWidth/0 in emitted port only
+ca19678db7ac	api-parity(port-extra)	port-extra	Array2D#height	/Array2D	0	var height/0 in emitted port only
+62023562b665	api-parity(port-extra)	port-extra	Array2D#isIndexValid	/Array2D	0	def isIndexValid/2 in emitted port only
+7e0f398d7415	api-parity(port-extra)	port-extra	Array2D#toIndex	/Array2D	0	def toIndex/2 in emitted port only
+6f48f9705333	api-parity(port-extra)	port-extra	Array2D#toX	/Array2D	0	def toX/1 in emitted port only
+6cfedb5bebd1	api-parity(port-extra)	port-extra	Array2D#toY	/Array2D	0	def toY/1 in emitted port only
+be149f21b208	api-parity(port-extra)	port-extra	Array2D#width	/Array2D	0	var width/0 in emitted port only
+4fc200f7965a	api-parity(port-extra)	port-extra	CellularAutomataGenerator#isInitiating	/CellularAutomataGenerator	0	def isInitiating/0 in emitted port only [rename candidates: getTemporaryGrid]
+0150ae610834	api-parity(port-extra)	port-extra	DungeonGenerator$#Direction	/DungeonGenerator$	0	class Direction/0 in emitted port only
+6b79aa203d35	api-parity(port-extra)	port-extra	DungeonGenerator$#Direction	/DungeonGenerator$	0	object Direction/0 in emitted port only
+993edbf0914e	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction#name	/DungeonGenerator$/Direction	0	def name/0 in emitted port only
+5d5e0297d485	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction#next	/DungeonGenerator$/Direction	0	def next/1 in emitted port only
+70d11bc9f8c5	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction#nextX	/DungeonGenerator$/Direction	0	def nextX/1 in emitted port only
+5b8df233c6e3	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction#nextX	/DungeonGenerator$/Direction	0	def nextX/2 in emitted port only
+345df2deb275	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction#nextY	/DungeonGenerator$/Direction	0	def nextY/1 in emitted port only
+f1969c43849a	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction#nextY	/DungeonGenerator$/Direction	0	def nextY/2 in emitted port only
+298c17ec1527	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction#ordinal	/DungeonGenerator$/Direction	0	def ordinal/0 in emitted port only
+f1a0ff072592	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction$#DOWN	/DungeonGenerator$/Direction$	0	object DOWN/0 in emitted port only
+9bb503b65c9d	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction$#LEFT	/DungeonGenerator$/Direction$	0	object LEFT/0 in emitted port only
+9e8130625e73	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction$#RIGHT	/DungeonGenerator$/Direction$	0	object RIGHT/0 in emitted port only
+b6ad8295c500	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction$#UP	/DungeonGenerator$/Direction$	0	object UP/0 in emitted port only
+3c0aa92eca5e	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction$#valueOf	/DungeonGenerator$/Direction$	0	def valueOf/1 in emitted port only
+dda525fa615e	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction$#values	/DungeonGenerator$/Direction$	0	def values/0 in emitted port only
+266301c618b9	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction$.DOWN$#next	/DungeonGenerator$/Direction$/DOWN$	0	def next/1 in emitted port only
+8afa4b391085	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction$.DOWN$#nextY	/DungeonGenerator$/Direction$/DOWN$	0	def nextY/2 in emitted port only
+835454a415b8	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction$.DOWN$#ordinal	/DungeonGenerator$/Direction$/DOWN$	0	def ordinal/0 in emitted port only
+089ad8278500	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction$.LEFT$#next	/DungeonGenerator$/Direction$/LEFT$	0	def next/1 in emitted port only
+61109e9c7fa8	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction$.LEFT$#nextX	/DungeonGenerator$/Direction$/LEFT$	0	def nextX/2 in emitted port only
+bc4805580c7f	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction$.LEFT$#ordinal	/DungeonGenerator$/Direction$/LEFT$	0	def ordinal/0 in emitted port only
+476b59e16085	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction$.RIGHT$#next	/DungeonGenerator$/Direction$/RIGHT$	0	def next/1 in emitted port only
+ef418b67449e	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction$.RIGHT$#nextX	/DungeonGenerator$/Direction$/RIGHT$	0	def nextX/2 in emitted port only
+b7902f71c0d4	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction$.RIGHT$#ordinal	/DungeonGenerator$/Direction$/RIGHT$	0	def ordinal/0 in emitted port only
+0b63ae4a7acb	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction$.UP$#next	/DungeonGenerator$/Direction$/UP$	0	def next/1 in emitted port only
+80be72fe6ce4	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction$.UP$#nextY	/DungeonGenerator$/Direction$/UP$	0	def nextY/2 in emitted port only
+c225aba933f1	api-parity(port-extra)	port-extra	DungeonGenerator$.Direction$.UP$#ordinal	/DungeonGenerator$/Direction$/UP$	0	def ordinal/0 in emitted port only
+d96c7c24f4ae	api-parity(port-extra)	port-extra	DungeonGenerator$.Point#x	/DungeonGenerator$/Point	0	def x/0 in emitted port only [rename candidates: hashCode, toString]
+6c9fb5c903eb	api-parity(port-extra)	port-extra	DungeonGenerator$.Point#y	/DungeonGenerator$/Point	0	def y/0 in emitted port only [rename candidates: hashCode, toString]
+2ed48eec019c	api-parity(port-extra)	port-extra	Generator$#GenerationMode	/Generator$	0	class GenerationMode/0 in emitted port only
+8408e7d08416	api-parity(port-extra)	port-extra	Generator$#GenerationMode	/Generator$	0	object GenerationMode/0 in emitted port only
+ae08267c17d5	api-parity(port-extra)	port-extra	Generator$.GenerationMode#modify	/Generator$/GenerationMode	0	def modify/4 in emitted port only
+73cf91bd5d91	api-parity(port-extra)	port-extra	Generator$.GenerationMode#name	/Generator$/GenerationMode	0	def name/0 in emitted port only
+5aeae9385f82	api-parity(port-extra)	port-extra	Generator$.GenerationMode#ordinal	/Generator$/GenerationMode	0	def ordinal/0 in emitted port only
+5a56be311864	api-parity(port-extra)	port-extra	Generator$.GenerationMode$#ADD	/Generator$/GenerationMode$	0	object ADD/0 in emitted port only
+a5450553514a	api-parity(port-extra)	port-extra	Generator$.GenerationMode$#DIVIDE	/Generator$/GenerationMode$	0	object DIVIDE/0 in emitted port only
+61fe4b074d8d	api-parity(port-extra)	port-extra	Generator$.GenerationMode$#MULTIPLY	/Generator$/GenerationMode$	0	object MULTIPLY/0 in emitted port only
+048c6e9cfd38	api-parity(port-extra)	port-extra	Generator$.GenerationMode$#REPLACE	/Generator$/GenerationMode$	0	object REPLACE/0 in emitted port only
+a30501a437ee	api-parity(port-extra)	port-extra	Generator$.GenerationMode$#SUBTRACT	/Generator$/GenerationMode$	0	object SUBTRACT/0 in emitted port only
+616dd56adddc	api-parity(port-extra)	port-extra	Generator$.GenerationMode$#valueOf	/Generator$/GenerationMode$	0	def valueOf/1 in emitted port only
+411b39c889b8	api-parity(port-extra)	port-extra	Generator$.GenerationMode$#values	/Generator$/GenerationMode$	0	def values/0 in emitted port only
+ed4c6f2ed359	api-parity(port-extra)	port-extra	Generator$.GenerationMode$.ADD$#modify	/Generator$/GenerationMode$/ADD$	0	def modify/4 in emitted port only
+6eb735172558	api-parity(port-extra)	port-extra	Generator$.GenerationMode$.ADD$#ordinal	/Generator$/GenerationMode$/ADD$	0	def ordinal/0 in emitted port only
+991f0a5e8754	api-parity(port-extra)	port-extra	Generator$.GenerationMode$.DIVIDE$#modify	/Generator$/GenerationMode$/DIVIDE$	0	def modify/4 in emitted port only
+6dbf656ee9c6	api-parity(port-extra)	port-extra	Generator$.GenerationMode$.DIVIDE$#ordinal	/Generator$/GenerationMode$/DIVIDE$	0	def ordinal/0 in emitted port only
+16e4423870d2	api-parity(port-extra)	port-extra	Generator$.GenerationMode$.MULTIPLY$#modify	/Generator$/GenerationMode$/MULTIPLY$	0	def modify/4 in emitted port only
+0ccbb270db31	api-parity(port-extra)	port-extra	Generator$.GenerationMode$.MULTIPLY$#ordinal	/Generator$/GenerationMode$/MULTIPLY$	0	def ordinal/0 in emitted port only
+0acd7d050e64	api-parity(port-extra)	port-extra	Generator$.GenerationMode$.REPLACE$#modify	/Generator$/GenerationMode$/REPLACE$	0	def modify/4 in emitted port only
+be1fbf485a8a	api-parity(port-extra)	port-extra	Generator$.GenerationMode$.REPLACE$#ordinal	/Generator$/GenerationMode$/REPLACE$	0	def ordinal/0 in emitted port only
+e32e37ae58ad	api-parity(port-extra)	port-extra	Generator$.GenerationMode$.SUBTRACT$#modify	/Generator$/GenerationMode$/SUBTRACT$	0	def modify/4 in emitted port only
+35dc756bb487	api-parity(port-extra)	port-extra	Generator$.GenerationMode$.SUBTRACT$#ordinal	/Generator$/GenerationMode$/SUBTRACT$	0	def ordinal/0 in emitted port only
+d92ec738787b	api-parity(port-extra)	port-extra	Generators$#DEFAULT_SEED_BIT_LENGTH	/Generators$	0	val DEFAULT_SEED_BIT_LENGTH/0 in emitted port only [rename candidates: DefaultSeedBitLength]
+47c89a4b8dd8	api-parity(port-extra)	port-extra	Grid#grid	/Grid	0	var grid/0 in emitted port only
+c34df6d25e82	api-parity(port-extra)	port-extra	Grid$.CellConsumer$#BREAK	/Grid$/CellConsumer$	0	val BREAK/0 in emitted port only [rename candidates: Break, Continue]
+e75017e6f4f7	api-parity(port-extra)	port-extra	Grid$.CellConsumer$#CONTINUE	/Grid$/CellConsumer$	0	val CONTINUE/0 in emitted port only [rename candidates: Break, Continue]
+a344424a9a08	api-parity(port-extra)	port-extra	Int2dArray#array	/Int2dArray	0	var array/0 in emitted port only
+7e39ff55ef66	api-parity(port-extra)	port-extra	NoiseGenerator$#DefaultNoiseAlgorithmProvider	/NoiseGenerator$	0	object DefaultNoiseAlgorithmProvider/0 in emitted port only
+2e33d7b88703	api-parity(port-extra)	port-extra	NoiseGenerator$#generator	/NoiseGenerator$	0	val generator/0 in emitted port only [rename candidates: gen]
+a4dd584b84db	api-parity(port-extra)	port-extra	Object2dArray#ArrayIterator	/Object2dArray	0	class ArrayIterator/0 in emitted port only
+9e691b2078f7	api-parity(port-extra)	port-extra	Object2dArray#array	/Object2dArray	0	var array/0 in emitted port only
+daa87c2d8ffc	api-parity(port-extra)	port-extra	Object2dArray#fill	/Object2dArray	0	def fill/1 in emitted port only
+0688f0b74811	api-parity(port-extra)	port-extra	Object2dArray#get	/Object2dArray	0	def get/2 in emitted port only
+7c70cd3f2394	api-parity(port-extra)	port-extra	Object2dArray#getArray	/Object2dArray	0	def getArray/0 in emitted port only
+232dfbe8f25c	api-parity(port-extra)	port-extra	Object2dArray#getArray	/Object2dArray	0	def getArray/1 in emitted port only
+34701c926301	api-parity(port-extra)	port-extra	Object2dArray#getObjectArray	/Object2dArray	0	def getObjectArray/0 in emitted port only
+f2bdc7468ec7	api-parity(port-extra)	port-extra	Object2dArray#getOrElse	/Object2dArray	0	def getOrElse/3 in emitted port only
+bc65039231c6	api-parity(port-extra)	port-extra	Object2dArray#getOrNull	/Object2dArray	0	def getOrNull/2 in emitted port only
+cae97ceef6b2	api-parity(port-extra)	port-extra	Object2dArray#iterator	/Object2dArray	0	def iterator/0 in emitted port only
+917b724ceff4	api-parity(port-extra)	port-extra	Object2dArray#set	/Object2dArray	0	def set/3 in emitted port only
+315e0615ff08	api-parity(port-extra)	port-extra	Object2dArray#swap	/Object2dArray	0	def swap/4 in emitted port only
+bff022b17489	api-parity(port-extra)	port-extra	Object2dArray$#Funnel	/Object2dArray$	0	class Funnel/0 in emitted port only
+7810f453b6d6	api-parity(port-extra)	port-extra	Object2dArray$#newNotTyped	/Object2dArray$	0	def newNotTyped/2 in emitted port only
+4d1e5bd4e266	api-parity(port-extra)	port-extra	Object2dArray.ArrayIterator#hasNext	/Object2dArray/ArrayIterator	0	def hasNext/0 in emitted port only
+a7687c5d00f2	api-parity(port-extra)	port-extra	Object2dArray.ArrayIterator#next	/Object2dArray/ArrayIterator	0	def next/0 in emitted port only
+7b64a9fcc37d	api-parity(port-extra)	port-extra	Object2dArray.ArrayIterator#remove	/Object2dArray/ArrayIterator	0	def remove/0 in emitted port only
+fcdc29842fe1	api-parity(port-extra)	port-extra	Object2dArray.ArrayIterator#reset	/Object2dArray/ArrayIterator	0	def reset/0 in emitted port only
+8bb8a3841d24	api-parity(port-extra)	port-extra	RoomType$#DefaultRoomType	/RoomType$	0	class DefaultRoomType/0 in emitted port only
+895a0eb7d8bb	api-parity(port-extra)	port-extra	RoomType$#Interceptor	/RoomType$	0	object Interceptor/0 in emitted port only
+714c958ce3ee	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType#name	/RoomType$/DefaultRoomType	0	def name/0 in emitted port only
+b52295c9b42e	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType#ordinal	/RoomType$/DefaultRoomType	0	def ordinal/0 in emitted port only
+799c4dc8cb97	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$#CASTLE	/RoomType$/DefaultRoomType$	0	object CASTLE/0 in emitted port only
+2ae61de66e46	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$#CROSS	/RoomType$/DefaultRoomType$	0	object CROSS/0 in emitted port only
+25776f25cb95	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$#DIAMOND	/RoomType$/DefaultRoomType$	0	object DIAMOND/0 in emitted port only
+9c238cce36e5	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$#ROUNDED	/RoomType$/DefaultRoomType$	0	object ROUNDED/0 in emitted port only
+aeec7c721803	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$#SQUARE	/RoomType$/DefaultRoomType$	0	object SQUARE/0 in emitted port only
+9ed3343e78ee	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$#valueOf	/RoomType$/DefaultRoomType$	0	def valueOf/1 in emitted port only
+177159602727	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$#values	/RoomType$/DefaultRoomType$	0	def values/0 in emitted port only
+a8d9e41581f5	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$.CASTLE$#MIN_SIZE	/RoomType$/DefaultRoomType$/CASTLE$	0	val MIN_SIZE/0 in emitted port only
+029806d5b911	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$.CASTLE$#MIN_TOWER	/RoomType$/DefaultRoomType$/CASTLE$	0	val MIN_TOWER/0 in emitted port only
+1fb37f0c7c6a	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$.CASTLE$#carve	/RoomType$/DefaultRoomType$/CASTLE$	0	def carve/3 in emitted port only
+fcc1ac4c3774	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$.CASTLE$#isValid	/RoomType$/DefaultRoomType$/CASTLE$	0	def isValid/1 in emitted port only
+26056e071ac3	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$.CASTLE$#ordinal	/RoomType$/DefaultRoomType$/CASTLE$	0	def ordinal/0 in emitted port only
+45e2c9fde6e6	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$.CROSS$#MIN_SIZE	/RoomType$/DefaultRoomType$/CROSS$	0	val MIN_SIZE/0 in emitted port only
+f3abe4d37c1c	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$.CROSS$#carve	/RoomType$/DefaultRoomType$/CROSS$	0	def carve/3 in emitted port only
+426ada292b01	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$.CROSS$#isValid	/RoomType$/DefaultRoomType$/CROSS$	0	def isValid/1 in emitted port only
+42f7fb21e6fd	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$.CROSS$#ordinal	/RoomType$/DefaultRoomType$/CROSS$	0	def ordinal/0 in emitted port only
+775949f190dc	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$.DIAMOND$#carve	/RoomType$/DefaultRoomType$/DIAMOND$	0	def carve/3 in emitted port only
+8620000ce8d9	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$.DIAMOND$#isValid	/RoomType$/DefaultRoomType$/DIAMOND$	0	def isValid/1 in emitted port only
+803c75c3896c	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$.DIAMOND$#ordinal	/RoomType$/DefaultRoomType$/DIAMOND$	0	def ordinal/0 in emitted port only
+ddcbb850d8f6	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$.ROUNDED$#carve	/RoomType$/DefaultRoomType$/ROUNDED$	0	def carve/3 in emitted port only
+57246ff150fa	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$.ROUNDED$#ordinal	/RoomType$/DefaultRoomType$/ROUNDED$	0	def ordinal/0 in emitted port only
+d6ee5f62f3b0	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$.SQUARE$#carve	/RoomType$/DefaultRoomType$/SQUARE$	0	def carve/3 in emitted port only
+d94c0dea3770	api-parity(port-extra)	port-extra	RoomType$.DefaultRoomType$.SQUARE$#ordinal	/RoomType$/DefaultRoomType$/SQUARE$	0	def ordinal/0 in emitted port only
+9d94423c65da	api-parity(port-extra)	port-extra	RoomType$.Interceptor#type	/RoomType$/Interceptor	0	var type/0 in emitted port only
+dee48748d4de	api-parity(signature)	signature	#Grid		0	parents differ: emitted-only [sge.noise.Array2D], reference-only []
+a56e3c4c60fe	api-parity(signature)	signature	#Int2dArray		0	parents differ: emitted-only [sge.noise.Array2D], reference-only []
+0633c929d93e	api-parity(signature)	signature	AbstractRoomGenerator#addRoomTypes	/AbstractRoomGenerator	0	param 0 type differs: emitted 'scala.Array[sge.noise.generator.room.RoomType]', reference 'RoomType*'
+34904d2f4380	api-parity(signature)	signature	AbstractRoomGenerator#getRoomTypes	/AbstractRoomGenerator	0	result type differs: emitted 'java.util.List[sge.noise.generator.room.RoomType]', reference 'ArrayList[RoomType]'
+dd31934b6c07	api-parity(signature)	signature	DungeonGenerator#getDestinations	/DungeonGenerator	0	param 0 type differs: emitted 'java.util.Set[java.lang.Integer]', reference 'JSet[Int]'
+5d53c7eaa45e	api-parity(signature)	signature	DungeonGenerator#getDestinations	/DungeonGenerator	0	param 1 type differs: emitted 'java.util.Iterator[java.lang.Integer]', reference 'JIterator[Int]'
+e16ca907110f	api-parity(signature)	signature	DungeonGenerator#getDestinations	/DungeonGenerator	0	param 2 type differs: emitted 'scala.Array[java.lang.Integer]', reference 'Array[Int]'
+215f604242e5	api-parity(signature)	signature	DungeonGenerator#getDestinations	/DungeonGenerator	0	result type differs: emitted 'scala.Array[java.lang.Integer]', reference 'Array[Int]'
+7cc9c0dd67a6	api-parity(signature)	signature	Generators$#randomElement	/Generators$	0	param 0 type differs: emitted 'java.util.List[Type]', reference 'JList[A]'
+f5c49eb2b4f3	api-parity(signature)	signature	Generators$#randomElement	/Generators$	0	result type differs: emitted 'Type', reference 'A'
+eb3bdddf120d	api-parity(signature)	signature	Generators$#randomElement	/Generators$	0	type params differ: emitted '[Type <: java.lang.Object]', reference '[A]'
+53b76f7c4d7b	api-parity(signature)	signature	Generators$#randomIndex	/Generators$	0	param 0 type differs: emitted 'java.util.List[?]', reference 'JList[?]'
+332ad3781091	api-parity(signature)	signature	Generators$#shuffle	/Generators$	0	param 0 type differs: emitted 'java.util.List[Type]', reference 'JList[A]'
+3b2b3998cd0c	api-parity(signature)	signature	Generators$#shuffle	/Generators$	0	result type differs: emitted 'java.util.List[Type]', reference 'JList[A]'
+0692b75b7fc8	api-parity(signature)	signature	Generators$#shuffle	/Generators$	0	type params differ: emitted '[Type <: java.lang.Object]', reference '[A]'
+e477ea7538df	api-parity(signature)	signature	Grid#getArray	/Grid	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
+2417492dc9d1	api-parity(visibility)	visibility	AbstractGenerator#modifyCell	/AbstractGenerator	0	access differs: emitted 'protected[generator]', reference 'protected'
+362f811395fe	api-parity(visibility)	visibility	AbstractRoomGenerator#carveRoom	/AbstractRoomGenerator	0	access differs: emitted 'protected[room]', reference 'protected'
+74c9ec2c5de8	api-parity(visibility)	visibility	AbstractRoomGenerator#getRandomRoom	/AbstractRoomGenerator	0	access differs: emitted 'protected[room]', reference 'protected'
+ce1af6958532	api-parity(visibility)	visibility	AbstractRoomGenerator#normalizePosition	/AbstractRoomGenerator	0	access differs: emitted 'protected[room]', reference 'protected'
+09e6b3bf5ea8	api-parity(visibility)	visibility	AbstractRoomGenerator#normalizeSize	/AbstractRoomGenerator	0	access differs: emitted 'protected[room]', reference 'protected'
+16c4388d7040	api-parity(visibility)	visibility	AbstractRoomGenerator#randomSize	/AbstractRoomGenerator	0	access differs: emitted 'protected[room]', reference 'protected'
+16c4388d7040/2	api-parity(visibility)	visibility	AbstractRoomGenerator#randomSize	/AbstractRoomGenerator	0	access differs: emitted 'protected[room]', reference 'protected'
+9f1df33af5df	api-parity(visibility)	visibility	CellularAutomataGenerator#countLivingNeighbors	/CellularAutomataGenerator	0	access differs: emitted 'protected[cellular]', reference 'protected'
+5ac43cf86e90	api-parity(visibility)	visibility	CellularAutomataGenerator#getTemporaryGrid	/CellularAutomataGenerator	0	access differs: emitted 'protected[cellular]', reference 'protected'
+4a9ee2d5f1e2	api-parity(visibility)	visibility	CellularAutomataGenerator#isAlive	/CellularAutomataGenerator	0	access differs: emitted 'protected[cellular]', reference 'protected'
+75c60c05c8ad	api-parity(visibility)	visibility	CellularAutomataGenerator#setAlive	/CellularAutomataGenerator	0	access differs: emitted 'protected[cellular]', reference 'protected'
+db6b6499d0c5	api-parity(visibility)	visibility	CellularAutomataGenerator#setDead	/CellularAutomataGenerator	0	access differs: emitted 'protected[cellular]', reference 'protected'
+72744a07f8dc	api-parity(visibility)	visibility	CellularAutomataGenerator#shouldBeBorn	/CellularAutomataGenerator	0	access differs: emitted 'protected[cellular]', reference 'protected'
+76eb2a884a47	api-parity(visibility)	visibility	CellularAutomataGenerator#shouldDie	/CellularAutomataGenerator	0	access differs: emitted 'protected[cellular]', reference 'protected'
+fcc1655f99c8	api-parity(visibility)	visibility	CellularAutomataGenerator#spawnLivingCells	/CellularAutomataGenerator	0	access differs: emitted 'protected[cellular]', reference 'protected'
+748ccd2d5e19	api-parity(visibility)	visibility	DungeonGenerator#addConnector	/DungeonGenerator	0	access differs: emitted 'protected[dungeon]', reference 'protected'
+630efb336190	api-parity(visibility)	visibility	DungeonGenerator#carveConnector	/DungeonGenerator	0	access differs: emitted 'protected[dungeon]', reference 'protected'
+a9ad448d5fde	api-parity(visibility)	visibility	DungeonGenerator#carveCorridor	/DungeonGenerator	0	access differs: emitted 'protected[dungeon]', reference 'protected'
+a1bbca8d5738	api-parity(visibility)	visibility	DungeonGenerator#carveMaze	/DungeonGenerator	0	access differs: emitted 'protected[dungeon]', reference 'protected'
+db1eebedb913	api-parity(visibility)	visibility	DungeonGenerator#findConnectors	/DungeonGenerator	0	access differs: emitted 'protected[dungeon]', reference 'protected'
+213fe8191bfd	api-parity(visibility)	visibility	DungeonGenerator#getDestinations	/DungeonGenerator	0	access differs: emitted 'protected[dungeon]', reference 'protected'
+3058d1d09d88	api-parity(visibility)	visibility	DungeonGenerator#getRegion	/DungeonGenerator	0	access differs: emitted 'protected[dungeon]', reference 'protected'
+0811a8c3643c	api-parity(visibility)	visibility	DungeonGenerator#isCarveable	/DungeonGenerator	0	access differs: emitted 'protected[dungeon]', reference 'protected'
+0811a8c3643c/2	api-parity(visibility)	visibility	DungeonGenerator#isCarveable	/DungeonGenerator	0	access differs: emitted 'protected[dungeon]', reference 'protected'
+44fa73d2b10c	api-parity(visibility)	visibility	DungeonGenerator#isCorridor	/DungeonGenerator	0	access differs: emitted 'protected[dungeon]', reference 'protected'
+43ae632d088a	api-parity(visibility)	visibility	DungeonGenerator#isDeadEnd	/DungeonGenerator	0	access differs: emitted 'protected[dungeon]', reference 'protected'
+990ab4926c28	api-parity(visibility)	visibility	DungeonGenerator#isWall	/DungeonGenerator	0	access differs: emitted 'protected[dungeon]', reference 'protected'
+581ce32843dc	api-parity(visibility)	visibility	DungeonGenerator#joinRegions	/DungeonGenerator	0	access differs: emitted 'protected[dungeon]', reference 'protected'
+f5bc6f48403b	api-parity(visibility)	visibility	DungeonGenerator#nextRegion	/DungeonGenerator	0	access differs: emitted 'protected[dungeon]', reference 'protected'
+fa1794118812	api-parity(visibility)	visibility	DungeonGenerator#normalizePosition	/DungeonGenerator	0	access differs: emitted 'protected[room]', reference 'protected'
+94a1651e3b3c	api-parity(visibility)	visibility	DungeonGenerator#normalizeSize	/DungeonGenerator	0	access differs: emitted 'protected[room]', reference 'protected'
+893b4994eef2	api-parity(visibility)	visibility	DungeonGenerator#overlapsAny	/DungeonGenerator	0	access differs: emitted 'protected[dungeon]', reference 'protected'
+0197b7ea5cae	api-parity(visibility)	visibility	DungeonGenerator#removeDeadEnds	/DungeonGenerator	0	access differs: emitted 'protected[dungeon]', reference 'protected'
+9f613bcabf17	api-parity(visibility)	visibility	DungeonGenerator#reset	/DungeonGenerator	0	access differs: emitted 'protected[dungeon]', reference 'protected'
+8b203c5d2489	api-parity(visibility)	visibility	DungeonGenerator#spawnCorridors	/DungeonGenerator	0	access differs: emitted 'protected[dungeon]', reference 'protected'
+bc109121358f	api-parity(visibility)	visibility	DungeonGenerator#spawnRooms	/DungeonGenerator	0	access differs: emitted 'protected[dungeon]', reference 'protected'
+e33ad103c245	api-parity(visibility)	visibility	DungeonGenerator#validateRoomSizes	/DungeonGenerator	0	access differs: emitted 'protected[dungeon]', reference 'protected'
+8aa70c034479	api-parity(visibility)	visibility	DungeonGenerator$#Point	/DungeonGenerator$	0	access differs: emitted 'public', reference 'protected[dungeon]'
+7f803fcb0db7	api-parity(visibility)	visibility	Grid#iterate	/Grid	0	access differs: emitted 'protected[noise]', reference 'protected'
+99c5002626c1	api-parity(visibility)	visibility	Grid#validateGrid	/Grid	0	access differs: emitted 'protected[noise]', reference 'protected'
+d19a655a5c9e	api-parity(visibility)	visibility	RoomType$.Interceptor#value	/RoomType$/Interceptor	0	access differs: emitted 'protected[room]', reference 'protected'
 f3d887d2ebe9	catalog(consulted)	reached	JS-C01	com/github/czyzby/noise4j/map/Grid.java	146	lowering CtInvocation/Expression — consulted 407, fired 51, declarations 0: a Java `static` is INHERITED by every subclass; a Scala companion inherits nothing
 4680742df532	catalog(consulted)	reached	JS-C02	-	0	lowering CtInvocation/Expression + lowering CtFieldRead/Expression + lowering CtFieldWrite/Expression — consulted 797, fired 0, declarations 0: interface constants are inherited through `implements`
 c0ac36c0289c	catalog(consulted)	reached	JS-C03	com/github/czyzby/noise4j/map/generator/cellular/CellularAutomataGenerator.java	21	rendering ClassDef — consulted 23, fired 4, declarations 0: static HIDING is resolved by the STATIC type of the qualifier
@@ -19,7 +328,7 @@ bfe889037a64	catalog(consulted)	reached	JS-C20	com/github/czyzby/noise4j/array/O
 8850c81312d6	catalog(consulted)	reached	JS-C22	-	0	rendering Apply — consulted 802, fired 0, declarations 0: Java's THREE-PHASE applicability (strict, then loose, then varargs) has no Scala counterpart
 826808581046	catalog(consulted)	reached	JS-C23	-	0	rendering Apply — consulted 802, fired 0, declarations 0: most-specific tie-break: Scala prefers a NON-GENERIC alternative and Java does not
 c8463c278ff1	catalog(consulted)	reached	JS-C25	com/github/czyzby/noise4j/array/Object2dArray.java	132	rendering DefDef — consulted 245, fired 50, declarations 0: `override` is mandatory in Scala and absent in Java
-4b8a84fd76ab	catalog(consulted)	reached	JS-C29	com/github/czyzby/noise4j/array/Object2dArray.java	10	rendering-type TypeRef — consulted 1057, fired 112, declarations 0: a static NESTED class and an INNER class are different types, and only one is path-dependent
+5ddc2f90f5f5	catalog(consulted)	reached	JS-C29	com/github/czyzby/noise4j/array/Object2dArray.java	10	rendering-type TypeRef — consulted 1058, fired 113, declarations 0: a static NESTED class and an INNER class are different types, and only one is path-dependent
 bbf9a870b655	catalog(consulted)	reached	JS-C31	com/github/czyzby/noise4j/array/Object2dArray.java	52	lowering CtNewClass/Expression — consulted 35, fired 3, declarations 0: anonymous class construction and capture
 dd6de70319e0	catalog(consulted)	reached	JS-C33	com/github/czyzby/noise4j/array/Object2dArray.java	10	rendering ClassDef — consulted 23, fired 4, declarations 0: the interface default-method diamond is resolved by JLS's two rules, not by trait linearization
 ac57255e4f4f	catalog(consulted)	reached	JS-C34	com/github/czyzby/noise4j/map/generator/AbstractGenerator.java	8	rendering ClassDef — consulted 23, fired 7, declarations 0: interface statics are not inherited AT ALL, not even by an implementor
@@ -55,7 +364,7 @@ a28c5ad6a5af	catalog(consulted)	reached	JS-G05	-	0	rendering ClassDef — consul
 cac6e5d46e5f	catalog(consulted)	reached	JS-G09	-	0	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 911, fired 0, declarations 0: UNCHECKED CONVERSION at a raw type is legal in Java and is not in Scala
 f8a1af2316fb	catalog(consulted)	reached	JS-G10	-	0	lowering CtNewClass/Expression — consulted 35, fired 0, declarations 0: a RAW anonymous class WITH a body
 a6fe2bf7ca03	catalog(consulted)	reached	JS-G11	com/github/czyzby/noise4j/map/generator/Generator.java	22	rendering ClassDef — consulted 23, fired 3, declarations 0: a partially-nameable F-BOUNDED raw fill
-415c6440f762	catalog(consulted)	reached	JS-G12	<synthetic>	0	lowering-type CtTypeParameterReference + rendering-type TypeRef — consulted 1154, fired 4, declarations 0: a diamond's inference variable has NO NAMEABLE type
+8c3943d744d5	catalog(consulted)	reached	JS-G12	<synthetic>	0	lowering-type CtTypeParameterReference + rendering-type TypeRef — consulted 1155, fired 4, declarations 0: a diamond's inference variable has NO NAMEABLE type
 f06ebe4ae8d1	catalog(consulted)	reached	JS-G13	com/github/czyzby/noise4j/array/Object2dArray.java	16	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 911, fired 4, declarations 0: Java arrays are COVARIANT, with a runtime `ArrayStoreException`; Scala's are invariant
 cc6f27210706	catalog(consulted)	reached	JS-G14	com/github/czyzby/noise4j/map/generator/room/dungeon/DungeonGenerator.java	267	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 911, fired 3, declarations 0: a primitive at a generic slot boxes to the WRAPPER, not to the formal
 dfeba0e18806	catalog(consulted)	reached	JS-G15	com/github/czyzby/noise4j/array/Object2dArray.java	56	lowering CtNewArray/Expression — consulted 7, fired 1, declarations 0: GENERIC ARRAY CREATION is illegal in Java, so only the cast idiom reaches the engine
@@ -84,6 +393,7 @@ f6ef51ecb879	catalog(consulted)	reached	JS-S15	com/github/czyzby/noise4j/map/gen
 186ca9c6ac84	catalog(consulted)	reached	JS-S19	com/github/czyzby/noise4j/array/Array2D.java	7	rendering ValDef — consulted 238, fired 33, declarations 0: definite assignment for LOCALS — Java rejects a read before assignment
 b018d24d7203	catalog(consulted)	reached	JS-S21	com/github/czyzby/noise4j/map/Grid.java	366	rendering Lambda — consulted 1, fired 1, declarations 0: `return` inside a lambda body returns from the LAMBDA, not from the method
 70686eb87ddb	catalog(consulted)	reached	JS-S25	-	0	rendering DefDef — consulted 245, fired 0, declarations 0: Java REJECTS unreachable code and Scala allows it — composed with `break`
+2378a86a9186	catalog(consulted)	reached	JS-S26	com/github/czyzby/noise4j/map/generator/room/dungeon/DungeonGenerator.java	164	rendering ForEach — consulted 9, fired 2, declarations 0: a `return` inside an enhanced-for body becomes a NON-LOCAL RETURN in Scala's `.foreach` desugaring
 9c22be7f2f32	catalog(uncited)	handled	JS-C01	-	0	UNCITED — a companion object has no inheritance relation to its class's parents (JLS side: JLS 8.2, 8.4.8): a Java `static` is INHERITED by every subclass; a Scala companion inherits nothing
 3047600ceab7	catalog(uncited)	handled	JS-C02	-	0	UNCITED — as JS-C01, through the interface edge (JLS side: JLS 9.3, 8.1.5): interface constants are inherited through `implements`
 c16eaa596e70	catalog(uncited)	handled	JS-C03	-	0	UNCITED — a companion re-export must not merge a redeclaration away (JLS side: JLS 8.4.8.2): static HIDING is resolved by the STATIC type of the qualifier
@@ -163,6 +473,7 @@ d461084a2020	catalog(uncited)	handled	JS-S18	-	0	UNCITED — Scala 3 has no `do`
 62291c7fd294	catalog(uncited)	handled	JS-S21	-	0	UNCITED — a `return` in a Scala lambda is a non-local return from the enclosing method (JLS side: JLS 15.27.2): `return` inside a lambda body returns from the LAMBDA, not from the method
 bd6e520e2d23	catalog(uncited)	handled	JS-S22	-	0	UNCITED — `.synchronized`, with the same monitor bytecode (JLS side: JLS 14.19): `synchronized` as a statement
 1c3b367e92aa	catalog(uncited)	handled	JS-S25	-	0	UNCITED — Scala has no unreachable-statement rule (JLS side: JLS 14.21): Java REJECTS unreachable code and Scala allows it — composed with `break`
+ce670f1fd3f7	catalog(uncited)	handled	JS-S26	-	0	UNCITED — Scala's `for (x <- xs) { ... }` desugars to `.foreach(x => ...)` and `return` inside the lambda is a non-local return, deprecated/errored under `-Werror` (JLS side: JLS 14.14.2): a `return` inside an enhanced-for body becomes a NON-LOCAL RETURN in Scala's `.foreach` desugaring
 1c32968f82ee	catalog(uncited)	non-diff	JS-C11	-	0	UNCITED — the same JVM mechanism (JLS side: JLS 12.4.2): a superclass is initialised before its subclass
 420f8947e9ff	catalog(uncited)	non-diff	JS-C15	-	0	UNCITED — the identical hazard (JLS side: JLS 12.5): a virtual call from a constructor sees UNINITIALISED subclass state
 7f39b3ac3114	catalog(uncited)	non-diff	JS-C27	-	0	UNCITED — the same rule (JLS side: JLS 8.4.8.3): covariant return types
@@ -214,6 +525,7 @@ cfcd9f09b9e3	catalog(undischarged)	declared open	JS-G16	com/github/czyzby/noise4
 3848578495dd	catalog(unreached)	handled	JS-C04	-	0	never reached by this port — TirEmitter.resolveFieldShadowing — the trigger is NAME membership in the inherited instance members, so a same-type field fires too: a subclass field SHADOWS a superclass field — two storage cells, not one
 6c4d695fa9eb	catalog(unreached)	handled	JS-C30	-	0	never reached by this port — SpoonTir.stmtArm's CtClass arm -> SpoonTir.classDef with the enclosing EXECUTABLE as owner and SpoonTir.localName for java's source name; the anonymous-class body wiring reused verbatim for captures and for `this`; StandardTraversal.allClassDefs, which is what every whole-program pass walks to reach it at all: method-LOCAL named classes
 598b3ef5cbfd	catalog(unreached)	handled	JS-C42	-	0	never reached by this port — CollectionsTransform.typeMap sends both to balticporter.runtime.JavaEnumMap/JavaEnumSet, which order by ordinal; JavaEnumCollectionsSpec asserts the order against an insertion order that would expose a stdlib map: `EnumMap`/`EnumSet` GUARANTEE declaration-order iteration
+e9b2e82c0798	catalog(unreached)	handled	JS-C52	-	0	never reached by this port — SpoonFrontend.preservedAnnotations carries @FunctionalInterface; TirEmitter's static MethodRef arm emits an explicit lambda to avoid eta-expansion entirely: `@FunctionalInterface` governs Scala's eta-expansion warning — a static method reference at a non-annotated SAM warns under `-Werror`
 d84efff450fd	catalog(unreached)	handled	JS-G06	-	0	never reached by this port — TirEmitter.rawParentAlignment — deWildcardedArgs decides the parent's arguments and the SAME substitution re-renders the overriding parameters, so agreement is by construction rather than by two rules coinciding: a de-wildcarded raw PARENT and its overrides must agree
 8230f0326cf9	catalog(unreached)	handled	JS-G33	-	0	never reached by this port — TirEmitter.samAscribed: SAM conversion eligibility
 2f7bf99cc26e	catalog(unreached)	handled	JS-G43	-	0	never reached by this port — SpoonTir.methodRef -> Tir.Tree.MethodRef; TirEmitter's Tree.MethodRef arm: METHOD REFERENCES are five forms sharing one syntax — static, unbound, bound, constructor, array constructor
