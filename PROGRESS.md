@@ -11287,6 +11287,15 @@ Engine suites 2561 passing. `.ref` residues on textra (401) and gdx (1331) are n
 build's real `-Werror` verdict on the emitted tree — `E198` unused symbols above all — and are the
 next `.ref` wave's population.
 
+### 13.9b Milestone — `just measure-all` exit 0 at `9ecea574` (2026-08-28)
+
+The first corpus-wide green run of the campaign: all twenty-four lanes at their baselines in ONE
+`measure-all` after promotion bp-promote16 (libGDX core 0 errors / `.ref` 93, every dependent at its
+floor — gltf-test 3, visui 7 — simple-graphs and ssg-md back to 0, all three differential suites
+passing). What it is evidence for: the engine at `9ecea574` reproduces every committed baseline;
+what it is not: parity (`api-parity` counts are the work list, §13.13) or the drop-in bar
+(`ecs-dropin` 408 errors, §13.16).
+
 ### 13.10 Residues measured by promotion bp-promote12 (master `0c35a135`) that no wave owns yet
 
 - **gdx-ai declares no `parity` reference** (`api-parity` records 0 lanes on `GdxAiMigrate`
