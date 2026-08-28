@@ -1316,19 +1316,28 @@ final class TirEmitter(
       // entry (no ClassDef), so the walk could not reach the external type's own parents
       // (e.g. `JavaCollection extends JavaIterable` where `iterator()` is on `JavaIterable`).
       //
-      // Fix: check program-declared types that list `typeSym` (or one of its ancestors from
-      // the walk) as a PARENT. If such a subtype declares `memberName` with parens, the parent
-      // type must also have it (an override matches its parent's arity). This works because
-      // CollectionsTransform re-parents program types onto the runtime shims, so a program
-      // type like `NodeCollection extends JavaCollection` declares `override def iterator()`.
+      // Two fallbacks, in order:
+      // (1) Check program-declared types that extend this external type — if a subtype declares
+      //     the member with parens, the parent must also have it (override matching).
+      // (2) Check whether the type is a runtime shim (`balticporter.runtime.Java*`), whose
+      //     members use java arity by design (CLAUDE.md section 4.5).
       if program.owns(typeSym) then false
       else
         val visited = ancestorsOf(typeSym) + typeSym
-        // Find program-declared types that extend any type in `visited`
-        parentsBySym.iterator.exists { case (child, parents) =>
+        // Fallback 1: check program-declared subtypes
+        val fromSubtype = parentsBySym.iterator.exists { case (child, parents) =>
           program.owns(child) && parents.exists(visited) &&
             checkMember(child).contains(true)
         }
+        if fromSubtype then true
+        else
+          // Fallback 2: runtime shim types — the engine's OWN `balticporter.runtime.Java*`
+          // types declare `iterator()`/`hasNext()`/`next()` with java arity (section 4.5).
+          // A port that has no program-declared subtype of `JavaCollection` (e.g. ssg-md
+          // where OrderedSet extends `scala.collection.mutable.Set`) still iterates over a
+          // `JavaCollection<?>` parameter and needs the java arity.
+          val runtimePrefix = balticporter.core.RuntimeArtifact.Package + ".Java"
+          program.symbolOf(typeSym).exists(_.fullName.startsWith(runtimePrefix))
     }
 
   /** backtick an identifier that collides with a Scala keyword. */
