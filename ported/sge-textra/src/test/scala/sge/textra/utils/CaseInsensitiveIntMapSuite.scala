@@ -11,7 +11,7 @@
 // SHIM substitution between the hand port's surface and this port's emitted one, and each
 // applied to CODE only — a comment is the hand port's own prose.
 //
-// mapping rows applied here: T1, T7
+// mapping rows applied here: T7, T9
 // ---------------------------------------------------------------------------------------------
 package sge
 package textra
@@ -24,14 +24,14 @@ class CaseInsensitiveIntMapSuite extends munit.FunSuite {
   test("default constructor creates empty map") {
     val map = new CaseInsensitiveIntMap()
     assertEquals(map.size, 0)
-    assert(map.isEmpty())
+    assert(map.empty)
     assert(!map.notEmpty())
   }
 
   test("constructor with initial capacity creates empty map") {
     val map = new CaseInsensitiveIntMap(100)
     assertEquals(map.size, 0)
-    assert(map.isEmpty())
+    assert(map.empty)
   }
 
   test("constructor with capacity and load factor") {
@@ -244,7 +244,7 @@ class CaseInsensitiveIntMapSuite extends munit.FunSuite {
     map.put("b", 2)
     map.clear()
     assertEquals(map.size, 0)
-    assert(map.isEmpty())
+    assert(map.empty)
     assert(!map.containsKey("a"))
   }
 
@@ -260,7 +260,7 @@ class CaseInsensitiveIntMapSuite extends munit.FunSuite {
     map.put("b", 2)
     map.clear(10)
     assertEquals(map.size, 0)
-    assert(map.isEmpty())
+    assert(map.empty)
   }
 
   // ---------- putAll ----------
@@ -323,7 +323,7 @@ class CaseInsensitiveIntMapSuite extends munit.FunSuite {
     map.put("y", 20)
     val values    = map.values()
     var collected = Set.empty[Int]
-    while (values.hasNext())
+    while (values.hasNext)
       collected += values.next()
     assertEquals(collected, Set(10, 20))
   }
@@ -463,13 +463,13 @@ class CaseInsensitiveIntMapSuite extends munit.FunSuite {
 
   test("notEmpty and isEmpty reflect state") {
     val map = new CaseInsensitiveIntMap()
-    assert(map.isEmpty())
+    assert(map.empty)
     assert(!map.notEmpty())
     map.put("x", 1)
-    assert(!map.isEmpty())
+    assert(!map.empty)
     assert(map.notEmpty())
     map.remove("x", -1)
-    assert(map.isEmpty())
+    assert(map.empty)
     assert(!map.notEmpty())
   }
 

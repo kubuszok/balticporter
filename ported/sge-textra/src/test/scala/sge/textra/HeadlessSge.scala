@@ -69,31 +69,31 @@ object HeadlessSge {
           "while asserting nothing about it (CLAUDE.md §3)"
       )
 
-    def getType(): sge.Application.ApplicationType = sge.Application.ApplicationType.HeadlessDesktop
+    def `type`: sge.Application.ApplicationType = sge.Application.ApplicationType.HeadlessDesktop
     def addLifecycleListener(listener: sge.LifecycleListener): Unit = ()
     def removeLifecycleListener(listener: sge.LifecycleListener): Unit = ()
 
-    def getApplicationListener(): sge.ApplicationListener = absent("getApplicationListener")
-    def getGraphics(): sge.Graphics = absent("getGraphics")
-    def getAudio(): sge.Audio = absent("getAudio")
-    def getInput(): sge.Input = absent("getInput")
-    def getFiles(): sge.Files = absent("getFiles")
-    def getNet(): sge.Net = absent("getNet")
+    def applicationListener: sge.ApplicationListener = absent("applicationListener")
+    def graphics: sge.Graphics = absent("graphics")
+    def audio: sge.Audio = absent("audio")
+    def input: sge.Input = absent("input")
+    def files: sge.Files = absent("files")
+    def net: sge.Net = absent("net")
     def log(tag: String, message: String): Unit = absent("log")
     def log(tag: String, message: String, exception: Throwable): Unit = absent("log")
     def error(tag: String, message: String): Unit = absent("error")
     def error(tag: String, message: String, exception: Throwable): Unit = absent("error")
     def debug(tag: String, message: String): Unit = absent("debug")
     def debug(tag: String, message: String, exception: Throwable): Unit = absent("debug")
-    def setLogLevel(logLevel: Int): Unit = absent("setLogLevel")
-    def getLogLevel(): Int = absent("getLogLevel")
-    def setApplicationLogger(applicationLogger: sge.ApplicationLogger): Unit = absent("setApplicationLogger")
-    def getApplicationLogger(): sge.ApplicationLogger = absent("getApplicationLogger")
-    def getVersion(): Int = absent("getVersion")
-    def getJavaHeap(): Long = absent("getJavaHeap")
-    def getNativeHeap(): Long = absent("getNativeHeap")
+    def logLevel_=(logLevel: Int): Unit = absent("logLevel_=")
+    def logLevel: Int = absent("logLevel")
+    def applicationLogger_=(applicationLogger: sge.ApplicationLogger): Unit = absent("applicationLogger_=")
+    def applicationLogger: sge.ApplicationLogger = absent("applicationLogger")
+    def version: Int = absent("version")
+    def javaHeap: Long = absent("javaHeap")
+    def nativeHeap: Long = absent("nativeHeap")
     def getPreferences(name: String): sge.Preferences = absent("getPreferences")
-    def getClipboard(): sge.utils.Clipboard = absent("getClipboard")
+    def clipboard: sge.utils.Clipboard = absent("clipboard")
     def postRunnable(runnable: Runnable): Unit = absent("postRunnable")
     def exit(): Unit = absent("exit")
   }
@@ -119,10 +119,10 @@ object HeadlessSge {
       def external(path: String): sge.files.FileHandle = internal(path)
       def absolute(path: String): sge.files.FileHandle = internal(path)
       def local(path: String): sge.files.FileHandle = internal(path)
-      def getExternalStoragePath(): String = ""
-      def isExternalStorageAvailable(): Boolean = false
-      def getLocalStoragePath(): String = ""
-      def isLocalStorageAvailable(): Boolean = false
+      def externalStoragePath: String = ""
+      def externalStorageAvailable: Boolean = false
+      def localStoragePath: String = ""
+      def localStorageAvailable: Boolean = false
     }
 
     /** The context a suite declares as its `given`. */
@@ -137,7 +137,7 @@ object HeadlessSge {
 
   /** A path the probe must see as ABSENT. */
   final class MissingFileHandle(name: String)(using sge.Sge) extends sge.files.FileHandleStream(name) {
-    override def exists(): Boolean = false
+    override def exists: Boolean = false
   }
 
   /** An in-memory readable "file": only `read()` and the base-class helpers built on it run. */

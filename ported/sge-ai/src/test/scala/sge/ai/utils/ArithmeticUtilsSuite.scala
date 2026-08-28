@@ -1,22 +1,8 @@
-// ---------------------------------------------------------------------------------------------
-// DIFFERENTIAL SUITE — a copy of the REFERENCE HAND PORT's own MUnit suite
-//   ../sge/sge-extension/ai/src/test/scala/sge/ai/utils/ArithmeticUtilsSuite.scala
-// run against THIS port's mechanically emitted `sge.ai.*`. It is HAND-WRITTEN Scala and must
-// never be counted as a ported test (`CLAUDE.md` §3, and the jbump differential probe's rule);
-// `PROGRESS.md` §10.7.12 is the census that says why this file is here and its siblings are not.
-//
-// Class (b) of that census. NO ASSERTION IS EDITED — an assertion changed is evidence
-// destroyed, and a file whose assertions could not survive the mapping is class (c) and was
-// left out rather than repaired. The only edits are the mapping rows below, each a NAME or
-// SHIM substitution between the hand port's surface and this port's emitted one, and each
-// applied to CODE only — a comment is the hand port's own prose.
-//
-// mapping rows applied here: M2
-// ---------------------------------------------------------------------------------------------
 package sge
 package ai
 package utils
 
+import lowlevel.math.MathUtils
 
 class ArithmeticUtilsSuite extends munit.FunSuite {
 
@@ -29,33 +15,33 @@ class ArithmeticUtilsSuite extends munit.FunSuite {
   }
 
   test("wrapAngleAroundZero: PI stays PI") {
-    assertEqualsFloat(ArithmeticUtils.wrapAngleAroundZero(sge.math.MathUtils.PI), sge.math.MathUtils.PI, Eps)
+    assertEqualsFloat(ArithmeticUtils.wrapAngleAroundZero(MathUtils.PI), MathUtils.PI, Eps)
   }
 
   test("wrapAngleAroundZero: -PI stays -PI") {
-    assertEqualsFloat(ArithmeticUtils.wrapAngleAroundZero(-sge.math.MathUtils.PI), -sge.math.MathUtils.PI, Eps)
+    assertEqualsFloat(ArithmeticUtils.wrapAngleAroundZero(-MathUtils.PI), -MathUtils.PI, Eps)
   }
 
   test("wrapAngleAroundZero: angle > PI wraps negative") {
-    val angle   = sge.math.MathUtils.PI + 0.5f
+    val angle   = MathUtils.PI + 0.5f
     val wrapped = ArithmeticUtils.wrapAngleAroundZero(angle)
-    assert(wrapped >= -sge.math.MathUtils.PI && wrapped <= sge.math.MathUtils.PI, s"wrapped=$wrapped not in [-PI, PI]")
-    assertEqualsFloat(wrapped, -sge.math.MathUtils.PI + 0.5f, Eps)
+    assert(wrapped >= -MathUtils.PI && wrapped <= MathUtils.PI, s"wrapped=$wrapped not in [-PI, PI]")
+    assertEqualsFloat(wrapped, -MathUtils.PI + 0.5f, Eps)
   }
 
   test("wrapAngleAroundZero: angle < -PI wraps positive") {
-    val angle   = -sge.math.MathUtils.PI - 0.5f
+    val angle   = -MathUtils.PI - 0.5f
     val wrapped = ArithmeticUtils.wrapAngleAroundZero(angle)
-    assert(wrapped >= -sge.math.MathUtils.PI && wrapped <= sge.math.MathUtils.PI, s"wrapped=$wrapped not in [-PI, PI]")
-    assertEqualsFloat(wrapped, sge.math.MathUtils.PI - 0.5f, Eps)
+    assert(wrapped >= -MathUtils.PI && wrapped <= MathUtils.PI, s"wrapped=$wrapped not in [-PI, PI]")
+    assertEqualsFloat(wrapped, MathUtils.PI - 0.5f, Eps)
   }
 
   test("wrapAngleAroundZero: 2*PI wraps to 0") {
-    assertEqualsFloat(ArithmeticUtils.wrapAngleAroundZero(sge.math.MathUtils.PI2), 0f, Eps)
+    assertEqualsFloat(ArithmeticUtils.wrapAngleAroundZero(MathUtils.PI2), 0f, Eps)
   }
 
   test("wrapAngleAroundZero: -2*PI wraps to 0") {
-    assertEqualsFloat(ArithmeticUtils.wrapAngleAroundZero(-sge.math.MathUtils.PI2), 0f, Eps)
+    assertEqualsFloat(ArithmeticUtils.wrapAngleAroundZero(-MathUtils.PI2), 0f, Eps)
   }
 
   // ── gcdPositive ────────────────────────────────────────────────────────

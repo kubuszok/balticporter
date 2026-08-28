@@ -1,17 +1,17 @@
 // ---------------------------------------------------------------------------------------------
-// DIFFERENTIAL SUITE — a copy of the REFERENCE HAND PORT's own MUnit suite
+// DIFFERENTIAL SUITE -- a copy of the REFERENCE HAND PORT's own MUnit suite
 //   ../sge/sge-extension/ai/src/test/scala/sge/ai/btree/TaskSuite.scala
 // run against THIS port's mechanically emitted `sge.ai.*`. It is HAND-WRITTEN Scala and must
-// never be counted as a ported test (`CLAUDE.md` §3, and the jbump differential probe's rule);
-// `PROGRESS.md` §10.7.12 is the census that says why this file is here and its siblings are not.
+// never be counted as a ported test (`CLAUDE.md` section 3, and the jbump differential probe's rule);
+// `PROGRESS.md` section 10.7.12 is the census that says why this file is here and its siblings are not.
 //
-// Class (b) of that census. NO ASSERTION IS EDITED — an assertion changed is evidence
+// Class (b) of that census. NO ASSERTION IS EDITED -- an assertion changed is evidence
 // destroyed, and a file whose assertions could not survive the mapping is class (c) and was
 // left out rather than repaired. The only edits are the mapping rows below, each a NAME or
 // SHIM substitution between the hand port's surface and this port's emitted one, and each
-// applied to CODE only — a comment is the hand port's own prose.
+// applied to CODE only -- a comment is the hand port's own prose.
 //
-// mapping rows applied here: M1, M2, M6, M7
+// mapping rows applied here: M1, M4, M5, M6
 // ---------------------------------------------------------------------------------------------
 package sge
 package ai
@@ -39,7 +39,7 @@ class TaskSuite extends munit.FunSuite {
 
   test("new task starts FRESH") {
     val task = new SuccessTask[String]()
-    assertEquals(task.getStatus(), Task.Status.FRESH)
+    assertEquals(task.status, Task.Status.FRESH)
   }
 
   // ── Lifecycle: init, start, end ──────────────────────────────────────
@@ -52,13 +52,13 @@ class TaskSuite extends munit.FunSuite {
         assert(startCalled, "start() should be called before execute()")
         Task.Status.SUCCEEDED
       }
-       def newInstance():                        Task[String] = throw new UnsupportedOperationException
+      def newInstance():                        Task[String] = throw new UnsupportedOperationException
       override def copyTo(task: Task[String]): Task[String] = task
     }
     val bt = new BehaviorTree[String]((task), ("bb"))
     bt.step()
     assert(startCalled, "start() should have been called")
-    assertEquals(bt.getStatus(), Task.Status.SUCCEEDED)
+    assertEquals(bt.status, Task.Status.SUCCEEDED)
   }
 
   test("end() is called when task succeeds") {
@@ -66,7 +66,7 @@ class TaskSuite extends munit.FunSuite {
     val task      = new LeafTask[String] {
       override def end():                                Unit         = endCalled = true
       override def execute():                            Task.Status  = Task.Status.SUCCEEDED
-       def newInstance():                        Task[String] = throw new UnsupportedOperationException
+      def newInstance():                        Task[String] = throw new UnsupportedOperationException
       override def copyTo(task: Task[String]): Task[String] = task
     }
     val bt = new BehaviorTree[String]((task), ("bb"))
@@ -79,7 +79,7 @@ class TaskSuite extends munit.FunSuite {
     val task      = new LeafTask[String] {
       override def end():                                Unit         = endCalled = true
       override def execute():                            Task.Status  = Task.Status.FAILED
-       def newInstance():                        Task[String] = throw new UnsupportedOperationException
+      def newInstance():                        Task[String] = throw new UnsupportedOperationException
       override def copyTo(task: Task[String]): Task[String] = task
     }
     val bt = new BehaviorTree[String]((task), ("bb"))
@@ -92,7 +92,7 @@ class TaskSuite extends munit.FunSuite {
     val task      = new LeafTask[String] {
       override def end():                                Unit         = endCalled = true
       override def execute():                            Task.Status  = Task.Status.RUNNING
-       def newInstance():                        Task[String] = throw new UnsupportedOperationException
+      def newInstance():                        Task[String] = throw new UnsupportedOperationException
       override def copyTo(task: Task[String]): Task[String] = task
     }
     val bt = new BehaviorTree[String]((task), ("bb"))
@@ -105,25 +105,25 @@ class TaskSuite extends munit.FunSuite {
   test("task transitions from FRESH to SUCCEEDED") {
     val task = new SuccessTask[String]()
     val bt   = new BehaviorTree[String]((task), ("bb"))
-    assertEquals(task.getStatus(), Task.Status.FRESH)
+    assertEquals(task.status, Task.Status.FRESH)
     bt.step()
-    assertEquals(task.getStatus(), Task.Status.SUCCEEDED)
+    assertEquals(task.status, Task.Status.SUCCEEDED)
   }
 
   test("task transitions from FRESH to FAILED") {
     val task = new FailTask[String]()
     val bt   = new BehaviorTree[String]((task), ("bb"))
-    assertEquals(task.getStatus(), Task.Status.FRESH)
+    assertEquals(task.status, Task.Status.FRESH)
     bt.step()
-    assertEquals(task.getStatus(), Task.Status.FAILED)
+    assertEquals(task.status, Task.Status.FAILED)
   }
 
   test("task transitions from FRESH to RUNNING") {
     val task = new RunningTask[String]()
     val bt   = new BehaviorTree[String]((task), ("bb"))
-    assertEquals(task.getStatus(), Task.Status.FRESH)
+    assertEquals(task.status, Task.Status.FRESH)
     bt.step()
-    assertEquals(task.getStatus(), Task.Status.RUNNING)
+    assertEquals(task.status, Task.Status.RUNNING)
   }
 
   test("task transitions from RUNNING to SUCCEEDED on subsequent step") {
@@ -132,11 +132,11 @@ class TaskSuite extends munit.FunSuite {
     val bt = new BehaviorTree[String]((task), ("bb"))
 
     bt.step()
-    assertEquals(task.getStatus(), Task.Status.RUNNING)
+    assertEquals(task.status, Task.Status.RUNNING)
 
     task.nextStatus = Task.Status.SUCCEEDED
     bt.step()
-    assertEquals(task.getStatus(), Task.Status.SUCCEEDED)
+    assertEquals(task.status, Task.Status.SUCCEEDED)
   }
 
   test("task transitions from RUNNING to FAILED on subsequent step") {
@@ -145,11 +145,11 @@ class TaskSuite extends munit.FunSuite {
     val bt = new BehaviorTree[String]((task), ("bb"))
 
     bt.step()
-    assertEquals(task.getStatus(), Task.Status.RUNNING)
+    assertEquals(task.status, Task.Status.RUNNING)
 
     task.nextStatus = Task.Status.FAILED
     bt.step()
-    assertEquals(task.getStatus(), Task.Status.FAILED)
+    assertEquals(task.status, Task.Status.FAILED)
   }
 
   // ── Reset ────────────────────────────────────────────────────────────
@@ -158,10 +158,10 @@ class TaskSuite extends munit.FunSuite {
     val task = new SuccessTask[String]()
     val bt   = new BehaviorTree[String]((task), ("bb"))
     bt.step()
-    assertEquals(task.getStatus(), Task.Status.SUCCEEDED)
+    assertEquals(task.status, Task.Status.SUCCEEDED)
 
     task.resetTask()
-    assertEquals(task.getStatus(), Task.Status.FRESH)
+    assertEquals(task.status, Task.Status.FRESH)
   }
 
   test("resetTask() cancels running task before resetting") {
@@ -169,23 +169,23 @@ class TaskSuite extends munit.FunSuite {
     val task      = new LeafTask[String] {
       override def end():                                Unit         = endCalled = true
       override def execute():                            Task.Status  = Task.Status.RUNNING
-       def newInstance():                        Task[String] = throw new UnsupportedOperationException
+      def newInstance():                        Task[String] = throw new UnsupportedOperationException
       override def copyTo(task: Task[String]): Task[String] = task
     }
     val bt = new BehaviorTree[String]((task), ("bb"))
     bt.step()
-    assertEquals(task.getStatus(), Task.Status.RUNNING)
+    assertEquals(task.status, Task.Status.RUNNING)
 
     task.resetTask()
     assert(endCalled, "end() should be called during cancel")
-    assertEquals(task.getStatus(), Task.Status.FRESH)
+    assertEquals(task.status, Task.Status.FRESH)
   }
 
   test("resetTask() on FRESH task is a no-op (stays FRESH)") {
     val task = new SuccessTask[String]()
-    assertEquals(task.getStatus(), Task.Status.FRESH)
+    assertEquals(task.status, Task.Status.FRESH)
     task.resetTask()
-    assertEquals(task.getStatus(), Task.Status.FRESH)
+    assertEquals(task.status, Task.Status.FRESH)
   }
 
   // ── Cancel ───────────────────────────────────────────────────────────
@@ -194,10 +194,10 @@ class TaskSuite extends munit.FunSuite {
     val task = new RunningTask[String]()
     val bt   = new BehaviorTree[String]((task), ("bb"))
     bt.step()
-    assertEquals(task.getStatus(), Task.Status.RUNNING)
+    assertEquals(task.status, Task.Status.RUNNING)
 
     task.cancel()
-    assertEquals(task.getStatus(), Task.Status.CANCELLED)
+    assertEquals(task.status, Task.Status.CANCELLED)
   }
 
   test("cancel() calls end()") {
@@ -205,7 +205,7 @@ class TaskSuite extends munit.FunSuite {
     val task      = new LeafTask[String] {
       override def end():                                Unit         = endCalled = true
       override def execute():                            Task.Status  = Task.Status.RUNNING
-       def newInstance():                        Task[String] = throw new UnsupportedOperationException
+      def newInstance():                        Task[String] = throw new UnsupportedOperationException
       override def copyTo(task: Task[String]): Task[String] = task
     }
     val bt = new BehaviorTree[String]((task), ("bb"))
@@ -218,7 +218,7 @@ class TaskSuite extends munit.FunSuite {
 
   test("LeafTask getChildCount is 0") {
     val task = new SuccessTask[String]()
-    assertEquals(task.getChildCount(), 0)
+    assertEquals(task.childCount, 0)
   }
 
   test("LeafTask addChild throws") {
@@ -244,7 +244,7 @@ class TaskSuite extends munit.FunSuite {
     val bt = new BehaviorTree[String]((parent), ("bb"))
     child.setControl(bt)
     // After setControl, getObject should work because tree is set
-    assertEquals(child.getObject(), "bb")
+    assertEquals(child.`object`, "bb")
   }
 
   // ── getObject ────────────────────────────────────────────────────────
@@ -252,7 +252,7 @@ class TaskSuite extends munit.FunSuite {
   test("getObject throws when task has never run") {
     val task = new SuccessTask[String]()
     intercept[IllegalStateException] {
-      task.getObject()
+      task.`object`
     }
   }
 
@@ -260,7 +260,7 @@ class TaskSuite extends munit.FunSuite {
     val task = new SuccessTask[String]()
     val bt   = new BehaviorTree[String]((task), ("hello"))
     bt.step()
-    assertEquals(task.getObject(), "hello")
+    assertEquals(task.`object`, "hello")
   }
 
   // ── cloneTask ────────────────────────────────────────────────────────
@@ -271,7 +271,7 @@ class TaskSuite extends munit.FunSuite {
     val clone = task.cloneTask()
     assert(clone ne task, "clone should be a different instance")
     assertEquals(clone.asInstanceOf[CountingTask[String]].succeedOn, 3)
-    assertEquals(clone.getStatus(), Task.Status.FRESH)
+    assertEquals(clone.status, Task.Status.FRESH)
   }
 
   test("cloneTask clones guard") {
@@ -292,7 +292,7 @@ class TaskSuite extends munit.FunSuite {
     task.guard = (new FailTask[String]())
 
     task.reset()
-    assertEquals(task.getStatus(), Task.Status.FRESH)
+    assertEquals(task.status, Task.Status.FRESH)
     assert((task.guard == null), "guard should be cleared")
   }
 }

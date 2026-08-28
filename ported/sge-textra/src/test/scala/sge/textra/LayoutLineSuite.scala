@@ -11,7 +11,7 @@
 // SHIM substitution between the hand port's surface and this port's emitted one, and each
 // applied to CODE only — a comment is the hand port's own prose.
 //
-// mapping rows applied here: T1, T3, T4, T5, T6, T7
+// mapping rows applied here: T3, T4, T5, T6, T7, T9
 // ---------------------------------------------------------------------------------------------
 package sge
 package textra
@@ -28,10 +28,10 @@ class LayoutLineSuite extends munit.FunSuite {
 
   test("Layout auxiliary fields start empty") {
     val layout = new Layout()
-    assert(layout.offsets.isEmpty(), "offsets should be empty")
-    assert(layout.sizing.isEmpty(), "sizing should be empty")
-    assert(layout.rotations.isEmpty(), "rotations should be empty")
-    assert(layout.advances.isEmpty(), "advances should be empty")
+    assert(layout.offsets.empty, "offsets should be empty")
+    assert(layout.sizing.empty, "sizing should be empty")
+    assert(layout.rotations.empty, "rotations should be empty")
+    assert(layout.advances.empty, "advances should be empty")
   }
 
   test("Layout defaults") {
@@ -148,9 +148,9 @@ class LayoutLineSuite extends munit.FunSuite {
 
   test("lineCount reflects number of lines") {
     val layout = new Layout()
-    assertEquals(layout.lines(), 1)
+    assertEquals(layout.lines, 1)
     layout.insertLine(0)
-    assertEquals(layout.lines(), 2)
+    assertEquals(layout.lines, 2)
   }
 
   test("getLine returns line for valid index") {
@@ -167,7 +167,7 @@ class LayoutLineSuite extends munit.FunSuite {
 
   test("peekLine returns the last line") {
     val layout = new Layout()
-    val last   = layout.peekLine()
+    val last   = layout.peekLine
     assert(last eq layout.lines$field.peek())
   }
 
@@ -202,10 +202,10 @@ class LayoutLineSuite extends munit.FunSuite {
     layout.clear()
     assertEquals(layout.lines$field.size, 1)
     assertEquals(layout.lines$field.get(0).glyphs.size, 0)
-    assert(layout.offsets.isEmpty())
-    assert(layout.sizing.isEmpty())
-    assert(layout.rotations.isEmpty())
-    assert(layout.advances.isEmpty())
+    assert(layout.offsets.empty)
+    assert(layout.sizing.empty)
+    assert(layout.rotations.empty)
+    assert(layout.advances.empty)
     assert(!layout.atLimit)
   }
 
@@ -262,7 +262,7 @@ class LayoutLineSuite extends munit.FunSuite {
     layout.insertLine(0)
     layout.lines$field.get(1).glyphs.add('C'.toLong)
     // Line 0 has A, B, \n (3) ; Line 1 has C (1)
-    assertEquals(layout.countGlyphs(), 4)
+    assertEquals(layout.countGlyphs, 4)
   }
 
   test("countGlyphsBeforeLine counts glyphs in lines before index") {
@@ -295,7 +295,7 @@ class LayoutLineSuite extends munit.FunSuite {
     assertEquals(copy.targetWidth, 300f)
     assertEquals(copy.maxLines, 5)
     assertEquals(copy.justification, Justify.SPACES_ON_ALL_LINES)
-    assertEquals(copy.lines(), 1)
+    assertEquals(copy.lines, 1)
     assertEquals(copy.lines$field.get(0).glyphs.size, 1)
     assertEquals(copy.lines$field.get(0).width, 50f)
     assertEquals(copy.offsets.size, 2)
@@ -311,7 +311,7 @@ class LayoutLineSuite extends munit.FunSuite {
     layout.lines$field.get(0).width = 100f
     layout.insertLine(0)
     layout.lines$field.get(1).width = 200f
-    assertEquals(layout.getWidth(), 200f)
+    assertEquals(layout.width, 200f)
   }
 
   test("getHeight sums all line heights") {
@@ -319,7 +319,7 @@ class LayoutLineSuite extends munit.FunSuite {
     layout.lines$field.get(0).height = 10f
     layout.insertLine(0)
     layout.lines$field.get(1).height = 15f
-    assertEquals(layout.getHeight(), 25f)
+    assertEquals(layout.height, 25f)
   }
 
   // ---------- Layout truncateExtra ----------

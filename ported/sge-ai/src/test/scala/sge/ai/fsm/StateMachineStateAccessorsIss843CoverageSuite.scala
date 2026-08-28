@@ -1,17 +1,17 @@
 // ---------------------------------------------------------------------------------------------
-// DIFFERENTIAL SUITE — a copy of the REFERENCE HAND PORT's own MUnit suite
+// DIFFERENTIAL SUITE -- a copy of the REFERENCE HAND PORT's own MUnit suite
 //   ../sge/sge-extension/ai/src/test/scala/sge/ai/fsm/StateMachineStateAccessorsIss843CoverageSuite.scala
 // run against THIS port's mechanically emitted `sge.ai.*`. It is HAND-WRITTEN Scala and must
-// never be counted as a ported test (`CLAUDE.md` §3, and the jbump differential probe's rule);
-// `PROGRESS.md` §10.7.12 is the census that says why this file is here and its siblings are not.
+// never be counted as a ported test (`CLAUDE.md` section 3, and the jbump differential probe's rule);
+// `PROGRESS.md` section 10.7.12 is the census that says why this file is here and its siblings are not.
 //
-// Class (b) of that census. NO ASSERTION IS EDITED — an assertion changed is evidence
+// Class (b) of that census. NO ASSERTION IS EDITED -- an assertion changed is evidence
 // destroyed, and a file whose assertions could not survive the mapping is class (c) and was
 // left out rather than repaired. The only edits are the mapping rows below, each a NAME or
 // SHIM substitution between the hand port's surface and this port's emitted one, and each
-// applied to CODE only — a comment is the hand port's own prose.
+// applied to CODE only -- a comment is the hand port's own prose.
 //
-// mapping rows applied here: M1, M2
+// mapping rows applied here: M1, M4, M7, M10
 // ---------------------------------------------------------------------------------------------
 package sge
 package ai
@@ -43,30 +43,30 @@ class StateMachineStateAccessorsIss843CoverageSuite extends munit.FunSuite {
       null
     )
 
-    fsm.setGlobalState((global))
+    fsm.globalState = (global)
 
     // Before any transition: no current, no previous, global set.
-    assert((fsm.getCurrentState() == null), "getCurrentState must be empty before any changeState")
-    assert((fsm.getPreviousState() == null), "getPreviousState must be empty before any changeState")
-    assert(fsm.getGlobalState() eq global, "getGlobalState must return exactly the state passed to setGlobalState")
+    assert((fsm.currentState == null), "getCurrentState must be empty before any changeState")
+    assert((fsm.previousState == null), "getPreviousState must be empty before any changeState")
+    assert(fsm.globalState eq global, "getGlobalState must return exactly the state passed to setGlobalState")
 
     // First transition: current == A, previous stays empty (it was empty before).
     fsm.changeState(stateA)
-    assert(fsm.getCurrentState() eq stateA, "getCurrentState must return exactly stateA after changeState(stateA)")
-    assert((fsm.getPreviousState() == null), "getPreviousState must remain empty: the state before stateA was empty")
-    assert(fsm.getGlobalState() eq global, "getGlobalState must be unaffected by changeState")
+    assert(fsm.currentState eq stateA, "getCurrentState must return exactly stateA after changeState(stateA)")
+    assert((fsm.previousState == null), "getPreviousState must remain empty: the state before stateA was empty")
+    assert(fsm.globalState eq global, "getGlobalState must be unaffected by changeState")
 
     // Second transition: current == B, previous == A.
     fsm.changeState(stateB)
-    assert(fsm.getCurrentState() eq stateB, "getCurrentState must return exactly stateB after changeState(stateB)")
-    assert(fsm.getPreviousState() eq stateA, "getPreviousState must return exactly stateA (the state current held before)")
-    assert(fsm.getGlobalState() eq global, "getGlobalState must be unaffected by changeState")
+    assert(fsm.currentState eq stateB, "getCurrentState must return exactly stateB after changeState(stateB)")
+    assert(fsm.previousState eq stateA, "getPreviousState must return exactly stateA (the state current held before)")
+    assert(fsm.globalState eq global, "getGlobalState must be unaffected by changeState")
 
     // Revert round-trip: current <- previous (A), previous <- current-before-revert (B).
     val reverted = fsm.revertToPreviousState()
     assert(reverted, "revertToPreviousState must return true when a previous state exists")
-    assert(fsm.getCurrentState() eq stateA, "after revert, getCurrentState must return exactly stateA")
-    assert(fsm.getPreviousState() eq stateB, "after revert, getPreviousState must return exactly stateB")
-    assert(fsm.getGlobalState() eq global, "getGlobalState must be unaffected by revert")
+    assert(fsm.currentState eq stateA, "after revert, getCurrentState must return exactly stateA")
+    assert(fsm.previousState eq stateB, "after revert, getPreviousState must return exactly stateB")
+    assert(fsm.globalState eq global, "getGlobalState must be unaffected by revert")
   }
 }

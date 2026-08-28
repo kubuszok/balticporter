@@ -1,17 +1,17 @@
 // ---------------------------------------------------------------------------------------------
-// DIFFERENTIAL SUITE — a copy of the REFERENCE HAND PORT's own MUnit suite
+// DIFFERENTIAL SUITE -- a copy of the REFERENCE HAND PORT's own MUnit suite
 //   ../sge/sge-extension/ai/src/test/scala/sge/ai/utils/CircularBufferSuite.scala
 // run against THIS port's mechanically emitted `sge.ai.*`. It is HAND-WRITTEN Scala and must
-// never be counted as a ported test (`CLAUDE.md` §3, and the jbump differential probe's rule);
-// `PROGRESS.md` §10.7.12 is the census that says why this file is here and its siblings are not.
+// never be counted as a ported test (`CLAUDE.md` section 3, and the jbump differential probe's rule);
+// `PROGRESS.md` section 10.7.12 is the census that says why this file is here and its siblings are not.
 //
-// Class (b) of that census. NO ASSERTION IS EDITED — an assertion changed is evidence
+// Class (b) of that census. NO ASSERTION IS EDITED -- an assertion changed is evidence
 // destroyed, and a file whose assertions could not survive the mapping is class (c) and was
 // left out rather than repaired. The only edits are the mapping rows below, each a NAME or
 // SHIM substitution between the hand port's surface and this port's emitted one, and each
-// applied to CODE only — a comment is the hand port's own prose.
+// applied to CODE only -- a comment is the hand port's own prose.
 //
-// mapping rows applied here: M1, M2, M3
+// mapping rows applied here: M3, M8, M9
 // ---------------------------------------------------------------------------------------------
 package sge
 package ai
@@ -24,10 +24,10 @@ class CircularBufferSuite extends munit.FunSuite {
     val buf = new CircularBuffer[String](4)
     buf.store("a")
     buf.store("b")
-    assertEquals(buf.size(), 2)
+    assertEquals(buf.size, 2)
     assertEquals(buf.read(), "a")
     assertEquals(buf.read(), "b")
-    assert(buf.isEmpty(), "buffer should be empty after reading all")
+    assert(buf.empty, "buffer should be empty after reading all")
   }
 
   test("FIFO order") {
@@ -42,7 +42,7 @@ class CircularBufferSuite extends munit.FunSuite {
     assert(buf.store("b"), "store b")
     assert(buf.store("c"), "store c triggers resize")
     assert(buf.store("d"), "store d")
-    assertEquals(buf.size(), 4)
+    assertEquals(buf.size, 4)
     assertEquals(buf.read(), "a")
     assertEquals(buf.read(), "b")
     assertEquals(buf.read(), "c")
@@ -54,8 +54,8 @@ class CircularBufferSuite extends munit.FunSuite {
     assert(buf.store("a"), "store a")
     assert(buf.store("b"), "store b")
     assert(!buf.store("c"), "store c should fail when full")
-    assertEquals(buf.size(), 2)
-    assert(buf.isFull(), "buffer should be full")
+    assertEquals(buf.size, 2)
+    assert(buf.full, "buffer should be full")
   }
 
   test("clear resets") {
@@ -63,8 +63,8 @@ class CircularBufferSuite extends munit.FunSuite {
     buf.store("a")
     buf.store("b")
     buf.clear()
-    assert(buf.isEmpty(), "buffer should be empty after clear")
-    assertEquals(buf.size(), 0)
+    assert(buf.empty, "buffer should be empty after clear")
+    assertEquals(buf.size, 0)
     assert((buf.read() == null), "read from cleared buffer should be empty")
   }
 
@@ -85,11 +85,11 @@ class CircularBufferSuite extends munit.FunSuite {
     // Now store 2 more (wrapping the tail around)
     assert(buf.store("e"), "store e after wrapping")
     assert(buf.store("f"), "store f after wrapping")
-    assertEquals(buf.size(), 4)
+    assertEquals(buf.size, 4)
     assertEquals(buf.read(), "c")
     assertEquals(buf.read(), "d")
     assertEquals(buf.read(), "e")
     assertEquals(buf.read(), "f")
-    assert(buf.isEmpty(), "buffer should be empty after reading all")
+    assert(buf.empty, "buffer should be empty after reading all")
   }
 }

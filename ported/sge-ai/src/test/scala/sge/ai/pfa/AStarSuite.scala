@@ -1,17 +1,17 @@
 // ---------------------------------------------------------------------------------------------
-// DIFFERENTIAL SUITE — a copy of the REFERENCE HAND PORT's own MUnit suite
+// DIFFERENTIAL SUITE -- a copy of the REFERENCE HAND PORT's own MUnit suite
 //   ../sge/sge-extension/ai/src/test/scala/sge/ai/pfa/AStarSuite.scala
 // run against THIS port's mechanically emitted `sge.ai.*`. It is HAND-WRITTEN Scala and must
-// never be counted as a ported test (`CLAUDE.md` §3, and the jbump differential probe's rule);
-// `PROGRESS.md` §10.7.12 is the census that says why this file is here and its siblings are not.
+// never be counted as a ported test (`CLAUDE.md` section 3, and the jbump differential probe's rule);
+// `PROGRESS.md` section 10.7.12 is the census that says why this file is here and its siblings are not.
 //
-// Class (b) of that census. NO ASSERTION IS EDITED — an assertion changed is evidence
+// Class (b) of that census. NO ASSERTION IS EDITED -- an assertion changed is evidence
 // destroyed, and a file whose assertions could not survive the mapping is class (c) and was
 // left out rather than repaired. The only edits are the mapping rows below, each a NAME or
 // SHIM substitution between the hand port's surface and this port's emitted one, and each
-// applied to CODE only — a comment is the hand port's own prose.
+// applied to CODE only -- a comment is the hand port's own prose.
 //
-// mapping rows applied here: M1, M2
+// mapping rows applied here: M2, M4
 // ---------------------------------------------------------------------------------------------
 package sge
 package ai
@@ -82,7 +82,7 @@ final class GridGraph(val width: Int, val height: Int) extends IndexedGraph[Grid
         // Remove connections that lead to the blocked node
         var i = conns.size - 1
         while (i >= 0) {
-          if (conns.get(i).getToNode().index == idx) {
+          if (conns.get(i).toNode.index == idx) {
             conns.removeIndex(i)
           }
           i -= 1
@@ -98,7 +98,7 @@ final class GridGraph(val width: Int, val height: Int) extends IndexedGraph[Grid
 
   override def getIndex(node: GridNode): Int = node.index
 
-  override def getNodeCount(): Int = width * height
+  override def nodeCount: Int = width * height
 }
 
 /** Manhattan distance heuristic for grid pathfinding. */
@@ -121,17 +121,17 @@ class AStarSuite extends munit.FunSuite {
     assert(found, "Path should be found")
 
     // Shortest path on a 5x5 grid from (0,0) to (4,4) is 8 steps (Manhattan distance)
-    assertEquals(path.getCount(), 9) // 9 nodes = 8 edges
+    assertEquals(path.count, 9) // 9 nodes = 8 edges
 
     // First node should be start, last should be end
     assertEquals(path.get(0).x, 0)
     assertEquals(path.get(0).y, 0)
-    assertEquals(path.get(path.getCount() - 1).x, 4)
-    assertEquals(path.get(path.getCount() - 1).y, 4)
+    assertEquals(path.get(path.count - 1).x, 4)
+    assertEquals(path.get(path.count - 1).y, 4)
 
     // Verify each step is adjacent (Manhattan distance 1)
     var i = 0
-    while (i < path.getCount() - 1) {
+    while (i < path.count - 1) {
       val a    = path.get(i)
       val b    = path.get(i + 1)
       val dist = Math.abs(a.x - b.x) + Math.abs(a.y - b.y)
@@ -157,20 +157,20 @@ class AStarSuite extends munit.FunSuite {
 
     // Path must avoid blocked nodes
     var i = 0
-    while (i < path.getCount()) {
+    while (i < path.count) {
       val n = path.get(i)
       assert(!(n.x == 2 && n.y <= 3), s"Path should not go through blocked node (${n.x},${n.y})")
       i += 1
     }
 
     // Path is longer than the direct 4-step path
-    assert(path.getCount() > 5, s"Path should be longer than direct route, got ${path.getCount()} nodes")
+    assert(path.count > 5, s"Path should be longer than direct route, got ${path.count} nodes")
 
     // First and last nodes correct
     assertEquals(path.get(0).x, 0)
     assertEquals(path.get(0).y, 0)
-    assertEquals(path.get(path.getCount() - 1).x, 4)
-    assertEquals(path.get(path.getCount() - 1).y, 0)
+    assertEquals(path.get(path.count - 1).x, 4)
+    assertEquals(path.get(path.count - 1).y, 0)
   }
 
   test("no path exists for isolated nodes") {
@@ -200,7 +200,7 @@ class AStarSuite extends munit.FunSuite {
     val start = graph.node(1, 1)
     val found = pathFinder.searchNodePath(start, start, heuristic, path)
     assert(found, "Path from node to itself should be found")
-    assertEquals(path.getCount(), 1)
+    assertEquals(path.count, 1)
   }
 
   test("connection path works") {
@@ -214,7 +214,7 @@ class AStarSuite extends munit.FunSuite {
     val found = pathFinder.searchConnectionPath(graph.node(0, 0), graph.node(2, 2), heuristic, path)
     assert(found, "Connection path should be found")
     // 4 edges for Manhattan distance of 4 from (0,0) to (2,2)
-    assertEquals(path.getCount(), 4)
+    assertEquals(path.count, 4)
   }
 
   // ── Dynamic graph tests: graph updating between pathfinding calls ─────
@@ -230,7 +230,7 @@ class AStarSuite extends munit.FunSuite {
     val path1       = DefaultGraphPath[GridNode]()
     val found1      = pathFinder1.searchNodePath(graph.node(0, 0), graph.node(4, 0), heuristic, path1)
     assert(found1, "Direct path should be found")
-    val directLength = path1.getCount()
+    val directLength = path1.count
 
     // Block nodes to force a longer path
     graph.blockNode(1, 0)
@@ -245,14 +245,14 @@ class AStarSuite extends munit.FunSuite {
 
     // Path must not go through blocked nodes
     var i = 0
-    while (i < path2.getCount()) {
+    while (i < path2.count) {
       val n = path2.get(i)
       assert(!(n.y == 0 && n.x >= 1 && n.x <= 3), s"Path should not go through blocked node (${n.x},${n.y})")
       i += 1
     }
 
     // Detoured path should be longer than the direct path
-    assert(path2.getCount() > directLength, s"Detoured path (${path2.getCount()}) should be longer than direct ($directLength)")
+    assert(path2.count > directLength, s"Detoured path (${path2.count}) should be longer than direct ($directLength)")
   }
 
   test("dynamic graph: reopening a node restores shorter path") {
@@ -271,7 +271,7 @@ class AStarSuite extends munit.FunSuite {
     val path1       = DefaultGraphPath[GridNode]()
     val found1      = pathFinder1.searchNodePath(graph.node(0, 0), graph.node(0, 4), heuristic, path1)
     assert(found1, "Path should exist even with wall")
-    val wallPathLength = path1.getCount()
+    val wallPathLength = path1.count
 
     // Rebuild connections (clear the wall) by making a fresh graph
     val graph2 = new GridGraph(5, 5)
@@ -283,8 +283,8 @@ class AStarSuite extends munit.FunSuite {
     assert(found2, "Path should be found on open graph")
 
     // Direct path from (0,0) to (0,4) is just 4 steps straight up
-    assertEquals(path2.getCount(), 5) // 5 nodes = 4 edges
+    assertEquals(path2.count, 5) // 5 nodes = 4 edges
     // Wall path should have been longer
-    assert(wallPathLength >= path2.getCount(), s"Wall path ($wallPathLength) should be >= direct path (${path2.getCount()})")
+    assert(wallPathLength >= path2.count, s"Wall path ($wallPathLength) should be >= direct path (${path2.count})")
   }
 }
