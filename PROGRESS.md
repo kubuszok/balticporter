@@ -11146,8 +11146,6 @@ M1 (parenless -> parens) rows are removed. New rows: M4 (bean-collapsed property
 `getToNode` -> `toNode`, `getNodeCount` -> `nodeCount`, `getChildCount` -> `childCount`), M7
 (property setter: `setGlobalState(x)` -> `globalState = x`), M8 (`is`-prefix dropped on
 CircularBuffer: `isEmpty` -> `empty`, `isFull` -> `full`), M9/M10 (Nullable return value unwrap).
-Test-name baseline re-accepted: `StateMachineEmptyProbeIss730RedSuite`'s 5 test names restored to
-the reference's own spelling (`currentState` not `getCurrentState`).
 
 **textra-diff: 24 -> 0 errors, 165 pass / 0 fail (unchanged)**. 2 suite files + `HeadlessSge.scala`
 fixture. Old T1 (parenless -> parens) rows removed for `width`/`height`/`lines`/`peekLine`/
@@ -11156,10 +11154,40 @@ fixture. Old T1 (parenless -> parens) rows removed for `width`/`height`/`lines`/
 bean-collapsed `Application`/`Files` interfaces (`getType()` -> `` `type` ``,
 `getGraphics()` -> `graphics`, `setLogLevel()` -> `logLevel_=`,
 `getExternalStoragePath()` -> `externalStoragePath`, `exists()` -> `exists` (parenless), etc.).
-Note: `Entries.hasNext()` and `Keys.hasNext()` KEEP parens (java arity per CLAUDE.md section 4.5)
-while `Values.hasNext` is parenless — the substitution is per RECEIVER as section 4.56 requires.
+Note: `Entries.hasNext()` and `Keys.hasNext()` KEEP parens (java arity per CLAUDE.md §4.5)
+while `Values.hasNext` is parenless — the substitution is per RECEIVER as §4.56 requires.
 
 **visui-diff: 0 errors, 50 pass / 0 fail — no changes needed.** The visui port's emitted surface
 still uses `isWindows()`, `setUseEquals()` etc. (no bean-collapse on visui yet), so the adapted
 suites (identical to reference) compile as-is.
+
+**Port gaps found — API divergences between port and sge under §13's exact-parity bar.** Every row
+in M4/M7/M8 (ai) and T9 (textra) is a member the port bean-collapses while sge keeps the java
+accessor name (parenless). The cause is `BeanPropertyTransform(scope = Everywhere())` on the base,
+which DERIVES the collapse over gdx-ai's and textra's own declarations — the base has no per-pair
+key for any of these. The manifest spelling that would close each: a `BeanPropertyTransform` scope
+entry on the gdx-ai or textra manifest excluding those owners, or per-pair keys overriding the
+derived detection. NOT applied in this wave — the table stays as the bridge until a module wave
+decides.
+
+| port | sge spelling | port emits | owner type(s) |
+|---|---|---|---|
+| sge-ai | `getStatus` | `status` | `Task` and subclasses |
+| sge-ai | `getCount` | `count` | `GraphPath`, `DefaultGraphPath` |
+| sge-ai | `getObject` | `` `object` `` | `Task` |
+| sge-ai | `getChildCount` | `childCount` | `Task` and subclasses |
+| sge-ai | `getToNode` | `toNode` | `Connection`, `DefaultConnection` |
+| sge-ai | `getNodeCount` | `nodeCount` | `IndexedGraph` |
+| sge-ai | `getCurrentState` | `currentState` | `StateMachine`, `DefaultStateMachine`, `StackStateMachine` |
+| sge-ai | `getPreviousState` | `previousState` | `StateMachine`, `DefaultStateMachine`, `StackStateMachine` |
+| sge-ai | `getGlobalState` | `globalState` | `StateMachine`, `DefaultStateMachine` |
+| sge-ai | `setGlobalState` | `globalState_=` | `StateMachine`, `DefaultStateMachine` |
+| sge-ai | `isEmpty` | `empty` | `CircularBuffer` |
+| sge-ai | `isFull` | `full` | `CircularBuffer` |
+| sge-textra | `getWidth` | `width` | `Layout` |
+| sge-textra | `getHeight` | `height` | `Layout` |
+| sge-textra | `isEmpty` | `empty` | `FloatArray` (base type), `CaseInsensitiveIntMap` |
+
+Note: gdx-ai declares no `parity` reference (`api-parity` counts 0 lanes on `GdxAiMigrate` against
+15 on Ashley), so nothing in the run can count these today. That sentence is the finding.
 
