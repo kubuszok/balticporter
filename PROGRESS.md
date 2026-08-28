@@ -11335,3 +11335,39 @@ parity (wave 0.1) and was not re-measured.
 hangs when a second `sbtn` client tries to connect to an idle server, reproducibly in this
 worktree. The porting run was killed before `run-latest/` was written. The promotion re-runs all
 lanes from a clean sbt server and produces the missing counts.
+
+### 13.14 Wave 2.12 — reference-flags (`-Werror`) population on libGDX core
+
+Three commits (`a0f36b11`, `e8ad464b`, `15cf0095`). The `.ref` population at entry was **1331**
+(all warnings-under-`-Werror`): 712 `orNull` deprecation, 253 lossy widening (`int2float` +
+`long2float` + `long2double`), 352 E198 unused symbol, 5 E030 unreachable, 3 E129, 6 JDK
+deprecation.
+
+Three families closed:
+
+- **`@nowarn("msg=deprecated")` on members using `orNull`** (K13 addendum). 459 annotated members
+  on gdx, covering 663 of 712 orNull warnings. sge's own pattern
+  (`RemoteInput.scala:359`, `GLFrameBuffer.scala:181`, `FloatTextureData.scala:89`).
+  `Decision.Kind.SuppressedWarning` added, `PorterNote.Rendered`. 49 residue in nested-class
+  constructors — the scan walks `DefDef.rhs` and misses `orNull` calls in constructor bodies the
+  CtorFunnel renders from a different path; the fix is to track during insertion (§4.6).
+- **Explicit `.toFloat`/`.toDouble` at lossy widening slots** (F10). In the frontend's
+  `SpoonTir.coerce`, JLS 5.1.2's implicit widening emits the explicit conversion. 253 sites, all
+  suppressed by the `@nowarn` above in this wave.
+- **Unused catch variable emitted as `_`** (T25). `TirEmitter.tryStr` scans the catch body for
+  references to the param symbol. 45 sites.
+
+| lane | JVM | JS | Native | `.ref` | notes |
+|---|---|---|---|---|---|
+| gdx | 0 = 0 | 0 = 0 | 0 = 0 | 1331 -> 370 | `@nowarn` 459 decisions, unused-pattern 45, lossy-widening 253 (suppressed by `@nowarn`) |
+| ashley | 0 = 0 | 0 = 0 | 0 = 0 | 8 = 8 | byte-identical |
+| gltf | 3 = 3 | 3 = 3 | 3 = 3 | at floor | 1495 member digests from base `@nowarn` |
+| textra | 0 = 0 | 0 = 0 | 0 = 0 | 402 -> 65 | base `@nowarn` propagates through `Named` target |
+| liqp | 0 = 0 | 0 = 0 | 0 = 0 | 106 -> 79 | `.toFloat` fix |
+
+gdx `.ref` residue (**370**): 307 E198 unused symbol (197 unset local var, 40 unset private var,
+31 unused private member, 28 unused local def, 9 mutated-but-not-read, 2 other), 49 `orNull` in
+nested-class constructors (K13 residue), 6 JDK deprecation (3 `Character.isSpace`, 2 `Locale` ctor,
+1 `DataInputStream.readLine`), 5 E030 match case unreachable, 3 E129 pure expression.
+
+Engine specs: 1002 passing, 0 failures.

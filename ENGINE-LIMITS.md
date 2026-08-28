@@ -4359,6 +4359,21 @@ JDK annotations from class files it moves **0** member digests for the reference
 gdx `.ref` 1362 -> 1331, ashley byte-identical, liqp `.ref` 106 -> 100 (the F9 half), textra
 `.ref` 402 -> 401.
 
+
+### T25. An unused catch variable triggers `-Wunused:patvars` under `-Werror` — CLOSED
+
+**(a) engine.** Java commonly declares catch variables it never reads — `catch (Exception ignored)`,
+`catch (NumberFormatException nfe)` where the body re-throws or falls through. Under sge's
+`-Wunused:patvars` (part of `SgePlugin.strictScalacOptions`) scalac reports `E198 unused pattern
+variable`, and `-Werror` promotes it. The emitter faithfully reproduced java's name, so every
+unused catch variable was a warning.
+
+The fix: `TirEmitter.tryStr` scans each catch body for references to the catch param's symbol
+(`StandardTraversal.scanTerm` with `Tree.Ident` matching). Where the variable is unused, it emits
+`_` instead of the name. **45 sites on gdx**, all catch clauses.
+
+*Fix kind: (a) — a fact about Java and Scala, true of every codebase.*
+
 ## 4. Collections, shims and the JDK boundary
 
 ### K1. Never model a Java interface on a Scala COLLECTION trait — the governing rule is `CLAUDE.md` §4.5
@@ -6038,6 +6053,36 @@ at its committed outcomes. The rule for the next wrapper target: whatever the ta
 emitted program must never manufacture the JVM's null in its place — `uninitialized`, a
 `null` literal through an `Object` slot, an array cell — and a suite, not a compile, is the only
 instrument that sees it.
+
+
+**Wave 2.12: `@nowarn("msg=deprecated")` at declaration level — sge's own pattern, 712 -> 49.**
+lls deprecates `Nullable.orNull` as a lint — every usage in sge carries
+`@nowarn("msg=deprecated")` on the enclosing declaration (`RemoteInput.scala:359`,
+`GLFrameBuffer.scala:181`, `FloatTextureData.scala:89`). The mechanical port inserts `.orNull` at
+every non-primitive slot coercion (`slotUnwrap`), so the same annotation is owed on every member
+where one lands. `NullabilityTransform.run` scans the transformed units after the tree walk,
+collects members whose bodies contain `Tree.Select(_, orNullSym, _, _)`, and adds the annotation to
+their symbols — 459 `SuppressedWarning` decisions on gdx, recorded so the porter note names the
+phase and key. gdx `.ref` **1331 -> 370** for the orNull + int2float families together (the
+`@nowarn("msg=deprecated")` suppresses ALL deprecation warnings in the annotated member, so
+`int2float` warnings in the same member are also covered).
+
+**The residue is 49 `orNull` calls in NESTED CLASS CONSTRUCTORS** — `CheckBoxStyle`, `TextButtonStyle`
+and twelve others. The scan walks each `DefDef.rhs` and each `ValDef.rhs` in `allClassDefs`, and a
+plain `Term` statement in the class body annotates the class. It MISSES an `orNull` that
+`CtorFunnel`'s PROMOTION moved: a promoted constructor's body is REPLAYED by the emitter from
+`CtorFunnel.stmtsOf` and `Plans.residualBody`, not rendered from `DefDef.rhs` — so the `orNull`
+is in the TIR's `DefDef.rhs` exactly where the scan looks, but the emitter renders the secondary
+constructor from the PLAN rather than from the tree. The annotation goes on the `DefDef` symbol, and
+the emitter sees it, but the 49 calls are in constructor bodies whose statements the CtorFunnel
+renders from a different path.
+
+**The fix is NOT a wider scan — it is to use the INSERTION RECORD.** The transform already knows
+every member where it inserted `.orNull` (it builds the `Tree.Select` node). Rescanning the tree is
+the second derivation `CLAUDE.md` §4.6 warns about: the transform has the fact, and a scan that
+re-derives it from the tree can disagree wherever the tree and the emission path diverge — which is
+exactly what happened. Track `orNull` usage at `unwrapOrNull` and accumulate the enclosing member's
+symbol, rather than walking the tree after the fact.
 
 ### K13.5 A wrapper target's LAST THREE SEAMS ARE ALL ONE SENTENCE — the retype changes a SIGNATURE, so everything java tied to that signature has to move with it
 
@@ -11983,6 +12028,28 @@ shape, with the `return` at method level — and decides the ARITY of `iterator/
 parenless). Measured: textra `.ref` 402 -> 401 for the one site; liqp `.ref` 106 -> 100 at 0 member
 digests moved outside the lowered members; 58 gdx port-map rows moved, all members holding such a
 loop. Specs in `EmitterBindingAndReturnSpec`.
+
+
+### F10. A LOSSY WIDENING PRIMITIVE CONVERSION (`int→float`, `long→float`, `long→double`) relies on Scala's deprecated implicit conversion — CLOSED
+
+**(a) engine.** Java widens `int→float`, `long→float` and `long→double` implicitly (JLS 5.1.2).
+Scala 2.13.1 deprecated the corresponding implicit conversions (`int2float`, `long2float`,
+`long2double`) because they lose precision — `Int.MaxValue.toFloat.toInt` is not `Int.MaxValue`.
+Under `-Werror` the deprecation becomes an error. The emitter left the widening to the implicit and
+every such slot compiled cleanly with a warning nobody gated.
+
+The fix is in the FRONTEND's `SpoonTir.coerce` function, which already handles narrowing, boxing,
+downcast and unboxing at assignment and invocation slots. A new branch detects the three lossy
+pairs by `primRank` and emits explicit `.toFloat`/`.toDouble` — the same spelling the deprecation
+message requests. The `Tree.Select` is minted with `minter.external("scala.Int#toFloat", "toFloat")`
+(or `Long#toFloat`, `Long#toDouble`), so the emitted member references a real stdlib accessor.
+
+**253 sites on gdx** (247 `int2float` + 3 `long2float` + 3 `long2double`). In wave 2.12 these are
+all suppressed by the `@nowarn("msg=deprecated")` that K13's fix placed on the enclosing member,
+so the standalone `.ref` improvement is verified by confirming the `.toFloat`/`.toDouble` text in
+the emitted files.
+
+*Fix kind: (a) — a fact about Java and Scala, true of every codebase.*
 
 ### V1. A comment the FRONTEND claimed and dropped, and one the EMISSION consumes. **222 → 100 → 0 lost**
 
