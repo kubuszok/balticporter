@@ -6144,6 +6144,38 @@ member, a SUPER-CONSTRUCTOR argument list evaluated before the class's own param
 
 *Fix kind: (a). All three closed in `NullabilityTransform`; specs in `NullabilityWrapperSpec`.*
 
+### K13.6 `nullableMembers` — the unannotated case (no annotation in the java, hand port wraps in Nullable)
+
+Ashley's six members whose hand port wraps in `Nullable[T]` carry NO nullability annotation in the
+upstream java. The hand port knows they return null from its migration notes:
+
+- `Engine.scala:10`: "Idiom: Nullable[A] for createComponent return"
+- `Engine.scala:168`: `def getSystem[T <: EntitySystem](...): Nullable[T]`
+- `Entity.scala:13`: "Idiom: Nullable[A] in public getComponent return type"
+- `Entity.scala:94`: `def remove[T <: Component](...): Nullable[T]`
+- `EntitySystem.scala:10`: "Idiom: Nullable[Engine] for engine reference (set/cleared by Engine)"
+- `PooledEngine.scala:72`: `override def createComponent[T <: Component](...): Nullable[T]`
+
+`nullableMembers: Set[String]` on `NullabilityTransform` is the (b) parameter: exact member FQNs
+matched at run time against `Symbol.fullName`, treated exactly as if the member's return (or field)
+type carried a configured nullability annotation — same target shape, same slot coercions at every
+use, same `== null` / `!= null` rewrites, same override-component rule, same `nullability-boundary`
+count. Empty is the no-op. Fingerprint segment omitted when empty (one mechanism, one derivation).
+`MergeablePolicy` union. `.conf` key `nullableMembers = [...]`.
+
+Ashley `api-parity(null-model) 6 -> 0`, `nullability-boundary 0 -> 1` (main) / `0 -> 18` (test),
+compile `0 = 0` (JVM/JS/Native), suite `108 passing / 2 failing / 2 skipped` = baseline-identical.
+gdx `members.tsv` byte-identical (the parameter defaults to `Set.empty` and the base does not pass
+it). `MethodBodyTransform` body for `Engine#createComponent` wraps in `Nullable(...)` to match the
+new return type.
+
+The `@nowarn("msg=deprecated")` that K13's fix places on every member whose body the phase gave an
+`.orNull` is also placed on the CLASS, because `TestFrameworkTransform` may remove the DefDef
+(converting it to a `test("...") { body }` statement) and the DefDef-level annotation would be lost.
+One derivation through the existing `scanBody` path.
+
+*Fix kind: (b) per-library policy — which members are nullable is a fact about the library.*
+
 ### K14. A RETARGET's subtyping licence is ONE-DIRECTIONAL — the producer side is COUNTED, never coerced
 
 A `CollectionsTransform(retarget)` entry moves a type and bridges nothing, on a precondition the

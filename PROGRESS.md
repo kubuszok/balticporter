@@ -11580,3 +11580,36 @@ Step 1 changes the base's emitted surface significantly (the five types plus the
 ~30 types). Once the base drops them, dependents inherit the families automatically (§1.5), so
 Ashley needs NO manifest entry — the per-entry scope mechanism is for a dependent that adds a
 DIFFERENT family the base does not carry.
+
+
+### 13.19 Wave 3.2d --- `NullabilityTransform.nullableMembers` for unannotated-but-nullable returns
+
+Ashley's six members whose hand port wraps in `Nullable[T]` carry no nullability annotation in the
+upstream java. sge's migration notes record the decision for each (Engine.scala:10, Entity.scala:13,
+EntitySystem.scala:10, PooledEngine.scala:72 --- quoted in `ENGINE-LIMITS.md` K13.6).
+
+`nullableMembers: Set[String]` on `NullabilityTransform` is the (b) parameter: exact member FQNs
+matched at run time against `Symbol.fullName`, treated exactly as if the member's return type carried
+a configured annotation. Six entries on Ashley's manifest:
+
+```
+com.badlogic.ashley.core.Engine#createComponent
+com.badlogic.ashley.core.Engine#getSystem
+com.badlogic.ashley.core.Entity#getComponent
+com.badlogic.ashley.core.Entity#remove
+com.badlogic.ashley.core.EntitySystem#engine       (post-bean-collapse name)
+com.badlogic.ashley.core.PooledEngine#createComponent
+```
+
+**Numbers:**
+- `api-parity(null-model) 6 -> 0` (all six parity rows closed)
+- `nullability-boundary 0 -> 1` (main), `0 -> 18` (test: `.orNull` at JUnit assertEquals/assertNull)
+- compile `0 = 0` (JVM/JS/Native)
+- suite `108 passing / 2 failing / 2 skipped` = baseline-identical
+- gdx `members.tsv` byte-identical (empty parameter, base unchanged)
+- `.ref`: `@nowarn("msg=deprecated")` also placed on the CLASS beside each DefDef, because
+  `TestFrameworkTransform` removes the DefDef (K13.6 addendum)
+
+`MethodBodyTransform` body for `Engine#createComponent` wraps in `Nullable(...)` to match the new
+return type. The hand port's `ComponentFactories.create` returns `T`; the manifest body is
+`lowlevel.Nullable(sge.ecs.ComponentFactories.create(componentType))`.
