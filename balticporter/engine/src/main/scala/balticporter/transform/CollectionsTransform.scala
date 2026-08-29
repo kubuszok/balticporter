@@ -7347,7 +7347,18 @@ final class CollectionsTransform(
     *
     * Fires when the `Tree.New`'s head symbol is a retarget target AND the retargetRewrites table
     * has a `Construct` entry for `("<init>", arity)`. Replaces the `Tree.New` with a companion
-    * factory call via a minted symbol whose fullName is `companionFqn.factoryMethod`. */
+    * factory call via a minted symbol whose fullName is `companionFqn.factoryMethod`.
+    *
+    * ==Type arguments on the factory call==
+    * The factory's `inline def apply[A](…)(using MkArray[A])` resolves `MkArray` via
+    * `summonInline`, which needs the type argument stated EXPLICITLY — without it Scala infers
+    * `Any` and `MkArray[Any]` does not exist. The element type is taken from `n.tpe` (the
+    * `Tree.New`'s type, already retargeted by `transformType`): an `AppliedType(Target, [T])`
+    * contributes `[T]` as a `TypeApply`. For a RAW java source (`new Array()` at a raw
+    * declaration) the element is `AnyRef` (G2's raw rule — `[?]` is unwritable as a method type
+    * argument). For a type-parameter element (`class Octree[T] { new ObjectSet<T>() }`) the type
+    * arg is emitted faithfully; `MkArray[T]` must be threaded onto the enclosing class via the
+    * given-threading mechanism or the construction is COUNTED. */
   private def retargetConstruct(t: Tree.Apply)(using p: Program): Option[Term] = t.fun match
     case n: Tree.New if retargetRewrites.nonEmpty || retargetRewritesByDesc.nonEmpty =>
       headSym(n.tpe).flatMap(retargetSourceOf).flatMap { srcFqn =>
@@ -7376,7 +7387,58 @@ final class CollectionsTransform(
                       Tree.Literal(balticporter.tir.Constant.NullC, safe, t.origin),
                       TypeTree(safe, t.origin), safe, t.origin)
                   }
-              Tree.Apply(Tree.Ident(factorySym, TypeRepr.NoType, t.origin), effectiveArgs, factorySym, n.tpe, t.origin)
+              // Extract type arguments from the retargeted type so the factory call carries them
+              // explicitly: `DynamicArray.apply[InputProcessor](4)` instead of `DynamicArray.apply(4)`.
+              // Without explicit type args, Scala infers `Any` and `summonInline[MkArray[Any]]` fails.
+              //
+              // A TYPE PARAMETER element (`class Octree[T] { new ObjectSet<T>() }`) is replaced
+              // with `AnyRef` in the factory call — `MkArray[T]` is not summonable inline because
+              // `T` is unknown at compile time, while `MkArray[AnyRef]` is (G2's raw rule extended
+              // to the type-parameter case). The result is then cast to the declared type:
+              // `ObjectSet.apply[AnyRef]().asInstanceOf[ObjectSet[T]]`. The cast is java's own
+              // unchecked conversion (a `new ObjectSet<T>()` carries T only for erasure) and the
+              // emitted `.asInstanceOf` is §4.4's reified question at a type the program controls.
+              val anyRef = TypeRepr.TypeRef(TypeRepr.NoPrefix, objectSym)
+              var hasTypeParamArg = false
+              val targs: List[TypeTree] = n.tpe match
+                case TypeRepr.AppliedType(_, as) =>
+                  as.map {
+                    case _: TypeRepr.TypeBounds =>
+                      // Wildcard becomes AnyRef — `[?]` is not writable as a method type argument.
+                      hasTypeParamArg = true
+                      TypeTree(anyRef, t.origin)
+                    case a =>
+                      // Check if this type arg is a type parameter (its symbol resolves to a
+                      // TypeDef, not a ClassDef) — if so, replace with AnyRef.
+                      val isTypeParam = headSym(a).exists { s =>
+                        p.definitionOf(s) match
+                          case Some(_: Tree.TypeDef) => true
+                          case _                     => false
+                      }
+                      if isTypeParam then
+                        hasTypeParamArg = true
+                        TypeTree(anyRef, t.origin)
+                      else
+                        TypeTree(a, t.origin)
+                  }
+                case _ =>
+                  // RAW java source (`new Array()` at a raw declaration): the type is unapplied.
+                  // The frontend's unchecked conversion usually provides the declared type as
+                  // the type args, so this path is rare.
+                  Nil
+              val ident = Tree.Ident(factorySym, TypeRepr.NoType, t.origin)
+              val fun: Term =
+                if targs.nonEmpty then Tree.TypeApply(ident, targs, TypeRepr.NoType, t.origin)
+                else ident
+              val call = Tree.Apply(fun, effectiveArgs, factorySym, n.tpe, t.origin)
+              // When a type parameter was replaced with AnyRef, wrap in a cast to the declared
+              // type — `ObjectSet.apply[AnyRef]().asInstanceOf[ObjectSet[T]]` — so the result
+              // type matches the slot the construction feeds. Without the cast, `ObjectSet[AnyRef]`
+              // is not assignable to `ObjectSet[T]` (invariant type parameter).
+              if hasTypeParamArg then
+                Tree.Typed(call, TypeTree(n.tpe, t.origin), n.tpe, t.origin)
+              else
+                call
             }
           case CollectionsTransform.RetargetRewrite.Template(expr) =>
             Some(renderTemplate(expr, Tree.Ident(SymId.None, n.tpe, t.origin), t.args, srcFqn, n.tpe, t.origin))

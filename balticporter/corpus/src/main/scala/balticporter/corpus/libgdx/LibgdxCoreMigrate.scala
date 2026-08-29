@@ -1616,10 +1616,10 @@ object LibgdxPolicy:
            // sge: val item = (fileName, d). The method is large; replace only relevant lines.
            "com.badlogic.gdx.assets.loaders.ModelLoader#getDependencies" ->
              """{
-               |  val deps: lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]] = lowlevel.util.DynamicArray().asInstanceOf[lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]]
+               |  val deps: lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]] = lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()
                |  val data: sge.graphics.g3d.model.data.ModelData = this.loadModelData(file, parameters)
                |  if (data == null) {
-               |    return deps.asInstanceOf[lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]]
+               |    return deps
                |  } else ()
                |  val item: scala.Tuple2[java.lang.String, sge.graphics.g3d.model.data.ModelData] = (fileName, data)
                |  this.items.synchronized {
@@ -1633,7 +1633,7 @@ object LibgdxPolicy:
                |      }
                |    } else ()
                |  }
-               |  return deps.asInstanceOf[lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]]
+               |  return deps
                |}""".stripMargin,
            // wave 3.1m: ParticleEffectLoader.getDependencies — Tuple2 default-construct then
            // assign _1/_2. Same pattern as ModelLoader. Construct the tuple at once.
@@ -1750,9 +1750,9 @@ object LibgdxPolicy:
            // Collect from the OrderedSet directly into an sge.utils.Array. sge: selected.foreach(result.add).
            "com.badlogic.gdx.scenes.scene2d.utils.Selection#toArray" ->
              """{
-               |  val result: lowlevel.util.DynamicArray[T] = lowlevel.util.DynamicArray()
+               |  val result: lowlevel.util.DynamicArray[T] = lowlevel.util.DynamicArray[AnyRef]().asInstanceOf[lowlevel.util.DynamicArray[T]]
                |  this.selected.foreach(result.add)
-               |  return result.asInstanceOf[lowlevel.util.DynamicArray[T]]
+               |  return result
                |}""".stripMargin,
            // wave 3.1m: Selection.toArray(Array<T>) — same pattern, collect into the provided array.
            "com.badlogic.gdx.scenes.scene2d.utils.Selection#toArray(Array)" ->
@@ -1770,7 +1770,7 @@ object LibgdxPolicy:
                |    return
                |  } else ()
                |  var changed: scala.Boolean = false
-               |  val toRemove = lowlevel.util.DynamicArray[T]()
+               |  val toRemove: lowlevel.util.DynamicArray[T] = lowlevel.util.DynamicArray[AnyRef]().asInstanceOf[lowlevel.util.DynamicArray[T]]
                |  val iter = this.items.orderedItems.iterator
                |  while (iter.hasNext) {
                |    val selected: T = iter.next().asInstanceOf[T]
@@ -1831,7 +1831,7 @@ object LibgdxPolicy:
            "com.badlogic.gdx.scenes.scene2d.Actor#<clinit>" ->
              """{
                |  Actor.POOLS.addPool(classOf[sge.math.Rectangle], ((() => new sge.math.Rectangle()): sge.utils.DefaultPool.PoolSupplier[sge.math.Rectangle]))
-               |  Actor.POOLS.addPool(classOf[lowlevel.util.DynamicArray[?]], ((() => lowlevel.util.DynamicArray[Any]()): sge.utils.DefaultPool.PoolSupplier[lowlevel.util.DynamicArray[?]]))
+               |  Actor.POOLS.addPool(classOf[lowlevel.util.DynamicArray[?]], ((() => lowlevel.util.DynamicArray[AnyRef]()): sge.utils.DefaultPool.PoolSupplier[lowlevel.util.DynamicArray[?]]))
                |  Actor.POOLS.addPool(classOf[sge.graphics.g2d.GlyphLayout], ((() => new sge.graphics.g2d.GlyphLayout()): sge.utils.DefaultPool.PoolSupplier[sge.graphics.g2d.GlyphLayout]))
                |  Actor.POOLS.addPool(classOf[sge.scenes.scene2d.utils.ChangeListener.ChangeEvent], ((() => new sge.scenes.scene2d.utils.ChangeListener.ChangeEvent()): sge.utils.DefaultPool.PoolSupplier[sge.scenes.scene2d.utils.ChangeListener.ChangeEvent]))
                |}""".stripMargin
