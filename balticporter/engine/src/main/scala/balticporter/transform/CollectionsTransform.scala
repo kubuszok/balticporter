@@ -6448,15 +6448,17 @@ final class CollectionsTransform(
         templateSeq += 1
         val tmpName = s"bp$$tpl$templateSeq"
         bindings += ((ph, term, tmpName))
-        // replace matched occurrences only — rebuild the string from findTermPh positions
+        // replace matched occurrences only — rebuild the string from findTermPh positions.
+        // Use explicit substring rather than append(CharSequence,start,end) to avoid
+        // Scala 3 auto-tupling on the 3-arg overload.
         val phPositions = findTermPh(text, ph)
         val sb = new StringBuilder
         var pos0 = 0
         for p <- phPositions do
-          sb.append(text, pos0, p)
+          sb.append(text.substring(pos0, p))
           sb.append(tmpName)
           pos0 = p + ph.length
-        sb.append(text, pos0, text.length)
+        sb.append(text.substring(pos0))
         text = sb.toString
     // 4. split text around remaining placeholders to build parts/holes for Opaque.spliced
     //    After step 3, only single-occurrence placeholders remain as $-prefixed text.
