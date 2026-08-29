@@ -440,14 +440,45 @@ final class CollectionsTransform(
         "matching retarget entry — a rewrite table for a type this phase does not retarget is dead code")
   }
 
+  /** Translate a descriptor key's parameter types from the UPSTREAM namespace to the TARGET
+    * namespace, so it can be matched against a callee's post-remap `Symbol.descriptor`.
+    *
+    * CLAUDE.md §4.56: policy is upstream, the artifact is emitted. The manifest key says `(Array)`,
+    * and the callee symbol at dispatch already reads `(DynamicArray)`. This translation is done ONCE
+    * at construction — one derivation, through the same `retarget` map the phase applies. */
+  private lazy val remappedDescRewrites: Map[String, Map[(String, Descriptor), CollectionsTransform.RetargetRewrite]] =
+    if retargetRewritesByDesc.isEmpty then Map.empty
+    else
+      // Build a simple-name translation: source simple name -> target simple name.
+      // retarget maps "com.badlogic.gdx.utils.Array" -> "lowlevel.util.DynamicArray",
+      // so the simple name map is "Array" -> "DynamicArray".
+      val simpleNameMap: Map[String, String] = retarget.map { (src, tgt) =>
+        val srcSimple = src.substring(src.lastIndexOf('.') + 1)
+        val tgtSimple = tgt.substring(tgt.lastIndexOf('.') + 1)
+        srcSimple -> tgtSimple
+      }
+      def translateParam(p: Param): Param = p match
+        case Param.Named(n) => Param.Named(simpleNameMap.getOrElse(n, n))
+        case Param.Arr(of)  => Param.Arr(translateParam(of))
+        case other          => other // Prim and Unresolved are unchanged
+      def translateDesc(d: Descriptor): Descriptor =
+        Descriptor(d.params.map(translateParam))
+      retargetRewritesByDesc.map { (srcFqn, tbl) =>
+        srcFqn -> tbl.map { case ((name, desc), rw) => (name, translateDesc(desc)) -> rw }
+      }
+
   /** Look up a retarget rewrite for a call at `(srcFqn, memberName, arity)`.
     *
     * Descriptor-keyed entries WIN over arity-keyed entries at the same member (§4.55: a loose key
     * indexing to a single value is a choice nobody made). The callee's [[Symbol.descriptor]] is
-    * compared through [[Descriptor.matches]], which normalises simple names. */
+    * compared through [[Descriptor.matches]], which normalises simple names.
+    *
+    * The descriptor keys are translated from the UPSTREAM namespace to the TARGET namespace at
+    * construction (§4.56: policy is upstream, the callee is remapped), so the match is in the
+    * same namespace the callee's descriptor is in. */
   private def lookupRewrite(srcFqn: String, name: String, arity: Int, desc: Option[Descriptor]): Option[CollectionsTransform.RetargetRewrite] =
     desc.flatMap { d =>
-      retargetRewritesByDesc.get(srcFqn).flatMap { tbl =>
+      remappedDescRewrites.get(srcFqn).flatMap { tbl =>
         tbl.collectFirst { case ((n, dd), rw) if n == name && dd.matches(d) => rw }
       }
     }.orElse(
