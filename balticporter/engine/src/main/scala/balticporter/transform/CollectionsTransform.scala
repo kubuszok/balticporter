@@ -208,6 +208,21 @@ final class CollectionsTransform(
       * both. Keyed by the family's SOURCE FQN; a key with no family entry is ignored. Default
       * `Everywhere(Set.empty)` — the pre-scope code path. */
     val familyScopes: Map[String, RuleScope] = Map.empty,
+    /** RETARGET COERCIONS — (`actualHeadFQN`, `expectedHeadFQN`) -> template string.
+      *
+      * When the `coerce` method finds that the actual value's head type is X and the expected type's
+      * head is Y, and this map contains `(X, Y)`, the template is rendered as a `Tree.Opaque.spliced`
+      * expression wrapping the actual value. `$0` in the template is the actual value (inserted as an
+      * AST hole so later phases can reach its symbols).
+      *
+      * This handles boundaries between retarget targets and shims (e.g. `DynamicArray` ->
+      * `JavaIterable`) or between retarget targets and standard types (e.g. `DynamicArray` ->
+      * `scala.Array`). The mechanism (render a coercion template at a type boundary) is universal;
+      * WHICH pairs and WHAT the template says is per-library policy.
+      *
+      * Empty is the default and the no-op. The fingerprint segment is omitted when empty.
+      * `MergeablePolicy` unions independent keys; same pair with different template refuses. */
+    val retargetCoercions: Map[(String, String), String] = Map.empty,
 ) extends Phase, Rewrite, RequiresRuntime, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound:
   def name = "java-collections->scala"
 
@@ -388,9 +403,10 @@ final class CollectionsTransform(
         val mergedTypeArgs = retargetTypeArgs ++ o.retargetTypeArgs
         val mergedFamilies = families ++ o.families
         val mergedFamilyScopes = familyScopes ++ o.familyScopes
-        // carriers and sinks: union without a clash (they are not surface)
+        // carriers, sinks and coercions: union without a clash (they are not surface)
         val mergedCarriers = reifiedCarriers ++ o.reifiedCarriers
         val mergedSinks = reflectiveSinks ++ o.reflectiveSinks
+        val mergedCoercions = retargetCoercions ++ o.retargetCoercions
         val addedRetargetSubjects = (o.retarget.keySet -- retarget.keySet).map(MergeablePolicy.subjectOf)
         val addedFamilySubjects = (o.families.keySet -- families.keySet).map(MergeablePolicy.subjectOf)
         Right(MergeablePolicy.Merged(
@@ -403,7 +419,8 @@ final class CollectionsTransform(
             reifiedCarriers  = mergedCarriers,
             reflectiveSinks  = mergedSinks,
             families         = mergedFamilies,
-            familyScopes     = mergedFamilyScopes),
+            familyScopes     = mergedFamilyScopes,
+            retargetCoercions = mergedCoercions),
           addedRetargetSubjects ++ addedFamilySubjects))
     case other =>
       Left(s"`${other.name}` is not a `CollectionsTransform`, so there is no table to compose")
@@ -733,6 +750,16 @@ final class CollectionsTransform(
     * table share a SymId, which is correct: the lookup returns their FQN, finds no table, and
     * returns `None`. */
   private var retargetTargetToSource: Map[SymId, String] = Map.empty
+  /** FQN-based fallback for [[retargetTargetToSource]]: the Collect rewrite and `retargetConstruct`
+    * build expressions whose types carry the FRONTEND's SymId for the target (interned from reading
+    * lls class files), while `retargetTargetToSource` maps from the MINTED SymId. This reverse-FQN
+    * map closes the gap by checking the FQN when the SymId is not found directly. */
+  private lazy val retargetTargetFqnToSource: Map[String, String] =
+    retarget.map { (src, tgt) => tgt -> src }
+  /** Resolve the retarget source FQN from a SymId, checking both the minted SymId and the FQN. */
+  private def retargetSourceOf(s: SymId)(using p: Program): Option[String] =
+    retargetTargetToSource.get(s).orElse(
+      p.symbolOf(s).flatMap(sym => retargetTargetFqnToSource.get(sym.fullName)))
   /** minted symbols for retarget rewrite target member names: `(sourceFqn, memberName)` -> SymId. */
   private var retargetRewriteSyms: Map[(String, String), SymId] = Map.empty
   /** source SymId -> arg mapping, for arity-changing retargets (keyed by the ORIGINAL symbol). */
@@ -808,7 +835,7 @@ final class CollectionsTransform(
       t.fun match
         case Tree.Select(recv, m, _, so) =>
           // First: try to rewrite the call itself as a Collect
-          val collectResult = headSym(recv.tpe).flatMap(retargetTargetToSource.get).flatMap { srcFqn =>
+          val collectResult = headSym(recv.tpe).flatMap(retargetSourceOf).flatMap { srcFqn =>
             val mName = methodName(m)
             lookupRewrite(srcFqn, mName, 0, None).flatMap {
               case rw: CollectionsTransform.RetargetRewrite.Collect =>
@@ -821,9 +848,35 @@ final class CollectionsTransform(
           // The Collect produces an Opaque.spliced; if the outer call has empty args,
           // convert Apply(Select(collectBlock, m), Nil) -> Select(collectBlock, m)
           // so the emitter renders without parens (DynamicArray members are parameterless).
+          //
+          // EXCEPTION: `toArray` and `iterator` on a Collect block. The Collect already built a
+          // DynamicArray; calling `.toArray` on it produces a `scala.Array`, which is wrong when
+          // the caller expects a DynamicArray (e.g. a return type that was retargetted). And
+          // `.iterator` returns `scala.collection.Iterator` where `JavaIterator` may be expected.
+          // The Collect block IS the right answer — drop the chained call and coerce the result.
           else recv match
             case _: Tree.Opaque if t.args.isEmpty =>
-              Tree.Select(recv, m, t.tpe, so)
+              val mName = methodName(m)
+              if mName == "toArray" then
+                // When the ORIGINAL type head is a retarget target, the caller expects a
+                // DynamicArray, not a scala.Array. Return the Collect block as-is.
+                val retargetTargetFqns = retarget.values.toSet
+                headSym(t.tpe) match
+                  case Some(h) if p.symbolOf(h).exists(s => retargetTargetFqns(s.fullName)) => recv
+                  case Some(h) if retargetTargetToSource.contains(h) => recv
+                  case Some(h) if remap.contains(h) && retargetTargetToSource.contains(remap(h)) => recv
+                  case _ => Tree.Select(recv, m, t.tpe, so)
+              else if mName == "iterator" && iteratorFromSym != SymId.None && javaIteratorSym != SymId.None then
+                // Wrap .iterator with JavaIterator.from when the caller expects JavaIterator.
+                headSym(t.tpe) match
+                  case Some(h) if h == javaIteratorSym || (remap.contains(h) && remap(h) == javaIteratorSym) ||
+                      p.symbolOf(h).exists(s => s.fullName == "java.util.Iterator" || s.fullName == "balticporter.runtime.JavaIterator") =>
+                    val iterSelect = Tree.Select(recv, m, TypeRepr.NoType, so)
+                    Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, so),
+                               List(iterSelect), iteratorFromSym, t.tpe, so)
+                  case _ => Tree.Select(recv, m, t.tpe, so)
+              else
+                Tree.Select(recv, m, t.tpe, so)
             case _ => t
         case _ => t
   /** Apply nodes produced by [[retargetForEach]] that need a value-carrying boundary wrapper.
@@ -5615,7 +5668,21 @@ final class CollectionsTransform(
       case _ if wantsIs(javaIteratorSym) && iteratorFromSym != SymId.None &&
                got.flatMap(p.symbolOf).exists(_.fullName == "scala.collection.Iterator") => iteratorFromSym
       case _                                                                          => SymId.None
-    if factory == SymId.None then actual
+    if factory == SymId.None then
+      // RETARGET COERCION — a §1(b) parameterised boundary wrap at a retarget target slot.
+      // The mechanism is the same for every library: when the actual's head is X and the expected's
+      // head is Y, and `retargetCoercions` holds a template for `(X, Y)`, apply the template.
+      // WHICH (X, Y) pairs are declared and WHAT the template says is per-library policy.
+      // Empty is the default and the no-op.
+      if retargetCoercions.nonEmpty then
+        val gotFqn   = got.flatMap(p.symbolOf).map(_.fullName)
+        val wantsFqn = wants.flatMap(p.symbolOf).map(_.fullName)
+        (gotFqn, wantsFqn) match
+          case (Some(gf), Some(wf)) if retargetCoercions.contains((gf, wf)) =>
+            val template = retargetCoercions((gf, wf))
+            renderRetargetCoercion(template, actual, expected, actual.origin)
+          case _ => actual
+      else actual
     else
       // The wrap is TYPED as what it now emits, which is the RETYPED expected type and not the one
       // read above. `wrapIterableArgs` takes its `expected` from a FORMAL in the symbol table, and
@@ -5629,6 +5696,30 @@ final class CollectionsTransform(
       val tpe = wants.map(withHead(expected, _)).getOrElse(expected)
       Tree.Apply(Tree.Ident(factory, TypeRepr.NoType, actual.origin), List(actual),
                  factory, tpe, actual.origin)
+
+  /** Render a retarget coercion template, wrapping `actual` in a `Tree.Opaque.spliced` expression.
+    * `$0` in the template is the actual value; everything else is literal text. The result is typed
+    * at the `expected` type. */
+  private def renderRetargetCoercion(template: String, actual: Term, expected: TypeRepr,
+      origin: Origin): Term =
+    val ph      = "$0"
+    val indices = scala.collection.mutable.ListBuffer.empty[Int]
+    var idx     = 0
+    while { idx = template.indexOf(ph, idx); idx >= 0 } do
+      indices += idx
+      idx += ph.length
+    if indices.isEmpty then
+      Tree.Opaque(template, expected, origin)
+    else
+      val parts = scala.collection.mutable.ListBuffer.empty[String]
+      val holes = scala.collection.mutable.ListBuffer.empty[Term]
+      var pos   = 0
+      for p <- indices do
+        parts += template.substring(pos, p)
+        holes += actual
+        pos = p + ph.length
+      parts += template.substring(pos)
+      Tree.Opaque.spliced(parts.toList, holes.toList, expected, origin)
 
   /** the runtime shims, as scala symbols — a source already typed as one is never re-wrapped. */
   private def shimSyms: Set[SymId] =
@@ -7124,7 +7215,7 @@ final class CollectionsTransform(
     * unchanged and `RetargetBoundaryCheck` counts it on the existing `collection-retarget` lane). */
   private def retargetRewrite(recv: Term, m: SymId, so: Origin, t: Tree.Apply)(using p: Program): Option[Term] =
     if retargetRewrites.isEmpty && retargetRewritesByDesc.isEmpty then return scala.None
-    headSym(recv.tpe).flatMap(retargetTargetToSource.get).flatMap { srcFqn =>
+    headSym(recv.tpe).flatMap(retargetSourceOf).flatMap { srcFqn =>
       val mName = methodName(m)
       val arity = t.args.size
       val desc = p.symbolOf(m).flatMap(_.descriptor)
@@ -7212,6 +7303,34 @@ final class CollectionsTransform(
                 case Some(h) if remap.contains(h) && remap(h) == javaIteratorSym =>
                   cur = Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, so),
                                    List(cur), iteratorFromSym, t.tpe, so)
+                // The call's type head may be the ORIGINAL java.util.Iterator sym (not yet
+                // remapped at this traversal point), OR the FRONTEND-interned sym for
+                // balticporter.runtime.JavaIterator (different from the MINTED javaIteratorSym).
+                // Check the FQN directly for both.
+                case Some(h) if p.symbolOf(h).exists(s =>
+                    s.fullName == "java.util.Iterator" || s.fullName == "balticporter.runtime.JavaIterator") =>
+                  cur = Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, so),
+                                   List(cur), iteratorFromSym, t.tpe, so)
+                case _ => ()
+            // A retarget target's `toArray()` returns `scala.Array[T]`, but the call's own
+            // type head may still be the RETARGET TARGET (because the original java method
+            // returned `gdx.Array<T>` and `transformType` replaced it with `DynamicArray[T]`).
+            // Where the caller expects a DynamicArray, the chain's `toArray` is WRONG — it
+            // produces a scala.Array.  Drop the `.toArray` and return the receiver, which is
+            // already a DynamicArray from the keys/values/collect rewrite.  Coercion-by-template
+            // cannot fire because the chain node carries `TypeRepr.NoType`.
+            // Matched by FQN: the call's type head may use the FRONTEND's SymId (from reading lls
+            // class files) while retargetTargetToSource maps from the MINTED SymId — two SymIds
+            // for the same type.
+            if members.last == "toArray" && members.size == 1 then
+              val retargetTargetFqns = retarget.values.toSet
+              headSym(t.tpe) match
+                case Some(h) if retargetTargetToSource.contains(h) =>
+                  cur = recv  // the DynamicArray already built by the preceding rewrite
+                case Some(h) if remap.contains(h) && retargetTargetToSource.contains(remap(h)) =>
+                  cur = recv
+                case Some(h) if p.symbolOf(h).exists(s => retargetTargetFqns(s.fullName)) =>
+                  cur = recv
                 case _ => ()
             Some(cur)
         case _: CollectionsTransform.RetargetRewrite.Chain => scala.None
@@ -7231,7 +7350,7 @@ final class CollectionsTransform(
     * factory call via a minted symbol whose fullName is `companionFqn.factoryMethod`. */
   private def retargetConstruct(t: Tree.Apply)(using p: Program): Option[Term] = t.fun match
     case n: Tree.New if retargetRewrites.nonEmpty || retargetRewritesByDesc.nonEmpty =>
-      headSym(n.tpe).flatMap(retargetTargetToSource.get).flatMap { srcFqn =>
+      headSym(n.tpe).flatMap(retargetSourceOf).flatMap { srcFqn =>
         val arity = t.args.size
         val ctorSym = p.symbolOf(t.method)
         val desc = ctorSym.flatMap(_.descriptor).orElse(ctorSym.flatMap(s => Descriptor.ofInfo(p, s)))

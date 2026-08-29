@@ -62,7 +62,7 @@ object Pools {
     * only context-free types, and its one context-needing pool lives on `SgeHttpClient`, an
     * INSTANCE that already holds the context. */
   def registerDefaults()(using sge.Sge): Unit = {
-    Pools.set(() => new Array[java.lang.Object]())
+    Pools.set(() => lowlevel.util.DynamicArray[java.lang.Object]())
     Pools.set(() => new sge.scenes.scene2d.utils.ChangeListener.ChangeEvent())
     Pools.set(() => new sge.scenes.scene2d.ui.Table.DebugRect())
     Pools.set(() => new sge.scenes.scene2d.utils.FocusListener.FocusEvent())
@@ -172,17 +172,17 @@ object Pools {
   }
 
   /** Frees the specified objects. Null objects within the array are silently ignored. */
-  def freeAll(objects: Array[?]): Unit = Pools.freeAll(objects, false)
+  def freeAll(objects: lowlevel.util.DynamicArray[?]): Unit = Pools.freeAll(objects, false)
 
   /** Frees the specified objects.
     * @param samePool if true the pool is looked up once and reused for every object. */
-  def freeAll(objects: Array[?], samePool: Boolean): Unit = {
+  def freeAll(objects: lowlevel.util.DynamicArray[?], samePool: Boolean): Unit = {
     if (objects == null) { throw new java.lang.IllegalArgumentException("objects cannot be null.") }
     var pool: lowlevel.Nullable[Pool[?]] = lowlevel.Nullable.empty
     var i             = 0
     val n             = objects.size
     while (i < n) {
-      val obj = objects.get(i).asInstanceOf[java.lang.Object]
+      val obj = objects(i).asInstanceOf[java.lang.Object]
       if (obj != null) {
         if (pool.isEmpty) { pool = Pools.typePools.get(obj.getClass()) }
         if (!pool.isEmpty) {

@@ -59,6 +59,21 @@ object JavaIterable {
     def iterator(): JavaIterator[A] = JavaIterator.from(xs.iterator)
   }
 
+  /** Adapt an iterator-producing function into a JavaIterable view. Each call to `iterator()`
+    * invokes the function, so the result is re-traversable.
+    *
+    * Inserted by the engine's retarget coercion mechanism at boundaries where a retarget
+    * target (e.g. `DynamicArray`) reaches a `JavaIterable` slot. The target has its own
+    * `def iterator: scala.collection.Iterator[A]` but does not extend any scala collection
+    * trait, so `from(Iterable)` cannot accept it. This factory takes a closure that
+    * re-creates the iterator on each call, preserving multi-use semantics. */
+  def fromIterator[A](mkIterator: () => scala.collection.Iterator[A]): JavaIterable[A] = {
+    new JavaIterable[A] with Wrapping {
+      def wrapped: Any = mkIterator
+      def iterator(): JavaIterator[A] = JavaIterator.from(mkIterator())
+    }
+  }
+
   extension [A](self: JavaIterable[A]) {
     /** A scala view of this java iterable — `for`, `map`, `foreach` and the rest. */
     def asScala: scala.collection.Iterable[A] = new scala.collection.Iterable[A] {

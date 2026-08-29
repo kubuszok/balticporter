@@ -881,6 +881,8 @@ object LibgdxPolicy:
         // IntArray.incr(index, value) -> { val i = index; da(i) = da(i) + value }
         // $recv appears twice — Template binds it to a temp (§4.4/F7).
         ("incr", 2)     -> Template("{ val bpIdx = $0; $recv(bpIdx) = $recv(bpIdx) + $1 }"),
+        // IntArray.add(4 args): DynamicArray has up to 3-arg add; split into two calls.
+        ("add", 4)      -> Template("{ $recv.add($0, $1); $recv.add($2, $3) }"),
       ),
       "com.badlogic.gdx.utils.FloatArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -955,8 +957,9 @@ object LibgdxPolicy:
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         // ensureCapacity(int) returns T[] in java; DynamicArray.ensureCapacity returns Unit.
-        // The callers assign the result for indexed access — return the DynamicArray itself.
-        ("ensureCapacity", 1) -> Template("{ $recv.ensureCapacity($0); $recv }"),
+        // The callers assign the result for indexed access into the backing array — return .items
+        // to get the raw Array[Byte], matching the java return type of byte[].
+        ("ensureCapacity", 1) -> Template("{ $recv.ensureCapacity($0); $recv }.items"),
       ),
       "com.badlogic.gdx.utils.CharArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -1044,7 +1047,11 @@ object LibgdxPolicy:
       ("<init>", arrayDesc)    -> Construct("lowlevel.util.DynamicArray", "from"),
       ("<init>", tArrDesc)     -> Template("{ val bpSrc = $0; val bpDa = $Target[$T0](); bpDa.addAll(bpSrc, 0, bpSrc.length); bpDa }"),
       ("<init>", supplierDesc) -> Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1),
-      ("addAll", addAllArrayDesc) -> Template("$recv.addAll($0.items, $1, $2)"),
+      // Cast .items to Array[$T0] to handle wildcard argument types — java arrays are covariant,
+      // scala arrays are invariant, so `DynamicArray[? <: T].items` is `Array[? <: T]` which
+      // does not conform to `Array[T]`. The asInstanceOf is safe: items really IS an Array[T]
+      // at erasure and addAll only reads from it.
+      ("addAll", addAllArrayDesc) -> Template("$recv.addAll($0.items.asInstanceOf[scala.Array[$T0]], $1, $2)"),
     )
     def primArrayInitByDesc(selfDesc: Descriptor, rawArrDesc: Descriptor) = Map(
       ("<init>", intDesc)    -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -1067,6 +1074,9 @@ object LibgdxPolicy:
       // needs a cast the Rename entry cannot express).
       "com.badlogic.gdx.utils.CharArray"            -> (primArrayInitByDesc(Descriptor(List(Param.Named("CharArray"))), charArrDesc) ++ Map(
         ("append", Descriptor(List(Param.Prim("char")))) -> Rename("add"),
+        // append(CharArray) -> addAll(other) — copies all chars from another CharArray.
+        // After retarget both are DynamicArray[Char], and DynamicArray.addAll(DynamicArray) exists.
+        ("append", Descriptor(List(Param.Named("CharArray")))) -> Rename("addAll"),
         // append(CharSequence/String) -> addAll(cs.toString.toCharArray, 0, len).
         // Template: $0 appears once, $recv appears once — no temp binding needed.
         ("append", Descriptor(List(Param.Named("CharSequence")))) ->
@@ -1076,6 +1086,11 @@ object LibgdxPolicy:
         // append(int) -> add(c.toChar) — the int is a codepoint, cast to Char.
         ("append", Descriptor(List(Param.Prim("int")))) ->
           Template("$recv.add($0.toChar)"),
+        // indexOf(String) -> indexOf(Char): DynamicArray.indexOf takes a single element.
+        // Java's CharArray.indexOf(String) is a substring search; the only occurrence
+        // in gdx/src is indexOf("\n"), a single-char string, so .charAt(0) is faithful.
+        ("indexOf", Descriptor(List(Param.Named("String")))) ->
+          Template("$recv.indexOf($0.charAt(0))"),
       )),
       "com.badlogic.gdx.utils.BooleanArray"         -> primArrayInitByDesc(Descriptor(List(Param.Named("BooleanArray"))), boolArrDesc),
     )
@@ -1485,6 +1500,34 @@ object LibgdxPolicy:
     "com.badlogic.gdx.scenes.scene2d.utils.TiledDrawable#align" -> "getAlign",
   )
 
+  /** RETARGET COERCIONS — boundary wraps inserted by `coerce` when a retarget target meets a slot
+    * whose head type is a different family.
+    *
+    * Keyed by (actual head FQN, expected head FQN), both in the TARGET namespace (post-retarget).
+    * `$0` in the template is the actual value, inserted as an AST hole. */
+  def libRetargetCoercions: Map[(String, String), String] = Map(
+    // DynamicArray -> JavaIterable: wrap with fromIterator so the shim delegates to DA's iterator.
+    ("lowlevel.util.DynamicArray", "balticporter.runtime.JavaIterable") ->
+      "balticporter.runtime.JavaIterable.fromIterator(() => $0.iterator)",
+    // DynamicArray -> JavaIterator: wrap DA's iterator into a JavaIterator.
+    // MapProperties.keys/values return a DynamicArray where the method declares JavaIterator.
+    ("lowlevel.util.DynamicArray", "balticporter.runtime.JavaIterator") ->
+      "balticporter.runtime.JavaIterator.from($0.iterator)",
+    // scala.collection.Iterator -> JavaIterator: wrap with JavaIterator.from.
+    // Retarget target's .iterator returns scala.collection.Iterator; the method declares JavaIterator.
+    ("scala.collection.Iterator", "balticporter.runtime.JavaIterator") ->
+      "balticporter.runtime.JavaIterator.from($0)",
+    // DynamicArray[Char] -> CharSequence: build a String from the backing char array.
+    ("lowlevel.util.DynamicArray", "java.lang.CharSequence") ->
+      "new java.lang.String($0.toArray)",
+    // DynamicArray -> scala.Array: extract a sized copy via toArray.
+    ("lowlevel.util.DynamicArray", "scala.Array") ->
+      "$0.toArray",
+    // scala.Array -> DynamicArray: wrap the array (zero-copy) into a DynamicArray.
+    ("scala.Array", "lowlevel.util.DynamicArray") ->
+      "lowlevel.util.DynamicArray.wrap($0)",
+  )
+
   /** the `gdx/src` pipeline. Universal phases first, then the three §1(b) phases configured above,
     * then the one §1(c) rule libGDX plugs in from OUTSIDE the engine
     * ([[GdxSharedIteratorRule]]). */
@@ -1493,7 +1536,8 @@ object LibgdxPolicy:
          new CollectionsTransform(retarget = comparatorRetarget ++ bitsRetarget ++ libCollectionRetargets,
                                   retargetRewrites = bitsRetargetRewrites ++ libCollectionConstructRewrites,
                                   retargetRewritesByDesc = libCollectionConstructRewritesByDesc,
-                                  retargetTypeArgs = libCollectionRetargetTypeArgs), new MutableParamsTransform,
+                                  retargetTypeArgs = libCollectionRetargetTypeArgs,
+                                  retargetCoercions = libRetargetCoercions), new MutableParamsTransform,
          new PanamaFfiTransform(), unwrapReflection, classTable, new GdxSharedIteratorRule,
          memberRenames, disposableRedirect, textureHandle, align, uniformLocation,
          nullability, globalsToContext,
@@ -1744,6 +1788,29 @@ object LibgdxPolicy:
              """{
                |  val selected: lowlevel.util.OrderedSet[T] = this.selection$field.items
                |  return if (selected.size == 0) -1 else this.items$field.indexOf(selected.first)
+               |}""".stripMargin,
+           // wave 3.1t: BitmapFont secondary ctor — `Array.with(arr)` is a static call on the
+           // retarget source's companion, which the retarget mechanism cannot rewrite (it handles
+           // INSTANCE calls). Replace with `DynamicArray.wrap(arr)` which zero-copy wraps the array.
+           "com.badlogic.gdx.graphics.g2d.BitmapFont#<init>(BitmapFontData,TextureRegion,boolean)" ->
+             """{
+               |  this(data, if (region != null) lowlevel.util.DynamicArray.wrap(scala.Array[sge.graphics.g2d.TextureRegion](region)) else null.asInstanceOf[lowlevel.util.DynamicArray[sge.graphics.g2d.TextureRegion]], integer)
+               |}""".stripMargin,
+           // wave 3.1t: removeDuplicates — java set/restore preserveOrder which is a val in
+           // DynamicArray (immutable constructor parameter). DynamicArray.removeIndex always
+           // preserves order (unlike gdx Array which optionally swaps the last element in),
+           // so setting preserveOrder to true is unnecessary. Drop both writes.
+           "com.badlogic.gdx.assets.AssetLoadingTask#removeDuplicates" ->
+             """{
+               |  { var i: scala.Int = 0; while (i < array.size) { {
+               |    val fn: java.lang.String = array.apply(i).fileName
+               |    val `type`: java.lang.Class[?] = array.apply(i).asInstanceOf[sge.assets.AssetDescriptor[java.lang.Object]].`type`.asInstanceOf[java.lang.Class[?]];
+               |    { var j: scala.Int = array.size - 1; while (j > i) { {
+               |      if ((`type` eq array.apply(j).asInstanceOf[sge.assets.AssetDescriptor[java.lang.Object]].`type`) && fn.equals(array.apply(j).fileName)) {
+               |        array.removeIndex(j)
+               |      } else ()
+               |    }; j = j - 1 } }
+               |  }; i = i + 1 } }
                |}""".stripMargin
          )))
 
