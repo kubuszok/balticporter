@@ -40,10 +40,10 @@ final class GridGraph(val width: Int, val height: Int) extends IndexedGraph[Grid
     arr
   }
 
-  private val connections: Array[sge.utils.Array[Connection[GridNode]]] = {
-    val arr = new Array[sge.utils.Array[Connection[GridNode]]](width * height)
+  private val connections: Array[lowlevel.util.DynamicArray[Connection[GridNode]]] = {
+    val arr = new Array[lowlevel.util.DynamicArray[Connection[GridNode]]](width * height)
     for (i <- 0 until width * height)
-      arr(i) = sge.utils.Array[Connection[GridNode]]()
+      arr(i) = lowlevel.util.DynamicArray[Connection[GridNode]]()
     arr
   }
 
@@ -93,7 +93,7 @@ final class GridGraph(val width: Int, val height: Int) extends IndexedGraph[Grid
 
   def node(x: Int, y: Int): GridNode = nodes(y * width + x)
 
-  override def getConnections(fromNode: GridNode): sge.utils.Array[Connection[GridNode]] =
+  override def getConnections(fromNode: GridNode): lowlevel.util.DynamicArray[Connection[GridNode]] =
     connections(fromNode.index)
 
   override def getIndex(node: GridNode): Int = node.index

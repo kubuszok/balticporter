@@ -65,7 +65,7 @@ class ScreenmanagerSuite extends munit.FunSuite {
     val i = new BasicInputMultiplexer()
     assertEquals(i.processors.size, 0)
 
-    val inputProcessors = new sge.utils.Array[sge.InputProcessor](4)
+    val inputProcessors = lowlevel.util.DynamicArray[sge.InputProcessor](4)
     inputProcessors.add(new sge.InputAdapter())
     inputProcessors.add(new sge.InputAdapter())
 
