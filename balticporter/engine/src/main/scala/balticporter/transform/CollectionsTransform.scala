@@ -6386,8 +6386,10 @@ final class CollectionsTransform(
     * ONCE in the template, it is bound to a `val` to avoid double evaluation (CLAUDE.md §4.4/F7). */
   private def renderTemplate(expr: String, recv: Term, args: List[Term],
       srcFqn: String, tpe: TypeRepr, so: Origin)(using p: Program): Term =
-    // 1. text-substitute type-level placeholders
-    val targetFqn = typeMap.get(srcFqn).map(_._1).getOrElse(srcFqn)
+    // 1. text-substitute type-level placeholders.
+    // A retarget entry is NOT in typeMap (which holds JDK families), so check retarget too —
+    // without this, $Target resolves to the SOURCE FQN for every retarget Template.
+    val targetFqn = typeMap.get(srcFqn).map(_._1).orElse(retarget.get(srcFqn)).getOrElse(srcFqn)
     var text = expr.replace("$Target", targetFqn)
     // substitute $T0, $T1, ... from receiver's type arguments
     recv.tpe match

@@ -922,6 +922,11 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
         ("get", 1)      -> Rename("apply"),
         ("set", 2)      -> Rename("update"),
+        // wave 3.1t: Java implicitly narrows int->short at ShortArray.add(short). After retarget,
+        // DynamicArray[Short].add(Short) does not accept Int. Insert .toShort cast.
+        ("add", 1)      -> Template("$recv.add($0.toShort)"),
+        ("add", 2)      -> Template("$recv.add($0.toShort, $1.toShort)"),
+        ("add", 3)      -> Template("$recv.add($0.toShort, $1.toShort, $2.toShort)"),
         ("notEmpty", 0) -> Chain(List("nonEmpty")),
         ("empty", 0)    -> Rename("isEmpty"),
         ("peek", 0)     -> Chain(List("peek")),
@@ -1017,7 +1022,14 @@ object LibgdxPolicy:
     val intDesc        = Descriptor(List(Param.Prim("int")))
     val arrayDesc      = Descriptor(List(Param.Named("Array")))
     val supplierDesc   = Descriptor(List(Param.Named("ArraySupplier")))
-    val objArrDesc     = Descriptor(List(Param.Arr(Param.Named("Object"))))
+    // wave 3.1t: the generic type-variable array desc was Object[] which never matched
+    // (the frontend's `descriptorOf` reads `getSimpleName` of the type variable reference,
+    // which is `"T"`, not the erasure). The desc is now T[] to match. DynamicArray.from takes
+    // a DynamicArray (not a raw scala.Array), so the from entry is REMOVED — the arity-1
+    // fallback `Construct("apply")` fires instead, which is one counted error per site.
+    // A Template cannot fix this: `$T0` contains the substring `$0`, so the template mechanism's
+    // placeholder detection collides and corrupts the output (ENGINE-LIMITS.md pending).
+    val tArrDesc       = Descriptor(List(Param.Arr(Param.Named("T"))))
     val intArrDesc     = Descriptor(List(Param.Arr(Param.Prim("int"))))
     val floatArrDesc   = Descriptor(List(Param.Arr(Param.Prim("float"))))
     val longArrDesc    = Descriptor(List(Param.Arr(Param.Prim("long"))))
@@ -1025,16 +1037,22 @@ object LibgdxPolicy:
     val byteArrDesc    = Descriptor(List(Param.Arr(Param.Prim("byte"))))
     val charArrDesc    = Descriptor(List(Param.Arr(Param.Prim("char"))))
     val boolArrDesc    = Descriptor(List(Param.Arr(Param.Prim("boolean"))))
+    // wave 3.1t: addAll(Array/Self, int, int) desc — the 3-arg addAll copies a range from
+    // another Array/Self. After retarget, the first arg is DynamicArray, but
+    // DynamicArray.addAll(Object, int, int) takes the raw BACKING ARRAY, not a DynamicArray.
+    // Extract .items to pass the raw array.
+    val addAllArrayDesc = Descriptor(List(Param.Named("Array"), Param.Prim("int"), Param.Prim("int")))
     def genericArrayInitByDesc = Map(
       ("<init>", intDesc)      -> Construct("lowlevel.util.DynamicArray", "apply"),
       ("<init>", arrayDesc)    -> Construct("lowlevel.util.DynamicArray", "from"),
       ("<init>", supplierDesc) -> Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1),
-      ("<init>", objArrDesc)   -> Construct("lowlevel.util.DynamicArray", "from"),
+      ("addAll", addAllArrayDesc) -> Template("$recv.addAll($0.items, $1, $2)"),
     )
     def primArrayInitByDesc(selfDesc: Descriptor, rawArrDesc: Descriptor) = Map(
       ("<init>", intDesc)    -> Construct("lowlevel.util.DynamicArray", "apply"),
       ("<init>", selfDesc)   -> Construct("lowlevel.util.DynamicArray", "from"),
-      ("<init>", rawArrDesc) -> Construct("lowlevel.util.DynamicArray", "from"),
+      ("addAll", Descriptor(List(selfDesc.params.head, Param.Prim("int"), Param.Prim("int")))) ->
+        Template("$recv.addAll($0.items, $1, $2)"),
     )
     Map(
       "com.badlogic.gdx.utils.Array"                -> genericArrayInitByDesc,
