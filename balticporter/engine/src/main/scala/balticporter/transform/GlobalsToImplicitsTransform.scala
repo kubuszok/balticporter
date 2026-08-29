@@ -94,6 +94,21 @@ final class GlobalsToImplicitsTransform(
       * (`ENGINE-LIMITS.md` CT8). Empty in a base, which is why every existing fingerprint is
       * byte-identical. */
     val extensions: List[ContextHolderExtension] = Nil,
+    /** A DIRECT instruction to add `(using GivenType[T])` to a class's constructors, where `T`
+      * is the class's own first type parameter. Keyed on the class's upstream FQN; value is the
+      * fully-qualified given type (e.g. `"lowlevel.MkArray"`).
+      *
+      * ==Why this is a (b) key on THIS phase==
+      * The MECHANISM is the same as the context holder's clause attachment — find the constructors,
+      * add a `using` parameter. What differs is WHICH type: a holder threads a concrete context
+      * (`Sge`), and this threads a type-class instance applied to the class's own type parameter
+      * (e.g. `MkArray[T]` on `Octree[T]`). A `retargetConstruct` emits `ObjectSet.apply[T]()`
+      * whose `inline` factory summons `MkArray[T]` — the clause is what puts it in scope.
+      *
+      * Every `new Octree[Foo](...)` caller supplies `MkArray[Foo]` by inline given resolution.
+      * An abstract class's clause propagates to subclass constructors through `extends`.
+      * An empty map is the default and the no-op. */
+    val requiredGivens: Map[String, String] = Map.empty,
 ) extends Phase, Rewrite, PolicySource, MergeablePolicy, PolicyBound:
 
   import GlobalsToImplicitsTransform.*
@@ -130,7 +145,9 @@ final class GlobalsToImplicitsTransform(
     * dependent that contributes only extensions would be indistinguishable from a phase with no
     * policy at all. */
   def surfaceFingerprint: String =
-    (effectiveHolders.map(_.fingerprint) ++ dangling.map(_.fingerprint)).sorted.mkString(";")
+    val rg = if requiredGivens.isEmpty then "" else
+      "|rg=" + requiredGivens.toList.sorted.map((k, v) => s"$k->$v").mkString(",")
+    (effectiveHolders.map(_.fingerprint) ++ dangling.map(_.fingerprint)).sorted.mkString(";") + rg
 
   /** every shared-surface SUBJECT this instance's policy is keyed on — the holder FQNs (of holders
     * AND of extensions, so a dependent naming a base's holder is a subject the screen can see), plus
@@ -149,7 +166,8 @@ final class GlobalsToImplicitsTransform(
       (Set(h.holder) ++ h.sites.keySet ++ h.selfSupplied.keySet ++ h.retain.keySet ++
        h.cache.keySet ++ h.promoteToClass ++ h.scope.entries))
     val fromExts = extensions.flatMap(e => Set(e.holder) ++ e.keys)
-    (fromHolders ++ fromExts).map(MergeablePolicy.subjectOf).toSet
+    val fromGivens = requiredGivens.keySet
+    (fromHolders ++ fromExts ++ fromGivens).map(MergeablePolicy.subjectOf).toSet
 
   /** THE MERGE CONTRACT (DESIGN.md §8.13), and the division is `ContextHolder.sharedSurface` —
     * which is a value on the policy rather than a list here, because "which half of this is the
@@ -217,7 +235,12 @@ final class GlobalsToImplicitsTransform(
         v2       <- mine(k).cache.get(key)
         if v2 != v
       yield s"""both modules CACHE the context on "$key", as "$v2" and as "$v""""
-      (surfaceClash ++ siteClash ++ selfClash ++ retainClash ++ cacheClash) match
+      val givenClash = for
+        (k, v) <- o.requiredGivens.toList.sorted
+        v2     <- requiredGivens.get(k)
+        if v2 != v
+      yield s"""both modules require a given on "$k", "$v2" and "$v""""
+      (surfaceClash ++ siteClash ++ selfClash ++ retainClash ++ cacheClash ++ givenClash) match
         case Nil =>
           val merged = (mine.keySet ++ theirs.keySet).toList.sorted.map { k =>
             (mine.get(k), theirs.get(k)) match
@@ -230,7 +253,8 @@ final class GlobalsToImplicitsTransform(
               case (None, None)       => sys.error("unreachable: a key from the union of two maps")
           }
           Right(MergeablePolicy.Merged(
-            new GlobalsToImplicitsTransform(merged, (extensions ++ o.extensions).distinct),
+            new GlobalsToImplicitsTransform(merged, (extensions ++ o.extensions).distinct,
+              requiredGivens ++ o.requiredGivens),
             o.subjects -- subjects))
         case whys => Left(whys.mkString("; ") +
           " — two answers for one key is a threading whose outcome depends on which manifest was read")
@@ -262,6 +286,8 @@ final class GlobalsToImplicitsTransform(
     * named it. [[boundRetain]]'s shape and [[boundRetain]]'s reasons — the key is what an agent
     * edits, what a `Reason.Configured` carries and what the dead-binding report names. */
   private var boundCache: Map[String, Map[SymId, String]]         = Map.empty
+  /** `requiredGivens` entries resolved to the class symbol — class SymId -> given type FQN. */
+  private var boundGivens: Map[SymId, String]                     = Map.empty
 
   def bindPolicy(binder: PolicyBinder): Unit =
     val bad = collection.mutable.ListBuffer.empty[PolicyFinding]
@@ -367,6 +393,10 @@ final class GlobalsToImplicitsTransform(
       h.scope.entries.foreach(e =>
         binder.bindScope(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.scope", e))
     }
+    requiredGivens.foreach { (cls, givenFqn) =>
+      binder.bindType(name, s"GlobalsToImplicitsTransform.requiredGivens", cls)
+        .toOption.foreach(s => boundGivens = boundGivens.updated(s, givenFqn))
+    }
     malformed = bad.toList
     records   = binder.recordsFor(name)
 
@@ -458,8 +488,75 @@ final class GlobalsToImplicitsTransform(
 
   override def run(program: Program): Program =
     seamLog.clear(); refusals.clear(); deadSites.clear()
-    if effectiveHolders.isEmpty then return program
-    effectiveHolders.foldLeft(program)((p, h) => runHolder(p, h))
+    val afterHolders =
+      if effectiveHolders.isEmpty then program
+      else effectiveHolders.foldLeft(program)((p, h) => runHolder(p, h))
+    if boundGivens.isEmpty then afterHolders
+    else applyRequiredGivens(afterHolders)
+
+  /** Add `(using GivenType[T])` clauses to constructors of classes listed in `requiredGivens`,
+    * where `T` is the class's own first type parameter. The applied type is built structurally
+    * so the package rename reaches every component of it.
+    *
+    * Unlike the holder-based threading, this does NOT run a closure — the class is named directly,
+    * and every caller of `new C[X](...)` supplies `GivenType[X]` by inline given resolution. An
+    * abstract class's clause propagates to subclass constructors through `extends`.
+    */
+  private def applyRequiredGivens(program0: Program): Program =
+    val mint = new Minter(program0)
+    val o = Origin.synthetic
+
+    // build a map from class SymId -> (givenTypeSym, appliedTypeRef)
+    val givenEntries: Map[SymId, (SymId, TypeRepr)] = boundGivens.flatMap { (classSym, givenFqn) =>
+      val classDef = program0.definitionOf(classSym).collect { case cd: Tree.ClassDef => cd }
+      classDef.flatMap { cd =>
+        // the class's FIRST type parameter — `Octree[T]`'s `T`
+        cd.tparams.headOption.map { tp =>
+          val tpRef = TypeRepr.TypeRef(TypeRepr.NoPrefix, tp.symbol)
+          val givenTypeSym = mint.tpe(givenFqn.split('.').last, givenFqn)
+          val appliedType = TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, givenTypeSym), List(tpRef))
+          classSym -> (givenTypeSym, appliedType)
+        }
+      }
+    }
+
+    if givenEntries.isEmpty then return program0
+
+    val edit = new Phase:
+      def name = "globals->implicits/required-givens"
+      override def transformClassDef(t: Tree.ClassDef)(using p: Program): Tree.ClassDef =
+        givenEntries.get(t.symbol) match
+          case Some((_, appliedType)) =>
+            val ctors = t.body.collect { case d: Tree.DefDef if isCtor(p, d.symbol) => d.symbol }
+            if ctors.isEmpty then t
+            else t.copy(body = t.body.map {
+              case d: Tree.DefDef if ctors.contains(d.symbol) =>
+                val param = mint.usingParam(d.symbol, appliedType.toString, appliedType, d.origin)
+                d.copy(paramss = d.paramss :+ List(param))
+              case s => s
+            })
+          case None => t
+
+    val prog1 = program0.rebuilt(symbols = SymbolTable(program0.symbols.all ++ mint.minted))
+    val units1 = prog1.units.map(u => StandardTraversal.mapClassDef(edit, u)(using prog1))
+    val prog2 = prog1.rebuilt(units = units1, symbols = SymbolTable(prog1.symbols.all ++ mint.minted))
+
+    // record decisions
+    boundGivens.foreach { (classSym, givenFqn) =>
+      program0.symbolOf(classSym).foreach { s =>
+        record(Decision(
+          kind = Decision.Kind.RequiredGiven,
+          subject = classSym,
+          subjectFqn = s.fullName,
+          detail = Map("given" -> givenFqn, "why" -> ("a retarget construction inside this class's " +
+            "body needs MkArray[T] and the factory's inline summon cannot resolve a type parameter")),
+          reason = Reason.Configured(name, s"requiredGivens/${s.fullName}"),
+          origin = Decision.originOf(program0, classSym),
+        ))
+      }
+    }
+
+    prog2.rebuilt(xref = Xref.build(prog2.units))
 
   private def runHolder(program0: Program, h: ContextHolder): Program =
     val statics: Map[SymId, String] =

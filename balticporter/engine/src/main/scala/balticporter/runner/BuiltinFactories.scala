@@ -537,7 +537,8 @@ final class GlobalsToImplicitsFactory extends TransformFactory:
     // any shared-surface key written inside such a block is an unread key the loader already
     // refuses. §1.5 is then structural rather than a convention on both sides of the front door.
     val (exts, full) = hs.partition(_.child("context").isEmpty)
-    new GlobalsToImplicitsTransform(full.map(holder), exts.map(extension))
+    val rg = config.stringMap("requiredGivens").getOrElse(Map.empty)
+    new GlobalsToImplicitsTransform(full.map(holder), exts.map(extension), rg)
 
   private def extension(c: ConfigView): ContextHolderExtension =
     ContextHolderExtension(

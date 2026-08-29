@@ -347,6 +347,10 @@ object Decision:
       * reader of the emitted `@nowarn` is owed the reason it is there. The DETAIL says which method
       * triggered the suppression. */
     case SuppressedWarning
+    /** a `(using GivenType[T])` clause added to a class's constructors because a retarget
+      * construction inside its body needs the given in scope — the class's callers supply it by
+      * inline given resolution. */
+    case RequiredGiven
 
   val Header ="#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 

@@ -1836,6 +1836,23 @@ object LibgdxPolicy:
                |    }; j = j - 1 } }
                |  }; i = i + 1 } }
                |}""".stripMargin,
+           // wave 3.1v: MapLayers.getByType(Class) and MapObjects.getByType(Class) — `new Array<T>()`
+           // at a METHOD-level type parameter T. MkArray[T] is not summonable inline here because
+           // T <: MapLayer/MapObject and the inline given resolves only for T <: AnyRef directly.
+           // Provide a local given as sge's `createRef` pattern does.
+           // The 2-arg overload takes an existing array — no construction needed.
+           "com.badlogic.gdx.maps.MapLayers#getByType(Class)" ->
+             """{
+               |  @scala.annotation.nowarn("msg=unused local definition")
+               |  given lowlevel.MkArray[T] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[T]]
+               |  return this.getByType(`type`, lowlevel.util.DynamicArray[T]())
+               |}""".stripMargin,
+           "com.badlogic.gdx.maps.MapObjects#getByType(Class)" ->
+             """{
+               |  @scala.annotation.nowarn("msg=unused local definition")
+               |  given lowlevel.MkArray[T] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[T]]
+               |  return this.getByType(`type`, lowlevel.util.DynamicArray[T]())
+               |}""".stripMargin,
            // wave 3.1t: Actor.<clinit> — `new DynamicArray()` inside a lambda in the companion's
            // static initialiser. DynamicArray's constructor is private; must use the factory.
            "com.badlogic.gdx.scenes.scene2d.Actor#<clinit>" ->
@@ -1957,7 +1974,7 @@ object LibgdxPolicy:
     * this phase alone reports 1 warning, not 25 — CLAUDE.md §5, and it is why the number is quoted
     * from the pipeline. */
   def globalsToContext: balticporter.transform.GlobalsToImplicitsTransform =
-    new balticporter.transform.GlobalsToImplicitsTransform(List(
+    new balticporter.transform.GlobalsToImplicitsTransform(holders = List(
       balticporter.transform.ContextHolder(
         holder   = "com.badlogic.gdx.Gdx",
         context  = balticporter.transform.ContextType.Injected("sge.Sge"),
@@ -1987,6 +2004,18 @@ object LibgdxPolicy:
             balticporter.transform.ContextSite.LazyInit,
         ),
       )
+    ),
+    // wave 3.1v: classes whose retarget constructions need `MkArray[T]` in scope.
+    // sge's Octree uses ClassTag (different retarget target); the port's retarget to lls types
+    // requires MkArray, which is the right bound for the lls factory's inline summon.
+    // BufferedParticleBatch is abstract; the clause propagates to subclass constructors.
+    requiredGivens = Map(
+      "com.badlogic.gdx.math.Octree" -> "lowlevel.MkArray",
+      "com.badlogic.gdx.math.BSpline" -> "lowlevel.MkArray",
+      "com.badlogic.gdx.math.Bezier" -> "lowlevel.MkArray",
+      "com.badlogic.gdx.utils.FlushablePool" -> "lowlevel.MkArray",
+      "com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch" -> "lowlevel.MkArray",
+      "com.badlogic.gdx.graphics.glutils.GLFrameBuffer" -> "lowlevel.MkArray",
     ))
 
   /** libGDX's GL texture handle — the `int` that is really a texture name — as an opaque type, which
