@@ -1811,6 +1811,15 @@ object LibgdxPolicy:
                |      } else ()
                |    }; j = j - 1 } }
                |  }; i = i + 1 } }
+               |}""".stripMargin,
+           // wave 3.1t: Actor.<clinit> — `new DynamicArray()` inside a lambda in the companion's
+           // static initialiser. DynamicArray's constructor is private; must use the factory.
+           "com.badlogic.gdx.scenes.scene2d.Actor#<clinit>" ->
+             """{
+               |  Actor.POOLS.addPool(classOf[sge.math.Rectangle], ((() => new sge.math.Rectangle()): sge.utils.DefaultPool.PoolSupplier[sge.math.Rectangle]))
+               |  Actor.POOLS.addPool(classOf[lowlevel.util.DynamicArray[?]], ((() => lowlevel.util.DynamicArray[Any]()): sge.utils.DefaultPool.PoolSupplier[lowlevel.util.DynamicArray[?]]))
+               |  Actor.POOLS.addPool(classOf[sge.graphics.g2d.GlyphLayout], ((() => new sge.graphics.g2d.GlyphLayout()): sge.utils.DefaultPool.PoolSupplier[sge.graphics.g2d.GlyphLayout]))
+               |  Actor.POOLS.addPool(classOf[sge.scenes.scene2d.utils.ChangeListener.ChangeEvent], ((() => new sge.scenes.scene2d.utils.ChangeListener.ChangeEvent()): sge.utils.DefaultPool.PoolSupplier[sge.scenes.scene2d.utils.ChangeListener.ChangeEvent]))
                |}""".stripMargin
          )))
 
