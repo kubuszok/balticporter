@@ -2,6 +2,7 @@ package balticporter.corpus.libgdx
 
 import balticporter.core.{FrontendConfig, ParityRef, PortManifest, Provenance, RuntimeMode, Substitutions}
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
+import balticporter.tir.{Descriptor, Param}
 import balticporter.transform.{ClassTableTransform, CollectionsTransform, MutableParamsTransform, PanamaFfiTransform, StaticForwarderTransform, TestFrameworkTransform}
 
 import java.nio.file.{Files, Path}
@@ -760,7 +761,7 @@ object LibgdxPolicy:
       // No ForEach needed: DynamicArray supports `for (x <- da)` natively (verified).
       "com.badlogic.gdx.utils.Array" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"), // fallback — desc keys win
         ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
         // arity 3: Array(boolean, int, ArraySupplier) — drop the ArraySupplier (lls uses MkArray).
         // Array(boolean, int, Class) is in dropMethods.
@@ -805,7 +806,7 @@ object LibgdxPolicy:
       // lls DynamicArray has begin/end built in).
       "com.badlogic.gdx.utils.SnapshotArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"), // fallback — desc keys win
         ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
         ("<init>", 3) -> Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1),
         ("get", 1)          -> Rename("apply"),
@@ -833,7 +834,7 @@ object LibgdxPolicy:
       ),
       "com.badlogic.gdx.utils.DelayedRemovalArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"), // fallback — desc keys win
         ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
         ("<init>", 3) -> Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1),
         ("get", 1)          -> Rename("apply"),
@@ -863,7 +864,7 @@ object LibgdxPolicy:
       // sge type-mappings.md: "IntArray -> DynamicArray[Int]", etc.
       "com.badlogic.gdx.utils.IntArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"), // fallback — desc keys win
         ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
         ("get", 1)      -> Rename("apply"),
         ("set", 2)      -> Rename("update"),
@@ -880,7 +881,7 @@ object LibgdxPolicy:
       ),
       "com.badlogic.gdx.utils.FloatArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"), // fallback — desc keys win
         ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
         ("get", 1)      -> Rename("apply"),
         ("set", 2)      -> Rename("update"),
@@ -897,7 +898,7 @@ object LibgdxPolicy:
       ),
       "com.badlogic.gdx.utils.LongArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"), // fallback — desc keys win
         ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
         ("get", 1)      -> Rename("apply"),
         ("set", 2)      -> Rename("update"),
@@ -914,7 +915,7 @@ object LibgdxPolicy:
       ),
       "com.badlogic.gdx.utils.ShortArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"), // fallback — desc keys win
         ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
         ("get", 1)      -> Rename("apply"),
         ("set", 2)      -> Rename("update"),
@@ -931,7 +932,7 @@ object LibgdxPolicy:
       ),
       "com.badlogic.gdx.utils.ByteArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"), // fallback — desc keys win
         ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
         ("get", 1)      -> Rename("apply"),
         ("set", 2)      -> Rename("update"),
@@ -948,7 +949,7 @@ object LibgdxPolicy:
       ),
       "com.badlogic.gdx.utils.CharArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"), // fallback — desc keys win
         ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
         ("get", 1)      -> Rename("apply"),
         ("set", 2)      -> Rename("update"),
@@ -966,7 +967,7 @@ object LibgdxPolicy:
       ),
       "com.badlogic.gdx.utils.BooleanArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"), // fallback — desc keys win
         ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
         ("get", 1)      -> Rename("apply"),
         ("set", 2)      -> Rename("update"),
@@ -999,6 +1000,47 @@ object LibgdxPolicy:
         ("toArray", 0)    -> Chain(List("toArray")),
         ("toArray", 1)    -> Chain(List("toArray"), dropArgs = true),
       ),
+    )
+
+  /** DESCRIPTOR-KEYED retarget rewrites — for arity-1 constructors where `(name, arity)` is
+    * ambiguous. `Array` has four surviving arity-1 constructors: `(int)` capacity,
+    * `(ArraySupplier)` factory, `(Array)` copy, `(T[])` from-array. §4.55: a map from an
+    * over-approximate key to a single value is a choice nobody made. */
+  def libCollectionConstructRewritesByDesc: Map[String, Map[(String, Descriptor), balticporter.transform.CollectionsTransform.RetargetRewrite]] =
+    import balticporter.transform.CollectionsTransform.RetargetRewrite.*
+    val intDesc        = Descriptor(List(Param.Prim("int")))
+    val arrayDesc      = Descriptor(List(Param.Named("Array")))
+    val supplierDesc   = Descriptor(List(Param.Named("ArraySupplier")))
+    val objArrDesc     = Descriptor(List(Param.Arr(Param.Named("Object"))))
+    val intArrDesc     = Descriptor(List(Param.Arr(Param.Prim("int"))))
+    val floatArrDesc   = Descriptor(List(Param.Arr(Param.Prim("float"))))
+    val longArrDesc    = Descriptor(List(Param.Arr(Param.Prim("long"))))
+    val shortArrDesc   = Descriptor(List(Param.Arr(Param.Prim("short"))))
+    val byteArrDesc    = Descriptor(List(Param.Arr(Param.Prim("byte"))))
+    val charArrDesc    = Descriptor(List(Param.Arr(Param.Prim("char"))))
+    val boolArrDesc    = Descriptor(List(Param.Arr(Param.Prim("boolean"))))
+    def genericArrayInitByDesc = Map(
+      ("<init>", intDesc)      -> Construct("lowlevel.util.DynamicArray", "apply"),
+      ("<init>", arrayDesc)    -> Construct("lowlevel.util.DynamicArray", "from"),
+      ("<init>", supplierDesc) -> Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1),
+      ("<init>", objArrDesc)   -> Construct("lowlevel.util.DynamicArray", "from"),
+    )
+    def primArrayInitByDesc(selfDesc: Descriptor, rawArrDesc: Descriptor) = Map(
+      ("<init>", intDesc)    -> Construct("lowlevel.util.DynamicArray", "apply"),
+      ("<init>", selfDesc)   -> Construct("lowlevel.util.DynamicArray", "from"),
+      ("<init>", rawArrDesc) -> Construct("lowlevel.util.DynamicArray", "from"),
+    )
+    Map(
+      "com.badlogic.gdx.utils.Array"                -> genericArrayInitByDesc,
+      "com.badlogic.gdx.utils.SnapshotArray"        -> genericArrayInitByDesc,
+      "com.badlogic.gdx.utils.DelayedRemovalArray"  -> genericArrayInitByDesc,
+      "com.badlogic.gdx.utils.IntArray"             -> primArrayInitByDesc(Descriptor(List(Param.Named("IntArray"))), intArrDesc),
+      "com.badlogic.gdx.utils.FloatArray"           -> primArrayInitByDesc(Descriptor(List(Param.Named("FloatArray"))), floatArrDesc),
+      "com.badlogic.gdx.utils.LongArray"            -> primArrayInitByDesc(Descriptor(List(Param.Named("LongArray"))), longArrDesc),
+      "com.badlogic.gdx.utils.ShortArray"           -> primArrayInitByDesc(Descriptor(List(Param.Named("ShortArray"))), shortArrDesc),
+      "com.badlogic.gdx.utils.ByteArray"            -> primArrayInitByDesc(Descriptor(List(Param.Named("ByteArray"))), byteArrDesc),
+      "com.badlogic.gdx.utils.CharArray"            -> primArrayInitByDesc(Descriptor(List(Param.Named("CharArray"))), charArrDesc),
+      "com.badlogic.gdx.utils.BooleanArray"         -> primArrayInitByDesc(Descriptor(List(Param.Named("BooleanArray"))), boolArrDesc),
     )
 
   /** `com.badlogic.gdx.utils.Disposable` → `java.lang.AutoCloseable`, with `dispose` → `close`.
@@ -1413,6 +1455,7 @@ object LibgdxPolicy:
     List(beanProperties, nullaryArity,
          new CollectionsTransform(retarget = comparatorRetarget ++ bitsRetarget ++ libCollectionRetargets,
                                   retargetRewrites = bitsRetargetRewrites ++ libCollectionConstructRewrites,
+                                  retargetRewritesByDesc = libCollectionConstructRewritesByDesc,
                                   retargetTypeArgs = libCollectionRetargetTypeArgs), new MutableParamsTransform,
          new PanamaFfiTransform(), unwrapReflection, classTable, new GdxSharedIteratorRule,
          memberRenames, disposableRedirect, textureHandle, align, uniformLocation,

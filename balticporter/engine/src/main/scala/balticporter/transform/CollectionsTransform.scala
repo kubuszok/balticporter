@@ -89,8 +89,28 @@ final class CollectionsTransform(
       *     otherwise refuses and counts on the existing `collection-retarget` lane.
       *
       * Empty is the default and the no-op. The fingerprint segment is omitted when empty.
-      * `MergeablePolicy` unions independent keys; same source with different target refuses. */
+      * `MergeablePolicy` unions independent keys; same source with different target refuses.
+      *
+      * Where a member NAME is overloaded at the same ARITY — `Array` has three arity-1 constructors
+      * `(int)`, `(T[])`, `(Array)` — the `(name, arity)` key is ambiguous (CLAUDE.md §4.55: a map
+      * from an over-approximate key to a single value is a choice nobody made). Use
+      * [[retargetRewritesByDesc]] for those entries: a `(name, Descriptor)` key wins over a
+      * `(name, arity)` key at the same member, so both maps coexist. */
     val retargetRewrites: Map[String, Map[(String, Int), CollectionsTransform.RetargetRewrite]] = Map.empty,
+    /** DESCRIPTOR-KEYED retarget rewrites — the precise form for overloaded members.
+      *
+      * Same semantics as [[retargetRewrites]] but keyed on `(name, Descriptor)` instead of
+      * `(name, arity)`. A descriptor key WINS over an arity key at the same member: at a call
+      * site, the lookup tries the descriptor map first (if the callee has a `Symbol.descriptor`),
+      * then falls back to the arity map.
+      *
+      * Use this for members that are overloaded at the same arity — e.g. `Array` has three arity-1
+      * constructors (`Array(int)`, `Array(T[])`, `Array(Array)`), each needing a different rewrite.
+      * The `.conf` spelling for a descriptor key is `"name/(descriptor)"` — e.g.
+      * `"<init>/(int)" = "apply"` or `"<init>/(Array)" { companion = "…", factory = "from" }`.
+      *
+      * Empty is the default and the no-op. */
+    val retargetRewritesByDesc: Map[String, Map[(String, Descriptor), CollectionsTransform.RetargetRewrite]] = Map.empty,
     /** TYPE ARGUMENT MAPPING for arity-changing retargets — source FQN -> target arg template.
       *
       * When a retarget changes the type parameter count (e.g. `IntMap<V>` (1 param) ->
@@ -276,7 +296,7 @@ final class CollectionsTransform(
       // `Bits.get(i)` became `apply(i)` and a dependent whose did not emit call sites that cannot
       // compile together. Segment omitted when empty, so a port that declares none has the
       // fingerprint it always had (§1(b)'s fingerprint rule).
-      scala.Option.when(retargetRewrites.nonEmpty)(
+      scala.Option.when(retargetRewrites.nonEmpty || retargetRewritesByDesc.nonEmpty)(
         "retargetRewrites=" + retargetRewritesDigest),
       // A RETARGET TYPE ARG MAPPING is the same surface fact: a base whose `IntMap` fields became
       // `ObjectMap[Int,V]` and a dependent whose became `ObjectMap[V]` emit incompatible signatures.
@@ -333,12 +353,14 @@ final class CollectionsTransform(
       // --- retargetRewrites clashes: same source FQN, different rewrite table ---
       val rewriteClash = (retargetRewrites.keySet & o.retargetRewrites.keySet)
         .filter(k => retargetRewrites(k) != o.retargetRewrites(k))
+      val descRewriteClash = (retargetRewritesByDesc.keySet & o.retargetRewritesByDesc.keySet)
+        .filter(k => retargetRewritesByDesc(k) != o.retargetRewritesByDesc(k))
       // --- retargetTypeArgs clashes: same source FQN, different arg mapping ---
       val typeArgsClash = (retargetTypeArgs.keySet & o.retargetTypeArgs.keySet)
         .filter(k => retargetTypeArgs(k) != o.retargetTypeArgs(k))
       // --- carrier/sink disagreements are NOT surface and therefore NOT a refusal ---
       if retargetClash.nonEmpty || familyClash.nonEmpty || crossClash.nonEmpty ||
-          scopeClash.nonEmpty || rewriteClash.nonEmpty || typeArgsClash.nonEmpty then
+          scopeClash.nonEmpty || rewriteClash.nonEmpty || descRewriteClash.nonEmpty || typeArgsClash.nonEmpty then
         Left(
           (retargetClash.toList.sorted.map(k =>
              s"""both modules retarget "$k", to "${retarget(k)}" and "${o.retarget(k)}"""") ++
@@ -353,6 +375,8 @@ final class CollectionsTransform(
                "decides which declarations carry the family type in their signatures") ++
            rewriteClash.toList.sorted.map(k =>
              s"""both modules declare retarget rewrites for "$k" and disagree""") ++
+           descRewriteClash.toList.sorted.map(k =>
+             s"""both modules declare descriptor-keyed retarget rewrites for "$k" and disagree""") ++
            typeArgsClash.toList.sorted.map(k =>
              s"""both modules declare retarget type args for "$k" and disagree"""))
             .mkString("; ") +
@@ -360,6 +384,7 @@ final class CollectionsTransform(
       else
         val mergedRetarget = retarget ++ o.retarget
         val mergedRewrites = retargetRewrites ++ o.retargetRewrites
+        val mergedDescRewrites = retargetRewritesByDesc ++ o.retargetRewritesByDesc
         val mergedTypeArgs = retargetTypeArgs ++ o.retargetTypeArgs
         val mergedFamilies = families ++ o.families
         val mergedFamilyScopes = familyScopes ++ o.familyScopes
@@ -373,6 +398,7 @@ final class CollectionsTransform(
             scope            = scope, // the base's scope — inherited
             retarget         = mergedRetarget,
             retargetRewrites = mergedRewrites,
+            retargetRewritesByDesc = mergedDescRewrites,
             retargetTypeArgs = mergedTypeArgs,
             reifiedCarriers  = mergedCarriers,
             reflectiveSinks  = mergedSinks,
@@ -408,7 +434,25 @@ final class CollectionsTransform(
     require(orphanTypeArgs.isEmpty,
       s"CollectionsTransform: retargetTypeArgs key(s) ${orphanTypeArgs.mkString(", ")} have no " +
         "matching retarget entry — an arg mapping for a type this phase does not retarget is dead code")
+    val orphanDescRewrites = retargetRewritesByDesc.keySet -- retarget.keySet
+    require(orphanDescRewrites.isEmpty,
+      s"CollectionsTransform: retargetRewritesByDesc key(s) ${orphanDescRewrites.mkString(", ")} have no " +
+        "matching retarget entry — a rewrite table for a type this phase does not retarget is dead code")
   }
+
+  /** Look up a retarget rewrite for a call at `(srcFqn, memberName, arity)`.
+    *
+    * Descriptor-keyed entries WIN over arity-keyed entries at the same member (§4.55: a loose key
+    * indexing to a single value is a choice nobody made). The callee's [[Symbol.descriptor]] is
+    * compared through [[Descriptor.matches]], which normalises simple names. */
+  private def lookupRewrite(srcFqn: String, name: String, arity: Int, desc: Option[Descriptor]): Option[CollectionsTransform.RetargetRewrite] =
+    desc.flatMap { d =>
+      retargetRewritesByDesc.get(srcFqn).flatMap { tbl =>
+        tbl.collectFirst { case ((n, dd), rw) if n == name && dd.matches(d) => rw }
+      }
+    }.orElse(
+      retargetRewrites.get(srcFqn).flatMap(_.get((name, arity)))
+    )
 
   /** java fully-qualified name → (scala fully-qualified name, collection kind).
     *
@@ -432,8 +476,9 @@ final class CollectionsTransform(
       families.toList.map((k, v) => s"$k->${v._1}:${v._2};scope=${familyScopeOf(k).fingerprint}")
         .sorted.mkString(",")).take(16)
 
-  /** digest of the `retargetRewrites` table — sorted by source FQN then by (member, arity).
-    * Used only when `retargetRewrites.nonEmpty`. */
+  /** digest of the `retargetRewrites` + `retargetRewritesByDesc` tables — sorted by source FQN
+    * then by key rendering. Arity-keyed entries render as `src#name/arity->Rw`, descriptor-keyed
+    * as `src#name/(desc)->Rw`. The two maps are combined so one digest covers both. */
   private def retargetRewritesDigest: String =
     def renderRw(rw: CollectionsTransform.RetargetRewrite): String = rw match
       case CollectionsTransform.RetargetRewrite.Rename(t) => s"Rename($t)"
@@ -449,10 +494,13 @@ final class CollectionsTransform(
         if da then s"$base;dropArgs" else base
       case CollectionsTransform.RetargetRewrite.FieldWrite(f, m) => s"FieldWrite($f,$m)"
       case CollectionsTransform.RetargetRewrite.IndexedField(f) => s"IndexedField($f)"
-    balticporter.tir.TirPrinter.sha256(
-      retargetRewrites.toList.sortBy(_._1).flatMap { (src, tbl) =>
-        tbl.toList.sortBy(_._1.toString).map { case ((m, ar), rw) => s"$src#$m/$ar->${renderRw(rw)}" }
-      }.mkString(",")).take(16)
+    val arityEntries = retargetRewrites.toList.sortBy(_._1).flatMap { (src, tbl) =>
+      tbl.toList.sortBy(_._1.toString).map { case ((m, ar), rw) => s"$src#$m/$ar->${renderRw(rw)}" }
+    }
+    val descEntries = retargetRewritesByDesc.toList.sortBy(_._1).flatMap { (src, tbl) =>
+      tbl.toList.sortBy(_._1.toString).map { case ((m, d), rw) => s"$src#$m/(${d.render})->${renderRw(rw)}" }
+    }
+    balticporter.tir.TirPrinter.sha256((arityEntries ++ descEntries).mkString(",")).take(16)
 
   /** digest of the `retargetTypeArgs` table — sorted by source FQN, each arg rendered as
     * `arg(i)` or `fixed(fqn)`. Used only when `retargetTypeArgs.nonEmpty`. */
@@ -740,7 +788,7 @@ final class CollectionsTransform(
           // First: try to rewrite the call itself as a Collect
           val collectResult = headSym(recv.tpe).flatMap(retargetTargetToSource.get).flatMap { srcFqn =>
             val mName = methodName(m)
-            retargetRewrites.get(srcFqn).flatMap(_.get((mName, 0))).flatMap {
+            lookupRewrite(srcFqn, mName, 0, None).flatMap {
               case rw: CollectionsTransform.RetargetRewrite.Collect =>
                 emitCollect(recv, srcFqn, rw, so)
               case _ => scala.None
@@ -1027,7 +1075,7 @@ final class CollectionsTransform(
         // retargetTargetToSource (a Map, so .toMap keeps the last), and every other source's
         // Chain/Rename/Collect entries never fire (§4.55: a loose key indexes to a List).
         val needsOwnSym = retargetTypeArgs.contains(s.fullName) ||
-          retargetRewrites.contains(s.fullName)
+          retargetRewrites.contains(s.fullName) || retargetRewritesByDesc.contains(s.fullName)
         val sym = if needsOwnSym then
           mint(sc.substring(sc.lastIndexOf('.') + 1), sc)
         else
@@ -1225,6 +1273,27 @@ final class CollectionsTransform(
         case _: CollectionsTransform.RetargetRewrite.IndexedField =>
           Nil // no minted symbol needed — the field select is stripped, not renamed
       }
+    } ++ retargetRewritesByDesc.flatMap { (src, tbl) =>
+      tbl.values.flatMap {
+        case CollectionsTransform.RetargetRewrite.Construct(companionFqn, factoryMethod, _, _) =>
+          val fqn = s"$companionFqn.$factoryMethod"
+          List((src, fqn) -> mint(factoryMethod, fqn))
+        case CollectionsTransform.RetargetRewrite.Rename(target) =>
+          List((src, target) -> mint(target, s"$src#retargetRewrite:$target"))
+        case CollectionsTransform.RetargetRewrite.BoolDispatch(_, onTrue, onFalse) =>
+          List(
+            (src, onTrue)  -> mint(onTrue, s"$src#retargetRewrite:$onTrue"),
+            (src, onFalse) -> mint(onFalse, s"$src#retargetRewrite:$onFalse"))
+        case CollectionsTransform.RetargetRewrite.ForEach(targetMethod, _) =>
+          List((src, targetMethod) -> mint(targetMethod, s"$src#retargetRewrite:$targetMethod"))
+        case CollectionsTransform.RetargetRewrite.Collect(via, _) =>
+          List((src, via) -> mint(via, s"$src#retargetRewrite:$via"))
+        case CollectionsTransform.RetargetRewrite.Chain(members, _, _) =>
+          members.map(m => (src, m) -> mint(m, s"$src#retargetRewrite:$m"))
+        case CollectionsTransform.RetargetRewrite.FieldWrite(_, method) =>
+          List((src, method) -> mint(method, s"$src#retargetRewrite:$method"))
+        case _: CollectionsTransform.RetargetRewrite.IndexedField => Nil
+      }
     }
     enumMapOfTypeSym    = mint("ofType", s"${CollectionsTransform.JavaEnumMapFqn}.ofType")
     enumSetSyms = List("noneOf", "allOf", "of", "copyOf", "range", "complementOf")
@@ -1342,7 +1411,8 @@ final class CollectionsTransform(
     // Collect post-pass: standalone keys()/values() calls that survived the main traversal.
     // The main pass returned None for Collect entries in retargetRewrite, letting retargetForEach
     // consume the for-each iterables.  Whatever remains is a standalone call.
-    if retargetRewrites.values.exists(_.values.exists(_.isInstanceOf[CollectionsTransform.RetargetRewrite.Collect])) then
+    if retargetRewrites.values.exists(_.values.exists(_.isInstanceOf[CollectionsTransform.RetargetRewrite.Collect])) ||
+        retargetRewritesByDesc.values.exists(_.values.exists(_.isInstanceOf[CollectionsTransform.RetargetRewrite.Collect])) then
       collectPassActive = true
       units = units.map(u => StandardTraversal.mapClassDef(collectPhase, u))
       collectPassActive = false
@@ -3137,12 +3207,12 @@ final class CollectionsTransform(
     * the assignment becomes a call. Keyed on SYMBOL via [[retargetTargetToSource]], never a name
     * (§4.56). */
   private def retargetFieldWrite(a: Tree.Assign)(using p: Program): Option[Term] =
-    if retargetRewrites.isEmpty then return scala.None
+    if retargetRewrites.isEmpty && retargetRewritesByDesc.isEmpty then return scala.None
     a.lhs match
       case sel: Tree.Select =>
         headSym(sel.qual.tpe).flatMap(retargetTargetToSource.get).flatMap { srcFqn =>
           val mName = methodName(sel.sym)
-          retargetRewrites.get(srcFqn).flatMap(_.get((mName, 0))).flatMap {
+          lookupRewrite(srcFqn, mName, 0, None).flatMap {
             case CollectionsTransform.RetargetRewrite.FieldWrite(_, method) =>
               retargetRewriteSyms.get((srcFqn, method)).map { tgtSym =>
                 Tree.Apply(
@@ -3218,10 +3288,10 @@ final class CollectionsTransform(
     // Rename entries at a SELECT (nullary property access, e.g. bean-property renamed `isEmpty` ->
     // `empty`).  The retargetRewrite table has `("empty", 0) -> Rename("isEmpty")`, but
     // retargetRewrite fires only on Tree.Apply.  A bean-property-renamed member is a Tree.Select.
-    if retargetRewrites.nonEmpty then
+    if retargetRewrites.nonEmpty || retargetRewritesByDesc.nonEmpty then
       headSym(sel.qual.tpe).flatMap(retargetTargetToSource.get).flatMap { srcFqn =>
         val mName = methodName(sel.sym)
-        retargetRewrites.get(srcFqn).flatMap(_.get((mName, 0))).flatMap {
+        lookupRewrite(srcFqn, mName, 0, None).flatMap {
           case CollectionsTransform.RetargetRewrite.Rename(target) =>
             retargetRewriteSyms.get((srcFqn, target)).map { tgtSym =>
               Tree.Select(sel.qual, tgtSym, sel.tpe, sel.origin)
@@ -3447,7 +3517,7 @@ final class CollectionsTransform(
     * `.key`/`.value` select is a reference to the whole entry, which has no lls image — the
     * for-each is left unchanged and counted. */
   private def retargetForEach(fe: Tree.ForEach)(using p: Program): Option[Term] =
-    if retargetRewrites.isEmpty then return scala.None
+    if retargetRewrites.isEmpty && retargetRewritesByDesc.isEmpty then return scala.None
     // extract the receiver and member from the iterable — must be a call `recv.member()`,
     // OR a bare reference to a Kind.Map retarget target (java's `for (Entry e : map)` iterates
     // entries implicitly — the retarget removed the `Iterable<Entry>` parent, so the desugared
@@ -3463,12 +3533,12 @@ final class CollectionsTransform(
         // so the desugared `map.foreach(...)` has no `foreach` — image it through the ENTRIES
         // ForEach, which is the same iteration the java performed.
         headSym(bareRef.tpe).flatMap(retargetTargetToSource.get) match
-          case Some(src) if retargetRewrites.get(src).exists(_.get(("entries", 0))
-                .exists(_.isInstanceOf[CollectionsTransform.RetargetRewrite.ForEach])) =>
+          case Some(src) if lookupRewrite(src, "entries", 0, None)
+                .exists(_.isInstanceOf[CollectionsTransform.RetargetRewrite.ForEach]) =>
             (bareRef, SymId.None, src)
           case _ => return scala.None
     val mName = if memberSym == SymId.None then "entries" else methodName(memberSym)
-    val rewrite = retargetRewrites.get(srcFqn).flatMap(_.get((mName, 0))) match
+    val rewrite = lookupRewrite(srcFqn, mName, 0, None) match
       case Some(rw: CollectionsTransform.RetargetRewrite.ForEach) => rw
       case Some(rw: CollectionsTransform.RetargetRewrite.Collect) =>
         CollectionsTransform.RetargetRewrite.ForEach(rw.via, 1)
@@ -6794,11 +6864,12 @@ final class CollectionsTransform(
     * strips the flag arg and calls the appropriate target; otherwise returns `None` (the call stays
     * unchanged and `RetargetBoundaryCheck` counts it on the existing `collection-retarget` lane). */
   private def retargetRewrite(recv: Term, m: SymId, so: Origin, t: Tree.Apply)(using p: Program): Option[Term] =
-    if retargetRewrites.isEmpty then return scala.None
+    if retargetRewrites.isEmpty && retargetRewritesByDesc.isEmpty then return scala.None
     headSym(recv.tpe).flatMap(retargetTargetToSource.get).flatMap { srcFqn =>
       val mName = methodName(m)
       val arity = t.args.size
-      retargetRewrites.get(srcFqn).flatMap(_.get((mName, arity))).flatMap {
+      val desc = p.symbolOf(m).flatMap(_.descriptor)
+      lookupRewrite(srcFqn, mName, arity, desc).flatMap {
         case CollectionsTransform.RetargetRewrite.Rename(target) =>
           retargetRewriteSyms.get((srcFqn, target)).map { tgtSym =>
             call(recv, tgtSym, t.args, t, so)
@@ -6878,10 +6949,12 @@ final class CollectionsTransform(
     * has a `Construct` entry for `("<init>", arity)`. Replaces the `Tree.New` with a companion
     * factory call via a minted symbol whose fullName is `companionFqn.factoryMethod`. */
   private def retargetConstruct(t: Tree.Apply)(using p: Program): Option[Term] = t.fun match
-    case n: Tree.New if retargetRewrites.nonEmpty =>
+    case n: Tree.New if retargetRewrites.nonEmpty || retargetRewritesByDesc.nonEmpty =>
       headSym(n.tpe).flatMap(retargetTargetToSource.get).flatMap { srcFqn =>
         val arity = t.args.size
-        retargetRewrites.get(srcFqn).flatMap(_.get(("<init>", arity))).flatMap {
+        val ctorSym = p.symbolOf(t.method)
+        val desc = ctorSym.flatMap(_.descriptor).orElse(ctorSym.flatMap(s => Descriptor.ofInfo(p, s)))
+        lookupRewrite(srcFqn, "<init>", arity, desc).flatMap {
           case CollectionsTransform.RetargetRewrite.Construct(companionFqn, factoryMethod, dropTrailing, fillTypeArgs) =>
             val fqn = s"$companionFqn.$factoryMethod"
             retargetRewriteSyms.get((srcFqn, fqn)).map { factorySym =>

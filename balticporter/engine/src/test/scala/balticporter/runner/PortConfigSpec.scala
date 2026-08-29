@@ -1,7 +1,7 @@
 package balticporter.runner
 
 import balticporter.core.{FrontendConfig, ManifestAgreement, PortManifest, Provenance, RuntimeMode}
-import balticporter.tir.{ConfigError, RuleScope}
+import balticporter.tir.{ConfigError, Descriptor, Param, RuleScope}
 import balticporter.transform.{BeanPropertyTransform, CollectionsTransform, MutableParamsTransform,
   TestFrameworkTransform, TypeRedirectTransform}
 
@@ -224,6 +224,194 @@ class PortConfigSpec extends munit.FunSuite:
     val tbl = ct.retargetRewrites("com.demo.Widget")
     assertEquals(tbl(("<init>", 0)),
       CollectionsTransform.RetargetRewrite.Construct("lowlevel.X", "apply"))
+  }
+
+  test("retargetRewrites with Construct entries parse dropTrailing and fillTypeArgs") {
+    val conf = Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", surface = [ { transform = "collections",
+        |  retarget { "com.demo.Widget" = "lowlevel.X" }
+        |  retargetRewrites { "com.demo.Widget" {
+        |    "<init>/4" { companion = "lowlevel.X", factory = "apply", dropTrailing = 2, fillTypeArgs = true }
+        |  } }
+        |} ] }""".stripMargin)
+    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
+      .collectFirst { case c: CollectionsTransform => c }.get
+    val tbl = ct.retargetRewrites("com.demo.Widget")
+    assertEquals(tbl(("<init>", 4)),
+      CollectionsTransform.RetargetRewrite.Construct("lowlevel.X", "apply", dropTrailing = 2, fillTypeArgs = true))
+  }
+
+  test("retargetRewrites with ForEach entries are parsed from config") {
+    val conf = Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", surface = [ { transform = "collections",
+        |  retarget { "com.demo.Widget" = "scala.X" }
+        |  retargetRewrites { "com.demo.Widget" {
+        |    "entries/0" { forEach = "foreachEntry", arity = 2 }
+        |  } }
+        |} ] }""".stripMargin)
+    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
+      .collectFirst { case c: CollectionsTransform => c }.get
+    val tbl = ct.retargetRewrites("com.demo.Widget")
+    assertEquals(tbl(("entries", 0)),
+      CollectionsTransform.RetargetRewrite.ForEach("foreachEntry", 2))
+  }
+
+  test("retargetRewrites with ForEach defaults arity to 1") {
+    val conf = Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", surface = [ { transform = "collections",
+        |  retarget { "com.demo.Widget" = "scala.X" }
+        |  retargetRewrites { "com.demo.Widget" {
+        |    "keys/0" { forEach = "foreachKey" }
+        |  } }
+        |} ] }""".stripMargin)
+    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
+      .collectFirst { case c: CollectionsTransform => c }.get
+    val tbl = ct.retargetRewrites("com.demo.Widget")
+    assertEquals(tbl(("keys", 0)),
+      CollectionsTransform.RetargetRewrite.ForEach("foreachKey", 1))
+  }
+
+  test("retargetRewrites with Collect entries are parsed from config") {
+    val conf = Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", surface = [ { transform = "collections",
+        |  retarget { "com.demo.Widget" = "scala.X" }
+        |  retargetRewrites { "com.demo.Widget" {
+        |    "keys/0" { collect = "foreachKey", into = "lowlevel.util.DynamicArray" }
+        |  } }
+        |} ] }""".stripMargin)
+    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
+      .collectFirst { case c: CollectionsTransform => c }.get
+    val tbl = ct.retargetRewrites("com.demo.Widget")
+    assertEquals(tbl(("keys", 0)),
+      CollectionsTransform.RetargetRewrite.Collect("foreachKey", "lowlevel.util.DynamicArray"))
+  }
+
+  test("retargetRewrites with Collect defaults into to DynamicArray") {
+    val conf = Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", surface = [ { transform = "collections",
+        |  retarget { "com.demo.Widget" = "scala.X" }
+        |  retargetRewrites { "com.demo.Widget" {
+        |    "values/0" { collect = "foreachValue" }
+        |  } }
+        |} ] }""".stripMargin)
+    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
+      .collectFirst { case c: CollectionsTransform => c }.get
+    val tbl = ct.retargetRewrites("com.demo.Widget")
+    assertEquals(tbl(("values", 0)),
+      CollectionsTransform.RetargetRewrite.Collect("foreachValue", "lowlevel.util.DynamicArray"))
+  }
+
+  test("retargetRewrites with Chain entries are parsed from config") {
+    val conf = Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", surface = [ { transform = "collections",
+        |  retarget { "com.demo.Widget" = "scala.X" }
+        |  retargetRewrites { "com.demo.Widget" {
+        |    "iterator/0" { chain = ["orderedItems", "iterator"], parens = ["orderedItems"] }
+        |  } }
+        |} ] }""".stripMargin)
+    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
+      .collectFirst { case c: CollectionsTransform => c }.get
+    val tbl = ct.retargetRewrites("com.demo.Widget")
+    assertEquals(tbl(("iterator", 0)),
+      CollectionsTransform.RetargetRewrite.Chain(List("orderedItems", "iterator"), parens = Set("orderedItems")))
+  }
+
+  test("retargetRewrites with Chain and dropArgs are parsed from config") {
+    val conf = Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", surface = [ { transform = "collections",
+        |  retarget { "com.demo.Widget" = "scala.X" }
+        |  retargetRewrites { "com.demo.Widget" {
+        |    "toArray/1" { chain = ["toArray"], dropArgs = true }
+        |  } }
+        |} ] }""".stripMargin)
+    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
+      .collectFirst { case c: CollectionsTransform => c }.get
+    val tbl = ct.retargetRewrites("com.demo.Widget")
+    assertEquals(tbl(("toArray", 1)),
+      CollectionsTransform.RetargetRewrite.Chain(List("toArray"), dropArgs = true))
+  }
+
+  test("retargetRewrites with FieldWrite entries are parsed from config") {
+    val conf = Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", surface = [ { transform = "collections",
+        |  retarget { "com.demo.Widget" = "scala.X" }
+        |  retargetRewrites { "com.demo.Widget" {
+        |    "size/0" { fieldWrite = "truncate" }
+        |  } }
+        |} ] }""".stripMargin)
+    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
+      .collectFirst { case c: CollectionsTransform => c }.get
+    val tbl = ct.retargetRewrites("com.demo.Widget")
+    assertEquals(tbl(("size", 0)),
+      CollectionsTransform.RetargetRewrite.FieldWrite("size", "truncate"))
+  }
+
+  test("retargetRewrites with IndexedField entries are parsed from config") {
+    val conf = Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", surface = [ { transform = "collections",
+        |  retarget { "com.demo.Widget" = "scala.X" }
+        |  retargetRewrites { "com.demo.Widget" {
+        |    "items/0" { indexedField = "items" }
+        |  } }
+        |} ] }""".stripMargin)
+    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
+      .collectFirst { case c: CollectionsTransform => c }.get
+    val tbl = ct.retargetRewrites("com.demo.Widget")
+    assertEquals(tbl(("items", 0)),
+      CollectionsTransform.RetargetRewrite.IndexedField("items"))
+  }
+
+  test("retargetRewrites with descriptor key are parsed into retargetRewritesByDesc") {
+    val conf = Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", surface = [ { transform = "collections",
+        |  retarget { "com.demo.Widget" = "scala.X" }
+        |  retargetRewrites { "com.demo.Widget" {
+        |    "<init>/(int)" = "apply"
+        |    "<init>/(Array)" { companion = "scala.X", factory = "from" }
+        |  } }
+        |} ] }""".stripMargin)
+    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
+      .collectFirst { case c: CollectionsTransform => c }.get
+    assert(ct.retargetRewrites.get("com.demo.Widget").forall(_.isEmpty))
+    val tbl = ct.retargetRewritesByDesc("com.demo.Widget")
+    assertEquals(tbl(("<init>", Descriptor(List(Param.Prim("int"))))),
+      CollectionsTransform.RetargetRewrite.Rename("apply"))
+    assertEquals(tbl(("<init>", Descriptor(List(Param.Named("Array"))))),
+      CollectionsTransform.RetargetRewrite.Construct("scala.X", "from"))
+  }
+
+  test("retargetRewrites mixes arity and descriptor keys for the same source") {
+    val conf = Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", surface = [ { transform = "collections",
+        |  retarget { "com.demo.Widget" = "scala.X" }
+        |  retargetRewrites { "com.demo.Widget" {
+        |    "<init>/0" = "apply"
+        |    "<init>/(int)" = "apply"
+        |  } }
+        |} ] }""".stripMargin)
+    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
+      .collectFirst { case c: CollectionsTransform => c }.get
+    val arityTbl = ct.retargetRewrites("com.demo.Widget")
+    assertEquals(arityTbl(("<init>", 0)),
+      CollectionsTransform.RetargetRewrite.Rename("apply"))
+    val descTbl = ct.retargetRewritesByDesc("com.demo.Widget")
+    assertEquals(descTbl(("<init>", Descriptor(List(Param.Prim("int"))))),
+      CollectionsTransform.RetargetRewrite.Rename("apply"))
+  }
+
+  test("retargetRewrites with multi-param descriptor key") {
+    val conf = Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", surface = [ { transform = "collections",
+        |  retarget { "com.demo.Widget" = "scala.X" }
+        |  retargetRewrites { "com.demo.Widget" {
+        |    "<init>/(boolean,int)" = "apply"
+        |  } }
+        |} ] }""".stripMargin)
+    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
+      .collectFirst { case c: CollectionsTransform => c }.get
+    val tbl = ct.retargetRewritesByDesc("com.demo.Widget")
+    assertEquals(tbl(("<init>", Descriptor(List(Param.Prim("boolean"), Param.Prim("int"))))),
+      CollectionsTransform.RetargetRewrite.Rename("apply"))
   }
 
   test("empty retargetRewrites is the default when not specified") {

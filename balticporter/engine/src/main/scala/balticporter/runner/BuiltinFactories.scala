@@ -1,7 +1,7 @@
 package balticporter.runner
 
 import balticporter.catalog.Platform
-import balticporter.tir.{ConfigError, ConfigView, OpaqueSpec, Phase, Remedy, RuleScope, TransformFactory}
+import balticporter.tir.{ConfigError, ConfigView, Descriptor, OpaqueSpec, Phase, Remedy, RuleScope, TransformFactory}
 import balticporter.transform.*
 
 /** The engine's own [[TransformFactory]] registrations — one per transform it ships that a config
@@ -121,37 +121,74 @@ final class CollectionsFactory extends TransformFactory:
   def fromConfig(config: ConfigView): Phase =
     import CollectionsTransform.RetargetRewrite
     val retarget = config.stringMap("retarget").getOrElse(Map.empty)
-    val rewrites = config.child("retargetRewrites").map { rr =>
-      rr.keys.map { srcFqn =>
+    def parseRewrite(tbl: ConfigView, memberKey: String, mName: String): RetargetRewrite =
+      if tbl.isObject(memberKey) then
+        val c = tbl.requireChild(memberKey)
+        if c.int("boolDispatch").isDefined then
+          RetargetRewrite.BoolDispatch(
+            c.int("boolDispatch").get,
+            c.requireString("onTrue"),
+            c.requireString("onFalse"))
+        else if c.string("companion").isDefined then
+          RetargetRewrite.Construct(
+            c.requireString("companion"),
+            c.requireString("factory"),
+            dropTrailing = c.int("dropTrailing").getOrElse(0),
+            fillTypeArgs = c.bool("fillTypeArgs").getOrElse(false))
+        else if c.string("forEach").isDefined then
+          RetargetRewrite.ForEach(
+            c.requireString("forEach"),
+            c.int("arity").getOrElse(1))
+        else if c.string("collect").isDefined then
+          RetargetRewrite.Collect(
+            c.requireString("collect"),
+            c.string("into").getOrElse("lowlevel.util.DynamicArray"))
+        else if c.strings("chain").isDefined then
+          val members = c.strings("chain").get
+          RetargetRewrite.Chain(
+            members,
+            parens = c.strings("parens").getOrElse(Nil).toSet,
+            dropArgs = c.bool("dropArgs").getOrElse(false))
+        else if c.string("fieldWrite").isDefined then
+          RetargetRewrite.FieldWrite(
+            mName,
+            c.requireString("fieldWrite"))
+        else if c.string("indexedField").isDefined then
+          RetargetRewrite.IndexedField(
+            c.requireString("indexedField"))
+        else throw ConfigError(tbl.at(memberKey),
+          "object entry must have 'boolDispatch', 'companion', 'forEach', 'collect', 'chain', 'fieldWrite', or 'indexedField'")
+      else
+        RetargetRewrite.Rename(tbl.requireString(memberKey))
+    var rewrites = Map.empty[String, Map[(String, Int), RetargetRewrite]]
+    var rewritesByDesc = Map.empty[String, Map[(String, Descriptor), RetargetRewrite]]
+    config.child("retargetRewrites").foreach { rr =>
+      rr.keys.foreach { srcFqn =>
         val tbl = rr.requireChild(srcFqn)
-        srcFqn -> tbl.keys.map { memberArity =>
-          val parts = memberArity.split("/", 2)
+        var arityEntries = Map.empty[(String, Int), RetargetRewrite]
+        var descEntries = Map.empty[(String, Descriptor), RetargetRewrite]
+        tbl.keys.foreach { memberKey =>
+          val parts = memberKey.split("/", 2)
           if parts.length != 2 then throw ConfigError(rr.at(srcFqn),
-            s"retargetRewrites key '$memberArity' must be 'memberName/arity'")
-          val (mName, arity) = (parts(0), parts(1).toInt)
-          val rw =
-            if tbl.isObject(memberArity) then
-              val c = tbl.requireChild(memberArity)
-              // Distinguish BoolDispatch from Construct by the presence of "boolDispatch" vs
-              // "companion".  Both are objects; the key that is present decides the variant.
-              if c.int("boolDispatch").isDefined then
-                RetargetRewrite.BoolDispatch(
-                  c.int("boolDispatch").get,
-                  c.requireString("onTrue"),
-                  c.requireString("onFalse"))
-              else if c.string("companion").isDefined then
-                RetargetRewrite.Construct(
-                  c.requireString("companion"),
-                  c.requireString("factory"),
-                  fillTypeArgs = c.bool("fillTypeArgs").getOrElse(false))
-              else throw ConfigError(tbl.at(memberArity),
-                "object entry must have either 'boolDispatch' (BoolDispatch) or 'companion' (Construct)")
-            else
-              RetargetRewrite.Rename(tbl.requireString(memberArity))
-          (mName, arity) -> rw
-        }.toMap
-      }.toMap
-    }.getOrElse(Map.empty)
+            s"retargetRewrites key '$memberKey' must be 'memberName/arity' or 'memberName/(descriptor)'")
+          val mName = parts(0)
+          val arityOrDesc = parts(1)
+          val rw = parseRewrite(tbl, memberKey, mName)
+          if arityOrDesc.startsWith("(") && arityOrDesc.endsWith(")") then
+            val descStr = arityOrDesc.drop(1).dropRight(1)
+            val params = if descStr.isEmpty then Nil
+              else descStr.split(",").toList.map(Descriptor.paramOf)
+            descEntries += (mName, Descriptor(params)) -> rw
+          else
+            val arity = try arityOrDesc.toInt catch
+              case _: NumberFormatException => throw ConfigError(rr.at(srcFqn),
+                s"retargetRewrites key '$memberKey': arity part must be an integer or (descriptor)")
+            arityEntries += (mName, arity) -> rw
+        }
+        if arityEntries.nonEmpty then rewrites += srcFqn -> arityEntries
+        if descEntries.nonEmpty then rewritesByDesc += srcFqn -> descEntries
+      }
+    }
     val typeArgs = config.child("retargetTypeArgs").map { ta =>
       import CollectionsTransform.RetargetArg
       ta.keys.map { srcFqn =>
@@ -170,6 +207,7 @@ final class CollectionsFactory extends TransformFactory:
       scope            = TransformFactory.scopeOf(config),
       retarget         = retarget,
       retargetRewrites = rewrites,
+      retargetRewritesByDesc = rewritesByDesc,
       retargetTypeArgs = typeArgs,
       reifiedCarriers  = config.strings("reifiedCarriers").getOrElse(Nil).toSet,
       reflectiveSinks  = config.strings("reflectiveSinks").getOrElse(Nil).toSet)
