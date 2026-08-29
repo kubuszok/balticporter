@@ -1862,7 +1862,11 @@ object LibgdxPolicy:
                |  Actor.POOLS.addPool(classOf[sge.graphics.g2d.GlyphLayout], ((() => new sge.graphics.g2d.GlyphLayout()): sge.utils.DefaultPool.PoolSupplier[sge.graphics.g2d.GlyphLayout]))
                |  Actor.POOLS.addPool(classOf[sge.scenes.scene2d.utils.ChangeListener.ChangeEvent], ((() => new sge.scenes.scene2d.utils.ChangeListener.ChangeEvent()): sge.utils.DefaultPool.PoolSupplier[sge.scenes.scene2d.utils.ChangeListener.ChangeEvent]))
                |}""".stripMargin
-         )))
+         )),
+         // The `@nowarn("msg=deprecated")` scan — LATE, after every retyping phase, so it sees
+         // the FINAL tree. Moved from NullabilityTransform because the scan there ran BEFORE the
+         // retarget, leaving stale annotations that `-Wunused:nowarn` reported.
+         new balticporter.transform.SuppressionPhase)
 
   /** Drop `()` from nullary getter-like methods — sge's empirical convention, no written rule in
     * `conversion-rules.md`. Enabled with `Everywhere()` because the convention is whole-library:

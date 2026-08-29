@@ -279,7 +279,7 @@ final class NullabilityTransform(
     * deliberately places on `orNull` — the same pattern sge uses at every Java interop boundary
     * (sge's `nullable-guide.md`, e.g. `RemoteInput.scala:359`). Recorded as a `Decision` so the
     * porter note names the phase and key. */
-  private val orNullMembers = collection.mutable.Set[SymId]()
+  // orNullMembers removed — the `@nowarn` scan is now in SuppressionPhase (late, post-retarget)
 
   /** Every seam and refusal this run produced, restricted to the units the run EMITS.
     *
@@ -300,7 +300,7 @@ final class NullabilityTransform(
     // and a cached answer from the first run is a wrong answer in the second (§5.1).
     issues.clear(); intrusions.clear(); observedEntries.clear(); planned = false
     newTypes = Map.empty; wrapped = Map.empty; overridingRead = false; typeVars = Map.empty
-    primSyms = Set.empty; orNullMembers.clear(); matchedMembers.clear()
+    primSyms = Set.empty; matchedMembers.clear()
     // §1(b): an empty policy needs no code path. Nothing bound — no annotation configured (or every
     // configured one named nothing) AND no nullableMembers — and the program is returned untouched.
     if boundAnnots.isEmpty && nullableMembers.isEmpty then return program
@@ -571,114 +571,14 @@ final class NullabilityTransform(
     val units = program.units.map { u => currentUnit = u.symbol; StandardTraversal.mapClassDef(this, u) }
     currentUnit = SymId.None
 
-    // ---- `@nowarn("msg=deprecated")` on every member whose body now contains `.orNull` --------
-    //
-    // sge deprecates `orNull` as a lint — every call gets `@nowarn("msg=deprecated")` on the
-    // enclosing declaration (sge's `nullable-guide.md`, e.g. `RemoteInput.scala:359`,
-    // `GLFrameBuffer.scala:181`, `FloatTextureData.scala:89`). The mechanical port inserts
-    // `.orNull` at slot coercions (`slotUnwrap`), so the same annotation is owed on every member
-    // this phase modified. The scan is over the TRANSFORMED units, after every `orNull` call has
-    // been placed.
-    val annotatedSymbols = if isWrapper && orNullSym != SymId.None then
-      orNullMembers.clear()
-      given p2: Program = summon[Program]
-      // Scan each member declaration's body for `.orNull` selects the tree walk inserted.
-      // `scanTerm` descends into anonymous class bodies but NOT into named nested ClassDefs
-      // (those are visited separately by `allClassDefs`). A plain STATEMENT in the class body
-      // (primary constructor code) annotates the CLASS.
-      //
-      // RESIDUE (K13 addendum): 49 `.orNull` calls that live in a CtorFunnel REPLAY are not in
-      // any `DefDef.rhs` — the emitter renders them from `CtorFunnel.Plans.replayFor`, and no
-      // tree scan on the TIR can see them. These stay as deprecation warnings under `-Werror`.
-      // The fix is to track `.orNull` at insertion time rather than rescanning, which requires a
-      // pre-member traversal hook the engine does not yet have (CLAUDE.md §4.6).
-      def hasOrNull(body: Term): Boolean = StandardTraversal.scanTerm(body, false) {
-        case (true, _) => true
-        case (_, Tree.Select(_, s, _, _)) if s == orNullSym => true
-        case (acc, _) => acc
-      }
-      def scanBody(members: List[Statement], ownerFallback: SymId): Unit =
-        members.foreach {
-          case d: Tree.DefDef =>
-            d.rhs.foreach { body => if hasOrNull(body) then
-              orNullMembers += d.symbol
-              // ALSO annotate the CLASS, because TestFrameworkTransform may later REMOVE this
-              // DefDef and replace it with a `test("...") { body }` statement — the `@nowarn`
-              // on the DefDef symbol is then lost (the symbol has no declaration node to render
-              // on). The class-level annotation survives the conversion and suppresses the
-              // deprecation warning wherever the `.orNull` ends up in the class body. Measured:
-              // ashley .ref 3 -> 31 without this, 3 -> 3 with it (28 `.orNull` calls in
-              // converted test bodies).
-              orNullMembers += ownerFallback
-            }
-          case v: Tree.ValDef =>
-            v.rhs.foreach { body => if hasOrNull(body) then orNullMembers += v.symbol }
-          case _: Tree.ClassDef | _: Tree.TypeDef => ()
-          case t: Term =>
-            if hasOrNull(t) then orNullMembers += ownerFallback
-          case _ => ()
-        }
-      units.foreach { u =>
-        StandardTraversal.allClassDefs(u).foreach { cd =>
-          scanBody(cd.body, cd.symbol)
-          // ANONYMOUS class bodies are NOT ClassDefs, so `allClassDefs` does not reach them.
-          // Their methods may contain `.orNull` calls the phase inserted, and the same annotation
-          // is owed. Without this, every orNull inside an anonymous class method was a deprecation
-          // warning under `-Werror` (measured: 18 on libGDX core).
-          StandardTraversal.allAnonClasses(cd).foreach { (anon, _) =>
-            scanBody(anon.body, anon.symbol)
-          }
-        }
-      }
-      orNullMembers.toSet
-    else Set.empty[SymId]
+    // The `@nowarn("msg=deprecated")` scan that used to live here has moved to SuppressionPhase,
+    // a LATE phase that runs AFTER every retyping phase. The scan here ran BEFORE the retarget
+    // phases, so it annotated members whose deprecated references a later retarget removed —
+    // leaving stale `@nowarn` annotations that `-Wunused:nowarn` reported (237 on libGDX core
+    // after the Array -> DynamicArray retarget). SuppressionPhase sees the FINAL tree and
+    // annotates only members that still contain a deprecated call.
 
-    // add the @nowarn annotation and record a Decision for each annotated member
-    val finalSymbols = if annotatedSymbols.nonEmpty then
-      // find or create the nowarn symbol
-      val existingNowarn = symbols.all.find(_.fullName == "scala.annotation.nowarn").map(_.id)
-      val nowarnSym = existingNowarn.getOrElse {
-        val minId = symbols.all.map(_.id.raw).minOption.getOrElse(0)
-        SymId(math.min(minId - 1, -2))
-      }
-      val nowarnAnnot = Annot(
-        tpe    = TypeRepr.TypeRef(TypeRepr.NoPrefix, nowarnSym),
-        args   = List("value" -> Tree.Literal(
-          Constant.StringC("msg=deprecated"),
-          TypeRepr.TypeRef(TypeRepr.NoPrefix, SymId.None),
-          Origin.synthetic)),
-        origin = Origin.synthetic,
-      )
-      val updated = symbols.all.map { s =>
-        if annotatedSymbols.contains(s.id) then s.copy(annotations = s.annotations :+ nowarnAnnot)
-        else s
-      }
-      val allSyms = if existingNowarn.isDefined then updated
-                    else updated ++ List(Symbol(
-                      nowarnSym, "nowarn", "scala.annotation.nowarn",
-                      Flags(), SymId.None, TypeRepr.NoType))
-      // record a Decision for each annotated member
-      annotatedSymbols.toList.sortBy(_.raw).foreach { id =>
-        symbols.get(id).foreach { s =>
-          record(Decision(
-            kind       = Decision.Kind.SuppressedWarning,
-            subject    = id,
-            subjectFqn = s.fullName,
-            detail = Map(
-              "annotation" -> "@nowarn(\"msg=deprecated\")",
-              "why"        -> ("this member's body calls `.orNull` (the null-preserving unwrap at a " +
-                "slot that accepts null); lls deprecates `orNull` as a lint so every usage needs " +
-                "`@nowarn` — the same pattern sge uses at every Java interop boundary"),
-            ),
-            reason = Reason.Configured(name, "target"),
-            origin = Decision.originOf(program, id),
-          ))
-        }
-      }
-      SymbolTable(allSyms)
-    else symbols
-
-    program.rebuilt(units, finalSymbols)
+    program.rebuilt(units, symbols)
 
   // -------------------------------------------------------------------------
   // planning helpers
