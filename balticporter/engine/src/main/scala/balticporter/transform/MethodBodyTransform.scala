@@ -1,6 +1,6 @@
 package balticporter.transform
 
-import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
+import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
 import balticporter.tir.*
 
 /** Replace a named method's BODY with ready-made Scala, keeping everything else about the class
@@ -58,8 +58,8 @@ import balticporter.tir.*
   *   and CLAUDE.md §6 applies to what you write (fully-qualified names, no imports, `args*` for a
   *   vararg spread).
   */
-final class MethodBodyTransform(bodies: Map[String, String] = Map.empty)
-    extends Phase, PolicySource, SurfacePolicy, PolicyBound:
+final class MethodBodyTransform(val bodies: Map[String, String] = Map.empty)
+    extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound:
   def name: String = "method-body-substitution"
 
   /** What the RUN resolved each declared key to, before the pipeline started (§8.1) — and the only
@@ -88,6 +88,35 @@ final class MethodBodyTransform(bodies: Map[String, String] = Map.empty)
     * dependent that supply different Scala for one member have certainly made a mistake. */
   def surfaceFingerprint: String =
     bodies.toList.sorted.map((k, v) => s"$k=${v.hashCode.toHexString}").mkString(",")
+
+  /** Independent keys UNION; same key with different body REFUSES — because a body is a replacement
+    * somebody hand-wrote, and two different replacements for one member is a conflict only a human
+    * can resolve.
+    *
+    * This merge is what lets a dependent declare its own `MethodBodyTransform` alongside the base's
+    * inherited one — the base replaces 20 bodies in libGDX core, the dependent replaces 1 in its own
+    * module, and `surfaceFold` composes them into one instance. Without it, every dependent that
+    * inherits the base's instance and also declares its own gets a fatal `SurfaceDivergence`.
+    *
+    * Same key, same body (by value equality on the text) is accepted silently — it is the same
+    * decision stated twice, which a `base.extendedBy(…)` can do legitimately when the key names a
+    * member visible from both modules. */
+  def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
+    case o: MethodBodyTransform =>
+      val conflicts = for
+        (k, v) <- o.bodies.toList.sorted
+        v2     <- bodies.get(k)
+        if v != v2
+      yield s"$k: bodies differ"
+      if conflicts.nonEmpty then Left(conflicts.mkString("; "))
+      else
+        val added = o.bodies.keySet -- bodies.keySet
+        Right(MergeablePolicy.Merged(
+          new MethodBodyTransform(bodies ++ o.bodies),
+          added.map(MergeablePolicy.subjectOf)))
+    case _ => Left(s"expected MethodBodyTransform, got ${later.getClass.getSimpleName}")
+
+  def subjects: Set[String] = bodies.keySet.map(MergeablePolicy.subjectOf)
 
   private var applied: List[String] = Nil
 
