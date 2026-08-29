@@ -73,6 +73,13 @@ class PolicyKeyLintSpec extends munit.FunSuite:
 
   /** file → the shapes it is allowed to use, and WHY. One line each, or it is a site to fix. */
   private val AllowList: Map[String, Map[String, String]] = Map(
+    "SuppressionPhase.scala" -> Map(
+      "fullName ==" ->
+        ("`scala.annotation.nowarn` is a WELL-KNOWN external annotation type the program never " +
+          "declares; this is a find-or-create for the annotation's SymId and a filter for members " +
+          "that already carry it — the same mint-or-reuse question MemberRenameTransform's " +
+          "`targetName` asks"),
+    ),
     "TypeRedirectTransform.scala" -> Map(
       "fullName.startsWith" ->
         ("renaming a twinned member's own `fullName` by replacing its owner's prefix, carrying the " +
