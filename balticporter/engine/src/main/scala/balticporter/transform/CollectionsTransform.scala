@@ -443,9 +443,10 @@ final class CollectionsTransform(
         if ft then s"$base+fill" else base
       case CollectionsTransform.RetargetRewrite.ForEach(t, a) => s"ForEach($t,$a)"
       case CollectionsTransform.RetargetRewrite.Collect(v, i) => s"Collect($v,$i)"
-      case CollectionsTransform.RetargetRewrite.Chain(ms, ps) =>
-        if ps.isEmpty then s"Chain(${ms.mkString(";")})"
+      case CollectionsTransform.RetargetRewrite.Chain(ms, ps, da) =>
+        val base = if ps.isEmpty then s"Chain(${ms.mkString(";")})"
         else s"Chain(${ms.mkString(";")};parens=${ps.toList.sorted.mkString(",")})"
+        if da then s"$base;dropArgs" else base
       case CollectionsTransform.RetargetRewrite.FieldWrite(f, m) => s"FieldWrite($f,$m)"
       case CollectionsTransform.RetargetRewrite.IndexedField(f) => s"IndexedField($f)"
     balticporter.tir.TirPrinter.sha256(
@@ -1217,7 +1218,7 @@ final class CollectionsTransform(
           List((src, targetMethod) -> mint(targetMethod, s"$src#retargetRewrite:$targetMethod"))
         case CollectionsTransform.RetargetRewrite.Collect(via, _) =>
           List((src, via) -> mint(via, s"$src#retargetRewrite:$via"))
-        case CollectionsTransform.RetargetRewrite.Chain(members, _) =>
+        case CollectionsTransform.RetargetRewrite.Chain(members, _, _) =>
           members.map(m => (src, m) -> mint(m, s"$src#retargetRewrite:$m"))
         case CollectionsTransform.RetargetRewrite.FieldWrite(_, method) =>
           List((src, method) -> mint(method, s"$src#retargetRewrite:$method"))
@@ -6838,15 +6839,19 @@ final class CollectionsTransform(
         // Each member's arity is decided from the Chain's `parens` set (F9's rule:
         // the arity comes from the CALLEE SYMBOL's declaration on the target type).
         // Default is parameterless (Tree.Select); members in `parens` get Tree.Apply.
-        case CollectionsTransform.RetargetRewrite.Chain(members, hasParens) if members.nonEmpty =>
+        case CollectionsTransform.RetargetRewrite.Chain(members, hasParens, dropAllArgs) if members.nonEmpty =>
           val syms = members.flatMap(m => retargetRewriteSyms.get((srcFqn, m)))
           if syms.size != members.size then scala.None
           else
             // First member: use call() when source args are non-empty OR parens says ();
             // otherwise Tree.Select (parameterless).
+            // When dropArgs is true, the source call's arguments are dropped and the first
+            // member is always emitted as Select (parameterless) — e.g. toArray(Class) -> toArray.
             var cur: Term =
-              if t.args.nonEmpty || hasParens(members.head) then
+              if !dropAllArgs && (t.args.nonEmpty || hasParens(members.head)) then
                 call(recv, syms.head, t.args, t, so)
+              else if hasParens(members.head) then
+                Tree.Apply(Tree.Select(recv, syms.head, TypeRepr.NoType, so), Nil, syms.head, TypeRepr.NoType, so)
               else
                 Tree.Select(recv, syms.head, TypeRepr.NoType, so)
             // Tail members: parameterless -> Select; in parens -> Apply with Nil args.
@@ -7102,8 +7107,13 @@ object CollectionsTransform:
       * listed in `parens` are emitted as `Tree.Apply(_, Nil, _)` (with `()`). This follows F9's
       * rule — the arity comes from the CALLEE SYMBOL's declaration on the target type. The
       * default (parenless) matches the convention of lls and scala collections; `parens` is the
-      * opt-in for members that genuinely take `()`. */
-    case class Chain(members: List[String], parens: Set[String] = Set.empty) extends RetargetRewrite
+      * opt-in for members that genuinely take `()`.
+      *
+      * '''dropArgs''': when true, the source call's arguments are DROPPED and the first member
+      * is emitted as `Tree.Select` (parameterless) regardless of the original call's arity.
+      * Use for a retarget where the source method takes an argument the target does not need —
+      * e.g. `Array.toArray(Class)` -> `DynamicArray.toArray` (parenless, ClassTag-based). */
+    case class Chain(members: List[String], parens: Set[String] = Set.empty, dropArgs: Boolean = false) extends RetargetRewrite
 
     /** Field write rewrite: `recv.field = value` -> `recv.method(value)`.
       *
