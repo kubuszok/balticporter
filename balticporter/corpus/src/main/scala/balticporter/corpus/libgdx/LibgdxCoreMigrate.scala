@@ -345,6 +345,24 @@ object LibgdxPolicy:
       // sge type-mappings.md: "ObjectSet, IntSet -> ObjectSet[A]". lls has no primitive-element
       // set specialisation; IntSet -> ObjectSet[Int] with boxing accepted.
       "com.badlogic.gdx.utils.IntSet",
+      // wave 3.1n: Array family retargetted to lowlevel.util.DynamicArray.
+      // sge type-mappings.md: "ByteArray, CharArray, FloatArray, IntArray, LongArray, ShortArray
+      // -> DynamicArray[T]" (unified via MkArray type class). Array<T> -> DynamicArray[T],
+      // SnapshotArray/DelayedRemovalArray -> DynamicArray (lls DynamicArray has begin/end for
+      // snapshot support). BooleanArray -> DynamicArray[Boolean] (lls MkArray$OfBooleans exists).
+      // Queue -> DynamicArray (sge: "Queue -> Scala stdlib queues", but DynamicArray is the
+      // shared collection type and Queue's API maps to it).
+      "com.badlogic.gdx.utils.Array",
+      "com.badlogic.gdx.utils.SnapshotArray",
+      "com.badlogic.gdx.utils.DelayedRemovalArray",
+      "com.badlogic.gdx.utils.IntArray",
+      "com.badlogic.gdx.utils.FloatArray",
+      "com.badlogic.gdx.utils.LongArray",
+      "com.badlogic.gdx.utils.ShortArray",
+      "com.badlogic.gdx.utils.ByteArray",
+      "com.badlogic.gdx.utils.CharArray",
+      "com.badlogic.gdx.utils.BooleanArray",
+      "com.badlogic.gdx.utils.Queue",
     ),
     // libGDX itself deprecated `setEnabledReflection` (superseded by the typed
     // `setEnabled(Styleable, Boolean)`, already ported); its private `findMethod` helper was the
@@ -512,6 +530,25 @@ object LibgdxPolicy:
     "com.badlogic.gdx.utils.ObjectLongMap" -> "lowlevel.util.ObjectMap",
     "com.badlogic.gdx.utils.ArrayMap" -> "lowlevel.util.ArrayMap",
     "com.badlogic.gdx.utils.IntSet" -> "lowlevel.util.ObjectSet",
+    // wave 3.1n: Array family -> DynamicArray.
+    // sge type-mappings.md: primitive arrays -> "DynamicArray[T]" (unified via MkArray type class).
+    // Array<T> -> DynamicArray[T] (1:1 type param). DynamicArray has the same member API:
+    // add, addAll, insert, removeIndex, removeValue/removeValueByRef, pop, peek, first, clear,
+    // truncate, swap, reverse, shuffle, sort(Ordering), toArray, ensureCapacity, begin/end,
+    // size (method), items (method), apply(i), update(i,v), contains/containsByRef,
+    // indexOf/indexOfByRef, lastIndexOf/lastIndexOfByRef, select, toString(sep), random,
+    // selectRanked, iterator. DynamicArray supports `for (x <- da)` natively (verified).
+    "com.badlogic.gdx.utils.Array" -> "lowlevel.util.DynamicArray",
+    "com.badlogic.gdx.utils.SnapshotArray" -> "lowlevel.util.DynamicArray",
+    "com.badlogic.gdx.utils.DelayedRemovalArray" -> "lowlevel.util.DynamicArray",
+    "com.badlogic.gdx.utils.IntArray" -> "lowlevel.util.DynamicArray",
+    "com.badlogic.gdx.utils.FloatArray" -> "lowlevel.util.DynamicArray",
+    "com.badlogic.gdx.utils.LongArray" -> "lowlevel.util.DynamicArray",
+    "com.badlogic.gdx.utils.ShortArray" -> "lowlevel.util.DynamicArray",
+    "com.badlogic.gdx.utils.ByteArray" -> "lowlevel.util.DynamicArray",
+    "com.badlogic.gdx.utils.CharArray" -> "lowlevel.util.DynamicArray",
+    "com.badlogic.gdx.utils.BooleanArray" -> "lowlevel.util.DynamicArray",
+    "com.badlogic.gdx.utils.Queue" -> "lowlevel.util.DynamicArray",
     // Inner iterator types — java's Keys/Values/Entries are live views backed by the map's
     // own table; lls has foreachKey/foreachValue/foreachEntry (inline) instead.  As TYPES these
     // are used only where java stores them in a local (`I18NBundle`) — Collect handles the call.
@@ -543,6 +580,15 @@ object LibgdxPolicy:
       "com.badlogic.gdx.utils.ObjectFloatMap" -> List(SourceArg(0), FixedType("scala.Float")),
       "com.badlogic.gdx.utils.ObjectLongMap"  -> List(SourceArg(0), FixedType("scala.Long")),
       "com.badlogic.gdx.utils.IntSet"         -> List(FixedType("scala.Int")),
+      // wave 3.1n: primitive arrays — 0-param source to 1-param DynamicArray[T].
+      // sge type-mappings.md: "IntArray -> DynamicArray[Int]", etc.
+      "com.badlogic.gdx.utils.IntArray"      -> List(FixedType("scala.Int")),
+      "com.badlogic.gdx.utils.FloatArray"    -> List(FixedType("scala.Float")),
+      "com.badlogic.gdx.utils.LongArray"     -> List(FixedType("scala.Long")),
+      "com.badlogic.gdx.utils.ShortArray"    -> List(FixedType("scala.Short")),
+      "com.badlogic.gdx.utils.ByteArray"     -> List(FixedType("scala.Byte")),
+      "com.badlogic.gdx.utils.CharArray"     -> List(FixedType("scala.Char")),
+      "com.badlogic.gdx.utils.BooleanArray"  -> List(FixedType("scala.Boolean")),
     )
 
   def libCollectionConstructRewrites: Map[String, Map[(String, Int), balticporter.transform.CollectionsTransform.RetargetRewrite]] =
@@ -702,6 +748,191 @@ object LibgdxPolicy:
         ("<init>", 1) -> Construct("lowlevel.util.ObjectSet", "apply"),
         ("<init>", 2) -> Construct("lowlevel.util.ObjectSet", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
+      ),
+      // wave 3.1n: Array family -> DynamicArray.
+      // lls DynamicArray.apply[T: MkArray](capacity, ordered) — MkArray resolves for concrete T.
+      // A type-parameter T at a construction needs MkArray[T] threaded: COUNTED (state the count).
+      // BoolDispatch: Array's `identity` boolean at flagIndex=1 dispatches to ByRef/non-ByRef.
+      // DynamicArray has: apply(i), update(i,v), removeValue/removeValueByRef,
+      // contains/containsByRef, indexOf/indexOfByRef, lastIndexOf/lastIndexOfByRef,
+      // containsAll/containsAllByRef, containsAny/containsAnyByRef, removeAll/removeAllByRef,
+      // replaceFirst/replaceFirstByRef, replaceAll/replaceAllByRef.
+      // No ForEach needed: DynamicArray supports `for (x <- da)` natively (verified).
+      "com.badlogic.gdx.utils.Array" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        // arity 3: Array(boolean, int, ArraySupplier) — drop the ArraySupplier (lls uses MkArray).
+        // Array(boolean, int, Class) is in dropMethods.
+        ("<init>", 3) -> Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1),
+        ("get", 1)          -> Rename("apply"),
+        ("set", 2)          -> Rename("update"),
+        ("removeValue", 2)  -> BoolDispatch(1, "removeValueByRef", "removeValue"),
+        ("contains", 2)     -> BoolDispatch(1, "containsByRef", "contains"),
+        ("indexOf", 2)      -> BoolDispatch(1, "indexOfByRef", "indexOf"),
+        ("lastIndexOf", 2)  -> BoolDispatch(1, "lastIndexOfByRef", "lastIndexOf"),
+        ("containsAll", 2)  -> BoolDispatch(1, "containsAllByRef", "containsAll"),
+        ("containsAny", 2)  -> BoolDispatch(1, "containsAnyByRef", "containsAny"),
+        ("removeAll", 2)    -> BoolDispatch(1, "removeAllByRef", "removeAll"),
+        ("replaceFirst", 3) -> BoolDispatch(1, "replaceFirstByRef", "replaceFirst"),
+        ("replaceAll", 3)   -> BoolDispatch(1, "replaceAllByRef", "replaceAll"),
+        ("notEmpty", 0)     -> Chain(List("nonEmpty")),
+        // bean-property renamed isEmpty() -> empty; lls keeps isEmpty
+        ("empty", 0)        -> Rename("isEmpty"),
+        // parameterless methods: DynamicArray declares peek, first, iterator, nonEmpty as
+        // parameterless (no ()) but java calls them with (). Chain with empty parens set
+        // produces arr.peek without (). F9's rule: lls methods are parameterless.
+        ("peek", 0)         -> Chain(List("peek")),
+        ("first", 0)        -> Chain(List("first")),
+        ("iterator", 0)     -> Chain(List("iterator")),
+      ),
+      // SnapshotArray extends Array — same rewrites. lls DynamicArray has begin()/end() for
+      // snapshot support (sge type-mappings.md: "SnapshotArray -> ArrayBuffer with copy-on-modify";
+      // lls DynamicArray has begin/end built in).
+      "com.badlogic.gdx.utils.SnapshotArray" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 3) -> Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1),
+        ("get", 1)          -> Rename("apply"),
+        ("set", 2)          -> Rename("update"),
+        ("removeValue", 2)  -> BoolDispatch(1, "removeValueByRef", "removeValue"),
+        ("contains", 2)     -> BoolDispatch(1, "containsByRef", "contains"),
+        ("indexOf", 2)      -> BoolDispatch(1, "indexOfByRef", "indexOf"),
+        ("lastIndexOf", 2)  -> BoolDispatch(1, "lastIndexOfByRef", "lastIndexOf"),
+        ("containsAll", 2)  -> BoolDispatch(1, "containsAllByRef", "containsAll"),
+        ("containsAny", 2)  -> BoolDispatch(1, "containsAnyByRef", "containsAny"),
+        ("removeAll", 2)    -> BoolDispatch(1, "removeAllByRef", "removeAll"),
+        ("replaceFirst", 3) -> BoolDispatch(1, "replaceFirstByRef", "replaceFirst"),
+        ("replaceAll", 3)   -> BoolDispatch(1, "replaceAllByRef", "replaceAll"),
+        ("notEmpty", 0)     -> Chain(List("nonEmpty")),
+        ("empty", 0)        -> Rename("isEmpty"),
+        ("peek", 0)         -> Chain(List("peek")),
+        ("first", 0)        -> Chain(List("first")),
+        ("iterator", 0)     -> Chain(List("iterator")),
+      ),
+      "com.badlogic.gdx.utils.DelayedRemovalArray" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 3) -> Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1),
+        ("get", 1)          -> Rename("apply"),
+        ("set", 2)          -> Rename("update"),
+        ("removeValue", 2)  -> BoolDispatch(1, "removeValueByRef", "removeValue"),
+        ("contains", 2)     -> BoolDispatch(1, "containsByRef", "contains"),
+        ("indexOf", 2)      -> BoolDispatch(1, "indexOfByRef", "indexOf"),
+        ("lastIndexOf", 2)  -> BoolDispatch(1, "lastIndexOfByRef", "lastIndexOf"),
+        ("containsAll", 2)  -> BoolDispatch(1, "containsAllByRef", "containsAll"),
+        ("containsAny", 2)  -> BoolDispatch(1, "containsAnyByRef", "containsAny"),
+        ("removeAll", 2)    -> BoolDispatch(1, "removeAllByRef", "removeAll"),
+        ("replaceFirst", 3) -> BoolDispatch(1, "replaceFirstByRef", "replaceFirst"),
+        ("replaceAll", 3)   -> BoolDispatch(1, "replaceAllByRef", "replaceAll"),
+        ("notEmpty", 0)     -> Chain(List("nonEmpty")),
+        ("empty", 0)        -> Rename("isEmpty"),
+        ("peek", 0)         -> Chain(List("peek")),
+        ("first", 0)        -> Chain(List("first")),
+        ("iterator", 0)     -> Chain(List("iterator")),
+      ),
+      // Primitive arrays: no identity flag (no BoolDispatch needed), same get->apply, set->update.
+      // sge type-mappings.md: "IntArray -> DynamicArray[Int]", etc.
+      "com.badlogic.gdx.utils.IntArray" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("get", 1)      -> Rename("apply"),
+        ("set", 2)      -> Rename("update"),
+        ("notEmpty", 0) -> Chain(List("nonEmpty")),
+        ("empty", 0)    -> Rename("isEmpty"),
+        ("peek", 0)     -> Chain(List("peek")),
+        ("first", 0)    -> Chain(List("first")),
+        ("iterator", 0) -> Chain(List("iterator")),
+      ),
+      "com.badlogic.gdx.utils.FloatArray" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("get", 1)      -> Rename("apply"),
+        ("set", 2)      -> Rename("update"),
+        ("notEmpty", 0) -> Chain(List("nonEmpty")),
+        ("empty", 0)    -> Rename("isEmpty"),
+        ("peek", 0)     -> Chain(List("peek")),
+        ("first", 0)    -> Chain(List("first")),
+        ("iterator", 0) -> Chain(List("iterator")),
+      ),
+      "com.badlogic.gdx.utils.LongArray" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("get", 1)      -> Rename("apply"),
+        ("set", 2)      -> Rename("update"),
+        ("notEmpty", 0) -> Chain(List("nonEmpty")),
+        ("empty", 0)    -> Rename("isEmpty"),
+        ("peek", 0)     -> Chain(List("peek")),
+        ("first", 0)    -> Chain(List("first")),
+        ("iterator", 0) -> Chain(List("iterator")),
+      ),
+      "com.badlogic.gdx.utils.ShortArray" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("get", 1)      -> Rename("apply"),
+        ("set", 2)      -> Rename("update"),
+        ("notEmpty", 0) -> Chain(List("nonEmpty")),
+        ("empty", 0)    -> Rename("isEmpty"),
+        ("peek", 0)     -> Chain(List("peek")),
+        ("first", 0)    -> Chain(List("first")),
+        ("iterator", 0) -> Chain(List("iterator")),
+      ),
+      "com.badlogic.gdx.utils.ByteArray" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("get", 1)      -> Rename("apply"),
+        ("set", 2)      -> Rename("update"),
+        ("notEmpty", 0) -> Chain(List("nonEmpty")),
+        ("empty", 0)    -> Rename("isEmpty"),
+        ("peek", 0)     -> Chain(List("peek")),
+        ("first", 0)    -> Chain(List("first")),
+        ("iterator", 0) -> Chain(List("iterator")),
+      ),
+      "com.badlogic.gdx.utils.CharArray" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("get", 1)      -> Rename("apply"),
+        ("set", 2)      -> Rename("update"),
+        ("notEmpty", 0) -> Chain(List("nonEmpty")),
+        ("empty", 0)    -> Rename("isEmpty"),
+        ("peek", 0)     -> Chain(List("peek")),
+        ("first", 0)    -> Chain(List("first")),
+        ("iterator", 0) -> Chain(List("iterator")),
+      ),
+      "com.badlogic.gdx.utils.BooleanArray" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("get", 1)      -> Rename("apply"),
+        ("set", 2)      -> Rename("update"),
+        ("notEmpty", 0) -> Chain(List("nonEmpty")),
+        ("empty", 0)    -> Rename("isEmpty"),
+        ("peek", 0)     -> Chain(List("peek")),
+        ("first", 0)    -> Chain(List("first")),
+        ("iterator", 0) -> Chain(List("iterator")),
+      ),
+      // Queue -> DynamicArray. sge type-mappings.md: "Queue -> Scala stdlib queues", but
+      // DynamicArray is the shared collection type. addLast -> add, removeLast -> pop,
+      // removeFirst -> removeIndex(0) (counted: no Chain for this).
+      "com.badlogic.gdx.utils.Queue" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("get", 1)        -> Rename("apply"),
+        ("addLast", 1)    -> Rename("add"),
+        ("removeLast", 0) -> Chain(List("pop")),  // parameterless in DynamicArray
+        ("notEmpty", 0)   -> Chain(List("nonEmpty")),
+        ("empty", 0)      -> Rename("isEmpty"),
+        ("first", 0)      -> Chain(List("first")),
+        ("last", 0)       -> Chain(List("last")),
+        ("iterator", 0)   -> Chain(List("iterator")),
       ),
     )
 
@@ -1182,10 +1413,10 @@ object LibgdxPolicy:
            // sge: val item = (fileName, d). The method is large; replace only relevant lines.
            "com.badlogic.gdx.assets.loaders.ModelLoader#getDependencies" ->
              """{
-               |  val deps: sge.utils.Array[sge.assets.AssetDescriptor[?]] = new sge.utils.Array().asInstanceOf[sge.utils.Array[sge.assets.AssetDescriptor[?]]]
+               |  val deps: lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]] = lowlevel.util.DynamicArray().asInstanceOf[lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]]
                |  val data: sge.graphics.g3d.model.data.ModelData = this.loadModelData(file, parameters)
                |  if (data == null) {
-               |    return deps.asInstanceOf[sge.utils.Array[sge.assets.AssetDescriptor[?]]]
+               |    return deps.asInstanceOf[lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]]
                |  } else ()
                |  val item: scala.Tuple2[java.lang.String, sge.graphics.g3d.model.data.ModelData] = (fileName, data)
                |  this.items.synchronized {
@@ -1199,7 +1430,7 @@ object LibgdxPolicy:
                |      }
                |    } else ()
                |  }
-               |  return deps.asInstanceOf[sge.utils.Array[sge.assets.AssetDescriptor[?]]]
+               |  return deps.asInstanceOf[lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]]
                |}""".stripMargin,
            // wave 3.1m: ParticleEffectLoader.getDependencies — Tuple2 default-construct then
            // assign _1/_2. Same pattern as ModelLoader. Construct the tuple at once.
@@ -1207,13 +1438,13 @@ object LibgdxPolicy:
              """{
                |  val json: sge.utils.Json = new sge.utils.Json()
                |  val data: sge.graphics.g3d.particles.ResourceData[sge.graphics.g3d.particles.ParticleEffect] = json.fromJson(classOf[sge.graphics.g3d.particles.ResourceData[?]], file).asInstanceOf[sge.graphics.g3d.particles.ResourceData[sge.graphics.g3d.particles.ParticleEffect]]
-               |  var assets: sge.utils.Array[sge.graphics.g3d.particles.ResourceData.AssetData[?]] = null
+               |  var assets: lowlevel.util.DynamicArray[sge.graphics.g3d.particles.ResourceData.AssetData[?]] = null
                |  this.items.synchronized {
                |    val entry: scala.Tuple2[java.lang.String, sge.graphics.g3d.particles.ResourceData[sge.graphics.g3d.particles.ParticleEffect]] = (fileName, data)
                |    this.items.add(entry)
-               |    assets = data.assets.asInstanceOf[sge.utils.Array[sge.graphics.g3d.particles.ResourceData.AssetData[?]]]
+               |    assets = data.assets.asInstanceOf[lowlevel.util.DynamicArray[sge.graphics.g3d.particles.ResourceData.AssetData[?]]]
                |  }
-               |  val descriptors: sge.utils.Array[sge.assets.AssetDescriptor[?]] = new sge.utils.Array[sge.assets.AssetDescriptor[?]]().asInstanceOf[sge.utils.Array[sge.assets.AssetDescriptor[?]]]
+               |  val descriptors: lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]] = lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]().asInstanceOf[lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]]
                |  for (assetData <- assets) {
                |    if (!this.resolve(assetData.filename).exists) {
                |      assetData.filename = file.parent().child(scala.Predef.summon[sge.Sge].files.internal(assetData.filename).name).path()
@@ -1224,7 +1455,7 @@ object LibgdxPolicy:
                |      descriptors.add(new sge.assets.AssetDescriptor(assetData.filename, assetData.asInstanceOf[sge.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`))
                |    }
                |  }
-               |  return descriptors.asInstanceOf[sge.utils.Array[sge.assets.AssetDescriptor[?]]]
+               |  return descriptors.asInstanceOf[lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]]
                |}""".stripMargin,
            // wave 3.1m: Node.calculateBoneTransforms — keys$field(i) -> getKeyAt(i),
            // values$field(i) -> getValueAt(i). sge: getKeyAt(i) / getValueAt(i).
@@ -1256,15 +1487,15 @@ object LibgdxPolicy:
                |        bindPose.setKeyAt(j, this.getNode(bindPose.getKeyAt(j).id))
                |      }; j = j + 1 } }
                |    } else ()
-               |    if (!this.materials.contains(lowlevel.Nullable(part.material), true)) {
-               |      val midx: scala.Int = this.materials.indexOf(lowlevel.Nullable(part.material), false)
+               |    if (!this.materials.containsByRef(part.material)) {
+               |      val midx: scala.Int = this.materials.indexOf(part.material)
                |      if (midx < 0) {
                |        this.materials.add({
                |          part.material = part.material.copy()
                |          part.material
                |        })
                |      } else {
-               |        part.material = this.materials.get(midx)
+               |        part.material = this.materials(midx)
                |      }
                |    } else ()
                |  }
@@ -1316,9 +1547,9 @@ object LibgdxPolicy:
            // Collect from the OrderedSet directly into an sge.utils.Array. sge: selected.foreach(result.add).
            "com.badlogic.gdx.scenes.scene2d.utils.Selection#toArray" ->
              """{
-               |  val result: sge.utils.Array[T] = new sge.utils.Array()
+               |  val result: lowlevel.util.DynamicArray[T] = lowlevel.util.DynamicArray()
                |  this.selected.foreach(result.add)
-               |  return result.asInstanceOf[sge.utils.Array[T]]
+               |  return result.asInstanceOf[lowlevel.util.DynamicArray[T]]
                |}""".stripMargin,
            // wave 3.1m: Selection.toArray(Array<T>) — same pattern, collect into the provided array.
            "com.badlogic.gdx.scenes.scene2d.utils.Selection#toArray(Array)" ->
@@ -1330,7 +1561,7 @@ object LibgdxPolicy:
            // body calls iter.remove(). sge: collect removals into a DynamicArray, then remove.
            "com.badlogic.gdx.scenes.scene2d.utils.ArraySelection#validate" ->
              """{
-               |  val array: sge.utils.Array[T] = this.array
+               |  val array: lowlevel.util.DynamicArray[T] = this.array
                |  if (array.size == 0) {
                |    this.clear()
                |    return
@@ -1340,14 +1571,14 @@ object LibgdxPolicy:
                |  val iter = this.items.orderedItems.iterator
                |  while (iter.hasNext) {
                |    val selected: T = iter.next().asInstanceOf[T]
-               |    if (!array.contains(lowlevel.Nullable(selected), false)) {
+               |    if (!array.contains(selected)) {
                |      toRemove.add(selected)
                |      changed = true
                |    } else ()
                |  }
                |  toRemove.foreach(this.selected.remove)
                |  if (this.required && (this.selected.size == 0)) {
-               |    this.set(array.first())
+               |    this.set(array.first)
                |  } else {
                |    if (changed) {
                |      this.changed()
@@ -1361,13 +1592,13 @@ object LibgdxPolicy:
            "com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getSelectedIndex" ->
              """{
                |  val selected: lowlevel.util.OrderedSet[T] = this.selection$field.items
-               |  return if (selected.size == 0) -1 else this.items$field.indexOf(lowlevel.Nullable(selected.first), false)
+               |  return if (selected.size == 0) -1 else this.items$field.indexOf(selected.first)
                |}""".stripMargin,
            // wave 3.1m: SgeList.selectedIndex — same OrderedSet vs ObjectSet pattern.
            "com.badlogic.gdx.scenes.scene2d.ui.List#getSelectedIndex" ->
              """{
                |  val selected: lowlevel.util.OrderedSet[T] = this.selection$field.items
-               |  return if (selected.size == 0) -1 else this.items$field.indexOf(lowlevel.Nullable(selected.first), false)
+               |  return if (selected.size == 0) -1 else this.items$field.indexOf(selected.first)
                |}""".stripMargin
          )))
 
