@@ -447,6 +447,7 @@ final class CollectionsTransform(
         if ps.isEmpty then s"Chain(${ms.mkString(";")})"
         else s"Chain(${ms.mkString(";")};parens=${ps.toList.sorted.mkString(",")})"
       case CollectionsTransform.RetargetRewrite.FieldWrite(f, m) => s"FieldWrite($f,$m)"
+      case CollectionsTransform.RetargetRewrite.IndexedField(f) => s"IndexedField($f)"
     balticporter.tir.TirPrinter.sha256(
       retargetRewrites.toList.sortBy(_._1).flatMap { (src, tbl) =>
         tbl.toList.sortBy(_._1.toString).map { case ((m, ar), rw) => s"$src#$m/$ar->${renderRw(rw)}" }
@@ -672,6 +673,12 @@ final class CollectionsTransform(
   /** retarget target SymIds whose source is an Entry-like type (mapped to Tuple2). Used by
     * [[retargetSelectRewrite]] to fire `.key -> ._1` / `.value -> ._2` by SYMBOL, not by name. */
   private var retargetEntryTargets: Set[SymId] = Set.empty
+  /** SOURCE member SymIds for IndexedField entries — the `items` field SymId on each retarget
+    * source type. Used by [[retargetIndexedField]] to match the member by SYMBOL after the
+    * bottom-up traversal has already visited (and potentially remapped) the `Select` node.
+    * Keyed on `(ownerFqn, fieldName)` -> source SymId, so we identify the source FQN for the
+    * rewrite table lookup. */
+  private var indexedFieldSyms: Map[SymId, String] = Map.empty
   private def byScalaSym(fqn: String): SymId = byScalaSyms.getOrElse(fqn, SymId.None)
   private def enumSetSym(n: String): SymId   = enumSetSyms.getOrElse(n, SymId.None)
   /** java 8 `Collection.forEach(Consumer)` — scala's is `foreach`, differing only in case, which
@@ -1166,6 +1173,21 @@ final class CollectionsTransform(
         .flatMap(_ => remap.get(s.id))
     }.toSet
 
+    // IndexedField: collect the SOURCE member SymIds for field names in IndexedField entries.
+    // The bottom-up traversal visits the inner Select BEFORE the ArrayAccess, so by the time
+    // retargetIndexedField fires, the Select's member symbol may have been remapped. We match on
+    // the ORIGINAL source member SymId (the field declared by the source type), keyed to its
+    // source FQN so we can look up the rewrite table.
+    indexedFieldSyms = retargetRewrites.flatMap { (srcFqn, tbl) =>
+      tbl.collect { case ((fieldName, 0), _: CollectionsTransform.RetargetRewrite.IndexedField) =>
+        // find the source type's SymId and then its member with this name
+        program.symbols.all.filter(s => s.fullName == srcFqn).flatMap { ownerSym =>
+          program.symbols.all.filter(m => m.owner == ownerSym.id && m.name == fieldName)
+            .map(m => m.id -> srcFqn)
+        }
+      }.flatten
+    }
+
     // resolve FixedType FQNs to minted symbols
     retargetFixedTypeSyms = retargetTypeArgs.values.flatten.collect {
       case CollectionsTransform.RetargetArg.FixedType(fqn) => fqn
@@ -1199,6 +1221,8 @@ final class CollectionsTransform(
           members.map(m => (src, m) -> mint(m, s"$src#retargetRewrite:$m"))
         case CollectionsTransform.RetargetRewrite.FieldWrite(_, method) =>
           List((src, method) -> mint(method, s"$src#retargetRewrite:$method"))
+        case _: CollectionsTransform.RetargetRewrite.IndexedField =>
+          Nil // no minted symbol needed — the field select is stripped, not renamed
       }
     }
     enumMapOfTypeSym    = mint("ofType", s"${CollectionsTransform.JavaEnumMapFqn}.ofType")
@@ -2894,7 +2918,7 @@ final class CollectionsTransform(
       // FieldWrite: `recv.field = value` -> `recv.method(value)` on a retarget target.
       // Checked BEFORE the coercion path, because the field is NOT writable on the target
       // and the assignment would be a compile error.
-      retargetFieldWrite(a) match
+      retargetFieldWrite(a).orElse(retargetIndexedFieldWrite(a)) match
         case Some(rewritten) => rewritten
         case scala.None =>
           // the TARGET may itself be a reference to a scoped-out declaration, in which case the slot
@@ -2908,6 +2932,7 @@ final class CollectionsTransform(
     case mr: Tree.MethodRef => lowerMethodRef(mr)
     case lit @ Tree.Literal(Constant.ClassOfC(tp), tpe, _) => retargetClassOf(lit, tp, tpe)
     case sel: Tree.Select => retargetSelectRewrite(sel).getOrElse(staticFieldRewrite(sel).getOrElse(externalFieldProducer(sel)))
+    case aa: Tree.ArrayAccess => retargetIndexedField(aa).getOrElse(aa)
     case other          => other
 
   // -------------------------------------------------------------------------------------------
@@ -3128,6 +3153,44 @@ final class CollectionsTransform(
         }
       case _ => scala.None
 
+  /** An INDEXED FIELD READ on a retarget target — `arr.items[i]` -> `arr.apply(i)`.
+    *
+    * Fires on `Tree.ArrayAccess` where the array is `Tree.Select(recv, items_sym)` and the select's
+    * member SymId is in [[indexedFieldSyms]]. Matches on the SOURCE member's SymId rather than
+    * looking up through `retargetTargetToSource`, because the bottom-up traversal has already
+    * visited the inner `Select` by the time this arm sees the `ArrayAccess` — the receiver's type
+    * has been remapped, and a lookup through `headSym(qual.tpe)` would find the TARGET type, not
+    * the source. The SOURCE field's SymId is stable through the traversal. */
+  private def retargetIndexedField(aa: Tree.ArrayAccess)(using p: Program): Option[Term] =
+    if indexedFieldSyms.isEmpty then return scala.None
+    aa.array match
+      case sel: Tree.Select =>
+        indexedFieldSyms.get(sel.sym).flatMap { srcFqn =>
+          val applySym = retargetRewriteSyms.getOrElse((srcFqn, "apply"),
+            byScalaSyms.getOrElse("apply", updateSym))
+          Some(Tree.Apply(
+            Tree.Select(sel.qual, applySym, aa.tpe, aa.origin),
+            List(aa.index), applySym, aa.tpe, aa.origin))
+        }
+      case _ => scala.None
+
+  /** An INDEXED FIELD WRITE on a retarget target — `arr.items[i] = v` -> `arr.update(i, v)`.
+    *
+    * Same SymId-based matching as [[retargetIndexedField]], for `Tree.Assign` where the LHS is
+    * a `Tree.ArrayAccess`. */
+  private def retargetIndexedFieldWrite(a: Tree.Assign)(using p: Program): Option[Term] =
+    if indexedFieldSyms.isEmpty then return scala.None
+    a.lhs match
+      case aa: Tree.ArrayAccess => aa.array match
+        case sel: Tree.Select =>
+          indexedFieldSyms.get(sel.sym).map { srcFqn =>
+            Tree.Apply(
+              Tree.Select(sel.qual, updateSym, TypeRepr.NoType, a.origin),
+              List(aa.index, a.rhs), updateSym, TypeRepr.NoType, a.origin)
+          }
+        case _ => scala.None
+      case _ => scala.None
+
   /** A FIELD ACCESS on a retarget target — `entry.key` -> `entry._1`, `entry.value` -> `entry._2`.
     *
     * The retarget moves the TYPE; [[retargetRewrite]] handles CALL SITES (`Tree.Apply`). A bare
@@ -3162,6 +3225,11 @@ final class CollectionsTransform(
             retargetRewriteSyms.get((srcFqn, target)).map { tgtSym =>
               Tree.Select(sel.qual, tgtSym, sel.tpe, sel.origin)
             }
+          // IndexedField is NOT handled here — it fires only on Tree.ArrayAccess (see
+          // retargetIndexedField). Stripping the field select on a bare Tree.Select would turn
+          // `someMethod(arr.items)` into `someMethod(arr)`, changing the type from Array[T] to
+          // DynamicArray[T] and opening new E007 errors. The rewrite must be scoped to the
+          // ArrayAccess node that actually indexes into the backing array.
           case _ => scala.None
         }
       }
@@ -6793,6 +6861,9 @@ final class CollectionsTransform(
         // FieldWrite entries are handled in transformTerm on Tree.Assign; if the call reaches
         // HERE it is a call to a method with the same (name, arity) — return None.
         case _: CollectionsTransform.RetargetRewrite.FieldWrite => scala.None
+        // IndexedField entries are handled in retargetSelectRewrite (stripping the field access);
+        // if a call reaches HERE it is a standalone call on the field — return None.
+        case _: CollectionsTransform.RetargetRewrite.IndexedField => scala.None
       }
     }
 
@@ -7050,6 +7121,19 @@ object CollectionsTransform:
       *
       * `method` is the target method to call with the assigned value as argument. */
     case class FieldWrite(field: String, method: String) extends RetargetRewrite
+
+    /** Indexed field bypass: `recv.field[i]` -> `recv(i)`, `recv.field[i] = v` -> `recv(i) = v`.
+      *
+      * Java's `arr.items[i]` accesses a PUBLIC backing-array FIELD and indexes into it. After
+      * retarget, `items()` on DynamicArray returns `Object` (the raw backing array), and
+      * `Object(i)` does not compile. The faithful image is `arr.apply(i)` / `arr.update(i, v)` --
+      * DynamicArray's own indexed access, bypassing the backing array entirely.
+      *
+      * Fires on `Tree.Select` in `retargetSelectRewrite`: the field select is STRIPPED, returning
+      * the qualifier. The enclosing `Tree.ArrayAccess(Select(arr, items), i)` then becomes
+      * `ArrayAccess(arr, i)`, which the emitter renders as `arr(i)`. For writes,
+      * `Assign(ArrayAccess(arr, i), v)` renders as `arr(i) = v` = `arr.update(i, v)`. */
+    case class IndexedField(field: String) extends RetargetRewrite
 
   /** How to construct a retarget target's type arguments from the source type's.
     * Each element produces one argument in the target type — so a `List[RetargetArg]` of length N

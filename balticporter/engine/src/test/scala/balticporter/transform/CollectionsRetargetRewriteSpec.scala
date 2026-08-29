@@ -464,4 +464,46 @@ class CollectionsRetargetRewriteSpec extends munit.FunSuite {
     assertEquals(ct.retargetRewrites("com.a.X")(("size", 0)), FieldWrite("size", "setSize"))
     assertEquals(ct.retargetRewrites("com.b.Y")(("size", 0)), FieldWrite("size", "clear"))
   }
+
+  // ---- IndexedField ----
+
+  test("IndexedField toString is readable") {
+    assertEquals(IndexedField("items").toString, "IndexedField(items)")
+  }
+
+  test("IndexedField changes the fingerprint") {
+    val a = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(("items", 0) -> IndexedField("items"))))
+    val b = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"))
+    assertNotEquals(a.surfaceFingerprint, b.surfaceFingerprint)
+  }
+
+  test("IndexedField with same values has the same fingerprint") {
+    val a = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(("items", 0) -> IndexedField("items"))))
+    val b = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(("items", 0) -> IndexedField("items"))))
+    assertEquals(a.surfaceFingerprint, b.surfaceFingerprint)
+  }
+
+  test("IndexedField can coexist with Rename and FieldWrite at the same source") {
+    val ct = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(
+        ("items", 0) -> IndexedField("items"),
+        ("size", 0)  -> FieldWrite("size", "setSize"),
+        ("get", 1)   -> Rename("apply"))))
+    assertEquals(ct.retargetRewrites("com.a.X").size, 3)
+  }
+
+  test("mergeWith unions IndexedField entries from independent sources") {
+    val a = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(("items", 0) -> IndexedField("items"))))
+    val b = new CollectionsTransform(retarget = Map("com.b.Y" -> "scala.Y"),
+      retargetRewrites = Map("com.b.Y" -> Map(("data", 0) -> IndexedField("data"))))
+    val merged = a.mergedWith(b)
+    assert(merged.isRight, s"merge refused: ${merged.left.getOrElse("")}")
+    val ct = merged.toOption.get.phase.asInstanceOf[CollectionsTransform]
+    assertEquals(ct.retargetRewrites("com.a.X")(("items", 0)), IndexedField("items"))
+    assertEquals(ct.retargetRewrites("com.b.Y")(("data", 0)), IndexedField("data"))
+  }
 }
