@@ -652,7 +652,13 @@ final class CollectionsTransform(
   /** this run's symbol for a scala/shim FQN, or `SymId.None` where the program never names it. */
   private var byScalaSyms: Map[String, SymId] = Map.empty
   /** retarget target SymId -> source FQN, so `retargetRewrite` can look up the rewrite table
-    * from a receiver whose head symbol is a retarget target. Built in `run`. */
+    * from a receiver whose head symbol is a retarget target. Built in `run`.
+    *
+    * Each retarget source with its own rewrite table (or arity-changing type args) gets a DISTINCT
+    * minted SymId in `remap`, so this map is injective — no two sources share a target SymId when
+    * either has entries in `retargetRewrites`. Sources that share a target AND have no rewrite
+    * table share a SymId, which is correct: the lookup returns their FQN, finds no table, and
+    * returns `None`. */
   private var retargetTargetToSource: Map[SymId, String] = Map.empty
   /** minted symbols for retarget rewrite target member names: `(sourceFqn, memberName)` -> SymId. */
   private var retargetRewriteSyms: Map[(String, String), SymId] = Map.empty
@@ -1005,9 +1011,15 @@ final class CollectionsTransform(
       // …RETARGET first, so a key the port also finds in `typeMap` cannot silently take the
       // collection answer: `effectiveRetarget` has already removed any such key and reported it.
       effectiveRetarget.get(s.fullName).map { sc =>
-        // Arity-changing retargets: each source gets its OWN minted symbol (different SymId, same
-        // FQN) so transformType can identify which source produced the args via retargetArgsByTarget.
-        val sym = if retargetTypeArgs.contains(s.fullName) then
+        // Per-source minted symbols: each retarget source with its OWN rewrite table OR
+        // arity-changing type args gets a DISTINCT SymId (same FQN, different SymId), so
+        // retargetTargetToSource can map each SymId back to exactly one source FQN.
+        // Without this, multiple sources sharing a target collapse to one entry in
+        // retargetTargetToSource (a Map, so .toMap keeps the last), and every other source's
+        // Chain/Rename/Collect entries never fire (§4.55: a loose key indexes to a List).
+        val needsOwnSym = retargetTypeArgs.contains(s.fullName) ||
+          retargetRewrites.contains(s.fullName)
+        val sym = if needsOwnSym then
           mint(sc.substring(sc.lastIndexOf('.') + 1), sc)
         else
           byScala.getOrElseUpdate(sc, mint(sc.substring(sc.lastIndexOf('.') + 1), sc))

@@ -386,4 +386,40 @@ class CollectionsRetargetRewriteSpec extends munit.FunSuite {
     assertEquals(ct.retargetRewrites("com.a.X")(("iterator", 0)), Chain(List("orderedItems", "iterator")))
     assertEquals(ct.retargetRewrites("com.b.Y")(("values", 0)), Chain(List("getValues")))
   }
+
+  // ---- per-source minting: two sources, one target, distinct rewrite tables ----
+
+  test("two sources sharing a target with DIFFERENT rewrite tables are accepted") {
+    // Array and Queue both map to DynamicArray, but Array has BoolDispatch entries Queue does not.
+    // Both must be accepted, and their fingerprints must include both tables.
+    val ct = new CollectionsTransform(
+      retarget = Map("com.a.Array" -> "lls.DynamicArray",
+                     "com.a.Queue" -> "lls.DynamicArray"),
+      retargetRewrites = Map(
+        "com.a.Array" -> Map(
+          ("get", 1)          -> Rename("apply"),
+          ("removeValue", 2)  -> BoolDispatch(1, "removeValueByRef", "removeValue")),
+        "com.a.Queue" -> Map(
+          ("get", 1)      -> Rename("apply"),
+          ("addLast", 1)  -> Rename("add"))))
+    // construction succeeds: both sources accepted
+    assertEquals(ct.retargetRewrites.size, 2)
+    // fingerprint includes both rewrite tables
+    assert(clue(ct.surfaceFingerprint).contains("retargetRewrites="))
+  }
+
+  test("two sources sharing a target with IDENTICAL rewrite tables are accepted") {
+    val tbl = Map(("get", 1) -> Rename("apply"), ("notEmpty", 0) -> Chain(List("nonEmpty")))
+    val ct = new CollectionsTransform(
+      retarget = Map("com.a.X" -> "lls.DA", "com.a.Y" -> "lls.DA"),
+      retargetRewrites = Map("com.a.X" -> tbl, "com.a.Y" -> tbl))
+    assertEquals(ct.retargetRewrites.size, 2)
+  }
+
+  test("two sources sharing a target where only ONE has a rewrite table are accepted") {
+    val ct = new CollectionsTransform(
+      retarget = Map("com.a.X" -> "lls.DA", "com.a.Y" -> "lls.DA"),
+      retargetRewrites = Map("com.a.X" -> Map(("get", 1) -> Rename("apply"))))
+    assertEquals(ct.retargetRewrites.size, 1)
+  }
 }
