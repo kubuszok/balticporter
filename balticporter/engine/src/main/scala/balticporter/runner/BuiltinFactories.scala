@@ -156,8 +156,11 @@ final class CollectionsFactory extends TransformFactory:
         else if c.string("indexedField").isDefined then
           RetargetRewrite.IndexedField(
             c.requireString("indexedField"))
+        else if c.string("template").isDefined then
+          RetargetRewrite.Template(
+            c.requireString("template"))
         else throw ConfigError(tbl.at(memberKey),
-          "object entry must have 'boolDispatch', 'companion', 'forEach', 'collect', 'chain', 'fieldWrite', or 'indexedField'")
+          "object entry must have 'boolDispatch', 'companion', 'forEach', 'collect', 'chain', 'fieldWrite', 'indexedField', or 'template'")
       else
         RetargetRewrite.Rename(tbl.requireString(memberKey))
     var rewrites = Map.empty[String, Map[(String, Int), RetargetRewrite]]

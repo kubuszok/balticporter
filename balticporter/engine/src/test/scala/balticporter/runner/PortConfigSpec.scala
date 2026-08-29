@@ -361,6 +361,21 @@ class PortConfigSpec extends munit.FunSuite:
       CollectionsTransform.RetargetRewrite.IndexedField("items"))
   }
 
+  test("retargetRewrites with Template entries are parsed from config") {
+    val conf = Minimal.replace("""manifest { name = "demo" }""",
+      """manifest { name = "demo", surface = [ { transform = "collections",
+        |  retarget { "com.demo.Widget" = "scala.X" }
+        |  retargetRewrites { "com.demo.Widget" {
+        |    "incr/2" { template = "{ val i = $0; $recv(i) = $recv(i) + $1 }" }
+        |  } }
+        |} ] }""".stripMargin)
+    val ct = PortConfig.load(fixture(conf)).manifest.get.effectiveSurface
+      .collectFirst { case c: CollectionsTransform => c }.get
+    val tbl = ct.retargetRewrites("com.demo.Widget")
+    assertEquals(tbl(("incr", 2)),
+      CollectionsTransform.RetargetRewrite.Template("{ val i = $0; $recv(i) = $recv(i) + $1 }"))
+  }
+
   test("retargetRewrites with descriptor key are parsed into retargetRewritesByDesc") {
     val conf = Minimal.replace("""manifest { name = "demo" }""",
       """manifest { name = "demo", surface = [ { transform = "collections",

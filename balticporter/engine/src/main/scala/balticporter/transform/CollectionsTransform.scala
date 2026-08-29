@@ -508,6 +508,7 @@ final class CollectionsTransform(
         if da then s"$base;dropArgs" else base
       case CollectionsTransform.RetargetRewrite.FieldWrite(f, m) => s"FieldWrite($f,$m)"
       case CollectionsTransform.RetargetRewrite.IndexedField(f) => s"IndexedField($f)"
+      case CollectionsTransform.RetargetRewrite.Template(e) => s"Template($e)"
     val arityEntries = retargetRewrites.toList.sortBy(_._1).flatMap { (src, tbl) =>
       tbl.toList.sortBy(_._1.toString).map { case ((m, ar), rw) => s"$src#$m/$ar->${renderRw(rw)}" }
     }
@@ -1300,6 +1301,8 @@ final class CollectionsTransform(
           List((src, method) -> mint(method, s"$src#retargetRewrite:$method"))
         case _: CollectionsTransform.RetargetRewrite.IndexedField =>
           Nil // no minted symbol needed — the field select is stripped, not renamed
+        case _: CollectionsTransform.RetargetRewrite.Template =>
+          Nil // no minted symbol needed — the template is rendered as Opaque text
       }
     } ++ retargetRewritesByDesc.flatMap { (src, tbl) =>
       tbl.values.flatMap {
@@ -1321,6 +1324,7 @@ final class CollectionsTransform(
         case CollectionsTransform.RetargetRewrite.FieldWrite(_, method) =>
           List((src, method) -> mint(method, s"$src#retargetRewrite:$method"))
         case _: CollectionsTransform.RetargetRewrite.IndexedField => Nil
+        case _: CollectionsTransform.RetargetRewrite.Template => Nil
       }
     }
     enumMapOfTypeSym    = mint("ofType", s"${CollectionsTransform.JavaEnumMapFqn}.ofType")
@@ -6371,6 +6375,87 @@ final class CollectionsTransform(
   private def staticCall(member: SymId, args: List[Term], t: Tree.Apply, so: Origin): Term =
     Tree.Apply(Tree.Ident(member, TypeRepr.NoType, so), args, member, t.tpe, t.origin)
 
+  /** counter for template temporary variables — one run-scoped namespace so names are stable. */
+  private var templateSeq: Int = 0
+
+  /** Render a `RetargetRewrite.Template(expr)` into a `Tree.Opaque.spliced` (or a `Tree.Block`
+    * wrapping one when temporary `val` bindings are needed for repeated term placeholders).
+    *
+    * Placeholders are text-substituted for type-level ones (`$Target`, `$T0`...) and turned into
+    * AST holes for term-level ones (`$recv`, `$0`...).  When a term placeholder appears MORE THAN
+    * ONCE in the template, it is bound to a `val` to avoid double evaluation (CLAUDE.md §4.4/F7). */
+  private def renderTemplate(expr: String, recv: Term, args: List[Term],
+      srcFqn: String, tpe: TypeRepr, so: Origin)(using p: Program): Term =
+    // 1. text-substitute type-level placeholders
+    val targetFqn = typeMap.get(srcFqn).map(_._1).getOrElse(srcFqn)
+    var text = expr.replace("$Target", targetFqn)
+    // substitute $T0, $T1, ... from receiver's type arguments
+    recv.tpe match
+      case TypeRepr.AppliedType(_, targs) =>
+        targs.zipWithIndex.foreach { (ta, i) =>
+          val fqn = headSym(ta).flatMap(s => p.symbolOf(s).map(_.fullName)).getOrElse("scala.Any")
+          text = text.replace(s"$$T$i", fqn)
+        }
+      case _ => ()
+    // 2. identify term placeholders and count occurrences
+    val termPh = scala.collection.mutable.LinkedHashMap.empty[String, Term]
+    if text.contains("$recv") then termPh("$recv") = recv
+    for i <- args.indices do
+      val ph = s"$$$i"
+      if text.contains(ph) then termPh(ph) = args(i)
+    // count occurrences of each placeholder
+    val counts = termPh.map { (ph, _) =>
+      val count = {
+        var c = 0; var idx = 0
+        while { idx = text.indexOf(ph, idx); idx >= 0 } do { c += 1; idx += ph.length }
+        c
+      }
+      ph -> count
+    }.toMap
+    // 3. for placeholders that appear >1 time, bind to a temp val and replace
+    //    subsequent occurrences with the temp name (first occurrence stays as a hole)
+    val bindings = scala.collection.mutable.ListBuffer.empty[(String, Term, String)]
+    for (ph, term) <- termPh do
+      if counts.getOrElse(ph, 0) > 1 then
+        templateSeq += 1
+        val tmpName = s"bp$$tpl$templateSeq"
+        bindings += ((ph, term, tmpName))
+        // replace ALL occurrences in text with the temp name — the binding statement
+        // will carry the hole for the original term
+        text = text.replace(ph, tmpName)
+    // 4. split text around remaining placeholders to build parts/holes for Opaque.spliced
+    //    After step 3, only single-occurrence placeholders remain as $-prefixed text.
+    val positions = scala.collection.mutable.ListBuffer.empty[(Int, Int, String)]
+    for (ph, _) <- termPh if counts.getOrElse(ph, 0) <= 1 do
+      var idx = 0
+      while { idx = text.indexOf(ph, idx); idx >= 0 } do
+        positions += ((idx, idx + ph.length, ph))
+        idx += ph.length
+    val sortedPositions = positions.sortBy(_._1).toList
+    val parts = scala.collection.mutable.ListBuffer.empty[String]
+    val holes = scala.collection.mutable.ListBuffer.empty[Term]
+    var pos = 0
+    for (start, end, ph) <- sortedPositions do
+      parts += text.substring(pos, start)
+      holes += termPh(ph)
+      pos = end
+    parts += text.substring(pos)
+    val opaque =
+      if parts.size == 1 && holes.isEmpty then Tree.Opaque(text, tpe, so)
+      else Tree.Opaque.spliced(parts.toList, holes.toList, tpe, so)
+    // 5. wrap in block with temp val bindings if needed
+    if bindings.isEmpty then opaque
+    else
+      val stmts = bindings.toList.map { (_, term, tmpName) =>
+        Tree.Opaque.spliced(
+          List(s"val $tmpName = ", ""),
+          List(term),
+          TypeRepr.NoType,
+          so
+        )
+      }
+      Tree.Block(stmts, opaque, tpe, so)
+
 
   /** Is this a call on a map whose type arguments are WILDCARDS, at one of the three members java
     * declares over `Object`?
@@ -7045,6 +7130,9 @@ final class CollectionsTransform(
         // bottom-up traversal does not steal the iterable before retargetForEach sees the
         // enclosing ForEach.
         case _: CollectionsTransform.RetargetRewrite.Collect => scala.None
+        // Template: a textual expression with AST holes for the receiver and args.
+        case CollectionsTransform.RetargetRewrite.Template(expr) =>
+          Some(renderTemplate(expr, recv, t.args, srcFqn, t.tpe, so))
         // Chain: recv.source(args) → recv.m1.m2.m3 (or with () where parens says to).
         // Each member's arity is decided from the Chain's `parens` set (F9's rule:
         // the arity comes from the CALLEE SYMBOL's declaration on the target type).
@@ -7136,6 +7224,8 @@ final class CollectionsTransform(
                   }
               Tree.Apply(Tree.Ident(factorySym, TypeRepr.NoType, t.origin), effectiveArgs, factorySym, n.tpe, t.origin)
             }
+          case CollectionsTransform.RetargetRewrite.Template(expr) =>
+            Some(renderTemplate(expr, Tree.Ident(SymId.None, n.tpe, t.origin), t.args, srcFqn, n.tpe, t.origin))
           case _ => scala.None // Rename/BoolDispatch at <init> is meaningless; ignore
         }
       }
@@ -7375,6 +7465,22 @@ object CollectionsTransform:
       * `ArrayAccess(arr, i)`, which the emitter renders as `arr(i)`. For writes,
       * `Assign(ArrayAccess(arr, i), v)` renders as `arr(i) = v` = `arr.update(i, v)`. */
     case class IndexedField(field: String) extends RetargetRewrite
+
+    /** Expression template with placeholders, rendered as `Tree.Opaque.spliced`.
+      *
+      * Placeholders:
+      *   - `$recv` — the receiver term
+      *   - `$0`, `$1`, ... — call arguments by position
+      *   - `$T0`, `$T1`, ... — the receiver's type arguments (rendered as FQN text, not holes)
+      *   - `$Target` — the retarget target's FQN (text, not a hole)
+      *
+      * When a term placeholder (`$recv`, `$0`...) appears MORE THAN ONCE in the template,
+      * it is bound to a temporary `val` to avoid evaluating side effects twice (CLAUDE.md §4.4/F7).
+      * Type-level placeholders (`$T0`, `$Target`) are text-substituted and may repeat freely.
+      *
+      * The result is a `Tree.Opaque.spliced` (or `Tree.Block` wrapping one when temps are needed),
+      * so argument trees are real AST nodes that later phases (package rename) can still reach. */
+    case class Template(expr: String) extends RetargetRewrite
 
   /** How to construct a retarget target's type arguments from the source type's.
     * Each element produces one argument in the target type — so a `List[RetargetArg]` of length N

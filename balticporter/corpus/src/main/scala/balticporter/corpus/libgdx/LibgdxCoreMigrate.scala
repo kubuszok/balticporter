@@ -878,6 +878,9 @@ object LibgdxPolicy:
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
+        // IntArray.incr(index, value) -> { val i = index; da(i) = da(i) + value }
+        // $recv appears twice — Template binds it to a temp (§4.4/F7).
+        ("incr", 2)     -> Template("{ val bpIdx = $0; $recv(bpIdx) = $recv(bpIdx) + $1 }"),
       ),
       "com.badlogic.gdx.utils.FloatArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -946,6 +949,9 @@ object LibgdxPolicy:
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
+        // ensureCapacity(int) returns T[] in java; DynamicArray.ensureCapacity returns Unit.
+        // The callers assign the result for indexed access — return the DynamicArray itself.
+        ("ensureCapacity", 1) -> Template("{ $recv.ensureCapacity($0); $recv }"),
       ),
       "com.badlogic.gdx.utils.CharArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -1045,6 +1051,15 @@ object LibgdxPolicy:
       // needs a cast the Rename entry cannot express).
       "com.badlogic.gdx.utils.CharArray"            -> (primArrayInitByDesc(Descriptor(List(Param.Named("CharArray"))), charArrDesc) ++ Map(
         ("append", Descriptor(List(Param.Prim("char")))) -> Rename("add"),
+        // append(CharSequence/String) -> addAll(cs.toString.toCharArray, 0, len).
+        // Template: $0 appears once, $recv appears once — no temp binding needed.
+        ("append", Descriptor(List(Param.Named("CharSequence")))) ->
+          Template("{ val bpCa = $0.toString.toCharArray; $recv.addAll(bpCa, 0, bpCa.length) }"),
+        ("append", Descriptor(List(Param.Named("String")))) ->
+          Template("{ val bpCa = $0.toString.toCharArray; $recv.addAll(bpCa, 0, bpCa.length) }"),
+        // append(int) -> add(c.toChar) — the int is a codepoint, cast to Char.
+        ("append", Descriptor(List(Param.Prim("int")))) ->
+          Template("$recv.add($0.toChar)"),
       )),
       "com.badlogic.gdx.utils.BooleanArray"         -> primArrayInitByDesc(Descriptor(List(Param.Named("BooleanArray"))), boolArrDesc),
     )
