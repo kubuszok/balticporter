@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
 import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, IdiomCheck, IdiomLog, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, RemedySource, RemedyVocabulary, ResolutionPlan, OverloadRiskCheck, Remediator, RewriteCallSitesCheck, RewriteLog, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
-import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionInternalCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, OpaqueBoundaryCheck, PackageRenameTransform, PortMapTransform, PrimitiveToOpaqueTransform, PublicFieldAccessorTransform, RetargetBoundaryCheck}
+import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionInternalCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, OpaqueBoundaryCheck, PackageRenameTransform, PortMapTransform, PrimitiveToOpaqueTransform, PublicFieldAccessorTransform, RetargetBoundaryCheck, SuppressionPhase}
 import balticporter.verify.ApiParityCheck
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -2539,7 +2539,7 @@ final case class PortRun(
     *
     * @see [[idiomPhases]] for WHERE each one is placed, which is the whole of the D1 argument. */
   private def effectivePhases: List[Phase] =
-    idiomPhases(declaredPhases) ++ PortRun.remedyPhases ++ renamePhase
+    idiomPhases(declaredPhases) ++ PortRun.remedyPhases ++ PortRun.derivedPhases ++ renamePhase
 
   /** THE REMEDIES THIS RUN CAN ACTUALLY CARRY OUT — derived from what the run HOLDS, never listed.
     *
@@ -3254,6 +3254,19 @@ object PortRun:
     * binds. Fresh instances per call, because a phase carries the state it binds. */
   def remedyPhases: List[Phase] =
     List(new HeapPollutionCheck.Apply, new OverloadRiskCheck.Apply)
+
+  /** §1(a) universal phases that are unconditionally derived — not declared per port. Each is a
+    * no-op when its trigger is absent, so including it costs nothing.
+    *
+    * `SuppressionPhase` scans the FINAL tree for `.orNull` calls and adds `@nowarn("msg=deprecated")`
+    * to members that hold them. `.orNull` members are minted by `NullabilityTransform` when the
+    * `Named` target is used; without a `Named` target, no `.orNull` symbols exist and the phase
+    * returns early. Declaring it here rather than in each port's `surface` is the conditional-lane
+    * pattern: a port under `-Werror -deprecation` needs it whenever a `Named` nullability target is
+    * in the pipeline, and the scan is harmless (returns the program unchanged) when it is not.
+    * Fresh instances per call, because a phase carries the state it binds. */
+  def derivedPhases: List[Phase] =
+    List(new SuppressionPhase)
 
   /** Every check's name as it appears in `counts.tsv`. Named here, in the orchestrator, because the
     * orchestrator is now the only thing that records: a check is a pure function of a `Program` and
