@@ -490,6 +490,34 @@ object LibgdxPolicy:
       // bits.containsAll(other) = "this is a superset of other" = other.subsetOf(this).
       // Argument and receiver SWAP — Template, not Rename.
       ("containsAll", 1)  -> Template("$0.subsetOf($recv)"),
+      // bits.length() -> highest set bit + 1. BitSet has no direct equivalent.
+      // BitSet.last is the highest element; +1 matches java's Bits.length semantics.
+      // Empty -> 0 (Bits.length returns 0 on empty, BitSet.last throws).
+      ("length", 0)       -> Template("(if ($recv.isEmpty) 0 else $recv.last + 1)"),
+      // bits.numBits() -> count of set bits = BitSet.size
+      ("numBits", 0)      -> Chain(List("size")),
+      // bits.flip(i) -> toggle bit i
+      ("flip", 1)         -> Template("(if ($recv($0)) $recv -= $0 else $recv += $0)"),
+      // bits.nextSetBit(fromIndex) -> first set bit >= fromIndex, or -1
+      ("nextSetBit", 1)   -> Template("$recv.rangeFrom($0).headOption.getOrElse(-1)"),
+      // bits.intersects(other) -> (bits & other).nonEmpty
+      ("intersects", 1)   -> Template("($recv & $0).nonEmpty"),
+      // bits.getAndClear(i) -> { val was = bits(i); bits -= i; was }
+      ("getAndClear", 1)  -> Template("{ val bpWas = $recv($0); $recv -= $0; bpWas }"),
+      // bits.getAndSet(i) -> { val was = bits(i); bits += i; !was } (returns true if ALREADY set = was NOT set before)
+      // Java's getAndSet returns true if the bit was ALREADY set BEFORE the operation.
+      // Wait: java says "returns true if the bit was already set" which means "was NOT changed".
+      // Actually the javadoc says "returns true if the bit was already set", so: { val was = bits(i); bits += i; was }
+      ("getAndSet", 1)    -> Template("{ val bpWas = $recv($0); $recv += $0; bpWas }"),
+      // bits.clear() (no args) -> clear all bits. BitSet.clear() exists.
+      ("clear", 0)        -> Rename("clear"),
+      // bits.notEmpty() -> nonEmpty (parenless on BitSet)
+      ("notEmpty", 0)     -> Chain(List("nonEmpty")),
+      // bits.isEmpty() -> isEmpty (parenless on BitSet)
+      // Note: bean-property may have renamed isEmpty->empty. The retarget rewrite
+      // ("empty", 0) -> Rename("isEmpty") below reverses it. But BitSet.empty returns
+      // a new empty BitSet (not a Boolean), so we MUST reach "isEmpty" not "empty".
+      ("empty", 0)        -> Chain(List("isEmpty")),
     ))
 
   /** `ObjectMap` and `ObjectSet` retargetted to their lls equivalents.
@@ -1085,12 +1113,13 @@ object LibgdxPolicy:
       // at erasure and addAll only reads from it.
       ("addAll", addAllArrayDesc) -> Template("$recv.addAll($0.items.asInstanceOf[scala.Array[$T0]], $1, $2)"),
     )
-    def primArrayInitByDesc(selfDesc: Descriptor, rawArrDesc: Descriptor) = Map(
+    def primArrayInitByDesc(selfDesc: Descriptor, rawArrDesc: Descriptor, elemType: String) = Map(
       ("<init>", intDesc)    -> Construct("lowlevel.util.DynamicArray", "apply"),
       ("<init>", selfDesc)   -> Construct("lowlevel.util.DynamicArray", "from"),
       // wave 3.1y: init from raw primitive array — e.g. LongArray(long[]).
       // DynamicArray.apply takes capacity (Int), not a raw array. Construct + addAll.
-      ("<init>", rawArrDesc) -> Template("{ val bpSrc = $0; val bpDa = $Target(); bpDa.addAll(bpSrc, 0, bpSrc.length); bpDa }"),
+      // The element type is fixed (primitive), so we template it explicitly.
+      ("<init>", rawArrDesc) -> Template(s"{ val bpSrc = $$0; val bpDa = $$Target[$elemType](); bpDa.addAll(bpSrc, 0, bpSrc.length); bpDa }"),
       ("addAll", Descriptor(List(selfDesc.params.head, Param.Prim("int"), Param.Prim("int")))) ->
         Template("$recv.addAll($0.items, $1, $2)"),
     )
@@ -1098,16 +1127,16 @@ object LibgdxPolicy:
       "com.badlogic.gdx.utils.Array"                -> genericArrayInitByDesc,
       "com.badlogic.gdx.utils.SnapshotArray"        -> genericArrayInitByDesc,
       "com.badlogic.gdx.utils.DelayedRemovalArray"  -> genericArrayInitByDesc,
-      "com.badlogic.gdx.utils.IntArray"             -> primArrayInitByDesc(Descriptor(List(Param.Named("IntArray"))), intArrDesc),
-      "com.badlogic.gdx.utils.FloatArray"           -> primArrayInitByDesc(Descriptor(List(Param.Named("FloatArray"))), floatArrDesc),
-      "com.badlogic.gdx.utils.LongArray"            -> primArrayInitByDesc(Descriptor(List(Param.Named("LongArray"))), longArrDesc),
-      "com.badlogic.gdx.utils.ShortArray"           -> primArrayInitByDesc(Descriptor(List(Param.Named("ShortArray"))), shortArrDesc),
-      "com.badlogic.gdx.utils.ByteArray"            -> primArrayInitByDesc(Descriptor(List(Param.Named("ByteArray"))), byteArrDesc),
+      "com.badlogic.gdx.utils.IntArray"             -> primArrayInitByDesc(Descriptor(List(Param.Named("IntArray"))), intArrDesc, "scala.Int"),
+      "com.badlogic.gdx.utils.FloatArray"           -> primArrayInitByDesc(Descriptor(List(Param.Named("FloatArray"))), floatArrDesc, "scala.Float"),
+      "com.badlogic.gdx.utils.LongArray"            -> primArrayInitByDesc(Descriptor(List(Param.Named("LongArray"))), longArrDesc, "scala.Long"),
+      "com.badlogic.gdx.utils.ShortArray"           -> primArrayInitByDesc(Descriptor(List(Param.Named("ShortArray"))), shortArrDesc, "scala.Short"),
+      "com.badlogic.gdx.utils.ByteArray"            -> primArrayInitByDesc(Descriptor(List(Param.Named("ByteArray"))), byteArrDesc, "scala.Byte"),
       // CharArray: init-by-desc AND append overloads (arity 1 is ambiguous — char/CharSequence/String/int).
       // append(char) -> add(char), append(CharSequence)/append(String) -> counted (no single-expression
       // translation — sge iterates char-by-char), append(int) -> counted (same reason — `add(c.toChar)`
       // needs a cast the Rename entry cannot express).
-      "com.badlogic.gdx.utils.CharArray"            -> (primArrayInitByDesc(Descriptor(List(Param.Named("CharArray"))), charArrDesc) ++ Map(
+      "com.badlogic.gdx.utils.CharArray"            -> (primArrayInitByDesc(Descriptor(List(Param.Named("CharArray"))), charArrDesc, "scala.Char") ++ Map(
         // CharArray(String) -> construct from string's char array.
         ("<init>", Descriptor(List(Param.Named("String")))) ->
           Template("{ val bpStr = $0; val bpDa = $Target[scala.Char](); bpDa.addAll(bpStr.toCharArray, 0, bpStr.length); bpDa }"),
@@ -1133,7 +1162,7 @@ object LibgdxPolicy:
         ("indexOf", Descriptor(List(Param.Named("String")))) ->
           Template("$recv.indexOf($0.charAt(0))"),
       )),
-      "com.badlogic.gdx.utils.BooleanArray"         -> primArrayInitByDesc(Descriptor(List(Param.Named("BooleanArray"))), boolArrDesc),
+      "com.badlogic.gdx.utils.BooleanArray"         -> primArrayInitByDesc(Descriptor(List(Param.Named("BooleanArray"))), boolArrDesc, "scala.Boolean"),
       // Queue: arity-1 is ambiguous — Queue(int) capacity vs Queue(int, Class) / Queue(int, ArraySupplier).
       // Queue(int) -> DynamicArray.apply(capacity). Queue(int, Class) drops the Class.
       // Queue(int, ArraySupplier) drops the ArraySupplier.
