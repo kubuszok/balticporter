@@ -6386,53 +6386,84 @@ final class CollectionsTransform(
     * ONCE in the template, it is bound to a `val` to avoid double evaluation (CLAUDE.md §4.4/F7). */
   private def renderTemplate(expr: String, recv: Term, args: List[Term],
       srcFqn: String, tpe: TypeRepr, so: Origin)(using p: Program): Term =
-    // 1. text-substitute type-level placeholders.
+    // 1. text-substitute $Target; collect $T0.. as TERMS for AST holes.
+    // $Target is text-only (the retarget target FQN — always post-rename).
     // A retarget entry is NOT in typeMap (which holds JDK families), so check retarget too —
     // without this, $Target resolves to the SOURCE FQN for every retarget Template.
     val targetFqn = typeMap.get(srcFqn).map(_._1).orElse(retarget.get(srcFqn)).getOrElse(srcFqn)
     var text = expr.replace("$Target", targetFqn)
-    // substitute $T0, $T1, ... from receiver's type arguments
+    // $T0, $T1, ... are type argument references — they become AST holes (Tree.Ident with the
+    // type arg's head symbol), NOT text, because the FQN at this pipeline position is the
+    // UPSTREAM namespace and package rename has not run yet. An AST hole lets later phases
+    // (PackageRenameTransform) reach and rewrite the symbol's fullName.
+    val typeArgTerms = scala.collection.mutable.LinkedHashMap.empty[String, Term]
     recv.tpe match
       case TypeRepr.AppliedType(_, targs) =>
         targs.zipWithIndex.foreach { (ta, i) =>
-          val fqn = headSym(ta).flatMap(s => p.symbolOf(s).map(_.fullName)).getOrElse("scala.Any")
-          text = text.replace(s"$$T$i", fqn)
+          val ph = s"$$T$i"
+          if text.contains(ph) then
+            val sym = headSym(ta).getOrElse(SymId.None)
+            typeArgTerms(ph) = Tree.Ident(sym, ta, so)
         }
       case _ => ()
-    // 2. identify term placeholders and count occurrences
+    // 2. identify term placeholders and count occurrences.
+    //    A term placeholder is `$recv` or `$N` where N is an argument index.
+    //    Matching must not collide with `$T0` (type args) or `$Target` — those are
+    //    TEXT-substituted in step 1, but may survive unresolved when the receiver has
+    //    no type arguments.  So `$N` is matched only when NOT preceded by `T` and NOT
+    //    followed by another digit (avoiding `$10` matching as `$1` + `0`).
+    def findTermPh(txt: String, ph: String): List[Int] =
+      val results = scala.collection.mutable.ListBuffer.empty[Int]
+      val isTypeArgPh = ph.startsWith("$T") && ph.length > 2 && ph.charAt(2).isDigit
+      var idx = 0
+      while { idx = txt.indexOf(ph, idx); idx >= 0 } do
+        // For $recv and $T0..: accept as-is. For $0..$N: skip if preceded by T (part of $T0)
+        // or followed by digit (part of $10).
+        val precOk = ph == "$recv" || isTypeArgPh || idx == 0 || txt.charAt(idx - 1) != 'T'
+        val suffOk = ph == "$recv" || isTypeArgPh || {
+          val afterEnd = idx + ph.length
+          afterEnd >= txt.length || !txt.charAt(afterEnd).isDigit
+        }
+        if precOk && suffOk then
+          results += idx
+          idx += ph.length
+        else
+          idx += 1
+      results.toList
     val termPh = scala.collection.mutable.LinkedHashMap.empty[String, Term]
-    if text.contains("$recv") then termPh("$recv") = recv
+    // type arg placeholders are term holes now — add them first so they are bound before $0 etc.
+    for (ph, term) <- typeArgTerms do termPh(ph) = term
+    if findTermPh(text, "$recv").nonEmpty then termPh("$recv") = recv
     for i <- args.indices do
       val ph = s"$$$i"
-      if text.contains(ph) then termPh(ph) = args(i)
+      if findTermPh(text, ph).nonEmpty then termPh(ph) = args(i)
     // count occurrences of each placeholder
-    val counts = termPh.map { (ph, _) =>
-      val count = {
-        var c = 0; var idx = 0
-        while { idx = text.indexOf(ph, idx); idx >= 0 } do { c += 1; idx += ph.length }
-        c
-      }
-      ph -> count
-    }.toMap
+    val counts = termPh.map { (ph, _) => ph -> findTermPh(text, ph).size }.toMap
     // 3. for placeholders that appear >1 time, bind to a temp val and replace
-    //    subsequent occurrences with the temp name (first occurrence stays as a hole)
+    //    subsequent occurrences with the temp name (first occurrence stays as a hole).
+    //    Replacement uses findTermPh to avoid corrupting $T0 etc.
     val bindings = scala.collection.mutable.ListBuffer.empty[(String, Term, String)]
     for (ph, term) <- termPh do
       if counts.getOrElse(ph, 0) > 1 then
         templateSeq += 1
         val tmpName = s"bp$$tpl$templateSeq"
         bindings += ((ph, term, tmpName))
-        // replace ALL occurrences in text with the temp name — the binding statement
-        // will carry the hole for the original term
-        text = text.replace(ph, tmpName)
+        // replace matched occurrences only — rebuild the string from findTermPh positions
+        val phPositions = findTermPh(text, ph)
+        val sb = new StringBuilder
+        var pos0 = 0
+        for p <- phPositions do
+          sb.append(text, pos0, p)
+          sb.append(tmpName)
+          pos0 = p + ph.length
+        sb.append(text, pos0, text.length)
+        text = sb.toString
     // 4. split text around remaining placeholders to build parts/holes for Opaque.spliced
     //    After step 3, only single-occurrence placeholders remain as $-prefixed text.
     val positions = scala.collection.mutable.ListBuffer.empty[(Int, Int, String)]
     for (ph, _) <- termPh if counts.getOrElse(ph, 0) <= 1 do
-      var idx = 0
-      while { idx = text.indexOf(ph, idx); idx >= 0 } do
-        positions += ((idx, idx + ph.length, ph))
-        idx += ph.length
+      for p <- findTermPh(text, ph) do
+        positions += ((p, p + ph.length, ph))
     val sortedPositions = positions.sortBy(_._1).toList
     val parts = scala.collection.mutable.ListBuffer.empty[String]
     val holes = scala.collection.mutable.ListBuffer.empty[Term]

@@ -1022,13 +1022,10 @@ object LibgdxPolicy:
     val intDesc        = Descriptor(List(Param.Prim("int")))
     val arrayDesc      = Descriptor(List(Param.Named("Array")))
     val supplierDesc   = Descriptor(List(Param.Named("ArraySupplier")))
-    // wave 3.1t: the generic type-variable array desc was Object[] which never matched
-    // (the frontend's `descriptorOf` reads `getSimpleName` of the type variable reference,
-    // which is `"T"`, not the erasure). The desc is now T[] to match. DynamicArray.from takes
-    // a DynamicArray (not a raw scala.Array), so the from entry is REMOVED — the arity-1
-    // fallback `Construct("apply")` fires instead, which is one counted error per site.
-    // A Template cannot fix this: `$T0` contains the substring `$0`, so the template mechanism's
-    // placeholder detection collides and corrupts the output (ENGINE-LIMITS.md pending).
+    // wave 3.1t: Array(T[]) — copy-construct from a raw array. DynamicArray.from takes a
+    // DynamicArray, not a raw scala.Array, so a Template constructs and addAll's. The $T0
+    // placeholder is an AST hole (Tree.Ident with the type arg's head symbol), so
+    // PackageRenameTransform reaches and renames the FQN correctly.
     val tArrDesc       = Descriptor(List(Param.Arr(Param.Named("T"))))
     val intArrDesc     = Descriptor(List(Param.Arr(Param.Prim("int"))))
     val floatArrDesc   = Descriptor(List(Param.Arr(Param.Prim("float"))))
@@ -1045,6 +1042,7 @@ object LibgdxPolicy:
     def genericArrayInitByDesc = Map(
       ("<init>", intDesc)      -> Construct("lowlevel.util.DynamicArray", "apply"),
       ("<init>", arrayDesc)    -> Construct("lowlevel.util.DynamicArray", "from"),
+      ("<init>", tArrDesc)     -> Template("{ val bpSrc = $0; val bpDa = $Target[$T0](); bpDa.addAll(bpSrc, 0, bpSrc.length); bpDa }"),
       ("<init>", supplierDesc) -> Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1),
       ("addAll", addAllArrayDesc) -> Template("$recv.addAll($0.items, $1, $2)"),
     )
