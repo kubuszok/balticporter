@@ -1414,6 +1414,14 @@ object LibgdxPolicy:
       annotations = Set("com.badlogic.gdx.utils.Null"),
       target      = balticporter.transform.NullabilityTransform.Target.Named("lowlevel.Nullable"),
       scope       = balticporter.tir.RuleScope.Everywhere(nullabilityErasureExempt),
+      // K13.6: `IntMap.get(int)` returns `V` WITHOUT `@Null` but CAN return null (the body says
+      // `return null`). After the retarget, lls's `ObjectMap.get(K)` returns `Nullable[V]`, so
+      // scalac sees `Nullable.Impl[V]` and the caller's `.beforeGroup()` is not a member. Adding
+      // the method to `nullableMembers` makes the plan include it, wraps the result, and the
+      // existing `transformSelect` unwrapping (`.get` on the Nullable) fires automatically.
+      nullableMembers = Set(
+        "com.badlogic.gdx.utils.IntMap#get",
+      ),
     )
 
   /** Types whose `@Null`-annotated overload sets create ERASURE CONFLICTS under Named mode.

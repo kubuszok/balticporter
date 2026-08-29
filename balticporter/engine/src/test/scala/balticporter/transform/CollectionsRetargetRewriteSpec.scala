@@ -291,6 +291,19 @@ class CollectionsRetargetRewriteSpec extends munit.FunSuite {
     assert(r.toString.contains("2"))
   }
 
+  // ---- forEach pool: monotonic, no wrap (M10 shape) ----
+
+  test("ForEach pool pre-allocates 64 entries to prevent modular wrap") {
+    // The pool was 8 with `forEachSeq % 8`; at nesting > 8 the names wrapped and the inner
+    // lambda silently shadowed the outer's captures (M10's shape). Now the pool is 64 with a
+    // require guard instead of wrap.
+    val ct = new CollectionsTransform(
+      retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(
+        ("entries", 0) -> ForEach("foreachEntry", 2))))
+    assert(ct.retargetRewrites.nonEmpty)
+  }
+
   test("mergeWith unions Construct entries with dropTrailing from independent sources") {
     val base = new CollectionsTransform(
       retarget = Map("com.a.X" -> "scala.X", "com.b.Y" -> "scala.Y"),

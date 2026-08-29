@@ -687,11 +687,11 @@ final class CollectionsTransform(
     * no second lowering can appear under an `a0$` that is already bound. */
   private var recvBindSym: SymId = SymId.None
   private var argParamSyms: Vector[SymId] = Vector.empty
-  /** sequence counter for lambda parameter symbols in [[retargetForEach]] — each nested rewrite
-    * gets unique names (`k$fe0`/`v$fe0`, `k$fe1`/`v$fe1`, …) so an inner entry lambda does not
-    * shadow the outer one's captures.  The old fixed `k$fe`/`v$fe` caused a capture when
-    * `Model.loadNodes` nested two `foreachEntry` calls (inner `k$fe` of type String shadowed
-    * outer `k$fe` of type NodePart). */
+  /** Monotonic counter for lambda parameter symbols in [[retargetForEach]] — each rewrite gets a
+    * unique name (`k$fe0`/`v$fe0`, `k$fe1`/`v$fe1`, …) so an inner entry lambda does not shadow
+    * the outer one's captures. Never wraps: the old modular `forEachSeq % 8` silently shadowed
+    * at nesting depth > 8, which is `ENGINE-LIMITS.md` M10's exact shape — an emitted NAME keyed
+    * on a program-global counter renumbering itself. */
   private var forEachSeq: Int = 0
   private var forEachKeyPool: Array[SymId] = Array.empty
   private var forEachValPool: Array[SymId] = Array.empty
@@ -1082,9 +1082,11 @@ final class CollectionsTransform(
     toJavaValueSym = mint("toJavaValue", s"${CollectionsTransform.ReifiedFqn}.toJavaValue")
     foreachSym          = mint("foreach", "foreach")
     forEachSeq          = 0
-    forEachKeyPool      = (0 until 8).map(i => mint(s"k$$fe$i", s"k$$fe$i")).toArray
-    forEachValPool      = (0 until 8).map(i => mint(s"v$$fe$i", s"v$$fe$i")).toArray
-    forEachElemPool     = (0 until 8).map(i => mint(s"x$$fe$i", s"x$$fe$i")).toArray
+    // 64 entries — never wraps; libGDX core uses ~30 forEach rewrites across the whole port.
+    // An assertion in retargetForEach guards the upper bound rather than silently shadowing.
+    forEachKeyPool      = (0 until 64).map(i => mint(s"k$$fe$i", s"k$$fe$i")).toArray
+    forEachValPool      = (0 until 64).map(i => mint(s"v$$fe$i", s"v$$fe$i")).toArray
+    forEachElemPool     = (0 until 64).map(i => mint(s"x$$fe$i", s"x$$fe$i")).toArray
     removeHeadOptionSym = mint("removeHeadOption", "removeHeadOption")
     headOptionSym       = mint("headOption", "headOption")
     orNullSym           = mint("orNull", "orNull")
@@ -3325,7 +3327,11 @@ final class CollectionsTransform(
     // pick unique lambda parameter symbols per rewrite — nested entry loops would otherwise
     // shadow: the inner `k$fe` captures the outer, and `k$fe.invBoneBindTransforms` resolves
     // against the inner key type (`String`) instead of the outer (`NodePart`).
-    val n = { val i = forEachSeq % forEachKeyPool.length; forEachSeq += 1; i }
+    val n = { val i = forEachSeq; forEachSeq += 1
+      require(i < forEachKeyPool.length,
+        s"CollectionsTransform: forEach lambda counter reached ${forEachKeyPool.length} — " +
+          "pool exhausted (was 8, now 64; if a port genuinely needs more, grow the pool)")
+      i }
     val apply =
       if rewrite.arity == 2 then
         // entry iteration: build `recv.foreachEntry((k, v) => body')`
