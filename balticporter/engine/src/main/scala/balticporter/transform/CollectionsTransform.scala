@@ -446,6 +446,7 @@ final class CollectionsTransform(
       case CollectionsTransform.RetargetRewrite.Chain(ms, ps) =>
         if ps.isEmpty then s"Chain(${ms.mkString(";")})"
         else s"Chain(${ms.mkString(";")};parens=${ps.toList.sorted.mkString(",")})"
+      case CollectionsTransform.RetargetRewrite.FieldWrite(f, m) => s"FieldWrite($f,$m)"
     balticporter.tir.TirPrinter.sha256(
       retargetRewrites.toList.sortBy(_._1).flatMap { (src, tbl) =>
         tbl.toList.sortBy(_._1.toString).map { case ((m, ar), rw) => s"$src#$m/$ar->${renderRw(rw)}" }
@@ -1196,6 +1197,8 @@ final class CollectionsTransform(
           List((src, via) -> mint(via, s"$src#retargetRewrite:$via"))
         case CollectionsTransform.RetargetRewrite.Chain(members, _) =>
           members.map(m => (src, m) -> mint(m, s"$src#retargetRewrite:$m"))
+        case CollectionsTransform.RetargetRewrite.FieldWrite(_, method) =>
+          List((src, method) -> mint(method, s"$src#retargetRewrite:$method"))
       }
     }
     enumMapOfTypeSym    = mint("ofType", s"${CollectionsTransform.JavaEnumMapFqn}.ofType")
@@ -2888,10 +2891,16 @@ final class CollectionsTransform(
     * structural. */
   override def transformTerm(t: Term)(using Program): Term = t match
     case a: Tree.Assign =>
-      // the TARGET may itself be a reference to a scoped-out declaration, in which case the slot is
-      // a JDK one however the node reads — the same `actualOf` the argument side takes.
-      val (want, wantScoped) = actualOf(a.lhs)
-      a.copy(rhs = coerce(want, a.rhs, wantScoped))
+      // FieldWrite: `recv.field = value` -> `recv.method(value)` on a retarget target.
+      // Checked BEFORE the coercion path, because the field is NOT writable on the target
+      // and the assignment would be a compile error.
+      retargetFieldWrite(a) match
+        case Some(rewritten) => rewritten
+        case scala.None =>
+          // the TARGET may itself be a reference to a scoped-out declaration, in which case the slot
+          // is a JDK one however the node reads — the same `actualOf` the argument side takes.
+          val (want, wantScoped) = actualOf(a.lhs)
+          a.copy(rhs = coerce(want, a.rhs, wantScoped))
     case ty: Tree.Typed if impossibleShimCast(ty) => ty.expr
     case ty: Tree.Typed   => reifiedCast(ty)
     case io: Tree.InstanceOf => reifiedTest(io)
@@ -3093,6 +3102,31 @@ final class CollectionsTransform(
       }
       lit.copy(const = Constant.ClassOfC(mapped))
     else lit
+
+  /** A FIELD WRITE on a retarget target — `recv.field = value` -> `recv.method(value)`.
+    *
+    * Fires on `Tree.Assign` where the LHS is a `Tree.Select` of a retarget target's member whose
+    * retargetRewrites entry is a [[CollectionsTransform.RetargetRewrite.FieldWrite]]. The java field
+    * becomes a METHOD on the target (e.g. `arr.size = n` -> `arr.setSize(n)` on DynamicArray), so
+    * the assignment becomes a call. Keyed on SYMBOL via [[retargetTargetToSource]], never a name
+    * (§4.56). */
+  private def retargetFieldWrite(a: Tree.Assign)(using p: Program): Option[Term] =
+    if retargetRewrites.isEmpty then return scala.None
+    a.lhs match
+      case sel: Tree.Select =>
+        headSym(sel.qual.tpe).flatMap(retargetTargetToSource.get).flatMap { srcFqn =>
+          val mName = methodName(sel.sym)
+          retargetRewrites.get(srcFqn).flatMap(_.get((mName, 0))).flatMap {
+            case CollectionsTransform.RetargetRewrite.FieldWrite(_, method) =>
+              retargetRewriteSyms.get((srcFqn, method)).map { tgtSym =>
+                Tree.Apply(
+                  Tree.Select(sel.qual, tgtSym, TypeRepr.NoType, a.origin),
+                  List(a.rhs), tgtSym, TypeRepr.NoType, a.origin)
+              }
+            case _ => scala.None
+          }
+        }
+      case _ => scala.None
 
   /** A FIELD ACCESS on a retarget target — `entry.key` -> `entry._1`, `entry.value` -> `entry._2`.
     *
@@ -6756,6 +6790,9 @@ final class CollectionsTransform(
             }
             Some(cur)
         case _: CollectionsTransform.RetargetRewrite.Chain => scala.None
+        // FieldWrite entries are handled in transformTerm on Tree.Assign; if the call reaches
+        // HERE it is a call to a method with the same (name, arity) — return None.
+        case _: CollectionsTransform.RetargetRewrite.FieldWrite => scala.None
       }
     }
 
@@ -6996,6 +7033,23 @@ object CollectionsTransform:
       * default (parenless) matches the convention of lls and scala collections; `parens` is the
       * opt-in for members that genuinely take `()`. */
     case class Chain(members: List[String], parens: Set[String] = Set.empty) extends RetargetRewrite
+
+    /** Field write rewrite: `recv.field = value` -> `recv.method(value)`.
+      *
+      * Fires on `Tree.Assign` where the LHS is a `Tree.Select` of `field` on a retarget target.
+      * Java's `arr.size = n` is a field assignment; lls's `DynamicArray` exposes `size` as a
+      * METHOD (getter only), so the write must become a METHOD CALL on the target.
+      *
+      * The entry is keyed at `(field, 0)` — the SAME slot a `Rename` or `Chain` would occupy for
+      * the READ side of that member. Both sides coexist: a `FieldWrite` fires ONLY for
+      * `Tree.Assign` (the write), while a `Rename`/`Chain` fires for `Tree.Select`/`Tree.Apply`
+      * (the read). Where the java field has both reads and writes, the rewrite table carries
+      * BOTH entries at the same key — the caller dispatches on the node kind, not on the key. A
+      * FieldWrite at a key with no read-side entry leaves the read unchanged (the target's member
+      * already has the right name).
+      *
+      * `method` is the target method to call with the assigned value as argument. */
+    case class FieldWrite(field: String, method: String) extends RetargetRewrite
 
   /** How to construct a retarget target's type arguments from the source type's.
     * Each element produces one argument in the target type — so a `List[RetargetArg]` of length N

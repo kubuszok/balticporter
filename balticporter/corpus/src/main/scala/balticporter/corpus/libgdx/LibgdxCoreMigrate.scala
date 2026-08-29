@@ -785,6 +785,14 @@ object LibgdxPolicy:
         ("peek", 0)         -> Chain(List("peek")),
         ("first", 0)        -> Chain(List("first")),
         ("iterator", 0)     -> Chain(List("iterator")),
+        // wave 3.1o: field-write images. DynamicArray exposes `size` as a METHOD (getter only),
+        // so `arr.size = n` must become `arr.setSize(n)`. `setSize` handles both growing (pads
+        // with defaults) and shrinking (truncates), which is java's Array.size field semantics.
+        // `arr.ordered` -> `arr.preserveOrder` (boolean, read-only on DynamicArray).
+        ("size", 0)         -> FieldWrite("size", "setSize"),
+        ("ordered", 0)      -> Rename("preserveOrder"),
+        // CharArray.append(char[], off, len) -> DynamicArray.addAll(raw, off, len)
+        ("append", 3)       -> Rename("addAll"),
       ),
       // SnapshotArray extends Array — same rewrites. lls DynamicArray has begin()/end() for
       // snapshot support (sge type-mappings.md: "SnapshotArray -> ArrayBuffer with copy-on-modify";
@@ -810,6 +818,9 @@ object LibgdxPolicy:
         ("peek", 0)         -> Chain(List("peek")),
         ("first", 0)        -> Chain(List("first")),
         ("iterator", 0)     -> Chain(List("iterator")),
+        ("size", 0)         -> FieldWrite("size", "setSize"),
+        ("ordered", 0)      -> Rename("preserveOrder"),
+        ("append", 3)       -> Rename("addAll"),
       ),
       "com.badlogic.gdx.utils.DelayedRemovalArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -832,6 +843,9 @@ object LibgdxPolicy:
         ("peek", 0)         -> Chain(List("peek")),
         ("first", 0)        -> Chain(List("first")),
         ("iterator", 0)     -> Chain(List("iterator")),
+        ("size", 0)         -> FieldWrite("size", "setSize"),
+        ("ordered", 0)      -> Rename("preserveOrder"),
+        ("append", 3)       -> Rename("addAll"),
       ),
       // Primitive arrays: no identity flag (no BoolDispatch needed), same get->apply, set->update.
       // sge type-mappings.md: "IntArray -> DynamicArray[Int]", etc.
@@ -846,6 +860,8 @@ object LibgdxPolicy:
         ("peek", 0)     -> Chain(List("peek")),
         ("first", 0)    -> Chain(List("first")),
         ("iterator", 0) -> Chain(List("iterator")),
+        ("size", 0)     -> FieldWrite("size", "setSize"),
+        ("ordered", 0)  -> Rename("preserveOrder"),
       ),
       "com.badlogic.gdx.utils.FloatArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -858,6 +874,8 @@ object LibgdxPolicy:
         ("peek", 0)     -> Chain(List("peek")),
         ("first", 0)    -> Chain(List("first")),
         ("iterator", 0) -> Chain(List("iterator")),
+        ("size", 0)     -> FieldWrite("size", "setSize"),
+        ("ordered", 0)  -> Rename("preserveOrder"),
       ),
       "com.badlogic.gdx.utils.LongArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -870,6 +888,8 @@ object LibgdxPolicy:
         ("peek", 0)     -> Chain(List("peek")),
         ("first", 0)    -> Chain(List("first")),
         ("iterator", 0) -> Chain(List("iterator")),
+        ("size", 0)     -> FieldWrite("size", "setSize"),
+        ("ordered", 0)  -> Rename("preserveOrder"),
       ),
       "com.badlogic.gdx.utils.ShortArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -882,6 +902,8 @@ object LibgdxPolicy:
         ("peek", 0)     -> Chain(List("peek")),
         ("first", 0)    -> Chain(List("first")),
         ("iterator", 0) -> Chain(List("iterator")),
+        ("size", 0)     -> FieldWrite("size", "setSize"),
+        ("ordered", 0)  -> Rename("preserveOrder"),
       ),
       "com.badlogic.gdx.utils.ByteArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -894,6 +916,8 @@ object LibgdxPolicy:
         ("peek", 0)     -> Chain(List("peek")),
         ("first", 0)    -> Chain(List("first")),
         ("iterator", 0) -> Chain(List("iterator")),
+        ("size", 0)     -> FieldWrite("size", "setSize"),
+        ("ordered", 0)  -> Rename("preserveOrder"),
       ),
       "com.badlogic.gdx.utils.CharArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -906,6 +930,9 @@ object LibgdxPolicy:
         ("peek", 0)     -> Chain(List("peek")),
         ("first", 0)    -> Chain(List("first")),
         ("iterator", 0) -> Chain(List("iterator")),
+        ("size", 0)     -> FieldWrite("size", "setSize"),
+        ("ordered", 0)  -> Rename("preserveOrder"),
+        ("append", 3)   -> Rename("addAll"),
       ),
       "com.badlogic.gdx.utils.BooleanArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -918,6 +945,8 @@ object LibgdxPolicy:
         ("peek", 0)     -> Chain(List("peek")),
         ("first", 0)    -> Chain(List("first")),
         ("iterator", 0) -> Chain(List("iterator")),
+        ("size", 0)     -> FieldWrite("size", "setSize"),
+        ("ordered", 0)  -> Rename("preserveOrder"),
       ),
       // Queue -> DynamicArray. sge type-mappings.md: "Queue -> Scala stdlib queues", but
       // DynamicArray is the shared collection type. addLast -> add, removeLast -> pop,
@@ -933,6 +962,7 @@ object LibgdxPolicy:
         ("first", 0)      -> Chain(List("first")),
         ("last", 0)       -> Chain(List("last")),
         ("iterator", 0)   -> Chain(List("iterator")),
+        ("size", 0)       -> FieldWrite("size", "setSize"),
       ),
     )
 

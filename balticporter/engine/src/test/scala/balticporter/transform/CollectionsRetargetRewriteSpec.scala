@@ -422,4 +422,46 @@ class CollectionsRetargetRewriteSpec extends munit.FunSuite {
       retargetRewrites = Map("com.a.X" -> Map(("get", 1) -> Rename("apply"))))
     assertEquals(ct.retargetRewrites.size, 1)
   }
+
+  // ---- FieldWrite ----
+
+  test("FieldWrite toString is readable") {
+    assertEquals(FieldWrite("size", "setSize").toString, "FieldWrite(size,setSize)")
+  }
+
+  test("FieldWrite changes the fingerprint") {
+    val a = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(("size", 0) -> FieldWrite("size", "setSize"))))
+    val b = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"))
+    assertNotEquals(a.surfaceFingerprint, b.surfaceFingerprint)
+  }
+
+  test("FieldWrite with same values has the same fingerprint") {
+    val a = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(("size", 0) -> FieldWrite("size", "setSize"))))
+    val b = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(("size", 0) -> FieldWrite("size", "setSize"))))
+    assertEquals(a.surfaceFingerprint, b.surfaceFingerprint)
+  }
+
+  test("FieldWrite can coexist with other variants at the SAME source") {
+    // FieldWrite at ("size", 0) and Rename at ("get", 1) — different keys, same source
+    val ct = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(
+        ("size", 0) -> FieldWrite("size", "setSize"),
+        ("get", 1)  -> Rename("apply"))))
+    assertEquals(ct.retargetRewrites("com.a.X").size, 2)
+  }
+
+  test("mergeWith unions FieldWrite entries from independent sources") {
+    val a = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(("size", 0) -> FieldWrite("size", "setSize"))))
+    val b = new CollectionsTransform(retarget = Map("com.b.Y" -> "scala.Y"),
+      retargetRewrites = Map("com.b.Y" -> Map(("size", 0) -> FieldWrite("size", "clear"))))
+    val merged = a.mergedWith(b)
+    assert(merged.isRight, s"merge refused: ${merged.left.getOrElse("")}")
+    val ct = merged.toOption.get.phase.asInstanceOf[CollectionsTransform]
+    assertEquals(ct.retargetRewrites("com.a.X")(("size", 0)), FieldWrite("size", "setSize"))
+    assertEquals(ct.retargetRewrites("com.b.Y")(("size", 0)), FieldWrite("size", "clear"))
+  }
 }
