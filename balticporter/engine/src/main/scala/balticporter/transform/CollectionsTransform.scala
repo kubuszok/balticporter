@@ -442,6 +442,8 @@ final class CollectionsTransform(
         val base = if dt == 0 then s"Construct($c,$m)" else s"Construct($c,$m,$dt)"
         if ft then s"$base+fill" else base
       case CollectionsTransform.RetargetRewrite.ForEach(t, a) => s"ForEach($t,$a)"
+      case CollectionsTransform.RetargetRewrite.Collect(v, i) => s"Collect($v,$i)"
+      case CollectionsTransform.RetargetRewrite.Chain(ms) => s"Chain(${ms.mkString(";")})"
     balticporter.tir.TirPrinter.sha256(
       retargetRewrites.toList.sortBy(_._1).flatMap { (src, tbl) =>
         tbl.toList.sortBy(_._1.toString).map { case ((m, ar), rw) => s"$src#$m/$ar->${renderRw(rw)}" }
@@ -698,6 +700,28 @@ final class CollectionsTransform(
   private var forEachElemPool: Array[SymId] = Array.empty
   /** sequence counter for return-boundary labels in [[retargetForEach]]. */
   private var retFeSeq: Int = 0
+  /** sequence counter for collect-block temp variables in [[emitCollect]]. */
+  private var collectSeq: Int = 0
+  /** set to `true` during the Collect post-pass so [[collectPhase]] fires `emitCollect`. */
+  private var collectPassActive: Boolean = false
+
+  /** A minimal Phase for the Collect post-pass: rewrites standalone `keys()`/`values()` calls on
+    * retarget targets into collect blocks. Defined as a member (not a local) so it can access
+    * the enclosing `CollectionsTransform`'s private methods. */
+  private val collectPhase: Phase = new Phase:
+    def name = "retarget-collect"
+    override def transformApply(t: Tree.Apply)(using p: Program): Term =
+      t.fun match
+        case Tree.Select(recv, m, _, so) =>
+          headSym(recv.tpe).flatMap(retargetTargetToSource.get).flatMap { srcFqn =>
+            val mName = methodName(m)
+            retargetRewrites.get(srcFqn).flatMap(_.get((mName, 0))).flatMap {
+              case rw: CollectionsTransform.RetargetRewrite.Collect =>
+                emitCollect(recv, srcFqn, rw, so)
+              case _ => scala.None
+            }
+          }.getOrElse(t)
+        case _ => t
   /** Apply nodes produced by [[retargetForEach]] that need a value-carrying boundary wrapper.
     * Keyed on the Apply's identity (the object itself); value is the label name used for the
     * `boundary.break` calls inside the lambda body. [[transformDefDef]] reads this to wrap
@@ -1082,6 +1106,7 @@ final class CollectionsTransform(
     toJavaValueSym = mint("toJavaValue", s"${CollectionsTransform.ReifiedFqn}.toJavaValue")
     foreachSym          = mint("foreach", "foreach")
     forEachSeq          = 0
+    collectSeq          = 0
     // 64 entries — never wraps; libGDX core uses ~30 forEach rewrites across the whole port.
     // An assertion in retargetForEach guards the upper bound rather than silently shadowing.
     forEachKeyPool      = (0 until 64).map(i => mint(s"k$$fe$i", s"k$$fe$i")).toArray
@@ -1136,6 +1161,10 @@ final class CollectionsTransform(
           List((src, fqn) -> mint(factoryMethod, fqn))
         case CollectionsTransform.RetargetRewrite.ForEach(targetMethod, _) =>
           List((src, targetMethod) -> mint(targetMethod, s"$src#retargetRewrite:$targetMethod"))
+        case CollectionsTransform.RetargetRewrite.Collect(via, _) =>
+          List((src, via) -> mint(via, s"$src#retargetRewrite:$via"))
+        case CollectionsTransform.RetargetRewrite.Chain(members) =>
+          members.map(m => (src, m) -> mint(m, s"$src#retargetRewrite:$m"))
       }
     }
     enumMapOfTypeSym    = mint("ofType", s"${CollectionsTransform.JavaEnumMapFqn}.ofType")
@@ -1250,6 +1279,14 @@ final class CollectionsTransform(
         }
       }
     remap = fullRemap // restore for signature processing, recordings, and checks
+
+    // Collect post-pass: standalone keys()/values() calls that survived the main traversal.
+    // The main pass returned None for Collect entries in retargetRewrite, letting retargetForEach
+    // consume the for-each iterables.  Whatever remains is a standalone call.
+    if retargetRewrites.values.exists(_.values.exists(_.isInstanceOf[CollectionsTransform.RetargetRewrite.Collect])) then
+      collectPassActive = true
+      units = units.map(u => StandardTraversal.mapClassDef(collectPhase, u))
+      collectPassActive = false
 
     // Signature pass — also multi-pass when family scopes exist.
     val symbols2 =
@@ -3299,6 +3336,8 @@ final class CollectionsTransform(
     val mName = if memberSym == SymId.None then "entries" else methodName(memberSym)
     val rewrite = retargetRewrites.get(srcFqn).flatMap(_.get((mName, 0))) match
       case Some(rw: CollectionsTransform.RetargetRewrite.ForEach) => rw
+      case Some(rw: CollectionsTransform.RetargetRewrite.Collect) =>
+        CollectionsTransform.RetargetRewrite.ForEach(rw.via, 1)
       case _ => return scala.None
     val hasReturn = returnsInForEach(fe.body)
     // for bare map iteration, refuse when the body has a return: the bottom-up traversal converts
@@ -3354,6 +3393,32 @@ final class CollectionsTransform(
         Tree.Apply(Tree.Select(recv, tgtSym, TypeRepr.NoType, so), List(lambda), tgtSym, unitTpe, so)
     if hasReturn then retFeReturnApplies.put(apply, label.get)
     Some(apply)
+
+  /** Emit a standalone `Collect` block: `{ val r$coN = Into[E](); recv.via(r$coN.add); r$coN }`.
+    *
+    * Called from the collect post-pass — standalone `keys()`/`values()` calls that survived the main
+    * traversal because `retargetRewrite` returned `None` for `Collect` entries (letting
+    * `retargetForEach` consume the for-each iterables first).
+    *
+    * Built from TIR nodes rather than `Tree.Opaque` so the package rename reaches the element type
+    * FQN — a bare string in Opaque text stays in the upstream namespace (measured: 4 E008
+    * `value badlogic is not a member of com` when emitting `DynamicArray[com.badlogic.gdx.…]`). */
+  private def emitCollect(recv: Term, srcFqn: String,
+      rw: CollectionsTransform.RetargetRewrite.Collect, so: Origin)(using p: Program): Option[Term] =
+    val viaSym = retargetRewriteSyms.getOrElse((srcFqn, rw.via), SymId.None)
+    if viaSym == SymId.None then return scala.None
+    val elemTpe = if rw.via.contains("Key") then keyType(recv.tpe).getOrElse(TypeRepr.NoType)
+                  else valueType(recv.tpe).getOrElse(TypeRepr.NoType)
+    if elemTpe == TypeRepr.NoType then return scala.None
+    val n = { collectSeq += 1; collectSeq }
+    val varName = s"r$$co$n"
+    val addName = "add"
+    Some(Tree.Opaque.spliced(
+      List(s"{ val $varName = ${rw.into}[", s"](); ", s".${rw.via}($varName.$addName); $varName }"),
+      List(Tree.Ident(headSym(elemTpe).getOrElse(SymId.None), elemTpe, so), recv),
+      TypeRepr.NoType,
+      so
+    ))
 
   /** does the for-each body contain a `return`? Stops at lambdas, nested defs, anonymous classes. */
   private def returnsInForEach(t: Any): Boolean = t match
@@ -6630,6 +6695,22 @@ final class CollectionsTransform(
         // reaches HERE it is a standalone usage of entries()/keys()/values() NOT in a for-each
         // header — no lls image, return None so RetargetBoundaryCheck counts it.
         case _: CollectionsTransform.RetargetRewrite.ForEach => scala.None
+        // Collect entries are handled in transformTerm on ForEach (same as ForEach) and by the
+        // collect POST-PASS (collectPhase) for standalone calls.  Return None here so the
+        // bottom-up traversal does not steal the iterable before retargetForEach sees the
+        // enclosing ForEach.
+        case _: CollectionsTransform.RetargetRewrite.Collect => scala.None
+        // Chain: recv.source(args) → recv.m1(args).m2().m3()…
+        case CollectionsTransform.RetargetRewrite.Chain(members) if members.nonEmpty =>
+          val syms = members.flatMap(m => retargetRewriteSyms.get((srcFqn, m)))
+          if syms.size != members.size then scala.None
+          else
+            var cur: Term = call(recv, syms.head, t.args, t, so)
+            syms.tail.foreach { s =>
+              cur = Tree.Select(cur, s, TypeRepr.NoType, so)
+            }
+            Some(cur)
+        case _: CollectionsTransform.RetargetRewrite.Chain => scala.None
       }
     }
 
@@ -6828,6 +6909,40 @@ object CollectionsTransform:
       * A usage of `sourceMethod()` NOT in a for-each header (stored, passed, assigned) has no
       * lls image and is a counted refusal on `collection-retarget`. */
     case class ForEach(targetMethod: String, arity: Int) extends RetargetRewrite
+
+    /** Standalone collection: `recv.sourceMethod()` outside a for-each header is replaced by
+      * an eager collection into a `DynamicArray`. In a for-each header, the entry is handled
+      * identically to `ForEach(via, 1)` — same lambda lowering, same binding rewrite.
+      *
+      * {{{
+      * // standalone (post-pass):
+      * recv.keys() → { val r$co0 = lowlevel.util.DynamicArray[K](); recv.foreachKey(r$co0.add); r$co0 }
+      * // for-each (main pass):
+      * for (k : recv.keys()) body → recv.foreachKey(k => body)
+      * }}}
+      *
+      * `via` is the forEach method name (e.g. `"foreachKey"`), `into` is the FQN of the
+      * companion whose `apply()` constructs the collection (e.g. `"lowlevel.util.DynamicArray"`).
+      * The type argument is derived from the receiver's `AppliedType` — key for `foreachKey`,
+      * value for `foreachValue`.
+      *
+      * Delta: eager copy vs live view (java's `Keys`/`Values` was a live view backed by the map's
+      * own table; the collect allocates). Mutation during iteration: java throws
+      * `ConcurrentModificationException`; the collect completes before any caller can mutate. Both
+      * are counted on `collection-retarget`. */
+    case class Collect(via: String, into: String) extends RetargetRewrite
+
+    /** Member chain: `recv.sourceMethod(args)` → `recv.m1(args).m2().…`.
+      *
+      * {{{
+      * // OrderedSet.iterator() → recv.orderedItems().iterator()
+      * Chain(List("orderedItems", "iterator"))
+      * }}}
+      *
+      * The first member receives the original arguments; each subsequent member is called with
+      * zero arguments. The chain is keyed in `retargetRewrites` at the source member's
+      * `(name, arity)`. */
+    case class Chain(members: List[String]) extends RetargetRewrite
 
   /** How to construct a retarget target's type arguments from the source type's.
     * Each element produces one argument in the target type — so a `List[RetargetArg]` of length N

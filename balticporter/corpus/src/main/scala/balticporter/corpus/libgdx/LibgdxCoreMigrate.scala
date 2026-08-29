@@ -512,6 +512,11 @@ object LibgdxPolicy:
     "com.badlogic.gdx.utils.ObjectLongMap" -> "lowlevel.util.ObjectMap",
     "com.badlogic.gdx.utils.ArrayMap" -> "lowlevel.util.ArrayMap",
     "com.badlogic.gdx.utils.IntSet" -> "lowlevel.util.ObjectSet",
+    // Inner iterator types — java's Keys/Values/Entries are live views backed by the map's
+    // own table; lls has foreachKey/foreachValue/foreachEntry (inline) instead.  As TYPES these
+    // are used only where java stores them in a local (`I18NBundle`) — Collect handles the call.
+    "com.badlogic.gdx.utils.ObjectMap$Keys" -> "lowlevel.util.DynamicArray",
+    "com.badlogic.gdx.utils.ObjectMap$Values" -> "lowlevel.util.DynamicArray",
     // Inner Entry types for the map family — same Tuple2 mapping as ObjectMap.Entry
     "com.badlogic.gdx.utils.IntMap$Entry" -> "scala.Tuple2",
     "com.badlogic.gdx.utils.LongMap$Entry" -> "scala.Tuple2",
@@ -552,8 +557,8 @@ object LibgdxPolicy:
         ("empty", 0) -> Rename("isEmpty"),
         // ForEach: for (Entry e : map.entries()) -> map.foreachEntry((k, v) => body)
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("keys", 0)    -> ForEach("foreachKey", 1),
-        ("values", 0)  -> ForEach("foreachValue", 1),
+        ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
+        ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
       ),
       // Entry arity-0: java's default-constructed Entry with both fields null.
       // Construct routes `new Tuple2()` -> `Tuple2.apply(null.asInstanceOf[K], null.asInstanceOf[V])`.
@@ -589,14 +594,15 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.OrderedMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("keys", 0)    -> ForEach("foreachKey", 1),
-        ("values", 0)  -> ForEach("foreachValue", 1),
+        ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
+        ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
       ),
       "com.badlogic.gdx.utils.OrderedSet" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.OrderedSet", "apply"),
         ("<init>", 1) -> Construct("lowlevel.util.OrderedSet", "apply"),
         ("<init>", 2) -> Construct("lowlevel.util.OrderedSet", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
+        ("iterator", 0) -> Chain(List("orderedItems", "iterator")),
       ),
       "com.badlogic.gdx.utils.IdentityMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ArrayMap", "apply"),
@@ -604,8 +610,8 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ArrayMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("keys", 0)    -> ForEach("foreachKey", 1),
-        ("values", 0)  -> ForEach("foreachValue", 1),
+        ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
+        ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
       ),
       // wave 3.1d: remaining MAP family — all to ObjectMap, same Construct + ForEach pattern.
       // IntMap<V> -> ObjectMap[Int, V], LongMap<V> -> ObjectMap[Long, V],
@@ -618,8 +624,8 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("keys", 0)    -> ForEach("foreachKey", 1),
-        ("values", 0)  -> ForEach("foreachValue", 1),
+        ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
+        ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
       ),
       "com.badlogic.gdx.utils.LongMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
@@ -627,8 +633,8 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("keys", 0)    -> ForEach("foreachKey", 1),
-        ("values", 0)  -> ForEach("foreachValue", 1),
+        ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
+        ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
       ),
       "com.badlogic.gdx.utils.IntIntMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
@@ -636,8 +642,8 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("keys", 0)    -> ForEach("foreachKey", 1),
-        ("values", 0)  -> ForEach("foreachValue", 1),
+        ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
+        ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
       ),
       "com.badlogic.gdx.utils.IntFloatMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
@@ -645,8 +651,8 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("keys", 0)    -> ForEach("foreachKey", 1),
-        ("values", 0)  -> ForEach("foreachValue", 1),
+        ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
+        ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
       ),
       "com.badlogic.gdx.utils.ObjectIntMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
@@ -654,8 +660,8 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("keys", 0)    -> ForEach("foreachKey", 1),
-        ("values", 0)  -> ForEach("foreachValue", 1),
+        ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
+        ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
       ),
       "com.badlogic.gdx.utils.ObjectFloatMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
@@ -663,8 +669,8 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("keys", 0)    -> ForEach("foreachKey", 1),
-        ("values", 0)  -> ForEach("foreachValue", 1),
+        ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
+        ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
       ),
       "com.badlogic.gdx.utils.ObjectLongMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
@@ -672,8 +678,8 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("keys", 0)    -> ForEach("foreachKey", 1),
-        ("values", 0)  -> ForEach("foreachValue", 1),
+        ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
+        ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
       ),
       // wave 3.1d: gdx's ArrayMap -> lowlevel.util.ArrayMap (same as IdentityMap's target)
       "com.badlogic.gdx.utils.ArrayMap" -> Map(
@@ -684,8 +690,8 @@ object LibgdxPolicy:
         ("<init>", 4) -> Construct("lowlevel.util.ArrayMap", "apply", dropTrailing = 2),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
-        ("keys", 0)    -> ForEach("foreachKey", 1),
-        ("values", 0)  -> ForEach("foreachValue", 1),
+        ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
+        ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
       ),
       // wave 3.1d: IntSet -> ObjectSet. No entries/keys/values — sets iterate through
       // themselves (Iterable<Integer>), lowered to foreachKey by the phase when applicable.
@@ -1112,7 +1118,42 @@ object LibgdxPolicy:
                                   retargetTypeArgs = libCollectionRetargetTypeArgs), new MutableParamsTransform,
          new PanamaFfiTransform(), unwrapReflection, classTable, new GdxSharedIteratorRule,
          memberRenames, disposableRedirect, textureHandle, align, uniformLocation,
-         nullability, globalsToContext)
+         nullability, globalsToContext,
+         new balticporter.transform.MethodBodyTransform(Map(
+           "com.badlogic.gdx.assets.AssetManager#clear" ->
+             """{
+               |  this.synchronized {
+               |    this.loadQueue.clear()
+               |  }
+               |  this.finishLoading()
+               |  this.synchronized {
+               |    val dependencyCount = scala.collection.mutable.HashMap[java.lang.String, scala.Int]()
+               |    while (this.assetTypes.size > 0) {
+               |      dependencyCount.clear()
+               |      val assetNames = lowlevel.util.DynamicArray[java.lang.String]()
+               |      this.assetTypes.foreachKey(assetNames.add)
+               |      assetNames.foreach { asset =>
+               |        this.assetDependencies.get(asset).foreach { dependencies =>
+               |          dependencies.foreach { dependency =>
+               |            dependencyCount(dependency) = dependencyCount.getOrElse(dependency, 0) + 1
+               |          }
+               |        }
+               |      }
+               |      assetNames.foreach { asset =>
+               |        if (dependencyCount.getOrElse(asset, 0) == 0) this.unload(asset)
+               |      }
+               |    }
+               |    this.assets.clear(51)
+               |    this.assetTypes.clear(51)
+               |    this.assetDependencies.clear(51)
+               |    this.loaded = 0
+               |    this.toLoad = 0
+               |    this.peakTasks = 0
+               |    this.loadQueue.clear()
+               |    this.tasks.clear()
+               |  }
+               |}""".stripMargin
+         )))
 
   /** Drop `()` from nullary getter-like methods — sge's empirical convention, no written rule in
     * `conversion-rules.md`. Enabled with `Everywhere()` because the convention is whole-library:

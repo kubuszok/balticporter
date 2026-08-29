@@ -319,4 +319,71 @@ class CollectionsRetargetRewriteSpec extends munit.FunSuite {
     assertEquals(ct.retargetRewrites("com.b.Y")(("<init>", 4)),
       Construct("scala.Y", "apply", dropTrailing = 2))
   }
+
+  // ---- Collect ----
+
+  test("Collect toString is readable") {
+    assertEquals(Collect("foreachKey", "lowlevel.util.DynamicArray").toString,
+      "Collect(foreachKey,lowlevel.util.DynamicArray)")
+  }
+
+  test("Collect changes the fingerprint") {
+    val a = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(("keys", 0) -> Collect("foreachKey", "lowlevel.util.DynamicArray"))))
+    val b = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"))
+    assertNotEquals(a.surfaceFingerprint, b.surfaceFingerprint)
+  }
+
+  test("Collect with same values has the same fingerprint") {
+    val a = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(("keys", 0) -> Collect("foreachKey", "lowlevel.util.DynamicArray"))))
+    val b = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(("keys", 0) -> Collect("foreachKey", "lowlevel.util.DynamicArray"))))
+    assertEquals(a.surfaceFingerprint, b.surfaceFingerprint)
+  }
+
+  test("mergeWith unions Collect entries from independent sources") {
+    val a = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(("keys", 0) -> Collect("foreachKey", "lowlevel.util.DynamicArray"))))
+    val b = new CollectionsTransform(retarget = Map("com.b.Y" -> "scala.Y"),
+      retargetRewrites = Map("com.b.Y" -> Map(("keys", 0) -> Collect("foreachKey", "lowlevel.util.DynamicArray"))))
+    val merged = a.mergedWith(b)
+    assert(merged.isRight, s"merge refused: ${merged.left.getOrElse("")}")
+    val ct = merged.toOption.get.phase.asInstanceOf[CollectionsTransform]
+    assertEquals(ct.retargetRewrites("com.a.X")(("keys", 0)), Collect("foreachKey", "lowlevel.util.DynamicArray"))
+    assertEquals(ct.retargetRewrites("com.b.Y")(("keys", 0)), Collect("foreachKey", "lowlevel.util.DynamicArray"))
+  }
+
+  // ---- Chain ----
+
+  test("Chain toString is readable") {
+    assertEquals(Chain(List("orderedItems", "iterator")).toString, "Chain(List(orderedItems, iterator))")
+  }
+
+  test("Chain changes the fingerprint") {
+    val a = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(("iterator", 0) -> Chain(List("orderedItems", "iterator")))))
+    val b = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"))
+    assertNotEquals(a.surfaceFingerprint, b.surfaceFingerprint)
+  }
+
+  test("Chain with same values has the same fingerprint") {
+    val a = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(("iterator", 0) -> Chain(List("orderedItems", "iterator")))))
+    val b = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(("iterator", 0) -> Chain(List("orderedItems", "iterator")))))
+    assertEquals(a.surfaceFingerprint, b.surfaceFingerprint)
+  }
+
+  test("mergeWith unions Chain entries from independent sources") {
+    val a = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(("iterator", 0) -> Chain(List("orderedItems", "iterator")))))
+    val b = new CollectionsTransform(retarget = Map("com.b.Y" -> "scala.Y"),
+      retargetRewrites = Map("com.b.Y" -> Map(("values", 0) -> Chain(List("getValues")))))
+    val merged = a.mergedWith(b)
+    assert(merged.isRight, s"merge refused: ${merged.left.getOrElse("")}")
+    val ct = merged.toOption.get.phase.asInstanceOf[CollectionsTransform]
+    assertEquals(ct.retargetRewrites("com.a.X")(("iterator", 0)), Chain(List("orderedItems", "iterator")))
+    assertEquals(ct.retargetRewrites("com.b.Y")(("values", 0)), Chain(List("getValues")))
+  }
 }
