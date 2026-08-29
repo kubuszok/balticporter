@@ -800,6 +800,11 @@ object LibgdxPolicy:
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         // CharArray.append(char[], off, len) -> DynamicArray.addAll(raw, off, len)
         ("append", 3)       -> Rename("addAll"),
+        // wave 3.1u: static factory `Array.with(T... array)` -> `DynamicArray.from(scalaArray)`.
+        // The vararg is already packed into a scala.Array by the engine. DynamicArray.from(Array[A])
+        // creates a copy, which matches java's Array.with semantics (creates a new Array from varargs).
+        // Matched on the qualifier SYMBOL (the source class symbol in static position, §4.56).
+        ("with", 1)         -> Template("$Target.from($0)"),
       ),
       // SnapshotArray extends Array — same rewrites. lls DynamicArray has begin()/end() for
       // snapshot support (sge type-mappings.md: "SnapshotArray -> ArrayBuffer with copy-on-modify";
@@ -831,6 +836,7 @@ object LibgdxPolicy:
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("append", 3)       -> Rename("addAll"),
+        ("with", 1)         -> Template("$Target.from($0)"),
       ),
       "com.badlogic.gdx.utils.DelayedRemovalArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -859,6 +865,7 @@ object LibgdxPolicy:
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("append", 3)       -> Rename("addAll"),
+        ("with", 1)         -> Template("$Target.from($0)"),
       ),
       // Primitive arrays: no identity flag (no BoolDispatch needed), same get->apply, set->update.
       // sge type-mappings.md: "IntArray -> DynamicArray[Int]", etc.
@@ -883,6 +890,7 @@ object LibgdxPolicy:
         ("incr", 2)     -> Template("{ val bpIdx = $0; $recv(bpIdx) = $recv(bpIdx) + $1 }"),
         // IntArray.add(4 args): DynamicArray has up to 3-arg add; split into two calls.
         ("add", 4)      -> Template("{ $recv.add($0, $1); $recv.add($2, $3) }"),
+        ("with", 1)     -> Template("$Target.from($0)"),
       ),
       "com.badlogic.gdx.utils.FloatArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -900,6 +908,7 @@ object LibgdxPolicy:
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
+        ("with", 1)     -> Template("$Target.from($0)"),
       ),
       "com.badlogic.gdx.utils.LongArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -917,6 +926,7 @@ object LibgdxPolicy:
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
+        ("with", 1)     -> Template("$Target.from($0)"),
       ),
       "com.badlogic.gdx.utils.ShortArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -939,6 +949,7 @@ object LibgdxPolicy:
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
+        ("with", 1)     -> Template("$Target.from($0)"),
       ),
       "com.badlogic.gdx.utils.ByteArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -960,6 +971,7 @@ object LibgdxPolicy:
         // The callers assign the result for indexed access into the backing array — return .items
         // to get the raw Array[Byte], matching the java return type of byte[].
         ("ensureCapacity", 1) -> Template("{ $recv.ensureCapacity($0); $recv }.items"),
+        ("with", 1)     -> Template("$Target.from($0)"),
       ),
       "com.badlogic.gdx.utils.CharArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -978,6 +990,7 @@ object LibgdxPolicy:
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("append", 3)   -> Rename("addAll"),
+        ("with", 1)     -> Template("$Target.from($0)"),
       ),
       "com.badlogic.gdx.utils.BooleanArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -995,6 +1008,7 @@ object LibgdxPolicy:
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
+        ("with", 1)     -> Template("$Target.from($0)"),
       ),
       // Queue -> DynamicArray. sge type-mappings.md: "Queue -> Scala stdlib queues", but
       // DynamicArray is the shared collection type. addLast -> add, removeLast -> pop,
