@@ -487,6 +487,9 @@ object LibgdxPolicy:
       ("and", 1)          -> Rename("&="),            // bits.and(other) -> bits &= other
       ("or", 1)           -> Rename("|="),            // bits.or(other) -> bits |= other
       ("andNot", 1)       -> Rename("&~="),           // bits.andNot(other) -> bits &~= other
+      // bits.containsAll(other) = "this is a superset of other" = other.subsetOf(this).
+      // Argument and receiver SWAP — Template, not Rename.
+      ("containsAll", 1)  -> Template("$0.subsetOf($recv)"),
     ))
 
   /** `ObjectMap` and `ObjectSet` retargetted to their lls equivalents.
@@ -926,6 +929,14 @@ object LibgdxPolicy:
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
+        // LongArray.incr(index, value) -> { val i = index; da(i) = da(i) + value }
+        ("incr", 2)     -> Template("{ val bpIdx = $0; $recv(bpIdx) = $recv(bpIdx) + $1 }"),
+        // LongArray.incr(value) -> add value to ALL elements
+        ("incr", 1)     -> Template("{ var bpI = 0; while (bpI < $recv.size) { $recv(bpI) = $recv(bpI) + $0; bpI += 1 } }"),
+        // LongArray.mul(index, value) -> { val i = index; da(i) = da(i) * value }
+        ("mul", 2)      -> Template("{ val bpIdx = $0; $recv(bpIdx) = $recv(bpIdx) * $1 }"),
+        // LongArray.mul(value) -> multiply ALL elements
+        ("mul", 1)      -> Template("{ var bpI = 0; while (bpI < $recv.size) { $recv(bpI) = $recv(bpI) * $0; bpI += 1 } }"),
         ("with", 1)     -> Template("$Target.from($0)"),
       ),
       "com.badlogic.gdx.utils.ShortArray" -> Map(
@@ -1011,22 +1022,29 @@ object LibgdxPolicy:
         ("with", 1)     -> Template("$Target.from($0)"),
       ),
       // Queue -> DynamicArray. sge type-mappings.md: "Queue -> Scala stdlib queues", but
-      // DynamicArray is the shared collection type. addLast -> add, removeLast -> pop,
-      // removeFirst -> removeIndex(0) (counted: no Chain for this).
+      // DynamicArray is the shared collection type. addLast -> add, removeLast -> pop.
+      // Deque ops: addFirst(T) -> insert(0, T), removeFirst() -> removeIndex(0).
+      // indexOf/removeValue/contains take the identity boolean (same as Array).
       "com.badlogic.gdx.utils.Queue" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
         ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("get", 1)        -> Rename("apply"),
-        ("addLast", 1)    -> Rename("add"),
-        ("removeLast", 0) -> Chain(List("pop")),  // parameterless in DynamicArray
-        ("notEmpty", 0)   -> Chain(List("nonEmpty")),
-        ("empty", 0)      -> Rename("isEmpty"),
-        ("first", 0)      -> Chain(List("first")),
-        ("last", 0)       -> Chain(List("last")),
-        ("iterator", 0)   -> Chain(List("iterator")),
-        ("size", 0)       -> FieldWrite("size", "setSize"),
-        ("toArray", 0)    -> Chain(List("toArray")),
-        ("toArray", 1)    -> Chain(List("toArray"), dropArgs = true),
+        ("get", 1)          -> Rename("apply"),
+        ("addLast", 1)      -> Rename("add"),
+        ("addFirst", 1)     -> Template("$recv.insert(0, $0)"),
+        ("removeLast", 0)   -> Rename("pop"),          // DynamicArray.pop() takes parens
+        ("removeFirst", 0)  -> Template("$recv.removeIndex(0)"),
+        ("removeValue", 2)  -> BoolDispatch(1, "removeValueByRef", "removeValue"),
+        ("indexOf", 2)      -> BoolDispatch(1, "indexOfByRef", "indexOf"),
+        ("contains", 2)     -> BoolDispatch(1, "containsByRef", "contains"),
+        ("notEmpty", 0)     -> Chain(List("nonEmpty")),
+        ("empty", 0)        -> Rename("isEmpty"),
+        ("first", 0)        -> Chain(List("first")),
+        ("last", 0)         -> Chain(List("last")),
+        ("peek", 0)         -> Chain(List("peek")),
+        ("iterator", 0)     -> Chain(List("iterator")),
+        ("size", 0)         -> FieldWrite("size", "setSize"),
+        ("toArray", 0)      -> Chain(List("toArray")),
+        ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
       ),
     )
 
@@ -1070,6 +1088,9 @@ object LibgdxPolicy:
     def primArrayInitByDesc(selfDesc: Descriptor, rawArrDesc: Descriptor) = Map(
       ("<init>", intDesc)    -> Construct("lowlevel.util.DynamicArray", "apply"),
       ("<init>", selfDesc)   -> Construct("lowlevel.util.DynamicArray", "from"),
+      // wave 3.1y: init from raw primitive array — e.g. LongArray(long[]).
+      // DynamicArray.apply takes capacity (Int), not a raw array. Construct + addAll.
+      ("<init>", rawArrDesc) -> Template("{ val bpSrc = $0; val bpDa = $Target(); bpDa.addAll(bpSrc, 0, bpSrc.length); bpDa }"),
       ("addAll", Descriptor(List(selfDesc.params.head, Param.Prim("int"), Param.Prim("int")))) ->
         Template("$recv.addAll($0.items, $1, $2)"),
     )
@@ -1087,6 +1108,12 @@ object LibgdxPolicy:
       // translation — sge iterates char-by-char), append(int) -> counted (same reason — `add(c.toChar)`
       // needs a cast the Rename entry cannot express).
       "com.badlogic.gdx.utils.CharArray"            -> (primArrayInitByDesc(Descriptor(List(Param.Named("CharArray"))), charArrDesc) ++ Map(
+        // CharArray(String) -> construct from string's char array.
+        ("<init>", Descriptor(List(Param.Named("String")))) ->
+          Template("{ val bpStr = $0; val bpDa = $Target[scala.Char](); bpDa.addAll(bpStr.toCharArray, 0, bpStr.length); bpDa }"),
+        // CharArray(CharSequence) -> same as String, via toString.
+        ("<init>", Descriptor(List(Param.Named("CharSequence")))) ->
+          Template("{ val bpCs = $0.toString; val bpDa = $Target[scala.Char](); bpDa.addAll(bpCs.toCharArray, 0, bpCs.length); bpDa }"),
         ("append", Descriptor(List(Param.Prim("char")))) -> Rename("add"),
         // append(CharArray) -> addAll(other) — copies all chars from another CharArray.
         // After retarget both are DynamicArray[Char], and DynamicArray.addAll(DynamicArray) exists.
@@ -1107,6 +1134,16 @@ object LibgdxPolicy:
           Template("$recv.indexOf($0.charAt(0))"),
       )),
       "com.badlogic.gdx.utils.BooleanArray"         -> primArrayInitByDesc(Descriptor(List(Param.Named("BooleanArray"))), boolArrDesc),
+      // Queue: arity-1 is ambiguous — Queue(int) capacity vs Queue(int, Class) / Queue(int, ArraySupplier).
+      // Queue(int) -> DynamicArray.apply(capacity). Queue(int, Class) drops the Class.
+      // Queue(int, ArraySupplier) drops the ArraySupplier.
+      "com.badlogic.gdx.utils.Queue" -> Map(
+        ("<init>", intDesc) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", Descriptor(List(Param.Prim("int"), Param.Named("Class")))) ->
+          Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1),
+        ("<init>", Descriptor(List(Param.Prim("int"), Param.Named("ArraySupplier")))) ->
+          Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1),
+      ),
     )
 
   /** `com.badlogic.gdx.utils.Disposable` → `java.lang.AutoCloseable`, with `dispose` → `close`.
