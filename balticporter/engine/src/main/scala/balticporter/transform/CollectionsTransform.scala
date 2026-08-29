@@ -3294,6 +3294,19 @@ final class CollectionsTransform(
               List(aa.index, a.rhs), updateSym, TypeRepr.NoType, a.origin)
           }
         case _ => scala.None
+      // The traversal maps children BEFORE offering the Assign to transformTerm, so by the time
+      // this method sees it the LHS ArrayAccess has already been replaced by retargetIndexedField
+      // with an Apply(Select(recv, applySym), List(idx)).  Match that post-transformation shape
+      // and rewrite to update(idx, rhs).
+      case app: Tree.Apply => app.fun match
+        case sel: Tree.Select if app.args.size == 1 && methodName(sel.sym) == "apply" =>
+          val recv = sel.qual
+          headSym(recv.tpe).flatMap(retargetTargetToSource.get).map { _ =>
+            Tree.Apply(
+              Tree.Select(recv, updateSym, TypeRepr.NoType, a.origin),
+              List(app.args.head, a.rhs), updateSym, TypeRepr.NoType, a.origin)
+          }
+        case _ => scala.None
       case _ => scala.None
 
   /** A FIELD ACCESS on a retarget target — `entry.key` -> `entry._1`, `entry.value` -> `entry._2`.
@@ -3886,6 +3899,10 @@ final class CollectionsTransform(
           // A RETARGET REWRITE comes first: a call on a retarget target whose member name and arity
           // have an entry in `retargetRewrites` is renamed/dispatched before `pinnedByObject`.
           case None    => retargetRewrite(recv, m, so, t2).orElse(pinnedByObject(recv, m, t2)).getOrElse(t2)
+        // When retargetSelectRewrite replaced a Select (the `fun` of a nullary `iterator()` call)
+        // with an Apply (the `JavaIterator.from(sel)` wrap), the OUTER Apply still sits here with
+        // Nil args.  Collapse it so the emitter does not render a trailing `()`.
+        case inner: Tree.Apply if t2.args.isEmpty => inner
         case _ => t2
     }
     // …and the seam arms see only what NOTHING ELSE REWROTE. Ordering them before the rewrites
