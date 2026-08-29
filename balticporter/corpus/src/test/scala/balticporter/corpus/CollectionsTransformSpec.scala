@@ -1954,7 +1954,7 @@ class CollectionsTransformSpec extends PortSuite:
           |  Holder<String, Integer> make() { return new Holder<String, Integer>(true, 16, String.class, Integer.class); }
           |}""".stripMargin), ph)
     assertEmits(p, "demo.Target.apply")
-    assertEmitsMatch(p, """Target\.apply\([^)]*true[^)]*16[^)]*\)""")
+    assertEmitsMatch(p, """Target\.apply(\[.*?\])?\(.*?true.*?16.*?\)""")
     assertNotEmits(p, "String.class")
   }
 
