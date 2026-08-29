@@ -699,6 +699,8 @@ final class CollectionsTransform(
     * than re-derived afterwards, so the provenance and the licence are one answer and cannot drift. */
   private val superDefaults = collection.mutable.ListBuffer.empty[(SymId, SymId, String)]
   private var opPlusEq, opMinusEq, opPlusPlusEq: SymId = SymId.None
+  /** Plain arithmetic operators for compound-FieldWrite expansion: `size -= 1` -> `setSize(size - 1)`. */
+  private var compoundOps: Map[String, SymId] = Map.empty
   private var updateSym, insertSym, getOrElseSym, containsSym: SymId = SymId.None
   /** scala `mutable.Map.put`/`remove` — they RETURN the previous value, which java's do too and
     * `update`/`-=` silently discard. */
@@ -1117,6 +1119,13 @@ final class CollectionsTransform(
     opPlusEq     = mint("+=", "scala.<op>#+=")   // rendered infix by the emitter
     opMinusEq    = mint("-=", "scala.<op>#-=")
     opPlusPlusEq = mint("++=", "scala.<op>#++=")
+    // Plain arithmetic operators for compound-FieldWrite expansion (`size -= 1` -> `setSize(size - 1)`).
+    compoundOps  = Map("-" -> mint("-", "scala.<op>#-"), "+" -> mint("+", "scala.<op>#+"),
+                       "*" -> mint("*", "scala.<op>#*"), "/" -> mint("/", "scala.<op>#/"),
+                       "%" -> mint("%", "scala.<op>#%"), "|" -> mint("|", "scala.<op>#|"),
+                       "&" -> mint("&", "scala.<op>#&"), "^" -> mint("^", "scala.<op>#^"),
+                       "<<" -> mint("<<", "scala.<op>#<<"), ">>" -> mint(">>", "scala.<op>#>>"),
+                       ">>>" -> mint(">>>", "scala.<op>#>>>"))
     updateSym    = mint("update", "update")
     insertSym    = mint("insert", "insert")
     getOrElseSym = mint("getOrElse", "getOrElse")
@@ -3038,6 +3047,7 @@ final class CollectionsTransform(
     case lit @ Tree.Literal(Constant.ClassOfC(tp), tpe, _) => retargetClassOf(lit, tp, tpe)
     case sel: Tree.Select => retargetSelectRewrite(sel).getOrElse(staticFieldRewrite(sel).getOrElse(externalFieldProducer(sel)))
     case aa: Tree.ArrayAccess => retargetIndexedField(aa).getOrElse(aa)
+    case id: Tree.IncDec => retargetIncDec(id).getOrElse(id)
     case other          => other
 
   // -------------------------------------------------------------------------------------------
@@ -3249,9 +3259,63 @@ final class CollectionsTransform(
           lookupRewrite(srcFqn, mName, 0, None).flatMap {
             case CollectionsTransform.RetargetRewrite.FieldWrite(_, method) =>
               retargetRewriteSyms.get((srcFqn, method)).map { tgtSym =>
+                // For a COMPOUND assignment (`size -= 1`), expand to `method(field op rhs)`.
+                // The field is now a read-only `def` on the target, so the compound form
+                // `field -= rhs` does not compile; the faithful image is `setSize(size - 1)`.
+                val effectiveRhs = a.compound match
+                  case Some((op, narrow)) =>
+                    compoundOps.get(op) match
+                      case Some(opSym) =>
+                        val binOp = Tree.Apply(
+                          Tree.Select(sel, opSym, a.rhs.tpe, a.origin),
+                          List(a.rhs), opSym, a.rhs.tpe, a.origin)
+                        narrow.fold(binOp: Term)(nt =>
+                          Tree.Typed(binOp, TypeTree(nt, a.origin), nt, a.origin))
+                      case None => a.rhs // unknown operator, fall through to simple assign
+                  case None => a.rhs
                 Tree.Apply(
                   Tree.Select(sel.qual, tgtSym, TypeRepr.NoType, a.origin),
-                  List(a.rhs), tgtSym, TypeRepr.NoType, a.origin)
+                  List(effectiveRhs), tgtSym, TypeRepr.NoType, a.origin)
+              }
+            case _ => scala.None
+          }
+        }
+      case _ => scala.None
+
+  /** A PRE-/POST-INCREMENT/DECREMENT on a retarget FieldWrite field.
+    *
+    * Java's `--stack.size` is a `Tree.IncDec` that the emitter renders as
+    * `{ stack.size -= 1; stack.size }`. When `size` is a read-only `def` on the target, the
+    * compound `size -= 1` does not compile. The faithful image is
+    * `{ setSize(size - 1); size }` (pre) or `{ val prev = size; setSize(size - 1); prev }` (post).
+    * Produced as a `Tree.Block` so the emitter renders it as a block expression. */
+  private def retargetIncDec(id: Tree.IncDec)(using p: Program): Option[Term] =
+    if retargetRewrites.isEmpty && retargetRewritesByDesc.isEmpty then return scala.None
+    id.target match
+      case sel: Tree.Select =>
+        headSym(sel.qual.tpe).flatMap(retargetTargetToSource.get).flatMap { srcFqn =>
+          val mName = methodName(sel.sym)
+          lookupRewrite(srcFqn, mName, 0, None).flatMap {
+            case CollectionsTransform.RetargetRewrite.FieldWrite(_, method) =>
+              retargetRewriteSyms.get((srcFqn, method)).flatMap { tgtSym =>
+                compoundOps.get(id.op).map { opSym =>
+                  val one = Tree.Literal(balticporter.tir.Constant.IntC(1), id.tpe, id.origin)
+                  // `field op 1` — the arithmetic
+                  val binOp = Tree.Apply(
+                    Tree.Select(sel, opSym, id.tpe, id.origin),
+                    List(one), opSym, id.tpe, id.origin)
+                  // `setSize(field op 1)` — the method call
+                  val call = Tree.Apply(
+                    Tree.Select(sel.qual, tgtSym, TypeRepr.NoType, id.origin),
+                    List(binOp), tgtSym, TypeRepr.NoType, id.origin)
+                  if !id.post then
+                    // pre: `{ setSize(size - 1); size }`
+                    Tree.Block(List(call), sel, id.tpe, id.origin)
+                  else
+                    // post: refused — the post-decrement value requires a temporary whose SymId
+                    // we cannot mint here (outside the init block). Counted on collection-retarget.
+                    return scala.None
+                }
               }
             case _ => scala.None
           }
