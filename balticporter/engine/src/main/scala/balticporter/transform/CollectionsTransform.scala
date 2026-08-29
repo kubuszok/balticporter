@@ -7391,35 +7391,18 @@ final class CollectionsTransform(
               // explicitly: `DynamicArray.apply[InputProcessor](4)` instead of `DynamicArray.apply(4)`.
               // Without explicit type args, Scala infers `Any` and `summonInline[MkArray[Any]]` fails.
               //
-              // A TYPE PARAMETER element (`class Octree[T] { new ObjectSet<T>() }`) is replaced
-              // with `AnyRef` in the factory call — `MkArray[T]` is not summonable inline because
-              // `T` is unknown at compile time, while `MkArray[AnyRef]` is (G2's raw rule extended
-              // to the type-parameter case). The result is then cast to the declared type:
-              // `ObjectSet.apply[AnyRef]().asInstanceOf[ObjectSet[T]]`. The cast is java's own
-              // unchecked conversion (a `new ObjectSet<T>()` carries T only for erasure) and the
-              // emitted `.asInstanceOf` is §4.4's reified question at a type the program controls.
-              val anyRef = TypeRepr.TypeRef(TypeRepr.NoPrefix, objectSym)
-              var hasTypeParamArg = false
+              // A TYPE PARAMETER element (`class Octree[T] { new ObjectSet<T>() }`) is emitted
+              // faithfully as `ObjectSet.apply[T]()` — `MkArray[T]` must be provided by the
+              // enclosing scope (a `using MkArray[T]` clause on the class, or a local given as
+              // sge's `DynamicArray.createRef` does). Where it is not, the compile error is
+              // COUNTED on the `collection-retarget` lane. A wildcard (`TypeBounds`) becomes
+              // `AnyRef` — `[?]` is not writable as a method type argument (§4.56).
               val targs: List[TypeTree] = n.tpe match
                 case TypeRepr.AppliedType(_, as) =>
                   as.map {
                     case _: TypeRepr.TypeBounds =>
-                      // Wildcard becomes AnyRef — `[?]` is not writable as a method type argument.
-                      hasTypeParamArg = true
-                      TypeTree(anyRef, t.origin)
-                    case a =>
-                      // Check if this type arg is a type parameter (its symbol resolves to a
-                      // TypeDef, not a ClassDef) — if so, replace with AnyRef.
-                      val isTypeParam = headSym(a).exists { s =>
-                        p.definitionOf(s) match
-                          case Some(_: Tree.TypeDef) => true
-                          case _                     => false
-                      }
-                      if isTypeParam then
-                        hasTypeParamArg = true
-                        TypeTree(anyRef, t.origin)
-                      else
-                        TypeTree(a, t.origin)
+                      TypeTree(TypeRepr.TypeRef(TypeRepr.NoPrefix, objectSym), t.origin)
+                    case a => TypeTree(a, t.origin)
                   }
                 case _ =>
                   // RAW java source (`new Array()` at a raw declaration): the type is unapplied.
@@ -7430,15 +7413,7 @@ final class CollectionsTransform(
               val fun: Term =
                 if targs.nonEmpty then Tree.TypeApply(ident, targs, TypeRepr.NoType, t.origin)
                 else ident
-              val call = Tree.Apply(fun, effectiveArgs, factorySym, n.tpe, t.origin)
-              // When a type parameter was replaced with AnyRef, wrap in a cast to the declared
-              // type — `ObjectSet.apply[AnyRef]().asInstanceOf[ObjectSet[T]]` — so the result
-              // type matches the slot the construction feeds. Without the cast, `ObjectSet[AnyRef]`
-              // is not assignable to `ObjectSet[T]` (invariant type parameter).
-              if hasTypeParamArg then
-                Tree.Typed(call, TypeTree(n.tpe, t.origin), n.tpe, t.origin)
-              else
-                call
+              Tree.Apply(fun, effectiveArgs, factorySym, n.tpe, t.origin)
             }
           case CollectionsTransform.RetargetRewrite.Template(expr) =>
             Some(renderTemplate(expr, Tree.Ident(SymId.None, n.tpe, t.origin), t.args, srcFqn, n.tpe, t.origin))

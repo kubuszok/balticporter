@@ -1748,9 +1748,15 @@ object LibgdxPolicy:
                |}""".stripMargin,
            // wave 3.1m: Selection.toArray() — Chain produces Iterator whose toArray needs ClassTag.
            // Collect from the OrderedSet directly into an sge.utils.Array. sge: selected.foreach(result.add).
+           // sge: `val result = DynamicArray.createRef[T](); selected.foreach(result.add); result`
+           // createRef provides `given MkArray[A] = MkArray.anyRef.asInstanceOf[MkArray[A]]` locally
            "com.badlogic.gdx.scenes.scene2d.utils.Selection#toArray" ->
              """{
-               |  val result: lowlevel.util.DynamicArray[T] = lowlevel.util.DynamicArray[AnyRef]().asInstanceOf[lowlevel.util.DynamicArray[T]]
+               |  val result: lowlevel.util.DynamicArray[T] = {
+               |    @scala.annotation.nowarn("msg=unused local definition")
+               |    given lowlevel.MkArray[T] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[T]]
+               |    lowlevel.util.DynamicArray[T]()
+               |  }
                |  this.selected.foreach(result.add)
                |  return result
                |}""".stripMargin,
@@ -1770,7 +1776,11 @@ object LibgdxPolicy:
                |    return
                |  } else ()
                |  var changed: scala.Boolean = false
-               |  val toRemove: lowlevel.util.DynamicArray[T] = lowlevel.util.DynamicArray[AnyRef]().asInstanceOf[lowlevel.util.DynamicArray[T]]
+               |  val toRemove: lowlevel.util.DynamicArray[T] = {
+               |    @scala.annotation.nowarn("msg=unused local definition")
+               |    given lowlevel.MkArray[T] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[T]]
+               |    lowlevel.util.DynamicArray[T]()
+               |  }
                |  val iter = this.items.orderedItems.iterator
                |  while (iter.hasNext) {
                |    val selected: T = iter.next().asInstanceOf[T]
