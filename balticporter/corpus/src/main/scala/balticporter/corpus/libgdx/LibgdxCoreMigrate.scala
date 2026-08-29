@@ -548,6 +548,8 @@ object LibgdxPolicy:
         ("<init>", 1) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
+        // bean-property renamed isEmpty() -> empty; lls keeps isEmpty
+        ("empty", 0) -> Rename("isEmpty"),
         // ForEach: for (Entry e : map.entries()) -> map.foreachEntry((k, v) => body)
         ("entries", 0) -> ForEach("foreachEntry", 2),
         ("keys", 0)    -> ForEach("foreachKey", 1),

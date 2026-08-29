@@ -687,11 +687,15 @@ final class CollectionsTransform(
     * no second lowering can appear under an `a0$` that is already bound. */
   private var recvBindSym: SymId = SymId.None
   private var argParamSyms: Vector[SymId] = Vector.empty
-  /** pre-minted lambda parameter symbols for the [[retargetForEach]] lowering.
-    * Reused across all lowered for-each loops: each lambda is a separate scope. */
-  private var forEachKeySym: SymId = SymId.None
-  private var forEachValSym: SymId = SymId.None
-  private var forEachElemSym: SymId = SymId.None
+  /** sequence counter for lambda parameter symbols in [[retargetForEach]] — each nested rewrite
+    * gets unique names (`k$fe0`/`v$fe0`, `k$fe1`/`v$fe1`, …) so an inner entry lambda does not
+    * shadow the outer one's captures.  The old fixed `k$fe`/`v$fe` caused a capture when
+    * `Model.loadNodes` nested two `foreachEntry` calls (inner `k$fe` of type String shadowed
+    * outer `k$fe` of type NodePart). */
+  private var forEachSeq: Int = 0
+  private var forEachKeyPool: Array[SymId] = Array.empty
+  private var forEachValPool: Array[SymId] = Array.empty
+  private var forEachElemPool: Array[SymId] = Array.empty
   /** sequence counter for return-boundary labels in [[retargetForEach]]. */
   private var retFeSeq: Int = 0
   /** Apply nodes produced by [[retargetForEach]] that need a value-carrying boundary wrapper.
@@ -1077,9 +1081,10 @@ final class CollectionsTransform(
     }.toSet
     toJavaValueSym = mint("toJavaValue", s"${CollectionsTransform.ReifiedFqn}.toJavaValue")
     foreachSym          = mint("foreach", "foreach")
-    forEachKeySym       = mint("k$fe", "k$fe")
-    forEachValSym       = mint("v$fe", "v$fe")
-    forEachElemSym      = mint("x$fe", "x$fe")
+    forEachSeq          = 0
+    forEachKeyPool      = (0 until 8).map(i => mint(s"k$$fe$i", s"k$$fe$i")).toArray
+    forEachValPool      = (0 until 8).map(i => mint(s"v$$fe$i", s"v$$fe$i")).toArray
+    forEachElemPool     = (0 until 8).map(i => mint(s"x$$fe$i", s"x$$fe$i")).toArray
     removeHeadOptionSym = mint("removeHeadOption", "removeHeadOption")
     headOptionSym       = mint("headOption", "headOption")
     orNullSym           = mint("orNull", "orNull")
@@ -3028,17 +3033,35 @@ final class CollectionsTransform(
     *
     * Keyed on SYMBOL (via [[retargetTargetToSource]] and [[tuple2Sym]]), never a name (§4.56). */
   private def retargetSelectRewrite(sel: Tree.Select)(using p: Program): Option[Term] =
-    if retargetEntryTargets.isEmpty then return scala.None
-    headSym(sel.qual.tpe).flatMap { h =>
-      if !retargetEntryTargets.contains(h) then scala.None
-      else
+    // Entry field rewrites: .key/.value -> ._1/._2
+    val entryResult =
+      if retargetEntryTargets.isEmpty then scala.None
+      else headSym(sel.qual.tpe).flatMap { h =>
+        if !retargetEntryTargets.contains(h) then scala.None
+        else
+          val mName = methodName(sel.sym)
+          if mName == "key" || mName == "getKey" then
+            Some(Tree.Select(sel.qual, key1Sym, sel.tpe, sel.origin))
+          else if mName == "value" || mName == "getValue" then
+            Some(Tree.Select(sel.qual, value2Sym, sel.tpe, sel.origin))
+          else scala.None
+      }
+    if entryResult.isDefined then return entryResult
+    // Rename entries at a SELECT (nullary property access, e.g. bean-property renamed `isEmpty` ->
+    // `empty`).  The retargetRewrite table has `("empty", 0) -> Rename("isEmpty")`, but
+    // retargetRewrite fires only on Tree.Apply.  A bean-property-renamed member is a Tree.Select.
+    if retargetRewrites.nonEmpty then
+      headSym(sel.qual.tpe).flatMap(retargetTargetToSource.get).flatMap { srcFqn =>
         val mName = methodName(sel.sym)
-        if mName == "key" || mName == "getKey" then
-          Some(Tree.Select(sel.qual, key1Sym, sel.tpe, sel.origin))
-        else if mName == "value" || mName == "getValue" then
-          Some(Tree.Select(sel.qual, value2Sym, sel.tpe, sel.origin))
-        else scala.None
-    }
+        retargetRewrites.get(srcFqn).flatMap(_.get((mName, 0))).flatMap {
+          case CollectionsTransform.RetargetRewrite.Rename(target) =>
+            retargetRewriteSyms.get((srcFqn, target)).map { tgtSym =>
+              Tree.Select(sel.qual, tgtSym, sel.tpe, sel.origin)
+            }
+          case _ => scala.None
+        }
+      }
+    else scala.None
 
   private def staticFieldRewrite(sel: Tree.Select)(using p: Program): Option[Term] =
     for
@@ -3252,18 +3275,36 @@ final class CollectionsTransform(
     * for-each is left unchanged and counted. */
   private def retargetForEach(fe: Tree.ForEach)(using p: Program): Option[Term] =
     if retargetRewrites.isEmpty then return scala.None
-    // extract the receiver and member from the iterable — must be a call `recv.member()`
+    // extract the receiver and member from the iterable — must be a call `recv.member()`,
+    // OR a bare reference to a Kind.Map retarget target (java's `for (Entry e : map)` iterates
+    // entries implicitly — the retarget removed the `Iterable<Entry>` parent, so the desugared
+    // `map.foreach(...)` has no `foreach` and the phase images it as `map.foreachEntry(...)`)
     val (recv, memberSym, srcFqn) = fe.iterable match
       case Tree.Apply(Tree.Select(r, m, _, _), Nil, _, _, _) =>
         headSym(r.tpe).flatMap(retargetTargetToSource.get) match
           case Some(src) => (r, m, src)
           case _         => return scala.None
-      case _ => return scala.None
-    val mName = methodName(memberSym)
+      case bareRef =>
+        // bare map reference — implicit entry iteration.  Java's `for (Entry e : map)` iterates
+        // entries because ObjectMap implements `Iterable<Entry>`.  The retarget removed that parent,
+        // so the desugared `map.foreach(...)` has no `foreach` — image it through the ENTRIES
+        // ForEach, which is the same iteration the java performed.
+        headSym(bareRef.tpe).flatMap(retargetTargetToSource.get) match
+          case Some(src) if retargetRewrites.get(src).exists(_.get(("entries", 0))
+                .exists(_.isInstanceOf[CollectionsTransform.RetargetRewrite.ForEach])) =>
+            (bareRef, SymId.None, src)
+          case _ => return scala.None
+    val mName = if memberSym == SymId.None then "entries" else methodName(memberSym)
     val rewrite = retargetRewrites.get(srcFqn).flatMap(_.get((mName, 0))) match
       case Some(rw: CollectionsTransform.RetargetRewrite.ForEach) => rw
       case _ => return scala.None
     val hasReturn = returnsInForEach(fe.body)
+    // for bare map iteration, refuse when the body has a return: the bottom-up traversal converts
+    // the inner for-each FIRST, wrapping the return in a boundary label inside a lambda.  The
+    // OUTER ForEach then cannot see the return (returnsInForEach stops at lambdas), so it would
+    // lose ITS return boundary — and the inner break would reference a label nobody declared.
+    // Refusing leaves the inner for-each as-is, and the OUTER ForEach's return rewrite handles it.
+    if memberSym == SymId.None && hasReturn then return scala.None
     // for arity-2 (entry iteration), check that the binding is ONLY used via .key/.value selects
     // and that it is not reassigned
     val bound = fe.binding.symbol
@@ -3281,21 +3322,28 @@ final class CollectionsTransform(
     def bodyWithBreaks(body: Term): Term =
       if !hasReturn then body
       else rewriteReturnsToBreaks(body, label.get, so)
+    // pick unique lambda parameter symbols per rewrite — nested entry loops would otherwise
+    // shadow: the inner `k$fe` captures the outer, and `k$fe.invBoneBindTransforms` resolves
+    // against the inner key type (`String`) instead of the outer (`NodePart`).
+    val n = { val i = forEachSeq % forEachKeyPool.length; forEachSeq += 1; i }
     val apply =
       if rewrite.arity == 2 then
         // entry iteration: build `recv.foreachEntry((k, v) => body')`
         val kTpe = keyType(recv.tpe).getOrElse(TypeRepr.NoType)
         val vTpe = valueType(recv.tpe).getOrElse(TypeRepr.NoType)
-        val kParam = Tree.ValDef(forEachKeySym, TypeTree(kTpe, so), scala.None, so)
-        val vParam = Tree.ValDef(forEachValSym, TypeTree(vTpe, so), scala.None, so)
-        val rewrittenBody = rewriteEntrySelects(bound, forEachKeySym, kTpe, forEachValSym, vTpe, fe.body, so)
+        val kSym = forEachKeyPool(n)
+        val vSym = forEachValPool(n)
+        val kParam = Tree.ValDef(kSym, TypeTree(kTpe, so), scala.None, so)
+        val vParam = Tree.ValDef(vSym, TypeTree(vTpe, so), scala.None, so)
+        val rewrittenBody = rewriteEntrySelects(bound, kSym, kTpe, vSym, vTpe, fe.body, so)
         val lambda = Tree.Lambda(List(kParam, vParam), bodyWithBreaks(rewrittenBody), unitTpe, so)
         Tree.Apply(Tree.Select(recv, tgtSym, TypeRepr.NoType, so), List(lambda), tgtSym, unitTpe, so)
       else
         // keys/values iteration: build `recv.foreachKey(k => body)` or `recv.foreachValue(v => body)`
         val paramTpe = fe.binding.tpt.tpe
-        val param = Tree.ValDef(forEachElemSym, TypeTree(paramTpe, so), scala.None, so)
-        val rewrittenBody = rewriteBindingRefs(bound, forEachElemSym, paramTpe, fe.body, so)
+        val eSym = forEachElemPool(n)
+        val param = Tree.ValDef(eSym, TypeTree(paramTpe, so), scala.None, so)
+        val rewrittenBody = rewriteBindingRefs(bound, eSym, paramTpe, fe.body, so)
         val lambda = Tree.Lambda(List(param), bodyWithBreaks(rewrittenBody), unitTpe, so)
         Tree.Apply(Tree.Select(recv, tgtSym, TypeRepr.NoType, so), List(lambda), tgtSym, unitTpe, so)
     if hasReturn then retFeReturnApplies.put(apply, label.get)
@@ -3377,7 +3425,7 @@ final class CollectionsTransform(
       // a .key/.value select on the bound entry — this is the ALLOWED usage, skip the inner Ident
       case Tree.Select(Tree.Ident(`bound`, _, _), m, _, _) =>
         val mn = methodName(m)
-        mn != "key" && mn != "value" && mn != "getKey" && mn != "getValue"
+        mn != "key" && mn != "value" && mn != "getKey" && mn != "getValue" && mn != "_1" && mn != "_2"
       // a bare ident reference to bound — NOT allowed, the entry has no lls image
       case Tree.Ident(`bound`, _, _) => true
       // stop at constructs that rebind (lambdas, nested defs, anonymous classes)
@@ -3396,8 +3444,8 @@ final class CollectionsTransform(
       override def transformTerm(x: Term)(using Program): Term = x match
         case Tree.Select(Tree.Ident(`bound`, _, _), m, _, _) =>
           val mn = methodName(m)
-          if mn == "key" || mn == "getKey" then Tree.Ident(kSym, kTpe, so)
-          else if mn == "value" || mn == "getValue" then Tree.Ident(vSym, vTpe, so)
+          if mn == "key" || mn == "getKey" || mn == "_1" then Tree.Ident(kSym, kTpe, so)
+          else if mn == "value" || mn == "getValue" || mn == "_2" then Tree.Ident(vSym, vTpe, so)
           else x
         case _ => x
     StandardTraversal.mapTerm(rw, body)
