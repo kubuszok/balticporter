@@ -142,7 +142,8 @@ final class CollectionsFactory extends TransformFactory:
               else if c.string("companion").isDefined then
                 RetargetRewrite.Construct(
                   c.requireString("companion"),
-                  c.requireString("factory"))
+                  c.requireString("factory"),
+                  fillTypeArgs = c.bool("fillTypeArgs").getOrElse(false))
               else throw ConfigError(tbl.at(memberArity),
                 "object entry must have either 'boolDispatch' (BoolDispatch) or 'companion' (Construct)")
             else

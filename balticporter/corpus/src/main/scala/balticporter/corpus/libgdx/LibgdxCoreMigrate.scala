@@ -558,22 +558,22 @@ object LibgdxPolicy:
       // Every Entry source needs the entry, since retargetTargetToSource maps to whichever
       // source program.symbols.all iterates last.
       "com.badlogic.gdx.utils.ObjectMap$Entry" -> Map(
-        ("<init>", 0) -> Construct("scala.Tuple2", "apply"),
+        ("<init>", 0) -> Construct("scala.Tuple2", "apply", fillTypeArgs = true),
       ),
       "com.badlogic.gdx.utils.IntMap$Entry" -> Map(
-        ("<init>", 0) -> Construct("scala.Tuple2", "apply"),
+        ("<init>", 0) -> Construct("scala.Tuple2", "apply", fillTypeArgs = true),
       ),
       "com.badlogic.gdx.utils.LongMap$Entry" -> Map(
-        ("<init>", 0) -> Construct("scala.Tuple2", "apply"),
+        ("<init>", 0) -> Construct("scala.Tuple2", "apply", fillTypeArgs = true),
       ),
       "com.badlogic.gdx.utils.ObjectIntMap$Entry" -> Map(
-        ("<init>", 0) -> Construct("scala.Tuple2", "apply"),
+        ("<init>", 0) -> Construct("scala.Tuple2", "apply", fillTypeArgs = true),
       ),
       "com.badlogic.gdx.utils.ObjectFloatMap$Entry" -> Map(
-        ("<init>", 0) -> Construct("scala.Tuple2", "apply"),
+        ("<init>", 0) -> Construct("scala.Tuple2", "apply", fillTypeArgs = true),
       ),
       "com.badlogic.gdx.utils.ObjectLongMap$Entry" -> Map(
-        ("<init>", 0) -> Construct("scala.Tuple2", "apply"),
+        ("<init>", 0) -> Construct("scala.Tuple2", "apply", fillTypeArgs = true),
       ),
       "com.badlogic.gdx.utils.ObjectSet" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ObjectSet", "apply"),

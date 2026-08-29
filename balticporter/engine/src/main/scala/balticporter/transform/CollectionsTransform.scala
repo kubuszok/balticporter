@@ -438,8 +438,9 @@ final class CollectionsTransform(
     def renderRw(rw: CollectionsTransform.RetargetRewrite): String = rw match
       case CollectionsTransform.RetargetRewrite.Rename(t) => s"Rename($t)"
       case CollectionsTransform.RetargetRewrite.BoolDispatch(f, t, ff) => s"BoolDispatch($f,$t,$ff)"
-      case CollectionsTransform.RetargetRewrite.Construct(c, m, dt) =>
-        if dt == 0 then s"Construct($c,$m)" else s"Construct($c,$m,$dt)"
+      case CollectionsTransform.RetargetRewrite.Construct(c, m, dt, ft) =>
+        val base = if dt == 0 then s"Construct($c,$m)" else s"Construct($c,$m,$dt)"
+        if ft then s"$base+fill" else base
       case CollectionsTransform.RetargetRewrite.ForEach(t, a) => s"ForEach($t,$a)"
     balticporter.tir.TirPrinter.sha256(
       retargetRewrites.toList.sortBy(_._1).flatMap { (src, tbl) =>
@@ -1123,7 +1124,7 @@ final class CollectionsTransform(
           List(
             (src, onTrue)  -> mint(onTrue, s"$src#retargetRewrite:$onTrue"),
             (src, onFalse) -> mint(onFalse, s"$src#retargetRewrite:$onFalse"))
-        case CollectionsTransform.RetargetRewrite.Construct(companionFqn, factoryMethod, _) =>
+        case CollectionsTransform.RetargetRewrite.Construct(companionFqn, factoryMethod, _, _) =>
           val fqn = s"$companionFqn.$factoryMethod"
           List((src, fqn) -> mint(factoryMethod, fqn))
         case CollectionsTransform.RetargetRewrite.ForEach(targetMethod, _) =>
@@ -6588,20 +6589,26 @@ final class CollectionsTransform(
       headSym(n.tpe).flatMap(retargetTargetToSource.get).flatMap { srcFqn =>
         val arity = t.args.size
         retargetRewrites.get(srcFqn).flatMap(_.get(("<init>", arity))).flatMap {
-          case CollectionsTransform.RetargetRewrite.Construct(companionFqn, factoryMethod, dropTrailing) =>
+          case CollectionsTransform.RetargetRewrite.Construct(companionFqn, factoryMethod, dropTrailing, fillTypeArgs) =>
             val fqn = s"$companionFqn.$factoryMethod"
             retargetRewriteSyms.get((srcFqn, fqn)).map { factorySym =>
               val rawArgs = if dropTrailing > 0 then t.args.dropRight(dropTrailing) else t.args
               val effectiveArgs =
                 if rawArgs.nonEmpty then rawArgs
+                else if !fillTypeArgs then Nil
                 else
                   val targs = n.tpe match
                     case TypeRepr.AppliedType(_, as) => as
                     case _ => Nil
                   targs.map { a =>
+                    // Replace wildcards (TypeBounds) with Object — `null.asInstanceOf[?]` is not
+                    // syntax (unbound wildcard in term position).
+                    val safe = a match
+                      case _: TypeRepr.TypeBounds => TypeRepr.TypeRef(TypeRepr.NoPrefix, objectSym)
+                      case other                 => other
                     Tree.Typed(
-                      Tree.Literal(balticporter.tir.Constant.NullC, a, t.origin),
-                      TypeTree(a, t.origin), a, t.origin)
+                      Tree.Literal(balticporter.tir.Constant.NullC, safe, t.origin),
+                      TypeTree(safe, t.origin), safe, t.origin)
                   }
               Tree.Apply(Tree.Ident(factorySym, TypeRepr.NoType, t.origin), effectiveArgs, factorySym, n.tpe, t.origin)
             }
@@ -6735,8 +6742,16 @@ object CollectionsTransform:
       * `dropTrailing` drops that many trailing arguments from the java constructor call before
       * passing them to the factory — for a java constructor that takes `Class` tokens the target
       * does not need (e.g. `ArrayMap(boolean, int, Class, Class)` → `ArrayMap.apply(boolean, int)`).
-      * Default 0 (pass all args through). */
-    case class Construct(companionFqn: String, factoryMethod: String, dropTrailing: Int = 0) extends RetargetRewrite
+      * Default 0 (pass all args through).
+      *
+      * `fillTypeArgs` — when true AND the java constructor has 0 args, generates
+      * `null.asInstanceOf[T]` arguments from the target type's type parameters, so the factory
+      * receives the right number of values.  This is for types like `Tuple2` whose companion
+      * `apply` has no 0-arg form.  Default false: the 0-arg factory is called with 0 args, and
+      * the enclosing declaration's type annotation carries the type parameters.  A wildcard type
+      * arg is replaced with `scala.Any` to avoid `null.asInstanceOf[?]` (an unbound wildcard in
+      * term position is not syntax — §4.56's own rule met at a `Construct`). */
+    case class Construct(companionFqn: String, factoryMethod: String, dropTrailing: Int = 0, fillTypeArgs: Boolean = false) extends RetargetRewrite
 
     /** For-each structural rewrite: a `for (E e : recv.sourceMethod())` over a retarget target
       * is lowered to `recv.targetMethod(e => body)` (single-parameter lambda) or
