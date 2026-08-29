@@ -11582,6 +11582,11 @@ Ashley needs NO manifest entry — the per-entry scope mechanism is for a depend
 DIFFERENT family the base does not carry.
 
 
+### 13.18 Wave 3.1h --- `ObjectMap.Entry -> Tuple2` image, `ArrayMap` 4-arity, `classOf` at a retarget
+
+- `retargetSelectRewrite`: `.key`/`.value` field SELECTS on a retarget target whose source maps to `Tuple2` become `._1`/`._2` (keyed on `retargetEntryTargets`, a SymId set derived from `remap` + `UninheritableTargets`). `Construct.dropTrailing` (default 0, fingerprint-flat) drops java `Class` tokens; an arity-0 `Construct` on a target with type args supplies `null.asInstanceOf[T]` per arg. `classOf[T]` literal CONSTANT synced through `remap` (the emitter reads `const`, which `mapTerm` never maps) and counted as `ReifiedOccurrence`.
+- gdx: the 16 family rows (8 `.key`/`.value` not a member, 2 `new Tuple2()`, 2 `ArrayMap` ctor, 4 `classOf[sge.utils.ObjectMap]`) are 0; 4 NEW `Reassignment to val _1/_2` --- java writes the Entry's fields after default construction and a `Tuple2` is immutable, a residue of the `Entry -> Tuple2` policy. The brief's `53` was a stale sbt-server figure: a fresh lane at HEAD read 125 and this commit reads **123**. 8 specs added (4 engine, 4 corpus).
+
 ### 13.19 Wave 3.2d --- `NullabilityTransform.nullableMembers` for unannotated-but-nullable returns
 
 Ashley's six members whose hand port wraps in `Nullable[T]` carry no nullability annotation in the

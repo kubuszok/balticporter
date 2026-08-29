@@ -259,4 +259,51 @@ class CollectionsRetargetRewriteSpec extends munit.FunSuite {
     assertEquals(ct.retargetRewrites("com.b.Y")(("keys", 0)),
       ForEach("foreachKey", 1))
   }
+
+  // ---- Construct.dropTrailing ----
+
+  test("Construct with dropTrailing=0 has the same fingerprint as Construct without it") {
+    val a = new CollectionsTransform(
+      retarget = Map("com.example.Foo" -> "com.example.Bar"),
+      retargetRewrites = Map("com.example.Foo" -> Map(
+        ("<init>", 0) -> Construct("com.example.Bar", "apply"))))
+    val b = new CollectionsTransform(
+      retarget = Map("com.example.Foo" -> "com.example.Bar"),
+      retargetRewrites = Map("com.example.Foo" -> Map(
+        ("<init>", 0) -> Construct("com.example.Bar", "apply", dropTrailing = 0))))
+    assertEquals(a.surfaceFingerprint, b.surfaceFingerprint)
+  }
+
+  test("Construct with dropTrailing>0 changes the fingerprint") {
+    val a = new CollectionsTransform(
+      retarget = Map("com.example.Foo" -> "com.example.Bar"),
+      retargetRewrites = Map("com.example.Foo" -> Map(
+        ("<init>", 4) -> Construct("com.example.Bar", "apply"))))
+    val b = new CollectionsTransform(
+      retarget = Map("com.example.Foo" -> "com.example.Bar"),
+      retargetRewrites = Map("com.example.Foo" -> Map(
+        ("<init>", 4) -> Construct("com.example.Bar", "apply", dropTrailing = 2))))
+    assertNotEquals(a.surfaceFingerprint, b.surfaceFingerprint)
+  }
+
+  test("Construct toString includes dropTrailing when non-zero") {
+    val r = Construct("lowlevel.util.ArrayMap", "apply", dropTrailing = 2)
+    assert(r.toString.contains("2"))
+  }
+
+  test("mergeWith unions Construct entries with dropTrailing from independent sources") {
+    val base = new CollectionsTransform(
+      retarget = Map("com.a.X" -> "scala.X", "com.b.Y" -> "scala.Y"),
+      retargetRewrites = Map("com.a.X" -> Map(
+        ("<init>", 0) -> Construct("scala.X", "apply"))))
+    val dep = new CollectionsTransform(
+      retarget = Map("com.b.Y" -> "scala.Y"),
+      retargetRewrites = Map("com.b.Y" -> Map(
+        ("<init>", 4) -> Construct("scala.Y", "apply", dropTrailing = 2))))
+    val merged = base.mergedWith(dep)
+    assert(clue(merged).isRight)
+    val ct = merged.toOption.get.phase.asInstanceOf[CollectionsTransform]
+    assertEquals(ct.retargetRewrites("com.b.Y")(("<init>", 4)),
+      Construct("scala.Y", "apply", dropTrailing = 2))
+  }
 }

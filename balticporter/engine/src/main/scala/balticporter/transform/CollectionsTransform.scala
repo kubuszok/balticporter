@@ -435,9 +435,15 @@ final class CollectionsTransform(
   /** digest of the `retargetRewrites` table — sorted by source FQN then by (member, arity).
     * Used only when `retargetRewrites.nonEmpty`. */
   private def retargetRewritesDigest: String =
+    def renderRw(rw: CollectionsTransform.RetargetRewrite): String = rw match
+      case CollectionsTransform.RetargetRewrite.Rename(t) => s"Rename($t)"
+      case CollectionsTransform.RetargetRewrite.BoolDispatch(f, t, ff) => s"BoolDispatch($f,$t,$ff)"
+      case CollectionsTransform.RetargetRewrite.Construct(c, m, dt) =>
+        if dt == 0 then s"Construct($c,$m)" else s"Construct($c,$m,$dt)"
+      case CollectionsTransform.RetargetRewrite.ForEach(t, a) => s"ForEach($t,$a)"
     balticporter.tir.TirPrinter.sha256(
       retargetRewrites.toList.sortBy(_._1).flatMap { (src, tbl) =>
-        tbl.toList.sortBy(_._1.toString).map { case ((m, ar), rw) => s"$src#$m/$ar->$rw" }
+        tbl.toList.sortBy(_._1.toString).map { case ((m, ar), rw) => s"$src#$m/$ar->${renderRw(rw)}" }
       }.mkString(",")).take(16)
 
   /** digest of the `retargetTypeArgs` table — sorted by source FQN, each arg rendered as
@@ -651,6 +657,9 @@ final class CollectionsTransform(
   private var retargetArgsByTarget: Map[SymId, List[CollectionsTransform.RetargetArg]] = Map.empty
   /** minted SymIds for FixedType FQNs in retargetTypeArgs. */
   private var retargetFixedTypeSyms: Map[String, SymId] = Map.empty
+  /** retarget target SymIds whose source is an Entry-like type (mapped to Tuple2). Used by
+    * [[retargetSelectRewrite]] to fire `.key -> ._1` / `.value -> ._2` by SYMBOL, not by name. */
+  private var retargetEntryTargets: Set[SymId] = Set.empty
   private def byScalaSym(fqn: String): SymId = byScalaSyms.getOrElse(fqn, SymId.None)
   private def enumSetSym(n: String): SymId   = enumSetSyms.getOrElse(n, SymId.None)
   /** java 8 `Collection.forEach(Consumer)` — scala's is `foreach`, differing only in case, which
@@ -1087,6 +1096,10 @@ final class CollectionsTransform(
     retargetTargetToSource = program.symbols.all.flatMap { s =>
       effectiveRetarget.get(s.fullName).flatMap(_ => remap.get(s.id).map(tgtSym => tgtSym -> s.fullName))
     }.toMap
+    retargetEntryTargets = program.symbols.all.flatMap { s =>
+      effectiveRetarget.get(s.fullName).filter(CollectionsTransform.UninheritableTargets.contains)
+        .flatMap(_ => remap.get(s.id))
+    }.toSet
 
     // resolve FixedType FQNs to minted symbols
     retargetFixedTypeSyms = retargetTypeArgs.values.flatten.collect {
@@ -1110,7 +1123,7 @@ final class CollectionsTransform(
           List(
             (src, onTrue)  -> mint(onTrue, s"$src#retargetRewrite:$onTrue"),
             (src, onFalse) -> mint(onFalse, s"$src#retargetRewrite:$onFalse"))
-        case CollectionsTransform.RetargetRewrite.Construct(companionFqn, factoryMethod) =>
+        case CollectionsTransform.RetargetRewrite.Construct(companionFqn, factoryMethod, _) =>
           val fqn = s"$companionFqn.$factoryMethod"
           List((src, fqn) -> mint(factoryMethod, fqn))
         case CollectionsTransform.RetargetRewrite.ForEach(targetMethod, _) =>
@@ -2808,7 +2821,8 @@ final class CollectionsTransform(
     case io: Tree.InstanceOf => reifiedTest(io)
     case fe: Tree.ForEach => retargetForEach(fe).getOrElse(writeThroughEntries(fe))
     case mr: Tree.MethodRef => lowerMethodRef(mr)
-    case sel: Tree.Select => staticFieldRewrite(sel).getOrElse(externalFieldProducer(sel))
+    case lit @ Tree.Literal(Constant.ClassOfC(tp), tpe, _) => retargetClassOf(lit, tp, tpe)
+    case sel: Tree.Select => retargetSelectRewrite(sel).getOrElse(staticFieldRewrite(sel).getOrElse(externalFieldProducer(sel)))
     case other          => other
 
   // -------------------------------------------------------------------------------------------
@@ -2974,6 +2988,57 @@ final class CollectionsTransform(
     *
     * Consulted AHEAD of [[externalFieldProducer]]: both would fire on the same node and the wrap is
     * the weaker answer — it preserves a raw type this one removes. */
+
+  /** A `classOf[T]` literal whose inner type was retarget-mapped — sync the CONSTANT to match.
+    *
+    * `mapTerm` maps the Literal's `tpe` (which for a classOf is `ConstantType(ClassOfC(tp))`)
+    * through `mapType`, which remaps the inner type. But it does NOT map `const`, the
+    * `Constant.ClassOfC(tp)` the EMITTER reads. So after the traversal the two disagree: `tpe`
+    * says `classOf[lowlevel.util.ObjectMap]` and `const` says `classOf[com.badlogic.gdx.utils.ObjectMap]`.
+    * The package rename then maps the SYMBOL but `sge.utils.ObjectMap` is gone (retargetted away).
+    *
+    * The site is COUNTED on `collection-retarget`: a third party reading `classOf[lls.ObjectMap]`
+    * sees the lls class, not the upstream one (K20's reified position). */
+  private def retargetClassOf(lit: Tree.Literal, tp: TypeRepr, tpe: TypeRepr)(using p: Program): Term =
+    def mapInner(t: TypeRepr): TypeRepr = t match
+      case TypeRepr.TypeRef(prefix, s) if remap.contains(s) =>
+        TypeRepr.TypeRef(prefix, remap(s))
+      case TypeRepr.AppliedType(tc, as) =>
+        val mc = mapInner(tc)
+        TypeRepr.AppliedType(mc, as.map(mapInner))
+      case other => other
+    val mapped = mapInner(tp)
+    if mapped != tp then
+      headSym(mapped).foreach { h =>
+        if retargetTargetToSource.contains(h) then
+          seam("classOf at retarget type (K20)", "reified class literal",
+               TirPrinter.tpe(mapped, TirPrinter.Style.canonical), lit.origin, SymId.None,
+               issue = CollectionBoundaryCheck.Issue.ReifiedOccurrence)
+      }
+      lit.copy(const = Constant.ClassOfC(mapped))
+    else lit
+
+  /** A FIELD ACCESS on a retarget target — `entry.key` -> `entry._1`, `entry.value` -> `entry._2`.
+    *
+    * The retarget moves the TYPE; [[retargetRewrite]] handles CALL SITES (`Tree.Apply`). A bare
+    * field select is the same member one node kind along and has no call node for `retargetRewrite`
+    * to see. Fires when the receiver's head is the `Tuple2` symbol AND that symbol is a retarget
+    * target, and the member name is `key`/`value`/`getKey`/`getValue`.
+    *
+    * Keyed on SYMBOL (via [[retargetTargetToSource]] and [[tuple2Sym]]), never a name (§4.56). */
+  private def retargetSelectRewrite(sel: Tree.Select)(using p: Program): Option[Term] =
+    if retargetEntryTargets.isEmpty then return scala.None
+    headSym(sel.qual.tpe).flatMap { h =>
+      if !retargetEntryTargets.contains(h) then scala.None
+      else
+        val mName = methodName(sel.sym)
+        if mName == "key" || mName == "getKey" then
+          Some(Tree.Select(sel.qual, key1Sym, sel.tpe, sel.origin))
+        else if mName == "value" || mName == "getValue" then
+          Some(Tree.Select(sel.qual, value2Sym, sel.tpe, sel.origin))
+        else scala.None
+    }
+
   private def staticFieldRewrite(sel: Tree.Select)(using p: Program): Option[Term] =
     for
       m   <- p.symbolOf(sel.sym)
@@ -6523,11 +6588,22 @@ final class CollectionsTransform(
       headSym(n.tpe).flatMap(retargetTargetToSource.get).flatMap { srcFqn =>
         val arity = t.args.size
         retargetRewrites.get(srcFqn).flatMap(_.get(("<init>", arity))).flatMap {
-          case CollectionsTransform.RetargetRewrite.Construct(companionFqn, factoryMethod) =>
+          case CollectionsTransform.RetargetRewrite.Construct(companionFqn, factoryMethod, dropTrailing) =>
             val fqn = s"$companionFqn.$factoryMethod"
             retargetRewriteSyms.get((srcFqn, fqn)).map { factorySym =>
-              // the result is typed as the TARGET — what the new would have produced.
-              Tree.Apply(Tree.Ident(factorySym, TypeRepr.NoType, t.origin), t.args, factorySym, n.tpe, t.origin)
+              val rawArgs = if dropTrailing > 0 then t.args.dropRight(dropTrailing) else t.args
+              val effectiveArgs =
+                if rawArgs.nonEmpty then rawArgs
+                else
+                  val targs = n.tpe match
+                    case TypeRepr.AppliedType(_, as) => as
+                    case _ => Nil
+                  targs.map { a =>
+                    Tree.Typed(
+                      Tree.Literal(balticporter.tir.Constant.NullC, a, t.origin),
+                      TypeTree(a, t.origin), a, t.origin)
+                  }
+              Tree.Apply(Tree.Ident(factorySym, TypeRepr.NoType, t.origin), effectiveArgs, factorySym, n.tpe, t.origin)
             }
           case _ => scala.None // Rename/BoolDispatch at <init> is meaningless; ignore
         }
@@ -6654,8 +6730,13 @@ object CollectionsTransform:
       * Where the element type is a TYPE PARAMETER of the enclosing class, the factory's inline
       * givens may not resolve — that construction is COUNTED on the existing
       * `collection-retarget` lane. Threading via `CtorFunnel`/context-threading is the eventual
-      * answer; this variant enables it to be wired when that mechanism is ready. */
-    case class Construct(companionFqn: String, factoryMethod: String) extends RetargetRewrite
+      * answer; this variant enables it to be wired when that mechanism is ready.
+      *
+      * `dropTrailing` drops that many trailing arguments from the java constructor call before
+      * passing them to the factory — for a java constructor that takes `Class` tokens the target
+      * does not need (e.g. `ArrayMap(boolean, int, Class, Class)` → `ArrayMap.apply(boolean, int)`).
+      * Default 0 (pass all args through). */
+    case class Construct(companionFqn: String, factoryMethod: String, dropTrailing: Int = 0) extends RetargetRewrite
 
     /** For-each structural rewrite: a `for (E e : recv.sourceMethod())` over a retarget target
       * is lowered to `recv.targetMethod(e => body)` (single-parameter lambda) or

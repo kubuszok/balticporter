@@ -498,10 +498,9 @@ object LibgdxPolicy:
     // sge type-mappings.md maps IdentityMap to ArrayMap (lls has no IdentityMap)
     "com.badlogic.gdx.utils.IdentityMap" -> "lowlevel.util.ArrayMap",
     // ObjectMap.Entry -> Tuple2: same image as JDK Map.Entry -> Tuple2 already in the phase.
-    // .key -> ._1, .value -> ._2 field rewrites are NOT expressible through retargetRewrites
-    // (which handles Tree.Apply, not bare Tree.Select field accesses). The field rename needs
-    // MemberRenameTransform or a phase-level Entry->Tuple2 handler -- HANDOFF to next wave.
-    // COUNTED on collection-retarget until then.
+    // .key -> ._1, .value -> ._2 field rewrites handled by retargetSelectRewrite (Tree.Select arm).
+    // The arity-0 constructor (java's default-constructed Entry with both fields null) is routed
+    // through the Construct entry in libCollectionConstructRewrites.
     "com.badlogic.gdx.utils.ObjectMap$Entry" -> "scala.Tuple2",
     // wave 3.1d: remaining MAP family retargets
     "com.badlogic.gdx.utils.IntMap" -> "lowlevel.util.ObjectMap",
@@ -553,6 +552,28 @@ object LibgdxPolicy:
         ("entries", 0) -> ForEach("foreachEntry", 2),
         ("keys", 0)    -> ForEach("foreachKey", 1),
         ("values", 0)  -> ForEach("foreachValue", 1),
+      ),
+      // Entry arity-0: java's default-constructed Entry with both fields null.
+      // Construct routes `new Tuple2()` -> `Tuple2.apply(null.asInstanceOf[K], null.asInstanceOf[V])`.
+      // Every Entry source needs the entry, since retargetTargetToSource maps to whichever
+      // source program.symbols.all iterates last.
+      "com.badlogic.gdx.utils.ObjectMap$Entry" -> Map(
+        ("<init>", 0) -> Construct("scala.Tuple2", "apply"),
+      ),
+      "com.badlogic.gdx.utils.IntMap$Entry" -> Map(
+        ("<init>", 0) -> Construct("scala.Tuple2", "apply"),
+      ),
+      "com.badlogic.gdx.utils.LongMap$Entry" -> Map(
+        ("<init>", 0) -> Construct("scala.Tuple2", "apply"),
+      ),
+      "com.badlogic.gdx.utils.ObjectIntMap$Entry" -> Map(
+        ("<init>", 0) -> Construct("scala.Tuple2", "apply"),
+      ),
+      "com.badlogic.gdx.utils.ObjectFloatMap$Entry" -> Map(
+        ("<init>", 0) -> Construct("scala.Tuple2", "apply"),
+      ),
+      "com.badlogic.gdx.utils.ObjectLongMap$Entry" -> Map(
+        ("<init>", 0) -> Construct("scala.Tuple2", "apply"),
       ),
       "com.badlogic.gdx.utils.ObjectSet" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ObjectSet", "apply"),
@@ -657,6 +678,8 @@ object LibgdxPolicy:
         ("<init>", 0) -> Construct("lowlevel.util.ArrayMap", "apply"),
         ("<init>", 1) -> Construct("lowlevel.util.ArrayMap", "apply"),
         ("<init>", 2) -> Construct("lowlevel.util.ArrayMap", "apply"),
+        // arity-4: ArrayMap(boolean, int, Class, Class) — last 2 are Class tokens lls does not need
+        ("<init>", 4) -> Construct("lowlevel.util.ArrayMap", "apply", dropTrailing = 2),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
         ("keys", 0)    -> ForEach("foreachKey", 1),

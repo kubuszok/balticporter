@@ -1879,3 +1879,100 @@ class CollectionsTransformSpec extends PortSuite:
     )
     assertEmits(p, "e.setValue(\"x\")")
   }
+
+  // ---------------------------------------------------------------------------
+  // RETARGET: Entry field rewrites (.key -> ._1, .value -> ._2) on Tree.Select
+  // ---------------------------------------------------------------------------
+
+  test("a RETARGET Entry's .key/.value field accesses become ._1/._2 on Tuple2") {
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.MyEntry" -> "scala.Tuple2"),
+      retargetRewrites = Map("demo.MyEntry" -> Map(
+        ("<init>", 0) -> CollectionsTransform.RetargetRewrite.Construct("scala.Tuple2", "apply"))))
+    val p = portAll(List(
+      "MyEntry.java" ->
+        """package demo;
+          |public class MyEntry<K, V> {
+          |  public K key;
+          |  public V value;
+          |  public MyEntry() { this.key = null; this.value = null; }
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  String first(MyEntry<String, Integer> e) { return e.key; }
+          |  Integer second(MyEntry<String, Integer> e) { return e.value; }
+          |}""".stripMargin), ph)
+    assertEmits(p, "e._1")
+    assertEmits(p, "e._2")
+    assertNotEmits(p, "e.key")
+    assertNotEmits(p, "e.value")
+  }
+
+  test("a RETARGET arity-0 Entry constructor emits Tuple2(null, null)") {
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.MyEntry" -> "scala.Tuple2"),
+      retargetRewrites = Map("demo.MyEntry" -> Map(
+        ("<init>", 0) -> CollectionsTransform.RetargetRewrite.Construct("scala.Tuple2", "apply"))))
+    val p = portAll(List(
+      "MyEntry.java" ->
+        """package demo;
+          |public class MyEntry<K, V> {
+          |  public K key;
+          |  public V value;
+          |  public MyEntry() { this.key = null; this.value = null; }
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  MyEntry<String, Integer> make() { return new MyEntry<String, Integer>(); }
+          |}""".stripMargin), ph)
+    assertEmits(p, "scala.Tuple2.apply")
+    assertEmits(p, "null.asInstanceOf[")
+    assertNotEmits(p, "new scala.Tuple2()")
+  }
+
+  test("a RETARGET Construct with dropTrailing drops the trailing arguments") {
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.Holder" -> "demo.Target"),
+      retargetRewrites = Map("demo.Holder" -> Map(
+        ("<init>", 4) -> CollectionsTransform.RetargetRewrite.Construct("demo.Target", "apply", dropTrailing = 2))))
+    val p = portAll(List(
+      "Holder.java" ->
+        """package demo;
+          |public class Holder<K, V> {
+          |  public Holder(boolean ordered, int cap, Class<K> mk, Class<V> mv) {}
+          |}""".stripMargin,
+      "Target.java" ->
+        """package demo;
+          |public class Target<K, V> {
+          |  public static <K, V> Target<K, V> apply(boolean ordered, int cap) { return null; }
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  Holder<String, Integer> make() { return new Holder<String, Integer>(true, 16, String.class, Integer.class); }
+          |}""".stripMargin), ph)
+    assertEmits(p, "demo.Target.apply")
+    assertEmitsMatch(p, """Target\.apply\([^)]*true[^)]*16[^)]*\)""")
+    assertNotEmits(p, "String.class")
+  }
+
+  test("a classOf literal at a retarget type is rewritten to the target type") {
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.ObjMap" -> "demo.LlsMap"))
+    val p = portAll(List(
+      "ObjMap.java" ->
+        """package demo;
+          |public class ObjMap<K, V> {}""".stripMargin,
+      "LlsMap.java" ->
+        """package demo;
+          |public class LlsMap<K, V> {}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  Class<?> c() { return ObjMap.class; }
+          |}""".stripMargin), ph)
+    assertEmits(p, "classOf[demo.LlsMap")
+    assertNotEmits(p, "classOf[demo.ObjMap")
+  }
