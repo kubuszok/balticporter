@@ -351,8 +351,9 @@ object LibgdxPolicy:
       // -> DynamicArray[T]" (unified via MkArray type class). Array<T> -> DynamicArray[T],
       // SnapshotArray/DelayedRemovalArray -> DynamicArray (lls DynamicArray has begin/end for
       // snapshot support). BooleanArray -> DynamicArray[Boolean] (lls MkArray$OfBooleans exists).
-      // Queue -> DynamicArray (sge: "Queue -> Scala stdlib queues", but DynamicArray is the
-      // shared collection type and Queue's API maps to it).
+      // Queue -> mutable.ArrayDeque (sge type-mappings.md: "Queue -> Scala stdlib queues";
+      // sge's own QueueBitsTest uses mutable.ArrayDeque). Retargetted separately from the
+      // DynamicArray family because ArrayDeque is stdlib, not lls.
       "com.badlogic.gdx.utils.Array",
       "com.badlogic.gdx.utils.SnapshotArray",
       "com.badlogic.gdx.utils.DelayedRemovalArray",
@@ -580,7 +581,7 @@ object LibgdxPolicy:
     "com.badlogic.gdx.utils.ByteArray" -> "lowlevel.util.DynamicArray",
     "com.badlogic.gdx.utils.CharArray" -> "lowlevel.util.DynamicArray",
     "com.badlogic.gdx.utils.BooleanArray" -> "lowlevel.util.DynamicArray",
-    "com.badlogic.gdx.utils.Queue" -> "lowlevel.util.DynamicArray",
+    "com.badlogic.gdx.utils.Queue" -> "scala.collection.mutable.ArrayDeque",
     // Inner iterator types — java's Keys/Values/Entries are live views backed by the map's
     // own table; lls has foreachKey/foreachValue/foreachEntry (inline) instead.  As TYPES these
     // are used only where java stores them in a local (`I18NBundle`) — Collect handles the call.
@@ -1049,28 +1050,28 @@ object LibgdxPolicy:
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("with", 1)     -> Template("$Target.from($0)"),
       ),
-      // Queue -> DynamicArray. sge type-mappings.md: "Queue -> Scala stdlib queues", but
-      // DynamicArray is the shared collection type. addLast -> add, removeLast -> pop.
-      // Deque ops: addFirst(T) -> insert(0, T), removeFirst() -> removeIndex(0).
-      // indexOf/removeValue/contains take the identity boolean (same as Array).
+      // Queue -> mutable.ArrayDeque (sge type-mappings.md: "Queue -> Scala stdlib queues";
+      // sge's QueueBitsTest confirms mutable.ArrayDeque). addLast -> addOne, addFirst -> prepend,
+      // removeLast -> removeLast, removeFirst -> removeHead. indexOf/removeValue/contains take
+      // the identity boolean — dispatched via Template since ArrayDeque has no ByRef variants.
       "com.badlogic.gdx.utils.Queue" -> Map(
-        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 0) -> Template("scala.collection.mutable.ArrayDeque[$T0]()"),
+        ("<init>", 1) -> Template("scala.collection.mutable.ArrayDeque[$T0]($0)"),
         ("get", 1)          -> Rename("apply"),
-        ("addLast", 1)      -> Rename("add"),
-        ("addFirst", 1)     -> Template("$recv.insert(0, $0)"),
-        ("removeLast", 0)   -> Rename("pop"),          // DynamicArray.pop() takes parens
-        ("removeFirst", 0)  -> Template("$recv.removeIndex(0)"),
-        ("removeValue", 2)  -> BoolDispatch(1, "removeValueByRef", "removeValue"),
-        ("indexOf", 2)      -> BoolDispatch(1, "indexOfByRef", "indexOf"),
-        ("contains", 2)     -> BoolDispatch(1, "containsByRef", "contains"),
+        ("addLast", 1)      -> Rename("addOne"),
+        ("addFirst", 1)     -> Rename("prepend"),
+        ("removeLast", 0)   -> Template("$recv.removeLast()"),
+        ("removeFirst", 0)  -> Template("$recv.removeHead()"),
+        ("removeIndex", 1)  -> Rename("remove"),
+        ("removeValue", 2)  -> Template("{ val bpIdx = (if ($1) $recv.indexWhere(_ eq $0) else $recv.indexOf($0)); if (bpIdx >= 0) { $recv.remove(bpIdx); true } else false }"),
+        ("indexOf", 2)      -> Template("(if ($1) $recv.indexWhere(_ eq $0) else $recv.indexOf($0))"),
+        ("contains", 2)     -> Template("(if ($1) $recv.exists(_ eq $0) else $recv.contains($0))"),
         ("notEmpty", 0)     -> Chain(List("nonEmpty")),
         ("empty", 0)        -> Rename("isEmpty"),
-        ("first", 0)        -> Chain(List("first")),
+        ("first", 0)        -> Chain(List("head")),
         ("last", 0)         -> Chain(List("last")),
-        ("peek", 0)         -> Chain(List("peek")),
+        ("peek", 0)         -> Chain(List("head")),
         ("iterator", 0)     -> Chain(List("iterator")),
-        ("size", 0)         -> FieldWrite("size", "setSize"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
       ),
@@ -1164,14 +1165,14 @@ object LibgdxPolicy:
       )),
       "com.badlogic.gdx.utils.BooleanArray"         -> primArrayInitByDesc(Descriptor(List(Param.Named("BooleanArray"))), boolArrDesc, "scala.Boolean"),
       // Queue: arity-1 is ambiguous — Queue(int) capacity vs Queue(int, Class) / Queue(int, ArraySupplier).
-      // Queue(int) -> DynamicArray.apply(capacity). Queue(int, Class) drops the Class.
-      // Queue(int, ArraySupplier) drops the ArraySupplier.
+      // Queue(int) -> new ArrayDeque[T](capacity). Queue(int, Class) already in dropMethods.
+      // Queue(int, ArraySupplier) already in dropMethods.
       "com.badlogic.gdx.utils.Queue" -> Map(
-        ("<init>", intDesc) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", intDesc) -> Template("new scala.collection.mutable.ArrayDeque[$T0]($0)"),
         ("<init>", Descriptor(List(Param.Prim("int"), Param.Named("Class")))) ->
-          Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1),
+          Template("new scala.collection.mutable.ArrayDeque[$T0]($0)"),
         ("<init>", Descriptor(List(Param.Prim("int"), Param.Named("ArraySupplier")))) ->
-          Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1),
+          Template("new scala.collection.mutable.ArrayDeque[$T0]($0)"),
       ),
     )
 
