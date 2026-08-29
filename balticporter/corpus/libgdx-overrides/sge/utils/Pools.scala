@@ -37,8 +37,8 @@ package sge.utils
   */
 object Pools {
 
-  private final val typePools: ObjectMap[java.lang.Class[?], Pool[?]] =
-    new ObjectMap[java.lang.Class[?], Pool[?]]()
+  private final val typePools: lowlevel.util.ObjectMap[java.lang.Class[?], Pool[?]] =
+    lowlevel.util.ObjectMap[java.lang.Class[?], Pool[?]]()
 
   /** The upstream `static { … }` block, ported by hand: every type libGDX itself pools is
     * pre-registered with its constructor as the factory. This is what makes the `Class`-keyed

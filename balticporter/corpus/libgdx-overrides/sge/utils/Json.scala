@@ -47,10 +47,9 @@ class Json {
   private var usePrototypes: Boolean           = true
   private var typeName: String                 = "class"
   private var defaultSerializer: Json.Serializer[?] = null
-  private val classToTag                       = new ObjectMap[Class[?], String]
-  private val tagToClass                       = new ObjectMap[String, Class[?]]
-  private val classToSerializer                = new ObjectMap[Class[?], Json.Serializer[?]]
-
+  private val classToTag                       = lowlevel.util.ObjectMap[Class[?], String]()
+  private val tagToClass                       = lowlevel.util.ObjectMap[String, Class[?]]()
+  private val classToSerializer                = lowlevel.util.ObjectMap[Class[?], Json.Serializer[?]]()
   /** THE SWAP POINT: bind the Kindlings Jsoniter/UBJson codec here and delegate the reflective
     * paths to it. Until then they fail loudly rather than pretending to decode. */
   private def codec(operation: String): Nothing =
