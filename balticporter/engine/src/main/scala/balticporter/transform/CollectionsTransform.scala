@@ -440,32 +440,16 @@ final class CollectionsTransform(
         "matching retarget entry — a rewrite table for a type this phase does not retarget is dead code")
   }
 
-  /** Translate a descriptor key's parameter types from the UPSTREAM namespace to the TARGET
-    * namespace, so it can be matched against a callee's post-remap `Symbol.descriptor`.
+  /** The descriptor-keyed retarget rewrites, ready for lookup.
     *
-    * CLAUDE.md §4.56: policy is upstream, the artifact is emitted. The manifest key says `(Array)`,
-    * and the callee symbol at dispatch already reads `(DynamicArray)`. This translation is done ONCE
-    * at construction — one derivation, through the same `retarget` map the phase applies. */
+    * Keys are in the UPSTREAM namespace — `(Array)` for `Array(Array<T>)`, `(int)` for
+    * `Array(int capacity)` — matching what `Symbol.descriptor` holds.  The callee's descriptor
+    * is recorded by the frontend from the ORIGINAL Java source and is never remapped, so the
+    * keys must stay in the same namespace.  (The previous translation to the TARGET namespace
+    * broke every copy-constructor match where the parameter type was itself a retarget source:
+    * the key said `(DynamicArray)` while the callee said `(Array)`, 94 -> 99.) */
   private lazy val remappedDescRewrites: Map[String, Map[(String, Descriptor), CollectionsTransform.RetargetRewrite]] =
-    if retargetRewritesByDesc.isEmpty then Map.empty
-    else
-      // Build a simple-name translation: source simple name -> target simple name.
-      // retarget maps "com.badlogic.gdx.utils.Array" -> "lowlevel.util.DynamicArray",
-      // so the simple name map is "Array" -> "DynamicArray".
-      val simpleNameMap: Map[String, String] = retarget.map { (src, tgt) =>
-        val srcSimple = src.substring(src.lastIndexOf('.') + 1)
-        val tgtSimple = tgt.substring(tgt.lastIndexOf('.') + 1)
-        srcSimple -> tgtSimple
-      }
-      def translateParam(p: Param): Param = p match
-        case Param.Named(n) => Param.Named(simpleNameMap.getOrElse(n, n))
-        case Param.Arr(of)  => Param.Arr(translateParam(of))
-        case other          => other // Prim and Unresolved are unchanged
-      def translateDesc(d: Descriptor): Descriptor =
-        Descriptor(d.params.map(translateParam))
-      retargetRewritesByDesc.map { (srcFqn, tbl) =>
-        srcFqn -> tbl.map { case ((name, desc), rw) => (name, translateDesc(desc)) -> rw }
-      }
+    retargetRewritesByDesc
 
   /** Look up a retarget rewrite for a call at `(srcFqn, memberName, arity)`.
     *
@@ -473,9 +457,8 @@ final class CollectionsTransform(
     * indexing to a single value is a choice nobody made). The callee's [[Symbol.descriptor]] is
     * compared through [[Descriptor.matches]], which normalises simple names.
     *
-    * The descriptor keys are translated from the UPSTREAM namespace to the TARGET namespace at
-    * construction (§4.56: policy is upstream, the callee is remapped), so the match is in the
-    * same namespace the callee's descriptor is in. */
+    * Both the keys and the callee's descriptor are in the UPSTREAM namespace — the frontend
+    * records parameter types from the original Java source and never remaps them. */
   private def lookupRewrite(srcFqn: String, name: String, arity: Int, desc: Option[Descriptor]): Option[CollectionsTransform.RetargetRewrite] =
     desc.flatMap { d =>
       remappedDescRewrites.get(srcFqn).flatMap { tbl =>
@@ -658,6 +641,11 @@ final class CollectionsTransform(
 
   // prepared in `run`, read by the hooks.
   private var remap: Map[SymId, SymId]    = Map.empty
+  /** target SymIds of the FULL remap — the set `transformType`'s wildcard-strip checks.
+    * Precomputed once from `fullRemap` and never reassigned; the multi-pass only RESTRICTS
+    * which sources are active but the TARGET set is always a subset of this one, so using
+    * the full set is safe (a stripped arg is idempotent and the guard checks `TypeBounds`). */
+  private var remapTargets: Set[SymId]   = Set.empty
   /** source SymId -> java FQN, for remap entries that came from [[families]] (not JDK typeMap, not
     * retarget). Built in [[run]], read by [[finishRun]] to determine the per-entry scope for the
     * multi-pass traversal (D12). */
@@ -1409,6 +1397,7 @@ final class CollectionsTransform(
     // applyScope/restoreExcluded), then one pass per distinct non-everywhere family scope with a
     // narrowed `remap`.
     val fullRemap = remap
+    remapTargets = fullRemap.values.toSet
     val scopedFamilyIds: Set[SymId] = familyRemapSources.collect {
       case (srcId, fqn) if !familyScopeOf(fqn).isUnrestricted => srcId
     }.toSet
@@ -2823,6 +2812,20 @@ final class CollectionsTransform(
       val mapping = retargetArgsByTarget(s)
       val newArgs = mapping.map(resolveRetargetArg(_, existingArgs))
       TypeRepr.AppliedType(TypeRepr.TypeRef(prefix, s), newArgs)
+    case TypeRepr.AppliedType(tc @ TypeRepr.TypeRef(_, s), args) if remapTargets.contains(s) && args.exists(_.isInstanceOf[TypeRepr.TypeBounds]) =>
+      // Strip wildcard bounds on same-arity retarget targets: `Comparator[? super T]` mapped to
+      // `Ordering[? >: T]` is invalid at an invariant target. A `? super T` (contravariant) is
+      // safe to narrow to `T`; a `? extends T` (covariant) is safe to narrow to `T` on an
+      // invariant target. Take the more-informative bound: lower when present, else upper.
+      // Restrict to LOWER-bounded wildcards (`? super T` / `? >: T`) only — stripping an UPPER
+      // bound (`? extends T`) on a raw-type occurrence (`Array<Node>` with `Node` generic and
+      // unparameterised) changes `DynamicArray[Node[?, ?, ?]]` to `DynamicArray[Node[Node, ?, Actor]]`
+      // and breaks invariant sites that were passing `DynamicArray[N <: Node]` through the raw slot.
+      val stripped = args.map {
+        case TypeRepr.TypeBounds(lo, _) if lo != TypeRepr.NoType => lo
+        case a => a
+      }
+      if stripped == args then t else TypeRepr.AppliedType(tc, stripped)
     case other => other
 
   private def resolveRetargetArg(arg: CollectionsTransform.RetargetArg, sourceArgs: List[TypeRepr]): TypeRepr =
