@@ -443,7 +443,9 @@ final class CollectionsTransform(
         if ft then s"$base+fill" else base
       case CollectionsTransform.RetargetRewrite.ForEach(t, a) => s"ForEach($t,$a)"
       case CollectionsTransform.RetargetRewrite.Collect(v, i) => s"Collect($v,$i)"
-      case CollectionsTransform.RetargetRewrite.Chain(ms) => s"Chain(${ms.mkString(";")})"
+      case CollectionsTransform.RetargetRewrite.Chain(ms, ps) =>
+        if ps.isEmpty then s"Chain(${ms.mkString(";")})"
+        else s"Chain(${ms.mkString(";")};parens=${ps.toList.sorted.mkString(",")})"
     balticporter.tir.TirPrinter.sha256(
       retargetRewrites.toList.sortBy(_._1).flatMap { (src, tbl) =>
         tbl.toList.sortBy(_._1.toString).map { case ((m, ar), rw) => s"$src#$m/$ar->${renderRw(rw)}" }
@@ -707,20 +709,37 @@ final class CollectionsTransform(
 
   /** A minimal Phase for the Collect post-pass: rewrites standalone `keys()`/`values()` calls on
     * retarget targets into collect blocks. Defined as a member (not a local) so it can access
-    * the enclosing `CollectionsTransform`'s private methods. */
+    * the enclosing `CollectionsTransform`'s private methods.
+    *
+    * Also strips `()` from calls chained on a Collect result: the bottom-up traversal replaces
+    * the inner `recv.keys()` first (producing an `Opaque.spliced` with the DynamicArray block),
+    * and the outer `Apply(Select(collectBlock, toArray), Nil, ...)` is visited next. Since the
+    * Collect's target type (`DynamicArray`) declares its members parameterless in Scala (F9's
+    * rule), the outer call must be `Select` rather than `Apply`. Detected by the receiver being
+    * an `Opaque.spliced` with empty args — the only shape `emitCollect` produces. */
   private val collectPhase: Phase = new Phase:
     def name = "retarget-collect"
     override def transformApply(t: Tree.Apply)(using p: Program): Term =
       t.fun match
         case Tree.Select(recv, m, _, so) =>
-          headSym(recv.tpe).flatMap(retargetTargetToSource.get).flatMap { srcFqn =>
+          // First: try to rewrite the call itself as a Collect
+          val collectResult = headSym(recv.tpe).flatMap(retargetTargetToSource.get).flatMap { srcFqn =>
             val mName = methodName(m)
             retargetRewrites.get(srcFqn).flatMap(_.get((mName, 0))).flatMap {
               case rw: CollectionsTransform.RetargetRewrite.Collect =>
                 emitCollect(recv, srcFqn, rw, so)
               case _ => scala.None
             }
-          }.getOrElse(t)
+          }
+          if collectResult.isDefined then collectResult.get
+          // Second: strip empty parens from calls chained on a Collect block.
+          // The Collect produces an Opaque.spliced; if the outer call has empty args,
+          // convert Apply(Select(collectBlock, m), Nil) -> Select(collectBlock, m)
+          // so the emitter renders without parens (DynamicArray members are parameterless).
+          else recv match
+            case _: Tree.Opaque if t.args.isEmpty =>
+              Tree.Select(recv, m, t.tpe, so)
+            case _ => t
         case _ => t
   /** Apply nodes produced by [[retargetForEach]] that need a value-carrying boundary wrapper.
     * Keyed on the Apply's identity (the object itself); value is the label name used for the
@@ -1163,7 +1182,7 @@ final class CollectionsTransform(
           List((src, targetMethod) -> mint(targetMethod, s"$src#retargetRewrite:$targetMethod"))
         case CollectionsTransform.RetargetRewrite.Collect(via, _) =>
           List((src, via) -> mint(via, s"$src#retargetRewrite:$via"))
-        case CollectionsTransform.RetargetRewrite.Chain(members) =>
+        case CollectionsTransform.RetargetRewrite.Chain(members, _) =>
           members.map(m => (src, m) -> mint(m, s"$src#retargetRewrite:$m"))
       }
     }
@@ -6028,6 +6047,7 @@ final class CollectionsTransform(
   private def staticCall(member: SymId, args: List[Term], t: Tree.Apply, so: Origin): Term =
     Tree.Apply(Tree.Ident(member, TypeRepr.NoType, so), args, member, t.tpe, t.origin)
 
+
   /** Is this a call on a map whose type arguments are WILDCARDS, at one of the three members java
     * declares over `Object`?
     *
@@ -6700,14 +6720,27 @@ final class CollectionsTransform(
         // bottom-up traversal does not steal the iterable before retargetForEach sees the
         // enclosing ForEach.
         case _: CollectionsTransform.RetargetRewrite.Collect => scala.None
-        // Chain: recv.source(args) → recv.m1(args).m2().m3()…
-        case CollectionsTransform.RetargetRewrite.Chain(members) if members.nonEmpty =>
+        // Chain: recv.source(args) → recv.m1.m2.m3 (or with () where parens says to).
+        // Each member's arity is decided from the Chain's `parens` set (F9's rule:
+        // the arity comes from the CALLEE SYMBOL's declaration on the target type).
+        // Default is parameterless (Tree.Select); members in `parens` get Tree.Apply.
+        case CollectionsTransform.RetargetRewrite.Chain(members, hasParens) if members.nonEmpty =>
           val syms = members.flatMap(m => retargetRewriteSyms.get((srcFqn, m)))
           if syms.size != members.size then scala.None
           else
-            var cur: Term = call(recv, syms.head, t.args, t, so)
-            syms.tail.foreach { s =>
-              cur = Tree.Select(cur, s, TypeRepr.NoType, so)
+            // First member: use call() when source args are non-empty OR parens says ();
+            // otherwise Tree.Select (parameterless).
+            var cur: Term =
+              if t.args.nonEmpty || hasParens(members.head) then
+                call(recv, syms.head, t.args, t, so)
+              else
+                Tree.Select(recv, syms.head, TypeRepr.NoType, so)
+            // Tail members: parameterless -> Select; in parens -> Apply with Nil args.
+            syms.tail.zip(members.tail).foreach { (s, mName) =>
+              if hasParens(mName) then
+                cur = Tree.Apply(Tree.Select(cur, s, TypeRepr.NoType, so), Nil, s, TypeRepr.NoType, so)
+              else
+                cur = Tree.Select(cur, s, TypeRepr.NoType, so)
             }
             Some(cur)
         case _: CollectionsTransform.RetargetRewrite.Chain => scala.None
@@ -6932,17 +6965,25 @@ object CollectionsTransform:
       * are counted on `collection-retarget`. */
     case class Collect(via: String, into: String) extends RetargetRewrite
 
-    /** Member chain: `recv.sourceMethod(args)` → `recv.m1(args).m2().…`.
+    /** Member chain: `recv.sourceMethod(args)` → `recv.m1.m2.…` or `recv.m1().m2()…`.
       *
       * {{{
-      * // OrderedSet.iterator() → recv.orderedItems().iterator()
+      * // OrderedSet.iterator() → recv.orderedItems.iterator
       * Chain(List("orderedItems", "iterator"))
+      * // with explicit parens on some members:
+      * Chain(List("orderedItems", "iterator"), parens = Set("orderedItems"))
       * }}}
       *
       * The first member receives the original arguments; each subsequent member is called with
       * zero arguments. The chain is keyed in `retargetRewrites` at the source member's
-      * `(name, arity)`. */
-    case class Chain(members: List[String]) extends RetargetRewrite
+      * `(name, arity)`.
+      *
+      * '''Arity''': by default every member is emitted as `Tree.Select` (parameterless). Members
+      * listed in `parens` are emitted as `Tree.Apply(_, Nil, _)` (with `()`). This follows F9's
+      * rule — the arity comes from the CALLEE SYMBOL's declaration on the target type. The
+      * default (parenless) matches the convention of lls and scala collections; `parens` is the
+      * opt-in for members that genuinely take `()`. */
+    case class Chain(members: List[String], parens: Set[String] = Set.empty) extends RetargetRewrite
 
   /** How to construct a retarget target's type arguments from the source type's.
     * Each element produces one argument in the target type — so a `List[RetargetArg]` of length N

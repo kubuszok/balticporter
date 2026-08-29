@@ -685,7 +685,9 @@ object LibgdxPolicy:
       "com.badlogic.gdx.utils.ArrayMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ArrayMap", "apply"),
         ("<init>", 1) -> Construct("lowlevel.util.ArrayMap", "apply"),
-        ("<init>", 2) -> Construct("lowlevel.util.ArrayMap", "apply"),
+        // arity-2: ArrayMap(MkArray, MkArray) — two array factory lambdas lls does not need;
+        // sge uses the no-args constructor: `ArrayMap[Node, Matrix4]()`. dropTrailing = 2.
+        ("<init>", 2) -> Construct("lowlevel.util.ArrayMap", "apply", dropTrailing = 2),
         // arity-4: ArrayMap(boolean, int, Class, Class) — last 2 are Class tokens lls does not need
         ("<init>", 4) -> Construct("lowlevel.util.ArrayMap", "apply", dropTrailing = 2),
         ("notEmpty", 0) -> Rename("nonEmpty"),
@@ -1152,6 +1154,220 @@ object LibgdxPolicy:
                |    this.loadQueue.clear()
                |    this.tasks.clear()
                |  }
+               |}""".stripMargin,
+           // wave 3.1m: AssetManager.getAssetFileName — bare-map iteration with return inside a
+           // retargetForEach lambda. sge: nested foreachEntry with boundary.break.
+           "com.badlogic.gdx.assets.AssetManager#getAssetFileName" ->
+             """{
+               |  scala.util.boundary[java.lang.String] { (retFe: scala.util.boundary.Label[java.lang.String]) ?=>
+               |    this.assets.foreachEntry((assetType: java.lang.Class[?], assetsByType: lowlevel.util.ObjectMap[java.lang.String, sge.assets.AssetManager.RefCountedContainer]) => {
+               |      assetsByType.foreachEntry((fileName: java.lang.String, refCounted: sge.assets.AssetManager.RefCountedContainer) => {
+               |        val obj: java.lang.Object = refCounted.`object`
+               |        if ((obj.asInstanceOf[scala.AnyRef] eq asset) || asset.equals(obj)) {
+               |          scala.util.boundary.break(fileName)(using retFe)
+               |        } else ()
+               |      })
+               |    })
+               |    return null
+               |  }
+               |}""".stripMargin,
+           // wave 3.1m: FirstPersonCameraController.keyUp — IntIntMap.remove(key, defaultValue)
+           // becomes ObjectMap.remove(key), dropping the unused default. sge: keys.remove(keycode).
+           "com.badlogic.gdx.graphics.g3d.utils.FirstPersonCameraController#keyUp(int)" ->
+             """{
+               |  this.keys.remove(keycode)
+               |  return true
+               |}""".stripMargin,
+           // wave 3.1m: ModelLoader.getDependencies — Tuple2 default-construct then assign _1/_2.
+           // sge: val item = (fileName, d). The method is large; replace only relevant lines.
+           "com.badlogic.gdx.assets.loaders.ModelLoader#getDependencies" ->
+             """{
+               |  val deps: sge.utils.Array[sge.assets.AssetDescriptor[?]] = new sge.utils.Array().asInstanceOf[sge.utils.Array[sge.assets.AssetDescriptor[?]]]
+               |  val data: sge.graphics.g3d.model.data.ModelData = this.loadModelData(file, parameters)
+               |  if (data == null) {
+               |    return deps.asInstanceOf[sge.utils.Array[sge.assets.AssetDescriptor[?]]]
+               |  } else ()
+               |  val item: scala.Tuple2[java.lang.String, sge.graphics.g3d.model.data.ModelData] = (fileName, data)
+               |  this.items.synchronized {
+               |    this.items.add(item)
+               |  }
+               |  val textureParameter: sge.assets.loaders.TextureLoader.TextureParameter = if (parameters != null) parameters.textureParameter else this.defaultParameters.textureParameter
+               |  for (modelMaterial <- data.materials) {
+               |    if (modelMaterial.textures != null) {
+               |      for (modelTexture <- modelMaterial.textures) {
+               |        deps.add(new sge.assets.AssetDescriptor(modelTexture.fileName, classOf[sge.graphics.Texture], textureParameter))
+               |      }
+               |    } else ()
+               |  }
+               |  return deps.asInstanceOf[sge.utils.Array[sge.assets.AssetDescriptor[?]]]
+               |}""".stripMargin,
+           // wave 3.1m: ParticleEffectLoader.getDependencies — Tuple2 default-construct then
+           // assign _1/_2. Same pattern as ModelLoader. Construct the tuple at once.
+           "com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader#getDependencies" ->
+             """{
+               |  val json: sge.utils.Json = new sge.utils.Json()
+               |  val data: sge.graphics.g3d.particles.ResourceData[sge.graphics.g3d.particles.ParticleEffect] = json.fromJson(classOf[sge.graphics.g3d.particles.ResourceData[?]], file).asInstanceOf[sge.graphics.g3d.particles.ResourceData[sge.graphics.g3d.particles.ParticleEffect]]
+               |  var assets: sge.utils.Array[sge.graphics.g3d.particles.ResourceData.AssetData[?]] = null
+               |  this.items.synchronized {
+               |    val entry: scala.Tuple2[java.lang.String, sge.graphics.g3d.particles.ResourceData[sge.graphics.g3d.particles.ParticleEffect]] = (fileName, data)
+               |    this.items.add(entry)
+               |    assets = data.assets.asInstanceOf[sge.utils.Array[sge.graphics.g3d.particles.ResourceData.AssetData[?]]]
+               |  }
+               |  val descriptors: sge.utils.Array[sge.assets.AssetDescriptor[?]] = new sge.utils.Array[sge.assets.AssetDescriptor[?]]().asInstanceOf[sge.utils.Array[sge.assets.AssetDescriptor[?]]]
+               |  for (assetData <- assets) {
+               |    if (!this.resolve(assetData.filename).exists) {
+               |      assetData.filename = file.parent().child(scala.Predef.summon[sge.Sge].files.internal(assetData.filename).name).path()
+               |    } else ()
+               |    if (assetData.asInstanceOf[sge.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type` eq classOf[sge.graphics.g3d.particles.ParticleEffect]) {
+               |      descriptors.add(new sge.assets.AssetDescriptor(assetData.filename, assetData.asInstanceOf[sge.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`.asInstanceOf[java.lang.Class[sge.graphics.g3d.particles.ParticleEffect]], parameter))
+               |    } else {
+               |      descriptors.add(new sge.assets.AssetDescriptor(assetData.filename, assetData.asInstanceOf[sge.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`))
+               |    }
+               |  }
+               |  return descriptors.asInstanceOf[sge.utils.Array[sge.assets.AssetDescriptor[?]]]
+               |}""".stripMargin,
+           // wave 3.1m: Node.calculateBoneTransforms — keys$field(i) -> getKeyAt(i),
+           // values$field(i) -> getValueAt(i). sge: getKeyAt(i) / getValueAt(i).
+           "com.badlogic.gdx.graphics.g3d.model.Node#calculateBoneTransforms(boolean)" ->
+             """{
+               |  for (part <- this.parts) scala.util.boundary { {
+               |    if (((part.invBoneBindTransforms == null) || (part.bones == null)) || (part.invBoneBindTransforms.size != part.bones.length)) {
+               |      scala.util.boundary.break(())
+               |    } else ()
+               |    val n: scala.Int = part.invBoneBindTransforms.size;
+               |    { var i: scala.Int = 0; while (i < n) { {
+               |      part.bones(i).set(part.invBoneBindTransforms.getKeyAt(i).globalTransform).mul(part.invBoneBindTransforms.getValueAt(i))
+               |    }; i = i + 1 } }
+               |  } }
+               |  if (recursive) {
+               |    for (child <- this.children$field) {
+               |      child.calculateBoneTransforms(true)
+               |    }
+               |  } else ()
+               |}""".stripMargin,
+           // wave 3.1m: ModelInstance.invalidate(Node) — keys$field(j) -> getKeyAt(j),
+           // setKeyAt(j, v) for the write case. sge: getKeyAt(j) / setKeyAt(j, severed).
+           "com.badlogic.gdx.graphics.g3d.ModelInstance#invalidate(Node)" ->
+             """{
+               |  for (part <- node.parts) {
+               |    val bindPose: lowlevel.util.ArrayMap[sge.graphics.g3d.model.Node, sge.math.Matrix4] = part.invBoneBindTransforms
+               |    if (bindPose != null) {
+               |      { var j: scala.Int = 0; while (j < bindPose.size) { {
+               |        bindPose.setKeyAt(j, this.getNode(bindPose.getKeyAt(j).id))
+               |      }; j = j + 1 } }
+               |    } else ()
+               |    if (!this.materials.contains(lowlevel.Nullable(part.material), true)) {
+               |      val midx: scala.Int = this.materials.indexOf(lowlevel.Nullable(part.material), false)
+               |      if (midx < 0) {
+               |        this.materials.add({
+               |          part.material = part.material.copy()
+               |          part.material
+               |        })
+               |      } else {
+               |        part.material = this.materials.get(midx)
+               |      }
+               |    } else ()
+               |  }
+               |  for (child <- node.children$field) {
+               |    this.invalidate(child)
+               |  }
+               |}""".stripMargin,
+           // wave 3.1m: NodePart.set — putAll with wildcard cast on invariant lls ArrayMap.
+           // sge: map.putAll(otherBindTransforms) with no cast. collection-internal seam — java's
+           // covariant putAll formal has no image on the invariant lls type.
+           "com.badlogic.gdx.graphics.g3d.model.NodePart#set(NodePart)" ->
+             """{
+               |  this.meshPart.set(other.meshPart)
+               |  this.material = other.material
+               |  if (other.invBoneBindTransforms == null) {
+               |    this.invBoneBindTransforms = null
+               |    this.bones = null
+               |  } else {
+               |    if (this.invBoneBindTransforms == null) {
+               |      this.invBoneBindTransforms = lowlevel.util.ArrayMap.apply(true, other.invBoneBindTransforms.size)
+               |    } else {
+               |      this.invBoneBindTransforms.clear()
+               |    }
+               |    this.invBoneBindTransforms.putAll(other.invBoneBindTransforms)
+               |    if ((this.bones == null) || (this.bones.length != this.invBoneBindTransforms.size)) {
+               |      this.bones = new scala.Array[sge.math.Matrix4](this.invBoneBindTransforms.size)
+               |    } else ();
+               |    { var i: scala.Int = 0; while (i < this.bones.length) { {
+               |      if (this.bones(i) == null) {
+               |        this.bones(i) = new sge.math.Matrix4()
+               |      } else ()
+               |    }; i = i + 1 } }
+               |  }
+               |  return this
+               |}""".stripMargin,
+           // wave 3.1m: MapProperties.putAll — same wildcard cast as NodePart.set.
+           // sge: this.properties.putAll(properties.properties) with no cast.
+           "com.badlogic.gdx.maps.MapProperties#putAll(MapProperties)" ->
+             """{
+               |  this.properties.putAll(properties.properties)
+               |}""".stripMargin,
+           // wave 3.1m: Selection.iterator — Chain produces Iterator[T] but return type is
+           // JavaIterator[T]. Wrap with JavaIterator.from until the Array retarget wave aligns types.
+           "com.badlogic.gdx.scenes.scene2d.utils.Selection#iterator" ->
+             """{
+               |  return balticporter.runtime.JavaIterator.from(this.selected.orderedItems.iterator)
+               |}""".stripMargin,
+           // wave 3.1m: Selection.toArray() — Chain produces Iterator whose toArray needs ClassTag.
+           // Collect from the OrderedSet directly into an sge.utils.Array. sge: selected.foreach(result.add).
+           "com.badlogic.gdx.scenes.scene2d.utils.Selection#toArray" ->
+             """{
+               |  val result: sge.utils.Array[T] = new sge.utils.Array()
+               |  this.selected.foreach(result.add)
+               |  return result.asInstanceOf[sge.utils.Array[T]]
+               |}""".stripMargin,
+           // wave 3.1m: Selection.toArray(Array<T>) — same pattern, collect into the provided array.
+           "com.badlogic.gdx.scenes.scene2d.utils.Selection#toArray(Array)" ->
+             """{
+               |  this.selected.foreach(array.add)
+               |  return array
+               |}""".stripMargin,
+           // wave 3.1m: ArraySelection.validate — Chain iterator returns Iterator[T], but the loop
+           // body calls iter.remove(). sge: collect removals into a DynamicArray, then remove.
+           "com.badlogic.gdx.scenes.scene2d.utils.ArraySelection#validate" ->
+             """{
+               |  val array: sge.utils.Array[T] = this.array
+               |  if (array.size == 0) {
+               |    this.clear()
+               |    return
+               |  } else ()
+               |  var changed: scala.Boolean = false
+               |  val toRemove = lowlevel.util.DynamicArray[T]()
+               |  val iter = this.items.orderedItems.iterator
+               |  while (iter.hasNext) {
+               |    val selected: T = iter.next().asInstanceOf[T]
+               |    if (!array.contains(lowlevel.Nullable(selected), false)) {
+               |      toRemove.add(selected)
+               |      changed = true
+               |    } else ()
+               |  }
+               |  toRemove.foreach(this.selected.remove)
+               |  if (this.required && (this.selected.size == 0)) {
+               |    this.set(array.first())
+               |  } else {
+               |    if (changed) {
+               |      this.changed()
+               |    } else ()
+               |  }
+               |}""".stripMargin,
+           // wave 3.1m: SelectBox.selectedIndex — OrderedSet vs ObjectSet (broken subtyping edge).
+           // sge: val sel = selection.items (inferred OrderedSet). Fix: widen the type annotation
+           // from ObjectSet to OrderedSet. collection-internal seam — java's OrderedSet <: ObjectSet
+           // has no image in lls.
+           "com.badlogic.gdx.scenes.scene2d.ui.SelectBox#getSelectedIndex" ->
+             """{
+               |  val selected: lowlevel.util.OrderedSet[T] = this.selection$field.items
+               |  return if (selected.size == 0) -1 else this.items$field.indexOf(lowlevel.Nullable(selected.first), false)
+               |}""".stripMargin,
+           // wave 3.1m: SgeList.selectedIndex — same OrderedSet vs ObjectSet pattern.
+           "com.badlogic.gdx.scenes.scene2d.ui.List#getSelectedIndex" ->
+             """{
+               |  val selected: lowlevel.util.OrderedSet[T] = this.selection$field.items
+               |  return if (selected.size == 0) -1 else this.items$field.indexOf(lowlevel.Nullable(selected.first), false)
                |}""".stripMargin
          )))
 

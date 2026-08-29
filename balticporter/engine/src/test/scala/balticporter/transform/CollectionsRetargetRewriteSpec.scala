@@ -357,7 +357,7 @@ class CollectionsRetargetRewriteSpec extends munit.FunSuite {
   // ---- Chain ----
 
   test("Chain toString is readable") {
-    assertEquals(Chain(List("orderedItems", "iterator")).toString, "Chain(List(orderedItems, iterator))")
+    assertEquals(Chain(List("orderedItems", "iterator")).toString, "Chain(List(orderedItems, iterator),Set())")
   }
 
   test("Chain changes the fingerprint") {
