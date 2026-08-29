@@ -3330,6 +3330,22 @@ final class CollectionsTransform(
             retargetRewriteSyms.get((srcFqn, target)).map { tgtSym =>
               Tree.Select(sel.qual, tgtSym, sel.tpe, sel.origin)
             }
+          // A parameterless `iterator` on a retarget target whose original return type is
+          // `JavaIterator[T]` (from the `java.util.Iterator` redirect) returns `scala.Iterator`
+          // from the target's API.  `NullaryArityTransform` makes it parameterless BEFORE this
+          // phase, so the call is a Select, not an Apply — the Chain handler in retargetRewrite
+          // never sees it.  Wrap with `JavaIterator.from(da.iterator)`.
+          // The wrapping fires unconditionally for `iterator` chains when `iteratorFromSym` is
+          // available — the retarget target's `iterator` always returns `scala.Iterator`, and
+          // every declaration that used to return `java.util.Iterator` now says `JavaIterator`
+          // after the type redirect.
+          case CollectionsTransform.RetargetRewrite.Chain(members, _, _)
+              if members.lastOption.contains("iterator") && iteratorFromSym != SymId.None =>
+            // Use the ORIGINAL Select as the argument — it already refers to the target's
+            // `iterator` member.  Creating a new Select with a new sym produces a double-
+            // application when the emitter renders the parameterless call.
+            Some(Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, sel.origin),
+                            List(sel), iteratorFromSym, sel.tpe, sel.origin))
           // IndexedField is NOT handled here — it fires only on Tree.ArrayAccess (see
           // retargetIndexedField). Stripping the field select on a bare Tree.Select would turn
           // `someMethod(arr.items)` into `someMethod(arr)`, changing the type from Array[T] to
@@ -5505,6 +5521,14 @@ final class CollectionsTransform(
       case _ if entryToPairSym != SymId.None &&
                 got.flatMap(detachedEntries.get).exists(tgt =>
                   wants.flatMap(p.symbolOf).exists(_.fullName == tgt))            => entryToPairSym
+      // A RETARGET target's `iterator()` returns `scala.collection.Iterator[T]`, but the method
+      // declaration expects `JavaIterator[T]` (from the `java.util.Iterator` redirect).  The value
+      // has no Kind — it is not a JDK collection, it is a bare iterator produced by the retarget
+      // target's own API.  Wrap with `JavaIterator.from`.
+      // Compared by FULLNAME, not by SymId: `scalaIteratorSym` is a minted sym while the actual
+      // value carries the frontend's interned sym for `scala.collection.Iterator`.
+      case _ if wantsIs(javaIteratorSym) && iteratorFromSym != SymId.None &&
+               got.flatMap(p.symbolOf).exists(_.fullName == "scala.collection.Iterator") => iteratorFromSym
       case _                                                                          => SymId.None
     if factory == SymId.None then actual
     else
@@ -6966,6 +6990,25 @@ final class CollectionsTransform(
               else
                 cur = Tree.Select(cur, s, TypeRepr.NoType, so)
             }
+            // A retarget target's `iterator` returns `scala.collection.Iterator`, but the
+            // method's declared return type is `JavaIterator` (from the java.util.Iterator
+            // redirect).  The Chain node has NoType so the return-coercion path cannot see
+            // the mismatch.  Wrap with `JavaIterator.from(it)`.
+            // Condition: the chain's terminal is `iterator`, the call's own type head (still
+            // carrying the pre-Chain mapping) IS `javaIteratorSym` — the minted sym for
+            // `balticporter.runtime.JavaIterator`, which is what `transformType` placed there
+            // when it remapped `java.util.Iterator`.  Also check `remap.values` in case the
+            // source sym was not yet remapped at this point (the Apply's type carries the
+            // original java.util.Iterator sym).
+            if members.last == "iterator" && iteratorFromSym != SymId.None && javaIteratorSym != SymId.None then
+              headSym(t.tpe) match
+                case Some(h) if h == javaIteratorSym =>
+                  cur = Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, so),
+                                   List(cur), iteratorFromSym, t.tpe, so)
+                case Some(h) if remap.contains(h) && remap(h) == javaIteratorSym =>
+                  cur = Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, so),
+                                   List(cur), iteratorFromSym, t.tpe, so)
+                case _ => ()
             Some(cur)
         case _: CollectionsTransform.RetargetRewrite.Chain => scala.None
         // FieldWrite entries are handled in transformTerm on Tree.Assign; if the call reaches

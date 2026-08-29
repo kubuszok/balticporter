@@ -1039,7 +1039,13 @@ object LibgdxPolicy:
       "com.badlogic.gdx.utils.LongArray"            -> primArrayInitByDesc(Descriptor(List(Param.Named("LongArray"))), longArrDesc),
       "com.badlogic.gdx.utils.ShortArray"           -> primArrayInitByDesc(Descriptor(List(Param.Named("ShortArray"))), shortArrDesc),
       "com.badlogic.gdx.utils.ByteArray"            -> primArrayInitByDesc(Descriptor(List(Param.Named("ByteArray"))), byteArrDesc),
-      "com.badlogic.gdx.utils.CharArray"            -> primArrayInitByDesc(Descriptor(List(Param.Named("CharArray"))), charArrDesc),
+      // CharArray: init-by-desc AND append overloads (arity 1 is ambiguous — char/CharSequence/String/int).
+      // append(char) -> add(char), append(CharSequence)/append(String) -> counted (no single-expression
+      // translation — sge iterates char-by-char), append(int) -> counted (same reason — `add(c.toChar)`
+      // needs a cast the Rename entry cannot express).
+      "com.badlogic.gdx.utils.CharArray"            -> (primArrayInitByDesc(Descriptor(List(Param.Named("CharArray"))), charArrDesc) ++ Map(
+        ("append", Descriptor(List(Param.Prim("char")))) -> Rename("add"),
+      )),
       "com.badlogic.gdx.utils.BooleanArray"         -> primArrayInitByDesc(Descriptor(List(Param.Named("BooleanArray"))), boolArrDesc),
     )
 
