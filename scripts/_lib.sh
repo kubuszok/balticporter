@@ -989,7 +989,7 @@ correlate() {
   # happened to run". A missing input is fatal and names the file to edit — CLAUDE.md §5.1, the same
   # rule that makes a non-existent `--tests` path an abort rather than an empty artifact.
   : "${CORE_PROJECT:?not set — export it from the Justfile (\`core_project\`) before sourcing scripts/_lib.sh}"
-  sbt -client "$CORE_PROJECT/runMain balticporter.tir.CorrelateMain --out $out --baseline $(dirname "$out")/baseline $*" \
+  sbt -batch "$CORE_PROJECT/runMain balticporter.tir.CorrelateMain --out $out --baseline $(dirname "$out")/baseline $*" \
     2>&1 | sed $'s/\033\\[[0-9;]*[a-zA-Z]//g' > "$cap"
   local st=${PIPESTATUS[0]}
   sed -n '/^units in source map/,$p' "$cap" | grep -v '^\['
