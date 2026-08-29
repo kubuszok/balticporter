@@ -37,10 +37,30 @@ object LibgdxTestMigrate:
     val srcRoot  = repoRoot.resolve("../sge/original-src/libgdx/gdx/src").normalize
     val testRoot = repoRoot.resolve("../sge/original-src/libgdx/gdx/test").normalize
 
+    // -----------------------------------------------------------------------------------------
+    // EXCLUDED FILES — each is a type the base's retargets eliminated from the port's surface.
+    //
+    // CharArrayTest: 30 @Test methods exercising `com.badlogic.gdx.utils.CharArray`, which is
+    // retargetted to `lowlevel.util.DynamicArray[Char]` (sge `docs/contributing/type-mappings.md`:
+    // "ByteArray, CharArray, FloatArray, IntArray, LongArray, ShortArray -> DynamicArray[T]
+    // Unified via MkArray type class"). sge ported NO CharArrayTest at all — its own test file for
+    // Queue and Bits is `sge/utils/QueueBitsTest` (a hand-written suite exercising the stdlib
+    // replacements, not the upstream shapes). The type under test does not exist in the port; every
+    // assertion is about a member the retarget rewrote, so what would compile is a suite exercising
+    // DynamicArray's API through a mechanical translation — not an honest port of libGDX's own
+    // test intentions.
+    //
+    // The 30 lost tests are counted by `test_discovery_guard` and held in `expected-lost`.
+    // -----------------------------------------------------------------------------------------
+    val excludedFiles = Set(
+      "com/badlogic/gdx/utils/CharArrayTest.java",
+    )
+
     val files = Files.walk(testRoot).iterator().asScala
       .filter(p => p.toString.endsWith(".java"))
       .map(p => testRoot.relativize(p).toString)
       .filterNot(f => f.endsWith("package-info.java") || f.endsWith("module-info.java"))
+      .filterNot(f => excludedFiles(f))
       .toList.sorted
 
     PortRun(
