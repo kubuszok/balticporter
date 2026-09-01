@@ -65,9 +65,19 @@ final class ImmutableArray[A](private val array: DynamicArray[A]) extends baltic
   }
 
   /** Java's `iterator()` has parens; the mechanically ported test calls it that way.
-    * `JavaIterable.iterator()` has parens too (java's own arity), so the override matches. */
-  override def iterator(): balticporter.runtime.JavaIterator[A] =
-    balticporter.runtime.JavaIterator.from(array.iterator)
+    * `JavaIterable.iterator()` has parens too (java's own arity), so the override matches.
+    * `remove()` throws `GdxRuntimeException("Remove not allowed.")` to match java's
+    * `ArrayIterable`/`ArrayIterator` behaviour (the original `ImmutableArray` creates
+    * `ArrayIterable(array, false)` where `false` = allowRemove). sge's own ImmutableArray
+    * uses `array.iterator` (scala Iterator, no `remove()` at all). */
+  override def iterator(): balticporter.runtime.JavaIterator[A] = {
+    val it = array.iterator
+    new balticporter.runtime.JavaIterator[A] {
+      def hasNext(): Boolean = it.hasNext
+      def next(): A = it.next()
+      override def remove(): Unit = throw new sge.utils.GdxRuntimeException("Remove not allowed.")
+    }
+  }
 
   override def toString(): String = array.toString()
 
