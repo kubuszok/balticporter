@@ -11596,6 +11596,7 @@ DIFFERENT family the base does not carry.
 - gdx-measure: errors=0/0/0/97 (unchanged).
 - engine suites: 1106 passed (engine), 1447 passed + 1 ignored (corpus).
 - ecs-dropin: JVM 38, JS 39, Native 39 (baseline was 408 JVM -- reduction is from the retarget wave, not this commit).
+- `0568769c` ashley ImmutableArray: iterator().remove() throws GdxRuntimeException (108/2/2). Java's ArrayIterator.remove() throws GdxRuntimeException("Remove not allowed."); the injected replacement now matches. sge's ImmutableArray uses array.iterator (scala Iterator, no remove()). Suite: 108 passing, 2 failing (pre-existing), 2 skipped (pre-existing). forbiddenRemoval now passes.
 
 ### 13.19 Wave 3.2d --- `NullabilityTransform.nullableMembers` for unannotated-but-nullable returns
 
