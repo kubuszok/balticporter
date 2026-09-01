@@ -130,6 +130,33 @@ de-indenting its body re-parents the body into the previous scope — 7 digests 
 caught, which is what the digest gate is for. Still open here: 0.2 (`isUnresolvedTypeVar` is a
 `startsWith("?")` sentinel test).
 
+**Wave 2.15 (2026-09-01) — census re-verified, `fieldDeclOf` added, 3 bare sites guarded.** The 21
+catch sites in `SpoonTir.scala` (20 real + 1 doc-comment example) were re-censused: all are
+absent-is-normal with honest defaults. Zero fabricated facts remain. One new named helper added:
+`fieldDeclOf(ref: CtFieldReference[?])`, paralleling the four wave-2.1 helpers
+(`typeDeclarationOf`, `typeParamDeclOf`, `execDeclOf`, `annotationTypeRefOf`). Five
+`getFieldDeclaration` call sites consolidated: two that were caught inline (`declaredTypeOf`,
+`erasedFieldReceiver`) and three that were BARE (`fieldSym`, `externalFieldType`,
+`erasedReceiverView`). The three bare sites would have crashed the per-unit translation on a
+noClasspath resolution failure — the refusal path catches that, but naming the helper is cheaper and
+consistent. 0 digests by construction: the behavior changes only for code paths that would have
+thrown.
+
+| helper | wraps | returns on failure | caller count |
+|---|---|---|---|
+| `typeDeclarationOf` | `r.getTypeDeclaration` | `None` | 26 |
+| `typeParamDeclOf` | `tv.getDeclaration` | `None` | 8 |
+| `execDeclOf` | `ex.getExecutableDeclaration` | `None` | 3 |
+| `annotationTypeRefOf` | `a.getAnnotationType` | `None` | 1 |
+| `fieldDeclOf` | `ref.getFieldDeclaration` | `None` | 5 |
+
+The five helpers together are the complete set of noClasspath-resolution lookups this frontend wraps.
+Every other catch in the file is either a computation over parser values (`boundMentions`,
+`@FunctionalInterface`, `annotationsOf`, `inheritedFormal`, `uncastAdded`, `overloadedSamSlot`,
+`labelOf`) or a type-resolution chain (`iterableOperand`, `selectorOutsideClassicSet`,
+`declaredTypeOf` variable path, `erasedFieldReceiver` field-type path, `bindingFrom`), each with a
+documented safe default. Still open: 0.2 (`isUnresolvedTypeVar`).
+
 ### 0.2 `Symbol.isUnresolvedTypeVar` is `startsWith("?")`, and **10,417 libGDX symbols match it**
 
 OPEN, and found by RUNNING the lane written to measure something else — which is the only way it

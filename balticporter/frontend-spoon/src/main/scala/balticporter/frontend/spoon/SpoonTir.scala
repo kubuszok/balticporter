@@ -1328,6 +1328,18 @@ object SpoonTir:
     private def annotationTypeRefOf(a: CtAnnotation[?]): Option[CtTypeReference[?]] =
       try Option(a.getAnnotationType) catch { case _: Throwable => scala.None }
 
+    /** the ONE Spoon lookup for a FIELD's declaration where an absent value is normal —
+      * the field belongs to an external class whose source is not on the classpath. Callers that
+      * receive `None` decline the rule they were about to apply (erased-field view, declared type,
+      * external field type), which is the correct fallback for an unknowable declaration.
+      * `CLAUDE.md` §4.6: one function, one doc, one `catch`.
+      *
+      * Added in wave 2.15 to consolidate five `getFieldDeclaration` sites — two caught and three
+      * bare — into one named helper, matching the pattern of [[typeDeclarationOf]],
+      * [[typeParamDeclOf]], [[execDeclOf]] and [[annotationTypeRefOf]]. */
+    private def fieldDeclOf(ref: CtFieldReference[?]): Option[CtField[?]] =
+      try Option(ref.getFieldDeclaration) catch { case _: Throwable => scala.None }
+
     /** JAVA'S FUNCTIONAL-INTERFACE QUESTION (JLS 9.8), asked of the class file — the ONE place it
       * is asked, and the ONLY place it can be.
       *
@@ -3460,13 +3472,16 @@ object SpoonTir:
           case _                                  => t
 
       /** the DECLARED type of an assignment target — the field's / local's own declaration, not
-        * Spoon's (possibly raw-erased) view of the access. */
+        * Spoon's (possibly raw-erased) view of the access. The field path goes through
+        * [[fieldDeclOf]]; the variable path wraps `getDeclaration` for the same noClasspath
+        * reason — a local's declaration is absent when the enclosing method is external. */
       private def declaredTypeOf(assigned: CtExpression[?]): Option[CtTypeReference[?]] =
-        try assigned match
-          case fw: CtFieldWrite[?]    => Option(fw.getVariable.getFieldDeclaration).map(_.getType)
-          case vw: CtVariableWrite[?] => Option(vw.getVariable.getDeclaration).map(_.getType)
+        assigned match
+          case fw: CtFieldWrite[?]    => fieldDeclOf(fw.getVariable).map(_.getType)
+          case vw: CtVariableWrite[?] =>
+            try Option(vw.getVariable.getDeclaration).map(_.getType)
+            catch { case _: Throwable => None }
           case _                      => None
-        catch { case _: Throwable => None }
 
       /** cast `t` to the in-scope resolution of type parameter `tp`, unless it already has it. */
       private def toTypeParam(tp: CtTypeParameterReference, e: CtExpression[?], t: Term): Term =
@@ -5674,8 +5689,7 @@ object SpoonTir:
             case _                      => false
           val unknown = formals.nonEmpty && (actuals.isEmpty || actuals.exists(useless))
           val names   = formals.map(_.getSimpleName).toSet
-          val declTpe = try Option(ref.getFieldDeclaration).map(_.getType).filter(_ != null)
-                        catch { case _: Throwable => None }
+          val declTpe = fieldDeclOf(ref).map(_.getType).filter(_ != null)
           val depends = declTpe.exists(mentionsTypeVarFilled(_, names))
           if unknown && depends then
             // same F-bound treatment as `erasedReceiverView`: an F-bounded class has no erased
@@ -5742,7 +5756,7 @@ object SpoonTir:
         None
 
       private def fieldSym(ref: CtFieldReference[?]): SymId =
-        val ownerQ = Option(ref.getFieldDeclaration).flatMap(fd => Option(fd.getDeclaringType)).map(_.getQualifiedName)
+        val ownerQ = fieldDeclOf(ref).flatMap(fd => Option(fd.getDeclaringType)).map(_.getQualifiedName)
           .orElse(Option(ref.getDeclaringType).map(_.getQualifiedName))
           .getOrElse("java.lang.Object")
         val ownerId = minter.external(ownerQ, simpleName(ownerQ))
@@ -5767,7 +5781,7 @@ object SpoonTir:
         * Only for a SHADOW declaration: a field the program declares gets its real type from
         * `fieldDef`, and a second, weaker rendering of the same member is a second truth about it. */
       private def externalFieldType(ref: CtFieldReference[?]): TypeRepr =
-        Option(ref.getFieldDeclaration) match
+        fieldDeclOf(ref) match
           case scala.None => NoType // no declaration to read — not evidence of anything
           case Some(fd)   =>
             val shadow = Option(fd.getParent(classOf[CtType[?]])).forall(_.isShadow)
@@ -5804,7 +5818,7 @@ object SpoonTir:
             // raw fill (`atDeclScope`), so consult it and decline when it names a type variable.
             val declaredVar = t match
               case fa: CtFieldAccess[?] =>
-                Option(fa.getVariable.getFieldDeclaration).map(_.getType)
+                fieldDeclOf(fa.getVariable).map(_.getType)
                       .exists(_.isInstanceOf[CtTypeParameterReference])
               case _ => false
             if declaredVar then None

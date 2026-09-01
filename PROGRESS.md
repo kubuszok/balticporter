@@ -11613,3 +11613,14 @@ com.badlogic.ashley.core.PooledEngine#createComponent
 `MethodBodyTransform` body for `Engine#createComponent` wraps in `Nullable(...)` to match the new
 return type. The hand port's `ComponentFactories.create` returns `T`; the manifest body is
 `lowlevel.Nullable(sge.ecs.ComponentFactories.create(componentType))`.
+
+### 13.20 Wave 2.15 -- frontend catch census (re-verification)
+
+Re-censused the 21 catch sites in `SpoonTir.scala` (20 real + 1 doc-comment example). All 21 are
+absent-is-normal with honest defaults; zero fabricated facts remain (waves 2.1 and 2.2 already
+removed all 126 fabricated-fact and dead catches). One new named helper added: `fieldDeclOf`,
+consolidating five `getFieldDeclaration` call sites (two caught, three bare) into one function,
+matching the pattern of the four wave-2.1 helpers. The three bare sites (`fieldSym`,
+`externalFieldType`, `erasedReceiverView`) would have crashed on a noClasspath resolution failure;
+now they gracefully decline. 0 digests by construction. See `ENGINE-LIMITS.md` 0.1 wave 2.15
+paragraph for the complete census table.
