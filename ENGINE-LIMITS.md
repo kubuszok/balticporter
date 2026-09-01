@@ -4448,8 +4448,18 @@ is conservatively treated as referenced and neither deleted nor suppressed.
 - 2 unused local vals with pure init inside arithmetic expressions (`t2 * u`, `1.0f - t`) that
   `isSideEffectFree` does not recognise as pure (Apply is not pure)
 - 1 non-private unused def on anonymous class (REFUSED: API surface, not deletable)
-(`@nowarn annotation does not suppress any warnings`). Closing the 51 requires teaching
-`TirEmitter.valDef` to render annotations, which is a cross-owned edit on the emitter.
+T26.1 is CLOSED: `TirEmitter.valDef` now calls `annots(s, i)`, so `@nowarn` on val/var declarations
+is emitted. The 13 `@nowarn annotation does not suppress` warnings exposed by the emitter fix are
+from stale `@nowarn("msg=deprecated")` on val declarations (SuppressionPhase false positives) and
+unreferenced privates whose bodies are referenced through substituted text (T26.2's shape).
+
+**T26.2 — unreferenced private with effectful init CANNOT be suppressed.** A `MethodBodyTransform`
+substitution references the symbol in the EMITTED code (a `Tree.Opaque` the TIR walk cannot see),
+so scalac considers the symbol USED while this phase's walk considers it UNREFERENCED. Adding
+`@nowarn("msg=unused")` then triggers `-Wunused:nowarn` ("does not suppress any warnings"). The
+substituted-body-reference guard (`isSubstitutionReferenced`) handles symbols whose name appears
+in an Opaque body of the same owning type; the remaining unreferenced privates with effectful init
+are left alone (REFUSED) as `.ref` residue.
 
 *Fix kind: (a) — a fact about Java and Scala, true of every codebase.*
 

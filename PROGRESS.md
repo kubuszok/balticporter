@@ -11661,13 +11661,15 @@ paragraph for the complete census table.
 
 ### 13.20 Wave 3.1ad --- unused symbols (.ref)
 
-`UnusedSymbolTransform`: a late §1(a) phase that deletes or discards unused local definitions and
-private members the port faithfully reproduced from java dead code. `.ref 97 -> 78` on gdx (19 of
-70 E198 closed). JVM/JS/Native 0/0/0 held. sg 0/0/0, noise4j 0/0/0. Engine suites: api 65/0,
-engine 1113/0, corpus 1447/0.
+`UnusedSymbolTransform`: a late §1(a) phase that deletes, discards or suppresses unused local
+definitions and private members the port faithfully reproduced from java dead code. Three actions:
+DELETE (pure-init, never read), DISCARD (effectful-init local, keep effect), SUPPRESS (`@nowarn` on
+serialVersionUID and write-only vars). Unreferenced privates with effectful init REFUSED because
+`MethodBodyTransform` substitutions may reference them in emitted code (T26.2).
 
 Emitter fix: `TirEmitter.valDef` now calls `annots(s, i)`, enabling `@nowarn` on val/var.
 Substituted-body-reference guard: symbols whose name appears in `Tree.Opaque.raw` text are
 conservatively treated as referenced (not deleted or suppressed).
-`.ref 97 -> 54` (49 of 70 E198 closed). 21 E198 remain (ENGINE-LIMITS T26.1).
-Check lanes: `unused-symbol(handled)` and `unused-symbol(refused)` in RequiredChecks.
+
+`.ref 93 -> 54` (49 of 70 E198 closed, 21 remain). JVM/JS/Native 0/0/0 held.
+`unused-symbol(handled)` 117, `unused-symbol(refused)` 0. Check lanes in RequiredChecks.

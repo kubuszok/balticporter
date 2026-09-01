@@ -6431,9 +6431,21 @@ BEFORE `package-rename`, because both are downstream of it.
    `this.field`) and which is never read and never written to after declaration.
 2. **DISCARD** -- an unreferenced local whose init MAY have effects: keep the expression as a bare
    statement, drop the binding.
-3. **SKIP** -- a write-only symbol, a serialVersionUID, or a private member with side-effecting
-   init. These need `@nowarn` to silence `-Wunused`, but the emitter does not yet render annotations
-   on `val`/`var` declarations (`ENGINE-LIMITS.md` T26.1), so they remain as `.ref` residue.
+3. **SUPPRESS** -- `@nowarn` on the declaration. `serialVersionUID` gets `@nowarn("msg=unused")`;
+   write-only vars (assigned but never read) get `@nowarn("msg=not read")`. Requires the emitter fix
+   (`TirEmitter.valDef` calling `annots(s, i)`) to render annotations on val/var declarations.
+4. **REFUSED** -- unreferenced private members with side-effecting inits are left alone. They cannot
+   be suppressed with `@nowarn("msg=unused")` because a `MethodBodyTransform` substitution may
+   reference them in the emitted code while the TIR walk sees them as unreferenced
+   (`ENGINE-LIMITS.md` T26.2).
+
+**Emitter fix.** `TirEmitter.valDef` now calls `annots(sym(v.symbol), i)` before rendering the
+declaration, mirroring `defDef`'s existing `annots(s, i)` call. Without this, annotations on
+val/var symbols (from this phase, from `SuppressionPhase`, or from any future phase) were silently
+dropped.
+
+**Check lanes.** `unused-symbol(handled)` (every symbol the phase acted on) and
+`unused-symbol(refused)` (unused symbols left alone). Both unconditional in `RequiredChecks`.
 
 **Read/write distinction.** ONE `StandardTraversal` walk collects two counters per symbol:
 `allCounts` (every `Ident`/`Select`) and `assignCounts` (how many of those are the direct LHS of
