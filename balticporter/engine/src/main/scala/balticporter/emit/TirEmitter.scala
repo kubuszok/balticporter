@@ -4100,12 +4100,15 @@ final class TirEmitter(
     // the guarantee is about a construction the JMM freezes, and a local has no such moment.
     Obligations.consult(JS.C(45), v.origin)(Option.when(!vs.flags.isMutable && ownerCd.isDefined)(()))
     declVisibility(vs, v.origin)
-    // trivia, then the porter note, then the `val` — see `defDef` for why that order is a rule.
+    // trivia, then the porter note, then annotations, then the `val` — see `defDef` for why that
+    // order is a rule. The `annots` call renders `@nowarn` on val/var declarations — without it,
+    // an annotation a phase attaches to a ValDef symbol is silently dropped (ENGINE-LIMITS T26.1).
     val note = declNotes(v.symbol, i)
+    val an   = annots(sym(v.symbol), i)
     // …and the synthetic-name counters are this declaration's, for the reason `defDef`'s are.
     inDeclaration {
-      if v.leading.nonEmpty then leading(v.leading, i) + note + valDef0(v.copy(leading = Nil), i)
-      else note + valDef0(v, i)
+      if v.leading.nonEmpty then leading(v.leading, i) + note + an + valDef0(v.copy(leading = Nil), i)
+      else note + an + valDef0(v, i)
     }
 
   private def valDef0(v: Tree.ValDef, i: Int): String =

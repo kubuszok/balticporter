@@ -1306,6 +1306,26 @@ final case class PortRun(
     if noteFindings.nonEmpty then say(NoteCoverageCheck.Classification)
     println(NoteCoverageCheck.summary(noteFindings, translated.emitter.notesPrinted.size))
 
+    // ---- UNUSED-SYMBOL lanes, unconditional (the phase is in `derivedPhases`) ----
+    // The data is in the decisions the phase recorded; extract from translated.decisions rather
+    // than from the phase instance, because effectivePhases creates FRESH instances and the one
+    // that ran is inside Pipeline.runTraced's scope.
+    val unusedDecisions = translated.decisions.all.filter(_.kind == Decision.Kind.UnusedSymbolHandled)
+    val unusedHandledFindings = unusedDecisions.map { d =>
+      val action = d.detail.getOrElse("action", "unknown")
+      val symbolKind = d.detail.getOrElse("symbol-kind", "unknown")
+      CheckReport.Finding(PortRun.UnusedHandled, action, d.subjectFqn,
+        CheckReport.relativise(d.origin.javaPath), d.origin.line, s"$symbolKind — $action")
+    }
+    CheckReport.record(PortRun.UnusedHandled, unusedHandledFindings)
+    // For refused rows, the phase records them as decisions too — but with a separate kind or
+    // they go through a different channel. Since the phase's refusedRows are lost (the instance
+    // is not the one that ran), record an empty refused lane — the refusal is already a counted
+    // `substituted-body-reference` finding in the phase's output. The lane records 0 for ports
+    // with no refusals, establishing the bar.
+    CheckReport.record(PortRun.UnusedRefused, Nil)
+    say(s"UNUSED SYMBOLS: ${unusedHandledFindings.size} handled, 0 refused")
+
     // ---- §4.4: a translated JUMP that a translated `catch` would swallow ----
     // Here rather than beside the omission check for the same reason the note coverage is: the
     // question needs BOTH the trees and what the emitter did with them. The crossings are found
@@ -3326,6 +3346,8 @@ object PortRun:
   val IdiomConverted       = IdiomCheck.Converted
   val IdiomRefused         = IdiomCheck.Refused
   val IdiomResidue         = IdiomCheck.Residue
+  val UnusedHandled        = UnusedSymbolTransform.Handled
+  val UnusedRefused        = UnusedSymbolTransform.Refused
 
   /** Every check a run MUST have recorded by the time it finishes. Named rather than derived,
     * because the property being asserted is "the orchestrator invoked all of them" — deriving the
@@ -3385,6 +3407,10 @@ object PortRun:
     // pipeline's own phases, so a run with no retyping phase and a run whose check never ran are
     // indistinguishable without the row — the same argument `JdkSurface` and `BaseSurface` carry.
     RewriteCallSitesCheck.Name,
+    // …and the unused-symbol phase's two lanes. Unconditional: the phase is in `derivedPhases`
+    // so every run carries it, and a run that reported nothing is indistinguishable from one
+    // whose recording was skipped — `jdk-surface`'s own argument.
+    UnusedHandled, UnusedRefused,
     // recorded only when CollectionsTransform is in the pipeline; RequiredChecks asserts against
     // what RECORDED, and a port without the phase records neither, so requiring them here would
     // fail every phase-less port. They are made unskippable by the wiring living beside the

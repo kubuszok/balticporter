@@ -80,6 +80,11 @@ class PolicyKeyLintSpec extends munit.FunSuite:
           "that already carry it — the same mint-or-reuse question MemberRenameTransform's " +
           "`targetName` asks"),
     ),
+    "UnusedSymbolTransform.scala" -> Map(
+      "fullName ==" ->
+        ("`scala.annotation.nowarn` lookup — the same find-or-create as SuppressionPhase: a " +
+          "WELL-KNOWN external annotation type, never a program-declared symbol"),
+    ),
     "TypeRedirectTransform.scala" -> Map(
       "fullName.startsWith" ->
         ("renaming a twinned member's own `fullName` by replacing its owner's prefix, carrying the " +

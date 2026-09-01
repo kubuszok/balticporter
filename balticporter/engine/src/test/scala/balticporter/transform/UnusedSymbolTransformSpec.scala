@@ -82,3 +82,21 @@ class UnusedSymbolTransformSpec extends munit.FunSuite:
     assert(unusedIdx < suppressionIdx,
       s"UnusedSymbolTransform (at $unusedIdx) must come before SuppressionPhase (at $suppressionIdx)")
   }
+
+  test("check lane names are defined") {
+    assertEquals(UnusedSymbolTransform.Handled, "unused-symbol(handled)")
+    assertEquals(UnusedSymbolTransform.Refused, "unused-symbol(refused)")
+  }
+
+  test("RequiredChecks includes unused-symbol lanes") {
+    assert(PortRun.RequiredChecks.contains(UnusedSymbolTransform.Handled),
+      "unused-symbol(handled) must be in RequiredChecks — the phase is unconditional")
+    assert(PortRun.RequiredChecks.contains(UnusedSymbolTransform.Refused),
+      "unused-symbol(refused) must be in RequiredChecks — the phase is unconditional")
+  }
+
+  test("UnusedSymbolHandled is NOT in PorterNote.Rendered") {
+    assert(!balticporter.tir.PorterNote.Rendered(Decision.Kind.UnusedSymbolHandled),
+      "UnusedSymbolHandled must NOT be in PorterNote.Rendered — deleted subjects have no " +
+      "declaration, and suppressed subjects carry @nowarn which is self-documenting")
+  }

@@ -11666,6 +11666,8 @@ private members the port faithfully reproduced from java dead code. `.ref 97 -> 
 70 E198 closed). JVM/JS/Native 0/0/0 held. sg 0/0/0, noise4j 0/0/0. Engine suites: api 65/0,
 engine 1113/0, corpus 1447/0.
 
-51 E198 remain: write-only vars, serialVersionUID, and private members with effectful init cannot be
-suppressed because `TirEmitter.valDef` does not render annotations on `val`/`var` declarations
-(`ENGINE-LIMITS.md` T26.1). The fix is to teach the emitter to call `annots(s, i)` for `ValDef`.
+Emitter fix: `TirEmitter.valDef` now calls `annots(s, i)`, enabling `@nowarn` on val/var.
+Substituted-body-reference guard: symbols whose name appears in `Tree.Opaque.raw` text are
+conservatively treated as referenced (not deleted or suppressed).
+`.ref 97 -> 54` (49 of 70 E198 closed). 21 E198 remain (ENGINE-LIMITS T26.1).
+Check lanes: `unused-symbol(handled)` and `unused-symbol(refused)` in RequiredChecks.

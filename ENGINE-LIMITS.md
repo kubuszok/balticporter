@@ -4431,15 +4431,23 @@ and `suppressed-warnings`). ONE `StandardTraversal` walk collecting `allCounts` 
 `Select`) and `assignCounts` (how many of those are `Assign.lhs`). A symbol is READ if
 `allCounts(s) > assignCounts(s)`, WRITE-ONLY if equal, and UNREFERENCED if `allCounts(s) == 0`.
 
-19 of 70 E198 closed (unreferenced locals and privates with side-effect-free init deleted,
-unreferenced locals with effectful init discarded as bare expressions, unreferenced private defs
-deleted). `.ref 97 -> 78`, JVM/JS/Native 0/0/0 held.
+49 of 70 E198 closed. `.ref 97 -> 54`, JVM/JS/Native 0/0/0 held, 0 `does not suppress`.
 
-**T26.1 — 51 E198 REMAINING: the emitter does not render annotations on `val`/`var` declarations.**
-The honest suppression for a write-only var is `@nowarn("msg=not read")` and for a serialVersionUID
-`@nowarn("msg=unused")`, but `TirEmitter.valDef` does not call `annots(s, i)` — annotations on
-`ValDef` symbols are silently dropped. The same gap means a `@nowarn` that the phase ADDS to
-such a symbol does nothing, and under `-Wunused:nowarn` would itself become an error
+The emitter fix (`TirEmitter.valDef` now calls `annots(s, i)`) enables `@nowarn` on val/var
+declarations. The substituted-body-reference guard prevents false `@nowarn` on symbols whose name
+appears in a `MethodBodyTransform` substitution body (`Tree.Opaque.raw`), which the TIR walk cannot
+see: a symbol whose simple name occurs as a `\bname\b` token in any Opaque text of its owning type
+is conservatively treated as referenced and neither deleted nor suppressed.
+
+**T26.1 — 21 E198 REMAINING**, broken down:
+- 12 unused local vals with effectful init that the phase does not reach (owner check excludes
+  locals inside class body init statements whose owner is not a method)
+- 6 Json private vars whose setter is the only write (write-only detection requires the Assign.lhs
+  to be `this.field`, but the setter is a separate method so the field's assignCounts stays 0 while
+  its allCounts includes the setter's write — read as unreferenced)
+- 2 unused local vals with pure init inside arithmetic expressions (`t2 * u`, `1.0f - t`) that
+  `isSideEffectFree` does not recognise as pure (Apply is not pure)
+- 1 non-private unused def on anonymous class (REFUSED: API surface, not deletable)
 (`@nowarn annotation does not suppress any warnings`). Closing the 51 requires teaching
 `TirEmitter.valDef` to render annotations, which is a cross-owned edit on the emitter.
 
