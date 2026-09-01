@@ -205,7 +205,37 @@ object LibgdxPolicy:
     */
   def test(repoRoot: Path): PortManifest = core(repoRoot).extendedBy(PortManifest(
     name    = "sge-test",
-    surface = List(new TestFrameworkTransform(), selfSuppliedSuites),
+    surface = List(new TestFrameworkTransform(), selfSuppliedSuites,
+      // --- 3.1ae: gdx-test residue ---
+      // JsonMatcherTests' two static toString helpers use CharArray as a string builder
+      // (append(String, String), replaceAll(String, String), toString). DynamicArray[Char] has
+      // none of these. sge dropped the CharArray string-builder API entirely (type-mappings.md:
+      // "CharArray -> DynamicArray[T]", CharArrayTest excluded at fdc30967). Replace with
+      // java.lang.StringBuilder, which is what these helpers are doing.
+      new balticporter.transform.MethodBodyTransform(Map(
+        "com.badlogic.gdx.utils.JsonMatcherTests#toString(JsonMatcher,String[])" ->
+          """{
+            |  val buffer: java.lang.StringBuilder = new java.lang.StringBuilder()
+            |  for (pattern <- patterns) {
+            |    if (buffer.length() > 0) buffer.append(", ")
+            |    if (pattern.isEmpty())
+            |      buffer.append("\"\"")
+            |    else
+            |      buffer.append(sge.utils.PatternParser.parse(matcher, pattern, lowlevel.Nullable.empty).toString())
+            |  }
+            |  return buffer.toString().replace("\n", "\\n").replace("\t", "\\t")
+            |}""".stripMargin,
+        "com.badlogic.gdx.utils.JsonMatcherTests#toString(Array)" ->
+          """{
+            |  val buffer: java.lang.StringBuilder = new java.lang.StringBuilder()
+            |  for (value <- values) {
+            |    if (buffer.length() > 0) buffer.append(", ")
+            |    buffer.append(value.toJson(sge.utils.JsonWriter.OutputType.minimal))
+            |  }
+            |  return buffer.toString().replace("\n", "\\n").replace("\t", "\\t")
+            |}""".stripMargin,
+      )),
+    ),
   ))
 
   /** THE ONE `selfSupplied` ENTRY — `ENGINE-LIMITS.md` CT7, contributed the way CT8 says a dependent
@@ -967,6 +997,19 @@ object LibgdxPolicy:
         // LongArray.mul(value) -> multiply ALL elements
         ("mul", 1)      -> Template("{ var bpI = 0; while (bpI < $recv.size) { $recv(bpI) = $recv(bpI) * $0; bpI += 1 } }"),
         ("with", 1)     -> Template("$Target.from($0)"),
+        // --- 3.1ae: gdx-test residue ---
+        // LongArray.add(4 args): DynamicArray has up to 3-arg add; split into two calls.
+        ("add", 4)      -> Template("{ $recv.add($0, $1); $recv.add($2, $3) }"),
+        // LongArray.shrink() returns long[] in java; DynamicArray.shrink() returns Unit.
+        // Return the backing array after shrink, matching java's return type.
+        ("shrink", 0)   -> Template("{ $recv.shrink(); $recv }.items"),
+        // LongArray.ensureCapacity(int) returns long[]; DynamicArray returns Unit.
+        ("ensureCapacity", 1) -> Template("{ $recv.ensureCapacity($0); $recv }.items"),
+        // LongArray.setSize(int) returns long[]; DynamicArray returns Unit.
+        ("setSize", 1)  -> Template("{ $recv.setSize($0); $recv }.items"),
+        // LongArray.resize(int) is protected, returns long[]; DynamicArray has no resize.
+        // setSize + items is the faithful image: allocate to newSize, pad with zeros, return array.
+        ("resize", 1)   -> Template("{ $recv.setSize($0); $recv }.items"),
       ),
       "com.badlogic.gdx.utils.ShortArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -1173,6 +1216,14 @@ object LibgdxPolicy:
           Template("new scala.collection.mutable.ArrayDeque[$T0]($0)"),
         ("<init>", Descriptor(List(Param.Prim("int"), Param.Named("ArraySupplier")))) ->
           Template("new scala.collection.mutable.ArrayDeque[$T0]($0)"),
+      ),
+      // --- 3.1ae: gdx-test residue ---
+      // Bits(Bits) copy constructor -> $0.clone(). arity 1 is ambiguous with Bits(int) capacity.
+      // BitSet.clone() returns BitSet; the cast is safe because clone() on a mutable.BitSet
+      // returns mutable.BitSet at runtime, but the static return type is Object.
+      "com.badlogic.gdx.utils.Bits" -> Map(
+        ("<init>", Descriptor(List(Param.Named("Bits")))) ->
+          Template("$0.clone().asInstanceOf[scala.collection.mutable.BitSet]"),
       ),
     )
 

@@ -7271,19 +7271,28 @@ final class CollectionsTransform(
             // otherwise Tree.Select (parameterless).
             // When dropArgs is true, the source call's arguments are dropped and the first
             // member is always emitted as Select (parameterless) — e.g. toArray(Class) -> toArray.
+            // Carry the CALL's type on the TERMINAL chain node so downstream phases
+            // (TestFrameworkTransform.promote) can read the result type. Intermediate nodes
+            // keep NoType — only the outermost matters.
+            val isSingle = members.size == 1
             var cur: Term =
               if !dropAllArgs && (t.args.nonEmpty || hasParens(members.head)) then
                 call(recv, syms.head, t.args, t, so)
               else if hasParens(members.head) then
-                Tree.Apply(Tree.Select(recv, syms.head, TypeRepr.NoType, so), Nil, syms.head, TypeRepr.NoType, so)
+                val tp = if isSingle then t.tpe else TypeRepr.NoType
+                Tree.Apply(Tree.Select(recv, syms.head, TypeRepr.NoType, so), Nil, syms.head, tp, so)
               else
-                Tree.Select(recv, syms.head, TypeRepr.NoType, so)
+                val tp = if isSingle then t.tpe else TypeRepr.NoType
+                Tree.Select(recv, syms.head, tp, so)
             // Tail members: parameterless -> Select; in parens -> Apply with Nil args.
-            syms.tail.zip(members.tail).foreach { (s, mName) =>
+            // The LAST tail member carries the call's type; intermediates keep NoType.
+            syms.tail.zip(members.tail).zipWithIndex.foreach { case ((s, mName), idx) =>
+              val isLast = idx == syms.tail.size - 1
+              val tp = if isLast then t.tpe else TypeRepr.NoType
               if hasParens(mName) then
-                cur = Tree.Apply(Tree.Select(cur, s, TypeRepr.NoType, so), Nil, s, TypeRepr.NoType, so)
+                cur = Tree.Apply(Tree.Select(cur, s, TypeRepr.NoType, so), Nil, s, tp, so)
               else
-                cur = Tree.Select(cur, s, TypeRepr.NoType, so)
+                cur = Tree.Select(cur, s, tp, so)
             }
             // A retarget target's `iterator` returns `scala.collection.Iterator`, but the
             // method's declared return type is `JavaIterator` (from the java.util.Iterator
