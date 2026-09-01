@@ -11658,3 +11658,14 @@ paragraph for the complete census table.
 - JsonMatcherTests x3 declared (CharArray->DynamicArray[Char] toString semantics, same as CharArrayTest exclusion fdc30967).
 - IteratorRemove x4 declared (QueueTest x2, MixedPutRemoveTest x2 -- ENGINE-LIMITS.md K36).
 - gdx 0/0/0/97, gdx-test 0/0/0/106, suite 180/11/0, expected-lost 30, base-surface 0 fatal.
+
+### 13.20 Wave 3.1ad --- unused symbols (.ref)
+
+`UnusedSymbolTransform`: a late §1(a) phase that deletes or discards unused local definitions and
+private members the port faithfully reproduced from java dead code. `.ref 97 -> 78` on gdx (19 of
+70 E198 closed). JVM/JS/Native 0/0/0 held. sg 0/0/0, noise4j 0/0/0. Engine suites: api 65/0,
+engine 1113/0, corpus 1447/0.
+
+51 E198 remain: write-only vars, serialVersionUID, and private members with effectful init cannot be
+suppressed because `TirEmitter.valDef` does not render annotations on `val`/`var` declarations
+(`ENGINE-LIMITS.md` T26.1). The fix is to teach the emitter to call `annots(s, i)` for `ValDef`.

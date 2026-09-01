@@ -6414,3 +6414,28 @@ with the finding recorded, and java's behaviour wins.
 
 **The lane is NOT in `measure-all`.** It reads api-parity findings (which `measure-all` produces)
 and does not re-emit anything. It is NOT in `dropin-all` either.
+
+### 8.26 Unused-symbol handling (`UnusedSymbolTransform`)
+
+A late §1(a) phase that removes unused local definitions and private members from the emitted tree.
+Java has no `-Wunused` equivalent; every port under sge/ssg strict flags (`-Werror
+-Wunused:locals,privates,patvars,nowarn`) needs it.
+
+**Derived unconditionally** by `PortRun.derivedPhases`, alongside `SuppressionPhase`. No
+configuration, no per-library policy. Must run BEFORE `SuppressionPhase` (`runsBefore` edge) and
+BEFORE `package-rename`, because both are downstream of it.
+
+**Translation order** (the refusal enumeration):
+
+1. **DELETE** -- a local or private member whose init is provably side-effect-free (literal, ident,
+   `this.field`) and which is never read and never written to after declaration.
+2. **DISCARD** -- an unreferenced local whose init MAY have effects: keep the expression as a bare
+   statement, drop the binding.
+3. **SKIP** -- a write-only symbol, a serialVersionUID, or a private member with side-effecting
+   init. These need `@nowarn` to silence `-Wunused`, but the emitter does not yet render annotations
+   on `val`/`var` declarations (`ENGINE-LIMITS.md` T26.1), so they remain as `.ref` residue.
+
+**Read/write distinction.** ONE `StandardTraversal` walk collects two counters per symbol:
+`allCounts` (every `Ident`/`Select`) and `assignCounts` (how many of those are the direct LHS of
+`Tree.Assign`). Post-pass: `isRead(s) = allCounts(s) > assignCounts(s)`. A compound assignment
+(`IncDec`) is both a read and a write, so `assignCounts` is not incremented for it.

@@ -4401,6 +4401,50 @@ The fix: `TirEmitter.tryStr` scans each catch body for references to the catch p
 
 *Fix kind: (a) — a fact about Java and Scala, true of every codebase.*
 
+### T26. Unused locals and private members trigger `-Wunused:locals,privates` under `-Werror`
+
+**(a) engine.** Java compiles unused local definitions, write-only local variables, unused private
+members and write-only private fields silently. Under sge's `-Wunused:imports,privates,locals,
+patvars,nowarn` (part of `SgePlugin.strictScalacOptions`) scalac reports `E198 Unused Symbol Warning`
+in three flavours: `unused local definition`, `local variable was mutated but not read`, and
+`unused private member` / `private variable was mutated but not read`. `-Werror` promotes each.
+
+**70 sites on gdx**, broken down:
+
+| shape | count | translation | sge's answer |
+|---|---|---|---|
+| serialVersionUID | 18 | residual (T26.1) | dropped (Serializable dropped) |
+| unused local val (pure init) | 13 | DELETE binding | deleted or absent |
+| unused local val (effectful init) | 7 | residual (T26.1) | deleted (call kept bare) |
+| for-loop-leftover (`val i/r = 0`) | 7 | DELETE binding | absent (hand-written) |
+| unused private var (write-only) | 9 | residual (T26.1) | `@nowarn` or omitted |
+| unused private val (`new Object()`) | 5 | residual (T26.1) | commented out or omitted |
+| unused private val (pure init) | 3 | DELETE | omitted |
+| unused private def | 2 | DELETE | omitted |
+| unused private inline val | 1 | DELETE | omitted |
+| unused local var (write-only) | 2 | residual (T26.1) | deleted |
+| unused non-private def (anon class) | 2 | REFUSED (API surface) | different signature |
+| unused def (Window.scrolled, 4 vs 5 params) | 1 | REFUSED (API surface) | different signature |
+
+The fix: `UnusedSymbolTransform`, a late §1(a) phase (after all retyping, before `package-rename`
+and `suppressed-warnings`). ONE `StandardTraversal` walk collecting `allCounts` (every `Ident`/
+`Select`) and `assignCounts` (how many of those are `Assign.lhs`). A symbol is READ if
+`allCounts(s) > assignCounts(s)`, WRITE-ONLY if equal, and UNREFERENCED if `allCounts(s) == 0`.
+
+19 of 70 E198 closed (unreferenced locals and privates with side-effect-free init deleted,
+unreferenced locals with effectful init discarded as bare expressions, unreferenced private defs
+deleted). `.ref 97 -> 78`, JVM/JS/Native 0/0/0 held.
+
+**T26.1 — 51 E198 REMAINING: the emitter does not render annotations on `val`/`var` declarations.**
+The honest suppression for a write-only var is `@nowarn("msg=not read")` and for a serialVersionUID
+`@nowarn("msg=unused")`, but `TirEmitter.valDef` does not call `annots(s, i)` — annotations on
+`ValDef` symbols are silently dropped. The same gap means a `@nowarn` that the phase ADDS to
+such a symbol does nothing, and under `-Wunused:nowarn` would itself become an error
+(`@nowarn annotation does not suppress any warnings`). Closing the 51 requires teaching
+`TirEmitter.valDef` to render annotations, which is a cross-owned edit on the emitter.
+
+*Fix kind: (a) — a fact about Java and Scala, true of every codebase.*
+
 ## 4. Collections, shims and the JDK boundary
 
 ### K1. Never model a Java interface on a Scala COLLECTION trait — the governing rule is `CLAUDE.md` §4.5

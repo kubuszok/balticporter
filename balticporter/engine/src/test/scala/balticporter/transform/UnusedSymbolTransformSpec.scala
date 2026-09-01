@@ -20,6 +20,8 @@ class UnusedSymbolTransformSpec extends munit.FunSuite:
     assert(clue(phase.runsAfter).contains("type-redirect"))
     assert(clue(phase.runsAfter).contains("globals->implicits"))
     assert(clue(phase.runsBefore).contains("package-rename"))
+    assert(clue(phase.runsBefore).contains(SuppressionPhase.Name),
+      "must run before SuppressionPhase so the @nowarn annotations are visible to it")
   }
 
   test("UnusedSymbolTransform name") {
