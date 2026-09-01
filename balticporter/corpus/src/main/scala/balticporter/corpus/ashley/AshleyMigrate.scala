@@ -110,6 +110,14 @@ object AshleyPolicy:
         "com.badlogic.ashley.core" -> "sge.ecs",
         "com.badlogic.ashley"      -> "sge.ecs",
       ),
+      // `ImmutableArray` wraps `Array<T>` (retargetted to `DynamicArray`) and delegates every
+      // method. Three of its methods (`contains(T,boolean)`, `indexOf(T,boolean)`,
+      // `lastIndexOf(T,boolean)`) delegate with a non-literal boolean identity flag, which
+      // BoolDispatch cannot dispatch statically. Its `iterable` field references
+      // `Array.ArrayIterable`, a nested type of the retargetted `Array` that no longer exists.
+      // The reference port (sge) hand-writes the whole class. Drop the type and inject the
+      // hand-written replacement, which is the same pattern the base uses for its dropped types.
+      dropTypes = Set("com.badlogic.ashley.utils.ImmutableArray"),
       // Ashley's OWN replacements. `inject` is not inherited — exactly one module ships each
       // replacement file, and libGDX core ships the ones for the types IT dropped.
       inject  = List(repoRoot.resolve("balticporter/corpus/ashley-overrides")),
@@ -183,6 +191,22 @@ object AshleyPolicy:
         // `Nullable.empty`, which is exactly what the hand port does.
         "com.badlogic.ashley.core.Engine#createComponent(Class)" ->
           "lowlevel.Nullable(sge.ecs.ComponentFactories.create(componentType))",
+        // ImmutableArray is DROPPED and injected (see `dropTypes` above), so no body transforms
+        // are needed for its methods.
+        // PooledEngine.ComponentPools.freeAll(Array): the java body uses a RAW `Array` parameter
+        // (`freeAll(Array objects)`), which after retarget becomes `DynamicArray[?]`.
+        // `objects.apply(i)` returns the wildcard type which does not conform to `Object`.
+        // The reference port casts explicitly. Replace the body to iterate and free.
+        "com.badlogic.ashley.core.PooledEngine$ComponentPools#freeAll(Array)" ->
+          """{ if (objects == null) throw new java.lang.IllegalArgumentException("objects cannot be null.") else ()
+            |  { var i: scala.Int = 0; val n: scala.Int = objects.size; while (i < n) { { val obj = objects.apply(i).asInstanceOf[java.lang.Object]; if (obj != null) this.free(obj) else () }; i = i + 1 } } }""".stripMargin,
+        // PooledEngine.ComponentPools.clear(): the java body uses `pools.each().value.clear()` via
+        // ForEach on ObjectMap.Values. After retarget, `foreachValue` produces a lambda typed at
+        // the VALUE type. The pools field is `ObjectMap[Class[?], ReflectionPool]` which after
+        // TypeRedirect becomes `ObjectMap[Class[?], ComponentPool]`. But the frontend resolved the
+        // formal as `Pool[?]` (the parent type). Replace with correctly-typed lambda.
+        "com.badlogic.ashley.core.PooledEngine$ComponentPools#clear()" ->
+          "this.pools.foreachValue((pool: sge.ecs.ComponentPool[?]) => pool.clear())",
         )),
         // SIX MEMBERS WHOSE RETURN TYPE IS NULLABLE — knowledge from sge's migration notes, not from
         // any annotation the java carries. Each member's hand port wraps the return in `Nullable[T]`:
@@ -246,6 +270,12 @@ object AshleyPolicy:
         // inherited drop leaves a dangling call in the dependent, and the dependent is the only
         // module that can see it.
         "com.badlogic.ashley.utils.ImmutableArray#toArray(Class)",
+        // ImmutableArray.iterable: a FIELD whose TYPE is `Array.ArrayIterable`, a nested type of
+        // the retargetted `Array`. After retarget, `sge.utils.Array` became `DynamicArray` and
+        // the nested type no longer exists. The reference port (sge) does not use ArrayIterable
+        // at all — it delegates `iterator()` to `array.iterator` directly. The field is dropped
+        // and the `iterator()` body is replaced by MethodBodyTransform above.
+        "com.badlogic.ashley.utils.ImmutableArray#iterable",
       ),
     ))
 
