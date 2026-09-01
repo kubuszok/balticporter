@@ -14365,6 +14365,35 @@ What keeps the measurement attached to the thing it was made about is a FIXTURE
 invalidates silently; this is the same rule §4.58's text-to-text check is written from, read at a
 measurement instead of at a comment.
 
+### K34. `retargetSelectRewrite` did not handle `Chain`/`Template` on `Tree.Select` -- 12 errors on ashley (Bits `.empty`, `.length` on BitSet). **CLOSED (wave 3.1ac)**
+
+**(a) engine.** Bean-property or NullaryArity makes a retarget-source member parenless, so the call
+arrives as `Tree.Select` instead of `Tree.Apply`. `retargetSelectRewrite` handled `Rename` at a
+Select but not `Chain` or `Template`. Measured at 7 `empty -> isEmpty` + 5 `length -> Template` =
+12 errors on ashley, 0 on gdx (gdx has 0 Bits callers).
+
+Fix: extend `retargetSelectRewrite` to handle `Chain` and `Template` at arity 0. A
+`selectChainRewritten` identity set tracks results so `transformApply` strips the outer `()` when a
+0-arg Apply wraps a Select the handler already rewrote (without this, `notEmpty()` becomes
+`nonEmpty()` -- 4 errors on gdx). 54 engine specs green.
+
+### K35. A call into a DROPPED+INJECTED type cannot follow the injected member's arity -- **OPEN**
+
+**(a) engine.** `NullaryArityTransform` skips members whose owner is a substituted type
+(`substitutedOwners` guard, line 112), and `PortMapTransform.followMemberRenames` likewise excludes
+substituted types. So a call to a member on a dropped+injected type keeps its java arity even when
+the injected file declares a different arity.
+
+Measured on ashley: `ImmutableArray.iterator()` with parens in the ported test against an injected
+ImmutableArray whose `iterator` is parenless (extending `Iterable[A]`, which is sge's shape). 1
+error. Worked around by extending `JavaIterable[A]` instead (parens `iterator()`), which is NOT
+sge's shape verbatim -- sge's `ImmutableArray` extends `Iterable[A]` with parenless `iterator`.
+
+The fix: read the injected source's member surface (the `api-parity` check already parses injected
+Scala with scalameta) and feed `calleeHasParens`/`NullaryArityTransform` from it. Then the injected
+file can be sge's verbatim shape (`Iterable`, parenless `iterator`). The `ArrayBuffer` vs
+`DynamicArray` backing half is the sge-ecs drop-in wave's (3.2e) and is noted there as such.
+
 ### K36. Retarget runtime: peek/first/pop exception class, removeRange inclusive bound, ensureCapacity growth, Array(T[]) capacity, Iterator.remove — **gdx-test 35 -> 11 failing, 8 SortTest CLOSED**
 
 Five families of retarget call-site semantics that compile clean and fail at run time:
