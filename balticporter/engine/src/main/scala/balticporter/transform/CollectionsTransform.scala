@@ -3480,6 +3480,46 @@ final class CollectionsTransform(
             // application when the emitter renders the parameterless call.
             Some(Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, sel.origin),
                             List(sel), iteratorFromSym, sel.tpe, sel.origin))
+          // Chain at a Select (parenless): the member was made parenless by bean-property or
+          // NullaryArityTransform, so it arrives as a Tree.Select, not a Tree.Apply.  Apply
+          // the chain with no arguments — each member in the chain is a parameterless Select
+          // unless `parens` says otherwise (same logic as the Apply path).
+          // The `iterator` special case above already handles that terminal; this arm handles
+          // every other chain (e.g. `("empty", 0) -> Chain(List("isEmpty"))`).
+          //
+          // CAVEAT: the same Select may also be the `fun` of a Tree.Apply(_, Nil, _) — a method
+          // that java calls with `()` and that was NOT made parenless. The Select handler fires
+          // first (bottom-up traversal), and the outer Apply would then wrap the rewritten Select
+          // in `()`, producing e.g. `nonEmpty()` where the target is parenless. Tracked in
+          // `selectChainRewritten` so the Apply handler can strip the parens.
+          case CollectionsTransform.RetargetRewrite.Chain(members, hasParens, _) if members.nonEmpty =>
+            val syms = members.flatMap(m => retargetRewriteSyms.get((srcFqn, m)))
+            if syms.size != members.size then scala.None
+            else
+              var cur: Term =
+                if hasParens(members.head) then
+                  Tree.Apply(Tree.Select(sel.qual, syms.head, TypeRepr.NoType, sel.origin),
+                             Nil, syms.head, TypeRepr.NoType, sel.origin)
+                else
+                  Tree.Select(sel.qual, syms.head, TypeRepr.NoType, sel.origin)
+              syms.tail.zip(members.tail).foreach { (s, mName) =>
+                if hasParens(mName) then
+                  cur = Tree.Apply(Tree.Select(cur, s, TypeRepr.NoType, sel.origin),
+                                   Nil, s, TypeRepr.NoType, sel.origin)
+                else
+                  cur = Tree.Select(cur, s, TypeRepr.NoType, sel.origin)
+              }
+              selectChainRewritten.add(cur)
+              Some(cur)
+          // Template at a Select (parenless): a Template expression with no arguments — the
+          // member was made parenless but the rewrite needs a template (e.g.
+          // `("length", 0) -> Template("(if ($recv.isEmpty) 0 else $recv.last + 1)")`).
+          // Rendered with an empty argument list; only $recv and type-level placeholders
+          // ($T0, $Target) are available. Same caveat as Chain above — tracked for the Apply path.
+          case CollectionsTransform.RetargetRewrite.Template(expr) =>
+            val result = renderTemplate(expr, sel.qual, Nil, srcFqn, sel.tpe, sel.origin)
+            selectChainRewritten.add(result)
+            Some(result)
           // IndexedField is NOT handled here — it fires only on Tree.ArrayAccess (see
           // retargetIndexedField). Stripping the field select on a bare Tree.Select would turn
           // `someMethod(arr.items)` into `someMethod(arr)`, changing the type from Array[T] to
@@ -4012,7 +4052,13 @@ final class CollectionsTransform(
     val out = tokenConstructor(t2).orElse(copyConstructor(t2)).orElse(capacityConstructor(t2))
       .orElse(retargetConstruct(t2))
       .orElse(staticRewrite(t2)).getOrElse {
-      t2.fun match
+      // When retargetSelectRewrite's Chain/Template handler rewrote a Select that is the `fun`
+      // of a 0-arg Apply, the outer Apply still wraps the result in `()`. The target member is
+      // parenless (e.g. `nonEmpty`, `isEmpty`), so strip the Apply BEFORE the Select path tries to
+      // look up the rewritten name in the retarget table. Checked by reference identity in
+      // `selectChainRewritten` — the set the Select handler populated.
+      if t2.args.isEmpty && selectChainRewritten.remove(t2.fun) then t2.fun
+      else t2.fun match
         case Tree.Select(recv, m, _, so) => kindAt(recv).orElse(inheritedKind(recv, m)) match
           case Some(k) => rewrite(k, recv, m, so, t2).getOrElse(t2)
           // NEITHER answered, so java resolved a member the CLASS declares — and the class may be
@@ -4076,6 +4122,13 @@ final class CollectionsTransform(
     * identity survives. An origin is a java file, line and column, which is exactly one call site.
     * Cleared per translation in [[run]] — a phase instance is reused across source sets. */
   private val implicitPending = collection.mutable.Set[Origin]()
+  /** Selects rewritten by the Chain/Template handler in `retargetSelectRewrite` — tracked so the
+    * Apply handler can strip the outer `()` when the fun was already chain-rewritten. Without this,
+    * a `notEmpty()` (Apply with 0 args) is rewritten by the Select handler to `nonEmpty` and then
+    * wrapped in `()` by the Apply, producing `nonEmpty()` — wrong for a parenless target.
+    * Tracked by reference identity of the RESULT term (the Term object the handler produced). */
+  private val selectChainRewritten = java.util.Collections.newSetFromMap(
+    new java.util.IdentityHashMap[Term, java.lang.Boolean]())
 
   /** [[inheritedKind]] with no receiver to read. The scope suppression `inheritedKind` applies is
     * about the RECEIVER's declaration, and there is no receiver here; the enclosing class's own

@@ -550,4 +550,62 @@ class CollectionsRetargetRewriteSpec extends munit.FunSuite {
         ("<init>", 1) -> Template("$Target.apply[$T0]($0)"))))
     assertNotEquals(a.surfaceFingerprint, b.surfaceFingerprint)
   }
+
+  // ---- Chain and Template on Select (parenless receivers, wave 3.1ac) ----
+  // When bean-property or NullaryArity makes a member parenless, its call arrives as Tree.Select
+  // rather than Tree.Apply.  The retarget rewrite must fire on Select for Chain and Template
+  // entries at arity 0.  The Apply path must strip the outer () when the Select handler already
+  // chain-rewrote the fun (the selectChainRewritten tracking).
+
+  test("Chain at arity 0 is accepted alongside Rename and Template") {
+    val ct = new CollectionsTransform(retarget = Map("com.a.Bits" -> "scala.collection.mutable.BitSet"),
+      retargetRewrites = Map("com.a.Bits" -> Map(
+        ("get", 1)      -> Rename("apply"),
+        ("empty", 0)    -> Chain(List("isEmpty")),
+        ("length", 0)   -> Template("(if ($recv.isEmpty) 0 else $recv.last + 1)"))))
+    assertEquals(ct.retargetRewrites("com.a.Bits").size, 3)
+  }
+
+  test("Chain at arity 0 changes the fingerprint") {
+    val a = new CollectionsTransform(retarget = Map("com.a.Bits" -> "scala.BitSet"),
+      retargetRewrites = Map("com.a.Bits" -> Map(("empty", 0) -> Chain(List("isEmpty")))))
+    val b = new CollectionsTransform(retarget = Map("com.a.Bits" -> "scala.BitSet"))
+    assertNotEquals(a.surfaceFingerprint, b.surfaceFingerprint)
+  }
+
+  test("Template at arity 0 changes the fingerprint") {
+    val a = new CollectionsTransform(retarget = Map("com.a.Bits" -> "scala.BitSet"),
+      retargetRewrites = Map("com.a.Bits" -> Map(
+        ("length", 0) -> Template("(if ($recv.isEmpty) 0 else $recv.last + 1)"))))
+    val b = new CollectionsTransform(retarget = Map("com.a.Bits" -> "scala.BitSet"))
+    assertNotEquals(a.surfaceFingerprint, b.surfaceFingerprint)
+  }
+
+  test("mergeWith unions Chain entries from independent retarget sources") {
+    val a = new CollectionsTransform(retarget = Map("com.a.Bits" -> "scala.BitSet"),
+      retargetRewrites = Map("com.a.Bits" -> Map(("empty", 0) -> Chain(List("isEmpty")))))
+    val b = new CollectionsTransform(retarget = Map("com.b.Flags" -> "scala.Flags"),
+      retargetRewrites = Map("com.b.Flags" -> Map(("empty", 0) -> Chain(List("isEmpty")))))
+    val merged = a.mergedWith(b)
+    assert(merged.isRight, s"merge refused: ${merged.left.getOrElse("")}")
+    val ct = merged.toOption.get.phase.asInstanceOf[CollectionsTransform]
+    assertEquals(ct.retargetRewrites("com.a.Bits")(("empty", 0)), Chain(List("isEmpty")))
+    assertEquals(ct.retargetRewrites("com.b.Flags")(("empty", 0)), Chain(List("isEmpty")))
+  }
+
+  test("mergeWith unions Template entries from independent retarget sources") {
+    val a = new CollectionsTransform(retarget = Map("com.a.Bits" -> "scala.BitSet"),
+      retargetRewrites = Map("com.a.Bits" -> Map(
+        ("length", 0) -> Template("(if ($recv.isEmpty) 0 else $recv.last + 1)"))))
+    val b = new CollectionsTransform(retarget = Map("com.b.Flags" -> "scala.Flags"),
+      retargetRewrites = Map("com.b.Flags" -> Map(
+        ("numBits", 0) -> Template("$recv.size"))))
+    val merged = a.mergedWith(b)
+    assert(merged.isRight, s"merge refused: ${merged.left.getOrElse("")}")
+    val ct = merged.toOption.get.phase.asInstanceOf[CollectionsTransform]
+    assertEquals(ct.retargetRewrites("com.a.Bits")(("length", 0)),
+      Template("(if ($recv.isEmpty) 0 else $recv.last + 1)"))
+    assertEquals(ct.retargetRewrites("com.b.Flags")(("numBits", 0)),
+      Template("$recv.size"))
+  }
 }
