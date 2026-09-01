@@ -548,14 +548,14 @@ object CtorFunnel:
                 seededDemotion(cd, there.get) match
                   case Some(p) => out = out.updated(cd.symbol, p)
                   case scala.None =>
-                    // No local plan matches the published descriptor. The dependent does NOT
-                    // emit this class (it is non-owned), so the plan's content does not reach
-                    // emitted text. The fixpoint's withholding decision depends on whether the
-                    // plan is PARAMFUL, and the local plan correctly knows that from the Java —
-                    // the arity does not change, only the type names do (an opaque type the base's
-                    // retyping phases minted, D12/O8). So the local plan stands and the
-                    // disagreement is non-fatal: the dependent follows the base's published
-                    // signature at every call site through `coerceArgs` / `baseMemberUpstream`.
+                    // D15: the dependent does NOT emit this class (it is non-owned), so the
+                    // plan's content does not reach emitted text. The fixpoint's withholding
+                    // decision depends on whether the plan is PARAMFUL, and the local plan
+                    // correctly knows that from the Java. The descriptor disagreement is expected
+                    // when the base's retyping/opaque phases renamed parameter types and the
+                    // dependent did not re-derive (D12, O8). The dependent follows the base's
+                    // published signature at every call site through `coerceArgs` /
+                    // `baseMemberUpstream`. Non-fatal.
                     surface.gap(Surface.Gap(fqn,
                       s"$module published the primary `(${there.get})` for this class " +
                         s"(locally derived: `(${here})`). " +
@@ -571,8 +571,8 @@ object CtorFunnel:
                       Some(module), fatal = false,
                       fix = "§1(a) ENGINE, FOLLOWED (D15): the dependent follows the base's published " +
                         "constructor signature — the descriptor disagreement is expected (the " +
-                        "opaque/retyping phases do not re-derive over base units) and does not reach " +
-                        "emitted text"))
+                        "opaque/retyping phases do not re-derive over base units) and does not " +
+                        "reach emitted text"))
             case Surface.Answer.Unknown(why, module) =>
               // An `Unknown` about a class whose plan is INVARIANT is not a failure: the local
               // derivation is the base's answer and the contract would only have confirmed it. One

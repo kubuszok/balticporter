@@ -160,12 +160,12 @@ class BaseSurfaceSpec extends munit.FunSuite:
       "an argument-free `extends` from a class this run DOES emit must still withhold the promotion")
   }
 
-  test("D4 CROSS-CHECK: a non-wall class whose published row disagrees is FATAL, as an engine bug") {
-    // §8.11's pin: for a non-wall class the local derivation is a pure function of the base's Java,
-    // so it and the row MUST agree while both modules run one engine. That they do not means the
-    // engine that published the map and the one running now compute different signatures — which is
-    // the drift a purely local derivation cannot see, and the reason the row is kept for classes
-    // that need no seeding.
+  test("D15: a non-wall class whose published row disagrees is NON-FATAL — the dependent follows the base") {
+    // D15 (wave 3.1ab): the dependent does NOT emit the class, so the plan's content does not reach
+    // emitted text. The descriptor disagreement is expected when the base's retyping/opaque phases
+    // renamed parameter types and the dependent did not re-derive (D12, O8). The dependent follows
+    // the base's published constructor signature at call sites through `coerceArgs` /
+    // `baseMemberUpstream`.
     val (p, root) = model(basePkg, Map("q/Mine.java" -> "package q; public class Mine { }"))
     val wrong     = Surface.TypeShape(form = "class", primary = Some(balticporter.tir.Descriptor(
       List(balticporter.tir.Param.Named("String")))), primaryKind = "unique-root")
@@ -174,11 +174,13 @@ class BaseSurfaceSpec extends munit.FunSuite:
     val plans = CtorFunnel.Plans(p, Some(surface))
     plans(p.units.head) // force
 
+    // non-fatal gap, not a fatal error — the dependent follows the base's published plan
     val fatal = surface.gaps.filter(_.fatal)
-    assertEquals(clue(fatal).size, 1)
-    assertEquals(fatal.head.subject, "p.Base")
-    assert(clue(fatal.head.why).contains("(String)"), "the message names the ROW it disagrees with")
-    assert(clue(fatal.head.fix).startsWith("§1(a) ENGINE"), "…and which of §1's three kinds the fix is")
+    assertEquals(clue(fatal), Nil, "a descriptor disagreement on a non-owned type is not fatal (D15)")
+    val baseGaps = surface.gaps.filter(_.subject == "p.Base")
+    assertEquals(clue(baseGaps).size, 1, "still recorded as a gap for p.Base")
+    assert(clue(baseGaps.head.why).contains("(String)"), "the message names the ROW it disagrees with")
+    assert(clue(baseGaps.head.fix).contains("FOLLOWED"), "the fix says the dependent follows")
   }
 
   test("D4 CROSS-CHECK NEGATIVE: an AGREEING row is silent — the check is not noise") {

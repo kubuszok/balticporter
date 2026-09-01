@@ -48,7 +48,7 @@ class CollapseDivergenceSpec extends munit.FunSuite:
 
   private val pairs   = Map("p.Base#w" -> "getW/setW")
   private val asVar   = (_: String) => Target.Var
-  private val collapsed = base("base-mod", List("p.Base"), List("p.Base#w" -> "var"))
+  private val collapsed = base("base-mod", List("p.Base"), List("p.Base#getW" -> "var"))
 
   test("a base that COLLAPSED and a dependent that REFUSES is FATAL, and the gap names BOTH answers") {
     val gaps = gapsOf(
@@ -66,7 +66,7 @@ class CollapseDivergenceSpec extends munit.FunSuite:
   }
 
   test("…and the other direction too — a dependent that COLLAPSES what the base did not") {
-    val plain = base("base-mod", List("p.Base"), List("p.Base#w" -> ""))
+    val plain = base("base-mod", List("p.Base"), List("p.Base#getW" -> ""))
     val gaps  = gapsOf(log("p.Base#w" -> IdiomVerdict.Converted),
                                            List(plain), pairs, asVar)
     assertEquals(clue(gaps).size, 1)
@@ -77,7 +77,7 @@ class CollapseDivergenceSpec extends munit.FunSuite:
   test("AGREEMENT is silent — in both shapes") {
     assertEquals(gapsOf(log("p.Base#w" -> IdiomVerdict.Converted),
                                             List(collapsed), pairs, asVar), Nil)
-    val plain = base("base-mod", List("p.Base"), List("p.Base#w" -> ""))
+    val plain = base("base-mod", List("p.Base"), List("p.Base#getW" -> ""))
     assertEquals(gapsOf(
       log("p.Base#w" -> IdiomVerdict.Refused("NotRequested", "the port did not ask")),
       List(plain), pairs, asVar), Nil)
@@ -162,4 +162,28 @@ class CollapseDivergenceSpec extends munit.FunSuite:
     // …and a map from an engine that never carried the key answers "", which reaches no comparison:
     // `PortMap.freshness` calls such a map Stale and the base is refused wholesale.
     assertEquals(Surface.parseMember("vis=private").form, "")
+  }
+
+  test("D15 bug 2: lookup by ACCESSOR name, not property key — a key mismatch silently reads as 'no row'") {
+    // The port map keys member rows by the UPSTREAM accessor name (`Owner#getW`), while the
+    // BeanCollapse idiom log records by the PROPERTY key (`Owner#w`). The lookup must translate
+    // through the `pairs` table. Without the fix every pair whose property name differs from the
+    // accessor name was reported `unanswered` — 79 of them on the gdx-test port.
+    val accessorBase = base("base-mod", List("p.Base"),
+      List("p.Base#getW" -> "var"))  // upstream key is the ACCESSOR name
+    val accessorPairs = Map("p.Base#w" -> "getW/setW")
+    // The idiom log records by PROPERTY key
+    val gaps = gapsOf(
+      log("p.Base#w" -> IdiomVerdict.Converted),
+      List(accessorBase), accessorPairs, asVar)
+    assertEquals(clue(gaps), Nil, "the accessor key `getW` matches the map row and the two agree")
+
+    // …and a DISAGREEMENT is still reported when they disagree
+    val accessorBasePlain = base("base-mod", List("p.Base"),
+      List("p.Base#getW" -> ""))  // base did NOT collapse
+    val disagree = gapsOf(
+      log("p.Base#w" -> IdiomVerdict.Converted),
+      List(accessorBasePlain), accessorPairs, asVar)
+    assertEquals(clue(disagree).size, 1, "the lookup found the row and the two disagree")
+    assert(disagree.head.fatal, "a genuine disagreement is still fatal")
   }
