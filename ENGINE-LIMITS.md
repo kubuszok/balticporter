@@ -11709,6 +11709,38 @@ already-renamed dependent overrides. The ordering fix — run `followMemberRenam
 bean/nullary phases, then scope detection to owned declarations — is the open design. Wave 1.3's
 `policy 0 -> 2` refusals on dependents are the visible residue of the current re-detection.
 
+### D15. A dependent's locally-derived primary disagrees with the base's published one when retyping phases minted opaque types over base units — **base-surface 82 -> 22 (3 fatal -> 0, 79 unanswered -> 0). FOLLOWED (non-fatal)**
+
+Two bugs, both in the base-surface contract check (wave 3.1ab, `w12-base-collections`):
+
+**Bug 1 — primary descriptor mismatch.** `CtorFunnel.Plans.reconciled` compared the dependent's
+locally-derived primary against the base's published one. The published primary showed `(int,T)` for
+`GLTexture` (where `T` is `TextureHandle`, an opaque type the base's `PrimitiveToOpaqueTransform`
+minted) and `(Drawable,Scaling,Align)` for `Image`. The dependent derived `(int,int)` and
+`(Drawable,Scaling,int)` because the dependent's retyping phases are deliberately NOT allowed to
+re-derive over base units (D12, O8 wave 2.11 — `coerceArgs` reads a base callee's formals off the
+published port map for exactly this reason). The dependent does NOT emit these classes, so the
+descriptor disagreement does not reach emitted text. The local plan stands for the fixpoint (arity
+unchanged) and the dependent follows the base's published constructor signature at call sites
+through `coerceArgs`/`baseMemberUpstream`. Downgraded from FATAL to non-fatal gap.
+
+Measured: 0 of 16 test-port compile errors are at a constructor or super-call of any class among
+the 3 formerly-fatal or 22 gap rows. All 16 errors are from the collections-retarget wave
+(AnimationControllerTest, BitsTest, JsonMatcherTests, LongArrayTest).
+
+**Bug 2 — collapse key mismatch.** `PortRun.collapseDivergence` looked up the base map's member
+rows by the BeanCollapse property key (`Owner#property`, e.g. `GLProfiler#listener`) instead of by
+the upstream accessor name (`Owner#getProperty`, e.g. `GLProfiler#getListener`). The port map keys
+member rows by the upstream Java name. Every lookup missed and reported `unanswered` — 79 of them.
+Fixed by translating the property key through the `pairs` table to the upstream getter name.
+
+Numbers: `base-surface 82 -> 22` (3 fatal -> 0, 79 unanswered -> 0), 136 collapse verdicts compared
+0 disagreeing. The 22 remaining gaps are non-fatal: 3 primary descriptor disagreements (D15
+FOLLOWED) + 19 pre-existing non-fatal gaps (overload disagreements on `PooledLinkedList#size` etc.).
+
+*Fix kind: (a) universal. The dependent follows the base's published constructor plan for types it
+does not emit — the same rule as `followMemberRenames` (D14).*
+
 ## 9.5 Control flow — what a `break` really leaves, and the boundary that steals it
 
 ### F1. A java LABEL sits on ANY statement, not only a loop. **55 → 10 residues**

@@ -11629,3 +11629,8 @@ matching the pattern of the four wave-2.1 helpers. The three bare sites (`fieldS
 `externalFieldType`, `erasedReceiverView`) would have crashed on a noClasspath resolution failure;
 now they gracefully decline. 0 digests by construction. See `ENGINE-LIMITS.md` 0.1 wave 2.15
 paragraph for the complete census table.
+
+#### 3.1ab base-surface primary
+
+- `06ad250b` base-surface D15: dependent follows published primary, collapse key fix -- base-surface 82->22 (3 fatal->0, 79 unanswered->0)
+- `26045f63` D15 specs: CollapseDivergenceSpec accessor-key test, BaseSurfaceSpec D15 update -- 2625 specs 0 failures

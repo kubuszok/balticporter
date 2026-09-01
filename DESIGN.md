@@ -2916,6 +2916,16 @@ dependent's own code. The base's REFUSALS have no `name=`/`form=` row, so they a
 construction. Measured at visui 164 -> 7 (floor), closing the whole of the dependent regression the
 switches produced (six ports).
 
+#### 8.3.2 Following the base's PUBLISHED CONSTRUCTOR PLAN — D15
+
+A dependent FOLLOWS the base's published constructor plan for types it does not emit. The same rule
+as `followMemberRenames` (D14, §8.3.1): a dependent's retyping/opaque phases are deliberately NOT
+allowed to re-derive over base units (D12, O8 wave 2.11), so `CtorFunnel.Plans.reconciled` sees a
+descriptor mismatch (`(int,int)` locally vs `(int,T)` published) that is expected rather than a bug.
+The local plan stands for the fixpoint (arity unchanged), and the dependent follows the base's
+published signature at call sites through `coerceArgs`/`baseMemberUpstream`. The disagreement is
+recorded as a non-fatal gap.
+
 ### 8.4 Globals → context — replace the core, keep the shell
 
 **Decision.** The existing globals transform's **closure and boundary handling are replaced**; its
