@@ -23,11 +23,14 @@ import lowlevel.Nullable
   *
   * @author David Saltares (original implementation)
   */
-final class ImmutableArray[A](private val array: DynamicArray[A]) extends Iterable[A] {
+final class ImmutableArray[A](private val array: DynamicArray[A]) extends balticporter.runtime.JavaIterable[A] {
 
-  def this() = this(DynamicArray[A]())
+  def this() = this({
+    given lowlevel.MkArray[A] = lowlevel.MkArray.anyRef.asInstanceOf[lowlevel.MkArray[A]]
+    DynamicArray[A]()
+  })
 
-  override def size: Int = array.size
+  def size: Int = array.size
 
   def apply(index: Int): A = array(index)
 
@@ -61,7 +64,10 @@ final class ImmutableArray[A](private val array: DynamicArray[A]) extends Iterab
     case _ => false
   }
 
-  override def iterator: Iterator[A] = array.iterator
+  /** Java's `iterator()` has parens; the mechanically ported test calls it that way.
+    * `JavaIterable.iterator()` has parens too (java's own arity), so the override matches. */
+  override def iterator(): balticporter.runtime.JavaIterator[A] =
+    balticporter.runtime.JavaIterator.from(array.iterator)
 
   override def toString(): String = array.toString()
 
