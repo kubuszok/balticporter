@@ -351,6 +351,22 @@ object Decision:
       * construction inside its body needs the given in scope — the class's callers supply it by
       * inline given resolution. */
     case RequiredGiven
+    /** a local definition or private member was DELETED, its binding DISCARDED (kept the
+      * side-effecting init as a bare expression), or SUPPRESSED with `@nowarn("msg=unused")`,
+      * because Scala's `-Wunused:locals,privates` (part of sge/ssg strict flags under `-Werror`)
+      * reports a symbol Java compiles silently.
+      *
+      * Three sub-actions, from most aggressive to least:
+      *  - '''deleted''' — side-effect-free init, never read. Safe to remove entirely.
+      *  - '''discarded-binding''' — side-effecting init, never read. The expression is kept as a
+      *    bare statement and the binding dropped.
+      *  - '''suppressed''' — `@nowarn("msg=unused")`. Used for `serialVersionUID` (the JVM reads
+      *    it reflectively), for private members whose init may have side effects, and for the
+      *    counted refusal (a private field a framework might read reflectively, K21's shape).
+      *
+      * §1(a) universal — Java has no `-Wunused` equivalent; every port under strict flags needs
+      * this. */
+    case UnusedSymbolHandled
 
   val Header ="#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 
