@@ -63,13 +63,14 @@ class NullabilitySpec extends PortSuite:
 
   test("the consumed annotation is STRIPPED — the type states the fact, and the jar is not re-imposed") {
     // Counted, because "the marker is gone" and "the marker is gone FROM THE RIGHT DECLARATIONS"
-    // are different claims and only the second is worth asserting. THREE markers reach the emitted
-    // baseline — `find`, `pick`, `count` — and not five: the emitter renders a class's and a
-    // method's annotations and neither a field's nor a parameter's, so `parent`'s and `spread`'s
-    // are invisible in the output whatever this phase does. The phase consumes `find`'s and
-    // `pick`'s and refuses `count`'s, so exactly the refused one survives.
+    // are different claims and only the second is worth asserting. FOUR markers reach the emitted
+    // baseline — `find`, `pick`, `count`, `parent` — and not five: the emitter renders a class's, a
+    // method's and (since wave 3.1ad, `TirEmitter.valDef` calling `annots`) a field's annotations,
+    // and not a parameter's, so `spread`'s is invisible in the output whatever this phase does. The
+    // phase consumes `find`'s, `pick`'s and `parent`'s and refuses `count`'s, so exactly the refused
+    // one survives.
     def markers(s: String) = s.linesIterator.count(_.trim == "@demo.Null")
-    assertEquals(markers(port(java).out), 3)
+    assertEquals(markers(port(java).out), 4)
     assertEquals(markers(port(java, phase()).out), 1)
   }
 
