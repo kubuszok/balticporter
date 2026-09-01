@@ -11634,3 +11634,7 @@ paragraph for the complete census table.
 
 - `06ad250b` base-surface D15: dependent follows published primary, collapse key fix -- base-surface 82->22 (3 fatal->0, 79 unanswered->0)
 - `26045f63` D15 specs: CollapseDivergenceSpec accessor-key test, BaseSurfaceSpec D15 update -- 2625 specs 0 failures
+
+#### 3.1ae gdx-test residue
+
+- `a45b5225` gdx-test 16->0: LongArray add(4)/shrink/ensureCapacity/setSize/resize return-array Templates; Bits copy ctor desc-keyed; JsonMatcherTests toString body substitution (StringBuilder); Chain type propagation fix (a) engine. gdx-test 0/0/0/106, 156 pass 35 fail 0 skip, expected-lost 30
