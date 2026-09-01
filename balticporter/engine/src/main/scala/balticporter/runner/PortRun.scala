@@ -3111,6 +3111,16 @@ object PortRun:
         m -> map.entries.filter(e => e.kind == "member" &&
           e.disposition != PortMap.Disposition.Dropped)
           .map(e => e.upstream -> e.memberShape.form).toMap).toMap
+      // The idiom log records BeanCollapse by the PROPERTY key (`Owner#property`), while the port
+      // map keys member rows by the UPSTREAM ACCESSOR name (`Owner#getProperty`). The `pairs` map
+      // bridges the two: its key is the property (`Owner#property`) and its value names the accessor
+      // (`getProperty` or `getProperty/setProperty`). Build a lookup from property key to the
+      // upstream accessor key the base map uses — the GETTER, which is the one the port map carries
+      // the `form=` row on (the collapsed property replaces the getter row, not the setter).
+      def accessorKey(propertyKey: String): String =
+        val owner = propertyKey.takeWhile(_ != '#')
+        pairs.get(propertyKey).map(_.takeWhile(_ != '/')).filter(_.nonEmpty)
+          .map(g => s"$owner#$g").getOrElse(propertyKey)
       val mine = idioms.all.iterator.collect {
         case c if c.kind == IdiomKind.BeanCollapse => c.subject -> (c.verdict match
           case IdiomVerdict.Converted => targetOf(c.subject).config
@@ -3126,7 +3136,8 @@ object PortRun:
       yield (key, derived, module)
       val out = for
         (key, derived, module) <- asked
-        gap            <- memberForm(module).get(key) match
+        upstreamKey             = accessorKey(key)
+        gap            <- memberForm(module).get(upstreamKey) match
           case Some(published) if published == derived => Nil
           case Some(published) =>
             List(Surface.Gap(key,

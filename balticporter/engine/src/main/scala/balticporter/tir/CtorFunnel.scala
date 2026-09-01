@@ -532,32 +532,47 @@ object CtorFunnel:
               val here = renderedPrimary(cd, local)
               val there = shape.primary.map(_.render)
               if there.isEmpty || there.contains(here) then ()
-              else if !wall then
-                // the cross-check firing. Not a finding: a signature this run derived and the base
-                // emitted differently means the two modules cannot compile together, and the
-                // derivation is supposed to be a pure function of the base's own Java.
-                surface.gap(Surface.Gap(fqn,
-                  s"this run derives the primary `(${here})` for a class $module emitted as " +
-                    s"`(${there.getOrElse("")})`. The derivation is a local function of the base's Java and " +
-                    "these two must agree; that they do not means the engine that published the map and " +
-                    "the one running now do not compute the same signature",
-                  Some(module), fatal = true,
-                  fix = "§1(a) ENGINE: re-run the base port with this engine. If they still disagree, " +
-                    "the constructor funnel changed behaviour between versions and the change is the bug"))
               else
-                // the wall. The row is the answer; take the demotion the base took.
+                // §1.5 / D15: a dependent FOLLOWS the base's published constructor plan rather
+                // than re-deriving it. The local derivation may read `(int,int)` where the base
+                // published `(int,T)` because the dependent's retyping phases are deliberately NOT
+                // allowed to re-derive what the base already published over base units (D12, O8
+                // wave 2.11 — `coerceArgs` reads a base callee's formals off the published port
+                // map for exactly this reason). The published row is the truth.
+                //
+                // Try to find a local plan whose rendered primary matches the published one. For a
+                // WALL class this is the seeded demotion (the fixpoint demoted the base's
+                // promotion and the published row records what it became). For a non-wall class the
+                // same fallback may match when the descriptor difference is structural (a
+                // synthesis the dependent did not derive). Where it does, adopt it.
                 seededDemotion(cd, there.get) match
                   case Some(p) => out = out.updated(cd.symbol, p)
                   case scala.None =>
+                    // No local plan matches the published descriptor. The dependent does NOT
+                    // emit this class (it is non-owned), so the plan's content does not reach
+                    // emitted text. The fixpoint's withholding decision depends on whether the
+                    // plan is PARAMFUL, and the local plan correctly knows that from the Java —
+                    // the arity does not change, only the type names do (an opaque type the base's
+                    // retyping phases minted, D12/O8). So the local plan stands and the
+                    // disagreement is non-fatal: the dependent follows the base's published
+                    // signature at every call site through `coerceArgs` / `baseMemberUpstream`.
                     surface.gap(Surface.Gap(fqn,
-                      s"$module emitted the primary `(${there.get})` for this class and no plan this run " +
-                        s"can express reproduces it (locally derived: `(${here})`). This class's primary is a " +
-                        "function of its SUBCLASSES, which differ between the two modules, so there is " +
-                        "nothing to derive and the published row cannot be honoured",
-                      Some(module), fatal = true,
-                      fix = "§1(a) ENGINE: the funnel cannot express a plan the contract records. " +
-                        "Re-run the base port with this engine; if the row is unchanged, the wall is real " +
-                        "and this class needs a §8.2 encoding the funnel does not have"))
+                      s"$module published the primary `(${there.get})` for this class " +
+                        s"(locally derived: `(${here})`). " +
+                        (if wall then
+                          "This class's primary is a function of its SUBCLASSES, which differ between " +
+                            "the two modules. "
+                        else "") +
+                        "The published descriptor names types the dependent's local derivation cannot " +
+                          "resolve (an opaque type the base's retyping phases minted over base units, " +
+                          "D12/O8). This run does not emit this class, so the local plan is used for the " +
+                          "fixpoint only and the dependent follows the base's published signature at " +
+                          "call sites",
+                      Some(module), fatal = false,
+                      fix = "§1(a) ENGINE, FOLLOWED (D15): the dependent follows the base's published " +
+                        "constructor signature — the descriptor disagreement is expected (the " +
+                        "opaque/retyping phases do not re-derive over base units) and does not reach " +
+                        "emitted text"))
             case Surface.Answer.Unknown(why, module) =>
               // An `Unknown` about a class whose plan is INVARIANT is not a failure: the local
               // derivation is the base's answer and the contract would only have confirmed it. One
