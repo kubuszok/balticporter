@@ -506,4 +506,48 @@ class CollectionsRetargetRewriteSpec extends munit.FunSuite {
     assertEquals(ct.retargetRewrites("com.a.X")(("items", 0)), IndexedField("items"))
     assertEquals(ct.retargetRewrites("com.b.Y")(("data", 0)), IndexedField("data"))
   }
+
+  // ---- Construct.dropTrailing: supplier-derived element type ----
+  // The engine's retargetConstruct derives element types from a dropped supplier (MethodRef)
+  // when the constructor type is raw or Object-applied; this is a §1(a) fact about raw types
+  // and ArraySupplier. The spec tests construction-time properties only; the runtime derivation
+  // is exercised through the SortTest/TextureAtlas end-to-end gate (gdx-test-measure).
+
+  test("Construct with dropTrailing > 0 fingerprints differently from dropTrailing = 0") {
+    val with0 = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(
+        ("<init>", 3) -> Construct("scala.X", "apply", dropTrailing = 0))))
+    val with1 = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(
+        ("<init>", 3) -> Construct("scala.X", "apply", dropTrailing = 1))))
+    assertNotEquals(with0.surfaceFingerprint, with1.surfaceFingerprint)
+  }
+
+  test("Construct.dropTrailing value is accessible for traceability") {
+    val c = Construct("scala.X", "apply", dropTrailing = 2)
+    assertEquals(c.dropTrailing, 2)
+    // The toString includes the numeric value (position-based rendering).
+    assert(clue(c.toString).contains("2"))
+  }
+
+  // ---- Template: slot-derived element type ----
+  // A Template with $T0 resolves the type argument from the receiver's applied type at render
+  // time. The spec verifies construction — runtime rendering is an integration concern.
+
+  test("Template with $T0 at an <init> entry is accepted") {
+    val ct = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(
+        ("<init>", 1) -> Template("$Target.from[$T0]($0)"))))
+    assertEquals(ct.retargetRewrites("com.a.X").size, 1)
+  }
+
+  test("Template fingerprint changes with the expression") {
+    val a = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(
+        ("<init>", 1) -> Template("$Target.from[$T0]($0)"))))
+    val b = new CollectionsTransform(retarget = Map("com.a.X" -> "scala.X"),
+      retargetRewrites = Map("com.a.X" -> Map(
+        ("<init>", 1) -> Template("$Target.apply[$T0]($0)"))))
+    assertNotEquals(a.surfaceFingerprint, b.surfaceFingerprint)
+  }
 }

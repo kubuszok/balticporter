@@ -7406,18 +7406,41 @@ final class CollectionsTransform(
               // sge's `DynamicArray.createRef` does). Where it is not, the compile error is
               // COUNTED on the `collection-retarget` lane. A wildcard (`TypeBounds`) becomes
               // `AnyRef` — `[?]` is not writable as a method type argument (§4.56).
-              val targs: List[TypeTree] = n.tpe match
+              val targsFromType: List[TypeTree] = n.tpe match
                 case TypeRepr.AppliedType(_, as) =>
                   as.map {
                     case _: TypeRepr.TypeBounds =>
                       TypeTree(TypeRepr.TypeRef(TypeRepr.NoPrefix, objectSym), t.origin)
                     case a => TypeTree(a, t.origin)
                   }
-                case _ =>
-                  // RAW java source (`new Array()` at a raw declaration): the type is unapplied.
-                  // The frontend's unchecked conversion usually provides the declared type as
-                  // the type args, so this path is rare.
-                  Nil
+                case _ => Nil
+              // --- 3.1af: derive element type from a dropped supplier argument ---
+              // A raw-type constructor (`new Array(true, n, Sprite[]::new)`) interns with an
+              // unapplied type (targsFromType = Nil) or with Object as its type arg. When
+              // dropTrailing > 0, the dropped argument may be a Tree.MethodRef for an array
+              // constructor (`Sprite[]::new`) whose qualifier carries the COMPONENT type.
+              // Derive [Sprite] from it rather than emitting [Object] or nothing — §4.56's
+              // rule: `[Object]` there is a fabricated fact. This is (a) universal — a fact
+              // about raw types and ArraySupplier, true of every codebase.
+              val targs: List[TypeTree] =
+                // `[Object]` is what the frontend's unchecked conversion fills a RAW `new` with;
+                // it is not a fact about the element and is replaced exactly as `Nil` is.
+                val allObject = targsFromType.nonEmpty && targsFromType.forall(tt => headSym(tt.tpe).contains(objectSym))
+                if dropTrailing > 0 && (targsFromType.isEmpty || allObject) then
+                  val droppedArgs = t.args.takeRight(dropTrailing)
+                  val supplierDerived = droppedArgs.collectFirst {
+                    case mr: Tree.MethodRef => mr.qualifier match
+                      case Left(tt) => tt.tpe match
+                        case TypeRepr.AppliedType(tc, List(componentType)) if headSym(tc).flatMap(p.symbolOf).exists(_.fullName == "scala.Array") =>
+                          List(TypeTree(componentType, t.origin))
+                        case _ => Nil
+                      case Right(term) => term.tpe match
+                        case TypeRepr.AppliedType(tc, List(componentType)) if headSym(tc).flatMap(p.symbolOf).exists(_.fullName == "scala.Array") =>
+                          List(TypeTree(componentType, t.origin))
+                        case _ => Nil
+                  }
+                  supplierDerived.getOrElse(targsFromType)
+                else targsFromType
               val ident = Tree.Ident(factorySym, TypeRepr.NoType, t.origin)
               val fun: Term =
                 if targs.nonEmpty then Tree.TypeApply(ident, targs, TypeRepr.NoType, t.origin)

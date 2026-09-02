@@ -59,6 +59,10 @@ object RetargetBoundaryCheck:
     /** a cast TO the retarget target from something that is not one — a runtime `ClassCastException`
       * with a green compile. */
     case CastToTarget
+    /** `remove()` on a `JavaIterator` BRIDGED from a retarget target's own `iterator` — the bridge
+      * has no handle on the collection, so its `remove` is the runtime's own
+      * `UnsupportedOperationException`, and java's removing iteration is a counted REFUSAL. */
+    case IteratorRemove
 
   object Issue:
     /** which of §1's three kinds the fix is — the thing a bare typer error cannot say, and here
@@ -80,6 +84,13 @@ object RetargetBoundaryCheck:
           "and the value did not, so this is a `ClassCastException` at run time on a port that " +
           "compiles clean (CLAUDE.md §4.4's class of defect). Refuse the retarget for this type or " +
           "wrap the operand."
+      case IteratorRemove =>
+        "§1(a) engine gap, REFUSED and counted: java's `Iterator.remove()` mutates the collection " +
+          "the iterator came from, and the scala target's `iterator` is a read-only view, so " +
+          "`JavaIterator.from(x.iterator)` can only refuse — `UnsupportedOperationException` at run " +
+          "time, on a port that compiles clean. A faithful image is a removing iterator minted " +
+          "OVER THE COLLECTION (index-tracking, calling the target's own remove), which is a " +
+          "runtime shim the bridge does not have yet (ENGINE-LIMITS.md K34)."
 
   /** one producer-direction site. `produced` is the java type the value really has; `slot` is what
     * the emitted code now says. */
@@ -132,10 +143,36 @@ object RetargetBoundaryCheck:
       def constructs(t: Tree.Apply): Boolean =
         t.fun.isInstanceOf[Tree.New] || program.symbolOf(t.method).exists(_.name == "<init>")
 
+      def fullNameOf(s: SymId): Option[String] = program.symbolOf(s).map(_.fullName)
+      val iteratorFromFqn   = "balticporter.runtime.JavaIterator.from"
+      val iteratorRemoveFqn = "balticporter.runtime.JavaIterator#remove"
+
       val scan = new Phase:
         def name: String = "collection-retarget-check"
 
+        // Per enclosing MEMBER, the retarget sources whose `iterator` this member bridged through
+        // `JavaIterator.from` — read off the bridge's own shape (`from(<recv>.iterator)`), which
+        // is the phase's own emission and not a name test on the receiver. A `remove()` on a
+        // `JavaIterator` in the same member is then attributed to them: the bridge value has no
+        // provenance past its declaration, so the member is the honest unit of attribution.
+        private var bridgedHere: List[String] = Nil
+        private var removesHere: List[(Origin, SymId)] = Nil
+
+        override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef =
+          bridgedHere = Nil; removesHere = Nil
+          val r = super.transformDefDef(d)
+          for src <- bridgedHere.distinct; (o, m) <- removesHere do
+            out += Finding(Issue.IteratorRemove, "iterator remove", src, retargeted(src), o, m)
+          r
+
         override def transformApply(t: Tree.Apply)(using Program): Term =
+          if fullNameOf(t.method).contains(iteratorFromFqn) then
+            t.args match
+              case Tree.Select(recv, _, _, _) :: Nil =>
+                targeted(recv.tpe).foreach(tt => bridgedHere ::= sourceOf(tt))
+              case _ => ()
+          if fullNameOf(t.method).contains(iteratorRemoveFqn) then
+            removesHere ::= (t.origin, t.method)
           if external(t.method) && !constructs(t) then
             targeted(t.tpe).foreach(tt => out += Finding(Issue.ExternalProducer, "call",
               sourceOf(tt), tt, t.origin, t.method))
