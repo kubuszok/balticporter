@@ -14729,8 +14729,6 @@ A base retarget table is measured on EVERY dependent before it lands. The corpus
 are a mix of section 1(a) engine bugs (O9, collectPhase), section 1(b) policy gaps (missing Entry
 retargets, nullableMembers arity), and counted residuals (Tuple2 immutability, companion references).
 
-### K37. Pool class-to-trait: emitted subclasses cannot bridge Pool-as-class and Pool-as-trait -- **OPEN**
-
 ### K38. Pool class-to-trait: emitted subclasses cannot bridge Pool-as-class and Pool-as-trait -- **OPEN**
 
 **(b) engine mechanism built, policy BLOCKED on Pool drop+inject.** sge hand-ported
