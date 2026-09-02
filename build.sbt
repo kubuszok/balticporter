@@ -367,21 +367,34 @@ lazy val corpus = project
 // them all while `sbt compile` stays the engine's.
 // ---------------------------------------------------------------------------------------------
 
+// The port's ACTUAL directory — `projectMatrix` sets `baseDirectory` to `.sbt/matrix/<id>`,
+// not to the `in(file(...))` path, so source generators must use the REAL directory. Each port
+// passes its directory name (the part after `ported/`) to these helpers, and the actual file
+// path is resolved INSIDE each Def.task via `(ThisBuild / baseDirectory).value`.
+
 // Shared settings every ported project carries.
-lazy val portSettings = Seq(
+def portSettings(dir: String): Seq[Setting[?]] = Seq(
   publish / skip := true,
   scalacOptions := Seq("-nowarn"),
-  cleanFiles += baseDirectory.value / "src_managed",
+  cleanFiles += (ThisBuild / baseDirectory).value / "ported" / dir / "src_managed",
 )
 
 // Source generators for src_managed/{main,test}/scala — the emitted build products.
-lazy val portSourceGenerators = Seq(
+// Uses (ThisBuild / baseDirectory) / "ported" / dir (the real directory) instead of
+// baseDirectory, because projectMatrix resolves baseDirectory to .sbt/matrix/<id> and the
+// sourceGenerators would find an empty directory there.
+def portSourceGenerators(dir: String): Seq[Setting[?]] = Seq(
   Compile / sourceGenerators += Def.task {
-    ((baseDirectory.value / "src_managed" / "main" / "scala") ** "*.scala").get()
+    val pd = (ThisBuild / baseDirectory).value / "ported" / dir
+    ((pd / "src_managed" / "main" / "scala") ** "*.scala").get()
   }.taskValue,
   Test / sourceGenerators += Def.task {
-    ((baseDirectory.value / "src_managed" / "test" / "scala") ** "*.scala").get()
+    val pd = (ThisBuild / baseDirectory).value / "ported" / dir
+    ((pd / "src_managed" / "test" / "scala") ** "*.scala").get()
   }.taskValue,
+  // Also add the port's src/ directory to unmanaged sources (for hand-written shims/tests).
+  Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / dir / "src" / "main" / "scala",
+  Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / dir / "src" / "test" / "scala",
 )
 
 // JS/Native platform settings shared by every port's cross rows.
@@ -399,8 +412,8 @@ val portNativeSettings: Seq[Setting[?]] = Seq(
 // ---------------------------------------------------------------------------------------------
 lazy val `port-sge` = (projectMatrix in file("ported/sge"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
-  .settings(portSettings *)
-  .settings(portSourceGenerators *)
+  .settings(portSettings("sge") *)
+  .settings(portSourceGenerators("sge") *)
   .settings(
     name := "balticporter-port-sge",
     libraryDependencies ++= Seq(
@@ -423,8 +436,8 @@ lazy val `port-sgeJVM`: Project = `port-sge`.jvm(scalaV)
 lazy val `port-sge-ecs` = (projectMatrix in file("ported/sge-ecs"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
   .dependsOn(`port-sge`)
-  .settings(portSettings *)
-  .settings(portSourceGenerators *)
+  .settings(portSettings("sge-ecs") *)
+  .settings(portSourceGenerators("sge-ecs") *)
   .settings(
     name := "balticporter-port-sge-ecs",
     libraryDependencies ++= Seq(
@@ -443,8 +456,8 @@ lazy val `port-sge-ecs` = (projectMatrix in file("ported/sge-ecs"))
 // ---------------------------------------------------------------------------------------------
 lazy val `port-sge-graphs` = (projectMatrix in file("ported/sge-graphs"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
-  .settings(portSettings *)
-  .settings(portSourceGenerators *)
+  .settings(portSettings("sge-graphs") *)
+  .settings(portSourceGenerators("sge-graphs") *)
   .settings(
     name := "balticporter-port-sge-graphs",
     libraryDependencies ++= Seq(
@@ -463,8 +476,8 @@ lazy val `port-sge-graphs` = (projectMatrix in file("ported/sge-graphs"))
 lazy val `port-sge-anim8` = (projectMatrix in file("ported/sge-anim8"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
   .dependsOn(`port-sge`)
-  .settings(portSettings *)
-  .settings(portSourceGenerators *)
+  .settings(portSettings("sge-anim8") *)
+  .settings(portSourceGenerators("sge-anim8") *)
   .settings(
     name := "balticporter-port-sge-anim8",
     libraryDependencies ++= Seq(
@@ -481,8 +494,8 @@ lazy val `port-sge-anim8` = (projectMatrix in file("ported/sge-anim8"))
 // ---------------------------------------------------------------------------------------------
 lazy val `port-sge-noise` = (projectMatrix in file("ported/sge-noise"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
-  .settings(portSettings *)
-  .settings(portSourceGenerators *)
+  .settings(portSettings("sge-noise") *)
+  .settings(portSourceGenerators("sge-noise") *)
   .settings(name := "balticporter-port-sge-noise")
   .jvmPlatform(scalaVersions = Seq(scalaV))
   .jsPlatform(scalaVersions = Seq(scalaV), settings = portJsSettings)
@@ -494,8 +507,8 @@ lazy val `port-sge-noise` = (projectMatrix in file("ported/sge-noise"))
 // ---------------------------------------------------------------------------------------------
 lazy val `port-sge-jbump` = (projectMatrix in file("ported/sge-jbump"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
-  .settings(portSettings *)
-  .settings(portSourceGenerators *)
+  .settings(portSettings("sge-jbump") *)
+  .settings(portSourceGenerators("sge-jbump") *)
   .settings(name := "balticporter-port-sge-jbump")
   .jvmPlatform(scalaVersions = Seq(scalaV))
   .jsPlatform(scalaVersions = Seq(scalaV), settings = portJsSettings)
@@ -507,8 +520,8 @@ lazy val `port-sge-jbump` = (projectMatrix in file("ported/sge-jbump"))
 lazy val `port-sge-gltf` = (projectMatrix in file("ported/sge-gltf"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
   .dependsOn(`port-sge`)
-  .settings(portSettings *)
-  .settings(portSourceGenerators *)
+  .settings(portSettings("sge-gltf") *)
+  .settings(portSourceGenerators("sge-gltf") *)
   .settings(
     name := "balticporter-port-sge-gltf",
     libraryDependencies ++= Seq(
@@ -528,8 +541,8 @@ lazy val `port-sge-gltf` = (projectMatrix in file("ported/sge-gltf"))
 lazy val `port-sge-screens` = (projectMatrix in file("ported/sge-screens"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
   .dependsOn(`port-sge`)
-  .settings(portSettings *)
-  .settings(portSourceGenerators *)
+  .settings(portSettings("sge-screens") *)
+  .settings(portSourceGenerators("sge-screens") *)
   .settings(
     name := "balticporter-port-sge-screens",
     libraryDependencies ++= Seq(
@@ -547,8 +560,8 @@ lazy val `port-sge-screens` = (projectMatrix in file("ported/sge-screens"))
 lazy val `port-sge-vfx` = (projectMatrix in file("ported/sge-vfx"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
   .dependsOn(`port-sge`)
-  .settings(portSettings *)
-  .settings(portSourceGenerators *)
+  .settings(portSettings("sge-vfx") *)
+  .settings(portSourceGenerators("sge-vfx") *)
   .settings(
     name := "balticporter-port-sge-vfx",
     libraryDependencies ++= Seq(
@@ -566,8 +579,8 @@ lazy val `port-sge-vfx` = (projectMatrix in file("ported/sge-vfx"))
 lazy val `port-sge-ai` = (projectMatrix in file("ported/sge-ai"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
   .dependsOn(`port-sge`)
-  .settings(portSettings *)
-  .settings(portSourceGenerators *)
+  .settings(portSettings("sge-ai") *)
+  .settings(portSourceGenerators("sge-ai") *)
   .settings(
     name := "balticporter-port-sge-ai",
     libraryDependencies ++= Seq(
@@ -588,8 +601,8 @@ lazy val `port-sge-ai` = (projectMatrix in file("ported/sge-ai"))
 lazy val `port-sge-textra` = (projectMatrix in file("ported/sge-textra"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
   .dependsOn(`port-sge`)
-  .settings(portSettings *)
-  .settings(portSourceGenerators *)
+  .settings(portSettings("sge-textra") *)
+  .settings(portSourceGenerators("sge-textra") *)
   .settings(
     name := "balticporter-port-sge-textra",
     libraryDependencies ++= Seq(
@@ -607,8 +620,8 @@ lazy val `port-sge-textra` = (projectMatrix in file("ported/sge-textra"))
 lazy val `port-sge-visui` = (projectMatrix in file("ported/sge-visui"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
   .dependsOn(`port-sge`)
-  .settings(portSettings *)
-  .settings(portSourceGenerators *)
+  .settings(portSettings("sge-visui") *)
+  .settings(portSourceGenerators("sge-visui") *)
   .settings(
     name := "balticporter-port-sge-visui",
     libraryDependencies ++= Seq(
@@ -626,8 +639,8 @@ lazy val `port-sge-visui` = (projectMatrix in file("ported/sge-visui"))
 // ---------------------------------------------------------------------------------------------
 lazy val `port-sge-visui-usl` = (projectMatrix in file("ported/sge-visui-usl"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
-  .settings(portSettings *)
-  .settings(portSourceGenerators *)
+  .settings(portSettings("sge-visui-usl") *)
+  .settings(portSourceGenerators("sge-visui-usl") *)
   .settings(
     name := "balticporter-port-sge-visui-usl",
     libraryDependencies ++= Seq(
@@ -645,8 +658,8 @@ lazy val `port-sge-visui-usl` = (projectMatrix in file("ported/sge-visui-usl"))
 // ---------------------------------------------------------------------------------------------
 lazy val `port-ssg-liquid` = (projectMatrix in file("ported/ssg-liquid"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
-  .settings(portSettings *)
-  .settings(portSourceGenerators *)
+  .settings(portSettings("ssg-liquid") *)
+  .settings(portSourceGenerators("ssg-liquid") *)
   .settings(
     name := "balticporter-port-ssg-liquid",
     libraryDependencies ++= Seq(
@@ -673,8 +686,8 @@ lazy val `port-ssg-liquid` = (projectMatrix in file("ported/ssg-liquid"))
 // ---------------------------------------------------------------------------------------------
 lazy val `port-ssg-md` = (projectMatrix in file("ported/ssg-md"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
-  .settings(portSettings *)
-  .settings(portSourceGenerators *)
+  .settings(portSettings("ssg-md") *)
+  .settings(portSourceGenerators("ssg-md") *)
   .settings(
     name := "balticporter-port-ssg-md",
     libraryDependencies ++= Seq(
@@ -693,8 +706,8 @@ lazy val `port-ssg-md` = (projectMatrix in file("ported/ssg-md"))
 lazy val `port-ssg-md-ext` = (projectMatrix in file("ported/ssg-md-ext"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
   .dependsOn(`port-ssg-md`)
-  .settings(portSettings *)
-  .settings(portSourceGenerators *)
+  .settings(portSettings("ssg-md-ext") *)
+  .settings(portSourceGenerators("ssg-md-ext") *)
   .settings(
     name := "balticporter-port-ssg-md-ext",
     libraryDependencies ++= Seq(
