@@ -181,6 +181,8 @@ final class ClassToTraitTransform(
           if m.index < superArgs.size then
             val tpe = if m.index < spec.formalTypes.size then spec.formalTypes(m.index) else superArgs(m.index).tpe
             Some(mkVal(m, tpe, Some(superArgs(m.index)), origin, cd.symbol, cdSym))
+          else if m.index < spec.defaults.size && m.index < spec.formalTypes.size then
+            Some(mkVal(m, spec.formalTypes(m.index), Some(spec.defaults(m.index)), origin, cd.symbol, cdSym))
           else None
         }
       case None =>
@@ -243,12 +245,17 @@ final class ClassToTraitTransform(
               case Some(anon) =>
                 val origin = app.origin
                 val anonSym = program.symbolOf(anon.symbol).getOrElse(return app)
-                // WITH args: override vals from the actual args. WITHOUT args: from defaults.
+                // WITH args: override vals from the actual args; indices beyond args.size
+                // fall back to defaults (a partial constructor: Pool(16) delegates to
+                // Pool(16, Integer.MAX_VALUE), so arg 0 is actual and arg 1 is the default).
+                // WITHOUT args: all from defaults.
                 val overrideVals = if app.args.nonEmpty then
                   spec.mappings.flatMap { m =>
                     if m.index < app.args.size then
                       val tpe = if m.index < spec.formalTypes.size then spec.formalTypes(m.index) else app.args(m.index).tpe
                       Some(mkVal(m, tpe, Some(app.args(m.index)), origin, anon.symbol, anonSym))
+                    else if m.index < spec.defaults.size && m.index < spec.formalTypes.size then
+                      Some(mkVal(m, spec.formalTypes(m.index), Some(spec.defaults(m.index)), origin, anon.symbol, anonSym))
                     else None
                   }
                 else if spec.defaults.size >= spec.mappings.size then
@@ -266,6 +273,7 @@ final class ClassToTraitTransform(
                 if app.args.nonEmpty then Tree.Apply(n, Nil, app.method, app.tpe, app.origin)
                 else app
           case _ => app
+
 
   // ---- helpers ----
 
