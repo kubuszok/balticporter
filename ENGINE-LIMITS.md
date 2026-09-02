@@ -10602,6 +10602,35 @@ hit), and `sbt --client shutdown` is clean. The `jstack` watchdog (`sbt_watchdog
 stale logs and can diagnose a hung server without killing the sibling. All 23 lanes moved from
 `sbt --server -batch` (one JVM start per invocation) to `sbt --client` (warm background server),
 reducing gdx-measure from ~25 min to ~2 min wall.
+
+### M5.12 Metals v2 standalone MCP per checkout — TOOLING LANDED, BUILD CONNECTION OPEN (2026-09-03)
+
+**What exists** (`a4139131`, `7231ecaf`): `scripts/metals-server.sh` starts one Metals 2.0.0-M18
+standalone MCP server per checkout under launchd (port and label from the checkout path, relaunch
+rate-limited, `.mcp.json` written for Claude Code, stopped with the sbt server by `sbt_shutdown`),
+`scripts/metals-call.sh` / `just metals-call` is a shell client over the streamable-HTTP transport for
+worktree agents (a subagent inherits the session's MCP servers and cannot register its own), and the
+`SessionStart` hook is opt-in (`.balticporter/metals.enabled`). `list` answers in 0.5 s with the full
+tool set.
+
+**What does not work yet, measured**: the server exits fatally at startup —
+`StandaloneMcpService.startAndBlock` awaits `initialized()` for a hard-coded **2 minutes**
+(`Await.result(projectMetalsLspService.initialized(), 2.minutes)`), and inside it the BSP connect to
+sbt's own server cancels at **60 s** ("Cancelled waiting for 'build/initialize'") twice in a row —
+on a machine at load 1.8 as well as at load 7. The sbt script routes `bsp` to a full LAUNCHER JVM
+(`use_sbtn=0`, `-bsp`), not the thin client, so Metals boots a second sbt per checkout; a direct
+framed client sending Metals' exact `build/initialize` to `sbt bsp` in the same environment gets
+its answer in **1–6 s**, so the slowness is specific to the process Metals spawns and its cause is
+not yet found (BSP trace shows the request sent and the child's stream closing ~1 s later).
+**Two dead ends, both measured**: (1) pointing Metals' BSP at the LANE's `SBT_GLOBAL_SERVER_DIR` to
+reuse the warm server — the `-bsp` launcher took the directory over and the lane's thin client
+wedged for 48 min (the M5.11 shape, self-inflicted; the watchdog in `_sbt_run` now exists because
+of it); Metals' BSP has its own directory since `7231ecaf`. (2) Metals 1.6.6's `metals-mcp` shares
+the same `StandaloneMcpService`, so it is not a fallback. **Next**: capture the spawned `sbt -bsp`
+child's own log (wrap `.bsp/sbt.json`'s argv), and if the 60 s/2 min limits are the only wall, an
+upstream change making `initialized()`'s await configurable or lazy (the HTTP server is already
+listening at 5 s); Metals is a §4.6 debugging aid, not a measurement, so nothing here is on a lane's
+path. Classification: tooling, no §1 kind.
 ### M6. Refuse and COUNT rather than approximate
 
 Three places where the port deliberately carries a number instead of a guess, and each is the right
