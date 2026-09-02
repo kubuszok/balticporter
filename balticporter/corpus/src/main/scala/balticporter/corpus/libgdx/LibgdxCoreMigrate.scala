@@ -684,10 +684,11 @@ object LibgdxPolicy:
         ("entries", 0) -> ForEach("foreachEntry", 2),
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
-        // --- 3.1aj: get(K) returns Nullable[V] in lls; the NullabilityTransform adds a spurious
-        // TypeApply (type argument) that makes scalac unable to resolve the overload between
-        // get(K):Nullable[V] and get(K,V):V. Template strips type args and unwraps.
-        ("get", 1)     -> Template("$recv.get($0).orNull"),
+        // --- 3.1al: .orNull -> .get — lls ObjectMap.get(K) returns Nullable[V]; the 1-arg
+        // overload must be selected explicitly because return-type-sensitive overload resolution
+        // would pick get(K,V):V when the expected type is V. `.get` is the non-deprecated
+        // unchecked unwrap (NPE on empty = java's null dereference semantics).
+        ("get", 1)     -> Template("$recv.get($0).get"),
       ),
       // Entry arity-0: java's default-constructed Entry with both fields null.
       // Construct routes `new Tuple2()` -> `Tuple2.apply(null.asInstanceOf[K], null.asInstanceOf[V])`.
@@ -732,8 +733,8 @@ object LibgdxPolicy:
         ("entries", 0) -> ForEach("foreachEntry", 2),
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
-        // --- 3.1aj: same get overload fix as ObjectMap
-        ("get", 1)     -> Template("$recv.get($0).orNull"),
+        // --- 3.1al: same get overload fix as ObjectMap
+        ("get", 1)     -> Template("$recv.get($0).get"),
       ),
       "com.badlogic.gdx.utils.OrderedSet" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.OrderedSet", "apply"),
@@ -754,8 +755,8 @@ object LibgdxPolicy:
         ("entries", 0) -> ForEach("foreachEntry", 2),
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
-        // --- 3.1aj: same get overload fix as ObjectMap
-        ("get", 1)     -> Template("$recv.get($0).orNull"),
+        // --- 3.1al: same get overload fix as ObjectMap
+        ("get", 1)     -> Template("$recv.get($0).get"),
       ),
       // wave 3.1d: remaining MAP family — all to ObjectMap, same Construct + ForEach pattern.
       // IntMap<V> -> ObjectMap[Int, V], LongMap<V> -> ObjectMap[Long, V],
@@ -770,10 +771,8 @@ object LibgdxPolicy:
         ("entries", 0) -> ForEach("foreachEntry", 2),
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
-        // --- 3.1ai: IntMap.get(int) returns V without @Null but CAN return null. After retarget
-        // to lls ObjectMap, get(K) returns Nullable[V]. Unwrap to V|Null so consumers see the
-        // original java contract. The 2-arg get(K,V) returns V and needs no rewrite. K13.6 CLOSED.
-        ("get", 1)     -> Template("$recv.get($0).orNull"),
+        // --- 3.1al: same get overload fix as ObjectMap
+        ("get", 1)     -> Template("$recv.get($0).get"),
       ),
       "com.badlogic.gdx.utils.LongMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
@@ -783,8 +782,8 @@ object LibgdxPolicy:
         ("entries", 0) -> ForEach("foreachEntry", 2),
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
-        // --- 3.1aj: same get overload fix as IntMap
-        ("get", 1)     -> Template("$recv.get($0).orNull"),
+        // --- 3.1al: same get overload fix as ObjectMap
+        ("get", 1)     -> Template("$recv.get($0).get"),
       ),
       "com.badlogic.gdx.utils.IntIntMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
@@ -863,8 +862,8 @@ object LibgdxPolicy:
         ("entries", 0) -> ForEach("foreachEntry", 2),
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
-        // --- 3.1aj: same get overload fix as ObjectMap
-        ("get", 1)     -> Template("$recv.get($0).orNull"),
+        // --- 3.1al: same get overload fix as ObjectMap
+        ("get", 1)     -> Template("$recv.get($0).get"),
         // --- 3.1aj: ArrayMap.remove(K) -> removeKey(K). lls ArrayMap has removeKey, not remove.
         ("remove", 1)  -> Rename("removeKey"),
       ),
@@ -2549,14 +2548,14 @@ object LibgdxPolicy:
       annotations = Set("com.badlogic.gdx.utils.Null"),
       target      = balticporter.transform.NullabilityTransform.Target.Named("lowlevel.Nullable"),
       scope       = balticporter.tir.RuleScope.Everywhere(nullabilityErasureExempt),
-      // K13.6 CLOSED by 3.1ai: `IntMap.get(int)` returns `V` WITHOUT `@Null` but CAN return null.
-      // After the retarget to lls `ObjectMap`, `get(K)` returns `Nullable[V]`. The nullableMembers
-      // entry matched BOTH the 1-arg and 2-arg `get` overloads by `Symbol.fullName` (arity-blind),
-      // wrapping the 2-arg `get(K, V)` return that is NOT nullable — measured at 36 errors on textra.
-      // Fix: retarget rewrite `("get", 1) -> Template("$recv.get($0).orNull")` on IntMap (below),
-      // which calls lls's `get(K): Nullable[V]` and unwraps to `V | Null`. The 2-arg `get(K, V)`
-      // stays unchanged and is not wrapped. `ObjectMap.get(K)` and `LongMap.get(long)` have `@Null`
-      // on the return and are handled by the annotation-based plan, so no entry is needed for them.
+      // K13.6 CLOSED: `IntMap.get(int)` returns `V` without `@Null` but CAN return null. After
+      // the retarget to lls `ObjectMap`, `get(K)` returns `Nullable[V]` natively. The 2-arg
+      // `get(K, V)` returns `V` and is not wrapped. `ObjectMap.get(K)` and `LongMap.get(long)` have
+      // `@Null` on the return and are handled by the annotation-based plan. 3.1al: `.orNull` ->
+      // `.get` on every map type's `("get", 1)` Template — `.get` is the non-deprecated
+      // unchecked unwrap (NPE on empty = java's null dereference semantics); the Template is
+      // STILL NEEDED because Scala 3's return-type-sensitive overload resolution picks `get(K,V):V`
+      // over `get(K):Nullable[V]` when the expected return type is `V`.
     )
 
   /** Types whose `@Null`-annotated overload sets create ERASURE CONFLICTS under Named mode.
