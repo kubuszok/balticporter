@@ -19,5 +19,19 @@
       "Bash(head:*)",
       "Bash(tail:*)"
     ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -f \"$CLAUDE_PROJECT_DIR/.balticporter/metals.enabled\" ] && bash \"$CLAUDE_PROJECT_DIR/scripts/metals-server.sh\" start >/dev/null 2>&1 || true",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
   }
 }

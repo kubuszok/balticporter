@@ -5295,3 +5295,21 @@ dropin-all:
       echo "################################################################## just $lane"
       {{just_executable()}} "$lane" || echo "!! $lane exited non-zero (expected for a red drop-in)"
     done
+
+# --- Metals v2 MCP server, one per checkout (scripts/metals-server.sh) -------------------------
+# The port and the launchd label derive from the checkout path, like SBT_GLOBAL_SERVER_DIR, so a
+# worktree never shares a Metals (or its sbt BSP) with another. A SessionStart hook runs `start`;
+# `sbt_shutdown` (scripts/_lib.sh) runs `stop` beside the sbt server. A worktree AGENT cannot register
+# its own MCP server (it inherits the session's), so it calls tools through `just metals-call`.
+[doc("start this checkout's Metals MCP server (idempotent, launchd) and write .mcp.json")]
+metals-start:
+    scripts/metals-server.sh start
+[doc("stop this checkout's Metals MCP server")]
+metals-stop:
+    scripts/metals-server.sh stop
+[doc("label, port and readiness of this checkout's Metals MCP server")]
+metals-status:
+    scripts/metals-server.sh status
+[doc("call one Metals MCP tool from the shell: just metals-call list | just metals-call <tool> '<json args>'")]
+metals-call +ARGS:
+    scripts/metals-call.sh {{ARGS}}

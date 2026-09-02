@@ -566,6 +566,10 @@ _sbt_run() {
 # sbt_shutdown — shut down the lane's private server. Called at lane end.
 sbt_shutdown() {
   sbt --client shutdown 2>/dev/null || true
+  # the checkout's Metals MCP server (and the sbt BSP instance it owns) goes with the sbt server:
+  # both are per-checkout launchd jobs, and a Metals left behind after the sbt server it indexed
+  # against is gone answers from a stale build.
+  "$(dirname "${BASH_SOURCE[0]}")/metals-server.sh" stop >/dev/null 2>&1 || true
 }
 
 # sbt_compile <sbt-project-task> <capture-file>

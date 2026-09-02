@@ -15,3 +15,5 @@ out/
 # Emitted ports are build products: reproducible from the Java sources plus the
 # manifest, invalidated by every engine change. Only hand-written src/ is committed.
 src_managed/
+.mcp.json
+.metals/
