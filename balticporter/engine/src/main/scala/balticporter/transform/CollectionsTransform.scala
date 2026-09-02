@@ -753,13 +753,58 @@ final class CollectionsTransform(
   /** FQN-based fallback for [[retargetTargetToSource]]: the Collect rewrite and `retargetConstruct`
     * build expressions whose types carry the FRONTEND's SymId for the target (interned from reading
     * lls class files), while `retargetTargetToSource` maps from the MINTED SymId. This reverse-FQN
-    * map closes the gap by checking the FQN when the SymId is not found directly. */
-  private lazy val retargetTargetFqnToSource: Map[String, String] =
-    retarget.map { (src, tgt) => tgt -> src }
-  /** Resolve the retarget source FQN from a SymId, checking both the minted SymId and the FQN. */
+    * map closes the gap by checking the FQN when the SymId is not found directly.
+    *
+    * --- 3.1an: AMBIGUITY-AWARE.  Multiple java sources may map to ONE scala target (e.g.
+    * `IntArray`/`FloatArray`/`ShortArray`/…/`Array` all → `DynamicArray`), and each source has its
+    * OWN rewrite table. The old `Map[String, String]` kept whichever source `retarget.map` iterated
+    * last, so `retargetRewrite` used the wrong table or none (§4.56: "a phase may only conclude
+    * something about a type from what the PHASE ITSELF did to that type").
+    *
+    * The fix resolves ambiguity at the MEMBER level rather than at the source level: when the SymId
+    * lookup fails and the FQN has multiple sources, `retargetSourceOf` returns any source (they all
+    * share the same target FQN), and `lookupRewriteForReceiver` tries each source's rewrite table
+    * for the specific member.  If all sources that have an entry for that member agree, the shared
+    * entry is used; if they disagree, the lookup returns `None` and the call stays unchanged.
+    * Sources with their own rewrite tables get DISTINCT minted SymIds in `remap` and are resolved
+    * through `retargetTargetToSource` FIRST (the SymId path), so the ambiguous FQN fallback fires
+    * only where the receiver's SymId came from the FRONTEND (class-file interning) rather than from
+    * `remap` — Collect/Template-produced blocks, external-callee return types. */
+  private lazy val retargetTargetFqnToSources: Map[String, Set[String]] =
+    retarget.groupMap(_._2)(_._1).view.mapValues(_.toSet).toMap
+  /** Resolve the retarget source FQN from a SymId, checking both the minted SymId and the FQN.
+    * When the FQN has multiple sources, returns ANY of them — the caller uses
+    * [[lookupRewriteForReceiver]] to disambiguate at the member level. */
   private def retargetSourceOf(s: SymId)(using p: Program): Option[String] =
     retargetTargetToSource.get(s).orElse(
-      p.symbolOf(s).flatMap(sym => retargetTargetFqnToSource.get(sym.fullName)))
+      p.symbolOf(s).flatMap(sym => retargetTargetFqnToSources.get(sym.fullName).map(_.head)))
+  /** True when the source FQN was resolved through `retargetTargetToSource` (the MINTED SymId —
+    * unambiguous) rather than the FQN fallback (which may be ambiguous). */
+  private def isUnambiguousSource(s: SymId): Boolean = retargetTargetToSource.contains(s)
+  /** Look up a retarget rewrite for a call at the receiver's head SymId + member name + arity,
+    * handling the multi-source ambiguity.
+    *
+    * When the receiver was resolved through the MINTED SymId (unambiguous), this is a plain
+    * `lookupRewrite`.  When it came through the FQN fallback (ambiguous — multiple sources share
+    * the target), this tries each source's table for the specific member: if all answering sources
+    * agree, the shared entry is used; if they disagree the lookup returns `None` (the call stays
+    * unchanged and is counted on the `collection-retarget` lane). */
+  private def lookupRewriteForReceiver(recvHeadSym: SymId, srcFqn: String,
+      name: String, arity: Int, desc: Option[Descriptor])(using Program): Option[CollectionsTransform.RetargetRewrite] =
+    if isUnambiguousSource(recvHeadSym) then
+      lookupRewrite(srcFqn, name, arity, desc)
+    else
+      // FQN fallback — multiple sources may share this target.  Try each source's table.
+      val targetFqn = retarget.getOrElse(srcFqn, "")
+      val allSources = retargetTargetFqnToSources.getOrElse(targetFqn, Set(srcFqn))
+      val answers = allSources.flatMap(src => lookupRewrite(src, name, arity, desc).map(src -> _))
+      if answers.isEmpty then None
+      else if answers.size == 1 then Some(answers.head._2)
+      else
+        // Multiple sources have entries — check if they all agree
+        val distinct = answers.map(_._2).toSet
+        if distinct.size == 1 then Some(distinct.head)
+        else None // genuinely ambiguous — different sources want different rewrites
   /** minted symbols for retarget rewrite target member names: `(sourceFqn, memberName)` -> SymId. */
   private var retargetRewriteSyms: Map[(String, String), SymId] = Map.empty
   /** source SymId -> arg mapping, for arity-changing retargets (keyed by the ORIGINAL symbol). */
@@ -842,9 +887,11 @@ final class CollectionsTransform(
       t.fun match
         case Tree.Select(recv, m, _, so) =>
           // First: try to rewrite the call itself as a Collect
-          val collectResult = headSym(recv.tpe).flatMap(retargetSourceOf).flatMap { srcFqn =>
+          val recvHead = headSym(recv.tpe)
+          val collectResult = recvHead.flatMap(retargetSourceOf).flatMap { srcFqn =>
             val mName = methodName(m)
-            lookupRewrite(srcFqn, mName, 0, None).flatMap {
+            val rhs = recvHead.getOrElse(SymId.None)
+            lookupRewriteForReceiver(rhs, srcFqn, mName, 0, None).flatMap {
               case rw: CollectionsTransform.RetargetRewrite.Collect =>
                 emitCollect(recv, srcFqn, rw, so)
               case _ => scala.None
@@ -3507,7 +3554,9 @@ final class CollectionsTransform(
     // retargetRewrite fires only on Tree.Apply.  A bean-property-renamed member is a Tree.Select.
     if retargetRewrites.nonEmpty || retargetRewritesByDesc.nonEmpty then
       // --- 3.1aj: static companion reference fallback (same as retargetRewrite) ---
-      headSym(sel.qual.tpe).flatMap(retargetSourceOf).orElse(
+      // --- 3.1an: receiver-origin disambiguation at the member level ---
+      val selHead = headSym(sel.qual.tpe)
+      selHead.flatMap(retargetSourceOf).orElse(
         for
           mSym <- p.symbolOf(sel.sym)
           oSym <- p.symbolOf(mSym.owner)
@@ -3515,7 +3564,8 @@ final class CollectionsTransform(
         yield oSym.fullName
       ).flatMap { srcFqn =>
         val mName = methodName(sel.sym)
-        lookupRewrite(srcFqn, mName, 0, None).flatMap {
+        val rhs = selHead.getOrElse(SymId.None)
+        lookupRewriteForReceiver(rhs, srcFqn, mName, 0, None).flatMap {
           case CollectionsTransform.RetargetRewrite.Rename(target) =>
             retargetRewriteSyms.get((srcFqn, target)).map { tgtSym =>
               Tree.Select(sel.qual, tgtSym, sel.tpe, sel.origin)
@@ -7438,7 +7488,8 @@ final class CollectionsTransform(
     // frontend interned from the parsed resolution root, which IS in `effectiveRetarget`.
     // Section 1(a) — a universal fact about static calls on retarget source types, true of
     // every codebase that calls a static factory on a retarget target.
-    headSym(recv.tpe).flatMap(retargetSourceOf).orElse(
+    val recvHead0 = headSym(recv.tpe)
+    recvHead0.flatMap(retargetSourceOf).orElse(
       for
         mSym   <- p.symbolOf(m)
         oSym   <- p.symbolOf(mSym.owner)
@@ -7448,7 +7499,8 @@ final class CollectionsTransform(
       val mName = methodName(m)
       val arity = t.args.size
       val desc = p.symbolOf(m).flatMap(_.descriptor)
-      lookupRewrite(srcFqn, mName, arity, desc).flatMap {
+      val rhs = recvHead0.getOrElse(SymId.None)
+      lookupRewriteForReceiver(rhs, srcFqn, mName, arity, desc).flatMap {
         case CollectionsTransform.RetargetRewrite.Rename(target) =>
           retargetRewriteSyms.get((srcFqn, target)).map { tgtSym =>
             call(recv, tgtSym, t.args, t, so)
@@ -7611,11 +7663,14 @@ final class CollectionsTransform(
     * given-threading mechanism or the construction is COUNTED. */
   private def retargetConstruct(t: Tree.Apply)(using p: Program): Option[Term] = t.fun match
     case n: Tree.New if retargetRewrites.nonEmpty || retargetRewritesByDesc.nonEmpty =>
-      headSym(n.tpe).flatMap(retargetSourceOf).flatMap { srcFqn =>
+      val newHead = headSym(n.tpe)
+      newHead.flatMap(retargetSourceOf).flatMap { srcFqn =>
         val arity = t.args.size
         val ctorSym = p.symbolOf(t.method)
         val desc = ctorSym.flatMap(_.descriptor).orElse(ctorSym.flatMap(s => Descriptor.ofInfo(p, s)))
-        lookupRewrite(srcFqn, "<init>", arity, desc).flatMap {
+        // --- 3.1an: receiver-origin disambiguation at the member level ---
+        val rhs = newHead.getOrElse(SymId.None)
+        lookupRewriteForReceiver(rhs, srcFqn, "<init>", arity, desc).flatMap {
           case CollectionsTransform.RetargetRewrite.Construct(companionFqn, factoryMethod, dropTrailing, fillTypeArgs) =>
             val fqn = s"$companionFqn.$factoryMethod"
             retargetRewriteSyms.get((srcFqn, fqn)).map { factorySym =>
