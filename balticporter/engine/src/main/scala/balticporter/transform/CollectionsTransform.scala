@@ -3492,7 +3492,14 @@ final class CollectionsTransform(
     // `empty`).  The retargetRewrite table has `("empty", 0) -> Rename("isEmpty")`, but
     // retargetRewrite fires only on Tree.Apply.  A bean-property-renamed member is a Tree.Select.
     if retargetRewrites.nonEmpty || retargetRewritesByDesc.nonEmpty then
-      headSym(sel.qual.tpe).flatMap(retargetTargetToSource.get).flatMap { srcFqn =>
+      // --- 3.1aj: static companion reference fallback (same as retargetRewrite) ---
+      headSym(sel.qual.tpe).flatMap(retargetSourceOf).orElse(
+        for
+          mSym <- p.symbolOf(sel.sym)
+          oSym <- p.symbolOf(mSym.owner)
+          if effectiveRetarget.contains(oSym.fullName)
+        yield oSym.fullName
+      ).flatMap { srcFqn =>
         val mName = methodName(sel.sym)
         lookupRewrite(srcFqn, mName, 0, None).flatMap {
           case CollectionsTransform.RetargetRewrite.Rename(target) =>
@@ -4194,6 +4201,16 @@ final class CollectionsTransform(
           // A RETARGET REWRITE comes first: a call on a retarget target whose member name and arity
           // have an entry in `retargetRewrites` is renamed/dispatched before `pinnedByObject`.
           case None    => retargetRewrite(recv, m, so, t2).orElse(pinnedByObject(recv, m, t2)).getOrElse(t2)
+        // --- 3.1aj: TypeApply(Select(recv, m), targs) — a generic call whose fun is wrapped in
+        // a TypeApply. The bottom-up traversal visits the inner Select BEFORE the outer TypeApply,
+        // so the call arrives as Apply(TypeApply(Select(recv, m), targs), args). Without this arm,
+        // every generic static call (`OrderedSet.with(...)`, `Array.of(...)`) falls through to
+        // `case _ => t2` and the retarget rewrite never fires. Section 1(a) — a universal fact
+        // about how the TIR represents generic calls, true of every codebase.
+        case Tree.TypeApply(Tree.Select(recv, m, _, so), _, _, _) =>
+          kindAt(recv).orElse(inheritedKind(recv, m)) match
+            case Some(k) => rewrite(k, recv, m, so, t2).getOrElse(t2)
+            case None    => retargetRewrite(recv, m, so, t2).orElse(pinnedByObject(recv, m, t2)).getOrElse(t2)
         // When retargetSelectRewrite replaced a Select (the `fun` of a nullary `iterator()` call)
         // with an Apply (the `JavaIterator.from(sel)` wrap) or an Opaque (K36 removing iterator),
         // the OUTER Apply still sits here with Nil args.  Collapse it so the emitter does not
@@ -7398,7 +7415,22 @@ final class CollectionsTransform(
     * unchanged and `RetargetBoundaryCheck` counts it on the existing `collection-retarget` lane). */
   private def retargetRewrite(recv: Term, m: SymId, so: Origin, t: Tree.Apply)(using p: Program): Option[Term] =
     if retargetRewrites.isEmpty && retargetRewritesByDesc.isEmpty then return scala.None
-    headSym(recv.tpe).flatMap(retargetSourceOf).flatMap { srcFqn =>
+    // --- 3.1aj: static companion reference fallback ---
+    // The primary lookup resolves the retarget source from the RECEIVER's type head symbol.
+    // For static calls (`OrderedSet.with(...)`, `Array.of(...)`), the receiver Ident carries
+    // a freshly minted external SymId (from `typeTerm` in SpoonTir) that is NOT in `remap`,
+    // so `retargetSourceOf` returns None. The fallback resolves the source FQN from the
+    // METHOD's OWNER's fullName — a structural fact (§4.56): the owner SymId is the one the
+    // frontend interned from the parsed resolution root, which IS in `effectiveRetarget`.
+    // Section 1(a) — a universal fact about static calls on retarget source types, true of
+    // every codebase that calls a static factory on a retarget target.
+    headSym(recv.tpe).flatMap(retargetSourceOf).orElse(
+      for
+        mSym   <- p.symbolOf(m)
+        oSym   <- p.symbolOf(mSym.owner)
+        if effectiveRetarget.contains(oSym.fullName)
+      yield oSym.fullName
+    ).flatMap { srcFqn =>
       val mName = methodName(m)
       val arity = t.args.size
       val desc = p.symbolOf(m).flatMap(_.descriptor)
@@ -7440,8 +7472,20 @@ final class CollectionsTransform(
         // enclosing ForEach.
         case _: CollectionsTransform.RetargetRewrite.Collect => scala.None
         // Template: a textual expression with AST holes for the receiver and args.
+        // --- 3.1aj: for a static call, `recv.tpe` is unapplied (no type arguments), so
+        // `$T0` does not resolve. Use `t.tpe` (the call's return type) for the type-arg
+        // extraction — it carries the retargeted type with its arguments filled.
         case CollectionsTransform.RetargetRewrite.Template(expr) =>
-          Some(renderTemplate(expr, recv, t.args, srcFqn, t.tpe, so))
+          val effectiveRecv = recv.tpe match
+            case TypeRepr.AppliedType(_, _) => recv // instance call: recv already has type args
+            case _ => t.tpe match
+              case TypeRepr.AppliedType(_, _) =>
+                // static call: borrow the call's return type for $T0 extraction
+                recv match
+                  case id: Tree.Ident => id.copy(tpe = t.tpe)
+                  case _              => recv
+              case _ => recv
+          Some(renderTemplate(expr, effectiveRecv, t.args, srcFqn, t.tpe, so))
         // Chain: recv.source(args) → recv.m1.m2.m3 (or with () where parens says to).
         // Each member's arity is decided from the Chain's `parens` set (F9's rule:
         // the arity comes from the CALLEE SYMBOL's declaration on the target type).

@@ -735,6 +735,10 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.OrderedSet", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("iterator", 0) -> Chain(List("orderedItems", "iterator")),
+        // --- 3.1aj: static factory `OrderedSet.with(T... array)` ---
+        // The vararg is packed into a scala.Array by the frontend. lls OrderedSet has no `with`;
+        // create a set and add each element from the packed array.
+        ("with", 1) -> Template("{ val bpArr = $0; val bpSet = $Target.apply[$T0](); var bpI = 0; while (bpI < bpArr.length) { bpSet.add(bpArr(bpI)); bpI += 1 }; bpSet }"),
       ),
       "com.badlogic.gdx.utils.IdentityMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ArrayMap", "apply"),
@@ -906,11 +910,10 @@ object LibgdxPolicy:
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         // CharArray.append(char[], off, len) -> DynamicArray.addAll(raw, off, len)
         ("append", 3)       -> Rename("addAll"),
-        // wave 3.1u: static factory `Array.with(T... array)` -> `DynamicArray.from(scalaArray)`.
-        // The vararg is already packed into a scala.Array by the engine. DynamicArray.from(Array[A])
-        // creates a copy, which matches java's Array.with semantics (creates a new Array from varargs).
-        // Matched on the qualifier SYMBOL (the source class symbol in static position, §4.56).
-        ("with", 1)         -> Template("$Target.from($0)"),
+        // --- 3.1aj: static factory `Array.with(T... array)` -> create + addAll from packed array.
+        // The vararg is packed into a scala.Array by the frontend. DynamicArray.from takes a
+        // DynamicArray, not a scala.Array, so create + addAll(Object, Int, Int).
+        ("with", 1)         -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
         // --- 3.1af: gdx-test runtime ---
         // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
         // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
@@ -953,7 +956,7 @@ object LibgdxPolicy:
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("append", 3)       -> Rename("addAll"),
-        ("with", 1)         -> Template("$Target.from($0)"),
+        ("with", 1)         -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
         // --- 3.1af: gdx-test runtime ---
         // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
         // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
@@ -993,7 +996,7 @@ object LibgdxPolicy:
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("append", 3)       -> Rename("addAll"),
-        ("with", 1)         -> Template("$Target.from($0)"),
+        ("with", 1)         -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
         // --- 3.1af: gdx-test runtime ---
         // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
         // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
@@ -1029,7 +1032,7 @@ object LibgdxPolicy:
         ("incr", 2)     -> Template("{ val bpIdx = $0; $recv(bpIdx) = $recv(bpIdx) + $1 }"),
         // IntArray.add(4 args): DynamicArray has up to 3-arg add; split into two calls.
         ("add", 4)      -> Template("{ $recv.add($0, $1); $recv.add($2, $3) }"),
-        ("with", 1)     -> Template("$Target.from[$T0]($0)"),
+        ("with", 1)     -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
         // --- 3.1af: gdx-test runtime ---
         // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
         // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
@@ -1068,7 +1071,7 @@ object LibgdxPolicy:
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
-        ("with", 1)     -> Template("$Target.from[$T0]($0)"),
+        ("with", 1)     -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
         // --- 3.1af: gdx-test runtime ---
         // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
         // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
@@ -1115,7 +1118,7 @@ object LibgdxPolicy:
         ("mul", 2)      -> Template("{ val bpIdx = $0; $recv(bpIdx) = $recv(bpIdx) * $1 }"),
         // LongArray.mul(value) -> multiply ALL elements
         ("mul", 1)      -> Template("{ var bpI = 0; while (bpI < $recv.size) { $recv(bpI) = $recv(bpI) * $0; bpI += 1 } }"),
-        ("with", 1)     -> Template("$Target.from[$T0]($0)"),
+        ("with", 1)     -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
         // --- 3.1ae: gdx-test residue ---
         // LongArray.add(4 args): DynamicArray has up to 3-arg add; split into two calls.
         ("add", 4)      -> Template("{ $recv.add($0, $1); $recv.add($2, $3) }"),
@@ -1167,7 +1170,7 @@ object LibgdxPolicy:
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
-        ("with", 1)     -> Template("$Target.from[$T0]($0)"),
+        ("with", 1)     -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
         // --- 3.1af: gdx-test runtime ---
         // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
         // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
@@ -1206,7 +1209,7 @@ object LibgdxPolicy:
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
-        ("with", 1)     -> Template("$Target.from[$T0]($0)"),
+        ("with", 1)     -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
         // --- 3.1af: gdx-test runtime ---
         // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
         // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
@@ -1251,7 +1254,7 @@ object LibgdxPolicy:
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("append", 3)   -> Rename("addAll"),
-        ("with", 1)     -> Template("$Target.from[$T0]($0)"),
+        ("with", 1)     -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
         // --- 3.1af: gdx-test runtime ---
         // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
         // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
@@ -1292,7 +1295,7 @@ object LibgdxPolicy:
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
-        ("with", 1)     -> Template("$Target.from[$T0]($0)"),
+        ("with", 1)     -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
         // --- 3.1af: gdx-test runtime ---
         // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
         // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
