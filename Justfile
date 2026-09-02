@@ -534,7 +534,6 @@ gdx-measure:
     ROOT="$(pwd)"
     export CORE_PROJECT="{{core_project}}"
     . scripts/_lib.sh
-    trap sbt_shutdown EXIT
 
     # Make persisted findings machine-independent: paths in the artifact are relative to this root,
     # so a baseline committed from one checkout diffs cleanly against a run from another (or from a
@@ -608,7 +607,6 @@ gdx-test-measure:
     ROOT="$(pwd)"
     export CORE_PROJECT="{{core_project}}"
     . scripts/_lib.sh
-    trap sbt_shutdown EXIT
 
     write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{gdx_src}}"
     REPORT="$ROOT/port-report/LibgdxTestMigrate"
@@ -714,7 +712,6 @@ ashley-measure:
     ROOT="$(pwd)"
     export CORE_PROJECT="{{core_project}}"
     . scripts/_lib.sh
-    trap sbt_shutdown EXIT
 
     write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{ashley_src}}"
     REPORT="$ROOT/port-report/AshleyMigrate"
