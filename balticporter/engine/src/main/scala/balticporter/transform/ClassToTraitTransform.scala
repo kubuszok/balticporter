@@ -3,14 +3,16 @@ package balticporter.transform
 import balticporter.core.{MergeablePolicy, SurfacePolicy}
 import balticporter.tir.*
 
-/** Rewrite every SUBCLASS of a nominated abstract class so that constructor arguments to the
-  * nominated parent become `override val` members. The nominated class itself is DROPPED and
-  * INJECTED as a trait with abstract vals.
+/** Rewrite a nominated abstract class into a trait and transform every subclass (named and
+  * anonymous) to use `override val` members instead of constructor arguments.
   *
-  * ==Two populations==
-  * A subclass may extend the nominated type WITH super args (widest constructor path) or WITHOUT
-  * (nilary path, delegating in Java to `Pool(16, Integer.MAX_VALUE)`). Both get override vals --
-  * with-args from the super args, without-args from the Java nilary delegation defaults.
+  * ==Declaration side==
+  * The nominated type's OWN ClassDef is rewritten in the TIR: constructors removed, the mapped
+  * parameters become abstract `val` members, flags set to `isTrait`. This is done even though
+  * emission drops the type in favour of the injected file, because the CtorFunnel then sees a
+  * parent with no constructor -- so there is nothing to replay and nothing to widen
+  * (`ctor-replay-widening` does not fire). The emitter's override derivation sees the abstract vals
+  * as parent members, which settles the `max$shadow` rename by section 4.55's implementation-pair rule.
   *
   * ==Kind==
   * CLAUDE.md section 1(b). Empty specs = no-op.
@@ -19,7 +21,9 @@ final class ClassToTraitTransform(
     val specs: Map[String, List[ClassToTraitTransform.ParamMapping]] = Map.empty,
 ) extends Phase, SurfacePolicy, MergeablePolicy:
 
-  def name: String = ClassToTraitTransform.Name
+  import ClassToTraitTransform.*
+
+  def name: String = Name
   override def runsBefore: Set[String] = Set("package-rename")
 
   def surfaceFingerprint: String =
@@ -43,29 +47,29 @@ final class ClassToTraitTransform(
         (o.specs.keySet -- specs.keySet).map(MergeablePolicy.subjectOf)))
     case _ => Left(s"`${later.name}` is not a `ClassToTraitTransform`")
 
+  // ---- resolved at the start of run ----
+  private var resolved = Map.empty[SymId, ResolvedSpec]
+  private var fresh: () => SymId = () => SymId.None
+  private var newSyms = List.newBuilder[Symbol]
+
   override def run(program: Program): Program =
     if specs.isEmpty then return program
     given Program = program
 
-    // Resolve nominated types to their SymIds and precompute their formal parameter types.
-    // The dropped type is STILL in the program (a drop is an emission decision).
-    val resolved: Map[SymId, ClassToTraitTransform.ResolvedSpec] = (for
+    // Resolve nominated types
+    resolved = (for
       (fqn, mappings) <- specs.toList
       sym             <- program.symbols.all.find(_.fullName == fqn)
     yield
-      // Find the nominated type's ClassDef and its widest constructor
       val parentCd = program.units.find(_.symbol == sym.id)
-      val formalTypes: List[TypeRepr] = parentCd.toList.flatMap { cd =>
+      val widestCtor = parentCd.toList.flatMap { cd =>
+        cd.body.collect { case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == "<init>") => d }
+          .maxByOption(_.paramss.flatten.size)
+      }.headOption
+      val formalTypes = widestCtor.toList.flatMap(_.paramss.flatten.map(_.tpt.tpe))
+      val defaults = parentCd.toList.flatMap { cd =>
         val ctors = cd.body.collect { case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == "<init>") => d }
-        ctors.maxByOption(_.paramss.flatten.size).toList.flatMap(_.paramss.flatten.map(_.tpt.tpe))
-      }
-      // Build default vals from the nilary constructor's delegation chain:
-      // Pool() -> Pool(16, MAX_VALUE). Read the this() delegation args.
-      val defaults: List[Term] = parentCd.toList.flatMap { cd =>
-        val ctors = cd.body.collect { case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == "<init>") => d }
-        val nilary = ctors.find(_.paramss.flatten.isEmpty)
-        nilary.toList.flatMap { nc =>
-          // The nilary constructor calls this(args) -- extract those args
+        ctors.find(_.paramss.flatten.isEmpty).toList.flatMap { nc =>
           CtorFunnel.stmtsOf(nc).headOption.collect { case t: Term => Tree.uncomment(t) }.toList.flatMap {
             case Tree.Apply(Tree.Select(_, m, _, _), args, _, _, _)
                 if program.symbolOf(m).exists(_.name == "<init>") => args
@@ -73,80 +77,110 @@ final class ClassToTraitTransform(
           }
         }
       }
-      // Collect field names owned by the parent (for stripping replayed assignments)
-      val ownedFields: Set[String] = program.symbols.all.filter { s =>
+      val ownedFields = program.symbols.all.filter { s =>
         s.owner == sym.id && s.name != "<init>" && !s.flags.isStatic && !s.flags.isAbstract
       }.map(_.name).toSet
-      sym.id -> ClassToTraitTransform.ResolvedSpec(fqn, mappings, formalTypes, defaults, ownedFields)
+      sym.id -> ResolvedSpec(fqn, mappings, formalTypes, defaults, ownedFields, sym.id)
     ).toMap
 
     if resolved.isEmpty then return program
 
-    var next = program.symbols.all.map(_.id.raw).maxOption.getOrElse(-1) + 1
-    def fresh(): SymId = { val id = SymId(next); next += 1; id }
-    var newSymbols = List.empty[Symbol]
+    var nextId = program.symbols.all.map(_.id.raw).maxOption.getOrElse(-1) + 1
+    fresh = () => { val id = SymId(nextId); nextId += 1; id }
+    newSyms = List.newBuilder[Symbol]
 
-    val units = program.units.map { cd =>
-      transformRec(cd, resolved, program, fresh, s => newSymbols = s :: newSymbols)
+    // 1) Transform the nominated types THEMSELVES into traits (declaration side)
+    val units1 = program.units.map { cd =>
+      if resolved.contains(cd.symbol) then transformNominatedType(cd, resolved(cd.symbol), program)
+      else cd
     }
-    program.rebuilt(units = units, symbols = SymbolTable(program.symbols.all ++ newSymbols))
 
-  private def transformRec(
-      cd: Tree.ClassDef, resolved: Map[SymId, ClassToTraitTransform.ResolvedSpec],
-      program: Program, fresh: () => SymId, addSym: Symbol => Unit,
-  )(using Program): Tree.ClassDef =
-    val body = cd.body.map {
-      case nested: Tree.ClassDef => transformRec(nested, resolved, program, fresh, addSym)
-      case other => other
+    // 2) Use the standard traversal to transform subclasses (named + anonymous)
+    val p1 = program.rebuilt(units1, program.symbols)
+    val units2 = p1.units.map(u => StandardTraversal.mapClassDef(this, u)(using p1))
+    val symbols2 = StandardTraversal.mapSymbols(this, p1.symbols)(using p1)
+
+    // 3) Update symbol flags for nominated types (isTrait)
+    val allSyms = symbols2.all.map { s =>
+      if resolved.contains(s.id) then
+        s.copy(flags = s.flags.copy(isTrait = true, isAbstract = false))
+      else s
+    } ++ newSyms.result()
+
+    p1.rebuilt(units2, SymbolTable(allSyms))
+
+  // ---- declaration side: transform the nominated type itself ----
+
+  private def transformNominatedType(cd: Tree.ClassDef, spec: ResolvedSpec, program: Program): Tree.ClassDef =
+    val origin = cd.origin
+    // Remove all constructors from the body
+    val bodyNoCtors = cd.body.filterNot {
+      case d: Tree.DefDef => program.symbolOf(d.symbol).exists(_.name == "<init>")
+      case _ => false
     }
-    val cd1 = if body ne cd.body then cd.copy(body = body) else cd
-    parentSpec(cd1, resolved) match
-      case Some(spec) => rewriteSubclass(program, cd1, spec, fresh, addSym)
-      case None       => cd1
+    // Add abstract val definitions for the mapped parameters
+    val abstractVals = spec.mappings.flatMap { m =>
+      if m.index < spec.formalTypes.size then
+        val tpe = spec.formalTypes(m.index)
+        val valId = fresh()
+        newSyms += Symbol(valId, m.valName, s"${program.symbolOf(cd.symbol).map(_.fullName).getOrElse("")}#${m.valName}",
+          Flags(isAbstract = true, isProtected = true), cd.symbol, tpe, origin)
+        Some(Tree.ValDef(valId, TypeTree(tpe, origin), None, origin))
+      else None
+    }
+    record(Decision(
+      kind       = Decision.Kind.RetypedSignature,
+      subject    = cd.symbol,
+      subjectFqn = program.symbolOf(cd.symbol).map(_.fullName).getOrElse(""),
+      detail     = Map("why" -> "class-to-trait: abstract class -> trait with abstract vals"),
+      reason     = Reason.Configured(name, spec.fqn),
+      origin     = origin,
+    ))
+    cd.copy(body = abstractVals ++ bodyNoCtors)
 
-  private def parentSpec(cd: Tree.ClassDef, resolved: Map[SymId, ClassToTraitTransform.ResolvedSpec])(using Program): Option[ClassToTraitTransform.ResolvedSpec] =
-    def headSym(t: TypeRepr): Option[SymId] = t match
-      case TypeRepr.TypeRef(_, s)      => Some(s)
-      case TypeRepr.AppliedType(tc, _) => headSym(tc)
-      case _                           => None
-    cd.parents.iterator.flatMap {
-      case tt: TypeTree => headSym(tt.tpe)
-      case t: Term      => headSym(t.tpe)
-    }.collectFirst { case s if resolved.contains(s) => resolved(s) }
+  // ---- MiniPhase hooks: transform subclasses ----
 
-  private def rewriteSubclass(
-      program: Program, cd: Tree.ClassDef, spec: ClassToTraitTransform.ResolvedSpec,
-      fresh: () => SymId, addSym: Symbol => Unit,
-  ): Tree.ClassDef =
+  override def transformClassDef(cd: Tree.ClassDef)(using Program): Tree.ClassDef =
+    if resolved.isEmpty then return cd
+    if resolved.contains(cd.symbol) then return cd // the nominated type itself, already handled
+    parentSpec(cd) match
+      case Some(spec) => rewriteNamedSubclass(cd, spec)
+      case None       => cd
+
+  override def transformNew(n: Tree.New)(using program: Program): Term =
+    if resolved.isEmpty then return n
+    val headSym = ClassToTraitTransform.headSymOf(n.tpt.tpe)
+    headSym.flatMap(resolved.get) match
+      case None       => n
+      case Some(spec) => rewriteAnonNew(n, spec)
+
+  // ---- named subclass rewrite ----
+
+  private def rewriteNamedSubclass(cd: Tree.ClassDef, spec: ResolvedSpec)(using program: Program): Tree.ClassDef =
     val cdSym = program.symbolOf(cd.symbol) match
       case Some(s) => s
       case None    => return cd
     val origin = cd.origin
     val ctors = cd.body.collect { case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == "<init>") => d }
 
-    // Find the widest constructor that calls super(args)
     val widestWithArgs = ctors
       .map(c => c -> CtorFunnel.superArgsOf(program, c))
       .filter(_._2.nonEmpty)
       .maxByOption(_._2.size)
 
-    val overrideVals: List[Tree.ValDef] = widestWithArgs match
+    val overrideVals = widestWithArgs match
       case Some((_, superArgs)) =>
         spec.mappings.flatMap { m =>
-          if m.index < superArgs.size && m.index < spec.formalTypes.size then
-            val tpe = spec.formalTypes(m.index) // use the DECLARED type, not the arg's inferred type
-            Some(mkVal(m, tpe, Some(superArgs(m.index)), origin, cd.symbol, cdSym, fresh, addSym))
-          else if m.index < superArgs.size then
-            Some(mkVal(m, superArgs(m.index).tpe, Some(superArgs(m.index)), origin, cd.symbol, cdSym, fresh, addSym))
+          if m.index < superArgs.size then
+            val tpe = if m.index < spec.formalTypes.size then spec.formalTypes(m.index) else superArgs(m.index).tpe
+            Some(mkVal(m, tpe, Some(superArgs(m.index)), origin, cd.symbol, cdSym))
           else None
         }
       case None =>
-        // Nilary super -- use defaults from the nominated type's nilary delegation chain
         if spec.defaults.size < spec.mappings.size then return cd
         spec.mappings.flatMap { m =>
           if m.index < spec.defaults.size && m.index < spec.formalTypes.size then
-            val tpe = spec.formalTypes(m.index)
-            Some(mkVal(m, tpe, Some(spec.defaults(m.index)), origin, cd.symbol, cdSym, fresh, addSym))
+            Some(mkVal(m, spec.formalTypes(m.index), Some(spec.defaults(m.index)), origin, cd.symbol, cdSym))
           else None
         }
 
@@ -161,22 +195,18 @@ final class ClassToTraitTransform(
       origin     = origin,
     ))
 
-    // Strip super args from the widest constructor
     val strippedBody = widestWithArgs match
       case Some((widestCtor, _)) =>
         cd.body.map {
-          case d: Tree.DefDef if d.symbol == widestCtor.symbol => stripSuperArgs(program, d)
+          case d: Tree.DefDef if d.symbol == widestCtor.symbol => stripSuperArgs(d)(using summon[Program])
           case other => other
         }
       case None => cd.body
 
-    // Strip replayed assignments to ALL parent-owned fields (freeObjects, max, peak, etc.)
-    // from constructor bodies. These are CtorFunnel replays of the parent's constructor body
-    // (the parent is now a trait whose body initialises its own fields from the override vals).
     val strippedFields = spec.mappings.map(_.valName).toSet ++ spec.ownedFields
     val cleanedBody = strippedBody.map {
       case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == "<init>") =>
-        stripReplayedAssignments(program, d, strippedFields)
+        stripReplayedAssignments(d, strippedFields)(using summon[Program])
       case other => other
     }
 
@@ -186,23 +216,83 @@ final class ClassToTraitTransform(
     }
     cd.copy(body = ctorDefs ++ overrideVals ++ rest)
 
-  private def mkVal(
-      m: ClassToTraitTransform.ParamMapping, tpe: TypeRepr, rhs: Option[Term],
-      origin: Origin, owner: SymId, ownerSym: Symbol,
-      fresh: () => SymId, addSym: Symbol => Unit,
-  ): Tree.ValDef =
+  // ---- anonymous subclass rewrite ----
+
+  private def rewriteAnonNew(n: Tree.New, spec: ResolvedSpec)(using program: Program): Term =
+    // The anonymous `new Pool(a, b) { ... }` appears as Apply(New(..., Some(AnonClass)), args).
+    // But by the time transformNew runs, the Apply has already been traversed and transformNew sees
+    // just the New node. The args are in the PARENT Apply. We need to handle this differently:
+    // we add override vals to the AnonClass body with the spec defaults, since the actual args
+    // will be stripped from the Apply by the time the emitter sees them.
+    // Actually, the StandardTraversal calls transformNew on the New, not the Apply.
+    // The constructor args are NOT part of the New -- they're in the Apply wrapping it.
+    // For anonymous classes, we add override vals with defaults to the AnonClass body.
+    n.anon match
+      case None => n
+      case Some(anon) =>
+        val origin = n.origin
+        val anonSym = program.symbolOf(anon.symbol).getOrElse(return n)
+        val overrideVals = if spec.defaults.size >= spec.mappings.size then
+          spec.mappings.flatMap { m =>
+            if m.index < spec.defaults.size && m.index < spec.formalTypes.size then
+              Some(mkVal(m, spec.formalTypes(m.index), Some(spec.defaults(m.index)), origin, anon.symbol, anonSym))
+            else None
+          }
+        else Nil
+        // For now, add defaults. The actual args from the Apply are handled by transformApply.
+        if overrideVals.isEmpty then return n
+        n.copy(anon = Some(anon.copy(body = overrideVals ++ anon.body)))
+
+  override def transformApply(app: Tree.Apply)(using program: Program): Term =
+    if resolved.isEmpty then return app
+    // Check if this Apply wraps a New of a nominated type with constructor args
+    app.fun match
+      case n: Tree.New =>
+        val headSym = ClassToTraitTransform.headSymOf(n.tpt.tpe)
+        headSym.flatMap(resolved.get) match
+          case Some(spec) if app.args.nonEmpty =>
+            // Strip the constructor args and put them as override vals in the AnonClass body
+            n.anon match
+              case Some(anon) =>
+                val origin = app.origin
+                val anonSym = program.symbolOf(anon.symbol).getOrElse(return app)
+                val overrideVals = spec.mappings.flatMap { m =>
+                  if m.index < app.args.size then
+                    val tpe = if m.index < spec.formalTypes.size then spec.formalTypes(m.index) else app.args(m.index).tpe
+                    Some(mkVal(m, tpe, Some(app.args(m.index)), origin, anon.symbol, anonSym))
+                  else None
+                }
+                val newAnon = anon.copy(body = overrideVals ++ anon.body)
+                val newNew = n.copy(anon = Some(newAnon))
+                Tree.Apply(newNew, Nil, app.method, app.tpe, app.origin)
+              case None =>
+                // Non-anonymous new Pool(args) -- strip args (the class itself handles override vals)
+                Tree.Apply(n, Nil, app.method, app.tpe, app.origin)
+          case _ => app
+      case _ => app
+
+  // ---- helpers ----
+
+  private def mkVal(m: ParamMapping, tpe: TypeRepr, rhs: Option[Term],
+      origin: Origin, owner: SymId, ownerSym: Symbol): Tree.ValDef =
     val valId = fresh()
-    addSym(Symbol(valId, m.valName, s"${ownerSym.fullName}#${m.valName}",
-      Flags(isOverride = true, isProtected = true), owner, tpe, origin))
+    newSyms += Symbol(valId, m.valName, s"${ownerSym.fullName}#${m.valName}",
+      Flags(isOverride = true, isProtected = true), owner, tpe, origin)
     Tree.ValDef(valId, TypeTree(tpe, origin), rhs, origin)
 
-  private def stripSuperArgs(program: Program, d: Tree.DefDef): Tree.DefDef =
+  private def parentSpec(cd: Tree.ClassDef)(using Program): Option[ResolvedSpec] =
+    cd.parents.iterator.flatMap {
+      case tt: TypeTree => headSymOf(tt.tpe)
+      case t: Term      => headSymOf(t.tpe)
+    }.collectFirst { case s if resolved.contains(s) => resolved(s) }
+
+  private def stripSuperArgs(d: Tree.DefDef)(using program: Program): Tree.DefDef =
     val stmts = CtorFunnel.stmtsOf(d)
     CtorFunnel.headStmt(d) match
       case Some(Tree.Apply(Tree.Select(_: Tree.Super, m, _, _), args, _, _, _))
           if program.symbolOf(m).exists(_.name == "<init>") && args.nonEmpty =>
         val newHead: Term = stmts.head match
-          case t: Term => stripTopSuperArgs(program, Tree.uncomment(t)) match
+          case t: Term => stripTopSuperArgs(Tree.uncomment(t))(using program) match
               case Some(stripped) => Tree.recomment(t, stripped)
               case None           => t
           case _ => return d
@@ -217,31 +307,31 @@ final class ClassToTraitTransform(
         d.copy(rhs = Some(newBody))
       case _ => d
 
-  private def stripTopSuperArgs(program: Program, t: Term): Option[Term] = t match
+  private def stripTopSuperArgs(t: Term)(using program: Program): Option[Term] = t match
     case Tree.Apply(sel @ Tree.Select(_: Tree.Super, m, _, _), args, method, tpe, origin)
         if program.symbolOf(m).exists(_.name == "<init>") && args.nonEmpty =>
       Some(Tree.Apply(sel, Nil, method, tpe, origin))
     case _ => None
 
-  private def stripReplayedAssignments(program: Program, d: Tree.DefDef, fieldNames: Set[String]): Tree.DefDef =
+  private def stripReplayedAssignments(d: Tree.DefDef, fieldNames: Set[String])(using program: Program): Tree.DefDef =
     d.rhs match
       case Some(body) =>
-        val newBody = stripAssigns(program, body, fieldNames)
+        val newBody = stripAssigns(body, fieldNames)
         if newBody ne body then d.copy(rhs = Some(newBody)) else d
       case None => d
 
-  private def stripAssigns(program: Program, t: Term, fieldNames: Set[String]): Term = t match
+  private def stripAssigns(t: Term, fieldNames: Set[String])(using program: Program): Term = t match
     case Tree.Block(stmts, expr, tpe, origin, trailing) =>
       val filtered = stmts.flatMap {
-        case a: Tree.Assign if isFieldAssign(program, a, fieldNames) => None
-        case s: Term   => Some(stripAssigns(program, s, fieldNames))
+        case a: Tree.Assign if isFieldAssign(a, fieldNames) => None
+        case s: Term   => Some(stripAssigns(s, fieldNames))
         case other     => Some(other)
       }
-      val newExpr = stripAssigns(program, expr, fieldNames)
+      val newExpr = stripAssigns(expr, fieldNames)
       if (filtered ne stmts) || (newExpr ne expr) then Tree.Block(filtered, newExpr, tpe, origin, trailing) else t
     case _ => t
 
-  private def isFieldAssign(program: Program, a: Tree.Assign, fieldNames: Set[String]): Boolean =
+  private def isFieldAssign(a: Tree.Assign, fieldNames: Set[String])(using program: Program): Boolean =
     a.lhs match
       case Tree.Select(_, sym, _, _) => program.symbolOf(sym).exists(s => fieldNames.contains(s.name))
       case Tree.Ident(sym, _, _)     => program.symbolOf(sym).exists(s => fieldNames.contains(s.name))
@@ -251,16 +341,14 @@ object ClassToTraitTransform:
   val Name: String = "class-to-trait"
 
   final case class ParamMapping(index: Int, valName: String,
-    /** default literal for the nilary-constructor population -- UNUSED now: defaults are read
-      * from the nominated type's own nilary constructor delegation chain. Kept for future
-      * .conf spelling compatibility. */
     defaultLiteral: Option[Term] = None)
 
-  /** Precomputed at the start of `run`, once per nominated type. */
   private[transform] final case class ResolvedSpec(
-    fqn: String,
-    mappings: List[ParamMapping],
-    formalTypes: List[TypeRepr],
-    defaults: List[Term],
-    ownedFields: Set[String],
+    fqn: String, mappings: List[ParamMapping], formalTypes: List[TypeRepr],
+    defaults: List[Term], ownedFields: Set[String], parentSymId: SymId,
   )
+
+  private[transform] def headSymOf(tpe: TypeRepr): Option[SymId] = tpe match
+    case TypeRepr.TypeRef(_, s)      => Some(s)
+    case TypeRepr.AppliedType(tc, _) => headSymOf(tc)
+    case _                           => None
