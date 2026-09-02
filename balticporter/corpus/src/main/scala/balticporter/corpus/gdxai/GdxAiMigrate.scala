@@ -456,18 +456,13 @@ object GdxAiPolicy:
         // The base carries the same mechanism for its own generic classes (Octree, BSpline, etc.);
         // the dependent adds entries for ITS OWN classes through MergeablePolicy.
         new balticporter.transform.GlobalsToImplicitsTransform(
+          // Only classes whose FIRST type parameter is used DIRECTLY as an element type in a
+          // retarget construction (new Array<T>(), new ObjectSet<E>()). Classes constructing
+          // wrapped types (new Array<Task<E>>()) derive MkArray from ClassTag of the known class.
           requiredGivens = Map(
-            "com.badlogic.gdx.ai.btree.BranchTask" -> "lowlevel.MkArray",
-            "com.badlogic.gdx.ai.btree.BehaviorTree" -> "lowlevel.MkArray",
-            "com.badlogic.gdx.ai.fma.Formation" -> "lowlevel.MkArray",
-            "com.badlogic.gdx.ai.fma.SoftRoleSlotAssignmentStrategy" -> "lowlevel.MkArray",
-            "com.badlogic.gdx.ai.fsm.StackStateMachine" -> "lowlevel.MkArray",
-            "com.badlogic.gdx.ai.msg.PriorityQueue" -> "lowlevel.MkArray",
-            "com.badlogic.gdx.ai.pfa.DefaultGraphPath" -> "lowlevel.MkArray",
-            "com.badlogic.gdx.ai.sched.SchedulerBase" -> "lowlevel.MkArray",
-            "com.badlogic.gdx.ai.steer.behaviors.BlendedSteering" -> "lowlevel.MkArray",
-            "com.badlogic.gdx.ai.steer.behaviors.PrioritySteering" -> "lowlevel.MkArray",
-            "com.badlogic.gdx.ai.steer.utils.paths.LinePath" -> "lowlevel.MkArray",
+            "com.badlogic.gdx.ai.msg.PriorityQueue" -> "lowlevel.MkArray",       // new ObjectSet<E>()
+            "com.badlogic.gdx.ai.pfa.DefaultGraphPath" -> "lowlevel.MkArray",     // new Array<N>()
+            "com.badlogic.gdx.ai.sched.SchedulerBase" -> "lowlevel.MkArray",      // new Array<T>()
           ),
         ),
         balticporter.transform.PortMapTransform.forBases("sge"),
