@@ -165,6 +165,21 @@ object AshleyPolicy:
             "com.badlogic.ashley.systems.IntervalIteratingSystem#family"  -> "getFamily",
             "com.badlogic.ashley.systems.IntervalSystem#interval"        -> "getInterval",
           ),
+          // SCOPE OUT three ashley types from the base's `Everywhere()` auto-detection: the sge
+          // hand port KEPT the Java-style getter names (`getEntities`, `getSystems`, `getComponents`,
+          // `getComponentBits`) on Engine, Entity and EntityManager, and the sge tests call them
+          // that way. Auto-detection would rename `getX()` to `x` which breaks every test site.
+          // Merged with the base's `Everywhere(Set.empty)` this becomes `Everywhere(except)` —
+          // auto-detection runs on all OTHER ashley types and all libGDX types, but not on these
+          // three. Explicit `pairs` entries (like `EntitySystem#engine` above) are NOT affected
+          // by the scope — they always apply.
+          scope = balticporter.tir.RuleScope.Everywhere(Set(
+            "com.badlogic.ashley.core.Engine",
+            "com.badlogic.ashley.core.Entity",
+            "com.badlogic.ashley.core.EntityManager",
+            "com.badlogic.ashley.core.SystemManager",
+            "com.badlogic.ashley.utils.Bag",
+          )),
         ),
         // `PooledEngine.ComponentPools` uses `ReflectionPool` as a TYPE — a field's type, a local's
         // type, a `new`, and several cast targets — so no body seam can reach it. The base drops
@@ -240,6 +255,13 @@ object AshleyPolicy:
             "com.badlogic.ashley.core.Entity#remove",
             "com.badlogic.ashley.core.EntitySystem#engine",
             "com.badlogic.ashley.core.PooledEngine#createComponent",
+            // ComponentMapper.get(Entity) returns T|null in java (the entity may not have the
+            // component); sge wraps it as Nullable[T] — the test calls `.isDefined`, `.isEmpty`,
+            // `.get` on the result.  Added for drop-in parity (wave 3.2g).
+            "com.badlogic.ashley.core.ComponentMapper#get",
+            // NOT SystemManager#getSystem: wrapping it in Nullable breaks the INTERNAL call chain
+            // (Engine.addSystem calls systemManager.getSystem and expects T, not Nullable[T]).
+            // The 7 SystemManagerSuite errors about isDefined/get are KNOWN RESIDUE.
           ),
         ),
         // --- 3.2g: hand-port-added members (ecs drop-in parity) ---

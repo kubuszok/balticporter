@@ -63,6 +63,15 @@ final class ImmutableArray[A] private (
       bufArray.contains(value)
     }
 
+  /** 1-arg overload for sge parity: the hand port's ImmutableArray delegates to Iterable.contains
+    * which takes one argument. The emitted port's 2-arg form is the faithful translation of
+    * `ImmutableArray.contains(T, boolean)` from Ashley's java, where `identity=false` is the
+    * default behaviour (equals-based).
+    * `@targetName` avoids a JVM-level clash with `Iterable.contains[A1 >: A](elem: A1)`, which
+    * both erase to `contains(Object)`. */
+  @scala.annotation.targetName("containsValue")
+  def contains(value: A): Boolean = contains(value, false)
+
   def indexOf(value: A, identity: Boolean): Int =
     if (useDyn) {
       if (identity) dynArray.indexOfByRef(value) else dynArray.indexOf(value)
