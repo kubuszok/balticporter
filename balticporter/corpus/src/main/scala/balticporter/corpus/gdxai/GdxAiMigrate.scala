@@ -384,7 +384,7 @@ object GdxAiPolicy:
               |      val meta: sge.ai.btree.utils.TaskRegistry.Meta = sge.ai.btree.utils.TaskRegistry.metaOf(clazz)
               |      if (meta != null) {
               |        val taskAttributes: lowlevel.util.ObjectMap[java.lang.String, sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.AttrInfo] =
-              |          new lowlevel.util.ObjectMap[java.lang.String, sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.AttrInfo]()
+              |          lowlevel.util.ObjectMap[java.lang.String, sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.AttrInfo]()
               |        val attrs: scala.Array[sge.ai.btree.utils.TaskRegistry.Attr] = meta.attributes
               |        var i: scala.Int = 0
               |        while (i < attrs.length) {
