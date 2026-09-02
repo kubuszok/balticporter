@@ -264,3 +264,19 @@ class ManifestAgreementSpec extends munit.FunSuite:
     assertEquals(fs.size, 1)
     assertEquals(fs.head.subject, "ScalaJs, ScalaNative")
   }
+
+  test("a TYPE-RENAMED type is found by EMITTED name when the upstream lookup misses (D16)") {
+    // D16 made the port map's `upstream` column carry java's own FQN (`…ui.List`). The dependent's
+    // `upstreamFqn` uses `sym.name` — the post-type-rename simple name (`SgeList`) — combined with
+    // the pre-rename package from the java path, producing `…ui.SgeList`. Neither the upstream
+    // column nor the `upstreamFqn` match. The emitted-name fallback finds the entry through
+    // `emittedFqn` (`sge.scenes.scene2d.ui.SgeList`), which IS the map's emitted column.
+    val m = PortMap.of("base", "eng", List("out.SgeWidget"), SrcMap.Recording(Nil),
+      Set.empty, Set.empty, Set.empty, Set.empty,
+      Map("up.stream" -> "out", "up.stream.Widget" -> "out.SgeWidget"))
+    val sh = List(SharedType("up.stream.SgeWidget", "out.SgeWidget", substituted = false))
+    // Without the fix: BaseSurfaceAbsent. With: clean.
+    val fs = run(sh, List(BasePort(base.copy(governs = Set("up.stream")), Some(m), "run-latest")))
+    assertEquals(clue(fs).filter(_.kind == Kind.BaseSurfaceAbsent), Nil,
+      "a type-renamed entry must be found through its emitted name, not reported absent")
+  }

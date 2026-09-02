@@ -733,6 +733,19 @@ object ManifestAgreement:
         usable.foldLeft(Map.empty[String, (String, PortMap.Entry)]) { (acc, p) =>
           acc ++ p.map.get.byUpstream("type").iterator.map((k, e) => k -> (p.name, e))
         }
+      // A SECOND index by EMITTED name, for types whose `upstreamFqn` carries a post-type-rename
+      // simple name. D16 made the `upstream` column carry java's own FQN (`…ui.List`), but the
+      // dependent computes `upstreamFqn` from a symbol whose `name` the type rename has already
+      // changed (`SgeList`), combined with the pre-rename package from the java path. The result
+      // (`com.badlogic.gdx.scenes.scene2d.ui.SgeList`) matches neither the upstream column
+      // (`…ui.List`) nor the emitted column (`sge.scenes.scene2d.ui.SgeList`), so every type-renamed
+      // type was `BaseSurfaceAbsent`. The emitted-FQN lookup uses `t.emittedFqn` — the fully-renamed
+      // FQN the symbol carries — which IS the port map's emitted column.
+      val emittedByBaseName: Map[String, (String, PortMap.Entry)] =
+        usable.foldLeft(Map.empty[String, (String, PortMap.Entry)]) { (acc, p) =>
+          acc ++ p.map.get.types.filter(_.emitted.nonEmpty)
+            .iterator.map(e => e.emitted -> (p.name, e))
+        }
       // A type this run models is only ABSENT from a base's output if some base with a usable map
       // CLAIMS the namespace. Without a claim there is no module obliged to have emitted it, and
       // reporting one would fire on every JDK-adjacent or third-party root a port resolves against.
@@ -742,7 +755,7 @@ object ManifestAgreement:
       val sorted = shared.sortBy(_.upstreamFqn)
 
       val tags = sorted.flatMap { t =>
-        emittedByBase.get(t.upstreamFqn) match
+        emittedByBase.get(t.upstreamFqn).orElse(emittedByBaseName.get(t.emittedFqn)) match
           // PUBLISHED: what the base actually produced. `Dropped` (nothing stands at the name) and
           // `Substituted` (injected Scala stands at it) are one answer here — neither is a
           // mechanical translation, so this run must have tagged the type either way.
@@ -778,7 +791,8 @@ object ManifestAgreement:
       // otherwise. The difference is the whole of hole 5: a base whose rename failed to reach an
       // owned symbol, or whose output moved for an engine reason, satisfies its own rename map and
       // not its own output — and only the second is what a dependent compiles against.
-      def expectedName(t: SharedType): Option[String] = emittedByBase.get(t.upstreamFqn) match
+      def expectedName(t: SharedType): Option[String] =
+        emittedByBase.get(t.upstreamFqn).orElse(emittedByBaseName.get(t.emittedFqn)) match
         case Some((_, e)) if e.emitted.nonEmpty => Some(e.emitted)
         case Some(_)                            => scala.None // dropped: nothing was emitted to disagree with
         case scala.None                         => Some(asTheBaseNamesIt(t.upstreamFqn))
