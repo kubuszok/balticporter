@@ -14556,17 +14556,17 @@ dependent inherits it.
 
 #### Per-dependent table
 
-| port | pre-retarget floor | after retarget (3.1ah) | after 3.1ai |
-|---|---|---|---|
-| gdx | 0 | 0 | 0 |
-| gdx-test | 0 | 0 | 0 (184/7) |
-| screens | 0 | 0 | 0 |
-| anim8 | 0 | 45 | 17 |
-| textra | 0 | 122 | 24 |
-| gltf | 0/3 | 0/34 | 19 (main+test) |
-| vfx | 0 | 1 | 1 |
-| ai | 0 | 13 | 13 |
-| visui | 7 | 14 | 14 |
+| port | pre-retarget floor | after retarget (3.1ah) | after 3.1ai | after 3.1aj | after 3.1al |
+|---|---|---|---|---|---|
+| gdx | 0 | 0 | 0 | 0 | 0 |
+| gdx-test | 0 | 0 | 0 (184/7) | 0 (184/7) | 0 (184/7) |
+| screens | 0 | 0 | 0 | 0 | 0 |
+| anim8 | 0 | 45 | 17 | 17 | 17 |
+| textra | 0 | 122 | 24 | 18 | 18 |
+| gltf | 0/3 | 0/34 | 19 (main+test) | 12 | 12 |
+| vfx | 0 | 1 | 1 | 1 | 1 |
+| ai | 0 | 13 | 13 | 13 | 13 |
+| visui | 7 | 14 | 14 | 13 | 12 |
 
 #### Families and fixes (3.1ai)
 
@@ -14595,27 +14595,48 @@ receiver type being a retarget target. gdx 1 -> 0.
 mappings for arity-changing Entry types (0-param -> Tuple2[Int,Int], etc.). anim8 45 -> 17 (-28),
 textra 26 -> 24 (-2 from Tuple2 arity fix).
 
-#### Remaining residue (88 total, classified)
+#### Families and fixes (3.1aj)
+
+**TypeApply(Select) dispatch (section 1(a), engine).** The retarget rewrite path dispatched on
+`Tree.Apply(Tree.Select(...), ...)` but not `Tree.Apply(Tree.TypeApply(Tree.Select(...), ...), ...)`,
+missing every generic call. textra 24 -> 20 (Array.of Templates), gltf 19 -> 12 (ObjectMap.get
+Template + ArrayMap.remove Rename), visui 14 -> 13 (ArrayMap.get Template).
+
+**Static-receiver fallback (section 1(a), engine).** The `StaticReceiver` companion rewrite used
+an external `SymId` that could not be resolved by later phases. The fallback now uses the retarget
+target's own companion. Landed in `9a8b5d30`.
+
+#### Families and fixes (3.1al)
+
+**`.orNull` -> `.get` on all map get(K) Templates (section 1(b), policy).** lls's `.orNull` is
+deprecated as a lint tripwire; the Templates used it to unwrap `Nullable[V]` at every `get(K)` call.
+Replaced with `.get` — the non-deprecated unchecked unwrap (NPE on empty = java's null dereference
+semantics). The Template is STILL NEEDED because Scala 3's return-type-sensitive overload resolution
+picks `get(K,V):V` over `get(K):Nullable[V]` when the expected return type is `V` (measured:
+E171 at 4 sites without the Template, 74 errors without any Template). `.ref` 140 -> 54 (baseline):
+91 `.orNull` deprecation warnings and 13 stale `@nowarn` annotations eliminated. visui 13 -> 12
+(one `.get`-reachable unwrap that `.orNull` had not covered).
+
+#### Remaining residue (73 total, classified)
 
 - **16 Tuple2-immutable** (anim8): `Reassignment to val _1/_2` — Entry fields are mutable in java,
   `Tuple2` is immutable. Counted; no fix short of a mutable entry shim.
-- **9 ObjectMap.get overload ambiguity** (gltf 7, visui 2): `None of the overloaded alternatives of
-  method get` — lls `ObjectMap.get(K): Nullable[V]` vs `get(K, V): V` ambiguity at boxed arg.
 - **8 DynamicArray.from overloads** (ai): descriptor-keyed `Construct` row needed for copy ctors.
-- **7 companion refs** (textra 4+2+1): `OrderedSet`/`Array`/`IntMap` "not a member of sge.utils" —
-  `StaticReceiver` issue, the retarget has no `transformIdent`.
-- **5 ObjectMap type mismatches** (textra): `Found: ObjectMap[? <: String, Long]` — wildcard captures
-  from `Map<? extends ...>` in `retargetTypeArgs`.
-- **4 ObjectMap field mismatches** (textra): copy ctor assigning one ObjectMap to another at the wrong
-  type.
-- **3 Sge/Boolean/overload** (visui): miscellaneous single-site errors.
-- **3 companion type refs** (ai): `type ObjectMap is not a member of sge.utils`.
-- **2 GLTFMorphTarget extends final ObjectMap** (gltf): program class extending a retarget target.
-- **2 iterator on ObjectMap/ArrayMap** (gltf, visui): `iterator` is not a member.
-- **2 DynamicArray.next** (textra): `next` not a member.
-- **1 MkArray given** (vfx): `GlobalsToImplicitsTransform` did not thread the class.
-- **1 DynamicArray arity** (ai): `peek` with `()`.
-- Various ctor overloads, wildcard captures, and miscellaneous (remaining).
+- **5 companion refs** (anim8 1 IntIntMap, textra 1 IntMap, ai 3 ObjectMap): static receiver FQN
+  points to the java companion, not the retarget target's.
+- **4 copy-ctor type mismatches** (textra): ObjectMap copy-ctor assigning at the wrong type.
+- **4 wildcard captures** (textra 3, gltf 1): `ObjectMap[? <: K, V]` from `retargetTypeArgs`.
+- **4 GLTFMorphTarget extends ObjectMap** (gltf): program class extending a retarget target (2) +
+  PBR ctor overloads (2).
+- **3 BoolDispatch result type** (visui): Boolean from `BoolDispatch` flag.
+- **3 ctor overloads** (visui): VisScrollPane, VisSlider, VisWindow constructor descriptor mismatch.
+- **3 iterator/entries/next member rows** (gltf 2 iterator, textra 2 next, textra 1 entries, ai 1
+  iterator, ai 1 peek, visui 1 ArrayMap iterator — 8 total across dependents).
+- **2 OrderedSet type mismatch** (textra): TextraListBox, TextraSelectBox.
+- **1 StackTraceElement** (visui): Dialogs.getStackTrace.
+- **1 Sge given** (visui): Draggable.BLOCKER.
+- **1 ObjectSet.addAll(T...)** (gltf): vararg-packed array descriptor mismatch.
+- **1 MkArray[V] given** (vfx): `GlobalsToImplicitsTransform` did not thread the class.
 
 #### Lesson
 

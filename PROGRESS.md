@@ -11755,3 +11755,19 @@ matching the pattern of the four wave-2.1 helpers. The three bare sites (`fieldS
 `externalFieldType`, `erasedReceiverView`) would have crashed on a noClasspath resolution failure;
 now they gracefully decline. 0 digests by construction. See `ENGINE-LIMITS.md` 0.1 wave 2.15
 paragraph for the complete census table.
+
+### 13.22 Wave 3.1al --- retarget dependents (null image, .ref)
+
+`.orNull` -> `.get` on all six map types' `("get", 1)` retarget Templates. lls's `.orNull` is
+deprecated as a lint tripwire; `.get` is the non-deprecated unchecked unwrap (NPE on empty = java's
+null dereference semantics). The Template is still needed because Scala 3's return-type-sensitive
+overload resolution picks `get(K,V):V` over `get(K):Nullable[V]` when the expected return type is
+`V` (measured: E171 at 4 sites without the Template, 74 errors without any Template at all).
+
+**Measurements (3.1al):**
+- gdx 0/0/0 .ref 54 (baseline), gdx-test 0/0/0 184/7 (baseline)
+- textra 18 (unchanged from 3.1aj)
+- gltf 12 (unchanged)
+- visui 13 -> 12 (one `.get`-reachable unwrap)
+- ai 13, anim8 17, screens 0, vfx 1 (all unchanged)
+- `.ref` 140 -> 54: 91 `.orNull` deprecation warnings + 13 stale `@nowarn` annotations removed
