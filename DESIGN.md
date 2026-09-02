@@ -6436,17 +6436,31 @@ held to those flags by a fourth compile in every lane (PROGRESS §13, wave 1.0).
 compile under the reference repo's own compiler flags; a syntax error under `-no-indent` or a
 warning promoted to an error by `-Werror` is the lane's to find, not the consumer's to discover.
 
-**The fourth compile — `flags_compile`.** `scripts/_lib.sh` carries `flags_compile`, which runs
-`scala-cli compile` with the reference repo's scalacOptions over the emitted tree, counts errors
-through the same `compile_guard` as the JVM compile, and baselines them as `expected-errors.ref` —
-gated in both directions through `headline` with the same marker-file deferred-exit as the JVM,
-JS and Native compiles. `-Xmacro-settings:*` flags are dropped (macro timeouts, not diagnostics).
-Three flag sets are declared in the Justfile: `sge_strict_flags` (core sge — `SgePlugin.
-defaultScalacOptions` + `strictScalacOptions`), `sge_relaxed_flags` (sge extensions — strict minus
-`-Wunused:…` per `SgePlugin.relaxedSettings`), and `ssg_flags` (ssg ports — `ssg/build.sbt`). 20 of
-23 lanes carry the fourth compile (the three differential lanes are excluded — they compile
-hand-port tests, not emitted code). `baseline-accept` promotes `errors-count.ref` to
-`expected-errors.ref` alongside the other baselines.
+**The fourth compile — `port-*-ref` sbt projects.** Each port has a JVM-only `port-<module>-ref`
+project in `build.sbt` that shares the port's source generators and hand-written `src/` directories
+but compiles with the reference repo's own scalacOptions rather than `-nowarn`. A dependent's `-ref`
+project `dependsOn` the base port's JVM row (with `-nowarn`), so only the dependent's own diagnostics
+appear — the base's warnings are counted by its own lane. `sbt_ref_compile` in `scripts/_lib.sh`
+runs `sbt --client port-<module>-ref/compile`, counts both Error AND Warning diagnostics (under
+`-Werror` every warning is promoted), and baselines them as `expected-errors.ref` — gated in both
+directions through `headline`. `-Xmacro-settings:*` flags are dropped. Three flag sets are declared
+as `val`s in `build.sbt` (`sgeStrictFlags`, `sgeRelaxedFlags`, `ssgFlags`) and as shell variables in
+the Justfile (`sge_strict_flags`, `sge_relaxed_flags`, `ssg_flags`). `just deps-lint` verifies
+that coordinates in `build.sbt` agree with what the port's manifest declares. 20 of 23 lanes carry
+the fourth compile (the three differential lanes are excluded — they compile hand-port tests, not
+emitted code).
+
+**Port subprojects and the warm-server model.** Every ported library is a `projectMatrix` in
+`build.sbt` with JVM, JS and Native rows, prefixed `port-` (`port-sgeJVM`, `port-sgeJS`,
+`port-sgeNative`). Sources reach them through `sourceGenerators` keyed on `(ThisBuild /
+baseDirectory)`, exactly as `SbtGen` already writes. A dependent `dependsOn` its base's matrix
+(e.g. ashley on sge), which is how the base's emitted Scala reaches the dependent's classpath.
+Each worktree runs a private sbt background server under `SBT_GLOBAL_SERVER_DIR=/tmp/sbt-bp-
+<sha1(cwd)[:8]>`, solving `ENGINE-LIMITS.md` M5.11: sbt 2's `sbtn` derived a socket hash that
+collided across worktrees sharing a common `.git` directory. The per-worktree socket makes
+`sbt --client` safe; zinc's incremental compile and sbt 2's compile cache make a policy iteration
+ONE migration plus ONE incremental JVM compile (~2 min for gdx instead of ~25 min under scala-cli).
+The `-measure-full` variant adds JS, Native and ref compiles; `measure-all` uses it.
 
 ### 8.25 The divergence census and its verdicts
 

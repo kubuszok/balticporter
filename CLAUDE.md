@@ -1051,11 +1051,13 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   | `just textra-diff-measure` | TextraTypist's DIFFERENTIAL gate — the hand port's own suite, run against the emitted port |
   | `just visui-measure` | VisUI's `ui/` module, compiled WITH libGDX core (a dependent port) |
   | `just visui-diff-measure` | VisUI's DIFFERENTIAL gate — the hand port's own suite, run against the emitted port |
-  | `just measure-all` | every lane above, SERIALLY, in dependency order — never in parallel |
+  | `just measure-all` | every lane above with `BP_FULL=1` (full: JVM + JS + Native + ref), SERIALLY |
+  | `just <lane>-measure-full` | any lane's FULL variant — adds JS, Native and ref-flags compiles |
   | `just decision-counts` | `decisions.tsv` row counts by kind, every port |
   | `just members-unchanged` | `members.tsv` against its baseline — the blast radius, before a compile |
   | `just baseline-{list,show,diff,accept}` | the baseline half of the check report |
   | `just upstream-pin` | vendored upstream trees vs sge/ssg submodule pins (mismatch is FATAL) |
+  | `just deps-lint` | fail when a `port-*` project's coordinates disagree with the port's manifest |
   | `just ecs-dropin` | sge-ecs drop-in: emitted port replaces hand port inside sge's own build |
   | `just ecs-divergence` | sge-ecs divergence census: every hand-port adjustment, enriched with evidence |
   | `just dropin-all` | every drop-in lane (NOT in `measure-all` — expected red until parity) |
@@ -1237,16 +1239,15 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   **Fewer errors fails the lane as loudly as more**: a change is acknowledged by re-accepting, and a
   lane that absorbed improvement would let a fix and a regression cancel inside one run.
 - **…AND THE CROSS-PLATFORM COMPILE IS BASELINED BESIDE IT, as `expected-errors.js` and
-  `expected-errors.native`.** After each lane's JVM compile, `xplat_compile` (scripts/_lib.sh) runs
-  `scala-cli compile --platform scala-js` and `--platform scala-native` over the same emitted source
-  tree. This is a COMPILE gate, not a portability gate (`ENGINE-LIMITS.md` P1): the Scala.js and
-  Native compilers type-check against their own javalib, so a `java.lang.reflect.Field` the JVM has
-  and JS/Native do not is a real compile error here, while the `portability(all|emitted|injected)`
-  lanes stay as the TIR-level API-presence check. Dependencies are passed through the `--` separator,
-  the same classpath the JVM compile gets: both `:` (Java) and `::` (Scala cross-published)
-  coordinates resolve on JS/Native for type-checking, and `--jar` directories are accepted too.
-  The JS and Native version
-  pins match sge's toolchain (Scala.js 1.22.0, Scala Native 0.5.12) through scala-cli's defaults.
+  `expected-errors.native`.** In full mode (`BP_FULL=1`, which `measure-all` sets), each lane compiles
+  the port's JS and Native `projectMatrix` rows via `sbt_xplat_compile` (scripts/_lib.sh), running
+  `sbt --client port-<module>JS/compile` and `port-<module>Native/compile`. This is a COMPILE gate,
+  not a portability gate (`ENGINE-LIMITS.md` P1): the Scala.js and Native compilers type-check
+  against their own javalib, so a `java.lang.reflect.Field` the JVM has and JS/Native do not is a
+  real compile error here, while the `portability(all|emitted|injected)` lanes stay as the TIR-level
+  API-presence check. Dependencies are in `build.sbt` (the matrix rows inherit them). The JS and
+  Native version pins come from `project/plugins.sbt` and match sge's toolchain (Scala.js 1.22.0,
+  Scala Native 0.5.12).
   `baseline/expected-errors.js` and `baseline/expected-errors.native` are written by the run
   (`run-latest/errors-count.js`, `errors-count.native`) and promoted by `just baseline-accept`, gated
   in both directions with the same marker-file deferred-exit pattern as the JVM error count. A
@@ -1264,17 +1265,19 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
 - **…AND A FOURTH COMPILE UNDER THE REFERENCE BUILD'S OWN FLAGS, baselined as
   `expected-errors.ref`.** The reference repo (sge or ssg) compiles with `-no-indent -Werror
   -Wunused:imports,privates,locals,patvars,nowarn` among others (DESIGN.md §8.24), so a port that is
-  green under scala-cli's defaults and red under those flags is not at the bar. `flags_compile`
-  (`scripts/_lib.sh`) runs `scala-cli compile` with the reference repo's scalacOptions over the same
-  emitted tree, counts errors, and baselines them as `expected-errors.ref` — gated in both directions
+  green under `-nowarn` and red under those flags is not at the bar. Each port has a `port-*-ref` sbt
+  project in `build.sbt` that shares the port's source generators but compiles with the reference
+  repo's `scalacOptions`. `sbt_ref_compile` (`scripts/_lib.sh`) runs
+  `sbt --client port-<module>-ref/compile`, counts BOTH errors and warnings (under `-Werror` every
+  warning is promoted), and baselines them as `expected-errors.ref` — gated in both directions
   through `headline` with the same marker-file deferred-exit as the other three compiles.
-  `-Xmacro-settings:*` flags are dropped (macro timeouts, not diagnostics). Three flag sets are
-  declared in the Justfile: `sge_strict_flags` (core sge, from `SgePlugin.strictScalacOptions`),
-  `sge_relaxed_flags` (sge extensions, strict minus `-Wunused:…` per `SgePlugin.relaxedSettings`),
-  and `ssg_flags` (ssg ports, from `ssg/build.sbt`). Every injected shim under
-  `balticporter/corpus/*-overrides/` and `ported/*/src/` and every runtime support file under
-  `balticporter/runtime/` must use brace syntax (`-no-indent`), which is a text change with 0 member
-  digests since injected files are copied, not emitted.
+  `-Xmacro-settings:*` flags are dropped. Three flag sets are declared as vals in `build.sbt`
+  (`sgeStrictFlags`, `sgeRelaxedFlags`, `ssgFlags`) and as variables in the Justfile. A dependent's
+  `-ref` project `dependsOn` the base port's JVM row (with `-nowarn`), so the base's warnings are
+  NOT double-counted. `just deps-lint` verifies coordinates agree between `build.sbt` and the port's
+  manifest. Every injected shim under `balticporter/corpus/*-overrides/` and `ported/*/src/` and
+  every runtime support file under `balticporter/runtime/` must use brace syntax (`-no-indent`),
+  which is a text change with 0 member digests since injected files are copied, not emitted.
 - **…AND SO IS THE NUMBER OF TESTS THE PORT EMITS, for the same reason and with the same file.** The
   error count was not the only measurement nothing compared. Every test lane already counted what
   each framework would DISCOVER in the emitted Scala against the `@Test` count in the upstream java
@@ -1317,25 +1320,20 @@ It runs on the **Fable 5** model and is expensive, so it is **not** run on every
   moved `policy=` read as a raw diff is two sixteen-character digests. A run that published NO map
   while a baseline exists fails it too: `PortMap.discoverIn` then silently hands its dependents the
   COMMITTED map instead.
-- **THE JDK IS AN INPUT TO THE MEASUREMENT, AND THERE ARE TWO OF THEM.** Every number here rests on
-  two JVMs: the FRONTEND's, which resolves an external symbol's parents, members and modifiers out of
-  a CLASS FILE — so the emitted text is a function of the JDK exactly as it is of the manifest and
-  the engine — and the COMPILE's, which `scala-cli` selects independently. Both were ambient. A
-  migration on GraalVM **24** (a launchd job with no `JAVA_HOME`, so `/usr/bin/java` takes the NEWEST
-  installed JDK) emitted `override def getChars` on `sge.utils.CharArray` — `java.lang.CharSequence`
-  gained the member in 23 — and the JDK-22 compile answered `E037 … overrides nothing` at a member
-  whose name, formals and body are a perfect translation. Every check count, every finding, every
-  other member digest and all three of the port map's fingerprints stayed flat, *correctly*: the
-  engine, the java and the policy really were unchanged. So the compile half is PINNED (`jdk_version`
-  in the `Justfile`, one exported variable, `--jvm` on every `scala-cli` a lane runs) and the
-  frontend half is RECORDED, because a lane cannot pin it — `sbt -client` forks the migration from a
-  server whose JVM was chosen earlier, which is §4.6's boundary and takes §4.6's remedy: the run
-  WRITES `run-latest/jvm.txt` where an environment variable would not arrive. `jdk_guard` prints
-  `frontend jdk N / compile jdk M` on every lane and fails when they differ; ACROSS runs the same
-  question is the port map's `jdk=` header, whose mismatch is fatal (`ENGINE-LIMITS.md` M5.10). Read
-  a bare `overrides nothing` at a faithful translation as a JDK split before reading it as an engine
-  gap — and never "fix" a split by moving `jdk_version`, which is a change to the measurement and is
-  acknowledged by re-accepting every baseline.
+- **THE JDK IS AN INPUT TO THE MEASUREMENT.** Every number here rests on the JVM the sbt server
+  runs under: the FRONTEND resolves external symbols' parents, members and modifiers out of CLASS
+  FILES, so the emitted text is a function of the JDK exactly as it is of the manifest and the
+  engine. With sbt doing all compiles (JVM, JS, Native, ref), the frontend and compile JDKs are the
+  SAME sbt server's JVM. A migration on GraalVM **24** (a launchd job with no `JAVA_HOME`, so
+  `/usr/bin/java` takes the NEWEST installed JDK) emitted `override def getChars` on
+  `sge.utils.CharArray` — `java.lang.CharSequence` gained the member in 23 — and the JDK-22 compile
+  answered `E037 … overrides nothing`. `jdk_version` in the Justfile (currently 22) is the EXPECTED
+  version; `jdk_guard` verifies the sbt server's JDK matches it (via `java -XshowSettings:properties`
+  and the run's `jvm.txt`). ACROSS runs the same question is the port map's `jdk=` header, whose
+  mismatch is fatal (`ENGINE-LIMITS.md` M5.10). Read a bare `overrides nothing` at a faithful
+  translation as a JDK mismatch before reading it as an engine gap — and never "fix" it by moving
+  `jdk_version`, which is a change to the measurement acknowledged by re-accepting every baseline.
+  Restart the sbt server under the correct `JAVA_HOME` instead.
 - **WIDENING A GUARD IS MEASURED ON THE PORTS IT WAS NOT AIMED AT, because an OVER-APPROXIMATION is
   invisible to every count.** Narrowing a predicate breaks something and a count says so. Widening
   one is the opposite shape and has no instrument pointed at it: the extra sites take a translation
@@ -2374,8 +2372,9 @@ let everything else be seen.** Two questions settle it —
 value is NORMAL; let a harvest that throws be seen") — this is the same rule, and it is here because
 the second occurrence is what makes it a rule rather than a note about comments.
 
-`sbt -client` talks to a long-running server, so a shell environment variable never reaches the
-forked migration. Gate the switch on a marker FILE.
+`sbt --client` talks to a warm background server (per-worktree via `SBT_GLOBAL_SERVER_DIR`, see
+`ENGINE-LIMITS.md` M5.11), so a shell environment variable never reaches the forked migration.
+Gate the switch on a marker FILE.
 
 **The kill switch is now a FLAG — do not edit source to get one.** `Pipeline.run` reads these, so
 the question "is this phase even responsible" costs one run and no diff:

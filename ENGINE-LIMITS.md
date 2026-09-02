@@ -10556,6 +10556,18 @@ worktrees" under `sbt -batch`. The invocation that runs a PRIVATE foreground ser
 lane's two calls now use it (measured: `engine/compile` 7.5 s wall with the disk cache, no server
 socket left behind). `sbt -client`, `sbtn` and bare `sbt -batch` are all forbidden in lanes and
 agent briefs.
+
+**CLOSED — per-worktree `SBT_GLOBAL_SERVER_DIR`.** The root cause was sbt 2's `sbtn` deriving a
+server hash from the base directory, and git worktrees sharing a common `.git` directory resolving to
+the SAME hash. The fix: `SBT_GLOBAL_SERVER_DIR`, exported by `scripts/_lib.sh` to a short path in
+`/tmp/sbt-bp-<sha1(cwd)[:8]>`. Each worktree gets a private server socket, sbt 2's compile cache and
+zinc's incremental state are per-worktree, and `sbt --client` is safe again (no `--server -batch`
+overhead per invocation). Measured: with the per-worktree socket, two worktrees' lanes run
+concurrently without interference, a second `sbt --client` command completes in <0.5 s (zinc cache
+hit), and `sbt --client shutdown` is clean. The `jstack` watchdog (`sbt_watchdog`) monitors for
+stale logs and can diagnose a hung server without killing the sibling. All 23 lanes moved from
+`sbt --server -batch` (one JVM start per invocation) to `sbt --client` (warm background server),
+reducing gdx-measure from ~25 min to ~2 min wall.
 ### M6. Refuse and COUNT rather than approximate
 
 Three places where the port deliberately carries a number instead of a guess, and each is the right
