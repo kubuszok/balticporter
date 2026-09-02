@@ -14469,20 +14469,33 @@ Five families of retarget call-site semantics that compile clean and fail at run
 | `Array(T[])` copies with `capacity == length` | previous `apply() + addAll` left default capacity 16 | `$Target.from[$T0]($0)` — `DynamicArray.from(Array)` copies with exact capacity | SortTest 8 -> 0 |
 | `Queue.toString` -> `"[a, b, c]"` | `ArrayDeque.toString` -> `"ArrayDeque(a, b, c)"` | Template `mkString("[", ", ", "]")` | `toStringTest` 1 -> 0 |
 | `xor(bits)` MUTATES in place | `BitSet.xor` RETURNS a new set | Template `^=` in-place operator (CLAUDE.md §4.4) | `xorTest` 1 -> 0 |
-| `Iterator.remove()` mutates the collection through the iterator | `JavaIterator.from(target.iterator)` is a read-only bridge — no handle on the collection | **REFUSED, counted**: `RetargetBoundaryCheck.Issue.IteratorRemove`, per-member attribution | 4 tests remain (QueueTest x2, MixedPutRemoveTest x2) |
+| `Iterator.remove()` mutates the collection through the iterator | `JavaIterator.from(target.iterator)` was a read-only bridge — no handle on the collection | **CLOSED** (wave 3.2f): `JavaIterator.removing` / `removingFromBuffer` — index-tracking shim over the collection. ArrayDeque (`removingFromBuffer`), DynamicArray (`removing` with `size/apply/removeIndex` lambdas), ObjectMap values/keys Collect (`removing` with parallel key-tracking and `map.remove(key)`). Unsupported targets keep the read-only bridge and the `IteratorRemove` finding | 4 -> 0 (QueueTest x2, MixedPutRemoveTest x2 now pass) |
 
 The raw-constructor element-type gap is **CLOSED**: `retargetConstruct` derives the element type
 from a dropped supplier `Tree.MethodRef` (`Sprite[]::new` -> `[Sprite]`) when the constructor's own
 type is unapplied or Object-applied. This is §1(a) universal — a fact about raw types and
 `ArraySupplier`, true of every codebase.
 
-**IteratorRemove: the approach to close it.** A faithful image is a removing iterator minted OVER THE
-COLLECTION (index-tracking, calling the target's own `removeIndex`), which is a runtime shim
-(`balticporter.runtime.RemovingIterator[A]`) the bridge does not have yet. `DynamicArray.iterator`
-returns a read-only `Iterator[A]` with no `remove`; lls has no removing iterator. The shim would
-wrap the DynamicArray directly, tracking the current index and delegating `remove` to
-`removeIndex(lastReturnedIndex)`. §1(a) engine mechanism, (b) parameter is the retarget target's
-remove method.
+**IteratorRemove: CLOSED (wave 3.2f).** A removing iterator minted OVER THE COLLECTION — three kinds:
+
+| retarget target | factory | mechanism |
+|---|---|---|
+| `scala.collection.mutable.ArrayDeque` | `JavaIterator.removingFromBuffer(buf)` | delegates to `Buffer.remove(i)` |
+| `lowlevel.util.DynamicArray` | `JavaIterator.removing(() => da.size, i => da(i), i => da.removeIndex(i))` | index-tracking with lambda callbacks |
+| `lowlevel.util.ObjectMap` (via Collect) | `JavaIterator.removing(...)` over parallel key/value DynamicArrays | collects keys and values, removes from the MAP by key on `remove()` |
+
+The engine decides by target FQN (`emitRemovingIterator` in `CollectionsTransform`, keyed on the
+phase's own `effectiveRetarget` table per section 4.56). Unsupported targets keep `JavaIterator.from(target.iterator)` and
+the `IteratorRemove` finding. The runtime shim is section 1(a) universal (the semantics scala's iterators
+lack); the per-target wiring is section 1(b) via the retarget table.
+
+Behavioural delta enumeration (CLAUDE.md section 3): (1) `ConcurrentModificationException` is not
+reproduced — java's contract says it is best-effort there too. (2) The removing iterator reads the
+LIVE collection (`size()` and `get()` at each step), matching java's `ArrayList.Itr`. (3) Elements
+returned are the live collection's own references, not copies. gdx-test 180/11 -> 184/7
+(QueueTest x2 + MixedPutRemoveTest x2 now pass). 27 member digests moved on libGDX core
+(every `.iterator` site on a DynamicArray or ArrayDeque retarget target). Ashley 108/2/2 held
+(0 member digests moved). Liqp: 0 member digests from this change (JDK collections, not retarget).
 
 **CharArray residue: 3 JsonMatcherTests.** `DynamicArray[Char].toString` renders as `[c, h, ...]`
 rather than java's `CharArray.toString` which concatenates chars into a string. Same decision as the

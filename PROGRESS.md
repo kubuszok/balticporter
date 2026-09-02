@@ -11646,9 +11646,8 @@ Engine specs at HEAD: 1106 engine + 1447 corpus, 0 failures.
 
 #### Residue / next
 
-- **IteratorRemove x4** (K36 OPEN): a faithful image is a removing iterator minted over the
-  collection (`RemovingIterator[A]` runtime shim wrapping `DynamicArray`, tracking index, delegating
-  `remove` to `removeIndex`). §1(a) mechanism, (b) parameter is the retarget target's remove method.
+- ~~IteratorRemove x4~~ K36 CLOSED (wave 3.2f): `JavaIterator.removing` / `removingFromBuffer`,
+  gdx-test 180/11 -> 184/7.
 - **K35 OPEN**: injected-type arity follow. Fix: read the injected source's member surface
   (scalameta, which `api-parity` already parses) and feed `NullaryArityTransform` from it. Then the
   injected ImmutableArray can be sge's verbatim shape (`Iterable`, parenless `iterator`).
@@ -11659,6 +11658,23 @@ Engine specs at HEAD: 1106 engine + 1447 corpus, 0 failures.
   `-Wunused` and `-Werror`-promoted warnings not yet addressed.
 - **sge-ecs drop-in 38/39/39**: wave 3.2e (ArrayBuffer-vs-DynamicArray backing divergence for
   drop-in parity).
+
+### 13.19a Wave 3.2f --- removing iterator (K36 IteratorRemove CLOSED)
+
+`JavaIterator.removing` / `removingFromBuffer` runtime shim with index-tracking, emitted by
+`CollectionsTransform` at retarget iterator sites keyed on the target FQN. Three kinds: ArrayDeque
+via `removingFromBuffer(buf)`, DynamicArray via `removing(() => da.size, ...)`, ObjectMap
+values/keys Collect via parallel key-tracking DynamicArrays and `map.remove(key)`.
+
+- gdx 0/0/0/54 (27 member digests moved at iterator sites, all attributable to the iterator
+  wrapping change)
+- gdx-test 184/7 (was 180/11): QueueTest.iteratorTest, QueueTest.iteratorRemoveEdgeCaseTest,
+  MixedPutRemoveTest.testIntMapIterator, MixedPutRemoveTest.testLongMapIterator now pass. 4 rows
+  removed from `expected-failures.tsv`, leaving the 3 CharArray rows.
+- ashley 108/2/2 held (0 member digests from this change)
+- liqp: 0 member digests from this change (JDK collections, not retarget targets)
+- runtime 194 specs green (10 new removing-iterator specs)
+- engine+corpus 1447 specs green
 
 ### 13.19 Wave 3.2d --- `NullabilityTransform.nullableMembers` for unannotated-but-nullable returns
 

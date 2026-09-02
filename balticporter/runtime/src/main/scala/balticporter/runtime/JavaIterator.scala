@@ -36,6 +36,69 @@ object JavaIterator {
     }
   }
 
+  /** A removing iterator over an indexed mutable collection.
+    *
+    * '''java.util.Iterator.remove() contract''' (JDK spec):
+    *   - removes the element last returned by `next()`
+    *   - throws `IllegalStateException` if `next()` has not yet been called
+    *   - throws `IllegalStateException` if `remove()` is called twice after a single `next()`
+    *   - after `remove()`, the cursor steps back so the subsequent `next()` returns the element
+    *     that WOULD HAVE been returned without the removal
+    *
+    * '''Behavioural delta enumeration''' (CLAUDE.md section 3, refusal enumeration):
+    *   1. '''Concurrent modification''' -- java's `ConcurrentModificationException` is not
+    *      reproduced. If the collection is modified by means other than `remove()` while
+    *      iteration is in progress, the behaviour is undefined. '''GUARD: not guarded;
+    *      COUNTED: no, because the java contract says behaviour is undefined there too'''
+    *      (the `modCount` fast-fail is best-effort in the JDK itself).
+    *   2. '''Snapshot vs live''' -- this iterator reads the LIVE collection (`size()` and
+    *      `get()` at each step), so a removal IS observed by the subsequent `hasNext()`/`next()`.
+    *      This matches java's own `ArrayList.Itr` and `ArrayDeque.DeqIterator`.
+    *   3. '''Identity''' -- the elements returned are the live collection's own references,
+    *      never copies. This matches java.
+    *
+    * @param size     the current size of the collection (called on each `hasNext()`)
+    * @param get      element at index `i` (called on each `next()`)
+    * @param removeAt remove element at index `i` (called on each `remove()`)
+    */
+  def removing[A](size: () => Int, get: Int => A, removeAt: Int => Unit): JavaIterator[A] = {
+    new JavaIterator[A] {
+      private var cursor: Int = 0
+      private var lastReturned: Int = -1 // -1 means "next() not yet called" or "already removed"
+
+      def hasNext(): Boolean = cursor < size()
+
+      def next(): A = {
+        val i = cursor
+        if (i >= size()) {
+          throw new java.util.NoSuchElementException()
+        }
+        lastReturned = i
+        cursor = i + 1
+        get(i)
+      }
+
+      override def remove(): Unit = {
+        if (lastReturned < 0) {
+          throw new IllegalStateException("next() has not been called or remove() already called")
+        }
+        removeAt(lastReturned)
+        // Step the cursor back: the element at `cursor` slid down into `lastReturned`'s slot,
+        // so the next call to `next()` should read from `lastReturned`, not `cursor`.
+        cursor = lastReturned
+        lastReturned = -1
+      }
+    }
+  }
+
+  /** A removing iterator for a `scala.collection.mutable.Buffer` (which includes `ArrayDeque`).
+    *
+    * Delegates `size`, `apply` and `remove` to the buffer's own methods.
+    * Portable: `mutable.Buffer` is in the Scala stdlib on all platforms. */
+  def removingFromBuffer[A](buf: scala.collection.mutable.Buffer[A]): JavaIterator[A] = {
+    removing[A](() => buf.size, i => buf(i), i => { buf.remove(i); () })
+  }
+
   extension [A](self: JavaIterator[A]) {
     /** A scala view of this java iterator. `remove()` is not expressible there and is
       * simply not offered — the view is for traversal. */

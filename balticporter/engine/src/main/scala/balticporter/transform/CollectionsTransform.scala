@@ -818,6 +818,13 @@ final class CollectionsTransform(
   private var collectSeq: Int = 0
   /** set to `true` during the Collect post-pass so [[collectPhase]] fires `emitCollect`. */
   private var collectPassActive: Boolean = false
+  /** Collect blocks whose original receiver is a map and whose `.iterator()` should produce a
+    * REMOVING iterator — keyed on the Opaque block's identity (same identity model as
+    * `selectChainRewritten`). Value is `(originalReceiver, srcFqn, collectVia)` so the
+    * iterator wrapping can emit a removing iterator that removes from the ORIGINAL map by key,
+    * rather than a read-only wrapper over the snapshot. */
+  private val collectBlockReceivers: java.util.IdentityHashMap[AnyRef, (Term, String, String)] =
+    new java.util.IdentityHashMap()
 
   /** A minimal Phase for the Collect post-pass: rewrites standalone `keys()`/`values()` calls on
     * retarget targets into collect blocks. Defined as a member (not a local) so it can access
@@ -868,7 +875,15 @@ final class CollectionsTransform(
                   case _ => Tree.Select(recv, m, t.tpe, so)
               else if mName == "iterator" && iteratorFromSym != SymId.None && javaIteratorSym != SymId.None then
                 // Wrap .iterator with JavaIterator.from when the caller expects JavaIterator.
+                // K36: if this Collect block's receiver is tracked, emit a REMOVING iterator
+                // that removes from the original MAP by key rather than wrapping the read-only
+                // DynamicArray snapshot.
                 headSym(t.tpe) match
+                  case Some(h) if (h == javaIteratorSym || (remap.contains(h) && remap(h) == javaIteratorSym) ||
+                      p.symbolOf(h).exists(s => s.fullName == "java.util.Iterator" || s.fullName == "balticporter.runtime.JavaIterator")) &&
+                      collectBlockReceivers.containsKey(recv) =>
+                    val (mapRecv, srcFqn, via) = collectBlockReceivers.get(recv)
+                    emitRemovingIteratorForCollect(mapRecv, srcFqn, via, t.tpe, so)
                   case Some(h) if h == javaIteratorSym || (remap.contains(h) && remap(h) == javaIteratorSym) ||
                       p.symbolOf(h).exists(s => s.fullName == "java.util.Iterator" || s.fullName == "balticporter.runtime.JavaIterator") =>
                     val iterSelect = Tree.Select(recv, m, TypeRepr.NoType, so)
@@ -3475,11 +3490,16 @@ final class CollectionsTransform(
           // after the type redirect.
           case CollectionsTransform.RetargetRewrite.Chain(members, _, _)
               if members.lastOption.contains("iterator") && iteratorFromSym != SymId.None =>
-            // Use the ORIGINAL Select as the argument — it already refers to the target's
-            // `iterator` member.  Creating a new Select with a new sym produces a double-
-            // application when the emitter renders the parameterless call.
-            Some(Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, sel.origin),
-                            List(sel), iteratorFromSym, sel.tpe, sel.origin))
+            // K36: for retarget targets that support indexed removal, emit a REMOVING iterator
+            // over the RECEIVER rather than a read-only JavaIterator.from(da.iterator).
+            val targetFqn = effectiveRetarget.get(srcFqn)
+            val removingResult = targetFqn.flatMap(tgt => emitRemovingIterator(sel.qual, tgt, sel.tpe, sel.origin))
+            if removingResult.isDefined then Some(removingResult.get)
+            else
+              // Fall back: use the ORIGINAL Select as the argument — it already refers to the
+              // target's `iterator` member.
+              Some(Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, sel.origin),
+                              List(sel), iteratorFromSym, sel.tpe, sel.origin))
           // Chain at a Select (parenless): the member was made parenless by bean-property or
           // NullaryArityTransform, so it arrives as a Tree.Select, not a Tree.Apply.  Apply
           // the chain with no arguments — each member in the chain is a parameterless Select
@@ -3841,12 +3861,88 @@ final class CollectionsTransform(
     val n = { collectSeq += 1; collectSeq }
     val varName = s"r$$co$n"
     val addName = "add"
-    Some(Tree.Opaque.spliced(
+    val block = Tree.Opaque.spliced(
       List(s"{ val $varName = ${rw.into}[", s"](); ", s".${rw.via}($varName.$addName); $varName }"),
       List(Tree.Ident(headSym(elemTpe).getOrElse(SymId.None), elemTpe, so), recv),
       TypeRepr.NoType,
       so
-    ))
+    )
+    // Track map Collect receivers so `.iterator()` chained on the block can emit a REMOVING
+    // iterator that removes from the original MAP rather than from the DynamicArray snapshot.
+    if rw.via == "foreachValue" || rw.via == "foreachKey" then
+      collectBlockReceivers.put(block, (recv, srcFqn, rw.via))
+    Some(block)
+
+  /** K36: emit a REMOVING iterator for a direct `recv.iterator` on a retarget target,
+    * keyed on the TARGET FQN (the phase's own retarget record, per section 4.56).
+    * Returns `None` for targets the shim does not support, in which case the caller falls
+    * back to the read-only `JavaIterator.from(recv.iterator)`. */
+  private def emitRemovingIterator(recv: Term, targetFqn: String, tpe: TypeRepr, so: Origin)(using p: Program): Option[Term] =
+    targetFqn match
+      case "scala.collection.mutable.ArrayDeque" =>
+        // ArrayDeque IS a mutable.Buffer -- use the dedicated factory.
+        Some(Tree.Opaque.spliced(
+          List("balticporter.runtime.JavaIterator.removingFromBuffer(", ")"),
+          List(recv), tpe, so))
+      case "lowlevel.util.DynamicArray" =>
+        // DynamicArray: generic removing with size/apply/removeIndex lambdas.
+        // $recv appears 3 times -- bind to a val to avoid multiple evaluation.
+        val n = { collectSeq += 1; collectSeq }
+        val tmpName = s"bp$$da$n"
+        val riName  = "bp$ri"
+        Some(Tree.Opaque.spliced(
+          List(s"{ val $tmpName = ", s"; balticporter.runtime.JavaIterator.removing(() => $tmpName.size, ($riName: scala.Int) => $tmpName.apply($riName), ($riName: scala.Int) => { $tmpName.removeIndex($riName); () }) }"),
+          List(recv), tpe, so))
+      case _ => scala.None
+
+  /** K36: emit a REMOVING iterator for a map Collect whose `.iterator()` was chained.
+    *
+    * Instead of the old `JavaIterator.from({ collectSnapshot }.iterator)`, this emits a block
+    * that collects BOTH keys and values into parallel DynamicArrays and returns a
+    * `JavaIterator.removing(...)` whose `removeAt` callback removes from the ORIGINAL map by
+    * key. The DynamicArray snapshots are also pruned on removal so the cursor stays consistent.
+    *
+    * The receiver is the ORIGINAL map term (`mapRecv`); the element type is extracted from the
+    * map's value (for `foreachValue`) or key (for `foreachKey`) type parameter. */
+  private def emitRemovingIteratorForCollect(mapRecv: Term, srcFqn: String, via: String,
+      tpe: TypeRepr, so: Origin)(using p: Program): Term =
+    val isValues = via == "foreachValue"
+    val keyTpe   = keyType(mapRecv.tpe).getOrElse(TypeRepr.NoType)
+    val valTpe   = valueType(mapRecv.tpe).getOrElse(TypeRepr.NoType)
+    val elemTpe  = if isValues then valTpe else keyTpe
+    val n = { collectSeq += 1; collectSeq }
+    val ksName   = s"bp$$ks$n"
+    val vsName   = s"bp$$vs$n"
+    val mapName  = s"bp$$map$n"
+    val riName   = "bp$ri"
+    val into     = "lowlevel.util.DynamicArray"
+    // Build the block as an Opaque.spliced with the map receiver, key type and value type as holes.
+    // The block collects keys and values in parallel, then creates a removing JavaIterator whose
+    // removeAt callback removes from the map by key AND from both snapshot arrays.
+    val iterExpr = if isValues then
+      s"{ val $mapName = "; val part2 = s"""; val $ksName = $into["""; val part3 = s"""](); val $vsName = $into["""; val part4 =
+        s"""](); $mapName.foreachEntry((bp$$k: """ ; val part5 = s""", bp$$v: """; val part6 =
+        s""") => { $ksName.add(bp$$k); $vsName.add(bp$$v) }); balticporter.runtime.JavaIterator.removing(() => $vsName.size, ($riName: scala.Int) => $vsName.apply($riName), ($riName: scala.Int) => { $mapName.remove($ksName.apply($riName)); $ksName.removeIndex($riName); $vsName.removeIndex($riName); () }) }"""
+      val keySym = headSym(keyTpe).getOrElse(SymId.None)
+      val valSym = headSym(valTpe).getOrElse(SymId.None)
+      Tree.Opaque.spliced(
+        List(s"{ val $mapName = ", s"; val $ksName = $into[", s"](); val $vsName = $into[",
+             s"](); $mapName.foreachEntry((bp$$k: ", s", bp$$v: ",
+             s") => { $ksName.add(bp$$k); $vsName.add(bp$$v) }); balticporter.runtime.JavaIterator.removing(() => $vsName.size, ($riName: scala.Int) => $vsName.apply($riName), ($riName: scala.Int) => { $mapName.remove($ksName.apply($riName)); $ksName.removeIndex($riName); $vsName.removeIndex($riName); () }) }"),
+        List(mapRecv,
+             Tree.Ident(keySym, keyTpe, so),
+             Tree.Ident(valSym, valTpe, so),
+             Tree.Ident(keySym, keyTpe, so),
+             Tree.Ident(valSym, valTpe, so)),
+        tpe, so)
+    else // foreachKey — iterator over keys, remove by key
+      val keySym = headSym(keyTpe).getOrElse(SymId.None)
+      Tree.Opaque.spliced(
+        List(s"{ val $mapName = ", s"; val $ksName = $into[",
+             s"](); $mapName.foreachKey($ksName.add); balticporter.runtime.JavaIterator.removing(() => $ksName.size, ($riName: scala.Int) => $ksName.apply($riName), ($riName: scala.Int) => { $mapName.remove($ksName.apply($riName)); $ksName.removeIndex($riName); () }) }"),
+        List(mapRecv, Tree.Ident(keySym, keyTpe, so)),
+        tpe, so)
+    iterExpr
 
   /** does the for-each body contain a `return`? Stops at lambdas, nested defs, anonymous classes. */
   private def returnsInForEach(t: Any): Boolean = t match
@@ -4079,9 +4175,11 @@ final class CollectionsTransform(
           // have an entry in `retargetRewrites` is renamed/dispatched before `pinnedByObject`.
           case None    => retargetRewrite(recv, m, so, t2).orElse(pinnedByObject(recv, m, t2)).getOrElse(t2)
         // When retargetSelectRewrite replaced a Select (the `fun` of a nullary `iterator()` call)
-        // with an Apply (the `JavaIterator.from(sel)` wrap), the OUTER Apply still sits here with
-        // Nil args.  Collapse it so the emitter does not render a trailing `()`.
+        // with an Apply (the `JavaIterator.from(sel)` wrap) or an Opaque (K36 removing iterator),
+        // the OUTER Apply still sits here with Nil args.  Collapse it so the emitter does not
+        // render a trailing `()`.
         case inner: Tree.Apply if t2.args.isEmpty => inner
+        case inner: Tree.Opaque if t2.args.isEmpty => inner
         case _ => t2
     }
     // …and the seam arms see only what NOTHING ELSE REWROTE. Ordering them before the rewrites
@@ -7370,22 +7468,22 @@ final class CollectionsTransform(
             // source sym was not yet remapped at this point (the Apply's type carries the
             // original java.util.Iterator sym).
             if members.last == "iterator" && iteratorFromSym != SymId.None && javaIteratorSym != SymId.None then
-              headSym(t.tpe) match
-                case Some(h) if h == javaIteratorSym =>
-                  cur = Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, so),
-                                   List(cur), iteratorFromSym, t.tpe, so)
-                case Some(h) if remap.contains(h) && remap(h) == javaIteratorSym =>
-                  cur = Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, so),
-                                   List(cur), iteratorFromSym, t.tpe, so)
-                // The call's type head may be the ORIGINAL java.util.Iterator sym (not yet
-                // remapped at this traversal point), OR the FRONTEND-interned sym for
-                // balticporter.runtime.JavaIterator (different from the MINTED javaIteratorSym).
-                // Check the FQN directly for both.
+              val wantsJavaIterator = headSym(t.tpe) match
+                case Some(h) if h == javaIteratorSym => true
+                case Some(h) if remap.contains(h) && remap(h) == javaIteratorSym => true
                 case Some(h) if p.symbolOf(h).exists(s =>
-                    s.fullName == "java.util.Iterator" || s.fullName == "balticporter.runtime.JavaIterator") =>
+                    s.fullName == "java.util.Iterator" || s.fullName == "balticporter.runtime.JavaIterator") => true
+                case _ => false
+              if wantsJavaIterator then
+                // K36: for retarget targets that support indexed removal, emit a REMOVING
+                // iterator over the RECEIVER rather than a read-only JavaIterator.from wrapping.
+                val targetFqn = effectiveRetarget.get(srcFqn)
+                val removingResult = targetFqn.flatMap(tgt => emitRemovingIterator(recv, tgt, t.tpe, so))
+                if removingResult.isDefined then
+                  cur = removingResult.get
+                else
                   cur = Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, so),
                                    List(cur), iteratorFromSym, t.tpe, so)
-                case _ => ()
             // A retarget target's `toArray()` returns `scala.Array[T]`, but the call's own
             // type head may still be the RETARGET TARGET (because the original java method
             // returned `gdx.Array<T>` and `transformType` replaced it with `DynamicArray[T]`).

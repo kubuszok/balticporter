@@ -4620,9 +4620,13 @@ both sides of that slot. Three kinds:
   `DynamicArray`). Counted because no coercion exists at that seam.
 - `CastToTarget` -- an `instanceof`/cast at a concrete retarget target that no live view can be
   (CLAUDE.md §1(b) reified-occurrence paragraph). Refused and counted.
-- `IteratorRemove` -- `Iterator.remove()` through a retarget target's iterator, where the bridge
-  wraps a read-only `Iterator` with no handle on the collection. A removing iterator minted OVER
-  THE COLLECTION is the approach (K36). Counted per member.
+- `IteratorRemove` -- `Iterator.remove()` through a retarget target's iterator. **CLOSED (wave
+  3.2f)**: the engine now emits `JavaIterator.removing` / `removingFromBuffer` at retarget iterator
+  sites keyed on the target FQN (`emitRemovingIterator` in `CollectionsTransform`). Three variants:
+  `removingFromBuffer` for `ArrayDeque` (which is a `mutable.Buffer`), `removing` with
+  `size/apply/removeIndex` lambdas for `DynamicArray`, and `removing` with parallel key-tracking
+  DynamicArrays for `ObjectMap` Collect results (`values().iterator()` / `keys().iterator()`).
+  Unsupported targets keep the read-only bridge and this finding kind. Counted per member.
 
 The lane is unconditional when `CollectionsTransform` is in the pipeline (`RequiredChecks`), and a
 refusal is a ROW (one finding per site) rather than a silent count, because a count with no row is
