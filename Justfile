@@ -5096,6 +5096,22 @@ ecs-dropin:
       exit 1
     fi
 
+    # --- 3.2g: copy base-emitted types the emitted tests reference ---
+    # The emitted upstream tests (EngineTests, FamilyManagerTests) throw `GdxRuntimeException`,
+    # which the base port EMITS but sge's hand port does not have. Copy the emitted file into a
+    # dropin overlay directory so the sge build can compile the tests. The sge build already has
+    # `java.lang.RuntimeException` (the parent class) — this is the small delta.
+    DROPIN_OVERLAY="$DROPIN_DIR/.dropin-overlay/main/scala"
+    GDX_RT_EX="$ROOT/ported/sge/src_managed/main/scala/sge/utils/GdxRuntimeException.scala"
+    if [ -f "$GDX_RT_EX" ]; then
+      mkdir -p "$DROPIN_OVERLAY/sge/utils"
+      cp "$GDX_RT_EX" "$DROPIN_OVERLAY/sge/utils/"
+      echo "   copied GdxRuntimeException.scala to dropin overlay"
+    else
+      echo "!! WARNING — GdxRuntimeException.scala not found at $GDX_RT_EX"
+      echo "   Run gdx-measure first to produce it. Tests referencing it will fail."
+    fi
+
     # Write a project/*.scala AutoPlugin that wires the emitted sources into the right projects.
     # An AutoPlugin is more reliable than a local-dropin.sbt for sbt-projectMatrix: the
     # `projectSettings` reach ALL platform variants (JVM/JS/Native) through the base directory
@@ -5114,6 +5130,7 @@ ecs-dropin:
       echo "      if (thisProject.value.base.getName.startsWith(\"sge-ecs\"))"
       echo "        Seq(file(\"$EMIT_MAIN\"))"
       echo "          ++ (if (file(\"$INJECT_MAIN\").isDirectory) Seq(file(\"$INJECT_MAIN\")) else Nil)"
+      echo "          ++ (if (file(\"$DROPIN_OVERLAY\").isDirectory) Seq(file(\"$DROPIN_OVERLAY\")) else Nil)"
       echo '      else Nil'
       echo '    },'
       echo '    Test / unmanagedSourceDirectories ++= {'
@@ -5121,11 +5138,21 @@ ecs-dropin:
       echo "        Seq(file(\"$EMIT_TEST\"))"
       echo "          ++ (if (file(\"$INJECT_TEST\").isDirectory) Seq(file(\"$INJECT_TEST\")) else Nil)"
       echo '      else Nil'
+      echo '    },'
+      echo '    // --- 3.2g: emitted upstream tests use org.mockito.Mockito and org.mockito.asm ---'
+      echo '    // Ashley declares mockito-all 1.10.19 (NOT mockito-core 2.x+: ComponentClassFactory'
+      echo '    // uses org.mockito.asm, the shaded ASM removed in Mockito 2). sge-ecs has no mockito'
+      echo '    // of its own (its hand-port tests use only munit). JVM only: JS/Native have no'
+      echo '    // ByteBuddy/ASM support, and the ComponentClassFactory is a JVM-only test helper.'
+      echo '    libraryDependencies ++= {'
+      echo "      if (thisProject.value.base.getName.startsWith(\"sge-ecs\"))"
+      echo '        Seq("org.mockito" % "mockito-all" % "1.10.19" % Test)'
+      echo '      else Nil'
       echo '    }'
       echo '  )'
       echo '}'
     } > "$dropin_scala"
-    echo "   wrote $dropin_scala to wire emitted sources"
+    echo "   wrote $dropin_scala to wire emitted sources and test dependencies"
 
     # ------------------------------------------------------------------
     # 4. Compile and test on each platform

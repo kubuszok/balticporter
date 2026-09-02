@@ -6279,6 +6279,24 @@ The `@nowarn("msg=deprecated")` that K13's fix places on every member whose body
 (converting it to a `test("...") { body }` statement) and the DefDef-level annotation would be lost.
 One derivation through the existing `scanBody` path.
 
+**Internal-caller coercion at an opaque wrapper: `.orNull` returns a SENTINEL, not JVM null.**
+`SystemManager#getSystem` returns `T | null` and the sge hand port wraps it as `Nullable[A]`. Adding
+it to `nullableMembers` wraps the return type. The INTERNAL caller in `SystemManager.addSystem` does
+`EntitySystem old = getSystem(type); if (old != null) removeSystem(old)` — the ValDef coercion
+(`coerceTo(EntitySystem, wrappedCall)`) unwraps with `.orNull`. But `Nullable` is an opaque type
+whose absent value is `NestedNone` (a singleton object), NOT JVM null. `.orNull` on an absent
+`Nullable` returns `NestedNone`, so `old != null` is TRUE, and `removeSystem(NestedNone.asInstanceOf
+[EntitySystem])` throws `ClassCastException`. Measured at **33 newly failing tests** on ashley, all at
+`SystemManager#getSystem`. The coercion mechanism assumes `.orNull` produces JVM null, which is true
+for `T | Null` (union target) and false for an opaque wrapper (`Named` target). The fix would be to
+use `.fold(null)(identity)` or `.getOrElse(null)` instead of `.orNull` when the slot is non-nullable,
+but that changes the engine's `slotUnwrap` for every opaque wrapper — not attempted in this wave.
+`SystemManager#getSystem` is left out of `nullableMembers`; the 7 `SystemManagerSuite` drop-in errors
+(`.isDefined`/`.get`/`.isEmpty` on a bare `T` return) are KNOWN RESIDUE.
+
+*Fix kind: (a) engine — `slotUnwrap` must distinguish opaque absent-value from JVM null at a
+non-wrapper slot. Not attempted: would change every wrapper-to-bare coercion in the pipeline.*
+
 *Fix kind: (b) per-library policy — which members are nullable is a fact about the library.*
 
 ### K14. A RETARGET's subtyping licence is ONE-DIRECTIONAL — the producer side is COUNTED, never coerced
@@ -14712,6 +14730,8 @@ are a mix of section 1(a) engine bugs (O9, collectPhase), section 1(b) policy ga
 retargets, nullableMembers arity), and counted residuals (Tuple2 immutability, companion references).
 
 ### K37. Pool class-to-trait: emitted subclasses cannot bridge Pool-as-class and Pool-as-trait -- **OPEN**
+
+### K38. Pool class-to-trait: emitted subclasses cannot bridge Pool-as-class and Pool-as-trait -- **OPEN**
 
 **(b) engine mechanism built, policy BLOCKED on Pool drop+inject.** sge hand-ported
 `com.badlogic.gdx.utils.Pool` as a TRAIT with abstract vals `initialCapacity` and `max`

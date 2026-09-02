@@ -164,6 +164,17 @@ object AshleyPolicy:
             "com.badlogic.ashley.systems.SortedIteratingSystem#family"    -> "getFamily",
             "com.badlogic.ashley.systems.IntervalIteratingSystem#family"  -> "getFamily",
             "com.badlogic.ashley.systems.IntervalSystem#interval"        -> "getInterval",
+            // --- 3.2g: arity-parity pairs (ecs drop-in) ---
+            // Two members whose java body contains a comparison (`> 0`, `== 0`), which the
+            // NullaryArityTransform predicate classifies as SideEffectingBody and refuses. sge's
+            // hand port writes them parenless. The getter-only BeanPropertyTransform pair strips
+            // the `()` (BeanPropertyTransform line 431: `t.copy(paramss = Nil)`) exactly as the
+            // nullary-arity phase would have, through the same MemberRenamer mechanism.
+            // `hasOperationsToProcess`: body is `operations.size > 0` — the `>` is an Apply with
+            // one arg, refused by `hasSideEffects`. sge: `def hasOperationsToProcess: Boolean`.
+            "com.badlogic.ashley.core.ComponentOperationHandler#hasOperationsToProcess" -> "hasOperationsToProcess",
+            // `isEmpty`: body is `size == 0` — same shape. sge: `def isEmpty: Boolean`.
+            "com.badlogic.ashley.utils.Bag#isEmpty" -> "isEmpty",
           ),
           // SCOPE OUT three ashley types from the base's `Everywhere()` auto-detection: the sge
           // hand port KEPT the Java-style getter names (`getEntities`, `getSystems`, `getComponents`,
@@ -189,6 +200,19 @@ object AshleyPolicy:
         new balticporter.transform.TypeRedirectTransform(Map(
           "com.badlogic.gdx.utils.ReflectionPool" -> "com.badlogic.ashley.core.ComponentPool",
         )),
+        // --- 3.2g: NullaryArityTransform scope (ecs drop-in parity) ---
+        // `createEntity()` is a FACTORY — it constructs and returns a new Entity. The
+        // NullaryArityTransform predicate accepted it as getter-like (body is `new Entity()`),
+        // so it was converted to parenless `def createEntity`. sge keeps `createEntity()` WITH
+        // parens (Engine.scala:105, PooledEngine.scala:64). The fix: add `createEntity` to
+        // the `Everywhere(except)` set, which merges with the base's `Everywhere()` to produce
+        // `Everywhere(except = {createEntity})`. `PooledEngine#createEntity` is in the same
+        // override component and follows automatically.
+        new balticporter.transform.NullaryArityTransform(
+          scope = balticporter.tir.RuleScope.Everywhere(Set(
+            "com.badlogic.ashley.core.Engine#createEntity",
+          )),
+        ),
         // --- 3.2g: Pool class-to-trait (ecs drop-in parity) ---
         // Pool is now dropped+injected as sge's trait in the BASE manifest, and the
         // ClassToTraitTransform phase (also in the base) rewrites every subclass. Ashley
@@ -260,8 +284,13 @@ object AshleyPolicy:
             // `.get` on the result.  Added for drop-in parity (wave 3.2g).
             "com.badlogic.ashley.core.ComponentMapper#get",
             // NOT SystemManager#getSystem: wrapping it in Nullable breaks the INTERNAL call chain
-            // (Engine.addSystem calls systemManager.getSystem and expects T, not Nullable[T]).
-            // The 7 SystemManagerSuite errors about isDefined/get are KNOWN RESIDUE.
+            // because Nullable is an opaque type whose `.orNull` returns the NestedNone SENTINEL,
+            // not JVM null. `SystemManager.addSystem` does `EntitySystem old = getSystem(type);
+            // if (old != null) removeSystem(old)` — after wrapping, `coerceTo` unwraps with
+            // `.orNull`, which produces NestedNone, so `old != null` is TRUE and
+            // `removeSystem(NestedNone.asInstanceOf[EntitySystem])` throws ClassCastException.
+            // Measured: 33 newly failing tests, all at SystemManager#getSystem (K13.6).
+            // The 7 SystemManagerSuite drop-in errors about isDefined/get are KNOWN RESIDUE.
           ),
         ),
         // --- 3.2g: hand-port-added members (ecs drop-in parity) ---
