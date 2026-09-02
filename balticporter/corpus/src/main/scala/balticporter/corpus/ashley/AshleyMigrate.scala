@@ -198,8 +198,8 @@ object AshleyPolicy:
         // `objects.apply(i)` returns the wildcard type which does not conform to `Object`.
         // The reference port casts explicitly. Replace the body to iterate and free.
         "com.badlogic.ashley.core.PooledEngine$ComponentPools#freeAll(Array)" ->
-          """{ if (objects == null) throw new java.lang.IllegalArgumentException("objects cannot be null.") else ()
-            |  { var i: scala.Int = 0; val n: scala.Int = objects.size; while (i < n) { { val obj = objects.apply(i).asInstanceOf[java.lang.Object]; if (obj != null) this.free(obj) else () }; i = i + 1 } } }""".stripMargin,
+          """{ if (objects == null) throw new java.lang.IllegalArgumentException("objects cannot be null.")
+            |  else { var i: scala.Int = 0; val n: scala.Int = objects.size; while (i < n) { { val obj = objects.apply(i).asInstanceOf[java.lang.Object]; if (obj != null) this.free(obj) else () }; i = i + 1 } } }""".stripMargin,
         // PooledEngine.ComponentPools.clear(): the java body uses `pools.each().value.clear()` via
         // ForEach on ObjectMap.Values. After retarget, `foreachValue` produces a lambda typed at
         // the VALUE type. The pools field is `ObjectMap[Class[?], ReflectionPool]` which after
