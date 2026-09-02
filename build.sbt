@@ -540,7 +540,7 @@ lazy val `port-sge-gltf` = (projectMatrix in file("ported/sge-gltf"))
 // ---------------------------------------------------------------------------------------------
 lazy val `port-sge-screens` = (projectMatrix in file("ported/sge-screens"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
-  .dependsOn(`port-sge`)
+  .dependsOn(`port-sge` % "test->test;compile->compile")
   .settings(portSettings("sge-screens") *)
   .settings(portSourceGenerators("sge-screens") *)
   .settings(
@@ -559,7 +559,7 @@ lazy val `port-sge-screens` = (projectMatrix in file("ported/sge-screens"))
 // ---------------------------------------------------------------------------------------------
 lazy val `port-sge-vfx` = (projectMatrix in file("ported/sge-vfx"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
-  .dependsOn(`port-sge`)
+  .dependsOn(`port-sge` % "test->test;compile->compile")
   .settings(portSettings("sge-vfx") *)
   .settings(portSourceGenerators("sge-vfx") *)
   .settings(
