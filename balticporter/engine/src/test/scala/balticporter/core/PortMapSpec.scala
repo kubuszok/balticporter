@@ -109,7 +109,8 @@ class PortMapSpec extends munit.FunSuite:
     val m = build(dropTypes = Set("p.Gone", "p.Replaced"), injected = Set("p.Replaced"))
     val byName = m.types.map(e => e.upstream -> e).toMap
     assertEquals(byName("p.Gone").disposition, Disposition.Dropped)
-    assertEquals(byName("p.Gone").emitted, "")
+    assertEquals(byName("p.Gone").emitted, "p.Gone",
+      "a Dropped entry carries the emitted-namespace name so a dependent's PublishedSurface can find it")
     assertEquals(byName("p.Replaced").disposition, Disposition.Substituted)
     assertEquals(byName("p.Replaced").emitted, "p.Replaced")
   }
@@ -131,16 +132,20 @@ class PortMapSpec extends munit.FunSuite:
       "a Substituted entry must carry its shape so a dependent's contract question is answerable")
     assert(byName("p.Replaced").typeShape.isDefined,
       "parseType must return Some for a Substituted row with a shape payload")
-    assertEquals(byName("p.Gone").shape, "",
-      "a Dropped entry has no shape — the type was not emitted and nothing replaced it")
+    assertEquals(byName("p.Gone").shape, "form=class",
+      "a Dropped entry carries a minimal shape so a dependent's PublishedSurface finds it")
   }
 
-  test("a dropped-only type stays a bare Dropped row with no shape — D16 holds") {
+  test("a dropped-only type carries a minimal shape so a dependent can find it (D16 amended)") {
     val m = build(dropTypes = Set("p.Gone"), injected = Set.empty)
     val e = m.types.find(_.upstream == "p.Gone").get
     assertEquals(e.disposition, Disposition.Dropped)
-    assertEquals(e.shape, "")
-    assertEquals(e.emitted, "")
+    assertEquals(e.shape, "form=class",
+      "a Dropped entry carries a minimal shape so PublishedSurface.typeShape returns Published, not Unknown")
+    assertEquals(e.emitted, "p.Gone",
+      "the emitted-namespace name so typeRows includes the entry")
+    assert(e.typeShape.isDefined,
+      "parseType must return Some for a Dropped row with a shape payload")
   }
 
   test("an injected type that replaces nothing is ADDED, not Substituted") {
@@ -167,9 +172,9 @@ class PortMapSpec extends munit.FunSuite:
     assertEquals(byUpstream("up.stream.Replaced").emitted, "out.Replaced",
       "the emitted half of the row must be the name the injection actually ships under")
 
-    // the drop with NO replacement is unaffected — that is the case the check exists for
+    // the drop with NO replacement carries the EMITTED-namespace name for the dependent's lookup
     assertEquals(byUpstream("up.stream.Gone").disposition, Disposition.Dropped)
-    assertEquals(byUpstream("up.stream.Gone").emitted, "")
+    assertEquals(byUpstream("up.stream.Gone").emitted, "out.Gone")
 
     // …and the injection that replaces nothing is still an ADDITION, subtracted in the EMITTED
     // namespace so `out.Replaced` is not double-counted as one.

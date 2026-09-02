@@ -11914,6 +11914,19 @@ emitted`). For the double-row defect, `typeEntries` is filtered against `dropTyp
 name — a type whose upstream FQN is in `dropTypes` is genuinely dropped and only the `Dropped` row
 is published.
 
+**Amendment (wave 3.3b)**: D16's fix made `droppedEntries` produce ONLY the `Dropped` row for every
+type in `dropTypes`, which was correct for a type dropped WITHOUT an injection and WRONG for one
+dropped WITH an injection (`Substituted`). The `Substituted` entry lost its `shape` payload —
+`shape=""`, so `Surface.parseType` returned `None` and `PublishedSurface.typeShape` answered
+`Unknown` ("no declared base publishes a contract row"). Every dependent's `PortRun.execute` then
+failed FATAL for `sge.utils.ReflectionPool`, `sge.utils.reflect.Annotation/Constructor/Field/Method`,
+and `sge.utils.reflect.ReflectionException` — ashley, anim8, gltf, screens, vfx, ai, textra, visui
+all "DID NOT RUN". Fix: `PortMap.of` passes `typeShapes.getOrElse(at, "")` for `Substituted`
+entries, and `PortRun` merges `InjectedSurface.renderedTypeShapes` (a new field recording each
+injected type's form — class/trait/object — parsed by scalameta) into the emitter's
+`shapes.renderedTypes`. A `Substituted` entry now carries at minimum `form=class` (or trait/object),
+`parseType` returns `Some(...)`, and the dependent gets `Published` instead of `Unknown`.
+
 *Fix kind: (a) universal — `PortMap.of` is engine code, and `typeRenames` is a §1(b) parameter
 every port may use. The defect is a fact about how the map writer reads a rename, true of every
 renaming port.*

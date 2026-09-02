@@ -11881,3 +11881,19 @@ Fix: pass the FULL rename table (`PackageRenameTransform.upstreamTable`) to `Por
 against `dropTypes` by upstream name. 2 type rows, 61 member rows corrected (all `SgeList`); 35
 phantom `Renamed` type entries removed. `PortMapAcceptanceSpec` DroppedType count 7 -> 68 (D2
 filter now works, and 35 types correctly resolve to `Dropped`). See `ENGINE-LIMITS.md` D16.
+
+#### 3.3b master repair
+
+1. D16's `droppedEntries` lost the `Substituted` shape payload for dropped+injected types. Every
+   dependent failed FATAL ("no declared base publishes a contract row") for 6 injected types. Fix:
+   `PortMap.of` passes `typeShapes` through for Substituted entries; `PortRun` merges
+   `InjectedSurface.renderedTypeShapes` (new: each injected type's form, parsed by scalameta) into
+   the emitter's shapes. gdx 0/0/0, ashley 108/2/2 restored. See `ENGINE-LIMITS.md` D16 amendment.
+
+2. 11 corpus specs (CtorFunnelBodyShapeSpec x3, CtorFunnelBranchReplaySpec x2,
+   CtorFunnelContextClauseSpec x3, NullAtTypeParamSpec x2, BaseSurfaceSpec x1) broken by CT12's
+   `reachableArgumentFree` widening (0d0d557d). The widening prevents demotion of classes with a
+   nilary ctor delegating to the promoted paramful root, which is correct for FlushablePool. Specs
+   updated: the Font/Set2/Set3/Bag fixtures now keep their promoted primary, the nilary ctor is
+   emitted as a secondary, and the inlining no longer fires. MutableBag replay is a new CT12
+   residue. 1448/1449 green (PortMapAcceptanceSpec requires `just gdx-measure` artifact).

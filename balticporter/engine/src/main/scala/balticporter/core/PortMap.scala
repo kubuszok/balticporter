@@ -454,9 +454,22 @@ object PortMap:
       // injected file's surface where the emitted type would have provided one. Without a shape,
       // `PublishedSurface.typeShape` answers `Unknown` for every dependent that references the
       // injected type, and that `Unknown` is FATAL when a question shaped emitted text.
-      Entry("type", fqn, if injectedFqns(at) then at else "",
-        if injectedFqns(at) then Disposition.Substituted else Disposition.Dropped,
-        shape = if injectedFqns(at) then typeShapes.getOrElse(at, "") else "")
+      //
+      // A DROPPED type (no injection) carries the EMITTED-NAMESPACE name in `emitted` and a MINIMAL
+      // shape (`form=class`) so a dependent's `PublishedSurface.typeRows` can find it. Without this,
+      // the `Dropped` entry's `emitted=""` makes it invisible to `typeRows` (which filters
+      // `_.emitted.nonEmpty`), the dependent's funnel gets `Unknown` for the type, and every WALL
+      // class the base dropped produces a FATAL gap. D16 removed the phantom `Renamed` rows that
+      // previously served this lookup; the `Dropped` entry must carry the same information.
+      // The shape carries no `primary=` — the type was not emitted — so the funnel's cross-check
+      // passes via `there.isEmpty` and produces no gap.
+      val emitted = at // the EMITTED-namespace FQN, for the dependent's lookup
+      if injectedFqns(at) then
+        Entry("type", fqn, emitted, Disposition.Substituted,
+          shape = typeShapes.getOrElse(at, ""))
+      else
+        Entry("type", fqn, emitted, Disposition.Dropped,
+          shape = typeShapes.getOrElse(at, "form=class"))
     }
 
     // What is left is a genuine ADDITION — a file the run wrote that replaces no drop (the runtime
