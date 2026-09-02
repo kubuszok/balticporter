@@ -11629,7 +11629,7 @@ ashley `ImmutableArray`: `dropTypes` + inject modeled on sge's own (`K35` workar
 
 | port | errors before | errors after (JVM/JS/Native/.ref) | suite before | suite after | notes |
 |---|---|---|---|---|---|
-| gdx | 0/0/0/93 | 0/0/0/54 | -- | -- | `.ref` 93->54 (UnusedSymbolTransform, 49 of 70 E198 closed; see §13.20) |
+| gdx | 0/0/0/359 | 0/0/0/54 | -- | -- | master's COMMITTED `.ref` baseline reads 93 but is not reproducible at master `9a5ec4b3`: a fresh run measures **359** (278 `@nowarn annotation does not suppress any warnings` left by the unmeasured "(projected)" nowarn commit `00809c29`, plus 70 E198, 5 E030, 3 E129, 3 deprecations). The branch closes it in two steps: late `SuppressionPhase` 359->97, then `UnusedSymbolTransform` 97->54 (49 of 70 E198 closed; see §13.20) |
 | gdx-test | 0/0/0/106 | 0/0/0/106 | 156 pass / 35 fail | 180 pass / 11 fail | expected-lost 30 (CharArrayTest) |
 | ashley | 22/--/--/-- | 0/0/0/-- | 107/3/2 | 108/2/2 | K34 CLOSED, `forbiddenRemoval` fixed |
 | ecs-dropin | 408/--/-- | 38/39/39 | -- | -- | retarget wave, not parity (wave 3.2e) |
