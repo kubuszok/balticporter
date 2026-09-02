@@ -685,7 +685,7 @@ gdx-test-measure:
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run (sbt port-sgeJVM/test) --"
-      sbt_test "port-sgeJVM/test" "$MEASURE_TMP"/gdxtestrun.txt
+      sbt_test "port-sgeJVM/testOnly *" "$MEASURE_TMP"/gdxtestrun.txt
       reconcile_outcomes "$MEASURE_TMP"/gdxtestrun.txt "$MUNIT_TESTS"; RECONCILED=$?
 
       # Anchor every failure on the first stack frame that lands in PORTED code and resolve it, through
@@ -787,7 +787,7 @@ ashley-measure:
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run (sbt port-sge-ecsJVM/test) --"
-      sbt_test "port-sge-ecsJVM/test" "$MEASURE_TMP"/ashleyrun.txt
+      sbt_test "port-sge-ecsJVM/testOnly *" "$MEASURE_TMP"/ashleyrun.txt
       reconcile_outcomes "$MEASURE_TMP"/ashleyrun.txt "$MUNIT_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
@@ -900,7 +900,7 @@ anim8-measure:
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
-      sbt_test "port-sge-anim8JVM/test" "$MEASURE_TMP"/anim8run.txt
+      sbt_test "port-sge-anim8JVM/testOnly *" "$MEASURE_TMP"/anim8run.txt
       reconcile_outcomes "$MEASURE_TMP"/anim8run.txt "$HAND_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
@@ -1030,7 +1030,7 @@ gltf-measure:
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
-      sbt_test "port-sge-gltfJVM/test" "$MEASURE_TMP"/gltfrun.txt
+      sbt_test "port-sge-gltfJVM/testOnly *" "$MEASURE_TMP"/gltfrun.txt
       # Reconciled against the SUM: both source sets are on the one invocation, so an outcome
       # count that matched only the ported half would report success for a hand-written suite that
       # never ran (CLAUDE.md §5.1).
@@ -1160,7 +1160,7 @@ screens-measure:
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
-      sbt_test "port-sge-screensJVM/test" "$MEASURE_TMP"/screensrun.txt
+      sbt_test "port-sge-screensJVM/testOnly *" "$MEASURE_TMP"/screensrun.txt
       reconcile_outcomes "$MEASURE_TMP"/screensrun.txt "$HAND_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
@@ -1271,7 +1271,7 @@ vfx-measure:
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
-      sbt_test "port-sge-vfxJVM/test" "$MEASURE_TMP"/vfxrun.txt
+      sbt_test "port-sge-vfxJVM/testOnly *" "$MEASURE_TMP"/vfxrun.txt
       reconcile_outcomes "$MEASURE_TMP"/vfxrun.txt "$HAND_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
@@ -1519,7 +1519,7 @@ ai-test-measure:
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
-      sbt_test "port-sge-aiJVM/test" "$MEASURE_TMP"/aitestrun.txt
+      sbt_test "port-sge-aiJVM/testOnly *" "$MEASURE_TMP"/aitestrun.txt
       reconcile_outcomes "$MEASURE_TMP"/aitestrun.txt "$MUNIT_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
@@ -1637,7 +1637,7 @@ ai-diff-measure:
 
     echo
     echo "-- run --"
-    sbt_test "port-sge-ai-diff/test" "$MEASURE_TMP"/aidiffrun.txt
+    sbt_test "port-sge-ai-diff/testOnly *" "$MEASURE_TMP"/aidiffrun.txt
     reconcile_outcomes "$MEASURE_TMP"/aidiffrun.txt "$ADAPTED_TESTS"; RECONCILED=$?
 
     echo
@@ -1743,7 +1743,7 @@ sg-measure:
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
-      sbt_test "port-sge-graphsJVM/test" "$MEASURE_TMP"/sgrun.txt
+      sbt_test "port-sge-graphsJVM/testOnly *" "$MEASURE_TMP"/sgrun.txt
       reconcile_outcomes "$MEASURE_TMP"/sgrun.txt "$MUNIT_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
@@ -2359,7 +2359,7 @@ usl-test-measure:
       # THE RESOURCE DIRECTORY IS THE LOAD-BEARING ARGUMENT. Every test resolves its input through
       # `getResourceAsStream("/test-*.usl")`, so without it `readFile` receives a null stream and
       # all six fail identically — which would read exactly like a conversion defect.
-      sbt_test "port-sge-visui-uslJVM/test" "$MEASURE_TMP"/usltrun.txt
+      sbt_test "port-sge-visui-uslJVM/testOnly *" "$MEASURE_TMP"/usltrun.txt
       reconcile_outcomes "$MEASURE_TMP"/usltrun.txt "$MUNIT_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
@@ -2583,7 +2583,7 @@ liqp-measure:
       # `src_managed/main/resources` because the descriptor is a build product the run writes from
       # the port's `serviceProviders` key — it was a hand-written `src/main/resources` file until
       # that key existed, which is the state P5's second half described.
-      sbt_test "port-ssg-liquidJVM/test" "$MEASURE_TMP"/liqprun.txt
+      sbt_test "port-ssg-liquidJVM/testOnly *" "$MEASURE_TMP"/liqprun.txt
       reconcile_outcomes "$MEASURE_TMP"/liqprun.txt "$MUNIT_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
@@ -2864,7 +2864,7 @@ md-test-measure:
       # harness marker on the test JVM's classpath; see `md_spec_res` for all three, for why the
       # harness's two are the upstream's own bytes at the upstream's own paths, and for why the
       # library's own is now the PORT's output instead (`DESIGN.md` §8.22).
-      sbt_test "port-ssg-mdJVM/test" "$MEASURE_TMP"/mdtestrun.txt
+      sbt_test "port-ssg-mdJVM/testOnly *" "$MEASURE_TMP"/mdtestrun.txt
       reconcile_outcomes "$MEASURE_TMP"/mdtestrun.txt "$MUNIT_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
@@ -3119,7 +3119,7 @@ md-ext-measure:
       # `ExceptionInInitializerError` that no compile, check or count can see. Pointed at upstream
       # this flag made the suite pass while the port shipped nothing. The spec files and the harness
       # marker are `md-test-measure`'s and are not on this lane's path.
-      sbt_test "port-ssg-md-extJVM/test" "$MEASURE_TMP"/mdextrun.txt
+      sbt_test "port-ssg-md-extJVM/testOnly *" "$MEASURE_TMP"/mdextrun.txt
       reconcile_outcomes "$MEASURE_TMP"/mdextrun.txt "$MUNIT_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
@@ -3403,7 +3403,7 @@ textra-diff-measure:
 
     echo
     echo "-- run --"
-    sbt_test "port-sge-textra-diff/test" "$MEASURE_TMP"/textradiffrun.txt
+    sbt_test "port-sge-textra-diff/testOnly *" "$MEASURE_TMP"/textradiffrun.txt
     reconcile_outcomes "$MEASURE_TMP"/textradiffrun.txt "$ADAPTED_TESTS"; RECONCILED=$?
 
     echo
@@ -3747,7 +3747,7 @@ visui-diff-measure:
 
     echo
     echo "-- run --"
-    sbt_test "port-sge-visui-diff/test" "$MEASURE_TMP"/visuidiffrun.txt
+    sbt_test "port-sge-visui-diff/testOnly *" "$MEASURE_TMP"/visuidiffrun.txt
     reconcile_outcomes "$MEASURE_TMP"/visuidiffrun.txt "$ADAPTED_TESTS"; RECONCILED=$?
 
     echo

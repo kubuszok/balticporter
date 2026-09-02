@@ -624,7 +624,10 @@ sbt_compile() {
 
 # sbt_test <sbt-project-task> <capture-file>
 #
-# Runs `sbt --client <task>` (e.g. `port-sgeJVM/test`), captures the output with sbt prefixes
+# Runs `sbt --client <task>` — ALWAYS `<project>/testOnly *`, never `<project>/test`: this build
+# aliases `test` to `testQuick` (CLAUDE.md §5.1), which under a WARM server re-runs only the suites
+# zinc saw change, and a lane then reports "94 outcomes lost" on a suite nothing was wrong with
+# (measured 2026-09-03 on gdx-test: 191 -> 97 outcomes on the second warm run). Captures the output with sbt prefixes
 # stripped. The caller reads the file for test outcomes (MUnit markers `  + `, `==> X `, etc.).
 sbt_test() {
   local task="$1" cap="$2"
