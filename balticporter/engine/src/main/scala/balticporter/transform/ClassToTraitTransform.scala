@@ -64,12 +64,12 @@ final class ClassToTraitTransform(
       val parentCd = program.units.find(_.symbol == sym.id)
       val widestCtor = parentCd.toList.flatMap { cd =>
         cd.body.collect { case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == "<init>") => d }
-          .maxByOption(_.paramss.flatten.size)
+          .maxByOption(c => CtorFunnel.valueParams(program, c).size)
       }.headOption
-      val formalTypes = widestCtor.toList.flatMap(_.paramss.flatten.map(_.tpt.tpe))
+      val formalTypes = widestCtor.toList.flatMap(c => CtorFunnel.valueParams(program, c).map(_.tpt.tpe))
       val defaults = parentCd.toList.flatMap { cd =>
         val ctors = cd.body.collect { case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == "<init>") => d }
-        ctors.find(_.paramss.flatten.isEmpty).toList.flatMap { nc =>
+        ctors.find(c => CtorFunnel.valueParams(program, c).isEmpty).toList.flatMap { nc =>
           CtorFunnel.stmtsOf(nc).headOption.collect { case t: Term => Tree.uncomment(t) }.toList.flatMap {
             case Tree.Apply(Tree.Select(_, m, _, _), args, _, _, _)
                 if program.symbolOf(m).exists(_.name == "<init>") => args
@@ -80,7 +80,27 @@ final class ClassToTraitTransform(
       val ownedFields = program.symbols.all.filter { s =>
         s.owner == sym.id && s.name != "<init>" && !s.flags.isStatic && !s.flags.isAbstract
       }.map(_.name).toSet
-      sym.id -> ResolvedSpec(fqn, mappings, formalTypes, defaults, ownedFields, sym.id)
+      // Build delegation expansions: for each non-widest parent constructor, trace its
+      // `this(...)` delegation to the widest, collecting the expanded argument list.
+      // Uses valueParams (excluding using clauses) for arity to match superArgsOf.
+      val widestArity = widestCtor.map(c => CtorFunnel.valueParams(program, c).size).getOrElse(0)
+      val ctorDelegations: Map[Int, (List[SymId], List[Term])] = parentCd.toList.flatMap { cd =>
+        val allCtors = cd.body.collect { case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == "<init>") => d }
+        allCtors.flatMap { ctor =>
+          val arity = CtorFunnel.valueParams(program, ctor).size
+          if arity >= widestArity then None // the widest itself needs no expansion
+          else
+            // Look at this ctor's head statement for a this(...) delegation
+            CtorFunnel.stmtsOf(ctor).headOption.collect { case t: Term => Tree.uncomment(t) }.flatMap {
+              case Tree.Apply(Tree.Select(r, m, _, _), delegArgs, _, _, _)
+                  if program.symbolOf(m).exists(_.name == "<init>") && !r.isInstanceOf[Tree.Super] && delegArgs.nonEmpty =>
+                val paramSyms = CtorFunnel.valueParams(program, ctor).map(_.symbol)
+                Some(arity -> (paramSyms, delegArgs))
+              case _ => None
+            }
+        }
+      }.toMap
+      sym.id -> ResolvedSpec(fqn, mappings, formalTypes, defaults, ownedFields, sym.id, ctorDelegations)
     ).toMap
 
     if resolved.isEmpty then return program
@@ -100,9 +120,28 @@ final class ClassToTraitTransform(
     val units2 = p1.units.map(u => StandardTraversal.mapClassDef(this, u)(using p1))
     val symbols2 = StandardTraversal.mapSymbols(this, p1.symbols)(using p1)
 
+    // 2b) Transitive subclass delegation: classes that extend a class that was REWRITTEN by step 2
+    // (gained a paramful widest constructor via override vals). Their constructors all call
+    // super(...) on the rewritten class, and the same multi-root delegation rewrite applies --
+    // rewriting narrower roots to this(...) delegations targeting the widest constructor of the
+    // subclass itself. This makes the funnel promote the widest constructor as primary.
+    //
+    // Built from the REWRITTEN program: after step 2, each rewritten class (e.g. FlushablePool)
+    // has this(...) delegations in its constructors that the delegation expansion can trace.
+    val p2 = p1.rebuilt(units2, symbols2)
+    val transitiveResolved: Map[SymId, ResolvedSpec] = buildTransitiveSpecs(p2)
+    val units2b = if transitiveResolved.isEmpty then units2
+    else
+      val savedResolved = resolved
+      resolved = transitiveResolved
+      val result = p2.units.map(u => StandardTraversal.mapClassDef(this, u)(using p2))
+      resolved = savedResolved
+      result
+
     // 3) Update symbol flags for nominated types (isTrait) and their mapped fields
     val mappedValNames = resolved.values.flatMap(_.mappings.map(_.valName)).toSet
-    val allSyms = symbols2.all.map { s =>
+    val finalSyms = (if transitiveResolved.isEmpty then symbols2 else p2.symbols)
+    val allSyms = finalSyms.all.map { s =>
       if resolved.contains(s.id) then
         // The nominated type itself: mark as trait
         s.copy(flags = s.flags.copy(isTrait = true, isAbstract = false))
@@ -116,7 +155,7 @@ final class ClassToTraitTransform(
       else s
     } ++ newSyms.result()
 
-    p1.rebuilt(units2, SymbolTable(allSyms))
+    p1.rebuilt(units2b, SymbolTable(allSyms))
 
   // ---- declaration side: transform the nominated type itself ----
 
@@ -175,7 +214,50 @@ final class ClassToTraitTransform(
     val origin = cd.origin
     val ctors = cd.body.collect { case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == "<init>") => d }
 
-    val widestWithArgs = ctors
+    val ctorsWithSuperArgs = ctors
+      .map(c => c -> CtorFunnel.superArgsOf(program, c))
+      .filter(_._2.nonEmpty)
+
+    val widestWithArgs = ctorsWithSuperArgs.maxByOption(_._2.size)
+
+    // --- multi-root rewrite: when MULTIPLE constructors call super(...) on the nominated parent
+    // (including nilary super()), rewrite the NARROWER ones into this(...) delegations to the
+    // widest, using the parent's own constructor delegation chain to expand the args. This makes
+    // the widest constructor the funnel's UNIQUE root, so isSafeArg is true and its params become
+    // override val RHSes.
+    //
+    // A nilary super() has no args in `superArgsOf` (which requires nonEmpty), but it IS a root
+    // that calls super on the nominated parent. Pool's own nilary constructor delegates
+    // `this(16, MAX_VALUE)`, so FlushablePool() -> super() -> this(16, MAX_VALUE).
+    val roots = ctors.filterNot(c => CtorFunnel.delegatesToThis(program, c))
+    val nilaryRoots = roots.filter { c =>
+      CtorFunnel.valueParams(program, c).isEmpty &&
+        CtorFunnel.headStmt(c).exists {
+          case Tree.Apply(Tree.Select(_: Tree.Super, m, _, _), _, _, _, _) =>
+            program.symbolOf(m).exists(_.name == "<init>")
+          case _ => false
+        }
+    }
+    val superRootSyms = (ctorsWithSuperArgs.map(_._1.symbol) ++ nilaryRoots.map(_.symbol)).toSet
+    val multipleRootsCallSuper = widestWithArgs.isDefined && superRootSyms.size > 1 &&
+      (spec.ctorDelegations.nonEmpty || spec.defaults.nonEmpty)
+
+    // Rewrite narrower roots into this(...) delegations BEFORE computing isSafeArg.
+    // After rewriting, the widest constructor becomes the UNIQUE root.
+    val rewrittenBody: List[Statement] = if multipleRootsCallSuper then
+      val widestCtor = widestWithArgs.get._1
+      cd.body.map {
+        case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == "<init>") &&
+            d.symbol != widestCtor.symbol && superRootSyms.contains(d.symbol) =>
+          rewriteSuperToThis(d, spec, widestCtor.symbol)(using program)
+        case other => other
+      }
+    else cd.body
+
+    // Re-collect ctors from the (possibly rewritten) body
+    val ctors2 = rewrittenBody.collect { case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == "<init>") => d }
+
+    val widestWithArgs2 = ctors2
       .map(c => c -> CtorFunnel.superArgsOf(program, c))
       .filter(_._2.nonEmpty)
       .maxByOption(_._2.size)
@@ -184,26 +266,20 @@ final class ClassToTraitTransform(
     // promoted to class-level by the ctor funnel). A super arg that references a SECONDARY
     // ctor's parameter becomes self-referential when placed as an override val RHS at class
     // body level — `override val max: Int = max` reads ITSELF and evaluates to 0.
-    // A constructor is primary-eligible if it is the UNIQUE root among the class's ctors
-    // (no delegation to `this(...)`); when multiple roots exist (FlushablePool has three),
-    // the funnel picks the nilary one, so any root with params is a secondary.
-    val ctorParamSyms: Set[SymId] = widestWithArgs match
+    // After multi-root rewrite, the widest IS the unique root.
+    val ctorParamSyms: Set[SymId] = widestWithArgs2 match
       case Some((ctor, _)) => ctor.paramss.flatten.map(_.symbol).toSet
       case None => Set.empty
 
     def isSafeArg(arg: Term): Boolean = arg match
       case Tree.Ident(sym, _, _) =>
-        // Safe if the ident does NOT reference a ctor param (it references a class member
-        // or a literal/expression), OR if it references a param of the ONLY root constructor
-        // (which will be promoted to the primary by the ctor funnel).
         if ctorParamSyms.contains(sym) then
-          // This is a ctor param reference. Safe only if this is the UNIQUE root ctor.
-          val roots = ctors.filterNot(c => CtorFunnel.delegatesToThis(program, c))
-          roots.size == 1 && widestWithArgs.exists(_._1.symbol == roots.head.symbol)
+          val roots2 = ctors2.filterNot(c => CtorFunnel.delegatesToThis(program, c))
+          roots2.size == 1 && widestWithArgs2.exists(_._1.symbol == roots2.head.symbol)
         else true
-      case _ => true // non-ident (literal, expression) — always safe
+      case _ => true
 
-    val overrideVals = widestWithArgs match
+    val overrideVals = widestWithArgs2 match
       case Some((_, superArgs)) =>
         spec.mappings.flatMap { m =>
           if m.index < superArgs.size && isSafeArg(superArgs(m.index)) then
@@ -221,7 +297,19 @@ final class ClassToTraitTransform(
           else None
         }
 
-    if overrideVals.isEmpty then return cd
+    // For a transitive subclass (empty mappings, no override vals), only the multi-root
+    // delegation rewrite is needed. Return the rewritten body directly.
+    if overrideVals.isEmpty && multipleRootsCallSuper then
+      record(Decision(
+        kind       = Decision.Kind.RetypedSignature,
+        subject    = cd.symbol,
+        subjectFqn = cdSym.fullName,
+        detail     = Map("parent" -> spec.fqn, "why" -> "class-to-trait: multi-root delegation rewrite for transitive subclass"),
+        reason     = Reason.Configured(name, spec.fqn),
+        origin     = origin,
+      ))
+      return cd.copy(body = rewrittenBody)
+    else if overrideVals.isEmpty then return cd
 
     record(Decision(
       kind       = Decision.Kind.RetypedSignature,
@@ -232,13 +320,17 @@ final class ClassToTraitTransform(
       origin     = origin,
     ))
 
-    val strippedBody = widestWithArgs match
-      case Some((widestCtor, _)) =>
-        cd.body.map {
+    // Strip super args from the widest constructor ONLY when not in multi-root mode.
+    // In multi-root mode, the widest root's super(args) must be KEPT so the CtorFunnel sees
+    // it as a unique root with super args and promotes it as primary. The emitter skips
+    // super args when the parent is a trait (§1(b) class-to-trait).
+    val strippedBody = widestWithArgs2 match
+      case Some((widestCtor, _)) if !multipleRootsCallSuper =>
+        rewrittenBody.map {
           case d: Tree.DefDef if d.symbol == widestCtor.symbol => stripSuperArgs(d)(using summon[Program])
           case other => other
         }
-      case None => cd.body
+      case _ => rewrittenBody
 
     val strippedFields = spec.mappings.map(_.valName).toSet ++ spec.ownedFields
     val cleanedBody = strippedBody.map {
@@ -367,6 +459,141 @@ final class ClassToTraitTransform(
           case _ => t
       case _ => t
 
+  // ---- multi-root rewrite: super(args) -> this(expanded_args) for narrower roots ----
+
+  /** Rewrite a constructor's `super(args)` into `this(expanded_args)` using the parent's
+    * own delegation chain. For `FlushablePool(int cap) { super(cap); }` where `Pool(int cap)`
+    * delegates `this(cap, MAX_VALUE)`, the rewrite produces `this(cap_actual, MAX_VALUE)`.
+    *
+    * The expansion substitutes the subclass's actual super args for the parent constructor's
+    * parameter symbols in the delegation args. */
+  /** Rewrite a narrower root's `super(args)` into `this(expanded_args)` targeting the widest
+    * constructor of THIS class (`targetCtor`), using the parent's own delegation chain. */
+  private def rewriteSuperToThis(d: Tree.DefDef, spec: ResolvedSpec, targetCtor: SymId)(using program: Program): Tree.DefDef =
+    val superArgs = CtorFunnel.superArgsOf(program, d)
+    val arity = superArgs.size
+    // Nilary super(): expand using defaults (Pool() -> this(16, MAX_VALUE))
+    if arity == 0 then
+      if spec.defaults.nonEmpty then rewriteSuperCallToThis(d, spec.defaults, targetCtor)
+      else d
+    else
+      spec.ctorDelegations.get(arity) match
+        case None => d // No delegation chain found for this arity
+        case Some((parentParamSyms, delegArgs)) =>
+          // Build substitution map: parent param symbol -> actual arg from subclass's super call
+          val subst = parentParamSyms.zip(superArgs).toMap
+          val expandedArgs = delegArgs.map(substituteSymbols(_, subst))
+          rewriteSuperCallToThis(d, expandedArgs, targetCtor)
+
+  /** Replace the head `super(args)` with `this(newArgs)` targeting `targetCtor` of THIS class. */
+  private def rewriteSuperCallToThis(d: Tree.DefDef, newArgs: List[Term], targetCtor: SymId)(using program: Program): Tree.DefDef =
+    val stmts = CtorFunnel.stmtsOf(d)
+    stmts.headOption.collect { case t: Term => t } match
+      case None => d
+      case Some(head) =>
+        val unwrapped = Tree.uncomment(head)
+        unwrapped match
+          case Tree.Apply(Tree.Select(sup: Tree.Super, m, sel, selOrigin), _, method, tpe, appOrigin)
+              if program.symbolOf(m).exists(_.name == "<init>") =>
+            // Replace Super with a self-reference (This) and target the WIDEST constructor
+            // of THIS class (not the parent's constructor). `targetCtor` is the SymId of the
+            // widest constructor that will be promoted to primary by the funnel.
+            val thisNode = Tree.This(sup.cls, sup.tpe, sup.origin)
+            val newSel = Tree.Select(thisNode, targetCtor, sel, selOrigin)
+            val newApply: Term = Tree.Apply(newSel, newArgs, method, tpe, appOrigin)
+            val newHead: Term = Tree.recomment(head, newApply)
+            val newStmts = (newHead: Statement) :: stmts.tail
+            val trailing = CtorFunnel.trailingOf(d)
+            val newBody: Term = newStmts match
+              case List(single: Term) if trailing.isEmpty => single
+              case _ =>
+                val last = newStmts.last match { case t: Term => t; case _ => return d }
+                Tree.Block(newStmts.init.collect { case s: Statement => s }, last,
+                           d.rhs.map(_.tpe).getOrElse(TypeRepr.NoType), d.origin, trailing)
+            d.copy(rhs = Some(newBody))
+          case _ => d
+
+  /** Substitute symbol references in a term: replace Ident(sym) with the mapped term. */
+  private def substituteSymbols(t: Term, subst: Map[SymId, Term]): Term = t match
+    case Tree.Ident(sym, tpe, origin) if subst.contains(sym) => subst(sym)
+    case Tree.Apply(fun, args, method, tpe, origin) =>
+      val newFun = fun match { case f: Term => substituteSymbols(f, subst); case other => other }
+      Tree.Apply(newFun, args.map(substituteSymbols(_, subst)), method, tpe, origin)
+    case Tree.Select(qual, sym, name, origin) =>
+      val newQual = qual match { case q: Term => substituteSymbols(q, subst); case other => other }
+      Tree.Select(newQual, sym, name, origin)
+    case other => other
+
+  // ---- transitive subclass rewrite ----
+
+  /** Build ResolvedSpecs for classes that extend a class that was REWRITTEN by the main pass
+    * (step 2). These specs carry NO mappings (no override vals), only the delegation chain data
+    * needed for the multi-root rewrite. A FlushablePoolClass extending FlushablePool gets its
+    * constructors rewritten to delegate to the widest via this(...). */
+  private def buildTransitiveSpecs(p: Program): Map[SymId, ResolvedSpec] =
+    // Find classes that were rewritten: they're direct subclasses of nominated types and now
+    // have a paramful widest constructor with this(...) delegation chains.
+    val rewrittenSyms = resolved.values.map(_.parentSymId).toSet
+    val specs = collection.mutable.Map[SymId, ResolvedSpec]()
+    p.units.flatMap(u => StandardTraversal.allClassDefs(u)(using p)).foreach { cd =>
+      val parentSym = cd.parents.iterator.flatMap {
+        case tt: TypeTree => ClassToTraitTransform.headSymOf(tt.tpe)
+        case t: Term => ClassToTraitTransform.headSymOf(t.tpe)
+      }.nextOption()
+      parentSym match
+        case Some(ps) if !rewrittenSyms.contains(ps) && !resolved.contains(ps) =>
+          // Check if this parent was rewritten: does it have a parent that IS a nominated type?
+          val parentCd = p.units.flatMap(u => StandardTraversal.allClassDefs(u)(using p))
+            .find(_.symbol == ps)
+          val parentIsRewritten = parentCd.exists { pcd =>
+            pcd.parents.iterator.flatMap {
+              case tt: TypeTree => ClassToTraitTransform.headSymOf(tt.tpe)
+              case t: Term => ClassToTraitTransform.headSymOf(t.tpe)
+            }.exists(resolved.contains)
+          }
+          if parentIsRewritten then
+            parentCd.foreach { pcd =>
+              val ctors = pcd.body.collect { case d: Tree.DefDef if p.symbolOf(d.symbol).exists(_.name == "<init>") => d }
+              // Use valueParams (excluding using clauses) for arity, matching superArgsOf's count
+              val widestCtor = ctors.maxByOption(c => CtorFunnel.valueParams(p, c).size)
+              val widestArity = widestCtor.map(c => CtorFunnel.valueParams(p, c).size).getOrElse(0)
+              if widestArity > 0 then
+                val formalTypes = widestCtor.toList.flatMap(c => CtorFunnel.valueParams(p, c).map(_.tpt.tpe))
+                // Build delegation chain from the parent's constructors (after rewrite, they
+                // have this(...) delegations that expand narrower calls to the widest)
+                val defaults = ctors.find(c => CtorFunnel.valueParams(p, c).isEmpty).toList.flatMap { nc =>
+                  CtorFunnel.stmtsOf(nc).headOption.collect { case t: Term => Tree.uncomment(t) }.toList.flatMap {
+                    case Tree.Apply(Tree.Select(_, m, _, _), args, _, _, _)
+                        if p.symbolOf(m).exists(_.name == "<init>") => args
+                    case _ => Nil
+                  }
+                }
+                val ctorDelegations: Map[Int, (List[SymId], List[Term])] = ctors.flatMap { ctor =>
+                  val arity = CtorFunnel.valueParams(p, ctor).size
+                  if arity >= widestArity then None
+                  else
+                    CtorFunnel.stmtsOf(ctor).headOption.collect { case t: Term => Tree.uncomment(t) }.flatMap {
+                      case Tree.Apply(Tree.Select(r, m, _, _), delegArgs, _, _, _)
+                          if p.symbolOf(m).exists(_.name == "<init>") && !r.isInstanceOf[Tree.Super] && delegArgs.nonEmpty =>
+                        Some(arity -> (CtorFunnel.valueParams(p, ctor).map(_.symbol), delegArgs))
+                      case _ => None
+                    }
+                }.toMap
+                if ctorDelegations.nonEmpty || defaults.nonEmpty then
+                  specs(ps) = ResolvedSpec(
+                    fqn = p.symbolOf(ps).map(_.fullName).getOrElse(""),
+                    mappings = Nil, // No override vals for transitive subclasses
+                    formalTypes = formalTypes,
+                    defaults = defaults,
+                    ownedFields = Set.empty,
+                    parentSymId = ps,
+                    ctorDelegations = ctorDelegations,
+                  )
+            }
+        case _ => ()
+    }
+    specs.toMap
+
   // ---- helpers ----
 
   private def mkVal(m: ParamMapping, tpe: TypeRepr, rhs: Option[Term],
@@ -442,6 +669,17 @@ object ClassToTraitTransform:
   private[transform] final case class ResolvedSpec(
     fqn: String, mappings: List[ParamMapping], formalTypes: List[TypeRepr],
     defaults: List[Term], ownedFields: Set[String], parentSymId: SymId,
+    /** For each non-widest parent constructor: its arity -> the expanded argument list to the
+      * widest constructor, with the parent constructor's own parameter SYMBOLS still in place.
+      * A subclass calling `super(args)` at that arity substitutes its actual args for those
+      * symbols to get the `this(expanded)` delegation it needs.
+      *
+      * Built from the parent's own `this(...)` delegation chain. `Pool()` delegates to
+      * `this(16, MAX_VALUE)`, so arity 0 maps to `[Literal(16), Literal(MAX_VALUE)]`.
+      * `Pool(int cap)` delegates to `this(cap, MAX_VALUE)`, so arity 1 maps to
+      * `[Ident(cap), Literal(MAX_VALUE)]` — the `Ident(cap)` will be substituted with
+      * the actual arg from the subclass's `super(cap_actual)`. */
+    ctorDelegations: Map[Int, (List[SymId], List[Term])] = Map.empty,
   )
 
   private[transform] def headSymOf(tpe: TypeRepr): Option[SymId] = tpe match

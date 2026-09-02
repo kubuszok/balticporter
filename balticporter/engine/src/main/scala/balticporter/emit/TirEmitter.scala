@@ -1945,9 +1945,18 @@ final class TirEmitter(
     // different feature and the port's `promoteToClass` is the answer — and is counted here.
     checkClause(cd, rendered = prim.contains("(using "), form = kw)
     val superTpe = cd.parents.headOption.map { case tt: TypeTree => tt.tpe; case t: Term => t.tpe }
+    // A class-to-trait converted parent has no constructor, so super args must NOT be rendered
+    // on the extends clause even when the funnel's plan carries them (the funnel promoted the
+    // widest super-calling constructor as primary so its params become class params, but the
+    // super args target a trait's abstract vals, not a constructor). Without this guard the
+    // emitter renders `extends Pool(cap$p, max$p)` — `Pool does not take parameters`.
+    def parentIsTrait: Boolean =
+      def headSym(t: TypeRepr): Option[SymId] = t match
+        case TypeRepr.TypeRef(_, s) => Some(s); case TypeRepr.AppliedType(tc, _) => headSym(tc); case _ => None
+      superTpe.flatMap(headSym).flatMap(program.symbolOf).exists(_.flags.isTrait)
     val parents = cd.parents.map(parent).filter(_.nonEmpty) match
       case Nil                          => Nil
-      case h :: t if superArgs.nonEmpty =>
+      case h :: t if superArgs.nonEmpty && !parentIsTrait =>
         val as = superArgs.zipWithIndex.map((a, n) => superArg(superTpe.getOrElse(TypeRepr.NoType), a, n, i))
         s"$h(${as.mkString(", ")})" :: t
       case all                          => all

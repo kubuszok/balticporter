@@ -357,8 +357,25 @@ object CtorFunnel:
       * separate nilary constructor would be safe by the same argument — the promotion CONSUMED
       * that constructor, so it is not there to be reached. */
     private def reachableArgumentFree(s: SymId, p: Plan): Boolean =
-      p.isSynthesised &&
-        classes.find(_.symbol == s).exists(cd => ctorsOf(program, cd.body).exists(valueParams(program, _).isEmpty))
+      val hasNilary = classes.find(_.symbol == s).exists(cd =>
+        ctorsOf(program, cd.body).exists(valueParams(program, _).isEmpty))
+      if p.isSynthesised then hasNilary
+      // A PROMOTED paramful primary whose class has a nilary constructor that DELEGATES TO IT
+      // is also argument-free-reachable: `extends C` with no args resolves the nilary `def this()`,
+      // which then calls `this(defaults)` to reach the promoted primary. This shape arises when
+      // ClassToTraitTransform rewrites multiple super-calling roots into this(...) delegations
+      // targeting the widest, leaving the widest as the promoted root while manufacturing a nilary
+      // delegation path. Without this, the fixpoint demotes the promoted primary and the override
+      // vals become self-referential.
+      else if p.primary.isDefined && hasNilary then
+        val primarySym = p.primary.get.symbol
+        classes.find(_.symbol == s).exists { cd =>
+          ctorsOf(program, cd.body).exists { c =>
+            valueParams(program, c).isEmpty && c.symbol != primarySym &&
+              reachesCtor(program, c, primarySym)
+          }
+        }
+      else false
 
     private val plans: Map[SymId, Plan] =
       var acc     = classes.map(cd => cd.symbol -> plan0(program, cd)).toMap
