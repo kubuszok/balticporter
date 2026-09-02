@@ -7611,9 +7611,31 @@ final class CollectionsTransform(
                   call(recv, tgtSym, remaining, t, so)
                 }
               case _ =>
-                // non-literal boolean: cannot dispatch statically — return None so it stays unchanged
-                // and is counted on the `collection-retarget` lane by RetargetBoundaryCheck.
-                scala.None
+                // --- 3.1aq: non-literal boolean — emit `if (flag) recv.onTrue(args) else recv.onFalse(args)`
+                // with F7 evaluate-once binding for the receiver and remaining args (CLAUDE.md §4.4).
+                // Section 1(a) — a universal fact about BoolDispatch: the flag is a runtime value,
+                // so the dispatch is emitted as an `if` rather than being resolved statically. The
+                // receiver and args are each evaluated once and bound to temporaries.
+                (retargetRewriteSyms.get((srcFqn, onTrue)), retargetRewriteSyms.get((srcFqn, onFalse))) match
+                  case (Some(trueSym), Some(falseSym)) =>
+                    val n = { templateSeq += 1; templateSeq }
+                    // Build temporary names for receiver and each remaining arg
+                    val recvTmp = s"bp$$bd$n"
+                    val argTmps = remaining.indices.map(i => s"bp$$bd${n}a$i")
+                    // Build the val bindings: val recv$ = <recv>; val a0$ = <arg0>; ...
+                    val recvBind = s"val $recvTmp = "
+                    val argBinds = argTmps.map(t => s"; val $t = ")
+                    // Build the two calls using the temp names
+                    val argList = argTmps.mkString(", ")
+                    val trueCall  = s"$recvTmp.${p.symbolOf(trueSym).map(_.name).getOrElse(onTrue)}($argList)"
+                    val falseCall = s"$recvTmp.${p.symbolOf(falseSym).map(_.name).getOrElse(onFalse)}($argList)"
+                    val tail = s"; if (" // flag hole follows
+                    val afterFlag = s") $trueCall else $falseCall }"
+                    // parts: "{ val recv$ = " <recv> "; val a0$ = " <arg0> ... "; if (" <flag> ") trueCall else falseCall }"
+                    val parts = List("{ " + recvBind) ++ argBinds.toList ++ List(tail, afterFlag)
+                    val holes = List(recv) ++ remaining.toList ++ List(flagArg)
+                    Some(Tree.Opaque.spliced(parts, holes, t.tpe, so))
+                  case _ => scala.None
         // Construct entries are handled by retargetConstruct (Tree.New path); if the call reaches
         // HERE it is a method call whose (name, arity) collides with an "<init>" entry, or an
         // anonymous subclass / super-call that retargetConstruct could not match — return None so

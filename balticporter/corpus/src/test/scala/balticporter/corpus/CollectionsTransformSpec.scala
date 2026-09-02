@@ -1976,3 +1976,90 @@ class CollectionsTransformSpec extends PortSuite:
     assertEmits(p, "classOf[demo.LlsMap")
     assertNotEmits(p, "classOf[demo.ObjMap")
   }
+
+  // ---------------------------------------------------------------------------
+  // --- 3.1aq: BoolDispatch on a NON-LITERAL flag
+  // ---------------------------------------------------------------------------
+
+  test("BoolDispatch with a literal true calls the onTrue target") {
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.Coll" -> "demo.Target"),
+      retargetRewrites = Map("demo.Coll" -> Map(
+        ("remove", 2) -> CollectionsTransform.RetargetRewrite.BoolDispatch(1, "removeByRef", "removeByVal"))))
+    val p = portAll(List(
+      "Coll.java" ->
+        """package demo;
+          |public class Coll<T> {
+          |  public boolean remove(T value, boolean identity) { return false; }
+          |}""".stripMargin,
+      "Target.java" ->
+        """package demo;
+          |public class Target<T> {
+          |  public boolean removeByRef(T value) { return false; }
+          |  public boolean removeByVal(T value) { return false; }
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  boolean test(Coll<String> c) { return c.remove("x", true); }
+          |}""".stripMargin), ph)
+    assertEmits(p, ".removeByRef(")
+    assertNotEmits(p, ".removeByVal(")
+  }
+
+  test("BoolDispatch with a literal false calls the onFalse target") {
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.Coll" -> "demo.Target"),
+      retargetRewrites = Map("demo.Coll" -> Map(
+        ("remove", 2) -> CollectionsTransform.RetargetRewrite.BoolDispatch(1, "removeByRef", "removeByVal"))))
+    val p = portAll(List(
+      "Coll.java" ->
+        """package demo;
+          |public class Coll<T> {
+          |  public boolean remove(T value, boolean identity) { return false; }
+          |}""".stripMargin,
+      "Target.java" ->
+        """package demo;
+          |public class Target<T> {
+          |  public boolean removeByRef(T value) { return false; }
+          |  public boolean removeByVal(T value) { return false; }
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  boolean test(Coll<String> c) { return c.remove("x", false); }
+          |}""".stripMargin), ph)
+    assertEmits(p, ".removeByVal(")
+    assertNotEmits(p, ".removeByRef(")
+  }
+
+  test("BoolDispatch with a NON-LITERAL flag emits if/else with F7 evaluate-once binding") {
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.Coll" -> "demo.Target"),
+      retargetRewrites = Map("demo.Coll" -> Map(
+        ("remove", 2) -> CollectionsTransform.RetargetRewrite.BoolDispatch(1, "removeByRef", "removeByVal"))))
+    val p = portAll(List(
+      "Coll.java" ->
+        """package demo;
+          |public class Coll<T> {
+          |  public boolean remove(T value, boolean identity) { return false; }
+          |}""".stripMargin,
+      "Target.java" ->
+        """package demo;
+          |public class Target<T> {
+          |  public boolean removeByRef(T value) { return false; }
+          |  public boolean removeByVal(T value) { return false; }
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  boolean test(Coll<String> c, boolean flag) { return c.remove("x", flag); }
+          |}""".stripMargin), ph)
+    // Both branch targets appear in the emitted if/else
+    assertEmits(p, "removeByRef")
+    assertEmits(p, "removeByVal")
+    // The flag appears in an if condition
+    assertEmitsMatch(p, """if\s*\(""")
+    // F7: the receiver is bound to a temp
+    assertEmitsMatch(p, """val bp\$bd\d+\s*=""")
+  }
