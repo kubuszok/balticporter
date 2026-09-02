@@ -247,12 +247,15 @@ scala_version := "3.8.4"
 # and `jdk_guard`'s probe read the SAME variable rather than a second copy that can drift.
 export jdk_version := "22"
 
-# The MIGRATOR invocation. `sbt -client` connects to "a" running server — and in a checkout with
-# git worktrees it connected to ANOTHER worktree's server (measured 2026-08-28: a run from
-# w13-nullable-members wrote its run-latest/ into w7-uniform-deps/port-report/, and two promotion
-# runs hung inside an `sbtn` that had nothing to talk to — ENGINE-LIMITS M5.11). `-batch` starts a
-# server per invocation, in THIS directory, and a recipe-exported JAVA_HOME reaches the fork.
-sbt_migrate := "sbt --server -batch"
+# The MIGRATOR invocation. `sbt --client` connects to the warm server whose socket directory is
+# set by SBT_GLOBAL_SERVER_DIR (computed in scripts/_lib.sh from the worktree's absolute path).
+# This gives each worktree a PRIVATE server, solving M5.11's cross-worktree collision: sbt 2's
+# sbtn derived a hash that collided across worktrees sharing a common .git, so sbtn in w21
+# attached to w20's background server (measured: lsof showed w20-dep-residue cwd). With a
+# per-worktree SBT_GLOBAL_SERVER_DIR, the first invocation starts a background server IN THIS
+# DIRECTORY, and subsequent ones (compile, test, correlate) reuse it — zinc's incremental cache
+# and sbt 2's compile cache make a second compile near-instant.
+sbt_migrate := "sbt --client"
 
 # Reference-build scalacOptions (DESIGN.md §8.24, PROGRESS.md §13 wave 1.0).
 #
@@ -531,6 +534,7 @@ gdx-measure:
     ROOT="$(pwd)"
     export CORE_PROJECT="{{core_project}}"
     . scripts/_lib.sh
+    trap sbt_shutdown EXIT
 
     # Make persisted findings machine-independent: paths in the artifact are relative to this root,
     # so a baseline committed from one checkout diffs cleanly against a run from another (or from a
@@ -604,6 +608,7 @@ gdx-test-measure:
     ROOT="$(pwd)"
     export CORE_PROJECT="{{core_project}}"
     . scripts/_lib.sh
+    trap sbt_shutdown EXIT
 
     write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{gdx_src}}"
     REPORT="$ROOT/port-report/LibgdxTestMigrate"
@@ -709,6 +714,7 @@ ashley-measure:
     ROOT="$(pwd)"
     export CORE_PROJECT="{{core_project}}"
     . scripts/_lib.sh
+    trap sbt_shutdown EXIT
 
     write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{ashley_src}}"
     REPORT="$ROOT/port-report/AshleyMigrate"

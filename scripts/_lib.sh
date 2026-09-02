@@ -533,24 +533,56 @@ declared_dep_flags() {
   done | sort -u | while read -r r; do printf '%s\n%s\n' "--repository" "$r"; done
 }
 
+# ---------------------------------------------------------------------------------------------
+# SBT SERVER ISOLATION AND WARM COMPILE
+#
+# sbt 2.0's sbtn (native thin client) derives a server hash from the base directory, but the
+# derivation COLLIDES across git worktrees that share a common .git directory: every worktree of
+# the same repository resolves to the SAME hash, so sbtn in w21 connects to w20's background
+# server (measured: `lsof -p <server pid> | grep cwd` showed w20-dep-residue after an invocation
+# from w21-sbt-ports, with every project listing from w20's build.sbt, ENGINE-LIMITS M5.11).
+#
+# The fix: `SBT_GLOBAL_SERVER_DIR` — a per-worktree directory for the server socket. Each
+# worktree's lane sets this to a short path in /tmp derived from the worktree's absolute path,
+# so the socket path stays under the UNIX domain socket limit (~104 chars on macOS). The server
+# is started by the FIRST `sbt --client` invocation and reused by subsequent ones in the same
+# lane; the lane shuts it down at the end.
+#
+# VERIFIED: with `SBT_GLOBAL_SERVER_DIR=/tmp/sbt-bp-<8-char-hash>`, the server ran at the
+# correct cwd, a second command completed in 0s (zinc cache hit), and `sbt --client shutdown`
+# was clean. Two lanes in two worktrees with different hashes do not interfere.
+# ---------------------------------------------------------------------------------------------
+
+# Compute a per-worktree short server directory and export it.
+# Called once when _lib.sh is sourced; every `sbt` invocation in the lane inherits it.
+_BP_SBT_HASH=$(python3 -c "import hashlib; print(hashlib.sha1('$(pwd)'.encode()).hexdigest()[:8])")
+export SBT_GLOBAL_SERVER_DIR="/tmp/sbt-bp-${_BP_SBT_HASH}"
+mkdir -p "$SBT_GLOBAL_SERVER_DIR"
+
+# sbt_run <sbt-args...>
+# The single sbt entry point for all lane invocations. Uses --client to connect to a warm
+# background server (or start one). The per-worktree SBT_GLOBAL_SERVER_DIR ensures isolation.
+# Caller captures output and exit status as needed.
+_sbt_run() {
+  sbt --client "$@"
+}
+
+# sbt_shutdown — shut down the lane's private server. Called at lane end.
+sbt_shutdown() {
+  sbt --client shutdown 2>/dev/null || true
+}
+
 # sbt_compile <sbt-project-task> <capture-file>
 #
-# Runs `sbt --batch <task>` (e.g. `port-sgeJVM/compile` or `port-sgeJVM/Test/compile`),
+# Runs `sbt --client <task>` (e.g. `port-sgeJVM/compile` or `port-sgeJVM/Test/compile`),
 # captures the output, strips sbt's `[error] `/`[warn] `/`[info] ` prefixes so that the
 # downstream error-counting grep (`^-- (\[E[0-9]+\] )?.*Error`) sees the same dotty diagnostic
 # format that scala-cli produced. Sets two shell variables the caller reads:
 #   SBT_ERRORS — the counted errors (same regex as the scala-cli lanes)
 #   SBT_STATUS — the sbt exit status
-#
-# WHY `--server -batch` AND NOT `--client` OR BARE `--batch`. sbt 2's default is `--client`,
-# which uses sbtn to connect to "a" running server — and in a checkout with git worktrees it
-# connects to ANOTHER worktree's server (ENGINE-LIMITS M5.11: measured again on this wave,
-# cwd was w20-dep-residue). `--server -batch` starts a FOREGROUND server in THIS directory,
-# uses its own JAVA_HOME, and exits when the command completes. The recipe-exported JAVA_HOME
-# reaches the fork, so the compile JDK is pinned the same way it was under scala-cli's --jvm.
 sbt_compile() {
   local task="$1" cap="$2"
-  sbt --server -batch "$task" 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$cap"
+  _sbt_run "$task" 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$cap"
   SBT_STATUS=${PIPESTATUS[0]}
   # Strip sbt line prefixes to expose the raw dotty output the error-counting grep expects.
   # sbt prefixes each diagnostic line with `[error] ` (for errors) or `[warn] ` (for warnings).
@@ -566,17 +598,68 @@ sbt_compile() {
 
 # sbt_test <sbt-project-task> <capture-file>
 #
-# Runs `sbt --batch <task>` (e.g. `port-sgeJVM/test`), captures the output with sbt prefixes
+# Runs `sbt --client <task>` (e.g. `port-sgeJVM/test`), captures the output with sbt prefixes
 # stripped. The caller reads the file for test outcomes (MUnit markers `  + `, `==> X `, etc.).
 sbt_test() {
   local task="$1" cap="$2"
-  sbt --server -batch "$task" 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$cap"
+  _sbt_run "$task" 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$cap"
   local st=${PIPESTATUS[0]}
   # Strip sbt prefixes so MUnit outcome markers appear at their expected column.
   local stripped="$cap.stripped"
   sed 's/^\[error\] //; s/^\[warn\] //; s/^\[info\] //' "$cap" > "$stripped"
   mv "$stripped" "$cap"
   return $st
+}
+
+# sbt_watchdog <active-json-path> <log-file> <stale-minutes>
+#
+# A watchdog for the sbt server hang (M5.11/M5.6b: sbtn idle at 0% CPU for 47 minutes).
+# Checks whether the sbt log file's mtime is stale beyond $stale_minutes. If so:
+#   1. Reads the server PID from active.json
+#   2. Takes a jstack thread dump and saves it under .balticporter/
+#   3. Kills the sbtn CLIENT process (not the server — the server may be shared)
+#   4. Reports the hang
+#
+# Returns 0 if the server is healthy (or no server is running), 1 if a hang was detected.
+sbt_watchdog() {
+  local active="$1" logfile="$2" stale="${3:-10}"
+  if [ ! -f "$logfile" ]; then return 0; fi
+  local now mtime age
+  now=$(date +%s)
+  mtime=$(stat -f%m "$logfile" 2>/dev/null || stat -c%Y "$logfile" 2>/dev/null)
+  if [ -z "$mtime" ]; then return 0; fi
+  age=$(( (now - mtime) / 60 ))
+  if [ "$age" -lt "$stale" ]; then return 0; fi
+
+  echo "!! SBT WATCHDOG — log stale for ${age} minutes (threshold: ${stale})"
+  local dump="$MEASURE_TMP/sbt-watchdog-$(date +%s).txt"
+  if [ -f "$active" ]; then
+    local server_pid
+    server_pid=$(python3 -c "
+import json, subprocess, re
+aj = json.load(open('$active'))
+uri = aj.get('uri', '')
+# Find the server process by looking for java processes listening on this socket
+# The PID is the server process in this worktree
+import os
+for proc in os.popen('pgrep -f sbt-launch.jar').read().split():
+    cwd = os.popen(f'lsof -p {proc} 2>/dev/null | grep cwd').read().strip().split()
+    if cwd and cwd[-1] == '$(pwd)':
+        print(proc)
+        break
+" 2>/dev/null)
+    if [ -n "$server_pid" ]; then
+      echo "   server PID: $server_pid — taking jstack"
+      jstack "$server_pid" > "$dump" 2>&1
+      echo "   thread dump saved: $dump"
+    else
+      echo "   could not find server PID"
+    fi
+  fi
+  echo "   killing this lane's sbtn client"
+  # Kill only the sbtn client for this worktree's server dir, not other lanes' clients
+  pkill -f "SBT_GLOBAL_SERVER_DIR=$SBT_GLOBAL_SERVER_DIR" 2>/dev/null || true
+  return 1
 }
 
 # compile_guard <scala-cli-exit-status> <counted-errors> <capture-file>
