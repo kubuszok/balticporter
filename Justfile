@@ -252,7 +252,7 @@ export jdk_version := "22"
 # w13-nullable-members wrote its run-latest/ into w7-uniform-deps/port-report/, and two promotion
 # runs hung inside an `sbtn` that had nothing to talk to — ENGINE-LIMITS M5.11). `-batch` starts a
 # server per invocation, in THIS directory, and a recipe-exported JAVA_HOME reaches the fork.
-sbt_migrate := "sbt -batch"
+sbt_migrate := "sbt --server -batch"
 
 # Reference-build scalacOptions (DESIGN.md §8.24, PROGRESS.md §13 wave 1.0).
 #
@@ -5146,7 +5146,7 @@ ecs-dropin:
       echo
       echo "-- platform: $plat (sbt: $sbt_id/test) --"
       # Run sbt in the dropin clone
-      (cd "$DROPIN_DIR" && sbt -batch "${sbt_id}/test" 2>&1) \
+      (cd "$DROPIN_DIR" && sbt --server -batch "${sbt_id}/test" 2>&1) \
         | sed 's/\x1b\[[0-9;]*m//g' > "$LOG"
       SBT_STATUS=${PIPESTATUS[0]}
       # Count errors
@@ -5219,7 +5219,7 @@ ecs-dropin:
     # ------------------------------------------------------------------
     echo
     echo "-- scalacOptions --"
-    (cd "$DROPIN_DIR" && sbt -batch "show sge-ecs/scalacOptions" 2>&1) \
+    (cd "$DROPIN_DIR" && sbt --server -batch "show sge-ecs/scalacOptions" 2>&1) \
       | sed 's/\x1b\[[0-9;]*m//g' | grep '^\[info\] \*' | sed 's/^\[info\] \* //' \
       > "$REPORT/run-latest/scalacOptions.txt"
     echo "scalacOptions: $(wc -l < "$REPORT/run-latest/scalacOptions.txt" | tr -d ' ') flags recorded"

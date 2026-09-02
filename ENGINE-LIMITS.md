@@ -10545,6 +10545,17 @@ dead-server caveat is met by the lanes' own `wrote` guard), and a recipe-exporte
 reaches the fork, which `-client` never let through (M5.10). Cost: one JVM start per migration.
 (b) instrument; the engine is untouched.
 
+
+**2026-09-02 correction — `sbt -batch` was NOT the fix.** sbt 2.0.8's launcher script runs the
+`sbtn` thin client BY DEFAULT (`--help`: "`--server` run sbt server in the foreground, instead of
+using sbtn"), so `sbt -batch` still connects to a background server and a worktree lane still queued
+behind, or hung inside, another checkout's server: bp-promote17 sat 47 min at 0% CPU in gltf's
+correlate step, and two agents on 2026-09-02 reported lanes "connecting to stale servers from other
+worktrees" under `sbt -batch`. The invocation that runs a PRIVATE foreground server is
+`sbt --server -batch`; `{{sbt_migrate}}`, the correlate step in `scripts/_lib.sh` and the drop-in
+lane's two calls now use it (measured: `engine/compile` 7.5 s wall with the disk cache, no server
+socket left behind). `sbt -client`, `sbtn` and bare `sbt -batch` are all forbidden in lanes and
+agent briefs.
 ### M6. Refuse and COUNT rather than approximate
 
 Three places where the port deliberately carries a number instead of a guess, and each is the right
