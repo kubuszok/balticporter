@@ -85,6 +85,7 @@ final class UnusedSymbolTransform extends Phase:
           case Tree.Ident(s, _, _)       => allCounts(s) += 1
           case Tree.Select(_, s, _, _)   => allCounts(s) += 1
           case Tree.Apply(_, _, m, _, _) => allCounts(m) += 1
+          case Tree.MethodRef(_, m, _, _, _) => allCounts(m) += 1
           case _ => ()
         t
 

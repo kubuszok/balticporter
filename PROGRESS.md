@@ -11778,3 +11778,12 @@ every count flat -- CLAUDE.md section 4.4's defect class.
 - ai 13, anim8 17, screens 0, vfx 1 (all unchanged)
 - `.ref` 140 -> 54: 91 `.orNull` deprecation warnings now suppressed by SuppressionPhase, 13 stale
   `@nowarn` gone (members now correctly have `.orNull` and the annotation suppresses it)
+
+#### 3.1ao ssg-md regression (UnusedSymbolTransform MethodRef)
+
+`UnusedSymbolTransform` (T26) deleted private methods referenced only through java method references
+(`this::visit`), because the `refCollector` walk did not count `Tree.MethodRef.method`. ssg-md
+**0 -> 45 errors**, three files: `LineCollectingVisitor` (6), `TextCollectingVisitor` (6),
+`CoreNodeFormatter` (30), `NodeVisitor` (3). Fix: one line in the `refCollector` --
+`case Tree.MethodRef(_, m, _, _, _) => allCounts(m) += 1`. See `ENGINE-LIMITS.md` T26.3.
+md 45 -> 0, md-test 0 (725 registrations held), md-ext 0 held.

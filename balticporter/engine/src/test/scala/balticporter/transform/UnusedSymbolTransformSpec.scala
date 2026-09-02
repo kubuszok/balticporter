@@ -95,6 +95,85 @@ class UnusedSymbolTransformSpec extends munit.FunSuite:
       "unused-symbol(refused) must be in RequiredChecks — the phase is unconditional")
   }
 
+  test("refCollector counts Tree.MethodRef references — a private method referenced only through this::visit must not be deleted") {
+    // A private method referenced only via a method reference (this::visit, which becomes
+    // Tree.MethodRef in the TIR) was falsely deleted because the refCollector did not count
+    // Tree.MethodRef.method. Regression: ssg-md 0 -> 45 errors on two visitor classes whose
+    // private visit methods are only used via VisitHandler<>(SomeType.class, this::visit).
+    //
+    // This test verifies that Tree.MethodRef's method symbol is counted by the refCollector,
+    // so that a private method referenced only through a method reference is NOT deleted.
+    // The shape: class C { private def visit(n: Node): Unit = ...; val v = new Handler(this.visit) }
+    // where this.visit is a Tree.MethodRef pointing at the private visit's SymId.
+
+    val classSym = SymId(100)
+    val visitSym = SymId(101)
+    val handlerSym = SymId(102)
+    val ctorSym = SymId(103)
+
+    val symbols = SymbolTable(List(
+      Symbol(classSym, "C", "pkg.C", Flags(), SymId.None, TypeRepr.NoType),
+      Symbol(visitSym, "visit", "pkg.C#visit",
+        Flags(isPrivate = true), classSym, TypeRepr.NoType),
+      Symbol(handlerSym, "myHandler", "pkg.C#myHandler",
+        Flags(isPrivate = true), classSym, TypeRepr.NoType),
+      Symbol(ctorSym, "<init>", "pkg.C#<init>", Flags(), classSym,
+        TypeRepr.MethodType(Nil, TypeRepr.NoType, false)),
+    ))
+
+    // The class body: private def visit(...), private val myHandler = <expr using this::visit>
+    val methodRefToVisit = Tree.MethodRef(
+      qualifier = Right(Tree.This(classSym, TypeRepr.NoType, Origin.synthetic)),
+      method = visitSym,
+      tpe = TypeRepr.NoType,
+      origin = Origin.synthetic,
+      referent = Referent.Instance(1),
+    )
+    val visitDef = Tree.DefDef(
+      symbol = visitSym,
+      paramss = Nil,
+      returnTpt = TypeTree(TypeRepr.NoType, Origin.synthetic),
+      rhs = Some(Tree.Literal(Constant.UnitC, TypeRepr.NoType, Origin.synthetic)),
+      origin = Origin.synthetic,
+    )
+    val handlerDef = Tree.ValDef(
+      symbol = handlerSym,
+      tpt = TypeTree(TypeRepr.NoType, Origin.synthetic),
+      rhs = Some(methodRefToVisit),
+      origin = Origin.synthetic,
+    )
+    val ctorDef = Tree.DefDef(
+      symbol = ctorSym,
+      paramss = Nil,
+      returnTpt = TypeTree(TypeRepr.NoType, Origin.synthetic),
+      rhs = Some(Tree.Literal(Constant.UnitC, TypeRepr.NoType, Origin.synthetic)),
+      origin = Origin.synthetic,
+    )
+
+    val classDef = Tree.ClassDef(
+      symbol = classSym,
+      parents = Nil,
+      selfType = None,
+      body = List(ctorDef, visitDef, handlerDef),
+      origin = Origin.synthetic,
+    )
+
+    given program: Program = new Program(List(classDef), symbols, Xref.build(List(classDef)), MemberIndex.empty)
+
+    val phase = new UnusedSymbolTransform
+    val result = phase.run(program)
+
+    // visit should NOT have been deleted — it is referenced by the MethodRef
+    val resultVisitDefs = result.units.flatMap(u =>
+      StandardTraversal.allClassDefs(u)(using result).flatMap(_.body.collect {
+        case d: Tree.DefDef if d.symbol == visitSym => d
+      })
+    )
+    assert(resultVisitDefs.nonEmpty,
+      "private visit method referenced only via Tree.MethodRef must NOT be deleted — " +
+      "the refCollector must count Tree.MethodRef.method (ssg-md regression, 0 -> 45)")
+  }
+
   test("UnusedSymbolHandled is NOT in PorterNote.Rendered") {
     assert(!balticporter.tir.PorterNote.Rendered(Decision.Kind.UnusedSymbolHandled),
       "UnusedSymbolHandled must NOT be in PorterNote.Rendered — deleted subjects have no " +

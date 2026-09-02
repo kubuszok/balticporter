@@ -4461,6 +4461,22 @@ substituted-body-reference guard (`isSubstitutionReferenced`) handles symbols wh
 in an Opaque body of the same owning type; the remaining unreferenced privates with effectful init
 are left alone (REFUSED) as `.ref` residue.
 
+**T26.3 — `Tree.MethodRef` references were not counted by the walk (CLOSED, wave 3.1ao).** The
+`refCollector` walk counted `Tree.Ident`, `Tree.Select` and `Tree.Apply` but NOT `Tree.MethodRef`.
+A java method reference (`this::visit`) becomes `Tree.MethodRef(_, method, ...)` in the TIR, and
+the `method` SymId was never added to `allCounts`. Private methods referenced ONLY through method
+references were therefore classified as unreferenced and DELETED. ssg-md regression **0 -> 45
+errors** across four emitted files: `LineCollectingVisitor` (6 E008, 6 deleted private `visit`
+methods), `TextCollectingVisitor` (6 E008, same shape), `CoreNodeFormatter` (30 E007 type
+mismatches -- 34 of 35 private `render` methods deleted, the surviving one misresolved every
+`this.render` reference), `NodeVisitor` (3 E086 wrong parameter count -- the 2-arg private `visit`
+deleted, the 1-arg public one took its place). Fix: one line --
+`case Tree.MethodRef(_, m, _, _, _) => allCounts(m) += 1` in the `refCollector`. The lesson: a
+derived-unconditionally phase (one in `PortRun.derivedPhases`) is measured on EVERY corpus port
+before it lands, not only on the ports the author was thinking about; the gdx lanes read
+`unused-symbol(handled) 117` throughout and saw nothing, because gdx has no private method
+referenced only through a method reference.
+
 *Fix kind: (a) — a fact about Java and Scala, true of every codebase.*
 
 ## 4. Collections, shims and the JDK boundary
