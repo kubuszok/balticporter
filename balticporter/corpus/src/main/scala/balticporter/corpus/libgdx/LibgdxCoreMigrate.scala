@@ -914,6 +914,10 @@ object LibgdxPolicy:
         // The vararg is packed into a scala.Array by the frontend. DynamicArray.from takes a
         // DynamicArray, not a scala.Array, so create + addAll(Object, Int, Int).
         ("with", 1)         -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
+        // --- 3.1aj: static factory `Array.of(boolean, int, ArraySupplier/Class)` and `Array.of(Class/Supplier)`.
+        // DynamicArray uses inline MkArray; the supplier/class arg is dropped.
+        ("of", 3) -> Template("$Target.apply[$T0]($1)"),
+        ("of", 1) -> Template("$Target.apply[$T0]()"),
         // --- 3.1af: gdx-test runtime ---
         // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
         // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
