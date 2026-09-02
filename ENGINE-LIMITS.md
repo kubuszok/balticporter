@@ -14545,13 +14545,16 @@ the injected file declares a different arity.
 
 Measured on ashley: `ImmutableArray.iterator()` with parens in the ported test against an injected
 ImmutableArray whose `iterator` is parenless (extending `Iterable[A]`, which is sge's shape). 1
-error. Worked around by extending `JavaIterable[A]` instead (parens `iterator()`), which is NOT
-sge's shape verbatim -- sge's `ImmutableArray` extends `Iterable[A]` with parenless `iterator`.
+error.
 
-The fix: read the injected source's member surface (the `api-parity` check already parses injected
-Scala with scalameta) and feed `calleeHasParens`/`NullaryArityTransform` from it. Then the injected
-file can be sge's verbatim shape (`Iterable`, parenless `iterator`). The `ArrayBuffer` vs
-`DynamicArray` backing half is the sge-ecs drop-in wave's (3.2e) and is noted there as such.
+Wave 3.2e: the ashley-specific symptom is CLOSED by rewriting the injected ImmutableArray to extend
+`Iterable[A]` directly (matching sge's shape), with a dual constructor (`DynamicArray[A]` for
+emitted code, `ArrayBuffer[A]` for sge tests), and parenless `iterator`. The arity mismatch is
+avoided because the injected file declares the exact parent sge's tests expect. The underlying
+engine limit -- the engine cannot read an injected file's member surface and make callers follow
+it -- is still OPEN. The fix remains: read the injected source's member surface (the `api-parity`
+check already parses injected Scala with scalameta) and feed `calleeHasParens`/
+`NullaryArityTransform` from it.
 
 ### K36. Retarget runtime: peek/first/pop exception class, removeRange inclusive bound, ensureCapacity growth, Array(T[]) capacity, Iterator.remove — **gdx-test 35 -> 11 failing, 8 SortTest CLOSED**
 

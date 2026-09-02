@@ -11656,8 +11656,18 @@ Engine specs at HEAD: 1106 engine + 1447 corpus, 0 failures.
   exclusion. Declared in `expected-failures.tsv`.
 - **`.ref` 54**: 21 E198 remaining (T26 residue, see §13.20). The remaining 33 are from other
   `-Wunused` and `-Werror`-promoted warnings not yet addressed.
-- **sge-ecs drop-in 38/39/39**: wave 3.2e (ArrayBuffer-vs-DynamicArray backing divergence for
-  drop-in parity).
+- **sge-ecs drop-in 6/7/7**: 1 unique error remaining -- `PooledEngine.EntityPool extends
+  Pool(initialSize, maxSize)` but sge's `Pool` is a trait with abstract vals, not a class with
+  constructor params. Requires an engine mechanism for transforming class extends clauses
+  (retargetted type whose constructor changed shape), or dropping/injecting `PooledEngine`.
+
+#### 3.2e sge-ecs drop-in
+
+ImmutableArray injected replacement rewritten for sge drop-in parity: extends `Iterable[A]` (not
+`JavaIterable`), parenless `iterator`, dual constructor (`DynamicArray[A]` for emitted code +
+`ArrayBuffer[A]` for sge tests). `MethodBodyTransform` freeAll body syntax fixed (`else { ... }`
+not `() { ... }`). ecs-dropin **43/43/43 -> 6/7/7** ([error] line count, 8 unique -> 1 unique).
+ashley 0/0/0, tests 108/2/2 held. gdx 0/0/0/54 held. engine specs 1447 passed.
 
 #### 3.1ak textra opaque
 
