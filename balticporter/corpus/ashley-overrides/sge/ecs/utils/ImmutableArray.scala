@@ -25,10 +25,12 @@ import lowlevel.Nullable
   */
 final class ImmutableArray[A](private val array: DynamicArray[A]) extends balticporter.runtime.JavaIterable[A] {
 
-  def this() = this({
-    given lowlevel.MkArray[A] = lowlevel.MkArray.anyRef.asInstanceOf[lowlevel.MkArray[A]]
-    DynamicArray[A]()
-  })
+  // The empty backing array is built in the COMPANION: a local `given` inside a constructor
+  // argument is lifted to a member by the Scala.js back end and refused as a self reference
+  // (`super constructor cannot be passed a self reference this.given_MkArray_A`), while the JVM
+  // compile accepts it — measured at the 3.1ac merge, ashley js 0 -> 1. `DynamicArray.apply` is
+  // `inline` and summons its `MkArray` at the call site, so the given must be in lexical scope.
+  def this() = this(ImmutableArray.emptyBacking[A])
 
   def size: Int = array.size
 
@@ -82,4 +84,11 @@ final class ImmutableArray[A](private val array: DynamicArray[A]) extends baltic
   override def toString(): String = array.toString()
 
   def toString(separator: String): String = array.iterator.mkString(separator)
+}
+
+object ImmutableArray {
+  private[utils] def emptyBacking[A]: DynamicArray[A] = {
+    given lowlevel.MkArray[A] = lowlevel.MkArray.anyRef.asInstanceOf[lowlevel.MkArray[A]]
+    DynamicArray[A]()
+  }
 }

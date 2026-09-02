@@ -4057,7 +4057,19 @@ final class CollectionsTransform(
       // parenless (e.g. `nonEmpty`, `isEmpty`), so strip the Apply BEFORE the Select path tries to
       // look up the rewritten name in the retarget table. Checked by reference identity in
       // `selectChainRewritten` — the set the Select handler populated.
-      if t2.args.isEmpty && selectChainRewritten.remove(t2.fun) then t2.fun
+      // …and the stripped result carries the CALL's type: the Select handler saw a `fun` whose
+      // `tpe` is the member's (a method type or none), while `t2.tpe` is the value the call
+      // produces — `TestFrameworkTransform.promote` reads it to widen `assertEquals(x.peek, 1)`
+      // to `1L`, and without it the merged Select path lost what the Apply path (3.1ae) carried
+      // (measured: 3 E172 on LongArrayTest at the 3.1ac + 3.1af merge, 0 on either alone).
+      if t2.args.isEmpty && selectChainRewritten.remove(t2.fun) then
+        t2.tpe match
+          case TypeRepr.NoType | _: TypeRepr.MethodType => t2.fun
+          case vt => t2.fun match
+            case b: Tree.Block  => b.copy(tpe = vt)
+            case a: Tree.Apply  => a.copy(tpe = vt)
+            case s: Tree.Select => s.copy(tpe = vt)
+            case other => other
       else t2.fun match
         case Tree.Select(recv, m, _, so) => kindAt(recv).orElse(inheritedKind(recv, m)) match
           case Some(k) => rewrite(k, recv, m, so, t2).getOrElse(t2)
