@@ -1236,7 +1236,11 @@ final case class PortRun(
       dropMethods  = policySubs.dropMethods,
       injectedFqns = injectedFqns,
       bodyKeys     = bodyKeys,
-      renames      = renames,
+      // The FULL rename table: package renames AND per-type renames, already composed through the
+      // package rename. With package renames only, `unrename` cannot invert a type rename and the
+      // `upstream` column carries the POST-rename simple name (`SgeList` instead of `List`),
+      // breaking every consumer that joins the map to the pre-rename program (D16).
+      renames      = renamePhase.map(_.upstreamTable).getOrElse(renames),
       // The map fingerprints the JAVA it was derived from, so a dependent can tell that the base's
       // sources moved under it (design risk R1) instead of reading an entry that describes a run
       // that no longer exists. `SrcMap` records each member's Java path relative to THIS root.

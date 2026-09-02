@@ -176,6 +176,71 @@ class PortMapSpec extends munit.FunSuite:
     assertEquals(m.members.head.upstream, "up.stream.lib.ui.Widget#draw(Batch)")
   }
 
+  test("a TYPE RENAME is inverted by the FULL rename table, so `upstream` is java's FQN (D16)") {
+    // The defect: `typeRenames` changes a simple name (`List` -> `SgeList`), and a map that only
+    // sees the PACKAGE renames cannot invert it. The `upstream` column then carries the post-rename
+    // name (`up.stream.lib.ui.SgeWidget`), and every consumer that joins the map to the pre-rename
+    // program fails to match: `ownedByBase`, `followMemberRenames`, `baseMemberUpstream`.
+    //
+    // The fix: pass the FULL accepted table (package + type renames, already composed through the
+    // package rename) to `PortMap.of`. `unrename` inverts by longest VALUE match, so the type
+    // rename's value (`port.ui.SgeWidget`, length 17) beats the package rename's (`port`, length 4).
+    val srcEntry = SrcMap.Entry("port.ui.SgeWidget", "port.ui.SgeWidget#draw(Batch)", "def", 1, 2,
+      "up/stream/lib/ui/Widget.java", 10, "d0")
+    // The FULL rename table: package rename AND type rename composed.
+    val fullRenames = Map(
+      "up.stream.lib"                    -> "port",            // package rename
+      "up.stream.lib.ui.Widget"          -> "port.ui.SgeWidget", // type rename, composed
+    )
+    val m = PortMap.of("m", "eng", List("port.ui.SgeWidget"), SrcMap.Recording(List(srcEntry)),
+      Set.empty, Set.empty, Set.empty, Set.empty, fullRenames)
+    val t = m.types.head
+    assertEquals(t.upstream, "up.stream.lib.ui.Widget",
+      "upstream must be java's OWN FQN, not the post-type-rename name")
+    assertEquals(t.emitted, "port.ui.SgeWidget")
+    assertEquals(t.disposition, Disposition.Renamed)
+    // the member follows: its owner is the upstream type's FQN, not the renamed one
+    assertEquals(m.members.head.upstream, "up.stream.lib.ui.Widget#draw(Batch)")
+  }
+
+  test("a type rename with a NESTED TYPE produces the upstream name for both (D16)") {
+    // `List$ListStyle` -> `SgeList$ListStyle`: both the outer and the inner must carry the upstream
+    // FQN. The inner's emitted name is `port.ui.SgeList$ListStyle` and its upstream must be
+    // `up.stream.lib.ui.List$ListStyle`.
+    val srcOuter = SrcMap.Entry("port.ui.SgeList", "port.ui.SgeList#draw()", "def", 1, 2,
+      "up/stream/lib/ui/List.java", 10, "d0")
+    val srcInner = SrcMap.Entry("port.ui.SgeList$ListStyle", "port.ui.SgeList$ListStyle#font", "val", 1, 2,
+      "up/stream/lib/ui/List.java", 20, "d1")
+    val fullRenames = Map(
+      "up.stream.lib"                   -> "port",
+      "up.stream.lib.ui.List"           -> "port.ui.SgeList",
+    )
+    val m = PortMap.of("m", "eng", List("port.ui.SgeList", "port.ui.SgeList$ListStyle"),
+      SrcMap.Recording(List(srcOuter, srcInner)),
+      Set.empty, Set.empty, Set.empty, Set.empty, fullRenames)
+    val outer = m.types.find(_.emitted == "port.ui.SgeList").get
+    assertEquals(outer.upstream, "up.stream.lib.ui.List")
+    val inner = m.types.find(_.emitted == "port.ui.SgeList$ListStyle").get
+    assertEquals(inner.upstream, "up.stream.lib.ui.List$ListStyle")
+    // the inner's member also carries the upstream owner
+    val innerMember = m.members.find(_.emitted.contains("SgeList$ListStyle#font")).get
+    assertEquals(innerMember.upstream, "up.stream.lib.ui.List$ListStyle#font")
+  }
+
+  test("a type in BOTH `emittedTypes` and `dropTypes` produces only the Dropped row (D16)") {
+    // A type whose upstream FQN is in `dropTypes` is genuinely DROPPED — even if a phantom of it
+    // appears in `emittedTypes` due to a namespace mismatch in the caller's filter. `PortMap.of`
+    // filters `typeEntries` against `dropTypes` by upstream name, so only the Dropped row remains.
+    val m = PortMap.of("m", "eng", List("port.A"),
+      SrcMap.Recording(List(member("port.A", "port.A#f()"))),
+      dropTypes = Set("up.A"), dropMethods = Set.empty,
+      injectedFqns = Set.empty, bodyKeys = Set.empty,
+      renames = Map("up" -> "port"))
+    val typeRows = m.types.filter(_.upstream == "up.A")
+    assertEquals(typeRows.size, 1, s"exactly one row for upstream 'up.A': $typeRows")
+    assertEquals(typeRows.head.disposition, Disposition.Dropped)
+  }
+
   test("a source root that is a CHECKOUT — the leading directories are not package segments") {
     // A `sourceRoot` that is a multi-module checkout makes `javaPath` begin with the module and its
     // maven layout, and reading the whole of it as a package published

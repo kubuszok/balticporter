@@ -11842,6 +11842,35 @@ FOLLOWED) + 19 pre-existing non-fatal gaps (overload disagreements on `PooledLin
 *Fix kind: (a) universal. The dependent follows the base's published constructor plan for types it
 does not emit — the same rule as `followMemberRenames` (D14).*
 
+### D16. A type renamed by `typeRenames` was published under the POST-rename simple name, not java's — **every consumer that joins the map to the pre-rename program missed it. CLOSED**
+
+`PortMap.of` derived the `upstream` column by inverting the PACKAGE rename table. A `typeRenames`
+entry (`List -> SgeList`) changes the SIMPLE NAME, and no package rename inverts that: `unrename`
+recovered `com.badlogic.gdx.scenes.scene2d.ui.SgeList` and stopped there, because the simple name
+is not a prefix it can match. Every reader that joins the map to the pre-rename program —
+`PortMapTransform.ownedByBase` (D2's ownership filter), `followMemberRenames` (D14), `baseMemberUpstream`
+(opaque-boundary coercion, O8) — looks the base up by the symbol's PRE-rename `fullName`
+(`…ui.List`), so the map's row (`…ui.SgeList`) matched nothing.
+
+**A second defect in the same artifact**: a type that is both in `emittedTypes` (a phantom, because
+`policySubs.dropsType` checks the emitted namespace while `dropTypes` is upstream) and in
+`dropTypes` produced TWO rows with the same `upstream` key — one `Renamed` and one `Dropped`.
+`byUpstream.toMap` kept whichever came last, which could be either. 35 such pairs on libGDX core.
+
+Fix (wave 3.3a): pass the FULL rename table to `PortMap.of` — package renames AND per-type renames,
+already composed through the package rename (`PackageRenameTransform.upstreamTable`). `unrename`
+inverts by longest VALUE match, so a type rename's value (`sge.scenes.scene2d.ui.SgeList`, length
+31) beats the package rename's value (`sge`, length 3) and recovers the upstream FQN
+(`com.badlogic.gdx.scenes.scene2d.ui.List`). The `upstreamOf` function now prefers the `unrename`
+result over the path-derived name whenever `unrename` actually changed something (`declared !=
+emitted`). For the double-row defect, `typeEntries` is filtered against `dropTypes` by upstream
+name — a type whose upstream FQN is in `dropTypes` is genuinely dropped and only the `Dropped` row
+is published.
+
+*Fix kind: (a) universal — `PortMap.of` is engine code, and `typeRenames` is a §1(b) parameter
+every port may use. The defect is a fact about how the map writer reads a rename, true of every
+renaming port.*
+
 ## 9.5 Control flow — what a `break` really leaves, and the boundary that steals it
 
 ### F1. A java LABEL sits on ANY statement, not only a loop. **55 → 10 residues**

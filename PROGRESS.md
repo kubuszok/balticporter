@@ -11818,3 +11818,19 @@ cold-JVM policy.
 Residue: the migration is now the bottleneck; a per-step timer in the lane (migrate / compile /
 correlate / checks) is the next instrument, and the Spoon parse is the candidate for a cache keyed
 on the vendored tree's hash.
+
+#### 3.3a port-map upstream names (D16)
+
+`PortMap.of` published the `upstream` column by inverting only package renames. A `typeRenames`
+entry (`List -> SgeList`) changes the simple name and was invisible to `unrename`, so the map
+carried `com.badlogic.gdx.scenes.scene2d.ui.SgeList` where it should say `...ui.List`. Every
+consumer joining the map to the pre-rename program -- `ownedByBase`, `followMemberRenames`,
+`baseMemberUpstream` -- missed the match. A second defect: types in both `emittedTypes` and
+`dropTypes` (a namespace mismatch in the caller's filter) produced phantom `Renamed` rows that
+shadowed the authoritative `Dropped` entry for 35 retargeted types.
+
+Fix: pass the FULL rename table (`PackageRenameTransform.upstreamTable`) to `PortMap.of`;
+`upstreamOf` prefers the `unrename` result when it changes something; `typeEntries` is filtered
+against `dropTypes` by upstream name. 2 type rows, 61 member rows corrected (all `SgeList`); 35
+phantom `Renamed` type entries removed. `PortMapAcceptanceSpec` DroppedType count 7 -> 68 (D2
+filter now works, and 35 types correctly resolve to `Dropped`). See `ENGINE-LIMITS.md` D16.

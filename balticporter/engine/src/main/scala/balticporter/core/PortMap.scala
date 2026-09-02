@@ -315,17 +315,27 @@ object PortMap:
       val simple = head.substring(head.lastIndexOf('.') + 1)
       val fromPath = (if pkg.isEmpty then simple else s"$pkg.$simple") + tail
       val declared = unrename(emitted, renames)
-      // …and the truncation needs the unrenamed name to be QUALIFIED, which is the guard the first
-      // spelling of this did not have. 102 of libGDX core's member rows have an emitted key that is
-      // a BARE NAME — a promoted constructor parameter, whose `SrcMap` key carries no owner — and
-      // for those `declared` is that bare name, which every path-derived name trivially ends with.
-      // Truncating there throws the package away and publishes `list`, which is a different wrong
-      // answer from the `com.badlogic.gdx.graphics.list` it replaced and not a better one. A bare
-      // name says nothing about where the package starts, so the origin stands.
+      // `declared` is the upstream FQN that `unrename` recovered by inverting the rename table.
+      // When it actually CHANGED something (`declared != emitted`) and is qualified, it is the
+      // correct answer: it inverts BOTH package renames AND type renames (D16). `fromPath` is the
+      // fallback for when `unrename` cannot help (an ambiguous or absent rename): it derives the
+      // package from the java PATH and takes the simple name from the emitted FQN.
+      //
+      // The truncation test (`fromPath.endsWith("." + declared)`) was the pre-D16 guard for
+      // checkout-shaped paths with extra leading directories. With D16's full rename table,
+      // `declared` handles both checkout paths (the package rename inverts the leading dirs) and
+      // type renames (the type rename inverts the simple name). The truncation is kept as a
+      // SECONDARY check for the case where `declared` happens to equal `emitted` (no rename match)
+      // but the path still carries the right package.
+      //
+      // The `qualifiedHead` guard survives for 102 libGDX rows: a BARE member key (a promoted
+      // constructor parameter whose `SrcMap` key carries no owner) has no package to truncate.
       val qualifiedHead = declared.indexWhere(c => c == '$' || c == '#') match
         case -1 => declared.contains('.')
         case i  => declared.substring(0, i).contains('.')
-      if qualifiedHead && fromPath.endsWith("." + declared) then declared else fromPath
+      if qualifiedHead && declared != emitted then declared
+      else if qualifiedHead && fromPath.endsWith("." + declared) then declared
+      else fromPath
 
   /** Assemble the map. Pure: every argument is something the run already holds.
     *
@@ -374,6 +384,14 @@ object PortMap:
       dropMethods: Set[String],
       injectedFqns: Set[String],
       bodyKeys: Set[String],
+      /** the rename table this run applied — package renames AND per-type renames, already composed
+        * through the package rename (`PackageRenameTransform.upstreamTable`). `unrename` inverts it by
+        * longest VALUE match, so a type rename whose value is `sge.scenes.scene2d.ui.SgeList` (longer
+        * than the package rename's `sge`) wins for that type and recovers the upstream FQN. With
+        * package renames only, a type rename is invisible to `unrename` and the `upstream` column
+        * carries the POST-rename simple name (`SgeList`) instead of java's (`List`) — breaking every
+        * consumer that joins the map to the pre-rename program (`PortMapTransform.ownedByBase`,
+        * `followMemberRenames`, `baseMemberUpstream`). See `ENGINE-LIMITS.md` D16. */
       renames: scala.collection.Map[String, String],
       sourceRoot: Option[Path] = scala.None,
       typeShapes: scala.collection.Map[String, String] = Map.empty,
@@ -398,11 +416,17 @@ object PortMap:
     // emitted FQN -> the java file it came from, so `upstreamOf` can use the ORIGIN.
     val originOf: scala.collection.Map[String, String] =
       srcMap.entries.iterator.map(e => e.unit -> e.javaPath).toMap
-    val typeEntries = emittedTypes.sorted.map { emitted =>
+    val typeEntries = emittedTypes.sorted.flatMap { emitted =>
       val upstream = upstreamOf(emitted, originOf.getOrElse(emitted, ""), renames)
-      Entry("type", upstream, emitted,
+      // A type whose upstream FQN is in `dropTypes` is genuinely DROPPED — its presence in
+      // `emittedTypes` is a namespace mismatch in the caller's filter (`policySubs.dropsType`
+      // checks the emitted namespace, `dropTypes` is upstream). Exclude it here so that
+      // `droppedEntries` carries the authoritative answer and `byUpstream` never has to choose
+      // between a `Renamed` row and a `Dropped` row for the same upstream key (D16).
+      if dropTypes(upstream) then scala.None
+      else Some(Entry("type", upstream, emitted,
         if upstream != emitted then Disposition.Renamed else Disposition.Ported,
-        shape = typeShapes.getOrElse(emitted, ""))
+        shape = typeShapes.getOrElse(emitted, "")))
     }
 
     // A dropped type is SUBSTITUTED when something stands at its name and DROPPED when nothing

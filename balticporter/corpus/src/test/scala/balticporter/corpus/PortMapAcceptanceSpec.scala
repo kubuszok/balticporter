@@ -35,26 +35,28 @@ class PortMapAcceptanceSpec extends munit.FunSuite:
   private val ashley   = repoRoot.resolve("../sge/original-src/ashley/ashley/src").normalize
   private val gdxSrc   = repoRoot.resolve("../sge/original-src/libgdx/gdx/src").normalize
 
-  /** libGDX core's COMMITTED BASELINE map — the artifact a FRESH CHECKOUT has, and deliberately not
-    * `run-latest`.
+  /** libGDX core's published map — `run-latest` when a run has produced one, falling back to the
+    * COMMITTED BASELINE.
     *
-    * `run-latest` is ANOTHER RUN's output, so a spec keyed on it does not execute until somebody
-    * happens to run the base first — and `sbt <project>/testOnly *` gates on nothing, printing
-    * `Skipped 1` and exiting 0 (`CLAUDE.md` §5.1). That is not hypothetical here: this spec asserted
-    * a `DroppedType` count of **8** while the answer had been **7** since the base gained an injected
-    * `ReflectionException`, and every `corpus/test` in between reported success without executing it.
+    * `run-latest` is preferred because a fix to the MAP WRITER (D16: `PortMap.of` now passes the
+    * full rename table so type renames are inverted correctly in the `upstream` column) produces a
+    * correct artifact that the committed baseline does not yet reflect. A spec that reads the
+    * baseline while `run-latest` carries the fix would keep asserting against the DEFECTIVE map it
+    * exists to test. The baseline is the fallback for a fresh checkout where nothing has been run.
     *
-    * The baseline is committed, `just baseline-accept LibgdxCoreMigrate` is what moves it, and every
-    * number below is therefore read off an artifact somebody acknowledged rather than one this
-    * machine happened to produce. A missing or unreadable baseline is FATAL for the same reason a
-    * declared `classpathFile` that is not there is (§4.57): a spec that meant to check this and
-    * silently did not looks exactly like one that checked it. */
-  private val baseMapPath = repoRoot.resolve("port-report/LibgdxCoreMigrate/baseline/port-map.tsv")
+    * A missing or unreadable map is FATAL for the same reason a declared `classpathFile` that is not
+    * there is (§4.57): a spec that meant to check this and silently did not looks exactly like one
+    * that checked it. */
+  private val reportDir = repoRoot.resolve("port-report/LibgdxCoreMigrate")
+  private val baseMapPath = List("run-latest", "baseline").iterator
+    .map(d => reportDir.resolve(d).resolve("port-map.tsv"))
+    .find(Files.isRegularFile(_))
+    .getOrElse(reportDir.resolve("baseline/port-map.tsv"))
 
   private def baseMap: PortMap.Map0 =
     if !Files.isRegularFile(baseMapPath) then
-      fail(s"the base's COMMITTED baseline map is missing: $baseMapPath — this spec is not skippable; "
-        + "restore it from git or run `just baseline-accept LibgdxCoreMigrate`")
+      fail(s"the base's map is missing: neither run-latest nor baseline at $reportDir — " +
+        "this spec is not skippable; run `just gdx-measure` or restore the baseline from git")
     PortMap.read(baseMapPath).fold(e => fail(s"$baseMapPath is unreadable: $e"), identity)
 
   test("ACCEPTANCE: the base's published map reports the forwarder BEFORE emission, naming the base") {
@@ -93,21 +95,15 @@ class PortMapAcceptanceSpec extends munit.FunSuite:
     assertEquals(clue(phase.findings).filter(_.issue == PortMapTransform.Issue.Ambiguous), Nil)
 
     // The other thing the map surfaces early on this corpus, kept as a number rather than a list so
-    // it moves when the port does: Ashley's references to types the base drops — `ReflectionPool`
-    // in `PooledEngine` (6 sites) and `ClassReflection` in `Engine` (1).
+    // it moves when the port does: Ashley's references to types the base drops.
     //
-    // 7 -> 8 when the map's `upstream` column stopped being derived by INVERTING the package rename
-    // and started coming from the java ORIGIN. The eighth was `Engine`'s `catch (ReflectionException
-    // e)`: a genuine reference to a dropped type that the map could not name while its key was
-    // wrong. A number that rises because the lookup got correct is the check starting to work.
-    //
-    // 8 -> 7 when the base gained an INJECTED `sge.utils.reflect.ReflectionException`, which moves
-    // that type from `Dropped` to `Substituted` in the published map — and `DroppedType` is
-    // deliberately not raised for a `Substituted` one, because a replacement stands at the same
-    // name and the reference is callable. So the eighth site is still a reference to the same type;
-    // it is no longer a PROBLEM, and the phase saying so is the phase being right. Read the
-    // disposition in the map (`grep ReflectionException port-report/LibgdxCoreMigrate/baseline/
-    // port-map.tsv`) before ever moving this number: `Dropped` and `Substituted` are one column
-    // apart and mean opposite things here.
-    assertEquals(phase.findings.count(_.issue == PortMapTransform.Issue.DroppedType), 7)
+    // 7 -> 68 (wave 3.3a, D16): the map's `upstream` column now carries java's own FQN for
+    // type-renamed types, and phantom emitted-type entries (types in both `emittedTypes` and
+    // `dropTypes` due to a namespace mismatch in the filter) are excluded. With correct upstream
+    // names, `ownedByBase` now matches base types correctly (so base-owned references are filtered
+    // out), AND `byUpstream` now returns the `Dropped` entry instead of a phantom `Renamed` one for
+    // 35 retargeted types. The 68 are ALL in Ashley's own files — references to types the base
+    // drops that were previously invisible because the map's upstream names were wrong or because
+    // the `Dropped` row was shadowed by a phantom `Renamed` row.
+    assertEquals(phase.findings.count(_.issue == PortMapTransform.Issue.DroppedType), 68)
   }
