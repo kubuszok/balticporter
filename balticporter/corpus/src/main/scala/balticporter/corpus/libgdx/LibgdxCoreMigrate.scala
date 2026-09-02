@@ -684,6 +684,10 @@ object LibgdxPolicy:
         ("entries", 0) -> ForEach("foreachEntry", 2),
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
+        // --- 3.1aj: get(K) returns Nullable[V] in lls; the NullabilityTransform adds a spurious
+        // TypeApply (type argument) that makes scalac unable to resolve the overload between
+        // get(K):Nullable[V] and get(K,V):V. Template strips type args and unwraps.
+        ("get", 1)     -> Template("$recv.get($0).orNull"),
       ),
       // Entry arity-0: java's default-constructed Entry with both fields null.
       // Construct routes `new Tuple2()` -> `Tuple2.apply(null.asInstanceOf[K], null.asInstanceOf[V])`.
@@ -728,6 +732,8 @@ object LibgdxPolicy:
         ("entries", 0) -> ForEach("foreachEntry", 2),
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
+        // --- 3.1aj: same get overload fix as ObjectMap
+        ("get", 1)     -> Template("$recv.get($0).orNull"),
       ),
       "com.badlogic.gdx.utils.OrderedSet" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.OrderedSet", "apply"),
@@ -748,6 +754,8 @@ object LibgdxPolicy:
         ("entries", 0) -> ForEach("foreachEntry", 2),
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
+        // --- 3.1aj: same get overload fix as ObjectMap
+        ("get", 1)     -> Template("$recv.get($0).orNull"),
       ),
       // wave 3.1d: remaining MAP family — all to ObjectMap, same Construct + ForEach pattern.
       // IntMap<V> -> ObjectMap[Int, V], LongMap<V> -> ObjectMap[Long, V],
@@ -775,6 +783,8 @@ object LibgdxPolicy:
         ("entries", 0) -> ForEach("foreachEntry", 2),
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
+        // --- 3.1aj: same get overload fix as IntMap
+        ("get", 1)     -> Template("$recv.get($0).orNull"),
       ),
       "com.badlogic.gdx.utils.IntIntMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
@@ -853,6 +863,10 @@ object LibgdxPolicy:
         ("entries", 0) -> ForEach("foreachEntry", 2),
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
+        // --- 3.1aj: same get overload fix as ObjectMap
+        ("get", 1)     -> Template("$recv.get($0).orNull"),
+        // --- 3.1aj: ArrayMap.remove(K) -> removeKey(K). lls ArrayMap has removeKey, not remove.
+        ("remove", 1)  -> Rename("removeKey"),
       ),
       // wave 3.1d: IntSet -> ObjectSet. No entries/keys/values — sets iterate through
       // themselves (Iterable<Integer>), lowered to foreachKey by the phase when applicable.
