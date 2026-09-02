@@ -606,8 +606,13 @@ lazy val `port-sge-textra` = (projectMatrix in file("ported/sge-textra"))
   .settings(
     name := "balticporter-port-sge-textra",
     libraryDependencies ++= Seq(
-      "com.kubuszok"  %% "lls"   % "0.3.0",
-      "org.scalameta" %% "munit" % "1.2.0" % Test,
+      "com.kubuszok"              %% "lls"       % "0.3.0",
+      // regexodus — declared by the port's manifest (`TextraTypistPolicy.dependencies`), derived
+      // from `run-latest/dependencies.tsv` in the scala-cli lanes via `declared_dep_flags`. Here
+      // it is the build.sbt coordinate, pinned to the version the manifest declares. The emitted
+      // Scala names six of its classes outright.
+      "com.github.tommyettinger"   % "regexodus" % "0.1.21",
+      "org.scalameta"             %% "munit"     % "1.2.0" % Test,
     ),
   )
   .jvmPlatform(scalaVersions = Seq(scalaV))
@@ -646,6 +651,9 @@ lazy val `port-sge-visui-usl` = (projectMatrix in file("ported/sge-visui-usl"))
     libraryDependencies ++= Seq(
       "org.scalameta" %% "munit" % "1.2.0" % Test,
     ),
+    // The test `.usl` fixtures the suite reads through `getResourceAsStream("/test-*.usl")` —
+    // upstream paths, unchanged, because the lookup is a STRING LITERAL no rename may touch (§4.56).
+    Test / unmanagedResourceDirectories += (ThisBuild / baseDirectory).value / ".." / "sge" / "original-src" / "vis-ui" / "usl" / "src" / "test" / "resources",
   )
   .jvmPlatform(scalaVersions = Seq(scalaV))
   .jsPlatform(scalaVersions = Seq(scalaV), settings = portJsSettings)
@@ -669,13 +677,38 @@ lazy val `port-ssg-liquid` = (projectMatrix in file("ported/ssg-liquid"))
       "com.fasterxml.jackson.core"      % "jackson-annotations"       % "2.15.0",
       "com.fasterxml.jackson.datatype"  % "jackson-datatype-jsr310"   % "2.15.0",
       "ua.co.k"                          % "strftime4j"                % "1.0.6",
+      // multiarch-serviceloader — declared by the port's manifest (`LiqpPolicy.dependencies`),
+      // derived from `run-latest/dependencies.tsv` in the scala-cli lanes via `declared_dep_flags`.
+      // The emitted Scala names `multiarch.serviceloader.ServiceProviders` outright. The snapshot
+      // resolver is the Central Portal snapshot repository the artifact is published to.
+      "com.kubuszok"                    %% "multiarch-serviceloader"   % "0.4.0-12-gc168b2f-SNAPSHOT",
       "org.scalameta"                   %% "munit"                     % "1.2.0" % Test,
       "junit"                            % "junit"                     % "4.13.1" % Test,
     ),
+    resolvers += "Central Portal Snapshots" at "https://central.sonatype.com/repository/maven-snapshots",
     // The ANTLR parser class directory, produced by `LiqpClasspath` during the migration.
-    // TODO(w21): sbt 2.0's Classpath type is Seq[Attributed[HashedVirtualFileRef]] and
-    // Attributed.blank(File) does not convert. Resolve after the pilot proves the approach.
-    // The lane falls back to adding `--jar` in the sbt scalacOptions for now.
+    // sbt 2.0's `Classpath` is `Seq[Attributed[HashedVirtualFileRef]]`; `fileConverter` converts
+    // a `java.io.File` to the `HashedVirtualFileRef` sbt 2.0 expects.
+    Compile / unmanagedClasspath ++= {
+      val parserDir = (ThisBuild / baseDirectory).value / "out" / "liqp-parser-classes"
+      if (parserDir.exists()) {
+        val fc = fileConverter.value
+        Seq(Attributed.blank(fc.toVirtualFile(parserDir.toPath)))
+      } else Nil
+    },
+    Test / unmanagedClasspath ++= {
+      val parserDir = (ThisBuild / baseDirectory).value / "out" / "liqp-parser-classes"
+      if (parserDir.exists()) {
+        val fc = fileConverter.value
+        Seq(Attributed.blank(fc.toVirtualFile(parserDir.toPath)))
+      } else Nil
+    },
+    // The SPI descriptor and test fixture resources.
+    Test / unmanagedResourceDirectories += (ThisBuild / baseDirectory).value / "ported" / "ssg-liquid" / "src_managed" / "main" / "resources",
+    // The test working directory — liqp's 45 tests read `./snippets/`, `./_includes/` and
+    // `src/test/jekyll/` by RELATIVE path (a `new FileInputStream(new File(...))` the process CWD
+    // decides, not `user.dir`). The lane creates symlinks under this directory before running.
+    Test / baseDirectory := (ThisBuild / baseDirectory).value / ".balticporter" / "tmp" / "liqp-run",
   )
   .jvmPlatform(scalaVersions = Seq(scalaV))
   .jsPlatform(scalaVersions = Seq(scalaV), settings = portJsSettings)
@@ -691,8 +724,20 @@ lazy val `port-ssg-md` = (projectMatrix in file("ported/ssg-md"))
   .settings(
     name := "balticporter-port-ssg-md",
     libraryDependencies ++= Seq(
-      "org.scalameta" %% "munit" % "1.2.0" % Test,
-      "junit"          % "junit"  % "4.13.2" % Test,
+      // The annotation jar — 237 of 468 emitted files name `@org.jetbrains.annotations.NotNull`
+      // because a MARKER annotation is carried into emitted Scala whatever the port claims. Without
+      // it the compile reports 1976 unresolved references as this port's wall (see `md_deps`).
+      "org.jetbrains"  % "annotations" % "24.0.1",
+      "org.scalameta" %% "munit"       % "1.2.0" % Test,
+      "junit"          % "junit"        % "4.13.2" % Test,
+    ),
+    // flexmark resources needed by the test run: the CommonMark spec files, the HTML5 entity
+    // table (shipped by the port itself in src_managed/main/resources), and the flexmark-test-util
+    // module-root marker. These are the three `--resource-dir` flags the scala-cli lane had.
+    Test / unmanagedResourceDirectories ++= Seq(
+      (ThisBuild / baseDirectory).value / ".." / "ssg" / "original-src" / "flexmark-java" / "flexmark-test-specs" / "src" / "main" / "resources",
+      (ThisBuild / baseDirectory).value / "ported" / "ssg-md" / "src_managed" / "main" / "resources",
+      (ThisBuild / baseDirectory).value / ".." / "ssg" / "original-src" / "flexmark-java" / "flexmark-test-util" / "src" / "main" / "resources",
     ),
   )
   .jvmPlatform(scalaVersions = Seq(scalaV))
@@ -720,6 +765,94 @@ lazy val `port-ssg-md-ext` = (projectMatrix in file("ported/ssg-md-ext"))
   .jvmPlatform(scalaVersions = Seq(scalaV))
   .jsPlatform(scalaVersions = Seq(scalaV), settings = portJsSettings)
   .nativePlatform(scalaVersions = Seq(scalaV), settings = portNativeSettings)
+
+// ---------------------------------------------------------------------------------------------
+// DIFFERENTIAL LANE PROJECTS — test-only projects that compile the HAND-WRITTEN adapted suite
+// against the port's emitted main classpath, WITHOUT including the port's emitted test sources
+// (`src_managed/test/scala`). The three differential lanes (`ai-diff-measure`,
+// `textra-diff-measure`, `visui-diff-measure`) each need this separation because they run the
+// reference hand port's OWN suite, not the migrated one. `dependsOn` gives them the main
+// classpath; their test sources come from `ported/<module>/src/test/scala`.
+//
+// These are JVM-only: the differential lanes do not carry xplat compiles (they compile
+// hand-port tests, not emitted code).
+// ---------------------------------------------------------------------------------------------
+
+// port-sge-ai-diff — gdx-ai's differential gate. Test sources from ported/sge-ai/src/test/scala.
+lazy val `port-sge-ai-diff` = (project in file(".ports/sge-ai-diff"))
+  .dependsOn(`port-sge-ai`.jvm(scalaV))
+  .settings(
+    name := "balticporter-port-sge-ai-diff",
+    publish / skip := true,
+    scalacOptions := Seq("-nowarn"),
+    Test / unmanagedSourceDirectories := Seq(
+      (ThisBuild / baseDirectory).value / "ported" / "sge-ai" / "src" / "test" / "scala"
+    ),
+    libraryDependencies ++= Seq(
+      "com.kubuszok"  %% "lls"   % "0.3.0",
+      "org.scalameta" %% "munit" % "1.2.0" % Test,
+      "junit"          % "junit"  % "4.12"  % Test,
+    ),
+  )
+
+// port-sge-textra-diff — TextraTypist's differential gate. Test sources from ported/sge-textra/src/test/scala.
+lazy val `port-sge-textra-diff` = (project in file(".ports/sge-textra-diff"))
+  .dependsOn(`port-sge-textra`.jvm(scalaV))
+  .settings(
+    name := "balticporter-port-sge-textra-diff",
+    publish / skip := true,
+    scalacOptions := Seq("-nowarn"),
+    Test / unmanagedSourceDirectories := Seq(
+      (ThisBuild / baseDirectory).value / "ported" / "sge-textra" / "src" / "test" / "scala"
+    ),
+    libraryDependencies ++= Seq(
+      "com.kubuszok"  %% "lls"   % "0.3.0",
+      "org.scalameta" %% "munit" % "1.2.0" % Test,
+    ),
+  )
+
+// port-sge-visui-diff — VisUI's differential gate. The SCOPED variant: the port is not at zero
+// (8 attributed errors), so the main sources are restricted to the CLOSURE — the files the
+// adapted suites transitively name — rather than the whole emitted tree. The closure is declared
+// in the Justfile (`visui_closure`) and verified against `errors.tsv` by the lane.
+//
+// This project depends on `port-sge` (the BASE, which compiles clean) and carries the closure
+// files as its OWN main sources, bypassing `port-sge-visui` entirely — if it `dependsOn`
+// port-sge-visui, sbt would try to compile that project first and fail at the 8 errors. The
+// closure files are picked by a sourceGenerator keyed on the same list the Justfile declares.
+// Test sources from ported/sge-visui/src/test/scala.
+lazy val `port-sge-visui-diff` = (project in file(".ports/sge-visui-diff"))
+  .dependsOn(`port-sge`.jvm(scalaV))
+  .settings(
+    name := "balticporter-port-sge-visui-diff",
+    publish / skip := true,
+    scalacOptions := Seq("-nowarn"),
+    // The CLOSURE — specific files from `src_managed/main/scala/sge/visui/`, the same list as
+    // `visui_closure` in the Justfile. A sourceGenerator rather than unmanagedSourceDirectories
+    // because we need individual FILES, not a whole directory.
+    Compile / sourceGenerators += Def.task {
+      val visuiEmit = (ThisBuild / baseDirectory).value / "ported" / "sge-visui" / "src_managed" / "main" / "scala" / "sge" / "visui"
+      // The closure files — keep in sync with `visui_closure` in the Justfile.
+      val closureFiles = Seq(
+        "Sizes.scala",
+        "util/ColorUtils.scala",
+        "util/OsUtils.scala",
+        "util/Validators.scala",
+        "util/InputValidator.scala",
+      )
+      closureFiles.flatMap { f =>
+        val p = visuiEmit / f
+        if (p.exists()) Seq(p) else Nil
+      }
+    }.taskValue,
+    Test / unmanagedSourceDirectories := Seq(
+      (ThisBuild / baseDirectory).value / "ported" / "sge-visui" / "src" / "test" / "scala"
+    ),
+    libraryDependencies ++= Seq(
+      "com.kubuszok"  %% "lls"   % "0.3.0",
+      "org.scalameta" %% "munit" % "1.2.0" % Test,
+    ),
+  )
 
 // ---------------------------------------------------------------------------------------------
 // `ports` — an aggregate of EVERY ported module, NOT part of `root`. `sbt ports/compile`
@@ -776,6 +909,7 @@ lazy val ports = project
   .aggregate(
     `port-ssg-md-ext`.projectRefs *
   )
+  .aggregate(`port-sge-ai-diff`, `port-sge-textra-diff`, `port-sge-visui-diff`)
   .settings(
     name := "balticporter-ports",
     publish / skip := true,

@@ -651,7 +651,6 @@ gdx-test-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$REPORT"
-    echo "-- compile --"
     # `{{gdx_module}}/src/test/scala` is the HAND-WRITTEN half of this port's test source set, and it
     # is on the line for the same reason `ported/sge-screens/src` and `ported/sge-vfx/src` are on theirs: an
     # emitted suite the globals policy marks `selfSupplied` gets `private given sge.Sge =
@@ -857,16 +856,12 @@ anim8-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$REPORT"
-    echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
-    DEPS="{{anim8_deps}}"
-    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
-      {{gdx_module}}/src_managed/main/scala {{anim8_module}}/src_managed/main/scala {{anim8_module}}/src/test/scala \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/anim8measure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/anim8measure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/anim8measure.txt
+    echo "-- compile (sbt port-sge-anim8JVM/Test/compile) --"
+    sbt_compile "port-sge-anim8JVM/Test/compile" "$MEASURE_TMP"/anim8measure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/anim8measure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/anim8measure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/anim8measure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/anim8measure.txt | sort | uniq -c | sort -rn | head
@@ -874,20 +869,13 @@ anim8-measure:
     grep -A1 '^-- Error:' "$MEASURE_TMP"/anim8measure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
     # Cross-platform compile gates — same source dirs and deps as the JVM compile.
-    xplat_compile scala-js {{scala_version}} "$REPORT" anim8measure \
-      {{gdx_module}}/src_managed/main/scala {{anim8_module}}/src_managed/main/scala -- {{anim8_deps}}
-    xplat_compile scala-native {{scala_version}} "$REPORT" anim8measure \
-      {{gdx_module}}/src_managed/main/scala {{anim8_module}}/src_managed/main/scala -- {{anim8_deps}}
 
     # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$REPORT" anim8measure "{{sge_relaxed_flags}}" {{gdx_module}}/src_managed/main/scala {{anim8_module}}/src_managed/main/scala -- {{anim8_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
-      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS -Duser.language=en -Duser.country=US \
-        {{gdx_module}}/src_managed/main/scala {{anim8_module}}/src_managed/main/scala {{anim8_module}}/src/test/scala \
-        2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/anim8run.txt
+      sbt_test "port-sge-anim8JVM/test" "$MEASURE_TMP"/anim8run.txt
       reconcile_outcomes "$MEASURE_TMP"/anim8run.txt "$HAND_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
@@ -982,7 +970,6 @@ gltf-measure:
     [ "$HAND_TESTS" = "0" ] && echo "!! the hand-written suite is GONE — the port's only cover for the loader would be missing"
     ALL_TESTS=$((MUNIT_TESTS + HAND_TESTS))
 
-    DEPS="{{gltf_deps}}"
 
     echo
     break_residue {{gltf_module}}/src_managed
@@ -991,16 +978,12 @@ gltf-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$REPORT"
-    echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a port
     # that does not compile — a false NEGATIVE on the headline number.
-    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
-      {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala \
-      {{gltf_module}}/src_managed/test/scala {{gltf_module}}/src/test/scala \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gltfmeasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/gltfmeasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/gltfmeasure.txt
+    echo "-- compile (sbt port-sge-gltfJVM/Test/compile) --"
+    sbt_compile "port-sge-gltfJVM/Test/compile" "$MEASURE_TMP"/gltfmeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/gltfmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/gltfmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/gltfmeasure.txt))"
     error_baseline_guard "$ERRORS" "$TREPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gltfmeasure.txt | sort | uniq -c | sort -rn | head
@@ -1008,21 +991,13 @@ gltf-measure:
     grep -A1 '^-- Error:' "$MEASURE_TMP"/gltfmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
     # Cross-platform compile gates — same source dirs and deps as the JVM compile.
-    xplat_compile scala-js {{scala_version}} "$TREPORT" gltfmeasure \
-      {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala {{gltf_module}}/src_managed/test/scala -- --test {{gltf_deps}}
-    xplat_compile scala-native {{scala_version}} "$TREPORT" gltfmeasure \
-      {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala {{gltf_module}}/src_managed/test/scala -- --test {{gltf_deps}}
 
     # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$TREPORT" gltfmeasure "{{sge_relaxed_flags}}" {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala {{gltf_module}}/src_managed/test/scala -- --test {{gltf_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
-      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS -Duser.language=en -Duser.country=US \
-        {{gdx_module}}/src_managed/main/scala {{gltf_module}}/src_managed/main/scala \
-        {{gltf_module}}/src_managed/test/scala {{gltf_module}}/src/test/scala \
-        2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gltfrun.txt
+      sbt_test "port-sge-gltfJVM/test" "$MEASURE_TMP"/gltfrun.txt
       # Reconciled against the SUM: both source sets are on the one invocation, so an outcome
       # count that matched only the ported half would report success for a hand-written suite that
       # never ran (CLAUDE.md §5.1).
@@ -1120,23 +1095,17 @@ screens-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$REPORT"
-    echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
-    DEPS="{{screens_deps}}"
     # `{{gdx_module}}/src/test/scala` is the BASE port's hand-written test fixture (`sge.SgeTestFixture`).
     # It is on this line because the base retires `Gdx` into a threaded context and this port's
     # hand-written suite has to construct one — the same fixture the base's own `selfSupplied` suite
     # is given, rather than a third copy of it in every dependent (CLAUDE.md §1.5's spirit, one
     # artifact down: a value the dependent imports, never policy it repeats).
-    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
-      {{gdx_module}}/src_managed/main/scala {{screens_module}}/src_managed/main/scala \
-      {{screens_module}}/src/main/scala {{screens_module}}/src/test/scala \
-      {{gdx_module}}/src/test/scala \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/screensmeasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/screensmeasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/screensmeasure.txt
+    echo "-- compile (sbt port-sge-screensJVM/Test/compile) --"
+    sbt_compile "port-sge-screensJVM/Test/compile" "$MEASURE_TMP"/screensmeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/screensmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/screensmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/screensmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/screensmeasure.txt | sort | uniq -c | sort -rn | head
@@ -1144,22 +1113,13 @@ screens-measure:
     grep -A1 '^-- Error:' "$MEASURE_TMP"/screensmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
     # Cross-platform compile gates — same source dirs and deps as the JVM compile.
-    xplat_compile scala-js {{scala_version}} "$REPORT" screensmeasure \
-      {{gdx_module}}/src_managed/main/scala {{screens_module}}/src_managed/main/scala -- {{screens_deps}}
-    xplat_compile scala-native {{scala_version}} "$REPORT" screensmeasure \
-      {{gdx_module}}/src_managed/main/scala {{screens_module}}/src_managed/main/scala -- {{screens_deps}}
 
     # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$REPORT" screensmeasure "{{sge_relaxed_flags}}" {{gdx_module}}/src_managed/main/scala {{screens_module}}/src_managed/main/scala -- {{screens_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
-      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS -Duser.language=en -Duser.country=US \
-        {{gdx_module}}/src_managed/main/scala {{screens_module}}/src_managed/main/scala \
-        {{screens_module}}/src/main/scala {{screens_module}}/src/test/scala \
-        {{gdx_module}}/src/test/scala \
-        2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/screensrun.txt
+      sbt_test "port-sge-screensJVM/test" "$MEASURE_TMP"/screensrun.txt
       reconcile_outcomes "$MEASURE_TMP"/screensrun.txt "$HAND_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
@@ -1242,18 +1202,13 @@ vfx-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$REPORT"
-    echo "-- compile --"
-    DEPS="{{vfx_deps}}"
     # `{{gdx_module}}/src/test/scala` is the BASE port's hand-written test fixture
     # (`sge.SgeTestFixture`), on this line for the reason `screens-measure` states: the base retires
     # `Gdx` into a threaded context and this port's hand-written suite has to construct one.
-    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
-      {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala {{vfx_module}}/src/test/scala \
-      {{gdx_module}}/src/test/scala \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/vfxmeasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/vfxmeasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/vfxmeasure.txt
+    echo "-- compile (sbt port-sge-vfxJVM/Test/compile) --"
+    sbt_compile "port-sge-vfxJVM/Test/compile" "$MEASURE_TMP"/vfxmeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/vfxmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/vfxmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/vfxmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/vfxmeasure.txt | sort | uniq -c | sort -rn | head
@@ -1261,21 +1216,13 @@ vfx-measure:
     grep -A1 '^-- Error:' "$MEASURE_TMP"/vfxmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
     # Cross-platform compile gates — same source dirs and deps as the JVM compile.
-    xplat_compile scala-js {{scala_version}} "$REPORT" vfxmeasure \
-      {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala -- {{vfx_deps}}
-    xplat_compile scala-native {{scala_version}} "$REPORT" vfxmeasure \
-      {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala -- {{vfx_deps}}
 
     # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$REPORT" vfxmeasure "{{sge_relaxed_flags}}" {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala -- {{vfx_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
-      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS -Duser.language=en -Duser.country=US \
-        {{gdx_module}}/src_managed/main/scala {{vfx_module}}/src_managed/main/scala {{vfx_module}}/src/test/scala \
-        {{gdx_module}}/src/test/scala \
-        2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/vfxrun.txt
+      sbt_test "port-sge-vfxJVM/test" "$MEASURE_TMP"/vfxrun.txt
       reconcile_outcomes "$MEASURE_TMP"/vfxrun.txt "$HAND_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
@@ -1383,7 +1330,6 @@ ai-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$REPORT"
-    echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
     #
@@ -1391,13 +1337,10 @@ ai-measure:
     # arrives the flag comes with it — `scala-cli compile` reports on the MAIN scope whatever
     # directories it is handed, so a test tree added here without `--test` would have its errors read
     # and not reported (CLAUDE.md §4.56).
-    DEPS="{{ai_deps}}"
-    scala-cli compile --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
-      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/aimeasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/aimeasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/aimeasure.txt
+    echo "-- compile (sbt port-sge-aiJVM/compile) --"
+    sbt_compile "port-sge-aiJVM/compile" "$MEASURE_TMP"/aimeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/aimeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/aimeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/aimeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/aimeasure.txt | sort | uniq -c | sort -rn | head
@@ -1405,13 +1348,8 @@ ai-measure:
     grep -A1 '^-- Error:' "$MEASURE_TMP"/aimeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
     # Cross-platform compile gates — no deps (ai_deps is empty).
-    xplat_compile scala-js {{scala_version}} "$REPORT" aimeasure \
-      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala -- {{ai_deps}}
-    xplat_compile scala-native {{scala_version}} "$REPORT" aimeasure \
-      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala -- {{ai_deps}}
 
     # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$REPORT" aimeasure "{{sge_relaxed_flags}}" {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala -- {{ai_deps}}
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
@@ -1498,38 +1436,25 @@ ai-test-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$REPORT"
-    echo "-- compile --"
     # `--test`: without it `scala-cli` READS the test directories and reports only the MAIN scope,
     # so a suite that does not compile measures 0 (§4.56's instrument-invocation rule — measured at
     # 0 against 6 on the one port whose test scope had stopped compiling).
-    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} {{ai_test_deps}} \
-      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala \
-      {{ai_module}}/src_managed/test/scala \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/aitestmeasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/aitestmeasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/aitestmeasure.txt
+    echo "-- compile (sbt port-sge-aiJVM/Test/compile) --"
+    sbt_compile "port-sge-aiJVM/Test/compile" "$MEASURE_TMP"/aitestmeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/aitestmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/aitestmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/aitestmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/aitestmeasure.txt | sort | uniq -c | sort -rn | head
 
     # Cross-platform compile gates — same source dirs and deps as the JVM compile.
-    xplat_compile scala-js {{scala_version}} "$REPORT" aitestmeasure \
-      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala {{ai_module}}/src_managed/test/scala -- --test {{ai_test_deps}}
-    xplat_compile scala-native {{scala_version}} "$REPORT" aitestmeasure \
-      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala {{ai_module}}/src_managed/test/scala -- --test {{ai_test_deps}}
 
     # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$REPORT" aitestmeasure "{{sge_relaxed_flags}}" {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala {{ai_module}}/src_managed/test/scala -- --test {{ai_test_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
-      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} {{ai_test_deps}} \
-        -Duser.language=en -Duser.country=US \
-        {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala \
-        {{ai_module}}/src_managed/test/scala \
-        2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/aitestrun.txt
+      sbt_test "port-sge-aiJVM/test" "$MEASURE_TMP"/aitestrun.txt
       reconcile_outcomes "$MEASURE_TMP"/aitestrun.txt "$MUNIT_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
@@ -1614,7 +1539,6 @@ ai-diff-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$ROOT/port-report/GdxAiMigrate"
-    echo "-- compile --"
     # `--test`: without it `scala-cli` READS the test directory and reports only the MAIN scope, so
     # a differential suite that does not compile measures 0 (CLAUDE.md §4.56's instrument-invocation
     # rule — measured at 0 against 6 on the one port whose test scope had stopped compiling).
@@ -1624,12 +1548,10 @@ ai-diff-measure:
     # (CLAUDE.md §3), and two files that typed clean turned out to declare 18 unimplemented members
     # and an override of nothing between them. A census read off the typer alone would have shipped
     # both.
-    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} {{ai_test_deps}} \
-      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala "$TREE" \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/aidiffmeasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/aidiffmeasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/aidiffmeasure.txt
+    echo "-- compile (sbt port-sge-ai-diff/Test/compile) --"
+    sbt_compile "port-sge-ai-diff/Test/compile" "$MEASURE_TMP"/aidiffmeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/aidiffmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/aidiffmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/aidiffmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/aidiffmeasure.txt | sort | uniq -c | sort -rn | head
@@ -1642,10 +1564,7 @@ ai-diff-measure:
 
     echo
     echo "-- run --"
-    scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} {{ai_test_deps}} \
-      -Duser.language=en -Duser.country=US \
-      {{gdx_module}}/src_managed/main/scala {{ai_module}}/src_managed/main/scala "$TREE" \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/aidiffrun.txt
+    sbt_test "port-sge-ai-diff/test" "$MEASURE_TMP"/aidiffrun.txt
     reconcile_outcomes "$MEASURE_TMP"/aidiffrun.txt "$ADAPTED_TESTS"; RECONCILED=$?
 
     echo
@@ -1723,19 +1642,15 @@ sg-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$REPORT"
-    echo "-- compile --"
     # NOTE the ANSI strip. Dropped once, and `grep -cE '^-- .*Error'` then matched nothing because every
     # line begins with a colour escape — reporting 0 errors for a port that had 20. A false NEGATIVE on
     # the project's headline number is the worst failure a measure lane can have.
     # BOTH source sets on one invocation: the main port is RuntimeMode.Vendored, so the shims live in
     # `src_managed/main` and the suite links against them there. Compiling either alone measures nothing.
-    DEPS="{{sg_deps}}"
-    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
-      {{sg_module}}/src_managed/main/scala {{sg_module}}/src_managed/test/scala \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/sgmeasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/sgmeasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/sgmeasure.txt
+    echo "-- compile (sbt port-sge-graphsJVM/Test/compile) --"
+    sbt_compile "port-sge-graphsJVM/Test/compile" "$MEASURE_TMP"/sgmeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/sgmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/sgmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/sgmeasure.txt))"
     error_baseline_guard "$ERRORS" "$TREPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/sgmeasure.txt | sort | uniq -c | sort -rn | head
@@ -1743,13 +1658,8 @@ sg-measure:
     grep -A1 '^-- Error:' "$MEASURE_TMP"/sgmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
     # Cross-platform compile gates — same source dirs and deps as the JVM compile.
-    xplat_compile scala-js {{scala_version}} "$TREPORT" sgmeasure \
-      {{sg_module}}/src_managed/main/scala {{sg_module}}/src_managed/test/scala -- --test {{sg_deps}}
-    xplat_compile scala-native {{scala_version}} "$TREPORT" sgmeasure \
-      {{sg_module}}/src_managed/main/scala {{sg_module}}/src_managed/test/scala -- --test {{sg_deps}}
 
     # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$TREPORT" sgmeasure "{{sge_relaxed_flags}}" {{sg_module}}/src_managed/main/scala {{sg_module}}/src_managed/test/scala -- --test {{sg_deps}}
 
     # -------------------------------------------------------------------------------------------
     # RUN them. Compiling a suite measures nothing about behaviour: CLAUDE.md §4.4 lists ten java forms
@@ -1760,9 +1670,7 @@ sg-measure:
     if [ "$ERRORS" = "0" ]; then
       echo
       echo "-- run --"
-      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS -Duser.language=en -Duser.country=US \
-        {{sg_module}}/src_managed/main/scala {{sg_module}}/src_managed/test/scala \
-        2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/sgrun.txt
+      sbt_test "port-sge-graphsJVM/test" "$MEASURE_TMP"/sgrun.txt
       reconcile_outcomes "$MEASURE_TMP"/sgrun.txt "$MUNIT_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
@@ -1843,16 +1751,12 @@ noise4j-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$REPORT"
-    echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a port
     # that does not compile — a false NEGATIVE on the headline number.
-    DEPS="{{n4j_deps}}"
-    scala-cli compile --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
-      {{n4j_module}}/src_managed/main/scala \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/n4jmeasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/n4jmeasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/n4jmeasure.txt
+    echo "-- compile (sbt port-sge-noiseJVM/compile) --"
+    sbt_compile "port-sge-noiseJVM/compile" "$MEASURE_TMP"/n4jmeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/n4jmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/n4jmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/n4jmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/n4jmeasure.txt | sort | uniq -c | sort -rn | head
@@ -1860,13 +1764,8 @@ noise4j-measure:
     grep -A1 '^-- Error:' "$MEASURE_TMP"/n4jmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
     # Cross-platform compile gates — no deps (n4j_deps is empty).
-    xplat_compile scala-js {{scala_version}} "$REPORT" n4jmeasure \
-      {{n4j_module}}/src_managed/main/scala
-    xplat_compile scala-native {{scala_version}} "$REPORT" n4jmeasure \
-      {{n4j_module}}/src_managed/main/scala
 
     # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$REPORT" n4jmeasure "{{sge_relaxed_flags}}" {{n4j_module}}/src_managed/main/scala
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
@@ -1943,17 +1842,13 @@ jbump-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$REPORT"
-    echo "-- compile --"
     # NOTE the ANSI strip — dropped once, and every line then began with an escape, reporting 0
     # errors for a port that had 20. A false NEGATIVE on the headline number is the worst failure a
     # measure lane can have.
-    DEPS="{{jbump_deps}}"
-    scala-cli compile --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
-      {{jbump_module}}/src_managed/main/scala \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/jbumpmeasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/jbumpmeasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/jbumpmeasure.txt
+    echo "-- compile (sbt port-sge-jbumpJVM/compile) --"
+    sbt_compile "port-sge-jbumpJVM/compile" "$MEASURE_TMP"/jbumpmeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/jbumpmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/jbumpmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/jbumpmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/jbumpmeasure.txt | sort | uniq -c | sort -rn | head
@@ -1961,13 +1856,8 @@ jbump-measure:
     grep -A1 '^-- Error:' "$MEASURE_TMP"/jbumpmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
     # Cross-platform compile gates — no deps (jbump_deps is empty).
-    xplat_compile scala-js {{scala_version}} "$REPORT" jbumpmeasure \
-      {{jbump_module}}/src_managed/main/scala
-    xplat_compile scala-native {{scala_version}} "$REPORT" jbumpmeasure \
-      {{jbump_module}}/src_managed/main/scala
 
     # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$REPORT" jbumpmeasure "{{sge_relaxed_flags}}" {{jbump_module}}/src_managed/main/scala
 
     # -------------------------------------------------------------------------------------------
     # RUN it — differentially, against the upstream Java.
@@ -1993,6 +1883,7 @@ jbump-measure:
     fi
 
     echo "-- differential probe: emitted Scala vs upstream Java, same scenario --"
+    DEPS="{{jbump_deps}}"
     PROBE="$MEASURE_TMP/jbump-probe"
     rm -rf "$PROBE"; mkdir -p "$PROBE/classes"
     javac -nowarn -d "$PROBE/classes" -sourcepath {{jbump_src}} balticporter/corpus/ports/jbump/probe/ProbeJava.java \
@@ -2116,17 +2007,13 @@ usl-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$REPORT"
-    echo "-- compile --"
     # NOTE the ANSI strip — dropped once, and every line then began with an escape, reporting 0
     # errors for a port that had 20. A false NEGATIVE on the headline number is the worst failure a
     # measure lane can have.
-    DEPS="{{usl_deps}}"
-    scala-cli compile --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
-      {{usl_module}}/src_managed/main/scala \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/uslmeasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/uslmeasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/uslmeasure.txt
+    echo "-- compile (sbt port-sge-visui-uslJVM/compile) --"
+    sbt_compile "port-sge-visui-uslJVM/compile" "$MEASURE_TMP"/uslmeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/uslmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/uslmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/uslmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/uslmeasure.txt | sort | uniq -c | sort -rn | head
@@ -2134,13 +2021,8 @@ usl-measure:
     grep -A1 '^-- Error:' "$MEASURE_TMP"/uslmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
     # Cross-platform compile gates — no deps (usl_deps is empty).
-    xplat_compile scala-js {{scala_version}} "$REPORT" uslmeasure \
-      {{usl_module}}/src_managed/main/scala
-    xplat_compile scala-native {{scala_version}} "$REPORT" uslmeasure \
-      {{usl_module}}/src_managed/main/scala
 
     # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$REPORT" uslmeasure "{{sge_relaxed_flags}}" {{usl_module}}/src_managed/main/scala
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
@@ -2185,6 +2067,7 @@ usl-measure:
       exit 0
     fi
 
+    DEPS="{{usl_deps}}"
     echo "-- oracle: 19 shipped .usl fixtures, port vs upstream java vs the checked-in uiskin.json --"
     # The include directive is what would make this gate ONLINE and non-deterministic (upstream's own
     # `RemoteTest` is `@Ignore`d for exactly that reason), so the absence is re-derived rather than
@@ -2345,20 +2228,16 @@ usl-test-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$TREPORT"
-    echo "-- compile --"
     # BOTH source sets on ONE invocation: the main port is RuntimeMode.Vendored, so the shims live
     # in `src_managed/main` and the suite links against them there. Compiling either alone measures
     # nothing. `--test` is not optional — without it scala-cli reports on the MAIN scope whatever
     # directories it is handed, so the test sources' ERRORS are simply not printed and the lane
     # reports a main-only figure under a two-scope headline (§4.56's instrument rule, measured at
     # 0 against 6 on identical inputs).
-    DEPS="{{usl_deps}} {{usl_test_deps}}"
-    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
-      {{usl_module}}/src_managed/main/scala {{usl_module}}/src_managed/test/scala \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/usltmeasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/usltmeasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/usltmeasure.txt
+    echo "-- compile (sbt port-sge-visui-uslJVM/Test/compile) --"
+    sbt_compile "port-sge-visui-uslJVM/Test/compile" "$MEASURE_TMP"/usltmeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/usltmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/usltmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/usltmeasure.txt))"
     error_baseline_guard "$ERRORS" "$TREPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/usltmeasure.txt | sort | uniq -c | sort -rn | head
@@ -2366,13 +2245,8 @@ usl-test-measure:
     grep -A1 '^-- Error:' "$MEASURE_TMP"/usltmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
     # Cross-platform compile gates — same source dirs and deps as the JVM compile.
-    xplat_compile scala-js {{scala_version}} "$TREPORT" usltmeasure \
-      {{usl_module}}/src_managed/main/scala {{usl_module}}/src_managed/test/scala -- --test {{usl_test_deps}}
-    xplat_compile scala-native {{scala_version}} "$TREPORT" usltmeasure \
-      {{usl_module}}/src_managed/main/scala {{usl_module}}/src_managed/test/scala -- --test {{usl_test_deps}}
 
     # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$TREPORT" usltmeasure "{{sge_relaxed_flags}}" {{usl_module}}/src_managed/main/scala {{usl_module}}/src_managed/test/scala -- --test {{usl_test_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -2380,11 +2254,7 @@ usl-test-measure:
       # THE RESOURCE DIRECTORY IS THE LOAD-BEARING ARGUMENT. Every test resolves its input through
       # `getResourceAsStream("/test-*.usl")`, so without it `readFile` receives a null stream and
       # all six fail identically — which would read exactly like a conversion defect.
-      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
-        --resource-dir {{usl_test_res}} \
-        -Duser.language=en -Duser.country=US \
-        {{usl_module}}/src_managed/main/scala {{usl_module}}/src_managed/test/scala \
-        2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/usltrun.txt
+      sbt_test "port-sge-visui-uslJVM/test" "$MEASURE_TMP"/usltrun.txt
       reconcile_outcomes "$MEASURE_TMP"/usltrun.txt "$MUNIT_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
@@ -2540,7 +2410,6 @@ liqp-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$REPORT"
-    echo "-- compile --"
     # The generated parser is a directory of CLASS FILES the frontend already read (D-liqp-1). If
     # scalac does not read the same `liquid.parser.v4` the two halves of the port disagree about
     # what it is, and the import failures that follow would count as this port's errors — so this
@@ -2556,27 +2425,10 @@ liqp-measure:
     # BOTH source sets on one invocation: the main port is RuntimeMode.Vendored, so the shims live in
     # `src_managed/main` and the suite links against them there. Compiling either alone measures nothing.
     # …plus whatever THE PORT ITSELF DECLARED, read from what the run published rather than
-    # re-typed here (`declared_dep_flags`, scripts/_lib.sh). Both report directories, because the
-    # two source sets are one compile and the suite's manifest may declare a coordinate the main
-    # one does not; the helper deduplicates the repositories across them.
-    DECLARED=$(declared_dep_flags "$REPORT" "$TREPORT" | tr '\n' ' ')
-    if [ -z "$DECLARED" ]; then
-      echo "!! run-latest/dependencies.tsv named no classpath coordinate for either source set —"
-      echo "   this port DECLARES multiarch-serviceloader and the emitted scala names it outright,"
-      echo "   so an empty derivation is a missing artifact and not an empty manifest. Refusing to"
-      echo "   compile against a classpath that is short one jar and to report the result as errors."
-      exit 1
-    fi
-    echo "-- declared coordinates, from the run's own dependencies.tsv --"
-    echo "   $DECLARED"
-    DEPS="{{liqp_deps}} {{liqp_test_deps}} $DECLARED"
-    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
-      --jar "{{liqp_parser_classes}}" \
-      {{liqp_module}}/src_managed/main/scala {{liqp_module}}/src_managed/test/scala \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/liqpmeasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/liqpmeasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/liqpmeasure.txt
+    echo "-- compile (sbt port-ssg-liquidJVM/Test/compile) --"
+    sbt_compile "port-ssg-liquidJVM/Test/compile" "$MEASURE_TMP"/liqpmeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/liqpmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/liqpmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/liqpmeasure.txt))"
     error_baseline_guard "$ERRORS" "$TREPORT"
     # …and the SPLIT, from the path scalac printed in each error header. The two source sets are one
@@ -2592,13 +2444,8 @@ liqp-measure:
 
     # Cross-platform compile gates — same deps as the JVM compile, including --jar for the
     # ANTLR parser classes (scalac on JS/Native type-checks against JVM class files fine).
-    xplat_compile scala-js {{scala_version}} "$TREPORT" liqpmeasure \
-      {{liqp_module}}/src_managed/main/scala {{liqp_module}}/src_managed/test/scala -- --test $DEPS --jar "{{liqp_parser_classes}}"
-    xplat_compile scala-native {{scala_version}} "$TREPORT" liqpmeasure \
-      {{liqp_module}}/src_managed/main/scala {{liqp_module}}/src_managed/test/scala -- --test $DEPS --jar "{{liqp_parser_classes}}"
 
     # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$TREPORT" liqpmeasure "{{ssg_flags}}" {{liqp_module}}/src_managed/main/scala {{liqp_module}}/src_managed/test/scala -- --test $DEPS --jar "{{liqp_parser_classes}}"
 
     # -------------------------------------------------------------------------------------------
     # RUN them. Compiling a suite measures nothing about behaviour: CLAUDE.md §4.4 lists the java
@@ -2623,13 +2470,7 @@ liqp-measure:
       # `src_managed/main/resources` because the descriptor is a build product the run writes from
       # the port's `serviceProviders` key — it was a hand-written `src/main/resources` file until
       # that key existed, which is the state P5's second half described.
-      ( cd "$FIX" && scala-cli test --workspace "$FIX" --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
-          -Duser.language=en -Duser.country=US \
-          --jar "$ROOT/{{liqp_parser_classes}}" \
-          --resource-dir "$ROOT/{{liqp_module}}/src_managed/main/resources" \
-          "$ROOT/{{liqp_module}}/src_managed/main/scala" \
-          "$ROOT/{{liqp_module}}/src_managed/test/scala" ) \
-        2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/liqprun.txt
+      sbt_test "port-ssg-liquidJVM/test" "$MEASURE_TMP"/liqprun.txt
       reconcile_outcomes "$MEASURE_TMP"/liqprun.txt "$MUNIT_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
@@ -2757,16 +2598,12 @@ md-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$REPORT"
-    echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a port
     # that does not compile — a false NEGATIVE on the headline number.
-    DEPS="{{md_deps}}"
-    scala-cli compile --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
-      {{md_module}}/src_managed/main/scala \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/mdmeasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/mdmeasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/mdmeasure.txt
+    echo "-- compile (sbt port-ssg-mdJVM/compile) --"
+    sbt_compile "port-ssg-mdJVM/compile" "$MEASURE_TMP"/mdmeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/mdmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/mdmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/mdmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/mdmeasure.txt | sort | uniq -c | sort -rn | head -20
@@ -2774,13 +2611,8 @@ md-measure:
     grep -A1 '^-- Error:' "$MEASURE_TMP"/mdmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -20
 
     # Cross-platform compile gates — same deps as the JVM compile.
-    xplat_compile scala-js {{scala_version}} "$REPORT" mdmeasure \
-      {{md_module}}/src_managed/main/scala -- {{md_deps}}
-    xplat_compile scala-native {{scala_version}} "$REPORT" mdmeasure \
-      {{md_module}}/src_managed/main/scala -- {{md_deps}}
 
     # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$REPORT" mdmeasure "{{ssg_flags}}" {{md_module}}/src_managed/main/scala -- {{md_deps}}
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
@@ -2872,19 +2704,15 @@ md-test-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$TREPORT"
-    echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
     # BOTH source sets on one invocation: the main port is RuntimeMode.Vendored, so the shims live in
     # `src_managed/main` and the suite links against them there. Compiling either alone measures
     # nothing.
-    DEPS="{{md_deps}} {{md_test_deps}}"
-    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
-      {{md_module}}/src_managed/main/scala {{md_module}}/src_managed/test/scala \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/mdtestmeasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/mdtestmeasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/mdtestmeasure.txt
+    echo "-- compile (sbt port-ssg-mdJVM/Test/compile) --"
+    sbt_compile "port-ssg-mdJVM/Test/compile" "$MEASURE_TMP"/mdtestmeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/mdtestmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/mdtestmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/mdtestmeasure.txt))"
     error_baseline_guard "$ERRORS" "$TREPORT"
     # …and the SPLIT, from the path scalac printed in each error header. `md-measure`'s figure is
@@ -2897,13 +2725,8 @@ md-test-measure:
     grep -A1 '^-- Error:' "$MEASURE_TMP"/mdtestmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -20
 
     # Cross-platform compile gates — same deps as the JVM compile, no --resource-dir.
-    xplat_compile scala-js {{scala_version}} "$TREPORT" mdtestmeasure \
-      {{md_module}}/src_managed/main/scala {{md_module}}/src_managed/test/scala -- --test {{md_deps}} {{md_test_deps}}
-    xplat_compile scala-native {{scala_version}} "$TREPORT" mdtestmeasure \
-      {{md_module}}/src_managed/main/scala {{md_module}}/src_managed/test/scala -- --test {{md_deps}} {{md_test_deps}}
 
     # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$TREPORT" mdtestmeasure "{{ssg_flags}}" {{md_module}}/src_managed/main/scala {{md_module}}/src_managed/test/scala -- --test {{md_deps}} {{md_test_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -2912,12 +2735,7 @@ md-test-measure:
       # harness marker on the test JVM's classpath; see `md_spec_res` for all three, for why the
       # harness's two are the upstream's own bytes at the upstream's own paths, and for why the
       # library's own is now the PORT's output instead (`DESIGN.md` §8.22).
-      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
-        --resource-dir "$ROOT/{{md_spec_res}}" \
-        --resource-dir "$ROOT/{{md_lib_res}}" \
-        --resource-dir "$ROOT/{{md_tutil_res}}" \
-        {{md_module}}/src_managed/main/scala {{md_module}}/src_managed/test/scala \
-        2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/mdtestrun.txt
+      sbt_test "port-ssg-mdJVM/test" "$MEASURE_TMP"/mdtestrun.txt
       reconcile_outcomes "$MEASURE_TMP"/mdtestrun.txt "$MUNIT_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
@@ -3115,7 +2933,6 @@ md-ext-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$EREPORT"
-    echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
     # BOTH TREES on one invocation: the base is RuntimeMode.Vendored, so the shims live in its
@@ -3133,14 +2950,10 @@ md-ext-measure:
     #
     # `md_ext_deps` is this lane's and not the base's — see its own comment: the emitted extension
     # code NAMES `org.nibor.autolink`, and the base names nothing from it.
-    DEPS="{{md_deps}} {{md_test_deps}} {{md_ext_deps}}"
-    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
-      {{md_module}}/src_managed/main/scala \
-      {{md_ext_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/test/scala \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/mdextmeasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/mdextmeasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/mdextmeasure.txt
+    echo "-- compile (sbt port-ssg-md-extJVM/Test/compile) --"
+    sbt_compile "port-ssg-md-extJVM/Test/compile" "$MEASURE_TMP"/mdextmeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/mdextmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/mdextmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/mdextmeasure.txt))"
     error_baseline_guard "$ERRORS" "$EREPORT"
     # …and the SPLIT, from the path scalac printed in each error header. `md-measure`'s figure is what
@@ -3156,13 +2969,8 @@ md-ext-measure:
     grep -A1 '^-- Error:' "$MEASURE_TMP"/mdextmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -20
 
     # Cross-platform compile gates — same deps as the JVM compile.
-    xplat_compile scala-js {{scala_version}} "$EREPORT" mdextmeasure \
-      {{md_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/test/scala -- --test {{md_deps}} {{md_test_deps}} {{md_ext_deps}}
-    xplat_compile scala-native {{scala_version}} "$EREPORT" mdextmeasure \
-      {{md_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/test/scala -- --test {{md_deps}} {{md_test_deps}} {{md_ext_deps}}
 
     # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$EREPORT" mdextmeasure "{{ssg_flags}}" {{md_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/test/scala -- --test {{md_deps}} {{md_test_deps}} {{md_ext_deps}}
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -3174,11 +2982,7 @@ md-ext-measure:
       # `ExceptionInInitializerError` that no compile, check or count can see. Pointed at upstream
       # this flag made the suite pass while the port shipped nothing. The spec files and the harness
       # marker are `md-test-measure`'s and are not on this lane's path.
-      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
-        --resource-dir "$ROOT/{{md_lib_res}}" \
-        {{md_module}}/src_managed/main/scala \
-        {{md_ext_module}}/src_managed/main/scala {{md_ext_module}}/src_managed/test/scala \
-        2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/mdextrun.txt
+      sbt_test "port-ssg-md-extJVM/test" "$MEASURE_TMP"/mdextrun.txt
       reconcile_outcomes "$MEASURE_TMP"/mdextrun.txt "$MUNIT_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"
@@ -3323,22 +3127,16 @@ textra-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$REPORT"
-    echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
     #
     # No `--test` and no test directory: this port has ONE source set. `scala-cli compile` reports on
     # the MAIN scope whatever directories it is handed, so a test tree added here without `--test`
     # would have its errors read and not reported (CLAUDE.md §4.56).
-    DECLARED=$(declared_dep_flags "$REPORT" | tr '\n' ' ')
-    echo "declared coordinates on the compile line: ${DECLARED:-(none)}"
-    DEPS="{{textra_deps}} $DECLARED"
-    scala-cli compile --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
-      {{gdx_module}}/src_managed/main/scala {{textra_module}}/src_managed/main/scala \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/textrameasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/textrameasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/textrameasure.txt
+    echo "-- compile (sbt port-sge-textraJVM/compile) --"
+    sbt_compile "port-sge-textraJVM/compile" "$MEASURE_TMP"/textrameasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/textrameasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/textrameasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/textrameasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/textrameasure.txt | sort | uniq -c | sort -rn | head
@@ -3346,13 +3144,8 @@ textra-measure:
     grep -A1 '^-- Error:' "$MEASURE_TMP"/textrameasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
     # Cross-platform compile gates — same deps as the JVM compile (textra_deps + declared).
-    xplat_compile scala-js {{scala_version}} "$REPORT" textrameasure \
-      {{gdx_module}}/src_managed/main/scala {{textra_module}}/src_managed/main/scala -- $DEPS
-    xplat_compile scala-native {{scala_version}} "$REPORT" textrameasure \
-      {{gdx_module}}/src_managed/main/scala {{textra_module}}/src_managed/main/scala -- $DEPS
 
     # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$REPORT" textrameasure "{{sge_relaxed_flags}}" {{gdx_module}}/src_managed/main/scala {{textra_module}}/src_managed/main/scala -- $DEPS
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
@@ -3431,7 +3224,6 @@ textra-diff-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$ROOT/port-report/TextraTypistMigrate"
-    echo "-- compile --"
     # `--test`: without it `scala-cli` READS the test directory and reports only the MAIN scope, so a
     # differential suite that does not compile measures 0 (CLAUDE.md §4.56's instrument-invocation
     # rule). This lane is also where `RefChecks` actually runs for the hand-written half, which is
@@ -3442,14 +3234,10 @@ textra-diff-measure:
     # The regexodus coordinate is DERIVED from what `textra-measure`'s run published, never restated
     # here — a revision bumped in the manifest and not in the lane compiles against a DIFFERENT JAR
     # with every count flat.
-    DECLARED=$(declared_dep_flags "$ROOT/port-report/TextraTypistMigrate" | tr '\n' ' ')
-    echo "declared coordinates on the compile line: ${DECLARED:-(none)}"
-    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} {{textra_test_deps}} $DECLARED \
-      {{gdx_module}}/src_managed/main/scala {{textra_module}}/src_managed/main/scala "$TREE" \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/textradiffmeasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/textradiffmeasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/textradiffmeasure.txt
+    echo "-- compile (sbt port-sge-textra-diff/Test/compile) --"
+    sbt_compile "port-sge-textra-diff/Test/compile" "$MEASURE_TMP"/textradiffmeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/textradiffmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/textradiffmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/textradiffmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/textradiffmeasure.txt | sort | uniq -c | sort -rn | head
@@ -3462,10 +3250,7 @@ textra-diff-measure:
 
     echo
     echo "-- run --"
-    scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} {{textra_test_deps}} $DECLARED \
-      -Duser.language=en -Duser.country=US \
-      {{gdx_module}}/src_managed/main/scala {{textra_module}}/src_managed/main/scala "$TREE" \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/textradiffrun.txt
+    sbt_test "port-sge-textra-diff/test" "$MEASURE_TMP"/textradiffrun.txt
     reconcile_outcomes "$MEASURE_TMP"/textradiffrun.txt "$ADAPTED_TESTS"; RECONCILED=$?
 
     echo
@@ -3649,22 +3434,16 @@ visui-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$REPORT"
-    echo "-- compile --"
     # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a
     # port that does not compile — a false NEGATIVE on the headline number.
     #
     # No `--test` and no test directory: this port has ONE source set. `scala-cli compile` reports on
     # the MAIN scope whatever directories it is handed, so a test tree added here without `--test`
     # would have its errors read and not reported (CLAUDE.md §4.56).
-    DECLARED=$(declared_dep_flags "$REPORT" | tr '\n' ' ')
-    echo "declared coordinates on the compile line: ${DECLARED:-(none)}"
-    DEPS="{{visui_deps}} $DECLARED"
-    scala-cli compile --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
-      {{gdx_module}}/src_managed/main/scala {{visui_module}}/src_managed/main/scala \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/visuimeasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/visuimeasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/visuimeasure.txt
+    echo "-- compile (sbt port-sge-visuiJVM/compile) --"
+    sbt_compile "port-sge-visuiJVM/compile" "$MEASURE_TMP"/visuimeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/visuimeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/visuimeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/visuimeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/visuimeasure.txt | sort | uniq -c | sort -rn | head
@@ -3672,13 +3451,8 @@ visui-measure:
     grep -A1 '^-- Error:' "$MEASURE_TMP"/visuimeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
 
     # Cross-platform compile gates — same deps as the JVM compile (visui_deps + declared).
-    xplat_compile scala-js {{scala_version}} "$REPORT" visuimeasure \
-      {{gdx_module}}/src_managed/main/scala {{visui_module}}/src_managed/main/scala -- $DEPS
-    xplat_compile scala-native {{scala_version}} "$REPORT" visuimeasure \
-      {{gdx_module}}/src_managed/main/scala {{visui_module}}/src_managed/main/scala -- $DEPS
 
     # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$REPORT" visuimeasure "{{sge_relaxed_flags}}" {{gdx_module}}/src_managed/main/scala {{visui_module}}/src_managed/main/scala -- $DEPS
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
@@ -3791,20 +3565,15 @@ visui-diff-measure:
     echo "none of the closure files appears in errors.tsv — the port's 8 are all in widget/ and layout/"
 
     echo
-    echo "-- compile --"
     # `--test`: without it `scala-cli` READS the test directory and reports only the MAIN scope, so
     # a differential suite that does not compile measures 0 (CLAUDE.md §4.56's instrument-invocation
     # rule). This is also where `RefChecks` runs for the hand-written half, which is why §10.9.12's
     # census had to be taken twice: a per-file typer count is a FLOOR (CLAUDE.md §3), and on gdx-ai
     # that difference moved four files and 16 tests in the dangerous direction.
-    DECLARED=$(declared_dep_flags "$ROOT/port-report/VisUiMigrate" | tr '\n' ' ')
-    echo "declared coordinates on the compile line: ${DECLARED:-(none)}"
-    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} {{visui_test_deps}} $DECLARED \
-      {{gdx_module}}/src_managed/main/scala $CLOSURE_ARGS "$TREE" \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/visuidiffmeasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/visuidiffmeasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/visuidiffmeasure.txt
+    echo "-- compile (sbt port-sge-visui-diff/Test/compile) --"
+    sbt_compile "port-sge-visui-diff/Test/compile" "$MEASURE_TMP"/visuidiffmeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/visuidiffmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/visuidiffmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/visuidiffmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/visuidiffmeasure.txt | sort | uniq -c | sort -rn | head
@@ -3817,10 +3586,7 @@ visui-diff-measure:
 
     echo
     echo "-- run --"
-    scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} {{visui_test_deps}} $DECLARED \
-      -Duser.language=en -Duser.country=US \
-      {{gdx_module}}/src_managed/main/scala $CLOSURE_ARGS "$TREE" \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/visuidiffrun.txt
+    sbt_test "port-sge-visui-diff/test" "$MEASURE_TMP"/visuidiffrun.txt
     reconcile_outcomes "$MEASURE_TMP"/visuidiffrun.txt "$ADAPTED_TESTS"; RECONCILED=$?
 
     echo
