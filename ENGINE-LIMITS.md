@@ -13540,6 +13540,71 @@ defer *to*, since there is no field of its own to become lazy.
 *Fix kind: (a) engine. `PROGRESS.md` §10.9.10 carries the row; the exit is a deferral whose subject
 is a step-9 SEQUENCE rather than a single member.*
 
+### CT12. Class-to-trait: the nominated type is INJECTED, not derived, because trait-init order differs from class-init order — **CLOSED; gdx 0 -> 20 -> 0, gdx-test 180/11, ashley 108/2/2, drop-in 408 -> 32/7**
+
+**(b) engine, parameterised.** `ClassToTraitTransform` (`0fec9a71`..`495facbd`) rewrites a nominated
+abstract class into a trait in the TIR and transforms every subclass to use `override val` members
+instead of constructor arguments. The mechanism is section 1(b) — WHICH types and WHICH parameter
+mappings is per-library policy; the mechanics (constructors removed, abstract vals, `override val`
+in subclasses, widest-primary plan) are the same for every library.
+
+**Why the trait is INJECTED rather than derived.** A scala trait has no constructor; its field
+initialisers run in the ORDER THE SUBCLASS LINEARISES THEM, not in the trait's own declaration
+order. Java's `Pool(int initialCapacity, int max)` has `this.freeObjects = new
+Array(initialCapacity)` in the constructor body, which runs AFTER the fields are set. A derived
+trait would emit `freeObjects` as a field initialiser that runs before `initialCapacity` is
+available (the subclass's `override val initialCapacity` has not been assigned yet at
+super-trait-init time). The injected file (`corpus/libgdx-overrides/sge/utils/Pool.scala`) places
+`freeObjects` after `initialCapacity` and `max` in the trait body, matching sge's hand-port shape,
+and uses `protected def newObject: A` as the abstract factory rather than the class's constructor
+parameter. The phase transforms the nominated type's `ClassDef` in the TIR (setting `isTrait`,
+removing constructors, adding abstract vals) so that `CtorFunnel` sees a parent with no constructor
+and replays nothing.
+
+**Mapped-field removal.** The phase also removes the nominated type's `ValDef` nodes for the
+mapped parameters from the TIR body (`243ff7e7`). Without this, `resolveFieldShadowing` (section
+4.55) sees both the original `var max` and the abstract `val max`, renames the field to
+`max$field`, and breaks every reference to `pool.max` in the emitted code.
+
+**Widest-primary plan** (`495facbd`). When MULTIPLE constructors all call `super(...)` on the
+nominated parent, the NARROWER ones are rewritten into `this(...)` delegations targeting the widest
+constructor of THIS class. The parent's own delegation chain expands the args: `Pool()` delegates
+to `this(16, MAX_VALUE)`, `Pool(int)` to `this(int, MAX_VALUE)`. This makes the widest constructor
+the funnel's UNIQUE root, so its params become class params and the `override val` members bind to
+them. `CtorFunnel.reachableArgumentFree` was extended to allow promoted plans where a nilary
+secondary delegates to the promoted primary. `TirEmitter` skips super args on the extends clause
+when the parent is a trait. Transitive subclass delegation (`buildTransitiveSpecs`) handles
+grandchildren like `FlushablePoolClass extends FlushablePool extends Pool`.
+
+**The E198 pair.** Two `.ref` rows survive: `DefaultPool.poolTypeSupplier` and
+`ParticleEffectPool.effect` — both `E198 unset private var`, fields that were widened to public by
+the ctor funnel's replay before the class-to-trait phase removed that replay. The funnel no longer
+sees a constructor to widen through, so these fields keep their declared visibility. Counted, not
+fixed: widening them would be a phase that reads the injected file's field visibility and propagates
+it, which is not built.
+
+**E030 unreachable-case** (`58780ee9`). `SuppressionPhase` now suppresses `E030` on an exhaustive
+enum `match` whose `case _ =>` java wrote defensively. Section 1(a) universal — a fact about Java
+enums and Scala exhaustiveness, true of every codebase. gdx `.ref` 56 -> 51 (5 E030), ashley
+drop-in E030 pair resolved.
+
+**Numbers** (across `d937af3d`..`495facbd`):
+
+| port | errors before | errors after | suite |
+|---|---|---|---|
+| gdx | 0/0/0/.ref 56 | 0/0/0/.ref 51 | -- |
+| gdx-test | 0/0/0 | 0/0/0 | 180/11 (baseline) |
+| ashley | 0/0/0 | 0/0/0 | 108/2/2 (baseline) |
+| ecs-dropin | 6/7/7 | 32/7 per platform | -- |
+
+`ClassToTraitTransform` itself went gdx 0 -> 20 -> 10 -> 4 -> 3 -> 1 -> 0 across six fixes. The
+20 initial errors were: 8 E035 (override val types emitted as `?`), E035 `max$shadow` rename
+conflict, 4 E100 (private Pool fields through replayed code), 4 E008/E052 (FlushablePool
+constructor relay). Each closed by one commit.
+
+*Fix kind: (b) engine mechanism. The mechanism is the same for every library; which types and
+which param mappings is per-library policy in the `.conf`.*
+
 ## 13. Retyping a PRIMITIVE to an opaque domain type
 
 All five entries below come from the SAME work — Stage P6's attempts to enable an opaque family on
@@ -14554,25 +14619,28 @@ Fix: extend `retargetSelectRewrite` to handle `Chain` and `Template` at arity 0.
 0-arg Apply wraps a Select the handler already rewrote (without this, `notEmpty()` becomes
 `nonEmpty()` -- 4 errors on gdx). 54 engine specs green.
 
-### K35. A call into a DROPPED+INJECTED type cannot follow the injected member's arity -- **OPEN**
+### K35. A call into a DROPPED+INJECTED type cannot follow the injected member's arity -- **CLOSED**
 
-**(a) engine.** `NullaryArityTransform` skips members whose owner is a substituted type
-(`substitutedOwners` guard, line 112), and `PortMapTransform.followMemberRenames` likewise excludes
-substituted types. So a call to a member on a dropped+injected type keeps its java arity even when
-the injected file declares a different arity.
+**(a) engine.** `InjectedSurface` (`401a747f`) reads every `.scala` file under the injection roots
+with scalameta, extracts member signatures (parameter types, arity, `hasParens`, return type), and
+feeds two emitter paths:
 
-Measured on ashley: `ImmutableArray.iterator()` with parens in the ported test against an injected
-ImmutableArray whose `iterator` is parenless (extending `Iterable[A]`, which is sge's shape). 1
-error.
+1. **`injectedOverrideTypes`**: when an emitted method overrides a member of a dropped+injected
+   parent, the parameter `TypeRepr` is rebuilt with the type strings from the injected file, using
+   the parent's type parameter substitution from the child's `extends` clause. Example:
+   `FlushablePool.freeAll` emits `DynamicArray[? <: T]` matching `Pool`'s `DynamicArray[? <: A]`.
+2. **`calleeHasParens`**: calls into injected members follow the injected arity, not the java
+   arity. A parenless `iterator` in the injected file is called without parens in emitted code.
 
-Wave 3.2e: the ashley-specific symptom is CLOSED by rewriting the injected ImmutableArray to extend
-`Iterable[A]` directly (matching sge's shape), with a dual constructor (`DynamicArray[A]` for
-emitted code, `ArrayBuffer[A]` for sge tests), and parenless `iterator`. The arity mismatch is
-avoided because the injected file declares the exact parent sge's tests expect. The underlying
-engine limit -- the engine cannot read an injected file's member surface and make callers follow
-it -- is still OPEN. The fix remains: read the injected source's member surface (the `api-parity`
-check already parses injected Scala with scalameta) and feed `calleeHasParens`/
-`NullaryArityTransform` from it.
+The mechanism is section 1(a) universal -- a fact about dropped+injected parents and Scala, true of
+every codebase. gdx 0/0/0 after the fix (zero blast on all ports). 138 `InjectedSurfaceSpec`
+assertions green.
+
+Wave 3.2e (before the engine fix): the ashley-specific symptom was worked around by rewriting the
+injected ImmutableArray to extend `Iterable[A]` directly with parenless `iterator`, avoiding the
+arity mismatch. The engine fix (`401a747f`) makes that workaround unnecessary for future ports.
+
+*Fix kind: (a) engine -- a fact about dropped+injected parents and Scala.*
 
 ### K36. Retarget runtime: peek/first/pop exception class, removeRange inclusive bound, ensureCapacity growth, Array(T[]) capacity, Iterator.remove — **gdx-test 35 -> 11 failing, 8 SortTest CLOSED**
 
@@ -14729,37 +14797,18 @@ A base retarget table is measured on EVERY dependent before it lands. The corpus
 are a mix of section 1(a) engine bugs (O9, collectPhase), section 1(b) policy gaps (missing Entry
 retargets, nullableMembers arity), and counted residuals (Tuple2 immutability, companion references).
 
-### K38. Pool class-to-trait: emitted subclasses cannot bridge Pool-as-class and Pool-as-trait -- **OPEN**
+### K38. ImmutableArray per-entry retarget: `Array -> ArrayBuffer` for ashley beside the base's `Array -> DynamicArray` -- **OPEN**
 
-**(b) engine mechanism built, policy BLOCKED on Pool drop+inject.** sge hand-ported
-`com.badlogic.gdx.utils.Pool` as a TRAIT with abstract vals `initialCapacity` and `max`
-(divergence-investigator verdict: justified, kind=api; Pool.scala:12 "Issues: Pool changed from
-abstract class to trait -- intentional design improvement but changes instantiation semantics";
-audit.tsv:545 "Changed from abstract class to trait (intentional Scala idiom)").
+**(b) engine mechanism not yet built.** The exact parity with sge's
+`ImmutableArray(ArrayBuffer[A])` requires a per-entry-scoped retarget on `CollectionsTransform` --
+a dependent (`ashley`) declaring `Array -> ArrayBuffer` for its own declarations beside the base's
+`Array -> DynamicArray`. The dual-backing `ImmutableArray` injection (wave 3.2e) works for both the
+normal compile and the dropin; what is missing is the `CollectionsTransform` extension that lets a
+dependent's retarget entries override a single source type to a different target within a scope.
 
-The engine-level `ClassToTraitTransform` phase (wave 3.2g) strips `super(args)` from subclass
-constructors and adds `override val` members. It compiles and the TIR transformation is correct.
-BUT: the override vals have nothing to override in the emitted Pool, which is still an abstract
-CLASS whose `initialCapacity` is a constructor parameter (not a field) and whose `max` is a mutable
-`var` (not an abstract val). Measured: enabling the phase in the core manifest produces **6 E037
-Declaration Error** across all platforms (2 per subclass: DefaultPool, ParticleEffectPool,
-FlushablePool).
+The Pool class-to-trait gap that K38 originally described (the bridge between Pool-as-class and
+Pool-as-trait) is **CLOSED** by CT12: Pool is dropped from `dropTypes` and injected as sge's trait
+shape, with `ClassToTraitTransform` rewriting all subclasses. The dropin residue on Pool is the 7
+`SystemManager` errors (K13.6's opaque-sentinel limit).
 
-**The gap**: there is no single Scala syntax for `extends Pool[T]` that works with BOTH
-Pool-as-class (constructor args) and Pool-as-trait (override vals). The emitted code must be
-COMPATIBLE with sge's Pool trait for the ecs-dropin to work.
-
-**The fix**: DROP `com.badlogic.gdx.utils.Pool` from the core port's `dropTypes` and INJECT a
-mechanical version that is a CLASS with `protected var initialCapacity: Int` and
-`protected var max: Int` as overridable fields. Then the phase's `override val` members override
-the injected vars in the normal compile and sge's abstract vals in the dropin. The blast radius is
-every port that uses Pool (gdx, ashley, gltf, screens, vfx, ai, textra, visui) -- 8+ ports to
-re-measure.
-
-**Dropin residue**: 1 error on all 3 platforms (JVM/JS/Native):
-`too many arguments for constructor Pool in trait Pool` at `EntityPool extends Pool[T](args)`.
-
-**ImmutableArray**: the dual-backing `ImmutableArray` injection (wave 3.2e) works for both the
-normal compile and the dropin. The exact parity with sge's `ImmutableArray(ArrayBuffer[A])` requires
-per-entry-scoped retarget (`Array -> ArrayBuffer` for ashley's own declarations, beside the base's
-`Array -> DynamicArray`) -- a `CollectionsTransform` extension not yet built.
+*Fix kind: (b) engine mechanism -- per-entry retarget scope on `CollectionsTransform`.*

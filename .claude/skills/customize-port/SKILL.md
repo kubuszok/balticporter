@@ -67,6 +67,39 @@ key not read fails the run.
 | `primitive-to-opaque` | `fqn` **required**, `underlying` (default `Int`), `extraHints = […]`, `scope`; **`hints` REFUSED** | see below |
 | `nullability` | `annotations = [...]`, `target` (`"union"` default / `"named"` / `"option"`), `wrapper` (required iff `target = "named"`), `scope`, `nullableMembers = [...]` | move a nullability annotation (or an explicitly named member) into the type. `nullableMembers` is a set of exact member FQNs (`Class#member`) matched at run time against `Symbol.fullName`, treated as if their return/field type carried an annotation: same target shape, same coercions, same boundary count. Empty = no-op; non-empty contributes a fingerprint segment. `MergeablePolicy` union (`ENGINE-LIMITS.md` K13.6) |
 | `globals-to-implicits` | `holders = [ { holder, context { inject \| mint }, members { … }, attach, reader, boundary, sites { … }, promoteToClass = […], scope } ]` **required** | globals → CONTEXT (DESIGN.md §8.4). `members` values are dot-PATHS on the context type, not member names (`gl = "graphics.gl20"`); `attach = "method"` puts a trailing `(using T)` on each threaded method and `"class"` puts it on the class's constructors; `boundary` decides what a site with no signature does; `sites` overrides one of them (`"lazy-init"` is the only EAGER→LAZY change and is never a default). Every seam is counted by `context-seam` |
+| `class-to-trait` | `specs { "com.foo.Pool" { params = [ { index = 0, name = "initialCapacity" }, { index = 1, name = "max" } ] } }` | rewrite a nominated abstract class into a trait: constructors removed, mapped parameters become abstract vals, every subclass gains `override val` members. The nominated type is typically DROPPED+INJECTED as a hand-written trait (DESIGN.md §8.27, ENGINE-LIMITS.md CT12). Empty specs = no-op. `SurfacePolicy` + `MergeablePolicy` |
+| `add-members` | `members { "com.foo.Engine" = [ { name = "register", arity = 2, source = "def register[T](k: Class[T], f: () => T): Unit = ???", why = "factory registry" } ] }` | append hand-written Scala members to a mechanically-translated class. Each member is verbatim text spliced at the end of the owner's body (DESIGN.md §8.29). Empty map = no-op. ADD-scoped `Only(Set.empty)` default. `SurfacePolicy` + `MergeablePolicy` |
+
+### The `class-to-trait` + drop+inject recipe
+
+When a hand port reshaped an abstract class into a trait (verified by `divergence-investigator`),
+the port needs three things:
+
+1. **Drop the type**: `dropTypes = ["com.foo.Pool"]` in the manifest.
+2. **Inject the hand-port trait**: copy the trait-shaped `.scala` file into the overrides directory
+   and add it to the manifest's `inject` list. The injected file must carry the abstract vals
+   that `ClassToTraitTransform` will override in subclasses.
+3. **Enable the phase**: add a `class-to-trait` surface entry mapping each constructor parameter
+   index to its val name.
+
+```hocon
+manifest {
+  dropTypes = ["com.foo.Pool"]
+  inject = ["overrides/sge/utils/Pool.scala"]
+  surface = [
+    { transform = "class-to-trait"
+      specs { "com.foo.Pool" { params = [
+        { index = 0, name = "initialCapacity" }
+        { index = 1, name = "max" }
+      ] } }
+    }
+  ]
+}
+```
+
+`InjectedSurface` then reads the injected file's member surface with scalameta: overrides adopt
+the injected parameter types and calls follow the injected arity (K35 CLOSED). No additional
+configuration needed.
 
 ### The `retarget` and `retargetRewrites` `.conf` spelling
 

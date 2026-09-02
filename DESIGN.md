@@ -6537,3 +6537,77 @@ dropped.
 `allCounts` (every `Ident`/`Select`) and `assignCounts` (how many of those are the direct LHS of
 `Tree.Assign`). Post-pass: `isRead(s) = allCounts(s) > assignCounts(s)`. A compound assignment
 (`IncDec`) is both a read and a write, so `assignCounts` is not incremented for it.
+
+### 8.27 Drop+inject a trait-shaped base type, re-parent direct subclasses with the widest primary (`ClassToTraitTransform`)
+
+A hand port may reshape an abstract class into a trait -- sge's `Pool[A]` is the worked example,
+with a `divergence-investigator` verdict of justified/api. The mechanical port cannot DERIVE the
+trait from the java class because trait initialisation order differs from class initialisation
+order: a field initialiser in a trait runs when the SUBCLASS linearises it, not when the trait's
+own constructor would have run, and `freeObjects = new Array(initialCapacity)` in the trait body
+reads `initialCapacity` before the subclass's `override val` has been assigned. The rejected
+alternative -- emitting a trait directly from the TIR -- was measured at **0 -> 20 errors** on gdx,
+all from init-order or field-visibility failures.
+
+So the type is DROPPED (`dropTypes`) and INJECTED as hand-written Scala that is a trait with
+abstract vals, and `ClassToTraitTransform` rewrites every subclass:
+
+1. The nominated type's OWN `ClassDef` is rewritten in the TIR: constructors removed, mapped
+   parameters become abstract `val` members, flags set to `isTrait`. This makes `CtorFunnel` see a
+   parent with no constructor -- nothing to replay, nothing to widen.
+2. Every direct subclass (named and anonymous `new P(a,b) { ... }`) gains `override val` members
+   bound to the `super(args)` expressions. Anonymous `new` nodes have their args moved into the
+   body as override vals.
+3. When MULTIPLE constructors all call `super(...)`, the narrower ones are rewritten into
+   `this(...)` delegations using the parent's own delegation chain to expand the args. This makes
+   the widest constructor the funnel's unique root, so it gets promoted to primary.
+
+The phase is section 1(b): mechanism in the engine (`ClassToTraitTransform`), policy in the
+`.conf` (`specs { "com.foo.Pool" { params = [ { index = 0, name = "initialCapacity" } ] } }`).
+Empty specs = no-op. `SurfacePolicy` + `MergeablePolicy`.
+
+`InjectedSurface` (`401a747f`) closes the second half: an emitted override of a dropped+injected
+parent adopts the injected file's parameter types (parsed once with scalameta), and calls into
+injected members follow the injected arity. gdx 0/0/0 after both phases.
+`ENGINE-LIMITS.md` CT12 carries the numbers and the trait-init reasoning.
+
+### 8.28 Overrides and calls follow an injected parent's surface (`InjectedSurface`)
+
+An injected Scala file may declare a member surface that differs from the java -- a wildcard bound
+(`DynamicArray[? <: A]` vs `DynamicArray[A]`), a parenless method, a renamed type. When an emitted
+class overrides such a member, the emitter must adopt the injected parameter types or the override
+does not compile. The rejected alternative was to constrain every injection to match the java
+arity and types exactly, which would have ruled out sge's `Pool.freeAll(DynamicArray[? <: A])` and
+every parenless accessor the hand port introduced. Measured: K35's original workaround (rewriting
+each injection to match the java) cost one injection rewrite PER adoption and did not scale.
+
+`InjectedSurface` parses the injection roots once with scalameta (the same parser `ApiParityCheck`
+uses) and builds a `Surface` keyed on `(ownerFqn, memberName, arity)`. Two consumers in the
+emitter:
+
+- **`injectedOverrideTypes`**: rebuilds the override's parameter `TypeRepr` from the injected
+  file's type string, substituting type parameters through the child's `extends` clause.
+- **`calleeHasParens`**: a call to an injected member follows the injected arity, not java's.
+
+Section 1(a) universal -- dropped+injected parents and Scala. `ENGINE-LIMITS.md` K35 CLOSED.
+
+### 8.29 Hand-port-added members as an ADD-scoped phase (`AddMembersTransform`)
+
+A hand port may add members java never declared -- sge-ecs's `Engine.registerComponentFactory` and
+`Engine.componentFactories` are the worked example, replacing the reflective
+`ClassReflection.newInstance` the mechanical port drops. The two existing seams cannot express this:
+`inject` is a whole FILE (the type stops tracking upstream changes), and `MethodBodyTransform` can
+replace a body but cannot ADD a member the java never wrote. The rejected alternative was to inject
+the whole `Engine.scala`, which would freeze 100+ mechanically-translated members against engine
+improvements.
+
+`AddMembersTransform` appends verbatim Scala text at statement position at the end of the
+nominated owner's body. Each member carries a name, arity, source text, and `Reason` (the section 1
+classification). `Decision.Kind.AddedMember` is recorded for each, with `PorterNote.InBody`
+placement. The target compiler is the gate -- the text is not type-checked by the engine, the same
+contract `MethodBodyTransform` has.
+
+Section 1(b): the mechanism (locate owner by FQN, append text) is the same for every library; which
+owners and what members is per-library policy. Empty map = no-op, ADD-scoped `Only(Set.empty)`
+default. `SurfacePolicy` + `MergeablePolicy` (independent owners union, same owner+name refuses).
+`.conf` key `add-members`. ashley drop-in 4/4/4 with both members; gdx 0/0/0.

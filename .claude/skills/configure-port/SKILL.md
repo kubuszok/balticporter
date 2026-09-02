@@ -184,7 +184,8 @@ test-framework, type-redirect.
 
 Eleven of those are the engine's own §1(a)/§1(b) transforms; `gdx-shared-iterator` is the corpus's
 own §1(c) rule, discovered because the corpus's build put it on the classpath. Per-transform keys
-are enumerated in **`customize-port`**.
+are enumerated in **`customize-port`** (including the `class-to-trait` drop+inject recipe for
+reshaping an abstract class into a trait, and `add-members` for appending hand-port API).
 
 **Every retyping rule takes the same `scope { }` grammar** (`TransformFactory.scopeOf`), so a
 third-party factory gets it for free:

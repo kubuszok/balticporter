@@ -11648,26 +11648,63 @@ Engine specs at HEAD: 1106 engine + 1447 corpus, 0 failures.
 
 - ~~IteratorRemove x4~~ K36 CLOSED (wave 3.2f): `JavaIterator.removing` / `removingFromBuffer`,
   gdx-test 180/11 -> 184/7.
-- **K35 OPEN**: injected-type arity follow. Fix: read the injected source's member surface
-  (scalameta, which `api-parity` already parses) and feed `NullaryArityTransform` from it. Then the
-  injected ImmutableArray can be sge's verbatim shape (`Iterable`, parenless `iterator`).
+- ~~K35 OPEN~~ K35 CLOSED (wave 3.2g): `InjectedSurface` (`401a747f`) reads injected file member
+  surface with scalameta, feeds `calleeHasParens` and override types to the emitter.
 - **CharArray x3** (JsonMatcherTests): `DynamicArray[Char].toString` renders `[c, h, ...]` rather
   than java's `CharArray.toString` string concatenation. Same decision as the `CharArrayTest`
   exclusion. Declared in `expected-failures.tsv`.
-- **`.ref` 54**: 21 E198 remaining (T26 residue, see §13.20). The remaining 33 are from other
-  `-Wunused` and `-Werror`-promoted warnings not yet addressed.
-- **sge-ecs drop-in 6/7/7**: 1 unique error remaining -- `PooledEngine.EntityPool extends
-  Pool(initialSize, maxSize)` but sge's `Pool` is a trait with abstract vals, not a class with
-  constructor params. Requires an engine mechanism for transforming class extends clauses
-  (retargetted type whose constructor changed shape), or dropping/injecting `PooledEngine`.
+- **`.ref` 51**: 21 E198 remaining (T26 residue, see §13.20). The remaining 30 are from other
+  `-Wunused` and `-Werror`-promoted warnings not yet addressed. (E030 x5 closed by wave 3.2g.)
+- ~~sge-ecs drop-in 6/7/7~~ drop-in **32 lines / 7 distinct per platform** (wave 3.2g). Residue:
+  7 `SystemManager` errors (K13.6 opaque-sentinel limit), K38 (ImmutableArray per-entry retarget).
+  Drop-in suite not yet run (main still has 7 errors).
 
-#### 3.2e sge-ecs drop-in
+### 13.18a Wave 3.2e--3.2g --- sge-ecs drop-in parity (`a51a4f1b`..`0d0cf968`)
 
-ImmutableArray injected replacement rewritten for sge drop-in parity: extends `Iterable[A]` (not
-`JavaIterable`), parenless `iterator`, dual constructor (`DynamicArray[A]` for emitted code +
-`ArrayBuffer[A]` for sge tests). `MethodBodyTransform` freeAll body syntax fixed (`else { ... }`
-not `() { ... }`). ecs-dropin **43/43/43 -> 6/7/7** ([error] line count, 8 unique -> 1 unique).
-ashley 0/0/0, tests 108/2/2 held. gdx 0/0/0/54 held. engine specs 1447 passed.
+Pool class-to-trait, `InjectedSurface`, `AddMembersTransform`, and ashley manifest parity
+adjustments. ImmutableArray injection rewrite (3.2e, `a51a4f1b`..`f0641856`), then Pool
+drop+inject and subclass rewriting (3.2g, `d937af3d`..`0d0cf968`).
+
+#### What the wave built
+
+| mechanism | section 1 kind | documented |
+|---|---|---|
+| `ClassToTraitTransform(specs)` | (b) | CLAUDE.md section 1(b) table, DESIGN.md section 8.27, ENGINE-LIMITS.md CT12 |
+| `InjectedSurface` (injected-file member surface) | (a) | DESIGN.md section 8.28, ENGINE-LIMITS.md K35 CLOSED |
+| `AddMembersTransform(members)` | (b) | CLAUDE.md section 1(b) table, DESIGN.md section 8.29 |
+| `SuppressionPhase` E030 exhaustive-enum suppression | (a) | ENGINE-LIMITS.md CT12 |
+| Pool `dropTypes` + inject as trait | (b) policy | ashley manifest |
+| `BeanPropertyTransform` scope exceptions | (b) policy | ashley manifest |
+| `NullaryArityTransform` scope (`createEntity`) | (b) policy | ashley manifest |
+| `nullableMembers` entries (`ComponentMapper#get`) | (b) policy | ashley manifest, ENGINE-LIMITS.md K13.6 |
+| `forbiddenRemoval` adapted per divergence verdict | (b) policy | ashley manifest |
+| varargs bridge (`FamilyVarargs.scala`) | injection | ashley overrides |
+| `ImmutableArray` overloads (`contains`) | injection | ashley overrides |
+| ashley dropin recipe (mockito, `GdxRuntimeException`) | lane | Justfile |
+
+#### Measurements
+
+| port | errors before | errors after (JVM/JS/Native/.ref) | suite |
+|---|---|---|---|
+| gdx | 0/0/0/.ref 56 | 0/0/0/.ref 51 | -- |
+| gdx-test | 0/0/0 | 0/0/0 | 180/11 (baseline) |
+| ashley | 0/0/0 | 0/0/0 | 108/2/2 (baseline) |
+| ecs-dropin | 408/--/-- | 32/32/32 (7 distinct) | not yet run |
+
+Drop-in trajectory: 408 -> 43 (wave 3.2e ImmutableArray) -> 6/7/7 (Pool remains) -> 515
+(ClassToTraitTransform + AddMembersTransform enabled, initial) -> 256 (bean scope, varargs,
+contains, nullable) -> 51 distinct (arity scope, bean pairs, mockito, GdxRuntimeException) ->
+**7 distinct per platform**.
+
+#### Residue (open)
+
+- **7 `SystemManager` errors** (all platforms): `getSystem` not in `nullableMembers` because
+  `Nullable` opaque wrapper's `.orNull` returns `NestedNone` sentinel, not JVM null -- internal
+  caller in `addSystem` gets `ClassCastException`. 33 newly failing tests measured when tried
+  (K13.6). Fix: `slotUnwrap` distinguishing wrapper absent-value from JVM null at a non-wrapper
+  slot.
+- **K38**: ImmutableArray per-entry `ArrayBuffer` retarget for ashley not yet built.
+- **Drop-in suite not yet RUN**: main still has 7 errors.
 
 #### 3.1ak textra opaque
 
