@@ -298,6 +298,10 @@ object LibgdxPolicy:
       // lookup + invoke) — the one thing Scala.js/Native cannot do. Replaced by an injected
       // `Pools` whose creation path takes a factory; `ReflectionPool` is dropped outright
       // (upstream deprecated it for the factory-backed `DefaultPool`, which ports mechanically).
+      // --- 3.2g: Pool class-to-trait (ecs drop-in parity) ---
+      // sge hand-ported Pool as a TRAIT with abstract vals (justified, kind=api; AD-003).
+      // The injected file reproduces sge's Pool trait; ClassToTraitTransform rewrites subclasses.
+      "com.badlogic.gdx.utils.Pool",
       "com.badlogic.gdx.utils.Pools",
       // dropped with NO replacement — every reference eliminated, so CHECK 2 proves they are gone
       "com.badlogic.gdx.utils.ReflectionPool",
@@ -2234,15 +2238,25 @@ object LibgdxPolicy:
                |  Actor.POOLS.addPool(classOf[sge.scenes.scene2d.utils.ChangeListener.ChangeEvent], ((() => new sge.scenes.scene2d.utils.ChangeListener.ChangeEvent()): sge.utils.DefaultPool.PoolSupplier[sge.scenes.scene2d.utils.ChangeListener.ChangeEvent]))
                |}""".stripMargin
          )),
-         // --- 3.2g: Pool class-to-trait BLOCKED ---
-         // sge hand-ported `Pool` as a TRAIT with abstract vals (justified, kind=api). The
-         // `ClassToTraitTransform` phase is built in the engine but cannot be enabled here until
-         // Pool itself is dropped and injected as a class with overridable `var initialCapacity`
-         // and `var max` fields. Without that, the override vals the phase adds to subclasses
-         // have nothing to override and produce E037 on all platforms (measured: 6 errors).
-         // ENGINE-LIMITS.md K37 tracks the dependency. An empty instance is NOT declared here
-         // because the base's own Pool subclasses compile correctly with constructor args and the
-         // phase would strip them. The dependent (ashley) inherits no instance and declares none.
+         // --- 3.2g: Pool class-to-trait (ecs drop-in parity) ---
+         // sge hand-ported Pool as a TRAIT with abstract vals (justified, kind=api; AD-003).
+         // Pool is now DROPPED and INJECTED as sge's trait (libgdx-overrides/sge/utils/Pool.scala).
+         // This phase rewrites every subclass: super(args) -> override vals, and for nilary
+         // constructors the defaults from Pool()'s delegation chain (16, Integer.MAX_VALUE).
+         new balticporter.transform.ClassToTraitTransform(
+           specs = Map(
+             "com.badlogic.gdx.utils.Pool" -> List(
+               balticporter.transform.ClassToTraitTransform.ParamMapping(0, "initialCapacity",
+                 Some(balticporter.tir.Tree.Literal(balticporter.tir.Constant.IntC(16),
+                   balticporter.tir.TypeRepr.TypeRef(balticporter.tir.TypeRepr.NoPrefix, balticporter.tir.SymId.None),
+                   balticporter.tir.Origin.synthetic))),
+               balticporter.transform.ClassToTraitTransform.ParamMapping(1, "max",
+                 Some(balticporter.tir.Tree.Literal(balticporter.tir.Constant.IntC(2147483647),
+                   balticporter.tir.TypeRepr.TypeRef(balticporter.tir.TypeRepr.NoPrefix, balticporter.tir.SymId.None),
+                   balticporter.tir.Origin.synthetic))),
+             ),
+           ),
+         ),
          // SuppressionPhase is now derived unconditionally by PortRun (§1(a) universal, no-op
          // when no `.orNull` symbols exist) — removed from surface, no port needs to declare it.
          )
