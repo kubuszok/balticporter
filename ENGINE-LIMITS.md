@@ -11927,6 +11927,13 @@ injected type's form — class/trait/object — parsed by scalameta) into the em
 `shapes.renderedTypes`. A `Substituted` entry now carries at minimum `form=class` (or trait/object),
 `parseType` returns `Some(...)`, and the dependent gets `Published` instead of `Unknown`.
 
+**Amendment 2 (wave 3.3b)**: `ManifestAgreement.emittedByBase` indexed base map type entries by
+UPSTREAM name only. A type-renamed type's `upstreamFqn` carries the post-rename simple name
+(`…ui.SgeList`) — neither the upstream column (`…ui.List`) nor the emitted column
+(`sge.…ui.SgeList`) — so every type-renamed type was `BaseSurfaceAbsent`, FATAL on ashley.
+Fix: `emittedByBaseName` indexes by EMITTED name; the lookup falls through from the upstream key to
+the emitted-FQN key.
+
 *Fix kind: (a) universal — `PortMap.of` is engine code, and `typeRenames` is a §1(b) parameter
 every port may use. The defect is a fact about how the map writer reads a rename, true of every
 renaming port.*
@@ -13646,6 +13653,14 @@ constructor relay). Each closed by one commit.
 
 *Fix kind: (b) engine mechanism. The mechanism is the same for every library; which types and
 which param mappings is per-library policy in the `.conf`.*
+
+**CT12 narrowing (wave 3.3b)**: the `reachableArgumentFree` widening (0d0d557d) for the
+widest-primary/nilary-delegation plan fired on EVERY class with a nilary ctor delegating to a
+promoted primary — Font, Bag, Set2, Set3 — breaking 11 specs. The widening was specified for direct
+subclasses of a ClassToTraitTransform-converted parent and nothing else. Narrowed: the `else if`
+branch requires a parent whose symbol has `isTrait && !isAbstract`, the structural signature unique
+to ClassToTraitTransform-converted types (a natural Java interface has `isTrait && isAbstract`; a
+regular class has neither). All 11 specs pass unmodified.
 
 ## 13. Retyping a PRIMITIVE to an opaque domain type
 

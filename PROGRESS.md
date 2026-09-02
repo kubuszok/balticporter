@@ -11890,10 +11890,14 @@ filter now works, and 35 types correctly resolve to `Dropped`). See `ENGINE-LIMI
    `InjectedSurface.renderedTypeShapes` (new: each injected type's form, parsed by scalameta) into
    the emitter's shapes. gdx 0/0/0, ashley 108/2/2 restored. See `ENGINE-LIMITS.md` D16 amendment.
 
-2. 11 corpus specs (CtorFunnelBodyShapeSpec x3, CtorFunnelBranchReplaySpec x2,
-   CtorFunnelContextClauseSpec x3, NullAtTypeParamSpec x2, BaseSurfaceSpec x1) broken by CT12's
-   `reachableArgumentFree` widening (0d0d557d). The widening prevents demotion of classes with a
-   nilary ctor delegating to the promoted paramful root, which is correct for FlushablePool. Specs
-   updated: the Font/Set2/Set3/Bag fixtures now keep their promoted primary, the nilary ctor is
-   emitted as a secondary, and the inlining no longer fires. MutableBag replay is a new CT12
-   residue. 1448/1449 green (PortMapAcceptanceSpec requires `just gdx-measure` artifact).
+2. CT12's `reachableArgumentFree` widening (0d0d557d) fired on EVERY class with a nilary ctor
+   delegating to a promoted primary — Font, Bag, Set2, Set3 — breaking 11 specs. Narrowed: the
+   widened branch now requires a parent whose symbol has `isTrait && !isAbstract`, the structural
+   signature unique to ClassToTraitTransform-converted types. All 11 specs pass unmodified.
+   See `ENGINE-LIMITS.md` CT12 narrowing.
+
+3. `ManifestAgreement` looked up type-renamed entries by UPSTREAM name only. A type-renamed
+   `upstreamFqn` carries the post-rename simple name (`SgeList`), matching neither the upstream
+   column (`List`) nor the emitted column (`sge.…SgeList`). Every type-renamed type was FATAL
+   `BaseSurfaceAbsent` on ashley. Fix: `emittedByBaseName` indexes by emitted name; the lookup
+   falls through from upstream to emitted-FQN key. See `ENGINE-LIMITS.md` D16 amendment 2.
