@@ -560,7 +560,33 @@ mkdir -p "$SBT_GLOBAL_SERVER_DIR"
 # background server (or start one). The per-worktree SBT_GLOBAL_SERVER_DIR ensures isolation.
 # Caller captures output and exit status as needed.
 _sbt_run() {
-  sbt --client "$@"
+  # The client runs in the background and is WATCHED: a wedged server (M5.6b's shape — the client
+  # idle at 0% CPU, measured at 47 min in promote17 and 48 min on 2026-09-02 when a Metals
+  # `sbt -bsp` launcher attached to the lane's server dir) is detected by the capture's mtime going
+  # stale, the server is jstack-dumped under .balticporter/, and BOTH are killed — the server is
+  # this checkout's private one (SBT_GLOBAL_SERVER_DIR), so nothing else is using it. The lane then
+  # fails loudly instead of waiting for someone to notice.
+  local stale_secs="${BP_SBT_STALE_SECS:-600}" out
+  out="$(mktemp "${TMPDIR:-/tmp}/bp-sbt-run.XXXXXX")"
+  sbt --client "$@" > "$out" 2>&1 &
+  local pid=$! last=$(date +%s) size=0 st
+  while kill -0 "$pid" 2>/dev/null; do
+    sleep 5
+    local nsize; nsize=$(stat -f%z "$out" 2>/dev/null || stat -c%s "$out" 2>/dev/null || echo 0)
+    if [ "$nsize" != "$size" ]; then size=$nsize; last=$(date +%s); fi
+    if [ $(( $(date +%s) - last )) -ge "$stale_secs" ]; then
+      echo "!! SBT WATCHDOG — no output for ${stale_secs}s on \`sbt --client $*\`; dumping and killing this checkout's server" >&2
+      local dump="$(pwd)/.balticporter/sbt-watchdog-$(date +%s).jstack"; mkdir -p "$(pwd)/.balticporter"
+      for sp in $(pgrep -f sbt-launch.jar); do
+        d=$(lsof -a -p "$sp" -d cwd -Fn 2>/dev/null | grep '^n' | cut -c2-)
+        if [ "$d" = "$(pwd)" ]; then jstack "$sp" > "$dump" 2>&1; echo "   server $sp dumped to $dump" >&2; kill "$sp" 2>/dev/null; fi
+      done
+      kill "$pid" 2>/dev/null; sleep 2; kill -9 "$pid" 2>/dev/null
+      cat "$out"; rm -f "$out"; return 124
+    fi
+  done
+  wait "$pid"; st=$?
+  cat "$out"; rm -f "$out"; return $st
 }
 
 # sbt_shutdown — shut down the lane's private server. Called at lane end.

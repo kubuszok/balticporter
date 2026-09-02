@@ -11,10 +11,10 @@ set -u
 ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
 METALS_VERSION="${METALS_MCP_VERSION:-2.0.0-M18}"
 HASH="$(printf '%s' "$ROOT" | shasum | cut -c1-8)"
-# the checkout's LANE sbt server (scripts/_lib.sh): Metals' `sbt bsp` must attach to it, not start
-# a second sbt for the same build — a cold sbt on this build took Metals past its 2-minute limit twice.
+# Metals' `sbt bsp` is a LAUNCHER JVM (the sbt script sets use_sbtn=0 for `bsp`), not a thin client,
+# so it cannot share the lane server; it gets its own directory, and the lane server is never touched.
 _LIB_HASH="$(cd "$ROOT" && printf '%s' "$(pwd)" | shasum | cut -c1-8)"
-SBT_DIR="/tmp/sbt-bp-${_LIB_HASH}"
+SBT_DIR="/tmp/sbt-bp-metals-${_LIB_HASH}"  # NEVER the lane's dir: a Metals `sbt -bsp` launcher in it wedged the lane's thin client for 48 min (2026-09-02)
 PORT=$((41000 + 0x${HASH:0:3} % 1000))
 LABEL="bp-metals-$HASH"
 LOG="$ROOT/.balticporter/metals-$HASH.log"
@@ -58,17 +58,15 @@ exit \$st
 SH
     chmod +x "$ROOT/.balticporter/metals-$HASH.sh"
     rm -f "$ROOT/.balticporter/metals-$HASH.failures"
-    # warm the lane server first (sbt 2 build load ~20 s cold) so Metals' BSP handshake is instant
-    ( cd "$ROOT" && JAVA_HOME=$JAVA_HOME_PIN PATH="$JAVA_HOME_PIN/bin:$PATH" SBT_GLOBAL_SERVER_DIR="$SBT_DIR" sbt --client "projects" >/dev/null 2>&1 ) || true
     launchctl submit -l "$LABEL" -o "$LOG" -e "$LOG" -- /usr/bin/env "PATH=$PATH" "HOME=$HOME" /bin/bash -lc "$ROOT/.balticporter/metals-$HASH.sh"
     write_mcp_json
     echo "started $LABEL on port $PORT (log: $LOG); .mcp.json written" ;;
   stop)
     launchctl remove "$LABEL" 2>/dev/null && echo "removed $LABEL" || echo "$LABEL was not loaded"
     for i in 1 2 3 4 5 6; do launchctl list 2>/dev/null | grep -q "$LABEL" || break; sleep 1; done
-    for p in $(pgrep -f "metals-mcp_2.13:$METALS_VERSION" 2>/dev/null); do lsof -a -p "$p" -d cwd -Fn 2>/dev/null | grep -q "^n$ROOT\$" && kill "$p" 2>/dev/null; done
+    for p in $(pgrep -f "metals-mcp_2.13|scala.meta.metals.McpMain" 2>/dev/null); do lsof -a -p "$p" -d cwd -Fn 2>/dev/null | grep -q "^n$ROOT\$" && kill "$p" 2>/dev/null; done
     sleep 2
-    for p in $(pgrep -f "metals-mcp_2.13:$METALS_VERSION" 2>/dev/null); do lsof -a -p "$p" -d cwd -Fn 2>/dev/null | grep -q "^n$ROOT\$" && kill -9 "$p" 2>/dev/null; done
+    for p in $(pgrep -f "metals-mcp_2.13|scala.meta.metals.McpMain" 2>/dev/null); do lsof -a -p "$p" -d cwd -Fn 2>/dev/null | grep -q "^n$ROOT\$" && kill -9 "$p" 2>/dev/null; done
     rm -f "$ROOT/.mcp.json" "$ROOT/.balticporter/metals-$HASH.failures"; echo "stopped" ;;
   *) echo "usage: $0 start|stop|status|port"; exit 2 ;;
 esac
