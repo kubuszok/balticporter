@@ -103,7 +103,7 @@ trait Pool[A] {
   }
 
   /** The number of objects available to be obtained. */
-  def getFree(): Int = {
+  def getFree: Int = {
     lock.synchronized {
       freeObjects.size
     }

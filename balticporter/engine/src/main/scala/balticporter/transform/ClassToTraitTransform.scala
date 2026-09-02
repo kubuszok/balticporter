@@ -228,30 +228,44 @@ final class ClassToTraitTransform(
   override def transformApply(app: Tree.Apply)(using program: Program): Term =
     if resolved.isEmpty then return app
     // Check if this Apply wraps a New of a nominated type with constructor args
-    app.fun match
-      case n: Tree.New =>
+    // Extract the New from either Apply(New(...), args) or Apply(TypeApply(New(...), targs), args)
+    val newNode: Option[Tree.New] = app.fun match
+      case n: Tree.New                        => Some(n)
+      case Tree.TypeApply(n: Tree.New, _, _, _) => Some(n)
+      case _                                  => None
+    newNode match
+      case None => return app
+      case Some(n) =>
         val headSym = ClassToTraitTransform.headSymOf(n.tpt.tpe)
         headSym.flatMap(resolved.get) match
-          case Some(spec) if app.args.nonEmpty =>
-            // Strip the constructor args and put them as override vals in the AnonClass body
+          case Some(spec) =>
             n.anon match
               case Some(anon) =>
                 val origin = app.origin
                 val anonSym = program.symbolOf(anon.symbol).getOrElse(return app)
-                val overrideVals = spec.mappings.flatMap { m =>
-                  if m.index < app.args.size then
-                    val tpe = if m.index < spec.formalTypes.size then spec.formalTypes(m.index) else app.args(m.index).tpe
-                    Some(mkVal(m, tpe, Some(app.args(m.index)), origin, anon.symbol, anonSym))
-                  else None
-                }
-                val newAnon = anon.copy(body = overrideVals ++ anon.body)
+                // WITH args: override vals from the actual args. WITHOUT args: from defaults.
+                val overrideVals = if app.args.nonEmpty then
+                  spec.mappings.flatMap { m =>
+                    if m.index < app.args.size then
+                      val tpe = if m.index < spec.formalTypes.size then spec.formalTypes(m.index) else app.args(m.index).tpe
+                      Some(mkVal(m, tpe, Some(app.args(m.index)), origin, anon.symbol, anonSym))
+                    else None
+                  }
+                else if spec.defaults.size >= spec.mappings.size then
+                  spec.mappings.flatMap { m =>
+                    if m.index < spec.defaults.size && m.index < spec.formalTypes.size then
+                      Some(mkVal(m, spec.formalTypes(m.index), Some(spec.defaults(m.index)), origin, anon.symbol, anonSym))
+                    else None
+                  }
+                else Nil
+                val newAnon = if overrideVals.nonEmpty then anon.copy(body = overrideVals ++ anon.body) else anon
                 val newNew = n.copy(anon = Some(newAnon))
                 Tree.Apply(newNew, Nil, app.method, app.tpe, app.origin)
               case None =>
-                // Non-anonymous new Pool(args) -- strip args (the class itself handles override vals)
-                Tree.Apply(n, Nil, app.method, app.tpe, app.origin)
+                // Non-anonymous new Pool(args) -- strip args
+                if app.args.nonEmpty then Tree.Apply(n, Nil, app.method, app.tpe, app.origin)
+                else app
           case _ => app
-      case _ => app
 
   // ---- helpers ----
 
