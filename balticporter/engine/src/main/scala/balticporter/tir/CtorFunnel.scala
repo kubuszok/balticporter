@@ -367,14 +367,27 @@ object CtorFunnel:
       // targeting the widest, leaving the widest as the promoted root while manufacturing a nilary
       // delegation path. Without this, the fixpoint demotes the promoted primary and the override
       // vals become self-referential.
+      //
+      // NARROWED (wave 3.3b): fires ONLY when the class has a parent that ClassToTraitTransform
+      // CONVERTED to a trait. The structural signature is `isTrait && !isAbstract` on a parent
+      // symbol — a natural Java interface has `isTrait && isAbstract`, and a regular Java class
+      // has neither. Without the narrowing, every class with a nilary delegation to a promoted
+      // primary (Font, Bag, Set2) kept its promoted primary and lost its demotion — 11 specs
+      // broken, the replay for MutableBag lost, and the Font-shaped emission changed on gdx.
       else if p.primary.isDefined && hasNilary then
-        val primarySym = p.primary.get.symbol
-        classes.find(_.symbol == s).exists { cd =>
-          ctorsOf(program, cd.body).exists { c =>
-            valueParams(program, c).isEmpty && c.symbol != primarySym &&
-              reachesCtor(program, c, primarySym)
-          }
+        val hasTraitConvertedParent = classes.find(_.symbol == s).exists { cd =>
+          parentSyms(cd).exists(ps =>
+            program.symbolOf(ps).exists(sym => sym.flags.isTrait && !sym.flags.isAbstract))
         }
+        if !hasTraitConvertedParent then false
+        else
+          val primarySym = p.primary.get.symbol
+          classes.find(_.symbol == s).exists { cd =>
+            ctorsOf(program, cd.body).exists { c =>
+              valueParams(program, c).isEmpty && c.symbol != primarySym &&
+                reachesCtor(program, c, primarySym)
+            }
+          }
       else false
 
     private val plans: Map[SymId, Plan] =
