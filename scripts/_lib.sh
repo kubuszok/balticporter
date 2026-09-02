@@ -542,15 +542,15 @@ declared_dep_flags() {
 #   SBT_ERRORS — the counted errors (same regex as the scala-cli lanes)
 #   SBT_STATUS — the sbt exit status
 #
-# WHY `--batch` AND NOT `--client`. sbt 2.0.8's `--client` connects to "a" running server, and
-# in a checkout with git worktrees it connected to ANOTHER worktree's server (ENGINE-LIMITS
-# M5.11). `--batch` starts a server per invocation in THIS directory, the recipe-exported
-# JAVA_HOME reaches the fork, and a recipe-local `sbt --client shutdown` at the end reclaims
-# the port. A warm-server approach (one sbt invocation per lane with multiple tasks) is the
-# goal, pending the watchdog's diagnosis of the observed 47-minute hang.
+# WHY `--server -batch` AND NOT `--client` OR BARE `--batch`. sbt 2's default is `--client`,
+# which uses sbtn to connect to "a" running server — and in a checkout with git worktrees it
+# connects to ANOTHER worktree's server (ENGINE-LIMITS M5.11: measured again on this wave,
+# cwd was w20-dep-residue). `--server -batch` starts a FOREGROUND server in THIS directory,
+# uses its own JAVA_HOME, and exits when the command completes. The recipe-exported JAVA_HOME
+# reaches the fork, so the compile JDK is pinned the same way it was under scala-cli's --jvm.
 sbt_compile() {
   local task="$1" cap="$2"
-  sbt --batch "$task" 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$cap"
+  sbt --server -batch "$task" 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$cap"
   SBT_STATUS=${PIPESTATUS[0]}
   # Strip sbt line prefixes to expose the raw dotty output the error-counting grep expects.
   # sbt prefixes each diagnostic line with `[error] ` (for errors) or `[warn] ` (for warnings).
@@ -570,7 +570,7 @@ sbt_compile() {
 # stripped. The caller reads the file for test outcomes (MUnit markers `  + `, `==> X `, etc.).
 sbt_test() {
   local task="$1" cap="$2"
-  sbt --batch "$task" 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$cap"
+  sbt --server -batch "$task" 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$cap"
   local st=${PIPESTATUS[0]}
   # Strip sbt prefixes so MUnit outcome markers appear at their expected column.
   local stripped="$cap.stripped"
