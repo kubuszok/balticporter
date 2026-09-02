@@ -339,7 +339,7 @@ object GdxAiPolicy:
               |            } else ()
               |          }
               |          // Check the max number of children of the parent
-              |          val stackedParent: sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.StackedTask[E] = { if (this.stack.isEmpty) throw new java.lang.IllegalStateException("Array is empty."); this.stack.peek }
+              |          val stackedParent: sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.StackedTask[E] = this.stack.peek()
               |          val maxChildren: scala.Int = stackedParent.metadata.maxChildren
               |          if (stackedParent.task.childCount >= maxChildren) {
               |            throw this.stackedTaskException(stackedParent, ((("max number of children exceeded (" + (stackedParent.task.childCount + 1)) + " > ") + maxChildren) + ")")
@@ -383,8 +383,8 @@ object GdxAiPolicy:
               |    if (metadata == null) {
               |      val meta: sge.ai.btree.utils.TaskRegistry.Meta = sge.ai.btree.utils.TaskRegistry.metaOf(clazz)
               |      if (meta != null) {
-              |        val taskAttributes: lowlevel.util.ObjectMap[java.lang.String, sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.AttrInfo] =
-              |          lowlevel.util.ObjectMap[java.lang.String, sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.AttrInfo]()
+              |        val taskAttributes: sge.utils.ObjectMap[java.lang.String, sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.AttrInfo] =
+              |          new sge.utils.ObjectMap[java.lang.String, sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.AttrInfo]()
               |        val attrs: scala.Array[sge.ai.btree.utils.TaskRegistry.Attr] = meta.attributes
               |        var i: scala.Int = 0
               |        while (i < attrs.length) {
