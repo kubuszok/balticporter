@@ -100,10 +100,19 @@ final class ClassToTraitTransform(
     val units2 = p1.units.map(u => StandardTraversal.mapClassDef(this, u)(using p1))
     val symbols2 = StandardTraversal.mapSymbols(this, p1.symbols)(using p1)
 
-    // 3) Update symbol flags for nominated types (isTrait)
+    // 3) Update symbol flags for nominated types (isTrait) and their mapped fields
+    val mappedValNames = resolved.values.flatMap(_.mappings.map(_.valName)).toSet
     val allSyms = symbols2.all.map { s =>
       if resolved.contains(s.id) then
+        // The nominated type itself: mark as trait
         s.copy(flags = s.flags.copy(isTrait = true, isAbstract = false))
+      else if resolved.values.exists(_.parentSymId == s.owner) && s.name == "<init>" then
+        // Constructor of a nominated type: mark abstract (a trait has no constructor to call)
+        s.copy(flags = s.flags.copy(isAbstract = true))
+      else if resolved.values.exists(_.parentSymId == s.owner) && mappedValNames.contains(s.name) &&
+              !s.flags.isStatic then
+        // Mapped field of a nominated type: mark abstract (override vals in subclasses)
+        s.copy(flags = s.flags.copy(isAbstract = true, isMutable = false))
       else s
     } ++ newSyms.result()
 
@@ -118,14 +127,17 @@ final class ClassToTraitTransform(
       case d: Tree.DefDef => program.symbolOf(d.symbol).exists(_.name == "<init>")
       case _ => false
     }
-    // Add abstract val definitions for the mapped parameters
+    // Add abstract DEF definitions (parameterless, no body) for the mapped parameters.
+    // DefDef rather than ValDef so the emitter's resolveFieldShadowing recognises the pair:
+    // its implementsInherited test matches "d: Tree.DefDef => d.paramss.isEmpty && d.rhs.isEmpty"
+    // and treats the subclass's override val as an implementation pair rather than a shadow.
     val abstractVals = spec.mappings.flatMap { m =>
       if m.index < spec.formalTypes.size then
         val tpe = spec.formalTypes(m.index)
-        val valId = fresh()
-        newSyms += Symbol(valId, m.valName, s"${program.symbolOf(cd.symbol).map(_.fullName).getOrElse("")}#${m.valName}",
+        val defId = fresh()
+        newSyms += Symbol(defId, m.valName, s"${program.symbolOf(cd.symbol).map(_.fullName).getOrElse("")}#${m.valName}",
           Flags(isAbstract = true, isProtected = true), cd.symbol, tpe, origin)
-        Some(Tree.ValDef(valId, TypeTree(tpe, origin), None, origin))
+        Some(Tree.DefDef(defId, Nil, TypeTree(tpe, origin), None, origin))
       else None
     }
     record(Decision(
@@ -147,12 +159,7 @@ final class ClassToTraitTransform(
       case Some(spec) => rewriteNamedSubclass(cd, spec)
       case None       => cd
 
-  override def transformNew(n: Tree.New)(using program: Program): Term =
-    if resolved.isEmpty then return n
-    val headSym = ClassToTraitTransform.headSymOf(n.tpt.tpe)
-    headSym.flatMap(resolved.get) match
-      case None       => n
-      case Some(spec) => rewriteAnonNew(n, spec)
+
 
   // ---- named subclass rewrite ----
 
@@ -216,32 +223,7 @@ final class ClassToTraitTransform(
     }
     cd.copy(body = ctorDefs ++ overrideVals ++ rest)
 
-  // ---- anonymous subclass rewrite ----
 
-  private def rewriteAnonNew(n: Tree.New, spec: ResolvedSpec)(using program: Program): Term =
-    // The anonymous `new Pool(a, b) { ... }` appears as Apply(New(..., Some(AnonClass)), args).
-    // But by the time transformNew runs, the Apply has already been traversed and transformNew sees
-    // just the New node. The args are in the PARENT Apply. We need to handle this differently:
-    // we add override vals to the AnonClass body with the spec defaults, since the actual args
-    // will be stripped from the Apply by the time the emitter sees them.
-    // Actually, the StandardTraversal calls transformNew on the New, not the Apply.
-    // The constructor args are NOT part of the New -- they're in the Apply wrapping it.
-    // For anonymous classes, we add override vals with defaults to the AnonClass body.
-    n.anon match
-      case None => n
-      case Some(anon) =>
-        val origin = n.origin
-        val anonSym = program.symbolOf(anon.symbol).getOrElse(return n)
-        val overrideVals = if spec.defaults.size >= spec.mappings.size then
-          spec.mappings.flatMap { m =>
-            if m.index < spec.defaults.size && m.index < spec.formalTypes.size then
-              Some(mkVal(m, spec.formalTypes(m.index), Some(spec.defaults(m.index)), origin, anon.symbol, anonSym))
-            else None
-          }
-        else Nil
-        // For now, add defaults. The actual args from the Apply are handled by transformApply.
-        if overrideVals.isEmpty then return n
-        n.copy(anon = Some(anon.copy(body = overrideVals ++ anon.body)))
 
   override def transformApply(app: Tree.Apply)(using program: Program): Term =
     if resolved.isEmpty then return app
