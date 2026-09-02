@@ -518,6 +518,7 @@ object LibgdxPolicy:
       ("and", 1)          -> Rename("&="),            // bits.and(other) -> bits &= other
       ("or", 1)           -> Rename("|="),            // bits.or(other) -> bits |= other
       ("andNot", 1)       -> Rename("&~="),           // bits.andNot(other) -> bits &~= other
+      ("xor", 1)          -> Rename("^="),             // bits.xor(other) -> bits ^= other (IN-PLACE, not BitSet.xor which returns a new set)
       // bits.containsAll(other) = "this is a superset of other" = other.subsetOf(this).
       // Argument and receiver SWAP — Template, not Rename.
       ("containsAll", 1)  -> Template("$0.subsetOf($recv)"),
@@ -845,8 +846,6 @@ object LibgdxPolicy:
         // parameterless methods: DynamicArray declares peek, first, iterator, nonEmpty as
         // parameterless (no ()) but java calls them with (). Chain with empty parens set
         // produces arr.peek without (). F9's rule: lls methods are parameterless.
-        ("peek", 0)         -> Chain(List("peek")),
-        ("first", 0)        -> Chain(List("first")),
         ("iterator", 0)     -> Chain(List("iterator")),
         // wave 3.1o: field-write images. DynamicArray exposes `size` as a METHOD (getter only),
         // so `arr.size = n` must become `arr.setSize(n)`. `setSize` handles both growing (pads
@@ -867,6 +866,19 @@ object LibgdxPolicy:
         // creates a copy, which matches java's Array.with semantics (creates a new Array from varargs).
         // Matched on the qualifier SYMBOL (the source class symbol in static position, §4.56).
         ("with", 1)         -> Template("$Target.from($0)"),
+        // --- 3.1af: gdx-test runtime ---
+        // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
+        // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
+        // contract a caller catches (LongArrayTest.popPeekFirstTest), so it is restated at the
+        // call — CLAUDE.md §4.4, "a rename onto a stdlib member with a different failure class".
+        ("peek", 0)  -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
+        ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
+        ("pop", 0)   -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
+        // removeRange(start, end): java's `end` is INCLUSIVE, and it refuses end >= size and
+        // start > end (Array.java:372-375); lls's is exclusive [start, end) and an empty or
+        // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
+        // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
+        ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
       ),
       // SnapshotArray extends Array — same rewrites. lls DynamicArray has begin()/end() for
       // snapshot support (sge type-mappings.md: "SnapshotArray -> ArrayBuffer with copy-on-modify";
@@ -889,8 +901,6 @@ object LibgdxPolicy:
         ("replaceAll", 3)   -> BoolDispatch(1, "replaceAllByRef", "replaceAll"),
         ("notEmpty", 0)     -> Chain(List("nonEmpty")),
         ("empty", 0)        -> Rename("isEmpty"),
-        ("peek", 0)         -> Chain(List("peek")),
-        ("first", 0)        -> Chain(List("first")),
         ("iterator", 0)     -> Chain(List("iterator")),
         ("size", 0)         -> FieldWrite("size", "setSize"),
         ("ordered", 0)      -> Rename("preserveOrder"),
@@ -899,6 +909,19 @@ object LibgdxPolicy:
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("append", 3)       -> Rename("addAll"),
         ("with", 1)         -> Template("$Target.from($0)"),
+        // --- 3.1af: gdx-test runtime ---
+        // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
+        // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
+        // contract a caller catches (LongArrayTest.popPeekFirstTest), so it is restated at the
+        // call — CLAUDE.md §4.4, "a rename onto a stdlib member with a different failure class".
+        ("peek", 0)  -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
+        ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
+        ("pop", 0)   -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
+        // removeRange(start, end): java's `end` is INCLUSIVE, and it refuses end >= size and
+        // start > end (Array.java:372-375); lls's is exclusive [start, end) and an empty or
+        // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
+        // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
+        ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
       ),
       "com.badlogic.gdx.utils.DelayedRemovalArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -918,8 +941,6 @@ object LibgdxPolicy:
         ("replaceAll", 3)   -> BoolDispatch(1, "replaceAllByRef", "replaceAll"),
         ("notEmpty", 0)     -> Chain(List("nonEmpty")),
         ("empty", 0)        -> Rename("isEmpty"),
-        ("peek", 0)         -> Chain(List("peek")),
-        ("first", 0)        -> Chain(List("first")),
         ("iterator", 0)     -> Chain(List("iterator")),
         ("size", 0)         -> FieldWrite("size", "setSize"),
         ("ordered", 0)      -> Rename("preserveOrder"),
@@ -928,6 +949,19 @@ object LibgdxPolicy:
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("append", 3)       -> Rename("addAll"),
         ("with", 1)         -> Template("$Target.from($0)"),
+        // --- 3.1af: gdx-test runtime ---
+        // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
+        // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
+        // contract a caller catches (LongArrayTest.popPeekFirstTest), so it is restated at the
+        // call — CLAUDE.md §4.4, "a rename onto a stdlib member with a different failure class".
+        ("peek", 0)  -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
+        ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
+        ("pop", 0)   -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
+        // removeRange(start, end): java's `end` is INCLUSIVE, and it refuses end >= size and
+        // start > end (Array.java:372-375); lls's is exclusive [start, end) and an empty or
+        // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
+        // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
+        ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
       ),
       // Primitive arrays: no identity flag (no BoolDispatch needed), same get->apply, set->update.
       // sge type-mappings.md: "IntArray -> DynamicArray[Int]", etc.
@@ -939,8 +973,6 @@ object LibgdxPolicy:
         ("set", 2)      -> Rename("update"),
         ("notEmpty", 0) -> Chain(List("nonEmpty")),
         ("empty", 0)    -> Rename("isEmpty"),
-        ("peek", 0)     -> Chain(List("peek")),
-        ("first", 0)    -> Chain(List("first")),
         ("iterator", 0) -> Chain(List("iterator")),
         ("size", 0)     -> FieldWrite("size", "setSize"),
         ("ordered", 0)  -> Rename("preserveOrder"),
@@ -952,7 +984,20 @@ object LibgdxPolicy:
         ("incr", 2)     -> Template("{ val bpIdx = $0; $recv(bpIdx) = $recv(bpIdx) + $1 }"),
         // IntArray.add(4 args): DynamicArray has up to 3-arg add; split into two calls.
         ("add", 4)      -> Template("{ $recv.add($0, $1); $recv.add($2, $3) }"),
-        ("with", 1)     -> Template("$Target.from($0)"),
+        ("with", 1)     -> Template("$Target.from[$T0]($0)"),
+        // --- 3.1af: gdx-test runtime ---
+        // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
+        // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
+        // contract a caller catches (LongArrayTest.popPeekFirstTest), so it is restated at the
+        // call — CLAUDE.md §4.4, "a rename onto a stdlib member with a different failure class".
+        ("peek", 0)  -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
+        ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
+        ("pop", 0)   -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
+        // removeRange(start, end): java's `end` is INCLUSIVE, and it refuses end >= size and
+        // start > end (Array.java:372-375); lls's is exclusive [start, end) and an empty or
+        // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
+        // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
+        ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
       ),
       "com.badlogic.gdx.utils.FloatArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -962,15 +1007,26 @@ object LibgdxPolicy:
         ("set", 2)      -> Rename("update"),
         ("notEmpty", 0) -> Chain(List("nonEmpty")),
         ("empty", 0)    -> Rename("isEmpty"),
-        ("peek", 0)     -> Chain(List("peek")),
-        ("first", 0)    -> Chain(List("first")),
         ("iterator", 0) -> Chain(List("iterator")),
         ("size", 0)     -> FieldWrite("size", "setSize"),
         ("ordered", 0)  -> Rename("preserveOrder"),
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
-        ("with", 1)     -> Template("$Target.from($0)"),
+        ("with", 1)     -> Template("$Target.from[$T0]($0)"),
+        // --- 3.1af: gdx-test runtime ---
+        // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
+        // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
+        // contract a caller catches (LongArrayTest.popPeekFirstTest), so it is restated at the
+        // call — CLAUDE.md §4.4, "a rename onto a stdlib member with a different failure class".
+        ("peek", 0)  -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
+        ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
+        ("pop", 0)   -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
+        // removeRange(start, end): java's `end` is INCLUSIVE, and it refuses end >= size and
+        // start > end (Array.java:372-375); lls's is exclusive [start, end) and an empty or
+        // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
+        // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
+        ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
       ),
       "com.badlogic.gdx.utils.LongArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -980,8 +1036,6 @@ object LibgdxPolicy:
         ("set", 2)      -> Rename("update"),
         ("notEmpty", 0) -> Chain(List("nonEmpty")),
         ("empty", 0)    -> Rename("isEmpty"),
-        ("peek", 0)     -> Chain(List("peek")),
-        ("first", 0)    -> Chain(List("first")),
         ("iterator", 0) -> Chain(List("iterator")),
         ("size", 0)     -> FieldWrite("size", "setSize"),
         ("ordered", 0)  -> Rename("preserveOrder"),
@@ -996,20 +1050,38 @@ object LibgdxPolicy:
         ("mul", 2)      -> Template("{ val bpIdx = $0; $recv(bpIdx) = $recv(bpIdx) * $1 }"),
         // LongArray.mul(value) -> multiply ALL elements
         ("mul", 1)      -> Template("{ var bpI = 0; while (bpI < $recv.size) { $recv(bpI) = $recv(bpI) * $0; bpI += 1 } }"),
-        ("with", 1)     -> Template("$Target.from($0)"),
+        ("with", 1)     -> Template("$Target.from[$T0]($0)"),
         // --- 3.1ae: gdx-test residue ---
         // LongArray.add(4 args): DynamicArray has up to 3-arg add; split into two calls.
         ("add", 4)      -> Template("{ $recv.add($0, $1); $recv.add($2, $3) }"),
         // LongArray.shrink() returns long[] in java; DynamicArray.shrink() returns Unit.
         // Return the backing array after shrink, matching java's return type.
         ("shrink", 0)   -> Template("{ $recv.shrink(); $recv }.items"),
-        // LongArray.ensureCapacity(int) returns long[]; DynamicArray returns Unit.
-        ("ensureCapacity", 1) -> Template("{ $recv.ensureCapacity($0); $recv }.items"),
-        // LongArray.setSize(int) returns long[]; DynamicArray returns Unit.
-        ("setSize", 1)  -> Template("{ $recv.setSize($0); $recv }.items"),
         // LongArray.resize(int) is protected, returns long[]; DynamicArray has no resize.
         // setSize + items is the faithful image: allocate to newSize, pad with zeros, return array.
         ("resize", 1)   -> Template("{ $recv.setSize($0); $recv }.items"),
+        // --- 3.1af: gdx-test runtime ---
+        // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
+        // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
+        // contract a caller catches (LongArrayTest.popPeekFirstTest), so it is restated at the
+        // call — CLAUDE.md §4.4, "a rename onto a stdlib member with a different failure class".
+        ("peek", 0)  -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
+        ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
+        ("pop", 0)   -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
+        // removeRange(start, end): java's `end` is INCLUSIVE, and it refuses end >= size and
+        // start > end (Array.java:372-375); lls's is exclusive [start, end) and an empty or
+        // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
+        // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
+        ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
+        // ensureCapacity(n) RETURNS the backing array in java and refuses n < 0; it grows only
+        // when size + n exceeds the array, and then to max(max(8, size + n), size * 1.75)
+        // (LongArray.java:347-351). lls returns Unit and grows to exactly size + n, so the
+        // returned array's LENGTH — the thing LongArrayTest.ensureCapacityTest asserts — differs.
+        // Java's own growth rule is restated; the `.items` read is the java return.
+        ("ensureCapacity", 1) -> Template("{ val bpN = $0; if (bpN < 0) throw new java.lang.IllegalArgumentException(\"additionalCapacity must be >= 0: \" + bpN); val bpNeeded = $recv.size + bpN; if (bpNeeded > $recv.items.length) $recv.ensureCapacity(java.lang.Math.max(java.lang.Math.max(8, bpNeeded), ($recv.size * 1.75f).toInt) - $recv.size); $recv }.items"),
+        // setSize(n) returns the backing array and refuses n < 0 (LongArray.java:356-361); lls
+        // returns Unit and sets a negative size silently. Growth agrees: both go to max(8, n).
+        ("setSize", 1) -> Template("{ val bpN = $0; if (bpN < 0) throw new java.lang.IllegalArgumentException(\"newSize must be >= 0: \" + bpN); $recv.setSize(bpN); $recv }.items"),
       ),
       "com.badlogic.gdx.utils.ShortArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -1024,15 +1096,26 @@ object LibgdxPolicy:
         ("add", 3)      -> Template("$recv.add($0.toShort, $1.toShort, $2.toShort)"),
         ("notEmpty", 0) -> Chain(List("nonEmpty")),
         ("empty", 0)    -> Rename("isEmpty"),
-        ("peek", 0)     -> Chain(List("peek")),
-        ("first", 0)    -> Chain(List("first")),
         ("iterator", 0) -> Chain(List("iterator")),
         ("size", 0)     -> FieldWrite("size", "setSize"),
         ("ordered", 0)  -> Rename("preserveOrder"),
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
-        ("with", 1)     -> Template("$Target.from($0)"),
+        ("with", 1)     -> Template("$Target.from[$T0]($0)"),
+        // --- 3.1af: gdx-test runtime ---
+        // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
+        // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
+        // contract a caller catches (LongArrayTest.popPeekFirstTest), so it is restated at the
+        // call — CLAUDE.md §4.4, "a rename onto a stdlib member with a different failure class".
+        ("peek", 0)  -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
+        ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
+        ("pop", 0)   -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
+        // removeRange(start, end): java's `end` is INCLUSIVE, and it refuses end >= size and
+        // start > end (Array.java:372-375); lls's is exclusive [start, end) and an empty or
+        // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
+        // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
+        ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
       ),
       "com.badlogic.gdx.utils.ByteArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -1042,19 +1125,32 @@ object LibgdxPolicy:
         ("set", 2)      -> Rename("update"),
         ("notEmpty", 0) -> Chain(List("nonEmpty")),
         ("empty", 0)    -> Rename("isEmpty"),
-        ("peek", 0)     -> Chain(List("peek")),
-        ("first", 0)    -> Chain(List("first")),
         ("iterator", 0) -> Chain(List("iterator")),
         ("size", 0)     -> FieldWrite("size", "setSize"),
         ("ordered", 0)  -> Rename("preserveOrder"),
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
-        // ensureCapacity(int) returns T[] in java; DynamicArray.ensureCapacity returns Unit.
-        // The callers assign the result for indexed access into the backing array — return .items
-        // to get the raw Array[Byte], matching the java return type of byte[].
-        ("ensureCapacity", 1) -> Template("{ $recv.ensureCapacity($0); $recv }.items"),
-        ("with", 1)     -> Template("$Target.from($0)"),
+        ("with", 1)     -> Template("$Target.from[$T0]($0)"),
+        // --- 3.1af: gdx-test runtime ---
+        // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
+        // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
+        // contract a caller catches (LongArrayTest.popPeekFirstTest), so it is restated at the
+        // call — CLAUDE.md §4.4, "a rename onto a stdlib member with a different failure class".
+        ("peek", 0)  -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
+        ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
+        ("pop", 0)   -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
+        // removeRange(start, end): java's `end` is INCLUSIVE, and it refuses end >= size and
+        // start > end (Array.java:372-375); lls's is exclusive [start, end) and an empty or
+        // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
+        // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
+        ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
+        // ensureCapacity(n) RETURNS the backing array in java and refuses n < 0; it grows only
+        // when size + n exceeds the array, and then to max(max(8, size + n), size * 1.75)
+        // (LongArray.java:347-351). lls returns Unit and grows to exactly size + n, so the
+        // returned array's LENGTH — the thing LongArrayTest.ensureCapacityTest asserts — differs.
+        // Java's own growth rule is restated; the `.items` read is the java return.
+        ("ensureCapacity", 1) -> Template("{ val bpN = $0; if (bpN < 0) throw new java.lang.IllegalArgumentException(\"additionalCapacity must be >= 0: \" + bpN); val bpNeeded = $recv.size + bpN; if (bpNeeded > $recv.items.length) $recv.ensureCapacity(java.lang.Math.max(java.lang.Math.max(8, bpNeeded), ($recv.size * 1.75f).toInt) - $recv.size); $recv }.items"),
       ),
       "com.badlogic.gdx.utils.CharArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -1064,8 +1160,6 @@ object LibgdxPolicy:
         ("set", 2)      -> Rename("update"),
         ("notEmpty", 0) -> Chain(List("nonEmpty")),
         ("empty", 0)    -> Rename("isEmpty"),
-        ("peek", 0)     -> Chain(List("peek")),
-        ("first", 0)    -> Chain(List("first")),
         ("iterator", 0) -> Chain(List("iterator")),
         ("size", 0)     -> FieldWrite("size", "setSize"),
         ("ordered", 0)  -> Rename("preserveOrder"),
@@ -1073,7 +1167,20 @@ object LibgdxPolicy:
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("append", 3)   -> Rename("addAll"),
-        ("with", 1)     -> Template("$Target.from($0)"),
+        ("with", 1)     -> Template("$Target.from[$T0]($0)"),
+        // --- 3.1af: gdx-test runtime ---
+        // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
+        // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
+        // contract a caller catches (LongArrayTest.popPeekFirstTest), so it is restated at the
+        // call — CLAUDE.md §4.4, "a rename onto a stdlib member with a different failure class".
+        ("peek", 0)  -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
+        ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
+        ("pop", 0)   -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
+        // removeRange(start, end): java's `end` is INCLUSIVE, and it refuses end >= size and
+        // start > end (Array.java:372-375); lls's is exclusive [start, end) and an empty or
+        // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
+        // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
+        ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
       ),
       "com.badlogic.gdx.utils.BooleanArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -1083,15 +1190,26 @@ object LibgdxPolicy:
         ("set", 2)      -> Rename("update"),
         ("notEmpty", 0) -> Chain(List("nonEmpty")),
         ("empty", 0)    -> Rename("isEmpty"),
-        ("peek", 0)     -> Chain(List("peek")),
-        ("first", 0)    -> Chain(List("first")),
         ("iterator", 0) -> Chain(List("iterator")),
         ("size", 0)     -> FieldWrite("size", "setSize"),
         ("ordered", 0)  -> Rename("preserveOrder"),
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
-        ("with", 1)     -> Template("$Target.from($0)"),
+        ("with", 1)     -> Template("$Target.from[$T0]($0)"),
+        // --- 3.1af: gdx-test runtime ---
+        // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
+        // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
+        // contract a caller catches (LongArrayTest.popPeekFirstTest), so it is restated at the
+        // call — CLAUDE.md §4.4, "a rename onto a stdlib member with a different failure class".
+        ("peek", 0)  -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
+        ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
+        ("pop", 0)   -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
+        // removeRange(start, end): java's `end` is INCLUSIVE, and it refuses end >= size and
+        // start > end (Array.java:372-375); lls's is exclusive [start, end) and an empty or
+        // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
+        // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
+        ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
       ),
       // Queue -> mutable.ArrayDeque (sge type-mappings.md: "Queue -> Scala stdlib queues";
       // sge's QueueBitsTest confirms mutable.ArrayDeque). addLast -> addOne, addFirst -> prepend,
@@ -1117,6 +1235,14 @@ object LibgdxPolicy:
         ("iterator", 0)     -> Chain(List("iterator")),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
+        // --- 3.1af: gdx-test runtime ---
+        // Queue.toString() -> "[a, b, c]"; ArrayDeque.toString -> "ArrayDeque(a, b, c)".
+        // Java's format is part of the contract the test asserts (QueueTest.toStringTest).
+        // ONE call, not `"[" + … + "]"`: a template is spliced verbatim, so a `+` chain hands a
+        // following `.equals(…)` to the `"]"` literal (3 E007 on QueueTest, wave 3.1af).
+        ("toString", 0)     -> Template("$recv.mkString(\"[\", \", \", \"]\")"),
+        // Queue.toString(sep) -> elements joined by sep, no brackets.
+        ("toString", 1)     -> Template("$recv.mkString($0)"),
       ),
     )
 
@@ -1149,7 +1275,13 @@ object LibgdxPolicy:
     def genericArrayInitByDesc = Map(
       ("<init>", intDesc)      -> Construct("lowlevel.util.DynamicArray", "apply"),
       ("<init>", arrayDesc)    -> Construct("lowlevel.util.DynamicArray", "from"),
-      ("<init>", tArrDesc)     -> Template("{ val bpSrc = $0; val bpDa = $Target[$T0](); bpDa.addAll(bpSrc, 0, bpSrc.length); bpDa }"),
+      // wave 3.1af: Array(T[]) -> DynamicArray.from(array) — exact capacity.
+      // DynamicArray.from copies with items.length == array.length, matching java's Array(T[])
+      // which sets items = clone, size = length. The previous apply()+addAll left default
+      // capacity 16, breaking SortTest (8 failures from trailing nulls in the backing array).
+      // $T0 resolves from the constructor's applied type; raw constructors reach the supplier-
+      // derived path in retargetConstruct (engine, 3.1af).
+      ("<init>", tArrDesc)     -> Template("$Target.from[$T0]($0)"),
       ("<init>", supplierDesc) -> Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1),
       // Cast .items to Array[$T0] to handle wildcard argument types — java arrays are covariant,
       // scala arrays are invariant, so `DynamicArray[? <: T].items` is `Array[? <: T]` which
@@ -1160,10 +1292,8 @@ object LibgdxPolicy:
     def primArrayInitByDesc(selfDesc: Descriptor, rawArrDesc: Descriptor, elemType: String) = Map(
       ("<init>", intDesc)    -> Construct("lowlevel.util.DynamicArray", "apply"),
       ("<init>", selfDesc)   -> Construct("lowlevel.util.DynamicArray", "from"),
-      // wave 3.1y: init from raw primitive array — e.g. LongArray(long[]).
-      // DynamicArray.apply takes capacity (Int), not a raw array. Construct + addAll.
-      // The element type is fixed (primitive), so we template it explicitly.
-      ("<init>", rawArrDesc) -> Template(s"{ val bpSrc = $$0; val bpDa = $$Target[$elemType](); bpDa.addAll(bpSrc, 0, bpSrc.length); bpDa }"),
+      // wave 3.1af: PrimArray(prim[]) -> DynamicArray.from for exact capacity (LongArrayTest).
+      ("<init>", rawArrDesc) -> Template(s"$$Target.from[$elemType]($$0)"),
       ("addAll", Descriptor(List(selfDesc.params.head, Param.Prim("int"), Param.Prim("int")))) ->
         Template("$recv.addAll($0.items, $1, $2)"),
     )
