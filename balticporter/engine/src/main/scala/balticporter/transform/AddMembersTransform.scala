@@ -55,7 +55,7 @@ final class AddMembersTransform(val members: Map[String, List[AddMembersTransfor
         existing       <- members.get(owner).toList
         s              <- specs
         if existing.exists(e => e.name == s.name && e.arity == s.arity)
-      yield s"$owner#${s.name}/${s.arity}: member already declared"
+      yield s"${MemberKey(owner, s.name).render}/${s.arity}: member already declared"
       if conflicts.nonEmpty then Left(conflicts.mkString("; "))
       else
         val merged = (members.keySet ++ o.members.keySet).toList.sorted.map { k =>
@@ -72,7 +72,7 @@ final class AddMembersTransform(val members: Map[String, List[AddMembersTransfor
       specs.flatMap { s =>
         // If no owner was found in the program, the whole entry is unmatched
         if !ownerFound.contains(owner) then
-          List(PolicyFinding(name, "AddMembersTransform", s"$owner#${s.name}",
+          List(PolicyFinding(name, "AddMembersTransform", MemberKey(owner, s.name).render,
             PolicyIssue.NeverMatched, s"no type '$owner' in this program"))
         else Nil
       }
