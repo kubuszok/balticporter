@@ -138,15 +138,23 @@ any number of further compile fixes.**
 
 ## 6. The lane — one command that does all of it
 
-In this repository the lanes live in the root `Justfile`:
+In this repository the lanes live in the root `Justfile`. Each port is an sbt `projectMatrix`
+subproject (`port-<module>JVM/JS/Native`), and the lane drives it via `sbt --client` to a warm
+per-worktree background server:
 
 ```
-just sg-measure          # simple-graphs + its suite
+just sg-measure          # simple-graphs + its suite (JVM-first — fast iteration)
+just sg-measure-full     # the same, PLUS JS, Native and reference-flags compiles
 just gdx-measure         # libGDX core
 just gdx-test-measure    # libGDX's own suite — … then RUN it
 just ashley-measure      # a DEPENDENT port, compiled WITH libGDX core
-just measure-all         # the four, SERIALLY, stopping at the first failure
+just measure-all         # every lane with BP_FULL=1, SERIALLY, stopping at the first failure
 ```
+
+**Two modes per lane.** The regular lane (`just <port>-measure`) does migration + JVM compile +
+checks + correlate — the fast-iteration path (~2 min for gdx). The full variant
+(`just <port>-measure-full` or `BP_FULL=1 just <port>-measure`) adds JS, Native and ref-flags
+compiles. `measure-all` uses the full form.
 
 **Serially, in dependency order, never in parallel** — each re-emits into `src_managed/`, so a
 dependent lane compiles against what the base lane just wrote.

@@ -244,6 +244,22 @@ nextStep = "just sg-measure"
   Present it takes `moduleName`, `organization`, `scalaVersion`, `sbtVersion`, `deps`/`testDeps`
   (`org:artifact:version`, or `org::artifact:version` for Scala-cross), `testFramework`.
 
+### 5b. The build.sbt entry — `port-<module>` projectMatrix + `port-<module>-ref`
+
+Every port in the corpus has a corresponding `port-<module>` `projectMatrix` in `build.sbt` with
+JVM, JS and Native rows, plus a JVM-only `port-<module>-ref` project that compiles with the
+reference repo's own scalacOptions (`sgeStrictFlags`, `sgeRelaxedFlags` or `ssgFlags`). When adding
+a port:
+
+1. Add a `port-<name>` `projectMatrix` in `build.sbt` using `portSettings(dir)` and
+   `portSourceGenerators(dir)`. A dependent `dependsOn` its base's matrix. `libraryDependencies`
+   must match the `.conf`'s `dependencies` (verify with `just deps-lint`).
+2. Add a `port-<name>-ref` plain `project` in `.ports/<name>-ref/` using `refPortSettings(dir)`,
+   with the appropriate flag set as `scalacOptions := <flagSet>` and the same dependencies.
+3. Add both to the `ports` aggregate.
+4. Add a lane in the Justfile using `sbt_compile "port-<name>JVM/compile"` for JVM and the BP_FULL
+   block for xplat/ref (see any existing lane as a template). Add a `-measure-full` recipe.
+
 ## 6. The second module — `base = "…"`, which IS `extendedBy`
 
 ```hocon
