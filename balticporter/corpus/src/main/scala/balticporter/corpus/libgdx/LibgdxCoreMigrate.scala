@@ -624,6 +624,13 @@ object LibgdxPolicy:
     "com.badlogic.gdx.utils.ObjectIntMap$Entry" -> "scala.Tuple2",
     "com.badlogic.gdx.utils.ObjectFloatMap$Entry" -> "scala.Tuple2",
     "com.badlogic.gdx.utils.ObjectLongMap$Entry" -> "scala.Tuple2",
+    // --- 3.1ai: missing Entry types for IntIntMap and IntFloatMap — anim8 45 errors.
+    // Only ENTRY types are retargetted (to Tuple2). Keys/Values/Entries are iterator types and
+    // DynamicArray is NOT an iterator, so retargeting them would introduce hasNext/next errors.
+    // The Collect rewrite handles keys()/values()/entries() calls; remaining type references to
+    // the iterator types are counted on the collection-retarget lane.
+    "com.badlogic.gdx.utils.IntIntMap$Entry" -> "scala.Tuple2",
+    "com.badlogic.gdx.utils.IntFloatMap$Entry" -> "scala.Tuple2",
   )
 
   /** TYPE ARGUMENT MAPPING for arity-changing retargets — describes how to fill the target type's
@@ -644,6 +651,14 @@ object LibgdxPolicy:
       "com.badlogic.gdx.utils.ObjectFloatMap" -> List(SourceArg(0), FixedType("scala.Float")),
       "com.badlogic.gdx.utils.ObjectLongMap"  -> List(SourceArg(0), FixedType("scala.Long")),
       "com.badlogic.gdx.utils.IntSet"         -> List(FixedType("scala.Int")),
+      // --- 3.1ai: Entry type arg mappings for primitive-key maps (0-param Entry -> Tuple2[K,V])
+      "com.badlogic.gdx.utils.IntIntMap$Entry"   -> List(FixedType("scala.Int"), FixedType("scala.Int")),
+      "com.badlogic.gdx.utils.IntFloatMap$Entry" -> List(FixedType("scala.Int"), FixedType("scala.Float")),
+      "com.badlogic.gdx.utils.IntMap$Entry"      -> List(FixedType("scala.Int"), SourceArg(0)),
+      "com.badlogic.gdx.utils.LongMap$Entry"     -> List(FixedType("scala.Long"), SourceArg(0)),
+      "com.badlogic.gdx.utils.ObjectIntMap$Entry" -> List(SourceArg(0), FixedType("scala.Int")),
+      "com.badlogic.gdx.utils.ObjectFloatMap$Entry" -> List(SourceArg(0), FixedType("scala.Float")),
+      "com.badlogic.gdx.utils.ObjectLongMap$Entry" -> List(SourceArg(0), FixedType("scala.Long")),
       // wave 3.1n: primitive arrays — 0-param source to 1-param DynamicArray[T].
       // sge type-mappings.md: "IntArray -> DynamicArray[Int]", etc.
       "com.badlogic.gdx.utils.IntArray"      -> List(FixedType("scala.Int")),
@@ -690,6 +705,13 @@ object LibgdxPolicy:
         ("<init>", 0) -> Construct("scala.Tuple2", "apply", fillTypeArgs = true),
       ),
       "com.badlogic.gdx.utils.ObjectLongMap$Entry" -> Map(
+        ("<init>", 0) -> Construct("scala.Tuple2", "apply", fillTypeArgs = true),
+      ),
+      // --- 3.1ai: IntIntMap$Entry and IntFloatMap$Entry constructor rewrites
+      "com.badlogic.gdx.utils.IntIntMap$Entry" -> Map(
+        ("<init>", 0) -> Construct("scala.Tuple2", "apply", fillTypeArgs = true),
+      ),
+      "com.badlogic.gdx.utils.IntFloatMap$Entry" -> Map(
         ("<init>", 0) -> Construct("scala.Tuple2", "apply", fillTypeArgs = true),
       ),
       "com.badlogic.gdx.utils.ObjectSet" -> Map(
