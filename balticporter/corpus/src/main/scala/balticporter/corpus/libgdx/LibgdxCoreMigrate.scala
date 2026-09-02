@@ -754,6 +754,13 @@ object LibgdxPolicy:
         ("entries", 0) -> ForEach("foreachEntry", 2),
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
+        // --- 3.1ah: dependents ---
+        // getAndIncrement(key, default, increment): if key present, return old and store old+inc;
+        // if absent, store default+inc and return default. ObjectMap.get(K,V) provides the default.
+        ("getAndIncrement", 3) -> Template("{ val bpK = $0; val bpOld = $recv.get(bpK, $1); $recv.put(bpK, bpOld + $2); bpOld }"),
+        // remove(key, default): return removed value or default if absent.
+        // ObjectMap.remove(K) returns null if absent; cast the boxed result.
+        ("remove", 2) -> Template("{ val bpK = $0; if ($recv.containsKey(bpK)) { val bpV = $recv.get(bpK, $1); $recv.remove(bpK); bpV } else $1 }"),
       ),
       "com.badlogic.gdx.utils.IntFloatMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
@@ -763,6 +770,9 @@ object LibgdxPolicy:
         ("entries", 0) -> ForEach("foreachEntry", 2),
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
+        // --- 3.1ah: dependents ---
+        ("getAndIncrement", 3) -> Template("{ val bpK = $0; val bpOld = $recv.get(bpK, $1); $recv.put(bpK, bpOld + $2); bpOld }"),
+        ("remove", 2) -> Template("{ val bpK = $0; if ($recv.containsKey(bpK)) { val bpV = $recv.get(bpK, $1); $recv.remove(bpK); bpV } else $1 }"),
       ),
       "com.badlogic.gdx.utils.ObjectIntMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
@@ -772,6 +782,9 @@ object LibgdxPolicy:
         ("entries", 0) -> ForEach("foreachEntry", 2),
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
+        // --- 3.1ah: dependents ---
+        ("getAndIncrement", 3) -> Template("{ val bpK = $0; val bpOld = $recv.get(bpK, $1); $recv.put(bpK, bpOld + $2); bpOld }"),
+        ("remove", 2) -> Template("{ val bpK = $0; if ($recv.containsKey(bpK)) { val bpV = $recv.get(bpK, $1); $recv.remove(bpK); bpV } else $1 }"),
       ),
       "com.badlogic.gdx.utils.ObjectFloatMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
@@ -781,6 +794,9 @@ object LibgdxPolicy:
         ("entries", 0) -> ForEach("foreachEntry", 2),
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
+        // --- 3.1ah: dependents ---
+        ("getAndIncrement", 3) -> Template("{ val bpK = $0; val bpOld = $recv.get(bpK, $1); $recv.put(bpK, bpOld + $2); bpOld }"),
+        ("remove", 2) -> Template("{ val bpK = $0; if ($recv.containsKey(bpK)) { val bpV = $recv.get(bpK, $1); $recv.remove(bpK); bpV } else $1 }"),
       ),
       "com.badlogic.gdx.utils.ObjectLongMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
@@ -790,6 +806,9 @@ object LibgdxPolicy:
         ("entries", 0) -> ForEach("foreachEntry", 2),
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
+        // --- 3.1ah: dependents ---
+        ("getAndIncrement", 3) -> Template("{ val bpK = $0; val bpOld = $recv.get(bpK, $1); $recv.put(bpK, bpOld + $2); bpOld }"),
+        ("remove", 2) -> Template("{ val bpK = $0; if ($recv.containsKey(bpK)) { val bpV = $recv.get(bpK, $1); $recv.remove(bpK); bpV } else $1 }"),
       ),
       // wave 3.1d: gdx's ArrayMap -> lowlevel.util.ArrayMap (same as IdentityMap's target)
       "com.badlogic.gdx.utils.ArrayMap" -> Map(
@@ -998,6 +1017,13 @@ object LibgdxPolicy:
         // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
         // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
         ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
+        // --- 3.1ah: dependents ---
+        // shrink/resize/ensureCapacity/setSize return int[] in java; DynamicArray returns Unit.
+        // Return the backing array after each, matching java's return type.
+        ("shrink", 0)   -> Template("{ $recv.shrink(); $recv }.items"),
+        ("resize", 1)   -> Template("{ $recv.setSize($0); $recv }.items"),
+        ("ensureCapacity", 1) -> Template("{ val bpN = $0; if (bpN < 0) throw new java.lang.IllegalArgumentException(\"additionalCapacity must be >= 0: \" + bpN); val bpNeeded = $recv.size + bpN; if (bpNeeded > $recv.items.length) $recv.ensureCapacity(java.lang.Math.max(java.lang.Math.max(8, bpNeeded), ($recv.size * 1.75f).toInt) - $recv.size); $recv }.items"),
+        ("setSize", 1) -> Template("{ val bpN = $0; if (bpN < 0) throw new java.lang.IllegalArgumentException(\"newSize must be >= 0: \" + bpN); $recv.setSize(bpN); $recv }.items"),
       ),
       "com.badlogic.gdx.utils.FloatArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -1027,6 +1053,11 @@ object LibgdxPolicy:
         // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
         // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
         ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
+        // --- 3.1ah: dependents ---
+        ("shrink", 0)   -> Template("{ $recv.shrink(); $recv }.items"),
+        ("resize", 1)   -> Template("{ $recv.setSize($0); $recv }.items"),
+        ("ensureCapacity", 1) -> Template("{ val bpN = $0; if (bpN < 0) throw new java.lang.IllegalArgumentException(\"additionalCapacity must be >= 0: \" + bpN); val bpNeeded = $recv.size + bpN; if (bpNeeded > $recv.items.length) $recv.ensureCapacity(java.lang.Math.max(java.lang.Math.max(8, bpNeeded), ($recv.size * 1.75f).toInt) - $recv.size); $recv }.items"),
+        ("setSize", 1) -> Template("{ val bpN = $0; if (bpN < 0) throw new java.lang.IllegalArgumentException(\"newSize must be >= 0: \" + bpN); $recv.setSize(bpN); $recv }.items"),
       ),
       "com.badlogic.gdx.utils.LongArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -1116,6 +1147,11 @@ object LibgdxPolicy:
         // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
         // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
         ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
+        // --- 3.1ah: dependents ---
+        ("shrink", 0)   -> Template("{ $recv.shrink(); $recv }.items"),
+        ("resize", 1)   -> Template("{ $recv.setSize($0); $recv }.items"),
+        ("ensureCapacity", 1) -> Template("{ val bpN = $0; if (bpN < 0) throw new java.lang.IllegalArgumentException(\"additionalCapacity must be >= 0: \" + bpN); val bpNeeded = $recv.size + bpN; if (bpNeeded > $recv.items.length) $recv.ensureCapacity(java.lang.Math.max(java.lang.Math.max(8, bpNeeded), ($recv.size * 1.75f).toInt) - $recv.size); $recv }.items"),
+        ("setSize", 1) -> Template("{ val bpN = $0; if (bpN < 0) throw new java.lang.IllegalArgumentException(\"newSize must be >= 0: \" + bpN); $recv.setSize(bpN); $recv }.items"),
       ),
       "com.badlogic.gdx.utils.ByteArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -1151,6 +1187,10 @@ object LibgdxPolicy:
         // returned array's LENGTH — the thing LongArrayTest.ensureCapacityTest asserts — differs.
         // Java's own growth rule is restated; the `.items` read is the java return.
         ("ensureCapacity", 1) -> Template("{ val bpN = $0; if (bpN < 0) throw new java.lang.IllegalArgumentException(\"additionalCapacity must be >= 0: \" + bpN); val bpNeeded = $recv.size + bpN; if (bpNeeded > $recv.items.length) $recv.ensureCapacity(java.lang.Math.max(java.lang.Math.max(8, bpNeeded), ($recv.size * 1.75f).toInt) - $recv.size); $recv }.items"),
+        // --- 3.1ah: dependents ---
+        ("shrink", 0)   -> Template("{ $recv.shrink(); $recv }.items"),
+        ("resize", 1)   -> Template("{ $recv.setSize($0); $recv }.items"),
+        ("setSize", 1) -> Template("{ val bpN = $0; if (bpN < 0) throw new java.lang.IllegalArgumentException(\"newSize must be >= 0: \" + bpN); $recv.setSize(bpN); $recv }.items"),
       ),
       "com.badlogic.gdx.utils.CharArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -1181,6 +1221,11 @@ object LibgdxPolicy:
         // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
         // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
         ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
+        // --- 3.1ah: dependents ---
+        ("shrink", 0)   -> Template("{ $recv.shrink(); $recv }.items"),
+        ("resize", 1)   -> Template("{ $recv.setSize($0); $recv }.items"),
+        ("ensureCapacity", 1) -> Template("{ val bpN = $0; if (bpN < 0) throw new java.lang.IllegalArgumentException(\"additionalCapacity must be >= 0: \" + bpN); val bpNeeded = $recv.size + bpN; if (bpNeeded > $recv.items.length) $recv.ensureCapacity(java.lang.Math.max(java.lang.Math.max(8, bpNeeded), ($recv.size * 1.75f).toInt) - $recv.size); $recv }.items"),
+        ("setSize", 1) -> Template("{ val bpN = $0; if (bpN < 0) throw new java.lang.IllegalArgumentException(\"newSize must be >= 0: \" + bpN); $recv.setSize(bpN); $recv }.items"),
       ),
       "com.badlogic.gdx.utils.BooleanArray" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
@@ -1210,6 +1255,11 @@ object LibgdxPolicy:
         // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
         // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
         ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
+        // --- 3.1ah: dependents ---
+        ("shrink", 0)   -> Template("{ $recv.shrink(); $recv }.items"),
+        ("resize", 1)   -> Template("{ $recv.setSize($0); $recv }.items"),
+        ("ensureCapacity", 1) -> Template("{ val bpN = $0; if (bpN < 0) throw new java.lang.IllegalArgumentException(\"additionalCapacity must be >= 0: \" + bpN); val bpNeeded = $recv.size + bpN; if (bpNeeded > $recv.items.length) $recv.ensureCapacity(java.lang.Math.max(java.lang.Math.max(8, bpNeeded), ($recv.size * 1.75f).toInt) - $recv.size); $recv }.items"),
+        ("setSize", 1) -> Template("{ val bpN = $0; if (bpN < 0) throw new java.lang.IllegalArgumentException(\"newSize must be >= 0: \" + bpN); $recv.setSize(bpN); $recv }.items"),
       ),
       // Queue -> mutable.ArrayDeque (sge type-mappings.md: "Queue -> Scala stdlib queues";
       // sge's QueueBitsTest confirms mutable.ArrayDeque). addLast -> addOne, addFirst -> prepend,
