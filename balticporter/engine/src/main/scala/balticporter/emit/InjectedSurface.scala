@@ -147,23 +147,22 @@ object InjectedSurface:
         val childFqn = fqnOf(fqn, d.name.value)
         walkTemplate(d.templ, childFqn)
       case d: Defn.Def =>
-        val paramClauses = d.paramClauseGroups.flatMap(_.paramClauses)
-          .filterNot(_.values.exists(_.mods.exists(_.isInstanceOf[Mod.Using])))
-          .map { pc =>
-            pc.values.map(p => ParamType(p.decltpe.map(_.syntax).getOrElse("?")))
-          }
-        val hasP = d.paramClauseGroups.exists(_.paramClauses.exists(pc =>
-          !pc.values.forall(_.mods.exists(_.isInstanceOf[Mod.Using]))))
+        val nonUsingClauses = d.paramClauseGroups.flatMap(_.paramClauses)
+          .filterNot(pc => pc.values.nonEmpty && pc.values.forall(_.mods.exists(_.isInstanceOf[Mod.Using])))
+        val paramClauses = nonUsingClauses.map { pc =>
+          pc.values.map(p => ParamType(p.decltpe.map(_.syntax).getOrElse("?")))
+        }
+        // hasParens: true if ANY non-using clause exists (even an empty `()`)
+        val hasP = nonUsingClauses.nonEmpty
         val ret = d.decltpe.map(_.syntax)
         out += MemberSig(fqn, d.name.value, paramClauses, hasP, ret)
       case d: Decl.Def =>
-        val paramClauses = d.paramClauseGroups.flatMap(_.paramClauses)
-          .filterNot(_.values.exists(_.mods.exists(_.isInstanceOf[Mod.Using])))
-          .map { pc =>
-            pc.values.map(p => ParamType(p.decltpe.map(_.syntax).getOrElse("?")))
-          }
-        val hasP = d.paramClauseGroups.exists(_.paramClauses.exists(pc =>
-          !pc.values.forall(_.mods.exists(_.isInstanceOf[Mod.Using]))))
+        val nonUsingClauses = d.paramClauseGroups.flatMap(_.paramClauses)
+          .filterNot(pc => pc.values.nonEmpty && pc.values.forall(_.mods.exists(_.isInstanceOf[Mod.Using])))
+        val paramClauses = nonUsingClauses.map { pc =>
+          pc.values.map(p => ParamType(p.decltpe.map(_.syntax).getOrElse("?")))
+        }
+        val hasP = nonUsingClauses.nonEmpty
         val ret = Some(d.decltpe.syntax)
         out += MemberSig(fqn, d.name.value, paramClauses, hasP, ret)
       case d: Defn.Val =>

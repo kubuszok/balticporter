@@ -182,6 +182,16 @@ class PolicyKeyLintSpec extends munit.FunSuite:
         ("the redirect DESTINATION is an injected table this program never parses — mint or reuse, " +
           "as above. Its KEYS are bound."),
     ),
+    "ClassToTraitTransform.scala" -> Map(
+      "fullName ==" ->
+        ("the nominated type FQN from `specs` is a CONFIG PARAMETER (§1(b)) the port hands in; " +
+          "the program-level lookup matches it against every symbol once, and the `java.lang.Object` " +
+          "check is the same mint-or-reuse as PublicFieldAccessorTransform — an external the program " +
+          "never declares"),
+      "interpolated #" ->
+        ("the `#` in MINTED symbol fullNames separates owner from member name — the same " +
+          "synthetic namespace the engine builds for every phase-created symbol, not a policy key"),
+    ),
   )
 
   private def sources: List[(String, String)] =
