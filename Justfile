@@ -568,30 +568,17 @@ gdx-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$REPORT"
-    echo "-- compile --"
-    # DECLARED is whatever the port's own manifest published (`declared_dep_flags`, scripts/_lib.sh).
-    # Before the Named target this was empty and the compile was standalone; now it carries `lls`,
-    # because the emitted types reference `lowlevel.Nullable`.
-    DECLARED=$(declared_dep_flags "$REPORT" | tr '\n' ' ')
-    scala-cli compile --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DECLARED {{gdx_module}}/src_managed/main/scala 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gdxmeasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    # count ALL errors: coded `-- [Exxx] ... Error` AND bare `-- Error:` (e.g. "secondary constructor
-    # must call a preceding constructor" carries no code). The coded-only count silently undercounts.
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/gdxmeasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/gdxmeasure.txt
+    echo "-- compile (sbt port-sgeJVM/compile) --"
+    # sbt_compile runs `sbt --batch port-sgeJVM/compile`, strips sbt line prefixes, and sets
+    # SBT_ERRORS / SBT_STATUS. Dependencies (lls, munit, junit) are in build.sbt.
+    sbt_compile "port-sgeJVM/compile" "$MEASURE_TMP"/gdxmeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/gdxmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/gdxmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/gdxmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gdxmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/gdxmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
-
-    # Cross-platform compile gates (ENGINE-LIMITS P1: a COMPILE gate, not a portability gate).
-    # Same deps as the JVM compile — the emitted types reference `lowlevel.Nullable`.
-    xplat_compile scala-js {{scala_version}} "$REPORT" gdxmeasure {{gdx_module}}/src_managed/main/scala -- $DECLARED
-    xplat_compile scala-native {{scala_version}} "$REPORT" gdxmeasure {{gdx_module}}/src_managed/main/scala -- $DECLARED
-
-    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$REPORT" gdxmeasure "{{sge_strict_flags}}" {{gdx_module}}/src_managed/main/scala -- $DECLARED
 
     # A count is not a triage. Join every error back to the member and the JAVA LINE it came from, and
     # split it into "at a region the engine marked approximate" vs "engine gap" (DESIGN.md §6.3).
@@ -668,26 +655,15 @@ gdx-test-measure:
     # sge.SgeTestFixture.testSge()`, and the fixture is a `src/` file a human may write where the
     # generated one is not (CLAUDE.md §5.5, `ENGINE-LIMITS.md` CT7). Leaving it off compiles the
     # emitted suite against a fixture that is not there — one error, and it is the port's own.
-    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} {{gdx_deps}} \
-      {{gdx_module}}/src_managed/main/scala {{gdx_module}}/src_managed/test/scala \
-      {{gdx_module}}/src/test/scala 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gdxtestmeasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/gdxtestmeasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/gdxtestmeasure.txt
+    # sbt's port-sgeJVM project has src_managed/{main,test}/scala via sourceGenerators and
+    # src/test/scala as an unmanaged source directory. Dependencies are in build.sbt.
+    echo "-- compile (sbt port-sgeJVM/Test/compile) --"
+    sbt_compile "port-sgeJVM/Test/compile" "$MEASURE_TMP"/gdxtestmeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/gdxtestmeasure.txt
     echo "TOTAL ERRORS: $ERRORS"
     error_baseline_guard "$ERRORS" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gdxtestmeasure.txt | sort | uniq -c | sort -rn | head
-
-    # Cross-platform compile gates — same source dirs and deps as the JVM compile.
-    xplat_compile scala-js {{scala_version}} "$REPORT" gdxtestmeasure \
-      {{gdx_module}}/src_managed/main/scala {{gdx_module}}/src_managed/test/scala \
-      {{gdx_module}}/src/test/scala -- --test {{gdx_deps}}
-    xplat_compile scala-native {{scala_version}} "$REPORT" gdxtestmeasure \
-      {{gdx_module}}/src_managed/main/scala {{gdx_module}}/src_managed/test/scala \
-      {{gdx_module}}/src/test/scala -- --test {{gdx_deps}}
-
-    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$REPORT" gdxtestmeasure "{{sge_strict_flags}}" {{gdx_module}}/src_managed/main/scala {{gdx_module}}/src_managed/test/scala {{gdx_module}}/src/test/scala -- --test {{gdx_deps}}
 
     # -------------------------------------------------------------------------------------------
     # RUN them. Compiling a test suite measures nothing about behaviour, and CLAUDE.md §4.4 lists ten
@@ -697,12 +673,8 @@ gdx-test-measure:
     # -------------------------------------------------------------------------------------------
     if [ "$ERRORS" = "0" ]; then
       echo
-      echo "-- run --"
-      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} {{gdx_run_deps}} \
-        -Duser.language=en -Duser.country=US \
-        {{gdx_module}}/src_managed/main/scala {{gdx_module}}/src_managed/test/scala \
-        {{gdx_module}}/src/test/scala 2>&1 |
-        sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/gdxtestrun.txt
+      echo "-- run (sbt port-sgeJVM/test) --"
+      sbt_test "port-sgeJVM/test" "$MEASURE_TMP"/gdxtestrun.txt
       reconcile_outcomes "$MEASURE_TMP"/gdxtestrun.txt "$MUNIT_TESTS"; RECONCILED=$?
 
       # Anchor every failure on the first stack frame that lands in PORTED code and resolve it, through
@@ -727,7 +699,7 @@ gdx-test-measure:
 # Ashley (main + its JUnit suite), compiled BOTH together with the ported libGDX core.
 #
 # Ashley is a DEPENDENT port (RuntimeMode.Dependency): the collection shims are vendored by
-# sge, so both source sets must be on the same scala-cli invocation. Compiling sge-ecs
+# sge, and port-sge-ecsJVM `dependsOn` port-sgeJVM in build.sbt. Compiling sge-ecs
 # alone measures nothing — every one of its 21 files resolves against libGDX.
 # ---------------------------------------------------------------------------------------------
 [doc("Ashley + its suite, compiled WITH libGDX core (a dependent port)")]
@@ -776,8 +748,6 @@ ashley-measure:
     # line an operator reads past; the verdict is deferred to `headline` so the compile still runs.
     test_discovery_guard "$JAVA_TESTS" "$SCALA_TESTS" "$TREPORT"
 
-    DEPS="{{ashley_deps}}"
-
     echo
     break_residue {{ashley_module}}/src_managed
 
@@ -785,34 +755,20 @@ ashley-measure:
     # the compile below runs on another. Nothing compared them until an `override` emitted on
     # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
     jdk_guard "$REPORT"
-    echo "-- compile --"
-    # NOTE the ANSI strip: without it `grep -cE '^-- .*Error'` matches nothing and reports 0 for a port
-    # that does not compile — a false NEGATIVE on the headline number.
-    scala-cli compile --test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS \
-      {{gdx_module}}/src_managed/main/scala {{ashley_module}}/src_managed/main/scala {{ashley_module}}/src_managed/test/scala \
-      2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/ashleymeasure.txt
-    CLI_STATUS=${PIPESTATUS[0]}
-    ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/ashleymeasure.txt)
-    compile_guard "$CLI_STATUS" "$ERRORS" "$MEASURE_TMP"/ashleymeasure.txt
+    echo "-- compile (sbt port-sge-ecsJVM/Test/compile) --"
+    # sbt handles the dependency on sge via `dependsOn` in build.sbt. Dependencies (mockito,
+    # junit, munit, lls) are in build.sbt.
+    sbt_compile "port-sge-ecsJVM/Test/compile" "$MEASURE_TMP"/ashleymeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/ashleymeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/ashleymeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/ashleymeasure.txt))"
     error_baseline_guard "$ERRORS" "$TREPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/ashleymeasure.txt | sort | uniq -c | sort -rn | head
 
-    # Cross-platform compile gates — same source dirs and deps as the JVM compile.
-    xplat_compile scala-js {{scala_version}} "$TREPORT" ashleymeasure \
-      {{gdx_module}}/src_managed/main/scala {{ashley_module}}/src_managed/main/scala {{ashley_module}}/src_managed/test/scala -- --test {{ashley_deps}}
-    xplat_compile scala-native {{scala_version}} "$TREPORT" ashleymeasure \
-      {{gdx_module}}/src_managed/main/scala {{ashley_module}}/src_managed/main/scala {{ashley_module}}/src_managed/test/scala -- --test {{ashley_deps}}
-
-    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
-    flags_compile {{scala_version}} "$TREPORT" ashleymeasure "{{sge_relaxed_flags}}" {{gdx_module}}/src_managed/main/scala {{ashley_module}}/src_managed/main/scala {{ashley_module}}/src_managed/test/scala -- --test {{ashley_deps}}
-
     if [ "$ERRORS" = "0" ]; then
       echo
-      echo "-- run --"
-      scala-cli test --scala {{scala_version}} --server=false --jvm {{jdk_version}} $DEPS -Duser.language=en -Duser.country=US \
-        {{gdx_module}}/src_managed/main/scala {{ashley_module}}/src_managed/main/scala {{ashley_module}}/src_managed/test/scala \
-        2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$MEASURE_TMP"/ashleyrun.txt
+      echo "-- run (sbt port-sge-ecsJVM/test) --"
+      sbt_test "port-sge-ecsJVM/test" "$MEASURE_TMP"/ashleyrun.txt
       reconcile_outcomes "$MEASURE_TMP"/ashleyrun.txt "$MUNIT_TESTS"; RECONCILED=$?
       echo
       echo "-- correlation: test failures located to members and Java origins --"

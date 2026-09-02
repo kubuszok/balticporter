@@ -533,6 +533,52 @@ declared_dep_flags() {
   done | sort -u | while read -r r; do printf '%s\n%s\n' "--repository" "$r"; done
 }
 
+# sbt_compile <sbt-project-task> <capture-file>
+#
+# Runs `sbt --batch <task>` (e.g. `port-sgeJVM/compile` or `port-sgeJVM/Test/compile`),
+# captures the output, strips sbt's `[error] `/`[warn] `/`[info] ` prefixes so that the
+# downstream error-counting grep (`^-- (\[E[0-9]+\] )?.*Error`) sees the same dotty diagnostic
+# format that scala-cli produced. Sets two shell variables the caller reads:
+#   SBT_ERRORS — the counted errors (same regex as the scala-cli lanes)
+#   SBT_STATUS — the sbt exit status
+#
+# WHY `--batch` AND NOT `--client`. sbt 2.0.8's `--client` connects to "a" running server, and
+# in a checkout with git worktrees it connected to ANOTHER worktree's server (ENGINE-LIMITS
+# M5.11). `--batch` starts a server per invocation in THIS directory, the recipe-exported
+# JAVA_HOME reaches the fork, and a recipe-local `sbt --client shutdown` at the end reclaims
+# the port. A warm-server approach (one sbt invocation per lane with multiple tasks) is the
+# goal, pending the watchdog's diagnosis of the observed 47-minute hang.
+sbt_compile() {
+  local task="$1" cap="$2"
+  sbt --batch "$task" 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$cap"
+  SBT_STATUS=${PIPESTATUS[0]}
+  # Strip sbt line prefixes to expose the raw dotty output the error-counting grep expects.
+  # sbt prefixes each diagnostic line with `[error] ` (for errors) or `[warn] ` (for warnings).
+  # The original `^-- [Exxx] ... Error` pattern must see the `--` at column 1.
+  local stripped="$cap.stripped"
+  sed 's/^\[error\] //; s/^\[warn\] //; s/^\[info\] //' "$cap" > "$stripped"
+  SBT_ERRORS=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$stripped")
+  # compile_guard expects the ORIGINAL capture (for abort detection) and uses the stripped one
+  # for counting. We put the stripped version back as the primary capture since all downstream
+  # consumers (correlate, error families) grep the same patterns.
+  mv "$stripped" "$cap"
+}
+
+# sbt_test <sbt-project-task> <capture-file>
+#
+# Runs `sbt --batch <task>` (e.g. `port-sgeJVM/test`), captures the output with sbt prefixes
+# stripped. The caller reads the file for test outcomes (MUnit markers `  + `, `==> X `, etc.).
+sbt_test() {
+  local task="$1" cap="$2"
+  sbt --batch "$task" 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$cap"
+  local st=${PIPESTATUS[0]}
+  # Strip sbt prefixes so MUnit outcome markers appear at their expected column.
+  local stripped="$cap.stripped"
+  sed 's/^\[error\] //; s/^\[warn\] //; s/^\[info\] //' "$cap" > "$stripped"
+  mv "$stripped" "$cap"
+  return $st
+}
+
 # compile_guard <scala-cli-exit-status> <counted-errors> <capture-file>
 # A compile that never happened must not report 0. `scala-cli` aborting before compilation
 # ("input file not found", a bad flag) exits non-zero and prints a line that matches neither
