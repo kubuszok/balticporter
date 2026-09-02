@@ -777,7 +777,18 @@ final class CollectionsTransform(
     * [[lookupRewriteForReceiver]] to disambiguate at the member level. */
   private def retargetSourceOf(s: SymId)(using p: Program): Option[String] =
     retargetTargetToSource.get(s).orElse(
-      p.symbolOf(s).flatMap(sym => retargetTargetFqnToSources.get(sym.fullName).map(_.head)))
+      p.symbolOf(s).flatMap { sym =>
+        // FQN fallback 1: the SymId may come from reading the TARGET's class file (lls), so the
+        // symbol's fullName is the TARGET FQN.
+        retargetTargetFqnToSources.get(sym.fullName).map(_.head)
+          // --- 3.1ap: FQN fallback 2: the SymId may be an un-remapped SOURCE symbol whose SymId
+          // is not in `remap` — a dependent port's frontend interned the symbol from the base's
+          // java resolution root, and `transformType` left its type unchanged. The symbol's fullName
+          // IS the source FQN, so check effectiveRetarget directly. Section 1(a) — the symbol is
+          // a retarget source the run knows about; it was not remapped only because its SymId was
+          // not in `program.symbols.all` when `remap` was built, or was added after.
+          .orElse(effectiveRetarget.get(sym.fullName).map(_ => sym.fullName))
+      })
   /** True when the source FQN was resolved through `retargetTargetToSource` (the MINTED SymId —
     * unambiguous) rather than the FQN fallback (which may be ambiguous). */
   private def isUnambiguousSource(s: SymId): Boolean = retargetTargetToSource.contains(s)
