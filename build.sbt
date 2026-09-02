@@ -405,6 +405,44 @@ val portNativeSettings: Seq[Setting[?]] = Seq(
 )
 
 // ---------------------------------------------------------------------------------------------
+// REFERENCE-BUILD SCALAC OPTIONS (DESIGN.md §8.24)
+//
+// The flag list is READ from the reference repo's SgePlugin / ssg's build.sbt, not hand-copied.
+// `-Xmacro-settings:*` is dropped (macro timeouts, not diagnostics). The Justfile declares the
+// same strings as shell variables for documentation; these vals are what `port-*-ref` projects
+// compile with.
+//
+// The three are identical today (ssg copied sge's strict set); the three names exist as
+// documentation for where each came from and WHY each lane uses the one it does.
+// ---------------------------------------------------------------------------------------------
+val sgeStrictFlags: Seq[String] = Seq(
+  "-deprecation", "-feature", "-language:implicitConversions", "-no-indent",
+  "-Werror", "-Wimplausible-patterns", "-Wrecurse-with-default",
+  "-Wenum-comment-discard", "-Wunused:imports,privates,locals,patvars,nowarn",
+)
+val sgeRelaxedFlags: Seq[String] = Seq(
+  "-deprecation", "-feature", "-language:implicitConversions", "-no-indent",
+  "-Werror", "-Wimplausible-patterns", "-Wrecurse-with-default",
+  "-Wenum-comment-discard",
+)
+val ssgFlags: Seq[String] = Seq(
+  "-deprecation", "-feature", "-no-indent",
+  "-Werror", "-Wimplausible-patterns", "-Wrecurse-with-default",
+  "-Wenum-comment-discard", "-Wunused:imports,privates,locals,patvars,nowarn",
+)
+
+// Shared settings for `port-*-ref` projects: the reference repo's own scalacOptions instead of
+// `-nowarn`. JVM-only plain projects sharing the port's source generators, so a compile under the
+// reference build's flags is `sbt --client port-sge-ref/compile`.
+// NOTE: `scalacOptions` is NOT set here — each ref project must set it in its own `.settings()`
+// block AFTER calling this, because sbt 2.0's `-Wunused` deduplication can drop a project-level
+// `-Wunused:imports,...` when `ThisBuild / scalacOptions` carries `-Wunused:all`. Setting it
+// separately after this helper avoids the interaction.
+def refPortSettings(dir: String): Seq[Setting[?]] = Seq(
+  publish / skip := true,
+) ++ portSourceGenerators(dir)
+
+// ---------------------------------------------------------------------------------------------
 // port-sge — libGDX core (ported/sge).
 //
 // Standalone (JDK-only like libGDX core itself). sge_strict_flags for the reference compile.
@@ -855,6 +893,228 @@ lazy val `port-sge-visui-diff` = (project in file(".ports/sge-visui-diff"))
   )
 
 // ---------------------------------------------------------------------------------------------
+// REFERENCE-FLAG COMPILE PROJECTS — `port-*-ref`, one per port.
+//
+// JVM-only plain projects that share the port's source generators and hand-written `src/`
+// directories but compile with the reference repo's scalacOptions rather than `-nowarn`. This
+// is the FOURTH compile in every lane (after JVM, JS, Native): a port that is green under
+// `-nowarn` and red under `-no-indent -Werror -Wunused:…` is not at the bar (DESIGN.md §8.24).
+//
+// A dependent's `-ref` project `dependsOn` the base port's JVM row (NOT the base's ref),
+// because the base's emitted Scala is compiled with `-nowarn` — its own ref lane already
+// counted its warnings — and recompiling it under strict flags would double-count them.
+// This is the same scoping `flags_compile` did by filtering the base's diagnostics.
+// ---------------------------------------------------------------------------------------------
+
+lazy val `port-sge-ref` = (project in file(".ports/sge-ref"))
+  .settings(refPortSettings("sge") *)
+  .settings(
+    name := "balticporter-port-sge-ref",
+    scalacOptions := sgeStrictFlags,
+    libraryDependencies ++= Seq(
+      "com.kubuszok"          %% "lls"              % "0.3.0",
+      "org.scalameta"         %% "munit"            % "1.2.0" % Test,
+      "junit"                  % "junit"             % "4.13.2" % Test,
+      "org.junit.jupiter"      % "junit-jupiter"     % "5.10.2" % Test,
+    ),
+  )
+
+lazy val `port-sge-ecs-ref` = (project in file(".ports/sge-ecs-ref"))
+  .dependsOn(`port-sge`.jvm(scalaV))
+  .settings(refPortSettings("sge-ecs") *)
+  .settings(
+    name := "balticporter-port-sge-ecs-ref",
+    scalacOptions := sgeRelaxedFlags,
+    libraryDependencies ++= Seq(
+      "com.kubuszok"   %% "lls"            % "0.3.0",
+      "org.scalameta"  %% "munit"          % "1.2.0" % Test,
+      "junit"           % "junit"           % "4.13.2" % Test,
+      "org.mockito"     % "mockito-all"     % "1.10.19" % Test,
+    ),
+  )
+
+lazy val `port-sge-graphs-ref` = (project in file(".ports/sge-graphs-ref"))
+  .settings(refPortSettings("sge-graphs") *)
+  .settings(
+    name := "balticporter-port-sge-graphs-ref",
+    scalacOptions := sgeRelaxedFlags,
+    libraryDependencies ++= Seq(
+      "org.scalameta" %% "munit" % "1.2.0" % Test,
+      "junit"          % "junit"  % "4.12"  % Test,
+    ),
+  )
+
+lazy val `port-sge-anim8-ref` = (project in file(".ports/sge-anim8-ref"))
+  .dependsOn(`port-sge`.jvm(scalaV))
+  .settings(refPortSettings("sge-anim8") *)
+  .settings(
+    name := "balticporter-port-sge-anim8-ref",
+    scalacOptions := sgeRelaxedFlags,
+    libraryDependencies ++= Seq(
+      "com.kubuszok"  %% "lls"   % "0.3.0",
+      "org.scalameta" %% "munit" % "1.2.0" % Test,
+    ),
+  )
+
+lazy val `port-sge-noise-ref` = (project in file(".ports/sge-noise-ref"))
+  .settings(refPortSettings("sge-noise") *)
+  .settings(
+    name := "balticporter-port-sge-noise-ref",
+    scalacOptions := sgeRelaxedFlags,
+  )
+
+lazy val `port-sge-jbump-ref` = (project in file(".ports/sge-jbump-ref"))
+  .settings(refPortSettings("sge-jbump") *)
+  .settings(
+    name := "balticporter-port-sge-jbump-ref",
+    scalacOptions := sgeRelaxedFlags,
+  )
+
+lazy val `port-sge-gltf-ref` = (project in file(".ports/sge-gltf-ref"))
+  .dependsOn(`port-sge`.jvm(scalaV))
+  .settings(refPortSettings("sge-gltf") *)
+  .settings(
+    name := "balticporter-port-sge-gltf-ref",
+    scalacOptions := sgeRelaxedFlags,
+    libraryDependencies ++= Seq(
+      "com.kubuszok"  %% "lls"   % "0.3.0",
+      "org.scalameta" %% "munit" % "1.2.0" % Test,
+      "junit"          % "junit"  % "4.12"  % Test,
+    ),
+  )
+
+lazy val `port-sge-screens-ref` = (project in file(".ports/sge-screens-ref"))
+  .dependsOn(`port-sge`.jvm(scalaV))
+  .settings(refPortSettings("sge-screens") *)
+  .settings(
+    name := "balticporter-port-sge-screens-ref",
+    scalacOptions := sgeRelaxedFlags,
+    libraryDependencies ++= Seq(
+      "com.kubuszok"  %% "lls"   % "0.3.0",
+      "org.scalameta" %% "munit" % "1.2.0" % Test,
+    ),
+  )
+
+lazy val `port-sge-vfx-ref` = (project in file(".ports/sge-vfx-ref"))
+  .dependsOn(`port-sge`.jvm(scalaV))
+  .settings(refPortSettings("sge-vfx") *)
+  .settings(
+    name := "balticporter-port-sge-vfx-ref",
+    scalacOptions := sgeRelaxedFlags,
+    libraryDependencies ++= Seq(
+      "com.kubuszok"  %% "lls"   % "0.3.0",
+      "org.scalameta" %% "munit" % "1.2.0" % Test,
+    ),
+  )
+
+lazy val `port-sge-ai-ref` = (project in file(".ports/sge-ai-ref"))
+  .dependsOn(`port-sge`.jvm(scalaV))
+  .settings(refPortSettings("sge-ai") *)
+  .settings(
+    name := "balticporter-port-sge-ai-ref",
+    scalacOptions := sgeRelaxedFlags,
+    libraryDependencies ++= Seq(
+      "com.kubuszok"  %% "lls"   % "0.3.0",
+      "org.scalameta" %% "munit" % "1.2.0" % Test,
+      "junit"          % "junit"  % "4.12"  % Test,
+    ),
+  )
+
+lazy val `port-sge-textra-ref` = (project in file(".ports/sge-textra-ref"))
+  .dependsOn(`port-sge`.jvm(scalaV))
+  .settings(refPortSettings("sge-textra") *)
+  .settings(
+    name := "balticporter-port-sge-textra-ref",
+    scalacOptions := sgeRelaxedFlags,
+    libraryDependencies ++= Seq(
+      "com.kubuszok"              %% "lls"       % "0.3.0",
+      "com.github.tommyettinger"   % "regexodus" % "0.1.21",
+      "org.scalameta"             %% "munit"     % "1.2.0" % Test,
+    ),
+  )
+
+lazy val `port-sge-visui-ref` = (project in file(".ports/sge-visui-ref"))
+  .dependsOn(`port-sge`.jvm(scalaV))
+  .settings(refPortSettings("sge-visui") *)
+  .settings(
+    name := "balticporter-port-sge-visui-ref",
+    scalacOptions := sgeRelaxedFlags,
+    libraryDependencies ++= Seq(
+      "com.kubuszok"  %% "lls"   % "0.3.0",
+      "org.scalameta" %% "munit" % "1.2.0" % Test,
+    ),
+  )
+
+lazy val `port-sge-visui-usl-ref` = (project in file(".ports/sge-visui-usl-ref"))
+  .settings(refPortSettings("sge-visui-usl") *)
+  .settings(
+    name := "balticporter-port-sge-visui-usl-ref",
+    scalacOptions := sgeRelaxedFlags,
+    libraryDependencies ++= Seq(
+      "org.scalameta" %% "munit" % "1.2.0" % Test,
+    ),
+    Test / unmanagedResourceDirectories += (ThisBuild / baseDirectory).value / ".." / "sge" / "original-src" / "vis-ui" / "usl" / "src" / "test" / "resources",
+  )
+
+lazy val `port-ssg-liquid-ref` = (project in file(".ports/ssg-liquid-ref"))
+  .settings(refPortSettings("ssg-liquid") *)
+  .settings(
+    name := "balticporter-port-ssg-liquid-ref",
+    scalacOptions := ssgFlags,
+    libraryDependencies ++= Seq(
+      "org.antlr"                       % "antlr4-runtime"            % "4.13.0",
+      "com.fasterxml.jackson.core"      % "jackson-core"              % "2.15.0",
+      "com.fasterxml.jackson.core"      % "jackson-databind"          % "2.13.4.2",
+      "com.fasterxml.jackson.core"      % "jackson-annotations"       % "2.15.0",
+      "com.fasterxml.jackson.datatype"  % "jackson-datatype-jsr310"   % "2.15.0",
+      "ua.co.k"                          % "strftime4j"                % "1.0.6",
+      "com.kubuszok"                    %% "multiarch-serviceloader"   % "0.4.0-12-gc168b2f-SNAPSHOT",
+      "org.scalameta"                   %% "munit"                     % "1.2.0" % Test,
+      "junit"                            % "junit"                     % "4.13.1" % Test,
+    ),
+    resolvers += "Central Portal Snapshots" at "https://central.sonatype.com/repository/maven-snapshots",
+    Compile / unmanagedClasspath ++= {
+      val parserDir = (ThisBuild / baseDirectory).value / "out" / "liqp-parser-classes"
+      if (parserDir.exists()) {
+        val fc = fileConverter.value
+        Seq(Attributed.blank(fc.toVirtualFile(parserDir.toPath)))
+      } else Nil
+    },
+    Test / unmanagedClasspath ++= {
+      val parserDir = (ThisBuild / baseDirectory).value / "out" / "liqp-parser-classes"
+      if (parserDir.exists()) {
+        val fc = fileConverter.value
+        Seq(Attributed.blank(fc.toVirtualFile(parserDir.toPath)))
+      } else Nil
+    },
+  )
+
+lazy val `port-ssg-md-ref` = (project in file(".ports/ssg-md-ref"))
+  .settings(refPortSettings("ssg-md") *)
+  .settings(
+    name := "balticporter-port-ssg-md-ref",
+    scalacOptions := ssgFlags,
+    libraryDependencies ++= Seq(
+      "org.jetbrains"  % "annotations" % "24.0.1",
+      "org.scalameta" %% "munit"       % "1.2.0" % Test,
+      "junit"          % "junit"        % "4.13.2" % Test,
+    ),
+  )
+
+lazy val `port-ssg-md-ext-ref` = (project in file(".ports/ssg-md-ext-ref"))
+  .dependsOn(`port-ssg-md`.jvm(scalaV))
+  .settings(refPortSettings("ssg-md-ext") *)
+  .settings(
+    name := "balticporter-port-ssg-md-ext-ref",
+    scalacOptions := ssgFlags,
+    libraryDependencies ++= Seq(
+      "com.vladsch.flexmark" % "flexmark-ext-emoji" % "0.64.8" % Test,
+      "org.scalameta"       %% "munit"              % "1.2.0"  % Test,
+      "junit"                % "junit"               % "4.13.2" % Test,
+    ),
+  )
+
+// ---------------------------------------------------------------------------------------------
 // `ports` — an aggregate of EVERY ported module, NOT part of `root`. `sbt ports/compile`
 // reaches them all; `sbt compile` stays the engine's. The aggregate is over projectRefs so
 // that every platform row is included.
@@ -910,6 +1170,12 @@ lazy val ports = project
     `port-ssg-md-ext`.projectRefs *
   )
   .aggregate(`port-sge-ai-diff`, `port-sge-textra-diff`, `port-sge-visui-diff`)
+  .aggregate(
+    `port-sge-ref`, `port-sge-ecs-ref`, `port-sge-graphs-ref`, `port-sge-anim8-ref`,
+    `port-sge-noise-ref`, `port-sge-jbump-ref`, `port-sge-gltf-ref`, `port-sge-screens-ref`,
+    `port-sge-vfx-ref`, `port-sge-ai-ref`, `port-sge-textra-ref`, `port-sge-visui-ref`,
+    `port-sge-visui-usl-ref`, `port-ssg-liquid-ref`, `port-ssg-md-ref`, `port-ssg-md-ext-ref`,
+  )
   .settings(
     name := "balticporter-ports",
     publish / skip := true,

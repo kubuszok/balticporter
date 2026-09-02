@@ -243,8 +243,10 @@ scala_version := "3.8.4"
 # ACKNOWLEDGED by re-accepting every baseline (§5) — not absorbed. `DESIGN.md` §8.24 records the
 # delta between the two numbers.
 #
-# EXPORTED, so `scripts/_lib.sh`'s own two `scala-cli` invocations (`xplat_compile`, `flags_compile`)
-# and `jdk_guard`'s probe read the SAME variable rather than a second copy that can drift.
+# EXPORTED, so `scripts/_lib.sh`'s `jdk_guard` check reads the SAME variable rather than a
+# second copy that can drift. With sbt doing all compiles (JVM, JS, Native, ref), the JDK is
+# the sbt server's own JVM — which is the SAME JVM that runs the frontend. `jdk_guard` verifies
+# this matches `jdk_version`.
 export jdk_version := "22"
 
 # The MIGRATOR invocation. `sbt --client` connects to the warm server whose socket directory is
@@ -591,6 +593,13 @@ gdx-measure:
     echo "-- correlation: every error located to its member and its Java origin --"
     correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/gdxmeasure.txt --srcmap "$REPORT/run-latest/srcmap.tsv"
 
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-sgeJS/compile" "$REPORT"
+      sbt_xplat_compile native "port-sgeNative/compile" "$REPORT"
+      sbt_ref_compile "port-sge-ref/compile" "$REPORT"
+    fi
+
     headline "$ERRORS" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
@@ -695,6 +704,14 @@ gdx-test-measure:
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
     fi
 
+
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-sgeJS/Test/compile" "$REPORT"
+      sbt_xplat_compile native "port-sgeNative/Test/compile" "$REPORT"
+      sbt_ref_compile "port-sge-ref/Test/compile" "$REPORT"
+    fi
+
     headline "$ERRORS" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
@@ -786,6 +803,14 @@ ashley-measure:
       test_outcome_guard "$TREPORT/run-latest" "$RECONCILED" || exit 1
     else
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
+    fi
+
+
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-sge-ecsJS/compile" "$TREPORT"
+      sbt_xplat_compile native "port-sge-ecsNative/compile" "$TREPORT"
+      sbt_ref_compile "port-sge-ecs-ref/compile" "$TREPORT"
     fi
 
     headline "$ERRORS" "$TREPORT" "$REPORT"
@@ -896,6 +921,14 @@ anim8-measure:
         --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
         --srcmap "$REPORT/run-latest/srcmap.tsv"
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
+    fi
+
+
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-sge-anim8JS/compile" "$REPORT"
+      sbt_xplat_compile native "port-sge-anim8Native/compile" "$REPORT"
+      sbt_ref_compile "port-sge-anim8-ref/compile" "$REPORT"
     fi
 
     headline "$ERRORS" "$REPORT"
@@ -1024,6 +1057,14 @@ gltf-measure:
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
     fi
 
+
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-sge-gltfJS/compile" "$TREPORT"
+      sbt_xplat_compile native "port-sge-gltfNative/compile" "$TREPORT"
+      sbt_ref_compile "port-sge-gltf-ref/compile" "$TREPORT"
+    fi
+
     headline "$ERRORS" "$TREPORT" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
@@ -1141,6 +1182,14 @@ screens-measure:
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
     fi
 
+
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-sge-screensJS/compile" "$REPORT"
+      sbt_xplat_compile native "port-sge-screensNative/compile" "$REPORT"
+      sbt_ref_compile "port-sge-screens-ref/compile" "$REPORT"
+    fi
+
     headline "$ERRORS" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
@@ -1243,6 +1292,14 @@ vfx-measure:
         --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
         --srcmap "$REPORT/run-latest/srcmap.tsv"
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
+    fi
+
+
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-sge-vfxJS/compile" "$REPORT"
+      sbt_xplat_compile native "port-sge-vfxNative/compile" "$REPORT"
+      sbt_ref_compile "port-sge-vfx-ref/compile" "$REPORT"
     fi
 
     headline "$ERRORS" "$REPORT"
@@ -1362,6 +1419,14 @@ ai-measure:
       --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
       --srcmap "$REPORT/run-latest/srcmap.tsv"
 
+
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-sge-aiJS/compile" "$REPORT"
+      sbt_xplat_compile native "port-sge-aiNative/compile" "$REPORT"
+      sbt_ref_compile "port-sge-ai-ref/compile" "$REPORT"
+    fi
+
     headline "$ERRORS" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
@@ -1467,6 +1532,14 @@ ai-test-measure:
       test_outcome_guard "$REPORT/run-latest" "$RECONCILED" || exit 1
     else
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
+    fi
+
+
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-sge-aiJS/Test/compile" "$REPORT"
+      sbt_xplat_compile native "port-sge-aiNative/Test/compile" "$REPORT"
+      sbt_ref_compile "port-sge-ai-ref/Test/compile" "$REPORT"
     fi
 
     headline "$ERRORS" "$REPORT"
@@ -1689,6 +1762,14 @@ sg-measure:
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
     fi
 
+
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-sge-graphsJS/compile" "$TREPORT"
+      sbt_xplat_compile native "port-sge-graphsNative/compile" "$TREPORT"
+      sbt_ref_compile "port-sge-graphs-ref/compile" "$TREPORT"
+    fi
+
     headline "$ERRORS" "$TREPORT" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
@@ -1773,6 +1854,14 @@ noise4j-measure:
     # compile output is the only diagnostic this port has and it is always worth attributing.
     correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/n4jmeasure.txt \
       --srcmap "$REPORT/run-latest/srcmap.tsv"
+
+
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-sge-noiseJS/compile" "$REPORT"
+      sbt_xplat_compile native "port-sge-noiseNative/compile" "$REPORT"
+      sbt_ref_compile "port-sge-noise-ref/compile" "$REPORT"
+    fi
 
     headline "$ERRORS" "$REPORT"
 
@@ -1922,6 +2011,14 @@ jbump-measure:
     echo "-- correlation: nothing to locate (0 errors); the source map is still published --"
     correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/jbumpmeasure.txt \
       --srcmap "$REPORT/run-latest/srcmap.tsv"
+
+
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-sge-jbumpJS/compile" "$REPORT"
+      sbt_xplat_compile native "port-sge-jbumpNative/compile" "$REPORT"
+      sbt_ref_compile "port-sge-jbump-ref/compile" "$REPORT"
+    fi
 
     headline "$ERRORS" "$REPORT"
 
@@ -2150,6 +2247,14 @@ usl-measure:
       exit 1
     fi
 
+
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-sge-visui-uslJS/compile" "$REPORT"
+      sbt_xplat_compile native "port-sge-visui-uslNative/compile" "$REPORT"
+      sbt_ref_compile "port-sge-visui-usl-ref/compile" "$REPORT"
+    fi
+
     headline "$ERRORS" "$REPORT"
 
 
@@ -2269,6 +2374,14 @@ usl-test-measure:
         --srcmap "$REPORT/run-latest/srcmap.tsv" \
         --srcmap "test=$TREPORT/run-latest/srcmap.tsv"
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
+    fi
+
+
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-sge-visui-uslJS/Test/compile" "$TREPORT"
+      sbt_xplat_compile native "port-sge-visui-uslNative/Test/compile" "$TREPORT"
+      sbt_ref_compile "port-sge-visui-usl-ref/Test/compile" "$TREPORT"
     fi
 
     headline "$ERRORS" "$TREPORT" "$REPORT"
@@ -2493,6 +2606,14 @@ liqp-measure:
       echo "   Every CLAUDE.md §4.4 form in this port is UNMEASURED until that line stops printing."
     fi
 
+
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-ssg-liquidJS/compile" "$TREPORT"
+      sbt_xplat_compile native "port-ssg-liquidNative/compile" "$TREPORT"
+      sbt_ref_compile "port-ssg-liquid-ref/compile" "$TREPORT"
+    fi
+
     headline "$ERRORS" "$TREPORT" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
@@ -2620,6 +2741,14 @@ md-measure:
     # compile output is the only diagnostic this port has and it is always worth attributing.
     correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/mdmeasure.txt \
       --srcmap "$REPORT/run-latest/srcmap.tsv"
+
+
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-ssg-mdJS/compile" "$REPORT"
+      sbt_xplat_compile native "port-ssg-mdNative/compile" "$REPORT"
+      sbt_ref_compile "port-ssg-md-ref/compile" "$REPORT"
+    fi
 
     headline "$ERRORS" "$REPORT"
 
@@ -2759,6 +2888,14 @@ md-test-measure:
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
       echo "   $JAVA_TESTS java @Test are emitted as $MUNIT_TESTS munit registrations and NONE OF THEM RUNS."
       echo "   Every CLAUDE.md §4.4 form in this port is UNMEASURED until that line stops printing."
+    fi
+
+
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-ssg-mdJS/Test/compile" "$TREPORT"
+      sbt_xplat_compile native "port-ssg-mdNative/Test/compile" "$TREPORT"
+      sbt_ref_compile "port-ssg-md-ref/Test/compile" "$TREPORT"
     fi
 
     headline "$ERRORS" "$TREPORT"
@@ -3009,6 +3146,14 @@ md-ext-measure:
       echo "   that line stops printing this milestone has a compile and no evidence (CLAUDE.md §3)."
     fi
 
+
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-ssg-md-extJS/compile" "$EREPORT"
+      sbt_xplat_compile native "port-ssg-md-extNative/compile" "$EREPORT"
+      sbt_ref_compile "port-ssg-md-ext-ref/compile" "$EREPORT"
+    fi
+
     headline "$ERRORS" "$EREPORT"
 
 # ---------------------------------------------------------------------------------------------
@@ -3157,6 +3302,14 @@ textra-measure:
     correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/textrameasure.txt \
       --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
       --srcmap "$REPORT/run-latest/srcmap.tsv"
+
+
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-sge-textraJS/compile" "$REPORT"
+      sbt_xplat_compile native "port-sge-textraNative/compile" "$REPORT"
+      sbt_ref_compile "port-sge-textra-ref/compile" "$REPORT"
+    fi
 
     headline "$ERRORS" "$REPORT"
 
@@ -3465,6 +3618,14 @@ visui-measure:
       --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
       --srcmap "$REPORT/run-latest/srcmap.tsv"
 
+
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-sge-visuiJS/compile" "$REPORT"
+      sbt_xplat_compile native "port-sge-visuiNative/compile" "$REPORT"
+      sbt_ref_compile "port-sge-visui-ref/compile" "$REPORT"
+    fi
+
     headline "$ERRORS" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
@@ -3602,6 +3763,74 @@ visui-diff-measure:
     headline "$ERRORS" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
+# FULL-MODE RECIPES — delegate to the regular lane with BP_FULL=1, which adds JS, Native and
+# reference-flags compiles. The JVM-first lane (`just gdx-measure`) is the fast-iteration path
+# (one migration + one incremental JVM compile); the full lane (`just gdx-measure-full`) is the
+# full-cycle gate (`measure-all` uses it). Diff lanes do not have full variants — they compile
+# hand-port tests, not emitted code.
+# ---------------------------------------------------------------------------------------------
+[doc("libGDX core — full: JVM + JS + Native + ref-flags compile")]
+gdx-measure-full:
+    BP_FULL=1 {{just_executable()}} gdx-measure
+[doc("libGDX's own suite — full")]
+gdx-test-measure-full:
+    BP_FULL=1 {{just_executable()}} gdx-test-measure
+[doc("Ashley + its suite — full")]
+ashley-measure-full:
+    BP_FULL=1 {{just_executable()}} ashley-measure
+[doc("anim8-gdx — full")]
+anim8-measure-full:
+    BP_FULL=1 {{just_executable()}} anim8-measure
+[doc("gdx-gltf + its suite — full")]
+gltf-measure-full:
+    BP_FULL=1 {{just_executable()}} gltf-measure
+[doc("libgdx-screenmanager — full")]
+screens-measure-full:
+    BP_FULL=1 {{just_executable()}} screens-measure
+[doc("gdx-vfx — full")]
+vfx-measure-full:
+    BP_FULL=1 {{just_executable()}} vfx-measure
+[doc("gdx-ai — full")]
+ai-measure-full:
+    BP_FULL=1 {{just_executable()}} ai-measure
+[doc("gdx-ai's JUnit suite — full")]
+ai-test-measure-full:
+    BP_FULL=1 {{just_executable()}} ai-test-measure
+[doc("simple-graphs + its suite — full")]
+sg-measure-full:
+    BP_FULL=1 {{just_executable()}} sg-measure
+[doc("noise4j — full")]
+noise4j-measure-full:
+    BP_FULL=1 {{just_executable()}} noise4j-measure
+[doc("jbump — full")]
+jbump-measure-full:
+    BP_FULL=1 {{just_executable()}} jbump-measure
+[doc("USL — full")]
+usl-measure-full:
+    BP_FULL=1 {{just_executable()}} usl-measure
+[doc("USL's own suite — full")]
+usl-test-measure-full:
+    BP_FULL=1 {{just_executable()}} usl-test-measure
+[doc("liqp + its own 105-file suite — full")]
+liqp-measure-full:
+    BP_FULL=1 {{just_executable()}} liqp-measure
+[doc("flexmark-java core + util modules — full")]
+md-measure-full:
+    BP_FULL=1 {{just_executable()}} md-measure
+[doc("flexmark-util's own suite — full")]
+md-test-measure-full:
+    BP_FULL=1 {{just_executable()}} md-test-measure
+[doc("flexmark extension modules — full")]
+md-ext-measure-full:
+    BP_FULL=1 {{just_executable()}} md-ext-measure
+[doc("TextraTypist — full")]
+textra-measure-full:
+    BP_FULL=1 {{just_executable()}} textra-measure
+[doc("VisUI — full")]
+visui-measure-full:
+    BP_FULL=1 {{just_executable()}} visui-measure
+
+# ---------------------------------------------------------------------------------------------
 # Every lane, SERIALLY, in dependency order — never in parallel.
 #
 # Each lane re-emits into `src_managed/`, so `gdx-test-measure` and `ashley-measure` compile against
@@ -3662,9 +3891,13 @@ measure-all:
     # that source set (`test.conf` has `base = "main.conf"`) and its compile links against the main
     # `src_managed/`, so run first it would measure the previous engine's emit of the library it
     # tests. It re-emits BOTH source sets, which is what keeps the pair honest either way round.
+    # BP_FULL=1: every non-diff lane runs JS, Native and reference-flags compiles in addition to
+    # JVM. Diff lanes (ai-diff, textra-diff, visui-diff) compile hand-port tests and do not carry
+    # xplat/ref compiles — BP_FULL has no effect on them.
+    export BP_FULL=1
     for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure ai-measure ai-test-measure ai-diff-measure textra-measure textra-diff-measure visui-measure visui-diff-measure usl-measure usl-test-measure; do
       echo
-      echo "################################################################## just $lane"
+      echo "################################################################## just $lane (full)"
       if ! {{just_executable()}} "$lane"; then
         echo "!! $lane FAILED — stopping; the remaining lanes would compile against a stale emit"
         exit 1

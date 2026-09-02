@@ -96,19 +96,15 @@ jdk_guard() {
   # this costs ~0.4s rather than a Scala compilation, and it answers about the JVM `scala-cli`
   # ACTUALLY selects — which is the question, `--jvm` overriding `JAVA_HOME` and both overriding the
   # system default.
-  local probe="$MEASURE_TMP/BpJdkProbe.java"
-  cat > "$probe" <<'PROBE'
-public class BpJdkProbe {
-  public static void main(String[] a) { System.out.println(System.getProperty("java.specification.version")); }
-}
-PROBE
+  # The COMPILE JDK. With sbt doing all compiles, the compile JDK is the SAME sbt server's JVM
+  # that ran the frontend. Derived from `java -XshowSettings:property` on the PATH's JDK, which
+  # is the one the sbt server was started under. This replaced a scala-cli probe.
   local compile
-  compile=$(scala-cli run --server=false ${jdk_version:+--jvm "$jdk_version"} "$probe" 2>/dev/null \
-            | sed 's/\x1b\[[0-9;]*m//g' | grep -E '^[0-9]+(\.[0-9]+)*$' | tail -1)
+  compile=$(java -XshowSettings:properties -version 2>&1 | grep 'java.specification.version' | sed 's/.*= *//')
   if [ -z "$compile" ]; then
-    echo "!! COULD NOT DERIVE THE COMPILE JDK — \`scala-cli run\` over a one-line java probe printed"
-    echo "   no version. The frontend recorded JDK $frontend; the compiler's half is UNKNOWN, and"
-    echo "   'I could not check' is not 'they agree' (CLAUDE.md §3)."
+    echo "!! COULD NOT DERIVE THE COMPILE JDK — \`java -XshowSettings:property\` printed no"
+    echo "   specification version. The frontend recorded JDK $frontend; the compiler's half is"
+    echo "   UNKNOWN, and 'I could not check' is not 'they agree' (CLAUDE.md §3)."
     exit 1
   fi
 
@@ -1428,64 +1424,33 @@ headline() {
   done
 }
 
-# xplat_compile <platform> <scala-version> <report-dir> <capture-basename> <source-dirs...> [-- <extra-flags...>]
+# sbt_xplat_compile <platform-suffix> <sbt-task> <report-dir>
 #
-# Cross-platform compile gate: runs `scala-cli compile --platform <platform>` over the same
-# source tree the JVM lane just compiled, counts errors, and baselines them.
+# Cross-platform compile gate via sbt: runs `sbt --client <task>` (e.g. `port-sgeJS/compile`),
+# counts errors, and baselines them as `expected-errors.{js,native}`.
 #
-# This is a COMPILE gate, not a portability gate (ENGINE-LIMITS P1): the Scala.js and Native
-# compilers type-check against their own javalib, so a `java.lang.reflect.Field` that the JVM
-# has and JS/Native do not is a real compile error here. The portability(all|emitted|injected)
-# lanes stay as the TIR-level API-presence check.
-#
-# DEPENDENCIES are passed through the `--` separator, the SAME classpath the JVM compile gets.
-# Both coordinate forms resolve on JS/Native for TYPE-CHECKING (not linking, which is not what
-# this lane does): a Scala cross-published artifact (`org.scalameta::munit:1.0.2`, the `::`
-# platform form) resolves the platform-specific JAR, and a Java-only artifact
-# (`junit:junit:4.13.2`, the `:` form) resolves the JVM JAR whose class files scalac reads for
-# type signatures. `portability(all|emitted|injected)` stays as the TIR-level check for
-# whether those APIs exist off-JVM (ENGINE-LIMITS P1).
-#
-# `declared_dep_flags` output (explicit JVM coordinates, `org:name_3:rev`) also resolves on
-# JS/Native — scalac type-checks against JVM class files, only linking would fail.
-# `--jar` directories (e.g. liqp_parser_classes) are passed the same way.
-#
-# Each call site in the Justfile passes its lane's deps after `--`, e.g.:
-#   xplat_compile scala-js ... <srcs> -- --test $DEPS
+# This REPLACES the scala-cli-based `xplat_compile`. The JS and Native rows of each port's
+# `projectMatrix` type-check against their platform's own javalib, so a `java.lang.reflect.Field`
+# the JVM has and JS/Native do not is a real compile error here. Dependencies are in build.sbt
+# (the projectMatrix rows inherit them), so no `--dependency` flags are needed.
 #
 # The JS and Native version pins come from `project/plugins.sbt` and match sge's toolchain:
-# Scala.js 1.22.0, Scala Native 0.5.12. scala-cli 1.16.0 defaults to these exact versions,
-# so no explicit version flags are needed.
-xplat_compile() {
-  local platform="$1" scala_ver="$2" report_dir="$3" capture_base="$4"
-  shift 4
-  # Collect source dirs until we hit '--' or run out
-  local -a srcs=()
-  local -a extra_flags=()
-  local past_sep=0
-  for arg in "$@"; do
-    if [ "$arg" = "--" ]; then past_sep=1; continue; fi
-    if [ "$past_sep" = "1" ]; then extra_flags+=("$arg"); else srcs+=("$arg"); fi
-  done
+# Scala.js 1.22.0, Scala Native 0.5.12.
+sbt_xplat_compile() {
+  local plat_suffix="$1" task="$2" report_dir="$3"
 
-  local plat_suffix
-  case "$platform" in
-    scala-js)     plat_suffix="js" ;;
-    scala-native) plat_suffix="native" ;;
-    *)            echo "!! xplat_compile: unknown platform '$platform'"; return 1 ;;
-  esac
-
-  local cap="$MEASURE_TMP/${capture_base}.${plat_suffix}.txt"
+  local cap="$MEASURE_TMP/xplat-${plat_suffix}-$$.txt"
   echo
-  echo "-- cross-platform compile: ${plat_suffix} --"
-  scala-cli compile --platform "$platform" --scala "$scala_ver" --server=false ${jdk_version:+--jvm "$jdk_version"} \
-    "${extra_flags[@]}" "${srcs[@]}" \
-    2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$cap"
-  local cli_st=${PIPESTATUS[0]}
+  echo "-- cross-platform compile: ${plat_suffix} (sbt $task) --"
+  _sbt_run "$task" 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$cap"
+  local sbt_st=${PIPESTATUS[0]}
+  local stripped="$cap.stripped"
+  sed 's/^\[error\] //; s/^\[warn\] //; s/^\[info\] //' "$cap" > "$stripped"
   local errors
-  errors=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$cap")
+  errors=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$stripped")
+  mv "$stripped" "$cap"
   # compile_guard for the xplat compile — abort/crash detection
-  compile_guard "$cli_st" "$errors" "$cap"
+  compile_guard "$sbt_st" "$errors" "$cap"
   echo "TOTAL ERRORS (${plat_suffix}): $errors  (coded $(grep -cE '\[E[0-9]+\].*Error' "$cap") + bare $(grep -cE '^-- Error:' "$cap"))"
   # top error families
   grep -oE "\[E[0-9]+\][^:]*Error" "$cap" | sort | uniq -c | sort -rn | head -5
@@ -1519,87 +1484,46 @@ xplat_compile() {
   : > "$marker"; return 1
 }
 
-# flags_compile <scala-version> <report-dir> <capture-basename> <flags-string> <source-dirs...> [-- <extra-flags...>]
+# sbt_ref_compile <sbt-task> <report-dir>
 #
-# REFERENCE-BUILD compile gate: runs `scala-cli compile` with the reference repo's own
-# scalacOptions over the emitted tree and counts errors, baselined as `expected-errors.ref`.
+# REFERENCE-BUILD compile gate via sbt: runs `sbt --client <task>` (e.g. `port-sge-ref/compile`),
+# counts errors INCLUDING warnings promoted by `-Werror`, and baselines as `expected-errors.ref`.
 #
-# This is the FOURTH compile in every lane (after JVM, JS, Native). The reference build
-# compiles with `-no-indent -Werror -Wunused:privates,locals,patvars …` — flags that promote
-# warnings to errors and reject indentation syntax. A port that is green under scala-cli's
-# defaults and red under `-no-indent -Werror` is not at the bar (DESIGN.md §8.24).
+# This REPLACES the scala-cli-based `flags_compile`. The `port-*-ref` projects in build.sbt
+# carry the reference repo's own scalacOptions (sge_strict_flags, sge_relaxed_flags, ssg_flags
+# — which include `-Werror`), so no flag string is needed here.
 #
-# The FLAGS are a whitespace-separated string, read from a Justfile variable that states the
-# source (SgePlugin.strictScalacOptions for sge ports, ssg/build.sbt for ssg ports). Macro
-# settings (`-Xmacro-settings:*`) are dropped — they are timeouts that carry no diagnostic
-# and produce no warning.
+# SCOPING IS STRUCTURAL: a dependent's `-ref` project `dependsOn` the base port's JVM row (with
+# `-nowarn`), so only the dependent's own diagnostics appear. The old `flags_compile` had to
+# filter the base's diagnostics by path prefix; sbt's project graph does it by construction.
 #
-# The compile is run through the correlator so that the resulting `errors.tsv`-style output
-# carries the member column — a `-Werror` row is a scalac diagnostic like any other, and the
-# agent needs to know which Java line produced the unused local.
-#
-# The baseline file is `expected-errors.ref`, the marker file is `errors-baseline-failed.ref`,
-# and both travel through `headline` like the other three compile gates.
-flags_compile() {
-  local scala_ver="$1" report_dir="$2" capture_base="$3" flags_str="$4"
-  shift 4
-  # Collect source dirs until we hit '--' or run out
-  local -a srcs=()
-  local -a extra_flags=()
-  local past_sep=0
-  for arg in "$@"; do
-    if [ "$arg" = "--" ]; then past_sep=1; continue; fi
-    if [ "$past_sep" = "1" ]; then extra_flags+=("$arg"); else srcs+=("$arg"); fi
-  done
+# -Werror WARNING COUNTING: under -Werror, scalac prints warnings as `-- [Exxx] ... Warning:`
+# and adds one closing error `No warnings can be incurred under -Werror`. The warnings ARE the
+# count. This function always counts both Error and Warning diagnostics, since every `-ref`
+# project carries `-Werror` in its scalacOptions.
+sbt_ref_compile() {
+  local task="$1" report_dir="$2"
 
-  # Parse the flags string, dropping -Xmacro-settings:*
-  local -a ref_flags=()
-  for flag in $flags_str; do
-    case "$flag" in
-      -Xmacro-settings:*) ;; # dropped: macro timeouts, not diagnostics
-      *) ref_flags+=("$flag") ;;
-    esac
-  done
-
-  if [ "${#ref_flags[@]}" = "0" ]; then
-    echo "!! flags_compile: no reference flags — nothing to compile with"
-    return 1
-  fi
-
-  local cap="$MEASURE_TMP/${capture_base}.ref.txt"
+  local cap="$MEASURE_TMP/ref-compile-$$.txt"
   echo
-  echo "-- reference-flags compile: ${ref_flags[*]} --"
-  scala-cli compile --scala "$scala_ver" --server=false ${jdk_version:+--jvm "$jdk_version"} \
-    "${ref_flags[@]}" "${extra_flags[@]}" "${srcs[@]}" \
-    2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$cap"
-  local cli_st=${PIPESTATUS[0]}
-  # SCOPE: count only diagnostics in the MODULE THIS LANE MEASURES. A dependent lane passes its
-  # base's emitted tree as SOURCES (scala-cli has no jar of it), so the base's own `-Werror`
-  # warnings would land in the dependent's count a second time — measured 2026-08-26: anim8 read
-  # 307 of which 262 were the base's deprecations, already counted as gdx's 651. The module is the
-  # root of the LAST source dir (everything up to `/src_managed` or `/src`); its main and test trees
-  # are both "own", the base's tree is not, and the excluded count is printed so nobody reads 0.
-  local own_root; own_root="${srcs[${#srcs[@]}-1]}"
-  own_root="${own_root%%/src_managed/*}"; own_root="${own_root%%/src/*}"
-  local own_cap="$cap.own"
-  awk -v root="$own_root/" 'BEGIN{keep=0} /^-- /{keep=index($0, root)>0} {if(keep)print}' "$cap" > "$own_cap"
-  local errors werrors=0 excluded
-  errors=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$own_cap")
-  excluded=$(( $(grep -cE '^-- (\[E[0-9]+\] )?.*(Error|Warning)' "$cap") - $(grep -cE '^-- (\[E[0-9]+\] )?.*(Error|Warning)' "$own_cap") ))
-  echo "   (scoped to $own_root — $excluded diagnostic(s) in other trees on the source path are the BASE's and counted by its own lane)"
-  # Under -Werror EVERY warning diagnostic is an error in the reference build: scalac still prints
-  # them as `-- Warning:` / `-- [Exxx] … Warning:` and adds ONE closing error, `No warnings can be
-  # incurred under -Werror`, which matches no Error pattern above — so a tree with 307 warnings
-  # and no real error counted 0 and compile_guard refused to report it (measured on anim8,
-  # 2026-08-26). The warnings ARE the count; the closing line is not a diagnostic of its own.
-  case " ${ref_flags[*]} " in
-    *" -Werror "*) werrors=$(grep -cE '^-- (\[E[0-9]+\] )?.*Warning' "$own_cap"); errors=$((errors + werrors)) ;;
-  esac
-  # compile_guard for the ref compile — abort/crash detection
-  compile_guard "$cli_st" "$((errors + excluded))" "$cap"
-  echo "TOTAL ERRORS (ref): $errors  (coded $(grep -cE '\[E[0-9]+\].*Error' "$own_cap") + bare $(grep -cE '^-- Error:' "$own_cap") + warnings-under-Werror $werrors)"
+  echo "-- reference-flags compile (sbt $task) --"
+  _sbt_run "$task" 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$cap"
+  local sbt_st=${PIPESTATUS[0]}
+  local stripped="$cap.stripped"
+  sed 's/^\[error\] //; s/^\[warn\] //; s/^\[info\] //' "$cap" > "$stripped"
+  local errors werrors
+  errors=$(grep -cE '^-- (\[E[0-9]+\] )?.*Error' "$stripped")
+  # Under -Werror every warning is promoted. Count them as errors.
+  werrors=$(grep -cE '^-- (\[E[0-9]+\] )?.*Warning' "$stripped")
+  errors=$((errors + werrors))
+  mv "$stripped" "$cap"
+  # compile_guard for the ref compile — abort/crash detection. Pass the total including the
+  # warnings, because under -Werror a tree with 307 warnings and no real error has a non-zero
+  # count that compile_guard must not refuse to report.
+  compile_guard "$sbt_st" "$errors" "$cap"
+  echo "TOTAL ERRORS (ref): $errors  (coded $(grep -cE '\[E[0-9]+\].*Error' "$cap") + bare $(grep -cE '^-- Error:' "$cap") + warnings-under-Werror $werrors)"
   # top families, warnings included — under -Werror they are the population
-  grep -oE "\[E[0-9]+\][^:]*(Error|Warning)|^-- (Error|Warning)" "$own_cap" | sort | uniq -c | sort -rn | head -6
+  grep -oE "\[E[0-9]+\][^:]*(Error|Warning)|^-- (Error|Warning)" "$cap" | sort | uniq -c | sort -rn | head -6
 
   # baseline guard — same logic as error_baseline_guard but with a .ref suffix
   local expected_file="$report_dir/baseline/expected-errors.ref"
