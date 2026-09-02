@@ -286,5 +286,19 @@ object AshleyPolicy:
   /** Ashley's own JUnit suite, as a dependent of [[core]]. */
   def test(repoRoot: Path): PortManifest = core(repoRoot).extendedBy(PortManifest(
     name    = "sge-ecs-test",
-    surface = List(new balticporter.transform.TestFrameworkTransform()),
+    surface = List(
+      new balticporter.transform.TestFrameworkTransform(),
+      // --- 3.2g: adapt forbiddenRemoval body ---
+      // The java test calls `iterator().remove()` which throws GdxRuntimeException.
+      // Scala's Iterator has no `remove()` — the read-only invariant is enforced by the type
+      // system. The sge hand port's ImmutableArraySuite (lines 95-123) replaces this with a
+      // verification that iteration works correctly and does not mutate the backing data.
+      // Citation: ../sge/sge-extension/ecs/src/test/scala/sge/ecs/utils/ImmutableArraySuite.scala:103-106
+      new balticporter.transform.MethodBodyTransform(Map(
+        "com.badlogic.ashley.utils.ImmutableArrayTests#forbiddenRemoval" ->
+          // Verify the iterator is read-only by type system — iteration works, backing unmodified.
+          // Uses the emitted namespace (sge.ecs).
+          """{ val iter = immutable.iterator; val first = iter.next(); munit.Assertions.assertEquals(first, 0.asInstanceOf[java.lang.Integer]); var count: scala.Int = 1; while (iter.hasNext) { iter.next(); count = count + 1 }; munit.Assertions.assertEquals(count, 10); munit.Assertions.assertEquals(immutable.size, 10); { var i: scala.Int = 0; while (i < 10) { munit.Assertions.assertEquals(immutable.get(i), i.asInstanceOf[java.lang.Integer]); i = i + 1 } } }""",
+      )),
+    ),
   ))
