@@ -794,10 +794,11 @@ lazy val `port-ssg-md-ext` = (projectMatrix in file("ported/ssg-md-ext"))
   .settings(
     name := "balticporter-port-ssg-md-ext",
     libraryDependencies ++= Seq(
-      // The ONE third-party coordinate the extension modules declare.
-      "com.vladsch.flexmark" % "flexmark-ext-emoji" % "0.64.8" % Test,
-      "org.scalameta"       %% "munit"              % "1.2.0"  % Test,
-      "junit"                % "junit"               % "4.13.2" % Test,
+      // The TWO third-party coordinates the extension modules declare.
+      "org.nibor.autolink"   % "autolink"            % "0.6.0",
+      "com.vladsch.flexmark" % "flexmark-ext-emoji"  % "0.64.8" % Test,
+      "org.scalameta"       %% "munit"               % "1.2.0"  % Test,
+      "junit"                % "junit"                % "4.13.2" % Test,
     ),
   )
   .jvmPlatform(scalaVersions = Seq(scalaV))
@@ -1108,9 +1109,10 @@ lazy val `port-ssg-md-ext-ref` = (project in file(".ports/ssg-md-ext-ref"))
     name := "balticporter-port-ssg-md-ext-ref",
     scalacOptions := ssgFlags,
     libraryDependencies ++= Seq(
-      "com.vladsch.flexmark" % "flexmark-ext-emoji" % "0.64.8" % Test,
-      "org.scalameta"       %% "munit"              % "1.2.0"  % Test,
-      "junit"                % "junit"               % "4.13.2" % Test,
+      "org.nibor.autolink"   % "autolink"            % "0.6.0",
+      "com.vladsch.flexmark" % "flexmark-ext-emoji"  % "0.64.8" % Test,
+      "org.scalameta"       %% "munit"               % "1.2.0"  % Test,
+      "junit"                % "junit"                % "4.13.2" % Test,
     ),
   )
 

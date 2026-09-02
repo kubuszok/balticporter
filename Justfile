@@ -4829,6 +4829,51 @@ baseline-accept PORT:
 # WHY NOT RE-PIN AUTOMATICALLY: a re-pin changes what every port resolves against, which is a
 # per-port measurement with its own baseline to acknowledge. The lane reports; the fix is manual.
 # ---------------------------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------------------------
+# DEPENDENCY LINT — verifies that each port's `build.sbt` coordinates agree with what the port's
+# manifest published in `run-latest/dependencies.tsv` (DESIGN.md §8.24).
+#
+# Dependencies are declared in TWO places: the port's `.conf` manifest (`dependencies = [...]`)
+# and `build.sbt`'s `libraryDependencies`. This lint fails when the `onClasspath=yes` coordinates
+# from the manifest differ from the coordinates in `build.sbt`, catching a revision bumped in one
+# and not the other — the same failure `declared_dep_flags` was written for in the scala-cli era.
+#
+# REQUIRES A RUN: reads `port-report/*/run-latest/dependencies.tsv`, which `PortRun` writes.
+# Run `just measure-all` first, or individual lanes for the ports you changed.
+# ---------------------------------------------------------------------------------------------
+[doc("fail when a port-* project's libraryDependencies disagree with the port's declared dependencies")]
+deps-lint:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    bad=0
+    for report in port-report/*/run-latest/dependencies.tsv; do
+      [ -f "$report" ] || continue
+      port_name=$(basename "$(dirname "$(dirname "$report")")")
+      # Extract onClasspath=yes coordinates from the manifest
+      manifest_deps=$(awk -F'\t' '!/^#/ && $7 == "yes" && $6 != "" { print $6 }' "$report" | sort)
+      [ -z "$manifest_deps" ] && continue
+      # Check each coordinate exists in build.sbt (as a substring match on org:name:version)
+      while IFS= read -r coord; do
+        # Parse org:name_suffix:version from the coordinate
+        org=$(echo "$coord" | cut -d: -f1)
+        name=$(echo "$coord" | cut -d: -f2 | sed 's/_3$//')  # strip Scala suffix
+        version=$(echo "$coord" | cut -d: -f3)
+        # Search for the coordinate in build.sbt (allowing %% and % forms)
+        if ! grep -q "\"$org\".*\"$name\".*\"$version\"" build.sbt; then
+          echo "!! $port_name: manifest declares $coord but build.sbt does not have $org / $name / $version"
+          bad=1
+        fi
+      done <<< "$manifest_deps"
+    done
+    if [ "$bad" = "0" ]; then
+      echo "deps-lint: all port-* coordinates agree with their manifests"
+    else
+      echo "!! deps-lint FAILED — coordinates above are in the manifest but not in build.sbt"
+      echo "   (or vice versa). Update build.sbt or the port's .conf to match."
+      exit 1
+    fi
+
 [doc("check every vendored upstream tree against the reference repo's submodule pin")]
 upstream-pin:
     #!/usr/bin/env bash
