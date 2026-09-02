@@ -296,9 +296,12 @@ object AshleyPolicy:
       // Citation: ../sge/sge-extension/ecs/src/test/scala/sge/ecs/utils/ImmutableArraySuite.scala:103-106
       new balticporter.transform.MethodBodyTransform(Map(
         "com.badlogic.ashley.utils.ImmutableArrayTests#forbiddenRemoval" ->
-          // Verify the iterator is read-only by type system — iteration works, backing unmodified.
-          // Uses the emitted namespace (sge.ecs).
-          """{ val iter = immutable.iterator; val first = iter.next(); munit.Assertions.assertEquals(first, 0.asInstanceOf[java.lang.Integer]); var count: scala.Int = 1; while (iter.hasNext) { iter.next(); count = count + 1 }; munit.Assertions.assertEquals(count, 10); munit.Assertions.assertEquals(immutable.size, 10); { var i: scala.Int = 0; while (i < 10) { munit.Assertions.assertEquals(immutable.get(i), i.asInstanceOf[java.lang.Integer]); i = i + 1 } } }""",
+          // Verify the iterator is read-only by type system -- iteration works, backing unmodified.
+          // Uses the emitted namespace (sge.ecs). Must define its own `array` and `immutable`
+          // locals because MethodBodyTransform replaces the WHOLE body and the original java
+          // method defined them as locals (no class-level fields).
+          // Citation: ../sge/sge-extension/ecs/src/test/scala/sge/ecs/utils/ImmutableArraySuite.scala:103-106
+          """{ val array: lowlevel.util.DynamicArray[java.lang.Integer] = lowlevel.util.DynamicArray.apply[java.lang.Integer](); val immutable: sge.ecs.utils.ImmutableArray[java.lang.Integer] = new sge.ecs.utils.ImmutableArray[java.lang.Integer](array); { var i: scala.Int = 0; while (i < 10) { array.add(i.asInstanceOf[java.lang.Integer]); i = i + 1 } }; val iter = immutable.iterator; val first = iter.next(); munit.Assertions.assertEquals(first, 0.asInstanceOf[java.lang.Integer]); var count: scala.Int = 1; while (iter.hasNext) { iter.next(); count = count + 1 }; munit.Assertions.assertEquals(count, 10); munit.Assertions.assertEquals(immutable.size, 10); { var i: scala.Int = 0; while (i < 10) { munit.Assertions.assertEquals(immutable.get(i), i.asInstanceOf[java.lang.Integer]); i = i + 1 } } }""",
       )),
     ),
   ))

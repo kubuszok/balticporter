@@ -29,9 +29,9 @@ import lowlevel.util.DynamicArray
 trait Pool[A] {
 
   /** The maximum number of objects that will be pooled. */
-  protected val max: Int
+  protected[utils] val max: Int
 
-  protected val initialCapacity: Int
+  protected[utils] val initialCapacity: Int
 
   var peak: Int = 0
 
