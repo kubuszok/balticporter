@@ -291,4 +291,13 @@ object AshleyPolicy:
   def test(repoRoot: Path): PortManifest = core(repoRoot).extendedBy(PortManifest(
     name    = "sge-ecs-test",
     surface = List(new balticporter.transform.TestFrameworkTransform()),
+    dropMethods = Set(
+      // `ImmutableArrayTests.forbiddenRemoval` tests that `iterator().remove()` throws
+      // GdxRuntimeException. The injected ImmutableArray extends `Iterable[A]` whose
+      // `iterator` is parenless, and Scala's `Iterator` has no `remove()` method at all.
+      // The test cannot compile: E050 `method iterator does not take parameters` (K35).
+      // The sge hand port's ImmutableArraySuite tests the same shape with scala's own
+      // `UnsupportedOperationException` pattern, so the coverage is not lost.
+      "com.badlogic.ashley.utils.ImmutableArrayTests#forbiddenRemoval",
+    ),
   ))
