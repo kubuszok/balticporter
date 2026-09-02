@@ -448,6 +448,28 @@ object GdxAiPolicy:
         // `ClassReflection.isInstance` files NO row and produces no error — the engine already
         // rewrites it to `isInstanceOf`, which is the difference between a reflective API and a
         // reflective MECHANISM.
+        // --- 3.1aq: MkArray[T] given threading for generic classes that construct retarget targets.
+        // A retarget construction like `DynamicArray.apply[T]()` uses `summonInline[MkArray[T]]`,
+        // which needs `MkArray[T]` in scope. For a generic class whose body constructs one with its
+        // own type parameter, `requiredGivens` adds `(using MkArray[T])` to the constructors.
+        // Section 1(b) — per-library policy: WHICH classes need the given.
+        // The base carries the same mechanism for its own generic classes (Octree, BSpline, etc.);
+        // the dependent adds entries for ITS OWN classes through MergeablePolicy.
+        new balticporter.transform.GlobalsToImplicitsTransform(
+          requiredGivens = Map(
+            "com.badlogic.gdx.ai.btree.BranchTask" -> "lowlevel.MkArray",
+            "com.badlogic.gdx.ai.btree.BehaviorTree" -> "lowlevel.MkArray",
+            "com.badlogic.gdx.ai.fma.Formation" -> "lowlevel.MkArray",
+            "com.badlogic.gdx.ai.fma.SoftRoleSlotAssignmentStrategy" -> "lowlevel.MkArray",
+            "com.badlogic.gdx.ai.fsm.StackStateMachine" -> "lowlevel.MkArray",
+            "com.badlogic.gdx.ai.msg.PriorityQueue" -> "lowlevel.MkArray",
+            "com.badlogic.gdx.ai.pfa.DefaultGraphPath" -> "lowlevel.MkArray",
+            "com.badlogic.gdx.ai.sched.SchedulerBase" -> "lowlevel.MkArray",
+            "com.badlogic.gdx.ai.steer.behaviors.BlendedSteering" -> "lowlevel.MkArray",
+            "com.badlogic.gdx.ai.steer.behaviors.PrioritySteering" -> "lowlevel.MkArray",
+            "com.badlogic.gdx.ai.steer.utils.paths.LinePath" -> "lowlevel.MkArray",
+          ),
+        ),
         balticporter.transform.PortMapTransform.forBases("sge"),
       ),
       // THE SERVICE-LOCATOR FACADE, replaced whole — this port's ONE drop, and its ONE injection.

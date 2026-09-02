@@ -330,6 +330,11 @@ object VisUiPolicy:
               "com.kotcrab.vis.ui.widget.tabbedpane.TabbedPane$Text"        -> "sge.visui.VisUI.sgeInstance",
             ),
           ),
+        // --- 3.1aq: requiredGivens for generic classes constructing retarget targets
+        ), requiredGivens = Map(
+          "com.kotcrab.vis.ui.util.adapter.AbstractListAdapter" -> "lowlevel.MkArray",
+          "com.kotcrab.vis.ui.util.adapter.CachedItemAdapter" -> "lowlevel.MkArray",
+          "com.kotcrab.vis.ui.widget.spinner.ArraySpinnerModel" -> "lowlevel.MkArray",
         )),
         // DEPENDENT SEEDS for the base's `Align` opaque family — the same `MergeablePolicy` merge
         // VfxPolicy uses, for the same reason: propagation follows pure-move flows and does NOT

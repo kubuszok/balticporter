@@ -275,7 +275,12 @@ object VfxPolicy:
         //   - a `selfSupplied` entry. gdx-vfx's suite is HAND-WRITTEN `src/` Scala, so it declares
         //     its own `given` (CLAUDE.md §5.5); `selfSupplied` exists for the suites a port cannot
         //     edit because the engine emitted them.
-        new balticporter.transform.GlobalsToImplicitsTransform(extensions = List(
+        // --- 3.1aq: requiredGivens for generic classes constructing retarget targets
+        new balticporter.transform.GlobalsToImplicitsTransform(
+          requiredGivens = Map(
+            "com.crashinvaders.vfx.utils.ValueArrayMap" -> "lowlevel.MkArray",
+          ),
+          extensions = List(
           balticporter.transform.ContextHolderExtension(
             holder = "com.badlogic.gdx.Gdx",
             sites  = Map(
