@@ -4401,7 +4401,7 @@ The fix: `TirEmitter.tryStr` scans each catch body for references to the catch p
 
 *Fix kind: (a) — a fact about Java and Scala, true of every codebase.*
 
-### T26. Unused locals and private members trigger `-Wunused:locals,privates` under `-Werror`
+### T26. Unused locals and private members trigger `-Wunused:locals,privates` under `-Werror` — **.ref 97 -> 54 (49 of 70 E198 closed). T26.1 CLOSED, T26.2 residue**
 
 **(a) engine.** Java compiles unused local definitions, write-only local variables, unused private
 members and write-only private fields silently. Under sge's `-Wunused:imports,privates,locals,

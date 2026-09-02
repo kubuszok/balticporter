@@ -55,7 +55,7 @@ key not read fails the run.
 
 | `transform` | keys | notes |
 |---|---|---|
-| `collections` | `scope` | retype JDK collections and API-map their call sites |
+| `collections` | `scope`, `retarget`, `retargetRewrites`, `retargetTypeArgs`, `retargetCoercions`, `reifiedCarriers`, `reflectiveSinks` | retype JDK collections and API-map their call sites. `retarget` retypes a library type whose scala target is usable wherever the java source was (extends/implements it). `retargetRewrites` maps per-member call-site rewrites (nine variants, see below). `retargetTypeArgs` maps arity-changing retargets. `retargetCoercions` maps boundary coercion templates. `reifiedCarriers` / `reflectiveSinks` name third-party types (K20/K21) |
 | `mutable-params` | — | §1(a), no policy; the entry exists so a conf can put it in the pipeline |
 | `panama-ffi` | — | §1(a), no policy; its `isNative` predicate is `_.flags.isNative`, a fact about Java |
 | `test-framework` | `suite` (default `TestFrameworkTransform.DefaultSuite`), `testMember` (default `"test"`) | JUnit → MUnit is a STRUCTURAL transform, not an annotation rename |
@@ -67,6 +67,70 @@ key not read fails the run.
 | `primitive-to-opaque` | `fqn` **required**, `underlying` (default `Int`), `extraHints = […]`, `scope`; **`hints` REFUSED** | see below |
 | `nullability` | `annotations = [...]`, `target` (`"union"` default / `"named"` / `"option"`), `wrapper` (required iff `target = "named"`), `scope`, `nullableMembers = [...]` | move a nullability annotation (or an explicitly named member) into the type. `nullableMembers` is a set of exact member FQNs (`Class#member`) matched at run time against `Symbol.fullName`, treated as if their return/field type carried an annotation: same target shape, same coercions, same boundary count. Empty = no-op; non-empty contributes a fingerprint segment. `MergeablePolicy` union (`ENGINE-LIMITS.md` K13.6) |
 | `globals-to-implicits` | `holders = [ { holder, context { inject \| mint }, members { … }, attach, reader, boundary, sites { … }, promoteToClass = […], scope } ]` **required** | globals → CONTEXT (DESIGN.md §8.4). `members` values are dot-PATHS on the context type, not member names (`gl = "graphics.gl20"`); `attach = "method"` puts a trailing `(using T)` on each threaded method and `"class"` puts it on the class's constructors; `boundary` decides what a site with no signature does; `sites` overrides one of them (`"lazy-init"` is the only EAGER→LAZY change and is never a default). Every seam is counted by `context-seam` |
+
+### The `retarget` and `retargetRewrites` `.conf` spelling
+
+A retarget retypes a library type and API-maps its call sites through per-member rewrite entries.
+The `.conf` spelling (read by `CollectionsFactory` in `BuiltinFactories.scala`):
+
+```hocon
+{ transform = "collections"
+  retarget { "com.example.Bits" = "scala.collection.mutable.BitSet" }
+  retargetRewrites {
+    "com.example.Bits" {
+      "get/1" = "apply"                                       # Rename
+      "set/1" = "addOne"                                      # Rename
+      "removeValue/2" {                                       # BoolDispatch
+        boolDispatch = 1
+        onTrue  = "removeValueByRef"
+        onFalse = "removeValue"
+      }
+      "<init>/0" {                                            # Construct
+        companion = "scala.collection.mutable.BitSet"
+        factory   = "apply"
+      }
+      "<init>/(int)" {                                        # Construct with descriptor key
+        companion = "scala.collection.mutable.BitSet"
+        factory   = "apply"
+      }
+      "forEach/1" { forEach = "foreach", arity = 1 }         # ForEach
+      "select/1" { collect = "collect", into = "lowlevel.util.DynamicArray" }   # Collect
+      "toArray/0" { chain = ["toArray"], parens = ["toArray"], dropArgs = false }  # Chain
+      "items/0"   { indexedField = "items" }                  # IndexedField
+      "items/1"   { fieldWrite = "items" }                    # FieldWrite
+      "ensureCapacity/1" {                                    # Template
+        template = "{ val $bp0 = $recv; val $bp1 = $0; if ($bp1 < 0) throw new java.lang.IllegalArgumentException(); $bp0.items }"
+      }
+    }
+  }
+  retargetTypeArgs {
+    "com.example.IntMap" = ["scala.Int", "arg(0)"]            # FixedType + SourceArg
+  }
+  retargetCoercions {
+    # (actualHead, expectedHead) -> template; $0 is the value
+    # "lowlevel.util.DynamicArray,lowlevel.JavaIterable" = "lowlevel.JavaIterable.fromIterator($0.iterator())"
+  }
+}
+```
+
+**Descriptor keys.** A member overloaded at the same arity needs a descriptor key: `"name/(params)"`
+where `params` are comma-separated type names in the UPSTREAM (java) namespace. Examples:
+`"<init>/(int)"`, `"<init>/(Array)"`, `"add/(float,float,float,float)"`. A descriptor key WINS over
+an arity key at the same member. Translation to the target namespace happens at construction time.
+
+**The nine `RetargetRewrite` variants:**
+
+| variant | `.conf` shape | what it does |
+|---|---|---|
+| `Rename` | `"name/arity" = "newName"` (a plain string value) | rename the call |
+| `BoolDispatch` | `{ boolDispatch = <argIndex>, onTrue = "…", onFalse = "…" }` | dispatch on a literal boolean argument |
+| `Construct` | `{ companion = "…", factory = "…" }` | `new Source(args)` becomes `Companion.factory(args)`. Optional: `dropTrailing = N` (drop trailing args), `fillTypeArgs = true` (supply type args on arity-0) |
+| `ForEach` | `{ forEach = "…", arity = N }` | structural for-each lowering with a return-boundary image |
+| `Collect` | `{ collect = "…", into = "…" }` | collect-into-builder pattern |
+| `Chain` | `{ chain = ["m1", "m2"], parens = ["m1"], dropArgs = false }` | chain member calls. `parens` lists which need `()`. `dropArgs` drops the original arguments |
+| `FieldWrite` | `{ fieldWrite = "fieldName" }` | field-write image on a retarget target |
+| `IndexedField` | `{ indexedField = "fieldName" }` | indexed field access via source-SymId matching |
+| `Template` | `{ template = "expr with $recv, $0, $T0, $Target" }` | expression template with AST holes. `$recv` = receiver, `$0`..`$N` = args, `$T0`..`$TN` = type args (FQN text), `$Target` = retarget target FQN. Argument holes are bound to temporaries when the argument has side effects (evaluate-once, CLAUDE.md §4.4 F7) |
 
 `package-rename` is **not** in this list and is refused by name: it is manifest DATA
 (`manifest.packageRenames`), because it must run after every other phase. See **`configure-port`** §4.

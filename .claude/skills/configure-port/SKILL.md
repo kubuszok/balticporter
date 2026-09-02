@@ -202,6 +202,11 @@ on purpose.
 The surface list IS inherited by a dependent, and the base's phases are placed BEFORE the
 dependent's own.
 
+**For a library whose collections a hand port retargeted** (e.g. libGDX `Array` to `DynamicArray`,
+`Bits` to `mutable.BitSet`): configure the `collections` transform with `retarget` and
+`retargetRewrites` entries. See **`customize-port`** for the `.conf` spelling of every retarget
+rewrite variant, the descriptor-key rule, and the `$T0`/`$Target` hole grammar.
+
 ## 5. The rest of the file
 
 ```hocon

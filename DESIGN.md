@@ -4560,6 +4560,74 @@ exist. A printable hole delimiter — it needs an escape grammar, which is a sec
 the engine deliberately does not parse. Deciding the overload from the call's argument shape — §8.1
 measured that alternative at 118 `Ambiguous` out of 263.
 
+#### Retarget REWRITES — per-member call-site images keyed `(name, arity)` or `(name, Descriptor)`
+
+**Decision.** A retarget moves the TYPE; `retargetRewrites` maps per-member call-site rewrites on
+the retarget target. Nine variants (`RetargetRewrite`): `Rename` (rename the call), `BoolDispatch`
+(dispatch on a literal boolean argument at a given index), `Construct` (construction rewrite:
+`new Source(args)` becomes `Target.factory(args)`), `ForEach` (structural for-each lowering with
+a return-boundary image), `Collect` (collect-into-builder), `Chain` (chain member calls, with
+`parens` and `dropArgs` flags), `FieldWrite` (field-write images on retarget targets),
+`IndexedField` (indexed field access via source-SymId matching), `Template` (expression templates).
+
+**Descriptor keys stay in the UPSTREAM namespace.** A member overloaded at the same arity (libGDX
+`Array` has three arity-1 constructors: `(int)`, `(T[])`, `(Array)`) cannot be distinguished by
+`(name, arity)`. `retargetRewritesByDesc` keys on `(name, Descriptor)` instead, and a descriptor
+key WINS over an arity key at the same member: the lookup tries the descriptor map first (when the
+callee has a `Symbol.descriptor`), then falls back to the arity map. The `.conf` spelling is
+`"name/(descriptor)"`, e.g. `"<init>/(int)"`. The descriptor is written in the UPSTREAM namespace
+(the java type names), because `PackageRenameTransform` runs LAST (CLAUDE.md §4.56) and a key
+written in the emitted namespace would match nothing. Translation to the target namespace happens at
+construction time (`retargetRewritesByDesc` is built with translated descriptors internally).
+Measured at 3 errors closed on gdx-test by descriptor-keying the `Bits` copy constructor
+(`a45b5225`).
+
+#### `Template` holes — AST holes with evaluate-once (F7)
+
+**Decision.** `RetargetRewrite.Template(expr)` is an expression template with five hole kinds:
+`$recv` (the call's receiver), `$0`...`$N` (positional arguments), `$T0`...`$TN` (type arguments,
+rendered as FQN text), `$Target` (the retarget target's FQN). Each hole is an AST slot
+(`Tree.Opaque.spliced`), so later phases -- including `PackageRenameTransform` -- can still reach
+the spliced terms. The alternative was rendering to text at the phase, which would have produced
+the one region of the program no later phase can see (the same argument §8.12 made for
+`CallSiteSubstitutionTransform`'s holes).
+
+**Evaluate-once.** Every argument hole is bound to a temporary when the argument has side effects
+(CLAUDE.md §4.4 `arr[f()] += x` row), so a template that mentions `$0` twice evaluates the
+argument once. This is F7's own rule applied to template holes: java evaluates a subexpression
+ONCE, and a template that re-evaluates it is a different program.
+
+#### `Construct` element-type derivation
+
+**Decision.** `RetargetRewrite.Construct(companion, factory, fillTypeArgs, dropTrailing)` rewrites
+`new Source(args)` to `Target.factory(args)`. The element type for a raw constructor (`new Array(n)`
+where `Array<T>` is unapplied) is derived in order: (1) the declared slot type at the constructor's
+type argument (the `T` in `Array<T>`); (2) the dropped supplier's `MethodRef` element type (e.g.
+`Sprite[]::new` gives `Sprite`); (3) REFUSE and count as `collection-retarget`. The supplier
+derivation (`7f09a880`) closed 8 `SortTest` failures (backing array capacity: `$Target.from[$T0]($0)`
+gives exact capacity). The alternative was a generic `Object`-applied fallback, which compiled and
+silently widened the element type.
+
+#### `RetargetBoundaryCheck` — the `collection-retarget` lane and its three kinds
+
+**Decision.** `RetargetBoundaryCheck` counts the direction a subtyping argument does NOT license:
+a value the JDK or an external library PRODUCES at a type this phase retargeted, which the
+`collection-boundary` check cannot see because the position-blind retyping moved the node type on
+both sides of that slot. Three kinds:
+
+- `ExternalProducer` -- a JDK or external callee whose declared return type is the retarget source
+  (e.g. `Collections.unmodifiableList()` returning `java.util.List` at a node retyped to
+  `DynamicArray`). Counted because no coercion exists at that seam.
+- `CastToTarget` -- an `instanceof`/cast at a concrete retarget target that no live view can be
+  (CLAUDE.md §1(b) reified-occurrence paragraph). Refused and counted.
+- `IteratorRemove` -- `Iterator.remove()` through a retarget target's iterator, where the bridge
+  wraps a read-only `Iterator` with no handle on the collection. A removing iterator minted OVER
+  THE COLLECTION is the approach (K36). Counted per member.
+
+The lane is unconditional when `CollectionsTransform` is in the pipeline (`RequiredChecks`), and a
+refusal is a ROW (one finding per site) rather than a silent count, because a count with no row is
+indistinguishable from a check that never ran (CLAUDE.md §5's argument).
+
 ### 8.13 The merge contract — how a parameterised phase's POLICY composes across manifests — as built
 
 **Decision.** A phase may declare `MergeablePolicy` (`api`, beside `SurfacePolicy`, which it

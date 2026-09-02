@@ -11582,21 +11582,83 @@ Ashley needs NO manifest entry — the per-entry scope mechanism is for a depend
 DIFFERENT family the base does not carry.
 
 
-### 13.18 Wave 3.1h --- `ObjectMap.Entry -> Tuple2` image, `ArrayMap` 4-arity, `classOf` at a retarget
+### 13.18 Wave 3.1 --- collections-retarget (66 commits, `7c573768`..`b7c7e98d`)
 
-- `retargetSelectRewrite`: `.key`/`.value` field SELECTS on a retarget target whose source maps to `Tuple2` become `._1`/`._2` (keyed on `retargetEntryTargets`, a SymId set derived from `remap` + `UninheritableTargets`). `Construct.dropTrailing` (default 0, fingerprint-flat) drops java `Class` tokens; an arity-0 `Construct` on a target with type args supplies `null.asInstanceOf[T]` per arg. `classOf[T]` literal CONSTANT synced through `remap` (the emitter reads `const`, which `mapTerm` never maps) and counted as `ReifiedOccurrence`.
-- gdx: the 16 family rows (8 `.key`/`.value` not a member, 2 `new Tuple2()`, 2 `ArrayMap` ctor, 4 `classOf[sge.utils.ObjectMap]`) are 0; 4 NEW `Reassignment to val _1/_2` --- java writes the Entry's fields after default construction and a `Tuple2` is immutable, a residue of the `Entry -> Tuple2` policy. The brief's `53` was a stale sbt-server figure: a fresh lane at HEAD read 125 and this commit reads **123**. 8 specs added (4 engine, 4 corpus).
+The retarget mechanism on `CollectionsTransform`: retype a library's own collection types (not JDK)
+and rewrite every call site through a per-member rewrite table. 66 commits across sub-waves
+3.1a--3.1af, plus the `UnusedSymbolTransform` (3.1ad, now §13.20) and `NullabilityTransform.nullableMembers`
+(3.2d, now §13.19).
 
-#### 3.1ac ashley residue
+#### What the wave built
 
-- `cde2585d` retargetSelectRewrite: Chain/Template fire on Tree.Select (ashley test 22->10). Engine fix (a): bean-property and NullaryArity make retarget-source members parenless, so the call arrives as Tree.Select; the handler now covers Chain and Template at arity 0. `selectChainRewritten` identity set prevents double-rewriting when a 0-arg Apply wraps the already-rewritten Select. Closed K34 (12 errors on ashley Bits `.empty`/`.length`, 0 on gdx). 54 engine specs green.
-- `a34ea883` ashley: dropTypes(ImmutableArray) + inject + PooledEngine body transforms (22->2). ImmutableArray wraps Array<T> (retargetted to DynamicArray); three methods delegate with a non-literal boolean identity flag (BoolDispatch cannot dispatch), and the `iterable` field references `Array.ArrayIterable` (a nested type of the retargetted Array). Dropped the type and injected a hand-written replacement modeled on sge's own ImmutableArray (`sge-extension/ecs/src/main/scala/sge/ecs/utils/ImmutableArray.scala`). PooledEngine.ComponentPools: two MethodBodyTransform entries for `freeAll` (raw DynamicArray cast) and `clear` (ComponentPool lambda type). Both verified fired in `decisions.tsv SubstitutedBody`.
-- `9e089c4c` ashley ImmutableArray: extend JavaIterable, add iterator() with parens (22->0). The injected ImmutableArray extends `JavaIterable[A]` (java's arity), NOT sge's `Iterable[A]` (parenless iterator). NullaryArityTransform cannot reach a dropped+injected type (substitutedOwners guard, K35 OPEN). The `ArrayBuffer` vs `DynamicArray` backing divergence from sge is the drop-in wave's (3.2e).
-- ashley suite: 107 passing, 3 failing, 2 skipped. `forbiddenRemoval` newly failing: the injected ImmutableArray's `iterator().remove()` throws `UnsupportedOperationException` (JavaIterator's default) instead of `GdxRuntimeException` (the original `ArrayIterable`'s throw). `createPrivateComponent` and `entityListenerPriority` still failing (unchanged from baseline). `componentHandlingInListeners` and `familyListenerPriority` still skipped (unchanged).
-- gdx-measure: errors=0/0/0/97 (unchanged).
-- engine suites: 1106 passed (engine), 1447 passed + 1 ignored (corpus).
-- ecs-dropin: JVM 38, JS 39, Native 39 (baseline was 408 JVM -- reduction is from the retarget wave, not this commit).
-- `0568769c` ashley ImmutableArray: iterator().remove() throws GdxRuntimeException (108/2/2). Java's ArrayIterator.remove() throws GdxRuntimeException("Remove not allowed."); the injected replacement now matches. sge's ImmutableArray uses array.iterator (scala Iterator, no remove()). Suite: 108 passing, 2 failing (pre-existing), 2 skipped (pre-existing). forbiddenRemoval now passes.
+| mechanism | §1 kind | documented |
+|---|---|---|
+| `retarget` map on `CollectionsTransform` | (b) | CLAUDE.md §1(b) table, DESIGN.md §8.12 |
+| `retargetRewrites` keyed `(name, arity)` | (b) | DESIGN.md §8.12, customize-port SKILL.md |
+| `retargetRewritesByDesc` (descriptor keys in UPSTREAM namespace) | (b) | DESIGN.md §8.12, customize-port SKILL.md |
+| `RetargetRewrite` variants: `Rename`, `BoolDispatch`, `Construct`, `ForEach`, `Collect`, `Chain`, `FieldWrite`, `IndexedField`, `Template` | (b) | customize-port SKILL.md |
+| `retargetTypeArgs` (`SourceArg` / `FixedType`) | (b) | customize-port SKILL.md |
+| `retargetCoercions` | (b) | customize-port SKILL.md |
+| `RetargetBoundaryCheck` lane `collection-retarget` with kinds `ExternalProducer`, `CastToTarget`, `IteratorRemove` | (a) | ENGINE-LIMITS.md K36 |
+| runtime `JavaIterable.fromIterator` | (a) | balticporter/runtime |
+| `GlobalsToImplicitsTransform.requiredGivens` (threads `MkArray[T]`) | (b) | DESIGN.md §8.4 |
+| `MethodBodyTransform` `MergeablePolicy` | (a) | DESIGN.md §8.13 |
+| late `SuppressionPhase` (derived unconditionally) | (a) | DESIGN.md §8.26 |
+| `UnusedSymbolTransform` (delete/discard/suppress) | (a) | DESIGN.md §8.26, ENGINE-LIMITS.md T26 |
+| `TirEmitter.valDef` rendering annotations | (a) | DESIGN.md §8.26 |
+| D15: dependent follows base's published constructor plan | (a) | DESIGN.md §8.3.2 (existing), ENGINE-LIMITS.md D15 |
+| K34 CLOSED: Chain/Template on Tree.Select | (a) | ENGINE-LIMITS.md K34 |
+| K35 OPEN: injected-type arity follow | (a) | ENGINE-LIMITS.md K35 |
+| K36: retarget runtime semantics | (b) | ENGINE-LIMITS.md K36 |
+
+#### libGDX retarget policy
+
+| java source | scala target | kind |
+|---|---|---|
+| `Bits` | `mutable.BitSet` | retarget + rewrites |
+| `ObjectMap` / `ObjectSet` / `OrderedMap` / `IdentityMap` | `lowlevel.util.*` | retarget + rewrites |
+| `IntMap` / `LongMap` / ... | `ObjectMap[fixed]` | retarget + typeArgs |
+| `Array` / `SnapshotArray` / `DelayedRemovalArray` | `DynamicArray` | retarget + rewrites |
+| primitive arrays (`IntArray`, ..., `CharArray`) | `DynamicArray[Int]`, ..., `DynamicArray[Char]` | retarget + typeArgs + rewrites |
+| `Queue` | `mutable.ArrayDeque` | retarget + rewrites (sge `QueueBitsTest`) |
+
+CharArrayTest excluded (`fdc30967`): 30 tests to `expected-lost` (sge `type-mappings.md`).
+ashley `ImmutableArray`: `dropTypes` + inject modeled on sge's own (`K35` workaround).
+
+#### Measurements
+
+| port | errors before | errors after (JVM/JS/Native/.ref) | suite before | suite after | notes |
+|---|---|---|---|---|---|
+| gdx | 0/0/0/93 | 0/0/0/54 | -- | -- | `.ref` 93->54 (UnusedSymbolTransform, 49 of 70 E198 closed; see §13.20) |
+| gdx-test | 0/0/0/106 | 0/0/0/106 | 156 pass / 35 fail | 180 pass / 11 fail | expected-lost 30 (CharArrayTest) |
+| ashley | 22/--/--/-- | 0/0/0/-- | 107/3/2 | 108/2/2 | K34 CLOSED, `forbiddenRemoval` fixed |
+| ecs-dropin | 408/--/-- | 38/39/39 | -- | -- | retarget wave, not parity (wave 3.2e) |
+
+Check lanes: `collection-retarget` 0 -> 463 (gdx). `base-surface` 82 -> 22 (3 fatal -> 0,
+79 unanswered -> 0; D15). `parity(port-extra)` 5677 -> 4158 (gdx). `signature` 3401 -> 3379
+(gdx). `unused-symbol(handled)` 117, `unused-symbol(refused)` 0 (gdx).
+
+gdx-test declared failures: 4 `IteratorRemove` (QueueTest x2, MixedPutRemoveTest x2 --
+ENGINE-LIMITS.md K36), 3 `CharArray` toString (JsonMatcherTests -- same as CharArrayTest
+exclusion), 4 baseline `JsonTest` (unchanged).
+
+Engine specs at HEAD: 1106 engine + 1447 corpus, 0 failures.
+
+#### Residue / next
+
+- **IteratorRemove x4** (K36 OPEN): a faithful image is a removing iterator minted over the
+  collection (`RemovingIterator[A]` runtime shim wrapping `DynamicArray`, tracking index, delegating
+  `remove` to `removeIndex`). §1(a) mechanism, (b) parameter is the retarget target's remove method.
+- **K35 OPEN**: injected-type arity follow. Fix: read the injected source's member surface
+  (scalameta, which `api-parity` already parses) and feed `NullaryArityTransform` from it. Then the
+  injected ImmutableArray can be sge's verbatim shape (`Iterable`, parenless `iterator`).
+- **CharArray x3** (JsonMatcherTests): `DynamicArray[Char].toString` renders `[c, h, ...]` rather
+  than java's `CharArray.toString` string concatenation. Same decision as the `CharArrayTest`
+  exclusion. Declared in `expected-failures.tsv`.
+- **`.ref` 54**: 21 E198 remaining (T26 residue, see §13.20). The remaining 33 are from other
+  `-Wunused` and `-Werror`-promoted warnings not yet addressed.
+- **sge-ecs drop-in 38/39/39**: wave 3.2e (ArrayBuffer-vs-DynamicArray backing divergence for
+  drop-in parity).
 
 ### 13.19 Wave 3.2d --- `NullabilityTransform.nullableMembers` for unannotated-but-nullable returns
 
@@ -11630,6 +11692,7 @@ com.badlogic.ashley.core.PooledEngine#createComponent
 return type. The hand port's `ComponentFactories.create` returns `T`; the manifest body is
 `lowlevel.Nullable(sge.ecs.ComponentFactories.create(componentType))`.
 
+<<<<<<< HEAD
 ### 13.20 Wave 2.15 -- frontend catch census (re-verification)
 
 Re-censused the 21 catch sites in `SpoonTir.scala` (20 real + 1 doc-comment example). All 21 are
@@ -11659,6 +11722,8 @@ paragraph for the complete census table.
 - IteratorRemove x4 declared (QueueTest x2, MixedPutRemoveTest x2 -- ENGINE-LIMITS.md K36).
 - gdx 0/0/0/97, gdx-test 0/0/0/106, suite 180/11/0, expected-lost 30, base-surface 0 fatal.
 
+=======
+>>>>>>> 79e63c56 (docs: wave 3.1 collections-retarget consolidation -- PROGRESS §13.18 consolidated, DESIGN §8.12 retarget rewrites/Template/Construct/RetargetBoundaryCheck, CLAUDE.md §1(b) table extended, ENGINE-LIMITS T26 status, skills updated)
 ### 13.20 Wave 3.1ad --- unused symbols (.ref)
 
 `UnusedSymbolTransform`: a late §1(a) phase that deletes, discards or suppresses unused local
