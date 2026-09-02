@@ -1,7 +1,7 @@
 package balticporter.emit
 
 import balticporter.catalog.{CatalogLog, JS, Obligations, Rendering, Typing}
-import balticporter.core.{EngineInfo, Provenance}
+import balticporter.core.{EngineInfo, Provenance, Substituted}
 import balticporter.tir.*
 
 /** Emission backend: the TRANSFORMED typed TIR → Scala 3 source (DESIGN.md §2.5,
@@ -93,6 +93,11 @@ final class TirEmitter(
       * twice — the same reason those instances do not share a source map (`CLAUDE.md` §5.1). Exactly
       * one emitter per run holds the run's log: the one whose text is shipped. */
     catalog: CatalogLog = CatalogLog.discarding,
+    /** The member surface of INJECTED Scala files — parameter type strings and arity — so an
+      * emitted override of a dropped+injected parent adopts the injected parent's signature,
+      * and `calleeHasParens` follows the injected arity. Populated from `PortManifest.inject`
+      * roots by `PortRun`; empty by default for specs and single-module ports. */
+    injectedSurface: InjectedSurface.Surface = InjectedSurface.Empty,
 ):
   private given CatalogLog = catalog
   private val surface: Surface = surfaceView.getOrElse(TrivialSurface(source))
@@ -1316,12 +1321,18 @@ final class TirEmitter(
       // entry (no ClassDef), so the walk could not reach the external type's own parents
       // (e.g. `JavaCollection extends JavaIterable` where `iterator()` is on `JavaIterable`).
       //
-      // Two fallbacks, in order:
+      // Three fallbacks, in order:
+      // (0) Check the INJECTED SURFACE — a dropped+injected type's members are in the
+      //     injected Scala file, not in the TIR. K35: the engine cannot follow the injected
+      //     member's arity without reading its source.
       // (1) Check program-declared types that extend this external type — if a subtype declares
       //     the member with parens, the parent must also have it (override matching).
       // (2) Check whether the type is a runtime shim (`balticporter.runtime.Java*`), whose
       //     members use java arity by design (CLAUDE.md section 4.5).
-      if program.owns(typeSym) then false
+      val ownerFqn = program.symbolOf(typeSym).map(_.fullName).getOrElse("")
+      val fromInjected = injectedSurface.memberHasParens(ownerFqn, memberName)
+      if fromInjected.isDefined then fromInjected.get
+      else if program.owns(typeSym) then false
       else
         val visited = ancestorsOf(typeSym) + typeSym
         // Fallback 1: check program-declared subtypes
@@ -1628,6 +1639,109 @@ final class TirEmitter(
     out.toMap
 
   private lazy val overrideAlign: Map[SymId, TypeRepr] = rawParentAlignment
+
+  /** Parameter-level override alignment against INJECTED parents.
+    *
+    * The injected type string uses short names from its own imports (e.g. `DynamicArray[? <: A]`),
+    * but the emitter renders FULLY QUALIFIED. This mechanism detects where the injected file has a
+    * wildcard bound (`? <: X`) and the emitted override has a plain type argument (`T`), then
+    * renders the emitter's OWN type with the wildcard inserted — so the output is fully qualified.
+    *
+    * §1(a) universal: a fact about dropped+injected parents and Scala, true of every codebase.
+    * K35 CLOSED. */
+  private lazy val injectedOverrideTypes: Map[SymId, TypeRepr] =
+    if injectedSurface.isEmpty then Map.empty
+    else
+      val out = collection.mutable.Map[SymId, TypeRepr]()
+      for
+        cd  <- allDeclaredClasses
+        p   <- cd.parents
+        pt   = p match { case tt: TypeTree => tt.tpe; case t: Term => t.tpe }
+        pSym <- headSymOf(pt).flatMap(program.symbolOf)
+        if Substituted.tags(pSym)
+      do
+        // Build a type-parameter substitution map from the parent's type params to the child's
+        // actual type arguments. e.g. for `extends Pool[T]` where Pool has type param `A`:
+        // Map("A" -> TypeRepr representing T)
+        val parentTParams = injectedSurface.typeParams.getOrElse(pSym.fullName, Nil)
+        val actualArgs: List[TypeRepr] = pt match
+          case TypeRepr.AppliedType(_, args) => args
+          case _ => Nil
+        val tparamSubst: Map[String, TypeRepr] =
+          if parentTParams.size == actualArgs.size then parentTParams.zip(actualArgs).toMap
+          else Map.empty
+
+        for
+          od  <- cd.body.collect { case d: Tree.DefDef if sym(d.symbol).name != "<init>" => d }
+          injSig <- injectedSurface.lookup(pSym.fullName, sym(od.symbol).name,
+                      od.paramss.flatten.size)
+          injParams = injSig.paramTypes.flatten
+          (ops, ip) <- od.paramss.flatten.zip(injParams)
+          if !overrideAlign.contains(ops.symbol) // do not override rawParentAlignment
+        do
+          // Detect if the injected type has a wildcard bound that the TIR type does not.
+          // Parse the injected type string to detect `? <: X` patterns and build a TypeRepr.
+          val tirType = ops.tpt.tpe
+          val injRendered = ip.rendered
+          val aligned = alignToInjected(tirType, injRendered, tparamSubst)
+          if aligned != tirType then out(ops.symbol) = aligned
+      out.toMap
+
+  /** Align a TIR type to match an injected parent's parameter type.
+    *
+    * Handles the case where the injected file has `Container[? <: A]` and the TIR has
+    * `Container[T]`: produces `Container[? <: T]` using the TIR's own type constructor
+    * (fully qualified) with the wildcard bound from the injected file. */
+  private def alignToInjected(tirType: TypeRepr, injected: String,
+                               tparamSubst: Map[String, TypeRepr]): TypeRepr =
+    // Quick check: does the injected type mention `?` (a wildcard)?
+    if !injected.contains("?") then tirType
+    else tirType match
+      case TypeRepr.AppliedType(tc, tirArgs) =>
+        // Parse the injected type's arguments to detect wildcards.
+        // e.g. "DynamicArray[? <: A]" -> detect that arg 0 has upper bound "A"
+        val injArgStr = extractTypeArgs(injected)
+        if injArgStr.size != tirArgs.size then tirType
+        else
+          val newArgs = tirArgs.zip(injArgStr).map { (tirArg, injArg) =>
+            val trimmed = injArg.trim
+            if trimmed.startsWith("?") then
+              // Parse the bound: `? <: X` or `? >: X` or bare `?`
+              val upperBound = """^\?\s*<:\s*(.+)$""".r
+              val lowerBound = """^\?\s*>:\s*(.+)$""".r
+              trimmed match
+                case upperBound(boundName) =>
+                  val resolvedBound = tparamSubst.getOrElse(boundName.trim, tirArg)
+                  TypeRepr.TypeBounds(TypeRepr.NoType, resolvedBound)
+                case lowerBound(boundName) =>
+                  val resolvedBound = tparamSubst.getOrElse(boundName.trim, tirArg)
+                  TypeRepr.TypeBounds(resolvedBound, TypeRepr.NoType)
+                case _ =>
+                  TypeRepr.TypeBounds(TypeRepr.NoType, TypeRepr.NoType)
+            else tirArg
+          }
+          if newArgs == tirArgs then tirType
+          else TypeRepr.AppliedType(tc, newArgs)
+      case _ => tirType
+
+  /** Extract type arguments from a rendered type string like `Foo[A, B, ? <: C]`.
+    * Returns the argument strings: `List("A", "B", "? <: C")`. */
+  private def extractTypeArgs(rendered: String): List[String] =
+    val i = rendered.indexOf('[')
+    if i < 0 then Nil
+    else
+      val inner = rendered.substring(i + 1, rendered.lastIndexOf(']'))
+      // Split on commas at depth 0 (not inside nested brackets)
+      val args = List.newBuilder[String]
+      var depth = 0
+      val sb = new StringBuilder
+      for c <- inner do
+        if c == '[' then { depth += 1; sb.append(c) }
+        else if c == ']' then { depth -= 1; sb.append(c) }
+        else if c == ',' && depth == 0 then { args += sb.toString; sb.clear() }
+        else sb.append(c)
+      if sb.nonEmpty then args += sb.toString
+      args.result()
 
   /** An ARGUMENT reaching a parameter [[rawParentAlignment]] re-rendered. Java accepted the call
     * because the callee's formal was RAW there (`ParticleEffect.save(AssetManager, ResourceData)`
@@ -4073,7 +4187,12 @@ final class TirEmitter(
     // Nothing else may reach here with a `NoType`: every declaration the frontend builds carries
     // java's own type, so an unannotated `def` parameter would be a frontend defect and is a case
     // this arm cannot produce — a lambda parameter is the only `ValDef` a phase mints without one.
-    val t = overrideAlign.getOrElse(v.symbol, v.tpt.tpe)
+    // An INJECTED parent's parameter type wins over the TIR-derived type, because the
+    // injected file may have a DIFFERENT signature than what java declared (K35 CLOSED).
+    // The injectedOverrideTypes map carries TypeRepr values (e.g. with TypeBounds for wildcards),
+    // so the emitter's own `tpe()` renders them fully qualified.
+    val t = injectedOverrideTypes.getOrElse(v.symbol,
+              overrideAlign.getOrElse(v.symbol, v.tpt.tpe))
     if t == TypeRepr.NoType then esc(sym(v.symbol).name)
     else s"${esc(sym(v.symbol).name)}: ${tpe(t)}"
 

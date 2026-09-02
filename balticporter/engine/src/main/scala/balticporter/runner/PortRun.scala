@@ -1938,8 +1938,9 @@ final case class PortRun(
         // same notes and records none of its own), but a consult is a COUNT: re-rendering every
         // unit into the same log would double every number `catalog.tsv` reports, for a second
         // emitter whose whole purpose is that its bytes are thrown away.
+        val injSurf = balticporter.emit.InjectedSurface.fromRoots(ownSubs.inject)
         val again = new TirEmitter(once.program, once.plan.concreteMembers, provenance, once.decisions,
-                                   preview, bestEffort, Some(once.surface))
+                                   preview, bestEffort, Some(once.surface), injectedSurface = injSurf)
         val diffs = once.emitOrder.filter(u => again.emitUnit(u) != once.sourceOf(u))
         if diffs.nonEmpty then determinismViolation("emission", once, diffs)
         say(s"determinism: ${once.emitOrder.size} units emitted twice, byte-identical " +
@@ -2830,8 +2831,11 @@ final case class PortRun(
     // (`balticporter.catalog.Rendering`): most `JS-S` rows are decided while rendering and the
     // frontend has nothing to say about them. THIS emitter and no other — the determinism twin
     // below re-renders every unit, and a shared log would count every consult twice.
+    // --- 3.2g: read the INJECTED Scala files' member surface so overrides adopt their
+    // parameter types and calleeHasParens follows their arity (K35 CLOSED).
+    val injSurface = balticporter.emit.InjectedSurface.fromRoots(ownSubs.inject)
     val emitter = new TirEmitter(program, plan.concreteMembers, provenance, decisions, preview, bestEffort,
-                                 Some(surface), catalog = catalog)
+                                 Some(surface), catalog = catalog, injectedSurface = injSurface)
     PortRun.Translated(program, plan, emitter, mine, theirs, cache.map(new ActionCache(_, true)),
                        decisions, binder, surface, parsed, catalog, rewrites, idioms)
 

@@ -78,7 +78,7 @@ trait Pool[A] {
     reset(obj)
   }
 
-  def freeAll(objects: DynamicArray[A]): Unit = {
+  def freeAll(objects: DynamicArray[? <: A]): Unit = {
     lock.synchronized {
       objects.foreach { obj =>
         if (obj.asInstanceOf[AnyRef] ne null) {
