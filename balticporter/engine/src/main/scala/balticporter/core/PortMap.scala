@@ -450,8 +450,13 @@ object PortMap:
       balticporter.transform.PackageRenameTransform.renamed(fqn, renames.toMap)
     val droppedEntries = dropTypes.toList.sorted.map { fqn =>
       val at = emittedAt(fqn)
+      // A SUBSTITUTED type keeps its contract row with whatever shape the caller provides — the
+      // injected file's surface where the emitted type would have provided one. Without a shape,
+      // `PublishedSurface.typeShape` answers `Unknown` for every dependent that references the
+      // injected type, and that `Unknown` is FATAL when a question shaped emitted text.
       Entry("type", fqn, if injectedFqns(at) then at else "",
-        if injectedFqns(at) then Disposition.Substituted else Disposition.Dropped)
+        if injectedFqns(at) then Disposition.Substituted else Disposition.Dropped,
+        shape = if injectedFqns(at) then typeShapes.getOrElse(at, "") else "")
     }
 
     // What is left is a genuine ADDITION — a file the run wrote that replaces no drop (the runtime

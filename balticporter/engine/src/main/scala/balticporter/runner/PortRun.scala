@@ -1188,6 +1188,12 @@ final case class PortRun(
     val bodyKeys: Set[String] =
       effectivePhases.collect { case m: MethodBodyTransform => m.substituted }.flatten.toSet
     val shapes = translated.emitter.emittedShapes
+    // A dropped+injected type needs a shape in the port map so a dependent's `PublishedSurface`
+    // answers `Published` rather than `Unknown` for that type's contract question. The emitter
+    // has no shape for it — it was not emitted — so the shape comes from the INJECTED FILE,
+    // parsed by `InjectedSurface`, which already runs during translation for override alignment.
+    val injectedTypeShapes: Map[String, String] =
+      balticporter.emit.InjectedSurface.fromRoots(ownSubs.inject).renderedTypeShapes
     // NESTED types are in the map from schema 3 on, and that is not a tidy-up. The contract's
     // constructor rows exist so a dependent can stop re-deriving a base class's primary over a
     // program the base never had (`ENGINE-LIMITS.md` D4), and a dependent extends a base's NESTED
@@ -1249,7 +1255,10 @@ final case class PortRun(
       // What this module EMITTED, taken from the emitter's own recording — never re-derived here.
       // A second derivation would be a third answer free to disagree with both the emission and the
       // consumer, which is the drift the contract exists to end.
-      typeShapes    = shapes.renderedTypes,
+      // …and the injected type shapes MERGED IN: emitted shapes take priority (they never
+      // overlap — a type is either emitted or injected), but `++` with the emitter's map on the
+      // RIGHT ensures that if they did, the emitter's answer would win.
+      typeShapes    = injectedTypeShapes ++ shapes.renderedTypes,
       memberShapes  = shapes.renderedMembers,
       // …and the THIRD fingerprint. `engine=` and `sources=` both stay put when the base's MANIFEST
       // changes, and the payload above is full of policy outcomes — so without this the map is

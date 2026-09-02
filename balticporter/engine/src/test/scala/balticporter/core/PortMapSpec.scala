@@ -19,7 +19,9 @@ class PortMapSpec extends munit.FunSuite:
       injected: Set[String] = Set.empty,
       bodies: Set[String] = Set.empty,
       renames: Map[String, String] = Map.empty,
-  ) = PortMap.of("m", "eng", emitted, SrcMap.Recording(members), dropTypes, dropMethods, injected, bodies, renames)
+      typeShapes: Map[String, String] = Map.empty,
+  ) = PortMap.of("m", "eng", emitted, SrcMap.Recording(members), dropTypes, dropMethods, injected, bodies, renames,
+                  typeShapes = typeShapes)
 
   test("the SEARCH PATH is several roots, nearest first — §4.45's consumer has no run tree") {
     // An agent in another repository points a published Baltic Porter at its own java. Its base's map
@@ -110,6 +112,35 @@ class PortMapSpec extends munit.FunSuite:
     assertEquals(byName("p.Gone").emitted, "")
     assertEquals(byName("p.Replaced").disposition, Disposition.Substituted)
     assertEquals(byName("p.Replaced").emitted, "p.Replaced")
+  }
+
+  test("a SUBSTITUTED type carries its shape payload so a dependent gets Published, not Unknown") {
+    // The defect this test pins: D16 made `droppedEntries` produce only `Dropped` rows, losing
+    // the `Substituted` disposition's contract payload. A `Substituted` entry with no shape made
+    // `PublishedSurface.typeShape` answer `Unknown` — and every dependent's `PortRun.execute`
+    // failed FATAL ("no declared base publishes a contract row") for types like
+    // `sge.utils.ReflectionPool` that the base drops and injects.
+    val m = build(
+      dropTypes = Set("p.Gone", "p.Replaced"),
+      injected  = Set("p.Replaced"),
+      typeShapes = Map("p.Replaced" -> "form=trait"),
+    )
+    val byName = m.types.map(e => e.upstream -> e).toMap
+    assertEquals(byName("p.Replaced").disposition, Disposition.Substituted)
+    assertEquals(byName("p.Replaced").shape, "form=trait",
+      "a Substituted entry must carry its shape so a dependent's contract question is answerable")
+    assert(byName("p.Replaced").typeShape.isDefined,
+      "parseType must return Some for a Substituted row with a shape payload")
+    assertEquals(byName("p.Gone").shape, "",
+      "a Dropped entry has no shape — the type was not emitted and nothing replaced it")
+  }
+
+  test("a dropped-only type stays a bare Dropped row with no shape — D16 holds") {
+    val m = build(dropTypes = Set("p.Gone"), injected = Set.empty)
+    val e = m.types.find(_.upstream == "p.Gone").get
+    assertEquals(e.disposition, Disposition.Dropped)
+    assertEquals(e.shape, "")
+    assertEquals(e.emitted, "")
   }
 
   test("an injected type that replaces nothing is ADDED, not Substituted") {
