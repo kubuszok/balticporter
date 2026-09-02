@@ -14531,3 +14531,84 @@ rather than java's `CharArray.toString` which concatenates chars into a string. 
 `CharArrayTest` exclusion (`fdc30967`). sge DROPPED `CharArray`'s string semantics — type-mappings.md
 maps it to `DynamicArray[Char]` with no string-like behaviour. 3 tests declared in
 `expected-failures.tsv`.
+
+### K37 Retarget dependents: base retarget table measured on every dependent before it lands
+
+**Classification: section 1(b) — per-library retarget policy applied across dependents.**
+
+The collections-retarget wave (3.1a-ah) retargetted libGDX's own collection types to their lls
+equivalents. The base port (gdx core) went to 0 errors on every retarget wave — and the thirteen
+dependent ports each compiled against the base's emitted Scala with the same retarget running over
+THEIR programs. The first corpus-wide measurement showed **230 dependent errors from 0 base errors**,
+because the retarget table is a base-declared policy carried through `extendedBy`, and every
+dependent inherits it.
+
+#### Per-dependent table
+
+| port | pre-retarget floor | after retarget (3.1ah) | after 3.1ai |
+|---|---|---|---|
+| gdx | 0 | 0 | 0 |
+| gdx-test | 0 | 0 | 0 (184/7) |
+| screens | 0 | 0 | 0 |
+| anim8 | 0 | 45 | 17 |
+| textra | 0 | 122 | 24 |
+| gltf | 0/3 | 0/34 | 19 (main+test) |
+| vfx | 0 | 1 | 1 |
+| ai | 0 | 13 | 13 |
+| visui | 7 | 14 | 14 |
+
+#### Families and fixes (3.1ai)
+
+**F1 Nullable at retargeted map members (section 1(b), K13.6 CLOSED).**
+`nullableMembers = Set("IntMap#get")` matched both the 1-arg and 2-arg `get` overloads by
+`Symbol.fullName` (arity-blind). The 2-arg `get(K, V)` returns `V` (not nullable), wrapping it
+produced `.orNull` on a non-Nullable type. Fix: removed the `nullableMembers` entry, added retarget
+rewrite `("get", 1) -> Template("$recv.get($0).orNull")` for IntMap. textra 122 -> 86 (-36).
+Limitation: `nullableMembers` matching is arity-blind — any future entry for an overloaded method
+will have the same issue.
+
+**O9 Duplicate FixedType symbols (section 1(a), engine).**
+`retargetFixedTypeSyms` minted a second `scala.Int` via `byScala.getOrElseUpdate` without checking
+the program's symbols or the `added` buffer; `named()` later minted another. Two symbols with the
+same `fullName` in the symbol table, any phase resolving by `fullName` binds the wrong one. Fix:
+both `retargetFixedTypeSyms` resolution and `named()` check `byScala` first.
+textra 86 -> 26 (-60), gltf 34 -> 19 (-15).
+
+**collectPhase paren stripping (section 1(a), engine).**
+`case _: Tree.Opaque if t.args.isEmpty` stripped parens from calls chained on ANY Opaque node, not
+just Collect blocks. A Template-produced Opaque had `.afterGroup()` parens stripped. Fix: guard on
+receiver type being a retarget target. gdx 1 -> 0.
+
+**F2 Entry retargets (section 1(b), policy).**
+`IntIntMap$Entry` and `IntFloatMap$Entry` were missing from the retarget table. Added, with type arg
+mappings for arity-changing Entry types (0-param -> Tuple2[Int,Int], etc.). anim8 45 -> 17 (-28),
+textra 26 -> 24 (-2 from Tuple2 arity fix).
+
+#### Remaining residue (88 total, classified)
+
+- **16 Tuple2-immutable** (anim8): `Reassignment to val _1/_2` — Entry fields are mutable in java,
+  `Tuple2` is immutable. Counted; no fix short of a mutable entry shim.
+- **9 ObjectMap.get overload ambiguity** (gltf 7, visui 2): `None of the overloaded alternatives of
+  method get` — lls `ObjectMap.get(K): Nullable[V]` vs `get(K, V): V` ambiguity at boxed arg.
+- **8 DynamicArray.from overloads** (ai): descriptor-keyed `Construct` row needed for copy ctors.
+- **7 companion refs** (textra 4+2+1): `OrderedSet`/`Array`/`IntMap` "not a member of sge.utils" —
+  `StaticReceiver` issue, the retarget has no `transformIdent`.
+- **5 ObjectMap type mismatches** (textra): `Found: ObjectMap[? <: String, Long]` — wildcard captures
+  from `Map<? extends ...>` in `retargetTypeArgs`.
+- **4 ObjectMap field mismatches** (textra): copy ctor assigning one ObjectMap to another at the wrong
+  type.
+- **3 Sge/Boolean/overload** (visui): miscellaneous single-site errors.
+- **3 companion type refs** (ai): `type ObjectMap is not a member of sge.utils`.
+- **2 GLTFMorphTarget extends final ObjectMap** (gltf): program class extending a retarget target.
+- **2 iterator on ObjectMap/ArrayMap** (gltf, visui): `iterator` is not a member.
+- **2 DynamicArray.next** (textra): `next` not a member.
+- **1 MkArray given** (vfx): `GlobalsToImplicitsTransform` did not thread the class.
+- **1 DynamicArray arity** (ai): `peek` with `()`.
+- Various ctor overloads, wildcard captures, and miscellaneous (remaining).
+
+#### Lesson
+
+A base retarget table is measured on EVERY dependent before it lands. The corpus cost of retargeting
+15 libGDX collection types was 230 dependent errors from a base at 0, and the dependent-side fixes
+are a mix of section 1(a) engine bugs (O9, collectPhase), section 1(b) policy gaps (missing Entry
+retargets, nullableMembers arity), and counted residuals (Tuple2 immutability, companion references).

@@ -11683,6 +11683,20 @@ values/keys Collect via parallel key-tracking DynamicArrays and `map.remove(key)
 - runtime 194 specs green (10 new removing-iterator specs)
 - engine+corpus 1447 specs green
 
+#### 3.1ai dependents (engine)
+
+Three engine fixes + Entry retarget policy, closing 142 of 230 dependent errors:
+
+- `abe4a972` F1+O9+paren: textra 122->26, gltf 34->19. Removed arity-blind `nullableMembers`
+  entry; fixed duplicate `scala.Int` FixedType symbol; narrowed collectPhase paren stripping.
+- `98f94ddd` F2 Entry retargets: anim8 45->17, textra 26->24. Added IntIntMap$Entry, IntFloatMap$Entry
+  retarget entries + type arg mappings for all Entry types.
+
+Residue (88): 16 Tuple2-immutable (anim8), 9 ObjectMap.get overload (gltf/visui), 8 DynamicArray.from
+(ai), 7 companion refs (textra), 5 ObjectMap wildcards (textra), 4 copy-ctor mismatches (textra),
+3 ai companion types, 3 visui Boolean, 2 GLTFMorphTarget extends final, 2 iterator, 2 DynamicArray.next
+(textra), 1 MkArray given (vfx), misc. See ENGINE-LIMITS.md K37 for the full classification.
+
 ### 13.19 Wave 3.2d --- `NullabilityTransform.nullableMembers` for unannotated-but-nullable returns
 
 Ashley's six members whose hand port wraps in `Nullable[T]` carry no nullability annotation in the
