@@ -17,3 +17,4 @@ balticporter.runner.BeanPropertyFactory
 balticporter.runner.NullabilityFactory
 balticporter.runner.PublicFieldAccessorFactory
 balticporter.runner.RemediationFactory
+balticporter.runner.ClassToTraitFactory

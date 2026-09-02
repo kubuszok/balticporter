@@ -14710,3 +14710,38 @@ A base retarget table is measured on EVERY dependent before it lands. The corpus
 15 libGDX collection types was 230 dependent errors from a base at 0, and the dependent-side fixes
 are a mix of section 1(a) engine bugs (O9, collectPhase), section 1(b) policy gaps (missing Entry
 retargets, nullableMembers arity), and counted residuals (Tuple2 immutability, companion references).
+
+### K37. Pool class-to-trait: emitted subclasses cannot bridge Pool-as-class and Pool-as-trait -- **OPEN**
+
+**(b) engine mechanism built, policy BLOCKED on Pool drop+inject.** sge hand-ported
+`com.badlogic.gdx.utils.Pool` as a TRAIT with abstract vals `initialCapacity` and `max`
+(divergence-investigator verdict: justified, kind=api; Pool.scala:12 "Issues: Pool changed from
+abstract class to trait -- intentional design improvement but changes instantiation semantics";
+audit.tsv:545 "Changed from abstract class to trait (intentional Scala idiom)").
+
+The engine-level `ClassToTraitTransform` phase (wave 3.2g) strips `super(args)` from subclass
+constructors and adds `override val` members. It compiles and the TIR transformation is correct.
+BUT: the override vals have nothing to override in the emitted Pool, which is still an abstract
+CLASS whose `initialCapacity` is a constructor parameter (not a field) and whose `max` is a mutable
+`var` (not an abstract val). Measured: enabling the phase in the core manifest produces **6 E037
+Declaration Error** across all platforms (2 per subclass: DefaultPool, ParticleEffectPool,
+FlushablePool).
+
+**The gap**: there is no single Scala syntax for `extends Pool[T]` that works with BOTH
+Pool-as-class (constructor args) and Pool-as-trait (override vals). The emitted code must be
+COMPATIBLE with sge's Pool trait for the ecs-dropin to work.
+
+**The fix**: DROP `com.badlogic.gdx.utils.Pool` from the core port's `dropTypes` and INJECT a
+mechanical version that is a CLASS with `protected var initialCapacity: Int` and
+`protected var max: Int` as overridable fields. Then the phase's `override val` members override
+the injected vars in the normal compile and sge's abstract vals in the dropin. The blast radius is
+every port that uses Pool (gdx, ashley, gltf, screens, vfx, ai, textra, visui) -- 8+ ports to
+re-measure.
+
+**Dropin residue**: 1 error on all 3 platforms (JVM/JS/Native):
+`too many arguments for constructor Pool in trait Pool` at `EntityPool extends Pool[T](args)`.
+
+**ImmutableArray**: the dual-backing `ImmutableArray` injection (wave 3.2e) works for both the
+normal compile and the dropin. The exact parity with sge's `ImmutableArray(ArrayBuffer[A])` requires
+per-entry-scoped retarget (`Array -> ArrayBuffer` for ashley's own declarations, beside the base's
+`Array -> DynamicArray`) -- a `CollectionsTransform` extension not yet built.

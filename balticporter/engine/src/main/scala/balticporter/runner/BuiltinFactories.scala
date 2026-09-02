@@ -54,6 +54,7 @@ object BuiltinFactories:
     new PortMapMigrationFactory,
     new PrimitiveToOpaqueFactory, new GlobalsToImplicitsFactory, new BeanPropertyFactory,
     new NullabilityFactory, new PublicFieldAccessorFactory, new RemediationFactory,
+    new ClassToTraitFactory,
   )
 
 // ---------------------------------------------------------------------------------------------
@@ -582,3 +583,36 @@ final class GlobalsToImplicitsFactory extends TransformFactory:
       promoteToClass = c.strings("promoteToClass").getOrElse(Nil).toSet,
       scope = TransformFactory.scopeOf(c),
     )
+
+// --- 3.2g: class-to-trait ---
+
+/** ```
+  * { transform = "class-to-trait"
+  *   specs {
+  *     "com.badlogic.gdx.utils.Pool" {
+  *       params = [
+  *         { index = 0, name = "initialCapacity" }
+  *         { index = 1, name = "max" }
+  *       ]
+  *     }
+  *   }
+  * }
+  * ```
+  */
+final class ClassToTraitFactory extends TransformFactory:
+  def name = ClassToTraitTransform.Name
+  def fromConfig(config: ConfigView): Phase =
+    val specs = config.child("specs") match
+      case Some(s) =>
+        s.keys.map { fqn =>
+          val paramViews = s.child(fqn).flatMap(_.children("params")).getOrElse(Nil)
+          val params = paramViews.map { pc =>
+            ClassToTraitTransform.ParamMapping(
+              pc.int("index").getOrElse(throw ConfigError(pc.at("index"), "required, and absent")),
+              pc.requireString("name"),
+            )
+          }
+          fqn -> params
+        }.toMap
+      case None => Map.empty
+    new ClassToTraitTransform(specs)

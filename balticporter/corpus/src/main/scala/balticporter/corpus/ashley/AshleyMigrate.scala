@@ -174,6 +174,14 @@ object AshleyPolicy:
         new balticporter.transform.TypeRedirectTransform(Map(
           "com.badlogic.gdx.utils.ReflectionPool" -> "com.badlogic.ashley.core.ComponentPool",
         )),
+        // --- 3.2g: Pool class-to-trait BLOCKED ---
+        // sge hand-ported `Pool` as a TRAIT with abstract vals; the emitted ashley code tries
+        // `extends Pool[T](args)`, which is a compile error against a trait. The
+        // `ClassToTraitTransform` phase (engine) is built and strips super args / adds override
+        // vals, but it cannot be enabled until Pool itself is dropped from the core port and
+        // injected as a class with overridable fields -- the override vals have nothing to
+        // override in the current emitted Pool class. Dropin residue: 1 error on all 3 platforms.
+        // ENGINE-LIMITS.md K37 tracks the dependency.
         new balticporter.transform.MethodBodyTransform(Map(
         // `Engine.createComponent` is the one reflective site in Ashley's 21 files: it calls
         // `ClassReflection.newInstance(componentType)` and catches `ReflectionException`, both

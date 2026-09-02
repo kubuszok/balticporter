@@ -2233,7 +2233,16 @@ object LibgdxPolicy:
                |  Actor.POOLS.addPool(classOf[sge.graphics.g2d.GlyphLayout], ((() => new sge.graphics.g2d.GlyphLayout()): sge.utils.DefaultPool.PoolSupplier[sge.graphics.g2d.GlyphLayout]))
                |  Actor.POOLS.addPool(classOf[sge.scenes.scene2d.utils.ChangeListener.ChangeEvent], ((() => new sge.scenes.scene2d.utils.ChangeListener.ChangeEvent()): sge.utils.DefaultPool.PoolSupplier[sge.scenes.scene2d.utils.ChangeListener.ChangeEvent]))
                |}""".stripMargin
-         ))
+         )),
+         // --- 3.2g: Pool class-to-trait BLOCKED ---
+         // sge hand-ported `Pool` as a TRAIT with abstract vals (justified, kind=api). The
+         // `ClassToTraitTransform` phase is built in the engine but cannot be enabled here until
+         // Pool itself is dropped and injected as a class with overridable `var initialCapacity`
+         // and `var max` fields. Without that, the override vals the phase adds to subclasses
+         // have nothing to override and produce E037 on all platforms (measured: 6 errors).
+         // ENGINE-LIMITS.md K37 tracks the dependency. An empty instance is NOT declared here
+         // because the base's own Pool subclasses compile correctly with constructor args and the
+         // phase would strip them. The dependent (ashley) inherits no instance and declares none.
          // SuppressionPhase is now derived unconditionally by PortRun (§1(a) universal, no-op
          // when no `.orNull` symbols exist) — removed from surface, no port needs to declare it.
          )

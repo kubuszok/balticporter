@@ -1,4 +1,5 @@
 #subject	status	evidence	spelling	decided_by
+Pool(class->trait)	justified	Pool.scala:12 "Issues: Pool changed from abstract class to trait -- intentional design improvement but changes instantiation semantics"; audit.tsv:545 "Changed from abstract class to trait (intentional Scala idiom)"; audit.tsv:1215 re-audited 2026-04-12; AD-003 adapter-class-to-trait principle; present from initial commit e1aff235	(b) ClassToTraitTransform -- subclass rewrites extends clause to override abstract vals instead of passing constructor args	div-pool-trait
 ComponentType#index	justified	sge ISS-017 resolved; getter/setter collapse convention	(b) BeanCollapse idiom phase	div-accessor
 EntitySystem#setProcessing	justified	EntitySystem.scala "Idiom: processing as public var (replaces get/set pair)"	(b) BeanCollapse idiom phase	div-accessor
 Family#index	justified	sge ISS-017 resolved; getter/setter collapse convention	(b) BeanCollapse idiom phase	div-accessor
