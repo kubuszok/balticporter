@@ -891,7 +891,15 @@ final class CollectionsTransform(
                                List(iterSelect), iteratorFromSym, t.tpe, so)
                   case _ => Tree.Select(recv, m, t.tpe, so)
               else
-                Tree.Select(recv, m, t.tpe, so)
+                // Strip parens ONLY when the Opaque's own type head is a retarget target —
+                // i.e. it was produced by a Collect whose `into` type is DynamicArray or similar.
+                // A Template-produced Opaque has the ORIGINAL call's return type (e.g. GroupPlug),
+                // and chained calls on that type must keep their parens. 3.1ai: measured at 1 gdx
+                // error (afterGroup must be called with () argument) without this guard.
+                val isCollectBlock = headSym(recv.tpe).exists(h =>
+                  retargetTargetToSource.contains(h) ||
+                  p.symbolOf(h).exists(s => retarget.values.toSet(s.fullName)))
+                if isCollectBlock then Tree.Select(recv, m, t.tpe, so) else t
             case _ => t
         case _ => t
   /** Apply nodes produced by [[retargetForEach]] that need a value-carrying boundary wrapper.
@@ -1334,11 +1342,19 @@ final class CollectionsTransform(
       }.flatten
     }
 
-    // resolve FixedType FQNs to minted symbols
+    // resolve FixedType FQNs — reuse an EXISTING symbol where one is already in byScala or in
+    // the program, so no FQN ends up with two SymIds. 3.1ai / O9: minting a duplicate `scala.Int`
+    // gives `SymbolTable` two entries with the same `fullName`, and any phase resolving a primitive
+    // by `fullName` may bind the wrong one (3.1ak's root cause: textra's 58 Align opaque rows).
     retargetFixedTypeSyms = retargetTypeArgs.values.flatten.collect {
       case CollectionsTransform.RetargetArg.FixedType(fqn) => fqn
     }.toSet.map { fqn =>
-      fqn -> byScala.getOrElseUpdate(fqn, mint(fqn.substring(fqn.lastIndexOf('.') + 1), fqn))
+      val sym = byScala.getOrElseUpdate(fqn, {
+        // check program symbols before minting — the frontend may already have this FQN
+        program.symbols.all.find(_.fullName == fqn).map(_.id)
+          .getOrElse(mint(fqn.substring(fqn.lastIndexOf('.') + 1), fqn))
+      })
+      fqn -> sym
     }.toMap
 
     // build per-source and per-target arg mappings
@@ -1414,7 +1430,11 @@ final class CollectionsTransform(
     // symbols for one FQN print the same text and compare unequal, which is how a later reader ends
     // up asking about a type this run has twice.
     def named(fqn: String, nm: String): SymId =
-      program.symbols.all.find(_.fullName == fqn).map(_.id).getOrElse(mint(nm, fqn))
+      // 3.1ai / O9: check `byScala` too — a FixedType resolution may have already minted a symbol
+      // for this FQN (e.g. `scala.Int`), and a second mint gives `SymbolTable` two entries with the
+      // same `fullName`. Minting duplicates is the root cause of textra's 58 Align opaque errors.
+      byScala.get(fqn).orElse(program.symbols.all.find(_.fullName == fqn).map(_.id))
+        .getOrElse(mint(nm, fqn))
     // …the BRIDGED members' own vocabulary (K28.1). `named` for every type, minted for the two
     // `asScala` views and for scala's `iterator`, which nothing in a java program declares.
     optionSym          = named("scala.Option", "Option")

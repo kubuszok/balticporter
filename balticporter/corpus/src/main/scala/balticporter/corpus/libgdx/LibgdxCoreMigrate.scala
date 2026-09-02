@@ -736,6 +736,10 @@ object LibgdxPolicy:
         ("entries", 0) -> ForEach("foreachEntry", 2),
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
+        // --- 3.1ai: IntMap.get(int) returns V without @Null but CAN return null. After retarget
+        // to lls ObjectMap, get(K) returns Nullable[V]. Unwrap to V|Null so consumers see the
+        // original java contract. The 2-arg get(K,V) returns V and needs no rewrite. K13.6 CLOSED.
+        ("get", 1)     -> Template("$recv.get($0).orNull"),
       ),
       "com.badlogic.gdx.utils.LongMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
@@ -2502,14 +2506,14 @@ object LibgdxPolicy:
       annotations = Set("com.badlogic.gdx.utils.Null"),
       target      = balticporter.transform.NullabilityTransform.Target.Named("lowlevel.Nullable"),
       scope       = balticporter.tir.RuleScope.Everywhere(nullabilityErasureExempt),
-      // K13.6: `IntMap.get(int)` returns `V` WITHOUT `@Null` but CAN return null (the body says
-      // `return null`). After the retarget, lls's `ObjectMap.get(K)` returns `Nullable[V]`, so
-      // scalac sees `Nullable.Impl[V]` and the caller's `.beforeGroup()` is not a member. Adding
-      // the method to `nullableMembers` makes the plan include it, wraps the result, and the
-      // existing `transformSelect` unwrapping (`.get` on the Nullable) fires automatically.
-      nullableMembers = Set(
-        "com.badlogic.gdx.utils.IntMap#get",
-      ),
+      // K13.6 CLOSED by 3.1ai: `IntMap.get(int)` returns `V` WITHOUT `@Null` but CAN return null.
+      // After the retarget to lls `ObjectMap`, `get(K)` returns `Nullable[V]`. The nullableMembers
+      // entry matched BOTH the 1-arg and 2-arg `get` overloads by `Symbol.fullName` (arity-blind),
+      // wrapping the 2-arg `get(K, V)` return that is NOT nullable — measured at 36 errors on textra.
+      // Fix: retarget rewrite `("get", 1) -> Template("$recv.get($0).orNull")` on IntMap (below),
+      // which calls lls's `get(K): Nullable[V]` and unwraps to `V | Null`. The 2-arg `get(K, V)`
+      // stays unchanged and is not wrapped. `ObjectMap.get(K)` and `LongMap.get(long)` have `@Null`
+      // on the return and are handled by the annotation-based plan, so no entry is needed for them.
     )
 
   /** Types whose `@Null`-annotated overload sets create ERASURE CONFLICTS under Named mode.
