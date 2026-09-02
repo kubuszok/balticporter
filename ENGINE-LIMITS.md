@@ -14364,3 +14364,37 @@ What keeps the measurement attached to the thing it was made about is a FIXTURE
 `Object` parameters. A number in a document that no test holds is a number the next emitter change
 invalidates silently; this is the same rule §4.58's text-to-text check is written from, read at a
 measurement instead of at a comment.
+
+### K36. Retarget runtime: peek/first/pop exception class, removeRange inclusive bound, ensureCapacity growth, Array(T[]) capacity, Iterator.remove — **gdx-test 35 -> 11 failing, 8 SortTest CLOSED**
+
+Five families of retarget call-site semantics that compile clean and fail at run time:
+
+| java semantics | sge/lls answer | rule | tests before -> after |
+|---|---|---|---|
+| `peek`/`first`/`pop` throw `IllegalStateException` on empty | lls `DynamicArray` throws `IndexOutOfBoundsException` | Template restates `IllegalStateException` guard at the call | `popPeekFirstTest` 1 -> 0 |
+| `removeRange(start, end)` with INCLUSIVE end, refusals `end >= size` and `start > end` | lls `DynamicArray.removeRange` is EXCLUSIVE [start, end) with silent no-op | Template binds once, restates refusals, translates bound `end + 1` (CLAUDE.md §4.4) | `removeRangeTest` 1 -> 0 |
+| `ensureCapacity(n)` returns `T[]`, refuses `n < 0`, grows to `max(max(8, needed), size * 1.75)` | lls returns `Unit`, grows to exactly `size + n` | Template restates refusal and java's growth rule, reads `.items` | `ensureCapacityTest` 1 -> 0 |
+| `setSize(n)` returns `T[]`, refuses `n < 0` | lls returns `Unit`, silently accepts negative | Template restates refusal, reads `.items` | `setSizeTest` 1 -> 0 |
+| `Array(T[])` copies with `capacity == length` | previous `apply() + addAll` left default capacity 16 | `$Target.from[$T0]($0)` — `DynamicArray.from(Array)` copies with exact capacity | SortTest 8 -> 0 |
+| `Queue.toString` -> `"[a, b, c]"` | `ArrayDeque.toString` -> `"ArrayDeque(a, b, c)"` | Template `mkString("[", ", ", "]")` | `toStringTest` 1 -> 0 |
+| `xor(bits)` MUTATES in place | `BitSet.xor` RETURNS a new set | Template `^=` in-place operator (CLAUDE.md §4.4) | `xorTest` 1 -> 0 |
+| `Iterator.remove()` mutates the collection through the iterator | `JavaIterator.from(target.iterator)` is a read-only bridge — no handle on the collection | **REFUSED, counted**: `RetargetBoundaryCheck.Issue.IteratorRemove`, per-member attribution | 4 tests remain (QueueTest x2, MixedPutRemoveTest x2) |
+
+The raw-constructor element-type gap is **CLOSED**: `retargetConstruct` derives the element type
+from a dropped supplier `Tree.MethodRef` (`Sprite[]::new` -> `[Sprite]`) when the constructor's own
+type is unapplied or Object-applied. This is §1(a) universal — a fact about raw types and
+`ArraySupplier`, true of every codebase.
+
+**IteratorRemove: the approach to close it.** A faithful image is a removing iterator minted OVER THE
+COLLECTION (index-tracking, calling the target's own `removeIndex`), which is a runtime shim
+(`balticporter.runtime.RemovingIterator[A]`) the bridge does not have yet. `DynamicArray.iterator`
+returns a read-only `Iterator[A]` with no `remove`; lls has no removing iterator. The shim would
+wrap the DynamicArray directly, tracking the current index and delegating `remove` to
+`removeIndex(lastReturnedIndex)`. §1(a) engine mechanism, (b) parameter is the retarget target's
+remove method.
+
+**CharArray residue: 3 JsonMatcherTests.** `DynamicArray[Char].toString` renders as `[c, h, ...]`
+rather than java's `CharArray.toString` which concatenates chars into a string. Same decision as the
+`CharArrayTest` exclusion (`fdc30967`). sge DROPPED `CharArray`'s string semantics — type-mappings.md
+maps it to `DynamicArray[Char]` with no string-like behaviour. 3 tests declared in
+`expected-failures.tsv`.

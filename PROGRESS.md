@@ -11638,3 +11638,12 @@ paragraph for the complete census table.
 #### 3.1ae gdx-test residue
 
 - `a45b5225` gdx-test 16->0: LongArray add(4)/shrink/ensureCapacity/setSize/resize return-array Templates; Bits copy ctor desc-keyed; JsonMatcherTests toString body substitution (StringBuilder); Chain type propagation fix (a) engine. gdx-test 0/0/0/106, 156 pass 35 fail 0 skip, expected-lost 30
+
+#### 3.1af gdx-test runtime
+
+- `7f09a880` engine (a): retargetConstruct derives raw-ctor element type from the dropped supplier MethodRef; RetargetBoundaryCheck IteratorRemove kind. 58 engine specs, 0 failures.
+- `f307b05d` policy: peek/first/pop IllegalStateException, removeRange inclusive->exclusive, Queue toString mkString, ensureCapacity/setSize growth, Array(T[]) from[$T0] exact capacity, xor ^=, with -> from($0). gdx-test 0/0/0/106, 180 pass 11 fail 0 skip, expected-lost 30.
+- SortTest x8 CLOSED (backing array capacity: from[$T0] gives exact capacity).
+- JsonMatcherTests x3 declared (CharArray->DynamicArray[Char] toString semantics, same as CharArrayTest exclusion fdc30967).
+- IteratorRemove x4 declared (QueueTest x2, MixedPutRemoveTest x2 -- ENGINE-LIMITS.md K36).
+- gdx 0/0/0/97, gdx-test 0/0/0/106, suite 180/11/0, expected-lost 30, base-surface 0 fatal.
