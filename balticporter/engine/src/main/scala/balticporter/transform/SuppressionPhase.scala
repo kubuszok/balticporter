@@ -51,6 +51,11 @@ final class SuppressionPhase extends Phase:
     def hasOrNull(body: Term): Boolean = StandardTraversal.scanTerm(body, false) {
       case (true, _) => true
       case (_, Tree.Select(_, s, _, _)) if orNullSyms(s) => true
+      // Template-produced `.orNull` appears in Tree.Opaque raw text, not as a structured
+      // Tree.Select. A Template like `"$recv.get($0).orNull"` renders into an Opaque whose
+      // `raw` contains the literal text `.orNull`. Scan for it so SuppressionPhase places
+      // `@nowarn("msg=deprecated")` on the enclosing member.
+      case (_, t: Tree.Opaque) if t.raw.contains(".orNull") => true
       case (acc, _) => acc
     }
 
