@@ -275,6 +275,70 @@ final class ClassToTraitTransform(
           case _ => app
 
 
+  /** Fix a RAW `new Pool[?](a,b) { ... }.asInstanceOf[Pool[T]]`.
+    *
+    * The TIR dump shows the shape is `Typed(Apply(New(tpt=Pool[?], anon=...), Nil), Pool[T])`.
+    * `transformApply` already stripped args and added override vals, but the `New` node's `tpt`
+    * carries wildcards (`Pool[?]` = `AppliedType(Pool, [TypeBounds])`) making the anonymous class
+    * `Pool[Nothing]` and every abstract member unreachable. The `Typed` wrapper (rendered as
+    * `.asInstanceOf[Pool[T]]`) carries the actual type argument from the field type.
+    *
+    * This hook: (1) replaces the wildcard args with the concrete args from the `Typed` target,
+    * (2) narrows override methods returning `Object` to the actual type argument, and
+    * (3) drops the `Typed` wrapper (the anonymous class now directly IS `Pool[T]`). */
+  override def transformTerm(t: Term)(using program: Program): Term =
+    if resolved.isEmpty then return t
+    t match
+      case ty @ Tree.Typed(inner: Tree.Apply, castTpt, _, _) =>
+        val n = inner.fun match
+          case n: Tree.New if n.anon.isDefined => Some(n)
+          case _                               => None
+        n match
+          case Some(newNode) =>
+            val headSym = ClassToTraitTransform.headSymOf(newNode.tpt.tpe)
+            headSym.flatMap(resolved.get) match
+              case Some(_) =>
+                // Match: tpt has wildcards (AppliedType with TypeBounds args) and target is concrete
+                val hasWildcards = newNode.tpt.tpe match
+                  case TypeRepr.AppliedType(_, args) => args.exists(_.isInstanceOf[TypeRepr.TypeBounds])
+                  case _ => false
+                val targetArgs = castTpt.tpe match
+                  case TypeRepr.AppliedType(tc, args) if headSymOf(tc) == headSym &&
+                       !args.exists(_.isInstanceOf[TypeRepr.TypeBounds]) => Some(args)
+                  case _ => None
+                (hasWildcards, targetArgs) match
+                  case (true, Some(concreteArgs)) =>
+                    // Replace wildcard args with concrete ones on the tpt
+                    val baseTc = newNode.tpt.tpe match
+                      case TypeRepr.AppliedType(tc, _) => tc
+                      case other => other
+                    val fixedTpt = newNode.tpt.copy(tpe = TypeRepr.AppliedType(baseTc, concreteArgs))
+                    // Narrow Object-returning overrides to the actual type argument
+                    val fixedAnon = newNode.anon.map { anon =>
+                      if concreteArgs.size == 1 then
+                        val actualTpe = concreteArgs.head
+                        val fixedBody = anon.body.map {
+                          case d: Tree.DefDef if !program.symbolOf(d.symbol).exists(_.name == "<init>") =>
+                            val isObject = d.returnTpt.tpe match
+                              case TypeRepr.TypeRef(_, s) => program.symbolOf(s).exists(n =>
+                                n.fullName == "java.lang.Object" || n.name == "Object")
+                              case _ => false
+                            if isObject then
+                              d.copy(returnTpt = d.returnTpt.copy(tpe = actualTpe))
+                            else d
+                          case other => other
+                        }
+                        anon.copy(body = fixedBody)
+                      else anon
+                    }
+                    val fixedNew = newNode.copy(tpt = fixedTpt, anon = fixedAnon)
+                    // Drop the Typed wrapper -- the anonymous class now directly extends Pool[T]
+                    inner.copy(fun = fixedNew, tpe = castTpt.tpe)
+                  case _ => t
+              case _ => t
+          case _ => t
+      case _ => t
+
   // ---- helpers ----
 
   private def mkVal(m: ParamMapping, tpe: TypeRepr, rhs: Option[Term],
