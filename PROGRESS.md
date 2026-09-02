@@ -11758,16 +11758,23 @@ paragraph for the complete census table.
 
 ### 13.22 Wave 3.1al --- retarget dependents (null image, .ref)
 
-`.orNull` -> `.get` on all six map types' `("get", 1)` retarget Templates. lls's `.orNull` is
-deprecated as a lint tripwire; `.get` is the non-deprecated unchecked unwrap (NPE on empty = java's
-null dereference semantics). The Template is still needed because Scala 3's return-type-sensitive
-overload resolution picks `get(K,V):V` over `get(K):Nullable[V]` when the expected return type is
-`V` (measured: E171 at 4 sites without the Template, 74 errors without any Template at all).
+SuppressionPhase fix: Template-produced `.orNull` (in `Tree.Opaque` raw text) was invisible to the
+structured `Tree.Select` scan. Extended `hasOrNull` to match `Tree.Opaque` nodes whose `raw`
+contains `.orNull`. The `.orNull` Template is the null-preserving unwrap (java's map.get returns
+null for a missing key, NOT NPE). lls `orNull` is NOT actually deprecated -- the annotation
+triggers `-Werror` with `-deprecation`, forcing `@nowarn("msg=deprecated")` with a reason. The
+Template is still needed: Scala 3's return-type-sensitive overload resolution picks `get(K,V):V`
+over `get(K):Nullable[V]` when the expected return type is `V`.
+
+DEAD END: `.orNull` -> `.get` (8f510973, reverted c310c564) was a behaviour regression:
+`Nullable.get` throws NPE on empty, turning every missing-key lookup into a crash. Compiled clean,
+every count flat -- CLAUDE.md section 4.4's defect class.
 
 **Measurements (3.1al):**
 - gdx 0/0/0 .ref 54 (baseline), gdx-test 0/0/0 184/7 (baseline)
 - textra 18 (unchanged from 3.1aj)
 - gltf 12 (unchanged)
-- visui 13 -> 12 (one `.get`-reachable unwrap)
+- visui 13 -> 12 (one `.orNull`-reachable unwrap)
 - ai 13, anim8 17, screens 0, vfx 1 (all unchanged)
-- `.ref` 140 -> 54: 91 `.orNull` deprecation warnings + 13 stale `@nowarn` annotations removed
+- `.ref` 140 -> 54: 91 `.orNull` deprecation warnings now suppressed by SuppressionPhase, 13 stale
+  `@nowarn` gone (members now correctly have `.orNull` and the annotation suppresses it)

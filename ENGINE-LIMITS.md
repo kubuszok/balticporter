@@ -14608,14 +14608,20 @@ target's own companion. Landed in `9a8b5d30`.
 
 #### Families and fixes (3.1al)
 
-**`.orNull` -> `.get` on all map get(K) Templates (section 1(b), policy).** lls's `.orNull` is
-deprecated as a lint tripwire; the Templates used it to unwrap `Nullable[V]` at every `get(K)` call.
-Replaced with `.get` — the non-deprecated unchecked unwrap (NPE on empty = java's null dereference
-semantics). The Template is STILL NEEDED because Scala 3's return-type-sensitive overload resolution
-picks `get(K,V):V` over `get(K):Nullable[V]` when the expected return type is `V` (measured:
-E171 at 4 sites without the Template, 74 errors without any Template). `.ref` 140 -> 54 (baseline):
-91 `.orNull` deprecation warnings and 13 stale `@nowarn` annotations eliminated. visui 13 -> 12
-(one `.get`-reachable unwrap that `.orNull` had not covered).
+**SuppressionPhase at Template `.orNull` (section 1(a), engine).** The `.orNull` Template on every
+map type's `get(K)` is the null-preserving unwrap (java's `map.get(k)` returns null for a missing
+key, NOT NPE). `.orNull` is NOT actually deprecated -- lls uses the annotation to trigger `-Werror`
+with `-deprecation`, forcing callers to add `@nowarn("msg=deprecated")` with an explicit reason
+naming the java interop boundary. `SuppressionPhase` scanned only structured `Tree.Select` nodes
+for `orNullSym`; Template-produced `.orNull` appears in `Tree.Opaque` raw text. Fix: also match
+`Tree.Opaque` nodes whose `raw` contains `.orNull`. The `.orNull` Template is still needed because
+Scala 3's return-type-sensitive overload resolution picks `get(K,V):V` over `get(K):Nullable[V]`
+when the expected return type is `V` (measured: E171 at 4 sites without the Template, 74 errors
+without any Template). `.ref` 140 -> 54 (baseline): 91 `.orNull` deprecation warnings now
+suppressed, 13 stale `@nowarn` annotations gone (the members now correctly have `.orNull` again
+and the annotation suppresses the deprecation). visui 13 -> 12 (one `.orNull`-reachable unwrap).
+`.get` was a BEHAVIOUR REGRESSION (8f510973, reverted in c310c564): `Nullable.get` throws NPE on
+empty, turning every missing-key lookup into a crash at the lookup instead of a null answer.
 
 #### Remaining residue (73 total, classified)
 
