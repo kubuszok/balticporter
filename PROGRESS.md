@@ -11692,38 +11692,6 @@ com.badlogic.ashley.core.PooledEngine#createComponent
 return type. The hand port's `ComponentFactories.create` returns `T`; the manifest body is
 `lowlevel.Nullable(sge.ecs.ComponentFactories.create(componentType))`.
 
-<<<<<<< HEAD
-### 13.20 Wave 2.15 -- frontend catch census (re-verification)
-
-Re-censused the 21 catch sites in `SpoonTir.scala` (20 real + 1 doc-comment example). All 21 are
-absent-is-normal with honest defaults; zero fabricated facts remain (waves 2.1 and 2.2 already
-removed all 126 fabricated-fact and dead catches). One new named helper added: `fieldDeclOf`,
-consolidating five `getFieldDeclaration` call sites (two caught, three bare) into one function,
-matching the pattern of the four wave-2.1 helpers. The three bare sites (`fieldSym`,
-`externalFieldType`, `erasedReceiverView`) would have crashed on a noClasspath resolution failure;
-now they gracefully decline. 0 digests by construction. See `ENGINE-LIMITS.md` 0.1 wave 2.15
-paragraph for the complete census table.
-
-#### 3.1ab base-surface primary
-
-- `06ad250b` base-surface D15: dependent follows published primary, collapse key fix -- base-surface 82->22 (3 fatal->0, 79 unanswered->0)
-- `26045f63` D15 specs: CollapseDivergenceSpec accessor-key test, BaseSurfaceSpec D15 update -- 2625 specs 0 failures
-
-#### 3.1ae gdx-test residue
-
-- `a45b5225` gdx-test 16->0: LongArray add(4)/shrink/ensureCapacity/setSize/resize return-array Templates; Bits copy ctor desc-keyed; JsonMatcherTests toString body substitution (StringBuilder); Chain type propagation fix (a) engine. gdx-test 0/0/0/106, 156 pass 35 fail 0 skip, expected-lost 30
-
-#### 3.1af gdx-test runtime
-
-- `7f09a880` engine (a): retargetConstruct derives raw-ctor element type from the dropped supplier MethodRef; RetargetBoundaryCheck IteratorRemove kind. 58 engine specs, 0 failures.
-- `f307b05d` policy: peek/first/pop IllegalStateException, removeRange inclusive->exclusive, Queue toString mkString, ensureCapacity/setSize growth, Array(T[]) from[$T0] exact capacity, xor ^=, with -> from($0). gdx-test 0/0/0/106, 180 pass 11 fail 0 skip, expected-lost 30.
-- SortTest x8 CLOSED (backing array capacity: from[$T0] gives exact capacity).
-- JsonMatcherTests x3 declared (CharArray->DynamicArray[Char] toString semantics, same as CharArrayTest exclusion fdc30967).
-- IteratorRemove x4 declared (QueueTest x2, MixedPutRemoveTest x2 -- ENGINE-LIMITS.md K36).
-- gdx 0/0/0/97, gdx-test 0/0/0/106, suite 180/11/0, expected-lost 30, base-surface 0 fatal.
-
-=======
->>>>>>> 79e63c56 (docs: wave 3.1 collections-retarget consolidation -- PROGRESS §13.18 consolidated, DESIGN §8.12 retarget rewrites/Template/Construct/RetargetBoundaryCheck, CLAUDE.md §1(b) table extended, ENGINE-LIMITS T26 status, skills updated)
 ### 13.20 Wave 3.1ad --- unused symbols (.ref)
 
 `UnusedSymbolTransform`: a late §1(a) phase that deletes, discards or suppresses unused local
@@ -11738,3 +11706,15 @@ conservatively treated as referenced (not deleted or suppressed).
 
 `.ref 93 -> 54` (49 of 70 E198 closed, 21 remain). JVM/JS/Native 0/0/0 held.
 `unused-symbol(handled)` 117, `unused-symbol(refused)` 0. Check lanes in RequiredChecks.
+
+
+### 13.21 Wave 2.15 -- frontend catch census (re-verification)
+
+Re-censused the 21 catch sites in `SpoonTir.scala` (20 real + 1 doc-comment example). All 21 are
+absent-is-normal with honest defaults; zero fabricated facts remain (waves 2.1 and 2.2 already
+removed all 126 fabricated-fact and dead catches). One new named helper added: `fieldDeclOf`,
+consolidating five `getFieldDeclaration` call sites (two caught, three bare) into one function,
+matching the pattern of the four wave-2.1 helpers. The three bare sites (`fieldSym`,
+`externalFieldType`, `erasedReceiverView`) would have crashed on a noClasspath resolution failure;
+now they gracefully decline. 0 digests by construction. See `ENGINE-LIMITS.md` 0.1 wave 2.15
+paragraph for the complete census table.
