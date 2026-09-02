@@ -2932,7 +2932,21 @@ final class CollectionsTransform(
   private def resolveRetargetArg(arg: CollectionsTransform.RetargetArg, sourceArgs: List[TypeRepr]): TypeRepr =
     arg match
       case CollectionsTransform.RetargetArg.SourceArg(i) =>
-        if i < sourceArgs.size then sourceArgs(i)
+        if i < sourceArgs.size then
+          // --- 3.1am: strip wildcard bounds on arity-changing retarget args ---
+          // A `SourceArg(i)` may resolve to a `TypeBounds` when the source type has a
+          // wildcard argument (`ObjectLongMap<? extends String>` -> `ObjectMap[? <: String, Long]`).
+          // The arity-changing target (ObjectMap) is invariant, so a wildcard argument is invalid.
+          // Take the more-informative bound: lower when present (? super T -> T), else upper
+          // (? extends T -> T). This is the same rule as the same-arity wildcard stripping
+          // at line 2921, applied at arity-changing args — section 1(a), a universal fact about
+          // wildcard bounds at invariant targets.
+          sourceArgs(i) match
+            case TypeRepr.TypeBounds(lo, hi) =>
+              if lo != TypeRepr.NoType then lo
+              else if hi != TypeRepr.NoType then hi
+              else TypeRepr.AnyBounds
+            case other => other
         else TypeRepr.AnyBounds // raw source — fill with ?
       case CollectionsTransform.RetargetArg.FixedType(fqn) =>
         retargetFixedTypeSyms.get(fqn) match
