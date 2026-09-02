@@ -2246,14 +2246,8 @@ object LibgdxPolicy:
          new balticporter.transform.ClassToTraitTransform(
            specs = Map(
              "com.badlogic.gdx.utils.Pool" -> List(
-               balticporter.transform.ClassToTraitTransform.ParamMapping(0, "initialCapacity",
-                 Some(balticporter.tir.Tree.Literal(balticporter.tir.Constant.IntC(16),
-                   balticporter.tir.TypeRepr.TypeRef(balticporter.tir.TypeRepr.NoPrefix, balticporter.tir.SymId.None),
-                   balticporter.tir.Origin.synthetic))),
-               balticporter.transform.ClassToTraitTransform.ParamMapping(1, "max",
-                 Some(balticporter.tir.Tree.Literal(balticporter.tir.Constant.IntC(2147483647),
-                   balticporter.tir.TypeRepr.TypeRef(balticporter.tir.TypeRepr.NoPrefix, balticporter.tir.SymId.None),
-                   balticporter.tir.Origin.synthetic))),
+               balticporter.transform.ClassToTraitTransform.ParamMapping(0, "initialCapacity"),
+               balticporter.transform.ClassToTraitTransform.ParamMapping(1, "max"),
              ),
            ),
          ),
