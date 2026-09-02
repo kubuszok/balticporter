@@ -122,9 +122,14 @@ final class ClassToTraitTransform(
 
   private def transformNominatedType(cd: Tree.ClassDef, spec: ResolvedSpec, program: Program): Tree.ClassDef =
     val origin = cd.origin
-    // Remove all constructors from the body
+    val mappedFieldNames = spec.mappings.map(_.valName).toSet
+    // Remove all constructors AND the mapped fields from the body.
+    // The mapped fields are replaced by abstract vals — keeping both causes the
+    // shadow-rename pass (§4.55) to rename the field to `max$field`, which breaks
+    // every reference to `pool.max` in the emitted code.
     val bodyNoCtors = cd.body.filterNot {
       case d: Tree.DefDef => program.symbolOf(d.symbol).exists(_.name == "<init>")
+      case d: Tree.ValDef => program.symbolOf(d.symbol).exists(s => mappedFieldNames.contains(s.name))
       case _ => false
     }
     // Add abstract DEF definitions (parameterless, no body) for the mapped parameters.
@@ -175,10 +180,33 @@ final class ClassToTraitTransform(
       .filter(_._2.nonEmpty)
       .maxByOption(_._2.size)
 
+    // Check if the widest-with-args constructor is the CLASS's primary (its params will be
+    // promoted to class-level by the ctor funnel). A super arg that references a SECONDARY
+    // ctor's parameter becomes self-referential when placed as an override val RHS at class
+    // body level — `override val max: Int = max` reads ITSELF and evaluates to 0.
+    // A constructor is primary-eligible if it is the UNIQUE root among the class's ctors
+    // (no delegation to `this(...)`); when multiple roots exist (FlushablePool has three),
+    // the funnel picks the nilary one, so any root with params is a secondary.
+    val ctorParamSyms: Set[SymId] = widestWithArgs match
+      case Some((ctor, _)) => ctor.paramss.flatten.map(_.symbol).toSet
+      case None => Set.empty
+
+    def isSafeArg(arg: Term): Boolean = arg match
+      case Tree.Ident(sym, _, _) =>
+        // Safe if the ident does NOT reference a ctor param (it references a class member
+        // or a literal/expression), OR if it references a param of the ONLY root constructor
+        // (which will be promoted to the primary by the ctor funnel).
+        if ctorParamSyms.contains(sym) then
+          // This is a ctor param reference. Safe only if this is the UNIQUE root ctor.
+          val roots = ctors.filterNot(c => CtorFunnel.delegatesToThis(program, c))
+          roots.size == 1 && widestWithArgs.exists(_._1.symbol == roots.head.symbol)
+        else true
+      case _ => true // non-ident (literal, expression) — always safe
+
     val overrideVals = widestWithArgs match
       case Some((_, superArgs)) =>
         spec.mappings.flatMap { m =>
-          if m.index < superArgs.size then
+          if m.index < superArgs.size && isSafeArg(superArgs(m.index)) then
             val tpe = if m.index < spec.formalTypes.size then spec.formalTypes(m.index) else superArgs(m.index).tpe
             Some(mkVal(m, tpe, Some(superArgs(m.index)), origin, cd.symbol, cdSym))
           else if m.index < spec.defaults.size && m.index < spec.formalTypes.size then
