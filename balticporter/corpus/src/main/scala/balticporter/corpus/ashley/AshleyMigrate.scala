@@ -242,6 +242,31 @@ object AshleyPolicy:
             "com.badlogic.ashley.core.PooledEngine#createComponent",
           ),
         ),
+        // --- 3.2g: hand-port-added members (ecs drop-in parity) ---
+        // sge's Engine.scala adds `registerComponentFactory` and `componentFactories` — the
+        // factory-registry API that replaces the reflective `ClassReflection.newInstance` the base
+        // drops. Both are justified by divergence-investigator verdict (sge commit 80b3fc64
+        // "ReflectionPool -> factory registry", ISS-723). The source text is FQN-qualified (§6)
+        // and spliced at the end of Engine's body.
+        // Citation: ../sge/sge-extension/ecs/src/main/scala/sge/ecs/Engine.scala:90-99
+        new balticporter.transform.AddMembersTransform(Map(
+          "com.badlogic.ashley.core.Engine" -> List(
+            balticporter.transform.AddMembersTransform.MemberSpec(
+              name   = "componentFactories",
+              arity  = 0,
+              source = "protected val componentFactories: scala.collection.mutable.HashMap[Class[?], () => ?] = scala.collection.mutable.HashMap.empty",
+              reason = balticporter.tir.Reason.Configured("add-members", "com.badlogic.ashley.core.Engine#componentFactories"),
+              why    = Some("sge factory registry (sge commit 80b3fc64, ISS-723): replaces reflective ClassReflection.newInstance the base drops"),
+            ),
+            balticporter.transform.AddMembersTransform.MemberSpec(
+              name   = "registerComponentFactory",
+              arity  = 2,
+              source = "def registerComponentFactory[T <: sge.ecs.Component](componentClass: Class[T], factory: () => T): Unit = componentFactories.put(componentClass, factory)",
+              reason = balticporter.tir.Reason.Configured("add-members", "com.badlogic.ashley.core.Engine#registerComponentFactory"),
+              why    = Some("sge factory registry (sge commit 80b3fc64, ISS-723): cross-platform component creation, required on Scala.js/Native"),
+            ),
+          ),
+        )),
         // LAST, deliberately. This reads what the BASE actually emitted and reports a reference the
         // base does not ship — so it must run AFTER the seams that re-point those references, or it
         // reports the very sites the next phase repairs. It is a RESIDUE check, exactly like

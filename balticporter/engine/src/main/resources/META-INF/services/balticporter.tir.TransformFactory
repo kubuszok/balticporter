@@ -9,6 +9,7 @@ balticporter.runner.ClassTableFactory
 balticporter.runner.TypeRedirectFactory
 balticporter.runner.MemberRenameFactory
 balticporter.runner.MethodBodyFactory
+balticporter.runner.AddMembersFactory
 balticporter.runner.CallSiteSubstitutionFactory
 balticporter.runner.PortMapMigrationFactory
 balticporter.runner.PrimitiveToOpaqueFactory

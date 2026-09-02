@@ -1,7 +1,7 @@
 package balticporter.runner
 
 import balticporter.catalog.Platform
-import balticporter.tir.{ConfigError, ConfigView, Descriptor, OpaqueSpec, Phase, Remedy, RuleScope, TransformFactory}
+import balticporter.tir.{ConfigError, ConfigView, Descriptor, OpaqueSpec, Phase, Reason, Remedy, RuleScope, TransformFactory}
 import balticporter.transform.*
 
 /** The engine's own [[TransformFactory]] registrations — one per transform it ships that a config
@@ -50,7 +50,7 @@ object BuiltinFactories:
     new CollectionsFactory, new MutableParamsFactory, new PanamaFfiFactory,
     new TestFrameworkFactory, new StaticForwarderFactory, new ClassTableFactory,
     new TypeRedirectFactory, new MemberRenameFactory,
-    new MethodBodyFactory, new CallSiteSubstitutionFactory,
+    new MethodBodyFactory, new AddMembersFactory, new CallSiteSubstitutionFactory,
     new PortMapMigrationFactory,
     new PrimitiveToOpaqueFactory, new GlobalsToImplicitsFactory, new BeanPropertyFactory,
     new NullabilityFactory, new PublicFieldAccessorFactory, new RemediationFactory,
@@ -393,6 +393,38 @@ final class MethodBodyFactory extends TransformFactory:
   def name = "method-body"
   def fromConfig(config: ConfigView): Phase =
     new MethodBodyTransform(config.stringMap("bodies").getOrElse(Map.empty))
+
+/** ```
+  * { transform = "add-members"
+  *   members {
+  *     "com.badlogic.ashley.core.Engine" = [
+  *       { name = "registerComponentFactory", arity = 2,
+  *         source = "def registerComponentFactory[T <: …](…): Unit = …" }
+  *     ]
+  *   }
+  * }
+  * ```
+  *
+  * Each member spec is an object with `name`, `arity`, `source`, and optional `why` (free text for
+  * the porter note). The key of the outer map is the owner's FQN in the UPSTREAM namespace. */
+final class AddMembersFactory extends TransformFactory:
+  def name = "add-members"
+  def fromConfig(config: ConfigView): Phase =
+    val raw = config.children("members").getOrElse(Nil)
+    val entries = raw.flatMap { obj =>
+      val owner = obj.requireString("owner")
+      val specs = obj.children("specs").getOrElse(Nil).map { s =>
+        AddMembersTransform.MemberSpec(
+          name   = s.requireString("name"),
+          arity  = s.int("arity").getOrElse(0),
+          source = s.requireString("source"),
+          reason = Reason.Configured("add-members", s"$owner#${s.requireString("name")}"),
+          why    = s.string("why"),
+        )
+      }
+      if specs.nonEmpty then List(owner -> specs) else Nil
+    }
+    new AddMembersTransform(entries.toMap)
 
 /** ```
   * { transform = "call-site-substitution"

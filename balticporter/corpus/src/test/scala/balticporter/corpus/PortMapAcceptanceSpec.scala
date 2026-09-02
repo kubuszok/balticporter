@@ -105,5 +105,8 @@ class PortMapAcceptanceSpec extends munit.FunSuite:
     // 35 retargeted types. The 68 are ALL in Ashley's own files — references to types the base
     // drops that were previously invisible because the map's upstream names were wrong or because
     // the `Dropped` row was shadowed by a phantom `Renamed` row.
+    // Wave 3.2g drops `Pool` too — but INJECTS sge's trait at the same FQN, so the map records it
+    // `Substituted`, and `DroppedType` is deliberately not raised for a `Substituted` type (a
+    // replacement stands at the name). The count therefore stays at the D16 number.
     assertEquals(phase.findings.count(_.issue == PortMapTransform.Issue.DroppedType), 68)
   }

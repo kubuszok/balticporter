@@ -367,6 +367,15 @@ object Decision:
       * §1(a) universal — Java has no `-Wunused` equivalent; every port under strict flags needs
       * this. */
     case UnusedSymbolHandled
+    /** a member ADDED to a class by `AddMembersTransform` — verbatim Scala text spliced at the end
+      * of the owner's body, for a member the hand port wrote and the upstream java does not declare.
+      *
+      * [[InjectedMember]]'s case one seam over: that one is about a whole FILE the port supplies,
+      * this one is about a MEMBER inside a mechanically-translated class. The DETAIL says what was
+      * added (`member`, `arity`) and cites the reference port's source, because a reader of the
+      * emitted `def registerComponentFactory` is looking at a member no java file declares and the
+      * source map cannot answer that. */
+    case AddedMember
 
   val Header ="#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 

@@ -144,7 +144,11 @@ object PorterNote:
         // emitted `@scala.annotation.nowarn("msg=deprecated")` is owed the reason it is there —
         // the method the body calls is deprecated as a lint measure by the target library, the same
         // pattern sge uses at every Java interop boundary (`nullable-guide.md`).
-        SuppressedWarning)
+        SuppressedWarning,
+        // …and a MEMBER the phase added. Here because a reader of the emitted member is looking at
+        // a `def` that is in NO java file, and the source map cannot answer that — the same shape
+        // as `BeanAccessor` and `RecordMembers`, one mechanism over.
+        AddedMember)
 
   /** WHERE each rendered kind's note goes, which is not a style question: the three answers are
     * three different pieces of machinery and a kind in the wrong one is a note that never appears.
@@ -159,7 +163,7 @@ object PorterNote:
     *     time); when nothing replaces it, `decisions.tsv` and the port map are the whole record,
     *     and that is the honest answer rather than a note in a file that does not exist.
     */
-  val InBody: Set[Decision.Kind]    = Set(Decision.Kind.DroppedMember)
+  val InBody: Set[Decision.Kind]    = Set(Decision.Kind.DroppedMember, Decision.Kind.AddedMember)
   val NotInTree: Set[Decision.Kind] = Set(Decision.Kind.DroppedType)
   val AtDeclaration: Set[Decision.Kind] = Rendered -- InBody -- NotInTree
 

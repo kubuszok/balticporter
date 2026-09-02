@@ -636,26 +636,37 @@ class PortRunSpec extends munit.FunSuite:
     // the missing `def this()` has nothing to grep for. Hence the note — `InBody`, at the head of
     // the owning type, which is where somebody looking for the constructor looks (§4.575).
     val (root, src) = fixture()
+    // TWO roots with super(args): Font(int) and Font(int, String). The WIDEST (int, String) is
+    // promoted. Font() chains to Font(int) which is the OTHER root, so reachesCtor(Font(),
+    // promotedPrimary) is false. Sub extends Font forces argument-free extends, the fixpoint
+    // withholds the promotion, falls to Plan.none, and the nilary is dropped (C11).
+    // Wave 3.2g: the CtorFunnel change for ClassToTraitTransform correctly keeps a nilary alive
+    // when it DOES chain to the promoted primary; this fixture triggers the case where it does NOT.
+    java(src, "com/demo/Base.java",
+      """package com.demo;
+        |public class Base {
+        |  public Base(int v) {}
+        |  public Base(int v, String s) {}
+        |}""".stripMargin)
     java(src, "com/demo/Font.java",
       """package com.demo;
-        |public class Font {
-        |  public int size; public String name;
-        |  public Font()                      { this(seed(), "d"); }
-        |  public Font(int size)              { this(size, "d"); }
-        |  public Font(int size, String name) { this.size = size; this.name = name; grow(size); }
+        |public class Font extends Base {
+        |  public int size;
+        |  public Font()                      { this(seed()); }
+        |  public Font(int size)              { super(size); this.size = size; }
+        |  public Font(int size, String name) { super(size, name); this.size = size; }
         |  static int seed() { return 12; }
-        |  void grow(int by) { size = size + by; }
         |}""".stripMargin)
     // the argument-free `extends` is what takes the paramful promotion back, leaving `Plan.none`
     java(src, "com/demo/Sub.java", "package com.demo; public class Sub extends Font { }")
-    val r = run(root, src, files = List("com/demo/Font.java", "com/demo/Sub.java"))()
+    val r = run(root, src, files = List("com/demo/Base.java", "com/demo/Font.java", "com/demo/Sub.java"))()
     val out = Files.readString(r.outDir.resolve("com/demo/Font.scala"))
 
     // the DECLARATION, not the string: the note's own `why` quotes `def this()` on purpose, and a
     // `contains` here would pass or fail on the explanation rather than on the code.
     assert(!out.linesIterator.exists(_.trim.startsWith("def this()")), out)
     assert(clue(out).contains("/* porter: dropped-member reason=universal " +
-      "rule=ctor-funnel/nilary-dropped(C11) arguments=2 member=<init>() owner=com.demo.Font"), out)
+      "rule=ctor-funnel/nilary-dropped(C11) arguments=1 member=<init>() owner=com.demo.Font"), out)
     // the note heads the CLASS BODY, not some member's declaration: the subject has none.
     assert(clue(out.indexOf("porter: dropped-member")) > out.indexOf("class Font"), out)
     // …and the omission it explains is still counted. Two records of ONE predicate's answer, for
