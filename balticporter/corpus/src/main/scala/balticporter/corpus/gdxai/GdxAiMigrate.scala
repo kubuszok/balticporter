@@ -339,7 +339,7 @@ object GdxAiPolicy:
               |            } else ()
               |          }
               |          // Check the max number of children of the parent
-              |          val stackedParent: sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.StackedTask[E] = this.stack.peek()
+              |          val stackedParent: sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.StackedTask[E] = this.stack.peek
               |          val maxChildren: scala.Int = stackedParent.metadata.maxChildren
               |          if (stackedParent.task.childCount >= maxChildren) {
               |            throw this.stackedTaskException(stackedParent, ((("max number of children exceeded (" + (stackedParent.task.childCount + 1)) + " > ") + maxChildren) + ")")
