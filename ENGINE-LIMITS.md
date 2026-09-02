@@ -14140,6 +14140,35 @@ four back to their committed floors. `PrimitiveToOpaqueTransformSpec` 39 -> 41 (
 coercion tests). *Fix kind: (a) engine — `coerceArgs` port-map check,
 `RunScope.baseMemberUpstream`, `PortRun` discovery.*
 
+### O9. `PrimitiveToOpaqueTransform` binds `primSym` to the WRONG `scala.Int` when a prior phase minted a duplicate — textra Align 0 -> 58
+
+**CLOSED. (a) engine — one `find` replaced by `minByOption` on the SymId, priced at 0 on every
+port.**
+
+`CollectionsTransform.retargetFixedTypeSyms` mints a second `Symbol` with `fullName = "scala.Int"`
+for arity-changing retargets (`FixedType("scala.Int")` — e.g. `IntIntMap -> ObjectMap[Int, Int]`).
+The symbol is created via `byScala.getOrElseUpdate`, a `Map` separate from the `named(...)` helper
+that resolves the phase's own `intSym` from the frontend's original. After the collections phase
+runs, the program's `SymbolTable` holds TWO symbols named `"scala.Int"` at different `SymId`s.
+
+`PrimitiveToOpaqueTransform.run` opened with
+`primSym = program.symbols.all.find(_.fullName == spec.underlyingFqn)`, which is non-deterministic
+when duplicates exist: `SymbolTable.all` iterates `Map.values` (no guaranteed order). If `find`
+returned the MINTED symbol (high SymId), `primRef = TypeRef(NoPrefix, <high>)`, and
+`isPrim(TypeRef(NoPrefix, <low>))` — the type every existing field carries — returned `false`.
+Every hint was filtered out at `taggablePrim`, `hints.isEmpty` was `true`, and the phase returned
+early with 0 seeds and 0 `RetypedSignature` decisions.
+
+**Measured**: textra **122 -> 62** (60 rows removed — 58 Align plus 2 from sibling opaque families
+that hit the same duplicate-symbol path; 62 remaining are sibling wave 3.1ai's families).
+gdx 0/0/0/54 held, every dependent lane unchanged.
+
+The fix: `filter(_.fullName == ...).minByOption(_.id.raw)` — the lowest `SymId` is the frontend's
+original, minted symbols always append above the existing max. Applied to `primSym`, `boxedPrimSym`
+and `arraySym`. `PrimitiveToOpaqueTransformSpec` 30 -> 31 (one O9 test with a duplicate symbol).
+
+*Fix kind: (a) engine — `PrimitiveToOpaqueTransform.run`, three `find` calls.*
+
 ## 14. The IDIOM layer — what was REFUSED, with its number
 
 `DESIGN.md` §8.15 states what licenses this layer at all: an idiom transformer has no DIFFERENCE to

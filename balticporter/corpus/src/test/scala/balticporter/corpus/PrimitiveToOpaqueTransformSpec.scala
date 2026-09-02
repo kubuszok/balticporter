@@ -2,7 +2,7 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{OpaqueSpec, Pipeline, PolicyBinder, RuleScope, RunScope}
+import balticporter.tir.{Flags, OpaqueSpec, Pipeline, PolicyBinder, RuleScope, RunScope, SymId, Symbol, TypeRepr}
 import balticporter.transform.PrimitiveToOpaqueTransform
 
 /** The primitive → opaque-type transform: a semantically-tagged primitive becomes an `opaque type`
@@ -739,4 +739,34 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     // retyped set (port map says `int`). The argument must be unwrapped.
     assert(clue(emitted).contains("Al.unwrap(this.local)"),
       "propagated arg at a base-NOT-retyped formal must unwrap")
+  }
+
+  // -------------------------------------------------------------------------
+  // O9: duplicate primitive symbol after CollectionsTransform.retargetFixedTypeSyms
+  // -------------------------------------------------------------------------
+
+  test("O9: seeding works when the program has a DUPLICATE scala.Int symbol (retarget FixedType)") {
+    // CollectionsTransform.retargetFixedTypeSyms mints a second `scala.Int` symbol through `byScala`
+    // when a FixedType("scala.Int") arg is resolved.  The opaque transform's `find` on
+    // `"scala.Int"` was non-deterministic: it might bind `primSym` to the MINTED one (high SymId)
+    // while every existing field's `info` references the ORIGINAL (low SymId).  Then `isPrim`
+    // rejected every hint and the phase returned early with 0 seeds.
+    //
+    // This test reproduces the exact shape: parse a program, add a second `scala.Int` symbol at a
+    // HIGH SymId, and verify the opaque transform still seeds from the original-SymId fields.
+    val p0  = SpoonTir.fromSource(src)
+    val origIntSym = p0.symbols.all.find(_.fullName == "scala.Int").get
+    // mint a duplicate with a higher SymId
+    val maxId = p0.symbols.all.map(_.id.raw).max
+    val dupSym = Symbol(SymId(maxId + 100), "Int", "scala.Int", Flags(), SymId.None, TypeRepr.NoType)
+    val p1  = p0.rebuilt(symbols = p0.symbols.updated(dupSym))
+    // sanity: TWO symbols named scala.Int
+    assertEquals(p1.symbols.all.count(_.fullName == "scala.Int"), 2)
+    // the opaque transform must still find the original and seed from it
+    val ph  = new PrimitiveToOpaqueTransform(layerSpec())
+    val out = new TirEmitter(Pipeline.run(p1, List(ph))).emit
+    assert(clue(out).contains("var layer: Layer.T"),
+      "O9 regression: the field hint must be seeded despite a duplicate scala.Int symbol")
+    assert(out.contains("def getLayer(): Layer.T"),
+      "O9 regression: propagation must discover the getter from the seeded field")
   }

@@ -280,11 +280,18 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
   override def run(program: Program): Program =
     unreachable.clear()
     boundaryIssues.clear()
-    primSym = program.symbols.all.find(_.fullName == spec.underlyingFqn).map(_.id).getOrElse(SymId.None)
+    // Use the LOWEST SymId among symbols with this fullName.  The frontend interns the canonical
+    // `scala.Int` / `scala.Array` symbol at a low id; `CollectionsTransform.retargetFixedTypeSyms`
+    // may later MINT a second symbol with the same fullName for arity-changing retargets, and which
+    // one `find` returns is non-deterministic.  The existing symbols' `info` references the ORIGINAL
+    // id, so binding `primSym` to the minted one makes `isPrim` / `taggablePrim` reject every seed.
+    // Prefer the lowest id (the frontend's) so the comparison is stable.
+    // (O9: diagnosed as the cause of the textra 0 -> 58 Align regression after the retarget wave.)
+    primSym = program.symbols.all.filter(_.fullName == spec.underlyingFqn).minByOption(_.id.raw).map(_.id).getOrElse(SymId.None)
     if primSym == SymId.None then return program
     primRef = TypeRepr.TypeRef(TypeRepr.NoType, primSym)
-    boxedPrimSym = program.symbols.all.find(_.fullName == spec.underlying.boxedFqn).map(_.id).getOrElse(SymId.None)
-    arraySym = program.symbols.all.find(_.fullName == "scala.Array").map(_.id).getOrElse(SymId.None)
+    boxedPrimSym = program.symbols.all.filter(_.fullName == spec.underlying.boxedFqn).minByOption(_.id.raw).map(_.id).getOrElse(SymId.None)
+    arraySym = program.symbols.all.filter(_.fullName == "scala.Array").minByOption(_.id.raw).map(_.id).getOrElse(SymId.None)
 
     // The SCOPE fences seeding as well as propagation: a fence a named entry could step over is not
     // a fence, and a pure-move chain crosses type boundaries freely enough that one careless hint

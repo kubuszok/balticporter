@@ -11659,6 +11659,13 @@ Engine specs at HEAD: 1106 engine + 1447 corpus, 0 failures.
 - **sge-ecs drop-in 38/39/39**: wave 3.2e (ArrayBuffer-vs-DynamicArray backing divergence for
   drop-in parity).
 
+#### 3.1ak textra opaque
+
+`ENGINE-LIMITS.md` O9 CLOSED. `PrimitiveToOpaqueTransform.run` bound `primSym` to a MINTED
+`scala.Int` symbol (`CollectionsTransform.retargetFixedTypeSyms`) instead of the frontend's original,
+making `isPrim` reject every hint. textra 122 -> 62 (60 rows closed: 58 Align + 2 sibling opaque;
+62 remaining are 3.1ai).
+
 ### 13.19a Wave 3.2f --- removing iterator (K36 IteratorRemove CLOSED)
 
 `JavaIterator.removing` / `removingFromBuffer` runtime shim with index-tracking, emitted by
