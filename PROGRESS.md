@@ -11787,3 +11787,34 @@ every count flat -- CLAUDE.md section 4.4's defect class.
 `CoreNodeFormatter` (30), `NodeVisitor` (3). Fix: one line in the `refCollector` --
 `case Tree.MethodRef(_, m, _, _, _) => allCounts(m) += 1`. See `ENGINE-LIMITS.md` T26.3.
 md 45 -> 0, md-test 0 (725 registrations held), md-ext 0 held.
+
+
+### 13.23 Wave 4.0 --- ports as sbt subprojects: measured cost of a lane
+
+Measured in the PRIMARY at `fa864edc` (2026-09-02) with three agent worktrees compiling on the same
+machine, so every "now" number is a ceiling. "Before" is the scala-cli lane at `54bd80f8` from the
+`bp-promote17` log (four cold `scala-cli --server=false` compiles of ~600 files per lane).
+
+| lane / step | before (scala-cli) | now (sbt `port-*` subprojects, warm per-worktree server) |
+|---|---|---|
+| `gdx-measure`, cold server (first invocation) | ~25 min | 257 s |
+| `gdx-measure`, warm, nothing changed | ~25 min | 131--166 s |
+| one-row policy iteration (edit one `Template` row in `LibgdxCoreMigrate.scala`, `gdx-measure`) | ~27 min (corpus rebuild + lane) | 172 s |
+| revert the row, `gdx-measure` | ~25 min | 131 s |
+| `gdx-measure-full` (JVM + JS + Native + `.ref`, the three extra rows compiled by sbt in parallel) | ~25 min | 237 s |
+| `gdx-test-measure` (migrate, compile, run 191 tests) | ~20 min | 117 s |
+| `ashley-measure` (dependent: base map, compile WITH `port-sge`, run 112 tests) | ~20 min | 199 s |
+| engine suites (api, engine, corpus, frontend-spoon), warm | -- | 108 s |
+
+What is left in a warm no-change lane is the MIGRATION (the Spoon parse of ~600 java files plus the
+pipeline and the checks, ~100 s) and the correlate step; the JVM compile is an incremental zinc run
+of a few seconds. The one-row iteration costs one corpus recompile (~30 s) on top. Every count and
+`tests.tsv` row was identical to the scala-cli lane at the same commit (wave 4.0b's 23-lane parity
+table). The root cause of every earlier sbt hang is closed in `ENGINE-LIMITS.md` M5.11 (sbtn's
+socket hash is derived from the git COMMON dir, so worktrees shared one server); the lane's
+`SBT_GLOBAL_SERVER_DIR` is per worktree and a `jstack` watchdog reports a stale server instead of a
+cold-JVM policy.
+
+Residue: the migration is now the bottleneck; a per-step timer in the lane (migrate / compile /
+correlate / checks) is the next instrument, and the Spoon parse is the candidate for a cache keyed
+on the vendored tree's hash.
