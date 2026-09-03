@@ -535,14 +535,16 @@ final class CollectionsTransform(
     balticporter.tir.TirPrinter.sha256((arityEntries ++ descEntries).mkString(",")).take(16)
 
   /** digest of the `retargetTypeArgs` table — sorted by source FQN, each arg rendered as
-    * `arg(i)` or `fixed(fqn)`. Used only when `retargetTypeArgs.nonEmpty`. */
+    * `arg(i)`, `fixed(fqn)`, or `applied(fqn,args)`. Used only when `retargetTypeArgs.nonEmpty`. */
   private def retargetTypeArgsDigest: String =
+    def renderArg(a: CollectionsTransform.RetargetArg): String = a match
+      case CollectionsTransform.RetargetArg.SourceArg(i) => s"arg($i)"
+      case CollectionsTransform.RetargetArg.FixedType(fqn) => s"fixed($fqn)"
+      case CollectionsTransform.RetargetArg.Applied(fqn, inner) =>
+        s"applied($fqn,${inner.map(renderArg).mkString("+")})"
     balticporter.tir.TirPrinter.sha256(
       retargetTypeArgs.toList.sortBy(_._1).map { (src, args) =>
-        s"$src->${args.map {
-          case CollectionsTransform.RetargetArg.SourceArg(i) => s"arg($i)"
-          case CollectionsTransform.RetargetArg.FixedType(fqn) => s"fixed($fqn)"
-        }.mkString(",")}"
+        s"$src->${args.map(renderArg).mkString(",")}"
       }.mkString(";")).take(16)
 
   /** the java types this phase retypes — its POLICY, read back so a CHECK can ask what the phase
@@ -1475,13 +1477,17 @@ final class CollectionsTransform(
       }.flatten
     }
 
-    // resolve FixedType FQNs — reuse an EXISTING symbol where one is already in byScala or in
-    // the program, so no FQN ends up with two SymIds. 3.1ai / O9: minting a duplicate `scala.Int`
-    // gives `SymbolTable` two entries with the same `fullName`, and any phase resolving a primitive
-    // by `fullName` may bind the wrong one (3.1ak's root cause: textra's 58 Align opaque rows).
-    retargetFixedTypeSyms = retargetTypeArgs.values.flatten.collect {
-      case CollectionsTransform.RetargetArg.FixedType(fqn) => fqn
-    }.toSet.map { fqn =>
+    // resolve FixedType and Applied FQNs — reuse an EXISTING symbol where one is already in
+    // byScala or in the program, so no FQN ends up with two SymIds. 3.1ai / O9: minting a
+    // duplicate `scala.Int` gives `SymbolTable` two entries with the same `fullName`, and any
+    // phase resolving a primitive by `fullName` may bind the wrong one.
+    // 3.1aw-3: Applied entries contribute their OWN FQN (the type constructor) to the same pool.
+    def collectFqns(arg: CollectionsTransform.RetargetArg): Set[String] = arg match
+      case CollectionsTransform.RetargetArg.FixedType(fqn) => Set(fqn)
+      case CollectionsTransform.RetargetArg.Applied(fqn, inner) =>
+        Set(fqn) ++ inner.flatMap(collectFqns)
+      case _ => Set.empty
+    retargetFixedTypeSyms = retargetTypeArgs.values.flatten.flatMap(collectFqns).toSet.map { fqn =>
       val sym = byScala.getOrElseUpdate(fqn, {
         // check program symbols before minting — the frontend may already have this FQN
         program.symbols.all.find(_.fullName == fqn).map(_.id)
@@ -3045,16 +3051,27 @@ final class CollectionsTransform(
       StandardTraversal.mapType(scan, t)
       seen.toSet
 
+  /** 3.1aw-3: true when a retarget arg mapping can be resolved WITHOUT any source type args —
+    * i.e. every leaf is a `FixedType`, and `Applied` entries contain only fixed leaves.
+    * `SourceArg` is the one form that reads from the source. */
+  private def allFixed(mapping: List[CollectionsTransform.RetargetArg]): Boolean =
+    def isFixed(a: CollectionsTransform.RetargetArg): Boolean = a match
+      case _: CollectionsTransform.RetargetArg.FixedType => true
+      case CollectionsTransform.RetargetArg.Applied(_, inner) => inner.forall(isFixed)
+      case _ => false
+    mapping.forall(isFixed)
+
   override def transformType(t: TypeRepr)(using Program): TypeRepr = t match
     case TypeRepr.TypeRef(prefix, s) if remap.contains(s) =>
       val newSym = remap(s)
       retargetArgsBySource.get(s) match
-        case Some(mapping) if mapping.forall(_.isInstanceOf[CollectionsTransform.RetargetArg.FixedType]) =>
+        case Some(mapping) if allFixed(mapping) =>
           // Arity-changing retarget where the source had ZERO type params (e.g. IntIntMap -> ObjectMap[Int,Int]):
-          // every target arg is a FixedType, so this TypeRef can never appear as the tycon of an
-          // AppliedType (the frontend leaves a 0-param raw type as a bare TypeRef). Fill the target
-          // arity directly. This is the ONLY case where transformType may return an AppliedType for
-          // a TypeRef — the source's 0 arity guarantees no double-wrapping.
+          // every target arg is a FixedType (or Applied over fixed leaves), so this TypeRef can
+          // never appear as the tycon of an AppliedType (the frontend leaves a 0-param raw type
+          // as a bare TypeRef). Fill the target arity directly. This is the ONLY case where
+          // transformType may return an AppliedType for a TypeRef — the source's 0 arity guarantees
+          // no double-wrapping.
           val args = mapping.map(resolveRetargetArg(_, Nil))
           TypeRepr.AppliedType(TypeRepr.TypeRef(prefix, newSym), args)
         case _ =>
@@ -3102,7 +3119,7 @@ final class CollectionsTransform(
                 remap.collectFirst { case (srcId, `newSym`) if retargetArgsBySource.contains(srcId) =>
                   retargetArgsBySource(srcId) }
               ) match
-                case Some(mapping) if mapping.forall(_.isInstanceOf[CollectionsTransform.RetargetArg.FixedType]) =>
+                case Some(mapping) if allFixed(mapping) =>
                   val args = mapping.map(resolveRetargetArg(_, Nil))
                   TypeRepr.AppliedType(TypeRepr.TypeRef(prefix, newSym), args)
                 case _ =>
@@ -3134,6 +3151,15 @@ final class CollectionsTransform(
         retargetFixedTypeSyms.get(fqn) match
           case Some(sym) => TypeRepr.TypeRef(TypeRepr.NoPrefix, sym)
           case None      => TypeRepr.AnyBounds // should not happen if validated
+      case CollectionsTransform.RetargetArg.Applied(fqn, innerArgs) =>
+        // 3.1aw-3: a composed type — resolve the type constructor and recursively resolve
+        // each inner arg. E.g. Applied("scala.Tuple2", List(SourceArg(0), SourceArg(1)))
+        // produces AppliedType(TypeRef(Tuple2), List(K, V)).
+        retargetFixedTypeSyms.get(fqn) match
+          case Some(sym) =>
+            val resolved = innerArgs.map(resolveRetargetArg(_, sourceArgs))
+            TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, sym), resolved)
+          case None => TypeRepr.AnyBounds
 
   // -------------------------------------------------------------------------------------------
   // THE THIRD REIFIED POSITION — a type ARGUMENT a third party reads out of the class file (K20)
@@ -8318,6 +8344,13 @@ object CollectionsTransform:
     /** Insert a fixed type at this position — `fqn` is the fully qualified name
       * (e.g. `"scala.Int"`), resolved to a minted symbol at run time. */
     case class FixedType(fqn: String) extends RetargetArg
+    /** 3.1aw-3: an applied type at this position — `fqn` is the fully qualified name of the
+      * type constructor (e.g. `"scala.Tuple2"`), and `args` are the type arguments, each of
+      * which is itself a `RetargetArg`. Used for composed types like `Tuple2[K,V]` at a
+      * position that was a nested Entry type in the source:
+      * `ObjectMap.Entries<K,V>` -> `DynamicArray[Tuple2[K,V]]` needs
+      * `List(Applied("scala.Tuple2", List(SourceArg(0), SourceArg(1))))`. */
+    case class Applied(fqn: String, args: List[RetargetArg]) extends RetargetArg
 
   /** the shape of a collection, which decides the call rewrite (a `Seq` `get` is `apply`,
     * a `Map` `get` is `getOrElse`). */

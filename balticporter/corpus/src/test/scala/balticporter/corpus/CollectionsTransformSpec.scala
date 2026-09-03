@@ -2099,6 +2099,70 @@ class CollectionsTransformSpec extends PortSuite:
   // 3.1aw-3: wildcard boundary type in wrapReturnBoundary
   // ---------------------------------------------------------------------------
 
+  // ---------------------------------------------------------------------------
+  // 3.1aw-3: retargetTypeArgs Applied form — composed types at type-arg positions
+  // ---------------------------------------------------------------------------
+
+  test("retargetTypeArgs Applied composes a type from source args — e.g. Entries -> DynamicArray[Tuple2[K,V]]") {
+    // ObjectMap.Entries<K,V> (2 params) -> DynamicArray[Tuple2[K,V]] (1 param, composed).
+    // The Applied form constructs an AppliedType(Tuple2, List(K, V)) from the source's args.
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.Entries" -> "demo.DArr"),
+      retargetTypeArgs = Map("demo.Entries" -> List(
+        CollectionsTransform.RetargetArg.Applied("demo.Pair",
+          List(CollectionsTransform.RetargetArg.SourceArg(0),
+               CollectionsTransform.RetargetArg.SourceArg(1))))))
+    val p = portAll(List(
+      "Entries.java" ->
+        """package demo;
+          |public class Entries<K, V> {}""".stripMargin,
+      "DArr.java" ->
+        """package demo;
+          |public class DArr<T> {}""".stripMargin,
+      "Pair.java" ->
+        """package demo;
+          |public class Pair<A, B> {}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  Entries<String, Integer> e;
+          |  void take(DArr<Pair<String, Integer>> x) {}
+          |  void test() { take(e); }
+          |}""".stripMargin), ph)
+    // The field type is retargetted: Entries<String, Integer> -> DArr[Pair[String, Integer]]
+    assertEmits(p, "demo.DArr[demo.Pair[java.lang.String, java.lang.Integer]]")
+    assertNotEmits(p, "demo.Entries")
+  }
+
+  test("retargetTypeArgs Applied with FixedType inner arg composes correctly") {
+    // IntEntries (0 params) -> DArr[Pair[Int, Int]] (0 -> 1, all-fixed inner args).
+    // The Applied form itself is NOT treated as all-FixedType by the transformType guard,
+    // but its inner args CAN be all-FixedType; the outer Applied needs resolveRetargetArg.
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.IntEntries" -> "demo.DArr"),
+      retargetTypeArgs = Map("demo.IntEntries" -> List(
+        CollectionsTransform.RetargetArg.Applied("demo.Pair",
+          List(CollectionsTransform.RetargetArg.FixedType("scala.Int"),
+               CollectionsTransform.RetargetArg.FixedType("scala.Int"))))))
+    val p = portAll(List(
+      "IntEntries.java" ->
+        """package demo;
+          |public class IntEntries {}""".stripMargin,
+      "DArr.java" ->
+        """package demo;
+          |public class DArr<T> {}""".stripMargin,
+      "Pair.java" ->
+        """package demo;
+          |public class Pair<A, B> {}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  IntEntries e;
+          |}""".stripMargin), ph)
+    assertEmits(p, "demo.DArr[demo.Pair[scala.Int, scala.Int]]")
+    assertNotEmits(p, "demo.IntEntries")
+  }
+
   test("renderTypeForBoundary renders a wildcard as ? inside an applied-type argument, not as scala.Any") {
     // A method returning `Base[?]` that iterates a retarget map with `return` in body:
     // the boundary wrapper must emit `boundary[demo.Base[?]]`, not `boundary[demo.Base[scala.Any]]`.
