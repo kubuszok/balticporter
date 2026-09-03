@@ -14826,17 +14826,17 @@ dependent inherits it.
 
 #### Per-dependent table
 
-| port | pre-retarget floor | after retarget (3.1ah) | after 3.1ai | after 3.1aj | after 3.1al | after 3.1ar | after 3.1as | after 3.1aw |
-|---|---|---|---|---|---|---|---|---|
-| gdx | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| gdx-test | 0 | 0 | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) |
-| screens | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| anim8 | 0 | 45 | 17 | 17 | 17 | 17 | 17 | 17 |
-| textra | 0 | 122 | 24 | 18 | 18 | 15 | 13 | 9 |
-| gltf | 0/3 | 0/34 | 19 (main+test) | 12 | 12 | 12 | 12 | 12 |
-| vfx | 0 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-| ai | 0 | 13 | 13 | 13 | 13 | 2 | 2 | 2 |
-| visui | 7 | 14 | 14 | 13 | 12 | 12 | 9 | 9 |
+| port | pre-retarget floor | after retarget (3.1ah) | after 3.1ai | after 3.1aj | after 3.1al | after 3.1ar | after 3.1as | after 3.1aw | after 3.1ay |
+|---|---|---|---|---|---|---|---|---|---|
+| gdx | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| gdx-test | 0 | 0 | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) |
+| screens | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| anim8 | 0 | 45 | 17 | 17 | 17 | 17 | 17 | 17 | 1 |
+| textra | 0 | 122 | 24 | 18 | 18 | 15 | 13 | 9 | 9 |
+| gltf | 0/3 | 0/34 | 19 (main+test) | 12 | 12 | 12 | 12 | 12 | 12 |
+| vfx | 0 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| ai | 0 | 13 | 13 | 13 | 13 | 2 | 2 | 2 | 2 |
+| visui | 7 | 14 | 14 | 13 | 12 | 12 | 9 | 9 | 9 |
 
 #### Families and fixes (3.1ai)
 
@@ -14975,8 +14975,31 @@ descriptor-keyed copy-constructor templates for ObjectSet, OrderedSet, IntSet us
 
 #### Remaining residue (51 total, classified)
 
-- **16 Tuple2-immutable** (anim8): `Reassignment to val _1/_2` — Entry fields are mutable in java,
-  `Tuple2` is immutable. Counted; no fix short of a mutable entry shim.
+#### Families and fixes (3.1ay)
+
+**Entry copy-construction fold (section 1(a), engine).** Java's `IntIntMap.Entry` has mutable
+`public int key` and `public int value` fields, and `IntIntMap.Entries` (the iterator) reuses ONE
+`Entry` instance per `next()` call — it is a scratch buffer, NOT a live view of the map
+(`IntIntMap.java:569`: `private final Entry entry = new Entry()`; `next()` at lines 580-585 writes
+`entry.key = keyTable[nextIndex]` from the map's internal arrays). PaletteReducer copies from the
+reused iterator entry into a new Entry: `IntIntMap.Entry e2 = new IntIntMap.Entry(); e2.key = e.key;
+e2.value = e.value; es.add(e2)` — a copy-construction pattern (default-construct, immediately fill
+both fields). After retargeting Entry to `scala.Tuple2`, the writes become `e2._1 = ...` /
+`e2._2 = ...` on an immutable `val`, producing `E052 Reassignment to val`. The faithful Scala image
+is to construct the Tuple2 with the correct values from the start: `val e2 = (e._1, e._2)`.
+
+Fix: `CollectionsTransform.transformBlock` scans a block's statements for the pattern — a `ValDef`
+whose type head is in `retargetEntryTargets` (mapped to Tuple2) followed by contiguous assigns to
+`_1` and `_2` of that variable — and folds the assigned values into the constructor arguments,
+removing the assign statements. Guards: the variable type is a retarget entry target, the assigns
+target `key1Sym`/`value2Sym` on the same variable, the assigns are contiguous and immediately follow
+the ValDef. This is §1(a) universal — a fact about Tuple2's immutability and the entry retarget
+mechanism. anim8 17 -> 1 (-16). gdx 0 = 0 (0 member digests: libGDX core's entry writes are all
+inside the iterator implementations, which are dropped by the retarget). The remaining 1 error on
+anim8 is `E008 Not Found` at `IntIntMap` (a member-access row, not an entry write).
+
+#### Remaining residue (39 total, classified)
+
 - **5 nested-type-of-retarget-parent** (anim8 1 IntIntMap.Keys, textra 2 IntMap.Entries +
   `.entries()` outside for-each, ai 1 ObjectMap.Entries, ai 1 ObjectMap.iterator call): the parent
   was retargeted but the nested type was not; counted on `collection-retarget`.

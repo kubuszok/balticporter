@@ -11934,3 +11934,12 @@ checked for `("entries", 0) -> ForEach` and sets had no such entry. Added `ForEa
 for ObjectSet, OrderedSet, IntSet. Also fixed the set copy-constructor templates which used
 `foreachKey` (a map method) instead of `foreach`. textra `-4` (KnownFonts SDF_NAMES/MSDF_NAMES
 copy-ctor and bare iteration). See `ENGINE-LIMITS.md` K37 table (3.1aw column).
+
+#### 3.1ay entry copy-construction fold -- anim8 17 -> 1
+
+Entry copy-construction pattern: `new Entry(); e2.key = X; e2.value = Y` folded into
+`(X, Y)` at the block level. `CollectionsTransform.transformBlock` scans for a `ValDef` whose type
+is a retarget entry target (Tuple2) followed by contiguous assigns to `._1`/`._2` and replaces the
+constructor defaults with the assigned values. 16 E052 `Reassignment to val _1/_2` closed on anim8.
+Remaining 1 error is `E008 IntIntMap not a member` (w31's row). gdx 0 = 0 (0 member digests).
+`ENGINE-LIMITS.md` K37.

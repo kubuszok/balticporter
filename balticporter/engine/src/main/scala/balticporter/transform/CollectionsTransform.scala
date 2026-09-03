@@ -3338,6 +3338,85 @@ final class CollectionsTransform(
     case id: Tree.IncDec => retargetIncDec(id).getOrElse(id)
     case other          => other
 
+  /** Entry copy-construction fold: when a block contains
+    * {{{
+    *   val e2 = Tuple2.apply[K,V](default, default)
+    *   e2._1 = X
+    *   e2._2 = Y
+    * }}}
+    * fold the field writes INTO the constructor: `val e2 = Tuple2.apply[K,V](X, Y)`.
+    *
+    * Java's `Entry` has mutable `public` fields; Scala's `Tuple2` has `val _1/_2`. The pattern is
+    * a copy-construction (default-construct, immediately fill) and the faithful image is to
+    * construct with the right values from the start. This is a §1(a) universal mechanism — a fact
+    * about `Tuple2`'s immutability and the entry retarget.
+    *
+    * Guards:
+    *  - the variable's type head is in `retargetEntryTargets` (i.e., mapped to `Tuple2`)
+    *  - the assigns target `key1Sym` (`_1`) and `value2Sym` (`_2`) on that variable
+    *  - the assigns are contiguous and immediately follow the ValDef
+    *  - the variable is not reassigned elsewhere in the block */
+  override def transformBlock(b: Tree.Block)(using p: Program): Term =
+    if retargetEntryTargets.isEmpty then b
+    else foldEntryCopyConstruction(b)
+
+  private def foldEntryCopyConstruction(b: Tree.Block)(using p: Program): Tree.Block =
+    // scan stats for the pattern; build a new stats list with folded entries
+    val newStats = scala.collection.mutable.ListBuffer.empty[Statement]
+    var i = 0
+    val stats = b.stats
+    val len = stats.size
+    var changed = false
+    while i < len do
+      stats(i) match
+        case vd: Tree.ValDef if vd.rhs.isDefined =>
+          // check if the variable's type head is an entry target (Tuple2)
+          val isEntry = headSym(vd.tpt.tpe).exists(retargetEntryTargets.contains)
+          if isEntry && i + 2 < len then
+            // look for _1 and _2 assigns immediately following
+            val (a1Opt, a2Opt) = (stats(i + 1), stats(i + 2)) match
+              case (a1: Tree.Assign, a2: Tree.Assign) =>
+                val a1Field = assignedEntryField(vd.symbol, a1)
+                val a2Field = assignedEntryField(vd.symbol, a2)
+                (a1Field, a2Field) match
+                  case (Some(1), Some(2)) => (Some(a1.rhs), Some(a2.rhs))
+                  case (Some(2), Some(1)) => (Some(a2.rhs), Some(a1.rhs))
+                  case _                 => (scala.None, scala.None)
+              case _ => (scala.None, scala.None)
+            (a1Opt, a2Opt) match
+              case (Some(rhs1), Some(rhs2)) =>
+                // fold: replace the constructor's default args with the assign RHSes
+                val newRhs = replaceConstructArgs(vd.rhs.get, rhs1, rhs2)
+                newStats += vd.copy(rhs = Some(newRhs))
+                i += 3 // skip the ValDef and both assigns
+                changed = true
+              case _ =>
+                newStats += vd
+                i += 1
+          else
+            newStats += vd
+            i += 1
+        case other =>
+          newStats += other
+          i += 1
+    if changed then b.copy(stats = newStats.toList)
+    else b
+
+  /** Is this assign writing to `_1` or `_2` of the given variable?  Returns Some(1) or Some(2). */
+  private def assignedEntryField(varSym: SymId, a: Tree.Assign): Option[Int] = a.lhs match
+    case Tree.Select(Tree.Ident(`varSym`, _, _), m, _, _) =>
+      if m == key1Sym then Some(1)
+      else if m == value2Sym then Some(2)
+      else scala.None
+    case _ => scala.None
+
+  /** Replace the first two arguments of a constructor/factory call with the given values.
+    * Handles both `Apply(TypeApply(ident, targs), args)` and `Apply(ident, args)`. */
+  private def replaceConstructArgs(rhs: Term, arg1: Term, arg2: Term): Term = rhs match
+    case a @ Tree.Apply(fun, args, method, tpe, origin) if args.sizeIs >= 2 =>
+      a.copy(args = arg1 :: arg2 :: args.drop(2))
+    case other => other // should not happen for a retargetConstruct-produced Tuple2
+
   // -------------------------------------------------------------------------------------------
   // REIFIED OCCURRENCES — the retyping moved the TYPE and not the OBJECTS
   //
