@@ -4066,6 +4066,13 @@ final class TirEmitter(
   private def ctorBody(cdef: Tree.DefDef, i: Int): String =
     val stats  = CtorFunnel.stmtsOf(cdef)
     val replay = currentClass.flatMap(plans.replayFor(_, cdef)).getOrElse(Nil)
+    // INLINED BODY — the parent constructor chain's post-delegation statements, when the synthesis
+    // was reached through resolvedThroughParent. These are the statements java's intermediate
+    // parent constructors ran AFTER their this(...) delegation (e.g., `textureDescription.texture =
+    // texture` in `CubemapAttribute(long, Cubemap)`), substituted and retyped into this class's
+    // scope. Same position as `replay`: after the delegation, before this secondary's own body.
+    // Never overlaps with `replay`, which is disabled for a paramful synthesis.
+    val inlined = currentClass.flatMap(plans.inlinedBodyFor(_, cdef)).getOrElse(Nil)
     // the head is read THROUGH its comments, and the comments are re-emitted above the delegation
     // that replaces it — the call itself is consumed, but what somebody wrote about it is not.
     val headTrivia = stats.headOption.collect { case t: Term => Tree.triviaOn(t) }.getOrElse(Nil)
@@ -4112,7 +4119,7 @@ final class TirEmitter(
     // reconstructs the braces from `stmtsOf`'s statement LIST rather than rendering the body
     // `Tree.Block`, so the slot on the block reaches no other path from here.
     val trail = CtorFunnel.trailingOf(cdef).map(triviaText(_, i + 1))
-    val lines = (head :: (replay ++ body).map(stat(_, i + 1)).filter(_.trim.nonEmpty)) ++ trail
+    val lines = (head :: (replay ++ inlined ++ body).map(stat(_, i + 1)).filter(_.trim.nonEmpty)) ++ trail
     s"{\n${joinStats(lines)}\n${ind(i)}}"
 
   /** A secondary constructor's `super(args)` — which scala cannot write — expressed as a

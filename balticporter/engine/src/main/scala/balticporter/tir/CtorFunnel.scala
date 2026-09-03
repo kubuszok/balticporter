@@ -156,6 +156,25 @@ object CtorFunnel:
         * where `Phase.transformDefDef` appends one and where Scala requires a `using` clause to be
         * for the call sites to stay unchanged. */
       givens: List[List[Tree.ValDef]] = Nil,
+      /** The substituted post-delegation body that each ROOT of a `resolvedThroughParent` synthesis
+        * must run after its `this(...)` delegation to reproduce the PARENT constructor chain's
+        * side-effecting statements.
+        *
+        * `CubemapAttribute(long, Cubemap)` is `{ this(type); textureDescription.texture = texture; }`,
+        * and the delegation chain resolves the super args correctly while the field assignment is
+        * dropped — §3's shape ("a green compile said nothing about any of these"). This field carries
+        * those statements, already SUBSTITUTED through the caller's arguments and RETYPED through the
+        * parent's type-parameter instantiation, so the emitter can splice them into the secondary's
+        * body immediately after its `this(...)` delegation.
+        *
+        * Empty for every plan that did not come through `resolvedThroughParent`, and for every root
+        * whose parent chain was a pure delegation with no post-body. A root with a non-empty entry
+        * here is one whose inlining would otherwise silently lose java's own field writes and method
+        * calls. A root whose post-body FAILED usability (`super.m()`, `return`, unreachable private)
+        * is REFUSED by `inlineDelegation` instead of appearing here.
+        *
+        * Keyed by the root's symbol, like [[delegations]]. */
+      inlinedBodies: Map[SymId, List[Statement]] = Map.empty,
       /** This promotion is THE COLLAPSE: the promoted root's own parameters ARE the parent
         * constructor's formals, passed straight through, in order ([[collapseTo]]).
         *
@@ -848,6 +867,22 @@ object CtorFunnel:
       * constructor stays counted by [[OmissionCheck]]. */
     def replayFor(cd: Tree.ClassDef, d: Tree.DefDef): Option[List[Statement]] =
       replays.get((cd.symbol, d.symbol))
+
+    /** The PARENT CONSTRUCTOR CHAIN's post-delegation body for this root, when the synthesis was
+      * reached through [[resolvedThroughParent]] and the body passed usability.
+      *
+      * These statements are the parent constructors' own side-effects — field writes, method calls —
+      * that would be SILENTLY LOST if only the effective super args were inlined. They are already
+      * substituted (the caller's own arguments in place of the parent chain's parameters) and retyped
+      * (the parent's type parameters replaced by this class's instantiation), so the emitter splices
+      * them directly after the `this(...)` delegation.
+      *
+      * `None` when the plan has no inlined body for this root (the common case: no post-body, or the
+      * plan was not produced by `resolvedThroughParent`). Never overlaps with [[replayFor]], which is
+      * disabled for a paramful synthesis. */
+    def inlinedBodyFor(cd: Tree.ClassDef, d: Tree.DefDef): Option[List[Statement]] =
+      val p = decided.getOrElse(cd.symbol, Plan.none)
+      p.inlinedBodies.get(d.symbol).filter(_.nonEmpty)
 
     // ---- the delegation itself: the ONE answer the emitter renders and the check counts ----
 
@@ -2299,6 +2334,13 @@ object CtorFunnel:
     //
     // PADDED is `ENGINE-LIMITS.md` C3's, and it is offered ONLY when `plan0` asks for it, which it
     // does only for a JDK throwable whose own measured branch nominated nothing.
+    // The post-delegation bodies from the parent chain, when resolvedThroughParent produced the
+    // effective args. Empty for the uniform case (all roots call the same parent ctor) and the
+    // throwable case, because neither inlines through a parent chain. Populated per-root only when
+    // the parent secondary had a body after its `this(...)` delegation (e.g., `setSkin(skin)` in
+    // `Window(String, Skin, String)` or `textureDescription.texture = texture` in
+    // `CubemapAttribute(long, Cubemap)`).
+    var resolvedBodies: Map[SymId, List[Statement]] = Map.empty
     val slotArgs: Option[(SymId, Map[SymId, List[Term]])] =
       Option.when(targets.sizeIs == 1 && arities.sizeIs == 1)(
         targets.head -> roots.map(r => r.symbol -> superArgsOf(program, r)).toMap)
@@ -2308,7 +2350,10 @@ object CtorFunnel:
         // parent, between the uniform case (all roots call the same constructor) and the throwable
         // padding case (all roots are padded to the widest JDK overload).
         .orElse(Option.when(targets.sizeIs > 1 && !throwablePad)(
-          resolvedThroughParent(program, cd, roots, calls)).flatten)
+          resolvedThroughParent(program, cd, roots, calls)).flatten.map { (root, args, bodies) =>
+            resolvedBodies = bodies
+            (root, args)
+          })
         .orElse(Option.when(throwablePad)(throwablePadding(program, roots)).flatten)
     if roots.sizeIs < 2 || roots.exists(_.tparams.nonEmpty) then scala.None
     else if slotArgs.isEmpty then scala.None
@@ -2389,11 +2434,28 @@ object CtorFunnel:
       val delegations = roots.map { r =>
         r.symbol -> (superValues(r.symbol) ++ values.getOrElse(r.symbol, Nil))
       }.toMap
+      // Retype the inlined bodies through the parent's type-parameter instantiation, the same
+      // way `Plans.replayFor` retypes its replayed statements: the bodies are written in the
+      // PARENT's scope and will run inside the SUBCLASS (`ENGINE-LIMITS.md` G25, §4.56).
+      val retypedBodies: Map[SymId, List[Statement]] =
+        if resolvedBodies.values.forall(_.isEmpty) then Map.empty
+        else
+          given Program = program
+          val ptSubst = ParentSubst.of(cd)
+          resolvedBodies.map { (sym, body) =>
+            if body.isEmpty || ptSubst.isEmpty then sym -> body
+            else
+              val ph = new Phase:
+                def name = "ctor-inline-retype"
+                override def transformType(t: TypeRepr)(using Program): TypeRepr = ParentSubst.subst(t, ptSubst)
+              sym -> body.map(StandardTraversal.mapStat(ph, _))
+          }
       def synthesise(mark: Option[String]): Option[Plan] =
         val o = cd.origin
         Some(Plan(scala.None, sup.map((n, ft) => Tree.Opaque(n, ft, o)), Nil, synthetic = allSlots,
                   marker = mark, superSlots = sup.size, fieldSlots = fs,
                   delegations = delegations, consumed = consumedRuns, notSlot = refusedFields,
+                  inlinedBodies = retypedBodies,
                   // the roots agree (checked above), so any one of them names the clause the
                   // synthesised primary must carry for every secondary's `this(...)` to resolve.
                   givens = rootGivens.headOption.getOrElse(Nil)))
@@ -2736,13 +2798,15 @@ object CtorFunnel:
     * §1(a) universal: every java constructor that is not a root delegates through `this(args)` to
     * one that is, and a parent's unique-root shape is the commonest in the corpus.
     *
-    * Returns `Some((parentRoot, Map[dependentRoot -> effectiveArgs]))` when ALL dependent roots
-    * converge to the same parent root and the inlining succeeds; `None` otherwise. */
+    * Returns `Some((parentRoot, argsMap, bodiesMap))` when ALL dependent roots converge to the same
+    * parent root and the inlining succeeds; `None` otherwise. `bodiesMap` carries the substituted
+    * post-delegation bodies from the parent chain, innermost first, for each root — empty for a root
+    * whose chain was a pure delegation with no side effects. */
   private def resolvedThroughParent(
       program: Program, cd: Tree.ClassDef,
       roots: List[Tree.DefDef],
       calls: List[(SymId, List[Term])]
-  ): Option[(SymId, Map[SymId, List[Term]])] =
+  ): Option[(SymId, Map[SymId, List[Term]], Map[SymId, List[Statement]])] =
     // find the PARENT class's ClassDef from the first parent in the extends clause
     val parentSym = parentSyms(cd).headOption.getOrElse(SymId.None)
     val parentCd  = program.definitionOf(parentSym).collect { case c: Tree.ClassDef => c }.getOrElse(return scala.None)
@@ -2758,45 +2822,61 @@ object CtorFunnel:
     val resolved = roots.zip(calls).map { case (dependentRoot, (target, superArgs)) =>
       // is this target already the parent root?
       if target == parentRootSym then
-        Some(dependentRoot.symbol -> superArgs)
+        Some((dependentRoot.symbol, superArgs, List.empty[Statement]))
       else
         // follow the parent's delegation chain: the target is a parent secondary
         // substitute the dependent root's super args into the parent secondary's body
         // and follow the `this(args)` delegation to find what reaches the parent root
         inlineDelegation(program, target, superArgs, parentRootSym, depth = 0)
-          .map(effectiveArgs => dependentRoot.symbol -> effectiveArgs)
+          .map((effectiveArgs, postBody) => (dependentRoot.symbol, effectiveArgs, postBody))
     }
     if resolved.exists(_.isEmpty) then scala.None
     else
-      val map = resolved.flatten.toMap
+      val flat = resolved.flatten
+      val argsMap   = flat.map((sym, args, _) => sym -> args).toMap
+      val bodiesMap = flat.map((sym, _, body) => sym -> body).toMap
       // verify all roots now target the same parent constructor and same arity
-      val effectiveArities = map.values.map(_.size).toList.distinct
+      val effectiveArities = argsMap.values.map(_.size).toList.distinct
       if effectiveArities.sizeIs != 1 then scala.None
-      else Some((parentRootSym, map))
+      else Some((parentRootSym, argsMap, bodiesMap))
 
   /** Inline a parent constructor's `this(args)` delegation chain to find the effective arguments
-    * that reach the `targetRoot` constructor.
+    * that reach the `targetRoot` constructor, AND the post-delegation body statements from each
+    * step of the chain.
     *
     * `currentCtor` is a parent secondary calling `this(args)` with `callerArgs`. The secondary's
     * body is loaded, the caller's args are substituted for its parameters, and the resulting
-    * `this(args)` call is followed. If the delegation reaches `targetRoot`, the effective args are
-    * returned.
+    * `this(args)` call is followed. If the delegation reaches `targetRoot`, the effective args and
+    * the collected post-body are returned.
+    *
+    * The post-body is the parent constructor's statements AFTER its `this(...)` delegation, with
+    * parameters substituted. For a chain of two levels, the innermost post-body comes first (the
+    * deeper constructor ran first in java), then the outer one. A post-body containing `super.m()`
+    * or `return` REFUSES the entire inlining (returns None), because those constructs dispatch
+    * wrongly or leave the wrong frame when replayed in a subclass.
     *
     * Uses the same substitution safety checks as `Plans.effects`: each parameter must be used
-    * at most once (or the argument must be `simple`), and no loop may multiply a use. */
+    * at most once (or the argument must be `simple`), and no loop may multiply a use. Parameter
+    * uses in BOTH the delegation args and the post-body are counted together, since the substitution
+    * reaches both. */
   private def inlineDelegation(
       program: Program, currentCtor: SymId, callerArgs: List[Term],
       targetRoot: SymId, depth: Int
-  ): Option[List[Term]] =
+  ): Option[(List[Term], List[Statement])] =
     if depth > 6 then scala.None
     else
       program.definitionOf(currentCtor).collect { case d: Tree.DefDef => d }.flatMap { d =>
         val ps   = valueParams(program, d)
-        // Count parameter uses ONLY in the HEAD STATEMENT (the delegation call), not the whole
-        // body. The extra body is intentionally dropped, so its uses don't affect substitution
-        // safety. A parameter used once in the delegation and once in the extra body counts as 1.
-        val headOnly = headStmt(d).toList.collect { case t: Term => t }
-        lazy val counts = headOnly.foldLeft(Map.empty[SymId, Int]) { (acc, st) =>
+        val stms = stmtsOf(d)
+        // the post-delegation body: everything after the head `this(...)` delegation.
+        val postBody = headStmt(d) match
+          case Some(Tree.Apply(Tree.Select(r, m, _, _), _, _, _, _))
+            if isInitName(program, m) && !r.isInstanceOf[Tree.Super] => stms.tail
+          case _ => Nil
+        // Count parameter uses across the WHOLE body (delegation args AND post-body), since the
+        // substitution reaches both. A parameter used once in the head and once in the post-body
+        // is used twice, and if the argument has effects it must be `simple`.
+        lazy val counts = stms.foldLeft(Map.empty[SymId, Int]) { (acc, st) =>
           var m = acc
           given Program = program
           val ph = new Phase:
@@ -2807,7 +2887,7 @@ object CtorFunnel:
           StandardTraversal.mapStat(ph, st)
           m
         }
-        lazy val loopFree = !headOnly.exists { st =>
+        lazy val loopFree = !stms.exists { st =>
           given Program = program
           var found = false
           val ph = new Phase:
@@ -2820,26 +2900,37 @@ object CtorFunnel:
           StandardTraversal.mapStat(ph, st)
           found
         }
-        def ok(p: Tree.ValDef, a: Term): Boolean =
-          simple(a) || (loopFree && counts.getOrElse(p.symbol, 0) <= 1)
+        def ok(p: Tree.ValDef, a: Term) = simple(a) || (loopFree && counts.getOrElse(p.symbol, 0) <= 1)
         if ps.length != callerArgs.length || !ps.zip(callerArgs).forall(ok) then scala.None
         else
-          // Follow the delegation — the `this(args)` call in the head statement. Extra body
-          // statements after the delegation (e.g., `setSkin(skin)` in `Window(String, Skin,
-          // String)`) are intentionally NOT replayed. This is a trade-off: the synthesis makes the
-          // extends clause compile (closing E134) while narrowing the C3 residue from "all super
-          // args lost" to "only the post-delegation body lost". The omission check counts both.
-          val head = headStmt(d)
           val subst = ps.zip(callerArgs).map((p, a) => p.symbol -> a).toMap
           given Program = program
           val substPh = new Phase:
             def name = "ctor-inline-subst"
             override def transformIdent(t: Tree.Ident)(using Program): Term = subst.getOrElse(t.sym, t)
-          // apply substitution to the delegation's arguments, not the whole body
+          // Check post-body usability: no `super.m()` (dispatches too high from a subclass), no
+          // `return` (leaves the wrong frame). These are the same guards `Plans.usable` applies to
+          // replayed constructor bodies, and the refusal is the same: loud (E134) rather than silent.
+          val substPostBody = postBody.map(s => StandardTraversal.mapStat(substPh, s))
+          if substPostBody.nonEmpty then
+            var usable = true
+            val scanPh = new Phase:
+              def name = "ctor-inline-usable"
+              override def transformTerm(t: Term)(using Program): Term =
+                t match
+                  case _: Tree.Super  => usable = false
+                  case _: Tree.Return => usable = false
+                  case _              => ()
+                t
+            substPostBody.foreach(StandardTraversal.mapStat(scanPh, _))
+            if !usable then return scala.None
+          // apply substitution to the delegation's arguments
+          val head = headStmt(d)
           head match
             case Some(Tree.Apply(Tree.Select(_, m, _, _), as, _, _, _)) if isInitName(program, m) =>
               val substArgs = as.map(a => StandardTraversal.mapStat(substPh, a).asInstanceOf[Term])
-              if m == targetRoot then Some(substArgs)
+              if m == targetRoot then Some((substArgs, substPostBody))
               else inlineDelegation(program, m, substArgs, targetRoot, depth + 1)
+                .map((args, innerBody) => (args, innerBody ++ substPostBody))
             case _ => scala.None
       }
