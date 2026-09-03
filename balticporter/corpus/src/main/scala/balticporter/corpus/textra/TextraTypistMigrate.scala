@@ -251,6 +251,70 @@ object TextraTypistPolicy:
           ),
           underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
         )),
+        // 3.1ba: body substitutions for retarget-chained-call residue.
+        //
+        // THREE FAMILIES, each a Collect-produced DynamicArray at a slot the chained call cannot
+        // reach:
+        //
+        //   (1) Parser.compileTokenPattern / getResetReplacement: java's
+        //       `keys().toArray(tokens)` APPENDS keys to an existing Array. After Collect, `keys()`
+        //       becomes a block producing a new DynamicArray, and `.toArray(tokens)` is arity-1 on a
+        //       DynamicArray whose `toArray` is parameterless. Fix: collect keys directly into
+        //       `tokens` via `foreachKey(tokens.add)` — the Collect's own mechanism, inlined.
+        //
+        //   (2) TextraListBox / TextraSelectBox selectedIndex (bean-collapsed from
+        //       getSelectedIndex): java declares `ObjectSet<T> selected = selection.items()` and
+        //       `selection.items()` returns `OrderedSet[T]` after retarget. lls `OrderedSet` does
+        //       NOT extend `ObjectSet` (K37 collection-internal), so the local variable assignment
+        //       fails. Fix: inline the usage — `selection.items` has `.size` and `.first` directly.
+        //
+        // Font#<init> and Font#loadJSON: `mapping.values().next()` — Collect produces DynamicArray,
+        // `.next()` is not a member. MethodBodyTransform REFUSES constructors, and loadJSON is 250+
+        // lines. Both are counted as `CollectChainedCall` residue on `collection-retarget`
+        // (K37 3.1ba).
+        new balticporter.transform.MethodBodyTransform(Map(
+          // --- (1) Parser: collect keys directly into tokens ---
+          "com.github.tommyettinger.textra.Parser#compileTokenPattern" ->
+            """{
+              |  val sb: java.lang.StringBuilder = new java.lang.StringBuilder()
+              |  sb.append("(?<!\\{)\\{(")
+              |  val tokens: lowlevel.util.DynamicArray[java.lang.String] = lowlevel.util.DynamicArray.apply[java.lang.String]()
+              |  sge.textra.TypingConfig.EFFECT_START_TOKENS.foreachKey(tokens.add)
+              |  sge.textra.TypingConfig.EFFECT_END_TOKENS.foreachKey(tokens.add)
+              |  for (token <- sge.textra.InternalToken.values()) {
+              |    tokens.add(token.name)
+              |  }
+              |  { var i: scala.Int = 0; while (i < tokens.size) { {
+              |    sb.append(tokens.apply(i))
+              |    if ((i + 1) < tokens.size) sb.append('|') else ()
+              |  }; i = i + 1 } }
+              |  sb.append(")(?:\\=([^\\{\\}]+))?\\}")
+              |  return regexodus.Pattern.compile(sb.toString(), regexodus.REFlags.IGNORE_CASE)
+              |}""".stripMargin,
+          "com.github.tommyettinger.textra.Parser#getResetReplacement" ->
+            """{
+              |  val tokens: lowlevel.util.DynamicArray[java.lang.String] = lowlevel.util.DynamicArray.apply[java.lang.String]()
+              |  sge.textra.TypingConfig.EFFECT_END_TOKENS.foreachKey(tokens.add)
+              |  tokens.add("NORMAL")
+              |  val sb: java.lang.StringBuilder = new java.lang.StringBuilder("[ ]")
+              |  for (token <- tokens) {
+              |    sb.append('{').append(token).append('}')
+              |  }
+              |  sge.textra.TypingConfig.dirtyEffectMaps = false
+              |  return sb.toString()
+              |}""".stripMargin,
+          // --- (2) selectedIndex: inline selection.items usage ---
+          "com.github.tommyettinger.textra.TextraListBox#getSelectedIndex" ->
+            """{
+              |  val selected: lowlevel.util.OrderedSet[T] = this.selection$field.items
+              |  return if (selected.size == 0) -1 else this.items$field.indexOf(selected.first)
+              |}""".stripMargin,
+          "com.github.tommyettinger.textra.TextraSelectBox#getSelectedIndex" ->
+            """{
+              |  val selected: lowlevel.util.OrderedSet[sge.textra.TextraLabel] = this.selection$field.items
+              |  return if (selected.size == 0) -1 else this.items$field.indexOf(selected.first)
+              |}""".stripMargin,
+        )),
         // LAST, deliberately, for the reason `AshleyPolicy` and `GdxAiPolicy` state: this reads what
         // the BASE actually emitted and reports a reference the base does not ship, so it must run
         // after any seam that re-points such a reference, or it reports the very sites the next

@@ -372,6 +372,126 @@ object VisUiPolicy:
           ),
           underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
         )),
+        // 3.1ba: body substitutions for the vendored-API-break and the CharArray-as-StringBuilder
+        // pattern.
+        //
+        // THREE FAMILIES:
+        //
+        //   (1) VisTextField keyboard.show(boolean) -> show(TextField) / close(): the vendored
+        //       libGDX 1.14.1 changed `OnscreenKeyboard.show(boolean)` to `show(TextField)` +
+        //       `close()`. VisUI was written against 1.14.0. §3.5's FOURTH paragraph: the upstream
+        //       version mismatch, and the remedy is not a translation but a counted residue — except
+        //       here the hand port already adapted it (`keyboard.show(VisTextField.this)` /
+        //       `keyboard.close()`), so the body transform carries the adaptation. Three methods.
+        //
+        //   (2) Dialogs.getStackTrace(Throwable, CharArray): java's `CharArray.append(Object)` calls
+        //       `toString()` on the argument and appends the chars. After retarget, `CharArray` is
+        //       `DynamicArray[Char]`, which has no `append(Object)`. The hand port uses StringBuilder
+        //       instead (§3.5). Two overloads.
+        //
+        // Draggable#BLOCKER: CT11 static-field-constructor-needs-context. `lazy-init` DOES fire and
+        // moves the E172 to the `<clinit>` that reads the field (VisUiMigrate comment, measured
+        // 8 -> 8). The hand port rewrote it as a lazy instance field with the listener setup inside
+        // the accessor — a refactoring no MethodBodyTransform can express (the field is a FIELD, not
+        // a method; and the static init block that reads it has no method key). Counted as
+        // `unsuppliable-use` on `context-seam` (CT11).
+        new balticporter.transform.MethodBodyTransform(Map(
+          // --- (1) keyboard.show(boolean) -> show(TextField) / close() ---
+          "com.kotcrab.vis.ui.widget.VisTextField#focusField" ->
+            """{
+              |  if (this.disabled$field) {
+              |    return
+              |  } else ()
+              |  val stage: sge.scenes.scene2d.Stage = this.stage.orNull
+              |  sge.visui.FocusManager.switchFocus(stage, this)
+              |  this.cursorPosition = 0
+              |  this.selectionStart$field = 0
+              |  this.calculateOffsets()
+              |  if (stage != null) {
+              |    stage.setKeyboardFocus(lowlevel.Nullable(this))
+              |  } else ()
+              |  this.keyboard.show(this)
+              |  this.hasSelection = true
+              |}""".stripMargin,
+          "com.kotcrab.vis.ui.widget.VisTextField#next(boolean)" ->
+            """{
+              |  val stage: sge.scenes.scene2d.Stage = this.stage.orNull
+              |  if (stage == null) {
+              |    return
+              |  } else ()
+              |  this.parent.get.localToStageCoordinates(sge.visui.widget.VisTextField.tmp1.set(this.x, this.y))
+              |  var textField: sge.visui.widget.VisTextField = this.findNextTextField(stage.actors, null, sge.visui.widget.VisTextField.tmp2, sge.visui.widget.VisTextField.tmp1, up)
+              |  if (textField == null) {
+              |    if (up) {
+              |      sge.visui.widget.VisTextField.tmp1.set(java.lang.Float.MIN_VALUE, java.lang.Float.MIN_VALUE)
+              |    } else {
+              |      sge.visui.widget.VisTextField.tmp1.set(java.lang.Float.MAX_VALUE, java.lang.Float.MAX_VALUE)
+              |    }
+              |    textField = this.findNextTextField(this.stage.get.actors, null, sge.visui.widget.VisTextField.tmp2, sge.visui.widget.VisTextField.tmp1, up)
+              |  } else ()
+              |  if (textField != null) {
+              |    textField.focusField()
+              |    textField.cursorPosition = textField.text.length()
+              |  } else {
+              |    this.keyboard.close()
+              |  }
+              |}""".stripMargin,
+          "com.kotcrab.vis.ui.widget.VisTextField$TextFieldClickListener#touchDown(InputEvent,float,float,int,int)" ->
+            """{
+              |  if (!super.touchDown(event, x, y, pointer, button)) {
+              |    return false
+              |  } else ()
+              |  if ((pointer == 0) && (button != 0)) {
+              |    return false
+              |  } else ()
+              |  if (VisTextField.this.disabled$field) {
+              |    return true
+              |  } else ()
+              |  val stage: sge.scenes.scene2d.Stage = VisTextField.this.stage.orNull
+              |  sge.visui.FocusManager.switchFocus(stage, VisTextField.this)
+              |  this.setCursorPosition(x, y)
+              |  VisTextField.this.selectionStart$field = VisTextField.this.cursor
+              |  if (stage != null) {
+              |    stage.setKeyboardFocus(lowlevel.Nullable(VisTextField.this))
+              |  } else ()
+              |  if (VisTextField.this.readOnly$field == false) {
+              |    VisTextField.this.keyboard.show(VisTextField.this)
+              |  } else ()
+              |  VisTextField.this.hasSelection = true
+              |  return true
+              |}""".stripMargin,
+          // --- (2) Dialogs.getStackTrace: StringBuilder instead of DynamicArray[Char] ---
+          // The single-arg overload creates the builder and calls the two-arg. The parameter is
+          // `DynamicArray[Char]` after retarget. Java's `CharArray.toString()` concatenates the chars
+          // into a String; `DynamicArray[Char].toString` would print `[a, b, c]`. Fix: use
+          // `new String(builder.toArray)` to reconstruct the char string.
+          "com.kotcrab.vis.ui.util.dialog.Dialogs#getStackTrace(Throwable)" ->
+            """{
+              |  val builder: lowlevel.util.DynamicArray[scala.Char] = lowlevel.util.DynamicArray.apply[scala.Char]()
+              |  sge.visui.util.dialog.Dialogs.getStackTrace(throwable, builder)
+              |  return new java.lang.String(builder.toArray)
+              |}""".stripMargin,
+          // The two-arg overload: java's `CharArray.append(Object)` calls toString on the argument
+          // and appends the chars. After retarget, `DynamicArray[Char].add(StackTraceElement)` is a
+          // type mismatch. Fix: convert each element to string, then to char array, then addAll.
+          // Key uses erased simple names: `owner#name(P1,P2)`. CharArray is the java type name.
+          "com.kotcrab.vis.ui.util.dialog.Dialogs#getStackTrace(Throwable,CharArray)" ->
+            """{
+              |  val msg: java.lang.String = throwable.getMessage()
+              |  if (msg != null) {
+              |    { val bpCa = msg.toString.toCharArray; builder.addAll(bpCa, 0, bpCa.length) }
+              |    { val bpCa = "\n\n".toString.toCharArray; builder.addAll(bpCa, 0, bpCa.length) }
+              |  } else ()
+              |  for (element <- throwable.getStackTrace()) {
+              |    { val bpCa = element.toString.toCharArray; builder.addAll(bpCa, 0, bpCa.length) }
+              |    { val bpCa = "\n".toString.toCharArray; builder.addAll(bpCa, 0, bpCa.length) }
+              |  }
+              |  if (throwable.getCause() != null) {
+              |    { val bpCa = "\nCaused by: ".toString.toCharArray; builder.addAll(bpCa, 0, bpCa.length) }
+              |    sge.visui.util.dialog.Dialogs.getStackTrace(throwable.getCause(), builder)
+              |  } else ()
+              |}""".stripMargin,
+        )),
         // LAST, deliberately, for the reason `AshleyPolicy`, `GdxAiPolicy` and `TextraTypistPolicy`
         // state: this reads what the BASE actually emitted and reports a reference the base does
         // not ship, so it must run after any seam that re-points such a reference, or it reports
