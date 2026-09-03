@@ -5,7 +5,6 @@ ssg.md.ext.abbreviation.MergeAbbreviationsTest	test_IdAttributeConflict1	pass
 ssg.md.ext.abbreviation.MergeAbbreviationsTest	test_IdAttributeConflict2	pass
 ssg.md.ext.abbreviation.MergeAbbreviationsTest	test_UndefinedIdConflict1	pass
 ssg.md.ext.abbreviation.MergeAbbreviationsTest	test_UndefinedIdConflict2	pass
-ssg.md.ext.admonition.AdmonitionParserTest	test_escape	pass
 ssg.md.ext.aside.AsideParserTest	test_escape	pass
 ssg.md.ext.attributes.MergeAttributesTest	testHtmlPreservation1	pass
 ssg.md.ext.attributes.MergeAttributesTest	testHtmlPreservation2	pass

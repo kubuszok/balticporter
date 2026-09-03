@@ -347,7 +347,7 @@ sge.graphs.VertexCollection	sge.graphs.VertexCollection$VertexIterator#hasNext()
 sge.graphs.VertexCollection	sge.graphs.VertexCollection$VertexIterator#next()	def	0f72e5d2a38ef2a8
 sge.graphs.VertexCollection	sge.graphs.VertexCollection$VertexIterator#nodeIterator	val	a6d05ee93f1ebd91
 sge.graphs.VertexCollection	sge.graphs.VertexCollection$VertexIterator#remove()	def	4a7c683d9859750b
-sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch	class	1e864b0d4cb18da9
+sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch	class	9d14466df0d2ff6d
 sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch#<stmt1>	stmt	b8451b3a133fcaa8
 sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch#<stmt2>	stmt	80f9eb745c02feb8
 sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch#<stmt3>	stmt	19ac163d835c8243
@@ -356,7 +356,6 @@ sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch#<stmt5>	stmt
 sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch#<stmt6>	stmt	9767db0337c38551
 sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch#<stmt7>	stmt	3a49289aa4ff18ea
 sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch#<stmt8>	stmt	081e4754abf94fec
-sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch#aStarSearch(Node<V>,Node<V>,Heuristic<V>,SearchProcessor<V>)	def	4426dfea32fb43fa
 sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch#end	val	a6ecc14d08e5e7c7
 sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch#getEnd()	def	14997d797a6386d1
 sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch#getPath()	def	3c1b4cbdae605fad
@@ -365,7 +364,7 @@ sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch#heuristic	va
 sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch#isFinished()	def	edf796077446b4c8
 sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch#path	val	dc9020a3737b449f
 sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch#processor	val	38dd39f2fae43445
-sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch#start	val	befad6e8376246d0
+sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch#start	val	a34db8af0ac6af67
 sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch#step	val	192eeff42c436b66
 sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch#target	val	a68cbd8bceaad0a5
 sge.graphs.algorithms.AStarSearch	sge.graphs.algorithms.AStarSearch#u	val	6ade1e94b3197bdc

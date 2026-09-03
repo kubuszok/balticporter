@@ -381,7 +381,6 @@ member	space.earlygrey.simplegraphs.algorithms.AStarSearch#<stmt5>	sge.graphs.al
 member	space.earlygrey.simplegraphs.algorithms.AStarSearch#<stmt6>	sge.graphs.algorithms.AStarSearch#<stmt6>	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	27	9767db0337c38551	
 member	space.earlygrey.simplegraphs.algorithms.AStarSearch#<stmt7>	sge.graphs.algorithms.AStarSearch#<stmt7>	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	28	3a49289aa4ff18ea	
 member	space.earlygrey.simplegraphs.algorithms.AStarSearch#<stmt8>	sge.graphs.algorithms.AStarSearch#<stmt8>	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	29	081e4754abf94fec	
-member	space.earlygrey.simplegraphs.algorithms.AStarSearch#aStarSearch(Node,Node,Heuristic,SearchProcessor)	sge.graphs.algorithms.AStarSearch#aStarSearch(Node<V>,Node<V>,Heuristic<V>,SearchProcessor<V>)	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	109	4426dfea32fb43fa	vis=private
 member	space.earlygrey.simplegraphs.algorithms.AStarSearch#end	sge.graphs.algorithms.AStarSearch#end	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	17	a6ecc14d08e5e7c7	vis=private
 member	space.earlygrey.simplegraphs.algorithms.AStarSearch#getEnd()	sge.graphs.algorithms.AStarSearch#getEnd()	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	98	14997d797a6386d1	
 member	space.earlygrey.simplegraphs.algorithms.AStarSearch#getPath()	sge.graphs.algorithms.AStarSearch#getPath()	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	90	3c1b4cbdae605fad	
@@ -390,7 +389,7 @@ member	space.earlygrey.simplegraphs.algorithms.AStarSearch#heuristic	sge.graphs.
 member	space.earlygrey.simplegraphs.algorithms.AStarSearch#isFinished()	sge.graphs.algorithms.AStarSearch#isFinished()	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	86	edf796077446b4c8	
 member	space.earlygrey.simplegraphs.algorithms.AStarSearch#path	sge.graphs.algorithms.AStarSearch#path	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	18	dc9020a3737b449f	vis=private
 member	space.earlygrey.simplegraphs.algorithms.AStarSearch#processor	sge.graphs.algorithms.AStarSearch#processor	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	14	38dd39f2fae43445	
-member	space.earlygrey.simplegraphs.algorithms.AStarSearch#start	sge.graphs.algorithms.AStarSearch#start	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	17	befad6e8376246d0	
+member	space.earlygrey.simplegraphs.algorithms.AStarSearch#start	sge.graphs.algorithms.AStarSearch#start	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	17	a34db8af0ac6af67	
 member	space.earlygrey.simplegraphs.algorithms.AStarSearch#step	sge.graphs.algorithms.AStarSearch#step	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	15	192eeff42c436b66	vis=private
 member	space.earlygrey.simplegraphs.algorithms.AStarSearch#target	sge.graphs.algorithms.AStarSearch#target	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	17	a68cbd8bceaad0a5	
 member	space.earlygrey.simplegraphs.algorithms.AStarSearch#u	sge.graphs.algorithms.AStarSearch#u	Renamed	-	space/earlygrey/simplegraphs/algorithms/AStarSearch.java	17	6ade1e94b3197bdc	vis=private

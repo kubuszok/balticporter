@@ -3,12 +3,12 @@ api-parity(accessor)	668
 api-parity(collection-retarget)	38
 api-parity(factory)	30
 api-parity(file-merge)	0
-api-parity(hand-port-extra)	3610
+api-parity(hand-port-extra)	3611
 api-parity(mutability)	372
 api-parity(null-model)	518
 api-parity(opaque)	13
 api-parity(operator)	0
-api-parity(port-extra)	1383
+api-parity(port-extra)	1386
 api-parity(rename)	0
 api-parity(signature)	2131
 api-parity(static-placement)	323
@@ -54,5 +54,7 @@ substitution(emitted)	0
 switch-null	0
 trivia	0
 trivia(deliberate)	0
-trivia(recovered)	5
+trivia(recovered)	7
 try-resource	0
+unused-symbol(handled)	104
+unused-symbol(refused)	0

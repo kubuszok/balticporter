@@ -19,7 +19,7 @@ type	com.dongbat.jbump.World	sge.jbump.World	Renamed	-		0		form=class primary=(f
 type	com.dongbat.jbump.util.BooleanArray	sge.jbump.util.BooleanArray	Renamed	-		0		companion=yes disambiguator=marker form=class primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(int);(boolean,int);(BooleanArray);(boolean[]);(boolean,boolean[],int,int) statics=`with`
 type	com.dongbat.jbump.util.FloatArray	sge.jbump.util.FloatArray	Renamed	-		0		companion=yes disambiguator=marker form=class primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(int);(boolean,int);(FloatArray);(float[]);(boolean,float[],int,int) statics=`with`
 type	com.dongbat.jbump.util.IntArray	sge.jbump.util.IntArray	Renamed	-		0		companion=yes disambiguator=marker form=class primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(int);(boolean,int);(IntArray);(int[]);(boolean,int[],int,int) statics=`with`
-type	com.dongbat.jbump.util.IntIntMap	sge.jbump.util.IntIntMap	Renamed	-		0		companion=yes form=class parents=balticporter.runtime.JavaIterable primary=(int,float) primaryKind=unique-root primaryVis=public secondaries=();(int);(IntIntMap) statics=EMPTY,Entries,Entry,Keys,MapIterator,PRIME1,PRIME2,PRIME3,Values
+type	com.dongbat.jbump.util.IntIntMap	sge.jbump.util.IntIntMap	Renamed	-		0		companion=yes form=class parents=balticporter.runtime.JavaIterable primary=(int,float) primaryKind=unique-root primaryVis=public secondaries=();(int);(IntIntMap) statics=EMPTY,Entries,Entry,Keys,MapIterator,PRIME2,PRIME3,Values
 type	com.dongbat.jbump.util.IntIntMap$Entries	sge.jbump.util.IntIntMap$Entries	Renamed	-		0		companion=yes form=class parents=sge.jbump.util.IntIntMap$MapIterator,balticporter.runtime.JavaIterable,balticporter.runtime.JavaIterator primary=(IntIntMap) primaryKind=unique-root primaryVis=public
 type	com.dongbat.jbump.util.IntIntMap$Entry	sge.jbump.util.IntIntMap$Entry	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public
 type	com.dongbat.jbump.util.IntIntMap$Keys	sge.jbump.util.IntIntMap$Keys	Renamed	-		0		companion=yes form=class parents=sge.jbump.util.IntIntMap$MapIterator primary=(IntIntMap) primaryKind=unique-root primaryVis=public
@@ -236,7 +236,7 @@ member	com.dongbat.jbump.World#setTileMode(boolean)	sge.jbump.World#setTileMode(
 member	com.dongbat.jbump.World#tileMode	sge.jbump.World#tileMode	Renamed	-	com/dongbat/jbump/World.java	38	9579b674952c5782	vis=private
 member	com.dongbat.jbump.World#toCell(float,float,Point)	sge.jbump.World#toCell(float,float,Point)	Renamed	-	com/dongbat/jbump/World.java	317	9fb9b109bd27f325	
 member	com.dongbat.jbump.World#toWorld(float,float,Point)	sge.jbump.World#toWorld(float,float,Point)	Renamed	-	com/dongbat/jbump/World.java	312	7d2372e5d6ba00f3	
-member	com.dongbat.jbump.World#update(Item,float,float)	sge.jbump.World#update(Item<?>,float,float)	Renamed	-	com/dongbat/jbump/World.java	362	9c7c827cca7d3473	
+member	com.dongbat.jbump.World#update(Item,float,float)	sge.jbump.World#update(Item<?>,float,float)	Renamed	-	com/dongbat/jbump/World.java	362	118e3688a34bd6b2	
 member	com.dongbat.jbump.World#update(Item,float,float,float,float)	sge.jbump.World#update(Item<?>,float,float,float,float)	Renamed	-	com/dongbat/jbump/World.java	371	d6b91a4eade001d9	
 member	com.dongbat.jbump.World#update_c1	sge.jbump.World#update_c1	Renamed	-	com/dongbat/jbump/World.java	368	d5d7498db4e5783d	vis=private
 member	com.dongbat.jbump.World#update_c2	sge.jbump.World#update_c2	Renamed	-	com/dongbat/jbump/World.java	369	4604e828b7f388b6	vis=private
@@ -340,7 +340,7 @@ member	com.dongbat.jbump.util.IntArray#addAll(IntArray,int,int)	sge.jbump.util.I
 member	com.dongbat.jbump.util.IntArray#clear()	sge.jbump.util.IntArray#clear()	Renamed	-	com/dongbat/jbump/util/IntArray.java	239	f21fecb865063005	
 member	com.dongbat.jbump.util.IntArray#contains(int)	sge.jbump.util.IntArray#contains(int)	Renamed	-	com/dongbat/jbump/util/IntArray.java	142	b6c76046fd7b6808	
 member	com.dongbat.jbump.util.IntArray#ensureCapacity(int)	sge.jbump.util.IntArray#ensureCapacity(int)	Renamed	-	com/dongbat/jbump/util/IntArray.java	254	fec0c363361b6536	
-member	com.dongbat.jbump.util.IntArray#equals(Any)	sge.jbump.util.IntArray#equals(Any)	Renamed	-	com/dongbat/jbump/util/IntArray.java	327	a3ff910ec1476ccc	
+member	com.dongbat.jbump.util.IntArray#equals(Any)	sge.jbump.util.IntArray#equals(Any)	Renamed	-	com/dongbat/jbump/util/IntArray.java	327	43cfbcb7c04ddbc8	
 member	com.dongbat.jbump.util.IntArray#first()	sge.jbump.util.IntArray#first()	Renamed	-	com/dongbat/jbump/util/IntArray.java	234	c93f90f427c363bf	
 member	com.dongbat.jbump.util.IntArray#get(int)	sge.jbump.util.IntArray#get(int)	Renamed	-	com/dongbat/jbump/util/IntArray.java	101	7eee57434ae6581c	
 member	com.dongbat.jbump.util.IntArray#hashCode()	sge.jbump.util.IntArray#hashCode()	Renamed	-	com/dongbat/jbump/util/IntArray.java	318	0c92be64d2e4dcab	
@@ -390,7 +390,6 @@ member	com.dongbat.jbump.util.IntIntMap#<stmt7>	sge.jbump.util.IntIntMap#<stmt7>
 member	com.dongbat.jbump.util.IntIntMap#<stmt8>	sge.jbump.util.IntIntMap#<stmt8>	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	70	5a0091ace06c2948	
 member	com.dongbat.jbump.util.IntIntMap#<stmt9>	sge.jbump.util.IntIntMap#<stmt9>	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	71	4698ea30c6ad449e	
 member	com.dongbat.jbump.util.IntIntMap#EMPTY	sge.jbump.util.IntIntMap#EMPTY	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	28	a5ab876fd59f0055	placement=companion vis=private
-member	com.dongbat.jbump.util.IntIntMap#PRIME1	sge.jbump.util.IntIntMap#PRIME1	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	25	17df3bd7f714e172	placement=companion vis=private
 member	com.dongbat.jbump.util.IntIntMap#PRIME2	sge.jbump.util.IntIntMap#PRIME2	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	26	2ce3df5601822253	placement=companion vis=private
 member	com.dongbat.jbump.util.IntIntMap#PRIME3	sge.jbump.util.IntIntMap#PRIME3	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	27	cfdac1fbe8de96db	placement=companion vis=private
 member	com.dongbat.jbump.util.IntIntMap#capacity	sge.jbump.util.IntIntMap#capacity	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	33	6fe5ed31b0b3fc19	
@@ -468,7 +467,6 @@ member	com.dongbat.jbump.util.IntIntMap$MapIterator#valid	sge.jbump.util.IntIntM
 member	com.dongbat.jbump.util.IntIntMap$Values#hasNext()	sge.jbump.util.IntIntMap$Values#hasNext()	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	758	3148a6c677171db6	
 member	com.dongbat.jbump.util.IntIntMap$Values#next()	sge.jbump.util.IntIntMap$Values#next()	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	762	90e8920fe0b088c5	
 member	com.dongbat.jbump.util.IntIntMap$Values#toArray()	sge.jbump.util.IntIntMap$Values#toArray()	Renamed	-	com/dongbat/jbump/util/IntIntMap.java	774	fdf0f3cdec622818	
-member	com.dongbat.jbump.util.MathUtils#BIG_ENOUGH_CEIL	sge.jbump.util.MathUtils#BIG_ENOUGH_CEIL	Renamed	-	com/dongbat/jbump/util/MathUtils.java	280	99d4ad33977c0562	placement=companion vis=private
 member	com.dongbat.jbump.util.MathUtils#BIG_ENOUGH_FLOOR	sge.jbump.util.MathUtils#BIG_ENOUGH_FLOOR	Renamed	-	com/dongbat/jbump/util/MathUtils.java	278	d717e5a305a4f292	placement=companion vis=private
 member	com.dongbat.jbump.util.MathUtils#BIG_ENOUGH_INT	sge.jbump.util.MathUtils#BIG_ENOUGH_INT	Renamed	-	com/dongbat/jbump/util/MathUtils.java	277	001749989e681724	placement=companion vis=private
 member	com.dongbat.jbump.util.MathUtils#BIG_ENOUGH_ROUND	sge.jbump.util.MathUtils#BIG_ENOUGH_ROUND	Renamed	-	com/dongbat/jbump/util/MathUtils.java	281	cffa23ea41cf977f	placement=companion vis=private

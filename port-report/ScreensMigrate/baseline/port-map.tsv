@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-screens	engine=balticporter/0.1.0-SNAPSHOT	sources=a6a40dee2864c599	files=20	policy=1a1822ba424f1af2	jdk=22
+# balticporter port map	schema=4	module=sge-screens	engine=balticporter/0.1.0-SNAPSHOT	sources=a6a40dee2864c599	files=20	policy=baa3baf7a859518c	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	de.eskalon.commons.screen.BlankScreen	sge.screen.BlankScreen	Renamed	-		0		form=class parents=sge.screen.ManagedScreenAdapter primary=() primaryKind=unique-root primaryVis=public
 type	de.eskalon.commons.core.ManagedGame	sge.screen.ManagedGame	Renamed	-		0		form=class parents=sge.ApplicationAdapter primary=(ScreenManager) primaryKind=unique-root primaryVis=public secondaries=() tparams="[S <: sge.screen.ManagedScreen, T <: sge.screen.transition.ScreenTransition]"
@@ -22,19 +22,46 @@ type	de.eskalon.commons.screen.transition.impl.VerticalSlicingTransition	sge.scr
 type	de.eskalon.commons.utils.BasicInputMultiplexer	sge.screen.utils.BasicInputMultiplexer	Renamed	-		0		form=class parents=sge.InputMultiplexer primary=() primaryKind=unique-root primaryVis=public
 type	de.eskalon.commons.utils.ScreenFboUtils	sge.screen.utils.ScreenFboUtils	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=private
 type	de.eskalon.commons.utils.Supplier	sge.screen.utils.Supplier	Renamed	-		0		form=trait tparams="[T <: java.lang.Object]"
-type	com.badlogic.gdx.net.NetJavaImpl		Dropped	-		0		
-type	com.badlogic.gdx.utils.Align		Dropped	-		0		
-type	com.badlogic.gdx.utils.Disposable		Dropped	-		0		
-type	com.badlogic.gdx.utils.Json		Dropped	-		0		
-type	com.badlogic.gdx.utils.Pools		Dropped	-		0		
-type	com.badlogic.gdx.utils.ReflectionPool		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.Annotation		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.ArrayReflection		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.ClassReflection		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.Constructor		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.Field		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.Method		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.ReflectionException		Dropped	-		0		
+type	com.badlogic.gdx.net.NetJavaImpl	sge.net.NetJavaImpl	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Align	sge.utils.Align	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Array	sge.utils.Array	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ArrayMap	sge.utils.ArrayMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Bits	sge.utils.Bits	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.BooleanArray	sge.utils.BooleanArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ByteArray	sge.utils.ByteArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.CharArray	sge.utils.CharArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.DelayedRemovalArray	sge.utils.DelayedRemovalArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Disposable	sge.utils.Disposable	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.FloatArray	sge.utils.FloatArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IdentityMap	sge.utils.IdentityMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IntArray	sge.utils.IntArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IntFloatMap	sge.utils.IntFloatMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IntIntMap	sge.utils.IntIntMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IntMap	sge.utils.IntMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IntSet	sge.utils.IntSet	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Json	sge.utils.Json	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.LongArray	sge.utils.LongArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.LongMap	sge.utils.LongMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ObjectFloatMap	sge.utils.ObjectFloatMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ObjectIntMap	sge.utils.ObjectIntMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ObjectLongMap	sge.utils.ObjectLongMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ObjectMap	sge.utils.ObjectMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ObjectSet	sge.utils.ObjectSet	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.OrderedMap	sge.utils.OrderedMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.OrderedSet	sge.utils.OrderedSet	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Pool	sge.utils.Pool	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Pools	sge.utils.Pools	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Queue	sge.utils.Queue	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ReflectionPool	sge.utils.ReflectionPool	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ShortArray	sge.utils.ShortArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.SnapshotArray	sge.utils.SnapshotArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.Annotation	sge.utils.reflect.Annotation	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.ArrayReflection	sge.utils.reflect.ArrayReflection	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.ClassReflection	sge.utils.reflect.ClassReflection	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.Constructor	sge.utils.reflect.Constructor	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.Field	sge.utils.reflect.Field	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.Method	sge.utils.reflect.Method	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.ReflectionException	sge.utils.reflect.ReflectionException	Dropped	-		0		form=class
 type		balticporter.runtime.JavaCollection	Added	-		0		
 type		balticporter.runtime.JavaCollections	Added	-		0		
 type		balticporter.runtime.JavaEnumMap	Added	-		0		
@@ -62,8 +89,8 @@ member	de.eskalon.commons.screen.ManagedScreen#addInputProcessor(InputProcessor)
 member	de.eskalon.commons.screen.ManagedScreen#getClearColor()	sge.screen.ManagedScreen#clearColor()	Renamed	-	de/eskalon/commons/screen/ManagedScreen.java	221	4e3820b023d7502f	
 member	de.eskalon.commons.screen.ManagedScreen#dispose()	sge.screen.ManagedScreen#close()	Renamed	-	de/eskalon/commons/screen/ManagedScreen.java	211	702bb3c652ddaaf9	
 member	de.eskalon.commons.screen.ManagedScreen#hide()	sge.screen.ManagedScreen#hide()	Renamed	-	de/eskalon/commons/screen/ManagedScreen.java	102	d6b290e8bed4dd65	
-member	de.eskalon.commons.screen.ManagedScreen#getInputProcessors	sge.screen.ManagedScreen#inputProcessors	Renamed	-	de/eskalon/commons/screen/ManagedScreen.java	59	848e085ceed75b02	name=inputProcessors$field
-member	de.eskalon.commons.screen.ManagedScreen#getInputProcessors()	sge.screen.ManagedScreen#inputProcessors()	Renamed	-	de/eskalon/commons/screen/ManagedScreen.java	213	54fd0e699d61483f	
+member	de.eskalon.commons.screen.ManagedScreen#getInputProcessors	sge.screen.ManagedScreen#inputProcessors	Renamed	-	de/eskalon/commons/screen/ManagedScreen.java	59	8db97003032411bd	name=inputProcessors$field
+member	de.eskalon.commons.screen.ManagedScreen#getInputProcessors()	sge.screen.ManagedScreen#inputProcessors()	Renamed	-	de/eskalon/commons/screen/ManagedScreen.java	213	9c269c970b131ecb	
 member	de.eskalon.commons.screen.ManagedScreen#pause()	sge.screen.ManagedScreen#pause()	Renamed	-	de/eskalon/commons/screen/ManagedScreen.java	171	5d138930f49f7e97	
 member	de.eskalon.commons.screen.ManagedScreen#render(float)	sge.screen.ManagedScreen#render(float)	Renamed	-	de/eskalon/commons/screen/ManagedScreen.java	134	ca556a41079a2c52	
 member	de.eskalon.commons.screen.ManagedScreen#resize(int,int)	sge.screen.ManagedScreen#resize(int,int)	Renamed	-	de/eskalon/commons/screen/ManagedScreen.java	149	9b8097b2042aade8	
@@ -81,7 +108,7 @@ member	de.eskalon.commons.screen.ScreenManager#createFrameBuffer()	sge.screen.Sc
 member	de.eskalon.commons.screen.ScreenManager#currFBO	sge.screen.ScreenManager#currFBO	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	81	f07d77e25a3a6cd1	vis=private
 member	de.eskalon.commons.screen.ScreenManager#currScreen	sge.screen.ScreenManager#currScreen	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	92	f634a7a11b31301e	
 member	de.eskalon.commons.screen.ScreenManager#currentHeight	sge.screen.ScreenManager#currentHeight	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	113	2283448627d2cc0b	
-member	de.eskalon.commons.screen.ScreenManager#currentProcessors	sge.screen.ScreenManager#currentProcessors	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	97	90e80b2a9f44c273	vis=private
+member	de.eskalon.commons.screen.ScreenManager#currentProcessors	sge.screen.ScreenManager#currentProcessors	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	97	ce22b445423a4c14	vis=private
 member	de.eskalon.commons.screen.ScreenManager#getCurrentScreen()	sge.screen.ScreenManager#currentScreen()	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	474	4207ce398007af1e	
 member	de.eskalon.commons.screen.ScreenManager#currentWidth	sge.screen.ScreenManager#currentWidth	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	113	d0b5af0ba022d3c5	
 member	de.eskalon.commons.screen.ScreenManager#finalizeScreen(ManagedScreen)	sge.screen.ScreenManager#finalizeScreen(ManagedScreen)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	344	9b7d56c908452bce	
@@ -97,9 +124,9 @@ member	de.eskalon.commons.screen.ScreenManager#lastFBO	sge.screen.ScreenManager#
 member	de.eskalon.commons.screen.ScreenManager#getLastScreen	sge.screen.ScreenManager#lastScreen	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	87	73bd26e8a557e3a7	name=lastScreen$field
 member	de.eskalon.commons.screen.ScreenManager#getLastScreen()	sge.screen.ScreenManager#lastScreen()	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	461	7050c1d5ba3231f3	
 member	de.eskalon.commons.screen.ScreenManager#pause()	sge.screen.ScreenManager#pause()	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	385	9e39007418b015d6	
-member	de.eskalon.commons.screen.ScreenManager#pushScreen(S,Nullable)	sge.screen.ScreenManager#pushScreen(S,Nullable<T>)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	208	4d136f26a0746b4f	
-member	de.eskalon.commons.screen.ScreenManager#pushScreen(Supplier,Nullable)	sge.screen.ScreenManager#pushScreen(Supplier<S>,Nullable<Supplier<T>>)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	243	938f480565e345f6	
-member	de.eskalon.commons.screen.ScreenManager#render(float)	sge.screen.ScreenManager#render(float)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	259	ceddee1b00fbe480	
+member	de.eskalon.commons.screen.ScreenManager#pushScreen(S,Nullable)	sge.screen.ScreenManager#pushScreen(S,Nullable<T>)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	208	163a3554aec73a64	
+member	de.eskalon.commons.screen.ScreenManager#pushScreen(Supplier,Nullable)	sge.screen.ScreenManager#pushScreen(Supplier<S>,Nullable<Supplier<T>>)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	243	54a73165e79d8066	
+member	de.eskalon.commons.screen.ScreenManager#render(float)	sge.screen.ScreenManager#render(float)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	259	08fc75f262b766f2	
 member	de.eskalon.commons.screen.ScreenManager#resize(int,int)	sge.screen.ScreenManager#resize(int,int)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	360	5f5e5f90d641e6e0	
 member	de.eskalon.commons.screen.ScreenManager#resume()	sge.screen.ScreenManager#resume()	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	398	aa5cb55fa6818fa4	
 member	de.eskalon.commons.screen.ScreenManager#setAutoDispose(boolean,boolean)	sge.screen.ScreenManager#setAutoDispose(boolean,boolean)	Renamed	-	de/eskalon/commons/screen/ScreenManager.java	180	621a92f2a2cb3e33	
@@ -192,12 +219,12 @@ member	de.eskalon.commons.screen.transition.impl.VerticalSlicingTransition#<stmt
 member	de.eskalon.commons.screen.transition.impl.VerticalSlicingTransition#<stmt2>	sge.screen.transition.impl.VerticalSlicingTransition#<stmt2>	Renamed	-	de/eskalon/commons/screen/transition/impl/VerticalSlicingTransition.java	58	0f0c5d295f88dac7	
 member	de.eskalon.commons.screen.transition.impl.VerticalSlicingTransition#render(float,TextureRegion,TextureRegion,float)	sge.screen.transition.impl.VerticalSlicingTransition#render(float,TextureRegion,TextureRegion,float)	Renamed	-	de/eskalon/commons/screen/transition/impl/VerticalSlicingTransition.java	77	2ed794960160a999	
 member	de.eskalon.commons.screen.transition.impl.VerticalSlicingTransition#sliceCount	sge.screen.transition.impl.VerticalSlicingTransition#sliceCount	Renamed	-	de/eskalon/commons/screen/transition/impl/VerticalSlicingTransition.java	38	54418312e9526795	
-member	de.eskalon.commons.utils.BasicInputMultiplexer#addProcessors(Array)	sge.screen.utils.BasicInputMultiplexer#addProcessors(Array<InputProcessor>)	Renamed	-	de/eskalon/commons/utils/BasicInputMultiplexer.java	56	f063cae0b26c9619	
+member	de.eskalon.commons.utils.BasicInputMultiplexer#addProcessors(DynamicArray)	sge.screen.utils.BasicInputMultiplexer#addProcessors(DynamicArray<InputProcessor>)	Renamed	-	de/eskalon/commons/utils/BasicInputMultiplexer.java	56	ba67a0ea107731da	
 member	de.eskalon.commons.utils.BasicInputMultiplexer#removeProcessors()	sge.screen.utils.BasicInputMultiplexer#removeProcessors()	Renamed	-	de/eskalon/commons/utils/BasicInputMultiplexer.java	39	61b65c2ab83baf02	
-member	de.eskalon.commons.utils.BasicInputMultiplexer#removeProcessors(Array)	sge.screen.utils.BasicInputMultiplexer#removeProcessors(Array<InputProcessor>)	Renamed	-	de/eskalon/commons/utils/BasicInputMultiplexer.java	50	b90475eb5b9f71a5	
+member	de.eskalon.commons.utils.BasicInputMultiplexer#removeProcessors(DynamicArray)	sge.screen.utils.BasicInputMultiplexer#removeProcessors(DynamicArray<InputProcessor>)	Renamed	-	de/eskalon/commons/utils/BasicInputMultiplexer.java	50	5001ba9e303c9795	
 member	de.eskalon.commons.utils.ScreenFboUtils#restoreFboStatus(Array,Sge)	sge.screen.utils.ScreenFboUtils#restoreFboStatus(Array<int>,Sge)	Renamed	-	de/eskalon/commons/utils/ScreenFboUtils.java	76	b4eb2c3d37fea383	placement=companion
 member	de.eskalon.commons.utils.ScreenFboUtils#retrieveFboStatus()	sge.screen.utils.ScreenFboUtils#retrieveFboStatus()	Renamed	-	de/eskalon/commons/utils/ScreenFboUtils.java	67	6bbdef0e7d6c7d6b	placement=companion
-member	de.eskalon.commons.utils.ScreenFboUtils#screenToTexture(ManagedScreen,FrameBuffer,float,Sge)	sge.screen.utils.ScreenFboUtils#screenToTexture(ManagedScreen,FrameBuffer,float,Sge)	Renamed	-	de/eskalon/commons/utils/ScreenFboUtils.java	49	5b0600f75d140707	placement=companion
+member	de.eskalon.commons.utils.ScreenFboUtils#screenToTexture(ManagedScreen,FrameBuffer,float,Sge)	sge.screen.utils.ScreenFboUtils#screenToTexture(ManagedScreen,FrameBuffer,float,Sge)	Renamed	-	de/eskalon/commons/utils/ScreenFboUtils.java	49	c96e873c2ab0bb46	placement=companion
 member	de.eskalon.commons.utils.Supplier#get()	sge.screen.utils.Supplier#get()	Renamed	-	de/eskalon/commons/utils/Supplier.java	10	666a8ba65422b449	
 member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray$ChannelDescriptor#<init>(int,Class,int)		Dropped	-		0		
 member	com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch#<init>(Class)		Dropped	-		0		

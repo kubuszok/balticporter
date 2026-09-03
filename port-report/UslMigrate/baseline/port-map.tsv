@@ -82,7 +82,7 @@ member	com.kotcrab.vis.usl.Parser#getJson(Buffer)	sge.visui.usl.Parser#getJson(B
 member	com.kotcrab.vis.usl.Parser#globalStyles	sge.visui.usl.Parser#globalStyles	Renamed	-	com/kotcrab/vis/usl/Parser.java	39	a59dd98c0a358073	vis=private
 member	com.kotcrab.vis.usl.Parser#i	sge.visui.usl.Parser#i	Renamed	-	com/kotcrab/vis/usl/Parser.java	30	f9d14e8446b062f7	vis=private
 member	com.kotcrab.vis.usl.Parser#identifiers	sge.visui.usl.Parser#identifiers	Renamed	-	com/kotcrab/vis/usl/Parser.java	41	c7f1c3930bcb350e	vis=private
-member	com.kotcrab.vis.usl.Parser#out	sge.visui.usl.Parser#out	Renamed	-	com/kotcrab/vis/usl/Parser.java	28	c4e24a9e9912c04b	vis=private
+member	com.kotcrab.vis.usl.Parser#out	sge.visui.usl.Parser#out	Renamed	-	com/kotcrab/vis/usl/Parser.java	28	a8603ea5c19c632a	vis=private
 member	com.kotcrab.vis.usl.Parser#peekNext()	sge.visui.usl.Parser#peekNext()	Renamed	-	com/kotcrab/vis/usl/Parser.java	251	91c9822374a3d832	vis=private
 member	com.kotcrab.vis.usl.Parser#peekPrev()	sge.visui.usl.Parser#peekPrev()	Renamed	-	com/kotcrab/vis/usl/Parser.java	247	8cc4159c01edf7a8	vis=private
 member	com.kotcrab.vis.usl.Parser#postCheck()	sge.visui.usl.Parser#postCheck()	Renamed	-	com/kotcrab/vis/usl/Parser.java	258	155e746b1ec41918	vis=private

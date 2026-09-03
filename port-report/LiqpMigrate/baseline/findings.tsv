@@ -35,7 +35,6 @@ d347a5b886da	api-parity(hand-port-extra)	hand-port-extra	#LiquidLexer		0	class L
 4e07608ecaa3	api-parity(hand-port-extra)	hand-port-extra	#MapFilter		0	class MapFilter/0 in reference port only
 cbdf30be85cd	api-parity(hand-port-extra)	hand-port-extra	#Token		0	class Token/0 in reference port only
 728a82b1ad4d	api-parity(hand-port-extra)	hand-port-extra	#TokenType		0	enum TokenType/0 in reference port only
-40057c390e0e	api-parity(hand-port-extra)	hand-port-extra	#UrlUtil		0	object UrlUtil/0 in reference port only
 90f58ada2788	api-parity(hand-port-extra)	hand-port-extra	#Version		0	val Version/0 in reference port only
 7206b4d4b3d6	api-parity(hand-port-extra)	hand-port-extra	#delta		0	var delta/0 in reference port only
 e4b13b6e25d1	api-parity(hand-port-extra)	hand-port-extra	#encode		0	def encode/1 in reference port only
@@ -43,6 +42,7 @@ e4b13b6e25d1	api-parity(hand-port-extra)	hand-port-extra	#encode		0	def encode/1
 e72199107737	api-parity(hand-port-extra)	hand-port-extra	#toAscii		0	def toAscii/1 in reference port only
 e12fcd28dc7d	api-parity(hand-port-extra)	hand-port-extra	Absolute_Url$#atIdx	/Absolute_Url$	0	val atIdx/0 in reference port only [rename candidates: config, url]
 e8a95fa26cb9	api-parity(hand-port-extra)	hand-port-extra	Absolute_Url$#bracketEnd	/Absolute_Url$	0	val bracketEnd/0 in reference port only [rename candidates: config, url]
+dcd7fb9508fc	api-parity(hand-port-extra)	hand-port-extra	Absolute_Url$#collapseSlashes	/Absolute_Url$	0	def collapseSlashes/1 in reference port only [rename candidates: convertUnicodeURLToAscii]
 b6c47b69694f	api-parity(hand-port-extra)	hand-port-extra	Absolute_Url$#colonIdx	/Absolute_Url$	0	val colonIdx/0 in reference port only [rename candidates: config, url]
 2987ef2dc996	api-parity(hand-port-extra)	hand-port-extra	Absolute_Url$#hasPort	/Absolute_Url$	0	val hasPort/0 in reference port only [rename candidates: config, url]
 9ada2758d407	api-parity(hand-port-extra)	hand-port-extra	Absolute_Url$#host	/Absolute_Url$	0	val host/0 in reference port only [rename candidates: config, url]
@@ -125,8 +125,8 @@ e60dd2d8b31c	api-parity(hand-port-extra)	hand-port-extra	Json$#toJson	/Json$	0	d
 5b60229d120b	api-parity(hand-port-extra)	hand-port-extra	LValue$#date	/LValue$	0	val date/0 in reference port only [rename candidates: BREAK, CONTINUE]
 ebdf7504ccda	api-parity(hand-port-extra)	hand-port-extra	LValue$#fields	/LValue$	0	val fields/0 in reference port only [rename candidates: BREAK, CONTINUE]
 0f9c57296493	api-parity(hand-port-extra)	hand-port-extra	LValue$#now	/LValue$	0	var now/0 in reference port only [rename candidates: rubyDateTimeFormat]
-f9bd9980e607	api-parity(hand-port-extra)	hand-port-extra	LValue$#temporalAsVector	/LValue$	0	def temporalAsVector/2 in reference port only [rename candidates: areEqual, asRubyDate, asTemporal]
-915357627656	api-parity(hand-port-extra)	hand-port-extra	LValue$#temporalToString	/LValue$	0	def temporalToString/2 in reference port only [rename candidates: areEqual, asRubyDate, asTemporal]
+7da4b4a88738	api-parity(hand-port-extra)	hand-port-extra	LValue$#temporalAsVector	/LValue$	0	def temporalAsVector/1 in reference port only [rename candidates: asFormattedNumber, isBlank, isTemporal, temporalAsArray]
+7536817bafc1	api-parity(hand-port-extra)	hand-port-extra	LValue$#temporalToString	/LValue$	0	def temporalToString/1 in reference port only [rename candidates: asFormattedNumber, isBlank, isTemporal, temporalAsArray]
 d1fc850e83e3	api-parity(hand-port-extra)	hand-port-extra	LValue$#time	/LValue$	0	val time/0 in reference port only [rename candidates: BREAK, CONTINUE]
 791aebe35c3b	api-parity(hand-port-extra)	hand-port-extra	LValue$#zoneId	/LValue$	0	val zoneId/0 in reference port only [rename candidates: BREAK, CONTINUE]
 78ec290213b3	api-parity(hand-port-extra)	hand-port-extra	LiquidException$#withContext	/LiquidException$	0	def withContext/4 in reference port only
@@ -450,7 +450,6 @@ ecb49ba401b1	api-parity(hand-port-extra)	hand-port-extra	TokenType#TRUE	/TokenTy
 de6636ef5e09	api-parity(hand-port-extra)	hand-port-extra	TokenType#UNLESS	/TokenType	0	case UNLESS/0 in reference port only
 b95359193d93	api-parity(hand-port-extra)	hand-port-extra	TokenType#WHEN	/TokenType	0	case WHEN/0 in reference port only
 1822b6e927a5	api-parity(hand-port-extra)	hand-port-extra	TokenType#WITH	/TokenType	0	case WITH/0 in reference port only
-1a2501d47253	api-parity(hand-port-extra)	hand-port-extra	UrlUtil$#collapseSlashes	/UrlUtil$	0	def collapseSlashes/1 in reference port only
 80e3575153dc	api-parity(hand-port-extra)	hand-port-extra	Where_Exp#vars	/Where_Exp	0	val vars/0 in reference port only [rename candidates: res]
 7c5845d5f78e	api-parity(mutability)	mutability	ComparingExpressionNode#lhs	/ComparingExpressionNode	0	kind differs: emitted var, reference val
 094e8206e56b	api-parity(mutability)	mutability	ComparingExpressionNode#rhs	/ComparingExpressionNode	0	kind differs: emitted var, reference val
@@ -927,11 +926,14 @@ d8e3a6661f14	api-parity(port-extra)	port-extra	JavaEnumSet#subtractOne	/JavaEnum
 a664ff962e65	api-parity(port-extra)	port-extra	JavaIterable$#asScala	/JavaIterable$	0	def asScala/0 in emitted port only
 59ff96db0ee7	api-parity(port-extra)	port-extra	JavaIterable$#foreach	/JavaIterable$	0	def foreach/1 in emitted port only
 3907bb7e4f82	api-parity(port-extra)	port-extra	JavaIterable$#from	/JavaIterable$	0	def from/1 in emitted port only
+2c8d9daac4dd	api-parity(port-extra)	port-extra	JavaIterable$#fromIterator	/JavaIterable$	0	def fromIterator/1 in emitted port only
 9b60a4f4b1a7	api-parity(port-extra)	port-extra	JavaIterator#hasNext	/JavaIterator	0	def hasNext/0 in emitted port only
 58e86ff3b887	api-parity(port-extra)	port-extra	JavaIterator#next	/JavaIterator	0	def next/0 in emitted port only
 34e6dc35875a	api-parity(port-extra)	port-extra	JavaIterator#remove	/JavaIterator	0	def remove/0 in emitted port only
 73941ef7dc75	api-parity(port-extra)	port-extra	JavaIterator$#asScala	/JavaIterator$	0	def asScala/0 in emitted port only
 3a2f7e9bbe2b	api-parity(port-extra)	port-extra	JavaIterator$#from	/JavaIterator$	0	def from/1 in emitted port only
+941a65746f56	api-parity(port-extra)	port-extra	JavaIterator$#removing	/JavaIterator$	0	def removing/3 in emitted port only
+a5102bc18483	api-parity(port-extra)	port-extra	JavaIterator$#removingFromBuffer	/JavaIterator$	0	def removingFromBuffer/1 in emitted port only
 0717d360dcd1	api-parity(port-extra)	port-extra	JavaListIterator#add	/JavaListIterator	0	def add/1 in emitted port only
 812f908e3edc	api-parity(port-extra)	port-extra	JavaListIterator#hasPrevious	/JavaListIterator	0	def hasPrevious/0 in emitted port only
 610fcead38ef	api-parity(port-extra)	port-extra	JavaListIterator#nextIndex	/JavaListIterator	0	def nextIndex/0 in emitted port only
@@ -950,7 +952,7 @@ ce4fa8859809	api-parity(port-extra)	port-extra	JavaStack#search	/JavaStack	0	def
 e3a6e9d48a1c	api-parity(port-extra)	port-extra	LValue#mapAsArray	/LValue	0	def mapAsArray/1 in emitted port only [rename candidates: asBoolean, asMap, asNumber, asStrictNumber, canBeDouble, canBeInteger, canBeNumber, isArray, isInteger, isMap, isNumber, isString, mapAsVector]
 f2ebd65ca930	api-parity(port-extra)	port-extra	LValue$#BREAK	/LValue$	0	val BREAK/0 in emitted port only [rename candidates: date, fields, rubyDateTimeFormat, time, zoneId]
 c3024353ba78	api-parity(port-extra)	port-extra	LValue$#CONTINUE	/LValue$	0	val CONTINUE/0 in emitted port only [rename candidates: date, fields, rubyDateTimeFormat, time, zoneId]
-33cfc3432143	api-parity(port-extra)	port-extra	LValue$#temporalAsArray	/LValue$	0	def temporalAsArray/1 in emitted port only [rename candidates: asFormattedNumber, isBlank, isTemporal]
+705bc3a990bc	api-parity(port-extra)	port-extra	LValue$#temporalAsArray	/LValue$	0	def temporalAsArray/1 in emitted port only [rename candidates: asFormattedNumber, isBlank, isTemporal, temporalAsVector, temporalToString]
 e1b13382d50a	api-parity(port-extra)	port-extra	LiquidException$#errorLine	/LiquidException$	0	val errorLine/0 in emitted port only
 52fdc2882ad3	api-parity(port-extra)	port-extra	LiquidException$#expectedBuilder	/LiquidException$	0	val expectedBuilder/0 in emitted port only
 803ccf0d557a	api-parity(port-extra)	port-extra	LiquidException$#fpe	/LiquidException$	0	val fpe/0 in emitted port only
@@ -1101,7 +1103,7 @@ d47e9ce900b5	api-parity(port-extra)	port-extra	Template#indent	/Template	0	var i
 2ccfeb5b6f34	api-parity(port-extra)	port-extra	Template#render	/Template	0	def render/3 in emitted port only [rename candidates: renderToObjectUnguarded]
 2ccfeb5b6f34/2	api-parity(port-extra)	port-extra	Template#render	/Template	0	def render/3 in emitted port only [rename candidates: renderToObjectUnguarded]
 4dabb4407a42	api-parity(port-extra)	port-extra	Template#render	/Template	0	def render/4 in emitted port only
-cbf239a239d4	api-parity(port-extra)	port-extra	Template#renderObject	/Template	0	def renderObject/1 in emitted port only [rename candidates: render, renderResult, renderToObject, renderToObjectUnguarded, renderUnguarded, renderUnguarded, withContextHolder, withJailRoot]
+1c3adf55be6e	api-parity(port-extra)	port-extra	Template#renderObject	/Template	0	def renderObject/1 in emitted port only [rename candidates: render, renderResult, renderToObject, renderToObjectUnguarded, renderUnguarded, withContextHolder, withJailRoot]
 eaae692ef747	api-parity(port-extra)	port-extra	Template#renderUnguarded	/Template	0	def renderUnguarded/3 in emitted port only [rename candidates: renderToObjectUnguarded]
 76e645f5998c	api-parity(port-extra)	port-extra	Template#root	/Template	0	var root/0 in emitted port only
 33d5fea3a436	api-parity(port-extra)	port-extra	Template#syntaxError	/Template	0	def syntaxError/6 in emitted port only
@@ -1536,7 +1538,7 @@ a45780dd1f0b	catalog(consulted)	reached	JS-C06	-	0	rendering Apply — consulted
 5348530cfe54	catalog(consulted)	reached	JS-C10	-	0	rendering ClassDef — consulted 157, fired 0, declarations 0: circular class initialisation delivers DEFAULT values on the same thread
 22ea578757f2	catalog(consulted)	reached	JS-C13	liqp/Examples.java	15	rendering ClassDef — consulted 157, fired 140, declarations 0: JLS 12.5's instance-creation sequence, whole
 2be72e83f31d	catalog(consulted)	reached	JS-C14	liqp/PlainBigDecimal.java	11	rendering ClassDef — consulted 157, fired 20, declarations 0: the superclass constructor runs before this class's field initialisers
-11462a81f1bf	catalog(consulted)	reached	JS-C16	liqp/Template.java	35	rendering DefDef — consulted 526, fired 4, declarations 0: instance initialiser blocks
+35863ca21321	catalog(consulted)	reached	JS-C16	liqp/Template.java	35	rendering DefDef — consulted 525, fired 4, declarations 0: instance initialiser blocks
 58c97dc9ec6f	catalog(consulted)	reached	JS-C17	liqp/filters/date/Parser.java	31	lowering CtNewClass/Expression — consulted 411, fired 1, declarations 0: double-brace initialisation is an anonymous subclass plus an instance initialiser
 e42946d01a99	catalog(consulted)	reached	JS-C18	-	0	rendering ClassDef — consulted 157, fired 0, declarations 0: field initialisers and instance-init blocks are ONE step-4 sequence in textual order, not two buckets
 455eaa72bb22	catalog(consulted)	reached	JS-C19	liqp/Insertion.java	13	rendering ClassDef — consulted 157, fired 16, declarations 0: `this(...)` / `super(...)` in a secondary constructor — Scala's secondary constructors cannot call `super`
@@ -1544,8 +1546,8 @@ e42946d01a99	catalog(consulted)	reached	JS-C18	-	0	rendering ClassDef — consul
 6dea3f8d6135	catalog(consulted)	reached	JS-C21	liqp/Insertion.java	13	rendering ClassDef — consulted 157, fired 16, declarations 0: constructor overload resolution, against Scala's textual-anteriority rule
 9e656d98b66c	catalog(consulted)	reached	JS-C22	liqp/Examples.java	35	rendering Apply — consulted 3239, fired 30, declarations 0: Java's THREE-PHASE applicability (strict, then loose, then varargs) has no Scala counterpart
 2e9b7b9af380	catalog(consulted)	reached	JS-C23	-	0	rendering Apply — consulted 3239, fired 0, declarations 0: most-specific tie-break: Scala prefers a NON-GENERIC alternative and Java does not
-867d4e816bcb	catalog(consulted)	reached	JS-C25	liqp/Examples.java	54	rendering DefDef — consulted 526, fired 215, declarations 0: `override` is mandatory in Scala and absent in Java
-0695f0145e43	catalog(consulted)	reached	JS-C29	liqp/Examples.java	19	rendering-type TypeRef — consulted 4171, fired 214, declarations 0: a static NESTED class and an INNER class are different types, and only one is path-dependent
+3d5c6198e0b4	catalog(consulted)	reached	JS-C25	liqp/Examples.java	54	rendering DefDef — consulted 525, fired 215, declarations 0: `override` is mandatory in Scala and absent in Java
+b593f9a13fd5	catalog(consulted)	reached	JS-C29	liqp/Examples.java	19	rendering-type TypeRef — consulted 4179, fired 213, declarations 0: a static NESTED class and an INNER class are different types, and only one is path-dependent
 35235bc5d678	catalog(consulted)	reached	JS-C31	liqp/Examples.java	52	lowering CtNewClass/Expression — consulted 411, fired 24, declarations 0: anonymous class construction and capture
 5ce9ea496f0e	catalog(consulted)	reached	JS-C33	liqp/filters/Sort.java	75	rendering ClassDef — consulted 157, fired 6, declarations 0: the interface default-method diamond is resolved by JLS's two rules, not by trait linearization
 0568bb91955e	catalog(consulted)	reached	JS-C34	liqp/Insertion.java	13	rendering ClassDef — consulted 157, fired 102, declarations 0: interface statics are not inherited AT ALL, not even by an implementor
@@ -1558,10 +1560,10 @@ d89667564021	catalog(consulted)	reached	JS-C39	liqp/TemplateParser.java	53	rende
 e07eac38598e	catalog(consulted)	reached	JS-C44	-	0	rendering ClassDef — consulted 157, fired 0, declarations 0: `sealed` / `non-sealed` / `permits`
 f7a07f3a3d29	catalog(consulted)	reached	JS-C45	liqp/Insertion.java	18	rendering ValDef — consulted 761, fired 147, declarations 0: a `final` field's JMM safe-publication guarantee
 3958d8f51c6c	catalog(consulted)	reached	JS-C46	-	0	phase member-clash — consulted 0, fired 0, declarations 3: Java has TWO name namespaces and Scala has one
-c0cec4414df0	catalog(consulted)	reached	JS-C47	liqp/Insertions.java	153	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1444, fired 40, declarations 0: package-private becomes `private[pkg]`
-ddef4d5e98d5	catalog(consulted)	reached	JS-C48	liqp/Insertion.java	24	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1444, fired 28, declarations 0: Java's `protected` also grants SAME-PACKAGE access, and accessibility is an input to overload resolution
-768cdeb5f455	catalog(consulted)	reached	JS-C49	liqp/Examples.java	185	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1444, fired 15, declarations 0: Java's `private` reaches the whole enclosing TOP-LEVEL class; Scala's reaches only the template
-9f7f8d5a2983	catalog(consulted)	reached	JS-C50	liqp/Insertions.java	153	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1444, fired 40, declarations 0: Java's default access is package-private and Scala's is public — INVERTED
+8d9fee8f07ef	catalog(consulted)	reached	JS-C47	liqp/Insertions.java	153	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1443, fired 40, declarations 0: package-private becomes `private[pkg]`
+1aa85cd8d9eb	catalog(consulted)	reached	JS-C48	liqp/Insertion.java	24	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1443, fired 28, declarations 0: Java's `protected` also grants SAME-PACKAGE access, and accessibility is an input to overload resolution
+555313d21ac2	catalog(consulted)	reached	JS-C49	liqp/Examples.java	185	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1443, fired 15, declarations 0: Java's `private` reaches the whole enclosing TOP-LEVEL class; Scala's reaches only the template
+6198ce4c7b94	catalog(consulted)	reached	JS-C50	liqp/Insertions.java	153	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1443, fired 40, declarations 0: Java's default access is package-private and Scala's is public — INVERTED
 bb326e834721	catalog(consulted)	reached	JS-C51	-	0	rendering ClassDef — consulted 157, fired 0, declarations 0: a `return` in a CONSTRUCTOR body, whose promotion puts it in the class body
 89994a6b00c7	catalog(consulted)	reached	JS-C52	-	0	rendering MethodRef — consulted 4, fired 0, declarations 0: `@FunctionalInterface` governs Scala's eta-expansion warning — a static method reference at a non-annotated SAM warns under `-Werror`
 d07ca9016e7e	catalog(consulted)	reached	JS-E01	liqp/Insertions.java	130	lowering CtBinaryOperator/Expression — consulted 686, fired 17, declarations 0: `==`/`!=` are REFERENCE identity in Java; Scala's `==` calls `equals`
@@ -1580,7 +1582,7 @@ e4d461aeb125	catalog(consulted)	reached	JS-G05	-	0	rendering ClassDef — consul
 c08c84b7a98a	catalog(consulted)	reached	JS-G09	liqp/Template.java	165	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 4461, fired 13, declarations 0: UNCHECKED CONVERSION at a raw type is legal in Java and is not in Scala
 5c3807d1babe	catalog(consulted)	reached	JS-G10	-	0	lowering CtNewClass/Expression — consulted 411, fired 0, declarations 0: a RAW anonymous class WITH a body
 cd6a6ac98526	catalog(consulted)	reached	JS-G11	liqp/TemplateParser.java	53	rendering ClassDef — consulted 157, fired 5, declarations 0: a partially-nameable F-BOUNDED raw fill
-99b521f2bfc2	catalog(consulted)	reached	JS-G12	<synthetic>	0	lowering-type CtTypeParameterReference + rendering-type TypeRef — consulted 4377, fired 104, declarations 0: a diamond's inference variable has NO NAMEABLE type
+482248e2e8fe	catalog(consulted)	reached	JS-G12	<synthetic>	0	lowering-type CtTypeParameterReference + rendering-type TypeRef — consulted 4385, fired 104, declarations 0: a diamond's inference variable has NO NAMEABLE type
 49025f516ea5	catalog(consulted)	reached	JS-G13	liqp/Insertions.java	91	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 4461, fired 14, declarations 0: Java arrays are COVARIANT, with a runtime `ArrayStoreException`; Scala's are invariant
 0738c0f7e375	catalog(consulted)	reached	JS-G14	liqp/Examples.java	109	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 4461, fired 134, declarations 0: a primitive at a generic slot boxes to the WRAPPER, not to the formal
 c9b3bb53b137	catalog(consulted)	reached	JS-G15	-	0	lowering CtNewArray/Expression — consulted 27, fired 0, declarations 0: GENERIC ARRAY CREATION is illegal in Java, so only the cast idiom reaches the engine
@@ -1594,12 +1596,12 @@ f4a21d5b587a	catalog(consulted)	reached	JS-G31	liqp/Insertions.java	113	lowering
 386f22e0e283	catalog(consulted)	reached	JS-G32	liqp/Examples.java	40	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression — consulted 2671, fired 354, declarations 0: a callee's OWN type variables never resolve at the caller
 e61465f407b4	catalog(consulted)	reached	JS-G33	liqp/Insertions.java	80	rendering MethodRef — consulted 4, fired 4, declarations 0: SAM conversion eligibility
 04d043e9aae4	catalog(consulted)	reached	JS-G34	-	0	rendering Typed — consulted 381, fired 0, declarations 0: a Java INTERSECTION in a cast becomes Scala's `&`
-4a9f7c32a7a2	catalog(consulted)	reached	JS-G35	-	0	rendering ClassDef + rendering DefDef — consulted 683, fired 0, declarations 0: Scala CHECKS an F-bound where javac does not
+31027b449d73	catalog(consulted)	reached	JS-G35	-	0	rendering ClassDef + rendering DefDef — consulted 682, fired 0, declarations 0: Scala CHECKS an F-bound where javac does not
 6a36b926efa8	catalog(consulted)	reached	JS-G37	liqp/Examples.java	35	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression — consulted 2671, fired 11, declarations 0: `T...` is an `Array[T]`, materialised at the port's OWN call sites
 bce172a4b5c9	catalog(consulted)	reached	JS-G38	liqp/Insertions.java	91	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression — consulted 2671, fired 53, declarations 0: a vararg slot ALREADY holding an array must not be re-packed — and neither a primitive array nor an under-dimensioned one forwards
 402877509d44	catalog(consulted)	reached	JS-G39	liqp/Insertions.java	91	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + rendering Apply — consulted 5910, fired 47, declarations 0: an EXTERNAL callee's `T...` is read by scalac as a REPEATED parameter
 72f12ca3b134	catalog(consulted)	reached	JS-G40	liqp/Insertions.java	91	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + rendering Spread — consulted 2671, fired 11, declarations 0: the COMPOSITION of JS-G38 and JS-G39 — an array forwarded through an external vararg slot
-1dfb2a100fab	catalog(consulted)	reached	JS-G41	-	0	rendering DefDef — consulted 526, fired 0, declarations 0: `@SafeVarargs` and heap pollution
+4b03920d8b71	catalog(consulted)	reached	JS-G41	-	0	rendering DefDef — consulted 525, fired 0, declarations 0: `@SafeVarargs` and heap pollution
 dcfd59cc5750	catalog(consulted)	reached	JS-G42	liqp/Insertions.java	91	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression — consulted 2671, fired 11, declarations 0: a generic vararg's COMPONENT element type has four layered sources
 808de951030e	catalog(consulted)	reached	JS-G43	liqp/Insertions.java	80	lowering CtExecutableReferenceExpression/Expression + rendering MethodRef — consulted 9, fired 9, declarations 0: METHOD REFERENCES are five forms sharing one syntax — static, unbound, bound, constructor, array constructor
 7e1c3dffb875	catalog(consulted)	reached	JS-G48	-	0	phase collections — consulted 0, fired 0, declarations 29: a REIFIED type occurrence asks about a RUNTIME OBJECT, so a retyping moves the question and not the answer
@@ -1621,7 +1623,7 @@ f9e6141fabd1	catalog(consulted)	reached	JS-S16	liqp/filters/Sort.java	115	render
 9d7151893efc	catalog(consulted)	reached	JS-S17	liqp/LValue.java	502	rendering For — consulted 21, fired 21, declarations 0: the classic `for`'s UPDATE runs on `continue`, and its `ForInit` scopes to the loop
 bcdba5d0cfac	catalog(consulted)	reached	JS-S19	liqp/Insertion.java	18	rendering ValDef — consulted 761, fired 150, declarations 0: definite assignment for LOCALS — Java rejects a read before assignment
 7eade48f87c7	catalog(consulted)	reached	JS-S21	-	0	rendering Lambda — consulted 12, fired 0, declarations 0: `return` inside a lambda body returns from the LAMBDA, not from the method
-98032ee01cfd	catalog(consulted)	reached	JS-S25	-	0	rendering DefDef — consulted 526, fired 0, declarations 0: Java REJECTS unreachable code and Scala allows it — composed with `break`
+5849bace3896	catalog(consulted)	reached	JS-S25	-	0	rendering DefDef — consulted 525, fired 0, declarations 0: Java REJECTS unreachable code and Scala allows it — composed with `break`
 ebae25db4fc7	catalog(consulted)	reached	JS-S26	liqp/filters/date/BasicDateParser.java	34	rendering ForEach — consulted 55, fired 6, declarations 0: a `return` inside an enhanced-for body becomes a NON-LOCAL RETURN in Scala's `.foreach` desugaring
 9c22be7f2f32	catalog(uncited)	handled	JS-C01	-	0	UNCITED — a companion object has no inheritance relation to its class's parents (JLS side: JLS 8.2, 8.4.8): a Java `static` is INHERITED by every subclass; a Scala companion inherits nothing
 3047600ceab7	catalog(uncited)	handled	JS-C02	-	0	UNCITED — as JS-C01, through the interface edge (JLS side: JLS 9.3, 8.1.5): interface constants are inherited through `implements`
@@ -1748,8 +1750,8 @@ e99b4ca06c8d	catalog(uncited)	partial	JS-S19	-	0	UNCITED — Scala requires an i
 61dcbf0d631c	catalog(uncited)	refused	JS-G11	-	0	UNCITED — a genuine expressiveness limit; four closing attempts measured worse (JLS side: JLS 4.5, 4.8): a partially-nameable F-BOUNDED raw fill
 2b030bc6245f	catalog(undischarged)	declared open	JS-C12	liqp/Examples.java	19	ValDef/Either lowered 761 time(s) without consulting it — a FORWARD REFERENCE to a later field is a Java compile error and a silent default read in Scala
 b2ed8979dcb3	catalog(undischarged)	declared open	JS-G02	<synthetic>	0	CtWildcardReference/Either lowered 393 time(s) without consulting it — CAPTURE CONVERSION relates two uses of one wildcard in a single expression
-c44d7533380a	catalog(undischarged)	declared open	JS-G16	liqp/Examples.java	35	NewArray/Either lowered 68 time(s) without consulting it — Scala's `Array[T]` needs a `ClassTag` to be CONSTRUCTED
-a35e656ec4a8	catalog(undischarged)	declared open	JS-G36	liqp/Examples.java	17	DefDef/Either lowered 526 time(s) without consulting it — an override's TYPE-PARAMETER BOUNDS must be copied from the parent
+70e2ab2e20f6	catalog(undischarged)	declared open	JS-G16	liqp/Examples.java	35	NewArray/Either lowered 69 time(s) without consulting it — Scala's `Array[T]` needs a `ClassTag` to be CONSTRUCTED
+4e757ff65dae	catalog(undischarged)	declared open	JS-G36	liqp/Examples.java	17	DefDef/Either lowered 525 time(s) without consulting it — an override's TYPE-PARAMETER BOUNDS must be copied from the parent
 17de2f733972	catalog(unmechanised)	partial	JS-G20	-	0	the row is per-phase DISCIPLINE across every retyping phase rather than one mechanism, so there is no dispatch and no single phase that could own the citation; what measures it is the `collection-retarget` lane (`RetargetBoundaryCheck`), which runs beside the obligation log and not through it: an unchecked cast's TIMING — a cast that only becomes impossible AFTER a retyping
 3848578495dd	catalog(unreached)	handled	JS-C04	-	0	never reached by this port — TirEmitter.resolveFieldShadowing — the trigger is NAME membership in the inherited instance members, so a same-type field fires too: a subclass field SHADOWS a superclass field — two storage cells, not one
 6c4d695fa9eb	catalog(unreached)	handled	JS-C30	-	0	never reached by this port — SpoonTir.stmtArm's CtClass arm -> SpoonTir.classDef with the enclosing EXECUTABLE as owner and SpoonTir.localName for java's source name; the anonymous-class body wiring reused verbatim for captures and for `this`; StandardTraversal.allClassDefs, which is what every whole-program pass walks to reach it at all: method-LOCAL named classes
@@ -2110,3 +2112,28 @@ a5128ae9dd8e	remediation	substitutions-drop	ssg.liquid.spi.Java7DateTypesSupport
 67afa830c376	service-providers	off-jvm-unwired	liqp.spi.TypesSupport	../resources/META-INF/services/liqp.spi.TypesSupport	0	`META-INF/services/ssg.liquid.spi.TypesSupport` is shipped for JVM discovery, and this port declares ScalaJs, ScalaNative — where there is NO classpath scan and providers resolve by REGISTRATION. The wrapper's registration sits in a generated object body that nothing in a ported library ever forces, so `load` answers an EMPTY iterator on those backends with no compile error and no other count — P5's defect one platform over. UNWIRED, not broken: the trigger emission is named as future work rather than built [§1(a) ENGINE: `ENGINE-LIMITS.md` P9, `DESIGN.md` §8.19 — narrow `targets` to `[jvm]` if this module is not built off the JVM, which is a statement and not a silencer]
 c974cd25d5d2	service-providers	shipped	liqp.spi.Java7DateTypesSupport	../resources/META-INF/services/liqp.spi.TypesSupport	1	provider shipped as `ssg.liquid.spi.Java7DateTypesSupport` in `META-INF/services/ssg.liquid.spi.TypesSupport`
 3aeb62fd89f4	service-providers	shipped	liqp.spi.Java8DateTypesSupport	../resources/META-INF/services/liqp.spi.TypesSupport	2	provider shipped as `ssg.liquid.spi.Java8DateTypesSupport` in `META-INF/services/ssg.liquid.spi.TypesSupport`
+98f7b098cd5b	unused-symbol(handled)	deleted	a	liqp/Insertions.java	81	unused local val — deleted
+4805c026fd9a	unused-symbol(handled)	deleted	a	liqp/filters/Filters.java	95	unused local val — deleted
+b75883068603	unused-symbol(handled)	deleted	e	liqp/LValue.java	429	unused local val — deleted
+740cb54fd5cf	unused-symbol(handled)	deleted	e	liqp/Template.java	103	unused local val — deleted
+740cb54fd5cf/2	unused-symbol(handled)	deleted	e	liqp/Template.java	292	unused local val — deleted
+5d2c910992b8	unused-symbol(handled)	deleted	e	liqp/TemplateParser.java	558	unused local val — deleted
+1e132e51a484	unused-symbol(handled)	deleted	e	liqp/blocks/For.java	296	unused local val — deleted
+9c797d81d659	unused-symbol(handled)	deleted	e	liqp/blocks/Tablerow.java	126	unused local val — deleted
+5efe58136ebb	unused-symbol(handled)	deleted	e	liqp/filters/Date.java	66	unused local val — deleted
+5f1c7eef6c0f	unused-symbol(handled)	deleted	e	liqp/filters/Url_Decode.java	15	unused local val — deleted
+586bfada03e7	unused-symbol(handled)	deleted	e	liqp/filters/Url_Encode.java	15	unused local val — deleted
+325827ac6233	unused-symbol(handled)	deleted	e	liqp/filters/date/BasicDateParser.java	38	unused local val — deleted
+d9d0516c76e8	unused-symbol(handled)	deleted	e	liqp/filters/where/JekyllWhereImpl.java	204	unused local val — deleted
+d283c1004773	unused-symbol(handled)	deleted	ex	liqp/Examples.java	178	unused local val — deleted
+e2b497cd5dba	unused-symbol(handled)	deleted	ignored	liqp/antlr/NameResolver.java	19	unused local val — deleted
+57a72bb8b47f	unused-symbol(handled)	deleted	ignored	liqp/filters/Relative_Url.java	107	unused local val — deleted
+4280e60a86a9	unused-symbol(handled)	deleted	liqp.filters.date.FuzzyDateDateParser#getPart	liqp/filters/date/FuzzyDateDateParser.java	56	unused private def — deleted
+1bbbb916aad3	unused-symbol(handled)	suppressed	liqp.PlainBigDecimal#serialVersionUID	liqp/PlainBigDecimal.java	12	unused private val — suppressed
+504f1056c750	unused-symbol(handled)	suppressed	liqp.exceptions.ExceededMaxIterationsException#serialVersionUID	liqp/exceptions/ExceededMaxIterationsException.java	4	unused private val — suppressed
+ad15ccb4c50b	unused-symbol(handled)	suppressed	liqp.exceptions.IncompatibleTypeComparisonException#serialVersionUID	liqp/exceptions/IncompatibleTypeComparisonException.java	4	unused private val — suppressed
+f7d411ae150b	unused-symbol(handled)	suppressed	liqp.exceptions.LiquidException#serialVersionUID	liqp/exceptions/LiquidException.java	10	unused private val — suppressed
+e91b13556e4d	unused-symbol(handled)	suppressed	liqp.exceptions.VariableNotExistException#serialVersionUID	liqp/exceptions/VariableNotExistException.java	4	unused private val — suppressed
+54a6925ad981	unused-symbol(handled)	suppressed	liqp.filters.Sort$SortableMap#serialVersionUID	liqp/filters/Sort.java	133	unused private val — suppressed
+53e053628b7f	unused-symbol(handled)	suppressed	liqp.parser.LiquidSupport$LiquidSerializer#serialVersionUID	liqp/parser/LiquidSupport.java	50	unused private val — suppressed
+f3647505a755	unused-symbol(handled)	suppressed	liqp.spi.BasicTypesSupport$22#serialVersionUID	liqp/spi/BasicTypesSupport.java	30	unused private val — suppressed

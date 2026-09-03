@@ -14,7 +14,7 @@ api-parity(signature)	394
 api-parity(static-placement)	1
 api-parity(unclassified)	0
 api-parity(visibility)	57
-base-surface	22
+base-surface	20
 break-catch	0
 cast-conversion	0
 catalog(consulted)	102
@@ -26,7 +26,7 @@ class-init-trigger	1
 collection-boundary	11
 collection-closure	0
 collection-internal	0
-collection-retarget	108
+collection-retarget	104
 context-seam	7
 dependency-coverage	0
 dependency-coverage(all)	37
@@ -50,8 +50,8 @@ portability(emitted)	0
 portability(injected)	0
 porter-notes	0
 remediation	1
-rewrite-callsites	0
-signature	0
+rewrite-callsites	1
+signature	10
 substitution(dangling)	0
 substitution(emitted)	0
 switch-null	0

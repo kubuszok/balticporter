@@ -41,3 +41,5 @@ trivia	0
 trivia(deliberate)	0
 trivia(recovered)	0
 try-resource	0
+unused-symbol(handled)	99
+unused-symbol(refused)	0

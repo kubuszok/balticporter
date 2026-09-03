@@ -46,7 +46,7 @@ sge.visui.usl.LexerContext	sge.visui.usl.LexerContext#tokens	val	56e818c623274d5
 sge.visui.usl.LexerContext	sge.visui.usl.LexerContext#workingDirectory	val	854a7f4ba99c3df9
 sge.visui.usl.Main	sge.visui.usl.Main	class	6610d931c2c3c49f
 sge.visui.usl.Main	sge.visui.usl.Main#main(Array<String>)	def	211002e7ca3928fa
-sge.visui.usl.Parser	sge.visui.usl.Parser	class	154ddda9569d6096
+sge.visui.usl.Parser	sge.visui.usl.Parser	class	2a35a98865df7f25
 sge.visui.usl.Parser	sge.visui.usl.Parser#currentPackage	val	52367ce30d538a4b
 sge.visui.usl.Parser	sge.visui.usl.Parser#currentPackageEnd	val	67f9bd983780e20b
 sge.visui.usl.Parser	sge.visui.usl.Parser#currentStyleBlock	val	b9a5da5d8ccc2ead
@@ -57,7 +57,7 @@ sge.visui.usl.Parser	sge.visui.usl.Parser#getJson(Buffer<Token>)	def	dbc9bdb80d6
 sge.visui.usl.Parser	sge.visui.usl.Parser#globalStyles	val	a59dd98c0a358073
 sge.visui.usl.Parser	sge.visui.usl.Parser#i	val	f9d14e8446b062f7
 sge.visui.usl.Parser	sge.visui.usl.Parser#identifiers	val	c7f1c3930bcb350e
-sge.visui.usl.Parser	sge.visui.usl.Parser#out	val	c4e24a9e9912c04b
+sge.visui.usl.Parser	sge.visui.usl.Parser#out	val	a8603ea5c19c632a
 sge.visui.usl.Parser	sge.visui.usl.Parser#peekNext()	def	91c9822374a3d832
 sge.visui.usl.Parser	sge.visui.usl.Parser#peekPrev()	def	8cc4159c01edf7a8
 sge.visui.usl.Parser	sge.visui.usl.Parser#postCheck()	def	155e746b1ec41918

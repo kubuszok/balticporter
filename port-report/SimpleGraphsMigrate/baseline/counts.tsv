@@ -8,7 +8,7 @@ api-parity(mutability)	8
 api-parity(null-model)	0
 api-parity(opaque)	4
 api-parity(operator)	0
-api-parity(port-extra)	389
+api-parity(port-extra)	387
 api-parity(rename)	0
 api-parity(signature)	50
 api-parity(static-placement)	1
@@ -53,5 +53,7 @@ substitution(emitted)	0
 switch-null	0
 trivia	0
 trivia(deliberate)	0
-trivia(recovered)	0
+trivia(recovered)	1
 try-resource	0
+unused-symbol(handled)	9
+unused-symbol(refused)	0

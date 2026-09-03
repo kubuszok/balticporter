@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-gltf	engine=balticporter/0.1.0-SNAPSHOT	sources=005dfe42009b3a9c	files=134	policy=a5c0d0eb3ac5bfd5	jdk=22
+# balticporter port map	schema=4	module=sge-gltf	engine=balticporter/0.1.0-SNAPSHOT	sources=005dfe42009b3a9c	files=134	policy=5871fee72b8c35b6	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	net.mgsx.gltf.data.GLTF	sge.gltf.data.GLTF	Renamed	-		0		form=class parents=sge.gltf.data.GLTFObject primary=() primaryKind=unique-root primaryVis=public
 type	net.mgsx.gltf.data.GLTFAsset	sge.gltf.data.GLTFAsset	Renamed	-		0		form=class parents=sge.gltf.data.GLTFObject primary=() primaryKind=unique-root primaryVis=public
@@ -149,45 +149,46 @@ type	net.mgsx.gltf.scene3d.utils.LightUtils	sge.gltf.scene3d.utils.LightUtils	Re
 type	net.mgsx.gltf.scene3d.utils.LightUtils$LightsInfo	sge.gltf.scene3d.utils.LightUtils$LightsInfo	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public
 type	net.mgsx.gltf.scene3d.utils.MaterialConverter	sge.gltf.scene3d.utils.MaterialConverter	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
 type	net.mgsx.gltf.scene3d.utils.ShaderParser	sge.gltf.scene3d.utils.ShaderParser	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
-type	com.badlogic.gdx.net.NetJavaImpl		Dropped	-		0		
-type	com.badlogic.gdx.utils.Align		Dropped	-		0		
-type	com.badlogic.gdx.utils.Array		Dropped	-		0		
-type	com.badlogic.gdx.utils.ArrayMap		Dropped	-		0		
-type	com.badlogic.gdx.utils.Bits		Dropped	-		0		
-type	com.badlogic.gdx.utils.BooleanArray		Dropped	-		0		
-type	com.badlogic.gdx.utils.ByteArray		Dropped	-		0		
-type	com.badlogic.gdx.utils.CharArray		Dropped	-		0		
-type	com.badlogic.gdx.utils.DelayedRemovalArray		Dropped	-		0		
-type	com.badlogic.gdx.utils.Disposable		Dropped	-		0		
-type	com.badlogic.gdx.utils.FloatArray		Dropped	-		0		
-type	com.badlogic.gdx.utils.IdentityMap		Dropped	-		0		
-type	com.badlogic.gdx.utils.IntArray		Dropped	-		0		
-type	com.badlogic.gdx.utils.IntFloatMap		Dropped	-		0		
-type	com.badlogic.gdx.utils.IntIntMap		Dropped	-		0		
-type	com.badlogic.gdx.utils.IntMap		Dropped	-		0		
-type	com.badlogic.gdx.utils.IntSet		Dropped	-		0		
-type	com.badlogic.gdx.utils.Json		Dropped	-		0		
-type	com.badlogic.gdx.utils.LongArray		Dropped	-		0		
-type	com.badlogic.gdx.utils.LongMap		Dropped	-		0		
-type	com.badlogic.gdx.utils.ObjectFloatMap		Dropped	-		0		
-type	com.badlogic.gdx.utils.ObjectIntMap		Dropped	-		0		
-type	com.badlogic.gdx.utils.ObjectLongMap		Dropped	-		0		
-type	com.badlogic.gdx.utils.ObjectMap		Dropped	-		0		
-type	com.badlogic.gdx.utils.ObjectSet		Dropped	-		0		
-type	com.badlogic.gdx.utils.OrderedMap		Dropped	-		0		
-type	com.badlogic.gdx.utils.OrderedSet		Dropped	-		0		
-type	com.badlogic.gdx.utils.Pools		Dropped	-		0		
-type	com.badlogic.gdx.utils.Queue		Dropped	-		0		
-type	com.badlogic.gdx.utils.ReflectionPool		Dropped	-		0		
-type	com.badlogic.gdx.utils.ShortArray		Dropped	-		0		
-type	com.badlogic.gdx.utils.SnapshotArray		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.Annotation		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.ArrayReflection		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.ClassReflection		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.Constructor		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.Field		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.Method		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.ReflectionException		Dropped	-		0		
+type	com.badlogic.gdx.net.NetJavaImpl	sge.net.NetJavaImpl	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Align	sge.utils.Align	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Array	sge.utils.Array	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ArrayMap	sge.utils.ArrayMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Bits	sge.utils.Bits	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.BooleanArray	sge.utils.BooleanArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ByteArray	sge.utils.ByteArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.CharArray	sge.utils.CharArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.DelayedRemovalArray	sge.utils.DelayedRemovalArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Disposable	sge.utils.Disposable	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.FloatArray	sge.utils.FloatArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IdentityMap	sge.utils.IdentityMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IntArray	sge.utils.IntArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IntFloatMap	sge.utils.IntFloatMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IntIntMap	sge.utils.IntIntMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IntMap	sge.utils.IntMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IntSet	sge.utils.IntSet	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Json	sge.utils.Json	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.LongArray	sge.utils.LongArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.LongMap	sge.utils.LongMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ObjectFloatMap	sge.utils.ObjectFloatMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ObjectIntMap	sge.utils.ObjectIntMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ObjectLongMap	sge.utils.ObjectLongMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ObjectMap	sge.utils.ObjectMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ObjectSet	sge.utils.ObjectSet	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.OrderedMap	sge.utils.OrderedMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.OrderedSet	sge.utils.OrderedSet	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Pool	sge.utils.Pool	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Pools	sge.utils.Pools	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Queue	sge.utils.Queue	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ReflectionPool	sge.utils.ReflectionPool	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ShortArray	sge.utils.ShortArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.SnapshotArray	sge.utils.SnapshotArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.Annotation	sge.utils.reflect.Annotation	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.ArrayReflection	sge.utils.reflect.ArrayReflection	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.ClassReflection	sge.utils.reflect.ClassReflection	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.Constructor	sge.utils.reflect.Constructor	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.Field	sge.utils.reflect.Field	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.Method	sge.utils.reflect.Method	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.ReflectionException	sge.utils.reflect.ReflectionException	Dropped	-		0		form=class
 type		balticporter.runtime.JavaCollection	Added	-		0		
 type		balticporter.runtime.JavaCollections	Added	-		0		
 type		balticporter.runtime.JavaEnumMap	Added	-		0		
@@ -481,9 +482,9 @@ member	net.mgsx.gltf.exporters.GLTFMaterialExporter#extSpecular(GLTFMaterial)	sg
 member	net.mgsx.gltf.exporters.GLTFMaterialExporter#extTransmission(GLTFMaterial)	sge.gltf.exporters.GLTFMaterialExporter#extTransmission(GLTFMaterial)	Renamed	-	net/mgsx/gltf/exporters/GLTFMaterialExporter.java	188	c705300527bafdea	vis=private
 member	net.mgsx.gltf.exporters.GLTFMaterialExporter#extVolume(GLTFMaterial)	sge.gltf.exporters.GLTFMaterialExporter#extVolume(GLTFMaterial)	Renamed	-	net/mgsx/gltf/exporters/GLTFMaterialExporter.java	208	1ebf94e02d191ec1	vis=private
 member	net.mgsx.gltf.exporters.GLTFMaterialExporter#getTexture(TextureAttribute)	sge.gltf.exporters.GLTFMaterialExporter#getTexture(TextureAttribute)	Renamed	-	net/mgsx/gltf/exporters/GLTFMaterialExporter.java	263	ab0defe27801e57d	vis=private
-member	net.mgsx.gltf.exporters.GLTFMaterialExporter#map(TextureWrap)	sge.gltf.exporters.GLTFMaterialExporter#map(TextureWrap)	Renamed	-	net/mgsx/gltf/exporters/GLTFMaterialExporter.java	297	78b98e0e3256af1e	vis=private
+member	net.mgsx.gltf.exporters.GLTFMaterialExporter#map(TextureWrap)	sge.gltf.exporters.GLTFMaterialExporter#map(TextureWrap)	Renamed	-	net/mgsx/gltf/exporters/GLTFMaterialExporter.java	297	8692cf2e57679cc1	vis=private
 member	net.mgsx.gltf.exporters.GLTFMaterialExporter#mapMag(TextureFilter)	sge.gltf.exporters.GLTFMaterialExporter#mapMag(TextureFilter)	Renamed	-	net/mgsx/gltf/exporters/GLTFMaterialExporter.java	307	da7fc42e310a2a68	vis=private
-member	net.mgsx.gltf.exporters.GLTFMaterialExporter#mapMin(TextureFilter)	sge.gltf.exporters.GLTFMaterialExporter#mapMin(TextureFilter)	Renamed	-	net/mgsx/gltf/exporters/GLTFMaterialExporter.java	315	8e5ff5195913ba9e	vis=private
+member	net.mgsx.gltf.exporters.GLTFMaterialExporter#mapMin(TextureFilter)	sge.gltf.exporters.GLTFMaterialExporter#mapMin(TextureFilter)	Renamed	-	net/mgsx/gltf/exporters/GLTFMaterialExporter.java	315	3b2ba70ee4249507	vis=private
 member	net.mgsx.gltf.exporters.GLTFMaterialExporter#normalTexture(PBRTextureAttribute,Material)	sge.gltf.exporters.GLTFMaterialExporter#normalTexture(PBRTextureAttribute,Material)	Renamed	-	net/mgsx/gltf/exporters/GLTFMaterialExporter.java	248	3c2b68f8606fadf6	vis=private
 member	net.mgsx.gltf.exporters.GLTFMaterialExporter#occlusionTexture(PBRTextureAttribute,Material)	sge.gltf.exporters.GLTFMaterialExporter#occlusionTexture(PBRTextureAttribute,Material)	Renamed	-	net/mgsx/gltf/exporters/GLTFMaterialExporter.java	240	8a7598f2c422cbc2	vis=private
 member	net.mgsx.gltf.exporters.GLTFMaterialExporter#pbr(GLTFMaterial)	sge.gltf.exporters.GLTFMaterialExporter#pbr(GLTFMaterial)	Renamed	-	net/mgsx/gltf/exporters/GLTFMaterialExporter.java	329	d1a57f31156fb0b0	vis=private
@@ -509,11 +510,11 @@ member	net.mgsx.gltf.loaders.exceptions.GLTFRuntimeException#<init>(Throwable)	s
 member	net.mgsx.gltf.loaders.exceptions.GLTFRuntimeException#serialVersionUID	sge.gltf.loaders.exceptions.GLTFRuntimeException#serialVersionUID	Renamed	-	net/mgsx/gltf/loaders/exceptions/GLTFRuntimeException.java	8	ff86abb99bd4d2ba	placement=companion vis=private
 member	net.mgsx.gltf.loaders.exceptions.GLTFUnsupportedException#serialVersionUID	sge.gltf.loaders.exceptions.GLTFUnsupportedException#serialVersionUID	Renamed	-	net/mgsx/gltf/loaders/exceptions/GLTFUnsupportedException.java	8	3e201b5daa0f1c7b	placement=companion vis=private
 member	net.mgsx.gltf.loaders.glb.BinaryDataFileResolver#bufferMap	sge.gltf.loaders.glb.BinaryDataFileResolver#bufferMap	Renamed	-	net/mgsx/gltf/loaders/glb/BinaryDataFileResolver.java	29	ac92c14bcb28dea7	vis=private
-member	net.mgsx.gltf.loaders.glb.BinaryDataFileResolver#getBuffer(int)	sge.gltf.loaders.glb.BinaryDataFileResolver#getBuffer(int)	Renamed	-	net/mgsx/gltf/loaders/glb/BinaryDataFileResolver.java	106	b3aae46e3b5fed9d	
+member	net.mgsx.gltf.loaders.glb.BinaryDataFileResolver#getBuffer(int)	sge.gltf.loaders.glb.BinaryDataFileResolver#getBuffer(int)	Renamed	-	net/mgsx/gltf/loaders/glb/BinaryDataFileResolver.java	106	bcd75959d75a0ad1	
 member	net.mgsx.gltf.loaders.glb.BinaryDataFileResolver#glModel	sge.gltf.loaders.glb.BinaryDataFileResolver#glModel	Renamed	-	net/mgsx/gltf/loaders/glb/BinaryDataFileResolver.java	30	9fe48d439fda37b0	vis=private
 member	net.mgsx.gltf.loaders.glb.BinaryDataFileResolver#load(Array)	sge.gltf.loaders.glb.BinaryDataFileResolver#load(Array<byte>)	Renamed	-	net/mgsx/gltf/loaders/glb/BinaryDataFileResolver.java	39	92023d15c6a98bc1	
 member	net.mgsx.gltf.loaders.glb.BinaryDataFileResolver#load(FileHandle)	sge.gltf.loaders.glb.BinaryDataFileResolver#load(FileHandle)	Renamed	-	net/mgsx/gltf/loaders/glb/BinaryDataFileResolver.java	34	cc60b67876628488	
-member	net.mgsx.gltf.loaders.glb.BinaryDataFileResolver#load(GLTFImage)	sge.gltf.loaders.glb.BinaryDataFileResolver#load(GLTFImage)	Renamed	-	net/mgsx/gltf/loaders/glb/BinaryDataFileResolver.java	111	0ec81c9204c22e50	
+member	net.mgsx.gltf.loaders.glb.BinaryDataFileResolver#load(GLTFImage)	sge.gltf.loaders.glb.BinaryDataFileResolver#load(GLTFImage)	Renamed	-	net/mgsx/gltf/loaders/glb/BinaryDataFileResolver.java	111	c8a5686b4297f028	
 member	net.mgsx.gltf.loaders.glb.BinaryDataFileResolver#load(InputStream)	sge.gltf.loaders.glb.BinaryDataFileResolver#load(InputStream)	Renamed	-	net/mgsx/gltf/loaders/glb/BinaryDataFileResolver.java	43	da997f58adabd30d	
 member	net.mgsx.gltf.loaders.glb.BinaryDataFileResolver#load(LittleEndianInputStream)	sge.gltf.loaders.glb.BinaryDataFileResolver#load(LittleEndianInputStream)	Renamed	-	net/mgsx/gltf/loaders/glb/BinaryDataFileResolver.java	47	bd715b84073447ca	
 member	net.mgsx.gltf.loaders.glb.BinaryDataFileResolver#loadInternal(LittleEndianInputStream)	sge.gltf.loaders.glb.BinaryDataFileResolver#loadInternal(LittleEndianInputStream)	Renamed	-	net/mgsx/gltf/loaders/glb/BinaryDataFileResolver.java	58	0372f4aaa14d2efa	vis=private
@@ -535,9 +536,9 @@ member	net.mgsx.gltf.loaders.gltf.GLTFAssetLoader#loadSync(AssetManager,String,F
 member	net.mgsx.gltf.loaders.gltf.GLTFAssetLoader#textureResolver	sge.gltf.loaders.gltf.GLTFAssetLoader#textureResolver	Renamed	-	net/mgsx/gltf/loaders/gltf/GLTFAssetLoader.java	116	95fc1e16b56235ae	vis=private
 member	net.mgsx.gltf.loaders.gltf.GLTFAssetLoader$ManagedTextureResolver#<stmt1>	sge.gltf.loaders.gltf.GLTFAssetLoader$ManagedTextureResolver#<stmt1>	Renamed	-	net/mgsx/gltf/loaders/gltf/GLTFAssetLoader.java	41	e410da57d0b8644c	
 member	net.mgsx.gltf.loaders.gltf.GLTFAssetLoader$ManagedTextureResolver#fetch(AssetManager)	sge.gltf.loaders.gltf.GLTFAssetLoader$ManagedTextureResolver#fetch(AssetManager)	Renamed	-	net/mgsx/gltf/loaders/gltf/GLTFAssetLoader.java	48	22078322ba45aec3	
-member	net.mgsx.gltf.loaders.gltf.GLTFAssetLoader$ManagedTextureResolver#getDependencies(DynamicArray)	sge.gltf.loaders.gltf.GLTFAssetLoader$ManagedTextureResolver#getDependencies(DynamicArray<AssetDescriptor<?>>)	Renamed	-	net/mgsx/gltf/loaders/gltf/GLTFAssetLoader.java	76	106596f38b7afe49	
+member	net.mgsx.gltf.loaders.gltf.GLTFAssetLoader$ManagedTextureResolver#getDependencies(DynamicArray)	sge.gltf.loaders.gltf.GLTFAssetLoader$ManagedTextureResolver#getDependencies(DynamicArray<AssetDescriptor<?>>)	Renamed	-	net/mgsx/gltf/loaders/gltf/GLTFAssetLoader.java	76	e42771c7b63e86c6	
 member	net.mgsx.gltf.loaders.gltf.GLTFAssetLoader$ManagedTextureResolver#glModel	sge.gltf.loaders.gltf.GLTFAssetLoader$ManagedTextureResolver#glModel	Renamed	-	net/mgsx/gltf/loaders/gltf/GLTFAssetLoader.java	37	0fc7f4e5ffe410b9	
-member	net.mgsx.gltf.loaders.gltf.GLTFAssetLoader$ManagedTextureResolver#loadTextures()	sge.gltf.loaders.gltf.GLTFAssetLoader$ManagedTextureResolver#loadTextures()	Renamed	-	net/mgsx/gltf/loaders/gltf/GLTFAssetLoader.java	57	1d3c3c1b118b87c9	
+member	net.mgsx.gltf.loaders.gltf.GLTFAssetLoader$ManagedTextureResolver#loadTextures()	sge.gltf.loaders.gltf.GLTFAssetLoader$ManagedTextureResolver#loadTextures()	Renamed	-	net/mgsx/gltf/loaders/gltf/GLTFAssetLoader.java	57	eff24b0be8065325	
 member	net.mgsx.gltf.loaders.gltf.GLTFAssetLoader$ManagedTextureResolver#loadTextures(DynamicArray,DynamicArray,ImageResolver)	sge.gltf.loaders.gltf.GLTFAssetLoader$ManagedTextureResolver#loadTextures(DynamicArray<GLTFTexture>,DynamicArray<GLTFSampler>,ImageResolver)	Renamed	-	net/mgsx/gltf/loaders/gltf/GLTFAssetLoader.java	45	764674f271b21b30	
 member	net.mgsx.gltf.loaders.gltf.GLTFAssetLoader$ManagedTextureResolver#pixmaps	sge.gltf.loaders.gltf.GLTFAssetLoader$ManagedTextureResolver#pixmaps	Renamed	-	net/mgsx/gltf/loaders/gltf/GLTFAssetLoader.java	34	a5544982d67fc210	vis=private[GLTFAssetLoader]
 member	net.mgsx.gltf.loaders.gltf.GLTFAssetLoader$ManagedTextureResolver#textureDescriptorsMipMap	sge.gltf.loaders.gltf.GLTFAssetLoader$ManagedTextureResolver#textureDescriptorsMipMap	Renamed	-	net/mgsx/gltf/loaders/gltf/GLTFAssetLoader.java	32	6b89629bc67e6e89	vis=private[GLTFAssetLoader]
@@ -547,7 +548,7 @@ member	net.mgsx.gltf.loaders.gltf.GLTFLoader#load(FileHandle)	sge.gltf.loaders.g
 member	net.mgsx.gltf.loaders.gltf.GLTFLoader#load(FileHandle,boolean)	sge.gltf.loaders.gltf.GLTFLoader#load(FileHandle,boolean)	Renamed	-	net/mgsx/gltf/loaders/gltf/GLTFLoader.java	13	485928aba202d745	
 member	net.mgsx.gltf.loaders.gltf.SeparatedDataFileResolver#bufferMap	sge.gltf.loaders.gltf.SeparatedDataFileResolver#bufferMap	Renamed	-	net/mgsx/gltf/loaders/gltf/SeparatedDataFileResolver.java	24	ac92c14bcb28dea7	vis=private
 member	net.mgsx.gltf.loaders.gltf.SeparatedDataFileResolver#decodePath(String)	sge.gltf.loaders.gltf.SeparatedDataFileResolver#decodePath(String)	Renamed	-	net/mgsx/gltf/loaders/gltf/SeparatedDataFileResolver.java	63	43aa9582f22c83e2	placement=companion
-member	net.mgsx.gltf.loaders.gltf.SeparatedDataFileResolver#getBuffer(int)	sge.gltf.loaders.gltf.SeparatedDataFileResolver#getBuffer(int)	Renamed	-	net/mgsx/gltf/loaders/gltf/SeparatedDataFileResolver.java	91	b3aae46e3b5fed9d	
+member	net.mgsx.gltf.loaders.gltf.SeparatedDataFileResolver#getBuffer(int)	sge.gltf.loaders.gltf.SeparatedDataFileResolver#getBuffer(int)	Renamed	-	net/mgsx/gltf/loaders/gltf/SeparatedDataFileResolver.java	91	bcd75959d75a0ad1	
 member	net.mgsx.gltf.loaders.gltf.SeparatedDataFileResolver#getImageFile(GLTFImage)	sge.gltf.loaders.gltf.SeparatedDataFileResolver#getImageFile(GLTFImage)	Renamed	-	net/mgsx/gltf/loaders/gltf/SeparatedDataFileResolver.java	126	1a5b93fba8795c7a	
 member	net.mgsx.gltf.loaders.gltf.SeparatedDataFileResolver#glModel	sge.gltf.loaders.gltf.SeparatedDataFileResolver#glModel	Renamed	-	net/mgsx/gltf/loaders/gltf/SeparatedDataFileResolver.java	25	9fe48d439fda37b0	vis=private
 member	net.mgsx.gltf.loaders.gltf.SeparatedDataFileResolver#load(FileHandle)	sge.gltf.loaders.gltf.SeparatedDataFileResolver#load(FileHandle)	Renamed	-	net/mgsx/gltf/loaders/gltf/SeparatedDataFileResolver.java	29	51aae4baa2434a29	
@@ -696,7 +697,7 @@ member	net.mgsx.gltf.loaders.shared.material.MaterialLoaderBase#materials	sge.gl
 member	net.mgsx.gltf.loaders.shared.material.MaterialLoaderBase#textureResolver	sge.gltf.loaders.shared.material.MaterialLoaderBase#textureResolver	Renamed	-	net/mgsx/gltf/loaders/shared/material/MaterialLoaderBase.java	10	58da6a4afea8987f	
 member	net.mgsx.gltf.loaders.shared.material.PBRMaterialLoader#getTexureMap(long,GLTFTextureInfo)	sge.gltf.loaders.shared.material.PBRMaterialLoader#getTexureMap(long,GLTFTextureInfo)	Renamed	-	net/mgsx/gltf/loaders/shared/material/PBRMaterialLoader.java	194	80068b9a9687794d	
 member	net.mgsx.gltf.loaders.shared.material.PBRMaterialLoader#loadMaterial(GLTFMaterial)	sge.gltf.loaders.shared.material.PBRMaterialLoader#loadMaterial(GLTFMaterial)	Renamed	-	net/mgsx/gltf/loaders/shared/material/PBRMaterialLoader.java	44	1f4bfca9aad56fce	
-member	net.mgsx.gltf.loaders.shared.scene.NodeResolver#get(int)	sge.gltf.loaders.shared.scene.NodeResolver#get(int)	Renamed	-	net/mgsx/gltf/loaders/shared/scene/NodeResolver.java	10	56ba04ca2d70e8b3	
+member	net.mgsx.gltf.loaders.shared.scene.NodeResolver#get(int)	sge.gltf.loaders.shared.scene.NodeResolver#get(int)	Renamed	-	net/mgsx/gltf/loaders/shared/scene/NodeResolver.java	10	c0e77db0d063b3c1	
 member	net.mgsx.gltf.loaders.shared.scene.NodeResolver#nodeMap	sge.gltf.loaders.shared.scene.NodeResolver#nodeMap	Renamed	-	net/mgsx/gltf/loaders/shared/scene/NodeResolver.java	8	67e149f9cdfa14bb	
 member	net.mgsx.gltf.loaders.shared.scene.NodeResolver#put(int,Node)	sge.gltf.loaders.shared.scene.NodeResolver#put(int,Node)	Renamed	-	net/mgsx/gltf/loaders/shared/scene/NodeResolver.java	14	0b0842b79c31ce4d	
 member	net.mgsx.gltf.loaders.shared.scene.SkinLoader#load(DynamicArray,DynamicArray,NodeResolver,DataResolver)	sge.gltf.loaders.shared.scene.SkinLoader#load(DynamicArray<GLTFSkin>,DynamicArray<GLTFNode>,NodeResolver,DataResolver)	Renamed	-	net/mgsx/gltf/loaders/shared/scene/SkinLoader.java	20	0f28849a1755d382	
@@ -713,7 +714,7 @@ member	net.mgsx.gltf.loaders.shared.texture.ImageResolver#load(DynamicArray)	sge
 member	net.mgsx.gltf.loaders.shared.texture.ImageResolver#pixmaps	sge.gltf.loaders.shared.texture.ImageResolver#pixmaps	Renamed	-	net/mgsx/gltf/loaders/shared/texture/ImageResolver.java	12	491575f654cd61cc	vis=private
 member	net.mgsx.gltf.loaders.shared.texture.PixmapBinaryLoaderHack#load(Array,int,int,Sge)	sge.gltf.loaders.shared.texture.PixmapBinaryLoaderHack#load(Array<byte>,int,int,Sge)	Renamed	-	net/mgsx/gltf/loaders/shared/texture/PixmapBinaryLoaderHack.java	17	125d3288d4a3c5e1	placement=companion
 member	net.mgsx.gltf.loaders.shared.texture.TextureResolver#dispose()	sge.gltf.loaders.shared.texture.TextureResolver#close()	Renamed	-	net/mgsx/gltf/loaders/shared/texture/TextureResolver.java	84	1c7bc6445414d134	
-member	net.mgsx.gltf.loaders.shared.texture.TextureResolver#getTexture(GLTFTextureInfo)	sge.gltf.loaders.shared.texture.TextureResolver#getTexture(GLTFTextureInfo)	Renamed	-	net/mgsx/gltf/loaders/shared/texture/TextureResolver.java	53	b3a684500b87eb93	
+member	net.mgsx.gltf.loaders.shared.texture.TextureResolver#getTexture(GLTFTextureInfo)	sge.gltf.loaders.shared.texture.TextureResolver#getTexture(GLTFTextureInfo)	Renamed	-	net/mgsx/gltf/loaders/shared/texture/TextureResolver.java	53	09b6f9f74fbbbb45	
 member	net.mgsx.gltf.loaders.shared.texture.TextureResolver#getTextures(DynamicArray)	sge.gltf.loaders.shared.texture.TextureResolver#getTextures(DynamicArray<Texture>)	Renamed	-	net/mgsx/gltf/loaders/shared/texture/TextureResolver.java	95	7a40e4591e1a9372	
 member	net.mgsx.gltf.loaders.shared.texture.TextureResolver#glSamplers	sge.gltf.loaders.shared.texture.TextureResolver#glSamplers	Renamed	-	net/mgsx/gltf/loaders/shared/texture/TextureResolver.java	24	c49b20a769e71560	
 member	net.mgsx.gltf.loaders.shared.texture.TextureResolver#glTextures	sge.gltf.loaders.shared.texture.TextureResolver#glTextures	Renamed	-	net/mgsx/gltf/loaders/shared/texture/TextureResolver.java	23	a4e6bbc1d76e2b18	
@@ -747,7 +748,7 @@ member	net.mgsx.gltf.scene3d.animation.AnimationControllerHack#setAnimation(Anim
 member	net.mgsx.gltf.scene3d.animation.AnimationControllerHack#setAnimation(Animation,int)	sge.gltf.scene3d.animation.AnimationControllerHack#setAnimation(Animation,int)	Renamed	-	net/mgsx/gltf/scene3d/animation/AnimationControllerHack.java	465	5c1755e7f15db655	
 member	net.mgsx.gltf.scene3d.animation.AnimationControllerHack#setAnimationDesc(AnimationDesc)	sge.gltf.scene3d.animation.AnimationControllerHack#setAnimationDesc(AnimationDesc)	Renamed	-	net/mgsx/gltf/scene3d/animation/AnimationControllerHack.java	452	573a902027ae57f4	
 member	net.mgsx.gltf.scene3d.animation.AnimationControllerHack#tmpT	sge.gltf.scene3d.animation.AnimationControllerHack#tmpT	Renamed	-	net/mgsx/gltf/scene3d/animation/AnimationControllerHack.java	159	2d3e1482312f0af6	placement=companion vis=private
-member	net.mgsx.gltf.scene3d.animation.AnimationControllerHack#transformPool	sge.gltf.scene3d.animation.AnimationControllerHack#transformPool	Renamed	-	net/mgsx/gltf/scene3d/animation/AnimationControllerHack.java	93	535c9ce6916374ab	name=transformPool$shadow
+member	net.mgsx.gltf.scene3d.animation.AnimationControllerHack#transformPool	sge.gltf.scene3d.animation.AnimationControllerHack#transformPool	Renamed	-	net/mgsx/gltf/scene3d/animation/AnimationControllerHack.java	93	4d79ab3d536ecc74	name=transformPool$shadow
 member	net.mgsx.gltf.scene3d.animation.AnimationControllerHack#transforms	sge.gltf.scene3d.animation.AnimationControllerHack#transforms	Renamed	-	net/mgsx/gltf/scene3d/animation/AnimationControllerHack.java	99	b88bb211f8ed3ba6	placement=companion vis=private
 member	net.mgsx.gltf.scene3d.animation.AnimationControllerHack$Transform#idt()	sge.gltf.scene3d.animation.AnimationControllerHack$Transform#idt()	Renamed	-	net/mgsx/gltf/scene3d/animation/AnimationControllerHack.java	42	49985626ec066d53	
 member	net.mgsx.gltf.scene3d.animation.AnimationControllerHack$Transform#lerp(Transform,float)	sge.gltf.scene3d.animation.AnimationControllerHack$Transform#lerp(Transform,float)	Renamed	-	net/mgsx/gltf/scene3d/animation/AnimationControllerHack.java	62	8cf263e6701f939c	
@@ -1060,7 +1061,7 @@ member	net.mgsx.gltf.scene3d.scene.CascadeShadowMap#lightMatrix	sge.gltf.scene3d
 member	net.mgsx.gltf.scene3d.scene.CascadeShadowMap#lights	sge.gltf.scene3d.scene.CascadeShadowMap#lights	Renamed	-	net/mgsx/gltf/scene3d/scene/CascadeShadowMap.java	25	fcbb88b2b020dd0b	
 member	net.mgsx.gltf.scene3d.scene.CascadeShadowMap#offset	sge.gltf.scene3d.scene.CascadeShadowMap#offset	Renamed	-	net/mgsx/gltf/scene3d/scene/CascadeShadowMap.java	35	ce6b7333e7166694	vis=private
 member	net.mgsx.gltf.scene3d.scene.CascadeShadowMap#setBaseLightBounds(DirectionalShadowLight,Camera,float)	sge.gltf.scene3d.scene.CascadeShadowMap#setBaseLightBounds(DirectionalShadowLight,Camera,float)	Renamed	-	net/mgsx/gltf/scene3d/scene/CascadeShadowMap.java	114	e1e0388dd6aea639	
-member	net.mgsx.gltf.scene3d.scene.CascadeShadowMap#setCascades(Camera,DirectionalShadowLight,float,DynamicArray)	sge.gltf.scene3d.scene.CascadeShadowMap#setCascades(Camera,DirectionalShadowLight,float,DynamicArray<Float>)	Renamed	-	net/mgsx/gltf/scene3d/scene/CascadeShadowMap.java	92	f6c893c58ca512da	
+member	net.mgsx.gltf.scene3d.scene.CascadeShadowMap#setCascades(Camera,DirectionalShadowLight,float,DynamicArray)	sge.gltf.scene3d.scene.CascadeShadowMap#setCascades(Camera,DirectionalShadowLight,float,DynamicArray<float>)	Renamed	-	net/mgsx/gltf/scene3d/scene/CascadeShadowMap.java	92	f6c893c58ca512da	
 member	net.mgsx.gltf.scene3d.scene.CascadeShadowMap#setCascades(Camera,DirectionalShadowLight,float,float)	sge.gltf.scene3d.scene.CascadeShadowMap#setCascades(Camera,DirectionalShadowLight,float,float)	Renamed	-	net/mgsx/gltf/scene3d/scene/CascadeShadowMap.java	69	e3b41ab41a7f85cf	
 member	net.mgsx.gltf.scene3d.scene.CascadeShadowMap#setCascades(DirectionalShadowLight,DirectionalShadowLight,Camera,float,float,float)	sge.gltf.scene3d.scene.CascadeShadowMap#setCascades(DirectionalShadowLight,DirectionalShadowLight,Camera,float,float,float)	Renamed	-	net/mgsx/gltf/scene3d/scene/CascadeShadowMap.java	134	1066636e032a2f93	vis=private
 member	net.mgsx.gltf.scene3d.scene.CascadeShadowMap#splitPoints	sge.gltf.scene3d.scene.CascadeShadowMap#splitPoints	Renamed	-	net/mgsx/gltf/scene3d/scene/CascadeShadowMap.java	31	6b36c7092dbd074d	
@@ -1220,9 +1221,9 @@ member	net.mgsx.gltf.scene3d.scene.SceneSkybox#setRotation(Matrix4)	sge.gltf.sce
 member	net.mgsx.gltf.scene3d.scene.SceneSkybox#setRotation(float)	sge.gltf.scene3d.scene.SceneSkybox#setRotation(float)	Renamed	-	net/mgsx/gltf/scene3d/scene/SceneSkybox.java	257	7d2655efadea3679	
 member	net.mgsx.gltf.scene3d.scene.SceneSkybox#shaderProvider	sge.gltf.scene3d.scene.SceneSkybox#shaderProvider	Renamed	-	net/mgsx/gltf/scene3d/scene/SceneSkybox.java	65	5d903d343005a9a9	
 member	net.mgsx.gltf.scene3d.scene.SceneSkybox#update(Camera,float)	sge.gltf.scene3d.scene.SceneSkybox#update(Camera,float)	Renamed	-	net/mgsx/gltf/scene3d/scene/SceneSkybox.java	232	a4df122ac95dd48a	
-member	net.mgsx.gltf.scene3d.scene.SceneSkybox$SkyboxShader#bindMaterial(Attributes)	sge.gltf.scene3d.scene.SceneSkybox$SkyboxShader#bindMaterial(Attributes)	Renamed	-	net/mgsx/gltf/scene3d/scene/SceneSkybox.java	196	d42f88c33f478aee	
-member	net.mgsx.gltf.scene3d.scene.SceneSkybox$SkyboxShader#init()	sge.gltf.scene3d.scene.SceneSkybox$SkyboxShader#init()	Renamed	-	net/mgsx/gltf/scene3d/scene/SceneSkybox.java	190	4e017111283bdab8	
-member	net.mgsx.gltf.scene3d.scene.SceneSkybox$SkyboxShader#u_lod	sge.gltf.scene3d.scene.SceneSkybox$SkyboxShader#u_lod	Renamed	-	net/mgsx/gltf/scene3d/scene/SceneSkybox.java	183	dac50e0a432fa205	vis=private[SceneSkybox]
+member	net.mgsx.gltf.scene3d.scene.SceneSkybox$SkyboxShader#bindMaterial(Attributes)	sge.gltf.scene3d.scene.SceneSkybox$SkyboxShader#bindMaterial(Attributes)	Renamed	-	net/mgsx/gltf/scene3d/scene/SceneSkybox.java	196	4f7081566110fee9	
+member	net.mgsx.gltf.scene3d.scene.SceneSkybox$SkyboxShader#init()	sge.gltf.scene3d.scene.SceneSkybox$SkyboxShader#init()	Renamed	-	net/mgsx/gltf/scene3d/scene/SceneSkybox.java	190	eb276306881eedc6	
+member	net.mgsx.gltf.scene3d.scene.SceneSkybox$SkyboxShader#u_lod	sge.gltf.scene3d.scene.SceneSkybox$SkyboxShader#u_lod	Renamed	-	net/mgsx/gltf/scene3d/scene/SceneSkybox.java	183	261fea971f6083d1	vis=private[SceneSkybox]
 member	net.mgsx.gltf.scene3d.scene.SceneSkybox$SkyboxShaderProvider#<stmt1>	sge.gltf.scene3d.scene.SceneSkybox$SkyboxShaderProvider#<stmt1>	Renamed	-	net/mgsx/gltf/scene3d/scene/SceneSkybox.java	207	1fded0127f8b3c3a	
 member	net.mgsx.gltf.scene3d.scene.SceneSkybox$SkyboxShaderProvider#createShader(Renderable)	sge.gltf.scene3d.scene.SceneSkybox$SkyboxShaderProvider#createShader(Renderable)	Renamed	-	net/mgsx/gltf/scene3d/scene/SceneSkybox.java	210	86dd63ee4d98b112	
 member	net.mgsx.gltf.scene3d.scene.SceneSkybox$SkyboxShaderProvider#fsPrefix	sge.gltf.scene3d.scene.SceneSkybox$SkyboxShaderProvider#fsPrefix	Renamed	-	net/mgsx/gltf/scene3d/scene/SceneSkybox.java	204	ad221daa410d7fc2	
@@ -1259,16 +1260,16 @@ member	net.mgsx.gltf.scene3d.shaders.PBRCommon#intBuffer	sge.gltf.scene3d.shader
 member	net.mgsx.gltf.scene3d.shaders.PBRCommon#seamlessCubemapsShouldBeEnabled	sge.gltf.scene3d.shaders.PBRCommon#seamlessCubemapsShouldBeEnabled	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRCommon.java	34	9125e501df342f29	placement=companion vis=private
 member	net.mgsx.gltf.scene3d.shaders.PBRCommon#setTextureTransform(Matrix3,PBRTextureAttribute)	sge.gltf.scene3d.shaders.PBRCommon#setTextureTransform(Matrix3,PBRTextureAttribute)	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRCommon.java	61	62a839f1989c8e14	placement=companion
 member	net.mgsx.gltf.scene3d.shaders.PBRDepthShader#<stmt1>	sge.gltf.scene3d.shaders.PBRDepthShader#<stmt1>	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRDepthShader.java	29	33582342eb96e3c0	
-member	net.mgsx.gltf.scene3d.shaders.PBRDepthShader#bindMaterial(Attributes)	sge.gltf.scene3d.shaders.PBRDepthShader#bindMaterial(Attributes)	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRDepthShader.java	33	8c300b17767fa075	
+member	net.mgsx.gltf.scene3d.shaders.PBRDepthShader#bindMaterial(Attributes)	sge.gltf.scene3d.shaders.PBRDepthShader#bindMaterial(Attributes)	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRDepthShader.java	33	fe81790c0889bd87	
 member	net.mgsx.gltf.scene3d.shaders.PBRDepthShader#canRender(Renderable)	sge.gltf.scene3d.shaders.PBRDepthShader#canRender(Renderable)	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRDepthShader.java	56	1c998a2bc0c7b684	
 member	net.mgsx.gltf.scene3d.shaders.PBRDepthShader#computeMorphTargetsMask(Renderable)	sge.gltf.scene3d.shaders.PBRDepthShader#computeMorphTargetsMask(Renderable)	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRDepthShader.java	44	2e8948998f8ffe38	
-member	net.mgsx.gltf.scene3d.shaders.PBRDepthShader#init()	sge.gltf.scene3d.shaders.PBRDepthShader#init()	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRDepthShader.java	64	3588f27f7bbde15f	
+member	net.mgsx.gltf.scene3d.shaders.PBRDepthShader#init()	sge.gltf.scene3d.shaders.PBRDepthShader#init()	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRDepthShader.java	64	4f27b41e81efff6c	
 member	net.mgsx.gltf.scene3d.shaders.PBRDepthShader#morphTargetsMask	sge.gltf.scene3d.shaders.PBRDepthShader#morphTargetsMask	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRDepthShader.java	18	c8d698dda4e6bc2d	
-member	net.mgsx.gltf.scene3d.shaders.PBRDepthShader#render(Renderable,Attributes)	sge.gltf.scene3d.shaders.PBRDepthShader#render(Renderable,Attributes)	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRDepthShader.java	74	0f79264a8142d325	
+member	net.mgsx.gltf.scene3d.shaders.PBRDepthShader#render(Renderable,Attributes)	sge.gltf.scene3d.shaders.PBRDepthShader#render(Renderable,Attributes)	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRDepthShader.java	74	701048bab5ac26f9	
 member	net.mgsx.gltf.scene3d.shaders.PBRDepthShader#textureTransform	sge.gltf.scene3d.shaders.PBRDepthShader#textureTransform	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRDepthShader.java	16	e04fd258668a22d3	placement=companion vis=private
-member	net.mgsx.gltf.scene3d.shaders.PBRDepthShader#u_morphTargets1	sge.gltf.scene3d.shaders.PBRDepthShader#u_morphTargets1	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRDepthShader.java	21	b1d1584e6223dded	vis=private
-member	net.mgsx.gltf.scene3d.shaders.PBRDepthShader#u_morphTargets2	sge.gltf.scene3d.shaders.PBRDepthShader#u_morphTargets2	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRDepthShader.java	22	7c7508b4d6815e8c	vis=private
-member	net.mgsx.gltf.scene3d.shaders.PBRDepthShader#u_texCoordTransform	sge.gltf.scene3d.shaders.PBRDepthShader#u_texCoordTransform	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRDepthShader.java	25	5b45624dc2761eb2	vis=private
+member	net.mgsx.gltf.scene3d.shaders.PBRDepthShader#u_morphTargets1	sge.gltf.scene3d.shaders.PBRDepthShader#u_morphTargets1	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRDepthShader.java	21	7a348a9c725be0f6	vis=private
+member	net.mgsx.gltf.scene3d.shaders.PBRDepthShader#u_morphTargets2	sge.gltf.scene3d.shaders.PBRDepthShader#u_morphTargets2	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRDepthShader.java	22	700acdb47d53824e	vis=private
+member	net.mgsx.gltf.scene3d.shaders.PBRDepthShader#u_texCoordTransform	sge.gltf.scene3d.shaders.PBRDepthShader#u_texCoordTransform	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRDepthShader.java	25	5487228816f78391	vis=private
 member	net.mgsx.gltf.scene3d.shaders.PBRDepthShaderProvider#<stmt1>	sge.gltf.scene3d.shaders.PBRDepthShaderProvider#<stmt1>	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRDepthShaderProvider.java	41	ca0f139f5a0247eb	
 member	net.mgsx.gltf.scene3d.shaders.PBRDepthShaderProvider#<stmt2>	sge.gltf.scene3d.shaders.PBRDepthShaderProvider#<stmt2>	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRDepthShaderProvider.java	42	4ac17dc3f90d96a7	
 member	net.mgsx.gltf.scene3d.shaders.PBRDepthShaderProvider#createDefaultConfig(Sge)	sge.gltf.scene3d.shaders.PBRDepthShaderProvider#createDefaultConfig(Sge)	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRDepthShaderProvider.java	31	4290b8f95077c043	placement=companion
@@ -1332,8 +1333,8 @@ member	net.mgsx.gltf.scene3d.shaders.PBRShader#baseColorFactorSetter	sge.gltf.sc
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#baseColorFactorUniform	sge.gltf.scene3d.shaders.PBRShader#baseColorFactorUniform	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	51	2312e43be052930a	placement=companion
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#baseColorTextureSetter	sge.gltf.scene3d.shaders.PBRShader#baseColorTextureSetter	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	42	e95581ee3ff65786	placement=companion
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#baseColorTextureUniform	sge.gltf.scene3d.shaders.PBRShader#baseColorTextureUniform	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	41	6f3cf4973151364c	placement=companion
-member	net.mgsx.gltf.scene3d.shaders.PBRShader#bindLights(Renderable,Attributes)	sge.gltf.scene3d.shaders.PBRShader#bindLights(Renderable,Attributes)	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	786	9330a35979fa9536	
-member	net.mgsx.gltf.scene3d.shaders.PBRShader#bindMaterial(Attributes)	sge.gltf.scene3d.shaders.PBRShader#bindMaterial(Attributes)	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	726	2519d22f88c937f1	
+member	net.mgsx.gltf.scene3d.shaders.PBRShader#bindLights(Renderable,Attributes)	sge.gltf.scene3d.shaders.PBRShader#bindLights(Renderable,Attributes)	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	786	f74284d3e0b3ef62	
+member	net.mgsx.gltf.scene3d.shaders.PBRShader#bindMaterial(Attributes)	sge.gltf.scene3d.shaders.PBRShader#bindMaterial(Attributes)	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	726	0162938faea595db	
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#brdfLUTTextureSetter	sge.gltf.scene3d.shaders.PBRShader#brdfLUTTextureSetter	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	167	0df4f01707b1fbc3	placement=companion
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#brdfLUTTextureUniform	sge.gltf.scene3d.shaders.PBRShader#brdfLUTTextureUniform	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	166	44e8dd50436b7587	placement=companion
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#canRender(Renderable)	sge.gltf.scene3d.shaders.PBRShader#canRender(Renderable)	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	640	e86e2f6605f1dc2c	
@@ -1355,7 +1356,7 @@ member	net.mgsx.gltf.scene3d.shaders.PBRShader#envRotationUniform	sge.gltf.scene
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#fogEquationSetter	sge.gltf.scene3d.shaders.PBRShader#fogEquationSetter	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	189	cca03a04fce08627	placement=companion
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#fogEquationUniform	sge.gltf.scene3d.shaders.PBRShader#fogEquationUniform	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	188	0182c4c8559f7033	placement=companion
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#getTextureCoordinateMapMask(Attributes)	sge.gltf.scene3d.shaders.PBRShader#getTextureCoordinateMapMask(Attributes)	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	686	ca888f74684c08a0	placement=companion vis=private
-member	net.mgsx.gltf.scene3d.shaders.PBRShader#init(ShaderProgram,Renderable)	sge.gltf.scene3d.shaders.PBRShader#init(ShaderProgram,Renderable)	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	705	8b3a419bf437eef4	
+member	net.mgsx.gltf.scene3d.shaders.PBRShader#init(ShaderProgram,Renderable)	sge.gltf.scene3d.shaders.PBRShader#init(ShaderProgram,Renderable)	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	705	51f3681bd5968757	
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#iorSetter	sge.gltf.scene3d.shaders.PBRShader#iorSetter	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	237	e461d069d93c6f99	placement=companion
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#iorUniform	sge.gltf.scene3d.shaders.PBRShader#iorUniform	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	236	c40f6dd00b6e44e1	placement=companion
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#iridescenceFactorSetter	sge.gltf.scene3d.shaders.PBRShader#iridescenceFactorSetter	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	321	9b0b479e45c51ba2	placement=companion
@@ -1387,7 +1388,7 @@ member	net.mgsx.gltf.scene3d.shaders.PBRShader#occlusionTextureSetter	sge.gltf.s
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#occlusionTextureUniform	sge.gltf.scene3d.shaders.PBRShader#occlusionTextureUniform	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	124	643995babae18a66	placement=companion
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#projViewTransSetter	sge.gltf.scene3d.shaders.PBRShader#projViewTransSetter	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	429	792c3dba7ecb0b7d	placement=companion
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#projViewTransUniform	sge.gltf.scene3d.shaders.PBRShader#projViewTransUniform	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	428	832deb961bc7150f	placement=companion
-member	net.mgsx.gltf.scene3d.shaders.PBRShader#render(Renderable,Attributes)	sge.gltf.scene3d.shaders.PBRShader#render(Renderable,Attributes)	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	752	e650c2ca3859a211	
+member	net.mgsx.gltf.scene3d.shaders.PBRShader#render(Renderable,Attributes)	sge.gltf.scene3d.shaders.PBRShader#render(Renderable,Attributes)	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	752	44f2039490025094	
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#shadowBiasSetter	sge.gltf.scene3d.shaders.PBRShader#shadowBiasSetter	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	179	b8d1afd524d47b31	placement=companion
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#shadowBiasUniform	sge.gltf.scene3d.shaders.PBRShader#shadowBiasUniform	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	178	83b0bffaad046969	placement=companion
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#specularColorFactorSetter	sge.gltf.scene3d.shaders.PBRShader#specularColorFactorSetter	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	292	e695387c46628ab1	placement=companion
@@ -1428,7 +1429,7 @@ member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_NormalScale	sge.gltf.scene3d.sh
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_NormalTexture	sge.gltf.scene3d.shaders.PBRShader#u_NormalTexture	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	465	955a94c29fc5427d	
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_ShadowBias	sge.gltf.scene3d.shaders.PBRShader#u_ShadowBias	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	469	372eb9efa7021785	
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_SpecularEnvSampler	sge.gltf.scene3d.shaders.PBRShader#u_SpecularEnvSampler	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	460	bbd7cdc4543086b0	
-member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_ambientLight	sge.gltf.scene3d.shaders.PBRShader#u_ambientLight	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	480	627edaa18147157d	vis=private
+member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_ambientLight	sge.gltf.scene3d.shaders.PBRShader#u_ambientLight	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	480	d56aefc5df84e109	vis=private
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_brdfLUTTexture	sge.gltf.scene3d.shaders.PBRShader#u_brdfLUTTexture	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	462	08a38cd8337e899f	
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_clippingPlane	sge.gltf.scene3d.shaders.PBRShader#u_clippingPlane	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	525	746656bd96c980b4	
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_csmPCFClip	sge.gltf.scene3d.shaders.PBRShader#u_csmPCFClip	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	528	7c4aa345f68959f2	
@@ -1445,9 +1446,9 @@ member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_iridescenceThicknessMin	sge.glt
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_iridescenceThicknessTexture	sge.gltf.scene3d.shaders.PBRShader#u_iridescenceThicknessTexture	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	515	9e8ada8a001b5fdf	
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_metallicRoughness	sge.gltf.scene3d.shaders.PBRShader#u_metallicRoughness	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	455	a6e81938259811d7	
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_metallicRoughnessTexture	sge.gltf.scene3d.shaders.PBRShader#u_metallicRoughnessTexture	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	457	56a7d503d228e7fd	
-member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_mipmapScale	sge.gltf.scene3d.shaders.PBRShader#u_mipmapScale	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	475	4145994a9a656001	vis=private
-member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_morphTargets1	sge.gltf.scene3d.shaders.PBRShader#u_morphTargets1	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	472	b1d1584e6223dded	vis=private
-member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_morphTargets2	sge.gltf.scene3d.shaders.PBRShader#u_morphTargets2	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	473	7c7508b4d6815e8c	vis=private
+member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_mipmapScale	sge.gltf.scene3d.shaders.PBRShader#u_mipmapScale	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	475	a6afea7ee234b3e1	vis=private
+member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_morphTargets1	sge.gltf.scene3d.shaders.PBRShader#u_morphTargets1	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	472	7a348a9c725be0f6	vis=private
+member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_morphTargets2	sge.gltf.scene3d.shaders.PBRShader#u_morphTargets2	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	473	700acdb47d53824e	vis=private
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_occlusionStrength	sge.gltf.scene3d.shaders.PBRShader#u_occlusionStrength	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	456	b15b959b2720033f	
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_occlusionTexture	sge.gltf.scene3d.shaders.PBRShader#u_occlusionTexture	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	458	1a1bbf3823914d75	
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_specularColorFactor	sge.gltf.scene3d.shaders.PBRShader#u_specularColorFactor	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	505	920f0e952c639f13	
@@ -1457,8 +1458,8 @@ member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_specularFactorTexture	sge.gltf.
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_specularMirrorMipmapScale	sge.gltf.scene3d.shaders.PBRShader#u_specularMirrorMipmapScale	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	521	7ebd4f42cd427138	
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_specularMirrorNormal	sge.gltf.scene3d.shaders.PBRShader#u_specularMirrorNormal	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	522	02ce5db853e10a78	
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_specularMirrorSampler	sge.gltf.scene3d.shaders.PBRShader#u_specularMirrorSampler	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	520	3985a1b58958cbf7	
-member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_texCoord0Transform	sge.gltf.scene3d.shaders.PBRShader#u_texCoord0Transform	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	477	b36e3bca2e9ef4d2	vis=private
-member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_texCoord1Transform	sge.gltf.scene3d.shaders.PBRShader#u_texCoord1Transform	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	478	b5c7698dd6ba29ba	vis=private
+member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_texCoord0Transform	sge.gltf.scene3d.shaders.PBRShader#u_texCoord0Transform	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	477	54ed4dd5d8ee40c2	vis=private
+member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_texCoord1Transform	sge.gltf.scene3d.shaders.PBRShader#u_texCoord1Transform	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	478	d2fbd08152cc5325	vis=private
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_thicknessFactor	sge.gltf.scene3d.shaders.PBRShader#u_thicknessFactor	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	499	e04a8540f3ae2c44	
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_thicknessTexture	sge.gltf.scene3d.shaders.PBRShader#u_thicknessTexture	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	498	d85ea5e9a1257a74	
 member	net.mgsx.gltf.scene3d.shaders.PBRShader#u_transmissionFactor	sge.gltf.scene3d.shaders.PBRShader#u_transmissionFactor	Renamed	-	net/mgsx/gltf/scene3d/shaders/PBRShader.java	492	8583ee13e6d339e2	
