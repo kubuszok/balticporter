@@ -543,6 +543,7 @@ final class GlobalsToImplicitsTransform(
           case ifc: Tree.If => hasNew(ifc.cond) || hasNew(ifc.thenp) || hasNew(ifc.elsep)
           case d: Tree.DefDef => d.rhs.exists(hasNew)
           case v: Tree.ValDef => v.rhs.exists(hasNew)
+          case a: Tree.Assign => hasNew(a.rhs)
           case _ => false
         if hasInstantiation(cd.body) then Some(givenFqn)
         else None
