@@ -749,6 +749,12 @@ object LibgdxPolicy:
         ("<init>", 1) -> Construct("lowlevel.util.ObjectSet", "apply"),
         ("<init>", 2) -> Construct("lowlevel.util.ObjectSet", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
+        // 3.1aw: bare-set iteration. Java's ObjectSet implements Iterable<T> and iterates via
+        // iterator(); lls ObjectSet has inline `foreach` but no `iterator`. The `"entries"` key
+        // is the synthetic lookup key for the retargetForEach bare-ref path — it fires on
+        // `for (T x : set)` the same way `("entries", 0) -> ForEach("foreachEntry", 2)` fires
+        // on `for (Entry e : map)`. ForEach("foreach", 1) produces `set.foreach(x => body)`.
+        ("entries", 0) -> ForEach("foreach", 1),
       ),
       "com.badlogic.gdx.utils.OrderedMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.OrderedMap", "apply"),
@@ -771,6 +777,8 @@ object LibgdxPolicy:
         // The vararg is packed into a scala.Array by the frontend. lls OrderedSet has no `with`;
         // create a set and add each element from the packed array.
         ("with", 1) -> Template("{ val bpArr = $0; val bpSet = $Target.apply[$T0](); var bpI = 0; while (bpI < bpArr.length) { bpSet.add(bpArr(bpI)); bpI += 1 }; bpSet }"),
+        // 3.1aw: bare-set iteration — same as ObjectSet above.
+        ("entries", 0) -> ForEach("foreach", 1),
       ),
       "com.badlogic.gdx.utils.IdentityMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ArrayMap", "apply"),
@@ -894,13 +902,14 @@ object LibgdxPolicy:
         // --- 3.1aj: ArrayMap.remove(K) -> removeKey(K). lls ArrayMap has removeKey, not remove.
         ("remove", 1)  -> Rename("removeKey"),
       ),
-      // wave 3.1d: IntSet -> ObjectSet. No entries/keys/values — sets iterate through
-      // themselves (Iterable<Integer>), lowered to foreachKey by the phase when applicable.
+      // wave 3.1d: IntSet -> ObjectSet. Sets iterate through themselves (Iterable<Integer>).
+      // 3.1aw: bare-set iteration via ForEach("foreach", 1) — lls ObjectSet has inline `foreach`.
       "com.badlogic.gdx.utils.IntSet" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ObjectSet", "apply"),
         ("<init>", 1) -> Construct("lowlevel.util.ObjectSet", "apply"),
         ("<init>", 2) -> Construct("lowlevel.util.ObjectSet", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
+        ("entries", 0) -> ForEach("foreach", 1),
       ),
       // wave 3.1n: Array family -> DynamicArray.
       // lls DynamicArray.apply[T: MkArray](capacity, ordered) — MkArray resolves for concrete T.
@@ -1591,18 +1600,21 @@ object LibgdxPolicy:
         ("<init>", Descriptor(List(Param.Named("IdentityMap")))) ->
           Template("{ val bpSrc = $0; val bpM = $Target.apply[$T0, $T1](bpSrc.size); bpM.putAll(bpSrc); bpM }"),
       ),
-      // ObjectSet and OrderedSet copy constructors — sets use addAll instead of putAll.
+      // 3.1aw: ObjectSet/OrderedSet/IntSet copy constructors — lls sets have `foreach`, not
+      // `foreachKey` (that is a MAP method). lls `foreach` is `inline def foreach(inline f: A => Unit)`,
+      // and `add` returns Boolean, so passing `bpS.add` as a method ref may not satisfy the inline
+      // parameter. A lambda avoids the concern. OrderedSet.add is additionally overloaded (arity 1 and 2).
       "com.badlogic.gdx.utils.ObjectSet" -> Map(
         ("<init>", Descriptor(List(Param.Named("ObjectSet")))) ->
-          Template("{ val bpSrc = $0; val bpS = $Target.apply[$T0](bpSrc.size); bpSrc.foreachKey(bpS.add); bpS }"),
+          Template("{ val bpSrc = $0; val bpS = $Target.apply[$T0](bpSrc.size); bpSrc.foreach(bpX => bpS.add(bpX)); bpS }"),
       ),
       "com.badlogic.gdx.utils.OrderedSet" -> Map(
         ("<init>", Descriptor(List(Param.Named("OrderedSet")))) ->
-          Template("{ val bpSrc = $0; val bpS = $Target.apply[$T0](bpSrc.size); bpSrc.foreachKey(bpS.add); bpS }"),
+          Template("{ val bpSrc = $0; val bpS = $Target.apply[$T0](bpSrc.size); bpSrc.foreach(bpX => bpS.add(bpX)); bpS }"),
       ),
       "com.badlogic.gdx.utils.IntSet" -> Map(
         ("<init>", Descriptor(List(Param.Named("IntSet")))) ->
-          Template("{ val bpSrc = $0; val bpS = $Target.apply[$T0](bpSrc.size); bpSrc.foreachKey(bpS.add); bpS }"),
+          Template("{ val bpSrc = $0; val bpS = $Target.apply[$T0](bpSrc.size); bpSrc.foreach(bpX => bpS.add(bpX)); bpS }"),
       ),
     )
 

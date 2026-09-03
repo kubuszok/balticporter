@@ -14826,17 +14826,17 @@ dependent inherits it.
 
 #### Per-dependent table
 
-| port | pre-retarget floor | after retarget (3.1ah) | after 3.1ai | after 3.1aj | after 3.1al | after 3.1ar | after 3.1as |
-|---|---|---|---|---|---|---|---|
-| gdx | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| gdx-test | 0 | 0 | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) |
-| screens | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| anim8 | 0 | 45 | 17 | 17 | 17 | 17 | 17 |
-| textra | 0 | 122 | 24 | 18 | 18 | 15 | 13 |
-| gltf | 0/3 | 0/34 | 19 (main+test) | 12 | 12 | 12 | 12 |
-| vfx | 0 | 1 | 1 | 1 | 1 | 1 | 0 |
-| ai | 0 | 13 | 13 | 13 | 13 | 2 | 2 |
-| visui | 7 | 14 | 14 | 13 | 12 | 12 | 9 |
+| port | pre-retarget floor | after retarget (3.1ah) | after 3.1ai | after 3.1aj | after 3.1al | after 3.1ar | after 3.1as | after 3.1aw |
+|---|---|---|---|---|---|---|---|---|
+| gdx | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| gdx-test | 0 | 0 | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) |
+| screens | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| anim8 | 0 | 45 | 17 | 17 | 17 | 17 | 17 | 17 |
+| textra | 0 | 122 | 24 | 18 | 18 | 15 | 13 | 9 |
+| gltf | 0/3 | 0/34 | 19 (main+test) | 12 | 12 | 12 | 12 | 12 |
+| vfx | 0 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
+| ai | 0 | 13 | 13 | 13 | 13 | 2 | 2 | 2 |
+| visui | 7 | 14 | 14 | 13 | 12 | 12 | 9 | 9 |
 
 #### Families and fixes (3.1ai)
 
@@ -14937,7 +14937,43 @@ in the dependent, a latent gap in external-constructor descriptor resolution).
 has `removeKey` instead of `remove`. The ArrayMap table already had the entry; IdentityMap's did not,
 and the source FQN is IdentityMap. visui 10 -> 9.
 
-#### Remaining residue (55 total, classified)
+#### Families and fixes (3.1aw)
+
+**Bare-set iteration via ForEach (section 1(b), policy).** Java's `ObjectSet`/`OrderedSet`/`IntSet`
+implement `Iterable<T>` and iterate via `iterator()`. lls sets have `inline def foreach` but no
+`iterator`. The `retargetForEach` bare-ref path checks for `("entries", 0) -> ForEach` to handle
+`for (T x : target)` where the target is a retarget. Maps had this entry; sets did not, so
+`for (String name : SDF_NAMES)` fell through to the default lowering and produced
+`value iterator is not a member of lowlevel.util.OrderedSet`. Fix: added
+`("entries", 0) -> ForEach("foreach", 1)` to ObjectSet, OrderedSet, IntSet rewrite tables. The
+`"entries"` key is the synthetic lookup key the bare-ref path uses; `ForEach("foreach", 1)` produces
+`set.foreach(x => body)`. textra 13 -> 11 (-2: `KnownFonts#getAllSDF`, `KnownFonts#getAllMSDF`).
+
+**Set copy-constructor template: `foreachKey` -> `foreach` (section 1(b), policy).** The
+descriptor-keyed copy-constructor templates for ObjectSet, OrderedSet, IntSet used `foreachKey`
+(a MAP method on `ObjectMap`). lls sets have `foreach`, not `foreachKey`. Additionally,
+`bpS.add` as a method reference is ambiguous for OrderedSet (overloaded `add(A)` and
+`add(A, Int)`). Fix: changed templates to `bpSrc.foreach(bpX => bpS.add(bpX))`. textra 11 -> 9
+(-2: `KnownFonts#SDF_NAMES`, `KnownFonts#MSDF_NAMES` copy constructors `new OrderedSet<>(JSON_NAMES)`).
+
+**Counted residue not closed (7 rows classified):**
+
+- gltf `Scene#getCamera`/`Scene#getLight` (2): `for (Entry e : map)` with `return` in body. The
+  `retargetForEach` bare-ref path refuses returns to prevent nesting issues. COUNTED.
+- visui `TabbedPane#selectFirstEnabledTab` (1): same pattern as Scene, `for (Entry e : tabsButtonMap)`
+  with `return true` in body. COUNTED.
+- ai `BehaviorTreeParser#checkRequiredAttributes` (2): explicit `.iterator()` + `while` loop on
+  ObjectMap, and `ObjectMap.Entries` nested-type reference. No lls image for manual iteration.
+  COUNTED.
+- textra `Font#fitCell` (2): standalone `.entries()` on IntMap + `IntMap.Entries` nested-type
+  reference. No lls image for standalone `entries()` (ForEach handles only the for-each context).
+  COUNTED.
+- anim8 `PaletteReducer#analyzeMC` (1): `IntIntMap` static/nested-type reference. COUNTED.
+- gltf `GLTFLoaderBase#<clinit>` (1): `ObjectSet.addAll(T...)` vararg -- no lls image. COUNTED.
+- gltf `GLTFMeshExporter#copyLayout` (1): wildcard capture `ObjectMap[? <: String, ? <: Integer]`.
+  COUNTED.
+
+#### Remaining residue (51 total, classified)
 
 - **16 Tuple2-immutable** (anim8): `Reassignment to val _1/_2` — Entry fields are mutable in java,
   `Tuple2` is immutable. Counted; no fix short of a mutable entry shim.

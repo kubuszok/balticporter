@@ -11926,3 +11926,11 @@ returns `"[]"` on empty. The nullary `toString()` agrees on both sides. Template
 DelayedRemovalArray, IntArray, FloatArray, LongArray, ShortArray, ByteArray, CharArray,
 BooleanArray). Key is `("toString", 1)` -- does not capture the nullary `("toString", 0)`.
 See `ENGINE-LIMITS.md` K36 table.
+
+### 13.24 Wave 3.1aw --- bare-set iteration and set copy-constructor templates (textra 13 -> 9)
+
+Bare-set iteration (`for (T x : set)`) was unhandled because the `retargetForEach` bare-ref path
+checked for `("entries", 0) -> ForEach` and sets had no such entry. Added `ForEach("foreach", 1)`
+for ObjectSet, OrderedSet, IntSet. Also fixed the set copy-constructor templates which used
+`foreachKey` (a map method) instead of `foreach`. textra `-4` (KnownFonts SDF_NAMES/MSDF_NAMES
+copy-ctor and bare iteration). See `ENGINE-LIMITS.md` K37 table (3.1aw column).
