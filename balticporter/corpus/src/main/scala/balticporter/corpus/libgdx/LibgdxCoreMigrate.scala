@@ -763,6 +763,8 @@ object LibgdxPolicy:
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1al: same get overload fix as ObjectMap
         ("get", 1)     -> Template("$recv.get($0).orNull"),
+        // --- 3.1as: IdentityMap -> ArrayMap has removeKey, not remove. Same as ArrayMap entry.
+        ("remove", 1)  -> Rename("removeKey"),
       ),
       // wave 3.1d: remaining MAP family — all to ObjectMap, same Construct + ForEach pattern.
       // IntMap<V> -> ObjectMap[Int, V], LongMap<V> -> ObjectMap[Long, V],
