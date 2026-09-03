@@ -7343,6 +7343,20 @@ every other phase would start mapping inside class literals at the same moment.
 (`Phase.preservesTypeArgsOf`, `CollectionsTransform.reifiedCarriers`, `CollectionsCarrierSpec`).
 The per-site diagnosis stays in `PROGRESS.md`'s liqp residue table.*
 
+**Correction (2026-09-03, wave 3.1av).** Commit `73d3cf97` added `retargetClassOf` to sync a
+`classOf` literal's `Constant.ClassOfC` to the mapped type when a retarget entry moves the type.
+Its `mapInner` helper checked `remap.contains(s)` — the WHOLE type map, JDK §1(a) table included —
+so `classOf[java.util.List[?]]` became `classOf[scala.collection.mutable.Buffer[?]]` and
+`fromJava` received a type it could not match: **3 `E134` errors on liqp MAIN** (two in
+`Template#putStringKey`, one in `LiquidWhereImpl#objectHasPropertyValue`), at 0 errors before. The
+JDK case is now excluded BY TABLE MEMBERSHIP: `mapInner` checks
+`remap.get(s).exists(retargetTargetToSource.contains)`, which fires only for retarget entries whose
+target SymId is in the per-library reverse map (CLAUDE.md §4.56 -- a phase may only conclude
+something about a type from what the PHASE ITSELF did, and the JDK table is a §1(a) constant whose
+`classOf` K20 already preserves through `UniversalCarriers`). The per-library retarget case still
+syncs: `classOf[ObjectMap]` becomes `classOf[lls.ObjectMap]`, counted on `collection-retarget`.
+Liqp **3 -> 0**.
+
 ---
 
 ### K21. A retyped VALUE and an emitted CLASS are read out of the class file at the OTHER end of the same call — **13 test failures on liqp, 0 compile errors, every check count flat, and three of the four assertions pass by accident. BOTH FACES CLOSED (554/21 → 567/8, and face 2's own bridge guard 631/6 → 633/4 once T9 gave it its first retyped field)**

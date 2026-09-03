@@ -1977,6 +1977,37 @@ class CollectionsTransformSpec extends PortSuite:
     assertNotEmits(p, "classOf[demo.ObjMap")
   }
 
+  test("a classOf literal at a JDK-table type keeps java's class (K20)") {
+    // A classOf whose inner type is a JDK-table source (java.util.List) must NOT be retyped.
+    // K20's contract: a reified carrier holds java's own class, and `fromJava` bridges at the
+    // use.  The retarget entry for ObjMap must still sync -- both cases in one test.
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.ObjMap" -> "demo.LlsMap"))
+    val p = portAll(List(
+      "ObjMap.java" ->
+        """package demo;
+          |public class ObjMap<K, V> {}""".stripMargin,
+      "LlsMap.java" ->
+        """package demo;
+          |public class LlsMap<K, V> {}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |import java.util.*;
+          |class Uses {
+          |  Class<?> retarget() { return ObjMap.class; }
+          |  Class<?> jdkList()  { return List.class; }
+          |  Class<?> jdkMap()   { return Map.class; }
+          |}""".stripMargin), ph)
+    // retarget entry: synced to the target
+    assertEmits(p, "classOf[demo.LlsMap")
+    assertNotEmits(p, "classOf[demo.ObjMap")
+    // JDK-table types: kept as java's own class
+    assertEmits(p, "classOf[java.util.List")
+    assertNotEmits(p, "classOf[scala.collection.mutable.Buffer")
+    assertEmits(p, "classOf[java.util.Map")
+    assertNotEmits(p, "classOf[scala.collection.mutable.Map")
+  }
+
   // ---------------------------------------------------------------------------
   // --- 3.1aq: BoolDispatch on a NON-LITERAL flag
   // ---------------------------------------------------------------------------

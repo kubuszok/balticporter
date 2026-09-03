@@ -3513,8 +3513,15 @@ final class CollectionsTransform(
     * The site is COUNTED on `collection-retarget`: a third party reading `classOf[lls.ObjectMap]`
     * sees the lls class, not the upstream one (K20's reified position). */
   private def retargetClassOf(lit: Tree.Literal, tp: TypeRepr, tpe: TypeRepr)(using p: Program): Term =
+    // Map ONLY through retarget entries, never through the JDK §1(a) table.  A classOf whose
+    // inner type is a JDK-table source (java.util.List, etc.) must keep java's class — K20's
+    // contract is that a reified carrier holds java's own class, and `fromJava` bridges at the
+    // use.  The discriminator is `retargetTargetToSource`: a target SymId is in that map iff
+    // the mapping came from a per-library retarget entry (§4.56 — a phase may only conclude
+    // something about a type from what the PHASE ITSELF did to that type, and the JDK table
+    // is §1(a) constant, not a retarget).
     def mapInner(t: TypeRepr): TypeRepr = t match
-      case TypeRepr.TypeRef(prefix, s) if remap.contains(s) =>
+      case TypeRepr.TypeRef(prefix, s) if remap.get(s).exists(retargetTargetToSource.contains) =>
         TypeRepr.TypeRef(prefix, remap(s))
       case TypeRepr.AppliedType(tc, as) =>
         val mc = mapInner(tc)
