@@ -5917,12 +5917,28 @@ final class CollectionsTransform(
             // no Return — the block's expr IS the boundary's value
             tailStats.collect { case t: Term => stripReturn(t) } :+ stripReturn(tailExpr)
         // assemble the boundary body: the Apply, then the tail, then the fallthrough
-        val retTypeName = renderTypeForBoundary(retType)
-        val allHoles    = applyNode :: fallthroughParts
+        // 3.1aw-2: the return type is rendered as an Opaque.spliced with the HEAD SYMBOL as an
+        // AST hole so that PackageRenameTransform reaches and renames it. The previous text-based
+        // renderTypeForBoundary used fullName, which is the UPSTREAM FQN before the rename —
+        // producing `boundary[com.badlogic.gdx.graphics.Camera]` on a dependent port.
+        // For applied types like `BaseLight[Any]`, the head is a hole and the args are text.
+        val retTypeRendered: Term = retType match
+          case TypeRepr.TypeRef(_, s) =>
+            Tree.Ident(s, retType, so)
+          case TypeRepr.AppliedType(TypeRepr.TypeRef(_, s), args) =>
+            val argsText = args.map(renderTypeForBoundary).mkString(", ")
+            Tree.Opaque.spliced(List("", s"[$argsText]"), List(Tree.Ident(s, retType, so)), retType, so)
+          case _ =>
+            // fallback: render as text (primitive types, Unit, etc.)
+            Tree.Opaque(renderTypeForBoundary(retType), retType, so)
+        // two type holes: one for boundary[R] and one for Label[R]
+        val allHoles    = retTypeRendered :: retTypeRendered :: applyNode :: fallthroughParts
         // boundary[R] { (label: Label[R]) ?=> hole0; hole1; ...; holeN }
         val parts       = new collection.mutable.ListBuffer[String]
-        parts += s"scala.util.boundary[$retTypeName] { ($label: scala.util.boundary.Label[$retTypeName]) ?=> "
-        for i <- 0 until allHoles.size - 1 do parts += "; "
+        parts += "scala.util.boundary["
+        parts += s"] { ($label: scala.util.boundary.Label["
+        parts += "]) ?=> "
+        for i <- 0 until (allHoles.size - 2 - 1) do parts += "; "
         parts += " }"
         val boundaryNode = Tree.Opaque.spliced(parts.toList, allHoles, retType, so)
         // replace the Apply + tail with the boundary
