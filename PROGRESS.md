@@ -11907,3 +11907,13 @@ filter now works, and 35 types correctly resolve to `Dropped`). See `ENGINE-LIMI
 - `ComponentClassFactory` injected with its defining loader as parent (ENGINE-LIMITS X8): ashley 103/3/6 -> 108/2/2 on the sbt lanes; sge has no such helper.
 
 #### 3.1av retargetClassOf: JDK-table classOf kept java's (K20) -- liqp 3 -> 0
+
+#### 3.1au Array#toString(separator) -- lls brackets, java does not (vfx 63/64 -> 64/64)
+
+`Array.toString(String separator)` (`Array.java:665`) joins items with no brackets and returns `""`
+on empty; lls `DynamicArray.toString(separator)` (`DynamicArray.scala:777`) wraps in `[...]` and
+returns `"[]"` on empty. The nullary `toString()` agrees on both sides. Template
+`$recv.iterator.mkString($0)` on all 10 Array-family retarget sources (Array, SnapshotArray,
+DelayedRemovalArray, IntArray, FloatArray, LongArray, ShortArray, ByteArray, CharArray,
+BooleanArray). Key is `("toString", 1)` -- does not capture the nullary `("toString", 0)`.
+See `ENGINE-LIMITS.md` K36 table.

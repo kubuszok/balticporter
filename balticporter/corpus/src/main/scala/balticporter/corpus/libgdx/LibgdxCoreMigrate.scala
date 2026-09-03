@@ -939,6 +939,10 @@ object LibgdxPolicy:
         // DynamicArray uses inline MkArray; the supplier/class arg is dropped.
         ("of", 3) -> Template("$Target.apply[$T0]($1)"),
         ("of", 1) -> Template("$Target.apply[$T0]()"),
+        // wave 3.1au: toString(separator) — lls DynamicArray wraps in "[...]" and returns
+        // "[]" on empty; java's Array.toString(separator) joins with no brackets, "" on empty
+        // (Array.java:665, every primitive array alike). iterator.mkString is java's shape.
+        ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
         // --- 3.1af: gdx-test runtime ---
         // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
         // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
@@ -982,6 +986,10 @@ object LibgdxPolicy:
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("append", 3)       -> Rename("addAll"),
         ("with", 1)         -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
+        // wave 3.1au: toString(separator) — lls DynamicArray wraps in "[...]" and returns
+        // "[]" on empty; java's Array.toString(separator) joins with no brackets, "" on empty
+        // (Array.java:665, every primitive array alike). iterator.mkString is java's shape.
+        ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
         // --- 3.1af: gdx-test runtime ---
         // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
         // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
@@ -1022,6 +1030,10 @@ object LibgdxPolicy:
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("append", 3)       -> Rename("addAll"),
         ("with", 1)         -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
+        // wave 3.1au: toString(separator) — lls DynamicArray wraps in "[...]" and returns
+        // "[]" on empty; java's Array.toString(separator) joins with no brackets, "" on empty
+        // (Array.java:665, every primitive array alike). iterator.mkString is java's shape.
+        ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
         // --- 3.1af: gdx-test runtime ---
         // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
         // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
@@ -1058,6 +1070,10 @@ object LibgdxPolicy:
         // IntArray.add(4 args): DynamicArray has up to 3-arg add; split into two calls.
         ("add", 4)      -> Template("{ $recv.add($0, $1); $recv.add($2, $3) }"),
         ("with", 1)     -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
+        // wave 3.1au: toString(separator) — lls DynamicArray wraps in "[...]" and returns
+        // "[]" on empty; java's Array.toString(separator) joins with no brackets, "" on empty
+        // (Array.java:665, every primitive array alike). iterator.mkString is java's shape.
+        ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
         // --- 3.1af: gdx-test runtime ---
         // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
         // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
@@ -1097,6 +1113,10 @@ object LibgdxPolicy:
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("with", 1)     -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
+        // wave 3.1au: toString(separator) — lls DynamicArray wraps in "[...]" and returns
+        // "[]" on empty; java's Array.toString(separator) joins with no brackets, "" on empty
+        // (Array.java:665, every primitive array alike). iterator.mkString is java's shape.
+        ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
         // --- 3.1af: gdx-test runtime ---
         // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
         // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
@@ -1153,6 +1173,10 @@ object LibgdxPolicy:
         // LongArray.resize(int) is protected, returns long[]; DynamicArray has no resize.
         // setSize + items is the faithful image: allocate to newSize, pad with zeros, return array.
         ("resize", 1)   -> Template("{ $recv.setSize($0); $recv }.items"),
+        // wave 3.1au: toString(separator) — lls DynamicArray wraps in "[...]" and returns
+        // "[]" on empty; java's Array.toString(separator) joins with no brackets, "" on empty
+        // (Array.java:665, every primitive array alike). iterator.mkString is java's shape.
+        ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
         // --- 3.1af: gdx-test runtime ---
         // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
         // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
@@ -1196,6 +1220,10 @@ object LibgdxPolicy:
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("with", 1)     -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
+        // wave 3.1au: toString(separator) — lls DynamicArray wraps in "[...]" and returns
+        // "[]" on empty; java's Array.toString(separator) joins with no brackets, "" on empty
+        // (Array.java:665, every primitive array alike). iterator.mkString is java's shape.
+        ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
         // --- 3.1af: gdx-test runtime ---
         // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
         // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
@@ -1235,6 +1263,10 @@ object LibgdxPolicy:
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("with", 1)     -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
+        // wave 3.1au: toString(separator) — lls DynamicArray wraps in "[...]" and returns
+        // "[]" on empty; java's Array.toString(separator) joins with no brackets, "" on empty
+        // (Array.java:665, every primitive array alike). iterator.mkString is java's shape.
+        ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
         // --- 3.1af: gdx-test runtime ---
         // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
         // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
@@ -1280,6 +1312,10 @@ object LibgdxPolicy:
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("append", 3)   -> Rename("addAll"),
         ("with", 1)     -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
+        // wave 3.1au: toString(separator) — lls DynamicArray wraps in "[...]" and returns
+        // "[]" on empty; java's Array.toString(separator) joins with no brackets, "" on empty
+        // (Array.java:665, every primitive array alike). iterator.mkString is java's shape.
+        ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
         // --- 3.1af: gdx-test runtime ---
         // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
         // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
@@ -1321,6 +1357,10 @@ object LibgdxPolicy:
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("with", 1)     -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
+        // wave 3.1au: toString(separator) — lls DynamicArray wraps in "[...]" and returns
+        // "[]" on empty; java's Array.toString(separator) joins with no brackets, "" on empty
+        // (Array.java:665, every primitive array alike). iterator.mkString is java's shape.
+        ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
         // --- 3.1af: gdx-test runtime ---
         // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
         // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
