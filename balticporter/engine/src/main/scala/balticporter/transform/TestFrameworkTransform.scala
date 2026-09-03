@@ -78,6 +78,12 @@ import balticporter.tir.*
 final class TestFrameworkTransform(
     suite: String = TestFrameworkTransform.DefaultSuite,
     testMember: String = "test",
+    /** Instance field FQNs (`Owner#name`) excluded from `bpFreshState` — a field the port DROPS
+      * via `dropMethods` must not have its initialiser hoisted into the per-test reset, because
+      * its initialiser may reference types that do not exist on every platform (P11: a `@Rule
+      * TestWatcher` whose anonymous class body calls `Description.getTestClass`, unavailable on
+      * JS/Native). Empty is the default and the no-op. */
+    dropFields: Set[String] = Set.empty,
 ) extends Phase, balticporter.core.SurfacePolicy, PolicyBound:
 
   import TestFrameworkTransform.{Expect, ExpectMsg, Finding, Fix, FreshStateMember, InitBlockName,
@@ -556,8 +562,17 @@ final class TestFrameworkTransform(
   private def instanceField(v: Tree.ValDef)(using p: Program): Boolean =
     p.owns(v.symbol) && p.symbolOf(v.symbol).exists { s =>
       !s.flags.isStatic && !s.flags.isGiven && !s.flags.isImplicit && !s.flags.isModule &&
-        s.name.nonEmpty
+        s.name.nonEmpty &&
+        !isDroppedField(s)
     }
+
+  private def isDroppedField(s: Symbol)(using p: Program): Boolean =
+    if dropFields.isEmpty then false
+    else p.symbolOf(s.owner).exists(o => dropFields.contains(MemberKey(o.fullName, s.name).render))
+
+  private def isDroppedField2(v: Tree.ValDef)(using p: Program): Boolean =
+    if dropFields.isEmpty then false
+    else p.symbolOf(v.symbol).exists(isDroppedField)
 
   private def isInitBlock(d: Tree.DefDef)(using p: Program): Boolean =
     p.symbolOf(d.symbol).exists(_.name == InitBlockName)
@@ -639,7 +654,16 @@ final class TestFrameworkTransform(
   /** THE REWRITE: the class's own initialisation moved out of its body and into [[freshSym]]'s
     * member. Returns the class unchanged where the lowering does not reach it. */
   private def freshState(cd: Tree.ClassDef)(using p: Program): Tree.ClassDef =
+    val hasDroppedFields = dropFields.nonEmpty && cd.body.exists {
+      case v: Tree.ValDef => isDroppedField2(v)
+      case _              => false
+    }
     freshSym.get(cd.symbol) match
+      case scala.None if hasDroppedFields =>
+        cd.copy(body = cd.body.map {
+          case v: Tree.ValDef if isDroppedField2(v) => v.copy(rhs = scala.None)
+          case other                                => other
+        })
       case scala.None  => cd
       case Some(member) =>
         val o     = cd.origin
@@ -650,6 +674,8 @@ final class TestFrameworkTransform(
         val kept   = List.newBuilder[Statement]
         var fields = 0
         cd.body.foreach {
+          case v: Tree.ValDef if isDroppedField2(v) =>
+            kept += v.copy(rhs = scala.None)
           case v: Tree.ValDef if instanceField(v) =>
             fields += 1
             defaultTerm(v.tpt.tpe, v.origin) match

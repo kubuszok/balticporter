@@ -203,9 +203,18 @@ object LibgdxPolicy:
     * the shared phases again, minus two, with a comment arguing that the two were unnecessary — a
     * correct argument that nothing checked and that the next module would have had to make again.
     */
+  /** P11: the `@Rule TestWatcher watcher` field's anonymous class body calls
+    * `desc.getTestClass().getSimpleName()`, and munit's JS/Native Description.getTestClass
+    * returns `Option[Class[_]]` instead of `Class<?>`. MUnit has no `@Rule` protocol so
+    * the field is dead on every platform — drop it via `dropMethods` and exclude it from
+    * `bpFreshState` via `dropFields`. Diagnostic-only divergence: JVM loses the
+    * "--- ClassName: method ---" println on test failure. */
+  private val watcherDrop = "com.badlogic.gdx.utils.JsonMatcherTests#watcher"
+
   def test(repoRoot: Path): PortManifest = core(repoRoot).extendedBy(PortManifest(
     name    = "sge-test",
-    surface = List(new TestFrameworkTransform(), selfSuppliedSuites,
+    dropMethods = Set(watcherDrop),
+    surface = List(new TestFrameworkTransform(dropFields = Set(watcherDrop)), selfSuppliedSuites,
       // --- 3.1ae: gdx-test residue ---
       // JsonMatcherTests' two static toString helpers use CharArray as a string builder
       // (append(String, String), replaceAll(String, String), toString). DynamicArray[Char] has

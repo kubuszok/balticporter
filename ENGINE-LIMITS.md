@@ -8253,7 +8253,7 @@ has, and whether the ports that would use it can DELIVER it.
 provides is the whole of the mechanised half: `MethodBodyTransform` for a body seam, `dropTypes` +
 `inject` for a whole type.*
 
-### P11. A call to an EXTERNAL MEMBER whose arity differs between JVM and JS/Native — **ARITY CLOSED (E050 -> 0); TYPE RESIDUE E008 remains (JS 1, Native 1)**
+### P11. A call to an EXTERNAL MEMBER whose arity differs between JVM and JS/Native — **CLOSED; gdx-test JS 1 -> 0, Native 1 -> 0**
 
 The frontend reads external members from JVM class files, where a Java method always has `()`. On
 Scala.js and Scala Native, a PLATFORM SHIM may declare the same member PARENLESS: munit 1.2.0's
@@ -8265,27 +8265,26 @@ not take parameters` on JS/Native.
 The old scala-cli cross-platform compiles (P1) type-checked against the JVM jar and never saw this;
 the sbt matrix rows compile against the platform's REAL classpath and do.
 
-**Mechanism**: `PortManifest.externalParenless` — a `Set[String]` of exact member FQNs
-(`Owner#member`). `TirEmitter.applyStr0` drops the `()` from a `Tree.Apply` with empty args when
-the callee is listed. Emitting without `()` is legal on the JVM too: Scala 3 auto-applies a
-Java-defined nullary method without a warning, and `-Werror` under the `.ref` flags stays quiet.
-Empty is the default and the no-op. `.conf` key `externalParenless = [...]`.
+**Two mechanisms closed it:**
 
-Measured: gdx-test JVM 0, ref 51 (held), suite 184/7 (held). The E050 arity error is CLOSED on
-both JS and Native. However, the fix exposed an E008 underneath: munit's `Description.getTestClass`
-returns `Option[Class[_]]` on JS/Native (parenless) while the JVM's returns `Class<?>` (with
-parens), so `desc.getTestClass.getSimpleName()` is `E008 value getSimpleName is not a member of
-Option[Class[?]]`. JS 1 / Native 1 (error changed E050 -> E008, count unchanged). The TYPE
-mismatch is a different class of problem from the ARITY mismatch and cannot be fixed by a manifest
-parameter. `MethodBodyTransform` cannot address anonymous class members (their symbols are not in
-the frontend's `seenMembers` index, so `PolicyBinder.bindMembers` always reports `NeverMatched`).
-`dropMethods` on the field drops the DECLARATION but not the ASSIGNMENT in the class body that
-constructs the anonymous class. The remaining option is either a `dropTypes` on the anonymous
-class (fragile: keyed on `$N` counter) or a structural fix in the emitter that knows about
-`externalParenless` return-type differences.
+1. `PortManifest.externalParenless` — a `Set[String]` of exact member FQNs (`Owner#member`).
+   `TirEmitter.applyStr0` drops the `()` from a `Tree.Apply` with empty args when the callee is
+   listed. Emitting without `()` is legal on the JVM too: Scala 3 auto-applies a Java-defined
+   nullary method. Empty is the default and the no-op. `.conf` key `externalParenless = [...]`.
 
-*Fix kind: (b) for `externalParenless` (arity: CLOSED). The remaining type-mismatch residue (JS 1,
-Native 1) is an engine gap — `MethodBodyTransform` cannot address anonymous class members.*
+2. `dropMethods` on the `@Rule TestWatcher watcher` field + `TestFrameworkTransform(dropFields)`.
+   MUnit has no `@Rule` protocol, so the field is dead on every platform. Dropping it removes the
+   anonymous `TestWatcher` class body that called `desc.getTestClass().getSimpleName()` — which
+   would have been `E008 value getSimpleName is not a member of Option[Class[?]]` on JS/Native
+   (munit's `getTestClass` returns `Option[Class[_]]`, not `Class<?>`). `dropFields` prevents
+   `TestFrameworkTransform.freshState` from hoisting the dropped field's initialiser into
+   `bpFreshState()`, and also strips the initialiser from the field declaration when the class has
+   no other state to rebuild (the `freshSym` path is not entered).
+
+Measured: gdx-test JVM 0, JS 0, Native 0, ref 51, suite 184/7. gdx-core: 0 member deltas.
+Ashley: 0 member deltas.
+
+*Fix kind: (b) — `externalParenless` is universal (arity); the field drop is per-library policy.*
 
 ### K23. SE8 put DEFAULT METHODS on `List`, `Map` and `Collection`, and a library written since uses them like `get` — **ssg-md 137 → 106; six mapped, two REFUSED, one gap named**
 

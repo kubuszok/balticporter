@@ -344,3 +344,41 @@ class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
     assert(ds.nonEmpty)
     assert(ds.forall(_.detail("rebuilt") == "bpFreshState"), clue(ds.map(_.detail("rebuilt"))))
   }
+
+  // -- P11: a DROPPED FIELD must not appear in bpFreshState ----------------------------------
+
+  private val droppedFieldSrc =
+    """import org.junit.Test;
+      |import org.junit.Rule;
+      |import org.junit.rules.TestWatcher;
+      |import org.junit.runner.Description;
+      |public class Demo {
+      |  private int kept = 42;
+      |  @Rule public TestWatcher watcher = new TestWatcher() {
+      |    protected void failed(Throwable cause, Description desc) {
+      |      System.out.println(desc.getTestClass().getSimpleName());
+      |    }
+      |  };
+      |  @Test public void one() { kept = 1; }
+      |}""".stripMargin
+
+  test("P11: a field listed in dropFields is excluded from bpFreshState") {
+    val ph    = new TestFrameworkTransform(dropFields = Set("Demo#watcher"))
+    val after = Pipeline.run(SpoonTir.fromSource(droppedFieldSrc), List(ph))
+    val out   = new TirEmitter(after).emit
+    assert(clue(out).contains("def bpFreshState()"), "the method should still exist (for `kept`)")
+    val body  = rebuild(out)
+    assert(!body.exists(_.contains("watcher")),
+      s"dropped field 'watcher' must NOT appear in bpFreshState body: ${body.mkString("\n")}")
+    assert(body.exists(_.contains("kept")),
+      "non-dropped field 'kept' must still appear in bpFreshState body")
+  }
+
+  test("P11: an empty dropFields set changes nothing") {
+    val ph    = new TestFrameworkTransform(dropFields = Set.empty)
+    val after = Pipeline.run(SpoonTir.fromSource(droppedFieldSrc), List(ph))
+    val out   = new TirEmitter(after).emit
+    val body  = rebuild(out)
+    assert(body.exists(_.contains("watcher")),
+      "with empty dropFields, watcher should be in bpFreshState body")
+  }
