@@ -14778,17 +14778,17 @@ dependent inherits it.
 
 #### Per-dependent table
 
-| port | pre-retarget floor | after retarget (3.1ah) | after 3.1ai | after 3.1aj | after 3.1al | after 3.1ar |
-|---|---|---|---|---|---|---|
-| gdx | 0 | 0 | 0 | 0 | 0 | 0 |
-| gdx-test | 0 | 0 | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) |
-| screens | 0 | 0 | 0 | 0 | 0 | 0 |
-| anim8 | 0 | 45 | 17 | 17 | 17 | 17 |
-| textra | 0 | 122 | 24 | 18 | 18 | 15 |
-| gltf | 0/3 | 0/34 | 19 (main+test) | 12 | 12 | 12 |
-| vfx | 0 | 1 | 1 | 1 | 1 | 1 |
-| ai | 0 | 13 | 13 | 13 | 13 | 2 |
-| visui | 7 | 14 | 14 | 13 | 12 | 12 |
+| port | pre-retarget floor | after retarget (3.1ah) | after 3.1ai | after 3.1aj | after 3.1al | after 3.1ar | after 3.1as |
+|---|---|---|---|---|---|---|---|
+| gdx | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| gdx-test | 0 | 0 | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) |
+| screens | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| anim8 | 0 | 45 | 17 | 17 | 17 | 17 | 17 |
+| textra | 0 | 122 | 24 | 18 | 18 | 15 | 13 |
+| gltf | 0/3 | 0/34 | 19 (main+test) | 12 | 12 | 12 | 12 |
+| vfx | 0 | 1 | 1 | 1 | 1 | 1 | 0 |
+| ai | 0 | 13 | 13 | 13 | 13 | 2 | 2 |
+| visui | 7 | 14 | 14 | 13 | 12 | 12 | 9 |
 
 #### Families and fixes (3.1ai)
 
@@ -14866,33 +14866,57 @@ intern a second SymId for a retarget source from the base's resolution root. No 
 the current corpus (the errors attributed to "un-remapped SymIds" turned out to be nested-type
 references, which are counted residue rather than SymId lookup failures).
 
-#### Remaining residue (61 total, classified)
+#### Families and fixes (3.1as)
+
+**requiredGivens type-parameter index (section 1(a), engine).** The value format now accepts `:N`
+suffix for the 0-based type-parameter index and `|` separator for multiple givens per class.
+`ValueArrayMap[K, V]` constructs both `DynamicArray[K]` and `DynamicArray[V]`, needing
+`MkArray:0|MkArray:1`. vfx 1 -> 0.
+
+**requiredGivens extends-chain propagation (section 1(b), policy).** The transitive closure in
+`applyRequiredGivens` scans `Tree.New` nodes but not `extends` clauses. Subclasses of
+`AbstractListAdapter` (ArrayAdapter, ArrayListAdapter, SimpleListAdapter) call `super()` which
+needs `MkArray[T]` from the parent. Direct `requiredGivens` entries fix this. visui 12 -> 10.
+
+**Map copy-constructor descriptor keys (section 1(b), policy).** `new ObjectMap(otherMap)` at arity 1
+is ambiguous with `ObjectMap(int capacity)`. Descriptor-keyed entries for all map types route to
+a create+putAll template: `{ val bpSrc = $0; val bpM = $Target.apply[$T0, $T1](bpSrc.size);
+bpM.putAll(bpSrc); bpM }`. textra 15 -> 13 (IntMap copy-ctor for `namesByCharCode` fixed;
+IntFloatMap for `kerning` still hits arity fallback -- descriptor not available at the call site
+in the dependent, a latent gap in external-constructor descriptor resolution).
+
+**IdentityMap.remove -> removeKey (section 1(b), policy).** IdentityMap retargets to ArrayMap, which
+has `removeKey` instead of `remove`. The ArrayMap table already had the entry; IdentityMap's did not,
+and the source FQN is IdentityMap. visui 10 -> 9.
+
+#### Remaining residue (55 total, classified)
 
 - **16 Tuple2-immutable** (anim8): `Reassignment to val _1/_2` — Entry fields are mutable in java,
   `Tuple2` is immutable. Counted; no fix short of a mutable entry shim.
-- **7 copy-ctor / slot type mismatches** (textra 4 ObjectMap copy-ctor, textra 3 DynamicArray.from):
-  descriptor-keyed `<init>` entries needed to distinguish capacity from copy constructor.
-- **5 nested-type-of-retarget-parent** (anim8 1 IntIntMap.Keys, textra 1 IntMap.Entries, ai 1
-  ObjectMap.Entries, textra 1 ObjectMap.entries call, ai 1 ObjectMap.iterator call): the parent
+- **5 nested-type-of-retarget-parent** (anim8 1 IntIntMap.Keys, textra 2 IntMap.Entries +
+  `.entries()` outside for-each, ai 1 ObjectMap.Entries, ai 1 ObjectMap.iterator call): the parent
   was retargeted but the nested type was not; counted on `collection-retarget`.
 - **4 GLTFMorphTarget extends ObjectMap** (gltf): program class extending a retarget target (2) +
   foreach not member (2). Counted as `SubclassOfTarget`.
-- **3 BoolDispatch result type** (visui): Boolean from `BoolDispatch` flag at VisTextField.
-- **3 ctor overloads** (visui): VisScrollPane, VisSlider, VisWindow constructor descriptor mismatch.
 - **3 member rows** (gltf 2 ObjectMap.iterator, textra 2 DynamicArray.next): retargeted type missing
   the called member outside for-each context. Counted.
-- **2 PBR ctor overloads** (gltf): PBRCubemapAttribute, PBRTextureAttribute.
+- **3 toArray on Collect result** (textra): `.toArray(DynamicArray)` chained on a Collect block;
+  DynamicArray has no `toArray(DynamicArray)`. Counted as `CollectChainedCall`.
+- **2 IntFloatMap copy-ctor** (textra): descriptor not available at the call site in the dependent
+  port; the arity-1 fallback fires instead of the descriptor-keyed template.
+- **2 PBR ctor overloads** (gltf): PBRCubemapAttribute, PBRTextureAttribute — C3 ctor-funnel, not
+  retarget. Pre-retarget floor.
 - **2 Nullable.Impl[Integer]** (gltf): retarget boundary at nullable member.
-- **2 OrderedSet slot mismatch** (textra): TextraListBox, TextraSelectBox.
-- **2 MkArray given** (visui 2 ArrayAdapter/ArrayListAdapter): `requiredGivens` entry needed.
+- **2 OrderedSet slot mismatch** (textra): OrderedSet does not extend ObjectSet in lls;
+  `collection-internal` kind.
 - **1 ObjectSet.addAll(T...)** (gltf): vararg-packed array descriptor mismatch.
 - **1 ObjectMap wildcard capture** (gltf): `ObjectMap[? <: String, ? <: Integer]`.
-- **1 StackTraceElement** (visui): Dialogs.getStackTrace, unrelated to retarget.
-- **1 Sge given** (visui): Draggable.BLOCKER, context seam.
-- **1 ArrayMap.iterator** (visui): missing iterator member rewrite.
-- **1 ArrayMap.remove** (visui): missing remove member rewrite.
-- **1 MkArray[V] given** (vfx): `requiredGivens` threads only the first type parameter;
-  `ValueArrayMap[K, V]` constructs `DynamicArray[V]` via its second.
+- **1 StackTraceElement** (visui): `DynamicArray[Char].add(StackTraceElement)` type mismatch —
+  java's `CharArray.append(Object)` converts to string, DynamicArray has no append(Object).
+- **1 ArrayMap.iterator** (visui): map has no `.iterator()` member; manual iteration pattern
+  not reachable by ForEach. Counted as `IteratorOutsideForEach`.
+- **7 pre-retarget floor** (visui): VisScrollPane/VisSlider/VisWindow ctor-funnel (3),
+  VisTextField keyboard.show(boolean) API change (3), Draggable.BLOCKER context seam (1).
 
 #### Lesson
 
