@@ -1482,6 +1482,67 @@ object LibgdxPolicy:
         ("<init>", Descriptor(List(Param.Named("Bits")))) ->
           Template("$0.clone().asInstanceOf[scala.collection.mutable.BitSet]"),
       ),
+      // --- 3.1as: map copy-constructor descriptor keys. ObjectMap(ObjectMap other) at arity 1
+      // is ambiguous with ObjectMap(int capacity). The copy-constructor creates a new map with the
+      // source's capacity and copies all entries via putAll. lls ObjectMap.putAll exists.
+      // Descriptor keys are in the UPSTREAM namespace (the frontend records from original Java).
+      "com.badlogic.gdx.utils.ObjectMap" -> Map(
+        ("<init>", Descriptor(List(Param.Named("ObjectMap")))) ->
+          Template("{ val bpSrc = $0; val bpM = $Target.apply[$T0, $T1](bpSrc.size); bpM.putAll(bpSrc); bpM }"),
+      ),
+      "com.badlogic.gdx.utils.IntMap" -> Map(
+        ("<init>", Descriptor(List(Param.Named("IntMap")))) ->
+          Template("{ val bpSrc = $0; val bpM = $Target.apply[$T0, $T1](bpSrc.size); bpM.putAll(bpSrc); bpM }"),
+      ),
+      "com.badlogic.gdx.utils.LongMap" -> Map(
+        ("<init>", Descriptor(List(Param.Named("LongMap")))) ->
+          Template("{ val bpSrc = $0; val bpM = $Target.apply[$T0, $T1](bpSrc.size); bpM.putAll(bpSrc); bpM }"),
+      ),
+      "com.badlogic.gdx.utils.OrderedMap" -> Map(
+        ("<init>", Descriptor(List(Param.Named("OrderedMap")))) ->
+          Template("{ val bpSrc = $0; val bpM = $Target.apply[$T0, $T1](bpSrc.size); bpM.putAll(bpSrc); bpM }"),
+      ),
+      "com.badlogic.gdx.utils.ArrayMap" -> Map(
+        ("<init>", Descriptor(List(Param.Named("ArrayMap")))) ->
+          Template("{ val bpSrc = $0; val bpM = $Target.apply[$T0, $T1](bpSrc.size); bpM.putAll(bpSrc); bpM }"),
+      ),
+      "com.badlogic.gdx.utils.IntIntMap" -> Map(
+        ("<init>", Descriptor(List(Param.Named("IntIntMap")))) ->
+          Template("{ val bpSrc = $0; val bpM = $Target.apply[$T0, $T1](bpSrc.size); bpM.putAll(bpSrc); bpM }"),
+      ),
+      "com.badlogic.gdx.utils.IntFloatMap" -> Map(
+        ("<init>", Descriptor(List(Param.Named("IntFloatMap")))) ->
+          Template("{ val bpSrc = $0; val bpM = $Target.apply[$T0, $T1](bpSrc.size); bpM.putAll(bpSrc); bpM }"),
+      ),
+      "com.badlogic.gdx.utils.ObjectIntMap" -> Map(
+        ("<init>", Descriptor(List(Param.Named("ObjectIntMap")))) ->
+          Template("{ val bpSrc = $0; val bpM = $Target.apply[$T0, $T1](bpSrc.size); bpM.putAll(bpSrc); bpM }"),
+      ),
+      "com.badlogic.gdx.utils.ObjectFloatMap" -> Map(
+        ("<init>", Descriptor(List(Param.Named("ObjectFloatMap")))) ->
+          Template("{ val bpSrc = $0; val bpM = $Target.apply[$T0, $T1](bpSrc.size); bpM.putAll(bpSrc); bpM }"),
+      ),
+      "com.badlogic.gdx.utils.ObjectLongMap" -> Map(
+        ("<init>", Descriptor(List(Param.Named("ObjectLongMap")))) ->
+          Template("{ val bpSrc = $0; val bpM = $Target.apply[$T0, $T1](bpSrc.size); bpM.putAll(bpSrc); bpM }"),
+      ),
+      "com.badlogic.gdx.utils.IdentityMap" -> Map(
+        ("<init>", Descriptor(List(Param.Named("IdentityMap")))) ->
+          Template("{ val bpSrc = $0; val bpM = $Target.apply[$T0, $T1](bpSrc.size); bpM.putAll(bpSrc); bpM }"),
+      ),
+      // ObjectSet and OrderedSet copy constructors — sets use addAll instead of putAll.
+      "com.badlogic.gdx.utils.ObjectSet" -> Map(
+        ("<init>", Descriptor(List(Param.Named("ObjectSet")))) ->
+          Template("{ val bpSrc = $0; val bpS = $Target.apply[$T0](bpSrc.size); bpSrc.foreachKey(bpS.add); bpS }"),
+      ),
+      "com.badlogic.gdx.utils.OrderedSet" -> Map(
+        ("<init>", Descriptor(List(Param.Named("OrderedSet")))) ->
+          Template("{ val bpSrc = $0; val bpS = $Target.apply[$T0](bpSrc.size); bpSrc.foreachKey(bpS.add); bpS }"),
+      ),
+      "com.badlogic.gdx.utils.IntSet" -> Map(
+        ("<init>", Descriptor(List(Param.Named("IntSet")))) ->
+          Template("{ val bpSrc = $0; val bpS = $Target.apply[$T0](bpSrc.size); bpSrc.foreachKey(bpS.add); bpS }"),
+      ),
     )
 
   /** `com.badlogic.gdx.utils.Disposable` → `java.lang.AutoCloseable`, with `dispose` → `close`.

@@ -278,7 +278,10 @@ object VfxPolicy:
         // --- 3.1aq: requiredGivens for generic classes constructing retarget targets
         new balticporter.transform.GlobalsToImplicitsTransform(
           requiredGivens = Map(
-            "com.crashinvaders.vfx.utils.ValueArrayMap" -> "lowlevel.MkArray",
+            // --- 3.1as: `|` separator names BOTH type parameters. ValueArrayMap[K, V]
+            // constructs DynamicArray[K] (tmpKeyArray) and DynamicArray[V] (values), so both
+            // MkArray[K] and MkArray[V] must be threaded through its constructors.
+            "com.crashinvaders.vfx.utils.ValueArrayMap" -> "lowlevel.MkArray:0|lowlevel.MkArray:1",
           ),
           extensions = List(
           balticporter.transform.ContextHolderExtension(

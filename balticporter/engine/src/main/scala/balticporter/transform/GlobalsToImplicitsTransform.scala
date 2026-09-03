@@ -95,8 +95,10 @@ final class GlobalsToImplicitsTransform(
       * byte-identical. */
     val extensions: List[ContextHolderExtension] = Nil,
     /** A DIRECT instruction to add `(using GivenType[T])` to a class's constructors, where `T`
-      * is the class's own first type parameter. Keyed on the class's upstream FQN; value is the
-      * fully-qualified given type (e.g. `"lowlevel.MkArray"`).
+      * is the class's own type parameter at a given index. Keyed on the class's upstream FQN;
+      * value is the fully-qualified given type, optionally suffixed with `:N` to name the
+      * type-parameter index (0-based, default 0). E.g. `"lowlevel.MkArray"` applies to the first
+      * type parameter, `"lowlevel.MkArray:1"` to the second.
       *
       * ==Why this is a (b) key on THIS phase==
       * The MECHANISM is the same as the context holder's clause attachment — find the constructors,
@@ -558,18 +560,38 @@ final class GlobalsToImplicitsTransform(
             changed = true
           }
 
-    // build a map from class SymId -> (givenTypeSym, appliedTypeRef)
-    val givenEntries: Map[SymId, (SymId, TypeRepr)] = boundGivens.flatMap { (classSym, givenFqn) =>
-      val classDef = program0.definitionOf(classSym).collect { case cd: Tree.ClassDef => cd }
-      classDef.flatMap { cd =>
-        // the class's FIRST type parameter — `Octree[T]`'s `T`
-        cd.tparams.headOption.map { tp =>
-          val tpRef = TypeRepr.TypeRef(TypeRepr.NoPrefix, tp.symbol)
-          val givenTypeSym = mint.tpe(givenFqn.split('.').last, givenFqn)
-          val appliedType = TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, givenTypeSym), List(tpRef))
-          classSym -> (givenTypeSym, appliedType)
-        }
+    // --- 3.1as: parse the given-FQN value. A value may contain `|` to name MULTIPLE givens,
+    // each optionally suffixed with `:N` for the type-parameter index (0-based, default 0).
+    // `"lowlevel.MkArray"` -> one given at tparam 0.
+    // `"lowlevel.MkArray:1"` -> one given at tparam 1.
+    // `"lowlevel.MkArray:0|lowlevel.MkArray:1"` -> two givens, one per type parameter.
+    // A `Map[K, V]` that constructs both `DynamicArray[K]` and `DynamicArray[V]` needs both.
+    def parseGivenSpec(raw: String): List[(String, Int)] =
+      raw.split('|').toList.map { part =>
+        part.lastIndexOf(':') match
+          case -1 => (part, 0)
+          case i  =>
+            val suffix = part.substring(i + 1)
+            scala.util.Try(suffix.toInt).toOption match
+              case Some(idx) => (part.substring(0, i), idx)
+              case None      => (part, 0)
       }
+
+    // build a map from class SymId -> list of (givenTypeSym, appliedTypeRef)
+    val givenEntries: Map[SymId, List[(SymId, TypeRepr)]] = boundGivens.flatMap { (classSym, givenFqnRaw) =>
+      val specs = parseGivenSpec(givenFqnRaw)
+      val classDef = program0.definitionOf(classSym).collect { case cd: Tree.ClassDef => cd }
+      classDef.map { cd =>
+        val entries = specs.flatMap { (givenFqn, tpIndex) =>
+          cd.tparams.lift(tpIndex).map { tp =>
+            val tpRef = TypeRepr.TypeRef(TypeRepr.NoPrefix, tp.symbol)
+            val givenTypeSym = mint.tpe(givenFqn.split('.').last + (if tpIndex > 0 then s"$$$tpIndex" else ""), givenFqn)
+            val appliedType = TypeRepr.AppliedType(TypeRepr.TypeRef(TypeRepr.NoPrefix, givenTypeSym), List(tpRef))
+            (givenTypeSym, appliedType)
+          }
+        }
+        classSym -> entries
+      }.filter(_._2.nonEmpty)
     }
 
     if givenEntries.isEmpty then return program0
@@ -578,16 +600,18 @@ final class GlobalsToImplicitsTransform(
       def name = "globals->implicits/required-givens"
       override def transformClassDef(t: Tree.ClassDef)(using p: Program): Tree.ClassDef =
         givenEntries.get(t.symbol) match
-          case Some((_, appliedType)) =>
+          case Some(entries) if entries.nonEmpty =>
             val ctors = t.body.collect { case d: Tree.DefDef if isCtor(p, d.symbol) => d.symbol }
             if ctors.isEmpty then t
             else t.copy(body = t.body.map {
               case d: Tree.DefDef if ctors.contains(d.symbol) =>
-                val param = mint.usingParam(d.symbol, appliedType.toString, appliedType, d.origin)
-                d.copy(paramss = d.paramss :+ List(param))
+                val params = entries.map { (_, appliedType) =>
+                  mint.usingParam(d.symbol, appliedType.toString, appliedType, d.origin)
+                }
+                d.copy(paramss = d.paramss :+ params)
               case s => s
             })
-          case None => t
+          case _ => t
 
     val prog1 = program0.rebuilt(symbols = SymbolTable(program0.symbols.all ++ mint.minted))
     val units1 = prog1.units.map(u => StandardTraversal.mapClassDef(edit, u)(using prog1))

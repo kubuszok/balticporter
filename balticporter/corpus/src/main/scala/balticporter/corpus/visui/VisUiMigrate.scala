@@ -335,6 +335,13 @@ object VisUiPolicy:
           "com.kotcrab.vis.ui.util.adapter.AbstractListAdapter" -> "lowlevel.MkArray",
           "com.kotcrab.vis.ui.util.adapter.CachedItemAdapter" -> "lowlevel.MkArray",
           "com.kotcrab.vis.ui.widget.spinner.ArraySpinnerModel" -> "lowlevel.MkArray",
+          // --- 3.1as: subclasses of AbstractListAdapter — the transitive closure does not reach
+          // subclasses through `extends` (only Tree.New), so direct entries are needed.
+          // The chain: AbstractListAdapter -> CachedItemAdapter -> ArrayAdapter -> SimpleListAdapter
+          //                                                    -> ArrayListAdapter
+          "com.kotcrab.vis.ui.util.adapter.ArrayAdapter" -> "lowlevel.MkArray",
+          "com.kotcrab.vis.ui.util.adapter.ArrayListAdapter" -> "lowlevel.MkArray",
+          "com.kotcrab.vis.ui.util.adapter.SimpleListAdapter" -> "lowlevel.MkArray",
         )),
         // DEPENDENT SEEDS for the base's `Align` opaque family — the same `MergeablePolicy` merge
         // VfxPolicy uses, for the same reason: propagation follows pure-move flows and does NOT
