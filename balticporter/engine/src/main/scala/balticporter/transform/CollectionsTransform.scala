@@ -664,6 +664,14 @@ final class CollectionsTransform(
     * which sources are active but the TARGET set is always a subset of this one, so using
     * the full set is safe (a stripped arg is idempotent and the guard checks `TypeBounds`). */
   private var remapTargets: Set[SymId]   = Set.empty
+  /** --- 3.1ar: fullName -> minted SymId fallback for `transformType`.
+    * A dependent port may hold a SECOND SymId for a type whose fullName is a retarget source or
+    * typeMap entry — interned from the base's java resolution root with a SymId that `remap` never
+    * saw. `retargetSourceOf` has an FQN fallback (line ~785); this brings the same coverage to
+    * `transformType`, so every TypeRef whose fullName is a mapped source gets remapped. Section 1(a)
+    * — a universal fact about the symbol table: every SymId for a given source FQN must map to the
+    * same target. */
+  private var remapByFullName: Map[String, SymId] = Map.empty
   /** source SymId -> java FQN, for remap entries that came from [[families]] (not JDK typeMap, not
     * retarget). Built in [[run]], read by [[finishRun]] to determine the per-entry scope for the
     * multi-pass traversal (D12). */
@@ -1296,6 +1304,17 @@ final class CollectionsTransform(
       }.orElse(typeMap.get(s.fullName).map(_._1).map { sc =>
         s.id -> byScala.getOrElseUpdate(sc, mint(sc.substring(sc.lastIndexOf('.') + 1), sc))
       })
+    }.toMap
+    // --- 3.1ar: build the fullName -> minted SymId fallback for `transformType`.
+    // A dependent port may intern the same java type under a SECOND SymId (from the base's
+    // resolution root), and that SymId is NOT in `remap` — `transformType` left the type
+    // unchanged, producing `sge.utils.IntIntMap.Keys` instead of `lowlevel.util.ObjectMap[...]`.
+    // The fallback maps each SOURCE fullName to the same minted target as the SymId path.
+    // For retarget sources with per-source minted symbols (needsOwnSym), there may be multiple
+    // target SymIds for the same fullName — any one will do, since they all resolve to the same
+    // target FQN; `retargetSourceOf`'s FQN fallback handles the member-level disambiguation.
+    remapByFullName = program.symbols.all.flatMap { s =>
+      remap.get(s.id).map(tgt => s.fullName -> tgt)
     }.toMap
     // …and the reverse map for per-entry family scoping (D12): which remap entries came from
     // `families` (not the JDK companion typeMap, not retarget). Used by `finishRun` to narrow
@@ -3064,6 +3083,32 @@ final class CollectionsTransform(
         case a => a
       }
       if stripped == args then t else TypeRepr.AppliedType(tc, stripped)
+    // --- 3.1ar: FQN fallback for un-remapped SymIds.
+    // A dependent port may hold a SECOND SymId for a type whose fullName is a retarget source
+    // or typeMap entry — interned from the base's java resolution root, never seen by `remap`.
+    // `retargetSourceOf` already has this fallback (line ~785); this brings the same coverage
+    // to `transformType`. Section 1(a) — every SymId for a given source FQN must map to the
+    // same target; leaving one un-remapped produces `sge.utils.IntIntMap` beside
+    // `lowlevel.util.ObjectMap`, a type that does not exist.
+    case TypeRepr.TypeRef(prefix, s) if !remap.contains(s) && s != SymId.None =>
+      summon[Program].symbolOf(s) match
+        case Some(sym) =>
+          remapByFullName.get(sym.fullName) match
+            case Some(newSym) =>
+              // Same logic as the primary remap path: check for arity-changing retargets.
+              retargetArgsBySource.get(s).orElse(
+                // The un-remapped SymId has no entry in retargetArgsBySource (keyed on SOURCE
+                // SymId); look up by the fullName-matched original SymId instead.
+                remap.collectFirst { case (srcId, `newSym`) if retargetArgsBySource.contains(srcId) =>
+                  retargetArgsBySource(srcId) }
+              ) match
+                case Some(mapping) if mapping.forall(_.isInstanceOf[CollectionsTransform.RetargetArg.FixedType]) =>
+                  val args = mapping.map(resolveRetargetArg(_, Nil))
+                  TypeRepr.AppliedType(TypeRepr.TypeRef(prefix, newSym), args)
+                case _ =>
+                  TypeRepr.TypeRef(prefix, newSym)
+            case None => t
+        case None => t
     case other => other
 
   private def resolveRetargetArg(arg: CollectionsTransform.RetargetArg, sourceArgs: List[TypeRepr]): TypeRepr =
@@ -6841,14 +6886,40 @@ final class CollectionsTransform(
     // type arg's head symbol), NOT text, because the FQN at this pipeline position is the
     // UPSTREAM namespace and package rename has not run yet. An AST hole lets later phases
     // (PackageRenameTransform) reach and rewrite the symbol's fullName.
+    //
+    // --- 3.1ar: for an APPLIED type arg (e.g. Task[E] in Array<Task<E>>), a plain
+    // Tree.Ident(headSym, ta, so) renders as just the head symbol's FQN (Task), losing
+    // the type arguments. Build a nested Opaque.spliced that renders `Task[E]` with each
+    // component as an AST hole reachable by PackageRenameTransform. Section 1(a) — a
+    // universal fact about type arguments: the rendered type must carry the full applied
+    // form, not just the raw head.
+    def typeArgToTerm(ta: TypeRepr): Term = ta match
+      case TypeRepr.AppliedType(tc, innerArgs) =>
+        val headTerm = typeArgToTerm(tc)
+        val argTerms = innerArgs.map(typeArgToTerm)
+        val parts = scala.collection.mutable.ListBuffer.empty[String]
+        val holes = scala.collection.mutable.ListBuffer.empty[Term]
+        parts += ""            // before the head
+        holes += headTerm
+        parts += "["           // between head and first arg
+        argTerms.zipWithIndex.foreach { (at, j) =>
+          holes += at
+          if j < argTerms.size - 1 then parts += ", " else parts += "]"
+        }
+        Tree.Opaque.spliced(parts.toList, holes.toList, ta, so)
+      case TypeRepr.TypeBounds(lo, hi) =>
+        // A wildcard — render as `?` (no AST hole needed, no FQN to rename).
+        Tree.Opaque("?", ta, so)
+      case _ =>
+        val sym = headSym(ta).getOrElse(SymId.None)
+        Tree.Ident(sym, ta, so)
     val typeArgTerms = scala.collection.mutable.LinkedHashMap.empty[String, Term]
     recv.tpe match
       case TypeRepr.AppliedType(_, targs) =>
         targs.zipWithIndex.foreach { (ta, i) =>
           val ph = s"$$T$i"
           if text.contains(ph) then
-            val sym = headSym(ta).getOrElse(SymId.None)
-            typeArgTerms(ph) = Tree.Ident(sym, ta, so)
+            typeArgTerms(ph) = typeArgToTerm(ta)
         }
       case _ => ()
     // 2. identify term placeholders and count occurrences.

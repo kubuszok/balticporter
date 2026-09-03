@@ -506,6 +506,57 @@ final class GlobalsToImplicitsTransform(
     val mint = new Minter(program0)
     val o = Origin.synthetic
 
+    // --- 3.1ar: transitive closure over requiredGivens.
+    // A generic class C[T] that constructs a bounded-given class B[T] with its OWN first type
+    // parameter needs the same given (MkArray[T]) threaded through its own constructors.
+    // Fixed-point: repeat until no new classes are discovered. Section 1(a) — a universal fact
+    // about inline given resolution: the factory's summonInline cannot resolve a type parameter
+    // that is not in scope, and the caller's caller has the same constraint.
+    val allClassDefs = program0.units.flatMap(StandardTraversal.allClassDefs(_)(using program0))
+    // Check if a class constructs a bounded-given class using its own first type parameter.
+    // Uses xref: a `new B[T](...)` registers as `Instantiate` usage of B's symbol.
+    def findBoundedConstruction(cd: Tree.ClassDef): Option[String] =
+      if cd.tparams.isEmpty then return None
+      val firstTp = cd.tparams.head.symbol
+      // Collect all Instantiate usages INSIDE this class's body. The xref maps symbol -> usages,
+      // so check which bounded-given class symbols are instantiated inside this class.
+      boundGivens.view.flatMap { (givenClassSym, givenFqn) =>
+        // Check if this class's body instantiates the given class with first-tparam as first arg.
+        // Walk the Tree.New nodes in the body.
+        def hasInstantiation(stmts: List[Statement]): Boolean = stmts.exists(hasNew)
+        def hasNew(t: Tree): Boolean = t match
+          case Tree.New(tpt, _, _, _) =>
+            tpt.tpe match
+              case TypeRepr.AppliedType(TypeRepr.TypeRef(_, headSym), args) =>
+                headSym == givenClassSym && args.headOption.exists {
+                  case TypeRepr.TypeRef(_, s) => s == firstTp
+                  case _ => false
+                }
+              case TypeRepr.TypeRef(_, headSym) =>
+                headSym == givenClassSym
+              case _ => false
+          case a: Tree.Apply => hasNew(a.fun) || a.args.exists(hasNew)
+          case ta: Tree.TypeApply => hasNew(ta.fun)
+          case b: Tree.Block => b.stats.exists(hasNew) || hasNew(b.expr)
+          case sel: Tree.Select => hasNew(sel.qual)
+          case typed: Tree.Typed => hasNew(typed.expr)
+          case ifc: Tree.If => hasNew(ifc.cond) || hasNew(ifc.thenp) || hasNew(ifc.elsep)
+          case d: Tree.DefDef => d.rhs.exists(hasNew)
+          case v: Tree.ValDef => v.rhs.exists(hasNew)
+          case _ => false
+        if hasInstantiation(cd.body) then Some(givenFqn)
+        else None
+      }.headOption
+    var changed = true
+    while changed do
+      changed = false
+      for cd <- allClassDefs do
+        if !boundGivens.contains(cd.symbol) then
+          findBoundedConstruction(cd).foreach { givenFqn =>
+            boundGivens = boundGivens.updated(cd.symbol, givenFqn)
+            changed = true
+          }
+
     // build a map from class SymId -> (givenTypeSym, appliedTypeRef)
     val givenEntries: Map[SymId, (SymId, TypeRepr)] = boundGivens.flatMap { (classSym, givenFqn) =>
       val classDef = program0.definitionOf(classSym).collect { case cd: Tree.ClassDef => cd }
