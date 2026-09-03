@@ -4100,12 +4100,18 @@ final class CollectionsTransform(
         CollectionsTransform.RetargetRewrite.ForEach(rw.via, 1)
       case _ => return scala.None
     val hasReturn = returnsInForEach(fe.body)
-    // for bare map iteration, refuse when the body has a return: the bottom-up traversal converts
-    // the inner for-each FIRST, wrapping the return in a boundary label inside a lambda.  The
-    // OUTER ForEach then cannot see the return (returnsInForEach stops at lambdas), so it would
-    // lose ITS return boundary — and the inner break would reference a label nobody declared.
-    // Refusing leaves the inner for-each as-is, and the OUTER ForEach's return rewrite handles it.
-    if memberSym == SymId.None && hasReturn then return scala.None
+    // 3.1aw-2: bare-ref with return — the blanket refusal was over-conservative. The boundary
+    // mechanism (rewriteReturnsToBreaks + retFeReturnApplies + wrapReturnBoundary) handles returns
+    // in the Apply(Select) path without issue.  The nesting concern (an inner for-each converted
+    // first steals the outer's returns) applies equally to both paths and is handled by
+    // returnsInForEach stopping at lambdas: an inner loop's returns are already break(v) and
+    // invisible to the outer's scan.  Guard only where the jump genuinely cannot be modelled:
+    // a `continue` targeting an OUTER loop boundary from inside the lambda (there is no outer
+    // `Label` in scope), or a `return` from inside a NESTED user lambda (the rewrite stops at
+    // lambdas, so it would stay as a Tree.Return and become a non-local return from the
+    // foreachEntry call — scala's own scope, not java's).  Both are already excluded by
+    // returnsInForEach stopping at Tree.Lambda/Tree.DefDef/Tree.AnonClass, so the existing
+    // hasReturn correctly reflects only THIS level's returns.
     // for arity-2 (entry iteration), check that the binding is ONLY used via .key/.value selects
     // and that it is not reassigned
     val bound = fe.binding.symbol

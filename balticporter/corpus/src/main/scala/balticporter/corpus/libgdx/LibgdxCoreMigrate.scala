@@ -1607,6 +1607,11 @@ object LibgdxPolicy:
       "com.badlogic.gdx.utils.ObjectSet" -> Map(
         ("<init>", Descriptor(List(Param.Named("ObjectSet")))) ->
           Template("{ val bpSrc = $0; val bpS = $Target.apply[$T0](bpSrc.size); bpSrc.foreach(bpX => bpS.add(bpX)); bpS }"),
+        // 3.1aw-2: addAll(T...) — the frontend packs the vararg into a scala.Array[T]. lls
+        // ObjectSet has addAll(ObjectSet) and addAll(DynamicArray) but NOT addAll(Array).
+        // Iterate the packed array and add each element.
+        ("addAll", tArrDesc) ->
+          Template("{ val bpArr = $0; var bpI = 0; while (bpI < bpArr.length) { $recv.add(bpArr(bpI)); bpI += 1 } }"),
       ),
       "com.badlogic.gdx.utils.OrderedSet" -> Map(
         ("<init>", Descriptor(List(Param.Named("OrderedSet")))) ->
