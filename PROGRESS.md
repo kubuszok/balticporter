@@ -11835,6 +11835,14 @@ every count flat -- CLAUDE.md section 4.4's defect class.
 `case Tree.MethodRef(_, m, _, _, _) => allCounts(m) += 1`. See `ENGINE-LIMITS.md` T26.3.
 md 45 -> 0, md-test 0 (725 registrations held), md-ext 0 held.
 
+#### 3.1at external parenless (JS/Native junit shim)
+
+`PortManifest.externalParenless`: calls to listed external members emitted without `()`.
+munit's JS/Native `Description` declares `getTestClass`, `getMethodName`, `getAnnotations` parenless.
+Arity E050 closed. Exposed E008 type mismatch: munit's `getTestClass` returns `Option[Class[_]]` on
+JS/Native, JVM's returns `Class<?>`. gdx-test JVM 0, JS 1 (E050->E008), Native 1 (E050->E008),
+ref 51, suite 184/7. `ENGINE-LIMITS.md` P11.
+
 
 ### 13.23 Wave 4.0 --- ports as sbt subprojects: measured cost of a lane
 

@@ -346,6 +346,9 @@ object PortConfig:
       // …and the artifacts this module's build adds because it took a `Verdict.Depend`'s advice.
       // A build fact, so not inherited (`inject`'s line); empty is the no-op and the whole corpus.
       dependencies   = m.children("dependencies").getOrElse(Nil).map(dependencyEntry),
+      // EXTERNAL MEMBERS PARENLESS ON SOME PLATFORMS — a build fact about which platform shims
+      // this module's classpath resolves. Not inherited (`dependencies`' line); empty is the no-op.
+      externalParenless = m.strings("externalParenless").getOrElse(Nil).toSet,
       // THE REFERENCE HAND PORT for this module. NOT inherited — a hand port is a fact about THIS
       // module's destination, not the shared surface. Empty / absent = the check is a no-op AND
       // records nothing (§1(b)'s rule).

@@ -295,6 +295,36 @@ final case class PortManifest(
       * exactly the "compiles on the platform I happened to test" hole the lane exists to make
       * visible at PORT time rather than at somebody else's build time. */
     dependencies: List[balticporter.catalog.ArtifactDep] = Nil,
+    /** EXTERNAL MEMBERS THAT ARE PARENLESS ON SOME PLATFORMS — exact member FQNs
+      * (`org.junit.runner.Description#getTestClass`).
+      *
+      * ==What it closes==
+      * The frontend reads external members from JVM CLASS FILES, where a Java method always has
+      * `()`. On Scala.js and Scala Native, a PLATFORM SHIM may declare the same member PARENLESS
+      * (munit's `org.junit.runner.Description` declares `def getTestClass: Option[Class[_]]`
+      * without `()`). The emitter follows the JVM arity and writes `getTestClass()`, which is
+      * `E050 method getTestClass in class Description does not take parameters` on JS/Native.
+      *
+      * Listing a member here makes `calleeHasParens` emit calls to it WITHOUT parens on every
+      * platform. This is legal on the JVM too: Scala 3 auto-applies a Java-defined nullary method
+      * called without `()`, and `-Werror` does not warn about it.
+      *
+      * ==Kind==
+      * Section 1(b). The MECHANISM is universal — a call rendered without `()` is legal against
+      * both a Java `getX()` and a Scala `def getX`. WHICH members need it is per-library policy:
+      * the set depends on which platform shims the port's build resolves.
+      *
+      * ==NOT inherited==
+      * A classpath fact about THIS module's build, like [[dependencies]]. A dependent that also
+      * calls these members declares its own entries.
+      *
+      * ==Does NOT implement `SurfacePolicy`==
+      * It reaches CALLS only, not emitted signatures. A call without `()` is a rendering choice
+      * the callee's declaration tolerates either way; no two modules scoping it differently emit
+      * signatures that each compile alone and cannot compile together.
+      *
+      * Empty is the default and the no-op. */
+    externalParenless: Set[String] = Set.empty,
     /** THE REFERENCE HAND PORT for this module — the §1(b) parameter for `ApiParityCheck`.
       *
       * NOT inherited. A hand port is a fact about THIS module's destination, not the shared

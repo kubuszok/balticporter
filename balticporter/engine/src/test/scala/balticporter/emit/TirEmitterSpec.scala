@@ -424,3 +424,103 @@ class TirEmitterSpec extends munit.FunSuite:
     assert(clue(text).contains("case 1 =>"), clue(text))
     assert(!text.contains(" if "), clue(text))
   }
+
+  // -- externalParenless (P11) ---------------------------------------------------------------
+  //
+  // A call to an external member listed in `externalParenless` is emitted WITHOUT `()`.
+  // On the JVM, Scala 3 auto-applies a Java nullary method; on JS/Native, the platform shim
+  // may declare the member parenless (munit's Description).
+
+  test("externalParenless: a listed member is called without parens") {
+    // external type: org.junit.runner.Description
+    val DESC       = SymId(1001)
+    // external member: Description#getTestClass
+    val GET_CLASS  = SymId(1002)
+    val STRTYPE    = SymId(1003)
+    // program-declared class and its method
+    val MY_CLASS   = SymId(1004)
+    val MY_METHOD  = SymId(1005)
+    val DESC_FIELD = SymId(1006)
+    val tDesc = TypeRef(NoPrefix, DESC)
+    val tStr  = TypeRef(NoPrefix, STRTYPE)
+
+    // the call: desc.getTestClass()
+    val getClassCall = Tree.Apply(
+      Tree.Select(Tree.Ident(DESC_FIELD, tDesc, O), GET_CLASS, tStr, O),
+      Nil, GET_CLASS, tStr, O,
+    )
+    val body = Tree.Block(Nil, Tree.Return(Some(getClassCall), tStr, O), tStr, O)
+    val myMethod = Tree.DefDef(MY_METHOD, paramss = List(Nil), returnTpt = TypeTree(tStr, O),
+      rhs = Some(body), origin = O)
+    val descField = Tree.ValDef(DESC_FIELD, TypeTree(tDesc, O), rhs = None, origin = O)
+    val myClass = Tree.ClassDef(MY_CLASS, parents = Nil, selfType = None,
+      body = List(descField, myMethod), origin = O)
+
+    val syms = SymbolTable(List(
+      Symbol(DESC,       "Description",  "org.junit.runner.Description",                Flags(), SymId.None, tDesc),
+      Symbol(GET_CLASS,  "getTestClass", "@1001#getTestClass()",                        Flags(), DESC,       MethodType(Nil, tStr)),
+      Symbol(STRTYPE,    "String",       "java.lang.String",                            Flags(), SymId.None, NoType),
+      Symbol(MY_CLASS,   "MyTest",       "demo.MyTest",                                 Flags(), SymId.None, TypeRef(NoPrefix, MY_CLASS)),
+      Symbol(MY_METHOD,  "run",          "demo.MyTest#run",                             Flags(), MY_CLASS,   MethodType(Nil, tStr)),
+      Symbol(DESC_FIELD, "desc",         "demo.MyTest#desc",                            Flags(), MY_CLASS,   tDesc),
+    ))
+
+    val prog = new Program(List(myClass), syms, Xref.build(List(myClass)), MemberIndex.empty)
+
+    // WITHOUT externalParenless — should emit getTestClass()
+    val withParens = new TirEmitter(prog).emit
+    assert(clue(withParens).contains("getTestClass()"),
+      "without externalParenless, the call should have parens")
+
+    // WITH externalParenless — should emit getTestClass (no parens)
+    val withoutParens = new TirEmitter(prog,
+      externalParenless = Set("org.junit.runner.Description#getTestClass")).emit
+    assert(clue(withoutParens).contains(".getTestClass"),
+      "with externalParenless, the call should appear")
+    assert(!withoutParens.contains("getTestClass()"),
+      "with externalParenless, the call must NOT have parens")
+  }
+
+  test("externalParenless: an UNLISTED member keeps its parens") {
+    val DESC       = SymId(2001)
+    val GET_NAME   = SymId(2002)
+    val STRTYPE    = SymId(2003)
+    val MY_CLASS   = SymId(2004)
+    val MY_METHOD  = SymId(2005)
+    val DESC_FIELD = SymId(2006)
+    val tDesc = TypeRef(NoPrefix, DESC)
+    val tStr  = TypeRef(NoPrefix, STRTYPE)
+
+    val call = Tree.Apply(
+      Tree.Select(Tree.Ident(DESC_FIELD, tDesc, O), GET_NAME, tStr, O),
+      Nil, GET_NAME, tStr, O,
+    )
+    val body = Tree.Block(Nil, Tree.Return(Some(call), tStr, O), tStr, O)
+    val myMethod = Tree.DefDef(MY_METHOD, paramss = List(Nil), returnTpt = TypeTree(tStr, O),
+      rhs = Some(body), origin = O)
+    val descField = Tree.ValDef(DESC_FIELD, TypeTree(tDesc, O), rhs = None, origin = O)
+    val myClass = Tree.ClassDef(MY_CLASS, parents = Nil, selfType = None,
+      body = List(descField, myMethod), origin = O)
+
+    val syms = SymbolTable(List(
+      Symbol(DESC,       "Description",  "org.junit.runner.Description",                Flags(), SymId.None, tDesc),
+      Symbol(GET_NAME,   "getMethodName","@2001#getMethodName()",                       Flags(), DESC,       MethodType(Nil, tStr)),
+      Symbol(STRTYPE,    "String",       "java.lang.String",                            Flags(), SymId.None, NoType),
+      Symbol(MY_CLASS,   "MyTest",       "demo.MyTest",                                 Flags(), SymId.None, TypeRef(NoPrefix, MY_CLASS)),
+      Symbol(MY_METHOD,  "run",          "demo.MyTest#run",                             Flags(), MY_CLASS,   MethodType(Nil, tStr)),
+      Symbol(DESC_FIELD, "desc",         "demo.MyTest#desc",                            Flags(), MY_CLASS,   tDesc),
+    ))
+
+    val prog = new Program(List(myClass), syms, Xref.build(List(myClass)), MemberIndex.empty)
+    // list only getTestClass, NOT getMethodName
+    val out = new TirEmitter(prog,
+      externalParenless = Set("org.junit.runner.Description#getTestClass")).emit
+    assert(clue(out).contains("getMethodName()"),
+      "unlisted member must keep parens")
+  }
+
+  test("externalParenless: empty set is a no-op — same output as default") {
+    val out1 = new TirEmitter(program).emit
+    val out2 = new TirEmitter(program, externalParenless = Set.empty).emit
+    assertEquals(out1, out2)
+  }

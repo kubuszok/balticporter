@@ -236,6 +236,16 @@ object LibgdxPolicy:
             |}""".stripMargin,
       )),
     ),
+    // P11: munit's JS/Native `org.junit.runner.Description` declares these members parenless
+    // (munit 1.2.0, `Description.scala`: `def getMethodName: String`, `def getTestClass: Option[…]`,
+    // `def getAnnotations: List[…]`). The JVM resolves the java `Description` class file where they
+    // have `()`. Emitting calls WITHOUT parens is legal on both: Scala 3 auto-applies a Java nullary
+    // method, and the parenless Scala `def` is its own match.
+    externalParenless = Set(
+      "org.junit.runner.Description#getTestClass",
+      "org.junit.runner.Description#getMethodName",
+      "org.junit.runner.Description#getAnnotations",
+    ),
   ))
 
   /** THE ONE `selfSupplied` ENTRY — `ENGINE-LIMITS.md` CT7, contributed the way CT8 says a dependent

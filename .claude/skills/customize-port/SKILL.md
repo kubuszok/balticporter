@@ -188,8 +188,14 @@ would be two homes for one policy.
 ### The other (b) surfaces, which are manifest DATA rather than phases
 
 `dropTypes` + `inject` (do not emit this type; here is the Scala that supplies its FQN),
-`dropMethods`, `packageRenames`, `supportSources`. See **`configure-port`** §4. Remember the
-asymmetry: a **drop** is inherited by a dependent, an **injection** is not.
+`dropMethods`, `packageRenames`, `supportSources`, `externalParenless`. See **`configure-port`** §4.
+Remember the asymmetry: a **drop** is inherited by a dependent, an **injection** is not.
+
+`externalParenless = ["org.junit.runner.Description#getTestClass", "…#getMethodName"]` — exact member
+FQNs (`Owner#member`) whose calls are emitted WITHOUT `()`. Closes the cross-platform arity gap where
+a JS/Native platform shim (munit's `Description`) declares a member parenless while the JVM class
+file has `()`. Legal on the JVM too: Scala 3 auto-applies. Empty = no-op. NOT inherited (a classpath
+fact). `ENGINE-LIMITS.md` P11.
 
 ## 2. When config is not enough — a §1(c) rule, in YOUR repository
 

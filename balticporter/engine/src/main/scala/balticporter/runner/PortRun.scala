@@ -1948,8 +1948,10 @@ final case class PortRun(
         // unit into the same log would double every number `catalog.tsv` reports, for a second
         // emitter whose whole purpose is that its bytes are thrown away.
         val injSurf = balticporter.emit.InjectedSurface.fromRoots(ownSubs.inject)
+        val extP = manifest.map(_.externalParenless).getOrElse(Set.empty)
         val again = new TirEmitter(once.program, once.plan.concreteMembers, provenance, once.decisions,
-                                   preview, bestEffort, Some(once.surface), injectedSurface = injSurf)
+                                   preview, bestEffort, Some(once.surface), injectedSurface = injSurf,
+                                   externalParenless = extP)
         val diffs = once.emitOrder.filter(u => again.emitUnit(u) != once.sourceOf(u))
         if diffs.nonEmpty then determinismViolation("emission", once, diffs)
         say(s"determinism: ${once.emitOrder.size} units emitted twice, byte-identical " +
@@ -2843,8 +2845,12 @@ final case class PortRun(
     // --- 3.2g: read the INJECTED Scala files' member surface so overrides adopt their
     // parameter types and calleeHasParens follows their arity (K35 CLOSED).
     val injSurface = balticporter.emit.InjectedSurface.fromRoots(ownSubs.inject)
+    // P11: external members that a platform shim declares parenless (munit's Description on
+    // JS/Native). Empty for a port with no manifest, which is the default and the no-op.
+    val extParenless = manifest.map(_.externalParenless).getOrElse(Set.empty)
     val emitter = new TirEmitter(program, plan.concreteMembers, provenance, decisions, preview, bestEffort,
-                                 Some(surface), catalog = catalog, injectedSurface = injSurface)
+                                 Some(surface), catalog = catalog, injectedSurface = injSurface,
+                                 externalParenless = extParenless)
     PortRun.Translated(program, plan, emitter, mine, theirs, cache.map(new ActionCache(_, true)),
                        decisions, binder, surface, parsed, catalog, rewrites, idioms)
 

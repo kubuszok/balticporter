@@ -98,6 +98,16 @@ final class TirEmitter(
       * and `calleeHasParens` follows the injected arity. Populated from `PortManifest.inject`
       * roots by `PortRun`; empty by default for specs and single-module ports. */
     injectedSurface: InjectedSurface.Surface = InjectedSurface.Empty,
+    /** EXTERNAL MEMBERS PARENLESS ON SOME PLATFORMS (`PortManifest.externalParenless`).
+      *
+      * Exact member FQNs (`Owner#member`) whose calls are emitted WITHOUT parens. The third
+      * source `calleeHasParens` consults — after the program and the injected surface, before
+      * the subtype and runtime-shim fallbacks.
+      *
+      * Does NOT reach emitted signatures — calls only. A call without `()` is legal against
+      * both a Java `getX()` (Scala 3 auto-applies) and a Scala `def getX` (parenless), so
+      * the emitted call compiles on every platform. Empty is the default and the no-op. */
+    externalParenless: Set[String] = Set.empty,
 ):
   private given CatalogLog = catalog
   private val surface: Surface = surfaceView.getOrElse(TrivialSurface(source))
@@ -1321,17 +1331,24 @@ final class TirEmitter(
       // entry (no ClassDef), so the walk could not reach the external type's own parents
       // (e.g. `JavaCollection extends JavaIterable` where `iterator()` is on `JavaIterable`).
       //
-      // Three fallbacks, in order:
-      // (0) Check the INJECTED SURFACE — a dropped+injected type's members are in the
-      //     injected Scala file, not in the TIR. K35: the engine cannot follow the injected
-      //     member's arity without reading its source.
-      // (1) Check program-declared types that extend this external type — if a subtype declares
-      //     the member with parens, the parent must also have it (override matching).
-      // (2) Check whether the type is a runtime shim (`balticporter.runtime.Java*`), whose
-      //     members use java arity by design (CLAUDE.md section 4.5).
+      // Four fallbacks, in order:
+      // (0)   Check the INJECTED SURFACE — a dropped+injected type's members are in the
+      //       injected Scala file, not in the TIR. K35: the engine cannot follow the injected
+      //       member's arity without reading its source.
+      // (0.5) Check the manifest's EXTERNAL PARENLESS set — members that a platform shim
+      //       declares parenless (P11: munit's `Description` on JS/Native).
+      // (1)   Check program-declared types that extend this external type — if a subtype declares
+      //       the member with parens, the parent must also have it (override matching).
+      // (2)   Check whether the type is a runtime shim (`balticporter.runtime.Java*`), whose
+      //       members use java arity by design (CLAUDE.md section 4.5).
       val ownerFqn = program.symbolOf(typeSym).map(_.fullName).getOrElse("")
       val fromInjected = injectedSurface.memberHasParens(ownerFqn, memberName)
       if fromInjected.isDefined then fromInjected.get
+      // Fallback 0.5: MANIFEST-DECLARED external parenless members (P11). A member FQN listed
+      // in `externalParenless` is emitted WITHOUT parens on every platform, because a platform
+      // shim (munit's `Description` on JS/Native) declares it parenless — and Scala 3
+      // auto-applies a Java method called without `()`, so the JVM compiles too.
+      else if externalParenless.contains(s"$ownerFqn#$memberName") then false
       else if program.owns(typeSym) then false
       else
         val visited = ancestorsOf(typeSym) + typeSym
@@ -1350,6 +1367,14 @@ final class TirEmitter(
           val runtimePrefix = balticporter.core.RuntimeArtifact.Package + ".Java"
           program.symbolOf(typeSym).exists(_.fullName.startsWith(runtimePrefix))
     }
+
+  /** Is this member listed in `externalParenless`? Matches `Owner#name` against the set. */
+  private def isExternalParenless(m: SymId): Boolean =
+    if externalParenless.isEmpty then false
+    else
+      val ownerSym = sym(m).owner
+      if ownerSym == SymId.None then false
+      else externalParenless.contains(s"${sym(ownerSym).fullName}#${sym(m).name}")
 
   /** backtick an identifier that collides with a Scala keyword. */
   private def esc(name: String): String = TirEmitter.esc(name)
@@ -5314,6 +5339,11 @@ final class TirEmitter(
     // where `r.value()` is a method call and must stay one — which is every annotation read in the
     // corpus but these.
     case Tree.Select(_, m, _, _) if args.isEmpty && emittedAnnotationElement(m) =>
+      term(fun, i)
+    // P11 — EXTERNAL PARENLESS: a member listed in `externalParenless` is called WITHOUT `()`.
+    // Legal on the JVM too (Scala 3 auto-applies a Java nullary method), and required on JS/Native
+    // where the platform shim declares the member parenless.
+    case Tree.Select(_, m, _, _) if args.isEmpty && isExternalParenless(m) =>
       term(fun, i)
     case _ =>
       // …through an ASCRIPTION, which wraps the callee without changing which member it is: a

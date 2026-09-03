@@ -8253,6 +8253,36 @@ has, and whether the ports that would use it can DELIVER it.
 provides is the whole of the mechanised half: `MethodBodyTransform` for a body seam, `dropTypes` +
 `inject` for a whole type.*
 
+### P11. A call to an EXTERNAL MEMBER whose arity differs between JVM and JS/Native — **ARITY CLOSED (E050 -> 0); TYPE RESIDUE E008 remains (JS 1, Native 1)**
+
+The frontend reads external members from JVM class files, where a Java method always has `()`. On
+Scala.js and Scala Native, a PLATFORM SHIM may declare the same member PARENLESS: munit 1.2.0's
+`org.junit.runner.Description` declares `def getTestClass: Option[Class[_]]` and
+`def getMethodName: String` without `()`. The emitter followed the JVM arity and wrote
+`desc.getTestClass().getSimpleName()`, which is `E050 method getTestClass in class Description does
+not take parameters` on JS/Native.
+
+The old scala-cli cross-platform compiles (P1) type-checked against the JVM jar and never saw this;
+the sbt matrix rows compile against the platform's REAL classpath and do.
+
+**Mechanism**: `PortManifest.externalParenless` — a `Set[String]` of exact member FQNs
+(`Owner#member`). `TirEmitter.applyStr0` drops the `()` from a `Tree.Apply` with empty args when
+the callee is listed. Emitting without `()` is legal on the JVM too: Scala 3 auto-applies a
+Java-defined nullary method without a warning, and `-Werror` under the `.ref` flags stays quiet.
+Empty is the default and the no-op. `.conf` key `externalParenless = [...]`.
+
+Measured: gdx-test JVM 0, ref 51 (held), suite 184/7 (held). The E050 arity error is CLOSED on
+both JS and Native. However, the fix exposed an E008 underneath: munit's `Description.getTestClass`
+returns `Option[Class[_]]` on JS/Native (parenless) while the JVM's returns `Class<?>` (with
+parens), so `desc.getTestClass.getSimpleName()` is `E008 value getSimpleName is not a member of
+Option[Class[?]]`. JS 1 / Native 1 (error changed E050 -> E008, count unchanged). The TYPE
+mismatch is a different class of problem from the ARITY mismatch and cannot be fixed by a manifest
+parameter — it needs either a `MethodBodyTransform` or a platform-conditional compilation guard.
+
+*Fix kind: (b) — the mechanism is universal (a call without `()` is legal against both a Java
+`getX()` and a Scala `def getX`); which members need it is per-library policy. The remaining
+type-mismatch residue is a separate issue.*
+
 ### K23. SE8 put DEFAULT METHODS on `List`, `Map` and `Collection`, and a library written since uses them like `get` — **ssg-md 137 → 106; six mapped, two REFUSED, one gap named**
 
 Every member the collections tables answered was a member java had in 1.2. A library written after
