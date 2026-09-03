@@ -229,7 +229,7 @@ member	liqp.StatementsTest#<stmt8>	ssg.liquid.StatementsTest#<stmt8>	Renamed	-	l
 member	liqp.StatementsTest#<stmt9>	ssg.liquid.StatementsTest#<stmt9>	Renamed	-	liqp/StatementsTest.java	129	6e7b30aa3a97085b	
 member	liqp.TemplateTest#<stmt10>	ssg.liquid.TemplateTest#<stmt10>	Renamed	-	liqp/TemplateTest.java	185	15bc4fa7a9d83c7e	
 member	liqp.TemplateTest#<stmt11>	ssg.liquid.TemplateTest#<stmt11>	Renamed	-	liqp/TemplateTest.java	201	5cab791f38c26f3e	
-member	liqp.TemplateTest#<stmt12>	ssg.liquid.TemplateTest#<stmt12>	Renamed	-	liqp/TemplateTest.java	221	cef9f2a03379eeb0	
+member	liqp.TemplateTest#<stmt12>	ssg.liquid.TemplateTest#<stmt12>	Renamed	-	liqp/TemplateTest.java	221	acb0885abe22987d	
 member	liqp.TemplateTest#<stmt13>	ssg.liquid.TemplateTest#<stmt13>	Renamed	-	liqp/TemplateTest.java	259	d10f858cdc605a89	
 member	liqp.TemplateTest#<stmt14>	ssg.liquid.TemplateTest#<stmt14>	Renamed	-	liqp/TemplateTest.java	268	40dcd741e2401bc2	
 member	liqp.TemplateTest#<stmt15>	ssg.liquid.TemplateTest#<stmt15>	Renamed	-	liqp/TemplateTest.java	284	b7967f30d45c2aba	
@@ -257,7 +257,6 @@ member	liqp.TemplateTest$ComparableBase#getVal()	ssg.liquid.TemplateTest$Compara
 member	liqp.TemplateTest$ComparableBase#val	ssg.liquid.TemplateTest$ComparableBase#val	Renamed	-	liqp/TemplateTest.java	36	5295b8d08e7323d5	
 member	liqp.TemplateTest$Foo#a	ssg.liquid.TemplateTest$Foo#a	Renamed	-	liqp/TemplateTest.java	50	9838902942352dae	
 member	liqp.TemplateTest$Foo#b	ssg.liquid.TemplateTest$Foo#b	Renamed	-	liqp/TemplateTest.java	51	d89aa5fdb47b03d3	vis=private[TemplateTest]
-member	liqp.TemplateTest$Foo#c	ssg.liquid.TemplateTest$Foo#c	Renamed	-	liqp/TemplateTest.java	53	f3e9f11825b1adb6	vis=private[TemplateTest]
 member	liqp.TemplateTest$Foo#getA()	ssg.liquid.TemplateTest$Foo#getA()	Renamed	-	liqp/TemplateTest.java	50	c76b459b6cf1220d	
 member	liqp.TemplateTest$Foo#getB()	ssg.liquid.TemplateTest$Foo#getB()	Renamed	-	liqp/TemplateTest.java	55	f1b1caf4ed3bafac	
 member	liqp.TemplateTest$Foo#setA(String)	ssg.liquid.TemplateTest$Foo#setA(String)	Renamed	-	liqp/TemplateTest.java	50	b0c2dcbbfe639f6e	
@@ -585,7 +584,7 @@ member	liqp.filters.Where_ExpTest#array_of_objects	ssg.liquid.filters.Where_ExpT
 member	liqp.filters.Where_ExpTest#bpFreshState()	ssg.liquid.filters.Where_ExpTest#bpFreshState()	Renamed	-	liqp/filters/Where_ExpTest.java	13	fa85b01e6d01f32e	
 member	liqp.filters.Where_ExpTest#objectWithGroups	ssg.liquid.filters.Where_ExpTest#objectWithGroups	Renamed	-	liqp/filters/Where_ExpTest.java	221	565be4172b9f9fd0	vis=private
 member	liqp.filters.Where_ExpTest#parse(String)	ssg.liquid.filters.Where_ExpTest#parse(String)	Renamed	-	liqp/filters/Where_ExpTest.java	325	48f7b99a3cb9a055	
-member	liqp.filters.date.FuzzyDateDateParserTest#parser	ssg.liquid.filters.date.FuzzyDateDateParserTest#parser	Renamed	-	liqp/filters/date/FuzzyDateDateParserTest.java	13	73da9833243a9164	vis=private
+member	liqp.filters.date.FuzzyDateDateParserTest#parser	ssg.liquid.filters.date.FuzzyDateDateParserTest#parser	Renamed	-	liqp/filters/date/FuzzyDateDateParserTest.java	13	759bbcd0205ac8ca	vis=private
 member	liqp.filters.where.JekyllWhereImplTest#<stmt10>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt10>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	451	5b34e6998926732f	
 member	liqp.filters.where.JekyllWhereImplTest#<stmt11>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt11>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	470	96a8c128c2c174c1	
 member	liqp.filters.where.JekyllWhereImplTest#<stmt12>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt12>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	510	e2957072a48c5424	
