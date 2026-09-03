@@ -139,6 +139,12 @@ object GltfPolicy:
       resolutions = Map(
         "net.mgsx.gltf.loaders.shared.GLTFLoaderBase#<init>(TextureResolver)" -> "accept-promoted-body",
       ),
+      // 3.1az: GLTFMorphTarget extends ObjectMap<String, Integer>, and lls ObjectMap is final.
+      // The hand port (../sge/sge-extension/gltf) extends HashMap[String, Int] instead —
+      // the whole Json.Serializable interface is dead (Json is dropped by the base), and the
+      // injected replacement at gltf-overrides/sge/gltf/data/geometry/GLTFMorphTarget.scala
+      // reproduces that shape. K37 SubclassOfTarget, section 1(c).
+      dropTypes = Set("net.mgsx.gltf.data.geometry.GLTFMorphTarget"),
       // gdx-gltf's OWN replacements. `inject` is not inherited — exactly one module ships each
       // replacement file, and libGDX core ships the ones for the types IT dropped.
       inject  = List(repoRoot.resolve("balticporter/corpus/gltf-overrides")),

@@ -14826,17 +14826,17 @@ dependent inherits it.
 
 #### Per-dependent table
 
-| port | pre-retarget floor | after retarget (3.1ah) | after 3.1ai | after 3.1aj | after 3.1al | after 3.1ar | after 3.1as | after 3.1aw | after 3.1ay |
-|---|---|---|---|---|---|---|---|---|---|
-| gdx | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| gdx-test | 0 | 0 | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) |
-| screens | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| anim8 | 0 | 45 | 17 | 17 | 17 | 17 | 17 | 17 | 1 |
-| textra | 0 | 122 | 24 | 18 | 18 | 15 | 13 | 9 | 9 |
-| gltf | 0/3 | 0/34 | 19 (main+test) | 12 | 12 | 12 | 12 | 12 | 12 |
-| vfx | 0 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
-| ai | 0 | 13 | 13 | 13 | 13 | 2 | 2 | 2 | 2 |
-| visui | 7 | 14 | 14 | 13 | 12 | 12 | 9 | 9 | 9 |
+| port | pre-retarget floor | after retarget (3.1ah) | after 3.1ai | after 3.1aj | after 3.1al | after 3.1ar | after 3.1as | after 3.1aw | after 3.1ay | after 3.1az |
+|---|---|---|---|---|---|---|---|---|---|---|
+| gdx | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| gdx-test | 0 | 0 | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) |
+| screens | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| anim8 | 0 | 45 | 17 | 17 | 17 | 17 | 17 | 17 | 1 | 1 |
+| textra | 0 | 122 | 24 | 18 | 18 | 15 | 13 | 9 | 9 | 9 |
+| gltf | 0/3 | 0/34 | 19 (main+test) | 12 | 12 | 12 | 12 | 12 | 12 | 7 |
+| vfx | 0 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
+| ai | 0 | 13 | 13 | 13 | 13 | 2 | 2 | 2 | 2 | 2 |
+| visui | 7 | 14 | 14 | 13 | 12 | 12 | 9 | 9 | 9 | 9 |
 
 #### Families and fixes (3.1ai)
 
@@ -15000,11 +15000,25 @@ anim8 is `E008 Not Found` at `IntIntMap` (a member-access row, not an entry writ
 
 #### Remaining residue (39 total, classified)
 
+#### Families and fixes (3.1az)
+
+**GLTFMorphTarget injection (section 1(c), library-specific).** `GLTFMorphTarget extends
+ObjectMap<String, Integer>` — a program class extending a retarget target (`lowlevel.util.ObjectMap`)
+that is `final`. The hand port (`../sge/sge-extension/gltf`) extends `HashMap[String, Int]` instead,
+dropping the `Json.Serializable` interface (the whole Json serialization layer is replaced by
+Jsoniter codecs). Injected as `gltf-overrides/sge/gltf/data/geometry/GLTFMorphTarget.scala`,
+dropped via `GltfPolicy.dropTypes`. Closes E093 (extends final), E173 (constructor access), two
+E008 (foreach not member), and one E007 (Nullable.Impl in the dropped `read` method).
+gltf 12 -> 7 (-5). The remaining E007 `Nullable.Impl[Integer]` at `exportMesh` persists because
+the retarget rewrite still fires on the CALLER's `put` call through the upstream ObjectMap
+parentage, and the injected HashMap takes `Int` not `Nullable[Integer]` — a counted residue at the
+SubclassOfTarget boundary.
+
+#### Remaining residue (50 total, classified)
+
 - **5 nested-type-of-retarget-parent** (anim8 1 IntIntMap.Keys, textra 2 IntMap.Entries +
   `.entries()` outside for-each, ai 1 ObjectMap.Entries, ai 1 ObjectMap.iterator call): the parent
   was retargeted but the nested type was not; counted on `collection-retarget`.
-- **4 GLTFMorphTarget extends ObjectMap** (gltf): program class extending a retarget target (2) +
-  foreach not member (2). Counted as `SubclassOfTarget`.
 - **3 member rows** (gltf 2 ObjectMap.iterator, textra 2 DynamicArray.next): retargeted type missing
   the called member outside for-each context. Counted.
 - **3 toArray on Collect result** (textra): `.toArray(DynamicArray)` chained on a Collect block;
@@ -15013,9 +15027,11 @@ anim8 is `E008 Not Found` at `IntIntMap` (a member-access row, not an entry writ
   port; the arity-1 fallback fires instead of the descriptor-keyed template.
 - **2 PBR ctor overloads** (gltf): PBRCubemapAttribute, PBRTextureAttribute — C3 ctor-funnel, not
   retarget. Pre-retarget floor.
-- **2 Nullable.Impl[Integer]** (gltf): retarget boundary at nullable member.
 - **2 OrderedSet slot mismatch** (textra): OrderedSet does not extend ObjectSet in lls;
   `collection-internal` kind.
+- **1 Nullable.Impl[Integer]** (gltf): retarget boundary at `exportMesh` — `put` on a dropped
+  GLTFMorphTarget (injected as HashMap) still gets ObjectMap's retarget rewrite wrapping the
+  argument in Nullable. SubclassOfTarget boundary.
 - **1 ObjectSet.addAll(T...)** (gltf): vararg-packed array descriptor mismatch.
 - **1 ObjectMap wildcard capture** (gltf): `ObjectMap[? <: String, ? <: Integer]`.
 - **1 StackTraceElement** (visui): `DynamicArray[Char].add(StackTraceElement)` type mismatch —
