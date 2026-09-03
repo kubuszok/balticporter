@@ -14778,17 +14778,17 @@ dependent inherits it.
 
 #### Per-dependent table
 
-| port | pre-retarget floor | after retarget (3.1ah) | after 3.1ai | after 3.1aj | after 3.1al |
-|---|---|---|---|---|---|
-| gdx | 0 | 0 | 0 | 0 | 0 |
-| gdx-test | 0 | 0 | 0 (184/7) | 0 (184/7) | 0 (184/7) |
-| screens | 0 | 0 | 0 | 0 | 0 |
-| anim8 | 0 | 45 | 17 | 17 | 17 |
-| textra | 0 | 122 | 24 | 18 | 18 |
-| gltf | 0/3 | 0/34 | 19 (main+test) | 12 | 12 |
-| vfx | 0 | 1 | 1 | 1 | 1 |
-| ai | 0 | 13 | 13 | 13 | 13 |
-| visui | 7 | 14 | 14 | 13 | 12 |
+| port | pre-retarget floor | after retarget (3.1ah) | after 3.1ai | after 3.1aj | after 3.1al | after 3.1ar |
+|---|---|---|---|---|---|---|
+| gdx | 0 | 0 | 0 | 0 | 0 | 0 |
+| gdx-test | 0 | 0 | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) |
+| screens | 0 | 0 | 0 | 0 | 0 | 0 |
+| anim8 | 0 | 45 | 17 | 17 | 17 | 17 |
+| textra | 0 | 122 | 24 | 18 | 18 | 15 |
+| gltf | 0/3 | 0/34 | 19 (main+test) | 12 | 12 | 12 |
+| vfx | 0 | 1 | 1 | 1 | 1 | 1 |
+| ai | 0 | 13 | 13 | 13 | 13 | 2 |
+| visui | 7 | 14 | 14 | 13 | 12 | 12 |
 
 #### Families and fixes (3.1ai)
 
@@ -14845,26 +14845,54 @@ and the annotation suppresses the deprecation). visui 13 -> 12 (one `.orNull`-re
 `.get` was a BEHAVIOUR REGRESSION (8f510973, reverted in c310c564): `Nullable.get` throws NPE on
 empty, turning every missing-key lookup into a crash at the lookup instead of a null answer.
 
-#### Remaining residue (73 total, classified)
+#### Families and fixes (3.1ar)
+
+**$T0 applied-type rendering (section 1(a), engine).** `renderTemplate`'s `$T0` placeholder
+extracted only the HEAD symbol from an applied type argument — `Task` from `Task[E]` in
+`Array<Task<E>>` — so `DynamicArray.from[$T0]($0)` rendered as `DynamicArray.from[Task](tasks)`
+instead of `DynamicArray.from[Task[E]](tasks)`. Fix: `typeArgToTerm` now builds a nested
+`Opaque.spliced` for `AppliedType` arguments, rendering the full type with each component as an
+AST hole reachable by `PackageRenameTransform`. ai 10 -> 2 (-8).
+
+**Transitive requiredGivens closure (section 1(a), engine).** A generic class `C[T]` constructing
+a bounded-given class `B[T]` with its own first type parameter was not transitively threaded.
+`applyRequiredGivens` now runs a fixed-point closure that scans `Tree.New` nodes in every class
+body, including `Tree.Assign` rhs nodes (secondary constructors assign into fields). vfx 2 -> 1
+(`PrioritizedArray[T]` -> `ValueArrayMap[T]` now threaded).
+
+**Un-remapped SymId fallback in transformType (section 1(a), engine).** `transformType` now checks
+`remapByFullName` when `remap` does not contain a SymId — a safety net for dependent ports that
+intern a second SymId for a retarget source from the base's resolution root. No measured effect on
+the current corpus (the errors attributed to "un-remapped SymIds" turned out to be nested-type
+references, which are counted residue rather than SymId lookup failures).
+
+#### Remaining residue (61 total, classified)
 
 - **16 Tuple2-immutable** (anim8): `Reassignment to val _1/_2` — Entry fields are mutable in java,
   `Tuple2` is immutable. Counted; no fix short of a mutable entry shim.
-- **8 DynamicArray.from overloads** (ai): descriptor-keyed `Construct` row needed for copy ctors.
-- **5 companion refs** (anim8 1 IntIntMap, textra 1 IntMap, ai 3 ObjectMap): static receiver FQN
-  points to the java companion, not the retarget target's.
-- **4 copy-ctor type mismatches** (textra): ObjectMap copy-ctor assigning at the wrong type.
-- **4 wildcard captures** (textra 3, gltf 1): `ObjectMap[? <: K, V]` from `retargetTypeArgs`.
+- **7 copy-ctor / slot type mismatches** (textra 4 ObjectMap copy-ctor, textra 3 DynamicArray.from):
+  descriptor-keyed `<init>` entries needed to distinguish capacity from copy constructor.
+- **5 nested-type-of-retarget-parent** (anim8 1 IntIntMap.Keys, textra 1 IntMap.Entries, ai 1
+  ObjectMap.Entries, textra 1 ObjectMap.entries call, ai 1 ObjectMap.iterator call): the parent
+  was retargeted but the nested type was not; counted on `collection-retarget`.
 - **4 GLTFMorphTarget extends ObjectMap** (gltf): program class extending a retarget target (2) +
-  PBR ctor overloads (2).
-- **3 BoolDispatch result type** (visui): Boolean from `BoolDispatch` flag.
+  foreach not member (2). Counted as `SubclassOfTarget`.
+- **3 BoolDispatch result type** (visui): Boolean from `BoolDispatch` flag at VisTextField.
 - **3 ctor overloads** (visui): VisScrollPane, VisSlider, VisWindow constructor descriptor mismatch.
-- **3 iterator/entries/next member rows** (gltf 2 iterator, textra 2 next, textra 1 entries, ai 1
-  iterator, ai 1 peek, visui 1 ArrayMap iterator — 8 total across dependents).
-- **2 OrderedSet type mismatch** (textra): TextraListBox, TextraSelectBox.
-- **1 StackTraceElement** (visui): Dialogs.getStackTrace.
-- **1 Sge given** (visui): Draggable.BLOCKER.
+- **3 member rows** (gltf 2 ObjectMap.iterator, textra 2 DynamicArray.next): retargeted type missing
+  the called member outside for-each context. Counted.
+- **2 PBR ctor overloads** (gltf): PBRCubemapAttribute, PBRTextureAttribute.
+- **2 Nullable.Impl[Integer]** (gltf): retarget boundary at nullable member.
+- **2 OrderedSet slot mismatch** (textra): TextraListBox, TextraSelectBox.
+- **2 MkArray given** (visui 2 ArrayAdapter/ArrayListAdapter): `requiredGivens` entry needed.
 - **1 ObjectSet.addAll(T...)** (gltf): vararg-packed array descriptor mismatch.
-- **1 MkArray[V] given** (vfx): `GlobalsToImplicitsTransform` did not thread the class.
+- **1 ObjectMap wildcard capture** (gltf): `ObjectMap[? <: String, ? <: Integer]`.
+- **1 StackTraceElement** (visui): Dialogs.getStackTrace, unrelated to retarget.
+- **1 Sge given** (visui): Draggable.BLOCKER, context seam.
+- **1 ArrayMap.iterator** (visui): missing iterator member rewrite.
+- **1 ArrayMap.remove** (visui): missing remove member rewrite.
+- **1 MkArray[V] given** (vfx): `requiredGivens` threads only the first type parameter;
+  `ValueArrayMap[K, V]` constructs `DynamicArray[V]` via its second.
 
 #### Lesson
 
