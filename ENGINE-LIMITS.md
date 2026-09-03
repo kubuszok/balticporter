@@ -10257,6 +10257,25 @@ of the decode path, and both are decisions for a port that intends to run graphi
 
 ## 7. Measurement discipline — the ones that will mislead you
 
+
+### X8. A java test that SUBCLASSES `ClassLoader` sees the SYSTEM loader, and sbt's forked test JVM keeps the application classes OUT of it — 5 tests, closed by an injected helper (2026-09-03)
+
+Ashley's `ComponentClassFactory extends ClassLoader` generates a `Component` subclass with ASM and
+`defineClass`es it. Java's default `ClassLoader()` parent is the SYSTEM loader; under gradle the
+application classes are on `-cp` and the helper works. Under the sbt-subproject lanes (wave 4.0,
+`Test / fork := true`) the forked JVM loads the project's classes in a child loader, so resolving the
+generated class's superclass failed with `NoClassDefFoundError: sge/ecs/Component` — one
+`EntityTests` failure and the four tests after it skipped: ashley **108/2/2 → 103/3/6**, invisible
+to every count but the suite's. scala-cli's runner had put the classes on `-cp`, which is why the
+lane conversion's parity table did not show it (it compared error counts and outcome totals, not
+`tests.tsv` rows — the `TestDiff` gate is the instrument that did). The reference port has NO such
+helper (sge's ecs suite generates no bytecode), so this is a harness fact of the mechanical port
+alone. Closed (§1(b), test-manifest `dropTypes` + `inject`): the injected copy of the emitted helper
+differs in ONE token — `extends java.lang.ClassLoader(classOf[ComponentClassFactory].getClassLoader)`,
+the loader that defined the helper, which is what java's helper observably relied on. ashley
+**103/3/6 → 108/2/2**. Rule: a test that reaches for the system loader, `Class.forName` without a
+loader, or `ClassLoader.getSystemResource` is a harness assumption to be read before a lane runs
+under a different runner; the `TestDiff.newlySkipped`/`disappeared` gates are what catch it.
 ### M1. The error count is a TYPER-ONLY measurement — the governing rule is `CLAUDE.md` §3
 
 The evidence, kept here because the size of the effect is the point:

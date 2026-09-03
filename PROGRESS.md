@@ -11901,3 +11901,7 @@ filter now works, and 35 types correctly resolve to `Dropped`). See `ENGINE-LIMI
    column (`List`) nor the emitted column (`sge.…SgeList`). Every type-renamed type was FATAL
    `BaseSurfaceAbsent` on ashley. Fix: `emittedByBaseName` indexes by emitted name; the lookup
    falls through from upstream to emitted-FQN key. See `ENGINE-LIMITS.md` D16 amendment 2.
+
+#### 3.3c ashley test helper under sbt fork
+
+- `ComponentClassFactory` injected with its defining loader as parent (ENGINE-LIMITS X8): ashley 103/3/6 -> 108/2/2 on the sbt lanes; sge has no such helper.

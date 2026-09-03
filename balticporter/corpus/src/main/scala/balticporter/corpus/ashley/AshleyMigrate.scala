@@ -362,6 +362,12 @@ object AshleyPolicy:
   /** Ashley's own JUnit suite, as a dependent of [[core]]. */
   def test(repoRoot: Path): PortManifest = core(repoRoot).extendedBy(PortManifest(
     name    = "sge-ecs-test",
+    // --- 3.3c: the bytecode-generating test helper takes its defining loader as parent ---
+    // `ComponentClassFactory extends ClassLoader` (system parent) cannot see `sge.ecs.Component`
+    // under sbt's forked test JVM; the injected copy differs in the parent loader only. sge has no
+    // such helper (its suite generates no bytecode) — ENGINE-LIMITS.md X8.
+    dropTypes = Set("com.badlogic.ashley.core.ComponentClassFactory"),
+    inject    = List(repoRoot.resolve("balticporter/corpus/ashley-test-overrides")),
     surface = List(
       new balticporter.transform.TestFrameworkTransform(),
       // --- 3.2g: adapt forbiddenRemoval body ---
