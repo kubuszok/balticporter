@@ -14851,17 +14851,17 @@ dependent inherits it.
 
 #### Per-dependent table
 
-| port | pre-retarget floor | after retarget (3.1ah) | after 3.1ai | after 3.1aj | after 3.1al | after 3.1ar | after 3.1as | after 3.1aw | after 3.1ay | after 3.1az | after 3.1ax |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| gdx | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| gdx-test | 0 | 0 | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) |
-| screens | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| anim8 | 0 | 45 | 17 | 17 | 17 | 17 | 17 | 17 | 1 | 1 | 1 |
-| textra | 0 | 122 | 24 | 18 | 18 | 15 | 13 | 9 | 9 | 9 | 9 |
-| gltf | 0/3 | 0/34 | 19 (main+test) | 12 | 12 | 12 | 12 | 12 | 12 | 7 | 5 |
-| vfx | 0 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
-| ai | 0 | 13 | 13 | 13 | 13 | 2 | 2 | 2 | 2 | 2 | 2 |
-| visui | 7 | 14 | 14 | 13 | 12 | 12 | 9 | 9 | 9 | 9 | 7 |
+| port | pre-retarget floor | after retarget (3.1ah) | after 3.1ai | after 3.1aj | after 3.1al | after 3.1ar | after 3.1as | after 3.1aw | after 3.1ay | after 3.1az | after 3.1ax | after 3.1aw-2 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| gdx | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| gdx-test | 0 | 0 | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) |
+| screens | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| anim8 | 0 | 45 | 17 | 17 | 17 | 17 | 17 | 17 | 1 | 1 | 1 | 1 |
+| textra | 0 | 122 | 24 | 18 | 18 | 15 | 13 | 9 | 9 | 9 | 9 | 9 |
+| gltf | 0/3 | 0/34 | 19 (main+test) | 12 | 12 | 12 | 12 | 12 | 12 | 7 | 5 | 3 |
+| vfx | 0 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 |
+| ai | 0 | 13 | 13 | 13 | 13 | 2 | 2 | 2 | 2 | 2 | 2 | 2 |
+| visui | 7 | 14 | 14 | 13 | 12 | 12 | 9 | 9 | 9 | 9 | 7 | 6 |
 
 #### Families and fixes (3.1ai)
 
@@ -14981,12 +14981,12 @@ descriptor-keyed copy-constructor templates for ObjectSet, OrderedSet, IntSet us
 `add(A, Int)`). Fix: changed templates to `bpSrc.foreach(bpX => bpS.add(bpX))`. textra 11 -> 9
 (-2: `KnownFonts#SDF_NAMES`, `KnownFonts#MSDF_NAMES` copy constructors `new OrderedSet<>(JSON_NAMES)`).
 
-**Counted residue not closed (7 rows classified):**
+**Counted residue not closed (4 rows remaining; 3 CLOSED in 3.1aw-2):**
 
-- gltf `Scene#getCamera`/`Scene#getLight` (2): `for (Entry e : map)` with `return` in body. The
-  `retargetForEach` bare-ref path refuses returns to prevent nesting issues. COUNTED.
-- visui `TabbedPane#selectFirstEnabledTab` (1): same pattern as Scene, `for (Entry e : tabsButtonMap)`
-  with `return true` in body. COUNTED.
+- ~~gltf `Scene#getCamera`/`Scene#getLight` (2)~~: **CLOSED (3.1aw-2)** — bare-ref return refusal
+  narrowed, boundary type rendered as AST hole. `getCamera` compiles; `getLight` has 1 remaining
+  wildcard-boundary error (Task 3: `BaseLight[scala.Any]` vs `BaseLight[?]`).
+- ~~visui `TabbedPane#selectFirstEnabledTab` (1)~~: **CLOSED (3.1aw-2)** — same fix as Scene.
 - ai `BehaviorTreeParser#checkRequiredAttributes` (2): explicit `.iterator()` + `while` loop on
   ObjectMap, and `ObjectMap.Entries` nested-type reference. No lls image for manual iteration.
   COUNTED.
@@ -14994,11 +14994,41 @@ descriptor-keyed copy-constructor templates for ObjectSet, OrderedSet, IntSet us
   reference. No lls image for standalone `entries()` (ForEach handles only the for-each context).
   COUNTED.
 - anim8 `PaletteReducer#analyzeMC` (1): `IntIntMap` static/nested-type reference. COUNTED.
-- gltf `GLTFLoaderBase#<clinit>` (1): `ObjectSet.addAll(T...)` vararg -- no lls image. COUNTED.
+- ~~gltf `GLTFLoaderBase#<clinit>` (1)~~: **CLOSED (3.1aw-2)** — `ObjectSet.addAll(T...)` Template
+  iterates the packed vararg array.
 - gltf `GLTFMeshExporter#copyLayout` (1): wildcard capture `ObjectMap[? <: String, ? <: Integer]`.
   COUNTED.
 
-#### Remaining residue (51 total, classified)
+#### Families and fixes (3.1aw-2)
+
+**Bare-ref return refusal narrowed (section 1(a), engine).** The blanket refusal
+`if memberSym == SymId.None && hasReturn then return scala.None` in `retargetForEach` prevented
+bare-map/set iteration with `return` from being converted. The existing boundary mechanism
+(`rewriteReturnsToBreaks` + `retFeReturnApplies` + `wrapReturnBoundary`) handles returns in the
+`Apply(Select)` path without issue. `returnsInForEach` already stops at `Tree.Lambda`/`Tree.DefDef`/
+`Tree.AnonClass`, so a nested user lambda's `return` and a `continue` targeting an outer loop are
+both excluded by the existing scan. Guard removed; the existing `hasReturn` correctly reflects only
+THIS level's returns. gdx 0 held (42 members moved -- all bare map/set-with-return bodies now emit
+`foreachEntry` + `boundary` instead of broken `.iterator()`). gltf `Scene#getCamera` CLOSED, visui
+`TabbedPane#selectFirstEnabledTab` CLOSED. gltf `Scene#getLight` partially closed: 1 remaining
+E007 from wildcard boundary type (`BaseLight[scala.Any]` vs `BaseLight[?]`, addressed in 3.1aw-3).
+gdx-test 0 errors, 184/7, 4 newly passing (MixedPutRemoveTest.testIntMapIterator,
+testLongMapIterator; QueueTest.iteratorRemoveEdgeCaseTest, iteratorTest), no newly failing.
+
+**ObjectSet.addAll(T...) Template (section 1(b), policy).** The frontend packs a `T...` argument
+into a `scala.Array[T]`. lls `ObjectSet` has `addAll(ObjectSet)` and `addAll(DynamicArray)` but NOT
+`addAll(Array)`. Template iterates the packed array and adds each element:
+`{ val bpArr = $0; var bpI = 0; while (bpI < bpArr.length) { $recv.add(bpArr(bpI)); bpI += 1 } }`.
+gltf `GLTFLoaderBase#<clinit>` CLOSED.
+
+**Boundary type as AST hole for package rename (section 1(a), engine).** `renderTypeForBoundary`
+used `Symbol.fullName` (the upstream FQN, before `PackageRenameTransform`), producing
+`boundary[com.badlogic.gdx.graphics.Camera]` on a dependent port. Fix: the return type's HEAD
+SYMBOL is now an `Tree.Ident` inside `Tree.Opaque.spliced`, so `PackageRenameTransform` reaches
+and renames it. For applied types like `BaseLight[Any]`, the head is a hole and the args are
+rendered as text. gltf 12 -> 10 (Scene namespace errors closed).
+
+#### Remaining residue (48 total, classified)
 
 #### Families and fixes (3.1ay)
 
@@ -15071,6 +15101,9 @@ stays E134 (guard 3, `VisUI.getSkin()` used twice). gltf 12 -> 10, visui 9 -> 7.
   GLTFMorphTarget (injected as HashMap) still gets ObjectMap's retarget rewrite wrapping the
   argument in Nullable. SubclassOfTarget boundary.
 - **1 ObjectSet.addAll(T...)** (gltf): vararg-packed array descriptor mismatch.
+
+- **1 wildcard boundary type** (gltf): `Scene#getLight` returns `BaseLight[?]`; boundary wrapper
+  renders as `BaseLight[scala.Any]`. E007 type mismatch.
 - **1 ObjectMap wildcard capture** (gltf): `ObjectMap[? <: String, ? <: Integer]`.
 - **1 StackTraceElement** (visui): `DynamicArray[Char].add(StackTraceElement)` type mismatch —
   java's `CharArray.append(Object)` converts to string, DynamicArray has no append(Object).

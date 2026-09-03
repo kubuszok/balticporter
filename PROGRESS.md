@@ -11945,3 +11945,16 @@ Remaining 1 error is `E008 IntIntMap not a member` (w31's row). gdx 0 = 0 (0 mem
 `ENGINE-LIMITS.md` K37.
 
 #### 3.1ax CtorFunnel parent-delegation inlining with post-body replay -- visui 9 -> 7, gltf 12 -> 10
+
+### 13.25 Wave 3.1aw-2 --- bare-ref return refusal narrowed, boundary type rename (gltf 12 -> 10, visui 9 -> 8)
+
+Narrowed `retargetForEach` bare-ref return refusal: the blanket guard prevented bare-map/set
+iteration with `return` from converting. The existing boundary mechanism handles returns correctly
+(`returnsInForEach` stops at lambdas/defs/anon-classes). 42 gdx members moved; gdx-test 184/7 with
+4 newly passing, no newly failing. Fixed `renderTypeForBoundary` to emit the return type's head
+symbol as an AST hole so `PackageRenameTransform` reaches it (was producing
+`boundary[com.badlogic.gdx.graphics.Camera]` on dependent ports). Also added
+`ObjectSet.addAll(T...)` Template (iterates the packed vararg array). gltf `Scene#getCamera` CLOSED,
+visui `TabbedPane#selectFirstEnabledTab` CLOSED, gltf `GLTFLoaderBase#<clinit>` CLOSED.
+gltf `Scene#getLight` has 1 remaining wildcard-boundary error (`BaseLight[scala.Any]` vs
+`BaseLight[?]`). See `ENGINE-LIMITS.md` K37 table (3.1aw column) and 3.1aw-2 subsection.

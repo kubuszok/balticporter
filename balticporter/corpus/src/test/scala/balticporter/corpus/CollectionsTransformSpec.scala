@@ -2094,3 +2094,53 @@ class CollectionsTransformSpec extends PortSuite:
     // F7: the receiver is bound to a temp
     assertEmitsMatch(p, """val bp\$bd\d+\s*=""")
   }
+
+  // ---------------------------------------------------------------------------
+  // 3.1aw-3: wildcard boundary type in wrapReturnBoundary
+  // ---------------------------------------------------------------------------
+
+  test("renderTypeForBoundary renders a wildcard as ? inside an applied-type argument, not as scala.Any") {
+    // A method returning `Base[?]` that iterates a retarget map with `return` in body:
+    // the boundary wrapper must emit `boundary[demo.Base[?]]`, not `boundary[demo.Base[scala.Any]]`.
+    // CLAUDE.md §4.56: a wildcard is writable INSIDE an argument (`Base[?]` is legal Scala)
+    // and not on its own (`asInstanceOf[?]` is a syntax error).
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.ObjMap" -> "demo.LlsMap"),
+      retargetRewrites = Map("demo.ObjMap" -> Map(
+        ("entries", 0) -> CollectionsTransform.RetargetRewrite.ForEach("foreachEntry", 2),
+        ("<init>", 0) -> CollectionsTransform.RetargetRewrite.Construct("demo.LlsMap", "apply"))))
+    val p = portAll(List(
+      "Base.java" ->
+        """package demo;
+          |public class Base<T> {}""".stripMargin,
+      "Entry.java" ->
+        """package demo;
+          |public class Entry<K, V> {
+          |  public K key;
+          |  public V value;
+          |}""".stripMargin,
+      "ObjMap.java" ->
+        """package demo;
+          |public class ObjMap<K, V> implements Iterable<Entry<K, V>> {
+          |  public java.util.Iterator<Entry<K, V>> iterator() { return null; }
+          |  public void foreachEntry(java.util.function.BiConsumer<K, V> c) {}
+          |}""".stripMargin,
+      "LlsMap.java" ->
+        """package demo;
+          |public class LlsMap<K, V> {
+          |  public void foreachEntry(java.util.function.BiConsumer<K, V> c) {}
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  Base<?> find(ObjMap<String, Base<?>> map, String name) {
+          |    for (Entry<String, Base<?>> e : map) {
+          |      if (name.equals(e.key)) return e.value;
+          |    }
+          |    return null;
+          |  }
+          |}""".stripMargin), ph)
+    // The boundary type must use `?`, not `scala.Any`
+    assertEmitsMatch(p, """boundary\[demo\.Base\[\?\]\]""")
+    assertNotEmits(p, "boundary[demo.Base[scala.Any]]")
+  }

@@ -5980,6 +5980,17 @@ final class CollectionsTransform(
     case TypeRepr.AppliedType(tc, args) =>
       val baseName = renderTypeForBoundary(tc)
       s"$baseName[${args.map(renderTypeForBoundary).mkString(", ")}]"
+    // 3.1aw-3: a wildcard type argument (`? extends T`, `? super T`, or bare `?`) is a
+    // TypeBounds in the TIR. Render it as `?` with its bounds so that
+    // `boundary[BaseLight[?]]` is legal Scala. A wildcard is writable INSIDE an argument
+    // position (CLAUDE.md §4.56: "is this type nameable" is TWO questions) and not on its own
+    // as a cast target, but renderTypeForBoundary is only called recursively from AppliedType
+    // args, so the position is always inside an argument.
+    case TypeRepr.TypeBounds(TypeRepr.NoType, TypeRepr.NoType) => "?"
+    case TypeRepr.TypeBounds(TypeRepr.NoType, hi) => s"? <: ${renderTypeForBoundary(hi)}"
+    case TypeRepr.TypeBounds(lo, TypeRepr.NoType) => s"? >: ${renderTypeForBoundary(lo)}"
+    case TypeRepr.TypeBounds(lo, hi) =>
+      s"? >: ${renderTypeForBoundary(lo)} <: ${renderTypeForBoundary(hi)}"
     case TypeRepr.NoType => "scala.Any"
     case _ => "scala.Any"
 
