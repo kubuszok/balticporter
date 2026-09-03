@@ -2302,6 +2302,13 @@ object CtorFunnel:
     val slotArgs: Option[(SymId, Map[SymId, List[Term]])] =
       Option.when(targets.sizeIs == 1 && arities.sizeIs == 1)(
         targets.head -> roots.map(r => r.symbol -> superArgsOf(program, r)).toMap)
+        // PARENT DELEGATION RESOLUTION (C15/D15): when roots call DIFFERENT parent constructors
+        // that all delegate to the same parent ROOT, inline the delegation chain to produce
+        // effective super args for each dependent root. This is the third path for a non-throwable
+        // parent, between the uniform case (all roots call the same constructor) and the throwable
+        // padding case (all roots are padded to the widest JDK overload).
+        .orElse(Option.when(targets.sizeIs > 1 && !throwablePad)(
+          resolvedThroughParent(program, cd, roots, calls)).flatten)
         .orElse(Option.when(throwablePad)(throwablePadding(program, roots)).flatten)
     if roots.sizeIs < 2 || roots.exists(_.tparams.nonEmpty) then scala.None
     else if slotArgs.isEmpty then scala.None
@@ -2716,3 +2723,123 @@ object CtorFunnel:
     case Some(Tree.Apply(Tree.Select(_: Tree.Super, m, _, _), args, _, _, _))
         if args.nonEmpty && isInitName(program, m) => m
     case _ => SymId.None
+
+  /** Follow a parent's constructor DELEGATION CHAIN so that roots calling DIFFERENT parent
+    * overloads converge on the parent's UNIQUE ROOT — the one constructor calling `super(...)`.
+    *
+    * When `VisScrollPane(Actor, ScrollPaneStyle)` calls `super(widget, style)` (the root) and
+    * `VisScrollPane(Actor, String)` calls `super(widget, getSkin(), styleName)` (a secondary that
+    * itself delegates `this(actor, skin.get(styleName, ScrollPaneStyle.class))`), both ultimately
+    * reach `ScrollPane(Actor, ScrollPaneStyle)`. The synthesis can then use that parent root's
+    * parameters, with the inlined delegation arguments for each dependent root.
+    *
+    * §1(a) universal: every java constructor that is not a root delegates through `this(args)` to
+    * one that is, and a parent's unique-root shape is the commonest in the corpus.
+    *
+    * Returns `Some((parentRoot, Map[dependentRoot -> effectiveArgs]))` when ALL dependent roots
+    * converge to the same parent root and the inlining succeeds; `None` otherwise. */
+  private def resolvedThroughParent(
+      program: Program, cd: Tree.ClassDef,
+      roots: List[Tree.DefDef],
+      calls: List[(SymId, List[Term])]
+  ): Option[(SymId, Map[SymId, List[Term]])] =
+    // find the PARENT class's ClassDef from the first parent in the extends clause
+    val parentSym = parentSyms(cd).headOption.getOrElse(SymId.None)
+    val parentCd  = program.definitionOf(parentSym).collect { case c: Tree.ClassDef => c }.getOrElse(return scala.None)
+    val parentCtors = ctorsOf(program, parentCd.body)
+    val parentRoots = parentCtors.filterNot(delegatesToThis(program, _))
+    // require exactly ONE parent root — the common case (unique-root). Multiple parent roots
+    // reaching different grandparent overloads are too complex to inline safely.
+    if parentRoots.sizeIs != 1 then return scala.None
+    val parentRoot = parentRoots.head
+    val parentRootSym = parentRoot.symbol
+
+    // for each dependent root, compute the effective args that reach the parent root
+    val resolved = roots.zip(calls).map { case (dependentRoot, (target, superArgs)) =>
+      // is this target already the parent root?
+      if target == parentRootSym then
+        Some(dependentRoot.symbol -> superArgs)
+      else
+        // follow the parent's delegation chain: the target is a parent secondary
+        // substitute the dependent root's super args into the parent secondary's body
+        // and follow the `this(args)` delegation to find what reaches the parent root
+        inlineDelegation(program, target, superArgs, parentRootSym, depth = 0)
+          .map(effectiveArgs => dependentRoot.symbol -> effectiveArgs)
+    }
+    if resolved.exists(_.isEmpty) then scala.None
+    else
+      val map = resolved.flatten.toMap
+      // verify all roots now target the same parent constructor and same arity
+      val effectiveArities = map.values.map(_.size).toList.distinct
+      if effectiveArities.sizeIs != 1 then scala.None
+      else Some((parentRootSym, map))
+
+  /** Inline a parent constructor's `this(args)` delegation chain to find the effective arguments
+    * that reach the `targetRoot` constructor.
+    *
+    * `currentCtor` is a parent secondary calling `this(args)` with `callerArgs`. The secondary's
+    * body is loaded, the caller's args are substituted for its parameters, and the resulting
+    * `this(args)` call is followed. If the delegation reaches `targetRoot`, the effective args are
+    * returned.
+    *
+    * Uses the same substitution safety checks as `Plans.effects`: each parameter must be used
+    * at most once (or the argument must be `simple`), and no loop may multiply a use. */
+  private def inlineDelegation(
+      program: Program, currentCtor: SymId, callerArgs: List[Term],
+      targetRoot: SymId, depth: Int
+  ): Option[List[Term]] =
+    if depth > 6 then scala.None
+    else
+      program.definitionOf(currentCtor).collect { case d: Tree.DefDef => d }.flatMap { d =>
+        val ps   = valueParams(program, d)
+        // Count parameter uses ONLY in the HEAD STATEMENT (the delegation call), not the whole
+        // body. The extra body is intentionally dropped, so its uses don't affect substitution
+        // safety. A parameter used once in the delegation and once in the extra body counts as 1.
+        val headOnly = headStmt(d).toList.collect { case t: Term => t }
+        lazy val counts = headOnly.foldLeft(Map.empty[SymId, Int]) { (acc, st) =>
+          var m = acc
+          given Program = program
+          val ph = new Phase:
+            def name = "ctor-inline-count"
+            override def transformIdent(t: Tree.Ident)(using Program): Term =
+              m = m.updated(t.sym, m.getOrElse(t.sym, 0) + 1)
+              t
+          StandardTraversal.mapStat(ph, st)
+          m
+        }
+        lazy val loopFree = !headOnly.exists { st =>
+          given Program = program
+          var found = false
+          val ph = new Phase:
+            def name = "ctor-inline-loops"
+            override def transformTerm(t: Term)(using Program): Term =
+              t match
+                case _: Tree.While | _: Tree.DoWhile | _: Tree.For | _: Tree.ForEach | _: Tree.Lambda => found = true
+                case _ => ()
+              t
+          StandardTraversal.mapStat(ph, st)
+          found
+        }
+        def ok(p: Tree.ValDef, a: Term): Boolean =
+          simple(a) || (loopFree && counts.getOrElse(p.symbol, 0) <= 1)
+        if ps.length != callerArgs.length || !ps.zip(callerArgs).forall(ok) then scala.None
+        else
+          // Follow the delegation — the `this(args)` call in the head statement. Extra body
+          // statements after the delegation (e.g., `setSkin(skin)` in `Window(String, Skin,
+          // String)`) are intentionally NOT replayed. This is a trade-off: the synthesis makes the
+          // extends clause compile (closing E134) while narrowing the C3 residue from "all super
+          // args lost" to "only the post-delegation body lost". The omission check counts both.
+          val head = headStmt(d)
+          val subst = ps.zip(callerArgs).map((p, a) => p.symbol -> a).toMap
+          given Program = program
+          val substPh = new Phase:
+            def name = "ctor-inline-subst"
+            override def transformIdent(t: Tree.Ident)(using Program): Term = subst.getOrElse(t.sym, t)
+          // apply substitution to the delegation's arguments, not the whole body
+          head match
+            case Some(Tree.Apply(Tree.Select(_, m, _, _), as, _, _, _)) if isInitName(program, m) =>
+              val substArgs = as.map(a => StandardTraversal.mapStat(substPh, a).asInstanceOf[Term])
+              if m == targetRoot then Some(substArgs)
+              else inlineDelegation(program, m, substArgs, targetRoot, depth + 1)
+            case _ => scala.None
+      }
