@@ -8277,11 +8277,15 @@ returns `Option[Class[_]]` on JS/Native (parenless) while the JVM's returns `Cla
 parens), so `desc.getTestClass.getSimpleName()` is `E008 value getSimpleName is not a member of
 Option[Class[?]]`. JS 1 / Native 1 (error changed E050 -> E008, count unchanged). The TYPE
 mismatch is a different class of problem from the ARITY mismatch and cannot be fixed by a manifest
-parameter — it needs either a `MethodBodyTransform` or a platform-conditional compilation guard.
+parameter. `MethodBodyTransform` cannot address anonymous class members (their symbols are not in
+the frontend's `seenMembers` index, so `PolicyBinder.bindMembers` always reports `NeverMatched`).
+`dropMethods` on the field drops the DECLARATION but not the ASSIGNMENT in the class body that
+constructs the anonymous class. The remaining option is either a `dropTypes` on the anonymous
+class (fragile: keyed on `$N` counter) or a structural fix in the emitter that knows about
+`externalParenless` return-type differences.
 
-*Fix kind: (b) — the mechanism is universal (a call without `()` is legal against both a Java
-`getX()` and a Scala `def getX`); which members need it is per-library policy. The remaining
-type-mismatch residue is a separate issue.*
+*Fix kind: (b) for `externalParenless` (arity: CLOSED). The remaining type-mismatch residue (JS 1,
+Native 1) is an engine gap — `MethodBodyTransform` cannot address anonymous class members.*
 
 ### K23. SE8 put DEFAULT METHODS on `List`, `Map` and `Collection`, and a library written since uses them like `get` — **ssg-md 137 → 106; six mapped, two REFUSED, one gap named**
 
