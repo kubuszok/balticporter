@@ -11943,3 +11943,5 @@ is a retarget entry target (Tuple2) followed by contiguous assigns to `._1`/`._2
 constructor defaults with the assigned values. 16 E052 `Reassignment to val _1/_2` closed on anim8.
 Remaining 1 error is `E008 IntIntMap not a member` (w31's row). gdx 0 = 0 (0 member digests).
 `ENGINE-LIMITS.md` K37.
+
+#### 3.1ax CtorFunnel parent-delegation inlining with post-body replay -- visui 9 -> 7, gltf 12 -> 10

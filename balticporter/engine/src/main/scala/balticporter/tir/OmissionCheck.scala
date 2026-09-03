@@ -41,6 +41,7 @@ object OmissionCheck extends RemedySource:
     val UnnameableLambdaReturn  = "lambda `return` with an unnameable result type"
     val DroppedAnnotation       = "annotation dropped"
     val OverloadedEnumCtor      = "enum constant reaching no expressible primary"
+    val InlineDelegationRefused = "parent-delegation inlining refused"
     val EnumNotJavaLangEnum     = "enum emitted without its java.lang.Enum supertype"
 
     /** every kind this lane files — `Issue.values`' role for a set of strings, and what a menu spec
@@ -210,6 +211,7 @@ object OmissionCheck extends RemedySource:
   def check(program: Program, units: List[Tree.ClassDef],
             surface: Option[Surface] = scala.None): List[Finding] =
     droppedSuperArgs(program, units, surface)
+      ++ inlineDelegationRefused(program, units, surface)
       ++ droppedCauseMessages(program, units, surface)
       ++ promotedBodyOnEveryPath(program, units, surface)
       ++ droppedNilaryCtors(program, units, surface)
@@ -394,6 +396,31 @@ object OmissionCheck extends RemedySource:
         else
           val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
           List(Finding(Kind.DroppedSuperArgs, owner, s"${args.size} argument(s) discarded", d.origin, d.symbol))
+      }
+    }
+
+  /** A parent-delegation inlining (`resolvedThroughParent`) was attempted and REFUSED for this
+    * constructor. The roots target different parent constructors that all delegate to one parent
+    * root, and inlining would resolve the super args, but the parent constructor's post-delegation
+    * body failed usability: a parameter used more than once with a non-simple caller argument
+    * (evaluating it twice differs from java's once), or the post-body holds `super.m()` / `return`.
+    *
+    * Reported on the same `omissions` lane as `droppedSuperArgs` so the refusal is a counted row
+    * with its guard named, not only an E134. */
+  def inlineDelegationRefused(program: Program): List[Finding] =
+    inlineDelegationRefused(program, program.units)
+
+  def inlineDelegationRefused(program: Program, units: List[Tree.ClassDef],
+                  surface: Option[Surface] = scala.None): List[Finding] =
+    def classes(cd: Tree.ClassDef): List[Tree.ClassDef] =
+      StandardTraversal.allClassDefs(cd)(using program)
+    val plans = CtorFunnel.Plans(program, surface)
+    units.flatMap(classes).flatMap { cd =>
+      CtorFunnel.ctorsOf(program, cd.body).flatMap { d =>
+        plans.inlineDelegationRefused(cd, d).map { reason =>
+          val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("?")
+          Finding(Kind.InlineDelegationRefused, owner, reason, d.origin, d.symbol)
+        }.toList
       }
     }
 

@@ -2259,6 +2259,31 @@ the ports it was not aimed at (`CLAUDE.md` §5).
 *Fix kind: (a). C3's refusal above still stands for every parent this cannot reach; what changed is
 that the refusal is no longer claimed about a shape the mechanism can express.*
 
+**PARENT-DELEGATION INLINING WITH POST-BODY REPLAY (wave 3.1ax, 2026-09).** When a subclass's roots
+call DIFFERENT parent constructors that all delegate to the same parent ROOT,
+`CtorFunnel.resolvedThroughParent` inlines the delegation chain to synthesise a primary at the parent
+root's parameters. That inlining now also collects the post-delegation body from each step of the
+chain (e.g., `textureDescription.texture = texture` in `CubemapAttribute(long, Cubemap)`, or
+`this.textureDescription.set(td)` in `CubemapAttribute(long, TextureDescriptor)`) and replays it
+into the subclass's secondary body after its `this(...)` delegation. Without the replay, the
+post-body was silently dropped — a behaviour loss at 0 compile errors.
+
+Three guards refuse the inlining (return `None`, fall back to E134 — loud):
+
+1. `return` in the post-body — would leave the wrong frame in a subclass;
+2. `super.m()` in the post-body — would dispatch too high from a subclass;
+3. parameter used more than once across the whole body when the caller argument is not simple —
+   evaluating it twice differs from java's once (VisWindow: `VisUI.getSkin()` used in both the
+   delegation `skin.get(styleName, WindowStyle.class)` and the post-body `setSkin(skin)`).
+
+The counted residue is guard (3): a synthesised primary taking the evaluated argument as a PARAMETER
+— so the post-body can name it without double evaluation — would close it. That is the next step and
+is not done here; it would be shape (4) extended with a hoisted post-body parameter.
+
+Measured: visui `omissions` 64 -> 52, gltf `omissions` 0 (unchanged). PBRCubemapAttribute and
+PBRTextureAttribute both emit the parent chain's field writes and method calls in each secondary.
+VisWindow stays E134 (guard 3), reported by `OmissionCheck.inlineDelegationRefused`.
+
 ### C4. Several roots, none nilary, plus an explicit nilary constructor = a clash with no plan
 
 `plan0`'s search for a nilary ROOT finds none when the nilary constructor *delegates* (`this(1)`), so
@@ -14826,17 +14851,17 @@ dependent inherits it.
 
 #### Per-dependent table
 
-| port | pre-retarget floor | after retarget (3.1ah) | after 3.1ai | after 3.1aj | after 3.1al | after 3.1ar | after 3.1as | after 3.1aw | after 3.1ay | after 3.1az |
-|---|---|---|---|---|---|---|---|---|---|---|
-| gdx | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| gdx-test | 0 | 0 | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) |
-| screens | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| anim8 | 0 | 45 | 17 | 17 | 17 | 17 | 17 | 17 | 1 | 1 |
-| textra | 0 | 122 | 24 | 18 | 18 | 15 | 13 | 9 | 9 | 9 |
-| gltf | 0/3 | 0/34 | 19 (main+test) | 12 | 12 | 12 | 12 | 12 | 12 | 7 |
-| vfx | 0 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
-| ai | 0 | 13 | 13 | 13 | 13 | 2 | 2 | 2 | 2 | 2 |
-| visui | 7 | 14 | 14 | 13 | 12 | 12 | 9 | 9 | 9 | 9 |
+| port | pre-retarget floor | after retarget (3.1ah) | after 3.1ai | after 3.1aj | after 3.1al | after 3.1ar | after 3.1as | after 3.1aw | after 3.1ay | after 3.1az | after 3.1ax |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| gdx | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| gdx-test | 0 | 0 | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) | 0 (184/7) |
+| screens | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| anim8 | 0 | 45 | 17 | 17 | 17 | 17 | 17 | 17 | 1 | 1 | 1 |
+| textra | 0 | 122 | 24 | 18 | 18 | 15 | 13 | 9 | 9 | 9 | 9 |
+| gltf | 0/3 | 0/34 | 19 (main+test) | 12 | 12 | 12 | 12 | 12 | 12 | 7 | 5 |
+| vfx | 0 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
+| ai | 0 | 13 | 13 | 13 | 13 | 2 | 2 | 2 | 2 | 2 | 2 |
+| visui | 7 | 14 | 14 | 13 | 12 | 12 | 9 | 9 | 9 | 9 | 7 |
 
 #### Families and fixes (3.1ai)
 
@@ -15015,6 +15040,19 @@ parentage, and the injected HashMap takes `Int` not `Nullable[Integer]` — a co
 SubclassOfTarget boundary.
 
 #### Remaining residue (50 total, classified)
+
+#### Families and fixes (3.1ax)
+
+**Parent-delegation inlining with post-body replay (section 1(a), engine).** When
+`resolvedThroughParent` inlines a parent's `this(...)` delegation chain, the post-delegation body
+from each intermediate parent constructor is now collected (innermost first), substituted, retyped
+through `ParentSubst`, and replayed into the subclass's secondary body after its `this(...)`
+delegation. Three guards refuse the inlining: `return` in the post-body, `super.m()` in the
+post-body, and parameter used more than once with a non-simple caller argument (double evaluation).
+PBRCubemapAttribute and PBRTextureAttribute now emit the parent chain's field writes; VisWindow
+stays E134 (guard 3, `VisUI.getSkin()` used twice). gltf 12 -> 10, visui 9 -> 7.
+
+#### Remaining residue (55 total, classified)
 
 - **5 nested-type-of-retarget-parent** (anim8 1 IntIntMap.Keys, textra 2 IntMap.Entries +
   `.entries()` outside for-each, ai 1 ObjectMap.Entries, ai 1 ObjectMap.iterator call): the parent

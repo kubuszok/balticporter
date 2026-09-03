@@ -884,6 +884,42 @@ object CtorFunnel:
       val p = decided.getOrElse(cd.symbol, Plan.none)
       p.inlinedBodies.get(d.symbol).filter(_.nonEmpty)
 
+    /** Was this constructor a candidate for parent-delegation inlining that was REFUSED?
+      *
+      * Re-derives the condition by checking whether the class's roots target different parent
+      * constructors that all delegate to one parent root, and whether `inlineDelegation` returns
+      * `None` for this specific root's target. The result names the guard that refused it.
+      *
+      * Used by `OmissionCheck` to produce a finding on the `omissions` lane naming the refusal
+      * guard, so the E134 it produces is not the only instrument that sees the lost post-body. */
+    def inlineDelegationRefused(cd: Tree.ClassDef, d: Tree.DefDef): Option[String] =
+      val p = decided.getOrElse(cd.symbol, Plan.none)
+      // only for classes that are NOT synthesised (the synthesis succeeded without this root)
+      if p.isSynthesised then scala.None
+      else
+        val roots = ctorsOf(program, cd.body).filterNot(delegatesToThis(program, _))
+        val calls = roots.map(r => superTarget(program, r) -> superArgsOf(program, r))
+        val targets = calls.map(_._1).distinct
+        if targets.sizeIs <= 1 then scala.None // uniform — not the inline delegation case
+        else
+          val parentSym = parentSyms(cd).headOption.getOrElse(SymId.None)
+          program.definitionOf(parentSym).collect { case c: Tree.ClassDef => c }.flatMap { pcd =>
+            val parentRoots = ctorsOf(program, pcd.body).filterNot(delegatesToThis(program, _))
+            if parentRoots.sizeIs != 1 then scala.None
+            else
+              val parentRootSym = parentRoots.head.symbol
+              val (target, args) = (superTarget(program, d), superArgsOf(program, d))
+              if target == parentRootSym || args.isEmpty then scala.None
+              else
+                inlineDelegation(program, target, args, parentRootSym, depth = 0) match
+                  case Some(_) => scala.None // inlining succeeded — no refusal
+                  case scala.None =>
+                    Some("parent-delegation inlining refused: double-use of a non-simple argument " +
+                      "(the parent constructor's parameter is used in both the delegation and the " +
+                      "post-body, and the caller's argument expression is not simple enough to " +
+                      "evaluate twice safely)")
+          }
+
     // ---- the delegation itself: the ONE answer the emitter renders and the check counts ----
 
     /** What a secondary constructor's `super(args)` becomes. Per-ROOT: two constructors of the same
