@@ -6,16 +6,7 @@ import balticporter.core.RuntimeArtifact
 /** `TirEmitter`'s `externalConcrete` exists ONLY because the injected supertypes used to be
   * unparseable text. They are a real, published module now, so the data CAN be derived — and this
   * suite is the derivation, run against `RuntimeArtifact.concreteMembers` to prove the declared
-  * table is not merely plausible.
-  *
-  * It lives in a TEST because `verify` is the only module that already has scalameta, and moving
-  * the parse into `core` (or into a build-time generator that emits the table) is the promotion
-  * step, not this one. The body below is that implementation — 25 lines.
-  *
-  * Reflection over the compiled classes is NOT an alternative: erasure cannot distinguish a nilary
-  * `remove()` from a parameterless `remove`, and `List(0)` versus `Nil` is the entire content of
-  * this table.
-  */
+  * table is not merely plausible. */
 class RuntimeMembersDerivationSpec extends munit.FunSuite:
 
   /** the CONCRETE instance members a support type brings, as `(name, params per clause)`. */

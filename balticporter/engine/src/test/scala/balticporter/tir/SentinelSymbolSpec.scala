@@ -1,22 +1,7 @@
 package balticporter.tir
 
 /** SENTINEL SYMBOLS — the marker's shape from before there was a marker, COUNTED rather than
-  * converted.
-  *
-  * `SpoonTir` mints two: `?T` for a type variable it cannot resolve, `?var$name` for a variable
-  * reference it cannot resolve. Each is a name that must never be printed, and each one's only
-  * defence is an emitter rule that does not print it. Nothing counted them, so a port could lose a
-  * type argument or a reference with a green compile, no finding and no moved number.
-  *
-  * `DESIGN.md` §6.5's mint list has both of them on it, and this is the one entry that is not
-  * simply converted. The reason is the emission gate: an OPEN marker refuses the emission, so a
-  * site that mints one is a site that stops a port building — and whether any corpus port mints a
-  * sentinel was, until this lane existed, a question nothing in the engine could answer. Converting
-  * a site whose live frequency nobody has measured is how a mechanism takes a whole corpus down.
-  * So the number comes first and the conversion is a decision somebody takes ON it — which is
-  * `ENGINE-LIMITS.md` M6's own discipline, turned on the engine's refusals rather than on a
-  * library's constructs.
-  */
+  * converted. */
 class SentinelSymbolSpec extends munit.FunSuite:
 
   private def programWith(syms: List[Symbol], units: List[Tree.ClassDef]): Program =
@@ -76,8 +61,6 @@ class SentinelSymbolSpec extends munit.FunSuite:
     // for a member whose OWNER it could not name (`Minter.fullNameOf`'s fallback) — `?#actual`,
     // `?#points`, `?#stride`, which are ordinary method PARAMETERS. Asked the prefix question, this
     // lane reported 10,417 of them on libGDX core and 29 on its own test set, not one a sentinel.
-    // CLAUDE.md §4.56 ("a prefix is not a structural fact about anything"), reproduced inside the
-    // check written to measure something else.
     val clsId = SymId(0)
     val defId = SymId(1)
     val parId = SymId(2)

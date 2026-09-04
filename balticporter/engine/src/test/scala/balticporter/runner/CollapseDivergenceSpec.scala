@@ -4,25 +4,7 @@ import balticporter.core.PortMap
 import balticporter.tir.{IdiomCandidate, IdiomKind, IdiomLog, IdiomVerdict, Origin, Surface}
 import balticporter.transform.BeanPropertyTransform.Target
 
-/** THE COLLAPSE VERDICT IS WHOLE-PROGRAM-DEPENDENT, AND A DEPENDENT RE-DERIVES IT.
-  *
-  * Every other §1(b) policy is a TABLE and a dependent inherits the base's instance, so two modules
-  * agree by construction. `BeanCollapse`'s verdict is DERIVED — `overriddenBelow` over the run's
-  * descendants, `concreteRelative` over its override closure, `writtenSymbols` over its assignments,
-  * `closureOf(_).isAnchored` over its parents — and a dependent's model CONTAINS its base's units
-  * plus its own. One subclass overriding the accessor, or one write of the field, and the dependent
-  * answers `Refuse` about a base declaration the base COLLAPSED.
-  *
-  * NOTHING ELSE CAN SEE IT: the manifest entry is identical on both sides, so `surfaceFingerprint`
-  * is EQUAL and `SurfaceDivergence` has nothing to compare; the phase agrees with itself, so
-  * `idiom(refused)` reports an honest refusal with a real guard; every count is flat; and the two
-  * ports each compile alone and cannot compile together — §1.5's failure arriving through a
-  * derivation rather than through a table.
-  *
-  * Asserted on the PURE FUNCTION, which is `PortRun.baseSurfaceFindings`' own stated pattern: the
-  * negative cases ("the two agree", "the base said nothing", "this pair is mine") are exactly the
-  * ones a two-module port on disk makes expensive and a value makes cheap.
-  */
+/** THE COLLAPSE VERDICT IS WHOLE-PROGRAM-DEPENDENT, AND A DEPENDENT RE-DERIVES IT. */
 class CollapseDivergenceSpec extends munit.FunSuite:
 
   private def base(module: String, types: List[String],
@@ -137,9 +119,7 @@ class CollapseDivergenceSpec extends munit.FunSuite:
     // A dependent reporting `base-surface 0` because sixty verdicts AGREED and one reporting 0
     // because the comparison never ran are indistinguishable from the outside, and the second is
     // every way this silently stops working: a base map that was not discovered, a pairs table the
-    // merge did not carry, a type row the base stopped emitting. `checked` is the only thing that
-    // can tell them apart — and it is computed from the SAME list the gaps are, so the count and
-    // the findings can never be about different populations.
+    // merge did not carry, a type row the base stopped emitting.
     val agreed = PortRun.collapseDivergence(log("p.Base#w" -> IdiomVerdict.Converted),
                                             List(collapsed), pairs, asVar)
     assertEquals(agreed.gaps, Nil)

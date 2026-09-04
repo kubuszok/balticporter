@@ -4,16 +4,7 @@ import balticporter.catalog.CatalogLog
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.runner.PortRun
 
-/** THE `omissions` MENU — three accepts on a lane of seven kinds (`DESIGN.md` §8.16).
-  *
-  * The positives are cheap and the NEGATIVES are the reason this file exists, because every one of
-  * them is silent by default. A remedy's `lane` and `kind` are plain strings that no compiler
-  * checks, so a menu can declare a kind its check never files: the vocabulary accepts the id, the
-  * key binds, the port reads `NeverApplied`, and its author goes looking for a site that is right
-  * there. And a drain that fired one kind too wide would empty a lane the engine deliberately does
-  * NOT let a port empty — four of this lane's seven kinds are LOSSES the port cannot honestly accept
-  * (C3, C11, T1's residue, M6/I9), and an accept on one would drain a defect rather than a question.
-  */
+/** THE `omissions` MENU — three accepts on a lane of seven kinds (`DESIGN.md` §8.16). */
 class OmissionRemedySpec extends munit.FunSuite:
 
   private val Java =

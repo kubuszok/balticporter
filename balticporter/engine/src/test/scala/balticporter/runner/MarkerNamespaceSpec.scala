@@ -3,20 +3,7 @@ package balticporter.runner
 import balticporter.tir.*
 
 /** THE CONSERVATION CHECK ACROSS A RENAME — `CLAUDE.md` §4.56's two-namespace rule, applied to the
-  * one artifact in the run that holds BOTH programs.
-  *
-  * `MarkerCheck.check` compares the frontend's output against the pipeline's, and a port's pipeline
-  * ends with `PackageRenameTransform`. So the two programs hold the SAME declarations under
-  * DIFFERENT names: the upstream ones and the emitted ones. Matched by `fullName`, the owned-unit
-  * filter matches nothing on every renaming port, the minted set is empty, and the check reports a
-  * confident ZERO for the life of that port — which is exactly the failure §4.56 records for
-  * `dropped-types.tsv`, where a derived rule *"had never once fired on a renaming port"* while the
-  * claim that it worked lived only in prose.
-  *
-  * A unit's `SymId` is what survives the pipeline unchanged; a rename moves `fullName` and never the
-  * id. Written as two hand-built programs rather than as a port run, because the property is exactly
-  * *the same ids under two names* and a fixture that parses Java would prove it only incidentally.
-  */
+  * one artifact in the run that holds BOTH programs. */
 class MarkerNamespaceSpec extends munit.FunSuite:
 
   private val clsId = SymId(0)

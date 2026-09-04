@@ -4,16 +4,7 @@ import balticporter.catalog.CatalogLog
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.runner.PortRun
 
-/** THE `jdk-surface` MENU — one accept, at an EXTERNAL callee (`DESIGN.md` §8.16).
-  *
-  * Two things here can be wrong with no other instrument to see them. The KEY SHAPE: this lane's
-  * subject column is the MEMBER and the member is one the program does not declare, so an
-  * `Ownership.Owned` binding refuses every key a reader could copy out of the report — the round
-  * trip §8.18 calls "a printed key and a bindable key are the same key". And the KIND: `unhandled`
-  * is the one of this lane's three findings that a port can settle by reading a call, while
-  * `kept-iterable` stands for a compile error that is really there (K9) and `stale-refusal` is a
-  * contradiction between two ENGINE tables. A drain one kind too wide would let a port accept both.
-  */
+/** THE `jdk-surface` MENU — one accept, at an EXTERNAL callee (`DESIGN.md` §8.16). */
 class JdkSurfaceRemedySpec extends munit.FunSuite:
 
   private val Java =

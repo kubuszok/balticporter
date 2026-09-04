@@ -2,17 +2,7 @@ package balticporter.emit
 
 import balticporter.frontend.spoon.SpoonTir
 
-/** A java FIELD named like a method an UNPARSED ancestor declares — `ENGINE-LIMITS.md` K28.2.
-  *
-  * `TirEmitter.resolveFieldShadowing` compared a field against the library's own hierarchy and
-  * against nothing else, so `private boolean finalize` and `private CharSequence chars` were emitted
-  * as `private var` under a method scala says they cannot override. Neither is a typer error, so
-  * neither is visible until the port reaches 0 (`CLAUDE.md` §3).
-  *
-  * THE NEGATIVES ARE THE POINT. `ExternalSurface.mayDeclare` answers YES for a type it has no row
-  * for, and this reader must NOT take that arm: unknown-is-yes renames a field on every class with
-  * an unparsed parent, which moves emitted surface on every port for no evidence at all.
-  */
+/** A java FIELD named like a method an UNPARSED ancestor declares — `ENGINE-LIMITS.md` K28.2. */
 class FieldShadowsExternalSpec extends munit.FunSuite:
 
   private def fieldNames(java: String, owner: String): Set[String] =

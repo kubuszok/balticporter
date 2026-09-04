@@ -2,19 +2,7 @@ package balticporter.tir
 
 import TypeRepr.*
 
-/** A hand-built four-member program, shared by the printer and pipeline specs.
-  *
-  * ```java
-  * class Foo<T> extends Base {
-  *   int count = 0;
-  *   int add(T x) { count = count + 1; return count; }
-  * }
-  * ```
-  *
-  * Small enough that a golden rendering can be read and argued with, and wide enough to exercise
-  * a type parameter, a parent, a field with an initialiser, a parameter list, a block, an
-  * assignment, a nested call and two literals.
-  */
+/** A hand-built four-member program, shared by the printer and pipeline specs. */
 object TinyProgram:
   val FOO   = SymId(1)
   val T     = SymId(2)

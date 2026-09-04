@@ -1,12 +1,6 @@
 package balticporter.tir
 
-/** The PORTER NOTE grammar and the check that holds the emitter to it.
-  *
-  * Both directions are tested, because both have already been wrong once: the first run of
-  * [[NoteCoverageCheck]] reported 594 notes as unbacked, on a corpus where every one of them was
-  * derived — the value `key="com.badlogic.gdx -> sge"` contains a space, the pair list is
-  * whitespace-separated, and both sides were reading a truncated value neither had written.
-  */
+/** The PORTER NOTE grammar and the check that holds the emitter to it. */
 class PorterNoteSpec extends munit.FunSuite:
 
   private def d(kind: Decision.Kind, fqn: String, detail: Map[String, String], reason: Reason) =

@@ -473,9 +473,7 @@ class BeanPropertySpec extends munit.FunSuite:
     // FIELD and in the other direction: `MutableStorage` asks for a declaration initialiser and no
     // assignment IN THIS PROGRAM — never for java's `final` keyword, deliberately — so the java
     // field routinely was not final and the emitted one is. A reflective writer (`setAccessible` +
-    // `Field.set`) that worked against java's does not work against this one. K21's shape at the
-    // storage rather than at the accessor: no guard can reach it, nothing compiles differently, no
-    // count moves, and §4.45's reader is at this line.
+    // `Field.set`) that worked against java's does not work against this one.
     val r = collapse(
       """
       class V {
@@ -502,10 +500,6 @@ class BeanPropertySpec extends munit.FunSuite:
     // below" about a subclass that really does re-declare the member, and the collapse emitted a
     // `var` under it. Made ABSTRACT so `concreteRelative` cannot catch it by accident: the belt is
     // the whole of the test, and a fixture the other guard also declines would prove nothing.
-    //
-    // …and the failure is the quietest kind there is (§3): a `var` cannot be overridden at all, and
-    // `RefChecks` does not run until the port reaches 0 typer errors — so it arrives on the day the
-    // port goes green, in a member nobody is looking at.
     val r = collapse(
       """
       class B {

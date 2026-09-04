@@ -2,12 +2,7 @@ package balticporter.tir
 
 import balticporter.frontend.spoon.SpoonTir
 
-/** [[OverrideGraph]] — the component, and everything that freezes one.
-  *
-  * Every test here asserts a fact no compile and no other count can see: a closure that stops one
-  * declaration short still compiles, and the contract it breaks breaks at run time in somebody
-  * else's repository (DESIGN.md §8.5).
-  */
+/** [[OverrideGraph]] — the component, and everything that freezes one. */
 class OverrideGraphSpec extends munit.FunSuite:
 
   private def graphOf(java: String, baseUnits: Set[SymId] = Set.empty): (Program, OverrideGraph) =
@@ -150,9 +145,7 @@ class OverrideGraphSpec extends munit.FunSuite:
     // interface's in `jdkPlatform` (JLS 8.1.4 forbids naming it as a direct superclass), so stating
     // it here is admissible on this map's own contract and would lift these anchors. It is refused
     // anyway, with a number: `ENGINE-LIMITS.md` CT10 measured 32 -> 41 errors on sge-visui, because
-    // the anchor was MASKING the enum-constructor clause rather than causing it. This test pins the
-    // refusal so the entry cannot arrive without CT10's other half — and reading it as "the engine
-    // thinks Enum declares getBundle" is exactly backwards.
+    // the anchor was MASKING the enum-constructor clause rather than causing it.
     assert(!ExternalSurface.default.isKnown("java.lang.Enum"))
     val (p, g) = graphOf(
       """
@@ -174,7 +167,6 @@ class OverrideGraphSpec extends munit.FunSuite:
     // DECLARE — and a `private` member is not inherited at all, so no ancestor can be declaring the
     // member it overrides, because there is none to declare. Five components on sge-visui were
     // frozen this way, all of them `private static` i18n lookups on java enums.
-    // NEGATIVE: drop `inherited` from `closureOf` and this reads `Set((java.lang.Enum, getBundle))`.
     val (p, g) = graphOf(
       """
       enum Text {

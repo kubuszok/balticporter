@@ -6,18 +6,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.*
 
 /** `class-to-trait` -- rewrite a nominated abstract class into a trait and transform every
-  * subclass (named and anonymous) to use `override val` members instead of constructor arguments.
-  *
-  * CLAUDE.md section 1(b). The mechanism belongs in the engine, the policy (which class, which
-  * params) belongs in the port. Empty specs = no-op.
-  *
-  * Three subclass shapes are exercised:
-  *  - a NAMED subclass calling `super(args)` -- the widest constructor's args are read
-  *  - an ANONYMOUS `new Pool(args) { ... }` -- args from the Apply node
-  *  - a NILARY anonymous `new Pool() { ... }` -- args from the nilary constructor's defaults
-  *  - a PARTIAL-ARGS case: `new Pool(a) { ... }` where the widest constructor takes 2 params --
-  *    the first arg is the actual, the second falls back to the nilary constructor's default
-  */
+  * subclass (named and anonymous) to use `override val` members instead of constructor arguments. */
 class ClassToTraitTransformSpec extends munit.FunSuite:
 
   // ---- fixtures ------------------------------------------------------------------------------

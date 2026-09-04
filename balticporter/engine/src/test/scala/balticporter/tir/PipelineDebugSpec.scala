@@ -4,12 +4,7 @@ import java.nio.file.{Files, Path}
 
 /** The kill switch of CLAUDE.md §4.6, exercised. A flag that is wired but never used is exactly
   * the defect class §3 is about, so each of these asserts the OUTPUT changed, not that the flag
-  * parsed.
-  *
-  * The second half drives the same flags through the MARKER FILES, which is the only channel that
-  * reaches a real migration: `sbt -client` forks it from a long-running server, so neither an
-  * exported variable nor a `-D` on the operator's command line arrives. A test that only ever sets
-  * a system property proves the half of the mechanism nobody uses. */
+  * parsed. */
 class PipelineDebugSpec extends munit.FunSuite:
 
   /** a phase that adds `by` to every integer literal — so "did this phase run" is readable off

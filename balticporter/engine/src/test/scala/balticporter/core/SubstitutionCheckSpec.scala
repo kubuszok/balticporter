@@ -4,13 +4,7 @@ import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
 /** [[SubstitutionCheck]] is a LIFT, not a redesign — CHECK 1 and CHECK 2 were inline in
-  * `LibgdxCoreMigrate` and had to keep behaving exactly as they did.
-  *
-  * "Behaviour identical" is asserted rather than reviewed: the two originals are reproduced
-  * verbatim below, from the code as it stood before the lift, and every case asserts the lifted
-  * answer EQUALS the original's on the same directory. Reading two implementations and agreeing
-  * they look the same is how a refactor loses a check.
-  */
+  * `LibgdxCoreMigrate` and had to keep behaving exactly as they did. */
 class SubstitutionCheckSpec extends munit.FunSuite:
 
   // ---- the originals, copied verbatim from LibgdxCoreMigrate before the lift ----

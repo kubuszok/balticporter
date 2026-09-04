@@ -54,12 +54,7 @@ class SrcMapEmitSpec extends munit.FunSuite:
       case (k, scala.None) => System.clearProperty(k)
     }
 
-  /** the map is read back off the EMITTER, not out of a global table.
-    *
-    * This used to be `SrcMap.snapshot().filter(_.unit == "srcmapdemo.Foo")` followed by
-    * `SrcMap.reset()`, and the filter carried a comment explaining why: the recording table was
-    * process-global, sbt runs every suite in one JVM, and another emitter spec running concurrently
-    * recorded into it too. The filter is gone because the hazard is. */
+  /** the map is read back off the EMITTER, not out of a global table. */
   private def emitWithMap(): (String, List[SrcMap.Entry]) =
     val tmp = java.nio.file.Files.createTempDirectory("bp-srcmap")
     withProps("balticporter.report" -> "on", "balticporter.reportDir" -> tmp.toString) {

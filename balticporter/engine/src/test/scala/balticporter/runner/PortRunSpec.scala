@@ -8,14 +8,7 @@ import balticporter.transform.{CollectionsTransform, PackageRenameTransform}
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** [[PortRun]] end to end, over a real (tiny) Java tree on disk.
-  *
-  * The properties asserted here are the ones a porting program used to have to get right by
-  * copying: the output goes to `src_managed`, resolution roots are not re-emitted, dropped types
-  * are skipped, injected sources survive the wipe, the substitution checks are fatal, and the
-  * package rename runs last. Each was a hand-written line in one migration program and absent from
-  * the other.
-  */
+/** [[PortRun]] end to end, over a real (tiny) Java tree on disk. */
 class PortRunSpec extends munit.FunSuite:
 
   private def java(dir: Path, rel: String, src: String): Unit =
@@ -96,8 +89,6 @@ class PortRunSpec extends munit.FunSuite:
     // has no source root short of their common ancestor, and that ancestor contains the resolution
     // roots — so "under `sourceRoot`" alone answered YES for every unit in the model and the whole
     // resolved library was re-emitted (546 files against 90 in scope, `CLAUDE.md` §4.56).
-    //
-    // `FrontendConfig.files` is the list this run was TOLD to convert, and it is the answer.
     val (root, src) = fixture()
     val nested = root.resolve("java2")
     java(nested, "com/demo2/Uses.java",
@@ -255,8 +246,7 @@ class PortRunSpec extends munit.FunSuite:
     // reason: `Pipeline.order` keeps both instances since CT9 Face B, so the phase ran TWICE and
     // the emitted file was correct only because `ClassTableTransform`'s rewrite happens to be
     // IDEMPOTENT — a property of that one phase, which nothing asked of it and which the next
-    // contract-less phase need not have. The fold now proves the pair equal and drops one, so the
-    // pipeline itself is the assertion and the green is no longer an accident.
+    // contract-less phase need not have.
     val (root, src) = fixture()
     val table = Map("com.demo.Widget#of" -> "com.demo.Widget#classFor")
     val m = PortManifest("base", surface = List(new balticporter.transform.ClassTableTransform(table)))
@@ -572,11 +562,7 @@ class PortRunSpec extends munit.FunSuite:
     // that directory before it validates its inputs. With reporting off `runDir` falls back to
     // `<cwd>/port-report/<sun.java.command>/run-latest`, and a forked test JVM's cwd is the
     // SUBPROJECT — so an empty artifact directory appeared in the checkout, from a run that had not
-    // opted in and whose source map had (correctly) never been written. Same defect, same shape and
-    // same fix as the unconditional `PortMap.write` above.
-    //
-    // Asserted on the FILESYSTEM, not on the return value: what is being pinned is that nothing was
-    // created, and a `None` proves only that a branch was taken.
+    // opted in and whose source map had (correctly) never been written.
     val here   = DebugFlags.root.resolve("port-report")
     def listed = if !Files.exists(here) then Set.empty[String]
                  else Files.walk(here).iterator().asScala.map(_.toString).toSet
@@ -598,9 +584,6 @@ class PortRunSpec extends munit.FunSuite:
     // roots reaching two DIFFERENT parent constructors, so nothing is synthesised and the nilary
     // root is promoted — whose `super(cap)` the REPLAY cannot express either, because `Par()`
     // assigns a field `Par(int)` does not and replaying it would not leave the state java left.
-    // One is emitted and must be reported; one is dropped-and-replaced, so its "omission" describes
-    // code the port never emits — the classpath holds the injected replacement — and reporting it
-    // hands an agent a finding it cannot act on in any file this run wrote.
     val (root, src) = fixture()
     val par =
       """package com.demo;
@@ -633,15 +616,13 @@ class PortRunSpec extends munit.FunSuite:
     // scala's own implicit nilary one, so it cannot be emitted and cannot be replaced by anything
     // that is not a wrong answer. `OmissionCheck` gives that a NUMBER; the number answers an agent
     // holding the run directory, and the agent this engine has is reading the emitted file, where
-    // the missing `def this()` has nothing to grep for. Hence the note — `InBody`, at the head of
-    // the owning type, which is where somebody looking for the constructor looks (§4.575).
+    // the missing `def this()` has nothing to grep for.
     val (root, src) = fixture()
     // TWO roots with super(args): Font(int) and Font(int, String). The WIDEST (int, String) is
-    // promoted. Font() chains to Font(int) which is the OTHER root, so reachesCtor(Font(),
-    // promotedPrimary) is false. Sub extends Font forces argument-free extends, the fixpoint
-    // withholds the promotion, falls to Plan.none, and the nilary is dropped (C11).
-    // Wave 3.2g: the CtorFunnel change for ClassToTraitTransform correctly keeps a nilary alive
-    // when it DOES chain to the promoted primary; this fixture triggers the case where it does NOT.
+    // promoted; Font() chains to Font(int), the OTHER root, so reachesCtor(Font(), promotedPrimary)
+    // is false. Sub extends Font forces argument-free extends, the fixpoint withholds the
+    // promotion, falls to Plan.none, and the nilary is dropped (C11) even though it DOES NOT chain
+    // to the promoted primary — the case a nilary that DOES chain (kept alive) is the contrast for.
     java(src, "com/demo/Base.java",
       """package com.demo;
         |public class Base {
@@ -696,12 +677,7 @@ class PortRunSpec extends munit.FunSuite:
   // a SYNTHESISED unit belongs to ONE module (ENGINE-LIMITS.md §13 O5, CLAUDE.md §1.5)
   // =========================================================================================
 
-  /** the smallest phase that reproduces O5: it MINTS a top-level unit with no `Origin`.
-    *
-    * `PortRun.converted` classifies a unit by its recorded origin and CONVERTS one it cannot place,
-    * deliberately — refusing to emit on a missing origin would be a silent omission. So a phase that
-    * mints in every module of a chain gets its unit written once per module, and no count anywhere
-    * moves: the base's report cannot see a file a dependent wrote. */
+  /** the smallest phase that reproduces O5: it MINTS a top-level unit with no `Origin`. */
   private final class MintUnit(fqn: String) extends Phase:
     def name = s"mint-unit:$fqn"
     override def run(program: Program): Program =

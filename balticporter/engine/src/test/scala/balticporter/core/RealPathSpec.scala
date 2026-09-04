@@ -3,21 +3,7 @@ package balticporter.core
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** CLAUDE.md §5.4's rule, and the DUPLICATION scan that keeps it one rule.
-  *
-  * The behavioural half pins what `RealPath` does; the source-scan half pins that nothing else does
-  * it. Both are needed and they catch different things: §5.4 became a rule because three separate
-  * parts of the engine were bitten by the same symlink, and the REPAIRS were separate too — four
-  * private helpers spelling one rule four ways, three of them with different exception policies.
-  * A behavioural spec cannot see a fifth copy; a grep can, and helper duplication is exactly the
-  * failure that actually happened.
-  *
-  * What is deliberately NOT built: a scan for a raw `startsWith` on paths. A path-ish receiver is
-  * not syntactically distinguishable from an FQN prefix test (`fullName.startsWith("java.")` is the
-  * §4.56 shape and is everywhere), so such a scan would be false positives that must be routinely
-  * ignored — which is how a lint stops being read. The semantic half is an auditor hunt line
-  * (`.claude/agents/porting-auditor.md`) instead.
-  */
+/** CLAUDE.md §5.4's rule, and the DUPLICATION scan that keeps it one rule. */
 class RealPathSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------------------------

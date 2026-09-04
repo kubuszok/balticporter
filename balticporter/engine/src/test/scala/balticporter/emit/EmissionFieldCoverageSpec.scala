@@ -5,45 +5,7 @@ import balticporter.tir.TypeRepr.*
 
 import scala.jdk.CollectionConverters.*
 
-/** EMISSION FIELD COVERAGE — the second, independent instrument beside the obligation log.
-  *
-  * WHAT IT CATCHES, and why nothing else can. `JS-S13` and `JS-E05` are the same defect shape: *a
-  * TIR node field the frontend populates, every phase carries and the EMITTER never renders*. No
-  * obligation catches one — the frontend discharged its obligation correctly and the loss is
-  * downstream — and no count moves, because the output compiles perfectly with the field's meaning
-  * gone. `ENGINE-LIMITS.md` F5 is that failure written by somebody who lost the bet: `Tree.Try
-  * .resources` was populated, carried through every phase and printed by `TirPrinter` in the debug
-  * view, *so every diagnostic said the resources were there*, while `TirEmitter.tryStr` computed
-  * their text into a local and never interpolated it.
-  *
-  * THE ENUMERATION IS DERIVED, TWICE OVER, and that is the whole design:
-  *
-  *   - the NODE KINDS come from the class files (`nodeKinds`/`aggregates`), exactly as
-  *     `NodeKindTotalitySpec` reads Spoon's taxonomy out of its jar. A `Tree` case added tomorrow
-  *     has no probe and fails here;
-  *   - the FIELDS come from `productElementNames` on the fixture itself. A field added to an
-  *     EXISTING node — which is precisely what `Tree.Try.resources` was — is in neither the moved
-  *     set nor the [[Why]] list, and the default for an unknown field is NOT COVERED.
-  *
-  * A hand-listed enumeration would have reproduced the exact defect it exists to catch: nothing
-  * about adding a field to a case class forces anyone to touch a list.
-  *
-  * WHAT A PROBE ASSERTS. For each field: perturb it in a minimal fixture and the EMITTED TEXT must
-  * change. That is a statement about the emitter and not about the tree — the comparison is
-  * text-to-text for the same reason `TriviaCheck`'s is (CLAUDE.md §4.58): counting nodes proves the
-  * frontend populated something and proves nothing about what was written.
-  *
-  * WHERE A FIELD LEGITIMATELY DOES NOT MOVE TEXT it goes on [[Why]], which admits exactly two
-  * reasons and no third — [[Why.Indirect]] cites the emitter SYMBOL that reads it, so the entry
-  * dies with the code it points at rather than outliving it, and [[Why.Metadata]] states what the
-  * field is instead. An entry with neither is a suppression, and this file is where the spec could
-  * be defanged in one commit.
-  *
-  * A FIELD MAY NEED A SECOND HOST. `ClassDef.enumCases` renders only for an enum-flagged symbol,
-  * and `ClassDef.parents` renders only for one that is not. So probes are GROUPED by node kind and
-  * the coverage question is asked of the group: every field is moved by SOME probe or reasoned
-  * about, never both. Per probe, only that a key names a real field.
-  */
+/** EMISSION FIELD COVERAGE — the second, independent instrument beside the obligation log. */
 class EmissionFieldCoverageSpec extends munit.FunSuite:
 
   // ============================================================================================
@@ -100,14 +62,8 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
     * emitted text exactly as a node's are, and perturbing the node's LIST field does not exercise
     * them: dropping a `CaseDef` from `Match.cases` says nothing about whether `CaseDef.guard` is
     * rendered. */
-  /** every `TypeRepr` case, by simple name — the fourth obligation surface's emitter-side keys.
-    *
-    * Derived from the class files for `nodeKinds`' reason, and it needs its OWN scan because
-    * [[tirClasses]] drops every name ending in `$`: that filter is right for a `Tree` (all of whose
-    * cases are case CLASSES, so a trailing `$` is a module class or a synthetic) and wrong here,
-    * where `NoType` and `NoPrefix` are case OBJECTS and are two of the cases `TirEmitter.tpe`
-    * dispatches on. Reading the module class and stripping the trailing `$` is what recovers them;
-    * a hand-written pair beside the scan would be the list the next case object is not on. */
+
+  /** every `TypeRepr` case, by simple name — the fourth obligation surface's emitter-side keys. */
   private lazy val typeReprKinds: Set[String] =
     val loc  = classOf[Tree].getProtectionDomain.getCodeSource.getLocation
     val root = java.nio.file.Path.of(loc.toURI)
@@ -376,11 +332,6 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
     )("tpe" -> tpeIsMetadata, "origin" -> originIsMetadata),
 
     // ---- This ---------------------------------------------------------------------------------
-    //
-    // `thisRef` renders the bare keyword for the INNERMOST class, so a top-level host cannot tell
-    // one `cls` from another: the difference java has (`Outer.this` vs `this`) only exists inside a
-    // NESTED class, which is therefore what this probe has to build. A probe that cannot distinguish
-    // the field would have had to excuse it, and the excuse would have been false.
     probe(Tree.This(HOST, tOth, O),
       (x: Tree.This) => hostTop(Tree.ClassDef(HOST, Nil, None, List(
         Tree.ValDef(A, tt(tInt), Some(iLit(1)), O),
@@ -433,13 +384,6 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
     )("tpe" -> tpeIsMetadata, "origin" -> originIsMetadata),
 
     // ---- Lambda -------------------------------------------------------------------------------
-    //
-    // The base body is a value-returning `return`, which is the ONE shape `resultTpt` is visible
-    // in: a java lambda body is a method body, so the emitter interposes a nested `def` (`JS-S21`)
-    // and that `def`'s result type is the SAM METHOD's. With no `return` the field is invisible by
-    // construction, and a probe built on `iLit(1)` would have declared it metadata — which is
-    // exactly the mistake `ENGINE-LIMITS.md` I9 was: the emitter could not read a type nothing
-    // carried, and nothing said so.
     probe(Tree.Lambda(List(Tree.ValDef(P1, tt(tInt), None, O)), Tree.Return(Some(iLit(1)), tInt, O),
                       tOth, O, resultTpt = Some(tt(tInt))), hostTerm)(
       "params"    -> Tree.Lambda(List(Tree.ValDef(P2, tt(tInt), None, O)), Tree.Return(Some(iLit(1)), tInt, O),
@@ -637,8 +581,7 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
     // A NON-TAIL `yield` (JLS 14.21), which is the only shape that reaches the IR — the frontend
     // peels a tail one into the arm's value. It renders only inside a switch-EXPRESSION arm, which
     // is what makes this host a `Match` with the node standing as a STATEMENT of the arm's block:
-    // put in the block's result position it would be a tail yield, and `Jumps.yieldsOut` would
-    // correctly report that no boundary is needed and nothing would render.
+    // put in the block's result position it would be a tail yield, and `Jumps.
     probe(Tree.Yield(iLit(1), tInt, O),
       (x: Tree.Yield) => hostTerm(Tree.Block(List(
         Tree.Match(refA, List(Tree.CaseDef(Nil, None,
@@ -689,9 +632,7 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
     // `referent` is the JLS 15.13.1 split at `Type::name` and it is a FIELD precisely because it
     // decides the emitted shape by itself: `Static(n)` is a qualified NAME for every `n` but ZERO,
     // where scala refuses to eta-expand a nullary method and the form becomes a lambda too
-    // (`ENGINE-LIMITS.md` G32); `Instance(n)` is an (n+1)-parameter lambda. Perturbing the ARITY
-    // alone moves the text in both cases, which is the half a symbol with no `MethodType` cannot
-    // supply (`Tree.MethodRef.referent`).
+    // (`ENGINE-LIMITS.md` G32); `Instance(n)` is an (n+1)-parameter lambda.
     probe(Tree.MethodRef(Left(tt(tOth)), M1, tOth, O, Referent.Instance(0)), hostTerm)(
       "qualifier" -> Tree.MethodRef(Right(Tree.Ident(OTHER, tOth, O)), M1, tOth, O, Referent.Instance(0)),
       "method"    -> Tree.MethodRef(Left(tt(tOth)), M2, tOth, O, Referent.Instance(0)),

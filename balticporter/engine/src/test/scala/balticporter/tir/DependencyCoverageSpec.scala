@@ -2,14 +2,7 @@ package balticporter.tir
 
 import balticporter.catalog.{ApiRows, ArtifactDep, DiffId, Platform, Verdict}
 
-/** The `dependency-coverage` lane, and the line it draws against `portability(*)`.
-  *
-  * Half of the catalog's platform answers are `Depend`: the API exists off the JVM, in an artifact
-  * the build has to add. Routing those into the portability lane makes the finding unanswerable —
-  * the reader is told to remove a call that one `libraryDependencies` line makes correct — so the
-  * two lanes partition the rule list, and the tests below are about that partition holding in both
-  * directions.
-  */
+/** The `dependency-coverage` lane, and the line it draws against `portability(*)`. */
 class DependencyCoverageSpec extends munit.FunSuite:
 
   private val All = Platform.values.toSet
@@ -89,11 +82,6 @@ class DependencyCoverageSpec extends munit.FunSuite:
   }
 
   // ---- the 2×2 (ENGINE-LIMITS.md P8) --------------------------------------------------------
-  //
-  // "Does this coordinate answer anything?" was asked of ONE program, and the answer is exact for a
-  // copied coordinate and WRONG for one a phase redirected INTO — the redirect removes the very JDK
-  // usage the coordinate answers, so the artifact the port needs most reads as the one that fired on
-  // nothing. All four cells below, plus the arm where the artifact's jar cannot be read at all.
 
   private val Time    = ArtifactDep("io.github.cquiroz", "scala-java-time", "2.6.0")
   private val Wrapper = ArtifactDep("org.example", "wrapper", "1.0")
@@ -223,7 +211,6 @@ class DependencyCoverageSpec extends munit.FunSuite:
     // wrote and interns NOTHING for it (`Tree.Opaque.raw` is text the engine deliberately does not
     // parse). Both halves read `No`, the cell is `Stale`, and the instruction says remove the
     // coordinate the emitted code cannot compile without — P8 re-entering through the other seam.
-    // liqp is masked only because its `type-redirect` interns a symbol for the same artifact.
     val spliced = Set("org.example.wrapper.Providers.load")
     val d = cellWithSpliced(Nil, spliced, known("org.example.wrapper.Providers"))
     assertEquals(d.cell, DependencyCheck.Cell.Introduced)
@@ -301,8 +288,7 @@ class DependencyCoverageSpec extends munit.FunSuite:
     // derives a lane's `--dependency`/`--repository` from, so a coordinate can be wrong in one
     // place instead of three. The column is derived from the EVIDENCE and never from the shape of
     // the coordinate — a catalog `Depend` artifact answers a JDK API this JVM already has
-    // (`scala-java-time` exists so `java.time` resolves OFF the jvm), and putting it on the line
-    // would shadow the JDK's own.
+    // (`scala-java-time` exists so `java.
     val viaCatalog = cellOf(List(req(Time)), Nil, List(req(Time)), Nil, Time, known())
     val named      = cellWithSpliced(Nil, Set("org.example.wrapper.Providers.load"),
                                      known("org.example.wrapper.Providers"))

@@ -4,26 +4,7 @@ import balticporter.core.ManifestAgreement.Kind
 import balticporter.tir.{Phase, RuleScope}
 import balticporter.transform.*
 
-/** `ENGINE-LIMITS.md` CT8 — a DEPENDENT declaring the per-declaration half of a base's holder.
-  *
-  * The phase is `SurfacePolicy` and its holders live in the BASE manifest, correctly: a base and a
-  * dependent that thread differently emit signatures that each compile alone and cannot compile
-  * together (§1.5). But `sites` and `selfSupplied` keys name DECLARATIONS, and a dependent's
-  * boundaries are in the DEPENDENT's own types. Measured in `gdx-vfx`: four counted seams whose own
-  * diagnostic said *give the site a `sites` policy*, with no manifest in which to write one, and two
-  * of them materialising as scalac errors the correlator classified `EngineGap` — correctly, because
-  * the port had nowhere to put the fix.
-  *
-  * What makes this a SPLIT rather than a merge is the second half of the problem: a `sites` entry
-  * belongs to a HOLDER, so naming one would mean restating the holder — and with the context type,
-  * the member map, the attachment mode, the read shape and the boundary default all agree-or-refuse,
-  * restating the holder means restating the base's whole member map in the dependent's manifest,
-  * which is exactly what §1.5 forbids. `ContextHolderExtension` has no field in which the shared
-  * half could be restated.
-  *
-  * Every negative here is negative-tested: this mechanism relaxes `SurfaceDivergence`, so the check
-  * it relaxes must keep firing on everything it fired on before (CLAUDE.md §3).
-  */
+/** `ENGINE-LIMITS.md` CT8 — a DEPENDENT declaring the per-declaration half of a base's holder. */
 class GlobalsToImplicitsMergeSpec extends munit.FunSuite:
 
   /** the base's holder, in the shape the reference bundle's config uses. */

@@ -5,27 +5,7 @@ import balticporter.core.ResourceTree
 import java.nio.file.{Files, Path}
 
 /** THE CLASSPATH-RESOURCE DELIVERABLE, at each of its answers — and every one of them is silent in
-  * production by construction.
-  *
-  * A resource that is absent, that arrives at a rewritten path, or that the port never declared
-  * produces the SAME emitted Scala, the same compile, the same member digests and the same check
-  * counts as one that is right: the failure is a lookup that returns nothing, in the CONSUMER's
-  * build, at first use. So this file and the lane it exercises are the only evidence there can be
-  * (`CLAUDE.md` §3 — a check reporting zero is only as good as its coverage), and the negatives
-  * matter more than the positive:
-  *
-  *   - the bytes and the PATH must both come through UNTOUCHED, including for a port that renames
-  *     everything — this is the half that separates the mechanism from [[ServiceProviders]], where
-  *     both namespaces must move;
-  *   - a path the emitted code NAMES and the port did not declare has to be REPORTED, or the
-  *     mechanism ships a subset and says nothing;
-  *   - a file under the declared root that the port did not declare and nothing names must NOT be
-  *     shipped, because the upstream's own build files live there.
-  *
-  * The fixture is a real file tree rather than a corpus port: `plan`/`candidates`/`findings` are
-  * pure functions of a declaration and a directory, so all of it is reachable here and only the
-  * positive is reachable on any port this corpus has.
-  */
+  * production by construction. */
 class PortResourcesSpec extends munit.FunSuite:
 
   private val tmp = FunFixture[Path](

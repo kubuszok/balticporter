@@ -6,20 +6,7 @@ import balticporter.tir.*
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** THE EMISSION GATE (`DESIGN.md` §6.4) — a port with an OPEN marker does not get written.
-  *
-  * §3.4's anti-omission stance applied to the one construct class the engine admits it cannot
-  * translate: what is forbidden is not best effort, it is SILENT best effort. So a run with an open
-  * marker has exactly two outcomes and both of them are loud —
-  *
-  *   - the DELIVERABLE run refuses, writes nothing, and names every marker with the §1
-  *     classification of its first remedy;
-  *   - the BEST-EFFORT run writes, to a SEPARATE directory, with a sentinel in it and a nonzero
-  *     exit. Borrowed from dotty (§6.1), which writes degraded artifacts where they cannot
-  *     masquerade as real ones.
-  *
-  * What is not on offer either way is a tree on disk that looks shippable.
-  */
+/** THE EMISSION GATE (`DESIGN.md` §6.4) — a port with an OPEN marker does not get written. */
 class EmissionGateSpec extends munit.FunSuite:
 
   private def java(dir: Path, rel: String, src: String): Unit =

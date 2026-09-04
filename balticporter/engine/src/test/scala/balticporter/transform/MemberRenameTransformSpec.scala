@@ -5,22 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.*
 
-/** `member-rename` — the manifest's way to reach [[MemberRenamer]] (CLAUDE.md §1(b), §4.55).
-  *
-  * The assertions that matter are the negatives, and there are four kinds:
-  *
-  *   - a rename takes the whole override COMPONENT or none of it, and a key that names nothing is a
-  *     REPORTED typo rather than a silent no-op;
-  *   - a COLLISION refuses and names the collider, because the new name is the port's free choice
-  *     and the one-edit answer is the port's. That is deliberately the opposite of
-  *     `bean-properties`' `DeferToEmitter`, whose name is forced by java;
-  *   - the merge refuses two answers for ONE member, compared by PARSED name — a bare key is every
-  *     overload, so `X#m` and `X#m()` are two strings that may be one member;
-  *   - and the PIPELINE POSITION, which is the one that was measured wrong. A `runsBefore` edge onto
-  *     a phase declared EARLIER postpones that phase past everything in between; the phase declares
-  *     the two edges it needs and no more, and a base gives it a declaration position ahead of
-  *     `type-redirect`.
-  */
+/** `member-rename` — the manifest's way to reach [[MemberRenamer]] (CLAUDE.md §1(b), §4.55). */
 class MemberRenameTransformSpec extends munit.FunSuite:
 
   // ---- fixtures ------------------------------------------------------------------------------

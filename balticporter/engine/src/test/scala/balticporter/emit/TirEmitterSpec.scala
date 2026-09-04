@@ -47,11 +47,6 @@ class TirEmitterSpec extends munit.FunSuite:
   }
 
   // -- a Scala KEYWORD as a PACKAGE SEGMENT ---------------------------------------------------
-  //
-  // Java's keyword set is not Scala's, so `com.fasterxml.jackson.core.type.TypeReference` is a
-  // legal java FQN and an unparseable scala path. `esc` answers for an IDENTIFIER and every name
-  // the emitter renders by hand goes through it; a `Symbol.fullName` is a PATH and used to reach
-  // the output verbatim, so no package segment was ever escaped. Cut only at §4.56's separators.
 
   test("escPath backticks every keyword segment, cutting only at a separator") {
     assertEquals(TirEmitter.escPath("com.x.type.Ref"), "com.x.`type`.Ref")
@@ -182,12 +177,6 @@ class TirEmitterSpec extends munit.FunSuite:
   }
 
   // -- an INFERENCE VARIABLE must never reach the output (F5's emitter half) ----------------------
-  //
-  // `new ArrayList<>(((Collection<?>) value))` — liqp `LValue.java:154`. The diamond's argument has
-  // no binder in the reading scope, so the frontend interns a marker symbol
-  // (`Symbol.UnresolvedTypeVarPrefix`). Printed, it read `JavaCollection[? <: ?E]`: `?E` names
-  // nothing, does not lex, and took the statement around it plus two further errors with it.
-  // G2 settles the rendering — `?`, everywhere.
 
   test("an unresolved type variable renders as `?`, never as its marker name") {
     val CLS  = SymId(41)
@@ -229,12 +218,6 @@ class TirEmitterSpec extends munit.FunSuite:
   }
 
   // -- an enhanced-for BINDING REASSIGNED in the body (F16) ---------------------------------------
-  //
-  // Java's `for (Object obj : array)` binding is an ordinary local and `obj = …` is legal; Scala's
-  // generator binds a `val`, so the same body reads `Reassignment to val obj` (liqp
-  // `Sort.java:111`). K7 covers the binding's declared TYPE and says nothing about its mutability.
-  // The alias is re-bound each iteration, which is java's own semantics: java assigns the binding
-  // afresh from the iterator every time round, so no write can leak into the next iteration.
 
   private def foreachBody(assignBinding: Boolean): String =
     val CLS  = SymId(61)
@@ -280,11 +263,6 @@ class TirEmitterSpec extends munit.FunSuite:
   }
 
   // -- K9: enhanced-for over a KEPT JDK Iterable -----------------------------------------------
-  //
-  // A JDK `java.util.List` (or `Set`, `Collection`, ...) the pipeline left in the java namespace
-  // has no scala `foreach`, so `for (x <- xs)` does not compile. The emitter detects this from the
-  // POST-PIPELINE type and emits java's own desugaring (JLS 14.14.2): a while-loop over
-  // `iterator()`/`hasNext()`/`next()`. Arrays and program-owned types keep the `for` form.
 
   /** build a ForEach loop over an iterable whose head type has the given FQN. */
   private def k9ForEach(
@@ -385,14 +363,6 @@ class TirEmitterSpec extends munit.FunSuite:
   }
 
   // -- a CASE's GUARD ---------------------------------------------------------------------------
-  //
-  // `Tree.CaseDef.guard` reached the emitter, was carried by `Phase.mapTerm`'s `Match` arm and
-  // printed by `TirPrinter`, and `matchStr` never rendered it — so every diagnostic said the guard
-  // was there while the emitted arm matched every scrutinee the PATTERN matched. `ENGINE-LIMITS.md`
-  // F5's shape, and unreachable from the corpus (nothing mints a guard: java's classic switch has
-  // none and the pattern switch is refused), which is why it is pinned here rather than measured.
-  // Found by `EmissionFieldCoverageSpec`, which is the instrument that can see a field the emitter
-  // silently does not read.
 
   private def guardedSwitch(guard: Option[Term]): String =
     val CLS = SymId(80); val M = SymId(81); val X = SymId(82); val I = SymId(83); val BL = SymId(84)

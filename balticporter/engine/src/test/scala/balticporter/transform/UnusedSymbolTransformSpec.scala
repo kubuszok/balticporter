@@ -100,11 +100,6 @@ class UnusedSymbolTransformSpec extends munit.FunSuite:
     // Tree.MethodRef in the TIR) was falsely deleted because the refCollector did not count
     // Tree.MethodRef.method. Regression: ssg-md 0 -> 45 errors on two visitor classes whose
     // private visit methods are only used via VisitHandler<>(SomeType.class, this::visit).
-    //
-    // This test verifies that Tree.MethodRef's method symbol is counted by the refCollector,
-    // so that a private method referenced only through a method reference is NOT deleted.
-    // The shape: class C { private def visit(n: Node): Unit = ...; val v = new Handler(this.visit) }
-    // where this.visit is a Tree.MethodRef pointing at the private visit's SymId.
 
     val classSym = SymId(100)
     val visitSym = SymId(101)

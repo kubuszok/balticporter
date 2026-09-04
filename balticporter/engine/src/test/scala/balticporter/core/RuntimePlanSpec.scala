@@ -58,15 +58,7 @@ class RuntimePlanSpec extends munit.FunSuite:
       // ELEVEN, and the list is the phase's `runtimeTypes`: the four shims — java's `Iterable`,
       // `Collection`, `Iterator` and `ListIterator`, none of which has a scala counterpart a class
       // can EXTEND (CLAUDE.md §4.5; `ListIterator` arrived when K23's refusal was re-read) —
-      // `JavaCollections` (a mirror of `java.util.Collections`' STATICS, which no receiver-keyed
-      // rewrite can see), `JavaStack` (its own type because the phase decides a rewrite from the
-      // RETYPED receiver and `java.util.ArrayList` already owns `ArrayBuffer`), `JavaEnumMap` and
-      // `JavaEnumSet` (ordinal-order guarantees no stdlib collection carries), and the three
-      // `JavaOptional*` ALIASES (an arity-changing retype the head swap cannot express).
-      //
-      // A vendoring port writes all eleven whether or not it names them, because `runtimeTypes` is
-      // asked of the PHASE before any program is read — the price of a delivery decision that
-      // cannot depend on the parse.
+      // `JavaCollections` (a mirror of `java.util.
       assertEquals(n, 11)
       val written = Files.readString(dir.resolve("balticporter/runtime/JavaIterator.scala"))
       assertEquals(written, RuntimeArtifact.sourceOf(s"${RuntimeArtifact.Package}.JavaIterator"))

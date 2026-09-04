@@ -5,26 +5,7 @@ import balticporter.core.RuntimeArtifact
 import balticporter.transform.CollectionsTransform
 
 /** `CollectionsTransform.OverridesShim` says what the four STANDALONE targets declare, and this
-  * suite is the derivation that proves it — `ENGINE-LIMITS.md` K28.
-  *
-  * ==Why this cannot be left to the corpus==
-  * The table decides whether an emitted `override` is stripped, and both of its errors are loud ON A
-  * PORT THAT EXERCISES THE ROW. Nothing exercises a member no corpus library happens to override, so
-  * a member added to `JavaIterator` tomorrow leaves this table describing the surface of a year ago
-  * — silently, until some future port's class implements it and the modifier goes the wrong way.
-  * `build.sbt` keeps the engine off `balticporter-runtime` on purpose (two modules of one library
-  * must share ONE `JavaIterator`, not vendor two at the same FQN), so there is no compiler edge to
-  * catch the drift either.
-  *
-  * `RuntimeMembersDerivationSpec`'s argument, one table over, and the same 25-line implementation —
-  * with two differences that are the whole reason it is a second derivation rather than a reuse:
-  * this one wants DECLARATIONS as well as definitions (java's `iterator()` is abstract on the shim
-  * and is exactly the member a ported class overrides), and it wants them CLOSED OVER THE SHIM'S OWN
-  * PARENTS (`JavaListIterator extends JavaIterator`, so a ported `hasNext()` overrides through it).
-  *
-  * Reflection is not the alternative here for `RuntimeMembersDerivationSpec`'s reason read at the
-  * other end: the engine has no runtime on its classpath to reflect over.
-  */
+  * suite is the derivation that proves it — `ENGINE-LIMITS.md` K28. */
 class MintedShimSurfaceDerivationSpec extends munit.FunSuite:
 
   /** every member a trait DECLARES, abstract and concrete alike, as `(name, arity)`. */

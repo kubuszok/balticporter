@@ -3,13 +3,7 @@ package balticporter.core
 import balticporter.core.ManifestAgreement.{BasePort, Kind, SharedType}
 import balticporter.tir.SrcMap
 
-/** What a base's PUBLISHED map lets the agreement check see that RE-DERIVATION cannot.
-  *
-  * Each test below is a case where the two sources of truth give different answers, and the map is
-  * right — which is the only justification for reading it at all. The re-derivation path is pinned
-  * too: it is the fallback whenever a map is missing or stale, so a regression in it would be
-  * invisible on a corpus where every base has been run.
-  */
+/** What a base's PUBLISHED map lets the agreement check see that RE-DERIVATION cannot. */
 class ManifestAgreementSpec extends munit.FunSuite:
 
   private def mapOf(
@@ -117,10 +111,7 @@ class ManifestAgreementSpec extends munit.FunSuite:
   test("a map published on ANOTHER JDK is FATAL, names both versions, and has nothing to fall back to") {
     // The one map verdict here that must stop the run. `Stale` and `Missing` degrade to
     // re-deriving the base's decisions from its manifest — honest, because a re-run of the base
-    // WOULD produce what the re-derivation says. A JDK mismatch breaks exactly that: the base's
-    // emitted Scala, which this module compiles against, came out of a frontend reading class
-    // files this run does not have, and no re-derivation on THIS JVM reproduces it
-    // (`ENGINE-LIMITS.md` M5.10).
+    // WOULD produce what the re-derivation says.
     val sh = List(SharedType("up.Missing", "up.Missing", substituted = false))
     val fs = run(sh, List(BasePort(base, scala.None, "run-latest", jdk = Some("24" -> "22"))))
     assertEquals(kinds(fs), List(Kind.BaseMapJdk))
@@ -216,14 +207,7 @@ class ManifestAgreementSpec extends munit.FunSuite:
     assertEquals(bad.filter(_.kind == Kind.SurfaceNameDivergence).size, 1)
   }
 
-  /** TARGETS: not inherited, and constrained in one direction only.
-    *
-    * `targets` decides which findings a module is told about and moves no emitted signature, so a
-    * base and a dependent may hold different sets. What they may not do is hold them in the wrong
-    * ORDER: a dependent targeting a backend its base does not is a port that depends on emitted
-    * Scala nobody checked for that backend, and D2's ownership filter is exactly what stops it
-    * seeing the base's findings — so the unbuildable half is the half nothing looks at.
-    */
+  /** TARGETS: not inherited, and constrained in one direction only. */
   private def targeted(baseT: Set[balticporter.catalog.Platform],
                        depT: Set[balticporter.catalog.Platform]) =
     val b = PortManifest(name = "base", governs = Set("up"), targets = baseT)

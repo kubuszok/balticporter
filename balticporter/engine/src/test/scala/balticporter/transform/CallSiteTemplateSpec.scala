@@ -4,15 +4,7 @@ import balticporter.tir.*
 import balticporter.transform.CallSiteSubstitutionTransform.{Bound, Hole, Template, receiverOf, siteFault}
 
 /** The two halves of the call-site seam that need NO program: the TEMPLATE GRAMMAR, and the
-  * per-SITE refusals.
-  *
-  * Both are pure functions on purpose, and this suite is why. A template fault has to be reportable
-  * before the pipeline runs (DESIGN.md §8.1's rule for keys, applied to their values), and a
-  * refusal has to be decidable from the call node alone so that the pass recording decisions and
-  * the traversal performing the rewrite cannot disagree about which sites were rewritten. Testing
-  * them through a frontend would prove neither property and would hide the shapes a frontend does
-  * not produce — the vararg SPREAD below is exactly one of those.
-  */
+  * per-SITE refusals. */
 class CallSiteTemplateSpec extends munit.FunSuite:
 
   private val o = Origin("Demo.java", 7, 3)

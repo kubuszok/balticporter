@@ -3,17 +3,7 @@ package balticporter.core
 import balticporter.core.ManifestAgreement.{BasePort, Kind}
 import balticporter.tir.SrcMap
 
-/** PER-LOCATION SELECTION AS SHARED SURFACE — the §1.5 half of `resolutions`.
-  *
-  * A remedy decides emitted text at a declaration, so two modules that answer one location
-  * differently produce two ports that each compile alone and cannot compile together. That is the
-  * failure this file pins, in both of its shapes: a chain that disagrees with itself, and a
-  * dependent quietly answering for a declaration its base EMITS.
-  *
-  * Both are checked in `surfacePairs`, which means both are load-bearing — `surfaceGate` stops the
-  * run before any phase runs rather than reporting the disagreement beside output an operator would
-  * then have to read to work out which of the two answers produced it.
-  */
+/** PER-LOCATION SELECTION AS SHARED SURFACE — the §1.5 half of `resolutions`. */
 class ResolutionAgreementSpec extends munit.FunSuite:
 
   private def mapOf(module: String = "base", emitted: List[String] = Nil,

@@ -3,21 +3,7 @@ package balticporter.tir
 import balticporter.catalog.{ApiRows, Platform, Verdict}
 
 /** `PortabilityCheck` as a §1(b) phase — the TARGET SET is the parameter, and this is what stops the
-  * parameterisation from being a lane reset.
-  *
-  * Three properties, and each of them is a way the change could have gone wrong silently:
-  *
-  *   - the DEFAULT reproduces the pre-parameter rule set EXACTLY. `PortManifest.targets` is all
-  *     three platforms, so a port that declares nothing selects every rule and no baseline moves.
-  *     A default of `Set(Jvm)` or `Set.empty` would have emptied the list on fifteen ports at once
-  *     and collapsed `portability(all|emitted|injected)` to a floor in one commit;
-  *   - the RE-SCOPING is real and observable, but only to a port that asks for it: eight rules leave
-  *     the set when Scala.js is not a target, and they are the eight the survey measured as too
-  *     broad for Scala Native 0.5.x;
-  *   - the rule list and the CATALOG cannot drift apart. A rule may not claim a platform on which
-  *     its own cited row says `Keep`, which is the direction that matters — a row corrected to
-  *     `Keep` while a rule keeps firing is a registry that has stopped describing the engine.
-  */
+  * parameterisation from being a lane reset. */
 class PortabilityTargetsSpec extends munit.FunSuite:
 
   private val All = Platform.values.toSet

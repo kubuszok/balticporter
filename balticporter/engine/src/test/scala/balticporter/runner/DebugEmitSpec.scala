@@ -3,13 +3,7 @@ package balticporter.runner
 import java.nio.file.{Files, Path}
 
 /** `just debug-emit`, end to end: a Java source tree in, the named type's TIR and emitted Scala
-  * out, at the phase boundary asked for.
-  *
-  * The entry point had no test at all, which for a DIAGNOSTIC is the worst place to have none: it
-  * is used when something else is already wrong, and a tool that silently prints the wrong thing
-  * (an unrecognised `--dump-after` alias printing nothing reads exactly like "the phase changed
-  * nothing") sends its operator after the wrong defect. Each assertion below is on the OUTPUT.
-  */
+  * out, at the phase boundary asked for. */
 class DebugEmitSpec extends munit.FunSuite:
 
   /** one small tree, modelled once per test — Spoon is the expensive part. */

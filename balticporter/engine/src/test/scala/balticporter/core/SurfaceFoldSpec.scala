@@ -4,12 +4,7 @@ import balticporter.core.ManifestAgreement.Kind
 import balticporter.tir.{Phase, RuleScope}
 import balticporter.transform.{ClassTableTransform, NullabilityTransform, TypeRedirectTransform}
 
-/** The merge contract — DESIGN.md §8.13, closing `ENGINE-LIMITS.md` D9.
-  *
-  * Every negative here is negative-tested: a check that has never fired is not known to work
-  * (CLAUDE.md §3), and this mechanism's whole reason for existing is that the CHECK it relaxes
-  * (`SurfaceDivergence`) must keep firing on everything it fired on before.
-  */
+/** The merge contract — DESIGN.md §8.13, closing `ENGINE-LIMITS.md` D9. */
 class SurfaceFoldSpec extends munit.FunSuite:
 
   private def redirect(rs: (String, String)*): TypeRedirectTransform =
@@ -534,12 +529,6 @@ class SurfaceFoldSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------------------------
   // NULLABILITY — the second phase to declare a merge, and the first whose policy is not a MAP
-  //
-  // Its three tables compose three different ways, which is the concrete case for `MergeablePolicy`
-  // being a contract rather than an engine-side union: the annotation set unions, the target must
-  // AGREE, and the scope unions its ENTRIES while its REGION moves in opposite directions for the
-  // two constructors.
-  // -------------------------------------------------------------------------------------------
 
   private def nullability(annotations: Set[String],
                           target: NullabilityTransform.Target = NullabilityTransform.Target.Union,

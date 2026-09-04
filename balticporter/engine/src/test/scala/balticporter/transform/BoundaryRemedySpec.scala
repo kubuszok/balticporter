@@ -4,19 +4,7 @@ import balticporter.runner.PortRun
 import balticporter.tir.*
 
 /** THE THREE BOUNDARY MENUS — what each check offers, and the two things a menu can be wrong about
-  * that nothing else in a run would notice.
-  *
-  * A remedy is a claim with two halves: an id a manifest writes, and a `lane(kind)` pair naming the
-  * residue it drains. Both halves are STRINGS on the `Remedy` and neither is checked by the compiler,
-  * so a menu can declare a kind its check never files — and the result is not an error but a silence:
-  * the vocabulary accepts the id, the key binds, the port reads `NeverApplied`, and its author goes
-  * looking for a site that is right there. That is the failure this file exists for, and it is the
-  * same shape `Rewrite.accountedBy` is checked for one artifact over.
-  *
-  * The second half is the DRAIN, and its negatives are the point: a remedy must fire at the kind it
-  * declared, and must NOT fire at any other — including the kinds each check deliberately offers
-  * nothing for, which are the majority.
-  */
+  * that nothing else in a run would notice. */
 class BoundaryRemedySpec extends munit.FunSuite:
 
   private val menus: List[(RemedySource, String, Set[String])] = List(
@@ -41,9 +29,6 @@ class BoundaryRemedySpec extends munit.FunSuite:
     // `RemedyVocabulary.from` REFUSES a duplicate rather than resolving it, so this is the assertion
     // that EVERY check-side menu the engine ships can be held at once — the thing a run does on
     // every port, and the property that breaks the day two lanes reach for the same obvious slug.
-    //
-    // Asserted against the whole of `CheckRemedies` and not against this file's three, deliberately:
-    // scoped to the boundary trio it would pass while a fourth menu collided with one of them.
     val v = RemedyVocabulary.from(PortRun.CheckRemedies)
     assertEquals(v.ids.size, PortRun.CheckRemedies.map(_.remedies.size).sum)
     menus.foreach((source, _, _) => source.remedies.foreach(r => assert(clue(v).contains(clue(r).id))))

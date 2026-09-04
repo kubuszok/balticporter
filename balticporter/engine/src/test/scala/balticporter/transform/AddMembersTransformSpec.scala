@@ -6,11 +6,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{Decision, DecisionLog, Pipeline, Program, Reason}
 
 /** AddMembersTransform — the §1(b) mechanism for appending hand-port members to a mechanically
-  * translated class.
-  *
-  * Five spec categories per the brief: added def, added protected val, merge union, merge refusal,
-  * fingerprint empty vs non-empty.
-  */
+  * translated class. */
 class AddMembersTransformSpec extends munit.FunSuite:
   import AddMembersTransform.MemberSpec
 

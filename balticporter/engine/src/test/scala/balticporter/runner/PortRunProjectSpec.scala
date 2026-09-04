@@ -7,23 +7,7 @@ import balticporter.transform.CollectionsTransform
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** BUILD-PROJECT GENERATION IS OPTIONAL — and this is the spec that says so in file names.
-  *
-  * The consumer this engine actually has (CLAUDE.md §4.45) calls `PortRun` from INSIDE a build it
-  * already owns: an existing sbt project, a Maven module, a Bazel target. Its build file, its
-  * `.gitignore` and its dependency declarations are DECISIONS that repository has already made, and
-  * a porting engine that overwrites any of them is not usable there at all. So `project` is an
-  * `Option`, `None` is the default, and with it the run must write the SOURCES and nothing else.
-  *
-  * Asserting the exact FILE SET rather than "build.sbt is absent" is the point. Every artifact this
-  * run could leak is a file somebody has to notice, and the failure mode is always the same shape —
-  * a write that looked incidental beside the one being reviewed (`PortMap.write` published maps into
-  * the checkout for exactly that reason, CLAUDE.md §5.1). A set comparison fails on the NEXT one
-  * too, which a named-file assertion cannot.
-  *
-  * The mirror direction is asserted in the same test rather than trusted: a gate that is never
-  * observed to be OPEN is indistinguishable from a feature that was deleted.
-  */
+/** BUILD-PROJECT GENERATION IS OPTIONAL — and this is the spec that says so in file names. */
 class PortRunProjectSpec extends munit.FunSuite:
 
   private def java(dir: Path, rel: String, src: String): Unit =
@@ -141,11 +125,7 @@ class PortRunProjectSpec extends munit.FunSuite:
     // `sourceSet` — and `SbtGen.emitPort` wrote it AGAIN into `managedMain(root)`, which cannot
     // respect anything because a build generator does not know which set the run is producing. So
     // this exact combination — Test + `project = Some` + `Vendored` — defined every support type
-    // twice, in two trees compiled together, which is the failure `PortRun.runtimeMode`'s scaladoc
-    // names ("a port that vendors into both `main` and `test`").
-    //
-    // Asserted as a COUNT over the whole port, not as "the main copy is absent": the question is
-    // how many definitions of each FQN this port ships, and only one of the two writers may answer.
+    // twice, in two trees compiled together, which is the failure `PortRun.
     val (root, src) = fixture()
     val port = root.resolve("port")
     val spec = SbtGen.ProjectSpec("demo", "org.demo", "3.8.4", "2.0.0-M4", Nil, engineFingerprint = "test")
@@ -195,11 +175,6 @@ class PortRunProjectSpec extends munit.FunSuite:
   }
 
   // -- the upstream NOTICE, for a library whose licence lives in ONE file (CLAUDE.md §4.57) -------
-  //
-  // The per-file banner NAMES a licence; MIT's single condition is that the copyright and
-  // permission notice be INCLUDED. An MIT library commonly carries no per-file headers at all, so
-  // reproducing every comment (§4.58) reproduces nothing, and no check in the pipeline can see the
-  // difference — the port compiles, every count is flat, and the obligation is simply unmet.
 
   test("a declared notice is COPIED beside the emitted code, into the build product") {
     val (root, src) = fixture()

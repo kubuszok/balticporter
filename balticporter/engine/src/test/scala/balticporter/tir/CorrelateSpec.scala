@@ -264,12 +264,7 @@ class CorrelateSpec extends munit.FunSuite:
     // `regressed` on the grounds that deleting a test is a decision somebody made — true of a
     // DELETION and false of the failure this project actually has: a CONVERSION regression that
     // stops emitting a suite removes its tests from both sides at once, so no pass count falls, no
-    // fail count rises, and the run reports success on a smaller suite. That is the same shape as
-    // a skip (`newlySkipped`, already gated) with the row gone instead of unrun.
-    //
-    // A deliberate deletion is acknowledged the way every other baseline change is — by
-    // re-accepting — which is what makes "somebody decided this" a recorded fact rather than an
-    // assumption the gate has to make.
+    // fail count rises, and the run reports success on a smaller suite.
     val d = Correlate.diffTests(Map("p.A\tt" -> "pass"), Nil)
     assertEquals(d.disappeared, List("p.A\tt"))
     assert(Correlate.renderTests(Nil, d).contains("DID NOT RUN"))

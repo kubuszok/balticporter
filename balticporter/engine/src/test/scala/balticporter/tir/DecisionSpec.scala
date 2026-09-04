@@ -2,14 +2,7 @@ package balticporter.tir
 
 import java.nio.file.Files
 
-/** The DECISION-PROVENANCE CHANNEL at the level a phase sees it.
-  *
-  * What is asserted here is what makes the artifact worth reading: a decision cannot be recorded
-  * without its CLAUDE.md §1 classification, the log belongs to ONE run (the property §5.1 states
-  * for the source map, whose process-global predecessor let two runs contaminate one file), and
-  * the file is sorted rather than merely written, because an artifact that records phase order is
-  * an artifact nobody can diff.
-  */
+/** The DECISION-PROVENANCE CHANNEL at the level a phase sees it. */
 class DecisionSpec extends munit.FunSuite:
 
   private def d(kind: Decision.Kind, fqn: String, reason: Reason, detail: Map[String, String] = Map.empty) =

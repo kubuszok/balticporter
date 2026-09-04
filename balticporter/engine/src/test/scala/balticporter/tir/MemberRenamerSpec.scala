@@ -205,13 +205,6 @@ class MemberRenamerSpec extends munit.FunSuite:
     // only DIFFERENT ones), and the second falls with its group. `SuffixUntilFree` writes its
     // answer per request, so rolling the second one back has to undo an assignment the first one
     // still needs.
-    //
-    // Patched — remove the refused request's members from `assign`, then backfill anything
-    // unassigned with the raw `newName` — the survivor's component came out on `go`, which is
-    // exactly the name the suffix search had found TAKEN (`I.go` is right there). The search's
-    // whole answer was discarded by a rollback about a different request, and nothing in the
-    // pipeline can see that: it is a clash somewhere else, or a silently shadowed member, and no
-    // count moves. The pass is therefore RE-RUN over the survivors from an empty table.
     val (p, out, refusals, _) = run(
       """
       import java.util.Comparator;

@@ -134,10 +134,7 @@ class XrefSpec extends munit.FunSuite:
   test("…and an EXTERNAL symbol's signature does NOT move — a class file is not the phase's to edit") {
     // The other half of the line above, and it is not symmetry for its own sake. `println`'s
     // signature is a fact about a compiled class file: whatever the port renames inside itself,
-    // that method still takes and returns what it was compiled to take and return. A phase that
-    // rewrote it would produce a table claiming otherwise, and every seam against an external
-    // callee would then read the port's OWN answer on both sides of it — which is the shape
-    // `ENGINE-LIMITS.md` K15 measured at 15 compile errors against 0 findings.
+    // that method still takes and returns what it was compiled to take and return.
     val widening = new Phase:
       def name = "unit->widget"
       override def transformType(t: TypeRepr)(using Program): TypeRepr = t match

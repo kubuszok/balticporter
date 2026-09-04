@@ -2,13 +2,7 @@ package balticporter.tir
 
 import java.nio.file.{Files, Path}
 
-/** `just debug-flags`, which is this class's [[DebugFlagsMain.render]] and nothing else.
-  *
-  * The recipe answers one question — "why did my flag not reach the run" — and every way of
-  * answering it wrongly is silent: naming the wrong layer, hiding the layer that was shadowed,
-  * saying nothing about an entry no accessor will ever read. So the assertions are on the rendered
-  * text, which is what an operator acts on.
-  */
+/** `just debug-flags`, which is this class's [[DebugFlagsMain.render]] and nothing else. */
 class DebugFlagsMainSpec extends munit.FunSuite:
 
   private def root(files: (String, String)*): Path =

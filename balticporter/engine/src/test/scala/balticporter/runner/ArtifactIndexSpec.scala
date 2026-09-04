@@ -6,18 +6,7 @@ import balticporter.tir.DependencyCheck
 import java.nio.file.{Files, Path}
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
-/** The PROVIDES-SET — read from the artifact, never derived from the coordinate.
-  *
-  * The whole reason `ENGINE-LIMITS.md` P8 stood open is that there is no structural link between a
-  * build coordinate and a package name, so the check has to read the jar. These tests are about the
-  * two halves of doing that honestly: the entry→name mapping (pure, and the part a wrong answer would
-  * make silently permissive), and the THREE-valued result, whose third value is what keeps an offline
-  * run from inventing a remove instruction.
-  *
-  * THE FIXTURE IS A ZIP OF ENTRY NAMES and holds no bytecode, which is not a shortcut — `classesIn`
-  * reads entry NAMES and nothing else, so a fixture supplying names exercises exactly the code under
-  * test. Compiling real classes would test `javac`.
-  */
+/** The PROVIDES-SET — read from the artifact, never derived from the coordinate. */
 class ArtifactIndexSpec extends munit.FunSuite:
 
   private def jarOf(entries: String*): Path =

@@ -2,16 +2,7 @@ package balticporter.transform
 
 import balticporter.core.{PortManifest, SurfaceFold}
 
-/** MethodBodyTransform's MergeablePolicy — the fix for `ENGINE-LIMITS.md` D9 at this phase.
-  *
-  * A dependent that inherits a base's MethodBodyTransform AND declares its own used to get a fatal
-  * SurfaceDivergence: two instances of a phase with no merge. Independent keys union; same key with
-  * different body text refuses; same key with identical text accepts silently.
-  *
-  * Measured: the retarget wave added MethodBodyTransform entries to the base manifest
-  * (AssetManager.clear, AssetManager.getAssetFileName, etc.), and every dependent that also declared
-  * one (ashley's Engine.createComponent) hit the divergence on its next run — 0 -> fatal.
-  */
+/** MethodBodyTransform's MergeablePolicy — the fix for `ENGINE-LIMITS.md` D9 at this phase. */
 class MethodBodyTransformMergeSpec extends munit.FunSuite:
 
   private def mbt(entries: (String, String)*) = new MethodBodyTransform(entries.toMap)

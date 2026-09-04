@@ -3,15 +3,7 @@ package balticporter.core
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** The vendored runtime text and the PUBLISHED runtime module must be the same bytes.
-  *
-  * This is §1.3's bug one level down. Publishing `balticporter-runtime` stops two ports from
-  * carrying divergent bodies at one FQN — and would achieve nothing if the engine kept a second,
-  * hand-maintained text of the same types for the vendored fallback. So the vendored copy is
-  * GENERATED from `balticporter/runtime/src/main/scala` by build.sbt's resource generator, and this suite is
-  * what proves the generator ran and covered everything: not "the strings look right", but "the
-  * set of files and every byte of each agree with the module that is actually published".
-  */
+/** The vendored runtime text and the PUBLISHED runtime module must be the same bytes. */
 class RuntimeArtifactSpec extends munit.FunSuite:
 
   /** the real module's source directory, written into the test resources by build.sbt so the

@@ -158,9 +158,7 @@ class PortMapSpec extends munit.FunSuite:
     // files the run WROTE, so it is EMITTED. Compared directly the test is false for every renaming
     // port, and `Substituted` had therefore never once been produced by one: libGDX drops
     // `com.badlogic.gdx.utils.Json`, injects `sge.utils.Json`, and its map carried `Dropped` beside
-    // an unrelated-looking `Added` with nothing joining them. The first dependent to reference such
-    // a replacement (gdx-gltf, on `Json`) was told the base "emits nothing at that name and nothing
-    // replaces it" about a type it compiles against — 10 false findings.
+    // an unrelated-looking `Added` with nothing joining them.
     val m = build(
       dropTypes = Set("up.stream.Gone", "up.stream.Replaced"),
       injected  = Set("out.Replaced", "out.Helper"),
@@ -217,10 +215,6 @@ class PortMapSpec extends munit.FunSuite:
     // sees the PACKAGE renames cannot invert it. The `upstream` column then carries the post-rename
     // name (`up.stream.lib.ui.SgeWidget`), and every consumer that joins the map to the pre-rename
     // program fails to match: `ownedByBase`, `followMemberRenames`, `baseMemberUpstream`.
-    //
-    // The fix: pass the FULL accepted table (package + type renames, already composed through the
-    // package rename) to `PortMap.of`. `unrename` inverts by longest VALUE match, so the type
-    // rename's value (`port.ui.SgeWidget`, length 17) beats the package rename's (`port`, length 4).
     val srcEntry = SrcMap.Entry("port.ui.SgeWidget", "port.ui.SgeWidget#draw(Batch)", "def", 1, 2,
       "up/stream/lib/ui/Widget.java", 10, "d0")
     // The FULL rename table: package rename AND type rename composed.
@@ -282,10 +276,6 @@ class PortMapSpec extends munit.FunSuite:
     // maven layout, and reading the whole of it as a package published
     // `mod.src.main.java.up.stream.lib.ui.Widget` for 9,261 of one port's 9,370 rows. Nothing in
     // that port could see it: the column is READ only by a dependent, and it had none.
-    //
-    // The declared package is a SUFFIX of the path-derived one by construction, so the rename's own
-    // inverse says where it starts. Note this TRUNCATES the path and never overrides it — the test
-    // below is the case where it must not fire.
     val srcEntry = SrcMap.Entry("port.ui.Widget", "port.ui.Widget#draw(Batch)", "def", 1, 2,
       "mod/src/main/java/up/stream/lib/ui/Widget.java", 10, "d0")
     val m = PortMap.of("m", "eng", List("port.ui.Widget"), SrcMap.Recording(List(srcEntry)),

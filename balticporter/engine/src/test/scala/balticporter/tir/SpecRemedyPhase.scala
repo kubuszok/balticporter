@@ -3,26 +3,7 @@ package balticporter.tir
 import balticporter.catalog.FixKind
 
 /** A PHASE THAT OFFERS A REMEDY, for specs — the fixture the whole `resolutions` loop is asserted
-  * through.
-  *
-  * It exists because the MECHANISM shipped before any menu did — every port's
-  * `remediation(resolved)` was provably zero and the plumbing's arrival moved no count — which is
-  * exactly the state in which selection → application → accounting → decision → staleness has no
-  * live subject to be tested on, and a mechanism nothing exercises is a mechanism nobody finds out
-  * is broken until the first real menu ships (`CLAUDE.md` §3 — a check reporting zero is only as
-  * good as its coverage).
-  *
-  * It stays after the real menus arrived, and not as a leftover: every shipped remedy so far is
-  * `accept`-shaped and NOT emission-affecting, so none of them can exercise the half of this
-  * mechanism that decides shared surface. This fixture declares `emissionAffecting = true` and is
-  * the only subject the specs have for it.
-  *
-  * What it DOES when a selection fires is nothing at all to the tree, and that is deliberate rather
-  * than lazy: the property under test is the LEDGER, and a fixture that also rewrote something would
-  * make every assertion here depend on a rewrite nobody is measuring. The application is still
-  * visible in the emitted file — a `Decision.Kind.SelectedRemedy` carries a porter note (§4.575), so
-  * "the run recorded it" and "the reader at the line is told" are one assertion.
-  */
+  * through. */
 final class SpecRemedyPhase(
     val lane: String = SpecRemedyPhase.Lane,
     val kind: String = SpecRemedyPhase.Kind,

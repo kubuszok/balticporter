@@ -1,17 +1,6 @@
 package balticporter.tir
 
-/** `Pipeline.order` orders INSTANCES, not names — `ENGINE-LIMITS.md` CT9 Face B.
-  *
-  * The defect this pins was silent from the day merging existed: the sort ran over a
-  * `name -> phase` map, so two same-name instances collapsed to the LATER one and the other never
-  * ran. Nothing could see it — the run emitted, every check counted the same, and the missing
-  * phase's decisions were missing because the phase was.
-  *
-  * Two same-name instances is precisely what a DECLINED or REFUSED merge leaves in the effective
-  * pipeline (`SurfaceFold`, DESIGN.md §8.13), which is the pre-merge behaviour the merge contract
-  * deliberately keeps. So this is asserted the way §3 asks: on the OUTPUT of running them, never on
-  * the list's shape alone.
-  */
+/** `Pipeline.order` orders INSTANCES, not names — `ENGINE-LIMITS.md` CT9 Face B. */
 class PipelineOrderSpec extends munit.FunSuite:
 
   /** adds `by` to every integer literal, so "did this instance run" is readable off the tree. */
@@ -97,7 +86,6 @@ class PipelineOrderSpec extends munit.FunSuite:
     // FIFO — `second` sits in the initial ready set while `first` waits for the newcomer — so an
     // ADDED phase that rewrites nothing changes what the pipeline computes. Measured on a real port:
     // `collection-boundary` 22 -> 20 with two member digests moved, from two phases whose `run`
-    // returns its argument.
     val first  = new Named("first", runsBefore = Set("last"))
     val second = new Named("second")
     val last   = new Named("last")

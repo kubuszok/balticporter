@@ -8,17 +8,7 @@ import balticporter.transform.{BeanPropertyTransform, CollectionsTransform, Muta
 import java.nio.file.{Files, Path}
 
 /** The config front door, held to ONE property: it constructs the same values the Scala path
-  * constructs.
-  *
-  * That is the whole §1.5 defence, so it is what the round-trip tests assert — field by field
-  * against a hand-built `PortRun`, not against a golden string. A snapshot of the rendered
-  * configuration would pass while the loader built something else entirely.
-  *
-  * The other half is the refusals. HOCON accepts any document it can parse, so every one of these
-  * mistakes is silent by default: an unknown transform, a misspelt key, a `hints` predicate written
-  * as data, a `package-rename` in the surface list. Each has a test, because each is exactly the
-  * §1(b) no-op the engine refuses everywhere else.
-  */
+  * constructs. */
 class PortConfigSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------------------------

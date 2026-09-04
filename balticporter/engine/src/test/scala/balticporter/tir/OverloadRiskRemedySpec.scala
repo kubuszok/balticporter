@@ -5,18 +5,7 @@ import balticporter.core.{PolicyIssue, PolicyReport}
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 
-/** `overload-risk`'s MENU — the first EMISSION-AFFECTING remedy (`DESIGN.md` §8.16).
-  *
-  * Two things are under test that the `heap-pollution` suite could not reach. The first is that an
-  * applied remedy MOVES EMITTED TEXT and that the move is attributable: the digest changes because a
-  * `Decision` says it should, which is `CLAUDE.md` §3's rule for any wave that rewrites by design.
-  * The second is the REFUSAL, which is what keeps this remedy inside `ENGINE-LIMITS.md` T17 — the
-  * engine does not predict which member scala would bind, it writes down the one the frontend
-  * resolved, and where that name cannot be written it records nothing and the finding stays.
-  *
-  * The java is the shape `CLAUDE.md` §4.4 already records for the JDK, asked of a library's own
-  * declarations: `remove(Object)` beside `remove(int)`, with javac binding the `int` one in phase 1.
-  */
+/** `overload-risk`'s MENU — the first EMISSION-AFFECTING remedy (`DESIGN.md` §8.16). */
 class OverloadRiskRemedySpec extends munit.FunSuite:
 
   private val Java =

@@ -3,27 +3,7 @@ package balticporter.transform
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** THE LINT — no phase reconstructs member identity from a STRING.
-  *
-  * ==Why a text check and not a type==
-  * `Symbol.fullName` is public and `String`-typed, so nothing in the type system stops a new phase
-  * writing `s.fullName.startsWith("java.")` or rebuilding `owner + "#" + name` and looking it up.
-  * DESIGN.md §8.1 says so plainly: what `PolicyBinder` gives is a CONVENTION WITH A LINT, not a
-  * guarantee. This is the lint, and it is deliberately the crudest possible instrument, because the
-  * defect it guards against is crude: §4.56 records a prefix test that turned `java.lang.String`
-  * into `j.lang.String`, and a second one that deleted three live casts because
-  * `java.lang.Object` starts with `java.`. Both compiled green and moved no count.
-  *
-  * ==Scope, and why it stops where it does==
-  * The TRANSFORM package: phases are the layer that takes per-library policy and rewrites the tree
-  * from it, so a string test there is a policy decision made from a name. Checks and the emitter are
-  * out of scope — they answer different questions and have their own reasons — and widening this to
-  * them would mean an allow-list longer than the rule, which is how a lint stops being read.
-  *
-  * ==The allow-list is NAMED, not a count==
-  * Every entry says which construct it is and why the string is the right instrument there. An entry
-  * that cannot be justified in one line is a site to fix, not to list.
-  */
+/** THE LINT — no phase reconstructs member identity from a STRING. */
 class PolicyKeyLintSpec extends munit.FunSuite:
 
   /** the engine's own `src/main/scala`, written into the test resources by build.sbt so the check
@@ -34,23 +14,13 @@ class PolicyKeyLintSpec extends munit.FunSuite:
     val s = try new String(is.readAllBytes(), "UTF-8").trim finally is.close()
     Path.of(s).resolve("balticporter/transform")
 
-  /** ONE forbidden shape: the NAME an allow-list entry cites, the test, and what to reach for.
-    *
-    * The test is a predicate rather than a substring because the first three shapes are literals
-    * and the fourth cannot be: `s"$owner#$name"` builds the same key as `owner + "#" + name` and
-    * shares no text with it. A lint that only knows the spelling it was written against passes
-    * vacuously the moment somebody writes the other one — which is exactly what happened
-    * (`StaticForwarderTransform` rebuilt three keys by interpolation, unlisted and unreported). */
+  /** ONE forbidden shape: the NAME an allow-list entry cites, the test, and what to reach for. */
   private final case class Shape(name: String, hits: String => Boolean, instead: String)
 
   /** a `$`-interpolation IMMEDIATELY BESIDE a `#` — `s"${owner}#$name"`, `s"$owner#$name"`,
     * `s"$owner#${name}"`. Adjacency is the whole test: prose that merely mentions `owner#member`
     * beside an interpolated value is not building a key, and a `#` used as some other separator
-    * (`PortMapTransform`'s fingerprint) is allow-listed by name rather than by weakening this.
-    *
-    * The LINE must also open an interpolated string, or `"java.util.Map$Entry#comparingByKey"` —
-    * a plain literal whose `$` is java's NESTED-TYPE separator — reads as an interpolation and the
-    * lint reports four of `CollectionsTransform`'s own table entries. */
+    * (`PortMapTransform`'s fingerprint) is allow-listed by name rather than by weakening this. */
   private val Interpolator = raw"""(^|[^A-Za-z0-9_])(s|f|raw)\"""".r
   private val HashAdjacent = raw"""(#\s*\$$)|(\}#)|(\$$[A-Za-z_][A-Za-z0-9_]*#)""".r
 
@@ -115,8 +85,7 @@ class PolicyKeyLintSpec extends munit.FunSuite:
     // same phase, same sites, same reasoning as the `CollectionsTransform.scala` entry above —
     // each `fullName ==` below is a mint-or-reuse lookup against a WELL-KNOWN external FQN
     // (`java.util.Iterator`, `balticporter.runtime.JavaIterator`, `scala.Array`, `java.lang.Object`,
-    // the phase's own `StreamFqn`, `scala.collection.Iterator`) the program never declares, never a
-    // policy key rebuilt from program-declared names.
+    // the phase's own `StreamFqn`, `scala.collection.
     "CollectionsRetarget.scala" -> Map(
       "fullName ==" ->
         ("the JDK side of this phase is a TYPE MAPPING keyed by FQN — mint-or-reuse against " +

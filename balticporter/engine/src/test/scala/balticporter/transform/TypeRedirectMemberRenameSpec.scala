@@ -5,19 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.*
 
-/** `type-redirect`'s MEMBER RENAMES — a target that spells the member differently (DESIGN.md §8.5).
-  *
-  * The assertions that matter here are the two design rulings, and both are negatives:
-  *
-  *   - the rename runs against the PRE-redirect override graph, INSIDE the one phase. The
-  *     `ordering` tests construct the wrong order and measure what it destroys: the component
-  *     splits into singletons, and the whole-or-none guarantee then guarantees nothing — an
-  *     anchored declaration stops refusing the rest, and half a hierarchy is renamed. That
-  *     compiles, and no count moves for it.
-  *   - the new name must exist on the TARGET. A rename to a name the target does not declare emits
-  *     code calling a method that is not there, three lanes downstream in somebody else's
-  *     repository.
-  */
+/** `type-redirect`'s MEMBER RENAMES — a target that spells the member differently (DESIGN.md §8.5). */
 class TypeRedirectMemberRenameSpec extends munit.FunSuite:
 
   // ---- fixtures ------------------------------------------------------------------------------
@@ -212,8 +200,7 @@ class TypeRedirectMemberRenameSpec extends munit.FunSuite:
     // handler, under a redirect that wants `dispose` renamed to `close`. `OnCollision.Refuse` is
     // right — one class cannot declare `close()` twice — but the KEY is the BASE's, inherited
     // through `surfaceFold`, so `PortRun`'s subject filter dropped the row and the port read
-    // `policy 0` beside eight compile errors. The refusal is about THIS RUN: only the dependent's
-    // program contains the collider, and the base's own run cannot reproduce it.
+    // `policy 0` beside eight compile errors.
     val colliding = clean.replace(
       "class Pooled implements Disposable {",
       "class Pooled implements Disposable {\n  protected void close() {}")

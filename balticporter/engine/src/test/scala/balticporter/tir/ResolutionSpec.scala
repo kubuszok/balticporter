@@ -4,16 +4,7 @@ import balticporter.catalog.{CatalogLog, FixKind}
 import balticporter.core.{PolicyIssue, PolicyReport}
 import balticporter.frontend.spoon.SpoonTir
 
-/** PER-LOCATION REMEDY SELECTION, end to end and at each of its refusals.
-  *
-  * The positive half is one property — a port names a member and a remedy id, and the phase that
-  * declared that remedy is handed the selection at that declaration — and the rest of this file is
-  * the NEGATIVES, because every one of them is silent by default. A selection that binds to nothing,
-  * names a remedy nobody offers, names one whose phase is not enabled, or names a real one at a site
-  * the finding never occurred at, all produce the same emitted text as a port that asked for nothing:
-  * no compile error, no moved digest, no check count. Each is a classified policy finding here for
-  * the reason `PolicyReport` exists at all.
-  */
+/** PER-LOCATION REMEDY SELECTION, end to end and at each of its refusals. */
 class ResolutionSpec extends munit.FunSuite:
 
   private val Java =
@@ -436,9 +427,7 @@ class ResolutionSpec extends munit.FunSuite:
     // The colliding form `selected(target, lane, kind)`'s own doc warns about, made real by the
     // portability lane: `accept-jvm-only` (a CHECK's) sits beside `class-table`,
     // `substitutions-drop` and `static-forwarder-inline` (a PHASE's), and all four declare
-    // `Remedy.AnyKind` — so a lane-keyed drain fires on whichever entry the plan holds. A port that
-    // selected the phase's remedy and got its honest REFUSAL would have had the finding drained
-    // anyway, under a `remediation(resolved)` row saying something the port never chose.
+    // `Remedy.AnyKind` — so a lane-keyed drain fires on whichever entry the plan holds.
     val p     = program
     val mine  = SpecRemedyPhase.Noop.copy(id = "spec-mine", kind = Remedy.AnyKind)
     val yours = SpecRemedyPhase.Noop.copy(id = "spec-yours", kind = Remedy.AnyKind)

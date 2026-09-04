@@ -8,8 +8,7 @@ import balticporter.transform.{ClassTableTransform, StaticForwarderTransform}
   * silent no-op: the phase runs, matches nothing, and the port keeps the very construct the policy
   * was written to remove. These pin the complaint — and, just as importantly, pin that a CORRECT
   * key produces no complaint, because a check that cries wolf is turned off and then it is not a
-  * check at all.
-  */
+  * check at all. */
 class PolicySpec extends munit.FunSuite:
 
   // ---- a tiny program: `com.x.Wrapper` with three statics, and one class that could call them.
@@ -63,11 +62,7 @@ class PolicySpec extends munit.FunSuite:
   // -------------------------------------------------------------------------
   // Substitutions — a PURE policy value. Which of its keys FIRED is a question about a RUN, and
   // `PolicyBinder` answers it from the program plus the frontend's index (where a DROPPED member
-  // still exists); see `PolicyBinderSpec`. What this value used to carry instead was a mutable
-  // tally whose own scaladoc apologised for it: `copy()` emptied it, two source sets translated
-  // through one manifest unioned their answers, and a report read before the frontend ran named
-  // every key. None of those is a thing a value can be asked to get right.
-  // -------------------------------------------------------------------------
+  // still exists); see `PolicyBinderSpec`.
   test("dropsType and dropsMethod are PURE — asking twice is asking once, and asking changes nothing") {
     val subs = Substitutions(dropTypes = Set("demo.Real"), dropMethods = Set("demo.C#m", "demo.C#n(Int)"))
     assert(subs.dropsType("demo.Real"))

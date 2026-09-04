@@ -2,45 +2,7 @@ package balticporter.transform
 
 import java.nio.file.{Files, Path}
 
-/** The phase's HANDLED TABLES against the phase's own arms — a bijection, both directions.
-  *
-  * `CollectionsTransform.handledStatics` and `handledInstance` exist so `JdkSurfaceCheck` can ask
-  * what this phase covers instead of guessing it from a type's name (CLAUDE.md §4.56). A table
-  * beside the code it describes is only worth having while the two agree, and nothing about a
-  * `Set[String]` beside a `match` makes them agree — the arms compile with the table stale, the
-  * table compiles with an arm removed, and the check then reports a mapping that is not there or a
-  * hole that is filled. Both are silent: no compile error, no check count, no test.
-  *
-  * So the table is derived from the SOURCE TEXT of the phase and compared, the way
-  * `RuntimeMembersDerivationSpec` derives the runtime member map from the published runtime
-  * sources. Both directions, because they fail differently: a missing table entry makes a handled
-  * member read as the port's JDK wall, and a stale entry makes a real hole read as covered.
-  *
-  * ==The scan is SLICED to the arms, and that is not tidiness==
-  * The tables now live in the same FILE as the arms, so a scan over the whole source would find its
-  * own declaration and pass vacuously in both directions — the exact failure this spec exists to
-  * prevent, wearing the spec's own clothes. Each derivation therefore cuts the region between the
-  * function it is reading and the next top-level doc comment, and asserts the region does not
-  * contain the table it is about to compare against.
-  *
-  * ==What is pinned and what is not==
-  * The static table is pinned EXACTLY: those arms are keyed on `owner#name` string literals, so the
-  * derivation is the set of literals. The instance table is pinned as a UNION of member NAMES: the
-  * arms are keyed on `(name, args, kind)` — one `add` arm serves `java.util.List`,
-  * `java.util.Collection`, `java.util.Queue` and every other Seq — and the KIND is a `Kind.X`
-  * pattern rather than a literal. Splitting the union across kinds is read by eye and is
-  * deliberately not asserted here: assigning a name to more kinds than the arm covers can only make
-  * the check kinder (a "mapped" row that could have been a finding), never make it miss a hole in a
-  * kind that genuinely has none.
-  *
-  * The OTHER direction is not symmetric and is worth naming, because it is the one that costs
-  * something: a name assigned to FEWER kinds than its arm covers makes `jdk-surface` report
-  * `unhandled` for a member the phase demonstrably rewrites — a finding that is simply false. That
-  * is not a kind error, it is a REPORT-CREDIBILITY error (§4.45): the agent it is written for is in
-  * another repository, and it spends a full investigation on a hole that is already filled. One
-  * such row teaches that this check's findings need checking, which is worse than the check not
-  * existing. So when a union is split by hand, err WIDE.
-  */
+/** The phase's HANDLED TABLES against the phase's own arms — a bijection, both directions. */
 class CollectionsHandledDerivationSpec extends munit.FunSuite:
 
   private val source: String =
@@ -64,14 +26,7 @@ class CollectionsHandledDerivationSpec extends munit.FunSuite:
 
   /** every `"owner#name"` STRING LITERAL in the static arms — which is exactly how `staticRewrite`
     * identifies a receiver-less JDK member — PLUS the static-FIELD table, which is the same question
-    * asked of the other node kind.
-    *
-    * The second half is not a convenience. A receiver-less JDK member arrives as a `Tree.Apply` for a
-    * CALL and as a `Tree.Select` for a FIELD (`Collections.EMPTY_LIST`), so the phase answers it in
-    * two places — and `handledStatics` is ONE table, because `jdk-surface` asks one question and a
-    * table split by node kind would report a member the phase rewrites as the port's JDK wall. A
-    * derivation that read only the `match` would then call every field entry STALE, which is this
-    * spec reporting a correct table as broken (§4.56, read at an instrument's own filter). */
+    * asked of the other node kind. */
   private def staticLiterals: Set[String] =
     """"(java\.[A-Za-z0-9_.$]+#[A-Za-z0-9_]+)"""".r.findAllMatchIn(staticArms).map(_.group(1)).toSet ++
       CollectionsTransform.StaticFieldFactories.keySet

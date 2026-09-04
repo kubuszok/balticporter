@@ -8,15 +8,7 @@ import balticporter.transform.{ClassTableTransform, CollectionsTransform, Mutabl
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** Cross-port composition, over a genuine TWO-PORT fixture.
-  *
-  * The libGDX corpus already has a real dependent port (`LibgdxTestMigrate` resolves against
-  * `gdx/src` and converts `gdx/test`), and the three deliberate perturbations were measured there.
-  * What it cannot give is a case small enough to assert on line by line, or one that runs without
-  * a vendored copy of libGDX on disk — so the same properties are pinned here, on two tiny Java
-  * trees where `other` resolves against `base` exactly the way an extension module resolves against
-  * the module it extends.
-  */
+/** Cross-port composition, over a genuine TWO-PORT fixture. */
 class ManifestSpec extends munit.FunSuite:
 
   private def writeJava(dir: Path, rel: String, src: String): Unit =
@@ -50,12 +42,7 @@ class ManifestSpec extends munit.FunSuite:
       .map(p => out.relativize(p).toString.replace('\\', '/')).toList.sorted
 
   /** the agreement findings that say the two modules DISAGREE, as opposed to the operational notes
-    * about how the check was answered.
-    *
-    * A unit-test JVM has `CheckReport` off, so no `PortRun` here publishes a port map and every
-    * declared base is reported `BaseMapMissing` — correctly: the agreement really was re-derived
-    * from the manifest rather than read off the base's output. Filtering it keeps each assertion
-    * about what it is testing, and the note itself is pinned once, where it is the subject. */
+    * about how the check was answered. */
   private def disagreements(r: PortResult): List[ManifestAgreement.Finding] =
     r.report.manifest.filterNot(f =>
       f.kind == Kind.BaseMapMissing || f.kind == Kind.BaseMapStale || f.kind == Kind.BaseMapUnverified)
@@ -91,8 +78,6 @@ class ManifestSpec extends munit.FunSuite:
     // reached the effective pipeline. Two instances of one name is not composition — it is the
     // same-name pair `SurfaceFold` decides, and two instances of a phase with EQUAL policy now
     // collapse to one (the base's), which is what the pipeline did before it ordered instances.
-    // What `extendedBy` composes is phases with DIFFERENT names, so that is what is pinned here;
-    // the same-name pair has its own coverage in `SurfaceFoldSpec`.
     val phase = new CollectionsTransform
     val own   = new MutableParamsTransform
     val core = PortManifest("core",
@@ -329,8 +314,7 @@ class ManifestSpec extends munit.FunSuite:
     // declarations routinely live inside that package — a TEST SOURCE SET always does, `src/test/
     // java/<pkg>` being the same package as `src/main/java/<pkg>` — so a screen that reads the
     // claim alone makes every key such a module declares about its OWN members an intrusion, and
-    // leaves it no way to comply. §1.5 says "may not edit what a base EMITS", and the base's
-    // published PORT MAP is what answers that.
+    // leaves it no way to comply. §1.
     val base = PortManifest("core", governs = Set("com.demo"))
     val m    = base.extendedBy(PortManifest("ext", dropMethods = Set("com.demo.OwnTest#helper()")))
     def run(entries: List[PortMap.Entry]) =
@@ -368,11 +352,7 @@ class ManifestSpec extends munit.FunSuite:
     // takes a `RuleScope`, and two modules scoping it differently emit signatures that each compile
     // alone and cannot compile together, which is precisely what `SurfacePolicy` is for (§1.5). The
     // default scope renders empty; what follows the `;` is the MAPPING TABLE's digest, which is
-    // engine policy rather than instance policy and is in the fingerprint for §1.5's own reason —
-    // a base ported before a mapping changed and a dependent ported after emit the incompatible
-    // pair, and the published `policy=` is the only thing that could say so. Asserted by SHAPE:
-    // pinning the digest here would mean editing this spec on every mapping change, which is the
-    // spec asking to be silenced rather than read.
+    // engine policy rather than instance policy and is in the fingerprint for §1.
     val collections = PortManifest.fingerprint(new CollectionsTransform)
     assert(collections.startsWith("java-collections->scala[;mapping="), clue(collections))
     assertEquals(collections, PortManifest.fingerprint(new CollectionsTransform), "not stable")

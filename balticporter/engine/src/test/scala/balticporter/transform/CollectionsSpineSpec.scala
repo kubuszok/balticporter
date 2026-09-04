@@ -2,14 +2,7 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** The one assumption `CollectionsTransform.restoreExcluded` makes about the traversal, asserted.
-  *
-  * A scope splices held-back members back into the MAPPED body by position, which is sound exactly
-  * while `StandardTraversal.mapClassDef` returns the same kinds in the same order. `zip` does not
-  * say when that stops being true — it truncates, so the tail of a class body would keep its mapped
-  * form however the scope was written, with no exception, no count moving and a port that compiles.
-  * That is the failure this pairs against, and a check that never fired is not known to work.
-  */
+/** The one assumption `CollectionsTransform.restoreExcluded` makes about the traversal, asserted. */
 class CollectionsSpineSpec extends munit.FunSuite:
 
   private val o  = Origin("X.java", 1, 1)

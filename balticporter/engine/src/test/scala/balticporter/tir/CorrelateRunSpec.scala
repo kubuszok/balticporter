@@ -3,13 +3,7 @@ package balticporter.tir
 import java.nio.file.{Files, Path}
 
 /** [[CorrelateRun]] as a library call — the in-process half of what `CorrelateMain` does from a
-  * shell.
-  *
-  * The correlation used to exist ONLY as a `main`, so the only way to run it was to start a second
-  * JVM. That is right for a measure lane (the compiler and the test runner have long since
-  * exited) and wrong for a porting program that drives the compile itself, so the request is now a
-  * value and `balticporter.runner.PortRun.correlate` calls it directly.
-  */
+  * shell. */
 class CorrelateRunSpec extends munit.FunSuite:
 
   private def fixture(): Path =

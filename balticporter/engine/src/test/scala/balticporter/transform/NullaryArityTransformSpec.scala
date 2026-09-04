@@ -5,18 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.*
 
 /** [[NullaryArityTransform]] — dropping `()` from a getter-like nullary method, and the four
-  * guards that decline.
-  *
-  * ==Why the refusals carry the spec and the conversion is one test==
-  * CLAUDE.md §3: an idiom transform's safety argument is a REFUSAL ENUMERATION, never a suite
-  * result. The faithful translation (`def x(): R`, called `o.x()`) already compiles and already
-  * behaves identically, so a green suite is what this phase produces whether or not its guards
-  * work. What can only be shown by a fixture is that each guard DECLINES the shape it was written
-  * for — and that the declining is COUNTED, in `idiom(refused)`, naming the guard.
-  *
-  * One fixture per guard, one positive, plus the §1(b) contract (`Only(Set.empty)` is the no-op,
-  * the fingerprint segment is omitted at the default, `MergeablePolicy` unions and refuses).
-  */
+  * guards that decline. */
 class NullaryArityTransformSpec extends munit.FunSuite:
 
   // ---- harness ------------------------------------------------------------------------------
@@ -98,8 +87,7 @@ class NullaryArityTransformSpec extends munit.FunSuite:
     * declaration shape, so §1(b)'s adds-vs-retypes rule puts its no-op at `Only(Set.empty)`. The
     * two must therefore FINGERPRINT DIFFERENTLY: rendered equal, `SurfaceMissing` could not tell a
     * port that runs the phase over everything from one that does not run it at all
-    * (`ENGINE-LIMITS.md` CT9). That is why the empty-segment omission stops here — an empty scope
-    * is not an empty POLICY for a phase whose default is the other direction. */
+    * (`ENGINE-LIMITS.md` CT9). */
   test("Everywhere() is NOT the no-op, and does NOT fingerprint equal to it") {
     val on  = new NullaryArityTransform(everywhere)
     val off = new NullaryArityTransform()

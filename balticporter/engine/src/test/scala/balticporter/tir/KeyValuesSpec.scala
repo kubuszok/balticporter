@@ -1,12 +1,6 @@
 package balticporter.tir
 
-/** The ONE `k=v` payload grammar (CLAUDE.md §4.575), now that it has a SECOND consumer.
-  *
-  * It was specified only through the porter note, whose own check reads the SLUG and deliberately
-  * never parses the pairs — so the parse side had no spec at all until the port map's `shape` column
-  * needed one. Both of the grammar's rules are properties of the grammar and not of the note, which
-  * is why they moved to `KeyValues` and why they are pinned here.
-  */
+/** The ONE `k=v` payload grammar (CLAUDE.md §4.575), now that it has a SECOND consumer. */
 class KeyValuesSpec extends munit.FunSuite:
 
   test("a value with WHITESPACE is quoted and round-trips whole") {

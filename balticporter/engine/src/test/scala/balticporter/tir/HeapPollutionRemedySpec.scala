@@ -4,19 +4,7 @@ import balticporter.catalog.CatalogLog
 import balticporter.core.{PolicyIssue, PolicyReport}
 import balticporter.frontend.spoon.SpoonTir
 
-/** THE FIRST MENU, END TO END — `heap-pollution`'s `acknowledge` (`DESIGN.md` §8.16).
-  *
-  * What this file is really asserting is the ACCOUNTING, because that is the half nothing else can
-  * see. A resolution is not a fix, it is a MOVE: a row leaves the lane that counted it and arrives in
-  * `remediation(resolved)`, and both halves have to move by the same number or the improvement is
-  * unreadable (`CLAUDE.md` §5). `acknowledge` changes no tree at all, so if the drain were missing
-  * the run would report the residue BESIDE the row saying it was answered and every count would look
-  * plausible.
-  *
-  * The negatives are the rest, and each is silent by default: a selection at a declaration whose
-  * finding is a DIFFERENT KIND, a selection at a declaration with no finding at all, and a selection
-  * at a declaration this run does not emit. None of the three moves a compile, a digest or a count.
-  */
+/** THE FIRST MENU, END TO END — `heap-pollution`'s `acknowledge` (`DESIGN.md` §8.16). */
 class HeapPollutionRemedySpec extends munit.FunSuite:
 
   private val Java =

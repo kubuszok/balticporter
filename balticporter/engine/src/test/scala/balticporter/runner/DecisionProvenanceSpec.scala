@@ -6,14 +6,7 @@ import balticporter.tir.*
 import java.nio.file.{Files, Path}
 
 /** `decisions.tsv` end to end — the channel that answers "HOW did the porter arrive at this code?"
-  * for an agent in another repository (CLAUDE.md §4.45).
-  *
-  * The properties pinned here are the ones that make the artifact usable rather than merely
-  * present: every row carries the §1 classification and, for a `Configured` one, the MANIFEST KEY
-  * verbatim — the string an agent edits to change the outcome; a run that decided nothing still
-  * writes a header, because "no policy" and "the run never got there" are different facts; and two
-  * identical runs produce identical bytes, since a provenance artifact nobody can diff is a log.
-  */
+  * for an agent in another repository (CLAUDE.md §4.45). */
 class DecisionProvenanceSpec extends munit.FunSuite:
 
   private def java(dir: Path, rel: String, src: String): Unit =
@@ -470,16 +463,7 @@ class DecisionProvenanceSpec extends munit.FunSuite:
     assert(clue(two.head.origin.javaPath).endsWith("com/demo/Two.java"))
   }
 
-  /** The funnel's row is also a PORTER NOTE, and that is a CORRECTION rather than an addition.
-    *
-    * `FunnelledCtor` was excluded from `PorterNote.Rendered` on the recorded argument that "the
-    * emitted class has one primary and N secondaries, which is the funnel, in the code" — true of a
-    * PROMOTION, whose primary is a java constructor spelled as java spelled it. `DESIGN.md` §8.2
-    * then made SYNTHESIS the normal case, and the same sentence became false: what the reader is
-    * looking at is a `protected` constructor NO JAVA DECLARED, with `sup$k` slots and sometimes a
-    * companion `Funnel` parameter that has no runtime purpose at all. It has no upstream line, so
-    * the source map cannot answer it either. An exclusion is an argument about a SHAPE, and nothing
-    * in the pipeline can fail when that argument goes stale — a missing note moves no count. */
+  /** The funnel's row is also a PORTER NOTE, and that is a CORRECTION rather than an addition. */
   test("the funnel's decision is emitted BESIDE the synthesised class, which has no java behind it") {
     val (root, src, files) = ctorFixture()
     val rep = root.resolve("note-report")

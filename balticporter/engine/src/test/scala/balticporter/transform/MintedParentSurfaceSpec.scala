@@ -3,25 +3,7 @@ package balticporter.transform
 import balticporter.tir.*
 
 /** The two tables `CollectionsTransform.strippedOverrides` decides an `override` modifier from,
-  * asserted against what they are quoting — `ENGINE-LIMITS.md` K28.
-  *
-  * ==Why a spec and not a comment==
-  * The strip's own errors are loud (too small a keep-list and scalac says `needs "override"
-  * modifier`; too large and the `E037` stays), so the corpus is a real instrument for the ROWS. It
-  * is not an instrument for the two things below, and neither of them moves a count:
-  *
-  *   - **the shim rows quote `balticporter/runtime`, which the engine does not compile against.**
-  *     `build.sbt` keeps the engine off the runtime on purpose, so a member added to `JavaIterator`
-  *     tomorrow leaves this table saying the old surface, and the only symptom is an `override` that
-  *     is stripped or kept wrongly on some future port. Nothing in this repository holds the two in
-  *     step except this file;
-  *   - **the ONE descriptor-keyed row.** A java `List` declares `remove` twice — by index and by
-  *     value — and only the first survives onto a `mutable.Buffer`. Keyed on arity alone the table
-  *     keeps the modifier on both, which is an `E038` the strip was written to remove; keyed on the
-  *     wrong descriptor spelling it strips both, which is a modifier scala requires. The pair is
-  *     asserted here because a corpus that happens to contain only one of the two would pass either
-  *     way.
-  */
+  * asserted against what they are quoting — `ENGINE-LIMITS.md` K28. */
 class MintedParentSurfaceSpec extends munit.FunSuite:
 
   import CollectionsTransform.{OverridesShim, OverridesTarget}
@@ -131,14 +113,6 @@ class MintedParentSurfaceSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------------------------
   // THE SUBSUMPTION TABLE — `ENGINE-LIMITS.md` K28.1.
-  //
-  // A row says a KIND's target is a supertype answering for the shim's WHOLE surface, so the shim
-  // clause may be dropped. Both errors are loud in `OverridesTarget`'s sense (too few rows leaves
-  // the `E164` this closes; too many leaves a `Not Found` naming the member) — but only the second
-  // is loud on the port that motivated it, and the derivation the rows rest on is `OverridesShim`,
-  // which lives two hundred lines away. So the ROWS are asserted against it here rather than read
-  // beside it: a member added to `JavaIterable` tomorrow makes the one row a claim nobody checked.
-  // -------------------------------------------------------------------------------------------
 
   import CollectionsTransform.SubsumesShim
 

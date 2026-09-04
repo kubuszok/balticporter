@@ -2,19 +2,7 @@ package balticporter.tir
 
 import java.nio.file.{Files, Path}
 
-/** THE SPI DELIVERABLE, at each of its four answers.
-  *
-  * Everything asserted here is silent in production by construction: a descriptor that is absent, is
-  * copied with the wrong names, or advertises a class the port dropped produces the SAME emitted
-  * Scala, the same compile, the same member digests and the same fifteen check counts as one that is
-  * right. The only evidence there can be is this file and the lane it exercises (`ENGINE-LIMITS.md`
-  * P5, and `CLAUDE.md` §3 — a check reporting zero is only as good as its coverage).
-  *
-  * The fixture is a real file tree rather than a corpus port, deliberately: `ServiceProviders.plan`
-  * is a pure function of a file list and a rename function, so the negatives — a dropped provider, a
-  * dropped service, an empty descriptor, a name the rename did not move — are all reachable here,
-  * and only ONE of them is reachable on any port this corpus has.
-  */
+/** THE SPI DELIVERABLE, at each of its four answers. */
 class ServiceProvidersSpec extends munit.FunSuite:
 
   private val tmp = FunFixture[Path](
