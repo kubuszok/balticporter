@@ -4,60 +4,19 @@ import balticporter.tir.*
 
 /** THE `var`/`val` COLLAPSE'S DECISION — every guard, stated once (`DESIGN.md` §8.5).
   *
-  * ==What the collapse is==
   * A java bean pair over a trivial backing field and a scala `var` are the same value with two
-  * spellings: `private String name; String getName(){return name;} void setName(String n){this.name=n;}`
-  * is `var name: String`, which emits a private field plus `name()`/`name_$eq()` — bytecode for
-  * bytecode what the `def x`/`def x_=` pair already emitted, which is what java's `getName()`/
-  * `setName()` already emitted. Three spellings, one class file.
+  * spellings, so [[BeanPropertyTransform]] can collapse the `def` pair to it. The guards live here
+  * rather than on the phase so it decides once — `Converted` or `Refused(guard)`, the same answer
+  * the `idiom(refused)` denominator reads (ENGINE-LIMITS K2.5). Each guard makes one delta from the
+  * faithful `def`-pair translation impossible: override safety ([[Guard.OverriddenBelow]],
+  * [[Guard.AnchoredClosure]]), field-equivalence of the body ([[Guard.ComputedBody]],
+  * [[Guard.SplitFields]]), surface parity with java ([[Guard.VarWithoutSetter]],
+  * [[Guard.ValWithSetter]], [[Guard.MutableStorage]]), and the moved JVM method names, recorded on
+  * the decision and refused outright when contradicted by [[PublicFieldAccessorTransform]]
+  * ([[Guard.ExposedField]]).
   *
-  * ==Why the DECISION is a value and not a method on the phase==
-  * [[BeanPropertyTransform]] both CONVERTS and publishes the DENOMINATOR — one row per configured
-  * pair, `Converted` or `Refused(guard)` — and the two must be the same answer. A phase that
-  * decided twice would be the shape `ENGINE-LIMITS.md` K2.5 measured: a residue count that cannot
-  * tell a refusal from a switched-off fix. So the guards live here, the phase asks once, and a
-  * reader of `idiom(refused)` is reading the same function that declined the site.
-  *
-  * ==THE DELTA ENUMERATION — the whole safety argument (`CLAUDE.md` §3)==
-  * The faithful translation (the `def` pair, bodies verbatim) already compiles and already behaves
-  * identically, so a green suite is what this layer would produce either way. What licenses it is
-  * therefore the list below, and every member is made impossible by a GUARD, made impossible by the
-  * SHAPE, or COUNTED:
-  *
-  *   1. '''a scala `var` cannot be OVERRIDDEN.''' Guard [[Guard.OverriddenBelow]]. An interface
-  *      ABOVE is fine — a `var x` implements an abstract `def x` and `def x_=` — and a declaration
-  *      BELOW is not. An ANCHORED closure refuses the whole component ([[Guard.AnchoredClosure]]),
-  *      because a declaration this program cannot move is one whose shape it may not decide;
-  *   2. '''deleting the accessors requires that every call provably route through the pair.''' Made
-  *      impossible by the SHAPE: the def-pair path has already rewritten every call site and
-  *      already REFUSES a pair with a value-position reference or an unrewritable receiver, so a
-  *      pair that reaches this decision has no call left that names the accessor. What the phase
-  *      cannot prove it counts, in `idiom(residue)`;
-  *   3. '''direct field access elsewhere in the class must be equivalent post-collapse.''' Guard
-  *      [[Guard.ComputedBody]] — the TRIVIAL-BODY test. `this.f` becomes `this.x`, which on a plain
-  *      `var` is the same storage; that holds exactly when the getter's body is `return this.f` and
-  *      the setter's is `this.f = v`, which is also why the def-pair path keeps bodies verbatim. A
-  *      getter and a setter over DIFFERENT fields have no single field to become the `var`
-  *      ([[Guard.SplitFields]]);
-  *   4. '''the SURFACE must not gain a writer java did not have, or lose one it did.''' Guards
-  *      [[Guard.VarWithoutSetter]] and [[Guard.ValWithSetter]] — which is what the per-entry
-  *      `target` is FOR: the port states the shape it expects and a mismatch is refused rather than
-  *      picked. [[Guard.MutableStorage]] is the same rule read at the storage: a `val` is only
-  *      emitted where java wrote the field `final` WITH its own initialiser, because every other
-  *      shape's keyword is decided by the constructor funnel — which this phase cannot see, and
-  *      guessing it would be a fabricated fact (§4.6). An over-refusal here is a counted skip an
-  *      agent can read; an under-refusal would be a public `var` where java published a read-only
-  *      property;
-  *   5. '''the JVM METHOD NAMES move.''' `getName()`/`setName()` become `name()`/`name_$eq()`. No
-  *      guard can reach a reflective reader, so it is RECORDED on the conversion's own decision —
-  *      and where the port has ALSO declared [[PublicFieldAccessorTransform]] over the same type it
-  *      is a contradiction rather than a residue ([[Guard.ExposedField]]): that phase exists to put
-  *      bean names ON a field for a framework to find, and this one takes them OFF.
-  *
-  * ==What is deliberately NOT a knob==
-  * The pairs map IS the include list and `DESIGN.md` §8.5's "Rejected" forbids a second policy home
-  * beside it, so there is no `RuleScope` here: a scope would let a pair be listed and then silently
-  * scoped out, which is the failure §1(b) exists to prevent.
+  * The pairs map IS the include list (`DESIGN.md` §8.5 "Rejected") — no `RuleScope` here, since a
+  * scope would let a pair be listed and then silently scoped out.
   */
 object BeanCollapse:
 
@@ -128,10 +87,8 @@ object BeanCollapse:
   /** THE DECISION, for one pair the def-pair path accepted.
     *
     * Stated obligations-first and `target` LAST, deliberately: a pair the port has not asked for
-    * still has a §8.5 verdict, and reporting it as `NotRequested` before asking whether it COULD
-    * collapse would make the denominator say "137 pairs, nothing known about any of them". The
-    * order costs one closure walk per unrequested pair and buys the only number a maintainer
-    * deciding whether to widen an enablement can read.
+    * still has a §8.5 verdict, so `NotRequested` is reported only after the collapse is shown
+    * possible — the only reading a maintainer deciding whether to widen an enablement can use.
     */
   def decide(p: Program, graph: OverrideGraph, prop: BeanPropertyTransform.Property,
              target: BeanPropertyTransform.Target, exposed: RuleScope, written: Set[SymId]): Verdict =
@@ -160,44 +117,32 @@ object BeanCollapse:
           else Verdict.Collapse(f)
 
   /** does the port ALSO ask for java-bean accessors on this field? See [[Guard.ExposedField]].
-    *
-    * Asked of the FIELD through [[PublicFieldAccessorTransform]]'s own `RuleScope`, which is the
-    * one place that policy lives — never re-derived from a name (§4.56). The default scope
-    * (`Only(Set.empty)`) includes nothing, so a port that does not carry that phase asks nothing. */
+    * Asked of the FIELD through [[PublicFieldAccessorTransform]]'s own `RuleScope` (§4.56); its
+    * default scope (`Only(Set.empty)`) includes nothing, so a port without that phase asks nothing. */
   private def isExposed(p: Program, exposed: RuleScope, field: SymId): Boolean =
     p.symbolOf(field).exists(exposed.includes(p, _))
 
-  /** is `f` a FIELD of the accessor's OWN class, declared by this program?
-    *
-    * Structural on both halves. `p.owns` answers the second (§4.56 — a symbol is owned iff climbing
-    * its owners reaches a unit), and comparing owners answers the first: an inherited field read by
-    * a trivial getter is somebody else's declaration and this phase may not move it, while a field
-    * of a DIFFERENT class reached through a qualified path is not a backing field at all. A
-    * `Tree.ValDef` under a `Tree.ClassDef` is the shape; a local or a parameter is not. */
+  /** is `f` a FIELD of the accessor's OWN class, declared by this program? Structural: `p.owns`
+    * (§4.56), matching owners, and the `Tree.ValDef`-under-`Tree.ClassDef` shape — never a local
+    * or a parameter, and never an inherited field this phase may not move. */
   private def ownedFieldOf(p: Program, f: SymId, getter: SymId): Boolean =
     p.owns(f) &&
       p.symbolOf(f).map(_.owner) == p.symbolOf(getter).map(_.owner) &&
       p.definitionOf(f).exists(_.isInstanceOf[Tree.ValDef]) &&
       p.symbolOf(f).exists(s => !s.flags.isStatic && !s.flags.isParam)
 
-  /** may this field really be emitted as a `val`? See [[Guard.MutableStorage]].
-    *
-    * Two conjuncts, and neither is java's `final` keyword — which is the point. A java field is
-    * routinely non-`final` and never actually reassigned (`private MapObjects objects = new
-    * MapObjects();`), and refusing on the modifier would decline most of the get-only population
-    * for a fact about java's syntax rather than about the program. What decides whether a `val`
-    * COMPILES is that the value is here at the declaration and that nothing writes it, and both are
-    * structural: the initialiser is on the node, and the write set is a whole-program scan taken
-    * once ([[writtenSymbols]]). */
+  /** may this field really be emitted as a `val`? See [[Guard.MutableStorage]]. Neither conjunct is
+    * java's `final` keyword — a non-`final` field that is never reassigned is common, and refusing
+    * on the modifier would decline most of the get-only population for a syntax fact rather than a
+    * program one. Structural instead: the initialiser is on the node, and nothing writes it (the
+    * whole-program scan [[writtenSymbols]]). */
   private def immutableHere(p: Program, f: SymId, written: Set[SymId]): Boolean =
     !written.contains(f) &&
       p.definitionOf(f).collect { case v: Tree.ValDef => v }.exists(_.rhs.isDefined)
 
-  /** every symbol the WHOLE PROGRAM assigns or increments, taken once.
-    *
-    * Whole-program because a setter in another member — or in another type — is invisible from the
-    * declaration, which is the same argument `CtorFunnel.writesPerField` makes for its own copy of
-    * this question. Through `StandardTraversal`, so a node kind added tomorrow is visited (§3). */
+  /** every symbol the WHOLE PROGRAM assigns or increments, taken once — a setter in another member
+    * or type is invisible from the declaration (the same argument `CtorFunnel.writesPerField`
+    * makes). Through `StandardTraversal`, so a node kind added tomorrow is visited (§3). */
   def writtenSymbols(p: Program): Set[SymId] =
     given Program = p
     val acc = collection.mutable.Set.empty[SymId]
@@ -217,12 +162,9 @@ object BeanCollapse:
     acc.toSet
 
   /** the field a TRIVIAL getter reads — `return this.f`, and nothing else. `None` for every other
-    * body, which is a refusal and never a widening.
-    *
-    * Read through [[soleStatement]], because a method body is a `Tree.Block` whose STATEMENTS hold
-    * the `return` and whose value position holds a unit literal — matching on the return alone
-    * reports every accessor in every port as computed, which is a denominator that would have
-    * decided a wave. */
+    * body, which is a refusal and never a widening. Read through [[soleStatement]]: a method body
+    * is a `Tree.Block` whose STATEMENTS hold the `return`, and matching on the return alone would
+    * report every accessor as computed. */
   def trivialField(p: Program, getter: SymId): Option[SymId] =
     p.definitionOf(getter).collect { case d: Tree.DefDef => d }.flatMap(_.rhs)
       .flatMap(soleStatement).flatMap {
@@ -240,13 +182,10 @@ object BeanCollapse:
         case _                                       => scala.None
       }
 
-  /** the ONE thing a body does, or `None` where it does more than one.
-    *
-    * A `Tree.Block`'s value position carries a unit literal for a `void`-shaped body and the real
-    * work sits in `stats`; for a value-returning body the `return` is a statement and the value
-    * position is again a filler. So "exactly one statement" is the question, and the block's own
-    * value position counts only when there are no statements at all. Anything else is a body that
-    * does more than move a field, which is the refusal §8.5 kept bodies verbatim for. */
+  /** the ONE thing a body does, or `None` where it does more than one. A `Tree.Block`'s value
+    * position is a filler unit literal for a `void`-shaped body (the real work sits in `stats`), so
+    * "exactly one statement" is the question, counting the value position only when `stats` is
+    * empty. Anything else does more than move a field — the refusal §8.5 kept bodies verbatim for. */
   def soleStatement(t: Term): Option[Statement] = t match
     case Tree.Block(Nil, e, _, _, _)       => soleStatement(e)
     case Tree.Block(List(one), _, _, _, _) =>
@@ -262,28 +201,14 @@ object BeanCollapse:
 
   /** does any OTHER declaration of this member's component have a BODY? See
     * [[Guard.ConcreteRelative]] — the half of the override question `overriddenBelow` does not
-    * answer, and the one that decides whether the emitted `var` is an IMPLEMENTATION or an
-    * (illegal) OVERRIDE. */
+    * answer, deciding whether the emitted `var` is an IMPLEMENTATION or an (illegal) OVERRIDE. */
   def concreteRelative(p: Program, g: OverrideGraph, m: SymId): Boolean =
     g.closureOf(m).members.exists(o => o != m &&
       p.definitionOf(o).collect { case d: Tree.DefDef => d }.exists(_.rhs.isDefined))
 
   /** does a SUBCLASS of the declaring class declare this member too? See [[Guard.OverriddenBelow]] —
-    * an ancestor is fine and a descendant is not, so the test is on the direction of the edge and
-    * not on the size of the component.
-    *
-    * ==Asked of the GRAPH's own transitive answer, because the one-hop form was not the question==
-    * This walked the closure and asked whether the other declaration's owner names THIS owner as a
-    * DIRECT parent — `g.parentsOf(theirs).contains(mine)`. A re-declaration two levels down names
-    * the class in BETWEEN, so the test answered "nothing below" about a subclass that really does
-    * re-declare the member, and the collapse emitted a `var` under an abstract `def` it cannot
-    * implement and a concrete one it cannot override. **Nothing reports that until the port is
-    * already at 0 typer errors**, because `RefChecks` does not run before then (§3), so it arrives
-    * on the day the port goes green in a member nobody is looking at.
-    *
-    * `OverrideGraph.overriders` is exactly this question — "the declarations BELOW `m` that override
-    * or implement it, every subclass, every anonymous body, transitively" — memoised on
-    * `descendantsOf` and published once. Re-deriving the direction here was the second answer §4.6
-    * is about, and it was the wrong one. */
+    * an ancestor is fine and a descendant is not. Uses `OverrideGraph.overriders`'s transitive
+    * answer, not a one-hop direct-parent test: a re-declaration two levels down would otherwise read
+    * as "nothing below" and the collapse would emit a `var` it cannot legally be. */
   def overriddenBelow(g: OverrideGraph, m: SymId): Boolean =
     g.overriders(m).nonEmpty

@@ -2,37 +2,22 @@ package balticporter.transform
 
 import balticporter.tir.{CheckReport, Origin}
 
-/** WHAT A REFLECTIVE FRAMEWORK CANNOT SEE — the count `ENGINE-LIMITS.md` K21 face 2 asks for.
+/** Counts java `public` fields a reflective framework cannot see once emitted as private scala
+  * members. `ENGINE-LIMITS.md` K21 face 2
   *
-  * A java `public` field is part of the class file's public surface; the scala the port emits has
-  * no public JVM field for it under any declaration form. Nothing else in the pipeline can report
-  * that: the port compiles, every other count is flat, and the framework's answer is an ABSENT
-  * property, which a library that defaults `null` then turns into a plausible wrong answer.
-  *
-  * Two rows, and they are two different questions:
-  *
-  *   - [[Issue.NameTaken]] is a seam this phase's own POLICY created — a class it was asked to
-  *     expose and could not. §1(b): a scope that produces a silent hole is worse than no scope.
-  *   - [[Issue.Unexposed]] is the REVIEW LIST — a type with java-public fields that the port did
-  *     not ask about. One row per TYPE, because "is this class read reflectively?" is asked once
-  *     per class, and the same shape as `CollectionBoundaryCheck.Issue.OpaqueEgress` for the same
-  *     reason.
-  *
-  * Recorded only where the phase RAN, exactly as the collection and nullability boundaries are: a
-  * port that never declared a reflective consumer has no policy for this to be a residue of, and
-  * the population would be every public field in the library.
+  * [[Issue.NameTaken]]: seam from this phase's own scope. [[Issue.Unexposed]]: review list of
+  * java-public-field types not yet scoped. [[Issue.NameUnreachable]]: name unreachable via
+  * `decapitalize`. Recorded only when the phase ran.
   */
 object BeanExposureCheck:
   val Name = "bean-exposure"
 
   enum Issue:
-    /** the class is in scope and a bean name is already taken by a member java declared. */
+    /** bean name already taken by a member java declared. */
     case NameTaken
-    /** the type has java-public fields and was not in scope — the list a port picks entries from. */
+    /** java-public-field type not yet in scope — review list. */
     case Unexposed
-    /** the field's name has no accessor a bean reader would look under: `decapitalize` does not
-      * invert the JavaBeans capitalisation for it, so the property would be registered under a name
-      * nobody asks for. */
+    /** field name unreachable via `decapitalize`. */
     case NameUnreachable
 
   object Issue:

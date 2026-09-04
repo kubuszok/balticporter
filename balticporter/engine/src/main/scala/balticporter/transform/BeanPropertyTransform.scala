@@ -3,75 +3,12 @@ package balticporter.transform
 import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
 import balticporter.tir.*
 
-/** Turn a named JavaBean ACCESSOR PAIR into a Scala property — `def x` and `def x_=(v)` — and
-  * rewrite every call site through it (DESIGN.md §8.5).
-  *
-  * ==Kind==
-  * CLAUDE.md §1(b). The MECHANISM — detect the pair, rename the whole override component, drop the
-  * getter's empty parameter clause, turn `o.getX()` into `o.x` and `o.setX(v)` into `o.x = v` — is a
-  * fact about the two languages. WHICH members are properties is a fact about one library and
-  * arrives as a constructor parameter. An empty map is a structural no-op: the phase returns its
-  * input before building anything.
-  *
-  * ==Why the policy is an INCLUDE LIST and not a detected pattern==
-  * Measured, not assumed. One upstream in this corpus emits 3,234 `get*`/`set*`/`is*` methods and
-  * its hand port KEPT 1,375 of them (684 distinct names) against ~223 it converted — a ~14 %
-  * conversion rate concentrated in three package families, with the SAME pair converted differently
-  * in different types (one type's `opacity` is a computed `def`, another's is a `var`). A blanket
-  * rule would rewrite some three thousand members a careful human deliberately left alone. So the
-  * pairs map IS the policy, and it is deliberately the only knob: a second scope beside it would be
-  * two homes for one decision (DESIGN.md §5.6, §8.5's "Rejected").
-  *
-  * ==Configuration==
-  * {{{
-  * { transform = "bean-properties"
-  *   pairs { "com.foo.MapLayer#opacity" = "getOpacity/setOpacity"
-  *           "com.foo.Map#properties"   = "getProperties"
-  *           "com.foo.MapLayer#name"    = { accessors = "getName/setName", target = "var" } } }
-  * }}}
-  * The KEY is the emitted property, in the UPSTREAM namespace like every policy key (§4.56 — the
-  * package rename runs last). The VALUE names the accessor(s) EXPLICITLY rather than deriving them
-  * from the property name, for two reasons: a hand port's names are not always bean-derivable
-  * (`getDragActor` → `currentDragActor`), and a `neverFired` report needs the accessors as DATA.
-  *
-  * ==The default target is `def x` / `def x_=(v: R): Unit`, bodies kept VERBATIM==
-  * Collapsing a trivial pair into a public `var` is what a hand port usually writes and it deletes
-  * the `$field` noise the emitter's `resolveMemberClashes` leaves behind — and it carries three
-  * silent-correctness obligations (a `var` cannot be overridden; every call must provably route
-  * through the pair; direct field access elsewhere must be equivalent), so it is OPT-IN PER ENTRY —
-  * `target = "var"` / `"val"` — and refused whenever an obligation cannot be discharged
-  * (DESIGN.md §8.5). Keeping the bodies is what makes a computed accessor and a side-effecting
-  * setter correct by construction, and it is what an entry that says nothing still gets.
-  *
-  * ==Refusals — each counted, each with a spec==
-  * A pair is applied whole or not at all, because a renamed getter with an unrenameable setter is
-  * half a property:
-  *
-  *   - an accessor whose override component reaches an unparsed parent or a resolution root's
-  *     declaration ([[OverrideGraph.Closure]]'s anchors);
-  *   - a FLUENT setter, returning the declaring type — `o.x = v` is `Unit` and a chain has no
-  *     assignment rendering;
-  *   - a SET-ONLY entry: Scala's `o.x = v` sugar needs `x` in scope, and the assignment's left-hand
-  *     side names the GETTER symbol, so with no getter there is nothing to put on an LHS;
-  *   - a value-position accessor reference (`Tree.MethodRef`, or a `Select` that is not a call) —
-  *     an eta-expanded `x_=` is not the SAM java saw;
-  *   - a STATIC accessor (a companion property is out of scope);
-  *   - a name collision the emitter's §4.55 passes will not resolve ([[MemberRenamer.OnCollision]]).
-  *
-  * '''NEVER INVENT A MEMBER.''' An entry naming an accessor that does not exist is a `NeverMatched`
-  * finding from the binder, not a synthesis. The audit behind this design found the hand port
-  * AUTHORING getters to complete pairs; that is authoring, permanently outside mechanism scope.
-  *
-  * ==Ordering==
-  * BEFORE every retyping phase, so the descriptors it matches are java's own; the package rename is
-  * last as always. `runsBefore` names the two engine phases whose names are static; the opaque-type
-  * phase's name embeds its own FQN and cannot be named here, so a port that runs one places this
-  * phase earlier in its `surface` list (`Pipeline.order` is stable in declaration order).
-  *
-  * ==This phase changes emitted SIGNATURES, so it is SHARED SURFACE==
-  * It implements `SurfacePolicy` and its pairs live in the BASE manifest: a dependent resolves
-  * against the base's Java and must see the same conversion, or the two ports each compile alone
-  * and cannot compile together (§1.5).
+/** Turns a configured JavaBean accessor pair (`getX`/`setX`) into a Scala property (`x`/`x_=`) and
+  * rewrites every call site; `pairs` is an explicit include list keyed by upstream FQN (§4.56), not
+  * a detected pattern. A pair is applied whole or refused (unparsed parent, fluent/set-only setter,
+  * value-position reference, static accessor, name collision) — never invented. Default target keeps
+  * bodies verbatim (`def x`/`def x_=`); `var`/`val` collapse is opt-in per entry.
+  * CLAUDE.md §1(b), DESIGN.md §8.5. Shared surface (§1.5) — runs before retyping and package rename.
   */
 final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
                                   targets: Map[String, BeanPropertyTransform.Target] = Map.empty,
@@ -83,51 +20,28 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
 
   override def runsBefore: Set[String] = Set("java-collections->scala", "package-rename")
 
-  /** the lane that publishes what this phase CONSIDERED — one row per configured pair, `Converted`
-    * or `Refused(guard)`, which IS the collapse's denominator ([[BeanCollapse]]).
-    *
-    * [[IdiomKind.BeanDetect]] is declared only when the scope is active, so a run with no scope
-    * does not report a zero that means "the phase is in the pipeline" when the phase could not have
-    * detected anything. A kind is a DECLARED POPULATION, and reporting one for a population the
-    * phase was not configured to look for would make `idiom(refused) = 0` indistinguishable from
-    * "detection off" — which is `CLAUDE.md` §5's own rule about a bar met by doing nothing. */
+  /** Idiom kinds this run reports: `BeanCollapse` always, plus `BeanDetect` only when the
+    * auto-detection scope is active — an inactive kind must not report a misleading zero. */
   def idiomKinds: Set[IdiomKind] =
     if scope == RuleScope.Only(Set.empty) then Set(IdiomKind.BeanCollapse)
     else Set(IdiomKind.BeanCollapse, IdiomKind.BeanDetect)
 
-  /** the lane that counts what a collapse MOVED and did not rewrite.
-    *
-    * Owed because the collapse retypes the surviving getter's `info`, which `Pipeline.runTraced`
-    * SEES — and deliberately NOT `policy`: a declared key that never fired is a different residue
-    * from a usage a rewrite left behind, and naming a lane that answers the first question about
-    * the second is the shape `ENGINE-LIMITS.md` K2.5 measured. */
+  /** Check lane that counts what a collapse moved and did not rewrite (not `policy`, which counts
+    * never-fired keys). ENGINE-LIMITS K2.5. */
   def accountedBy: Set[String] = Set(IdiomCheck.Residue)
 
-  /** THE K21-FACE-2 POLICY THIS PHASE MUST NOT CONTRADICT, threaded by the run.
-    *
-    * `PublicFieldAccessorTransform` PUTS java-bean names on a field so a reflective framework can
-    * find them; the collapse TAKES them off. A port declaring both over one type is asking for two
-    * opposite things, and the only place that can SEE both is the run that assembles the pipeline —
-    * so it hands this phase the other phase's own `RuleScope` rather than the port declaring a
-    * second copy of it (`PortRun.idiomPhases`). A copy, never a mutation: a phase is a value. */
+  /** Threads `PublicFieldAccessorTransform`'s scope in, so a field it exposed reflectively is not
+    * also collapsed away by this phase (K21 face 2). Returns a copy. */
   def withExposed(exposed: RuleScope): BeanPropertyTransform =
     new BeanPropertyTransform(pairs, targets, exposed, scope)
 
-  /** WHAT SHAPE this entry asked for — [[BeanPropertyTransform.Target.DefPair]] where it said
-    * nothing, which is what every published config already says and what makes the second map a
-    * compatible extension rather than a second policy home (DESIGN.md §8.5). */
+  /** The shape an entry asked for; `DefPair` where it said nothing (DESIGN.md §8.5). */
   def targetOf(key: String): BeanPropertyTransform.Target =
     targets.getOrElse(key, BeanPropertyTransform.Target.DefPair)
 
-  /** the pairs, sorted and rendered — two modules that agree must compare equal (§1.5).
-    *
-    * '''The TARGET is part of it, and it is one line that is easy to miss.''' Two configurations
-    * that name the same accessors and ask for different SHAPES emit different signatures; rendered
-    * without the target they compare EQUAL, `SurfaceMissing` cannot see the difference, and a
-    * same-name pair can be neither compared nor composed — which is `ENGINE-LIMITS.md` CT9's
-    * recorded failure exactly. Rendered UNCONDITIONALLY rather than only where a target was
-    * declared: a fingerprint whose grammar depends on the value is one whose collisions depend on
-    * it too. */
+  /** The pairs, sorted and rendered with their target — two modules that agree must compare
+    * equal (§1.5); the target is rendered unconditionally or `SurfaceMissing` cannot see two
+    * configs naming the same accessors at different shapes (ENGINE-LIMITS CT9). */
   def surfaceFingerprint: String =
     val pairsFp = pairs.toList.sorted.map((k, v) => s"$k=$v>${targetOf(k).config}").mkString(",")
     // §1(b): omit the scope segment at the default (`Only(Set.empty)`) — an empty parameter
@@ -139,41 +53,20 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
       if pairsFp.isEmpty then s"detect=$scopeFp"
       else s"$pairsFp;detect=$scopeFp"
 
-  /** the port's own pairs table, verbatim — the policy this phase was constructed WITH.
-    *
-    * Exposed for the one question the phase itself cannot ask: whether the shape this run derived
-    * for a BASE's pair is the shape the base PUBLISHED. That comparison needs the base's port map
-    * and the run's own idiom log, and neither is a thing a phase holds — it belongs to `PortRun`
-    * (`PortRun.collapseDivergence`). What a phase must not do is answer it twice, so this hands over
-    * the CONFIGURATION and nothing else: the verdict still comes from the idiom log the phase filled
-    * (§4.6, and `ENGINE-LIMITS.md` K2.5's measured shape of two answers to one question). */
+  /** The port's own pairs table, verbatim — used only to compare a derived collapse shape against
+    * the base's published one (`PortRun.collapseDivergence`); the verdict itself comes from the
+    * idiom log (ENGINE-LIMITS K2.5). */
   def pairsTable: Map[String, String] = pairs
 
-  /** the auto-detection scope, exposed for the merge contract (two instances composing their
-    * scopes) and the fingerprint. */
+  /** The auto-detection scope, exposed for the merge contract and the fingerprint. */
   def detectScope: RuleScope = scope
 
-  /** every type this instance's policy is KEYED on — a key's owner, through the one cut
-    * `MergeablePolicy.subjectOf` owns. The scope entries contribute too, because an auto-detected
-    * pair's property name is a fact about the emitted SURFACE (§1.5). */
+  /** Every type this instance's policy is keyed on, including scope entries — an auto-detected
+    * pair's property name is emitted surface too (§1.5). */
   def subjects: Set[String] = pairs.keySet.map(MergeablePolicy.subjectOf) ++ scope.entries
 
-  /** THE MERGE CONTRACT (DESIGN.md §8.13). Independent member keys union; same key with different
-    * accessor value is REFUSED.
-    *
-    * ==Why this is now owed==
-    * A DEPENDENT can now declare its own `bean-properties` entries — ashley's `getEngine` ->
-    * `engine` is a fact about ashley, not about libGDX. The §1.5 instance-count question
-    * (`grep -rn 'BeanPropertyTransform' balticporter/corpus`) now answers >1, so the merge contract
-    * is owed. The merge is a union of independent keys, which is the contract `MemberRenameTransform`
-    * establishes for the same shape (a map of member keys to per-key policy). A key appearing in
-    * BOTH with DIFFERENT values is refused, which is §1.5's "same key, different value stays two
-    * instances and is reported".
-    *
-    * The TARGET map merges the same way: an entry in both with different targets is refused (a pair
-    * is a `var` or a `val`, and two modules cannot disagree about that). An absent target on one side
-    * (= `DefPair`, the default) yields to the other side's explicit target.
-    */
+  /** The merge contract (DESIGN.md §8.13): independent keys union; same key with a different
+    * accessor value or target is refused. An absent target (`DefPair`) yields to an explicit one. */
   def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
     case b: BeanPropertyTransform =>
       val myPairs    = pairsTable
@@ -184,8 +77,6 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
           conflicts.toList.sorted.take(3).map(k =>
             s"`$k` (${myPairs(k)} vs ${theirPairs(k)})").mkString("; "))
       else
-        // Compare targets through `targetOf` — the public accessor that defaults `DefPair`.
-        // Two entries that BOTH default are equal; an absent target on one side yields to the other.
         val allKeys = myPairs.keySet ++ theirPairs.keySet
         val targetConflicts = allKeys.filter { k =>
           val mine   = targetOf(k)
@@ -198,18 +89,15 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
             targetConflicts.toList.sorted.take(3).map(k =>
               s"`$k` (${targetOf(k).config} vs ${b.targetOf(k).config})").mkString("; "))
         else
-          // Merge targets: the non-default side wins. Both default -> omit from the map.
+          // non-default side wins; both default -> omit
           val mergedTargets = allKeys.flatMap { k =>
             val mine   = targetOf(k)
             val theirs = b.targetOf(k)
             val chosen = if mine != BeanPropertyTransform.Target.DefPair then mine else theirs
             if chosen != BeanPropertyTransform.Target.DefPair then Some(k -> chosen) else scala.None
           }.toMap
-          // Merge scopes: two `Only` scopes union their include sets, two `Everywhere` scopes
-          // union their except sets, and a mixed pair is refused — `Everywhere(except) ∩ Only(include)`
-          // has no meaning the enum can hold.
-          // `Only(Set.empty)` is the NO-OP default. When one side is the no-op, the other
-          // side's scope wins — a dependent that declared no scope inherits the base's.
+          // Only/Only union include sets, Everywhere/Everywhere union except sets, mixed is refused;
+          // the no-op side yields to the other's scope.
           val noOp = RuleScope.Only(Set.empty)
           val mergedScope: Either[String, RuleScope] = (detectScope, b.detectScope) match
             case (s, `noOp`) => Right(s)
@@ -249,10 +137,7 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     parsed      = entries
     ownFindings = malformed
     bound = entries.flatMap { e =>
-      // The accessor key is RENDERED from a `MemberKey`, never spliced from the owner and the name:
-      // §8.1's convention, and the one the transform-package lint enforces. It is BARE on purpose —
-      // a bare key names every overload, and only the one with the right shape converts (§8.5:
-      // `getX(int)` stays while `getX()` moves).
+      // bare key names every overload; only the one with the right shape converts (§8.5)
       e.accessors.map { a =>
         val key = MemberKey(e.owner, a).render
         key -> binder.bindMembers(name, s"BeanPropertyTransform(pairs) `${e.key}`", key)
@@ -261,25 +146,20 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     }.toMap
     records = binder.recordsFor(name)
 
-  /** the never-fired half (from the BINDING, so it is complete whether or not this phase ran) plus
-    * this phase's own malformed entries and counted refusals. */
+  /** The never-fired half (from the binding) plus this phase's own malformed entries and counted
+    * refusals. */
   def policyReport: PolicyReport = PolicyReport.fromBindings(records) ++ PolicyReport(ownFindings)
 
   // ---- the run ------------------------------------------------------------------------------
 
-  /** EVERY declaration of the getter component -> the property, and the same for the setter.
-    *
-    * The whole COMPONENT and not the named accessor, which is the invariant applied to the SHAPE
-    * change rather than only to the name: an interface whose `getX()` became `def x` and an
-    * implementor that kept `def x()` do not override each other, which is an error at exactly the
-    * declaration the policy was written to move. Measured on this phase's own end-to-end fixture —
-    * the rename was complete and the arity edit reached one of three declarations. */
+  /** Every declaration of the getter's whole override COMPONENT -> the property, and likewise for
+    * the setter — an interface `getX()` and an implementor's kept `def x()` would otherwise not
+    * override each other. */
   private var getters: Map[SymId, BeanPropertyTransform.Property] = Map.empty
   private var setters: Map[SymId, BeanPropertyTransform.Property] = Map.empty
 
-  /** a setter declaration -> the getter declaration whose NAME its assignment's LHS must carry —
-    * the one in the SAME owner where there is one, so the emitted `this.x = v` names a member of
-    * the class it is written in. */
+  /** setter declaration -> the SAME-owner getter declaration whose name its assignment's LHS must
+    * carry, so the emitted `this.x = v` names a member of the class it is written in. */
   private var lhsOf: Map[SymId, SymId] = Map.empty
 
   /** the collapses this run applied — decided once, applied once, reported once. */
@@ -317,14 +197,8 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     val detectedProperties =
       if !scopeActive then Nil
       else
-        // Skip any accessor method already CLAIMED by a configured pair, AND skip any auto-detected
-        // pair whose derived property name collides with a configured pair's property key.
-        // The configured pair's key is `owner#property` and the auto-detected key is
-        // `owner#derivedProperty` — which differ when the configured pair uses a non-standard
-        // property name (e.g., `getDragActor` -> `currentDragActor` instead of `dragActor`).
-        // TWO checks: (1) the accessor NAME is already claimed; (2) the derived PROPERTY NAME is
-        // already taken (e.g., configured `getTouchable` -> `touchable` blocks auto-detected
-        // `isTouchable` -> `touchable`).
+        // skip an accessor already claimed by a configured pair, or a derived property name
+        // colliding with a configured one's key (the two can differ, e.g. getDragActor -> currentDragActor)
         val configuredAccessors: Set[String] = parsed.flatMap { e =>
           e.accessors.map(a => MemberKey(e.owner, a).render)
         }.toSet
@@ -361,7 +235,6 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     renameRefusals.map(_.request.key).distinct.foreach { k =>
       val why = renameRefusals.find(_.request.key == k).map(_.why).getOrElse("refused")
       parsed.find(_.key == k).foreach(e => refuse(e, why))
-      // auto-detected pairs report their rename refusal through the idiom lane
       detectedProperties.find(_.key == k).foreach { p =>
         consider(IdiomCandidate(IdiomKind.BeanDetect,
           IdiomVerdict.Refused("RenameRefused", why), p.key,
@@ -372,12 +245,8 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
 
     val applied = properties.filterNot(p => refusedKeys.contains(p.key))
 
-    // ---- 3. THE COLLAPSE DECISION, per entry, on the PRE-rename program ---------------------
-    // A rename moves NAMES and every §8.5 obligation is about a SHAPE, so the two questions are
-    // independent and the cheaper program answers this one. Filed for EVERY parsed entry, including
-    // the ones the def-pair path refused, because `idiom(refused)` is a DENOMINATOR: a run that
-    // reported only the entries it could have collapsed would answer "how many did you convert" and
-    // nothing at all about the population that number is drawn from.
+    // ---- 3. the collapse decision, per entry, on the pre-rename program ----------------------
+    // filed for every parsed entry (incl. def-pair refusals) since `idiom(refused)` is a denominator
     lazy val written = BeanCollapse.writtenSymbols(program)
     val verdicts = parsed.map { e =>
       e -> (applied.find(_.key == e.key) match
@@ -412,34 +281,22 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     }.toMap
 
     // ---- 4. the tree edits: the getter's empty parameter clause, and every call site ---------
-    // A `paramss` of `List(Nil)` renders `()` and `Nil` renders nothing, so this is what turns a
-    // java nilary method into a scala PARAMETERLESS one — and it is why the call sites must move in
-    // the same pass: `o.x()` on a parameterless def is a type error.
-    //
-    // The symbol's `info` is deliberately LEFT as `MethodType(Nil, R)`: a scala parameterless `def`
-    // IS a method, its descriptor is still the empty one, and every arity reader in the engine reads
-    // `paramss`. Retyping it would make `PolicyBinder.isExecutable` and `OverrideGraph.signatureOf`
-    // stop recognising the member they had just renamed.
+    // `paramss = Nil` renders no `()`, turning the java nilary method into a scala parameterless
+    // one; call sites move in the same pass since `o.x()` on a parameterless def is a type error.
+    // `info` stays `MethodType(Nil, R)` — every arity reader in the engine reads `paramss`.
     val paired =
       given Program = renamed
       renamed.rebuilt(units = renamed.units.map(u => StandardTraversal.mapClassDef(this, u)))
 
-    // ---- 5. …and the COLLAPSE, applied last, over what the def-pair path has already moved ---
+    // ---- 5. …and the collapse, applied last, over what the def-pair path has already moved ---
     if collapsed.isEmpty then paired else applyCollapse(paired)
 
   override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef =
     if getters.contains(t.symbol) then t.copy(paramss = Nil) else t
 
-  /** `o.getX()` → `o.x`, `o.setX(v)` → `o.x = v`.
-    *
-    * BOTTOM-UP, which is what makes the compound form `o.setX(o.getX() + 1)` need no special case:
-    * the inner read has already become a `Select` by the time the outer write is rewritten.
-    *
-    * The assignment's LEFT-HAND SIDE names the GETTER symbol, not the setter — the emitter renders
-    * `Assign` as `lhs = rhs`, so `recv.x = v` is what reaches scalac, and scalac desugars it to
-    * `x_=`. That is also the structural reason a set-only entry is refused: with no getter there is
-    * nothing to put on an LHS.
-    */
+  /** `o.getX()` -> `o.x`, `o.setX(v)` -> `o.x = v`. Bottom-up, so `o.setX(o.getX() + 1)` needs no
+    * special case. The assignment's LHS names the GETTER symbol — scalac desugars `recv.x = v` to
+    * `x_=` — which is also why a set-only entry has nothing to put on an LHS. */
   override def transformApply(t: Tree.Apply)(using Program): Term =
     if getters.contains(t.method) && t.args.isEmpty then
       receiverOf(t.fun) match
@@ -457,9 +314,8 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
         case scala.None       => t
     else t
 
-  /** the call's receiver: `Some(None)` for a bare call (no qualifier), `Some(Some(q))` for a
-    * qualified one, `None` for a shape this phase does not rewrite — which `validate` has already
-    * refused the pair for, so it cannot be reached for an APPLIED property. */
+  /** The call's receiver: `Some(None)` bare, `Some(Some(q))` qualified, `None` a shape `validate`
+    * has already refused the pair for. */
   private def receiverOf(fun: Term): Option[Option[Term]] = fun match
     case _: Tree.Ident            => Some(scala.None)
     case Tree.Select(q, _, _, _)  => Some(Some(q))
@@ -467,45 +323,16 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
 
   // ---- the collapse ---------------------------------------------------------------------------
 
-  /** an accessor's own comments, harvested BEFORE its declaration is deleted.
-    *
-    * §4.58: a comment whose construct the emission CONSUMES needs a home, and the honest one here is
-    * the node that SURVIVES — the getter's javadoc was describing the property. Taken in DECLARATION
-    * ORDER (getter, then setter) and appended after the field's own, so the emitted file reads the
-    * way the java did and nothing is lost. */
+  /** An accessor's own comments, harvested before its declaration is deleted, in declaration order
+    * (getter then setter) and appended after the field's own (§4.58). */
   private def triviaOf(p: Program, m: SymId): List[Trivia] =
     p.definitionOf(m).collect { case d: Tree.DefDef => d.leading }.getOrElse(Nil)
 
-  /** APPLY the collapses: the getter's SYMBOL becomes the property's storage, the field's `ValDef`
-    * becomes the property's declaration, and both accessors' declarations go.
-    *
-    * ==Why the GETTER survives and the field does not==
-    * The two orders emit the same text and only one of them is visible to anything.
-    * `Pipeline.runTraced` derives what a phase moved by comparing each owned symbol's `info` ACROSS
-    * the phase, so retyping the getter is a `Patch.retyped` row while dropping the pair and MINTING a
-    * `var` is not: the dropped symbol has no post-phase `info`, the minted one has no pre-phase one,
-    * and the pair cancels to nothing. Minted, this phase would owe no `accountedBy` lane at all —
-    * `rewrite-callsites` would report 0, `idiom(residue)` would report 0, and every usage the phase
-    * failed to rewrite would be invisible to the one instrument built to find it. The surviving
-    * symbol also carries the `usagesOf` edges the call-site rewrite has already moved, the `srcmap`
-    * row that attributes an error to a java line, and the `port-map.tsv` member row a dependent's
-    * `base-surface` compares against.
-    *
-    * ==…and why the FIELD's NODE is the one that stays in the body==
-    * A scala class body IS its constructor, so the property's POSITION among the field initialisers
-    * and instance-initialiser blocks is the whole of what the class computes (§4.55, JLS 12.5 step
-    * 4). The field is where java put that value; the getter is somewhere else entirely. So the node
-    * keeps its place, its initialiser and its declared type, and only its SYMBOL changes.
-    *
-    * ==The flags are a SPLIT, and it is the one §8.5 states==
-    * VISIBILITY comes from the ACCESSORS — the field is the implementation and the pair is the
-    * surface, so taking the field's `private` would silently narrow the port's API with a green
-    * compile. Everything else comes from the FIELD, whose modifiers are facts about the slot java
-    * allocated. `isMutable` is neither: it is the SHAPE the port asked for, which the guards are
-    * what make sound (`Var` was refused without a setter, `Val` without storage nothing writes).
-    * Read off the field's own `isMutable` instead, a get-only property over an ordinary non-`final`
-    * java field would emit a public `var` and publish a writer java never had.
-    */
+  /** Apply the collapses: the getter's symbol becomes the property's storage, the field's `ValDef`
+    * (kept in place — its position is what the class computes, §4.55/JLS 12.5) becomes the
+    * property's declaration, and both accessors' declarations go. Visibility comes from the
+    * accessors (the surface); every other flag from the field, except `isMutable`, which is the
+    * target shape (`Var`/`Val`) the guards made sound. */
   private def applyCollapse(p: Program): Program =
     val byGetter = collapsed.map(c => c.getter -> c).toMap
     val syms = p.symbols.all.map { s =>
@@ -513,8 +340,7 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
         case Some((c, f)) =>
           s.copy(
             info = f.info,
-            // a field has no parameter spelling; leaving the getter's would tell every overload
-            // reader that this member is still executable (§8.1).
+            // a field has no parameter spelling (§8.1)
             descriptor = scala.None,
             flags = f.flags.copy(
               isPrivate        = s.flags.isPrivate,
@@ -534,13 +360,9 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     recordCollapse(indexed)
     indexed
 
-  /** the DECISION per collapsed property, and the RESIDUE the shape cannot rule out.
-    *
-    * One decision per surviving declaration (§5.1), carrying the one thing the emitted text cannot
-    * say: the JVM METHOD NAMES moved. `getName()`/`setName()` became `name()`/`name_$eq()`, which is
-    * invisible to a compiler, to every count and to every test, and visible to exactly the reflective
-    * reader `ENGINE-LIMITS.md` K21 is about.
-    */
+  /** One decision per surviving declaration (§5.1), recording that the JVM method names moved
+    * (`getName()`/`setName()` -> `name()`/`name_$eq()` — invisible to any compiler or test check,
+    * relevant to a reflective reader, ENGINE-LIMITS K21), plus the residue the shape cannot rule out. */
   private def recordCollapse(p: Program): Unit =
     collapsed.foreach { c =>
       record(Decision(
@@ -561,31 +383,15 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
         reason = Reason.Configured(name, c.key),
         origin = Decision.originOf(p, c.getter),
       ))
-      // …and the RESIDUE. Delta 2 of the enumeration is made impossible by the SHAPE — the def-pair
-      // path refuses a pair with an unrewritable reference and has already moved every rewritable
-      // one — so these three counts SHOULD be zero, and that is exactly why they are taken: a claim
-      // a phase makes about itself and never checks is the shape `ENGINE-LIMITS.md` K2.5 measured.
+      // these three should read zero — an unchecked claim is the K2.5 shape
       c.setter.foreach(s => residue(p, c, s, "a reference to the setter this collapse deleted"))
       residue(p, c, c.field, "a reference to the backing field the property replaced")
       residue(p, c, c.getter, "a CALL of a member that is now a `var`", _.kind == UsageKind.Call)
     }
 
-  /** the SECOND reflective fact, and it belongs only to `target = "val"`.
-    *
-    * Guard 5 of the §8.5 enumeration records that the JVM METHOD NAMES move. A `val` moves one more
-    * thing, in the other direction and at the FIELD: scalac emits a `val`'s backing field `final`,
-    * and java's was not — `MutableStorage` requires a declaration initialiser and no assignment IN
-    * THIS PROGRAM, which is a fact about the program and never about the `final` keyword (that is
-    * deliberate, and it is what keeps the guard from declining most of the get-only population).
-    *
-    * So a reflective WRITER that worked against the java field — `setAccessible(true)` and
-    * `Field.set`, which every deserialiser and every test fixture reaches for — does not work
-    * against the emitted one. It is `ENGINE-LIMITS.md` K21's shape at the storage rather than at the
-    * accessor: no guard can reach it (every reference to an object can reach its `Class`), the port
-    * compiles, no count moves, and the only reader who can act on it is §4.45's, at this line.
-    *
-    * Recorded ONLY for `val`, because a `var`'s field is not final and the sentence would then be
-    * false — a note that says something untrue about the code below it is worse than no note. */
+  /** For `target = "val"` only: scalac emits the backing field `final` where java's was not, so a
+    * reflective writer (`setAccessible` + `Field.set`) that worked against the java field no longer
+    * works (ENGINE-LIMITS K21). Not recorded for `var`, whose field is not final. */
   private def finality(c: BeanPropertyTransform.Collapsed): String =
     if c.target != BeanPropertyTransform.Target.Val then ""
     else "; and this one is a `val`, so its BACKING FIELD is `final` on the JVM where java's was " +
@@ -608,7 +414,7 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     def defOf(s: SymId): Option[Tree.DefDef] = p.definitionOf(s).collect { case d: Tree.DefDef => d }
     def hits(a: String): List[SymId] = bound.getOrElse(MemberKey(e.owner, a).render, Nil).flatMap(_.sym)
 
-    /** the java NILARY overload, and only it: `getX(int)` stays where `getX()` moves (D1 — match by
+    /** The java NILARY overload, and only it: `getX(int)` stays where `getX()` moves (D1 — match by
       * descriptor, never by name-and-guess). */
     def nilary(cands: List[SymId]): List[SymId] =
       cands.filter(s => defOf(s).exists(_.paramss.forall(_.isEmpty)))
@@ -617,13 +423,9 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
 
     def isStatic(s: SymId): Boolean = p.symbolOf(s).exists(_.flags.isStatic)
 
-    /** every recorded CALL of every declaration in the COMPONENT is an ordinary `Apply` of the
-      * right arity through a receiver this phase can move. A `Tree.MethodRef` is a method VALUE —
-      * an eta-expanded `x_=` is not the SAM java saw — and anything else is a shape the rewrite has
-      * no rendering for. Asked of the whole component and not of the named accessor, for the same
-      * reason the arity edit is: a call through an IMPLEMENTOR's symbol is a different symbol from
-      * a call through the interface's, and only one of them is what the entry named. Read from the
-      * xref, so an occurrence inside an anonymous body counts like any other. */
+    /** Every recorded call of every declaration in the whole override COMPONENT is an ordinary
+      * `Apply` of the right arity through a movable receiver — a `MethodRef`/bare `Select` is a
+      * method value, not the SAM java saw. */
     def callsAreRewritable(component: Set[SymId], arity: Int): Boolean =
       component.forall(s => p.usages(s).forall {
         case Usage(UsageKind.Call, a: Tree.Apply, _) =>
@@ -640,8 +442,7 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
       case _ =>
         nilary(hits(e.getterName)) match
           case Nil =>
-            // the binder already reports a key that named nothing; this is the narrower failure —
-            // it named something, and nothing it named has the shape of a getter.
+            // binder already reports a key naming nothing; here it named something with no getter shape
             if hits(e.getterName).isEmpty then scala.None
             else refuse(e, s"`${e.getterName}` has no NILARY overload, so there is no getter to " +
               "convert (an overload with parameters is left exactly as it is)")
@@ -709,27 +510,17 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     case TypeRepr.AppliedType(tc, _) => headOf(tc)
     case _                           => scala.None
 
-  /** Java `void`, as the frontend writes it. `scala.Unit` is the ENGINE's own rendering of it — an
-    * external this program never declares and has no symbol to bind — so the question "did the
-    * frontend write void here" has no other instrument. See `PolicyKeyLintSpec`'s allow-list. */
+  /** Java `void`, as the frontend writes it — not `scala.Unit`, the engine's own rendering.
+    * See `PolicyKeyLintSpec`'s allow-list. */
   private def isVoid(p: Program, t: TypeRepr): Boolean = t match
     case TypeRepr.TypeRef(_, s) => p.symbolOf(s).exists(_.fullName == "scala.Unit")
     case _                      => false
 
 object BeanPropertyTransform:
 
-  /** WHAT SHAPE an entry asks for.
-    *
-    * Three cases and not a boolean, because "collapse this" is two different declarations with two
-    * different obligations: a `var` needs a setter to be a faithful surface and a `val` needs the
-    * storage to be written once. Naming them separately is what lets the phase REFUSE a mismatch
-    * (a `val` target on a pair with a setter is a contradiction the port can be told about) rather
-    * than pick one and be silently right or wrong.
-    *
-    * [[DefPair]] is the default, so every existing port and every existing config is byte-identical
-    * by construction — §1(b)'s "an empty parameter is a no-op" met at the ENTRY level, which is the
-    * right granularity for a per-key policy.
-    */
+  /** The shape an entry asks for: a `var` needs a setter to be a faithful surface, a `val` needs
+    * the storage written once — naming them lets the phase refuse a mismatch rather than pick one
+    * silently. `DefPair` is the default (§1(b)'s no-op, at the entry granularity). */
   enum Target:
     /** `def x` / `def x_=(v: R): Unit`, bodies verbatim — the phase's original and only shape. */
     case DefPair
@@ -738,31 +529,27 @@ object BeanPropertyTransform:
     /** a public `val x`: a get-only entry over storage java wrote once. */
     case Val
 
-    /** the spelling a `.conf` writes. Derived nowhere else, so the config grammar and the enum
-      * cannot drift. */
+    /** The spelling a `.conf` writes; derived nowhere else so the two cannot drift. */
     def config: String = this match
       case DefPair => "def-pair"
       case Var     => "var"
       case Val     => "val"
 
   object Target:
-    /** the CLOSED set a `target = …` key is read against — `ConfigView.enumerated`'s loud door,
-      * which names every alternative in the error rather than falling back to the default. */
+    /** The closed set a `target = …` key is read against. */
     val byConfigName: Map[String, Target] = values.map(t => t.config -> t).toMap
 
-  /** ONE COLLAPSED PROPERTY: the policy key, the accessors as the entry spelled them, the emitted
-    * name, the surviving symbol, the setter that goes, the field that becomes the storage, the shape
-    * the port asked for, and the comments the deleted declarations were carrying. */
+  /** One collapsed property: the policy key, the accessors as spelled, the emitted name, the
+    * surviving symbol, the setter that goes, the storage field, the target shape, and the deleted
+    * declarations' comments. */
   final case class Collapsed(key: String, accessors: String, property: String,
                              getter: SymId, setter: Option[SymId], field: SymId,
                              target: Target, trivia: List[Trivia])
 
-  /** THE TREE EDIT — one traversal, bottom-up, so every reference has been re-pointed by the time
+  /** The tree edit — one traversal, bottom-up, so every reference has been re-pointed by the time
     * the owning class's body is rebuilt.
-    *
-    * A `StandardTraversal` phase and not a private recursion, for §3's reason: the references this
-    * has to move are wherever java wrote them, an anonymous body and a method-local class included.
-    */
+    * A `StandardTraversal` phase and not a private recursion (§3), so an anonymous or method-local
+    * body is reached too. */
   private[transform] final class Collapser(cs: List[Collapsed]) extends Phase:
     def name: String = "bean-properties/collapse"
 
@@ -784,33 +571,27 @@ object BeanPropertyTransform:
         case other                                     => List(other)
       })
 
-    /** every read and write of the backing field now names the PROPERTY.
-      *
-      * Exact, and it is obligation 3 of the enumeration cashed in: the trivial-body guard has
-      * already established that the getter is `return this.f` and the setter `this.f = v`, so
-      * `this.f` and `this.x` are the same storage — a plain scala `var` compiles to the same field
-      * access the java field did. */
+    /** Every read and write of the backing field now names the property — sound because the
+      * trivial-body guard already established `this.f` and `this.x` are the same storage. */
     override def transformIdent(t: Tree.Ident)(using Program): Term =
       byField.get(t.sym).map(c => t.copy(sym = c.getter)).getOrElse(t)
 
     override def transformSelect(t: Tree.Select)(using Program): Term =
       byField.get(t.sym).map(c => t.copy(sym = c.getter)).getOrElse(t)
 
-  /** One applied property: the policy key it came from, the emitted name, the accessors the entry
-    * NAMED, and every declaration of each accessor's override COMPONENT — which is what the arity
-    * edit and the call-site rewrite range over, because a call through an implementor's symbol is a
-    * different symbol from a call through the interface's. */
+  /** One applied property: the policy key, the emitted name, and every declaration of each
+    * accessor's whole override component, which is what the arity edit and call-site rewrite
+    * range over. */
   final case class Property(key: String, property: String, getter: SymId, setter: Option[SymId],
                             getterMembers: Set[SymId], setterMembers: Set[SymId])
 
-  /** one declared entry, parsed. `key` is kept verbatim — it is the string an agent edits. */
+  /** One declared entry, parsed. `key` is kept verbatim — the string an agent edits. */
   final case class Entry(key: String, value: String, owner: String, property: String,
                          getterName: String, setterName: Option[String]):
     def accessors: List[String] = getterName :: setterName.toList
 
-  /** Parse the declared map. Everything outside the grammar is a `Malformed` finding rather than a
-    * best-effort reading: a lenient parse produces a key that binds to the wrong member and says
-    * nothing (`MemberKey.parse`'s argument, applied to this phase's value half too). */
+  /** Parse the declared map; anything outside the grammar is a `Malformed` finding rather than a
+    * best-effort reading. */
   def parse(pairs: Map[String, String]): (List[Entry], List[PolicyFinding]) =
     val findings = collection.mutable.ListBuffer.empty[PolicyFinding]
     def bad(k: String, what: String): scala.None.type =
@@ -857,18 +638,11 @@ object BeanPropertyTransform:
     if s.length > 1 && s.charAt(0).isUpper && s.charAt(1).isUpper then s
     else if s.nonEmpty then s.updated(0, s.charAt(0).toLower) else s
 
-  /** Scan the program for bean accessor pairs in the types named by `scope`. Each detected pair
-    * yields a [[Property]] that can be merged with the configured ones.
-    *
-    * The scope check is on the OWNER TYPE, not on the method — "auto-detect pairs in type `Bar`"
-    * means every getter/setter pair declared in `Bar`. A configured pair at the same key is
-    * SKIPPED so the configured policy always wins.
-    *
-    * Each candidate goes through the SAME shape checks the configured path applies: static, void
-    * getter, fluent setter, value-position references. A refused candidate is filed as
-    * `IdiomKind.BeanDetect` with the guard that refused it. */
-  /** @param substitutedOwners upstream FQNs of types the base SUBSTITUTED — detection skips these
-    *                           so a rename the injected file did not perform is not applied (D14). */
+  /** Scan the program for bean accessor pairs in the types named by `scope` (checked on the owner
+    * type). A configured pair at the same key wins; each candidate goes through the same shape
+    * checks as the configured path, filing a refusal as `IdiomKind.BeanDetect` with its guard.
+    * @param substitutedOwners upstream FQNs of types the base SUBSTITUTED — skipped so a rename
+    *                          the injected file did not perform is not applied (D14). */
   def detect(program: Program, graph: OverrideGraph, scope: RuleScope,
              configuredAccessors: Set[String], configuredPropertyKeys: Set[String],
              substitutedOwners: Set[String],
@@ -885,9 +659,7 @@ object BeanPropertyTransform:
     def paramHead(m: SymId): Option[SymId] =
       defOf(m).flatMap(_.paramss.flatten.headOption).flatMap(v => headOf(v.tpt.tpe))
 
-    // Group owned symbols by their declaring type. Static methods are INCLUDED in the scan so
-    // that the per-getter check can refuse them with a counted `BeanDetect` refusal — filtering
-    // them out here would make them invisible to every instrument.
+    // static methods stay in the scan so the per-getter check can file a counted refusal
     val ownedByType = collection.mutable.Map.empty[SymId, List[Symbol]]
     program.symbols.all.foreach { s =>
       if program.owned(s.id) then
@@ -899,16 +671,12 @@ object BeanPropertyTransform:
     }
 
     ownedByType.foreach { (ownerSym, members) =>
-      // The scope check is on the OWNER TYPE
       val ownerSymObj = program.symbolOf(ownerSym)
       val ownerFqn = ownerSymObj.map(_.fullName).getOrElse("")
-      // Skip types the base SUBSTITUTED — their members are from the JAVA source, not from the
-      // injected Scala, so a rename the detection plans is a rename the injected file never
-      // performed. The dependent's emitted code would call a property the shim never declared
-      // (D14, §1.5). Skipped silently — `followMemberRenames` handles the base's published renames.
+      // skip types the base SUBSTITUTED — their members are java's, not the injected Scala (D14, §1.5)
       if !substitutedOwners.contains(ownerFqn) && ownerSymObj.exists(o => scope.includes(program, o)) then
 
-        // Collect getter candidates: nilary methods matching get[A-Z]* or is[A-Z]*
+        // nilary methods matching get[A-Z]* or is[A-Z]*
         val getterCandidates = members.flatMap { s =>
           propertyNameOf(s.name).flatMap { propName =>
             defOf(s.id).flatMap { d =>
@@ -918,19 +686,13 @@ object BeanPropertyTransform:
           }
         }
 
-
-        // Deduplicate: if two getters in the same type map to the SAME property name
-        // (e.g., `isTouchable()` -> `touchable` and `getTouchable()` -> `touchable`),
-        // skip both — a property has one getter and two is a name collision.
+        // two getters mapping to the same property name is a collision — skip both
         val propNameCounts = getterCandidates.groupBy(_._2).view.mapValues(_.size)
         val ambiguousProps = propNameCounts.collect { case (n, c) if c > 1 => n }.toSet
 
-        // For each getter candidate, try to find a matching setter
         getterCandidates.foreach { (getterSym, propName, getterDef) =>
           val key = MemberKey(ownerFqn, propName).render
-          // Skip if the getter method is already claimed by a configured pair. The configured
-          // pair may use a DIFFERENT property name (e.g., `getDragActor` -> `currentDragActor`),
-          // so we check the accessor name, not the property name.
+          // configured pair may use a different property name, so check the accessor name too
           val getterKey = MemberKey(ownerFqn, getterSym.name).render
           if !configuredAccessors.contains(getterKey) && !configuredPropertyKeys.contains(key) &&
              !ambiguousProps.contains(propName) then
@@ -938,7 +700,6 @@ object BeanPropertyTransform:
             val getterReturnVoid = isVoid(program, getterDef.returnTpt.tpe)
             val gComp = graph.closureOf(getterSym.id).members
 
-            // Shape checks on the getter
             if isStatic(getterSym.id) then
               phase.consider(IdiomCandidate(IdiomKind.BeanDetect,
                 IdiomVerdict.Refused("Static", "the getter is static; a companion property is out of scope"),
@@ -953,9 +714,7 @@ object BeanPropertyTransform:
                   "the getter is referenced in value position"),
                 key, s"auto-detected `$propName`", Decision.originOf(program, getterSym.id)))
             else
-              // Check setter candidates. A setter check that refuses files the refusal and
-              // the whole pair is SKIPPED — no getter-only fallback from a refused setter, because
-              // the refusal is about the PAIR, not about the setter alone.
+              // a refused setter skips the whole pair — no getter-only fallback
               val setterName = "set" + propName.updated(0, propName.charAt(0).toUpper)
               val setterCands = members.filter { s =>
                 s.name == setterName && !s.flags.isStatic &&
@@ -995,39 +754,15 @@ object BeanPropertyTransform:
 
                 val sMembers = setterOpt.map(s => graph.closureOf(s.id).members).getOrElse(Set.empty)
 
-                // A setter whose override component reaches a type that declares the setter
-                // WITHOUT a corresponding getter is a seam: `x.cullingArea = v` desugars to a
-                // call of `cullingArea_=`, and the ASSIGNMENT's LHS names the GETTER symbol.
-                // With no getter at that type, the LHS names a member the receiver does not have.
-                // Measured at 2 errors on libGDX (Cullable: setter-only interface, Container and
-                // ScrollPane call through a Cullable-typed reference).
-                //
-                // But a SUBCLASS that overrides only the setter INHERITS the getter through the
-                // type hierarchy, so `x.prop` still works — exclude setter-only owners that are
-                // descendants of a getter owner, because the getter is accessible there by
-                // inheritance. Measured at 3 errors on vfx's VfxWidgetGroup (overrides
-                // setTransform but not isTransform; the getter is inherited from Group).
-                //
-                // But only exclude them where the inherited GETTER is the SAME PAIR — a type
-                // that inherits `getStage()` returning `Nullable[Stage]` and overrides
-                // `setStage(Stage)` is NOT the same pair, and the refusal is legitimate.
+                // a setter-only owner (no corresponding getter) is a seam: `x.prop = v`'s LHS
+                // names the getter symbol, which the receiver does not have there. Excluded where
+                // a descendant INHERITS the getter from an ancestor declaring the same pair.
                 val setterOnlyOwners = setterOpt.toList.flatMap { s =>
                   val sComp = graph.closureOf(s.id).members
                   val getterOwners = gComp.flatMap(g => program.symbolOf(g).map(_.owner))
                   sComp.flatMap { sm =>
                     program.symbolOf(sm).map(_.owner).filterNot(getterOwners.contains)
                   }.filterNot { owner =>
-                    // A subclass that overrides only the setter still INHERITS the getter — so
-                    // if this owner is a descendant of a type that declares BOTH getter AND setter
-                    // (a "pair owner"), the getter is reachable through inheritance and the
-                    // property desugaring works.
-                    //
-                    // Only exclude where the setter override IN THIS OWNER agrees with the
-                    // getter's return type (same head). A type that overrides `setStage(Stage)`
-                    // under a getter returning `Nullable[Stage]` (after nullability) is a type
-                    // mismatch the pair cannot resolve, and the refusal is legitimate.
-                    // Measured: VfxWidgetGroup.setTransform (from Group, both boolean — correct);
-                    // Group.setStage (from Actor, getter Nullable vs setter Stage — refused).
                     val pairOwners = getterOwners.filter { go =>
                       sComp.exists(sm => program.symbolOf(sm).exists(_.owner == go))
                     }
@@ -1044,7 +779,6 @@ object BeanPropertyTransform:
                 else {
                   val prop = Property(key, propName, getterSym.id, setterOpt.map(_.id), gComp, sMembers)
 
-                  // File a converted candidate through the idiom lane
                   phase.consider(IdiomCandidate(IdiomKind.BeanDetect, IdiomVerdict.Converted,
                     key, s"auto-detected pair `$propName` via `$accessorsStr`",
                     Decision.originOf(program, getterSym.id)))

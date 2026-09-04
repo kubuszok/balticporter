@@ -3,32 +3,15 @@ package balticporter.transform
 import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
 import balticporter.tir.*
 
-/** Append hand-written Scala MEMBERS to a mechanically-translated class, at the end of its body.
+/** Append hand-written Scala MEMBERS to a mechanically-translated class, at the end of its body —
+  * the seam for hand-port-added API that `inject` (whole file) and `MethodBodyTransform` (body
+  * replacement) cannot express.
   *
-  * ==The gap this fills==
-  * A reference hand port may add members java never declared — `Engine.registerComponentFactory` in
-  * sge-ecs is the worked example: a factory-registry API that replaces the reflective
-  * `ClassReflection.newInstance` the mechanical port drops. The two existing seams (`inject` and
-  * `MethodBodyTransform`) cannot express this: `inject` is a whole FILE, so the type stops tracking
-  * upstream; a body substitution keeps the type mechanical but cannot ADD a member that java never
-  * wrote. This phase is that seam.
-  *
-  * ==Kind==
-  * CLAUDE.md §1(b): the MECHANISM — locate an owner by FQN, append verbatim Scala — is a fact
-  * about Java and Scala and is the same for every library. WHICH owners and WHAT members is a fact
-  * about one library and arrives as a constructor parameter. An empty map is a no-op.
-  *
-  * ==ADD-scoped, `Only(Set.empty)` default==
-  * This phase MINTS members, so its unrestricted form is not a safe default (CLAUDE.md §1(b)). Its
-  * no-op is `Only(Set.empty)` — which is an empty `members` map, since the scope is implicit in the
-  * keys.
-  *
-  * ==What it deliberately does NOT do==
-  *   - **It never changes an existing member.** Every member the java declares stays mechanically
-  *     translated; what this phase adds is BESIDE them. A port that needs to REPLACE a member wants
-  *     `MethodBodyTransform` or `dropMethods` + inject.
-  *   - **It does not type-check the source.** The text is spliced verbatim, and the target compiler
-  *     is the gate — the same contract `MethodBodyTransform` has.
+  * CLAUDE.md §1(b): the MECHANISM (locate an owner by FQN, append verbatim Scala) is universal;
+  * WHICH owners and WHAT members is per-library and arrives as a constructor parameter. The phase
+  * MINTS members, so its no-op is `Only(Set.empty)` (an empty `members` map), never the
+  * unrestricted form. Never changes an EXISTING member — additions sit BESIDE them — and does not
+  * type-check the source; the target compiler is the gate.
   *
   * @param members
   *   owner FQN (upstream namespace) -> list of member specifications. Keys use `Symbol.fullName` of
@@ -85,7 +68,6 @@ final class AddMembersTransform(val members: Map[String, List[AddMembersTransfor
 
     ownerFound = Set.empty
 
-    // Build a lookup from owner FQN to specs
     val byOwner: Map[SymId, List[MemberSpec]] =
       program.symbols.all.iterator
         .filter(s => members.contains(s.fullName))
@@ -98,11 +80,9 @@ final class AddMembersTransform(val members: Map[String, List[AddMembersTransfor
 
     def rewrite(cd: Tree.ClassDef): Tree.ClassDef =
       val owner = program.symbolOf(cd.symbol).map(_.fullName).getOrElse("")
-      // Append added members to this class's body
       val appended = byOwner.get(cd.symbol) match
         case Some(specs) =>
           specs.map { s =>
-            // Record the decision
             record(Decision(
               kind       = Decision.Kind.AddedMember,
               subject    = cd.symbol,
@@ -115,11 +95,9 @@ final class AddMembersTransform(val members: Map[String, List[AddMembersTransfor
               reason = s.reason,
               origin = program.definitionOf(cd.symbol).map(_.origin).getOrElse(Origin.synthetic),
             ))
-            // Create an opaque statement with the member source text
             Tree.Opaque(s.source, TypeRepr.NoType, Origin.synthetic)
           }
         case _ => Nil
-      // Recursively rewrite nested classes too
       val body = cd.body.map {
         case c: Tree.ClassDef => rewrite(c)
         case other            => other
