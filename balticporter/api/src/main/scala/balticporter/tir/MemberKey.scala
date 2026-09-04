@@ -160,7 +160,7 @@ enum Param:
     case Unresolved => "?"
 
   /** …the SIMPLE spelling: `java.lang.Object` is `Object`. A policy author routinely writes the
-    * qualified form (what reports show them via `Symbol.fullName`), which used to match NOTHING —
+    * qualified form (what reports show them via `Symbol.fullName`) —
     * this removes the trap rather than documenting it. Cut only at the LAST separator (§4.56):
     * `.` between packages/top-level type, `$` before a nested type. */
   def simple: Param = this match

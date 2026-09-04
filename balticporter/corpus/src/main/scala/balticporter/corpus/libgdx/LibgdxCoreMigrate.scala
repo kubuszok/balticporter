@@ -380,7 +380,7 @@ object LibgdxPolicy:
     "com.badlogic.gdx.utils.ObjectLongMap" -> "lowlevel.util.ObjectMap",
     "com.badlogic.gdx.utils.ArrayMap" -> "lowlevel.util.ArrayMap",
     "com.badlogic.gdx.utils.IntSet" -> "lowlevel.util.ObjectSet",
-    // wave 3.1n: Array family -> DynamicArray. sge type-mappings.md: primitive arrays ->
+    // Array family -> DynamicArray (sge type-mappings.md: primitive arrays ->
     // "DynamicArray[T]" (unified via MkArray type class); `Array<T>` -> `DynamicArray[T]`
     // (1:1 type param). DynamicArray has the same member API (add/insert/remove/pop/peek/first/
     // clear/truncate/swap/reverse/shuffle/sort/toArray/ensureCapacity/size/items/contains/
@@ -1215,7 +1215,7 @@ object LibgdxPolicy:
     def genericArrayInitByDesc = Map(
       ("<init>", intDesc)      -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
       ("<init>", arrayDesc)    -> Construct("lowlevel.util.DynamicArray", "from"),
-      // wave 3.1af: Array(T[]) -> DynamicArray.from(array) — exact capacity. `.from` copies with
+      // Array(T[]) -> DynamicArray.from(array) — exact capacity. `.from` copies with
       // `items.length == array.length`, matching java's `Array(T[])` (items=clone, size=length);
       // the previous apply()+addAll left default capacity 16, breaking SortTest (8 failures from
       // trailing nulls). `$T0` resolves from the constructor's applied type; raw constructors

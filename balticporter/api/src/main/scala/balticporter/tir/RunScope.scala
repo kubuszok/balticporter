@@ -36,7 +36,7 @@ trait RunScope:
   def ownSubstitutedOwners: Set[String] = Set.empty
 
   /** UPSTREAM member descriptors from the base's PUBLISHED PORT MAP — the set a dependent phase
-    * reads to decide whether the base RETYPED a parameter (O8 dependent blast, wave 2.11). Each
+    * reads to decide whether the base RETYPED a parameter (ENGINE-LIMITS O8). Each
     * string is a member row's `upstream` column; a retyping phase checks it against the callee's
     * own opaque FQN, a direct read rather than a re-derivation (CLAUDE.md §4.55). */
   def baseMemberUpstream: Set[String] = Set.empty

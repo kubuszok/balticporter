@@ -18,7 +18,7 @@ trait MergeablePolicy extends SurfacePolicy:
 
   /** Every shared-surface SUBJECT this instance's policy is keyed on — each key's leading FQN, via
     * [[MergeablePolicy.subjectOf]]. Makes the `governs` screen reachable without a MERGE: a
-    * dependent declaring a phase its base lacks was previously unscreened. Over-approximate rather
+    * dependent declaring a phase its base lacks is screened too. Over-approximate rather
     * than under — a harmless subject costs a refusal, an omitted one is a hole. */
   def subjects: Set[String]
 

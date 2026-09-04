@@ -128,7 +128,7 @@ object Pipeline:
     out.toList.map(instances)
 
   /** Run phases in dependency order, rebuilding the xref after each so every phase sees an index
-    * consistent with the prior one's rewrites. Three questions a source edit used to cost now cost
+    * consistent with the previous phase's rewrites. Three questions now cost
     * a flag (CLAUDE.md §4.6): `balticporter.skipPhases=<name>` drops a phase (measure the DIFF, not
     * the error count), `dumpTirBefore`/`dumpTirAfter`/`dumpOnly` inspect the tree, `tracePhases`
     * announces each run. A name in `skipPhases` matching no phase is REPORTED, not ignored. */
