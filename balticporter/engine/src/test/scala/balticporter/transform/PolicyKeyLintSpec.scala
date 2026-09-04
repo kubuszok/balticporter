@@ -111,6 +111,30 @@ class PolicyKeyLintSpec extends munit.FunSuite:
           "a rewrite-target name or a member/arity — it names no member, it is a synthetic symbol " +
           "namespace for minted SymIds and a fingerprint rendering format"),
     ),
+    // CollectionsRetarget/Reified/Boundary split out of CollectionsTransform (context diet S3):
+    // same phase, same sites, same reasoning as the `CollectionsTransform.scala` entry above —
+    // each `fullName ==` below is a mint-or-reuse lookup against a WELL-KNOWN external FQN
+    // (`java.util.Iterator`, `balticporter.runtime.JavaIterator`, `scala.Array`, `java.lang.Object`,
+    // the phase's own `StreamFqn`, `scala.collection.Iterator`) the program never declares, never a
+    // policy key rebuilt from program-declared names.
+    "CollectionsRetarget.scala" -> Map(
+      "fullName ==" ->
+        ("the JDK side of this phase is a TYPE MAPPING keyed by FQN — mint-or-reuse against " +
+          "`java.util.Iterator`/`balticporter.runtime.JavaIterator`/`scala.Array`, externals the " +
+          "program never declares, exactly as in `CollectionsTransform.scala`"),
+    ),
+    "CollectionsReified.scala" -> Map(
+      "fullName ==" ->
+        ("`java.lang.Object` mint-or-reuse — the root every java class inherits and no program " +
+          "declares, the same question `SamLambda.scala` and `PublicFieldAccessorTransform.scala` " +
+          "ask of it"),
+    ),
+    "CollectionsBoundary.scala" -> Map(
+      "fullName ==" ->
+        ("mint-or-reuse against `java.lang.Object`, the phase's own `StreamFqn`, and " +
+          "`scala.collection.Iterator` — externals the program never declares, plus a bridged-" +
+          "target FQN compared to the CANDIDATE's own `fullName`, not to a program-declared name"),
+    ),
     "PublicFieldAccessorTransform.scala" -> Map(
       "fullName ==" ->
         ("`java.lang.Object` (the one type whose name says NOTHING about a value, which is why the " +
