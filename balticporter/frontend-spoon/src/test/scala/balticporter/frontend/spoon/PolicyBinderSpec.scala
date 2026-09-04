@@ -6,13 +6,7 @@ import balticporter.tir.*
 import java.nio.file.Files
 
 /** [[PolicyBinder]] — every way a declared key can FAIL to name what its author meant, and the
-  * different instruction each failure owes its reader.
-  *
-  * The positives are cheap and the negatives are the design. A binder that only ever answers about
-  * keys that bind is a `Map.get`, and `Map.get` is what the engine had eighteen copies of.
-  *
-  * Over a REAL source tree, for `DescriptorSpec`'s reason.
-  */
+  * different instruction each failure owes its reader. */
 class PolicyBinderSpec extends munit.FunSuite:
 
   private def tree(subs: Substitutions)(files: (String, String)*): Program =

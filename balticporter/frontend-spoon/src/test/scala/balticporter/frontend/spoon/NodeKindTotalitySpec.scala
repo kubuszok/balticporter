@@ -2,42 +2,12 @@ package balticporter.frontend.spoon
 
 import scala.jdk.CollectionConverters.*
 
-/** NODE-KIND TOTALITY — the half of the total-match requirement that scalac cannot give.
-  *
-  * The TIR side is already total by construction: `Tree` is sealed and the emitter's dispatch ends
-  * with no default arm, so a new node kind is a compile error. The JAVA side has no sealedness at
-  * all — `CtElement` is an ordinary interface hierarchy — so a `match` over it is exhaustive only by
-  * inspection, and the arms are ORDERED: a kind that extends a kind the frontend dispatches on is
-  * absorbed by that supertype's arm, silently, and looks handled from every angle except the emitted
-  * output.
-  *
-  * So this spec is the inspection, mechanised:
-  *
-  *   declared   = every `Ct*` under `spoon.reflect.{code,declaration}` IN THE RESOLVED JAR
-  *   excluded   = `SpoonKinds.excluded` — a COMMITTED, DIFFABLE Set[String]
-  *   registry   = `SpoonKinds.registry` — what the frontend claims about each producible kind
-  *   assert       declared -- excluded == registry
-  *
-  * TWO HALVES THAT MUST NOT BE CONFUSED. The COUNT is derived from the jar and is written down
-  * nowhere — a constant here would be `PortabilityCheck`'s phantom "34 rules" waiting to happen, and
-  * this spec would be the thing that made it credible. The FILTER is hand-maintained on purpose: a
-  * reflective predicate would be cheaper and would make the exclusion invisible, and the one thing
-  * this spec exists to surface is what somebody decided not to handle. A Spoon upgrade therefore
-  * produces a DIFF OF NAMES, in a review, rather than a number that quietly moved.
-  *
-  * COST, honestly: this fails on a Spoon upgrade that adds a node kind. That is the feature. It is
-  * also the only thing in the design that will annoy an unrelated dependency bump, and it is worth
-  * it — every kind on the ABSENT list below was found this way and four of them fail silently. */
+/** NODE-KIND TOTALITY — the half of the total-match requirement that scalac cannot give. */
 class NodeKindTotalitySpec extends munit.FunSuite:
 
   /** Every `Ct*` interface name under the two node packages, read from the jar `CtElement` was
     * loaded from. Not a `Class.forName` sweep over a hand-written list — that is the shape that
-    * cannot see a kind nobody thought to name, which is the whole failure this spec addresses.
-    *
-    * Nested classfiles (`CtComment$CommentType` and friends) are dropped by the `$` test and are not
-    * node kinds; the two `enum`s that DO live in these packages are named in `SpoonKinds.notNodeKinds`
-    * instead, because "it is not an interface" is a fact worth having in the diffable list rather
-    * than in a predicate. */
+    * cannot see a kind nobody thought to name, which is the whole failure this spec addresses. */
   private lazy val declared: Set[String] =
     val loc = classOf[spoon.reflect.declaration.CtElement].getProtectionDomain.getCodeSource.getLocation
     val zf  = java.util.zip.ZipFile(java.nio.file.Path.of(loc.toURI).toFile)
@@ -106,30 +76,13 @@ class NodeKindTotalitySpec extends munit.FunSuite:
       // to tell apart. `CtTextBlock` left when `TextBlockSpec` established that the absorption is
       // FAITHFUL — `CtLiteral.getValue` is JLS 3.10.6's denoted string, so the arm that takes it is
       // the right arm — and `CtRecord` left when the absorption turned out to be four defects at
-      // once (`JS-C43`) and each was fixed. `CtAnnotationMethod` left the second way: the probe
-      // that pinned it (`AbsorbedProbeSpec`) said an emitted `@interface` had NO elements at all,
-      // and the elements are now the emitted class's parameters (`ENGINE-LIMITS.md` T22,
-      // `AnnotationTypeSpec`). "Absorbed silently" is a SUSPICION; a probe either retires it or
-      // turns it into work, and both outcomes have now happened.
+      // once (`JS-C43`) and each was fixed.
       List("CtAnnotationFieldAccess"))
     // …and a FOURTH, added when `DESIGN.md` §6.2's marker took over the first two of
     // `SpoonTir.unsupported`'s six sites. A marked kind still blocks the port — the emission gate
     // refuses on any open marker — but the failure is now the size of the CONSTRUCT rather than the
     // size of the FILE, which is the difference between "this library cannot be ported" and "these
     // three declarations cannot".
-    // ONE, and the two that left are `JS-S09`: `CtSwitchExpression` and `CtYieldStatement` are
-    // `Lowered` now, because a scala `match` IS an expression and the image was `Tree.Match` all
-    // along — what was missing was the arm, not the node. The same shape as `CtTextBlock`'s exit
-    // from the list above, arrived at the other way round: there a probe retired a suspicion, here
-    // a lowering retired a refusal.
-    // `CtCasePattern` left when `JS-S10`'s TYPE-pattern half was lowered: the wrapper's arm exists
-    // and reads the pattern, and WHICH pattern it holds is a fact the three rows below carry. What
-    // ONE, and the one that left is `CtRecordPattern`: `JS-C43` derives an `unapply` over the
-    // ACCESSORS — JLS 14.30.1's own member — so the pattern is an ordinary constructor pattern and
-    // the arm is written (T19). What is left is a TYPE pattern, and only where it is an `instanceof`
-    // OPERAND: java flow-scopes that binding and no lexical `val` placement is faithful (T18). As a
-    // CASE LABEL the same kind lowers, which is why the refusal is about the position and not the
-    // kind — and is exactly what this list cannot express, so it is said here.
     assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.MarkedUnportable),
       List("CtTypePattern"))
     // EMPTY, and the last three to leave are the correction worth keeping. The comment that used to
@@ -142,9 +95,6 @@ class NodeKindTotalitySpec extends munit.FunSuite:
     // fixture that reaches it and found none: `CtUnnamedPattern` is not something this parser builds
     // from any source it accepts. A refusal nobody can trigger reads exactly like a refusal that
     // fires, which is the reason this census is three named lists and not a total.
-    // `CtRecordComponent` left this list for `positional`: `getRecordComponents` IS called now, and
-    // the component is not a member the walk reaches but the declaration `JS-C43`'s three derived
-    // members are read from.
     assertEquals(SpoonKinds.absentBy(SpoonKinds.Absence.NeverVisited),
       List("CtModule", "CtModuleRequirement", "CtPackage", "CtPackageDeclaration", "CtPackageExport",
         "CtProvidedService", "CtReceiverParameter", "CtUnnamedPattern",

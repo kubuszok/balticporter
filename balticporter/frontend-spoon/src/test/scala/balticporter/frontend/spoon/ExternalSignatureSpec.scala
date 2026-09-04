@@ -6,18 +6,7 @@ import balticporter.tir.TypeRepr.*
 
 import java.nio.file.Files
 
-/** An EXTERNAL member's `MethodType` — `ENGINE-LIMITS.md` K15's frontend half.
-  *
-  * Every external member the frontend interned used to carry `NoType`, so no phase could ask what a
-  * method the program does not declare TAKES or RETURNS. That is what blocked the consumer half of
-  * the collection boundary: a retyped scala collection handed to a class file's `java.util.*` formal
-  * is a break nothing in the pipeline could see.
-  *
-  * Both directions are pinned here, because only one of them is a feature. A signature that is
-  * WRONG is worse than none: the rendering may not consult the CALLER's type-parameter scope, and a
-  * class file the parse could only partially resolve must leave the member signature-less rather
-  * than produce an arity-correct-looking answer with a hole in it.
-  */
+/** An EXTERNAL member's `MethodType` — `ENGINE-LIMITS.md` K15's frontend half. */
 class ExternalSignatureSpec extends munit.FunSuite:
 
   private val src =
@@ -40,12 +29,7 @@ class ExternalSignatureSpec extends munit.FunSuite:
 
   private val program = SpoonTir.fromSource(src)
 
-  /** an EXTERNAL member's symbol, by its owner's fully-qualified name and its own simple name.
-    *
-    * An external member's `fullName` is the INTERNING KEY (`@8#matcher(java.lang.CharSequence)`),
-    * never `owner#name` — that is deliberate (`ENGINE-LIMITS.md` P4: the key is what the emitter,
-    * the nested-path builder and the rename all read). So the lookup goes through the owner, which
-    * is the field P4 added for exactly this. */
+  /** an EXTERNAL member's symbol, by its owner's fully-qualified name and its own simple name. */
   private def external(owner: String, name: String): Symbol =
     val found = program.symbols.all.toList.filter { s =>
       s.name == name && s.owner != SymId.None &&
@@ -216,12 +200,6 @@ class ExternalSignatureSpec extends munit.FunSuite:
     // classpath holds two compiled classes and one of the two references a third whose class file
     // has been removed — which is the ordinary case for a generated parser compiled with
     // `-implicit:none` against sources that are not on the frontend's classpath.
-    //
-    // Spoon reconstructs a shadow declaration only for the class it can resolve WHOLE, so the
-    // incomplete one yields no declaration at all and every member of it stays at `NoType` — the
-    // state every external member was in before this feature existed. Nothing guesses an arity
-    // from the reference's own erased formals, which a lenient parse would supply and which would
-    // read as a fact.
     val root = Files.createTempDirectory("external-signature")
     val jsrc = root.resolve("jsrc")
     val cls  = root.resolve("classes")

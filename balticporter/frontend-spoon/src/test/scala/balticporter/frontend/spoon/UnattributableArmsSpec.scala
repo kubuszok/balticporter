@@ -3,19 +3,7 @@ package balticporter.frontend.spoon
 import balticporter.tir.*
 
 /** §0.4's UNATTRIBUTABLE ARMS — fallbacks that answer with a VALUE indistinguishable from a real
-  * answer.
-  *
-  * `SpoonTir` has ~100 `case _ =>` arms and five of them throw. The other ninety-five degrade, and
-  * most of those degradations are right: a dropped annotation is recorded and counted, a dropped
-  * anonymous-class member is recorded and counted — those are what "right" looks like, and they are
-  * not work items. What this spec is about is the ones that are not, and they share one shape.
-  *
-  * The sharpest is the arity family. A raw type's declared arity was computed inside
-  * `catch { case _: Throwable => 0 }` at five sites, and arity zero is not "unknown" — it is the
-  * statement that the type takes no type arguments, which is what the emitter then writes. So a
-  * resolution failure inside a declaration Spoon HAS became a generic type emitted un-applied,
-  * silently, with a green compile and no moved count.
-  */
+  * answer. */
 class UnattributableArmsSpec extends munit.FunSuite:
 
   private def rendered(java: String): String =

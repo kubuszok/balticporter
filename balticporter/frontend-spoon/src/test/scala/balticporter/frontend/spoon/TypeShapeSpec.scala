@@ -7,27 +7,7 @@ import spoon.reflect.declaration.*
 import spoon.reflect.reference.*
 import spoon.support.compiler.VirtualFile
 
-/** THE ONE CLASSIFICATION OF A TYPE REFERENCE — `CLAUDE.md` §4.56's match-arm rule, pinned.
-  *
-  * Spoon's `CtWildcardReference` EXTENDS `CtTypeParameterReference`, so `case tv:
-  * CtTypeParameterReference` claims every `?` and any wildcard arm written under it is DEAD. That
-  * is not a bug a count can find: the wrong answer is the conservative one, so no port emits
-  * anything wrong, nothing moves, and the only symptom is a rule that fires nowhere
-  * (`ENGINE-LIMITS.md` G21 — thirteen such matches at once, ten answer-changing).
-  *
-  * Three things are asserted here and each has a different failure mode:
-  *
-  *   1. the STRUCTURAL FACT the whole taxonomy rests on, read off the class hierarchy rather than
-  *      assumed. §4.56 says to `javap` the interface; this is that, as a test, so a Spoon upgrade
-  *      that changed the hierarchy would say so instead of silently making the arm order pointless;
-  *   2. `TypeShape.of`'s ARM ORDER — a wildcard classifies as `Wildcard` and never as `Variable`.
-  *      Verified failing by swapping the two arms in `of`, which is the exact edit that reintroduces
-  *      the defect;
-  *   3. the two PROJECTIONS `ref`/`args`, which are what let a migrated caller treat several kinds
-  *      alike and still reproduce the `case r =>` it used to fall into. A projection that stopped
-  *      agreeing with `getActualTypeArguments` would move answers at every one of those callers
-  *      with nothing else to see it.
-  */
+/** THE ONE CLASSIFICATION OF A TYPE REFERENCE — `CLAUDE.md` §4.56's match-arm rule, pinned. */
 class TypeShapeSpec extends munit.FunSuite:
 
   private val src =

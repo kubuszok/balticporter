@@ -3,25 +3,7 @@ package balticporter.frontend.spoon
 import scala.jdk.CollectionConverters.*
 
 /** REFERENCE-KIND TOTALITY — [[NodeKindTotalitySpec]]'s argument at the THIRD Spoon package, which
-  * is where the catalog's fourth obligation surface gets its keys.
-  *
-  * `SpoonTir.tpe` is an ORDERED match over `CtTypeReference` and its four sub-interfaces, and its
-  * final arm is the supertype's. So a reference kind Spoon adds tomorrow is absorbed there
-  * silently and renders as an ordinary class reference — the `CtTextBlock` shape one package over,
-  * except that the wrong answer here is a TYPE, which reaches every signature that names it.
-  *
-  * The method is the other spec's, unchanged and deliberately so:
-  *
-  *   declared   = every `Ct*` under `spoon.reflect.reference` IN THE RESOLVED JAR
-  *   excluded   = `SpoonKinds.refExcluded` — a COMMITTED, DIFFABLE Set[String]
-  *   registry   = `SpoonKinds.references`
-  *   assert       declared -- excluded == registry
-  *
-  * TWO REGISTRIES AND TWO SCANS, never one of each. Folding the reference kinds into
-  * `SpoonKinds.registry` would make a single total answer for two independent taxonomies, and a
-  * Spoon upgrade's diff — the whole product of this mechanism — would stop saying which package
-  * moved.
-  */
+  * is where the catalog's fourth obligation surface gets its keys. */
 class ReferenceKindTotalitySpec extends munit.FunSuite:
 
   /** Every `Ct*` interface name under `spoon.reflect.reference`, read from the jar `CtReference`

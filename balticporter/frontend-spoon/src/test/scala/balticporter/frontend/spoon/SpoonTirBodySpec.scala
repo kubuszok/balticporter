@@ -100,17 +100,7 @@ class SpoonTirBodySpec extends munit.FunSuite:
     assert(p.symbols.all.exists(_.fullName == "demo.R#go"))
   }
 
-  /** CLAUDE.md §4.4 row 7, for the shape a String switch takes.
-    *
-    * Java FALLS OUT of a `switch` when no label matches; Scala's `match` throws `MatchError`. The
-    * fall-out is routinely the NORMAL path — a three-label switch over a comparison operator
-    * leaves the variable at whatever the code before it set — so the difference is not an edge
-    * case, and it costs no compile error and no check count: the emitted `match` is valid Scala
-    * that throws where java returned.
-    *
-    * Asserted on the TREE rather than the emitted text because this is the frontend's contract:
-    * every `Tree.Match` built from a java `switch` carries a default arm, whatever the scrutinee's
-    * type, and `TirEmitter` renders `isDefault` as `case _`. */
+  /** CLAUDE.md §4.4 row 7, for the shape a String switch takes. */
   private def matchesOf(p: Program, member: String): List[Tree.Match] =
     val sym = p.symbols.all.find(_.fullName == member).map(_.id)
       .getOrElse(fail(s"no member $member"))
@@ -159,13 +149,6 @@ class SpoonTirBodySpec extends munit.FunSuite:
   }
 
   // -- a java VARARG PACK stops at the program's edge (`ENGINE-LIMITS.md` K6.5, third case) ------
-  //
-  // `T...` is emitted as `Array[T]`, so a positional call has to materialise the array java would
-  // have built — and that is right only while BOTH halves are ours. An EXTERNAL callee's half is a
-  // class file, where scalac reads `T...` as a REPEATED parameter, so the pack is one argument too
-  // many. The loud face is `Paths.get(".", Array[String]())`; the silent one is
-  // `String.format(fmt, Array[Object](a, b))`, which CONFORMS (`Array[Object] <: Object`) and
-  // passes the whole array as one `%s`.
 
   private def callsIn(p: Program, member: String): List[Tree.Apply] =
     given Program = p
@@ -215,12 +198,6 @@ class SpoonTirBodySpec extends munit.FunSuite:
   }
 
   // -- …and the MIRROR: java PASSES AN ARRAY THROUGH the same slot (K6.5, fourth case) -----------
-  //
-  // `String.format(fmt, args)` is java's own vararg-FORWARDING idiom, not an edge case. Where the
-  // callee is ours the array is passed as it stands, because the parameter is emitted `Array[T]`.
-  // Where it is a class file the bare array conforms as ONE element: silent where the repeated
-  // element is `Object` (measured on 3.8.4 — `String.format("%s-%s", arr)` prints the array for the
-  // first `%s` and throws `MissingFormatArgumentException` for the second), loud otherwise.
 
   private val passThroughProgram = SpoonTir.fromSource(
     """package demo;
@@ -265,16 +242,6 @@ class SpoonTirBodySpec extends munit.FunSuite:
   }
 
   // -- …and a pass-through is decided by the COMPONENT TYPE, not by "the argument is an array" ----
-  //
-  // Java's rule is assignability, and a PRIMITIVE array is assignable to nothing but its own array
-  // type. `int[]` at an `Object...` slot is therefore not a pass-through at all — java materialises
-  // `new Object[]{ intArr }`, ONE element holding the array — which is the classic gotcha
-  // `Arrays.asList(intArr)` (a `List<int[]>` of size 1, not a list of ints) and
-  // `String.format("%s", intArr)` (one `%s`, printing `[I@…`) are both instances of.
-  //
-  // Read as a pass-through it is CLAUDE.md §4.4's shape twice over: `Arrays.asList(intArr*)`
-  // compiles and yields a list of five, and `String.format(fmt, intArr*)` changes the arity of the
-  // format call. Neither moves an error count.
 
   // One method per case, so each `callsIn` selection names exactly one call — two `asList`s in one
   // body are told apart only by position, which is a test that passes for the wrong reason the day
@@ -319,18 +286,6 @@ class SpoonTirBodySpec extends munit.FunSuite:
   }
 
   // -- …and the OTHER half of that same assignability rule is the ARRAY DIMENSION (G26) ----------
-  //
-  // The primitive cells above are assignability read at a PRIMITIVE component; these are the same
-  // question read at an ARRAY one, and "is the argument an array" was exact for as long as no corpus
-  // vararg's component was itself an array. At an `H[]...` slot the parameter is `H[][]`: a plain
-  // `H[]` is assignable to the COMPONENT and not to the parameter, so java materialises
-  // `new H[][]{ hs }` — and read as a pass-through the port forwards a one-dimensional array into a
-  // two-dimensional slot, which is the ARITY of the call being wrong before its element type is.
-  //
-  // `dims(arg) >= dims(comp) + 1` answers all five of `ENGINE-LIMITS.md` G26's javac-probed cells,
-  // and the four below are the four of them this program can express (the fifth, `obj(int[])`, is
-  // the primitive pack tested above). Every shape javac REJECTS — a `String[][]` at a `String...` —
-  // is outside the rule either way.
   private val dimProgram = SpoonTir.fromSource(
     """package demo;
       |class Dim {
@@ -384,15 +339,6 @@ class SpoonTirBodySpec extends munit.FunSuite:
   }
 
   // -- T14: a java STATIC is INHERITED by every subclass; a scala companion inherits NOTHING ------
-  //
-  // `ZoneOffset.systemDefault()` is ordinary java: `systemDefault` is declared `static` on
-  // `java.time.ZoneId`, `ZoneOffset extends ZoneId`, and java lets a static be named through ANY
-  // subclass. Emitted verbatim that is `value systemDefault is not a member of object
-  // java.time.ZoneOffset`, every time.
-  //
-  // Java resolved the member STATICALLY, so the receiver that means the same thing in both
-  // languages is the member's DECLARING type — which is the interned symbol's OWNER, never a test
-  // on the written name (`CLAUDE.md` §4.56).
 
   private val staticProgram = SpoonTir.fromSources(List(
     "Base.java"   -> """package demo;
@@ -461,13 +407,6 @@ class SpoonTirBodySpec extends munit.FunSuite:
   }
 
   // -- …and the vararg PACK is owed at an ANONYMOUS-CLASS construction too ----------------------
-  //
-  // `new P(a, b) { … }` is a `CtNewClass`, whose executable REFERENCE names the anonymous subtype's
-  // (nonexistent) constructor rather than `P`'s — so `declParams` answers `None`, the variadic test
-  // is false, and the pack that fires for the very same `new P(a, b)` without a body does not. The
-  // residue is loud here (`None of the overloaded alternatives …`) and only because the parent is
-  // overloaded; a parent with ONE vararg constructor would emit a call scala auto-tuples, which is
-  // `CLAUDE.md` §4.4's shape.
 
   private val anonVarargProgram = SpoonTir.fromSources(List(
     "P.java"   -> """package demo;

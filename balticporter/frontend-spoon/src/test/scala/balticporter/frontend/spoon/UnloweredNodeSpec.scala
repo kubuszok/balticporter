@@ -2,21 +2,7 @@ package balticporter.frontend.spoon
 
 import balticporter.tir.*
 
-/** THE FIRST MINT SITE (`DESIGN.md` §6.5): `SpoonTir.unsupported`'s two default dispatch arms.
-  *
-  * §6.5 stages the frontend's refusal points first, and it is the right place to start for a
-  * measurable reason: the throw is not per-site. It fails the whole COMPILATION UNIT, so one node
-  * the frontend has no arm for costs every other type in that file — which is what makes adopting a
-  * new syntax family all-or-nothing rather than an incremental measured step.
-  *
-  * What must be true after the conversion, and is what this spec asserts:
-  *
-  *   - the unit TRANSLATES. Every declaration beside the unmodelled one survives;
-  *   - the refusal is still there and is now LOCATED, taxonomised, and joined to the kind registry
-  *     and to the difference catalog;
-  *   - the port still does not ship — the emission gate is what enforces that (§6.4), and it is
-  *     tested where it lives.
-  */
+/** THE FIRST MINT SITE (`DESIGN.md` §6.5): `SpoonTir.unsupported`'s two default dispatch arms. */
 class UnloweredNodeSpec extends munit.FunSuite:
 
   /** every term this program holds, `StandardTraversal` doing the walking (`CLAUDE.md` §3: never a
@@ -45,8 +31,7 @@ class UnloweredNodeSpec extends munit.FunSuite:
     // marker inventory is a WORK LIST and a work list shrinks. It was written against a switch
     // EXPRESSION, which `JS-S09` lowered; it was then re-pointed at the RECORD PATTERN, which
     // `JS-S10`'s second half lowers now that `JS-C43` derives an `unapply` over the record's
-    // ACCESSORS. Kept as the NEGATIVE rather than deleted, because a marker that stops being minted
-    // and a MINT SITE that stops being reached are indistinguishable from a count alone.
+    // ACCESSORS.
     val p = SpoonTir.fromSource(
       """package p;
         |public class Sw {
@@ -71,9 +56,7 @@ class UnloweredNodeSpec extends munit.FunSuite:
     // The half of `JS-S10`'s record lowering that is not a lowering. The `unapply` a record pattern
     // deconstructs through is written into the companion of every record THIS RUN EMITS; scala
     // derives none for a java record read out of a class file, so a pattern over one from a
-    // dependency would emit `dep.Rec(x, y)` naming nothing. Refused per site, and refused
-    // STRUCTURALLY — "does this parse hold a `CtRecord` for the type the pattern names" — rather
-    // than by any test on its name (§4.56).
+    // dependency would emit `dep.Rec(x, y)` naming nothing.
     val p = SpoonTir.fromSource(
       """package p;
         |public class S3 {
@@ -186,19 +169,6 @@ class UnloweredNodeSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------------------------
   // THE OPERATOR ARMS — a blind spot INSIDE a kind the frontend dispatches on.
-  //
-  // `BinaryOperatorKind` and `UnaryOperatorKind` are java enums from a DEPENDENCY, not sealed Scala
-  // ones, so scalac cannot check either match and a Spoon upgrade that adds a kind falls straight
-  // through to the default arm. The binary default used to be `"?" + other` — which is not a
-  // diagnostic, it is a METHOD NAME: `binApply` builds `l.?NEWKIND(r)` and the emitter renders it,
-  // so the port carries a call to a member nobody declares. Best case that is a compile error naming
-  // a symbol which appears nowhere in the java; worst case it is nothing at all.
-  //
-  // The fallback itself cannot be PROBED — a java enum cannot be extended, so no fixture can make
-  // the parser hand over a kind that does not exist yet, which is the same reason the unary twin has
-  // no direct probe. What IS checkable is the pair of facts it sits between: the jar's enum, and
-  // what the emitted text may contain.
-  // -------------------------------------------------------------------------------------------
 
   /** every constant of a Spoon operator enum, READ FROM THE JAR — never a hand-written list, for
     * `NodeKindTotalitySpec`'s reason: a set written down here is one that stops being a measurement
@@ -227,9 +197,7 @@ class UnloweredNodeSpec extends munit.FunSuite:
     // Asserted at the APPLY's own symbol, which is what the emitter renders: `?NEWKIND` is a legal
     // Scala identifier, so nothing downstream can tell it from a real member — the emitted file is
     // the last place this is visible and the first place it is too late. (Read here rather than out
-    // of emitted text because `frontend-spoon` does not see the emitter; the name is the same one.)
-    // One snippet using every binary operator, both compound-assignment positions included, because
-    // all three call sites took their spelling from the same function.
+    // of emitted text because `frontend-spoon` does not see the emitter; the name is the same one.
     val p = SpoonTir.fromSource(
       """package p;
         |public class Ops {

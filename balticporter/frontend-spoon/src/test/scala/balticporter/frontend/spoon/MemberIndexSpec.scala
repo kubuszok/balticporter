@@ -6,16 +6,7 @@ import balticporter.tir.*
 import java.nio.file.Files
 
 /** The [[MemberIndex]] the frontend publishes — and the ONE property that cannot be got anywhere
-  * else: '''a DROPPED member is still an answer.'''
-  *
-  * By the time any phase runs, a member removed by `Substitutions.dropMethods` has no `SymId`, no
-  * `Symbol`, no `DefDef` and no row in the symbol table — the frontend filters the executable out
-  * BEFORE the method symbol is minted. So a key naming it cannot be resolved against a `Program` at
-  * all, and a binder that only asked the program would report every drop that WORKED as a typo. The
-  * index is where the answer still exists, and that is why it is stage one.
-  *
-  * Written against a REAL SOURCE TREE for the reason `DescriptorSpec` states.
-  */
+  * else: '''a DROPPED member is still an answer.''' */
 class MemberIndexSpec extends munit.FunSuite:
 
   private def tree(subs: Substitutions)(files: (String, String)*): Program =

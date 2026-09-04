@@ -5,11 +5,7 @@ import balticporter.tir.*
 /** A parameter's `Symbol.fullName` is `Class#method#paramName`, derived from the METHOD's fullName
   * computed from its OWNER (whose symbol is already set at parameter-creation time). Before the fix,
   * it was `?#paramName` because `minter.fullNameOf(methodSymId)` returned `"?"` — the method's
-  * symbol had not been `set` yet when its parameters were `define`d.
-  *
-  * This is a FRONTEND TRUTH FIX: nothing else guards it, and an `OpaqueSpec` hint matching a
-  * parameter by FQN (wave 2.8 — the dependent Align seeds) depends on it.
-  */
+  * symbol had not been `set` yet when its parameters were `define`d. */
 class ParameterFullNameSpec extends munit.FunSuite:
 
   private val src =

@@ -5,14 +5,7 @@ import balticporter.tir.*
 /** G34 — under `noClasspath`, Spoon's `getExecutableDeclaration` can resolve to an UNRELATED type's
   * method that happens to share the name.  The frontend must validate that the declaration's owner
   * is the receiver's static type or a supertype (an inherited method), and fall through when it is
-  * not.
-  *
-  * Three cases:
-  *  1. Direct call on interface — `a.getType()` where `A` declares `getType`, must bind `A#getType`.
-  *  2. Inherited method — `c.getType()` where `C extends B implements A`, must bind `A#getType`
-  *     or `B#getType`.
-  *  3. Unrelated same-named method — `f.getType()` on unrelated `F`, must NOT bind `A#getType`
-  *     or `B#getType`. */
+  * not. */
 class MethodResolutionSpec extends munit.FunSuite:
 
   private val src =

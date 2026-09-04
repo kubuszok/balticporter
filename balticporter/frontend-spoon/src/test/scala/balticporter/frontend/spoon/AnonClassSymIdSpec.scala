@@ -2,17 +2,7 @@ package balticporter.frontend.spoon
 
 import balticporter.tir.*
 
-/** Proves that an anonymous class's field DECLARATION and its REFERENCES share ONE SymId.
-  *
-  * ROOT CAUSE (measured, PROGRESS.md §13.15): `anonClass` creates the symbol with key
-  * `@{enclosing.raw}#<anon>N`, while `fieldSym` resolves the owner via `minter.external(ownerQ,
-  * …)` where `ownerQ` is Spoon's `getQualifiedName` (`SplitPane$1`). Without the alias the two
-  * keys yield two SymIds for one class, and a `ValDef` written inside the anonymous class body
-  * is not found by `isWritten` — conservatively emitting `var` where `val` was correct.
-  *
-  * FIX: `Minter.alias(qname, id)` registered in `anonClass` after the symbol is defined.
-  * Emission-side tests (no `inline val`, bare reference) are in `AnonClassEmitSpec` under corpus,
-  * which depends on both engine and frontend-spoon. */
+/** Proves that an anonymous class's field DECLARATION and its REFERENCES share ONE SymId. */
 class AnonClassSymIdSpec extends munit.FunSuite:
 
   private val src =

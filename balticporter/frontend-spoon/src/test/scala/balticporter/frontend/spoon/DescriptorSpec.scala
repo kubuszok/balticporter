@@ -6,16 +6,7 @@ import balticporter.tir.*
 import java.nio.file.{Files, Path}
 
 /** `Symbol.descriptor` as the FRONTEND derives it — over a REAL SOURCE TREE, never through
-  * `SpoonTir.fromSource`.
-  *
-  * That is not a stylistic preference and it is the reason this file exists rather than a handful of
-  * cases bolted onto `SpoonTirSpec`. The convenience parse path sets `setNoClasspath(true)`, so an
-  * executable reference resolves through the REFERENCE's formals, which a lenient parse erases
-  * systematically: `<T> void m(T x)` reads `m(java.lang.Object)`. A descriptor spec written there
-  * would assert the erased answer and PASS — for the wrong reason, and it would keep passing after
-  * the derivation stopped working. The production frontend runs `setNoClasspath(false)`, and this
-  * spec runs the same way.
-  */
+  * `SpoonTir.fromSource`. */
 class DescriptorSpec extends munit.FunSuite:
 
   private def tree(files: (String, String)*): Program =

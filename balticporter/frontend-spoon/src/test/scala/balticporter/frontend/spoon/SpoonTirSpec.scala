@@ -107,12 +107,6 @@ class SpoonTirSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------
   // ANNOTATIONS on every declaration kind — the parameter half was missing.
-  //
-  // A Java library states most of its nullability contract ON PARAMETERS, and `annotationsOf` was
-  // called for types, fields and methods only. Nothing renders a parameter annotation either, so
-  // the gap was invisible from both ends: the emitted file is byte-identical with them and
-  // without, and no check can report a symbol property that is never populated.
-  // -------------------------------------------------------------------------
 
   private val annotated = SpoonTir.fromSource(
     """package demo;
@@ -169,13 +163,6 @@ class SpoonTirSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------
   // …and the TYPE, which had no translator at all — `ENGINE-LIMITS.md` T16.
-  //
-  // A type's symbol is minted before any body exists, so `defineType` harvested with `None` and
-  // every argument-bearing annotation on every type in every port was reported and dropped. The
-  // fix is two things and not one: a translator at the harvest (universal — the values are
-  // constant expressions) and the §1(b) policy saying which families a port claims, whose default
-  // claims NONE so that nothing a port did not ask for starts being emitted.
-  // -------------------------------------------------------------------------
 
   private val typeAnnotated =
     """package demo;
