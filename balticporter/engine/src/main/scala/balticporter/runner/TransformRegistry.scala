@@ -6,23 +6,10 @@ import java.util.ServiceLoader
 import scala.jdk.CollectionConverters.*
 
 /** The [[TransformFactory]] instances visible on one classpath, and the only place a config file's
-  * `transform = "…"` is turned into a [[Phase]].
-  *
-  * ==One discovery mechanism, not two==
-  * The engine's own parameterisable transforms are registered exactly the way a consumer's rule is
-  * — a `META-INF/services/balticporter.tir.TransformFactory` line in `balticporter-engine`'s own
-  * resources. A built-in table beside the service loader would be a second mechanism that only the
-  * engine could use, and the first thing a consumer would discover is that its own factory behaves
-  * differently from the ones it can read the source of.
-  *
-  * ==Reserved names==
-  * `package-rename` is NOT constructible, and the refusal is specific rather than falling through to
-  * "unknown transform". `PackageRenameTransform` has an ordering obligation `runsAfter` cannot state
-  * — it must run after every other phase, because all of their policy is written in the upstream
-  * namespace (CLAUDE.md §4.56) — so `PortRun` takes it as MANIFEST DATA and appends it last. A port
-  * that listed it as a surface entry would be told "unknown transform" and reasonably conclude the
-  * feature is missing; it is not missing, it is spelled `manifest.packageRenames`.
-  */
+  * `transform = "…"` is turned into a [[Phase]]. The engine's own transforms register through the
+  * SAME `META-INF/services/balticporter.tir.TransformFactory` mechanism a consumer's rule does —
+  * no built-in table beside the service loader. `package-rename` is NOT constructible: it must run
+  * after every other phase (§4.56), so `PortRun` takes it as MANIFEST DATA instead. */
 final class TransformRegistry(val factories: List[TransformFactory]):
 
   private val byName: Map[String, TransformFactory] =

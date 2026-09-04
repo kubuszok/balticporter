@@ -6,29 +6,9 @@ import com.typesafe.config.{Config, ConfigList, ConfigObject, ConfigValue, Confi
 
 import scala.jdk.CollectionConverters.*
 
-/** [[ConfigView]] over HOCON, and the reason the config front door can be strict.
-  *
-  * ==Every read is RECORDED, so a key nobody read fails the run==
-  * HOCON tolerates junk: a document with `dropTypes` where the schema says `dropType` parses
-  * perfectly, resolves perfectly, and silently ports a library without the drop. That is the §1(b)
-  * silent no-op exactly — the failure `PolicyReport` had to be built to catch for manifest keys —
-  * and on the config path there is nothing else to catch it, because a mistyped key produces no
-  * finding, no count, and no compile error.
-  *
-  * So the view keeps the set of keys an accessor was called with, and every child view it hands out
-  * is remembered. [[unread]] then walks that tree and names every key nobody looked at, with its
-  * full dotted path. It is a TREE walk rather than a path-string comparison on purpose: a key may
-  * itself contain dots (`packageRenames { "com.foo" = "sge" }`), and any scheme that decided
-  * containment by splitting a path on `.` would be the §4.56 mistake in a new place.
-  *
-  * A whole object read as a map or handed to a factory counts every key under it as read — the
-  * reader of that object is answerable for its contents, not this class.
-  *
-  * ==Absent vs malformed==
-  * An absent key is `None`, because a default is a legitimate answer. A key present with the wrong
-  * shape THROWS: `files = "Foo.java"` where a list is meant is never anything but a mistake, and
-  * widening it silently is how a scalar typo becomes a valid document.
-  */
+/** [[ConfigView]] over HOCON. Every read is recorded; [[unread]] reports keys nobody accessed
+  * (catches typos that HOCON silently tolerates). Absent key = `None`; wrong shape = throws.
+  * Containment is a tree walk, not a dot-split (keys may contain dots). */
 final class HoconView private (val path: String, obj: ConfigObject) extends ConfigView:
 
   private val readKeys = collection.mutable.LinkedHashSet.empty[String]
@@ -45,7 +25,7 @@ final class HoconView private (val path: String, obj: ConfigObject) extends Conf
 
   def string(key: String): Option[String] = raw(key).map {
     case v if v.valueType == ConfigValueType.STRING  => v.unwrapped.asInstanceOf[String]
-    // a number or a boolean written unquoted is still a scalar the author meant as text
+    // Unquoted numbers/booleans accepted as text
     case v if v.valueType == ConfigValueType.NUMBER  => String.valueOf(v.unwrapped)
     case v if v.valueType == ConfigValueType.BOOLEAN => String.valueOf(v.unwrapped)
     case v                                           => wrongType(key, "a string", v)
@@ -81,8 +61,7 @@ final class HoconView private (val path: String, obj: ConfigObject) extends Conf
     case v => wrongType(key, "an object of string values", v)
   }
 
-  /** the shape PROBE — deliberately NOT through `raw`, which records the read. See
-    * [[ConfigView.isObject]] for why a probe that counted as a read would defeat [[unread]]. */
+  /** Shape probe; does NOT record a read (so the unread-key check is not defeated). */
   def isObject(key: String): Boolean =
     Option(obj.get(key)).exists(_.valueType == ConfigValueType.OBJECT)
 
@@ -106,20 +85,11 @@ final class HoconView private (val path: String, obj: ConfigObject) extends Conf
     handed += v
     v
 
-  /** Declare a key CONSIDERED READ without reading it.
-    *
-    * The one caller is a conf loaded as a `base`: §1.5 says a dependent inherits the shared SURFACE
-    * and nothing else, so the base file's `input`, `output`, `provenance` and `runtimeMode` are
-    * deliberately not this run's business and must not be reported as junk. They are still checked
-    * — by the run that loads that same file as its own configuration, which is the run they belong
-    * to. */
+  /** Mark a key as read without accessing it (used when loading a conf as a base). */
   def markRead(key: String): Unit = readKeys += key
 
-  /** Every key in this subtree that no accessor asked for, deepest paths included, sorted.
-    *
-    * `readKeys` may name a key this object does not have (a reader asking for an optional value);
-    * that is harmless and is not reported — the question here is only about keys that EXIST and
-    * that nobody read. */
+  /** Every key in this subtree that no accessor asked for, deepest paths included, sorted. A key
+    * in `readKeys` that this object does not have is harmless and not reported. */
   def unread: List[String] =
     val here = keys.filterNot(readKeys.contains).map(at)
     (here ++ handed.toList.flatMap(_.unread)).sorted
@@ -130,15 +100,9 @@ object HoconView:
 
   def root(config: Config): HoconView = new HoconView("", config.root)
 
-  /** Parse a file, resolving substitutions against SYSTEM PROPERTIES only.
-    *
-    * `ConfigFactory.load` would also pull in `reference.conf` from every jar on the classpath and
-    * the whole environment, which is how a port's configuration becomes a function of which
-    * libraries happen to be on the classpath. A port must be reproducible from its own file
-    * (CLAUDE.md §5), so the resolution sources are exactly two and both are visible: the file
-    * itself, and `-D` system properties for the values an operator genuinely supplies (the measure
-    * lanes' `balticporter.root` is the worked example).
-    */
+  /** Parse a file, resolving substitutions against SYSTEM PROPERTIES only — never
+    * `ConfigFactory.load`, which would pull in `reference.conf` from every jar on the classpath. A
+    * port must be reproducible from its own file (CLAUDE.md §5). */
   def parse(file: java.nio.file.Path): Config =
     if !java.nio.file.Files.isRegularFile(file) then
       throw ConfigError(file.toString, "no such port configuration file")

@@ -2,29 +2,11 @@ package balticporter.runner
 
 import java.nio.file.Path
 
-/** The truthful `Provenance.upstreamCommit` for a VENDORED source tree.
-  *
-  * Every generated file carries an attribution header (CLAUDE.md §4.57), and its
-  * `upstream-commit` line exists so an investigating agent can pin the exact Java the port was
-  * derived from. Three of the live ports shipped a PATH there ("vendored in ../sge/…") — true,
-  * machine-local, and pinning nothing. The honest pin is the LAST COMMIT THAT TOUCHED THE TREE in
-  * the repository that contains it, plus that repository's `origin` URL when it has one. Where the
-  * vendored tree is a full upstream clone (all three sge trees are — libgdx, ashley and
-  * simple-graphs each carry their real upstream `origin`), that hash IS a true upstream commit
-  * and the line becomes directly actionable: fetch origin, check out the hash, diff the subtree.
-  *
-  * Last-touch, not `HEAD`: `HEAD` moves on every unrelated commit to the containing repository,
-  * which would churn every generated header — and the member-digest baseline with it — while the
-  * Java the port reads is byte-identical. The last commit touching the tree changes exactly when
-  * the sources can have changed, and pins the identical subtree state either way.
-  *
-  * A dirty tree is stated (`+dirty`): a header claiming a commit the working files no longer
-  * match is the wrong-but-plausible value §4.57 warns defeats the line's only purpose. The same
-  * clause covers the fallback: where git answers nothing, say `commit unknown` rather than
-  * inventing an anchor.
-  *
-  * Paths are realpathed before relativising (CLAUDE.md §5.4 — a worktree reaches its sibling
-  * checkout through a symlink, and `git -C` follows it while a lexical relativise keeps it). */
+/** The truthful `Provenance.upstreamCommit` for a VENDORED source tree (CLAUDE.md §4.57). The
+  * honest pin is the LAST COMMIT THAT TOUCHED THE TREE (never `HEAD`, which churns on every
+  * unrelated commit) plus the repo's `origin` URL when it has one. A dirty tree is stated
+  * (`+dirty`); where git answers nothing, `commit unknown` rather than inventing an anchor. Paths
+  * are realpathed before relativising (§5.4). */
 object VendoredCommit:
 
   def of(sourceRoot: Path): String =

@@ -4,48 +4,13 @@ import balticporter.catalog.Platform
 import balticporter.tir.{ConfigError, ConfigView, Descriptor, OpaqueSpec, Phase, Reason, Remedy, RuleScope, TransformFactory}
 import balticporter.transform.*
 
-/** The engine's own [[TransformFactory]] registrations — one per transform it ships that a config
-  * file can name, and nothing else.
-  *
-  * ==Which transforms are here, and why exactly these==
-  * A phase belongs here iff it is a CLAUDE.md §1(a) or §1(b) transform the engine ships. That is
-  * the whole test, and it is what makes the list closed rather than a matter of taste:
-  *
-  *   - a (b) whose policy is string-shaped is registered — every one of them, so an agent holding a
-  *     `.conf` can reach the engine's whole parameterised surface without dropping to Scala;
-  *   - a (a) with no configuration is registered taking an EMPTY config object, because a config
-  *     file still has to be able to put it in the pipeline (`mutable-params`, `panama-ffi`);
-  *   - a (c) is NOT here and cannot be — it lives in the porting repository, ships its own factory,
-  *     and is discovered on the consumer's classpath (`GdxSharedIteratorRule` is the worked one);
-  *   - `package-rename` is refused by name, see [[TransformRegistry.Reserved]].
-  *
-  * ==Why these are classes and not `object`s==
-  * `java.util.ServiceLoader` instantiates a provider through a public no-argument constructor, and
-  * a Scala `object`'s constructor is private. Registration is therefore a top-level `final class`
-  * per factory, listed in `META-INF/services/balticporter.tir.TransformFactory`. They are stateless,
-  * so nothing depends on there being one instance.
-  *
-  * ==The one thing config cannot express, stated once==
-  * Two of these phases take a `Symbol => Boolean` in Scala:
-  * `GlobalsToImplicitsTransform.isContext`, `PanamaFfiTransform.isNative`. A predicate is CODE, and
-  * a config format that grew a way to write one would have become a scripting language with the
-  * engine as its interpreter. So each is handled the same way:
-  *
-  *   - where the predicate has a universal default that needs no policy, config uses it
-  *     (`isNative` is `_.flags.isNative` — a fact about Java, not about a library);
-  *   - where the port must name things, config names them AS DATA and the factory closes over the
-  *     data (`globals-to-implicits` takes `contextClasses`, a set of FQNs;
-  *     `primitive-to-opaque` takes `hints`, a set of FQNs — O4 CLOSED);
-  *
-  * That third case is the §1.5 line held: the conf path constructs the same values the Scala path
-  * constructs, and anything a value needs that config cannot express arrives as SPI-discovered
-  * code — never as a string that is secretly code.
-  */
+/** ServiceLoader-discovered [[TransformFactory]] registrations for the engine's own
+  * §1(a) and §1(b) transforms. Each is a `final class` (ServiceLoader needs a public no-arg
+  * constructor). A §1(c) rule ships in the consumer's repository. Predicates are expressed as
+  * data (FQN sets) rather than code. See [[TransformRegistry.Reserved]] for `package-rename`. */
 object BuiltinFactories:
 
-  /** every factory this module registers — the same list its service file names. A spec asserts the
-    * two agree, because a factory added here and not there is reachable from a Scala embedder and
-    * invisible to the config front door, which is the harder of the two failures to notice. */
+  /** Every factory this module registers; a spec asserts agreement with the service file. */
   def all: List[TransformFactory] = List(
     new CollectionsFactory, new MutableParamsFactory, new PanamaFfiFactory,
     new TestFrameworkFactory, new StaticForwarderFactory, new ClassTableFactory,
@@ -57,10 +22,7 @@ object BuiltinFactories:
     new ClassToTraitFactory,
   )
 
-// ---------------------------------------------------------------------------------------------
-// (a) — no policy. The config object is empty; any key under it is caught by the loader's
-// unread-key refusal without these classes doing anything.
-// ---------------------------------------------------------------------------------------------
+// (a) — no policy; empty config object
 
 final class MutableParamsFactory extends TransformFactory:
   def name = "mutable-params"
@@ -70,9 +32,7 @@ final class PanamaFfiFactory extends TransformFactory:
   def name = "panama-ffi"
   def fromConfig(config: ConfigView): Phase = new PanamaFfiTransform()
 
-// ---------------------------------------------------------------------------------------------
 // (b) — policy as data
-// ---------------------------------------------------------------------------------------------
 
 /** ```
   * { transform = "collections"
@@ -96,26 +56,9 @@ final class PanamaFfiFactory extends TransformFactory:
   *   reifiedCarriers = ["com.fasterxml.jackson.core.type.TypeReference"]
   *   reflectiveSinks = ["com.fasterxml.jackson.databind.ObjectMapper"] }
   * ```
-  *
-  * `retarget` is the type-only half: java FQN → scala FQN, retyped everywhere and API-mapped
-  * nowhere. Legal exactly where the scala target is usable wherever the java source was — see the
-  * constructor parameter for the precondition and why the engine cannot check it.
-  *
-  * `retargetRewrites` maps per-retarget member rewrites. The outer key is the source FQN (must
-  * match a `retarget` key). Each inner key is `"memberName/arity"`. A string value is a `Rename`;
-  * an object with `boolDispatch` is a `BoolDispatch`; an object with `companion` + `factory` is a
-  * `Construct` (construction rewrite: `new Source(args)` -> `Target.factory(args)`).
-  *
-  * `reifiedCarriers` names the external generic types whose type ARGUMENTS a third party reads back
-  * out of the class file at run time and constructs from — a super-type token
-  * (`ENGINE-LIMITS.md` K20). Those arguments stay in java's namespace and the value is bridged where
-  * it is used. `java.lang.Class` is included by the engine and needs no entry.
-  *
-  * `reflectiveSinks` is the same third party at the OTHER end of the same call
-  * (`ENGINE-LIMITS.md` K21 face 1): an external type that reads the RUNTIME REPRESENTATION of a
-  * value handed to it at a `java.lang.Object` slot. Arguments there are bridged through
-  * `JavaCollections.Reified.toJavaValue`. Nothing is included by the engine — java guarantees no
-  * such type — and the `OpaqueEgress` boundary rows are the review list a port picks entries from.
+  * `retargetRewrites` inner key is `"memberName/arity"` or `"memberName/(descriptor)"`.
+  * `reifiedCarriers`: super-type tokens whose arguments stay in java's namespace (ENGINE-LIMITS K20).
+  * `reflectiveSinks`: types that read runtime representations at `Object` slots (ENGINE-LIMITS K21).
   */
 final class CollectionsFactory extends TransformFactory:
   def name = "collections"
@@ -216,14 +159,9 @@ final class CollectionsFactory extends TransformFactory:
       reifiedCarriers  = config.strings("reifiedCarriers").getOrElse(Nil).toSet,
       reflectiveSinks  = config.strings("reflectiveSinks").getOrElse(Nil).toSet)
 
-/** ```
-  * { transform = "public-field-accessors", scope { only = ["com.foo.Model"] } }
-  * ```
+/** `{ transform = "public-field-accessors", scope { only = ["com.foo.Model"] } }`
   *
-  * Java's `public` field is part of the class file's surface and scala emits no public JVM field
-  * for it, so a framework that auto-detects one sees nothing (`ENGINE-LIMITS.md` K21 face 2). This
-  * adds `getX`/`setX` beside such a field for the declarations named — the entries reach nested and
-  * ANONYMOUS classes, which is the usual shape. No scope admits nothing, which is the default.
+  * Adds `getX`/`setX` beside public fields for the scoped declarations. // ENGINE-LIMITS K21 face 2
   */
 final class PublicFieldAccessorFactory extends TransformFactory:
   def name = "public-field-accessors"
@@ -240,11 +178,7 @@ final class TestFrameworkFactory extends TransformFactory:
       testMember = config.string("testMember").getOrElse("test"),
     )
 
-/** ```
-  * { transform = "static-forwarder"
-  *   forwarders = [ { wrapper = "…", receiver = "…", members = ["…"] } ] }
-  * ```
-  */
+/** `{ transform = "static-forwarder", forwarders = [ { wrapper, receiver, members } ] }` */
 final class StaticForwarderFactory extends TransformFactory:
   def name = "static-forwarder"
   def fromConfig(config: ConfigView): Phase =
@@ -257,30 +191,14 @@ final class StaticForwarderFactory extends TransformFactory:
             "forwards nothing, which is a policy entry that can only ever be a mistake")).toSet,
       )))
 
-/** ```
-  * { transform = "remediation"
-  *   classTables { "a.B#forName" = "c.D#classFor" }
-  *   targets = ["jvm", "js", "native"] }
-  * ```
+/** `{ transform = "remediation", classTables { "a.B#forName" = "c.D#classFor" } }`
   *
-  * THE PORTABILITY MENU (`RemediationTransform`). It takes no location list: WHICH locations is a
-  * `resolutions` selection and lives in the manifest, because a selection spans several producers
-  * and is compared across a chain (`DESIGN.md` §8.16). What is here is the one value a template
-  * cannot compute — the destination table for `class-table` — and the target set the questions are
-  * asked for.
-  *
-  * `remedies` restates the phase's own menu, and the duplication is the point: a `resolutions` entry
-  * is validated at LOAD, before a pipeline exists, so a TYPO and a port that picked a real remedy
-  * and forgot the `surface` line need different answers, and only a declaration that costs no
-  * construction can tell them apart.
-  */
+  * Portability menu. Location list is `manifest.resolutions`; `classTables` is the destination
+  * table for `class-table`. `remedies` restates the menu for load-time validation. */
 final class RemediationFactory extends TransformFactory:
   def name = RemediationTransform.Name
   override def remedies: List[Remedy] = RemediationTransform.Remedies
-  /** `targets` is NOT a key here, deliberately: which backends the module is ported for is
-    * `PortManifest.targets`, the phase reads it off the run (`RunScope.platform`), and a second
-    * spelling under this transform could disagree with the lane the run reports. A `.conf` that
-    * writes one is caught by the loader's unread-key refusal, which is the right sentence. */
+  // `targets` is read from `PortManifest.targets` via `RunScope.platform`, not from this transform.
   def fromConfig(config: ConfigView): Phase =
     new RemediationTransform(classTables = config.stringMap("classTables").getOrElse(Map.empty))
 
@@ -293,24 +211,14 @@ final class ClassTableFactory extends TransformFactory:
 /** ```
   * { transform = "type-redirect"
   *   redirects {
-  *     "a.B" = "c.D"                                                  # the flat form
-  *     "a.Disposable" = { to = "java.lang.AutoCloseable"               # …and the same entry with
-  *                        memberRenames { dispose = "close" } }        #    the target's names
-  *     "x.reflect.Field" = { to = "com.foo.ai.TaskField"               # …and a DEPENDENT's own
-  *                           scope { only = ["com.foo.ai"] } }         #    slice of the program
+  *     "a.B" = "c.D"                                                  # flat form
+  *     "a.Disposable" = { to = "java.lang.AutoCloseable"
+  *                        memberRenames { dispose = "close" } }
+  *     "x.reflect.Field" = { to = "com.foo.ai.TaskField"
+  *                           scope { only = ["com.foo.ai"] } }
   *   } }
   * ```
-  *
-  * TWO SHAPES IN ONE MAP, and the flat one is not a legacy spelling: an entry whose target spells
-  * every member the same way has nothing to say beyond `to`, and making it say
-  * `{ to = "c.D" }` would rewrite every port that already writes the published form for no
-  * information. The value is read as an object only when it IS one ([[ConfigView.isObject]]) — never
-  * by catching the error the other reader would throw, which would turn a genuine shape mistake (a
-  * list, a number) into a silent fallback.
-  *
-  * A `memberRenames` key is a member SEGMENT under its owner — `dispose`, or `dispose()` for the
-  * nilary overload alone. The owner is the entry it is nested in, which is what makes a rename for
-  * a type nothing redirects unwritable rather than merely reported.
+  * Two shapes: a string value is the flat form; an object carries `to`, `memberRenames`, `scope`.
   */
 final class TypeRedirectFactory extends TransformFactory:
   def name = "type-redirect"
@@ -319,10 +227,7 @@ final class TypeRedirectFactory extends TransformFactory:
       if !rs.isObject(k) then (k, rs.requireString(k), Map.empty[String, String], RuleScope.everywhere)
       else
         val e = rs.requireChild(k)
-        // `Everywhere(Set.empty)` — this phase's own default and its pre-scope code path, which is
-        // what `scopeOf` takes rather than assuming one (CLAUDE.md §1). PER ENTRY, because the merge
-        // is: a base's whole-program redirect and a dependent's package-scoped one live in one
-        // folded instance.
+        // Per-entry scope: a base's whole-program redirect and a dependent's scoped one fold together.
         (k, e.requireString("to"), e.stringMap("memberRenames").getOrElse(Map.empty),
          TransformFactory.scopeOf(e))
     })
@@ -333,25 +238,11 @@ final class TypeRedirectFactory extends TransformFactory:
 
 /** ```
   * { transform = "bean-properties"
-  *   pairs { "a.B#opacity" = "getOpacity/setOpacity"                       # def-pair, unchanged
-  *           "a.B#layers"  = "getLayers"
-  *           "a.B#name"    = { accessors = "getName/setName", target = "var" }
-  *           "a.B#props"   = { accessors = "getProps",        target = "val" } } }
+  *   pairs { "a.B#opacity" = "getOpacity/setOpacity"
+  *           "a.B#name"    = { accessors = "getName/setName", target = "var" } } }
   * ```
-  *
-  * The key is the emitted PROPERTY in the upstream namespace; the value names the accessor(s)
-  * explicitly. An absent `pairs` is an empty map, which makes the phase a structural no-op — the
-  * §1(b) requirement that "turned off" needs no code path.
-  *
-  * TWO SHAPES IN ONE MAP, exactly as [[TypeRedirectFactory]]'s `redirects` carries them, and for
-  * the same reason: an entry that wants the default shape has nothing to say beyond its accessors,
-  * and making it write `{ accessors = "…" }` would rewrite every port that already publishes the
-  * flat form for no information. `target` defaults to `def-pair`, so a config written before this
-  * key existed constructs exactly the phase it constructed before. The value is read as an object
-  * only when it IS one ([[ConfigView.isObject]]) — a PROBE that does not count as a read, so a
-  * misspelling INSIDE an entry still reaches the unread-key refusal — never by catching the error
-  * the other reader would throw, which would turn a genuine shape mistake into a silent fallback.
-  */
+  * Two shapes: a string value names accessors; an object adds `target` (def-pair | var | val).
+  * Empty `pairs` is a no-op. */
 final class BeanPropertyFactory extends TransformFactory:
   def name = "bean-properties"
   def fromConfig(config: ConfigView): Phase =
@@ -370,19 +261,9 @@ final class BeanPropertyFactory extends TransformFactory:
 
 /** ```
   * { transform = "member-rename"
-  *   renames { "a.VisWindow#close"   = "closeWindow"      # every overload of `close`
-  *             "a.Stream#close(int)" = "closeAt" } }      # exactly one of them
+  *   renames { "a.VisWindow#close" = "closeWindow", "a.Stream#close(int)" = "closeAt" } }
   * ```
-  *
-  * The key is a MEMBER KEY in the upstream namespace and the value is a BARE MEMBER NAME — no
-  * nesting, and deliberately no second shape. A `type-redirect` entry nests its `memberRenames`
-  * under the type it redirects because the owner is already named there and a rename for an
-  * un-redirected type must be unwritable; here the owner is the key's own first half, so a nested
-  * form would be a second spelling of one act (`CLAUDE.md` §5's one-policy-one-spelling rule).
-  *
-  * An absent `renames` is an empty map, which makes the phase a structural no-op — the §1(b)
-  * requirement that "turned off" needs no code path.
-  */
+  * Key is member key in upstream namespace; value is bare target name. Empty = no-op. */
 final class MemberRenameFactory extends TransformFactory:
   def name = MemberRenameTransform.Name
   def fromConfig(config: ConfigView): Phase =
@@ -394,19 +275,9 @@ final class MethodBodyFactory extends TransformFactory:
   def fromConfig(config: ConfigView): Phase =
     new MethodBodyTransform(config.stringMap("bodies").getOrElse(Map.empty))
 
-/** ```
-  * { transform = "add-members"
-  *   members {
-  *     "com.badlogic.ashley.core.Engine" = [
-  *       { name = "registerComponentFactory", arity = 2,
-  *         source = "def registerComponentFactory[T <: …](…): Unit = …" }
-  *     ]
-  *   }
-  * }
-  * ```
+/** `{ transform = "add-members", members { "owner.Fqn" = [ { name, arity, source, why? } ] } }`
   *
-  * Each member spec is an object with `name`, `arity`, `source`, and optional `why` (free text for
-  * the porter note). The key of the outer map is the owner's FQN in the UPSTREAM namespace. */
+  * Each spec has `name`, `arity`, `source` (verbatim Scala), optional `why`. Owner is upstream FQN. */
 final class AddMembersFactory extends TransformFactory:
   def name = "add-members"
   def fromConfig(config: ConfigView): Phase =
@@ -426,15 +297,9 @@ final class AddMembersFactory extends TransformFactory:
     }
     new AddMembersTransform(entries.toMap)
 
-/** ```
-  * { transform = "call-site-substitution"
-  *   calls { "a.B#m(int,String)" = "c.D.n({recv}, {arg0})" } }
-  * ```
+/** `{ transform = "call-site-substitution", calls { "a.B#m(int,String)" = "c.D.n({recv}, {arg0})" } }`
   *
-  * The key is the RESOLVED CALLEE and the value an expression template; `{recv}` and
-  * `{arg0}`…`{argN}` are the call's own receiver and arguments. Named for the phase rather than
-  * shortened to `call-site`, so the conf entry reads as what it does to the reader of a diff.
-  */
+  * Key is resolved callee; value is expression template with `{recv}`, `{arg0}`...`{argN}`. */
 final class CallSiteSubstitutionFactory extends TransformFactory:
   def name = "call-site-substitution"
   def fromConfig(config: ConfigView): Phase =
@@ -442,14 +307,7 @@ final class CallSiteSubstitutionFactory extends TransformFactory:
 
 /** `{ transform = "port-map-migration", bases = ["base-core"] }`
   *
-  * Named for the phase rather than shortened to `port-map`, which is a CHECK name in every run's
-  * report — two identifiers that differ by nothing an agent can see is how a config key and a
-  * finding get confused for each other.
-  *
-  * The policy is a list of BASE MODULE NAMES; the maps themselves are discovered from the
-  * classpath and the report tree by `PortMap.published`, which is what makes this data rather than
-  * a list of files a conf would have to keep in step with a build.
-  */
+  * Takes base module names; maps are discovered by `PortMap.published`. */
 final class PortMapMigrationFactory extends TransformFactory:
   def name = "port-map-migration"
   def fromConfig(config: ConfigView): Phase =
@@ -464,13 +322,7 @@ final class PortMapMigrationFactory extends TransformFactory:
   *   extraHints = ["sge.gl.GL20#glHandle"]
   *   scope { only = ["sge.gl"] } }
   * ```
-  *
-  * `hints` is a `Set[String]` of exact FQNs matched against `Symbol.fullName` — the port's own
-  * seeds, §1(c) in its purest form. Both `hints` and `extraHints` are fully-qualified names and
-  * both reach the surface fingerprint (O4 CLOSED); the two are kept apart so that a port's
-  * own policy (which an agent reviews once) and an agent's additions (which arrive after a compile
-  * failure) are visibly different artifacts.
-  */
+  * `hints` and `extraHints` are exact FQNs for seeding; both reach the surface fingerprint. */
 final class PrimitiveToOpaqueFactory extends TransformFactory:
   def name = "primitive-to-opaque"
   def fromConfig(config: ConfigView): Phase =
@@ -485,19 +337,12 @@ final class PrimitiveToOpaqueFactory extends TransformFactory:
     ))
 
 /** ```
-  * { transform    = "nullability"
-  *   annotations  = ["com.foo.Null"]        # FQN set, UPSTREAM namespace; empty = no-op
-  *   target       = "union"                 # "union" (T | Null) | "named" | "option"
-  *   wrapper      = "lowlevel.Nullable"     # required iff target = "named", refused otherwise
+  * { transform = "nullability"
+  *   annotations = ["com.foo.Null"], target = "union"       # union | named | option
+  *   wrapper = "lowlevel.Nullable"                          # required iff target = "named"
   *   scope { except = ["com.foo.Bridge"] } }
   * ```
-  *
-  * `wrapper` is REFUSED under `target = "union"` or `target = "option"` rather than ignored: a
-  * config that names a wrapper and gets a union has been silently overruled, which is the §1(b)
-  * failure this SPI exists to prevent. It is read unconditionally so that the loader's unread-key
-  * check cannot fire on it before this refusal does — the refusal names the actual mistake,
-  * "unknown key" does not. `target = "option"` uses `scala.Option` and needs no wrapper FQN.
-  */
+  * `wrapper` is refused when `target` is not `"named"`. Empty `annotations` = no-op. */
 final class NullabilityFactory extends TransformFactory:
   def name = NullabilityTransform.Name
   def fromConfig(config: ConfigView): Phase =
@@ -543,19 +388,9 @@ final class NullabilityFactory extends TransformFactory:
   *     cache        = { "com.foo.Boot" = "fooContext" }
   *     promoteToClass = [ "com.foo.Viewport" ]
   *     scope { except = [ … ] } }] }
-  *
-  * # …and in a DEPENDENT, an EXTENSION: no `context` block, per-declaration keys only
-  * { transform = "globals-to-implicits"
-  *   holders = [{ holder = "com.foo.Gdx"
-  *                sites  = { "com.dep.Utils#<clinit>" = "lazy-init" } }] }
   * }}}
-  *
-  * The whole policy is DATA, which is why this phase (unlike `primitive-to-opaque`'s seeds) needs no
-  * escape hatch: what a port has to say is which class is the ambient context, what its counterpart
-  * is called and which of its fields map where, and all three are names. An absent `holders` is
-  * REFUSED rather than defaulted — with no holder the phase would thread nothing at all, which is
-  * the §1(b) silent no-op this engine exists to remove.
-  */
+  * A holder entry with no `context` block is an extension (dependent's per-declaration keys only).
+  * `holders` is required; absent is refused. */
 final class GlobalsToImplicitsFactory extends TransformFactory:
   def name = "globals-to-implicits"
 
@@ -564,11 +399,7 @@ final class GlobalsToImplicitsFactory extends TransformFactory:
       throw ConfigError(config.at("holders"),
         "required, and absent — with no holder named, the phase would find none and do nothing, " +
           "which is the §1(b) silent no-op this engine refuses"))
-    // A HOLDER ENTRY WITH NO `context` BLOCK IS AN EXTENSION — the per-declaration half of a holder
-    // the BASE declares (`ENGINE-LIMITS.md` CT8). The absence of `context` is the signal because
-    // it is the one key with no default: a dependent has nothing to say about the context TYPE, and
-    // any shared-surface key written inside such a block is an unread key the loader already
-    // refuses. §1.5 is then structural rather than a convention on both sides of the front door.
+    // No `context` block = extension (dependent's per-declaration keys only). // ENGINE-LIMITS CT8
     val (exts, full) = hs.partition(_.child("context").isEmpty)
     val rg = config.stringMap("requiredGivens").getOrElse(Map.empty)
     new GlobalsToImplicitsTransform(full.map(holder), exts.map(extension), rg)
@@ -616,21 +447,7 @@ final class GlobalsToImplicitsFactory extends TransformFactory:
       scope = TransformFactory.scopeOf(c),
     )
 
-// --- 3.2g: class-to-trait ---
-
-/** ```
-  * { transform = "class-to-trait"
-  *   specs {
-  *     "com.badlogic.gdx.utils.Pool" {
-  *       params = [
-  *         { index = 0, name = "initialCapacity" }
-  *         { index = 1, name = "max" }
-  *       ]
-  *     }
-  *   }
-  * }
-  * ```
-  */
+/** `{ transform = "class-to-trait", specs { "a.Pool" { params = [ { index, name } ] } } }` */
 final class ClassToTraitFactory extends TransformFactory:
   def name = ClassToTraitTransform.Name
   def fromConfig(config: ConfigView): Phase =

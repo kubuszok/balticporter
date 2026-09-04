@@ -9,89 +9,28 @@ import java.util.zip.ZipFile
 import scala.jdk.CollectionConverters.*
 import scala.util.control.NonFatal
 
-/** WHAT AN ARTIFACT PROVIDES, read from the artifact.
-  *
-  * `DependencyCheck`'s 2×2 needs to know whether the emitted code references a declared coordinate,
-  * and there is no structural link between `com.kubuszok:multiarch-serviceloader` and
-  * `multiarch.serviceloader.ServiceProviders`. Deriving one from the other is a package-prefix guess
-  * — §4.56's own hazard at a build coordinate, and precisely the reason `ENGINE-LIMITS.md` P8 stood
-  * open. **The jar is the one authority on what the jar provides**, so this resolves the coordinate
-  * and enumerates the class entries, and answers `Unverifiable` where it cannot.
-  *
-  * ==Which jar, and the limit that follows==
-  * The **JVM** variant — `name_3` for a Scala or platform-crossed coordinate, the bare `name` for a
-  * java one. For a `CrossKind.Platform` artifact that is one of three published jars, and the API
-  * SURFACE is what these three share: `scala-java-time_sjs1_3` exists so that `java.time.Instant`
-  * resolves on Scala.js, and it declares the same types the `_3` jar does. So the JVM listing is the
-  * right approximation of "what this coordinate provides" — and it is an approximation, which is the
-  * limit to state rather than to hide: a class published on ONE backend only is a class this reading
-  * does not see. It costs an `Unused` cell where the true one is `Introduced`, which is a wrong
-  * remove instruction, and nothing here can do better without resolving three jars for every
-  * coordinate on every run. No corpus port has that shape; the day one does, this is the paragraph it
-  * contradicts.
-  *
-  * ==The coordinate is built EXPLICITLY, never handed to `cs`'s defaults==
-  * `cs fetch org::name:rev` picks the suffix from whatever Scala version that `cs` installation
-  * defaults to, which is an ambient fact about the machine — two checkouts could read two different
-  * jars and every count would agree. `org:name_3:rev` names one artifact and cannot drift.
-  *
-  * `--intransitive` is not an optimisation either: without it the resolution pulls the artifact's own
-  * dependencies, `scala-library` first, and the provides-set becomes the whole of `scala.*` — after
-  * which every port "references" every declared coordinate and the check answers `Covered` for
-  * anything at all.
-  *
-  * ==Offline, and why a failure is not fatal here==
-  * `ClasspathCache` — the same mechanism one module out, in `corpus`, which the engine cannot depend
-  * on — makes a fetch failure FATAL, and rightly: a frontend with no classpath does not fail, it
-  * resolves WRONGLY. Here the consequence is a single check column, so a failure is
-  * [[DependencyCheck.Provides.Unverifiable]] and the run continues with that cell reported as the
-  * unknown it is. What is NOT permitted is the empty set: `Known(Set.empty)` is indistinguishable
-  * from "this artifact declares no class the port names", which is a remove instruction (§4.6).
-  *
-  * The CACHE follows `ClasspathCache`'s discipline for its reason — a cache keyed on existence alone
-  * answers a question nobody asked after a coordinate bump — so the listing carries a sidecar holding
-  * the exact invocation, and a listing whose sidecar does not match is refetched. It lives under
-  * `<root>/.balticporter/`, which is gitignored and is where every other run capture goes (§3.7).
+/** Resolves an [[ArtifactDep]] via `cs fetch --intransitive` and enumerates the JVM jar's class
+  * entries to answer [[DependencyCheck.Provides]]. Returns `Unverifiable` on failure. Coordinate
+  * is built explicitly (`name_3`, not `cs`'s default). Cache is fingerprinted by the exact
+  * invocation; stale sidecars trigger a refetch. // ENGINE-LIMITS P8
   */
 object ArtifactIndex:
 
-  /** the JVM artifact id, built from the coordinate's own `CrossKind` and never from `cs`'s default. */
+  /** JVM artifact id from the coordinate's `CrossKind`. */
   def coordinate(d: ArtifactDep, scalaBinary: String = "3"): String =
     val artifact = d.cross match
       case CrossKind.Java              => d.name
       case CrossKind.Scala | CrossKind.Platform => s"${d.name}_$scalaBinary"
     s"${d.org}:$artifact:${d.rev}"
 
-  /** …and the whole invocation, which is also the cache fingerprint.
-    *
-    * `--intransitive` comes AFTER the repositories and not before, which is not style: `cs` reads
-    * everything after that flag as a MODULE, so `--intransitive -r <url>` fails with
-    * *malformed module: -r* — a resolution failure, which this object reports honestly as
-    * `Unverifiable` and which is therefore exactly the shape that would have shipped as a permanent
-    * unknown on the one port that needs the answer. Measured: liqp's coordinate read `unverifiable`
-    * on the first live run with the flags the other way round. */
+  /** Full `cs` invocation; also the cache fingerprint.
+    * `--intransitive` must come AFTER `-r` flags (`cs` reads everything after it as a module). */
   def command(d: ArtifactDep, scalaBinary: String = "3"): List[String] =
     List("cs", "fetch") ++ d.resolver.toList.flatMap(r => List("-r", r)) ++
       List("--intransitive", coordinate(d, scalaBinary))
 
-  /** every class an entry NAMES, as `Symbol.fullName` spells it, with each enclosing prefix beside it.
-    *
-    * Pure, and separated from the zip reading precisely so it can be tested without one. Three things
-    * it does and one it deliberately does not:
-    *
-    *   - `META-INF/` is skipped whole. It carries no class a program can name, and `META-INF/versions/`
-    *     (a multi-release jar) would otherwise contribute the SAME class twice under a version path
-    *     that is not part of any name;
-    *   - `module-info` and `package-info` are skipped by SIMPLE name: neither is a type a source can
-    *     reference, and `module-info` in particular has no package at all;
-    *   - a NESTED entry contributes its own name and every enclosing prefix, cut only at `$`. That is
-    *     what lets the match be an equality test rather than a `startsWith`, which is the entire point
-    *     (§4.56). A scala module class `Foo$` yields `Foo`, and a synthetic `Foo$$anon$1` yields `Foo`
-    *     and stops — the empty segment after the first `$` is where a name stops being a name.
-    *
-    * What it does NOT do is decide whether an entry is "public API". A jar publishes what it
-    * publishes; a check that guessed at visibility from a class file would be inventing the fact the
-    * whole object exists to read. */
+  /** Classes named by a jar entry as `Symbol.fullName`, plus enclosing prefixes (cut at `$`).
+    * Skips `META-INF/`, `module-info`, `package-info`. Pure function for testability. */
   def namesOf(entry: String): List[String] =
     if !entry.endsWith(".class") || entry.startsWith("META-INF/") then Nil
     else
@@ -112,23 +51,13 @@ object ArtifactIndex:
       finally zip.close()
     }.toSet
 
-  /** the cache file for a coordinate, under the gitignored scratch root. `_` for every character a
-    * coordinate may hold that a file name may not — the fingerprint sidecar is what decides
-    * freshness, so two coordinates colliding on a name is a refetch and never a wrong answer. */
+  /** Cache file path for a coordinate. Freshness is decided by the fingerprint sidecar. */
   def cacheFile(dir: Path, d: ArtifactDep): Path =
     dir.resolve(s"${d.org}.${d.name}.${d.rev}".replaceAll("[^A-Za-z0-9._-]", "_") + ".classes")
 
   private def sidecar(cache: Path): Path = cache.resolveSibling(cache.getFileName.toString + ".coords")
 
-  /** WHAT THIS COORDINATE PROVIDES — from the cache when its fingerprint matches, else from `cs`.
-    *
-    * @param cacheDir where the listing lives; `None` resolves on every call, which is what a caller
-    *   with no writable root should get rather than a silent miss
-    * @param resolve the RESOLVER, a parameter for one reason: the arm that matters most here is the
-    *   one that CANNOT resolve, and a spec that had to be offline to reach it is a spec nothing runs
-    *   (§5.1's rule about `assume`-guarded specs, met by construction instead). The default is the
-    *   real `cs` invocation and no caller in the engine passes anything else.
-    */
+  /** What this coordinate provides. Cached when fingerprint matches; `resolve` is injectable for testing. */
   def provides(d: ArtifactDep, cacheDir: Option[Path], scalaBinary: String = "3",
                resolve: List[String] => Either[String, List[Path]] = fetch): DependencyCheck.Provides =
     val cmd = command(d, scalaBinary)
@@ -138,16 +67,13 @@ object ArtifactIndex:
     }
     hit match
       case Some(c) =>
-        // an EMPTY cached listing is a listing, not an absence: a jar can legitimately declare no
-        // class (a resources-only artifact), and the fingerprint says this is that jar's answer.
+        // An empty cached listing is valid (e.g. a resources-only artifact).
         DependencyCheck.Provides.Known(Files.readString(c).linesIterator.filter(_.nonEmpty).toSet)
       case scala.None =>
         resolve(cmd) match
           case Left(why) => DependencyCheck.Provides.Unverifiable(why)
           case Right(jars) =>
-            // the ONE lookup where an absent value is normal is the FETCH, above. A jar that resolved
-            // and cannot be READ is a different fact and says so — it is not "provides nothing", and
-            // it is not silence either (§4.6).
+            // A jar that resolved but cannot be read is Unverifiable, not empty. // CLAUDE.md §4.6
             try
               val classes = classesIn(jars)
               cacheDir.foreach(dir => writeCache(dir, d, classes, key))
@@ -156,34 +82,18 @@ object ArtifactIndex:
               case NonFatal(e) => DependencyCheck.Provides.Unverifiable(
                 s"resolved ${jars.size} jar(s) and could not read them: ${e.getClass.getSimpleName}: ${e.getMessage}")
 
-  /** …and the write is guarded ON ITS OWN, because a cache that cannot be written is not an answer
-    * about the artifact. Folded into the read's `try` it would turn a perfectly good listing into an
-    * `Unverifiable` on a read-only checkout — a diagnostic switch deciding a check's answer. */
+  /** Write is guarded separately: a cache write failure must not affect the check result. */
   private def writeCache(dir: Path, d: ArtifactDep, classes: Set[String], key: String): Unit =
     try
       val c = cacheFile(dir, d)
       Files.createDirectories(dir)
       Files.writeString(c, classes.toList.sorted.mkString("\n"))
-      // listing first, fingerprint second — a listing without its fingerprint is refetched, which is
-      // the safe direction to be interrupted in (`ClasspathCache`'s own rule).
+      // Listing first, fingerprint second: interrupted = refetched (safe direction).
       Files.writeString(sidecar(c), key + "\n")
     catch case NonFatal(_) => ()
 
-  /** `cs fetch --intransitive`, filtered to the jars — `ClasspathCache.fetch`'s two lessons, which
-    * are not this object's to re-learn: merge the streams so a failure is reportable, then keep only
-    * the lines that hold a jar, because the progress output once cached `Downloading https…` as a
-    * classpath entry.
-    *
-    * **A LINE IS A PATH, SPACES INCLUDED.** `cs fetch` prints one filesystem path per line, and the
-    * progress lines it interleaves are told apart by the path EXISTING and not by its shape — which
-    * is the only test that is a fact rather than a guess. Filtered on `!contains(' ')` instead, a
-    * coursier cache under a space-bearing directory (`~/Library/Application Support/Coursier` is the
-    * platform default on macOS; a Windows profile is the other) drops every jar it resolved, the
-    * list is empty, and the coordinate reads a PERMANENT `Unverifiable` on a machine that is online
-    * and has the artifact on disk — the same shape as the `--intransitive` flag order, which shipped
-    * exactly that (`ENGINE-LIMITS.md` P8). `Path.of` is guarded per line rather than around the
-    * whole read: one unparseable line is not a failed resolution, and letting it escape would turn
-    * a good listing into an unknown. */
+  /** Run `cs fetch --intransitive`, filter to existing `.jar` paths.
+    * Lines are paths (may contain spaces); progress lines filtered by existence check. */
   def fetch(cmd: List[String]): Either[String, List[Path]] =
     try
       val proc = new ProcessBuilder(cmd*).redirectErrorStream(true).start()
@@ -197,35 +107,19 @@ object ArtifactIndex:
       case NonFatal(e) =>
         Left(s"could not run `${cmd.mkString(" ")}`: ${e.getClass.getSimpleName}: ${e.getMessage}")
 
-  /** a printed line as a jar THIS MACHINE HAS. `None` for a progress line, a URL, or anything the
-    * platform's path syntax refuses — none of which is a resolution failure. */
+  /** A printed line as a local jar path, or `None` for progress/URL lines. */
   private[runner] def asPath(line: String): Option[Path] =
     try Option(Path.of(line)).filter(Files.isRegularFile(_))
     catch case NonFatal(_) => scala.None
 
-  /** the whole supplier a run hands `DependencyCheck.declarations`, memoised per RUN.
-    *
-    * Memoised because the 2×2 asks about the same coordinate up to twice (once per program) and a
-    * cold cache would then resolve it twice; a `Map` built here rather than a global for the reason
-    * every other run-scoped table has one — two runs in one JVM are two answers (§5.1).
-    *
-    * **THE KEY IS EVERY FIELD THE INVOCATION READS**, which is [[command]]'s own input and not a
-    * subset of it: `cross` decides the ARTIFACT ID (`name` against `name_3`) and `resolver` decides
-    * which repository is searched, so two entries agreeing on org/name/rev and differing in either
-    * are two different jars — and keyed on that triple the second one silently receives the first
-    * one's listing. One manifest holding both a java and a scala-cross spelling of a coordinate is
-    * the shape, and the wrong answer would be a cell nothing in the report could explain. Keyed on
-    * the command STRING so it cannot drift from what is actually run; [[cacheFile]] is the on-disk
-    * half of the same question and carries the same invocation as its fingerprint. */
+  /** Memoised supplier for `DependencyCheck.declarations`. Keyed on full command string
+    * (includes cross kind and resolver) so two different coordinates never share a result. */
   def supplier(cacheDir: Option[Path], scalaBinary: String = "3",
                resolve: List[String] => Either[String, List[Path]] = fetch): ArtifactDep => DependencyCheck.Provides =
     val memo = scala.collection.mutable.Map.empty[String, DependencyCheck.Provides]
     d => memo.getOrElseUpdate(command(d, scalaBinary).mkString(" "),
                               provides(d, cacheDir, scalaBinary, resolve))
 
-  /** the scratch directory a run caches into — `<root>/.balticporter/artifact-index`, the gitignored
-    * location every other run capture already uses (§3.7), anchored on the same `root` the debug
-    * flags are. Always `Some`: [[writeCache]] degrades on its own, so a root that cannot be written
-    * costs a refetch and never an answer. */
+  /** Default cache dir: `<root>/.balticporter/artifact-index`. Always `Some`. */
   def defaultCacheDir: Option[Path] =
     Some(balticporter.tir.DebugFlags.root.resolve(".balticporter").resolve("artifact-index"))
