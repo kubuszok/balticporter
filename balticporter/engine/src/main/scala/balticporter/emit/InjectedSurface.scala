@@ -3,19 +3,10 @@ package balticporter.emit
 import java.nio.file.{Files, Path}
 import scala.meta.*
 
-/** The member surface of INJECTED Scala files, parsed with scalameta.
+/** Member surface of injected Scala files (parsed with scalameta).
   *
-  * An emitted override of a dropped+injected parent must adopt the INJECTED parent's
-  * parameter types, which may differ from what the TIR carries — the TIR holds the java-derived
-  * type, while the injected file holds sge's hand-port API choice (e.g. `DynamicArray[? <: A]`
-  * vs `DynamicArray[A]`). This reader extracts member signatures so the emitter can align them.
-  *
-  * Also feeds `calleeHasParens`: a call to a member of a dropped+injected type must follow
-  * the injected member's arity, not the java arity.
-  *
-  * ==Kind==
-  * CLAUDE.md section 1(a). The mechanism is universal — a fact about dropped+injected parents
-  * and Scala, true of every codebase.
+  * Extracts signatures so the emitter can align overrides of dropped+injected
+  * parents and follow their member arity (hasParens).
   */
 object InjectedSurface:
 
@@ -32,31 +23,20 @@ object InjectedSurface:
   ):
     def arity: Int = paramTypes.flatten.size
 
-  /** Keyed by (ownerFqn, memberName, arity) for override alignment.
-    * Multiple overloads at the same arity are kept as a list — the emitter
-    * disambiguates by head type when needed. */
-  /** What kind of declaration an injected type is — enough for a port map's `shape` column. */
+  /** Declaration kind of an injected type, for the port map's `shape` column. */
   enum TypeForm:
     case Class, Trait, Object
 
   final case class Surface(
       members: Map[(String, String, Int), List[MemberSig]],
-      /** Type parameter names of each injected type, for substitution.
-        * e.g. `"sge.utils.Pool" -> List("A")` */
+      /** Type parameter names per injected type, for substitution in overrides. */
       typeParams: Map[String, List[String]] = Map.empty,
-      /** The declaration kind of each injected type — the minimum a port map's `shape` column needs
-        * so a dependent's `PublishedSurface.typeShape` can answer `Published` rather than `Unknown`.
-        * Without this, a dropped+injected type's contract row carries no payload and every dependent
-        * fails FATAL ("no declared base publishes a contract row"). */
+      /** Declaration kind per injected type, so a dependent's port map gets `Published`. */
       typeForms: Map[String, TypeForm] = Map.empty,
   ):
     def isEmpty: Boolean = members.isEmpty
 
-    /** Render a minimal `TypeShape` payload for each injected type, in the porter-note `k=v` grammar.
-      * Only `form=` is produced — a type the port drops and replaces has no constructor contract,
-      * no statics list, and no parent list to publish. What matters is that the payload is NON-EMPTY
-      * so `Surface.parseType` returns `Some(…)` and the dependent gets `Published` instead of
-      * `Unknown`. */
+    /** Renders a minimal `form=` payload per injected type for port-map type-shape rows. */
     def renderedTypeShapes: Map[String, String] =
       typeForms.map { (fqn, form) =>
         val f = form match
@@ -66,11 +46,7 @@ object InjectedSurface:
         fqn -> s"form=$f"
       }
 
-    /** Look up the injected member matching this override, applying the type parameter
-      * substitution from the child's `extends` clause.
-      *
-      * @param actualTypeArgs the type arguments the child passes to the injected parent,
-      *                       rendered as strings by the emitter's `tpe()` */
+    /** Look up the injected member, substituting the child's actual type args. */
     def lookup(ownerFqn: String, memberName: String, arity: Int,
                actualTypeArgs: List[String] = Nil): Option[MemberSig] =
       members.get((ownerFqn, memberName, arity)).flatMap(_.headOption).map { sig =>
@@ -82,17 +58,15 @@ object InjectedSurface:
             ParamType(substituteTypeParams(pt.rendered, subst)))))
       }
 
-    /** Does this member have parens in the injected file? */
+    /** Whether this member has parens in the injected file. */
     def memberHasParens(ownerFqn: String, memberName: String): Option[Boolean] =
-      // Check all arities for this member; any match tells us the arity shape
       members.iterator
         .filter { case ((fqn, n, _), _) => fqn == ownerFqn && n == memberName }
         .flatMap(_._2)
         .map(_.hasParens)
         .nextOption()
 
-  /** Substitute type parameter names in a rendered type string.
-    * e.g. `substituteTypeParams("DynamicArray[? <: A]", Map("A" -> "T"))` -> `"DynamicArray[? <: T]"` */
+  /** Substitute type parameter names in a rendered type string (whole-word match). */
   private def substituteTypeParams(rendered: String, subst: Map[String, String]): String =
     if subst.isEmpty then rendered
     else
@@ -103,10 +77,7 @@ object InjectedSurface:
 
   val Empty: Surface = Surface(Map.empty)
 
-  /** Parse all `.scala` files under the given injection roots and extract member signatures.
-    *
-    * Reuses the same scalameta parser the `ApiParityCheck` / `SkeletonDiff` path does
-    * (`DESIGN.md` §8.23). */
+  /** Parse `.scala` files under the given roots and extract member signatures. */
   def fromRoots(roots: List[Path]): Surface =
     val sigs = List.newBuilder[MemberSig]
     val tparams = collection.mutable.Map[String, List[String]]()
@@ -134,7 +105,7 @@ object InjectedSurface:
         .filter(p => Files.isRegularFile(p) && p.toString.endsWith(".scala"))
         .toList
 
-  /** Extract the package name from a parsed Scala source tree. */
+  /** Package name from a parsed Scala source tree. */
   private def extractPackage(tree: Source): String =
     tree.stats.collectFirst {
       case Pkg(ref, _) => ref.syntax

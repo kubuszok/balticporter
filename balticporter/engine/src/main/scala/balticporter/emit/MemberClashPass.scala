@@ -17,8 +17,7 @@ object MemberClashPass:
     val u1 =
       if collapsed.isEmpty then unit
       else
-        // resolved nilary calls to collapsed accessors become field reads — in
-        // EVERY unit (the accessor's declaring unit no longer emits the method)
+        // collapsed accessors: nilary calls become field reads across all units
         unit.copy(types = unit.types.map(BirTransform.mapTypeDecl(_) {
           case Call(recv, n, Nil, _, Some(owner)) if collapsed((owner, n)) =>
             recv match
@@ -29,8 +28,7 @@ object MemberClashPass:
           case e => e
         }))
     val u2 = u1.copy(types = u1.types.map(t => dropMembers(t, pkgPrefix + t.name, collapsed ++ dropped)))
-    // inherited method names (CharSequence.length() etc.) so a local named like one
-    // is renamed too — Java resolves `length()` in `int length = length()` to the method
+    // include inherited method names so locals shadowing them are renamed too
     def inheritedMethods(t: BTypeDecl): Set[String] =
       registry match
         case None => Set.empty
@@ -39,12 +37,7 @@ object MemberClashPass:
           supers.flatMap(reg.inheritedMethodNames(_)).toSet
     u2.copy(types = u2.types.map(t => qualifyParamShadowedThisCalls(fixLocals(fixType(t, unit), inheritedMethods(t)))))
 
-  /** A method parameter shadowing a same-named this-callable method makes a bare
-    * `m(...)` call resolve to the parameter (`param.apply(...)` → "does not take
-    * parameters" for a nilary `length()`). Qualify such calls as `this.m(...)`. Safe:
-    * a `Recv.OnThis` call always targets `this`'s method (a parameter used as a
-    * function is invoked through `Recv.On`), so the qualification never changes which
-    * member is meant — it only defeats the parameter's lexical shadow. */
+  /** Qualify `Recv.OnThis` calls where a parameter shadows the method name. */
   private def qualifyParamShadowedThisCalls(t0: BTypeDecl): BTypeDecl =
     val t = t0.copy(
       nested = t0.nested.map(qualifyParamShadowedThisCalls),
@@ -60,9 +53,7 @@ object MemberClashPass:
         })))
     t.copy(methods = t.methods.map(fixM), staticMethods = t.staticMethods.map(fixM))
 
-  /** removes collapsed/dropped accessor methods, hoisting their trivia onto the
-    * same-named field so the comment invariant holds. Recurses with $-qualified
-    * names matching the registry's keys. */
+  /** Remove collapsed/dropped accessors, hoisting their trivia onto the field. */
   private def dropMembers(t: BTypeDecl, fqcn: String, gone: Set[(String, String)]): BTypeDecl =
     def hoist(fields: List[BField], removed: List[BMethod]): List[BField] =
       fields.map { f =>
@@ -81,13 +72,10 @@ object MemberClashPass:
       inner = t.inner.map(n => dropMembers(n, s"$fqcn$$${n.name}", gone)),
     )
 
-  /** A Java local may share the name of a method it calls in its own initializer
-    * (`Object x = x(...)`) — Scala's block scoping makes that a self-reference.
-    * Rename such locals `x` → `x$loc` (Ident(Local) refs only; calls are untouched). */
+  /** Rename locals whose name clashes with a method (`x` -> `x$loc`). */
   private def fixLocals(t0: BTypeDecl, inherited: Set[String] = Set.empty): BTypeDecl =
     val t = t0.copy(nested = t0.nested.map(fixLocals(_, inherited)))
-    // this-method calls in the bodies — catches JDK-inherited methods (length() from
-    // CharSequence) that aren't in the closure registry: a local shadowing one still clashes
+    // scan for this-method calls (catches JDK-inherited methods outside the closure)
     val thisCallNames = collection.mutable.Set[String]()
     def scan(body: List[BStmt]): Unit =
       body.foreach(s => BirTransform.mapStmt(s) {
@@ -151,8 +139,7 @@ object MemberClashPass:
         case e => e
       }
 
-      // rewrite refs everywhere in this type EXCEPT nested types (they were fixed
-      // independently and may legitimately reuse the names)
+      // rewrite refs except in nested types (fixed independently, may reuse names)
       val nested = t.nested
       val rewritten = BirTransform.mapTypeDecl(t.copy(nested = Nil))(renameRefs)
       rewritten.copy(

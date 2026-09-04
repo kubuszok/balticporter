@@ -11,43 +11,21 @@ enum FieldLine:
   case SentinelVal(f: BField, paramName: String, default: BExpr)
   /** generalized sentinel: `val f: T = if (_p != null) <whenSome> else <whenNull>`. */
   case CondInit(f: BField, paramName: String, whenSome: BExpr, whenNull: BExpr)
-  /** no initializer usable at the declaration → Java default value, as `var`.
-    * For final fields this is the definite-assignment fallback (DESIGN.md §4:
-    * ctor assigns inside branches/try → lift is impossible mechanically; `var` +
-    * in-body assignment preserves behavior at the cost of final-field publication). */
+  /** No usable initializer: Java default value, as `var` (definite-assignment fallback). */
   case DefaultInit(f: BField)
 
-/** The primary/secondary constructor layout for a class — the constructor funnel
-  * strategies (ENGINE-LIMITS.md §2).
+/** Primary/secondary constructor layout for a class.
   *
-  * Java constructor graphs don't map 1:1 onto Scala's primary/auxiliary model
-  * (auxiliaries can never call `super`); this module picks one of three shapes:
-  *
-  *  1. zero/one constructor → it becomes the primary; a final field assigned
-  *     exactly once as `this.f = f` from the same-named parameter becomes a
-  *     `val` class parameter; other single-assigned final fields become
-  *     `val f = expr` members; remaining body statements stay as class body;
-  *  2. several constructors with empty bodies where exactly one calls `super`
-  *     with exactly its own parameters → that one is primary, the others
-  *     delegate (`def this(...) = this(<their super/this args>)`);
-  *  3. exactly two constructors — `(p)` assigning a final ref-typed field from
-  *     its parameter and `()` assigning the same field from a no-param
-  *     expression — merge via the null-sentinel idiom used across the
-  *     hand-ported corpus: primary `(_p: T)`, secondary `def this() = this(null)`,
-  *     `val f: T = if (_p != null) _p else <expr>`.
-  *
-  * Anything else is Unsupported: the engine refuses rather than approximates.
+  * Picks a funnel strategy: single-root promotion, identity-super delegation,
+  * null-sentinel merge, maximal-primary, or no-arg-primary + effect-replay.
+  * Refuses (Unsupported) when no strategy applies.
   */
 final case class CtorPlan(
     primaryParams: List[CtorPlan.Param],
     primaryMods: Option[Mods],
-    /** true when this class's no-arg construction path is equivalent to passing the
-      * null sentinel to its primary (the sentinel merge itself, or a super() rewrite
-      * against a sentinel-like parent). Subclass translation consults this via
-      * the sentinel registry. */
+    /** True when the no-arg path equals passing null to the primary (sentinel merge). */
     sentinelLike: Boolean,
-    /** the primary Java ctor's comments — hoisted above the class line, since the
-      * primary constructor has no declaration of its own in Scala. */
+    /** Primary Java ctor's comments, hoisted above the class line. */
     primaryLeading: List[Trivia],
     superArgs: List[BExpr],
     primaryBody: List[BStmt],
@@ -82,10 +60,7 @@ object CtorPlan:
         case Some(i) => FieldLine.FromField(f, i)
         case None    => FieldLine.DefaultInit(f) // incl. blank finals: definite-assignment fallback
 
-    /** `this.f = <e>` assignments in a ctor body (with their leading trivia, so the
-      * fusion into field declarations can't lose comments), in order; everything
-      * else stays.
-      */
+    /** Split `this.f = <e>` assignments from other statements, preserving trivia. */
     def splitAssigns(body: List[BStmt]): (List[(String, BExpr)], List[BStmt]) =
       val (a, r) = splitAssignsT(body)
       (a.map(x => (x._1, x._2)), r)
@@ -101,9 +76,7 @@ object CtorPlan:
       }
       (assigns.result(), rest.result())
 
-    /** shape 1 generalized: `root` is the single non-delegating ctor; `secondaries`
-      * are this(...)-delegators already converted.
-      */
+    /** Root ctor becomes primary; `secondaries` are pre-converted this()-delegators. */
     def rootPlan(c: BCtor, secondaries: List[Secondary]): CtorPlan =
         val (assignsT, rest) = splitAssignsT(c.body)
         val assigns = assignsT.map(x => (x._1, x._2))
@@ -113,7 +86,7 @@ object CtorPlan:
         val assignTrivia: Map[String, List[Trivia]] = assignsT.map(x => x._1 -> x._3).toMap
         def withAssignTrivia(f: BField): BField =
           f.copy(leading = f.leading ++ assignTrivia.getOrElse(f.name, Nil))
-        // fields assigned again in secondary-ctor bodies can be neither promoted nor val
+        // fields reassigned by secondaries cannot be promoted or val
         val secondaryAssigned: Set[String] = secondaries
           .flatMap(_.body)
           .collect { case BStmt(_, BStmtK.Assign(Ident(f, RefKind.OwnField), _, None)) => f }
@@ -125,13 +98,7 @@ object CtorPlan:
                 !t.methods.exists(_.name == f) => // field-vs-method clash stays a field (renamed later)
             f -> t.fields.find(_.name == f).get
         }
-        // a class param may not share a name with a member it doesn't become — rename
-        // such params `_p` and rewrite every reference (field-init exprs, super args,
-        // remaining ctor body)
-        // ...or with a method name (a used plain param materializes as private[this] val)
-        // a plain ctor param promoted to a Scala field would also shadow an
-        // INHERITED field of the same name — Java's `this.f` reaches the inherited
-        // one (InlineParserImpl's `options` field vs its DataHolder ctor param)
+        // rename params that collide with fields, methods, or inherited field names
         val inheritedFields: Set[String] =
           t.superClass.flatMap(s => registry.map(_.inheritedFieldNames(s.qname))).getOrElse(Set.empty)
         val renamed: Set[String] = c.params
@@ -165,9 +132,7 @@ object CtorPlan:
               case (Some(i), None) => Some(FieldLine.FromField(f, i))
               case (None, Some(e)) => Some(FieldLine.FromField(withAssignTrivia(f), e))
               case (Some(i), Some(_)) =>
-                // Java: field init runs first, ctor assignment overwrites — keep the
-                // declaration init and reinstate the assignment in the ctor body
-                // (position among other body stmts approximated to front; gates verify)
+                // field has own init AND ctor assignment: keep init, reinstate assignment in body
                 reassignedInCtor += f.name
                 Some(FieldLine.FromField(f.copy(mods = f.mods.copy(isFinal = false)), i))
               case (None, None) => Some(fieldWithOwnInit(f))
@@ -175,8 +140,7 @@ object CtorPlan:
         val reinstated = assignsT
           .filter(x => reassignedInCtor.contains(x._1))
           .map(x => BStmt(x._3, BStmtK.Assign(Ident(x._1, RefKind.OwnField), rn(x._2), None)))
-        // promoted fields become val class params, which can't carry block comments —
-        // hoist their Javadoc above the class line so nothing is lost
+        // hoist promoted fields' trivia above the class line (val params can't carry block comments)
         val promotedTrivia = t.fields.filter(f => promoted.contains(f.name)).flatMap(f => withAssignTrivia(f).leading)
         CtorPlan(params, Some(c.mods), sentinelLike = false, c.leading ++ promotedTrivia,
           superArgsR, reinstated ++ restR, fieldLines, secondaries)
@@ -184,16 +148,8 @@ object CtorPlan:
     def identityBasisPlan(ctors: List[BCtor], roots: List[BCtor]): Option[CtorPlan] =
       identityBasisPlanImpl(ctors, roots, splitAssigns, rootPlan)
 
-    /** Synthetic maximal-primary funnel: several root ctors (no `this()`-delegation)
-      * that each call `super(...)` reaching the SAME canonical super arity and whose
-      * bodies are pure `this.f = expr` assignments. A synthetic private primary takes
-      * all super slots + all assigned-field slots; each real ctor delegates
-      * `this(<its canonical super args>, <its field values>)`. Fields a ctor doesn't
-      * set take their own initializer (or the Java default). This is the general
-      * struct-of-params encoding for independent multi-field constructors that don't
-      * delegate to one another (SegmentedSequenceTree). Constructors that `this()`-
-      * delegate within the subclass stay as ordinary aux→sibling delegations
-      * (BasedSegmentBuilder). */
+    /** Synthetic maximal-primary: multiple root ctors with the same canonical super
+      * arity get a private primary taking all super + field slots. */
     def maximalPrimaryPlan: Option[CtorPlan] =
       val reg = registry.orNull
       val (rootCtors, thisDelegators) = t.ctors.partition(_.thisArgs.isEmpty)
@@ -209,10 +165,7 @@ object CtorPlan:
           val (assigns, rest) = splitAssigns(c.body)
           (c, canonSuper(c), assigns, rest)
         }
-        // guards: every ROOT super resolves, all to one arity. Non-field-assign
-        // statements (method calls like setSuppressOpenTagLine) are allowed — they
-        // replay as post-this() secondary body, so they may not reference `this`
-        // before construction (they run AFTER the delegation completes).
+        // guards: every root super resolves to one arity; non-assign stmts replay as secondary body
         if perCtor.exists(_._2.isEmpty) then None
         else if perCtor.exists { case (_, _, a, _) => a.map(_._1).distinct.length != a.length } then None
         else
@@ -220,7 +173,7 @@ object CtorPlan:
           if arities.lengthIs != 1 then None
           else
             val n = arities.head
-            // super-slot types from the parent's canonical n-arity ctor
+            // parent's canonical n-arity ctor param types
             val superParamTypes: Option[List[BType]] =
               if n == 0 then Some(Nil)
               else superQ.flatMap(q => reg.byFqcn.get(q)).flatMap((_, info) => info.ctors.find(_.params.length == n).map(_.params.map(_.tpe)))
@@ -229,7 +182,7 @@ object CtorPlan:
               case Some(sTypes) =>
                 val assignedNames = perCtor.flatMap(_._3.map(_._1)).toSet
                 val fieldsF = t.fields.filter(f => assignedNames.contains(f.name))
-                // a class-member/param-name a synthetic slot must not collide with
+                // synthetic slot names must not collide with class members
                 val sNames = (0 until n).map(i => s"_s$i").toList
                 val fNames = fieldsF.map(f => s"_f_${f.name}")
                 val primaryParams =
@@ -239,8 +192,7 @@ object CtorPlan:
                 val primaryBody = fieldsF.zip(fNames).map { (f, nm) =>
                   BStmt(f.leading, BStmtK.Assign(Ident(f.name, RefKind.OwnField), Ident(nm, RefKind.Param(false)), None))
                 }
-                // fields assigned by any ctor become plain `var f = <java default>`;
-                // the primary overwrites them, others keep decl-order fields untouched
+                // assigned fields become var with java default; primary overwrites them
                 val fieldLines = t.fields.map { f =>
                   if assignedNames.contains(f.name) then FieldLine.DefaultInit(f.copy(mods = f.mods.copy(isFinal = false)))
                   else fieldWithOwnInit(f)
@@ -253,8 +205,7 @@ object CtorPlan:
                   fixSecondaryCollisions(t, Secondary(c.leading, c.mods, c.params, cSuper ++ fieldVals,
                     body = rest, targetTypes = primaryParams.map(_.tpe)))
                 }
-                // this()-delegating ctors stay as ordinary aux→sibling delegations,
-                // ordered so each target (found by arity) precedes it (Scala rule)
+                // this()-delegating ctors: ordered so each target precedes it (Scala rule)
                 def depth(c: BCtor, seen: Set[BCtor]): Int = c.thisArgs match
                   case None => 0
                   case Some(args) =>
@@ -291,9 +242,7 @@ object CtorPlan:
         val allEmptyBodies = ctors.forall { c =>
           val (a, r) = splitAssigns(c.body); a.isEmpty && r.isEmpty
         }
-        // Date shape: every ctor is a root with IDENTICAL super args and no field
-        // assignments; one no-arg ctor with an empty body exists → it becomes the
-        // primary and the others delegate `this()` then run their statements.
+        // Date shape: all roots with identical super args, no field assigns, one no-arg root
         val sameSuper = ctors.map(_.superArgs.getOrElse(Nil)).distinct.lengthIs == 1
         val noFieldAssigns = ctors.forall(c => splitAssigns(c.body)._1.isEmpty)
         val noArgEmptyRoot =
@@ -305,10 +254,7 @@ object CtorPlan:
           }
           rootPlan(primary, secondaries)
         else if roots.length == 1 && delegators.nonEmpty then
-          // this(...)-chain: the sole root becomes the primary; each delegator is an
-          // auxiliary running its remaining statements after the delegation. Auxiliaries
-          // may only call PRECEDING ctors in Scala, so order by delegation depth
-          // (target found by arity — scalac re-verifies the resolution).
+          // this()-chain: sole root is primary; delegators ordered by depth (Scala rule)
           def depth(c: BCtor, seen: Set[BCtor]): Int =
             c.thisArgs match
               case None => 0
@@ -338,16 +284,10 @@ object CtorPlan:
               noArgPrimaryPlan(t, unit, registry, fail).getOrElse(
                 fail("multiple constructors, none with an identity super(...) call"))
             case candidates =>
-              // several identity-super ctors: the max-arity one is primary (first in
-              // source order on ties — `candidates` preserves source order)
+              // max-arity identity-super ctor is primary (source order on ties)
               val primary = candidates.maxBy(_.params.length)
-              // super() ≡ super(null) when the parent's no-arg path is the null-sentinel
-              // (by construction of the sentinel merge) — so a no-arg secondary calling a
-              // different super overload can still delegate as this(null).
               val parentSentinel = t.superClass.exists(s => sentinelSupers.contains(s.qname))
-              // a secondary's super(subsetArgs) can resolve THROUGH the parent's own
-              // this()-chain to the primary's (canonical) super arity — DependentItemMap
-              // super(capacity) → OrderedMap.this(capacity, null) → delegate this(capacity, null)
+              // resolve secondary's super args through parent's this()-chain to primary arity
               def resolvedThrough(c: BCtor): Option[List[BExpr]] =
                 if c.thisArgs.isDefined then None // this-delegation must already match arity
                 else
@@ -361,8 +301,7 @@ object CtorPlan:
                   primary.params.length == 1 && !primary.params.head.tpe.isInstanceOf[BType.Prim])
               val others = ctors.filterNot(_ eq primary)
               if !others.forall(canDelegate) then
-                // different-super-overload family: the no-arg-primary + effect-replay
-                // encoding (the hand-ported corpus's own answer to this shape)
+                // different-super-overload: fall back to no-arg-primary + effect-replay
                 noArgPrimaryPlan(t, unit, registry, fail).getOrElse(
                   fail("secondary ctor cannot delegate to primary (arity mismatch)")
                 )
@@ -427,10 +366,7 @@ object CtorPlan:
                     List(Secondary(noArg.leading, noArg.mods, Nil, List(Lit(LitKind.NullL, "null")))),
                   )
                 case (na, pa) =>
-                  // generalized N-field sentinel merge: for every field the paramful ctor
-                  // assigns, the no-null branch takes that expression and the null branch
-                  // takes the no-arg ctor's assignment or the field's own initializer —
-                  // exactly Java's two construction paths, merged.
+                  // generalized N-field sentinel merge
                   val naMap = na.toMap
                   val paMap = pa.toMap
                   val noDupes = naMap.size == na.length && paMap.size == pa.length
@@ -473,14 +409,8 @@ object CtorPlan:
                 .orElse(maximalPrimaryPlan)
                 .getOrElse(fail(s"${ctors.length} constructors with field logic — no funnel strategy applies"))
 
-  /** Identity-basis funnel: a root ctor P whose super args are all distinct param refs
-    * and whose field assigns are all param refs, with every param used exactly once,
-    * is a complete basis — any sibling with the SAME super arity and SAME assigned
-    * field set delegates by filling P's slots from its own exprs:
-    *   P(in, path){ super(in); this.path = path }
-    *   R(path){ super(CharStreams.fromPath(path)); this.path = path }
-    *     → def this(path) = this(CharStreams.fromPath(path), path)
-    */
+  /** Identity-basis funnel: a root ctor whose super+field args are all distinct param
+    * refs serves as basis; siblings delegate by filling its slots. */
   private def identityBasisPlanImpl(
       ctors: List[BCtor],
       roots: List[BCtor],
@@ -529,12 +459,8 @@ object CtorPlan:
       secondaries.map(rootPlan(p, _))
     }
 
-  /** The no-arg-primary + effect-replay funnel (the hand-ported corpus's encoding
-    * for Node-family hierarchies with different-super-overload ctors): synthesize a
-    * bare primary; every Java ctor becomes `def this(params) = { this(); <transitive
-    * inlined super effects>; <own body> }`. Requires the parent chain reachable via
-    * empty no-arg construction and overload effects inlinable from the registry.
-    */
+  /** No-arg-primary + effect-replay: bare primary, each ctor replays
+    * inlined super effects. Requires no-arg-reachable parent chain. */
   private def noArgPrimaryPlan(
       t: BTypeDecl,
       unit: BUnit,
@@ -547,10 +473,7 @@ object CtorPlan:
       def dbg(msg: => String): Unit =
         if sys.env.get("BP_DEBUG_CLASS").exists(selfFqcn.endsWith) then System.err.println(s"[noargpp] $selfFqcn: $msg")
       val noArgJava = t.ctors.find(_.params.isEmpty)
-      // shared-super shape: no no-arg ctor, but every ctor opens with the SAME
-      // param-free super(<const>) call (AttributeProviderAdapter: all super(AST_ADAPTER)).
-      // The synthetic primary carries that super call in its `extends` clause and each
-      // ctor replays only its OWN body — no cross-class inlining needed.
+      // shared-super shape: all ctors call the same param-free super(<const>)
       def hasParamRef(e: BExpr): Boolean =
         var found = false
         BirTransform.mapExpr(e) { case x @ Ident(_, RefKind.Param(_)) => found = true; x; case x => x }
@@ -571,12 +494,10 @@ object CtorPlan:
             case None    => if sargs.isEmpty then Some(Nil) else None
       def ownBody(c: BCtor): List[BStmt] = c.body.filterNot(st => st.k == BStmtK.Empty && st.leading.isEmpty)
       def flatBody(c: BCtor): Option[List[BStmt]] =
-        // in shared-super mode the primary already ran super(<const>) — replay only own body
+        // shared-super: primary already ran super, replay only own body
         if sharedSuper.isDefined then Some(ownBody(c))
         else upstreamOf(c).map(_ ++ ownBody(c))
-      // a body-ful (or this-delegating) no-arg ctor flattens into the synthetic
-      // primary's body — its effects run on every construction path, and replayed
-      // secondaries overwrite them, the funnel's standing replay semantics
+      // no-arg ctor body flattens into the synthetic primary's body
       val primaryBody: Option[List[BStmt]] = noArgJava match
         case None    => Some(Nil)
         case Some(c) => flatBody(c)
@@ -629,8 +550,7 @@ object CtorPlan:
         }
     }
 
-  /** Secondary-ctor params sharing a name with a class member would make
-    * `member = param` a self-assignment — rename them `_p` throughout. */
+  /** Rename secondary-ctor params that collide with class members (`_p`). */
   private def fixSecondaryCollisions(t: BTypeDecl, s: Secondary): Secondary =
     val collide = s.params
       .map(_.name)
@@ -648,7 +568,7 @@ object CtorPlan:
         body = s.body.map(BirTransform.mapStmt(_)(rnE)),
       )
 
-  /** true when the expression touches the instance under construction. */
+  /** True when the expression references `this` or an own-field. */
   private def usesThis(e: BExpr): Boolean = e match
     case This                       => true
     case Ident(_, RefKind.OwnField) => true
@@ -685,8 +605,7 @@ object CtorPlan:
     case BType.Prim(_)         => Lit(LitKind.IntL, "0")
     case _                     => Lit(LitKind.NullL, "null")
 
-  /** Renames a parameter reference throughout an expression (best-effort structural
-    * map; lambda bodies that shadow the name are left untouched, scalac verifies). */
+  /** Rename a parameter reference throughout an expression. */
   private def renameParam(e: BExpr, from: String, to: String): BExpr =
     def rp(x: BExpr): BExpr = renameParam(x, from, to)
     e match

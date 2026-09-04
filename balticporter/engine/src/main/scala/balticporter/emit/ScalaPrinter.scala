@@ -1,29 +1,11 @@
 package balticporter.emit
 
-// =============================================================================
-// FROZEN — the BIR emission backend. New work goes on `TirEmitter`, beside this file.
-//
-// This prints `BUnit`s: the untyped Java IR described (and frozen) at the head of
-// `core/Bir.scala`. `TirEmitter` prints the TIR, where every node carries a resolved
-// `TypeRepr` and every reference a `SymId` — which is why it can decide diamonds,
-// constructor funnels and member clashes that this printer can only guess at.
-//
-// Kept because liqp and xwiki/flexmark still port through it (the corpus
-// programs are listed in `core/Bir.scala`). Fix what they need; add nothing.
-// =============================================================================
+// FROZEN: BIR emission backend. New work goes on TirEmitter. Fix what liqp/flexmark need; add nothing.
 
 import balticporter.core.*
 import balticporter.core.BExpr.*
 
-/** Deterministic BIR → Scala 3 printer. Pure function of (unit, provenance):
-  * same input + same engine version = byte-identical output.
-  *
-  * M0 conventions (M1 will refine): fully-qualified type references except
-  * java.lang and same-package types; every binary expression parenthesized;
-  * no import synthesis. Constructor translation follows the constructor funnel
-  * strategies (ENGINE-LIMITS.md §2); the two-ctor sentinel merge mirrors the idiom
-  * used across the hand-ported corpus (see ssg Filter.scala).
-  */
+/** Deterministic BIR -> Scala 3 printer. Pure function of (unit, provenance). */
 object ScalaPrinter:
 
   def print(
@@ -35,9 +17,7 @@ object ScalaPrinter:
   ): String =
     new Printer(MemberClashPass(widenFields(unit, registry), registry), prov, sentinels, registry, ctorOverrides).result()
 
-  /** Private non-final fields that subclass effect-replay assigns (see
-    * CtorRegistry.widenedFields) emit `protected` — the deterministic analog of
-    * the hand-port corpus's accessor widening. */
+  /** Widen private non-final fields assigned by subclass effect-replay to `protected`. */
   private def widenFields(unit: BUnit, registry: Option[CtorRegistry]): BUnit =
     registry match
       case None => unit
@@ -52,9 +32,7 @@ object ScalaPrinter:
             })
           })
 
-/** Cross-unit knowledge: which classes' no-arg construction path equals the null
-  * sentinel (needed for the super()-rewrite; transitive over subclass chains).
-  */
+/** Classes whose no-arg path equals the null sentinel (transitive). */
 object SentinelRegistry:
   def compute(units: List[BUnit]): Set[String] =
     var acc = Set.empty[String]
@@ -75,12 +53,8 @@ object SentinelRegistry:
       }
     acc
 
-/** PLAN §7 declaration-level override: replace only a class's constructor block
-  * (the irreducible cases the funnel refuses) while the engine still translates
-  * every field, method, companion, and import. `headerSuffix` is spliced after
-  * `class Name[tparams]` (primary params + `extends ...`); `body` lines open the
-  * class body (field decls the ctors assign + the auxiliary `def this(...)`s).
-  * The engine emits methods/inner types/companion below it as usual. */
+/** Declaration-level ctor override: `headerSuffix` after `class Name[tparams]`,
+  * `body` lines at the top of the class body. Engine emits the rest as usual. */
 final case class CtorOverride(headerSuffix: String, body: List[String])
 
 private final class Printer(
@@ -97,9 +71,7 @@ private final class Printer(
     if s.isEmpty then sb.append('\n')
     else sb.append("  " * indent).append(s).append('\n')
 
-  /** Renders `body`'s line() output into a string instead of the document —
-    * the mechanism for multi-line expressions (anonymous class bodies).
-    */
+  /** Capture line() output into a string (for multi-line expressions). */
   private def captured(body: => Unit): String =
     val mark = sb.length
     body
@@ -135,8 +107,7 @@ private final class Printer(
     "new", "null", "object", "override", "package", "private", "protected", "return", "sealed",
     "super", "then", "throw", "trait", "true", "try", "type", "val", "var", "while", "with", "yield",
     "macro", "forSome",
-    // soft keywords — position-sensitive (e.g. `using = x` in annotation args); backticking
-    // them unconditionally is always safe
+    // soft keywords: always safe to backtick
     "using", "extension", "inline", "opaque", "transparent", "derives", "end", "infix",
   )
 
@@ -147,16 +118,14 @@ private final class Printer(
     case -1 => ""
     case i  => q.substring(0, i)
 
-  /** boxed types whose simple names collide with Scala primitives — never shortened
-    * (java.lang.Long.MAX_VALUE must not become scala.Long.MAX_VALUE). */
+  /** Boxed types whose simple names collide with Scala primitives; never shortened. */
   private val collidingJavaLang = Set(
     "java.lang.Long", "java.lang.Double", "java.lang.Float", "java.lang.Boolean",
     "java.lang.Byte", "java.lang.Short", "java.lang.Character",
     "java.lang.StringBuilder", "java.lang.Iterable", "java.lang.Cloneable",
   )
 
-  /** Spoon qnames of inner (non-static) classes in this unit — referable only by
-    * simple name inside their outer class (path-dependent from anywhere else). */
+  /** Inner (non-static) class qnames in this unit; referable only by simple name. */
   private lazy val innerQNames: Set[String] =
     def walk(prefix: String, t: BTypeDecl): List[String] =
       val q = s"$prefix${t.name}"
@@ -167,8 +136,7 @@ private final class Printer(
 
   private def refName(q0: String): String =
     if innerQNames.contains(q0) then return id(q0.substring(q0.lastIndexOf('$') + 1))
-    // Spoon names LOCAL classes with a block-counter prefix (Outer$1MyParams) — they
-    // are only referable by simple name inside their defining method
+    // local classes: strip block-counter prefix (Outer$1MyParams -> MyParams)
     val lastSeg0 = q0.substring(q0.lastIndexOf('$') + 1)
     val localStripped = lastSeg0.dropWhile(_.isDigit)
     if q0.contains('$') && lastSeg0.headOption.exists(_.isDigit) && localStripped.nonEmpty then
@@ -203,8 +171,7 @@ private final class Printer(
         case (None, Some(l)) => s"? >: ${tpe(l)}"
         case _               => "?"
 
-  /** Java Object[] is Array[AnyRef], not Array[Any] — arrays are invariant and the
-    * JDK's T[] overloads require reference element types. */
+  /** Object[] -> Array[AnyRef] (arrays are invariant; JDK requires reference types). */
   private def arrElem(e: BType): String =
     if BType.isObject(e) then "AnyRef" else tpe(e)
 
@@ -212,8 +179,7 @@ private final class Printer(
     case -1 => unit.pkg
     case i  => unit.pkg.substring(i + 1)
 
-  /** >0 while printing types nested inside a companion — their `private` members are
-    * outer-accessible in Java (synthetic accessors), so they widen to package scope. */
+  /** >0 inside a companion: nested private members widen to package scope. */
   private var nestedDepth = 0
 
   private def visPrefix(m: Mods): String = m.vis match
@@ -228,7 +194,7 @@ private final class Printer(
   private def trivia(ts: List[Trivia]): Unit =
     ts.foreach { t =>
       t.text.linesIterator.zipWithIndex.foreach { case (l, i) =>
-        // continuation lines of block comments keep a leading space so `*` aligns under `/*`
+        // leading space on continuation lines to align `*` under `/*`
         if i == 0 then line(l.trim) else line(" " + l.trim)
       }
     }
@@ -240,9 +206,7 @@ private final class Printer(
     case BTypeKind.Class     => classDecl(t)
     case BTypeKind.Enum      => enumDecl(t)
 
-  /** Java enum → `enum E(val params) extends java.lang.Enum[E]` (the conversion rule
-    * both target repos mandate; parameterized cases per the corpus encoding).
-    */
+  /** Java enum -> Scala 3 `enum E(val params) extends java.lang.Enum[E]`. */
   private def enumDecl(t: BTypeDecl): Unit =
     trivia(t.leading)
     val plan = CtorPlan.of(t, unit, sentinels, registry)
@@ -261,8 +225,7 @@ private final class Printer(
       else line(s"case ${id(c.name)} extends ${id(t.name)}(${c.args.map(expr).mkString(", ")})")
     }
     line()
-    // enum auxiliary constructors (a no-arg Java enum ctor delegating this(default))
-    // let no-arg cases `extends Flags()` resolve — Scala 3 enums allow `def this()`
+    // enum auxiliary constructors
     plan.secondaryCtors.foreach { sc =>
       trivia(sc.leading)
       val dArgs =
@@ -318,17 +281,13 @@ private final class Printer(
     line("}")
     companion(t)
 
-  /** Java statics + static nested types → companion object (DESIGN.md §4;
-    * init-order caveats documented there).
-    */
+  /** Java statics + static nested types -> companion object. */
   private def companion(t: BTypeDecl): Unit =
     if t.staticFields.nonEmpty || t.staticMethods.nonEmpty || t.nested.nonEmpty || t.staticInit.nonEmpty then
       line()
       line(s"object ${id(t.name)} {")
       indent += 1
-      // Java blank-final statics (`static final X F; static { F = ...; }`) are
-      // assigned in the static-init block, not at declaration — Scala can't express
-      // a val assigned later in the object body, so those must be `var`.
+      // blank-final statics assigned in static-init must be var (no deferred val in Scala)
       val reassignedStatics = assignedFieldNames(t.staticInit)
       t.staticFields.foreach { f =>
         trivia(f.leading)
@@ -338,8 +297,6 @@ private final class Printer(
         line()
       }
       if t.staticInit.nonEmpty then
-        // Java `static { ... }` blocks — companion body statements (init-order caveat:
-        // Scala companions initialize lazily on first access, DESIGN.md §4 trap 1)
         t.staticInit.foreach(stmt)
         line()
       t.staticMethods.foreach(methodDecl)
@@ -352,10 +309,7 @@ private final class Printer(
       indent -= 1
       line("}")
 
-  /** Names of fields that appear as the LHS of an assignment anywhere in `stmts`
-    * (recursing through control flow). A static blank-final assigned in a static
-    * init block is detected here and rendered `var` rather than `val`. Method calls
-    * on a field (`F.addAll(...)`) are not assignments and don't count. */
+  /** Field names assigned anywhere in `stmts` (recursing through control flow). */
   private def assignedFieldNames(stmts: List[BStmt]): Set[String] =
     val out = collection.mutable.Set[String]()
     def fieldName(e: BExpr): Option[String] = e match
@@ -396,8 +350,7 @@ private final class Printer(
     if t.mods.isAbstract then mods.append("abstract ")
     if t.mods.isFinal then mods.append("final ")
 
-    // a private class can't expose a less-private ctor; and ctor vis on a private
-    // class trips "non-private constructor refers to private class"
+    // private class: ctor cannot be less private
     val primaryVis =
       if t.mods.vis == Vis.Private then ""
       else
@@ -421,9 +374,7 @@ private final class Printer(
     indent += 1
 
     if t.staticInit.nonEmpty then
-      // Java <clinit> runs before the first instance; Scala companions are lazy —
-      // touch the companion so static{} blocks keep their before-any-instance timing
-      // (DESIGN.md §4 trap 1, hit live by SPI registries)
+      // force companion init to preserve Java's before-any-instance <clinit> timing
       line(s"locally(${id(t.name)})")
       line()
 
@@ -450,8 +401,7 @@ private final class Printer(
     }
     plan.secondaryCtors.foreach { sc =>
       trivia(sc.leading)
-      // an aux-ctor param reassigned in the body can't stay a val: rename it `_p`,
-      // add `var p = _p` after the delegate, and read `_p` in the delegate args
+      // reassigned aux-ctor params: rename to `_p`, add `var p = _p` after delegation
       val reassigned = reassignedParams(sc.body, sc.params.map(_.name).toSet)
       val paramStrs = sc.params.map(p => if reassigned(p.name) then paramOf(p.copy(name = "_" + p.name)) else paramOf(p))
       val sig = s"${visPrefix(sc.mods)}def this(${paramStrs.mkString(", ")}) ="
@@ -503,9 +453,7 @@ private final class Printer(
     line("}")
     companion(t)
 
-  /** Class emission with a handwritten constructor block (CtorOverride): the header
-    * suffix and body come verbatim from the override; fields/methods/inner/companion
-    * are still the engine's, so the class stays in sync with upstream on re-port. */
+  /** Emit class with a handwritten CtorOverride; fields/methods/companion are engine-generated. */
   private def classDeclOverridden(t: BTypeDecl, ovr: CtorOverride): Unit =
     t.serialVersionUID.foreach(v => line(s"@SerialVersionUID(${v}L)"))
     val mods = StringBuilder(visPrefix(t.mods))
@@ -529,11 +477,7 @@ private final class Printer(
     line("}")
     companion(t)
 
-  /** Delegation/super-call argument: forwarding a varargs param needs a spread
-    * (formals of this()/super() targets aren't tracked; forwarding-whole is the
-    * overwhelmingly common Java shape, and scalac verifies).
-    */
-  /** a type carrying a wildcard anywhere — illegal in `new`/CtorRef instantiation args. */
+  /** A type carrying a wildcard anywhere. */
   private def hasWildType(x: BType): Boolean = x match
     case _: BType.Wild    => true
     case BType.Ref(_, as) => as.exists(hasWildType)
@@ -549,10 +493,7 @@ private final class Printer(
     (stripped, target) match
       case (Ident(_, RefKind.Param(true)), Some(BType.Arr(_))) => expr(stripped) + ".toArray"
       case (Ident(_, RefKind.Param(true)), _)                  => expr(stripped) + "*"
-      // a bare `null` delegate arg is ambiguous when the target ctor is overloaded
-      // (this(null) matching both (String) and (BasedSequence)) — ascribe its type
-      // a type-variable target can't take the `(null: T)` ascription (Null isn't a
-      // subtype of an unbounded T) — cast instead
+      // ascribe null to disambiguate overloaded targets; cast for type-variable targets
       case (Lit(LitKind.NullL, _), Some(t: BType.TVar))                    => s"null.asInstanceOf[${tpe(t)}]"
       case (Lit(LitKind.NullL, _), Some(t)) if !t.isInstanceOf[BType.Prim] => s"(null: ${tpe(t)})"
       case _                                                   => expr(stripped)
@@ -561,23 +502,18 @@ private final class Printer(
 
   private def paramStr(p: CtorPlan.Param, methods: List[BMethod], reassigned: Set[String] = Set.empty): String =
     p.promoted match
-      // a promoted field reassigned in the ctor body (Java mutates the param before
-      // storing the final field) must be `var`, not `val`
+      // promoted field reassigned in ctor body: var, not val
       case Some(f)                               => s"${beanPrefix(f, methods)}${visPrefix(f.mods)}${if reassigned.contains(p.p.name) then "var" else "val"} ${id(p.p.name)}: ${tpe(p.p.tpe)}"
-      // Java ctor params are mutable; a primary-ctor param reassigned in the ctor body
-      // becomes a `private var` field (Scala params are val). The super call still reads
-      // its value, and the body's `p += ...` / `p++` mutate the field.
+      // reassigned plain param: private var (Scala params are val)
       case None if reassigned.contains(p.p.name) => s"private var ${paramOf(p.p)}"
       case None                                  => paramOf(p.p)
 
-  /** Primary-ctor parameters reassigned in the ctor body (statement `p = …`, or an
-    * `AssignExpr`/`IncDecExpr` nested in an expression such as `p++`). */
+  /** Primary-ctor parameters reassigned in the ctor body. */
   private def reassignedParams(stmts: List[BStmt], pnames: Set[String]): Set[String] =
     if pnames.isEmpty then Set.empty
     else
       val out = collection.mutable.Set[String]()
-      // a primary-ctor param may be read back either as its parameter (Param) or, when
-      // promoted to a field, as an own-field reference — both count as the same binding
+      // a param promoted to a field may appear as either Param or OwnField ref
       def isTarget(e: BExpr): Option[String] = e match
         case Ident(n, RefKind.Param(_)) if pnames(n) => Some(n)
         case Ident(n, RefKind.OwnField) if pnames(n) => Some(n)
@@ -622,8 +558,7 @@ private final class Printer(
     else tpe(p.tpe)
     s"${id(p.name)}: $t"
 
-  /** Java PUBLIC fields are reflectively visible (Jackson/beans introspection);
-    * Scala fields compile to private+accessor — @BeanProperty restores getters.
+  /** @BeanProperty for public fields (restores JVM-visible getters).
     * Skipped when the class already declares the bean method. */
   private def beanPrefix(f: BField, methods: List[BMethod]): String =
     if f.mods.vis != Vis.Public then ""
@@ -647,7 +582,7 @@ private final class Printer(
     if m.mods.isOverride then mods.append("override ")
     if m.mods.isFinal then mods.append("final ")
 
-    // Java parameters are mutable; reassigned ones become `_p` + `var p = _p`.
+    // reassigned params: `_p` + `var p = _p`
     val paramStrs = m.params.map { p =>
       if m.assignedParams.contains(p.name) then paramOf(p.copy(name = "_" + p.name)) else paramOf(p)
     }
@@ -661,8 +596,7 @@ private final class Printer(
           val t = if p.varargs then unsupported(s"reassigned varargs parameter ${p.name}") else tpe(p.tpe)
           line(s"var ${id(p.name)}: $t = ${id("_" + p.name)}")
         }
-        // `return null` from a method whose return type is a type variable — Scala's
-        // unbounded T rejects Null, so ascribe (Java allows null for any ref type)
+        // ascribe `return null` for type-variable returns (Null is not <: T)
         printBody(if m.ret.isInstanceOf[BType.TVar] then body.map(ascribeReturnNulls(_, m.ret)) else body)
         indent -= 1
         line("}")
@@ -670,8 +604,7 @@ private final class Printer(
 
   // ---- statements ------------------------------------------------------------
 
-  /** ascribe a bare `return null` to the method's type-variable return type,
-    * recursing into control-flow bodies (the null must carry the T type). */
+  /** Ascribe `return null` to T-typed return, recursing into control-flow. */
   private def ascribeReturnNulls(s: BStmt, ret: BType): BStmt =
     def r(x: BStmt) = ascribeReturnNulls(x, ret)
     val k = s.k match
@@ -687,13 +620,10 @@ private final class Printer(
       case other                     => other
     s.copy(k = k)
 
-  /** true while emitting a lambda body wrapped in scala.util.boundary — any
-    * surviving `return e` prints as `boundary.break(e)`. */
+  /** True inside a lambda boundary: `return e` prints as `boundary.break(e)`. */
   private var lambdaBoundaryActive = false
 
-  /** Converts tail-position `return e` to a bare value `e` (recursing into the
-    * tails of if/else, match, try, and nested blocks) so a Java lambda block reads
-    * as a Scala expression. Non-tail returns are left for the boundary fallback. */
+  /** Strip tail-position returns; non-tail returns are left for boundary fallback. */
   private def stripTailReturns(stmts: List[BStmt]): List[BStmt] =
     if stmts.isEmpty then stmts
     else
@@ -737,26 +667,17 @@ private final class Printer(
     s.k match
       case BStmtK.LocalVar(name, t, init, effFinal) =>
         val kw = if effFinal then "val" else "var"
-        // wildcard-typed locals: the annotation would demand invariant conformance the
-        // rhs can't give (raw-type iterators etc.) — let inference take it
+        // wildcard-typed locals: skip annotation, let inference handle it
         def wildIn(x: BType): Boolean = x match
           case _: BType.Wild    => true
           case BType.Ref(_, as) => as.exists(wildIn)
           case BType.Arr(e2)    => wildIn(e2)
           case _                => false
-        // engine-synthesized loop locals ($it/$arr) always infer correctly and their
-        // declared types can be existential-hostile
+        // synthesized loop locals ($it/$arr) always infer correctly
         val synthetic = name.endsWith("$it") || name.endsWith("$arr")
-        // a call whose return type is a bare method type variable (getBuilder():
-        // <B extends ...> B) needs the declared type as inference context, even when
-        // it carries a wildcard — otherwise B infers Nothing. Keep the skip only for
-        // top-level-wildcard locals (raw iterators), which infer fine.
+        // keep annotation when a method type-var return needs inference context
         def topWild(x: BType): Boolean = x.isInstanceOf[BType.Wild]
-        // a call/constructor whose type args Scala must infer needs the declared type as
-        // context: a method type-var return (getBuilder(): <B..> B) infers Nothing, and a
-        // raw `new HashSet()` (Java diamond) infers Object without the annotation. Keep the
-        // annotation for those (unless the local's own type is a top-level wildcard, which
-        // can't be written and infers fine anyway).
+        // calls/constructors needing type inference context keep the annotation
         val ctorInit = init.exists(e => e.isInstanceOf[Call] || e.isInstanceOf[New] || e.isInstanceOf[NewArray])
         val skip = synthetic || (wildIn(t) && !(ctorInit && !topWild(t)))
         val ann = if skip && init.isDefined then "" else s": ${tpe(t)}"
@@ -790,8 +711,7 @@ private final class Printer(
           case Some(msg) => line(s"assert(${expr(c)}, ${expr(msg)})")
           case None      => line(s"assert(${expr(c)})")
       case BStmtK.Block(b) =>
-        // `locally` keeps a bare block from gluing onto the previous line as an
-        // anonymous-class body or refinement
+        // `locally` prevents parsing as an anonymous-class body
         line("locally {")
         indent += 1; b.foreach(stmt); indent -= 1
         line("}")
@@ -858,8 +778,7 @@ private final class Printer(
   private def expr(e: BExpr): String = e match
     case Lit(_, raw)   => raw
     case Ident(n, RefKind.StaticField(owner)) => s"${refName(owner)}.${id(n)}"
-    // explicit `this.` — a Java local may shadow a same-named field, and Java resolves
-    // the pre-declaration read to the field while Scala's block scoping would not
+    // explicit `this.` to defeat Scala's block scoping of same-named locals
     case Ident(n, RefKind.OwnField) => s"this.${id(n)}"
     case Ident(n, RefKind.OuterField(outer)) => s"${id(outer)}.this.${id(n)}"
     case Ident(n, RefKind.EnclosingField) => id(n) // bare: resolved lexically from an anon/local class
@@ -883,13 +802,12 @@ private final class Printer(
       s"$target${id(name)}(${adaptedArgs(args, formals, ownerQ).mkString(", ")})"
 
     case New(t, args, anon, formals) =>
-      // wildcards are illegal in instantiation type args (Java diamond/raw) — strip
-      // and let inference do what javac did
+      // strip wildcards from instantiation type args (let inference handle them)
       val newT = if t.args.exists(hasWildType) then t.copy(args = Nil) else t
       val argsStr =
         if args.isEmpty && anon.isDefined then ""
         else s"(${adaptedArgs(args, formals, Some(t.qname)).mkString(", ")})"
-      // `new Object()` — Any has no constructor; Object aliases AnyRef in Scala
+      // `new Object()` -> `new Object()` (Any has no constructor)
       val typeStr = if BType.isObject(BType.Ref(t.qname, Nil)) then "Object" else tpe(newT)
       val base = s"new $typeStr$argsStr"
       anon match
@@ -910,7 +828,6 @@ private final class Printer(
           }
           base + " {\n" + body + ("  " * indent) + "}"
     case NewArray(el, _, Some(inits)) =>
-      // Object[] initializers box like Java autoboxing did
       val items =
         if BType.isObject(el) then inits.map(i => s"${expr(i)}.asInstanceOf[AnyRef]")
         else inits.map(expr)
@@ -919,10 +836,7 @@ private final class Printer(
     case NewArray(_, dims, None) => unsupported(s"multi-dimensional array (${dims.length} dims)")
 
     case Binary(op, l, r, concat) =>
-      // Java string concat: any operand String makes the whole chain concat; Scala
-      // needs a String LEFT operand — String.valueOf is identity on strings, so
-      // wrapping when the left isn't obviously a string is semantics-preserving
-      // (incl. null → "null", matching Java)
+      // Scala needs a String left operand for concat; wrap non-obvious cases
       def obviouslyString(x: BExpr): Boolean = x match
         case Lit(LitKind.StringL, _)      => true
         case Binary(_, _, _, true)        => true
@@ -938,7 +852,7 @@ private final class Printer(
     case CtorRef(t, formals) =>
       val ps = formals.zipWithIndex.map((ft, i) => s"p$i$$: ${tpe(ft)}")
       val args = formals.indices.map(i => s"p$i$$").mkString(", ")
-      // wildcards are illegal in instantiation type args (raw HashMap::new) — strip
+      // strip wildcards from instantiation type args
       val ctorT = if t.args.exists(hasWildType) then t.copy(args = Nil) else t
       s"((${ps.mkString(", ")}) => new ${tpe(ctorT)}($args))"
 
@@ -948,8 +862,7 @@ private final class Printer(
         case Right(r)    => s"${expr(r)}.${id(name)}"
 
     case UnboundMethodRef(recvT, name, formals) =>
-      // annotate the receiver only when its type is precise (wildcards would WIDEN what
-      // SAM inference could otherwise carry); other params always infer
+      // annotate receiver only when precise (wildcards would widen SAM inference)
       def precise(x: BType): Boolean = x match
         case _: BType.Wild    => false
         case BType.Ref(_, as) => as.forall(precise)
@@ -961,8 +874,7 @@ private final class Printer(
       s"((${ps.mkString(", ")}) => recv$$.${id(name)}($args))"
 
     case Lambda(ps, body, pts) =>
-      // annotate params with their resolved SAM types when available and clean —
-      // wildcards can't be written as lambda param types, so fall back to bare names
+      // annotate lambda params with SAM types when available and wildcard-free
       val useTypes = pts.length == ps.length && pts.nonEmpty && !pts.exists(hasWildType)
       val plist =
         if useTypes then "(" + ps.zip(pts).map((p, t) => s"${id(p)}: ${tpe(t)}").mkString(", ") + ")"
@@ -975,9 +887,7 @@ private final class Printer(
         case Left(List(BStmt(_, BStmtK.Return(Some(e))))) => s"($plist => ${expr(e)})"
         case Left(List(BStmt(_, BStmtK.ExprStmt(e))))     => s"($plist => ${expr(e)})"
         case Left(stmts0) =>
-          // Java lambdas use `return` for their value; Scala lambdas can't. Strip
-          // tail-position returns (recursing into if/else/match/try tails); if early
-          // (non-tail) returns remain, wrap in scala.util.boundary and break instead.
+          // strip tail returns; wrap non-tail returns in boundary.break
           val stmts = stripTailReturns(stmts0)
           val needsBoundary = hasReturn(stmts)
           val bodyStr = captured {
@@ -995,29 +905,19 @@ private final class Printer(
     case Cast(BType.Prim(p), e1) =>
       val conv = primMap.getOrElse(p, unsupported(s"cast to $p"))
       s"${expr(e1)}.to$conv"
-    // a Java cast of a lambda / method reference to a functional interface is a SAM
-    // conversion, not a runtime cast — ascribe it (`(f: I)`) so Scala converts, and so
-    // the target type resolves an overloaded method reference (`(this.matches: Predicate)`)
+    // SAM conversion: ascribe rather than cast so Scala resolves the target type
     case Cast(t, e1) if e1.isInstanceOf[Lambda] || e1.isInstanceOf[MethodRef] || e1.isInstanceOf[UnboundMethodRef] =>
       s"(${expr(e1)}: ${tpe(t)})"
     case Cast(t, e1)       => s"${expr(e1)}.asInstanceOf[${tpe(t)}]"
     case InstanceOf(e1, t) => s"${expr(e1)}.isInstanceOf[${tpe(t)}]"
     case ClassLit(t) =>
-      // Java class literals are erased. For a GENERIC class the raw Class value flows
-      // with an unchecked T in Java — Class[AnyRef] reproduces that for inference,
-      // with result casts handled at the assignment (maybeUncheckedCast).
       t match
         case BType.Ref(_, args) if args.nonEmpty =>
-          // generic class literal: Java's raw Class flows with unchecked T
+          // generic class literal: cast to Class[AnyRef] (Java's raw Class is erased)
           s"classOf[${tpe(t)}].asInstanceOf[Class[AnyRef]]"
         case other => s"classOf[${tpe(other)}]"
 
-  /** Call-site adaptation of Java varargs/array boundaries (DESIGN.md §4):
-    *   - varargs param forwarded into a varargs slot        → spread `p*`
-    *   - varargs param passed where an array is expected    → `p.toArray`
-    *     (`.asInstanceOf[Array[AnyRef]]` when the callee is a JDK Object[] slot,
-    *     since translated code maps Object → Any but the JDK keeps AnyRef)
-    */
+  /** Call-site varargs/array adaptation: spread, toArray, or AnyRef cast as needed. */
   private def adaptedArgs(args: List[BExpr], formals: Option[List[Formal]], ownerQ: Option[String]): List[String] =
     formals match
       case Some(fs) if fs.length == args.length =>
@@ -1026,24 +926,20 @@ private final class Printer(
             case Typed(inner, t) => (inner, Some(t))
             case e               => (e, None)
           (a, at, f) match
-            // flat varargs param (H...) forwarded into a varargs-OF-ARRAYS slot
-            // (Java H[]... target = Scala Array[H]*): Java passes the whole array as
-            // ONE element, so materialize the Seq to one array — don't spread it flat
+            // varargs into varargs-of-arrays: materialize as one element, not spread
             case (Ident(_, RefKind.Param(true)), srcT, Formal(BType.Arr(el), true))
                 if !srcT.exists(_.isInstanceOf[BType.Arr]) =>
               val conv = expr(a) + ".toArray"
               if BType.isObject(el) then conv + ".asInstanceOf[Array[AnyRef]]" else conv
-            // varargs param forwarded into a varargs slot → spread
+            // varargs into varargs: spread
             case (Ident(_, RefKind.Param(true)), _, Formal(_, true)) => expr(a) + "*"
-            // array-typed value into a varargs slot (Java passes arrays directly) → spread
+            // array into varargs: spread
             case (_, Some(BType.Arr(_)), Formal(_, true)) => expr(a) + "*"
-            // varargs param into an array slot → materialize (Object[] slots always
-            // need the cast: the Seq is Seq[Any] but Object[] is Array[AnyRef])
+            // varargs into array: materialize (Object[] needs AnyRef cast)
             case (Ident(_, RefKind.Param(true)), _, Formal(BType.Arr(el), false)) =>
               val conv = expr(a) + ".toArray"
               if BType.isObject(el) then conv + ".asInstanceOf[Array[AnyRef]]" else conv
-            // varargs param into a plain Object slot: Java's runtime value is an
-            // Object[] (isArray-visible) — Scala's Seq must materialize
+            // varargs into Object slot: materialize to preserve isArray semantics
             case (Ident(_, RefKind.Param(true)), _, Formal(t, false)) if BType.isObject(t) =>
               expr(a) + ".toArray"
             case _ => expr(a)
