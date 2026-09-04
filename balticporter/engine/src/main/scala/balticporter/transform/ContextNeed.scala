@@ -4,39 +4,12 @@ import balticporter.tir.*
 
 /** THE CLOSURE — which declarations must be able to supply the context, and where the closure stops.
   *
-  * A DIRECTED reachability over five edge kinds (DESIGN.md §8.4), computed once per holder and
-  * exposed as a value so a spec can pin the edge set itself rather than only its result. The edges,
-  * and why only one of them is a call-graph fact:
-  *
-  *   1. [[ContextNeed.Edge.Kind.Seed]] — a body READS a mapped static. Read from the phase's own
-  *      record of what it mapped ([[statics]]), never from a name (§4.56).
-  *   2. [[ContextNeed.Edge.Kind.Use]] — a declaration uses a threaded one. CALLS and REFERENCES
-  *      both, because a `lazy-init` rewrite turns a FIELD into a method whose reads stay written as
-  *      references.
-  *   3. [[ContextNeed.Edge.Kind.Override]] — the whole override COMPONENT, up and down
-  *      ([[OverrideGraph.closureOf]]). Java resolved every virtual call to the DECLARED member, so
-  *      threading an implementation without its declaration is a broken `override`, and threading a
-  *      declaration without its implementations is a call with no argument. All of a component or
-  *      none of it; an ANCHORED component is refused whole and counted.
-  *   4. [[ContextNeed.Edge.Kind.Instantiate]] — `new C` where `C`'s constructors took the clause,
-  *      and every subclass of such a `C`, whose own `extends` would otherwise have no argument.
-  *   5. [[ContextNeed.Edge.Kind.Capture]] — a lexically nested body (an anonymous class, an
-  *      enum-constant body) does NOT thread its own signature-frozen method; the need lands on the
-  *      ENCLOSING declaration and `summon` inside the nested body resolves that clause. This is what
-  *      makes an external-interface SAM body a non-problem in the common case, and it is why the
-  *      reads inside 156 anonymous bodies in one corpus library cost no signature at all.
-  *
-  * ==Why not `FlowPropagation`==
-  * That utility is a union-find over SYMMETRIC pure-move edges (*these two must share a type*); this
-  * is DIRECTED need (*this one must be able to supply that one*). Bending one into the other either
-  * over-unions — threading everything a threaded method merely assigns from — or requires exactly
-  * this walk anyway. What IS reused is its shape: [[edges]] is exposed separately from the growth.
-  *
-  * ==Over-approximation is benign and PRICED==
-  * Threading a component member that never reads the holder costs one trailing anonymous clause at
-  * the declaration, NOTHING at the call sites, and one extra reference argument at run time. Each
-  * such member's decision says `via=override-component`, so a reader of the emitted file can see why
-  * a parameter it never uses is there.
+  * A DIRECTED reachability over five edge kinds (DESIGN.md §8.4): [[ContextNeed.Edge.Kind.Seed]] (a
+  * mapped static read), [[ContextNeed.Edge.Kind.Use]] (a call/reference to a threaded declaration),
+  * [[ContextNeed.Edge.Kind.Override]] (the whole override component, up and down),
+  * [[ContextNeed.Edge.Kind.Instantiate]] (`new C` and its subclasses), and
+  * [[ContextNeed.Edge.Kind.Capture]] (a nested body's need lands on its enclosing declaration).
+  * Computed once per holder and exposed via [[edges]] so a spec can pin the derivation itself.
   */
 final class ContextNeed(
     program: Program,
@@ -48,13 +21,11 @@ final class ContextNeed(
     promoteAllowed: Set[SymId],
     seam: (ContextSeamCheck.Kind, String, String, String, Origin, SymId) => Unit,
     refuse: (SymId, String) => Unit,
-    /** the `sites` entries that BOUND: the policy key → the symbols it named. The phase's OWN record
-      * of what the binder resolved, so a `lazy-init` entry can name a site NO READ reaches — which
-      * is `ENGINE-LIMITS.md` CT6's second face. Empty is the pre-CT6 code path. */
+    /** the `sites` entries that BOUND: the policy key → the symbols it named. Empty is the pre-CT6
+      * code path. // ENGINE-LIMITS CT6 */
     boundSites: Map[String, List[SymId]] = Map.empty,
     /** the `selfSupplied` entries that BOUND: the TYPE a framework instantiates → the policy key
-      * that said so. Such a type is threaded in every way except the one that changes its
-      * signature — `ENGINE-LIMITS.md` CT7's third answer. Empty is the pre-CT7 code path. */
+      * that said so. Empty is the pre-CT7 code path. // ENGINE-LIMITS CT7 */
     selfSupplied: Map[SymId, String] = Map.empty,
 ):
   import ContextNeed.*
@@ -84,29 +55,22 @@ final class ContextNeed(
 
   /** The climb: from the declaration a read is IN, to the declaration that can carry a clause.
     *
-    * Every step is structural. A LEXICALLY NESTED type (an anonymous-class body, an enum-constant
-    * body) has no `ClassDef` of its own and its owner is the declaration it was written inside, so
-    * the climb continues through it and the read CAPTURES. A class initialiser and a field
-    * initialiser have no signature at all and stop the climb: those are the two sites the
-    * predecessor mistranslated in silence — one by seeding a `<clinit>` that then lost its parameter
-    * at emission, the other by never seeding a field initialiser and never rewriting it either. */
+    * Every step is structural. A lexically nested type (anonymous-class body, enum-constant body)
+    * has no `ClassDef` of its own, so the climb continues through its owner and the read CAPTURES.
+    * A class or field initialiser has no signature and stops the climb. */
   def siteOf(from: SymId): Site = siteCache.getOrElseUpdate(from, climb(from, captured = false, 64))
 
   /** the climb AS IT WAS BEFORE ANY DEFERRAL — the one question the deferral scan may ask.
     *
-    * [[deferrals]] is computed from the sites the closure cannot reach, and a deferred field then
-    * BECOMES a reachable one, so a deferral-aware climb consulted while the plan is being built is
-    * a cycle. It is also uncached on purpose: the answer it gives is the pre-deferral one, and
-    * leaving it in [[siteCache]] would hand it to the growth as well. */
+    * Uncached on purpose: a deferral-aware climb consulted while the plan is being built is a
+    * cycle, since [[deferrals]] is derived from sites this climb finds unreachable. */
   private def preSiteOf(from: SymId): Site = climb(from, captured = false, 64, deferAware = false)
 
   @annotation.tailrec
   private def climb(s: SymId, captured: Boolean, fuel: Int, deferAware: Boolean = true): Site =
     if s == SymId.None || fuel <= 0 then Site.Boundary(s, "it is outside any declaration")
-    // a DEFERRED static is no longer a field whose initialiser runs at class initialisation: the
-    // rewrite has made it a `def` over a cache that takes the clause, on the field's OWN symbol. A
-    // climb that still called it a boundary would report a seam against the exit the `sites` policy
-    // just took, and refuse to thread the very body the deferral moved.
+    // a DEFERRED static is now a `def` over a cache that takes the clause, on the field's OWN
+    // symbol — not a boundary, or the climb would refuse the very body the deferral moved.
     else if deferAware && deferredFields.contains(s) then Site.Method(s, captured)
     else program.symbolOf(s) match
       case scala.None => Site.Boundary(s, "it is outside any declaration")
@@ -115,13 +79,11 @@ final class ContextNeed(
           if isDeclaredClass(s) then
             if holder.attach == ContextAttach.Class then Site.Cls(s, captured)
             else Site.Boundary(s, "it is a class body statement and `attach = method`")
-          // an anonymous-class or enum-constant body: its members' signatures are fixed by what they
-          // implement, so the need lands OUTSIDE and the body captures it lexically.
+          // an anonymous/enum-constant body: signature is fixed by what it implements, so the
+          // need lands OUTSIDE and captures lexically.
           else climb(anonHome.getOrElse(s, sym.owner), captured = true, fuel - 1, deferAware)
-        // …and a MEMBER of such a body is reached from the member, not from the body: the climb has
-        // to look UP one level before it decides, or an anonymous `Runnable#run` reads as an
-        // ordinary method, gets a clause it may not have (its signature is `Runnable`'s), and the
-        // enclosing declaration — the one that can actually supply the context — is never asked.
+        // a MEMBER of such a body must look UP one level first, or an anonymous `Runnable#run`
+        // reads as an ordinary method and gets a clause its signature (`Runnable`'s) may not have.
         else if isType(sym.owner) && !isDeclaredClass(sym.owner) then
           climb(sym.owner, captured = true, fuel - 1, deferAware)
         else if PolicyBinder.isExecutable(sym.info) then
@@ -148,69 +110,34 @@ final class ContextNeed(
 
   /** an anonymous-class body → the DECLARATION it was WRITTEN INSIDE.
     *
-    * The frontend interns an anonymous class with its enclosing CLASS as owner, because that is
-    * where its emitted name comes from (`Outer$1`) — so the owner chain reaches the class and loses
-    * the method, and a capture landing on the class would be a boundary under `attach = method` and
-    * the wrong constructor under `attach = class`. The xref does hold the lexical home: every
-    * `new T(){ … }` is a usage of `T` whose SITE is the `New` node carrying the body and whose
-    * `enclosing` is the declaration it was written in. Read from there, so nothing has to re-walk
-    * the tree with its own notion of "where am I" (CLAUDE.md §3).
-    *
-    * The KIND of that usage is not asked for, and that is `ENGINE-LIMITS.md` CT6: `Xref.walkType`'s
-    * `AppliedType` arm re-labels `Instantiate` as `Tycon`, so an anonymous subclass of a GENERIC
-    * parent — `new Pool<Cell>(){ … }` — had no lexical home at all and every capture inside it
-    * climbed to the enclosing CLASS instead. The home comes from the NODE (which body this `New`
-    * carries), so the recorded kind decides nothing here. */
+    * The frontend interns an anonymous class with its enclosing CLASS as owner, losing the method,
+    * so the lexical home is read off the `New` node's usage site instead (whose `enclosing` is where
+    * it was written) rather than the owner chain (CLAUDE.md §3). The usage KIND is not consulted —
+    * `Xref.walkType` mislabels a generic constructor's `Instantiate` as `Tycon`. // ENGINE-LIMITS CT6
+    */
   private val anonHome: Map[SymId, SymId] =
     program.referenced.toList.flatMap(program.usages).collect {
       case Usage(_, n: Tree.New, enc) if n.anon.isDefined && enc != SymId.None =>
         n.anon.get.symbol -> enc
     }.toMap
 
-  /** Is this usage of `c` a CONSTRUCTION of `c`? — `ENGINE-LIMITS.md` CT6's first face.
-    *
-    * `Xref.walkType(tpt.tpe, UsageKind.Instantiate, n)` at a [[Tree.New]] reaches the constructed
-    * class as `Tycon` whenever that class takes type parameters, because the `AppliedType` arm
-    * re-labels the kind it was called with — and the frontend applies a RAW `new Cell()` too. The
-    * instantiate edge of DESIGN.md §8.4 was therefore absent for EVERY generic class: no threading,
-    * no [[impose]], and so no seam either, which is a boundary the engine cannot see rather than one
-    * it refuses (CLAUDE.md §1).
-    *
-    * The fix is HERE and not in `Xref`. `UsageKind` is a shared index read by the portability check,
-    * the rewrite trace and the external-surface walk; re-labelling that arm is its own change with
-    * its own thirteen-port measure cycle. A usage whose SITE is a `New` is an instantiation of
-    * whatever that `New` CONSTRUCTS — a structural fact about the node this phase is holding, never
-    * a conclusion drawn from a recorded name (§4.56).
-    *
-    * Reading the node is also what keeps it EXACT. A kind-blind "any usage at a `New` site" would
-    * make `new Pool<Cell>()` an instantiation of `Cell`, which it is not: `Cell` is named there as a
-    * TYPE ARGUMENT, and constructing a `Pool` constructs no `Cell`. Off a `New` the recorded kind is
-    * still the answer — `Tree.NewArray` records `Instantiate` for its element type and has no
-    * constructed head to read. */
+  /** Is this usage of `c` a CONSTRUCTION of `c`? — reads the `New` NODE's constructed head rather
+    * than the recorded `UsageKind`, because `Xref.walkType`'s `AppliedType` arm mislabels a generic
+    * constructor's `Instantiate` as `Tycon`. A kind-blind "any usage at a `New` site" would also be
+    * wrong: `Cell` in `new Pool<Cell>()` is a TYPE ARGUMENT, not a construction. Off a `New`, the
+    * recorded kind is still the answer — `Tree.NewArray` has no constructed head to read.
+    * // ENGINE-LIMITS CT6
+    */
   private def instantiates(u: Usage, c: SymId): Boolean = u.site match
     case n: Tree.New => constructedBy(n) == c
     case _           => u.kind == UsageKind.Instantiate
 
-  /** `C::new` IS a construction of `C`, and it is the one the index cannot be asked about.
-    *
-    * A constructor method reference is java's own way of writing a FACTORY — `registerEffect("LINK",
-    * LinkEffect::new)` — and it lowers to a lambda that runs `new C(…)`, so every reason a `new C()`
-    * imposes the need holds here verbatim: the emitted `(a0, a1) => new C(a0, a1)` needs a given
-    * wherever it is elaborated. It is also the shape most likely to sit at a BOUNDARY, because a
-    * registry is a class initialiser and that is what registries are for.
-    *
-    * [[instantiates]] cannot answer it, and the reason is a fact about the shared index rather than
-    * a gap here: [[Xref]] records the reference's TYPE with the qualifier's `TypeTree` as the site
-    * (`UsageKind.TypeRefPos`), so nothing about that usage says a construction is what it is — and a
-    * `TypeTree` is the site for every type mention in the program, so no widening of the class-usage
-    * arm could tell them apart. The CONSTRUCTOR's own symbol is recorded at the `MethodRef` node
-    * itself, which is the structural question this asks: *is this program's `C` constructor
-    * REFERENCED from a node that is a method reference*. Reading the node and not a recorded kind is
-    * [[instantiates]]'s own rule (`ENGINE-LIMITS.md` CT6) at the one node kind it does not cover.
-    *
-    * Consulted by BOTH callers, because they are two halves of one fact: the growth must impose the
-    * need at the referencing declaration, and [[constructedByProgram]] must stop warning that
-    * nothing constructs a class a factory reference builds on every use. */
+  /** `C::new` IS a construction of `C`, which [[instantiates]] cannot answer: `Xref` records the
+    * reference's TYPE at the qualifier's `TypeTree` (`UsageKind.TypeRefPos`), a site every type
+    * mention shares, so the constructor's own symbol is read off the `MethodRef` node instead.
+    * Consulted by both the growth (impose the need) and [[constructedByProgram]] (stop warning that
+    * nothing constructs a class a factory reference builds). // ENGINE-LIMITS CT6
+    */
   private def ctorRefUses(c: SymId): List[Usage] =
     ctorsOf(c).flatMap(program.usages).filter(_.site.isInstanceOf[Tree.MethodRef])
 
@@ -245,18 +172,10 @@ final class ContextNeed(
 
   /** the statics whose initialisation a `sites` policy asked to move out of an initialiser.
     *
-    * ==The trigger is the POLICY, not a read — `ENGINE-LIMITS.md` CT6's second face==
-    * This used to be derived from [[reads]] alone: a read of a MAPPED STATIC whose site resolved to
-    * a `lazy-init` boundary. Every seam the phase draws tells its reader to *give the site a `sites`
-    * policy* — and for the shape that most needs it, an initialiser that CONSTRUCTS a now-threaded
-    * type, there was no read of a mapped static anywhere in it, so the entry could name nothing. It
-    * BOUND (it named a real member), it changed no emitted byte, and `policy` stayed at its floor:
-    * a policy entry that is accepted, does nothing, and is invisible to every check in the run.
-    *
-    * So the candidates are the entries themselves, resolved through [[boundSites]], with the
-    * read-derived set kept beside them — it is a subset by construction (a read boundary reaches
-    * `lazy-init` only through a `sites` entry naming it) but it also covers the keys the binder
-    * refuses, `<clinit>` above all, which is an engine-minted member policy may still name here. */
+    * The trigger is the POLICY, not a read: candidates come from the `sites` entries themselves
+    * (via [[boundSites]]), with the read-derived set kept beside them as a subset that also covers
+    * keys the binder refuses (`<clinit>`). // ENGINE-LIMITS CT6
+    */
   val deferrals: List[Deferral] = lazyInitSubjects.flatMap(planDeferral)
 
   /** the deferred fields, as [[climb]] reads them. Derived from [[deferrals]] and therefore
@@ -277,10 +196,8 @@ final class ContextNeed(
     val key = program.symbolOf(subject).map(_.fullName)
     key.flatMap(holder.sites.get) match
       case Some(s) =>
-        // A `lazy-init` entry is judged by its OUTCOME, not by this lookup: the lookup is how the
-        // deferral scan ASKS the question, so counting it here would mark the entry fired before
-        // anything was planned — which is exactly the blindness CT6 measured. The other two decide
-        // at this call and nowhere else.
+        // A `lazy-init` entry is judged by its OUTCOME, not by this lookup — counting it here would
+        // mark it fired before anything was planned. // ENGINE-LIMITS CT6
         if s != ContextSite.LazyInit then key.foreach(firedS += _)
         s
       case scala.None => holder.boundary match
@@ -312,28 +229,20 @@ final class ContextNeed(
 
   /** a STATIC FIELD CARRYING ITS OWN INITIALISER — the shape no read reaches.
     *
-    * `static final Pool<Cell> cellPool = new Pool<Cell>(){ … new Cell() … }` is a boundary because a
-    * static initialiser runs at class initialisation, before anything could pass it a context; it
-    * names no mapped static, so the read-derived trigger never saw it. There is no `<clinit>` to
-    * strip here — the ValDef itself is what [[DeferredInit]] replaces — which is why the deferral's
-    * `clinit` is [[SymId.None]].
-    *
-    * STATIC only: the cache pair [[DeferredInit]] mints is static, and an instance field under
-    * `attach = class` is not a boundary at all. A `sites` entry naming an instance field selects no
-    * site and is reported as such rather than silently doing something else. */
+    * A static initialiser runs at class initialisation before anything could pass it a context, and
+    * names no mapped static, so the read-derived trigger never sees it. No `<clinit>` to strip here
+    * — the `ValDef` itself is what [[DeferredInit]] replaces, so the deferral's `clinit` is
+    * [[SymId.None]]. STATIC only: an instance field under `attach = class` is not a boundary.
+    */
   private def fromField(v: Tree.ValDef, key: String): List[Deferral] =
     if !program.symbolOf(v.symbol).exists(_.flags.isStatic) then Nil
     else v.rhs.filter(needsContext).map(rhs => Deferral(SymId.None, v.symbol, rhs, key)).toList
 
-  /** Does this initialiser reach the context AT ALL?
-    *
-    * Two ways, and the second is CT6's: it READS a mapped static, or it CONSTRUCTS a type this
-    * program declares — whose constructors the closure may thread. The second is an
-    * over-approximation and cannot be anything else here: the deferral plan is read BEFORE the
-    * growth (it creates seeds), so `threadedClasses` does not exist yet, and computing it twice to
-    * refine this would report every boundary the first pass drew and then unreport it. The gate that
-    * makes the approximation safe is that the port had to NAME this site: `lazy-init` is per-site
-    * opt-in, a `DeferredInit` decision, a porter note and a counted seam, never a default. */
+  /** Does this initialiser reach the context AT ALL? Either it READS a mapped static, or it
+    * CONSTRUCTS a type this program declares. The second is a deliberate over-approximation — the
+    * deferral plan runs BEFORE the growth, so `threadedClasses` does not exist yet — made safe by
+    * `lazy-init` being per-site opt-in, never a default. // ENGINE-LIMITS CT6
+    */
   private def needsContext(t: Term): Boolean = readsHolder(t) || constructsOwned(t)
 
   private def constructsOwned(t: Term): Boolean =
@@ -367,11 +276,10 @@ final class ContextNeed(
   private val deferredReads: Set[(SymId, Origin)] = deferrals.flatMap(d => staticIn(d.rhs)).toSet
 
   /** WHICH `sites` entries this run's decisions actually turned on — the input to the phase's
-    * dead-binding report (`ENGINE-LIMITS.md` CT6).
-    *
-    * A `lazy-init` entry counts as fired iff it produced a [[Deferral]]; the other two count when
-    * [[policyFor]] resolved a boundary through them. Read it AFTER [[readPlan]] has been forced, or
-    * the residual-global and refuse entries have not been consulted yet. */
+    * dead-binding report. A `lazy-init` entry counts as fired iff it produced a [[Deferral]]; the
+    * other two count when [[policyFor]] resolved a boundary through them. Read AFTER [[readPlan]]
+    * has been forced. // ENGINE-LIMITS CT6
+    */
   def firedSites: Set[String] = firedS.toSet
 
   // -------------------------------------------------------------------------
@@ -441,13 +349,10 @@ final class ContextNeed(
     classes.toList.sortBy(_.raw).foreach(warnUnconstructed)
 
   /** A SELF-SUPPLIED CLASS WHOSE PARENT TOOK THE CLAUSE — the one shape the third answer cannot
-    * cover, and it is a hard compile error rather than a lost suite.
-    *
-    * A `given` member of a class body is in scope for the body. It is NOT in scope in the `extends`
-    * clause: the parent constructor runs before this class's own members exist, so `class Suite
-    * extends Threaded` has no argument to pass and nothing to pass it from. There is no rewrite that
-    * repairs it here — the parent's signature is the base's, not this type's — so it is refused,
-    * named, and counted, which is what a boundary the engine cannot fix is owed (CLAUDE.md §1). */
+    * cover. A `given` member is in scope for the class BODY, not for its `extends` clause: the
+    * parent constructor runs before this class's own members exist, so there is no argument to
+    * pass and no rewrite that repairs it — refused, named and counted. CLAUDE.md §1
+    */
   private def checkSelfSupplied(c: SymId): Unit =
     graph.parentsOf(c).filter(classes).sortBy(_.raw).foreach { p =>
       seam(ContextSeamCheck.Kind.SelfSupplied, fqn(c), selfSupplied.getOrElse(c, holder.holder),
@@ -460,29 +365,12 @@ final class ContextNeed(
     }
 
   /** THE CT7 WARNING — a threaded class NOTHING IN THIS PROGRAM CONSTRUCTS, whose ancestry leaves
-    * the program.
-    *
-    * This is the check the measured loss lacked. Every part of the closure worked: the suite
-    * constructed a threaded type, the instantiate edge threaded the suite, and the clause landed on
-    * its constructor — while nothing in the program ever instantiates a test suite, because a test
-    * RUNNER does, reflectively, and a reflective instantiation cannot supply a `using`. The emitted
-    * file compiled at 0 errors with 0 seams and the only evidence was five tests that stopped
-    * running.
-    *
-    * Both halves are structural and neither names a library (§1):
-    *
-    *   - '''nothing constructs it''' — no `Instantiate` edge into it from an owned declaration, and
-    *     no owned DESCENDANT that is constructed either. A subclass that IS constructed supplies the
-    *     parent's clause through its own `extends`, so the parent is exercised and is not this.
-    *   - '''its ancestry leaves the program''' — a strict ancestor this program does not declare,
-    *     other than `java.lang.Object`, which is every class's parent and would make this fire on
-    *     the whole port. That is what a framework-constructed type looks like from inside the
-    *     program: the framework's own base type is on the classpath and is not ported.
-    *
-    * It WARNS rather than refuses because the engine cannot distinguish "a framework constructs
-    * this" from "your users construct this" — both are external constructions, and the second is an
-    * ordinary ported API whose callers pass the given. A refusal would make the second unportable;
-    * a silence made the first invisible. */
+    * the program (the shape a reflectively-instantiated test suite has). WARNS rather than refuses:
+    * the engine cannot distinguish a framework construction from an ordinary caller passing the
+    * given. Fires when no `Instantiate` edge reaches it (nor a constructed descendant) AND its
+    * ancestry has a declared ancestor, other than `java.lang.Object`, this program does not own.
+    * // ENGINE-LIMITS CT7
+    */
   private def warnUnconstructed(c: SymId): Unit =
     if selfS(c) || constructedByProgram(c) then return
     val external = graph.externalAncestorsOf(c).filterNot(_ == JavaLangObject).sorted
@@ -496,20 +384,11 @@ final class ContextNeed(
 
   /** Does anything THIS PROGRAM declares construct `c`, or a descendant of it?
     *
-    * '''An ARRAY ALLOCATION is not a construction.''' `Xref` records `Instantiate` for a
-    * `Tree.NewArray`'s ELEMENT type, which is the right edge for the questions that ask "is this
-    * type mentioned in a way that needs it on the classpath" — and it is the wrong one here.
-    * `new Suite[8]` allocates eight null slots and runs no constructor, so a class only ever
-    * array-allocated is a class NOTHING IN THIS PROGRAM CONSTRUCTS: exactly the shape the warning
-    * exists for, silently suppressed by the one edge that means the opposite of what it is read as.
-    * Reading the NODE is the same rule [[instantiates]] states for `new Pool<Cell>()` — a type named
-    * at a site is not a type constructed there — applied to the other node kind that names one.
-    *
-    * The exclusion is HERE and not in [[instantiates]] deliberately. Its other caller is the
-    * threading closure, where the same edge over-threads (a method holding `new Foo[10]` is given a
-    * clause it does not need), and fixing THAT moves emitted signatures — a separate change with a
-    * separate measurement, recorded in `ENGINE-LIMITS.md` CT7. This one moves no emitted text at
-    * all: it decides whether a warning fires. */
+    * An ARRAY ALLOCATION is not a construction: `new Suite[8]` runs no constructor, so it is
+    * excluded here rather than in [[instantiates]] — that other caller (the threading closure)
+    * over-threads on the same edge, but fixing it there moves emitted signatures, a separate
+    * change. This one decides only whether a warning fires. // ENGINE-LIMITS CT7
+    */
   private def constructedByProgram(c: SymId): Boolean =
     (c :: graph.descendantsOf(c)).exists(t =>
       program.usages(t).exists(u =>
@@ -546,13 +425,9 @@ final class ContextNeed(
 
   private def expandClass(c: SymId): Unit =
     if classes(c) || frozen(c) || selfS(c) then return
-    // THE THIRD ANSWER, before anything else this method does (`ENGINE-LIMITS.md` CT7). A class a
-    // FRAMEWORK constructs takes the context WITHOUT taking a parameter, so it joins no signature
-    // edit and propagates neither down the hierarchy nor to its instantiation sites — its
-    // constructors are exactly what java declared, and there is nothing for a `new` to supply.
-    // Its BODY still reads the context, which is why this is a resolution and not a refusal: the
-    // reads inside it are `ReadPlan.Threaded` and the given member the emitter writes is what they
-    // resolve against.
+    // THE THIRD ANSWER (ENGINE-LIMITS CT7): a framework-constructed class takes the context WITHOUT
+    // a parameter — no signature edit, no propagation — but its body still reads it via a `given`
+    // member the emitter fills, so this is a resolution and not a refusal.
     if selfSupplied.contains(c) then
       selfS += c
       program.symbolOf(c).foreach(s => seam(ContextSeamCheck.Kind.SelfSupplied, s.fullName,
@@ -585,9 +460,8 @@ final class ContextNeed(
       if !classes(d) then viaMap.getOrElseUpdate(d, "subclass-of-threaded")
       enqueue(Node.C(d), Edge(Edge.Kind.Instantiate, c, d, Decision.originOf(program, d)))
     }
-    // INSTANTIATE: `new C` needs a context in scope wherever it is written. Read through
-    // `instantiates`, which asks the NODE and not the recorded kind — a generic `new` is labelled
-    // `Tycon` by the shared index (`ENGINE-LIMITS.md` CT6).
+    // INSTANTIATE: `new C` needs a context in scope wherever written. Reads the NODE, not the
+    // recorded kind — a generic `new` is labelled `Tycon` by the shared index. ENGINE-LIMITS CT6
     program.usages(c).foreach { u =>
       if instantiates(u, c) && u.enclosing != SymId.None && u.enclosing != c then
         impose(u.enclosing, c, u.site.origin, Edge.Kind.Instantiate)
@@ -611,26 +485,15 @@ final class ContextNeed(
         if !classes(c) then viaMap.getOrElseUpdate(c, kindVia(kind))
         enqueue(Node.C(c), Edge(kind, from, c, at))
       case Site.Boundary(sub, why) =>
-        // A declaration that CANNOT take a clause uses one that requires it. This is the seam the
-        // deleted ambient `given` used to hide: with `given T = new T()` in scope it compiled
-        // silently and the global was back. It is loud here, and attributable.
-        //
-        // ITS OWN KIND, and the split is about what the emitted file DOES. This used to file as
-        // `ResidualGlobalRead` with the words "unsuppliable use" in front of the detail — so the
-        // §1 classification a reader was handed opened by saying *this read still reaches a global*
-        // at a site that holds no read at all, and offered `boundary = "residual-global"`, which
-        // re-spells reads and cannot touch this. The two are one lane and two instructions: a
-        // residual read compiles and keeps a global, an unsuppliable use is `No given` at that line
-        // every time (`PROGRESS.md` §10.8.9).
+        // A declaration that CANNOT take a clause uses one that requires it — its own kind
+        // (`UnsuppliableUse`), distinct from a residual global read: this is `No given` at that
+        // line every time. PROGRESS.md §10.8.9
         seam(ContextSeamCheck.Kind.UnsuppliableUse, fqn(sub), holder.holder,
           s"this declaration ${useVerb(kind)} `${fqn(from)}`, which now takes a context, and $why — " +
             "so the emitted code has no given in scope at this line", at, sub)
 
-  /** what the boundary DID with the threaded declaration, in the finding's own sentence. The edge
-    * kind is already in hand at [[impose]] and it is the difference between *this initialiser builds
-    * a threaded object* and *this initialiser calls into one* — two different things to go and look
-    * at, and a reader who has to open the file to find out which is a reader the classification
-    * failed (§4.45). */
+  /** what the boundary DID with the threaded declaration, in the finding's own sentence —
+    * distinguishes "constructs" from "uses" so a reader need not open the file to find out. §4.45 */
   private def useVerb(k: Edge.Kind): String = k match
     case Edge.Kind.Instantiate => "CONSTRUCTS"
     case _                     => "uses"
@@ -671,9 +534,8 @@ final class ContextNeed(
           case Site.Method(m, cap) if methods(m) =>
             if cap then captured(enc, at)
             key -> ReadPlan.Threaded
-          // `supplies` and not `classes`: a self-supplied type's body has a given in scope, so its
-          // reads are threaded reads and reporting them as residual globals would count a seam that
-          // is not there — and would leave the read naming the holder the port is retiring.
+          // `supplies`, not `classes`: a self-supplied type's body has a given in scope too, so its
+          // reads are threaded reads, not residual globals.
           case Site.Cls(c, cap) if supplies(c) =>
             if cap then captured(enc, at)
             key -> ReadPlan.Threaded

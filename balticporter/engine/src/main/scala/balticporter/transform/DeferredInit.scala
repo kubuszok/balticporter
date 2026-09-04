@@ -2,42 +2,12 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** EAGER → LAZY, per site and never by default: a static whose class initialiser reads the holder
-  * becomes a `def` over a cache, taking the context clause.
-  *
-  * ==Why this is a per-site opt-in and not a mode==
-  * A class initialiser has no signature, so it cannot be threaded, and it runs before anything could
-  * have constructed a context. The only faithful-ish answer is to move the initialisation to the
-  * first READ of the field — and that is a SEMANTIC CHANGE: Java runs a class initialiser at the
-  * first ACTIVE USE of the class (any static read, any instantiation), while this runs at the first
-  * read of THIS field. The two coincide when nothing else in the class is touched first, and the
-  * mechanism cannot know whether that holds. So it is asked for per site, recorded as a
-  * `Decision.Kind.DeferredInit` with a porter note beside the code, and counted as a
-  * `deferred-init` seam. The corpus demand for it is exactly ONE site in nine libraries, which is
-  * itself the argument for per-site policy over a mode.
-  *
-  * ==The emitted shape==
-  * {{{
-  * // was:  static X f;  static { f = <expr reading the holder>; }
-  * private var f$set: Boolean = false
-  * private var f$value: X     = null
-  * def f(using T): X = { if (!f$set) { f$set = true; f$value = <expr, now threaded> }; f$value }
-  * }}}
-  *
-  * A pair of cache fields rather than a Scala `lazy val`, for two reasons that are not style: a
-  * `lazy val` initialiser has no parameter list, so there would be nowhere for the context to arrive
-  * — that is the whole problem being solved — and the `set` flag makes the rewrite work for a
-  * PRIMITIVE-typed static, where a null test would fire on a legitimately-zero value forever.
-  *
-  * What it does NOT reproduce is the JVM's class-initialisation LOCK: `<clinit>` runs once even
-  * under concurrent first use, and this does not. A static a port defers is one whose first read is
-  * on a known thread; the decision row says so, and a port that needs the guarantee should inject a
-  * hand-written holder instead.
-  *
-  * ==Reads are UNCHANGED at the call site==
-  * A Scala parameterless `def` is read exactly as a field was, so every `T.f` in the program stays
-  * the text it was and the context arrives from the `using` in scope. That is why the field's symbol
-  * is seeded into the closure as a METHOD: its readers are what must now be able to supply it.
+/** Turns a static whose class initialiser reads the threaded holder into a `def` over a `$set`/
+  * `$value` cache pair, taking the context clause — per site and never by default, since deferring
+  * init to the field's first read is a semantic change from java's first-ACTIVE-USE trigger, which
+  * the mechanism cannot verify (recorded as `Decision.Kind.DeferredInit`, counted `deferred-init`).
+  * Does NOT reproduce the JVM's class-init lock; reads are unchanged since the field's symbol is
+  * reused as a parameterless `def`.
   */
 final class DeferredInit(
     program: Program,
@@ -50,23 +20,19 @@ final class DeferredInit(
   def name = "globals->implicits/deferred-init"
 
   private val byField  = deferrals.map(d => d.field -> d).toMap
-  /** only the deferrals that came OUT OF a class initialiser have one to strip: a static field
-    * carrying its own initialiser is replaced whole by [[deferField]], and its `clinit` is
-    * `SymId.None` (`ENGINE-LIMITS.md` CT6). */
+  /** Only deferrals out of a class initialiser have one to strip — a field carrying its own
+    * initialiser is replaced whole by `deferField` and its `clinit` is `SymId.None` (ENGINE-LIMITS
+    * CT6). */
   private val byClinit = deferrals.filter(_.clinit != SymId.None).groupBy(_.clinit)
   private val o        = Origin.synthetic
 
-  // The two types the cache is written in. MINTED rather than looked up: searching the symbol table
-  // for `fullName == "scala.Boolean"` is the §4.56 string test the transform-package lint forbids,
-  // and there is nothing to gain by winning it — an external symbol is rendered from its `fullName`,
-  // so a second one interned under the same name emits the same text and owns nothing.
+  // minted rather than looked up: a name string test is the §4.56 hazard the transform lint forbids
   private lazy val boolSym = mint.tpe("Boolean", "scala.Boolean")
   private lazy val unitSym = mint.tpe("Unit", "scala.Unit")
   private lazy val boolT   = TypeRepr.TypeRef(TypeRepr.NoPrefix, boolSym)
   private lazy val unitT   = TypeRepr.TypeRef(TypeRepr.NoPrefix, unitSym)
-  /** the emitter renders a call on a symbol whose `fullName` starts with `scala.<op>#` as an
-    * operator — the convention the frontend's own operator lowering uses, read back rather than
-    * re-invented. */
+  /** `scala.<op>#unary_!` is the convention the frontend's own operator lowering uses for the emitter
+    * to render a call as an operator. */
   private lazy val notSym  = mint.member("unary_!", "scala.<op>#unary_!", SymId.None, boolT, Flags())
 
   def apply(u: Tree.ClassDef)(using Program): Tree.ClassDef =
@@ -103,14 +69,13 @@ final class DeferredInit(
     List(
       Tree.ValDef(setSym, TypeTree(boolT, at), Some(Tree.Literal(Constant.BoolC(false), boolT, at)), at),
       Tree.ValDef(valSym, TypeTree(v.tpt.tpe, at), scala.None, at),
-      // the field's OWN symbol carries the `def`, so every read in the program keeps naming it and
-      // no call site changes; only its `paramss` says the context now arrives here.
+      // the field's OWN symbol carries the `def`, so no call site changes — only its `paramss` moves
       Tree.DefDef(v.symbol, List(List(mint.usingParam(v.symbol, holder.context.fqn, ctxRef, at))),
                   TypeTree(v.tpt.tpe, at), Some(body), at, leading = v.leading),
     )
 
-  /** the class initialiser keeps everything the deferral did not move; an initialiser left with no
-    * statements at all is dropped rather than emitted as an empty block. */
+  /** The class initialiser keeps everything the deferral did not move; dropped rather than emitted
+    * empty if nothing remains. */
   private def stripClinit(d: Tree.DefDef, ds: List[ContextNeed.Deferral])(using Program): List[Statement] =
     val moved = ds.map(_.field).toSet
     def isMoved(t: Statement): Boolean = t match
@@ -138,7 +103,6 @@ final class DeferredInit(
     case Tree.Select(_, s, _, _) => Some(s)
     case _                       => scala.None
 
-  /** the field flags a deferral needs on the emitted `def`: the static stays a static, so it lands
-    * in the companion where Java put it. Nothing here changes them — the symbol is reused verbatim,
-    * which is what keeps every read in the program naming the same thing. */
+  /** The static flags are reused verbatim (the symbol stays a static, landing in the companion where
+    * java put it), which is what keeps every read in the program naming the same thing. */
   def unchangedSymbols: Set[SymId] = byField.keySet

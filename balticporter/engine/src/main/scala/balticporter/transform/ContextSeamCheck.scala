@@ -3,137 +3,25 @@ package balticporter.transform
 import balticporter.catalog.FixKind
 import balticporter.tir.*
 
-/** The CONTEXT BOUNDARY, counted — every place the threading stopped, and why.
-  *
-  * ==Why this exists==
-  * [[GlobalsToImplicitsTransform]] turns a Java static holder into a Scala 3 `using` parameter
-  * threaded through everything that reaches it. The mechanism is a CLOSURE, and a closure has an
-  * edge: a declaration that reads the holder and cannot take a parameter. A class initialiser has
-  * no signature; a static field's initialiser runs before anything could pass it a context; an
-  * override component that reaches an unparsed parent is not this program's to re-sign.
-  *
-  * The predecessor design closed that edge with an ambient `given T = new T()` in the context's
-  * companion — and that made every seam SILENT. An unthreaded caller of a threaded callee compiled
-  * cleanly against the ambient default, so the global was reintroduced with extra steps and nothing
-  * counted it. DESIGN.md §8.4 deletes the ambient given, which makes an unthreaded owned caller of a
-  * threaded callee '''impossible by construction''' — the closure would have threaded it — EXCEPT
-  * across a refused boundary. Those sites are exactly what this counts.
-  *
-  * So: a number with an origin and a CLAUDE.md §1 classification, available before any compiler
-  * runs. A port that enables the phase sees the size of its boundary immediately.
-  *
-  * ==The eight kinds, and why they are eight==
-  * Each one is a different instruction to its reader, which is the same argument
-  * [[balticporter.tir.NotBound]] makes for refusing to collapse its cases:
-  *
-  *   - [[Kind.ResidualGlobalRead]] — the read is still a GLOBAL read. Either it was rewritten to the
-  *     context companion's `global` (`boundary = "residual-global"`) or it was left naming the
-  *     upstream holder (`boundary = "refuse"`). This is the count that says how much of the global
-  *     survived, and it is the one a port drives to zero.
-  *   - [[Kind.UnsuppliableUse]] — the MIRROR of that one, and the difference between them is whether
-  *     the emitted file COMPILES. A residual read is a coherent program: the port kept a global it
-  *     meant to retire, and every instrument except this one reads clean. An unsuppliable use is a
-  *     declaration with no signature — a class initialiser, a static field's initialiser — that
-  *     CONSTRUCTS or CALLS something the closure threaded, and there is no given anywhere in its
-  *     scope: the emitted Scala is `No given … is in scope`, always, at a line the source map
-  *     attributes. Merging the two costs a reader the one fact they most need, because a
-  *     `residual-global-read` classification opens by saying *this read still reaches a global* about
-  *     a site that holds no read at all (`PROGRESS.md` §10.8.9).
-  *   - [[Kind.DeferredInit]] — a static initialiser was rewritten to initialise on first READ
-  *     instead of at class initialisation. That is an EAGER→LAZY semantic change, never a default,
-  *     and it is counted here as well as recorded as a `Decision` because the two answer different
-  *     questions: the decision says what one declaration became, this says how many there are.
-  *   - [[Kind.CapturedContext]] — the read is inside a lexically nested body (an anonymous class,
-  *     an enum-constant body) whose own method could not be re-signed, so the context is CAPTURED
-  *     from the enclosing declaration's clause. It is correct and free; it is counted because a
-  *     captured context outlives the call that supplied it, which is a fact about the port a
-  *     reader should be able to size without reading every anonymous body.
-  *   - [[Kind.FrozenComponent]] — an override component this program may not re-sign
-  *     ([[balticporter.tir.OverrideGraph.Closure.isAnchored]]), or a trait whose own body needs the
-  *     context and has no `promoteToClass` entry. Threading half a component is a broken `override`,
-  *     so the whole of it is refused; each refusal names the member and what froze it.
-  *   - [[Kind.SelfSupplied]] — THE THIRD ANSWER. The port declared this type framework-instantiated,
-  *     so it takes the context WITHOUT taking a parameter: no clause on its constructors and a
-  *     `given` member the port's own expression fills. Counted because it is a place the threading
-  *     stopped exactly like the other six, and because the value now comes from a port's hand-
-  *     written fixture rather than from the caller — which is a fact about the port a reader should
-  *     be able to size without reading every generated file.
-  *   - [[Kind.UnconstructedThread]] — the WARNING, and the only kind that is not a place the
-  *     threading stopped: it is a place the threading may have gone somewhere it cannot be
-  *     exercised. A threaded class this program never constructs, whose ancestry leaves it, is the
-  *     shape a framework instantiates; a clause on its constructor compiles perfectly and cannot be
-  *     supplied at run time. This is the check `ENGINE-LIMITS.md` CT7 lacked.
-  *   - [[Kind.LostClause]] — a clause the phase DID attach that the emitted type does not carry.
-  *     The other six are refusals the phase records as it makes them; this one is a disagreement
-  *     between the tree and the emitted text, and it is the only kind that is invisible to every
-  *     other number in the run — the file compiles, and the run's own decision row and porter note
-  *     claim the clause. Recorded from the emitter's reading of the header it wrote
-  *     (`ENGINE-LIMITS.md` CT5), which is why this one arrives after emission rather than with the
-  *     others.
-  *
-  * ==Its gate is the BASELINE, not a constant==
-  * Deliberately no hard-coded fatality on any kind. The count is a finding and the committed
-  * baseline is what a rise fails against — the same shape as the trivia check. "Fatal when this kind
-  * is non-zero" bakes one library's census into the engine (CLAUDE.md §1) and is exactly the
-  * per-library constant this repository keeps having to remove: a NEW library's honest first run
-  * would fail on a number that is simply its starting point.
-  *
-  * ==Universal in mechanism, parameterised by the policy==
-  * §1(a) in shape — "a signature cannot be added here" is a fact about Java and Scala — and it
-  * counts nothing at all unless a port declared a holder. An empty `holders` list makes it a no-op
-  * by arithmetic: the phase records no seam, so this records nothing, exactly the way
-  * `collection-boundary` records nothing for a port with no collections phase.
+/** Counts every place [[GlobalsToImplicitsTransform]]'s `using`-threading closure stopped, and
+  * why — a declaration with no signature to thread through (a class initialiser, a static field
+  * initialiser, an unparsed override component). Eight [[Kind]]s, each a different reader
+  * instruction; see [[balticporter.tir.NotBound]] for why they aren't collapsed. Gated by baseline,
+  * not a hard-coded fatality — one library's census must not become an engine constant. No-op
+  * unless a port declared a threaded holder. DESIGN.md §8.4, CLAUDE.md §1
   */
 object ContextSeamCheck extends RemedySource:
 
   /** The check's name in `findings.tsv`. */
   val Name = "context-seam"
 
-  /** THE MENU — see [[balticporter.tir.Remedy]] and `DESIGN.md` §8.16.
-    *
-    * This check is the one where the ONE-SPELLING rule does most of the work, because nearly every
-    * act its classifications name ALREADY HAS A KEY. A remedy that restated one would be a second
-    * way to say the same thing, which is the drift §1.5 exists to kill, so those are POINTERS and
-    * not entries:
-    *
-    *   - a framework really does construct this class → `GlobalsToImplicitsTransform(selfSupplied)`,
-    *     which is `ENGINE-LIMITS.md` CT7's third answer and is already shipped;
-    *   - this static initialiser should become lazy → a `sites` entry (`lazy-init`);
-    *   - this trait's own body needs the context → `promoteToClass`;
-    *   - the residual reads should at least name the context → `boundary = "residual-global"`;
-    *   - the frozen component's parent is itself portable → port it in the same run, which is a
-    *     build act and not a per-site one.
-    *
-    * What NONE of those spells is the port saying *I have looked at this one and it is FINE* — and
-    * that is the whole of what is added here, at the two kinds where "fine" is a real answer:
-    *
-    *   - `unconstructed-thread` is a WARNING and the check says so in its own classification: "if
-    *     YOUR USERS construct it, this is correct as it stands and the clause is part of the ported
-    *     API: the engine cannot tell the two apart". A port CAN. Its subject is the CLASS, which is
-    *     why [[balticporter.tir.Remedy.Subject.OwnedType]] exists at all — the clause is on every
-    *     constructor java gave it, so a member key would have to pick one;
-    *   - `residual-global-read` is the count a port drives to zero, and some of it cannot go: a
-    *     static field's initialiser runs before anything could pass it a context. Accepting one site
-    *     is not the same statement as `boundary = "residual-global"`, which is a whole-phase setting
-    *     about how EVERY residual read is spelled.
-    *
-    * The other six kinds take no entry, and each is absent for its own reason:
-    * `captured-context` and `self-supplied` are OUTCOME rows — the first is correct by construction
-    * and the second is a `selfSupplied` entry's own result, so "accepting" either would drain a
-    * report of something that already worked; `deferred-init` is what a `sites` entry ASKED for;
-    * `frozen-component`'s two acts are spelled above and its own residue is counted as
-    * `residual-global-read`, where the accept is; **`unsuppliable-use` is not a QUESTION at all** —
-    * §5's second screen, and the one kind where it decides rather than confirms. Every other accept
-    * on every menu answers a site the engine DECLINED to decide, and a port reading such a site and
-    * saying *this is fine* is stating something the engine could not. Here the target compiler has
-    * already answered: the emitted file does not compile, so an accept would drain a row while the
-    * defect it names goes on failing the build — an accept that balances the arithmetic over a
-    * `No given` nobody will look at again. Its exits are acts with spellings (`sites`,
-    * `selfSupplied`, moving the use into a declaration the closure can reach), which is the FIRST
-    * screen refusing it too; and `lost-clause` is an ENGINE BUG in the
-    * constructor region (`DESIGN.md` §8.2, `ENGINE-LIMITS.md` CT5) that is "reachable from no
-    * manifest key" — a remedy for it would let a port silence a defect the engine caused, which
-    * `CLAUDE.md` §1's rule about engine-created obligations forbids outright.
+  /** The menu; see [[balticporter.tir.Remedy]] and `DESIGN.md` §8.16. Only `unconstructed-thread`
+    * and `residual-global-read` get accept entries — the two kinds where "fine" is a real per-site
+    * answer the engine cannot derive itself. Every other act already has a spelling elsewhere
+    * (`selfSupplied`, `sites`, `promoteToClass`, `boundary`) and is a pointer, not an entry; and
+    * `unsuppliable-use` gets none at all — the emitted file does not compile, so there is nothing
+    * to accept. `lost-clause` is an engine bug (`DESIGN.md` §8.2, `ENGINE-LIMITS.md` CT5), not a
+    * port's to silence.
     */
   def remedies: List[Remedy] = List(
     Remedy(
@@ -158,29 +46,19 @@ object ContextSeamCheck extends RemedySource:
   /** what kind of seam this is, which is what decides who fixes it (CLAUDE.md §1). */
   enum Kind(val label: String):
     case ResidualGlobalRead extends Kind("residual-global-read")
-    /** …and its MIRROR: a declaration with no signature that USES something threaded. The read half
-      * above leaves a coherent program behind; this one leaves a `No given` at every site, so the
-      * two are one lane and two instructions (`PROGRESS.md` §10.8.9). */
+    /** the mirror of ResidualGlobalRead: a signature-less declaration that USES something
+      * threaded — a `No given` at every site, unlike the coherent-but-global read. PROGRESS.md §10.8.9 */
     case UnsuppliableUse    extends Kind("unsuppliable-use")
     case DeferredInit       extends Kind("deferred-init")
     case CapturedContext    extends Kind("captured-context")
     case FrozenComponent    extends Kind("frozen-component")
-    /** the port's own answer to a class no caller of this program constructs (`ENGINE-LIMITS.md`
-      * CT7): the constructors keep java's signature and a `given` member supplies the context. */
+    /** the port's own answer to a class no caller of this program constructs: constructors keep
+      * java's signature, a `given` member supplies the context. ENGINE-LIMITS CT7 */
     case SelfSupplied       extends Kind("self-supplied")
-    /** …and the WARNING, which is the CT7 shape observed rather than declared. */
+    /** the CT7 shape observed rather than declared — a warning, not a refusal. */
     case UnconstructedThread extends Kind("unconstructed-thread")
-    /** …and the eighth, which is the only one the PHASE cannot see: a clause it put on a class's
-      * constructors that the emitted header does not carry (`ENGINE-LIMITS.md` CT5).
-      *
-      * It is a seam by the same definition as the other seven — a place the threading stopped — and
-      * it is here rather than in a check of its own because a reader asking "how much of this
-      * library is still global" must see all eight in one number. What makes it different is WHERE it
-      * is observed: the seven above are refusals the phase RECORDS as it makes them, and this one is
-      * a disagreement between the tree and the text, so it comes from the emitter's own recording of
-      * the header it wrote, after emission. A lost clause compiles perfectly wherever the class's
-      * body happens not to summon anything, moves no other count, and leaves the decision row and
-      * the porter note claiming a clause the file does not have. */
+    /** a clause the phase attached that the emitted header does not carry — an engine bug, found
+      * only from the emitter's own recording after emission. ENGINE-LIMITS CT5 */
     case LostClause         extends Kind("lost-clause")
 
   object Kind:
