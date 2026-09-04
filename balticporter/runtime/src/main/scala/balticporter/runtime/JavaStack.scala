@@ -8,7 +8,7 @@ package balticporter.runtime
   * `get(0)` is the bottom, and the iterator runs bottom-to-top. Scala's `mutable.Stack` is an
   * `ArrayDeque` whose `push` PREPENDS, so its top is element 0 and it iterates top-to-bottom. The
   * two agree on `push`/`pop`/`peek` in isolation and disagree on every LIST-shaped read of the same
-  * object — a `for`, a `get(i)`, an `indexOf`, a `toString` — which is `CLAUDE.md` §4.4's defect
+  * object — a `for`, a `get(i)`, an `indexOf`, a `toString` — which is a defect
   * class arriving through a type mapping rather than through a statement.
   *
   * ==Why not a plain `ArrayBuffer` plus five call rewrites==

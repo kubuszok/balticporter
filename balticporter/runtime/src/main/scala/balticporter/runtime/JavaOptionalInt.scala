@@ -12,7 +12,7 @@ package balticporter.runtime
   *
   * An alias is that same type with the argument already supplied. Nothing is wrapped and nothing is
   * copied: a value of this type IS an `Option[Int]` at every slot that wants one, which is what
-  * makes this a translation rather than a shim (`ENGINE-LIMITS.md` M6's bar). One file per FQN,
+  * makes this a translation rather than a shim. One file per FQN,
   * because `RuntimeArtifact.vendored` indexes the published module by FILE NAME.
   *
   * What does NOT come across is the MEMBER NAMES — `getAsInt`, `isPresent`, `orElse`, `ifPresent` —

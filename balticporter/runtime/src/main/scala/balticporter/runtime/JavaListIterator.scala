@@ -2,22 +2,22 @@ package balticporter.runtime
 
 /** `java.util.ListIterator`, as Scala — java's interface, not scala's.
   *
-  * This shim exists because a REFUSAL did not survive being re-read (`ENGINE-LIMITS.md` K23). The
+  * This shim exists because a REFUSAL did not survive being re-read. The
   * refusal said *scala's `Iterator` is forward-only and read-only, so every mapping is either a
   * different protocol or a detached copy whose `set` updates nothing* — and every word of that is a
   * statement about `scala.collection.Iterator`, not about the RECEIVER. A `java.util.List` retypes
   * to a `scala.collection.mutable.Buffer`, and a `Buffer` supports indexed READ, indexed UPDATE,
   * INSERT and REMOVE, which is `ListIterator`'s whole contract, cursor and all. "There is nothing to
-  * map them onto" is true of a MAPPING and false of a SHIM — the distinction `ENGINE-LIMITS.md` K5.7
-  * draws between a target and a parent, read one family over.
+  * map them onto" is true of a MAPPING and false of a SHIM — the distinction
+  * between a target and a parent, read one family over.
   *
   * A trait, so a ported class may IMPLEMENT `java.util.ListIterator` and be emitted onto this;
   * `extends JavaIterator[A]` because java's own `ListIterator<E> extends Iterator<E>` and a mapping
-  * MUST PRESERVE THE SOURCE LIBRARY'S OWN SUBTYPE RELATIONS (`ENGINE-LIMITS.md` K29). Left unmapped,
+  * MUST PRESERVE THE SOURCE LIBRARY'S OWN SUBTYPE RELATIONS. Left unmapped,
   * that lost relation is what `collection-closure` was already reporting.
   *
   * Java's arity throughout (`hasNext()`, `previous()`, `nextIndex()`), which is also the arity every
-  * ported override was written with — `CLAUDE.md` §4.5.
+  * ported override was written with.
   *
   * `remove()` arrives from [[JavaIterator]] with java's own default (throw), which is right for both
   * interfaces: `ListIterator.remove` is an OPTIONAL operation exactly as `Iterator.remove` is.

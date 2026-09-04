@@ -9,7 +9,7 @@ package balticporter.runtime
   * AVAILABILITY and not the GUARANTEE. `java.util.EnumMap` is documented to iterate in the natural
   * order of its keys (the ordinal order in which the constants are declared), and a `HashMap` does
   * not, a `LinkedHashMap` iterates in INSERTION order, and the difference between the two is a
-  * silent reordering of whatever the library was iterating for. That is `CLAUDE.md` §4.4's defect
+  * silent reordering of whatever the library was iterating for — a defect
   * class arriving through a type mapping, and it is catalog row `JS-C42`.
   *
   * ==How the order is kept==

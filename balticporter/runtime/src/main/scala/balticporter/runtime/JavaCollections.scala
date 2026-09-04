@@ -20,7 +20,7 @@ package balticporter.runtime
   * the `unmodifiable*` family below is offered only because the runtime can express java's answer
   * exactly — a read-only VIEW — which the STDLIB cannot. Where a copy or the identity is the only
   * available shape, neither is offered: both compile and both are wrong, and an unmapped static
-  * fails to compile under the JDK's own name, which is the honest outcome (ENGINE-LIMITS M6).
+  * fails to compile under the JDK's own name, which is the honest outcome.
   */
 object JavaCollections {
 
@@ -28,7 +28,7 @@ object JavaCollections {
     *
     * `sortInPlace` and not `sorted`: java mutates the argument and returns nothing, and every caller
     * reads the list afterwards through the same reference. A sorted COPY would compile, return the
-    * right answer to nobody, and leave the original in its original order — a CLAUDE.md §4.4 defect
+    * right answer to nobody, and leave the original in its original order — a defect
     * with no compile error and no changed count. */
   def sort[A](xs: scala.collection.mutable.Buffer[A], cmp: java.util.Comparator[? >: A]): Unit =
     inPlace(xs, xs.toList.sortWith((a, b) => cmp.compare(a, b) < 0))
@@ -97,8 +97,8 @@ object JavaCollections {
     *   - **reads go through to the array**, so a write to `arr` after the call is visible in the
     *     list;
     *   - **`set(i, v)` writes THROUGH**, so a write through the list is visible in `arr`. That is
-    *     the half a copy silently loses, which is why `ENGINE-LIMITS.md` K6.5 refused a copying
-    *     rewrite rather than shipping one: a detached alias is CLAUDE.md §4.4 exactly — valid
+    *     the half a copy silently loses, which is why a copying rewrite was refused rather
+    *     than shipped: a detached alias is exactly the defect class — valid
     *     Scala, no error, no moved count, and every aliased write gone;
     *   - **the size is FIXED.** `add`, `remove`, `clear`, `insert` and `prepend` throw
     *     `UnsupportedOperationException`, which is what `Arrays$ArrayList` does — it extends
@@ -111,7 +111,7 @@ object JavaCollections {
     * formal — see `CollectionsTransform.asListViewArg`, which is `arrayArg`'s rule at a second
     * site.
     *
-    * CLAUDE.md §4.5 is not violated here for the same reason [[FrozenBuffer]] does not violate it:
+    * is not violated here for the same reason [[FrozenBuffer]] does not violate it:
     * nothing in a port ever EXTENDS this class, so there is no second java interface to satisfy and
     * no ported member for a collection trait's inherited names to collide with. */
   def asListView[A](arr: Array[A]): scala.collection.mutable.Buffer[A] = {
@@ -191,7 +191,7 @@ object JavaCollections {
     * auto-tupling, so the two java arguments became one `(Int, Collection)` pair. At this port's
     * element type that is a compile error; at an element type of `Any` or a tuple it is a program
     * that appends a pair where java inserted a collection, with a green compile and no count moving
-    * (`CLAUDE.md` §4.4's defect class, met at an arity). */
+    * a defect class, met at an arity). */
   def insertAll[E](dst: scala.collection.mutable.Buffer[E], index: Int,
                    src: scala.collection.IterableOnce[?] | JavaIterable[?]): Boolean = {
     val before = dst.size
@@ -251,7 +251,7 @@ object JavaCollections {
     * universe and iterates only the non-zero fields, and java's own test asserts the TRIMMED array.
     * Filling `new Array[Object](xs.size)` by iteration and returning it leaves the tail `null` and
     * compiles perfectly: `ArraySeq(a, b, c, d, null, null, …)` against `[a, b, c, d]`, no error
-    * moved and no check able to see it (`ENGINE-LIMITS.md` K31). The other direction is worse only
+    * moved and no check able to see it. The other direction is worse only
     * in being loud — an `ArrayIndexOutOfBoundsException` where java grew the array. */
   def toArray(xs: scala.collection.Iterable[?]): Array[Object] = {
     val r  = new Array[Object](xs.size)
@@ -300,7 +300,7 @@ object JavaCollections {
     *      place. Java sets exactly that one element and leaves the rest of the tail alone; so does
     *      this.
     *
-    * Every one of the three is a CLAUDE.md §4.4 shape — a naive `xs.toArray` compiles, returns the
+    * Every one of the three is the same shape — a naive `xs.toArray` compiles, returns the
     * right elements, and silently breaks all three: it never fills `a`, so an aliasing caller reads
     * a stale array; it allocates on the element's class rather than `a`'s; and it is exactly `size`
     * long, so the terminator a caller looks for is never written. None of that moves a compile-error
@@ -340,13 +340,13 @@ object JavaCollections {
   // to a MUTABLE scala collection. `mutable.ArrayBuffer.empty` would compile and be wrong in the
   // one direction that matters: `Insertions.EMPTY = new Insertions(Collections.emptyMap())` is a
   // shared static, and a caller that put into it gets `UnsupportedOperationException` in java and,
-  // with a growable buffer, silently corrupts a global here. That is CLAUDE.md §4.4 exactly — valid
+  // with a growable buffer, silently corrupts a global here. That is exactly the shape — valid
   // scala meaning something else, with no compile error and no count moved.
   //
   // So the immutability is REPRODUCED rather than dropped: the three `Frozen*` classes below are
   // scala collections of the retyped shape whose every mutator throws
   // `UnsupportedOperationException`, which is java's own behaviour and not an approximation of it.
-  // This is what ENGINE-LIMITS K6 said `Collections.unmodifiableList` had no target for — correctly
+  // This is what `Collections.unmodifiableList` had no target for — correctly
   // for the STDLIB, which has no read-only `Buffer` view; the runtime can supply one, and these
   // factories are the half of that family with no VIEW semantics to get wrong.
   // -------------------------------------------------------------------------------------------
@@ -391,7 +391,7 @@ object JavaCollections {
     * changes to `xs`, so a copy would silently detach every one of them (§4.4), and the identity
     * would silently drop the immutability. Both compile. What makes the honest answer reachable is
     * [[FrozenBuffer]], which delegates every READ to the collection it wraps and throws on every
-    * write — exactly `Collections.UnmodifiableList`. ENGINE-LIMITS K6 recorded this as unmappable,
+    * write — exactly `Collections.UnmodifiableList`. recorded this as unmappable,
     * and it was, while the only candidate targets were the STDLIB's: scala has no read-only
     * `Buffer` view. The runtime can supply one, and this is it.
     *
@@ -526,7 +526,7 @@ object JavaCollections {
     *
     * A `Spliterator` is a parallel-DECOMPOSITION protocol and its only consumer is
     * `java.util.stream`, which the collections phase collapses rather than models — which is why
-    * this stayed refused when `listIterator` did not (`ENGINE-LIMITS.md` K23). That refusal's
+    * this stayed refused when `listIterator` did not. That refusal's
     * stated evidence was a NEAR MISS — `buf.asJava.spliterator()` reports NEITHER `ORDERED` nor
     * `SIZED` where the `ArrayList` java held reports both — and it DOES NOT REPRODUCE: measured on
     * scala 3.8.4, the converter's wrapper reports `ORDERED | SIZED | SUBSIZED`, the same `16464`
@@ -641,8 +641,8 @@ object JavaCollections {
   // `java.util.AbstractCollection` and never writes — and a class that DEFINES a collection
   // routinely calls them through `super`, to delegate the general case its own fast path does not
   // cover. Re-parenting such a class onto a scala collection removes the implementation java was
-  // calling, and the phase owes one back: `CLAUDE.md` §1's *an obligation the engine's own
-  // translation created*, with the measurement in `ENGINE-LIMITS.md` K29.
+  // calling, and the phase owes one back: *an obligation the engine's own
+  // translation created*.
   //
   // ==ONE receiver type across the three, and it is java's own contract rather than a bound
   // somebody computed==
@@ -743,7 +743,7 @@ object JavaCollections {
     * `Option.getOrElse` takes `=> B`, evaluated only when the option is empty. So a default with a
     * side effect (a counter, a `remove`, a lazily-built fallback that registers itself) runs in
     * java and does not run in the port, and a costly one runs in java and does not in the port:
-    * same name, same answer, different program. `CLAUDE.md` §4.4's class exactly — valid Scala
+    * same name, same answer, different program — exactly the shape — valid Scala
     * meaning something else, with a green compile and no moved count.
     *
     * Here and not on the alias, because the alias IS `Option` and a type alias cannot carry a
@@ -774,7 +774,7 @@ object JavaCollections {
   // nothing can reach reads as one that works. `SpoonTir` now interns an external member WITH its
   // `MethodType` wherever a class file can be read for one scope-free, so the trigger exists and
   // the helper is reachable. Where the formal is still unknown — a class file the parse could only
-  // partially resolve — the seam is COUNTED exactly as it was. See ENGINE-LIMITS K15.
+  // partially resolve — the seam is COUNTED exactly as it was.
   //
   // ==What these do NOT convert, and why the ELEMENT type decides it==
   // `asScala` converts one level. A `java.util.List<java.util.List<String>>` becomes a
@@ -825,7 +825,7 @@ object JavaCollections {
   // parameter. The cast is a widening of the PROBE POSITION only and is erased, so no value is
   // reinterpreted and NO `checkcast` is inserted — which is the whole point: narrowing the probe to
   // `K` instead would throw `ClassCastException` at `map.get(anInteger)` on a `Map<String, ?>`,
-  // where java answers `null` (CLAUDE.md §4.4's shape, valid scala meaning something else).
+  // where java answers `null` — valid scala meaning something else).
   //
   // The lookup is the same `hashCode`/`equals` one java performs, in java's own DIRECTION: scala's
   // `HashMap.contains(key)` and `HashSet.contains(elem)` compare `probe == stored`, which is
@@ -834,7 +834,7 @@ object JavaCollections {
   //
   // Not `put` or `getOrDefault`: java REJECTS both on a `Map<?, ?>`, because each needs a value at
   // the capture, so for the wildcard face there is nothing to translate. For the `Object`-probe face
-  // they are reachable and have no arm — a gap NAMED in `ENGINE-LIMITS.md` K24 rather than filled,
+  // they are reachable and have no arm — a gap NAMED rather than filled,
   // because java declares the VALUE of both at `V` and no site in the corpus reaches one.
   // -------------------------------------------------------------------------------------------
 
@@ -889,7 +889,7 @@ object JavaCollections {
   // they belong to the runtime for §1's own reason: the capability is one scala's library does not
   // express, not a shape the emitter could have chosen differently.
   //
-  // Both REFUSALS are java's own, spelled the way `CLAUDE.md` §1 asks — the java contract's own
+  // Both REFUSALS are java's own, spelled the way the engine asks for one — the java contract's own
   // refusal at an operation the interface itself declares unsupported, which is louder than java
   // and never quieter.
 
@@ -937,7 +937,7 @@ object JavaCollections {
     }
 
   /** a class the port DECLARES that kept java's `Map.Entry` as its parent, at the `Tuple2` slot the
-    * mapping gave every USE of that interface — `ENGINE-LIMITS.md` K5.7's other half.
+    * mapping gave every USE of that interface.
     *
     * The two halves of that entry are about different things and only one of them is a refusal.
     * `Tuple2` cannot BE a parent (it is final, takes its components in its constructor, and has no
@@ -953,7 +953,7 @@ object JavaCollections {
     *
     * ONE evaluation of the argument, which is why this is a helper and not `(e.getKey, e.getValue)`
     * spelled at the site: the term at such a slot is routinely a `new` or a call, and duplicating it
-    * is `CLAUDE.md` §4.4's compound-assignment shape one position over. */
+    * is the compound-assignment shape one position over. */
   def entryToPair[K, V](e: java.util.Map.Entry[K, V]): (K, V) = (e.getKey, e.getValue)
 
   /** the CONSUMER direction: a `Buffer` the port holds, at a class file's `java.util.List` FORMAL.
@@ -993,7 +993,7 @@ object JavaCollections {
     xs.toBuffer.asJava.stream()
 
   // -------------------------------------------------------------------------------------------
-  // THREE `mutable.Buffer` MEMBERS JAVA'S `List` HAS NO COUNTERPART FOR — `ENGINE-LIMITS.md` K28.1
+  // THREE `mutable.Buffer` MEMBERS JAVA'S `List` HAS NO COUNTERPART FOR —
   // -------------------------------------------------------------------------------------------
   //
   // A class the engine re-parented from `java.util.List` onto `scala.collection.mutable.Buffer` owes
@@ -1009,7 +1009,7 @@ object JavaCollections {
   // ever re-parent, and an emitted loop would be one `while` per owner per port with nothing
   // per-owner in it. Every call below dispatches VIRTUALLY through `self`, so on a re-parented class
   // it lands on that class's own bridge and therefore on java's own member — which is the same
-  // argument the `super` → `this` substitution rests on (`ENGINE-LIMITS.md` K29), read at a
+  // argument the `super` → `this` substitution rests on, read at a
   // synthesised member rather than at a JDK default.
 
   /** `mutable.Buffer.remove(idx, count)` — java's `List` has no such member.
@@ -1112,7 +1112,7 @@ object JavaCollections {
   // representation of a java `Map` is a `mutable.Map`. The two SHIM targets are where it does
   // not: `java.util.List <: java.util.Collection` in java, and `mutable.Buffer` is not a
   // `JavaCollection`, because the shim exists precisely so a class can EXTEND
-  // `AbstractCollection` (CLAUDE.md §4.5). So `isCollection` names the targets of `Collection`'s
+  // `AbstractCollection`. So `isCollection` names the targets of `Collection`'s
   // mapped java subtypes as well, and `isIterable` names those plus the collection shim.
   //
   // ==and why it is not `scala.collection.Iterable` either==
@@ -1131,7 +1131,7 @@ object JavaCollections {
 
     import scala.jdk.CollectionConverters.*
 
-    /** WHAT A SHIM IS DELEGATING TO — `ENGINE-LIMITS.md` K19, and the reason every predicate below
+    /** WHAT A SHIM IS DELEGATING TO, and the reason every predicate below
       * asks twice.
       *
       * A coercion at a shim target BUILDS a wrapper, because `mutable.Buffer` is not a
@@ -1139,7 +1139,7 @@ object JavaCollections {
       * reified question about that value is still a question about the ORIGINAL class:
       * `(Collection) list` then `instanceof List` is TRUE in java. Asked of the wrapper alone it
       * was false, and `asBuffer` on it threw — valid Scala, right static types, wrong answer, no
-      * count (`CLAUDE.md` §4.4 reached through a retyping).
+      * count moved: exactly the shape reached through a retyping.
       *
       * Transitive, because a chain of coercions is what produces the shape in the first place; and
       * an UNMODIFIABLE wrapper is deliberately not `Wrapping`, so this stops there — see that
@@ -1256,7 +1256,7 @@ object JavaCollections {
     }
 
     // -----------------------------------------------------------------------------------------
-    // THE EGRESS DIRECTION — `ENGINE-LIMITS.md` K21 face 1
+    // THE EGRESS DIRECTION, face 1
     // -----------------------------------------------------------------------------------------
     //
     // Every `is*`/`as*` above answers a question the PORT asks about a value it is holding. This
@@ -1563,7 +1563,7 @@ object JavaCollections {
     * operations do; everything that would MUTATE throws `UnsupportedOperationException`, which is
     * java's own behaviour and not an approximation of it.
     *
-    * CLAUDE.md §4.5 forbids modelling a JAVA INTERFACE on a scala collection trait, and this is not
+    * §4.5 forbids modelling a JAVA INTERFACE on a scala collection trait, and this is not
     * that: nothing in a port ever extends this, so there is no second java interface to satisfy and
     * no member of a ported class for the trait's hundreds of inherited names to collide with. The
     * rule's hazard is inheritance in the PORT, and this class is never in one. */

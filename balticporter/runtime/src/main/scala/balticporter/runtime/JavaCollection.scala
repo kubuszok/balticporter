@@ -12,7 +12,7 @@ package balticporter.runtime
   * `Array`, `NodeCollection` and `VertexCollection` there each `extends AbstractCollection<T>` and
   * declare their own `size()`, `isEmpty()`, `contains(o)`, `iterator()`, `add`, `remove`, `clear`,
   * `containsAll`, `addAll`, `removeAll`, `retainAll`. Making such a class extend
-  * `scala.collection.mutable.Buffer` is `CLAUDE.md` §4.5 exactly: the scala collection traits are
+  * `scala.collection.mutable.Buffer` is illegal for the reason it always is: the scala collection traits are
   * large and interlocking, they demand `apply`/`update`/`insert`/`patchInPlace` the java class never
   * had, and the members it DOES have collide — java's nilary `iterator()` against scala's
   * parameterless `iterator` is the same clash `JavaIterable` was created for.
@@ -28,14 +28,14 @@ package balticporter.runtime
   * never meet.
   *
   * An implicit bridge is not available either, and that is measured rather than assumed:
-  * `ENGINE-LIMITS` records `given Conversion` as inert against the corpus because **scala does not
+  * `given Conversion` is inert against the corpus because **scala does not
   * attempt an implicit conversion when no overload alternative matches**, and `addVertices` is
   * overloaded with `addVertices(V...)` — precisely the shape no bridge can rescue.
   *
   * ==What this costs==
   * A scala collection can no longer be passed where a java `Collection` is expected. In
   * simple-graphs that is 2 sites, both `stream().collect(Collectors.toList())` chains, which are
-  * already unbuildable for an unrelated reason (`ENGINE-LIMITS` K6). Where it does bite, the fix is
+  * already unbuildable for an unrelated reason. Where it does bite, the fix is
   * [[JavaCollection.from]] at the call site, the same seam `JavaIterable.from` already provides.
   */
 /** The ABSTRACT/CONCRETE split is `java.util.AbstractCollection`'s OWN, member for member: only
@@ -45,7 +45,7 @@ package balticporter.runtime
   * ==Why that split, exactly, and not a plausible one==
   * Both halves matter, and getting either wrong is invisible until the very last typer error is
   * gone. `contains`, `isEmpty`, `remove` and `clear` were abstract here for one session, and
-  * `RefChecks` — which dotty skips entirely while any typer error remains (CLAUDE.md §3) — then
+  * `RefChecks` — which dotty skips entirely while any typer error remains — then
   * reported `class Array needs to be abstract, since: it has 2 unimplemented members` for four of
   * simple-graphs' classes at once. Java's authors never implemented those members because
   * `AbstractCollection` already had; a shim that demands them is asking for code the source does not
@@ -198,21 +198,21 @@ object JavaCollection {
     *
     * Backed by the ORIGINAL buffer rather than a copy, so `add`/`remove` are visible to whoever
     * holds it. `.asScala` on a nested collection COPIES and turns a live view into a detached
-    * snapshot — the failure `ENGINE-LIMITS` records — and this is the same hazard from the other
+    * snapshot — the failure — and this is the same hazard from the other
     * side, so it is deliberately not a copy.
     *
     * Its `iterator()` is REMOVAL-CAPABLE, which is not a nicety: `AbstractCollection`'s
     * `removeAll`, `retainAll` and `removeIf` are all implemented as iterate-and-remove, and
     * `JavaIterator.from` hands back the throwing default — so all three threw
     * `UnsupportedOperationException` on a wrapper documented as live. That COMPILED and no count
-    * moved (CLAUDE.md §4.4); it was found by calling them, in `JavaCollectionSpec`. And it is the
+    * moved; it was found by calling them, in `JavaCollectionSpec`. And it is the
     * reason `JavaIterator` carries `remove` at all: java's own `ArrayList.iterator()` supports it,
     * so a shim standing in for one must too. The index bookkeeping below is
     * `java.util.ArrayList.Itr`'s, including `IllegalStateException` before the first `next()` and
     * on a second `remove()`. */
   def from[A](xs: scala.collection.mutable.Buffer[A]): JavaCollection[A] = new JavaCollection[A] with Wrapping {
     // …and it SAYS what it delegates to, so a later reified question is asked of the buffer java
-    // would still have been looking at (`ENGINE-LIMITS.md` K19).
+    // would still have been looking at.
     def wrapped: Any = xs
     def iterator(): JavaIterator[A] = new JavaIterator[A] {
       private var cursor = 0
@@ -316,7 +316,7 @@ object JavaCollection {
     *
     * An overload would resolve on the static type, and `mutable.Set` is a `scala.collection.Iterable`
     * — so `Collection<X> c = new HashSet<>(); c.add(x)` would silently pick the read-only wrapper and
-    * throw at runtime while compiling perfectly. That is precisely the CLAUDE.md §4.4 defect class:
+    * throw at runtime while compiling perfectly. That is precisely the defect class:
     * valid scala meaning something else, invisible to every count. A separate name cannot be reached
     * by accident, and the emitted call says which one it is.
     *

@@ -45,7 +45,7 @@ object JavaIterator {
     *   - after `remove()`, the cursor steps back so the subsequent `next()` returns the element
     *     that WOULD HAVE been returned without the removal
     *
-    * '''Behavioural delta enumeration''' (CLAUDE.md section 3, refusal enumeration):
+    * '''Behavioural delta enumeration''' (refusal enumeration):
     *   1. '''Concurrent modification''' -- java's `ConcurrentModificationException` is not
     *      reproduced. If the collection is modified by means other than `remove()` while
     *      iteration is in progress, the behaviour is undefined. '''GUARD: not guarded;

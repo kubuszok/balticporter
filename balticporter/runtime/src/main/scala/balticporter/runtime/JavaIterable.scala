@@ -22,14 +22,14 @@ trait JavaIterable[A] {
   def iterator(): JavaIterator[A]
 }
 
-/** A SHIM THAT DELEGATES, saying what it delegates TO — `ENGINE-LIMITS.md` K19.
+/** A SHIM THAT DELEGATES, saying what it delegates TO.
   *
   * A reified coercion at a shim target has to BUILD something: `mutable.Buffer` is not a
   * `JavaCollection` and no view can make it one, so the value that leaves
   * `JavaCollections.Reified.asCollection` is a different OBJECT from the one that arrived. Java's
   * cast was the IDENTITY, so every later reified question about that value was still a question
   * about the original class — `(Collection) list` then `instanceof List` is TRUE in java, and
-  * false when asked of an opaque wrapper. That is `CLAUDE.md` §4.4's shape reached through a
+  * false when asked of an opaque wrapper — exactly the shape reached through a
   * retyping: valid Scala, right static types, wrong answer, no count.
   *
   * So the delegating factories carry this and `Reified` looks through it. Two things it is not:
