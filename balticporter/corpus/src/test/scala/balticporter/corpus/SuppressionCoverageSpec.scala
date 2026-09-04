@@ -47,6 +47,11 @@ class SuppressionCoverageSpec extends PortSuite:
       |  Runnable r;
       |  AnonCtor(@Null Actor p) { r = new Runnable() { public void run() { Actor q = p; } }; }
       |}
+      |class Jdk {
+      |  String s(java.io.DataInputStream in) throws Exception { return in.readLine(); }
+      |  Object l() { return new java.util.Locale("en", "US"); }
+      |  int ok(String x) { return x.length(); }
+      |}
       |class Method {
       |  Actor a;
       |  @Null Actor give() { return null; }
@@ -95,4 +100,11 @@ class SuppressionCoverageSpec extends PortSuite:
   test("an `.orNull` only inside an anonymous class in a PROMOTED body annotates the anon member, not the class") {
     assertNotEmits(ported, "nowarn(\"msg=deprecated\")\nprivate class AnonCtor")
     assertNotEmits(ported, "nowarn(\"msg=deprecated\")\nclass AnonCtor")
+  }
+
+
+  test("a call to a class-file member annotated @Deprecated annotates the calling member") {
+    assertEmitsMatch(ported, """nowarn\("msg=deprecated"\)[^\n]*\n[^\n]*def s\(in""")
+    assertEmitsMatch(ported, """nowarn\("msg=deprecated"\)[^\n]*\n[^\n]*def l\(\)""")
+    assertNotEmits(ported, "nowarn(\"msg=deprecated\")\n  private[demo] def ok(")
   }

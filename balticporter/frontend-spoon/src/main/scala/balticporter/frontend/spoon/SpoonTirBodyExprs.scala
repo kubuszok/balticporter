@@ -483,7 +483,8 @@ private[spoon] trait SpoonTirBodyExprs:
       .orElse(Option(ref.getDeclaringType).map(_.getQualifiedName))
       .getOrElse("java.lang.Object")
     val ownerId = minter.external(ownerQ, simpleName(ownerQ))
-    externalMember(ownerId, ref.getSimpleName, ref.getSimpleName, info = externalFieldType(ref))
+    outer.externalMember(ownerId, ref.getSimpleName, ref.getSimpleName, info = externalFieldType(ref),
+      annotations = fieldDeclOf(ref).toList.flatMap(outer.deprecatedOf))
 
   /** the DECLARED type of an EXTERNAL field, as a class file states it — [[externalSignature]]'s
     * fact for a field (the seam a `Select` node makes is invisible to anything keyed on
@@ -1161,7 +1162,7 @@ private[spoon] trait SpoonTirBodyExprs:
         val (q, s) = declType(decl)
         val ownerId = minter.external(q, s)
         val nm      = if decl.isInstanceOf[CtConstructor[?]] then "<init>" else decl.getSimpleName
-        externalMember(ownerId, nm + erasedSig(decl), nm, descriptorOf(decl), externalSignature(decl))
+        outer.externalMember(ownerId, nm + erasedSig(decl), nm, descriptorOf(decl), externalSignature(decl), outer.deprecatedOf(decl))
       case None =>
         val ownerQ  = Option(ex.getDeclaringType).map(_.getQualifiedName).getOrElse("java.lang.Object")
         val ownerId = minter.external(ownerQ, simpleName(ownerQ))

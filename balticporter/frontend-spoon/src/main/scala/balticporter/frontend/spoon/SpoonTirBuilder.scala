@@ -235,8 +235,14 @@ private[spoon] final class Builder(subs: Substitutions = Substitutions.none,
     * what lets `owner#name` be reconstructed downstream (see `Minter.external`). */
   private[spoon] def externalMember(owner: SymId, sig: String, name: String,
                              descriptor: Option[Descriptor] = None,
-                             info: TypeRepr = NoType): SymId =
-    minter.external(memberKey(owner, sig), name, owner, descriptor, info)
+                             info: TypeRepr = NoType, annotations: List[Annot] = Nil): SymId =
+    minter.external(memberKey(owner, sig), name, owner, descriptor, info, annotations)
+
+  /** `@Deprecated` on a class-file member, interned so `DeprecatedUseScan` sees it (CLAUDE.md §4.4). */
+  private[spoon] def deprecatedOf(decl: CtElement): List[Annot] =
+    if decl.hasAnnotation(classOf[java.lang.Deprecated])
+    then List(Annot(TypeRef(NoPrefix, minter.external("java.lang.Deprecated", "Deprecated")), Nil, Origin.synthetic))
+    else Nil
   private[spoon] def minterKeyOf(id: SymId): String = "@" + id.raw // members hang off their owner's id
   private[spoon] def erasedSig(m: CtExecutable[?]): String =
     val ps = m.getParameters.asScala.toList

@@ -22,10 +22,10 @@ final class SuppressionPhase extends Phase:
   override def run(program: Program): Program =
     given Program = program
 
-    // Scan 1: members whose bodies call `.orNull` (deprecated); OrNullScan owns the counting
+    // Scan 1: members whose bodies call `.orNull` (deprecated); DeprecatedUseScan owns the counting
     val deprecatedMembers = collection.mutable.Set[SymId]()
 
-    def hasOrNull(body: Term): Boolean = OrNullScan.count(body) > 0
+    def hasOrNull(body: Term): Boolean = DeprecatedUseScan.count(body) > 0
 
     // Scan 2: members whose bodies contain a match on an enum type where all constants are
     // covered and a `case _ =>` exists — scalac's E030 fires where java's own switch has no

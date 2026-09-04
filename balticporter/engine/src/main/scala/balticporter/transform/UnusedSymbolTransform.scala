@@ -16,6 +16,7 @@ final class UnusedSymbolTransform extends Phase:
     "java-collections->scala",
     "type-redirect",
     "globals->implicits",
+    "method-body-substitution", // a reference inside a body a substitution REPLACED is not one
   )
   override def runsBefore: Set[String] = Set("package-rename", SuppressionPhase.Name)
 
@@ -34,7 +35,8 @@ final class UnusedSymbolTransform extends Phase:
       def name = "unused-symbol/ref-collect"
       override def transformTerm(t: Term)(using Program): Term =
         t match
-          case Tree.Assign(lhs, _, _, _, _) =>
+          // a compound assignment (`x += 1`) reads `x`: scalac counts it as read, so must this
+          case Tree.Assign(lhs, _, _, _, compound) if compound.isEmpty =>
             lhs match
               case Tree.Ident(s, _, _)     => assignCounts(s) += 1
               case Tree.Select(_, s, _, _) => assignCounts(s) += 1
@@ -48,6 +50,7 @@ final class UnusedSymbolTransform extends Phase:
 
     program.units.foreach(u => StandardTraversal.mapClassDef(refCollector, u))
 
+    def opName(s: SymId): String         = program.symbolOf(s).map(_.name).getOrElse("")
     def isRead(s: SymId): Boolean        = allCounts(s) > assignCounts(s)
     def isWriteOnly(s: SymId): Boolean   = allCounts(s) > 0 && allCounts(s) == assignCounts(s)
     def isUnreferenced(s: SymId): Boolean = allCounts(s) == 0
@@ -90,7 +93,7 @@ final class UnusedSymbolTransform extends Phase:
         else if s.name == "serialVersionUID" then
           toSuppress(v.symbol) = "msg=unused"
         else if isUnreferenced(v.symbol) then
-          if UnusedSymbolTransform.isSideEffectFree(v.rhs) then toDelete += v.symbol
+          if UnusedSymbolTransform.isSideEffectFree(v.rhs, opName) then toDelete += v.symbol
           else toSuppress(v.symbol) = "msg=unused"
         else if isWriteOnly(v.symbol) && s.flags.isMutable then
           toSuppress(v.symbol) = "msg=not read"
@@ -145,7 +148,7 @@ final class UnusedSymbolTransform extends Phase:
               p.symbolOf(s.owner).foreach { os =>
                 if os.descriptor.isDefined || os.name == "<init>" then
                   if isUnreferenced(v.symbol) then
-                    if UnusedSymbolTransform.isSideEffectFree(v.rhs) then toDelete += v.symbol
+                    if UnusedSymbolTransform.isSideEffectFree(v.rhs, opName) then toDelete += v.symbol
                     else toDiscard += v.symbol
                   else if isWriteOnly(v.symbol) && s.flags.isMutable then
                     toSuppress(v.symbol) = "msg=not read"
@@ -210,15 +213,16 @@ final class UnusedSymbolTransform extends Phase:
     val rewritePhase = new Phase:
       def name: String = "unused-symbol/rewrite"
       override def transformClassDef(t: Tree.ClassDef)(using Program): Tree.ClassDef =
+        // a DISCARD keeps the list's size (one binding becomes one statement): compare the lists
         val newBody = rewriteStats(t.body)
-        if newBody.size == t.body.size then t else t.copy(body = newBody)
+        if newBody == t.body then t else t.copy(body = newBody)
       override def transformBlock(t: Tree.Block)(using Program): Term =
         val newStats = rewriteStats(t.stats)
-        if newStats.size == t.stats.size then t else t.copy(stats = newStats)
+        if newStats == t.stats then t else t.copy(stats = newStats)
       override def transformTerm(t: Term)(using Program): Term = t match
         case f: Tree.For =>
           val newInit = rewriteStats(f.init)
-          if newInit.size == f.init.size then f else f.copy(init = newInit)
+          if newInit == f.init then f else f.copy(init = newInit)
         case other => other
 
     val units = program.units.map(u => StandardTraversal.mapClassDef(rewritePhase, u))
@@ -278,16 +282,23 @@ object UnusedSymbolTransform:
     else
       s"unused local ${if s.flags.isMutable then "var" else "val"}"
 
-  def isSideEffectFree(rhs: Option[Term]): Boolean = rhs match
+  /** @param opName the operator symbol's name; the default knows none, so every operator counts as effectful. */
+  def isSideEffectFree(rhs: Option[Term], opName: SymId => String = _ => ""): Boolean = rhs match
     case None    => true
-    case Some(t) => isSideEffectFreeTerm(t)
+    case Some(t) => isSideEffectFreeTerm(t, opName)
 
-  def isSideEffectFreeTerm(t: Term): Boolean = t match
+  def isSideEffectFreeTerm(t: Term, opName: SymId => String = _ => ""): Boolean = t match
     case _: Tree.Literal               => true
     case _: Tree.This                  => true
     case _: Tree.Ident                 => true
     case Tree.Select(_: Tree.This, _, _, _) => true
-    case Tree.Select(q, _, _, _)       => isSideEffectFreeTerm(q)
-    case Tree.Typed(e, _, _, _)        => isSideEffectFreeTerm(e)
-    case Tree.Block(Nil, e, _, _, _)   => isSideEffectFreeTerm(e)
+    case Tree.Select(q, _, _, _)       => isSideEffectFreeTerm(q, opName)
+    case Tree.Typed(e, _, _, _)        => isSideEffectFreeTerm(e, opName)
+    case Tree.Block(Nil, e, _, _, _)   => isSideEffectFreeTerm(e, opName)
+    // an operator that cannot throw (no `/`, `%`, no call), over free operands
+    case Tree.Apply(Tree.Select(l, op, _, _), args, _, _, _)
+        if args.sizeIs <= 1 && pureOperators(opName(op)) => (l :: args).forall(isSideEffectFreeTerm(_, opName))
     case _ => false
+
+  private val pureOperators = Set("+", "-", "*", "<<", ">>", ">>>", "&", "|", "^", "<", ">", "<=", ">=",
+    "==", "!=", "&&", "||", "unary_-", "unary_+", "unary_!", "unary_~")
