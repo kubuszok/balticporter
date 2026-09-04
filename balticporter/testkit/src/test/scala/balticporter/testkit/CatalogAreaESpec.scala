@@ -4,20 +4,7 @@ import balticporter.catalog.{Attaches, Differences, JS, Status}
 import balticporter.tir.{CastConversionCheck, Phase, Program, Term, Tree, TypeRepr}
 
 /** THE `JS-E` EDGE-CASE SUITE — one test per expression row the engine wires, at the shape the row
-  * is about.
-  *
-  * This suite is the half of the guarantee the obligation wrapper does NOT provide, and it is why
-  * `DESIGN.md` §2.8 states the wrapper's claim at the strength it actually holds. The wrapper
-  * detects an ABSENT consult; it cannot detect a WRONG one, because an arm that consults a row and
-  * hands it a predicate which never returns `Some` discharges the obligation and emits the same
-  * wrong code. So each test below asserts BOTH — that the branch was live (`assertConsults`) and
-  * that the emitted Scala means what java meant. Neither on its own is worth much: the log without
-  * the text says the question was asked and not that the answer was right; the text without the log
-  * passes for a lowering that never asked.
-  *
-  * A row that is `NoObligation` gets no test here and owes none — there is nothing to discharge at
-  * a site, and the last test asserts exactly that partition rather than leaving it to a reader.
-  */
+  * is about. */
 class CatalogAreaESpec extends PortSuite:
 
   // -- JS-E01: `==` on references is IDENTITY in java; scala's `==` calls `equals` ----------------
@@ -86,12 +73,6 @@ class CatalogAreaESpec extends PortSuite:
   }
 
   // -- JS-E04: the SAME difference in EXPRESSION position -----------------------------------------
-  //
-  // The row this whole mechanism was designed around: two arms lower a `CtOperatorAssignment`, the
-  // statement one narrowed and the expression one did not, twelve lines apart, for the whole life of
-  // the file. The predicate is ONE function (`SpoonTir.compoundNarrow`) and both dispatches consult
-  // it now — which is what these tests assert in BOTH directions, because a predicate consulted and
-  // never firing discharges the obligation and emits the same wrong code.
 
   test("JS-E04 — `(b += 3)` used as a VALUE narrows back, exactly as the statement form does") {
     assertEquals(Differences.byId(JS.E(4)).status, Status.Handled)
@@ -267,9 +248,7 @@ class CatalogAreaESpec extends PortSuite:
     // `ENGINE-LIMITS.md` K17 face 2, at the shape that produced it. JLS 15.25.2 gives a conditional
     // whose operands are `Long` and `Double` binary numeric promotion: both are unboxed, promoted to
     // `double`, and the result re-boxed — so the expression's type really is `Double` and the `Long`
-    // branch really does become one. Scala's `if` types as the lub (`java.lang.Number`) and the
-    // branch value stays a `Long`, which is why writing java's type as a CAST at the enclosing slot
-    // throws: a cast is not a conversion.
+    // branch really does become one. Scala's `if` types as the lub (`java.lang.
     val p = port(
       """public class E {
         |  Number f(String s) { return s.matches("d+") ? Long.valueOf(s) : Double.valueOf(s); }
@@ -298,12 +277,7 @@ class CatalogAreaESpec extends PortSuite:
     // `if (b) i else d` a `Double`; SCALA 3 DROPPED IT, so the two branches type as `Int | Double`,
     // the `Int` branch BOXES, and the expression java computed as a `double` is a
     // `java.lang.Integer` at run time. PROBED on 3.8.4 before this was written: `("" + x)` prints
-    // `3` where java prints `3.0`, and the `asInstanceOf[java.lang.Double]` an enclosing slot then
-    // writes throws — which is `ENGINE-LIMITS.md` K17's own defect, one cell along.
-    //
-    // The conversion is REDUNDANT wherever an expected type reaches the branch (a `double` return
-    // harmonises the `Int` on its own) and it is never WRONG: `asInstanceOf` between two statically
-    // primitive types is a CONVERSION in scala, in both directions (JS-E06).
+    // `3` where java prints `3.0`, and the `asInstanceOf[java.lang.
     val p = port("public class E { double f(boolean b, int i, double d) { return b ? i : d; } }")
     assertConsults(p, JS.E(5), fired = true)
     assertEmits(p, "i.asInstanceOf[scala.Double]")
@@ -323,17 +297,7 @@ class CatalogAreaESpec extends PortSuite:
     // is the type Spoon records BEFORE the source's own casts, which `expr` applies on top — so a
     // `(float) Math.asin(…)` operand of a `float` conditional reads as a `double`, earns a
     // narrowing, and gets one more `asInstanceOf[scala.Float]` stacked on a term that is already a
-    // `Float`. It says nothing, it moves a member digest, and neither a compile nor any count can
-    // see it.
-    //
-    // ONE cast now, not two. This assertion used to demand two — "the source's own and the return
-    // coercion's" — and the second was `coerce` asking `e.getType` the same stale question one
-    // level out: at a `float` return slot, an operand java already converted to `float` is owed
-    // nothing. `ENGINE-LIMITS.md` K17 named that redundancy at `JsonValue.asByte` and said the fix
-    // "belongs at `coerce` reading the TIR type it is handed, which is its own change and its own
-    // measurement"; K17 face 3 is that change, and this is the assertion it moves. Note WHY the
-    // old form passed: it asserted a PRESENCE that the defect supplied, so it would have failed the
-    // correct emission — the same trap face 2's `assertNotEmits` fell into, one direction over.
+    // `Float`.
     val p = port(
       """public class E {
         |  float f(boolean b, float g) { return b ? (float) Math.asin(g) : g * 0.5f; }
@@ -348,10 +312,6 @@ class CatalogAreaESpec extends PortSuite:
     // could not see the order. Spoon lists the casts OUTERMOST FIRST — `expr` folds them with
     // `foldRight`, which makes the head the outer `Tree.Typed`, and the emitted text for
     // `(Integer)(Object) o` is `o.asInstanceOf[Object].asInstanceOf[Integer]`, java's own order.
-    // A reader taking `lastOption` therefore gets the INNERMOST cast: here `(double)`, which reads
-    // as a `double` operand of a `float` conditional and earns a narrowing the source already
-    // wrote. `SpoonTir.castType` is the one place the question is asked (`CLAUDE.md` §4.6's
-    // "one idiom, six sites").
     val p = port(
       """public class E {
         |  float f(boolean b, double d, float g) { return b ? (float)(double) d : g; }
@@ -370,23 +330,13 @@ class CatalogAreaESpec extends PortSuite:
   }
 
   // -- JS-E06: a cast expression's TYPE is the cast's, and the enclosing context converts THAT ----
-  //
-  // The row attaches at `Rendered("Typed")` — a cast IS a node in the emitter's rendering dispatch,
-  // which the row denied for as long as it was `Unmechanised`. What the consult asks is the ONE
-  // checkable cell (a primitive target over a wrapper of a DIFFERENT primitive), so most of these
-  // fixtures consult it without firing: the frontend's answer has already put the conversion where
-  // java had it, and the cell that remains needs a RETYPING to reach — which is the last test here.
-  // The emitted text is still the bulk of the evidence, which is why every one of these asserts a
-  // PRESENCE and not only an absence (`ENGINE-LIMITS.md` K17's own lesson about the E05 spec that
-  // enshrined the wrong claim).
 
   test("JS-E06 — a cast expression at a REFERENCE slot boxes at the CAST's type, not the operand's") {
     // `ENGINE-LIMITS.md` K17 face 3, at the shape that produced it. JLS 5.1.7 boxes the expression's
     // OWN type, and a cast expression's type is the cast's — so `(long) Math.ceil(d)` returned from
     // a method declared `Object` is a `java.lang.Long`. Read as the operand's pre-cast `double` the
     // port wrote `.asInstanceOf[scala.Long].asInstanceOf[java.lang.Double]`, which is an ASSERTION
-    // that a `Long` is a `Double`: `class java.lang.Long cannot be cast to class java.lang.Double`,
-    // at run time, with a green compile and every check count flat.
+    // that a `Long` is a `Double`: `class java.lang.Long cannot be cast to class java.lang.
     val p = port(
       """public class E {
         |  public Object f(double d) { return (long) Math.ceil(d); }
@@ -420,18 +370,6 @@ class CatalogAreaESpec extends PortSuite:
   test("JS-E06 — the OTHER direction is already faithful and must stay a bare `asInstanceOf`") {
     // The half this row was PREDICTED to need and does not, kept as a test because "we checked and
     // the answer was do nothing" is otherwise indistinguishable from nobody having looked.
-    //
-    // PROBED against javac and scalac 3.8.4, the same instrument K17 faces 1 and 2 were settled
-    // with. Java's `(prim) objectExpr` is NOT a conversion and performs NO `Number` dispatch: JLS
-    // 5.5 gives it a narrowing reference conversion to the EXACT wrapper followed by an unbox, so
-    // `(double) o` on an `Object` holding a `Long` throws `ClassCastException` — and so does it on
-    // a `Number`-typed operand, which is the shape that most invites the mistake. Scala's
-    // `asInstanceOf[scala.Double]` on the same operand compiles to `unboxToDouble`, which throws in
-    // exactly the same cells: all 45 of (9 runtime classes x 5 primitives) agree between the two
-    // languages, `Character` and `Boolean` included.
-    //
-    // So a checked unbox-and-convert helper here would CONVERT where java THROWS — it would turn a
-    // faithful port into an unfaithful one, and it would do it while making tests pass.
     val p = port(
       """public class E {
         |  double f(Object o) { return (double) o; }
@@ -455,12 +393,6 @@ class CatalogAreaESpec extends PortSuite:
     // `7.0`. `Long` is statically known here, which is exactly what makes it decidable — the
     // `Object` operand above is the same expression with the knowledge removed, and java raises
     // there for want of that knowledge rather than converting.
-    //
-    // This is the row's own sentence at the CAST rather than at the slot, and it was broken in both
-    // directions before it was written: the emission was `v.asInstanceOf[scala.Double]`, a
-    // `unboxToDouble` that demands a `java.lang.Double` and throws on a `Long`. The older form put a
-    // `.doubleValue()` AFTER that checkcast, where nothing can reach it. No corpus site exercises
-    // the shape, so no count and no compile could ever have said so.
     val p = port("public class E { double f(Long v) { return (double) v; } }")
     assertEmits(p, "v.doubleValue()")
     assertNotEmits(p, "asInstanceOf[scala.Double]")
@@ -480,15 +412,7 @@ class CatalogAreaESpec extends PortSuite:
   test("JS-E06 — the RESIDUE is a value a later PHASE retyped, and the emitter COUNTS it") {
     // The cell this row's `Partial` names, and the reason it has never been measured: the frontend
     // decides a cast from the type the operand has IN THE JAVA (`SpoonTir.castOf`), so a wrapper at
-    // a primitive target is already `v.doubleValue()` before the emitter sees it. What no frontend
-    // reading can answer for is a RETYPING that lands after it — a phase moves an operand's static
-    // type and moves no cast, so an assertion that was right when it was built is java's CONVERSION
-    // by the time it is rendered, with a green compile and no count able to see it.
-    //
-    // No corpus port has the shape — this lane reads 0 on all fifteen — which is exactly why the
-    // FIXTURE is the evidence. The phase below is the smallest thing that produces it: it retypes
-    // one `Object`-typed operand to `java.lang.Long` and touches nothing else, which is what a
-    // retyping phase does to a slot.
+    // a primitive target is already `v.doubleValue()` before the emitter sees it.
     val retype = new Phase:
       def name: String = "spec/retype-operand"
       override def transformIdent(i: Tree.Ident)(using p: Program): Term =
@@ -564,10 +488,6 @@ class CatalogAreaESpec extends PortSuite:
     // one holds the promotion perfectly well — so the flag survived to the next declaration the
     // traversal reached and that one took the citation: here the class's own `<init>`, and with the
     // field last in a body, a member of the NEXT class.
-    //
-    // Nothing else can see this. The emitted text is identical, every check count is identical, and
-    // `catalog(consulted)` counts the row either way; what moves is only WHICH declaration an agent
-    // is sent to, and it is sent to one with nothing in it (§4.575).
     val a =
       """package p;
         |import org.junit.Assert;

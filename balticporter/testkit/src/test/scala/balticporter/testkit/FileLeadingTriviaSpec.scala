@@ -4,14 +4,7 @@ import balticporter.core.CommentScanner
 
 import scala.jdk.CollectionConverters.*
 
-/** The FILE HEADER, harvested by POSITION — `ENGINE-LIMITS.md` V3, closed.
-  *
-  * Two consecutive block comments above `package` is the shape that lost one of them, and the loss
-  * is a licence loss wherever the second block is the notice (a generated parser puts its
-  * generator banner first). Nothing else in the pipeline can see it: the emitted file compiles, no
-  * count moves, no test breaks — so the spec IS the gate, and it asserts the parser's own answer
-  * too, because that answer is what the design turns on.
-  */
+/** The FILE HEADER, harvested by POSITION — `ENGINE-LIMITS.md` V3, closed. */
 class FileLeadingTriviaSpec extends munit.FunSuite:
 
   private val twoBlocks =

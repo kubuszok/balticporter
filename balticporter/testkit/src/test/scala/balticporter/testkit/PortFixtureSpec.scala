@@ -3,12 +3,7 @@ package balticporter.testkit
 import balticporter.core.RuntimeArtifact
 import balticporter.transform.CollectionsTransform
 
-/** The testkit's own suite — and the worked example a consumer copies.
-  *
-  * Every assertion below was, until this module had sources, four lines of preamble repeated at
-  * the top of each engine spec: parse, run the pipeline, build an emitter with the right external
-  * table, look a symbol up by fully-qualified name.
-  */
+/** The testkit's own suite — and the worked example a consumer copies. */
 class PortFixtureSpec extends PortSuite:
 
   private val java =
@@ -57,9 +52,7 @@ class PortFixtureSpec extends PortSuite:
     // — the log for a caller that does not want one. That is backwards: an undischarged obligation
     // is a LOWERING ARM that returned without consulting a difference the catalog attaches to it,
     // so a FRONTEND-ONLY spec is the closest witness there is, and it was the one path where a
-    // lowering could stop asking with every spec still green (`DESIGN.md` §2.8 stages enforcement
-    // FATAL in the testkit, precisely because a port run has diagnostics to protect and a spec has
-    // none).
+    // lowering could stop asking with every spec still green (`DESIGN.md` §2.
     val (_, log) = PortFixture.parseWith("package demo; public class P { void f(byte b) { b += 3; } }")
     assert(log.fatal, "the frontend-only fixture must enforce what the porting ones enforce")
     // JS-E03 and JS-E17 are both discharged; nothing is left.

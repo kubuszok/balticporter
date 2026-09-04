@@ -3,25 +3,7 @@ package balticporter.testkit
 import balticporter.catalog.{Attaches, Differences, JS, Status}
 
 /** THE `JS-S` EDGE-CASE SUITE — one test per statement row the engine wires, at the shape the row is
-  * about.
-  *
-  * The half of the guarantee the obligation wrapper does NOT give. The wrapper detects an ABSENT
-  * consult; it cannot detect a WRONG one, because an arm that consults a row and hands it a
-  * predicate which never returns `Some` discharges the obligation and emits the same wrong code. So
-  * each test asserts BOTH — that the branch was live (`assertConsults`) and that the emitted Scala
-  * means what java meant.
-  *
-  * AREA S IS THE FIRST AREA WITH TWO SURFACES, which is what this suite is really exercising.
-  * `JS-E`'s rows all discharge in the frontend; most of these do not — a `switch` with no `default`
-  * is decided while LOWERING and a `break` in the middle of a case while RENDERING, and the frontend
-  * has already done its job correctly by the time the second one arises. `Rendering.of` at
-  * `TirEmitter.stat`/`term` is that surface, and every `Attaches.Rendered` row below is a row that
-  * carried `Unmechanised` — a COUNTED admission that nothing was measuring it — until it existed.
-  *
-  * A row that is `NoObligation` gets no test and owes none; a row the registry calls `Absent` gets
-  * the OPPOSITE assertion, because rule (ii) makes consulting one a finding. The last two tests
-  * assert those partitions rather than leaving them to a reader.
-  */
+  * about. */
 class CatalogAreaSSpec extends PortSuite:
 
   // -- JS-S01: an unlabelled jump binds LEXICALLY to the innermost enclosing loop ------------------
@@ -290,9 +272,6 @@ class CatalogAreaSSpec extends PortSuite:
     // `T`, so the adapted result still mentions a type variable and the site is REFUSED, with
     // `OmissionCheck.unnameableLambdaReturn` counting it. A guessed `T`, or an erased `Object`, is
     // §4.6's fabricated fact — it compiles.
-    //
-    // And the refusal is NOT loud, which is why the count exists: what is left is a bare `return`
-    // under a function literal, and that is scala's NON-LOCAL RETURN from the enclosing method.
     val p = port("public class R3 { @SuppressWarnings(\"rawtypes\") java.util.function.Supplier s = () -> { return \"x\"; }; }")
     assertConsults(p, JS.S(21), fired = true)
     assertNotEmits(p, "body$")
@@ -360,12 +339,7 @@ class CatalogAreaSSpec extends PortSuite:
     assertEquals(byKind.values.map(_.size).sum, Differences.statements.size)
     // THE CHUNK'S OWN BAR. Area S opened with all 25 rows on `Unmechanised` because the emitter had
     // no obligation dispatch; the audit point for this wave is "were the emitter-side rows really
-    // instrumented, or marked unmechanised to keep the lane green". This is that question, asserted
-    // in the exact form that can fail: the ONLY rows left are the two whose construct the frontend
-    // NONE is left: the set was 25 when area S opened, TWO after chunk 11 (the two constructs the
-    // frontend refused at their kind), one after `JS-S09` gained an arm and zero after `JS-S10`'s
-    // TYPE-pattern half did. A row leaves this set exactly one way — by gaining a discharge site
-    // that RETURNS.
+    // instrumented, or marked unmechanised to keep the lane green".
     assertEquals(byKind.getOrElse("unmechanised", Nil).map(_.id).toSet, Set.empty,
       "a JS-S row still says nothing is measuring it, and all three dispatch surfaces now exist")
     assert(byKind.getOrElse("rendered", Nil).nonEmpty, "no JS-S row is wired to the RENDERING dispatch")

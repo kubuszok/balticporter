@@ -4,21 +4,7 @@ import balticporter.core.RuntimeMode
 import balticporter.tir.*
 import balticporter.transform.PackageRenameTransform
 
-/** THE TESTKIT'S STRUCTURAL HALF — a spec over the ASSERTIONS, not over a transform.
-  *
-  * `PortSuite` offered four assertions and all four read EMITTED TEXT. That is the assertion a spec
-  * reaches for when it has nothing better, and it is how a rule comes to pass the corpus without
-  * being right (`CLAUDE.md` §3): a substring is present for many reasons, and three of the facts a
-  * port is judged on are not in its text at all —
-  *
-  *   - which non-mechanical DECISION the engine recorded (`decisions.tsv`, §4.575);
-  *   - which FINDING a check produced (`findings.tsv`, `DESIGN.md` §6.3);
-  *   - what the engine REFUSED to render, which under the shipping default is a comment and `()`
-  *     and under `preview` is a `compiletime.error` plus a recorded decision (§7.4).
-  *
-  * Each test below exercises one assertion in BOTH directions — it fires on the fact and stays
-  * silent without it — because an assertion that cannot fail is the same defect one layer down.
-  */
+/** THE TESTKIT'S STRUCTURAL HALF — a spec over the ASSERTIONS, not over a transform. */
 class StructuralAssertionsSpec extends PortSuite:
 
   // -- assertDecides / assertNotDecides -----------------------------------------------------------
@@ -143,11 +129,6 @@ class StructuralAssertionsSpec extends PortSuite:
 
 
   // -- assertConsults / assertNotConsults / assertCites -------------------------------------------
-  //
-  // The FOURTH fact a port is judged on, and the one nothing could reach until the obligation log
-  // existed: whether the engine CONSIDERED a Java-vs-Scala difference at this construct. Text
-  // cannot say it — a lowering that happens to produce the right output without ever asking the
-  // question emits exactly the same characters, and that is the state an arm regresses into.
 
   private val identity = "public class I { boolean f(Object a, Object b) { return a == b; } }"
 

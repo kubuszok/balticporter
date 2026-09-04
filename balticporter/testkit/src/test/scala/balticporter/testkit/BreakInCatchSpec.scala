@@ -1,28 +1,6 @@
 package balticporter.testkit
 
-/** A translated jump that leaves a translated `try` — the catch that swallows it.
-  *
-  * CLAUDE.md §4.4, and the newest member of that family. Java's `break`/`continue`/`return` is a
-  * JUMP: no `catch` can intercept one, at any breadth. Scala's translation of it is an EXCEPTION —
-  * `scala.util.boundary.Break[T] extends RuntimeException(null, null, false, false)` (verified in
-  * the 3.8.x library source, `scala/util/boundary.scala`; it is deliberately NOT a
-  * `ControlThrowable`, so `NonFatal` returns true for it too). So the moment the emitter puts a
-  * `boundary.break` inside a `try` whose boundary is OUTSIDE that try, every arm broad enough to
-  * match a `RuntimeException` catches the jump: the loop runs on, and the handler's body executes
-  * for a condition java never had.
-  *
-  * It is not incidental, either. dotty's `DropBreaks` phase rewrites a same-method break into a
-  * labelled jump — which would be immune — but `DropBreaks.prepareForTry` shadows every enclosing
-  * label ("Need to suppress labeled returns if there is an intervening try"), so a break under a
-  * `try` is ALWAYS the exception form. The swallow is deterministic.
-  *
-  * Measured live in the reference ecosystem: ssg `ed8ce078`, "fix BasicDateParser cache
-  * break-in-broad-catch swallow — date filter now parses date strings". The whole `date` filter
-  * silently stopped parsing, with a green compile, no moved count and no failing check.
-  *
-  * The faithful shape is a re-throw arm ahead of the java arms — `case b: boundary.Break[?] =>
-  * throw b` — which is exactly what java's own semantics say: this catch never sees this jump.
-  */
+/** A translated jump that leaves a translated `try` — the catch that swallows it. */
 class BreakInCatchSpec extends PortSuite:
 
   private def emit(java: String): String = port(java).out
@@ -215,11 +193,6 @@ class BreakInCatchSpec extends PortSuite:
   }
 
   // ---- the behaviour, executed by this JVM ----
-  //
-  // The assertions above are on emitted TEXT, which is all a string comparison can be. These two
-  // transcribe the shapes literally and RUN them, because the claim being made is about what the
-  // JVM does with a `Break` — and §3 says assertions are the only evidence of behaviour this
-  // project can have.
 
   test("BEHAVIOUR: an unguarded catch really does swallow the jump") {
     var attempts = 0

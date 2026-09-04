@@ -1,22 +1,6 @@
 package balticporter.testkit
 
-/** A Java enum CONSTANT BODY, through the real pipeline.
-  *
-  * Java's enum constant may carry an anonymous class body, and that body is an ordinary class body:
-  * it may override methods AND declare fields. JLS 8.1.3 allows `static final` ones there because
-  * they are constant variables, which is exactly the form libraries use to keep a magic number
-  * beside the constant that needs it.
-  *
-  * The frontend harvested only `CtMethod` from that body and dropped everything else in silence. A
-  * field so lost is not visible to any count: the emitted `case object` is structurally correct, the
-  * omissions check counts what the TIR CARRIES and this never reached the TIR, and the only symptom
-  * is a `Not found` at the line that reads it — which is a compile error and therefore invisible
-  * behind any earlier one (CLAUDE.md §3). Measured on noise4j's `RoomType.DefaultRoomType`: 4 of the
-  * port's 6 errors, from two constants.
-  *
-  * A `case object`'s body IS the constant's scope in Scala, so the field needs no home of its own —
-  * which is why this is a frontend harvest and not an emitter change.
-  */
+/** A Java enum CONSTANT BODY, through the real pipeline. */
 class EnumConstantBodySpec extends PortSuite:
 
   private val castle = """

@@ -1,13 +1,6 @@
 package balticporter.testkit
 
-/** Java's labelled and mid-case jumps, through the real pipeline.
-  *
-  * CLAUDE.md §4.4: each of these translates to syntactically valid Scala that means something
-  * else, and none of them moves a compile-error count. The assertions below are on EMITTED TEXT
-  * because that is the only place the difference shows — plus a probe file the operator can put a
-  * real compiler over (see the last test), because "this shape type-checks" is a claim about
-  * scalac and a string assertion is not evidence for it.
-  */
+/** Java's labelled and mid-case jumps, through the real pipeline. */
 class LabeledJumpSpec extends PortSuite:
 
   private def emit(java: String): String = port(java).out
@@ -245,18 +238,7 @@ class LabeledJumpSpec extends PortSuite:
 
   // ---- the probe an operator can compile ----
 
-  /** Every shape above in one Scala file, for a real compiler.
-    *
-    * Written on every run, into this build's `target/` — a build product, gitignored, and NOT an
-    * artifact any baseline is computed from, so CLAUDE.md §5.1's gate does not apply. It is
-    * unconditional on purpose: the opt-in form this file first carried (a system property, as
-    * `TriviaSpec` uses) cannot be switched on at all, because `ThisBuild / Test / fork := true`
-    * and neither a `-D` nor an environment variable crosses into a forked test JVM launched by an
-    * sbt server — the same boundary CLAUDE.md §4.6 records for the forked migration. A probe an
-    * operator cannot obtain is not evidence, and "the shape scalac accepts" is exactly the claim a
-    * string assertion cannot make.
-    *
-    * {{{ scala-cli compile --scala 3.8.4 --server=false <the path printed below> }}} */
+  /** Every shape above in one Scala file, for a real compiler. */
   test("emitted probe is written for a real compiler") {
     val p = _root_.java.nio.file.Path
       .of(sys.props.getOrElse("balticporter.dumpProbe", s"${sys.props("user.dir")}/target/probe"), "LabeledJumpProbe.scala")

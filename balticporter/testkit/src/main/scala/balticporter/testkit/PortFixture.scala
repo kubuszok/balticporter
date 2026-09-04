@@ -8,32 +8,19 @@ import balticporter.tir.{CheckReport, Decision, IdiomCandidate, IdiomKind, Idiom
   MemberIndex, Phase, Pipeline, PolicyBinder, Program, RemedySource, RemedyVocabulary, ResolutionPlan,
   RewriteLog, SymId, SymbolTable, Xref}
 
-/** One Java snippet taken through the pipeline, with everything a test wants to assert on.
-  *
-  * `before` and `after` are both kept because half the useful assertions are about the XREF —
-  * "the old symbol is vacated, the new one inherited its positions" — and those need the two
-  * programs side by side. `out` is the emitted Scala.
-  */
+/** One Java snippet taken through the pipeline, with everything a test wants to assert on. */
+
 /** @param sources the java the fixture parsed, `fileName -> code`. Handed to the emitter as
   *   its `javaSource`, since an in-memory snippet's `Origin.javaPath` names a file that
   *   does not exist.
   * @param decisions everything the phases RECORDED while they ran (`Pipeline.runTraced`).
-  *   Carried rather than re-derived, since a decision is a value one run owns.
-  * @param runtimeMode which delivery the fixture's [[plan]] is derived for -- a parameter,
-  *   not a constant, since `RuntimeMode.Vendored` yields a different `RuntimePlan` and a
-  *   different `concreteMembers` set. */
+  *   Carried rather than re-derived, since a decision is a value one run owns. */
 final case class Ported(before: Program, after: Program, phases: List[Phase],
                         sources: Map[String, String] = Map.empty,
                         decisions: List[Decision] = Nil,
                         runtimeMode: RuntimeMode = RuntimeMode.Dependency,
                         catalog: CatalogLog = CatalogLog.discarding,
-                        /** what each phase MOVED, observed by the pipeline (`balticporter.tir.Rewrite`).
-                          *
-                          * Here for the reason every other log on this fixture is: the record is
-                          * taken while the pipeline holds the symbol table on BOTH sides of a phase,
-                          * so it cannot be re-derived afterwards from `before` and `after` alone
-                          * once more than one phase ran. A spec asserting that its phase accounts
-                          * for what it retyped has nowhere else to read it. */
+                        /** what each phase MOVED, observed by the pipeline (`balticporter.tir.Rewrite`). */
                         rewrites: RewriteLog = RewriteLog.discarding,
                         /** what each phase MOVED, observed by the pipeline
                           * (`balticporter.tir.Rewrite`) -- taken while the pipeline holds
@@ -70,23 +57,12 @@ final case class Ported(before: Program, after: Program, phases: List[Phase],
 
   /** the same program emitted in PREVIEW mode (`DESIGN.md` §7.4). A SECOND emitter over the
     * same tree, never a flag on the first: an emitter records its own source map and member
-    * digests as it goes, so a shared instance would double-record. The only fixture surface
-    * that can see the engine's emission-side REFUSALS: under `preview = false` an
-    * unrenderable site emits its residue string with nothing marking it, so a spec against
-    * [[out]] alone cannot tell a residue from ordinary text. The EMITTER is exposed, not
-    * only its text, so a spec can read the recorded `Decision.Kind.Unrenderable` beside the
-    * marker. */
+    * digests as it goes, so a shared instance would double-record. */
   lazy val previewEmitter: TirEmitter = emitterWith(preview = true)
 
   lazy val previewOut: String = previewEmitter.emit
 
-  /** the same program emitted in BEST-EFFORT mode (`DESIGN.md` §6.4).
-    *
-    * A third emitter, for the reason the second one is a second: each records its own source map,
-    * member digests and marker inventory. This is the fixture §6.4's standing claim needs — *at
-    * zero open markers, best-effort output minus fences and banner is byte-identical to deliverable
-    * output, by construction* — and a claim by construction still wants the one comparison that
-    * would notice if the construction ever stopped holding. */
+  /** the same program emitted in BEST-EFFORT mode (`DESIGN.md` §6.4). */
   lazy val bestEffortEmitter: TirEmitter = emitterWith(bestEffort = true)
 
   lazy val bestEffortOut: String = bestEffortEmitter.emit
@@ -96,13 +72,7 @@ final case class Ported(before: Program, after: Program, phases: List[Phase],
   def idBefore(fullName: String): Option[SymId]         = idIn(before, fullName)
   def idAfter(fullName: String): Option[SymId]          = idIn(after, fullName)
 
-/** Run Java source through phases and get the emitted Scala back.
-  *
-  * This is the four lines every engine spec opened with — parse, run, emit, look a symbol up by
-  * name — and the reason it is a MODULE rather than a copied preamble is CLAUDE.md §4.45: the
-  * consumer is an agent in another repository, writing tests for its own library's phases without
-  * this repository's context. What it must not have to reinvent is how to hold the engine.
-  */
+/** Run Java source through phases and get the emitted Scala back. */
 object PortFixture:
 
   /** parse `java`, run `phases` over it, and hand back both programs plus the emitted Scala.
@@ -127,9 +97,7 @@ object PortFixture:
     // `fatal = true` — the TESTKIT is the mode where an undischarged obligation is an ERROR.
     // `DESIGN.md` §2.8 stages enforcement deliberately: a port run counts, because a run that died
     // on an incomplete rule produces no diagnostics at all, and a spec fails, because every
-    // difference gets an edge-case suite and that suite is what the guarantee rests on. A row the
-    // registry itself calls `Open` or `Absent` is never fatal — it is the work list, and a mode
-    // that died on it would make the work list unrunnable.
+    // difference gets an edge-case suite and that suite is what the guarantee rests on.
     val catalog       = new CatalogLog(fatal = true)
     val rewrites      = new RewriteLog
     val idioms        = new IdiomLog
@@ -187,12 +155,7 @@ object PortFixture:
     val catalog = new CatalogLog(fatal = true)
     (SpoonTir.fromSource(java, catalog = catalog), catalog)
 
-/** MUnit base class for suites that port a snippet and assert on the result.
-  *
-  * Extends `munit.FunSuite` rather than offering a mixin because that is how the corpus specs are
-  * written and there is no second base to compose with. The assertions carry `munit.Location` so a
-  * failure points at the caller's line, not at this file.
-  */
+/** MUnit base class for suites that port a snippet and assert on the result. */
 abstract class PortSuite extends munit.FunSuite:
 
   def port(java: String, phases: Phase*): Ported = PortFixture.port(java, phases*)
@@ -301,12 +264,7 @@ abstract class PortSuite extends munit.FunSuite:
     s"${d.kind} ${d.subjectFqn} [${d.reason.className}=${d.reason.detail}] " +
       d.detail.toList.sorted.map((k, v) => s"$k=$v").mkString(" ")
 
-  /** a check produced a finding of `kind`, optionally whose `detail` contains `detail`.
-    *
-    * The findings are passed in rather than derived, because a check is a plain object with its own
-    * `check(program, …)` signature and no registry to look one up in — so the spec names the check
-    * it is testing, which is also what makes the assertion readable at the call site:
-    * `assertFinds(OmissionCheck.check(p.after), "dropped-anon-member")`. */
+  /** a check produced a finding of `kind`, optionally whose `detail` contains `detail`. */
   def assertFinds(findings: Seq[CheckReport.Finding], kind: String, detail: String = "")(using munit.Location): Unit =
     if !findings.exists(f => f.kind == kind && f.detail.contains(detail)) then
       fail(s"no finding of kind '$kind'${if detail.isEmpty then "" else s" whose detail contains '$detail'"}" +
@@ -327,10 +285,7 @@ abstract class PortSuite extends munit.FunSuite:
   /** a catalog row was CONSULTED while this fixture was lowered -- the structural assertion
     * for `DESIGN.md` §2.8's obligation surfaces. Asserts that the engine CONSIDERED the
     * difference at this construct, which `assertEmits` cannot: a string can be present for
-    * many reasons, including a lowering that produced the right text without asking.
-    * `fired` is separate on purpose: a consult that never applies is the normal state of
-    * most rows at most sites; `assertConsults(p, id, fired = true)` asserts the difference
-    * APPLIED here. */
+    * many reasons, including a lowering that produced the right text without asking. */
   def assertConsults(p: Ported, id: DiffId, fired: Boolean = false)(using munit.Location): Unit =
     val n = reached(p).consulted(id)
     if n == 0 then

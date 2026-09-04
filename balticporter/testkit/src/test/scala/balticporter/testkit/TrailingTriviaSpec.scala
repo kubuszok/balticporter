@@ -2,13 +2,7 @@ package balticporter.testkit
 
 import balticporter.tir.*
 
-/** `Tree.Block.trailing` — the comment java wrote at the END of a body.
-  *
-  * The frontend folds a comment-statement onto the statement that FOLLOWS it; with nothing after
-  * it the comment was CLAIMED and then discarded, which put it beyond every coarser harvest too.
-  * That single line was the largest category of comment the port lost, and none of it is visible
-  * to a compile: the emitted Scala is valid with every one of these gone.
-  */
+/** `Tree.Block.trailing` — the comment java wrote at the END of a body. */
 class TrailingTriviaSpec extends munit.FunSuite:
 
   private def occurrences(hay: String, needle: String): Int =

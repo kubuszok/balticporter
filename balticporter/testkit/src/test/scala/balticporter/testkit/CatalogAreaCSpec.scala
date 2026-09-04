@@ -4,31 +4,7 @@ import balticporter.catalog.{Attaches, Differences, JS, Status}
 import balticporter.tir.Decision
 
 /** THE `JS-C` EDGE-CASE SUITE — one test per class/member/initialisation row the engine wires, at
-  * the shape the row is about.
-  *
-  * Same contract as [[CatalogAreaESpec]] and [[CatalogAreaSSpec]]: each test asserts BOTH that the
-  * branch was live (`assertConsults`) and that the emitted Scala means what java meant, because the
-  * obligation wrapper detects an ABSENT consult and cannot detect a WRONG one.
-  *
-  * AREA C IS THE FIRST AREA WHOSE ROWS ARE ABOUT DECLARATIONS, and that is what this suite is really
-  * exercising. `JS-E`'s rows discharge at the frontend's expression dispatch and `JS-S`'s mostly at
-  * the emitter's statement dispatch; these are decided while rendering a `Tree.ClassDef`, a
-  * `Tree.DefDef` or a `Tree.ValDef` — which are Statements, so `Rendering.of` already reaches them —
-  * plus two whole-program renaming passes that CITE rather than consult, because a pass that walks
-  * the program rather than a node kind has no dispatch to be wrapped at.
-  *
-  * The proposal predicted "most JS-C rows discharge in PHASES". They do not: chunk 0's re-derivation
-  * put a `SpoonTir` or `TirEmitter` symbol against almost every one, and only `resolveFieldShadowing`
-  * (JS-C04) and `resolveMemberClashes` (JS-C46) are whole-program passes. The consequence is that
-  * area C needed no new surface at all — one hole had to be closed first, and it is stated where it
-  * was closed: `TirEmitter.emitUnit` reached `classDef` directly, so a TOP-LEVEL type never entered
-  * the rendering dispatch and every `Rendered("ClassDef")` row would have been owed only by nested
-  * ones.
-  *
-  * A row that is `NoObligation` gets no test and owes none; a row the registry calls `Open` or
-  * `Absent` gets the OPPOSITE assertion, because rule (ii) makes consulting one a finding. The last
-  * tests assert those partitions rather than leaving them to a reader.
-  */
+  * the shape the row is about. */
 class CatalogAreaCSpec extends PortSuite:
 
   /** two files in a real package — the only way to test the access levels at all, since a java
@@ -597,10 +573,7 @@ class CatalogAreaCSpec extends PortSuite:
     // shape neither of them reaches and the one a seal decided from the survivors gets wrong: java
     // permits `p.B` and `p.C`, the port ships only `p.B` (the other is excluded, refused, or
     // another module's), and every surviving subtype is in this very file. Read off the parsed
-    // extends-edges alone the seal looks EXACT and `sealed p.A` ships — and whatever supplies
-    // `p.C`, an injected shim or §4.45's consumer, then cannot extend a type java said it could.
-    // Nothing would report it: only the widening is recorded, so a wrongful seal is a decision NOT
-    // taken and no instrument has a row for one.
+    // extends-edges alone the seal looks EXACT and `sealed p.
     val p = portAll(List(
       "A.java" -> "package p;\npublic sealed class A permits A.B, C {\n  public static final class B extends A { }\n}\n",
       "D.java" -> "package p;\npublic class D { }\n"))
@@ -627,13 +600,6 @@ class CatalogAreaCSpec extends PortSuite:
   test("JS-C12 — an OPEN row is the WORK LIST and is never consulted") {
     // JS-C12 ATTACHES — a forward reference is decided where the field it reads renders — so it is
     // an `undischarged` hole on every port, which is exactly what a work list is.
-    //
-    // THREE rows have LEFT this list, and each left it a different way, which is the distinction
-    // `Unmechanised` exists to keep visible. JS-C22 and JS-C23 became `Partial` when the RISK
-    // COUNTER landed: what did not exist was a RESOLVER, and the rendered call was a surface all
-    // along. JS-C42 became `Handled` when the ordinal-order SHIMS landed: what did not exist was a
-    // TARGET, and the row is discharged by a table entry rather than by an arm — so it is `Cited`
-    // by the phase and not consulted at a site, which is why it is not asserted here.
     val p = port("public class A { int a = b; int b = 1; }")
     List(JS.C(12)).foreach { id =>
       assertNotConsults(p, id)
@@ -713,7 +679,6 @@ class CatalogAreaCSpec extends PortSuite:
     // construct. Java's reference is RAW — an inner class of a generic outer imported by simple
     // name from another file is ordinary java — so `?` per parameter is what the source wrote, and
     // it is the reference hand port's rendering of every raw generic (§3.5).
-    // NEGATIVE: drop `outerFill` and this emits `A#Inner`, at three errors on sge-visui.
     val p = port(
       """public class A<T> {
         |  class Inner { }
@@ -764,10 +729,6 @@ class CatalogAreaCSpec extends PortSuite:
     // instrumented or renamed to keep a lane green. This is that question in the exact form that can
     // fail: the ONLY rows left are the six whose surface genuinely does not exist, and each names
     // which one it is waiting for.
-    // …and it is now EMPTY. `JS-C43` was the last one and it left the same way `JS-C22`/`JS-C23`
-    // did: what was missing was never a surface. A record is rendered through the same `ClassDef`
-    // dispatch as everything else in this area; what did not exist was any way for an arm to KNOW
-    // one was there, which is one flag on the type symbol.
     assertEquals(byKind.getOrElse("unmechanised", Nil).map(_.id).toSet,
       Set.empty,
       "a JS-C row that is neither a refused construct, an absorbed one, nor a row whose surface " +

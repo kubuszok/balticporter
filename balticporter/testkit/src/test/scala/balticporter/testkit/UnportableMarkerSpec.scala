@@ -2,13 +2,7 @@ package balticporter.testkit
 
 import balticporter.tir.*
 
-/** THE MARKER (`DESIGN.md` §6.2/§6.4/§6.5), under test end to end.
-  *
-  * Every claim §6.2 makes about the marker is a claim about behaviour nothing else in the run can
-  * see. The emitted code of a port with no markers is identical to the emitted code of a port whose
-  * markers a phase quietly deleted; the error count, the check counts and every member digest agree
-  * in both cases. So each section below is one of §6.2's sentences, turned into a fixture.
-  */
+/** THE MARKER (`DESIGN.md` §6.2/§6.4/§6.5), under test end to end. */
 class UnportableMarkerSpec extends PortSuite:
 
   private val src = "package p; public class M { public int go(int a) { return a + 1; } }"

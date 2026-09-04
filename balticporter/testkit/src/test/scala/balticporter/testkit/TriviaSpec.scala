@@ -3,20 +3,7 @@ package balticporter.testkit
 import balticporter.tir.*
 
 /** The comment-preservation spec, end to end: Java source → `SpoonTir` → `Pipeline` (with a phase
-  * that really rewrites, to prove pass-through) → `TirEmitter`.
-  *
-  * Everything asserted here is a property somebody can silently break without moving a single
-  * count, which is why it is a spec and not a measurement:
-  *
-  *   - the LICENCE survives, verbatim, above the `package` clause (CLAUDE.md §4.57 — nothing in
-  *     the pipeline reports a missing notice, and the output compiles perfectly without one);
-  *   - a comment appears EXACTLY ONCE, which is the `claimed` set's whole reason for existing —
-  *     `deepComments` is a net over a subtree, so a nested statement's comment would otherwise be
-  *     emitted above the nested statement AND above its parent;
-  *   - an expression-level comment HOISTS to the statement it was written in, not to the method;
-  *   - a phase that rewrites terms keeps the wrapper (`StandardTraversal` rebuilds `Commented`);
-  *   - a block comment that Scala would read as NESTING cannot break the emitted file.
-  */
+  * that really rewrites, to prove pass-through) → `TirEmitter`. */
 class TriviaSpec extends munit.FunSuite:
 
   private val java =
@@ -224,12 +211,7 @@ class TriviaSpec extends munit.FunSuite:
     * operator can put a real compiler over it (`scala-cli compile --server=false
     * testkit/target/trivia-probe`). "Comments cannot break syntax" is a claim about a PARSER, and
     * the specs above are string assertions; this is how the claim gets checked by the only
-    * authority on it.
-    *
-    * Unconditional, not property-gated: tests run FORKED (`ThisBuild / Test / fork := true`), and
-    * neither a `-D` on the sbt command line nor an environment variable reaches a forked test JVM
-    * launched through the sbt server — measured three ways during the labelled-jump work. The
-    * write stays inside this module's own target tree, which `clean` removes. */
+    * authority on it. */
   test("emitted probe is written for a real compiler") {
     val p = _root_.java.nio.file.Path.of("target", "trivia-probe", "Probe.scala")
     _root_.java.nio.file.Files.createDirectories(p.getParent)

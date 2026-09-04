@@ -3,46 +3,10 @@ package balticporter.testkit
 import balticporter.catalog.{Attaches, Differences, JS, Status}
 import balticporter.tir.HeapPollutionCheck
 
-/** THE `JS-G` EDGE-CASE SUITE — the generics rows the engine wires, at the shape each row is about.
-  *
-  * Same contract as [[CatalogAreaESpec]], [[CatalogAreaSSpec]] and [[CatalogAreaCSpec]]: each test
-  * asserts BOTH that the branch was live (`assertConsults`) and that the emitted Scala means what
-  * java meant, because the obligation wrapper detects an ABSENT consult and cannot detect a WRONG
-  * one.
-  *
-  * WHAT MAKES AREA G DIFFERENT FROM THE THREE BEFORE IT. Its rows are not about a node kind at all;
-  * they are about a SLOT and about a TYPE. Two consequences run through the whole suite:
-  *
-  *   - the slot rows (`JS-G09`, `JS-G13`, `JS-G14`) attach at SEVEN dispatches, because java's
-  *     assignment conversion (JLS 5.2) is one conversion reached from a local's initialiser, an
-  *     assignment, a `return`, a call argument, a `new`'s argument, an array initialiser's element
-  *     and a FIELD's initialiser. `SpoonTir.slotConsults` is the one place that states them, and it
-  *     is called from the ARM rather than from `coerce` — `coerce` is not reached for a local with
-  *     no initialiser or a zero-argument call, so a consult inside it would report a hole at
-  *     exactly the nodes where the difference does not apply. The seventh is the one that needed a
-  *     third `Dispatch`: a `CtField` is neither a statement nor an expression, so for as long as
-  *     the enumeration was "the kinds we dispatch on" that slot could not be owed anywhere;
-  *   - ELEVEN rows are still `Unmechanised`, and the last test asserts exactly which. Every one of
-  *     them is decided while lowering or rendering a TYPE REFERENCE, which is neither of the
-  *     frontend's two dispatches (a `CtTypeReference` is not a statement or an expression) nor the
-  *     emitter's (a `TypeTree` is a `Tree` that is not a `Statement`) — plus `JS-G20`, which is
-  *     per-phase discipline rather than one mechanism. `JS-G41` was on that list and is not any
-  *     more: having nothing to TRANSLATE is not having nothing to DECIDE, and the decision an
-  *     emitted declaration takes about java's heap pollution is to carry it, which is a consult at
-  *     `Rendered("DefDef")` and a count in `HeapPollutionCheck`.
-  *
-  * `JS-G48` is `Cited("collections")` and has no test here: a citation needs the phase, and the
-  * phase's own reified rewrites are exercised by `balticporter.corpus.CollectionsReifiedSpec`. The
-  * partition test asserts the attachment so the two cannot drift apart silently.
-  */
+/** THE `JS-G` EDGE-CASE SUITE — the generics rows the engine wires, at the shape each row is about. */
 class CatalogAreaGSpec extends PortSuite:
 
   // -- JS-G31: a POLY EXPRESSION is typed by its TARGET, so nothing may cast it ------------------
-  //
-  // `ENGINE-LIMITS.md` K17 face 1. The defect this suite exists to keep closed is SILENT at the
-  // compile — `(() => …).asInstanceOf[Supplier[? <: Path]]` has the right static type and throws
-  // `ClassCastException` at run time — so `assertNotEmits("asInstanceOf")` is the whole assertion
-  // and no error count could ever stand in for it.
 
   test("JS-G31 — a LAMBDA at a wildcard-applied SAM slot is emitted BARE, never cast") {
     // THE MEASURED SITE, reduced: `Optional<T>.orElseGet(Supplier<? extends T>)`. The receiver's
@@ -107,15 +71,7 @@ class CatalogAreaGSpec extends PortSuite:
     // NON-poly operand where `asInstanceOf` is the right rendering. On a poly one it is not, and
     // this cast is not an unusual shape — java REQUIRES it wherever the target does not determine
     // the lambda's type: an overload to disambiguate, an `Object`/generic slot, a return of
-    // `Object`. `polyArgsUncast` is right to keep it (it is the source's own, the innermost
-    // `getTypeCasts` layers); what the emitter may not do is write it as an assertion, because the
-    // literal then elaborates to a `scala.Function0` FIRST and the cast asserts that a `Function0`
-    // is a `Callable`, which is K17 face 1's ClassCastException one syntax along.
-    //
-    // Scala SAM-converts at an ASCRIPTION — probed on 3.8.4 at a bare slot, a wildcard-applied one,
-    // a two-parameter one and a bare method name — so the ascription is the same fix face 1 took
-    // (hand the expected type to scalac where javac had it) written where the source demanded a
-    // cast rather than deleted.
+    // `Object`.
     val p = port(
       """public class A {
         |  Object f() { return (java.util.concurrent.Callable<String>) () -> "x"; }
@@ -158,9 +114,6 @@ class CatalogAreaGSpec extends PortSuite:
     // that reaches it is not rare: java's own vararg materialisation collapses N trailing arguments
     // into ONE array term, so EVERY vararg call with two or more variadic arguments declined,
     // including for the poly expression sitting in the FIXED prefix, which lines up perfectly.
-    //
-    // Per index now: the fixed prefix pairs with `argEs` position by position and the packed tail
-    // is answered INSIDE the array, element by element, against the arguments it was built from.
     val p = port(
       """public class A {
         |  static void run(Runnable r, Object... rest) {}
@@ -352,8 +305,6 @@ class CatalogAreaGSpec extends PortSuite:
   // methods are EXTERNAL, and that is the whole of it: an external member is interned with no
   // `Flags` (so `flags.isStatic` says *not static* about every JDK static) and with `NoType` for an
   // `info` whose slots cannot be named scope-free (so `methodParams` says *takes no arguments*
-  // about a method whose one parameter is a type VARIABLE). An IN-PROGRAM reference has both facts
-  // on its symbol, which is exactly why the corpus's own fixtures above never saw either.
 
   test("JS-G43 — a STATIC reference at an EXTERNAL method is a qualified NAME, not an unbound one") {
     val p = port(
@@ -599,11 +550,6 @@ class CatalogAreaGSpec extends PortSuite:
   }
 
   // -- THE FOURTH SURFACE — the rows decided while a TYPE is lowered or rendered -----------------
-  //
-  // `SpoonTir.tpe` and `TirEmitter.tpe` (`DESIGN.md` §2.8). Each of these was `Unmechanised` until
-  // the surface existed, and each is asserted BOTH ways for the reason the file's header states:
-  // the wrapper detects an ABSENT consult and cannot detect a wrong one, so a suite that only ever
-  // showed the difference firing would pass against a predicate wired to a constant.
 
   test("JS-G01 — a wildcard with a WRITTEN bound crosses into scala's grammar, at both ends") {
     // The frontend chooses the IMAGE (a `TypeBounds`) and the emitter chooses the TEXT (`? <: X`),
@@ -728,9 +674,6 @@ class CatalogAreaGSpec extends PortSuite:
     // The parent could not keep its wildcard (`extends Cfg[?]` is illegal), so it was eliminated to
     // `Cfg[Number]`; the override's own parameter was independently rendered `Box[?]` by the raw
     // fill. Two renderings of one raw type in one class, and the override implemented neither.
-    // `rawParentAlignment` applies the parent's OWN substitution to the inherited signature, so
-    // agreement is by construction — and it is a whole-program pass, so what it owes is a CITATION
-    // and not an obligation (`DESIGN.md` §2.8).
     val p = port(
       """public class A {
         |  static class Box<T> { }
@@ -745,12 +688,6 @@ class CatalogAreaGSpec extends PortSuite:
     // picked by `(name, param counts)` taking the FIRST hit up the chain, so a class declaring both
     // of an interface's overloads — ordinary java — had the SECOND one aligned onto the FIRST one's
     // formal, and an `asInstanceOf` the source never wrote inserted at every call to make it fit.
-    //
-    // The head-constructor guard cannot separate this pair, which is what says the KEY was wrong
-    // rather than the guard one case short: BOTH formals are `scala.Array`, and they differ only
-    // INSIDE the type argument. `OverrideGraph.overridden` is keyed by name and DESCRIPTOR, so the
-    // wildcarded overload aligns onto the wildcarded parent, the `!hasWildcardArg` arm declines, and
-    // the port emits what java wrote.
     val p = port(
       """public class A {
         |  static class Cell<T> { }
@@ -787,12 +724,7 @@ class CatalogAreaGSpec extends PortSuite:
     // single in-memory unit. `resolveTypeParam` searches every enclosing frame BY NAME, so a
     // nested — even `static` nested — class still resolves the outer `T`, and the shape that does
     // reach the mint needs a receiver instantiation read under `atDeclScope`, where an EXECUTABLE
-    // frame is skipped. Eight fixtures were probed across that space and every one resolved. So the
-    // FIRE is a corpus measurement (`catalog.tsv`'s `JS-G12` row) and what an edge-case suite can
-    // hold is the standing obligation itself: whatever the frontend minted, `?E` is neither a type
-    // nor a token sequence scala can lex, and one occurrence took out the statement around it
-    // (`ENGINE-LIMITS.md` G2). `TirEmitterSpec` holds the same line from the other side, on a
-    // hand-built marker, which is the only way to construct one deliberately.
+    // frame is skipped. Eight fixtures were probed across that space and every one resolved.
     val p = port(
       """public class A<T> {
         |  static class Inner { java.util.List<T> xs; }
@@ -860,11 +792,6 @@ class CatalogAreaGSpec extends PortSuite:
   }
 
   // -- JS-G41: heap pollution, which is COUNTED because there is nothing to translate -------------
-  //
-  // The row's decision at a declaration is to CARRY java's unsoundness — the port reproduces it
-  // exactly, and a phase that "fixed" it would emit a different program. So the consult is reached
-  // at every method and fires where the declaration is one javac had an opinion about; the number
-  // lives in `HeapPollutionCheck` beside it, through the same predicate.
 
   test("JS-G41 — a vararg whose component is a TYPE VARIABLE fires, and it is UNACKNOWLEDGED") {
     val p = port("public class A { @SafeVarargs final <T> void f(T... xs) { } void g(String s) { } }")
@@ -890,8 +817,7 @@ class CatalogAreaGSpec extends PortSuite:
     // `Class<?>…` and `String[]…` are all reifiable (JLS 4.7), javac warns at none of them, and
     // nothing is carried. The ARRAY is the one that needs its own clause and would otherwise be
     // reported: an array is spelled as an APPLICATION here, so the parameterised-type rule sees
-    // `scala.Array[java.lang.String]` and a non-wildcard argument. A lane counting a risk that is
-    // not there is worse than one counting none.
+    // `scala.Array[java.lang.String]` and a non-wildcard argument.
     val p = port(
       """public class A {
         |  void f(String... xs) { }
@@ -936,9 +862,7 @@ class CatalogAreaGSpec extends PortSuite:
     // THE CHUNK'S OWN BAR, in the form that can fail. Area G opened with 38 of its 40 rows on
     // `Unmechanised` — the largest such claim in the registry — chunk 12 took it to eleven, and the
     // fourth surface takes it to TWO, and `JS-G41`'s counter to ONE. The audit question is
-    // unchanged: were the rows instrumented, or renamed to keep a lane green. What is left is
-    // `JS-G20`'s per-phase discipline — a fact about every retyping phase rather than one
-    // mechanism, which `collection-retarget` measures.
+    // unchanged: were the rows instrumented, or renamed to keep a lane green.
     assertEquals(byKind.getOrElse("unmechanised", Nil).map(_.id).toSet,
       Set(JS.G(20)),
       "a JS-G row that is not JS-G20's per-phase discipline still says nothing is measuring it")

@@ -4,13 +4,7 @@ import balticporter.core.Substitutions
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.*
 
-/** THE RECOVERY BACKSTOP — the completeness half of comment preservation (`DESIGN.md` §8.8).
-  *
-  * The attachment channel places the overwhelming majority correctly and cannot be COMPLETE: a
-  * construct the emission consumes takes its comments with it. What this asserts is that the
-  * comment still reaches the file, that it says WHERE it came from, that it is not emitted twice,
-  * and that a comment documenting a member the port deliberately drops is NOT put back.
-  */
+/** THE RECOVERY BACKSTOP — the completeness half of comment preservation (`DESIGN.md` §8.8). */
 class RecoveredTriviaSpec extends munit.FunSuite:
 
   private def occurrences(hay: String, needle: String): Int =
