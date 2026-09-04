@@ -409,8 +409,36 @@ object LibgdxPolicy:
     // Inner iterator types — java's Keys/Values/Entries are live views backed by the map's
     // own table; lls has foreachKey/foreachValue/foreachEntry (inline) instead.  As TYPES these
     // are used only where java stores them in a local (`I18NBundle`) — Collect handles the call.
-    "com.badlogic.gdx.utils.ObjectMap$Keys" -> "lowlevel.util.DynamicArray",
-    "com.badlogic.gdx.utils.ObjectMap$Values" -> "lowlevel.util.DynamicArray",
+    // Nested iterator types (Keys/Values/Entries are MapIterators over one reused entry, K36):
+    // an ITERATOR's image is scala's Iterator; the producing call snapshots (Collect / entries
+    // iterator) and a stored cursor takes `.iterator` (CollectionsRetarget.cursorIfStored).
+    "com.badlogic.gdx.utils.ObjectMap$Keys" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.ObjectMap$Values" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.ObjectMap$Entries" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.IntMap$Keys" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.IntMap$Values" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.IntMap$Entries" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.LongMap$Keys" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.LongMap$Values" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.LongMap$Entries" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.IntIntMap$Keys" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.IntIntMap$Values" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.IntIntMap$Entries" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.IntFloatMap$Keys" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.IntFloatMap$Values" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.IntFloatMap$Entries" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.ObjectIntMap$Keys" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.ObjectIntMap$Values" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.ObjectIntMap$Entries" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.ObjectFloatMap$Keys" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.ObjectFloatMap$Values" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.ObjectFloatMap$Entries" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.ObjectLongMap$Keys" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.ObjectLongMap$Values" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.ObjectLongMap$Entries" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.ArrayMap$Keys" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.ArrayMap$Values" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.ArrayMap$Entries" -> "scala.collection.Iterator",
     // Inner Entry types for the map family — same Tuple2 mapping as ObjectMap.Entry
     "com.badlogic.gdx.utils.IntMap$Entry" -> "scala.Tuple2",
     "com.badlogic.gdx.utils.LongMap$Entry" -> "scala.Tuple2",
@@ -448,6 +476,25 @@ object LibgdxPolicy:
       "com.badlogic.gdx.utils.ObjectIntMap$Entry" -> List(SourceArg(0), FixedType("scala.Int")),
       "com.badlogic.gdx.utils.ObjectFloatMap$Entry" -> List(SourceArg(0), FixedType("scala.Float")),
       "com.badlogic.gdx.utils.ObjectLongMap$Entry" -> List(SourceArg(0), FixedType("scala.Long")),
+      // Nested iterator types -> Iterator[elem]: Entries carry (K, V) as a Tuple2 (K36).
+      "com.badlogic.gdx.utils.ObjectMap$Entries"     -> List(Applied("scala.Tuple2", List(SourceArg(0), SourceArg(1)))),
+      "com.badlogic.gdx.utils.ArrayMap$Entries"      -> List(Applied("scala.Tuple2", List(SourceArg(0), SourceArg(1)))),
+      "com.badlogic.gdx.utils.IntMap$Entries"        -> List(Applied("scala.Tuple2", List(FixedType("scala.Int"), SourceArg(0)))),
+      "com.badlogic.gdx.utils.IntMap$Keys"           -> List(FixedType("scala.Int")),
+      "com.badlogic.gdx.utils.LongMap$Entries"       -> List(Applied("scala.Tuple2", List(FixedType("scala.Long"), SourceArg(0)))),
+      "com.badlogic.gdx.utils.LongMap$Keys"          -> List(FixedType("scala.Long")),
+      "com.badlogic.gdx.utils.IntIntMap$Entries"     -> List(Applied("scala.Tuple2", List(FixedType("scala.Int"), FixedType("scala.Int")))),
+      "com.badlogic.gdx.utils.IntIntMap$Keys"        -> List(FixedType("scala.Int")),
+      "com.badlogic.gdx.utils.IntIntMap$Values"      -> List(FixedType("scala.Int")),
+      "com.badlogic.gdx.utils.IntFloatMap$Entries"   -> List(Applied("scala.Tuple2", List(FixedType("scala.Int"), FixedType("scala.Float")))),
+      "com.badlogic.gdx.utils.IntFloatMap$Keys"      -> List(FixedType("scala.Int")),
+      "com.badlogic.gdx.utils.IntFloatMap$Values"    -> List(FixedType("scala.Float")),
+      "com.badlogic.gdx.utils.ObjectIntMap$Entries"  -> List(Applied("scala.Tuple2", List(SourceArg(0), FixedType("scala.Int")))),
+      "com.badlogic.gdx.utils.ObjectIntMap$Values"   -> List(FixedType("scala.Int")),
+      "com.badlogic.gdx.utils.ObjectFloatMap$Entries" -> List(Applied("scala.Tuple2", List(SourceArg(0), FixedType("scala.Float")))),
+      "com.badlogic.gdx.utils.ObjectFloatMap$Values" -> List(FixedType("scala.Float")),
+      "com.badlogic.gdx.utils.ObjectLongMap$Entries" -> List(Applied("scala.Tuple2", List(SourceArg(0), FixedType("scala.Long")))),
+      "com.badlogic.gdx.utils.ObjectLongMap$Values"  -> List(FixedType("scala.Long")),
       // wave 3.1n: primitive arrays — 0-param source to 1-param DynamicArray[T].
       // sge type-mappings.md: "IntArray -> DynamicArray[Int]", etc.
       "com.badlogic.gdx.utils.IntArray"      -> List(FixedType("scala.Int")),
@@ -471,6 +518,7 @@ object LibgdxPolicy:
         ("empty", 0) -> Rename("isEmpty"),
         // ForEach: for (Entry e : map.entries()) -> map.foreachEntry((k, v) => body)
         ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1al: lls ObjectMap.get(K) returns Nullable[V]; the 1-arg overload must be
@@ -481,6 +529,35 @@ object LibgdxPolicy:
         // boundary). SuppressionPhase places @nowarn on the enclosing member.
         ("get", 1)     -> Template("$recv.get($0).orNull"),
       ),
+      // Nested iterator types: `it.hasNext()` (a method in java's MapIterator; the FIELD spelling
+      // `it.hasNext` needs nothing) is parenless on scala's Iterator.
+      "com.badlogic.gdx.utils.ObjectMap$Keys"        -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.ObjectMap$Values"      -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.ObjectMap$Entries"     -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.IntMap$Keys"           -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.IntMap$Values"         -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.IntMap$Entries"        -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.LongMap$Keys"          -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.LongMap$Values"        -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.LongMap$Entries"       -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.IntIntMap$Keys"        -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.IntIntMap$Values"      -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.IntIntMap$Entries"     -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.IntFloatMap$Keys"      -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.IntFloatMap$Values"    -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.IntFloatMap$Entries"   -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.ObjectIntMap$Keys"     -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.ObjectIntMap$Values"   -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.ObjectIntMap$Entries"  -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.ObjectFloatMap$Keys"   -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.ObjectFloatMap$Values" -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.ObjectFloatMap$Entries" -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.ObjectLongMap$Keys"    -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.ObjectLongMap$Values"  -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.ObjectLongMap$Entries" -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.ArrayMap$Keys"         -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.ArrayMap$Values"       -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.ArrayMap$Entries"      -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
       // Entry arity-0: java's default-constructed Entry with both fields null.
       // Construct routes `new Tuple2()` -> `Tuple2.apply(null.asInstanceOf[K], null.asInstanceOf[V])`.
       // Every Entry source needs the entry, since retargetTargetToSource maps to whichever
@@ -528,6 +605,7 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.OrderedMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1al: same get overload fix as ObjectMap
@@ -552,6 +630,7 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ArrayMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1al: same get overload fix as ObjectMap
@@ -570,6 +649,7 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1al: same get overload fix as ObjectMap
@@ -581,6 +661,7 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1al: same get overload fix as ObjectMap
@@ -592,6 +673,7 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1ah: dependents ---
@@ -608,6 +690,7 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1ah: dependents ---
@@ -620,6 +703,7 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1ah: dependents ---
@@ -632,6 +716,7 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1ah: dependents ---
@@ -644,6 +729,7 @@ object LibgdxPolicy:
         ("<init>", 2) -> Construct("lowlevel.util.ObjectMap", "apply"),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1ah: dependents ---
@@ -661,6 +747,7 @@ object LibgdxPolicy:
         ("<init>", 4) -> Construct("lowlevel.util.ArrayMap", "apply", dropTrailing = 2),
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("iterator", 0) -> ForEach("foreachEntry", 2), // java's iterator() IS Entries (K36)
         ("keys", 0)    -> Collect("foreachKey", "lowlevel.util.DynamicArray"),
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1al: same get overload fix as ObjectMap

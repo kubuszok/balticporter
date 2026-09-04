@@ -2207,4 +2207,58 @@ class CollectionsTransformSpec extends PortSuite:
     // The boundary type must use `?`, not `scala.Any`
     assertEmitsMatch(p, """boundary\[demo\.Base\[\?\]\]""")
     assertNotEmits(p, "boundary[demo.Base[scala.Any]]")
+  
+
+  test("nested map iterator types: a stored Entries cursor, values().next(), parenless hasNext") {
+    import CollectionsTransform.RetargetRewrite.*
+    import CollectionsTransform.RetargetArg.*
+    val ph = new CollectionsTransform(
+      retarget = Map(
+        "demo.MyMap" -> "lowlevel.util.ObjectMap",
+        "demo.MyMap$Entries" -> "scala.collection.Iterator",
+        "demo.MyMap$Values" -> "scala.collection.Iterator",
+        "demo.MyMap$Entry" -> "scala.Tuple2"),
+      retargetRewrites = Map(
+        "demo.MyMap" -> Map(
+          ("entries", 0) -> ForEach("foreachEntry", 2),
+          ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray")),
+        "demo.MyMap$Entries" -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+        "demo.MyMap$Values"  -> Map(("hasNext", 0) -> Chain(List("hasNext")))),
+      retargetTypeArgs = Map(
+        "demo.MyMap$Entries" -> List(Applied("scala.Tuple2", List(SourceArg(0), SourceArg(1))))))
+    val p = portAll(List(
+      "MyMap.java" ->
+        """package demo;
+          |public class MyMap<K, V> {
+          |  public static class Entry<K, V> { public K key; public V value; }
+          |  public static class Entries<K, V> implements java.util.Iterator<Entry<K, V>> {
+          |    public boolean hasNext() { return false; }
+          |    public Entry<K, V> next() { return null; }
+          |  }
+          |  public static class Values<V> implements java.util.Iterator<V> {
+          |    public boolean hasNext() { return false; }
+          |    public V next() { return null; }
+          |  }
+          |  public Entries<K, V> entries() { return new Entries<K, V>(); }
+          |  public Values<V> values() { return new Values<V>(); }
+          |  public void foreachEntry(java.util.function.BiConsumer<K, V> f) {}
+          |  public void foreachValue(java.util.function.Consumer<V> f) {}
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  int walk(MyMap<String, Integer> m) {
+          |    int n = 0;
+          |    MyMap.Entries<String, Integer> it = m.entries();
+          |    while (it.hasNext()) { MyMap.Entry<String, Integer> e = it.next(); n += e.value; }
+          |    return n;
+          |  }
+          |  Integer first(MyMap<String, Integer> m) { return m.values().next(); }
+          |}""".stripMargin), ph)
+    assertEmits(p, "scala.collection.Iterator[")     // the stored cursor's declared type
+    assertEmits(p, ".iterator }")                    // the entries snapshot ends in its iterator
+    assertEmits(p, ".iterator.next()")               // values().next(): one-shot cursor call
+    assertNotEmits(p, "it.hasNext()")                // parenless on scala's Iterator
+    assertNotEmits(p, "m.entries()")
   }
+}
