@@ -394,7 +394,7 @@ measurement discipline (§5) depends on being able to see.
 
 - Name the sections and files to read (`CLAUDE.md §4.56`, `ENGINE-LIMITS.md K28`) — never "read fully".
 - Give the numbers (baseline before, expected after), the OWNED files, the verification recipe
-  (`just <lane>-measure`, `members-unchanged`), and the environment rules (worktree, `sbt -batch`,
+  (`just <lane>-measure`, `members-unchanged`), and the environment rules (worktree, `sbt --client` with the lane's server dir,
   no `pkill`, launchd for long runs).
 - One subject per wave; one commit per riser; `before->after` in the subject.
 - No subagents unless the brief says so.
