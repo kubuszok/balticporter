@@ -5,121 +5,42 @@ import balticporter.tir.{MemberKey, Phase, RuleScope}
 
 import java.nio.file.Path
 
-/** The porting policy of ONE module, as a value a DEPENDENT module imports and extends.
+/** The porting policy of ONE module, as a value a DEPENDENT module imports and extends
+  * (`base.extendedBy(PortManifest(...))`, CLAUDE.md §1.5). A library is rarely one module, and an
+  * extension port's frontend resolves against the base's upstream *Java*, never the Scala the base
+  * emitted — so agreement between the two is a mechanism, not a habit of copying config correctly.
+  * A VALUE, not a DSL: ordinary Scala the consumer's compiler type-checks.
   *
-  * ==The problem this exists for==
-  * A library is rarely one module. An extension port (a plugin, an add-on, the library's own test
-  * suite) references the base module's types — but its frontend can only parse JAVA, so it resolves
-  * against the base's *upstream* sources through `FrontendConfig.resolutionRoots`, never against
-  * the Scala the base port emitted. The base's transforms changed those emitted signatures:
-  * collections were retyped, members were dropped, a namespace was renamed, a shim type was
-  * substituted in. Nothing in the pipeline connects the two runs, so the only way the extension
-  * agrees with the base is that somebody copied the base's configuration correctly and kept copying
-  * it correctly. That is not a mechanism; it is a habit, and it fails one module at a time.
+  * MUST agree (here): [[dropTypes]], [[dropMethods]], [[packageRenames]], [[surface]],
+  * [[resolutions]] — each changes the SHAPE of the shared surface the dependent compiles against.
+  * MAY differ (not here): source set/root, output directory, provenance, `runtimeMode`,
+  * `supportSources`, determinism — properties of THIS module's build, observable in no signature.
   *
-  * A manifest makes the shared surface a VALUE. The dependent writes
-  * {{{ base.extendedBy(PortManifest(name = "…", surface = List(new MyOwnPhase))) }}}
-  * and inherits the base's drops, renames and surface phases by construction — and
-  * [[ManifestAgreement]] verifies the agreement anyway, because a consumer is free to write the
-  * dependent's policy out longhand (which is what every port does today) and a check that only
-  * works when you used the convenience is a check that does not work.
+  * [[inject]] MAY differ ON PURPOSE: a drop is an observation about the shared API (every port
+  * agrees), the injection is a build artefact (exactly one module ships the replacement file) — so
+  * `inject` is per-manifest and NOT inherited by [[extendedBy]], unlike the drop beside it.
+  * [[serviceProviders]] carries the same asymmetry at a RESOURCE.
   *
-  * ==This is a VALUE, not a DSL==
-  * Everything here is ordinary Scala the consumer's compiler type-checks: `Set[String]`,
-  * `Map[String, String]`, `List[Phase]`. A configuration language would move the policy OUT of the
-  * consumer's repository and out of reach of its compiler, which is the opposite of what CLAUDE.md
-  * §1 asks for. The composition operator is [[extendedBy]] and there is nothing else to learn.
-  *
-  * ==MUST agree vs MAY differ — the line, and why it is drawn there==
-  * The fields of this class are precisely the things a dependent module must NOT decide for itself.
-  * Everything a [[balticporter.runner.PortRun]] takes that is NOT here is free to differ:
-  *
-  *   - '''MUST agree (here)''' — [[dropTypes]], [[dropMethods]], [[packageRenames]], [[surface]],
-  *     [[resolutions]].
-  *     Each one changes the SHAPE of the shared surface as the dependent will compile against it. A
-  *     type the base does not translate mechanically must not be translated mechanically here
-  *     either, or this port emits references to a class the base never wrote. A method the base
-  *     dropped must be dropped here, or this port emits a call to a member that does not exist. A
-  *     namespace the base moved must be moved identically, or this port's `import`s name nothing. A
-  *     signature-affecting phase the base ran must run here, or this port re-derives the base's
-  *     signatures differently from the base itself — the case that motivated the whole item, since
-  *     retyping `java.util.List` to a `Buffer` in one module and not the other produces two ports
-  *     that each compile alone and cannot compile together.
-  *
-  *   - '''MAY differ (not here)''' — the source set, the source root, the file list, the output
-  *     directory, the provenance header, `runtimeMode`, `supportSources`, the generated sbt
-  *     project, determinism, the action cache, leniency. None of these is observable in a
-  *     signature; all of them are properties of THIS module's build. `runtimeMode` is the clearest
-  *     case: the two source sets of one module deliberately disagree, because vendoring the support
-  *     types twice defines every one of them twice.
-  *
-  *   - '''[[inject]] is the interesting one, and it MAY differ ON PURPOSE.''' A drop and its
-  *     replacement look like one decision and are two. The DROP is an observation about the shared
-  *     API — "this type is not mechanically translatable" — and every port that sees the type must
-  *     agree with it. The INJECTION is a build artefact: exactly one module ships the replacement
-  *     file, and a dependent that copied the base's `inject` would emit a second definition of the
-  *     same FQN into its own source set and fail to compile. So [[inject]] is declared per manifest
-  *     and is NOT inherited by [[extendedBy]], while the drops beside it are. This asymmetry is the
-  *     single most important thing on this page to get right, and it is why `inject` is a field of
-  *     the manifest rather than being folded into [[substitutions]] wholesale. [[serviceProviders]]
-  *     is that same asymmetry read at a RESOURCE: the drops that decide whether a provider still
-  *     exists are inherited, and the descriptor FILE is shipped by exactly one module's build.
-  *
-  * ==What [[governs]] is for — and what an EMPTY one switches off==
-  * A namespace claim, used where a check genuinely needs prefixes. Substitution agreement does NOT
-  * use it: that check works from unit ORIGINS, so it is exact even when the two modules interleave
-  * their packages (a library's own test suite typically declares its suites in the very packages it
-  * tests, and no prefix can separate those).
-  *
-  * '''An empty `governs` is not merely a lost diagnosis — it DISABLES THE INTRUSION SCREEN for this
-  * module entirely.''' [[claims]] is `false` for every FQN when the set is empty ("no claim", never
-  * "everything"), and `SurfaceFold`'s `governs` screen — the thing that stops a DEPENDENT adding
-  * policy that re-shapes this module's emitted surface (§1.5, `DESIGN.md` §8.13) — asks exactly
-  * that question of each base. A base with no claim therefore admits every subject every dependent
-  * adds, silently and by arithmetic: there is no code path that reports it, because a screen with
-  * nothing to screen against is indistinguishable from a screen that passed. `ManifestAgreement`
-  * reports it ([[ManifestAgreement.Kind.BaseNamespaceUnclaimed]]) for that reason.
-  *
-  * Three checks read it: the package-rename comparison (`RenameOverride`, `TypeRenameDivergence`'s
-  * extra half), the `ExtraDrop` comparison, and the intrusion screen. Leave it empty only for a
-  * module nothing depends on, or for the empty manifest that declares "this resolution root is not
-  * a ported module" — where there is no policy to protect and [[declaresPolicy]] says so.
+  * [[governs]] is a namespace claim used where a check needs prefixes (substitution agreement
+  * itself works from unit ORIGINS instead, since a test suite routinely shares packages with what
+  * it tests). An EMPTY `governs` DISABLES the intrusion screen entirely for this module — silently
+  * admitting every subject a dependent adds — so `ManifestAgreement` reports it
+  * (`BaseNamespaceUnclaimed`). Leave it empty only for a module nothing depends on, or the empty
+  * manifest declaring "this resolution root is not a ported module" ([[declaresPolicy]]).
   */
 /** ONE UPSTREAM RESOURCE ROOT AND THE FILES UNDER IT THIS MODULE SHIPS — copied **VERBATIM**, at
-  * the path the emitted code already names.
+  * the path the emitted code already names. A library reads its own classpath resource through a
+  * STRING LITERAL, and a rename decides ownership STRUCTURALLY, never from a string (CLAUDE.md
+  * §4.56) — so the bytes must arrive at the upstream path unchanged. The COMPLEMENT of
+  * [[PortManifest.serviceProviders]]: a `META-INF/services` descriptor is FQNs all the way down and
+  * is REWRITTEN; every other resource is bytes merely LOCATED, and copied verbatim. A DECLARATION,
+  * not a scan of the root (`DESIGN.md` §8.17): an upstream resource root often holds the upstream
+  * BUILD's own descriptors too, not this port's to ship. Empty is the no-op; a declared file that
+  * is not there is FATAL.
   *
-  * ==Why nothing here is rewritten, which is the whole of the difference==
-  * A library that reads its own classpath resource does it through a STRING LITERAL — a
-  * `getResourceAsStream("/p/q/table.properties")`, a file handle built from `"p/q/skin.json"` — and
-  * a rename decides ownership STRUCTURALLY, never from a string (`CLAUDE.md` §4.56). So the emitted
-  * code asks for the path the java asked for, whatever this port's types are called, and the bytes
-  * have to arrive at exactly that path.
-  *
-  * That makes this the COMPLEMENT of [[PortManifest.serviceProviders]] and not a variant of it, and
-  * the two are siblings a port chooses between by asking what the file CONTAINS:
-  *
-  *   - a `META-INF/services` descriptor is FQNs all the way down — its NAME is an interface's and
-  *     its LINES are implementations' — so it is REWRITTEN through this port's own rename rules, and
-  *     copied verbatim it would advertise a service the port does not declare;
-  *   - every other resource is bytes the program merely LOCATES, so it is copied and its path is
-  *     left alone, and rewritten it would break the one lookup it exists for.
-  *
-  * ==Why a DECLARATION and not a scan of the root==
-  * `DESIGN.md` §8.17's argument, measured a second time and more sharply: which of a library's
-  * resources are part of the DERIVED WORK is a fact about that library, and an upstream resource
-  * root routinely also holds the upstream BUILD's own descriptors — a cross-compiler module
-  * definition, a native-toolchain configuration — which are not this port's to ship and which name
-  * the upstream namespace this port renames. A scan ships them; a declaration is the port saying
-  * what its output contains. Empty is the no-op, and a declared file that is not there is FATAL
-  * (`Provenance.notices`' rule: a file the port meant to ship and silently did not looks exactly
-  * like one it shipped).
-  *
-  * @param root  the upstream resource root, resolved like every other manifest path (relative to the
-  *              `.conf`, or absolute from a migration program).
-  * @param files the classpath paths under it, `/`-separated. Each is BOTH the path to read from
-  *              `root` and the path the run writes under `src_managed/<config>/resources` — which is
-  *              why it is the same string an emitted literal names, and why the check below can
-  *              compare the two.
+  * @param root  the upstream resource root, resolved like every other manifest path.
+  * @param files the classpath paths under it, `/`-separated — the path to read AND the path the
+  *              run writes under `src_managed/<config>/resources`.
   */
 final case class ResourceTree(root: Path, files: List[String])
 

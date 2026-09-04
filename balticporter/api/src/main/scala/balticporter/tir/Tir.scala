@@ -2,20 +2,11 @@ package balticporter.tir
 
 /** Typed IR (TIR) — the re-compiler's working representation. See DESIGN.md §2.
   *
-  * SHAPED LIKE `scala.quoted.Quotes#reflect` so that anyone who has written a Scala 3
-  * macro finds the transformer API familiar: `TypeRepr`, `Tree`/`Statement`/
-  * `Definition`/`Term`/`TypeTree`, `Symbol`. We do NOT use Quotes directly — its
-  * contracts are subtle to satisfy outside a macro, and its `Symbol` hides internals
-  * from users. So we OWN a close analog and deliberately EXPOSE MORE:
-  *   - `Origin`: provenance back to the original Java source (Quotes has positions,
-  *     but not cross-language origin);
-  *   - `SymTag`: open domain semantics on symbols (e.g. "this Int is a GL layer");
-  *   - a WHOLE-PROGRAM `XrefIndex` (`usagesOf`, `callersOf`) — Quotes is per-macro-
-  *     expansion and cannot answer program-wide usage queries.
-  *
-  * Every node carries a fully STRUCTURED `TypeRepr` (never a flat string collapsing
-  * applied params / mixins / self-types), resolved from Spoon — never re-inferred.
-  * Starter subset of the Quotes node set; grown incrementally.
+  * Shaped like `scala.quoted.Quotes#reflect` (`TypeRepr`, `Tree`/`Statement`/`Definition`/`Term`/
+  * `TypeTree`, `Symbol`) but a close analog rather than Quotes itself, exposing MORE: `Origin`
+  * (cross-language provenance), `SymTag` (open domain semantics), and a WHOLE-PROGRAM `XrefIndex`
+  * (Quotes is per-macro-expansion only). Every node carries a fully STRUCTURED `TypeRepr`, resolved
+  * from Spoon, never re-inferred.
   */
 
 /** Provenance to the original source. Our addition over Quotes' positions. */
@@ -50,29 +41,12 @@ object SymId:
   extension (s: SymId) def raw: Int = s
 
 /** what a java METHOD REFERENCE's referenced executable declares — see [[Tree.MethodRef.referent]].
-  *
-  * The two cases are JLS 15.13.1's split at `Type::name`, which is ONE java syntax naming two
-  * different functions: a `static` method is a qualified NAME, an instance method is an UNBOUND
-  * reference whose receiver becomes the SAM's FIRST parameter (JLS 15.13.3).
-  *
-  * ==BOTH cases carry the ARITY, and the static one earns it at ZERO==
-  * This enum used to say *"the arity rides on the second case only … a qualified name is eta-expanded
-  * by scala against the target, exactly as javac did it"*. That is true of every arity but one.
-  * Scala 3 does NOT eta-expand a NULLARY method from a bare name — `Type.m` where `m` is `def m(): T`
-  * is a call missing its argument list (`method m must be called with () argument`), not a `() => T` —
-  * so `Type::nilaryStatic` at a supplier-shaped SAM is the one static reference whose emitted form
-  * has to be a lambda after all. Measured at 3 errors on the first library to write one
-  * (`ENGINE-LIMITS.md` G32).
-  *
-  * The arity is therefore read for both, from the same place and for the reason stated at
-  * [[Tree.MethodRef]]: `getParameters` on the REFERENCE survives a lenient parse — it erases what
-  * each slot says, never how many there are — so this is a fact about java and never a default
-  * standing in for one.
-  *
-  * At PACKAGE level and not inside `object Tree`, beside `Flags` and `Descriptor`: it is a fact
-  * ABOUT a node and not a node, and `EmissionFieldCoverageSpec` scans `object Tree`'s case classes
-  * for exactly that distinction — its aggregate set is pinned, so a non-Tree declared in there fails
-  * the totality assertion rather than quietly joining the node census. */
+  * The two cases are JLS 15.13.1's split at `Type::name`: a `static` method is a qualified NAME, an
+  * instance method is an UNBOUND reference whose receiver becomes the SAM's FIRST parameter (JLS
+  * 15.13.3). BOTH carry the ARITY: scala does NOT eta-expand a NULLARY method from a bare name, so
+  * `Type::nilaryStatic` at a supplier-shaped SAM must emit as a lambda too (`ENGINE-LIMITS.md`
+  * G32). At PACKAGE level, not inside `object Tree`: `EmissionFieldCoverageSpec` scans `Tree`'s
+  * case classes for a pinned node census. */
 enum Referent:
   case Static(arity: Int)
   case Instance(arity: Int)

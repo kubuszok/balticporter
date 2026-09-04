@@ -1,48 +1,20 @@
 package balticporter.tir
 
 /** What a run may CONCLUDE about a type it did not emit — the view that replaces bare `Program`
-  * access for every non-owned question (`DESIGN.md` §8.3).
+  * access for every non-owned question (`DESIGN.md` §8.3). A dependent's `Program` CONTAINS its
+  * base (parsed via `resolutionRoots`), so recomputing an answer over it is not the base's answer
+  * (`ENGINE-LIMITS.md` D2/D4/D5/D6). A drift CHECK cannot close this after the fact: it would need
+  * the published answer anyway, so this is a construction-time restriction instead — ask the view,
+  * get one of three [[Answer]]s, and an [[Answer.Unknown]] that shaped emitted text fails the run.
   *
-  * ==Why a view and not a check==
-  * A dependent module's `Program` CONTAINS its base: `resolutionRoots` parses the base's Java, so
-  * every whole-program index the emitter and the funnel build spans units the base emitted and this
-  * run will not. Recomputing an answer over that program is not the base's answer — the dependent's
-  * own units are extra inputs — and `ENGINE-LIMITS.md` D2/D4/D5/D6 are six faces of exactly that.
+  * `Program.owned` is the WRONG predicate here: it is a program-vs-JDK filter (roots on ALL
+  * `program.units`, base included), not a mine-vs-base one. [[owns]] answers the second question.
+  * Exhausting fuel counts as NOT owned, so the run asks the contract rather than guessing.
   *
-  * A drift CHECK cannot close it: D4's own write-up records that NOTHING in the dependent's run
-  * disagrees with itself, so a check comparing recomputed answers has nothing to compare against;
-  * it would have to hold the published answer too, at which point it is already reading the
-  * contract and the only remaining question is whether it reads it BEFORE or AFTER emitting the
-  * wrong text. So this is a construction-time restriction: ask the view, get one of three answers,
-  * and an [[Answer.Unknown]] that shaped emitted text fails the run.
-  *
-  * ==`Program.owned` is the WRONG predicate, and that is the substrate bug==
-  * `Program.owned` roots its climb on `program.units` — ALL of them, the base's included — so it is
-  * a '''program-vs-JDK''' filter, not a '''mine-vs-base''' filter, and in a dependent it answers
-  * `true` for every base symbol. It is still exactly right for what it is asked for there (a rename
-  * must not rewrite the JDK; a `RuleScope` entry naming an external type did not fire). [[owns]] is
-  * the second question, and it is the one six independent copies of a fuel-bounded climb were each
-  * answering differently.
-  *
-  * ==The failure direction is NAMED, once==
-  * Exhausting the fuel counts as '''NOT owned''': the run then asks the contract and gets an honest
-  * [[Answer.Unknown]] rather than silently computing an answer over the wrong program. Deciding on a
-  * guess is the failure this whole mechanism exists to prevent.
-  *
-  * ==The honest scope statement==
-  * "A dependent answers every non-owned question from the contract" is NOT achievable. Three
-  * questions have no local repair, because the base is already emitted and gone: a base type
-  * collapsed to an `object` and named here in a TYPE position, a base primary this module's
-  * subclass cannot reach, a base `private` member a replay needs. For those the contract buys
-  * ATTRIBUTION and REFUSE-AND-COUNT — a bare typer error becomes a finding naming the module that
-  * must change and which of §1's three kinds the fix is — which is a smaller claim than "answer from
-  * it" and the one §4.45 measures a check by.
-  *
-  * ==Honest about the guarantee==
-  * A future phase can still write `program.units.foreach`; Scala has no capability type here. What
-  * it CANNOT get anywhere else is an answer about a base type — those live only behind this view.
-  * That is the same lever `RuleScope` and `FlowPropagation` already use, and as close to structural
-  * refusal as the language gives.
+  * Not fully achievable: three questions (a base type collapsed to an `object`, a base primary a
+  * subclass cannot reach, a base `private` member a replay needs) have no local repair once the
+  * base is already emitted, so the contract buys ATTRIBUTION and REFUSE-AND-COUNT instead of an
+  * answer.
   */
 trait Surface:
 

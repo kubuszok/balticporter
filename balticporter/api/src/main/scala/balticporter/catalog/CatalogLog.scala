@@ -2,87 +2,42 @@ package balticporter.catalog
 
 import balticporter.tir.Origin
 
-/** THE OBLIGATION SURFACES — the half of the catalog that makes a row answerable to the code.
+/** THE OBLIGATION SURFACES -- the half of the catalog that makes a row answerable to the
+  * code. A row declares WHERE the engine owes it a decision, and the engine records
+  * whether that decision was taken. GUARANTEE: the wrapper detects an ABSENT consult, never
+  * a WRONG one -- correctness is carried by the per-difference edge-case suites.
   *
-  * A registry nothing consults is dead weight, and a facility with no call sites is
-  * indistinguishable from one that is not there (`TirTrace` is this repository's own worked
-  * example: the mechanism shipped, two call sites were wired, and nothing could report the
-  * difference). So a row does not merely describe a difference — it declares WHERE the engine owes
-  * it a decision, and the engine records whether that decision was taken.
+  * THE WRAPPER GOES AT THE DISPATCH, NEVER IN AN ARM, so no arm can opt out.
   *
-  * WHAT IS GUARANTEED, stated at the strength it actually holds. The wrapper detects an ABSENT
-  * consult. It cannot detect a WRONG one: an arm that calls `consult(JS.E(3))` and hands it a
-  * predicate that never returns `Some` discharges the obligation and emits the same wrong code. So
-  * the claim is *a difference cannot be silently UNCONSIDERED at a site the catalog attaches it
-  * to*, and the other half — that the consideration is CORRECT — is carried by the per-difference
-  * edge-case suites, which is why those suites are a definition-of-done and not an afterthought.
-  * An over-claimed guarantee is how a mechanism stops being audited (`DESIGN.md` §2.8).
+  * FOUR DISCHARGE SURFACES, ONE LOG: frontend lowering ([[Lowering.of]]), emitter rendering
+  * ([[Rendering.of]]), types ([[Typing]], one surface with two ends since a TYPE is not a
+  * node at either), and phases (whole-program rewrites CITE their row via
+  * [[CatalogLog.cite]], one row per DECLARATION, weaker than an obligation). One log because
+  * the coverage question is "was this row reached at all, anywhere".
   *
-  * THE WRAPPER GOES AT THE DISPATCH, NEVER IN AN ARM. If [[Lowering.of]] were written inside each
-  * `case`, an arm could decline to wrap and the mechanism would see nothing — and an arm that opts
-  * out is the same shape as the defect the mechanism exists to catch. Entered at the dispatch, an
-  * arm is incapable of escaping its obligations because it never had the choice.
+  * A row with no surface carries [[Attaches.Unmechanised]] and is COUNTED in its own lane --
+  * a number that can go down, rather than a silence that reads as coverage.
   *
-  * FOUR DISCHARGE SURFACES, ONE LOG. Most rows do not discharge in the frontend at all:
-  *
-  *   - **frontend lowering** (Java AST → TIR) — [[Lowering.of]] at `SpoonTir`'s statement and
-  *     expression dispatches, [[Obligations]] inside;
-  *   - **emitter rendering** (TIR → Scala text) — [[Rendering.of]] at `TirEmitter`'s `stat`/`term`
-  *     dispatches, keyed on the `Tree` kind rather than on the Java node kind;
-  *   - **types** — [[Typing]], at `SpoonTir.tpe` and `TirEmitter.tpe`. One surface with two ends,
-  *     because a TYPE is not a node at either: a `CtTypeReference` is not a statement or an
-  *     expression, and a `TypeRepr` is not a `Tree` at all;
-  *   - **phases** (whole-program rewrites) — a phase does not walk one node kind, so a wrapper is
-  *     the wrong shape. A phase CITES its row through [[CatalogLog.cite]], one row per DECLARATION
-  *     it decides about, exactly the granularity `Decision` already uses (`CLAUDE.md` §5.1: one row
-  *     per declaration, never one per expression). Deliberately weaker than an obligation, and
-  *     reported as its own thing: nothing can assert that a phase *should have* considered a
-  *     difference at a declaration it never visited.
-  *
-  * The four feed ONE log, because the coverage question is "was this row reached at all,
-  * anywhere" and four per-surface artifacts would answer four narrower questions and not that one.
-  *
-  * A row whose surface does not exist carries [[Attaches.Unmechanised]] and is COUNTED in its own
-  * lane, because a lane reporting it as fine on the strength of a mechanism nobody built would be
-  * worse than no lane. That number has gone 112 → 88 → 47 → 20 → 10 → 5 as the surfaces landed, and it
-  * is the only honest alternative to measuring: a number that can go down, rather than a silence
-  * that reads as coverage.
-  *
-  * A LOG IS A VALUE ONE RUN OWNS — never a process-global table, for the reason `TirEmitter.srcMap`
-  * and `DecisionLog` are values one run owns (`CLAUDE.md` §5.1). `Determinism.Full` translates
-  * twice, and two translations sharing a log would double every count in it.
+  * A LOG IS A VALUE ONE RUN OWNS, never a process-global table (CLAUDE.md §5.1):
+  * `Determinism.Full` translates twice, and a shared log would double every count.
   */
 object Lowering:
 
-  /** Enter the obligation scope for ONE node of `kind` at `dispatch`, then run its lowering.
+  /** Enter the obligation scope for ONE node of `kind` at `dispatch`, then run its
+    * lowering. On exit, every row the catalog attaches to that (kind, dispatch) the body
+    * did not consult is recorded as a HOLE. Costs nothing where nothing attaches.
     *
-    * On exit, every row the catalog attaches to that (kind, dispatch) and the body did not consult
-    * is recorded as a HOLE. A body that throws settles nothing — `SpoonTir.unsupported` fails the
-    * whole compilation unit, so there is no partial result to report an obligation about.
-    *
-    * Costs nothing where nothing attaches: the common case is an empty `owed` list, which takes a
-    * shared, allocation-free [[Obligations]] and skips the settle entirely.
-    *
-    * ==`subject` and the DELEGATION SEAM==
-    *
-    * The frontend's two dispatches are not disjoint: a node reached as a STATEMENT is routinely
-    * handed straight to the EXPRESSION arm (`case inv: CtInvocation => expr(inv)`), so ONE node is
-    * lowered inside TWO scopes, and the consults all happen in the inner one. A row attached at
-    * `(kind, Statement)` would then be reported as a hole at every such node while the arm had in
-    * fact considered it — a phantom on the work list, which is the one thing a work list may not
-    * have. No row is in that position today; every one of them would be, the moment a statement
-    * kind whose arm delegates gains an attachment.
-    *
-    * So a consult marks the row seen in the enclosing scope too, and the scopes are joined by NODE
-    * IDENTITY (`subject`) rather than by kind or by origin. Identity is the exact question: two
-    * different nodes of the same kind on one line (`x += (y += 1)`) are two obligations, and reading
-    * `at` or `kind` would silently discharge the outer one from the inner node's consult. */
+    * `subject` joins the DELEGATION SEAM by NODE IDENTITY: a node reached as a STATEMENT is
+    * routinely handed straight to the EXPRESSION arm, so one node is lowered inside two
+    * scopes and a consult marks the row seen in the enclosing scope too -- keyed on
+    * identity rather than kind, since two nodes of the same kind on one line
+    * (`x += (y += 1)`) are two separate obligations. */
   def of[A](kind: String, dispatch: Dispatch, at: Origin, subject: AnyRef)(body: Obligations ?=> A)(using log: CatalogLog): A =
     scoped(Differences.owedAt(kind, dispatch), kind, dispatch, at, subject)(body)
 
-  /** the scope both dispatch surfaces enter — ONE implementation, because the delegation seam, the
-    * allocation-free fast path and the settle are the same question at either end of the pipeline
-    * and two copies would be two answers (`ENGINE-LIMITS.md` F8). */
+  /** the scope both dispatch surfaces enter -- ONE implementation, since the delegation
+    * seam, the allocation-free fast path and the settle are the same question at either
+    * end (`ENGINE-LIMITS.md` F8). */
   private[catalog] def scoped[A](owed: List[DiffId], kind: String, dispatch: Dispatch, at: Origin,
                                  subject: AnyRef)(body: Obligations ?=> A)(using log: CatalogLog): A =
     val outer = log.enterSubject(subject, at)
@@ -98,84 +53,40 @@ object Lowering:
         r
     finally log.exitSubject(outer)
 
-/** THE EMITTER'S HALF — the same wrapper at the OTHER end of the pipeline, keyed on the `Tree` kind.
+/** THE EMITTER'S HALF -- the same wrapper at the OTHER end of the pipeline, keyed on the
+  * `Tree` kind. Most `JS-S` rows discharge only here: a decision about TEXT taken while
+  * rendering, which a lowering-only mechanism cannot see.
   *
-  * §2.3(c)'s second discharge surface. Most `JS-S` rows do not discharge in the frontend at all: a
-  * `switch` with no `default`, a `break` in the middle of a case, a `boundary` the emitter
-  * interposes, a `try`'s resources, a labelled statement — every one of them is a decision about
-  * TEXT, taken while rendering, and the frontend has already done its job correctly by the time they
-  * arise. A lowering-only mechanism can say nothing about any of them, which is why they carried
-  * `Attaches.Unmechanised` and were COUNTED rather than claimed.
-  *
-  * Two things are deliberately identical to [[Lowering]] and one is deliberately different.
-  *
-  * IDENTICAL: the wrapper is at the DISPATCH (`TirEmitter.stat` / `TirEmitter.term`), so no arm can
-  * decline to wrap; and the scopes are joined by NODE IDENTITY, because the emitter has the same
-  * delegation seam the frontend does — `stat` hands every `Term` straight to `term`, so one node is
-  * rendered inside two scopes and the consults all happen in the inner one.
-  *
-  * DIFFERENT: there is no [[Dispatch]]. Java gives one node kind two meanings by POSITION (`i += 1`
-  * as a statement discards its value; as an expression it yields one), which is a fact about JLS
-  * 14.8 vs 15.26.2 and is why the frontend's key carries it. The TIR has already resolved that
-  * question — the position is in the tree — so a second axis here would be a distinction with no
-  * fact behind it. `Dispatch.Either` is what the shared machinery records for a rendering, and it
-  * reads correctly: both of the emitter's dispatches owe it.
+  * IDENTICAL to [[Lowering]]: wrapper at the DISPATCH, scopes joined by NODE IDENTITY.
+  * DIFFERENT: no [[Dispatch]] -- the TIR has already resolved the position question a java
+  * node's dual meaning needed; `Dispatch.Either` is what the shared machinery records.
   */
 object Rendering:
 
-  /** Enter the obligation scope for ONE `Tree` node, then render it.
-    *
-    * `kind` is the node's `productPrefix` — the same name `EmissionFieldCoverageSpec` derives from
-    * the class files, so a row attaching to a kind the IR does not have is caught by a spec rather
-    * than by silence. */
+  /** Enter the obligation scope for ONE `Tree` node, then render it. `kind` is the node's
+    * `productPrefix`, the same name `EmissionFieldCoverageSpec` derives from the class
+    * files. */
   def of[A](kind: String, at: Origin, subject: AnyRef)(body: Obligations ?=> A)(using log: CatalogLog): A =
     Lowering.scoped(Differences.owedAtRender(kind), kind, Dispatch.Either, at, subject)(body)
 
-/** THE FOURTH SURFACE — a TYPE, at both ends of the pipeline.
+/** THE FOURTH SURFACE -- a TYPE, at both ends of the pipeline. Neither [[Lowering]] nor
+  * [[Rendering]] can enter one: a `CtTypeReference` is not a statement or expression, and a
+  * `TypeRepr` is not a `Tree` at all.
   *
-  * The first three surfaces are all about a NODE: a java statement or expression ([[Lowering]]), a
-  * `Tree` ([[Rendering]]), a declaration a whole-program pass decided about ([[CatalogLog.cite]]).
-  * A whole family of differences is about none of them — a use-site wildcard, a raw type's fill, an
-  * F-bound no instantiation can eliminate, a type variable with no binder in scope, a nested type
-  * that is path-dependent in one language and not in the other. Every one is decided while a TYPE
-  * is lowered or rendered, and a type is not a node at either end: a `CtTypeReference` is not a
-  * `CtStatement` or a `CtExpression`, and a `TypeRepr` is not a `Tree` at all — it is the algebra a
-  * `TypeTree` carries, and the `TypeTree` is rendered through its parent.
+  * ONE SURFACE, TWO ENDS: the frontend chooses the IMAGE, the emitter chooses the TEXT --
+  * two [[Attaches]] cases since the KEYS are two different vocabularies (Spoon's
+  * reference-interface names vs `TypeRepr`'s own `productPrefix`). NEITHER carries a
+  * [[Dispatch]] (a type reference has only ever had one meaning).
   *
-  * So neither existing wrapper could enter one, and ten rows carried [[Attaches.Unmechanised]]
-  * saying exactly that. This is the surface that retires them.
-  *
-  * ONE SURFACE, TWO ENDS — the same shape the node surface has, and for the same reason. The
-  * pipeline has two ends and a type is decided at both: the frontend chooses the IMAGE (what a raw
-  * use fills with, whether `? super Object` is a wildcard at all, which variable has no binder) and
-  * the emitter chooses the TEXT (`? <: X`, a projection or a value path, the `?` that stands in for
-  * a marker). Two [[Attaches]] cases rather than one because the KEYS are two different
-  * vocabularies: Spoon's reference-interface names on one side — `SpoonKinds.references`, whose
-  * totality is derived from `spoon.reflect.reference` exactly as the node registry's is from
-  * `code`/`declaration` — and the `TypeRepr` case's own `productPrefix` on the other.
-  *
-  * NEITHER CARRIES A [[Dispatch]], for [[Rendering]]'s reason: java gives a NODE two meanings by
-  * position (JLS 14.8 vs 15.26.2), and a type reference has only ever had one.
-  *
-  * ==The origin, which the emitter half does not have==
-  *
-  * A `CtTypeReference` is a `CtElement` with a source position, so the frontend passes its own. A
-  * `TypeRepr` carries none and cannot: it is a VALUE the IR shares between every position naming
-  * the same type, so there is no one place it was written. What does exist is the origin of the
-  * node the type is being rendered FOR, which is what [[CatalogLog.currentOrigin]] holds. Reporting
-  * that is exact rather than approximate — a finding's job is to name a java file and line somebody
-  * can open, and the line where the type was NAMED is the one they want — where an
-  * `Origin.synthetic` would put `-`/0 on every type-surface finding in the catalog, which is a
-  * diagnostic nobody can act on.
+  * The origin the emitter half reports is [[CatalogLog.currentOrigin]] -- the node the type
+  * is being rendered FOR -- because a `TypeRepr` is a VALUE shared across every position
+  * naming it and has no origin of its own.
   */
 object Typing:
 
-  /** the FRONTEND's type-reference dispatch — `SpoonTir.tpe`.
-    *
-    * `kind` is the registry name of the Spoon *reference* interface, resolved by
-    * `SpoonKinds.refNameOf`'s most-specific rule — so a `CtWildcardReference` is not silently read
-    * as the `CtTypeParameterReference` its implementation extends, which is the same absorption
-    * `SpoonKinds` exists to prevent one package over. */
+  /** the FRONTEND's type-reference dispatch -- `SpoonTir.tpe`. `kind` is resolved by
+    * `SpoonKinds.refNameOf`'s most-specific rule, so a `CtWildcardReference` is not
+    * silently read as the `CtTypeParameterReference` its implementation extends. */
   def ofReference[A](kind: String, at: Origin, subject: AnyRef)(body: Obligations ?=> A)(using log: CatalogLog): A =
     Lowering.scoped(Differences.owedAtLowerType(kind), kind, Dispatch.Either, at, subject)(body)
 
@@ -183,42 +94,28 @@ object Typing:
   def ofRepr[A](kind: String, subject: AnyRef)(body: Obligations ?=> A)(using log: CatalogLog): A =
     Lowering.scoped(Differences.owedAtRenderType(kind), kind, Dispatch.Either, log.currentOrigin, subject)(body)
 
-/** WHICH of the frontend's two term dispatches an obligation attaches at.
-  *
-  * Not decoration, and not a frontend implementation detail leaking into the registry: java gives
-  * the SAME node kind two different meanings by position, and the catalog has two rows for exactly
-  * that reason. `i += f` as a statement (JLS 14.8) discards the compound assignment's value; the
-  * same node as an expression (JLS 15.26.2) yields it, and the narrowing that is right in one
-  * position is a different obligation in the other. A single kind-keyed attachment could not tell
-  * `JS-E03` from `JS-E04`, which is the pair the whole mechanism was designed around. */
+/** WHICH of the frontend's two term dispatches an obligation attaches at. Not decoration:
+  * java gives the SAME node kind two different meanings by position (`i += f` discards its
+  * value as a statement, JLS 14.8, and yields it as an expression, JLS 15.26.2), so a
+  * single kind-keyed attachment could not tell `JS-E03` from `JS-E04`. */
 enum Dispatch:
   /** the node reached as a STATEMENT — JLS 14.8's expression statement. `SpoonTir.stmtKind` */
   case Statement
   /** the node reached as an EXPRESSION whose value is used — JLS 15. `SpoonTir.exprNoCast` */
   case Expression
-  /** the node reached as a MEMBER DECLARATION — neither of the two above, and that is the point.
-    *
-    * A `CtField` is not a `CtStatement` and not a `CtExpression`: it is walked out of its type's
-    * member list, so it enters neither dispatch and no row attached at either could ever be owed
-    * there. That made a whole JLS 5.2 slot invisible — a field's INITIALISER is an assignment
-    * conversion exactly as a local's is, and a port whose only boxing sites were field initialisers
-    * read "the difference does not apply" on every one of them.
-    *
-    * Deliberately not folded into [[Statement]]: `CatalogCoverageSpec` derives the legal dispatches
-    * for a kind from Spoon's own hierarchy, so `Lowered("CtField", Statement)` is a claim that
-    * spec rejects — correctly, because it says the frontend reaches a field somewhere it does not. */
+  /** the node reached as a MEMBER DECLARATION -- neither Statement nor Expression. A
+    * `CtField` enters neither dispatch (walked from its type's member list), which made a
+    * field's INITIALISER assignment-conversion slot invisible until named explicitly. Not
+    * folded into [[Statement]]: `CatalogCoverageSpec` derives legal dispatches from Spoon's
+    * own hierarchy and would reject that claim. */
   case Declaration
   /** both of the two POSITIONAL dispatches owe the consult. Not [[Declaration]]: a kind reached as
     * a declaration is reached at exactly one place, so a row that means it says so. */
   case Either
 
-/** WHERE a row's obligation is discharged — the field that makes a row answerable to the code.
-  *
-  * ONE value per row rather than a list, and that is the [[Difference]] no-parameter rule holding:
-  * `DifferenceTakesNoParameterSpec` rejects a collection in any row field, because a collection is
-  * the exact shape a per-library policy takes. A row that genuinely discharges at two surfaces has
-  * [[Attaches.Both]] instead — a product of enum cases, which the spec admits by the recursion it
-  * already performs.
+/** WHERE a row's obligation is discharged. ONE value per row, never a list
+  * (`DifferenceTakesNoParameterSpec`'s no-parameter rule); a row discharging at two
+  * surfaces uses [[Attaches.Both]] instead.
   */
 enum Attaches:
   /** the frontend's lowering dispatch owes a consult for every node of `kind` at `dispatch`.
@@ -267,29 +164,16 @@ enum Attaches:
     * requires every leaf, so a row half of whose discharge nobody built keeps saying so. */
   case Both(a: Attaches, b: Attaches)
 
-  /** NO obligation surface exists for this row yet, and `why` says which one it wants.
+  /** NO obligation surface exists for this row yet, and `why` says which one it wants -- a
+    * number that can go down rather than a silence that reads as coverage.
     *
-    * This is the honest alternative to measuring: a row whose discharge site has no mechanism is
-    * EXCLUDED from the undischarged lane and counted in its own, so "we are not measuring these" is
-    * a number that can go down rather than a silence that reads as coverage.
+    * A construct the frontend REFUSES takes THIS, not [[Lowered]] (no arm to owe the
+    * consult) and not [[NoObligation]] (there IS a gap): `SpoonKinds` records the refused
+    * kind and the `markers` lane counts every mint.
     *
-    * ==A construct the frontend REFUSES takes this, and neither of the two it looks like==
-    *
-    * Not [[Lowered]]: that says an ARM owes a consult, and a refused kind has none — the dispatch
-    * enters, the refusal mints a marker or throws, and the obligation would be owed at a site that
-    * never returns. The row would then sit on `mechanised` reading `unreached` on every port
-    * forever, which is a claim that reads as coverage and can never fail. Not [[NoObligation]]
-    * either, because there IS a gap. What measures such a row is the OTHER instrument: `SpoonKinds`
-    * records the refused kind against the row's own id and the `markers` lane counts every mint.
-    *
-    * ==And "no surface exists" is a HYPOTHESIS about the engine, twice falsified==
-    *
-    * `JS-C22`/`JS-C23` said no surface could owe the overload question, and what did not exist was a
-    * RESOLVER — the rendered call had been a surface all along (`ENGINE-LIMITS.md` T17). `JS-C43`
-    * said the same of a java `record`, and a record renders through the same `ClassDef` dispatch as
-    * every other declaration: the whole of the gap was that no arm could KNOW one was there, which
-    * one flag on the type symbol fixed. So before writing this case, ask whether the surface is
-    * missing or only the INFORMATION at it. */
+    * "No surface exists" is a HYPOTHESIS about the engine, twice falsified
+    * (`ENGINE-LIMITS.md` T17, the record row): ask whether the surface is missing or only
+    * the INFORMATION at it, before writing this case. */
   case Unmechanised(why: String)
 
   /** there is NOTHING to discharge — the row records a checked non-difference, or a difference the

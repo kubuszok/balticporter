@@ -1,23 +1,11 @@
 package balticporter.tir
 
-/** MEMBER IDENTITY — one grammar for "which member", written once and read once.
-  *
-  * ==Why this exists at all==
-  * `Symbol.fullName` is `owner#name` and carries NO parameter list, so `X#m` is the same string for
-  * every overload of `m` while each overload is a distinct symbol with distinct call sites. Every
-  * seam that had to tell two overloads apart therefore grew its own answer, and the engine ended up
-  * with FIVE spellings of one idea, two of which disagree (see [[Descriptor]]'s note on the two
-  * divergences). A local arity test was measured as the alternative and produced 118 `Ambiguous`
-  * results out of 263 — overload identity is not a refinement of a name, it is the whole of it.
-  *
-  * ==Why it is a SEPARATE FIELD and not a fourth separator in `fullName`==
-  * Two reasons, and the first is decisive. A finding's stable id hashes its owner's `fullName`, as
-  * do `decisions.tsv`'s subject, `TirPrinter.canonical` and therefore every cache key — so widening
-  * `fullName` moves every row of every promoted artifact in every lane, for a change that adds no
-  * information any of them display. And a descriptor contains `.` (`java.lang.String`) and `$` (a
-  * nested parameter type), which would give `RuleScope.covers` and the package rename a place to cut
-  * INSIDE a parameter list: CLAUDE.md §4.56's trap re-opened in the one function this project has
-  * been bitten by twice. `Symbol.fullName` is left exactly as it was.
+/** MEMBER IDENTITY — one grammar for "which member", written once and read once. `Symbol.fullName`
+  * is `owner#name` with NO parameter list, so overload identity had FIVE independent spellings
+  * across the engine before this — a local arity test was measured as insufficient (118
+  * `Ambiguous` of 263). A SEPARATE FIELD rather than a fourth `fullName` separator: widening
+  * `fullName` would move every row of every promoted artifact keyed on it, and a descriptor's `.`/`$`
+  * would give a package rename a place to cut INSIDE a parameter list (CLAUDE.md §4.56's trap).
   */
 final case class MemberKey(owner: String, name: String, descriptor: Option[Descriptor]):
 

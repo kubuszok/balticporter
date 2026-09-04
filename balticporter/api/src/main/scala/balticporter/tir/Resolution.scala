@@ -1,24 +1,12 @@
 package balticporter.tir
 
-/** ONE LOCATION'S SELECTION — the port picked [[remedy]] at [[key]], and the run BOUND that key to a
-  * declaration it owns.
-  *
-  * The key is a [[MemberKey]] — or, where the remedy says so ([[Remedy.Subject]]), a bare type FQN —
-  * and the granularity is therefore PER DECLARATION, which is the compromise
-  * the whole engine already made: [[Decision.declarationsUsing]] records one row per (declaration,
-  * kind) and never one per expression, `IdiomCandidate.subject` is `owner#member` and never the
-  * site's own expression, and `Remediator.Suggestion.subject` is a declared FQN. A finer key would
-  * have to be positional, and a positional policy key is the fragility `CheckReport.Finding` already
-  * refuses (its id deliberately excludes the line number so an upstream whitespace edit does not
-  * orphan a baseline entry).
-  *
-  * '''So a selection BROADCASTS.''' Where one member holds two sites of the targeted finding kind,
-  * the selection applies to both. That is a decision and not an oversight: the alternative is an
-  * occurrence index, which reintroduces line-number-shaped fragility one level down. A member that
-  * genuinely wants two different remedies at two sites is a feature nobody has needed yet, and it
-  * will be an EXPLICIT one when somebody does. What is NOT broadcast is an ambiguous OVERLOAD set —
-  * `PolicyBinder.bindMember` refuses a key naming two overloads and lists them, because those are
-  * two different members and picking one by position is exactly what this grammar exists to stop.
+/** ONE LOCATION'S SELECTION — the port picked [[remedy]] at [[key]], and the run BOUND that key to
+  * a declaration it owns. Granularity is PER DECLARATION (matching `Decision.declarationsUsing`,
+  * `IdiomCandidate.subject`, `Remediator.Suggestion.subject`); a positional key would reintroduce
+  * the line-number fragility `CheckReport.Finding`'s id deliberately excludes. So a selection
+  * BROADCASTS: where one member holds two sites of the targeted finding kind, both are covered. An
+  * ambiguous OVERLOAD set is NOT broadcast — `PolicyBinder.bindMember` refuses a key naming two
+  * overloads and lists them.
   */
 final case class Resolution(
     /** the manifest entry verbatim — the string an agent edits (`CLAUDE.md` §4.575). */

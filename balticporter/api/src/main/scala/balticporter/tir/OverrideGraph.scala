@@ -1,42 +1,20 @@
 package balticporter.tir
 
 /** MEMBER-LEVEL correspondence across a hierarchy — *the set of declarations that must change
-  * together, or none of them* (DESIGN.md §8.5, §8.11).
+  * together, or none of them* (DESIGN.md §8.5, §8.11). Edges keyed by NAME AND DESCRIPTOR
+  * ([[Symbol.descriptor]]), because `(name, arity)` alone was measured insufficient
+  * (`ENGINE-LIMITS.md` D1: 263 findings, 118 ambiguous); where a descriptor is missing the edge is
+  * still taken but REPORTED ([[OverrideGraph.Closure.approximate]]).
   *
-  * ==Why this exists==
-  * The engine has parent edges between TYPES, recomputed locally at least six times in one file,
-  * and has never had an edge between MEMBER symbols. Every seam that needed one matched on
-  * `(name, arity)` instead, which `ENGINE-LIMITS.md` D1 measured insufficient — 263 findings, 118
-  * ambiguous. So the edges here are keyed by NAME AND DESCRIPTOR ([[Symbol.descriptor]], §8.1's
-  * identity), and where a descriptor is missing the edge is still taken but REPORTED
-  * ([[OverrideGraph.Closure.approximate]]) rather than passed off as exact.
+  * The invariant: a signature change applies to '''all of a component or none of it'''.
+  * [[closureOf]] answers what the component IS; `Closure.isAnchored` answers whether the program
+  * may change it at all — CONSERVATIVELY: a parent this program did not parse could declare the
+  * member under any name, so with no surface data the closure refuses (a counted over-refusal, not
+  * a silent contract break). Surface data arrives as a value ([[ExternalSurface]]) rather than
+  * being guessed.
   *
-  * ==The invariant, and why it is the whole point==
-  * A signature change applies to '''all of a component or none of it'''. Renaming `Music#setLooping`
-  * without `NoopMusic#setLooping` and every `new Music(){ … }` body is a silent contract break that
-  * no count moves for; threading a `using` clause through half a component is a broken `override`.
-  * [[closureOf]] answers what the component IS, and `Closure.isAnchored` answers whether the
-  * program is allowed to change it at all.
-  *
-  * ==Three consumers, two of which use only this layer==
-  *   - the property transform renames a component (through [[MemberRenamer]]);
-  *   - the type-redirect member renames do the same;
-  *   - globals→context (DESIGN.md §8.4) adds a `using` clause to every declaration in a component
-  *     and never renames anything, which is exactly why the closure layer and the renamer are
-  *     separate types.
-  *
-  * ==Anchors are deliberately CONSERVATIVE, and stated as such==
-  * A parent type this program did not parse could declare the member under any name; with no
-  * surface data for it the closure is ANCHORED and the consumer refuses, counted. *An over-refusal
-  * is a counted skip an agent can see; an under-refusal is a silent contract break.* The surface
-  * arrives as a value ([[ExternalSurface]]) rather than being guessed here, so the day the engine
-  * derives a real JDK surface (DESIGN.md §8.9) the refusals lift with no change to this file.
-  *
-  * ==Built with `StandardTraversal`, so anonymous-class bodies are NODES==
-  * CLAUDE.md §3: two of the four silent correctness defects this project has found were hand-rolled
-  * walks that stopped one node short, and anonymous bodies are precisely where an override lives
-  * that a class-only walk cannot see (156 sites in libGDX core). Enum-constant bodies are nodes for
-  * the same reason — a Java enum constant may override the enum's own method.
+  * Built with `StandardTraversal` so anonymous-class and enum-constant bodies are NODES (CLAUDE.md
+  * §3): a class-only walk misses an override living in either.
   */
 final class OverrideGraph private (
     private val program: Program,

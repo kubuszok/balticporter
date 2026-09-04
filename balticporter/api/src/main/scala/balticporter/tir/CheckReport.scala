@@ -2,64 +2,24 @@ package balticporter.tir
 
 import java.nio.file.{Files, Path}
 
-/** PERSISTENCE and DIFF for the engine's checks — `before->after`, mechanically.
+/** PERSISTENCE and DIFF for the engine's checks — `before->after`, mechanically. Every check
+  * records its FULL result here; this writes it to a machine-readable file and diffs it against a
+  * committed baseline. Truncation stays at the human stdout render and never reaches the artifact.
   *
-  * ## The problem this closes
+  * The ORCHESTRATOR records, not each check (`balticporter.runner.PortRun` invokes every check
+  * unconditionally, so checks stay pure functions of a `Program`): `PortRun.RequiredChecks` names
+  * every check a run must have recorded, compared against [[snapshot]], so a number reaching
+  * stdout and never `findings.tsv` fails the run. Recording is a no-op unless [[enabled]].
   *
-  * Every check is computed on every migration run and then printed, truncated, to stdout.
-  * There was no way to answer "did my change move omissions from 31 to 33" except scrollback
-  * archaeology, which is precisely the question CLAUDE.md §5 requires every commit subject to
-  * answer. Truncation makes it worse: a `take(20)` in the caller means the 21st finding has never
-  * been seen by anyone.
+  * `record` registers the check's name even for an empty result, so `counts.tsv` distinguishes
+  * "omissions: 0" from "never invoked", and [[diff]] reports a check's disappearance as a WARNING
+  * rather than an improvement to zero.
   *
-  * So: every check records its FULL result here; this writes it to a machine-readable file and
-  * diffs it against a committed baseline. Truncation stays where it belongs — the human stdout
-  * render — and never reaches the artifact.
-  *
-  * ## The ORCHESTRATOR records; a check is a pure function
-  *
-  * The checks used to call `record` themselves. That was a stopgap with one real virtue — it could
-  * not be forgotten by a caller — taken while check invocation was copy-paste in each migration
-  * program, which is how `LibgdxTestMigrate` went its whole life without calling
-  * `PortabilityCheck`. `balticporter.runner.PortRun` cured the disease it was guarding against: it
-  * invokes every check unconditionally, so the guard is no longer needed and the checks are pure
-  * functions of a `Program` again — testable with no artifact directory in sight.
-  *
-  * The virtue is not lost, it MOVED UP: `PortRun.RequiredChecks` names every check a run must have
-  * recorded and is compared against [[snapshot]] before the run finishes, so a number that reaches
-  * stdout and never reaches `findings.tsv` fails the run. That is a stronger guarantee than
-  * recording from inside a check, which could only ever assert something about checks that were
-  * called.
-  *
-  * The recording is a no-op unless [[enabled]], so a run stays artifact-free in every context that
-  * has not opted in — including the unit tests.
-  *
-  * ## A check that did not RUN is not a check that found NOTHING
-  *
-  * `record` registers the check's name even for an empty result. So `counts.tsv` distinguishes
-  * "omissions: 0" from "omissions: never invoked", and [[diff]] reports the disappearance of a
-  * whole check as a WARNING rather than as an improvement of N to zero. That distinction is not
-  * hypothetical: a migration program silently missing a check is a defect this repository has
-  * actually shipped.
-  *
-  * It survives the move intact, and is exactly why `PortRun` records EVERY check with its complete
-  * result — `Nil` included — rather than skipping the empty ones.
-  *
-  * ## Format, and why
-  *
-  * `findings.tsv` — one tab-separated line per finding, `#`-prefixed header, sorted by
-  * (check, kind, owner, path, line, detail). TSV rather than JSON because the consumers are
-  * `diff`, `sort`, `cut`, `grep` and an agent reading a terminal; because a one-finding change is
-  * a ONE-LINE diff (a pretty-printed JSON array re-indents, a compact one is a single enormous
-  * line); and because there is no nesting to represent.
-  *
-  * Determinism is the whole point (a noisy diff is a diff nobody reads), so the file contains:
-  * no timestamps, no absolute paths (see [[relativise]]), no hash-order iteration, and no
-  * `SymId` — symbol ids are interning-order dependent and change when an unrelated file is added.
-  *
-  * `id` is the first 12 hex of sha-256 over `check|kind|owner|path|detail`. The LINE NUMBER is
-  * carried but excluded from the id, so an upstream whitespace edit moves a finding without
-  * orphaning its baseline entry (DESIGN.md §6.3 and §6.5, risk R7).
+  * `findings.tsv`: one TSV line per finding (not JSON — a one-finding change stays a one-line
+  * diff), sorted by (check, kind, owner, path, line, detail), with no timestamps, absolute paths,
+  * hash-order iteration or `SymId`. `id` is sha-256 over `check|kind|owner|path|detail`, excluding
+  * the LINE NUMBER so an upstream whitespace edit does not orphan a baseline entry (DESIGN.md
+  * §6.3/§6.5, R7).
   */
 object CheckReport:
 

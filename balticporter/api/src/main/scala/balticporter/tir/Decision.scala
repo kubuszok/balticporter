@@ -2,40 +2,14 @@ package balticporter.tir
 
 import java.nio.file.{Files, Path}
 
-/** DECISION PROVENANCE — why the emitted code looks the way it does.
-  *
-  * ## The problem this closes
-  *
-  * [[SrcMap]] answers "which Java produced this Scala"; it does not answer "why is this Scala not a
-  * mechanical translation of that Java". Every non-obvious shape in the output — a type that is
-  * simply absent, a package that is not the upstream one, a member that came from a hand-written
-  * file rather than from the frontend — is the result of a DECISION some part of the engine made,
-  * and until now the only record of it was the prose in a scaladoc plus whatever the operator
-  * happened to read on stdout. An agent in another repository (CLAUDE.md §4.45) investigating
-  * `sge.utils.Json` has no way to learn that the type it is looking at is injected because the
-  * manifest dropped `com.badlogic.gdx.utils.Json`, short of reading the porting program.
-  *
-  * A `Decision` is that record, made durable and machine-joinable (`decisions.tsv`) beside the
-  * source map, the findings and the port map.
-  *
-  * ## Every decision carries its §1 CLASSIFICATION, and that is not optional
-  *
-  * [[Reason]] is a constructor parameter, not a free-text field, because the first question an
-  * investigating agent has is CLAUDE.md §1's: is this the engine's doing (a), a policy entry it can
-  * change (b), or a rule written for one library (c)? A note that says what happened without saying
-  * which of the three it is costs a full investigation to classify — which is the same reason
-  * `PortReport.Kind` and every `ENGINE-LIMITS.md` entry carry one. Free text is still welcome; it
-  * goes in `detail("why")`, where it cannot be mistaken for the classification.
-  *
-  * ## Why the FQN is captured at decision time
-  *
-  * `subject` is a [[SymId]], which is interning order and dies with the run — it is carried because
-  * a phase that wants to join two decisions in-process has nothing better, and it is deliberately
-  * NOT written to the artifact (the same rule `CheckReport` states for findings). `subjectFqn` is
-  * the name the subject had WHEN THE DECISION WAS MADE, which is the only form that survives: a
-  * package rename runs last (§4.56), so a decision recorded before it names an upstream symbol and
-  * a decision recorded by it names both sides. Re-deriving the name at write time would silently
-  * relabel every earlier decision into the emitted namespace.
+/** DECISION PROVENANCE — why the emitted code looks the way it does. [[SrcMap]] answers "which Java
+  * produced this Scala"; a `Decision` answers "why is this not a mechanical translation" — durable
+  * and machine-joinable (`decisions.tsv`), for an agent in another repository (CLAUDE.md §4.45).
+  * [[Reason]] is a constructor parameter, not free text, so every decision carries its §1
+  * classification ((a) engine, (b) policy, (c) library rule) — free text still goes in
+  * `detail("why")`. `subjectFqn` captures the name AT DECISION TIME rather than at write time: a
+  * package rename runs last (§4.56), so re-deriving the name later would silently relabel every
+  * earlier decision into the emitted namespace.
   */
 final case class Decision(
     kind: Decision.Kind,

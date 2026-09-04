@@ -1,23 +1,12 @@
 package balticporter.tir
 
-/** The transform pipeline — shaped by Scala 3's COMPILER PLUGIN model.
-  *
-  *   - `Plugin`     ~ `dotc.plugins.Plugin`: a named bundle of phases.
-  *   - `Phase`      ~ `dotc.plugins.PluginPhase` / `MiniPhase`: a named transform with
-  *                    `runsAfter`/`runsBefore` ordering and `transformX` hooks you
-  *                    override only for the nodes you touch. The framework does the
-  *                    traversal (bottom-up), so a transform is small and declarative.
-  *   - full control ~ `ResearchPlugin`: override `run` for whole-program analyses
-  *                    (e.g. globals→implicits needs the call graph before rewriting).
-  *
-  * Every hook runs with the whole-program `Program` in scope (`using`), so a transform
-  * can ask `usagesOf` / `callersOf` / `symbolOf` while rewriting — the thing Quotes
-  * and scalafix-over-SemanticDB cannot give you across the program, before emission.
-  *
-  * `transformType` is applied by the traversal at EVERY type occurrence in the tree
-  * (parents, self-types, tpts, type args, `new`, ascriptions) AND over every symbol's
-  * `info`, so a type rewrite lands everywhere the xref reads — and the rebuilt index
-  * reflects it. That is the "responds to rewrites" contract.
+/** The transform pipeline — shaped by Scala 3's COMPILER PLUGIN model: `Plugin` ~
+  * `dotc.plugins.Plugin`, `Phase` ~ `PluginPhase`/`MiniPhase` (named, `runsAfter`/`runsBefore`,
+  * `transformX` hooks the framework traverses bottom-up), full control ~ `ResearchPlugin`
+  * (override `run` for whole-program analyses). Every hook runs with the whole-program `Program`
+  * in scope (`using`), so a transform can ask `usagesOf`/`callersOf`/`symbolOf` while rewriting.
+  * `transformType` applies at EVERY type occurrence AND every symbol's `info`, so a rewrite lands
+  * everywhere the xref reads.
   */
 trait Phase:
   def name: String

@@ -1,37 +1,21 @@
 package balticporter.tir
 
 /** ONE place a POLICY KEY becomes a SYMBOL — and the only place a phase is allowed to learn what a
-  * key names.
+  * key names. Replaces eighteen engine sites that each built or matched a member key with their own
+  * (mostly overload-blind) string test.
   *
-  * ==What it replaces==
-  * Eighteen sites in the engine built or matched a member key, thirteen of them overload-blind, each
-  * with its own string test. Two independent phases had already routed AROUND member identity rather
-  * than trust one of those tests — `TestFrameworkTransform` refuses to read a callee's parameter list
-  * ("only as good as the frontend's key encoding for an EXTERNAL symbol") and `CollectionsTransform`
-  * reads a call's RESULT type to decide which `remove` overload Java resolved. Two routes around one
-  * wall is the signal that the wall is a design defect and not a collection of local ones.
+  * TWO STAGES: a `dropMethods` key names a member the frontend removed BEFORE minting its symbol,
+  * so resolving it against a `Program` alone would report every drop that WORKED as a typo — stage
+  * one is [[MemberIndex]] (what the frontend SAW, including what it dropped), stage two is the
+  * symbol table.
   *
-  * ==Two stages, and the reason the first one is not optional==
-  * A `dropMethods` key names a member the frontend removed BEFORE minting its symbol — no `SymId`,
-  * no `Symbol`, no row in the symbol table. Resolving it against a `Program` reports every drop that
-  * WORKED as a typo. So stage one is the [[MemberIndex]] the frontend publishes (what it SAW,
-  * including what it dropped) and stage two is the symbol table (what the program HAS, including
-  * externals). Policy that REMOVES something can only be bound where the thing still exists.
+  * Every refusal is a DIFFERENT instruction to its reader (CLAUDE.md §4.45): `NeverMatched` (typo),
+  * `ExternalOnly` (a documented silent no-op), `SyntheticTarget` (policy has no standing here),
+  * `Ambiguous` (pick one), `Malformed` (rewrite it) — collapsing any two would read as one and mean
+  * opposites.
   *
-  * ==Every refusal is a different instruction to its reader==
-  * That is the whole point of the enum, and it is CLAUDE.md §4.45's rule applied to policy: a
-  * finding an agent cannot classify costs it a full investigation. `NeverMatched` says *your key is
-  * a typo*; `ExternalOnly` says *it named a JDK symbol, which is a documented silent no-op*;
-  * `SyntheticTarget` says *it names a member the ENGINE created, which policy has no standing to
-  * address*; `Ambiguous` says *it names three members and you asked for one, here they are*;
-  * `Malformed` says *this could never have matched anything, and here is what to write*. Collapsed
-  * into one, the first and the third read identically and mean opposite things.
-  *
-  * ==What it deliberately does not do==
-  * It does not make string matching impossible. `Symbol.fullName` is public and `String`-typed, so
-  * nothing in the type system stops a new phase writing `s.fullName.startsWith("java.")` — the exact
-  * §4.56 defect, twice measured. This is a CONVENTION WITH A LINT (`PolicyKeyLintSpec`), not a
-  * type-level guarantee, and saying so plainly is better than implying otherwise.
+  * A CONVENTION WITH A LINT (`PolicyKeyLintSpec`), not a type-level guarantee: `Symbol.fullName` is
+  * still public and `String`-typed, so nothing stops a new phase writing its own §4.56 defect.
   */
 /** @param run what the RUN knows about itself — which units it EMITS, and which of a merged
   *            phase's keys THIS manifest contributed ([[RunScope]]). Defaulted to

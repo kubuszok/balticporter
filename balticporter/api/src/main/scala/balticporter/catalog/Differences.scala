@@ -7,44 +7,9 @@ import Twin.*
 import FixKind.*
 import Attaches.*
 
-/** The language half of the catalog — `JS-{E,S,C,G}`.
-  *
-  * EVERY STATUS HERE WAS RE-DERIVED AGAINST THE ENGINE, not copied from a document. The method,
-  * in this order and no other: (1) `scripts/catalog-status.sh` — does the row's twin read CLOSED in
-  * `ENGINE-LIMITS.md`; (2) re-read the cited SYMBOL in the engine, never the cited line; (3) only
-  * then a fixture. Step (1) is mechanised because it is the step a hand pass skips: four headline
-  * rows went from `Open` to fixed inside one week and nothing could see that they had, and all four
-  * fall out of that one grep.
-  *
-  * WHAT THE RE-DERIVATION MOVED, so the next reader knows this list is not a transcription:
-  *
-  *   - `JS-C03`, `JS-C04`, `JS-C06`, `JS-C09`, `JS-C29`, `JS-C47`, `JS-C49` were `PARTIAL` /
-  *     `OPEN` / `UNVERIFIED` and are `Handled` — each has a symbol that does the work, and in
-  *     `JS-C04`'s case the doubt came from reading `MemberRenamer` (the POLICY renamer, which
-  *     defers this case) instead of the emitter pass that actually decides it;
-  *   - `JS-C44` was `UNVERIFIED` and is `Open`: `SpoonTir.typeFlags` never populates
-  *     `Flags.isSealed`, so a Java `sealed`/`permits` hierarchy ships as an ordinary open class —
-  *     a silent widening with no refusal and no finding;
-  *   - `JS-G31` was `HANDLED`, was re-derived to `Partial` — the poly-expression exclusion list is
-  *     TWO lists and the constructor-argument one omits a member the invocation one has — and is
-  *     `Handled` again only now that it is ONE predicate consulted at both call dispatches. Read
-  *     the sequence rather than the endpoint: the re-derivation was right and UNDERSTATED the
-  *     defect, because there was a THIRD argument arm with no list at all, and that arm is where
-  *     `ENGINE-LIMITS.md` K17 face 1's 27 test failures came from;
-  *   - `JS-C22`'s twin was `T12`, which reads CLOSED. T12 closed a different FACE (accessibility as
-  *     an input to the candidate set), so the CITATION was wrong rather than the status. That is
-  *     the finding step (1) produced on its first run;
-  *   - `JS-G24` cited `ENGINE-LIMITS.md` **G23**, which is the WILDCARD-BOUND entry and says nothing
-  *     about unboxing — cited because `JS-G03` cites it, one row up. Step (2) applied to the ENTRY
-  *     rather than to the row is what found it, and re-reading the row's own sentence settled the
-  *     status too: scala unboxes through an instance method on the wrapper, so a null unbox is an
-  *     NPE on both sides. `NonDiff`, `NoTwin`, `NoObligation`;
-  *   - `JS-G48` claimed `Handled` while shipping a counted REFUSAL that is one corpus port's last
-  *     remaining test failure. `Partial`, on `JS-C44`'s precedent: a row states which half is
-  *     missing rather than claiming coverage for a residue somebody is still failing a test on.
-  *
-  * The count is DERIVED ([[all]]`.size`) and written down nowhere. `PortabilityCheck`'s phantom
-  * "34 rules" is what a hand-written total becomes.
+/** The language half of the catalog -- `JS-{E,S,C,G}`. Every status is RE-DERIVED against
+  * the engine (via `scripts/catalog-status.sh`, then the cited SYMBOL, then a fixture) --
+  * never copied from a document. The count is DERIVED ([[all]]`.size`), written nowhere.
   */
 object Differences:
 
@@ -55,19 +20,9 @@ object Differences:
 
   private def el(id: String) = EngineLimit(id)
 
-  // -------------------------------------------------------------------------------------------
-  // ATTACHMENT — the three shared "not instrumented yet" answers, one per area whose obligations
-  // are not declared.
-  //
-  // Written down rather than defaulted, and that is not ceremony: a DEFAULT would give a row added
-  // tomorrow a claim nobody made, which is the exact failure `EmissionFieldCoverageSpec` exists to
-  // prevent one artifact over — the default for an unknown thing must be "not covered", and the
-  // only way a reader can tell "not covered" from "nobody thought about it" is a sentence.
-  //
-  // Each says WHICH surface the area is waiting for, so the wave that builds that surface knows
-  // what it retires. `catalog(unmechanised)` counts them, which is the honest alternative to
-  // measuring: a number that can go down, rather than a silence that reads as coverage.
-  // -------------------------------------------------------------------------------------------
+  // ATTACHMENT -- three shared "not instrumented yet" answers, one per area whose
+  // obligations are not declared. Written down rather than defaulted, so a row added
+  // tomorrow gets no claim nobody made; `catalog(unmechanised)` counts them.
 
   /** the four `Tree` kinds a LOOP is, as one attachment.
     *
@@ -77,29 +32,13 @@ object Differences:
     * loop (`JS-S01`) and an interposed boundary steals one (`JS-S03`), and both are decided in
     * `TirEmitter.loopWithJumps`, which every loop arm goes through. Writing the chain twice would be
     * the F8 shape — one rule, two copies, and the next loop kind added to the IR is on only one. */
-  // A NAMED `Unmechanised` FOR A REFUSED KIND STOOD HERE — `refusedAtTheKind` — and it is gone
-  // because its last user is. Its argument is not: a construct the frontend REFUSES cannot take a
-  // `Lowered` attachment, since that says an ARM owes a consult and there is no arm — the dispatch
-  // enters, the refusal mints a marker or throws, and a row attached there would sit on
-  // `mechanised` reading `unreached` on every port forever, which is a claim that reads as coverage
-  // and can never fail. It cannot take `NoObligation` either, because there IS a gap. That argument
-  // lives on `Attaches.Unmechanised` itself, where the next refused kind will read it; what was
-  // here was one phrasing of it with two users, and both rows now LOWER (`JS-S10`'s record half,
-  // `JS-C43`'s declaration).
 
   private val everyLoop: Attaches =
     Both(Rendered("While"), Both(Rendered("For"), Both(Rendered("ForEach"), Rendered("DoWhile"))))
 
-  /** the three DECLARATION kinds an emitted member is one of, as one attachment.
-    *
-    * `everyLoop`'s shape one area over, and for the same reason: the four VISIBILITY rows (JS-C47,
-    * C48, C49, C50) are one decision — `Visibility.decide` runs over the whole program and
-    * `TirEmitter.visOf` renders its answer — and a class, a method and a field each carry it.
-    * Attaching such a row to one kind would leave the other two able to render without considering
-    * it, which is exactly what `Attaches.Both` exists to prevent.
-    *
-    * The convergence point is `TirEmitter.declVisibility`, called from all three arms of the
-    * rendering dispatch, so the rule is stated ONCE (`ENGINE-LIMITS.md` F8). */
+  /** the three DECLARATION kinds an emitted member is one of, as one attachment. The four
+    * VISIBILITY rows (JS-C47..50) are one decision (`Visibility.decide` +
+    * `TirEmitter.declVisibility`), so all three carry it (`ENGINE-LIMITS.md` F8). */
   private val everyDeclaration: Attaches =
     Both(Rendered("ClassDef"), Both(Rendered("DefDef"), Rendered("ValDef")))
 
@@ -111,37 +50,18 @@ object Differences:
   private val everyStaticFieldRead: Attaches =
     Both(Lowered("CtFieldRead", Dispatch.Expression), Lowered("CtFieldWrite", Dispatch.Expression))
 
-  /** every dispatch at which a value flows into a DECLARED TYPE — java's assignment conversion.
-    *
-    * `everyLoop`'s shape in area G, and the driver is the same one chunk 10 named: MORE THAN ONE
-    * KIND at one surface. JLS 5.2 is one conversion and `SpoonTir.coerce` is the one function that
-    * writes it out, but a slot is not a node kind — a local's initialiser, an assignment's
-    * right-hand side, a `return`ed value, a call argument, a `new`'s argument, an array
-    * initialiser's element and a FIELD's initialiser are seven kinds reaching that one function.
-    * Attaching the boxing rows to any one of them would leave the other six able to lower without
-    * considering it.
-    *
-    * The seventh is the one that shows why the enumeration has to be written down rather than
-    * assumed: a `CtField` is neither a statement nor an expression, so it enters neither of the
-    * frontend's two dispatches, and for as long as the list was "the six node kinds we dispatch on"
-    * the slot was not merely unattached — it was UNREACHABLE. A port whose only boxing, array
-    * covariance or unchecked conversion sites were field initialisers read `consulted = 0` on all
-    * three rows, which is indistinguishable from "the difference does not arise in this library".
-    *
-    * The convergence point is `SpoonTir.slotConsults`, called from all six arms, so the rule is
-    * stated ONCE (`ENGINE-LIMITS.md` F8). It is called from the ARM and not from `coerce` itself,
-    * and that is not a detail: `coerce` is not reached at all for a local with no initialiser, a
-    * bare `return` or a zero-argument call, so a consult inside it would report a hole at exactly
-    * the nodes where the difference does not apply. */
-  /** the CALL dispatches, as one attachment — an invocation and a `new` resolve ONE
-    * method-invocation conversion (JLS 15.12.4.2) and all three kinds reach
-    * `SpoonTir.coerceArgs`, which is where the vararg family and the external-callee family are
-    * answered.
-    *
-    * `CtNewClass` is a `CtConstructorCall` and reaches the very same arm, and it is named ANYWAY:
-    * `SpoonKinds.nameOf` answers the MOST SPECIFIC registered interface, so a `new Foo(xs) { … }`
-    * enters the dispatch as `CtNewClass` and a two-kind attachment would leave every anonymous-class
-    * construction able to lower without considering the vararg pack java performed for it. */
+  /** every dispatch at which a value flows into a DECLARED TYPE -- java's assignment
+    * conversion (JLS 5.2), through the one function `SpoonTir.coerce` -- but a slot is not
+    * a node kind: seven distinct kinds reach it, including a FIELD initialiser, which
+    * enters neither of the frontend's two dispatches and was UNREACHABLE until named
+    * explicitly. Convergence point: `SpoonTir.slotConsults`, stated ONCE (`ENGINE-LIMITS.md`
+    * F8), called from the ARM rather than from `coerce` (which is not reached for a local
+    * with no initialiser, a bare `return`, or a zero-arg call). */
+  /** the CALL dispatches, as one attachment -- an invocation and a `new` resolve ONE
+    * method-invocation conversion (JLS 15.12.4.2), all reaching `SpoonTir.coerceArgs`.
+    * `CtNewClass` is named separately because `SpoonKinds.nameOf` answers the MOST SPECIFIC
+    * registered interface, so an anonymous-class `new` would otherwise skip the vararg
+    * pack java performed for it. */
   private val everyCall: Attaches =
     Both(Lowered("CtInvocation", Dispatch.Expression),
       Both(Lowered("CtConstructorCall", Dispatch.Expression),
@@ -155,14 +75,10 @@ object Differences:
             Both(Lowered("CtAssignment", Dispatch.Either),
                  Lowered("CtReturn", Dispatch.Statement))))))
 
-  /** the WILDCARD arm of the frontend's type dispatch — `SpoonTir.tpe`'s `CtWildcardReference`
-    * branch, where java's use-site variance becomes a scala `TypeBounds` or, at `? super Object`,
-    * stops being a family at all.
-    *
-    * Named once because three rows own that one arm and each asks a different question of it. Note
-    * `SpoonKinds.refNameOf` has to answer `CtWildcardReference` here and not the type-parameter
-    * kind its IMPLEMENTATION extends, which is why the registry lists both and
-    * `ReferenceKindTotalitySpec` pins the pair. */
+  /** the WILDCARD arm of the frontend's type dispatch (`SpoonTir.tpe`'s
+    * `CtWildcardReference` branch). Named once because three rows own that one arm.
+    * `SpoonKinds.refNameOf` answers `CtWildcardReference` here, not the type-parameter kind
+    * its implementation extends (`ReferenceKindTotalitySpec` pins the pair). */
   private val everyWildcard: Attaches = LoweredType("CtWildcardReference")
 
   /** the PLAIN reference arm — `SpoonTir.tpe`'s final `case r`, and its primitive fast path.
@@ -195,23 +111,11 @@ object Differences:
       Mixed, Handled, el("K17"), Universal,
       "SpoonTir.promotedBranch converts each OPERAND to java's own computed type, beside the null-branch ascription in the CtConditional arm",
       Lowered("CtConditional", Dispatch.Expression)),
-    // The status is `Partial` and the reason is NOT the one this row shipped with, which named the
-    // wrong half. What was measured (K17 face 3) is that the mismatch needs no retyping phase at
-    // all: the FRONTEND manufactures it, by reading Spoon's pre-cast type for a term `expr` has
-    // already folded the casts onto. Both readers are fixed and both directions of the cast itself
-    // are now java's — so what remains is the cell this row's own sentence describes and nobody has
-    // ever measured, which is why it may not be called `Handled`. Note the PREDICTED fix here was
-    // refuted: `(prim) objectExpr` throws in java too (JLS 5.5 is a checkcast to the exact wrapper,
-    // not a `Number` dispatch), so converting there would be unfaithful — see K17 face 3.
     Difference(eId(6), "a primitive cast is a CONVERSION in Java and an assertion in Scala once a phase has retyped the value",
       "JLS 5.5", "UNCITED — `asInstanceOf` converts at a statically primitive type and checks otherwise",
-      // …and the ATTACHMENT is the emitter's, which the row denied it had. `Tree.Typed` DOES enter
-      // the rendering dispatch — `JS-G34` consults there — so "the EMITTER half has none either"
-      // was false about a surface that already existed. The consult is the CHECKABLE cell: a
-      // primitive target over a WRAPPER of a DIFFERENT primitive, which is the one shape the
-      // frontend's own answer (`SpoonTir.castOf`) makes unreachable from a translation and which
-      // therefore only a RETYPING can produce. It is COUNTED and not repaired, because the repair
-      // belongs where the retyping is.
+      // JS-G34 also consults the Tree.Typed emitter arm; the checkable cell is a primitive
+      // target over a wrapper of a DIFFERENT primitive, reachable only by a RETYPING phase,
+      // and so COUNTED rather than repaired here.
       Silent, Partial("the FRONTEND's two readings are fixed — a cast expression's own type at the slot that boxes it, and a wrapper operand at a primitive target — but a value some later PHASE retypes after the frontend decided is still unrepaired: the emitter COUNTS that cell (`cast-conversion`) and no corpus site has ever produced one"),
       el("K17"), Universal, "SpoonTir.expr via SpoonTir.castOf for the cast itself, and SpoonTir.coerce + SpoonTir.uncheckedGeneric reading SpoonTir.castType for the slot; TirEmitter's Tree.Typed arm renders what those decided and CastConversionCheck counts what a later phase moved under it",
       Rendered("Typed")),
@@ -308,19 +212,10 @@ object Differences:
     Difference(sId(8), "a `null` selector throws NPE IMPLICITLY — a classic switch has no `case null` to opt out with",
       "JLS 14.11.2", "UNCITED — `null` matches no literal pattern and reaches the last arm",
       Silent, Handled, el("F6"), Universal, "TirEmitter.matchStr's synthesised `case null` throw; SwitchNullCheck", Rendered("Match")),
-    // The image was `Tree.Match` all along — a scala `match` IS an expression — so what was absent
-    // was the ARM and not the node, and the row closes without one line of new IR for the switch
-    // itself. `Tree.Yield` is the one node it did need, and only for the shape scala has no image
-    // for at all: a `yield` that is not the arm's last statement completes the switch expression
-    // abruptly from depth, which is a value-carrying `boundary` the emitter interposes around the
-    // ARM. A TAIL `yield` needs nothing, because it is what a scala arm already means.
-    //
-    // `Handled` rather than `Partial`, and the difference is worth stating: the one cell where the
-    // two languages do not agree exactly is EXHAUSTIVENESS. JLS 15.28.1 makes java's switch
-    // expression exhaustive by construction and scala's `match` is not checked to be — so where
-    // java's own guarantee fails at run time (a separately-compiled enum that gained a constant) it
-    // throws `MatchException` and scala throws `MatchError`. Both throw, at the same place, for the
-    // same reason; the class differs and nothing else does.
+    // `Tree.Yield` is the one new node needed: a non-tail `yield` completes the switch expression
+    // abruptly from depth, rendered as a value-carrying `boundary` around the ARM. `Handled`, not
+    // `Partial`: the one cell where the languages disagree is EXHAUSTIVENESS (JLS 15.28.1), and
+    // both throw at the same place for the same reason, class only differing.
     Difference(sId(9), "switch EXPRESSIONS and `yield`",
       "JLS 15.28, 14.21", "UNCITED — a `match` is already an expression, so the image exists",
       Loud, Handled,
@@ -329,19 +224,11 @@ object Differences:
         "`yield` peeled at the tail and carried as Tree.Yield elsewhere, which " +
         "TirEmitter.matchStr wraps in a value-carrying arm boundary",
       Lowered("CtSwitchExpression", Dispatch.Expression)),
-    // The SPLIT this row was is closed. "Scala patterns are a superset" was true of a TYPE pattern
-    // and false of a RECORD one, because the two languages deconstruct through different members —
-    // java through the record's ACCESSORS (JLS 14.30.1), scala through an `unapply` — and the engine
-    // emitted a java record as a plain class with neither. `JS-C43` derives one over exactly those
-    // accessors now, so the record half is an ordinary constructor pattern.
-    //
-    // What the record half had to get right beyond the extractor is JLS 14.30.2's UNCONDITIONAL
-    // component pattern: where the pattern's type already covers the component's, java matches a
-    // `null` component and a scala type test does not. So an unconditional component emits the
-    // BINDING ALONE and a narrowing one the typed pattern, and the two are different nodes rather
-    // than one node with a flag (`Tree.BindPattern` / `Tree.TypePattern`). Measured in both
-    // languages: `new One(null)` matches `case One(String s)` and does not match a pattern that
-    // really narrows.
+    // java deconstructs a record through its ACCESSORS (JLS 14.30.1), scala through `unapply`;
+    // `JS-C43` derives one over the accessors, so the record half is an ordinary constructor
+    // pattern. JLS 14.30.2's UNCONDITIONAL component pattern (matches `null` where a narrowing
+    // typed pattern does not) is a separate node (`Tree.BindPattern`/`Tree.TypePattern`), verified
+    // against javac.
     Difference(sId(10), "pattern and record switch, with sealed exhaustiveness",
       "JLS 14.11.1, 14.30", "UNCITED — a scala typed pattern is the image of one half and a constructor pattern over JS-C43's derived extractor is the image of the other",
       Loud, Partial("the TYPE pattern, its `when` guard, `case null`, `case null, default` and the " +
@@ -543,17 +430,11 @@ object Differences:
       Mixed, Handled, NoTwin, Universal,
       "TirEmitter.tpe's TypeRef arm, through typeSym's cascade — nestedPath for a static nested type, a projection for an inner one, with namedInner opting out at `extends`/`new`",
       RenderedType("TypeRef")),
-    // `Absent("refused outright by the frontend")` until this wave, and the sentence that replaced
-    // it is worth reading for what it says about the OTHER surfaces. The construct's own lowering
-    // was twenty lines — `Tree.ClassDef` is a `Statement` and always was, so the node the TIR
-    // needed already existed, which is exactly what T9's exit note predicted. What was not the
-    // frontend's was the rest: twenty-eight whole-program recursion lines walked `cd.body` and
-    // therefore could not reach a class standing in a member's BLOCK, and each of those four
-    // answers (the type's name, its visibility, its constructor plan, its package) is wrong in a
-    // different, silent way. Two things a local class asks that a nested one does not: java's
-    // qualified name carries a BINARY disambiguator that is not an identifier, and the owner is an
-    // EXECUTABLE, which is what makes the emitter name it by simple name rather than by a
-    // projection through a method.
+    // `Tree.ClassDef` is a `Statement` and always was (T9's exit note); the gap was every
+    // whole-program recursion walking `cd.body` alone, which cannot reach a class standing in a
+    // member's BLOCK. Two things a local class asks a nested one does not: java's qualified name
+    // carries a BINARY disambiguator, and the owner is an EXECUTABLE (naming by simple name, not
+    // a method projection).
     Difference(cId(30), "method-LOCAL named classes",
       "JLS 14.3", "UNCITED — Scala has a direct counterpart; only the capture wiring is missing",
       Loud, Handled, el("T9"), Universal,
@@ -619,38 +500,16 @@ object Differences:
       // by the same one arm that lowers every other reference, and making that arm owe this row
       // would demand a consult at every type in every program.
       Cited("collections")),
-    // LOWERED, and the image is a PLAIN FINAL CLASS with javac's four members written out — not a
-    // scala `case class`, which was priced against javac cell by cell and loses six of them. Two of
-    // the six cannot be repaired at all: an EXPLICIT accessor (`public int y() { return y * 2; }`,
-    // which java permits) is `E120 Conflicting definitions` beside a case class's `val y`, and the
-    // generated `unapply` reads the constructor PARAMETERS where java's record pattern reads the
-    // ACCESSOR (JLS 14.30.1) — so java binds `6` on that record and a case class would bind `3`,
-    // silently. The other four are `toString`'s format (`Pt[x=1, y=2]` against `Pt(1,2)`),
-    // `hashCode` (javac's 31-fold from zero against `MurmurHash3.productHash` — unspecified by the
-    // JLS, so it binds nothing on its own, but two hash values are two bucket orders), `equals` on
-    // `double`/`float` (`Double.compare`, so `NaN` equals `NaN` and `0.0` does not equal `-0.0` —
-    // scala's `==` is the opposite on both), and the added surface (`copy`, `apply`, `productArity`,
-    // `canEqual` — the last for a problem records cannot have, being final by construction).
-    //
-    // Three things the PARSER hands over wrong were found by the fixtures and are repaired in the
-    // frontend, none of them visible to a compile: a COMPACT constructor arrives without JLS
-    // 8.10.4's appended field assignments (every accessor answered the type's default); the implicit
-    // canonical constructor's parameters arrive in the parser's FIELD order rather than the header's
-    // (so every translated `new` transposes them); and a NESTED record arrives with NO constructor
-    // at all and with accessors whose field read does not resolve, which in scala's one namespace
-    // makes each accessor call ITSELF.
-    //
-    // `Partial` and not `Handled`, for THREE residues no image can close, all recorded on the
-    // `RecordMembers` decision at every emitted record. One is the class file: scalac emits no JVM
-    // record, so it carries no `Record` attribute — `x instanceof java.lang.Record` still answers
-    // true (the emitted class really does extend it) while `getClass.isRecord` answers false and
-    // `getRecordComponents` answers null, which a framework that discovers records reflectively
-    // acts on. The other two are the DECONSTRUCTION, and they are about the extractor's shape: a
-    // record pattern is a matching PROCESS and a tuple-returning `unapply` is a FUNCTION, so the
-    // port calls EVERY accessor where java stops at the first failing component, and an accessor's
-    // exception arrives raw where java wraps it in a `MatchException`. Both measured in both
-    // languages; neither is repairable without name-based lazy extractors, which scala has no form
-    // for.
+    // LOWERED as a PLAIN FINAL CLASS with javac's four members written out, not a `case class`
+    // (priced against javac cell by cell, §4.4's record row). Three parser errors were found by
+    // fixtures and repaired in the frontend: a compact constructor's JLS 8.10.4 appended field
+    // assignments were missing; the canonical constructor's parameters arrived in FIELD order
+    // rather than the header's; and a NESTED record arrived with no constructor and self-calling
+    // accessors. `Partial`, not `Handled`, for THREE residues no image can close (recorded on the
+    // `RecordMembers` decision): scalac emits no JVM `Record` attribute; a record pattern is a
+    // matching PROCESS and `unapply` a FUNCTION, so every accessor runs where java stops at the
+    // first failure; and an accessor's exception arrives raw rather than wrapped in
+    // `MatchException`.
     Difference(cId(43), "Java `record`",
       "JLS 8.10", "UNCITED — a case class differs in accessor naming, in three facets of `toString`, in `hashCode`, in float equality and in what its extractor reads",
       Loud,
@@ -667,13 +526,9 @@ object Differences:
         "TirEmitter.recordMembers, which writes equals/hashCode/toString over the FIELDS and an " +
         "`unapply` over the ACCESSORS — java's own split, and the reason a case class cannot be the image",
       Rendered("ClassDef")),
-    // `Open` — "SpoonTir.typeFlags never populates Flags.isSealed, so a sealed hierarchy ships as
-    // an ordinary open class, a silent widening with no refusal and no finding" — until this wave.
-    // What the two languages have is not one feature: java seals by NAMING its subclasses anywhere
-    // in the module, scala by CONTAINING them in one file. Where they coincide the image is EXACT
-    // and is emitted; where they do not there is no image at all, and the residue is RECORDED
-    // rather than approximated. `Partial` and not `Handled`, because the second half is a widening
-    // the port still ships — what changed is that it now says so.
+    // java seals by NAMING its subclasses anywhere in the module, scala by CONTAINING them in one
+    // file. Where they coincide the image is EXACT; where they do not the residue is RECORDED
+    // rather than approximated (`Partial`, not `Handled`: the port still ships the widening).
     Difference(cId(44), "`sealed` / `non-sealed` / `permits`",
       "JLS 8.1.1.2, 9.1.1.4",
       "UNCITED — Scala has no `non-sealed` and no explicit `permits`; `sealed` restricts extension to the declaring FILE",
@@ -704,18 +559,11 @@ object Differences:
     Difference(cId(50), "Java's default access is package-private and Scala's is public — INVERTED",
       "JLS 6.6.1", "UNCITED — emitting nothing means public, which is the wrong default",
       Silent, Handled, el("T12"), Universal, "Visibility.decide — the same branch as JS-C47", everyDeclaration),
-    // A `return` with no value is legal in a java constructor (JLS 14.17) and completes it
-    // normally — an ordinary early exit from a parameter parser, and upstream libraries write it.
-    // The promotion that makes `super(args)` expressible at all (JS-C19) moves that body into the
-    // CLASS BODY, where scala has no method to return from: `E091 return outside method
-    // definition`, and the faithful translation is the one that does not compile.
-    //
-    // A local `def` is the image, for JS-S21's own reason at the other java construct — a `def` is
-    // the one thing a local `return` belongs to, so nothing has to be NAMED and no interposed
-    // construct can capture the jump — and for one more that is specific to a CONSTRUCTOR body:
-    // `scala.util.boundary.Break` extends `RuntimeException`, and a constructor body routinely
-    // holds a broad `catch` (JS-S12), which would then swallow a jump java's `return` can never be
-    // caught by.
+    // the promotion that makes `super(args)` expressible (JS-C19) moves the body into the CLASS
+    // BODY, where scala has no method to return from. A local `def` is the image (JS-S21's own
+    // reason): nothing to name, no interposed construct can capture the jump, and
+    // `boundary.Break extends RuntimeException` would otherwise be swallowed by a broad `catch`
+    // (JS-S12) java's `return` is never caught by.
     Difference(cId(51), "a `return` in a CONSTRUCTOR body, whose promotion puts it in the class body",
       "JLS 14.17, 8.8.7", "UNCITED — a scala class body is not a method, so `return` is rejected outright",
       Loud, Handled, NoTwin, Universal,
