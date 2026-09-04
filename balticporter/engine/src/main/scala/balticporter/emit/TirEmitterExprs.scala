@@ -275,7 +275,13 @@ private[emit] trait TirEmitterExprs:
       // JS-S17 — java's classic for scopes ForInit to the loop and runs UPDATE on a continue too;
       // while has neither clause, so both must be PLACED explicitly.
       Obligations.consult(JS.S(17), body.origin)(Option.when(init.nonEmpty || upd.nonEmpty)(()))
-      loopWithJumps(body, lbl, bd => s"{ $is; while ($c) { $bd; $u } }", term(body, i))
+      // an EMPTY java body (`for (...; ...; i++) ;`) renders no `()` statement: scalac's E129
+      val emptyBody = Tree.uncomment(body) match
+        case Tree.Block(Nil, Tree.Literal(Constant.UnitC, _, _), _, _, _) => true
+        case Tree.Literal(Constant.UnitC, _, _)                          => true
+        case _                                                           => false
+      loopWithJumps(body, lbl,
+        bd => if emptyBody then s"{ $is; while ($c) { $u } }" else s"{ $is; while ($c) { $bd; $u } }", term(body, i))
     case t: Tree.Try                    => tryStr(t, i)
     case m: Tree.Match                  => matchStr(m, i)
     case mr @ Tree.MethodRef(q, s, mrT, _, referent) =>
