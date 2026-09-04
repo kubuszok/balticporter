@@ -4,27 +4,11 @@ import balticporter.runner.PortConfig
 
 import java.nio.file.Path
 
-/** Migrate **jbump** (`jbump/src`, 19 types -- a dependency-free 2D AABB collision library).
-  *
-  *   corpus/runMain balticporter.corpus.jbump.JbumpMigrate [--determinism=full]
-  *
-  * The whole port is `balticporter/corpus/ports/jbump/main.conf` -- read that, not this file. This
-  * `main` only names it and gives the run its report identity.
-  *
-  * NO test suite: upstream's `test` gradle module is a runnable libGDX demo with zero `@Test`; the
-  * reference hand port's 32 Scala test cases were WRITTEN there, not translated (`PROGRESS.md`
-  * §jbump), so this port's evidence stops at the compiler (CLAUDE.md §3).
-  *
-  * Four constructs it forces, none of which simple-graphs or Ashley has: a class that is both
-  * `Iterable<T>` and `Iterator<T>` (`IntIntMap.Entries`, CLAUDE.md §4.5 -- `IntIntMap` is literally
-  * libGDX's own class vendored in, the control experiment for whether `GdxSharedIteratorRule` is
-  * §1(c) or §1(b)); interface constants that are anonymous classes (java's `static` fields are
-  * INHERITED, a Scala companion inherits nothing); a field and a method sharing a name three times
-  * (CLAUDE.md §4.55); and `size++` read as a value, eight times in `IntIntMap` (CLAUDE.md §4.4).
-  *
-  * `JbumpPortSpec` asserts that `Collisions`' public copy constructor survives here, since the hand
-  * port lost it (`CollisionsCopyCtorRedSuite`) and the engine ports constructors mechanically.
-  */
+/** Migrate **jbump** (`jbump/src`, 19 types — dependency-free 2D AABB collision library):
+  * `.../ports/jbump/main.conf`. NO test suite (zero `@Test` upstream): the hand port's 32
+  * Scala tests were WRITTEN there, so evidence stops at the compiler (§3). Forces: a class both
+  * `Iterable<T>` and `Iterator<T>` (§4.5), interface constants as anonymous classes, a
+  * field/method sharing a name (§4.55), `size++` as a value (§4.4), a `Collisions` copy ctor. */
 object JbumpMigrate:
 
   def main(args: Array[String]): Unit =

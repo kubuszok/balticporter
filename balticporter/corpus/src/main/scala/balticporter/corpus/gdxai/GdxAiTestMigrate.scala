@@ -8,20 +8,10 @@ import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
 /** Migrate **gdx-ai's own JUnit suite** (`gdx-ai/tests`, 2 files / 10 `@Test`) through the TIR.
-  *
-  *   corpus/runMain balticporter.corpus.gdxai.GdxAiTestMigrate [--determinism=full]
-  *
-  * Only two upstream files carry `@Test` at all -- `pfa/indexed/IndexedAStarPathFinderTest` and
-  * `btree/branch/ParallelTest`; the separate top-level `gdx-ai/tests` gradle project (111 files)
-  * declares ZERO `@Test` and is an LWJGL demo application. `ai-test-measure` censuses the two
-  * trees apart, in both directions, because every wrong answer this library has produced came from
-  * conflating them. Validates two of gdx-ai's eight packages -- the port's first evidence of
-  * BEHAVIOUR (CLAUDE.md §3), not a claim about the library as a whole.
-  *
-  * A dependent OF a dependent: resolves against gdx-ai's Java AND libGDX's (both RESOLUTION
-  * ROOTS, §1.5), manifest is [[GdxAiPolicy.test]] extended from `core`. JUnit 4.12 is gdx-ai's own
-  * declared version; an unresolved static import resolves WRONGLY, not fails.
-  */
+  * Only two upstream files carry `@Test`; the separate `gdx-ai/tests` gradle project (111
+  * files) declares ZERO `@Test`, an LWJGL demo application. `ai-test-measure` censuses the two
+  * trees apart, since every wrong answer this library produced came from conflating them. A
+  * dependent OF a dependent (both RESOLUTION ROOTS, §1.5), manifest [[GdxAiPolicy.test]] extended. */
 object GdxAiTestMigrate:
 
   def main(args: Array[String]): Unit =

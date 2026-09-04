@@ -9,12 +9,9 @@ import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
 /** Migrate libGDX's CORE module (`gdx/src`) through the TIR to the `ported/sge` sbt submodule.
-  *
-  *   corpus/runMain balticporter.corpus.libgdx.LibgdxCoreMigrate [--raw] [--determinism=full]
-  *
+  * `corpus/runMain balticporter.corpus.libgdx.LibgdxCoreMigrate [--raw] [--determinism=full]` —
   * `--raw` skips the transform pipeline. This file is POLICY ONLY; engine mechanics live in
-  * [[balticporter.runner.PortRun]] — what's here is the manifest, transform args, provenance.
-  */
+  * [[balticporter.runner.PortRun]] — what's here is the manifest, transform args, provenance. */
 object LibgdxCoreMigrate:
 
   def main(args: Array[String]): Unit =
@@ -155,12 +152,10 @@ object LibgdxPolicy:
   ))
 
   /** THE ONE `selfSupplied` ENTRY (`ENGINE-LIMITS.md` CT7): `AnimationControllerTest` is
-    * constructed reflectively by MUnit, so the threaded context cannot reach it as a parameter.
-    * The suite takes the context without one — an emitted
-    * `private given sge.Sge = sge.SgeTestFixture.testSge()`, matching the reference hand port.
-    * Lives on the DEPENDENT (test source set): the key names a test declaration the base never
-    * parses.
-    */
+    * constructed reflectively by MUnit, so the threaded context cannot reach it as a parameter —
+    * it takes one without a clause, an emitted `private given sge.Sge = sge.SgeTestFixture.testSge()`,
+    * matching the reference hand port. Lives on the DEPENDENT (test source set): the key names a
+    * test declaration the base never parses. */
   def selfSuppliedSuites: balticporter.transform.GlobalsToImplicitsTransform =
     new balticporter.transform.GlobalsToImplicitsTransform(extensions = List(
       balticporter.transform.ContextHolderExtension(
@@ -255,11 +250,9 @@ object LibgdxPolicy:
       "com.badlogic.gdx.scenes.scene2d.ui.Skin#setEnabledReflection",
       "com.badlogic.gdx.scenes.scene2d.ui.Skin#findMethod",
       // `ArrayReflection` — `java.lang.reflect.Array`, which neither Scala.js nor Native has.
-      // Every remaining use of it sits inside a member libGDX ITSELF deprecated in favour of an
-      // `ArraySupplier` overload that is already portable (`Array(boolean, int, ArraySupplier)`,
-      // `toArray(ArraySupplier)`, `ChannelDescriptor(int, ArraySupplier, int)`, …). The corpus
-      // calls none of the deprecated forms — `ParticleChannels` already builds every descriptor
-      // with `float[]::new` — so dropping them costs no call site and removes the last JVM-only
+      // Every remaining use sits inside a member libGDX ITSELF deprecated in favour of an
+      // `ArraySupplier` overload that is already portable. The corpus calls none of the
+      // deprecated forms, so dropping them costs no call site and removes the last JVM-only
       // dependency outright. Overload-precise keys: the `ArraySupplier` twins must survive.
       "com.badlogic.gdx.utils.Array#<init>(boolean,int,Class)",
       "com.badlogic.gdx.utils.Array#<init>(Class)",
@@ -387,14 +380,11 @@ object LibgdxPolicy:
     "com.badlogic.gdx.utils.ObjectLongMap" -> "lowlevel.util.ObjectMap",
     "com.badlogic.gdx.utils.ArrayMap" -> "lowlevel.util.ArrayMap",
     "com.badlogic.gdx.utils.IntSet" -> "lowlevel.util.ObjectSet",
-    // wave 3.1n: Array family -> DynamicArray.
-    // sge type-mappings.md: primitive arrays -> "DynamicArray[T]" (unified via MkArray type class).
-    // Array<T> -> DynamicArray[T] (1:1 type param). DynamicArray has the same member API:
-    // add, addAll, insert, removeIndex, removeValue/removeValueByRef, pop, peek, first, clear,
-    // truncate, swap, reverse, shuffle, sort(Ordering), toArray, ensureCapacity, begin/end,
-    // size (method), items (method), apply(i), update(i,v), contains/containsByRef,
-    // indexOf/indexOfByRef, lastIndexOf/lastIndexOfByRef, select, toString(sep), random,
-    // selectRanked, iterator. DynamicArray supports `for (x <- da)` natively (verified).
+    // wave 3.1n: Array family -> DynamicArray. sge type-mappings.md: primitive arrays ->
+    // "DynamicArray[T]" (unified via MkArray type class); `Array<T>` -> `DynamicArray[T]`
+    // (1:1 type param). DynamicArray has the same member API (add/insert/remove/pop/peek/first/
+    // clear/truncate/swap/reverse/shuffle/sort/toArray/ensureCapacity/size/items/contains/
+    // indexOf/select/random/selectRanked/iterator) and supports `for (x <- da)` natively.
     "com.badlogic.gdx.utils.Array" -> "lowlevel.util.DynamicArray",
     "com.badlogic.gdx.utils.SnapshotArray" -> "lowlevel.util.DynamicArray",
     "com.badlogic.gdx.utils.DelayedRemovalArray" -> "lowlevel.util.DynamicArray",
@@ -525,9 +515,8 @@ object LibgdxPolicy:
         // --- 3.1al: lls ObjectMap.get(K) returns Nullable[V]; the 1-arg overload must be
         // selected explicitly because return-type-sensitive overload resolution picks get(K,V):V
         // when the expected type is V. `.orNull` is the null-preserving unwrap (java's map.get
-        // returns null for a missing key, NOT NPE). lls `orNull` is NOT actually deprecated —
-        // the annotation triggers -Werror, forcing @nowarn with a reason (the java interop
-        // boundary). SuppressionPhase places @nowarn on the enclosing member.
+        // returns null, NOT NPE). lls `orNull` is not actually deprecated — the annotation
+        // triggers -Werror, so `SuppressionPhase` places @nowarn on the enclosing member.
         ("get", 1)     -> Template("$recv.get($0).orNull"),
       ),
       // `it.hasNext()` is parenless on scala's Iterator
@@ -1226,12 +1215,11 @@ object LibgdxPolicy:
     def genericArrayInitByDesc = Map(
       ("<init>", intDesc)      -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
       ("<init>", arrayDesc)    -> Construct("lowlevel.util.DynamicArray", "from"),
-      // wave 3.1af: Array(T[]) -> DynamicArray.from(array) — exact capacity.
-      // DynamicArray.from copies with items.length == array.length, matching java's Array(T[])
-      // which sets items = clone, size = length. The previous apply()+addAll left default
-      // capacity 16, breaking SortTest (8 failures from trailing nulls in the backing array).
-      // $T0 resolves from the constructor's applied type; raw constructors reach the supplier-
-      // derived path in retargetConstruct (engine, 3.1af).
+      // wave 3.1af: Array(T[]) -> DynamicArray.from(array) — exact capacity. `.from` copies with
+      // `items.length == array.length`, matching java's `Array(T[])` (items=clone, size=length);
+      // the previous apply()+addAll left default capacity 16, breaking SortTest (8 failures from
+      // trailing nulls). `$T0` resolves from the constructor's applied type; raw constructors
+      // reach the supplier-derived path in `retargetConstruct` (engine, 3.1af).
       ("<init>", tArrDesc)     -> Template("$Target.from[$T0]($0)"),
       ("<init>", supplierDesc) -> Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1, typeVarEvidence = mkArrayRef),
       // Cast .items to Array[$T0] to handle wildcard argument types — java arrays are covariant,
@@ -1377,13 +1365,11 @@ object LibgdxPolicy:
       ),
     )
 
-  /** `com.badlogic.gdx.utils.Disposable` -> `java.lang.AutoCloseable`, with `dispose` ->
-    * `close` -- the JDK's own type under a different name. `memberRenames` renames the whole
-    * PRE-REDIRECT override component (66 declarations) so unrelated `void dispose()` members
-    * elsewhere keep their name. Paired `dropTypes` entry is required: a redirect re-points
-    * references but never deletes the declaration (`ENGINE-LIMITS.md` D8). SHARED SURFACE,
-    * lives in [[core]] (§1.5); `MergeablePolicy` folds dependents' own redirects into this
-    * one instance (D9). */
+  /** `com.badlogic.gdx.utils.Disposable` -> `java.lang.AutoCloseable`, `dispose` -> `close` —
+    * the JDK's own type under a different name. `memberRenames` renames the whole PRE-REDIRECT
+    * override component (66 declarations) so unrelated `void dispose()` members elsewhere keep
+    * their name. Paired `dropTypes` entry is required (`ENGINE-LIMITS.md` D8). SHARED SURFACE,
+    * lives in [[core]] (§1.5); `MergeablePolicy` folds dependents' own redirects in (D9). */
   def disposableRedirect: balticporter.transform.TypeRedirectTransform =
     new balticporter.transform.TypeRedirectTransform(
       redirects     = Map("com.badlogic.gdx.utils.Disposable" -> "java.lang.AutoCloseable"),
@@ -1400,12 +1386,11 @@ object LibgdxPolicy:
     // via PortMapTransform.followMemberRenames rather than re-deciding.
     new balticporter.transform.BeanPropertyTransform(beanPropertyPairs, beanPropertyTargets, scope = balticporter.tir.RuleScope.Everywhere())
 
-  /** WHICH pairs collapse to a plain `var`/`val` instead of a `def` pair (`DESIGN.md` §8.5) --
+  /** WHICH pairs collapse to a plain `var`/`val` instead of a `def` pair (`DESIGN.md` §8.5) —
     * `def-pair` is the default for everything not named here. The phase REFUSES a mismatch
-    * rather than picking (a counted `idiom(refused)` row, never a silent surface change).
-    * Declared even for PERMANENT refusals (`MutableStorage` get-only properties) so the run's
-    * denominator stays honest. `MapLayer#opacity` is deliberately absent: its getter is
-    * computed, never a stored value. */
+    * rather than picking (a counted `idiom(refused)` row). Declared even for PERMANENT refusals
+    * so the run's denominator stays honest. `MapLayer#opacity` deliberately absent: its getter
+    * is computed, never a stored value. */
   def beanPropertyTargets: Map[String, balticporter.transform.BeanPropertyTransform.Target] =
     import balticporter.transform.BeanPropertyTransform.Target
     Map(
@@ -1519,12 +1504,11 @@ object LibgdxPolicy:
     "com.badlogic.gdx.audio.Music#looping" -> "isLooping/setLooping",
     "com.badlogic.gdx.audio.Music#volume" -> "getVolume/setVolume",
     "com.badlogic.gdx.audio.Music#position" -> "getPosition/setPosition",
-    // -- com.badlogic.gdx.Graphics --
-    // The four GL accessors, and they are here for a MECHANICAL reason rather than a stylistic one:
-    // [[globalsToContext]]'s member map re-points `Gdx.gl20` at the path `graphics.gl20`, and a path
-    // segment is an IDENTIFIER — so `graphics.gl20` can only land on a member of that name. Without
-    // these four the five `gl*` statics would have nowhere to go. (`Gdx.gl` is an alias of `gl20`
-    // upstream and maps to the same path, so four pairs serve five statics.)
+    // -- com.badlogic.gdx.Graphics -- The four GL accessors are here for a MECHANICAL reason:
+    // [[globalsToContext]]'s member map re-points `Gdx.gl20` at the path `graphics.gl20`, and a
+    // path segment is an IDENTIFIER — without these four the five `gl*` statics would have
+    // nowhere to go. (`Gdx.gl` aliases `gl20` upstream and maps to the same path, so four pairs
+    // serve five statics.)
     "com.badlogic.gdx.Graphics#gl20" -> "getGL20/setGL20",
     "com.badlogic.gdx.Graphics#gl30" -> "getGL30/setGL30",
     "com.badlogic.gdx.Graphics#gl31" -> "getGL31/setGL31",
@@ -2045,12 +2029,10 @@ object LibgdxPolicy:
          )
 
   /** Drop `()` from nullary getter-like methods — sge's empirical convention, no written rule in
-    * `conversion-rules.md`. Enabled with `Everywhere()` because the convention is whole-library:
-    * the sge hand port strips parens from EVERY getter-like method, not from a named list.
-    *
-    * AFTER `bean-properties`, which has already claimed its own getters and dropped their parens.
-    * The `runsAfter` edge is on the phase; the list position is the pipeline's contract.
-    */
+    * `conversion-rules.md`. Enabled with `Everywhere()` since the convention is whole-library:
+    * the sge hand port strips parens from EVERY getter-like method, not a named list. AFTER
+    * `bean-properties`, which has already claimed its own getters. The `runsAfter` edge is on
+    * the phase; the list position is the pipeline's contract. */
   def nullaryArity: balticporter.transform.NullaryArityTransform =
     // Drop `()` from every getter-like nullary method in scope. Dependents follow the base's
     // published shape (form=parenless in the port map) through PortMapTransform.followMemberRenames.
@@ -2079,11 +2061,9 @@ object LibgdxPolicy:
 
   /** `com.badlogic.gdx.Gdx`'s `public static` fields retired into `sge.Sge`, threaded as a
     * `using` parameter (`DESIGN.md` §8.4). `attach = "class"`: measured against method
-    * attachment, which freezes declarations anchored on an external parent the program
-    * doesn't declare. `sites` marks the two CONSTRUCT-at-init sites `LazyInit` (no caller to
-    * take a clause from). SHARED SURFACE, lives in [[core]] alone (§1.5); dependents fold
-    * their own `ContextHolderExtension`s in at this position. Position: LAST (after
-    * [[disposableRedirect]] and [[beanProperties]], which change what it reads). */
+    * attachment, which freezes declarations anchored on an external parent the program doesn't
+    * declare. `sites` marks the two CONSTRUCT-at-init sites (no caller for a clause). SHARED
+    * SURFACE, in [[core]] (§1.5); LAST (after [[disposableRedirect]] and [[beanProperties]]). */
   def globalsToContext: balticporter.transform.GlobalsToImplicitsTransform =
     new balticporter.transform.GlobalsToImplicitsTransform(holders = List(
       balticporter.transform.ContextHolder(
@@ -2127,14 +2107,11 @@ object LibgdxPolicy:
       "com.badlogic.gdx.graphics.glutils.GLFrameBuffer" -> "lowlevel.MkArray",
     ))
 
-  /** libGDX's GL texture handle -- the `int` that is really a texture name -- as an opaque
-    * type, matching the reference hand port's `GLHandle.scala` (applied to
-    * `GLTexture.scala:42`). Only `TextureHandle` is configured (§1c) -- the others are a
-    * typed layer offered to CONSUMERS the reference port does NOT surface on ported
-    * declarations themselves (`PROGRESS.md` §11.25). The four GL interfaces are FENCED out
-    * of propagation, or a nullary `glGenTexture()` flow edge would retype the whole GL
-    * interface. SHARED SURFACE, lives in [[core]] (§1.5); phase RUNS in dependents too,
-    * coercing against the object THIS module minted (`ENGINE-LIMITS.md` §13 O5). */
+  /** libGDX's GL texture handle — the `int` that is really a texture name — as an opaque type,
+    * matching the reference hand port's `GLHandle.scala`. Only `TextureHandle` is configured
+    * (§1c); the four GL interfaces are FENCED out of propagation, or a nullary `glGenTexture()`
+    * flow edge would retype the whole GL interface. SHARED SURFACE, lives in [[core]] (§1.5);
+    * phase RUNS in dependents too, coercing against the object THIS module minted (O5). */
   def textureHandle: balticporter.transform.PrimitiveToOpaqueTransform =
     new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
       fqn        = "com.badlogic.gdx.graphics.TextureHandle",
@@ -2145,13 +2122,11 @@ object LibgdxPolicy:
         "com.badlogic.gdx.graphics.GL31", "com.badlogic.gdx.graphics.GL32")),
     ))
 
-  /** libGDX's `Align` -- a class of `static final int` constants -- as an opaque type
-    * against an EXISTING/injected type (O6 CLOSED): `Substitutions.dropTypes` drops the
-    * java class, `inject` supplies sge's own `Align.scala` (`opaque type Align = Int` +
-    * extensions); `PrimitiveToOpaqueTransform(OpaqueSpec(target = Existing(...)))` seeds
-    * from align-typed FIELDS and propagates to getters/setters/parameters, coercing via
-    * `Align(rawInt)` / `Align.toInt(value)`. SHARED SURFACE, composed via `MergeablePolicy`
-    * (§1.5): a dependent seeding additional declarations unions its own `hints`. */
+  /** libGDX's `Align` — a class of `static final int` constants — as an opaque type against an
+    * EXISTING/injected type (O6 CLOSED): `Substitutions.dropTypes` drops the java class, `inject`
+    * supplies sge's own `Align.scala`; the transform seeds from align-typed FIELDS and propagates
+    * to getters/setters/parameters, coercing via `Align(rawInt)`/`Align.toInt(value)`. SHARED
+    * SURFACE, composed via `MergeablePolicy` (§1.5): a dependent unions its own `hints`. */
   def align: balticporter.transform.PrimitiveToOpaqueTransform =
     new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
       fqn        = "com.badlogic.gdx.utils.Align",
@@ -2181,12 +2156,11 @@ object LibgdxPolicy:
       underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
     ))
 
-  /** GL uniform locations -- the `int` that is really a distinct domain value -- as an
-    * opaque type following the Align pattern: no java class to drop, injected as
-    * `sge.graphics.UniformLocation` under `libgdx-overrides/` with sge's own comparison
-    * extensions (`>=`, `<`, `+`, `-`). Seeds: `fetchUniformLocation`'s return (the one
-    * producer) and `BaseShader#locations` (`int[]`, O3). Same GL-interface FENCE as
-    * [[textureHandle]]. */
+  /** GL uniform locations — the `int` that is really a distinct domain value — as an opaque type
+    * following the Align pattern: no java class to drop, injected as
+    * `sge.graphics.UniformLocation` with sge's own comparison extensions. Seeds:
+    * `fetchUniformLocation`'s return and `BaseShader#locations` (`int[]`, O3). Same GL-interface
+    * FENCE as [[textureHandle]]. */
   def uniformLocation: balticporter.transform.PrimitiveToOpaqueTransform =
     new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
       fqn        = "com.badlogic.gdx.graphics.UniformLocation",
@@ -2205,12 +2179,11 @@ object LibgdxPolicy:
         "com.badlogic.gdx.graphics.GL31", "com.badlogic.gdx.graphics.GL32")),
     ))
 
-  /** libGDX's own `@Null` moved OUT of the annotation and INTO the type --
-    * `lowlevel.Nullable[T]`, the hand port's own wrapper (`DESIGN.md` §8.6 N1). SHARED
-    * SURFACE, lives here once, inherited via `extendedBy` (§1.5). `Named` CLOSES K13: the
-    * union floor `T | Null` is not transparent at an abstract `T`; `Nullable[T]` composes
-    * at every `T`, so the abstract-type-parameter scope exit this target replaces is gone
-    * entirely. */
+  /** libGDX's own `@Null` moved OUT of the annotation and INTO the type — `lowlevel.Nullable[T]`,
+    * the hand port's own wrapper (`DESIGN.md` §8.6 N1). SHARED SURFACE, lives here once,
+    * inherited via `extendedBy` (§1.5). `Named` CLOSES K13: the union floor `T | Null` is not
+    * transparent at an abstract `T`; `Nullable[T]` composes at every `T`, so that scope exit is
+    * gone entirely. */
   def nullability: balticporter.transform.NullabilityTransform =
     new balticporter.transform.NullabilityTransform(
       annotations = Set("com.badlogic.gdx.utils.Null"),

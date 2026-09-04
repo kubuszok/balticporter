@@ -9,26 +9,11 @@ import balticporter.transform.TypeRedirectTransform
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** Migrate **libgdx-screenmanager** (`src/main/java`, 22 types -- a screen stack, a
-  * transition queue and eleven concrete transitions) through the TIR.
-  *
-  *   corpus/runMain balticporter.corpus.screens.ScreensMigrate [--determinism=full]
-  *
-  * A DEPENDENT port (`gdx/src` as a RESOLUTION root, [[LibgdxPolicy.core]] EXTENDED,
-  * CLAUDE.md §1.5), with a SECOND dependency the corpus has not met before: guacamole
-  * (`com.github.crykn.guacamole:gdx`), a separate upstream this corpus neither vendors nor
-  * ports. Its types RESOLVE via [[ScreensClasspath]] but cannot be EMITTED, so every
-  * occurrence is re-pointed at hand-written Scala this port ships
-  * ([[TypeRedirectTransform]], see [[ScreensPolicy.guacamole]]).
-  *
-  * Strictly better than the reference hand port on `NestableFrameBuffer`
-  * (`PROGRESS.md` §1.1): sge uses a plain `FrameBuffer`, whose `end()` unbinds to
-  * framebuffer 0 rather than to whatever was bound on `begin()` -- silently losing the
-  * screen manager's own buffer. This port carries the guacamole type that fixes it.
-  *
-  * Scope: `src/main/java` only; [[ScreensTestMigrate]] takes `src/test/java`.
-  * `src/example/java` (a `gdx-backend-lwjgl3` demo) is excluded.
-  */
+/** Migrate **libgdx-screenmanager** (`src/main/java`, 22 types — a screen stack, transition
+  * queue, eleven concrete transitions) through the TIR. A DEPENDENT port (`gdx/src` a
+  * RESOLUTION root, [[LibgdxPolicy.core]] EXTENDED, §1.5), with a SECOND dependency, guacamole,
+  * which RESOLVES via [[ScreensClasspath]] but cannot be EMITTED — re-pointed at hand-written
+  * Scala this port ships ([[TypeRedirectTransform]]). Scope: `src/main/java` only. */
 object ScreensMigrate:
 
   def main(args: Array[String]): Unit =
@@ -102,14 +87,11 @@ object ScreensPolicy:
         repoRoot.resolve("../sge/sge-extension/screens/src/main/scala").normalize))),
     ))
 
-  /** screenmanager's OWN nullability annotation (`org.jspecify.annotations.Nullable`), a
-    * SECOND `NullabilityTransform` instance rather than a line in the base's set -- folding
-    * it into `LibgdxPolicy.core`'s `annotations` would report `never-fired` on every libGDX
-    * lane forever, since libGDX declares no jspecify annotation. `MergeablePolicy` composes
-    * both halves (`DESIGN.md` §8.13). K13 CLOSED: `Named("lowlevel.Nullable")` composes
-    * at every `T`, so no scope exit is needed. The annotation is CONSUMED (stripped from
-    * every declaration), so `jspecify` stays only on the FRONTEND classpath -- the java
-    * sources still carry it and it must resolve for the phase to see it. */
+  /** screenmanager's OWN nullability annotation (`org.jspecify.annotations.Nullable`), a SECOND
+    * `NullabilityTransform` instance rather than a line in the base's set — folding it in would
+    * report `never-fired` on every libGDX lane forever. `MergeablePolicy` composes both halves
+    * (§8.13). K13 CLOSED: `Named("lowlevel.Nullable")` composes at every `T`. CONSUMED (stripped
+    * from every declaration), so `jspecify` stays only on the FRONTEND classpath. */
   def nullability: balticporter.transform.NullabilityTransform =
     new balticporter.transform.NullabilityTransform(
       annotations = Set("org.jspecify.annotations.Nullable"))
@@ -134,12 +116,10 @@ object ScreensPolicy:
     "de.damios.guacamole.annotations.Beta"                      -> "sge.screen.guacamole.Beta",
   ))
 
-/** libgdx-screenmanager's COMPILE-scope dependency, for shadow-class resolution only.
-  * libGDX itself arrives as a SOURCE resolution root instead (excluded here rather than
-  * resolved twice from two versions); what's left is guacamole and the jspecify
-  * annotation jar both it and screenmanager use. guacamole is jitpack-only, so the
-  * repository is named explicitly; a resolve failure is FATAL, since an unresolved import
-  * resolves WRONGLY rather than failing. */
+/** libgdx-screenmanager's COMPILE-scope dependency, for shadow-class resolution only. libGDX
+  * itself arrives as a SOURCE resolution root instead (excluded here rather than resolved
+  * twice); what's left is guacamole and the jspecify annotation jar both use. guacamole is
+  * jitpack-only, so the repository is named explicitly; a resolve failure is FATAL. */
 object ScreensClasspath:
 
   def cache(repoRoot: Path): Path = repoRoot.resolve("out/screens-classpath.txt")

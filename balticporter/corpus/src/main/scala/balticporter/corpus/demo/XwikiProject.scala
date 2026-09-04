@@ -8,12 +8,10 @@ import balticporter.sbtgen.SbtGen
 import java.nio.file.{Files, Path, StandardCopyOption}
 import scala.jdk.CollectionConverters.*
 
-/** M6 cold-port assembly: the flexmark-ext-xwiki-macros dependency closure
-  * (ssg never ported it) flattened into a single sbt 2.0 module and driven
-  * through the whole-module scalac gate. Constructor-level overrides
-  * (XwikiOverrides) handle the irreducible ctors; everything else is engine-
-  * translated. This is the real M6 gate — a library with no hand-port corpus.
-  */
+/** M6 cold-port assembly: the flexmark-ext-xwiki-macros dependency closure (ssg never ported it)
+  * flattened into one sbt module and driven through the whole-module scalac gate.
+  * Constructor-level overrides ([[XwikiOverrides]]) handle the irreducible ctors; everything else
+  * is engine-translated — the real M6 gate, a library with no hand-port corpus. */
 object XwikiProject:
 
   def main(args: Array[String]): Unit =

@@ -7,16 +7,10 @@ import balticporter.frontend.spoon.SpoonFrontend
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** M1 coverage baseline: translate every `done` Liqp file from ssg's migration
-  * manifest, per-file tolerant, and report:
-  *   - OK              translated, comments preserved
-  *   - COMMENT_LOSS    translated but the preservation invariant failed
-  *   - UNSUPPORTED     frontend/printer refused a construct (with reason)
-  *   - NO_COUNTERPART  translated but no hand-ported file at the mapped path
-  *
-  * Writes out/liqp-corpus-report.tsv (sorted, deterministic) and prints a
-  * histogram of unsupported reasons — that histogram is the M1 worklist.
-  */
+/** M1 coverage baseline: translate every `done` Liqp file from ssg's migration manifest,
+  * per-file tolerant, and report OK (preserved) / COMMENT_LOSS / UNSUPPORTED (with reason) /
+  * NO_COUNTERPART. Writes `out/liqp-corpus-report.tsv` (sorted, deterministic) and prints a
+  * histogram of unsupported reasons — that histogram is the M1 worklist. */
 object LiqpCorpus:
 
   def main(args: Array[String]): Unit =

@@ -2,16 +2,11 @@ package balticporter.corpus.libgdx
 
 import balticporter.tir.*
 
-/** A CLAUDE.md §1(c) rule — a phase living OUTSIDE the engine, in `corpus` (the stand-in for "the
-  * porting program's own repository"), because `com.badlogic.gdx.utils.Array.iterator()` returns
-  * a CACHED iterator reset in place, so nested iteration over the same collection makes the inner
-  * loop reset the outer's and terminate it early, silently — a libGDX allocation-strategy
-  * invariant, not a Java/Scala fact, so no `Set` parameter would let a second library instantiate
-  * it meaningfully (§1's own test). Enters the pipeline as an ordinary `Phase` element of
-  * `PortRun(phases = …)`; a `.conf`-driven port instead names it via [[GdxSharedIteratorFactory]].
-  * REPORTS rather than rewrites: written during a §5 flat-refactor, so a rewriting phase moving
-  * several sites at once with nothing to attribute them to was deferred as its own measurement.
-  */
+/** A CLAUDE.md §1(c) rule — a phase living OUTSIDE the engine, in `corpus`, because
+  * `com.badlogic.gdx.utils.Array.iterator()` returns a CACHED iterator reset in place, so nested
+  * iteration over the same collection silently terminates the outer loop early — a libGDX
+  * allocation invariant, not a Java/Scala fact. Enters the pipeline as an ordinary `Phase`
+  * element of `PortRun(phases = …)`. REPORTS rather than rewrites (deferred, §5). */
 final class GdxSharedIteratorRule extends Phase:
 
   def name: String = "gdx-shared-iterator"

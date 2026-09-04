@@ -7,11 +7,8 @@ import balticporter.transform.PrimitiveToOpaqueTransform
 
 /** Demonstrates the primitive → opaque-type transform end-to-end: a class with a
   * semantically-tagged `int layer` becomes an `opaque type Layer.T = Int` with a synthesized
-  * companion, retyped everywhere it flows, wrapped at construction and unwrapped where consumed as
-  * a plain int.
-  *
-  *   corpus/runMain balticporter.corpus.demo.OpaqueDemo
-  */
+  * companion, retyped everywhere it flows, wrapped at construction and unwrapped at use.
+  * `corpus/runMain balticporter.corpus.demo.OpaqueDemo` */
 object OpaqueDemo:
 
   private val src =

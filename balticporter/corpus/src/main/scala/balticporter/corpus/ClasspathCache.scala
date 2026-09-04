@@ -3,16 +3,11 @@ package balticporter.corpus
 import java.io.File
 import java.nio.file.{Files, Path}
 
-/** The frontend classpath every port resolves once and CACHES — with the coordinates it was
-  * resolved from recorded beside it. Five porting programs wrote this loop independently
-  * (§1(b): the MECHANICS are identical, only the COORDINATES differ). The resolver INVOCATION
-  * (coordinates, repositories, exclusions, in order) is written to a sidecar (`<cache>.coords`)
-  * and compared before a cached line is reused — an unresolved import resolves WRONGLY rather
-  * than failing (CLAUDE.md §5.1), so a stale line after a coordinate bump would be undetectable
-  * by any count. A sidecar rather than a header INSIDE the file: `PortConfig.classpathFile` splits
-  * the whole text on the path separator, so a comment line there is a classpath entry that does
-  * not exist.
-  */
+/** The frontend classpath every port resolves once and CACHES, with the coordinates it was
+  * resolved from recorded beside it (§1(b): five porting programs wrote this loop
+  * independently). The resolver INVOCATION is written to a sidecar (`<cache>.coords`) and
+  * compared before a cached line is reused — an unresolved import resolves WRONGLY rather than
+  * failing (CLAUDE.md §5.1). A header INSIDE the file would be a phantom classpath entry instead. */
 object ClasspathCache:
 
   /** the invocation a cached line must have been produced by, as ONE string. Order-sensitive on
@@ -41,13 +36,10 @@ object ClasspathCache:
     cache
 
   /** `cs fetch --classpath`, filtered to the one line that holds jars. `cs` writes PROGRESS to
-    * stderr and the classpath to stdout; merged here so a failure is reportable, then filtered
-    * (the raw stdout once cached `Downloading https…` as a classpath entry). A failure is FATAL
-    * rather than an empty classpath: an unresolved import resolves WRONGLY, not fails.
-    *
-    * @param label the port, for the message an operator will read
-    * @param extraArgs repositories, exclusions — anything before the coordinates; part of the key
-    */
+    * stderr and the classpath to stdout; merged here so a failure is reportable, then filtered.
+    * A failure is FATAL rather than an empty classpath: an unresolved import resolves WRONGLY,
+    * not fails. @param label the port, for the message an operator will read @param extraArgs
+    * repositories/exclusions before the coordinates; part of the key. */
   def fetch(label: String, coordinates: List[String], extraArgs: List[String] = Nil): List[String] =
     val cmd  = List("cs", "fetch", "--classpath") ++ extraArgs ++ coordinates
     val proc = new ProcessBuilder(cmd*).redirectErrorStream(true).start()

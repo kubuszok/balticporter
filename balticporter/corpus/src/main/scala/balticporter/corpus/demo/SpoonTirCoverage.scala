@@ -7,15 +7,10 @@ import balticporter.tir.TypeRepr
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** Coverage burn-down for the SpoonTir populator: translate whole corpora into the TIR and
-  * tally which constructs still hit `Unsupported`. Drives full coverage across every Java
-  * library that sge and ssg port — run, implement the top failure category, repeat.
-  *
-  *   corpus/runMain balticporter.corpus.demo.SpoonTirCoverage [corpus] [N]
-  *
-  * corpus = liqp | flexmark | sge | all (default liqp) ; N = example failures per category.
-  * sge is a lenient multi-library sweep (each libGDX-ecosystem library modeled on its own).
-  */
+/** Coverage burn-down for the SpoonTir populator: translate whole corpora into the TIR and tally
+  * which constructs still hit `Unsupported`. `corpus/runMain balticporter.corpus.demo.SpoonTirCoverage
+  * [corpus] [N]` — corpus = liqp | flexmark | sge | all (default liqp); N = example failures per
+  * category; sge is a lenient multi-library sweep. */
 object SpoonTirCoverage:
 
   private final case class Corpus(name: String, cfg: FrontendConfig, lenient: Boolean = false)

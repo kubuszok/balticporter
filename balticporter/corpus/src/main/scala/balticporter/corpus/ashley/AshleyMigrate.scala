@@ -7,22 +7,11 @@ import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** Migrate **Ashley** (`ashley/src`, 21 types -- libGDX's entity-component-system) through
-  * the TIR.
-  *
-  *   corpus/runMain balticporter.corpus.ashley.AshleyMigrate [--determinism=full]
-  *
-  * The second corpus library, and the smallest genuine DEPENDENT port: every file resolves
-  * against libGDX core, so `ManifestAgreement` is exercised for the first time outside
-  * libGDX's own two source sets. It imports three types the base drops
-  * (`ClassReflection`/`ReflectionException`/`ReflectionPool` -- Scala.js/Native cannot do
-  * reflection); the reference hand port SOLVED this with a factory-registry approach
-  * (`PooledEngine.scala:11`), matching the base's own factory-backed `Pools`.
-  *
-  * Scope: `ashley/src` only. `benchmarks/` (depends on a third ECS library) and `tests/src`
-  * (demo apps needing a backend) are excluded. `ashley/tests` (118 `@Test`) IS in scope,
-  * ported by [[AshleyTestMigrate]] as this port's only behavioural evidence.
-  */
+/** Migrate **Ashley** (`ashley/src`, 21 types — libGDX's entity-component-system) through the
+  * TIR. Second corpus library, smallest genuine DEPENDENT port: every file resolves against
+  * libGDX core, exercising `ManifestAgreement` outside libGDX's own source sets. Imports three
+  * types the base drops (reflection classes); the hand port SOLVED this with a factory-registry
+  * approach. Scope: `ashley/src` plus `ashley/tests` (ported by [[AshleyTestMigrate]]). */
 object AshleyMigrate:
 
   def main(args: Array[String]): Unit =
@@ -84,13 +73,11 @@ object AshleyPolicy:
       // replacement file, and libGDX core ships the ones for the types IT dropped.
       inject  = List(repoRoot.resolve("balticporter/corpus/ashley-overrides")),
       surface = List(
-        // ASHLEY'S OWN BEAN PROPERTY PAIRS -- merged into the base's `bean-properties`
-        // phase via `MergeablePolicy`, at the base's pipeline position. `EntitySystem#engine`
-        // is a def-pair (runtime-assigned, so `val` is wrong and `var` would publish a
-        // setter java never had). The `getFamily`/`getInterval`/`getEntities` families stay
-        // as `def`s here: the hand port restructured them into CONSTRUCTOR PARAMETERS, which
-        // a mechanical port cannot reproduce without changing the signature (`accessor`
-        // api-parity rows, `justified`).
+        // ASHLEY'S OWN BEAN PROPERTY PAIRS — merged into the base's `bean-properties` phase via
+        // `MergeablePolicy`. `EntitySystem#engine` is a def-pair (runtime-assigned, so `val` is
+        // wrong and `var` would publish a setter java never had). The
+        // `getFamily`/`getInterval`/`getEntities` families stay as `def`s: the hand port
+        // restructured them into CONSTRUCTOR PARAMETERS, which a mechanical port cannot reproduce.
         new balticporter.transform.BeanPropertyTransform(
           pairs = Map(
             // engine: kept as the port's STATED POLICY even though auto-detection would
@@ -145,12 +132,10 @@ object AshleyPolicy:
         // both, no instance declared here.
         new balticporter.transform.MethodBodyTransform(Map(
         // Engine.createComponent is the one reflective site in Ashley's 21 files
-        // (ClassReflection.newInstance / ReflectionException, both dropped by the base);
-        // the rest of Engine translates mechanically, so this replaces the BODY only,
-        // signature untouched. KEY is upstream namespace (matched before rename); BODY is
-        // spliced verbatim in the FINAL namespace. Wraps in Nullable(...) because
-        // `nullableMembers` retyped the return to Nullable[T]; Nullable(null) normalises
-        // to Nullable.empty, matching the hand port.
+        // (ClassReflection.newInstance/ReflectionException, both dropped by the base); the
+        // rest of Engine translates mechanically, so this replaces the BODY only, signature
+        // untouched. Wraps in Nullable(...) since `nullableMembers` retyped the return; a null
+        // normalises to Nullable.empty, matching the hand port.
         "com.badlogic.ashley.core.Engine#createComponent(Class)" ->
           "lowlevel.Nullable(sge.ecs.ComponentFactories.create(componentType))",
         // ImmutableArray is DROPPED and injected (see `dropTypes` above), so no body transforms
@@ -167,11 +152,10 @@ object AshleyPolicy:
           "this.pools.foreachValue((pool: sge.ecs.ComponentPool[?]) => pool.clear())",
         )),
         // SIX MEMBERS WHOSE RETURN TYPE IS NULLABLE, per sge's migration notes (no java
-        // annotation carries this). Keys use the name as it exists when
-        // NullabilityTransform runs (AFTER bean collapse), in the UPSTREAM namespace.
-        // `Entity#getComponent` names both overloads since fullName carries no descriptor.
-        // MERGED with the base's NullabilityTransform via `MergeablePolicy`
-        // (`nullableMembers` unions).
+        // annotation carries this). Keys use the name as it exists when NullabilityTransform
+        // runs (AFTER bean collapse), UPSTREAM namespace. `Entity#getComponent` names both
+        // overloads since fullName carries no descriptor. MERGED with the base's
+        // NullabilityTransform via `MergeablePolicy` (`nullableMembers` unions).
         new balticporter.transform.NullabilityTransform(
           nullableMembers = Set(
             "com.badlogic.ashley.core.Engine#createComponent",

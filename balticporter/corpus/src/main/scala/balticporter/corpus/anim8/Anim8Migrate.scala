@@ -7,24 +7,11 @@ import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** Migrate **anim8-gdx** (`src/main/java`, 16 types -- GIF/PNG8/APNG writers and the dithering and
-  * palette-reduction machinery behind them) through the TIR.
-  *
-  *   corpus/runMain balticporter.corpus.anim8.Anim8Migrate [--determinism=full]
-  *
-  * The corpus's first library whose difficulty is per-LINE rather than per-file (16 files, 19,594
-  * lines -- `PNG8` alone is 8,351). Two shapes not found elsewhere: enormous constant data
-  * (`ConstantData`'s ISO-8859-1 string literals up to 47,935 characters, decoded in a
-  * `static { }` block, verified byte-for-byte by the port's own suite rather than by length); and
-  * bulk bit-pattern arithmetic (`OtherMath`'s spline/probit/cbrt/atan2 approximations) covering
-  * every CLAUDE.md §4.4 form at once.
-  *
-  * A DEPENDENT port: `gdx/src` is a RESOLUTION root, policy is [[LibgdxPolicy.core]] EXTENDED
-  * (CLAUDE.md §1.5). Scope is `src/main/java` only; `src/test/java` (20 files, zero `@Test`, all
-  * `ApplicationAdapter` demos needing a desktop backend) is excluded. No upstream suite; this
-  * port's only behavioural evidence is the hand-written suite in `ported/sge-anim8/src/test/scala`
-  * (CLAUDE.md §3).
-  */
+/** Migrate **anim8-gdx** (`src/main/java`, 16 types — GIF/PNG8/APNG writers, dithering/
+  * palette-reduction machinery) through the TIR. Difficulty is per-LINE (19,594 lines, `PNG8`
+  * alone 8,351): enormous constant data and bulk bit-pattern arithmetic. A DEPENDENT port:
+  * `gdx/src` a RESOLUTION root, policy [[LibgdxPolicy.core]] EXTENDED (§1.5). No upstream suite;
+  * evidence is the hand-written suite in `ported/sge-anim8/src/test/scala` (CLAUDE.md §3). */
 object Anim8Migrate:
 
   def main(args: Array[String]): Unit =

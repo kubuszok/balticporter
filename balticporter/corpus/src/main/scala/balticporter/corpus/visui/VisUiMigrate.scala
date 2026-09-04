@@ -7,19 +7,11 @@ import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** Migrate **VisUI**'s `ui/` module (162 files -- a scene2d widget toolkit: dialogs, a file
-  * chooser, a colour picker, a tabbed pane, spinners, validators, a form/layout framework)
-  * through the TIR.
-  *
-  *   corpus/runMain balticporter.corpus.visui.VisUiMigrate [--determinism=full]
-  *
-  * A DEPENDENT port: `gdx/src` is a RESOLUTION root, no third-party jar exists, and the
-  * policy is [[LibgdxPolicy.core]] EXTENDED, not restated (CLAUDE.md §1.5). Scope is `ui/`
-  * only; `usl/` (a self-contained skin-DSL compiler `ui/` never calls, only consumes the
-  * compiled JSON of) is a NAMED follow-up (`PROGRESS.md` §10.9). No test source set this
-  * wave: upstream's own suite is 2 real `@Test`; behavioural evidence is DIFFERENTIAL
-  * against the reference hand port's 72-case suite, scoped in `PROGRESS.md` §10.9.
-  */
+/** Migrate **VisUI**'s `ui/` module (162 files — a scene2d widget toolkit) through the TIR.
+  * A DEPENDENT port: `gdx/src` is a RESOLUTION root, and the policy is [[LibgdxPolicy.core]]
+  * EXTENDED, not restated (CLAUDE.md §1.5). Scope is `ui/` only; `usl/` is a NAMED follow-up
+  * (`PROGRESS.md` §10.9). No test source set this wave — behavioural evidence is DIFFERENTIAL
+  * against the reference hand port's 72-case suite (`PROGRESS.md` §10.9). */
 object VisUiMigrate:
 
   def main(args: Array[String]): Unit =
@@ -47,14 +39,11 @@ object VisUiMigrate:
         originalLicense  = "Apache-2.0",
         sourcePathPrefix = "vis-ui/ui/src/main/java",
         sourceRoot       = base.toString,
-        // TWO LICENCE REGIMES (CLAUDE.md §4.57): (a) Apache-2.0 per-file header, covering
-        // 161/162 in-scope sources (the one exception, `layout/FlowGroup.java`, gets a
-        // NAMES-not-INCLUDES banner, same shape as GdxAiPolicy's one-file case); (b) CC
-        // BY-ND 3.0 on the shipped ICONS (`ui/NOTICE` / `ui/icons-license`) -- a
-        // NON-CODE, NO-DERIVATIVES licence no harvest or banner can ever reach, since the
-        // icons are baked into `uiskin.atlas`/`uiskin.png` and loaded by classpath string.
-        // Apache-2.0 §4(d) makes declaring NOTICE unconditional. The reference hand port
-        // ships neither notice file despite copying the atlas -- this port is more compliant.
+        // TWO LICENCE REGIMES (CLAUDE.md §4.57): (a) Apache-2.0 per-file header, covering 161/162
+        // in-scope sources (`layout/FlowGroup.java` gets a NAMES-not-INCLUDES banner instead);
+        // (b) CC BY-ND 3.0 on the shipped ICONS (`ui/NOTICE`/`ui/icons-license`) — a
+        // NO-DERIVATIVES licence no harvest or banner can reach, baked into `uiskin.atlas`/`.png`
+        // and loaded by classpath string. Apache-2.0 §4(d) makes declaring NOTICE unconditional.
         notices          = List(upstream.resolve("LICENSE"),
                                 upstream.resolve("ui/NOTICE"),
                                 upstream.resolve("ui/icons-license")),
@@ -80,21 +69,17 @@ object VisUiPolicy:
       // THE CLAIM IS THE MODULE'S SCOPE, not the upstream organisation's namespace:
       // com.kotcrab.vis covers com.kotcrab.vis.usl too, which this port does not emit.
       governs = Set("com.kotcrab.vis.ui"),
-      // ONE PAIR, UNIFORM, verified 1:1 against the reference port's tree (22 sub-packages,
-      // name for name; no per-type deviation, unlike sge-textra). WHAT THE RENAME DOES NOT
-      // REACH: VisUI loads its own skin/i18n/shader resources through HARDCODED CLASSPATH
-      // STRINGS -- a rename moves SYMBOLS, never a string literal (§4.56) -- so the 22
-      // resources below ship at their UPSTREAM classpath path, verified byte-identical to
-      // the reference hand port's own resource layout.
+      // ONE PAIR, UNIFORM, verified 1:1 against the reference port's tree (22 sub-packages, name
+      // for name). WHAT THE RENAME DOES NOT REACH: VisUI loads its own skin/i18n/shader
+      // resources through HARDCODED CLASSPATH STRINGS — a rename moves SYMBOLS, never a string
+      // literal (§4.56) — so the 22 resources below ship at their UPSTREAM classpath path,
+      // verified byte-identical to the reference hand port's own layout.
       packageRenames = Map("com.kotcrab.vis.ui" -> "sge.visui"),
-      // THE 22 RESOURCES THE EMITTED CODE ASKS FOR, COPIED VERBATIM (`DESIGN.md` §8.22).
-      // The other 2 files under that root (`robovm.xml`, `vis-ui.gwt.xml`) belong to the
-      // UPSTREAM BUILD, not the library -- confirmed against upstream's own GWT resource
-      // enumeration (`gdx.files.classpath` extend-configuration-property), which lists
-      // exactly these 22. Only 2 are named by a literal outright; the other 20 are reached
-      // through indirection (another resource's content, a name the library completes with
-      // a suffix, or a directory literal plus a file name) that no phase can walk -- which
-      // is why a check over emitted literals could never replace this declared list.
+      // THE 22 RESOURCES THE EMITTED CODE ASKS FOR, COPIED VERBATIM (`DESIGN.md` §8.22). The
+      // other 2 files under that root (`robovm.xml`, `vis-ui.gwt.xml`) belong to the UPSTREAM
+      // BUILD, not the library — confirmed against upstream's own GWT resource enumeration,
+      // which lists exactly these 22. Most are reached through indirection (another resource's
+      // content, a completed name, a directory+file literal) that no phase can walk.
       resources = List(balticporter.core.ResourceTree(
         repoRoot.resolve("../sge/original-src/vis-ui/ui/src/main/resources").normalize,
         List(
@@ -132,38 +117,28 @@ object VisUiPolicy:
       // with two answers -- no rename/substitution/redirect may reach across on the name
       // alone.
       surface = List(
-        // THE ONE MEMBER THIS LIBRARY HAS TO MOVE (`PROGRESS.md` §10.9.7 family 2,
-        // `ENGINE-LIMITS.md` D13): libGDX's Disposable->AutoCloseable redirect renames
-        // `dispose -> close` across the override component, and two of VisUI's five
-        // Disposable implementors already declare their own `close()`
-        // (`VisWindow`/`ColorPicker`) -- `MemberRenamer.OnCollision.Refuse` correctly
-        // refused the whole component. `AutoCloseable#close` isn't negotiable, so VisUI's
-        // OWN member moves to `closeWindow` (free upstream, names the WINDOW half of the
-        // pair). The reference hand port instead keeps `close()` by not retargeting
-        // `Disposable` at all -- a hand port's freedom the base has already foreclosed here.
+        // THE ONE MEMBER THIS LIBRARY HAS TO MOVE (`PROGRESS.md` §10.9.7 family 2, D13):
+        // libGDX's Disposable->AutoCloseable redirect renames `dispose -> close`, and two of
+        // VisUI's own Disposable implementors already declare `close()` — `OnCollision.Refuse`
+        // correctly refused the component. VisUI's OWN member moves to `closeWindow` instead; the
+        // reference hand port keeps `close()` by not retargeting `Disposable` at all.
         balticporter.transform.MemberRenameTransform(Map(
           "com.kotcrab.vis.ui.widget.VisWindow#close" -> "closeWindow",
         )),
         // THE CONTEXT SEAM'S EXIT: an EXTENSION of the base's `Gdx` holder, never a second
-        // holder (`PROGRESS.md` §10.9.7 family 1, §10.9.10; `ENGINE-LIMITS.md` CT8).
-        // `cache` on `VisUI` (an all-`static` holder whose lifecycle puts the clause on its
-        // METHODS, matching the reference hand port's own `sgeInstance` field/name).
-        // `selfSupplied` on three enums the threading reached and could not sign: an enum's
-        // primary IS its constructor, so a clause there is a `lost-clause` refusal -- these
-        // take the context without a parameter, from the `sgeInstance` accessor.
+        // holder (`PROGRESS.md` §10.9.7 family 1, §10.9.10; `ENGINE-LIMITS.md` CT8). `cache` on
+        // `VisUI` (all-`static`, clause on its METHODS, matching the hand port's `sgeInstance`
+        // name). `selfSupplied` on three enums the threading could not sign: an enum's primary
+        // IS its constructor, so these take the context without a parameter, from `sgeInstance`.
         balticporter.transform.GlobalsToImplicitsTransform(Nil, List(
           balticporter.transform.ContextHolderExtension(
             holder = "com.badlogic.gdx.Gdx",
             cache  = Map("com.kotcrab.vis.ui.VisUI" -> "sgeInstance"),
-            // NO `sites` ENTRY FOR `Draggable#BLOCKER` -- MEASURED, not assumed
-            // (`ENGINE-LIMITS.md` CT11): `lazy-init` fires but only MOVES the error to the
-            // static block that reads the now-context-taking field, which has no clause of
-            // its own to supply one (8 -> 8 errors, 9 member digests, zero net). Stays a
-            // counted `unsuppliable-use` until a mechanism exists for the BLOCK.
-            // all EIGHT sites: the second five (Locales$CommonText and siblings) arrived
-            // once the graph learned a `private` member is not inherited (JLS 8.2) and
-            // unfroze `java.lang.Enum#getBundle`, producing the same `lost-clause` shape
-            // (`ENGINE-LIMITS.md` CT10's sequence read forwards).
+            // NO `sites` ENTRY FOR `Draggable#BLOCKER` — MEASURED, not assumed (CT11): `lazy-init`
+            // fires but only MOVES the error to the static block reading the now-context-taking
+            // field, which has no clause of its own (8 -> 8 errors, 9 member digests, zero net).
+            // Stays a counted `unsuppliable-use`. The other EIGHT sites arrived once the graph
+            // learned a `private` member is not inherited (JLS 8.2), unfreezing `Enum#getBundle`.
             selfSupplied = Map(
               "com.kotcrab.vis.ui.VisUI$SkinScale"                          -> "sge.visui.VisUI.sgeInstance",
               "com.kotcrab.vis.ui.widget.ButtonBar$ButtonType"              -> "sge.visui.VisUI.sgeInstance",
@@ -210,13 +185,11 @@ object VisUiPolicy:
           ),
           underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
         )),
-        // 3.1ba: body substitutions, THREE FAMILIES -- (1) VisTextField
-        // keyboard.show(boolean) -> show(TextField)/close(): vendored libGDX 1.14.1 changed
-        // the signature after VisUI (1.14.0) was written; §3.5's upstream-version-mismatch
-        // case, and the hand port's own adaptation is carried here. (2) Dialogs.getStackTrace:
-        // CharArray.append(Object) has no DynamicArray[Char] equivalent post-retarget; the
-        // hand port's StringBuilder-based rewrite is carried instead (§3.5). (3)
-        // Draggable#BLOCKER (CT11): counted `unsuppliable-use` -- see the comment above.
+        // 3.1ba: body substitutions, THREE FAMILIES — (1) VisTextField keyboard.show(boolean) ->
+        // show(TextField)/close(): vendored libGDX 1.14.1 changed the signature after VisUI's
+        // 1.14.0 (§3.5); (2) Dialogs.getStackTrace: CharArray.append(Object) has no
+        // DynamicArray[Char] equivalent post-retarget, so the hand port's StringBuilder rewrite
+        // is carried instead; (3) Draggable#BLOCKER (CT11): counted `unsuppliable-use`.
         new balticporter.transform.MethodBodyTransform(Map(
           // --- (1) keyboard.show(boolean) -> show(TextField) / close() ---
           "com.kotcrab.vis.ui.widget.VisTextField#focusField" ->

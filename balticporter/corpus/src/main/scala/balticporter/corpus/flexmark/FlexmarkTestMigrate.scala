@@ -6,36 +6,22 @@ import balticporter.runner.PortConfig
 import java.io.File
 import java.nio.file.{Files, Path}
 
-/** Port **flexmark-util**'s own JUnit suite -- 52 files, **730 plain `@Test`** -- through
-  * the same pipeline as the twelve modules milestone 1 converts.
-  *
-  *   corpus/runMain balticporter.corpus.flexmark.FlexmarkTestMigrate [--determinism=full]
-  *
-  * The port is `balticporter/corpus/ports/ssg-md/test.conf`; this `main` names it and
-  * gives the run its own report identity (`CLAUDE.md` §2.1). The port's FIRST behavioural
-  * evidence (CLAUDE.md §3: an error count is typer-only). Lives in the `flexmark-util`
-  * AGGREGATOR module (a thirteenth module the main port does not convert -- its own
-  * `src/main/java` is empty, so the split libraries' tests live there instead). Unusually
-  * clean for `TestFrameworkTransform` (no `@RunWith(Parameterized.class)`, no `@Ignore`, no
-  * test-class inheritance); its two refusals (`@Rule ExpectedException`, nine
-  * `@RunWith(Suite.class)` aggregators) are reported with the `CLAUDE.md` §1 classification.
-  * A DEPENDENT of [[FlexmarkMigrate]]: resolves against the twelve modules' Java, inheriting
-  * the base's renames and surface phases via `base = "main.conf"` (`CLAUDE.md` §1.5).
-  */
+/** Port **flexmark-util**'s own JUnit suite — 52 files, **730 plain `@Test`** — through the
+  * same pipeline as milestone 1's twelve modules: `.../ports/ssg-md/test.conf`. The port's
+  * FIRST behavioural evidence (§3: an error count is typer-only), living in the `flexmark-util`
+  * AGGREGATOR module. Its two refusals (`@Rule ExpectedException`, nine `@RunWith(Suite.class)`)
+  * are reported with §1's classification, as a DEPENDENT of [[FlexmarkMigrate]] (§1.5). */
 object FlexmarkTestMigrate:
 
   def main(args: Array[String]): Unit =
     FlexmarkTestClasspath.ensure(FlexmarkPort.repoRoot)
     PortConfig.load(FlexmarkPort.conf("test.conf"), args.toSeq).execute()
 
-/** flexmark's TEST frontend classpath: everything [[FlexmarkClasspath]] resolves, plus
-  * JUnit. Exactly ONE test-scope coordinate (`junit:junit`, version pinned by the parent
-  * pom's `dependencyManagement`, `AshleyClasspath`'s read-the-declaration rule);
-  * `hamcrest-core` arrives transitively and is deliberately NOT named. The MAIN classpath
-  * is included because `resolutionRoots` is flexmark's Java source, so the frontend needs
-  * every jar that source needs too -- delegated to [[FlexmarkClasspath]]'s `ensure`, never
-  * duplicated. Written to a FILE rather than inlined in the conf (`CLAUDE.md` §1.5).
-  */
+/** flexmark's TEST frontend classpath: everything [[FlexmarkClasspath]] resolves, plus JUnit —
+  * exactly ONE test-scope coordinate (`junit:junit`, version pinned by the parent pom's
+  * `dependencyManagement`); `hamcrest-core` arrives transitively and is deliberately NOT named.
+  * The MAIN classpath is included since `resolutionRoots` is flexmark's Java source, delegated
+  * to [[FlexmarkClasspath]]'s `ensure`, never duplicated. Written to a FILE, not inlined (§1.5). */
 object FlexmarkTestClasspath:
 
   /** the one test-scope coordinate the poms declare. hamcrest-core 1.3 is its transitive. */

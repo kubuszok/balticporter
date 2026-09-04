@@ -6,20 +6,11 @@ import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 
 import java.nio.file.{Files, Path}
 
-/** Port gdx-gltf's own JUnit suite through the same pipeline as `gltf/src`.
-  *
-  *   corpus/runMain balticporter.corpus.gltf.GltfTestMigrate [--determinism=full]
-  *
-  * A TEST FILE IS NOT A TEST (the jbump/anim8 lesson again): `gltf/test` holds seven Java files
-  * but only ONE has any `@Test` (eight, on `Attribute.compareTo` for four attribute types); the
-  * other six are `extends Game`/`ApplicationAdapter` LWJGL demos with `Test` in the name.
-  * [[testFiles]] names the one real file; `gltf-measure` re-derives the count from the whole tree
-  * rather than trusting this comment.
-  *
-  * A DEPENDENT of a DEPENDENT: resolves against `gltf/src` (ported by [[GltfMigrate]]), which
-  * resolves against `libgdx/gdx/src`. `PortManifest.baseChain` carries both ancestors' drops,
-  * renames and surface phases, inherited rather than restated.
-  */
+/** Port gdx-gltf's own JUnit suite through the same pipeline as `gltf/src`. A TEST FILE IS NOT A
+  * TEST (jbump/anim8 lesson again): `gltf/test` holds seven Java files but only ONE has any
+  * `@Test` (eight, on `Attribute.compareTo`); the other six are LWJGL demos with `Test` in the
+  * name. [[testFiles]] names the real file; `gltf-measure` re-derives the count from the whole
+  * tree rather than trusting this comment. A DEPENDENT of a DEPENDENT (via [[GltfMigrate]]). */
 object GltfTestMigrate:
 
   /** The one file in `gltf/test` that is a suite. See the class comment for the other six. */

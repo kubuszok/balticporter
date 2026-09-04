@@ -7,24 +7,11 @@ import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** Migrate **gdx-vfx** (44 types -- post-processing shader effects for libGDX) through the
-  * TIR.
-  *
-  *   corpus/runMain balticporter.corpus.vfx.VfxMigrate [--determinism=full]
-  *
-  * The corpus's first GL-facing library: nearly every signature mentions a BASE-emitted
-  * type (`FrameBuffer`/`Mesh`/`ShaderProgram`/`GL20`), so this is a real test of §1.5's
-  * agreement. A DEPENDENT port: `gdx/src` is a RESOLUTION root, policy is
-  * [[LibgdxPolicy.core]] EXTENDED (CLAUDE.md §1.5). `VfxGLUtils`' static initialiser has a
-  * reflective branch reaching a GWT-only class this port does not carry -- see [[VfxPolicy]].
-  *
-  * Scope: the two LIBRARY modules (`core/src`, `effects/src`), emitted into ONE sbt module
-  * (matching the reference hand port). `gwt/src` (the GWT backend) and `demo/` (depends on
-  * third-party libraries not in the corpus) are excluded.
-  *
-  * No upstream suite (0 `@Test`); behavioural evidence is the hand-written MUnit suite
-  * under `ported/sge-vfx/src/test/scala` (CLAUDE.md §3).
-  */
+/** Migrate **gdx-vfx** (44 types — post-processing shader effects for libGDX) through the TIR.
+  * First GL-facing library: nearly every signature mentions a BASE-emitted type
+  * (`FrameBuffer`/`Mesh`/`ShaderProgram`/`GL20`), testing §1.5's agreement. A DEPENDENT port:
+  * `gdx/src` a RESOLUTION root, [[LibgdxPolicy.core]] EXTENDED. Scope: `core/src`+`effects/src`
+  * into ONE sbt module. No upstream suite; evidence is the hand-written suite under `ported/sge-vfx`. */
 object VfxMigrate:
 
   def main(args: Array[String]): Unit =
@@ -91,28 +78,11 @@ object VfxPolicy:
         "java.util.Map#clear()" -> "accept-jdk-member",
       ),
       surface = List(
-        // VfxGLUtils' STATIC INITIALISER reflectively instantiates a GWT-only class
-        // (`ClassReflection.newInstance(ClassReflection.forName("...gwt.
-        // GwtVfxGlExtension"))`) when running as WebGL. Both `ClassReflection` and the
-        // target class are out of scope, so the branch is UNREACHABLE rather than merely
-        // unported -- the reference hand port reaches the same conclusion
-        // (`initExtension()` assigns `DefaultVfxGlExtension()` unconditionally, no WebGL
-        // branch at all, CLAUDE.md §3.5).
-        //
-        // THE PAIR, and why initialisation LEAVES the class initialiser: constructing a
-        // `DefaultVfxGlExtension` now takes the threaded `sge.Sge` context, which a
-        // `static { }` block cannot supply. `<clinit>` becomes EMPTY and construction moves
-        // to the first call with a context (`VfxFrameBuffer#getBoundFboHandle`), matching
-        // the reference hand port's own `initExtension()(using Sge)` -- placed one member
-        // further out here because a body substitution may change what a member DOES but
-        // never what it TAKES.
-        //
-        // `VfxGLUtils.getBoundFboHandle()` is PUBLIC API and may be called without ever
-        // touching a `VfxFrameBuffer`, in which case it now NULLs where java's class
-        // initialiser had already run. It cannot self-initialise (same threading boundary),
-        // so it fails with an `IllegalStateException` naming the initialisation path --
-        // residue the reference hand port avoids by hand-writing a member that takes the
-        // clause, which a generated one cannot be edited to.
+        // VfxGLUtils' STATIC INITIALISER reflectively instantiates a GWT-only class out of
+        // scope, so the branch is UNREACHABLE (hand port reaches the same conclusion, §3.5).
+        // `DefaultVfxGlExtension` now takes the threaded `sge.Sge` context, so `<clinit>`
+        // becomes EMPTY and construction moves to the first call with one; a call made without
+        // a context fails loudly, residue the hand port avoids by hand-writing the member.
         new balticporter.transform.MethodBodyTransform(Map(
           "com.crashinvaders.vfx.gl.VfxGLUtils#<clinit>" -> "{ }",
           "com.crashinvaders.vfx.framebuffer.VfxFrameBuffer#getBoundFboHandle" ->
@@ -133,17 +103,11 @@ object VfxPolicy:
               |  sge.vfx.gl.VfxGLUtils.glExtension.boundFboHandle
               |}""".stripMargin,
         )),
-        // WHAT A DEPENDENT ADDS TO THE BASE'S CONTEXT HOLDER (`ENGINE-LIMITS.md` CT8): the
-        // holder itself is SHARED SURFACE, inherited from `LibgdxPolicy.core` (§1.5); this
-        // carries only the PER-DECLARATION half for gdx-vfx's own types.
-        //
-        // `VfxFrameBuffer#tmpCam` is a `private static final OrthographicCamera` (one of
-        // the base's threaded classes) -- moved to first READ via `LazyInit`
-        // (`deferred-init`). NOT carried: `VfxGLUtils#<clinit>` (READS the holder rather
-        // than initialising from a threaded construction -- `lazy-init` is the wrong site
-        // kind, answered by the body substitution above); a `selfSupplied` entry (the
-        // suite is HAND-WRITTEN Scala and declares its own `given`, CLAUDE.md §5.5).
-        // --- 3.1aq: requiredGivens for generic classes constructing retarget targets
+        // WHAT A DEPENDENT ADDS TO THE BASE'S CONTEXT HOLDER (CT8): the holder is SHARED
+        // SURFACE, inherited from `LibgdxPolicy.core` (§1.5); this carries only the
+        // PER-DECLARATION half. `VfxFrameBuffer#tmpCam` (a base-threaded class) moved to first
+        // READ via `LazyInit`. NOT carried: `VfxGLUtils#<clinit>` (READS the holder, wrong site
+        // kind); a `selfSupplied` entry (the suite is HAND-WRITTEN, declares its own `given`).
         new balticporter.transform.GlobalsToImplicitsTransform(
           requiredGivens = Map(
             // 3.1as: `|` separator names BOTH type parameters -- ValueArrayMap[K, V]
@@ -159,13 +123,11 @@ object VfxPolicy:
             ),
           )
         )),
-        // DEPENDENT SEEDS for the base's Align opaque family, folded via `MergeablePolicy`
-        // at the base's pipeline position. Propagation follows pure-move flows and does NOT
-        // follow a bitwise test, so these four PARAMETERS (only ever combined with Align.*
-        // via bitwise ops) are unreachable from the base's field hints alone
-        // (`ENGINE-LIMITS.md` O6). Hints are parameter FQNs (§4.56:
-        // `<method-fqn>#<param-name>`); identity fields match the base's so `mergedWith`
-        // composes.
+        // DEPENDENT SEEDS for the base's Align opaque family, folded via `MergeablePolicy` at
+        // the base's pipeline position. Propagation follows pure-move flows and does NOT follow
+        // a bitwise test, so these four PARAMETERS (only combined with Align.* via bitwise ops)
+        // are unreachable from the base's field hints alone (O6). Hints are parameter FQNs
+        // (§4.56); identity fields match the base's so `mergedWith` composes.
         new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
           fqn        = "com.badlogic.gdx.utils.Align",
           target     = balticporter.tir.OpaqueSpec.Target.Existing(

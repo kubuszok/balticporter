@@ -7,19 +7,11 @@ import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** Migrate **gdx-ai** (`gdx-ai/src` -- libGDX's AI extension: behaviour trees, state
-  * machines, message dispatch, pathfinding, steering, formation motion and scheduling)
-  * through the TIR.
-  *
-  *   corpus/runMain balticporter.corpus.gdxai.GdxAiMigrate [--determinism=full]
-  *
-  * A DEPENDENT port: `gdx/src` is a RESOLUTION root only, and the policy is
-  * [[LibgdxPolicy.core]] EXTENDED, not restated (CLAUDE.md §1.5). Scope excludes
-  * `com/badlogic/gdx/emu/` (GWT super-source, excluded from upstream's own `compileJava` --
-  * a name collision otherwise). The reflective behaviour-tree parser is kept via five
-  * `MethodBodyTransform` bodies rather than dropped, because `BehaviorTreeLibrary` and
-  * `Include` reach it structurally (`PROGRESS.md` §10.7.8).
-  */
+/** Migrate **gdx-ai** (`gdx-ai/src` — libGDX's AI extension: behaviour trees, state machines,
+  * message dispatch, pathfinding, steering, formation motion, scheduling) through the TIR. A
+  * DEPENDENT port: `gdx/src` a RESOLUTION root only, [[LibgdxPolicy.core]] EXTENDED (§1.5).
+  * Scope excludes `com/badlogic/gdx/emu/` (GWT super-source collision). Reflective
+  * behaviour-tree parser kept via five `MethodBodyTransform` bodies (`PROGRESS.md` §10.7.8). */
 object GdxAiMigrate:
 
   def main(args: Array[String]): Unit =
@@ -76,22 +68,16 @@ object GdxAiPolicy:
       name    = "sge-ai",
       governs = Set("com.badlogic.gdx.ai"),
       // NO packageRenames, deliberately: gdx-ai declares com.badlogic.gdx.ai, INSIDE the
-      // base's own com.badlogic.gdx, so the inherited com.badlogic.gdx -> sge rename
-      // already carries every unit to sge.ai.* (matching the reference hand port).
-      // Restating it as com.badlogic.gdx.ai -> sge.ai computes the same string and is
-      // still WRONG -- ManifestAgreement reports a fatal RenameOverride, since a
-      // dependent's own rule for a prefix inside the base's namespace is free to drift
-      // (CLAUDE.md §1.5). `governs` STAYS as the sub-claim the drift check needs.
+      // base's own com.badlogic.gdx, so the inherited rename already carries every unit to
+      // sge.ai.*. Restating it computes the same string and is still WRONG —
+      // ManifestAgreement reports a fatal RenameOverride, since a dependent's own rule for a
+      // prefix inside the base's namespace is free to drift. `governs` STAYS.
       surface = List(
-        // THE BEHAVIOUR-TREE PARSER'S REFLECTIVE HALF: DefaultBehaviorTreeReader names
-        // the base's dropped reflect.Field in three signatures. dropMethods is the wrong
-        // cut here -- castValue is a documented protected extension point, and the three
-        // call sites are inside an ENUM CONSTANT WITH A BODY, whose members MemberKey.parse
-        // cannot even name (`ENGINE-LIMITS.md` T23). TypeRedirectTransform fixes all three
-        // signatures at once and leaves every call site mechanically translated. SCOPED to
-        // com.badlogic.gdx.ai: a dependent's Program CONTAINS its base
-        // (`ENGINE-LIMITS.md` D2), so an unscoped redirect would re-point Field inside
-        // libGDX's own declarations too, breaking base-surface (measured: 0->1 FATAL).
+        // THE BEHAVIOUR-TREE PARSER'S REFLECTIVE HALF: DefaultBehaviorTreeReader names the
+        // base's dropped reflect.Field in three signatures, inside an ENUM CONSTANT WITH A
+        // BODY, whose members MemberKey.parse cannot name (T23); TypeRedirectTransform fixes
+        // all three at once. SCOPED to com.badlogic.gdx.ai: a dependent's Program CONTAINS
+        // its base (D2), so unscoped would re-point `Field` in libGDX itself (0->1 FATAL).
         new balticporter.transform.TypeRedirectTransform(
           redirects = Map(
             "com.badlogic.gdx.utils.reflect.Field" -> "com.badlogic.gdx.ai.btree.utils.TaskField",
@@ -101,12 +87,11 @@ object GdxAiPolicy:
               balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx.ai")),
           ),
         ),
-        // THE TWO SINGLE-SITE REFLECTIVE MEMBERS -- Ashley's Engine#createComponent shape,
+        // THE TWO SINGLE-SITE REFLECTIVE MEMBERS — Ashley's Engine#createComponent shape,
         // twice. Ordinary algorithmic code with one member reaching the base's dropped
         // reflect package; dropping either TYPE would fork it from upstream, dropping the
-        // METHOD strands its callers. Signature untouched. KEY is upstream namespace
-        // (matched before rename); BODY is spliced verbatim in the port's FINAL namespace,
-        // including any §4.55-moved member name.
+        // METHOD strands its callers. Signature untouched. KEY is upstream namespace; BODY
+        // is spliced verbatim in the port's FINAL namespace.
         new balticporter.transform.MethodBodyTransform(Map(
           // ArrayReflection.newInstance(items.getClass().getComponentType(), n): NOT an
           // approximation -- this class's own ctor writes (T[]) new Object[capacity], so
@@ -127,10 +112,9 @@ object GdxAiPolicy:
               |    this.items = newItems
               |  }""".stripMargin,
 
-          // ClassReflection.newInstance(this.getClass()) -- a reflective SELF-CLONE with
-          // no mechanical image; the reference hand port's alternative (an abstract
-          // newInstance() signature change) is not one this phase makes. So this is JAVA'S
-          // OWN CONTRACT REFUSAL (CLAUDE.md §1): cloneTask declares `@throws
+          // ClassReflection.newInstance(this.getClass()) — a reflective SELF-CLONE with no
+          // mechanical image; the reference hand port's alternative is not one this phase
+          // makes. JAVA'S OWN CONTRACT REFUSAL (§1): cloneTask declares `@throws
           // TaskCloneException`, so throwing one is conforming. TASK_CLONER is java's own
           // escape hatch, kept verbatim.
           "com.badlogic.gdx.ai.btree.Task#cloneTask()" ->
@@ -145,15 +129,11 @@ object GdxAiPolicy:
               |      "hatch upstream documents for GWT.")
               |  }""".stripMargin,
 
-          // THE BEHAVIOUR-TREE PARSER -- FIVE BODIES, nothing else in the file moves.
+          // THE BEHAVIOUR-TREE PARSER — FIVE BODIES, nothing else in the file moves.
           // DefaultBehaviorTreeReader asked the JVM three run-time questions (build this
-          // class, read its @TaskConstraint/@TaskAttribute, coerce a value into this
-          // field); each becomes a lookup in the injected
-          // sge.ai.btree.utils.TaskRegistry, adapted from the reference hand port's own
-          // TaskRegistry/TaskMeta/AttrInfo trio. WHAT THE PORT LOSES: java's mechanism is
-          // OPEN (any classpath type with the two annotations works), a table is CLOSED --
-          // an unregistered task name surfaces as the same ReflectionException java's
-          // forName threw.
+          // class, read its annotations, coerce a value); each becomes a lookup in the
+          // injected `sge.ai.btree.utils.TaskRegistry`, adapted from the hand port's own
+          // trio. WHAT THE PORT LOSES: java's mechanism is OPEN, a table is CLOSED.
 
           // ClassReflection.newInstance(ClassReflection.forName(className)); the catch is
           // kept so the registry's refusal arrives at the caller in java's own words.
@@ -210,11 +190,10 @@ object GdxAiPolicy:
               |  }""".stripMargin,
 
           // getAnnotation(...) + getFields + each field's getDeclaredAnnotation. The CACHE
-          // and the null protocol are java's own and kept: null means "no @TaskConstraint
-          // in this hierarchy". THE BASE'S @Null SURFACE IS READ OFF THE GENERATED CALLER
-          // (CLAUDE.md §1): this hand-written body is outside the threading closure, so it
-          // must NOT use the engine's checked .get unwrap (NPE on empty) -- here an empty
-          // cache is the NORMAL case, so isEmpty is the test, matching java's protocol.
+          // and the null protocol are java's own: null means "no @TaskConstraint in this
+          // hierarchy". THE BASE'S @Null SURFACE IS READ OFF THE GENERATED CALLER (§1): this
+          // hand-written body is outside the threading closure, so it must NOT use the
+          // engine's checked `.get` unwrap — an empty cache is the NORMAL case here.
           "com.badlogic.gdx.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#findMetadata(Class)" ->
             """{
               |    val cached: lowlevel.Nullable[sge.ai.btree.utils.BehaviorTreeParser.DefaultBehaviorTreeReader.Metadata] =
@@ -275,12 +254,11 @@ object GdxAiPolicy:
               |    field.cast(value, this.btParser.distributionAdapters)
               |  }""".stripMargin,
         )),
-        // LAST, deliberately (as AshleyPolicy): reads what the BASE actually emitted, so
-        // it must run after any seam re-pointing such a reference. Milestone 1 has no such
-        // seam yet -- the 14 DroppedType rows it files ARE the milestone's finding (12 in
-        // BehaviorTreeParser, one each in Task.cloneTask() and CircularBuffer.resize(int)).
-        // 3.1aq: MkArray[T] given threading for generic classes constructing retarget
-        // targets -- only where the FIRST type parameter is used DIRECTLY as an element type.
+        // LAST, deliberately (as AshleyPolicy): reads what the BASE actually emitted, must
+        // run after any seam re-pointing such a reference. Milestone 1 has no such seam yet —
+        // the 14 DroppedType rows it files ARE the milestone's finding. 3.1aq: MkArray[T]
+        // given threading for generic classes constructing retarget targets — only where
+        // the FIRST type parameter is used DIRECTLY as an element type.
         new balticporter.transform.GlobalsToImplicitsTransform(
           // Only classes whose FIRST type parameter is used DIRECTLY as an element type in a
           // retarget construction (new Array<T>(), new ObjectSet<E>()). Classes constructing
@@ -293,16 +271,11 @@ object GdxAiPolicy:
         ),
         balticporter.transform.PortMapTransform.forBases("sge"),
       ),
-      // THE SERVICE-LOCATOR FACADE, replaced whole -- this port's ONE drop, ONE injection.
-      // GdxAI chooses two of its three services by SNIFFING THE AMBIENT ENVIRONMENT at
-      // class initialisation, and the base retired Gdx.* into a threaded context -- a
-      // static field initialiser runs before anything could pass one, so this is a
-      // QUESTION THE PORT CANNOT ASK. The replacement installs JAVA'S OWN NEGATIVE BRANCH
-      // unconditionally (NullLogger, StandaloneFileSystem); the libGDX-backed pair is still
-      // emitted via setLogger/setFileSystem. context-seam and lazy-init alternatives were
-      // both measured worse (`PROGRESS.md` §10.7.6). Closure verified as ONE type: every
-      // GdxAI reference is one of six static accessors, all declared at the same FQN by
-      // the injected object.
+      // THE SERVICE-LOCATOR FACADE, replaced whole — this port's ONE drop, ONE injection.
+      // GdxAI chooses two of its three services by SNIFFING THE AMBIENT ENVIRONMENT at class
+      // init, and the base retired Gdx.* into a threaded context — a static field
+      // initialiser runs before anything could pass one, a QUESTION THE PORT CANNOT ASK. The
+      // replacement installs JAVA'S OWN NEGATIVE BRANCH; both alternatives measured worse (§10.7.6).
       dropTypes = Set("com.badlogic.gdx.ai.GdxAI"),
       // THREE injected files, only ONE replacing a drop: sge/ai/GdxAI.scala stands at the
       // dropped FQN; TaskField.scala/TaskRegistry.scala stand at names nothing drops. NOT

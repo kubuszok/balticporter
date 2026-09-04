@@ -6,14 +6,11 @@ import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** Port libGDX's own JUnit suite (`gdx/test`) through the same pipeline as `gdx/src`.
-  *
-  * The port's only BEHAVIOURAL gate (CLAUDE.md §3: `LibgdxCoreMigrate` measures only *compiles*).
-  * 221 `@Test` methods, ~900 assertions -- the only evidence of behaviour this project can have.
-  * `gdx/src` is a RESOLUTION root only, ported separately by [[LibgdxCoreMigrate]]; re-emitting it
-  * here would fork the output. The transform pipeline arrives from `LibgdxPolicy.core`'s manifest
-  * (this module adds only `TestFrameworkTransform`), never restated.
-  */
+/** Port libGDX's own JUnit suite (`gdx/test`) through the same pipeline as `gdx/src`. The port's
+  * only BEHAVIOURAL gate (CLAUDE.md §3: `LibgdxCoreMigrate` measures only *compiles*). 221
+  * `@Test` methods, ~900 assertions. `gdx/src` is a RESOLUTION root only, ported separately by
+  * [[LibgdxCoreMigrate]]; re-emitting it here would fork the output. The pipeline arrives from
+  * `LibgdxPolicy.core`'s manifest (adds only `TestFrameworkTransform`), never restated. */
 object LibgdxTestMigrate:
 
   def main(args: Array[String]): Unit =
