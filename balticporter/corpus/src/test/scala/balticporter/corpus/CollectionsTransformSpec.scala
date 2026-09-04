@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.{PortSuite, Ported}
 import balticporter.tir.{Phase, Pipeline, PolicyBinder, RunScope, UsageKind}
-import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform}
+import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform, NullaryArityTransform}
 
 import java.nio.file.Files
 
@@ -2234,4 +2234,34 @@ class CollectionsTransformSpec extends PortSuite:
           |  void read(M<? extends String, ? extends Integer> m) {}
           |}""".stripMargin), ph)
     assertEmits(p, "? <: java.lang.String")
+  }
+
+  // a `Chain` ending in `iterator` at a java.util.Iterator-typed slot: the chain's members are
+  // applied, THEN the shim wrap — at the parenless Select (NullaryArity) and at the Apply alike
+  private def chainIteratorFixture(nullary: Boolean): Ported =
+    import CollectionsTransform.RetargetRewrite.*
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.OSet" -> "lowlevel.util.OrderedSet"),
+      retargetRewrites = Map("demo.OSet" -> Map(("iterator", 0) -> Chain(List("orderedItems", "iterator")))))
+    val java = List(
+      "OSet.java" ->
+        """package demo;
+          |public class OSet<T> implements Iterable<T> {
+          |  public java.util.Iterator<T> iterator() { return null; }
+          |}""".stripMargin,
+      "Sel.java" ->
+        """package demo;
+          |class Sel<T> implements Iterable<T> {
+          |  final OSet<T> selected = new OSet<T>();
+          |  public java.util.Iterator<T> iterator() { return selected.iterator(); }
+          |}""".stripMargin)
+    if nullary then portAll(java, ph, new NullaryArityTransform(balticporter.tir.RuleScope.Only(Set("demo"))))
+    else portAll(java, ph)
+
+  test("a Chain ending in `iterator` keeps its members under the JavaIterator wrap — parenless Select") {
+    assertEmits(chainIteratorFixture(nullary = true), "JavaIterator.from(this.selected.orderedItems.iterator)")
+  }
+
+  test("a Chain ending in `iterator` keeps its members under the JavaIterator wrap — Apply") {
+    assertEmits(chainIteratorFixture(nullary = false), "JavaIterator.from(this.selected.orderedItems.iterator)")
   }

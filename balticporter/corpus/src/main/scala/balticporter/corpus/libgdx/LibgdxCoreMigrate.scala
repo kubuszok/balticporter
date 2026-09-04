@@ -1891,12 +1891,6 @@ object LibgdxPolicy:
              """{
                |  this.properties.putAll(properties.properties)
                |}""".stripMargin,
-           // wave 3.1m: Selection.iterator — Chain produces Iterator[T] but return type is
-           // JavaIterator[T]. Wrap with JavaIterator.from until the Array retarget wave aligns types.
-           "com.badlogic.gdx.scenes.scene2d.utils.Selection#iterator" ->
-             """{
-               |  return balticporter.runtime.JavaIterator.from(this.selected.orderedItems.iterator)
-               |}""".stripMargin,
            // wave 3.1m: Selection.toArray() — Chain produces Iterator whose toArray needs ClassTag.
            // Collect from the OrderedSet directly into an sge.utils.Array. sge: selected.foreach(result.add).
            // sge: `val result = DynamicArray.createRef[T](); selected.foreach(result.add); result`
@@ -1986,23 +1980,6 @@ object LibgdxPolicy:
                |      } else ()
                |    }; j = j - 1 } }
                |  }; i = i + 1 } }
-               |}""".stripMargin,
-           // wave 3.1v: MapLayers.getByType(Class) and MapObjects.getByType(Class) — `new Array<T>()`
-           // at a METHOD-level type parameter T. MkArray[T] is not summonable inline here because
-           // T <: MapLayer/MapObject and the inline given resolves only for T <: AnyRef directly.
-           // Provide a local given as sge's `createRef` pattern does.
-           // The 2-arg overload takes an existing array — no construction needed.
-           "com.badlogic.gdx.maps.MapLayers#getByType(Class)" ->
-             """{
-               |  @scala.annotation.nowarn("msg=unused local definition")
-               |  given lowlevel.MkArray[T] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[T]]
-               |  return this.getByType(`type`, lowlevel.util.DynamicArray[T]())
-               |}""".stripMargin,
-           "com.badlogic.gdx.maps.MapObjects#getByType(Class)" ->
-             """{
-               |  @scala.annotation.nowarn("msg=unused local definition")
-               |  given lowlevel.MkArray[T] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[T]]
-               |  return this.getByType(`type`, lowlevel.util.DynamicArray[T]())
                |}""".stripMargin,
            // wave 3.1t: Actor.<clinit> — `new DynamicArray()` inside a lambda in the companion's
            // static initialiser. DynamicArray's constructor is private; must use the factory.

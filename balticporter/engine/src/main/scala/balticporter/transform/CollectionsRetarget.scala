@@ -422,37 +422,23 @@ private[transform] trait CollectionsRetarget:
           // a parameterless iterator on a retarget target whose declared return is JavaIterator[T]
           // (java.util.Iterator redirect): NullaryArityTransform already made this a Select, so
           // the Chain handler in retargetRewrite never sees it — wrap with JavaIterator.from.
-          case CollectionsTransform.RetargetRewrite.Chain(members, _, _)
+          case CollectionsTransform.RetargetRewrite.Chain(members, hasParens, _)
               if members.lastOption.contains("iterator") && iteratorFromSym != SymId.None =>
             // K36: for targets supporting indexed removal, emit a removing iterator over the receiver.
             val targetFqn = effectiveRetarget.get(srcFqn)
             val removingResult = targetFqn.flatMap(tgt => emitRemovingIterator(sel.qual, tgt, sel.tpe, sel.origin))
             if removingResult.isDefined then Some(removingResult.get)
             else
-              Some(Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, sel.origin),
-                              List(sel), iteratorFromSym, sel.tpe, sel.origin))
+              // the chain's own members first (`orderedItems.iterator`), then the shim wrap
+              chainSelect(sel.qual, srcFqn, members, hasParens, sel.origin).map { cur =>
+                Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, sel.origin),
+                           List(cur), iteratorFromSym, sel.tpe, sel.origin)
+              }
           // Chain at a Select (parenless, made so by bean-property/NullaryArityTransform):
           // apply with no arguments, same logic as the Apply path. The outer Apply may still
           // wrap this in () if java called it with (); tracked in selectChainRewritten to strip it.
           case CollectionsTransform.RetargetRewrite.Chain(members, hasParens, _) if members.nonEmpty =>
-            val syms = members.flatMap(m => retargetRewriteSyms.get((srcFqn, m)))
-            if syms.size != members.size then scala.None
-            else
-              var cur: Term =
-                if hasParens(members.head) then
-                  Tree.Apply(Tree.Select(sel.qual, syms.head, TypeRepr.NoType, sel.origin),
-                             Nil, syms.head, TypeRepr.NoType, sel.origin)
-                else
-                  Tree.Select(sel.qual, syms.head, TypeRepr.NoType, sel.origin)
-              syms.tail.zip(members.tail).foreach { (s, mName) =>
-                if hasParens(mName) then
-                  cur = Tree.Apply(Tree.Select(cur, s, TypeRepr.NoType, sel.origin),
-                                   Nil, s, TypeRepr.NoType, sel.origin)
-                else
-                  cur = Tree.Select(cur, s, TypeRepr.NoType, sel.origin)
-              }
-              selectChainRewritten.add(cur)
-              Some(cur)
+            chainSelect(sel.qual, srcFqn, members, hasParens, sel.origin)
           // Template at a Select (parenless): a Template expression with no arguments — the
           // member was made parenless but the rewrite needs a template (e.g.
           // `("length", 0) -> Template("(if ($recv.isEmpty) 0 else $recv.last + 1)")`).
@@ -628,6 +614,19 @@ private[transform] trait CollectionsRetarget:
   /** K36: emit a removing iterator for a direct `recv.iterator` on a retarget target, keyed on
     * the target FQN. `None` for targets the shim does not support (caller falls back to
     * read-only `JavaIterator.from`). */
+  /** A `Chain` rewrite applied at a parenless Select: `qual.m1.m2…`, each member with or
+    * without `()` as the row says; `None` when a member has no minted symbol. */
+  private def chainSelect(qual: Term, srcFqn: String, members: List[String], hasParens: String => Boolean, so: Origin): Option[Term] =
+    val syms = members.flatMap(m => retargetRewriteSyms.get((srcFqn, m)))
+    if syms.size != members.size then scala.None
+    else
+      def step(recv: Term, s: SymId, m: String): Term =
+        if hasParens(m) then Tree.Apply(Tree.Select(recv, s, TypeRepr.NoType, so), Nil, s, TypeRepr.NoType, so)
+        else Tree.Select(recv, s, TypeRepr.NoType, so)
+      val cur = syms.zip(members).foldLeft(qual) { case (acc, (s, m)) => step(acc, s, m) }
+      selectChainRewritten.add(cur)
+      Some(cur)
+
   private[transform] def emitRemovingIterator(recv: Term, targetFqn: String, tpe: TypeRepr, so: Origin)(using p: Program): Option[Term] =
     targetFqn match
       case "scala.collection.mutable.ArrayDeque" =>
