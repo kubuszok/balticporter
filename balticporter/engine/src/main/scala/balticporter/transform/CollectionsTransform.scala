@@ -1146,11 +1146,13 @@ final class CollectionsTransform(
       val newArgs = mapping.map(resolveRetargetArg(_, existingArgs))
       TypeRepr.AppliedType(TypeRepr.TypeRef(prefix, s), newArgs)
     case TypeRepr.AppliedType(tc @ TypeRepr.TypeRef(_, s), args) if remapTargets.contains(s) && args.exists(_.isInstanceOf[TypeRepr.TypeBounds]) =>
-      // strip wildcard bounds on same-arity retarget targets (invariant, so a wildcard is invalid).
-      // Lower-bounded only: stripping an upper bound on a raw-type occurrence breaks invariant
-      // sites passing DynamicArray[N <: Node] through the raw slot.
+      // Same-arity retarget target is invariant: a wildcard arg is invalid, strip to the more
+      // informative bound. Upper-only (`? extends T`) is restricted to `retarget` targets, per
+      // 5e09bc77's rule at arity-changing args (CLAUDE.md §1(a), subplan item 3).
+      val stripToUpper = retargetTargetToSource.contains(s)
       val stripped = args.map {
         case TypeRepr.TypeBounds(lo, _) if lo != TypeRepr.NoType => lo
+        case TypeRepr.TypeBounds(_, hi) if stripToUpper && hi != TypeRepr.NoType && !hasNestedBound(hi) => hi
         case a => a
       }
       if stripped == args then t else TypeRepr.AppliedType(tc, stripped)
@@ -1175,6 +1177,14 @@ final class CollectionsTransform(
             case None => t
         case None => t
     case other => other
+
+  /** A raw-type occurrence's substituted bound still carries its OWN unresolved wildcards (a
+    * self-bounded generic's erasure); stripping an upper bound to such a bound mis-narrows an
+    * invariant slot, so upper-bound stripping only fires where this is `false` (subplan item 3). */
+  private[transform] def hasNestedBound(t: TypeRepr): Boolean = t match
+    case _: TypeRepr.TypeBounds       => true
+    case TypeRepr.AppliedType(tc, as) => hasNestedBound(tc) || as.exists(hasNestedBound)
+    case _                            => false
 
   /** WHICH type constructors' arguments this run must not move — the carriers, resolved to this
     * program's own symbols. `false` by arithmetic where the port declares none and the program names

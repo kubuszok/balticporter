@@ -2204,3 +2204,18 @@ class CollectionsTransformSpec extends PortSuite:
     assert(clue(out).contains(".put(k, v)"))
     assert(!out.contains("lowlevel.Nullable("))
   }
+
+  test("a use-site wildcard at an invariant retarget target strips to its (ground) upper bound") {
+    val ph = new CollectionsTransform(retarget = Map("demo.M" -> "lowlevel.util.ObjectMap"))
+    val p = portAll(List(
+      "M.java" ->
+        """package demo;
+          |public class M<K, V> {}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  void read(M<? extends String, ? extends Integer> m) {}
+          |}""".stripMargin), ph)
+    assertEmits(p, "lowlevel.util.ObjectMap[java.lang.String, java.lang.Integer]")
+    assertNotEmits(p, "? <:")
+  }
