@@ -4,79 +4,17 @@ import balticporter.catalog.FixKind
 import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
 import balticporter.tir.*
 
-/** THE PORTABILITY MENU — `Remediator`'s loop, closed from the other end.
+/** THE PORTABILITY MENU — `Remediator`'s loop, closed from the other end: a port SELECTS one of
+  * `Remediator`'s verified templates at a location (`PortManifest.resolutions`) and this phase
+  * performs it, inside the pipeline where the tree can still change. Runs LAST in `surface` so its
+  * view of the program matches `Remediator`'s own post-pipeline one. Every remedy either applies or
+  * refuses with a counted, named guard — never silent. `classTables` is the one value a template
+  * cannot compute (the `class-table` destination); empty is the no-op.
+  * CLAUDE.md §1(b), §3, §5; DESIGN.md §8.16, §8.18
   *
-  * ==What was already here, and what was missing==
-  * `Remediator` verifies three templates against the program and prints the manifest line that would
-  * fix each. It is deliberately narrow — a template that cannot verify its precondition does not
-  * fire, and a wrong suggestion costs its reader more than silence would — and it has always
-  * stopped one step short: a human reads the snippet, opens the manifest and pastes it. That
-  * round trip is the whole of `DESIGN.md` §8.16's argument, and this phase is the other end of it.
-  * A port SELECTS one of the templates at the location it applies to
-  * (`PortManifest.resolutions`), and the engine performs it — the same precondition, verified by
-  * the same code, at a position in the pipeline where the tree can still be changed.
-  *
-  * ==§1(b), and where the line falls==
-  * The MECHANISM is the engine's: which shapes are safe to drop, inline or redirect is a fact about
-  * java and about this program, and it is `Remediator`'s already. What is the PORT'S is (i) WHICH
-  * locations, which arrives as a `resolutions` selection and not as a parameter here, and (ii) the
-  * one VALUE a template cannot compute — the destination table for `class-table`, which is a type
-  * the port has to write. Both empty is the no-op: with no selections and no table this phase
-  * returns its input.
-  *
-  * ==Why a phase, and why placed LAST in `surface`==
-  * `Remediator` runs AFTER the pipeline, over the final program, and this runs INSIDE it. Those are
-  * two different programs and `CLAUDE.md` §5's dry-run rule is exactly about the difference: a phase
-  * measures what it is HANDED, so a chokepoint that exists after `StaticForwarderTransform` has
-  * inlined nine members may not exist before it. So this phase is placed LAST in a port's `surface`
-  * (the namespace rename still runs after it, §4.56), which is as close to `Remediator`'s own view
-  * as a phase can stand — and the residue lane is what reconciles the two: whatever this did not
-  * take out, `Remediator` still suggests.
-  *
-  * ==The four answers, and the three refusals that are not silence==
-  * Every remedy here can decline, and a decline is a COUNTED row naming its guard
-  * (`Resolution.RefusedKind`), never a selection that quietly did nothing. That is `CLAUDE.md` §3's
-  * refusal-enumeration rule read at a menu: a count of applications says nothing about what was
-  * declined, and the three guards have three different next actions —
-  *
-  *   - `substitutions-drop` fires only at `Remediator`'s HIGH grade, which is the measured claim
-  *     that every site of the chokepointed APIs is inside this one type AND no other unit in the
-  *     port references it. At the MEDIUM grade the drop still needs an injected replacement at the
-  *     same FQN, which is a file this phase cannot write and a `Substitutions(inject = …)` key it
-  *     has no standing to add — so it declines and says so;
-  *   - `class-table` applies the mechanism and cannot invent the table: a redirect with no
-  *     destination would leave the lookup reflective and the port JVM-only with nothing said, which
-  *     is the exact silent no-op `ClassTableTransform`'s own doc calls out. So a selection with no
-  *     entry in [[classTables]] is a classified refusal;
-  *   - `static-forwarder-inline` fires where the template verified the receiver-first shape, and
-  *     inlines exactly the members `Remediator` did NOT exclude — a member that forwards to an
-  *     `X#m` which is itself unportable relocates the dependency rather than removing it.
-  *
-  * ==What is deliberately NOT on this menu==
-  *   - a MEDIUM-grade drop with an engine-written replacement. The replacement is library semantics
-  *     (`ENGINE-LIMITS.md` P1's family — a loud-refusal facade is a per-library decision about which
-  *     paths are real), and a stand-in that compiles and silently does nothing is what
-  *     `CLAUDE.md` §1 refuses;
-  *   - a `dropMethods`-scale drop of only the touching members. `Remediator` OBSERVES it (the ratio
-  *     is stated rather than thresholded) and it is not offered here, because "nothing calls them"
-  *     is the port's judgement about its own consumers and not a fact this program holds;
-  *   - `accept-jvm-only`, which is not a phase's remedy at all: it changes no tree and re-files a
-  *     row, so it belongs to the CHECK that mints the row (`PortabilityCheck`).
-  *
-  * ==WHICH BACKENDS the questions are asked for is the RUN's, not this phase's==
-  * It used to be a second constructor parameter, defaulted to all three, which agreed with
-  * `PortManifest.targets` by CONVENTION and by nothing else — a port with `targets = ["jvm"]`
-  * reports an empty `portability(emitted)` lane (no rule in the list asks about the JVM) while this
-  * phase at its default computed violations against all three and could claim to drain rows from a
-  * lane reading zero. Two spellings of one fact with no comparison between them, which is exactly
-  * the §1.5 drift a manifest field exists to prevent. It now arrives on the binder
-  * (`RunScope.platform`), with the port's `verdictOverrides` beside it, so this phase asks the
-  * question the run reports on and there is nothing for a manifest to state twice.
-  *
-  * @param classTables the destination for a `class-table` selection, keyed by the SAME manifest key
+  * @param classTables the destination for a `class-table` selection, keyed by the same manifest key
   *                    the selection uses (`owner#member` of the CALLEE), valued `owner#member` of
-  *                    the table's lookup. Empty is the no-op and makes every such selection a
-  *                    counted refusal rather than a silent one.
+  *                    the table's lookup.
   */
 final class RemediationTransform(
     val classTables: Map[String, String] = Map.empty,
@@ -86,31 +24,17 @@ final class RemediationTransform(
 
   def remedies: List[Remedy] = RemediationTransform.Remedies
 
-  /** Two ports that resolve different locations emit different signatures for shared code — a
-    * dropped type is not there at all — so the selections are surface. They live in the MANIFEST and
-    * are fingerprinted there (`PortManifest.surfaceDigestInputs`); what this adds is the one value
-    * that is a phase parameter, so a base and a dependent redirecting one lookup at two different
-    * tables cannot compare equal.
-    *
-    * The target set is NOT here, and no longer can be: it is the run's (`RunScope.platform`), and
-    * `PortManifest.targets` is already the one place two modules' declarations are compared —
-    * fingerprinting a copy of it would be the second spelling this phase just stopped carrying. */
+  /** The selections are surface, fingerprinted in the manifest; this adds only [[classTables]], the
+    * one value that is a phase parameter. Targets are NOT here — they are the run's
+    * (`RunScope.platform`), already compared through `PortManifest.targets`. */
   def surfaceFingerprint: String =
     classTables.toList.sorted.map((k, v) => s"$k->$v").mkString(",")
 
   private var plan: ResolutionPlan   = ResolutionPlan.empty
   private var binder: Option[PolicyBinder] = scala.None
   private var unusedTables: List[String]   = Nil
-  /** …and WHICH DECLARATIONS THIS RUN EMITS — `ENGINE-LIMITS.md` D2 read at the resolution ledger,
-    * the guard `HeapPollutionCheck.Apply` and `OverloadRiskCheck.Apply` already carry.
-    *
-    * `resolutions` is INHERITED (`DESIGN.md` §8.16: a remedy decides emitted text at a declaration a
-    * dependent compiles against), and a dependent's `Program` CONTAINS its base's units — so every
-    * selection a base made binds here too, at the very same symbols. Unguarded, this phase re-applies
-    * them: it would DROP a base's unit out of the dependent's model, inline a base's wrapper, and
-    * file `remediation(resolved)` rows and `SelectedRemedy` decisions about declarations this module
-    * does not write. The base already did all of that in its own run, and none of it is this
-    * module's to redo or to report. */
+  /** which declarations THIS RUN emits — ENGINE-LIMITS D2 at the resolution ledger. Unguarded, a
+    * dependent would re-apply a base's own selections over shared units it does not own. */
   private var scope: RunScope = RunScope.whole
 
   def bindPolicy(b: PolicyBinder): Unit =
@@ -118,11 +42,8 @@ final class RemediationTransform(
     binder = Some(b)
     scope  = b.run
 
-  /** A table entry no selection reaches is DEAD POLICY, and the failure mode is the §1(b) silent
-    * no-op: the port wrote a destination, the lookup stayed reflective, and nothing said so. It is
-    * computed in `run` rather than at bind time because the question is not "did this key name a
-    * member" — the binder answers that for the SELECTION — but "did any selection ask for this
-    * table". */
+  /** a table entry no selection reaches is dead policy — computed in `run` rather than at bind time
+    * because the question is "did any selection ask for this table", not "does this key exist". */
   def policyReport: PolicyReport =
     PolicyReport(unusedTables.sorted.map(k =>
       PolicyFinding(name, "RemediationTransform(classTables) key", k, PolicyIssue.NeverMatched,
@@ -134,12 +55,10 @@ final class RemediationTransform(
   override def run(program: Program): Program =
     if plan.isEmpty then program
     else
-      // the RUN's question, both halves of it — never a set of this phase's own (see the class doc).
+      // the run's question, never a set of this phase's own.
       val rules      = PortabilityCheck.rulesFor(scope.platform.targets, scope.platform.verdictOverrides)
       val violations = PortabilityCheck.check(program, rules)
-      // The SAME verification, by the same code, that prints the snippet a human would paste. A
-      // second implementation of "is this a chokepoint" would be free to disagree with the one the
-      // report shows, which is the shape §4.6 calls two answers to one question.
+      // the same verification, by the same code, that prints the snippet a human would paste.
       val fixes = Remediator.suggest(program, violations)
       val asked = collection.mutable.Set.empty[String]
 
@@ -187,12 +106,8 @@ final class RemediationTransform(
       }.toSet
       if dropped.isEmpty then program
       else
-        // The unit LEAVES the program, which is what a `Substitutions.dropTypes` entry would have
-        // done at the frontend — with one difference that is the whole reason the HIGH grade is the
-        // only one offered: a frontend drop still parses the type so every reference resolves, and
-        // this one cannot, so it is only sound where nothing refers to it. The pipeline rebuilds the
-        // xref after every phase, so the sites inside it stop being usages and BOTH portability
-        // lanes fall by exactly the count recorded above.
+        // sound only because HIGH grade means nothing else refers to it; xref rebuilds after
+        // every phase, so both portability lanes fall by exactly the count recorded above.
         program.rebuilt(units = program.units.filterNot(u => dropped(u.symbol)))
 
   // ---- static-forwarder-inline ----------------------------------------------------------------
@@ -220,11 +135,9 @@ final class RemediationTransform(
                   "removing it [§1(c): those members need a real replacement]")
               scala.None
             else
-              // `drained = 0`, and it is a CLAIM rather than a shortfall: an inline RELOCATES a
-              // call from the wrapper to each of its call sites, so whether a lane row disappears
-              // depends on where the call lands and this phase cannot know it. Claiming rows it did
-              // not remove would make `sum(drained)` disagree with the lane it is read against,
-              // which is the one arithmetic the drain rule rests on.
+              // `drained = 0`: an inline RELOCATES a call rather than removing it, so this phase
+              // cannot know if a lane row disappears — claiming rows it did not remove would break
+              // `sum(drained)`.
               plan.applied(r, name, unit.symbol, unit.origin,
                 s"inlined ${members.size} static forwarder(s) to $receiver " +
                   s"(${members.toList.sorted.mkString(", ")}); the lane's own before/after is the " +
@@ -258,16 +171,9 @@ final class RemediationTransform(
         classTables.get(r.declaredKey) match
           case Some(dest) if dest.contains('#') =>
             asked += r.declaredKey
-            // `drained = 0`, and it is the SAME claim `static-forwarder-inline` makes one arm up: a
-            // redirect RELOCATES a call. `Wrapper.forName(s)` becomes `Table.classFor(s)` at each
-            // CALL SITE, and the row this lane counts is the `Class.forName` inside the WRAPPER'S
-            // BODY — which this rewrite does not touch, so the lane falls by nothing here and only
-            // falls at all if the now-unreferenced wrapper is later dropped.
-            //
-            // It used to claim the number of CALL SITES of the wrapper, which is neither the rows
-            // removed nor a number this lane holds: `resolved` gained N while the lane fell by 0,
-            // and `sum(drained)` — the one arithmetic §5's drain rule rests on — was fiction. A
-            // remedy that cannot know what it moved claims ZERO and says why (`DESIGN.md` §8.18).
+            // `drained = 0`, the same claim `static-forwarder-inline` makes: a redirect RELOCATES a
+            // call, and the row this lane counts (the `Class.forName` inside the wrapper's body)
+            // is untouched — it falls only if the now-unreferenced wrapper is later dropped.
             plan.applied(r, sym.fullName, sym.id, origin,
               s"redirected this runtime class lookup at $dest; the lookup INSIDE this member is " +
                 "still what the lane counts, so the redirect claims no rows — the lane's own " +
@@ -300,18 +206,12 @@ object RemediationTransform:
 
   val Name: String = "remediation"
 
-  /** the lane every remedy here drains. A type this phase removes takes its sites with it, so both
-    * portability lanes fall — `portability(emitted)` is the one named because it is the DELIVERABLE
-    * number and the one a drain is read against.
-    *
-    * Read from the CHECK that mints the rows (`PortabilityCheck.EmittedLane`) and never spelled
-    * here: `Remedy.lane`'s own scaladoc asks for a constant so that a renamed lane is a compile
-    * error, and this file was one of three places the name was written out. */
+  /** the lane every remedy here drains — `portability(emitted)`, read from the check that mints the
+    * rows rather than spelled here, so a renamed lane is a compile error. */
   private val Lane: String = PortabilityCheck.EmittedLane
 
-  /** `Remediator`'s own `mechanism` strings, and that is not a coincidence to be tidied away: the id
-    * a port writes in `resolutions` is the id printed beside the snippet in the `remediation` lane,
-    * so the loop reads as one thing from both ends. */
+  /** `Remediator`'s own `mechanism` strings — the id a port writes in `resolutions` is the id
+    * printed beside the snippet in the `remediation` lane. */
   val Drop: Remedy = Remedy(
     id = "substitutions-drop", lane = Lane, kind = Remedy.AnyKind, emissionAffecting = true,
     fix = FixKind.Parameterised, subject = Remedy.Subject.OwnedType,

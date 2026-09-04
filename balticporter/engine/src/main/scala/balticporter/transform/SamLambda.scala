@@ -2,75 +2,12 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** THE ANONYMOUS-SAM DECISION, STATED ONCE — and the transformer that acts on it publishes its own
-  * denominator, so there is nothing else to ask.
-  *
-  * ==What this is about==
-  * A java anonymous class implementing a single-abstract-method interface and a scala lambda at
-  * that same interface are the same value with two spellings. The faithful translation — the
-  * anonymous class — already compiles and already behaves correctly, so this is not a `JS-` row and
-  * this layer has no difference to discharge (`DESIGN.md` §8.15 states what licenses it instead).
-  *
-  * ==Why the wave-0 CENSUS is gone, and why that is the same rule that made it===
-  * Wave 0 shipped a `SamLambdaCensus` — this decision with the rewrite removed — so the population
-  * was published BEFORE anything converted and wave 1's blast could be confirmed rather than
-  * discovered. It did that (155 considered / 23 convertible on the libGDX base, and the wiring
-  * converted exactly 23). With the transformer IN the pipeline the census is a SECOND ANSWER to a
-  * question the transformer already answers: it files one row per site considered, `Converted` or
-  * `Refused(guard)`, which IS the denominator. Two phases at one position filing about one site
-  * would double every row in the lane, and `CLAUDE.md` §4.6's one-mechanism-one-seam is what
-  * retired it. What survives is [[decide]], which both of them always called.
-  *
-  * ==THE DELTA ENUMERATION — the whole safety argument==
-  * An idiom transform's safety argument is a REFUSAL ENUMERATION, not a suite result. The
-  * behavioural differences between `new I(){ … }` and a lambda at `I` are these, and each is
-  * either made impossible by a guard, made impossible by the SHAPE the transformer emits, or
-  * COUNTED:
-  *
-  *   1. '''the target may not be a functional interface at all''' — guard [[Guard.NotSam]];
-  *   2. '''the class file may be unreadable''' — guard [[Guard.Unreadable]]. Counted rather than
-  *      assumed either way (§4.6: a default indistinguishable from a real answer is a fabricated
-  *      fact);
-  *   3. '''the body may be more than the one method''' — a field, an instance initialiser, a helper,
-  *      a nested type, or a member the frontend could not translate. Guard [[Guard.BodyNotSingle]];
-  *   4. '''`this` inside a java anonymous class is the ANON INSTANCE; inside a scala lambda it is
-  *      the ENCLOSING class.''' Guard [[Guard.SelfReference]] — a §4.4-class meaning change that
-  *      compiles perfectly either way. Note the test is on the `cls` SYMBOL and not on the node
-  *      kind: a QUALIFIED outer `this` is fine and must not be refused, and refusing it would
-  *      decline most of the real population;
-  *   5. '''INSTANCE IDENTITY.''' `new Runnable(){…}` allocates a fresh object at every evaluation.
-  *      A scala lambda at a SAM slot goes through `LambdaMetafactory`, and '''JVMS 5.4.3.6 and the
-  *      `LambdaMetafactory` contract leave instance identity UNSPECIFIED, in both directions''' —
-  *      a JDK may cache a non-capturing lambda, may not, may cache at one call site and not
-  *      another, and may change between releases. What licenses guard [[Guard.NonCapturing]] is
-  *      therefore the SPECIFICATION'S SILENCE, never a measurement: a program whose behaviour
-  *      depends on an unspecified identity is one the port must not create. Written the other way
-  *      round ("this JDK caches, so refuse") the guard would read as removable the day somebody
-  *      measures a JDK that does not, which is exactly backwards — the next JDK is not bound by
-  *      that measurement. A CAPTURING lambda allocates per evaluation, so the guard closes the
-  *      whole gap structurally and costs only the non-capturing sites;
-  *   6. '''SERIALIZATION.''' A serializable lambda's serialized form is not the anonymous class's,
-  *      and `$deserializeLambda$` is not a translation of a class descriptor. Guard
-  *      [[Guard.Serializable]];
-  *   7. '''OVERLOAD RESOLUTION at every use of the value''' — made impossible by the SHAPE, which
-  *      is the cheapest of the three arms and the reason there is no seventh guard. A java
-  *      anonymous class is a value whose type javac WROTE DOWN; a bare scala function literal is a
-  *      poly expression whose type the CALLEE decides. So the transformer emits the lambda
-  *      ASCRIBED to the interface the anonymous class named, and the argument's type at every
-  *      callee is exactly the type it had before the phase ran — the candidate set and the
-  *      most-specific answer cannot move, because nothing about the call moved. (`JS-C22`/`JS-C23`
-  *      is the standing risk that javac and scalac resolve one call differently; the ascription is
-  *      what keeps this transformer out of it entirely.)
-  *
-  * ==And ONE member of the enumeration has no structural test, so it is COUNTED on the decision==
-  * A capturing lambda allocates per evaluation, which is what guard 5 buys — and its CLASS is
-  * still not the anonymous class's. Java's is `Outer$1`, with a stable name that
-  * `getClass().getName()`, `getSimpleName()`, a `toString()` or a log line can print; a lambda's is
-  * a hidden class spelled `Outer$$Lambda$14/0x…` — synthetic, unstable across runs, and different
-  * in shape as well as in text. No guard can reach it: every reference to a value can reach
-  * `getClass()`, so a guard for it would refuse every conversion. It is a §4.4-shaped residue —
-  * valid scala, green compile, no moved count — and the only honest answer is to record it where
-  * §4.45's reader is, on the CONVERSION's own decision.
+/** Decides whether a java anonymous class implementing a single-abstract-method interface can
+  * become a scala lambda ascribed to that interface. `decide` is the single source of truth for
+  * the population (no separate census — `CLAUDE.md` §4.6's one-mechanism-one-seam). Every
+  * behavioural delta between the two forms is either made impossible by a [[Guard]], impossible by
+  * the ascribed-lambda SHAPE (overload resolution), or counted on the conversion's own `Decision`
+  * (class-name identity — `getClass()` differs and no guard can reach it). `DESIGN.md` §8.15
   */
 object SamLambda:
 
@@ -125,11 +62,8 @@ object SamLambda:
     case Convert(method: Tree.DefDef, iface: String, javaClassName: String)
     case Refuse(guard: Guard, iface: String)
 
-  /** THE DECISION, for one `new T(){…}` in one enclosing declaration.
-    *
-    * Order matters only for which guard a multiply-refused site is ATTRIBUTED to, and it is stated
-    * cheapest-fact-first so the lane groups by the most informative reason: what the class file
-    * says, then what the body is, then what the body does. */
+  /** The decision for one `new T(){…}` in one enclosing declaration. Guard order decides which
+    * guard a multiply-refused site is attributed to — cheapest fact first. */
   def decide(nw: Tree.New, anon: Tree.AnonClass)(using p: Program): Verdict =
     val iface = typeName(nw.tpt.tpe)
     def refuse(g: Guard) = Verdict.Refuse(g, iface)
@@ -151,58 +85,18 @@ object SamLambda:
               else Verdict.Convert(d, iface, javaClassNameOf(anon))
             case _ => refuse(Guard.BodyNotSingle)
 
-  /** does the body name the ANON INSTANCE — the §4.4 meaning change.
-    *
-    * On the `cls` SYMBOL, never on the node kind: `Outer.this.field` is a QUALIFIED outer `this`,
-    * is perfectly fine under a lambda, and is what most of the real population looks like. A
-    * `super` bound to the anon is refused for the same reason and one more of its own — a lambda
-    * has no supertype to dispatch to.
-    *
-    * ==…AND THE SECOND HALF IS A NODE THAT IS NOT THERE, which is what makes this hard==
-    * A `Tree.This(anonSym)` exists only where the source used `this` AS A VALUE. Where it is the
-    * TARGET of a member access the frontend deliberately does not build one — Spoon reports the
-    * anonymous class as the receiver's type whatever the member's real owner is, so trusting it
-    * would qualify half the corpus's references with a type that does not exist in the emitted
-    * code. The fallback is a BARE reference that scala resolves LEXICALLY, exactly as java did
-    * (`SpoonTir.thisOf`). Inside a scala anonymous class that lands on the same member java chose;
-    * inside a LAMBDA it lands on the ENCLOSING class's, because a lambda has no members.
-    *
-    * So `this.toString()` in an anonymous `Runnable` arrives here as
-    * `Tree.Ident(java.lang.Object#toString)` — no `This`, no `Select`, nothing a guard reading
-    * `This` can see — and converting it would silently print the ENCLOSING object. Measured on
-    * this guard's own fixture, which is the only place it exists: zero corpus sites today.
-    *
-    * Guard 3 has already established that the anon body is exactly ONE method, so the members a
-    * bare reference can reach THROUGH THE ANON are exactly the anon's own — and that set was
-    * spelled as `java.lang.Object`'s public members plus the anon's own SAM method. That is only
-    * the half every anonymous class inherits UNCONDITIONALLY. An anonymous class also inherits
-    * whatever THE SAM INTERFACE AND ITS ANCESTORS declare: a `default` method
-    * (`java.util.Comparator` ships six) and, in principle, an interface CONSTANT. A bare `helper()`
-    * inside the anon binds to the interface's default THROUGH THE ANON INSTANCE; a lambda inherits
-    * nothing at all, so the emitted reference either resolves to nothing — loud — or SILENTLY
-    * re-resolves to a same-named member of the enclosing class, which is the §4.4-shaped half and
-    * the one no count can see. (The CONSTANT face was predicted and MEASURED not to be one: the
-    * frontend resolves the implicit static access to `Select(Ident(F), F#K)`, so the emitted
-    * reference names the interface and needs no guard — `IdiomCensusSpec` pins the qualifier.)
-    *
-    * ==And the set is the ANON'S ANCESTRY, not "every type that is not lexically enclosing"==
-    * Those two differ on exactly the shape java's resolution rule is about, and the wider one costs
-    * a correct conversion. Java resolves a bare name INNERMOST-FIRST (JLS 15.12.1): the anon's own
-    * members — declared, or inherited from the interface and from `Object` — win, and only then does
-    * an ENCLOSING instance's. So a reference the anon does NOT inherit was bound to an enclosing
-    * instance in java and is bound to the same enclosing instance under a lambda, whatever type
-    * happens to DECLARE it. Written as "the owner is a type that does not lexically enclose the
-    * site", the guard refused `Pixmap.downloadFromUrl`'s inner `Runnable`, whose body calls
-    * `failed(t)` — a member of the OUTER anonymous class, declared by the interface THAT one
-    * implements, which no lambda around the inner one moves. Measured: `idiom(converted) 83 -> 82`
-    * on the libGDX base for one site that was never a defect. */
+  /** does the body name the ANON INSTANCE — the §4.4 meaning change (`this`/`super` bound to the
+    * anon, or a bare reference resolving to a member the anon INHERITS from its ancestry or from
+    * `java.lang.Object`). A qualified outer `this` is fine under a lambda and is not refused. The
+    * bare-reference form exists because the frontend drops `this.` receivers and resolves them
+    * lexically (`SpoonTir.thisOf`), so `this.toString()` arrives as a plain `Ident` with no `This`
+    * node — matched here by owner rather than by node shape. */
   private def selfReferences(d: Tree.DefDef, anonSym: SymId, ancestry: Set[SymId])
                             (using p: Program): Boolean =
     d.rhs.exists(b => StandardTraversal.scanTerm(b, false) { (acc, t) =>
       acc || (t match
         case Tree.This(c, _, _)  => c == anonSym
         case Tree.Super(c, _, _) => c == anonSym
-        // the bare, lexically-resolved half — see the doc above
         case Tree.Ident(s, _, _) => !namesAType(s) && p.symbolOf(s).exists { sym =>
           sym.owner == anonSym || ancestry.contains(sym.owner) ||
             p.symbolOf(sym.owner).exists(_.fullName == SamLambda.JavaLangObject)
@@ -210,22 +104,14 @@ object SamLambda:
         case _ => false)
     })
 
-  /** the root every java class inherits from, and therefore the owner of the members every
-    * anonymous class inherits whatever it implements. Kept as a NAME because `java.lang.Object` is
-    * never a parent the tree writes down — it is the implicit one — so an ancestry walk over
-    * declared parents cannot reach it. A fact about java, spelled once. */
+  /** `java.lang.Object` is an IMPLICIT parent the tree never writes down, so an ancestry walk over
+    * declared parents cannot reach it — kept as a name instead. */
   private val JavaLangObject = "java.lang.Object"
 
-  /** the anonymous class's own strict ANCESTRY — the SAM interface it named and every parent of
-    * that this program DECLARES, transitively.
-    *
-    * Seeded from `nw.tpt` rather than from the anon's symbol, because an anonymous class's TIR
-    * symbol carries no parent list: the type java wrote at the `new` IS its one declared parent.
-    * From there the walk is over `Tree.ClassDef.parents`, so a program-declared super-interface
-    * bearing a `default` method is reached and an EXTERNAL one is not — which is the honest state
-    * rather than a guess: the members of a type this run cannot read are not a set this phase can
-    * enumerate, and `Guard.Unreadable` is what covers a target the frontend could not resolve at
-    * all. Cycle-safe and fuel-bounded, for `serializableAncestry`'s reason. */
+  /** The anon's strict ancestry — the SAM interface it named plus every parent this program
+    * DECLARES, transitively. Seeded from `nw.tpt` (the anon symbol carries no parent list). An
+    * external super-interface is not reached — its members are unknowable, covered by
+    * `Guard.Unreadable` instead of guessed. Cycle-safe and fuel-bounded. */
   private def ancestryOf(nw: Tree.New, anon: Tree.AnonClass)(using p: Program): Set[SymId] =
     def headSym(t: TypeRepr): Option[SymId] = t match
       case TypeRepr.TypeRef(_, s)      => Some(s)
@@ -246,17 +132,8 @@ object SamLambda:
         }
     out.toSet
 
-  /** does this `Ident` name a TYPE rather than a member?
-    *
-    * It has to be asked, and it is the difference between a guard and an over-refusal: a QUALIFIER
-    * is an `Ident` too, and a type NESTED INSIDE the SAM interface is owned by a symbol the ancestry
-    * set above contains. The emitter writes fully-qualified names for types (§6), so a type
-    * reference cannot re-resolve when a lambda replaces the anonymous class, and refusing one would
-    * be a refusal with no defect behind it.
-    *
-    * A class symbol's `info` is the class `TypeRef` pointing at ITSELF, which a field of that same
-    * type does not satisfy — so this is exact rather than a name test (§4.56), and it answers for an
-    * external symbol, which has no `Definition` to look up. */
+  /** does this `Ident` name a TYPE rather than a member? A type reference is emitted
+    * fully-qualified (§6) so it cannot re-resolve wrongly, and must not be refused as a capture. */
   private def namesAType(s: SymId)(using p: Program): Boolean =
     p.definitionOf(s).exists(_.isInstanceOf[Tree.ClassDef]) ||
       p.symbolOf(s).exists(_.info match
@@ -267,31 +144,11 @@ object SamLambda:
   private[transform] final case class Converted(iface: String, javaClassName: String,
                                                 method: String, origin: Origin)
 
-  /** does the body CAPTURE an enclosing binding? See the object doc, delta 5, for why this decides
-    * anything at all.
-    *
-    * Three shapes count and all three are structural: a `this` naming an ENCLOSING class (the lambda
-    * then closes over the outer instance), a reference to a local or parameter owned by an
-    * executable that is not the anon's own method, and a reference to an INSTANCE MEMBER of an
-    * enclosing instance. A local declared INSIDE the body is owned by that method and is therefore
-    * not a capture, which is exactly right — it does not make the lambda allocate.
-    *
-    * ==The third one is guard 4's absent node, read here instead==
-    * `Outer.this.n` and a bare `n` on the enclosing CLASS are the same capture in java and only the
-    * first arrives as a `Tree.This`; the frontend drops the receiver for the other
-    * (`SpoonTir.thisOf`). Where that fallback fires the reference is a bare `Tree.Ident` whose
-    * symbol is owned by a TYPE — `Pixmap.downloadFromUrl`'s inner `Runnable` calling `failed(t)`,
-    * declared by the interface the OUTER anonymous class implements — and `isEnclosingBinding` asks
-    * for an owner whose definition is a `DefDef`, so it answers NO. Refused under `NonCapturing`,
-    * the site is declined for a reason that is not true: the lambda closes over that instance and
-    * allocates at every evaluation, which is exactly what guard 5 is buying. The test is on the
-    * `static` FLAG and not on the owner's kind, because a `static` member is reached without an
-    * instance and a lambda naming one really does capture nothing.
-    *
-    * The design's other disjunct — "or the site is provably evaluated once" — is NOT implemented
-    * and is not silently approximated: a purity/one-shot answer over an arbitrary expression is a
-    * dataflow question this engine does not have (the same one `JS-E17` is Open over). Those sites
-    * are counted under [[Guard.NonCapturing]] rather than converted on a guess. */
+  /** does the body CAPTURE an enclosing binding — instance identity, guard 5. Three structural
+    * shapes count: `this` naming an ENCLOSING class, a reference to a local/parameter owned by an
+    * outer executable, or a reference to a non-static instance member of an enclosing instance. A
+    * local declared inside the body is not a capture. "provably evaluated once" is NOT
+    * implemented — such sites are counted under [[Guard.NonCapturing]] rather than guessed. */
   private def captures(d: Tree.DefDef, anonSym: SymId)(using p: Program): Boolean =
     d.rhs.exists(b => StandardTraversal.scanTerm(b, false) { (acc, t) =>
       acc || (t match
@@ -309,21 +166,16 @@ object SamLambda:
         p.definitionOf(owner).exists(_.isInstanceOf[Tree.DefDef])
     }
 
-  /** …and is `s` an INSTANCE member of an ENCLOSING instance? See [[captures]]'s third shape.
-    *
-    * `selfReferences` has already refused every reference the anon itself inherits, so a bare
-    * reference owned by a type that reaches here names something an ENCLOSING instance carries —
-    * and naming it is closing over that instance. `static` is the whole of the exclusion, and it is
-    * read off the referenced symbol rather than off its owner, which is what keeps a companion-level
-    * constant from reading as a capture. */
+  /** is `s` an instance member of an ENCLOSING instance ([[captures]]'s third shape)? `static` is
+    * read off the referenced symbol, not its owner, so a companion constant is not a capture. */
   private def isEnclosingMember(s: SymId, anonSym: SymId)(using p: Program): Boolean =
     p.symbolOf(s).exists { sym =>
       !sym.flags.isStatic && sym.owner != SymId.None && sym.owner != anonSym &&
         p.symbolOf(sym.owner).exists(o => !PolicyBinder.isExecutable(o.info))
     }
 
-  /** the name java gave the anonymous class — `Outer$1`. Recorded on the conversion's decision
-    * because it is the one thing the lambda cannot carry: see the object doc's `getClass()` note. */
+  /** the name java gave the anonymous class — `Outer$1`. Recorded on the decision: the one thing
+    * the lambda cannot carry (`getClass()` differs). */
   def javaClassNameOf(anon: Tree.AnonClass)(using p: Program): String =
     p.symbolOf(anon.symbol).map(_.fullName).getOrElse("<anon>")
 
@@ -332,47 +184,11 @@ object SamLambda:
     case TypeRepr.AppliedType(tc, _)  => typeName(tc)
     case other                        => other.toString
 
-  // A `sites(unit)` walk stood here — "every anonymous-class site in a unit, with the DECLARATION it
-  // sits in" — and its only caller was the wave-0 census the transformer RETIRED. Left standing it
-  // is a second, unexercised enumeration of the population beside the one `Converter` actually
-  // walks, which is the disagreement §4.6 is about with nothing left to disagree with it: no spec
-  // covers it, no run reaches it, and the first reader to reuse it would be reading a walk nothing
-  // has held to §3 since the census went.
-
-/** WAVE 1 — the conversion itself. An anonymous class implementing a single-abstract-method
-  * interface becomes a LAMBDA, ASCRIBED to that interface.
-  *
-  * ==§1 kind: (a), unparameterised, and in EVERY pipeline==
-  * Which types are SAM is a structural fact about a class file; whether a body is a single method is
-  * a structural fact about a tree. There is no library policy in it, so there is no constructor
-  * parameter, no `RuleScope`, no `SurfacePolicy` and no fingerprint — and no on/off switch, because
-  * a knob on an (a) is the shape `CLAUDE.md` §1 forbids. `PortRun` weaves it, exactly as it weaves
-  * the package rename; it is not part of any manifest `surface`, so nothing about the shared surface
-  * (§1.5) moves.
-  *
-  * ==The ASCRIPTION is the load-bearing part, and it is what removes a guard rather than adding one==
-  * A java anonymous class is a value whose type javac WROTE DOWN. A bare scala function literal is a
-  * POLY EXPRESSION whose type the CALLEE decides. Dropping the type is therefore not "the same value,
-  * spelled shorter" — it discards the evidence javac left at every use of that value and hands the
-  * choice to scala's own overload resolution, which is the one place this engine knows it cannot
-  * follow javac (`JS-C22`/`JS-C23`, `ENGINE-LIMITS.md` T17). Emitted `((a, b) => …): p.Comparator[T]`
-  * the argument's type at every callee is exactly what it was before the phase ran, so the candidate
-  * set and the most-specific answer cannot move — nothing about the call moved. It costs emitted
-  * characters and nothing else: no declaration moves, no symbol moves, no call site is rewritten.
-  *
-  * ==What it does NOT do==
-  * It rewrites no call site (nothing outside the expression can name an anonymous class), moves no
-  * declaration's `info`, and mints no top-level unit — so it owes no `Rewrite.accountedBy` lane and
-  * §1.5's `RunScope` rule does not apply. The anon's synthetic TYPE symbol disappears, which
-  * `Pipeline.recordPatch` deliberately does not report (a symbol swap is indistinguishable from a
-  * legitimate drop), and that is verified by running it rather than asserted from this comment: if
-  * `rewrite-callsites` ever names this phase `Unaccounted`, the premise is wrong.
-  *
-  * ==Ordering==
-  * BEFORE every retyping phase, so the type it ASCRIBES TO is java's own. A
-  * `CollectionsTransform(retarget)` moving `java.util.Comparator` to `scala.math.Ordering` changes
-  * what the ascription would say, and a phase that ran afterwards would be writing a type java never
-  * named at that site.
+/** Converts an anonymous class implementing a single-abstract-method interface into a lambda,
+  * ASCRIBED to that interface. §1 kind (a): unparameterised, no scope, no on/off switch — which
+  * types are SAM and whether a body is a single method are structural facts. The ascription keeps
+  * every call's candidate set unchanged (no `JS-C22`/`JS-C23` risk); rewrites no call site, moves
+  * no declaration, mints no unit. Runs before every retyping phase, so it ascribes java's own type.
   */
 final class SamLambdaTransform extends Phase, IdiomPhase:
 
@@ -386,16 +202,10 @@ final class SamLambdaTransform extends Phase, IdiomPhase:
     given Program = program
     program.rebuilt(program.units.map(u => StandardTraversal.mapClassDef(new Converter(this), u)))
 
-  /** the rewriting traversal, and the ATTRIBUTION of what it did.
-    *
-    * The conversion happens at `transformNew`, which does not know the declaration it is inside; the
-    * traversal is BOTTOM-UP, so the enclosing definition's hook fires AFTER every conversion in its
-    * body. That is exactly the shape needed: conversions accumulate in a buffer and the first
-    * definition hook to fire CLAIMS them, so a nested `def` takes its own and the enclosing member
-    * takes the rest. One `Decision` per declaration with a `count`, never one per site — `CLAUDE.md`
-    * §5.1's granularity rule, and here it is also what makes the wave's blast classification
-    * COMPUTABLE, since a decision subjected at a `Tree.New` has no declaration symbol to join
-    * `members.tsv` on.
+  /** The rewriting traversal and the attribution of what it did. The traversal is bottom-up, so
+    * the enclosing definition's hook fires after every conversion in its body and claims them — a
+    * nested `def` takes its own, the enclosing member takes the rest. One `Decision` per
+    * declaration with a `count`, never one per site. // CLAUDE.md §5.1
     */
   private final class Converter(owner: SamLambdaTransform) extends Phase:
     def name: String = "sam-anon->lambda/convert"
@@ -403,19 +213,10 @@ final class SamLambdaTransform extends Phase, IdiomPhase:
     private val pending = collection.mutable.ListBuffer.empty[SamLambda.Converted]
     private val refused = collection.mutable.ListBuffer.empty[(SamLambda.Guard, String, Origin)]
 
-    /** THE CONVERSION HAPPENS AT THE `Apply`, NOT AT THE `Tree.New` — and that is not a detail.
-      *
-      * The frontend models `new I(){…}` as `Tree.Apply(Tree.New(…, anon), args, <init>)`
-      * (`SpoonTir`'s `ctorCall`). A phase that returned a lambda from `transformNew` would leave
-      * the enclosing `Apply` standing and emit `((…) => …): I)()` — a lambda APPLIED to the
-      * constructor's argument list, which is not what the java said and is not what the guards
-      * decided about.
-      *
-      * The `Apply` is also where the ARGUMENTS are, which is the belt to guard 1's brace: java's
-      * SAM rule admits only an INTERFACE, and an interface has no constructor to pass arguments
-      * to, so a non-empty list here is a shape the guards should already have declined. Counted
-      * rather than dropped — an argument list a conversion silently discarded is exactly the
-      * defect class §3 keeps finding. */
+    /** The conversion happens at the `Apply`, not the `Tree.New`: the frontend models
+      * `new I(){…}` as `Apply(New(…, anon), args, <init>)`, and converting at `New` alone would
+      * leave the `Apply` standing and emit a lambda applied to the constructor args. A non-empty
+      * `args` here is counted (`Guard.ConstructorArgs`) rather than silently dropped. */
     override def transformApply(t: Tree.Apply)(using p: Program): Term = t.fun match
       case nw @ Tree.New(_, _, _, Some(anon)) =>
         SamLambda.decide(nw, anon) match
@@ -424,18 +225,10 @@ final class SamLambdaTransform extends Phase, IdiomPhase:
           case SamLambda.Verdict.Convert(d, iface, javaName) =>
             pending += SamLambda.Converted(iface, javaName,
               p.symbolOf(d.symbol).map(_.name).getOrElse("?"), nw.origin)
-            // the ASCRIPTION, and it is the whole of `TirEmitter`'s `(expr: T)` form:
-            // `polyOperand` answers true for a lambda, so a `Typed` over one renders as an
-            // ascription rather than as the `asInstanceOf` a java CAST renders as.
-            //
-            // …and `resultTpt` is the OTHER type this node needs, which is not the same one and is
-            // the whole of `ENGINE-LIMITS.md` I9. The ASCRIPTION says what the value IS (the
-            // functional interface javac wrote down); the RESULT TYPE says what the SAM METHOD
-            // returns, and the emitter needs it to restore java's `return`-leaves-the-lambda with a
-            // nested `def` (`JS-S21`). Nothing else in the program holds it once this conversion
-            // has consumed the anonymous class's `DefDef`, which is why threading it here is the
-            // fix rather than a convenience: `d.returnTpt` is the method's OWN declared type, never
-            // the interface's, and never `nw.tpt`.
+            // `Typed` over a lambda renders as an ascription, not `asInstanceOf`.
+            // resultTpt = the SAM method's own declared return type, needed by the emitter to
+            // restore `return`-leaves-the-lambda (`JS-S21`) — distinct from the ascription type.
+            // ENGINE-LIMITS I9
             Tree.Typed(Tree.Lambda(d.paramss.flatten, d.rhs.get, nw.tpe, nw.origin,
                                    resultTpt = Some(d.returnTpt)),
                        nw.tpt, nw.tpe, nw.origin)
@@ -455,26 +248,15 @@ final class SamLambdaTransform extends Phase, IdiomPhase:
     override def transformClassDef(t: Tree.ClassDef)(using p: Program): Tree.ClassDef =
       claim(t.symbol, t.origin); t
 
-    /** is this definition a MEMBER of a type, as opposed to a local or a parameter?
-      *
-      * The distinction is the whole of `CLAUDE.md` §4.55's ownership rule read for a different
-      * purpose: the frontend interns a field under the CLASS and a local under the enclosing
-      * EXECUTABLE, so "is this a member" is a symbol lookup. It has to be asked, because a
-      * conversion inside `Runnable a = new Runnable(){…};` would otherwise be claimed by the LOCAL
-      * `a` — and a decision subjected at a local has no row in `members.tsv` for the wave's blast
-      * classification to join on, which is exactly the failure D3's rule exists to prevent. Skipped
-      * here, the conversion bubbles up to the enclosing member, which is where it belongs. */
+    /** is this definition a MEMBER of a type, as opposed to a local/parameter? A conversion inside
+      * `Runnable a = new Runnable(){…};` must not be claimed by the local `a` — it has no row in
+      * `members.tsv` to join on — so it bubbles up to the enclosing member instead. // CLAUDE.md §4.55
+      */
     private def isMember(sym: SymId)(using p: Program): Boolean =
       p.symbolOf(sym).map(_.owner).flatMap(p.definitionOf).exists(_.isInstanceOf[Tree.ClassDef])
 
-    /** everything CONSIDERED since the last MEMBER-level definition hook belongs to THIS declaration
-      * — the conversions and the refusals alike.
-      *
-      * The refusals are subjected at the enclosing declaration for the same reason the conversions
-      * are, and it is not the blast gate's (a refusal moves no emitted text, so there is nothing to
-      * join): it is that `idiom(refused)` is a POPULATION a reader reads per declaration, and the
-      * census this phase replaces filed it that way. Two phases answering one question in two
-      * spellings is the disagreement §4.6 is about, seen in the report rather than in the tree. */
+    /** everything considered since the last member-level definition hook belongs to THIS
+      * declaration — conversions and refusals alike; `idiom(refused)` is read per-declaration. */
     private def claim(sym: SymId, at: Origin)(using p: Program): Unit =
       val fqn = p.symbolOf(sym).map(_.fullName).getOrElse("<unknown>")
       if refused.nonEmpty && isMember(sym) then
