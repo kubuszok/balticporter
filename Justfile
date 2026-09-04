@@ -4829,6 +4829,10 @@ baseline-accept PORT:
 # WHY NOT RE-PIN AUTOMATICALLY: a re-pin changes what every port resolves against, which is a
 # per-port measurement with its own baseline to acknowledge. The lane reports; the fix is manual.
 # ---------------------------------------------------------------------------------------------
+# comment-lint: comment blocks over 5 lines, or narrative words in added comments (CLAUDE.md §7)
+comment-lint RANGE="":
+    scripts/comment-lint.sh {{RANGE}}
+
 
 # ---------------------------------------------------------------------------------------------
 # DEPENDENCY LINT — verifies that each port's `build.sbt` coordinates agree with what the port's

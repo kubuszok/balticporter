@@ -109,7 +109,7 @@ private[transform] trait CollectionsRetarget:
     * `selectChainRewritten`). Value is `(originalReceiver, srcFqn, collectVia)` so the
     * iterator wrapping can emit a removing iterator that removes from the ORIGINAL map by key,
     * rather than a read-only wrapper over the snapshot. */
-  /** Iterator-typed Collect wrappers -> their inner DynamicArray snapshot (for a chained `toArray`). */
+  /** Iterator-typed Collect wrapper -> its inner snapshot (a chained `toArray` reads the inner one). */
   private[transform] val iteratorBlocks: java.util.IdentityHashMap[Term, Term] = new java.util.IdentityHashMap()
   private[transform] val collectBlockReceivers: java.util.IdentityHashMap[AnyRef, (Term, String, String)] =
     new java.util.IdentityHashMap()
@@ -130,8 +130,7 @@ private[transform] trait CollectionsRetarget:
             lookupRewriteForReceiver(rhs, srcFqn, mName, 0, None, resolveRecvOrigin(recv)).flatMap {
               case rw: CollectionsTransform.RetargetRewrite.Collect =>
                 emitCollect(recv, srcFqn, rw, t.tpe, so)
-              // A standalone `entries()` (not a for-each header — the main pass lowered those):
-              // java's Entries is an ITERATOR, so the image is an Iterator[(K, V)] over a snapshot.
+              // standalone `entries()` (for-each headers were lowered by the main pass): an Iterator[(K, V)]
               case rw: CollectionsTransform.RetargetRewrite.ForEach if rw.arity == 2 && t.args.isEmpty =>
                 emitEntriesIterator(recv, srcFqn, rw.targetMethod, t.tpe, so)
               case _ => scala.None
@@ -146,7 +145,6 @@ private[transform] trait CollectionsRetarget:
               if mName == "next" && isIteratorType(recv.tpe) then t // `values().next()` on the snapshot's iterator
               else if mName == "hasNext" && isIteratorType(recv.tpe) then Tree.Select(recv, m, t.tpe, so)
               else if mName == "toArray" then
-                // an Iterator-typed snapshot's `toArray()` reads the inner DynamicArray snapshot
                 val snap = Option(iteratorBlocks.get(recv)).getOrElse(recv)
                 // When the ORIGINAL type head is a retarget target, the caller expects a
                 // DynamicArray, not a scala.Array. Return the Collect block as-is.
@@ -590,8 +588,7 @@ private[transform] trait CollectionsRetarget:
     // iterator that removes from the original MAP rather than from the DynamicArray snapshot.
     if rw.via == "foreachValue" || rw.via == "foreachKey" then
       collectBlockReceivers.put(block, (recv, srcFqn, rw.via))
-    // The call's own type decides the static shape: a java `Keys`/`Values` (an ITERATOR, retyped
-    // to scala's Iterator) is the snapshot's iterator; a collection-typed call keeps the snapshot.
+    // the call's own type decides: an Iterator-typed call (java's Keys/Values) is the snapshot's iterator
     if isIteratorType(callTpe) then
       val outer = Tree.Opaque.spliced(List("", ".iterator"), List(block), callTpe, so)
       iteratorBlocks.put(outer, block)
@@ -599,11 +596,8 @@ private[transform] trait CollectionsRetarget:
       Some(outer)
     else Some(block)
 
-  /** `recv.entries()` stored or chained (not a for-each header): java's Entries is an ITERATOR
-    * over reused entry objects; the image is an `Iterator[(K, V)]` over a snapshot taken through
-    * the target's 2-ary `via` (`foreachEntry`). Reads only — a write through the cursor is
-    * counted (K36 IteratorRemove / entry-write). No typeclass is needed (an ArrayBuffer, not a
-    * DynamicArray), so a generic K/V is fine. */
+  /** `recv.entries()` outside a for-each header: an `Iterator[(K, V)]` over a snapshot taken through the
+    * 2-ary `via`; reads only, a cursor write is counted (K36). ArrayBuffer-backed, so no typeclass. */
   private[transform] def emitEntriesIterator(recv: Term, srcFqn: String, via: String,
       tpe: TypeRepr, so: Origin)(using p: Program): Option[Term] =
     val viaSym = retargetRewriteSyms.getOrElse((srcFqn, via), SymId.None)
@@ -620,8 +614,7 @@ private[transform] trait CollectionsRetarget:
       List(hole(kTpe), hole(vTpe), recv, hole(kTpe), hole(vTpe)),
       tpe, so))
 
-  /** The declared type is `scala.collection.Iterator` — the image of java's nested map
-    * iterator types (`ObjectMap.Keys`/`Values`/`Entries`, …) under the retarget rows. */
+  /** the type is `scala.collection.Iterator` (the retarget image of java's nested map iterators) */
   /** A type parameter, structurally: `isParam` with `TypeBounds` as its info. */
   private[transform] def isTypeVariable(s: SymId)(using p: Program): Boolean =
     p.symbolOf(s).exists(x => x.flags.isParam && x.info.isInstanceOf[TypeRepr.TypeBounds])
@@ -1361,12 +1354,9 @@ private[transform] trait CollectionsRetarget:
                 if targs.nonEmpty then Tree.TypeApply(ident, targs, TypeRepr.NoType, t.origin)
                 else ident
               val call = Tree.Apply(fun, effectiveArgs, factorySym, n.tpe, t.origin)
-              // A TYPE-VARIABLE element has no typeclass evidence in scope: append the row's
-              // `(using <evidence>)` (the hand port's own `MkArray.anyRef` cast) — subplan 1b.
               (typeVarEvidence, targs.headOption) match
                 case (Some(tpl), Some(tt)) if headSym(tt.tpe).exists(isTypeVariable) =>
-                  // `{ given <tpl with $T0 = T>; <call> }` — the factory summons its evidence
-                  // inline, so the given must be in scope at the call, not passed explicitly.
+                  // `{ given <tpl>; <call> }`: the factory summons its evidence inline (subplan 1b)
                   val parts = tpl.split(java.util.regex.Pattern.quote("$T0"), -1).toList
                   val tHole = () => Tree.Ident(headSym(tt.tpe).getOrElse(SymId.None), tt.tpe, t.origin)
                   val strs  = ("{ given " + parts.head) :: parts.tail.dropRight(1) ++ List(parts.last + "; ", " }")

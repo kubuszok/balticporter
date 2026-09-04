@@ -2204,7 +2204,7 @@ object CollectionsTransform:
     /** Construction rewrite: `new Source(args)` to `companionFqn.factoryMethod(args)`.
       * `dropTrailing` strips trailing args; `fillTypeArgs` generates null placeholders for 0-arg case. */
     case class Construct(companionFqn: String, factoryMethod: String, dropTrailing: Int = 0, fillTypeArgs: Boolean = false,
-        /** a `given` clause (`Type = expr`, `$T0` = the element type) put in scope when the element type argument is a TYPE VARIABLE */
+        /** a `given` clause (`Type = expr`, `$T0` = the element type), in scope when the element is a type variable */
         typeVarEvidence: Option[String] = None) extends RetargetRewrite
 
     /** For-each structural rewrite: `for (E e : recv.sourceMethod())` over a retarget target

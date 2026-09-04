@@ -409,9 +409,7 @@ object LibgdxPolicy:
     // Inner iterator types — java's Keys/Values/Entries are live views backed by the map's
     // own table; lls has foreachKey/foreachValue/foreachEntry (inline) instead.  As TYPES these
     // are used only where java stores them in a local (`I18NBundle`) — Collect handles the call.
-    // Nested iterator types (Keys/Values/Entries are MapIterators over one reused entry, K36):
-    // an ITERATOR's image is scala's Iterator; the producing call snapshots (Collect / entries
-    // iterator) and a stored cursor takes `.iterator` (CollectionsRetarget.cursorIfStored).
+    // nested iterator types -> scala Iterator over a snapshot (K36)
     "com.badlogic.gdx.utils.ObjectMap$Keys" -> "scala.collection.Iterator",
     "com.badlogic.gdx.utils.ObjectMap$Values" -> "scala.collection.Iterator",
     "com.badlogic.gdx.utils.ObjectMap$Entries" -> "scala.collection.Iterator",
@@ -476,7 +474,7 @@ object LibgdxPolicy:
       "com.badlogic.gdx.utils.ObjectIntMap$Entry" -> List(SourceArg(0), FixedType("scala.Int")),
       "com.badlogic.gdx.utils.ObjectFloatMap$Entry" -> List(SourceArg(0), FixedType("scala.Float")),
       "com.badlogic.gdx.utils.ObjectLongMap$Entry" -> List(SourceArg(0), FixedType("scala.Long")),
-      // Nested iterator types -> Iterator[elem]: Entries carry (K, V) as a Tuple2 (K36).
+      // nested iterator types -> Iterator[elem]; Entries carry (K, V) as a Tuple2
       "com.badlogic.gdx.utils.ObjectMap$Entries"     -> List(Applied("scala.Tuple2", List(SourceArg(0), SourceArg(1)))),
       "com.badlogic.gdx.utils.ArrayMap$Entries"      -> List(Applied("scala.Tuple2", List(SourceArg(0), SourceArg(1)))),
       "com.badlogic.gdx.utils.IntMap$Entries"        -> List(Applied("scala.Tuple2", List(FixedType("scala.Int"), SourceArg(0)))),
@@ -506,8 +504,7 @@ object LibgdxPolicy:
       "com.badlogic.gdx.utils.BooleanArray"  -> List(FixedType("scala.Boolean")),
     )
 
-  // A class type parameter has no `MkArray[T]`; sge's own `DynamicArrayOps.createRef` casts the
-  // reference-array evidence (subplan 1b). Emitted as `(using …)` only at a type-variable element.
+  // MkArray evidence at a type-variable element: sge's own `createRef` cast (subplan 1b)
   private val mkArrayRef = Some("lowlevel.MkArray[$T0] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[$T0]]")
 
   def libCollectionConstructRewrites: Map[String, Map[(String, Int), balticporter.transform.CollectionsTransform.RetargetRewrite]] =
@@ -533,8 +530,7 @@ object LibgdxPolicy:
         // boundary). SuppressionPhase places @nowarn on the enclosing member.
         ("get", 1)     -> Template("$recv.get($0).orNull"),
       ),
-      // Nested iterator types: `it.hasNext()` (a method in java's MapIterator; the FIELD spelling
-      // `it.hasNext` needs nothing) is parenless on scala's Iterator.
+      // `it.hasNext()` is parenless on scala's Iterator
       "com.badlogic.gdx.utils.ObjectMap$Keys"        -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
       "com.badlogic.gdx.utils.ObjectMap$Values"      -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
       "com.badlogic.gdx.utils.ObjectMap$Entries"     -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
