@@ -141,6 +141,78 @@ class GlobalsToImplicitsTransformSpec extends munit.FunSuite:
     assert(need.exists(e => e.kind == ContextNeed.Edge.Kind.Use))
   }
 
+  // ---- CT11: static field holders ---------------------------------------------------------------
+
+  /** A class whose static field CONSTRUCTS a threaded type, and whose static method reads it. The
+    * field's initialiser cannot run at companion-initialisation time; the method's body is where
+    * the context first becomes available, so the field becomes a holder there. `Widget` reads
+    * `Config.verbosity` so that the growth threads it. */
+  private val fieldHolderSrc =
+    """package demo;
+      |class Config {
+      |  static int verbosity = 0;
+      |}
+      |class Widget {
+      |  int level() { return Config.verbosity; }
+      |}
+      |class Panel {
+      |  private static final Widget MAIN = new Widget();
+      |  static void show() { System.out.println(MAIN); }
+      |}
+      |""".stripMargin
+
+  /** A class whose static field constructs a threaded type and has NO threaded method — the holder
+    * cannot fire and the engine refuses. `Widget` is threaded (reads `Config.verbosity`), but
+    * `Isolated.count()` does not use `SOLO` and does not read the holder, so no method on
+    * `Isolated` gets threaded. */
+  private val noHolderSrc =
+    """package demo;
+      |class Config {
+      |  static int verbosity = 0;
+      |}
+      |class Widget {
+      |  int level() { return Config.verbosity; }
+      |}
+      |class Isolated {
+      |  private static final Widget SOLO = new Widget();
+      |  static int count() { return 0; }
+      |}
+      |""".stripMargin
+
+  test("CT11: static field constructing a threaded type becomes a holder with throwing accessor") {
+    val h = ContextHolder(
+      holder  = "demo.Config",
+      context = ContextType.Minted("demo.Ctx"),
+      members = Map("verbosity" -> "verbosity"),
+      attach  = ContextAttach.Class,
+    )
+    val phase        = new GlobalsToImplicitsTransform(List(h))
+    val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(fieldHolderSrc), List(phase))
+    val text         = new TirEmitter(after, notes = log).emit
+    assert(clue(text).contains("MAIN$holder"), text)
+    assert(text.contains("def MAIN"), text)
+    assert(text.contains("IllegalStateException"), text)
+    assert(text.contains("MAIN$holder eq null"), text)
+    val ds = log.of(Decision.Kind.InjectedMember).filter(_.subjectFqn.contains("MAIN"))
+    assert(clue(ds).nonEmpty)
+    assert(ds.head.detail.get("from").exists(_.contains("static field")))
+  }
+
+  test("CT11: static field with NO threaded method on the class is a counted unsuppliable-use") {
+    val h = ContextHolder(
+      holder  = "demo.Config",
+      context = ContextType.Minted("demo.Ctx"),
+      members = Map("verbosity" -> "verbosity"),
+      attach  = ContextAttach.Class,
+    )
+    val phase        = new GlobalsToImplicitsTransform(List(h))
+    val (after, _)   = Pipeline.runTraced(SpoonTir.fromSource(noHolderSrc), List(phase))
+    val seams        = phase.seams(after)
+    val soloSeams = seams.filter(_.subject.contains("SOLO"))
+    assert(clue(soloSeams).nonEmpty)
+    assert(soloSeams.exists(_.kind == ContextSeamCheck.Kind.UnsuppliableUse))
+  }
+
   private def edgesOf(h: ContextHolder): List[ContextNeed.Edge] =
     val program = SpoonTir.fromSource(src)
     val phase   = new GlobalsToImplicitsTransform(List(h))

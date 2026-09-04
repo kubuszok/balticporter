@@ -57,6 +57,10 @@ object ContextSeamCheck extends RemedySource:
     case SelfSupplied       extends Kind("self-supplied")
     /** the CT7 shape observed rather than declared — a warning, not a refusal. */
     case UnconstructedThread extends Kind("unconstructed-thread")
+    /** a static field whose initialiser constructs a threaded class — the field becomes a holder
+      * with a throwing accessor, initialised at the head of threaded static methods. ENGINE-LIMITS
+      * CT11 */
+    case StaticFieldHolder  extends Kind("static-field-holder")
     /** a clause the phase attached that the emitted header does not carry — an engine bug, found
       * only from the emitter's own recording after emission. ENGINE-LIMITS CT5 */
     case LostClause         extends Kind("lost-clause")
@@ -123,6 +127,14 @@ object ContextSeamCheck extends RemedySource:
           "context. If YOUR USERS construct it, this is correct as it stands and the clause is part " +
           "of the ported API: the engine cannot tell the two apart, which is why this warns rather " +
           "than refuses."
+      case StaticFieldHolder =>
+        "§1(a) ENGINE and DERIVED: this static field's initialiser constructs a type whose " +
+          "constructor the threading reached, so the companion object cannot evaluate it at " +
+          "initialisation time. The field becomes a holder with a throwing accessor, and the " +
+          "initialiser runs at the head of every threaded static method on the same class. No " +
+          "manifest key is needed — the engine derives the holder for every static field whose " +
+          "initialiser constructs a threaded class, because the accessor keeps the field's name " +
+          "and no new public name is minted."
       case FrozenComponent =>
         "§1(b)/§1(a): this override component reaches a declaration this program does not own — an " +
           "unparsed parent, or a resolution root's — so its signature is not this module's to " +

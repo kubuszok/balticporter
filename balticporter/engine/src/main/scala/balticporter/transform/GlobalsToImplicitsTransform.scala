@@ -493,6 +493,13 @@ final class GlobalsToImplicitsTransform(
                                 selfSupplied)
     need.grow()
 
+    // CT11: remove stale UnsuppliableUse seams for fields that became holders — the growth
+    // records the seam BEFORE discoverFieldHolders resolves it, so the stale row stays.
+    if need.fieldHolders.nonEmpty then
+      val held = need.fieldHolders.keySet
+      seamLog.filterInPlace(f =>
+        !(f.kind == ContextSeamCheck.Kind.UnsuppliableUse && held.contains(f.enclosing)))
+
     // ---- the context TYPE, and the terms that read through it ---------------------------------
     val ctxFqn = h.context.fqn
     val ctxSym = mint.selfTyped(ctxFqn.split('.').last, ctxFqn, Flags(isFinal = true))
@@ -590,6 +597,66 @@ final class GlobalsToImplicitsTransform(
             })
         }
 
+      /** CT11: static field constructing a threaded class becomes a holder + throwing accessor.
+        * No manifest key -- the accessor keeps the field's name. Like [[cached]], runs ahead of
+        * the arms below. */
+      private def fieldHeld(t: Tree.ClassDef)(using Program): Tree.ClassDef =
+        val p = summon[Program]
+        val fh = need.fieldHolders
+        val myFields = t.body.collect {
+          case v: Tree.ValDef if fh.contains(v.symbol) => v
+        }
+        if myFields.isEmpty then return t
+        val myThreaded = t.body.collect {
+          case d: Tree.DefDef
+            if need.threadedMethods(d.symbol) && !deferredFields(d.symbol) &&
+               p.symbolOf(d.symbol).exists(s => s.flags.isStatic && s.name != ContextNeed.CtorName) =>
+            d.symbol
+        }.toSet
+        if myThreaded.isEmpty then return t
+        val built = myFields.map { v =>
+          val initRhs = fh(v.symbol)
+          val (hold, acc) = mint.fieldHolder(v.symbol, v.tpt.tpe, v.origin)
+          (v.symbol, hold, acc, initRhs)
+        }
+        val holdMap: Map[SymId, (SymId, Term)] = built.map { case (field, hold, _, initRhs) =>
+          field -> (hold.symbol, initRhs)
+        }.toMap
+        val fieldSyms = holdMap.keySet
+        val newMembers: List[Statement] = built.flatMap { case (_, hold, acc, _) => List(hold, acc) }
+        val clinitStmts = need.fieldHolderClinit.getOrElse(t.symbol, Nil)
+        t.copy(body = newMembers ++ t.body.flatMap {
+          case v: Tree.ValDef if fieldSyms(v.symbol) => Nil
+          case d: Tree.DefDef if p.symbolOf(d.symbol).exists(_.name == ContextNeed.ClinitName) &&
+                                 clinitStmts.nonEmpty =>
+            stripClinitStmts(d, clinitStmts)
+          case d: Tree.DefDef if myThreaded(d.symbol) =>
+            val stored = holdMap.values.foldLeft(d.rhs) { case (body, (holdSym, initRhs)) =>
+              body.map(b => mint.prependFieldInit(holdSym, initRhs, b, clinitStmts))
+            }
+            List(d.copy(rhs = stored))
+          case s => List(s)
+        })
+
+      /** Strip statements from the clinit that were moved to the holder init. If nothing remains,
+        * drop the clinit entirely. */
+      private def stripClinitStmts(d: Tree.DefDef, moved: List[Statement]): List[Statement] =
+        val movedSet = moved.toSet
+        d.rhs.map(Tree.uncomment) match
+          case Some(b: Tree.Block) =>
+            val remaining = (b.stats :+ b.expr).filterNot(movedSet.contains)
+            val (init, expr) = remaining.lastOption match
+              case Some(t: Term) => (remaining.dropRight(1), t)
+              case _             => (remaining, Tree.Literal(Constant.UnitC, TypeRepr.NoType, d.origin))
+            if init.isEmpty && isUnitLiteral(expr) then Nil
+            else List(d.copy(rhs = Some(b.copy(stats = init, expr = expr))))
+          case Some(t) if movedSet.contains(t) => Nil
+          case _                               => List(d)
+
+      private def isUnitLiteral(t: Term): Boolean = Tree.uncomment(t) match
+        case Tree.Literal(Constant.UnitC, _, _) => true
+        case _                                  => false
+
       /** Does this type's companion need its own `given` too? A scala `class` and its `object` are
         * two scopes, so a `private given` at the head of the class body reaches no `summon` in a
         * `static` member. Skipped where the type emits as a MODULE (one shared scope — a second
@@ -600,7 +667,7 @@ final class GlobalsToImplicitsTransform(
                           case _             => false }
 
       override def transformClassDef(t0: Tree.ClassDef)(using Program): Tree.ClassDef =
-        val t = cached(t0)
+        val t = fieldHeld(cached(t0))
         // ENGINE-LIMITS CT7: no clause anywhere; a `given` member at the HEAD of the body instead
         // (a class body is a constructor, so a use ahead of it would read `null`).
         if need.selfSuppliedClasses(t.symbol) then
@@ -654,6 +721,7 @@ final class GlobalsToImplicitsTransform(
     recordSelfSupplied(out, h, need, ctxFqn, selfSupplied, selfSource)
     recordRetained(out, h, need, ctxFqn, retainOf)
     recordCached(out, h, ctxFqn, cacheOf, cacheFired.toSet)
+    recordFieldHolders(out, h, need, ctxFqn)
     recordDeadSelf(h, need)
     recordDeadRetain(h, need)
     recordDeadCache(h, cacheFired.toSet)
@@ -825,6 +893,25 @@ final class GlobalsToImplicitsTransform(
         ),
         reason = Reason.Configured(name, keyOf.getOrElse(c, sym.fullName)),
         origin = Decision.originOf(p, c),
+      )))
+    }
+
+  /** CT11: one `InjectedMember` row per field holder. */
+  private def recordFieldHolders(p: Program, h: ContextHolder, need: ContextNeed, ctxFqn: String): Unit =
+    need.fieldHolders.toList.sortBy(_._1.raw).foreach { (field, rhs) =>
+      p.symbolOf(field).foreach(sym => record(Decision(
+        kind = Decision.Kind.InjectedMember, subject = field, subjectFqn = sym.fullName,
+        detail = Map(
+          "from"   -> "a static field whose initialiser constructs a threaded class",
+          "to"     -> (s"a private `var` holder + throwing accessor `def ${sym.name}` -- the " +
+            "initialiser runs at the head of every threaded static method behind an `eq null` guard"),
+          "why"    -> ("this field's initialiser cannot run at companion-initialisation time because " +
+            s"it constructs a type whose constructor now takes `(using $ctxFqn)` and there is no " +
+            "given in scope at that point. The accessor keeps the field's name so no new public " +
+            "name is minted"),
+        ),
+        reason = Reason.Universal("static-field-holder (CT11)"),
+        origin = Decision.originOf(p, field),
       )))
     }
 
@@ -1001,6 +1088,59 @@ object GlobalsToImplicitsTransform:
       body match
         case b: Tree.Block => b.copy(stats = store :: b.stats)
         case other         => Tree.Block(List(store), other, other.tpe, other.origin)
+
+    // ---- STATIC FIELD HOLDERS (CT11) -----------------------------------------------------------
+
+    private val fieldHolderCache = collection.mutable.Map.empty[SymId, (SymId, SymId)]
+
+    /** CT11: a `private var` holder + throwing `def` accessor for a static field whose initialiser
+      * constructs a threaded class. Accessor keeps the field's name. Parallel to [[cachedContext]]. */
+    def fieldHolder(field: SymId, fieldTpe: TypeRepr, at: Origin): (Tree.ValDef, Tree.DefDef) =
+      val sym   = program.symbolOf(field)
+      val nm    = sym.map(_.name).getOrElse("f")
+      val owner = sym.map(_.owner).getOrElse(SymId.None)
+      val full  = sym.map(_.fullName).getOrElse(nm)
+      val (hold, acc) = fieldHolderCache.getOrElseUpdate(field, (
+        member(s"$nm$$holder", MemberKey(full, s"$nm$$holder").render, owner, fieldTpe,
+               Flags(isStatic = true, isMutable = true, isPrivate = true)),
+        member(nm, MemberKey(full, nm).render, owner, TypeRepr.MethodType(Nil, fieldTpe),
+               Flags(isStatic = true)),
+      ))
+      val ownerSimple = program.symbolOf(owner).map(_.fullName).getOrElse("?").split('.').last.split('$').last
+      val read = Tree.Ident(hold, fieldTpe, at)
+      val cond = Tree.Apply(Tree.Select(read, eqOp, TypeRepr.NoType, at),
+                            List(Tree.Literal(Constant.NullC, TypeRepr.NoType, at)),
+                            eqOp, TypeRepr.NoType, at)
+      val boom = Tree.Throw(Tree.Apply(
+        Tree.New(TypeTree(illegalStateRef, at), illegalStateRef, at),
+        List(Tree.Literal(Constant.StringC(
+          s"$ownerSimple.$nm has not been initialised yet — call one of its context-taking members first"),
+          TypeRepr.NoType, at)),
+        illegalStateCtor, illegalStateRef, at), TypeRepr.NoType, at)
+      (Tree.ValDef(hold, TypeTree(fieldTpe, at), scala.None, at),
+       Tree.DefDef(acc, Nil, TypeTree(fieldTpe, at),
+                   Some(Tree.If(cond, boom, Tree.Ident(hold, fieldTpe, at), fieldTpe, at)), at))
+
+    /** CT11: `if (<held> eq null) { <held> = <init>; <clinit stmts> }` at the head of a threaded
+      * method. The method already has `(using T)` from the thread pass. */
+    def prependFieldInit(hold: SymId, rhs: Term, body: Term,
+                         clinitStmts: List[Statement] = Nil): Term =
+      val tpe = rhs.tpe
+      val at  = body.origin
+      val read = Tree.Ident(hold, tpe, at)
+      val cond = Tree.Apply(Tree.Select(read, eqOp, TypeRepr.NoType, at),
+                            List(Tree.Literal(Constant.NullC, TypeRepr.NoType, at)),
+                            eqOp, TypeRepr.NoType, at)
+      val store = Tree.Assign(Tree.Ident(hold, tpe, at), rhs, TypeRepr.NoType, at)
+      val thenBody: Term =
+        if clinitStmts.isEmpty then store
+        else Tree.Block(store :: clinitStmts.collect { case t: Term => t },
+                        Tree.Literal(Constant.UnitC, TypeRepr.NoType, at), TypeRepr.NoType, at)
+      val init  = Tree.If(cond, thenBody, Tree.Literal(Constant.UnitC, TypeRepr.NoType, at),
+                          TypeRepr.NoType, at)
+      body match
+        case b: Tree.Block => b.copy(stats = init :: b.stats)
+        case other         => Tree.Block(List(init), other, other.tpe, other.origin)
 
     /** `eq` — reference identity, the faithful spelling of java's `== null` (CLAUDE.md §4.4). The
       * `scala.<op>#` prefix is what the emitter reads to render an operator infix. */

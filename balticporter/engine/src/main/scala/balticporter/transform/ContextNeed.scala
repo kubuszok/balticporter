@@ -272,6 +272,15 @@ final class ContextNeed(
 
   private def readsHolder(t: Term): Boolean = staticIn(t).nonEmpty
 
+  /** Does this term read any of the given symbols? */
+  private def readsAnyOf(t: Term, syms: Set[SymId]): Boolean =
+    StandardTraversal.scanTerm(t, false) { (acc, x) =>
+      acc || (x match
+        case Tree.Ident(s, _, _)     => syms.contains(s)
+        case Tree.Select(_, s, _, _) => syms.contains(s)
+        case _                       => false)
+    }
+
   /** the read sites the deferral moved into a method that DOES take a clause. */
   private val deferredReads: Set[(SymId, Origin)] = deferrals.flatMap(d => staticIn(d.rhs)).toSet
 
@@ -343,10 +352,117 @@ final class ContextNeed(
         case Node.M(m) => expandMethod(m)
         case Node.C(c) => expandClass(c)
 
+    // CT11: static field holders — seeds readers of held fields, re-runs to fixpoint.
+    discoverFieldHolders()
+
     // AFTER the fixpoint, because both questions are about the finished closure: whether a
     // self-supplied class's PARENT ended up threaded, and which threaded classes nothing constructs.
     selfS.toList.sortBy(_.raw).foreach(checkSelfSupplied)
     classes.toList.sortBy(_.raw).foreach(warnUnconstructed)
+
+  // ---- STATIC FIELD HOLDERS (CT11) ------------------------------------------------------------
+
+  /** static fields whose initialisers construct a threaded class — they become holders with a
+    * throwing accessor, initialised at the head of every threaded static method on the same class.
+    * Populated by [[discoverFieldHolders]] after the first growth pass. */
+  private val fieldHolderSet = collection.mutable.LinkedHashMap.empty[SymId, Term]
+
+  /** clinit statements that read a held field — they are deferred alongside the field's initialiser,
+    * because the static block and the field are ONE JLS step-9 sequence (CT11). Key is the owning
+    * type's symbol. */
+  private val fieldHolderClinitStmts = collection.mutable.LinkedHashMap.empty[SymId, List[Statement]]
+
+  /** the held fields: field symbol -> initialiser term. Read AFTER [[grow]]. */
+  def fieldHolders: Map[SymId, Term] = fieldHolderSet.toMap
+
+  /** clinit statements that read a held field, grouped by owning type. These are REMOVED from the
+    * clinit body and prepended to the holder assignment at the head of threaded methods. */
+  def fieldHolderClinit: Map[SymId, List[Statement]] = fieldHolderClinitStmts.toMap
+
+  /** Does this initialiser construct a type the growth already threaded? More precise than
+    * [[constructsOwned]] — only types whose constructors WILL change are relevant. */
+  private def constructsThreaded(t: Term): Boolean =
+    StandardTraversal.scanTerm(t, false) { (acc, x) =>
+      acc || (x match
+        case n: Tree.New =>
+          val head = constructedBy(n)
+          head != SymId.None && classes.contains(head)
+        case _ => false)
+    }
+
+  /** CT11: find static fields whose initialisers construct a threaded class, seed readers, re-grow. */
+  private def discoverFieldHolders(): Unit =
+    val candidates = program.units.flatMap(u => StandardTraversal.allClassDefs(u)).flatMap { cd =>
+      cd.body.collect {
+        case v: Tree.ValDef
+          if program.symbolOf(v.symbol).exists(s => s.flags.isStatic && !s.flags.isMutable) &&
+             v.rhs.exists(constructsThreaded) &&
+             !statics.contains(v.symbol) &&
+             !deferredFields.contains(v.symbol) =>
+          v.symbol -> v.rhs.get
+      }
+    }
+    if candidates.isEmpty then return
+
+    candidates.foreach { (field, rhs) =>
+      fieldHolderSet += field -> rhs
+      program.usages(field).foreach {
+        case Usage(UsageKind.TermRef, site, enc) if enc != SymId.None =>
+          if !inScope(enc) then scopedS += enc
+          else siteOf(enc) match
+            case Site.Method(m, _) =>
+              if !methods(m) then viaMap.getOrElseUpdate(m, "uses-held-field")
+              enqueue(Node.M(m), Edge(Edge.Kind.Instantiate, field, m, site.origin))
+            case Site.Cls(c, _) =>
+              if !classes(c) then viaMap.getOrElseUpdate(c, "uses-held-field")
+              enqueue(Node.C(c), Edge(Edge.Kind.Instantiate, field, c, site.origin))
+            case Site.Boundary(sub, why) =>
+              seam(ContextSeamCheck.Kind.StaticFieldHolder, fqn(sub), holder.holder,
+                s"this declaration reads `${fqn(field)}`, whose initialiser now needs the " +
+                  s"context, and $why", site.origin, sub)
+        case _ => ()
+      }
+    }
+
+    // Clinit statements reading a held field are deferred alongside it (JLS step 9, CT11).
+    val heldSyms = fieldHolderSet.keySet
+    program.units.flatMap(u => StandardTraversal.allClassDefs(u)).foreach { cd =>
+      val owner = cd.symbol
+      cd.body.foreach {
+        case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == ClinitName) =>
+          val stmts = statementsOf(d.rhs).collect {
+            case s: Term if readsAnyOf(s, heldSyms.toSet) => s
+          }
+          if stmts.nonEmpty then
+            fieldHolderClinitStmts.updateWith(owner) {
+              case Some(existing) => Some(existing ++ stmts)
+              case scala.None => Some(stmts)
+            }
+        case _ => ()
+      }
+    }
+
+    while work.nonEmpty do
+      work.dequeue() match
+        case Node.M(m) => expandMethod(m)
+        case Node.C(c) => expandClass(c)
+
+    fieldHolderSet.keys.toList.foreach { field =>
+      val owner = program.symbolOf(field).map(_.owner).getOrElse(SymId.None)
+      val hasThreadedStatic = program.definitionOf(owner).toList.collect { case cd: Tree.ClassDef => cd }
+        .flatMap(_.body).exists {
+          case d: Tree.DefDef =>
+            methods(d.symbol) && !deferredFields(d.symbol) &&
+              program.symbolOf(d.symbol).exists(s => s.flags.isStatic && s.name != CtorName)
+          case _ => false
+        }
+      if !hasThreadedStatic then
+        fieldHolderSet -= field
+        seam(ContextSeamCheck.Kind.UnsuppliableUse, fqn(field), holder.holder,
+          s"this static field's initialiser constructs `${fqn(field)}` which now needs the context, " +
+            "and no static method on this class was threaded — there is nowhere to assign the holder",
+          Decision.originOf(program, field), field)
+    }
 
   /** A SELF-SUPPLIED CLASS WHOSE PARENT TOOK THE CLAUSE — the one shape the third answer cannot
     * cover. A `given` member is in scope for the class BODY, not for its `extends` clause: the
