@@ -2,64 +2,30 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** The OPAQUE-TYPE boundary, counted — every seam the primitive-to-opaque retyping opened and could
-  * not close.
-  *
-  * ==Why this exists==
-  * `PrimitiveToOpaqueTransform` retypes a set of `int`/`long`/… symbols to an `opaque type`,
-  * wrapping at construction and unwrapping at consumption. The phase inserts coercions at every
-  * boundary it can reach — owned method arguments, val initialisers, assignments, returns — but
-  * THREE populations sit beyond what inline coercion can close:
-  *
-  *   - an EXTERNAL CALLEE whose formal the program does not have: `coerceArgs` falls through to
-  *     `case _ => t` and the opaque-typed argument reaches a class-file formal that still expects
-  *     the primitive. The SCOPE FENCE prevents this for the GL interfaces the libGDX spec names,
-  *     and a port without a fence would see a much larger count here;
-  *   - the REIFIED positions (`instanceof`/casts/`Class` arguments): these ask about a RUNTIME
-  *     OBJECT, and the phase moved the static type without moving any object or any class.
-  *     `CLAUDE.md` §1's paragraph on reified positions applies one level down (an opaque type IS
-  *     the primitive at the JVM level, so `instanceof Int` still works for a `GLHandle`, but the
-  *     STATIC `isInstanceOf[GLHandle]` is a different question and scalac rejects it). Measured at
-  *     0 on every current port — the fenced GL interfaces are where casts live;
-  *   - the BOXED-PRIMITIVE boundary: a `Cell<Integer>` holds the boxed form, and java's auto-unbox
-  *     is implicit in the TIR. Wave 2.6 added the coercion for this face; what remains here is
-  *     wherever that coercion could not fire.
-  *
-  * ==Universal, parameterised by the phase's own mapping==
-  * §1(a) in mechanism: it reads the phase's `seeds` and `typeMapping`, holds no library name,
-  * and an empty seed set produces an empty findings list by arithmetic rather than by a branch.
-  * The check is a conditional lane, required of a run that carries `PrimitiveToOpaqueTransform`
-  * and absent otherwise, following the `collection-boundary`/`nullability-boundary` pattern.
-  *
-  * ==What this deliberately does NOT count==
-  * Coercions the phase SUCCESSFULLY INSERTED are not findings — they are the phase working. The
-  * count here is the RESIDUE: what the phase could not close, with the §1 classification a bare
-  * typer error cannot carry.
+/** The OPAQUE-TYPE boundary, counted — every seam `PrimitiveToOpaqueTransform`'s retyping opened
+  * and could not close: an EXTERNAL CALLEE with no readable formal (the scope fence's job to
+  * prevent), a REIFIED position (`instanceof`/cast — CLAUDE.md §1's paragraph, one level down),
+  * and a BOXED-PRIMITIVE boundary the wave-2.6 coercion did not reach. Universal in mechanism,
+  * parameterised by the phase's own `seeds`/`typeMapping`; empty seeds is a no-op. A conditional
+  * lane, required only of a run carrying that phase. Counts residue, not successful coercions.
   */
 object OpaqueBoundaryCheck:
 
   /** the check's name in `findings.tsv`. */
   val Name = "opaque-boundary"
 
-  /** what kind of boundary this is, which is what decides who fixes it (CLAUDE.md §1). */
+  /** what kind of boundary this is, which decides who fixes it (CLAUDE.md §1). */
   enum Issue:
-    /** a call to an EXTERNAL method — one whose definition this program does not have — where the
-      * argument carries the opaque type and the class-file formal expects the primitive (or vice
-      * versa for returns). The phase's `coerceArgs` reads the callee's `definitionOf`, which is
-      * absent for externals; the SCOPE FENCE is the configured defence, so a port without one
-      * would see this for every external callee a seed value reaches. */
+    /** a call to an EXTERNAL method whose formal `coerceArgs` cannot read; the SCOPE FENCE is the
+      * configured defence. */
     case ExternalCallee
-    /** the declaration carries the opaque type and the port's SCOPE deliberately holds it back,
-      * so it keeps the primitive type. Counted for the same reason `NullabilityBoundaryCheck`
-      * counts `ScopedOut`: a residue nobody counts is a residue that grows. */
+    /** the declaration's opaque type is deliberately held back by the port's SCOPE. */
     case ScopedOut
-    /** a BOXED-PRIMITIVE value (`Integer`, `Long`, …) where the opaque wrapping could not fire:
-      * the boxed form has no `opaque type` in its ancestry and an auto-unbox node does not exist
-      * in the TIR, so the value would reach the opaque slot as the boxed type. */
+    /** a BOXED-PRIMITIVE value where the wrapping could not fire — no auto-unbox node in the TIR. */
     case BoxedPrimitive
 
   object Issue:
-    /** which of §1's three kinds the fix is — the thing a bare typer error cannot say. */
+    /** which of §1's three kinds the fix is (CLAUDE.md §4.45). */
     def classification(i: Issue): String = i match
       case ExternalCallee =>
         "§1(b) the SCOPE FENCE is the answer: the phase cannot read this external callee's " +
@@ -78,8 +44,7 @@ object OpaqueBoundaryCheck:
           "boxed-primitive coercion (wave 2.6) handles the commonest shape; this residue is what " +
           "it could not reach."
 
-  /** one boundary site. `unit` is the top-level symbol for D2 ownership filtering, following the
-    * `NullabilityBoundaryCheck` pattern. */
+  /** one boundary site. `unit` is the top-level symbol for D2 ownership filtering. */
   final case class Finding(issue: Issue, subject: String, detail: String, origin: Origin,
                            unit: SymId = SymId.None):
     def render: String = s"$issue $subject — $detail  (${origin.javaPath}:${origin.line})"
@@ -87,8 +52,7 @@ object OpaqueBoundaryCheck:
       CheckReport.Finding(Name, issue.toString, subject,
         CheckReport.relativise(origin.javaPath), origin.line, detail)
 
-  /** grouped one-line summary, worst family first, each with its §1 classification — a reader must
-    * not have to work out who fixes it. */
+  /** grouped one-line summary, worst family first, each with its §1 classification. */
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
     else

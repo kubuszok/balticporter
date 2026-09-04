@@ -3,79 +3,22 @@ package balticporter.transform
 import balticporter.catalog.FixKind
 import balticporter.tir.*
 
-/** The NULLABILITY boundary, counted — every annotated site the phase could not honour, every seam
-  * a wrapper retype opened and did not close, and every retype whose transparency the LANGUAGE does
-  * not grant.
-  *
-  * ==Why a refusal has to be a number==
-  * `NullabilityTransform` moves a contract out of an annotation and into the type. Where it cannot
-  * — a vararg parameter has no nullable Scala form, a primitive cannot be null, an annotation
-  * carrying arguments is a different annotation — the declaration is left exactly as the upstream
-  * wrote it. That is the RIGHT outcome and it is indistinguishable, from the emitted file alone,
-  * from the phase never having been configured. A refusal that moved no number would be the §1(b)
-  * silent no-op the whole design exists to avoid, so each one arrives here with an origin and a §1
-  * classification, before any compiler runs.
-  *
-  * ==And one retype that SUCCEEDS still has to be counted==
-  * `Null` is a subtype of every CONCRETE reference type, which is what makes the union floor free
-  * at a use site — and it is NOT a subtype of an ABSTRACT type parameter, which is the very reason
-  * a `return null` at a `T` return needs a cast at all. So a retyped `T | Null` declaration compiles
-  * and every USE of it in a plain `T` slot does not. Nothing at the declaration is wrong, there is
-  * nothing to refuse, and the cost is entirely somewhere else — which is exactly the shape that has
-  * to be a number rather than a discovery. Measured on the reference port: 0 → 35 compile errors,
-  * every one inside a generic type.
-  *
-  * ==And a wrapper mode has a residue by construction==
-  * Wrapper mode retypes a declaration to `W[T]` and inserts explicit wrap/unwrap at the four slot
-  * kinds a coercion seam reaches. One slot has NO formal to compare against: a call whose callee is
-  * an external the frontend interned without a signature. Nothing honest can be inserted there, so
-  * the site is counted — the same shape, and the same reasoning, as the collection boundary's
-  * scoped-out receiver.
-  *
-  * ==Universal, parameterised by the policy==
-  * §1(a) in mechanism; it holds no library's names. An empty annotation set produces an empty
-  * findings list by arithmetic rather than by a branch.
+/** The nullability boundary, counted: every annotated site the phase could not honour, every seam
+  * a wrapper retype opened and did not close, and every retype whose transparency the language does
+  * not grant (e.g. a retyped `T | Null` compiles while a use at a plain abstract `T` does not — cost
+  * lands on the uses, invisible at the declaration, so it must be a number). Universal in mechanism
+  * (§1(a)); parameterised by the annotation policy, empty producing empty by arithmetic.
   */
 object NullabilityBoundaryCheck extends RemedySource:
 
-  /** the check's name in `findings.tsv`. */
+  /** The check's name in `findings.tsv`. */
   val Name = "nullability-boundary"
 
-  /** THE MENU — see [[balticporter.tir.Remedy]] and `DESIGN.md` §8.16.
-    *
-    * Two entries, and the ONE-SPELLING rule accounts for every act that is not here. Widening or
-    * narrowing the exclusion is `NullabilityTransform(scope)`; choosing between a union and a
-    * wrapper is its `target`; deciding whether an annotation belongs in the set at all is
-    * `annotations`; and `-Yexplicit-nulls -language:unsafeNulls` is a BUILD act, which no manifest
-    * key can or should hold. A remedy restating any of those would be a second spelling of a key a
-    * port already has.
-    *
-    * What none of them spells is the port having READ a site and stating that the residue is
-    * acceptable THERE, which is what these two are:
-    *
-    *   - `ScopedOut` — this declaration keeps its upstream type and its upstream marker because the
-    *     port's own scope holds it back. The check exists because "a residue nobody counts is a
-    *     residue that grows"; a review that reached the opposite conclusion at one declaration had
-    *     nowhere to be recorded, so the number could only ever go up. Deleting the scope entry is
-    *     the OTHER answer and it is already spelled;
-    *   - `AbstractTypeParameter` — the classification names three ways out and says all three are
-    *     policy: scope it out, stage the build, or ACCEPT THE ERRORS. The first two are spelled; the
-    *     third is a statement about the USES, which is the one thing no key here can see, and on a
-    *     port that compiles it is a statement the compile itself corroborates.
-    *
-    * The other seven take none. `VarargParameter` and `AnnotationArguments` are refused
-    * STRUCTURALLY — a Scala vararg has no nullable form and `@A` is not `@A(x)` — so there is
-    * nothing to accept and no site at which accepting would mean anything. `PrimitiveType` is an
-    * upstream ANNOTATION ERROR: the entry names a site its own library cannot mean, and a port that
-    * accepted it would be recording agreement with a mistake. `OverrideCrossing` and
-    * `UncoercibleSeam` are wrapper-mode gaps whose answers are `target`/`scope` and the same K15
-    * external-callee limit the collection lane counts. `ScopedOutParent` is a scope EXIT THAT DID
-    * NOT CLOSE — half an override pair, which is the one shape a union floor may not emit — so its
-    * only answer is the missing scope entry (`ENGINE-LIMITS.md` K13: 35 -> 6 -> 0). And
-    * `NotAValuePosition` is an OUTCOME row: its own classification says the emitted signature is
-    * already correct, which makes it `captured-context`'s neighbour rather than a residue, and
-    * draining it would move a report of something that worked.
-    */
+  /** The menu (`Remedy`, DESIGN.md §8.16). Two entries — everything else a port could restate
+    * already has a spelling (`NullabilityTransform(scope)`/`target`/`annotations`, or a build flag).
+    * `ScopedOut` records that the port read a held-back site and accepts the residue there, as
+    * opposed to deleting the scope entry; `AbstractTypeParameter` records accepting the use-site
+    * errors, the one of its three ways out no manifest key or build flag already states. */
   def remedies: List[Remedy] = List(
     Remedy(
       id = "accept-scoped-out", lane = Name, kind = Issue.ScopedOut.toString,
@@ -90,12 +33,12 @@ object NullabilityBoundaryCheck extends RemedySource:
         "the classification names, and the only one no manifest key or build flag already states"),
   )
 
-  /** DRAIN what this port selected — see [[remedies]] and `CLAUDE.md` §5. */
+  /** Drains what this port selected (CLAUDE.md §5). */
   def resolved(plan: ResolutionPlan, findings: List[Finding]): List[Finding] =
     plan.drain(remedies, findings)(f =>
       ResolutionPlan.Residue(f.issue.toString, f.at, f.subject, f.origin, f.detail))
 
-  /** what kind of boundary this is, which is what decides who fixes it (CLAUDE.md §1). */
+  /** What kind of boundary this is, which decides who fixes it (CLAUDE.md §1). */
   enum Issue:
     /** `@Null Object... rest` — a Scala vararg has no nullable form (`T*` cannot be `T* | Null`). */
     case VarargParameter
@@ -215,17 +158,10 @@ object NullabilityBoundaryCheck extends RemedySource:
           "deleting the scope entry (and paying `AbstractTypeParameter`'s errors), or by staging " +
           "to `-Yexplicit-nulls -language:unsafeNulls`, under which the whole exit disappears."
 
-  /** one boundary site. `unit` is the top-level symbol it belongs to, which is how a dependent
-    * port holds a finding to the module that EMITS it (`ENGINE-LIMITS.md` D2).
-    *
-    * `at` is a DIFFERENT symbol answering a different question and the two are deliberately not one:
-    * the unit is for OWNERSHIP and the declaration is for SELECTION ([[remedies]]). They coincide
-    * only for a top-level type, and the site this check reports most often is a PARAMETER, whose
-    * declaration is the method it belongs to and whose unit is the file's outermost class. Defaulted
-    * to [[SymId.None]] rather than to `unit`, because a finding minted without one must be
-    * UNSELECTABLE rather than selectable at the wrong granularity — `SymId.None` matches no key by
-    * construction, and a fallback to `unit` would silently let one selection drain every row in a
-    * file. */
+  /** One boundary site. `unit` is the top-level symbol it belongs to (ownership, D2); `at` is the
+    * declaration for selection (`remedies`) and is deliberately a different symbol — they coincide
+    * only for a top-level type. Defaults to `SymId.None` rather than `unit`, so an unset finding is
+    * unselectable rather than selectable at the wrong granularity. */
   final case class Finding(issue: Issue, subject: String, detail: String, origin: Origin, unit: SymId,
                            at: SymId = SymId.None):
     def render: String = s"$issue $subject — $detail  (${origin.javaPath}:${origin.line})"
@@ -233,8 +169,7 @@ object NullabilityBoundaryCheck extends RemedySource:
       CheckReport.Finding(Name, issue.toString, subject,
         CheckReport.relativise(origin.javaPath), origin.line, detail)
 
-  /** grouped one-line summary, worst family first, each with its §1 classification — a reader must
-    * not have to work out who fixes it. */
+  /** Grouped one-line summary, worst family first, each with its §1 classification. */
   def summary(fs: List[Finding]): String =
     if fs.isEmpty then "  none"
     else

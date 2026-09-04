@@ -3,40 +3,12 @@ package balticporter.transform
 import balticporter.core.{MergeablePolicy, SurfacePolicy}
 import balticporter.tir.*
 
-/** Drop `()` from nullary getter-like methods — `def x(): R` becomes `def x: R`, and every call
-  * site `o.x()` becomes `o.x`.
-  *
-  * ==Kind==
-  * CLAUDE.md section 1(b). The MECHANISM — detect a getter-like shape, strip the empty parameter
-  * clause, rewrite every call site — is a fact about the two languages (java's `int getX()` is
-  * idiomatically scala's `def x: Int`). WHICH methods are converted is a fact about one library and
-  * arrives as a `RuleScope` — the same tool every retyping phase uses, with the OPPOSITE default
-  * because this phase ADDS a declaration shape (a parameterless `def` is a new arity the override
-  * component never had) rather than retyping one. `Only(Set.empty)` is the no-op.
-  *
-  * ==The convention this phase implements==
-  * sge's empirical convention: a nullary method that returns a value and whose body is free of
-  * side effects drops its `()`. No written rule in sge's `conversion-rules.md` — the convention
-  * is observed from how the hand port actually writes its code. This phase makes the mechanical
-  * port match that convention where the scope says to.
-  *
-  * ==What "getter-like" means, structurally==
-  * A method is getter-like when (1) it returns a non-void value, (2) its body contains no
-  * assignments (`Tree.Assign`, `Tree.IncDec`) and no calls to methods that are themselves not
-  * getter-like (a recursive definition, so the phase resolves it conservatively: only field reads,
-  * other getter calls, `this`, pure expressions). In practice, the structural test the phase uses
-  * is simpler and conservative: the body must contain no writes and no calls to non-nullary members
-  * of the same program. That over-refuses (a call to a pure nullary helper is still refused) and
-  * never under-refuses.
-  *
-  * ==Ordering==
-  * AFTER `bean-properties` (which drops `()` for its OWN pairs and must not compete), BEFORE
-  * `package-rename` (which runs last, as always). The phase ADDS a declaration shape, so its
-  * `RuleScope` default is `Only(Set.empty)` — the opposite of a retyping phase.
-  *
-  * ==This phase changes emitted SIGNATURES, so it is SHARED SURFACE==
-  * It implements `SurfacePolicy` and `MergeablePolicy`. Two modules scoping it differently emit
-  * signatures that each compile alone and cannot compile together (section 1.5).
+/** Drops `()` from a nullary getter-like method — `def x(): R` becomes `def x: R` — and rewrites
+  * every call site, reproducing sge's empirical convention. Getter-like (conservatively): body has
+  * no assignments/increments and no calls to non-nullary members; over-refuses, never under-refuses.
+  * CLAUDE.md §1(b): scope default is `Only(Set.empty)` (opposite of a retyping phase, since this
+  * ADDS a declaration arity). Runs after `bean-properties`, before `package-rename`. Shared surface
+  * (§1.5): implements `SurfacePolicy`/`MergeablePolicy`.
   */
 final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
     extends Phase, SurfacePolicy, MergeablePolicy, IdiomPhase, Rewrite, PolicyBound:
@@ -52,7 +24,7 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
 
   def accountedBy: Set[String] = Set(IdiomCheck.Residue)
 
-  /** the scope, exposed for the merge contract and the fingerprint. */
+  /** The scope, exposed for the merge contract and the fingerprint. */
   def arityScope: RuleScope = scope
 
   def surfaceFingerprint: String =
@@ -91,8 +63,7 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
 
   // ---- the run --------------------------------------------------------------------------
 
-  /** the methods whose `()` this run stripped — keyed by SymId, with the property name for
-    * the decision log. */
+  /** The methods whose `()` this run stripped. */
   private var converted: Set[SymId] = Set.empty
 
   override def run(program: Program): Program =
@@ -105,9 +76,7 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
     val candidates = collection.mutable.ListBuffer.empty[SymId]
 
     program.symbols.all.foreach { s =>
-      // Skip members whose owner type the base SUBSTITUTED — the injected file's members are
-      // hand-written and were never renamed, so dropping `()` here produces a call shape the
-      // shim does not have (D14, §1.5).
+      // skip owners the base SUBSTITUTED — the injected shim's members were never renamed (D14, §1.5)
       val ownerFqn = program.symbolOf(s.owner).map(_.fullName).getOrElse("")
       if program.owned(s.id) && !s.flags.isStatic && !substitutedOwners.contains(ownerFqn) &&
          PolicyBinder.isExecutable(s.info) && scope.includes(program, s) then
@@ -137,14 +106,13 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
     }
 
     // ---- 2. group by override component and convert whole components ----
-    // A component is converted whole-or-none: half a component would break the override edge.
+    // whole-or-none: half a component would break the override edge
     val componentMap = candidates.map(c => c -> graph.closureOf(c).members).toMap
     val allConverted = collection.mutable.Set.empty[SymId]
 
     candidates.foreach { c =>
       if !allConverted.contains(c) then
         val comp = componentMap(c)
-        // Every member of the component must also be a candidate (or at least not refused)
         val allInComp = comp.forall { m =>
           candidates.contains(m) || !program.owned(m)
         }
@@ -166,7 +134,6 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
             ))
           }
         else
-          // Some component members are not candidates — refuse all of them
           comp.filter(m => candidates.contains(m)).foreach { m =>
             refuse(program, m, "ComponentPartial",
               "not every member of the override component qualifies — dropping `()` on some " +
@@ -217,18 +184,15 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
   /** CONSERVATIVE getter-like test: the body contains no assignments and no calls to
     * non-nullary owned methods. Over-refuses rather than under-refuses.
     *
-    * An ABSTRACT method (no body) is NOT getter-like: its arity is part of its contract, and
-    * dropping `()` on an interface's abstract method would break every SAM lambda that ascribes
-    * to it. Measured at 38 errors from `PoolSupplier.get()`, `Comparator.compare()` etc. */
+    * An ABSTRACT method (no body) is not getter-like: its arity is part of its contract, and
+    * dropping `()` would break every SAM lambda ascribing to it. */
   private def isGetterLike(p: Program, d: Tree.DefDef): Boolean =
     d.rhs match
       case scala.None    => false // abstract — no body to inspect, keep arity
       case Some(body) => !hasSideEffects(p, body)
 
-  /** walk the body looking for assignments, increments, and calls to non-nullary members.
-    *
-    * The scan uses a mutable flag rather than a fold, because `StandardTraversal` requires a
-    * `Phase` that returns the same node kind it received (it is a TRANSFORMER, not a folder). */
+  /** Walk the body for assignments, increments, and calls to non-nullary members. A mutable flag
+    * rather than a fold, since `StandardTraversal` is a transformer, not a folder. */
   private def hasSideEffects(p: Program, t: Term): Boolean =
     var found = false
     def scan(t: Term): Unit = t match
@@ -237,7 +201,6 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
       case a: Tree.Apply =>
         // a call to a method that itself takes arguments is potentially side-effecting
         if a.args.nonEmpty then found = true
-        // recurse into subexpressions
         scan(a.fun)
         a.args.foreach(scan)
       case Tree.Select(q, _, _, _)      => scan(q)
@@ -258,20 +221,11 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
     scan(t)
     found
 
-  /** Does the owner type declare another method with the same name that takes PARAMETERS?
-    *
-    * Dropping `()` from `toArray()` when `toArray(Class)` exists makes `a.toArray(classOf[X])`
-    * resolve to the parenless `toArray` APPLIED to the argument — which is valid Scala asking a
-    * completely different question. The guard fires at the DECLARATION rather than at the call site,
-    * because the ambiguity is structural: any call to the parameterful overload that passes one arg
-    * will bind to the wrong member.
-    *
-    * The check scans the owner's MEMBERS (using `OverrideGraph.membersOf`, which is the declared
-    * body members) and looks for a same-named sibling whose `info` takes parameters. That is
-    * deliberately OVER-approximate — a sibling with one parameter is always an ambiguity, and a
-    * sibling with two parameters is also an ambiguity because Scala 3's auto-tupling can bind
-    * a `(a, b)` tuple to the parenless `def`. Conservative: a false positive is a method that
-    * keeps its `()`, which is the faithful translation and always correct. */
+  /** Does the owner type declare another method with the same name that takes parameters?
+    * Dropping `()` from `toArray()` beside `toArray(Class)` would make `a.toArray(classOf[X])`
+    * resolve to the parenless `toArray` applied to the argument, valid Scala asking a different
+    * question. Deliberately over-approximate (Scala 3 auto-tupling makes any-arity a hazard);
+    * a false positive just keeps `()`, always correct. */
   private def hasOverloadedSibling(p: Program, s: Symbol): Boolean =
     val siblings = p.symbols.all.filter(sib =>
       sib.id != s.id &&
@@ -281,13 +235,13 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
       hasParams(sib.info))
     siblings.nonEmpty
 
-  /** does this method type take at least one parameter? */
+  /** Does this method type take at least one parameter? */
   private def hasParams(info: TypeRepr): Boolean = info match
     case TypeRepr.MethodType(ps, _, _) => ps.nonEmpty
     case TypeRepr.PolyType(_, r)       => hasParams(r)
     case _                             => false
 
-  /** can every call site of every member in the component be rewritten? */
+  /** Can every call site of every member in the component be rewritten? */
   private def callSitesRewritable(p: Program, comp: Set[SymId]): Boolean =
     comp.forall { s =>
       p.usages(s).forall {
@@ -302,5 +256,5 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
     }
 
 object NullaryArityTransform:
-  /** the phase NAME, for `runsBefore` / `runsAfter` edges declared elsewhere. */
+  /** The phase name, for `runsBefore`/`runsAfter` edges declared elsewhere. */
   val PhaseName: String = "nullary-arity"
