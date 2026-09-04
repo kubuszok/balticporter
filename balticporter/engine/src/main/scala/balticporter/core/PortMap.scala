@@ -5,65 +5,13 @@ import balticporter.tir.{CheckReport, SrcMap, TirPrinter}
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** What a module's port ACTUALLY DID to its upstream surface, published for its dependents.
-  *
-  * ==Why this exists==
-  * A dependent module's frontend can only parse **Java**. Ashley resolves against
-  * `libgdx/gdx/src` — the upstream sources — never against the 596 Scala files the libGDX port
-  * emitted. So a dependent reaches the base's decisions by RE-DERIVING them: it inherits the base's
-  * [[PortManifest]] and re-runs identically-configured phases over the same Java, and
-  * [[ManifestAgreement]] verifies the two derivations agree.
-  *
-  * That answers *"did we intend the same thing?"* It cannot answer *"what did you produce?"* — and
-  * `ManifestAgreement` documents exactly where the difference bites: it cannot see a parameterised
-  * phase's CONFIGURATION unless the phase implements [[SurfacePolicy]], cannot see nested-type
-  * drops, and cannot see the base's emitted output at all.
-  *
-  * The concrete case that prompted this: Ashley's `ImmutableArray.toArray(Class)` forwards to
-  * `Array.toArray(Class)`, which the base drops. It was found by `RewriteTrace`'s orphaned-call
-  * check AFTER translating and emitting. Against a published map it is a lookup, answerable before
-  * translation begins.
-  *
-  * ==This is a PROJECTION, not new analysis==
-  * Every field comes from something the engine already computes: [[SrcMap]] for members, origins
-  * and digests; `Substituted` tags and `SubstitutionCheck` for drops; `PackageRenameTransform` for
-  * renames; `Substitutions.inject` and `RuntimePlan` for what was added; `MethodBodyTransform` for
-  * substituted bodies; `EnginePin` for the engine identity. Assembling them in one declared schema
-  * is the whole of it.
-  *
-  * ==One rule that must not be broken==
-  * A module's map is an OUTPUT and never an input to its own run. Only DEPENDENTS read it. If a
-  * module's own behaviour ever depended on its own map, the map would become a second source of
-  * truth able to disagree with the manifest, and re-running a port would stop being reproducible
-  * from sources plus policy (CLAUDE.md §5.5). `PortMapSpec` pins this: deleting a module's own map
-  * and re-running must produce byte-identical output.
-  *
-  * ==Encoding==
-  * TSV, like every other artifact here, and for the reason already recorded for `findings.tsv`: a
-  * one-entry change is a one-line diff, which a committed baseline lives or dies by. JSON either
-  * re-indents on every edit or is one enormous line. The SCHEMA — the field names and their
-  * meanings — is what a future `PortManifest.fromJson` would share; the encoding is not.
-  */
+/** What a module's port actually did to its upstream surface, published for its dependents.
+  * A projection of SrcMap, Substitutions, PackageRenameTransform, RuntimePlan and MethodBodyTransform.
+  * Invariant: a module's map is an OUTPUT, never an input to its own run. TSV-encoded. */
 object PortMap:
 
-  /** Schema version, in the file. A consumer refuses a map written by a NEWER engine rather than
-    * mis-reading it — silently mis-reading is the failure this number prevents. An OLDER one is
-    * read, and every question its columns cannot answer degrades to
-    * [[balticporter.tir.Surface.Answer.Unknown]] (see [[read]]).
-    *
-    * 2 — the header gained `sources=` / `files=`, the SOURCE fingerprint that makes design risk R1
-    *     (a map gone stale against the base's emitted output) detectable rather than assumed.
-    * 3 — the BASE-SURFACE CONTRACT (`DESIGN.md` §8.3). One new column, `shape`, carrying what the
-    *     port EMITTED for each type and member in the porter-note `k=v` grammar; and one new header
-    *     field, `policy=`, the base's sorted `SurfacePolicy` fingerprint. The two land together on
-    *     purpose: a schema that changes twice regenerates every committed baseline twice, for one
-    *     design that was known at the first bump.
-    * 4 — one new header field, `jdk=`, the `java.specification.version` of the JVM that PUBLISHED
-    *     the map. The FOURTH fingerprint, and the one the other three provably cannot stand in
-    *     for: the frontend reads an external type's members out of a CLASS FILE, so the emitted
-    *     text is a function of the JDK — and `engine=`, `sources=` and `policy=` all match exactly
-    *     when only the JDK moved. Measured at one `E037 … overrides nothing` on `sge.utils.CharArray`
-    *     with every check count flat (`ENGINE-LIMITS.md` M5.10, `JvmInfo`). */
+  /** Schema version. A NEWER schema is refused; an OLDER one degrades per question to `Unknown`.
+    * 2: `sources=`/`files=`; 3: `shape` column + `policy=`; 4: `jdk=`. // ENGINE-LIMITS M5.10 */
   val Schema = 4
 
   enum Disposition:
@@ -81,21 +29,11 @@ object PortMap:
       * library-specific rule introduced. */
     case Added
 
-  /** @param upstream the Java-side name (`owner#name(P1,P2)` for a member)
-    * @param emitted  the name in the emitted Scala; empty when [[Disposition.Dropped]]
-    * @param body     the member is emitted with a HAND-SUPPLIED body (`MethodBodyTransform`). The
-    *                 signature is upstream's and the behaviour is not — a caller cannot see this
-    *                 from the signature, which is precisely why it is recorded.
-    * @param shape    WHAT THIS PORT EMITTED, in the porter-note `k=v` grammar — schema 3's
-    *                 base-surface contract (`DESIGN.md` §8.3). Sparse: most member rows carry
-    *                 nothing, and a row that says nothing costs one empty column.
-    *
-    *                 '''Every name inside it is an EMITTED name''' (§4.56), while [[upstream]] stays
-    *                 the manifest-shaped upstream name because it is the join key. The split is not
-    *                 symmetric and it is deliberate: every consumer of `shape` compares it against
-    *                 emitted text — a reference, a `super[X]`, an `export` selector, a stack frame —
-    *                 and [[of]] is the one point where both namespaces are in scope.
-    */
+  /** @param upstream Java-side name (`owner#name(P1,P2)` for a member)
+    * @param emitted  emitted Scala name; empty when [[Disposition.Dropped]]
+    * @param body     member has a hand-supplied body (`MethodBodyTransform`)
+    * @param shape    porter-note `k=v` grammar describing what was emitted (DESIGN.md §8.3);
+    *                 names inside are EMITTED names, while `upstream` stays the join key */
   final case class Entry(
       kind: String, // "type" | "member"
       upstream: String,
@@ -110,34 +48,18 @@ object PortMap:
     def tsv: String =
       s"$kind\t$upstream\t$emitted\t$disposition\t${if body then "body" else "-"}\t$javaPath\t$javaLine\t$digest\t$shape"
 
-    /** the contract row, parsed. `None` for a member row, for a schema-2 row, and for a type this
-      * port DROPPED — a dropped type has no emitted form to describe. */
+    /** Parsed type shape, or `None` for member rows, schema-2 rows, or dropped types. */
     def typeShape: Option[balticporter.tir.Surface.TypeShape] =
       if kind == "type" then balticporter.tir.Surface.parseType(shape) else scala.None
 
     def memberShape: balticporter.tir.Surface.MemberShape =
       balticporter.tir.Surface.parseMember(shape)
 
-  /** @param sources a fingerprint of the base's JAVA at the moment the map was published — see
-    *                [[sourcesDigest]]. Empty for a map assembled without a source root.
-    * @param files   how many distinct Java files that fingerprint covers, so a consumer can say
-    *                how much of the base it was able to check rather than only whether it agreed.
-    * @param policy  the publisher's sorted `SurfacePolicy` fingerprint — see [[policyDigest]]. The
-    *                THIRD fingerprint, and the one schema 3 could not do without: [[sources]] and
-    *                [[engine]] both stay put when the base's MANIFEST changes, and schema 3's
-    *                `shape` payload is full of policy outcomes (an emitted member name is a property
-    *                pair, a `form` is a drop or a collapse, a `vis` is one rename entry away from a
-    *                different qualifier). Without it the map is `Fresh` and WRONG — D4's signature
-    *                failure re-entering through the artifact built to prevent it. Empty only for a
-    *                map published by a pre-schema-3 engine.
-    * @param jdk     `java.specification.version` of the JVM that PUBLISHED this map — the FOURTH
-    *                fingerprint (see [[Schema]] 4 and [[JvmInfo]]). Empty only for a map published
-    *                by a pre-schema-4 engine, which is why an empty one is `Unverified` and never
-    *                an agreement: "the field did not exist yet" and "we ran on the same JDK" are
-    *                different answers.
-    * @param schema  the schema the map was READ at, so a consumer can say "published by an older
-    *                engine" per question instead of refusing the file (`DESIGN.md` §8.3).
-    */
+  /** @param sources source fingerprint at publication time (see [[sourcesDigest]])
+    * @param files   count of distinct Java files the fingerprint covers
+    * @param policy  sorted `SurfacePolicy` fingerprint (see [[policyDigest]])
+    * @param jdk     `java.specification.version` of the publishing JVM
+    * @param schema  schema the map was read at */
   final case class Map0(
       module: String,
       engine: String,
@@ -152,43 +74,16 @@ object PortMap:
     def members: List[Entry] = entries.filter(_.kind == "member")
     /** upstream name → what a dependent will actually find. The lookup a `PortMapTransform` needs. */
     def byUpstream: scala.collection.Map[String, Entry] = entries.iterator.map(e => e.upstream -> e).toMap
-    /** …restricted to one kind, because `type` and `member` share the namespace only by accident:
-      * a member key always carries a `#`, but relying on that is a parse where a filter will do. */
+    /** byUpstream restricted to one kind ("type" or "member"). */
     def byUpstream(kind: String): scala.collection.Map[String, Entry] =
       entries.iterator.filter(_.kind == kind).map(e => e.upstream -> e).toMap
-    /** every distinct Java FILE this map attributes a member to — the file set [[sources]] covers,
-      * derivable by a CONSUMER from the map alone, which is what makes the check reproducible
-      * without the base telling the dependent which files it converted.
-      *
-      * A path in angle brackets is excluded: `<synthetic>` is the origin of a member no Java file
-      * produced, and `SrcMap.relativise` leaves it alone precisely because it is not a path. One
-      * such member in libGDX core put an unresolvable entry in the file set, which made every
-      * dependent report the map as `Unverified` — a check crying wolf on its first real run. */
+    /** Distinct Java files this map attributes members to. Paths in angle brackets excluded. */
     def javaPaths: List[String] =
       members.map(_.javaPath).filter(p => p.nonEmpty && !p.startsWith("<")).distinct.sorted
 
-    /** …and each of those paths ALSO as a PACKAGE-RELATIVE one, where the two differ.
-      *
-      * A published `javaPath` is relative to the PUBLISHER's source root, and nothing says a
-      * consumer has that root. It does not, in the one shape this matters for: a base whose
-      * `sourceRoot` is a multi-module CHECKOUT publishes
-      * `flexmark-util-ast/src/main/java/com/vladsch/…/Block.java`, while a dependent resolves the
-      * same library through the MODULE directories themselves — so **422 of 422** of that base's
-      * paths lay outside every one of its dependent's roots and `PortMap.freshness` could check
-      * nothing at all (`ENGINE-LIMITS.md` D11's second half). The map is still USED — `Unverified`
-      * is deliberately a third value and never a `no` — and the guarantee this artifact exists to
-      * give was switched off for the whole chain by one port's root.
-      *
-      * This is D11's OWN insight read at a PATH instead of at a package name: the declared package
-      * is a SUFFIX of the path-derived one by construction, so the package-relative path is the tail
-      * of `javaPath` that begins where the package begins — and the package is in the `upstream`
-      * column, which is the UNRENAMED name (§4.56: an artifact joining policy to observed code
-      * carries both namespaces, and this is the reading side of that). Nothing is guessed and no
-      * schema column is added: a consumer derives it from rows it already has.
-      *
-      * A path that is ALREADY package-relative contributes nothing — there is no second form — so a
-      * port whose `sourceRoot` is a package root is untouched by arithmetic rather than by a
-      * branch. */
+    /** Each `javaPath` also as a package-relative path (where the two differ), so a consumer
+      * whose resolution roots differ from the publisher's source root can still resolve files.
+      * Derived from the `upstream` column's package. // ENGINE-LIMITS D11 */
     def packageRelative: scala.collection.Map[String, String] =
       members.iterator.flatMap { e =>
         val norm = e.javaPath.replace('\\', '/')
@@ -214,26 +109,10 @@ object PortMap:
   private val Header =
     "#kind\tupstream\temitted\tdisposition\tbody\tjavaPath\tjavaLine\tdigest\tshape"
 
-  /** Reverse a package rename: emitted name → the upstream name it came from.
-    *
-    * Longest matching VALUE prefix wins, mirroring `PackageRenameTransform`'s longest-KEY-prefix
-    * rule so a round trip is exact. Cut only at a separator, for the same reason the forward
-    * direction does: `sge` must not match `sgex`. When two renames share a target the reversal is
-    * genuinely ambiguous; the emitted name is then reported as its own upstream rather than a
-    * guess, because a wrong upstream name in a published map is worse than an absent one. */
-  /** Strip generic ARGUMENTS from a member key's parameter list: `f(Class<T>)` → `f(Class)`.
-    *
-    * The engine spells a member key two ways and this reconciles them. [[SrcMap]] records the
-    * emitted signature, generics included, because its consumer is a human reading a source map and
-    * a correlator matching a stack frame. `Substitutions.dropMethods`, `MethodBodyTransform` and
-    * every manifest key use the ERASED simple names, because that is what a policy author writes
-    * and what Java erasure makes stable.
-    *
-    * A published map is a LOOKUP TABLE, so its `upstream` column must be the form a consumer holds
-    * — the manifest form. Without this, `Engine#createComponent(Class)` in a manifest never matches
-    * `Engine#createComponent(Class<T>)` in the map, and the miss is silent: the body-substitution
-    * flag simply never appears, which is how this was found. The precise emitted signature is not
-    * lost; it stays in the `emitted` column. */
+  /** Reverse a package rename: emitted name -> upstream name.
+    * Longest matching value prefix wins; ambiguous targets decline. */
+  /** Strip generic arguments from a member key's parameter list: `f(Class<T>)` -> `f(Class)`.
+    * Reconciles emitted (generic) keys to the erased manifest form for lookup. */
   private[core] def erase(key: String): String =
     val i = key.indexOf('(')
     if i < 0 then key
@@ -257,79 +136,27 @@ object PortMap:
       case (from, to) :: rest if !rest.exists(_._2.length == to.length) => from + emitted.substring(to.length)
       case _                                                           => emitted
 
-  /** The upstream FQN a unit came from, taken from its JAVA ORIGIN rather than from its emitted
-    * name.
-    *
-    * `unrename` inverts a package rename, and a rename is not always invertible: Ashley's policy
-    * flattens `com.badlogic.ashley.core` AND `com.badlogic.ashley` onto `sge.ecs`, so `sge.ecs.X`
-    * genuinely could have come from either and no tie-break gets both `sge.ecs.Engine` (from
-    * `…core`) and `sge.ecs.signals.Signal` (from `…ashley`) right. Declining to guess is correct —
-    * and it made every one of Ashley's 21 shared types unfindable to its own test port, because a
-    * dependent looks the base up by upstream name.
-    *
-    * The origin is ground truth and rename-proof: `com/badlogic/ashley/core/Component.java` says
-    * exactly what the java was called. This is the same rule the provenance header already follows
-    * (CLAUDE.md §4.57 — take the path from `Origin`, never reconstruct it from the FQN).
-    *
-    * The trailing `$Inner` / `#member` of the emitted name is carried across, because the file names
-    * only the TOP-LEVEL type.
-    *
-    * ==A DIRECTORY IS NOT A PACKAGE, which is the half "the file gives the PACKAGE" assumed==
-    * That sentence is true only where the `javaPath` is relative to a PACKAGE ROOT, which every
-    * corpus port's `sourceRoot` was until one was a 53-module CHECKOUT: there
-    * `flexmark/src/main/java/com/vladsch/flexmark/ast/Heading.java` reads as the package
-    * `flexmark.src.main.java.com.vladsch.flexmark.ast`, and **9,261 of that port's 9,370 published
-    * rows carried it**. Nothing could see it — the port compiles, `port-map` is a diff against a
-    * baseline written the same way, and the column is READ only by a DEPENDENT — so the first
-    * dependent that module ever had reported **459 fatal `BaseSurfaceAbsent` findings** on its first
-    * run, about types its base emits perfectly well. `CLAUDE.md` §4.56 at a PATH: a package derived
-    * from a directory is not the package java declared.
-    *
-    * The two derivations DISAGREE only by leading directory segments, and that is what settles it
-    * without a third source of truth: the declared package is a SUFFIX of the path-derived one by
-    * construction, so where the path-derived name ends with the unrenamed one, everything before it
-    * is the source root's own directory structure. Note what this deliberately does NOT do — it
-    * never lets `unrename` OVERRIDE the path, only TRUNCATE it, so Ashley's non-invertible flatten
-    * (which `unrename` answers by declining, i.e. by returning the emitted name) fails the suffix
-    * test and keeps the origin exactly as this method's own note requires. A port with no renames at
-    * all is covered by the same line, because there `unrename` is the identity and the emitted name
-    * IS the declared FQN. */
+  /** The upstream FQN, derived from the java ORIGIN path rather than the emitted name.
+    * `unrename` inverts the rename table; the path is ground truth where `unrename` is ambiguous.
+    * The declared package (a suffix of the path-derived one) truncates leading directory segments.
+    * // CLAUDE.md §4.57 */
   private def upstreamOf(emitted: String, javaPath: String, renames: scala.collection.Map[String, String]): String =
     if javaPath.isEmpty || javaPath.startsWith("<") then unrename(emitted, renames)
     else
-      // The file gives the PACKAGE, never the type name. A java file may declare more than one
-      // top-level type — only the public one has to match the filename — and libGDX has exactly
-      // that: `MtlLoader` lives in `ObjLoader.java`. Taking the FQN from the path renamed it to
-      // `ObjLoader` and left the base's map without an entry a dependent could find.
-      //
-      // A package rename moves the PACKAGE and leaves the simple name alone, so the two halves come
-      // from the two places that actually know them.
+      // The file gives the PACKAGE, never the type name (a file may declare multiple top-level types).
       val dir = javaPath.stripSuffix(".java").replace('\\', '/')
       val pkg = dir.lastIndexOf('/') match
         case i if i > 0 => dir.substring(0, i).replace('/', '.')
         case _          => ""
-      // the emitted name's own top-level simple name, plus whatever follows it (`$Inner`, `#m(…)`).
+      // emitted name's top-level simple name, plus `$Inner` / `#m(…)` tail.
       val cut  = emitted.indexWhere(c => c == '$' || c == '#')
       val head = if cut < 0 then emitted else emitted.substring(0, cut)
       val tail = if cut < 0 then "" else emitted.substring(cut)
       val simple = head.substring(head.lastIndexOf('.') + 1)
       val fromPath = (if pkg.isEmpty then simple else s"$pkg.$simple") + tail
       val declared = unrename(emitted, renames)
-      // `declared` is the upstream FQN that `unrename` recovered by inverting the rename table.
-      // When it actually CHANGED something (`declared != emitted`) and is qualified, it is the
-      // correct answer: it inverts BOTH package renames AND type renames (D16). `fromPath` is the
-      // fallback for when `unrename` cannot help (an ambiguous or absent rename): it derives the
-      // package from the java PATH and takes the simple name from the emitted FQN.
-      //
-      // The truncation test (`fromPath.endsWith("." + declared)`) was the pre-D16 guard for
-      // checkout-shaped paths with extra leading directories. With D16's full rename table,
-      // `declared` handles both checkout paths (the package rename inverts the leading dirs) and
-      // type renames (the type rename inverts the simple name). The truncation is kept as a
-      // SECONDARY check for the case where `declared` happens to equal `emitted` (no rename match)
-      // but the path still carries the right package.
-      //
-      // The `qualifiedHead` guard survives for 102 libGDX rows: a BARE member key (a promoted
-      // constructor parameter whose `SrcMap` key carries no owner) has no package to truncate.
+      // `declared` inverts both package and type renames (D16). `fromPath` is the fallback.
+      // `qualifiedHead` guard: bare member keys have no package to truncate.
       val qualifiedHead = declared.indexWhere(c => c == '$' || c == '#') match
         case -1 => declared.contains('.')
         case i  => declared.substring(0, i).contains('.')
@@ -337,44 +164,7 @@ object PortMap:
       else if qualifiedHead && fromPath.endsWith("." + declared) then declared
       else fromPath
 
-  /** Assemble the map. Pure: every argument is something the run already holds.
-    *
-    * @param emittedTypes  fully-qualified names of the units this run WROTE
-    * @param srcMap        the emitter's own member recording
-    * @param dropTypes     the effective drop set (the module's own plus every base's)
-    * @param dropMethods   likewise, for members
-    * @param injectedFqns  types supplied as ready-made Scala — replacements and additions alike
-    * @param bodyKeys      member keys whose body was hand-supplied
-    * @param renames       the package renames this run applied
-    * @param sourceRoot    the Java root the member `javaPath`s are relative to. Supplied so the map
-    *                      can carry a fingerprint of the sources it was derived FROM ([[Freshness]]);
-    *                      absent, the map publishes no fingerprint and a dependent can only say it
-    *                      could not check.
-    * @param typeShapes    schema 3's contract, keyed by EMITTED FQN — what the emitter actually
-    *                      wrote for each type it emitted. Empty makes every `shape` column empty and
-    *                      the map a schema-3 file with no contract, which is what a caller that does
-    *                      not emit (a snippet, a test) should publish.
-    * @param memberShapes  …and per emitted member key, in `SrcMap`'s spelling. This is where the
-    *                      §4.55 renames finally reach a consumer: the map's `upstream` column
-    *                      already spells Java's name (see the note at the member entries below) and
-    *                      the EMITTED name was published nowhere at all — 827 renames in one base,
-    *                      recorded only in `decisions.tsv`, which nothing discovers and nothing
-    *                      consumes.
-    * @param policy        the sorted `SurfacePolicy` fingerprint of the manifest this run used.
-    * @param refusedMembers
-    *   members this run DID NOT EMIT because an engine rule could not render them — EMITTED member
-    *   key → the `shape` payload naming that rule ([[balticporter.tir.Surface.MemberShape.refusal]]).
-    *   Distinct from `dropMethods`, which is POLICY, and the distinction is the whole content of the
-    *   row for a dependent: a policy drop can be asked back, an engine refusal cannot.
-    *
-    *   Until this existed, `ENGINE-LIMITS.md` C11's drop reached the contract through
-    *   `TypeShape.secondaries`, which SUBTRACTS the constructor and says nothing — `primary=()
-    *   primaryKind=not-funnelled` with no `()` among the secondaries is indistinguishable from a
-    *   benign class with no second constructor. So a dependent's `new C()` compiled straight into the
-    *   wrong answer with nothing counting it. As a `Dropped` MEMBER row it lands in the lane
-    *   `PortMapTransform` already has for a dropped member's call sites, and the base's own record
-    *   travels with the finding.
-    */
+  /** Assemble the map. Pure: every argument comes from the run. */
   def of(
       module: String,
       engine: String,
@@ -384,85 +174,39 @@ object PortMap:
       dropMethods: Set[String],
       injectedFqns: Set[String],
       bodyKeys: Set[String],
-      /** the rename table this run applied — package renames AND per-type renames, already composed
-        * through the package rename (`PackageRenameTransform.upstreamTable`). `unrename` inverts it by
-        * longest VALUE match, so a type rename whose value is `sge.scenes.scene2d.ui.SgeList` (longer
-        * than the package rename's `sge`) wins for that type and recovers the upstream FQN. With
-        * package renames only, a type rename is invisible to `unrename` and the `upstream` column
-        * carries the POST-rename simple name (`SgeList`) instead of java's (`List`) — breaking every
-        * consumer that joins the map to the pre-rename program (`PortMapTransform.ownedByBase`,
-        * `followMemberRenames`, `baseMemberUpstream`). See `ENGINE-LIMITS.md` D16. */
+      /** Package renames AND per-type renames, composed via `PackageRenameTransform.upstreamTable`.
+        * // ENGINE-LIMITS D16 */
       renames: scala.collection.Map[String, String],
       sourceRoot: Option[Path] = scala.None,
       typeShapes: scala.collection.Map[String, String] = Map.empty,
       memberShapes: scala.collection.Map[String, String] = Map.empty,
       policy: String = "",
       refusedMembers: scala.collection.Map[String, String] = Map.empty,
-      /** MEMBER RENAMES from the phase pipeline: maps a member's CURRENT fullName (after
-        * MemberRenamer) to its ORIGINAL java fullName (before the rename). Used to write the
-        * UPSTREAM column with java's member name rather than the renamed one, matching the contract
-        * type entries already follow. Without this, the upstream column carries the post-rename
-        * name and a dependent's `PortMapTransform` cannot match it to program symbols. */
+      /** Member renames: current fullName -> original java fullName. */
       memberOriginals: scala.collection.Map[String, String] = Map.empty,
-      /** the publishing JVM's `java.specification.version` — schema 4's fourth fingerprint.
-        *
-        * PASSED IN rather than read from `JvmInfo` here, and the default is `""` rather than the
-        * ambient answer. A default that reads the process would make every caller that did not think
-        * about it — a spec, a snippet, a fixture — publish a map ASSERTING a JDK it never meant to
-        * claim, and an assertion nobody made is exactly what CLAUDE.md §4.6 calls a fabricated fact.
-        * `""` means "this publisher did not say", which `freshness` reports as `Unverified`. */
+      /** Publishing JVM's `java.specification.version`. `""` = "not stated" (reported as `Unverified`). */
       jdk: String = "",
   ): Map0 =
-    // emitted FQN -> the java file it came from, so `upstreamOf` can use the ORIGIN.
+    // emitted FQN -> origin java file
     val originOf: scala.collection.Map[String, String] =
       srcMap.entries.iterator.map(e => e.unit -> e.javaPath).toMap
     val typeEntries = emittedTypes.sorted.flatMap { emitted =>
       val upstream = upstreamOf(emitted, originOf.getOrElse(emitted, ""), renames)
-      // A type whose upstream FQN is in `dropTypes` is genuinely DROPPED — its presence in
-      // `emittedTypes` is a namespace mismatch in the caller's filter (`policySubs.dropsType`
-      // checks the emitted namespace, `dropTypes` is upstream). Exclude it here so that
-      // `droppedEntries` carries the authoritative answer and `byUpstream` never has to choose
-      // between a `Renamed` row and a `Dropped` row for the same upstream key (D16).
+      // Exclude types whose upstream FQN is in dropTypes (namespace mismatch); droppedEntries handles them.
       if dropTypes(upstream) then scala.None
       else Some(Entry("type", upstream, emitted,
         if upstream != emitted then Disposition.Renamed else Disposition.Ported,
         shape = typeShapes.getOrElse(emitted, "")))
     }
 
-    // A dropped type is SUBSTITUTED when something stands at its name and DROPPED when nothing
-    // does. The distinction is the whole content of the entry for a dependent: one is "call it, you
-    // get a different implementation", the other is "every call must be gone".
-    //
-    // AND THE TWO SIDES ARE IN DIFFERENT NAMESPACES (CLAUDE.md §4.56). `dropTypes` is a manifest
-    // key, so it is UPSTREAM; `injectedFqns` is the set of files the run actually WROTE, so it is
-    // EMITTED. Compared directly, `injectedFqns(fqn)` is false for every renaming port — libGDX
-    // drops `com.badlogic.gdx.utils.Json` and injects `sge.utils.Json`, and the same map came out
-    // carrying `Dropped com.badlogic.gdx.utils.Json` beside `Added sge.utils.Json` with nothing
-    // joining them. `Substituted` had therefore NEVER been produced by a renaming port, and the
-    // first dependent to reference an injected replacement (gdx-gltf, on `Json`) was told by
-    // `PortMapTransform` that the base "emits nothing at that name and nothing replaces it" about
-    // a type the base ships and it compiles against — **10 false findings**.
-    //
-    // Translate with the rename phase's OWN rule rather than a hand-written `startsWith`; §4.56
-    // spells out why (a prefix must cut only at a separator, and everything after it is carried
-    // across verbatim).
+    // Substituted when an injection stands at the name; Dropped when nothing does.
+    // `dropTypes` is upstream namespace, `injectedFqns` is emitted -- translate via the rename rule. // CLAUDE.md §4.56
     def emittedAt(fqn: String): String =
       balticporter.transform.PackageRenameTransform.renamed(fqn, renames.toMap)
     val droppedEntries = dropTypes.toList.sorted.map { fqn =>
       val at = emittedAt(fqn)
-      // A SUBSTITUTED type keeps its contract row with whatever shape the caller provides — the
-      // injected file's surface where the emitted type would have provided one. Without a shape,
-      // `PublishedSurface.typeShape` answers `Unknown` for every dependent that references the
-      // injected type, and that `Unknown` is FATAL when a question shaped emitted text.
-      //
-      // A DROPPED type (no injection) carries the EMITTED-NAMESPACE name in `emitted` and a MINIMAL
-      // shape (`form=class`) so a dependent's `PublishedSurface.typeRows` can find it. Without this,
-      // the `Dropped` entry's `emitted=""` makes it invisible to `typeRows` (which filters
-      // `_.emitted.nonEmpty`), the dependent's funnel gets `Unknown` for the type, and every WALL
-      // class the base dropped produces a FATAL gap. D16 removed the phantom `Renamed` rows that
-      // previously served this lookup; the `Dropped` entry must carry the same information.
-      // The shape carries no `primary=` — the type was not emitted — so the funnel's cross-check
-      // passes via `there.isEmpty` and produces no gap.
+      // Substituted: shape from the caller. Dropped: emitted-namespace name + minimal shape
+      // so `PublishedSurface.typeRows` can find it.
       val emitted = at // the EMITTED-namespace FQN, for the dependent's lookup
       if injectedFqns(at) then
         Entry("type", fqn, emitted, Disposition.Substituted,
@@ -472,9 +216,7 @@ object PortMap:
           shape = typeShapes.getOrElse(at, "form=class"))
     }
 
-    // What is left is a genuine ADDITION — a file the run wrote that replaces no drop (the runtime
-    // support types, and a port's own new helpers). Subtracted in the EMITTED namespace for the
-    // same reason.
+    // Genuine additions: files that replace no drop (runtime support, port helpers).
     val replacements = dropTypes.map(emittedAt)
     val added = (injectedFqns -- replacements).toList.sorted.map(fqn =>
       Entry("type", "", fqn, Disposition.Added))
@@ -483,40 +225,26 @@ object PortMap:
       .filter(_.kind != "class")
       .sortBy(e => (e.unit, e.member))
       .map { e =>
-        // `upstream` is the LOOKUP key and therefore the erased, manifest-shaped form; `emitted`
-        // keeps the precise signature the emitter produced.
-        //
-        // A §4.55 MEMBER RENAME needs no undoing here, and that is worth stating rather than
-        // leaving as an accident: the §4.55 passes rewrite `Symbol.name` and NOT `Symbol.fullName`,
-        // which is a stored field, so the member key the source map records already spells Java's
-        // name (`…FileHandle#file`, never `#file$field`) and the join key is right by construction.
-        // The EMITTED name is the half that was missing, and it is in `shape`'s `name=`.
-        //
-        // A BEAN/NULLARY rename DOES update `fullName` (via `MemberRenamer`), so the source map
-        // records the RENAMED name. `memberOriginals` carries the reverse mapping: the original
-        // java FQN before the rename. This is the same contract type entries follow — `upstream`
-        // is java's own spelling, `emitted` is scala's.
+        // `upstream` is erased manifest form; `emitted` keeps the precise signature.
+        // Bean/nullary renames update fullName, so `memberOriginals` carries the reverse mapping.
         val emittedUpstream = erase(upstreamOf(e.member, e.javaPath, renames))
-        // Look up the bare FQN (without parentheses/parameters) in memberOriginals, because the
-        // decision log records the FQN without a descriptor and the source map includes one.
+        // Look up bare FQN in memberOriginals (decision log omits descriptors).
         val bareUpstream = emittedUpstream.indexOf('(') match
           case i if i > 0 => emittedUpstream.substring(0, i)
           case _          => emittedUpstream
         val upstream = memberOriginals.get(bareUpstream).map { orig =>
           // The original FQN is also bare. Append the parameter part from emittedUpstream.
           val params = if emittedUpstream.length > bareUpstream.length then emittedUpstream.substring(bareUpstream.length) else ""
-          // The original java name replaces the member part, keeping the same owner
+          // original java name replaces the member part, keeping owner
           val origCut = orig.lastIndexOf('#')
           val upCut   = bareUpstream.lastIndexOf('#')
           if origCut >= 0 && upCut >= 0 then
-            // owner from the upstream (already un-renamed) + original member name + params
+            // owner from upstream + original member name + params
             bareUpstream.substring(0, upCut + 1) + orig.substring(origCut + 1) + params
           else emittedUpstream
         }.getOrElse(emittedUpstream)
         val shape = memberShapes.getOrElse(e.member, "")
-        // A PARENLESS member's emitted column drops `()` so the two columns disagree exactly
-        // where `form=parenless` says they do. The source map key still has `()` (it is the
-        // member's identity in the source map); only the port map column moves.
+        // A parenless member's emitted column drops `()`.
         val emitted =
           if shape.contains("form=parenless") && e.member.endsWith("()") then e.member.stripSuffix("()")
           else e.member
@@ -529,12 +257,7 @@ object PortMap:
 
     val droppedMembers = dropMethods.toList.sorted.map(k => Entry("member", k, "", Disposition.Dropped))
 
-    // …and the members an ENGINE RULE refused, in BOTH namespaces (§4.56). The upstream half comes
-    // from the same `upstreamOf` every other member row uses — one derivation, so a refused row and
-    // an emitted row of the same owner can never disagree about what the java was called — with the
-    // owner's java file taken from the unit's own source-map entry, since the refused member has none
-    // of its own. The EMITTED half is kept, unlike a policy drop's, because the type IS emitted:
-    // only the member is missing, so a reader who greps the emitted file has a name to grep for.
+    // Engine-refused members, in both namespaces (§4.56).
     val refusedEntries = refusedMembers.toList.sortBy(_._1).map { (emitted, shape) =>
       val cut  = emitted.indexWhere(c => c == '$' || c == '#')
       val unit = if cut < 0 then emitted else emitted.substring(0, cut)
@@ -560,17 +283,8 @@ object PortMap:
   // R1 — is the map still true of the base? (staleness)
   // -------------------------------------------------------------------------
 
-  /** A fingerprint of the base's JAVA, computed identically by the publisher and the consumer.
-    *
-    * The list of files is not configuration and is not told to the consumer: it is DERIVED from the
-    * map itself ([[Map0.javaPaths]]), which attributes every member to the Java file it came from.
-    * So a dependent recomputes the same digest from the map plus the sources it already resolves
-    * against, with nothing to agree on beyond the map.
-    *
-    * A path the consumer cannot resolve contributes `?`, which can only ever make the digest
-    * DIFFER. That is why an unresolvable path is reported as [[Freshness.Unverified]] before the
-    * digests are compared — "I could not check" and "it changed" are different answers and a check
-    * that conflates them is worse than one that admits the gap (CLAUDE.md §3). */
+  /** Fingerprint of the base's Java. File list is derived from [[Map0.javaPaths]].
+    * An unresolvable path contributes `?`, reported as `Unverified`. */
   def sourcesDigest(paths: List[String], resolve: String => Option[Path]): String =
     val lines = paths.sorted.map { p =>
       val d = resolve(p).filter(Files.isRegularFile(_)) match
@@ -580,26 +294,8 @@ object PortMap:
     }
     TirPrinter.sha256(lines.mkString("\n")).take(16)
 
-  /** The publisher's POLICY, fingerprinted — the third thing a map has to pin, and the one that
-    * schema 2 could not see at all.
-    *
-    * [[freshness]] compared an engine fingerprint and a digest over the base's Java, and NEITHER of
-    * them moves when the base's MANIFEST changes. Schema 3's `shape` payload is full of policy
-    * outcomes: an emitted member `name` is a property pair read from the base manifest, a `form` is
-    * a drop or a collapse, a `vis` is one rename entry away from a different qualifier. Edit one
-    * entry in the base's manifest, re-run the DEPENDENT alone, and every source digest still matches
-    * while the payload is stale — a run that reports clean while the emitted text is wrong, which is
-    * `ENGINE-LIMITS.md` D4's signature failure arriving through the artifact built to prevent it.
-    *
-    * It is the value `ManifestAgreement` ALREADY compares (`PortManifest.fingerprint` over the
-    * effective surface), sorted and digested — not a new derivation. That matters: a second
-    * derivation of "what is this module's policy" is a second thing to keep in step, and §1.5's
-    * guarantee is that a dependent holds the base's manifest AS A VALUE, so it can compute exactly
-    * this without loading the base's build.
-    *
-    * The empty list still digests to something. `""` therefore means "published before schema 3"
-    * and never "this module has no surface policy", which is the one confusion that would make the
-    * comparison silently inert for every port with an empty surface. */
+  /** Digest of the sorted `SurfacePolicy` fingerprints. `""` means "published before schema 3",
+    * never "no surface policy". // ENGINE-LIMITS D4 */
   def policyDigest(fingerprints: List[String]): String =
     TirPrinter.sha256(fingerprints.sorted.mkString("\n")).take(16)
 
@@ -607,42 +303,21 @@ object PortMap:
   enum Freshness:
     /** the engine and the base's sources are the ones the map was published from. */
     case Fresh
-    /** PROVEN out of date. A consumer must not use it: it describes output the base no longer
-      * produces, so an entry read from it is a statement about a run that no longer exists. */
+    /** Proven out of date. Must not be used. */
     case Stale(reason: String)
-    /** not proven either way — no fingerprint in the map, or sources this run cannot see. The map
-      * IS used (absence of proof is not proof) and the gap is reported. */
+    /** Not proven either way. The map IS used; the gap is reported. */
     case Unverified(reason: String)
-    /** the map was published by a JVM of a DIFFERENT JDK SPECIFICATION than the one running now.
-      *
-      * A case of its own, and not a [[Stale]] with a different sentence, because the two ask
-      * different things of their reader. `Stale` means *the base changed* and its remedy is to
-      * re-run the base; this means *nothing changed and the answer is still not this one's* — the
-      * base's Java, manifest and engine are all provably identical, and the emitted text still
-      * differs, because the frontend read `java.lang.CharSequence`'s members out of a different
-      * class file. Its remedy names a JVM rather than a port, which is why the two VERSIONS are
-      * carried as data instead of baked into a string: the finding has to name both. */
+    /** Published by a JVM with a different JDK specification. Distinct from [[Stale]]:
+      * nothing changed, but the frontend read different class files. // ENGINE-LIMITS M5.10 */
     case JdkMismatch(published: String, running: String)
 
-  /** Compare a published map against the engine now running, the sources now on disk, and the
-    * POLICY this run inherited from the module that published it.
-    *
-    * @param roots  where a member's relative `javaPath` may be resolved from — a dependent's
-    *               `resolutionRoots`, which by construction include the base's Java.
-    * @param policy what [[policyDigest]] says about the base's manifest AS THIS RUN INHERITED IT
-    *               (§1.5 — a value, not a build). Empty skips the comparison, which is what a caller
-    *               with no manifest (a spec, a snippet) should pass.
-    * @param jdk    the `java.specification.version` THIS run's frontend is reading class files with
-    *               ([[JvmInfo.specification]]). Empty skips the comparison, for `policy`'s reason
-    *               exactly — a caller that cannot state it must not be made to assert one. */
+  /** Compare a published map against the current engine, sources on disk, policy and JDK.
+    * Empty `policy`/`jdk` skips the respective comparison. */
   def freshness(m: Map0, engine: String, roots: List[Path], policy: String = "",
                 jdk: String = ""): Freshness =
     if m.engine.nonEmpty && m.engine != engine then
       Freshness.Stale(s"published by engine ${m.engine}; this run is $engine — re-run the base port")
-    // …and the JDK, BEFORE the policy and the sources for the reason the policy check states one
-    // notch further down: this is the mismatch every other fingerprint agrees through, so a
-    // comparison that reached the source digest first would answer `Fresh` and hide it. It is also
-    // the only one whose remedy is not "re-run the base" but "re-run the base ON THIS JDK".
+    // JDK check before policy/sources: this mismatch hides behind matching source digests.
     else if jdk.nonEmpty && m.jdk.nonEmpty && m.jdk != jdk then
       Freshness.JdkMismatch(m.jdk, jdk)
     else if jdk.nonEmpty && m.jdk.isEmpty then
@@ -650,9 +325,7 @@ object PortMap:
         s"the map carries no `jdk=` fingerprint (published by an engine before schema $Schema), so a " +
           "base emitted under a different JDK cannot be detected — its emitted text is a function of " +
           "the class files its frontend read")
-    // …before the source digest, deliberately: a policy mismatch is PROVEN staleness and a source
-    // digest that matches would otherwise report `Fresh` first and hide it. That ordering IS the
-    // finding — every source digest matching is the whole point of this comparison existing.
+    // Policy check before source digest: a policy mismatch is proven staleness.
     else if policy.nonEmpty && m.policy.nonEmpty && m.policy != policy then
       Freshness.Stale(
         s"the base's MANIFEST has changed since the map was published (policy ${m.policy} vs $policy) — " +
@@ -666,16 +339,7 @@ object PortMap:
       Freshness.Unverified("the map carries no source fingerprint (published by an older engine)")
     else
       val paths = m.javaPaths
-      // …and the PACKAGE-RELATIVE form as the second candidate, for the reason
-      // [[Map0.packageRelative]] states: a publisher's root is not a consumer's, and a base whose
-      // root is a multi-module checkout is otherwise unverifiable in full.
-      //
-      // ONE ROOT OR NONE, and that guard is the whole of why this is safe: a package-relative path
-      // is by construction the same string in every module that declares that package, so two roots
-      // holding one could be two different files and the digest would then be computed over
-      // whichever the iterator reached first — a `Fresh` or `Stale` answer about a file the base
-      // never published. Ambiguity therefore declines, and `Unverified` stands, which is the same
-      // "I could not check" this whole comparison is careful to keep distinct from "it changed".
+      // Package-relative fallback; only used when exactly one root resolves it (ambiguity declines).
       val alt = m.packageRelative
       def under(q: String): List[Path] =
         roots.iterator.map(_.resolve(q)).filter(Files.isRegularFile(_)).toList
@@ -698,16 +362,7 @@ object PortMap:
     Files.writeString(p, render(m))
     p
 
-  /** Read a map published by another module.
-    *
-    * '''A NEWER schema is refused; an OLDER one is read and degrades PER QUESTION.''' The two are
-    * not the same risk. A map from a newer engine has columns this engine cannot place, so reading
-    * it is guessing — refused. A map from an OLDER engine is a strict prefix of this schema, every
-    * column this engine knows how to read means what it says, and the only thing missing is the
-    * answer to a question that engine could not answer: `shape` comes back empty and every contract
-    * question about it is `Unknown("published by an older engine")`. Refusing it wholesale would
-    * tell a dependent "your base is unusable" where the truth is "your base is one engine version
-    * behind, and here are the three questions I cannot ask it" (`DESIGN.md` §8.3). */
+  /** Read a map. A NEWER schema is refused; an OLDER one degrades per question to `Unknown`. */
   def read(p: Path): Either[String, Map0] =
     if !Files.exists(p) then Left(s"no port map at $p")
     else
@@ -729,15 +384,7 @@ object PortMap:
           val policy  = field(meta, "policy").getOrElse("")
           val jdk     = field(meta, "jdk").getOrElse("")
           val es = lines.filterNot(l => l.startsWith("#") || l.isBlank).flatMap { l =>
-            // `-1` keeps TRAILING empty fields. Without it Scala's `split` drops them, so every
-            // `type` row — which has no javaPath, line or digest — arrived with 5 columns instead
-            // of 8, matched no case, and was silently discarded. A map that loses exactly its type
-            // entries while reporting success is the worst shape this artifact could fail in.
-            //
-            // The SAME trap one column later: schema 3's `shape` is empty on most member rows, so a
-            // 9-column row whose last field is empty splits to 9 here and would split to 8 without
-            // the `-1`. Both arities are accepted — the 8 is a schema-2 row and its contract answer
-            // is simply absent.
+            // `-1` keeps trailing empty fields (type rows and empty `shape` columns).
             l.split("\t", -1) match
               case Array(k, up, em, d, b, jp, jl, dg, sh) =>
                 Some(Entry(k, up, em, Disposition.valueOf(d), b == "body", jp, jl.toIntOption.getOrElse(0), dg, sh))
@@ -757,60 +404,21 @@ object PortMap:
   // discovery — a dependent finds its bases' maps without being told where they are
   // -------------------------------------------------------------------------
 
-  /** A map found on disk, with WHERE it came from — a consumer that reports a disagreement has to
-    * be able to say which artifact it read, and a run directory and a committed baseline are not
-    * the same claim. */
+  /** A map found on disk, with its source ("run-latest" or "baseline"). */
   final case class Published(module: String, path: Path, source: String, map: Either[String, Map0])
 
-  /** every port-report directory's map, newest-run-first, keyed by the module that PUBLISHED it.
-    *
-    * The module name comes out of the file's own header, not out of the directory name: a report
-    * directory is named after the migration PROGRAM (`CheckReport.dir`), and a `PortManifest` names
-    * the MODULE. Those two strings agree today by convention and nothing enforces it, so the lookup
-    * uses the one the map itself states.
-    *
-    * `run-latest` wins over `baseline` when both exist: the run directory is what the base most
-    * recently produced, and a dependent run in the same session must see it. The baseline is the
-    * committed fallback for a fresh checkout where nothing has been run.
-    *
-    * `exclude` is how design risk R2 is enforced at the only place it could be violated: a module
-    * must never read its OWN map, or its behaviour would depend on its previous output and a port
-    * would stop being reproducible from sources plus policy.
-    *
-    * KNOWN HAZARD, stated rather than guarded: two modules that publish under the SAME `module`
-    * name are indistinguishable here, and the first directory alphabetically wins. That is not
-    * hypothetical — every `PortRun` driven from a unit-test JVM writes into one shared
-    * `port-report/<main class>` directory (`CheckReport.dir` keys on `sun.java.command`, which is
-    * the launcher there), so a suite's runs overwrite each other's map. No consumer in the corpus is
-    * affected, because a map is looked up by the base MANIFEST's name and no test's run label
-    * matches one. Give a module a name nothing else uses.
-    */
+  /** Discover all port maps under `reportRoot`, keyed by module name from the file header.
+    * `run-latest` wins over `baseline`. `exclude` prevents a module from reading its own map. */
   def discover(reportRoot: Path, exclude: Set[String] = Set.empty,
                configured: List[Path] = Nil): List[Published] =
     discoverIn(reportRoot :: searchPath(configured), exclude)
 
-  /** THE EXTRA ROOTS, and WHOSE ANSWER THEY ARE.
-    *
-    * A base's map decides emitted text — the funnel's fixpoint, the class-vs-object question, §4.55's
-    * field names, the `export` lists — so WHICH maps a run discovers is part of that run's identity,
-    * not part of an operator's session. `balticporter.baseReports` alone made it the operator's: a
-    * leftover `debug.properties` entry adds a base, and two checkouts at the same commit then emit
-    * differently with every count identical. That is `reportPathRoot`'s lesson (§4.6) at an input
-    * that shapes the OUTPUT rather than a finding's id.
-    *
-    * So a port states it — `PortManifest.baseReports`, beside the `bases` it is about — and the flag
-    * is a FALLBACK, consulted only where nothing states one: `DebugEmit` and the other tools that
-    * have no port configuration at all, and §4.45's consumer before it has written a manifest. It is
-    * not merged with a declared value, deliberately: an extra root can only ADD a base, so merging
-    * would leave exactly the leftover-flag failure in place for every port that had stated its own. */
+  /** Extra report roots: `configured` if non-empty, else the `baseReports` debug flag as fallback.
+    * Not merged: an extra root can only add a base. */
   def searchPath(configured: List[Path]): List[Path] =
     if configured.nonEmpty then configured else balticporter.tir.DebugFlags.baseReports
 
-  /** …over SEVERAL roots, nearest first. THE ONE SEARCH PATH, and both readers take it: `PortRun`
-    * builds the `Surface` from it and `PortMapTransform` resolves its own base through
-    * [[published]], and two discoveries of one artifact answering differently is D6.5's failure
-    * shape. Duplicates are collapsed the same way one root's are — first wins per module — so an
-    * extra root can only ADD a base, never shadow the run's own tree with a stale copy. */
+  /** Discover over several roots, nearest first. First wins per module. */
   def discoverIn(roots: List[Path], exclude: Set[String]): List[Published] =
     val dirs = roots.map(RealPath.of).distinct.filter(Files.isDirectory(_)).flatMap { r =>
       Files.list(r).iterator().asScala.filter(Files.isDirectory(_)).toList.sortBy(_.toString)
@@ -826,23 +434,12 @@ object PortMap:
         val head   = Files.readAllLines(p).asScala.headOption.getOrElse("")
         val module = field(head, "module").getOrElse(d.getFileName.toString)
         Published(module, p, source, read(p))
-      // first wins per module: `run-latest` is listed before `baseline` for every directory.
+      // first wins per module: run-latest listed before baseline
       found.filterNot(x => exclude(x.module)).groupBy(_.module).toList.sortBy(_._1).map(_._2.head)
 
-  /** the directory every port's report lives under — the parent of THIS run's own report dir, so a
-    * consumer needs no configuration and no knowledge of any other port's layout.
-    *
-    * A port's own `baseReports` extends it (see [[searchPath]]) for §4.45's consumer, which has no
-    * run tree of this shape at all. */
+  /** Parent of this run's own report dir -- the root all port reports live under. */
   def reportRoot: Path = CheckReport.dir.toAbsolutePath.normalize.getParent
 
-  /** The map published by `module`, for a porting program constructing a
-    * `balticporter.transform.PortMapTransform`. `scala.None` when the base has never been run or
-    * its map cannot be read — which the phase reports rather than silently treating as a no-op.
-    *
-    * `configured` is this PORT's declared search path (`PortManifest.baseReports`), and it must be
-    * the same value `PortRun` hands [[discover]]: both readers take one function for D6.5's reason —
-    * two loads of one artifact answering differently is the failure the base-surface view exists to
-    * remove. */
+  /** The map published by `module`, or `None` when unavailable. */
   def published(module: String, configured: List[Path] = Nil): Option[Map0] =
     discover(reportRoot, configured = configured).find(_.module == module).flatMap(_.map.toOption)

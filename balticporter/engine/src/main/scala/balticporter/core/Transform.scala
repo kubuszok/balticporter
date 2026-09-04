@@ -2,7 +2,7 @@ package balticporter.core
 
 import balticporter.core.BExpr.*
 
-/** Structural bottom-up mappers over BIR — the substrate passes are built on. */
+/** Structural bottom-up mappers over BIR nodes. */
 object BirTransform:
 
   def mapExpr(e: BExpr)(f: BExpr => BExpr): BExpr =
@@ -72,7 +72,7 @@ object BirTransform:
       body = c.body.map(mapStmt(_)(f)),
     )
 
-  /** Maps every expression in a type declaration (recursing into nested types). */
+  /** Maps every expression in a type declaration, recursing into nested types. */
   def mapTypeDecl(t: BTypeDecl)(f: BExpr => BExpr): BTypeDecl =
     t.copy(
       fields = t.fields.map(fl => fl.copy(init = fl.init.map(mapExpr(_)(f)))),

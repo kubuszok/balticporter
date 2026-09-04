@@ -2,12 +2,8 @@ package balticporter.core
 
 import balticporter.core.BExpr.*
 
-/** Tier-3 rule API (DESIGN.md §2.4, cut to the current engine surface): pure
-  * BUnit → BUnit passes, single-concern, individually versioned. Order is
-  * explicit — the port program lists its passes; the framework never reorders.
-  * `id@version` of every registered pass joins the action-cache fingerprint so
-  * a rule change invalidates exactly like an engine change.
-  */
+/** Pure BUnit -> BUnit pass. `id@version` joins the action-cache fingerprint.
+  * // DESIGN.md §2.4 */
 trait BirPass:
   /** stable id, e.g. "vocab/apply" or "ssg/package-rename". */
   def id: String
@@ -23,12 +19,8 @@ object PassPipeline:
   def run(passes: List[BirPass], unit: BUnit): BUnit =
     passes.foldLeft(unit)((u, p) => p.run(u))
 
-/** Rewrites every qualified-name occurrence in a unit — the substrate for
-  * Tier-2 type mappings and package renames. Covers type positions (decls,
-  * locals, catches, params, returns, tparams) and the qname-carrying
-  * expression fields (call owners, static receivers/fields, class literals,
-  * method/ctor references).
-  */
+/** Rewrites every qualified-name occurrence in a unit: type positions and qname-carrying
+  * expression fields (call owners, static receivers/fields, class literals, method/ctor refs). */
 object QNameMap:
 
   def apply(u: BUnit)(f: String => String): BUnit =

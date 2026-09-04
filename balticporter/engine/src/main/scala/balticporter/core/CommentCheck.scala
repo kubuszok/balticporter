@@ -1,9 +1,7 @@
 package balticporter.core
 
-/** The comment-preservation invariant: every comment in the Java source must appear in the
-  * generated Scala (or be explicitly listed as dropped). Comments are compared on normalized
-  * body text so that reflowing/indentation changes don't count as loss.
-  */
+/** Checks that every Java comment appears in the generated Scala, compared on normalized body text.
+  * Comments in `dropped` are exempted. */
 object CommentCheck:
 
   def normalize(text: String): String =
