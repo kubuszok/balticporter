@@ -31,6 +31,7 @@ class NullabilityWrapperSpec extends PortSuite:
       |  void clear() { parent = null; }
       |  boolean gone() { return parent == null; }
       |  boolean here() { return parent != null; }
+      |  boolean isGroup() { return parent instanceof Group; }
       |}
       |""".stripMargin
 
@@ -55,6 +56,10 @@ class NullabilityWrapperSpec extends PortSuite:
   test("declaration-vs-init and argument-vs-formal unwrap with `.orNull` — java's slots accept null") {
     assertEmits(ported, "val a: demo.Actor = this.parent.orNull")
     assertEmits(ported, "this.take(this.parent.orNull)")
+  }
+
+  test("`instanceof` tests the UNWRAPPED value — java answers false for null") {
+    assertEmits(ported, "this.parent.orNull.isInstanceOf[Group]")
   }
 
   test("member selection on a wrapped receiver unwraps first") {

@@ -802,6 +802,8 @@ final class NullabilityTransform(
     case a: Tree.Assign      if isWrapper => a.copy(rhs = coerceTo(a.lhs.tpe, a.rhs))
     case a: Tree.ArrayLength if isWrapper && isWrapped(a.array) => a.copy(array = unwrap(a.array))
     case a: Tree.ArrayAccess if isWrapper && isWrapped(a.array) => a.copy(array = unwrap(a.array))
+    // java's `x instanceof T` is false for null: test the unwrapped value, never the wrapper
+    case io: Tree.InstanceOf if isWrapper && isWrapped(io.expr) => io.copy(expr = unwrapOrNull(io.expr))
     case other => other
 
   // -------------------------------------------------------------------------

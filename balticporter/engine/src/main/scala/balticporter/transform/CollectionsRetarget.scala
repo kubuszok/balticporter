@@ -248,6 +248,18 @@ private[transform] trait CollectionsRetarget:
   // ---- Reified carrier type arguments — preserved in java's namespace ----
   // // ENGINE-LIMITS K20
 
+  /** A type test at a retarget target keeps no type ARGUMENT: java checked the erased class only,
+    * and scalac refuses an unchecked one (E092); the element kind stays untested — counted (K18). */
+  private[transform] def wildcardReifiedTest(t: Tree.InstanceOf)(using p: Program): Tree.InstanceOf =
+    t.tpt.tpe match
+      case TypeRepr.AppliedType(tc @ TypeRepr.TypeRef(_, s), args) if retargetTargetToSource.contains(s) && args.nonEmpty =>
+        val wild = TypeRepr.AppliedType(tc, args.map(_ => TypeRepr.TypeBounds(TypeRepr.NoType, TypeRepr.NoType)))
+        seam("type test at retarget type (K18)", TirPrinter.tpe(t.tpt.tpe, TirPrinter.Style.canonical),
+             "erased test — the element kind is not checked", t.origin, SymId.None,
+             issue = CollectionBoundaryCheck.Issue.ReifiedOccurrence)
+        t.copy(tpt = TypeTree(wild, t.tpt.origin))
+      case _ => t
+
   /** A `classOf[T]` literal whose inner type was retarget-mapped — syncs the `const` field to
     * match, since `mapTerm` remaps `tpe` but not the `Constant.ClassOfC` the emitter reads. Counted
     * on `collection-retarget`: a third party sees the lls class, not the upstream one (K20). */

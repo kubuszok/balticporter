@@ -1249,7 +1249,7 @@ final class CollectionsTransform(
           a.copy(rhs = coerce(want, a.rhs, wantScoped))
     case ty: Tree.Typed if impossibleShimCast(ty) => ty.expr
     case ty: Tree.Typed   => reifiedCast(stripCastWildcard(ty))
-    case io: Tree.InstanceOf => reifiedTest(io)
+    case io: Tree.InstanceOf => reifiedTest(wildcardReifiedTest(io))
     case fe: Tree.ForEach => retargetForEach(fe).getOrElse(writeThroughEntries(fe))
     case mr: Tree.MethodRef => lowerMethodRef(mr)
     case lit @ Tree.Literal(Constant.ClassOfC(tp), tpe, _) => retargetClassOf(lit, tp, tpe)

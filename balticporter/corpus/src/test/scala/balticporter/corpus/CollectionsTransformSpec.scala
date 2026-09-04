@@ -2265,3 +2265,14 @@ class CollectionsTransformSpec extends PortSuite:
   test("a Chain ending in `iterator` keeps its members under the JavaIterator wrap — Apply") {
     assertEmits(chainIteratorFixture(nullary = false), "JavaIterator.from(this.selected.orderedItems.iterator)")
   }
+
+  test("a type test at a PARAMETERISED retarget target is erased to a wildcard and counted (K18)") {
+    import CollectionsTransform.RetargetArg.*
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.CharArr" -> "lowlevel.util.DynamicArray"),
+      retargetTypeArgs = Map("demo.CharArr" -> List(FixedType("scala.Char"))))
+    val p = portAll(List(
+      "CharArr.java" -> "package demo;\npublic class CharArr {}",
+      "U.java" -> "package demo;\nclass U { Object o; boolean f() { return o instanceof CharArr; } }"), ph)
+    assertEmits(p, "isInstanceOf[lowlevel.util.DynamicArray[?]]")
+  }

@@ -99,9 +99,11 @@ final class UnusedSymbolTransform extends Phase:
           toSuppress(v.symbol) = "msg=not read"
       }
 
-    def classifyPrivateDef(d: Tree.DefDef): Unit =
+    /** @param anon in an anonymous class a non-override method is unreachable by name, so it is
+      *             classified as a private one would be */
+    def classifyPrivateDef(d: Tree.DefDef, anon: Boolean = false): Unit =
       program.symbolOf(d.symbol).foreach { s =>
-        if s.flags.isPrivate && !s.flags.isParam && isUnreferenced(d.symbol) &&
+        if (s.flags.isPrivate || (anon && !s.flags.isOverride)) && !s.flags.isParam && isUnreferenced(d.symbol) &&
            s.name != "<init>" && !s.name.endsWith("_=") &&
            !Set("equals", "hashCode", "toString", "clone", "finalize").contains(s.name) then
           if isSubstitutionReferenced(s) then
@@ -129,8 +131,8 @@ final class UnusedSymbolTransform extends Phase:
           anon.body.foreach {
             case v: Tree.ValDef => classifyPrivateMember(v)
             case d: Tree.DefDef =>
-              classifyPrivateDef(d)
-              classifyNonPrivateDef(d)
+              classifyPrivateDef(d, anon = true)
+              if program.symbolOf(d.symbol).exists(_.flags.isOverride) then classifyNonPrivateDef(d)
             case _ => ()
           }
         }
@@ -219,6 +221,10 @@ final class UnusedSymbolTransform extends Phase:
       override def transformBlock(t: Tree.Block)(using Program): Term =
         val newStats = rewriteStats(t.stats)
         if newStats == t.stats then t else t.copy(stats = newStats)
+      override def transformNew(t: Tree.New)(using Program): Term =
+        t.anon.map(a => rewriteStats(a.body)) match
+          case Some(nb) if !t.anon.exists(_.body == nb) => t.copy(anon = t.anon.map(_.copy(body = nb)))
+          case _ => t
       override def transformTerm(t: Term)(using Program): Term = t match
         case f: Tree.For =>
           val newInit = rewriteStats(f.init)

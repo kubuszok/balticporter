@@ -17,6 +17,7 @@ class UnusedLocalCoverageSpec extends PortSuite:
       |  C() { this(0); int alsoUnused = compute(3); }
       |  int m(int t) { int dt = 1 - t; return t; }
       |  static int s(int t) { int t3 = t * t; return t; }
+      |  Runnable r() { return new Runnable() { public void run() {} void dead(int q) {} }; }
       |}
       |""".stripMargin
 
@@ -33,4 +34,9 @@ class UnusedLocalCoverageSpec extends PortSuite:
     assertNotEmits(ported, "val alsoUnused")
     assertEmits(ported, "C.compute(x$p)")
     assertEmits(ported, "C.compute(3)")
+  }
+
+  test("a non-override method of an anonymous class that nothing calls is dead code, deleted") {
+    assertNotEmits(ported, "def dead")
+    assertEmits(ported, "def run()")
   }
