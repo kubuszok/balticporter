@@ -127,6 +127,36 @@ class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
     // (its delegation should NOT include getSkin())
   }
 
+  // ---- (b3) Post-body referencing NO param — boolean guard ----
+
+  private val boolSrc =
+    """package demo;
+      |public class FlagBase {
+      |  int n;
+      |  boolean ownsIt;
+      |  public FlagBase(int n) { this.n = n; }
+      |  public FlagBase(int n, String s) { this(n); this.ownsIt = true; }
+      |}
+      |public class FlagSub extends FlagBase {
+      |  public FlagSub(int n, String s) { super(n, s); }
+      |  public FlagSub(int n) { super(n); }
+      |}
+      |""".stripMargin
+
+  private val boolProgram = Pipeline.run(SpoonTir.fromSource(boolSrc), Nil)
+  private val boolOut     = new TirEmitter(boolProgram).emit
+
+  test("(b3) param-less post-body: boolean guard runs the assignment") {
+    assert(clue(boolOut).contains("extends demo.FlagBase(sup$0)"),
+      "synthesised primary at parent root's parameter")
+    assert(clue(boolOut).contains("via$pb"),
+      "boolean guard parameter for param-less post-body")
+    assert(clue(boolOut).contains("ownsIt = true"),
+      "the assignment is emitted under the guard")
+    assert(clue(boolOut).contains("if (via$pb)"),
+      "guard uses boolean condition, not null check")
+  }
+
   // ---- (c) Non-replayable post-body — `return` or `super.m()` ----
 
   private val refusedSrc =

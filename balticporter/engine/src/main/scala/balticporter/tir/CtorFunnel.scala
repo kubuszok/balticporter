@@ -1249,6 +1249,19 @@ object CtorFunnel:
                 override def transformType(t: TypeRepr)(using Program): TypeRepr = ParentSubst.subst(t, ptSubst)
               substBody.map(StandardTraversal.mapStat(retypePh, _))
           (slots, retypedBody)
+        case Some(rr) if rr.boolGuard =>
+          // Param-less post-body: a boolean guard slot controls whether it runs.
+          given Program = program
+          val boolSym = program.symbols.all.find(_.fullName == "scala.Boolean").map(_.id).getOrElse(SymId.None)
+          val boolType = TypeRepr.TypeRef(TypeRepr.NoPrefix, boolSym)
+          val ptSubst = ParentSubst.of(cd)
+          val retypedBody = if ptSubst.isEmpty then rr.rawPostBody
+            else
+              val retypePh = new Phase:
+                def name = "ctor-postbody-retype"
+                override def transformType(t: TypeRepr)(using Program): TypeRepr = ParentSubst.subst(t, ptSubst)
+              rr.rawPostBody.map(StandardTraversal.mapStat(retypePh, _))
+          (List(("via$pb", boolType)), retypedBody)
         case _ => (Nil, Nil)
       val allSlots    = sup ++ pbSlots ++ fs.map(s => (s.name, s.tpe))
       val delegations = roots.map { r =>
@@ -1466,7 +1479,9 @@ object CtorFunnel:
         * Used to derive synthesised parameter names and types. */
       postBodyParams: List[(Tree.ValDef, Term)],
       /** The raw post-body statements (un-substituted for post-body params). */
-      rawPostBody: List[Statement]
+      rawPostBody: List[Statement],
+      /** True when the post-body uses no params and needs a boolean guard slot. */
+      boolGuard: Boolean = false
   )
 
   /** Resolve diverging roots through the parent's delegation chain, so they converge on the
@@ -1513,11 +1528,18 @@ object CtorFunnel:
           if seenPb(p.symbol) then false else { seenPb += p.symbol; true }
         }
         val rawPostBody = flat.map(_._2.postBody).find(_.nonEmpty).getOrElse(Nil)
+        val needsBoolGuard = rawPostBody.nonEmpty && uniquePbParams.isEmpty
+        val boolSym = SymId.None // placeholder for the boolean type ref
         val pbValues = flat.map { (sym, r) =>
-          if r.postBodyParams.isEmpty then sym -> uniquePbParams.map(_ => Tree.Literal(Constant.NullC, TypeRepr.NoType, cd.origin): Term)
+          if needsBoolGuard then
+            val v: Term = Tree.Literal(if r.postBody.nonEmpty then Constant.BoolC(true) else Constant.BoolC(false),
+              TypeRepr.TypeRef(TypeRepr.NoPrefix, boolSym), cd.origin)
+            sym -> List(v)
+          else if r.postBodyParams.isEmpty then
+            sym -> uniquePbParams.map(_ => Tree.Literal(Constant.NullC, TypeRepr.NoType, cd.origin): Term)
           else sym -> r.postBodyParams.map(_._2)
         }.toMap
-        Some(ResolvedResult(parentRootSym, argsMap, pbValues, uniquePbParams, rawPostBody))
+        Some(ResolvedResult(parentRootSym, argsMap, pbValues, uniquePbParams, rawPostBody, needsBoolGuard))
 
   /** Effective args reaching the parent root, un-substituted post-body, and post-body param
     * dependencies for synthesised parameter creation. // ENGINE-LIMITS C3 */

@@ -444,15 +444,17 @@ private[emit] trait TirEmitterDecls:
                      !reentrantBearers.contains(cd.symbol)
                   then forceCompanion(cd, cd.symbol, balticporter.tir.ClassInitTriggerCheck.Instantiation, i + 1)
                   else ""
-    // C3 item 4 — parent secondary's post-body, guarded by a null check. // ENGINE-LIMITS C3
+    // C3 item 4 — parent secondary's post-body, guarded. // ENGINE-LIMITS C3
     val postBody = currentClass.map(plans.primaryPostBodyFor(_)).getOrElse(Nil)
     val postBodyStr =
       if postBody.isEmpty || plan.postBodySlots.isEmpty then ""
       else
         val guardParam = plan.postBodySlots.head._1
+        val isBool = guardParam == "via$pb"
+        val cond = if isBool then guardParam else s"$guardParam != null"
         val pbStats = postBody.map(stat(_, i + 2)).filter(_.trim.nonEmpty)
         if pbStats.isEmpty then ""
-        else s"${ind(i + 1)}if ($guardParam != null) {\n${pbStats.mkString("\n")}\n${ind(i + 1)}}"
+        else s"${ind(i + 1)}if ($cond) {\n${pbStats.mkString("\n")}\n${ind(i + 1)}}"
     // JS-C43 — the members javac derives from a record header, which no java declaration carries.
     val (recMembers, recStatics, recNote) = recordMembers(cd, s, i)
     val body0   = joinStats(List(bnote, force, postBodyStr, body1, recMembers.mkString("\n")).filter(_.nonEmpty))
