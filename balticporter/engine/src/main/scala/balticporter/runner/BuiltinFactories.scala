@@ -78,7 +78,8 @@ final class CollectionsFactory extends TransformFactory:
             c.requireString("companion"),
             c.requireString("factory"),
             dropTrailing = c.int("dropTrailing").getOrElse(0),
-            fillTypeArgs = c.bool("fillTypeArgs").getOrElse(false))
+            fillTypeArgs = c.bool("fillTypeArgs").getOrElse(false),
+            typeVarEvidence = c.string("typeVarEvidence"))
         else if c.string("forEach").isDefined then
           RetargetRewrite.ForEach(
             c.requireString("forEach"),

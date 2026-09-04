@@ -238,9 +238,10 @@ final class CollectionsTransform(
     def renderRw(rw: CollectionsTransform.RetargetRewrite): String = rw match
       case CollectionsTransform.RetargetRewrite.Rename(t) => s"Rename($t)"
       case CollectionsTransform.RetargetRewrite.BoolDispatch(f, t, ff) => s"BoolDispatch($f,$t,$ff)"
-      case CollectionsTransform.RetargetRewrite.Construct(c, m, dt, ft) =>
+      case CollectionsTransform.RetargetRewrite.Construct(c, m, dt, ft, ev) =>
         val base = if dt == 0 then s"Construct($c,$m)" else s"Construct($c,$m,$dt)"
-        if ft then s"$base+fill" else base
+        val filled = if ft then s"$base+fill" else base
+        ev.fold(filled)(e => s"$filled+ev:$e")
       case CollectionsTransform.RetargetRewrite.ForEach(t, a) => s"ForEach($t,$a)"
       case CollectionsTransform.RetargetRewrite.Collect(v, i) => s"Collect($v,$i)"
       case CollectionsTransform.RetargetRewrite.Chain(ms, ps, da) =>
@@ -705,7 +706,7 @@ final class CollectionsTransform(
           List(
             (src, onTrue)  -> mint(onTrue, s"$src#retargetRewrite:$onTrue"),
             (src, onFalse) -> mint(onFalse, s"$src#retargetRewrite:$onFalse"))
-        case CollectionsTransform.RetargetRewrite.Construct(companionFqn, factoryMethod, _, _) =>
+        case CollectionsTransform.RetargetRewrite.Construct(companionFqn, factoryMethod, _, _, _) =>
           val fqn = s"$companionFqn.$factoryMethod"
           List((src, fqn) -> mint(factoryMethod, fqn))
         case CollectionsTransform.RetargetRewrite.ForEach(targetMethod, _) =>
@@ -723,7 +724,7 @@ final class CollectionsTransform(
       }
     } ++ retargetRewritesByDesc.flatMap { (src, tbl) =>
       tbl.values.flatMap {
-        case CollectionsTransform.RetargetRewrite.Construct(companionFqn, factoryMethod, _, _) =>
+        case CollectionsTransform.RetargetRewrite.Construct(companionFqn, factoryMethod, _, _, _) =>
           val fqn = s"$companionFqn.$factoryMethod"
           List((src, fqn) -> mint(factoryMethod, fqn))
         case CollectionsTransform.RetargetRewrite.Rename(target) =>
@@ -2202,7 +2203,9 @@ object CollectionsTransform:
     case class BoolDispatch(flagIndex: Int, onTrue: String, onFalse: String) extends RetargetRewrite
     /** Construction rewrite: `new Source(args)` to `companionFqn.factoryMethod(args)`.
       * `dropTrailing` strips trailing args; `fillTypeArgs` generates null placeholders for 0-arg case. */
-    case class Construct(companionFqn: String, factoryMethod: String, dropTrailing: Int = 0, fillTypeArgs: Boolean = false) extends RetargetRewrite
+    case class Construct(companionFqn: String, factoryMethod: String, dropTrailing: Int = 0, fillTypeArgs: Boolean = false,
+        /** a `given` clause (`Type = expr`, `$T0` = the element type) put in scope when the element type argument is a TYPE VARIABLE */
+        typeVarEvidence: Option[String] = None) extends RetargetRewrite
 
     /** For-each structural rewrite: `for (E e : recv.sourceMethod())` over a retarget target
       * lowers to `recv.targetMethod(e => body)` (or a 2-arg lambda for entry iteration). `break`/

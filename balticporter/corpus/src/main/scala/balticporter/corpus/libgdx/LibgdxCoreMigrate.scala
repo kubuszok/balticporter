@@ -506,6 +506,10 @@ object LibgdxPolicy:
       "com.badlogic.gdx.utils.BooleanArray"  -> List(FixedType("scala.Boolean")),
     )
 
+  // A class type parameter has no `MkArray[T]`; sge's own `DynamicArrayOps.createRef` casts the
+  // reference-array evidence (subplan 1b). Emitted as `(using …)` only at a type-variable element.
+  private val mkArrayRef = Some("lowlevel.MkArray[$T0] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[$T0]]")
+
   def libCollectionConstructRewrites: Map[String, Map[(String, Int), balticporter.transform.CollectionsTransform.RetargetRewrite]] =
     import balticporter.transform.CollectionsTransform.RetargetRewrite.*
     Map(
@@ -768,12 +772,12 @@ object LibgdxPolicy:
       // MkArray[T] threaded: COUNTED. BoolDispatch: Array's `identity` boolean at flagIndex=1
       // dispatches to ByRef/non-ByRef. No ForEach: DynamicArray supports `for (x <- da)` natively.
       "com.badlogic.gdx.utils.Array" -> Map(
-        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"), // fallback — desc keys win
-        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef), // fallback — desc keys win
+        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
         // arity 3: Array(boolean, int, ArraySupplier) — drop the ArraySupplier (lls uses MkArray).
         // Array(boolean, int, Class) is in dropMethods.
-        ("<init>", 3) -> Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1),
+        ("<init>", 3) -> Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1, typeVarEvidence = mkArrayRef),
         ("get", 1)          -> Rename("apply"),
         ("set", 2)          -> Rename("update"),
         ("removeValue", 2)  -> BoolDispatch(1, "removeValueByRef", "removeValue"),
@@ -827,10 +831,10 @@ object LibgdxPolicy:
       // snapshot support (sge type-mappings.md: "SnapshotArray -> ArrayBuffer with copy-on-modify";
       // lls DynamicArray has begin/end built in).
       "com.badlogic.gdx.utils.SnapshotArray" -> Map(
-        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"), // fallback — desc keys win
-        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 3) -> Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1),
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef), // fallback — desc keys win
+        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
+        ("<init>", 3) -> Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1, typeVarEvidence = mkArrayRef),
         ("get", 1)          -> Rename("apply"),
         ("set", 2)          -> Rename("update"),
         ("removeValue", 2)  -> BoolDispatch(1, "removeValueByRef", "removeValue"),
@@ -862,10 +866,10 @@ object LibgdxPolicy:
         ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
       ),
       "com.badlogic.gdx.utils.DelayedRemovalArray" -> Map(
-        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"), // fallback — desc keys win
-        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 3) -> Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1),
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef), // fallback — desc keys win
+        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
+        ("<init>", 3) -> Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1, typeVarEvidence = mkArrayRef),
         ("get", 1)          -> Rename("apply"),
         ("set", 2)          -> Rename("update"),
         ("removeValue", 2)  -> BoolDispatch(1, "removeValueByRef", "removeValue"),
@@ -899,9 +903,9 @@ object LibgdxPolicy:
       // Primitive arrays: no identity flag (no BoolDispatch needed), same get->apply, set->update.
       // sge type-mappings.md: "IntArray -> DynamicArray[Int]", etc.
       "com.badlogic.gdx.utils.IntArray" -> Map(
-        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"), // fallback — desc keys win
-        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef), // fallback — desc keys win
+        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
         ("get", 1)      -> Rename("apply"),
         ("set", 2)      -> Rename("update"),
         ("notEmpty", 0) -> Chain(List("nonEmpty")),
@@ -938,9 +942,9 @@ object LibgdxPolicy:
         ("mul", 1)      -> Template("{ var bpI = 0; while (bpI < $recv.size) { $recv(bpI) = $recv(bpI) * $0; bpI += 1 } }"),
       ),
       "com.badlogic.gdx.utils.FloatArray" -> Map(
-        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"), // fallback — desc keys win
-        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef), // fallback — desc keys win
+        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
         ("get", 1)      -> Rename("apply"),
         ("set", 2)      -> Rename("update"),
         ("notEmpty", 0) -> Chain(List("nonEmpty")),
@@ -972,9 +976,9 @@ object LibgdxPolicy:
         ("add", 4)      -> Template("{ $recv.add($0, $1); $recv.add($2, $3) }"),
       ),
       "com.badlogic.gdx.utils.LongArray" -> Map(
-        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"), // fallback — desc keys win
-        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef), // fallback — desc keys win
+        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
         ("get", 1)      -> Rename("apply"),
         ("set", 2)      -> Rename("update"),
         ("notEmpty", 0) -> Chain(List("nonEmpty")),
@@ -1022,9 +1026,9 @@ object LibgdxPolicy:
         ("setSize", 1) -> Template("{ val bpN = $0; if (bpN < 0) throw new java.lang.IllegalArgumentException(\"newSize must be >= 0: \" + bpN); $recv.setSize(bpN); $recv }.items"),
       ),
       "com.badlogic.gdx.utils.ShortArray" -> Map(
-        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"), // fallback — desc keys win
-        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef), // fallback — desc keys win
+        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
         ("get", 1)      -> Rename("apply"),
         ("set", 2)      -> Rename("update"),
         // wave 3.1t: Java implicitly narrows int->short at ShortArray.add(short). After retarget,
@@ -1061,9 +1065,9 @@ object LibgdxPolicy:
         ("add", 4)      -> Template("{ $recv.add($0.toShort, $1.toShort); $recv.add($2.toShort, $3.toShort) }"),
       ),
       "com.badlogic.gdx.utils.ByteArray" -> Map(
-        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"), // fallback — desc keys win
-        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef), // fallback — desc keys win
+        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
         ("get", 1)      -> Rename("apply"),
         ("set", 2)      -> Rename("update"),
         ("notEmpty", 0) -> Chain(List("nonEmpty")),
@@ -1100,9 +1104,9 @@ object LibgdxPolicy:
         ("add", 4)      -> Template("{ $recv.add($0, $1); $recv.add($2, $3) }"),
       ),
       "com.badlogic.gdx.utils.CharArray" -> Map(
-        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"), // fallback — desc keys win
-        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef), // fallback — desc keys win
+        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
         ("get", 1)      -> Rename("apply"),
         ("set", 2)      -> Rename("update"),
         ("notEmpty", 0) -> Chain(List("nonEmpty")),
@@ -1137,9 +1141,9 @@ object LibgdxPolicy:
         ("append", 1)   -> Rename("add"),
       ),
       "com.badlogic.gdx.utils.BooleanArray" -> Map(
-        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
-        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"), // fallback — desc keys win
-        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply"),
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
+        ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef), // fallback — desc keys win
+        ("<init>", 2) -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
         ("get", 1)      -> Rename("apply"),
         ("set", 2)      -> Rename("update"),
         ("notEmpty", 0) -> Chain(List("nonEmpty")),
@@ -1224,7 +1228,7 @@ object LibgdxPolicy:
     // Extract .items to pass the raw array.
     val addAllArrayDesc = Descriptor(List(Param.Named("Array"), Param.Prim("int"), Param.Prim("int")))
     def genericArrayInitByDesc = Map(
-      ("<init>", intDesc)      -> Construct("lowlevel.util.DynamicArray", "apply"),
+      ("<init>", intDesc)      -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
       ("<init>", arrayDesc)    -> Construct("lowlevel.util.DynamicArray", "from"),
       // wave 3.1af: Array(T[]) -> DynamicArray.from(array) — exact capacity.
       // DynamicArray.from copies with items.length == array.length, matching java's Array(T[])
@@ -1233,7 +1237,7 @@ object LibgdxPolicy:
       // $T0 resolves from the constructor's applied type; raw constructors reach the supplier-
       // derived path in retargetConstruct (engine, 3.1af).
       ("<init>", tArrDesc)     -> Template("$Target.from[$T0]($0)"),
-      ("<init>", supplierDesc) -> Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1),
+      ("<init>", supplierDesc) -> Construct("lowlevel.util.DynamicArray", "apply", dropTrailing = 1, typeVarEvidence = mkArrayRef),
       // Cast .items to Array[$T0] to handle wildcard argument types — java arrays are covariant,
       // scala arrays are invariant, so `DynamicArray[? <: T].items` is `Array[? <: T]` which
       // does not conform to `Array[T]`. The asInstanceOf is safe: items really IS an Array[T]
@@ -1241,7 +1245,7 @@ object LibgdxPolicy:
       ("addAll", addAllArrayDesc) -> Template("$recv.addAll($0.items.asInstanceOf[scala.Array[$T0]], $1, $2)"),
     )
     def primArrayInitByDesc(selfDesc: Descriptor, rawArrDesc: Descriptor, elemType: String) = Map(
-      ("<init>", intDesc)    -> Construct("lowlevel.util.DynamicArray", "apply"),
+      ("<init>", intDesc)    -> Construct("lowlevel.util.DynamicArray", "apply", typeVarEvidence = mkArrayRef),
       ("<init>", selfDesc)   -> Construct("lowlevel.util.DynamicArray", "from"),
       // wave 3.1af: PrimArray(prim[]) -> DynamicArray.from for exact capacity (LongArrayTest).
       ("<init>", rawArrDesc) -> Template(s"$$Target.from[$elemType]($$0)"),

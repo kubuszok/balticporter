@@ -622,6 +622,10 @@ private[transform] trait CollectionsRetarget:
 
   /** The declared type is `scala.collection.Iterator` — the image of java's nested map
     * iterator types (`ObjectMap.Keys`/`Values`/`Entries`, …) under the retarget rows. */
+  /** A type parameter, structurally: `isParam` with `TypeBounds` as its info. */
+  private[transform] def isTypeVariable(s: SymId)(using p: Program): Boolean =
+    p.symbolOf(s).exists(x => x.flags.isParam && x.info.isInstanceOf[TypeRepr.TypeBounds])
+
   private[transform] def isIteratorType(t: TypeRepr)(using p: Program): Boolean =
     headSym(t).exists(h => p.symbolOf(h).exists(_.fullName == "scala.collection.Iterator"))
 
@@ -1298,7 +1302,7 @@ private[transform] trait CollectionsRetarget:
         // receiver-origin disambiguation at the member level
         val rhs = newHead.getOrElse(SymId.None)
         lookupRewriteForReceiver(rhs, srcFqn, "<init>", arity, desc).flatMap {
-          case CollectionsTransform.RetargetRewrite.Construct(companionFqn, factoryMethod, dropTrailing, fillTypeArgs) =>
+          case CollectionsTransform.RetargetRewrite.Construct(companionFqn, factoryMethod, dropTrailing, fillTypeArgs, typeVarEvidence) =>
             val fqn = s"$companionFqn.$factoryMethod"
             retargetRewriteSyms.get((srcFqn, fqn)).map { factorySym =>
               val rawArgs = if dropTrailing > 0 then t.args.dropRight(dropTrailing) else t.args
@@ -1356,7 +1360,19 @@ private[transform] trait CollectionsRetarget:
               val fun: Term =
                 if targs.nonEmpty then Tree.TypeApply(ident, targs, TypeRepr.NoType, t.origin)
                 else ident
-              Tree.Apply(fun, effectiveArgs, factorySym, n.tpe, t.origin)
+              val call = Tree.Apply(fun, effectiveArgs, factorySym, n.tpe, t.origin)
+              // A TYPE-VARIABLE element has no typeclass evidence in scope: append the row's
+              // `(using <evidence>)` (the hand port's own `MkArray.anyRef` cast) — subplan 1b.
+              (typeVarEvidence, targs.headOption) match
+                case (Some(tpl), Some(tt)) if headSym(tt.tpe).exists(isTypeVariable) =>
+                  // `{ given <tpl with $T0 = T>; <call> }` — the factory summons its evidence
+                  // inline, so the given must be in scope at the call, not passed explicitly.
+                  val parts = tpl.split(java.util.regex.Pattern.quote("$T0"), -1).toList
+                  val tHole = () => Tree.Ident(headSym(tt.tpe).getOrElse(SymId.None), tt.tpe, t.origin)
+                  val strs  = ("{ given " + parts.head) :: parts.tail.dropRight(1) ++ List(parts.last + "; ", " }")
+                  val holes = List.fill(parts.size - 1)(tHole()) :+ call
+                  Tree.Opaque.spliced(strs, holes, n.tpe, t.origin)
+                case _ => call
             }
           case CollectionsTransform.RetargetRewrite.Template(expr) =>
             Some(renderTemplate(expr, Tree.Ident(SymId.None, n.tpe, t.origin), t.args, srcFqn, n.tpe, t.origin))

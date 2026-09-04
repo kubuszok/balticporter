@@ -2209,6 +2209,7 @@ class CollectionsTransformSpec extends PortSuite:
     assertNotEmits(p, "boundary[demo.Base[scala.Any]]")
   
 
+  }
   test("nested map iterator types: a stored Entries cursor, values().next(), parenless hasNext") {
     import CollectionsTransform.RetargetRewrite.*
     import CollectionsTransform.RetargetArg.*
@@ -2261,4 +2262,24 @@ class CollectionsTransformSpec extends PortSuite:
     assertNotEmits(p, "it.hasNext()")                // parenless on scala's Iterator
     assertNotEmits(p, "m.entries()")
   }
-}
+
+  test("a Construct at a TYPE-VARIABLE element puts the row's given in scope (typeVarEvidence)") {
+    import CollectionsTransform.RetargetRewrite.*
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.Arr" -> "lowlevel.util.DynamicArray"),
+      retargetRewrites = Map("demo.Arr" -> Map(
+        ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply",
+          typeVarEvidence = Some("lowlevel.MkArray[$T0] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[$T0]]")))))
+    val p = portAll(List(
+      "Arr.java" ->
+        """package demo;
+          |public class Arr<T> { public Arr() {} }""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses<E> {
+          |  Arr<E> generic() { return new Arr<E>(); }
+          |  Arr<String> concrete() { return new Arr<String>(); }
+          |}""".stripMargin), ph)
+    assertEmits(p, "{ given lowlevel.MkArray[E] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[E]]; lowlevel.util.DynamicArray.apply[E]() }")
+    assertNotEmits(p, "given lowlevel.MkArray[java.lang.String]")
+  }
