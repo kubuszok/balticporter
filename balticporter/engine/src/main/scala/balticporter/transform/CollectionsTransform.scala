@@ -1146,13 +1146,12 @@ final class CollectionsTransform(
       val newArgs = mapping.map(resolveRetargetArg(_, existingArgs))
       TypeRepr.AppliedType(TypeRepr.TypeRef(prefix, s), newArgs)
     case TypeRepr.AppliedType(tc @ TypeRepr.TypeRef(_, s), args) if remapTargets.contains(s) && args.exists(_.isInstanceOf[TypeRepr.TypeBounds]) =>
-      // Same-arity retarget target is invariant: a wildcard arg is invalid, strip to the more
-      // informative bound. Upper-only (`? extends T`) is restricted to `retarget` targets, per
-      // 5e09bc77's rule at arity-changing args (CLAUDE.md §1(a), subplan item 3).
-      val stripToUpper = retargetTargetToSource.contains(s)
+      // Same-arity retarget target is invariant: a wildcard arg is invalid, strip to the LOWER
+      // bound when present. Upper-only is left alone HERE — a DECLARATION (a parameter, a field)
+      // may keep `?`, which is valid Scala and the right image of java's own covariant wildcard;
+      // stripping the upper bound is licensed only at a CAST TARGET, see [[stripCastWildcard]].
       val stripped = args.map {
         case TypeRepr.TypeBounds(lo, _) if lo != TypeRepr.NoType => lo
-        case TypeRepr.TypeBounds(_, hi) if stripToUpper && hi != TypeRepr.NoType && !hasNestedBound(hi) => hi
         case a => a
       }
       if stripped == args then t else TypeRepr.AppliedType(tc, stripped)
@@ -1185,6 +1184,21 @@ final class CollectionsTransform(
     case _: TypeRepr.TypeBounds       => true
     case TypeRepr.AppliedType(tc, as) => hasNestedBound(tc) || as.exists(hasNestedBound)
     case _                            => false
+
+  /** `asInstanceOf[T]` needs a REIFIABLE `T`; a DECLARATION may keep `?` (valid Scala, the right
+    * image of java's wildcard) but a cast target may not, so the upper-bound strip [[hasNestedBound]]
+    * guards belongs here and not in [[transformType]] (subplan item 3). */
+  private[transform] def stripCastWildcard(t: Tree.Typed): Tree.Typed =
+    def strip(tp: TypeRepr): TypeRepr = tp match
+      case TypeRepr.AppliedType(tc @ TypeRepr.TypeRef(_, s), args) if retargetTargetToSource.contains(s) =>
+        TypeRepr.AppliedType(tc, args.map {
+          case TypeRepr.TypeBounds(_, hi) if hi != TypeRepr.NoType && !hasNestedBound(hi) => hi
+          case a => strip(a)
+        })
+      case TypeRepr.AppliedType(tc, args) => TypeRepr.AppliedType(strip(tc), args.map(strip))
+      case other                          => other
+    val stripped = strip(t.tpe)
+    if stripped == t.tpe then t else t.copy(tpt = TypeTree(stripped, t.tpt.origin), tpe = stripped)
 
   /** WHICH type constructors' arguments this run must not move — the carriers, resolved to this
     * program's own symbols. `false` by arithmetic where the port declares none and the program names
@@ -1234,7 +1248,7 @@ final class CollectionsTransform(
           val (want, wantScoped) = actualOf(a.lhs)
           a.copy(rhs = coerce(want, a.rhs, wantScoped))
     case ty: Tree.Typed if impossibleShimCast(ty) => ty.expr
-    case ty: Tree.Typed   => reifiedCast(ty)
+    case ty: Tree.Typed   => reifiedCast(stripCastWildcard(ty))
     case io: Tree.InstanceOf => reifiedTest(io)
     case fe: Tree.ForEach => retargetForEach(fe).getOrElse(writeThroughEntries(fe))
     case mr: Tree.MethodRef => lowerMethodRef(mr)

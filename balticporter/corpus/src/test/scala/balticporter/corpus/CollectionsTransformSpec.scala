@@ -2205,7 +2205,24 @@ class CollectionsTransformSpec extends PortSuite:
     assert(!out.contains("lowlevel.Nullable("))
   }
 
-  test("a use-site wildcard at an invariant retarget target strips to its (ground) upper bound") {
+  test("a use-site wildcard at an invariant retarget target strips to its (ground) upper bound, at a CAST only") {
+    val ph = new CollectionsTransform(retarget = Map("demo.M" -> "lowlevel.util.ObjectMap"))
+    val p = portAll(List(
+      "M.java" ->
+        """package demo;
+          |public class M<K, V> {
+          |  public void putAll(M<? extends K, ? extends V> other) {}
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  void merge(M<String, Integer> a, M<String, Integer> b) { a.putAll(b); }
+          |}""".stripMargin), ph)
+    assertEmits(p, "b.asInstanceOf[lowlevel.util.ObjectMap[java.lang.String, java.lang.Integer]]")
+    assertNotEmits(p, "asInstanceOf[lowlevel.util.ObjectMap[?")
+  }
+
+  test("…and a DECLARED parameter keeps its wildcard — an invariant target's use-site `?` is valid Scala") {
     val ph = new CollectionsTransform(retarget = Map("demo.M" -> "lowlevel.util.ObjectMap"))
     val p = portAll(List(
       "M.java" ->
@@ -2216,6 +2233,5 @@ class CollectionsTransformSpec extends PortSuite:
           |class Uses {
           |  void read(M<? extends String, ? extends Integer> m) {}
           |}""".stripMargin), ph)
-    assertEmits(p, "lowlevel.util.ObjectMap[java.lang.String, java.lang.Integer]")
-    assertNotEmits(p, "? <:")
+    assertEmits(p, "? <: java.lang.String")
   }
