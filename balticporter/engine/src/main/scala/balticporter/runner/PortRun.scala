@@ -36,23 +36,10 @@ object Determinism:
     if args.contains(FullFlag) then Full else if args.contains(OffFlag) then Off else Emission
 
 /** Entry point for a porting program: orchestrates frontend, phases, emitter, and ALL checks.
-  *
-  * Policy stays in the consumer (phases, subs, renames, provenance). Mechanics are mandatory:
-  * pipeline with rename LAST (CLAUDE.md §4.56), all checks, `src_managed/` paths (§5.5),
-  * `externalConcrete` via [[RuntimePlan]], determinism, provenance (§4.57).
-  *
-  * @param label      console prefix
-  * @param portRoot   port module root; `src_managed/{main,test}/scala` hangs off it
-  * @param frontend   what to parse vs resolve against; resolution-only units are NOT emitted
-  * @param phases     transform pipeline in declaration order; must NOT contain [[PackageRenameTransform]]
-  * @param subs       drop/inject manifest; empty is a no-op
-  * @param packageRenames upstream prefix → port prefix; appended last, verified by `PackageRenameTransform.check`
-  * @param runtimeMode how `balticporter-runtime` reaches this source set
-  * @param supportSources FQN → source for support types not declared via [[RequiresRuntime]]
-  * @param project    opt-in sbt skeleton generation; `None` (default) writes only sources
-  * @param manifest   module policy VALUE; supplies phases/subs/renames when present; enables
-  *                   [[balticporter.core.ManifestAgreement]]
-  */
+  * Policy stays in the consumer; mechanics are mandatory (rename LAST §4.56, all checks,
+  * `src_managed/` paths §5.5, determinism, provenance §4.57). @param frontend what to parse vs
+  * resolve against @param phases pipeline, must NOT contain `PackageRenameTransform` @param subs
+  * drop/inject manifest @param packageRenames appended last @param manifest module policy value. */
 final case class PortRun(
     label: String,
     portRoot: Path,
@@ -403,48 +390,31 @@ final case class PortRun(
       CheckReport.record(PortRun.PortabilityAll, allViolations.map(_.report(PortRun.PortabilityAll)))
       CheckReport.record(PortRun.PortabilityEmitted, portability.map(_.report(PortRun.PortabilityEmitted)))
     }
-    // the rule count is DERIVED here and stated nowhere else. `PortabilityCheck`'s own scaladoc
-    // carried a hand-written one for long enough that it detached from the list and then escaped
-    // into two commit subjects nobody can regenerate; the fix is a number the code computes, at the
-    // one line a reader is looking at when they ask "against what?".
-    // …and the TARGETS beside the count, because the rule set is now derived from them: "12 sites
-    // against 27 rules" says nothing an operator can act on unless they can see WHICH backends this
-    // port declared. A run reporting fewer sites because it narrowed its targets and one reporting
-    // fewer because it fixed something are otherwise the same line.
+    // the rule count is DERIVED here and stated nowhere else — a hand-written one in
+    // `PortabilityCheck`'s own scaladoc detached from the list and escaped into commit subjects
+    // nobody could regenerate. TARGETS shown beside it, since "12 against 27" is unactionable
+    // without which backends the port declared — narrowing targets and fixing a defect otherwise
+    // read as the same line.
     say(s"PORTABILITY (${targets.toList.map(_.toString).sorted.mkString("/")}): ${portability.size} " +
       s"site(s) on APIs those backends cannot provide, in EMITTED code" +
       s", against ${portabilityRules.size} rules")
     if portability.nonEmpty then say(PortReport.Kind.Portability.classification)
     println(PortabilityCheck.summary(portability, fixes))
 
-    // ---- and the OTHER half of the same enumeration: what the declared backends need from the
-    // BUILD GRAPH rather than from the source. Half the catalog's platform answers are `Depend` —
-    // the API exists off the JVM, in an artifact nobody has added — and reported as an
-    // unportability that finding is unanswerable, because the reader is told to remove a call one
-    // `libraryDependencies` line makes correct. Three conjuncts, and two of them are structural:
-    // the usage FIRED (this walk), the port declared no ALTERNATIVE (read through
-    // `verdictOverrides`, so it cannot disagree with the first), and no declared dependency
-    // COVERS it (the one real filter, below). Held to this module's own units by the same
-    // `notShipped` predicate every other check carries (D2).
+    // ---- what the declared backends need from the BUILD GRAPH rather than the source. Half the
+    // catalog's platform answers are `Depend` (API exists off the JVM, artifact nobody added), and
+    // reporting that as unportability tells the reader to remove a call one dependency line makes
+    // correct. Three conjuncts: usage FIRED, no declared ALTERNATIVE, no dependency COVERS it.
+    // Held to this module's own units by `notShipped` (D2).
     val declaredDeps = manifest.map(_.dependencies).getOrElse(Nil)
     val allRequired  = DependencyCheck.requirements(program, targets, verdictOverrides)
     val ownRequired  = DependencyCheck.inEmittedCode(program, allRequired, notShipped)
     val needed       = DependencyCheck.uncovered(ownRequired, declaredDeps)
-    // …and the SAME PAIR read backwards, which no count in this lane can show: coverage SUBTRACTS,
-    // so an entry naming an artifact nothing here needs leaves every number on this lane exactly
-    // where it was. It is a declared key that fired on nothing, so it goes where every other one
-    // goes — the `policy` lane, folded in below where that report is assembled.
-    //
-    // ASKED OF TWO PROGRAMS, which is what closed ENGINE-LIMITS P8. The walk above enumerates JDK
-    // usages, and a `Verdict.Depend` is answered by declaring the artifact AND REDIRECTING INTO IT
-    // (DESIGN.md §8.19) — the redirect is what removes the usage, so after it runs the coordinate the
-    // port needs most reads as the one that fired on nothing, and the instruction says remove it. The
-    // pre-pipeline program is where that usage still is, and the artifact's own class list is where
-    // the emitted reference is; `DependencyCheck.declarations` is the 2×2 over the two. Note this is
-    // provably one-directional: the emitted column is a SUPERSET of the test that used to be the
-    // whole answer, so a `policy` row can only turn off.
-    // LAZY, and not for speed alone: twelve of the corpus's fifteen ports declare no dependency at
-    // all, and a second whole-program walk they cannot use is a walk that could only ever go wrong.
+    // …and the SAME PAIR read backwards: coverage SUBTRACTS, so an unneeded artifact leaves every
+    // number on this lane where it was — it goes to `policy` instead. ASKED OF TWO PROGRAMS
+    // (`ENGINE-LIMITS.md` P8): a `Verdict.Depend` is answered by declaring the artifact AND
+    // REDIRECTING INTO IT, so the emitted reference is what the artifact's class list answers.
+    // LAZY: most ports declare no dependency at all.
     lazy val beforeRequired = DependencyCheck.inEmittedCode(translated.parsed,
       DependencyCheck.requirements(translated.parsed, targets, verdictOverrides), notShipped)
     lazy val beforeExternal = ExternalUsage.external(translated.parsed, notShipped)
@@ -473,16 +443,11 @@ final case class PortRun(
       // …and the THIRD, which counts DECLARATIONS: `policy = 0` here is a bar a port holds by
       // declaring nothing, and an artifact a phase redirected into has no row on either lane above.
       CheckReport.record(DependencyCheck.Declared, DependencyCheck.reportDeclared(declaredCells))
-      // …and the same rows as an artifact a BUILD can read. One value, one spelling (§1.5) at the
-      // build layer: a coordinate this manifest declares was ALSO written by hand into the measure
-      // lane's scala-cli flags, and nothing compared the two — a revision bumped here and not there
-      // compiles the port against a DIFFERENT JAR with every count flat. `scripts/_lib.sh`
-      // (`declared_dep_flags`) derives the lane's `--dependency`/`--repository` from this file, so
-      // the coordinate is stated once and the drift has nowhere to happen.
-      //
-      // GATED ON THE ARTIFACT LAYER, without exception (§5.1): with reporting off `runDir` falls
-      // back to `<cwd>/port-report/<this JVM's main class>`, and one unconditional write was enough
-      // to publish a forked test suite's run directory into the checkout.
+      // …and the same rows as an artifact a BUILD can read. One value, one spelling (§1.5): a
+      // coordinate this manifest declares was ALSO written by hand into the measure lane's flags,
+      // with nothing comparing the two — `scripts/_lib.sh` now derives the lane's flags from this
+      // file. GATED ON THE ARTIFACT LAYER (§5.1): with reporting off, one unconditional write was
+      // enough to publish a forked test suite's run directory into the checkout.
       if CheckReport.enabled && declaredCells.nonEmpty then
         Files.createDirectories(CheckReport.runDir)
         Files.writeString(CheckReport.runDir.resolve("dependencies.tsv"),

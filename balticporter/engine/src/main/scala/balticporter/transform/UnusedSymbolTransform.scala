@@ -2,19 +2,11 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** A LATE phase that removes or suppresses unused local definitions and private members.
-  *
-  * Java allows unused symbols; Scala's strict `-Wunused` flags do not, and the reference compile
-  * promotes every survivor to an error. For each unused definition, the FIRST applicable action
-  * wins: DELETE (side-effect-free, unread/unwritten), DISCARD (keep a possibly-effectful
-  * initialiser, drop the binding), SUPPRESS (`@nowarn`), or REFUSE — a non-private member (API
-  * surface) or a private one whose name appears in a `MethodBodyTransform` substitution body
-  * (`Tree.Opaque`, invisible to the TIR walk — CLAUDE.md §1.5), conservatively treated as
-  * referenced. `allCounts`/`assignCounts` from one `StandardTraversal` walk classify READ,
-  * WRITE-ONLY and UNREFERENCED.
-  *
-  * CLAUDE.md §1(a) universal. `unused-symbol(handled|refused)` required of every run. Runs after
-  * every retyping phase, before `package-rename` and `suppressed-warnings`. */
+/** A LATE phase removing or suppressing unused local defs and private members — java allows them,
+  * Scala's `-Wunused` does not. Per unused def, first applicable action wins: DELETE
+  * (side-effect-free), DISCARD (keep effectful init, drop binding), SUPPRESS (`@nowarn`), REFUSE
+  * (API surface, or a private name referenced inside a `MethodBodyTransform` substitution body,
+  * invisible to the TIR walk — treated conservatively as referenced). CLAUDE.md §1(a). */
 final class UnusedSymbolTransform extends Phase:
 
   def name = UnusedSymbolTransform.Name

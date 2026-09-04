@@ -1050,12 +1050,11 @@ private[transform] trait CollectionsBoundary:
       case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
     }.getOrElse(Nil)
 
-  /** The consumer half of the external seam — a value this phase retyped, at a formal it did
-    * not and cannot (a class file's, K15, or a held-back declaration's). Bridged with a live
-    * `JavaCollections.toJava` view. Runs where the seam count runs — on a call nothing else
-    * rewrote — never in `wrapIterableArgs`, since a `java.util.*` formal may belong to a method
-    * this phase is about to RETARGET, and bridging first would hand the rewritten call a wrapped
-    * argument its new target does not want (measured: 8 specs the first time merged). */
+  /** The consumer half of the external seam — a value this phase retyped, at a formal it did not
+    * and cannot (a class file's, K15, or a held-back declaration's). Bridged with a live
+    * `JavaCollections.toJava` view. Runs where the seam count runs, never in `wrapIterableArgs`:
+    * a `java.util.*` formal may belong to a method about to be RETARGETED, and bridging first
+    * would hand the rewritten call an argument its new target does not want. */
   private[transform] def bridgeJavaFormals(t: Tree.Apply)(using p: Program): Tree.Apply =
     if !keepsJavaFormals(t) then t
     else
@@ -1252,11 +1251,9 @@ private[transform] trait CollectionsBoundary:
 
   /** Does the kind parent really iterate what the shim parent says this class iterates?
     * `SubsumesShim` claims a `scala.collection` target answers for `JavaIterable`'s one member,
-    * but only where the two clauses agree on the element (`implements Map<K,V>,
-    * Iterable<Map.Entry<K,V>>` agrees; `Iterable<String>` does not). Asked in java's own types,
-    * since [[declaredParentKinds]] reads the original units. Declines on a raw clause or an
-    * arity this table has no row for, leaving the duplicate parent and scalac's own `E164`.
-    */
+    * but only where the two clauses agree on the element. Asked in java's own types, since
+    * [[declaredParentKinds]] reads the original units. Declines on a raw clause or an unhandled
+    * arity, leaving the duplicate parent and scalac's own `E164`. */
   private[transform] def carriesElement(k: Kind, kindParent: TypeRepr, shimParent: TypeRepr)(using p: Program): Boolean =
     def entryOf(t: TypeRepr): Option[(TypeRepr, TypeRepr)] = t match
       case TypeRepr.AppliedType(_, a :: b :: Nil) =>

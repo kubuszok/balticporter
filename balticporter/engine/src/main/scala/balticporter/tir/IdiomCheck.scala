@@ -1,11 +1,9 @@
 package balticporter.tir
 
 /** Three idiom lanes from one [[IdiomLog]]: converted, refused (naming the guard), and
-  * unrewritten-usage residue.
-  *
-  * Required of every port (including those with no idiom phase -- records zero).
-  * Data comes from the phases, never from a second walk. [[summary]] recomputes the
-  * denominator per kind on every run. */
+  * unrewritten-usage residue. Required of every port (including a phase-less one — records zero).
+  * Data comes from the phases, never a second walk. [[summary]] recomputes the denominator per
+  * kind on every run. */
 object IdiomCheck:
 
   val Converted = "idiom(converted)"

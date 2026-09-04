@@ -4,12 +4,10 @@ import balticporter.core.{MergeablePolicy, SurfacePolicy}
 import balticporter.tir.*
 
 /** Drops `()` from a nullary getter-like method — `def x(): R` becomes `def x: R` — and rewrites
-  * every call site, reproducing sge's empirical convention. Getter-like (conservatively): body has
-  * no assignments/increments and no calls to non-nullary members; over-refuses, never under-refuses.
-  * CLAUDE.md §1(b): scope default is `Only(Set.empty)` (opposite of a retyping phase, since this
-  * ADDS a declaration arity). Runs after `bean-properties`, before `package-rename`. Shared surface
-  * (§1.5): implements `SurfacePolicy`/`MergeablePolicy`.
-  */
+  * every call site, reproducing sge's empirical convention. Getter-like (conservatively): no
+  * assignments/increments, no calls to non-nullary members; over-refuses, never under-refuses.
+  * Scope default `Only(Set.empty)` (§1(b), opposite of a retyping phase — this ADDS arity). Runs
+  * after `bean-properties`, before `package-rename`. `SurfacePolicy`/`MergeablePolicy`. */
 final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
     extends Phase, SurfacePolicy, MergeablePolicy, IdiomPhase, Rewrite, PolicyBound:
 

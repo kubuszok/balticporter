@@ -4,15 +4,10 @@ import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyRep
 import balticporter.tir.*
 
 /** Replaces a named method's body with ready-made Scala, keeping the rest of the class
-  * mechanically translated — the seam for "keep this class, replace these bodies" that
-  * `dropTypes`/`inject` (whole file) and `dropMethods` (removal only) cannot express. Runs as a
-  * phase so the replacement lands in the TIR before checks read it. Refuses constructors:
-  * `CtorFunnel` derives the primary constructor and replayable `super(args)` from bodies.
-  * CLAUDE.md §1(b): mechanism is universal, `bodies` is per-library policy; empty = no-op.
-  *
-  * @param bodies member key (`owner#name` or precise `owner#name(P1,P2)`) → Scala source spliced
-  *   verbatim at term position (block form for multi-statement); not type-checked by the engine.
-  */
+  * mechanically translated — the seam `dropTypes`/`inject`/`dropMethods` cannot express. Runs as a
+  * phase so the replacement lands in the TIR before checks read it. Refuses constructors
+  * (`CtorFunnel`'s job). CLAUDE.md §1(b): empty `bodies` = no-op. `bodies` keys `owner#name[(P1,P2)]`
+  * → Scala source spliced verbatim at term position, not type-checked by the engine. */
 final class MethodBodyTransform(val bodies: Map[String, String] = Map.empty)
     extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound:
   def name: String = "method-body-substitution"

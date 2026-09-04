@@ -4,24 +4,10 @@ import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource
 import balticporter.tir.*
 
 /** Moves the port out of the upstream namespace: rewrites the package prefix of every symbol the
-  * program itself declares, and, per type, moves one type at a time. CLAUDE.md §1(b): mechanism
-  * (longest-prefix-wins over `Symbol.fullName`, owned symbols only) is universal; the maps are
-  * per-port policy. Empty map = no-op.
-  *
-  * Four maps, one phase, because every one of them must run after every other phase and
-  * `runsAfter` cannot say "after everything": `renames` (upstream package prefix → port prefix),
-  * `typeRenames` (one type's FQN → new name), `subPackages` (one type's FQN → sub-package to nest
-  * under), `flattenNestedTypes` (nested type FQN promoted to top level). All four targets are
-  * written in the UPSTREAM namespace (§4.56), applied before this phase's own package rename.
-  *
-  * Renames SYMBOLS, not text — the TIR is symbol-resolved, so every reference moves by
-  * construction; trees and the xref stay keyed by `SymId`, untouched (flattening is the one
-  * exception, since promoting a type is a tree change no name rewrite can express). Only OWNED
-  * symbols move, decided structurally (climbing `owner` reaches a `program.units` symbol) — a bare
-  * prefix match would silently rewrite the stdlib. Cut only at `.`/`$`/`#` separators. Runs LAST;
-  * [[PackageRenameTransform.check]] verifies every prefix is unmatched afterward. Does not reach
-  * injected substitution sources, which carry their own package clause and no symbols.
-  */
+  * program itself declares. §1(b): mechanism (longest-prefix-wins, owned symbols only) is
+  * universal; the maps (`renames`/`typeRenames`/`subPackages`/`flattenNestedTypes`, all UPSTREAM
+  * namespace) are per-port policy. Renames SYMBOLS, not text, cut only at `.`/`$`/`#`. Runs LAST
+  * (`runsAfter` can't say "after everything"); `check` verifies afterward. */
 final class PackageRenameTransform(
     renames: Map[String, String] = Map.empty,
     /** upstream TYPE FQN → its name in the port: a dotted FQN, or a bare simple name to rename it
@@ -198,14 +184,10 @@ final class PackageRenameTransform(
   // -------------------------------------------------------------------------
 
   /** Which declarations a move puts on the wrong side of an access boundary Java gave them. A
-    * per-type rename (or flatten) can split two types that shared an access boundary — a package,
-    * or a top-level enclosure (JLS 6.6.1) — that a whole-package rename never could. Reports one
-    * row per broken declaration, both for a refusal and for a declared move's record (§8.7's
-    * qualifier derivation reads it). Java's package-private is not represented in this TIR at all
-    * (a no-modifier declaration flags identically to `public`), so [[restricted]] sees only the
-    * `protected` half. Each entry is judged alone, against the package renames plus itself, so the
-    * answer does not depend on which other entries were refused.
-    */
+    * per-type rename (or flatten) can split two types that shared a package or top-level enclosure
+    * (JLS 6.6.1) that a whole-package rename never could. Reports one row per broken declaration,
+    * for a refusal or a declared move's record. Java's package-private is unrepresented in this
+    * TIR, so [[restricted]] sees only the `protected` half. Each entry judged alone. */
   private def boundaryOf(program: Program, mv: Move): List[Widening] =
     val solo   = renames + (mv.key -> mv.emitted)
     val wasKey = renamed(mv.key, renames)

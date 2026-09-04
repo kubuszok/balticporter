@@ -2,15 +2,11 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** THE CLOSURE — which declarations must be able to supply the context, and where the closure stops.
-  *
-  * A DIRECTED reachability over five edge kinds (DESIGN.md §8.4): [[ContextNeed.Edge.Kind.Seed]] (a
-  * mapped static read), [[ContextNeed.Edge.Kind.Use]] (a call/reference to a threaded declaration),
-  * [[ContextNeed.Edge.Kind.Override]] (the whole override component, up and down),
-  * [[ContextNeed.Edge.Kind.Instantiate]] (`new C` and its subclasses), and
-  * [[ContextNeed.Edge.Kind.Capture]] (a nested body's need lands on its enclosing declaration).
-  * Computed once per holder and exposed via [[edges]] so a spec can pin the derivation itself.
-  */
+/** THE CLOSURE — which declarations must be able to supply the context, and where it stops. A
+  * DIRECTED reachability over five edge kinds (DESIGN.md §8.4): `Seed` (a mapped static read),
+  * `Use` (a call/reference to a threaded declaration), `Override` (the whole override component),
+  * `Instantiate` (`new C` and subclasses), `Capture` (a nested body's need lands on its
+  * enclosing declaration). Computed once per holder, exposed via [[edges]] for pinning. */
 final class ContextNeed(
     program: Program,
     graph: OverrideGraph,
@@ -108,13 +104,11 @@ final class ContextNeed(
               else Site.Boundary(s, "a field initialiser has no signature and `attach = method`")
             case _ => Site.Boundary(s, "it is outside any declaration")
 
-  /** an anonymous-class body → the DECLARATION it was WRITTEN INSIDE.
-    *
-    * The frontend interns an anonymous class with its enclosing CLASS as owner, losing the method,
-    * so the lexical home is read off the `New` node's usage site instead (whose `enclosing` is where
-    * it was written) rather than the owner chain (CLAUDE.md §3). The usage KIND is not consulted —
-    * `Xref.walkType` mislabels a generic constructor's `Instantiate` as `Tycon`. // ENGINE-LIMITS CT6
-    */
+  /** an anonymous-class body → the DECLARATION it was WRITTEN INSIDE. The frontend interns an
+    * anonymous class under its enclosing CLASS, losing the method — so the lexical home is read
+    * off the `New` node's usage site (`enclosing`) instead of the owner chain (CLAUDE.md §3). The
+    * usage KIND is not consulted — `Xref.walkType` mislabels a generic constructor's `Instantiate`
+    * as `Tycon` (`ENGINE-LIMITS.md` CT6). */
   private val anonHome: Map[SymId, SymId] =
     program.referenced.toList.flatMap(program.usages).collect {
       case Usage(_, n: Tree.New, enc) if n.anon.isDefined && enc != SymId.None =>
@@ -122,22 +116,18 @@ final class ContextNeed(
     }.toMap
 
   /** Is this usage of `c` a CONSTRUCTION of `c`? — reads the `New` NODE's constructed head rather
-    * than the recorded `UsageKind`, because `Xref.walkType`'s `AppliedType` arm mislabels a generic
-    * constructor's `Instantiate` as `Tycon`. A kind-blind "any usage at a `New` site" would also be
-    * wrong: `Cell` in `new Pool<Cell>()` is a TYPE ARGUMENT, not a construction. Off a `New`, the
-    * recorded kind is still the answer — `Tree.NewArray` has no constructed head to read.
-    * // ENGINE-LIMITS CT6
-    */
+    * than the recorded `UsageKind` (`Xref.walkType`'s `AppliedType` arm mislabels a generic
+    * constructor's `Instantiate` as `Tycon`, `ENGINE-LIMITS.md` CT6). A kind-blind "any usage at a
+    * `New` site" is also wrong: `Cell` in `new Pool<Cell>()` is a TYPE ARGUMENT. Off a `New`, the
+    * recorded kind is still the answer (`NewArray` has no constructed head). */
   private def instantiates(u: Usage, c: SymId): Boolean = u.site match
     case n: Tree.New => constructedBy(n) == c
     case _           => u.kind == UsageKind.Instantiate
 
   /** `C::new` IS a construction of `C`, which [[instantiates]] cannot answer: `Xref` records the
-    * reference's TYPE at the qualifier's `TypeTree` (`UsageKind.TypeRefPos`), a site every type
-    * mention shares, so the constructor's own symbol is read off the `MethodRef` node instead.
-    * Consulted by both the growth (impose the need) and [[constructedByProgram]] (stop warning that
-    * nothing constructs a class a factory reference builds). // ENGINE-LIMITS CT6
-    */
+    * reference's TYPE at the qualifier's `TypeTree`, a site every type mention shares, so the
+    * constructor's own symbol is read off the `MethodRef` node instead (`ENGINE-LIMITS.md` CT6).
+    * Consulted by both growth and [[constructedByProgram]] (stop warning about a factory-built class). */
   private def ctorRefUses(c: SymId): List[Usage] =
     ctorsOf(c).flatMap(program.usages).filter(_.site.isInstanceOf[Tree.MethodRef])
 
@@ -170,12 +160,10 @@ final class ContextNeed(
   // 2. the DEFERRED-INIT plan — read BEFORE the growth, because it creates seeds
   // -------------------------------------------------------------------------
 
-  /** the statics whose initialisation a `sites` policy asked to move out of an initialiser.
-    *
-    * The trigger is the POLICY, not a read: candidates come from the `sites` entries themselves
-    * (via [[boundSites]]), with the read-derived set kept beside them as a subset that also covers
-    * keys the binder refuses (`<clinit>`). // ENGINE-LIMITS CT6
-    */
+  /** the statics whose initialisation a `sites` policy asked to move out of an initialiser. The
+    * trigger is the POLICY, not a read: candidates come from the `sites` entries themselves (via
+    * [[boundSites]]), with the read-derived set kept beside them as a subset that also covers
+    * keys the binder refuses (`<clinit>`, `ENGINE-LIMITS.md` CT6). */
   val deferrals: List[Deferral] = lazyInitSubjects.flatMap(planDeferral)
 
   /** the deferred fields, as [[climb]] reads them. Derived from [[deferrals]] and therefore
@@ -227,13 +215,11 @@ final class ContextNeed(
       case _ => scala.None
     }
 
-  /** a STATIC FIELD CARRYING ITS OWN INITIALISER — the shape no read reaches.
-    *
-    * A static initialiser runs at class initialisation before anything could pass it a context, and
-    * names no mapped static, so the read-derived trigger never sees it. No `<clinit>` to strip here
-    * — the `ValDef` itself is what [[DeferredInit]] replaces, so the deferral's `clinit` is
-    * [[SymId.None]]. STATIC only: an instance field under `attach = class` is not a boundary.
-    */
+  /** a STATIC FIELD CARRYING ITS OWN INITIALISER — the shape no read reaches. A static initialiser
+    * runs at class initialisation before anything could pass a context, and names no mapped
+    * static, so the read-derived trigger never sees it. No `<clinit>` to strip — the `ValDef`
+    * itself is what [[DeferredInit]] replaces, so the deferral's `clinit` is `SymId.None`. STATIC
+    * only: an instance field under `attach = class` is not a boundary. */
   private def fromField(v: Tree.ValDef, key: String): List[Deferral] =
     if !program.symbolOf(v.symbol).exists(_.flags.isStatic) then Nil
     else v.rhs.filter(needsContext).map(rhs => Deferral(SymId.None, v.symbol, rhs, key)).toList
@@ -481,12 +467,10 @@ final class ContextNeed(
     }
 
   /** THE CT7 WARNING — a threaded class NOTHING IN THIS PROGRAM CONSTRUCTS, whose ancestry leaves
-    * the program (the shape a reflectively-instantiated test suite has). WARNS rather than refuses:
-    * the engine cannot distinguish a framework construction from an ordinary caller passing the
-    * given. Fires when no `Instantiate` edge reaches it (nor a constructed descendant) AND its
-    * ancestry has a declared ancestor, other than `java.lang.Object`, this program does not own.
-    * // ENGINE-LIMITS CT7
-    */
+    * the program (a reflectively-instantiated test suite's shape). WARNS rather than refuses: the
+    * engine cannot distinguish a framework construction from an ordinary caller. Fires when no
+    * `Instantiate` edge reaches it (nor a constructed descendant) AND an ancestor other than
+    * `java.lang.Object` is undeclared here (`ENGINE-LIMITS.md` CT7). */
   private def warnUnconstructed(c: SymId): Unit =
     if selfS(c) || constructedByProgram(c) then return
     val external = graph.externalAncestorsOf(c).filterNot(_ == JavaLangObject).sorted
@@ -498,13 +482,10 @@ final class ContextNeed(
         "that is what builds it, add a `selfSupplied` entry naming the expression that yields the " +
         "context", Decision.originOf(program, c), c))
 
-  /** Does anything THIS PROGRAM declares construct `c`, or a descendant of it?
-    *
-    * An ARRAY ALLOCATION is not a construction: `new Suite[8]` runs no constructor, so it is
-    * excluded here rather than in [[instantiates]] — that other caller (the threading closure)
-    * over-threads on the same edge, but fixing it there moves emitted signatures, a separate
-    * change. This one decides only whether a warning fires. // ENGINE-LIMITS CT7
-    */
+  /** Does anything THIS PROGRAM declares construct `c`, or a descendant of it? An ARRAY ALLOCATION
+    * is not a construction (`new Suite[8]` runs no constructor) — excluded here rather than in
+    * [[instantiates]], since fixing it there moves emitted signatures (a separate change). This
+    * one decides only whether a warning fires (`ENGINE-LIMITS.md` CT7). */
   private def constructedByProgram(c: SymId): Boolean =
     (c :: graph.descendantsOf(c)).exists(t =>
       program.usages(t).exists(u =>
@@ -697,13 +678,9 @@ object ContextNeed:
     case C(sym: SymId)
 
   /** One static whose initialisation moves out of an initialiser and onto first READ.
-    *
-    * @param clinit the class initialiser the assignment is removed from, or [[SymId.None]] when the
-    *               FIELD carried its own initialiser and there is nothing to strip
-    * @param field  the static being initialised — it becomes a `def` over a cache, taking the clause
-    * @param rhs    the initialiser expression, moved verbatim; its own reads are then threaded
-    * @param key    the `sites` entry that asked for this, verbatim — the string an agent edits
-    */
+    * @param clinit the class initialiser removed from, or `SymId.None` for a self-initialising
+    *   FIELD @param field the static being initialised — becomes a `def` over a cache @param rhs
+    *   the initialiser expression, moved verbatim @param key the `sites` entry that asked for this. */
   final case class Deferral(clinit: SymId, field: SymId, rhs: Term, key: String)
 
   /** one edge the closure took — exposed so a spec can pin the DERIVATION and not only its result. */

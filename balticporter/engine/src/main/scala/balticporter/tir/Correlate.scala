@@ -3,28 +3,10 @@ package balticporter.tir
 import java.nio.file.{Files, Path}
 
 /** Attribute a COMPILER ERROR or a TEST FAILURE over emitted Scala back to the member that
-  * produced it and to the Java it came from (DESIGN.md §6.3, CLAUDE.md §4.4). TWO LANES: scalac
-  * errors are joined to (member, java origin), classified as approximate-region or engine-gap; and
-  * because §4.4's Java forms translate to VALID Scala meaning something else and move no
-  * compile-error count, the same join runs over the TEST RUNNER's output, diffed run-over-run
-  * exactly as §5.3 diffs findings.
-  *
-  * A failing test is anchored by the first STACK FRAME landing in ported code, not by name, giving
-  * three qualities of answer the artifact states: `main-frame` (threw in the ported library, exact
-  * anchor), `test-frame` (threw at the assertion's caller — names where the failure was OBSERVED,
-  * not computed), and weaker fallbacks. The member-digest join narrows a test-frame answer's
-  * suspect set.
-  *
-  * EXPECTED FAILURES ARE DERIVED FIRST, DECLARED ONLY AS FALLBACK: a test whose failure stack
-  * reaches a dropped type fails because the port deliberately lacks it — `PortRun` writes those
-  * FQNs to `dropped-types.tsv` every run and [[locateTests]] classifies from them, in BOTH
-  * namespaces per drop ([[Dropped]]) since policy is upstream and the package rename runs last
-  * (§4.56). The DECLARED form (`expected-failures.tsv`) survives only as the explicit escape hatch
-  * for a failure no drop explains, kept APART from derived ([[Expected.derived]] says which
-  * classified a test) so a hand-maintained list cannot rot silently. A DECLARED expected failure
-  * that PASSES is reported too (news); a declared row may also carry `frame=<ported class>` so a
-  * NEW failure with a different cause in the same test counts UNEXPECTED rather than being
-  * silently absorbed ([[TestDiff.staleExpectations]]); the column is OPTIONAL for compatibility. */
+  * produced it and the Java it came from (DESIGN.md §6.3, CLAUDE.md §4.4). TWO LANES: scalac
+  * errors and test-runner output, both joined to (member, java origin), diffed run-over-run. A
+  * failing test anchors on the first STACK FRAME in ported code. EXPECTED FAILURES ARE DERIVED
+  * FIRST from `dropped-types.tsv`; `expected-failures.tsv` is the explicit fallback, kept APART. */
 object Correlate:
 
   // ===========================================================================

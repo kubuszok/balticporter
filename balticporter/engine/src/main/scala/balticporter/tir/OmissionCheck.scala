@@ -47,26 +47,21 @@ object OmissionCheck extends RemedySource:
   // -------------------------------------------------------------------------------------------
 
   /** THE PORT RAN MORE THAN JAVA DID, AND READ THE BODY — the one omission kind that is an
-    * ADDITION. `CtorFunnel` nominates one java constructor as scala's primary and its body becomes
-    * the class body, running on EVERY construction path, where java's non-delegating constructors
-    * ran disjoint bodies (refusing this measured 0 -> 41 errors, ENGINE-LIMITS C6/C7). Takes an
-    * accept because `CtorFunnel.Plans.promotionEscapes` is "deliberately NOT a purity question" —
-    * whether re-running is observable depends on facts only the port can read. NOT
-    * emission-affecting (the promoted body is already the class body; only the note moves). Keyed
-    * at the ESCAPING constructor, not the class — one type may have several escaping paths. */
+    * ADDITION. `CtorFunnel`'s promoted primary body runs on EVERY construction path where java's
+    * non-delegating constructors ran disjoint bodies (refusing this measured 0 -> 41 errors,
+    * `ENGINE-LIMITS.md` C6/C7). Takes an accept because whether re-running is observable depends
+    * on facts only the port can read. NOT emission-affecting. Keyed at the ESCAPING constructor. */
   val AcceptPromotedBody: Remedy = Remedy(
     id = "accept-promoted-body", lane = Name, kind = Kind.PromotedBodyEveryPath,
     emissionAffecting = false, fix = FixKind.Universal,
     what = "the port has READ the promoted constructor body and states that running it on this " +
       "path is not observable — the divergence C6 counts, examined")
 
-  /** THE ANNOTATION IS RIGHT TO LOSE HERE — the complement of `FrontendConfig.preservedAnnotations`.
+  /** THE ANNOTATION IS RIGHT TO LOSE HERE — complement of `FrontendConfig.preservedAnnotations`.
     * An argument-bearing java annotation the frontend could not carry is reported rather than
-    * emitted bare (`@A` where java wrote `@A(x)` is a different annotation). WHICH annotations are
-    * behaviour-bearing is a fact about a library, never about java (T16), so the two answers are
-    * `preservedAnnotations` (carry the family) or this (the drop is right here). TWO ids for one
-    * act since [[Remedy.subject]] is per-remedy and this lane's rows sit at both a TYPE symbol and
-    * a MEMBER symbol, which cannot collide (a bare FQN vs `owner#member`). NOT emission-affecting. */
+    * emitted bare (a different annotation). WHICH are behaviour-bearing is per-library (T16). TWO
+    * ids for one act since [[Remedy.subject]] is per-remedy and this lane's rows sit at both a
+    * TYPE and a MEMBER symbol. NOT emission-affecting. */
   val AcceptDroppedAnnotation: Remedy = Remedy(
     id = "accept-dropped-annotation", lane = Name, kind = Kind.DroppedAnnotation,
     emissionAffecting = false, fix = FixKind.Universal,
@@ -82,14 +77,10 @@ object OmissionCheck extends RemedySource:
       "meaning in scala — the complement of a `preservedAnnotations` family")
 
   /** THE MENU, AND WHAT IS DELIBERATELY NOT ON IT. Every other kind here is a LOSS with no site
-    * where reading it yields "this is fine" — an accept would drain a DEFECT rather than a
-    * question. Absent, each with what refused it: `super(args) dropped` (C3 — padding was measured
-    * and refused; use `inject`); `nilary constructor dropped` (C11 — all three delegation-keeping
-    * shapes measured worse); `Throwable(cause) message dropped` (a loss, as above);
-    * `anonymous-class member dropped` (T1's engine-gap residue); `lambda return with an unnameable
-    * result type` (a WORK ITEM, M6/I9 — accepting it would retire it silently). Pointers to
-    * existing spellings rather than new remedies (§5): carry the annotation via
-    * `FrontendConfig.preservedAnnotations`; supply the constructor via `Substitutions.inject`. */
+    * where reading it yields "this is fine" — an accept would drain a DEFECT, not a question.
+    * Absent: `super(args) dropped` (padding refused — use `inject`); `nilary ctor dropped` (all
+    * shapes measured worse); `Throwable(cause) dropped`; `anon-class member dropped`; a lambda's
+    * unnameable result type (a WORK ITEM). Pointers to existing spellings, not new remedies (§5). */
   def remedies: List[Remedy] =
     List(AcceptPromotedBody, AcceptDroppedAnnotation, AcceptDroppedTypeAnnotation)
 
@@ -161,11 +152,10 @@ object OmissionCheck extends RemedySource:
     out.toList
 
   /** A `return` inside a LAMBDA whose result type nothing in the program states — M6's refusal,
-    * NARROWED, turned into a number. Java's lambda body is a METHOD body and `return` leaves the
-    * lambda (JLS 15.27.2); scala's is an EXPRESSION, so TirEmitter interposes a nested `def`
-    * (JS-S21), which needs a RESULT TYPE from the SAM METHOD. What moves this row: a lambda a
-    * SOURCE wrote has no method anywhere in the program (javac inferred it from a class file);
-    * `SamLambdaTransform` supplies one for a converted anonymous class (I9). */
+    * NARROWED, turned into a number. Java's lambda body is a METHOD body (`return` leaves it, JLS
+    * 15.27.2); scala's is an EXPRESSION, so `TirEmitter` interposes a nested `def` (JS-S21) needing
+    * a RESULT TYPE from the SAM METHOD. A source-written lambda has none; `SamLambdaTransform`
+    * supplies one for a converted anonymous class (I9). */
   def unnameableLambdaReturn(program: Program): List[Finding] =
     unnameableLambdaReturn(program, program.units)
 
@@ -211,12 +201,10 @@ object OmissionCheck extends RemedySource:
     case p: Product                                          => p.productIterator.toList.flatMap(valuedReturns)
     case _                                                   => Nil
 
-  /** A Java secondary constructor whose `super(args)` cannot be expressed in Scala. Scala's
-    * secondary constructors must delegate to another constructor of the SAME class, so a leading
-    * `super(…)` becomes `this()` — CORRECT at no arguments, LOSSY otherwise. Derived from
+  /** A Java secondary constructor whose `super(args)` cannot be expressed in Scala — a leading
+    * `super(…)` becomes `this()`, CORRECT at no arguments, LOSSY otherwise. Derived from
     * [[CtorFunnel]]'s own decision so the two can never disagree: not reported where the
-    * constructor is promoted to primary (arguments EMITTED into `extends`), replayed, or carried
-    * by the funnel's delegation ([[CtorFunnel.Plans.superCall]]). Asked per CONSTRUCTOR. */
+    * constructor is promoted to primary, replayed, or carried by the funnel's own delegation. */
   def droppedSuperArgs(program: Program): List[Finding] = droppedSuperArgs(program, program.units)
 
   def droppedSuperArgs(program: Program, units: List[Tree.ClassDef],
@@ -239,13 +227,10 @@ object OmissionCheck extends RemedySource:
     }
 
   /** A parent-delegation inlining (`resolvedThroughParent`) was attempted and REFUSED for this
-    * constructor. The roots target different parent constructors that all delegate to one parent
-    * root, and inlining would resolve the super args, but the parent constructor's post-delegation
-    * body failed usability: a parameter used more than once with a non-simple caller argument
-    * (evaluating it twice differs from java's once), or the post-body holds `super.m()` / `return`.
-    *
-    * Reported on the same `omissions` lane as `droppedSuperArgs` so the refusal is a counted row
-    * with its guard named, not only an E134. */
+    * constructor — roots targeting different parent constructors that all delegate to one root,
+    * where inlining would resolve the super args but the parent's post-delegation body failed
+    * usability (a doubly-used non-simple argument, or a `super.m()`/`return`). Reported on
+    * `omissions` beside `droppedSuperArgs` so the refusal is a counted row, not only an `E134`. */
   def inlineDelegationRefused(program: Program): List[Finding] =
     inlineDelegationRefused(program, program.units)
 
@@ -263,17 +248,11 @@ object OmissionCheck extends RemedySource:
       }
     }
 
-  /** A `super(cause)` that reached the JDK's `Throwable(Throwable)` overload and whose MESSAGE that
-    * overload computes for itself could not be rebuilt.
-    *
-    * `Throwable(Throwable cause)` is `this(cause == null ? null : cause.toString(), cause)`, so the
-    * delegation has to name the cause in both slots — and a scala secondary constructor cannot bind
-    * a value before its `this(...)` call, so a cause the port cannot read twice is refused rather
-    * than evaluated twice. The ARGUMENTS are not lost here (the cause reaches its own slot, so
-    * [[droppedSuperArgs]] correctly says nothing); the message is, and that is invisible to a
-    * compile and to every other count — a runtime probe over the emitted `GdxRuntimeException` is
-    * what found it (CLAUDE.md §4.4). Derived from [[CtorFunnel.Plans.causeMessageLost]], the same
-    * function the emitter's refusal comes from, per CONSTRUCTOR. */
+  /** A `super(cause)` reaching JDK's `Throwable(Throwable)`, whose MESSAGE that overload computes
+    * could not be rebuilt (a scala secondary cannot bind a value before its `this(...)` call, so a
+    * cause read twice is refused rather than duplicated). ARGUMENTS are not lost
+    * ([[droppedSuperArgs]] says nothing); only the message is, invisible until a runtime probe
+    * finds it (§4.4). Derived from [[CtorFunnel.Plans.causeMessageLost]], per CONSTRUCTOR. */
   def droppedCauseMessages(program: Program): List[Finding] =
     droppedCauseMessages(program, program.units)
 
@@ -293,13 +272,10 @@ object OmissionCheck extends RemedySource:
     }
 
   /** A construction path on which the port runs the PROMOTED constructor's body and java ran
-    * nothing — the one omission in this file that is an ADDITION. CtorFunnel nominates one java
-    * constructor as scala's primary; a scala class body runs on every path, so two non-delegating
-    * java constructors that ran disjoint bodies now both run the promoted one's. Refusing the
-    * promotion was measured 0 -> 41 errors (ENGINE-LIMITS C6), so the emission stands and the
-    * divergence is COUNTED. Derived from [[CtorFunnel.Plans.promotionEscapes]], the same
-    * `Plan.primaryBody` the emitter inlines. Fix kind (a) at the promotion, not at
-    * `CtorFunnel.Plans.supersedes` (C6 again). */
+    * nothing — the one omission here that is an ADDITION. Two non-delegating java constructors
+    * that ran disjoint bodies now both run the promoted one's (refusing this measured 0 -> 41
+    * errors, `ENGINE-LIMITS.md` C6, so it stands and is COUNTED). Derived from
+    * [[CtorFunnel.Plans.promotionEscapes]], the same `Plan.primaryBody` the emitter inlines. */
   def promotedBodyOnEveryPath(program: Program): List[Finding] =
     promotedBodyOnEveryPath(program, program.units)
 
@@ -322,11 +298,9 @@ object OmissionCheck extends RemedySource:
 
   /** A NILARY java constructor the port does not emit, whose delegation DID something (e.g.
     * `BitmapFont()` delegating to a default-face constructor) — `new C()` then builds an empty
-    * object and NOTHING SAW IT (§4.4's shape exactly). The sibling case (a nilary delegation
-    * passing nothing) is not reported, since scala's implicit primary IS that constructor.
-    * [[CtorFunnel.delegationOnlyNilary]] is the same predicate the emitter drops with. Fix kind
-    * (a), a REFUSAL not a gap — [[CtorFunnel.Plans.droppedNilaryCtor]] records the alternatives
-    * measured worse; a port needing the behaviour writes it by hand (`inject`). */
+    * object and NOTHING SAW IT (§4.4's shape). Not reported for a nilary delegation passing
+    * nothing (scala's implicit primary IS that constructor). [[CtorFunnel.delegationOnlyNilary]]
+    * is the same predicate the emitter drops with — a REFUSAL, not a gap. */
   def droppedNilaryCtors(program: Program): List[Finding] =
     droppedNilaryCtors(program, program.units)
 
@@ -349,11 +323,9 @@ object OmissionCheck extends RemedySource:
 
   /** An enum CONSTANT whose arguments cannot be routed to the one primary a `case object` reaches.
     * With ONE java constructor the lowering is exact; with several it holds only where one is the
-    * ROOT and every other delegates to it with arguments not mentioning its own parameters
-    * ([[CtorFunnel.enumConstantArgs]], the same function the emitter renders from). Everything else
-    * is refused (several roots, an overload ambiguity T17 does not re-implement, a delegating
-    * constructor doing more than delegating). Replaces an earlier `ctors.head` shape that emitted
-    * an EMPTY primary and silently defaulted delegating constants (§4.4's shape). Fix kind (a). */
+    * ROOT and every delegator's arguments don't mention its own parameters
+    * ([[CtorFunnel.enumConstantArgs]]). Everything else is refused. Replaces an earlier `ctors.head`
+    * shape that silently defaulted delegating constants (§4.4). */
   def overloadedEnumCtors(program: Program): List[Finding] =
     overloadedEnumCtors(program, program.units)
 
@@ -376,13 +348,11 @@ object OmissionCheck extends RemedySource:
           }
       }
 
-  /** A java enum emitted WITHOUT `java.lang.Enum[X]` — the shape refusal, one row per enum. Java's
-    * enum IS a java.lang.Enum, and scala 3 offers that supertype only to the `enum` syntax; where
-    * a constant has a class body or a member name java.lang.Enum already made final, the port
-    * keeps the `sealed abstract class` shape instead, silently at the enum itself and loud only at
-    * some caller (possibly another module, §4.45). `EnumShape.refusal` is the emitter's own
-    * function. NO menu entry: a LOSS, not a question the engine declined to decide (§5). Fix kind
-    * (a). */
+  /** A java enum emitted WITHOUT `java.lang.Enum[X]` — the shape refusal, one row per enum. Scala
+    * 3 offers that supertype only to the `enum` syntax; where a constant has a class body or a
+    * member java.lang.Enum already made final, the port keeps the `sealed abstract class` shape
+    * instead — silent at the enum, loud only at some caller (§4.45). `EnumShape.refusal` is the
+    * emitter's own function. NO menu entry: a LOSS, not a declined question (§5). */
   def enumShapeRefusals(program: Program): List[Finding] =
     enumShapeRefusals(program, program.units)
 

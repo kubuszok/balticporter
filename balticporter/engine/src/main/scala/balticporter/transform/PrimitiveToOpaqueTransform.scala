@@ -4,29 +4,10 @@ import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyRep
 import balticporter.tir.*
 
 /** Retypes a semantically-tagged primitive to an `opaque type` (+companion) everywhere it flows,
-  * wrapping construction sites and unwrapping consumption sites (sge/ssg case: GL layer ids,
-  * key/button codes). Symbol-identity- and flow-driven, not textual:
-  *   1. hints — a small tagged-symbol seed set (`spec.hints`, or an agent-supplied `extraHints`
-  *      FQN after a failed compile, closing the loop).
-  *   2. detect — [[FlowPropagation]] grows the seeds along pure-move flows (assignment, `val`
-  *      init, `return`, argument passing); arithmetic breaks the chain and gets an unwrap instead.
-  *   3. retype + coerce — each seed's `info` becomes the opaque type, references retype via the
-  *      xref, coercions are inserted at every seed/primitive boundary.
-  *
-  * Everything a port says is in [[OpaqueSpec]] — CLAUDE.md §1(b) mechanism, §1(c) policy. Two
-  * instances in one pipeline compose (union of seeds) or the run fails on overlap
-  * ([[refuseOverlap]]) — one symbol cannot be two opaque types. Coercion reads the boundary through
-  * the DECLARATION, never a term node's `tpe`, descending carrier expressions (`if`, block tail,
-  * `match` arm) so a mixed-branch value is not missed. ENGINE-LIMITS §13 O1
-  * A retyped parameter moves its enclosing method's `MethodType` too, by position. ENGINE-LIMITS §13 O2
-  *
-  * The mint belongs to the ONE module that owns the declarations it was minted for — fenced by
-  * [[RunScope.emits]] (CLAUDE.md §1.5, synthesised declarations), read off the HINTS and never the
-  * grown seed set, since propagation can reach a dependent's own declarations. A dependent still
-  * retypes and coerces everywhere; only the object/type/apply/unwrap symbols stay phantom
-  * (`Program.owns` reports them external) and resolve against the owning module's emitted class.
-  * ENGINE-LIMITS §13 O5
-  */
+  * wrapping construction sites and unwrapping consumption sites. Seed from `spec.hints`/
+  * `extraHints`, grow via [[FlowPropagation]] (pure-move flows; arithmetic breaks the chain),
+  * retype+coerce at every boundary. Everything a port says is in [[OpaqueSpec]] (§1b mechanism,
+  * §1c policy). The mint belongs to the ONE module owning what it was minted for ([[RunScope.emits]]). */
 final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     extends Phase, Rewrite, PolicySource, MergeablePolicy, PolicyBound:
   def name = s"primitive->opaque:${spec.fqn}"
@@ -37,11 +18,9 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
   def accountedBy: Set[String] = Set(OpaqueBoundaryCheck.Name)
 
   /** This phase retypes under a [[RuleScope]], so two modules configuring it differently emit
-    * signatures that cannot compile together. Everything in the spec is rendered, sorted —
-    * `hints` (exact FQNs), the fence, the definition site, the primitive, `extraHints`, and the
-    * target FQN when `target = Existing` (empty segment when `target = Mint`, so §1(b)'s
-    * fingerprint no-op rule holds).
-    */
+    * signatures that cannot compile together. Everything in the spec is rendered, sorted — hints,
+    * fence, definition site, primitive, extraHints, target FQN when `Existing` (empty segment
+    * when `Mint`, so §1(b)'s fingerprint no-op rule holds). */
   def surfaceFingerprint: String =
     val seeds  = if spec.hints.isEmpty then "" else s";hints=${spec.hints.toList.sorted.mkString(",")}"
     val extras = if spec.extraHints.isEmpty then "" else s";extra=${spec.extraHints.toList.sorted.mkString(",")}"
@@ -341,13 +320,11 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
   private def mintsHere(p: Program, hints: Set[SymId]): Boolean =
     hints.exists(id => runScope.emits(unitOf(p, id)))
 
-  /** Fails the run when the spec's bound hints land in more than one module — a spec's `hints`
-    * predicate can match a field in both a base and a dependent, making both modules mint the same
-    * FQN. `PortRun.claimedSynthetic` cannot be relied on to catch this (it admits by default when
-    * no base map is published), so this phase refuses for itself, naming both sides. §1(c): the
-    * fix is in the port — `hints` names declarations of ONE module. Throws rather than finding,
-    * for [[refuseOverlap]]'s reason: there is no honest program to emit. ENGINE-LIMITS §13 O5
-    */
+  /** Fails the run when the spec's bound hints land in more than one module — `hints` can match a
+    * field in both a base and a dependent, making both mint the same FQN. `PortRun.claimedSynthetic`
+    * cannot catch this (admits by default with no published base map), so this phase refuses for
+    * itself, naming both sides. §1(c): the fix is `hints` naming declarations of ONE module.
+    * Throws, not a finding — there is no honest program to emit (`ENGINE-LIMITS.md` §13 O5). */
   private def refuseSpanningHints(p: Program, hints: Set[SymId]): Unit =
     def named(id: SymId): String = p.symbolOf(id).map(_.fullName).getOrElse(id.toString)
     val (here, elsewhere) = hints.toList.partition(id => runScope.emits(unitOf(p, id)))
@@ -376,12 +353,10 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
       case _                                            => id
 
   /** A hint the mechanism cannot reach, made loud. [[taggablePrim]] tests a symbol's own info, so
-    * a domain value sitting INSIDE a container (`int[] locations`) is invisible to seeding and
-    * propagation alike — an array element has no symbol. Reports the one case it can tell apart
-    * from a typo: a hint naming a real declaration whose type MENTIONS the primitive somewhere
-    * the mechanism cannot seed. `Malformed`, not `NeverMatched` — the key named something real.
-    * §1(a) ENGINE: a spec has no vocabulary for "the element of". ENGINE-LIMITS §13 O3
-    */
+    * a domain value INSIDE a container (`int[] locations`) is invisible to seeding — an array
+    * element has no symbol. Reports the one case tellable apart from a typo: a real declaration
+    * whose type MENTIONS the primitive somewhere the mechanism cannot seed. `Malformed`, not
+    * `NeverMatched`. §1(a): the spec has no vocabulary for "the element of" (`ENGINE-LIMITS.md` §13 O3). */
   private def reportUnreachable(program: Program, named: Iterable[Symbol]): Unit =
     given Program = program
     named.foreach { s =>
@@ -431,12 +406,10 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
       .flatMap(t => p.symbolOf(t.owner).map(_.fullName).orElse(Some(t.fullName)))
 
   /** Fails the run when this spec's seeds overlap another `PrimitiveToOpaqueTransform`'s. Without
-    * this, whichever instance runs second finds those symbols already retyped, declines them
-    * silently, and emits a port with half a domain type missing — no compile error, no count
-    * moved. Propagation is allowed to walk into a sibling's opaque type so the overlap is visible
-    * here, naming the symbol and both specs. Throws rather than a finding: there is no honest
-    * program to emit. CLAUDE.md §3
-    */
+    * this, whichever instance runs second finds those symbols already retyped, declines silently,
+    * and emits a port with half a domain type missing — no compile error, no count moved.
+    * Propagation is allowed to walk into a sibling's opaque type so the overlap is visible here.
+    * Throws, not a finding — there is no honest program to emit (CLAUDE.md §3). */
   private def refuseOverlap(p: Program): Unit =
     val clashes = seeds.toList.flatMap { id =>
       p.symbolOf(id).flatMap(s => foreignOpaque(p, s.info).map(other => (s.fullName, other)))

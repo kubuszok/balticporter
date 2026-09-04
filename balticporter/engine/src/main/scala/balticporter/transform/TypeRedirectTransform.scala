@@ -4,16 +4,11 @@ import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyRep
 import balticporter.tir.*
 
 
-/** Re-points every reference to one type at another, differently-named type, whole-or-none. Fills
-  * the gap a dependent module otherwise has no way to close: it cannot `inject` at a base's dropped
-  * FQN (one module per FQN) or un-drop it, so it supplies a shape-compatible type of its own — the
-  * target compiler is the gate on shape, never this phase. `memberRenames` renames a member's whole
-  * override component first (target may spell it differently, e.g. `dispose` -> `close`), against
-  * the pre-redirect graph, or the split hierarchy defeats whole-or-none (`TypeRedirectMemberRenameSpec`).
-  * `scopes` is per-entry (§1.5) since a base's whole-program redirect and a dependent's package-scoped
-  * one merge into one instance. CLAUDE.md §1(b); safe unordered unlike `PackageRenameTransform`
-  * since it leaves the original symbol resolvable.
-  */
+/** Re-points every reference to one type at another, differently-named type, whole-or-none — fills
+  * the gap a dependent has no other way to close (can't `inject` a base's dropped FQN twice). The
+  * target compiler is the gate on shape, never this phase. `memberRenames` renames the whole
+  * override component first, against the PRE-redirect graph. `scopes` is per-entry (§1.5). CLAUDE.md
+  * §1(b); safe unordered unlike `PackageRenameTransform` since the original symbol stays resolvable. */
 final class TypeRedirectTransform(
     val redirects: Map[String, String] = Map.empty,
     val memberRenames: Map[String, Map[String, String]] = Map.empty,
@@ -225,12 +220,10 @@ final class TypeRedirectTransform(
       bound.get(from).flatMap(_.toOption).map(_ -> from)
     }.toMap
 
-    // members move with the type. A never-parsed type reaches its statics through an explicit
-    // `Select(Ident(type), member)`, which `transformIdent` moves; a PARSED type is re-qualified by
-    // the emitter from the member symbol's OWNER (`staticThroughInstance`), undoing a qualifier-only
-    // rewrite silently — so a TWIN (same name/signature, owner = target) is minted instead of
-    // re-pointing the original's owner, which would detach it from its unit (§4.56) and break every
-    // "base's declarations, not mine" filter (D2).
+    // members move with the type. A never-parsed type reaches statics through an explicit
+    // `Select(Ident(type), member)`; a PARSED type is re-qualified from the member symbol's OWNER
+    // — so a TWIN (same name/signature, owner = target) is minted instead of re-pointing the
+    // original's owner, which would detach it from its unit (§4.56) and break "base's own" (D2).
     memberTwins = mapping.flatMap { (fromType, toType) =>
       // read both names from `table`, never `program` — a minted target is only in the former
       val fromFqn = table.get(fromType).map(_.fullName).getOrElse("")
@@ -416,14 +409,9 @@ final class TypeRedirectTransform(
 object TypeRedirectTransform:
 
   /** One declared member rename, parsed and bound.
-    *
-    * @param source the redirected type, as the policy spells it
-    * @param target what it is redirected TO — the type whose name for the member is being adopted
-    * @param entry  the bound member key (`owner#name`, or one overload), rendered from a `MemberKey`
-    * @param newName the target's name for it
-    * @param hits   every declaration the key named. The override CLOSURE of each is what actually
-    *               moves; this is only what the key itself pointed at.
-    */
+    * @param source the redirected type @param target what it redirects TO @param entry the bound
+    * member key (`owner#name`) @param newName the target's name for it @param hits every
+    * declaration the key named — the override CLOSURE of each actually moves. */
   final case class Rename(source: String, target: String, entry: String, newName: String,
                           hits: List[SymId]):
     /** The string an agent edits — the `Reason.Configured` key and refusal-report id (§4.575). */

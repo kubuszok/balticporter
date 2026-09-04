@@ -68,17 +68,10 @@ object JdkSurfaceCheck extends RemedySource:
           "refusal — it is the reason not to look."
       case _ => ""
 
-  /** A deliberate non-translation, with its reason and its citation.
-    *
-    * ==Check data, not a decision==
-    * `decisions.tsv` records what changed an emitted DECLARATION (§5.1's altitude rule), and a kept
-    * JDK call changes no declaration at all: it is a fact about the SURFACE, which is what a check
-    * table is for. None of `Decision.Kind`'s cases fits an external member, and inventing one would
-    * put a row in every port's provenance artifact for something the port did not do.
-    *
-    * ==An UNCITED refusal is not a refusal==
-    * `cite` is required because the value of this table is entirely in being followed: a `why`
-    * with no pointer is the doc comment these entries came from, one indirection further away. */
+  /** A deliberate non-translation, with its reason and its citation. Check data, not a decision:
+    * `decisions.tsv` records what changed an emitted DECLARATION, and a kept JDK call changes no
+    * declaration — this is a fact about the SURFACE. `cite` is required because this table's value
+    * is entirely in being followed: a `why` with no pointer is the doc comment one step removed. */
   final case class Refusal(api: String, why: String, cite: String):
     /** matches a member key (`owner#name`) exactly. */
     def matches(member: String): Boolean = member == api
@@ -103,11 +96,9 @@ object JdkSurfaceCheck extends RemedySource:
     * SHARED SURFACE, so their home is the manifest (§1.5's inherited column), not a conf key. */
   val Refusals: List[Refusal] = List(
     // `Collections#unmodifiableList`/`Set`/`Map` and `Collectors#toSet`/`toMap` stood here and are
-    // GONE, removed by the STALE-REFUSAL guard rather than by anyone remembering: all five are now
-    // rewritten (ENGINE-LIMITS K6). Their citations said "no read-only view exists to map onto" and
-    // "the target type cannot be guessed", and the first was a claim about the STDLIB that stopped
-    // being true the moment the runtime supplied the view. A refusal that outlives its reason is a
-    // finding that sends its reader to a wall which is not there (§4.45).
+    // GONE, removed by the STALE-REFUSAL guard: all five are now rewritten (`ENGINE-LIMITS.md` K6).
+    // Their citation was a claim about the STDLIB that stopped being true once the runtime
+    // supplied the view — a refusal outliving its reason sends its reader to a wall not there (§4.45).
     Refusal("java.util.Map$Entry#setValue",
       "a `java.util.Map.Entry` becomes a `Tuple2`, which has no write-through to the map. A " +
         "`setValue` must fail to COMPILE rather than be turned into a write to a detached copy",
@@ -115,33 +106,11 @@ object JdkSurfaceCheck extends RemedySource:
     Refusal("java.util.Map.Entry#setValue",
       "the dotted spelling of the same member, for a frontend that names nested types with `.`",
       "CollectionsTransform.rewrite, the `entrySet` arm"),
-    // `java.util.List#listIterator` STOOD HERE and is GONE, removed by the STALE-REFUSAL guard for
-    // the reason the five above it went: its text was a claim about `scala.collection.Iterator`
-    // ("forward-only and read-only") and never about the RECEIVER, which is a `mutable.Buffer` with
-    // indexed read, indexed update, insert and remove — `ListIterator`'s whole contract. §4.5's own
-    // answer applies (`JavaListIterator`, a standalone shim writing THROUGH the buffer), so this is
-    // now a `mapped` row. `ENGINE-LIMITS.md` K23.
-    //
-    // …and its SIBLING went the SAME WAY at wave 16, for the third time the same reading did it:
-    // `java.util.List#spliterator` and `java.util.Set#spliterator` STOOD HERE and are GONE. The
-    // refusal was exact about the PROTOCOL — a `Spliterator` is a parallel decomposition whose only
-    // consumer is `java.util.stream`, which this phase collapses — and that is not what the SITE
-    // asked. What it rested on in practice was the NEAR MISS its own text names: `buf.asJava`
-    // yields a wrapper whose `spliterator()` reports NEITHER `ORDERED` nor `SIZED`. That is a
-    // statement about `asJava`, not about the receiver, and java's own answer is written down: the
-    // member is a DEFAULT METHOD re-declared at three owners with three characteristic sets
-    // (`Collection` passes `0`, `List` `ORDERED`, `Set` `DISTINCT`, and
-    // `Spliterators.spliterator` ORs in `SIZED | SUBSIZED` for all three). The owner a call
-    // resolved at is the receiver's KIND, which `rewrite` is already keyed on — so the emission
-    // reproduces java's declaration at that owner and nothing about streams is modelled.
-    // `ENGINE-LIMITS.md` K23.
-    //
-    // `Collection` STAYS, and the asymmetry is now the other way round from what it was: a receiver
-    // this phase left as the `JavaCollection` SHIM carries java's own names and arity and is skipped
-    // by `rewrite`'s blanket shim guard before any arm, so there is no mapped kind to reproduce a
-    // default at. Keyed here for `Map$Entry#setValue`'s reason — a refusal is spelled at the owner
-    // the call resolves at, and keyed at `Collection` alone every `List`-typed receiver in the
-    // corpus once read as `unhandled` and met a wall instead of this sentence.
+    // `java.util.List#listIterator`/`spliterator` and `Set#spliterator` stood here and are GONE
+    // (STALE-REFUSAL guard, `ENGINE-LIMITS.md` K23) — the refusal was about the WRAPPER's reported
+    // characteristics, not the receiver; java declares `spliterator()` a default method per owner.
+    // `Collection` STAYS: a `JavaCollection` shim receiver is skipped by `rewrite`'s blanket guard,
+    // so this is keyed at `Collection` alone, or a `List` receiver falls through to an unhandled wall.
     Refusal("java.util.Collection#spliterator", SpliteratorWhy,
       "ENGINE-LIMITS.md K23; CollectionsTransform.rewrite skips a shim receiver before any arm"),
   )
@@ -152,15 +121,11 @@ object JdkSurfaceCheck extends RemedySource:
   /** the member NAME a constructor is interned under — see [[Mapping.constructors]]. */
   val Constructor = "<init>"
 
-  /** What a retyping phase DID, as data the check reads — never re-derived here.
-    *
-    * `ran` is the difference between a demand and an offer: with the phase in the pipeline an
-    * unhandled member on a retyped owner is a hole the phase MADE, and is a finding; with the phase
-    * absent the same member is untouched JDK code the port chose to keep, and the row says only
-    * that a mapping exists if the port wants it.
-    *
-    * The empty value makes the whole check a report of `Kept` rows plus K9 — the §1(b) discipline
-    * that an empty parameter is a no-op, applied to a check. */
+  /** What a retyping phase DID, as data the check reads — never re-derived here. `ran` is the
+    * difference between a demand and an offer: with the phase in the pipeline an unhandled member
+    * on a retyped owner is a hole the phase MADE (a finding); absent, it's untouched JDK code the
+    * port chose to keep. The empty value makes the check a report of `Kept` rows plus K9 — §1(b)'s
+    * discipline applied to a check. */
   final case class Mapping(
       phase: String,
       ran: Boolean,
@@ -175,18 +140,11 @@ object JdkSurfaceCheck extends RemedySource:
       /** the FQN of the iterable shim, whose `foreach` extension is what makes an enhanced-for
         * work — K9's "covered by the shipped iterable shim" half */
       iterableShim: Option[String],
-      /** does the phase rewrite `new` on every type it retypes?
-        *
-        * A CONSTRUCTOR is not a member call and cannot be in a member table: retyping the type IS
-        * the rewrite for `new`, and the arity correspondence between the java constructor and the
-        * scala one is the phase's own business (ENGINE-LIMITS K11 is exactly that correspondence
-        * failing and being fixed). Without this the check reports `java.util.HashMap#<init>()` as a
-        * hole at every port that constructs one, while the emitted line reads
-        * `new scala.collection.mutable.HashMap()` and calls nothing java at all — 18 such rows on
-        * the first run, in front of the `clear`/`contains` rows that are the real work list.
-        *
-        * `false` — [[noMapping]]'s value — leaves a constructor classified like any other member, so
-        * a phase that retypes without touching `new` is reported rather than assumed. */
+      /** does the phase rewrite `new` on every type it retypes? A CONSTRUCTOR is not a member
+        * call: retyping the type IS the rewrite for `new`, and arity correspondence is the phase's
+        * own business (`ENGINE-LIMITS.md` K11). Without this the check reports every `new
+        * HashMap()` as a hole (18 such rows measured). `false` leaves a constructor classified
+        * like any other member, so a phase that retypes without touching `new` is reported. */
       constructors: Boolean = false,
   ):
     def handles(owner: String, name: String, kind: String): Boolean =
@@ -206,61 +164,11 @@ object JdkSurfaceCheck extends RemedySource:
   // THE MENU (`DESIGN.md` §8.16) — what a port may ASK FOR at one of these rows
   // -------------------------------------------------------------------------------------------
 
-  /** THE EMITTED CALL IS RIGHT AS IT STANDS — the port read this JDK member and states so.
-    *
-    * ==What an `Unhandled` row actually claims, and why only the port can settle it==
-    * It claims the phase has no ENTRY for this member, and it explicitly does NOT claim the emitted
-    * call is broken (see the class doc): a `java.util.List#indexOf` on a `mutable.Buffer` survives
-    * because scala happens to spell the member the same way, and a `java.util.Arrays#fill(float[],
-    * float)` on a `scala.Array[Float]` survives because the two are one JVM type. That is coverage
-    * by COINCIDENCE — nothing recorded it, nothing would notice it changing — which is exactly why
-    * the row exists and exactly why it cannot be closed from inside the engine: whether the
-    * coincidence is one this port relies on is a reading of the call, not of a table.
-    *
-    * So this is the third answer beside the two the classification already names — add the mapping,
-    * or record a cited [[Refusal]] — and it is the one neither of them can express, because both of
-    * those are statements the ENGINE makes about every port at once. A `Refusal` says *no
-    * translation exists, here is the citation*; this says *this port emits this call against the JDK
-    * on purpose*. Filed as an engine refusal instead, one port's reading would silence the row for
-    * all fifteen.
-    *
-    * ==Keyed at the EXTERNAL CALLEE==
-    * A `jdk-surface` row's subject is the MEMBER (one member, however many call sites) and never the
-    * declaration that happened to call it first — the class doc says why. So the thing a port has an
-    * opinion about is the callee, `Remedy.Subject.ExternalMember` binds it, and the key a port writes
-    * is the finding's own subject column verbatim: `java.util.Arrays#fill(float[],float)`. An
-    * `Ownership.Owned` binding would refuse every one of them as `ExternalOnly`.
-    *
-    * ==NOT emission-affecting==
-    * The call is emitted as it already was; only the porter note follows, and an external member has
-    * no emitted declaration for one to sit above, so in practice the selection changes not one byte
-    * (`PortRun.declaredSymbols` excludes it from note coverage deliberately). Two modules choosing
-    * differently therefore cannot produce two ports that fail to compile together (§1.5) — and one
-    * of them is genuinely likely, since a base and a dependent may call the same JDK member and only
-    * one of them may have read it.
-    *
-    * ==What is NOT on this menu==
-    *   - '''`kept-iterable`''' (K9) — ABSENT. The emitted `for (x <- xs)` asks a kept
-    *     `java.util.List` for a `foreach` it does not have, so the row stands for a compile error
-    *     that is really there (noise4j's two errors ARE these two rows). An accept would be the port
-    *     stating that an uncompilable emission is correct, which no reading of a site can support.
-    *     The fix K9 specifies is a phase with an EMPTY default that rewrites a declared set of kept
-    *     iterables to the iterator protocol, and it is unbuilt — a row whose answer is a mechanism
-    *     nobody has written is a work item, and accepting a work item retires it silently;
-    *   - '''`stale-refusal`''' — ABSENT. It reports that [[Refusals]] and a phase table CONTRADICT
-    *     each other, which is a fact about the engine and about no port. Accepting it would preserve
-    *     the exact thing the guard exists to remove: "a refusal that names a case the code handles is
-    *     worse than no refusal — it is the reason not to look."
-    *
-    * ==Pointers — acts that already have a spelling (`CLAUDE.md` §5's ONE POLICY, ONE SPELLING)==
-    *   - retarget the member's OWNER at a type the port can use → `CollectionsTransform(retarget)`;
-    *   - hold the calling declaration back so its receiver keeps the JDK type →
-    *     `CollectionsTransform(scope)`. RULED OUT as a general answer besides:
-    *     scope-as-residue-reduction measured `27 -> 47` errors scoped and `27 -> 51` off
-    *     (`ENGINE-LIMITS.md` K16);
-    *   - the mapping itself and the cited refusal beside it are ENGINE edits — the phase's
-    *     static/instance tables and [[Refusals]] — with no manifest key, which is why neither
-    *     competes with this entry. */
+  /** THE EMITTED CALL IS RIGHT AS IT STANDS — the port read this JDK member and states so. An
+    * `Unhandled` row claims the phase has no entry, NOT that the emission is broken (coverage may
+    * be by COINCIDENCE) — a reading only the port can settle. Keyed at the EXTERNAL CALLEE
+    * (`Remedy.Subject.ExternalMember`). NOT emission-affecting. `kept-iterable`/`stale-refusal`
+    * are deliberately NOT on this menu (would silence a real defect or the guard's own signal). */
   val AcceptJdkMember: Remedy = Remedy(
     // …the kind read off the DISPOSITION's own `label`, never a literal: that is the string a
     // `findings.tsv` row carries and the string `resolved` matches through, and three spellings of
@@ -350,30 +258,10 @@ object JdkSurfaceCheck extends RemedySource:
             else Disposition.Kept
 
   /** ENGINE-LIMITS K9 as a DERIVED demand: an enhanced-for whose receiver the pipeline LEFT in the
-    * JDK namespace.
-    *
-    * ==It reads the POST-PIPELINE type, which is stronger than reading a table==
-    * The obvious spelling — "the receiver's java type is absent from the phase's `typeMap`" — is
-    * the wrong side of the mapping and gets both directions wrong. A port that declares the phase
-    * but SCOPES this declaration out (`RuleScope`) keeps a real `java.util.List`, which the table
-    * says is mapped; a port with no phase at all keeps the same type, which the table also says is
-    * mapped. Asking the NODE instead answers both: whatever any phase intended, the type standing
-    * in the receiver slot when emission begins is the type the emitted `for (x <- xs)` will be
-    * applied to. That is §4.56's rule at its strongest — the conclusion comes from what the phase
-    * actually did to this expression, not from a table lookup and never from the type's name.
-    *
-    * `retypedTo` is therefore a guard against ONE thing only: a phase whose target is itself a
-    * `java.*` type (a `LinkedList` → `ArrayDeque` style remap). Every target the engine ships today
-    * is a `scala.*` or a `balticporter.runtime.*` type, so the set is empty in practice and the
-    * guard costs nothing — but a check that would silently mis-report the day such a mapping is
-    * added is not a check.
-    *
-    * Per SITE, not per member: the repair is per loop and each one is a distinct emission that will
-    * not compile, where a missing mapping is one table entry however many call sites it has.
-    *
-    * An OWNED receiver is not this check's business — the port emits that type and whatever
-    * `foreach` it has, and a dependent's program owns its base's types too (D2) — and neither is an
-    * ARRAY, which is not a `TypeRef` at all and which Scala iterates natively. */
+    * JDK namespace. Reads the POST-PIPELINE type, not a `typeMap` lookup — a scoped-out or
+    * phase-less port both keep a real `java.util.List` that a table would call mapped either way
+    * (§4.56's rule at its strongest). `retypedTo` guards only against a phase whose target is
+    * itself `java.*` (empty today). Per SITE, not per member. An OWNED receiver or ARRAY is out of scope. */
   private def keptIterables(program: Program, units: List[Tree.ClassDef], m: Mapping): List[Finding] =
     given Program = program
     val retypedTo = m.types.values.map(_._1).toSet ++ m.iterableShim

@@ -4,19 +4,10 @@ import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource
 import balticporter.tir.*
 
 /** Replaces a CALL with ready-made Scala naming the call's own receiver and arguments — the
-  * call-level twin of [[MethodBodyTransform]], for the shape neither `dropMethods`/`inject` nor
-  * `MethodBodyTransform` can express: keep this method, rewrite one call inside it. ENGINE-LIMITS D7
-  *
-  * A key is a [[MemberKey]] naming the resolved callee (must be exact — a bare `owner#name` key is
-  * `Ambiguous` over multiple overloads, since one positional template can only fit one arity); the
-  * value is an expression template with `{recv}`, `{arg0}`…`{argN}` (callee parameter positions,
-  * not java call-token positions), `{{`/`}}` for a literal brace. Parsed once at bind time; spliced
-  * as a [[Tree.Opaque]] over terms, never a string. CLAUDE.md §1(b): mechanism is universal, `calls`
-  * is per-library policy; empty = no-op. Every refusal (vararg spread, wrong arity, missing
-  * receiver, method-value reference) is counted, not approximated.
-  *
-  * @param calls resolved-callee member key → the expression template to replace each call with.
-  */
+  * call-level twin of [[MethodBodyTransform]] (`ENGINE-LIMITS.md` D7). A key is a [[MemberKey]]
+  * naming the resolved callee (exact — else arity-ambiguous); the value is a template with
+  * `{recv}`, `{arg0}`…`{argN}`, `{{`/`}}`, parsed once, spliced as a [[Tree.Opaque]] over terms.
+  * §1(b): mechanism universal, `calls` per-library; every refusal counted, not approximated. */
 final class CallSiteSubstitutionTransform(calls: Map[String, String] = Map.empty)
     extends Phase, PolicySource, SurfacePolicy, PolicyBound:
   def name: String = "call-site-substitution"
@@ -257,14 +248,10 @@ object CallSiteSubstitutionTransform:
 
   object Template:
 
-    /** Parse a template, or say precisely what is wrong with it. The grammar is deliberately
-      * tiny and anything outside it is refused rather than carried through as literal text — a
-      * lenient parse would emit `{arg0}` into the output as a compile error nobody can attribute.
-      *
-      *   - `{recv}`            the call's receiver
-      *   - `{arg0}` … `{argN}` its arguments, positionally
-      *   - `{{` and `}}`       a literal `{` and `}`
-      */
+    /** Parse a template, or say precisely what is wrong with it. Tiny grammar, refused outside it
+      * rather than carried through as literal text — a lenient parse would emit `{arg0}` as an
+      * unattributable compile error. `{recv}` the receiver; `{arg0}`…`{argN}` positional
+      * arguments; `{{`/`}}` a literal brace. */
     def parse(text: String): Either[String, Template] =
       val parts = List.newBuilder[String]
       val holes = List.newBuilder[Hole]

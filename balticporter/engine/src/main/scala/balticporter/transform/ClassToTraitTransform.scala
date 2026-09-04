@@ -4,14 +4,9 @@ import balticporter.core.{MergeablePolicy, SurfacePolicy}
 import balticporter.tir.*
 
 /** Rewrite a nominated abstract class into a trait and transform every subclass (named and
-  * anonymous) to use `override val` members instead of constructor arguments.
-  *
-  * The nominated type's own `ClassDef` is rewritten in the TIR — constructors removed, mapped
-  * parameters become abstract `val` members, `isTrait` set — even though emission may drop it in
-  * favour of an injected file, so the `CtorFunnel` sees a parent with no constructor to replay.
-  *
-  * CLAUDE.md §1(b). Empty specs = no-op.
-  */
+  * anonymous) to use `override val` members instead of constructor arguments. The nominated
+  * type's `ClassDef` is rewritten in the TIR even when emission drops it (injected file), so
+  * `CtorFunnel` sees a parent with no constructor to replay. CLAUDE.md §1(b). Empty specs = no-op. */
 final class ClassToTraitTransform(
     val specs: Map[String, List[ClassToTraitTransform.ParamMapping]] = Map.empty,
 ) extends Phase, SurfacePolicy, MergeablePolicy:
@@ -365,11 +360,9 @@ final class ClassToTraitTransform(
 
 
   /** Fix a RAW `new Pool[?](a,b) { ... }.asInstanceOf[Pool[T]]`: the `New` node's `tpt` carries
-    * wildcards (`AppliedType(Pool, [TypeBounds])`), making the anonymous class `Pool[Nothing]` and
-    * every abstract member unreachable, while the `Typed` wrapper carries the real type argument.
-    *
-    * Replaces the wildcard args with the `Typed` target's concrete ones, narrows `Object`-returning
-    * overrides to that argument, and drops the `Typed` wrapper. */
+    * wildcards, making the anonymous class `Pool[Nothing]` and every abstract member unreachable,
+    * while the `Typed` wrapper carries the real type argument. Replaces the wildcard args with the
+    * `Typed` target's concrete ones, narrows `Object`-returning overrides, drops the wrapper. */
   override def transformTerm(t: Term)(using program: Program): Term =
     if resolved.isEmpty then return t
     t match

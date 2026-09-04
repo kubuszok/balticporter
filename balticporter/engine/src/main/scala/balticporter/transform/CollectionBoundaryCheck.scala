@@ -5,33 +5,20 @@ import balticporter.core.RuntimeArtifact
 import balticporter.tir.*
 
 /** The JDK/Scala collection BOUNDARY, counted — every slot the retyping opened and did not close.
-  *
   * `CollectionsTransform` retypes signatures while JDK types the mapping does not cover stay put,
-  * so a `Found: … / Required: …` reaches the compiler with no §1 classification (CLAUDE.md §4.45).
-  * This counts it first, as a triaged finding, over the same four slot kinds `coerce` reaches — a
-  * call ARGUMENT, a `val`/field DECLARATION, an ASSIGNMENT, a `return` — plus one they cannot
-  * express: an argument to a call on a SCOPED-OUT receiver, whose formal is unknown ([[check]]'s
-  * `onScopedReceiver`). A slot is STRANDED when its two sides fall on opposite sides of one of
-  * THREE lines the phase itself drew (JDK/retyped, shim/scala, scoped-out/rewritten) — never from
-  * a wrap `coerce` inserted, which retypes the slot to agreement by construction.
-  *
-  * §1(a) in mechanism, parameterised by the mapping: an empty mapping is a no-op by arithmetic.
-  */
+  * so a `Found/Required` error reaches the compiler with no §1 classification (§4.45). Counts the
+  * same four slot kinds `coerce` reaches, plus a call on a SCOPED-OUT receiver. STRANDED when the
+  * two sides fall on opposite sides of a line the phase itself drew. §1(a), an empty mapping is a no-op. */
 object CollectionBoundaryCheck extends RemedySource:
 
   /** The check's name in `findings.tsv`. */
   val Name = "collection-boundary"
 
-  /** THE MENU — see [[balticporter.tir.Remedy]] and `DESIGN.md` §8.16.
-    *
-    * Two entries, both `accept`-shaped, both at an EXTERNAL callee — the ONE-SPELLING rule rules
-    * out the rest: `UnmappedSubtype` and `ScopedOut` already have a manifest key (`typeMap`/`scope`
-    * — the latter also RULED OUT as a general residue reduction, K16), and `OpaqueEgress`'s wrap is
-    * `reflectiveSinks`. `wrap-at-seam` and `copy-detach` are ABSENT rather than unspelled: a row
-    * here only exists where the phase found no factory (K2.5) or a copy would silently detach both
-    * directions (K15). `InexpressibleParent`/`ReifiedOccurrence` are known divergences the engine
-    * refuses to repair (K5.7, K18), not review lists an `accept` could drain.
-    */
+  /** THE MENU — see [[balticporter.tir.Remedy]] and `DESIGN.md` §8.16. Two entries, both
+    * `accept`-shaped, at an EXTERNAL callee (ONE-SPELLING rules out the rest: `UnmappedSubtype`/
+    * `ScopedOut` already have a manifest key). `wrap-at-seam`/`copy-detach` are ABSENT, not
+    * unspelled (no factory found, or a copy would detach both directions).
+    * `InexpressibleParent`/`ReifiedOccurrence` are known divergences the engine refuses to repair. */
   def remedies: List[Remedy] = List(
     Remedy(
       id = "accept-external-callee", lane = Name, kind = Issue.ExternalCallee.toString,
@@ -249,11 +236,10 @@ object CollectionBoundaryCheck extends RemedySource:
     case Jdk, Shim, Scala, Universal, Other
 
   /** which side of the boundary a type is on, decided from the MAPPING's own targets wherever a
-    * choice exists. The shim side is `targets` restricted to the runtime package, not a hardcoded
-    * list, so a fourth shim widens this with nothing to edit; the scala side is decided by PACKAGE
-    * since the phase also mints `scala.collection.Set`/`Buffer` types outside `typeMap`.
-    * `Universal` (`java.lang.Object`) is its own side, not `Other`: a retyped value CONFORMS there,
-    * producing no compile error, while the callee behind it may see a value java never handed it. */
+    * choice exists. Shim side is `targets` restricted to the runtime package; scala side is
+    * decided by PACKAGE since the phase also mints types outside `typeMap`. `Universal`
+    * (`java.lang.Object`) is its own side, not `Other`: it CONFORMS with no compile error, though
+    * the callee behind it may see a value java never handed it. */
   private def sideOf(fqn: String, shims: Set[String]): Side =
     if shims.contains(fqn) then Side.Shim
     else if fqn.startsWith("scala.collection.") then Side.Scala
@@ -363,12 +349,10 @@ object CollectionBoundaryCheck extends RemedySource:
         t
 
       /** The scope seam the four slot kinds CANNOT reach: an argument whose FORMAL is unknown. A
-        * call on a scoped-out declaration binds to the JDK's own API — `b.raw.addAll(mine)` where
-        * `raw` kept its `java.util.List` — and `addAll` is an EXTERNAL symbol with no interned
-        * signature, so the arm above skips it entirely. So the JDK's own contract stands in,
-        * licensed only where the receiver resolves THROUGH A SCOPED-OUT DECLARATION (never the
-        * node's own, position-blind-retyped type) to a mapped type. Gated on
-        * `scopedOut`/`classFileOverrides`, so a run holding nothing back cannot reach this at all. */
+        * call on a scoped-out declaration binds to the JDK's own API (`b.raw.addAll(mine)`), an
+        * EXTERNAL symbol with no interned signature, so the arm above skips it. The JDK contract
+        * stands in, licensed only where the receiver resolves THROUGH A SCOPED-OUT DECLARATION.
+        * Gated on `scopedOut`/`classFileOverrides`, so a run holding nothing back can't reach this. */
       private def onScopedReceiver(t: Tree.Apply)(using Program): Unit = t.fun match
         case Tree.Select(recv, _, _, _) =>
           val (recvT, recvHeld) = actualOf(recv)
@@ -405,11 +389,9 @@ object CollectionBoundaryCheck extends RemedySource:
     out.toList
 
   /** every `return` that belongs to THIS method — the same DELIBERATELY BOUNDED walk
-    * `CollectionsTransform.coerceReturns` performs. A `return` inside a lambda, an anonymous
-    * class's method or a local class returns from THAT, so comparing it against the enclosing
-    * method's declared type would be a WRONG finding — only statement-carrying node kinds are
-    * followed, and the default arm does NOT descend, making a node kind added later a MISSED
-    * finding rather than a wrong one. Pinned against `CollectionsTransform.coerceReturns` by spec. */
+    * `CollectionsTransform.coerceReturns` performs. A `return` inside a lambda/anon class/local
+    * class returns from THAT; the default arm does NOT descend, making a later node kind a MISSED
+    * finding rather than a wrong one. Pinned against `coerceReturns` by spec. */
   def returnsIn(t: Term): List[Tree.Return] = t match
     case x: Tree.Return       => List(x)
     case x: Tree.Block        => x.stats.collect { case s: Term => returnsIn(s) }.flatten ++ returnsIn(x.expr)

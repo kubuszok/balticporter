@@ -3,12 +3,9 @@ package balticporter.transform
 import balticporter.tir.{CheckReport, Origin}
 
 /** Counts java `public` fields a reflective framework cannot see once emitted as private scala
-  * members. `ENGINE-LIMITS.md` K21 face 2
-  *
-  * [[Issue.NameTaken]]: seam from this phase's own scope. [[Issue.Unexposed]]: review list of
-  * java-public-field types not yet scoped. [[Issue.NameUnreachable]]: name unreachable via
-  * `decapitalize`. Recorded only when the phase ran.
-  */
+  * members (`ENGINE-LIMITS.md` K21 face 2). [[Issue.NameTaken]]: seam from this phase's own scope.
+  * [[Issue.Unexposed]]: review list of java-public-field types not yet scoped.
+  * [[Issue.NameUnreachable]]: name unreachable via `decapitalize`. Recorded only when the phase ran. */
 object BeanExposureCheck:
   val Name = "bean-exposure"
 

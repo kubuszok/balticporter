@@ -3,12 +3,9 @@ package balticporter.transform
 import balticporter.tir.*
 
 /** Replaces each JNI `native` method with a Project Panama (`java.lang.foreign`) downcall: a
-  * private `MethodHandle` field built from the signature (each primitive → its `ValueLayout`,
-  * everything else → `ADDRESS`), and a body invoking the handle and casting to the declared
-  * return type. Detection is structural (`isNative`), so it finds the JNI surface rather than
-  * being told where it is. First cut: JVM downcalls only (JDK 22+ `invokeExact`); a Scala Native
-  * linker backend is a refinement point.
-  */
+  * private `MethodHandle` field built from the signature, and a body invoking the handle and
+  * casting to the declared return type. Detection is structural (`isNative`). First cut: JVM
+  * downcalls only (JDK 22+ `invokeExact`); a Scala Native linker backend is a refinement point. */
 final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) extends Phase:
   def name = "jni->panama"
 
@@ -77,11 +74,9 @@ final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) e
   // ---- FFI codegen ----
 
   /** The handle field's name for every native at once, keyed on a fact about the METHOD, never on
-    * the frontend's mint counter (`ENGINE-LIMITS.md` M10 — a counter-keyed name moved 122 member
-    * digests across untouched types once). A lone native of a name: `freeMemory$handle`. An
-    * overload set: `copyJni$0$handle`, … ordered by erased signature, tiebroken by declaration
-    * position — never by `FunctionDescriptor` (it erases to `ADDRESS` and collides) or by visit
-    * order. [[invoke]] reads the name back off the minted symbol rather than re-deriving it. */
+    * the frontend's mint counter (`ENGINE-LIMITS.md` M10 — moved 122 digests once). A lone native:
+    * `freeMemory$handle`. An overload set: `copyJni$0$handle`, ordered by erased signature,
+    * tiebroken by declaration position. [[invoke]] reads the name back off the minted symbol. */
   private[balticporter] def handleNames(program: Program, natives: Set[SymId]): Map[SymId, String] =
     given Program = program
     def nameOf(m: SymId): String  = program.symbolOf(m).map(_.name).getOrElse("fn")

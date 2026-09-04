@@ -2,15 +2,11 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** The collections residue INSIDE the program — every site where java's own subtyping carried a
-  * value across an edge the mapping has no image for, counted. `CollectionBoundaryCheck` sees only
-  * the half of a slot that is the JDK's own; this counts the third population, where BOTH sides are
-  * the phase's own output, so no JDK type is in the comparison and no boundary arm fires. Distinct
-  * from [[CollectionClosureCheck]] (mapped supertype / unmapped subtype, about types): this is about
-  * SITES where both ends are mapped and the two targets are unrelated. Universal in mechanism,
-  * parameterised by the mapping — an empty mapping is a no-op by arithmetic.
-  * CLAUDE.md §1's third-population paragraph, §4.45, §4.56; ENGINE-LIMITS K2.5
-  */
+/** The collections residue INSIDE the program — sites where java's own subtyping carried a value
+  * across an edge the mapping has no image for. `CollectionBoundaryCheck` sees only the JDK's own
+  * half of a slot; this counts the third population where BOTH sides are the phase's own output.
+  * Distinct from [[CollectionClosureCheck]] (about TYPES): this is about SITES where both ends map
+  * to unrelated targets. Empty mapping is a no-op. CLAUDE.md §1's third-population para; K2.5 */
 object CollectionInternalCheck:
 
   /** The check's name in `findings.tsv`. */

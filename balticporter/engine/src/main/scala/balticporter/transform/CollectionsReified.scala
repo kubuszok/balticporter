@@ -253,11 +253,10 @@ private[transform] trait CollectionsReified:
       if prev.forall(o => t.origin.line < o.line) then opaqueEgressSites(key) = t.origin
 
   /** The same bridge where there is no formal to read — a generic external method has no
-    * readable `MethodType`, so [[bridgeJavaFormals]]'s arity test declines. For an ordinary
-    * external callee that refusal is the honest answer and counted; for a DECLARED SINK it is
-    * not, since the port already stated the fact the signature would have carried — the argument
-    * decides instead: a retyped value or `java.lang.Object`. Measured: with the arity path alone,
-    * one of liqp's seven sink sites bridged. */
+    * readable `MethodType`, so [[bridgeJavaFormals]]'s arity test declines. Honest and counted for
+    * an ordinary external callee; for a DECLARED SINK it is not (the port already stated the fact
+    * a signature would have carried) — the argument decides instead, a retyped value or
+    * `java.lang.Object`. */
   private[transform] def bridgeSinkArgs(t: Tree.Apply)(using p: Program): Tree.Apply =
     if formalsOf(t).sizeIs == t.args.size || !externalCallee(t.method) then t
     else sinkOf(t.method) match
@@ -279,12 +278,10 @@ private[transform] trait CollectionsReified:
     else p.symbolOf(m).map(_.owner).filter(sinkSyms.contains).flatMap(p.symbolOf).map(_.fullName)
 
   /** is this source's sole element type an unnameable wildcard? `java.util.List<?>` means
-    * `List<? extends Object>`, so `list.addAll(valueList)` type-checks in java with no cast;
-    * scala's `?` is bounded by `Any`, so `Buffer[?]` is `IterableOnce[Any]` and `++=` on
-    * `Buffer[Object]` fails. Widening scala's `?` is a measured dead end (G2); the difference is
-    * stated at this one operation instead, by a helper doing java's own read. Narrow to a sole
-    * `TypeBounds` argument — a real element type stays the idiomatic `++=`. F11
-    */
+    * `List<? extends Object>` and type-checks in java with no cast; scala's `?` is bounded by
+    * `Any`, so `++=` on `Buffer[Object]` fails. Widening scala's `?` is a measured dead end (G2);
+    * the difference is stated at this one operation instead. Narrow to a sole `TypeBounds`
+    * argument — a real element type stays the idiomatic `++=`. F11 */
   private[transform] def wildcardElement(t: TypeRepr): Boolean = t match
     case TypeRepr.AppliedType(_, List(_: TypeRepr.TypeBounds)) => true
     case _                                                     => false
@@ -300,6 +297,7 @@ private[transform] trait CollectionsReified:
     * three over `K`, so a wildcard receiver would emit an unnameable `K`/`V`. `put`/`getOrDefault`
     * are absent: each needs a value at the capture, which javac itself rejects on `Map<?,?>`.
     * Measured on liqp at 10 and 8 errors from the same nine call sites. K10 */
+
   /** does this type mention a wildcard at any depth? Not a nameability test — a wildcard-applied
     * type IS nameable (`Class[? <: N]`) — but a narrower question for [[wildcardMapCall]]: could
     * scala's invariance bite at this key. Complete over `TypeRepr`, never a partial walk. */
@@ -336,13 +334,10 @@ private[transform] trait CollectionsReified:
       want.exists(w => w != TypeRepr.NoType && !headSym(w).contains(objectSym))
 
   /** The third face of the same seam: a probe at a proper ancestor of the element type.
-    * [[objectProbe]] is exact only at `java.lang.Object` (the top of the hierarchy); scala's
-    * `Map[K,V]` is invariant in `K`, so a probe of an unrelated ancestor type also needs the
-    * helper. Answered structurally by walking this run's own `extends` edges from the element type
-    * up to the probe's head (CLAUDE.md §4.56) — no subtype test, and a probe the walk cannot
-    * account for takes the ordinary rewrite. Not a cast: a cast would throw where java's probe
-    * answers `false`; this widens the erased probe position instead. ENGINE-LIMITS K24
-    */
+    * [[objectProbe]] is exact only at `java.lang.Object`; scala's `Map[K,V]` is invariant in `K`,
+    * so an unrelated ancestor also needs the helper. Answered structurally by walking this run's
+    * `extends` edges (§4.56) — no subtype test. Not a cast: widens the erased probe position
+    * instead of throwing where java's probe answers `false`. `ENGINE-LIMITS.md` K24. */
   private[transform] def ancestorProbe(arg: Term, want: Option[TypeRepr]): Boolean =
     (headSym(arg.tpe), want.flatMap(headSym)) match
       case (Some(a), Some(e)) if a != SymId.None && e != SymId.None && a != e =>

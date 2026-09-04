@@ -2,22 +2,11 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** THE `var`/`val` COLLAPSE'S DECISION — every guard, stated once (`DESIGN.md` §8.5).
-  *
-  * A java bean pair over a trivial backing field and a scala `var` are the same value with two
-  * spellings, so [[BeanPropertyTransform]] can collapse the `def` pair to it. The guards live here
-  * rather than on the phase so it decides once — `Converted` or `Refused(guard)`, the same answer
-  * the `idiom(refused)` denominator reads (ENGINE-LIMITS K2.5). Each guard makes one delta from the
-  * faithful `def`-pair translation impossible: override safety ([[Guard.OverriddenBelow]],
-  * [[Guard.AnchoredClosure]]), field-equivalence of the body ([[Guard.ComputedBody]],
-  * [[Guard.SplitFields]]), surface parity with java ([[Guard.VarWithoutSetter]],
-  * [[Guard.ValWithSetter]], [[Guard.MutableStorage]]), and the moved JVM method names, recorded on
-  * the decision and refused outright when contradicted by [[PublicFieldAccessorTransform]]
-  * ([[Guard.ExposedField]]).
-  *
-  * The pairs map IS the include list (`DESIGN.md` §8.5 "Rejected") — no `RuleScope` here, since a
-  * scope would let a pair be listed and then silently scoped out.
-  */
+/** THE `var`/`val` COLLAPSE'S DECISION — every guard, stated once (`DESIGN.md` §8.5). A java bean
+  * pair over a trivial backing field and a scala `var` are the same value with two spellings, so
+  * [[BeanPropertyTransform]] can collapse the `def` pair — `Converted` or `Refused(guard)`, what
+  * `idiom(refused)` reads. Each guard blocks one delta from the faithful translation. The pairs
+  * map IS the include list; no `RuleScope` (would let a pair be listed then silently scoped out). */
 object BeanCollapse:
 
   /** WHY a configured pair was not collapsed. A closed enum, because [[IdiomVerdict.Refused]]'s
@@ -84,12 +73,10 @@ object BeanCollapse:
     case Collapse(field: SymId)
     case Refuse(guard: Guard)
 
-  /** THE DECISION, for one pair the def-pair path accepted.
-    *
-    * Stated obligations-first and `target` LAST, deliberately: a pair the port has not asked for
-    * still has a §8.5 verdict, so `NotRequested` is reported only after the collapse is shown
-    * possible — the only reading a maintainer deciding whether to widen an enablement can use.
-    */
+  /** THE DECISION, for one pair the def-pair path accepted. Stated obligations-first and `target`
+    * LAST, deliberately: a pair the port has not asked for still gets a §8.5 verdict, so
+    * `NotRequested` reports only after the collapse is shown possible — the reading a maintainer
+    * deciding whether to widen an enablement needs. */
   def decide(p: Program, graph: OverrideGraph, prop: BeanPropertyTransform.Property,
              target: BeanPropertyTransform.Target, exposed: RuleScope, written: Set[SymId]): Verdict =
     import BeanPropertyTransform.Target

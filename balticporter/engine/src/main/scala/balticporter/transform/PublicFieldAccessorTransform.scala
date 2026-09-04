@@ -3,15 +3,11 @@ package balticporter.transform
 import balticporter.core.{RequiresRuntime, RuntimeArtifact, SurfacePolicy}
 import balticporter.tir.*
 
-/** Adds `getX()`/`setX(v)` beside a java `public` instance field, because a Scala `var` emits a
-  * PRIVATE JVM field plus differently-named accessors — `getClass.getFields` answers `[]`, so a
-  * reflective bean framework sees nothing where java showed it a property (ENGINE-LIMITS K21 face
-  * 2, the face that does not throw: every lookup silently reads `null`). The getter is typed
-  * `java.lang.Object` and always bridged through `Reified.toJavaValue`, since it is a MINTED
-  * signature no library caller names — the setter is not bridged (would need the reverse copy
-  * `Reified` refuses). CLAUDE.md §1(b): scoped, `Only(Set.empty)` no-op; a name clash is refused
-  * and counted rather than emitted as a compile error.
-  */
+/** Adds `getX()`/`setX(v)` beside a java `public` instance field, since a Scala `var` emits a
+  * PRIVATE JVM field — a reflective bean framework sees nothing (ENGINE-LIMITS K21 face 2: every
+  * lookup silently reads `null`). The getter is typed `java.lang.Object`, bridged through
+  * `Reified.toJavaValue` (a MINTED signature); the setter is not bridged. CLAUDE.md §1(b): scoped,
+  * `Only(Set.empty)` no-op; a name clash is refused and counted. */
 final class PublicFieldAccessorTransform(
     /** Which declarations are read reflectively. `Only(Set.empty)` (default) admits nothing;
       * `Everywhere(Set.empty)` is the whole port. Entries are FQNs cut at a `Symbol.fullName`

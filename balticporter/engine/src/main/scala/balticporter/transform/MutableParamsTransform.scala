@@ -3,12 +3,9 @@ package balticporter.transform
 import balticporter.tir.*
 
 /** Java lets a method reassign its parameters; Scala parameters are `val`. For each parameter
-  * written to in its method body, renames the PARAMETER to `name$arg` and prepends a mutable
-  * local `var name: T = name$arg`, so every existing body reference binds to the `var` and the
-  * reassignment type-checks — symbol-driven, no reference rewriting needed.
-  * KNOWN LIMIT: a LAMBDA's own reassigned parameter is not reached (no `DefDef` to rewrite);
-  * degrades loudly as a compile error, not a behavioural difference.
-  */
+  * written to in its body, renames it to `name$arg` and prepends a mutable local
+  * `var name: T = name$arg`, so every body reference binds to the `var`. KNOWN LIMIT: a LAMBDA's
+  * own reassigned parameter is not reached — degrades loudly as a compile error. */
 final class MutableParamsTransform extends Phase:
   def name = "reassigned-params->var"
 

@@ -14,12 +14,9 @@ enum FieldLine:
   /** No usable initializer: Java default value, as `var` (definite-assignment fallback). */
   case DefaultInit(f: BField)
 
-/** Primary/secondary constructor layout for a class.
-  *
-  * Picks a funnel strategy: single-root promotion, identity-super delegation,
-  * null-sentinel merge, maximal-primary, or no-arg-primary + effect-replay.
-  * Refuses (Unsupported) when no strategy applies.
-  */
+/** Primary/secondary constructor layout for a class. Picks a funnel strategy: single-root
+  * promotion, identity-super delegation, null-sentinel merge, maximal-primary, or no-arg-primary +
+  * effect-replay. Refuses (Unsupported) when no strategy applies. */
 final case class CtorPlan(
     primaryParams: List[CtorPlan.Param],
     primaryMods: Option[Mods],

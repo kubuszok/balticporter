@@ -6,10 +6,8 @@ import balticporter.tir.*
 /** GLOBALS → CONTEXT: a Java class whose `static` state is an ambient CONTEXT becomes a value
   * threaded through the program as a Scala 3 `using` parameter, found by a five-edge closure over
   * [[ContextNeed]] and rewritten through [[ContextHolder]]'s member map. A class/field initialiser
-  * is a BOUNDARY (no signature to thread through); a framework-constructed class takes
-  * [[ContextHolder.selfSupplied]] instead of a clause.
-  * CLAUDE.md §1(b), §1.5; DESIGN.md §8.4; ENGINE-LIMITS CT4, CT6, CT7, CT8, CT9
-  */
+  * is a BOUNDARY; a framework-constructed class takes [[ContextHolder.selfSupplied]] instead of a
+  * clause. CLAUDE.md §1(b), §1.5; `ENGINE-LIMITS.md` CT4, CT6, CT7, CT8, CT9. */
 final class GlobalsToImplicitsTransform(
     val holders: List[ContextHolder] = Nil,
     /** the per-declaration half of a holder the BASE declares; empty in a base. ENGINE-LIMITS CT8 */
@@ -60,12 +58,9 @@ final class GlobalsToImplicitsTransform(
     val fromGivens = requiredGivens.keySet
     (fromHolders ++ fromExts ++ fromGivens).map(MergeablePolicy.subjectOf).toSet
 
-  /** THE MERGE CONTRACT (DESIGN.md §8.13); division is `ContextHolder.sharedSurface`.
-    *   - holders UNION by holder FQN; a holder only one side declares is an addition.
-    *   - a holder BOTH sides declare must AGREE on its shared surface, or the merge refuses.
-    *   - `sites` and `selfSupplied` UNION, refusing same-key-different-value.
-    *   - extensions carry across; a dangling one folds into whatever the merge brings into scope.
-    *
+  /** THE MERGE CONTRACT (DESIGN.md §8.13); division is `ContextHolder.sharedSurface`. Holders
+    * UNION by FQN, adding a one-side-only holder; a holder BOTH sides declare must AGREE on shared
+    * surface or the merge refuses; `sites`/`selfSupplied` UNION, refusing same-key-different-value.
     * `added` is every subject the later instance holds that this one did not — what `SurfaceFold`
     * screens against `governs`. */
   def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
@@ -168,18 +163,11 @@ final class GlobalsToImplicitsTransform(
           "would be un-mappable and the phase would thread nothing — the §1(b) silent no-op this " +
           "engine refuses. Map at least one static onto a path on the context type")
 
-      // CLASS ATTACHMENT USED TO BE REFUSED HERE with a counted `Unverifiable` finding, because the
-      // TIR edit was correct and the EMISSION was not: the constructor funnel undid it three ways
-      // (`ENGINE-LIMITS.md` CT4, 5 scalac errors on this phase's own fixture) — a constructor that
-      // had gained a parameter stopped counting as java's nilary root, a promoted primary's
-      // parameter list was rebuilt flat and lost the `using` grouping, and a subclass of the first
-      // shape saw two applicable constructors. All three were in the constructor region `DESIGN.md`
-      // §8.2 owns, and all three are closed there: the plan models parameter GROUPS
-      // (`CtorFunnel.Plan.givens`), every "is this constructor nilary" question in the funnel reads
-      // `CtorFunnel.valueParams`, and the emitter renders the clause through `paramClause`. This
-      // phase needs no code for it — which is the point, and the reason the refusal was a refusal
-      // rather than a workaround: a clause the funnel will not carry is not a clause, and every
-      // workaround would have been a second constructor plan.
+      // CLASS ATTACHMENT USED TO BE REFUSED HERE: the TIR edit was correct and the EMISSION was
+      // not — `CtorFunnel` undid it three ways (`ENGINE-LIMITS.md` CT4). All three were in the
+      // constructor region `DESIGN.md` §8.2 owns, and closed there: parameter GROUPS
+      // (`Plan.givens`), nilary tests via `valueParams`, clause rendering via `paramClause`. This
+      // phase needs no code for it.
 
       h.context match
         case ContextType.Minted(fqn) =>

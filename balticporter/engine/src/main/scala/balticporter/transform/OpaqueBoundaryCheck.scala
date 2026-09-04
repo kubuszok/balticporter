@@ -3,12 +3,9 @@ package balticporter.transform
 import balticporter.tir.*
 
 /** The OPAQUE-TYPE boundary, counted — every seam `PrimitiveToOpaqueTransform`'s retyping opened
-  * and could not close: an EXTERNAL CALLEE with no readable formal (the scope fence's job to
-  * prevent), a REIFIED position (`instanceof`/cast — CLAUDE.md §1's paragraph, one level down),
-  * and a BOXED-PRIMITIVE boundary the wave-2.6 coercion did not reach. Universal in mechanism,
-  * parameterised by the phase's own `seeds`/`typeMapping`; empty seeds is a no-op. A conditional
-  * lane, required only of a run carrying that phase. Counts residue, not successful coercions.
-  */
+  * and could not close: an EXTERNAL CALLEE with no readable formal, a REIFIED position
+  * (`instanceof`/cast), and a BOXED-PRIMITIVE boundary the coercion did not reach. Parameterised by
+  * the phase's own `seeds`/`typeMapping`; empty seeds is a no-op. Counts residue, not successes. */
 object OpaqueBoundaryCheck:
 
   /** the check's name in `findings.tsv`. */

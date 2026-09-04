@@ -105,10 +105,10 @@ private[transform] trait CollectionsRetarget:
   /** set to `true` during the Collect post-pass so [[collectPhase]] fires `emitCollect`. */
   private[transform] var collectPassActive: Boolean = false
   /** Collect blocks whose original receiver is a map and whose `.iterator()` should produce a
-    * REMOVING iterator — keyed on the Opaque block's identity (same identity model as
-    * `selectChainRewritten`). Value is `(originalReceiver, srcFqn, collectVia)` so the
-    * iterator wrapping can emit a removing iterator that removes from the ORIGINAL map by key,
-    * rather than a read-only wrapper over the snapshot. */
+    * REMOVING iterator — keyed on the Opaque block's identity. Value is
+    * `(originalReceiver, srcFqn, collectVia)`, so wrapping can emit a removing iterator against
+    * the ORIGINAL map by key, rather than a read-only wrapper over the snapshot. */
+
   /** Iterator-typed Collect wrapper -> its inner snapshot (a chained `toArray` reads the inner one). */
   private[transform] val iteratorBlocks: java.util.IdentityHashMap[Term, Term] = new java.util.IdentityHashMap()
   private[transform] val collectBlockReceivers: java.util.IdentityHashMap[AnyRef, (Term, String, String)] =
@@ -492,12 +492,13 @@ private[transform] trait CollectionsRetarget:
       case t                      => headSym(t).filter(h => p.symbolOf(h).exists(x => typeMap.contains(x.fullName)))
     }
 
-  /** Rewrite `entry.setValue(v)` to `map.put(entry._1, v)` when the map is reachable from
-    * the enclosing for-each loop. Guards: map-kind source, loop-binding receiver, pure
-    * path, no reassignment. Detached entries (no loop) stay refused. // ENGINE-LIMITS K2 */
-  /** Lower a for-each over a retarget target's entries/keys/values into a lambda-based
-    * iteration method. `return` in body is refused and counted (non-local return).
-    * Arity-2 rewrites `.key`/`.value` selects to lambda parameters. */
+  /** Rewrite `entry.setValue(v)` to `map.put(entry._1, v)` when the map is reachable from the
+    * enclosing for-each loop. Guards: map-kind source, loop-binding receiver, pure path, no
+    * reassignment. Detached entries (no loop) stay refused. `ENGINE-LIMITS.md` K2. */
+
+  /** Lower a for-each over a retarget target's entries/keys/values into a lambda-based iteration
+    * method. `return` in body is refused and counted (non-local return). Arity-2 rewrites
+    * `.key`/`.value` selects to lambda parameters. */
   private[transform] def retargetForEach(fe: Tree.ForEach)(using p: Program): Option[Term] =
     if retargetRewrites.isEmpty && retargetRewritesByDesc.isEmpty then return scala.None
     // receiver+member from `recv.member()`, or a bare Kind.Map reference — java's implicit
@@ -1118,12 +1119,10 @@ private[transform] trait CollectionsRetarget:
 
 
   /** The value's own minted ancestry, as a coercion source — K26's `DeclaredSubtype` half.
-    * `coerce` reads a source's kind out of `kindOf`, keyed on the phase's own scala target
-    * symbols, so it answers `None` for a type the PROGRAM declares (`OrderedSet implements
-    * java.util.Set`, emitted `extends mutable.Set`, handed to its own `retainAll` — java's
-    * `Set <: Collection` edge has no image). `None` where the value already conforms. Which kind,
-    * where a class carries two, is [[Kind]]'s own declaration order (deterministic), never a
-    * `Set`'s iteration order. ENGINE-LIMITS K26 */
+    * `coerce` reads a source's kind out of `kindOf`, keyed on the phase's own scala targets, so it
+    * answers `None` for a type the PROGRAM declares (java's `Set <: Collection` edge has no
+    * image). `None` where the value already conforms. Which kind, where a class carries two, is
+    * [[Kind]]'s own declaration order (deterministic), never a `Set`'s iteration order (K26). */
   private[transform] def mintedSourceKind(head: SymId, wants: Option[SymId]): Option[Kind] =
     parentClash.get(head).filterNot { mp =>
       (wants.contains(javaIterableSym) &&
@@ -1284,11 +1283,10 @@ private[transform] trait CollectionsRetarget:
     }
 
   /** Rewrites a construction of a retarget target — `new Source[A](args)` -> `Target.factory[A](args)`
-    * — via a minted companion-factory symbol, when `retargetRewrites` has a `Construct` entry for
-    * `("<init>", arity)`. The factory's `inline apply[A](…)(using MkArray[A])` needs the type
-    * argument explicit (else scala infers `Any`); taken from `n.tpe`, `AnyRef` for a raw source
-    * (G2), emitted faithfully for a type-parameter element (`MkArray[T]` must then be threaded or
-    * the construction is counted). */
+    * — via a minted companion-factory symbol, for a `retargetRewrites` `Construct` entry.
+    * The factory's `inline apply[A](…)(using MkArray[A])` needs the type argument explicit (else
+    * scala infers `Any`); taken from `n.tpe`, `AnyRef` for a raw source, threaded for a
+    * type-parameter element (else counted). */
   private[transform] def retargetConstruct(t: Tree.Apply)(using p: Program): Option[Term] = t.fun match
     case n: Tree.New if retargetRewrites.nonEmpty || retargetRewritesByDesc.nonEmpty =>
       val newHead = headSym(n.tpe)

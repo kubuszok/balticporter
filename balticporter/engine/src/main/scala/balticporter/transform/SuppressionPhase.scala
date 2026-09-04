@@ -2,12 +2,11 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** A LATE phase (after every retyping phase, so it sees the final tree) that annotates members to
-  * suppress two scalac warnings a `-Werror` build cannot avoid: `@nowarn("msg=deprecated")` on a
-  * body calling `.orNull`, and `@nowarn("msg=Unreachable case")` on a `match` translating a java
-  * enum's `default:` to `case _ =>` where scalac proves exhaustiveness but java has no such rule.
-  * `runsBefore` `package-rename` (FQN is scala-side). // CLAUDE.md §1(a)
-  */
+/** A LATE phase (after every retyping phase) that annotates members to suppress two scalac
+  * warnings a `-Werror` build cannot avoid: `@nowarn("msg=deprecated")` on a body calling
+  * `.orNull`, and `@nowarn("msg=Unreachable case")` on a `match` translating a java enum's
+  * `default:` where scalac proves exhaustiveness java has no such rule for. `runsBefore`
+  * `package-rename` (FQN is scala-side). CLAUDE.md §1(a) */
 final class SuppressionPhase extends Phase:
 
   def name = SuppressionPhase.Name

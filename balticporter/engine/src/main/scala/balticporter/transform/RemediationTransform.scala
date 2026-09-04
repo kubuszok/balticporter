@@ -4,18 +4,11 @@ import balticporter.catalog.FixKind
 import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
 import balticporter.tir.*
 
-/** THE PORTABILITY MENU — `Remediator`'s loop, closed from the other end: a port SELECTS one of
-  * `Remediator`'s verified templates at a location (`PortManifest.resolutions`) and this phase
-  * performs it, inside the pipeline where the tree can still change. Runs LAST in `surface` so its
-  * view of the program matches `Remediator`'s own post-pipeline one. Every remedy either applies or
-  * refuses with a counted, named guard — never silent. `classTables` is the one value a template
-  * cannot compute (the `class-table` destination); empty is the no-op.
-  * CLAUDE.md §1(b), §3, §5; DESIGN.md §8.16, §8.18
-  *
-  * @param classTables the destination for a `class-table` selection, keyed by the same manifest key
-  *                    the selection uses (`owner#member` of the CALLEE), valued `owner#member` of
-  *                    the table's lookup.
-  */
+/** THE PORTABILITY MENU's other end: a port SELECTS one of `Remediator`'s verified templates at a
+  * location (`PortManifest.resolutions`) and this phase performs it, inside the pipeline. Runs
+  * LAST in `surface`. Every remedy applies or refuses with a counted, named guard — never silent.
+  * `classTables` is the `class-table` destination, keyed `owner#member` of the CALLEE, valued
+  * `owner#member` of the table's lookup; empty is the no-op. CLAUDE.md §1(b),§3,§5; DESIGN.md §8.16,§8.18 */
 final class RemediationTransform(
     val classTables: Map[String, String] = Map.empty,
 ) extends Phase, RemedySource, PolicyBound, PolicySource, SurfacePolicy:

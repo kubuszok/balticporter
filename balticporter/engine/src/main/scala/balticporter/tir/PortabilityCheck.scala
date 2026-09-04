@@ -3,23 +3,10 @@ package balticporter.tir
 import balticporter.catalog.{ApiRow, ApiRows, DiffId, FixKind, Platform}
 
 /** Which JDK APIs the port still depends on that a cross-platform target cannot provide. sge
-  * targets Scala Native and Scala.js as well as the JVM, so a port can compile clean and test
-  * green and still be JVM-only (`utils.reflect`, `Class`-driven serialization have no off-JVM
-  * counterpart). Compiling with `--js` does NOT catch this — Scala.js type-checks against the
-  * JDK's signatures; only the LINKER fails, and only on what is reachable from an entry point,
-  * which a library does not have. This check is the pre-flight version: the TIR already knows
-  * every external symbol referenced anywhere, so violations are enumerated exactly for ALL code.
-  * Deliberately narrow — a rule earns its place by being a known removal reason.
-  *
-  * §1(b), parameterised on the TARGET SET: WHICH rules apply is a fact about the BACKENDS a module
-  * is ported for (`java.nio.file` is absent on Scala.js, present on Native — seven of this list's
-  * rules were measurably too broad for Native 0.5.x). Every [[Rule]] carries the platforms it is a
-  * refusal FOR; [[rulesFor]] selects by declared targets, defaulting to all three.
-  *
-  * The FACT lives in the catalog (`balticporter.catalog.ApiRows`); this list is the MATCHER — a
-  * rule may not claim a platform its own cited row says `Keep` (`PortabilityRuleMatrixSpec`). Not
-  * generated from the survey, since that would drop every rule with no survey row
-  * (`org.junit.`, `org.hamcrest.`). */
+  * targets JS/Native/JVM, so a port can compile and test green on the JVM and still be JVM-only.
+  * The TIR pre-flight replaces `--js` linking: every external symbol reference is enumerated.
+  * §1(b), parameterised on the TARGET SET — a rule carries the platforms it refuses FOR, matched
+  * against `ApiRows` (never claiming a platform its cited row says `Keep`). */
 object PortabilityCheck extends RemedySource:
 
   /** THE `CheckReport` LANE THIS CHECK'S EMITTED-CODE RESIDUE IS COUNTED IN — one spelling, since a
@@ -39,11 +26,10 @@ object PortabilityCheck extends RemedySource:
     * than `alsoKinds`: this lane's kind column is the offending API's FQN, an open set. */
 
   /** `accept-jvm-only` — *this location is JVM-only and I know it; stop reporting it.* Changes NO
-    * tree, moves a row into `remediation(resolved)` (`emissionAffecting = false`). CONSISTENCY
-    * test: a port's `targets` says which backends it is built for, so accepting a JVM-only API
-    * while `targets` includes Scala.js/Native is REPORTED as a contradiction and never applied —
-    * making the apply arm unreachable by construction (0 of the rules name `Platform.Jvm`,
-    * ENGINE-LIMITS P6). The honest answers are narrowing `targets` or a `verdictOverrides` entry. */
+    * tree, moves a row into `remediation(resolved)`. CONSISTENCY: accepting a JVM-only API while
+    * `targets` includes Scala.js/Native is REPORTED as a contradiction and never applied — the
+    * apply arm is unreachable by construction (`ENGINE-LIMITS.md` P6). Honest answers: narrow
+    * `targets`, or a `verdictOverrides` entry. */
   val AcceptJvmOnly: Remedy = Remedy(
     id = "accept-jvm-only", lane = EmittedLane, kind = Remedy.AnyKind,
     emissionAffecting = false, fix = FixKind.Universal, subject = Remedy.Subject.OwnedMember,
@@ -51,13 +37,10 @@ object PortabilityCheck extends RemedySource:
       "changes — refused, with both real knobs named, on a port whose `targets` claim Scala.js or " +
       "Scala Native")
 
-  /** @param api         a prefix (`java.nio.file.`) or an exact `owner#member`
-    * @param why         one sentence, what the reader acts on
-    * @param exactMember which of the two `api` is
-    * @param on          THE PLATFORMS THIS RULE IS A REFUSAL FOR — a rule applying regardless of
-    *                    target would tell a JVM+Native port to remove APIs that work on both.
-    * @param at          the catalog row holding the availability FACT. `None` only where the
-    *                    javalib survey has no row (a non-JDK dependency). */
+  /** @param api a prefix (`java.nio.file.`) or an exact `owner#member` @param why one sentence
+    * @param exactMember which of the two `api` is @param on THE PLATFORMS THIS RULE IS A REFUSAL
+    * FOR (unconditional would tell a JVM+Native port to remove APIs that work on both) @param at
+    * the catalog row holding the availability FACT, `None` only for a non-JDK dependency. */
   final case class Rule(
       api: String,
       why: String,
@@ -339,11 +322,10 @@ object PortabilityCheck extends RemedySource:
     climb(from, 64)
 
   /** Violations occurring in code that is actually EMITTED — a violation inside a substituted
-    * (dropped) type would overstate the problem.
-    * @param isExcluded a type this run does NOT ship: either the port DROPPED it
-    *   (`Substitutions.dropTypes`) or the run merely RESOLVED against it
-    *   (`FrontendConfig.resolutionRoots`, another module's unit). The second was missing once and
-    *   the misattribution was total: Ashley reported 67 sites, none its own. */
+    * (dropped) type would overstate the problem. @param isExcluded a type this run does NOT ship —
+    * either DROPPED (`Substitutions.dropTypes`) or merely RESOLVED against (`resolutionRoots`, a
+    * foreign unit). The second was once missing and the misattribution was total (Ashley: 67
+    * sites, none its own). */
   def inEmittedCode(program: Program, violations: List[Violation], isExcluded: SymId => Boolean): List[Violation] =
     violations.filterNot(v => owningType(program, v.enclosing).exists(isExcluded))
 

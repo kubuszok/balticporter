@@ -2,20 +2,11 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** A JUnit suite → a CROSS-PLATFORM Scala suite (MUnit).
-  *
-  * §1(b): `suite` and `testMember` are constructor parameters, but the registration shape (curried
-  * `test(name)(body)`), `.ignore`, `intercept[E]`, `beforeAll`/`afterAll` and every assertion
-  * member (via `munit.Assertions`, fully-qualified per CLAUDE.md §6) are MUnit's own contract,
-  * named literally in this file — pointing `suite` at another framework does not compile.
-  *
-  * `@Rule`, `@RunWith`, JUnit 5, TestNG, JUnit 3's `TestCase` and Hamcrest's `assertThat` are
-  * unsupported and reported as [[TestFrameworkTransform.Finding]] with their CLAUDE.md §1
-  * classification, because an unrecognised annotation registers zero tests and reports success.
-  *
-  * @param suite      fully-qualified base class the ported suites extend
-  * @param testMember curried `(name)(body)` registration member on that base class
-  */
+/** A JUnit suite → a CROSS-PLATFORM Scala suite (MUnit). §1(b): `suite`/`testMember` are
+  * constructor parameters, but MUnit's own contract (curried `test(name)(body)`, `.ignore`,
+  * `intercept[E]`, assertions) is named literally, so pointing `suite` elsewhere does not compile.
+  * `@Rule`/`@RunWith`/JUnit 5/TestNG/JUnit 3/Hamcrest are unsupported, reported with their §1
+  * classification (an unrecognised annotation silently registers zero tests). */
 final class TestFrameworkTransform(
     suite: String = TestFrameworkTransform.DefaultSuite,
     testMember: String = "test",
@@ -142,12 +133,11 @@ final class TestFrameworkTransform(
     * rewrite (`transformApply`) sees a call and never the enclosing member; cleared per declaration. */
   private var promotedHere = false
 
-  /** A TEST-CLASS HIERARCHY. [[suiteAnchors]]: `munit.FunSuite` is a class and so may the java
-    * superclass be, so the suite parent must go at the ROOT of the program-declared chain above
-    * the `@Test` declarer, or scalac rejects a second class parent. [[virtualTests]]: a `@Test`
-    * participating in an override relation stays a `def` and registers ONCE at the top declarer,
-    * as a call — a statement would emit a duplicate registration and lose `super.m()`. Both
-    * computed once per [[run]] over the whole program. */
+  /** A TEST-CLASS HIERARCHY. [[suiteAnchors]]: the suite parent goes at the ROOT of the
+    * program-declared chain above the `@Test` declarer (scalac rejects a second class parent).
+    * [[virtualTests]]: a `@Test` in an override relation stays a `def`, registering ONCE at the
+    * top declarer as a call (a statement would duplicate and lose `super.m()`). Both computed
+    * once per [[run]] over the whole program. */
   private var classDefs: Map[SymId, Tree.ClassDef] = Map.empty
   private var suiteAnchors: Set[SymId]             = Set.empty
   /** `@Test` methods that stay `def`s because java's own override relation reaches them. */
@@ -239,18 +229,11 @@ final class TestFrameworkTransform(
   // JUnit constructs a FRESH INSTANCE per @Test — the per-test RECONSTRUCTION
   // -------------------------------------------------------------------------
 
-  /** Per-test RECONSTRUCTION: JUnit builds a fresh instance per `@Test` (JLS 12.5 — zero, field
-    * inits + instance-init blocks in textual order, ctor body, then `@Before`); MUnit has one
-    * suite instance. Hoists that sequence into `override def bpFreshState()`, called at the head
-    * of every test ahead of `@Before`, chaining `super.bpFreshState()` after zeroing this class's
-    * own fields (java's allocation order) and never duplicating the class-body initialisation.
-    * `ENGINE-LIMITS.md` X4.
-    *
-    * Not reproduced, per CLAUDE.md §3: object identity (counted, `fresh-state(instance-escape)`);
-    * a non-replayable constructor (guard+count, `fresh-state(constructor)`); a field with no
-    * writable default (guard+count, `fresh-state(no-default)`); a base module's test class in the
-    * chain (guard+count, `fresh-state(base-ancestor)`, see [[scope]]). Structurally impossible and
-    * uncounted: `static` fields, an external superclass, `@Ignore`, a virtual `@Test`. */
+  /** Per-test RECONSTRUCTION: JUnit builds a fresh instance per `@Test` (JLS 12.5); MUnit has one
+    * suite instance. Hoists that sequence into `override def bpFreshState()`, called ahead of
+    * `@Before`, chaining `super.bpFreshState()` after zeroing this class's own fields
+    * (`ENGINE-LIMITS.md` X4). Not reproduced (§3): object identity, a non-replayable constructor,
+    * a field with no writable default, a base module's test class — each guarded and counted. */
   private def planFreshState(program: Program)(using p: Program): Unit =
     freshSym = Map.empty; freshSuper = Map.empty; freshCall = Map.empty
     // classes java rebuilds for one suite: the declarer and every program-declared class above it.
@@ -697,15 +680,11 @@ final class TestFrameworkTransform(
   // Assertions — org.junit.Assert onto munit.Assertions, by ARGUMENT TYPE
   // -------------------------------------------------------------------------
 
-  /** `org.junit.Assert.assertX(…)` → the MUnit assertion that means the same thing. Java's
-    * `(expected, actual)` with an optional leading `String message` becomes MUnit's
-    * `(obtained, expected)` with an optional trailing `clue`; the overload is read from the
-    * ARGUMENTS' static types, not the callee's signature. A member with no mapping (`assertThat`)
-    * is left alone and reported, keeping the `org.junit` reference [[PortabilityCheck]] counts.
-    *
-    * `SpoonTir.fromSource` builds with `noClasspath`, so a one-file snippet's
-    * `import static org.junit.Assert.assertEquals` resolves to `this.assertEquals(…)` and this
-    * hook never fires there — write `Assert.assertEquals(…)` explicitly in such a fixture. */
+  /** `org.junit.Assert.assertX(…)` → the MUnit assertion meaning the same thing. Java's
+    * `(expected, actual)` with an optional leading `String message` becomes MUnit's `(obtained,
+    * expected, clue)`; the overload is read from the ARGUMENTS' static types, not the callee's
+    * signature. An unmapped member (`assertThat`) is left alone and reported. `SpoonTir.fromSource`
+    * builds with `noClasspath`, so a static-import snippet never fires this hook. */
   override def transformApply(t: Tree.Apply)(using p: Program): Term = t.fun match
     case Tree.Select(recv, m, _, o) =>
       assertClassOf(recv) match
@@ -792,12 +771,10 @@ final class TestFrameworkTransform(
     if operands.forall(x => NumericRank.getOrElse(nameOf(x.tpe), Int.MaxValue) <= floatRank)
     then "assertEqualsFloat" else "assertEqualsDouble"
 
-  /** JAVA'S BINARY NUMERIC PROMOTION, re-applied.
-    *
-    * `assertEquals(int, long)` is legal java because the call promoted the `int` before comparing;
-    * MUnit infers each operand independently, so nothing drives scala's widening. Widening the
-    * NARROWER operand is the only safe direction. `Char` and `Short` share a rank because neither
-    * widens to the other, so the equal-rank case promotes both to `Int`. */
+  /** JAVA'S BINARY NUMERIC PROMOTION, re-applied. `assertEquals(int, long)` is legal java (the
+    * call promoted `int` first); MUnit infers each operand independently, so nothing drives
+    * scala's widening. Widening the NARROWER operand is the only safe direction; `Char`/`Short`
+    * share a rank (neither widens to the other), so equal-rank promotes both to `Int`. */
   private def promote(x: Term, y: Term)(using p: Program): (Term, Term) =
     val (tx, ty) = (nameOf(x.tpe), nameOf(y.tpe))
     (NumericRank.get(tx), NumericRank.get(ty)) match
@@ -834,16 +811,11 @@ final class TestFrameworkTransform(
   private def widen(t: Term, from: String, to: String, p: Program): Term =
     if from == to then t else select(guarded(t)(using p), widenSyms(to), t.origin, primTypes(to))
 
-  /** JAVA'S OTHER WIDENING, re-applied — the REFERENCE half of what [[promote]] does for numbers.
-    * Java's one `assertEquals(Object, Object)` widens every reference pair at the call; MUnit's
-    * `assertEquals[A, B]` demands a `Compare[A, B]`, which two invariant `java.util.List`s at
-    * different element types do not satisfy. Written back as the call's TYPE ARGUMENTS.
-    *
-    * True exactly when both static types are the SAME and not a ROOT (`Compare[A, Object]` is
-    * already vacuous at a root, so widening there costs nothing but is needed to trust the TIR's
-    * type over an earlier boundary-bridge wrap typed as `java.lang.Object`). Refuses rather than
-    * guesses on `NoType` (frontend could not say) or a PRIMITIVE (belongs to [[promote]]; boxed
-    * `Object` equality is numeric where java's is not — §4.4). */
+  /** JAVA'S OTHER WIDENING, re-applied — the REFERENCE half of [[promote]]. Java's
+    * `assertEquals(Object, Object)` widens every pair at the call; MUnit's `Compare[A, B]` rejects
+    * two invariant `java.util.List`s at different element types. Written as the call's TYPE
+    * ARGUMENTS. True exactly when both static types are SAME and not a ROOT. Refuses rather than
+    * guesses on `NoType` or a PRIMITIVE (§4.4). */
   private def widened(x: Term, y: Term)(using p: Program): Boolean =
     val (sx, sy) = (shape(x.tpe), shape(y.tpe))
     sx.nonEmpty && sy.nonEmpty &&
@@ -882,11 +854,9 @@ final class TestFrameworkTransform(
     case _                                           => t
 
   /** The ONE junit assertion with no MUnit counterpart: elementwise comparison with a tolerance.
-    *
-    * Emitted as the loop it means. Both arrays are bound to locals FIRST — the two operands are
-    * arbitrary expressions (`polygon.getTransformedVertices()`), and naming each once is the
-    * difference between java's one evaluation and one per element. The length check comes first,
-    * as it does in junit, so a size mismatch reports as a size mismatch. */
+    * Emitted as the loop it means. Both arrays are bound to locals FIRST — the operands are
+    * arbitrary expressions, and naming each once is the difference between one evaluation and one
+    * per element. The length check comes first, as in junit. */
   private def arrayWithDelta(e: Term, a: Term, delta: Term, clue: List[Term], o: Origin)
                             (using p: Program): Option[Term] =
     if a.tpe == TypeRepr.NoType || e.tpe == TypeRepr.NoType then scala.None
@@ -960,12 +930,9 @@ final class TestFrameworkTransform(
       case other            => other
     }
     // per-test RECONSTRUCTION: moves this class's own initialisation into its own member. Touches
-    // only classes [[planFreshState]] admitted, class untouched elsewhere.
-    //
-    // TWO CLASSES, deliberately: `cd1` is what every ANALYSIS below reads and `cd2` is what is
-    // emitted — the reconstruction writes ASSIGNMENTS to this class's fields, and a scan counting
-    // REFERENCES over `cd2` would count them (`ExpectedException`'s `arming-outside-test` guard did,
-    // and silently refused eleven of this phase's own fixtures).
+    // only classes [[planFreshState]] admitted. TWO CLASSES, deliberately: `cd1` is what every
+    // ANALYSIS below reads, `cd2` is what is EMITTED — a reference scan over `cd2` would count the
+    // reconstruction's own assignments as usages (silently refused eleven fixtures once).
     val cd1 = cd.copy(body = nested)
     val cd2 = freshState(cd1)
     // the suite parent is the ANCHOR's, not the declarer's (see [[suiteAnchors]]): a class that
@@ -1097,19 +1064,9 @@ final class TestFrameworkTransform(
 
   /** `thrown.expect(E.class)` → an ARMING of the rule's own accumulator, plus one `try`/`catch`
     * around the whole test — junit's `ExpectedExceptionStatement` contract transcribed exactly,
-    * because `intercept[E] { rest }` cannot express an arming's reach past a loop/block boundary
-    * (`ENGINE-LIMITS.md` X5). One mutable `List[Throwable => Boolean]` accumulator plus the caught
-    * throwable, matched with `forall` (java's `allOf`) on completion.
-    *
-    * Refused per `CLAUDE.md` §3, one [[Finding]] per site: a reference to the field that is not
-    * the receiver of `expect`/`expectMessage` (`unsupported-reference`/`unsupported-member`,
-    * asked of the whole CLASS too — see `arming-outside-test`), or an unreadable overload
-    * (`expect-overload`/`expect-message-overload`). `break-catch` counts an untranslated jump
-    * under the catch.
-    *
-    * @return the body to emit, the wrapper to apply OUTSIDE everything else the conversion emits,
-    *         and the sentence the test's `Decision` carries (empty where nothing was translated —
-    *         a declined site records its own [[Finding]] instead). */
+    * since `intercept[E] { rest }` cannot express an arming's reach past a loop/block boundary
+    * (`ENGINE-LIMITS.md` X5). Refused per §3, one [[Finding]] per site: a stray field reference, or
+    * an unreadable overload. @return the body to emit, the OUTER wrapper, the `Decision` sentence. */
   private def expectedException(d: Tree.DefDef, body: Term, rules: Set[SymId])
                                (using p: Program): (Term, Term => Term, String) =
     val refs =
@@ -1372,13 +1329,11 @@ final class TestFrameworkTransform(
       val body0 = expectsThrow match
         case Some(exTpe) => intercept(interceptSym, exTpe, ruleBody, d.origin)
         case scala.None  => ruleBody
-      // JUnit's own nesting: afters(befores(expectException(invoke))). So the `@Before` calls go
-      // INSIDE the try — a setup that throws still runs teardown, as in java — and the
-      // expected-exception check goes inside them both.
-      // …and AHEAD of `@Before`, JUnit's `createTest()`: the fresh instance it builds for every test
-      // is what runs the class's field initialisers and constructor body, and it runs before the
-      // setup hooks (probed against junit 4.13, `ENGINE-LIMITS.md` X4). Absent where the suite holds
-      // no instance state at all, and where a guard in [[planFreshState]] declined the class.
+      // JUnit's own nesting: afters(befores(expectException(invoke))) — `@Before` calls go INSIDE
+      // the try so a setup that throws still runs teardown, and the expected-exception check goes
+      // inside them both. AHEAD of `@Before`: JUnit's `createTest()` instance runs field
+      // initialisers and the constructor body BEFORE setup hooks (probed against junit 4.13,
+      // `ENGINE-LIMITS.md` X4). Absent where no instance state exists, or [[planFreshState]] declined.
       val rebuild = freshCall.get(owner).toList.map(call(_, d.origin))
       val prologue = rebuild ++ setups.map(call(_, d.origin))
       val setUp =

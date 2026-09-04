@@ -3,12 +3,10 @@ package balticporter.transform
 import balticporter.tir.*
 
 /** Turns a static whose class initialiser reads the threaded holder into a `def` over a `$set`/
-  * `$value` cache pair, taking the context clause — per site and never by default, since deferring
-  * init to the field's first read is a semantic change from java's first-ACTIVE-USE trigger, which
-  * the mechanism cannot verify (recorded as `Decision.Kind.DeferredInit`, counted `deferred-init`).
-  * Does NOT reproduce the JVM's class-init lock; reads are unchanged since the field's symbol is
-  * reused as a parameterless `def`.
-  */
+  * `$value` cache pair, taking the context clause — per site, never by default, since deferring
+  * init to first read changes java's first-ACTIVE-USE trigger (recorded as
+  * `Decision.Kind.DeferredInit`, counted `deferred-init`). Does NOT reproduce the JVM's class-init
+  * lock; reads are unchanged since the field's symbol is reused as a parameterless `def`. */
 final class DeferredInit(
     program: Program,
     holder: ContextHolder,

@@ -4,19 +4,10 @@ import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyRep
 import balticporter.tir.*
 
 /** Append hand-written Scala MEMBERS to a mechanically-translated class, at the end of its body —
-  * the seam for hand-port-added API that `inject` (whole file) and `MethodBodyTransform` (body
-  * replacement) cannot express.
-  *
-  * CLAUDE.md §1(b): the MECHANISM (locate an owner by FQN, append verbatim Scala) is universal;
-  * WHICH owners and WHAT members is per-library and arrives as a constructor parameter. The phase
-  * MINTS members, so its no-op is `Only(Set.empty)` (an empty `members` map), never the
-  * unrestricted form. Never changes an EXISTING member — additions sit BESIDE them — and does not
-  * type-check the source; the target compiler is the gate.
-  *
-  * @param members
-  *   owner FQN (upstream namespace) -> list of member specifications. Keys use `Symbol.fullName` of
-  *   the owning type, in the UPSTREAM namespace (before package rename).
-  */
+  * the seam for hand-port-added API that `inject`/`MethodBodyTransform` cannot express. §1(b):
+  * mechanism (locate owner by FQN, append verbatim Scala) is universal; WHICH/WHAT is per-library.
+  * MINTS members, so no-op is `Only(Set.empty)`. Never changes an EXISTING member; does not
+  * type-check — the target compiler is the gate. @param members owner FQN (upstream) -> specs. */
 final class AddMembersTransform(val members: Map[String, List[AddMembersTransform.MemberSpec]] = Map.empty)
     extends Phase, PolicySource, SurfacePolicy, MergeablePolicy:
   import AddMembersTransform.*
@@ -108,16 +99,10 @@ final class AddMembersTransform(val members: Map[String, List[AddMembersTransfor
     program.rebuilt(units)
 
 object AddMembersTransform:
-  /** One member to add to a class body.
-    *
-    * @param name   the member's name, for parity-check and port-map visibility.
-    * @param arity  the number of non-using value parameters (0 for a `val`/`var`).
-    * @param source the verbatim Scala text, spliced at statement position at the end of the owner's
-    *               body. FQN-qualified, no imports (CLAUDE.md §6).
-    * @param reason the §1 classification: `Configured` for a manifest entry, `LibraryRule` for a
-    *               plugged-in rule.
-    * @param why    free-text explanation for the porter note's `why` field.
-    */
+  /** One member to add to a class body. @param name for parity-check/port-map visibility
+    * @param arity non-using value parameters (0 for a val/var) @param source verbatim Scala,
+    * spliced at statement position, FQN-qualified no imports (CLAUDE.md §6) @param reason §1
+    * classification @param why free text for the porter note. */
   final case class MemberSpec(
       name: String,
       arity: Int,

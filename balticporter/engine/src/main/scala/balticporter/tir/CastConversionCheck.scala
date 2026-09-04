@@ -1,11 +1,10 @@
 package balticporter.tir
 
-/** Casts where the operand is a wrapper of a DIFFERENT primitive than the target -- java's
-  * unboxing conversion (JLS 5.1.8) rendered as a scala type assertion that throws.
-  *
-  * The frontend handles this shape (`SpoonTir.castOf`); this check catches the residue where
-  * a later phase retyped the operand. The predicate is shared with the emitter's consult.
-  * // ENGINE-LIMITS K17, catalog JS-E06 */
+/** Casts where the operand is a wrapper of a DIFFERENT primitive than the target — java's
+  * unboxing conversion (JLS 5.1.8) rendered as a scala type assertion that throws. The frontend
+  * handles this shape (`SpoonTir.castOf`); this check catches the residue where a later phase
+  * retyped the operand, sharing its predicate with the emitter's consult. `ENGINE-LIMITS.md` K17,
+  * catalog JS-E06. */
 object CastConversionCheck:
 
   val Name = "cast-conversion"

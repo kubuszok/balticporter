@@ -4,11 +4,10 @@ import balticporter.catalog.FixKind
 import balticporter.tir.*
 
 /** The nullability boundary, counted: every annotated site the phase could not honour, every seam
-  * a wrapper retype opened and did not close, and every retype whose transparency the language does
-  * not grant (e.g. a retyped `T | Null` compiles while a use at a plain abstract `T` does not — cost
-  * lands on the uses, invisible at the declaration, so it must be a number). Universal in mechanism
-  * (§1(a)); parameterised by the annotation policy, empty producing empty by arithmetic.
-  */
+  * a wrapper retype opened and did not close, and every retype whose transparency the language
+  * does not grant (e.g. `T | Null` compiles at the declaration but a use at a plain abstract `T`
+  * does not — cost lands on uses, invisible at the declaration). Parameterised by the annotation
+  * policy; empty produces empty by arithmetic. */
 object NullabilityBoundaryCheck extends RemedySource:
 
   /** The check's name in `findings.tsv`. */

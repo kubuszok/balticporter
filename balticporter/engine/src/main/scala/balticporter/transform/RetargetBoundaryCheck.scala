@@ -2,16 +2,11 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** The RETARGET boundary, in the direction the subtyping argument does not cover — every value the
-  * JDK PRODUCES at a retargeted type, counted. A retarget's precondition (the scala target is
-  * usable wherever the java source was) licenses the value flowing INTO a slot; it says nothing
-  * about the JDK HANDING one BACK (`Collections.reverseOrder()`) into a slot this phase retyped —
-  * a subtyping direction `CollectionBoundaryCheck` cannot see, since `transformType` already moved
-  * both sides of the slot to the same type. Counts three shapes (producer reference, static
-  * receiver, cast) with distinct next actions; synthesises no coercion (ENGINE-LIMITS K14).
-  * Universal in mechanism, parameterised by the phase's own retarget table (§4.56); empty is a no-op.
-  * CLAUDE.md §3, §4.4, §4.56
-  */
+/** The RETARGET boundary, in the direction subtyping does not cover — every value the JDK
+  * PRODUCES at a retargeted type, counted. A retarget licenses a value flowing INTO a slot; it
+  * says nothing about the JDK HANDING one BACK — a direction `CollectionBoundaryCheck` cannot see
+  * since `transformType` already moved both sides of the slot. Counts three shapes (producer
+  * reference, static receiver, cast); synthesises no coercion (ENGINE-LIMITS K14). */
 object RetargetBoundaryCheck:
 
   /** The check's name in `findings.tsv`. */

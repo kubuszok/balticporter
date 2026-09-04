@@ -5,11 +5,9 @@ import balticporter.tir.*
 
 /** Turns a configured JavaBean accessor pair (`getX`/`setX`) into a Scala property (`x`/`x_=`) and
   * rewrites every call site; `pairs` is an explicit include list keyed by upstream FQN (§4.56), not
-  * a detected pattern. A pair is applied whole or refused (unparsed parent, fluent/set-only setter,
+  * a detected pattern. Applied whole or refused (unparsed parent, fluent/set-only setter,
   * value-position reference, static accessor, name collision) — never invented. Default target keeps
-  * bodies verbatim (`def x`/`def x_=`); `var`/`val` collapse is opt-in per entry.
-  * CLAUDE.md §1(b), DESIGN.md §8.5. Shared surface (§1.5) — runs before retyping and package rename.
-  */
+  * bodies verbatim; `var`/`val` collapse is opt-in per entry. CLAUDE.md §1(b), DESIGN.md §8.5. */
 final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
                                   targets: Map[String, BeanPropertyTransform.Target] = Map.empty,
                                   exposedFields: RuleScope = RuleScope.Only(Set.empty),

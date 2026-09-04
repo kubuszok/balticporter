@@ -49,12 +49,9 @@ object ManifestAgreement:
       "§1(b) PER-LIBRARY: the shared namespace is renamed differently in the two modules, so this " +
         "module's references name a package the base never emits. Inherit the base's rename map.")
     /** a TYPE both modules see is moved — renamed, sub-packaged or flattened — differently.
-      *
-      * Separate from [[RenameDivergence]] because the fix is a different key and the failure is a
-      * different shape: a package divergence moves a whole namespace and is visible in every
-      * `import`, while a per-TYPE one moves ONE class and is invisible until the dependent names
-      * it. Both are fatal, and for the same reason — the two ports each compile alone and cannot
-      * compile together. */
+      * Separate from [[RenameDivergence]]: a package divergence moves a whole namespace, visible
+      * in every `import`; a per-TYPE one moves ONE class, invisible until the dependent names it.
+      * Both are fatal — the two ports each compile alone and cannot compile together. */
     case TypeRenameDivergence extends Kind(true,
       "§1(b) PER-LIBRARY: a type of the shared surface is moved differently in the two modules — " +
         "renamed, sub-packaged or flattened here and not there, or to a different destination — so " +
@@ -93,14 +90,11 @@ object ManifestAgreement:
         "compile alone and could not compile together. Reconcile the two entries: move the " +
         "selection to the module that owns the declaration, and inherit it with " +
         "`base.extendedBy(...)` rather than restating it.")
-    /** a base selects a remedy at a location this module answers NOTHING at.
-      *
-      * `MissingDrop` read at a member key, and reachable only on the `mirroring` path for the same
-      * reason: an INHERITING module's `effectiveResolutions` already contains its base's, so the
-      * comparison is vacuous there by construction. A module that states its policy IN FULL has no
-      * such guarantee, and the omission is invisible to [[ResolutionDivergence]] — that one compares
-      * a `policyChain` which is `List(this)` here, so it sees one manifest and nothing to disagree
-      * with. */
+    /** a base selects a remedy at a location this module answers NOTHING at. `MissingDrop` read
+      * at a member key, reachable only on the `mirroring` path: an INHERITING module's
+      * `effectiveResolutions` already contains its base's (vacuous there); a module stating its
+      * policy IN FULL has no such guarantee, and [[ResolutionDivergence]] cannot see the omission
+      * since its `policyChain` is `List(this)` here. */
     case MissingResolution extends Kind(true,
       "§1(b) PER-LIBRARY: the base module SELECTS a remedy at this location and this module selects " +
         "none, so the same declaration is emitted two ways and the two ports cannot compile " +
@@ -180,15 +174,10 @@ object ManifestAgreement:
         "the configuration of any phase that does not implement `SurfacePolicy`. Re-run the base " +
         "port to restore the stronger check.")
     /** the base's map was published by a JVM of a DIFFERENT JDK specification than this run's.
-      *
-      * FATAL, and the only member of this family that is. Every other map verdict here degrades to
-      * a WEAKER but still valid check: `Stale` and `Missing` fall back to re-deriving the base's
-      * decisions from its manifest, which is honest because the re-derivation and the base's own
-      * run would agree if the base were re-run. A JDK mismatch breaks that: the base's EMITTED
-      * SCALA — the artifact this module actually compiles against — was produced by a frontend
-      * reading a different set of class files, and no amount of re-derivation on THIS JVM produces
-      * it. So there is nothing weaker to fall back TO, and the run must stop rather than emit a
-      * module against a base whose surface it cannot reproduce. */
+      * FATAL, the only member of this family that is: `Stale`/`Missing` fall back to re-deriving
+      * the base's decisions from its manifest (honest, since re-derivation would agree with a
+      * re-run base). A JDK mismatch breaks that — the base's EMITTED SCALA was produced from a
+      * different set of class files, and no re-derivation on THIS JVM reproduces it. */
     case BaseMapJdk extends Kind(true,
       "§1(b) PER-LIBRARY, OPERATIONAL: the base's port map was published by a JVM implementing a " +
         "DIFFERENT JDK specification than this run's, so the Scala this module is about to compile " +

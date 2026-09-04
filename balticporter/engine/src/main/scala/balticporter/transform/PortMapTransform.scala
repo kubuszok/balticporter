@@ -3,13 +3,10 @@ package balticporter.transform
 import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource, PortMap, PortManifest, SurfacePolicy}
 import balticporter.tir.*
 
-/** Migrates a DEPENDENT's references from what its base module actually PUBLISHED — re-points a
-  * renamed type/member to the base's emitted name, and reports a call to a member the base dropped
-  * or replaced with a hand-supplied body. `maps` are the base's own published [[PortMap]]s; empty
-  * is a total no-op. Does not rewrite a dropped call, consult its own module's map, or verify
-  * freshness ([[PortMap.freshness]]'s job).
-  * CLAUDE.md §1(b), §1.5; ENGINE-LIMITS D2, D14
-  */
+/** Migrates a DEPENDENT's references from what its base module PUBLISHED — re-points a renamed
+  * type/member to the base's emitted name, and reports a call to a member the base dropped or
+  * replaced with a hand-supplied body. `maps` are the base's own published [[PortMap]]s; empty is
+  * a no-op. Does not rewrite a dropped call or verify freshness ([[PortMap.freshness]]'s job). */
 final class PortMapTransform(maps: List[PortMap.Map0] = Nil) extends Phase, PolicySource, SurfacePolicy:
   def name: String = "port-map-migration"
 

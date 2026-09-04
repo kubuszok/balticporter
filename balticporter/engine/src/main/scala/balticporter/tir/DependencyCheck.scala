@@ -2,41 +2,11 @@ package balticporter.tir
 
 import balticporter.catalog.{ApiRow, ArtifactDep, DiffId, Platform}
 
-/** Which third-party ARTIFACTS the port's declared backends need, and which of them its build does
-  * not name. `PortabilityCheck` reports an API to STOP CALLING; half the catalog's platform
-  * answers instead mean the API EXISTS off the JVM in an artifact the build must add (java.time,
-  * java.util.Locale, DecimalFormat, MessageDigest, WeakReference), so reporting those as
-  * unportability would tell the reader to remove a call a one-line dependency entry makes correct.
-  * `Verdict.Depend` gets its own finding kind — a BUILD-GRAPH question, not a symbol-reference one.
-  *
-  * A finding is *a usage FIRED* ∧ *no declared dependency covers it* ∧ *no declared alternative*.
-  * The usage is [[requirements]] (an ExternalUsage walk over Depend-verdict rules); the
-  * alternative is read THROUGH `PortManifest.verdictOverrides` structurally, not as a second
-  * filter that could disagree; the coverage is [[uncovered]], the only real filter. [[unneeded]]
-  * is the opposite direction — a declared coordinate answering nothing — reported on `policy`
-  * instead, since it is not a fact about this port's portability.
-  *
-  * THE 2×2: "does this coordinate answer anything" asked of one (post-pipeline) program is wrong
-  * for a coordinate a phase redirected INTO — the redirect removes the very JDK usage the
-  * coordinate answers, so the walk then finds nothing and wrongly recommends removing an artifact
-  * the emitted code needs (ENGINE-LIMITS P8). The answer is TWO programs and a 2×2 cell:
-  * {{{
-  *                       EMITTED uses it?
-  *                        yes            no
-  *   ORIGINAL   yes   Covered        Stale        <- the port rewrote away its last usage
-  *   uses it?    no   Introduced     Unused       <- copied, or an upstream change removed the call
-  * }}}
-  * The EMITTED column alone decides keep-or-remove (Covered/Introduced keep, Stale/Unused don't);
-  * the ORIGINAL column decides the SENTENCE (an upstream call that vanished vs. an entry that
-  * never had one). Both columns are one union ([[uses]]) over a different Program: a catalog row's
-  * Depend naming the artifact ([[requirements]]); the artifact's OWN CLASS LIST answering a named
-  * reference (read FROM the jar, never derived from the coordinate — §4.56's hazard at a build
-  * coordinate); or the artifact's class list answering a name a phase SPLICED in as LITERAL TEXT
-  * ([[splicedNames]], derived from the emitted program since a Tree.Opaque has no interned symbol
-  * for ExternalUsage to see). [[Provides]] is THREE-valued: a jar that cannot be fetched is
-  * `Unverifiable` ([[Cell.Unverifiable]], KEEPS, says why) rather than collapsing either way
-  * (§4.6's fabricated fact). The catalog half is asked FIRST, so most ports resolve no jar at all.
-  */
+/** Which third-party ARTIFACTS the port's declared backends need, and which its build does not
+  * name — a BUILD-GRAPH question, not a symbol-reference one. A finding is *a usage FIRED* ∧ *no
+  * dependency covers it* ∧ *no declared alternative*; [[unneeded]] is the opposite (on `policy`).
+  * Coverage compares ORIGINAL and EMITTED programs (a redirect can remove the JDK usage a
+  * coordinate answers, `ENGINE-LIMITS.md` P8). [[Provides]] unfetchable = `Unverifiable` (§4.6). */
 object DependencyCheck:
 
   /** the RESIDUE lane: requirements that survived BOTH filters — this module's own emitted code
@@ -50,11 +20,9 @@ object DependencyCheck:
   val All = "dependency-coverage(all)"
 
   /** the THIRD artifact of the family, counting DECLARATIONS rather than usage sites: `policy = 0`
-    * is a bar a port can hold by DECLARING NOTHING, and the two lanes above cannot show it (they
-    * enumerate JDK usages, so a redirected-into artifact has no row — ENGINE-LIMITS P8). One row
-    * per declared coordinate, naming its [[Cell]]; the `policy` residue is the subtraction. A run
-    * that declares nothing records `0`, a fact about that port
-    * and not an exemption (`jdk-surface`'s own reason). */
+    * is a bar a port can hold by DECLARING NOTHING, invisible to the usage-enumerating lanes above
+    * (`ENGINE-LIMITS.md` P8). One row per declared coordinate, naming its [[Cell]]; the `policy`
+    * residue is the subtraction. */
   val Declared = "dependency-coverage(declared)"
 
   val Classification: String =
@@ -170,12 +138,9 @@ object DependencyCheck:
     def render: String = s"$dep — ${cell.label} (original: ${original.why}; emitted: ${emitted.why})"
 
   /** every dotted name a phase SPLICED into this program as literal text — the third evidence, and
-    * the one no symbol table holds. A `Tree.Opaque` is ready-made Scala the engine deliberately does
-    * not parse, so every symbol-keyed check reads past it. Walked with `StandardTraversal` over the
-    * PROGRAM rather than asked of the phases (`CLAUDE.md` §1 — `Rewrite.accountedBy`).
-    *
-    * Returns the MAXIMAL dotted run, uncut — `a.b.C.member` and not `a.b.C` — because which prefix
-    * is a CLASS only the artifact's own listing can answer (§4.56). [[namesClass]] does the cutting. */
+    * the one no symbol table holds. A `Tree.Opaque` is ready-made Scala the engine deliberately
+    * does not parse, so a symbol-keyed check reads past it. Walked with `StandardTraversal` over
+    * the PROGRAM (§1 — `Rewrite.accountedBy`). Returns the MAXIMAL dotted run, uncut — [[namesClass]] cuts. */
   def splicedNames(program: Program): Set[String] =
     given Program = program
     program.units.foldLeft(Set.empty[String]) { (acc, u) =>
@@ -185,12 +150,10 @@ object DependencyCheck:
       }
     }
 
-  /** the maximal `ident(.ident)+` runs of a piece of ready-made Scala — a CANDIDATE list, each tested
-    * for equality against a jar's own class listing.
-    *
-    * The hole marker (`Tree.Opaque.Mark`, NUL) is an IDENTIFIER-IGNORABLE control character (JLS
-    * 3.8), so `Character.isJavaIdentifierPart` answers true for it and it would otherwise glue onto
-    * the literal name in front of it. Exclude the whole ignorable CLASS, not just the marker. */
+  /** the maximal `ident(.ident)+` runs of a piece of ready-made Scala — a CANDIDATE list, each
+    * tested against a jar's own class listing. The hole marker (`Tree.Opaque.Mark`, NUL) is an
+    * IDENTIFIER-IGNORABLE control character (JLS 3.8), so it would otherwise glue onto the literal
+    * name in front of it — exclude the whole ignorable CLASS, not just the marker. */
   private[tir] def dottedRuns(raw: String): Set[String] =
     val out = Set.newBuilder[String]
     val cur = new StringBuilder
@@ -217,13 +180,11 @@ object DependencyCheck:
       if i > 0 then hit = classes(name.substring(0, i))
     hit
 
-  /** does THIS program use THIS artifact — the derivation both columns of the 2×2 read. The union of
-    * the THREE evidences, catalog half first: a `Depend` row, a reference to a class the artifact
-    * declares, or a name a phase SPLICED in as literal text.
-    *
-    * `external` is the program's own EXTERNAL usage rows, held to this module's emitted code by the
-    * caller's D2 predicate — the same list `jdk-surface` reads, never a second walk (§3). `spliced`
-    * is [[splicedNames]] over the same program, `Set.empty` for the pre-pipeline one. */
+  /** does THIS program use THIS artifact — the derivation both columns of the coverage table
+    * read. The union of THREE evidences, catalog half first: a `Depend` row, a reference to a
+    * class the artifact declares, or a name a phase SPLICED in as literal text. `external` is this
+    * module's own external usage rows (D2, the same list `jdk-surface` reads); `spliced` is
+    * [[splicedNames]], `Set.empty` for the pre-pipeline program. */
   def uses(dep: ArtifactDep, reqs: List[Requirement], external: List[ExternalUsage.Row],
            provides: ArtifactDep => Provides, spliced: Set[String] = Set.empty): Answer =
     val byCatalog = reqs.filter(_.deps.values.exists(d => (d.org, d.name) == (dep.org, dep.name)))
@@ -254,17 +215,11 @@ object DependencyCheck:
                 " — written as literal Scala by a surface phase, which interns no symbol",
                 Evidence.Spliced)
 
-  /** the 2×2 itself: one [[Declaration]] per declared coordinate.
-    *
-    * The PRE-pipeline halves are BY NAME and forced exactly once, here — never per declaration, since
-    * a by-name parameter read inside the `map` would re-walk the program per coordinate.
-    *
-    * @param before this module's own requirements over the PRE-pipeline program
-    * @param beforeExternal …and its external usage rows
-    * @param after  the same over the program the run EMITS — [[unneeded]]'s old input, unchanged
-    * @param splicedAfter [[splicedNames]] over the EMITTED program only: the pre-pipeline program
-    *   holds no spliced text
-    */
+  /** the 2×2 itself: one [[Declaration]] per declared coordinate. PRE-pipeline halves are BY NAME
+    * and forced exactly once, here — never per declaration, or a by-name parameter would re-walk
+    * the program per coordinate. @param before/beforeExternal this module's own PRE-pipeline
+    * requirements/usage rows @param after the same over the EMITTED program @param splicedAfter
+    * [[splicedNames]] over the EMITTED program (the pre-pipeline one holds no spliced text). */
   def declarations(declared: List[ArtifactDep],
                    before: => List[Requirement], beforeExternal: => List[ExternalUsage.Row],
                    after: List[Requirement], afterExternal: List[ExternalUsage.Row],
@@ -290,13 +245,10 @@ object DependencyCheck:
         Declaration(d, cell, original, emitted)
       }
 
-  /** the same filter read backwards: a declared artifact no requirement in this module's own emitted
-    * code names. Reported as `NeverApplied` (not `NeverMatched`): the entry is well formed and names
-    * a real artifact, but no requirement fired — the reader checks whether the usage went away or
-    * lives somewhere this walk cannot see.
-    *
-    * The SUBTRACTION of [[declarations]] rather than a second derivation: rows whose [[Cell]] does
-    * not [[Cell.keep]], carrying that cell's sentence. A separate filter could disagree with it. */
+  /** the same filter read backwards: a declared artifact no requirement in this module's own
+    * emitted code names. Reported as `NeverApplied` (not `NeverMatched`): well formed, real
+    * artifact, but no requirement fired. The SUBTRACTION of [[declarations]], not a second
+    * derivation: rows whose [[Cell]] does not [[Cell.keep]], carrying that cell's sentence. */
   def unneeded(decls: List[Declaration]): List[(ArtifactDep, String)] =
     decls.filterNot(_.cell.keep).map { d =>
       d.dep -> (s"${d.cell.label} — ${d.cell.advice}" +
@@ -333,17 +285,11 @@ object DependencyCheck:
         s"original: ${d.original.why} | emitted: ${d.emitted.why} — ${d.cell.advice}")
     }
 
-  /** the same rows as an ARTIFACT a BUILD can read (`run-latest/dependencies.tsv`) — one value, one
-    * spelling, so a measure lane derives its classpath flags from the run rather than duplicating
-    * the manifest by hand (`CLAUDE.md` §1.5).
-    *
-    * `coordinate` is the EXPLICIT jvm form (`org:name_3:rev`), never `cs`'s or scala-cli's `::`
-    * shorthand, which picks an ambient suffix that can differ between checkouts.
-    *
-    * `onClasspath` is DERIVED here because only the run has the evidence: a coordinate whose emitted
-    * evidence is the CATALOG half answers a JDK API the JVM already has, so a jvm compile does not
-    * need it; a coordinate the emitted code NAMES does. Unknown takes the INCLUDING arm — an unneeded
-    * jar costs a resolution, a missing one a wall of unrelated errors. */
+  /** the same rows as an ARTIFACT a BUILD can read (`run-latest/dependencies.tsv`) — one value,
+    * one spelling, so a measure lane derives its classpath from the run (CLAUDE.md §1.5).
+    * `coordinate` is the EXPLICIT jvm form, never a `::` shorthand that can differ per checkout.
+    * `onClasspath` is DERIVED here since only the run has the evidence — Unknown takes the
+    * INCLUDING arm (an unneeded jar costs a resolution, a missing one a wall of errors). */
   val DeclaredHeader = "#org\tname\trev\tcross\tresolver\tcoordinate\tonClasspath\tcell\twhy"
 
   def declaredTsv(decls: List[Declaration], coordinateOf: ArtifactDep => String): List[String] =

@@ -5,13 +5,10 @@ import balticporter.tir.*
 import balticporter.tir.TypeRepr.NoType
 
 /** Inlines a static forwarder — `Wrapper.m(x, rest…)` -> `x.m(rest…)` — removing a dependency on a
-  * platform-swapping wrapper the port does not need (and often cannot have, off the JVM). Which
-  * class forwards which members to which receiver is per-library policy (`Forwarder`); empty is a
-  * no-op. Mints proper `<receiver>#<member>` symbols rather than reusing the wrapper's, so the xref
-  * and `PortabilityCheck` see each call for what it now is. `policyReport` surfaces two policy
-  * failure modes: a name matching nothing, and a name matching an overload set (receiver-first is
-  * assumed, not provable from a name alone).
-  */
+  * platform-swapping wrapper the port does not need. Which class forwards which members to which
+  * receiver is per-library policy (`Forwarder`); empty is a no-op. Mints proper
+  * `<receiver>#<member>` symbols so xref/`PortabilityCheck` see each call for what it now is.
+  * `policyReport` surfaces two failure modes: name matches nothing, or matches an overload set. */
 final class StaticForwarderTransform(forwarders: List[StaticForwarderTransform.Forwarder])
     extends Phase, PolicySource, SurfacePolicy, PolicyBound:
   def name: String = "static-forwarder-inline"

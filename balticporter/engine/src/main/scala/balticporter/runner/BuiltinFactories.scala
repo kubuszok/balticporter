@@ -34,32 +34,10 @@ final class PanamaFfiFactory extends TransformFactory:
 
 // (b) — policy as data
 
-/** ```
-  * { transform = "collections"
-  *   scope { except = ["com.foo.Bridge"] }
-  *   retarget { "java.util.Comparator" = "scala.math.Ordering" }
-  *   retargetRewrites {
-  *     "com.example.Bits" {
-  *       "get/1" = "apply"                               # Rename
-  *       "set/1" = "addOne"                              # Rename
-  *       "removeValue/2" {                               # BoolDispatch
-  *         boolDispatch = 1
-  *         onTrue = "removeValueByRef"
-  *         onFalse = "removeValue"
-  *       }
-  *       "<init>/0" {                                    # Construct
-  *         companion = "lowlevel.util.ObjectMap"
-  *         factory = "apply"
-  *       }
-  *     }
-  *   }
-  *   reifiedCarriers = ["com.fasterxml.jackson.core.type.TypeReference"]
-  *   reflectiveSinks = ["com.fasterxml.jackson.databind.ObjectMapper"] }
-  * ```
-  * `retargetRewrites` inner key is `"memberName/arity"` or `"memberName/(descriptor)"`.
-  * `reifiedCarriers`: super-type tokens whose arguments stay in java's namespace (ENGINE-LIMITS K20).
-  * `reflectiveSinks`: types that read runtime representations at `Object` slots (ENGINE-LIMITS K21).
-  */
+/** `.conf` shape for `CollectionsTransform`: `scope`/`retarget`/`retargetRewrites` (key
+  * `"member/arity"` or `"member/(descriptor)"`, values Rename/BoolDispatch/Construct/… variants),
+  * `reifiedCarriers` (super-type tokens whose args stay in java's namespace, `ENGINE-LIMITS.md`
+  * K20), `reflectiveSinks` (types reading runtime representations at `Object` slots, K21). */
 final class CollectionsFactory extends TransformFactory:
   def name = "collections"
   def fromConfig(config: ConfigView): Phase =
@@ -209,18 +187,8 @@ final class ClassTableFactory extends TransformFactory:
   def fromConfig(config: ConfigView): Phase =
     new ClassTableTransform(config.stringMap("redirects").getOrElse(Map.empty))
 
-/** ```
-  * { transform = "type-redirect"
-  *   redirects {
-  *     "a.B" = "c.D"                                                  # flat form
-  *     "a.Disposable" = { to = "java.lang.AutoCloseable"
-  *                        memberRenames { dispose = "close" } }
-  *     "x.reflect.Field" = { to = "com.foo.ai.TaskField"
-  *                           scope { only = ["com.foo.ai"] } }
-  *   } }
-  * ```
-  * Two shapes: a string value is the flat form; an object carries `to`, `memberRenames`, `scope`.
-  */
+/** `.conf` shape for `type-redirect`: `redirects` maps upstream FQN to either a bare string (flat
+  * form) or an object carrying `to`, `memberRenames`, `scope`. */
 final class TypeRedirectFactory extends TransformFactory:
   def name = "type-redirect"
   def fromConfig(config: ConfigView): Phase =
@@ -237,13 +205,8 @@ final class TypeRedirectFactory extends TransformFactory:
       memberRenames = entries.collect { case (k, _, rn, _) if rn.nonEmpty => k -> rn }.toMap,
       scopes        = entries.collect { case (k, _, _, sc) if !sc.isUnrestricted => k -> sc }.toMap)
 
-/** ```
-  * { transform = "bean-properties"
-  *   pairs { "a.B#opacity" = "getOpacity/setOpacity"
-  *           "a.B#name"    = { accessors = "getName/setName", target = "var" } } }
-  * ```
-  * Two shapes: a string value names accessors; an object adds `target` (def-pair | var | val).
-  * Empty `pairs` is a no-op. */
+/** `.conf` shape for `bean-properties`: `pairs` maps a member key to either an accessor-pair
+  * string or an object adding `target` (def-pair | var | val). Empty `pairs` is a no-op. */
 final class BeanPropertyFactory extends TransformFactory:
   def name = "bean-properties"
   def fromConfig(config: ConfigView): Phase =
@@ -317,13 +280,8 @@ final class PortMapMigrationFactory extends TransformFactory:
         "required, and absent — with no base module named there is no published map to read, and " +
           "the phase would report nothing while looking as though it had checked"))*)
 
-/** ```
-  * { transform = "primitive-to-opaque"
-  *   fqn = "sge.gl.GlHandle", underlying = "Int"
-  *   extraHints = ["sge.gl.GL20#glHandle"]
-  *   scope { only = ["sge.gl"] } }
-  * ```
-  * `hints` and `extraHints` are exact FQNs for seeding; both reach the surface fingerprint. */
+/** `.conf` shape for `primitive-to-opaque`: `fqn`, `underlying`, `hints`/`extraHints` (exact FQN
+  * seeds, both reach the surface fingerprint), `scope`. */
 final class PrimitiveToOpaqueFactory extends TransformFactory:
   def name = "primitive-to-opaque"
   def fromConfig(config: ConfigView): Phase =
@@ -337,13 +295,8 @@ final class PrimitiveToOpaqueFactory extends TransformFactory:
       scope      = TransformFactory.scopeOf(config),
     ))
 
-/** ```
-  * { transform = "nullability"
-  *   annotations = ["com.foo.Null"], target = "union"       # union | named | option
-  *   wrapper = "lowlevel.Nullable"                          # required iff target = "named"
-  *   scope { except = ["com.foo.Bridge"] } }
-  * ```
-  * `wrapper` is refused when `target` is not `"named"`. Empty `annotations` = no-op. */
+/** `.conf` shape for `nullability`: `annotations`, `target` (union|named|option), `wrapper`
+  * (required iff `target = "named"`, refused otherwise), `scope`. Empty `annotations` = no-op. */
 final class NullabilityFactory extends TransformFactory:
   def name = NullabilityTransform.Name
   def fromConfig(config: ConfigView): Phase =
@@ -376,22 +329,10 @@ final class NullabilityFactory extends TransformFactory:
       nullableMembers = config.strings("nullableMembers").getOrElse(Nil).toSet,
     )
 
-/** {{{
-  * { transform = "globals-to-implicits"
-  *   holders = [{
-  *     holder  = "com.foo.Gdx"
-  *     context = { inject = "sge.Sge" }                  # or { mint = "com.foo.Sge" }
-  *     members = { app = "application", gl = "graphics.gl20" }
-  *     attach = "method", reader = "summon", boundary = "refuse"
-  *     sites  = { "com.foo.Utils#<clinit>" = "lazy-init" }
-  *     selfSupplied = { "com.foo.FooTest" = "com.foo.TestFixture.ctx()" }
-  *     retain       = { "com.foo.Widget" = "fooContext" }
-  *     cache        = { "com.foo.Boot" = "fooContext" }
-  *     promoteToClass = [ "com.foo.Viewport" ]
-  *     scope { except = [ … ] } }] }
-  * }}}
-  * A holder entry with no `context` block is an extension (dependent's per-declaration keys only).
-  * `holders` is required; absent is refused. */
+/** `.conf` shape for `globals-to-implicits`: `holders` (each an entry with `holder`, `context`
+  * — `inject`/`mint` — `members`, `attach`/`reader`/`boundary`, `sites`, `selfSupplied`,
+  * `retain`, `cache`, `promoteToClass`, `scope`). No `context` block = an extension (dependent's
+  * per-declaration keys only). `holders` is required; absent is refused. */
 final class GlobalsToImplicitsFactory extends TransformFactory:
   def name = "globals-to-implicits"
 

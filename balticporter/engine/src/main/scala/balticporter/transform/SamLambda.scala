@@ -3,12 +3,9 @@ package balticporter.transform
 import balticporter.tir.*
 
 /** Decides whether a java anonymous class implementing a single-abstract-method interface can
-  * become a scala lambda ascribed to that interface. `decide` is the single source of truth for
-  * the population (no separate census — `CLAUDE.md` §4.6's one-mechanism-one-seam). Every
-  * behavioural delta between the two forms is either made impossible by a [[Guard]], impossible by
-  * the ascribed-lambda SHAPE (overload resolution), or counted on the conversion's own `Decision`
-  * (class-name identity — `getClass()` differs and no guard can reach it). `DESIGN.md` §8.15
-  */
+  * become a scala lambda ascribed to that interface. `decide` is the single source of truth (no
+  * separate census, CLAUDE.md §4.6). Every behavioural delta is made impossible by a [[Guard]] or
+  * by the ascribed-lambda SHAPE, or counted on the conversion's own `Decision`. `DESIGN.md` §8.15. */
 object SamLambda:
 
   /** WHY a site was declined. A closed enum, because [[IdiomVerdict.Refused]]'s `guard` is the
@@ -86,11 +83,10 @@ object SamLambda:
             case _ => refuse(Guard.BodyNotSingle)
 
   /** does the body name the ANON INSTANCE — the §4.4 meaning change (`this`/`super` bound to the
-    * anon, or a bare reference resolving to a member the anon INHERITS from its ancestry or from
-    * `java.lang.Object`). A qualified outer `this` is fine under a lambda and is not refused. The
-    * bare-reference form exists because the frontend drops `this.` receivers and resolves them
-    * lexically (`SpoonTir.thisOf`), so `this.toString()` arrives as a plain `Ident` with no `This`
-    * node — matched here by owner rather than by node shape. */
+    * anon, or a bare reference resolving to an inherited member). A qualified outer `this` is fine
+    * under a lambda and not refused. Bare-reference form exists because the frontend drops
+    * `this.` receivers and resolves them lexically, so `this.toString()` arrives as a plain
+    * `Ident` — matched here by owner rather than node shape. */
   private def selfReferences(d: Tree.DefDef, anonSym: SymId, ancestry: Set[SymId])
                             (using p: Program): Boolean =
     d.rhs.exists(b => StandardTraversal.scanTerm(b, false) { (acc, t) =>
@@ -185,11 +181,9 @@ object SamLambda:
     case other                        => other.toString
 
 /** Converts an anonymous class implementing a single-abstract-method interface into a lambda,
-  * ASCRIBED to that interface. §1 kind (a): unparameterised, no scope, no on/off switch — which
-  * types are SAM and whether a body is a single method are structural facts. The ascription keeps
-  * every call's candidate set unchanged (no `JS-C22`/`JS-C23` risk); rewrites no call site, moves
-  * no declaration, mints no unit. Runs before every retyping phase, so it ascribes java's own type.
-  */
+  * ASCRIBED to that interface. §1 kind (a): unparameterised — which types are SAM is structural.
+  * The ascription keeps every call's candidate set unchanged (no `JS-C22`/`JS-C23` risk); rewrites
+  * no call site, moves no declaration, mints no unit. Runs before every retyping phase. */
 final class SamLambdaTransform extends Phase, IdiomPhase:
 
   def name: String = "sam-anon->lambda"

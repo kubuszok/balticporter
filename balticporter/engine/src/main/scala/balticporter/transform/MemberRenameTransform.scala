@@ -3,20 +3,11 @@ package balticporter.transform
 import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
 import balticporter.tir.*
 
-/** Renames a member the port names to a name the port CHOOSES — the manifest's way to reach
-  * [[MemberRenamer]] for a free-form rename (unlike [[TypeRedirectTransform]]'s, which is dictated
-  * by its redirect target). Uses `OnCollision.Refuse`: the new name is the port's free choice, so a
-  * collision is reported rather than silently resolved by moving a third member. Base-anchored —
-  * built with `baseUnits` excluding this run's own emitted units — because unlike a redirect
-  * rename this one has no agreement with a base about the result. `runsBefore("type-redirect")` at
-  * declaration position (not a hand-written edge) frees a name before a redirect could collide with
-  * it; `package-rename` stays last. CLAUDE.md §1(b), §4.55, §4.56, ENGINE-LIMITS D2; empty `renames`
-  * is a no-op. `SurfacePolicy` + `MergeablePolicy`: independent keys union, one member two names
-  * refuses.
-  *
-  * {{{ renames { "com.foo.VisWindow#close" = "closeWindow", "com.foo.Stream#close(int)" = "closeAt" } }}}
-  * Key is a [[MemberKey]] in the upstream namespace; value is a bare member name only.
-  */
+/** Renames a member to a name the port CHOOSES — reaches [[MemberRenamer]] for a free-form rename
+  * (unlike [[TypeRedirectTransform]]'s, dictated by its redirect target). `OnCollision.Refuse`: a
+  * collision is reported, never silently resolved. Base-anchored (excludes this run's own emitted
+  * units). `runsBefore("type-redirect")` frees a name before a redirect could collide with it;
+  * `package-rename` stays last. Empty `renames` is a no-op. `{{{ renames { "com.foo.Stream#close(int)" = "closeAt" } }}}` */
 final class MemberRenameTransform(val renames: Map[String, String] = Map.empty)
     extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound:
 

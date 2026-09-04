@@ -1426,9 +1426,9 @@ final class CollectionsTransform(
     memberKeyOf(m).exists(CollectionsTransform.handledStatics.contains)
 
   /** Java's collection copy constructor — `new ArrayList<>(c)`, `new HashSet<>(c)`, etc. A
-    * capacity hint (`new ArrayList<>(10)`) maps correctly by accident since `ArrayBuffer(10)`
-    * means the same; a COPY (`new ArrayList<>(c)`) needs `<Companion>.from(c)` instead, gated on
-    * the argument being a collection. */
+    * capacity hint (`new ArrayList<>(10)`) maps correctly by accident; a COPY needs
+    * `<Companion>.from(c)` instead, gated on the argument being a collection. */
+
   /** Java's class-token constructor — `new EnumMap<K, V>(K.class)` — routed to a named factory
     * since the shim orders by `ordinal` and the token has nothing to size. Ordered before
     * [[copyConstructor]]; disjoint anyway (takes a `classOf[…]` literal). */
@@ -1734,12 +1734,10 @@ final class CollectionsTransform(
       .map(s => TypeRepr.TypeRef(TypeRepr.NoPrefix, s.id)).getOrElse(a.tpe)
 
   /** A `return` is a shim-typed slot exactly as a formal or `val` is — the declared return type
-    * is the expected type of every `return` in the body. The walk is DELIBERATELY BOUNDED: a
-    * `return` inside a lambda, anon class or local class returns from THAT, so only node kinds
-    * carrying a statement of the same method are followed; an unhandled kind therefore MISSES a
-    * coercion (a loud compile error) rather than wrongly coercing one. A method body's tail
-    * expression is not a return value here — every java method exits through `Tree.Return`, so
-    * `Block.expr` is a statement or `()`. */
+    * is the expected type of every `return` in the body. DELIBERATELY BOUNDED: a `return` inside a
+    * lambda/anon/local class returns from THAT, so an unhandled kind MISSES a coercion (a loud
+    * compile error) rather than wrongly coercing. Tail expression is not a return value here —
+    * every java method exits through `Tree.Return`. */
   override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef =
     citeIfReified(t.symbol)
     val coerced = t.copy(rhs = t.rhs.map(coerceReturns(t.returnTpt.tpe, _)))
@@ -1827,11 +1825,9 @@ final class CollectionsTransform(
         Some(Tree.Apply(Tree.Ident(f, TypeRepr.NoType, so), List(recv, d), f, t.tpe, t.origin))
       case ("ifPresent", List(f), Kind.Opt)  => Some(call(recv, foreachSym, List(f), t, so))
       // m.entrySet() is the VIEW of the map as (key, value) pairs; a scala Map[K, V] already IS
-      // an Iterable[(K, V)], so the view is the map itself (Tuple2 loses setValue write-through,
-      // which now fails to compile rather than writing to a detached copy).
-      // list.iterator() yields a scala.collection.Iterator, but every declaration derived from
-      // java.util.Iterator wants the removal-capable shim; decided on provenance (a scala
-      // collection's iterator is scala's). Not on shims themselves — already JavaIterator.
+      // one, so the view is the map itself (Tuple2 loses setValue write-through). list.iterator()
+      // yields a scala.collection.Iterator, but a java.util.Iterator-derived declaration wants the
+      // removal-capable shim; decided on provenance.
       case ("iterator", Nil, _) if iteratorFromSym != SymId.None =>
         val sel = Tree.Select(recv, m, t.tpe, t.origin) // parenless, as the generic case below
         Some(Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, so), List(sel), iteratorFromSym, t.tpe, so))
@@ -1991,10 +1987,9 @@ final class CollectionsTransform(
 
   /** May a rewrite that cannot stand on `super` stand on `this` instead — do `super.m` and
     * `this.m` name the same member for every value this expression can have? True iff neither the
-    * class itself nor any subclass IN THIS PROGRAM declares `m` (a whole-program question the port
-    * cannot answer beyond its own scope, but the alternative is no emission at all — a refused
-    * rewrite that does not compile). Both walks read class definitions, not the symbol table;
-    * the subclass walk is transitive. */
+    * class nor any subclass IN THIS PROGRAM declares `m` (the port cannot answer beyond its own
+    * scope; the alternative is a refused rewrite that does not compile). Both walks read class
+    * definitions, not the symbol table; the subclass walk is transitive. */
   private[transform] def superIsThis(recv: Term, member: String)(using p: Program): Boolean = recv match
     case Tree.Super(cls, _, _) if cls != SymId.None =>
       val all      = PackageRenameTransform.allClasses(p)
@@ -2043,12 +2038,10 @@ final class CollectionsTransform(
     case Tree.Super(cls, tpe, so) => Tree.This(cls, tpe, so)
     case other                    => other
 
-  /** Does every `super` in this rewritten term stand where scala allows one — as a member
+  /** Does every `super` in this rewritten term stand where scala allows one — a member
     * selection's qualifier, nowhere else? Java has no such restriction, so a rewrite can put
-    * `super` where scala's grammar forbids it (`entrySet()` -> bare `super`; `Seq` `get` ->
-    * `super(i)`), both `E040` syntax errors. Asked of the RESULT, not the arm, so a rewrite added
-    * later is covered by construction. Walked with `StandardTraversal` (CLAUDE.md §3). ENGINE-LIMITS M6
-    */
+    * `super` where scala forbids it (`E040`). Asked of the RESULT, not the arm, so a later rewrite
+    * is covered by construction. `ENGINE-LIMITS.md` M6. */
   private[transform] def superPlaced(t: Term)(using Program): Boolean =
     var bad = false
     val scan = new Phase:
@@ -2118,13 +2111,10 @@ final class CollectionsTransform(
     case _                                => None
 
   /** A key argument, with the coercion java's formal required stripped when the scala member's
-    * formal is exactly what lies beneath it. Java declares `Map.get`/`remove`/`containsKey` over
-    * `Object`, so the frontend widens a type-variable key with `asInstanceOf[Object]` (G14);
-    * once this phase retypes the receiver to `Map[K,V]` that widening is the one thing between
-    * the argument and `K` (ENGINE-LIMITS K5.6, a coercion that only becomes wrong after a
-    * retyping). Structural and names no type (CLAUDE.md §4.56): stripped exactly when what it
-    * wraps already has the wanted type; left alone otherwise, so a genuine mismatch fails
-    * compilation naming both types (ENGINE-LIMITS M6). */
+    * formal is exactly what lies beneath it. Java's `Map.get`/`remove`/`containsKey` widen a
+    * type-variable key with `asInstanceOf[Object]` (G14); after this phase retypes the receiver,
+    * that widening is all that stands between the argument and `K` (`ENGINE-LIMITS.md` K5.6).
+    * Structural, names no type — stripped only when what it wraps already has the wanted type. */
   private[transform] def keyArg(arg: Term, recv: Term): Term = (arg, keyType(recv.tpe)) match
     case (Tree.Typed(inner, _, _, _), Some(k)) if k != TypeRepr.NoType && inner.tpe == k => inner
     case _                                                                               => arg

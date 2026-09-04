@@ -2,12 +2,9 @@ package balticporter.tir
 
 /** Nominates which Java constructor becomes Scala's PRIMARY, lifts its `super(args)` into the
   * `extends` clause, and routes every other constructor through `this(...)`. Shared between the
-  * emitter and [[OmissionCheck]] so the check cannot drift from what is emitted.
-  *
-  * Seven shapes: unique root, no-arg root, widest pass-through (JDK throwables), synthesised
-  * primary, synthetic-shaped root, promoted nilary, padded throwable synthesis. On top of the
-  * nomination, [[Plans]] withholds paramful promotions and [[Plans.replayFor]] replays
-  * `super(args)` as statements after `this()`. // ENGINE-LIMITS C3, C7 */
+  * emitter and [[OmissionCheck]] so the check cannot drift. Seven shapes: unique root, no-arg
+  * root, widest pass-through, synthesised primary, synthetic-shaped root, promoted nilary, padded
+  * throwable synthesis. `ENGINE-LIMITS.md` C3, C7. */
 object CtorFunnel:
 
   /** the plan for one class: which Java constructor is Scala's primary, the super arguments to

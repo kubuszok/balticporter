@@ -6,10 +6,8 @@ import balticporter.tir.TypeRepr.NoType
 
 /** Re-points a runtime class lookup by name (`Class.forName`-shaped) at an explicit
   * name→class table the port supplies, since Scala.js/Native have no runtime class registry.
-  * Rewrites `Wrapper.forName(s)` → `Table.classFor(s)`, same arguments and result type.
-  * Keys/values are `owner#member`. A key naming no program member is a no-op; [[policyReport]]
-  * reports it.
-  */
+  * Rewrites `Wrapper.forName(s)` → `Table.classFor(s)`, same arguments/result type. Keys/values are
+  * `owner#member`; a key naming no program member is a no-op, reported by [[policyReport]]. */
 final class ClassTableTransform(redirects: Map[String, String])
     extends Phase, PolicySource, SurfacePolicy, PolicyBound:
   def name: String = "class-table"

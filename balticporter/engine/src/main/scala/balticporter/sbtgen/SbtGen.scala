@@ -54,11 +54,9 @@ object SbtGen:
   def managedResources(root: Path, config: String): Path =
     managedRoot(root).resolve(config).resolve("resources")
 
-  /** Emit the skeleton with runtime delivery derived from the phases that ran.
-    *
-    * Does NOT write vendored sources -- `PortRun` handles that into the correct source set.
-    * A caller with no `PortRun` writes them via `plan.writeSources(dir)`.
-    *
+  /** Emit the skeleton with runtime delivery derived from the phases that ran. Does NOT write
+    * vendored sources -- `PortRun` handles that into the correct source set; a caller with no
+    * `PortRun` writes them via `plan.writeSources(dir)`.
     * @return the plan (carries `concreteMembers` for the emitter and `sources` for vendoring) */
   def emitPort(
       root: Path,

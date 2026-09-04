@@ -138,13 +138,11 @@ private[emit] trait TirEmitterExprs:
         // OmissionCheck.unnameableLambdaReturn.
         case None => head + term(body, i)
     case Tree.If(c, th, el, _, _)       => s"if (${term(c, i)}) ${term(th, i)} else ${term(el, i)}"
-    // A cast ON A POLY EXPRESSION is an ASCRIPTION (ENGINE-LIMITS K17 face 1): javac's cast there
-    // supplies the expected type without ever being a runtime cast, and rendered asInstanceOf a
-    // literal elaborates to Function0 FIRST, throwing where java's cast never would. `operand`
-    // parenthesises the lambda since `(x => y: T)` ascribes the BODY.
-    // A METHOD-VALUE ASCRIPTION — `(recv.m: (A, B) => R)`, the shape that PINS which overload scala
-    // binds (OverloadRiskCheck.AscribeJavacChoice). Structurally unambiguous as its own arm: JAVA
-    // HAS NO METHOD TYPES, so a Tree.Typed target of MethodType cannot be a source-written cast.
+    // A cast ON A POLY EXPRESSION is an ASCRIPTION (`ENGINE-LIMITS.md` K17 face 1): javac's cast
+    // there supplies the expected type without being a runtime cast; `asInstanceOf` on a literal
+    // elaborates to `Function0` first and throws. `operand` parenthesises the lambda. A
+    // METHOD-VALUE ASCRIPTION (`(recv.m: (A, B) => R)`) pins which overload scala binds
+    // (`OverloadRiskCheck.AscribeJavacChoice`) — unambiguous since JAVA HAS NO METHOD TYPES.
     case ty @ Tree.Typed(e, tpt, _, _) if tpt.tpe.isInstanceOf[TypeRepr.MethodType] =>
       // discharged NOT FIRED: this node is neither JS-G34's intersection cast nor JS-E06's
       // unboxing conversion, so both answers are facts rather than defaults (catalog(undischarged)).
@@ -320,12 +318,10 @@ private[emit] trait TirEmitterExprs:
               case Referent.Static(_)   => Nil // a constructor is never static; JLS 8.8.3
             samAscribed(s"((${ps.mkString(", ")}) => new ${ctorTpe(tt.tpe)}(${ps.mkString(", ")}))",
                         mrT, tt.tpe)
-        // Type::method is TWO java forms sharing one syntax: a STATIC method is Type.method; an
-        // INSTANCE method is an UNBOUND reference (the receiver becomes the first parameter).
-        // At arity ZERO the qualified name is not a function at all — scala 3 eta-expands a
-        // parameterful method but refuses a nullary one — so a nilary static reference (a
-        // Supplier<T>-shaped default) takes the lambda form (ENGINE-LIMITS G32); every other
-        // arity keeps the name.
+        // `Type::method` is TWO java forms sharing one syntax: STATIC is `Type.method`; INSTANCE
+        // is UNBOUND (receiver becomes the first parameter). At arity ZERO the qualified name is
+        // not a function at all — scala 3 refuses to eta-expand a nullary method — so a nilary
+        // static reference takes the lambda form (`ENGINE-LIMITS.md` G32); every other arity keeps the name.
         case Left(tt) if isStaticRef && referent == Referent.Static(0) =>
           samAscribed(s"(() => ${tpe(tt.tpe)}.${local(s)}())", mrT, tt.tpe)
         // a static method reference at NON-ZERO arity: bare name where the target SAM type carries
@@ -500,13 +496,13 @@ private[emit] trait TirEmitterExprs:
   private[emit] val recordedMarkers = collection.mutable.ListBuffer.empty[Tree.Unportable]
 
   /** A Java constructor reference (`Foo::new`) is typed by the TARGET functional interface java
-    * resolved, not by `Foo`. Emitted bare, `() => new Foo()` is a `Function0`, which scala
-    * SAM-converts to ANY single-abstract-method type, making an overload set AMBIGUOUS where
-    * java's was not — so the resolved target is re-stated as an ascription. Strictly guarded
-    * (concrete type, not the constructed type itself) so this can only ever narrow, never mis-type. */
+    * resolved, not by `Foo`. Emitted bare, `() => new Foo()` is a `Function0`, which SAM-converts
+    * to ANY interface, making an overload set AMBIGUOUS where java's was not — the resolved target
+    * is re-stated as an ascription, strictly guarded so this can only narrow, never mis-type. */
+
   /** Does the TARGET SAM type carry `@FunctionalInterface`? REFUTER polarity (§4.56): an
-    * unreadable annotation set is treated as UNANNOTATED, since the safe direction is the
-    * explicit lambda nobody warns about. */
+    * unreadable annotation set is treated as UNANNOTATED, the safe direction being the explicit
+    * lambda nobody warns about. */
   private[emit] def targetHasFunctionalInterface(target: TypeRepr): Boolean =
     headSymOf(target).flatMap(program.symbolOf).exists(
       _.annotations.exists(_.tpe match
@@ -548,12 +544,9 @@ private[emit] trait TirEmitterExprs:
   // -- F7 lvalue binding (CLAUDE.md §4.4, JLS 15.26.2 / 15.14.2 / 15.15.1) ---------------------
 
   /** Does this lvalue contain a subexpression whose re-evaluation could have an effect?
-    *
     * `effectFree` conservatively returns `false` for every `ArrayAccess`, but `arr(0)` with both
-    * `arr` and `0` effect-free does not need binding — evaluating them twice is evaluating them
-    * once. This function looks ONE LEVEL inside an assignable form and asks whether any
-    * constituent subexpression is non-trivial, which is the question the compound-assignment and
-    * increment arms need. */
+    * effect-free needs no binding. Looks ONE LEVEL inside an assignable form for a non-trivial
+    * constituent — the question the compound-assignment and increment arms need. */
   private[emit] def hasNonTrivialSubexpr(lv: Term): Boolean = lv match
     case _: Tree.Ident | _: Tree.This | _: Tree.Literal => false
     case Tree.Select(q, _, _, _)                        => !effectFree(q)
@@ -680,16 +673,11 @@ private[emit] trait TirEmitterExprs:
                                 "scala.Int" -> 3, "scala.Long" -> 4, "scala.Float" -> 5,
                                 "scala.Double" -> 6)
 
-  /** Java resolves an overload by EXACT match; scala widens numerics first and then finds no
-    * most-specific alternative (`setRegion(int×4)` beside `setRegion(float×4)`, four Int args).
-    * Ascribing the method's function type names the alternative java chose. Fires only where a
-    * sibling of the same name/arity is WEAKLY WIDER at every position and strictly wider at one, so
-    * checking the direction avoids ascribing every numeric call (measured 175 sites, 1 ambiguous).
-    * The RESULT goes through [[ParentSubst]] since a declared result may name the declaring type's
-    * own type parameter (G12), which the call site does not have; parameters need no substitution
-    * ([[numericParams]] admits only formals whose head is a numeric primitive). A variable the
-    * substitution cannot reach (unowned receiver, raw receiver, the callee's own method variable)
-    * DECLINES the ascription and the call renders as java wrote it (T17's stated refusal). */
+  /** Java resolves an overload by EXACT match; scala widens numerics first and finds no
+    * most-specific alternative. Ascribing the method's function type names the alternative java
+    * chose. Fires only where a same-name/arity sibling is WEAKLY WIDER everywhere and strictly
+    * wider at one position (175 sites measured, 1 ambiguous). RESULT goes through [[ParentSubst]]
+    * (G12); an unreachable substitution DECLINES the ascription (T17's stated refusal). */
   private[emit] def numericOverloadAscription(recv: Term, m: SymId): Option[String] =
     def numericParams(d: Tree.DefDef): Option[List[TypeRepr]] =
       val ps = d.paramss.flatten.map(_.tpt.tpe)
@@ -821,13 +809,10 @@ private[emit] trait TirEmitterExprs:
     scala.None
 
   /** A java `try`, plus the arm that keeps a translated JUMP out of its handlers. Java's
-    * break/continue is not an exception and no catch can intercept one, at any breadth; scala's
-    * translation IS one (`boundary.Break extends RuntimeException`), so a broad catch would
-    * silently swallow the jump — not incidental, since dotty's `DropBreaks.prepareForTry` shadows
-    * every enclosing label, so a break under a try is ALWAYS the exception form. The repair is a
-    * re-throw arm ahead of the java arms, interposed only where a jump really CROSSES the catch
-    * (`crossesCatch`, exact from the emitter's own boundary state). `finally` is untouched, since
-    * both languages run it and let the jump through. */
+    * break/continue is not an exception; scala's translation IS one (`boundary.Break extends
+    * RuntimeException`), so a broad catch would silently swallow it — always the exception form
+    * (dotty's `DropBreaks.prepareForTry`). Repair: a re-throw arm ahead of the java arms, only
+    * where a jump really CROSSES the catch (`crossesCatch`). `finally` is untouched. */
   private[emit] def tryStr(t: Tree.Try, i: Int)(using Obligations): String =
     val (res, body, catches, fin) = (t.resources, t.body, t.catches, t.finalizer)
     // JS-S13 — try-with-resources closes on ANY completion, in reverse order, BEFORE this try's
@@ -872,16 +857,11 @@ private[emit] trait TirEmitterExprs:
       resourceLowered += t.id
       s"try ${resourceStr(res, body, i)}$cl$fl"
 
-  /** JLS 14.20.3.1's lowering of a try-with-resources, emitted INLINE — one nesting per resource,
-    * as statements rather than a `Using`/lambda combinator (this emitter's `return` and
-    * `break`/`continue` render bound to labels outside the try and cannot survive being moved into
-    * a lambda body). Reproduces java's contract: reverse declaration order (falls out of the
-    * nesting), every `close()` attempted even after an earlier one throws, suppression rather than
-    * replacement on the body's own exception, and closed on ANY completion including a jump — a
-    * jump takes the `Break` arm ahead of the recorder (java's break carries no exception to
-    * suppress into, and `boundary.Break` is constructed with suppression disabled, so leaving
-    * `primary` null routes the finally to a bare `close()`). The catch-all binder and `primary`
-    * are numbered per nesting level to avoid shadowing across resources in one statement. */
+  /** JLS 14.20.3.1's lowering of a try-with-resources, emitted INLINE — not `Using`/a lambda
+    * (this emitter's `return`/`break`/`continue` bind to labels outside the try). Reproduces
+    * java's contract: reverse declaration order, every `close()` attempted after an earlier
+    * throws, suppression on the body's own exception, closed on ANY completion including a jump
+    * (a jump takes the `Break` arm ahead of the recorder). Numbered per nesting level. */
   private[emit] def resourceStr(res: List[Tree.ValDef], body: Term, i: Int)(using Obligations): String =
     res match
       case Nil => term(body, i)
@@ -940,11 +920,9 @@ private[emit] trait TirEmitterExprs:
   def breakGuardCount: Int = breakGuarded.size
 
   /** A java `switch`, with a boundary around any case body that still contains an unlabelled
-    * `break` (the frontend strips only the CASE-TERMINATING one, so one reaching here is mid-case
-    * fallthrough) — a scala `match` arm cannot be left early. Also emits a `case null => throw`
-    * arm ahead of the java arms for a REFERENCE-typed selector java's own switch NPEs on
-    * implicitly (JLS 14.11.2), unless the switch already declares its own `case null`
-    * (SE21's pattern-switch escape hatch). The boundary is ALWAYS named. */
+    * `break` (mid-case fallthrough — the frontend strips only the CASE-TERMINATING one). Also
+    * emits `case null => throw` ahead of the java arms for a REFERENCE selector java NPEs on
+    * implicitly (JLS 14.11.2), unless the switch already declares its own `case null` (SE21). */
   private[emit] def matchStr(m: Tree.Match, i: Int)(using Obligations): String =
     val (scr, cases) = (m.scrutinee, m.cases)
     // JS-S06 — an unlabelled break in the MIDDLE of a case ends the CASE, and a match arm cannot

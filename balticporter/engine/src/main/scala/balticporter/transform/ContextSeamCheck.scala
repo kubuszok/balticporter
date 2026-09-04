@@ -4,12 +4,10 @@ import balticporter.catalog.FixKind
 import balticporter.tir.*
 
 /** Counts every place [[GlobalsToImplicitsTransform]]'s `using`-threading closure stopped, and
-  * why — a declaration with no signature to thread through (a class initialiser, a static field
-  * initialiser, an unparsed override component). Eight [[Kind]]s, each a different reader
-  * instruction; see [[balticporter.tir.NotBound]] for why they aren't collapsed. Gated by baseline,
-  * not a hard-coded fatality — one library's census must not become an engine constant. No-op
-  * unless a port declared a threaded holder. DESIGN.md §8.4, CLAUDE.md §1
-  */
+  * why — a declaration with no signature to thread through. Eight [[Kind]]s, each a different
+  * reader instruction (see [[balticporter.tir.NotBound]] for why not collapsed). Gated by
+  * baseline, not a hard-coded fatality. No-op unless a port declared a threaded holder. DESIGN.md
+  * §8.4, CLAUDE.md §1. */
 object ContextSeamCheck extends RemedySource:
 
   /** The check's name in `findings.tsv`. */
@@ -17,12 +15,9 @@ object ContextSeamCheck extends RemedySource:
 
   /** The menu; see [[balticporter.tir.Remedy]] and `DESIGN.md` §8.16. Only `unconstructed-thread`
     * and `residual-global-read` get accept entries — the two kinds where "fine" is a real per-site
-    * answer the engine cannot derive itself. Every other act already has a spelling elsewhere
-    * (`selfSupplied`, `sites`, `promoteToClass`, `boundary`) and is a pointer, not an entry; and
-    * `unsuppliable-use` gets none at all — the emitted file does not compile, so there is nothing
-    * to accept. `lost-clause` is an engine bug (`DESIGN.md` §8.2, `ENGINE-LIMITS.md` CT5), not a
-    * port's to silence.
-    */
+    * answer the engine cannot derive. Every other act already has a spelling (`selfSupplied`,
+    * `sites`, `promoteToClass`, `boundary`), a pointer not an entry; `unsuppliable-use` gets none
+    * (the emitted file does not compile); `lost-clause` is an engine bug, not a port's to silence. */
   def remedies: List[Remedy] = List(
     Remedy(
       id = "accept-unconstructed-thread", lane = Name, kind = Kind.UnconstructedThread.label,
@@ -143,12 +138,9 @@ object ContextSeamCheck extends RemedySource:
           "context, add it to `promoteToClass`; otherwise the reads inside it stay global and are " +
           "counted above."
 
-  /** one seam.
-    *
-    * @param subject   the DECLARATION the seam is at, fully qualified at the time it was found.
-    * @param key       the policy entry a reader edits — the holder FQN, or the `sites` key.
-    * @param enclosing the declaration's symbol, for the ownership filter and for attribution.
-    */
+  /** one seam. @param subject the DECLARATION the seam is at, fully qualified at find time
+    * @param key the policy entry a reader edits — the holder FQN, or the `sites` key
+    * @param enclosing the declaration's symbol, for the ownership filter and attribution. */
   final case class Finding(kind: Kind, subject: String, key: String, detail: String,
                            origin: Origin, enclosing: SymId):
     def render: String = s"${kind.label} $subject — $detail  (${origin.javaPath}:${origin.line})"

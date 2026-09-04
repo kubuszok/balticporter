@@ -5,12 +5,10 @@ import balticporter.core.{EngineInfo, Provenance, Substituted}
 import balticporter.tir.*
 
 /** Emission backend: transformed TIR to Scala 3 source.
-  *
-  * @param externalConcrete concrete instance members of injected supertypes, keyed by FQN
-  *   as `(name, param counts)`. Required for [[diamondOverrides]] to see injected parents.
-  * @param provenance upstream attribution header stamped on every emitted unit. `None` = no header.
-  * @param notes the run's decision log (read-only); decisions render as porter notes beside emitted code.
-  */
+  * @param externalConcrete concrete instance members of injected supertypes, keyed `(FQN, param
+  *   counts)` — required for [[diamondOverrides]] to see injected parents
+  * @param provenance upstream attribution header stamped on every emitted unit; `None` = no header
+  * @param notes the run's decision log (read-only) — decisions render as porter notes beside code. */
 final class TirEmitter(
     private[emit] val source: Program,
     private[emit] val externalConcrete: Map[String, Set[(String, List[Int])]] = Map.empty,
@@ -98,13 +96,10 @@ final class TirEmitter(
     result.toSet
   }
 
-  /** The decisions THIS emitter made — the three §4.55 renaming passes, the replay widening, and
-    * the replay `@nowarn` suppression.
-    *
-    * A value rather than a recording, for the reason the `notes` parameter gives: the orchestrator
-    * records these once, from the emitter it keeps, and the determinism twin's identical copy is
-    * simply never read. Recording from the constructor would double every row on any run that
-    * builds two emitters — which is every run, since `Determinism.Emission` is the default. */
+  /** The decisions THIS emitter made — the three §4.55 renaming passes, the replay widening, the
+    * replay `@nowarn` suppression. A value, not a recording: the orchestrator records once, from
+    * the emitter it keeps, and a determinism twin's identical copy is never read — recording from
+    * the constructor would double every row on any run building two emitters (the default). */
   val ownDecisions: List[Decision] = own.toList
 
   def emit: String = program.units.map(emitUnit).mkString("\n\n")
@@ -120,11 +115,9 @@ final class TirEmitter(
   private[emit] var currentTopLevelSym: SymId = SymId.None
   private[emit] var currentOwnerSym: SymId    = SymId.None
   /** last segment of the package this unit is being EMITTED into — the qualifier a Java
-    * package-private or `protected` declaration renders with (DESIGN §8.7). Read from the unit the
-    * emitter is writing and never from a symbol's upstream FQN plus a rename map: the rename runs
-    * LAST (§4.56), so this string is already the emitted fact and no two-namespace join exists.
-    * Empty in the default package, which [[Visibility]] has already turned into a recorded
-    * widening rather than an unspellable qualifier. */
+    * package-private or `protected` declaration renders with (DESIGN §8.7). Read from the unit
+    * being written, never from an upstream FQN plus a rename map (the rename runs LAST, §4.56).
+    * Empty in the default package, already turned into a recorded widening by [[Visibility]]. */
   private[emit] var currentPkgTail: String = ""
 
   def emitUnit(cd: Tree.ClassDef): String =
@@ -404,13 +397,10 @@ object TirEmitter:
     * @param form what WAS emitted for this type: class, trait, object, enum. */
   final case class ClauseLoss(subject: SymId, fqn: String, form: String, origin: Origin)
 
-  /** The default `javaSource`: the upstream file, read once per path.
-    *
-    * Memoised per JVM because it is a pure function of the path and a port asks for the same file
-    * once per top-level type it declares. An unreadable path is `None` and not an exception — an
-    * emitter must not fail because a source tree moved after it was parsed; the comment simply
-    * cannot be recovered, and `TriviaCheck` (which reads the same file) reports the same absence
-    * as an uncompared file rather than as a clean one. */
+  /** The default `javaSource`: the upstream file, read once per path. Memoised per JVM (a pure
+    * function of the path, asked once per top-level type). An unreadable path is `None`, not an
+    * exception — a source tree that moved after parsing must not fail the emitter; `TriviaCheck`
+    * reports the same absence as an uncompared file. */
   private[emit] val javaSources = collection.concurrent.TrieMap.empty[String, Option[String]]
 
   def readJavaSource(path: String): Option[String] =
@@ -463,11 +453,10 @@ object TirEmitter:
   private[emit] val MemberRenameRule = "member-rename(§4.55)"
 
   /** Drop `private` from the given members. Java lets a parent constructor write its own private
-    * fields; when REPLAYED one level down (`CtorFunnel.replayFor`) they execute in the subclass,
-    * where `private` no longer reaches. Widening can only remove access errors, never behaviour.
-    * `forDependents` is the same widening asked by a subclass THIS RUN CANNOT SEE
-    * (`CtorFunnel.externalReplayWidenings`, ENGINE-LIMITS C15) — kept separate only for the note's
-    * sake, so a reader is not told "replayed in this subclass" about a class with none here. */
+    * fields; REPLAYED one level down (`CtorFunnel.replayFor`) they execute in the subclass, where
+    * `private` no longer reaches — widening only removes access errors, never behaviour.
+    * `forDependents` is the same widening for a subclass THIS RUN CANNOT SEE
+    * (`ENGINE-LIMITS.md` C15), kept separate so the note doesn't misattribute an empty class. */
   def widen(p: Program, members: Set[SymId],
             out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty,
             forDependents: Set[SymId] = Set.empty): Program =
@@ -557,14 +546,11 @@ object TirEmitter:
       if scanned(cd.symbol) then return
       scanned += cd.symbol
       parentSyms(cd).flatMap(declOf.get).foreach(scan) // parents first, so `eff` is settled
-      // AN ENUM PROMOTES ITS CONSTRUCTOR PARAMETERS TOO, by a different route: enumDef renders
-      // each as a var field without consulting CtorFunnel (ENGINE-LIMITS T11's remaining half —
-      // the collidee here is a DECLARED member, e.g. Flavor's isLiquidStyleInclude parameter
-      // against its own isLiquidStyleInclude()). NARROW, unlike the plan-based arm below: an enum
-      // parameter is EMITTED SURFACE (a public var), so only a real collision renames one. Two
-      // names are NOT collidees: the parameter's own name, and a body field it SUPERSEDES
-      // (enumDef drops that ValDef, so it never clashes and renaming would un-supersede it).
-      // "supersedes" is a (name, TYPE) question asked of CtorFunnel so the two cannot disagree.
+      // AN ENUM PROMOTES ITS CONSTRUCTOR PARAMETERS TOO, by a different route: `enumDef` renders
+      // each as a var field without consulting `CtorFunnel` (`ENGINE-LIMITS.md` T11's remaining
+      // half). NARROW, unlike the plan-based arm below: an enum parameter is EMITTED SURFACE (a
+      // public var), so only a real collision renames one. Two names are NOT collidees: the
+      // parameter's own name, and a body field it SUPERSEDES (`enumDef` drops that `ValDef`).
       val enumParams =
         if !p.symbolOf(cd.symbol).exists(_.flags.isEnum) then Nil
         else CtorFunnel.enumPrimaryCtor(p, cd).map(CtorFunnel.valueParams(p, _)).getOrElse(Nil)
@@ -630,18 +616,11 @@ object TirEmitter:
     if renames.isEmpty then p
     else p.rebuilt(symbols = SymbolTable(p.symbols.all.map(s => renames.get(s.id).map(n => s.copy(name = n)).getOrElse(s))))
 
-  /** Rename any field that SHADOWS an inherited member. Java fields shadow rather than override
-    * and resolve by the STATIC type of the receiver, so `ParallelArray.Channel`'s `Object data`
-    * and `FloatChannel`'s `float[] data` are different storage; scala has no such thing, so the
-    * shadowing field gets a fresh name. Exact because java resolved these statically: every TIR
-    * reference already points at the symbol java chose, so renaming that symbol re-points exactly
-    * what java meant. A field shadowing an inherited METHOD is the same defect through java's
-    * separate namespaces, renamed here too; statics are exempt (they land in the companion, which
-    * inherits nothing). The inherited member may be one this program never parsed (`finalize` on
-    * java.lang.Object, above every type whether or not a parent list says so) — narrowed to
-    * `isKnown(fqn) && mayDeclare(fqn, sig)`, since `mayDeclare`'s UNKNOWN-is-YES default is right
-    * for its other readers (*may I rename*, over-refusal free) and wrong here (*must I rename*
-    * would move a field on every unparsed-parent class for no evidence — ENGINE-LIMITS K28.2). */
+  /** Rename any field that SHADOWS an inherited member. Java fields shadow rather than override,
+    * resolving by the STATIC receiver type; scala has no such thing, so the field gets a fresh
+    * name — exact, since every TIR reference already points at the symbol java chose. A field
+    * shadowing an inherited METHOD gets the same treatment. Narrowed to `isKnown(fqn) &&
+    * mayDeclare(fqn, sig)`, since UNKNOWN-is-YES would over-rename (`ENGINE-LIMITS.md` K28.2). */
   def resolveFieldShadowing(p: Program, out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty,
                             surface: Surface = null,
                             /** JS-C04's citation surface: a whole-program pass CITES the row once per
@@ -710,14 +689,10 @@ object TirEmitter:
           case TirEmitter.BaseName.Renamed(to) => renames(v.symbol) = to; true
           case TirEmitter.BaseName.Kept        => true
       /** A scala `val`/`var` and a scala PARAMETERLESS `def` of the same name, one inherited from
-        * the other's type, are an IMPLEMENTATION pair and not a shadowing one — moving the field
-        * would break that contract silently until the port reaches 0 typer errors (§3). EXACT
-        * because java cannot produce a parameterless method, so an emitted `paramss == Nil` is
-        * always a property conversion's accessor over the field it stands for. `exists`, not
-        * `forall`, because the same name can reach a class from TWO directions (a shadowing field
-        * AND a collapsed implementation obligation); `forall` would silently stop implementing the
-        * member (ENGINE-LIMITS K5.7's trade: an unimplemented member is invisible until 0 typer
-        * errors, a shadowing var is a typer error immediately, so the implementation wins). */
+        * the other's type, are an IMPLEMENTATION pair, not a shadowing one — java cannot produce a
+        * parameterless method, so `paramss == Nil` is always a property conversion's accessor.
+        * `exists`, not `forall`: the same name can reach a class from TWO directions, and `forall`
+        * would silently stop implementing the member (`ENGINE-LIMITS.md` K5.7's trade). */
       lazy val inheritedDecls = inheritedSyms(cd)
       def implementsInherited(v: Tree.ValDef): Boolean =
         val n    = nm(v.symbol)
@@ -780,14 +755,10 @@ object TirEmitter:
     case Kept
 
   /** A field this run does NOT emit: does the BASE's published name settle it? A dependent's
-    * Program CONTAINS its base with EXTRA descendants the base's own run never saw, so a dependent
-    * subclass declaring `def x()` could rename the base's field independently, spelling a name the
-    * base never wrote and producing a module that cannot compile against what it resolves against
-    * (§1.5, ENGINE-LIMITS D4's shape at the renaming passes). The base's answer is FOLLOWED, not
-    * merely respected. `Kept` is NOT "nothing to do": it settles only the base's HALF of the clash
-    * — the other half is this module's own declaration, and `Kept` hands the caller that fact so
-    * it can move the half it owns (base `p.Base{int x}`, dependent `q.Heir extends p.Base{int
-    * x()}` would otherwise emit an uncompilable erased-signature clash with zero findings). */
+    * `Program` CONTAINS its base with EXTRA descendants the base's own run never saw, so an
+    * independent rename could produce a module that cannot compile against what it resolves
+    * against (§1.5). The base's answer is FOLLOWED, not merely respected. `Kept` settles only the
+    * base's HALF of the clash — the caller still moves the half it owns. */
   private[emit] def baseName(p: Program, view: Surface, field: SymId, clash: String): BaseName =
     if view.owns(field) then BaseName.Derive
     else
@@ -806,11 +777,9 @@ object TirEmitter:
           BaseName.Derive
 
   /** THE OTHER HALF OF A §4.55 FIELD RENAME: the member also ships WIDER than java wrote it. Both
-    * clash passes strip private/protected unconditionally so a renamed field stays reachable from
-    * wherever java read it, but the rename was recorded and the widening was not — a public member
-    * carrying a RenamedMember row said nothing about visibility. One row per member that ACTUALLY
-    * LOST a modifier (the discipline [[widen]] already keeps); `clash` matches the RenamedMember
-    * row beside it, so both questions are one grep. */
+    * clash passes strip private/protected unconditionally so a renamed field stays reachable, but
+    * the rename was recorded and the widening was not. One row per member that ACTUALLY LOST a
+    * modifier; `clash` matches the `RenamedMember` row beside it, so both questions are one grep. */
   private[emit] def recordClashWidening(p: Program, out: collection.mutable.Buffer[Decision],
                                   renamed: Iterable[SymId], clash: String): Unit =
     renamed.toList.sortBy(_.raw).foreach { id =>
@@ -831,22 +800,10 @@ object TirEmitter:
     }
 
   /** Rename an enclosing method's LOCAL or PARAMETER that a nested class's member shadows — the
-    * fourth face of §4.55, running the other way: here the CAPTURE moves, not the member. Java's
-    * two namespaces (methods vs variables) let a parameter and a nested class's same-named method
-    * coexist; scala has one namespace and resolves innermost-first, so the member wins both, and
-    * scala can qualify an outer MEMBER but cannot name a shadowed LOCAL at all — so the capture is
-    * renamed (exact per §4.55, since java resolved it statically). TWO RULES, because scala has
-    * two failure shapes and java has one: UNNAMEABLE (the body references the capture, and the
-    * class declares or inherits the name — the member simply wins) and AMBIGUOUS (the body
-    * references an INHERITED member and an enclosing scope defines that name too — scala 3's
-    * `E049`, which java has no rule for at all: an inherited field always shadows an enclosing
-    * local/parameter, probed against javac; ENGINE-LIMITS C16). Same remedy in both — move the
-    * outer declaration — which in the second case also PRESERVES java's binding. Renames only
-    * where really shadowed (local referenced inside the nested body AND the body declares/inherits
-    * the name); the second rule ranges over the whole enclosing scope instead, since it has no
-    * reference to read the capture off, over-approximating only onto an out-of-scope local (safe).
-    * Does not reach an outer FIELD OF AN ENCLOSING CLASS (a different pass's business — a
-    * qualification, not a rename) or a member inherited from an unparsed (JDK) supertype. */
+    * fourth face of §4.55, running the other way (the CAPTURE moves). Scala resolves
+    * innermost-first, so the member wins and the local becomes unnameable. TWO RULES: UNNAMEABLE
+    * (body references it, class declares/inherits the name) and AMBIGUOUS (scala 3's `E049`, java
+    * has none — `ENGINE-LIMITS.md` C16). Same remedy both ways — move the outer declaration. */
   def resolveCapturedLocalClashes(p: Program, out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty): Program =
     given Program = p
     def nm(id: SymId): String = p.symbolOf(id).map(_.name).getOrElse("")
@@ -1022,13 +979,11 @@ object TirEmitter:
     if renames.isEmpty then p
     else p.rebuilt(symbols = SymbolTable(p.symbols.all.map(s => renames.get(s.id).map(n => s.copy(name = n)).getOrElse(s))))
 
-  /** Rename any field whose simple name collides with a method in the same EMITTED SCOPE (legal in
-    * java, illegal in scala) by suffixing `$field`. "Same emitted scope" is the whole rule, and it
-    * is PLACEMENT, not name: a java `static` member leaves the class for the companion object, so a
-    * static factory and an instance field of the same name cannot collide (Ashley's `Family`).
-    * The two scopes are asymmetric: the INSTANCE scope is inherited (a field clashes with a method
-    * declared in any DESCENDANT), the STATIC scope is not (a companion inherits nothing). A
-    * `module` symbol has one body for both, so the partition collapses there. */
+  /** Rename any field whose simple name collides with a method in the same EMITTED SCOPE (legal
+    * in java, illegal in scala) by suffixing `$field`. "Same emitted scope" is PLACEMENT, not name
+    * — a java `static` member leaves for the companion, so an instance field of the same name
+    * cannot collide with it. INSTANCE scope is inherited (a descendant's method still clashes);
+    * STATIC scope is not. A `module` symbol has one body for both, collapsing the partition. */
   def resolveMemberClashes(p: Program, out: collection.mutable.Buffer[Decision] = collection.mutable.ListBuffer.empty,
                            surface: Surface = null,
                            /** JS-C46's citation surface — see [[resolveFieldShadowing]]'s. */
@@ -1102,10 +1057,9 @@ object TirEmitter:
 
       /** the answer when the FIELD IS THE BASE'S AND THE BASE KEPT JAVA'S NAME: move the half of
         * the clash this module owns. The clashing methods are necessarily this run's own
-        * declarations (a `Kept` answer means the base's own run saw no such descendant). The
-        * rename still must be SOUND: a method implementing an interface or overriding a parent
-        * this module does not own cannot move, and that closure is refused and RECORDED
-        * (DESIGN.md §8.3). */
+        * declarations (`Kept` means the base's own run saw no such descendant). The rename must
+        * still be SOUND: a method implementing/overriding something this module does not own
+        * cannot move, and that closure is refused and RECORDED (DESIGN.md §8.3). */
       def moveOwnMethods(v: Tree.ValDef): Unit =
         val n     = nm(v.symbol)
         val mine  = selfOrDescClasses(cd.symbol)

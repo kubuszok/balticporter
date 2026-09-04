@@ -3,12 +3,10 @@ package balticporter.core
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** Post-emission check over `outDir` that [[Substitutions]] were carried out.
-  *
-  *   - [[emittedDroppedTypes]] (CHECK 1, run BEFORE injection) -- engine emitted a dropped type.
-  *   - [[dangling]] (CHECK 2, run AFTER injection) -- dropped, unreplaced, still referenced.
-  *
-  * A dropped type with no replacement AND no remaining references is the success case. */
+/** Post-emission check over `outDir` that [[Substitutions]] were carried out. [[emittedDroppedTypes]]
+  * (CHECK 1, before injection) — engine emitted a dropped type. [[dangling]] (CHECK 2, after
+  * injection) — dropped, unreplaced, still referenced. A dropped type with no replacement AND no
+  * remaining references is the success case. */
 object SubstitutionCheck:
 
   enum Kind:

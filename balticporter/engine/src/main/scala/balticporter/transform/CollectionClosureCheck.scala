@@ -2,24 +2,11 @@ package balticporter.transform
 
 import balticporter.tir.{CheckReport, Origin, Program, SymId, Tree, UsageKind}
 
-/** A retyping map must be CLOSED DOWNWARDS over the source library's own subtype relations — and
-  * this counts every place `CollectionsTransform.typeMap` is not.
-  *
-  * A mapping that sends `java.util.List` to `mutable.Buffer` has said something about every JDK
-  * subtype of `List`; leaving `java.util.Vector` unmapped means a `Vector`-typed expression and a
-  * `Buffer`-typed slot no longer meet, and nothing records that java's relation is gone. Measured
-  * twice, from opposite directions: `Collection`/`AbstractCollection` mapped to different targets
-  * (13 of 20 errors, ENGINE-LIMITS K5), and `ArrayDeque`/`Queue` mapped so scala's ordering
-  * INVERTS java's.
-  *
-  * §1(a): the closure property (a mapped type's declared subtypes must map or be REPORTED) is
-  * universal; WHICH types map is §1(b) and taken as a PARAMETER, so an empty mapped set is a no-op.
-  *
-  * [[jdkSupertypes]] is DATA, transcribed from the JDK's own declarations — an external symbol
-  * carries no parent list to climb (CLAUDE.md §4.56), and the hierarchy is frozen since Java 1.2.
-  * A type this table does not know is NOT reported: a missing edge is a missed finding, never a
-  * wrong one.
-  */
+/** A retyping map must be CLOSED DOWNWARDS over the source library's own subtype relations —
+  * counts every place `CollectionsTransform.typeMap` is not. A mapped type's declared subtypes
+  * must map too or be REPORTED, or java's own relation breaks silently (ENGINE-LIMITS K5).
+  * [[jdkSupertypes]] is DATA transcribed from the JDK's frozen hierarchy (§4.56); an unknown type
+  * is a missed finding, never a wrong one. Empty mapped set is a no-op. */
 object CollectionClosureCheck:
 
   /** The check's name in `findings.tsv`. */

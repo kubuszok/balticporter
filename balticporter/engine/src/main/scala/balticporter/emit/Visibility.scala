@@ -2,12 +2,10 @@ package balticporter.emit
 
 import balticporter.tir.*
 
-/** Maps Java's four access levels to Scala qualifiers. DESIGN.md §8.7.
-  *
-  * Cross-package overrides use the nearest common ancestor package as qualifier,
-  * computed parents-first over already-rendered forms. Records residue as
-  * [[Decision.Kind.WidenedVisibility]] when a declaration ships wider than Java's.
-  */
+/** Maps Java's four access levels to Scala qualifiers. DESIGN.md §8.7. Cross-package overrides use
+  * the nearest common ancestor package as qualifier, computed parents-first over already-rendered
+  * forms. Records residue as [[Decision.Kind.WidenedVisibility]] when a declaration ships wider
+  * than Java's. */
 object Visibility:
 
   /** The level a declaration renders at. Package cases carry no qualifier string —

@@ -3,13 +3,11 @@ package balticporter.transform
 import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource}
 import balticporter.tir.*
 
-/** Moves a library's nullability annotations out of an annotation the compiler ignores and into the
-  * type — `T | Null` (union), `W[T]` (named wrapper), or `Option[T]` — stripping the annotation and
-  * coercing at every slot seam (argument, declaration, assignment, return, member selection).
-  * Runs after collections (their retypes must land first) and before package rename (annotation
-  * FQNs are upstream). Every refusal (vararg, primitive, annotated args, override boundary) is left
-  * untouched and counted by [[NullabilityBoundaryCheck]]. `ENGINE-LIMITS.md` K2, K13
-  */
+/** Moves a library's nullability annotations out of an annotation the compiler ignores and into
+  * the type — `T | Null`, `W[T]`, or `Option[T]` — stripping it and coercing at every slot seam.
+  * Runs after collections, before package rename (annotation FQNs are upstream). Every refusal
+  * (vararg, primitive, annotated args, override boundary) is left untouched and counted by
+  * [[NullabilityBoundaryCheck]]. `ENGINE-LIMITS.md` K2, K13. */
 final class NullabilityTransform(
     val annotations: Set[String] = Set.empty,
     val target: NullabilityTransform.Target = NullabilityTransform.Target.Union,
@@ -252,11 +250,9 @@ final class NullabilityTransform(
     planned = true
 
     // The override edge the annotation travels down (wrapper mode only): java's annotation is a
-    // member-level contract an override inherits without repeating; a wrapper retype changes the
-    // SIGNATURE, so an unannotated override becomes E038/E007 — invisible until 0 typer errors
-    // (`CLAUDE.md` §3), and a dependent-only shape since a base with the defect would not compile.
-    // Propagate the retype down the override graph at the same slot/position, under the same gates,
-    // keyed on the annotated member (the overrider carries no annotation to strip).
+    // member-level contract an override inherits without repeating, but a wrapper retype changes
+    // the SIGNATURE, so an unannotated override becomes E038/E007, invisible until 0 typer errors
+    // (§3). Propagated down the override graph at the same slot, keyed on the annotated member.
     def paramIndexOf(s: Symbol): Int =
       program.definitionOf(s.owner).collect { case d: Tree.DefDef =>
         d.paramss.flatten.indexWhere(_.symbol == s.id)
@@ -390,12 +386,10 @@ final class NullabilityTransform(
       case _                                                     => scala.None
 
   /** The overload sets a wrapper would collapse — refused, at both members, at the positions that
-    * carry java's distinction. A wrapper's erasure drops type arguments, so `W[Font]` and
-    * `W[BitmapFont]` collapse to one descriptor (E120) though java kept them apart by erasure.
-    * Refuses the minimum: planned parameters at every position the two members' pre-retype types
-    * differ, on both members (neither is more the port's than the other). Head-symbol comparison
-    * under-approximates deliberately — a false negative is a loud compile error; a false positive
-    * would silently over-refuse. */
+    * carry java's distinction (a wrapper's erasure drops type arguments, so `W[Font]`/
+    * `W[BitmapFont]` collapse to one descriptor, `E120`). Refuses the minimum: planned parameters
+    * differing pre-retype, on both members. Head-symbol comparison under-approximates deliberately
+    * — a false negative is a loud compile error, a false positive would silently over-refuse. */
   private def refuseErasureClashes(p: Program, plan: List[Planned]): List[Planned] =
     val plannedParam: Map[SymId, Planned] =
       plan.iterator.filter(_.slot == Slot.Param).map(x => x.sym.id -> x).toMap
@@ -480,13 +474,10 @@ final class NullabilityTransform(
   // -------------------------------------------------------------------------
 
   /** Would honouring `key` here retype a declaration this run does not emit, on the strength of
-    * policy THIS module added? An annotation FQN selects declarations without naming any of them, so
-    * `SurfaceFold`'s `governs` screen admits it while a dependent whose base's java carries the same
-    * third-party annotation would retype the base's own (untouched) declarations — §1.5's failure,
-    * invisible by construction (D2 drops the decisions, [[boundary]] drops the finding). Only the
-    * annotation half needs this: a scope entry reaching a base declaration is already a fatal
-    * `SurfaceIntrusion`. An INHERITED key (from `contributed`) is not screened — the base already
-    * applies it identically. `ENGINE-LIMITS.md` D2 */
+    * policy THIS module added? An annotation FQN selects without naming, so `governs` admits it
+    * while retyping a base's own untouched declarations — §1.5's failure, invisible by
+    * construction. Only the annotation half needs this — a scope entry reaching a base is already
+    * a fatal `SurfaceIntrusion`. An INHERITED key is not screened (`ENGINE-LIMITS.md` D2). */
   private def intrudesOnBase(p: Program, s: Symbol, key: String): Boolean =
     ownSubjects.exists(_.contains(MergeablePolicy.subjectOf(key))) && !runScope.emits(unitOf(p, s.id))
 
@@ -535,11 +526,10 @@ final class NullabilityTransform(
       }
 
   /** The closure a `RuleScope` does not compute — a scoped-out PARENT beside a retyped CHILD (an
-    * owned subtype that RE-STATES the annotation on a same-named member is not covered by the
-    * parent's scope entry and gets retyped — half an override pair). A subtype that merely INHERITS
-    * an annotation is never planned and never reaches this predicate (that gap is
-    * [[deadScopeFindings]]'s). Fix is a scope entry in the library's manifest, never an engine change.
-    * `ENGINE-LIMITS.md` K13 */
+    * owned subtype that RE-STATES the annotation on a same-named member gets retyped — half an
+    * override pair). A subtype that merely INHERITS the annotation never reaches this predicate
+    * (that gap is [[deadScopeFindings]]'s). Fix is a manifest scope entry, never an engine change.
+    * `ENGINE-LIMITS.md` K13. */
   private def scopedOutParents(p: Program, plan: List[Planned]): Unit =
     if scope.isUnrestricted || plan.isEmpty then return
     def classOf(id: SymId): Option[Tree.ClassDef] =
@@ -1005,12 +995,10 @@ final class NullabilityTransform(
         // no formal to coerce against: unwrap with `.orNull` — java's default is every reference slot accepts null.
         t.copy(args = t.args.map(a => if isWrapped(a) then unwrapOrNull(a) else a))
 
-  /** `x == null` / `x != null` on a wrapped value → `x.isEmpty` / `!x.isEmpty`.
-    *
-    * Not an ergonomic nicety: equality against `null` on an opaque wrapper is a COMPILE ERROR
-    * (E172, no `CanEqual`), so every Java null test on a wrapped value has to be rewritten or the
-    * port does not build. The rewrite is the portable mechanism — a `CanEqual` given in the
-    * wrapper's companion would work, and a published wrapper need not have one. */
+  /** `x == null` / `x != null` on a wrapped value → `x.isEmpty` / `!x.isEmpty`. Not an ergonomic
+    * nicety: equality against `null` on an opaque wrapper is a COMPILE ERROR (`E172`, no
+    * `CanEqual`), so every java null test on a wrapped value must be rewritten or the port does
+    * not build. The rewrite is the portable mechanism (a `CanEqual` given need not exist). */
   private def nullTest(t: Tree.Apply)(using p: Program): Option[Term] = t.fun match
     case Tree.Select(recv, op, _, o) =>
       val opName = p.symbolOf(op).filter(s => OperatorOwners(ownerNameOf(s))).map(_.name)
@@ -1032,14 +1020,11 @@ final class NullabilityTransform(
   // shared walks
   // -------------------------------------------------------------------------
 
-  /** every `return` that belongs to THIS method, rewritten by `f`.
-    *
-    * The same DELIBERATELY BOUNDED walk `CollectionsTransform.coerceReturns` performs, and bounded
-    * for the same reason: a `return` inside a lambda, an anonymous class's method or a local class
-    * returns from THAT, so rewriting it against this method's declared type would be wrong. The
-    * default arm does not descend, which makes a node kind added later a MISSED rewrite — loud by
-    * construction, never wrong. A `Commented` wrapper is read THROUGH (§4.58): a `return` under a
-    * Java comment is still a return, and with the trivia harvest live that is the common case. */
+  /** every `return` that belongs to THIS method, rewritten by `f`. The same DELIBERATELY BOUNDED
+    * walk `CollectionsTransform.coerceReturns` performs: a `return` inside a lambda, anonymous
+    * class or local class returns from THAT, not this. The default arm does not descend, so a
+    * later node kind is a MISSED rewrite — loud, never wrong. A `Commented` wrapper is read
+    * THROUGH (§4.58). */
   private def mapReturns(want: TypeRepr, t: Term, f: (TypeRepr, Term) => Term): Term = t match
     case x: Tree.Return       => x.copy(expr = x.expr.map(f(want, _)))
     case x: Tree.Block        => x.copy(stats = x.stats.map { case s: Term => mapReturns(want, s, f); case s => s },
@@ -1059,20 +1044,10 @@ final class NullabilityTransform(
     case other                => other
 
   /** the type variables a type mentions THAT THIS UNIT CANNOT NAME — [[mentionsTypeParam]]'s
-    * question asked without a `Program`, off the table this run captured, and narrowed to the ones
-    * that are actually out of reach.
-    *
-    * A variable declared by the unit being walked (or by anything nested inside it) IS writable
-    * where a node of that unit stands: `Tooltip[T]`'s own `T` is in scope in every member of
-    * `Tooltip`, including an anonymous listener's, and refusing there would decline five correct
-    * ascriptions on libGDX alone. What is NOT writable is a variable belonging to ANOTHER unit —
-    * the CALLEE's own, which is what `ENGINE-LIMITS.md` G12 is about.
-    *
-    * The unit is the granularity because it is the one the walk carries ([[currentUnit]]); a
-    * bottom-up traversal reaches a `DefDef` after its body, so there is no enclosing-declaration
-    * stack to ask a finer question of. The residue that leaves is G20's — a STATIC member sees none
-    * of its class's type parameters, and this test says the unit owns them — which is a false
-    * NEGATIVE, i.e. an ascription too many, and loud. */
+    * question without a `Program`, narrowed to what's actually out of reach. A variable declared
+    * by the walked unit (or nested inside it) IS writable everywhere in it; only ANOTHER unit's
+    * variable (the CALLEE's own, `ENGINE-LIMITS.md` G12) is not. Unit-granularity because that is
+    * what the walk carries ([[currentUnit]]) — a bottom-up traversal has no finer stack to ask. */
   private def typeVarsIn(t: TypeRepr): List[String] = t match
     case TypeRepr.TypeRef(_, s)       => typeVars.get(s).filterNot(_._2 == currentUnit).map(_._1).toList
     case TypeRepr.AppliedType(tc, as) => typeVarsIn(tc) ++ as.flatMap(typeVarsIn)

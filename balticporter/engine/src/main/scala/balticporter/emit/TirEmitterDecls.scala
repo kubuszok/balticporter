@@ -180,24 +180,20 @@ private[emit] trait TirEmitterDecls:
     })
 
   /** A cast onto a parameter that [[rawParentAlignment]] re-rendered must land on the type the
-    * parameter now HAS. The frontend built these casts against the raw fill's `ResourceData[?]`;
-    * once the declaration reads `ResourceData[Object]` the same cast narrows to a wildcard the
-    * callee will not take — and a cast to `T[?]` asserts nothing in the first place, so following
-    * the alignment loses nothing. Only wildcarded targets on an aligned symbol are touched. */
-  /** a POLY EXPRESSION (JLS 15.2) — a lambda or a method reference, the two java forms that have no
-    * type of their own in EITHER language and take one from the slot they fill. The emitter's own
-    * copy of `SpoonTir.polyExpression`'s question, asked of the TIR rather than of Spoon, because
-    * this is the one place a cast on such a term can still be reached: the frontend's rule stops
-    * the ENGINE writing one, and a cast the java SOURCE wrote is kept by design. `uncomment`,
-    * because trivia wraps a term without changing what it is. */
+    * parameter now HAS — the frontend built these casts against the raw fill's `ResourceData[?]`,
+    * and once the declaration reads `ResourceData[Object]` the same cast asserts nothing new.
+    * Only wildcarded targets on an aligned symbol are touched. */
+
+  /** a POLY EXPRESSION (JLS 15.2) — a lambda or method reference with no type of its own, taking
+    * one from the slot it fills. The emitter's copy of `SpoonTir.polyExpression`'s question, asked
+    * of the TIR since this is the one place a cast on such a term can still be reached (a cast the
+    * java SOURCE wrote is kept by design). `uncomment`: trivia wraps a term without changing it. */
   private[emit] def polyOperand(t: Term): Boolean = Tree.uncomment(t) match
     case _: Tree.Lambda | _: Tree.MethodRef => true
-    // …and a CONDITIONAL over them, which JLS 15.25 makes a poly expression in its own right: java
-    // pushes the target type through the `?:` and types each branch against it. Rendered as a CAST
-    // this is the failure `polyExpression`'s refusal is about, one node out — the branches
-    // elaborate to `Function1`s first and the cast then asserts that a `Function1` is the
-    // functional interface, which throws. As an ASCRIPTION scala propagates the expected type into
-    // both arms exactly as java did.
+    // …and a CONDITIONAL over them, which JLS 15.25 makes a poly expression too: java pushes the
+    // target type through `?:`. Rendered as a CAST it fails one node out (branches elaborate to
+    // `Function1`s first, then the cast asserts a `Function1` is the functional interface); as an
+    // ASCRIPTION scala propagates the expected type into both arms exactly as java did.
     case Tree.If(_, th, el, _, _)           => polyOperand(th) && polyOperand(el)
     case _                                  => false
 
@@ -210,14 +206,10 @@ private[emit] trait TirEmitterDecls:
         case _                       => scala.None
       s.flatMap(overrideAlign.get).getOrElse(target)
 
-  /** `this` in Scala always names the INNERMOST class, where Java's `Outer.this` names an enclosing
-    * one. Qualify by simple name when the symbol is an enclosing class actually being rendered
-    * around this point; anything else (an inherited/unknown owner) keeps the bare `this`.
-    *
-    * A SUPERTYPE is never qualified even when it also encloses: libGDX nests subclasses inside their
-    * own base (`DynamicsModifier.FaceDirection extends DynamicsModifier`), and constructor replay
-    * moves the base's `this` statements into the subclass body — there the bare `this` is exactly
-    * right, while `DynamicsModifier.this` would name the companion object. */
+  /** `this` in Scala always names the INNERMOST class, where Java's `Outer.this` names an
+    * enclosing one. Qualify by simple name only when the enclosing class is actually being
+    * rendered around this point. A SUPERTYPE is never qualified even when it also encloses:
+    * constructor replay moves the base's `this` into the subclass body, where bare `this` is right. */
   private[emit] def thisRef(s: SymId): String =
     val inner = classStack.lastOption
     if inner.contains(s) || !classStack.contains(s) || inner.exists(inheritsFrom(_, s)) then "this"
@@ -261,69 +253,26 @@ private[emit] trait TirEmitterDecls:
     val (loweredBody, superArgs) = (lowerCtors(cd.body, plan), plan.superArgs)
     val pparams = plan.primaryParams
     // A SYNTHESISED primary (CtorFunnel.Plan.synthetic) has no java constructor behind it, so its
-    // parameters are rendered from the plan's own (name, type) pairs rather than from symbols.
-    //
-    // It is `protected`, and the reason is a corrected fact. This comment used to assert that
-    // "scala's `extends C(args)` can only ever invoke C's PRIMARY, so hiding it would make the class
-    // unextendable" — which is FALSE, and was the only thing keeping a constructor java never
-    // declared in the published API. Compiled and run: a `private` primary with three secondaries is
-    // reached by `class D extends p.C("hello")`, `class E extends p.C()` and `class F(k: Int) extends
-    // p.C(k.toString)` from ANOTHER package; a `protected` primary is reached DIRECTLY by a
-    // subclass's `extends` clause in another package, and by an anonymous `new G(3, false) {}`.
-    //
-    // `protected` rather than `private` because `private` is CLASS-private in scala, not
-    // package-private: a SAME-package subclass sees only the nilary secondary ("too many arguments
-    // for constructor A ... : (): g.A"). Choosing between them per class would mean asking "is this
-    // class extended?", which is the whole-program question `ENGINE-LIMITS.md` D4 measures as drift
-    // — and it is asked at emission, one module at a time, so a dependent would answer it
-    // differently from the base. `protected` needs no such question, cannot be reached by ordinary
-    // client code, and is what the reference ports write on every funnel class that is subclassed.
-    // Bare `protected`, never `protected[pkg]`: a package qualifier would deny exactly the
-    // cross-module subclassing this choice exists to permit (DESIGN.md §8.11).
-    //
-    // A DISAMBIGUATED synthesis takes one more parameter, of a marker type minted in this class's
-    // own companion (`CtorFunnel.Plan.marker`). It is there to change the primary's ARITY, which is
-    // what removes it from every `this(<a root's super arguments>)` overload candidate set at once
-    // — `ENGINE-LIMITS.md` C8, where a real constructor narrower than the parent's formals won the
-    // call and delegated to itself. The type is named through the companion's VALUE path, and it is
-    // `protected` there, never `private`: scala requires every type in a member's signature to be
-    // at least as visible as the member (C9).
+    // parameters come from the plan's own (name, type) pairs. `protected`, not `private` (scala's
+    // `private` is CLASS-private, unreachable from a subclass) and not per-class-derived (a
+    // whole-program question, `ENGINE-LIMITS.md` D4) — bare `protected`, matching the reference
+    // ports. A DISAMBIGUATED synthesis adds a marker-typed parameter to change ARITY (`ENGINE-LIMITS.md` C8).
     val markerParam = plan.marker.map(n => s"ctor$$: ${typeValue(cd.symbol)}.${esc(n)}").toList
     // …and the CONTEXT CLAUSE a phase put on this class's constructors (`CtorFunnel.Plan.givens`),
-    // rendered as its own GROUP through `paramClause`. Java's parameter list is one list and
-    // scala's is a list of groups; flattened into the value parameters the `using` is lost and the
-    // class reads `class Scene($p: demo.Ctx)` — an ordinary parameter, no given in scope, every
-    // `summon` in the body unresolved. That was one of `ENGINE-LIMITS.md` CT4's three causes, and it
-    // is the one that lived HERE: the other two were the funnel reading such a constructor as
-    // paramful and declining to promote it. Empty for every port that threads nothing, which is why
-    // no emitted byte moves.
+    // rendered as its own GROUP — flattened into value parameters, `using` is lost and every
+    // `summon` in the body goes unresolved (`ENGINE-LIMITS.md` CT4). Empty for a port threading
+    // nothing, so no emitted byte moves.
     val givenClause = plan.givens.map(paramClause).mkString
-    // A PROMOTED java constructor is still a java DECLARATION, so §8.7's mapping governs it exactly
-    // as it governs the `def this` secondaries — one rule per kind of declaration (§8.11). The
-    // SYNTHESISED primary above is the deliberate exception: it is not a java declaration at all,
-    // and bare `protected` is the pair of answers it needs — wider in the subclass direction, so a
-    // dependent module in another package can still extend the class, and narrower in the package
-    // direction, where nothing legitimate calls it but this class's own secondaries.
+    // A PROMOTED java constructor is still a java DECLARATION, so §8.7's mapping governs it as it
+    // governs the `def this` secondaries. The SYNTHESISED primary is the exception: not a java
+    // declaration, so bare `protected` is the answer — wide enough for a subclass in another
+    // package to extend it, narrow enough that nothing else legitimately calls it.
     val ctorVis = plan.primary.map(pc => vis(sym(pc.symbol), privateQualifier(s.owner))).getOrElse("")
-    // …and a promoted parameter the java constructor ASSIGNS TO is a `var`.
-    //
-    // A java constructor parameter is an ordinary LOCAL and may be reassigned; a scala class
-    // parameter is a `val`. Promoted unchanged, `C(int x) { x = x * 2; this.f = x; }` emits
-    // `x$p = x$p * 2` — `E052 Reassignment to val`, loud but uncounted, because no library in this
-    // corpus happens to write it. A record's COMPACT constructor is the shape that makes it
-    // ordinary rather than exotic: JLS 8.10.4 exists PRECISELY so a record can normalise its
-    // components by assigning the parameters, and the appended field assignments then read what the
-    // body left.
-    //
-    // `private var` and not `var`: java's parameter is not a member at all, so the promotion must
-    // not put a name on the emitted surface. Class-private is enough for every reference there can
-    // be — they are all inside the class that promoted the constructor — and it keeps the header's
-    // arity, its types and its descriptor exactly as they were.
-    //
-    // Decided from the LOWERED body, which is where the promoted statements are (`plan.primaryBody`
-    // is only half of the picture once `lowerCtors` has run), and by SYMBOL rather than by name
-    // (§4.56). Every write in this IR is a `Tree.Assign` — the frontend desugars `x *= 2`, `x++`
-    // and `--x` into one — so the scan is complete.
+    // …and a promoted parameter the java constructor ASSIGNS TO is a `var`. A java ctor parameter
+    // is an ordinary LOCAL and may be reassigned (`x = x*2` promotes to `E052 Reassignment to val`
+    // otherwise) — a record's compact constructor makes this ordinary (JLS 8.10.4). `private var`,
+    // never a bare `var`: java's parameter is not a member, so no name reaches the emitted surface.
+    // Decided by SYMBOL over the LOWERED body (§4.56) — every write here is a `Tree.Assign`.
     val mutatedParams: Set[SymId] =
       if pparams.isEmpty then Set.empty
       else
@@ -344,13 +293,10 @@ private[emit] trait TirEmitterDecls:
       if plan.isSynthesised then
         s" protected (${(plan.synthetic.map((n, t) => s"$n: ${tpe(t)}") ++ markerParam).mkString(", ")})$givenClause"
       else if pparams.nonEmpty then s"${if ctorVis.isEmpty then "" else " " + ctorVis}(${pparams.map(primaryParam).mkString(", ")})$givenClause"
-      // a class whose constructor java declared NILARY and the pipeline gave a clause: the clause is
-      // the whole parameter list, and `class C(using T)` is what puts the given in scope for the
-      // body, the field initialisers and the `extends` clause at once.
-      // …and a NILARY constructor that is not public needs somewhere for the modifier to sit. With
-      // a context clause that place already exists and the clause must NOT gain an empty group
-      // before it — `()(using Ctx)` is a different signature from `(using Ctx)` and every call site
-      // would have to change. Without one, `class C private[p] ()` is the only spelling there is.
+      // a class whose constructor java declared NILARY and the pipeline gave a clause: the clause
+      // is the whole parameter list, `class C(using T)`. A NILARY constructor that is not public
+      // still needs the modifier's place — with a context clause it already exists and must NOT
+      // gain an empty group before it (`()(using Ctx)` is a different signature).
       else if ctorVis.isEmpty then givenClause
       else if givenClause.nonEmpty then s" $ctorVis$givenClause"
       else if kw == "class" then s" $ctorVis()"
@@ -412,14 +358,10 @@ private[emit] trait TirEmitterDecls:
       return s"${leading(cd.leading, i)}$cnote${ind(i)}${vis(s, privateQualifier(s.owner))}object ${esc(s.name)}$tps {\n$ob\n${ind(i)}}"
     // Java statics have no instance home in Scala — they move to the companion object.
     val (statics, instance0) = if s.flags.isModule then (Nil, loweredBody) else loweredBody.partition(isStatic)
-    // T22 — an `@interface`'s ELEMENTS (JLS 9.6.1), which are the whole of its instance side. They
-    // become the emitted class's CONSTRUCTOR PARAMETERS, so they are taken out of the body here,
-    // BEFORE `memberStat` runs: rendered as members they were emitted into a `body` the annotation
-    // arm below then discards, which left four planned-and-never-written slots per port — one
-    // `!! UNLOCATABLE` row each, under a key whose owner had been composed twice, and a javadoc the
-    // trivia backstop then relocated because its declaration was not there (§4.58's recovery lane
-    // reading high for a category that still wants a home). Both are that discarded rendering, not
-    // two defects.
+    // T22 — an `@interface`'s ELEMENTS (JLS 9.6.1) become the emitted class's CONSTRUCTOR
+    // PARAMETERS, so they are taken out of the body BEFORE `memberStat` runs — rendered as members
+    // they land in a `body` the annotation arm below discards, leaving planned-and-never-written
+    // slots (`!! UNLOCATABLE`, and a relocated javadoc — §4.58's recovery lane, not two defects).
     val (annotElems, instance) =
       if !s.flags.isAnnotation then (Nil, instance0)
       else instance0.partition {
@@ -428,18 +370,11 @@ private[emit] trait TirEmitterDecls:
       }
     val self    = cd.selfType.map(st => s"${ind(i + 1)}self: ${tpe(st.tpe)} =>\n").getOrElse("")
     val body1   = joinStats(classBodyStats(orderBody(instance, cd.symbol, paramfulPrimary), plan, i + 1).filter(_.nonEmpty))
-    // K22 — the CLASS-INITIALISATION trigger, ahead of every other class-body statement because
-    // that is where java ran it. See [[forceCompanion]]; `statics` is where BOTH halves of java's
-    // class initialiser lower to — the `static { }` blocks and the static field initialisers — so
-    // this is asked of the very list that carries the defect.
-    // …and only where there is a CONSTRUCTOR to hang it on. A `trait` body statement runs at every
-    // implementor's initialisation, which is MORE than java does (JLS 12.4.1 does not initialise an
-    // interface when an implementor is initialised), and the annotation rendering below emits no
-    // body at all. Neither shape can arise from java — an interface may not declare a static
-    // initialiser (JLS 9.1.1) — so both are left to `class-init-trigger` rather than guessed at.
-    // …and never where forcing would RE-ENTER an initialisation already in progress: java tolerates
-    // a cyclic pair of class initialisers and a scala companion does not, so the trigger is
-    // declined and `class-init-trigger` counts the refusal (`ENGINE-LIMITS.md` K22 face 2).
+    // K22 — the CLASS-INITIALISATION trigger, ahead of every other statement since that is where
+    // java ran it (`statics` carries both `static { }` blocks and static field initialisers). Only
+    // where there is a CONSTRUCTOR to hang it on: a `trait` body statement runs at every
+    // implementor's init (more than java does), and an interface may not declare one (JLS 9.1.1) —
+    // and never where forcing would RE-ENTER an in-progress initialisation (`ENGINE-LIMITS.md` K22 face 2).
     val force   = if hasClinit(statics) && kw == "class" && !s.flags.isAnnotation &&
                      !reentrantBearers.contains(cd.symbol)
                   then forceCompanion(cd, cd.symbol, balticporter.tir.ClassInitTriggerCheck.Instantiation, i + 1)
@@ -462,33 +397,16 @@ private[emit] trait TirEmitterDecls:
     val body    = if diamonds.isEmpty then body0 else joinStats(List(body0).filter(_.nonEmpty) ++ diamonds)
     val open    = if body.isEmpty && self.isEmpty then "" else s" {\n$self$body\n${ind(i)}}"
     val abs     = if kw == "class" && s.flags.isAbstract then "abstract " else ""
-    // Scala (unlike Java) forbids a NON-private member from referring to a bare-`private` type in
-    // its signature — a public `Values extends MapIterator` / field `pool: ModelInstancePool` where
-    // the referent is private is an error. Java nested classes leak this way constantly, which is
-    // why this whole modifier used to be ERASED at the class header. It is not erased any more:
-    // the rule is about UNQUALIFIED `private` only, and every rendering §8.7 gives a nested type is
-    // QUALIFIED (`private[TopLevel]` for a java `private` one, `private[pkg]` for a package-private
-    // one) — a public member may expose such a type in its signature, and a cross-package caller
-    // may call it and hold the value. The erasure was therefore hiding a real level, which is what
-    // the type-level half of §8.7's mapping restores. A top-level java type is never `private`, so
-    // the bare form the sentence above is about cannot arise from this path at all.
-    // A Java `@interface` is an ANNOTATION TYPE. Emitted as an ordinary interface it becomes a
-    // trait, and then nothing can be annotated with it — 161 errors' worth of `@Null` in this
-    // corpus alone. Scala's equivalent is a class extending `StaticAnnotation`.
-    // The PROMOTED constructor's own Javadoc has no `def` left to sit on — `CtorFunnel` turned it
-    // into the class's parameter list — so it joins the class's, which is where Scala documents a
-    // primary constructor anyway. Without this it is simply dropped, and `TriviaCheck` counted it:
-    // 138 Javadoc losses on libGDX core, the largest single category, most of them exactly this.
-    // exactly the constructor `lowerCtors` replaces with its body, so this can never duplicate a
-    // doc that is still attached to a `def this` somewhere in the class.
+    // §8.7 renders every nested type QUALIFIED (`private[TopLevel]`/`private[pkg]`), so the
+    // class-header erasure this rule once needed is gone. A `@interface` emitted as a trait cannot
+    // be applied as an annotation (161 corpus errors) — the equivalent is `extends StaticAnnotation`.
+    // A PROMOTED constructor's Javadoc joins the CLASS's own (`CtorFunnel` removed its `def`) —
+    // dropping it cost 138 Javadoc losses on libGDX core (`TriviaCheck`, the largest category).
     val ctorLead = plan.primary.toList.flatMap(_.leading)
-    // …and its NOTES go the same way, for the same reason and by §4.575's own rule. A PROMOTED
-    // constructor has no `def` left for an `AtDeclaration` note to sit above, so a decision
-    // subjected at it — a SAM conversion inside a constructor body, a substituted call, any kind in
-    // that set — simply produced NO NOTE: `NoteCoverageCheck` reported `decision with no note` and
-    // nothing else in the run could see it (measured at 1 on the libGDX base, `ENGINE-LIMITS.md`
-    // I9). The class is where scala documents a primary constructor, which is where the javadoc
-    // above already goes.
+    // …and its NOTES go the same way (§4.575): a PROMOTED constructor has no `def` for an
+    // `AtDeclaration` note to sit above, so a decision subjected at it produced NO NOTE at all
+    // (measured 1 on libGDX base, `ENGINE-LIMITS.md` I9). The class is where scala documents a
+    // primary constructor, matching the javadoc above.
     val ctorNote = plan.primary.toList.map(c => declNotes(c.symbol, i)).mkString
     // JS-C44 — note placed after cnote per §4.575 order.
     val (seal, sealNote) = sealOf(cd, s, i)
@@ -507,37 +425,19 @@ private[emit] trait TirEmitterDecls:
       if s.flags.isAnnotation then
         s"${leading(cd.leading ++ annotLead, i)}$cnote${annots(s, i)}${ind(i)}class ${esc(s.name)}$tps$annotPrim extends scala.annotation.StaticAnnotation"
       else s"${leading(cd.leading ++ ctorLead, i)}$cnote$ctorNote$sealNote$recNote${annots(s, i)}${ind(i)}${mods(s, privateQualifier(s.owner))}$seal$abs$kw ${esc(s.name)}$tps$prim$ext$open"
-    // Java interface/parent CONSTANTS are `static`, so they live in the parent's companion object
-    // — which Scala does NOT inherit. Re-export each static-bearing parent's companion so an
-    // inherited constant accessed via a subclass (`GL30.GL_LUMINANCE`, declared in `GL20`) resolves.
-    // exclude the class's OWN static names from the re-export (a subtype may redeclare a parent
-    // constant — OpenGL's GL31 vs GL30 — which would otherwise be a duplicate/conflicting export).
-    //
-    // A STATIC INITIALIZER BLOCK is not one of those names. Java calls it `<clinit>` — the JVM's
-    // name for the synthetic method it compiles a `static { … }` block into — and no Scala
-    // identifier can spell it, backticks included: there is no member at that name to hide, so an
-    // exclusion naming it is not merely useless, it is `export P.{<clinit> => _, *}`, which the
-    // parser reads as an XML start tag. The block has no name in the emitted Scala either
-    // ([[isInitBlock]] lowers it into the companion's body), so it can never collide with an
-    // inherited constant and has nothing to exclude.
-    //
-    // Invisible for six ports because it needs BOTH halves at once — a class that inherits statics
-    // from a parent AND declares a `static { }` block of its own. libGDX core has 605 types and not
-    // one of them; gdx-gltf's attribute hierarchy has three (`PBRColorAttribute`,
-    // `PBRCubemapAttribute`, `PBRTextureAttribute`, each `extends` a libGDX `Attribute` subclass
-    // whose constants it re-exports, each registering its own aliases in a `static { }`).
+    // Java interface/parent CONSTANTS are `static`, living in the parent's companion, which Scala
+    // does NOT inherit — re-export each parent's companion so an inherited constant resolves,
+    // excluding the class's OWN static names (a subtype may redeclare one). A STATIC INITIALIZER
+    // BLOCK (`<clinit>`) has no Scala identifier to spell and lowers into the companion's body, so
+    // it is never in the set. Needs BOTH a statics-bearing parent AND an own `static{}` at once.
     val ownStaticNames = statics.collect {
       case d: Definition if !d.isInstanceOf[Tree.DefDef] || !isInitBlock(d.asInstanceOf[Tree.DefDef]) =>
         esc(sym(d.symbol).name)
     }.distinct
-    // Two exports must not both deliver the same name. `GL20Interceptor extends GLInterceptor with
-    // GL20` and `GLInterceptor` itself implements `GL20`, so `GLInterceptor`'s companion ALREADY
-    // re-exports `GL20`'s constants by this rule — a second `export GL20.*` is a duplicate
-    // definition, not extra reach. Drop a parent another exported parent wholly subsumes, and for
-    // the DIAMOND that remains (`GLInterceptor` and `GL30` meeting at `GL20`) exclude, from each
-    // later export, every name an earlier one already delivered FROM THE SAME DECLARING TYPE. The
-    // same-owner test is what keeps this safe: a genuine redeclaration (`GL31` shadowing a `GL30`
-    // constant) has a different owner, so it is never silently merged away.
+    // Two exports must not both deliver the same name: `GLInterceptor` already re-exports `GL20`'s
+    // constants via `extends GLInterceptor with GL20`, so a second `export GL20.*` duplicates.
+    // Drop a subsumed parent; for a DIAMOND, exclude from each later export every name an earlier
+    // one delivered FROM THE SAME DECLARING TYPE (a genuine redeclaration has a different owner).
     val exported       = parentSymsOf(cd).filter(p => staticsReachable(p))
     val kept           = exported.filterNot(p => exported.exists(q => q != p && ancestorsOf(q).contains(p)))
     val delivered      = kept.map(staticOwnersOf(_))
@@ -580,16 +480,10 @@ private[emit] trait TirEmitterDecls:
       statics   = ownStaticNames)
     if !hasCompanion then cls
     else
-      // K22's SECOND trigger — JLS 12.4.1 item 7. Initialising a class initialises its SUPERCLASS
-      // first, and what initialises a class with nothing instantiating it is a bare `S.member`
-      // read; in Scala that touches `object S` and reaches no other object, so an ancestor's
-      // `static { }` never runs on that path. The force goes FIRST in the companion body, because
-      // java ran the ancestor's initialiser before this type's own static field initialisers.
-      //
-      // The companion is the whole condition — an object that is never initialised runs nothing, so
-      // a line inside one can never over-trigger relative to java, whatever put the object there.
-      // That is why this asks `hasCompanion` rather than re-deriving "does anything read a static
-      // of this type", which is the string-shaped guess §4.56 is about.
+      // K22's SECOND trigger — JLS 12.4.1 item 7: initialising a class initialises its SUPERCLASS
+      // first, which a bare `S.member` read cannot reach in Scala (touches only `object S`).
+      // Forced FIRST in the companion body (java ran the ancestor's initialiser first). Asks
+      // `hasCompanion` rather than re-deriving "does anything read a static of this type" (§4.56).
       val superForce = nearestClinitAncestor(cd.symbol)
         .filterNot(reentrantBearers.contains)
         .map(a => forceCompanion(cd, a, balticporter.tir.ClassInitTriggerCheck.SubclassInit, i + 1))
@@ -613,54 +507,31 @@ private[emit] trait TirEmitterDecls:
       case _                   => scala.None
     lhs.filter(l => rhs.contains(l))
 
-  /** Java enum → `sealed abstract class Name <parents-minus-Enum> { members }` plus a
-    * companion `object` holding each constant as a `case object` and a `values` array. */
-  /** A java ENUM takes ONE of two shapes, and which one is a fact about java's own declaration —
-    * [[balticporter.tir.EnumShape]], read here, at every `values()` call site and by
-    * `OmissionCheck.enumShapeRefusals`, so the three can never disagree.
-    *
-    * The scala 3 `enum` is the shape that IS a `java.lang.Enum[X]`, which no `sealed abstract class`
-    * may claim ("only enums defined with the enum syntax can"). Everything a bound like
-    * `<E extends Enum<E> & BitField>` asks of a ported enum — and everything `EnumSet`, `EnumMap`
-    * and `Comparable<E>` ask — is answered by that supertype and by nothing else.
-    *
-    * Where a constant carries a class BODY, or an emitted member would collide with one of the
-    * members java made FINAL on `java.lang.Enum`, the `enum` form cannot express java's declaration
-    * at all and the pre-existing sealed shape is kept — a REFUSAL, counted at
-    * `OmissionCheck.enumShapeRefusals` rather than silently chosen. */
+  /** Java enum → `sealed abstract class Name <parents-minus-Enum> { members }` plus a companion
+    * `object` holding each constant as a `case object` and a `values` array. */
+
+  /** A java ENUM takes ONE of two shapes, a fact about java's own declaration — [[balticporter.tir.EnumShape]],
+    * read here and by `OmissionCheck.enumShapeRefusals` so the two can never disagree. Scala 3
+    * `enum` IS a `java.lang.Enum[X]`, answering every bound/`EnumSet`/`EnumMap` a ported enum
+    * needs. A class BODY on a constant, or a member colliding with `java.lang.Enum`'s finals, keeps
+    * the sealed shape instead — a REFUSAL, counted, never silently chosen. */
   private[emit] def enumDef(cd: Tree.ClassDef, i: Int): String =
     if balticporter.tir.EnumShape.isScalaEnum(program, cd) then scalaEnumDef(cd, i) else sealedEnumDef(cd, i)
 
-  /** The parts BOTH enum shapes are made of, derived ONCE.
-    *
-    * The two arms differ in the header they write and in the members java.lang.Enum does or does not
-    * supply; they do not differ about which constructor is the primary, which parameters it
-    * promotes, which field a parameter supersedes or which of its statements survive. Read twice
-    * those would be two derivations free to drift — the failure `CtorFunnel.enumPrimaryCtor` exists
-    * to prevent one level down (§4.56). */
+  /** The parts BOTH enum shapes are made of, derived ONCE. The two arms differ only in the header
+    * and in what `java.lang.Enum` supplies — never in the primary constructor, its promoted
+    * params, superseded fields or surviving statements. Two derivations would drift (§4.56). */
   private[emit] final case class EnumParts(ctorParams: List[Tree.ValDef], paramNames: Set[String],
                                      instance: List[Statement], ctorStats: List[Statement],
                                      statics: List[Statement], eprimary: String)
 
   private[emit] def enumParts(cd: Tree.ClassDef): EnumParts =
     val (statics, instance0) = cd.body.partition(isStatic)
-    // A Java enum constructor's PARAMS become the emitted type's primary constructor params (as
-    // `var` fields), so `Nearest extends TextureFilter(GL_NEAREST)` has somewhere to pass its arg.
-    // Drop the constructor itself and any field that a param supersedes (same name).
-    // JAVA's parameters, never `paramss.flatten` (`CtorFunnel.valueParams`, and the same rule the
-    // funnel applies one level up). A context clause a phase put on this constructor is not a java
-    // parameter and cannot become a `var` field: the parameter is ANONYMOUS, so it would render as
-    // `var : sge.Sge`, and an enum's primary is reached by every `case object` — each of which
-    // would have to pass an argument for a clause the emitter has no way to supply. So it is
-    // dropped from the parameter list and COUNTED as a lost clause instead (`ENGINE-LIMITS.md`
-    // CT5); an enum whose body needs an ambient context is a port-level decision, not a rendering.
-    // THE ROOT, never `ctors.head`. For the single-constructor enum every corpus library had, the
-    // two are the same and nothing could tell them apart; for an overloaded one the head is
-    // whichever java wrote first, and taking ITS parameters gave a delegating `Flags()` beside
-    // `Flags(int)` an EMPTY primary — `case object X extends Flags(3)` is `too many arguments`, and
-    // every constant that named the nilary overload silently got the field's DEFAULT where java ran
-    // `this(1)`. `CtorFunnel.enumPrimaryCtor` is the shared derivation (§4.56) and
-    // `OmissionCheck.overloadedEnumCtors` counts what it refuses.
+    // A Java enum constructor's PARAMS become the primary constructor's params (as `var` fields).
+    // JAVA's parameters, never `paramss.flatten` — a context clause is ANONYMOUS and cannot become
+    // a named field, so it is dropped and COUNTED (`ENGINE-LIMITS.md` CT5). THE ROOT, never
+    // `ctors.head`: taking the head's params silently gave a delegating overload an EMPTY primary
+    // (`CtorFunnel.enumPrimaryCtor`, `OmissionCheck.overloadedEnumCtors` counts refusals).
     val primaryCtor = CtorFunnel.enumPrimaryCtor(program, cd)
     val ctorParams = primaryCtor.map(CtorFunnel.valueParams(program, _)).getOrElse(Nil)
     checkClause(cd, rendered = false, form = "enum")
@@ -736,12 +607,10 @@ private[emit] trait TirEmitterDecls:
     val eprimary = if ctorParams.isEmpty then "" else s"(${ctorParams.map(enumParam).mkString(", ")})"
     EnumParts(ctorParams, paramNames, instance, ctorStats, statics, eprimary)
 
-  /** THE PRE-EXISTING SHAPE — a `sealed abstract class` plus one `case object` per constant.
-    *
-    * It is what a java enum the scala 3 `enum` cannot express is emitted as, and the ONE thing it
-    * does not do is extend `java.lang.Enum[X]` (scalac: "only enums defined with the enum syntax
-    * can"), which is why `name()`, `ordinal()`, `values()` and `valueOf` are all supplied by hand
-    * below. `EnumShape.refusal` decides which enums arrive here and `OmissionCheck` counts them. */
+  /** THE PRE-EXISTING SHAPE — a `sealed abstract class` plus one `case object` per constant. What
+    * a java enum the scala 3 `enum` cannot express is emitted as; does NOT extend
+    * `java.lang.Enum[X]`, so `name()`/`ordinal()`/`values()`/`valueOf` are all supplied by hand.
+    * `EnumShape.refusal` decides which enums arrive here; `OmissionCheck` counts them. */
   private[emit] def sealedEnumDef(cd: Tree.ClassDef, i: Int): String =
     val s       = sym(cd.symbol)
     val name    = esc(s.name)
@@ -866,14 +735,10 @@ private[emit] trait TirEmitterDecls:
   private[emit] val CtorBodyName = "ctorBody$"
 
   /** JS-C51 — java `return` in a constructor leaves the constructor (JLS 14.17); promoted into the
-    * class body it becomes `E091 return outside method definition`. Wrapped in a local `def` (a
-    * `return`'s only valid target, and unlike `boundary.Break` not swallowed by a `catch
-    * (Exception)` the promoted body may hold — §4.4), itself wrapped in a block so the `def` is not
-    * a class member and does not appear in `members.tsv`. Only `plan.primaryBody` moves inside, at
-    * the constructor's own position; fields and init blocks are already hoisted above it by
-    * `orderBody` (§4.55). [[returnsIn]] stops at a nested `Tree.Lambda`/`DefDef`/`AnonClass`, so a
-    * `return` belonging to an inner listener is not a reason to wrap. A value-carrying `return` is
-    * refused and left as is (javac itself rejects it in a constructor). */
+    * class body it becomes `E091`. Wrapped in a local `def` (a valid `return` target, unlike
+    * `boundary.Break`) inside a block so it is not a class member. Only `plan.primaryBody` moves
+    * inside; [[returnsIn]] stops at a nested `Lambda`/`DefDef`/`AnonClass`. A value-carrying
+    * `return` is refused (javac itself rejects it in a constructor). */
   private[emit] def classBodyStats(ordered: List[Statement], plan: CtorFunnel.Plan, i: Int): List[String] =
     val promoted = plan.primaryBody
     def inBody(s: Statement) = promoted.exists(_ eq s)
@@ -904,18 +769,11 @@ private[emit] trait TirEmitterDecls:
   private[emit] def hasClinit(members: List[Statement]): Boolean =
     balticporter.tir.ClassInitTriggerCheck.stepNine(members)(using program)
 
-  // K22 — a java class initialiser (JLS 12.4.2 step 9: static field initialisers + `static { }`
-  // blocks, one sequence) runs at class initialisation; a scala companion initialises only when
-  // something touches the OBJECT, which `new T(…)` does not. So it is emitted into the companion
-  // and reproduced only at java's own trigger list (JLS 12.4.1): INSTANTIATION (forced ahead of
-  // every field initialiser, at the class body's head), STATIC ACCESS (already an access to the
-  // object, needs nothing), and SUBCLASS INITIALISATION (item 7 — force the nearest bearing
-  // ancestor's companion). Never "call it from every use": java's constant-variable inlining means
-  // a plain read triggers nothing, and forcing there would re-enter the Vector3/Matrix4 init cycle
-  // (§4.4). REFLECTION cannot be reproduced (a reflective load of `T` does not touch `T$`) and is
-  // stated rather than counted (ENGINE-LIMITS K22). `val _ = <fully-qualified path>`: bare would be
-  // `E176 unused value` under the consumer's own `-Wall` (§4.45); qualified because an unqualified
-  // simple name inside the body can resolve to a same-named MEMBER instead (§4.56).
+  // K22 — a java class initialiser (JLS 12.4.2 step 9) runs at class init; a scala companion
+  // initialises only when something touches the OBJECT. Reproduced only at java's own trigger
+  // list (JLS 12.4.1): INSTANTIATION (forced ahead of every field initialiser), STATIC ACCESS
+  // (needs nothing), SUBCLASS INITIALISATION (item 7, force the nearest bearing ancestor).
+  // REFLECTION cannot be reproduced and is stated, not counted (`ENGINE-LIMITS.md` K22).
 
   /** The note and statement that force `target`'s companion, recorded as one [[Decision]] about
     * `cd` so the note is DERIVED (§4.575) and `NoteCoverageCheck` sees the pair. `target` is `cd`
@@ -989,49 +847,11 @@ private[emit] trait TirEmitterDecls:
     case d: Definition    => sym(d.symbol).flags.isStatic
     case _                => false
 
-  /** Scala secondary constructors must delegate to a PRECEDING constructor, so order fields first,
-    * then constructors in DELEGATION-TOPOLOGICAL order (each ctor's `this(args)` target emitted
-    * before it), then everything else. Arity is not a reliable proxy — a 3-arg convenience ctor can
-    * delegate to a 1-arg one (`Texture(pixmap,fmt,mip)` → `Texture(data)`), so we follow the actual
-    * `this(...)` edges, keyed by the target ctor's own symbol.
-    *
-    * `owner` is the class whose body this is, and it decides WHICH `ValDef`s the hoist applies to —
-    * `ENGINE-LIMITS.md` C12. Two kinds of `ValDef` reach this list and they are the same node kind:
-    *
-    *  - the class's own FIELDS, which java runs in step 4 of JLS 12.5 — in textual order, before
-    *    any constructor body statement. Hoisting them puts every one ahead of the promoted body,
-    *    which is where java runs them, and a field declared BELOW the constructor needs the hoist
-    *    to compile at all;
-    *
-    *    **…but step 4 is not only fields, and "whatever order the java file declared them in" was
-    *    an overclaim.** JLS 12.5 step 4 runs field initialisers and INSTANCE INITIALISER BLOCKS as
-    *    ONE sequence, in textual order (12.4.2 step 9 says the same of the static pair). A block is
-    *    carried as a synthetic `<initblock>`/`<clinit>` member — a `Tree.DefDef`, not a `ValDef` —
-    *    so it fell into `rest`, behind every field: `{ b = 2; } int b = 5;` left `b == 2` where
-    *    java leaves 5, because the assignment java ran FIRST ran LAST. Same evidence as C12 — valid
-    *    Scala, no compile error, no check count, only a run can see it — which is why the hoisted
-    *    group is "step-4 members" and their RELATIVE ORDER is java's, rather than "the `ValDef`s";
-    *  - a PROMOTED CONSTRUCTOR LOCAL, spliced in by [[lowerCtors]] as part of `plan.primaryBody`.
-    *    That declaration is a step-5 constructor BODY statement: java ran it exactly where it stood,
-    *    among the constructor's other statements, and the interleaving is what carries every
-    *    dependency between them. Hoisted, it initialises itself before the statements java ran
-    *    first — measured on liqp's `Template` as 409 of 414 test failures, all `NullPointerException`
-    *    on a field the statement above the local assigns, at **0 scalac errors with every check
-    *    count flat**.
-    *
-    * The two are told apart by OWNERSHIP and by nothing else (`CLAUDE.md` §4.56 — never by name,
-    * never by origin line, which a real field and a promoted local can share only by accident).
-    * The frontend interns a field under the CLASS and a local under the enclosing EXECUTABLE
-    * (`SpoonTir.defineLocal` sets `owner = methodId`), so "is this `ValDef` a member of `owner`?"
-    * is a symbol lookup. It also generalises past the funnel: any route that splices a
-    * constructor's own declarations into a class body produces symbols owned by that constructor,
-    * so no caller has to opt in.
-    *
-    * A promoted local therefore stays in `rest`, in place — the SIMPLEST faithful shape, and the
-    * one that needs no `uninitialized`/assign split, because java's definite-assignment rules make
-    * a forward reference from an earlier statement to a later local impossible in the first place.
-    * A `val` is legal anywhere in a scala class body, so nothing about its position needs
-    * repairing; only the hoist did. */
+  /** Scala secondaries must delegate to a PRECEDING constructor, so order fields first, then
+    * constructors in DELEGATION-TOPOLOGICAL order (`this(...)` edges, not arity), then everything
+    * else. `owner` decides WHICH `ValDef`s hoist (`ENGINE-LIMITS.md` C12): java's STEP-4 members
+    * hoist ahead of the body (field initialisers AND instance init blocks, textual order); a
+    * PROMOTED CONSTRUCTOR LOCAL stays in place. Told apart by OWNERSHIP (§4.56), never by name. */
   private[emit] def orderBody(body: List[Statement], owner: SymId, paramfulPrimary: Boolean = false): List[Statement] =
     def isCtor(s: Statement) = s match { case d: Tree.DefDef => sym(d.symbol).name == "<init>"; case _ => false }
     // the peer ctor this one delegates to via a leading `this(args)` (NOT super, NOT the no-arg
@@ -1043,25 +863,10 @@ private[emit] trait TirEmitterDecls:
           if sym(m).name == "<init>" && args.nonEmpty && !r.isInstanceOf[Tree.Super] => Some(m)
       case _ => None
     // a no-arg constructor whose body is only super/this delegation is degenerate — Scala's
-    // implicit primary constructor already is no-arg, and `def this() = this()` self-recurses.
-    // Only when the primary IS no-arg: against a PARAMFUL primary a `C() { this(16); }` — or a
-    // `C() { super(0, false); }` in front of a SYNTHESISED primary — is the only thing that makes
-    // `new C()` legal at all, so it must be emitted. `paramfulPrimary` therefore has to be read off
-    // the emitted class, not off `Plan.primaryParams`, which a synthesised primary leaves empty.
-    // …and NILARY is a question about what JAVA declared, never `paramss.flatten` — the same
-    // distinction `CtorFunnel.valueParams` exists for one level up. A `C()` that gained a `(using
-    // T)` clause (`DESIGN.md` §8.4) stopped being degenerate here and was emitted as
-    // `def this()(using T)` beside a primary carrying the same clause: `E120` at the declaration
-    // ("the same type after erasure"), and an `E051` ambiguous overload at every argument-free
-    // `extends` and every `new C()`. That is CT4's third cause reappearing on the `Plan.none` side,
-    // and reading value parameters restores exactly the answer this class gets with no clause at
-    // all — the degenerate secondary dropped (`ENGINE-LIMITS.md` CT5).
-    // …and DEGENERATE is only half of what this predicate drops. A nilary constructor whose
-    // delegation CARRIES ARGUMENTS is not degenerate — java ran that delegation and scala's implicit
-    // nilary primary does not — and it is dropped all the same, because there is nowhere to put it:
-    // `def this()` beside a nilary primary is `E120`. That half is `CtorFunnel.Plans.droppedNilaryCtor`
-    // and `OmissionCheck.droppedNilaryCtors` counts it. ONE predicate for both, so the emission and
-    // the count cannot disagree about which constructors vanish.
+    // implicit primary is already no-arg. Only when the primary IS no-arg (`paramfulPrimary` read
+    // off the EMITTED class). NILARY is about what JAVA declared, never `paramss.flatten`.
+    // DEGENERATE is only half: a nilary delegation CARRYING ARGUMENTS is also dropped (`E120`) —
+    // `CtorFunnel.Plans.droppedNilaryCtor`, ONE predicate for both emission and count.
     def dropped(d: Tree.DefDef): Boolean = !paramfulPrimary && CtorFunnel.delegationOnlyNilary(program, d).isDefined
     val ctorList = body.collect { case d: Tree.DefDef if isCtor(d) && !dropped(d) => d }
     val bySym    = ctorList.map(d => d.symbol -> d).toMap

@@ -134,19 +134,10 @@ private[emit] trait TirEmitterNotes:
         if put.isEmpty then text else splice(text, put.toList)
 
   /** Insert each rendered block after the slot it anchors on (`-1` = after everything the unit
-    * emitted, for a comment that precedes the first member).
-    *
-    * Slot positions come from the SAME forward-cursor search `srcMapOf` uses — one implementation
-    * of "where did this member land", so an anchor and a source-map entry can never disagree.
-    *
-    * '''An ENCLOSING slot gains the insertion too.''' Slots nest: a nested class's own text
-    * contains its members' text, so a comment placed after a nested member falls INSIDE the nested
-    * class's recorded string, and `srcMapOf` — which finds a member by searching for exactly that
-    * string — then cannot find it at all. Measured the first time this shipped: 2 UNLOCATABLE
-    * members on libGDX core, a silent hole in the map that attributes every later error in those
-    * types to the wrong member. The enclosing member's digest DOES move, and that is honest: it
-    * really did gain a line. Only a comment appended AFTER a member (`off == end`, never inside)
-    * leaves every digest alone, which is the ordinary case. */
+    * emitted). Slot positions come from the SAME forward-cursor search `srcMapOf` uses, so an
+    * anchor and a source-map entry can never disagree. An ENCLOSING slot gains the insertion too
+    * (slots nest, so inserting after a nested member falls inside the enclosing class's recorded
+    * string — measured as 2 UNLOCATABLE members before this was fixed). */
   private[emit] def splice(text: String, put: List[(Int, String)]): String =
     val starts = Array.fill(slots.size)(-1)
     val ends   = Array.fill(slots.size)(-1)
@@ -208,15 +199,11 @@ private[emit] trait TirEmitterNotes:
     }
     out.toList
 
-  /** The attribution + do-not-edit banner, in the same shape the BIR printer
-    * ([[balticporter.emit.ScalaPrinter.header]]) has always emitted — one header, so a port that
-    * still runs both backends produces one kind of file. Empty when no [[Provenance]] was given.
-    *
-    * The "Ported from" line names the ORIGINAL JAVA FILE for THIS unit, taken from the unit's own
-    * `Origin` rather than reconstructed from its package: a nested or renamed type does not live at
-    * the path its FQN suggests, and after [[balticporter.transform.PackageRenameTransform]] the FQN
-    * is not the upstream one at all — attribution has to point at the upstream file, which is
-    * exactly what `Origin` records and nothing else does. */
+  /** The attribution + do-not-edit banner, in the same shape the BIR printer has always emitted —
+    * one header, so a port that still runs both backends produces one kind of file. Empty when no
+    * [[Provenance]] was given. The "Ported from" line names the ORIGINAL JAVA FILE from the unit's
+    * own `Origin`, never reconstructed from its package: a renamed/nested type does not live at
+    * the path its FQN suggests, and `Origin` is what still points at the upstream file. */
   private[emit] def header(cd: Tree.ClassDef): String = provenance match
     case scala.None => ""
     case Some(p) =>
@@ -534,13 +521,10 @@ private[emit] trait TirEmitterNotes:
   private[emit] def isUnresolvedTypeVar(t: TypeRepr): Boolean = t match
     case TypeRepr.TypeRef(_, s) => Symbol.isUnresolvedTypeVar(sym(s).fullName)
     case _                      => false
-  /** a TYPE symbol's rendered name. FULLY QUALIFIED by default — for the structural Java→Scala
-    * phase we emit fully-qualified references and generate NO imports, which deletes the entire
-    * import-decision bug class (import-vs-projection, shadowing, static-receiver qualification):
-    * a reference is now a context-free function of the symbol's owner chain. Only two things
-    * stay unqualified: type params, and a type declared in THIS unit (in scope by simple name).
-    * Human-readable imports are a separate, optional beautification backend, not a correctness
-    * prerequisite. (A later refinement handles givens/extensions, which FQN genuinely can't name.) */
+  /** a TYPE symbol's rendered name. FULLY QUALIFIED by default: fully-qualified references and NO
+    * imports deletes the whole import-decision bug class (a reference becomes a context-free
+    * function of the owner chain). Unqualified only for type params and a type declared in THIS
+    * unit. Human-readable imports are a separate, optional beautification backend. */
   private[emit] def typeSym(id: SymId): String =
     val s = sym(id)
     // an UNRESOLVED type variable is a marker and not a name — never print it (see
@@ -554,12 +538,10 @@ private[emit] trait TirEmitterNotes:
     // is named through the value path `Outer.Inner` — NOT by simple name (companion members aren't
     // in the class's scope) and NOT `Outer#Inner` (a type projection can't reach a companion member).
     else if s.flags.isStatic && s.fullName.contains('$') then nestedPath(id)
-    // a Java INNER (non-static) class is a PATH-dependent type in Scala: named by simple name inside
-    // the enclosing class it means `this.Inner`, so the same Java type reached through two different
-    // instances (`pa.Channel` vs `ParallelArray#Channel` from another file) never unifies, and a
-    // method bounded `<T extends Channel>` cannot accept an initializer written against the outer
-    // view. Name it by PROJECTION everywhere instead — one type for all instances. `extends` and
-    // `new` need an instantiable/stable name, so those two positions opt out (see `namedInner`).
+    // a Java INNER (non-static) class is a PATH-dependent type in Scala: by simple name it means
+    // `this.Inner`, so the same Java type reached through two instances never unifies. Named by
+    // PROJECTION everywhere instead — one type for all instances. `extends`/`new` need an
+    // instantiable/stable name, so those two positions opt out (see `namedInner`).
     else if program.definitionOf(id).isDefined && currentDeclared(id) then
       if namedInner || !isInnerClass(id) then esc(s.name) // declared here — in scope
       else nestedPath(id)
@@ -575,13 +557,10 @@ private[emit] trait TirEmitterNotes:
   private[emit] def inheritedNested(owner: SymId): Boolean =
     owner != SymId.None && classStack.exists(c => c != owner && ancestorsOf(c).contains(owner))
 
-  /** the path to a NESTED type, choosing a separator PER LEVEL: `.` where that level is a Java
-    * `static` nested class (lowered into the enclosing companion `object`, so reachable only through
-    * the value path) and `#` where it is a genuine inner class (a type projection). A blanket
-    * `fullName.replace('$', '#')` gets a MIXED chain wrong — `ModelInfluencer.Random` is static and
-    * holds the inner `ModelInstancePool`, so the type is `ModelInfluencer.Random#ModelInstancePool`
-    * while `ModelInfluencer#Random#ModelInstancePool` names nothing at all. Falls back to the
-    * blanket form whenever an owner symbol is unknown, so this can only ever add precision. */
+  /** the path to a NESTED type, choosing a separator PER LEVEL: `.` for a java `static` nested
+    * class (lowered into the companion `object`), `#` for a genuine inner class (a projection). A
+    * blanket `fullName.replace('$', '#')` gets a MIXED chain wrong. Falls back to the blanket form
+    * whenever an owner symbol is unknown, so this can only ever add precision. */
   private[emit] def nestedPath(id: SymId): String =
     def go(x: SymId): Option[String] =
       val sx = sym(x)
@@ -597,23 +576,11 @@ private[emit] trait TirEmitterNotes:
       val sep = if program.definitionOf(id).isEmpty then '.' else '#'
       escPath(sym(id).fullName).replace('$', sep)
 
-  /** THE `[?, …]` A PROJECTION'S PREFIX NEEDS when the enclosing class is GENERIC.
-    *
-    * `Outer#Inner` is not a legal projection where `Outer` takes type parameters: the prefix has to
-    * be a TYPE, and an unapplied type constructor is not one — scalac reads it as
-    * `Found: Outer / Required: ?{ Inner: ? }`, which names neither the missing arguments nor the
-    * construct. Java writes exactly this: an inner class of a generic outer, referred to RAW from
-    * another file (`import …ListView.ListAdapterListener; … ListAdapterListener viewListener;`) is
-    * ordinary java and carries no arguments for the port to render.
-    *
-    * `?` per parameter is the reference hand port's own rendering of every raw generic (§3.5), and
-    * it is the only answer available here: the TIR's reference is to the NESTED symbol and the
-    * outer's arguments are nowhere on it, so filling from the enclosing scope would be inventing an
-    * instantiation java did not write. PROBED against scalac 3.8.4 before it was written —
-    * `ListView[?]#ListAdapterListener` type-checks as a field type, as a formal, across an override
-    * edge, and at a call passing `new lv.ListAdapterListener`.
-    *
-    * Empty for a non-generic owner, which is every other projection this emitter writes. */
+  /** THE `[?, …]` A PROJECTION'S PREFIX NEEDS when the enclosing class is GENERIC. `Outer#Inner`
+    * is not a legal projection where `Outer` takes type parameters (scalac needs a TYPE, not an
+    * unapplied constructor) — java writes exactly this for an inner class referred to RAW. `?` per
+    * parameter is the hand port's own rendering of every raw generic (§3.5); filling from the
+    * enclosing scope would invent an instantiation java did not write. Empty for a non-generic owner. */
   private[emit] def outerFill(owner: SymId): String =
     program.definitionOf(owner).collect { case c: Tree.ClassDef => c.tparams.size }
       .filter(_ > 0).map(n => List.fill(n)("?").mkString("[", ", ", "]")).getOrElse("")
@@ -636,38 +603,11 @@ private[emit] trait TirEmitterNotes:
 
   private[emit] def ind(n: Int): String = "  " * n
 
-  // ---------------------------------------------------------------------------
-  // TRIVIA — the original Java comments, re-emitted above the node that carried them.
-  //
-  // Three decisions, all of them made once here so that the output is DETERMINISTIC rather than
-  // whitespace-faithful (a port is regenerated on every engine change; a diff that moves because a
-  // comment re-wrapped is a diff nobody reads):
-  //
-  //   1. RE-INDENTED to the node, not reproduced at the column Java used. A `/** … */` on a nested
-  //      class's method sat at column 4 upstream and lands at whatever depth the emitted class
-  //      nests to; left at its original column it would read as a comment on the enclosing class.
-  //      Relative alignment INSIDE the comment is preserved — the common leading whitespace of the
-  //      continuation lines is the only thing removed — so a commented-out code block keeps its
-  //      shape and a Javadoc keeps its ` * ` gutter.
-  //   2. Exactly ONE newline between the comment and its node, whatever the Java had. Blank lines
-  //      inside a comment survive; blank lines around it do not, because nothing carries them.
-  //   3. VERBATIM otherwise: every non-whitespace character of the original, delimiters included.
-  //
-  // ## Why no escaping is needed, and the one case where it is
-  //
-  // A comment's text is inert to Scala's parser in every way that matters BUT ONE. `*/` inside a
-  // `//` line comment is nothing; a Javadoc full of `@param`, backticks, `$`, unclosed braces or
-  // Scala-significant text is nothing, because none of it is read. Scala's block comments, however,
-  // NEST and Java's do not — so a Java block comment whose body contains `/*` (perfectly legal:
-  // `/* see the /* marker */` ends at the first `*/` in Java) opens a nested comment in Scala that
-  // never closes, and SWALLOWS THE REST OF THE FILE. That is not hypothetical prettiness: it turns
-  // one upstream comment into a file that does not compile, with an error pointing at the end of
-  // the file.
-  //
-  // The guard is the minimal one: such a comment is re-emitted LINE BY LINE as `//` comments, so
-  // every character of the original — its `/*` and `*/` delimiters included — is still in the
-  // output, and nothing in it can open anything.
-  // ---------------------------------------------------------------------------
+  // TRIVIA — the original Java comments, re-emitted above the node that carried them. Three
+  // decisions, made once so the output is DETERMINISTIC, not whitespace-faithful: RE-INDENTED to
+  // the node (relative alignment inside preserved); exactly ONE newline between comment and node;
+  // otherwise VERBATIM. A comment containing `/*` is re-emitted LINE BY LINE as `//`, since Scala's
+  // block comments NEST (unlike java's) and would otherwise swallow the rest of the file.
 
   /** the block of comment lines that precedes a node, with its trailing newline; `""` for none. */
   private[emit] def leading(ts: List[Trivia], i: Int): String =

@@ -9,97 +9,10 @@ import java.nio.file.{FileSystems, Files, Path}
 import scala.jdk.CollectionConverters.*
 
 /** Constructs a [[PortRun]] from a HOCON `.conf` file, through the same constructors the Scala
-  * path uses. Manifest inheritance is `base.extendedBy(dependent)`. Anything config cannot express
-  * arrives as SPI-discovered code ([[balticporter.tir.TransformFactory]]). Unread keys are refused
-  * (see [[HoconView]]).
-  *
-  *
-  * {{{
-  * label = "sge-graphs"                   # required — the prefix on every console line
-  * base  = "main.conf"                    # a dependent's BASE; see below
-  *
-  * input {
-  *   sourceRoot      = "…/src/main/java"  # required
-  *   files           = ["a/B.java"]       # explicit list, relative to sourceRoot; or:
-  *   includeGlobs    = ["**.java"]        # globs over the path relative to sourceRoot
-  *   excludeGlobs    = ["**\/package-info.java", "package-info.java", …]
-  *   classpath       = ["…jar"]
-  *   classpathFile   = "out/test-classpath.txt"   # one path-separator-joined line, as `cs` writes
-  *   resolutionRoots = ["…/src/main/java"]
-  *   resolutionExcludes = ["com/example/emu"]  # paths under a resolution root NOT to parse,
-  *                                             # relative to the root — a super-source tree that
-  *                                             # REDECLARES classes is otherwise two declarations
-  *                                             # of one FQN and the model is refused outright
-  *   preservedAnnotations = ["com.fasterxml.jackson."]  # which ARGUMENT-BEARING annotation
-  *                                             # families this port claims ON A TYPE. Absent =
-  *                                             # none, which is what every port did before the
-  *                                             # key existed; a MARKER annotation needs no entry
-  * }
-  *
-  * output { portRoot = "…", sourceSet = "main" }   # both required; sourceSet is main | test
-  *
-  * manifest {                             # required — a port without one is not a port (§1.5)
-  *   name           = "sge-graphs"        # required
-  *   governs        = ["space.earlygrey.simplegraphs"]
-  *   dropTypes      = []
-  *   dropMethods    = []
-  *   packageRenames { "space.earlygrey.simplegraphs" = "sge.graphs" }
-  *   typeRenames    { "liqp.filters.Map" = "MapFilter" }      # bare name = renamed in place
-  *   subPackages    { "p.Algorithms" = "internal" }           # nested under p.internal, in place
-  *   flattenNestedTypes = ["p.Connection$DirectedConnection"] # promoted to top level
-  *   allowPackageSplit  = []                                  # boundary moves declared deliberate
-  *   inject         = ["corpus/overrides"]
-  *   serviceProviders = ["../upstream/src/main/resources/META-INF/services/p.Spi"]
-  *                                             # upstream SPI descriptors this module ships. Copied
-  *                                             # into src_managed's resource tree with the SERVICE
-  *                                             # and every PROVIDER renamed through this port's own
-  *                                             # rules. Not inherited (`inject`'s line); a declared
-  *                                             # file that is not there is fatal
-  *   resources      = [ { root  = "../upstream/src/main/resources",
-  *                        files = ["p/q/entities.properties"] } ]
-  *                                             # the descriptor's COMPLEMENT: classpath resources
-  *                                             # this module ships VERBATIM, at the upstream paths
-  *                                             # the emitted lookups name. Nothing is rewritten — a
-  *                                             # lookup is a string literal no rename may touch —
-  *                                             # and the files are DECLARED rather than scanned for
-  *                                             # (an upstream resource root also holds the upstream
-  *                                             # BUILD's own files). Not inherited; a declared file
-  *                                             # that is not there is fatal
-  *   surface        = [ { transform = "collections" }, { transform = "mutable-params" } ]
-  *   resolutions { "com.foo.Bar#baz" = "wrap-checked" }  # PER-LOCATION remedy selection: pick one
-  *                                             # of the alternatives a phase or check OFFERED at
-  *                                             # this member. Ids are validated at load against the
-  *                                             # remedies this classpath declares. Inherited, and
-  *                                             # MUST agree across a chain
-  *   targets        = ["jvm", "js", "native"]  # default: all three — what `PortabilityCheck`
-  *                                             # asked before it had a parameter. Narrowing is
-  *                                             # this module's decision; a DEPENDENT may not
-  *                                             # declare a platform its base does not.
-  *   dependencies   = [ { org = "io.github.cquiroz", name = "scala-java-time",
-  *                        rev = "2.6.0", cross = "scala" } ]   # java | scala (default) | platform
-  * }
-  *
-  * provenance {                           # omitted ⇒ None
-  *   upstreamName = "simple-graphs"       # required within the block
-  *   originalLicense = "MIT"              # required within the block
-  *   sourcePathPrefix = "src/main/java"   # required within the block
-  *   upstreamCommit = "…"                 # default: derived from the source tree's git state
-  *   sourceRoot     = "…"                 # default: input.sourceRoot, absolute
-  *   notices        = ["../LICENSE"]      # upstream notice files copied beside the emitted code
-  * }
-  *
-  * runtimeMode = "vendored"               # dependency (default) | vendored
-  * determinism = "emission"               # emission (default) | full | off
-  * supportSources { "com.foo.Shim" = "…" }
-  * cache = ".balticporter/cache"
-  * lenient = true
-  * preview = false
-  * nextStep = "just sg-measure"
-  * project { … }                          # omitted ⇒ None: no build file is written
-  * }}}
-  *
-  * Paths are relative to the conf file. `base = "main.conf"` inherits the manifest only.
-  */
+  * path uses. Manifest inheritance is `base.extendedBy(dependent)`; anything config cannot
+  * express arrives as SPI-discovered code ([[balticporter.tir.TransformFactory]]); unread keys are
+  * refused (see [[HoconView]]). `label`/`input`/`output`/`manifest` required, rest optional; paths
+  * are relative to the conf file; `base = "main.conf"` inherits the manifest only. */
 object PortConfig:
 
   /** Default file selection: every `.java` minus declaration-only files.
