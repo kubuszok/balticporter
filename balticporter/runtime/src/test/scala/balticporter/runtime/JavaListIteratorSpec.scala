@@ -1,16 +1,6 @@
 package balticporter.runtime
 
-/** `java.util.AbstractList.ListItr`'s contract, cell by cell, over a `mutable.Buffer`.
-  *
-  * This shim exists because K23's refusal — *scala's `Iterator` is forward-only and read-only* — is
-  * a statement about `scala.collection.Iterator` and not about the RECEIVER. Every assertion below
-  * is one of the capabilities that sentence said was unavailable, and the ones that matter most are
-  * the WRITE-THROUGH ones: a detached copy passes `next`/`previous` and fails every `set`/`add`/
-  * `remove` test here, silently, which is exactly what made the refusal plausible.
-  *
-  * Read against `java.util.ArrayList().listIterator()`'s own javadoc rather than by intuition —
-  * `add` is the one nobody predicts correctly.
-  */
+/** `java.util.AbstractList.ListItr`'s contract, cell by cell, over a `mutable.Buffer`. */
 class JavaListIteratorSpec extends munit.FunSuite:
 
   private def buf(xs: String*) = scala.collection.mutable.Buffer(xs*)

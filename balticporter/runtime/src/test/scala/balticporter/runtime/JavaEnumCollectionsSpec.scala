@@ -1,14 +1,7 @@
 package balticporter.runtime
 
 /** `JavaEnumMap` / `JavaEnumSet` — the ORDINAL-ORDER guarantee, which is the whole reason they are
-  * shims rather than a mapping onto `mutable.HashMap`/`HashSet`.
-  *
-  * Availability is not what these tests are about; a stdlib map would have supplied that. What no
-  * stdlib map supplies is java's documented iteration order, and an order regression has no compile
-  * error, no check count and no other test — so the assertions here are all about ORDER, and each
-  * one is written against a set INSERTED in the wrong order so that "it happens to come out right"
-  * cannot pass it.
-  */
+  * shims rather than a mapping onto `mutable.HashMap`/`HashSet`. */
 
 /** A java-shaped enum — `extends java.lang.Enum` is what the shims' bound asks for, and it is what
   * a PORTED java enum emits, so the fixture is the shape the mapping will really meet. It has to be
@@ -43,14 +36,6 @@ class JavaEnumCollectionsSpec extends munit.FunSuite:
   }
 
   // -- …and the OTHER HALF of java's null contract, which is NOT "throw everywhere" -------------
-  //
-  // `java.util.EnumMap` throws on a null key at `put` ONLY. Every QUERY answers absent — `get`
-  // returns null, `containsKey` returns false, and `remove` returns null without touching the map
-  // (`isValidKey` is the one gate, and it is a filter for the readers and a `typeCheck` NPE only
-  // for the writer). A shim that throws at a query is LOUDER than java, which is the direction
-  // that turns a caller's null-tolerant lookup into an exception, and the ordering is what would
-  // have thrown it — so, like the `put` check, these are EXPLICIT: an empty map never consults a
-  // comparator, so the divergence would appear only once something was in the map.
 
   test("a null QUERY answers absent, as java's does — never an exception out of the ordering") {
     val m = new JavaEnumMap[Level, String]

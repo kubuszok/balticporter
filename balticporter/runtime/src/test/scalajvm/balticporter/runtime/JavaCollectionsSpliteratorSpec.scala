@@ -2,21 +2,7 @@ package balticporter.runtime
 
 import scala.collection.mutable.ArrayBuffer
 
-/** The `JavaCollections` members whose SIGNATURE names a JDK type Scala.js does not implement.
-  *
-  * `java.util.Spliterator` and `java.util.Spliterators` are absent from `scalajs-javalib` entirely
-  * — not a missing method on a type that exists, the TYPE. Scala.js compiles against the real JDK
-  * and checks availability at LINK time, so `orderedSpliterator` / `distinctSpliterator` compile
-  * on every row of the matrix and refuse to link on the JS one the moment anything reaches them.
-  * Scala Native implements both, and links these fine; they are here rather than in
-  * `src/test/scalanative` because a test dir per platform-that-happens-to-work is a list that goes
-  * stale, while "the JVM is the row that has everything" does not.
-  *
-  * They are NOT moved out of `JavaCollectionsSpec` because they are less important. They are moved
-  * because the alternative is a JS suite that does not link at all, which would take the other 170
-  * assertions with it — and a suite that cannot run is the one thing worse than a residue that is
-  * written down (`PROGRESS.md` §13, Phase 0).
-  */
+/** The `JavaCollections` members whose SIGNATURE names a JDK type Scala.js does not implement. */
 class JavaCollectionsSpliteratorSpec extends munit.FunSuite:
 
   test("spliterator reports JAVA'S OWN characteristics — the cell K23's refusal was about") {
@@ -55,17 +41,6 @@ class JavaCollectionsSpliteratorSpec extends munit.FunSuite:
     // this JDK that is FALSE: the converter hands back a `java.util.List` wrapper whose
     // `spliterator()` is `List`'s own default, so it reports ORDERED, SIZED and SUBSIZED — exactly
     // what the two helpers above produce, characteristics `16464` either way.
-    //
-    // So the refusal rested on a measurement that no longer holds, and the honest record is this
-    // assertion rather than the prose. It is pinned in the OTHER direction from the test it
-    // replaces: if a future converter stopped agreeing, this says so, and the reason to state
-    // java's answer rather than inherit it becomes the loud one instead of the quiet one.
-    //
-    // Why the helpers stay anyway: they make the characteristics follow JAVA'S DECLARATION at the
-    // owner the receiver was typed by, which is a fact a reader can check against the JDK source,
-    // instead of following what scala's converter happens to wrap the collection in. That is the
-    // same argument §4.5 makes for a standalone shim over an inherited one, and it is deliberately
-    // NOT the argument the refusal made.
     import scala.jdk.CollectionConverters.*
     val viaAsJava = ArrayBuffer("a", "b", "c").asJava.spliterator()
     assert(viaAsJava.hasCharacteristics(java.util.Spliterator.ORDERED),

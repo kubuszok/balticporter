@@ -1,67 +1,11 @@
 package balticporter.runtime
 
 /** `java.util.Collection` / `java.util.AbstractCollection`, as Scala — java's interface, not
-  * scala's collection.
-  *
-  * ==Why a standalone type and not `mutable.Buffer`==
-  * A library that merely USES java collections is fine with `Buffer`: `add`/`remove`/`contains`/
-  * `size` all have counterparts and the retyping is invisible. A library that **defines its own
-  * collection** is not, and the two cases were conflated until simple-graphs made the difference
-  * a number — 27 of its 30 compile errors.
-  *
-  * `Array`, `NodeCollection` and `VertexCollection` there each `extends AbstractCollection<T>` and
-  * declare their own `size()`, `isEmpty()`, `contains(o)`, `iterator()`, `add`, `remove`, `clear`,
-  * `containsAll`, `addAll`, `removeAll`, `retainAll`. Making such a class extend
-  * `scala.collection.mutable.Buffer` is illegal for the reason it always is: the scala collection traits are
-  * large and interlocking, they demand `apply`/`update`/`insert`/`patchInPlace` the java class never
-  * had, and the members it DOES have collide — java's nilary `iterator()` against scala's
-  * parameterless `iterator` is the same clash `JavaIterable` was created for.
-  *
-  * So this is the third member of that family, for the same reason and with the same shape: java's
-  * own member ARITY, no scala collection in the parents, interop by extension.
-  *
-  * ==Why `java.util.Collection` maps here too, and not only the abstract base==
-  * Because subtyping has to hold in both directions and no bridge can supply it. In simple-graphs
-  * `Collection` is a RETURN type for the library's own collections (`Node.getConnections()`,
-  * `Graph.getVertices()`) and a PARAMETER type for arbitrary ones (`addVertices(Collection<V>)`).
-  * If the parameter retyped to `Buffer` while the classes became `JavaCollection`, the two would
-  * never meet.
-  *
-  * An implicit bridge is not available either, and that is measured rather than assumed:
-  * `given Conversion` is inert against the corpus because **scala does not
-  * attempt an implicit conversion when no overload alternative matches**, and `addVertices` is
-  * overloaded with `addVertices(V...)` — precisely the shape no bridge can rescue.
-  *
-  * ==What this costs==
-  * A scala collection can no longer be passed where a java `Collection` is expected. In
-  * simple-graphs that is 2 sites, both `stream().collect(Collectors.toList())` chains, which are
-  * already unbuildable for an unrelated reason. Where it does bite, the fix is
-  * [[JavaCollection.from]] at the call site, the same seam `JavaIterable.from` already provides.
-  */
+  * scala's collection. */
+
 /** The ABSTRACT/CONCRETE split is `java.util.AbstractCollection`'s OWN, member for member: only
   * `iterator()` and `size()` are abstract there, and everything else has a default written over
-  * those two.
-  *
-  * ==Why that split, exactly, and not a plausible one==
-  * Both halves matter, and getting either wrong is invisible until the very last typer error is
-  * gone. `contains`, `isEmpty`, `remove` and `clear` were abstract here for one session, and
-  * `RefChecks` — which dotty skips entirely while any typer error remains — then
-  * reported `class Array needs to be abstract, since: it has 2 unimplemented members` for four of
-  * simple-graphs' classes at once. Java's authors never implemented those members because
-  * `AbstractCollection` already had; a shim that demands them is asking for code the source does not
-  * contain.
-  *
-  * The other half of the same rule: a java class extending `AbstractCollection` inherits
-  * `addAll`/`removeAll`/`retainAll`/`containsAll`/`toArray` without writing them, and `Collection`'s
-  * java-8 `removeIf` likewise, so a shim missing THOSE leaves every such call unresolved. That was 6
-  * errors, found the same way.
-  *
-  * ==`java.lang.Object`, never `Any`==
-  * `contains(Object)` and `remove(Object)` take `java.lang.Object` because java does, and because
-  * scala keeps the two distinct: a ported `override def contains(item: java.lang.Object)` implements
-  * nothing at all against a `contains(o: Any)`, and says so only once RefChecks runs.
-  *
-  * A class that overrides any of these simply overrides it, which is what java does too. */
+  * those two. */
 trait JavaCollection[A] extends JavaIterable[A] {
 
   // ---- the only two java leaves abstract ----
@@ -135,21 +79,7 @@ trait JavaCollection[A] extends JavaIterable[A] {
     changed
   }
 
-  /** JAVA's signature, `java.util.function.Predicate` included — not `A => Boolean`.
-    *
-    * This is §4.5's rule ("java's own shape, java's method arity included") applied to a parameter
-    * type, and the reason is the same: a ported class OVERRIDES this. simple-graphs' `Path` declares
-    * `removeIf(Predicate<? super V>)`, and scala requires an override's parameter type to match its
-    * parent's EXACTLY — contravariance does not help. Declared `A => Boolean` here, no rendering of
-    * the java declaration can agree with it: `Function1[? >: V, Boolean]` is a different type, and
-    * `Function1[V, Boolean]` would be a different DECLARATION from the one java wrote.
-    *
-    * The alternative — map `java.util.function.Predicate` to `Function1` and adapt at each call —
-    * also changes the parameter type of every ported override, so it moves the disagreement rather
-    * than removing it. Note that this is the one place a JDK type is deliberately IN a shim
-    * signature; it is admissible because `java.util.function` is a functional interface available on
-    * the JVM, Scala.js and Scala Native alike, whereas `java.util.Collection` (which this file
-    * exists to replace) is not the portability problem — its INHERITANCE shape is. */
+  /** JAVA's signature, `java.util.function.Predicate` included — not `A => Boolean`. */
   def removeIf(filter: java.util.function.Predicate[? >: A]): Boolean = {
     var changed = false
     val it = iterator()
@@ -168,13 +98,8 @@ trait JavaCollection[A] extends JavaIterable[A] {
 
   /** `Collection.toArray(T[])` — the ARRAY-TAKING twin, which four of simple-graphs' classes override
     * and which was simply absent: `method toArray overrides nothing`, reported only once RefChecks
-    * ran.
-    *
-    * Java's contract to the letter: fill the caller's array when it is long enough (and null the
-    * element just past the last, which is how a caller distinguishes the used prefix), otherwise
-    * return a NEW array of the same component type. `scala.Array.copyOf` is what supplies the second
-    * case without a `ClassTag` — the component type comes from the argument, as java's reflective
-    * allocation does. */
+    * ran. */
+
   /** `T <: java.lang.Object`, not a bare `T`. Java's implicit type-parameter bound IS `Object`, and
     * the port renders it — `toArray[U <: java.lang.Object]` — so a shim declaring `[T]` (bound `Any`)
     * has a DIFFERENT signature and overrides nothing. Same rule as `contains(Object)` above, one
@@ -194,22 +119,7 @@ object JavaCollection {
 
   /** Adapt a scala collection to the java-shaped one — the counterpart of
     * [[JavaIterable.from]], for a call site where a `Collection`-typed parameter meets a
-    * collection the port itself mapped to scala.
-    *
-    * Backed by the ORIGINAL buffer rather than a copy, so `add`/`remove` are visible to whoever
-    * holds it. `.asScala` on a nested collection COPIES and turns a live view into a detached
-    * snapshot — the failure — and this is the same hazard from the other
-    * side, so it is deliberately not a copy.
-    *
-    * Its `iterator()` is REMOVAL-CAPABLE, which is not a nicety: `AbstractCollection`'s
-    * `removeAll`, `retainAll` and `removeIf` are all implemented as iterate-and-remove, and
-    * `JavaIterator.from` hands back the throwing default — so all three threw
-    * `UnsupportedOperationException` on a wrapper documented as live. That COMPILED and no count
-    * moved; it was found by calling them, in `JavaCollectionSpec`. And it is the
-    * reason `JavaIterator` carries `remove` at all: java's own `ArrayList.iterator()` supports it,
-    * so a shim standing in for one must too. The index bookkeeping below is
-    * `java.util.ArrayList.Itr`'s, including `IllegalStateException` before the first `next()` and
-    * on a second `remove()`. */
+    * collection the port itself mapped to scala. */
   def from[A](xs: scala.collection.mutable.Buffer[A]): JavaCollection[A] = new JavaCollection[A] with Wrapping {
     // …and it SAYS what it delegates to, so a later reified question is asked of the buffer java
     // would still have been looking at.
@@ -238,16 +148,7 @@ object JavaCollection {
   }
 
   /** the OTHER direction — a `java.util.Collection` a third party HANDED BACK, at a slot the
-    * retyping made this shim.
-    *
-    * `JavaCollections.fromJava` has no overload for this and deliberately so: at a static slot the
-    * only evidence is a declared type, `java.util.Collection` has no `scala.jdk` converter, and
-    * building one over a copied `Buffer` would detach both directions — the refusal
-    * `CollectionsTransform.liveWrappable` states and counts. Here there is no such doubt, because
-    * the OBJECT is in hand: this is a REIFIED occurrence (`(Collection<?>) x`), so the wrapper is a
-    * straight delegation to the java collection's own members and nothing is copied. Its
-    * `iterator()` is removal-capable through java's own iterator, as [[from]]'s is through the
-    * buffer's. */
+    * retyping made this shim. */
   def fromJava[A](c: java.util.Collection[A]): JavaCollection[A] = new JavaCollection[A] with Wrapping {
     def wrapped: Any = c
     def iterator(): JavaIterator[A] = new JavaIterator[A] {
@@ -265,27 +166,7 @@ object JavaCollection {
   }
 
   /** The same seam for a `Kind.Set` source — `java.util.Set` IS a `java.util.Collection`, so a
-    * ported method taking a `Collection` must still accept the port's `mutable.Set`.
-    *
-    * A DISTINCT NAME and not an overload of [[from]], for the reason spelled out on
-    * [[unmodifiableFrom]] one level down: an overload resolves on the STATIC type, and a `Buffer`
-    * and a `mutable.Set` are both `scala.collection.Iterable` — so a third `Iterable`-shaped
-    * candidate added later would silently start winning calls that used to reach this one. An
-    * emitted call that names the wrapper it wants cannot be re-resolved by accident.
-    *
-    * Live, like [[from]]: `add`/`remove` are visible to whoever else holds the set. Two details are
-    * java's `Set`, not java's `Collection`, and both differ from the buffer version above:
-    *
-    *   - `add` returns whether the set CHANGED — `false` for an element already present, where a
-    *     `List` always returns `true`.
-    *   - `contains`/`remove` test `o.equals(element)`, the PROBE's `equals`, as
-    *     `java.util.AbstractCollection` does.
-    *
-    * REMOVAL-CAPABLE for the reason [[from]] gives. Over a SNAPSHOT of the set rather than the
-    * set's own iterator: removing through a live `mutable.Set` iterator is undefined, and java's
-    * own answer to iterating a `HashSet` while mutating it is `ConcurrentModificationException` —
-    * so nothing correct depends on the difference, and the snapshot makes iterate-and-remove work
-    * where the live iterator would corrupt the traversal. */
+    * ported method taking a `Collection` must still accept the port's `mutable.Set`. */
   def fromSet[A](xs: scala.collection.mutable.Set[A]): JavaCollection[A] = new JavaCollection[A] with Wrapping {
     def wrapped: Any = xs
     def iterator(): JavaIterator[A] = new JavaIterator[A] {
@@ -312,17 +193,7 @@ object JavaCollection {
   }
 
   /** Adapt a scala collection that the port may NOT mutate through — a DISTINCT NAME rather than an
-    * overload of [[from]], deliberately.
-    *
-    * An overload would resolve on the static type, and `mutable.Set` is a `scala.collection.Iterable`
-    * — so `Collection<X> c = new HashSet<>(); c.add(x)` would silently pick the read-only wrapper and
-    * throw at runtime while compiling perfectly. That is precisely the defect class:
-    * valid scala meaning something else, invisible to every count. A separate name cannot be reached
-    * by accident, and the emitted call says which one it is.
-    *
-    * Read-only is not a narrowing where it is used. `Map.values()` in java is a VIEW that rejects
-    * `add` with `UnsupportedOperationException`, and `Collections.unmodifiableCollection` rejects
-    * every mutator — so throwing is what java does, not a capability the port lost. */
+    * overload of [[from]], deliberately. */
   def unmodifiableFrom[A](xs: scala.collection.Iterable[A]): JavaCollection[A] = new JavaCollection[A] {
     def iterator(): JavaIterator[A] = JavaIterator.from(xs.iterator)
     def size(): Int                 = xs.size
@@ -333,13 +204,7 @@ object JavaCollection {
     override def clear(): Unit               = throw new UnsupportedOperationException("clear on an unmodifiable collection")
   }
 
-  /** `java.util.Collections.unmodifiableCollection`, with java's own signature.
-    *
-    * The `? <: T` is the whole reason this exists rather than being erased to the identity: java's
-    * `<T> Collection<T> unmodifiableCollection(Collection<? extends T>)` is where a
-    * `Collection<Connection<V>>` becomes the `Collection<Edge<V>>` a method declares it returns, and
-    * [[JavaCollection]] — like java's own `Collection` — is invariant. Drop the call and the widening
-    * goes with it. */
+  /** `java.util.Collections.unmodifiableCollection`, with java's own signature. */
   def unmodifiable[T](c: JavaCollection[? <: T]): JavaCollection[T] = new JavaCollection[T] {
     // the WRAPPED collection's iterator may be removal-capable ([[from]] now is), and java's
     // `unmodifiableCollection` returns one whose `remove()` throws — otherwise a caller removes
@@ -359,14 +224,7 @@ object JavaCollection {
     override def clear(): Unit               = throw new UnsupportedOperationException("clear on an unmodifiable collection")
   }
 
-  /** `Stream.filter(Predicate)`, as a function rather than a synthesised lambda.
-    *
-    * A `java.util.stream` chain does not translate call-for-call — scala's collections carry the
-    * operations directly, so `stream()` and `collect(Collectors.toList())` both DISAPPEAR and only
-    * the middle survives. What survives still takes a `java.util.function.Predicate` where scala's
-    * `filter` wants `A => Boolean`, and doing that in the transform would mean minting a lambda with
-    * a fresh parameter symbol. A named function needs neither, and keeps the adaptation in one
-    * readable place. */
+  /** `Stream.filter(Predicate)`, as a function rather than a synthesised lambda. */
   def filtered[A](xs: scala.collection.mutable.Buffer[A], p: java.util.function.Predicate[? >: A])
       : scala.collection.mutable.Buffer[A] = xs.filter(p.test(_))
 

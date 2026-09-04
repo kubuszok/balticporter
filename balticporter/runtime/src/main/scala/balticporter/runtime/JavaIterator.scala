@@ -1,22 +1,6 @@
 package balticporter.runtime
 
-/** `java.util.Iterator`, as Scala — java's interface, not scala's.
-  *
-  * Java's `Iterator` has a third method, `remove()`, which removes from the underlying
-  * collection the element last returned by `next()`. `scala.collection.Iterator` has no
-  * such operation and no way to express one, so a port that maps java's onto scala's
-  * drops the method — quietly, until a call site fails to compile, and dangerously if the
-  * call site is instead "fixed" by dropping the removal. libGDX calls it POLYMORPHICALLY,
-  * through the interface (`ModelLoader`, `ParticleControllerInfluencer`, `ArraySelection`,
-  * `Predicate`), so no call-site narrowing brings it back.
-  *
-  * Declared standalone rather than as a `scala.collection.Iterator` subtype — see
-  * [[JavaIterable]] for why that subtyping is not available at all. The methods carry
-  * java's arity (`hasNext()`, `next()`), which is also the arity every ported override
-  * was written with.
-  *
-  * Portable: no JVM-only API, nothing reflective.
-  */
+/** `java.util.Iterator`, as Scala — java's interface, not scala's. */
 trait JavaIterator[A] {
   def hasNext(): Boolean
   def next(): A
@@ -36,31 +20,7 @@ object JavaIterator {
     }
   }
 
-  /** A removing iterator over an indexed mutable collection.
-    *
-    * '''java.util.Iterator.remove() contract''' (JDK spec):
-    *   - removes the element last returned by `next()`
-    *   - throws `IllegalStateException` if `next()` has not yet been called
-    *   - throws `IllegalStateException` if `remove()` is called twice after a single `next()`
-    *   - after `remove()`, the cursor steps back so the subsequent `next()` returns the element
-    *     that WOULD HAVE been returned without the removal
-    *
-    * '''Behavioural delta enumeration''' (refusal enumeration):
-    *   1. '''Concurrent modification''' -- java's `ConcurrentModificationException` is not
-    *      reproduced. If the collection is modified by means other than `remove()` while
-    *      iteration is in progress, the behaviour is undefined. '''GUARD: not guarded;
-    *      COUNTED: no, because the java contract says behaviour is undefined there too'''
-    *      (the `modCount` fast-fail is best-effort in the JDK itself).
-    *   2. '''Snapshot vs live''' -- this iterator reads the LIVE collection (`size()` and
-    *      `get()` at each step), so a removal IS observed by the subsequent `hasNext()`/`next()`.
-    *      This matches java's own `ArrayList.Itr` and `ArrayDeque.DeqIterator`.
-    *   3. '''Identity''' -- the elements returned are the live collection's own references,
-    *      never copies. This matches java.
-    *
-    * @param size     the current size of the collection (called on each `hasNext()`)
-    * @param get      element at index `i` (called on each `next()`)
-    * @param removeAt remove element at index `i` (called on each `remove()`)
-    */
+  /** A removing iterator over an indexed mutable collection. */
   def removing[A](size: () => Int, get: Int => A, removeAt: Int => Unit): JavaIterator[A] = {
     new JavaIterator[A] {
       private var cursor: Int = 0

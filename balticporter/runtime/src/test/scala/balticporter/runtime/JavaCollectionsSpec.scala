@@ -5,11 +5,7 @@ import scala.collection.mutable.{ArrayBuffer, Buffer, ListBuffer}
 /** `JavaCollections`' BEHAVIOUR. Every member here exists because a java call has no scala
   * counterpart with the same MEANING, and every one of those differences is invisible to a compile
   * — which is why an emission spec (`CollectionsStaticsSpec`) is only half the gate. The other half
-  * is here, and it was entirely missing: nothing called any of these methods.
-  *
-  * Each test names the divergence it would catch. A test that only asserted the obvious answer
-  * would pass against the very implementation the doc says must not be written.
-  */
+  * is here, and it was entirely missing: nothing called any of these methods. */
 class JavaCollectionsSpec extends munit.FunSuite:
 
   private val byNatural: java.util.Comparator[Int] = (a: Int, b: Int) => a - b
@@ -261,16 +257,6 @@ class JavaCollectionsSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------------------------
   // `java.util.Collection`'s BULK DEFAULTS at the SECOND target — the K29 receiver contract
-  // -------------------------------------------------------------------------------------------
-  //
-  // `addAll`/`removeAll`/`retainAll` are what a java class INHERITS from `AbstractCollection` and
-  // calls through `super`. The re-parenting removes them, so the phase supplies them — and the whole
-  // point of the receiver being an intersection rather than a `Buffer` is that a definer is
-  // re-parented onto EITHER `mutable.Buffer` or `mutable.Set`. Both are exercised below, and so is
-  // the shape the emitted call actually has: a GENERIC class extending `mutable.Set`, calling the
-  // helper on `this`. That third one is a TYPE-INFERENCE assertion as much as a behavioural one —
-  // an intersection is a place scala's inference can decline, and a helper that does not infer at
-  // the emitted shape is a helper the emitted call cannot use.
 
   /** the emitted shape itself: a class that DEFINES a set, re-parented onto `mutable.Set`, whose
     * `super.<default>` the phase rewrites to a helper standing on `this`. */
@@ -426,9 +412,6 @@ class JavaCollectionsSpec extends munit.FunSuite:
     // holds anything. The view constructed lazily throws too — but at the first READ, an arbitrary
     // distance away, in whichever member happened to touch it first. Same exception, different
     // stack, different member, and the correlator anchors the failure on the wrong frame.
-    //
-    // A one-line difference in WHEN, which is the whole of what a faithful translation of a
-    // fail-fast contract is.
     intercept[NullPointerException](JavaCollections.asListView(null))
   }
 
@@ -519,14 +502,6 @@ class JavaCollectionsSpec extends munit.FunSuite:
   }
 
   // ---- …and java's FOURTH part: `size()` is a HINT, and both directions are its own code path --
-  //
-  // `AbstractCollection.toArray` allocates on `size()` and then RECONCILES — `Arrays.copyOf(r, i)`
-  // where the iterator ran out early, `finishToArray` where it ran on. A collection whose `size()`
-  // is a constant of its SHAPE rather than a count of its live elements is an ordinary design (a
-  // bit-set over a fixed universe reports the universe and iterates the non-zero fields), so this
-  // is not a defensive corner: filling `new Array[Object](size)` and returning it leaves the tail
-  // `null`, compiles perfectly, moves no count, and answers `[a, b, c, d, null, …]` where java
-  // answers `[a, b, c, d]`.
 
   /** a collection whose `size` disagrees with its iterator, as a fixed-universe bit set's does. */
   private final class Lying(elems: List[String], claimed: Int) extends Iterable[String]:
@@ -805,7 +780,6 @@ class JavaCollectionsSpec extends munit.FunSuite:
   // Two receivers need them: a map whose type arguments are WILDCARDS (`K` is an unnameable
   // capture), and any retyped collection reached with java's own `Object` still on the argument —
   // an implementing class's `remove(Object o)`, or the frontend's G14 erasure coercion.
-  // -------------------------------------------------------------------------------------------
 
   test("mapGet is java's `get(Object)`: the value, or NULL when absent") {
     val m = scala.collection.mutable.Map("a" -> "x")
@@ -884,11 +858,6 @@ class JavaCollectionsSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------------------------
   // Reified — `ENGINE-LIMITS.md` K18. Both representations, and the LIVENESS of the coercion.
-  //
-  // Nothing about these is visible to a compile: every one of them is an `isInstanceOf` or an
-  // `asInstanceOf` that already type-checked and simply answered java's question about the wrong
-  // set of classes. So this is the only place the semantics are stated as an assertion.
-  // -------------------------------------------------------------------------------------------
 
   test("every predicate accepts BOTH representations — the port's and the producer's") {
     assert(JavaCollections.Reified.isMap(scala.collection.mutable.Map("a" -> 1)))
@@ -967,17 +936,6 @@ class JavaCollectionsSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------------------------
   // …AND THE COERCION'S OWN RESULT IS ASKED ABOUT AGAIN. `ENGINE-LIMITS.md` K19.
-  //
-  // A coercion at a shim target has to BUILD something — `mutable.Buffer` is not a
-  // `JavaCollection` and no view can make it one — so the value that leaves `as*` is a different
-  // OBJECT from the one that arrived. Java's cast was the identity, so every later reified
-  // question about that value was still about the ORIGINAL class: `(Collection) list` then
-  // `instanceof List` is TRUE in java, and answered on the wrapper alone it is false.
-  //
-  // The fixable half is exactly this chain, and the fix is that the shims say what they DELEGATE
-  // to (`Wrapping`), so a later question can be asked of the value underneath. What no
-  // implementation can fix is reference IDENTITY — see K19.
-  // -------------------------------------------------------------------------------------------
 
   test("WRAP-THEN-RETEST: a coerced value still answers for what it was made of") {
     val xs: Buffer[Int] = ArrayBuffer(1)
@@ -1159,10 +1117,6 @@ class JavaCollectionsSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------------------------
   // SE8's default methods on List / Map / Collection (`ENGINE-LIMITS.md` K23)
-  //
-  // Each of these has a scala member that LOOKS right, and each test asserts the cell where the two
-  // answer differently — never the cell where they agree, which the wrong implementation would pass.
-  // -------------------------------------------------------------------------------------------
 
   test("computeIfAbsent treats a key mapped to NULL as ABSENT, where getOrElseUpdate does not") {
     // java's own words: "if the specified key is not already associated with a value (or is mapped

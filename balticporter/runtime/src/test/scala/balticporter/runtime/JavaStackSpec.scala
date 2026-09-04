@@ -1,12 +1,6 @@
 package balticporter.runtime
 
-/** `JavaStack`'s BEHAVIOUR — java's `Stack`, whose top is its LAST element.
-  *
-  * Every assertion here but the last would pass against `scala.collection.mutable.Stack` as well,
-  * which is exactly why the last one is the point: that type's `push` PREPENDS, so its element 0 is
-  * the top and every list-shaped read of the same object answers in the opposite order, with no
-  * compile error and nothing to count. The mapping choice rests on that one test.
-  */
+/** `JavaStack`'s BEHAVIOUR — java's `Stack`, whose top is its LAST element. */
 class JavaStackSpec extends munit.FunSuite:
 
   test("push appends and returns THE ITEM, not the collection") {

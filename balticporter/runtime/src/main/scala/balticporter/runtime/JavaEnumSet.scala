@@ -1,13 +1,6 @@
 package balticporter.runtime
 
-/** `java.util.EnumSet`, as Scala — a `mutable.Set` that iterates in ORDINAL order.
-  *
-  * [[JavaEnumMap]]'s reasoning, one collection kind over, with one difference that decides the
-  * shape: `EnumSet` has NO public constructor. Every java site is a static factory, so the port's
-  * rewrites land on this companion rather than on a `new`, and the class token those factories take
-  * is not decoration here — `allOf`, `range` and `complementOf` need the enum's CONSTANTS, which is
-  * what `Class.getEnumConstants` is for and what java itself uses.
-  */
+/** `java.util.EnumSet`, as Scala — a `mutable.Set` that iterates in ORDINAL order. */
 final class JavaEnumSet[E <: java.lang.Enum[E]] extends scala.collection.mutable.AbstractSet[E] {
   private given byOrdinal: Ordering[E] = Ordering.by((e: E) => e.ordinal)
   private val under = scala.collection.mutable.TreeSet.empty[E]
@@ -15,11 +8,7 @@ final class JavaEnumSet[E <: java.lang.Enum[E]] extends scala.collection.mutable
   /** NULL is [[JavaEnumMap]]'s rule verbatim, and the reasoning is stated once there: java has ONE
     * gate (`isValidKey`/`typeCheck`) read two ways — `add` THROWS, every READER answers absent, so
     * `contains(null)` is `false` and `remove(null)` is `false` with the set untouched
-    * (`null instanceof Enum` is false, and `RegularEnumSet` filters rather than throws). Both
-    * halves are EXPLICIT for the reason given there: a `TreeSet` consults its ordering only when
-    * there is something to compare, so an empty set would accept a null that every later insertion
-    * rejects, and a query would answer absent on an empty set and throw out of the `Ordering` on a
-    * populated one. */
+    * (`null instanceof Enum` is false, and `RegularEnumSet` filters rather than throws). */
   private def valid(elem: E): Boolean = elem != null
 
   def contains(elem: E): Boolean      = valid(elem) && under.contains(elem)

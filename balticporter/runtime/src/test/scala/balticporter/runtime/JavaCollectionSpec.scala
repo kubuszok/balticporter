@@ -3,17 +3,7 @@ package balticporter.runtime
 import scala.collection.mutable.{ArrayBuffer, Buffer, Set as MSet}
 
 /** `JavaCollection`'s BEHAVIOUR — the shim a port's `Collection`/`AbstractCollection` slots become,
-  * and the four factories `CollectionsTransform.coerce` reaches for.
-  *
-  * Nothing called any of it. That is the gap CLAUDE.md §3 names exactly: these were only ever
-  * COMPILED, as part of a port, and only the port's own tests could have caught a defect in them —
-  * while ENGINE-LIMITS K5 records that four separate mistakes in this very file were invisible
-  * until the last typer error was gone and `RefChecks` finally ran.
-  *
-  * The properties asserted here are the ones a plausible wrong implementation would fail: a LIVE
-  * view rather than a copy, `Set` semantics that differ from `List` semantics, the read-only
-  * wrappers actually throwing, and `toArray(T[])`'s null terminator.
-  */
+  * and the four factories `CollectionsTransform.coerce` reaches for. */
 class JavaCollectionSpec extends munit.FunSuite:
 
   private def coll(xs: String*): JavaCollection[String] = JavaCollection.from(ArrayBuffer.from(xs))
