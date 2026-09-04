@@ -23,15 +23,15 @@ class LayoutLineSuite extends munit.FunSuite {
   test("new Layout has one empty line") {
     val layout = new Layout()
     assertEquals(layout.lines$field.size, 1)
-    assertEquals(layout.lines$field.get(0).glyphs.size, 0)
+    assertEquals(layout.lines$field(0).glyphs.size, 0)
   }
 
   test("Layout auxiliary fields start empty") {
     val layout = new Layout()
-    assert(layout.offsets.empty, "offsets should be empty")
-    assert(layout.sizing.empty, "sizing should be empty")
-    assert(layout.rotations.empty, "rotations should be empty")
-    assert(layout.advances.empty, "advances should be empty")
+    assert(layout.offsets.isEmpty, "offsets should be empty")
+    assert(layout.sizing.isEmpty, "sizing should be empty")
+    assert(layout.rotations.isEmpty, "rotations should be empty")
+    assert(layout.advances.isEmpty, "advances should be empty")
   }
 
   test("Layout defaults") {
@@ -101,16 +101,16 @@ class LayoutLineSuite extends munit.FunSuite {
     assert(result != null, "insertLine should return non-empty")
     assertEquals(layout.lines$field.size, 2)
     // The new line is at index 1
-    assertEquals(layout.lines$field.get(1).height, 0f)
+    assertEquals(layout.lines$field(1).height, 0f)
   }
 
   test("insertLine appends newline glyph to the line at the given index") {
     val layout = new Layout()
-    layout.lines$field.get(0).glyphs.add('A'.toLong)
+    layout.lines$field(0).glyphs.add('A'.toLong)
     layout.insertLine(0)
     // Line at index 0 should now have 'A' and '\n'
-    val glyphs = layout.lines$field.get(0).glyphs
-    assertEquals(glyphs.peek().toChar, '\n')
+    val glyphs = layout.lines$field(0).glyphs
+    assertEquals(glyphs.peek.toChar, '\n')
   }
 
   test("insertLine respects maxLines limit") {
@@ -168,7 +168,7 @@ class LayoutLineSuite extends munit.FunSuite {
   test("peekLine returns the last line") {
     val layout = new Layout()
     val last   = layout.peekLine
-    assert(last eq layout.lines$field.peek())
+    assert(last eq layout.lines$field.peek)
   }
 
   test("pushLineBare adds a line without newline glyph") {
@@ -177,7 +177,7 @@ class LayoutLineSuite extends munit.FunSuite {
     assert(result != null)
     assertEquals(layout.lines$field.size, 2)
     // Original line should NOT have a newline glyph added
-    assertEquals(layout.lines$field.get(0).glyphs.size, 0)
+    assertEquals(layout.lines$field(0).glyphs.size, 0)
   }
 
   test("pushLineBare respects maxLines") {
@@ -201,11 +201,11 @@ class LayoutLineSuite extends munit.FunSuite {
     layout.atLimit = true
     layout.clear()
     assertEquals(layout.lines$field.size, 1)
-    assertEquals(layout.lines$field.get(0).glyphs.size, 0)
-    assert(layout.offsets.empty)
-    assert(layout.sizing.empty)
-    assert(layout.rotations.empty)
-    assert(layout.advances.empty)
+    assertEquals(layout.lines$field(0).glyphs.size, 0)
+    assert(layout.offsets.isEmpty)
+    assert(layout.sizing.isEmpty)
+    assert(layout.rotations.isEmpty)
+    assert(layout.advances.isEmpty)
     assert(!layout.atLimit)
   }
 
@@ -257,20 +257,20 @@ class LayoutLineSuite extends munit.FunSuite {
 
   test("countGlyphs counts across all lines") {
     val layout = new Layout()
-    layout.lines$field.get(0).glyphs.add('A'.toLong)
-    layout.lines$field.get(0).glyphs.add('B'.toLong)
+    layout.lines$field(0).glyphs.add('A'.toLong)
+    layout.lines$field(0).glyphs.add('B'.toLong)
     layout.insertLine(0)
-    layout.lines$field.get(1).glyphs.add('C'.toLong)
+    layout.lines$field(1).glyphs.add('C'.toLong)
     // Line 0 has A, B, \n (3) ; Line 1 has C (1)
     assertEquals(layout.countGlyphs, 4)
   }
 
   test("countGlyphsBeforeLine counts glyphs in lines before index") {
     val layout = new Layout()
-    layout.lines$field.get(0).glyphs.add('A'.toLong)
-    layout.lines$field.get(0).glyphs.add('B'.toLong)
+    layout.lines$field(0).glyphs.add('A'.toLong)
+    layout.lines$field(0).glyphs.add('B'.toLong)
     layout.insertLine(0)
-    layout.lines$field.get(1).glyphs.add('C'.toLong)
+    layout.lines$field(1).glyphs.add('C'.toLong)
     // Before line 0: 0 glyphs
     assertEquals(layout.countGlyphsBeforeLine(0), 0)
     // Before line 1: glyphs in line 0 = A, B, \n = 3
@@ -284,8 +284,8 @@ class LayoutLineSuite extends munit.FunSuite {
     original.targetWidth = 300f
     original.maxLines = 5
     original.justification = Justify.SPACES_ON_ALL_LINES
-    original.lines$field.get(0).glyphs.add('X'.toLong)
-    original.lines$field.get(0).size(50f, 12f)
+    original.lines$field(0).glyphs.add('X'.toLong)
+    original.lines$field(0).size(50f, 12f)
     original.offsets.add(1f, 2f)
     original.sizing.add(3f, 4f)
     original.rotations.add(5f)
@@ -296,8 +296,8 @@ class LayoutLineSuite extends munit.FunSuite {
     assertEquals(copy.maxLines, 5)
     assertEquals(copy.justification, Justify.SPACES_ON_ALL_LINES)
     assertEquals(copy.lines, 1)
-    assertEquals(copy.lines$field.get(0).glyphs.size, 1)
-    assertEquals(copy.lines$field.get(0).width, 50f)
+    assertEquals(copy.lines$field(0).glyphs.size, 1)
+    assertEquals(copy.lines$field(0).width, 50f)
     assertEquals(copy.offsets.size, 2)
     assertEquals(copy.sizing.size, 2)
     assertEquals(copy.rotations.size, 1)
@@ -308,17 +308,17 @@ class LayoutLineSuite extends munit.FunSuite {
 
   test("getWidth returns max line width when no justification") {
     val layout = new Layout()
-    layout.lines$field.get(0).width = 100f
+    layout.lines$field(0).width = 100f
     layout.insertLine(0)
-    layout.lines$field.get(1).width = 200f
+    layout.lines$field(1).width = 200f
     assertEquals(layout.width, 200f)
   }
 
   test("getHeight sums all line heights") {
     val layout = new Layout()
-    layout.lines$field.get(0).height = 10f
+    layout.lines$field(0).height = 10f
     layout.insertLine(0)
-    layout.lines$field.get(1).height = 15f
+    layout.lines$field(1).height = 15f
     assertEquals(layout.height, 25f)
   }
 

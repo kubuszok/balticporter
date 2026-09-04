@@ -50,7 +50,7 @@ class PaletteSuite extends munit.FunSuite {
   }
 
   test("NAMES is sorted alphabetically") {
-    val names  = Palette.NAMES.toArray().toSeq
+    val names  = Palette.NAMES.toArray.toSeq
     val sorted = names.sorted
     assertEquals(names, sorted)
   }

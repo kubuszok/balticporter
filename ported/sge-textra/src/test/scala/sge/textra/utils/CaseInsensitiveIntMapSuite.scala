@@ -335,7 +335,7 @@ class CaseInsensitiveIntMapSuite extends munit.FunSuite {
     map.put("c", 15)
     val arr = map.values().toArray()
     assertEquals(arr.size, 3)
-    val sorted = (0 until arr.size).map(arr.get(_)).sorted.toList
+    val sorted = (0 until arr.size).map(arr(_)).sorted.toList
     assertEquals(sorted, List(5, 10, 15))
   }
 
@@ -345,7 +345,7 @@ class CaseInsensitiveIntMapSuite extends munit.FunSuite {
     map.put("bar", 2)
     val arr = map.keys().toArray()
     assertEquals(arr.size, 2)
-    val sorted = (0 until arr.size).map(i => arr.get(i).toLowerCase).sorted.toList
+    val sorted = (0 until arr.size).map(i => arr(i).toLowerCase).sorted.toList
     assertEquals(sorted, List("bar", "foo"))
   }
 

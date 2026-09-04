@@ -80,7 +80,7 @@ class TextraLzmaFontRedSuite extends munit.FunSuite {
     assertEquals(font.name, "LzmaFixture")
     assert(font.mapping.containsKey('A'.toInt), "glyph 'A' (unicode 65) from the fixture must be mapped")
     // advance 0.5 * atlas size 32 + widthAdjust 0 = 16
-    assertEqualsFloat(font.mapping.get('A'.toInt).xAdvance, 16f, 0.001f, "glyph 'A' must keep its JSON metrics (advance 0.5 * size 32)")
+    assertEqualsFloat(font.mapping.get('A'.toInt).get.xAdvance, 16f, 0.001f, "glyph 'A' must keep its JSON metrics (advance 0.5 * size 32)")
   }
 
   test("ISS-514: Font.loadJSON loads a .json.lzma FileHandle (upstream Font.java lines 3218-3236)") {
