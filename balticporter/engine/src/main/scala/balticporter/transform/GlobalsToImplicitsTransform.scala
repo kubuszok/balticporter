@@ -163,11 +163,7 @@ final class GlobalsToImplicitsTransform(
           "would be un-mappable and the phase would thread nothing — the §1(b) silent no-op this " +
           "engine refuses. Map at least one static onto a path on the context type")
 
-      // CLASS ATTACHMENT USED TO BE REFUSED HERE: the TIR edit was correct and the EMISSION was
-      // not — `CtorFunnel` undid it three ways (`ENGINE-LIMITS.md` CT4). All three were in the
-      // constructor region `DESIGN.md` §8.2 owns, and closed there: parameter GROUPS
-      // (`Plan.givens`), nilary tests via `valueParams`, clause rendering via `paramClause`. This
-      // phase needs no code for it.
+      // class attachment: the constructor region (DESIGN.md §8.2) owns its emission — ENGINE-LIMITS CT4
 
       h.context match
         case ContextType.Minted(fqn) =>

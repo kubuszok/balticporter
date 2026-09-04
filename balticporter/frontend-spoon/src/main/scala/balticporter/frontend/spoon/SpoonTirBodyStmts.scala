@@ -24,9 +24,8 @@ private[spoon] trait SpoonTirBodyStmts:
 
   private[spoon] def methodBody(b: CtBlock[?]): Term = blockOf(b.getStatements.asScala.toList, b)
 
-  /** a statement list and the element it came from → a TIR `Block`, with any trailing comments
-    * kept in the block's `trailing` slot. The ONE place a `Tree.Block` is built out of `stmts` —
-    * previously dropped independently at three call sites, exactly the shape a fix misses two of. */
+  /** a statement list and the element it came from → a TIR `Block`, trailing comments kept in
+    * `trailing`. The ONE place a `Tree.Block` is built out of `stmts` (three callers, one derivation). */
   private[spoon] def blockOf(ss: List[CtStatement], el: CtElement): Tree.Block =
     val (sts, trail) = stmts(ss)
     Tree.Block(sts, unit(el), unitT, originOf(el), trail)
