@@ -3,37 +3,7 @@ package balticporter.catalog
 import java.nio.file.{Files, Path}
 
 /** STATUS ENFORCEMENT RULE (i): **a row whose twin names a CLOSED `ENGINE-LIMITS.md` entry may not
-  * claim `Open`.**
-  *
-  * Why it is a spec and not a habit: four of the catalog's headline `Open` rows were FIXED inside
-  * one week while the document describing them was being written, and nothing could see that they
-  * had. All four would have fallen out of a single question asked of `ENGINE-LIMITS.md`, which is
-  * maintained in the commit that measures — so the twin column is more current than the status
-  * column by construction, and this spec is what makes preferring it mechanical rather than advisory.
-  *
-  * It reads the committed file, because the stable ids ARE the citation surface and the CLOSED
-  * marker is already there. No new artifact, no generation step. `scripts/catalog-status.sh` is the
-  * same rule for an agent holding a checkout rather than a test runner, and the two must agree —
-  * they read the same file by the same shape.
-  *
-  * BOTH DIRECTIONS, because they are different failures: a row still claiming `Open` after the entry
-  * closed is a status that went stale downwards, and a row claiming `Handled` against a twin that
-  * reads OPEN is the registry asserting coverage its own measurement contradicts — which reads as a
-  * guarantee to an agent in another repository. `Partial(why)` is exempt from the second and that is
-  * the whole exemption: a partial row STATES which half is missing, which is what an open twin is
-  * evidence of.
-  *
-  * ITS HONEST LIMIT, stated because an over-claimed guarantee is how a mechanism stops being
-  * audited: it sees a row only THROUGH its twin. A row with `Twin.Predicted` is invisible to it,
-  * which is why `Twin.NoTwin` is refused for an `Open` row below — a row claiming to be open owes a
-  * pointer at the record that would contradict it. And a twin CLOSED on one face and open on another
-  * is `AMBIGUOUS` rather than a verdict; the spec reports those and does not fail on them, because a
-  * half-closed entry is a human's call by construction.
-  *
-  * NOT SKIPPABLE. If the file cannot be found the spec FAILS. `CLAUDE.md` §5.1: an `assume`-guarded
-  * spec whose precondition is an artifact is one nobody is running, and it can go stale for as long
-  * as nobody happens to produce that artifact first. `ENGINE-LIMITS.md` is committed at the
-  * repository root, so a checkout always has it and its absence is a real failure. */
+  * claim `Open`.** */
 class ClosedTwinStatusSpec extends munit.FunSuite:
 
   /** Walk up from the working directory. A forked test JVM's cwd is the SUBPROJECT, not the
@@ -52,11 +22,7 @@ class ClosedTwinStatusSpec extends munit.FunSuite:
   /** id -> CLOSED / OPEN / AMBIGUOUS / UNMARKED, from the file's own shape: `### <ID>. <heading>`
     * (the trailing dot is optional — several ids are written `### K5.6 A cast …`), and the marker is
     * read from the heading OR from the entry's first paragraph, because the file uses both
-    * conventions.
-    *
-    * The token is matched in UPPER CASE only, deliberately: one entry's heading reads "OPEN; the
-    * counting is closed, the pipeline is not", and a case-insensitive match would call the one entry
-    * that says it is open, closed. */
+    * conventions. */
   private lazy val verdicts: Map[String, String] =
     val lines = Files.readAllLines(limits).toArray(Array.empty[String]).toList
     val out   = collection.mutable.LinkedHashMap.empty[String, String]
@@ -101,12 +67,6 @@ class ClosedTwinStatusSpec extends munit.FunSuite:
     // entry that exercised the TRANSITION — a verdict that is derived from the heading and the first
     // paragraph moves on its own when a wave edits them, and an entry whose faces closed in three
     // different commits is the only shape that can prove the derivation is live in both directions.
-    // Three rows cite it, one per face: `JS-E05` and `JS-G31` `Handled`, and `JS-E06` `Partial` —
-    // whose face IS closed while the cell its own sentence names (a value a later PHASE retypes)
-    // has never been measured. That is exempt by design and is the shape the exemption is FOR: a
-    // partial row STATES which half is missing, and rule (i) only forbids a stale `Open`. The
-    // alternative was flipping it to `Handled` on the strength of a fix that discharges a different
-    // sentence, which is the over-claim this spec exists to make mechanical.
     assertEquals(verdicts.get("K17"), Some("CLOSED"))
     // UNMARKED is a real third state, not a parse failure: this entry describes a shipped fix and a
     // residue counted to zero without ever using the word, and calling that CLOSED would be the
@@ -119,10 +79,6 @@ class ClosedTwinStatusSpec extends munit.FunSuite:
     // heading said "CLOSED where a class file can be READ, counted where it cannot", which holds
     // only the one token, so it parsed CLOSED and zero entries were AMBIGUOUS — while this spec's
     // header and `scripts/catalog-status.sh` both cited K15 as the worked example of the state.
-    // The entry's own content is the arbiter and it is genuinely two-faced: the producer half is
-    // closed wherever a signature can be read, and where it cannot the suppression is a COUNTED
-    // RESIDUE and nothing is bridged. The heading now says both, so the verdict is derived rather
-    // than asserted here — and a documented state with no instance is a branch nobody has run.
     assertEquals(verdicts.get("K15"), Some("AMBIGUOUS"))
     val ambiguous = verdicts.collect { case (id, "AMBIGUOUS") => id }.toList.sorted
     assert(ambiguous.nonEmpty, "no entry is AMBIGUOUS — the state both documents describe is unreachable")
@@ -148,8 +104,6 @@ class ClosedTwinStatusSpec extends munit.FunSuite:
     // after the entry closed. The opposite claim is the one that costs something: a row saying
     // `Handled` while the record it points at says the engine does NOT handle it is a registry
     // asserting coverage the measurement contradicts, and it reads as a guarantee to §4.45's agent.
-    // `Partial(why)` is exempt and that is the whole of the exemption: a partial row STATES which
-    // half is missing, which is exactly what an open twin is evidence of.
     val optimistic = engineLimitTwins.collect {
       case (id, t, Status.Handled) if verdicts(t) == "OPEN" =>
         s"$id claims Handled, but twin $t reads OPEN — say which half is missing (`Partial`), or " +
@@ -207,17 +161,6 @@ class ClosedTwinStatusSpec extends munit.FunSuite:
     // `UNCITED — ` is a real state: for many of these rules there is a Scala 3 reference page and we
     // did not locate it, and for some there is genuinely no normative text. Making it a prefix means
     // the gap is a number that can go DOWN, instead of a sentence in a document nobody re-reads.
-    //
-    // It is deliberately not a failing assertion — a spec that failed on it would be a spec someone
-    // silences by inventing a citation, which is worse than the gap. But the version of that stance
-    // this test used to hold was `assert(uncited <= all)`, which is true of every possible registry:
-    // the number was printed and nothing diffed it, so 121 rows sat here with nothing able to report
-    // the 122nd. The count now records as `catalog(uncited)` on every port run, where `counts.tsv`
-    // and the committed baseline are what compare it (`CLAUDE.md` §5.1) — the same move the four
-    // coverage lanes made, and for the same reason.
-    //
-    // What is left here is the PREFIX itself, which is the lane's only input: spelled differently in
-    // one row, that row silently leaves the count.
     val uncited = Differences.all.filter(_.scala.startsWith("UNCITED"))
     println(s"[catalog] Scala-side citation gap: ${uncited.size} of ${Differences.all.size} " +
       "language rows (diffed as `catalog(uncited)`, in every port's counts.tsv)")

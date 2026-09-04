@@ -2,13 +2,7 @@ package balticporter.tir
 
 import java.nio.file.{Files, Path}
 
-/** The FLAG RESOLUTION of CLAUDE.md §4.6, proven rather than described.
-  *
-  * The rule — system property, then `debug.properties`, then `run.properties` — was stated in three
-  * documents and asserted nowhere, and it is exactly the rule an agent blames when a flag "did not
-  * work". Every test here writes real files and reads the answer back through the same accessors a
-  * migration uses.
-  */
+/** The FLAG RESOLUTION of CLAUDE.md §4.6, proven rather than described. */
 class DebugFlagsSpec extends munit.FunSuite:
 
   private def tempRoot(): Path =

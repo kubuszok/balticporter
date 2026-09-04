@@ -2,28 +2,7 @@ package balticporter.catalog
 
 import balticporter.tir.Origin
 
-/** STATUS ENFORCEMENT RULE (ii): **a CONSULT that cites an `Open` or `Absent` row is a finding.**
-  *
-  * A lowering arm that consults a difference the registry says nobody handles is a registry that has
-  * stopped describing the code. The practical effect is the rule that makes the pair land together:
-  * a wiring commit flips the row's status IN THE SAME CHANGE, or it does not go green — the same
-  * discipline `ENGINE-LIMITS.md` gets from "add the entry in the commit that measures the failure",
-  * applied to a value a test can check.
-  *
-  * ============================================================================================
-  * THIS WAS A STUB AND IS NOT ONE ANY MORE. The stub's last test asserted that
-  * `balticporter.catalog.CatalogLog` did not exist, so that the day it did the suite would fail and
-  * force this file to be written. That day is this commit. What the stub could only state, this
-  * spec now RUNS: a real log, a real consult recorded into it, and the rule read off the log rather
-  * than off a hand-supplied id.
-  * ============================================================================================
-  *
-  * Where the rule LIVES is `CatalogCheck.consultsOpenRows`, in the engine, because it must reach a
-  * port run's check report. What lives here is the same rule over the same log — and it is not a
-  * duplicate: this module cannot see the engine, and a status rule that only ran when somebody
-  * migrated a library would be a rule nobody runs while EDITING a status, which is exactly when it
-  * is needed.
-  */
+/** STATUS ENFORCEMENT RULE (ii): **a CONSULT that cites an `Open` or `Absent` row is a finding.** */
 class ConsultCitesOpenRowSpec extends munit.FunSuite:
 
   private val origin = Origin("Snippet.java", 1, 1)
@@ -31,14 +10,7 @@ class ConsultCitesOpenRowSpec extends munit.FunSuite:
     * two dispatches of ONE node by identity. A `def`, so every call site is a different node. */
   private def node: AnyRef = new Object
 
-  /** the rule, over a LOG. `Nil` when every consult the run made is fine.
-    *
-    * `statusOf` is a PARAMETER and defaults to the live registry, for one reason that is not
-    * generality: the rule has three arms and the registry does not always have a row in each. It has
-    * no `Absent` row at all since `JS-C43`'s record lowering landed, and an assertion that quietly
-    * skipped that arm — or an `assume` guarding it — is the vacuity `CLAUDE.md` §5.1 is about. The
-    * arm is exercised against a stated status instead, and every other test here still reads the
-    * registry. */
+  /** the rule, over a LOG. `Nil` when every consult the run made is fine. */
   private def findings(log: CatalogLog,
                        statusOf: DiffId => Option[Status] = id => Differences.byId.get(id).map(_.status)): List[String] =
     log.reached.toList.sortBy(_.toString).flatMap { id =>
@@ -98,17 +70,11 @@ class ConsultCitesOpenRowSpec extends munit.FunSuite:
     // The stub could not ask this and it is the whole point of the rule. Every id the frontend's
     // arms cite is a literal in the source, so the set is fixed at compile time — and the rows the
     // engine deliberately leaves UNCONSULTED (JS-E17, `Open`, whose fix binds temporaries at 161
-    // sites — `ENGINE-LIMITS.md` F7) are what makes the assertion non-vacuous: were one wired, this
-    // test would fail and the wiring commit would have to flip the status, which is the discipline
-    // the rule exists to enforce. JS-E04 is the worked example of that discipline being followed:
-    // it was `Open` and unconsulted here until the commit that wrote its fix flipped it.
+    // sites — `ENGINE-LIMITS.
     val open = Differences.all.filter(d => d.status.isOpen || d.status.isInstanceOf[Status.Absent])
     assert(open.nonEmpty, "the registry has no Open or Absent row — this test would be vacuous")
     // …and it is `Open` rows alone that keep it non-vacuous now: the `Absent` set is empty since
     // `JS-C43`'s lowering, so the guard above is entirely carried by the work list.
     // `Attaches.Lowered` on an Open row is EXPECTED and is not a violation: it is the work list.
-    // What must not exist is a CONSULT, and a consult is a call site rather than a value, so what
-    // the api module can assert is the contrapositive — the rule, applied to the log a real run
-    // produces, is asserted by `CatalogCheckSpec` in the engine, where a program can be lowered.
     assertEquals(findings(new CatalogLog), Nil)
   }

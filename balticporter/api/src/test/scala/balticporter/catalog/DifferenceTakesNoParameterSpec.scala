@@ -1,24 +1,6 @@
 package balticporter.catalog
 
-/** THE GUARD RAIL THAT PROTECTS `CLAUDE.md` §1's TAXONOMY.
-  *
-  * A [[Difference]] is a fact about Java and Scala. If a row needed to know something about a
-  * LIBRARY — which declarations, which types, which names — it would not be a difference at all: it
-  * would be a (b) phase's policy, and it belongs in that phase's constructor where §1.5's merge
-  * contract already governs it. Nothing else in the design catches that mistake, because a row with
-  * a `Set[String]` in it compiles perfectly, reads plausibly, and turns the (a) registry into a
-  * second home for per-library configuration one field at a time.
-  *
-  * The rule is mechanical: EVERY field of every row, recursively, is a literal or an enum case.
-  * Reached by REFLECTION over the constructed values rather than by a list of allowed field names,
-  * for the same reason the node-kind enumeration is derived from the jar — a hand-maintained list of
-  * what to check is a list a new field is not on.
-  *
-  * SCOPE, stated so it cannot be quietly widened: this governs `JS-{E,S,C,G}` ONLY. The `JS-{L,P}`
-  * rows are [[ApiRow]]s and they legitimately carry per-platform MAPS, because Scala.js and Scala
-  * Native genuinely disagree and one shared verdict is exactly what makes a rule wrong for one of
-  * them. Relaxing THIS spec to accommodate them would take the language rows with it, so they have
-  * their own, narrower guard — `ApiRowCarriesNoPolicySpec`. */
+/** THE GUARD RAIL THAT PROTECTS `CLAUDE.md` §1's TAXONOMY. */
 class DifferenceTakesNoParameterSpec extends munit.FunSuite:
 
   /** `scala.None` when the value is a literal or an enum case all the way down; otherwise what it

@@ -1,16 +1,6 @@
 package balticporter.tir
 
-/** [[MemberKey]] and [[Descriptor]] — the ONE grammar for "which member".
-  *
-  * The negatives are the point, exactly as in `RuleScopeSpec`. A key grammar that is only ever
-  * asked about keys it accepts reports the same as `String ==`, and the failure mode of a lenient
-  * parse is a key that binds the WRONG overload and says nothing about it.
-  *
-  * Two of these pin cross-grammar divergences that were latent in the engine and invisible to every
-  * count — an ARRAY parameter and a vararg. They are here rather than only in the frontend spec
-  * because a spelling is a fact about the grammar, and a grammar with one reader and one writer is
-  * exactly how the engine came to have five of them.
-  */
+/** [[MemberKey]] and [[Descriptor]] — the ONE grammar for "which member". */
 class MemberKeySpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------

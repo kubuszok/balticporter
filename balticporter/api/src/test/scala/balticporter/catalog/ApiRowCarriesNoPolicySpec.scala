@@ -1,23 +1,7 @@
 package balticporter.catalog
 
 /** The `JS-{L,P}` half of the (a)/(b) line — NARROWER than `DifferenceTakesNoParameterSpec` rather
-  * than absent.
-  *
-  * An [[ApiRow]] carries maps on purpose: Scala.js and Scala Native disagree on nine families, and
-  * a single shared verdict is precisely what makes several of the engine's existing portability
-  * rules wrong for one of them. So "every field is a literal" cannot be the rule here. What CAN be
-  * the rule, and is:
-  *
-  *   - a map's KEYS are [[Platform]]s or version-name strings, never anything a port chose;
-  *   - a map's VALUES are literals or enum cases, recursively;
-  *   - NO field is a `Set`, a predicate, or a `RuleScope` — a TARGET SET is the specific thing that
-  *     must never appear, because a row says what is true OF A PLATFORM and which platforms a port
-  *     cares about is the port's own answer, in its manifest.
-  *
-  * Plus the two invariants that make the version half honest: a `why` is never empty, and a row with
-  * an EMPTY `asOf` must say `UNSTATED` in its `why`. A coverage claim with no version goes stale on
-  * the next release; a claim that cannot say when it was true is one nothing can ever re-check, and
-  * the only defence is making the absence visible in the row's own sentence. */
+  * than absent. */
 class ApiRowCarriesNoPolicySpec extends munit.FunSuite:
 
   private def literalOnly(v: Any): Option[String] = v match

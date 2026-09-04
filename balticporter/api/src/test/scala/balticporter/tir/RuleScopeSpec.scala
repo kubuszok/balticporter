@@ -1,13 +1,6 @@
 package balticporter.tir
 
-/** [[RuleScope]] — and above all its SEPARATOR CUT, which is CLAUDE.md §4.56's trap.
-  *
-  * The negative cases are the point. A membership test that only ever gets asked about names it
-  * covers reports the same as a bare `startsWith`, and a bare `startsWith` is the defect §4.56
-  * exists for: it rewrote `java.lang.String` into `j.lang.String` once and deleted three live casts
-  * another time, both silently and both with a green compile. So every `covers` test here comes
-  * with the name that must NOT match.
-  */
+/** [[RuleScope]] — and above all its SEPARATOR CUT, which is CLAUDE.md §4.56's trap. */
 class RuleScopeSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------
