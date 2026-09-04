@@ -16,8 +16,7 @@ package com.vladsch.flexmark.util.sequence
  * A BasedSequence implementation which wraps original CharSequence to provide a BasedSequence for
  * all its subsequences, a subSequence() returns a SubSequence from the original base sequence.
  * <p>
- * NOTE: '\0' changed to '\uFFFD' use {@link com.vladsch.flexmark.util.sequence.mappers.NullEncoder#decodeNull} mapper to get original null chars.
- */
+ * NOTE: '\0' changed to '\uFFFD' use {@link com.vladsch.flexmark.util.sequence.mappers.NullEncoder#decodeNull} mapper to get original null chars. */
 final class SubSequence private () extends BasedSequenceImpl(0) {
   private var charSequence: CharSequence = null
 

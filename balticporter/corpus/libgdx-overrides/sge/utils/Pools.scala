@@ -1,40 +1,6 @@
 package sge.utils
 
-/** INJECTED SCALA (Substitutions.inject) — the portable replacement for libGDX's `Pools`.
-  *
-  * The Java original kept a `Class` -> `Pool` map and, on a miss, fabricated a pool with
-  * `ReflectionPool`, which resolved the type's no-arg constructor reflectively and invoked it. That
-  * is the one thing Scala.js and Scala Native genuinely cannot do: a `Class` is a value on those
-  * platforms (identity, `getClass`, `isInstance` all work) but nothing can be INSTANTIATED from it.
-  *
-  * So the construction side moves to the caller, as a factory function, and `ReflectionPool` is
-  * dropped outright — upstream libGDX already deprecated it in favour of `DefaultPool`, which is
-  * exactly a factory-backed pool (`PoolSupplier[T]`). The `Class` stays where it is harmless: as the
-  * map KEY, which is what `free`/`freeAll` need to find an object's pool.
-  *
-  * The resulting split is total, and enforced by the signatures:
-  *   - CREATE  — needs a factory: `set(factory)`, `get(type, factory, max)`, `obtain(type, factory)`
-  *   - LOOK UP — needs only the `Class`: `get(type)`, `getOrNull(type)`, `obtain(type)`, `free(obj)`
-  *
-  * `get(type)` therefore no longer creates on a miss; it throws, naming the registration call. The
-  * old `get(type, max)` overload is REMOVED rather than silently redefined, so any caller that
-  * relied on creation-on-demand fails to compile instead of failing at runtime. The
-  * `WARN_ON_REFLECTION_POOL_CREATION` / `THROW_ON_REFLECTION_POOL_CREATION` switches go with it —
-  * they existed only to police the reflective path that no longer exists.
-  *
-  * ==Why this is NOT an instance of the shared registry the corpus has three of==
-  * Ashley's `ComponentFactories` and gdx-gltf's `GLTFExtensionFactories` are the other two, and this
-  * one is the reason extracting a single mechanism was refused (`ENGINE-LIMITS.md` P10). Three
-  * differences, each of which a shared class would have to bend: the table holds shared pool VALUES
-  * rather than factories, so a factory-valued registry does not fit it at all; registration DERIVES
-  * the key by probing a factory for the class of what it makes, which no other instance does; and
-  * the SAME table is read two ways — `getOrNull` answers `null`, `get` throws — so a registry with
-  * one declared miss policy cannot express it. Generalise past all three and what is left is a
-  * `Class`-keyed map, which the runtime module does not admit — it takes semantics the target LACKS,
-  * and a map is not one. This file also files ZERO `portability(injected)` findings today, its map
-  * being the port's own portable `ObjectMap`, so there is no residue for a shared table to drain
-  * here either.
-  */
+/** INJECTED SCALA (Substitutions.inject) — the portable replacement for libGDX's `Pools`. */
 object Pools {
 
   private final val typePools: lowlevel.util.ObjectMap[java.lang.Class[?], Pool[?]] =
@@ -43,24 +9,7 @@ object Pools {
   /** The upstream `static { … }` block, ported by hand: every type libGDX itself pools is
     * pre-registered with its constructor as the factory. This is what makes the `Class`-keyed
     * lookups above resolve WITHOUT ever needing to construct from a `Class` — the reflective
-    * fallback existed only because these registrations were not exhaustive for user types.
-    *
-    * ==Why it is a METHOD taking the context, and why the WHOLE block moves==
-    * Registration CONSTRUCTS: `set(factory)` calls the factory once to learn the `Class` that keys
-    * the map. `sge.Net.HttpRequest` — one of the 38 types below — is one of the 188 classes the
-    * globals policy threads, so its constructor now takes `(using sge.Sge)`, and an OBJECT
-    * INITIALISER has neither a clause of its own nor a caller to take one from.
-    *
-    * Splitting the block (37 eager, one deferred) would be a hand-maintained list derived from
-    * which classes today's closure happens to reach — it rots the first time upstream pools one
-    * more threaded type, silently, because nothing reports a registration that was not made. So
-    * the whole block moves behind one call the bootstrap makes once, and the miss message
-    * (`Pools.get`) names this method.
-    *
-    * The reference hand port never had this problem and its shape says why: sge carries no
-    * context-free global pool registry at all — `Actor.POOLS` and `Actions.ACTION_POOLS` register
-    * only context-free types, and its one context-needing pool lives on `SgeHttpClient`, an
-    * INSTANCE that already holds the context. */
+    * fallback existed only because these registrations were not exhaustive for user types. */
   def registerDefaults()(using sge.Sge): Unit = {
     Pools.set(() => lowlevel.util.DynamicArray[java.lang.Object]())
     Pools.set(() => new sge.scenes.scene2d.utils.ChangeListener.ChangeEvent())

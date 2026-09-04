@@ -3,44 +3,13 @@
  * Original source: com/badlogic/gdx/ai/btree/utils/BehaviorTreeParser.java (the reflective half)
  * Original authors: davebaol
  * Licensed under the Apache License, Version 2.0
- *
- * INJECTED SCALA — the reflection-free stand-in for the THREE things
- * `BehaviorTreeParser.DefaultBehaviorTreeReader` asked the JVM at run time:
- *
- *   java                                                    here
- *   ClassReflection.newInstance(ClassReflection.forName(s))  TaskRegistry.newTask(s)
- *   ClassReflection.getAnnotation(c, TaskConstraint.class)   TaskRegistry.metaOf(c)
- *   + getFields + getDeclaredAnnotation(TaskAttribute.class)
- *   ClassReflection.getField(c, name)                        TaskRegistry.fieldOf(c, name)
- *
- * The libGDX base drops `com.badlogic.gdx.utils.reflect` outright — runtime reflection is the one
- * thing Scala.js and Scala Native cannot do — so those three are the whole of gdx-ai's remaining
- * wall. Five method BODIES in the reader are substituted onto this table
- * (`MethodBodyTransform`, see `GdxAiPolicy`); everything else in that 780-line file, the enum
- * `Statement` and its four constant bodies included, stays mechanically translated.
- *
- * THE SHAPE IS THE REFERENCE HAND PORT'S. `../sge/sge-extension/ai/src/main/scala/sge/ai/btree/
- * utils/BehaviorTreeParser.scala` answers the same wall with a nested `TaskRegistry` of
- * `alias -> () => Task[?]` factories plus a `TaskMeta`/`AttrInfo` pair carrying SETTER CLOSURES in
- * place of `Field.set` — because a closure knows the field's type where it is written, and that is
- * precisely what `castValue` had to ask the JVM for. What differs is what the two ports are: the
- * hand port REPLACES the parser and keys its registry on aliases, while this one keeps the
- * translated parser and therefore has to key on exactly what the translated parser passes — the
- * fully-qualified class NAME `DEFAULT_IMPORTS` resolved (`c.getName()` over the port's own emitted
- * classes) and the runtime `Class` of the task being configured.
- *
- * ==What this is NOT, stated rather than discovered later==
- * Java's mechanism is OPEN: any class on the classpath carrying `@TaskConstraint`/`@TaskAttribute`
- * works, with no registration at all. A table is CLOSED, so a task type nobody registered is a
- * refusal — a `ReflectionException` wrapped exactly as java wrapped its own `ClassNotFoundException`
- * — and that refusal is LOUDER than java and never quieter (CLAUDE.md §1). The eighteen built-ins
- * that `DEFAULT_IMPORTS` names are pre-registered here, and [[TaskRegistry.register]] plus
- * [[TaskRegistry.constrain]] / [[TaskRegistry.attribute]] are what a consumer's own task class
- * needs. Java's `@Inherited` half IS reproduced — [[TaskRegistry.metaOf]] walks the superclass
- * chain, so a consumer's `class MyTask extends LeafTask` inherits `(0, 0)` from the registration of
- * `LeafTask` exactly as java inherited it from the annotation, and only the ATTRIBUTES a new class
- * declares itself have to be declared.
  */
+
+/** INJECTED — the reflection-free stand-in for what `DefaultBehaviorTreeReader` asked the JVM at
+  * run time (`ClassReflection.newInstance/getAnnotation/getField` become [[TaskRegistry.newTask]],
+  * [[TaskRegistry.metaOf]], [[TaskRegistry.fieldOf]]); five reader method BODIES substitute onto
+  * this table (`MethodBodyTransform`, `GdxAiPolicy`). CLOSED where java's mechanism is OPEN: an
+  * unregistered task type REFUSES loudly (CLAUDE.md §1) rather than silently matching nothing. */
 package sge.ai.btree.utils
 
 /** The reflection-free task table `DefaultBehaviorTreeReader` resolves against.
@@ -50,13 +19,7 @@ package sge.ai.btree.utils
   */
 object TaskRegistry {
 
-  /** one `@TaskAttribute` slot, as `findMetadata` needs to see it.
-    *
-    * @param name      the attribute's name in the `.btree` text — `@TaskAttribute(name = …)`, or the
-    *                  field's name where the annotation does not say
-    * @param fieldName the JAVA field's name, which is what `AttrInfo.fieldName` carries and what
-    *                  `getField` is later asked for
-    */
+  /** one `@TaskAttribute` slot, as `findMetadata` needs to see it. */
   final class Attr private[utils] (val name: String, val fieldName: String, val required: Boolean,
                                    val field: TaskField)
 
@@ -73,13 +36,7 @@ object TaskRegistry {
   // what the substituted bodies call
   // -------------------------------------------------------------------------------------------
 
-  /** java's `ClassReflection.newInstance(ClassReflection.forName(className))`.
-    *
-    * @throws sge.utils.reflect.ReflectionException
-    *   for a name nothing registered — the SAME exception java's `forName` threw for a class that
-    *   is not on the classpath, so `openTask`'s own `catch` still turns it into
-    *   `GdxRuntimeException("Cannot parse behavior tree!!!", e)` with java's wording.
-    */
+  /** java's `ClassReflection.newInstance(ClassReflection.forName(className))`. */
   def newTask(className: String): sge.ai.btree.Task[java.lang.Object] = {
     factories.get(className) match {
       case Some(f) => f()
@@ -92,17 +49,7 @@ object TaskRegistry {
   }
 
   /** java's `getAnnotation(clazz, TaskConstraint.class)` + `getFields` + `getDeclaredAnnotation(
-    * TaskAttribute.class)`, over the registration table.
-    *
-    * The superclass walk is java's `@Inherited` and java's `Class#getFields`, in one pass: the
-    * NEAREST registered constraint wins (that is what `@Inherited` means), while attributes
-    * ACCUMULATE down the whole chain (that is what `getFields` returned), nearest declaration
-    * winning on a name collision.
-    *
-    * `null` where no class in the chain has a constraint — java's own answer when no
-    * `@TaskConstraint` is found, which `createStackedTask` turns into
-    * `"@TaskConstraint annotation not found in '…' class hierarchy"`.
-    */
+    * TaskAttribute.class)`, over the registration table. */
   def metaOf(clazz: java.lang.Class[?]): Meta = {
     var c: java.lang.Class[?] = clazz
     var min                   = 0
@@ -205,15 +152,7 @@ object TaskRegistry {
   // -------------------------------------------------------------------------------------------
 
   /** Register everything `DEFAULT_IMPORTS` names, plus the six `@TaskConstraint` sites the whole
-    * `btree` hierarchy has.
-    *
-    * TWO NAMES PER FACTORY. `DEFAULT_IMPORTS` is built at run time from `c.getName()` over the
-    * port's OWN emitted classes, so a built-in arrives here as `sge.ai.btree.…`. A `.btree` asset
-    * written against upstream gdx-ai names the class it knew — `com.badlogic.gdx.ai.btree.…` — and
-    * java resolved that through `forName`. The port renamed the class and cannot rename the asset,
-    * so both spellings resolve; the alternative is a library that cannot read its own upstream's
-    * data files.
-    */
+    * `btree` hierarchy has. */
   private def registerBuiltins(): Unit = {
     // ---- the six @TaskConstraint sites, by their emitted class names ----
     // Task            @TaskConstraint                                  -> defaults (0, MAX_VALUE)
@@ -247,10 +186,7 @@ object TaskRegistry {
     // THE ONE FACTORY THAT IS NOT A BARE `new`, and it is not a choice. Java's `Random()` delegates
     // — `this(ConstantFloatDistribution.ZERO_POINT_FIVE)` — and the port's emitted `Random` has no
     // nilary constructor to carry that: `ENGINE-LIMITS.md` C11 refuses to emit one, because scala's
-    // implicit nilary primary runs NOTHING and `def this()` beside it is `E120`. The emitted class
-    // therefore builds an object java could not build, with `success` unset, and the porter note on
-    // that member says in as many words that a port needing the behaviour writes it by hand. This
-    // is that hand-written constructor, at the one place in the port that calls it.
+    // implicit nilary primary runs NOTHING and `def this()` beside it is `E120`.
     both("decorator.Random", () => {
       val t = new sge.ai.btree.decorator.Random[java.lang.Object]()
       t.success$shadow = sge.ai.utils.random.ConstantFloatDistribution.ZERO_POINT_FIVE

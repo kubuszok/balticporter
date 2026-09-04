@@ -5,29 +5,7 @@ import sge.utils.JsonWriter.OutputType
 
 import java.io.{InputStream, Reader, StringWriter, Writer}
 
-/** INJECTED SCALA (Substitutions.inject) — substitution seam for libGDX's `Json`.
-  *
-  * libGDX's `Json` is a REFLECTION-driven serializer: it walks `utils.reflect` field metadata to
-  * decide how to read and write arbitrary objects. sge does not port it — decoding was replaced by
-  * Kindlings' Jsoniter/UBJson codecs, which resolve a codec statically instead of reflecting at
-  * runtime. Porting it mechanically is also what produced the corpus's largest error cluster: its
-  * own `Class[?]` plumbing drives overload storms on `readValue`/`writeValue`/`convertToString`.
-  *
-  * This facade preserves the API the ported corpus calls, so the `sge` port compiles against a build
-  * that genuinely does not contain the reflective serializer. Two tiers of behaviour:
-  *
-  *   - CONFIGURATION and the EXPLICIT WRITE path are real: `writeValue`/`writeObjectStart`/… drive
-  *     the ported [[JsonWriter]] directly, and `Json.Serializable` objects write themselves. No
-  *     reflection is involved, so this is faithful.
-  *   - REFLECTIVE paths — `readValue` of an arbitrary type, `fromJson`, `readFields`, `writeFields`,
-  *     `copyFields`, `newInstance` — are exactly what Kindlings replaces. They raise
-  *     [[UnsupportedOperationException]] naming the seam rather than silently returning null or an
-  *     empty document. THIS IS THE SWAP POINT: bind a Kindlings codec in [[codec]] and delegate.
-  *
-  * Note the tradeoff this encodes: the port compiles and its JSON *writing* works, but the decoding
-  * paths are inert until a codec is wired. That is deliberate — a stub that quietly produced empty
-  * objects would be far worse than one that names what is missing.
-  */
+/** INJECTED SCALA (Substitutions.inject) — substitution seam for libGDX's `Json`. */
 class Json {
 
   def this(outputType: OutputType) = {
@@ -80,11 +58,10 @@ class Json {
     this.defaultSerializer = defaultSerializer
 
   /** Java's parameter is `Serializer<T>`; ours is `Serializer[?]`, for the same reason `read`
-    * returns `Object` above. libGDX registers RAW `new ReadOnlySerializer() {…}` instances, and a
-    * raw anonymous class gives Scala nothing to infer the parent's argument FROM — the expected
-    * type does not propagate into an anonymous class's parent, so it infers `Nothing` and
-    * `Serializer[Nothing]` matches no `Serializer[X]`. Accepting the erased registration is the
-    * only faithful rendering: javac accepted it unchecked, and the map below is untyped anyway. */
+    * returns `Object` above: libGDX registers RAW `new ReadOnlySerializer() {…}` instances, and a
+    * raw anonymous class's expected type does not propagate into its parent, so it infers
+    * `Nothing` and `Serializer[Nothing]` matches no `Serializer[X]`. javac accepted it unchecked
+    * too, and the map below is untyped anyway, so the erased registration is the faithful one. */
   def setSerializer[T](`type`: Class[T], serializer: Json.Serializer[?]): Unit =
     this.classToSerializer.put(`type`, serializer)
 
@@ -199,6 +176,7 @@ class Json {
 
   /** `protected boolean ignoreUnknownField (Class type, String fieldName)` — libgdx's Json calls it
     * from `readFields`, and `Skin` overrides it. Absent here, that override compiled to nothing. */
+
   // …and it is `protected[utils]` rather than public because that is what the upstream declaration
   // it replaces is (DESIGN §8.7 renders java `protected` as `protected[<emitted package>]`). An
   // INJECTED file supplies an FQN the port does not emit, so nothing derives its surface from the
@@ -206,14 +184,10 @@ class Json {
   protected[utils] def ignoreUnknownField(`type`: Class[?], fieldName: String): Boolean = false
 
   def readValue[T](`type`: Class[T], jsonData: JsonValue): T = codec("Json.readValue")
-  // java's `<T>` MEANS `<T extends Object>`, and the engine renders an override of this overload
-  // that way — `Skin`'s anonymous Json subclass does exactly that. Scala requires an override's
-  // bounds to match EXACTLY, so this one carries the bound. The SIBLING overloads deliberately do
-  // not: `readValue("minParticleCount", int.class, jsonData)` reaches
-  // `(String, Class[T], JsonValue)` in 16 places, and `classOf[scala.Int]` is `Class[Int]` where
-  // `Int` is not `<: Object` (java's `int.class` is `Class<Integer>`; scala's is honest). Until the
-  // engine pins `T` for a primitive class literal — see ENGINE-LIMITS.md §1, four measured
-  // refutations — the bound goes only on the overloads that are actually overridden.
+  // java's `<T>` MEANS `<T extends Object>`; `Skin`'s anonymous Json subclass overrides exactly
+  // this overload that way, and scala requires an override's bounds to match EXACTLY, so this one
+  // carries the bound. SIBLING overloads deliberately do not: `classOf[scala.Int]` is `Class[Int]`,
+  // not `<: Object`, and 16 sites resolve through `(String, Class[T], JsonValue)` instead.
   def readValue[T <: Object](`type`: Class[T], elementType: Class[?], jsonData: JsonValue): T = codec("Json.readValue")
   def readValue[T](`type`: Class[T], elementType: Class[?], defaultValue: T, jsonData: JsonValue): T =
     codec("Json.readValue")
@@ -280,19 +254,7 @@ class Json {
 
 object Json {
 
-  /** a type's custom read/write strategy — the Kindlings codec's counterpart.
-    *
-    * `read` returns `Object`, not `T`, and that is deliberate. Java declares `T read(…)`, but every
-    * serializer libGDX registers is a RAW `new ReadOnlySerializer() {…}`, so javac checks the body
-    * at the ERASED signature and never verifies the result against `T`. `Skin` relies on exactly
-    * that: the serializer registered for `TintedDrawable` returns whatever `newDrawable` gives it,
-    * a plain `Drawable`, which is NOT a `TintedDrawable`. Declaring `read: T` would make the raw
-    * registration untranslatable — the only types satisfying both the anonymous body and the
-    * `setSerializer` argument are contradictory, and Scala resolves that to `Nothing`.
-    *
-    * So the erased contract is not a weakening for convenience; it is the contract libGDX's call
-    * sites actually depend on, and writing it down is what lets them port at all. An override
-    * MAY still narrow the result (covariant return), and the ported `Color` serializer does. */
+  /** a type's custom read/write strategy — the Kindlings codec's counterpart. */
   trait Serializer[T] {
     def write(json: Json, `object`: T, knownType: Class[?]): Unit
     def read(json: Json, jsonData: JsonValue, `type`: Class[?]): Object

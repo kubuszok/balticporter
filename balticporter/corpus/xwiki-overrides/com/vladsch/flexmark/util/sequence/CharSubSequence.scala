@@ -15,8 +15,7 @@ package com.vladsch.flexmark.util.sequence
  * A CharSequence that references original char[]
  * a subSequence() returns a sub-sequence from the original base sequence
  * <p>
- * NOTE: '\0' changed to '\uFFFD' use {@link com.vladsch.flexmark.util.sequence.mappers.NullEncoder#decodeNull} mapper to get original null chars.
- */
+ * NOTE: '\0' changed to '\uFFFD' use {@link com.vladsch.flexmark.util.sequence.mappers.NullEncoder#decodeNull} mapper to get original null chars. */
 final class CharSubSequence private () extends BasedSequenceImpl(0) {
   private var baseChars: Array[Char] = null
 
@@ -129,9 +128,7 @@ object CharSubSequence {
    * @param chars      char array
    * @param startIndex start index in array
    * @param endIndex   end index in array
-   * @return CharSubSequence based sequence of array
-   * @deprecated NOTE: use BasedSequence.of() for creating based sequences
-   */
+   * @return CharSubSequence based sequence of array */
   @scala.deprecated
   def of(chars: Array[Char], startIndex: Int, endIndex: Int): CharSubSequence = {
     assert((((startIndex >= 0) && (startIndex <= endIndex)) && (endIndex <= chars.length)))
@@ -144,8 +141,7 @@ object CharSubSequence {
    * @param charSequence char sequence
    * @param startIndex   start index in sequence
    * @param endIndex     end index in sequence
-   * @return char based sequence
-   */
+   * @return char based sequence */
   private def of(charSequence: CharSequence, startIndex: Int, endIndex: Int): CharSubSequence = {
     assert((((startIndex >= 0) && (startIndex <= endIndex)) && (endIndex <= charSequence.length())))
     var charSubSequence: CharSubSequence = null

@@ -2,19 +2,10 @@ package sge.utils
 
 import java.nio.file.Files
 
-/** INJECTED SCALA (Substitutions.inject): a self-contained stand-in for libGDX's
-  * `SharedLibraryLoader`, which sge removed in favour of a dedicated library that
-  * extracts a native artifact from resources and loads it, choosing the file by
-  * name and platform. The ported corpus still references it — `UIUtils` reads the
-  * static [[SharedLibraryLoader.os]], `GdxNativesLoader` does
-  * `new SharedLibraryLoader().load("gdx")` — so a ready Scala equivalent is
-  * injected in its place rather than mechanically translated from a source that no
-  * longer exists.
-  *
-  * Swap point: to route to the dedicated extraction library, replace the body of
-  * [[SharedLibraryLoader.load]] with a call into it and add that library as a
-  * dependency (Substitutions declares the seam; nothing else in the port changes).
-  */
+/** INJECTED (Substitutions.inject): a self-contained stand-in for libGDX's `SharedLibraryLoader`,
+  * which sge removed in favour of a dedicated extraction library the ported corpus still
+  * references (`UIUtils.os`, `GdxNativesLoader.load`). Swap point: route [[load]] to that library
+  * and add it as a dependency instead — the substitution seam, nothing else in the port changes. */
 object SharedLibraryLoader {
   /** The platform the JVM is running on, derived from `os.name`. */
   val os: Os = {

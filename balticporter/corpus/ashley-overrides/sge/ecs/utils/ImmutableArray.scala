@@ -4,19 +4,14 @@
  * Original authors: David Saltares
  * Licensed under the Apache License, Version 2.0
  *
- * Injected replacement: the mechanical port cannot handle ImmutableArray because it wraps
- * `Array<T>` (retargetted to `DynamicArray`), and three of its methods delegate with a non-literal
- * boolean identity flag that BoolDispatch cannot dispatch statically. The `iterable` field
- * references `Array.ArrayIterable`, a nested type of the retargetted `Array` that no longer exists.
- *
- * Drop-in parity: sge's ImmutableArray extends `Iterable[A]` with parenless `iterator` and takes
- * `ArrayBuffer[A]`. The emitted ashley code passes `DynamicArray[A]` (via collections retarget).
- * Both constructors are provided so both sides compile. The `DynamicArray` constructor is the
- * primary one used by emitted code; the `ArrayBuffer` constructor is used by sge's own tests
- * and hand-written code.
- *
  * Scala port copyright 2025-2026 Mateusz Kubuszok
  */
+
+/** Injected replacement: `Array<T>` retargets to `DynamicArray`, and three methods dispatch on a
+  * non-literal boolean identity flag `BoolDispatch` cannot handle statically, plus a nested
+  * `Array.ArrayIterable` reference that no longer exists after the retarget. Drop-in parity with
+  * sge's hand port (`Iterable[A]`, parenless `iterator`): both a `DynamicArray[A]` constructor
+  * (what emitted ashley code passes) and an `ArrayBuffer[A]` one (sge's own tests) are provided. */
 package sge.ecs.utils
 
 import scala.collection.mutable.ArrayBuffer
@@ -64,11 +59,9 @@ final class ImmutableArray[A] private (
     }
 
   /** 1-arg overload for sge parity: the hand port's ImmutableArray delegates to Iterable.contains
-    * which takes one argument. The emitted port's 2-arg form is the faithful translation of
-    * `ImmutableArray.contains(T, boolean)` from Ashley's java, where `identity=false` is the
-    * default behaviour (equals-based).
-    * `@targetName` avoids a JVM-level clash with `Iterable.contains[A1 >: A](elem: A1)`, which
-    * both erase to `contains(Object)`. */
+    * which takes one argument. Forwards to the emitted 2-arg form (the faithful translation of
+    * `ImmutableArray.contains(T, boolean)`) with `identity=false`, java's default. `@targetName`
+    * avoids a JVM-level clash with `Iterable.contains[A1 >: A](elem: A1)`, which erases the same. */
   @scala.annotation.targetName("containsValue")
   def contains(value: A): Boolean = contains(value, false)
 

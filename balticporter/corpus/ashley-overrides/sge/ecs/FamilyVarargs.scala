@@ -1,15 +1,7 @@
 /*
- * Varargs bridge for the ecs drop-in gate (wave 3.2g).
- *
- * The engine emits java's `Class<? extends Component>...` as `Array[Class[? <: Component]]` because
- * java varargs are arrays. sge's hand-written tests call these methods with individual Class
- * arguments — `Family.all(classOf[A], classOf[B])` — which is varargs syntax.
- *
- * Extension methods provide the varargs overloads on Family's companion and Builder, plus
- * ComponentType.getBitsFor. They delegate to the Array versions the engine emitted.
- *
- * Scala port copyright 2025-2026 Mateusz Kubuszok
- */
+ * Varargs bridge for the ecs drop-in gate: the engine emits java's `Class<? extends Component>...`
+ * as `Array[Class[? <: Component]]`, and sge's hand-written tests call these with individual
+ * arguments (`Family.all(classOf[A], classOf[B])`), which is varargs syntax. */
 package sge.ecs
 
 extension (f: sge.ecs.Family.type) {
