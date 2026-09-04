@@ -838,13 +838,9 @@ object CtorFunnel:
       case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
     }.getOrElse(Nil)
 
-  /** Substitution map for CONSTRUCTOR type parameters (JLS 8.8.4 generic constructors).
-    * A child primary cannot declare method-level type parameters, so each is replaced with a
-    * use-site wildcard bounded by its upper bound: `T extends Texture` becomes `? <: Texture`.
-    * The bounds are themselves substituted through `classSubst` (a class-level `ParentSubst` map)
-    * so that a bound referencing a class type parameter is resolved.
-    * When `targets` names ALL parent constructors, the map covers every constructor type parameter
-    * the post-body params or formals might reference. // G25, card 4e */
+  /** Constructor type parameters (JLS 8.8.4) of `targets` → use-site wildcards at their upper bound
+    * (`T extends Texture` → `? <: Texture`), bounds first substituted through `classSubst`; a child
+    * primary cannot declare method-level type parameters. G25, card 4e. */
   private def ctorTypeParamSubst(program: Program, targets: List[SymId],
                                   classSubst: Map[SymId, TypeRepr]): Map[SymId, TypeRepr] =
     targets.flatMap { target =>
