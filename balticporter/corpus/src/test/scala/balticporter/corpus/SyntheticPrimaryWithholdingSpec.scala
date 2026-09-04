@@ -20,9 +20,9 @@ class SyntheticPrimaryWithholdingSpec extends munit.FunSuite:
       |  Mid(int a)     { super(a, 1); }
       |  Mid(boolean f) { super(0, 2); }
       |}
-      |/** …and this subclass reaches it ARGUMENT-FREE. Its own roots reach two DIFFERENT `Mid`
-      |  * constructors, so it is a wall, its plan carries no super arguments, and the `extends`
-      |  * clause it emits is bare — where java wrote `super(a)` and `super(f)`. */
+      |/** This subclass's roots reach two DIFFERENT `Mid` constructors. Because `Mid` has a
+      |  * synthesised plan with `rootArgs`, the child resolves through that plan and also
+      |  * synthesises — no withholding cascade. // ENGINE-LIMITS C3 item 4c */
       |class Sub extends Mid {
       |  Sub(int a)     { super(a); }
       |  Sub(boolean f) { super(f); }
@@ -31,14 +31,36 @@ class SyntheticPrimaryWithholdingSpec extends munit.FunSuite:
 
   private val withheld = new TirEmitter(Pipeline.run(SpoonTir.fromSource(withheldSrc), Nil)).emit
 
-  test("C1 — a synthesis a subclass would reach ARGUMENT-FREE is WITHHELD") {
-    // the subclass's clause is the fact the guard reads, and it is bare
-    assert(clue(withheld).contains("class Sub extends with1.Mid {"))
-    // so `Mid` may not carry a paramful primary of any kind. Emitted, the class would have exactly
-    // one constructor — `(sup$0, sup$1)` — and `extends with1.Mid` names none of them: `E134`, four
-    // times, on the run that deleted this guard.
-    assert(!withheld.contains("class Mid protected ("), "the synthesis was not withheld")
-    assert(clue(withheld).contains("class Mid extends with1.Base"))
+  test("C1 — child resolves through parent plan: no withholding cascade") {
+    // C3 item 4c: Sub resolves through Mid's synthesised plan, so Mid keeps its synthesis
+    assert(clue(withheld).contains(
+      "class Mid protected (sup$0: scala.Int, sup$1: scala.Int) extends with1.Base(sup$0, sup$1)"))
+    assert(clue(withheld).contains(
+      "class Sub protected (sup$0: scala.Int, sup$1: scala.Int) extends with1.Mid(sup$0, sup$1)"))
+  }
+
+  test("C1 — a child with ONLY a nilary ctor still withholds the parent's synthesis") {
+    // A child whose only constructor is nilary (implicit `super()`) cannot synthesise and its
+    // plan has empty superArgs. The fixpoint sees `superArgs.isEmpty && !isSynthesised` and
+    // correctly withholds the parent. // ENGINE-LIMITS C1, C3
+    val src =
+      """package with1b;
+        |class Base { Base(int a, int b) {} }
+        |class Mid extends Base {
+        |  Mid(int a)     { super(a, 1); }
+        |  Mid(boolean f) { super(0, 2); }
+        |}
+        |class Sub extends Mid {
+        |  Sub() {}
+        |}
+        |""".stripMargin
+    val o = new TirEmitter(Pipeline.run(SpoonTir.fromSource(src), Nil)).emit
+    assert(clue(o).contains("extends with1b.Mid"),
+      "nilary-only child has bare extends (no super args)")
+    assert(!o.contains("extends with1b.Mid(sup$0"),
+      "no paramful extends of a withheld parent")
+    assert(!o.contains("class Mid protected (sup$0"),
+      "parent synthesis withheld by the nilary child")
   }
 
   test("C1 — withholding is NOT a whole-program ban: a synthesis nothing reaches bare survives") {

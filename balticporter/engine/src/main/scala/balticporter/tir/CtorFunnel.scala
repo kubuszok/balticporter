@@ -50,6 +50,11 @@ object CtorFunnel:
       /** True when the promoted root passes its own parameters straight through to super,
         * enabling positional delegation for all siblings. */
       collapse: Boolean = false,
+      /** Per-java-ctor delegation to the synthesised primary. Keyed by java ctor symbol; the
+        * terms reference that ctor's own param symbols. A child's `resolvedThroughParent` resolves
+        * through this when the parent has 2+ java roots. Empty for non-synthesised plans.
+        * // ENGINE-LIMITS C3 */
+      rootArgs: Map[SymId, List[Term]] = Map.empty,
   ):
     /** the primary's VALUE parameters — java's own, never the context clause [[givens]] holds. */
     def primaryParams: List[Tree.ValDef] =
@@ -154,8 +159,26 @@ object CtorFunnel:
           }
       else false
 
+    /** Topological sort: parents before children, depth-limited BFS. */
+    private val topoClasses: List[Tree.ClassDef] =
+      val syms = classes.map(_.symbol).toSet
+      val depth = collection.mutable.Map[SymId, Int]()
+      def d(s: SymId, fuel: Int): Int =
+        if fuel <= 0 || !syms(s) then 0
+        else depth.getOrElseUpdate(s, {
+          val cd = classes.find(_.symbol == s).get
+          val pd = parentSyms(cd).filter(syms).map(p => d(p, fuel - 1)).maxOption.getOrElse(0)
+          pd + 1
+        })
+      classes.foreach(cd => d(cd.symbol, 32))
+      classes.sortBy(cd => depth.getOrElse(cd.symbol, 0))
+
     private val plans: Map[SymId, Plan] =
-      var acc     = classes.map(cd => cd.symbol -> plan0(program, cd)).toMap
+      // C3: compute parents-first so a child can resolve through a parent's synthesised plan.
+      var acc     = Map.empty[SymId, Plan]
+      topoClasses.foreach { cd =>
+        acc = acc.updated(cd.symbol, plan0(program, cd, parentPlanOf = acc.get))
+      }
       // only apply nilaryPlan where the plan is truly un-nominated (not synthesised)
       classes.foreach { cd =>
         val p = acc(cd.symbol)
@@ -168,7 +191,8 @@ object CtorFunnel:
       while changed do
         changed = false
         // owned classes only: a dependent must not demote what the base emitted. // ENGINE-LIMITS D4
-        val needNilary = ownedClasses.filter(cd => acc.get(cd.symbol).forall(_.superArgs.isEmpty))
+        // a synthesised child passes its slots to the parent root: it demands no nilary parent
+        val needNilary = ownedClasses.filter(cd => acc.get(cd.symbol).forall(p => p.superArgs.isEmpty && !p.isSynthesised))
           .flatMap(parentSyms)
           .toSet
         acc.foreach { (s, p) =>
@@ -1141,8 +1165,10 @@ object CtorFunnel:
         case other           => other
 
   /** Local nomination (ignoring whole-program constraints [[Plans]] applies).
-    * @param synthesis `false` to get the plan without a synthesised primary (fallback). */
-  def plan0(program: Program, cd: Tree.ClassDef, synthesis: Boolean = true): Plan =
+    * @param synthesis `false` to get the plan without a synthesised primary (fallback).
+    * @param parentPlanOf lookup for the parent's already-computed plan. // ENGINE-LIMITS C3 */
+  def plan0(program: Program, cd: Tree.ClassDef, synthesis: Boolean = true,
+            parentPlanOf: SymId => Option[Plan] = _ => scala.None): Plan =
     val s = program.symbolOf(cd.symbol)
     if s.exists(x => x.flags.isModule || x.flags.isTrait || x.flags.isEnum) then Plan.none
     else
@@ -1167,22 +1193,24 @@ object CtorFunnel:
         case Some(c) if roots.sizeIs == 1 =>
           val (sa, rest) = split(program, c); promoted(program, c, sa, rest)
         // several roots (non-throwable): try synthesis first
-        case other if !throwableParent && synthesis => syntheticPrimary(program, cd, roots).getOrElse {
+        case other if !throwableParent && synthesis => syntheticPrimary(program, cd, roots, parentPlanOf = parentPlanOf).getOrElse {
           other match
             case None    => Plan.none
             case Some(c) => val (sa, rest) = split(program, c); promoted(program, c, sa, rest)
         }
         // throwable parent with no nomination: try padded synthesis // ENGINE-LIMITS C3
         case None if throwableParent && synthesis =>
-          syntheticPrimary(program, cd, roots, throwablePad = true).getOrElse(Plan.none)
+          syntheticPrimary(program, cd, roots, throwablePad = true, parentPlanOf = parentPlanOf).getOrElse(Plan.none)
         case None    => Plan.none
         case Some(c) => val (sa, rest) = split(program, c); promoted(program, c, sa, rest)
 
   /** Synthesise a primary from the parent constructor's formals. Refuses if roots diverge.
-    * @param throwablePad allow padding for JDK throwable parents with diverging roots. */
+    * @param throwablePad allow padding for JDK throwable parents with diverging roots.
+    * @param parentPlanOf lookup for the parent's already-computed plan. // ENGINE-LIMITS C3 */
   private def syntheticPrimary(program: Program, cd: Tree.ClassDef,
                                roots: List[Tree.DefDef],
-                               throwablePad: Boolean = false): Option[Plan] =
+                               throwablePad: Boolean = false,
+                               parentPlanOf: SymId => Option[Plan] = _ => scala.None): Option[Plan] =
     val calls = roots.map(r => superTarget(program, r) -> superArgsOf(program, r))
     val targets = calls.map(_._1).distinct
     val arities = calls.map(_._2.size).distinct
@@ -1195,7 +1223,7 @@ object CtorFunnel:
         targets.head -> roots.map(r => r.symbol -> superArgsOf(program, r)).toMap)
         // resolve through parent delegation chain when roots call different parent secondaries
         .orElse(Option.when(targets.sizeIs > 1 && !throwablePad)(
-          resolvedThroughParent(program, cd, roots, calls)).flatten.map { rr =>
+          resolvedThroughParent(program, cd, roots, calls, parentPlanOf)).flatten.map { rr =>
             resolvedResult = Some(rr)
             (rr.parentRoot, rr.argsMap)
           })
@@ -1213,10 +1241,12 @@ object CtorFunnel:
         superArgsOf(program, c).map { case Tree.Ident(x, _, _) => x; case _ => SymId.None } == ps && ps.nonEmpty
       // formals from parent's signature, substituted through this class's instantiation.
       // G25: class type params first, then constructor type params as wildcards (card 4e).
+      // C3: when resolved through the parent's plan, use the parent plan's slot types directly.
       val classSubst = ParentSubst.of(cd)(using program)
       val ctorSubst  = ctorTypeParamSubst(program, targets, classSubst)
-      val formals = formalsOf(program, target).map(t =>
-        ParentSubst.subst(ParentSubst.subst(t, classSubst), ctorSubst))
+      val formals = resolvedResult.flatMap(_.resolvedFormals).getOrElse(
+        formalsOf(program, target).map(t =>
+          ParentSubst.subst(ParentSubst.subst(t, classSubst), ctorSubst)))
       // collision test: a root whose params exactly match the formals
       val collides = roots.exists(valueParams(program, _).map(_.tpt.tpe) == formals)
       // also check APPLICABILITY: a narrower real ctor can shadow the synthesis // ENGINE-LIMITS C8
@@ -1308,6 +1338,9 @@ object CtorFunnel:
           else rawPbVals
         r.symbol -> (superValues(r.symbol) ++ pbVals ++ values.getOrElse(r.symbol, Nil))
       }.toMap
+      // C3: per-java-ctor delegation for child resolution. Roots are directly from delegations;
+      // non-roots follow their this(...) chain and compose substitutions.
+      val ra = buildRootArgs(program, cd, roots, delegations)
       def synthesise(mark: Option[String]): Option[Plan] =
         val o = cd.origin
         Some(Plan(scala.None, sup.map((n, ft) => Tree.Opaque(n, ft, o)), Nil, synthetic = allSlots,
@@ -1316,7 +1349,8 @@ object CtorFunnel:
                   postBodySlots = pbSlots, primaryPostBody = pbPostBody,
                   // the roots agree (checked above), so any one of them names the clause the
                   // synthesised primary must carry for every secondary's `this(...)` to resolve.
-                  givens = rootGivens.headOption.getOrElse(Nil)))
+                  givens = rootGivens.headOption.getOrElse(Nil),
+                  rootArgs = ra))
       // is any real constructor applicable to the delegation args? // ENGINE-LIMITS C8
       val shadowed = delegations.values.exists { args =>
         ctors.exists { c =>
@@ -1343,6 +1377,41 @@ object CtorFunnel:
       // synthesise when there are slots; empty slots = Plan.none (context clause via hosting)
       else if allSlots.isEmpty then scala.None
       else synthesise(scala.None)
+
+  /** Per-java-ctor delegation mapping for child resolution. Roots have entries from `delegations`;
+    * non-root ctors follow `this(...)` chains and compose substitutions. // ENGINE-LIMITS C3 */
+  private def buildRootArgs(program: Program, cd: Tree.ClassDef,
+                             roots: List[Tree.DefDef],
+                             delegations: Map[SymId, List[Term]]): Map[SymId, List[Term]] =
+    val rootSet   = roots.map(_.symbol).toSet
+    val ctors     = ctorsOf(program, cd.body)
+    val rootPart  = delegations
+    // non-root ctors: follow this(...) chain, substituting along the way. // ENGINE-LIMITS C3
+    val nonRoots = ctors.filter(c => !rootSet(c.symbol))
+    def derive(c: Tree.DefDef, depth: Int): Option[List[Term]] =
+      if depth > 6 then scala.None
+      else headStmt(c) match
+        case Some(Tree.Apply(Tree.Select(r, m, _, _), as, _, _, _))
+          if isInitName(program, m) && !r.isInstanceOf[Tree.Super] =>
+          rootPart.get(m).orElse(
+            ctors.find(_.symbol == m).flatMap(derive(_, depth + 1))
+          ).flatMap { targetArgs =>
+            val ps = valueParams(program, c)
+            program.definitionOf(m).collect { case d: Tree.DefDef => d }.flatMap { td =>
+              val targetPs = valueParams(program, td)
+              if targetPs.length != as.length then scala.None
+              else
+                val subst = targetPs.zip(as).map((p, a) => p.symbol -> a).toMap
+                given Program = program
+                val substPh = new Phase:
+                  def name = "ctor-rootargs-subst"
+                  override def transformIdent(t: Tree.Ident)(using Program): Term = subst.getOrElse(t.sym, t)
+                Some(targetArgs.map(a => StandardTraversal.mapStat(substPh, a).asInstanceOf[Term]))
+            }
+          }
+        case _ => scala.None
+    val nonRootPart = nonRoots.flatMap(c => derive(c, 0).map(c.symbol -> _)).toMap
+    rootPart ++ nonRootPart
 
   /** Promote the widest pass-through root if no path escapes. Marked `collapse = true`. */
   private def collapseTo(program: Program, cd: Tree.ClassDef, candidates: List[Tree.DefDef]): Option[Plan] =
@@ -1523,24 +1592,29 @@ object CtorFunnel:
       /** True when the post-body uses no params and needs a boolean guard slot. */
       boolGuard: Boolean = false,
       /** Roots that went through a secondary with a post-body (card 4e: boolean guard). */
-      rootsWithPostBody: Set[SymId] = Set.empty
+      rootsWithPostBody: Set[SymId] = Set.empty,
+      /** Parent's synthesised primary's slot types, when resolved through a parent plan rather
+        * than a unique java root. Overrides `formalsOf` in the caller. // ENGINE-LIMITS C3 */
+      resolvedFormals: Option[List[TypeRepr]] = scala.None,
   )
 
   /** Resolve diverging roots through the parent's delegation chain, so they converge on the
     * parent's unique root. Returns the parent root, per-root effective args, and post-body info
-    * for synthesised parameter creation. // ENGINE-LIMITS C3 item 4 */
+    * for synthesised parameter creation. // ENGINE-LIMITS C3 item 4, C3 item 4c */
   private def resolvedThroughParent(
       program: Program, cd: Tree.ClassDef,
       roots: List[Tree.DefDef],
-      calls: List[(SymId, List[Term])]
+      calls: List[(SymId, List[Term])],
+      parentPlanOf: SymId => Option[Plan] = _ => scala.None
   ): Option[ResolvedResult] =
     // find the PARENT class's ClassDef from the first parent in the extends clause
     val parentSym = parentSyms(cd).headOption.getOrElse(SymId.None)
     val parentCd  = program.definitionOf(parentSym).collect { case c: Tree.ClassDef => c }.getOrElse(return scala.None)
     val parentCtors = ctorsOf(program, parentCd.body)
     val parentRoots = parentCtors.filterNot(delegatesToThis(program, _))
-    // require exactly one parent root
-    if parentRoots.sizeIs != 1 then return scala.None
+    // multiple parent roots with a synthesised parent plan: resolve through the plan. // C3
+    if parentRoots.sizeIs != 1 then
+      return resolvedThroughParentPlan(program, cd, roots, calls, parentSym, parentCd, parentPlanOf)
     val parentRoot = parentRoots.head
     val parentRootSym = parentRoot.symbol
 
@@ -1592,6 +1666,58 @@ object CtorFunnel:
         val withPb = flat.collect { case (sym, r) if r.postBody.nonEmpty => sym }.toSet
         Some(ResolvedResult(parentRootSym, argsMap, pbValues, uniquePbParams, rawPostBody,
           needsBoolGuard, withPb))
+
+  /** Resolve through the parent's SYNTHESISED PLAN when the parent has 2+ java roots but an
+    * already-computed synthesised primary. Substitutes the child's `super(args)` into the
+    * parent plan's per-ctor delegation mapping. // ENGINE-LIMITS C3 */
+  private def resolvedThroughParentPlan(
+      program: Program, cd: Tree.ClassDef,
+      roots: List[Tree.DefDef],
+      calls: List[(SymId, List[Term])],
+      parentSym: SymId,
+      parentCd: Tree.ClassDef,
+      parentPlanOf: SymId => Option[Plan]
+  ): Option[ResolvedResult] =
+    val pp = parentPlanOf(parentSym).getOrElse(return scala.None)
+    if !pp.isSynthesised || pp.rootArgs.isEmpty then return scala.None
+    val superSlotCount = pp.superSlots
+    // resolve each child root through the parent plan's rootArgs mapping (super-slot portion only;
+    // the parent's post-body and field slots are internal to the parent class). // C3
+    val resolved = roots.zip(calls).map { case (childRoot, (target, superArgs)) =>
+      pp.rootArgs.get(target).flatMap { parentDelegArgs =>
+        val superDelegArgs = parentDelegArgs.take(superSlotCount)
+        // substitute childRoot's super(args) for the target parent ctor's params
+        program.definitionOf(target).collect { case d: Tree.DefDef => d }.flatMap { td =>
+          val targetPs = valueParams(program, td)
+          if targetPs.length != superArgs.length then scala.None
+          else
+            val subst = targetPs.zip(superArgs).map((p, a) => p.symbol -> a).toMap
+            given Program = program
+            val substPh = new Phase:
+              def name = "ctor-parent-plan-subst"
+              override def transformIdent(t: Tree.Ident)(using Program): Term =
+                subst.getOrElse(t.sym, t)
+            val effectiveArgs = superDelegArgs.map(a =>
+              StandardTraversal.mapStat(substPh, a).asInstanceOf[Term])
+            Some((childRoot.symbol, effectiveArgs))
+        }
+      }
+    }
+    if resolved.exists(_.isEmpty) then scala.None
+    else
+      val flat = resolved.flatten
+      val argsMap = flat.toMap
+      val effectiveArities = argsMap.values.map(_.size).toList.distinct
+      if effectiveArities.sizeIs != 1 then scala.None
+      else
+        // the parent's synthesised primary's super-slot types become the child's formals
+        val classSubst = ParentSubst.of(cd)(using program)
+        val parentFormals = pp.synthetic.take(pp.superSlots).map { (_, t) =>
+          ParentSubst.subst(t, classSubst)
+        }
+        // no post-body: the parent plan already handles its own post-body internally
+        Some(ResolvedResult(SymId.None, argsMap, Map.empty, Nil, Nil,
+          resolvedFormals = Some(parentFormals)))
 
   /** Effective args reaching the parent root, un-substituted post-body, and post-body param
     * dependencies for synthesised parameter creation. // ENGINE-LIMITS C3 */

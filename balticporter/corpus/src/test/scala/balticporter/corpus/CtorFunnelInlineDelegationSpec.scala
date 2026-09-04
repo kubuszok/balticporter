@@ -2,7 +2,7 @@ package balticporter.corpus
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{OmissionCheck, Pipeline}
+import balticporter.tir.{CtorFunnel, OmissionCheck, Pipeline}
 
 /** When a subclass's roots call DIFFERENT parent constructors that all delegate to the same parent
   * ROOT, `CtorFunnel.resolvedThroughParent` resolves the delegation chain to synthesise a primary
@@ -246,4 +246,45 @@ class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
       "boolean guard for value-typed post-body input")
     assert(clue(valueSlotOut).contains("if (via$pb)"),
       "guard uses boolean condition, not null check")
+  }
+
+  // ---- (f) a child whose primary is SYNTHESISED passes its slots to the parent root: it does not
+  // demand a nilary parent, so the withholding fixpoint must not demote the parent ----
+
+  private val chainSrc =
+    """package demo;
+      |public class ChainRoot {
+      |  int n;
+      |  public ChainRoot(int n) { this.n = n; }
+      |  public ChainRoot(String s) { this(s.length()); }
+      |}
+      |public class ChainMid extends ChainRoot {
+      |  public ChainMid(int n) { super(n); }
+      |  public ChainMid(String s) { super(s); }
+      |}
+      |public class ChainLeaf extends ChainMid {
+      |  public ChainLeaf(int n) { super(n); }
+      |  public ChainLeaf(String s) { super(s); }
+      |}
+      |""".stripMargin
+
+  private lazy val chainOut = new TirEmitter(Pipeline.run(SpoonTir.fromSource(chainSrc), Nil)).emit
+
+  test("(f) a synthesised child does not demote its parent's synthesised primary") {
+    assert(clue(chainOut).contains("extends demo.ChainRoot(sup$0)"), "ChainMid keeps its synthesised primary")
+    assert(clue(chainOut).contains("extends demo.ChainMid(sup$0)"), "ChainLeaf synthesises against ChainMid's root")
+    assert(!clue(chainOut).contains("extends demo.ChainRoot {"), "no argument-free extends of a paramful parent")
+  }
+
+  // ---- (g) non-owned parent: no parent plan available, refusal counted ----
+
+  test("(g) non-owned parent with 2+ roots: plan0 without parent plan refuses synthesis") {
+    val prog = Pipeline.run(SpoonTir.fromSource(chainSrc), Nil)
+    // plan0 WITHOUT a parent plan lookup: the parent (ChainMid) has 2+ roots and its plan is
+    // unknown, so resolvedThroughParentPlan refuses and the child gets Plan.none. // D4, C3
+    val leafCd = prog.units.flatMap(balticporter.tir.StandardTraversal.allClassDefs(_)(using prog))
+      .find(cd => prog.symbolOf(cd.symbol).exists(_.name == "ChainLeaf")).get
+    val plan = CtorFunnel.plan0(prog, leafCd)
+    assert(clue(plan.superArgs.isEmpty), "no super args without parent plan")
+    assert(clue(!plan.isSynthesised), "no synthesis without parent plan")
   }
