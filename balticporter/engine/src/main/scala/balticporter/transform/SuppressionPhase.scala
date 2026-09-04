@@ -24,7 +24,7 @@ final class SuppressionPhase extends Phase:
 
     // Scan 1: members whose bodies reference `.orNull` (deprecated)
     val orNullSyms: Set[SymId] = program.symbols.all.iterator
-      .filter(s => s.name == "orNull" && s.fullName.endsWith(".orNull"))
+      .filter(s => s.name == "orNull" && (s.fullName.endsWith(".orNull") || s.fullName.endsWith("#orNull")))
       .map(_.id).toSet
 
     val deprecatedMembers = collection.mutable.Set[SymId]()
@@ -51,12 +51,15 @@ final class SuppressionPhase extends Phase:
 
     /** Scan a class body for both `.orNull` references and exhaustive enum matches. Runs after
       * TestFrameworkTransform, so a converted test body is already a class-body statement. */
+    def isCtor(d: Tree.DefDef): Boolean = program.symbolOf(d.symbol).exists(_.name == "<init>")
     def scanBody(members: List[Statement], classSym: SymId): Unit =
       members.foreach {
         case d: Tree.DefDef =>
+          // a constructor renders as `def this` without annotations: the class carries them
+          val target = if isCtor(d) then classSym else d.symbol
           d.rhs.foreach { body =>
-            if hasOrNull(body) then deprecatedMembers += d.symbol
-            if hasExhaustiveEnumDefault(body) then unreachableCaseMembers += d.symbol
+            if hasOrNull(body) then deprecatedMembers += target
+            if hasExhaustiveEnumDefault(body) then unreachableCaseMembers += target
           }
         case v: Tree.ValDef =>
           v.rhs.foreach { body =>
@@ -73,6 +76,7 @@ final class SuppressionPhase extends Phase:
     program.units.foreach { u =>
       StandardTraversal.allClassDefs(u).foreach { cd =>
         scanBody(cd.body, cd.symbol)
+        cd.enumCases.foreach(ec => scanBody(ec.body, ec.symbol))
         StandardTraversal.allAnonClasses(cd).foreach { (anon, _) =>
           scanBody(anon.body, anon.symbol)
         }
