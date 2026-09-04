@@ -1032,7 +1032,15 @@ private[spoon] trait SpoonTirBodyExprs:
     Obligations.consult(JS.G(10), originOf(cc))(Option.when(cc match
       case nc: CtNewClass[?] => anon.isDefined && isRawGenericUse(nc.getType)
       case _                 => false)(()))
-    Tree.Apply(Tree.New(tt(t, cc), t, originOf(cc), anon), args, cid, t, originOf(cc))
+    // JS-E19 — a deprecated boxing constructor is the JDK's own `valueOf`.
+    val boxing = isBoxedWrapper(cc.getType) && args.sizeIs == 1 && anon.isEmpty
+    Obligations.consult(JS.E(19), originOf(cc))(Option.when(boxing)(()))
+    if boxing then
+      val wSym = minter.external(cc.getType.getQualifiedName, cc.getType.getSimpleName)
+      val vSym = minter.external(cc.getType.getQualifiedName + "#valueOf", "valueOf", wSym)
+      Tree.Apply(Tree.Select(Tree.Ident(wSym, TypeRef(NoPrefix, wSym), originOf(cc)), vSym, NoType, originOf(cc)),
+        args, vSym, t, originOf(cc))
+    else Tree.Apply(Tree.New(tt(t, cc), t, originOf(cc), anon), args, cid, t, originOf(cc))
 
   /** A RAW constructor call — `return new Values(this)` inside `ArrayMap<K,V>`. Java checks a
     * raw `new`'s arguments against the ERASED constructor, so `this: ArrayMap<K,V>` passes

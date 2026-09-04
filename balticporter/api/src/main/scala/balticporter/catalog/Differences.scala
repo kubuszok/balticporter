@@ -164,6 +164,12 @@ object Differences:
       Predicted, NoFix,
       "SpoonTir.literal reads getValue and the frontend calls getOriginalSourceFragment nowhere; TirEmitter.escape puts every newline back; TextBlockSpec",
       NoObligation("a checked NON-difference: the two languages denote the same string, so no arm has a decision to take")),
+    Difference(eId(19), "a BOXING CONSTRUCTOR — `new Double(v)` — is deprecated for removal; the JDK names `valueOf`",
+      "JDK 9 `@Deprecated(since=\"9\", forRemoval=true)` on every `java.lang` wrapper constructor",
+      "UNCITED — scalac's `-deprecation` under the reference build's `-Werror` makes each site an error (12 in one port)",
+      Silent, Handled, Predicted, Universal,
+      "SpoonTir.ctorCall: isBoxedWrapper && one argument -> `<Wrapper>.valueOf(arg)`; the ONE delta is JS-E01's cache (a `new` is a distinct object, `valueOf` may not be) — no corpus site compares a fresh box by identity; BoxingCtorSpec",
+      Lowered("CtConstructorCall", Dispatch.Expression)),
   )
 
   // -------------------------------------------------------------------------------------------
