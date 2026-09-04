@@ -3,19 +3,7 @@ package balticporter.corpus
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{Pipeline, PortabilityCheck, Program, Remediator, SymId}
 
-/** Two things at once, because they are the same defect seen from two ends.
-  *
-  * `PortabilityCheck`'s nine `exactMember` rules ask for `owner#name` of an external member. The
-  * frontend interned every external symbol with `owner = SymId.None` and a `fullName` that is an
-  * interning key, so that string was `None` at every one of them and the rules never fired once —
-  * a check reporting a number that looked like coverage (CLAUDE.md §3). The first group pins that
-  * they fire, and pins the shape they need in order to fire.
-  *
-  * `Remediator` then reads the SAME `owner#name` to decide that a call reaches a particular member
-  * of a particular external type — which is what lets it recognise a static forwarder. The second
-  * group pins its three templates against a program small enough to argue with, and pins the thing
-  * that matters more than any of them: that it declines to suggest where it cannot verify.
-  */
+/** Two things at once, because they are the same defect seen from two ends. */
 class RemediatorSpec extends munit.FunSuite:
 
   private def parse(java: String): Program = Pipeline.run(SpoonTir.fromSource(java), Nil)

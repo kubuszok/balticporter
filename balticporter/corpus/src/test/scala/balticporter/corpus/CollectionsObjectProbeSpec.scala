@@ -5,30 +5,7 @@ import balticporter.transform.CollectionsTransform
 
 /** Java's UNTYPED PROBE — `Map.get`, `Map.containsKey`, `Map.remove`, `Collection.contains` and
   * `Set.remove` all take an `Object`, and the retyping moves the receiver to a scala collection
-  * whose members are typed at the element.
-  *
-  * That the formal is `Object` is java's CONTRACT and not an accident of erasure: the lookup is by
-  * VALUE, so a probe of an unrelated type is meant to miss rather than to fail to compile. There are
-  * two ways such a probe reaches the slot and they look identical in the emitted text:
-  *
-  *   - a class that IMPLEMENTS `java.util.Map<String, T>` must DECLARE `remove(Object o)` and
-  *     delegate to its retyped field — java's own parameter, with nothing to strip;
-  *   - the frontend's erasure coercion (`typeParamToObject`, `ENGINE-LIMITS.md` G14) widened a
-  *     type-parameter key to `Object` because that is what java's formal said. The mint is right for
-  *     a call to a java `Map`; this phase moving the receiver is what invalidated it, which is
-  *     `keyArg`'s own argument at the coercion `keyArg` cannot strip.
-  *
-  * ==Why a HELPER and not a cast==
-  * `o.asInstanceOf[String]` is the translation that compiles and means something else: it inserts a
-  * `checkcast` and throws `ClassCastException` where java's `map.get(anInteger)` answers `null`
-  * (CLAUDE.md §4.4). The helpers widen the PROBE POSITION, which is erased, so java's own
-  * `hashCode`/`equals` lookup runs and a wrong-typed probe misses exactly as java's does.
-  *
-  * ==And the guard is the one question a phase can answer with NO conformance oracle==
-  * `java.lang.Object` is the TOP of java's reference hierarchy, so an argument at that type conforms
-  * to a scala element type only where the element type is `Object` too. Everything else declines —
-  * which is what the negatives below pin (`ENGINE-LIMITS.md` K24).
-  */
+  * whose members are typed at the element. */
 class CollectionsObjectProbeSpec extends PortSuite:
 
   /** face 1 — the IMPLEMENTING side. `Ledger` is java's `Map<String, T>`, so its own signatures are
@@ -158,20 +135,7 @@ class CollectionsObjectProbeSpec extends PortSuite:
     assertNotEmits(p, "JavaCollections.mapGet(")
   }
 
-  /** face 4 — the PROBE AT A PROPER ANCESTOR, `ENGINE-LIMITS.md` K24's third face.
-    *
-    * `objectProbe` above is exact BECAUSE `java.lang.Object` is the top of java's reference
-    * hierarchy — which is precisely why it is silent about every OTHER supertype, and java's
-    * `Object` formal admits all of them. `Map<Tag, String>.containsKey(node)` at an `Nd` is ordinary
-    * java: the lookup is by VALUE and a probe of an unrelated type is meant to MISS. Scala's
-    * `Map[K, V]` is INVARIANT in `K`, so the retyped receiver's member no longer takes it and only
-    * scalac ever sees it — the probe is not at `Object`, so `objectProbe` declines correctly, and
-    * nothing here is a wildcard, so `wildcardMapCall` declines correctly too.
-    *
-    * Answered by walking THIS RUN's own `extends` edges up from the ELEMENT type: reaching the
-    * probe's head proves the probe is NOT a subtype of the element, so the ordinary rewrite could
-    * never have been right. The two negatives are what pin it — the SAME hierarchy read at equal
-    * types, and read the other way round. */
+  /** face 4 — the PROBE AT A PROPER ANCESTOR, `ENGINE-LIMITS.md` K24's third face. */
   private val ancestry =
     """package demo;
       |import java.util.*;

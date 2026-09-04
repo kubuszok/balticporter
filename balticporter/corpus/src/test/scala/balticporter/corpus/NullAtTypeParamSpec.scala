@@ -4,14 +4,7 @@ import balticporter.testkit.PortSuite
 
 /** `null` at a slot whose formal is a TYPE PARAMETER — java assigns it to every reference type and
   * scala's `Null` is not a subtype of an unbounded `T`, so the faithful emission is the cast java
-  * performs implicitly.
-  *
-  * The arm that resolves the parameter from the caller's own scope is old; this pins the one that
-  * resolves it from the RECEIVER'S INSTANTIATION (`ENGINE-LIMITS.md` G12's third source), and the
-  * two negatives that decide it. Both negatives are §4.56 read at a type variable: the substitution
-  * is keyed on the DECLARING CLASS's formals by NAME, so a method's own variable of the same name
-  * must not take it, and an actual this scope cannot write down must not be emitted at all.
-  */
+  * performs implicitly. */
 class NullAtTypeParamSpec extends PortSuite:
 
   test("a `null` at a callee's own variable, resolved through the RECEIVER's type arguments") {

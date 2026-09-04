@@ -8,13 +8,7 @@ import balticporter.transform.PackageRenameTransform
 
 import java.nio.file.{Files, Path}
 
-/** The attribution header `TirEmitter` stamps on every emitted unit.
-  *
-  * Not cosmetics: the originals this project ports are licensed (Apache-2.0 for the libraries in
-  * the corpus), a port is a derived work, and a derived work ships its notice. Nothing else in the
-  * pipeline reports a missing one — the output compiles perfectly without it — so this spec is the
-  * gate.
-  */
+/** The attribution header `TirEmitter` stamps on every emitted unit. */
 class ProvenanceHeaderSpec extends munit.FunSuite:
 
   private val src =
@@ -115,14 +109,7 @@ class ProvenanceHeaderSpec extends munit.FunSuite:
   test("a SYMLINKED spelling of sourceRoot renders the same header as the real one (CLAUDE.md §5.4)") {
     // The third part of the engine bitten by the same symlink: a git worktree reaches the sibling
     // source checkout through `.claude/worktrees/<x>/../sge`, so the CONFIGURED root arrives as a
-    // symlinked spelling while the parser recorded the real path. Compared lexically, the
-    // root-relative case silently failed only in worktrees and the MARKER cut took over — and the
-    // marker cut slices at the FIRST occurrence of the prefix, which for a root shaped
-    // `…/mylib/mylib/` (the upstream-repo-contains-a-module-dir-of-its-own-name layout gdx-vfx
-    // has) sits one directory too early: `mylib/mylib/com/…` in a worktree against `mylib/com/…`
-    // in the primary checkout. Same commit, two spellings; 44 whole-file digests a
-    // worktree-accepted baseline carried and the primary could not reproduce. Realpath both
-    // operands and the two spellings are one root.
+    // symlinked spelling while the parser recorded the real path.
     val tmp  = Files.createTempDirectory("bp-provenance-link").toRealPath()
     val nest = tmp.resolve("mylib/mylib/com/example/demo")
     Files.createDirectories(nest)

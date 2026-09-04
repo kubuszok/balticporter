@@ -8,20 +8,7 @@ import balticporter.transform.NullabilityTransform
 import java.nio.file.{Files, Path}
 
 /** A DEPENDENT's own annotation FQN, reaching its BASE's declarations — the one policy key that
-  * selects a shared surface without naming any part of it.
-  *
-  * `SurfaceFold`'s `governs` screen refuses a subject inside a base's claimed namespace
-  * (`DESIGN.md` §8.13), and an annotation FQN is inside nobody's: `org.jspecify.annotations.Nullable`
-  * is a third-party jar's name, so the screen admits it — correctly, because the KEY edits nothing.
-  * What it SELECTS is the problem. The plan loop walks `Program.owned`, which in a dependent roots
-  * on every unit including the base's, so a dependent whose base's Java carries the same annotation
-  * retypes declarations the base's own run emitted untouched: two ports that each compile alone and
-  * cannot compile together, which is §1.5's failure through the one door the fold cannot watch.
-  *
-  * It is invisible BY CONSTRUCTION, which is why this spec exists and no count did: `ENGINE-LIMITS`
-  * D2's module scope drops the `decisions.tsv` rows (they are about the base's declarations) and
-  * `NullabilityTransform.boundary`'s emitted-unit filter drops any finding raised at one.
-  */
+  * selects a shared surface without naming any part of it. */
 class NullabilityBaseSurfaceSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------

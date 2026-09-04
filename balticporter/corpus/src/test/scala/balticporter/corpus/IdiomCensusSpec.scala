@@ -4,22 +4,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.{IdiomCandidate, IdiomCheck, IdiomKind, IdiomLog, IdiomVerdict, Origin, Sam, Tree}
 import balticporter.transform.{BeanPropertyTransform, ReturnThisCensus, SamLambda, SamLambdaTransform}
 
-/** WAVE 0 OF THE IDIOM LAYER — the census phases, and the three lanes they feed.
-  *
-  * ==What is being asserted, and why it is asserted here rather than on emitted text==
-  * These phases are EMISSION-INERT by construction: `run` returns its argument, and the wave's own
-  * gate is 0 member digests on every port. So the emitted text says nothing about whether they
-  * work, and a spec written against it could not tell a census that classified every site correctly
-  * from one that never ran. What carries the meaning is the CANDIDATE LOG — one row per site
-  * considered, with the guard that declined it — which is exactly the surface an idiom transform's
-  * safety argument rests on (`DESIGN.md` §8.15: a refusal enumeration, not a suite result).
-  *
-  * ==And the fixtures are the evidence for the guards, not the corpus==
-  * `JS-E06`'s third commit is the precedent: a defect found by the test for the cell NEXT DOOR, at
-  * zero corpus sites. Every guard below has a fixture whose shape is chosen to fail if the guard
-  * were removed, including the two nobody would write a corpus case for — the qualified outer
-  * `this` that must NOT be refused, and the non-capturing lambda that must be.
-  */
+/** WAVE 0 OF THE IDIOM LAYER — the census phases, and the three lanes they feed. */
 class IdiomCensusSpec extends PortSuite:
 
   // -------------------------------------------------------------------------------------------
@@ -130,9 +115,7 @@ class IdiomCensusSpec extends PortSuite:
     // OWNER instead. `this.toString()` inside an anonymous `Runnable` arrives as a bare
     // `Tree.Ident(java.lang.Object#toString)` — the frontend drops the receiver on purpose, because
     // Spoon types it as the anonymous class whatever the member's real owner is, and scala's
-    // LEXICAL resolution then lands on the same member java chose. Inside a LAMBDA it lands on the
-    // ENCLOSING object instead: valid scala, green compile, printing a different object. Zero
-    // corpus sites; this fixture is the whole evidence.
+    // LEXICAL resolution then lands on the same member java chose.
     val p = port(
       """class C {
         |  Runnable make(final String s) {
@@ -164,9 +147,7 @@ class IdiomCensusSpec extends PortSuite:
     // would re-resolve", and it was spelled as `java.lang.Object`'s. That is only the half every
     // anonymous class inherits UNCONDITIONALLY. A functional interface may also carry `default`
     // methods — `java.util.Comparator` ships six — and java binds a bare `helper()` inside the anon
-    // to the INTERFACE's, through the anon instance. A lambda has no such member, so the emitted
-    // call either resolves to nothing or, worse, SILENTLY re-resolves to a same-named member of the
-    // enclosing class. Zero corpus sites; this fixture is the whole evidence.
+    // to the INTERFACE's, through the anon instance.
     val p = portAll(List(
       "F.java" -> """interface F {
                     |  void go();
@@ -184,14 +165,7 @@ class IdiomCensusSpec extends PortSuite:
        "     which is why it CONVERTS and is still correct") {
     // The other half of what an interface contributes, and it was PREDICTED as a second face of the
     // defect above and MEASURED not to be one. A field declared in an interface is implicitly
-    // `public static final` (JLS 9.3) and is inherited, so java binds a bare `K` inside the anon to
-    // the interface's — but the frontend does not hand that over as a bare reference: it resolves
-    // the implicit static access to `Select(Ident(F), F#K)`, so the emitted Scala names `F` and
-    // re-resolves to the same constant with or without a lambda around it.
-    //
-    // Asserted on the EMITTED QUALIFIER and not merely on the conversion, because the qualifier IS
-    // the mechanism: a `converts` assertion alone would go on passing if the frontend ever started
-    // emitting the bare form, which is precisely the shape the guard next door exists for.
+    // `public static final` (JLS 9.
     val p = portAll(List(
       "F.java" -> """interface F {
                     |  int K = 3;
@@ -211,12 +185,7 @@ class IdiomCensusSpec extends PortSuite:
     // The cell that decides how wide guard 4's complement may be, and it is a corpus shape rather
     // than an invented one: this is `Pixmap.downloadFromUrl`. The inner `Runnable`'s body calls
     // `failed(t)` — a member of the OUTER anonymous class, DECLARED by the interface that one
-    // implements. Read as "the owner is a type that does not lexically enclose the site" the guard
-    // refuses it, because `L` is not an enclosing type; read as the ANON'S OWN ANCESTRY it converts,
-    // because the inner `Runnable` does not inherit `failed` and java therefore bound it to the
-    // enclosing instance — which a lambda around the inner one does not move. Measured at
-    // `idiom(converted) 83 -> 82` on the libGDX base for the wide reading, on a site that was never
-    // a defect.
+    // implements.
     val p = portAll(List(
       "L.java" -> """interface L {
                     |  void handle(int code);
@@ -302,13 +271,6 @@ class IdiomCensusSpec extends PortSuite:
     // parameter — so a bare reference to a MEMBER of an enclosing instance answers "not capturing",
     // and the site is refused under a reason that is not true: the lambda closes over that instance
     // and allocates at every evaluation, which is exactly what guard 5 is buying.
-    //
-    // The fixture is the `Pixmap.downloadFromUrl` shape with everything else taken away, because
-    // that is what makes it reachable: `C.this.n` and a bare `n` on the ENCLOSING CLASS both arrive
-    // as a `Tree.This` and were already counted. What does not is a member reached through the
-    // frontend's receiver-dropping fallback (`SpoonTir.thisOf`) — here `failed(...)`, declared by
-    // the interface the OUTER anonymous class implements, which arrives as `Tree.Ident(L#failed)`
-    // owned by a TYPE.
     val p = portAll(List(
       "L.java" -> """interface L {
                     |  void handle(int code);
@@ -357,13 +319,7 @@ class IdiomCensusSpec extends PortSuite:
     assertNoGuard(p, "NonCapturing")
   }
 
-  /** NO `SamLambda` refusal was filed under this GUARD.
-    *
-    * Spelled here rather than reached for from the testkit because the testkit's nearest helper —
-    * `assertIdiomIgnores` — matches its third argument against the SUBJECT, and the two calls that
-    * passed a guard name to it were asserting *no candidate has a subject containing
-    * "NonCapturing"*, which no candidate ever could. Two vacuous assertions, both in the cell that
-    * decides whether guard 5 declines the population it is meant to. */
+  /** NO `SamLambda` refusal was filed under this GUARD. */
   private def assertNoGuard(p: balticporter.testkit.Ported, guard: String)(using munit.Location): Unit =
     val hits = p.idioms.all.filter(_.verdict match
       case IdiomVerdict.Refused(g, _) => g == guard
@@ -393,9 +349,7 @@ class IdiomCensusSpec extends PortSuite:
     // "answers false and the SAM answer is Unreadable anyway — the two cannot disagree in a
     // direction that converts". That is true of an UNREADABLE ancestor and says nothing about a
     // READABLE one seven links up: the walk answers `false`, the SAM answer is `Yes`, and the site
-    // CONVERTS a serializable target. The `seen` set is what makes the walk terminate (a qualified
-    // name is walked once, and the type graph is finite), so the fuel was a second bound that could
-    // only ever be wrong.
+    // CONVERTS a serializable target.
     val chain = (1 to 8).map(i =>
       s"I$i.java" -> (if i == 1 then "interface I1 extends java.io.Serializable { }"
                       else s"interface I$i extends I${i - 1} { }")).toList
@@ -457,11 +411,7 @@ class IdiomCensusSpec extends PortSuite:
   test("the CENSUS phase is EMISSION-INERT — the tree it hands back IS the tree it got") {
     // The wave-0 property, still true of the ONE phase that is still a census. Neither the SAM
     // phase nor the bean collapse is one any more: each wired its transformer, and a census beside
-    // one is a second answer to its own question (§4.6). What replaces this assertion for those two
-    // lanes is the refusal assertion in each transformer's own suite —
-    // `SamLambdaTransformSpec`'s "every REFUSAL leaves the anonymous class BYTE-IDENTICAL" and
-    // `BeanPropertySpec`'s "a refused collapse degenerates to the def-pair, byte for byte" — which
-    // is the same property asked of the sites the transformer declines.
+    // one is a second answer to its own question (§4.6).
     val src =
       """class C {
         |  int n = 1;

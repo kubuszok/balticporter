@@ -7,38 +7,7 @@ import balticporter.tir.Pipeline
 import balticporter.transform.CollectionsTransform
 
 /** The scala-shaped call rewrites are refused on a SHIM receiver — and a library's OWN SUBTYPE of a
-  * shim is a shim receiver (`CLAUDE.md` §4.5, §4.56).
-  *
-  * ==The defect==
-  * `CollectionsTransform.parenless` strips `()` from `size`/`iterator`/`hasNext`/`next`, because a
-  * scala collection's are parameterless. The runtime shims deliberately keep JAVA's arity — a class
-  * that is both java `Iterable` and java `Iterator` cannot be modelled on scala's collection traits
-  * at all — so a blanket `onShim` guard refuses every rewrite there.
-  *
-  * That guard asked the receiver's HEAD SYMBOL against the three shim symbols. It is exact for a
-  * receiver the phase retyped, and it answers `false` for the one shape a library that defines its
-  * own iterator is made of:
-  *
-  * {{{
-  *   interface Cursor<E> extends java.util.Iterator<E>   →   trait Cursor[E] extends JavaIterator[E]
-  *   while (c.hasNext())                                 →   while (c.hasNext)   // E: must be called with ()
-  * }}}
-  *
-  * The head symbol is `Cursor`, which is no shim; and `inheritedKind` correctly answers
-  * `Kind.Iterator`, because `hasNext` really does resolve to `java.util.Iterator#hasNext`. The two
-  * together strip the parens from a call to a member declared `def hasNext()`. Sixteen measured
-  * errors on one port, every one of them a receiver at a program-declared subtype.
-  *
-  * ==Two shapes above a receiver, not one==
-  * `Walker` reaches the shim through a class PARENT; `Bounded` reaches it through a type parameter's
-  * BOUND, which is the same question asked at the other kind of declaration — a value typed `I`
-  * where `I extends Cursor<Integer>` has `Cursor`'s members and therefore java's arity. Two of the
-  * sixteen were only the second shape, and a fix for the first alone leaves them.
-  *
-  * ==And the negative is the whole point of a guard that SUPPRESSES==
-  * `Plain` proves the refusal did not become blanket: a receiver retyped to a real scala collection
-  * still loses its `()`, which is what `parenless` exists for.
-  */
+  * shim is a shim receiver (`CLAUDE.md` §4.5, §4.56). */
 class ShimSubtypeAritySpec extends PortSuite:
 
   private val src =

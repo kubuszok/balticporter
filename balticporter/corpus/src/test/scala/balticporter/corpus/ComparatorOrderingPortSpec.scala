@@ -7,32 +7,7 @@ import balticporter.tir.{Phase, Pipeline, Program}
 import balticporter.transform.{CallSiteSubstitutionTransform, CollectionsTransform, RetargetBoundaryCheck}
 
 /** `java.util.Comparator` → `scala.math.Ordering`, END TO END — the first RETARGET entry, and the
-  * first real input to the call-site seam.
-  *
-  * ==Why a retarget and not a `typeMap` row==
-  * Scala declares `trait Ordering[T] extends java.util.Comparator[T]`. Everything follows from that
-  * one fact, and it is what makes this a retarget rather than a collection mapping:
-  *
-  *   - a declaration moves with NO bridge — an `Ordering` reaching a slot that still says
-  *     `Comparator` already IS one, so `coerce` has nothing to do and no boundary is created;
-  *   - `implements Comparator<T>` becomes `extends Ordering[T]` and the `compare(a, b)` under it is
-  *     structurally unchanged, because `compare` is `Ordering`'s ONE abstract member (which is also
-  *     what keeps a java lambda SAM-convertible);
-  *   - every call site keeps type-checking with no rewrite at all, including the engine's own
-  *     `JavaCollections.sort(xs, cmp)` — its parameter is a `java.util.Comparator`, and an
-  *     `Ordering` is one.
-  *
-  * That last point is this policy's whole scope, and it is the measured answer to "does the sort
-  * call-site table ride the M4 mechanism or extend the statics table": after the retarget, NEITHER.
-  * The shape `sortInPlace()(using ord)` is expressible in the template language and does not
-  * type-check against `mutable.Buffer`, which is the phase's own target for `java.util.List` — see
-  * the two tests at the bottom, which carry the compiler's words.
-  *
-  * Both halves are DEFAULT-OFF: an empty `retarget` and an empty `calls` map, and every corpus lane
-  * is byte-identical without them.
-  *
-  * {{{ scala-cli compile --scala 3.8.4 --server=false <the directory printed below> }}}
-  */
+  * first real input to the call-site seam. */
 class ComparatorOrderingPortSpec extends munit.FunSuite:
 
   private val src =
@@ -164,37 +139,12 @@ class ComparatorOrderingPortSpec extends munit.FunSuite:
 
   test("…and that shape is REFUTED by the compiler, which is why this policy ships no entry") {
     // MEASURED, `scala-cli compile --scala 3.8.4`:
-    //
-    //   value sortInPlace is not a member of scala.collection.mutable.Buffer[String]
-    //
-    // `sortInPlace` is a `mutable.IndexedSeqOps` member and `java.util.List` maps to
-    // `mutable.Buffer`, which is not one — so the idiomatic shape does not type-check against the
-    // phase's OWN target. Nothing in the emitted text says so, no count moves, and the substitution
-    // is performed exactly as asked: the seam did its job and the POLICY is wrong. Recorded here as
-    // the test that would start failing the day the mapping or the stdlib changes.
-    //
-    // The correct target is the one already there: after the retarget, `JavaCollections.sort`
-    // accepts an `Ordering` unchanged (`Ordering[T] <: Comparator[T]`) and compiles.
     assert(clue(emit(List(new CollectionsTransform(retarget = Retarget))))
       .contains("balticporter.runtime.JavaCollections.sort("))
   }
 
   test("`Arrays.sort`'s erasure cast is PRE-EXISTING — this policy neither causes nor fixes it") {
     // MEASURED, both with and without the retarget:
-    //
-    //   Found: java.util.Comparator[String] / Required: java.util.Comparator[? >: Object]
-    //
-    // The frontend renders the java call against the erased `sort(Object[], Comparator)`, so the
-    // ARRAY argument carries an `asInstanceOf` while the comparator keeps its element type. Reading
-    // that as something the retarget did would send the next agent to the wrong file, which is what
-    // §4.45 costs an investigation for — so it is asserted identical on both sides.
-    //
-    // It is also why this policy ships no `Arrays.sort` entry even as a legibility rewrite: the
-    // idiomatic counterpart is `scala.util.Sorting.stableSort`, whose using clause takes a
-    // `ClassTag` as well as the `Ordering`, and a positional template cannot name a SUMMONED
-    // argument; `quickSort` has the one using parameter and is NOT stable, where java's
-    // `Arrays.sort` is guaranteed to be. Trading a documented guarantee for legibility is not a
-    // trade a seam may make silently (CLAUDE.md §4.4's whole family).
     val plain      = emit(Nil, arraySrc)
     val retargeted = emit(List(new CollectionsTransform(retarget = Retarget)), arraySrc)
     assert(clue(plain).contains("xs.asInstanceOf[scala.Array[java.lang.Object]]"))
@@ -251,8 +201,7 @@ class ComparatorOrderingPortSpec extends munit.FunSuite:
     // libGDX core, 6 in its suite, 1 in anim8. All eleven are correct code — the phase retyped the
     // instantiated type and the body under it together, so `new Ordering[T]{…}` really IS an
     // `Ordering`. They reached the counter because an ANONYMOUS class's `<init>` does not climb to
-    // a unit symbol, so `Program.owns` reads it as external; a constructor is therefore excluded
-    // STRUCTURALLY. A counter that reports a working retarget as a residue is worse than none.
+    // a unit symbol, so `Program.
     val anonSrc =
       """package demo;
         |import java.util.Comparator;

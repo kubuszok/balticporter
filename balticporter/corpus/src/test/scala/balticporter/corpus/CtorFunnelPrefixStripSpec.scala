@@ -4,24 +4,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{CtorFunnel, OmissionCheck, Pipeline}
 
-/** A10 / `ENGINE-LIMITS.md` C7 — the PREFIX STRIP, and the runtime shape it repairs.
-  *
-  * The escaping-promotion divergence is not uniform. Where an escaping root's own body literally
-  * BEGINS with the promoted body, the duplication has an exact repair: the class body runs the
-  * prefix, `this(…)` returns, and the residual runs — the same statements, in the same order, once
-  * each. Nothing is approximated and no argument is guessed.
-  *
-  * libGDX's `Button` is the shape and the reason this is worth an emission change: `Button()` is
-  * `{ initialize(); }` and `Button(Skin)` is `{ initialize(); setSkin(skin); }`. Promoting the
-  * first ran `initialize()` twice on eight of ten construction paths, adding a SECOND
-  * `ClickListener`; every click then called `setChecked` twice and the button never changed state.
-  * A green compile said nothing about it (CLAUDE.md §3), and no count moved.
-  *
-  * The two halves are asserted together on purpose: the emitted text must lose the duplicate AND
-  * `OmissionCheck.promotedBodyOnEveryPath` must stop reporting that path — they are one function
-  * (`Plans.residualBody`), and a check that kept reporting a path the emitter had just repaired
-  * would be the C7-at-`droppedSuperArgs` failure in its other direction.
-  */
+/** A10 / `ENGINE-LIMITS.md` C7 — the PREFIX STRIP, and the runtime shape it repairs. */
 class CtorFunnelPrefixStripSpec extends munit.FunSuite:
 
   private val src =

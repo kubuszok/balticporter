@@ -3,23 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 
 /** `ENGINE-LIMITS.md` G8.10 — java's UNCHECKED override, where an F-BOUNDED result-only method type
-  * parameter is erased at the DECLARATION.
-  *
-  * JLS 8.4.2 makes a signature a SUBSIGNATURE of one whose ERASURE it is, so java lets
-  * `SequenceBuilder getBuilder()` override `<B extends ISequenceBuilder<B,T>> B getBuilder()` with
-  * an unchecked warning. Scala has no such rule, so the pair is `E038 has a different signature` at
-  * the narrowing declaration and `needs to be abstract` at every concrete class below it.
-  *
-  * G8 measured four ways of INSTANTIATING such a parameter and every one was worse, for a reason it
-  * measured rather than assumed: no denotable `X` satisfies `X <: ISequenceBuilder<X, T>`. So the
-  * parameter is UNWRITABLE — no caller can supply an argument and no implementation can produce one
-  * without a cast — and its bound, self-reference wildcarded, is the only text there is.
-  *
-  * The three negatives are what keep this from erasing ordinary generic java: a variable a FORMAL
-  * mentions is constrained by its argument, a variable with an ORDINARY bound has denotable
-  * instantiations callers really write, and a variable the RESULT does not mention changes no
-  * emitted type.
-  */
+  * parameter is erased at the DECLARATION. */
 class UncheckedErasureOverrideSpec extends PortSuite:
 
   test("an F-BOUNDED, RESULT-ONLY method type parameter is erased to its bound at the DECLARATION") {

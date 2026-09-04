@@ -5,22 +5,7 @@ import balticporter.transform.{CollectionInternalCheck, CollectionsTransform}
 import balticporter.transform.CollectionInternalCheck.Issue
 
 /** The IN-PROGRAM half of the collections residue — every site where java's own subtyping carried a
-  * value across an edge the mapping has no image for.
-  *
-  * Every test here is paired with the NEGATIVE that decides it, because each arm has a shape that
-  * looks identical and is correct:
-  *
-  *   - a library's own collection routinely carries BOTH ends of the split as parents
-  *     (`OrderedSet extends mutable.Set with JavaIterable`), so an arm that only looked for an end
-  *     on the far side would report every one of its CORRECT slots;
-  *   - a type variable bound twice to the SAME side is java's ordinary generic call and there is
-  *     nothing to report;
-  *   - and the arm that is NOT here at all: a call at a symbol the phase MINTED, whose operands
-  *     span the edge and whose helper may well take both.
-  *
-  * And one negative for the check as a whole: `CollectionBoundaryCheck` must not report the same
-  * sites, or the two lanes count one residue twice and a baseline diff can attribute neither.
-  */
+  * value across an edge the mapping has no image for. */
 class CollectionInternalCheckSpec extends PortSuite:
 
   private def findings(java: String) =
@@ -85,10 +70,7 @@ class CollectionInternalCheckSpec extends PortSuite:
   // THE SHAPE IS NOW THE RESIDUE, not the population — and that is the pass draining the lane.
   // `set(Key<V> k, V v)` used to be this fixture, and `CollectionsTransform` now answers it: `Key<V>`
   // is INVARIANT, so the key argument fixes `V` and the value is coerced TO it (`ENGINE-LIMITS.md`
-  // K26, measured `collection-internal` 5 -> 0 with its five errors). What no substitution can answer
-  // is the shape with NO parameterised formal to read the variable off — TWO BARE occurrences, where
-  // java infers the lub and the phase has no standing to pick one side — so that is what this lane
-  // counts now, and the drained shape is the case below it.
+  // K26, measured `collection-internal` 5 -> 0 with its five errors).
   private val splitVar =
     """package demo;
       |import java.util.*;
@@ -159,8 +141,7 @@ class CollectionInternalCheckSpec extends PortSuite:
     // the helper has NO signature to check either against — which is exactly why an arm reading the
     // operands alone cannot tell this site (2 compile errors) from
     // `JavaCollections.containsAll`, whose `IterableOnce[?] | JavaIterable[?]` formal exists for
-    // this shape and closes it. `ENGINE-LIMITS.md` K2.5's defect; the repair is signatures on the
-    // mints, not a wider guard here.
+    // this shape and closes it. `ENGINE-LIMITS.md` K2.
     assertEmits(p, "balticporter.runtime.JavaCollections.addAll(")
     assertEquals(clue(fs), Nil)
   }

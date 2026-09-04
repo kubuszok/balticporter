@@ -4,22 +4,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.DecisionLog
 
-/** A captured LOCAL that a nested class's member shadows — `TirEmitter.resolveCapturedLocalClashes`.
-  *
-  * The fourth face of CLAUDE.md §4.55, and the one that runs the other way: the name that has to
-  * move is not the member but the capture. Java keeps methods and variables in separate namespaces,
-  * so a method parameter `filter` and an anonymous class's `Response filter(a, b)` coexist and a
-  * bare `filter` is unambiguously the parameter. Scala has one namespace and resolves
-  * innermost-first, so the member wins and the capture becomes unnameable — `value filter is not a
-  * member of (Item[?], Item[?]) => Response`, the compiler naming a function type nobody wrote.
-  *
-  * Measured on jbump's `World.check`, which is the shape the first test reproduces.
-  *
-  * The NEGATIVES carry as much weight as the positives here, and are why the pass is precise rather
-  * than blanket: a local rename is invisible, but a PARAMETER rename changes the emitted signature,
-  * so a pass that renamed on a name match alone would move public surface for no reason. Each
-  * negative below names the over-approximation it forbids.
-  */
+/** A captured LOCAL that a nested class's member shadows — `TirEmitter.resolveCapturedLocalClashes`. */
 class CapturedLocalClashSpec extends munit.FunSuite:
 
   private def emit(src: String): String = new TirEmitter(SpoonTir.fromSource(src)).emit
@@ -113,18 +98,10 @@ class CapturedLocalClashSpec extends munit.FunSuite:
   // same way and is deliberately NOT tested here: the frontend refuses it outright
   // (`unsupported construct: statement CtClassImpl`, `SpoonTir.stmtKind`), so a test for it would
   // be a test of an engine gap one layer up, failing for a reason that has nothing to do with this
-  // pass. The pass itself is indifferent — it reads `Tree.ClassDef` and `Tree.AnonClass` through
-  // one traversal — so it will cover local classes on the day the frontend produces them.
+  // pass. The pass itself is indifferent — it reads `Tree.ClassDef` and `Tree.
 
   // -------------------------------------------------------------------------------------------
   // THE SECOND RULE — AMBIGUITY, which is not shadowing (ENGINE-LIMITS.md C16)
-  //
-  // Every test above has the body referencing the CAPTURE. Where the parent declares the name as a
-  // FIELD, java binds the INHERITED MEMBER instead — probed against javac 22, and the same answer
-  // through an anonymous body, a named local class and a grandparent — so no capture reference
-  // exists and the first rule sees nothing. Scala 3 then calls the bare name AMBIGUOUS rather than
-  // choosing either, and the outer declaration is what has to move.
-  // -------------------------------------------------------------------------------------------
 
   private val ambiguous =
     """package demo;
@@ -307,12 +284,6 @@ class CapturedLocalClashSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------------------------
   // LAMBDA BODY — the shape `TestFrameworkTransform` creates (ENGINE-LIMITS C16.1)
-  //
-  // A converted `@Test` method is a `test("…") { body }` call, whose body is a lambda. The
-  // collector's `transformDefDef` never sees it, so without `transformLambda` every anonymous
-  // class inside a converted test is invisible to both the shadowing and ambiguity rules.
-  // Measured at 2 E049 on ashley: `EngineTests.cascadedRemoveEntity`.
-  // -------------------------------------------------------------------------------------------
 
   test("a local inside a LAMBDA body that shadows an inherited member is renamed (C16.1)") {
     val out = emit(

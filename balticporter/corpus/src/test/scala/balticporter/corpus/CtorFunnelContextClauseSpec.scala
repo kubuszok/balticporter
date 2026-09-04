@@ -8,33 +8,7 @@ import balticporter.tir.{Constant, CtorFunnel, Descriptor, Flags, MemberKey, Omi
 import balticporter.transform.*
 
 /** THE CLAUSE-BEARING EMPTY PRIMARY — a class the funnel neither PROMOTES nor SYNTHESISES, carrying a
-  * context clause (`ENGINE-LIMITS.md` CT5, `DESIGN.md` §8.2).
-  *
-  * The funnel has three outcomes and only two of them ever had a parameter list for a phase's
-  * `(using T)` group to land on. The third — `Plan.none`, where the emitted class keeps scala's own
-  * implicit nilary primary — is the most common one in real code: measured on one corpus library at
-  * `attach = "class"`, 19 top-level classes plus at least 3 nested ones of 188 threaded lost the
-  * clause, 55 scalac errors of the run's 57.
-  *
-  * Two halves, and they are reached by two DIFFERENT roads to `Plan.none`, which is why there are two
-  * fixtures rather than one:
-  *
-  *   - [[bufferSrc]] — several paramful roots and nothing to synthesise. The clause has to REACH the
-  *     class, or every `summon` in its body fails (`E172`).
-  *   - [[fontSrc]] — a promotion the WITHHOLDING FIXPOINT takes back, leaving a java NILARY
-  *     constructor beside the implicit primary. It must not be emitted as `def this()(using T)`, or
-  *     the two declarations have the same erased signature (`E120`) and every argument-free
-  *     `extends` is an ambiguous overload (`E051`) — CT4's third cause on the `Plan.none` side, and
-  *     the same `paramss.flatten` mistake one level down in `TirEmitter.orderBody`.
-  *
-  * …and the SILENT half: a threaded class whose body happens not to summon anything loses its clause
-  * under a GREEN COMPILE, while the run's decision row and porter note both claim it. That is what
-  * the loss recording is for, and it is negative-tested here on shapes the engine deliberately
-  * refuses rather than on a mutilated emitter.
-  *
-  * Everything is CLAUSE-CONDITIONAL: with no clause anywhere the emitted text must be exactly what
-  * it was, which is what the byte-for-byte test asserts by emitting the same java twice.
-  */
+  * context clause (`ENGINE-LIMITS.md` CT5, `DESIGN.md` §8.2). */
 class CtorFunnelContextClauseSpec extends munit.FunSuite:
 
   private val preamble =
@@ -48,8 +22,7 @@ class CtorFunnelContextClauseSpec extends munit.FunSuite:
     * constructor, no nilary root and no hoistable field — `syntheticPrimary` has nothing to
     * synthesise and declines, which is `Plan.none` (`IndexBufferObject`, `Mesh`,
     * `VertexBufferObject`). `Buffer(int)` is the deep secondary chain, and `Buffer.Nested` is the
-    * same shape one level down — a walk over top-level classes finds neither.
-    */
+    * same shape one level down — a walk over top-level classes finds neither. */
   private val bufferSrc = preamble +
     """public class Buffer {
       |  int n;
@@ -71,10 +44,7 @@ class CtorFunnelContextClauseSpec extends munit.FunSuite:
     * has ONE root, so the funnel promotes it — and `Sub` reaches `Font` with an argument-free
     * `extends`, so the withholding fixpoint takes the paramful promotion back. `nilaryPlan` cannot
     * promote `Font()` in its place either: its delegation argument is a call (not re-evaluable) and
-    * the target uses `size` twice, so inlining it would evaluate `seed()` twice. What is left is
-    * `Plan.none` with a DEGENERATE nilary constructor — a delegation and nothing else, which scala's
-    * own implicit primary already is.
-    */
+    * the target uses `size` twice, so inlining it would evaluate `seed()` twice. */
   private val fontSrc = preamble +
     """public class Font {
       |  int size; String name;
@@ -159,18 +129,7 @@ class CtorFunnelContextClauseSpec extends munit.FunSuite:
     assert(clue(out).contains("class Sub(using demo.Ctx) extends demo.Font"), out)
   }
 
-  /** …AND THE DROP IS NOT FREE, which the assertion above used to state as though it were.
-    *
-    * `Font()` is not DEGENERATE: it delegates `this(seed(), "d")`, and scala's implicit nilary
-    * primary runs none of that. `new Sub()` therefore builds an object java could not build, and
-    * until this lane existed nothing said so — the port compiled, every other count was unchanged,
-    * and the only witness would have been a test that constructed one. Measured on libGDX core as
-    * exactly one site: `new BitmapFont()` built a font with no data, no page and no glyph where
-    * java loaded the default 15pt face.
-    *
-    * The three alternatives are priced in `CtorFunnel.Plans.droppedNilaryCtor`; each emits a WRONG
-    * answer rather than a missing one, which is why the outcome here is refuse-and-count.
-    */
+  /** …AND THE DROP IS NOT FREE: a delegation carrying arguments is a counted omission, not silent. */
   test("…and a delegation that CARRIES ARGUMENTS is a counted omission, never a silent drop") {
     val (after, _, out) = threaded(fontSrc)
     assert(!out.contains("def this()"), out)
@@ -287,10 +246,7 @@ class CtorFunnelContextClauseSpec extends munit.FunSuite:
 
   /** `class X(using T)` reached by `this()` from a secondary, by `new X(…)`, by an argument-free
     * `extends` and by a body `summon` is a claim about scala's overload resolution, and a string
-    * assertion is not evidence for it.
-    *
-    * {{{ scala-cli compile --scala 3.8.4 --server=false <the path printed below> }}}
-    */
+    * assertion is not evidence for it. */
   test("emitted probe is written for a real compiler, ONE FILE PER UNIT as a port writes it") {
     probe("none-buffer", bufferSrc,
       """package demo
@@ -337,11 +293,7 @@ object CtorFunnelContextClauseSpec:
     * are ones a real holder's closure would refuse before reaching, and the question here is what the
     * CONSTRUCTOR REGION does with a clause, whoever attached it and however wrongly. It mints through
     * the phase's own `Minter`, so the parameter is anonymous and `isGiven` exactly as the threading's
-    * is, and it mints a constructor for a type that has none, exactly as the threading does.
-    *
-    * @param firstOnly attach to the FIRST constructor only — the non-uniform case, which is a
-    *                  refusal rather than a shape.
-    */
+    * is, and it mints a constructor for a type that has none, exactly as the threading does. */
   final class Clause(on: Set[String], firstOnly: Boolean = false) extends Phase:
     def name = "spec/clause"
 

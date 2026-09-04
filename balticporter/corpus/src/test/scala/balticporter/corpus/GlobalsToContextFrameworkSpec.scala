@@ -6,25 +6,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{Decision, DecisionLog, PorterNote, Pipeline, Program}
 import balticporter.transform.*
 
-/** `ENGINE-LIMITS.md` CT7 — THE THIRD ANSWER, and the warning that makes its absence visible.
-  *
-  * A class a FRAMEWORK instantiates is neither of the two answers the attachment decision had. It is
-  * not a boundary — its body genuinely needs the context — and it must not take the clause, because
-  * a reflective construction cannot supply one. The measured cost of getting this wrong is the whole
-  * reason CLAUDE.md §3 says what it says: the emitted file compiled at 0 scalac errors, every check
-  * count was identical, `context-seam` was 0, and five tests stopped running.
-  *
-  * Two separable halves, and this spec pins both:
-  *
-  *   - the ANSWER — `selfSupplied` names the type, its constructors keep java's signature, and a
-  *     `private given` member filled by the port's own expression is what its `summon`s resolve
-  *     against. That is the reference hand port's shape, reached from policy rather than by hand;
-  *   - the WARNING — a threaded class NOTHING IN THIS PROGRAM CONSTRUCTS whose ancestry leaves the
-  *     program is the CT7 shape, observed rather than declared. It cannot refuse (a class this
-  *     library's USERS construct looks identical from inside), so it counts.
-  *
-  * Every assertion here is negative-testable: revert the guard named in its comment and it fails.
-  */
+/** `ENGINE-LIMITS.md` CT7 — THE THIRD ANSWER, and the warning that makes its absence visible. */
 class GlobalsToContextFrameworkSpec extends munit.FunSuite:
 
   /** the CT7 shape beside its two controls: a threaded class this program DOES construct, and a
@@ -124,9 +106,7 @@ class GlobalsToContextFrameworkSpec extends munit.FunSuite:
     // program builds a `ModelTest` and the CT7 shape is exactly what it was. The recorded
     // `Instantiate` edge on a `NewArray`'s ELEMENT type means "this type is named here", which is
     // the opposite of what the suppressor read it as.
-    // NEGATIVE: drop the `!u.site.isInstanceOf[Tree.NewArray]` guard in `constructedByProgram` and
-    // this is Nil — a class a framework instantiates, warned about nowhere, which is the whole of
-    // what CT7 cost.
+    // NEGATIVE: drop the `!u.site.isInstanceOf[Tree.
     val (p, a, _, out) = portedFrom(arrayAllocSrc, base)
     assert(clue(code(out)).contains("class ModelTest(using demo.Ctx)"), code(out))
     assert(clue(code(out)).contains("new scala.Array[demo.ModelTest](4)"), code(out))

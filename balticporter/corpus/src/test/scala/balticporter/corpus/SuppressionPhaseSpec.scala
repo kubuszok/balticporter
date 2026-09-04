@@ -3,20 +3,7 @@ package balticporter.corpus
 import balticporter.runner.PortRun
 import balticporter.transform.SuppressionPhase
 
-/** `SuppressionPhase` is derived unconditionally by `PortRun` — not declared per port.
-  *
-  * ==Why==
-  * The phase scans the FINAL tree and adds `@nowarn` annotations for two concerns:
-  *   1. `.orNull` calls (minted by `NullabilityTransform` with a `Named` target) — deprecated
-  *      lint under `-Werror -deprecation`.
-  *   2. Exhaustive enum match defaults — a `match` on a java enum where all constants are covered
-  *      and a `case _ =>` (from java's `default:`) is unreachable. Scalac proves exhaustiveness
-  *      (E030) but java has no such rule.
-  *
-  * Declaring it per port is the §1.5 drift the conditional-lane pattern exists to prevent: the
-  * next port using `Named` would silently lose its suppressions. `PortRun.derivedPhases` includes
-  * it unconditionally, the same way `remedyPhases` includes the remedy phases.
-  */
+/** `SuppressionPhase` is derived unconditionally by `PortRun` — not declared per port. */
 class SuppressionPhaseSpec extends munit.FunSuite:
 
   test("PortRun.derivedPhases includes SuppressionPhase") {

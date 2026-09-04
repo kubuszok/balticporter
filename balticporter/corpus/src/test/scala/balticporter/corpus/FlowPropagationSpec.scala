@@ -4,14 +4,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.{Program, SymId, TypeRepr}
 import balticporter.transform.FlowPropagation
 
-/** [[FlowPropagation]] on its own — the shared second half of every retyping rule.
-  *
-  * Both users pin it end to end already (`PrimitiveToOpaqueTransformSpec` on the emitted Scala,
-  * `CollectionsScopeSpec` on a scoped collections rewrite), which is exactly why it also needs a
-  * spec of its own: an end-to-end assertion cannot say WHICH property carried the seed, so a
-  * propagation that grew for the wrong reason would still read green. These assert the four
-  * pure-move shapes one at a time, and — the half that matters — the shapes that must NOT propagate.
-  */
+/** [[FlowPropagation]] on its own — the shared second half of every retyping rule. */
 class FlowPropagationSpec extends PortSuite:
 
   private val src =

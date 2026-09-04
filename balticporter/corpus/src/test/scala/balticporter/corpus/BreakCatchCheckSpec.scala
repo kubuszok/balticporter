@@ -5,15 +5,7 @@ import balticporter.tir.{BreakCatchCheck, Constant, Flags, MemberIndex, Origin, 
   SymbolTable, SymId, Tree, TypeRepr, TypeTree, Xref}
 import balticporter.tir.BreakCatchCheck.Issue
 
-/** The `break-catch` lane: can it report, and does it read 0 once the emitter guards?
-  *
-  * The negative test is the load-bearing one. A check whose crossings were read back out of the
-  * emitter's own answer would be 0 by construction and could never fail — so the crossings are
-  * found here, from the trees, and `guarded` is the ONLY thing the emitter contributes. Passing
-  * `_ => false` is therefore the un-repaired engine exactly: same walk, same trees, nothing
-  * guarded. If that reports nothing, the lane is decoration (CLAUDE.md §3, "a check reporting zero
-  * is only as good as its coverage").
-  */
+/** The `break-catch` lane: can it report, and does it read 0 once the emitter guards? */
 class BreakCatchCheckSpec extends PortSuite:
 
   private val crossing = """
@@ -126,13 +118,6 @@ class BreakCatchCheckSpec extends PortSuite:
   }
 
   // -- two `try`s, ONE origin: a guarded one must not vouch for its unguarded sibling -------------
-  //
-  // `Origin` is a path, a line and a column, and it is not unique across `try`s: a nested one-liner
-  // shares one, and every `try` a phase SYNTHESISES carries `Origin.synthetic`. Keyed by origin the
-  // emitter's answer for the guarded try answers for the other one too, and this check — the only
-  // thing in the pipeline that can see a §4.4 jump-in-catch — reports nothing for a defect that
-  // compiles, moves no count and fails no test. Built as TIR rather than as java, because the whole
-  // question is what happens when two DISTINCT nodes carry ONE origin.
 
   test("a guarded `try` does not vouch for an unguarded sibling that shares its ORIGIN") {
     val O   = Origin("C.java", 7, 5)

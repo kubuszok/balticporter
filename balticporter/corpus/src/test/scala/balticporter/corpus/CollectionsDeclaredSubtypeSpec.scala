@@ -3,27 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** K26's `DeclaredSubtype` half, CLOSED AT THE SLOT — a value the PROGRAM declares, meeting a shim.
-  *
-  * `typeMap` sends `java.util.Collection` to a STANDALONE shim (`CLAUDE.md` §4.5 says it must) and
-  * every java SUBTYPE of it to a `scala.collection.*` type, so java's `Set <: Collection` has no
-  * image. `coerce` bridges a value at such a slot wherever a factory exists — and it reads the
-  * source's kind out of `kindOf`, which is keyed on this phase's own SCALA TARGETS and therefore
-  * answers NOTHING for a type the program declares.
-  *
-  * That is the exact blindness `CollectionInternalCheck.Issue.DeclaredSubtype` exists to COUNT
-  * (`ENGINE-LIMITS.md` K26): `OrderedSet implements java.util.Set` handed to its own
-  * `retainAll(Collection<?>)` matched no factory, and the residue reached the compiler as a bare
-  * `Found: … / Required: …`. The class really IS a `mutable.Set` at that slot, because THIS PHASE
-  * made it one, so `JavaCollection.fromSet` conforms and the seam closes where the lane names it.
-  *
-  * ==The two conjuncts that keep it from wrapping correct code==
-  *   - a class that ALREADY carries the wanted shim among its parents conforms and gets nothing —
-  *     and `JavaCollection extends JavaIterable`, so a `Collection`-parented class satisfies the
-  *     iterable slot too;
-  *   - a class this phase never re-parented is not a party to the edge at all, and its seam stays
-  *     the honest compile error it was.
-  */
+/** K26's `DeclaredSubtype` half, CLOSED AT THE SLOT — a value the PROGRAM declares, meeting a shim. */
 class CollectionsDeclaredSubtypeSpec extends PortSuite:
 
   private val setSubtype =

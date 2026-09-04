@@ -4,26 +4,7 @@ import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
 /** K5.7's OTHER half — a `Tuple2` is impossible as a PARENT and exact at a SLOT, and which of the
-  * two a class gets is decided by a CAPABILITY the class either has or has not.
-  *
-  * `java.util.Map.Entry` maps to `scala.Tuple2`, so every USE of the interface is retyped to a pair
-  * while a class IMPLEMENTING it keeps java's parent (`Tuple2` is final, takes its components in its
-  * constructor and has no write-through member). The class's own value then meets the retyped slot —
-  * `Map.Entry<K,V> getEntry(int)` — and the projection `(getKey, getValue)` there is a COPY, which
-  * is precisely what K2 refuses: a later `setValue` on the copy succeeds and writes nothing.
-  *
-  * Except where there is no write to lose. `MapEntry.setValue` is `throw new
-  * UnsupportedOperationException()` in flexmark's own source — java's own optional-operation refusal,
-  * written by the library at the very member the copy would detach — so the value REALLY IS a
-  * detached pair and the copy is exact. That is the whole licence, and it is a fact about the
-  * LIBRARY's body rather than about the interface.
-  *
-  * The negatives are what make this a rule rather than a convenience, and the last of them is the
-  * one this phase could most easily get wrong about itself: `refuseOnTarget` substitutes a throw at
-  * exactly this member for an entry it BROKE, so a derivation reading the mapped tree would let the
-  * phase's own refusal license its own projection — detaching an entry whose java writes through,
-  * with a green compile and no count moving anywhere (`CLAUDE.md` §3).
-  */
+  * two a class gets is decided by a CAPABILITY the class either has or has not. */
 class CollectionsDetachedEntrySpec extends PortSuite:
 
   /** the library's own refusal at `setValue`, and a slot typed at the interface. */

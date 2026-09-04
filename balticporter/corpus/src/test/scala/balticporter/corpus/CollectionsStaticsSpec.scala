@@ -5,17 +5,7 @@ import balticporter.transform.CollectionsTransform
 
 /** The seams of `CollectionsTransform` that `CollectionsTransformSpec` does not reach — the
   * `staticRewrite` TABLE, the copy constructor, the blanket shim refusal and the per-kind rewrites
-  * that had no spec at all.
-  *
-  * Written because an inventory of the transform against its tests found 17 of 29 seams unasserted,
-  * including every entry of the static-utility table. A rewrite with no spec is a rewrite that can
-  * be deleted, mis-keyed or silently stop matching with nothing to say so — and the entire table is
-  * keyed on `owner#name` strings the frontend produces, which is exactly the shape that stops
-  * matching when a frontend changes (`CollectionsTransform.collapsed`'s doc says so about the
-  * collapse; it is no less true of the rest).
-  *
-  * These pin EMISSION. The behaviour of what they emit is pinned in `balticporter/runtime/src/test`.
-  */
+  * that had no spec at all. */
 class CollectionsStaticsSpec extends PortSuite:
 
   // -------------------------------------------------------------------------------------------

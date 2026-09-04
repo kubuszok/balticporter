@@ -7,12 +7,7 @@ import balticporter.transform.PrimitiveToOpaqueTransform
 
 /** The primitive → opaque-type transform: a semantically-tagged primitive becomes an `opaque type`
   * with a synthesized companion, retyped everywhere it flows, wrapped at construction and unwrapped
-  * where consumed as a plain value. Asserts the emitted Scala at each boundary.
-  *
-  * The first half is the `Int` case as it has always behaved, unchanged by the generalisation; the
-  * second half is what the generalisation added — another primitive, an explicit definition site, a
-  * scope fencing the propagation, and two specs colliding.
-  */
+  * where consumed as a plain value. Asserts the emitted Scala at each boundary. */
 class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
 
   private val src =
@@ -468,11 +463,6 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------
   // O6 CLOSED — the Existing form: retype against an EXISTING/injected opaque type
-  //
-  // The opaque type already exists (an injected file declares it), and the java class it replaces
-  // is handled by `Substitutions` (drop + inject). The phase retypes declarations to the existing
-  // type's FQN and coerces through its declared wrap/unwrap methods. No companion is minted.
-  // -------------------------------------------------------------------------
 
   private def existingSpec(scope: RuleScope = RuleScope.Everywhere()) =
     OpaqueSpec(
@@ -595,14 +585,6 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------
   // O8 — array ELEMENT coercion at three positions
-  //
-  // After O3 retypes `int[] locations` to `Array[Loc.T]`, an element read
-  // `locations[i]` is already opaque.  The three shapes that arrived on
-  // UniformLocation:
-  //   (a) element READ in a non-seed context — must NOT double-wrap
-  //   (b) element WRITE from an unpropagated value — must wrap the RHS
-  //   (c) branch join — one branch is an element read, the other plain
-  // -------------------------------------------------------------------------
 
   private val arrayElem =
     """package demo;
@@ -751,9 +733,6 @@ class PrimitiveToOpaqueTransformSpec extends munit.FunSuite:
     // `"scala.Int"` was non-deterministic: it might bind `primSym` to the MINTED one (high SymId)
     // while every existing field's `info` references the ORIGINAL (low SymId).  Then `isPrim`
     // rejected every hint and the phase returned early with 0 seeds.
-    //
-    // This test reproduces the exact shape: parse a program, add a second `scala.Int` symbol at a
-    // HIGH SymId, and verify the opaque transform still seeds from the original-SymId fields.
     val p0  = SpoonTir.fromSource(src)
     val origIntSym = p0.symbols.all.find(_.fullName == "scala.Int").get
     // mint a duplicate with a higher SymId

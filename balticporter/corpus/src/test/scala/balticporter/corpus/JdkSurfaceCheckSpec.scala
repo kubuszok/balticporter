@@ -5,13 +5,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.{ExternalUsage, JdkSurfaceCheck, Pipeline, Program, SymId}
 import balticporter.transform.CollectionsTransform
 
-/** The port's JDK wall, classified — `JdkSurfaceCheck`.
-  *
-  * Every answer this check gives has to come from a table something else owns, so every test below
-  * asserts a DISPOSITION rather than a count: which of §1's three kinds an agent is being sent to
-  * is the whole product (CLAUDE.md §4.45), and a check that says "3 findings" without saying who
-  * fixes them costs its reader the investigation it was built to save.
-  */
+/** The port's JDK wall, classified — `JdkSurfaceCheck`. */
 class JdkSurfaceCheckSpec extends PortSuite:
 
   private def rows(p: Program) = ExternalUsage.external(p)
@@ -112,8 +106,6 @@ class JdkSurfaceCheckSpec extends PortSuite:
     // The synthetic stale entry used to be `Collections#unmodifiableList`, and this guard is what
     // RETIRED it: that member is now rewritten, so the pair stopped being a contradiction and the
     // test went red — which is the guard reporting on its own table rather than on a fixture.
-    // `Map.Entry#setValue` is a live refusal (a `Tuple2` has no write-through), so pairing it with
-    // a mapping that claims to handle it reproduces the contradiction.
     val m = CollectionsTransform.jdkMapping(ran = true)
       .copy(statics = CollectionsTransform.handledStatics + "java.util.Map$Entry#setValue")
     val row = ExternalUsage.Row(SymId(1), "setValue",

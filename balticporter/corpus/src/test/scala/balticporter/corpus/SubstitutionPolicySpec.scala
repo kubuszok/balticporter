@@ -5,20 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.PolicyBinder
 
 /** The unmatched-key report END TO END — now derived from the BINDING rather than from a tally the
-  * policy value accumulated while the frontend consulted it.
-  *
-  * The failure it closes is unchanged and is the whole reason it exists: a `dropTypes`/`dropMethods`
-  * entry that matches nothing means the type is translated after all, the injected replacement
-  * shadows nothing, and NOTHING says so. The migration's CHECK 2 catches the opposite case (a drop
-  * that fired and left a dangling reference); this is the symmetric half.
-  *
-  * What changed is where the answer comes from. `Substitutions` carried a mutable tally whose own
-  * scaladoc apologised for it — `copy()` emptied it, two source sets translated through one manifest
-  * unioned their answers, and a report read before the frontend ran named every key. `PolicyBinder`
-  * answers from the program plus the frontend's `MemberIndex`, where a DROPPED member still exists,
-  * so the answer is a fact about a RUN. It also distinguishes an EXTERNAL-only match from a typo,
-  * which the tally could not.
-  */
+  * policy value accumulated while the frontend consulted it. */
 class SubstitutionPolicySpec extends munit.FunSuite:
 
   private val src =

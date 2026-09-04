@@ -4,34 +4,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{OmissionCheck, Pipeline}
 
-/** A parent constructor whose whole body is ONE BRANCH is still a replayable `super(args)`.
-  *
-  * `CtorFunnel.Plans.replayFor` expresses a secondary constructor's `super(args)` as the parent
-  * constructor's own statements run after `this()`, and it is admissible exactly when the replay
-  * OVERWRITES every field the emitted `this()` already put into the object. That question used to
-  * be asked through one function that recognised a plain `this.f = <e>` and nothing else, so a
-  * parent whose body is
-  *
-  * {{{ if (other == null) data = new HashMap<>(); else data = new HashMap<>(other.getAll()); }}}
-  *
-  * — ONE `Tree.If` — answered "assigns no field", the replay was refused, and the secondary emitted
-  * a bare `this()`. Nothing reports that: the constructor's loss is counted honestly by
-  * `OmissionCheck.droppedSuperArgs`, which reads exactly the same predicate, and the port compiles
-  * and constructs an EMPTY object. Measured three classes deep on flexmark, where a renderer built
-  * through `builder(options)` silently held no options at all (`PROGRESS.md` §10.6.7) — the whole
-  * of one library's remaining conformance residue, at 0 compile errors and every check count flat.
-  *
-  * The widening is two functions and not one, and both directions are asserted here because either
-  * alone is unsound:
-  *
-  *   - the PROLOGUE is read as MAY-assign (the union over a branch's arms), because the question is
-  *     what `this()` may have left in the object;
-  *   - the REPLAY is read as MUST-assign (the INTERSECTION over a branch's arms), because the
-  *     question is what it definitely overwrites. `Half` is that half's negative: a field written in
-  *     one arm only is not overwritten on every path, so its replay stays refused. Read through one
-  *     union-shaped function it would be admitted, the emitted constructor would compile, and the
-  *     prologue's value would survive on the arm nobody looked at.
-  */
+/** A parent constructor whose whole body is ONE BRANCH is still a replayable `super(args)`. */
 class CtorFunnelBranchReplaySpec extends munit.FunSuite:
 
   private val src =

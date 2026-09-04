@@ -4,21 +4,7 @@ import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
 /** Java's RAW static constants, and java's POSITIONAL `addAll` — two shapes that reached scalac as
-  * something else and neither of which is a mapping gap.
-  *
-  * `Collections.EMPTY_LIST`/`EMPTY_SET`/`EMPTY_MAP` are declared RAW, which is why java's own javadoc
-  * points readers at `emptyList()` instead: reading one at a parameterised slot is an UNCHECKED
-  * CONVERSION (JLS 5.1.9), legal with a warning, and the libraries that use them write
-  * `@SuppressWarnings("unchecked")` over the site. Scala has no unchecked conversion, so the external
-  * field wrap produced `Buffer[java.util.Collections.EMPTY_LIST.E]` — an element type naming the raw
-  * field's own variable. No unchecked-conversion machinery is needed to fix it: JAVA ALREADY HAS THE
-  * TYPED FORM and documents these as it, so the FIELD rewrites to the same helper the CALL does and
-  * the raw type is gone rather than worked around.
-  *
-  * `List.addAll(int, Collection)` is the other: it fell through every arm and scala accepted
-  * `buf.addAll(0, c)` by AUTO-TUPLING against `Growable.addAll(IterableOnce)`, turning java's two
-  * arguments into one pair.
-  */
+  * something else and neither of which is a mapping gap. */
 class CollectionsRawConstantSpec extends PortSuite:
 
   test("`Collections.EMPTY_LIST` becomes the TYPED factory java says it is") {

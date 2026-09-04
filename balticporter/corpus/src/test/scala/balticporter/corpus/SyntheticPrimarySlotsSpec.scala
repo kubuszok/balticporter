@@ -5,21 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{OmissionCheck, Pipeline}
 
 /** The SLOTS of a synthesised primary — where each parameter's TYPE comes from, and which classes
-  * may have one at all.
-  *
-  * The synthesis used to demand that one of the roots be NILARY, on the reasoning that a paramful
-  * root could otherwise be promoted instead. It cannot, and the cost was silent: with several
-  * paramful roots and no nilary one, `plan0` nominated NOTHING (`several.find(_.paramss.isEmpty)` is
-  * `None`), the class came out `not-funnelled`, and EVERY root's `super(args)` was lowered to a bare
-  * `this()` — the parent constructed with the wrong arguments, compiling perfectly. The condition
-  * that actually makes the encoding work is that every root reaches ONE parent constructor, and it
-  * has nothing to do with a nilary root; `ENGINE-LIMITS.md` C7's claim to the contrary is corrected.
-  *
-  * Both halves are here, because the positive alone would pass on a synthesis that fired everywhere:
-  * roots reaching DIFFERENT parent constructors are the WALL, must NOT synthesise, and must stay
-  * counted by `OmissionCheck` — one `extends` clause cannot make two different parent constructor
-  * calls, and padding one to reach the other measured 0 -> 55 errors outside the JDK family.
-  */
+  * may have one at all. */
 class SyntheticPrimarySlotsSpec extends munit.FunSuite:
 
   private val src =
@@ -176,13 +162,7 @@ class SyntheticPrimarySlotsSpec extends munit.FunSuite:
     // written ONCE in the whole program, from a parameter, in the leading run — `val`-eligible by
     // the write count and by nothing else. The count is over THIS run's program, so a dependent
     // module compiled against the emitted base can assign it and the `val` is `E052 Reassignment to
-    // val` in somebody else's compile (gdx-gltf 7 -> 23, every one on a libGDX core field). The
-    // narrowing is a JAVA fact — `final` cannot be written after construction at all, `private`
-    // cannot be written from outside this compilation — and neither can drift.
-    //
-    // Reverting the guard to `true` leaves every count in the suite unchanged and every other
-    // assertion in this file passing; only this one moves, and only three lanes downstream would
-    // otherwise have said so.
+    // val` in somebody else's compile (gdx-gltf 7 -> 23, every one on a libGDX core field).
     assert(clue(fout).contains("f$loose"), "the slot itself must be unaffected — this is not a slot question")
     assert(!fout.contains("val loose:"))
     assert(fout.contains("var loose: scala.Int = f$loose"))
@@ -196,11 +176,6 @@ class SyntheticPrimarySlotsSpec extends munit.FunSuite:
     // …and the field keeps a placeholder, which for a PRIMITIVE is the literal java put there.
     // `scala.compiletime.uninitialized` replaces the `null.asInstanceOf[T]` CAST and nothing else,
     // so a type that states its own default keeps stating it.
-    //
-    // NO `private`: a java-`private` field a PARAMFUL constructor writes is widened for a replay in
-    // a module this run cannot see (`ENGINE-LIMITS.md` C15). It is a `var`, so the widening is the
-    // whole of what a cross-module replay needs — and `n`/`tag` above keep theirs precisely because
-    // they are NOT, an immutable slot being one no replay could assign whatever it can see.
     assert(fout.contains("var hashed: scala.Int = 0"))
     assert(!fout.contains("private var hashed:"))
   }
@@ -219,7 +194,6 @@ class SyntheticPrimarySlotsSpec extends munit.FunSuite:
     // replaying subclass, in code no source scan can see. Ashley's `EntitySystemMock.updates` is
     // java-`private` and assigned by one constructor — `val`-eligible by every test over the java —
     // and its two subclasses replay `super(updates)`. Measured 0 -> 4 `E052 Reassignment to val`
-    // with the decision taken before the replays were known.
     val replayed =
       """package repl;
         |class Mock {

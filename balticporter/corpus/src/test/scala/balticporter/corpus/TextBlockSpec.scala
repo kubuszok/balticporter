@@ -3,25 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 
 /** SE15 TEXT BLOCKS — `SpoonKinds` called this the sharpest of the four ABSORBED-SILENTLY kinds,
-  * and this spec is the probe that decides whether it is a defect at all.
-  *
-  * The worry was exact: `CtTextBlock extends CtLiteral`, so `SpoonTir.literal` takes it and no arm
-  * is aware a text block was there — the shape `SpoonKinds.Absence.AbsorbedSilently` names as "the
-  * dangerous one". What the worry could not settle without running something is WHICH STRING
-  * arrives, and that is the whole question:
-  *
-  *   - JLS 3.10.6 says a text block DENOTES the string obtained by stripping incidental whitespace,
-  *     normalising line terminators to `\n`, and applying the escapes — the CONTENT, not the source;
-  *   - `SpoonTir.literal` reads `CtLiteral.getValue`, never `getOriginalSourceFragment` (the
-  *     frontend does not call that method anywhere), so what reaches the TIR is a `Constant.StringC`
-  *     holding exactly that denoted string;
-  *   - `TirEmitter.escape` puts every newline back as `\n` inside a single-line `"…"`
-  *     (`ENGINE-LIMITS.md` L1, which exists because a RAW newline ends a Scala literal).
-  *
-  * So the SHAPE changes and the VALUE does not, and a value-preserving shape change is not a
-  * difference. That is what these assertions establish, and it is why the catalog row is a
-  * `NonDiff` with this spec as its evidence rather than an entry on a work list.
-  */
+  * and this spec is the probe that decides whether it is a defect at all. */
 class TextBlockSpec extends PortSuite:
 
   // A TRIPLE-QUOTED Scala string holding a JAVA text block. Nothing here is processed by Scala; the

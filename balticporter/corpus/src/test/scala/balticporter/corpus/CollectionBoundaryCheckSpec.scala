@@ -5,14 +5,7 @@ import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform}
 import balticporter.transform.CollectionBoundaryCheck.Issue
 
 /** The JDK/Scala collection BOUNDARY, counted — every slot `CollectionsTransform` opened and
-  * `coerce` did not close.
-  *
-  * The first test is the PROBE and stays first: it shows what a stranded slot looks like today,
-  * which is a bare `Found: … / Required: …` from scalac with no classification, no origin in the
-  * JAVA source and nothing to say which of CLAUDE.md §1's three kinds the fix is. That is the bulk
-  * of a new library's first wall (§4.45). Everything after it is the check turning those into a
-  * triaged list, and the negative test asserting the ZERO.
-  */
+  * `coerce` did not close. */
 class CollectionBoundaryCheckSpec extends PortSuite:
 
   private def findings(java: String) =
@@ -74,15 +67,6 @@ class CollectionBoundaryCheckSpec extends PortSuite:
     // and `m.entrySet()` handed back the MAP, which is no `Collection` view of anything. The
     // rewrites now emit live `mutable.Set` views, so both are ordinary `Kind.Set` sources with a
     // factory on `coerce`'s first table.
-    //
-    // Asserted as a ZERO rather than deleted, and that is §4.56's rule read at a check: a residue
-    // count is only as good as the assumption that everything able to close it RAN, so the day a
-    // view stops being emitted this reads two findings instead of silence. They were also the only
-    // `ShimBoundary` pair VALID JAVA could reach — the remaining cells of that table are
-    // unreachable because java itself forbids the assignment (a `Map` is no `Collection`, a
-    // `Collection` is no `List`) — so the row is empty on all fifteen ports and its classification
-    // is what a consumer would meet if a new mapping target ever reopened it. That sentence is
-    // pinned here rather than left to the day it fires (§4.45).
     val (_, fs) = findings(
       """package demo;
         |import java.util.*;
@@ -160,10 +144,7 @@ class CollectionBoundaryCheckSpec extends PortSuite:
     // The one way this walk could be wrong SILENTLY rather than merely short. `coerceReturns` has
     // the same bound and the same default-does-not-descend rule; these two tests are what keep the
     // two node lists honest about each other.
-    // The inner `return xs` is a `Buffer` and the ENCLOSING method returns a `Collection`, i.e. the
-    // shim — so a walk that descended into the lambda would report a `ShimBoundary` here, at a
-    // slot that does not exist. A bare `return;` would not prove this: it carries no expression,
-    // so it is skipped whether the walk descends or not.
+    // The inner `return xs` is a `Buffer` and the ENCLOSING method returns a `Collection`, i.e.
     val (_, fs) = findings(
       """package demo;
         |import java.util.*;
@@ -204,8 +185,7 @@ class CollectionBoundaryCheckSpec extends PortSuite:
     // side for anything to be stranded against. Note what this test must NOT be: running the check
     // with an empty mapping over a program a REAL mapping already retyped still reports, and
     // rightly — the boundary is in the program by then, whatever set is passed. The no-op is a
-    // property of the pair, which is why `CollectionsTransform.boundary` is the only caller that
-    // can get it wrong and why it passes its own policy.
+    // property of the pair, which is why `CollectionsTransform.
     val p = port(streamSlot)
     assertEquals(clue(CollectionBoundaryCheck.check(p.after, Set.empty, Set.empty)), Nil)
   }

@@ -4,15 +4,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.ClassInitTriggerCheck
 import balticporter.tir.ClassInitTriggerCheck.Issue
 
-/** K22's WATCHDOG, driven in both directions — the check that had never had a spec.
-  *
-  * `class-init-trigger` reads 0 on every port in the corpus, which is the number a check reports
-  * both when the repair works and when the census cannot see the defect. The only way to tell those
-  * apart is to run it with an EMPTY forced set, which is the un-repaired engine on the same trees,
-  * and that is what every cell below does first. Its `Unforced` lane had never fired anywhere:
-  * measured on fifteen ports it read 0 from the first run, so nothing in the corpus proved the lane
-  * could produce a row at all.
-  */
+/** K22's WATCHDOG, driven in both directions — the check that had never had a spec. */
 class ClassInitTriggerSpec extends PortSuite:
 
   /** a `static { }` block on a class with instance state — no all-static collapse, so the block

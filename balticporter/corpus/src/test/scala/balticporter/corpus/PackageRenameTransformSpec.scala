@@ -6,13 +6,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{Decision, DecisionLog, Pipeline, Program}
 import balticporter.transform.PackageRenameTransform
 
-/** `PackageRenameTransform` — the §1(b) phase that moves a port out of the upstream namespace.
-  *
-  * Asserts BOTH sides on every case: the symbol table (what the rename actually did) and the
-  * emitted Scala (what a consumer sees). The two can disagree — a rename that reaches `fullName`
-  * but not the emitter's nested-type path would leave a symbol table that reads correctly and
-  * output that does not compile — which is why neither alone is the test.
-  */
+/** `PackageRenameTransform` — the §1(b) phase that moves a port out of the upstream namespace. */
 class PackageRenameTransformSpec extends munit.FunSuite:
 
   private val src =
@@ -157,11 +151,6 @@ class PackageRenameTransformSpec extends munit.FunSuite:
 
   // ---------------------------------------------------------------------------
   // M6 — the PER-TYPE maps: `typeRenames`, `subPackages`, `flattenNestedTypes`
-  //
-  // Same phase, same LAST position, same separator cut. What they add over a prefix entry is a
-  // BOUND key (so a JDK type or a typo is refused rather than silently succeeding), a FREE
-  // destination (a bound target FQN is a collision, not a hit), and the boundary rule below.
-  // ---------------------------------------------------------------------------
 
   private def phase(
       pkg: Map[String, String] = Map.empty,

@@ -4,20 +4,7 @@ import balticporter.testkit.PortSuite
 import balticporter.transform.TypeRedirectTransform
 
 /** `TypeRedirectTransform` promises that EVERY reference to a redirected type moves together —
-  * "so a partial redirect is impossible", in its own words. This suite is what holds it to that.
-  *
-  * The promise was false for two years of one library's use, because the first port to configure
-  * the phase redirected a type with no static surface and no annotation use. A second library
-  * redirected ten third-party types and found the gap: `transformType` reaches TYPE occurrences,
-  * and a static call's receiver, a static field read and an annotation are not type occurrences —
-  * the emitter renders the first two from a `Tree.Ident`'s SYMBOL and the third from
-  * `Symbol.annotations`. Every one of them kept naming the type the port was configured not to
-  * have. Nothing counted it: the emitted file simply does not compile, at exactly the sites the
-  * redirect existed to fix.
-  *
-  * So each case below is one KIND of occurrence, asserted through the emitted text, and the
-  * negative half (`assertNotEmits`) is the half that would have caught the original gap.
-  */
+  * "so a partial redirect is impossible", in its own words. This suite is what holds it to that. */
 class TypeRedirectTransformSpec extends PortSuite:
 
   private val java =

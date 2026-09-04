@@ -5,30 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{OmissionCheck, Pipeline}
 
 /** A PROMOTED constructor's body becomes the class body, and a scala class body runs on EVERY
-  * construction path. Java's did not.
-  *
-  * `CtorFunnel` nominates one java constructor as scala's primary; every other constructor is a
-  * secondary whose first statement must be `this(...)`, so the primary's body runs before each of
-  * them. Two java constructors that do not delegate to each other ran DISJOINT bodies, and that
-  * separation has no single-primary encoding. `ENGINE-LIMITS.md` C6's probe is the shape:
-  *
-  * {{{
-  * Base() { this.n = Audit.bump(); }   Base(int n) { this.n = n; }
-  * }}}
-  *
-  * `new Base(5)` bumps in the port and does not in java — measured by running both:
-  * java printed `n=5 bumps=0`, the emitted scala `n=5 bumps=1`.
-  *
-  * REFUSING the promotion is not available and is not a matter of taste: with every escaping
-  * promotion dropped to `Plan.none`, libGDX measured **0 -> 41 compile errors**, all `E120
-  * Conflicting definitions` — the refused class emits `def this()` beside scala's implicit nilary
-  * primary, which is the clash the promotion exists to prevent. So the emission stands and the
-  * divergence is COUNTED (CLAUDE.md §4.4; `ENGINE-LIMITS.md` M6).
-  *
-  * The half that matters as much as the report is the SILENCE: a constructor that delegates
-  * `this()` — at any arity — did run the promoted body in java too, and reporting it would bury
-  * the real ones. Both directions are asserted here, so a fix in either alone fails.
-  */
+  * construction path. Java's did not. */
 class CtorFunnelPromotedBodySpec extends munit.FunSuite:
 
   private val src =

@@ -3,23 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 
 /** The Java ENUM lowering, pinned through the pipeline — a Java snippet in, the emitted Scala
-  * asserted.
-  *
-  * A Java enum constructor is an ordinary constructor: it has a body and the body RUNS. The
-  * emitter kept its PARAMETERS (a `case object` has to be able to pass its arguments) and dropped
-  * the constructor outright, so every field the body assigned stayed at its declared default — in a
-  * port that compiled with zero errors and moved no check count, which is CLAUDE.md §3's defect
-  * class exactly.
-  *
-  * Two worked examples, and note that only the second one a compiler could ever have told you
-  * about:
-  *
-  *   - libGDX `Cubemap.CubemapSide` builds `up` and `direction` from six float parameters. All six
-  *     sides shipped with `up == null`; `getUp(out)` threw. Nothing in the corpus called it.
-  *   - anim8 `Dithered.DitherAlgorithm` assigns `legibleName` from a `String name` parameter, so
-  *     `toString()` returned null for all 22 constants — AND the promoted `var name` collided with
-  *     the synthesised `Enum.name()`, which is the one error that made it visible at all.
-  */
+  * asserted. */
 class EnumCtorBodySpec extends PortSuite:
 
   test("an enum constructor's BODY runs — the field it computes is not left at its default") {
@@ -103,10 +87,6 @@ class EnumCtorBodySpec extends PortSuite:
     // for it wherever the constants stand for consecutive integers somewhere else (gdx-vfx feeds
     // `lineStyle.ordinal()` into a shader `#define`). Absent, it is `value ordinal is not a member
     // of …` and there is no substitute a reader would reach for.
-    //
-    // The subject is an enum the `enum` syntax CANNOT express — a constant with a class body — so
-    // it is the sealed lowering that owes the member. Asked of an expressible enum the answer comes
-    // from `java.lang.Enum`, which the cell below pins.
     val p = port(
       """package p;
         |enum Plain {
@@ -168,14 +148,6 @@ class EnumCtorBodySpec extends PortSuite:
   }
 
   // -- T11's OTHER half: the collidee is DECLARED, not synthesised ------------------------------
-  //
-  // T11 closed the case where a promoted parameter collides with the emitter-SYNTHESISED
-  // `Enum.name()`, by skipping the synthesis, and recorded that the other case "would need a §4.55
-  // pass that can see an EMITTER-synthesised member, which no phase can today". The other case does
-  // not need one: the collidee is DECLARED (liqp `Flavor`'s `isLiquidStyleInclude` parameter
-  // against its own `isLiquidStyleInclude()` method), which is exactly what `funnelParamRenames`
-  // reads. Java needs no answer here — a constructor parameter is not a member, and its two
-  // namespaces would let it share a name with a method even if it were.
 
   test("a promoted enum parameter clashing with a DECLARED method is renamed, and the method stays") {
     val p = port(

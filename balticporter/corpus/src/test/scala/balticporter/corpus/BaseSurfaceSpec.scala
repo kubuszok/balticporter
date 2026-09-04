@@ -7,12 +7,7 @@ import balticporter.tir.{CtorFunnel, Program, Surface, SymId, Tree, TrivialSurfa
 
 import java.nio.file.{Files, Path}
 
-/** The BASE-SURFACE CONTRACT, end to end (`DESIGN.md` §8.3).
-  *
-  * Two modules, because none of what this closes is visible in one: the whole family — D2, D4, D5,
-  * D6 — is a run answering a whole-program question over a program that CONTAINS its base, and a
-  * single-module fixture is exactly the shape under which every one of those answers is right.
-  */
+/** The BASE-SURFACE CONTRACT, end to end (`DESIGN.md` §8.3). */
 class BaseSurfaceSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------
@@ -392,15 +387,7 @@ class BaseSurfaceSpec extends munit.FunSuite:
   // 3.6 §4.55 — a DESCENDANT clash may not rename a field this run does not EMIT
   // -------------------------------------------------------------------------
 
-  /** The face with **0 corpus sites**, which is exactly why it is pinned here rather than measured.
-    *
-    * `p.Base` declares a field `x`; the DEPENDENT declares `q.Heir extends p.Base` with a method
-    * `x()`. §4.55's field-vs-method pass is whole-program — a field is renamed iff this class or any
-    * DESCENDANT declares a method of that name — and a dependent's `Program` contains its base with
-    * EXTRA descendants the base's own run never saw. So the dependent renames the BASE's field, and
-    * every reference it emits spells `x$field` against a base that wrote `x`: it compiles alone and
-    * cannot compile against the module it resolves against.
-    */
+  /** The face with **0 corpus sites**, which is exactly why it is pinned here rather than measured. */
   private val clashBase = Map(
     "p/Base.java" -> """package p;
       |public class Base { public int x; }""".stripMargin,

@@ -8,14 +8,7 @@ import balticporter.transform.MutableParamsTransform
 /** `MutableParamsTransform` finds a reassigned parameter by SCANNING the method body, and the scan
   * used to be a hand-rolled recursion over a hand-maintained list of node kinds — the thing
   * CLAUDE.md §3 bans, and the shape of two of the four silent defects this project has found. Each
-  * method below is a Java form that list did not reach.
-  *
-  * These do not degrade silently: a parameter left a `val` makes the emitted reassignment fail to
-  * compile, so the port's error count says so. That is why this is HARDENING rather than a bug
-  * fix. But "loud" only holds while somebody is reading the count, and the list would have gone
-  * stale again at the next `Tree` case added — so what is pinned here is that the scan now reaches
-  * whatever the map traversal reaches, by construction.
-  */
+  * method below is a Java form that list did not reach. */
 class MutableParamsScanSpec extends munit.FunSuite:
 
   private val src =
@@ -49,13 +42,7 @@ class MutableParamsScanSpec extends munit.FunSuite:
       |}
       |""".stripMargin
 
-  /** A reassigned CONSTRUCTOR parameter, which is the one position where the `var` cannot be read.
-    *
-    * The delegation is the constructor's first statement (JLS 8.8.7) and the `var` is prepended
-    * after it, so a delegation naming the repurposed parameter symbol names a local declared below
-    * it. The funnel then hoists that statement into the `extends` clause, where no class member is
-    * in scope at all.
-    */
+  /** A reassigned CONSTRUCTOR parameter, which is the one position where the `var` cannot be read. */
   private val ctorSrc =
     """package demo;
       |class Sup { Sup(int a, int b) { } }

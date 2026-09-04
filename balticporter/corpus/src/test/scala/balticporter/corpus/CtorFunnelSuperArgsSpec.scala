@@ -4,29 +4,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{OmissionCheck, Pipeline}
 
-/** `OmissionCheck.droppedSuperArgs` must shadow the EMITTER's decision, one constructor at a time.
-  *
-  * Scala lets only the primary constructor reach `super`, so `CtorFunnel` nominates one Java
-  * constructor and every other one delegates. Whether a given delegation actually CARRIES that
-  * constructor's super arguments is a computation that can decline — an argument whose type fits no
-  * parameter of the promoted primary has nowhere to go, and the emitter falls back to a bare
-  * `this()`, losing it.
-  *
-  * WHERE IT MAY NOT DECLINE is the other half, and this spec pinned the wrong answer for it. Under
-  * THE COLLAPSE the primary's parameters are the parent constructor's own formals, so every root's
-  * `super(args)` reaches them positionally and the type-matched fill has no standing to refuse.
-  * `Mixed` is that shape; `Holder` is a genuine loss, kept so both directions still have a fixture.
-  *
-  * The regression this pins: the funnel briefly asserted a CLASS-WIDE `Plan.superExpressed` flag,
-  * and the check skipped every constructor of a class carrying it. A class whose promotion expressed
-  * one root and dropped another therefore reported ZERO dropped super arguments — the check hiding
-  * exactly the drop class it exists to count, on the shape that motivated the promotion in the first
-  * place. Both halves are asserted here: the dropped root IS reported, and the expressed roots are
-  * NOT, so a fix in either direction alone fails.
-  *
-  * Nothing about this is visible to a compile — both emissions type-check; only the parent's state
-  * differs at runtime (CLAUDE.md §3, §4.4).
-  */
+/** `OmissionCheck.droppedSuperArgs` must shadow the EMITTER's decision, one constructor at a time. */
 class CtorFunnelSuperArgsSpec extends munit.FunSuite:
 
   private val src =
@@ -98,13 +76,6 @@ class CtorFunnelSuperArgsSpec extends munit.FunSuite:
     // the pass-through root became the primary: its arguments are in the `extends` clause
     assert(promoted.findFirstIn(clue(out)).isDefined)
     // …and the sibling reaches it with its own arguments, in the parent constructor's order.
-    //
-    // This is the shape the synthesis was built to express, and the collapse used to drop it. The
-    // type-matched fill is the right question for a promotion that passes only SOME of its
-    // parameters up (`Sized` below); for a COLLAPSE the primary's parameters ARE the parent's
-    // formals, and `String` failing to be `Object` by head name says nothing about whether
-    // `super(s, 7)` reaches them — java made that exact call. Both arguments were discarded here,
-    // silently, with a green compile, and this spec pinned that as correct.
     assert(delegated.findFirstIn(clue(out)).isDefined)
     assertEquals(dropped.filter(_.owner == "demo.Mixed"), Nil)
   }
@@ -135,8 +106,6 @@ class CtorFunnelSuperArgsSpec extends munit.FunSuite:
     // A synthesised primary IS paramful, but `Plan.primaryParams` is empty for it — no java
     // constructor backs it. Reading only that, the emitter judged `Synth()` degenerate (Scala's
     // implicit primary is already no-arg) and dropped it, leaving a class whose ONLY constructors
-    // take arguments: `new Synth()` a compile error at every call site, while `Plans.superCall`
-    // reported that same root Positional — the exact check/emitter disagreement the per-root
-    // `superCall` refactor exists to make impossible.
+    // take arguments: `new Synth()` a compile error at every call site, while `Plans.
     assert(nilarySecondary.findFirstIn(clue(out)).isDefined)
   }

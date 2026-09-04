@@ -5,24 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{OmissionCheck, Pipeline}
 
 /** A padded super-call slot is `null` because the NARROWER overload java called left it `null` —
-  * true of every JDK `Throwable` position except one.
-  *
-  * `Throwable(Throwable cause)` is specified as `this(cause == null ? null : cause.toString(),
-  * cause)`: it fills its OWN message. Padding it with `null` instead builds a different exception,
-  * and a RUNTIME probe over the emitted `GdxRuntimeException` is what showed it —
-  * `new GdxRuntimeException(cause).getMessage` returned `null` where the JDK's returned
-  * `java.lang.IllegalStateException: boom`. Both emissions compile and no check count moves
-  * (CLAUDE.md §4.4).
-  *
-  * The rendering is `java.util.Objects.toString(cause, null)`, which IS that conditional. It still
-  * names the cause TWICE across the two slots, and a scala secondary constructor cannot bind a
-  * value before its `this(...)` call — so a cause that cannot be read twice is REFUSED and counted
-  * rather than evaluated twice.
-  *
-  * Every direction is pinned here, because a fix that widens is the real risk: the padding rule is
-  * exact only for the JDK-throwable family, whose constructor set is fixed and documented. Guessing
-  * outside it measured 0 -> 55 compile errors.
-  */
+  * true of every JDK `Throwable` position except one. */
 class CtorFunnelThrowablePaddingSpec extends munit.FunSuite:
 
   private val src =

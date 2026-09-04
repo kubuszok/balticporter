@@ -4,18 +4,7 @@ import balticporter.catalog.{Attaches, CatalogLog, Differences, Dispatch, DiffId
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{CatalogCheck, Origin}
 
-/** THE COVERAGE LANES, AND THE PROOF THAT THEY CAN FAIL.
-  *
-  * A coverage mechanism that only ever sees passing input cannot distinguish "the rule holds" from
-  * "the rule is inert", and `DESIGN.md` §2.8 names the exact failure to avoid: a facility with no
-  * call sites is indistinguishable from one that is not there. So every lane here is exercised in
-  * BOTH directions — a run that discharges its obligations reports nothing, and a run that does not
-  * reports precisely the row it skipped.
-  *
-  * The negatives are built from the SURFACE, never by poking the log: a probe that wrote a hole
-  * into the log directly would prove that the reporting works and nothing about whether the wrapper
-  * ever produces one.
-  */
+/** THE COVERAGE LANES, AND THE PROOF THAT THEY CAN FAIL. */
 class CatalogCoverageSpec extends munit.FunSuite:
 
   private val origin = Origin("Snippet.java", 1, 1)
@@ -72,8 +61,7 @@ class CatalogCoverageSpec extends munit.FunSuite:
     // expr(inv)`, `case cc: CtConstructorCall => ctorCall(cc)`, and the `CtUnaryOperator` default.
     // The inner dispatch opens a scope of its own, so every consult happens there; a row attached at
     // the STATEMENT dispatch of such a kind would be reported as a hole at every one of those nodes
-    // while the arm had in fact considered it. No row is in that position today, and every row that
-    // ever attaches to a delegating statement kind would be.
+    // while the arm had in fact considered it.
     val log = new CatalogLog
     given CatalogLog = log
     val one = node
@@ -219,8 +207,6 @@ class CatalogCoverageSpec extends munit.FunSuite:
     // the obligation would then be owed at a site nothing ever enters — a claim that reads as
     // coverage and can never fail.
     // …and through `leaves`, because a row may attach at more than one place: an `Attaches.Both`
-    // is not an `Attaches.Lowered`, so an `isInstanceOf` on the top-level value silently skips the
-    // lowering half of every two-surface row — which is the one shape this guard exists to hold.
     val dispatched = balticporter.frontend.spoon.SpoonKinds.lowered.map(_.name).toSet
     val bad = Differences.all.flatMap(d =>
       Differences.leaves(d.attaches).collect { case Attaches.Lowered(k, _) => (d.id, k) })
@@ -228,19 +214,7 @@ class CatalogCoverageSpec extends munit.FunSuite:
     assertEquals(bad, Nil, s"attached to a kind no arm lowers: $bad")
   }
 
-  /** WHICH of the two term dispatches a lowered kind can actually be reached at.
-    *
-    * Derived from the `by` symbol the registry already carries, which is the claim being checked:
-    * `stmtKind` is the statement dispatch and `exprNoCast` is the expression one, and a kind whose
-    * claim names one of them cannot be reached at the other. Where the claim names a NAMED HELPER
-    * instead (`SpoonTir.invocation`, `SpoonTir.literal`, `SpoonTir.classDef`), the helper says
-    * nothing about position, so the question falls to Spoon's own hierarchy — a node reaches
-    * `stmtKind` iff it is a `CtStatement` and `exprNoCast` iff it is a `CtExpression`, because those
-    * two wrappers are entered for every node of those types and for nothing else.
-    *
-    * Both halves are structural (§4.56): one reads the registry's own recorded symbol, the other
-    * reads the class hierarchy out of the jar. Neither is a hand-written table of kinds, which is
-    * what would go stale the first time an arm moved. */
+  /** WHICH of the two term dispatches a lowered kind can actually be reached at. */
   private def legalDispatches(k: balticporter.frontend.spoon.SpoonKinds.Kind): Set[Dispatch] =
     import balticporter.frontend.spoon.SpoonKinds
     val by = k.claim match
@@ -255,11 +229,7 @@ class CatalogCoverageSpec extends munit.FunSuite:
       // dispatch, and that used to be the end of the sentence: the empty set, so no `Lowered`
       // attachment could be right about it. That was true of the mechanism and false of java, and
       // it cost a whole JLS 5.2 slot — a field's INITIALISER is an assignment conversion with
-      // nowhere to be owed. `Dispatch.Declaration` is the third position, and it is derived the
-      // same structural way: a `CtTypeMember` is walked out of its type's member list, which is a
-      // place the frontend really does reach it. Resolved out of both node packages rather than
-      // one, because a name that does not resolve would otherwise throw where the sweep wants a
-      // finding.
+      // nowhere to be owed. `Dispatch.
       def resolve(pkg: String): Option[Class[?]] =
         try Some(Class.forName(s"$pkg.${k.name}", false, getClass.getClassLoader))
         catch { case _: ClassNotFoundException => scala.None }
@@ -275,9 +245,7 @@ class CatalogCoverageSpec extends munit.FunSuite:
     // The guard above validates the KIND and stops there, so `Lowered("CtAssert", Expression)` — a
     // statement-only kind claimed at the expression dispatch — passes it while owing an obligation
     // at a scope `exprNoCast` never opens for that kind. `Differences.owedAt` would answer with the
-    // row, `Lowering.of` would never be entered with that pair, and the obligation would read as
-    // coverage that can never fail: exactly the shape the kind half exists to prevent, one column
-    // over.
+    // row, `Lowering.
     import balticporter.frontend.spoon.SpoonKinds
     def complaint(id: String, k: String, disp: Dispatch): Option[String] =
       val legal = SpoonKinds.byName.get(k).map(legalDispatches).getOrElse(Set.empty)

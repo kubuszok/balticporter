@@ -5,14 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{Pipeline, PortabilityCheck}
 import balticporter.transform.TestFrameworkTransform
 
-/** The JUnit-4 → MUnit conversion, per translated construct.
-  *
-  * Every case here is a CLAUDE.md §4.4 defect: it compiles either way, so a compile proves
-  * nothing. Each construct therefore gets two checks — the emitted Scala (what the transform
-  * built) and, for `@After` and `@Ignore`, a live MUnit test running the SAME shape, so the claim
-  * "teardown runs after a failing test" and "an ignored body does not execute" are asserted
-  * behaviourally rather than asserted about a string.
-  */
+/** The JUnit-4 → MUnit conversion, per translated construct. */
 class TestFrameworkTransformSpec extends munit.FunSuite:
 
   private def emit(java: String): (String, TestFrameworkTransform) =
@@ -361,21 +354,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     assert(out.contains(".length, bpExpected"))
   }
 
-  /** JUnit's assertion statics live at THREE FQNs, not one.
-    *
-    * `junit.framework.Assert` is JUnit 3's, `junit.framework.TestCase` inherits it, and a JUnit-4
-    * suite reaches either through `import static junit.framework.TestCase.assertEquals` — an
-    * ordinary `@Test` class with no `TestCase` parent, so `survey`'s JUnit-3 scan correctly says
-    * nothing and the calls are the only trace. Their argument order, their optional leading
-    * `String message` and their minimal arity are `org.junit.Assert`'s exactly, so one table maps
-    * all three; gating on one FQN left the other two emitting `junit.framework.*` into a suite this
-    * phase exists to make cross-platform.
-    *
-    * Written with an IMPORT and a simple-name receiver, as `assertSrc` is: `fromSource` builds with
-    * `noClasspath`, so in a one-file snippet an inline `junit.framework.TestCase.assertEquals(…)`
-    * is an unresolvable name chain rather than a type access and the receiver carries no FQN at all.
-    * A model over a whole source tree resolves both forms — and liqp's own shape, a static import,
-    * is a third that only a real classpath resolves (see `transformApply`'s note). */
+  /** JUnit's assertion statics live at THREE FQNs, not one. */
   private val junit3StaticsSrc =
     """package demo;
       |import junit.framework.Assert;
@@ -637,18 +616,6 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
   }
 
   // -------------------------------------- @Rule ExpectedException -> the RULE, MODELLED --
-  //
-  // JUnit's other spelling of `@Test(expected = …)`, and the one with a state machine behind it.
-  // Every case below is a CLAUDE.md §4.4 defect: the untranslated form COMPILES and the test simply
-  // fails at run time, so the only evidence is the emitted shape, the BEHAVIOUR specs at the end of
-  // this block, and — for the refusals — the guard that declined it (`refused = 0` is a bar met by
-  // converting nothing, §3).
-  //
-  // The junit and hamcrest declarations are supplied as SOURCES because `fromSource` builds with
-  // `noClasspath`: which of `expect`'s two overloads java resolved is read from the CALLEE'S OWN
-  // FORMAL, and an external member with no class file behind it carries no signature at all — that
-  // is exactly the state the phase DECLINES on, so a snippet without them would assert the refusal
-  // path while claiming to test the conversion.
 
   private val junitRuleStubs: List[(String, String)] = List(
     "ExpectedException.java" ->
@@ -850,10 +817,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
   test("an arming in a HELPER refuses the WHOLE SUITE — no test body holds that reference") {
     // The per-test guards are asked of a BODY and cannot see this: the arming is in no test body, so
     // every test reads as *never touches the rule* and is left alone silently, with the
-    // `thrown.expect` still standing in emitted code that compiles and does nothing. The refusal is
-    // class-wide rather than per-site because a test that arms the rule ITSELF and also calls the
-    // helper would be modelled with FEWER matchers than java accumulated — the direction that PASSES
-    // where java FAILED.
+    // `thrown.expect` still standing in emitted code that compiles and does nothing.
     val (out, ph) = emitWithRules(ruleSuite(
       """  private void arm() { thrown.expect(IllegalStateException.class); }
         |  @Test public void a() {
@@ -956,11 +920,6 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
   }
 
   // ---- the lowering's SEMANTIC CELLS, run rather than read ----
-  //
-  // Everything above asserts the emitted SHAPE. These run it: each is the shape the phase emits,
-  // written out, over a body that behaves the way the java did. A shape assertion cannot tell an
-  // exact model from a plausible one, and junit's contract is what this has to reproduce —
-  // `ExpectedExceptionStatement.evaluate` plus `failDueToMissingException`.
 
   private def ruleCheck(caught: java.lang.Throwable,
                         expected: List[java.lang.Throwable => Boolean]): Unit =
@@ -1164,12 +1123,6 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     // NUMBER. `TestFrameworkTransform.findings` prints one; nothing recorded it, because the check
     // had rules for `org.junit.` and `junit.framework.` and none for the vocabulary reached
     // THROUGH them — so a suite could be 100% hamcrest and every portability lane read zero.
-    //
-    // The receiver is IMPORTED and named, not static-imported: `fromSource` builds with
-    // `noClasspath`, so a static import in a one-file snippet resolves to `this.assertThat(…)` and
-    // the reference never names hamcrest at all (see `transformApply`'s note). A model over a whole
-    // source tree resolves the static-import form — which is the one every liqp suite uses — to the
-    // same symbol this one names directly.
     val prog = Pipeline.run(SpoonTir.fromSource(
       """package demo;
         |import org.hamcrest.CoreMatchers;
@@ -1224,9 +1177,7 @@ class TestFrameworkTransformSpec extends munit.FunSuite:
     // EVERY finding LOCATES ITSELF STRUCTURALLY, and this is the assertion that keeps the lane
     // whole. A `Symbol`'s `origin` defaults to `Origin.synthetic`, so a construct reported from a
     // SYMBOL — which is every DROPPED annotation, and `@RunWith(Suite.class)` is one because it
-    // has arguments — carries `<synthetic>` as its path. A D2 filter written on the path alone
-    // therefore drops exactly the class-level rows: measured at 11 of 30 surviving on ssg-md's
-    // test port, with `@RunWith` ×10 and `@Suite.SuiteClasses` ×9 among the missing.
+    // has arguments — carries `<synthetic>` as its path.
     val classLevel = ph.findings.filter(f => f.construct.startsWith("org.junit.runner") ||
                                              f.construct.contains("SuiteClasses"))
     assert(clue(classLevel).nonEmpty)

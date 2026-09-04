@@ -4,21 +4,7 @@ import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
 /** SE8's DEFAULT METHODS on `List`, `Map` and `Collection` — the members every library written since
-  * 2014 uses as readily as `get`, and which the tables did not have.
-  *
-  * ==Why each is a HELPER and not a rename==
-  * Every one of these has a scala member that looks right and means something else, which is the
-  * same argument `removeValue` and `putIfAbsent` already carry. The divergence is asserted per
-  * member in `balticporter/runtime/src/test` (behaviour); this pins the EMISSION — that the call
-  * names the helper at all, and that nothing survives naming a JDK member on a retyped receiver.
-  *
-  * ==And TWO of them are REFUSED, which is the half a count cannot show==
-  * `listIterator` and `spliterator` hand back a JDK PROTOCOL rather than a value — a write-through
-  * bidirectional cursor and a parallel-decomposition handle — so there is nothing to map them onto
-  * that keeps the contract. They are recorded in `JdkSurfaceCheck.Refusals` with their citation, so
-  * the call fails to compile under the JDK's own name and its reader meets the reason rather than a
-  * wall (`ENGINE-LIMITS.md` K23).
-  */
+  * 2014 uses as readily as `get`, and which the tables did not have. */
 class CollectionsSe8MembersSpec extends PortSuite:
 
   private val src =
@@ -131,18 +117,6 @@ class CollectionsSe8MembersSpec extends PortSuite:
     // The refusal is DATA (`JdkSurfaceCheck.Refusals`) rather than an absent arm, so a reader who
     // meets the compile error finds the reason and its citation instead of a wall. A refusal that
     // exists only as a missing `case` is indistinguishable from a mapping nobody has written yet.
-    //
-    // The PAIR became a single, and that is this entry's own lesson rather than a detail: the
-    // `listIterator` refusal read *scala's `Iterator` is forward-only and read-only*, which is a
-    // statement about `scala.collection.Iterator` and never about the RECEIVER — a `mutable.Buffer`,
-    // whose indexed read, indexed update, insert and remove ARE `ListIterator`'s contract. §4.5's
-    // standalone shim answers it (`CollectionsListIteratorSpec`), so the row is now `mapped` and the
-    // refusal is gone. `spliterator` FOLLOWED IT AT WAVE 16, for the same reason read one member
-    // over: java's `spliterator()` is a DEFAULT METHOD whose characteristics are written down per
-    // owner, so reproducing the one at the owner the receiver was typed by models nothing about
-    // streams. What is left is `Collection`'s row, and its reason is about the SHIM rather than the
-    // protocol — a receiver this phase left as `JavaCollection` is skipped before any arm, so there
-    // is no mapped kind to reproduce a default at.
     val refused = balticporter.tir.JdkSurfaceCheck.Refusals.map(_.api).toSet
     assert(!clue(refused).contains("java.util.List#listIterator"),
            "the `listIterator` refusal is STALE — the phase answers for it (ENGINE-LIMITS K23)")

@@ -4,28 +4,7 @@ import balticporter.runner.PortRun
 import balticporter.testkit.PortSuite
 import balticporter.tir.*
 
-/** THE TWO WALKS THAT WERE STILL COUNTING A CLASS BODY, and what each one's blindness costs.
-  *
-  * A METHOD-LOCAL class is a `BlockStatement` (JLS 14.3, catalog `JS-C30`), not a type member, so a
-  * `cd.body.foreach { case c: Tree.ClassDef => … }` recursion answers *there is no nested type
-  * here* about a type the program declares. `StandardTraversal.allClassDefs` exists precisely so
-  * that answer is given once; twenty-eight recursions moved onto it and these two did not.
-  *
-  * The two consequences are not the same size:
-  *
-  *   - `PortRun.declaredSymbols` builds the SUBJECT SET `NoteCoverageCheck` joins on, and a
-  *     decision about a subject outside it is EXCLUDED DELIBERATELY — a policy key that matched
-  *     nothing, a type another module owns, an injected FQN with no `SymId`. So a local class's
-  *     members were not an uncovered finding, they were a silent EXEMPTION from note coverage that
-  *     reads exactly like the three legitimate ones. That is the shape `CLAUDE.md` §3 is about: no
-  *     count moves, the output compiles, and the check reports a confident zero;
-  *   - `MarkerCheck.inventory` still FOUND every marker (the enclosing member's term scan reaches
-  *     straight through a local class) and sited it on the enclosing METHOD. The counts were right
-  *     and the attribution was not — a reader is sent to the wrong declaration.
-  *
-  * Both are asserted here because both are invisible to every other instrument: `markers` is 0 on
-  * all fifteen ports and `porter-notes` is 0 on all fifteen, so neither fix can move a number.
-  */
+/** THE TWO WALKS THAT WERE STILL COUNTING A CLASS BODY, and what each one's blindness costs. */
 class LocalClassSubjectsSpec extends PortSuite:
 
   private val src =

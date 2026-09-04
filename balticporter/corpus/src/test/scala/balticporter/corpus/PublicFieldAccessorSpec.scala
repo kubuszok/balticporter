@@ -6,31 +6,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.{Decision, DecisionLog, Pipeline, Program, RuleScope}
 import balticporter.transform.{BeanExposureCheck, CollectionsTransform, PublicFieldAccessorTransform}
 
-/** A JAVA `public` FIELD IS NOT PUBLIC ON THE JVM ONCE IT IS SCALA — `ENGINE-LIMITS.md` K21 face 2.
-  *
-  * `class C { var a: Object }` emits a PRIVATE field plus `a()`/`a_$eq()`, so `getClass.getFields`
-  * answers `[]` and no bean reader finds a property. The port compiles, every count is flat, and
-  * the framework reads every property as ABSENT — which a library that defaults `null` then turns
-  * into a plausible wrong answer rather than an error. A suite is the only instrument that sees it.
-  *
-  * What is asserted, and the last three are what a first cut gets wrong:
-  *
-  *   1. a public field in scope gains `getX`/`setX`, and a `final` one gains only the getter;
-  *   2. a field java did NOT make public gains nothing — the phase reproduces java's surface, it
-  *      does not invent one;
-  *   3. out of scope nothing is emitted at all (an empty scope is the no-op) and the type is
-  *      COUNTED instead, so a port can find the classes it should be naming;
-  *   4. the getter BRIDGES through the run-time egress helper, at `java.lang.Object`, for EVERY
-  *      field. This is the half a call-site rule cannot reach: a framework calls BACK IN through
-  *      the accessor, and what it gets is whatever the field holds — and a field whose type a
-  *      retyping phase moved is exactly the case the old `Object`-only bridge missed;
-  *   5. an ANONYMOUS class is reached. It is the usual shape here — `new Inspectable() { public
-  *      Date a; }` — and it lives inside a TERM, so a phase that only overrode the class hook would
-  *      do nothing on the measured case with no error anywhere;
-  *   6. a bean name java already declares is REFUSED and counted, never emitted twice;
-  *   7. the bean capitalisation is `java.beans.Introspector`'s and not `capitalize` — `URL` stays
-  *      `getURL`, or the accessor is one no framework looks for.
-  */
+/** A JAVA `public` FIELD IS NOT PUBLIC ON THE JVM ONCE IT IS SCALA — `ENGINE-LIMITS.md` K21 face 2. */
 class PublicFieldAccessorSpec extends PortSuite:
 
   private def ported(source: String, scope: RuleScope = RuleScope.Everywhere())
@@ -243,9 +219,7 @@ class PublicFieldAccessorSpec extends PortSuite:
     // handled: `decapitalize(beanSuffix(f)) == f` makes `beanSuffix` INJECTIVE on the names this
     // phase admits, so two admitted fields never want the same `getX`. `a` and `A` — the shape that
     // would collide — are separated because `A` is not invertible (it decapitalises to `a`), so it
-    // is refused and only one `def getA` is ever minted. The accumulating screen is still what
-    // holds this: a duplicate mint is the one failure with no finding behind it, so the invariant
-    // is asserted on the OUTPUT and not on the arithmetic.
+    // is refused and only one `def getA` is ever minted.
     val (_, after, ph, out) = ported(
       """package demo;
         |class T {

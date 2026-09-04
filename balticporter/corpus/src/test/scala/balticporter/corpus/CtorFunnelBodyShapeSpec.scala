@@ -6,33 +6,11 @@ import balticporter.tir.{Constant, CtorFunnel, OmissionCheck, Phase, Pipeline, P
                          TriviaKind}
 
 /** WHAT SHAPE A CONSTRUCTOR'S BODY ARRIVES IN — and why `CtorFunnel.delegationOnlyNilary` may not
-  * have a fallback arm (`ENGINE-LIMITS.md` C11).
-  *
-  * That predicate is the one place in the engine whose answer is "DELETE THIS DECLARATION": the
-  * emitter drops with it (`TirEmitter.orderBody`) and `OmissionCheck.droppedNilaryCtors` counts from
-  * it, so a wrong answer removes a constructor AND removes the record of its removal, in one step,
-  * with nothing else in the pipeline moving. It used to end in `case _ => Some(Nil)` under a match on
-  * `Tree.Block`, and that arm caught two bodies that are not "no body":
-  *
-  *   - a body wrapped in [[Tree.Commented]], which is what ONE COMMENT above the constructor's first
-  *     statement produces — the failure `CtorFunnel.headStmt`'s own doc calls the worst one in that
-  *     file, at the predicate where it costs the most;
-  *   - a single-statement body that is not a block.
-  *
-  * Both are built here by REWRITING a parsed constructor's `rhs`, because no Java text can produce
-  * them at the frontend: the shapes come from a phase, a lowering or a future frontend, which is
-  * exactly why the predicate must not assume the one shape today's frontend happens to emit.
-  */
+  * have a fallback arm (`ENGINE-LIMITS.md` C11). */
 class CtorFunnelBodyShapeSpec extends munit.FunSuite:
 
   /** The C11 shape itself: `Font()` is nilary, delegates with ARGUMENTS, and sits in front of a class
-    * whose primary is scala's own implicit nilary one.
-    *
-    * Every part of it is load-bearing, which is why it is the `BitmapFont` shape rather than a
-    * two-constructor sketch. `Sub` reaches `Font` with an argument-free `extends`, so the withholding
-    * fixpoint takes the paramful promotion back; `Font(int,String)` reads `size` twice, so
-    * `nilaryPlan` cannot promote `Font()` in its place. What is left is `Plan.none` — and only there
-    * is a `def this()` undeclarable, which is the whole precondition of the drop under test. */
+    * whose primary is scala's own implicit nilary one. */
   private val src =
     """package demo;
       |public class Font {

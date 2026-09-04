@@ -1,18 +1,6 @@
 package balticporter.corpus
 
-/** What the try-with-resources lowering DOES — JLS 14.20.3.1, executed.
-  *
-  * `TryResourceSpec` asserts the SHAPE `TirEmitter.resourceStr` writes. This file runs that shape:
-  * each test is the emitted pattern, written out by hand at the arity under test, over resources
-  * whose `close()` records the order it was called in. A shape assertion cannot say the semantics
-  * are java's, and only running them can — which is CLAUDE.md §3's "prefer running ported tests
-  * over any number of further compile fixes" at the smallest scale it applies at.
-  *
-  * The two files are kept honest by being the same text: change the lowering in the emitter and
-  * `TryResourceSpec` fails; change what the lowering MEANS and this file does. No corpus library
-  * writes a try-with-resources today (ten upstream trees, zero sites), so these are the only
-  * behavioural evidence this translation has.
-  */
+/** What the try-with-resources lowering DOES — JLS 14.20.3.1, executed. */
 class TryResourceBehaviourSpec extends munit.FunSuite:
 
   /** a resource that records its own close, and optionally fails while doing it. */
@@ -100,21 +88,6 @@ class TryResourceBehaviourSpec extends munit.FunSuite:
 
   test("…and a close() that THROWS during that jump PROPAGATES — java abandons the jump") {
     // The half the re-throw above does not settle, and the one that only running it can see.
-    //
-    // JLS 14.20.3.1 makes no special case for a jump: the resource is closed, and a `close()` that
-    // completes abruptly makes the whole `try` statement complete abruptly for THAT reason. Java's
-    // `break` is a jump with no exception object, so there is nothing for the close exception to be
-    // suppressed INTO — it simply replaces the jump and propagates out of the loop.
-    //
-    // Scala's `break` is `boundary.Break`, a `RuntimeException`, so the lowering's catch-all
-    // recorded it as `primary` and the `finally` took the SUPPRESSING arm. `boundary.Break` is
-    // constructed with suppression DISABLED, so `addSuppressed` is a documented no-op: the close
-    // exception went nowhere, the jump completed, and the resource's failure to close vanished.
-    // No compile error, no count, no other test — CLAUDE.md §4.4's shape exactly.
-    //
-    // The fix is the arm the recorder now sits behind: a `Break` is re-thrown BEFORE `primary` is
-    // written, so `primary` stays null, the `finally` calls `close()` bare, and a throwing close
-    // completes the statement abruptly exactly as java's does.
     val log = collection.mutable.ListBuffer.empty[String]
     val e = intercept[IllegalStateException](scala.util.boundary {
       one(new R("a", log, failOnClose = true)) { scala.util.boundary.break(7) }

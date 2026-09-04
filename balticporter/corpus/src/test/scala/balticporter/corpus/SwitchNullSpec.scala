@@ -4,13 +4,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.{SwitchNullCheck, Tree}
 import balticporter.tir.SwitchNullCheck.Issue
 
-/** A java `switch` on a REFERENCE type NPEs on a null selector (JLS 14.11); a `match` falls out.
-  *
-  * This is the fall-out arm's own defect read at the other selector value. Both come from the same
-  * mechanism: without the fall-out arm an ordinary value throws `MatchError` where java falls out,
-  * and without this repair a null value falls out where java throws. Neither moves a compile-error
-  * count — the emitted `match` is valid Scala with or without the arm.
-  */
+/** A java `switch` on a REFERENCE type NPEs on a null selector (JLS 14.11); a `match` falls out. */
 class SwitchNullSpec extends PortSuite:
 
   private val onString = """

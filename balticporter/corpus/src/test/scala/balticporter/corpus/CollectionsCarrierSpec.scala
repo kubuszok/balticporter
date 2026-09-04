@@ -7,31 +7,7 @@ import balticporter.tir.{Decision, DecisionLog, Pipeline, Program}
 import balticporter.transform.CollectionsTransform
 
 /** The THIRD reified position — a generic type ARGUMENT a third party reads out of the class file's
-  * generic signature and CONSTRUCTS from (`ENGINE-LIMITS.md` K20).
-  *
-  * K18's two reified positions are written in the java: `x instanceof T` and `(T) x`. This one is
-  * written nowhere. The occurrence is a type argument in a declaration, so a phase walking every
-  * `InstanceOf` and every `Typed` visits nothing; there is no value, so no coercion has anywhere to
-  * go; and no slot disagrees with another, so no boundary count fires. The port compiles, every
-  * check count stays flat, and the evidence is an exception thrown from inside someone else's
-  * library — `Cannot construct instance of scala.collection.mutable.Map`. This suite is that
-  * evidence at the size a spec can hold.
-  *
-  * What is asserted, and the last four are what a first cut gets wrong:
-  *
-  *   1. a declared carrier's type argument stays in JAVA's namespace, at every position it occurs —
-  *      the field's type, the anonymous subclass's parent, a method's parameter and result;
-  *   2. the declaration AROUND it keeps the mapping. That is the whole point of a per-argument list
-  *      and is what neither of K20's two nearby answers does (a `RuleScope` exclusion holds the
-  *      whole declaration back; a producer wrap leaves the argument retyped);
-  *   3. the value is BRIDGED at the use, by the external-producer seam and not by new machinery;
-  *   4. an argument that mentions NO mapped type decides nothing and records nothing;
-  *   5. an UNDECLARED carrier is not preserved — the list is policy, and a phase that guessed from
-  *      the shape of a name would be §4.56's failure;
-  *   6. `java.lang.Class` needs no entry: java reifies it itself, so the engine carries it;
-  *   7. the preservation is RECORDED, with the §1 classification a reader needs to know which
-  *      repository the fix lives in — `Configured` for a declared carrier, `Universal` for Class.
-  */
+  * generic signature and CONSTRUCTS from (`ENGINE-LIMITS.md` K20). */
 class CollectionsCarrierSpec extends PortSuite:
 
   private val Carrier = "com.fasterxml.jackson.core.type.TypeReference"

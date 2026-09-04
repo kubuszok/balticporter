@@ -7,16 +7,7 @@ import balticporter.tir.Pipeline
 import balticporter.transform.CollectionsTransform
 
 /** The four `java.util` rows whose absence off the JVM is a LINK error and whose answer is not a
-  * stdlib type: `EnumMap`, `EnumSet` and the three primitive `Optional`s.
-  *
-  * `EnumMap`/`EnumSet` are SHIMS because both GUARANTEE iteration in the enum's declaration order,
-  * which a `HashMap` does not have and a `LinkedHashMap` answers with INSERTION order instead —
-  * reproducing the availability and dropping the guarantee is catalog row `JS-C42`. The optionals
-  * are ALIASES because their retype is arity-changing: `OptionalInt` takes no type argument and
-  * `Option` takes one, so the head swap alone would emit `scala.Option` un-applied.
-  *
-  * `JavaEnumCollectionsSpec` is the behavioural half; this is the emission half.
-  */
+  * stdlib type: `EnumMap`, `EnumSet` and the three primitive `Optional`s. */
 class CollectionsEnumOptionalSpec extends PortSuite:
 
   private val src =

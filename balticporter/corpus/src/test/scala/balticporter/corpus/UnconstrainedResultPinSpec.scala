@@ -2,18 +2,7 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** `ENGINE-LIMITS.md` G8.7 — G22's pin at the shape its FOURTH condition declines.
-  *
-  * Both pins answer one disagreement: java instantiates an unconstrained method type variable at its
-  * BOUND and scala at `Nothing`, and a member selection on `Nothing` is rejected. They differ in what
-  * can be written down. A type ARGUMENT has to satisfy the bound, and no denotable `X` satisfies
-  * `X <: Builder<X, T>` — that is G8's measured expressiveness limit. An ASCRIPTION does not: the
-  * argument still infers `Nothing`, and what the ascription supplies is the type the SELECTION reads.
-  *
-  * The negatives are what keep it from being a fifth attempt at G8's fill: it fires only where the
-  * argument pin cannot, only where the result IS the variable, only at a receiver position, and only
-  * where every named variable in the bound has honest text here.
-  */
+/** `ENGINE-LIMITS.md` G8.7 — G22's pin at the shape its FOURTH condition declines. */
 class UnconstrainedResultPinSpec extends PortSuite:
 
   test("an F-BOUNDED result variable is ascribed at its bound, own variables wildcarded") {

@@ -4,21 +4,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.{Tree, TryResourceCheck}
 import balticporter.tir.TryResourceCheck.Issue
 
-/** Java's try-with-resources (JLS 14.20.3) — the lowering, and the lane that can see it go missing.
-  *
-  * ==What this is a regression test for==
-  * `Tree.Try.resources` was populated by the frontend and printed by `TirPrinter`, and
-  * `TirEmitter.tryStr` rendered the resources into a local it then never interpolated. The
-  * resource `val`s, every `close()`, the ordering and the suppression were dropped from the output
-  * whole. A resource referenced inside its own body failed to compile, which is loud; a resource
-  * opened for its side effect alone compiled cleanly with nothing acquired and nothing released.
-  *
-  * ==Two halves, and neither is the other's evidence==
-  * The tests below assert the SHAPE the emitter writes. The tests in `TryResourceBehaviourSpec`
-  * assert what that shape DOES — close order, suppression, close-on-jump — by running it. Neither
-  * is enough alone: a shape assertion cannot say the semantics are java's, and a behaviour
-  * assertion over hand-written Scala cannot say the emitter writes it.
-  */
+/** Java's try-with-resources (JLS 14.20.3) — the lowering, and the lane that can see it go missing. */
 class TryResourceSpec extends PortSuite:
 
   private val oneResource = """
@@ -69,7 +55,6 @@ class TryResourceSpec extends PortSuite:
     // exception, so recorded as `primary` it routed the `finally` to the SUPPRESSING arm — and
     // `boundary.Break` disables suppression, making `addSuppressed` a no-op that dropped the close
     // exception entirely. The arm below is what keeps `primary` null on a jump.
-    // `TryResourceBehaviourSpec` runs the difference; this asserts the shape that produces it.
     val p   = port(oneResource)
     val out = p.out
     val jump = out.indexOf("scala.util.boundary.Break[?] => throw brkThru$")

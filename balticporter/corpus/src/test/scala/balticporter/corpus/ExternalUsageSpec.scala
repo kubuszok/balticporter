@@ -4,23 +4,8 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.PortSuite
 import balticporter.tir.{ExternalUsage, PortabilityCheck, UsageKind}
 
-/** The enumeration `PortabilityCheck` used to perform inline and discard — `ExternalUsage`.
-  *
-  * The check walked every referenced symbol, resolved its `owner#name`, held every recorded usage
-  * with its kind and its origin, and then kept only the hits of its 34 rules. Everything else went,
-  * which is why no artifact of what a port depends on OUTSIDE ITSELF existed anywhere and why every
-  * question about the JDK surface was answered by grepping emitted text — a method that cannot see
-  * an instance call on a kept receiver at all.
-  *
-  * Two properties are load-bearing and neither is visible to a count:
-  *
-  *   - the rules still see exactly what they saw, IN ORDER. `portability(all)` is a promoted
-  *     baseline in thirteen lanes, and a reordering diffs as every row removed and re-added while
-  *     every count stays identical;
-  *   - "external" is STRUCTURAL (`Program.owns`, CLAUDE.md §4.56) and never a name test, so a
-  *     dependent port's base module — whose units are in the program because it RESOLVES against
-  *     them — is owned exactly as its own types are.
-  */
+/** `ExternalUsage` — every external symbol referenced (`owner#name`), its kind and origin, held as
+  * an artifact rather than kept only where `PortabilityCheck`'s 34 rules matched and discarded. */
 class ExternalSurfaceSpec extends PortSuite:
 
   private val src =

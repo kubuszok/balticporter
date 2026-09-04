@@ -6,17 +6,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{Decision, DecisionLog, PorterNote, Pipeline, Program}
 import balticporter.transform.*
 
-/** globals → context END TO END — java in, emitted Scala out, through the same pipeline a port runs.
-  *
-  * The unit spec asserts the mechanism on a straight line; this asserts the ARTEFACT on the shapes
-  * that broke the predecessor: an override component through an interface, an anonymous body, a
-  * FIELD INITIALISER and a CLASS INITIALISER. It also writes a PROBE an operator can put a real
-  * compiler over, because "an anonymous `(using T)` clause resolves across four emitted files" is a
-  * claim about scalac and a string assertion is not evidence for it — and the cross-file coherence
-  * class is exactly what only a compile catches.
-  *
-  * {{{ scala-cli compile --scala 3.8.4 --server=false <the path printed below> }}}
-  */
+/** globals → context END TO END — java in, emitted Scala out, through the same pipeline a port runs. */
 class GlobalsToContextPortSpec extends munit.FunSuite:
 
   private val src =
@@ -91,14 +81,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
       |""".stripMargin
 
   /** A CLASS INITIALISER THAT DOES BOTH THINGS — the shape that made the two kinds one, and the
-    * only fixture in this file where they can be told apart.
-    *
-    * `Utils.<clinit>` READS a mapped static (`Gdx.files`) and CONSTRUCTS a class the closure threads
-    * (`Ext`, whose constructor reads `Gdx.graphics`). One initialiser, one boundary, two seams — and
-    * before they had two kinds the second one was filed as a residual READ whose classification told
-    * its reader to re-spell a read that is not there. It is a real corpus shape, not a constructed
-    * one: `com.crashinvaders.vfx.gl.VfxGLUtils`'s `<clinit>` is exactly this, two reads and one
-    * `new DefaultVfxGlExtension()`. */
+    * only fixture in this file where they can be told apart. */
   private val bothSrc =
     """package demo;
       |public class Gdx { public static Graphics graphics; public static Files files; }
@@ -113,17 +96,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
       |""".stripMargin
 
   /** THE REGISTRY, which is what a constructor method reference is FOR — and the shape that made
-    * the closure blind to a construction it could see everywhere else.
-    *
-    * `Config`'s class initialiser registers two factories, one of them `Link::new`. Java's `::new`
-    * IS a construction of `Link` and lowers to `(a) => new Link(a)`, so the emitted lambda needs a
-    * given exactly where a written `new Link(x)` would — and the enclosing declaration is a
-    * `<clinit>`, which has none. `Plain::new` is the CONTROL: `Plain` reads nothing, is never
-    * threaded, and its reference must impose nothing at all.
-    *
-    * It is the corpus shape reduced, not an invention: TextraTypist's `TypingConfig` registers forty
-    * effects this way and exactly one of them — `LinkEffect`, whose `onApply` calls `Gdx.net.openURI`
-    * — reads the holder (`PROGRESS.md` §10.8.9). */
+    * the closure blind to a construction it could see everywhere else. */
   private val ctorRefSrc =
     """package demo;
       |public class Gdx { public static Graphics graphics; }
@@ -217,10 +190,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     // One `<clinit>`, two seams, two kinds — and the difference is whether the emitted file
     // compiles. The read half leaves a coherent program that kept a global; the construction half
     // leaves `new demo.Ext()` with no given anywhere in its scope, which is `No given` every time.
-    // NEGATIVE: file `impose`'s `Site.Boundary` arm as `ResidualGlobalRead` again and both rows land
-    // in one kind, whose classification opens *this read still reaches a global* about a site with
-    // no read in it and offers `boundary = "residual-global"`, which re-spells reads and cannot
-    // touch a construction (PROGRESS.md §10.8.9, and the shape ENGINE-LIMITS CT-era vfx carried).
+    // NEGATIVE: file `impose`'s `Site.
     val (p, a, _, o) = both
     val clinit = p.seams(a).filter(_.subject.contains("<clinit>"))
     assertEquals(clue(clinit).map(_.kind).toSet,
@@ -272,8 +242,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     // and `Link` took the clause, so the emitted lambda needs a given and a class initialiser has
     // none — a hard `No given` that arrived as a BARE TYPER ERROR with nothing in the run pointing
     // at it, because the closure never saw the construction at all.
-    // NEGATIVE: delete the `ctorRefUses(c).foreach` block in `expandClass` and this is Nil while the
-    // emitted text is unchanged and still uncompilable — no finding, no decision, no moved count.
+    // NEGATIVE: delete the `ctorRefUses(c).
     val (p, a, _, o) = ctorRef
     val use = p.seams(a).filter(_.kind == ContextSeamCheck.Kind.UnsuppliableUse)
     assertEquals(clue(use).map(_.subject), List("demo.Config#<clinit>"),
@@ -334,17 +303,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
   // …and the FOURTH exit: the context is IN SCOPE and has no name
   // -------------------------------------------------------------------------
 
-  /** THE SHAPE THE THIRD ANSWER RUNS OUT ON, and the reference hand port's own answer to it.
-    *
-    * `Link` is built by a REGISTRY, so its constructor may not grow a clause — and it is handed a
-    * `Label` that HAS the context, because `Label` is threaded. The clause on `Label` is a
-    * constructor PARAMETER: in scope in `Label`'s body and nameable from nowhere else, so
-    * `selfSupplied` has no expression to be given. `retain` is what gives it one.
-    *
-    * The hand port for the library this came from writes exactly this by hand —
-    * `private[textra] val sgeContext: Sge = summon[Sge]` on its label type, read as
-    * `label.sgeContext.net.openURI(link)` from an effect whose constructor keeps java's arity
-    * (`PROGRESS.md` §10.8.11). */
+  /** THE SHAPE THE THIRD ANSWER RUNS OUT ON, and the reference hand port's own answer to it. */
   private val retainSrc =
     """package demo;
       |public class Gdx { public static Graphics graphics; }
@@ -389,9 +348,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
     // …and the given reads the value it was HANDED. That it sits above `this.label = label$p` is
     // safe and MEASURED rather than assumed: a class-level anonymous `given T = e` is initialised
     // lazily in Scala 3, so `e` runs at the first `summon` and not during the prologue (probed
-    // against scalac 3.8.4, both for a field this class assigns and for one a parent does). What is
-    // still unsafe is a class body that USES the context during construction, which is the sentence
-    // `Minter.givenMember` already carries.
+    // against scalac 3.8.4, both for a field this class assigns and for one a parent does).
     assert(c.contains("private given demo.Ctx = this.label.demoCtx"), c)
     assert(c.contains("scala.Predef.summon[demo.Ctx].graphics.getWidth()"), c)
     // and the seam the second commit made visible is GONE — the registry has nothing to supply.
@@ -437,17 +394,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
   // THE FIFTH EXIT — `cache`, which is `retain`'s question where the clause is on a STATIC METHOD
   // -------------------------------------------------------------------------
 
-  /** THE SHAPE `retain` CANNOT SERVE, and it is the commonest one a library has.
-    *
-    * `Boot` is an all-`static` lifecycle holder: nothing constructs it, so it is in no
-    * `threadedClasses` and a `retain` key on it emits nothing and is a counted `NeverMatched`. The
-    * clause it DOES take is on `load()`, live only for that call — so the value exists and nothing
-    * outside can name it, which is the second question CLAUDE.md §1 says to ask of every refusing
-    * escape hatch (*is there no value, or no NAME?*).
-    *
-    * `Panel` is the reader: a type whose own body needs the context and which is not built by this
-    * program at all. `selfSupplied` is its answer and it wants an EXPRESSION — which is exactly what
-    * `Boot`'s accessor becomes. */
+  /** THE SHAPE `retain` CANNOT SERVE, and it is the commonest one a library has. */
   private val cacheSrc =
     """package demo;
       |public class Gdx { public static Graphics graphics; }
@@ -529,14 +476,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
   }
 
   /** A SELF-SUPPLIED TYPE WHOSE READS ARE ON BOTH SIDES — a `class` and its `object` are two
-    * SCOPES, and java's one namespace is what hides that.
-    *
-    * `Layout` is a java `enum` with a constant BODY that constructs a threaded type, so the closure
-    * reaches the enum as a class and `selfSupplied` answers it. The constant's body is emitted
-    * inside the COMPANION, where a `given` member of the class is not in scope at all — so the type
-    * takes the third answer, is reported as having taken it, and still emits `No given` at the one
-    * site that needed it. Measured on the first port whose framework-instantiated types were java
-    * enums (`PROGRESS.md` §10.9.7 family 1). */
+    * SCOPES, and java's one namespace is what hides that. */
   private val bothSidesSrc =
     """package demo;
       |public class Gdx { public static Graphics graphics; }
@@ -684,10 +624,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
   test("`attach = class` EMITS — the refusal is gone, and nothing is reported in its place") {
     // This spec was the REFUSAL's spec: `attach = "class"` recorded a counted `Unverifiable`
     // finding because the constructor funnel undid the clause three ways (ENGINE-LIMITS CT4, 5
-    // scalac errors on this fixture). All three were in the constructor region DESIGN.md §8.2 owns
-    // and all three are closed there — the plan models parameter GROUPS, the funnel's "is this
-    // nilary" questions read the VALUE parameters, and the emitter renders the clause through
-    // `paramClause`. The finding therefore has to be gone, not merely quieter.
+    // scalac errors on this fixture). All three were in the constructor region DESIGN.md §8.
     val (p, _, _, _) = ported(base.copy(attach = ContextAttach.Class))
     assertEquals(clue(p.policyReport.findings.filter(_.setting.endsWith(".attach"))), Nil,
       p.policyReport.render)
@@ -776,10 +713,7 @@ class GlobalsToContextPortSpec extends munit.FunSuite:
   test("…and the CLASS-mode probe too — it used to be the measurement behind a refusal") {
     // While `attach = "class"` did not emit, writing this probe would have left an uncompilable
     // directory in `target/` that reads as a regression, so only the method-mode one was written
-    // and the 5 errors were reproduced by hand. Now that the funnel carries the clause the probe is
-    // the evidence, not the symptom: an anonymous `(using T)` resolving through a SYNTHESISED
-    // primary, a subclass's `extends`, a field initialiser and an anonymous body across ten emitted
-    // files is a claim about scalac, and a string assertion is not evidence for it (M2's lesson).
+    // and the 5 errors were reproduced by hand.
     probe("class", base.copy(attach = ContextAttach.Class))
     // …and the SYNTHESISED-primary shape beside it, in its own directory: a `protected (…)(using T)`
     // primary reached by two secondaries and by a subclass's `extends` is the part of the encoding

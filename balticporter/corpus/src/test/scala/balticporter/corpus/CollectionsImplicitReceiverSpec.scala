@@ -3,36 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** AN INHERITED COLLECTION CALL WITH NO RECEIVER WRITTEN — the shape `inheritedKind` could not see.
-  *
-  * `ENGINE-LIMITS.md` K5 closed the class that EXTENDS a mapped JDK collection: `this.get(k)`,
-  * `super.putAll(m)` and the rest are identified from the RESOLVED METHOD's declaring type rather
-  * than from the receiver's own (which is the subclass's, a type this phase never minted). But the
-  * rewrite is dispatched on `Tree.Select(recv, m)` — it needs a receiver term, both to ask the
-  * question and to build the answer — and java's most common way of writing such a call is to write
-  * no receiver at all:
-  *
-  * {{{
-  * List<?> xs = new ArrayList<Object>() {{ add(a); add(b); }};   // java's double-brace idiom
-  * }}}
-  *
-  * WHERE THE RECEIVER COMES FROM IS NOT UNIFORM, and the two halves below are why this spec has
-  * negatives that pass before the fix. Inside a NAMED class the frontend already supplies one:
-  * Spoon reports an implicit `CtThisAccess` and `SpoonTir` emits `this.add(…)` /
-  * `Outer.this.add(…)`, choosing the innermost enclosing type that PROVIDES the member — so those
-  * shapes have always reached `inheritedKind`. Inside an ANONYMOUS class the target is absent and
-  * the call is a bare `Tree.Ident`, so the whole family went through untouched and emitted
-  * `add(…)` against a `mutable.ArrayBuffer`, which has no such member. Four errors on one library's
-  * suite, all in one field initialiser.
-  *
-  * The receiver java means is the innermost enclosing class that provides the member, and since the
-  * member is a mapped collection's, that is the innermost enclosing class which IS one. The
-  * traversal is bottom-up, so an anonymous class is offered the pending calls under it BEFORE
-  * anything further out is: it claims them if its own type answers `kindAt`, and drops them
-  * unclaimed if it does not — because `this` inside a nested anonymous class is that class, and a
-  * receiver synthesised further out would be naming something Scala's `this` cannot reach from
-  * there. An unclaimed call is emitted exactly as it was, which is the honest refusal.
-  */
+/** AN INHERITED COLLECTION CALL WITH NO RECEIVER WRITTEN — the shape `inheritedKind` could not see. */
 class CollectionsImplicitReceiverSpec extends PortSuite:
 
   /** java's double-brace initialiser, nested — the shape measured in the corpus. */
@@ -57,12 +28,6 @@ class CollectionsImplicitReceiverSpec extends PortSuite:
     // the inner `new HashMap(){{ put(…) }}` is a `Map`, the outer an `ArrayList`. Bottom-up, the
     // inner class is offered its own pending call first; claimed by the outer instead, `put` would
     // have been rewritten against a `Buffer`.
-    //
-    // …and the whole `put` REWRITE arrives with it, which is the half that moved no error count and
-    // was therefore invisible: java's `Map.put` returns the PREVIOUS value and scala's returns an
-    // `Option`, so an unclaimed bare `put(k, v)` inside a double-brace initialiser COMPILED and
-    // silently had a different result type (§4.4). 22 such sites in one library, all repaired by
-    // this claim and none of them by the four errors that made it visible.
     assertEmits(port(doubleBrace, new CollectionsTransform),
                 "this.put(\"k\", \"v\").getOrElse(null.asInstanceOf[java.lang.String])")
   }

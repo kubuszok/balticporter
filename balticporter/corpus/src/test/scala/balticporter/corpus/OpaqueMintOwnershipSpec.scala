@@ -9,26 +9,7 @@ import balticporter.transform.PrimitiveToOpaqueTransform
 import java.nio.file.{Files, Path}
 
 /** A phase that MINTS a top-level unit owes the same one-module answer an `inject` does —
-  * `ENGINE-LIMITS.md` §13 O5, CLAUDE.md §1.5.
-  *
-  * `PrimitiveToOpaqueTransform` adds its `object <fqn>` to `program.units`, and `PortRun.converted`
-  * classifies a unit by its recorded `Origin`: a unit with no usable origin is CONVERTED, because
-  * refusing to emit on a missing origin would be a silent omission. Right for a parsed unit, blind
-  * for a minted one — a dependent's `Program` CONTAINS its base's units, so the inherited instance
-  * seeds there too, mints there too, and every module in the chain writes its own copy of one FQN.
-  * Measured on the corpus at nine `TextureHandle.scala` where one was owed, 24 scalac errors over
-  * six dependent lanes, six suites not run, while the BASE read 0 errors with every check count flat.
-  *
-  * The two halves this spec pins are the two the failure needs:
-  *
-  *   - the module that owns the SPEC'S OWN HINTS mints, and no other module does;
-  *   - a module that does not mint still RETYPES and COERCES, because its call sites resolve the
-  *     name against the object the owning module emitted and put on the classpath.
-  *
-  * …and the third is the trap: the seed set GROWS along pure-move flows into a dependent's own
-  * declarations (gdx-gltf's `SharedTextureTest` is exactly that shape), so a fence read off the
-  * grown set hands the mint straight back to a module that merely uses the family.
-  */
+  * `ENGINE-LIMITS.md` §13 O5, CLAUDE.md §1.5. */
 class OpaqueMintOwnershipSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------

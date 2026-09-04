@@ -4,29 +4,7 @@ import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
 /** java's two `Set`-typed VIEWS of a map — `keySet()` and `entrySet()` — at the type the retyping
-  * declares.
-  *
-  * ==Why the fix is at the REWRITE and not at the slot==
-  * Both members had a node whose recorded type was the retyped `java.util.Set` (`mutable.Set`) and
-  * an emission that was something else: `m.keySet` is a `scala.collection.Set`, one capability
-  * short, and the `entrySet` rewrite handed back the MAP, which is an `Iterable[(K, V)]` and not a
-  * `Set` at all. The phase carried one local answer per position it could reach — retype a `val`
-  * initialised from `keySet`, refuse to wrap a `keySet` coercion source — and a java method whose
-  * declared result is `Set<K>` is a THIRD position that neither of them reaches. A conditional is a
-  * FOURTH, and no slot-level answer reaches inside one at all.
-  *
-  * So the disagreement is removed where it is made, and the view is a value of the type the node
-  * already claimed. Every position then follows for free, which is what the `either` and `pass`
-  * cases below pin.
-  *
-  * ==And the write-through must survive it==
-  * `Map.Entry.setValue` inside a `for` over `entrySet()` is the one legal mutation java has during
-  * entry iteration, and the phase rewrites it to the map's own `put`. That rewrite reads the map
-  * OFF THE LOOP, so a change to what `entrySet()` emits is exactly the shape that silently switches
-  * it off — a green compile, no moved count, and a write that reaches nothing (`CLAUDE.md` §4.4).
-  * `bump` is that case, and it is the reason `entrySource` asks the phase's own record rather than
-  * `kindAt` alone.
-  */
+  * declares. */
 class CollectionsMapViewsSpec extends PortSuite:
 
   private val src =

@@ -6,42 +6,7 @@ import balticporter.tir.Pipeline
 
 /** A DIAMOND FORWARDER carries the PARENT's signature, and a generic parent writes that signature
   * in its OWN scope — so every type parameter it mentions must be substituted by what the subclass
-  * instantiates the parent with (`CLAUDE.md` §4.56, `balticporter.tir.ParentSubst`).
-  *
-  * ==The defect==
-  * Java has single inheritance of implementation, so a concrete superclass method simply IMPLEMENTS
-  * an interface's default of the same name; scala linearises and refuses, so the emitter declares
-  * the forwarder itself. It rendered `d.returnTpt` and `d.paramss` — the parent's DefDef — verbatim:
-  *
-  * {{{
-  *   abstract class LeafBase extends fbound.SeqBase[fbound.Leaf] with fbound.Leaf {
-  *     override def split(c: Char): scala.Array[T] = super[SeqBase].split(c)   // Not found: type T
-  *   }
-  * }}}
-  *
-  * Valid-looking Scala naming a type the emitting class does not declare. The instantiation is
-  * right there in the `extends` clause, so the repair is exact rather than a guess.
-  *
-  * ==F-BOUNDED, because that is the shape that makes it unavoidable==
-  * `Seq<T extends Seq<T>>` is the self-typed-builder idiom every sequence library uses, and it
-  * forces the parameter into RESULT position on almost every member — so the forwarder cannot avoid
-  * mentioning it. `ENGINE-LIMITS.md` G8 is about an F-bound with no consistent FILL; this is the
-  * opposite case and must not be confused with it: nothing is being inferred here, the argument is
-  * written down.
-  *
-  * ==Three shapes, and the two negatives are the point==
-  *  - `LeafBase` — the parent is instantiated with a CONCRETE type: `T` becomes `fbound.Leaf`;
-  *  - `MidBase[T]` — the subclass passes its OWN parameter through, so the substitution must land on
-  *    a type the emitted class really declares. A repair that erased to the BOUND, or to `Any`,
-  *    passes the first assertion and fails this one;
-  *  - `Motor` — a non-generic hierarchy, whose forwarder must be byte-identical to what it was.
-  *
-  * ==TRANSITIVE, which is the half the first walk got wrong==
-  * `TwiceRemoved extends LeafBase` names a NON-GENERIC parent, and the member it forwards is
-  * `SeqBase`'s, whose `T` is bound two levels up. A walk that only descends into APPLIED parents
-  * stops at `LeafBase` and reports an empty map — right for the immediate parent, silent for every
-  * hierarchy with a plain class in the middle, which is the majority shape in the corpus.
-  */
+  * instantiates the parent with (`CLAUDE.md` §4.56, `balticporter.tir.ParentSubst`). */
 class ParentSubstForwarderSpec extends munit.FunSuite:
 
   private val src =

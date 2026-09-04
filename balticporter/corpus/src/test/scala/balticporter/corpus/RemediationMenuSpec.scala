@@ -6,19 +6,7 @@ import balticporter.testkit.PortFixture
 import balticporter.tir.*
 import balticporter.transform.RemediationTransform
 
-/** THE PORTABILITY MENU, at each of its answers.
-  *
-  * Every case here is silent by default. A selection that binds perfectly and does nothing produces
-  * the same emitted Scala, the same compile and the same member digests as one that worked; a
-  * selection that fires produces a smaller port with no error anywhere to say why. So the assertions
-  * are on the LEDGER — what was applied, what was declined and which guard declined it — and on the
-  * tree, which is the only pair that can tell the two apart (`CLAUDE.md` §3, §5's drain rule).
-  *
-  * The fixture is deliberately the shape `Remediator`'s first template is about: a JVM-only API used
-  * from exactly one declared type, once with no other referrer (the HIGH grade) and once with one
-  * (the MEDIUM grade). That difference is the whole of the drop's precondition, and it is a fact
-  * about the program rather than about any library.
-  */
+/** THE PORTABILITY MENU, at each of its answers. */
 class RemediationMenuSpec extends munit.FunSuite:
 
   /** `java.lang.reflect.` is a rule every target list asks about, so the fixture does not depend on

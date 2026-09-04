@@ -3,22 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 
 /** A NILARY STATIC METHOD REFERENCE — `ENGINE-LIMITS.md` G32, the one qualified name scala will not
-  * eta-expand.
-  *
-  * `Referent`'s own doc used to say the arity rode on the unbound case *"only because that is the
-  * only form whose emitted lambda has to state it — a qualified name is eta-expanded by scala against
-  * the target, exactly as javac did it"*. True of every arity but one: Scala 3 refuses to eta-expand
-  * a NULLARY method from a bare name, so `Type.m` where java declared `T m()` is a call missing its
-  * argument list and not a `() => T`. A library that states a lazily-computed default as
-  * `new DataKey<>("k", Type::compute)` therefore emitted three `must be called with () argument`
-  * errors, at 0 findings and 0 moved counts on every other lane — the compile is the only instrument
-  * that sees it, and it sees it only on a port that has one.
-  *
-  * The arity is JAVA'S, off the node (`Tree.MethodRef.referent`) and never off the symbol: an
-  * external member is interned with no `MethodType` and would read as taking no arguments, which is
-  * `CLAUDE.md` §4.6's fabricated fact with the default baked into the data. `getParameters` on the
-  * REFERENCE survives a lenient parse — it erases what each slot SAYS, never how many there are.
-  */
+  * eta-expand. */
 class StaticMethodRefAritySpec extends PortSuite:
 
   test("a NILARY static reference becomes a lambda that CALLS the method") {

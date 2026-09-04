@@ -5,26 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{CtorFunnel, OmissionCheck, Pipeline}
 
 /** THE THIRD THROWABLE SHAPE: several roots, several different `super(...)`, and NOT ONE of them
-  * passing its own parameters straight through.
-  *
-  * `CtorFunnelThrowablePaddingSpec` covers the shape where one root IS the widest overload —
-  * `plan0` promotes it and every narrower root pads into its parameters. That nomination is a
-  * PROMOTION and it needs a root to promote. Where no root qualifies, `plan0` nominated NOTHING,
-  * `Plan.none` was the answer, and every root's `super(args)` was lowered to a bare `this()`: the
-  * class compiled, no count moved except an omission nobody read, and every exception the port
-  * threw carried a NULL MESSAGE AND NO CAUSE (`CLAUDE.md` §4.4's own row, shipping).
-  *
-  * The missing piece was a primary to delegate TO. `ENGINE-LIMITS.md` C3: synthesise one at the JDK
-  * throwable's WIDEST overload, and let each root pad into it through exactly the machinery the
-  * promotion already uses. Everything the padding rests on is a JDK fact — the constructor set is
-  * `()`, `(String)`, `(String, Throwable)`, `(Throwable)` and each shorter overload delegates to the
-  * widest with `null` where it takes nothing — which is why the rule may not leave that family:
-  * guessing outside it measured 0 -> 55 compile errors (`ENGINE-LIMITS.md` C3, K5.5).
-  *
-  * Two boundaries are pinned here as hard as the fix itself, because both are ways it could widen
-  * into a guess: the widest overload has to be one a root ACTUALLY CALLED (the engine has no symbol
-  * for a constructor nothing in the program names), and a non-JDK parent gains nothing at all.
-  */
+  * passing its own parameters straight through. */
 class CtorFunnelThrowableSynthesisSpec extends munit.FunSuite:
 
   private val src =

@@ -2,22 +2,7 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** AN F-BOUNDED TYPE APPLIED TO A WILDCARD CANNOT CAPTURE-CONVERT — `ENGINE-LIMITS.md` G31.
-  *
-  * `for (Object part : builder)` over a `Seq<?>` whose declaration is `Seq<S extends Seq<S>>` is
-  * ordinary java: JLS 14.14.2 looks `Iterable<T>` up in the expression's type and iterates at `T`.
-  * Scala's `for` is a `foreach` CALL, the shim's `foreach` is an EXTENSION, and applying one to a
-  * wildcard application means capture conversion — which dotty performs by substituting `Any` for
-  * the F-bounded parameter, so the capture's upper bound is `Seq[Any]` while its own slot asks for
-  * `Seq[CAP]`. `E057`, at an INFERRED type, and no spelling of the wildcard repairs it: the java
-  * form (`Seq<? extends Seq<?>>`) fails identically, measured.
-  *
-  * So the emission is java's own lookup — the iterable expression put at the `java.lang.Iterable`
-  * supertype java itself read, through the same `Tree.Typed` view every other receiver view in this
-  * frontend uses. It is an UPCAST and not a reified question (`ENGINE-LIMITS.md` K18's exclusion):
-  * the value already has that type, so the `checkcast` cannot fail and nothing is asserted that the
-  * program does not already know.
-  */
+/** AN F-BOUNDED TYPE APPLIED TO A WILDCARD CANNOT CAPTURE-CONVERT — `ENGINE-LIMITS.md` G31. */
 class ForEachFBoundReceiverSpec extends PortSuite:
 
   test("a `for` over an F-bounded wildcard receiver iterates at the Iterable supertype java read") {

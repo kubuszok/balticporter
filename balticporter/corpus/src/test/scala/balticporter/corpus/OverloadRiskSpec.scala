@@ -4,12 +4,7 @@ import balticporter.testkit.{Ported, PortSuite}
 import balticporter.tir.*
 import balticporter.tir.OverloadRiskCheck.Issue
 
-/** `JS-C22` and `JS-C23` — java's three-phase overload applicability, counted as a RISK.
-  *
-  * Every test is in both directions, and the ones that matter most are the NEGATIVES: an
-  * over-approximation is only worth having if it declines to report the shapes both languages agree
-  * about, and those are the tests a widening of the rule would break first.
-  */
+/** `JS-C22` and `JS-C23` — java's three-phase overload applicability, counted as a RISK. */
 class OverloadRiskSpec extends PortSuite:
 
   private def report(java: String) =
@@ -147,12 +142,6 @@ class OverloadRiskSpec extends PortSuite:
   }
 
   // -- …AND THE OTHER DIRECTION, which a candidate set rooted at the CALLEE'S OWNER cannot see ----
-  //
-  // The test above happens to work with either root: javac binds `f(1)` to `C.f(int)`, so the
-  // callee's owner IS the receiver's type and climbing to `P` finds the second candidate. Reverse
-  // the two declarations and the walk runs the other way — javac binds the INHERITED `P.f(int)` in
-  // phase 1, and the candidate that spans the boundary is declared BELOW the owner, where an
-  // upward-only climb never looks. That is exactly the `BoxingPhaseSpan` this lane exists for.
 
   test("a candidate declared BELOW the resolved callee's owner is in the set — the receiver's type is the root") {
     val (_, r) = report(
@@ -202,14 +191,7 @@ class OverloadRiskSpec extends PortSuite:
   // case in every library. Claiming a call for a class it is not written in is therefore not a
   // reporting detail: it reads the candidate set out of the wrong type.
 
-  /** the same units with every unqualified `this.m(…)` rewritten to the BARE `Ident` form.
-    *
-    * `rootOf` has exactly one arm that consults the enclosing class — the call with NO receiver —
-    * and SpoonTir almost never builds it, because Spoon materialises an implicit `CtThisAccess` and
-    * the frontend renders that as a `Select`. So the arm is real, documented and reachable (the
-    * `case null` branch of the invocation lowering builds it whenever Spoon leaves the target
-    * unset), and a fixture that only parses java cannot get to it. Rewriting the one node is how
-    * this suite asks the question the arm exists to answer, through the shipped `check`. */
+  /** the same units with every unqualified `this.m(…)` rewritten to the BARE `Ident` form. */
   private def bareIdentCalls(p: Ported): List[Tree.ClassDef] =
     given Program = p.after
     val bare = new Phase:
@@ -228,10 +210,7 @@ class OverloadRiskSpec extends PortSuite:
     // `go()` is `A`'s, where `f` has one candidate — so java had no choice to make and there is
     // nothing to report. Claimed by `Inner` (which extends `A`, so `sameName` climbs to the callee
     // and the guard in `rootOf` passes), the same call reads TWO candidates and reports a boxing
-    // span that does not exist. Bottom-up claiming is what put it there: a nested class closes over
-    // whatever calls are still unclaimed, and a call written EARLIER in the enclosing body is one
-    // of them — so the invariant "the first ClassDef to close is the innermost one containing it"
-    // is false for every sibling pair.
+    // span that does not exist.
     val r = bareReport(
       """public class A {
         |  void f(int a) { }

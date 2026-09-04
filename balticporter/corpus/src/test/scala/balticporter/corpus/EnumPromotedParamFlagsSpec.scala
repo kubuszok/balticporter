@@ -3,30 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 
 /** A PROMOTED ENUM PARAMETER THAT SUPERSEDES A FIELD IS THAT FIELD — its ACCESS LEVEL and its
-  * MUTABILITY included.
-  *
-  * `CtorFunnel.enumSupersededFields` decides that a parameter and a body field are ONE member, on
-  * (name, TYPE), and the emitter then writes the parameter and drops the field. What it wrote was
-  * `var <name>: <T>`, unqualified, whatever java had declared — so `final private int level` shipped
-  * as `enum ParsedOptionStatus(var level: scala.Int)`, and `ParsedOptionStatus.ERROR.level = 0`
-  * compiled and mutated a shared singleton. No instrument here can see that: the port compiles,
-  * every check count is flat, and a write nobody performs is a widening nobody notices
-  * (`ENGINE-LIMITS.md` T11's fourth half).
-  *
-  * ==The three modifiers, and where each comes from==
-  *   - the ACCESS LEVEL is [[balticporter.emit.Visibility]]'s answer FOR THE FIELD SYMBOL, so §8.7's
-  *     mapping and its `WidenedVisibility` residue govern the parameter exactly as they govern the
-  *     field. This rendering invents no widening of its own;
-  *   - a bare `private` is QUALIFIED WITH THE ENUM. Java's `private` reaches the whole top-level
-  *     enclosure (JLS 6.6.1) and an enum CONSTANT's body is inside it, while scala's bare `private`
-  *     on a class parameter is not visible from a `case object` extending that class. Probed both
-  *     ways against scalac 3.8.4: `private val glEnum` is `value glEnum is not a member of object
-  *     F.LINEAR` at a constant body, `private[F] val glEnum` compiles there and in the companion's
-  *     nested types, and `F.NEAREST.glEnum` from outside stays refused;
-  *   - `val` where java wrote `final` AND nothing the promotion left behind writes it — a java final
-  *     field is assignable in the constructor, and a constructor statement that is not the dropped
-  *     self-assignment SURVIVES into the class body, where a scala `val` cannot be its target.
-  */
+  * MUTABILITY included. */
 class EnumPromotedParamFlagsSpec extends PortSuite:
 
   test("a PRIVATE FINAL field's flags reach the parameter that supersedes it") {

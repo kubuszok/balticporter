@@ -2,20 +2,7 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** A JAVA `@interface` AND ITS ELEMENTS — `ENGINE-LIMITS.md` T22.
-  *
-  * The declaration used to emit as `class Tag extends scala.annotation.StaticAnnotation` with
-  * every element gone, and nothing in the pipeline could report it: `omissions` counts a dropped
-  * annotation USAGE and has no row for an annotation TYPE's own members. What moved instead was
-  * `trivia(recovered)` (each accessor's javadoc had no declaration left to sit on) and `srcmap`
-  * (four planned-and-never-written members, `!! UNLOCATABLE`) — two artifacts of the SAME
-  * discarded rendering.
-  *
-  * This file was `AbsorbedProbeSpec`, which PINNED that defect and was written to fail when it was
-  * fixed. It failed; this is the repair, asserted. The corpus's earlier `@interface`s are all
-  * MARKERS, for which the elementless class was the right answer — which is why nothing but a
-  * fixture could see this until a library declared an annotation with elements AND read them back.
-  */
+/** A JAVA `@interface` AND ITS ELEMENTS — `ENGINE-LIMITS.md` T22. */
 class AnnotationTypeSpec extends PortSuite:
 
   test("an @interface's ELEMENTS become the emitted class's parameters, with java's defaults") {
@@ -55,13 +42,6 @@ class AnnotationTypeSpec extends PortSuite:
   test("an EXTERNAL annotation's element keeps its parens — the class file is java's, not this port's") {
     // §4.56: the arm asks PROGRAM OWNERSHIP, never a name and never a package prefix. Scalac reads
     // `java.lang.annotation.Retention` out of a class file, where `value()` is a method.
-    //
-    // MEASURED, so the next reader is not misled about which conjunct this exercises: with
-    // `program.owns` removed the test still passes, because the frontend interns an EXTERNAL symbol
-    // with default flags and `isAnnotation` is therefore false for every class-file annotation.
-    // Ownership is the conjunct that stays right when it is not (a RESOLUTION ROOT's `@interface` is
-    // parsed, carries the flag, and IS emitted — by its own port, with this same rule), and it is
-    // kept for that reason rather than because this fixture can fail without it.
     val p = port(
       "package p;\n" +
       "import java.lang.annotation.Retention;\n" +

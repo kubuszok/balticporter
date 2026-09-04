@@ -6,14 +6,7 @@ import balticporter.transform.NullabilityBoundaryCheck.Issue
 import balticporter.transform.NullabilityTransform
 import balticporter.transform.NullabilityTransform.Target
 
-/** WRAPPER MODE — the retype plus EXPLICIT coercion at every slot, and never an implicit.
-  *
-  * `given Conversion` is a measured dead end (`ENGINE-LIMITS.md` K2: it does not fire through an
-  * overloaded call, and the annotation-heaviest upstream is also the overload-heaviest), so the
-  * seam is attacked at the SLOT — before overload resolution ever runs, with the argument's type
-  * already exactly the formal. The negative half of that claim is asserted here as plainly as the
-  * positive: nothing in the output is a conversion; `.orNull` is now the SLOT spelling (see below).
-  */
+/** WRAPPER MODE — the retype plus EXPLICIT coercion at every slot, and never an implicit. */
 class NullabilityWrapperSpec extends PortSuite:
 
   private val W = "lowlevel.Nullable"
@@ -217,12 +210,7 @@ class NullabilityWrapperSpec extends PortSuite:
     * slot, and the port has to unwrap the `Nullable` under that cast. The unwrap is the OPERAND's
     * business and the cast is untouched — so the node still emits `.asInstanceOf[scala.Int]`, and
     * recording the slot's `long` on it is a type the emitted Scala does not have
-    * (`ENGINE-LIMITS.md` §0). `TestFrameworkTransform.promote` is the reader that pays for it.
-    *
-    * Junit is DECLARED here rather than resolved: `SpoonTir.fromSources` runs `noClasspath` with no
-    * source classpath, so an unresolved `org.junit.Assert` interns with no `MethodType` at all —
-    * and this defect is entirely about the FORMAL the coercion reads. A fixture that could not see
-    * `long` would exercise the no-formal refusal instead and pass whatever the arm does. */
+    * (`ENGINE-LIMITS.md` §0). `TestFrameworkTransform.promote` is the reader that pays for it. */
   private val junitStub =
     """package org.junit;
       |public @interface Test {}
@@ -284,15 +272,7 @@ class NullabilityWrapperSpec extends PortSuite:
   /** A dependent port's `Program` CONTAINS its base's units (`ENGINE-LIMITS.md` D2), and the
     * inherited phase runs over both — so a base member the annotations retype has to be seen as
     * retyped at a call site in the other unit, or the dependent emits a call to a signature that no
-    * longer exists.
-    *
-    * `get(K)` beside `get(K, V)` is the shape that makes the failure LOUD rather than silent, and it
-    * is libGDX's own `ObjectMap`: with the one-argument result wrapped, an un-unwrapped call no
-    * longer conforms to the assignment's type, scalac falls through to the TWO-argument overload,
-    * and the message is `E171 missing argument for parameter defaultValue` — which names neither
-    * null nor the wrapper and reads as an overload bug. Measured once, on gdx-ai's own
-    * `BehaviorTreeParser` (1 error), where the site was a `MethodBodyTransform` body a human wrote:
-    * the mechanical sites in the same port were already correct, which is what this asserts. */
+    * longer exists. */
   private val baseUnit =
     """package base;
       |import java.lang.annotation.*;
@@ -331,12 +311,7 @@ class NullabilityWrapperSpec extends PortSuite:
     * repeat it on an override and routinely does not. Scala has no such freedom: a wrapper retype
     * moves the SIGNATURE, so an override that keeps the upstream spelling is `E038 … a different
     * signature than the overridden declaration` — and at a GENERIC result it is `E007 Found: W[T] /
-    * Required: T` in a body that returns exactly what the parent handed it.
-    *
-    * Both were measured on DEPENDENTS and on nothing else, which is what the shape predicts: a base
-    * carrying such a pair would not compile, so the corpus's bases have none. TextraTypist's
-    * `setParent` ×2 (`E038`, invisible until the port reached 0 typer errors — `CLAUDE.md` §3) and
-    * VisUI's `DragPane#findActor` (`E007`, 8 -> 7). */
+    * Required: T` in a body that returns exactly what the parent handed it. */
   private val overrideChain =
     """package demo;
       |import java.lang.annotation.*;

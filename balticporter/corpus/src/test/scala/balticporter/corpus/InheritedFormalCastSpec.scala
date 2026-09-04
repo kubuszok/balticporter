@@ -4,28 +4,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 
 /** JAVA'S UNCHECKED CONVERSION AT AN *INHERITED* FORMAL — the one place a callee's type variable
-  * really does resolve at the call site.
-  *
-  * `ENGINE-LIMITS.md` G12 is the general rule and it is right: an executable's formal may name the
-  * CALLEE's type variables, which have no meaning where the call is written, so a cast to one
-  * renders a `?T` stub. An INHERITED formal is the exception — the variable belongs to an ANCESTOR
-  * and the `extends` clause says what this class instantiated it as, which is `ParentSubst`'s own
-  * fact in the TIR (`CLAUDE.md` §4.56) and is exact rather than a guess.
-  *
-  * The DIMENSION cell is where this rule meets `ENGINE-LIMITS.md` G26's, and it is a positive now
-  * rather than the refusal it was: at an `H[]...` slot java PACKS a one-dimensional argument into a
-  * fresh `H[][]`, so the cast belongs on the ELEMENT and never on the array — cast at the array it
-  * is a `checkcast [[L…` against a `[L…`, which COMPILES and throws, the one direction §3 forbids.
-  * The pack renders its component through this same lookup, so the two agree by construction.
-  *
-  * Three negatives, each of which the positive would swallow:
-  *
-  *   - a callee the class DECLARES ITSELF. Its type variables are its own and G12's refusal stands;
-  *   - an argument that is not RAW. Java performs no unchecked conversion, so neither may the port;
-  *   - TWO ancestors whose variables share a NAME. The lookup is keyed by (declaring type, name) —
-  *     `ParentSubst`'s identity — because the name-keyed map beside it is the one `inheritedTp`
-  *     measured at 161/142/141 and is switched off for.
-  */
+  * really does resolve at the call site. */
 class InheritedFormalCastSpec extends munit.FunSuite:
 
   private def emitted(src: String): String =
@@ -71,9 +50,7 @@ class InheritedFormalCastSpec extends munit.FunSuite:
     // The one cell where this rule and `ENGINE-LIMITS.md` G26's meet, and the reason the cast alone
     // was refused for a wave: at an `H[]...` slot java PACKS a one-dimensional argument into a fresh
     // `H[][]`, so a cast to the two-dimensional type is a `checkcast [[L…` against a value that is
-    // `[L…` — it COMPILES and throws at run time, which is the one direction §3 forbids. With the
-    // pack shipped, the arity is java's own and the unchecked conversion sits where java performs
-    // it: on the element, at ONE dimension, where the checkcast holds.
+    // `[L…` — it COMPILES and throws at run time, which is the one direction §3 forbids.
     val out  = emitted(single)
     val flat = out.linesIterator.filter(_.contains("super.takeAll")).toList
       .filterNot(_.contains("hs.asInstanceOf[scala.Array[scala.Array"))

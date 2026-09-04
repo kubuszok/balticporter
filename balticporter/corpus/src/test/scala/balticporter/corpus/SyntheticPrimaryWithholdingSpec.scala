@@ -5,31 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 
 /** THE WHOLE-PROGRAM GUARDS AROUND THE SYNTHESIS — the two that were measured and then pinned by
-  * nothing but a lane.
-  *
-  * `CtorFunnel.Plans` decides three things no single class can decide for itself, and each of them
-  * was wrong once in a way that compiles:
-  *
-  *  - **WITHHOLDING** (`ENGINE-LIMITS.md` C1). A paramful primary — synthesised or promoted — is
-  *    withheld where some subclass reaches this class with an argument-free `extends`. `DESIGN.md`
-  *    §8.2 argued a synthesis needs no such guard, since every java constructor survives as a
-  *    `def this` and `extends C` reaches the nilary one. True, and it does not follow: the TRIGGER
-  *    is the SUBCLASS's plan, and a subclass carrying no super arguments emits `extends P` BARE
-  *    even where java wrote `super(args)`. Deleted, libGDX core measured **0 -> 4 compile errors**
-  *    (`E134`, "None of the overloaded alternatives of constructor BatchTiledMapRenderer") and
-  *    omissions 180 -> 196.
-  *  - **`nilaryPlan` MUST NOT OVERWRITE A SYNTHESIS** (C1.5). A synthesised plan has no `primary`
-  *    either, so `primary.isEmpty` claimed every one of them for the nilary promotion — and the
-  *    promotion came back with its escaping body. libGDX core escapes **95 -> 31**, and the port
-  *    compiled at 0 either way.
-  *  - **"is this a synthesis" is `Plan.isSynthesised`** (C1.5 again), never `synthetic.nonEmpty`:
-  *    a class disambiguated by the MARKER ALONE has an EMPTY slot list, and reading the field
-  *    emitted a primary whose parameter list was empty while every secondary wrote
-  *    `this((null: C.Funnel))` against scala's implicit nilary primary.
-  *
-  * Each is a whole-program decision, so each needs a fixture with the SHAPE — one class is never
-  * enough. Every assertion below was verified to fail against its own guard reverted.
-  */
+  * nothing but a lane. */
 class SyntheticPrimaryWithholdingSpec extends munit.FunSuite:
 
   // ---- C1: the withholding fixpoint, on the shape that named it ----

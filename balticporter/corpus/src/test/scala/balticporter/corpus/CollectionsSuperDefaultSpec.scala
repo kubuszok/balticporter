@@ -7,35 +7,7 @@ import balticporter.tir.{Decision, Pipeline, PorterNote, Program, Reason}
 import balticporter.transform.CollectionsTransform
 
 /** A `super.<JDK DEFAULT>` ON A CLASS THE PHASE RE-PARENTED — `ENGINE-LIMITS.md` K29, and
-  * `CLAUDE.md` §1's *an obligation the engine's own translation created*.
-  *
-  * A class that DEFINES a collection inherits `containsAll`/`addAll`/`removeAll`/`retainAll` from
-  * `java.util.AbstractCollection` and calls them through `super`, to delegate the general case its
-  * own fast path does not cover. Emitted `extends scala.collection.mutable.ArrayBuffer`, three of
-  * the four are simply not there and the fourth (`addAll`, from `Growable`) answers `this.type`
-  * where java answered `boolean` — so the phase owes the body back. No manifest key can: the member
-  * `super` named was the JDK's.
-  *
-  * ==The licence is PER MEMBER, and that is the whole of what the negatives are about==
-  * `superIsThis` already tries `super` → `this` and declines here CORRECTLY: the class in front of
-  * us overrides `m`, so `this.m` would recurse into the very body the call sits in. What licenses
-  * this arm is a different statement — the emitted call does not select `m` on `this` at all, it
-  * calls a HELPER reproducing the JDK default's body, and that body dispatches VIRTUALLY. Read off
-  * the JDK's own source, member by member, which is why the engine holds a TABLE and not a rule:
-  * `ArrayList.clone` and `AbstractList.subList` read the receiver's own FIELDS and no helper
-  * standing on `this` can reach them.
-  *
-  * Four negatives, each a different way the substitution would be wrong:
-  *
-  *   - a member NOT in the table — `subList` is the sharp one, because it has the SAME SHAPE as the
-  *     positives (a helper taking the receiver as an argument, so `superPlaced` refuses) and must
-  *     go on refusing;
-  *   - a program-declared ANCESTOR that declares the member — `super.removeAll` then names code this
-  *     port still emits, and the JDK default is not what `super` meant at all;
-  *   - a class the phase did NOT re-parent — nothing was removed, so nothing is owed;
-  *   - a SHIM parent, which is K29's own two-way bind seen from the other side: the shim carries
-  *     java's own member names, so `super.containsAll` still resolves and there is nothing to fix.
-  */
+  * `CLAUDE.md` §1's *an obligation the engine's own translation created*. */
 class CollectionsSuperDefaultSpec extends PortSuite:
 
   /** `Fast` is the positive — a class the mapping re-parents onto `mutable.ArrayBuffer`, calling all

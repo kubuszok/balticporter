@@ -3,38 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 
 /** A LAMBDA AT AN OVERLOADED SLOT — the one shape where leaving a poly expression bare is not the
-  * faithful emission.
-  *
-  * `SpoonTir.polyExpression` says a lambda has no type of its own in EITHER language and takes one
-  * from the slot it fills, so the frontend never casts one — and that rule is exactly right for as
-  * long as the slot is a single formal. Where the callee's name stands for TWO alternatives of the
-  * same arity, scala types the function literal BEFORE it can use an expected type, so no
-  * alternative matches and the error names none of them:
-  *
-  * {{{
-  * // java: two candidates at arity 2, resolved by the ARGUMENT's shape
-  * T tagLine(CharSequence tag, boolean voidElement);
-  * T tagLine(CharSequence tag, Runnable body);
-  *
-  * fa.tagLine("li", () => fa.text("x"))                          // E134 — none of the alternatives
-  * fa.tagLine("li", (() => fa.text("x")): java.lang.Runnable)    // what javac resolved, written down
-  * }}}
-  *
-  * ==an ASCRIPTION, never a CAST==
-  * `polyExpression`'s refusal is about `asInstanceOf`: written as a cast the literal elaborates to a
-  * `Function0` first and the cast then asserts that a `Function0` is a `Runnable`, which throws at
-  * run time. `TirEmitter.polyOperand` renders a `Tree.Typed` over a poly term as `(e: T)` — scala's
-  * own SAM conversion at an expected type — which is why the mint is a `Tree.Typed` and why no
-  * emitter arm had to be added for it.
-  *
-  * ==the negatives are what make it a rule rather than a widening==
-  * `CLAUDE.md` §5: ascribing every lambda would be CORRECT, would move emitted text on every port
-  * that has one, and no count could see it. So the three below pin the conjuncts — an unoverloaded
-  * callee (the shape that sits in the SAME java statement as the positive), alternatives that agree
-  * at the lambda's own index, and a method REFERENCE, which `TirEmitter.samAscribed` already answers
-  * for the forms it renders as a function literal and which renders as a bare qualified NAME in the
-  * static form, where an ascription would APPLY a nilary method.
-  */
+  * faithful emission. */
 class PolyArgOverloadAscriptionSpec extends PortSuite:
 
   /** the positive and its in-statement negative together: `tagLine` is overloaded at arity 2 and

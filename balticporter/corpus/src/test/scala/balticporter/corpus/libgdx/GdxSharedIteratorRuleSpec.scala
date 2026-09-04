@@ -3,16 +3,7 @@ package balticporter.corpus.libgdx
 import balticporter.testkit.PortSuite
 
 /** How a §1(c) rule is TESTED — from the porting repository, with the engine's testkit, on a Java
-  * snippet. The third of the three things [[GdxSharedIteratorRule]] exists to demonstrate.
-  *
-  * Note what is NOT here: no engine internals, no hand-built `Program`, no fixture of our own.
-  * `PortSuite.port` parses, runs the phases and emits; everything else is an ordinary assertion.
-  * A consumer writing its first external phase can copy this file's shape and nothing else.
-  *
-  * And note the NEGATIVE tests. A check that has never reported is not known to work (CLAUDE.md
-  * §5), and this one currently finds zero hazards in `gdx/src` — so the only evidence that it can
-  * find one at all is a snippet where it must.
-  */
+  * snippet. The third of the three things [[GdxSharedIteratorRule]] exists to demonstrate. */
 class GdxSharedIteratorRuleSpec extends PortSuite:
 
   /** The shape of libGDX's own `Array`, reduced to what the rule reads: the FQN and an

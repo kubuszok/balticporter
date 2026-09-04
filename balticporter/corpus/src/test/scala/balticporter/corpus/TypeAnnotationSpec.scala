@@ -6,14 +6,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.PortSuite
 
 /** A TYPE's argument-bearing annotation, from the harvest to the emitted text — `ENGINE-LIMITS.md`
-  * T16.
-  *
-  * The frontend half is pinned in `SpoonTirSpec`; what is here is the two things only an EMISSION
-  * spec can see. A framework that looks a serializer up on an interface needs the annotation to
-  * reach the class file, so "the symbol carries it" is half an answer; and the element NAME is a
-  * java identifier being written into a Scala source, which is where the first one the engine ever
-  * carried turned out to be spelled `using`.
-  */
+  * T16. */
 class TypeAnnotationSpec extends PortSuite:
 
   private val src =

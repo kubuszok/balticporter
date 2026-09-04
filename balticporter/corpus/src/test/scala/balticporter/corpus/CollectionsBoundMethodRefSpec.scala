@@ -3,28 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** A BOUND METHOD REFERENCE AT A REWRITTEN MEMBER — `ENGINE-LIMITS.md` K23's named row, built.
-  *
-  * K23 recorded this rather than closing it, on a count: *"measured at one site in the corpus"*. Its
-  * comment also carried the reason the row had been invisible — `lowerMethodRef` lowers the UNBOUND
-  * form and says a bound one *"is the `Apply` case one node out"*, which is true of a CALL and false
-  * of a REFERENCE. `map::get` emits as an eta-expanded `map.get`, a `Tree.Select` that no
-  * `Apply`-keyed arm ever sees, so `Map.get`'s `getOrElse(null)` rewrite never happened and the
-  * reference handed a `String => Option[V]` to a slot that wanted java's `V`.
-  *
-  * ==the receiver is bound ONCE, and that is not tidiness==
-  * Java evaluates `expr` when the reference is CREATED and never again (JLS 15.13.3); a lambda
-  * `(a0$) => expr.m(a0$)` evaluates it per INVOCATION. For a field read or a call that is a
-  * different program, and it is a `CLAUDE.md` §4.4-shaped difference — valid scala meaning something
-  * else, with no compile error and no moved count to report it. So the lowering is
-  * `{ val recv$ = expr; (a0$) => … }`, which is java's own evaluation order written down.
-  * `Tree.This` skips the binding because it is not a variable and no assignment can move it.
-  *
-  * ==the arity is JAVA'S, off the node==
-  * `Tree.MethodRef.referent` — `G27`'s field, and the same one the emitter's own expansion reads.
-  * Never off the symbol: an external member is interned with no `MethodType` at all and would read
-  * as taking no arguments, which is §4.6's fabricated fact with the default baked into the data.
-  */
+/** A BOUND METHOD REFERENCE AT A REWRITTEN MEMBER — `ENGINE-LIMITS.md` K23's named row, built. */
 class CollectionsBoundMethodRefSpec extends PortSuite:
 
   test("a BOUND reference at a rewritten map member lowers to the lambda, receiver bound once") {

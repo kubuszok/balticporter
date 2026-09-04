@@ -4,15 +4,7 @@ import balticporter.testkit.PortSuite
 import balticporter.transform.{CollectionClosureCheck, CollectionsTransform}
 
 /** The CLOSURE property of `CollectionsTransform.typeMap`: if a type maps, everything the JDK
-  * declares as its subtype must map or be REPORTED.
-  *
-  * The first test is the PROBE, and it is kept as the first test on purpose: it shows what the
-  * engine does today with an unmapped JDK subtype, which is nothing at all — the two sides of an
-  * ordinary java assignment come out in different type families, no count moves, and the only
-  * evidence is a compile error whose text names neither the mapping nor the phase. The rest of the
-  * file is the check turning that into a classified finding, and the negative test asserting that
-  * a fully-mapped program reports ZERO (a check that cannot report zero is not a measurement).
-  */
+  * declares as its subtype must map or be REPORTED. */
 class CollectionClosureCheckSpec extends PortSuite:
 
   // -------------------------------------------------------------------------------------------

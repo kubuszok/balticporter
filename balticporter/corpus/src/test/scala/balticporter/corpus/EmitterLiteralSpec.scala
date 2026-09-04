@@ -6,20 +6,7 @@ import balticporter.testkit.PortSuite
   * Scala asserted. Both are CLAUDE.md §1(a) facts about the two languages' lexers, both were found
   * by porting anim8-gdx, and neither is visible to any check: the emitted file simply does not
   * parse, so the whole failure arrives as a wall of syntax errors attributed to whatever the lexer
-  * was reading when it gave up.
-  *
-  *   - **a literal's VALUE has to be re-escaped.** `Constant.StringC` holds decoded text, so a
-  *     control character, a newline or a lone surrogate has to be put back in a form Scala accepts.
-  *     anim8's `ConstantData` holds four ISO-8859-1 literals (47,935 + 3 × 6,390 characters) full of
-  *     both: **1,334 errors** from one file, because one unescaped newline ends the literal and
-  *     every byte after it is read as source.
-  *   - **a prefix operator and its operand are two tokens.** Scala's lexer takes a maximal run of
-  *     operator characters as one identifier, so `-` against a literal that already renders `-…`
-  *     gives `--`. Java negating a hex literal whose `long` value is negative is routine in
-  *     hash-mixing code (`x * -0xC13FA9A902A6328FL`): **48 errors** in one method.
-  *
-  * No phase is involved: `port(java)` with no phases is the emitter's own identity fixture.
-  */
+  * was reading when it gave up. */
 class EmitterLiteralSpec extends PortSuite:
 
   // -------------------------------------------------------------------------------------------

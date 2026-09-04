@@ -3,25 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** THE SEAM WITH NO HEAD TO COERCE AGAINST — `ENGINE-LIMITS.md` K26's first blindness, at the fix.
-  *
-  * `typeMap` sends `java.util.Collection` to a STANDALONE shim (`CLAUDE.md` §4.5 says it must) and
-  * every java SUBTYPE of it to a `scala.collection.*`, so java's `ArrayList <: Collection` has no
-  * image on the scala side. Where BOTH ends of that broken edge meet inside ONE argument list,
-  * bound to ONE type variable, there is no formal HEAD for the factory table to match: the value
-  * slot's formal is a bare `T`, so every arm of `coerce` declines and `collection-boundary` — which
-  * compares two head FQNs — correctly reads zero.
-  *
-  * Java's own resolution supplies the head, and its ASYMMETRY is the whole rule: `Key<T>` is
-  * INVARIANT, so the key argument fixes `T` exactly (JLS 18.2.1) and the value is converted TO it,
-  * while the bare occurrence only bounds `T` from below and decides nothing. A PARAMETERISED formal
-  * binds; a bare one is the slot being answered.
-  *
-  * WHICH variables the call may bind is OWNERSHIP and never a name (§4.56 at its sharpest — a
-  * class's `<V>` and a method's `<V>` are one string), which is the same test
-  * `CollectionInternalCheck.typeVariableSplit` uses to COUNT this residue. That is deliberate: the
-  * lane and the pass that drains it may not disagree about which slot is which.
-  */
+/** THE SEAM WITH NO HEAD TO COERCE AGAINST — `ENGINE-LIMITS.md` K26's first blindness, at the fix. */
 class CollectionsInferenceSiteSpec extends PortSuite:
 
   private val src =

@@ -7,33 +7,7 @@ import balticporter.runner.PortRun
 import balticporter.tir.{Decision, DecisionLog, Pipeline}
 
 /** EMISSION IS NOT A PURE FUNCTION OF THE UNIT, and the action cache stored only half of what it
-  * produces.
-  *
-  * `Translated.sourceOf` memoises emitted TEXT through an [[ActionCache]], on the stated argument
-  * that the text is a pure function of the unit, its dependencies' signatures and the engine. The
-  * text is. Rendering also produces two things the text cannot carry:
-  *
-  *   - `Decision`s taken AT EMISSION — `WidenedSeal`, `ForcedClassInit`, preview's `Unrenderable` —
-  *     which travel out through `TirEmitter.emissionDecisions` and into `decisions.tsv`;
-  *   - the NOTE RECORDS `NoteCoverageCheck` joins the decisions against.
-  *
-  * A cache HIT returns the text without rendering, so both vanish — while the cached text still
-  * CARRIES the porter note, because the note is characters in the file. That is `CLAUDE.md` §4.575's
-  * exact defect (a note in the code with no decision behind it), and it is invisible to the check
-  * built for it: `NoteCoverageCheck` compares the run's decisions against what the EMITTER recorded
-  * printing, and on a hit both of those derive from the rendering that did not happen. The compile
-  * is green, every count is flat, and `decisions.tsv` is one row short.
-  *
-  * The fix is a refusal rather than a replay, and the reason is identity: a `Decision` and a
-  * `PorterNote.Printed` are keyed on a `SymId`, which is interning order and dies with the run, so a
-  * record written by one run and replayed by another would join against the wrong symbols — and
-  * re-resolving it by name is the join `NoteCoverageCheck`'s own doc calls empty on exactly the
-  * decisions it exists for. A unit whose rendering recorded either is therefore never STORED, so no
-  * such unit can ever be hit.
-  *
-  * Latent today — no port in this corpus sets `cache` — and `cache` is a documented `PortConfig`
-  * key, so the first port to set one is the first to lose rows.
-  */
+  * produces. */
 class ActionCacheSideEffectSpec extends munit.FunSuite:
 
   /** a java `sealed` hierarchy whose permitted subtype lands in ANOTHER emitted file: scala's

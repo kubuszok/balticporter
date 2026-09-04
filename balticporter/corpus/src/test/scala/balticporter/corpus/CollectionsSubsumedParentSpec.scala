@@ -6,34 +6,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.{Decision, Pipeline, PorterNote, Reason}
 import balticporter.transform.CollectionsTransform
 
-/** A MINTED PARENT ANOTHER MINTED PARENT SUBSUMES is dropped — `ENGINE-LIMITS.md` K28.1.
-  *
-  * ==The difference this is licensed by==
-  * Java's `Map` and `Iterable` are independent interfaces and a class implements BOTH, relating them
-  * at ONE MEMBER spelled two ways: `Map` has `entrySet().iterator()`, `Iterable` has `iterator()`,
-  * and the class writes the second. Mapped onto `scala.collection.mutable.Map` AND onto the
-  * `JavaIterable` shim, the emitted class declares `iterator(): JavaIterator[…]` under a parent
-  * declaring `iterator: Iterator[…]` — one name at two arities, which scala's single namespace
-  * cannot hold. `CLAUDE.md` §4.5's sentence arriving at a MINTING rather than at a shim's design: no
-  * repair at the member helps, because the conflict is in the parents.
-  *
-  * ==Why the NEGATIVES are the whole of the difficulty==
-  * The claim a dropped parent makes is *the surviving target already carries this relation*, and it
-  * is wrong in two directions that no compile of THIS fixture would show:
-  *
-  *   - a shim the target does NOT subsume. `mutable.Buffer` is not a `JavaCollection` and no scala
-  *     collection is (that is what a STANDALONE target means), so dropping that clause is an
-  *     immediate `Not Found` at fourteen members. `SubsumesShim` has exactly one shim on its
-  *     right-hand side for that reason;
-  *   - a shim the target subsumes at a DIFFERENT ELEMENT. `implements Map<K,V>, Iterable<String>` is
-  *     ordinary java — java's `Map` declares no `iterator()` at all, so nothing forces the element —
-  *     and dropping the clause there would silently change what `for (x <- xs)` yields, with a green
-  *     compile and no count moving anywhere. That is the direction with NO instrument, which is why
-  *     the element agreement is asked rather than assumed.
-  *
-  * The port that motivated it is measured where the drop actually fires: three classes, 25 member
-  * digests, `ENGINE-LIMITS.md` K28.1.
-  */
+/** A MINTED PARENT ANOTHER MINTED PARENT SUBSUMES is dropped — `ENGINE-LIMITS.md` K28.1. */
 class CollectionsSubsumedParentSpec extends PortSuite:
 
   private val src =

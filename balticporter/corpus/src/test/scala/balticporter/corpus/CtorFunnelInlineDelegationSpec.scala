@@ -6,23 +6,7 @@ import balticporter.tir.{OmissionCheck, Pipeline}
 
 /** When a subclass's roots call DIFFERENT parent constructors that all delegate to the same parent
   * ROOT, `CtorFunnel.resolvedThroughParent` inlines the delegation chain to synthesise a primary
-  * at the parent root's parameters.
-  *
-  * Three cases, each of which was wrong in a different way before it was written:
-  *
-  *   (a) PURE delegation — the parent secondary's body is ONLY the `this(args)` call, nothing after
-  *       it. The inlining is exact and nothing is lost.
-  *
-  *   (b) Delegation WITH a replayable post-body — the parent secondary has statements after its
-  *       `this(args)` (e.g., `this.textureDescription.texture = texture`). The inlining resolves
-  *       the super args AND the post-body is replayed into the subclass's secondary, after the
-  *       `this(...)` delegation. Without the replay, the post-body is silently dropped — a
-  *       behaviour loss at 0 compile errors (CLAUDE.md §3).
-  *
-  *   (c) Delegation with a NON-REPLAYABLE post-body — the post-body contains `super.m()` or
-  *       `return`, which dispatch wrongly or leave the wrong frame in a subclass. The inlining
-  *       is REFUSED and the synthesis falls back (E134, loud).
-  */
+  * at the parent root's parameters. */
 class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
 
   // ---- (a) Pure delegation — no post-body ----

@@ -7,24 +7,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.{Decision, Pipeline, PorterNote, Program, Reason, RuleScope}
 import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform}
 
-/** WHERE `CollectionsTransform` applies — its [[RuleScope]], in both directions.
-  *
-  * Four things are asserted here and nowhere else, in the order they matter:
-  *
-  *   1. the DEFAULT is a no-op — byte-for-byte the same emitted Scala as the phase produced before
-  *      it took a scope at all. That is §1(b)'s requirement stated as a test rather than as prose;
-  *      the measure lanes assert the same property over 600 files and this asserts it in a second.
-  *   2. an excluded declaration KEEPS its JDK type, and the separator cut holds in the exclusion
-  *      direction too — `demo.Bridge` must not carry `demo.BridgeHelper` out with it (§4.56).
-  *   3. `Only` PROPAGATES: naming a field brings its getter, because a signature that moves without
-  *      its call sites is a compile error one call away.
-  *   4. every seam the scope creates is either BRIDGED or REPORTED. This is the one that makes the
-  *      knob safe to ship. The CONSUMER direction is bridged — a retyped `Buffer` reaching a
-  *      held-back `java.util.List` slot goes through `JavaCollections.toJava`, a live view — and
-  *      the PRODUCER direction is not, because a value the held-back declaration hands back arrives
-  *      already typed as java's. A scope whose remaining boundaries were silent would be a feature
-  *      for emitting code that does not compile, with nothing to say why.
-  */
+/** WHERE `CollectionsTransform` applies — its [[RuleScope]], in both directions. */
 class CollectionsScopeSpec extends PortSuite:
 
   private val src =
@@ -187,8 +170,7 @@ class CollectionsScopeSpec extends PortSuite:
     // than merely under-counting: `b.raw`/`b.m` are excluded, so they stay `java.util.List` /
     // `java.util.Map` — but their reference nodes were remapped by the position-blind
     // `transformType`, and a rewrite keyed on the node's type therefore fired `++=` and
-    // `getOrElse` against JDK receivers that have neither. Two compile errors produced BY the
-    // scope that exists to protect those declarations.
+    // `getOrElse` against JDK receivers that have neither.
     val (_, _, out) = ported(RuleScope.Everywhere(Set("demo.Bridge")), callSrc)
     assert(clue(out).contains("b.raw.addAll("), "java's method, against the JDK type it kept")
     assert(out.contains("""b.m.get("k")"""), "…and java's `Map.get`, not scala's `getOrElse`")
@@ -202,7 +184,6 @@ class CollectionsScopeSpec extends PortSuite:
     // `HashMap` translate. That fallback would rewrite a scoped-out receiver too, and for the worst
     // possible reason: `b.raw.addAll(mine)` resolves to `java.util.List#addAll` whatever the scope
     // said, so the fallback alone re-emits exactly the broken `++=` the test above pins as absent.
-    // Suppressed on `actualOf`'s scoped flag, which reads `false` for every port that sets no scope.
     val (_, _, out) = ported(RuleScope.Everywhere(Set("demo.Bridge")), callSrc)
     assert(clue(out).contains("b.raw.addAll("))
     assert(!out.contains("b.raw ++="), "the declaring-type fallback must stop at a scoped-out receiver")
@@ -212,10 +193,7 @@ class CollectionsScopeSpec extends PortSuite:
     // Refusing the rewrite is only half of §1(b)'s obligation: `Client.push` still hands its own
     // `Buffer` to the `java.util.List` slot `b.raw.addAll` kept. That USED to be uncloseable and
     // counted, on the reasoning that a `mutable.Buffer` is not a `java.util.List` — which is true
-    // of the TYPE and false of the value, because `asJava` is a live view in both directions. The
-    // formal became readable when the frontend started interning external members with their
-    // `MethodType` (`ENGINE-LIMITS.md` K15), and §1(b) is explicit about the order: where a
-    // coercion exists, insert it; only where none can, refuse and report.
+    // of the TYPE and false of the value, because `asJava` is a live view in both directions.
     val (ph, after, out) = ported(RuleScope.Everywhere(Set("demo.Bridge")), callSrc)
     assert(clue(out).contains("b.raw.addAll(balticporter.runtime.JavaCollections.toJava(mine))"))
     assertEquals(ph.boundary(after).count(_.issue == CollectionBoundaryCheck.Issue.ScopedOut), 0,

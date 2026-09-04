@@ -6,14 +6,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 import balticporter.transform.MethodBodyTransform
 
-/** The body-substitution seam: keep the class mechanically translated, replace named method BODIES.
-  *
-  * Every assertion here is a property the seam is only useful if it has — the signature surviving
-  * untouched is what keeps call sites type-checking, and the reporting of a key that matched
-  * nothing is what stops a typo from silently leaving the original body in place (CLAUDE.md §3: a
-  * check reporting zero is only as good as its coverage, so the misses are tested, not just the
-  * hits).
-  */
+/** The body-substitution seam: keep the class mechanically translated, replace named method BODIES. */
 class MethodBodyTransformSpec extends munit.FunSuite:
 
   private val src =
@@ -119,11 +112,6 @@ class MethodBodyTransformSpec extends munit.FunSuite:
     // A `static { … }` block is where a library puts the one thing it does reflectively, or the one
     // branch that reaches a backend the port does not have — so it is exactly a body a port needs
     // to replace, and it is not a `def` in the emitted Scala (it renders as `locally { … }`).
-    //
-    // The second assertion is the one that found a real gap: the emitter's init-block arm rendered
-    // the replaced body with NO `declNotes` call, so the decision shipped with no note beside the
-    // code and `NoteCoverageCheck` failed the run for it. Nothing else can see that — the output
-    // compiles perfectly either way and no other count moves.
     val (phase, out, printed) =
       emitTraced(withClinit, Map("demo.Boot#<clinit>" -> """{ demo.Boot.mode = "default" }"""))
     assertEquals(phase.substituted, List("demo.Boot#<clinit>"))

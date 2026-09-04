@@ -2,23 +2,7 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** A RECEIVER IS AN OPERAND, and `.m` binds tighter than every control-flow expression.
-  *
-  * `(c ? a : b).toString()` is ordinary java. Rendered as `if (c) a else b.toString()` scala parses
-  * it as `if (c) a else (b.toString())` — the call moved INTO one branch. That is `CLAUDE.md` §4.4's
-  * shape at the emitter rather than at a statement: where the two branches have different types it
-  * is a type error attributed to the wrong thing, and where they do not it COMPILES and calls the
-  * method on one branch only.
-  *
-  * `TirEmitter.operand` has always known which terms need parenthesising as an operand — an
-  * operator application and a control-flow expression — and three receiver positions rendered their
-  * qualifier with `term` instead: a `Select`'s, an `InstanceOf`'s, an `ArrayLength`'s and an
-  * `ArrayAccess`'s. `Tree.Typed` and `Tree.Spread` already went through `operand`, which is why the
-  * rule was half-applied rather than absent.
-  *
-  * Found by porting a test suite, not by compiling a library (`InsertionTest`'s
-  * `(nodes.length >= 2 ? nodes[1].render(c) : nodes[0].render(c)).toString()`).
-  */
+/** A RECEIVER IS AN OPERAND, and `.m` binds tighter than every control-flow expression. */
 class EmitterReceiverParensSpec extends PortSuite:
 
   private val src =

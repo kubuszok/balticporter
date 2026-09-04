@@ -3,25 +3,7 @@ package balticporter.corpus
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 
-/** An all-static Java class is still a TYPE — `object` is a value, and no value is a type.
-  *
-  * The emitter collapses a class whose every member is `static` to a bare `object`, which is right
-  * for a constant holder nobody does anything else with. It is guarded on nobody EXTENDING it (you
-  * cannot extend an object) and nobody INSTANTIATING it (you cannot `new` one); each guard was
-  * added after a library broke on the missing one, the second costing Ashley 26 errors from a
-  * single empty `private static class Dummy { }`.
-  *
-  * The third face has neither `extends` nor `new`: a bare TYPE POSITION. `KHRMaterialsUnlit.class`
-  * as a `Class<T>` argument, and `T get(Class<T>, String)` returning at `T = KHRMaterialsUnlit`, is
-  * ordinary Java over a class with nothing but a `static final String` in it. libGDX core has 31
-  * all-static classes and names none of them as a type, which is why five ports did not see it; a
-  * library that CONSUMES another's constant holders does, and gdx-gltf paid 5 errors from one
-  * eight-line file.
-  *
-  * Both directions are asserted, because the collapse is worth keeping: a constant holder nothing
-  * names as a type must STILL become an `object`, or this fix would have de-collapsed 31 libGDX
-  * types for nothing.
-  */
+/** An all-static Java class is still a TYPE — `object` is a value, and no value is a type. */
 class AllStaticClassAsTypeSpec extends munit.FunSuite:
 
   private def emit(src: String): String = new TirEmitter(SpoonTir.fromSource(src)).emit

@@ -7,20 +7,7 @@ import balticporter.transform.PortMapTransform
 
 import java.nio.file.{Files, Path}
 
-/** Mechanical call migration for a DEPENDENT, from the base's published map.
-  *
-  * The acceptance case is the one `DESIGN.md` §5 names: an entity-component library's
-  * `ImmutableArray.toArray(Class)` is a one-line forwarder to the collection library's
-  * `Array.toArray(Class)`, which the base drops because it is reflective. Today that surfaces as
-  * `RewriteTrace`'s orphaned-call finding AFTER emission, saying only that a member has no
-  * declaration. Against a published map it is a lookup, answerable before translation, and the
-  * message names the module that dropped it.
-  *
-  * The shapes below are the real ones — the forwarder's body, the base's two `toArray` overloads,
-  * the base's own manifest key — and where the base's map has been published in this checkout the
-  * test reads THAT file rather than a fabricated one, so the artifact and the consumer are pinned
-  * against each other and not merely against a shared assumption.
-  */
+/** Mechanical call migration for a DEPENDENT, from the base's published map. */
 class PortMapTransformSpec extends munit.FunSuite:
 
   // -------------------------------------------------------------------------
@@ -136,13 +123,7 @@ class PortMapTransformSpec extends munit.FunSuite:
   // an ENGINE REFUSAL is a `Dropped` MEMBER row, not an absence from `secondaries`
   // -------------------------------------------------------------------------
 
-  /** A base whose nilary constructor `ENGINE-LIMITS.md` C11 refuses, and a dependent that calls it.
-    *
-    * `Font()` delegates WITH ARGUMENTS in front of a class whose primary is scala's own implicit
-    * nilary one, so it cannot be emitted; `new Font()` in the port therefore builds an object java
-    * could not build (§4.4 — it compiles and means something else). The base published that fact only
-    * as an ABSENCE from `secondaries`, which is indistinguishable from a class that never had a
-    * second constructor: `primary=() primaryKind=not-funnelled` either way. */
+  /** A base whose nilary constructor `ENGINE-LIMITS.md` C11 refuses, and a dependent that calls it. */
   private val refusedBase = Map(
     "p/Font.java" ->
       """package p;

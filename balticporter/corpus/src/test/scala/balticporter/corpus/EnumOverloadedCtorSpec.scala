@@ -6,38 +6,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.{OmissionCheck, Pipeline}
 
 /** A java enum's primary is its ROOT constructor, not the first one written (`CLAUDE.md` §4.4's
-  * `super(args)` row read at an enum body).
-  *
-  * ==The shape and the defect==
-  * A java enum's primary IS java's constructor, because every CONSTANT passes its arguments to it
-  * and no constant can delegate — true of the `case object` this shipped as and of the scala 3
-  * `enum` case it became (`ENGINE-LIMITS.md` T21). The emitter took
-  * `ctors.head` — the first in TREE ORDER — which is exact for the single-constructor enum every
-  * corpus library had, and wrong the moment there are two:
-  *
-  * {{{
-  *   enum Level { HIGH(3), LOW;  final int bits;
-  *                Level()        { this(1); }        // written FIRST
-  *                Level(int b)   { this.bits = b; } }
-  * }}}
-  *
-  * The head is the DELEGATING overload, so the emitted class got an EMPTY primary and both bodies
-  * were dropped. Half of that is loud — `case object HIGH extends Level(3)` is `too many arguments`
-  * — and half is silent: `LOW` took the field's declared default `0` where java ran `this(1)`,
-  * which compiles, moves no count and is `CLAUDE.md` §4.4's shape exactly.
-  *
-  * ==What the fix is, and what it deliberately is not==
-  * The root becomes the primary and its parameters the class's; a constant that named a DELEGATING
-  * overload is emitted with that delegation's arguments, which is what java ran. It is NOT a
-  * resolver: which overload a constant named is read off the VALUE-parameter ARITY and refused
-  * where two share one, because java's three-phase resolution has no scala counterpart and is not
-  * re-implemented (`ENGINE-LIMITS.md` T17).
-  *
-  * ==Every refusal is COUNTED, which is the half that was missing entirely==
-  * `ctors.head` was not a refusal, it was a wrong answer with no row anywhere.
-  * `OmissionCheck.overloadedEnumCtors` reads the same function the emitter renders from, so it can
-  * neither report a site the emitter handled nor miss one it did not.
-  */
+  * `super(args)` row read at an enum body). */
 class EnumOverloadedCtorSpec extends PortSuite:
 
   private def emit(src: String) =

@@ -6,14 +6,7 @@ import balticporter.tir.{Decision, Pipeline, Reason, RuleScope}
 import balticporter.transform.*
 
 /** globals → context, at the MECHANISM level: the straight-line closure the predecessor pinned, kept
-  * as this replacement's regression floor, plus the two things the replacement REVERSED.
-  *
-  * The predecessor's spec asserted a named `ctx` parameter and a `given ConfigCtx: Config = new
-  * Config` in the companion. Both are gone on purpose (DESIGN.md §8.4): a named context parameter
-  * shadows an emitted root package, and an ambient given makes every seam silent. What stays true is
-  * the shape that made the mechanism worth having — a method that reads the holder is threaded, its
-  * caller is threaded, and the CALL SITE does not change at all.
-  */
+  * as this replacement's regression floor, plus the two things the replacement REVERSED. */
 class GlobalsToImplicitsTransformSpec extends munit.FunSuite:
 
   private val src =

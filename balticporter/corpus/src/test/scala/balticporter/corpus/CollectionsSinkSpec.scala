@@ -7,31 +7,7 @@ import balticporter.tir.{Decision, DecisionLog, Pipeline, Program}
 import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform}
 
 /** THE OTHER END OF THE CARRIER'S CALL — a value this phase retyped, handed to external code that
-  * reads its RUNTIME REPRESENTATION (`ENGINE-LIMITS.md` K21 face 1).
-  *
-  * `CollectionsCarrierSpec` is the third party reading the class file's TYPE ARGUMENTS. This is the
-  * same third party reading the OBJECT, on the same call, and it is the harder half to see: the
-  * formal is `java.lang.Object`, so the port's `mutable.Map` CONFORMS — no compile error, no slot
-  * whose sides disagree, no coercion site — and the difference is entirely in what the callee then
-  * does with the value it was handed. Measured as a serialiser emitting
-  * `{"scala$collection$mutable$HashMap$$table":[…]}` where java emitted the map's entries.
-  *
-  * The fixtures use `java.lang.StringBuilder` as the sink. It is a real external type whose formals
-  * a frontend can read with nothing on the classpath, and `append(Object)` is exactly the shape the
-  * measured case has — a `java.lang.Object` parameter whose callee decides what to do from the
-  * value's class. Nothing about the mechanism is JDK-specific; a port names a serialiser.
-  *
-  * What is asserted:
-  *
-  *   1. a declared sink's `Object` argument is bridged, whether the ARGUMENT's static type is a
-  *      retyped collection or `Object` (the second is the measured case and the one with no static
-  *      evidence at all);
-  *   2. a formal that is NOT opaque is left alone — the bridge is about the slot, not the callee;
-  *   3. an UNDECLARED sink bridges nothing (an empty set is the no-op) and is COUNTED instead, once
-  *      per callee, so a port can read its candidates off the boundary report;
-  *   4. an argument the phase can prove it never touched is neither bridged nor counted;
-  *   5. the bridge is RECORDED per declaration, with the manifest entry verbatim.
-  */
+  * reads its RUNTIME REPRESENTATION (`ENGINE-LIMITS.md` K21 face 1). */
 class CollectionsSinkSpec extends PortSuite:
 
   private val Sink = "java.lang.StringBuilder"
@@ -148,8 +124,7 @@ class CollectionsSinkSpec extends PortSuite:
     // filter then reads as if it were the whole population. Keep ONE origin per callee across the
     // whole program — base units included — and `boundary(units)` drops the row whenever the
     // surviving origin is in a file this module does not emit: the dependent has the seam, has no
-    // row, and nothing anywhere says so. `Base.java` sorts before `Dep.java`, so the base wins the
-    // minimum and the shape is exactly the one a dependent port has.
+    // row, and nothing anywhere says so. `Base.java` sorts before `Dep.
     val ph = new CollectionsTransform(reflectiveSinks = Set.empty)
     val (after, _) = Pipeline.runTraced(SpoonTir.fromSources(List(
       "Base.java" ->

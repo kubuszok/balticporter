@@ -6,33 +6,7 @@ import balticporter.tir.{Decision, Pipeline}
 import balticporter.transform.TestFrameworkTransform
 
 /** JUnit 4 CONSTRUCTS A FRESH TEST OBJECT PER `@Test`; MUnit runs one suite instance
-  * (`ENGINE-LIMITS.md` X4, `CLAUDE.md` §4.4).
-  *
-  * Every cell here is a §4.4 defect in the strict sense — the port compiles either way, no check
-  * count moves, and only RUNNING the suite can tell the two apart — so each is asserted twice where
-  * it can be: once against the emitted Scala, and once BEHAVIOURALLY, by running the shape the
-  * transform emits and comparing it against what a real `junit 4.13` run produced for the same java.
-  *
-  * The oracle is not the JLS read from memory. Each ordering claim below was probed against junit:
-  *
-  * {{{
-  * @BeforeClass
-  * fieldA-init / init-block / fieldB-init   <- JLS 12.5 step 4, ONE sequence, textual order
-  * ctor-body                                <- step 5
-  * @Before
-  * t1 mutated-was=0 sharedStatic-was=0      <- an un-initialised field is back at the DEFAULT
-  * @After
-  * fieldA-init / init-block / fieldB-init   <- and all of it again, for the second test
-  * ctor-body
-  * @Before
-  * t2 mutated-was=0 sharedStatic-was=1      <- but a `static` field is SHARED
-  * }}}
-  *
-  * …and, for a hierarchy, `Base.field-init / Base.ctor sees sub=null / Sub.field-init / Sub.ctor`
-  * on BOTH tests — the superclass constructor reads the subclass field at its DEFAULT even on the
-  * second construction, after the first test assigned it. That is the whole argument for zeroing
-  * before delegating upward rather than on the way down.
-  */
+  * (`ENGINE-LIMITS.md` X4, `CLAUDE.md` §4.4). */
 class TestFrameworkFreshInstanceSpec extends munit.FunSuite:
 
   private def emit(java: String): (String, TestFrameworkTransform) =

@@ -80,16 +80,13 @@ class CollectionsTransformSpec extends PortSuite:
   // A CAST across the shim boundary. Both halves of one rule, and they must be tested together:
   // the phase may drop a cast ONLY when it has itself retyped the source out of the shim family.
   // Deciding that from the source type's NAME (`fullName.startsWith("java.")`) swept up
-  // `java.lang.Object` and deleted a downcast that is correct — CLAUDE.md §4.56, met in a phase
-  // that is not a renamer.
-  // ---------------------------------------------------------------------------------------------
+  // `java.lang.Object` and deleted a downcast that is correct — CLAUDE.md §4.
 
   // ---------------------------------------------------------------------------------------------
   // `List.remove` — java's TWO one-argument overloads, which do opposite things. Scala's `Buffer`
   // has only the index one, and `Integer2int` makes the by-VALUE call compile as index removal
   // (CLAUDE.md §4.4: valid scala meaning something else, no count moved). Verified against a real
   // run: `[10, 11, 12].remove(Integer.valueOf(1))` removes nothing in java and removed `11` here.
-  // ---------------------------------------------------------------------------------------------
 
   private val removes =
     """package demo;
@@ -133,7 +130,6 @@ class CollectionsTransformSpec extends PortSuite:
   // WRITTEN type rather than its retyped kind" and DISPROVED — see `CollectionsTransform.collapsed`
   // for the argument. These pin the two halves of it so a change in the frontend's member
   // resolution reports here instead of the chain silently ceasing to translate.
-  // ---------------------------------------------------------------------------------------------
 
   /** every spelling a `stream()` receiver can have, including a program class of its own. */
   private val streamReceivers =
@@ -244,7 +240,6 @@ class CollectionsTransformSpec extends PortSuite:
   // four slot kinds (argument, declaration, assignment, RETURN) crossed with the source kinds
   // (Seq, Set, Map), plus the two cells that are deliberately REFUSED. The doc on `coerce` used to
   // claim one seam covered every slot and two of the six cells were open.
-  // ---------------------------------------------------------------------------------------------
 
   private val slots =
     """package demo;
@@ -321,9 +316,7 @@ class CollectionsTransformSpec extends PortSuite:
     // `Kind.Set` source and the two arms that serve a set serve them. This test used to pin the
     // opposite for the second one — "there is no `Collection` view of a map" — and that sentence was
     // about the MAP, which really is not a collection; the VIEW is, and it reproduces java's own
-    // `entrySet().remove(e)` (remove only where the KEY AND THE VALUE both match) rather than
-    // guessing it. The refusal that stays is the one with no view behind it: a bare `Kind.Map` at a
-    // `JavaCollection` slot, which no valid java writes.
+    // `entrySet().
     assertEmits(p,
       "this.takeIt(balticporter.runtime.JavaIterable.from(balticporter.runtime.JavaCollections.entrySetView(m)))")
     assertEmits(p,
@@ -337,9 +330,7 @@ class CollectionsTransformSpec extends PortSuite:
     // `scala.collection.Set`, not the retyped `mutable.Set` the node claimed, so a wrap would have
     // named the WRAPPER instead of the boundary a reader has to act on. The DISAGREEMENT is what
     // went away — the rewrite emits a live `mutable.Set` view — so the source is an ordinary
-    // `Kind.Set` and `fromSet` serves it like any other. Nothing about the refusal RULE changed;
-    // what changed is that the phase can now make its emission match its record, which is the one
-    // thing that rule was waiting on.
+    // `Kind.Set` and `fromSet` serves it like any other.
     val p = port(
       """package demo;
         |import java.util.*;
@@ -360,7 +351,6 @@ class CollectionsTransformSpec extends PortSuite:
   // counterpart is a scala vararg. A java `T...` parameter is emitted as `Array[T]` and the
   // frontend materialises the pack at the call, which is right for every in-program vararg method
   // and wrong for `JavaCollections.asList[A](xs: A*)`.
-  // ---------------------------------------------------------------------------------------------
 
   private val asList =
     """package demo;
@@ -400,12 +390,7 @@ class CollectionsTransformSpec extends PortSuite:
 
   test("the ELEMENT form carries JAVA'S OWN INFERENCE as an explicit type argument") {
     // Java infers `T` from all the arguments at once and BOXES what it must, so
-    // `Arrays.asList(98, "97", true)` is a `List<Serializable & Comparable<…>>`. Scala infers `A`
-    // too, but its `Int`/`Boolean` are VALUE types that join to nothing java would name — and at an
-    // INFERRED `A` scalac declines the boxing conversion outright ("implicit conversions were not
-    // tried because the result of an implicit conversion must be more specific than T"), reporting
-    // one mismatch per element. Written down, the conversion is tried and `Predef.int2Integer`
-    // applies.
+    // `Arrays.asList(98, "97", true)` is a `List<Serializable & Comparable<…>>`.
     val p = port(
       """package demo;
         |import java.util.*;
@@ -460,18 +445,6 @@ class CollectionsTransformSpec extends PortSuite:
   // ---------------------------------------------------------------------------------------------
   // …AND NO LATER MECHANISM MAY PAINT OVER THAT REFUSAL — the other half of `ENGINE-LIMITS.md`
   // K6.5, measured as K2.5's caution.
-  //
-  // The refused call keeps the JDK name, so at run time it really is a `java.util.List`. Its NODE
-  // says `Buffer`, because `transformType` is position-blind and moved the type on both sides — so
-  // the argument bridge, reading the node, sees a `Kind.Seq` meeting a shim-typed formal and wraps:
-  // `JavaCollection.from(java.util.Arrays.asList(…))`, a factory handed a java collection. Same
-  // error count either way (the call could not compile before), and a strictly worse message: it
-  // names the WRAPPER instead of the boundary the reader has to act on.
-  //
-  // The test is the phase's own record, exactly as §4.56 requires: a call whose callee is still one
-  // of THIS PHASE'S handled statics is a call this phase declined to rewrite — every arm that fired
-  // left the minted helper's symbol behind instead — so its value is whatever java's was.
-  // ---------------------------------------------------------------------------------------------
 
   private val refusedIntoShimSlot =
     """package demo;
@@ -489,10 +462,6 @@ class CollectionsTransformSpec extends PortSuite:
     // `JavaCollection.from(…)` over it named the wrapper instead of the boundary. `asListView`
     // produces a `Buffer`, so there is nothing left to paint over: the bridge is wrapping a value
     // this phase made, which is the case it exists for.
-    //
-    // The mechanism that decided the old case is UNCHANGED and still load-bearing — a call left
-    // standing at one of this phase's handled statics is a call the phase declined — which is why
-    // the assertion below is about the NAME the emitted call carries, not about a special case.
     val p = port(refusedIntoShimSlot, new CollectionsTransform)
     assertEmits(p, "B.of(balticporter.runtime.JavaCollection.from(balticporter.runtime.JavaCollections.asListView(xs)))")
     assertNotEmits(p, "JavaCollection.from(java.util.Arrays.asList")
@@ -509,9 +478,7 @@ class CollectionsTransformSpec extends PortSuite:
   // F11 — `addAll` from an UNBOUNDED WILDCARD source. Java's `List<?>` is `List<? extends Object>`,
   // so reading it as `Object` is sound and `list.addAll(valueList)` needs no cast anywhere; scala's
   // `?` is bounded by `Any`, so `Buffer[?]` is an `IterableOnce[Any]` and `++=` on a
-  // `Buffer[Object]` reads `Required: IterableOnce[Object]`. Widening scala's `?` is G2's measured
-  // dead end, so the difference is stated at the one operation it blocks.
-  // ---------------------------------------------------------------------------------------------
+  // `Buffer[Object]` reads `Required: IterableOnce[Object]`.
 
   private val wildcardAddAll =
     """package demo;
@@ -561,7 +528,6 @@ class CollectionsTransformSpec extends PortSuite:
   // shape: a JDK member the phase's tables did not name, which is invisible until a compile error
   // names it — `JdkSurfaceCheck` reads those same tables, so an unlisted member reads as the port's
   // JDK wall rather than as an engine gap.
-  // ---------------------------------------------------------------------------------------------
 
   test("anyMatch/allMatch are scala's exists/forall, and noneMatch is the one that needs a helper") {
     val p = port(
@@ -604,7 +570,6 @@ class CollectionsTransformSpec extends PortSuite:
   // in exactly one position — as the qualifier of a member selection — and java has no such rule,
   // so a rewrite can put it somewhere illegal. The refusal used to be BLANKET; it is now a
   // structural test of the RESULT, so a new arm is covered by construction.
-  // ---------------------------------------------------------------------------------------------
 
   private val superReceiver =
     """package demo;
@@ -633,8 +598,6 @@ class CollectionsTransformSpec extends PortSuite:
     // `entrySetView(super)` — an argument position, where scala has no place for `super` at all.
     // `Sorted` declares no `entrySet` and nothing in this program extends it, so `super.entrySet()`
     // and `this.entrySet()` name the same member and the rewrite may simply stand on `this`.
-    // (It used to be the receiver ALONE — `for (e <- super)` — and the placement question is the
-    // same one: `superPlaced` asks it of the RESULT, so a new arm is covered by construction.)
     val p = port(superReceiver, new CollectionsTransform)
     assertEmits(p, "<- balticporter.runtime.JavaCollections.entrySetView(this))")
     assertNotEmits(p, "entrySetView(super)")
@@ -764,8 +727,6 @@ class CollectionsTransformSpec extends PortSuite:
   // scala's is PARENLESS, so `xs.toArray()` parses as `xs.toArray.apply()` — an array INDEX — and
   // the error names `method apply in class Array`. Both go to a `JavaCollections` helper because
   // java's CONTRACT (Object[] component type; fill-the-argument-if-it-fits; the null terminator)
-  // is what a naive `xs.toArray` silently breaks — §4.4, and pinned in `JavaCollectionsSpec`.
-  // ---------------------------------------------------------------------------------------------
 
   test("toArray() and toArray(T[]) go to the runtime helper, on Seq and on Set alike") {
     val p = port(
@@ -814,10 +775,6 @@ class CollectionsTransformSpec extends PortSuite:
     // correctly, because the shim carries java's own names and arity. So the erasure cast survived
     // onto the argument and the shim's `toArray[A](Array[A])` inferred `A = Object`, handing back
     // an `Array[Object]` that matched none of the overloads java resolved among.
-    //
-    // The guard is not weakened: this is not a scala-shaped rewrite. The call keeps java's name,
-    // its arity and its receiver, and only the COERCION built for the callee this phase replaced
-    // comes off — one more caller of `arrayArg`, never a second copy of its rule (F8).
     val p = port(
       """package demo;
         |import java.util.*;
@@ -858,7 +815,6 @@ class CollectionsTransformSpec extends PortSuite:
   // stayed open wherever the parent becomes a REAL scala collection, because the receiver's type is
   // then the class's own and `kindOf` has no key for it. `this.get(k)` bound to scala's `Map.get`
   // and returned an `Option` where java returned the value — a rewrite that silently did not run.
-  // ---------------------------------------------------------------------------------------------
 
   test("a call INHERITED from a mapped collection is rewritten — the kind comes from the declaring type") {
     val p = port(
@@ -882,12 +838,6 @@ class CollectionsTransformSpec extends PortSuite:
     // java has no such rule. Two arms put it somewhere else — `entrySet` returns the receiver ALONE
     // (`for (e <- super)`) and the `Seq` `get` makes it a function (`super(i)`) — both E040 SYNTAX
     // errors, which are strictly worse than the type errors they replace.
-    //
-    // This used to be a BLANKET refusal, on the grounds that "which arm renders infix" is a fact
-    // about the emitter. It is no longer: the emitter renders an operator on a `super` receiver as
-    // an ordinary selection (the only legal spelling), and what remains is a STRUCTURAL property of
-    // the RESULT this phase can check — see `superPlaced`. Asked of the result and not of the arm,
-    // so a rewrite added later is covered by construction.
     val p = port(
       """package demo;
         |import java.util.HashMap;
@@ -942,22 +892,8 @@ class CollectionsTransformSpec extends PortSuite:
   // FILE, which no phase can move — while `transformType` moved the call NODE's type, so both sides
   // read the same scala collection and every check comparing node types reports zero. Measured on
   // liqp: 15 compile errors at one third-party package against 0 findings.
-  //
-  // These use `java.util.Collections` and `java.lang.System` as stand-ins for a third party, because
-  // §1's enforcement rule forbids naming a ported library here and the mechanism does not care
-  // which class file it is: what it keys on is "the program does not declare this method".
-  // ---------------------------------------------------------------------------------------------
 
-  /** a port whose frontend also sees COMPILED CLASS FILES.
-    *
-    * The JDK alone cannot pose two of the questions this seam has to answer — a third party's method
-    * declared to return a CONCRETE `java.util.ArrayList`, and one declared to return a
-    * `java.util.Map.Entry` — because every JDK member of that shape is owned by a type the mapping
-    * already covers and is excluded before the arm is reached. So the fixture compiles its own
-    * class file and hands the directory to the frontend as a classpath, exactly the way
-    * `ExternalSignatureSpec` builds its partially-resolvable one. `ext.*` is a fixture package, not
-    * a library (§1's enforcement rule): what the mechanism keys on is "the program does not declare
-    * this method". */
+  /** a port whose frontend also sees COMPILED CLASS FILES. */
   private def portAgainst(ext: List[(String, String)], java: String, phases: Phase*): Ported =
     val root = Files.createTempDirectory("collections-external")
     val cls  = root.resolve("classes")
@@ -1142,9 +1078,7 @@ class CollectionsTransformSpec extends PortSuite:
     // `java.util.List`, the node says `Buffer` because this phase MOVED it. Where the result is a
     // TYPE VARIABLE, the node says `Buffer` because the CALLER handed it one — and wrapping that
     // converts a value that was never java's. Measured as 7 sites on liqp
-    // (`fromJava(java.util.Objects.requireNonNull(aScalaMap))`, an E134 naming the helper rather
-    // than the boundary). With no external signature there is no way to ask "is the result a type
-    // variable", so it is answered structurally: the result type already occurs on the INPUT side.
+    // (`fromJava(java.util.Objects.
     val p = port(
       """package demo;
         |import java.util.*;
@@ -1164,9 +1098,7 @@ class CollectionsTransformSpec extends PortSuite:
     // `Tuple2` — while `fromJava` produces exactly five shapes (`Buffer`, `Set`, `Map`,
     // `JavaIterator`, `JavaIterable`). Wrapping toward the rest emits a call whose RESULT does not
     // meet the node's own claim, and the error then names the HELPER instead of the boundary:
-    // `E134 None of the overloaded alternatives of method fromJava`. `liveWrappable` is the phase's
-    // own record of which targets a live view exists for, read in the direction the phase moved
-    // them (§4.56); everything else is a counted refusal, exactly as `JavaCollection` already was.
+    // `E134 None of the overloaded alternatives of method fromJava`.
     val ph = new CollectionsTransform
     val p  = portAgainst(
       List("ext/Prod.java" ->
@@ -1194,15 +1126,6 @@ class CollectionsTransformSpec extends PortSuite:
     // of every non-identity `List`→`List` third-party utility (`reverse`, `sorted`, `filtered`), and
     // there the value crossing the call really is java's. Suppressing the wrap there ALSO recorded
     // nothing, which is the pre-K15 state at the very calls K15 was built for.
-    //
-    // Where the class file can be read the guess is not needed: a MethodType is all-or-none, so a
-    // member whose result is a type VARIABLE is signature-less by construction (`ExternalSignatureSpec`)
-    // — and a readable result whose HEAD is a type this phase maps is therefore a real java
-    // collection, whatever the argument types happen to be. The phase's own table answers it (§4.56).
-    // The RECEIVER half of the guess is what this fixture aims at, because it is the half nothing
-    // else moves: a bridged ARGUMENT stops being a scala collection before the guess reads it, while
-    // a receiver's type is never bridged. A generic third-party holder instantiated at a collection
-    // makes every concrete-returning member of it read as a pass-through.
     val ph = new CollectionsTransform
     val p  = portAgainst(
       List("ext/Holder.java" ->
@@ -1230,10 +1153,7 @@ class CollectionsTransformSpec extends PortSuite:
   test("…and where the STRUCTURAL GUESS is all there is, the suppression is COUNTED in its own lane") {
     // `Objects.requireNonNull(m)` and `ThreadLocal<Map<K,V>>.get()` are signature-less — a
     // type-variable result leaves the member at `NoType` — so nothing can decide whether the value
-    // crossing the call was ever java's, and the wrap stays suppressed. What may NOT happen is the
-    // early exit taking the count with it: a suppression nobody counted is indistinguishable from a
-    // seam that does not exist (M6), and it is a DIFFERENT fact from "the argument's fit could not
-    // be verified" — the two must never be confusable, so it gets its own slot.
+    // crossing the call was ever java's, and the wrap stays suppressed.
     val ph = new CollectionsTransform
     val p  = port(
       """package demo;
@@ -1256,12 +1176,7 @@ class CollectionsTransformSpec extends PortSuite:
     // `java.util.List#addAll`'s formal is `java.util.Collection`, which `remap` reads as the SHIM —
     // so the moment external formals became readable, the argument pass wrapped it first and the
     // rewrite then emitted `list ++= JavaCollection.from(other.list)`, which is not an
-    // `IterableOnce` at all. Measured at 4 errors on a port that had 0, with every check count flat
-    // and 8 member digests moved: nothing but the compiler could see it, and no spec looked.
-    //
-    // Two rules keep it shut and both are asserted here: the shim wrap is for callees the PROGRAM
-    // OWNS (a class file cannot name a `balticporter.runtime` type), and the java-formal bridge
-    // runs after the rewrites.
+    // `IterableOnce` at all.
     val p = port(
       """package demo;
         |import java.util.*;
@@ -1287,7 +1202,6 @@ class CollectionsTransformSpec extends PortSuite:
     // `MethodType` — so nothing could decide whether the argument fitted and the only honest
     // answer was a cannot-verify count. `SpoonTir` now records what a class file can be read for
     // scope-free, so `String.join`'s `java.lang.Iterable` formal is visible and the port's `Buffer`
-    // reaches it through a LIVE view instead of through a compile error.
     val ph = new CollectionsTransform
     val p  = port(
       """package demo;
@@ -1307,14 +1221,6 @@ class CollectionsTransformSpec extends PortSuite:
     // so the port compiles and hands reflective third-party code a value java handed a `HashMap`.
     // `toString`, `instanceof` and every serializer see something else: an ObjectMapper's
     // `convertValue`/`writeValueAsString`, a `String.valueOf`, a `println`. \u00a74.4's exact shape.
-    //
-    // `toJava` is the FAITHFUL answer rather than a compromise, and that is what licenses inserting
-    // one where nothing is broken: java's value at that slot really WAS a java collection, so the
-    // live view restores what the callee is entitled to see, both directions still shared.
-    //
-    // Naming `java.lang.Object` is not \u00a74.56's forbidden name test: it is not a claim about a
-    // library's type, it is java's universal supertype \u2014 the one slot at which EVERY value conforms
-    // and therefore the one at which conformance proves nothing.
     val ph = new CollectionsTransform
     val p  = port(
       """package demo;
@@ -1379,9 +1285,7 @@ class CollectionsTransformSpec extends PortSuite:
     // The half that must never quietly become zero. Where the callee's declaration cannot be
     // reconstructed there is no formal at any slot, so nothing can decide whether the argument
     // fits and a cannot-verify count is the honest answer (M6) \u2014 a check that reads 0 because it
-    // stopped looking is exactly the failure CLAUDE.md \u00a71(b) names. The real classpath fixture
-    // that puts a member in that state lives in `ExternalSignatureSpec`; asserted here is that the
-    // arm keys on the ABSENT `MethodType` and that its classification still reaches a reader.
+    // stopped looking is exactly the failure CLAUDE.md \u00a71(b) names.
     val ph = new CollectionsTransform
     val p  = port(
       """package demo;
@@ -1407,8 +1311,7 @@ class CollectionsTransformSpec extends PortSuite:
     // `Map<?, ?>` and no capture is involved. Scala declares the same three over `K`, so the
     // ordinary rewrite emits a key at an unnameable capture (`Found: String / Required: map.K`)
     // and — for `get` — a `null` ascribed to the equally unnameable `V`, which renders as a bare
-    // `?` in a TERM position and is not syntax. Measured on liqp at 10 and 8 errors, from the same
-    // nine call sites.
+    // `?` in a TERM position and is not syntax.
     val p = port(
       """package demo;
         |import java.util.*;
@@ -1469,8 +1372,7 @@ class CollectionsTransformSpec extends PortSuite:
     // perfectly NAMEABLE — a call site can write it — so "the key is a capture" does not explain
     // this at all. What fails is that scala's `Map[K, V]` is INVARIANT in `K`, so the probe's own
     // `Class[?]` does not conform to the key's `Class[? <: N]`; java, whose `get` takes `Object`,
-    // never asked. The test is an EQUALITY against the probe's rendered type and never a
-    // conformance oracle (§4.56).
+    // never asked.
     val p = port(
       """package demo;
         |import java.util.*;
@@ -1514,9 +1416,6 @@ class CollectionsTransformSpec extends PortSuite:
     // anywhere inside it makes the key unnameable; the VALUE reaches the rewrite only through
     // `get`'s ascribed `null` default, and `null.asInstanceOf[Buffer[Box[?]]]` is perfectly good
     // Scala. Only a BARE wildcard value is unwriteable, which the cell above already covers.
-    //
-    // Read deeply on both, this shape routes six libGDX members through the `Any`-keyed helpers at
-    // 0 errors — nothing WRONG, and a diff saying something moved that did not need to.
     val p = port(
       """package demo;
         |import java.util.*;
@@ -1562,9 +1461,7 @@ class CollectionsTransformSpec extends PortSuite:
     // `Map.Entry` is a pair, and `Tuple2` is exact for every USE of one — which is why `entrySet()`
     // can hand back the map itself. As a PARENT it is impossible three times over: `Tuple2` is
     // final, has no `setValue`, and takes its two components in its constructor. So the parent
-    // stays java's — the class really does implement `java.util.Map.Entry`, whose three members it
-    // declares — and the seam moves to the slots where the port hands such a class to a `Tuple2`,
-    // which is where a reader can act on it (M6).
+    // stays java's — the class really does implement `java.util.Map.
     val ph = new CollectionsTransform
     val p  = port(
       """package demo;
@@ -1585,13 +1482,6 @@ class CollectionsTransformSpec extends PortSuite:
     // legal and leaves the class INCOMPLETE: `Map.Entry` declares `setValue`, the target has no
     // write-through, and a member the parent declares cannot simply be absent — the class would
     // need to be abstract, which `RefChecks` only says once the port reaches 0 typer errors (§3).
-    // Java's own contract is the answer: `setValue` is an OPTIONAL operation documented to throw
-    // `UnsupportedOperationException` where the backing map does not support the write, and a
-    // ported entry with no reachable map IS that entry. Louder than java, never quieter — the
-    // opposite of the `SimpleEntry` K2 refuses, which would succeed and change nothing.
-    // …and the body is the DELEGATING one on purpose: this member's `return e.setValue(v)` is a
-    // write-through on a receiver THIS PHASE retyped to a `Tuple2`, so the phase can point at what
-    // it broke. That is the whole licence for the substitution — see the two tests below.
     assertEmits(p, "override def setValue(v: V): V = throw new java.lang.UnsupportedOperationException(")
     val fs = ph.boundary(p.after).filter(_.issue == CollectionBoundaryCheck.Issue.InexpressibleParent)
     assertEquals(clue(fs).map(_.slot).sorted, List("member (implements) setValue", "parent (implements)"))
@@ -1603,14 +1493,7 @@ class CollectionsTransformSpec extends PortSuite:
     // The refusal above is licensed by a DEFECT THIS PHASE CAUSED: the body was a write-through on
     // a receiver the mapping retyped to a type with no such member, so there is no body left to
     // emit. An entry that stores its own value has no such body — java runs it, it returns the
-    // previous value, and nothing the mapping did touches it. Substituting a throw there is the
-    // port failing where java succeeded, with a green compile and no count moving anywhere
-    // (CLAUDE.md §3), and it is exactly what a BARE-NAME match does.
-    //
-    // §4.56 states the rule this restores: a phase may only conclude something about a member from
-    // what the PHASE ITSELF did to it. `refuseOnTarget` therefore asks its own mapping whether the
-    // TRANSLATED body still references a member the mapping removed, and emits java's optional-
-    // operation contract only when the answer is yes.
+    // previous value, and nothing the mapping did touches it.
     val ph = new CollectionsTransform
     val p  = port(
       """package demo;
@@ -1754,9 +1637,7 @@ class CollectionsTransformSpec extends PortSuite:
     // Java's `Map.get(Object)` accepts anything ON PURPOSE — the lookup is BY VALUE, so a probe of
     // an unrelated type is meant to MISS. `keyArg`'s strip cannot help here: what lies under the
     // cast is not `K`, and there is often no cast at all (this `o` is java's own parameter). What
-    // it must NOT do is narrow the probe — `o.asInstanceOf[String]` throws where java answers
-    // `null` — so the call goes to the `Any`-keyed helper the wildcard receiver already used, and
-    // the seam is CLOSED rather than reported (`ENGINE-LIMITS.md` K24).
+    // it must NOT do is narrow the probe — `o.
     val p = port(
       """package demo;
         |import java.util.HashMap;

@@ -3,28 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** ONE SHIM'S ABSENCE MUST NOT SWITCH OFF ANOTHER SHIM'S BRIDGE.
-  *
-  * `coerce` is the single place a scala collection is bridged into a shim-typed slot, and its table
-  * has two independent targets: `JavaIterable` (from `java.lang.Iterable`) and `JavaCollection`
-  * (from `java.util.Collection`). The pass that applies it at an OWNED callee's formals was gated
-  * on `javaIterableSym != SymId.None` — a symbol that exists only when the program NAMES
-  * `java.lang.Iterable`.
-  *
-  * A library that uses `Collection` and never mentions `Iterable` is therefore a library where the
-  * whole argument-bridging pass is a no-op, and nothing says so: no check fires, no policy entry is
-  * unmatched, and the only evidence is `E134 None of the overloaded alternatives` at the call. liqp
-  * is exactly that library — 135 java files, `Collection` throughout, `Iterable` nowhere, and not
-  * one `JavaCollection.from(` in the emitted port.
-  *
-  * The rule this is an instance of is `CLAUDE.md` §4.56's: a phase may conclude something only from
-  * what the phase itself did to the thing it is concluding about. "Is there a `JavaIterable` in
-  * this program" is not a fact about a `Collection`-typed formal.
-  *
-  * The two fixtures below differ in ONE line — whether anything mentions `Iterable` — and must
-  * emit the same bridge. They are separate programs on purpose: in one program the mention would
-  * enable the other fixture and the test would prove nothing.
-  */
+/** ONE SHIM'S ABSENCE MUST NOT SWITCH OFF ANOTHER SHIM'S BRIDGE. */
 class CollectionsBridgeGateSpec extends PortSuite:
 
   /** `List` into a `Collection` formal — java's own subtyping, which the retyping does not keep:

@@ -5,19 +5,7 @@ import balticporter.transform.CollectionsTransform
 
 /** Two emitter seams that had no spec at all, pinned THROUGH THE PIPELINE — a java snippet in, the
   * emitted Scala asserted. Both are §4.4's defect class (valid Scala meaning something else), and
-  * both were built from a failure found by running a ported test suite rather than by compiling.
-  *
-  *   - **the enhanced-for BINDING** (ENGINE-LIMITS K7). `for (Object e : xs)` is a DECLARATION:
-  *     java resolves every use of `e` against `Object`. Scala's `for (e <- xs)` binds at the
-  *     ITERABLE's element type, so the type of `e` silently changes.
-  *   - **a `return` inside a LAMBDA.** Scala has no non-local return, so a java lambda that returns
-  *     early needs a `def` to return from — and the two things that decide it (does this subtree
-  *     return from the construct that OWNS it, and what result type can be given) each have a
-  *     failure mode of their own.
-  *
-  * No phase is involved: `port(java)` with no phases is the emitter's own identity fixture, which
-  * is what makes these tests about the emitter and not about a transform.
-  */
+  * both were built from a failure found by running a ported test suite rather than by compiling. */
 class EmitterBindingAndReturnSpec extends PortSuite:
 
   // -------------------------------------------------------------------------------------------

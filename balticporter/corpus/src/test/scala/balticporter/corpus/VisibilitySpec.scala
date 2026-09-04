@@ -3,17 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.tir.Decision
 
-/** JAVA'S FOUR ACCESS LEVELS, pinned through the pipeline — `DESIGN.md` §8.7.
-  *
-  * Three of Java's four levels used to collapse onto "no modifier at all": `protected` was dropped
-  * wholesale during an error burn-down, package-private could not even be STATED in the TIR, and a
-  * type's `private` was erased at the class header. Every one of those is a WIDENING that no
-  * compile, no check count and no test can see — the port compiles perfectly with every member
-  * public — which is why the mapping needs specs rather than a measurement.
-  *
-  * Each negative below asserts the RECORDED fallback, not merely the absence of the qualifier: a
-  * widening the port cannot state is the failure this whole section exists to remove.
-  */
+/** JAVA'S FOUR ACCESS LEVELS, pinned through the pipeline — `DESIGN.md` §8.7. */
 class VisibilitySpec extends PortSuite:
 
   private def widenings(p: balticporter.testkit.Ported): List[Decision] =
@@ -158,10 +148,7 @@ class VisibilitySpec extends PortSuite:
   test("a §4.55 field RENAME widens too, and the widening RECORDS — the clash pass is the decider") {
     // Both clash passes strip `private`/`protected` from every field they rename, unconditionally,
     // and they must: a renamed field has to stay reachable from wherever java read it, which
-    // scala's own access rules do not grant at the new name. The RENAME was recorded and the
-    // WIDENING was not — the emitted visibility is unchanged, the compile is unchanged, and
-    // `NoteCoverageCheck` compares decisions to NOTES rather than to reality, so nothing could see
-    // a widening with no decision.
+    // scala's own access rules do not grant at the new name.
     val p = port(
       """package demo.util;
         |public class Holder {
@@ -242,19 +229,7 @@ class VisibilitySpec extends PortSuite:
     // The override graph here is keyed on (name, TOTAL ARITY) — D1's identity — and a java class
     // overloads freely, so one key can name SEVERAL parent members. Held one-per-key, the index kept
     // whichever came last in the parent's body: `hook(Object)` is public, so it constrains nothing,
-    // and the `protected` `hook(String)` the child really overrides was simply not in the list. The
-    // child then shipped its OWN package's qualifier over a parent qualified with the parent's —
-    // "has weaker access privileges", an ERROR, and one `RefChecks` does not report until the port
-    // is already at zero (`ENGINE-LIMITS.md` K28).
-    //
-    // Every member at the key is held instead, which is the SAFE direction and not a compromise: the
-    // fold takes the common package of all of them, and an override may be WIDER than what it
-    // overrides and never narrower.
-    //
-    // The parent's two members are in the order the library wrote them, and the ORDER is what made
-    // this silent: the index kept the LAST at each key, so the public overload won and the widening
-    // simply did not happen. Swapped, the same defect answers correctly by luck — which is why the
-    // fixture states java's order rather than a convenient one.
+    // and the `protected` `hook(String)` the child really overrides was simply not in the list.
     val p = portAll(List(
       "Parent.java" ->
         """package demo.a.q;

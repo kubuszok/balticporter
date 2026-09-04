@@ -5,23 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{Decision, Pipeline}
 
 /** A `private` a CONSTRUCTOR writes is widened for a subclass THIS RUN CANNOT SEE —
-  * `ENGINE-LIMITS.md` C15.
-  *
-  * `CtorFunnel.Plans.replayFor` expresses a secondary constructor's `super(args)` as the parent
-  * constructor's own statements replayed one level down, and those statements then execute in the
-  * SUBCLASS, where the parent's `private` no longer reaches. Within one module the planner widens
-  * what the replays it OBSERVED touch. That makes the answer depend on which run you are in: a
-  * subclass in a dependent module replays the very same constructor, `reachablePrivate` reads the
-  * base's published `vis=private`, and — because the refusal is at the CONSTRUCTOR and not at the
-  * statement — the WHOLE `super(args)` is dropped, at 0 compile errors and no moved test.
-  *
-  * So the widening is derived from the class's OWN declarations instead: a paramful, non-private
-  * constructor of an extensible class is one a subclass's secondary can only express as a replay,
-  * and every `private` its statements touch is a member that replay must reach.
-  *
-  * The five negatives below are the narrowings, and each is a FACT rather than a budget — a
-  * widening nobody needs is emitted surface the port did not have to move (`CLAUDE.md` §5).
-  */
+  * `ENGINE-LIMITS.md` C15. */
 class CtorFunnelExternalReplaySpec extends munit.FunSuite:
 
   /** Every class below extends `Base` and its roots reach THREE DIFFERENT `Base` constructors,

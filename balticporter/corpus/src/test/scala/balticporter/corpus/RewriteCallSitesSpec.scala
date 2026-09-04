@@ -6,17 +6,7 @@ import balticporter.tir.RewriteCallSitesCheck.Issue
 import balticporter.transform.{CollectionBoundaryCheck, CollectionClosureCheck, CollectionsTransform, RetargetBoundaryCheck}
 
 /** THE STANDING QUESTION every retyping phase owes — `Rewrite`, `RewriteCallSitesCheck`, and the
-  * `ENGINE-LIMITS.md` K5.6 sentence they close.
-  *
-  * Every test here is in BOTH directions, because the whole value of the check is that it can tell
-  * an accounted phase from an unaccounted one, and a check that reported the same thing about both
-  * would be the silence it exists to replace.
-  *
-  * The two tests that carry the design are the last two: the retyped set is DERIVED and cannot be
-  * under-reported by the phase, and the site count CANNOT be taken before the phase runs — which is
-  * the measured reason the proposal's `find`/`fix` half is not retrofitted onto these phases and
-  * lives in `ENGINE-LIMITS.md` K5.10 rather than in a comment.
-  */
+  * `ENGINE-LIMITS.md` K5.6 sentence they close. */
 class RewriteCallSitesSpec extends PortSuite:
 
   private val src =
@@ -57,13 +47,7 @@ class RewriteCallSitesSpec extends PortSuite:
 
   /** …and the SAME retype written the OTHER way a phase can write it: at the DECLARATION IN THE
     * TREE, through the definition hooks, with `transformType` left alone so the symbol table never
-    * moves.
-    *
-    * Every retyping phase in the engine today happens to go through `transformType`, which
-    * `StandardTraversal` routes into the symbol records as well as into the trees — so an
-    * `info`-only comparison saw all of them and nothing said it was reading half the question. This
-    * is the half it was not reading, and it is a shape a phase is entitled to write: `tpt` and
-    * `returnTpt` are what the EMITTER prints. */
+    * moves. */
   private class TreeOnlyMover extends Phase:
     def name: String = "tree-only-mover"
     override def transformValDef(v: Tree.ValDef)(using Program): Tree.ValDef =

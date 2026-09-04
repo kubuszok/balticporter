@@ -6,32 +6,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.{Pipeline, Program}
 import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform}
 
-/** A REIFIED occurrence of a retyped type — `ENGINE-LIMITS.md` K18, catalog `JS-G48`.
-  *
-  * Every other seam this phase owes is a SLOT: two sides disagree, and a compiler or a boundary
-  * count says so. An `instanceof` and a downcast are neither — they ask about a RUNTIME OBJECT,
-  * java answered over java's own classes, and a retyping moves the static type without moving one
-  * object or one class. So the emitted `isInstanceOf`/`asInstanceOf` is VALID SCALA ASKING A
-  * DIFFERENT QUESTION, and nothing in the pipeline can fail for it: the port compiles, every check
-  * count is flat, and the only evidence is the assertion that stopped holding. This suite is that
-  * evidence, at the size a spec can hold.
-  *
-  * Six things are asserted, and the last three are the ones a naive fix gets wrong:
-  *
-  *   1. a type TEST at a mapped type becomes the representation-agnostic predicate;
-  *   2. a DOWNCAST from `Object` becomes the coercion — with java's own cast KEPT around it,
-  *      because java's cast to a generic type is unchecked in its type arguments (JLS 5.5) and the
-  *      surviving `asInstanceOf` is exactly that;
-  *   3. the SHIM targets are reached too, not only the `scala.collection.mutable` ones;
-  *   4. an UPCAST is left alone. Its operand is a declaration THIS PHASE retyped, so the
-  *      representation is known and java's cast was already a no-op on it — coercing there was 4
-  *      compile errors on the first real port, at a bounded-wildcard target the helper cannot name;
-  *   5. …but an EXTERNAL PRODUCER is not vouched for even though its node type reads as a mapping
-  *      target, because that is only `transformType` being position-blind. This is the
-  *      `mapper.readValue(json, HashMap.class)` shape, and it is 139 of the 160 failures K18 closed;
-  *   6. a CONCRETE target is refused and COUNTED. No live view can BE a `mutable.HashMap`, and this
-  *      count is the only instrument that sees such a site at all.
-  */
+/** A REIFIED occurrence of a retyped type — `ENGINE-LIMITS.md` K18, catalog `JS-G48`. */
 class CollectionsReifiedSpec extends PortSuite:
 
   private def ported(source: String): (CollectionsTransform, Program, String) =
@@ -177,19 +152,6 @@ class CollectionsReifiedSpec extends PortSuite:
 
   // -------------------------------------------------------------------------
   // 7. …and the target the phase did NOT retype, which reads as nothing at all
-  // -------------------------------------------------------------------------
-  //
-  // The refusal above is at a target the mapping OWNS. This one is at a target OUTSIDE it, and it
-  // is the shape with no instrument on it whatsoever: `x instanceof RandomAccess` is emitted
-  // verbatim, because nothing in it names a type this phase moved — and it answers NO for every
-  // value the phase retyped, where java answered YES for the `ArrayList` that value used to be.
-  // No compile error, no coercion, no count, and (unlike a mapped target) not even a helper the
-  // engine could have written: `mutable.Buffer` is not a `RandomAccess` and no live view can make
-  // it one.
-  //
-  // Decided from the phase's OWN typeMap (§4.56): the supertype closure of the java types it maps,
-  // minus the ones it maps. Never a name test — `com.badlogic.gdx.utils.Json$Serializable` is a
-  // `Serializable` by NAME and shares nothing with `java.io.Serializable`.
 
   test("a reified test at an UNMAPPED JDK SUPERTYPE of a mapped type is refused and COUNTED") {
     val (ph, program, out) = ported(

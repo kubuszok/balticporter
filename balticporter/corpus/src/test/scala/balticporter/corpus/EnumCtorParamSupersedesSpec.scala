@@ -3,23 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 
 /** WHICH field a promoted enum constructor parameter SUPERSEDES — a (name, TYPE) question, never a
-  * name one.
-  *
-  * The lowering renders every primary parameter as a `var` member of the emitted enum, so a body
-  * field of the same name would be a second member under one name and cannot be emitted. Where the
-  * parameter really IS the field — `Filter(int glEnum)` beside `public int glEnum`, whose whole
-  * constructor is `this.glEnum = glEnum` — dropping the field is exact and the `var` carries it.
-  *
-  * ==And java's TWO variable scopes make the other shape ordinary==
-  * A constructor parameter routinely names a field it is not, precisely so the constructor can
-  * COMPUTE one from the other: `Handler(String open)` beside `public final Pattern open`, whose body
-  * is `this.open = Pattern.compile(open, …)`. Java resolves `open` to the parameter and `this.open`
-  * to the field, and both members exist. Matched on the name alone the field is DROPPED and the enum
-  * ships `var open: String` under the field's name — every read of it is `value pattern is not a
-  * member of String`, and the constructor assigns a `Pattern` to a `String`. `CLAUDE.md` §4.56 at a
-  * rename: two names being equal is not a structural fact about anything
-  * (`ENGINE-LIMITS.md` T11's third half).
-  */
+  * name one. */
 class EnumCtorParamSupersedesSpec extends PortSuite:
 
   test("a DIFFERENT type is a DIFFERENT member — the field survives and the parameter moves aside") {

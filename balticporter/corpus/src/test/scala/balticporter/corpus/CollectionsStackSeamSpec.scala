@@ -3,24 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** A KIND THAT IS SEQ-SHAPED EVERYWHERE ELSE MUST BE SEQ-SHAPED AT THE SEAM TOO.
-  *
-  * `java.util.Stack` got its own `Kind` because ONE member of it — `peek()` — means the opposite
-  * end from the `Deque` `peek` the `Kind.Seq` arms answer, and a shared arm cannot be both. That is
-  * a fact about the CALL REWRITE table and about nothing else: the target `JavaStack` extends
-  * `mutable.ArrayBuffer`, so as a VALUE it is exactly a `Kind.Seq` and conforms wherever one does.
-  *
-  * `coerce`'s factory table nonetheless names `Kind.Seq | Kind.Set | Kind.Map` in every arm and
-  * `Kind.Stack` in none, so a stack at a bridged slot matched nothing and the boundary check
-  * reported it — as an honest refusal, which is what the surrounding rows in that same count are.
-  * `ENGINE-LIMITS.md` K2.5's shape exactly: a residue count is only as good as the assumption that
-  * everything able to close it RAN, and here the factory existed and applied on its first line.
-  *
-  * The subtyping licence is IDENTICAL to `Kind.Seq`'s — `JavaIterable.from` takes a
-  * `scala.collection.Iterable` and `JavaCollection.from` a `scala.collection.Seq`, and a
-  * `JavaStack` is both — so the arms are shared rather than duplicated, and this is the test that
-  * says the sharing is real rather than a claim in a comment.
-  */
+/** A KIND THAT IS SEQ-SHAPED EVERYWHERE ELSE MUST BE SEQ-SHAPED AT THE SEAM TOO. */
 class CollectionsStackSeamSpec extends PortSuite:
 
   /** Nothing here names `Iterable`, so the `Collection` bridge is tested on its own terms

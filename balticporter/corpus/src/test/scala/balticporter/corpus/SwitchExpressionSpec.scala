@@ -2,25 +2,7 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** JLS 15.28 SWITCH EXPRESSIONS and JLS 14.21 `yield` — catalog `JS-S09`.
-  *
-  * The evidence for this row is entirely FIXTURES, and deliberately so: no library in the corpus is
-  * written to SE14 or later, so a measurement over the corpus can only ever say zero. That is the
-  * same position `TextBlockSpec` was written from, with the opposite outcome — there the probe
-  * found no difference at all, here there is one and it has an exact image.
-  *
-  * What makes the image exact is that a scala `match` IS an expression, so the construct needed no
-  * new node for the switch itself. It needed one for the single shape scala has no counterpart for:
-  * a `yield` that is NOT the arm's last statement completes the whole switch expression abruptly
-  * from arbitrary depth, and scala has no expression-level jump. That is `Tree.Yield`, and the
-  * emitter renders it as the value-carrying `scala.util.boundary` it is.
-  *
-  * Every test below names the JLS shape it covers, because "every shape" is a claim a reader must
-  * be able to check against 15.28's own grammar: arrow-expression arms, arrow-block arms with an
-  * explicit `yield`, an arrow `throw` arm, multi-label arms, colon-form arms with `yield`,
-  * colon-form fallthrough, an exhaustive enum switch with no `default`, a nested switch expression,
-  * a non-tail `yield`, and the null-selector rule composing with `JS-S08`.
-  */
+/** JLS 15.28 SWITCH EXPRESSIONS and JLS 14.21 `yield` — catalog `JS-S09`. */
 class SwitchExpressionSpec extends PortSuite:
 
   // ---------------------------------------------------------------------------------------------
@@ -211,11 +193,6 @@ class SwitchExpressionSpec extends PortSuite:
 
   // ---------------------------------------------------------------------------------------------
   // …and the construct that is NOT one of those: a `yield` through a nested switch STATEMENT.
-  //
-  // JLS 14.21 binds a `yield` to the innermost enclosing switch EXPRESSION, and a switch STATEMENT
-  // is not one — so this is ordinary java and javac (22.0.2) runs it: `f(1,2)` is 10, `f(1,3)` is
-  // 20, `f(5,2)` is 0. The `yield 10` completes the OUTER expression from two constructs down.
-  // ---------------------------------------------------------------------------------------------
 
   private val throughStmt = port(
     """package p;
@@ -277,15 +254,6 @@ class SwitchExpressionSpec extends PortSuite:
 
   // ---------------------------------------------------------------------------------------------
   // THE SCALAC PROBE — what the emitted shapes MEAN, compiled and run
-  //
-  // Everything above asserts about emitted TEXT, which is the only thing the fixture path can see.
-  // Three of this row's cells are claims about the LANGUAGE the text is written in, and a text
-  // assertion cannot settle any of them: that a value-carrying `boundary` with a `$`-suffixed name
-  // beginning `yield` is even lexable (scala's `yield` is a reserved word), that `break` at a typed
-  // `Label` really produces the arm's value, and that an inexhaustive `match` throws where java's
-  // exhaustiveness would have. The functions below are hand-written scala in the emitter's own
-  // shape; scalac compiles them as part of this suite and the assertions run them.
-  // ---------------------------------------------------------------------------------------------
 
   /** the emitter's rendering of `switch (k) { default -> { if (k > 0) { yield 1; } yield 2; } }`. */
   private def nonTailShape(k: Int): Int =

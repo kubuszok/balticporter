@@ -6,20 +6,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 import balticporter.transform.{CallSiteSubstitutionTransform, PackageRenameTransform}
 
-/** The call-site seam, end to end: keep the method mechanically translated, replace ONE call in it.
-  *
-  * The properties asserted here are the ones the seam is only useful if it has, and each of them is
-  * a failure this repository has already paid for once at a different seam:
-  *
-  *   - '''overload exactness''' (CLAUDE.md §4.4's flagship). A key for `remove(Object)` that also
-  *     rewrote `remove(int)` would produce a green compile and a different program.
-  *   - '''the spliced arguments are TREES.''' A later phase — the package rename, which runs LAST
-  *     (§4.56) — must reach them. Spliced as text they would be the one region of the program no
-  *     phase can see.
-  *   - '''a refusal is COUNTED''' rather than approximated, and a decision is recorded only for
-  *     what was actually rewritten: a porter note claiming a substitution that did not happen is
-  *     the one artifact a reader takes at face value.
-  */
+/** The call-site seam, end to end: keep the method mechanically translated, replace ONE call in it. */
 class CallSiteSubstitutionSpec extends munit.FunSuite:
 
   private val src =
@@ -136,9 +123,6 @@ class CallSiteSubstitutionSpec extends munit.FunSuite:
     // from inside a method that is otherwise entirely mechanical. Before this phase the port's only
     // two options were to replace the CALLER's whole body (forking it from upstream permanently) or
     // to drop the caller too (deleting the feature); the call site itself had no seam at all.
-    //
-    // A dropped member has no DECLARATION symbol, which is why the callee is bound through
-    // `PolicyBinder.bindCallee` — the reference side, which the frontend interned anyway.
     val subs  = Substitutions(dropMethods = Set("demo.Bag#remove(Object)"))
     val phase = new CallSiteSubstitutionTransform(Map(
       "demo.Bag#remove(Object)" -> "demo.Support.rm({recv}, {arg0})"))

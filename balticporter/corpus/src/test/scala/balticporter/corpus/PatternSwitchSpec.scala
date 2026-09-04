@@ -2,23 +2,7 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** SE21 PATTERN CASE LABELS — catalog `JS-S10`, split honestly.
-  *
-  * The row's own sentence used to be "case labels are read as plain expressions and refused", and
-  * the split this suite establishes is that HALF of it has an exact image and half does not:
-  *
-  *   - a TYPE PATTERN (`case String s ->`), a GUARD (`case Integer i when i > 3 ->`), a `null`
-  *     label and `case null, default ->` are all things a scala `match` arm writes natively, so
-  *     they LOWER;
-  *   - a RECORD PATTERN (`case Point(int x, int y) ->`) does too, now that `JS-C43` derives an
-  *     `unapply` over the record's ACCESSORS — which is the member java's own deconstruction reads
-  *     (JLS 14.30.1), and the reason a scala `case class` could not have supplied it;
-  *   - an UNNAMED pattern keeps the refusal, and it is one nobody can trigger: no source Spoon
-  *     accepts builds a `CtUnnamedPattern` at all (`ENGINE-LIMITS.md` T19).
-  *
-  * Fixtures are the whole evidence, for `SwitchExpressionSpec`'s reason: no corpus library is
-  * written to SE21.
-  */
+/** SE21 PATTERN CASE LABELS — catalog `JS-S10`, split honestly. */
 class PatternSwitchSpec extends PortSuite:
 
   private val patterns = port(
@@ -174,14 +158,6 @@ class PatternSwitchSpec extends PortSuite:
   // ---------------------------------------------------------------------------------------------
   // A QUALIFIED ENUM CONSTANT label (JEP 441) — the OTHER way a switch STATEMENT becomes enhanced,
   // and the one no case label betrays. Both cells below are javac-verified (22.0.2):
-  //
-  //   - selector a SUPERTYPE of the enum: `javac` calls `return 0;` after the switch an
-  //     `unreachable statement`, and compiles `new MatchException` at the fall-out — so the switch
-  //     is enhanced and exhaustive, and a synthesised `case _ => ()` is §4.4's defect;
-  //   - selector the ENUM ITSELF, one constant listed, no default: compiles, RUNS, and FALLS OUT
-  //     (prints the statement after the switch). A qualified label is therefore NOT what makes a
-  //     switch enhanced — the SELECTOR'S TYPE is, which is JLS 14.11.2's own first disjunct.
-  // ---------------------------------------------------------------------------------------------
 
   /** the sealed interface, the enum that implements it, and a switch over the INTERFACE. Several
     * units, because the shape needs a type the switch's own compilation unit does not declare. */

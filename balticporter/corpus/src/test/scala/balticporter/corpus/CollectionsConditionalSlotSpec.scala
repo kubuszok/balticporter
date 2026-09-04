@@ -3,18 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** A CONDITIONAL's conversion belongs to its BRANCHES — JLS 15.25, met at a retyping's own seam.
-  *
-  * Java assigns each operand of a reference conditional to the target type SEPARATELY, so the two
-  * arms were converted independently. This phase saw ONE `Tree.If` whose own type is already the LUB
-  * of two arms it had just moved, matched no factory against that lub, and left both — which is not
-  * a refusal, it is a slot the walk never reached.
-  *
-  * The frontend's own `coerce` learned this at java's unchecked conversion and states the same
-  * reason. Here it is the arm that PRODUCES a value the retyping has to bridge: a `Map.values` view
-  * in one branch and a `Collections.emptyList()` in the other, where the lub is neither and the
-  * declared result is a shim.
-  */
+/** A CONDITIONAL's conversion belongs to its BRANCHES — JLS 15.25, met at a retyping's own seam. */
 class CollectionsConditionalSlotSpec extends PortSuite:
 
   test("each BRANCH is bridged at the slot, not the conditional's lub") {

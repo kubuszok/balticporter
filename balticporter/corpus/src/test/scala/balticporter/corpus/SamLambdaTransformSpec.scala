@@ -4,17 +4,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.{Decision, IdiomKind}
 import balticporter.transform.SamLambdaTransform
 
-/** THE SAM TRANSFORMER — the conversion, its emitted SHAPE, and its attribution.
-  *
-  * `JS-E06`'s third commit is the precedent for why this suite is the whole evidence and not the
-  * corpus: a defect found by the test for the cell NEXT DOOR, at zero corpus sites. What a corpus
-  * run can confirm is a BLAST; what only a fixture can confirm is that a guard declines the shape it
-  * was written for and that the emitted form is the one intended.
-  *
-  * The REFUSALS are pinned next door in `IdiomCensusSpec`, against the shared decision function —
-  * one mechanism, one seam (§4.6): the census and this transformer ask `SamLambda.decide`, so a
-  * second copy of the guards could not disagree with the first.
-  */
+/** THE SAM TRANSFORMER — the conversion, its emitted SHAPE, and its attribution. */
 class SamLambdaTransformSpec extends PortSuite:
 
   private val runnable =
@@ -91,13 +81,7 @@ class SamLambdaTransformSpec extends PortSuite:
     // java's lambda body is a METHOD body, so `return` is legal in it; scala's lambda is an
     // expression and rejects `return` outright. The emitter restores java's meaning with a nested
     // `def` (`JS-S21`) — and a `def` needs a RESULT TYPE, which is `compare`'s `int` and NEVER the
-    // interface's `Comparator[String]`. Before I9 nothing carried it, so the emitter refused (M6)
-    // and rendered the body bare: `(a, b) => { if (…) return -1; … }`, four of which were the whole
-    // of wave 1's failure on the libGDX base.
-    //
-    // Asserted on the RENDERED `def` and not on the string "def ", which the ENCLOSING method's own
-    // declaration already satisfies — a vacuous assertion is how this passed while the emission was
-    // broken.
+    // interface's `Comparator[String]`.
     val p = port(valuedReturn, new SamLambdaTransform)
     assertIdiomConverts(p, IdiomKind.SamLambda, "C#c")
     assertEmitsMatch(p, """def body\$\d+\(\): scala\.Int = """)
@@ -115,13 +99,7 @@ class SamLambdaTransformSpec extends PortSuite:
     // This tree used to be M6's standing residue: `Supplier.get` is declared `T get()`, `T` is not
     // a name the emitted code can write, and the refusal's stated reason was that substituting the
     // REFERENCE's actual arguments for the DECLARATION's formals is a different mechanism from
-    // reading a class file. That was a statement about a missing mechanism rather than about the
-    // language — the target reference says what `T` is, and Spoon's own `TypeAdaptor` performs the
-    // substitution, composed along the hierarchy.
-    //
-    // What makes the fix worth having is that the residue was never LOUD: a scala `return` inside a
-    // closure is a NON-LOCAL RETURN from the enclosing method, so this compiled green and unwound
-    // out of `s`'s caller (`ENGINE-LIMITS.md` I9).
+    // reading a class file.
     val p = port(
       """class C {
         |  java.util.function.Supplier<String> s() {
@@ -242,12 +220,6 @@ class SamLambdaTransformSpec extends PortSuite:
     // `((a, b) => …): java.util.Comparator[?]`, and a scala lambda at a WILDCARD-APPLIED type is a
     // shape worth doubting: if scalac refuses to instantiate a SAM there, the conversion is a
     // compile error the corpus cannot see, because no corpus site has this shape.
-    //
-    // MEASURED rather than guarded: the emitted text was put through `scala-cli compile --scala
-    // 3.8.4` and accepted, exit 0 — the wildcard instantiates to the erasure the raw type already
-    // had, and the lambda's parameters are `Object` on both sides. So there is no guard here and
-    // the refusal enumeration is unchanged; what this fixture pins is the EMISSION, so that the
-    // measurement stays attached to the thing it was made about (`ENGINE-LIMITS.md` S1).
     val p = port(
       """import java.util.Comparator;
         |class C {

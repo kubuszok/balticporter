@@ -2,34 +2,10 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** THE TWO SHAPES `JS-C30`'s LOWERING DOES NOT REACH, pinned in both directions.
-  *
-  * T9 closed the method-LOCAL class (JLS 14.3): it is a `BlockStatement`, it lowers to a Scala
-  * local `class`/`object`, and twenty-eight whole-program walks moved onto
-  * `StandardTraversal.allClassDefs` so they can see one. Neither shape below occurs in any of the
-  * fifteen ported modules, which is exactly why the lowering could close without meeting them — and
-  * `AbsorbedProbeSpec`'s rule applies: a construct nothing in the corpus exercises needs a fixture
-  * that says what is emitted TODAY, in both directions, or the next change to that path moves it
-  * silently.
-  *
-  * BOTH ARE LOUD. Neither ships a plausible wrong answer: each is a scalac error at §3's gate, so
-  * the instrument that counts them is the port's own error count. That is the whole reason they are
-  * pinned rather than refused — a frontend refusal here would take the shapes that DO work with it.
-  *
-  * `ENGINE-LIMITS.md` T9 carries both with the emitted text.
-  */
+/** THE TWO SHAPES `JS-C30`'s LOWERING DOES NOT REACH, pinned in both directions. */
 class T9ResidueProbeSpec extends PortSuite:
 
   // -- 1. a local class that collides with a nested TYPE of the same name ------------------------
-  //
-  // §4.55's "count what the constructor funnel PROMOTES" reaches its parameters and its top-level
-  // LOCALS. A local CLASS is neither, and it becomes a member of the emitted class body exactly as
-  // a promoted local does — so it can collide with a nested type, and the member-clash pass does
-  // not see it.
-  //
-  // The collision is narrower than it looks, and the negative below is why: java's STATIC nested
-  // class is emitted into the COMPANION OBJECT and the local class into the CLASS, which are two
-  // Scala namespaces. Only a non-static INNER class shares a body with it.
 
   test("a promoted-constructor local class beside a STATIC nested class of the same name is FINE — two namespaces") {
     val out = port(
@@ -70,12 +46,6 @@ class T9ResidueProbeSpec extends PortSuite:
   }
 
   // -- 2. a method-local ENUM --------------------------------------------------------------------
-  //
-  // `CtEnum <: CtClass`, so the statement dispatch's `case c: CtClass[?]` takes it with no arm
-  // aware an enum was there — the same absorption `JS-C43` recorded for a record, one construct
-  // over, until that row's own flag made the question askable.
-  // The DECLARATION survives that: the enum lowering runs and emits the type. The REFERENCE does
-  // not.
 
   test("a method-local enum LOWERS — the declaration is the ordinary scala 3 `enum`") {
     val out = port(
@@ -108,10 +78,7 @@ class T9ResidueProbeSpec extends PortSuite:
     // day either is fixed this test says so:
     //   - `1Level` is javac's binary simple name for the FIRST `Level` in the type. The DECLARATION
     //     strips that leading digit run (`SpoonTir.localName`, and JLS 3.8 makes the strip safe);
-    //     the reference reads `Symbol.fullName`, which still holds it, and `1Level` is not a Scala
-    //     identifier at all;
-    //   - the projection is wrong whatever the name: a method-local type is not a member of the
-    //     enclosing class, it is lexically in scope, so the reference wants the SIMPLE name.
+    //     the reference reads `Symbol.
     assert(clue(out).contains("demo.Holder.1Level.HIGH"))
   }
 

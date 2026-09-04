@@ -4,12 +4,7 @@ import balticporter.testkit.PortSuite
 
 /** `ENGINE-LIMITS.md` G8.9 — the frontend widens a java `equals(Object)`'s parameter to `scala.Any`
   * so that it OVERRIDES `Object.equals` instead of clashing with it, and every forwarding of that
-  * parameter to an `Object` slot then has an argument scala types as strictly wider.
-  *
-  * The signal is THIS FRONTEND'S OWN RECORD (§4.56) and neither the java nor the reference's node
-  * type: both say `java.lang.Object`, because the widening happened at the declaration and nowhere
-  * else.
-  */
+  * parameter to an `Object` slot then has an argument scala types as strictly wider. */
 class EqualsParamAtObjectSlotSpec extends PortSuite:
 
   test("a widened `equals` parameter forwarded to an `Object` slot is cast") {

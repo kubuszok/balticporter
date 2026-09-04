@@ -7,20 +7,7 @@ import balticporter.tir.*
 import balticporter.transform.TypeRedirectTransform
 
 /** `type-redirect` + `memberRenames` END TO END — java in, emitted Scala out, through the pipeline a
-  * port runs.
-  *
-  * The unit spec (`TypeRedirectMemberRenameSpec`) asserts the mechanism. This asserts the ARTEFACT,
-  * and specifically the property no unit assertion can reach: CROSS-FILE COHERENCE. Four files come
-  * out of this fixture, and the thing that goes wrong when a rename reaches some declarations and
-  * not others is that each file is perfectly valid on its own — the interface declares `close`, the
-  * implementor declares `dispose`, and only a COMPILER over all four says so.
-  *
-  * So the suite writes a PROBE an operator (and CI) can put a real compiler over, which is the shape
-  * `BeanPropertyPortSpec` and `LabeledJumpSpec` use and for the same reason: a forked test JVM
-  * cannot be handed a compiler.
-  *
-  * {{{ scala-cli compile --scala 3.8.4 --server=false <the path printed below> }}}
-  */
+  * port runs. */
 class TypeRedirectRenamePortSpec extends PortSuite:
 
   /** The shape a `Disposable`-style redirect meets: an interface, two implementors, one of them
@@ -110,11 +97,6 @@ class TypeRedirectRenamePortSpec extends PortSuite:
   test("emitted probe is written for a real compiler — ONE FILE PER UNIT, as a port writes it") {
     // The only instrument that sees cross-file coherence. Five valid-looking files that do not
     // agree about a member's name compile INDIVIDUALLY and fail together.
-    //
-    // Written per UNIT and not as `TirEmitter.emit`'s whole-program concatenation: five
-    // `package com.demo` clauses in one file NEST (`com.demo.com.demo.…`), which is a fact about
-    // scala's syntax and nothing to do with this phase — a probe in that shape fails for a reason
-    // no port has, and would read as this feature being broken.
     val (phase, after, log, _) = ported()
     val emitter = new TirEmitter(after, notes = log)
     val dir = _root_.java.nio.file.Path

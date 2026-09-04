@@ -3,17 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 
 /** Java's array covariance (JLS 10.10) asked at the RENDERING, because java's own erasure can write
-  * both sides of the slot as one type — `ENGINE-LIMITS.md` G13.5, which is §0's rule read at a slot.
-  *
-  * `arrayCovSlot` compares the two recorded JAVA array types and is exact wherever java wrote two
-  * different ones. `<E extends Enum<E>> E[] getUniverse(…)` assigned to an `Enum<?>[]` local is not
-  * that shape: both sides read `java.lang.Enum[]`, so there is nothing to compare — while the emitted
-  * term is an `Array[E]` at an `Array[Enum[?]]` slot, and scala's arrays are INVARIANT.
-  *
-  * The predicate's whole safety argument is arithmetic, which is what the negatives pin: two
-  * DIFFERENT `Array[…]` renderings conform in neither direction, so it can only add a cast at a slot
-  * scala would have rejected outright, and where the renderings agree it declines by construction.
-  */
+  * both sides of the slot as one type — `ENGINE-LIMITS.md` G13.5, which is §0's rule read at a slot. */
 class ArrayCovarianceRenderedSpec extends PortSuite:
 
   test("an ERASE-EQUAL array slot still takes java's covariance cast") {

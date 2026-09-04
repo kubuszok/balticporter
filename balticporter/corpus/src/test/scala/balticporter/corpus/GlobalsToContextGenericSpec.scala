@@ -5,24 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{Decision, DecisionLog, PorterNote, Pipeline, Program, UsageKind}
 import balticporter.transform.*
 
-/** `ENGINE-LIMITS.md` CT6 — the two faces of the same blindness, and the fixture that dumped them.
- *
- * Face A: `Xref.walkType`'s `AppliedType` arm re-labels the kind it was called with, so
- * `walkType(tpt.tpe, Instantiate, n)` at a `Tree.New` reaches a GENERIC class as `Tycon` — for
- * `new Cell<String>()` and for a RAW `new Cell()` alike. DESIGN.md §8.4's instantiate edge was
- * therefore absent for every generic class: no threading, no `impose`, and so NO SEAM, which is a
- * boundary the engine cannot see rather than one it refuses. The same relabelling left an anonymous
- * subclass of a GENERIC parent with no lexical home, so a capture inside it climbed to the enclosing
- * CLASS.
- *
- * Face B: the seam's own diagnostic says *give the site a `sites` policy*, and for the shape that
- * most needs one — a static initialiser that CONSTRUCTS a now-threaded type — there was no such
- * policy: the deferral was derived from reads of a MAPPED STATIC, and that initialiser reads none.
- * Measured on a real port, both keys BOUND, both did nothing, and the emitted output was
- * byte-identical with them and without them.
- *
- * Every assertion here is negative-testable: revert the guard named in its comment and it fails.
- */
+/** `ENGINE-LIMITS.md` CT6 — the two faces of the same blindness, and the fixture that dumped them. */
 class GlobalsToContextGenericSpec extends munit.FunSuite:
 
   /** The five shapes CT6 needs, side by side — a GENERIC and a NON-GENERIC class with the same
@@ -116,11 +99,6 @@ class GlobalsToContextGenericSpec extends munit.FunSuite:
     // threaded class, and before CT6 only the non-generic one was a counted boundary.
     // NEGATIVE: make `ContextNeed.instantiates` read `u.kind == UsageKind.Instantiate` only, and the
     // `demo.Tbl#cellPool` row disappears while `demo.Named#p` stays.
-    //
-    // Both rows are `unsuppliable-use` and NOT `residual-global-read`: neither initialiser reads a
-    // mapped static at all, they CONSTRUCT threaded classes, and that is the whole of the split
-    // (PROGRESS.md §10.8.9). This fixture is CT6's, so it is also the corpus's oldest witness that
-    // the two were being counted as one.
     val subjects = seams(phase, after)
       .filter(_.kind == ContextSeamCheck.Kind.UnsuppliableUse).map(_.subject).toSet
     assert(clue(subjects).contains("demo.Named#p"), render(phase, after))

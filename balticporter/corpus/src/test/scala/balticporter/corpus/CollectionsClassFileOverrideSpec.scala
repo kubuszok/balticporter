@@ -7,42 +7,7 @@ import balticporter.tir.{Decision, Pipeline, PorterNote, Program, Reason}
 import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform}
 
 /** A MEMBER THAT OVERRIDES A CLASS FILE keeps its formals — `CLAUDE.md` §4.56 read at an OVERRIDE
-  * rather than at a call.
-  *
-  * ==What this pins, and why each half needs a fixture==
-  * `class Holder extends java.util.AbstractMap<String, String>` declares
-  * `putAll(Map<? extends K, ? extends V>)` and opens it with `super.putAll(m)`. `java.util.AbstractMap`
-  * is a JDK type the mapping does NOT cover, so its `putAll` still takes a `java.util.Map` however the
-  * port retypes its own; retyped, the emitted member overrides nothing and its own `super` call cannot
-  * compile.
-  *
-  * ==THE FIXTURE'S PREMISE IS ASSERTED, because it went stale once and failed unreadably==
-  * This spec was written with `java.util.AbstractSet` in that role, and wave 12 MAPPED it
-  * (`ENGINE-LIMITS.md` K29) — at which point the positive stopped holding and said only
-  * `heldNames = Set()`, which reads as "the refusal broke" rather than as "your example moved". So
-  * the premise is a `test` of its own: the parent this fixture stands on must be ABSENT from
-  * `typeMap`, checked against the phase's own table. `AbstractMap`, `AbstractList` and
-  * `AbstractSequentialList` are all still absent, and each is the SAME latent shape K29 closed for
-  * `AbstractSet` — so the day one is mapped this fixture moves again, deliberately, with a failure
-  * message that says what to do.
-  *
-  * The NEGATIVES are the whole of the difficulty and each one is a measurement:
-  *
-  *   - a class extending a MAPPED collection (`extends java.util.ArrayList`) emits the SHIM as its
-  *     parent, so its overrides belong in shim shape and must move. Held back, they would break in
-  *     the other direction — this is the case that decides correctness on every port that is not
-  *     this one;
-  *   - a member overriding an interface THIS PROGRAM DECLARES must move, with its interface. Asked
-  *     through `OverrideGraph.Closure.externalAnchors` instead of `overridden`, this failed: 104
-  *     members were held on ssg-md over `java.util.function.Function#getAfterDependents`, because
-  *     `ExternalSurface.mayDeclare` answers YES for an unparsed type on purpose (69 → 113);
-  *   - a member that overrides NOTHING is not a candidate at all, whatever its signature says.
-  *
-  * And the CLASSIFICATION is asserted here rather than left to prose: the seam this refusal creates
-  * is `Issue.ClassFileOverride` and NOT `Issue.ScopedOut`, whose sentence tells its reader to widen
-  * a `CollectionsTransform(scope)` that has nothing to do with it and that no port can write for a
-  * java class file.
-  */
+  * rather than at a call. */
 class CollectionsClassFileOverrideSpec extends PortSuite:
 
   /** `Holder` is the positive; `Fast` is the mapped-parent negative; `Ours`/`Impl` are the
@@ -144,10 +109,7 @@ class CollectionsClassFileOverrideSpec extends PortSuite:
     // string. Instantiate the interface and they are not: `names(T)` above, `names(String)` below.
     // `OverrideGraph.matchingUp` reads that edge through `ParentSubst` now; before it did not, so
     // `overridden` answered EMPTY, this phase concluded the member must override a CLASS FILE, and
-    // the only external ancestor an enum has is `java.lang.Enum` — whose surface is unknown, so
-    // `mayDeclare` says yes on purpose. Java's formal was then held on a member whose parent the
-    // port had already retyped: `E007`, `Found` and `Required` differing by one type argument, with
-    // every check count flat. `ENGINE-LIMITS.md` C16.
+    // the only external ancestor an enum has is `java.lang.
     val generic =
       """package demo;
         |import java.util.*;

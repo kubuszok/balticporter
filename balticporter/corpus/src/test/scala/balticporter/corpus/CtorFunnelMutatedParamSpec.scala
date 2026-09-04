@@ -2,24 +2,7 @@ package balticporter.corpus
 
 import balticporter.testkit.PortSuite
 
-/** A PROMOTED constructor parameter the java constructor ASSIGNS TO.
-  *
-  * Java's constructor parameter is an ordinary LOCAL (JLS 8.8.1) and may be reassigned; a scala
-  * class parameter is a `val`. `CtorFunnel` promotes the chosen constructor's parameters into the
-  * class's parameter list, so `C(int x) { x = x * 2; this.f = x; }` emitted `x$p = x$p * 2` —
-  * `E052 Reassignment to val x$p`, which is loud and was nevertheless uncounted, because no library
-  * in this corpus happens to write it.
-  *
-  * It is not an exotic shape. Normalising an argument before storing it is ordinary java, and a
-  * record's COMPACT constructor exists PRECISELY for it: JLS 8.10.4 runs the written body against
-  * the parameters and then appends the field assignments, so `public R { x = x * 2; }` is the whole
-  * idiom the feature was added for.
-  *
-  * The emission is `private var`, which is the smallest shape that keeps java's meaning: the value
-  * is still per-construction, the header keeps its arity, its types and its descriptor, and nothing
-  * new reaches the emitted SURFACE — java's parameter is not a member, so the promotion must not
-  * make one that a consumer can see.
-  */
+/** A PROMOTED constructor parameter the java constructor ASSIGNS TO. */
 class CtorFunnelMutatedParamSpec extends PortSuite:
 
   test("a promoted parameter the constructor ASSIGNS TO is emitted `private var`") {

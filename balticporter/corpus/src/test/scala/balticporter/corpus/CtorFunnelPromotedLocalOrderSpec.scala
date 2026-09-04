@@ -4,35 +4,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 
-/** A PROMOTED constructor LOCAL keeps java's POSITION — `ENGINE-LIMITS.md` C12.
-  *
-  * `CtorFunnel` promotes one java constructor to scala's primary and splices its body into the
-  * class body, where the constructor's own top-level locals become `val` MEMBERS (C2, and
-  * `CLAUDE.md` §4.55 for the rename that goes with it). Both of those are about the NAME. This
-  * spec is about WHERE the initialiser runs, which is the half that was wrong:
-  * `TirEmitter.orderBody` hoisted every `ValDef` ahead of every statement, so a promoted local
-  * initialised itself BEFORE the constructor statements java ran first.
-  *
-  * JLS 12.5 is the whole of the rule, and it cuts between the two:
-  *
-  *   - a FIELD initialiser (and an instance initialiser) runs in step 4, in textual order, before
-  *     any constructor body statement — so hoisting a field above the promoted body reproduces
-  *     java whatever order the java file declared them in;
-  *   - a constructor's LOCAL DECLARATION is a step-5 constructor BODY statement, and its position
-  *     among the other body statements is what carries every dependency between them.
-  *
-  * A scala class body IS its constructor and runs in textual order, so the emitted ORDER is the
-  * semantics — which is what these tests assert. The behaviour itself was measured on liqp, where
-  * `Template`'s three promoted locals read `this.templateParser` one statement before java assigned
-  * it: 409 of 414 test failures, `NullPointerException`, and **0 scalac errors with every check
-  * count flat**. Nothing but a run could see it (`CLAUDE.md` §3).
-  *
-  * The distinction is NOT visible in the node kind — both are `Tree.ValDef` — and is read off
-  * OWNERSHIP, which is the structural fact `CLAUDE.md` §4.56 demands: the frontend interns a field
-  * under the CLASS and a local under the enclosing EXECUTABLE (`SpoonTir.defineLocal`), so
-  * "is this ValDef a member of the class whose body I am ordering?" is a symbol lookup and not a
-  * guess about names, lines or provenance.
-  */
+/** A PROMOTED constructor LOCAL keeps java's POSITION — `ENGINE-LIMITS.md` C12. */
 class CtorFunnelPromotedLocalOrderSpec extends munit.FunSuite:
 
   private val src =
@@ -140,13 +112,7 @@ class CtorFunnelPromotedLocalOrderSpec extends munit.FunSuite:
   // …AND STEP 4 HAS TWO KINDS OF MEMBER IN IT. C12's own doc said the hoist "reproduces java
   // WHATEVER order the java file declared them in", which is true of fields ALONE and false the
   // moment an instance initialiser block is in the same class: JLS 12.5 step 4 runs field
-  // initialisers and instance initialisers as ONE sequence, in TEXTUAL ORDER. The hoist put every
-  // field ahead of every block, so `{ b = 2; } int b = 5;` left `b == 2` where java leaves 5.
-  //
-  // Same shape as C12 and same evidence: valid Scala, no compile error, no check count, and only
-  // a run can see it. A block is a `Tree.DefDef` named `<initblock>`, so it was in `rest` — which
-  // is where a promoted constructor LOCAL correctly belongs and where a step-4 member does not.
-  // -----------------------------------------------------------------------------------------
+  // initialisers and instance initialisers as ONE sequence, in TEXTUAL ORDER.
 
   test("an instance INITIALISER BLOCK keeps its textual position among the fields") {
     // java: the block runs first, `b = 5` overwrites it, `b == 5`.

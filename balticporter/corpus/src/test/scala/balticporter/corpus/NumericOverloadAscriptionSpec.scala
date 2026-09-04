@@ -2,20 +2,7 @@ package balticporter.corpus
 
 import balticporter.testkit.PortFixture
 
-/** THE NUMERIC-OVERLOAD PIN, and the type variable it may not write down.
-  *
-  * Java resolves an overload by exact match; scala widens numerics first and then finds no
-  * most-specific alternative, so `TirEmitter.numericOverloadAscription` names the alternative javac
-  * chose by ascribing the callee's own function type. That text is the callee's DECLARED signature
-  * written at the CALL SITE, and a declared RESULT may name the declaring type's own type
-  * parameter — which the call site does not have. `ENGINE-LIMITS.md` G12's rule met at a fourth
-  * minting site, and `CLAUDE.md` §4.56's answer to it: the `extends` clause says what the argument
-  * is, so `ParentSubst` is the substitution and a variable it cannot reach declines the pin.
-  *
-  * Two positives and three negatives. The RAW receiver is the one that decides whether this
-  * declines rather than approximates, and the SELF call is the one that decides whether the
-  * nameability test reads the enclosing scope rather than "is it a type parameter at all".
-  */
+/** THE NUMERIC-OVERLOAD PIN, and the type variable it may not write down. */
 class NumericOverloadAscriptionSpec extends munit.FunSuite:
 
   private def out(java: String): String = PortFixture.port(java).out

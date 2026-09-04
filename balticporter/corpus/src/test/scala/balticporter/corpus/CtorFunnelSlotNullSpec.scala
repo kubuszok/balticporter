@@ -5,22 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 
 /** A `null` in a delegation THE ENGINE MINTED is ASCRIBED — `ENGINE-LIMITS.md` C8's own sentence,
-  * one argument to the left of where it was already written.
-  *
-  * `CtorFunnel` synthesises a primary whose slots are the parent constructor's formals FOLLOWED BY
-  * the fields it hoists, and every java root then delegates with the whole slot list. A root that
-  * does not assign a hoisted field contributes that field's own java initialiser — routinely
-  * `null`. Java never wrote that argument list and never resolved it: `null` inhabits every
-  * reference type, so `this(null)` is applicable to the primary AND to any real one-argument
-  * constructor at a reference type, and scalac reports `E051 Ambiguous overload`.
-  *
-  * The engine already knows this fact and already writes the fix — `TirEmitter.markerArg` ascribes
-  * the DISAMBIGUATOR's `null` for exactly this reason, and `CtorFunnel`'s own `shadowed` predicate
-  * records that treating a bare `null` as applicable to everything refused the synthesis for every
-  * class with a one-argument constructor. So the slot arguments are ascribed at the slot's declared
-  * type and `shadowed` is left alone: the ambiguity goes without the marker's extra parameter, and
-  * the funnel's decisions are byte-identical.
-  */
+  * one argument to the left of where it was already written. */
 class CtorFunnelSlotNullSpec extends munit.FunSuite:
 
   private def emit(src: String): String =

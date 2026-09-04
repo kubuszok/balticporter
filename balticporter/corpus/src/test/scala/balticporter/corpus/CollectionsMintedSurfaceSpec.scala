@@ -3,30 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** THE SURFACE THE MINTED PARENT DECLARES — `ENGINE-LIMITS.md` K28.1's bridge.
-  *
-  * `CollectionsMintedParentClashSpec` beside this one is about a CALL the re-parenting made
-  * ambiguous. This is the other half: a class emitted `extends scala.collection.mutable.Map[K,V]`
-  * owes that trait's abstract surface, and java's own members are the wrong SHAPE for it —
-  * `put(K,V): V` against `Option[V]`, `iterator(): JavaIterator[A]` against a parameterless
-  * `Iterator[A]`, `size(): Int` against a member `SeqOps` declares `final`. `CLAUDE.md` §1: an
-  * obligation the ENGINE'S OWN TRANSLATION created is not a port's to discharge, and no manifest key
-  * could.
-  *
-  * ==Rename, don't retype==
-  * *Scala's member wins* — retype `iterator()` to `Iterator[A]` — closes the row and DELETES whatever
-  * its result type was carrying, which on one corpus library is three further declarations returning
-  * a reversible indexed iterator. Renaming java's member to `<name>$java` moves a NAME and nothing
-  * else (§4.55's machinery re-points every reference exactly, because java resolved all of them
-  * statically), and the synthesised member over it is what the parent asked for.
-  *
-  * ==And the rename is about the BODY, not only about the error==
-  * The bridge has to NAME its delegate, and scala resolves `this.get(k)` at `k: K` to the inherited
-  * `MapOps.get(K): Option[V]` — the bridge itself. An unrenamed delegate is an infinite recursion
-  * that compiles, moves no count and overflows the stack at the first call, which is `CLAUDE.md`
-  * §4.4's defect class reached through a delegation. That is why `CapturedByTarget` is a separate
-  * table from `BridgedTarget`, and the third test below is what pins the difference.
-  */
+/** THE SURFACE THE MINTED PARENT DECLARES — `ENGINE-LIMITS.md` K28.1's bridge. */
 class CollectionsMintedSurfaceSpec extends PortSuite:
 
   private val src =
@@ -101,20 +78,7 @@ class CollectionsMintedSurfaceSpec extends PortSuite:
   }
 
   /** …and the one below it that THIS FIXTURE CANNOT PROVE, which is worth stating rather than
-    * hiding (§4.59: a fixture only promotes a fact it can actually distinguish).
-    *
-    * `Bag` declares `add(E)` beside `add(E...)` and both have arity 1 — §4.55's over-approximate key
-    * met at a delegate. Java's own resolution admits the fixed-arity candidate in phase 1 or 2 and
-    * the pack only in phase 3 (JLS 15.12.2), so `addOne` must delegate to the SCALAR; bound to the
-    * pack, the emitted body is `Found: E / Required: Array[E]`.
-    *
-    * VERIFIED FAILING was attempted and the guard is NOT load-bearing here: with the preference
-    * removed the spec still passes, because `OverrideGraph.membersOf` hands back the scalar first
-    * whichever order the java declares them in — the fixture was written with the pack first
-    * precisely to try to break that, and it does not. The guard's reach is measured on a PORT
-    * instead: **1 error, exactly once, on the one corpus class that declares both**
-    * (`ENGINE-LIMITS.md` K28.1). So what these assertions pin is the emitted SHAPE, and the number
-    * beside them is the evidence for the rule. */
+    * hiding (§4.59: a fixture only promotes a fact it can actually distinguish). */
   test("a VARARG overload is never the delegate while a fixed-arity one exists") {
     val p = port(src, new CollectionsTransform)
     assertEmits(p, "override def addOne(elem: E): this.type")
@@ -136,15 +100,6 @@ class CollectionsMintedSurfaceSpec extends PortSuite:
     // `Widened extends Map<String,V>` declares none of the delegates, so every row declines and the
     // type owes nothing: a java interface may leave members abstract, and the obligation lands on
     // whatever implements it.
-    //
-    // What this test pins is the EMITTED half, which is load-bearing here. The other half — that
-    // such a type is not REPORTED as owing anything — is a refusal population and no emitted text
-    // shows it, so removing `found.isEmpty` leaves this spec green; its reach is measured on a port,
-    // at SEVEN refusal rows with no closed error (`ENGINE-LIMITS.md` K28.1), which is the difference
-    // between a refusal population and noise (`CLAUDE.md` §3).
-    //
-    // Ported ALONE, because `assertNotEmits` reads the WHOLE emitted port: asked of the fixture
-    // above it would be answered by `Ledger`'s bridges and say nothing about this declaration.
     val p = port(
       """package demo;
         |import java.util.*;

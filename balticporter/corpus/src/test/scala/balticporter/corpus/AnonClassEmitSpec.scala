@@ -5,11 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 
 /** A constant declared INSIDE an anonymous class must never be emitted as `inline val` (there is no
   * companion to put it in), and a reference to it must never go through the class's synthetic FQN
-  * (whose numeric suffix becomes a syntax error after package rename: `Skin.107.K`).
-  *
-  * Two fixture shapes: a pre-16 instance constant (`final String K = "k"`) and a Java 16+ static
-  * constant (`static final String K = "k"`). Both must render as a plain body member of the
-  * anonymous class expression, referenced bare. */
+  * (whose numeric suffix becomes a syntax error after package rename: `Skin.107.K`). */
 class AnonClassEmitSpec extends munit.FunSuite:
 
   // pre-16: instance constant — `final String K = "k"` (not static, allowed in every version)

@@ -5,22 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.PortSuite
 import balticporter.tir.{OmissionCheck, Pipeline}
 
-/** A ported java enum IS a `java.lang.Enum` — the shape that says so, and the shapes that cannot.
-  *
-  * ==Why the shape had to change==
-  * `class E extends Enum<E>` is a TYPE fact, not decoration: `EnumSet.noneOf`, `EnumMap`,
-  * `Comparable<E>` and any library that writes `<E extends Enum<E> & I>` bound on it. A
-  * `sealed abstract class` may not name that supertype at all — scalac answers *"only enums defined
-  * with the enum syntax can"* — so a port whose enums are sealed classes cannot satisfy one such
-  * bound at any call site anywhere. Measured on flexmark, whose `BitFieldSet<E extends Enum<E> &
-  * BitField>` is exactly that shape.
-  *
-  * ==…and the `enum` syntax cannot express every java enum==
-  * A scala 3 enum CASE has no template body, and a member of the emitted type may not collide with
-  * one java made FINAL on `java.lang.Enum` — which java itself permits, because java has two
-  * namespaces and a FIELD called `name` sits happily beside the final `name()`. Each such enum keeps
-  * the pre-existing sealed shape and is COUNTED, never silently chosen.
-  */
+/** A ported java enum IS a `java.lang.Enum` — the shape that says so, and the shapes that cannot. */
 class EnumJavaLangEnumSpec extends PortSuite:
 
   private def emit(src: String) =

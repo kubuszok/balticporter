@@ -4,21 +4,11 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{Correlate, Decision, DecisionLog, Pipeline, PorterNote, SrcMap}
 
-/** E9 — PREVIEW MODE: say it in the OUTPUT, or refuse and count.
-  *
-  * `ENGINE-LIMITS.md` M6 is right for a port that ships: where the engine has no faithful Scala it
-  * refuses, leaves a residue comment, and carries a NUMBER. It is wrong for the first week of a NEW
-  * library, where the operator is an agent in another repository (CLAUDE.md §4.45) that has to find
-  * the residue at all — and `/* break … */ ()` compiles perfectly.
-  *
-  * `preview = true` turns each such site into `scala.compiletime.error`. The port deliberately does
-  * not compile, and every error carries the four things a residue comment does not: WHAT could not
-  * be rendered, WHY, WHAT the agent must do, and the JAVA ORIGIN.
-  *
-  * Both halves are asserted, and the first is the one that matters most: with the flag OFF the
-  * emitted text is EXACTLY what it was, character for character. A diagnostic mode that perturbs
-  * the shipping emission is not a diagnostic mode.
-  */
+/** E9 — PREVIEW MODE: say it in the OUTPUT, or refuse and count. `preview = true` turns a residue
+  * site into `scala.compiletime.error`, naming WHAT could not be rendered, WHY, WHAT the agent
+  * must do, and the JAVA ORIGIN — for an agent in another repository (CLAUDE.md §4.45) who has to
+  * find the residue at all. With the flag OFF the emitted text is EXACTLY what it was, character
+  * for character: a diagnostic mode that perturbs the shipping emission is not a diagnostic mode. */
 class PreviewModeSpec extends munit.FunSuite:
 
   /** a labelled `break` whose label the emitter cannot see — the residue shape, minted directly

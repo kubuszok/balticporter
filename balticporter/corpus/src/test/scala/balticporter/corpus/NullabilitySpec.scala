@@ -7,14 +7,7 @@ import balticporter.transform.{MutableParamsTransform, NullabilityBoundaryCheck,
 import balticporter.transform.NullabilityBoundaryCheck.Issue
 import balticporter.transform.NullabilityTransform.Target
 
-/** UNION FLOOR — the annotation moves out of a marker the Scala compiler ignores and INTO the type.
-  *
-  * The negatives carry as much weight as the positives here, and are written first in the file's
-  * mind if not on its page: an annotated VARARG has no nullable Scala form, an annotated PRIMITIVE
-  * cannot be null at all, and an annotation carrying ARGUMENTS is a different annotation. Each is
-  * refused, left exactly as the upstream wrote it, and COUNTED — a refusal nobody can see is the
-  * §1(b) silent no-op this phase exists to avoid.
-  */
+/** UNION FLOOR — the annotation moves out of a marker the Scala compiler ignores and INTO the type. */
 class NullabilitySpec extends PortSuite:
 
   private val java =
@@ -66,9 +59,7 @@ class NullabilitySpec extends PortSuite:
     // are different claims and only the second is worth asserting. FOUR markers reach the emitted
     // baseline — `find`, `pick`, `count`, `parent` — and not five: the emitter renders a class's, a
     // method's and (since wave 3.1ad, `TirEmitter.valDef` calling `annots`) a field's annotations,
-    // and not a parameter's, so `spread`'s is invisible in the output whatever this phase does. The
-    // phase consumes `find`'s, `pick`'s and `parent`'s and refuses `count`'s, so exactly the refused
-    // one survives.
+    // and not a parameter's, so `spread`'s is invisible in the output whatever this phase does.
     def markers(s: String) = s.linesIterator.count(_.trim == "@demo.Null")
     assertEquals(markers(port(java).out), 4)
     assertEquals(markers(port(java, phase()).out), 1)
@@ -156,13 +147,6 @@ class NullabilitySpec extends PortSuite:
     // A Java field with no initialiser has no Scala default, so the declaration needs a PLACEHOLDER;
     // a union WITH `Null` STATES its own, so the cast the union was introduced to retire goes at the
     // declaration as well as at the generic return.
-    //
-    // The placeholder off the union path is `scala.compiletime.uninitialized` rather than the
-    // `null.asInstanceOf[T]` this test was written against — A1's residue, scala's own word for the
-    // JVM default. That substitution is keyed on the CAST specifically and not on "field with no
-    // initialiser": applied to every one it took the union default here back off to
-    // `uninitialized`, which is the same cast-shaped answer in a different spelling and defeats the
-    // second assertion below. Both halves are asserted together for exactly that reason.
     assertEmits(port(java), "var parent: demo.Actor = scala.compiletime.uninitialized")
     assertEmits(port(java, phase()), "var parent: demo.Actor | scala.Null = null")
   }
@@ -186,8 +170,7 @@ class NullabilitySpec extends PortSuite:
     // the parameter symbol as a local `var` and mints `s$arg` for the slot — WITHOUT touching the
     // method's `MethodType`, whose parameter is still called `s`. Matched by NAME, the emitted
     // parameter moved and the signature silently did not: a disagreement no count can see, and
-    // the reason the two lists are joined BY POSITION. Both ends asserted, because asserting the
-    // emitted text alone is exactly what missed it.
+    // the reason the two lists are joined BY POSITION.
     val p = port(reassigning, new MutableParamsTransform, phase())
     assertEmits(p, "def trim(s$arg: java.lang.String | scala.Null)")
     val m = p.after.symbols.all.find(_.fullName == "demo.Group#trim").getOrElse(fail("no `trim`"))
@@ -284,9 +267,7 @@ class NullabilitySpec extends PortSuite:
     // The negative this is written for: with parameters refused, a scope entry that holds one back
     // REMOVED that site's `AbstractTypeParameter`/refusal row and added nothing, so
     // `nullability-boundary` fell with nothing to attribute the fall to — indistinguishable from a
-    // check that stopped asking (CLAUDE.md §5). And the emitted text cannot stand in for it: a
-    // PARAMETER's surviving marker is one of the two the emitter does not render (see the
-    // stripped-annotation test above), so the number is the ONLY evidence there is.
+    // check that stopped asking (CLAUDE.md §5).
     val only = phase(scope = RuleScope.Only(Set("demo.Group#parent")))
     val (after, log) = Pipeline.runTraced(PortFixture.parse(java), List(only))
     val out = only.boundary(after.units).filter(_.issue == Issue.ScopedOut).map(_.subject)

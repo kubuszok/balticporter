@@ -5,14 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.{OmissionCheck, Pipeline}
 import balticporter.transform.MutableParamsTransform
 
-/** Java ANONYMOUS CLASSES, end to end.
-  *
-  * This exists because the body of every one of them was silently DISCARDED for the project's
-  * entire history: `SpoonTir.ctorCall` read `CtConstructorCall` and never asked whether the node
-  * was the `CtNewClass` subtype. The result compiled — a listener with no overrides is a valid
-  * listener — so every libGDX button did nothing when clicked while the gate stayed green. A
-  * regression here is invisible to a compile gate, which is exactly why it is pinned by a test.
-  */
+/** Java ANONYMOUS CLASSES, end to end. */
 class AnonymousClassSpec extends munit.FunSuite:
 
   private val src =

@@ -3,25 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 
 /** JAVA'S UNBOXING CONVERSION IS TWO STEPS, and the shortcut through `Number` names a member that
-  * does not exist on two of the eight wrappers.
-  *
-  * JLS 5.1.8 unboxes at the wrapper's OWN primitive; a widening primitive conversion (5.1.2) then
-  * takes it to the slot. `SpoonTir.unbox` collapsed the pair into one `xxxValue()` call keyed on the
-  * TARGET, which is exact for the six `java.lang.Number` wrappers — every one of them carries the
-  * whole `byteValue()`/`shortValue()`/`intValue()`/`longValue()`/`floatValue()`/`doubleValue()`
-  * family, so `Long -> double` really is `doubleValue()`.
-  *
-  * `Character` and `Boolean` are NOT `Number`s. They carry `charValue()` and `booleanValue()` and
-  * nothing else, so a `Character` flowing into an `int` emitted `c.intValue()` — a member no class
-  * in the chain declares. That one is LOUD (`value intValue is not a member of java.lang.Character`)
-  * rather than silent, which is why it is a spec here and not an `ENGINE-LIMITS.md` entry: it fails
-  * a compile at the line, and the fix is to emit the two steps java performs.
-  *
-  * BOTH CALL SITES, because the collapse was written once and read twice: `coerce`'s cross-type
-  * unbox clause (any slot with an expected type) and `promotedBranch`'s boxed arm (a conditional
-  * operand, which has none). A fixture reaching only one of them would have left the other emitting
-  * `intValue()` on a `Character`.
-  */
+  * does not exist on two of the eight wrappers. */
 class WrapperUnboxSpec extends PortSuite:
 
   test("a `Character` at an `int` SLOT unboxes at `char` and widens — never `intValue()`") {

@@ -3,23 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 
 /** A call through an ERASED RECEIVER whose declared result is a RAW generic — the node's type must
-  * say what the emitted scala HAS, not what java's expression meant.
-  *
-  * ENGINE-LIMITS §0 is the governing rule and this is a worked instance of it. A wildcard receiver
-  * whose callee depends on its type variables is called through java's own erased view (G11), so
-  * `pool.obtain().asInstanceOf[W[Object]].init(item)` EMITS a `W[Object]`. Spoon says the call's
-  * type is the raw `W`, which the caller's name-directed fill renders `W[T]` — and the node then
-  * asserts a type the output does not have. Nothing about the expression is wrong; what is wrong is
-  * the type recorded ON it, and the rule that pays for it is the unchecked-conversion cast at the
-  * argument slot: `knownReceiverArgs` compared `W[T]` (slot) with `W[T]` (node), found them equal,
-  * and emitted nothing for a conversion java really did perform.
-  *
-  * Typed honestly, the two disagree in exactly the shape of an unchecked conversion — same type
-  * constructor, same arity, every differing argument `Object` — and the cast is emitted.
-  *
-  * The idiom is a per-class object pool, and the java is legal precisely because it is RAW
-  * throughout (gdx-vfx's `PrioritizedArray.Wrapper`).
-  */
+  * say what the emitted scala HAS, not what java's expression meant. */
 class ErasedReceiverResultSpec extends PortSuite:
 
   private val pooled =

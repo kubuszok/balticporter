@@ -5,47 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 
 /** A SYNTHESISED primary is `protected` — and the fact that decides it was written down BACKWARDS
-  * in this engine's own source for as long as the synthesis existed.
-  *
-  * `TirEmitter` asserted, in a comment, that *"scala's `extends C(args)` can only ever invoke C's
-  * PRIMARY, so hiding it would make the class unextendable by exactly the subclasses that motivated
-  * it"*. That is false, and it was the only argument keeping a constructor JAVA NEVER DECLARED in
-  * the port's published API. Compiled and run against scalac 3.8.4:
-  *
-  * {{{
-  * package p
-  * class C private (val n: Int, val b: Boolean):
-  *   def this()          = this(0, false)
-  *   def this(s: String) = this(s.length, true)
-  * package q:
-  *   class D extends p.C("hello")   // n=5  — a SECONDARY, from another package
-  *   class E extends p.C()          // n=0
-  *   class F(k: Int) extends p.C(k.toString)
-  * package r:
-  *   class G protected (val n: Int, val b: Boolean)
-  * package s:
-  *   class H(k: Int) extends r.G(k, true)   // n=7 — the PROTECTED PRIMARY, another package
-  *   new r.G(3, false) {}                   // and an anonymous subclass reaches it too
-  * }}}
-  *
-  * And the negative that decides `protected` over `private`, which is the half usually missing —
-  * `private` is CLASS-private in Scala, not package-private, so a SAME-package subclass cannot
-  * reach it either:
-  *
-  * {{{
-  * package g
-  * class A private (val n: Int, val b: Boolean) { def this() = this(0, false) }
-  * class B extends A(1, true)
-  * // -- Error: too many arguments for constructor A in class A: (): g.A
-  * }}}
-  *
-  * Choosing `private` where a class is provably leaf would mean asking *"is this class extended?"*,
-  * which is a WHOLE-PROGRAM question asked at emission — the shape `ENGINE-LIMITS.md` D4 measures as
-  * drift between a base module's run and a dependent's. `protected` needs no such question. What
-  * this spec can pin without a compiler is the emitter's half: the synthesised primary renders
-  * `protected`, bare (never `protected[pkg]`, which would deny the cross-module subclassing the
-  * choice exists to permit — `DESIGN.md` §8.11), and a PROMOTED java constructor does not gain it.
-  */
+  * in this engine's own source for as long as the synthesis existed. */
 class SyntheticPrimaryVisibilitySpec extends munit.FunSuite:
 
   private val src =

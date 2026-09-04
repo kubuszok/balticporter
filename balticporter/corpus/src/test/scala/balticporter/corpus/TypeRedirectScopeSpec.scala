@@ -5,20 +5,7 @@ import balticporter.tir.{Decision, RuleScope}
 import balticporter.transform.TypeRedirectTransform
 
 /** `TypeRedirectTransform` RETYPES declarations, so CLAUDE.md §1 owes it a `RuleScope` — and this
-  * suite is what says the scope is real rather than a constructor parameter nobody reads.
-  *
-  * ==Why the omission was invisible for two ports==
-  * A dependent's `Program` CONTAINS its base (`ENGINE-LIMITS.md` D2), and a dependent does not EMIT
-  * its base's files. So an unscoped redirect re-points the type inside the base's declarations too,
-  * where it changes no emitted text at all and changes only what the run DERIVES about them. The
-  * first port whose redirected type appeared in a base signature is the one that found it: libGDX's
-  * `Json$FieldMetadata` takes a `reflect.Field`, its published contract row says `primary=(Field)`,
-  * and the dependent re-derived `primary=(TaskField)` — one FATAL `base-surface` finding and no
-  * compile error anywhere, because the file the disagreement is about is not this module's to write.
-  *
-  * The two units below stand in for the two modules: `com.demo` is the dependent's own namespace and
-  * `com.base` is the base's.
-  */
+  * suite is what says the scope is real rather than a constructor parameter nobody reads. */
 class TypeRedirectScopeSpec extends PortSuite:
 
   private val sources = List(

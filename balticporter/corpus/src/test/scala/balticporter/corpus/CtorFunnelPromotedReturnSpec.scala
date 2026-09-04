@@ -5,25 +5,7 @@ import balticporter.frontend.spoon.SpoonTir
 import balticporter.tir.Pipeline
 
 /** JS-C51 — a `return` in a java CONSTRUCTOR body, once `CtorFunnel` has promoted that body into
-  * the CLASS BODY.
-  *
-  * A `return` with no value is legal in a java constructor (JLS 14.17) and completes it normally:
-  * an ordinary early exit from a parameter parser, and upstream libraries write it. Scala's class
-  * body is not a method, so the faithful translation is `E091 return outside method definition` —
-  * the one shape in this family where the LOUD failure is the whole of the evidence, which is why
-  * the negatives below are compiled shapes rather than counts.
-  *
-  * The image is a LOCAL `def`, for JS-S21's own reason (a `def` is the one construct a local
-  * `return` belongs to, so nothing has to be named and no interposed construct can capture the
-  * jump) and for one more that belongs to a constructor: `scala.util.boundary.Break` extends
-  * `RuntimeException`, and a constructor body routinely holds a broad `catch`, which would then eat
-  * a jump java's `return` can never be caught by.
-  *
-  * Every fixture here has ONE constructor on purpose — that is `CtorFunnel`'s UNIQUE ROOT shape, the
-  * one that really promotes a body. A class with two non-delegating roots is funnelled some other
-  * way and has no promoted body for this to be about, which is what the first draft of this spec
-  * measured by accident.
-  */
+  * the CLASS BODY. */
 class CtorFunnelPromotedReturnSpec extends munit.FunSuite:
 
   private def emit(src: String): String =

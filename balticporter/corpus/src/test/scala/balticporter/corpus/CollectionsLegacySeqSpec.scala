@@ -7,20 +7,7 @@ import balticporter.tir.Pipeline
 import balticporter.transform.CollectionsTransform
 
 /** `java.util.Vector` and `java.util.Stack` — java's two LEGACY sequences, both absent from
-  * Scala.js and `Stack` from Scala Native too.
-  *
-  * The whole content of this spec is that BOTH map to `mutable.ArrayBuffer`, and it is worth a
-  * suite of its own because the obvious answer for the second one is wrong in a way no compile can
-  * see. `scala.collection.mutable.Stack` has java's `push`/`pop`/`peek` and is an `ArrayDeque`
-  * whose `push` PREPENDS — so its element 0 is the TOP, while java's `Stack extends Vector extends
-  * List` puts the top LAST. Every list-shaped read of the same object (a `for`, a `get(i)`, an
-  * `indexOf`, a `toString`) then answers in the opposite order with a green compile, which is
-  * CLAUDE.md §4.4's defect class arriving through a type mapping.
-  *
-  * So `peek` is the arm to watch: at `Kind.Seq` it is the DEQUE `peek` — `headOption.orNull`, the
-  * FIRST element, null when empty — and java's `Stack.peek()` is the LAST element and THROWS. Both
-  * spellings compile; only one is java.
-  */
+  * Scala.js and `Stack` from Scala Native too. */
 class CollectionsLegacySeqSpec extends PortSuite:
 
   private val src =

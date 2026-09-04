@@ -2,15 +2,7 @@ package balticporter.corpus
 
 import java.nio.file.{Files, Path}
 
-/** The cache every port's classpath is resolved through — and the ONE question it exists to ask.
-  *
-  * A cache keyed on "does the file exist?" answers a coordinate BUMP with the versions the port
-  * used to declare, and the failure that follows is the worst kind this project has: an import that
-  * resolves WRONGLY rather than failing, so the port emits nonsense and reports success (CLAUDE.md
-  * §5.1). No count moves and the port still compiles, so nothing but this can see it.
-  *
-  * No `cs` here: what is under test is the freshness decision, which is pure file state.
-  */
+/** The cache every port's classpath is resolved through — and the ONE question it exists to ask. */
 class ClasspathCacheSpec extends munit.FunSuite:
 
   private def tmp(name: String): Path =

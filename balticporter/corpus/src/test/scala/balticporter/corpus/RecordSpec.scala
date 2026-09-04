@@ -4,20 +4,7 @@ import balticporter.catalog.JS
 import balticporter.testkit.PortSuite
 import balticporter.tir.Decision
 
-/** JAVA `record` — `JS-C43`, JLS 8.10.
-  *
-  * ZERO CORPUS SITES. No library in the corpus declares a record (they predate SE16), so these
-  * fixtures are the whole of the evidence and there is no port whose numbers could move if one of
-  * them were wrong — the same position `SwitchExpressionSpec` opened in, and the same discipline:
-  * the assertions about EMITTED TEXT say what the engine writes, and the assertions at the bottom
-  * COMPILE AND RUN the shapes it writes, because "does `Tuple1` work as a one-element extractor",
-  * "does `Double.compare` make `NaN` equal itself" and "what does `String.valueOf` do to a
-  * `char[]`" are claims about scala and about the JDK that no text assertion settles.
-  *
-  * Every expected value below was MEASURED against `javac` before it was written down — the
-  * `toString` renderings, the `hashCode` numbers, and both float edge cases. They are javac's
-  * answers, not this engine's.
-  */
+/** JAVA `record` — `JS-C43`, JLS 8.10. */
 class RecordSpec extends PortSuite:
 
   private def rec(body: String, header: String = "public record Point(int x, int y)") =
@@ -103,8 +90,7 @@ class RecordSpec extends PortSuite:
     // `equals(String)` and `equals(Object)` separately (JLS 8.4.9), so a record declaring the first
     // still DERIVES the second — and suppressing it does not leave the class abstract, because
     // `AnyRef.equals` is concrete: the record silently downgrades to REFERENCE equality, with a
-    // green compile, no moved count and no finding. The comment on the test above already stated
-    // "the member with the right SIGNATURE"; the code was reading (name, arity).
+    // green compile, no moved count and no finding.
     val p = rec("  public boolean equals(String s) { return false; }\n")
     assertEmits(p, "override def equals(o$rec: scala.Any): scala.Boolean = o$rec match {")
     // both, and no more: java's own is kept beside the derived one.
@@ -170,11 +156,6 @@ class RecordSpec extends PortSuite:
 
   // ---------------------------------------------------------------------------------------------
   // THE THREE THINGS THE PARSER HANDS OVER WRONG
-  //
-  // None of these is visible to a compile, and two of them are silent at run time as well. Each
-  // assertion is written against what the emitted class must SAY, because the fixture path has no
-  // way to run it.
-  // ---------------------------------------------------------------------------------------------
 
   test("a COMPACT constructor gets JLS 8.10.4's appended field assignments") {
     // Spoon models the written body and not the appended half, so every backing field kept its
@@ -190,13 +171,6 @@ class RecordSpec extends PortSuite:
   test("a DELEGATING constructor beside a NORMALISING compact one — both construction paths") {
     // javac 22.0.2 on this exact record: `new R(3, 4)` prints `R[x=6, y=4]` and `new R(3)` prints
     // `R[x=6, y=0]`. Both paths run the canonical constructor, so both double `x`.
-    //
-    // Two engine facts compose here and neither was exercised before. `CtorFunnel` promotes the
-    // canonical constructor and leaves `R(int)` a `def this` delegating to it — which is exactly
-    // java's own shape, since a non-canonical record constructor MUST begin with `this(…)` (JLS
-    // 8.10.4). And the compact body ASSIGNS a component, which is what compact constructors are
-    // FOR: promoted as a plain class parameter that is `Reassignment to val`, so the parameter is
-    // emitted `private var` (`CtorFunnelMutatedParamSpec`).
     val p = port("package p;\npublic record R(int x, int y) {\n  R(int x) { this(x, 0); }\n  public R { x = x * 2; }\n}\n")
     assertEmits(p, "final class R(private var x$p: scala.Int, y$p: scala.Int)")
     assertEmits(p, "def this(x: scala.Int)")
@@ -231,10 +205,6 @@ class RecordSpec extends PortSuite:
 
   // ---------------------------------------------------------------------------------------------
   // THE SCALAC PROBE — the emitted shapes, COMPILED AND RUN, against javac's own answers
-  //
-  // Hand-written scala in `TirEmitter.recordMembers`' exact shape. Every expected value here was
-  // produced by `javac` first.
-  // ---------------------------------------------------------------------------------------------
 
   /** the emitted image of `record Pt(int x, int y)`. */
   final class Pt(x$p: scala.Int, y$p: scala.Int) extends java.lang.Record:

@@ -6,31 +6,7 @@ import balticporter.tir.Pipeline
 
 /** A SYNTHESISED PRIMARY's slots are the PARENT CONSTRUCTOR's formals, and those formals are
   * written in the parent's scope — so they take the same substitution the diamond forwarder does
-  * (`balticporter.tir.ParentSubst`, `CLAUDE.md` §4.56: one derivation, not one per caller).
-  *
-  * ==The defect==
-  * Every root of `Widget` reaches the same parent constructor, none of them can be the primary, so
-  * the funnel synthesises `protected (sup$0: <formal 0>)`. The formal is `Adapter<N>`:
-  *
-  * {{{
-  *   class Widget protected (sup$0: fbound2.Adapter[N])       // Not found: type N
-  *     extends fbound2.Handler[Widget, fbound2.Panel](sup$0)
-  * }}}
-  *
-  * The `extends` clause on the very same line says what `N` is. Note what makes this one worse than
-  * the forwarder's: the slot is named twice — once in the primary's signature and once as the
-  * argument to the parent — and every `def this` in the class delegates to it, so one unresolved
-  * parameter is the root of a whole file's worth of `Found: …` cascades.
-  *
-  * ==The three cases==
-  *  - `Widget` — the formal mentions the parent's parameter, closed at a concrete type;
-  *  - `Deep` — the binding is a GRANDparent's, reached through an intermediate that binds it on;
-  *  - `Plain` — a parent constructor whose formals mention no parameter at all, whose emitted
-  *    primary must be exactly what it was.
-  *
-  * The REPLAY path already substituted (it is where the derivation was first written); this spec is
-  * the two callers that did not, and it fails on either half alone.
-  */
+  * (`balticporter.tir.ParentSubst`, `CLAUDE.md` §4.56: one derivation, not one per caller). */
 class ParentSubstFunnelSpec extends munit.FunSuite:
 
   private val src =

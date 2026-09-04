@@ -3,22 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 
 /** A RAW BOUND'S NAME-FILL IS LICENSED PER SLOT — `ENGINE-LIMITS.md` G30, `CLAUDE.md` §4.56 read at
-  * a bound.
-  *
-  * `N extends Node` is java's F-BOUND idiom and the name-directed fill exists to preserve it; JLS 4.8
-  * then stops checking, so the SAME syntax at a type that is not the declaring one is a coincidence
-  * of two names, and filling it re-imposes bounds java never checked. Both blanket answers are
-  * refuted with a counter-example each and both are negatives here:
-  *
-  *  - scoping the fill to the DECLARING type would take the third test's fill away (a raw bound at a
-  *    type that does not declare it, whose fill libGDX needs and whose port compiles at 0);
-  *  - erasing every raw bound to `Foo[?, ?, ?]` would take the fourth's, which is `fbound`'s own
-  *    record.
-  *
-  * What separates them is whether the in-scope variable can STAND in the slot, decided from what
-  * java WROTE — same declaration, unbounded formal, or the same bound spelled the same way — never
-  * from a conformance lookup a `noClasspath` model can answer `false` for a readable hierarchy.
-  */
+  * a bound. */
 class RawBoundNameFillSpec extends PortSuite:
 
   /** G30's site, reduced: `ReferencingNode<R extends NodeRepository<B>, B extends ReferenceNode>`

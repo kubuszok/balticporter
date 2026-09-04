@@ -7,16 +7,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.*
 import balticporter.transform.BeanPropertyTransform
 
-/** `bean-properties` END TO END — java in, emitted Scala out, through the same pipeline a port runs.
-  *
-  * The unit specs assert the mechanism; this asserts the ARTEFACT: the text an adopter reads, the
-  * porter note beside it, and the §1(b) never-fired report. It also writes a PROBE an operator can
-  * put a real compiler over, because "`def x` / `def x_=` and `o.x = v` type-check" is a claim about
-  * scalac and a string assertion is not evidence for it (the shape `LabeledJumpSpec` uses, and for
-  * the same reason: a forked test JVM cannot be handed a compiler).
-  *
-  * {{{ scala-cli compile --scala 3.8.4 --server=false <the path printed below> }}}
-  */
+/** `bean-properties` END TO END — java in, emitted Scala out, through the same pipeline a port runs. */
 class BeanPropertyPortSpec extends PortSuite:
 
   private val src =
@@ -162,12 +153,6 @@ class BeanPropertyPortSpec extends PortSuite:
     // false, so the pass renamed the property to `w$shadow` and `Below` stopped implementing
     // `HasW.w`. Neither answer is free: renaming loses the implementation, keeping the name leaves a
     // `var` shadowing an inherited one.
-    //
-    // The implementation WINS, and the argument is which failure is VISIBLE (`ENGINE-LIMITS.md`
-    // K5.7's trade). An unimplemented member is invisible until the port reaches 0 typer errors,
-    // because `RefChecks` does not run before then (§3) — it arrives on the day the port goes green,
-    // in a member nobody is looking at. A `var` that shadows an inherited one is a TYPER error:
-    // scalac says so on the first run, with the member named.
     val phase = new BeanPropertyTransform(
       Map("demo.HasW#w" -> "getW/setW", "demo.Below#w" -> "getW/setW"),
       Map("demo.Below#w" -> BeanPropertyTransform.Target.Var))

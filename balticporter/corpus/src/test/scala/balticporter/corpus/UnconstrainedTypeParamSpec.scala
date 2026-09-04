@@ -3,14 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 
 /** A method TYPE PARAMETER that appears in NO FORMAL, at a call that gives it no target type —
-  * `ENGINE-LIMITS.md` G22.
-  *
-  * Java instantiates such a variable at its BOUND (JLS 18: no constraints, no target type) and the
-  * member selection on the result resolves; Scala instantiates an unconstrained variable at its
-  * LOWER bound and the selection fails with `Found: Nothing / Required: ?{ isEmpty: ? }`. Nothing
-  * about the receiver is wrong — the two languages disagree about what an unconstrained variable
-  * IS — so java's answer is written down at the call.
-  */
+  * `ENGINE-LIMITS.md` G22. */
 class UnconstrainedTypeParamSpec extends PortSuite:
 
   test("a type parameter constrained ONLY by its bound is pinned to that bound at the call") {

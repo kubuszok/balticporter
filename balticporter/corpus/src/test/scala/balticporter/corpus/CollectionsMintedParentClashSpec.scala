@@ -3,36 +3,7 @@ package balticporter.corpus
 import balticporter.testkit.PortSuite
 import balticporter.transform.CollectionsTransform
 
-/** THE CLASH THE MINTED PARENT MADE — `CLAUDE.md` §4.5 read at a CALL rather than at a shim.
-  *
-  * §4.5's sentence is that a parent adds MEMBERS and an extension adds a view, and it is written
-  * about the runtime shims. It governs what this phase does to a class the PROGRAM declares just as
-  * exactly: `Ledger implements java.util.Map<K,V>` is emitted `extends
-  * scala.collection.mutable.Map[K,V]`, so the class now inherits `remove(key: K): Option[V]` beside
-  * the `remove(o: Object): V` java obliged it to declare (`ENGINE-LIMITS.md` K24 is why that member
-  * stays: java's lookup is BY VALUE and a probe of an unrelated type is meant to miss).
-  *
-  * Java's candidate set at `ledger.remove("k")` was ONE member. Scala's is TWO and a `String`
-  * matches both, so scalac reports `E051 Ambiguous overload` — at a call java resolved without
-  * hesitating, in a port where nothing is wrong: the member has to stay and the parent is what makes
-  * every retyped slot conform. `CLAUDE.md` §1 says an obligation the engine's own translation
-  * created is not a port's to discharge, so the phase pins the call.
-  *
-  * ==The pin is java's own spelling==
-  * `ledger.remove("k".asInstanceOf[java.lang.Object])` is the translation of `ledger.remove((Object)
-  * "k")`, which is what a java programmer writes for the same disambiguation — the node kind the
-  * frontend already builds for a cast, so no emitter arm and no `catalog` obligation moves. It works
-  * because `java.lang.Object` conforms to the minted parent's `K`/`A` only where that parameter IS
-  * `Object`, which is the refusal the last negative below pins.
-  *
-  * ==Why it must NOT be an over-approximation==
-  * Ascribing every `Object`-formal argument would be correct and would move emitted text on every
-  * port with such a call, which `CLAUDE.md` §5 has no instrument for. So four conjuncts, all of them
-  * the phase's own record: the owner is a class THIS PHASE re-parented, onto a target that is not
-  * standalone; the callee is a member the PROGRAM declares over exactly one `java.lang.Object`; the
-  * minted parent declares that (name, arity) AT ITS TYPE PARAMETER; and the argument is not already
-  * an `Object`.
-  */
+/** THE CLASH THE MINTED PARENT MADE — `CLAUDE.md` §4.5 read at a CALL rather than at a shim. */
 class CollectionsMintedParentClashSpec extends PortSuite:
 
   /** the shape, on all three kinds at once. Each class declares java's `Object`-formal member and
