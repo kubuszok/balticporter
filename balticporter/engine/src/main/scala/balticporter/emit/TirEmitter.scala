@@ -64,36 +64,40 @@ final class TirEmitter(
   /** Whole-program visibility plan mapping SymIds to access levels. // DESIGN.md §8.7 */
   private[emit] val visPlan: Map[SymId, Visibility.Vis] = Visibility.plan(program, own)
 
-  /** Constructors whose replayed statements contain `.orNull`, needing `@nowarn("msg=deprecated")`.
-    * Excludes ctors already bearing that annotation from NullabilityTransform. */
-  private[emit] val replayOrNullCtors: Set[SymId] = {
+  private[emit] def hasDeprecatedNowarn(s: Symbol): Boolean = s.annotations.exists(_.args.exists(_._2 match {
+    case Tree.Literal(Constant.StringC(v), _, _) => v.contains("deprecated"); case _ => false
+  }))
+  private[emit] def nowarnDeprecated(i: Int): String = s"${ind(i)}@scala.annotation.nowarn(\"msg=deprecated\")\n"
+
+  /** Constructors whose RENDERED statements call `.orNull`, and classes whose PROMOTED body or
+    * super arguments do — decided here, before emission, from the same lists `ctorBody` and the
+    * class arm render (`ctorRendered`), so the decision carries a porter note. CLAUDE.md §4.4. */
+  private[emit] val (orNullCtors, orNullClasses): (Set[SymId], Set[SymId]) = {
     given Program = program
-    val result = collection.mutable.Set.empty[SymId]
-    def hasDeprecatedNowarn(s: Symbol): Boolean = s.annotations.exists(_.args.exists(_._2 match {
-      case Tree.Literal(Constant.StringC(v), _, _) => v.contains("deprecated"); case _ => false
-    }))
+    val ctors   = Set.newBuilder[SymId]
+    val classes = Set.newBuilder[SymId]
+    def record(s: SymId, what: String, slug: String): Unit =
+      TirEmitter.note(own, Decision.Kind.SuppressedWarning, program, s,
+        Map("annotation" -> "@nowarn(\"msg=deprecated\")",
+            "why" -> s"$what call `.orNull` (the null-preserving unwrap at a slot that accepts null); lls deprecates `orNull` as a lint"),
+        slug)
     program.units.foreach { u =>
       StandardTraversal.allClassDefs(u).foreach { cd =>
+        val s    = sym(cd.symbol)
+        val plan = if s.flags.isModule then CtorFunnel.Plan.none else plans(cd)
+        if !hasDeprecatedNowarn(s) && OrNullScan.count(plan.primaryBody ++ plan.superArgs) > 0 then
+          classes += cd.symbol
+          record(cd.symbol, "this class's promoted constructor body or super arguments", "ctor-promoted-orNull-suppression")
         CtorFunnel.ctorsOf(program, cd.body).foreach { d =>
-          val s = sym(d.symbol)
-          if s.name == "<init>" && !hasDeprecatedNowarn(s) then
-            plans.replayFor(cd, d) match
-              case Some(replay) if replay.nonEmpty && replayHasOrNull(replay) =>
-                result += d.symbol
-                TirEmitter.note(own, Decision.Kind.SuppressedWarning, program, d.symbol,
-                  Map(
-                    "annotation" -> "@nowarn(\"msg=deprecated\")",
-                    "why" -> ("this constructor's REPLAY statements contain `.orNull` calls from " +
-                      "the parent constructor (NullabilityTransform inserted them there); the same " +
-                      "@nowarn pattern sge uses at every Java interop boundary"),
-                  ),
-                  "ctor-replay-orNull-suppression",
-                )
-              case _ => ()
+          val ds = sym(d.symbol)
+          if ds.name == "<init>" && !hasDeprecatedNowarn(ds) && OrNullScan.count(ctorRendered(cd, d)) > 0 then
+            ctors += d.symbol
+            record(d.symbol, "this constructor's rendered statements (delegation arguments, replayed parent statements, own body)",
+              "ctor-replay-orNull-suppression")
         }
       }
     }
-    result.toSet
+    (ctors.result(), classes.result())
   }
 
   /** The decisions THIS emitter made — the three §4.55 renaming passes, the replay widening, the

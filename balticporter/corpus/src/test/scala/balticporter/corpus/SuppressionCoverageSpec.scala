@@ -29,6 +29,24 @@ class SuppressionCoverageSpec extends PortSuite:
       |  A { Actor pick(@Null Actor p) { Actor q = p; return q; } };
       |  Actor pick(@Null Actor p) { return null; }
       |}
+      |class Anon {
+      |  Actor a;
+      |  Runnable r() { return new Runnable() { public void run() { a = give(); } }; }
+      |  @Null Actor give() { return null; }
+      |}
+      |class Local {
+      |  Actor a;
+      |  Local(int x, int y, int z) {}
+      |  Local(@Null Actor p) { Actor q = p; a = q; }
+      |}
+      |class Base { Base(Actor a) {} }
+      |class SuperArg extends Base {
+      |  SuperArg(@Null Actor p) { super(p); }
+      |}
+      |class AnonCtor {
+      |  Runnable r;
+      |  AnonCtor(@Null Actor p) { r = new Runnable() { public void run() { Actor q = p; } }; }
+      |}
       |class Method {
       |  Actor a;
       |  @Null Actor give() { return null; }
@@ -41,9 +59,10 @@ class SuppressionCoverageSpec extends PortSuite:
 
   private val nowarn = "@scala.annotation.nowarn(\"msg=deprecated\")"
 
-  test("an `.orNull` in a SECONDARY constructor body annotates the class") {
+  test("an `.orNull` in a SECONDARY constructor body annotates that constructor") {
     assertEmits(ported, "this.a = p.orNull")
-    assertEmitsMatch(ported, """(?s)nowarn\("msg=deprecated"\)[^\n]*\n\s*(private |final |open )*class Group""")
+    assertEmitsMatch(ported, """nowarn\("msg=deprecated"\)[^\n]*\n[^\n]*def this\(p: lowlevel""")
+    assertNotEmits(ported, "nowarn(\"msg=deprecated\")\nprivate class Group")
   }
 
   test("an `.orNull` in a PROMOTED constructor body annotates the class") {
@@ -57,4 +76,23 @@ class SuppressionCoverageSpec extends PortSuite:
 
   test("an `.orNull` in an ENUM CONSTANT body annotates that member") {
     assertEmitsMatch(ported, """nowarn\("msg=deprecated"\)[^\n]*\n[^\n]*def pick\(p: lowlevel""")
+  }
+
+
+  test("an `.orNull` only inside an ANONYMOUS class annotates the anon member, not the enclosing one") {
+    assertEmitsMatch(ported, """nowarn\("msg=deprecated"\)[^\n]*\n[^\n]*def run\(\)""")
+    assertNotEmits(ported, "nowarn(\"msg=deprecated\")\n  def r()")
+  }
+
+  test("a LOCAL `val` with `.orNull` in a secondary constructor annotates that constructor") {
+    assertEmitsMatch(ported, """nowarn\("msg=deprecated"\)[^\n]*\n[^\n]*def this\(p: lowlevel\.Nullable\[demo\.Actor\]\) = \{\n\s*this\(\)\n\s*val q""")
+  }
+
+  test("an `.orNull` in the primary's SUPER arguments annotates the class") {
+    assertEmitsMatch(ported, """nowarn\("msg=deprecated"\)[^\n]*\n[^\n]*class SuperArg""")
+  }
+
+  test("an `.orNull` only inside an anonymous class in a PROMOTED body annotates the anon member, not the class") {
+    assertNotEmits(ported, "nowarn(\"msg=deprecated\")\nprivate class AnonCtor")
+    assertNotEmits(ported, "nowarn(\"msg=deprecated\")\nclass AnonCtor")
   }

@@ -587,27 +587,32 @@ private[emit] trait TirEmitterMembers:
     }
     tparamSubst = savedSubst // restore (ctor type-param substitution was local to this def)
     // trivia first, porter note last, member next (§4.575) — the note must not displace the licence.
-    // a ctor whose REPLAY contains .orNull needs @nowarn("msg=deprecated") (detected at construction
-    // time into replayOrNullCtors, recorded as a SuppressedWarning decision).
-    val replayNowarn =
-      if isCtor && replayOrNullCtors.contains(d.symbol)
-      then s"${ind(i)}@scala.annotation.nowarn(\"msg=deprecated\")\n"
-      else ""
-    s"${leading(d.leading, i)}${declNotes(d.symbol, i)}${annots(s, i)}$replayNowarn${ind(i)}${mods(s, privateQualifier(s.owner))}def $name$tps$pss$ret$rhs"
+    val ctorNowarn = if isCtor && orNullCtors(d.symbol) then nowarnDeprecated(i) else ""
+    s"${leading(d.leading, i)}${declNotes(d.symbol, i)}${annots(s, i)}$ctorNowarn${ind(i)}${mods(s, privateQualifier(s.owner))}def $name$tps$pss$ret$rhs"
 
-  /** does a list of replay statements contain a `.orNull` call? Called at construction time to
-    * compute `replayOrNullCtors` and record a `SuppressedWarning` decision for each (§4.575). */
-  private[emit] def replayHasOrNull(stmts: List[Statement]): Boolean =
-    given Program = program
-    stmts.exists {
-      case t: Term =>
-        StandardTraversal.scanTerm(t, false) {
-          case (true, _)                                               => true
-          case (_, Tree.Select(_, m, _, _)) if sym(m).name == "orNull" => true
-          case (acc, _)                                                => acc
-        }
-      case _ => false
-    }
+  /** a secondary's own statements after its delegation head, minus the ones its delegation consumed. */
+  private[emit] def ctorRest(plan: CtorFunnel.Plan, cdef: Tree.DefDef, stats: List[Statement],
+                             after: List[Statement], eaten: Int): List[Statement] =
+    if plan.delegations.contains(cdef.symbol) then after.drop(eaten)
+    else CtorFunnel.headStmt(cdef) match
+      case Some(Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _)) if sym(m).name == "<init>" => stats.tail
+      case _ => stats
+
+  /** Every statement `ctorBody` renders for a secondary — delegation arguments, replayed parent
+    * statements, own residual body — the one list the `@nowarn` decision reads (CLAUDE.md §4.4). */
+  private[emit] def ctorRendered(cd: Tree.ClassDef, cdef: Tree.DefDef): List[Statement] =
+    val stats = CtorFunnel.stmtsOf(cdef)
+    val plan  = plans(cd)
+    val headIsDelegation = CtorFunnel.headStmt(cdef) match
+      case Some(Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _)) => sym(m).name == "<init>"
+      case _                                                     => false
+    val after = if headIsDelegation then stats.tail else stats
+    val eaten = plan.delegations.get(cdef.symbol).map(_ => plan.consumed.getOrElse(cdef.symbol, 0)).getOrElse(0)
+    val body  = plans.residualBody(cd, cdef).getOrElse(ctorRest(plan, cdef, stats, after, eaten))
+    val delegTerms: List[Term] = plan.delegations.get(cdef.symbol).getOrElse(CtorFunnel.headStmt(cdef) match
+      case Some(Tree.Apply(_, args, _, _, _)) => args
+      case _                                  => Nil)
+    plans.replayFor(cd, cdef).getOrElse(Nil) ++ body ++ delegTerms
 
   /** Loop-jump scope, as scala `boundary` nesting. `break`/`continue` need boundaries in DIFFERENT
     * places (loop / body), so when a loop needs both the body boundary is innermost and the outer
@@ -852,18 +857,18 @@ private[emit] trait TirEmitterMembers:
       case _                                                     => false
     val after = if headIsDelegation then stats.tail else stats
     val eaten = plan.delegations.get(cdef.symbol).map(_ => plan.consumed.getOrElse(cdef.symbol, 0)).getOrElse(0)
-    val (deleg, rest) = plan.delegations.get(cdef.symbol) match
+    val rest  = ctorRest(plan, cdef, stats, after, eaten)
+    val deleg = plan.delegations.get(cdef.symbol) match
       case Some(args) =>
         val extra = currentClass.zip(plan.marker).map(markerArg(_, _)).toList
         val as    = args.zipWithIndex.map((a, k) => slotArg(a, plan.synthetic.lift(k).map(_._2), i + 1))
-        (s"this(${(as ++ extra).mkString(", ")})", after.drop(eaten))
+        s"this(${(as ++ extra).mkString(", ")})"
       case None => CtorFunnel.headStmt(cdef) match
         case Some(Tree.Apply(Tree.Select(r, m, _, _), args, _, _, _)) if sym(m).name == "<init>" =>
-          val d = r match
+          r match
             case _: Tree.Super => superDelegation(args, i + 1)
             case _             => s"this(${args.map(term(_, i + 1)).mkString(", ")})"
-          (d, stats.tail)
-        case _ => ("this()", stats)
+        case _ => "this()"
     // §4.58 — a CONSUMED `this.f = e` does not disappear from the file, so its comment rides THIS
     // secondary's delegation, the one place a reader will find it.
     val eatenTrivia = after.take(eaten).collect { case t: Term => Tree.triviaOn(t) }.flatten

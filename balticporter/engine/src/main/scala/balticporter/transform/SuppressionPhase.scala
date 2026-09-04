@@ -22,20 +22,10 @@ final class SuppressionPhase extends Phase:
   override def run(program: Program): Program =
     given Program = program
 
-    // Scan 1: members whose bodies reference `.orNull` (deprecated)
-    val orNullSyms: Set[SymId] = program.symbols.all.iterator
-      .filter(s => s.name == "orNull" && (s.fullName.endsWith(".orNull") || s.fullName.endsWith("#orNull")))
-      .map(_.id).toSet
-
+    // Scan 1: members whose bodies call `.orNull` (deprecated); OrNullScan owns the counting
     val deprecatedMembers = collection.mutable.Set[SymId]()
 
-    def hasOrNull(body: Term): Boolean = StandardTraversal.scanTerm(body, false) {
-      case (true, _) => true
-      case (_, Tree.Select(_, s, _, _)) if orNullSyms(s) => true
-      // a Template-rendered `.orNull` is raw text in a Tree.Opaque, not a structured Select
-      case (_, t: Tree.Opaque) if t.raw.contains(".orNull") => true
-      case (acc, _) => acc
-    }
+    def hasOrNull(body: Term): Boolean = OrNullScan.count(body) > 0
 
     // Scan 2: members whose bodies contain a match on an enum type where all constants are
     // covered and a `case _ =>` exists — scalac's E030 fires where java's own switch has no
@@ -51,15 +41,14 @@ final class SuppressionPhase extends Phase:
 
     /** Scan a class body for both `.orNull` references and exhaustive enum matches. Runs after
       * TestFrameworkTransform, so a converted test body is already a class-body statement. */
-    def isCtor(d: Tree.DefDef): Boolean = program.symbolOf(d.symbol).exists(_.name == "<init>")
     def scanBody(members: List[Statement], classSym: SymId): Unit =
       members.foreach {
+        // a constructor's rendered statements are the emitter's (`TirEmitter.orNullCtors`)
+        case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == "<init>") => ()
         case d: Tree.DefDef =>
-          // a constructor renders as `def this` without annotations: the class carries them
-          val target = if isCtor(d) then classSym else d.symbol
           d.rhs.foreach { body =>
-            if hasOrNull(body) then deprecatedMembers += target
-            if hasExhaustiveEnumDefault(body) then unreachableCaseMembers += target
+            if hasOrNull(body) then deprecatedMembers += d.symbol
+            if hasExhaustiveEnumDefault(body) then unreachableCaseMembers += d.symbol
           }
         case v: Tree.ValDef =>
           v.rhs.foreach { body =>

@@ -238,6 +238,9 @@ private[emit] trait TirEmitterDecls:
     val s  = sym(cd.symbol)
     // A NESTED type carries its own notes at its `class` keyword; the TOP-LEVEL one's are the
     // file's (`unitNotes`) and must not be printed twice.
+    val plan    = if s.flags.isModule then CtorFunnel.Plan.none else plans(cd)
+    // a PROMOTED constructor body runs in the class body, so the class carries its `@nowarn`
+    val promotedNowarn = if orNullClasses(cd.symbol) then nowarnDeprecated(i) else ""
     val cnote = if cd.symbol == currentTopLevelSym then "" else declNotes(cd.symbol, i)
     val bnote = bodyNotes(cd.symbol, i + 1)
     val kw =
@@ -249,7 +252,6 @@ private[emit] trait TirEmitterDecls:
     // inlined (those statements run at construction), its `super(args)` moves into the `extends`
     // clause (which also fixes parents that need constructor arguments), and its PARAMETERS become
     // the class's parameters. Every other constructor stays a `def this(...)` delegating to it.
-    val plan    = if s.flags.isModule then CtorFunnel.Plan.none else plans(cd)
     val (loweredBody, superArgs) = (lowerCtors(cd.body, plan), plan.superArgs)
     val pparams = plan.primaryParams
     // A SYNTHESISED primary (CtorFunnel.Plan.synthetic) has no java constructor behind it, so its
@@ -424,7 +426,7 @@ private[emit] trait TirEmitterDecls:
     val cls     =
       if s.flags.isAnnotation then
         s"${leading(cd.leading ++ annotLead, i)}$cnote${annots(s, i)}${ind(i)}class ${esc(s.name)}$tps$annotPrim extends scala.annotation.StaticAnnotation"
-      else s"${leading(cd.leading ++ ctorLead, i)}$cnote$ctorNote$sealNote$recNote${annots(s, i)}${ind(i)}${mods(s, privateQualifier(s.owner))}$seal$abs$kw ${esc(s.name)}$tps$prim$ext$open"
+      else s"${leading(cd.leading ++ ctorLead, i)}$cnote$ctorNote$sealNote$recNote${annots(s, i)}$promotedNowarn${ind(i)}${mods(s, privateQualifier(s.owner))}$seal$abs$kw ${esc(s.name)}$tps$prim$ext$open"
     // Java interface/parent CONSTANTS are `static`, living in the parent's companion, which Scala
     // does NOT inherit — re-export each parent's companion so an inherited constant resolves,
     // excluding the class's OWN static names (a subtype may redeclare one). A STATIC INITIALIZER
