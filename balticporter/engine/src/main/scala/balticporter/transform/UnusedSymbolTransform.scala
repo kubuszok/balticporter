@@ -4,52 +4,17 @@ import balticporter.tir.*
 
 /** A LATE phase that removes or suppresses unused local definitions and private members.
   *
-  * ==Why this is needed==
-  * Java has no equivalent of Scala's `-Wunused:locals,privates` — a local or private field that is
-  * never read compiles silently. Under sge's strict flags (`-Werror -Wunused:imports,privates,
-  * locals,patvars,nowarn`) every such symbol becomes `E198 Unused Symbol Warning` promoted to an
-  * error. The port faithfully reproduces Java's dead code, and the reference compile rejects it.
+  * Java allows unused symbols; Scala's strict `-Wunused` flags do not, and the reference compile
+  * promotes every survivor to an error. For each unused definition, the FIRST applicable action
+  * wins: DELETE (side-effect-free, unread/unwritten), DISCARD (keep a possibly-effectful
+  * initialiser, drop the binding), SUPPRESS (`@nowarn`), or REFUSE — a non-private member (API
+  * surface) or a private one whose name appears in a `MethodBodyTransform` substitution body
+  * (`Tree.Opaque`, invisible to the TIR walk — CLAUDE.md §1.5), conservatively treated as
+  * referenced. `allCounts`/`assignCounts` from one `StandardTraversal` walk classify READ,
+  * WRITE-ONLY and UNREFERENCED.
   *
-  * ==Kind==
-  * CLAUDE.md §1(a) universal. Java allows unused symbols and Scala's strict flags do not, true of
-  * every codebase. No configuration, no per-library policy.
-  *
-  * ==Translation (the refusal enumeration — §3)==
-  * For each unused definition the phase chooses the FIRST applicable action:
-  *
-  *  1. '''DELETE''' — a local or private member whose initialiser is provably side-effect-free
-  *     (literal, ident, `this.field`) and which is never read and never written to.
-  *  2. '''DISCARD''' — for a local with an initialiser that MAY have effects (a call, a `new`),
-  *     keep the effect as a bare expression and drop the binding.
-  *  3. '''SUPPRESS''' — `@nowarn` on the declaration:
-  *     - `serialVersionUID`: `@nowarn("msg=unused")` matches "unused private member".
-  *     - write-only locals: `@nowarn("msg=not read")` matches "mutated but not read".
-  *     - write-only private vars: `@nowarn("msg=not read")`.
-  *     - unreferenced private with side-effecting init: `@nowarn("msg=unused")`.
-  *  4. '''REFUSED''' — an unused NON-PRIVATE member is API surface and not deletable; a private
-  *     member whose simple name appears in a `MethodBodyTransform` substitution body of its
-  *     owning type is conservatively treated as referenced (`substituted-body-reference` guard).
-  *     Both are counted on the `unused-symbol(refused)` lane.
-  *
-  * ==Substituted-body-reference guard==
-  * A `MethodBodyTransform` body is verbatim text injected AFTER all phases (CLAUDE.md §1.5), so
-  * the TIR cannot see what it references. A symbol whose simple name occurs as a `\bname\b` token
-  * in ANY `Tree.Opaque.raw` text of its owning type is treated as referenced and never deleted or
-  * suppressed — a conservative refusal counted on the refused lane.
-  *
-  * ==Read/write distinction==
-  * ONE `StandardTraversal` walk (never a private recursion — CLAUDE.md §3) collects TWO counts per
-  * symbol: `allCounts` (every `Ident`/`Select`) and `assignCounts` (how many of those are the
-  * direct LHS of a `Tree.Assign`). Post-pass: a symbol is READ if `allCounts(s) > assignCounts(s)`,
-  * WRITE-ONLY if equal, and UNREFERENCED if `allCounts(s) == 0`.
-  *
-  * ==Check lanes==
-  * `unused-symbol(handled)` — every symbol the phase acted on (deleted, discarded, or suppressed).
-  * `unused-symbol(refused)` — unused symbols the phase left alone, naming the guard. Both are
-  * required of every run (unconditional, the phase is in `derivedPhases`).
-  *
-  * ==Position==
-  * Runs AFTER every retyping phase. Runs BEFORE `package-rename` and `suppressed-warnings`. */
+  * CLAUDE.md §1(a) universal. `unused-symbol(handled|refused)` required of every run. Runs after
+  * every retyping phase, before `package-rename` and `suppressed-warnings`. */
 final class UnusedSymbolTransform extends Phase:
 
   def name = UnusedSymbolTransform.Name
@@ -96,21 +61,18 @@ final class UnusedSymbolTransform extends Phase:
     def isUnreferenced(s: SymId): Boolean = allCounts(s) == 0
 
     // ---- Step 1b: collect substituted-body words per owning class ----
-    // A MethodBodyTransform body is Tree.Opaque — verbatim Scala text the TIR walk cannot see.
-    // Any symbol whose simple name appears as a word boundary token in that text is treated as
-    // referenced (conservative refusal). Comment-mask the text before scanning.
+    // Tree.Opaque is verbatim Scala text the TIR walk cannot see; a symbol whose name appears as a
+    // word-boundary token in it is treated as referenced (conservative refusal).
     val substWords = collection.mutable.Map[SymId, Set[String]]().withDefaultValue(Set.empty)
     val opaqueCollector = new Phase:
       def name = "unused-symbol/opaque-collect"
       override def transformDefDef(d: Tree.DefDef)(using p: Program): Tree.DefDef =
         d.rhs.foreach {
           case Tree.Opaque(raw, _, _,  _) =>
-            // Strip comments: // to EOL, /* ... */
             val masked = raw
               .replaceAll("//[^\n]*", "")
               .replaceAll("/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/", "")
             val words = masked.split("[^a-zA-Z0-9_$]+").filter(_.nonEmpty).toSet
-            // Walk owner chain to find enclosing class
             p.symbolOf(d.symbol).foreach { ds =>
               substWords(ds.owner) = substWords(ds.owner) ++ words
             }
@@ -159,7 +121,6 @@ final class UnusedSymbolTransform extends Phase:
           refused += ((s.fullName, "non-private member", d.origin))
       }
 
-    // Scan class bodies
     program.units.foreach { u =>
       StandardTraversal.allClassDefs(u).foreach { cd =>
         cd.body.foreach {
@@ -181,7 +142,6 @@ final class UnusedSymbolTransform extends Phase:
       }
     }
 
-    // Scan method bodies for unused locals — walk with StandardTraversal
     val localCollector = new Phase:
       def name = "unused-symbol/local-collect"
       override def transformValDef(v: Tree.ValDef)(using p: Program): Tree.ValDef =

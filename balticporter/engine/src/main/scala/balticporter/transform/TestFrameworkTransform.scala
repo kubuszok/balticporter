@@ -2,75 +2,16 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** A JUnit suite → a CROSS-PLATFORM Scala suite.
+/** A JUnit suite → a CROSS-PLATFORM Scala suite (MUnit).
   *
-  * A ported test suite is the only behavioural evidence this engine can produce, and a JUnit one
-  * runs on the JVM alone — neither Scala.js nor Scala Native has JUnit. Emitting Java's tests as
-  * JUnit-in-Scala therefore yields a gate that cannot execute on the platforms the port EXISTS for,
-  * while looking like full coverage: 221 discovered tests, zero of them runnable on the target.
+  * §1(b): `suite` and `testMember` are constructor parameters, but the registration shape (curried
+  * `test(name)(body)`), `.ignore`, `intercept[E]`, `beforeAll`/`afterAll` and every assertion
+  * member (via `munit.Assertions`, fully-qualified per CLAUDE.md §6) are MUnit's own contract,
+  * named literally in this file — pointing `suite` at another framework does not compile.
   *
-  * ==The assertion façade is GONE — nothing ships with the port==
-  *
-  * An earlier version rewrote `Assert.assertEquals(expected, actual)` to a same-shaped member of an
-  * injected `balticporter.runtime.Asserts` object, because the direct mapping onto MUnit had
-  * measured 1 -> 33 errors. Re-declaring shapes the engine can emit correctly is exactly what
-  * injected sources are NOT for (they exist for semantics the target LACKS, like
-  * `CollectionsTransform`'s removal-capable iterator), so the façade was deleted and the 33 closed
-  * by two type-directed rules here plus one naming rule. Recorded because each was a guess that had
-  * to be measured:
-  *
-  *   - 26 were `Can't compare these two types: Long / Int`. MUnit's `assertEquals[A, B]` infers
-  *     both operands independently, so nothing drives Scala's numeric widening; java had already
-  *     promoted them at the call. [[promote]] re-applies JAVA'S OWN promotion — widen the narrower
-  *     operand to the wider, and `Char`/`Short` (which do not widen to each other) both to `Int`.
-  *   - 6 were `Not found: assertEquals` / `fail` inside a java `static` test helper, which emits
-  *     into the COMPANION object — a scope that does not extend the suite, so members inherited
-  *     from `munit.FunSuite` are invisible there. The fix is NOT to move the helper onto the suite:
-  *     MUnit declares every assertion on the `munit.Assertions` OBJECT as well, and an object
-  *     member resolves identically from a suite body, a companion object, a nested class and a
-  *     lambda. So every assertion is emitted fully qualified (CLAUDE.md §6), and the scope question
-  *     disappears instead of being answered.
-  *   - 1 was unrelated (a pre-existing error in the ported main sources).
-  *
-  * The remaining shapes are argument PERMUTATION, which is what a re-compiler is for: java's
-  * `(expected, actual)` is MUnit's `(obtained, expected)`, java's leading `String message` is
-  * MUnit's trailing `clue`, java's `delta` overloads are `assertEqualsFloat`/`assertEqualsDouble`,
-  * and `assertArrayEquals` is a `.toSeq` comparison. Only ONE junit form has no MUnit counterpart —
-  * `assertArrayEquals(expected, actual, delta)`, elementwise-with-tolerance — and it is emitted as
-  * the loop it means, with both arrays bound to locals first so neither is re-evaluated.
-  *
-  * ==The honest §1 label: (b) with EXACTLY ONE implemented policy value==
-  *
-  * `suite` and `testMember` are constructor parameters, and that used to be described as making
-  * the target framework configurable. It does not. The trees this phase builds encode a fixed
-  * CONTRACT that only MUnit satisfies:
-  *
-  *   1. registration is CURRIED — `test(name)(body)`, two argument lists;
-  *   2. the name slot accepts a `munit.TestOptions`, and `.ignore` on one disables the test;
-  *   3. `intercept[E] { … }` is inherited from the suite and asserts that the body throws;
-  *   4. one-time setup/teardown are `override def beforeAll()` / `afterAll()` on the suite;
-  *   5. `munit.TestOptions` is nameable by FQN with no import (CLAUDE.md §6);
-  *   6. the assertions exist as members of a stable OBJECT (`munit.Assertions`), with MUnit's own
-  *      argument order, clue position and delta-member split — see [[munitCall]].
-  *
-  * 2–6 name MUnit types and members literally, in this file. 1 is a tree SHAPE, not a string — and
-  * note what it is NOT: the TIR expresses currying perfectly well as a nested `Apply`, because
-  * `Apply.fun` is a `Term`. An earlier version believed otherwise and injected a `PortedSuite` base
-  * class with an un-curried `testCase(name, body)` forwarder; that class has been DELETED and the
-  * belief retracted. There is no missing IR node here. What is missing is a seam.
-  *
-  * So: pointing `suite` at `utest.TestSuite` emits code that does not compile. A second target
-  * needs 1–5 to become tree-BUILDING policy — a `TestTarget` supplying the registration, ignore,
-  * intercept and lifecycle SHAPES — not more `String` parameters, and it needs its own answer for
-  * the assertions. Until one exists this is a (b) whose policy set has one member, and the
-  * parameters name only the two least interesting parts of it.
-  *
-  * ==What is NOT translated — reported, never dropped silently==
-  *
-  * `@Rule`, `@RunWith`, JUnit 5, TestNG, JUnit 3's `TestCase` and Hamcrest's `assertThat` have no
-  * translation here. Each is emitted as a [[TestFrameworkTransform.Finding]] carrying its
-  * CLAUDE.md §1 classification, and `run` prints them, because the failure mode of all of them is
-  * a suite that compiles, discovers nothing (or asserts nothing) and reports success.
+  * `@Rule`, `@RunWith`, JUnit 5, TestNG, JUnit 3's `TestCase` and Hamcrest's `assertThat` are
+  * unsupported and reported as [[TestFrameworkTransform.Finding]] with their CLAUDE.md §1
+  * classification, because an unrecognised annotation registers zero tests and reports success.
   *
   * @param suite      fully-qualified base class the ported suites extend
   * @param testMember curried `(name)(body)` registration member on that base class
@@ -78,11 +19,9 @@ import balticporter.tir.*
 final class TestFrameworkTransform(
     suite: String = TestFrameworkTransform.DefaultSuite,
     testMember: String = "test",
-    /** Instance field FQNs (`Owner#name`) excluded from `bpFreshState` — a field the port DROPS
-      * via `dropMethods` must not have its initialiser hoisted into the per-test reset, because
-      * its initialiser may reference types that do not exist on every platform (P11: a `@Rule
-      * TestWatcher` whose anonymous class body calls `Description.getTestClass`, unavailable on
-      * JS/Native). Empty is the default and the no-op. */
+    /** Instance field FQNs (`Owner#name`) excluded from `bpFreshState`: a field the port DROPS
+      * via `dropMethods` must not have its initialiser hoisted into the per-test reset, since the
+      * initialiser may reference platform-unavailable types. Empty = no-op. */
     dropFields: Set[String] = Set.empty,
 ) extends Phase, balticporter.core.SurfacePolicy, PolicyBound:
 
@@ -91,78 +30,39 @@ final class TestFrameworkTransform(
 
   def name: String = "junit->portable-suite"
 
-  /** WHICH DECLARATIONS THIS RUN EMITS — the one question the per-test reconstruction cannot answer
-    * from its `Program` (see [[planFreshState]]).
-    *
-    * A dependent's model CONTAINS its base's units (`ENGINE-LIMITS.md` D2), so a suite whose java
-    * superclass is a BASE module's test class is a chain this run can see and cannot write: the
-    * `override def bpFreshState` it would emit names a member only the base's own run could have
-    * put on that parent, and whether the base put one there is not derivable here. That chain is
-    * REFUSED and counted rather than guessed at (`CLAUDE.md` §1.5). [[RunScope.whole]] is the
-    * default and is exactly the truth for a base port, a single-module port and every spec. */
+  /** WHICH DECLARATIONS THIS RUN EMITS — a suite whose java superclass is a BASE module's test
+    * class is a chain this run cannot write (`override def bpFreshState` would name a member only
+    * the base's run could put there) and is refused and counted instead. `CLAUDE.md` §1.5.
+    * [[RunScope.whole]] is the default, correct for a base or single-module port. */
   private var scope: RunScope = RunScope.whole
 
   def bindPolicy(binder: PolicyBinder): Unit = scope = binder.run
 
-  /** This phase SHAPES SIGNATURES — CLAUDE.md §1's obligation on a (b), which it owed and did not
-    * pay. A converted suite gains [[suite]] as a PARENT and every `@Test` method becomes a
-    * [[testMember]] call, so two modules configured differently emit two different type hierarchies
-    * for the same Java. Without this, [[balticporter.core.PortManifest.fingerprint]] falls back to
-    * the phase NAME and `junit->portable-suite(munit.FunSuite)` compares EQUAL to
-    * `junit->portable-suite(utest.TestSuite)`: `SurfaceMissing` cannot see the difference, and a
-    * same-name pair could neither be compared nor composed (`ENGINE-LIMITS.md` CT9 Face B's third
-    * change, which makes such a pair a refusal rather than a silent double application).
-    *
-    * Both parameters, and only them: they are the whole of what a caller can vary. The rest of this
-    * phase's contract is MUnit named literally in tree-building code (see the class doc), which is
-    * not policy and cannot differ between two instances. */
+  /** SurfacePolicy: [[suite]] becomes the converted suite's parent, [[testMember]] every `@Test`
+    * call, so two differently-configured modules emit different signatures. `ENGINE-LIMITS.md` CT9. */
   def surfaceFingerprint: String = s"suite=$suite,test=$testMember"
 
-  /** JUnit's assertion statics live at THREE FQNs, and one table maps all of them.
-    *
-    * `junit.framework.Assert` is JUnit 3's assertion class; `junit.framework.TestCase` extends it,
-    * so `import static junit.framework.TestCase.assertEquals` resolves to the same member and a
-    * frontend may report either as the receiver (Spoon reports the executable's DECLARING type,
-    * which is `Assert`; a frontend reporting the qualifier would say `TestCase`). Both are covered
-    * because which one arrives is not this phase's fact to know.
-    *
-    * Note what this is NOT evidence of: a class reaching these members through a static import is
-    * an ordinary JUnit-4 suite that happens to have imported JUnit 3's copy of `assertEquals` —
-    * five of liqp's do — not a `TestCase` subclass. [[survey]]'s JUnit-3 scan keys off the PARENT
-    * and correctly says nothing about them.
-    *
-    * Their contract is `org.junit.Assert`'s exactly: `(expected, actual)`, an optional leading
-    * `String message`, the same minimal arities — JUnit 4's `Assert` was written as a superset of
-    * this one. So the set is a §1(a) fact about JUnit, written into the engine. It must not become
-    * a constructor parameter: an empty default would silently stop converting `org.junit.Assert`
-    * too, and a per-library list of JUnit's own class names is policy nobody can get right twice. */
+  /** JUnit's assertion statics live at THREE FQNs (JUnit 3's `Assert`/`TestCase` plus JUnit 4's),
+    * all sharing `org.junit.Assert`'s contract — `(expected, actual)` with an optional leading
+    * `String message`. A §1(a) fact about JUnit, not a constructor parameter. */
   private val AssertClasses = Set("org.junit.Assert", "junit.framework.Assert", "junit.framework.TestCase")
-  /** MUnit declares every assertion twice — on the `Assertions` TRAIT that `FunSuite` mixes in, and
-    * on the `Assertions` OBJECT. Emitting through the object is what makes a java `static` test
-    * helper translate at all: it lands in the companion object, which does not extend the suite, so
-    * an inherited `assertEquals` is not in scope there. An object member is, from every scope. */
+  /** MUnit declares assertions on both the `Assertions` TRAIT `FunSuite` mixes in and the
+    * `Assertions` OBJECT; emitting through the object also resolves inside a companion (a java
+    * `static` test helper), which does not extend the suite. */
   private val MunitAssertions = "munit.Assertions"
-  /** MUnit's own members this phase emits. `TestFrameworkTransform.MinArity` is the matching list
-    * of the `org.junit.Assert` members mapped ONTO them; a junit name absent from it (`assertThat`)
-    * is reported, never guessed at. */
+  /** MUnit's own members this phase emits; `MinArity` is the matching `org.junit.Assert` list —
+    * a junit name absent from it (`assertThat`) is reported, never guessed at. */
   private val MunitMembers = Set("assertEquals", "assertNotEquals", "assert", "fail",
     "assertEqualsFloat", "assertEqualsDouble", "intercept")
-  /** JUnit's OTHER spelling of `@Test(expected = …)`, and the one with a state machine behind it.
-    *
-    * `@Rule public ExpectedException thrown = ExpectedException.none()` arms a matcher at the
-    * `thrown.expect(…)` CALL and applies it to whatever the test throws from there on. There is no
-    * shape to derive a general `@Rule` from — see [[adviceFor]] — but THIS rule's contract is
-    * JUnit's own and is written down (`ExpectedExceptionStatement.evaluate`), so it is a §1(a) fact
-    * about JUnit and MUnit and not policy. [[expectedException]] MODELS it — the matcher list armed
-    * where java armed it and one `try`/`catch` over the whole test — and the behavioural
-    * differences between java's shape and the emitted one are enumerated there, each one a guard, a
-    * shape or a counted refusal (`CLAUDE.md` §3). */
+  /** JUnit's OTHER spelling of `@Test(expected = …)`: `@Rule ExpectedException thrown` arms a
+    * matcher at `thrown.expect(…)` and applies it to whatever the test throws from there on.
+    * JUnit's own contract (`ExpectedExceptionStatement.evaluate`), so a §1(a) fact, not policy.
+    * [[expectedException]] models it; deltas are enumerated there per CLAUDE.md §3. */
   private val ExpectedExceptionCls = "org.junit.rules.ExpectedException"
   private val RuleAnn        = "org.junit.Rule"
   private val ClassRuleAnn   = "org.junit.ClassRule"
-  /** the ONE hamcrest member this phase names, and it names it because `expect(Matcher)` is one of
-    * junit's two overloads: `matches(Object)` is the `Matcher` CONTRACT, so asserting it over the
-    * intercepted value is universal rather than one translation per matcher class. */
+  /** The one hamcrest member this phase names: `matches(Object)` is the `Matcher` CONTRACT, so
+    * asserting it over the intercepted value is universal rather than per-matcher-class. */
   private val HamcrestMatcher = "org.hamcrest.Matcher"
   private val TestAnn        = "org.junit.Test"
   private val BeforeAnn      = "org.junit.Before"
@@ -171,11 +71,9 @@ final class TestFrameworkTransform(
   private val BeforeClassAnn = "org.junit.BeforeClass"
   private val AfterClassAnn  = "org.junit.AfterClass"
 
-  /** Annotations whose meaning this phase MOVES into emitted call sites. Once moved, the
-    * annotation itself must not survive into the output: `@org.junit.Before` on a retained
-    * `setUp` re-imports a JVM-only library into the very suite this phase exists to make
-    * cross-platform, and reads as though JUnit still drives it. `@Test` is deliberately NOT in
-    * this set — a `@Test` left on an abstract method is the residue the discovery count measures. */
+  /** Annotations whose meaning this phase MOVES into emitted call sites; the annotation itself
+    * must not survive emission. `@Test` is deliberately excluded — left on an abstract method it
+    * is the residue the discovery count measures. */
   private val ConsumedAnns = Set(BeforeAnn, AfterAnn, BeforeClassAnn, AfterClassAnn, IgnoreAnn)
 
   /** every JUnit-4 annotation this phase understands; anything else under a test-framework
@@ -225,8 +123,7 @@ final class TestFrameworkTransform(
   /** distinguishes the locals of one emitted array-with-delta loop from the next. */
   private var nextTmp: Int = 0
 
-  // symbol minting has to continue DURING the walk (each converted suite needs its own
-  // `beforeAll`/`afterAll` symbol), so the counter and the buffer are fields, not `run` locals.
+  // symbol minting continues DURING the walk, so the counter and buffer are fields, not `run` locals.
   private var nextId: Int = 0
   private val added = collection.mutable.ListBuffer[Symbol]()
   /** declarations whose consumed annotation must be stripped from the emitted output. */
@@ -236,52 +133,21 @@ final class TestFrameworkTransform(
   private val found = collection.mutable.ListBuffer[Finding]()
   private var suitesConverted = 0
   private var testsConverted  = 0
-  /** `thrown.expect(…)` sites this run turned into an `intercept`; the DECLINED ones are one
-    * [[Finding]] each, naming the guard (`CLAUDE.md` §3 — a count of conversions says nothing about
-    * what was refused, and `refused = 0` is a bar met by converting nothing). */
+  /** `thrown.expect(…)` sites turned into `intercept`; declined ones are one [[Finding]] each,
+    * naming the guard (`CLAUDE.md` §3). */
   private var rulesConverted  = 0
 
-  /** JS-E07's citation state — set when [[promote]] actually widened an operand, read by
-    * [[transformDefDef]], which the bottom-up traversal reaches AFTER the body it belongs to.
-    *
-    * A flag and not a set of `Apply` nodes, because the citation is per DECLARATION (`CLAUDE.md`
-    * §5.1) and the declaration is the frame this phase's rewrite has no other way to name: the
-    * assertion rewrite is a `transformApply` hook, which sees a call and never the member it is in.
-    * Cleared at each declaration, so a widening in one method cannot be attributed to the next. */
+  /** JS-E07's citation state — set when [[promote]] widens an operand, read by
+    * [[transformDefDef]] after the body it belongs to. Per-declaration, since the assertion
+    * rewrite (`transformApply`) sees a call and never the enclosing member; cleared per declaration. */
   private var promotedHere = false
 
-  /** ==A TEST-CLASS HIERARCHY, which java has and this conversion had never met==
-    *
-    * Every suite this phase had converted before was a ROOT: a class declaring its own `@Test`s and
-    * extending nothing the program declares. Java does not require that, and the first library to
-    * write the ordinary shape — an abstract `RenderingTestCase`, an abstract `FullSpecTestCase`
-    * declaring the one `@Test`, and four concrete subclasses that inherit it — breaks the
-    * conversion in two independent ways, neither of which any per-class rule can see.
-    *
-    * '''THE PARENT.''' `munit.FunSuite` is a CLASS, and so is the java superclass. Prepended at the
-    * class that declares the `@Test`, the emitted clause reads
-    * `extends munit.FunSuite with RenderingTestCase` and scalac answers *class RenderingTestCase is
-    * not a trait*. Scala has ONE superclass, so there is exactly one place the suite can go: the
-    * ROOT of the chain of program-declared classes the `@Test` declarer belongs to. [[suiteAnchors]]
-    * is that set, and for a class with no program-declared superclass it is the class itself —
-    * which is every suite in the corpus before this one, so the rule is flat by construction.
-    *
-    * '''THE METHOD.''' A `@Test` becomes a `test("m") { … }` STATEMENT, and a statement does not
-    * override anything: a subclass that overrides its parent's test method would emit a SECOND
-    * registration under the same name (MUnit rejects a duplicate at run time — after the compile,
-    * after every count) and a `super.m()` inside it names a member that no longer exists. Java runs
-    * ONE test per concrete class and it is the override.
-    *
-    * So a `@Test` that participates in an override relation among program-declared classes stays a
-    * `def` — [[virtualTests]] — and the registration is emitted ONCE, at the TOP declarer, as a CALL
-    * to it. Virtual dispatch then reproduces java exactly: each concrete subclass registers the one
-    * inherited test and runs its own override. The guard is structural (does an ancestor or a
-    * descendant this program declares also declare a `@Test` at this name and arity), so a suite
-    * with no test-class ancestry takes the statement form it always did.
-    *
-    * Both sets are computed ONCE per [[run]], over the whole program, because neither is a fact
-    * about the class being converted — `convert` is handed one `ClassDef` and the answer is in its
-    * ancestors and its descendants. */
+  /** A TEST-CLASS HIERARCHY. [[suiteAnchors]]: `munit.FunSuite` is a class and so may the java
+    * superclass be, so the suite parent must go at the ROOT of the program-declared chain above
+    * the `@Test` declarer, or scalac rejects a second class parent. [[virtualTests]]: a `@Test`
+    * participating in an override relation stays a `def` and registers ONCE at the top declarer,
+    * as a call — a statement would emit a duplicate registration and lose `super.m()`. Both
+    * computed once per [[run]] over the whole program. */
   private var classDefs: Map[SymId, Tree.ClassDef] = Map.empty
   private var suiteAnchors: Set[SymId]             = Set.empty
   /** `@Test` methods that stay `def`s because java's own override relation reaches them. */
@@ -295,32 +161,24 @@ final class TestFrameworkTransform(
 
   /** class → the `bpFreshState` member IT declares. */
   private var freshSym: Map[SymId, SymId]   = Map.empty
-  /** class → the NEAREST ANCESTOR that also declares one, which is `super.bpFreshState()`'s target
-    * and the reason the member carries `override`. Not necessarily the direct parent: a class the
-    * lowering could not reach is skipped, and the chain closes over it. */
+  /** class → the NEAREST ANCESTOR that also declares one, i.e. `super.bpFreshState()`'s target.
+    * Not necessarily the direct parent: a class the lowering could not reach is skipped over. */
   private var freshSuper: Map[SymId, SymId] = Map.empty
   /** class → the member a `test(…)` registration EMITTED IN IT may call: its own, or the nearest
-    * one it inherits. Distinct from [[freshSym]] because a virtual test registers at the TOP
-    * declarer, which may hold no state of its own while its subclasses do. */
+    * inherited one. Distinct from [[freshSym]] since a virtual test registers at the TOP declarer,
+    * which may hold no state of its own while its subclasses do. */
   private var freshCall: Map[SymId, SymId]  = Map.empty
-  /** the java `final` instance fields the reconstruction ASSIGNS, which is what makes them `var`s.
-    * Java rebuilt the object, so its `final` was per-construction; scala has one object, so the
-    * same per-test value needs a mutable slot. Narrowed to the fields the lowering really writes —
-    * every other field is emitted exactly as it was. */
+  /** java `final` instance fields the reconstruction ASSIGNS, hence made `var`s — narrowed to the
+    * fields the lowering really writes; every other field is emitted exactly as it was. */
   private val madeMutable = collection.mutable.Set.empty[SymId]
   private var suitesRebuilt = 0
 
   /** Constructs this phase could not translate, with their CLAUDE.md §1 classification. Empty
-    * until [[run]] has executed. A migrator that wants the number on every run can read it; `run`
-    * already prints a one-line summary plus the details, so no wiring is required for it to be
-    * LOUD. */
+    * until [[run]] has executed. */
   def findings: List[Finding] = found.toList
 
-  /** the program-declared SUPERCLASS of `cd`, if the program declares one.
-    *
-    * A parent this program does not declare is not a candidate — its `extends` clause is a fact
-    * about a class file (§4.56) — and neither is a TRAIT, which is what java's `implements` becomes
-    * and which scala is happy to mix in beside the suite. */
+  /** the program-declared SUPERCLASS of `cd`, if any. A parent this program does not declare, or
+    * a TRAIT (java's `implements`), is not a candidate — §4.56. */
   private def classParentOf(cd: Tree.ClassDef)(using p: Program): Option[Tree.ClassDef] =
     cd.parents.iterator
       .map { case tt: TypeTree => headSymOf(tt.tpe); case t: Term => headSymOf(t.tpe) }
@@ -381,102 +239,25 @@ final class TestFrameworkTransform(
   // JUnit constructs a FRESH INSTANCE per @Test — the per-test RECONSTRUCTION
   // -------------------------------------------------------------------------
 
-  /** ==JUNIT REBUILDS THE TEST OBJECT; MUNIT HAS ONE SUITE INSTANCE==
+  /** Per-test RECONSTRUCTION: JUnit builds a fresh instance per `@Test` (JLS 12.5 — zero, field
+    * inits + instance-init blocks in textual order, ctor body, then `@Before`); MUnit has one
+    * suite instance. Hoists that sequence into `override def bpFreshState()`, called at the head
+    * of every test ahead of `@Before`, chaining `super.bpFreshState()` after zeroing this class's
+    * own fields (java's allocation order) and never duplicating the class-body initialisation.
+    * `ENGINE-LIMITS.md` X4.
     *
-    * `BlockJUnit4ClassRunner.methodBlock` opens with `createTest()` — a `newInstance` on the class's
-    * ONE public constructor — for every `@Test`, so java runs the whole of JLS 12.5 once per test:
-    * the object's fields are ZEROED by the allocation, the field initialisers and instance
-    * initialiser blocks run as one sequence in TEXTUAL ORDER (step 4), then the constructor body
-    * (step 5), then `@Before`. MUnit registers `test(name)(body)` on ONE instance, so a converted
-    * suite's fields are built ONCE and every test after the first inherits the last one's state.
-    *
-    * Measured, before this lowering existed, at **4 of one suite's 10** — four instance fields with
-    * their own initialisers, and the second test met a `BehaviorTree` that already had a root
-    * (`ENGINE-LIMITS.md` X4). Discharging `@Before` correctly is what makes the gap VISIBLE and not
-    * what causes it: the state java rebuilt is the CONSTRUCTOR's, and no `@Before` translation
-    * reaches it. Nothing else can see it — 0 compile errors, 0 skipped, every check count flat,
-    * `outcomes N of N emitted` — which is §3's whole argument for running the suite.
-    *
-    * ==THE LOWERING: java's own initialisation sequence, HOISTED OUT OF THE CLASS BODY==
-    *
-    * Each class in the closure below declares
-    * {{{
-    * override def bpFreshState(): Unit = { <zero MY fields>; super.bpFreshState(); <MY step 4>; <MY ctor body> }
-    * }}}
-    * and every converted test body opens with `bpFreshState()`, AHEAD of the `@Before` calls. The
-    * class body no longer initialises anything: a field's initialiser MOVES into the member, its
-    * declaration keeps only the JVM default the emitter already writes for an uninitialised java
-    * field, and an instance initialiser block's statements move with them, in java's textual order.
-    *
-    * Three properties that are the reason for this exact shape, each verified against a real JUnit 4
-    * run rather than reasoned about:
-    *
-    *  - '''zeroing precedes ALL initialisation, and that is what the chain order buys.''' Each class
-    *    zeroes its own fields BEFORE delegating upward, so the sequence is
-    *    `zero(C), zero(B), zero(A), init(A), init(B), init(C)` — exactly java's, where the
-    *    allocation zeroes every field of every class in the hierarchy before the superclass
-    *    constructor runs. It is not decoration: a superclass constructor that calls an overridden
-    *    method reading a SUBCLASS field sees the DEFAULT in java (probed: `Base.ctor sees sub=null`
-    *    on the second test, after the first had assigned it), and a chain that zeroed on the way
-    *    down would show it the previous test's value — X4 itself, one level in.
-    *  - '''the initialisation is HOISTED, never duplicated.''' Left in the class body it would run
-    *    once at suite construction AND once per test, so a field initialiser with an effect outside
-    *    the object would run N+1 times where java ran it N. Hoisting also puts it on java's side of
-    *    `@BeforeClass`: junit runs the static hook BEFORE the first construction, and MUnit
-    *    constructs the suite before `beforeAll()`, so an un-hoisted initialiser runs on the wrong
-    *    side of it.
-    *  - '''a `private` field is reset BY ITS OWN CLASS.''' That is why the member chains rather than
-    *    being inlined at the concrete suite: a base test case's `private` field is not nameable from
-    *    its subclass, and java's constructor chain is what runs each class's own step 4.
-    *
-    * ==WHAT THE LOWERING DOES NOT REPRODUCE==
-    *
-    * `CLAUDE.md` §3: each is (i) a structural GUARD, (ii) impossible by the SHAPE emitted, or (iii)
-    * COUNTED — one [[Finding]] per site naming the guard.
-    *
-    *  1. '''OBJECT IDENTITY.''' SHAPE-LIMITED and the one irreducible difference: java allocated a
-    *     new object per test and this resets one object's fields. Anything that OUTLIVES a test
-    *     holding the instance — a listener the test registered, a static map it put `this` in —
-    *     observes the reset where java left the old object alone. Counted where the instance is used
-    *     as a VALUE at all (`fresh-state(instance-escape)`, one row per suite): a `this` in
-    *     RECEIVER position is not an escape and is most of them, so the count is the population that
-    *     could escape rather than a proof that one did.
-    *  2. '''`static` FIELDS.''' GUARD — only non-static fields are zeroed and re-initialised. Java
-    *     shares a static across every construction (probed: a static counter reads 1 in the second
-    *     test after the first incremented it), so resetting one would be this defect inverted.
-    *  3. '''A CONSTRUCTOR THIS CANNOT REPLAY.''' GUARD + COUNT (`fresh-state(constructor)`): the
-    *     lowering fires only for a class with at most ONE constructor, nilary, with no `this(…)`
-    *     delegation and no ARGUMENTS passed to `super(…)` — which is every JUnit 4 test class, since
-    *     `validateOnlyOneConstructor`/`validateZeroArgConstructor` is junit's own precondition
-    *     (probed: junit refuses the class outright otherwise). Anything else keeps its constructor
-    *     AND its field initialisers exactly as they were: hoisting the fields out from under a
-    *     constructor body this cannot move would leave that body reading defaults, which is a defect
-    *     the lowering would have CAUSED.
-    *  4. '''A FIELD WITH NO WRITABLE DEFAULT.''' GUARD + COUNT (`fresh-state(no-default)`): a field
-    *     at a class TYPE PARAMETER or an opaque type has no default this can write, so the field is
-    *     left out of the ZERO step and named. Writing `null` at such a type is a compile error and
-    *     inventing a value is §4.6's fabricated fact.
-    *  5. '''A BASE MODULE'S TEST CLASS IN THE CHAIN.''' GUARD + COUNT (`fresh-state(base-ancestor)`)
-    *     — see [[scope]].
-    *  6. '''AN EXTERNAL SUPERCLASS.''' SHAPE — a class file's fields are not this program's to
-    *     rebuild, and such a suite never reaches this question: the anchor is the TOPMOST
-    *     program-declared class, so an external class parent stands on the one class that gains
-    *     `munit.FunSuite`, and `extends munit.FunSuite with X` where `X` is a class is *class X is
-    *     not a trait* — loud, at the compiler, before any of this runs.
-    *  7. '''`@Ignore`.''' SHAPE — MUnit does not evaluate an ignored body, so the prologue does not
-    *     run; junit likewise fires `testIgnored` without ever calling `createTest`.
-    *  8. '''A VIRTUAL `@Test`.''' SHAPE — the registration stands at the top declarer and calls the
-    *     member, so `bpFreshState()` dispatches to the RUNTIME class's override, which is the
-    *     concrete class junit would have constructed.
-    */
+    * Not reproduced, per CLAUDE.md §3: object identity (counted, `fresh-state(instance-escape)`);
+    * a non-replayable constructor (guard+count, `fresh-state(constructor)`); a field with no
+    * writable default (guard+count, `fresh-state(no-default)`); a base module's test class in the
+    * chain (guard+count, `fresh-state(base-ancestor)`, see [[scope]]). Structurally impossible and
+    * uncounted: `static` fields, an external superclass, `@Ignore`, a virtual `@Test`. */
   private def planFreshState(program: Program)(using p: Program): Unit =
     freshSym = Map.empty; freshSuper = Map.empty; freshCall = Map.empty
-    // the classes java rebuilt for one suite: the declarer and every program-declared class above
-    // it, because JLS 12.5 runs each of their step 4s on every construction.
+    // classes java rebuilds for one suite: the declarer and every program-declared class above it.
     def chainOf(s: SymId): List[Tree.ClassDef] = classDefs(s) :: classAncestry(classDefs(s))
     val declarers = testDeclarers.toList.filter(classDefs.contains).sortBy(_.raw)
-    // …and the ones this run may WRITE. A chain that leaves the run's own emission is refused whole:
-    // the `override` the subclass needs names a member only the base's run could have emitted.
+    // a chain leaving the run's own emission is refused whole: the `override` names a member only
+    // the base's run could have emitted.
     val (mine, borrowed) = declarers.partition(s => chainOf(s).forall(c => scope.emitsSymbol(program, c.symbol)))
     borrowed.filter(s => scope.emitsSymbol(program, s)).foreach { s =>
       val cd = classDefs(s)
@@ -490,7 +271,6 @@ final class TestFrameworkTransform(
         "base test class into this module's source set, or keep this suite on the JVM/JUnit path.")
     }
     val chains = mine.map(chainOf)
-    // WHICH classes the lowering can express, and which of them hold state java rebuilt.
     val reachable = chains.flatten.map(_.symbol).distinct
     val blocked   = collection.mutable.Set.empty[SymId]
     reachable.foreach { s =>
@@ -508,33 +288,26 @@ final class TestFrameworkTransform(
             "a constructor taking arguments unless a `@RunWith` runner supplies them.")
         case Right(_) => ()
     }
-    // A CHAIN IS EITHER ACTIVE OR ABSENT. A suite with no instance state at all needs no member and
-    // gets none — otherwise every stateless suite in the corpus would grow an empty `def` and a
-    // call in every test body. Where any class in the chain does hold state, EVERY class the
-    // lowering can express gets the member, including the stateless ones: the registration for a
-    // virtual test stands at the top declarer, and a member it cannot name is a call that does not
-    // compile.
+    // a chain is active or absent, never per-class: a stateless suite gets no member, but where any
+    // class in an active chain holds state, EVERY class the lowering can express gets one — a
+    // virtual test's registration stands at the top declarer and cannot call a member missing there.
     val inSet = chains.filter(c => c.exists(cd => !blocked(cd.symbol) && holdsState(cd)))
                       .flatten.map(_.symbol).distinct.filterNot(blocked).toSet
-    // …the chain's own edges, settled BEFORE the symbols are minted, because whether a member
-    // carries `override` is exactly whether it has one.
+    // settled before symbols are minted, since whether a member carries `override` depends on it.
     val supers = inSet.iterator.flatMap { s =>
       classAncestry(classDefs(s)).map(_.symbol).find(inSet).map(s -> _)
     }.toMap
     val unitT = primTypes("scala.Unit")
     freshSym = inSet.iterator.map { s =>
-      // `MemberKey`, never `owner + "#" + name`: the separator grammar is one derivation
-      // (`PolicyKeyLintSpec` is the rule), and this member's `fullName` is a member key like any
-      // other — a bare one, since a nilary synthesised member has no overload to distinguish.
+      // `MemberKey`, never `owner + "#" + name` (`PolicyKeyLintSpec`); a bare key since a nilary
+      // synthesised member has no overload to distinguish.
       val fqn = p.symbolOf(s).map(o => MemberKey(o.fullName, FreshStateMember).render)
                   .getOrElse(FreshStateMember)
       s -> mint(FreshStateMember, fqn, Flags(isOverride = supers.contains(s)),
                 TypeRepr.MethodType(Nil, unitT), owner = s)
     }.toMap
     freshSuper = supers.map((s, a) => s -> freshSym(a))
-    // …and WHICH member a registration emitted in a class may call: its own, or the nearest it
-    // inherits. Computed for every class in a chain, because a `@Test` may stand in one the
-    // lowering skipped.
+    // computed for every class in a chain, since a `@Test` may stand in one the lowering skipped.
     freshCall = reachable.iterator.flatMap { s =>
       (s :: classAncestry(classDefs(s)).map(_.symbol)).find(inSet).map(m => s -> freshSym(m))
     }.toMap
@@ -548,17 +321,10 @@ final class TestFrameworkTransform(
       case _               => false
     } || ctorToReplay(cd).toOption.flatten.exists(d => replayedStatements(d).nonEmpty)
 
-  /** a field the ALLOCATION zeroes and step 4 initialises — never a `static`, which java shares
-    * across every construction, and never a member ANOTHER PHASE MINTED.
-    *
-    * The second half is `CLAUDE.md` §4.56 read at a rewrite: this lowering may reason about what
-    * JAVA DECLARED, and a `ValDef` in an emitted class body is not evidence of that — a phase that
-    * threads a context injects `private given sge.Sge` as one, with a symbol the frontend never
-    * interned and, in that case, no NAME to assign through. Zeroed and hoisted it emitted ` = null`
-    * and a `given` with no right-hand side: two syntax errors on the first port that carried both
-    * phases. `Program.owns` is the structural answer — an interned java field hangs off a unit
-    * through its owner chain and a minted one does not — and the flag test beside it is the same
-    * question asked of a phase that mints an OWNED member, which nothing does today. */
+  /** a field the ALLOCATION zeroes and step 4 initialises — never a `static` (java shares one
+    * across every construction) and never a member ANOTHER PHASE MINTED (`Program.owns` is the
+    * structural test, since a `ValDef` in an emitted body is not evidence java declared it —
+    * CLAUDE.md §4.56). */
   private def instanceField(v: Tree.ValDef)(using p: Program): Boolean =
     p.owns(v.symbol) && p.symbolOf(v.symbol).exists { s =>
       !s.flags.isStatic && !s.flags.isGiven && !s.flags.isImplicit && !s.flags.isModule &&
@@ -577,14 +343,9 @@ final class TestFrameworkTransform(
   private def isInitBlock(d: Tree.DefDef)(using p: Program): Boolean =
     p.symbolOf(d.symbol).exists(_.name == InitBlockName)
 
-  /** THE ONE CONSTRUCTOR THIS LOWERING MAY REPLAY, or the sentence the refusal reports.
-    *
-    * Junit's own precondition is exactly this shape (`validateOnlyOneConstructor` +
-    * `validateZeroArgConstructor`), so the guard costs nothing on a class junit would run. What it
-    * refuses is a base test case a `@RunWith` runner constructs with arguments — where replaying is
-    * impossible, since the arguments are the runner's — and a `super(…)` with arguments, whose
-    * parent construction the emitter carries in the `extends` clause and which a replay must not
-    * duplicate. */
+  /** THE ONE CONSTRUCTOR THIS LOWERING MAY REPLAY, or the sentence the refusal reports. Matches
+    * JUnit's own precondition (`validateOnlyOneConstructor` + `validateZeroArgConstructor`), so
+    * the guard costs nothing on a class JUnit would run. */
   private def ctorToReplay(cd: Tree.ClassDef)(using p: Program): Either[String, Option[Tree.DefDef]] =
     cd.body.collect { case d: Tree.DefDef if p.symbolOf(d.symbol).exists(_.name == "<init>") => d } match
       case Nil          => Right(scala.None)
@@ -622,13 +383,10 @@ final class TestFrameworkTransform(
       p.symbolOf(m).exists(_.name == "<init>")
     case _ => false
 
-  /** THE VALUE THE ALLOCATION LEAVES, as a term.
-    *
-    * The same answer `TirEmitter.defaultFor` writes for an uninitialised java field, in the IR
-    * rather than in text — the two are the same fact and this one has to be a `Term` because it
-    * stands on the right of an assignment. `None` where the type STATES no default this can write:
-    * a class TYPE PARAMETER (`null` does not conform) or an opaque type (`null` is not its shape).
-    * Refused and counted, never guessed (`CLAUDE.md` §4.6). */
+  /** THE VALUE THE ALLOCATION LEAVES, as a term — the same answer `TirEmitter.defaultFor` writes
+    * for an uninitialised java field, in the IR rather than in text. `None` where the type states
+    * no writable default (a class type parameter or an opaque type): refused and counted, never
+    * guessed (`CLAUDE.md` §4.6). */
   private def defaultTerm(t: TypeRepr, o: Origin)(using p: Program): Option[Term] =
     def lit(c: Constant) = Some(Tree.Literal(c, t, o))
     nameOf(t) match
@@ -692,10 +450,8 @@ final class TestFrameworkTransform(
             v.rhs.foreach { r => inits += assignField(v.symbol, v.tpt.tpe, r, v.origin); madeMutable += v.symbol }
             kept += (if v.rhs.isEmpty then v else v.copy(rhs = scala.None))
           case d: Tree.DefDef if isInitBlock(d) =>
-            // JLS 12.5 step 4 is ONE sequence in TEXTUAL ORDER, and the frontend has already sorted
-            // the fields and the blocks into it (`CLAUDE.md` §4.55) — so this walk preserves it by
-            // walking the body, and the member itself is CONSUMED rather than left for the emitter
-            // to inline a second time.
+            // JLS 12.5 step 4 is ONE textual-order sequence, already sorted by the frontend
+            // (§4.55); the member is CONSUMED rather than left for the emitter to inline again.
             d.rhs.foreach(inits += _)
           case d: Tree.DefDef if ctor.exists(_.symbol == d.symbol) && replayedStatements(d).nonEmpty =>
             inits ++= replayedStatements(d)
@@ -710,7 +466,6 @@ final class TestFrameworkTransform(
         val stats = zeroes.result() ++ sup.toList ++ inits.result()
         val rhs   = Tree.Block(stats, unitLit(o), unitT, o)
         suitesRebuilt += 1
-        // difference 1 — the one thing a reset cannot be: a NEW OBJECT.
         val escapes = instanceEscapes(cd)
         if escapes > 0 then
           found += Finding("fresh-state(instance-escape)", cd.origin, Fix.EngineRule, at = cd.symbol, advice =
@@ -744,10 +499,8 @@ final class TestFrameworkTransform(
 
   private def unitLit(o: Origin): Term = Tree.Literal(Constant.UnitC, primTypes("scala.Unit"), o)
 
-  /** the instance used as a VALUE, which is the only part of difference 1 anything can see. A `this`
-    * that is the QUALIFIER of a selection is a field or a method access and is not an escape — it is
-    * also most of them, so the two are counted as a difference of two standard walks rather than by
-    * a predicate that would have to know every shape a receiver can take. */
+  /** the instance used as a VALUE — a `this` that is the QUALIFIER of a selection is a field/method
+    * access and not an escape, so this is the difference of two standard walks. */
   private def instanceEscapes(cd: Tree.ClassDef)(using p: Program): Int =
     def all(n: Int, t: Term)   = t match { case _: Tree.This => n + 1; case _ => n }
     def recvs(n: Int, t: Term) = t match
@@ -762,31 +515,21 @@ final class TestFrameworkTransform(
     suiteSym = mint(suite.substring(suite.lastIndexOf('.') + 1), suite)
     testSym  = mint(testMember, testMember)  // MUnit's own `test`, applied CURRIED
     interceptSym = mint("intercept", "intercept") // MUnit's own, inherited from the suite
-    // `munit.TestOptions("n").ignore` rather than `"n".ignore`: the latter needs MUnit's implicit
-    // String conversion, and this phase emits fully-qualified references with no imports (§6).
+    // `munit.TestOptions("n").ignore`: `"n".ignore` needs MUnit's implicit String conversion.
     testOptionsSym = mint("TestOptions", "munit.TestOptions")
     ignoreSym      = mint("ignore", "ignore")
-    // fully qualified to an OBJECT rather than left to inheritance: see [[MunitAssertions]].
     munitSyms = MunitMembers.map(nm => nm -> mint(nm, MunitAssertions + "." + nm)).toMap
-    // scala's own widening members and array views — a `Select`'s member renders by SIMPLE name, so
-    // these are minted with no qualification at all.
+    // a `Select`'s member renders by SIMPLE name, so these are minted unqualified.
     widenSyms  = NumericRank.keys.map(t => t -> mint("to" + t.stripPrefix("scala."), "to" + t.stripPrefix("scala."))).toMap
     toSeqSym   = mint("toSeq", "toSeq")
     indicesSym = mint("indices", "indices")
-    // reference identity, NOT `==` — CLAUDE.md §4.4. The `scala.<op>#` prefix is the emitter's
-    // marker for an operator, which renders infix instead of `.eq(x)`.
+    // reference identity, NOT `==` — CLAUDE.md §4.4. `scala.<op>#` is the emitter's infix marker.
     eqSym = mint("eq", "scala.<op>#eq")
     neSym = mint("ne", "scala.<op>#ne")
-    // …and the three members the ExpectedException translation selects. Minted unqualified for the
-    // reason the widening members above are: a `Select`'s member renders by SIMPLE name against
-    // whatever the receiver's own type declares — `org.hamcrest.Matcher#matches`,
-    // `java.lang.Throwable#getMessage`, `java.lang.String#contains`.
     matchesSym    = mint("matches", "matches")
     getMessageSym = mint("getMessage", "getMessage")
     containsSym   = mint("contains", "contains")
-    // …and the rule's own state machine. `Nil` is QUALIFIED because it is an Ident rather than a
-    // selection (§6 — this backend emits no imports); the rest are selections on a receiver whose
-    // own type declares them, and the two operators carry the emitter's infix tag.
+    // `Nil` is an Ident (§6, no imports) and so is QUALIFIED; the rest are ordinary selections.
     nilSym      = mint("Nil", "scala.collection.immutable.Nil")
     appendSym   = mint(":+", "scala.<op>#:+")
     forallSym   = mint("forall", "forall")
@@ -812,43 +555,21 @@ final class TestFrameworkTransform(
 
     val symbols0 = SymbolTable(program.symbols.all ++ added)
     given Program = program.rebuilt(symbols = symbols0)
-    // WHERE THE SUITE PARENT GOES and WHICH `@Test`s stay `def`s — both facts about the whole
-    // program's class graph rather than about the class `convert` is handed, so both are settled
-    // before either walk starts (see the fields' doc).
+    // both are facts about the whole program's class graph, settled before either walk starts.
     planHierarchy(program)
-    // …and WHOSE INSTANCE STATE JUNIT REBUILT PER TEST, which is a fact about the same class graph
-    // and is settled here for the same reason (see [[planFreshState]]).
     planFreshState(program)
     survey(program)
-    // TWO WALKS, and the split is the whole of what is gated on `@Test`.
-    //
-    // The ASSERTION rewrite runs over every unit: an assertion is an assertion wherever it is
-    // written, and a test HELPER declares no `@Test` — that is what makes it a helper — while
-    // being where a suite's assertions are most often centralised. Scoped to converted classes it
-    // never VISITED those calls, so they emitted as `org.junit.Assert.*` into a port whose whole
-    // point is to leave the JVM, and the phase's own counters said nothing because nothing was
-    // counted.
-    //
-    // It was scoped for a stated reason that no longer holds: rewriting program-wide once produced
-    // `Not found: assertTrue` in helper classes, because the members came from the suite's base
-    // class and a helper has none. Assertions have been emitted fully qualified to the
-    // `munit.Assertions` OBJECT since — see [[MunitAssertions]], which is the fix for exactly that
-    // failure — so there is no scope in which they do not resolve, and the gate was a leftover.
-    //
-    // Running it ONCE per unit rather than once per converted class also removes a double walk:
-    // `mapClassDef` descends into nested classes, so an outer suite re-walked its already-converted
-    // nested one. Idempotent for the rewrites, NOT for the findings — an unmapped member inside a
-    // nested suite was reported twice and the untranslated-construct headline over-counted.
+    // the ASSERTION rewrite runs over every unit — a test HELPER declares no `@Test` and is where
+    // assertions are often centralised — and resolves everywhere since assertions are emitted
+    // fully qualified to the `munit.Assertions` OBJECT ([[MunitAssertions]]). Run once per unit
+    // rather than per converted class: `mapClassDef` descends into nested classes on its own.
     val rewritten = program.units.map(u => StandardTraversal.mapClassDef(this, u))
-    // …and the CONVERSION — the `munit.FunSuite` parent, the `test(name){body}` registrations, the
-    // lifecycle inlining and the `beforeAll`/`afterAll` overrides — stays gated on the class
-    // declaring a `@Test`, because that is what a suite IS. A helper that gained the parent would
-    // register zero tests and claim to be one.
+    // the CONVERSION (parent, registrations, lifecycle) stays gated on `@Test`: a helper that
+    // gained the parent would register zero tests and claim to be one.
     val units = rewritten.map(convert)
     // `convert` mints more (the lifecycle overrides), so the table is rebuilt AFTER the walk.
-    // …and a java `final` instance field the per-test reconstruction ASSIGNS has to be a `var`:
-    // java's `final` was per-CONSTRUCTION and this suite is constructed once. Narrowed to the
-    // fields really written (`CLAUDE.md` §4.55's own rule for a promotion's mutability).
+    // a java `final` instance field the reconstruction ASSIGNS has to be a `var` (this suite is
+    // constructed once); narrowed to the fields really written (§4.55's promotion-mutability rule).
     val symbols0m = madeMutable.foldLeft(SymbolTable(program.symbols.all ++ added)) { (t, id) =>
       t.get(id) match
         case scala.None => t
@@ -860,19 +581,15 @@ final class TestFrameworkTransform(
         case scala.None => t
         case Some(s)    => t.updated(s.copy(
           annotations        = s.annotations.filterNot(a => gone(nameOf(a.tpe))),
-          // a consumed annotation the FRONTEND could not carry (`@Ignore("why")` on a class, whose
-          // arguments need an expression translator) was handled all the same, so it must stop
+          // a consumed annotation the frontend could not carry was still handled, so it must stop
           // being reported as an omission.
           droppedAnnotations = s.droppedAnnotations.filterNot(ConsumedAnns)))
     }
     report()
     program.rebuilt(units, symbols)
 
-  /** …`owner` is `SymId.None` for every name this phase mints EXCEPT the per-test reconstruction's,
-    * and that exception is the point: `Program.owns` is what decides whether a member is this
-    * program's, so an unowned one is published by `PortMap` at the PACKAGE — the first run emitted a
-    * `com.badlogic.gdx…utils.bpFreshState()` row, a top-level name no file declares. A member added
-    * to an emitted class is emitted surface and belongs to that class. */
+  /** `owner` is `SymId.None` for every mint EXCEPT the per-test reconstruction's: `Program.owns`
+    * decides membership, and an unowned member publishes at the PACKAGE rather than its class. */
   private def mint(nm: String, full: String, flags: Flags = Flags(), info: TypeRepr = TypeRepr.NoType,
                    owner: SymId = SymId.None): SymId =
     val id = SymId(nextId); nextId += 1
@@ -883,23 +600,16 @@ final class TestFrameworkTransform(
     println(s"[$name] converted $suitesConverted suite(s), $testsConverted test(s); " +
             s"UNTRANSLATED test-framework constructs: ${found.size}")
     if suitesRebuilt > 0 then
-      // WHAT THE RECONSTRUCTION IS, stated where it is counted. A conversion count says nothing
-      // about the one difference between the two frameworks that RUNS the tests differently.
       println(s"  fresh instance: $suitesRebuilt class(es) rebuild their instance state before " +
               "every test — JUnit constructs the test object per @Test and MUnit has ONE suite " +
               s"instance, so each class's field initialisers, instance initialiser blocks and " +
               s"constructor body are hoisted into `$FreshStateMember`")
     if rulesConverted > 0 then
-      // WHAT THE CONVERSIONS ARE, stated where they are counted (`CLAUDE.md` §3). The residual
-      // difference the `intercept` shape had to declare here — junit catches `Throwable`, MUnit's
-      // `intercept` catches `NonFatal` — is GONE with that shape: the emitted `catch` is junit's
-      // own. What remains is the enumeration in `expectedException`'s doc, every member of which is
-      // a guard the refusal lane reports or a property of the shape.
       println(s"  ExpectedException @Rule: $rulesConverted `thrown.expect(…)` site(s) MODELLED — " +
               "the rule's matcher list armed in place and one try/catch over the whole test, which " +
               "is junit's own `ExpectedExceptionStatement` and reaches a site in a loop body")
     if found.nonEmpty then
-      // grouped, because one unhandled annotation is typically on every method of a suite.
+      // grouped: one unhandled annotation is typically on every method of a suite.
       found.groupBy(_.construct).toList.sortBy(-_._2.size).foreach { (c, fs) =>
         println(s"  $c × ${fs.size} — (${fs.head.fix.label}) ${fs.head.advice}")
         fs.take(3).foreach(f => println(s"      ${f.where.javaPath}:${f.where.line}"))
@@ -909,14 +619,9 @@ final class TestFrameworkTransform(
   // Survey — what this phase does NOT translate
   // -------------------------------------------------------------------------
 
-  /** Every test-framework construct the phase leaves alone, recorded with its §1 classification.
-    *
-    * All of these are (a): a fact about JUnit/TestNG and Scala, identical for every library, so
-    * none of them is fixed by configuring a phase or by a library-specific rule. Saying so is the
-    * point — an error an agent cannot classify costs it a full investigation (CLAUDE.md §4.45).
-    *
-    * The failure mode is uniform and quiet: an unrecognised annotation means the class is not
-    * converted at all, so it registers ZERO tests, compiles, and reports success. */
+  /** Every test-framework construct the phase leaves alone, recorded with its §1 classification —
+    * all §1(a). An unrecognised annotation means the class is not converted at all, so it
+    * registers ZERO tests, compiles, and reports success (`CLAUDE.md` §4.45). */
   private def survey(program: Program)(using p: Program): Unit =
     val roots = List("org.junit.", "org.junit.jupiter.", "org.testng.")
     program.symbols.all.foreach { s =>
@@ -925,14 +630,13 @@ final class TestFrameworkTransform(
       names.foreach { (fqn, o) =>
         if roots.exists(fqn.startsWith) && !HandledAnns(fqn) then
           val (fix, advice) = adviceFor(fqn)
-          // `s.id` and not `o`: a DROPPED annotation is reported from the SYMBOL, whose `origin`
-          // defaults to `Origin.synthetic`, so the path locates nothing and the D2 filter has to
-          // ask the owner chain instead (see `Finding.at`).
+          // `s.id` and not `o`: a DROPPED annotation's `origin` defaults to `Origin.synthetic`,
+          // so `Finding.at` asks the owner chain instead.
           found += Finding(fqn, o, fix, advice, s.id)
       }
     }
-    // JUnit 3 has no annotations at all: a suite is a `junit.framework.TestCase` subclass whose
-    // test methods are named `testXxx`. Nothing above can see it, so the PARENT is the signal.
+    // JUnit 3 has no annotations: a suite is a `junit.framework.TestCase` subclass whose test
+    // methods are named `testXxx`, so the PARENT is the signal.
     def scanParents(cd: Tree.ClassDef): Unit =
       cd.parents.foreach {
         case tt: TypeTree if nameOf(tt.tpe) == "junit.framework.TestCase" =>
@@ -942,18 +646,14 @@ final class TestFrameworkTransform(
             "and registers zero tests.")
         case _ => ()
       }
-    // `allClassDefs`, not a `cd.body` recursion: a class body is the type's MEMBERS, one node short
-    // of java — a method-LOCAL class (`JS-C30`) stands in a member's block, and a JUnit-3 suite
-    // declared as one would be reported by nothing.
+    // `allClassDefs`, not a `cd.body` recursion — a method-LOCAL class (`JS-C30`) stands in a
+    // member's block and would be missed by the latter (§3).
     program.units.foreach(u => StandardTraversal.allClassDefs(u)(using program).foreach(scanParents))
-    // Hamcrest: a whole second assertion vocabulary, reached either through the deprecated
-    // `org.junit.Assert.assertThat` or through `org.hamcrest.MatcherAssert`.
+    // Hamcrest: a second assertion vocabulary, reached via `org.junit.Assert.assertThat` or
+    // `org.hamcrest.MatcherAssert`.
     program.referenced.foreach { id =>
       program.symbolOf(id).foreach { s =>
-        // `RuleScope.covers`, not `startsWith`: a bare prefix makes `org.hamcrest` cover
-        // `org.hamcrestic`, which is §4.56's trap and the one the lint in this package exists to
-        // stop. No corpus package is named that, and that is exactly why the site was worth fixing
-        // rather than exempting — nothing would ever have reported it.
+        // `RuleScope.covers`, not `startsWith` — a bare prefix covers `org.hamcrestic` too (§4.56).
         val isHamcrest = RuleScope.covers(s.fullName, "org.hamcrest")
         val isAssertThat = s.name == "assertThat"
         if isHamcrest || isAssertThat then
@@ -997,27 +697,15 @@ final class TestFrameworkTransform(
   // Assertions — org.junit.Assert onto munit.Assertions, by ARGUMENT TYPE
   // -------------------------------------------------------------------------
 
-  /** `org.junit.Assert.assertX(…)` → the MUnit assertion that means the same thing.
+  /** `org.junit.Assert.assertX(…)` → the MUnit assertion that means the same thing. Java's
+    * `(expected, actual)` with an optional leading `String message` becomes MUnit's
+    * `(obtained, expected)` with an optional trailing `clue`; the overload is read from the
+    * ARGUMENTS' static types, not the callee's signature. A member with no mapping (`assertThat`)
+    * is left alone and reported, keeping the `org.junit` reference [[PortabilityCheck]] counts.
     *
-    * Java's shape is `(expected, actual)` with an OPTIONAL leading `String message`; MUnit's is
-    * `(obtained, expected)` with an optional TRAILING `clue`. So both ends of the argument list
-    * move, and which junit overload was resolved decides how — a `delta` third argument is a
-    * different assertion in MUnit, not a third argument to the same one.
-    *
-    * The overload is read from the ARGUMENTS' static types, not from the callee's signature: every
-    * TIR term carries a structured `TypeRepr` by construction, whereas a callee's parameter list is
-    * only as good as the frontend's key encoding for an EXTERNAL symbol. Both were available here;
-    * this is the one the IR contract guarantees.
-    *
-    * A member with no mapping (`assertThat`) is LEFT ALONE and reported. Rewriting it to something
-    * plausible is the silent-miss this engine exists to prevent, and leaving it keeps the reference
-    * to `org.junit` that [[PortabilityCheck]] already counts.
-    *
-    * NOTE for anyone unit-testing this against `SpoonTir.fromSource`: that path builds with
-    * `noClasspath`, so a `import static org.junit.Assert.assertEquals` in a one-file snippet
-    * resolves to `this.assertEquals(…)` and this hook never fires. Write `Assert.assertEquals(…)`
-    * explicitly, or the test asserts against unrewritten output and passes for the wrong reason. A
-    * model built over a whole source tree resolves the static import correctly. */
+    * `SpoonTir.fromSource` builds with `noClasspath`, so a one-file snippet's
+    * `import static org.junit.Assert.assertEquals` resolves to `this.assertEquals(…)` and this
+    * hook never fires there — write `Assert.assertEquals(…)` explicitly in such a fixture. */
   override def transformApply(t: Tree.Apply)(using p: Program): Term = t.fun match
     case Tree.Select(recv, m, _, o) =>
       assertClassOf(recv) match
@@ -1027,11 +715,7 @@ final class TestFrameworkTransform(
           munitCall(nm, t.args, o) match
             case Right(rewritten) => rewritten
             case Left(why)        =>
-              // the finding names the receiver the CALL had, not a canonical one: reported under a
-              // class the source never mentions, an agent cannot find the site. And where the
-              // refusal has a REASON beyond "no mapping exists" — a shape this phase understands
-              // and declines — that reason is the whole of what the reader needs, so `munitCall`
-              // returns it rather than leaving it to be re-derived from the argument list here.
+              // names the receiver the CALL had, not a canonical one, so an agent can find the site.
               found += Finding(assertCls + "." + nm, o, Fix.EngineRule,
                 s"no MUnit counterpart is known for this `$nm` overload (${t.args.size} argument(s)), so " +
                 s"the call is left on $assertCls — which compiles only with JUnit on the classpath and " +
@@ -1041,11 +725,8 @@ final class TestFrameworkTransform(
     case _ => t
 
   /** java's `(message?, expected, actual, delta?)` → MUnit's `(obtained, expected, delta?, clue?)`.
-    *
     * `hasMsg` is decided STRUCTURALLY: a leading `String` is junit's message exactly when the call
-    * carries more arguments than the member's minimal arity. That separates every junit overload
-    * that exists — `assertEquals(String, Object, Object)` from `assertEquals(double, double,
-    * double)`, and `assertEquals(a, b)` on two Strings from either — without naming one. */
+    * carries more arguments than the member's minimal arity. */
   private def munitCall(nm: String, args: List[Term], o: Origin)(using p: Program): Either[String, Term] =
     MinArity.get(nm).toRight("").flatMap { min =>
       val hasMsg = args.sizeIs > min && args.headOption.exists(a => nameOf(a.tpe) == "java.lang.String")
@@ -1056,13 +737,10 @@ final class TestFrameworkTransform(
         case ("fail", Nil) =>
           Right(call("fail", List(clue.headOption.getOrElse(constTerm(Constant.StringC("failed"), "java.lang.String", o))), o))
         case ("assertTrue", List(c))  => Right(call("assert", c :: clue, o))
-        // `assert(!c)` would need an operator node for one gain in readability; comparing against
-        // the literal is the same assertion and reports the same way.
         case ("assertFalse", List(c)) => Right(call("assertEquals", c :: bool(false, o) :: clue, o))
         case ("assertNull", List(x))    => Right(call("assertEquals", x :: nul(o) :: clue, o))
         case ("assertNotNull", List(x)) => Right(call("assertNotEquals", x :: nul(o) :: clue, o))
-        // REFERENCE identity — scala's `==` is java's `equals` (CLAUDE.md §4.4), so `assertEquals`
-        // here would silently weaken every `assertSame` into an `assertEquals`.
+        // REFERENCE identity — scala's `==` is java's `equals` (CLAUDE.md §4.4).
         case ("assertSame", List(e, a))    => Right(call("assert", infix(a, eqSym, e, o) :: clue, o))
         case ("assertNotSame", List(e, a)) => Right(call("assert", infix(a, neSym, e, o) :: clue, o))
         case ("assertEquals" | "assertNotEquals", List(e, a)) =>
@@ -1073,30 +751,17 @@ final class TestFrameworkTransform(
         case ("assertEquals", List(e, a, delta)) =>
           Right(call(deltaMember(List(e, a, delta)), a :: e :: delta :: clue, o))
         case ("assertArrayEquals", List(e, a)) =>
-          // `guarded` for the same reason as in `widen`: an operand that renders infix or as a
-          // control-flow expression would bind `.toSeq` to its last branch.
+          // `guarded`: an infix or control-flow operand would bind `.toSeq` to its last branch.
           Right(call("assertEquals",
             select(guarded(a), toSeqSym, o) :: select(guarded(e), toSeqSym, o) :: clue, o))
         case ("assertArrayEquals", List(e, a, delta)) => arrayWithDelta(e, a, delta, clue, o).toRight("")
-        // JUnit 4.13's `assertThrows(Class<T>, ThrowingRunnable)` asserts exactly what MUnit's
-        // `intercept[T] { … }` asserts and returns the throwable exactly as it does — the same
-        // construction [[testCase]] already builds for `@Test(expected = …)`, reached from the
-        // assertion side instead of the annotation side. TWO restrictions, both of them refusals
-        // rather than approximations:
-        //
-        //  - the runnable must be a LAMBDA. `intercept[E] { r }` EVALUATES `r` and never runs it,
-        //    so a `ThrowingRunnable` value or a method reference would turn the assertion into a
-        //    test of whether CONSTRUCTING the runnable threw — passing while checking nothing,
-        //    which is the shape this phase exists to prevent. Deriving the invocation would mean
-        //    naming `ThrowingRunnable#run`, a member no MUnit contract mentions;
-        //  - no leading `String message`. `intercept[T](body: => Any)` has no clue slot, so
-        //    junit's message has nowhere to go, and dropping a diagnostic the author wrote with
-        //    nothing counting the loss is worse than leaving the call where `PortabilityCheck`
-        //    already counts it.
+        // JUnit 4.13's `assertThrows` asserts what MUnit's `intercept[T] { … }` asserts. Two
+        // refusals: the runnable must be a LAMBDA (a value or method reference would test whether
+        // CONSTRUCTING it threw, not running it), and no leading `String message` (`intercept`
+        // has no clue slot).
         case ("assertThrows", List(Tree.Literal(Constant.ClassOfC(ex), _, _), lam: Tree.Lambda))
             if clue.isEmpty && lam.params.isEmpty =>
           Right(intercept(munitSyms("intercept"), ex, lam.body, o))
-        // …and the two shapes this phase DOES understand and declines, each with the reason.
         case ("assertThrows", List(Tree.Literal(Constant.ClassOfC(_), _, _), _: Tree.Lambda))
             if clue.nonEmpty =>
           Left("MUnit's `intercept[T](body)` has no clue slot, so junit's leading `String message` " +
@@ -1110,13 +775,10 @@ final class TestFrameworkTransform(
         case _ => Left("")
     }
 
-  /** `intercept[E] { body }` — MUnit's assertion that the body throws.
-    *
-    * The SYMBOL is a parameter because there are two spellings and the difference is scope, not
-    * taste. [[testCase]] builds this only inside a class that gains [[suite]] as a PARENT, where
-    * `intercept` is inherited and in scope; [[munitCall]] builds it wherever an assertion is
-    * written — a java `static` helper's companion object included, which extends nothing — so that
-    * one goes through the `munit.Assertions` OBJECT for the reason [[MunitAssertions]] states. */
+  /** `intercept[E] { body }` — MUnit's assertion that the body throws. `sym` is a parameter since
+    * there are two spellings: [[testCase]] uses the inherited one where `suite` is a parent, and
+    * [[munitCall]] the `munit.Assertions` OBJECT one, for scopes that don't extend the suite
+    * ([[MunitAssertions]]). */
   private def intercept(sym: SymId, ex: TypeRepr, body: Term, o: Origin): Term =
     val fn = Tree.TypeApply(Tree.Ident(sym, TypeRepr.NoType, o), List(TypeTree(ex, o)),
                             TypeRepr.NoType, o)
@@ -1132,13 +794,10 @@ final class TestFrameworkTransform(
 
   /** JAVA'S BINARY NUMERIC PROMOTION, re-applied.
     *
-    * `assertEquals(int, long)` is legal java because the call promoted the `int` before comparing.
-    * MUnit's `assertEquals[A, B]` infers each operand independently, so nothing drives scala's
-    * widening and the pair is rejected — 26 of the 33 errors that once justified an injected
-    * façade. Widening the NARROWER operand is the only safe direction; the reverse loses bits.
-    *
-    * `Char` and `Short` share a rank because neither widens to the other, which is why the
-    * equal-rank case promotes both to `Int` rather than picking one. */
+    * `assertEquals(int, long)` is legal java because the call promoted the `int` before comparing;
+    * MUnit infers each operand independently, so nothing drives scala's widening. Widening the
+    * NARROWER operand is the only safe direction. `Char` and `Short` share a rank because neither
+    * widens to the other, so the equal-rank case promotes both to `Int`. */
   private def promote(x: Term, y: Term)(using p: Program): (Term, Term) =
     val (tx, ty) = (nameOf(x.tpe), nameOf(y.tpe))
     (NumericRank.get(tx), NumericRank.get(ty)) match
@@ -1148,43 +807,21 @@ final class TestFrameworkTransform(
         (widen(x, tx, to, p), widen(y, ty, to, p))
       case _ => (x, y)
 
-  /** JS-E07's CITATION — the catalog's third discharge surface (`DESIGN.md` §2.8).
-    *
-    * A phase does not walk one node kind, so an obligation wrapper is the wrong shape for it; what
-    * a phase owes is a row per DECLARATION it decided about. This hook is where that declaration is
-    * finally in hand: the traversal is bottom-up, so a `DefDef` is reached after every `Apply` in
-    * its body, and [[promotedHere]] is exactly "java's binary numeric promotion had to be
-    * re-applied somewhere in this member".
-    *
-    * The tree is returned UNCHANGED. This hook exists to observe, and an observation that moved a
-    * byte of output would be a coverage mechanism that changes what it measures. */
+  /** JS-E07's CITATION — the catalog's third discharge surface (`DESIGN.md` §2.8). The traversal
+    * is bottom-up, so a `DefDef` is reached after every `Apply` in its body and [[promotedHere]]
+    * says whether promotion fired anywhere in this member. Returns the tree UNCHANGED. */
   override def transformDefDef(t: Tree.DefDef)(using p: Program): Tree.DefDef =
     citeIfPromoted(t.symbol)
     t
 
-  /** …AND A FIELD INITIALISER IS NOT INSIDE A `DefDef`.
-    *
-    * The hook above reads a flag and clears it, which is only sound if EVERY declaration whose body
-    * can hold a widening clears it. A field's initialiser can — `Runnable check = () ->
-    * Assert.assertEquals(1, 2L)` puts the promotion inside a `ValDef`'s right-hand side — and the
-    * `ValDef` did not clear, so the flag survived to the NEXT `DefDef` the traversal reached and the
-    * citation named it. In the fixture that is the class's own `<init>`, a member the phase never
-    * touched; with the field last in a class body it is a member of the NEXT class.
-    *
-    * A citation is a claim about which declaration a phase decided at. One that names the wrong
-    * member sends an investigation to code with nothing in it, which is the single thing provenance
-    * may not do (`CLAUDE.md` §4.575) — and nothing else can see it: the emitted text is identical,
-    * every check count is identical, and `catalog(consulted)` counts the row either way. */
+  /** …AND A FIELD INITIALISER IS NOT INSIDE A `DefDef` — its promotion must clear here too, or the
+    * flag survives to the NEXT `DefDef` and cites the wrong member (`CLAUDE.md` §4.575). */
   override def transformValDef(t: Tree.ValDef)(using p: Program): Tree.ValDef =
     citeIfPromoted(t.symbol)
     t
 
-  /** …and the CLASS BOUNDARY, which is the backstop rather than a third case.
-    *
-    * Whatever holds a widening that neither hook above owns — a class-body term some future lowering
-    * introduces — belongs to the type it was written in and to no member of the next one. Citing the
-    * class is honest ("this phase decided something in here") where leaking is not; and because both
-    * hooks above run first, this fires only for what they do not cover. */
+  /** …and the CLASS BOUNDARY is the backstop: a class-body term neither hook above owns belongs to
+    * its own type, and this fires only for what they do not cover. */
   override def transformClassDef(t: Tree.ClassDef)(using p: Program): Tree.ClassDef =
     citeIfPromoted(t.symbol)
     t
@@ -1198,46 +835,15 @@ final class TestFrameworkTransform(
     if from == to then t else select(guarded(t)(using p), widenSyms(to), t.origin, primTypes(to))
 
   /** JAVA'S OTHER WIDENING, re-applied — the REFERENCE half of what [[promote]] does for numbers.
+    * Java's one `assertEquals(Object, Object)` widens every reference pair at the call; MUnit's
+    * `assertEquals[A, B]` demands a `Compare[A, B]`, which two invariant `java.util.List`s at
+    * different element types do not satisfy. Written back as the call's TYPE ARGUMENTS.
     *
-    * Java has one `assertEquals(Object, Object)` and every reference pair went through it, WIDENED
-    * at the call; MUnit's `assertEquals[A, B]` infers each operand independently and then demands a
-    * `Compare[A, B]`, which needs the two types to relate. Two invariant `java.util.List`s at
-    * different element types do not — `Can't compare these two types: java.util.List[Object] /
-    * java.util.List[String]` (liqp `RenderSettingsTest`), the same fact as the 26 `Long / Int`
-    * errors at the other overload.
-    *
-    * MUnit's constraint is a STRICTLY STRONGER check than java's, so the rule is to KEEP IT WHERE
-    * IT IS A CHECK and write java's widening down everywhere else. It is a check exactly when the
-    * two static types are the SAME and that type is not a ROOT — `Compare` is reflexive, and
-    * `[Object, Object]` on a pair MUnit can already compare would throw the better diagnostic
-    * away.
-    *
-    * **A ROOT on either side is the case that reads as "already relates" and is not.** MUnit's
-    * `Compare[A, Object]` resolves whatever `A` is, so at a root operand the constraint is ALREADY
-    * VACUOUS and the widening costs nothing — and it is the one place the TIR's own answer cannot
-    * be trusted. An earlier phase's boundary bridge types its wrap as the FORMAL it was inserted
-    * for, and java's `assertEquals(Object, Object)` formal is `java.lang.Object`: at liqp's
-    * `RenderSettingsTest` BOTH operands are `JavaCollections.toJava(…)` nodes carrying
-    * `java.lang.Object`, while the text they emit is `java.util.List[Object]` and
-    * `java.util.List[String]`. Read as "same type, so MUnit can compare them" that pair declines
-    * the widening and fails to compile; read as "a root, so there was never a check here" it takes
-    * it. Note the phase concludes nothing about ANOTHER phase's rewrite — it reads its own operand
-    * types and treats a root as the absence of information it is.
-    *
-    * Two guards, both refusals rather than approximations:
-    *
-    *   - `NoType` on either side is "the frontend could not say", and a rewrite is not made on a
-    *     guess;
-    *   - a PRIMITIVE on either side belongs to [[promote]], and widening a boxed pair to `Object`
-    *     would silently change the comparison: scala's `==` on two boxed numbers is NUMERIC
-    *     (`BoxesRunTime.equals`), where java's `Integer.equals(Long)` is `false`. That is a §4.4
-    *     divergence and this rewrite must not open it.
-    *
-    * The widening is written as the call's TYPE ARGUMENTS rather than as a cast per operand: it is
-    * one construct instead of two, it is exactly what java's signature said, and it leaves the
-    * operands' own emitted text alone. A type-PARAMETER operand takes it too and is safe for the
-    * reason `ENGINE-LIMITS.md` G24 measures — the port emits java's vacuous `T <: java.lang.Object`
-    * bound literally, so such an operand conforms; the day G24's bound comes off, it stops. */
+    * True exactly when both static types are the SAME and not a ROOT (`Compare[A, Object]` is
+    * already vacuous at a root, so widening there costs nothing but is needed to trust the TIR's
+    * type over an earlier boundary-bridge wrap typed as `java.lang.Object`). Refuses rather than
+    * guesses on `NoType` (frontend could not say) or a PRIMITIVE (belongs to [[promote]]; boxed
+    * `Object` equality is numeric where java's is not — §4.4). */
   private def widened(x: Term, y: Term)(using p: Program): Boolean =
     val (sx, sy) = (shape(x.tpe), shape(y.tpe))
     sx.nonEmpty && sy.nonEmpty &&
@@ -1248,11 +854,8 @@ final class TestFrameworkTransform(
     val n = nameOf(t)
     NumericRank.contains(n) || n == "scala.Boolean" || n == "scala.Unit"
 
-  /** A type's full structural name, type ARGUMENTS included.
-    *
-    * [[nameOf]] deliberately answers the type CONSTRUCTOR, which is right everywhere else in this
-    * phase and is exactly wrong here: the pair [[widened]] exists for differs ONLY in its
-    * arguments, and read through `nameOf` the two sides compare equal. */
+  /** A type's full structural name, type ARGUMENTS included — [[nameOf]] answers only the type
+    * CONSTRUCTOR, which would make the pair [[widened]] exists for compare equal. */
   private def shape(t: TypeRepr)(using p: Program): String = t match
     case TypeRepr.TypeRef(_, s)       => p.symbolOf(s).map(_.fullName).getOrElse("")
     case TypeRepr.AppliedType(tc, as) =>
@@ -1348,69 +951,43 @@ final class TestFrameworkTransform(
     sym.flatMap(p.symbolOf).map(_.fullName).filter(AssertClasses)
 
   /** A class is a SUITE when it declares at least one `@Test` member. Nested classes are converted
-    * too — libGDX nests helper suites — so the walk is explicit rather than top-level only.
-    *
-    * This gate covers the CONVERSION alone: the parent, the registrations, the lifecycle inlining.
-    * The assertion rewrite ran over the whole unit before this (see [[run]]), because a class with
-    * no `@Test` is a test HELPER, not a non-test — and a helper is where a suite's assertions are
-    * most often centralised. */
+    * too, so the walk is explicit rather than top-level only. Gates the CONVERSION alone (parent,
+    * registrations, lifecycle inlining) — the assertion rewrite already ran over the whole unit
+    * ([[run]]), since a `@Test`-less class is a HELPER, not a non-test. */
   private def convert(cd: Tree.ClassDef)(using p: Program): Tree.ClassDef =
     val nested = cd.body.map {
       case c: Tree.ClassDef => convert(c)
       case other            => other
     }
-    // THE PER-TEST RECONSTRUCTION, which MOVES this class's own initialisation into a member of its
-    // own. It touches only the classes [[planFreshState]] admitted — which includes ancestors that
-    // declare no `@Test` of their own, since java rebuilt their state too — and returns the class
-    // untouched everywhere else.
+    // per-test RECONSTRUCTION: moves this class's own initialisation into its own member. Touches
+    // only classes [[planFreshState]] admitted, class untouched elsewhere.
     //
-    // TWO CLASSES, AND THAT IS NOT A CONVENIENCE. `cd1` is what every ANALYSIS below reads and `cd2`
-    // is what is emitted: the reconstruction writes ASSIGNMENTS to this class's fields, and a scan
-    // that counts REFERENCES to a field would count them. `ExpectedException`'s `arming-outside-test`
-    // guard is exactly such a scan — every reference to the rule field, less the ones inside `@Test`
-    // bodies — so read through `cd2` it saw the synthesised `thrown = null` as an arming made in a
-    // helper and refused the whole class, silently, on eleven of this phase's own fixtures.
+    // TWO CLASSES, deliberately: `cd1` is what every ANALYSIS below reads and `cd2` is what is
+    // emitted — the reconstruction writes ASSIGNMENTS to this class's fields, and a scan counting
+    // REFERENCES over `cd2` would count them (`ExpectedException`'s `arming-outside-test` guard did,
+    // and silently refused eleven of this phase's own fixtures).
     val cd1 = cd.copy(body = nested)
     val cd2 = freshState(cd1)
-    // THE SUITE PARENT IS THE ANCHOR'S, NOT THE DECLARER'S (see [[suiteAnchors]]). A class that
-    // anchors a hierarchy but declares no `@Test` of its own gets the parent and nothing else —
-    // there is no registration to make and no lifecycle to inline, and every member it declares is
-    // already whatever java wrote.
+    // the suite parent is the ANCHOR's, not the declarer's (see [[suiteAnchors]]): a class that
+    // anchors a hierarchy but declares no `@Test` of its own gets the parent and nothing else.
     def withSuite(c: Tree.ClassDef): Tree.ClassDef =
       if !suiteAnchors(cd.symbol) then c
       else c.copy(parents = TypeTree(TypeRepr.TypeRef(TypeRepr.NoPrefix, suiteSym), cd.origin) :: c.parents)
     if !nested.exists(isAnnotated(_, TestAnn)) then withSuite(cd2)
     else
-      // NOTE there is no assertion walk here: it has already run over this whole unit (see `run`).
-      // What is left is the SUITE conversion, which is what `@Test` gates.
-      //
-      // JUnit runs `@Before` before EVERY test, on a FRESH instance of the class. MUnit has
-      // neither: one suite instance, and no such annotation — so the emitted `@Before def setUp`
-      // was never called and `SortTest`'s `sortInstance` was null in all 19 of its tests. Nothing
-      // failed to compile; the suite failed at run time, which is the only place this shows.
-      //
-      // Call it at the head of each test body. That reproduces java's per-test setup exactly
-      // wherever setup ASSIGNS the fields it needs, which is the shape `@Before` exists for. It
-      // does NOT reproduce JUnit's fresh instance, so a field carrying state through its own
-      // INITIALISER rather than through setup still leaks between tests — recorded, not hidden.
+      // JUnit runs `@Before` before EVERY test on a FRESH instance; MUnit has neither, so this is
+      // called at the head of each test body — reproducing per-test setup that ASSIGNS fields, but
+      // not a field carrying state through its own INITIALISER rather than setup.
       val setups = cd2.body.collect {
         case d: Tree.DefDef if isAnnotated(d, BeforeAnn) => d.symbol
       }
-      // `@After` is the SAME defect on the release side, and it is the one that hides best: the
-      // teardown simply never runs, every test still passes, and state leaks into the next one.
-      //
-      // JUnit runs it after every test AND WHETHER OR NOT THE TEST THREW — `RunAfters` wraps
-      // `RunBefores`, which wraps the expected-exception check, which wraps the invocation. So a
-      // trailing call appended to the body is wrong exactly where teardown matters most: a failing
-      // test would skip it and poison every later test in the suite. `try … finally` is the only
-      // shape with java's semantics, and it nests in java's own order —
-      // `try { setUp(); intercept[E]{ body } } finally { tearDown() }`.
+      // `@After` runs after every test WHETHER OR NOT IT THREW, so it is emitted as
+      // `try { setUp(); intercept[E]{ body } } finally { tearDown() }`, not a trailing call.
       val teardowns = cd2.body.collect {
         case d: Tree.DefDef if isAnnotated(d, AfterAnn) => d.symbol
       }
-      // `@BeforeClass` / `@AfterClass` are JUnit's ONE-TIME hooks; MUnit spells them `beforeAll` /
-      // `afterAll` on the suite. They are java `static`, so they emit into the companion object and
-      // the override calls them through it (`Suite.setUpClass()`).
+      // `@BeforeClass`/`@AfterClass` are java `static`; MUnit's `beforeAll`/`afterAll` call them
+      // through the companion object.
       val classSetups = cd2.body.collect {
         case d: Tree.DefDef if isAnnotated(d, BeforeClassAnn) => d.symbol
       }
@@ -1418,33 +995,22 @@ final class TestFrameworkTransform(
         case d: Tree.DefDef if isAnnotated(d, AfterClassAnn) => d.symbol
       }
       consumed ++= setups ++ teardowns ++ classSetups ++ classTeardowns
-      // …and the `ExpectedException` @Rule FIELDS this class declares. Matched on the field's own
-      // TYPE and not on the annotation alone: `@Rule` is every rule class junit has, and this phase
-      // translates exactly one of them.
+      // matched on the field's own TYPE, not the annotation alone: `@Rule` is every rule class
+      // junit has, and this phase translates exactly one of them.
       val ruleFields0 = cd2.body.collect {
         case v: Tree.ValDef
             if hasAnn(v.symbol, RuleAnn) && nameOf(v.tpt.tpe) == ExpectedExceptionCls => v.symbol
       }.toSet
-      // …and the rule is only MODELLABLE where every arming is inside the test it governs, because
-      // the accumulator [[expectedException]] arms is a LOCAL of that test's own frame.
-      //
-      // The per-test guards ask that of the body they are handed and CANNOT ask it here: a helper
-      // method, a field initialiser or a nested class arming the rule is a reference no test body
-      // contains, so every test in the class reads as *never touches the rule* and is left alone —
-      // silently, and with the arming still standing in emitted code that compiles and does nothing.
-      // Refusing the CLASS rather than the sites is the conservative arm and is not tidiness: a
-      // test that arms the rule ITSELF and also calls such a helper would be modelled with FEWER
-      // matchers than java accumulated, which is the direction that PASSES where java FAILED.
-      //
-      // Counted as a DIFFERENCE of two standard walks — every reference the class holds, less every
-      // reference its own `@Test` bodies hold — so growing a node kind cannot open a hole here
-      // (`CLAUDE.md` §3). No corpus source declares the shape, which is exactly why an unstated
-      // exclusion would never be found.
+      // the rule is MODELLABLE only where every arming is inside the test it governs, since
+      // [[expectedException]]'s accumulator is a LOCAL of that test's frame — an arming from a
+      // helper, initialiser or nested class would model FEWER matchers than java accumulated,
+      // passing where java failed. Refuses the whole CLASS rather than the site, counted as a
+      // DIFFERENCE of two standard walks (`CLAUDE.md` §3).
       val ruleFields =
         if ruleFields0.isEmpty then ruleFields0
         else
           def refs(n: Int, t: Term) = if isRuleRef(t, ruleFields0) then n + 1 else n
-          // `cd1`: the class BEFORE the per-test reconstruction, see the comment at its binding.
+          // `cd1`: the class BEFORE the per-test reconstruction (see its binding above).
           val all   = StandardTraversal.scanClassDef(cd1, 0)(refs)
           val mine  = cd1.body.collect { case d: Tree.DefDef if isAnnotated(d, TestAnn) => d.rhs }
                         .flatten.map(b => StandardTraversal.scanTerm(b, 0)(refs)).sum
@@ -1459,10 +1025,8 @@ final class TestFrameworkTransform(
               "than modelled from an incomplete expectation; inline the arming into each test, or " +
               "keep this suite on the JVM/JUnit path.")
             Set.empty[SymId]
-      // …and `@ClassRule` is REPORTED, never quietly taken for `@Rule`. A method rule wraps each
-      // test and a CLASS rule wraps the whole class run, so the region an `expect` arms is a
-      // different one and `intercept` in a test body is not its image. Nothing in the corpus writes
-      // the shape, which is exactly why an unstated exclusion here would never be found.
+      // `@ClassRule` is REPORTED, never taken for `@Rule`: it wraps the whole class run, not each
+      // test, so `intercept` in a test body is not its image.
       cd2.body.foreach {
         case v: Tree.ValDef
             if hasAnn(v.symbol, ClassRuleAnn) && nameOf(v.tpt.tpe) == ExpectedExceptionCls =>
@@ -1476,16 +1040,12 @@ final class TestFrameworkTransform(
       // `@Ignore` on the CLASS disables every test it declares.
       val allIgnored = hasAnn(cd.symbol, IgnoreAnn)
       if allIgnored then consumed += cd.symbol
-      // A VIRTUAL `@Test` keeps its `def` — java's own override relation reaches it, and a statement
-      // overrides nothing (see [[virtualTests]]). The TOP declarer additionally emits the one
-      // registration, whose body CALLS the method, so every concrete subclass runs its own override
-      // exactly as JUnit does. Everything else takes the statement form this phase has always used.
+      // a VIRTUAL `@Test` keeps its `def` (see [[virtualTests]]); the TOP declarer additionally
+      // emits the one registration, whose body CALLS the method.
       val body = cd2.body.flatMap {
         case d: Tree.DefDef if isAnnotated(d, TestAnn) && virtualTests(d.symbol) =>
-          // …and its `@Test` goes, which no other converted test needs: everywhere else the METHOD
-          // disappears and takes the annotation with it, so `ConsumedAnns` never had to name it.
-          // Here the `def` survives, and a junit annotation left on an emitted scala method is both
-          // meaningless and COUNTED — `junit_residue` reads it as a suite that did not convert.
+          // the `def` survives here, so its `@Test` must go explicitly — left on, it reads as a
+          // suite that did not convert (`junit_residue`).
           consumedTests += d.symbol
           if virtualRoots(d.symbol)
           then List(d, testCase(d, cd.symbol, setups, teardowns, allIgnored, ruleFields, viaCall = true))
@@ -1535,97 +1095,17 @@ final class TestFrameworkTransform(
   // JUnit's ExpectedException @Rule — the RULE MODELLED, not a lexical wrap
   // -------------------------------------------------------------------------
 
-  /** `thrown.expect(E.class)` → an ARMING of the rule's own accumulator, and one `try`/`catch`
-    * around the whole converted test — the `@Test(expected = …)` row of `CLAUDE.md` §4.4 met at
-    * JUnit's other spelling, and with the same failure one step louder: the rule field is emitted,
-    * nothing applies it, so the expected throw propagates and MUnit records a FAILURE where java
-    * recorded a pass. Measured at **37 of one suite's 40 failing tests**, every one of them the port
-    * being RIGHT about the library and wrong about the harness.
+  /** `thrown.expect(E.class)` → an ARMING of the rule's own accumulator, plus one `try`/`catch`
+    * around the whole test — junit's `ExpectedExceptionStatement` contract transcribed exactly,
+    * because `intercept[E] { rest }` cannot express an arming's reach past a loop/block boundary
+    * (`ENGINE-LIMITS.md` X5). One mutable `List[Throwable => Boolean]` accumulator plus the caught
+    * throwable, matched with `forall` (java's `allOf`) on completion.
     *
-    * The mechanical image exists because `ExpectedException` is not an arbitrary `@Rule`: junit
-    * WRITES ITS CONTRACT DOWN, and this lowering is that contract transcribed rather than
-    * approximated —
-    *
-    *   - `expect(Class)`/`expect(Matcher)`/`expectMessage(…)` APPEND to a matcher list
-    *     (`ExpectedException.matcherBuilder`), whatever position the call stands in;
-    *   - `ExpectedExceptionStatement.evaluate` runs the base statement, catches `Throwable`, and —
-    *     if any matcher is set at that moment — asserts the CONJUNCTION of them over what was
-    *     thrown, rethrowing untouched where none is;
-    *   - completing normally with a matcher set is `failDueToMissingException`.
-    *
-    * So the emitted shape is junit's own state machine, one `var` for the list and one for the
-    * throwable:
-    *
-    * {{{
-    * var bpExpected: List[(Throwable) => Boolean] = Nil
-    * var bpCaught: java.lang.Throwable = null
-    * try { … bpExpected = bpExpected :+ ((bpEx: Throwable) => bpEx.isInstanceOf[E]) … }
-    * catch { case bpThrown: java.lang.Throwable => bpCaught = bpThrown }
-    * if (bpCaught ne null) { if (bpExpected.isEmpty) throw bpCaught else assert(bpExpected.forall(…)) }
-    * else if (bpExpected.nonEmpty) fail(…)
-    * }}}
-    *
-    * ==WHY NOT `intercept[E] { rest }`==
-    * That was this translation's first shape and it converted 20 of ssg-md's 37 sites. Java's rule
-    * is armed from the `expect` CALL TO THE END OF THE TEST — across the remaining iterations of an
-    * enclosing loop, out of every enclosing block, past everything after it — and `intercept` wraps
-    * a LEXICAL region, so every site standing anywhere but at statement position in the test's own
-    * body had to be declined (17 of 37, all of them in a `while` or `for` body). The two ways to
-    * stretch the wrap were each a DIFFERENT PROGRAM — see `ENGINE-LIMITS.md` X5 — and the
-    * accumulator is what removes the question rather than approximating it: an arming is a
-    * statement, so it goes exactly where java wrote it and reaches exactly as far as java's did.
-    *
-    * ==THE DIFFERENCES BETWEEN JAVA'S SHAPE AND THIS ONE==
-    *
-    * `CLAUDE.md` §3: every member of this set is (i) a structural GUARD, (ii) made impossible by the
-    * SHAPE emitted, or (iii) COUNTED. A count of conversions says nothing about what was declined,
-    * so each guard below files ONE [[Finding]] PER SITE naming itself.
-    *
-    *  1. **POSITION.** SHAPE — an arming is a statement rewritten IN PLACE, so a call in a loop, an
-    *     `if`, a lambda or a nested block arms exactly what java armed, and the state it arms lives
-    *     in the test's own frame. This is the difference the `intercept` shape could not express and
-    *     the whole reason this lowering exists.
-    *  2. **ACCUMULATION.** SHAPE — java requires ALL matchers set at the moment of the throw
-    *     (`allOf`); the list is the same list and `forall` is the same conjunction. An arming that
-    *     executes twice appends twice, exactly as junit's does, which is why the state is a LIST and
-    *     not a flag: keeping only the last matcher would PASS where java FAILED.
-    *  3. **THE CATCH POLICY.** SHAPE — junit catches `Throwable` and so does this, the
-    *     `AssertionError` an assertion inside the body throws included. That is the one delta the
-    *     `intercept` shape had to COUNT (MUnit's `intercept` catches `NonFatal`), and it is gone.
-    *  4. **A TRANSLATED JAVA JUMP UNDER THE CATCH.** `scala.util.boundary.Break` extends
-    *     `RuntimeException`, so a `break` crossing this catch would be recorded as the test's
-    *     outcome where java's jump is not an exception at all. SHAPE: the emitter puts its own
-    *     re-throw arm ahead of the recorder wherever a jump really crosses (`CLAUDE.md` §4.4), and
-    *     `break-catch` counts any it did not.
-    *  5. **THE MATCHER OVERLOAD.** `expect(Matcher)` is not a class literal. SHAPE: `matches(Object)`
-    *     is the `org.hamcrest.Matcher` CONTRACT, so the predicate is one translation for every
-    *     matcher class rather than a table of them. Which overload java resolved is read from the
-    *     CALLEE'S OWN FORMAL and never guessed from the argument (§4.6): an unreadable signature
-    *     declines (`expect-overload`).
-    *  6. **`expectMessage`.** An added matcher, not a different wrap — junit's `expectMessage(String)`
-    *     is `hasMessage(containsString(s))`, and hamcrest's `TypeSafeMatcher` answers FALSE for a
-    *     null item, so the predicate is `getMessage ne null && getMessage.contains(s)`.
-    *     `expectMessage(Matcher)` is that matcher over `getMessage()`.
-    *  7. **OPERAND EVALUATION.** Java evaluated the matcher expression AT THE `expect` CALL. SHAPE:
-    *     each non-literal operand is bound to a local at the arming site, which is inside the loop
-    *     body where java bound it, so a closure appended on the second iteration captures the second
-    *     iteration's matcher.
-    *  8. **ANY OTHER USE OF THE FIELD.** `expectCause`, `handleAssertionErrors`, a `thrown` passed as
-    *     an argument or assigned — each is a rule state this lowering does not model. GUARD: every
-    *     reference to the field must be the receiver of an `expect`/`expectMessage` call
-    *     (`unsupported-member` / `unsupported-reference`). **And that question is asked of the CLASS
-    *     as well as of each body**, because a reference in a helper, a field initialiser or a nested
-    *     class is in NO test body and would otherwise leave every test reading as *never touches the
-    *     rule* — see `arming-outside-test`, filed where the rule FIELDS are found.
-    *  9. **`@After` AND `@Test(expected = …)` ORDERING.** JUnit's rules are the OUTERMOST statement
-    *     (`BlockJUnit4ClassRunner.methodBlock` wraps `withRules` around `withAfters` around
-    *     `withBefores` around `possiblyExpectingExceptions`). SHAPE: this wrap is applied to the
-    *     converted body AFTER the teardown `try … finally` and the `@Test(expected)` `intercept`,
-    *     so a teardown that throws is compared against the expectation exactly as java compares it,
-    *     and an annotation-expected throw is swallowed BELOW the rule exactly as java swallows it.
-    *     Both were guards under the `intercept` shape and neither is one now.
-    * 10. **THE FAILURE TEXT.** Junit renders hamcrest's `Description`; this names the throwable that
-    *     arrived. Not a behavioural difference — both fail, and neither passes where the other did.
+    * Refused per `CLAUDE.md` §3, one [[Finding]] per site: a reference to the field that is not
+    * the receiver of `expect`/`expectMessage` (`unsupported-reference`/`unsupported-member`,
+    * asked of the whole CLASS too — see `arming-outside-test`), or an unreadable overload
+    * (`expect-overload`/`expect-message-overload`). `break-catch` counts an untranslated jump
+    * under the catch.
     *
     * @return the body to emit, the wrapper to apply OUTSIDE everything else the conversion emits,
     *         and the sentence the test's `Decision` carries (empty where nothing was translated —
@@ -1640,9 +1120,8 @@ final class TestFrameworkTransform(
       def refuse(guard: String, why: String): (Term, Term => Term, String) =
         found += Finding(s"$ExpectedExceptionCls($guard)", d.origin, Fix.EngineRule, why, d.symbol)
         (body, identity, "")
-      // every call ON the rule field, WHEREVER it stands — `StandardTraversal` and not a scan of the
-      // body's own statements, because reaching a site in a loop body is what this lowering is for
-      // (CLAUDE.md §3: the walk is the standard one or a construct is silently not there).
+      // `StandardTraversal`, not a scan of the body's own statements — reaching a site in a loop
+      // body is what this lowering is for (§3).
       val calls = StandardTraversal.scanTerm(body, List.empty[(String, Tree.Apply)]) { (acc, t) =>
         ruleCallIn(t, rules).map(acc :+ _).getOrElse(acc)
       }
@@ -1760,12 +1239,9 @@ final class TestFrameworkTransform(
                 invoke(Tree.Ident(p, predType, o), applySym, List(caught), o),
                 TypeRepr.NoType, o)
 
-  /** ONE `thrown.expect(…)` / `thrown.expectMessage(…)` call, as junit's own append.
-    *
-    * The operand is bound to a local FIRST and the closure captures the local, because java
-    * evaluated the matcher expression at the call: a binding inside a loop body is re-bound on every
-    * iteration, so the second iteration's closure holds the second iteration's matcher. A LITERAL
-    * needs no binding and gets none. */
+  /** ONE `thrown.expect(…)` / `thrown.expectMessage(…)` call, as junit's own append. The operand
+    * is bound to a local FIRST (java evaluated it at the call), so a closure appended on a loop's
+    * second iteration captures that iteration's matcher. A LITERAL needs no binding. */
   private def arming(nm: String, a: Tree.Apply, expected: SymId, k: Int)(using p: Program): Term =
     val o   = a.origin
     val pre = List.newBuilder[Statement]
@@ -1778,15 +1254,13 @@ final class TestFrameworkTransform(
     val ex    = mint("bpEx", "bpEx", Flags(), throwableType)
     val exRef = Tree.Ident(ex, throwableType, o)
     val boolT = primTypes("scala.Boolean")
-    // recomputed rather than threaded from the guard pass: same node, same program, same function
-    // (`expectAt`), so it is the same answer — and the `Left` arm is the state the guards already
-    // declined the whole method on, which is why it cannot arrive here.
+    // recomputed rather than threaded from the guard pass — same node, same program, same function
+    // (`expectAt`), so the same answer.
     val pred: Option[Term] = expectAt(nm, a).toOption.map {
       case Left(Expect.OfClass(t))   => Tree.InstanceOf(exRef, TypeTree(t, o), boolT, o)
       case Left(Expect.OfMatcher(m)) => invoke(bound(s"bpMatcher$k", m), matchesSym, List(exRef), o)
       case Right(ExpectMsg.Contains(t)) =>
-        // hamcrest's `TypeSafeMatcher.matches` answers FALSE for a null item, so junit's
-        // `containsString` over a null message does not throw — it does not match.
+        // hamcrest's `TypeSafeMatcher.matches` answers FALSE for a null item.
         infix(infix(message(exRef, o), neSym, nul(o), o), andSym,
               invoke(message(exRef, o), containsSym, List(bound(s"bpMessage$k", t)), o), o)
       case Right(ExpectMsg.ByMatcher(m)) =>
@@ -1825,11 +1299,9 @@ final class TestFrameworkTransform(
       Some(p.symbolOf(m).map(_.name).getOrElse("") -> a)
     case _ => scala.None
 
-  /** WHICH `expect` overload java resolved, read from the CALLEE's own formal.
-    *
-    * The class form additionally needs a LITERAL `classOf`, because what `intercept` takes is a
-    * type ARGUMENT and a `Class` value is not one. A `Class`-typed variable is therefore declined
-    * rather than approximated. */
+  /** WHICH `expect` overload java resolved, read from the CALLEE's own formal. The class form
+    * additionally needs a LITERAL `classOf` — `intercept` takes a type ARGUMENT and a `Class`
+    * value is not one, so a `Class`-typed variable is declined. */
   private def expectKind(a: Tree.Apply)(using p: Program): Either[String, Expect] = a.args match
     case List(Tree.Literal(Constant.ClassOfC(t), _, _)) => Right(Expect.OfClass(t))
     case List(arg) => formalOf(a) match
@@ -1851,18 +1323,11 @@ final class TestFrameworkTransform(
       case TypeRepr.MethodType(List((_, f)), _, _) => f
     }
 
-  /** `@Test def m(): Unit = { … }` → `test("m") { … }`, a statement in the class body.
-    *
-    * An `expected = classOf[E]` argument becomes `intercept[E] { … }` — NOT dropped. A test that
-    * asserts an exception and instead runs the body bare would PASS while checking nothing, which
-    * is the silent-omission shape this engine exists to prevent. Until `intercept` is wired the
-    * method is left alone, so such a test stays a compile error rather than a false green.
-    *
-    * `@Ignore` becomes `test(munit.TestOptions("m").ignore) { … }`. Emitting the test ENABLED — as
-    * this phase did until the annotation was read — is worse than dropping it: an upstream "we
-    * know this one is broken" turns into either a red gate for a defect nobody introduced, or a
-    * green one that means nothing. MUnit does not evaluate an ignored body, so the by-name
-    * argument keeps the code compiling without running it. */
+  /** `@Test def m(): Unit = { … }` → `test("m") { … }`, a statement in the class body. An
+    * `expected = classOf[E]` argument becomes `intercept[E] { … }` — never dropped, since running
+    * the body bare would PASS while checking nothing. `@Ignore` becomes
+    * `test(munit.TestOptions("m").ignore) { … }`, never enabled, since MUnit does not evaluate an
+    * ignored body. */
   private def testCase(d: Tree.DefDef, owner: SymId, setups: List[SymId], teardowns: List[SymId],
                        allIgnored: Boolean, ruleFields: Set[SymId],
                        viaCall: Boolean = false)(using p: Program): Statement =
@@ -1874,11 +1339,8 @@ final class TestFrameworkTransform(
     if d.rhs.isEmpty then d
     else
       testsConverted += 1
-      // `test("name") { … }` — TWO argument lists, modelled the way `quotes.reflect` does: nested
-      // `Apply`, since `Apply.fun` is itself a `Term`. An earlier version routed around this via an
-      // un-curried forwarder in an injected base class, on the false belief that the IR could not
-      // express currying. The IR follows quotes/BeTASTy and models any correct scala tree; the
-      // forwarder was a scaffold built over a gap that did not exist.
+      // `test("name") { … }` — TWO argument lists, modelled as nested `Apply` (`Apply.fun` is a
+      // `Term`), following `quotes.reflect`.
       val lit: Term = Tree.Literal(Constant.StringC(nm), TypeRepr.NoType, d.origin)
       val ignored   = allIgnored || hasAnn(d.symbol, IgnoreAnn)
       val nameTerm  =
@@ -1889,21 +1351,11 @@ final class TestFrameworkTransform(
           Tree.Select(opts, ignoreSym, TypeRepr.NoType, d.origin)
       val head = Tree.Apply(Tree.Ident(testSym, TypeRepr.NoType, d.origin), List(nameTerm),
                             testSym, TypeRepr.NoType, d.origin)
-      // `@Test(expected = classOf[E])` asserts that the body THROWS. Run bare it would pass while
-      // checking nothing — the silent-omission shape this engine exists to prevent — so it becomes
-      // MUnit's `intercept[E] { … }`, which asserts exactly what java asserted.
-      // …and JUnit's OTHER spelling of the same assertion — the `ExpectedException` @Rule, whose
-      // arming call stands INSIDE the body. `ruleNote` is empty where the class declares no such
-      // rule, where this test never touches it, and where a guard declined the site.
-      // THE REGISTRATION'S CORE. Normally the method's own body, inlined; for a VIRTUAL test it is
-      // a CALL to the method that stayed a `def`, because the whole point of keeping it is that a
-      // subclass may replace it and the registration must dispatch rather than inline one version.
-      //
-      // The `ExpectedException` model is REFUSED there and counted, rather than approximated: it
-      // arms a list that is a LOCAL of the frame it governs (see [[expectedException]]), and the
-      // arming now sits inside a method the registration merely calls — so the matcher list the
-      // wrap would build is not the one the body appends to. One row per site naming the guard, and
-      // zero rows on this corpus, which is exactly why an unstated exclusion would never be found.
+      // the REGISTRATION'S CORE: normally the method's own body, inlined; for a VIRTUAL test it is
+      // a CALL to the method that stayed a `def`, so a subclass override dispatches rather than
+      // inlining one version. The `ExpectedException` model is REFUSED there and counted: its
+      // matcher list is a LOCAL of the frame it governs ([[expectedException]]), which is no
+      // longer the frame the registration builds.
       val (ruleBody, ruleWrap, ruleNote) =
         if !viaCall then expectedException(d, d.rhs.get, ruleFields)
         else
@@ -1937,24 +1389,13 @@ final class TestFrameworkTransform(
         else Tree.Try(Nil, setUp, Nil,
                       Some(seq(teardowns.map(call(_, d.origin)), TypeRepr.NoType, d.origin)),
                       setUp.tpe, d.origin)
-      // …and JUnit's OUTERMOST statement, applied last: `methodBlock` wraps `withRules` around
-      // `withAfters`, so an `ExpectedException` compares a THROWING TEARDOWN against the
-      // expectation, and swallows an annotation-expected throw below it. Identity where the class
-      // declares no such rule, where this test never touches it, and where a guard declined it.
+      // JUnit's OUTERMOST statement, applied last (`methodBlock` wraps `withRules` around
+      // `withAfters`) — identity where the class declares no such rule, or a guard declined it.
       val rhs = ruleWrap(rhs0)
-      // DECISION PROVENANCE, one row per TEST MEMBER — already declaration-level: a `@Test` method
-      // is the unit this phase reshapes, and it stops being a method at all.
-      //
-      // What the row carries is the part an agent CANNOT read off the emitted file. `test("m") { … }`
-      // plainly came from a `@Test`; that setup and teardown were INLINED into its body is exactly
-      // what is invisible, and it is where §4.4's two silent defects lived — JUnit runs `@Before`
-      // before every test on a fresh instance and `@After` whether or not the test threw, and MUnit
-      // has neither. `detail` names them.
-      //
-      // Universal: JUnit's semantics against MUnit's are a fact about the two frameworks, identical
-      // for every library. `suite`/`testMember` are constructor parameters and deliberately do NOT
-      // make this `Configured` — the class doc records that they name the two least interesting
-      // parts of a contract only MUnit satisfies, and a reason must say where the fix LIVES.
+      // DECISION PROVENANCE, one row per TEST MEMBER: `detail` names what an agent cannot read off
+      // the emitted file — that setup/teardown were INLINED, and the fresh-instance rebuild.
+      // Universal: JUnit's semantics against MUnit's are a fact about the two frameworks; `suite`/
+      // `testMember` are parameters but deliberately do NOT make this `Configured` (class doc).
       record(Decision(
         kind       = Decision.Kind.RetypedSignature,
         subject    = d.symbol,
@@ -1976,27 +1417,21 @@ final class TestFrameworkTransform(
         reason = Reason.Universal("test-framework"),
         origin = d.origin,
       ))
-      // …and the METHOD'S OWN DOCUMENTATION, which stops having a `def` to sit on the moment this
-      // phase runs. A `DefDef` carries `leading`; the statement that replaces it is a TERM, and the
-      // TIR's carrier for a statement's comments is the `Commented` wrapper — so the javadoc lands
-      // directly above `test("m")`, which is exactly where java had it. Without this it is the
-      // largest single category the recovery backstop has to put back (51 comments on one suite),
-      // and a backstop placement is member-granular where this is exact.
+      // the METHOD'S OWN DOCUMENTATION: a `DefDef` carries `leading`, and the statement that
+      // replaces it carries it via `Commented`, so the javadoc lands directly above `test("m")`.
       val call0 = Tree.Apply(head, List(rhs), testSym, TypeRepr.NoType, d.origin)
       if d.leading.isEmpty then call0 else Tree.Commented(d.leading, call0)
 
 object TestFrameworkTransform:
   val DefaultSuite = "munit.FunSuite"
-  /** the member each converted class declares to rebuild its own instance state before every test —
-    * JUnit's `createTest()`, which MUnit has no counterpart for. `bp`-prefixed like every other name
-    * this phase mints, so it cannot collide with a java member a suite declares. */
+  /** the member each converted class declares to rebuild its own instance state before every test
+    * — JUnit's `createTest()`, which MUnit has no counterpart for. `bp`-prefixed so it cannot
+    * collide with a java member a suite declares. */
   val FreshStateMember = "bpFreshState"
-  /** the frontend's name for a java INSTANCE INITIALISER BLOCK (`SpoonTir.classDef`) — a synthetic
-    * executable member, and half of JLS 12.5 step 4. Named here because this phase MOVES one, and
-    * a phase that matched the string inline would be the second spelling of one fact. */
+  /** the frontend's name for a java INSTANCE INITIALISER BLOCK (`SpoonTir.classDef`), half of JLS
+    * 12.5 step 4. */
   val InitBlockName = "<initblock>"
-  /** MUnit's one-time hooks — see the class doc on why these are a fixed contract and not a
-    * parameter. */
+  /** MUnit's one-time hooks — a fixed contract, not a parameter (class doc). */
   val BeforeAllMember = "beforeAll"
   val AfterAllMember  = "afterAll"
 
@@ -2008,8 +1443,8 @@ object TestFrameworkTransform:
     case PhasePolicy extends Fix("b") // configure an existing phase for this library
     case LibraryRule extends Fix("c") // write a rule only this library could ever need
 
-  /** WHICH of junit's two `ExpectedException.expect` overloads a call resolved to — the answer read
-    * from the callee's own formal, never from the argument's shape. */
+  /** WHICH of junit's two `ExpectedException.expect` overloads a call resolved to — read from the
+    * callee's own formal, never from the argument's shape. */
   enum Expect:
     case OfClass(tpe: TypeRepr)
     case OfMatcher(matcher: Term)
@@ -2019,46 +1454,23 @@ object TestFrameworkTransform:
     case Contains(text: Term)
     case ByMatcher(matcher: Term)
 
-  /** One test-framework construct this phase did not translate.
-    *
-    * `at` is the DECLARATION the construct sits on, and it is a `SymId` rather than a path because
-    * that is what the D2 filter has to be asked (`CLAUDE.md` §4.56 — ownership is decided
-    * STRUCTURALLY, never from a string). It is not decoration: `Origin` is the only other locator
-    * here and a `Symbol`'s origin DEFAULTS TO `Origin.synthetic`, so a construct reported from a
-    * symbol rather than from a tree node carries `<synthetic>` as its path. Filtered on the path,
-    * exactly those rows vanish — measured at 11 of 30 surviving on one port, with the 19 missing
-    * being every CLASS-LEVEL annotation (`@RunWith`, `@Suite.SuiteClasses`), which is the largest
-    * standing refusal in the corpus and the one this lane exists to make visible. */
+  /** One test-framework construct this phase did not translate. `at` is a `SymId` rather than a
+    * path (§4.56 — ownership decided structurally); a `Symbol`'s origin defaults to
+    * `Origin.synthetic`, so reporting from `where` alone would drop every class-level annotation. */
   final case class Finding(construct: String, where: Origin, fix: Fix, advice: String,
                            at: SymId = SymId.None):
     def render: String = s"$construct — (${fix.label}) $advice  (${where.javaPath}:${where.line})"
 
-    /** …as a row of the [[Refused]] lane. The KIND is the construct, which is the GUARD this site
-      * was declined at — `CLAUDE.md` §3's refusal-enumeration rule wants the guard named and not a
-      * total, because a count of conversions says nothing about what was left alone.
-      *
-      * The OWNER is the caller's, because the caller is the one that climbed [[at]]'s owner chain
-      * to the top-level unit and therefore already holds the emitted name. */
+    /** …as a row of the [[Refused]] lane. The KIND is the GUARD this site was declined at — CLAUDE.md
+      * §3's refusal-enumeration rule. The OWNER is the caller's, from [[at]]'s owner chain. */
     def report(owner: String): CheckReport.Finding =
       CheckReport.Finding(Refused, construct, owner, where.javaPath, where.line,
                           s"(${fix.label}) $advice")
 
-  /** THE REFUSAL POPULATION, as a lane — `CLAUDE.md` §3 and §5, at the phase that has the largest
-    * standing one in this corpus.
-    *
-    * `run` has printed these to stdout since the phase was written, grouped by construct, and stdout
-    * is not an artifact: no baseline diffs it, so a refusal that appeared, moved owner or changed its
-    * advice reached nobody, and the only place the population was written down was a PROSE row in
-    * `PROGRESS.md` that somebody had to keep in step by hand. That is the arrangement §5's
-    * `findings.tsv` paragraph exists to refuse — every number that reaches stdout must reach the
-    * artifact — and it is worse here than for most, because this phase's failure mode is SILENT: an
-    * unrecognised annotation means the class is not converted at all, so it registers ZERO tests,
-    * compiles, and reports success.
-    *
-    * `(refused)` and not a bare name, deliberately: the spelling says it is a RESIDUE lane in the
-    * `idiom(refused)` family and not a defect count, and it is required only OF A RUN THAT CARRIES
-    * THE PHASE (`PortRun.requiredChecks`) — a port with no test source set records nothing here, and
-    * requiring it of every port would fail every one of them. */
+  /** THE REFUSAL POPULATION, as a lane (`CLAUDE.md` §3, §5) — required only of a run carrying the
+    * phase. `(refused)`, not a bare name: it is a RESIDUE in the `idiom(refused)` family, and this
+    * phase's failure mode is SILENT (an unrecognised annotation registers zero tests and reports
+    * success), so nothing else can see what it declined. */
   val Refused: String = "test-framework(refused)"
 
   /** the one-line classification every lane with a §1 answer prints beside its count. */
@@ -2076,33 +1488,24 @@ object TestFrameworkTransform:
     }.mkString("\n")
 
   /** Widening rank for java's BINARY NUMERIC PROMOTION: a value of rank r converts, without loss,
-    * to any numeric type of higher rank. `Char` and `Short` share a rank because neither widens to
-    * the other — java promotes that pair to `Int`, and so does [[TestFrameworkTransform.promote]].
-    *
-    * Deliberately NOT the emitter's copy of this table: that one exists to disambiguate an OVERLOAD
-    * at emission, this one to rewrite a TREE. Sharing them would couple a transform to a backend. */
+    * to any numeric type of higher rank. `Char` and `Short` share a rank since neither widens to
+    * the other. Deliberately NOT the emitter's copy — that one disambiguates an OVERLOAD at
+    * emission, this one rewrites a TREE. */
   val NumericRank: Map[String, Int] = Map(
     "scala.Byte" -> 1, "scala.Short" -> 2, "scala.Char" -> 2, "scala.Int" -> 3,
     "scala.Long" -> 4, "scala.Float" -> 5, "scala.Double" -> 6)
 
-  /** The types every other type conforms to — where MUnit's `Compare` resolves whatever the other
-    * operand is, so its constraint is ALREADY VACUOUS and there is no check to preserve.
-    *
-    * Read [[TestFrameworkTransform.widened]] for why that makes a root a reason TO widen rather
-    * than a reason not to. `java.lang.Object` is the one java's `assertEquals` formal produces; the
+  /** The types every other type conforms to — MUnit's `Compare` resolves whatever the other operand
+    * is, so its constraint is ALREADY VACUOUS there (see [[TestFrameworkTransform.widened]]).
     * Scala roots are here because a port's own retyping can put one on an operand. */
   val Roots: Set[String] =
     Set("java.lang.Object", "scala.Any", "scala.AnyRef", "scala.Matchable")
 
   /** How many arguments each `org.junit.Assert` member takes WITHOUT java's optional leading
-    * `String message`. Everything above this count with a leading `String` is that message — which
-    * is what separates `assertEquals(String, Object, Object)` from `assertEquals(double, double,
-    * double)` without either being named. */
+    * `String message` — everything above this count with a leading `String` is that message. */
   val MinArity: Map[String, Int] = Map(
     "assertEquals" -> 2, "assertNotEquals" -> 2, "assertArrayEquals" -> 2,
     "assertSame" -> 2, "assertNotSame" -> 2, "assertTrue" -> 1, "assertFalse" -> 1,
     "assertNull" -> 1, "assertNotNull" -> 1, "fail" -> 0,
-    // JUnit 4.13's `assertThrows(Class<T>, ThrowingRunnable)`, and its 3-arg message overload —
-    // which is HERE so that `hasMsg` separates the two, and refused in `munitCall` because MUnit's
-    // `intercept` has no clue slot to put the message in.
+    // `assertThrows(Class<T>, ThrowingRunnable)`, so `hasMsg` separates it from its 3-arg overload.
     "assertThrows" -> 2)
