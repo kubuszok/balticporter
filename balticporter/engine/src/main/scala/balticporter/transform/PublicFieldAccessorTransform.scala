@@ -3,85 +3,29 @@ package balticporter.transform
 import balticporter.core.{RequiresRuntime, RuntimeArtifact, SurfacePolicy}
 import balticporter.tir.*
 
-/** A JAVA `public` FIELD IS PART OF THE CLASS FILE'S PUBLIC SURFACE; A SCALA `var` IS NOT —
-  * `ENGINE-LIMITS.md` K21 face 2.
-  *
-  * The source level is faithful and the class file is not. `class C { var a: Object }` emits a
-  * PRIVATE field plus accessors named `a()` and `a_$eq()`, so `getClass.getFields` answers `[]` and
-  * an accessor named `a()` is not a JavaBean `getA()`. Every framework that auto-detects a public
-  * field or a bean property therefore sees NOTHING where java showed it a property.
-  *
-  * **And this is the face that does not throw.** Every property is absent, so every lookup is
-  * `null`, and a library that coerces `null` to a default then answers correctly from data that is
-  * not there — three assertions out of four, in the measured case. No compile error, no check
-  * count, no exception: a suite is the only instrument that ever sees it, and it sees it once.
-  *
-  * ==What this phase does, and what it cannot==
-  * It adds `getX()`/`setX(v)` beside the field, which is what a bean-convention framework reads.
-  * **`getFields` still answers `[]`** — Scala 3 emits no JVM-public instance field for any
-  * declaration form (probed: a class-body `var`, a `val`, and a `val` class parameter all emit a
-  * private field plus accessors), so the port CANNOT be faithful at the class-file level and this
-  * is the nearest expressible thing. A framework that reads FIELDS specifically is a limit, stated
-  * in K21 rather than papered over.
-  *
-  * ==Why the getter BRIDGES, which is the half a call-site rule cannot reach==
-  * K21 face 1 bridges a value the port hands OUT at an opaque slot. A reflective framework does not
-  * only receive values — it CALLS BACK IN, through exactly the accessors this phase adds, and what
-  * it gets back is whatever the field holds. A field holding a collection this port retyped hands
-  * the framework a `scala.collection.*` again, one hop past the bridge that was supposed to have
-  * dealt with it. So the getter goes through the same run-time bridge. Measured at +3 tests over
-  * `@BeanProperty`, whose generated getter cannot interpose anything.
-  *
-  * ==And the accessor is a REFLECTIVE surface, not a java one — which is what settles its TYPE==
-  * The bridge used to fire only where the field's own type was `java.lang.Object`, on the reasoning
-  * that a field typed as anything else is already java's own representation. That is exact for a
-  * primitive, a `String` and a class the port emits, and FALSE for a field whose type a retyping
-  * phase MOVED — `public Map<String,String> some` is a `scala.collection.mutable.Map` by the time
-  * this phase sees it, and the accessor handed jackson the map's internals exactly as K21 face 1's
-  * argument seam did. Asking which types moved is a question §4.56 forbids this phase (a phase may
-  * only conclude from what IT did) and it does not have to ask it, because **java declared a FIELD
-  * and not a getter**: this signature is one the phase MINTED, no caller in the library names it,
-  * and its only reader is a framework that reads the RUNTIME value. So it is typed
-  * `java.lang.Object` and ALWAYS bridged, which is behaviour-identical wherever the old rule was
-  * right — `Reified.toJavaValue` is the identity on a primitive, a `String`, a `Date` and every
-  * object the port emits — and correct where it was not. Measured on the first port with such a
-  * field (`ENGINE-LIMITS.md` K21).
-  *
-  * The SETTER is the same seam read backwards and is NOT closed: writing a property back would need
-  * java's value converted INTO this port's representation, which is the copy `Reified` refuses. It
-  * keeps the field's own type, which is exact for every field a retyping did not move; K21 states
-  * that residue rather than guessing at it.
-  *
-  * ==Why it is a (b) and not a universal emission==
-  * The FACT is universal. The REMEDY is not free: it adds two names per field to the emitted
-  * surface, and `getX` collides with a java class that already declares one — which is a real
-  * shape, not a hypothetical (a library whose `public ObjectMapper mapper` sits beside
-  * `getMapper()`). Applied everywhere it would rewrite the surface of every port in the corpus to
-  * fix the classes of the one that hands objects to a framework, and the reference hand ports emit
-  * no such accessor anywhere. So it is scoped, `Only(Set.empty)` is the default and the no-op, and
-  * a clash is REFUSED and counted rather than emitted as a compile error.
+/** Adds `getX()`/`setX(v)` beside a java `public` instance field, because a Scala `var` emits a
+  * PRIVATE JVM field plus differently-named accessors — `getClass.getFields` answers `[]`, so a
+  * reflective bean framework sees nothing where java showed it a property (ENGINE-LIMITS K21 face
+  * 2, the face that does not throw: every lookup silently reads `null`). The getter is typed
+  * `java.lang.Object` and always bridged through `Reified.toJavaValue`, since it is a MINTED
+  * signature no library caller names — the setter is not bridged (would need the reverse copy
+  * `Reified` refuses). CLAUDE.md §1(b): scoped, `Only(Set.empty)` no-op; a name clash is refused
+  * and counted rather than emitted as a compile error.
   */
 final class PublicFieldAccessorTransform(
-    /** WHICH declarations are read reflectively. `Only(Set.empty)` — the default — admits nothing,
-      * which is §1(b)'s no-op with no code path. `Everywhere(Set.empty)` is the whole port, which
-      * is the honest answer for a module whose classes are handed to a template engine or a
-      * serialiser wholesale; the entries are matched by FQN and cut only at a `Symbol.fullName`
-      * separator, so naming an enclosing type reaches its nested and ANONYMOUS classes — and an
-      * anonymous class is the common shape here, since `new Inspectable() { public Date a; }` is
-      * how a framework's caller writes one. */
+    /** Which declarations are read reflectively. `Only(Set.empty)` (default) admits nothing;
+      * `Everywhere(Set.empty)` is the whole port. Entries are FQNs cut at a `Symbol.fullName`
+      * separator, so an enclosing type also reaches its nested and anonymous classes. */
     val scope: RuleScope = RuleScope.Only(Set.empty),
 ) extends Phase, RequiresRuntime, SurfacePolicy, PolicyBound:
 
   def name = "public-field->bean-accessors"
 
-  /** the phase decides MEMBER NAMES in the emitted surface, which is `SurfacePolicy`'s case in its
-    * plainest form: a base that exposes `getA` and a dependent that does not are two modules whose
-    * signatures for one shared class disagree. */
+  /** The phase decides member names in the emitted surface (`SurfacePolicy`). */
   def surfaceFingerprint: String = scope.fingerprint
 
-  /** the getter's bridge is `JavaCollections.Reified.toJavaValue`. Declared only where the scope can
-    * admit something, so a port that leaves the phase in its pipeline unconfigured does not acquire
-    * a runtime dependency it never uses. */
+  /** The getter's bridge, declared only where the scope can admit something so an unconfigured
+    * port acquires no unused runtime dependency. */
   def runtimeTypes: Set[String] =
     if scope.isUnrestricted || scope.entries.nonEmpty then Set(PublicFieldAccessorTransform.JavaCollectionsFqn)
     else Set.empty
@@ -99,13 +43,11 @@ final class PublicFieldAccessorTransform(
   private var toJavaValueSym: SymId = SymId.None
   private var objectSym: SymId      = SymId.None
 
-  /** `scala.Unit`, as this program spells it — a java setter returns `void`, and a `TypeRepr.NoType`
-    * return renders `Any`, which is a bean setter no reader is looking at and a lie about what the
-    * member does. */
+  /** `scala.Unit`, as this program spells it — `TypeRepr.NoType` would render `Any`. */
   private var unitTpe: TypeRepr = TypeRepr.NoType
 
-  /** every field this phase could NOT expose, and every type it was not asked about that has one —
-    * [[PublicFieldAccessorTransform.exposure]]'s two rows. */
+  /** Every field this phase could not expose, and every type it was not asked about that has one
+    * (`exposure`'s two rows). */
   private val refusals = collection.mutable.ListBuffer[BeanExposureCheck.Finding]()
 
   private def mint(nm: String, full: String, flags: Flags, owner: SymId, info: TypeRepr): SymId =
@@ -118,21 +60,14 @@ final class PublicFieldAccessorTransform(
     added.clear()
     refusals.clear()
     toJavaValueSym = SymId.None
-    // …resolved where the program names it and MINTED where it does not, exactly as `unitSym` below
-    // is. `java.lang.Object` is now the type of every accessor this phase emits, so a program that
-    // happens never to have named it is a program whose accessors would otherwise render at
-    // `TypeRepr.NoType` — an emitted `Any`, which is not the java type a bean reader is looking at.
+    // resolved where the program names it, minted otherwise — two symbols for one FQN would
+    // compare unequal and print the same text
     objectSym = program.symbols.all.find(_.fullName == PublicFieldAccessorTransform.ObjectFqn)
       .map(_.id).getOrElse(mint("Object", PublicFieldAccessorTransform.ObjectFqn, Flags(),
                                 SymId.None, TypeRepr.NoType))
-    // minted like every other reference into the runtime: nothing in a java program declares it,
-    // and the emitter prints a minted symbol's `fullName` verbatim (§6 — fully qualified, no import).
     if scope.isUnrestricted || scope.entries.nonEmpty then
       toJavaValueSym = mint("toJavaValue", PublicFieldAccessorTransform.ToJavaValueFqn,
                             Flags(), SymId.None, TypeRepr.NoType)
-    // …resolved where the program names it and minted where it does not, for the reason
-    // `CollectionsTransform.named` gives: two symbols for one FQN print the same text and compare
-    // unequal, which is how a later reader ends up asking about a type this run has twice.
     val unitSym = program.symbols.all.find(_.fullName == PublicFieldAccessorTransform.UnitFqn)
       .map(_.id).getOrElse(mint("Unit", PublicFieldAccessorTransform.UnitFqn, Flags(), SymId.None,
                                 TypeRepr.NoType))
@@ -141,28 +76,21 @@ final class PublicFieldAccessorTransform(
     val units = program.units.map(u => StandardTraversal.mapClassDef(this, u))
     program.rebuilt(units, SymbolTable(program.symbols.all ++ added))
 
-  /** a NAMED class — the ordinary case. */
+  /** A named class — the ordinary case. */
   override def transformClassDef(t: Tree.ClassDef)(using Program): Tree.ClassDef =
     t.copy(body = exposed(t.symbol, t.body, t.origin))
 
-  /** …and an ANONYMOUS one, which the traversal reaches through its `New` and never through
-    * [[transformClassDef]] (see `StandardTraversal.mapTerm`). It is the SHAPE this phase exists for
-    * — a framework's caller writes `new Inspectable() { public Date a = …; }` — so a phase that
-    * only overrode the hook above would be a phase that does nothing on the measured case, with no
-    * error anywhere (§3). */
+  /** An anonymous class, reached through its `New` and never through `transformClassDef` — the
+    * shape this phase exists for (`new Inspectable() { public Date a = …; }`). */
   override def transformNew(t: Tree.New)(using Program): Term =
     t.copy(anon = t.anon.map(a => a.copy(body = exposed(a.symbol, a.body, a.origin))))
 
-  /** the body of one class, plus whatever accessors its java-public fields need. Takes the three
-    * things a `ClassDef` and an `AnonClass` both have and nothing else, because they are two node
-    * types and the answer is one. */
+  /** The body of one class, plus whatever accessors its java-public fields need. */
   private def exposed(cls: SymId, body: List[Statement], origin: Origin)(using p: Program): List[Statement] =
     val owner = p.symbolOf(cls)
     if owner.isEmpty then body
     else if !scope.includes(p, owner.get) then
-      // …NOT in scope, and it has java-public fields: the review list. Same shape and same reason as
-      // `CollectionBoundaryCheck.Issue.OpaqueEgress` — one row per TYPE, because the question a
-      // port answers is "is this class read reflectively?" and it is asked once per class.
+      // not in scope, and it has java-public fields: the review list, one row per type
       val fields = publicFields(body)
       if fields.nonEmpty then
         refusals += BeanExposureCheck.Finding(
@@ -170,32 +98,23 @@ final class PublicFieldAccessorTransform(
           fields.flatMap(v => p.symbolOf(v.symbol)).map(_.name).sorted.mkString(","), origin)
       body
     else
-      // …the screen ACCUMULATES, and it starts from the inherited names as well as this body's.
-      // Two shapes fall through a screen that is a fixed set of the type's own members, and both
-      // are bare typer errors with no finding and no §1 classification behind them: a parent that
-      // declares `getMapper()` while the subclass declares the FIELD, and two fields whose bean
-      // names collide (`a` and `A` both want `getA` — java keeps them apart by case and one
-      // emitted `def getA` cannot). An ancestor OUTSIDE the program is a class file this pass
-      // cannot read; K21 states that half rather than guessing at it.
+      // the screen accumulates from inherited names too, so a member the port cannot read at all
+      // (an out-of-program ancestor) is never overwritten
       val existing = collection.mutable.Set.from(memberNames(body) ++ inheritedNames(cls))
       val extra = publicFields(body).flatMap { v =>
         val fs   = p.symbolOf(v.symbol).get
         val bean = PublicFieldAccessorTransform.beanSuffix(fs.name)
         val want = List("get" + bean, "set" + bean, "is" + bean)
         if !PublicFieldAccessorTransform.invertible(fs.name) then
-          // …the property a bean reader would register is not this field's name, so the accessor is
-          // one nothing looks for — this face's own defect, re-emitted by its own repair. Refused
-          // and counted rather than emitted as coverage.
+          // the property a bean reader would register is not this field's name — refused, not emitted
           refusals += BeanExposureCheck.Finding(
             BeanExposureCheck.Issue.NameUnreachable, MemberKey(owner.get.fullName, fs.name).render,
             s"get$bean would register the property `${PublicFieldAccessorTransform.decapitalize(bean)}`",
             v.origin)
           Nil
         else if want.exists(existing.contains) then
-          // …a java class that declares BOTH a public field and its own accessor is ordinary, and
-          // emitting a second `getX` is an error the port cannot recover from. `is` is refused
-          // beside `get` because a bean reader that sees both reports a conflicting property, which
-          // is a worse answer than the absent one this refusal leaves.
+          // a class declaring both the field and its own accessor is ordinary; `is` refused beside
+          // `get` too, since a reader seeing both reports a conflicting property
           refusals += BeanExposureCheck.Finding(
             BeanExposureCheck.Issue.NameTaken, MemberKey(owner.get.fullName, fs.name).render,
             want.filter(existing.contains).mkString(","), v.origin)
@@ -207,11 +126,8 @@ final class PublicFieldAccessorTransform(
       }
       if extra.isEmpty then body else body ++ extra
 
-  /** the fields a java `public` modifier put on the class file's surface.
-    *
-    * INSTANCE fields only: a java `static` field is not a bean property and no bean reader looks
-    * for one, so exposing it would be surface for nobody. And the flags are java's — exactly one of
-    * the three access booleans is set, or the declaration is public (see `Flags`). */
+  /** The fields a java `public` modifier put on the class file's surface — instance fields only
+    * (a `static` field is not a bean property). */
   private def publicFields(body: List[Statement])(using p: Program): List[Tree.ValDef] =
     body.collect { case v: Tree.ValDef => v }.filter { v =>
       p.symbolOf(v.symbol).exists { s =>
@@ -228,14 +144,9 @@ final class PublicFieldAccessorTransform(
       case _                => scala.None
     }.toSet
 
-  /** every member name `cls` INHERITS from an ancestor this program declares.
-    *
-    * The screen above reads one body, and a java class that declares `public Object mapper` while
-    * its PARENT declares `getMapper()` is the same ordinary shape one level up — the emitted `def
-    * getMapper` is then a duplicate the port cannot recover from, arriving as a bare typer error
-    * with nothing to classify it. Bounded to the program on purpose (§4.56): an ancestor's members
-    * are otherwise a fact about a class file this pass cannot read, and `ENGINE-LIMITS.md` K21
-    * states that residue rather than guessing at it. */
+  /** Every member name `cls` inherits from an ancestor this program declares. Bounded to the
+    * program on purpose (§4.56) — an ancestor's members outside it are a class file this pass
+    * cannot read; K21 states that residue rather than guessing at it. */
   private def inheritedNames(cls: SymId)(using p: Program): Set[String] =
     def headSym(t: TypeRepr): Option[SymId] = t match
       case TypeRepr.TypeRef(_, s)      => Some(s)
@@ -255,19 +166,13 @@ final class PublicFieldAccessorTransform(
       case _ => Nil
     direct.flatMap(go(_, Set(cls))).toSet
 
-  /** `def getX(): java.lang.Object` and, for a java NON-FINAL field, `def setX(v: T): Unit`.
-    *
-    * A `final` field is a `val` and has no setter to give — java had none either, and a bean reader
-    * that only reads is served by the getter alone. */
+  /** `def getX(): java.lang.Object` and, for a java non-final field, `def setX(v: T): Unit`. */
   private def accessors(cls: SymId, v: Tree.ValDef, fs: Symbol, bean: String)(using p: Program): List[Statement] =
     val o    = v.origin
     val tpe  = v.tpt.tpe
     val self = Tree.This(cls, TypeRepr.ThisType(cls), o)
     val read = Tree.Select(self, fs.id, tpe, o)
-    // …the getter's OWN type, which is `java.lang.Object` for every field. See the class doc: java
-    // declared a field and not a getter, so this signature is one the phase minted and its only
-    // reader is a framework reading the RUNTIME value — which lets the bridge fire unconditionally
-    // instead of asking which types another phase moved (§4.56).
+    // always java.lang.Object — a minted signature bridged unconditionally (§4.56, class doc)
     val getTpe = if objectSym == SymId.None then tpe else TypeRepr.TypeRef(TypeRepr.NoPrefix, objectSym)
     val body =
       if toJavaValueSym != SymId.None then
@@ -301,18 +206,15 @@ final class PublicFieldAccessorTransform(
           "is typed `java.lang.Object` through the run-time bridge because its only reader is that " +
           "framework, reading the value and not the signature"),
       ),
-      // …the KEY is the manifest entry VERBATIM where there is one (§4.575: it is the string an
-      // agent edits). An UNRESTRICTED scope has no entry and its fingerprint is empty, so the key
-      // names the declaration instead — `key=""` would tell a reader nothing at all.
+      // the key is the manifest entry verbatim (§4.575); unrestricted has no entry, so name the declaration
       reason = Reason.Configured(name, scope.entryFor(fs.fullName).getOrElse(
         if scope.fingerprint.isEmpty then "scope (unrestricted)" else scope.fingerprint)),
       origin = o,
     ))
     getter :: setter
 
-  /** what this run could not expose, and what it was never asked about — for [[BeanExposureCheck]].
-    * Held to the units the run EMITS by its caller, exactly as every other boundary count is
-    * (`ENGINE-LIMITS.md` D2). */
+  /** What this run could not expose, and what it was never asked about, for `BeanExposureCheck`;
+    * held to the units the run emits by its caller (D2). */
   def exposure(units: List[Tree.ClassDef]): List[BeanExposureCheck.Finding] =
     val paths = units.map(_.origin.javaPath).toSet
     refusals.toList.filter(f => paths.contains(f.origin.javaPath))
@@ -324,36 +226,23 @@ object PublicFieldAccessorTransform:
   private val ObjectFqn          = "java.lang.Object"
   private val UnitFqn            = "scala.Unit"
 
-  /** the JavaBeans capitalisation, which is NOT `capitalize`. A name whose first two characters are
-    * both upper case keeps its spelling (`URL` → `getURL`), because that is what
-    * `java.beans.Introspector.decapitalize` inverts and therefore what every bean reader will look
-    * for. Getting it wrong emits an accessor the framework does not recognise — which is the defect
-    * this phase exists to remove, one letter along. */
+  /** The JavaBeans capitalisation, not `capitalize`: a name whose first two characters are both
+    * upper case keeps its spelling (`URL` -> `getURL`), matching what `Introspector.decapitalize`
+    * inverts. */
   def beanSuffix(field: String): String =
     if field.isEmpty then field
     else if field.length > 1 && field.charAt(0).isUpper && field.charAt(1).isUpper then field
     else field.head.toUpper.toString + field.tail
 
-  /** `java.beans.Introspector.decapitalize`, spelled out — the function every bean reader runs on
-    * `getX`'s suffix to get the PROPERTY NAME it registers.
-    *
-    * Reproduced here rather than called because it is the half [[beanSuffix]] has to be checked
-    * against, and a check that calls the JDK cannot be stated as an identity in this module's own
-    * terms. Its rule is `beanSuffix`'s read backwards, and the two are NOT inverse: they compose to
-    * the identity everywhere except a `lowerUpper` name (see [[invertible]]). */
+  /** `java.beans.Introspector.decapitalize`, spelled out — reproduced rather than called since it
+    * is the half `beanSuffix` is checked against. Not its inverse everywhere: they compose to the
+    * identity except a `lowerUpper` name (see `invertible`). */
   def decapitalize(bean: String): String =
     if bean.isEmpty then bean
     else if bean.length > 1 && bean.charAt(0).isUpper && bean.charAt(1).isUpper then bean
     else bean.head.toLower.toString + bean.tail
 
-  /** DOES THE ROUND TRIP HOLD FOR THIS FIELD? — the one question that decides whether an accessor is
-    * worth emitting at all.
-    *
-    * A framework handed this port's object asks for the FIELD's name; what it finds is
-    * `decapitalize(beanSuffix(name))`. For `eMail` those differ — `getEMail` decapitalises to
-    * `EMail`, because two leading capitals keep their spelling — so the property is registered under
-    * a name nobody asks for. That is K21 face 2's own failure class arriving through the repair for
-    * it: an accessor IS emitted, the port compiles, every count is flat, and the lookup reads
-    * absent. `lowerUpper` is not an exotic shape (`eTag`, `xAxis`, `iValue`), and the honest answer
-    * is a refusal rather than an accessor that reads as coverage. */
+  /** Does the round trip `decapitalize(beanSuffix(name)) == name` hold? A `lowerUpper` field like
+    * `eMail` fails it (`getEMail` decapitalises to `EMail`), registering under a name nobody asks
+    * for — refused rather than emitted as false coverage. */
   def invertible(field: String): Boolean = decapitalize(beanSuffix(field)) == field

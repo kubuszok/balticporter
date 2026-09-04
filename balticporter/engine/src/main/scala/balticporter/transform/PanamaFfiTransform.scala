@@ -2,25 +2,12 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** JNI `native` methods → Project Panama (`java.lang.foreign`) downcall bindings. The sge/ssg
-  * case: replace hand-written JNI glue with generated Foreign Function & Memory API bindings
-  * that work on both the JVM linker and (later) a Scala Native linker.
-  *
-  * For each `native` method the transform:
-  *   - generates a private `MethodHandle` field — a `Linker.nativeLinker().downcallHandle(...)`
-  *     over a `FunctionDescriptor` built from the signature (each Java primitive → its
-  *     `ValueLayout`, everything else → `ADDRESS`), looked up by name in the default lookup;
-  *   - replaces the (bodyless) `native` method with a body that invokes the handle and casts
-  *     the result back to the declared type.
-  *
-  * The public method stays STRUCTURAL (its real params and return type drive the descriptor);
-  * only the FFI plumbing — pure generated boilerplate keyed off the signature — is emitted as
-  * synthesized [[Tree.Opaque]] glue. Detection is `isNative` (carried from Spoon's `native`
-  * modifier), so it genuinely FINDS the JNI surface rather than being told where it is.
-  *
-  * First cut: JVM downcalls for primitive/pointer signatures. The `invokeExact` shape compiles
-  * against `java.lang.foreign` (JDK 22+); an exact-typed per-arity invoker and the Scala Native
-  * linker backend are the refinement points.
+/** Replaces each JNI `native` method with a Project Panama (`java.lang.foreign`) downcall: a
+  * private `MethodHandle` field built from the signature (each primitive → its `ValueLayout`,
+  * everything else → `ADDRESS`), and a body invoking the handle and casting to the declared
+  * return type. Detection is structural (`isNative`), so it finds the JNI surface rather than
+  * being told where it is. First cut: JVM downcalls only (JDK 22+ `invokeExact`); a Scala Native
+  * linker backend is a refinement point.
   */
 final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) extends Phase:
   def name = "jni->panama"
@@ -47,12 +34,6 @@ final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) e
       m -> mint(n, n, Flags(isStatic = true, isPrivate = true), owner, mhRef)
     }.toMap
 
-    // DECISION PROVENANCE: one row per NATIVE method, which is already declaration-level — the
-    // unit of work here IS a method. What moves in the emitted file is the DECLARATION: a bodyless
-    // `native` method becomes an ordinary one with a body, beside a private `MethodHandle` field
-    // that has no java behind it at all. Universal: `native` is a java modifier and the JNI glue it
-    // names exists on no backend this engine targets, so detection is `isNative` and no policy
-    // decides which methods are involved.
     natives.foreach { m =>
       program.symbolOf(m).foreach { s =>
         record(Decision(
@@ -71,7 +52,7 @@ final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) e
       }
     }
 
-    // drop the `native` modifier from the rewritten methods (they now have a body).
+    // drop `native` from the rewritten methods — they now have a body
     val symbols0 = program.symbols.all.map(s =>
       if natives(s.id) then s.copy(flags = s.flags.copy(isNative = false)) else s)
     val symbols = SymbolTable(symbols0 ++ minted)
@@ -95,36 +76,12 @@ final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) e
 
   // ---- FFI codegen ----
 
-  /** THE HANDLE FIELD'S NAME, for every native at once — and it is keyed on a fact about the
-    * METHOD, never on a mint counter. `ENGINE-LIMITS.md` M10.
-    *
-    * It used to be `<method>$<SymId.raw>$handle`. `SymId.raw` is the FRONTEND'S MINT COUNTER, so
-    * the name held only for as long as nothing before that method interned one more symbol than it
-    * used to — and a conditional gaining a conversion in an unrelated compilation unit moved 122
-    * member digests across four types the change never touched. That is not a cosmetic problem:
-    * `members.tsv` is the blast radius `CLAUDE.md` §5.1 makes available BEFORE a compile and calls
-    * a stronger revert check than any count, and a name keyed on the counter is precisely what
-    * defeats it. The general rule, which is why this is worth a comment this long: **no identifier
-    * the engine EMITS may be keyed on a mint counter.**
-    *
-    * WHAT THE DISAMBIGUATOR IS FOR is the only question, and this transform already answered it:
-    * two `native` methods sharing one name in one owner — `copyJni(float[]…)`, `copyJni(int[]…)` —
-    * need distinct fields. So the key is what java itself overloads on, and the name says WHICH
-    * OVERLOAD rather than which mint:
-    *
-    *   - the only native of that name in that owner: `freeMemory$handle`, and nothing can move it;
-    *   - one of several: `copyJni$0$handle`, `copyJni$1$handle`, … ordered by the ERASED SIGNATURE
-    *     and, where two of those compare equal, by the DECLARATION'S OWN POSITION — so the ordinal
-    *     follows a fact about the class at every level of the key and never the order the frontend
-    *     happened to visit them in. Adding or retyping an overload can renumber its siblings, and
-    *     that is honest: it is a change to the class, not to an unrelated file.
-    *
-    * NOT the `FunctionDescriptor`, which is the near-miss worth naming: it erases every reference
-    * to `ADDRESS`, so libGDX's three `copyJni` overloads share ONE descriptor between them and a
-    * name keyed on it would collide. The rendering is `TirPrinter.tpe` at `Style.canonical` — the
-    * existing total, id-free renderer — rather than a second one written here, for the same reason
-    * this file now derives the name ONCE: [[invoke]] reads it back off the minted symbol instead of
-    * re-deriving it, so there is no second copy to disagree. */
+  /** The handle field's name for every native at once, keyed on a fact about the METHOD, never on
+    * the frontend's mint counter (`ENGINE-LIMITS.md` M10 — a counter-keyed name moved 122 member
+    * digests across untouched types once). A lone native of a name: `freeMemory$handle`. An
+    * overload set: `copyJni$0$handle`, … ordered by erased signature, tiebroken by declaration
+    * position — never by `FunctionDescriptor` (it erases to `ADDRESS` and collides) or by visit
+    * order. [[invoke]] reads the name back off the minted symbol rather than re-deriving it. */
   private[balticporter] def handleNames(program: Program, natives: Set[SymId]): Map[SymId, String] =
     given Program = program
     def nameOf(m: SymId): String  = program.symbolOf(m).map(_.name).getOrElse("fn")
@@ -134,15 +91,7 @@ final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) e
         ps.map((_, t) => TirPrinter.tpe(t, TirPrinter.Style.canonical)).mkString(",") +
           ":" + TirPrinter.tpe(r, TirPrinter.Style.canonical)
       case _ => ""
-    // …AND THE TIEBREAK IS A POSITION, never the order the symbols arrive in. The `MethodType` case
-    // above is guaranteed by `run`'s own filter today, so the empty key is unreachable — which is
-    // precisely why it was worth removing: `sortBy` is STABLE, so a group whose keys all
-    // degenerated would fall back to the order `natives` iterates in, and that order is the MINT
-    // COUNTER. This entry exists because an emitted identifier was keyed on the mint counter once
-    // (122 member digests in four untouched types), and a fallback that quietly restores it is the
-    // same defect with a filter in front of it. The declaration's own source position is a fact
-    // about the class, exactly as the erased signature is, so the pair is counter-free all the way
-    // down and no branch of this key can return a constant.
+    // tiebreak by source position, never by iteration order (which is the mint counter)
     def posOf(m: SymId): (String, Int, Int) =
       val o = Decision.originOf(program, m)
       (o.javaPath, o.line, o.col)
@@ -164,9 +113,7 @@ final class PanamaFfiTransform(isNative: Symbol => Boolean = _.flags.isNative) e
 
   /** `handle.invokeExact(params).asInstanceOf[Ret]` (or a Unit-discarding block for void). */
   private def invoke(d: Tree.DefDef, hs: SymId)(using p: Program): String =
-    // read the name off the MINTED SYMBOL rather than re-deriving it: one derivation, so the field
-    // and the call that reads it cannot drift apart (the two used to be two calls of one function,
-    // which is the same defect with a shorter fuse).
+    // read the name off the minted symbol rather than re-deriving it, so the two cannot drift apart
     val h      = p.symbolOf(hs).map(_.name).getOrElse("fn$handle")
     val params = d.paramss.flatten.flatMap(v => p.symbolOf(v.symbol).map(_.name)).mkString(", ")
     val ret    = d.returnTpt.tpe
