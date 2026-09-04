@@ -1,0 +1,31 @@
+#suite	test	status
+sge.gltf.GLTFTypesSuite	accessor type constants carry the specification's names	pass
+sge.gltf.GLTFTypesSuite	accessorComponentTypeSize gives each component type its byte width	pass
+sge.gltf.GLTFTypesSuite	accessorComponentTypeSize refuses an unknown component type	pass
+sge.gltf.GLTFTypesSuite	accessorStrideSize and accessorSize compose the two, times the count	pass
+sge.gltf.GLTFTypesSuite	accessorTypeSize counts the elements of each accessor type	pass
+sge.gltf.GLTFTypesSuite	accessorTypeSize refuses an unknown or absent type	pass
+sge.gltf.GLTFTypesSuite	component type constants carry the GL enum values	pass
+sge.gltf.GLTFTypesSuite	isMipMapFilter switches on the ENUM, and only the four mip filters are true	pass
+sge.gltf.GLTFTypesSuite	map(CubicQuaternion, …) splits twelve floats into three quaternions	pass
+sge.gltf.GLTFTypesSuite	map(CubicVector3, …) splits nine floats into tangentIn / value / tangentOut IN THAT ORDER	pass
+sge.gltf.GLTFTypesSuite	map(CubicWeightVector, …) ADVANCES the offset between the three groups	pass
+sge.gltf.GLTFTypesSuite	map(Quaternion, float[], offset) reads four floats from the offset	pass
+sge.gltf.GLTFTypesSuite	map(Vector3, float[], offset) reads three floats from the offset	pass
+sge.gltf.GLTFTypesSuite	map(WeightVector, …) copies exactly `count` weights from the offset	pass
+sge.gltf.GLTFTypesSuite	mapColor falls back to a COPY of the default, not to the default itself	pass
+sge.gltf.GLTFTypesSuite	mapColor treats a three-component array as opaque and a four-component one as given	pass
+sge.gltf.GLTFTypesSuite	mapInterpolation maps the three sampler interpolations and defaults null to LINEAR	pass
+sge.gltf.GLTFTypesSuite	mapPrimitiveMode FALLS OUT of the switch and throws on an unknown mode	pass
+sge.gltf.GLTFTypesSuite	mapPrimitiveMode defaults a null mode to GL_TRIANGLES	pass
+sge.gltf.GLTFTypesSuite	mapPrimitiveMode maps every glTF mode to its GL constant	pass
+sge.gltf.GLTFTypesSuite	mapTextureMagFilter maps the two legal values and defaults null to Linear	pass
+sge.gltf.GLTFTypesSuite	mapTextureMinFilter maps all six values and defaults null to Linear	pass
+sge.gltf.scene3d.attributes.AttributesCompareTest	testFogDifferent	pass
+sge.gltf.scene3d.attributes.AttributesCompareTest	testFogSame	pass
+sge.gltf.scene3d.attributes.AttributesCompareTest	testIridescenceDifferent	pass
+sge.gltf.scene3d.attributes.AttributesCompareTest	testIridescenceSame	pass
+sge.gltf.scene3d.attributes.AttributesCompareTest	testTextureDifferent	pass
+sge.gltf.scene3d.attributes.AttributesCompareTest	testTextureSame	fail
+sge.gltf.scene3d.attributes.AttributesCompareTest	testVolumeDifferent	pass
+sge.gltf.scene3d.attributes.AttributesCompareTest	testVolumeSame	pass

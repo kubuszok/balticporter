@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-vfx	engine=balticporter/0.1.0-SNAPSHOT	sources=9c70572f550ff922	files=44	policy=0c47770860c60ab5	jdk=22
+# balticporter port map	schema=4	module=sge-vfx	engine=balticporter/0.1.0-SNAPSHOT	sources=9c70572f550ff922	files=44	policy=0ce7d4879786d94b	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.crashinvaders.vfx.VfxManager	sge.vfx.VfxManager	Renamed	-		0		companion=yes flags=final form=class parents=java.lang.AutoCloseable primary=(Format,int,int) primaryKind=unique-root primaryVis=public secondaries=(Format) statics=MAX_FRAME_BUFFER_SIDE,constrainFrameBufferSize,tmpVec
 type	com.crashinvaders.vfx.VfxRenderContext	sge.vfx.VfxRenderContext	Renamed	-		0		form=class parents=java.lang.AutoCloseable primary=(Format,int,int) primaryKind=unique-root primaryVis=public
@@ -63,19 +63,46 @@ type	com.crashinvaders.vfx.utils.PrioritizedArray$WrapperComparator	sge.vfx.util
 type	com.crashinvaders.vfx.utils.UniformBatcher	sge.vfx.utils.UniformBatcher	Renamed	-		0		form=class parents=sge.utils.Pool$Poolable primary=() primaryKind=unique-root primaryVis=public
 type	com.crashinvaders.vfx.utils.ValueArrayMap	sge.vfx.utils.ValueArrayMap	Renamed	-		0		form=class primary=(int) primaryKind=unique-root primaryVis=public secondaries=() tparams="[K <: java.lang.Object, V <: java.lang.Object]"
 type	com.crashinvaders.vfx.utils.ViewportQuadMesh	sge.vfx.utils.ViewportQuadMesh	Renamed	-		0		companion=yes form=class primary=(VertexAttribute[]) primaryKind=unique-root primaryVis=public secondaries=() statics=U1,U2,U3,U4,V1,V2,V3,V4,VERT_SIZE,X1,X2,X3,X4,Y1,Y2,Y3,Y4,verts
-type	com.badlogic.gdx.net.NetJavaImpl		Dropped	-		0		
-type	com.badlogic.gdx.utils.Align		Dropped	-		0		
-type	com.badlogic.gdx.utils.Disposable		Dropped	-		0		
-type	com.badlogic.gdx.utils.Json		Dropped	-		0		
-type	com.badlogic.gdx.utils.Pools		Dropped	-		0		
-type	com.badlogic.gdx.utils.ReflectionPool		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.Annotation		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.ArrayReflection		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.ClassReflection		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.Constructor		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.Field		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.Method		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.ReflectionException		Dropped	-		0		
+type	com.badlogic.gdx.net.NetJavaImpl	sge.net.NetJavaImpl	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Align	sge.utils.Align	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Array	sge.utils.Array	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ArrayMap	sge.utils.ArrayMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Bits	sge.utils.Bits	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.BooleanArray	sge.utils.BooleanArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ByteArray	sge.utils.ByteArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.CharArray	sge.utils.CharArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.DelayedRemovalArray	sge.utils.DelayedRemovalArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Disposable	sge.utils.Disposable	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.FloatArray	sge.utils.FloatArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IdentityMap	sge.utils.IdentityMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IntArray	sge.utils.IntArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IntFloatMap	sge.utils.IntFloatMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IntIntMap	sge.utils.IntIntMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IntMap	sge.utils.IntMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IntSet	sge.utils.IntSet	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Json	sge.utils.Json	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.LongArray	sge.utils.LongArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.LongMap	sge.utils.LongMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ObjectFloatMap	sge.utils.ObjectFloatMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ObjectIntMap	sge.utils.ObjectIntMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ObjectLongMap	sge.utils.ObjectLongMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ObjectMap	sge.utils.ObjectMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ObjectSet	sge.utils.ObjectSet	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.OrderedMap	sge.utils.OrderedMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.OrderedSet	sge.utils.OrderedSet	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Pool	sge.utils.Pool	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Pools	sge.utils.Pools	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Queue	sge.utils.Queue	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ReflectionPool	sge.utils.ReflectionPool	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ShortArray	sge.utils.ShortArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.SnapshotArray	sge.utils.SnapshotArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.Annotation	sge.utils.reflect.Annotation	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.ArrayReflection	sge.utils.reflect.ArrayReflection	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.ClassReflection	sge.utils.reflect.ClassReflection	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.Constructor	sge.utils.reflect.Constructor	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.Field	sge.utils.reflect.Field	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.Method	sge.utils.reflect.Method	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.ReflectionException	sge.utils.reflect.ReflectionException	Dropped	-		0		form=class
 type		balticporter.runtime.JavaCollection	Added	-		0		
 type		balticporter.runtime.JavaCollections	Added	-		0		
 type		balticporter.runtime.JavaEnumMap	Added	-		0		
@@ -96,7 +123,7 @@ member	com.crashinvaders.vfx.VfxManager#MAX_FRAME_BUFFER_SIDE	sge.vfx.VfxManager
 member	com.crashinvaders.vfx.VfxManager#addEffect(ChainVfxEffect)	sge.vfx.VfxManager#addEffect(ChainVfxEffect)	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	162	7adc955723f4aa4e	
 member	com.crashinvaders.vfx.VfxManager#addEffect(ChainVfxEffect,int)	sge.vfx.VfxManager#addEffect(ChainVfxEffect,int)	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	166	1b71439ff779993b	
 member	com.crashinvaders.vfx.VfxManager#anyEnabledEffects()	sge.vfx.VfxManager#anyEnabledEffects	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	344	24d973126ca3b35a	form=parenless
-member	com.crashinvaders.vfx.VfxManager#applyEffects()	sge.vfx.VfxManager#applyEffects()	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	264	208d11c8d1fd3051	
+member	com.crashinvaders.vfx.VfxManager#applyEffects()	sge.vfx.VfxManager#applyEffects()	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	264	59e407f149d08d8a	
 member	com.crashinvaders.vfx.VfxManager#isApplyingEffects	sge.vfx.VfxManager#applyingEffects	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	61	0ef2803ed471bd82	name=applyingEffects$field
 member	com.crashinvaders.vfx.VfxManager#isApplyingEffects()	sge.vfx.VfxManager#applyingEffects()	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	136	7c7df46c1e8668c0	
 member	com.crashinvaders.vfx.VfxManager#beginInputCapture()	sge.vfx.VfxManager#beginInputCapture()	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	227	038df53f92b80afd	
@@ -115,7 +142,7 @@ member	com.crashinvaders.vfx.VfxManager#isDisabled()	sge.vfx.VfxManager#disabled
 member	com.crashinvaders.vfx.VfxManager#setDisabled(boolean)	sge.vfx.VfxManager#disabled_=(boolean)	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	104	7914d182c65498d3	
 member	com.crashinvaders.vfx.VfxManager#effects	sge.vfx.VfxManager#effects	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	51	e90e9307ab923c32	vis=private
 member	com.crashinvaders.vfx.VfxManager#endInputCapture()	sge.vfx.VfxManager#endInputCapture()	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	238	2dcb69eba638c922	
-member	com.crashinvaders.vfx.VfxManager#filterEnabledEffects(Array)	sge.vfx.VfxManager#filterEnabledEffects(Array<ChainVfxEffect>)	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	353	096dd00becd1dfe6	vis=private
+member	com.crashinvaders.vfx.VfxManager#filterEnabledEffects(DynamicArray)	sge.vfx.VfxManager#filterEnabledEffects(DynamicArray<ChainVfxEffect>)	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	353	6ff0da9e5cd5a670	vis=private
 member	com.crashinvaders.vfx.VfxManager#getHeight	sge.vfx.VfxManager#height	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	65	a7e467b018f1c62a	name=height$field
 member	com.crashinvaders.vfx.VfxManager#getHeight()	sge.vfx.VfxManager#height()	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	91	4efcb6a9616ee5ef	
 member	com.crashinvaders.vfx.VfxManager#getPingPongWrapper	sge.vfx.VfxManager#pingPongWrapper	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	56	25959c8f0d412af5	name=pingPongWrapper$field
@@ -132,7 +159,7 @@ member	com.crashinvaders.vfx.VfxManager#resize(int,int)	sge.vfx.VfxManager#resiz
 member	com.crashinvaders.vfx.VfxManager#getResultBuffer()	sge.vfx.VfxManager#resultBuffer()	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	141	9c782edbd08de9ce	
 member	com.crashinvaders.vfx.VfxManager#setEffectPriority(ChainVfxEffect,int)	sge.vfx.VfxManager#setEffectPriority(ChainVfxEffect,int)	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	182	381b5ada3b11e9a5	
 member	com.crashinvaders.vfx.VfxManager#setEffectTextureParams(TextureWrap,TextureWrap,TextureFilter,TextureFilter)	sge.vfx.VfxManager#setEffectTextureParams(TextureWrap,TextureWrap,TextureFilter,TextureFilter)	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	128	11c0c1084f844c15	
-member	com.crashinvaders.vfx.VfxManager#tmpEffectArray	sge.vfx.VfxManager#tmpEffectArray	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	52	9d65484b8ddb6b1a	vis=private
+member	com.crashinvaders.vfx.VfxManager#tmpEffectArray	sge.vfx.VfxManager#tmpEffectArray	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	52	2039b8034caf9d0a	vis=private
 member	com.crashinvaders.vfx.VfxManager#tmpVec	sge.vfx.VfxManager#tmpVec	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	49	c9749fd589e3eb7d	placement=companion vis=private
 member	com.crashinvaders.vfx.VfxManager#update(float)	sge.vfx.VfxManager#update(float)	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	220	e86db290d26491c6	
 member	com.crashinvaders.vfx.VfxManager#useAsInput(Texture)	sge.vfx.VfxManager#useAsInput(Texture)	Renamed	-	core/src/com/crashinvaders/vfx/VfxManager.java	252	d62688bd89f281b8	
@@ -218,18 +245,18 @@ member	com.crashinvaders.vfx.effects.ChromaticAberrationEffect#setMaxDistortion(
 member	com.crashinvaders.vfx.effects.ChromaticAberrationEffect#rebind()	sge.vfx.effects.ChromaticAberrationEffect#rebind()	Renamed	-	effects/src/com/crashinvaders/vfx/effects/ChromaticAberrationEffect.java	41	5ef29856b29138a4	
 member	com.crashinvaders.vfx.effects.ChromaticAberrationEffect#render(VfxRenderContext,VfxFrameBuffer,VfxFrameBuffer)	sge.vfx.effects.ChromaticAberrationEffect#render(VfxRenderContext,VfxFrameBuffer,VfxFrameBuffer)	Renamed	-	effects/src/com/crashinvaders/vfx/effects/ChromaticAberrationEffect.java	63	db182fee83854ba9	
 member	com.crashinvaders.vfx.effects.ChromaticAberrationEffect#render(VfxRenderContext,VfxPingPongWrapper)	sge.vfx.effects.ChromaticAberrationEffect#render(VfxRenderContext,VfxPingPongWrapper)	Renamed	-	effects/src/com/crashinvaders/vfx/effects/ChromaticAberrationEffect.java	59	02818914ebf06f32	
-member	com.crashinvaders.vfx.effects.CompositeVfxEffect#dispose()	sge.vfx.effects.CompositeVfxEffect#close()	Renamed	-	core/src/com/crashinvaders/vfx/effects/CompositeVfxEffect.java	54	bc503261823073bb	
-member	com.crashinvaders.vfx.effects.CompositeVfxEffect#managedEffects	sge.vfx.effects.CompositeVfxEffect#managedEffects	Renamed	-	core/src/com/crashinvaders/vfx/effects/CompositeVfxEffect.java	30	34d22392ff3cc357	
-member	com.crashinvaders.vfx.effects.CompositeVfxEffect#rebind()	sge.vfx.effects.CompositeVfxEffect#rebind()	Renamed	-	core/src/com/crashinvaders/vfx/effects/CompositeVfxEffect.java	40	2a7796bf530cf273	
+member	com.crashinvaders.vfx.effects.CompositeVfxEffect#dispose()	sge.vfx.effects.CompositeVfxEffect#close()	Renamed	-	core/src/com/crashinvaders/vfx/effects/CompositeVfxEffect.java	54	1538ded20ac19208	
+member	com.crashinvaders.vfx.effects.CompositeVfxEffect#managedEffects	sge.vfx.effects.CompositeVfxEffect#managedEffects	Renamed	-	core/src/com/crashinvaders/vfx/effects/CompositeVfxEffect.java	30	51d9e440fcb00632	
+member	com.crashinvaders.vfx.effects.CompositeVfxEffect#rebind()	sge.vfx.effects.CompositeVfxEffect#rebind()	Renamed	-	core/src/com/crashinvaders/vfx/effects/CompositeVfxEffect.java	40	36046f4d83a6cc29	
 member	com.crashinvaders.vfx.effects.CompositeVfxEffect#register(T)	sge.vfx.effects.CompositeVfxEffect#register(T)	Renamed	-	core/src/com/crashinvaders/vfx/effects/CompositeVfxEffect.java	60	b5a363d742907f74	
-member	com.crashinvaders.vfx.effects.CompositeVfxEffect#resize(int,int)	sge.vfx.effects.CompositeVfxEffect#resize(int,int)	Renamed	-	core/src/com/crashinvaders/vfx/effects/CompositeVfxEffect.java	33	38aea77ea2535500	
-member	com.crashinvaders.vfx.effects.CompositeVfxEffect#unregister(T)	sge.vfx.effects.CompositeVfxEffect#unregister(T)	Renamed	-	core/src/com/crashinvaders/vfx/effects/CompositeVfxEffect.java	65	8e93cb1c5abf512f	
-member	com.crashinvaders.vfx.effects.CompositeVfxEffect#update(float)	sge.vfx.effects.CompositeVfxEffect#update(float)	Renamed	-	core/src/com/crashinvaders/vfx/effects/CompositeVfxEffect.java	47	45b3cfb12733a027	
+member	com.crashinvaders.vfx.effects.CompositeVfxEffect#resize(int,int)	sge.vfx.effects.CompositeVfxEffect#resize(int,int)	Renamed	-	core/src/com/crashinvaders/vfx/effects/CompositeVfxEffect.java	33	c93bf2bf052cc9d4	
+member	com.crashinvaders.vfx.effects.CompositeVfxEffect#unregister(T)	sge.vfx.effects.CompositeVfxEffect#unregister(T)	Renamed	-	core/src/com/crashinvaders/vfx/effects/CompositeVfxEffect.java	65	8218fc431d099ab8	
+member	com.crashinvaders.vfx.effects.CompositeVfxEffect#update(float)	sge.vfx.effects.CompositeVfxEffect#update(float)	Renamed	-	core/src/com/crashinvaders/vfx/effects/CompositeVfxEffect.java	47	9c39f4ef6265e24a	
 member	com.crashinvaders.vfx.effects.CrtEffect#<init>(Sge)	sge.vfx.effects.CrtEffect#<init>(Sge)	Renamed	-	effects/src/com/crashinvaders/vfx/effects/CrtEffect.java	35	6a98f253e98b7353	
 member	com.crashinvaders.vfx.effects.CrtEffect#<stmt1>	sge.vfx.effects.CrtEffect#<stmt1>	Renamed	-	effects/src/com/crashinvaders/vfx/effects/CrtEffect.java	47	5e3db9e8fb1acb4f	
 member	com.crashinvaders.vfx.effects.CrtEffect#U_RESOLUTION	sge.vfx.effects.CrtEffect#U_RESOLUTION	Renamed	-	effects/src/com/crashinvaders/vfx/effects/CrtEffect.java	30	eb3ba9546b3ccb97	placement=companion vis=private
 member	com.crashinvaders.vfx.effects.CrtEffect#U_TEXTURE0	sge.vfx.effects.CrtEffect#U_TEXTURE0	Renamed	-	effects/src/com/crashinvaders/vfx/effects/CrtEffect.java	29	84c2b4ea4638c1a2	placement=companion vis=private
-member	com.crashinvaders.vfx.effects.CrtEffect#rebind()	sge.vfx.effects.CrtEffect#rebind()	Renamed	-	effects/src/com/crashinvaders/vfx/effects/CrtEffect.java	58	39c93061d4cd9b1e	
+member	com.crashinvaders.vfx.effects.CrtEffect#rebind()	sge.vfx.effects.CrtEffect#rebind()	Renamed	-	effects/src/com/crashinvaders/vfx/effects/CrtEffect.java	58	88d63c3789c5b931	
 member	com.crashinvaders.vfx.effects.CrtEffect#render(VfxRenderContext,VfxFrameBuffer,VfxFrameBuffer)	sge.vfx.effects.CrtEffect#render(VfxRenderContext,VfxFrameBuffer,VfxFrameBuffer)	Renamed	-	effects/src/com/crashinvaders/vfx/effects/CrtEffect.java	78	db182fee83854ba9	
 member	com.crashinvaders.vfx.effects.CrtEffect#render(VfxRenderContext,VfxPingPongWrapper)	sge.vfx.effects.CrtEffect#render(VfxRenderContext,VfxPingPongWrapper)	Renamed	-	effects/src/com/crashinvaders/vfx/effects/CrtEffect.java	74	02818914ebf06f32	
 member	com.crashinvaders.vfx.effects.CrtEffect#resize(int,int)	sge.vfx.effects.CrtEffect#resize(int,int)	Renamed	-	effects/src/com/crashinvaders/vfx/effects/CrtEffect.java	51	850c766b86bfa2c1	
@@ -284,7 +311,7 @@ member	com.crashinvaders.vfx.effects.GaussianBlurEffect#getAmount	sge.vfx.effect
 member	com.crashinvaders.vfx.effects.GaussianBlurEffect#getAmount()	sge.vfx.effects.GaussianBlurEffect#amount()	Renamed	-	effects/src/com/crashinvaders/vfx/effects/GaussianBlurEffect.java	127	50a8f478da67601b	
 member	com.crashinvaders.vfx.effects.GaussianBlurEffect#setAmount(float)	sge.vfx.effects.GaussianBlurEffect#amount_=(float)	Renamed	-	effects/src/com/crashinvaders/vfx/effects/GaussianBlurEffect.java	132	cf8f114319f35758	
 member	com.crashinvaders.vfx.effects.GaussianBlurEffect#dispose()	sge.vfx.effects.GaussianBlurEffect#close()	Renamed	-	effects/src/com/crashinvaders/vfx/effects/GaussianBlurEffect.java	70	5b3adce3fcd39280	
-member	com.crashinvaders.vfx.effects.GaussianBlurEffect#computeBlurWeightings()	sge.vfx.effects.GaussianBlurEffect#computeBlurWeightings()	Renamed	-	effects/src/com/crashinvaders/vfx/effects/GaussianBlurEffect.java	147	6042d3f05a1b8342	vis=private
+member	com.crashinvaders.vfx.effects.GaussianBlurEffect#computeBlurWeightings()	sge.vfx.effects.GaussianBlurEffect#computeBlurWeightings()	Renamed	-	effects/src/com/crashinvaders/vfx/effects/GaussianBlurEffect.java	147	2769a7ae415549a3	vis=private
 member	com.crashinvaders.vfx.effects.GaussianBlurEffect#computeKernel(int,float,Array)	sge.vfx.effects.GaussianBlurEffect#computeKernel(int,float,Array<float>)	Renamed	-	effects/src/com/crashinvaders/vfx/effects/GaussianBlurEffect.java	252	3fca051b754ab72d	vis=private
 member	com.crashinvaders.vfx.effects.GaussianBlurEffect#computeOffsets(int,float,float,Array,Array)	sge.vfx.effects.GaussianBlurEffect#computeOffsets(int,float,float,Array<float>,Array<float>)	Renamed	-	effects/src/com/crashinvaders/vfx/effects/GaussianBlurEffect.java	277	c3c56dd5514eb23b	vis=private
 member	com.crashinvaders.vfx.effects.GaussianBlurEffect#convolve	sge.vfx.effects.GaussianBlurEffect#convolve	Renamed	-	effects/src/com/crashinvaders/vfx/effects/GaussianBlurEffect.java	59	77c8f6f895c1a4f4	vis=private
@@ -669,12 +696,12 @@ member	com.crashinvaders.vfx.framebuffer.VfxFrameBuffer$RendererAdapter#restoreO
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBuffer$RendererAdapter#getTransform()	sge.vfx.framebuffer.VfxFrameBuffer$RendererAdapter#transform()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBuffer.java	283	97f4473747771351	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBuffer$RendererAdapter#setTransform(Matrix4)	sge.vfx.framebuffer.VfxFrameBuffer$RendererAdapter#transform_=(Matrix4)	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBuffer.java	285	527aa179eca8b3af	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBuffer$RendererManager#addRenderer(Renderer)	sge.vfx.framebuffer.VfxFrameBuffer$RendererManager#addRenderer(Renderer)	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBuffer.java	226	f27fca2e2c37cf0c	
-member	com.crashinvaders.vfx.framebuffer.VfxFrameBuffer$RendererManager#assignLocalMatrices(Matrix4,Matrix4)	sge.vfx.framebuffer.VfxFrameBuffer$RendererManager#assignLocalMatrices(Matrix4,Matrix4)	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBuffer.java	245	30899dea98cbee93	
+member	com.crashinvaders.vfx.framebuffer.VfxFrameBuffer$RendererManager#assignLocalMatrices(Matrix4,Matrix4)	sge.vfx.framebuffer.VfxFrameBuffer$RendererManager#assignLocalMatrices(Matrix4,Matrix4)	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBuffer.java	245	7256af64f97fc662	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBuffer$RendererManager#clearRenderers()	sge.vfx.framebuffer.VfxFrameBuffer$RendererManager#clearRenderers()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBuffer.java	234	07326cc48d788e60	
-member	com.crashinvaders.vfx.framebuffer.VfxFrameBuffer$RendererManager#flush()	sge.vfx.framebuffer.VfxFrameBuffer$RendererManager#flush()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBuffer.java	239	507d7d50fffccfaf	
-member	com.crashinvaders.vfx.framebuffer.VfxFrameBuffer$RendererManager#removeRenderer(Renderer)	sge.vfx.framebuffer.VfxFrameBuffer$RendererManager#removeRenderer(Renderer)	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBuffer.java	230	b4db80d8d42f8fbb	
-member	com.crashinvaders.vfx.framebuffer.VfxFrameBuffer$RendererManager#renderers	sge.vfx.framebuffer.VfxFrameBuffer$RendererManager#renderers	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBuffer.java	221	204fd094ce9b52af	vis=private[VfxFrameBuffer]
-member	com.crashinvaders.vfx.framebuffer.VfxFrameBuffer$RendererManager#restoreOwnMatrices()	sge.vfx.framebuffer.VfxFrameBuffer$RendererManager#restoreOwnMatrices()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBuffer.java	251	c6b3cd50a9c21507	
+member	com.crashinvaders.vfx.framebuffer.VfxFrameBuffer$RendererManager#flush()	sge.vfx.framebuffer.VfxFrameBuffer$RendererManager#flush()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBuffer.java	239	97af9c0643827512	
+member	com.crashinvaders.vfx.framebuffer.VfxFrameBuffer$RendererManager#removeRenderer(Renderer)	sge.vfx.framebuffer.VfxFrameBuffer$RendererManager#removeRenderer(Renderer)	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBuffer.java	230	772b3c4fead8288b	
+member	com.crashinvaders.vfx.framebuffer.VfxFrameBuffer$RendererManager#renderers	sge.vfx.framebuffer.VfxFrameBuffer$RendererManager#renderers	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBuffer.java	221	60c1923157e55cb3	vis=private[VfxFrameBuffer]
+member	com.crashinvaders.vfx.framebuffer.VfxFrameBuffer$RendererManager#restoreOwnMatrices()	sge.vfx.framebuffer.VfxFrameBuffer$RendererManager#restoreOwnMatrices()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBuffer.java	251	7b81476b33270b42	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBuffer$ShapeRendererAdapter#<init>()	sge.vfx.framebuffer.VfxFrameBuffer$ShapeRendererAdapter#<init>()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBuffer.java	339	b3b8ebaedc83c917	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBuffer$ShapeRendererAdapter#<init>(ShapeRenderer)	sge.vfx.framebuffer.VfxFrameBuffer$ShapeRendererAdapter#<init>(ShapeRenderer)	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBuffer.java	342	2d685102db0f26a4	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBuffer$ShapeRendererAdapter#flush()	sge.vfx.framebuffer.VfxFrameBuffer$ShapeRendererAdapter#flush()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBuffer.java	361	adc8ab1f5c8b31c0	
@@ -690,25 +717,25 @@ member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#<init>(Sge)	sge.vfx.
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#<stmt1>	sge.vfx.framebuffer.VfxFrameBufferPool#<stmt1>	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	54	19ab7a3c85329e47	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#<stmt2>	sge.vfx.framebuffer.VfxFrameBufferPool#<stmt2>	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	55	756b3dfe32c62344	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#<stmt3>	sge.vfx.framebuffer.VfxFrameBufferPool#<stmt3>	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	56	c8179272566866ba	
-member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#<stmt4>	sge.vfx.framebuffer.VfxFrameBufferPool#<stmt4>	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	58	29c2ffea83f409b6	
-member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#<stmt5>	sge.vfx.framebuffer.VfxFrameBufferPool#<stmt5>	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	59	ae4e964dcbecf99b	
+member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#<stmt4>	sge.vfx.framebuffer.VfxFrameBufferPool#<stmt4>	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	58	ae8eb74b9e297c1b	
+member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#<stmt5>	sge.vfx.framebuffer.VfxFrameBufferPool#<stmt5>	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	59	3354fb4336dc6ed3	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#TAG	sge.vfx.framebuffer.VfxFrameBufferPool#TAG	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	28	4fb461be0af8ed38	placement=companion vis=private
-member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#cleanupInvalid()	sge.vfx.framebuffer.VfxFrameBufferPool#cleanupInvalid()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	158	28f6741f2a557fde	
-member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#clearFree()	sge.vfx.framebuffer.VfxFrameBufferPool#clearFree()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	118	b41e059943bca35f	
-member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#dispose()	sge.vfx.framebuffer.VfxFrameBufferPool#close()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	63	ec314b34b3f50e3d	
+member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#cleanupInvalid()	sge.vfx.framebuffer.VfxFrameBufferPool#cleanupInvalid()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	158	85d75bfe3109a935	
+member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#clearFree()	sge.vfx.framebuffer.VfxFrameBufferPool#clearFree()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	118	3dc88206e375bf79	
+member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#dispose()	sge.vfx.framebuffer.VfxFrameBufferPool#close()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	63	a682fb7f68ead24b	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#createBuffer()	sge.vfx.framebuffer.VfxFrameBufferPool#createBuffer()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	132	e4d547b722c9664c	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#disposed	sge.vfx.framebuffer.VfxFrameBufferPool#disposed	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	47	3f833972782d1402	vis=private
-member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#free(VfxFrameBuffer)	sge.vfx.framebuffer.VfxFrameBufferPool#free(VfxFrameBuffer)	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	102	d90c77fe5c537c61	
-member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#freeBuffers	sge.vfx.framebuffer.VfxFrameBufferPool#freeBuffers	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	36	dcf9ccd867e0ccb6	
+member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#free(VfxFrameBuffer)	sge.vfx.framebuffer.VfxFrameBufferPool#free(VfxFrameBuffer)	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	102	c60c4a62203d68ab	
+member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#freeBuffers	sge.vfx.framebuffer.VfxFrameBufferPool#freeBuffers	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	36	5802857ffb1d3b2c	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#getFreeCount()	sge.vfx.framebuffer.VfxFrameBufferPool#freeCount()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	128	bd81e7848f92043b	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#freePeak	sge.vfx.framebuffer.VfxFrameBufferPool#freePeak	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	31	bd8105c367451d5a	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#height	sge.vfx.framebuffer.VfxFrameBufferPool#height	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	39	0aba9d38c6a5e49d	
-member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#managedBuffers	sge.vfx.framebuffer.VfxFrameBufferPool#managedBuffers	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	34	a97f5a208a405ffb	
-member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#obtain()	sge.vfx.framebuffer.VfxFrameBufferPool#obtain()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	91	bf56baaf5b16d7ad	
+member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#managedBuffers	sge.vfx.framebuffer.VfxFrameBufferPool#managedBuffers	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	34	12be51d59f79c262	
+member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#obtain()	sge.vfx.framebuffer.VfxFrameBufferPool#obtain()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	91	5520836ee1959c75	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#pixelFormat	sge.vfx.framebuffer.VfxFrameBufferPool#pixelFormat	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	40	353ca23d611e7d8d	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#resetBuffer(VfxFrameBuffer)	sge.vfx.framebuffer.VfxFrameBufferPool#resetBuffer(VfxFrameBuffer)	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	140	67c65e94d1cb537c	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#resize(int,int)	sge.vfx.framebuffer.VfxFrameBufferPool#resize(int,int)	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	80	68a5c7b788664a93	
-member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#setTextureParams(TextureWrap,TextureWrap,TextureFilter,TextureFilter)	sge.vfx.framebuffer.VfxFrameBufferPool#setTextureParams(TextureWrap,TextureWrap,TextureFilter,TextureFilter)	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	176	0419d92a3fcdd8e7	
+member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#setTextureParams(TextureWrap,TextureWrap,TextureFilter,TextureFilter)	sge.vfx.framebuffer.VfxFrameBufferPool#setTextureParams(TextureWrap,TextureWrap,TextureFilter,TextureFilter)	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	176	099f13a926e8067d	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#textureFilterMag	sge.vfx.framebuffer.VfxFrameBufferPool#textureFilterMag	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	45	a711c524376c2224	vis=private
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#textureFilterMin	sge.vfx.framebuffer.VfxFrameBufferPool#textureFilterMin	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	44	84a0c9514ca638da	vis=private
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#textureWrapU	sge.vfx.framebuffer.VfxFrameBufferPool#textureWrapU	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	42	3ee42dac7f4ec34e	vis=private
@@ -716,17 +743,17 @@ member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#textureWrapV	sge.vfx
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#validateBuffer(VfxFrameBuffer)	sge.vfx.framebuffer.VfxFrameBufferPool#validateBuffer(VfxFrameBuffer)	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	149	460df1d3902123c1	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferPool#width	sge.vfx.framebuffer.VfxFrameBufferPool#width	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferPool.java	38	3465c1374587a7bf	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferQueue#<stmt1>	sge.vfx.framebuffer.VfxFrameBufferQueue#<stmt1>	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferQueue.java	37	984b8dd0083d2284	
-member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferQueue#<stmt2>	sge.vfx.framebuffer.VfxFrameBufferQueue#<stmt2>	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferQueue.java	40	a44d4149922889b7	
+member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferQueue#<stmt2>	sge.vfx.framebuffer.VfxFrameBufferQueue#<stmt2>	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferQueue.java	40	b9879fa1bf96ada1	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferQueue#<stmt3>	sge.vfx.framebuffer.VfxFrameBufferQueue#<stmt3>	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferQueue.java	41	79cc4661177d209d	
-member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferQueue#buffers	sge.vfx.framebuffer.VfxFrameBufferQueue#buffers	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferQueue.java	28	b1ffcb54b4a45e40	
+member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferQueue#buffers	sge.vfx.framebuffer.VfxFrameBufferQueue#buffers	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferQueue.java	28	5e8cc15acea1db67	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferQueue#changeToNext()	sge.vfx.framebuffer.VfxFrameBufferQueue#changeToNext()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferQueue.java	79	da809bcfb9c9fcef	
-member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferQueue#dispose()	sge.vfx.framebuffer.VfxFrameBufferQueue#close()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferQueue.java	47	64cb5f61b88a74ba	
-member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferQueue#getCurrent()	sge.vfx.framebuffer.VfxFrameBufferQueue#current()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferQueue.java	75	23332873c1513483	
+member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferQueue#dispose()	sge.vfx.framebuffer.VfxFrameBufferQueue#close()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferQueue.java	47	42ff2f9801c637fb	
+member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferQueue#getCurrent()	sge.vfx.framebuffer.VfxFrameBufferQueue#current()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferQueue.java	75	9a6f49b73c3740f5	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferQueue#currentIdx	sge.vfx.framebuffer.VfxFrameBufferQueue#currentIdx	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferQueue.java	29	7dfd2bc1a4a1ef22	vis=private
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferQueue#filterMag	sge.vfx.framebuffer.VfxFrameBufferQueue#filterMag	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferQueue.java	34	22cb2837e26973c7	vis=private
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferQueue#filterMin	sge.vfx.framebuffer.VfxFrameBufferQueue#filterMin	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferQueue.java	33	028df4c40fa62833	vis=private
-member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferQueue#rebind()	sge.vfx.framebuffer.VfxFrameBufferQueue#rebind()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferQueue.java	63	f6b10a3524eef6df	
-member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferQueue#resize(int,int)	sge.vfx.framebuffer.VfxFrameBufferQueue#resize(int,int)	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferQueue.java	54	9a7733279d8704fd	
+member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferQueue#rebind()	sge.vfx.framebuffer.VfxFrameBufferQueue#rebind()	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferQueue.java	63	81e6f88747046cdd	
+member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferQueue#resize(int,int)	sge.vfx.framebuffer.VfxFrameBufferQueue#resize(int,int)	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferQueue.java	54	32bccfb70c99bba1	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferQueue#setTextureParams(TextureWrap,TextureWrap,TextureFilter,TextureFilter)	sge.vfx.framebuffer.VfxFrameBufferQueue#setTextureParams(TextureWrap,TextureWrap,TextureFilter,TextureFilter)	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferQueue.java	84	4cfee698e840ac9c	
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferQueue#wrapU	sge.vfx.framebuffer.VfxFrameBufferQueue#wrapU	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferQueue.java	31	90761450cbf3641f	vis=private
 member	com.crashinvaders.vfx.framebuffer.VfxFrameBufferQueue#wrapV	sge.vfx.framebuffer.VfxFrameBufferQueue#wrapV	Renamed	-	core/src/com/crashinvaders/vfx/framebuffer/VfxFrameBufferQueue.java	32	05dad59c8d5bbb33	vis=private
@@ -836,8 +863,8 @@ member	com.crashinvaders.vfx.utils.CommonUtils#parseHexColor8(String)	sge.vfx.ut
 member	com.crashinvaders.vfx.utils.CommonUtils#random(Array)	sge.vfx.utils.CommonUtils#random(Array<T>)	Renamed	-	core/src/com/crashinvaders/vfx/utils/CommonUtils.java	27	a1fba9269a20dc0d	placement=companion
 member	com.crashinvaders.vfx.utils.CommonUtils#stringEquals(String,String)	sge.vfx.utils.CommonUtils#stringEquals(String,String)	Renamed	-	core/src/com/crashinvaders/vfx/utils/CommonUtils.java	84	80f2d649f9e5484a	placement=companion
 member	com.crashinvaders.vfx.utils.CommonUtils#tmpColor	sge.vfx.utils.CommonUtils#tmpColor	Renamed	-	core/src/com/crashinvaders/vfx/utils/CommonUtils.java	25	8ff10d58c2a011d4	placement=companion vis=private
-member	com.crashinvaders.vfx.utils.PrioritizedArray#<init>()	sge.vfx.utils.PrioritizedArray#<init>()	Renamed	-	core/src/com/crashinvaders/vfx/utils/PrioritizedArray.java	33	16a678a3baf4fc78	
-member	com.crashinvaders.vfx.utils.PrioritizedArray#<init>(int)	sge.vfx.utils.PrioritizedArray#<init>(int)	Renamed	-	core/src/com/crashinvaders/vfx/utils/PrioritizedArray.java	37	c138775132a4cbf4	
+member	com.crashinvaders.vfx.utils.PrioritizedArray#<init>(MkArray)	sge.vfx.utils.PrioritizedArray#<init>(MkArray<T>)	Renamed	-	core/src/com/crashinvaders/vfx/utils/PrioritizedArray.java	33	00c4a9f83d094d3b	
+member	com.crashinvaders.vfx.utils.PrioritizedArray#<init>(int,MkArray)	sge.vfx.utils.PrioritizedArray#<init>(int,MkArray<T>)	Renamed	-	core/src/com/crashinvaders/vfx/utils/PrioritizedArray.java	37	abab77355ecb0186	
 member	com.crashinvaders.vfx.utils.PrioritizedArray#add(T)	sge.vfx.utils.PrioritizedArray#add(T)	Renamed	-	core/src/com/crashinvaders/vfx/utils/PrioritizedArray.java	45	998b109688803da8	
 member	com.crashinvaders.vfx.utils.PrioritizedArray#add(T,int)	sge.vfx.utils.PrioritizedArray#add(T,int)	Renamed	-	core/src/com/crashinvaders/vfx/utils/PrioritizedArray.java	49	994aae5db04fe9ba	
 member	com.crashinvaders.vfx.utils.PrioritizedArray#clear()	sge.vfx.utils.PrioritizedArray#clear()	Renamed	-	core/src/com/crashinvaders/vfx/utils/PrioritizedArray.java	70	c7bfd4075aeafaca	
@@ -875,7 +902,7 @@ member	com.crashinvaders.vfx.utils.PrioritizedArray$PrioritizedArrayIterator#res
 member	com.crashinvaders.vfx.utils.PrioritizedArray$PrioritizedArrayIterator#valid	sge.vfx.utils.PrioritizedArray$PrioritizedArrayIterator#valid	Renamed	-	core/src/com/crashinvaders/vfx/utils/PrioritizedArray.java	144	01d045a83c9f074c	
 member	com.crashinvaders.vfx.utils.PrioritizedArray$Wrapper#initialize(T,int)	sge.vfx.utils.PrioritizedArray$Wrapper#initialize(T,int)	Renamed	-	core/src/com/crashinvaders/vfx/utils/PrioritizedArray.java	114	f26a1821a31c2f1b	
 member	com.crashinvaders.vfx.utils.PrioritizedArray$Wrapper#item	sge.vfx.utils.PrioritizedArray$Wrapper#item	Renamed	-	core/src/com/crashinvaders/vfx/utils/PrioritizedArray.java	111	ea9a271c4e41043a	
-member	com.crashinvaders.vfx.utils.PrioritizedArray$Wrapper#pool	sge.vfx.utils.PrioritizedArray$Wrapper#pool	Renamed	-	core/src/com/crashinvaders/vfx/utils/PrioritizedArray.java	104	781352cabe2e9757	placement=companion vis=private[PrioritizedArray]
+member	com.crashinvaders.vfx.utils.PrioritizedArray$Wrapper#pool	sge.vfx.utils.PrioritizedArray$Wrapper#pool	Renamed	-	core/src/com/crashinvaders/vfx/utils/PrioritizedArray.java	104	df15e9181706abef	placement=companion vis=private[PrioritizedArray]
 member	com.crashinvaders.vfx.utils.PrioritizedArray$Wrapper#priority	sge.vfx.utils.PrioritizedArray$Wrapper#priority	Renamed	-	core/src/com/crashinvaders/vfx/utils/PrioritizedArray.java	112	4a723e78abc6cd3b	
 member	com.crashinvaders.vfx.utils.PrioritizedArray$Wrapper#reset()	sge.vfx.utils.PrioritizedArray$Wrapper#reset()	Renamed	-	core/src/com/crashinvaders/vfx/utils/PrioritizedArray.java	121	c577819b17866857	
 member	com.crashinvaders.vfx.utils.PrioritizedArray$Wrapper#toString()	sge.vfx.utils.PrioritizedArray$Wrapper#toString()	Renamed	-	core/src/com/crashinvaders/vfx/utils/PrioritizedArray.java	127	0c1dba5fc002c0ab	
@@ -892,27 +919,27 @@ member	com.crashinvaders.vfx.utils.UniformBatcher#set(String,Vector3)	sge.vfx.ut
 member	com.crashinvaders.vfx.utils.UniformBatcher#set(String,float)	sge.vfx.utils.UniformBatcher#set(String,float)	Renamed	-	core/src/com/crashinvaders/vfx/utils/UniformBatcher.java	56	6ebf8e1d2cdb46b0	
 member	com.crashinvaders.vfx.utils.UniformBatcher#set(String,int)	sge.vfx.utils.UniformBatcher#set(String,int)	Renamed	-	core/src/com/crashinvaders/vfx/utils/UniformBatcher.java	62	d73c03fe86fa7af7	
 member	com.crashinvaders.vfx.utils.UniformBatcher#set(String,int,Array,int,int)	sge.vfx.utils.UniformBatcher#set(String,int,Array<float>,int,int)	Renamed	-	core/src/com/crashinvaders/vfx/utils/UniformBatcher.java	93	f64f6b7450d8fe6a	
-member	com.crashinvaders.vfx.utils.ValueArrayMap#<init>()	sge.vfx.utils.ValueArrayMap#<init>()	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	34	f4d0f4ad605e6b7c	
+member	com.crashinvaders.vfx.utils.ValueArrayMap#<init>(MkArray,MkArray$1)	sge.vfx.utils.ValueArrayMap#<init>(MkArray<K>,MkArray$1<V>)	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	34	9629546b17800d53	
 member	com.crashinvaders.vfx.utils.ValueArrayMap#<stmt1>	sge.vfx.utils.ValueArrayMap#<stmt1>	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	39	03eeecf0fa6920ac	
-member	com.crashinvaders.vfx.utils.ValueArrayMap#<stmt2>	sge.vfx.utils.ValueArrayMap#<stmt2>	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	40	fe11a9b88153e83f	
-member	com.crashinvaders.vfx.utils.ValueArrayMap#<stmt3>	sge.vfx.utils.ValueArrayMap#<stmt3>	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	42	1f330264d6899a1e	
+member	com.crashinvaders.vfx.utils.ValueArrayMap#<stmt2>	sge.vfx.utils.ValueArrayMap#<stmt2>	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	40	e00ce2c10320066d	
+member	com.crashinvaders.vfx.utils.ValueArrayMap#<stmt3>	sge.vfx.utils.ValueArrayMap#<stmt3>	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	42	e5ca1b0e1ef3739e	
 member	com.crashinvaders.vfx.utils.ValueArrayMap#clear()	sge.vfx.utils.ValueArrayMap#clear()	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	80	ea802b696d6f99e4	
 member	com.crashinvaders.vfx.utils.ValueArrayMap#contains(K)	sge.vfx.utils.ValueArrayMap#contains(K)	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	85	c4570383b10de920	
 member	com.crashinvaders.vfx.utils.ValueArrayMap#findKey(V)	sge.vfx.utils.ValueArrayMap#findKey(V)	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	71	7437ae20d1f5acbc	
 member	com.crashinvaders.vfx.utils.ValueArrayMap#get(K)	sge.vfx.utils.ValueArrayMap#get(K)	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	50	967fe1c8e0c4ba70	
-member	com.crashinvaders.vfx.utils.ValueArrayMap#getValueAt(int)	sge.vfx.utils.ValueArrayMap#getValueAt(int)	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	54	6f12dcb6085dbf24	
-member	com.crashinvaders.vfx.utils.ValueArrayMap#getKeys()	sge.vfx.utils.ValueArrayMap#keys()	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	102	a654692563db7963	
+member	com.crashinvaders.vfx.utils.ValueArrayMap#getValueAt(int)	sge.vfx.utils.ValueArrayMap#getValueAt(int)	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	54	a5f7cb9e588a455c	
+member	com.crashinvaders.vfx.utils.ValueArrayMap#getKeys()	sge.vfx.utils.ValueArrayMap#keys()	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	102	3e70a3be6ae8f515	
 member	com.crashinvaders.vfx.utils.ValueArrayMap#map	sge.vfx.utils.ValueArrayMap#map	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	29	6e6f4adfbb57061d	
 member	com.crashinvaders.vfx.utils.ValueArrayMap#put(K,V)	sge.vfx.utils.ValueArrayMap#put(K,V)	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	45	8495eb3aa213830d	
-member	com.crashinvaders.vfx.utils.ValueArrayMap#remove(K)	sge.vfx.utils.ValueArrayMap#remove(K)	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	58	3b8491974808e1d8	
+member	com.crashinvaders.vfx.utils.ValueArrayMap#remove(K)	sge.vfx.utils.ValueArrayMap#remove(K)	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	58	e6f19708883c0ec8	
 member	com.crashinvaders.vfx.utils.ValueArrayMap#removeByValue(V)	sge.vfx.utils.ValueArrayMap#removeByValue(V)	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	66	e94bd99a7f1b530e	
 member	com.crashinvaders.vfx.utils.ValueArrayMap#size()	sge.vfx.utils.ValueArrayMap#size	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	89	be8c1aa40a84af3a	form=parenless
-member	com.crashinvaders.vfx.utils.ValueArrayMap#sort(Ordering)	sge.vfx.utils.ValueArrayMap#sort(Ordering<V>)	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	93	d43197d3de9ec44d	
-member	com.crashinvaders.vfx.utils.ValueArrayMap#tmpKeyArray	sge.vfx.utils.ValueArrayMap#tmpKeyArray	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	32	f45c7b9a46d14db9	
+member	com.crashinvaders.vfx.utils.ValueArrayMap#sort(Ordering)	sge.vfx.utils.ValueArrayMap#sort(Ordering<V>)	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	93	dd6f6eed4c4db470	
+member	com.crashinvaders.vfx.utils.ValueArrayMap#tmpKeyArray	sge.vfx.utils.ValueArrayMap#tmpKeyArray	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	32	d02ab017e249bd73	
 member	com.crashinvaders.vfx.utils.ValueArrayMap#toString()	sge.vfx.utils.ValueArrayMap#toString()	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	113	e9fa8a659d40514f	
-member	com.crashinvaders.vfx.utils.ValueArrayMap#toString(String)	sge.vfx.utils.ValueArrayMap#toString(String)	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	117	8762e43fc16433f5	
-member	com.crashinvaders.vfx.utils.ValueArrayMap#getValues	sge.vfx.utils.ValueArrayMap#values	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	30	9155495b7f1535a9	name=values$field
-member	com.crashinvaders.vfx.utils.ValueArrayMap#getValues()	sge.vfx.utils.ValueArrayMap#values()	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	97	141e7980e8fa9223	
+member	com.crashinvaders.vfx.utils.ValueArrayMap#toString(String)	sge.vfx.utils.ValueArrayMap#toString(String)	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	117	c2d30b9f8455f34d	
+member	com.crashinvaders.vfx.utils.ValueArrayMap#getValues	sge.vfx.utils.ValueArrayMap#values	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	30	412eca63916ba770	name=values$field
+member	com.crashinvaders.vfx.utils.ValueArrayMap#getValues()	sge.vfx.utils.ValueArrayMap#values()	Renamed	-	core/src/com/crashinvaders/vfx/utils/ValueArrayMap.java	97	c310f3ef00c84a4b	
 member	com.crashinvaders.vfx.utils.ViewportQuadMesh#<clinit>	sge.vfx.utils.ViewportQuadMesh#<clinit>	Renamed	-	core/src/com/crashinvaders/vfx/utils/ViewportQuadMesh.java	80	a7e3d6d36595ad62	placement=companion
 member	com.crashinvaders.vfx.utils.ViewportQuadMesh#<init>(Sge)	sge.vfx.utils.ViewportQuadMesh#<init>(Sge)	Renamed	-	core/src/com/crashinvaders/vfx/utils/ViewportQuadMesh.java	37	4cc02c4b7ea796ea	
 member	com.crashinvaders.vfx.utils.ViewportQuadMesh#<stmt1>	sge.vfx.utils.ViewportQuadMesh#<stmt1>	Renamed	-	core/src/com/crashinvaders/vfx/utils/ViewportQuadMesh.java	43	27fd101673ff6fae	

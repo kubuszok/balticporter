@@ -1900,10 +1900,10 @@ ssg.md.html.HtmlRendererOptions	ssg.md.html.HtmlRendererOptions#suppressInlineHt
 ssg.md.html.HtmlRendererOptions	ssg.md.html.HtmlRendererOptions#suppressInlineHtmlComments	val	d135aa6cfcda15f6
 ssg.md.html.HtmlRendererOptions	ssg.md.html.HtmlRendererOptions#suppressedLinks	val	6bfc0620eaee4765
 ssg.md.html.HtmlRendererOptions	ssg.md.html.HtmlRendererOptions#unescapeHtmlEntities	val	ca5aa83068823239
-ssg.md.html.HtmlWriter	ssg.md.html.HtmlWriter	class	ead394351c5bc517
-ssg.md.html.HtmlWriter	ssg.md.html.HtmlWriter#<init>(Appendable,int,int,boolean,boolean)	ctor	951af6fc657bc2cd
-ssg.md.html.HtmlWriter	ssg.md.html.HtmlWriter#<init>(HtmlWriter,boolean)	ctor	883fb0dd5ab69b64
-ssg.md.html.HtmlWriter	ssg.md.html.HtmlWriter#<init>(int,int)	ctor	e3c5fcf6c28de061
+ssg.md.html.HtmlWriter	ssg.md.html.HtmlWriter	class	8fb70f71f249db36
+ssg.md.html.HtmlWriter	ssg.md.html.HtmlWriter#<init>(Appendable,int,int,boolean,boolean)	ctor	1db8a050a89dd050
+ssg.md.html.HtmlWriter	ssg.md.html.HtmlWriter#<init>(HtmlWriter,boolean)	ctor	23249967ef732d8a
+ssg.md.html.HtmlWriter	ssg.md.html.HtmlWriter#<init>(int,int)	ctor	b726cfe1488c4182
 ssg.md.html.HtmlWriter	ssg.md.html.HtmlWriter#<init>(int,int,boolean,boolean)	ctor	6453d69f0675feaa
 ssg.md.html.HtmlWriter	ssg.md.html.HtmlWriter#context	val	bcfe5ef795999f42
 ssg.md.html.HtmlWriter	ssg.md.html.HtmlWriter#getContext()	def	d4ba9a3cc445912a
@@ -5828,10 +5828,11 @@ ssg.md.util.html.HtmlAppendable	ssg.md.util.html.HtmlAppendable#text(CharSequenc
 ssg.md.util.html.HtmlAppendable	ssg.md.util.html.HtmlAppendable#withAttr()	def	152336d58fca7f9a
 ssg.md.util.html.HtmlAppendable	ssg.md.util.html.HtmlAppendable#withCondIndent()	def	a58b0b37353f9015
 ssg.md.util.html.HtmlAppendable	ssg.md.util.html.HtmlAppendable#withCondLineOnChildText()	def	9b59a5bbd3ec4db1
-ssg.md.util.html.HtmlAppendableBase	ssg.md.util.html.HtmlAppendableBase	class	2ecc758863dcb383
-ssg.md.util.html.HtmlAppendableBase	ssg.md.util.html.HtmlAppendableBase#<init>(Appendable,int,int)	ctor	ca4b9da90ba3c10f
+ssg.md.util.html.HtmlAppendableBase	ssg.md.util.html.HtmlAppendableBase	class	cc2c1bbbf1af5bb1
 ssg.md.util.html.HtmlAppendableBase	ssg.md.util.html.HtmlAppendableBase#<init>(LineAppendable,boolean)	ctor	2325394cb8c63b8d
 ssg.md.util.html.HtmlAppendableBase	ssg.md.util.html.HtmlAppendableBase#<init>(int,int)	ctor	7d4e95bc7df81ca1
+ssg.md.util.html.HtmlAppendableBase	ssg.md.util.html.HtmlAppendableBase#<stmt1>	stmt	d2cbb226e5a0f677
+ssg.md.util.html.HtmlAppendableBase	ssg.md.util.html.HtmlAppendableBase#<stmt2>	stmt	b17d1fe98ca5505d
 ssg.md.util.html.HtmlAppendableBase	ssg.md.util.html.HtmlAppendableBase#addIndentOnFirstEOL(Runnable)	def	cd8b65e4650c5059
 ssg.md.util.html.HtmlAppendableBase	ssg.md.util.html.HtmlAppendableBase#addPrefix(CharSequence)	def	a7303d8d0dfa93f7
 ssg.md.util.html.HtmlAppendableBase	ssg.md.util.html.HtmlAppendableBase#addPrefix(CharSequence,boolean)	def	e6b1952d012e232e
@@ -5841,7 +5842,7 @@ ssg.md.util.html.HtmlAppendableBase	ssg.md.util.html.HtmlAppendableBase#append(L
 ssg.md.util.html.HtmlAppendableBase	ssg.md.util.html.HtmlAppendableBase#append(char)	def	e1fd0c9f511b3a9d
 ssg.md.util.html.HtmlAppendableBase	ssg.md.util.html.HtmlAppendableBase#append(char,int)	def	f6988851ab168024
 ssg.md.util.html.HtmlAppendableBase	ssg.md.util.html.HtmlAppendableBase#appendTo(T,boolean,int,int,int,int)	def	dd376bb4fef06421
-ssg.md.util.html.HtmlAppendableBase	ssg.md.util.html.HtmlAppendableBase#appendable	val	a488f681eccf21d0
+ssg.md.util.html.HtmlAppendableBase	ssg.md.util.html.HtmlAppendableBase#appendable	val	ec023020302db1f0
 ssg.md.util.html.HtmlAppendableBase	ssg.md.util.html.HtmlAppendableBase#attr(Array<Attribute>)	def	751343d7fa5ccf2e
 ssg.md.util.html.HtmlAppendableBase	ssg.md.util.html.HtmlAppendableBase#attr(Attributes)	def	a236f24b3cbe7175
 ssg.md.util.html.HtmlAppendableBase	ssg.md.util.html.HtmlAppendableBase#attr(CharSequence,CharSequence)	def	71025b1c4024c61f

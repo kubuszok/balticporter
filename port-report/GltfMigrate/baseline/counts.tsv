@@ -10,7 +10,7 @@ api-parity(opaque)	9
 api-parity(operator)	0
 api-parity(port-extra)	190
 api-parity(rename)	0
-api-parity(signature)	394
+api-parity(signature)	393
 api-parity(static-placement)	1
 api-parity(unclassified)	0
 api-parity(visibility)	57
@@ -39,10 +39,10 @@ idiom(residue)	0
 jdk-surface	0
 manifest	0
 markers	0
-nullability-boundary	0
-omissions	11
+nullability-boundary	1
+omissions	4
 opaque-boundary	0
-overload-risk	190
+overload-risk	189
 policy	2
 port-map	1
 portability(all)	153
