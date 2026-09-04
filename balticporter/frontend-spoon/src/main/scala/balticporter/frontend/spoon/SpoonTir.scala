@@ -16,79 +16,50 @@ import java.nio.file.{Files, Path}
 
 import scala.jdk.CollectionConverters.*
 
-/** Populates the typed IR ([[balticporter.tir]]) DIRECTLY from Spoon's resolved model —
-  * the re-compiler's build-order step 2. Unlike the BIR frontend, nothing collapses to
-  * strings: every declaration mints a stable-identity [[Symbol]], every type reference
-  * resolves to a structured [[TypeRepr]] pointing at a symbol, and externals (JDK/library
-  * types) are lazily interned so `usagesOf(java.util.List)` works even with no local
-  * definition. [[Xref.build]] then indexes every usage by position.
-  *
-  * Scope: declarations, signatures, TYPES, and method BODIES — the full substrate the
-  * whole-program transforms query. Bodies translate to TIR terms with every reference
-  * resolved to a `SymId` (see [[Builder.BodyTranslator]]), so `usagesOf`/`callersOf` are
-  * real over actual code. Type-position tracing includes class/method type-parameter
-  * F-bounds. The whole liqp corpus (135 types) translates with no `Unsupported`.
+/** Populates the typed IR ([[balticporter.tir]]) directly from Spoon's resolved model: every
+  * declaration mints a stable-identity [[Symbol]], every type reference resolves to a structured
+  * [[TypeRepr]], and externals are lazily interned so `usagesOf` works with no local definition.
+  * Scope: declarations, signatures, types, and method bodies. [[Xref.build]] indexes usages.
   */
 object SpoonTir:
 
-  /** the PUBLIC instance methods of `java.lang.Object`, by Spoon signature — the exclusion JLS 9.8
-    * makes when counting a functional interface's abstract methods, and the reason
-    * `java.util.Comparator` (which redeclares `equals`) is one.
-    *
-    * `clone` and `finalize` are deliberately absent: they are `protected`, so JLS 9.8 does not
-    * exclude them and an interface redeclaring one abstract really does have two. */
+  /** the PUBLIC instance methods of `java.lang.Object`, by Spoon signature — JLS 9.8's exclusion
+    * when counting a functional interface's abstract methods. `clone`/`finalize` excluded: they
+    * are `protected`, so JLS 9.8 does not exclude them. */
   private[spoon] val ObjectPublicSignatures: Set[String] = Set(
     "equals(java.lang.Object)", "hashCode()", "toString()", "getClass()",
     "notify()", "notifyAll()", "wait()", "wait(long)", "wait(long,int)")
 
-  /** the three SENTINEL entries `annotationsOf` can put in `Symbol.droppedAnnotations` beside real
-    * annotation names, so `omissions` distinguishes the reasons a drop happened.
-    *
-    * `<unresolved>` (the oldest) is an annotation whose TYPE would not resolve — there is no name to
-    * report. `<unreadable-annotations>` is the whole SET failing to read, which used to be an
-    * uncounted `Nil` and therefore a declaration that looked as though it carried none.
-    * `<annotation-arguments-failed>` marks the one drop that is an ENGINE DEFECT rather than
-    * policy: the constant-expression path threw. Sentinels rather than decorated names, because
-    * `Symbol.droppedAnnotations` is documented as annotations BY NAME and every consumer matches an
-    * FQN exactly (`TestFrameworkTransform` must still recognise a `@Test` whose arguments would not
-    * translate). */
+  /** Sentinel entries `annotationsOf` can put in `Symbol.droppedAnnotations` beside real annotation
+    * names, so `omissions` distinguishes the reasons a drop happened: `<unresolved>` (type would
+    * not resolve), `<unreadable-annotations>` (whole set failed to read), `<annotation-arguments-failed>`
+    * (constant-expression path threw — an engine defect, not policy). */
   val UnresolvedAnnotation = "<unresolved>"
   val UnreadableAnnotations = "<unreadable-annotations>"
   val FailedAnnotationArguments = "<annotation-arguments-failed>"
 
-  /** Build a [[Program]] from already-resolved top-level Spoon types.
-    *
-    * `catalog` is the run's OBLIGATION LOG (`balticporter.catalog`). It is a parameter and not a
-    * field of the returned `Program` for the reason `DecisionLog` is a parameter of the pipeline: a
-    * log is a value ONE RUN owns (`CLAUDE.md` §5.1), and `Determinism.Full` translates twice — two
-    * translations sharing one log would double every consult in it. The default is a fresh
-    * discarding log, so a caller that does not want coverage does not have to hold one, and nothing
-    * accumulates across two calls. */
+  /** Build a [[Program]] from already-resolved top-level Spoon types. `catalog` is the run's
+    * obligation log — a parameter, not a field of `Program`, because a log is a value one run owns
+    * (CLAUDE.md §5.1); default is a fresh discarding log. */
   def fromTypes(types: List[CtType[?]], subs: Substitutions = Substitutions.none,
                 catalog: CatalogLog = CatalogLog.discarding,
                 annotations: AnnotationPolicy = AnnotationPolicy.none): Program =
     new Builder(subs, catalog = catalog, annotations = annotations).build(types)
 
-  /** Build the Spoon model over a whole closure and return its top-level types. Full
-    * classpath by default (like the BIR frontend); `lenient` uses noClasspath mode so a
-    * library with unconfigured external deps still parses (types resolve where possible,
-    * unresolved ones degrade to unmapped references — fine for construct coverage). */
+  /** Build the Spoon model over a whole closure and return its top-level types. Full classpath by
+    * default; `lenient` uses noClasspath mode so unconfigured external deps still parse (unresolved
+    * types degrade to unmapped references). */
   def buildModel(cfg: FrontendConfig, lenient: Boolean = false): List[CtType[?]] =
     val launcher = new Launcher
     val env      = launcher.getEnvironment
     env.setComplianceLevel(21)
-    // Comments are PART OF THE PORT (see `Builder.triviaOf`): the licence notice every emitted file
-    // is obliged to reproduce, and the documentation that makes the output readable. With this off
-    // Spoon attaches none of them and the whole harvest below sees an empty model.
+    // comments must stay enabled — the licence-notice harvest below needs them (CLAUDE.md §4.58)
     env.setCommentEnabled(true)
     env.setNoClasspath(lenient)
     env.setSourceClasspath(cfg.classpath.map(_.toString).toArray)
     if cfg.resolutionRoots.nonEmpty then
       cfg.resolutionRoots.foreach(r => addResolutionRoot(launcher, r, cfg.resolutionExcludes))
-      // §5.4 on both operands, and STRICT on both: these are DECLARED inputs, so an absent one is
-      // fatal with a diagnostic naming it (§5.1's missing-input rule) rather than a bare
-      // `NoSuchFileException` from deep inside a `map`. `RealPath.of` would be worse than either —
-      // it would normalise the absent path and hand the resolver a root that is not there.
+      // declared inputs: an absent one is fatal with a named diagnostic (CLAUDE.md §5.4)
       val covered = cfg.resolutionRoots.map(r => RealPath.ofExisting(r, "resolution root"))
       cfg.files
         .map(f => RealPath.ofExisting(cfg.sourceRoot.resolve(f), s"declared source file $f"))
@@ -97,18 +68,10 @@ object SpoonTir:
     else cfg.files.foreach(f => launcher.addInputResource(cfg.sourceRoot.resolve(f).toString))
     launcher.buildModel().getAllTypes.asScala.toList.filter(_.getDeclaringType == null)
 
-  /** Add one resolution root, MINUS whatever the port excluded from it
-    * ([[balticporter.core.FrontendConfig.resolutionExcludes]]).
-    *
-    * With no exclusions this is the one line it always was — the DIRECTORY, so Spoon walks it —
-    * which is what keeps the key's arrival flat for every port that states none. With one, the walk
-    * is done here and each surviving `.java` is added individually; the ROOT itself is unchanged in
-    * `cfg.resolutionRoots`, because that list is also what a base's published map is joined
-    * through, and narrowing it to dodge a file is the measured-worse workaround the key's own doc
-    * records.
-    *
-    * Matched at a path SEPARATOR and never as a substring (§4.56): `com/badlogic/gdx/emu` is a
-    * DIRECTORY, and a `contains` would also name a package called `emulation`. */
+  /** Add one resolution root, minus whatever the port excluded from it
+    * ([[balticporter.core.FrontendConfig.resolutionExcludes]]). No exclusions: add the directory
+    * whole. With exclusions: add surviving `.java` files individually; `cfg.resolutionRoots` itself
+    * stays unchanged. Matched at a path separator, never substring (CLAUDE.md §4.56). */
   private def addResolutionRoot(launcher: Launcher, root: Path, excludes: List[String]): Unit =
     if excludes.isEmpty then launcher.addInputResource(root.toString)
     else
@@ -138,13 +101,9 @@ object SpoonTir:
                  annotations: AnnotationPolicy = AnnotationPolicy.none): Program =
     fromSources(List(fileName -> code), subs, catalog, annotations)
 
-  /** The same, over SEVERAL compilation units — because a Java file holds exactly one package, and
-    * every rule about a PACKAGE BOUNDARY (default access, `protected`, a cross-package override)
-    * is therefore untestable from one snippet. Each pair is `fileName -> code`.
-    *
-    * The buffer handed to the builder is the CONCATENATION, which is only used to slice comments
-    * out by position; Spoon reports positions per compilation unit, so each unit's own text is
-    * looked up by file name rather than by offset into a joined string. */
+  /** The same, over several compilation units — needed to test package-boundary rules (default
+    * access, `protected`, cross-package overrides) that one snippet cannot exercise. Each pair is
+    * `fileName -> code`; each unit's text is looked up by file name for comment slicing. */
   def fromSources(sources: List[(String, String)],
                   subs: Substitutions = Substitutions.none,
                   catalog: CatalogLog = CatalogLog.discarding,
@@ -157,35 +116,13 @@ object SpoonTir:
     sources.foreach((name, code) => launcher.addInputResource(new VirtualFile(code, name)))
     val model = launcher.buildModel()
     val tops  = model.getAllTypes.asScala.toList.filter(_.getDeclaringType == null)
-    // the source texts are handed to the builder because a `VirtualFile` has no file behind it and
-    // Spoon's `CtCompilationUnit.getOriginalSourceCode` therefore returns null — comments would
-    // fall back to Spoon's RE-PRINTED form and this convenience API would quietly be the one path
-    // that does not preserve them verbatim. It is the same buffer either way; only its source
-    // differs.
+    // VirtualFile has no source buffer of its own — pass texts explicitly or comments re-print (§4.58)
     new Builder(subs, sources.toMap, catalog, annotations).build(tops)
 
-  // -------------------------------------------------------------------------
-  /** ==THE ONE CLASSIFICATION OF A SPOON TYPE REFERENCE==
-    *
-    * Spoon's `CtWildcardReference` EXTENDS `CtTypeParameterReference`, so `case tv:
-    * CtTypeParameterReference` claims every `?` and a wildcard arm written BELOW it is unreachable.
-    * Thirteen `match`es in this file had exactly that shape, each one deciding, on its own, that a
-    * `?` is a type VARIABLE — which is the reading that makes `Class<?>` "not nameable here" and is
-    * `ENGINE-LIMITS.md` G21's second blocker.
-    *
-    * `CLAUDE.md` §4.56 is the rule this discharges: a phase may only conclude something about a
-    * type from a STRUCTURAL fact, and the structural fact here is the KIND of reference. It is
-    * derived ONCE, in [[TypeShape.of]], with the wildcard arm ABOVE the variable arm — so growing a
-    * kind is one edit, and no caller re-derives the taxonomy by `isInstanceOf`. What each caller
-    * then does per kind is the CALLER's answer and is written out at the caller, including the
-    * kinds it does not distinguish: `ref` and `args` are the two projections a caller needs to
-    * treat `Prim`/`Intersection`/`Named` alike, which is what most of them did before by falling
-    * into a `case r =>`.
-    *
-    * The migration itself changed NO answer (§5: the unification measured flat on all fifteen
-    * ports). Where a wildcard's answer was the variable arm's, that answer is written out AS the
-    * wildcard arm and marked — a preserved shadow, now visible and changeable one site at a time
-    * with a measurement, rather than a dead arm nobody could see. */
+  /** The one classification of a Spoon type reference. Since `CtWildcardReference` extends
+    * `CtTypeParameterReference`, the wildcard arm must be matched ABOVE the variable arm or `?`
+    * reads as a type variable — derived once here so no caller re-derives it by `isInstanceOf`.
+    * `ref`/`args` let a caller treat Prim/Intersection/Named alike. CLAUDE.md §4.56, ENGINE-LIMITS G21 */
   private[spoon] enum TypeShape:
     case Absent
     case Wildcard(w: CtWildcardReference, bound: Option[CtTypeReference[?]], upper: Boolean)
@@ -241,12 +178,9 @@ object SpoonTir:
 
     def set(id: SymId, sym: Symbol): Unit = syms(id) = sym
 
-    /** Register a SECOND key for an existing SymId — so `resolve(alias)` and `external(alias, …)`
-      * return `id` rather than minting a new one. The canonical use is anonymous classes: `anonClass`
-      * creates the symbol under an internal key (`@{owner}#<anon>N`) while `fieldSym`/`methodSym`
-      * look up the owner by Spoon's `getQualifiedName` (`SplitPane$1`). Without the alias the two
-      * keys yield two SymIds for one class, and a field's declaration and its references disagree.
-      * Measured: `SplitPane$113#draggingPointer` SymId 38377 vs 38384 (PROGRESS.md §13.15). */
+    /** Register a SECOND key for an existing SymId, so `resolve`/`external` on the alias return
+      * `id` rather than minting a new one. Used for anonymous classes, whose internal key and
+      * Spoon's `getQualifiedName` key must resolve to the same symbol. */
     def alias(key: String, id: SymId): Unit = byKey(key) = id
 
     def define(key: String)(mk: SymId => Symbol): SymId =
@@ -254,34 +188,17 @@ object SpoonTir:
       syms(id) = mk(id)
       id
 
-    /** Ensure a minimal stub exists for an external reference (never clobbers a real
-      * definition, so define-after-reference wins).
-      *
-      * `owner` is `SymId.None` for a TYPE — an external type is by definition rooted outside the
-      * program, and every "is this ours?" predicate in the engine decides exactly that by climbing
-      * to `SymId.None` (`PackageRenameTransform.ownedSymbols`, `Cache.topOwner`). An external
-      * MEMBER, however, must carry the id of the external type it hangs off, or it is
-      * indistinguishable from a root: its `fullName` is the INTERNING key (`@8#forName(…)`), so
-      * `owner#name` is the only place its real identity lives. Nine `PortabilityCheck` rules —
-      * `Class#forName`, `Class#newInstance`, `System#getProperty` and the six reflective readers —
-      * asked for exactly that string and got `None` from every external member for the whole
-      * history of the project, so they never fired once. Ownership still terminates at `SymId.None`
-      * one level up, so nothing that climbs the chain changes answer. */
+    /** Ensure a minimal stub exists for an external reference; never clobbers a real definition.
+      * `owner` is `SymId.None` for a TYPE (external types are rooted outside the program); an
+      * external MEMBER must carry its owning type's id, or `owner#name` cannot identify it and
+      * every ownership-keyed lookup (e.g. `PortabilityCheck`) silently never fires. */
     def external(key: String, name: String, owner: SymId = SymId.None,
                  descriptor: Option[Descriptor] = None, info: TypeRepr = NoType,
                  annotations: List[Annot] = Nil): SymId =
       val id = resolve(key)
       if !syms.contains(id) then syms(id) = Symbol(id, name, key, Flags(), owner, info, descriptor = descriptor, annotations = annotations)
       else
-        // `external` NEVER clobbers, so a stub interned by an earlier, UNRESOLVED reference would
-        // otherwise keep its empty descriptor for the whole run while a later, resolved one knew the
-        // answer. The descriptor is the one field where filling a hole is strictly better information:
-        // it is derived from the parser's own declaration and cannot contradict a previous fill.
-        //
-        // `info` fills the same way and for the same reason — and only ever a HOLE. A member the
-        // program DECLARES gets its real signature from `execDef`, through `define`, which does
-        // clobber; the fill here can therefore never overwrite a declaration, only precede one.
-        // `annotations` fills the same way: empty is a stub, non-empty is an answer.
+        // fill holes only — never overwrite a real declaration (that happens via `define`)
         var s = syms(id)
         if descriptor.isDefined && s.descriptor.isEmpty then s = s.copy(descriptor = descriptor)
         if info != NoType && s.info == NoType then s = s.copy(info = info)
@@ -291,99 +208,63 @@ object SpoonTir:
 
     def table: SymbolTable        = SymbolTable(syms.values)
     def idOf(key: String): SymId  = byKey(key)
-    /** the symbol at `key` IF one was really defined there.
-      *
-      * Deliberately not `resolve`: that MINTS an id for a key nobody defined, and a dangling id — a
-      * `SymId` with no `Symbol` behind it — reaches the emitter as `?`. The one caller asks about a
-      * member java DERIVED and this program may still not have (a record accessor a port's
-      * `dropMethods` removed), where "there is nothing here" is the answer, not a new id. */
+    /** the symbol at `key` IF one was really defined there. Deliberately not `resolve`, which mints
+      * an id for a key nobody defined and reaches the emitter as `?`. */
     def defined(key: String): Option[(SymId, Symbol)] =
       byKey.get(key).flatMap(id => syms.get(id).map(id -> _))
     def fullNameOf(id: SymId): String = syms.get(id).map(_.fullName).getOrElse("?")
     /** the DECLARED type this frontend interned for `id` — `NoType` where nothing was declared.
-      * Read to answer *did this frontend RETYPE this declaration?*, which is §4.56's rule at the
-      * one widening the frontend performs itself (`execDef.anyForEquals`). */
+      * Answers *did this frontend retype this declaration?* (CLAUDE.md §4.56). */
     def infoOf(id: SymId): TypeRepr = syms.get(id).map(_.info).getOrElse(NoType)
-    /** the interned OWNER of a member — the type that DECLARES it, which for a member reached
-      * through a subclass name is NOT the type the source wrote (T14). `SymId.None` for a type,
-      * and for a member whose declaration the parse could not resolve, which is what makes reading
-      * it a safe no-op rather than a guess. */
+    /** the interned OWNER of a member — the type that declares it (not the subclass name it was
+      * reached through, T14). `SymId.None` for a type or an unresolved member. */
     def ownerOf(id: SymId): SymId = syms.get(id).map(_.owner).getOrElse(SymId.None)
 
-  /** @param inMemorySources
-    *   each compilation unit's text BY FILE NAME, for the units where Spoon has none of its own —
-    *   see `fromSources`. Empty for a model built over real files, where every unit carries its own
-    *   buffer. Keyed rather than a single string because two in-memory units have two buffers and
-    *   one position is only meaningful in ONE of them: slicing unit B's comment out of unit A's
-    *   text is exactly the silent mis-preservation §4.58 is about. */
+  /** @param inMemorySources each compilation unit's text by file name, for units with no buffer of
+    *   their own (`fromSources`). Empty for real files. Keyed because a position is meaningful in
+    *   only one unit's buffer (CLAUDE.md §4.58). */
   private final class Builder(subs: Substitutions = Substitutions.none,
                               inMemorySources: Map[String, String] = Map.empty,
                               catalog: CatalogLog = CatalogLog.discarding,
                               annotations: AnnotationPolicy = AnnotationPolicy.none):
-    /** the run's obligation log, in scope for every `Lowering.of` in this builder. `given` rather
-      * than a parameter on every lowering method: the wrapper is at the DISPATCH and the dispatch
-      * is one method, so threading it explicitly would be forty signatures carrying a value one of
-      * them uses. */
+    /** the run's obligation log, in scope for every `Lowering.of` in this builder — `given` rather
+      * than threaded through forty signatures that only the dispatch method needs it. */
     private given CatalogLog = catalog
     private val minter   = new Minter
     private val tpScopes = collection.mutable.ArrayDeque[Map[String, SymId]]()
     /** an executable's own type parameters that are ERASED rather than declared — name → the type
-      * every occurrence of the variable renders as. Parallel to `tpScopes` and consulted AHEAD of
-      * it, because such a name has no binder to resolve to: it was never minted.
-      *
-      * One frame per executable, pushed and popped with that executable's `tpScopes` frame. See
-      * [[unwritableResultVars]] for which parameters land here and why. */
+      * every occurrence renders as. Consulted AHEAD of `tpScopes` since such a name has no binder.
+      * One frame per executable. See [[unwritableResultVars]]. */
     private val tpErased = collection.mutable.ArrayDeque[Map[String, TypeRepr]]()
     private val selfRawStack = collection.mutable.ArrayDeque[(SymId, List[SymId])]()
-    /** Type params LEGALLY in scope at the current point, respecting static-nested boundaries: a
-      * static nested class / interface / enum cannot see its enclosing type's params, unlike a
-      * non-static inner class. Distinct from `tpScopes`/`resolveTypeParam`, which keep every
-      * enclosing frame for reference resolution — name-directed raw-fill must NOT emit a param the
-      * emitted Scala can't see (that produced `Not found: type T` inside static-nested `SaveData`). */
+    /** Type params LEGALLY in scope at the current point, respecting static-nested boundaries (a
+      * static nested type cannot see its enclosing type's params). Distinct from `tpScopes`, which
+      * keeps every enclosing frame for reference resolution. */
     private val tpAccessible = collection.mutable.ArrayDeque[Map[String, SymId]]()
     /** names contributed by EXECUTABLES, parallel to `tpAccessible` (which merges each level into
       * one map, so a frame cannot simply be skipped). Hidden under [[atDeclScope]]. */
     private val tpExecNames = collection.mutable.ArrayDeque[Set[String]]()
 
-    /** The instantiation this class gives its ANCESTORS' type parameters, by their names.
-      *
-      * `AssetLoader<T, P>` declares a RAW `Array<AssetDescriptor> getDependencies(…)`. Inside the
-      * parent the name-directed fill matches `AssetDescriptor`'s own `T` to `AssetLoader`'s `T`, so
-      * the inherited member reads `Array[AssetDescriptor[T]]` — and in
-      * `BitmapFontLoader extends AsynchronousAssetLoader<BitmapFont, BitmapFontParameter>` that is
-      * `Array[AssetDescriptor[BitmapFont]]`. The OVERRIDE re-renders the same raw type with no `T`
-      * in scope, gets `AssetDescriptor[?]`, and scala rejects the pair. Java has no such problem:
-      * both sides are raw and it checks neither.
-      *
-      * So a class must be able to see what it instantiated its parents' names AS. */
+    /** The instantiation this class gives its ANCESTORS' type parameters, by name — needed so an
+      * overriding member can fill a raw inherited type the same way the inherited declaration did,
+      * rather than independently landing on `[?]` and disagreeing with it. */
     private val inheritedInst = collection.mutable.ArrayDeque[Map[String, (TypeRepr, CtTypeReference[?])]]()
     /** …the same instantiation keyed by DECLARATION — see [[instantiationByDecl]]. Read only by
       * [[inheritedFormal]], at a call to a member an ANCESTOR declares. */
     private val inheritedByDecl = collection.mutable.ArrayDeque[Map[(String, String), CtTypeReference[?]]]()
-    /** FQNs of the enclosing class and its ancestors — a raw type NESTED in any of them is filled
-      * from the names in scope, because those names are the ones it was declared against.
-      * `Entries` lives in `ObjectMap[K,V]`; inside `OrderedMap[K,V] extends ObjectMap[K,V]` it is
-      * still `Entries[K,V]`, and the inherited field `entries1` is declared at exactly that type. */
+    /** FQNs of the enclosing class and its ancestors — a raw type nested in any of them is filled
+      * from the names in scope, since those are the names it was declared against. */
     private val enclosingFqns = collection.mutable.ArrayDeque[Set[String]]()
     /** FQNs of this class's ancestors — the only declarations whose formals are written in type
       * variables the inherited instantiation can speak about. */
     private val ancestorFqns = collection.mutable.ArrayDeque[Set[String]]()
     private var noInheritFill = false
-    /** true while translating a member this class INHERITS (an override). The inherited
-      * instantiation exists to make such a member agree with the one it overrides — that is the
-      * whole reason it was introduced. A member the class declares for ITSELF carries no such
-      * obligation, and taking the entry there is exactly the `AssetLoadingTask` misfire: a private
-      * `Array<AssetDescriptor> dependencies` field picking up `T -> Void` from
-      * `implements AsyncTask<Void>`, because `AssetDescriptor`'s formal is also called `T`.
-      *
-      * Filtering the MAP cannot fix that: the `T -> Void` entry is genuinely needed, since
-      * `AssetLoadingTask.call()` really does return `Void`. Four map-level guards measured 161,
-      * 161, 142 and 141 for this reason. The obligation is a property of the SITE. */
+    /** true while translating a member this class INHERITS (an override), so the inherited
+      * instantiation applies only there — a member the class declares for itself has no such
+      * obligation, and an unrelated ancestor's same-named type param must not leak into it. */
     private var inOverridingMember = false
-    /** The map is keyed by NAME, so an unrelated ancestor's `T` can collide with the `T` of the type
-      * being filled — `Button`'s inherited `T = ButtonStyle` reaching `ButtonGroup<T extends
-      * Button>`, which is not a `Button` at all. Require the candidate to satisfy the formal's own
-      * BOUND; that is what makes the name match evidence rather than coincidence. */
+    /** The map is keyed by NAME, so an unrelated ancestor's `T` can collide with the type being
+      * filled; require the candidate to satisfy the formal's own BOUND to make the match safe. */
     private def inheritedTp(f: CtTypeParameter): Option[TypeRepr] =
       if true || noInheritFill || !inOverridingMember then scala.None // sge design: no inherited fill
       else inheritedInst.headOption.flatMap(_.get(f.getSimpleName)).collect {
@@ -405,47 +286,30 @@ object SpoonTir:
       val prev = inStatic; inStatic = s
       try f finally inStatic = prev
 
-    /** WHAT THIS WALK SAW — every executable it was asked to consider, INCLUDING the ones policy
-      * removed. Published on the `Program` as [[MemberIndex]], which explains why the dropped half
-      * cannot be recovered anywhere else: after `classDef` filters an executable out, it has no
-      * symbol, no `DefDef` and no row in the symbol table, so a `dropMethods` key naming it would be
-      * reported as a typo on every run that WORKED. */
+    /** Every executable this walk considered, INCLUDING ones policy removed — published as
+      * [[MemberIndex]], since a dropped executable has no symbol elsewhere to recover it from. */
     private val seenMembers = collection.mutable.ListBuffer.empty[(MemberKey, MemberFacts)]
     private val seenTypes   = collection.mutable.Set.empty[String]
 
     def build(types: List[CtType[?]]): Program =
-      // the FILE header goes on every top-level type the file declares, and the type's own
-      // comments come from `classDef` — see `fileHeader` for why the two are separate fields.
-      //
-      // Harvested BEFORE any type translates, which is not an ordering detail: the header is
-      // decided by POSITION now (everything above the first line of code), and a positional claim
-      // can only keep a finer harvest off a comment if it is made before that harvest runs.
+      // headers harvested BEFORE any type translates — positional claim must run first (§4.58)
       val headers = types.map(fileHeader)
       val units   = types.zip(headers).map((t, h) => classDef(t).copy(unitLeading = h))
       new Program(units, minter.table, Xref.build(units),
                   MemberIndex(seenMembers.toList, seenTypes.toSet))
 
     // ---- trivia (the original comments) -------------------------------------
-    //
-    // Ported from the BIR frontend, which got this right and is the only place it existed:
-    // VERBATIM slices out of the source buffer, and a CLAIMED set so a coarse harvest point only
-    // scoops what no closer one took. Both properties are load-bearing; see each below.
+    // verbatim slices out of the source buffer; a CLAIMED set so a coarse harvest only scoops
+    // what no closer one took.
 
-    /** Every comment handed out, by IDENTITY. `deepComments` is a net cast over a whole subtree, so
-      * without this a comment inside a nested statement would be emitted twice — once above the
-      * statement it belongs to and once above the statement that contains it. Identity, not
-      * equality: two `// TODO` comments in one method are two comments. */
+    /** Every comment handed out, by IDENTITY (not equality — two `// TODO`s are two comments), so
+      * `deepComments`'s net cast over a subtree does not re-emit one a closer harvest already took. */
     private val claimed: java.util.Set[CtComment] =
       java.util.Collections.newSetFromMap(new java.util.IdentityHashMap[CtComment, java.lang.Boolean]())
 
-    /** VERBATIM comment text, sliced from the original source (delimiters included).
-      *
-      * Never `CtComment.toString`, which RE-PRINTS from the parsed model: Spoon reflows the body,
-      * normalises the ` * ` gutter and drops the exact indentation of a `<pre>` block or a
-      * commented-out code sample. For a licence notice — the one comment a derived work must
-      * reproduce — "close enough" is not a category that exists (CLAUDE.md §4.57). The re-printed
-      * form is kept only as the fallback for a comment with no usable position, where there is
-      * nothing to slice. */
+    /** VERBATIM comment text, sliced from the original source (delimiters included). Never
+      * `CtComment.toString`, which re-prints and loses exact formatting — unacceptable for a licence
+      * notice (CLAUDE.md §4.57). Re-printed form is the fallback for a comment with no position. */
     private def triviaOf(c: CtComment): Trivia =
       val kind = c.getCommentType match
         case CtComment.CommentType.JAVADOC => TriviaKind.Javadoc
@@ -460,37 +324,29 @@ object SpoonTir:
         else c.toString
       Trivia(kind, text)
 
-    /** The compilation unit's original text, for slicing. `""` when Spoon has no buffer for it —
-      * which is the NORMAL case for an in-memory `VirtualFile` (`SpoonTir.fromSource`), where
-      * `getOriginalSourceCode` returns null. Note the two `Option`s: `.map` over the unit alone
-      * yields `Some(null)`, and the `null` then reaches `triviaOf` and NPEs — which, swallowed by
-      * a broad `catch` one level up, made the whole harvest silently produce nothing. */
+    /** The compilation unit's original text, for slicing. `""` when Spoon has no buffer (the
+      * normal case for an in-memory `VirtualFile`). Guard against `Some(null)`: a bare `.map` over
+      * the unit yields it and NPEs downstream. */
     private def sourceOf(el: CtElement): String =
       val pos = el.getPosition
       if pos == null || !pos.isValidPosition then inMemoryFor(null)
       else Option(pos.getCompilationUnit).flatMap(cu => Option(cu.getOriginalSourceCode)).getOrElse(inMemoryFor(pos))
 
-    /** the in-memory buffer THIS position belongs to, by the unit's file name. Falls back to the
-      * only source when there is exactly one (the single-snippet convenience path, where the name
-      * is an implementation detail nobody passed), and to `""` when several are in play and the
-      * position names none of them — which degrades a comment to Spoon's re-printed form rather
-      * than slicing it out of the wrong file. */
+    /** the in-memory buffer this position belongs to, by file name. Falls back to the only source
+      * when exactly one exists; falls back to `""` (never guesses the wrong file) otherwise. */
     private def inMemoryFor(pos: spoon.reflect.cu.SourcePosition): String =
       Option(pos).filter(_.isValidPosition).flatMap(p => Option(p.getFile)).map(_.getName)
         .flatMap(inMemorySources.get)
         .orElse(Option.when(inMemorySources.sizeIs == 1)(inMemorySources.values.head))
         .getOrElse("")
 
-    /** the comments Spoon attached DIRECTLY to `el` — its Javadoc and anything written above it.
-      * Deliberately NOT wrapped in a `catch`: a harvest that throws is a defect to see, and a
-      * blanket catch here is exactly what hid the null above. */
+    /** the comments Spoon attached DIRECTLY to `el`. Deliberately NOT wrapped in a `catch` — a
+      * harvest that throws is a defect to see (CLAUDE.md §4.6). */
     private def leadingOf(el: CtElement): List[Trivia] =
       el.getComments.asScala.toList.filter(unheaded).map { c => claimed.add(c); triviaOf(c) }
 
-    /** WHERE a comment is, as a pair a set can hold: the file it is in and the offset it starts
-      * at. The identity `claimed` uses is the parser's OBJECT, which is exactly what the file
-      * header can no longer rely on — a comment the parser attached nowhere has no object to
-      * claim, so the header claims a SPAN and every finer harvest is held off by span too. */
+    /** WHERE a comment is: file + start offset. `claimed` uses object identity, which a comment
+      * the parser attached nowhere cannot provide — the file header instead claims by span. */
     private def spanOf(c: CtComment): Option[(String, Int)] =
       val p = c.getPosition
       if p == null || !p.isValidPosition then scala.None
@@ -499,8 +355,7 @@ object SpoonTir:
     private def unitKeyOf(p: spoon.reflect.cu.SourcePosition): String =
       Option(p.getFile).map(_.getPath)
         .orElse(Option(p.getCompilationUnit).flatMap(cu => Option(cu.getFile)).map(_.getPath))
-        // an in-memory `VirtualFile` may report no file at all, and "<unknown>" for every unit
-        // would make two snippets share one header. The unit OBJECT is the identity then.
+        // in-memory units with no file: fall back to the unit OBJECT identity, not "<unknown>"
         .orElse(Option(p.getCompilationUnit).map(cu => "cu@" + System.identityHashCode(cu)))
         .getOrElse("<unknown>")
 
@@ -511,44 +366,18 @@ object SpoonTir:
       * leading block that Spoon ALSO attached to the type is not emitted twice. */
     private def unheaded(c: CtComment): Boolean = spanOf(c).forall(!headerSpans.contains(_))
 
-    /** Comments Spoon attached to EXPRESSION-level descendants — an argument, a link in a fluent
-      * chain, an initialiser. The TIR carries trivia on declarations and on statements only, so
-      * these hoist to the nearest enclosing harvest point.
-      *
-      * MUST be called AFTER the element's children have been translated, so that nested statements
-      * have already claimed theirs and this scoops only what nothing closer wanted. Called before,
-      * it swallows the whole subtree's comments and prints them all above the outermost statement. */
+    /** Comments Spoon attached to expression-level descendants, hoisted to the nearest enclosing
+      * harvest point (the TIR carries trivia only on declarations/statements). MUST be called AFTER
+      * the element's children have translated, or it swallows their comments too. */
     private def deepComments(el: CtElement): List[Trivia] =
       el.getElements(new spoon.reflect.visitor.filter.TypeFilter[CtComment](classOf[CtComment]))
         .asScala.toList.filter(unheaded).filter(claimed.add).map(triviaOf)
 
-    /** The FILE's own header: everything above the first line of CODE, plus anything hanging off
-      * the imports. In every library this engine has seen, that is the licence.
-      *
-      * ## Why this one harvest reads TEXT and not the parser
-      *
-      * A parser's attachment model is precisely the thing that cannot be trusted here, and it was
-      * measured (`ENGINE-LIMITS.md` V3): where a file opens with TWO consecutive block comments,
-      * `CtCompilationUnit.getComments` carries the FIRST and the second goes to the PACKAGE
-      * DECLARATION — the one attachment site this walk never read (probed and pinned in the
-      * testkit). In one generated-parser family the block that fell down that gap is the APACHE
-      * NOTICE itself, behind three `//` generator lines the parser attached first, which makes
-      * this a §4.57/§4.58 obligation rather than a tidiness item.
-      *
-      * Reading one more of the parser's slots is NOT the fix, and that is the point of doing it
-      * positionally: the next shape lands in a slot nobody enumerated, and no set of slots can say
-      * which of two blocks came FIRST — the order of a licence and the banner above it is text's
-      * answer alone. So the rule needs no parser at all: a comment is the FILE's iff no code
-      * precedes it (`CommentScanner.firstCodeOffset`). The parser-attached ones are still read —
-      * they are how a comment with no usable position, and anything hanging off an import, still
-      * arrives — and merged by offset, so a block both sides see is emitted once.
-      *
-      * This is also the ONE harvest that does not respect `claimed`. A Java file with two top-level
-      * types becomes two Scala files, and each of them is a derived work that must carry the
-      * notice; claimed-once would give it to the first and leave the second unattributed. The
-      * answer is therefore CACHED per compilation unit rather than recomputed — recomputing would
-      * be correct too, but the cache is what makes "each type gets the same header" a fact of the
-      * code instead of a property of two harvests agreeing. */
+    /** The FILE's own header: everything above the first line of code, plus anything hanging off
+      * the imports — the licence, in every library seen so far. Read POSITIONALLY, not from the
+      * parser's attachment model, which mis-attaches the second of two leading block comments to
+      * the package declaration (ENGINE-LIMITS V3). Does not respect `claimed`: two top-level types
+      * from one file each need the header, so it is cached per compilation unit instead. */
     private val fileHeaders = collection.mutable.Map.empty[String, List[Trivia]]
 
     private def fileHeader(t: CtType[?]): List[Trivia] =
@@ -567,8 +396,7 @@ object SpoonTir:
           val cut = balticporter.core.CommentScanner.firstCodeOffset(src)
           balticporter.core.CommentScanner.scanAt(src).filter(_.start < cut)
       val fromText = positional.map(a => a.start -> Trivia(kindOf(a.kind), a.text))
-      // …then the parser's own, which still contribute: an import's comments sit BELOW the cut,
-      // and a comment with no usable position has no offset to be found by.
+      // then the parser's own — an import's comments, and any comment with no usable position
       val attached = cu.getComments.asScala.toList ++ cu.getImports.asScala.toList.flatMap(_.getComments.asScala)
       attached.foreach(claimed.add)
       val taken    = fromText.map(_._1).toSet
@@ -576,8 +404,7 @@ object SpoonTir:
         val at = spanOf(c).map(_._2)
         if at.exists(taken.contains) then Nil else List(at.getOrElse(Int.MaxValue) -> triviaOf(c))
       }
-      // the header OWNS these spans: `leadingOf` and `deepComments` skip them from here on, so a
-      // leading block the parser also attached to the type cannot be emitted a second time.
+      // the header OWNS these spans — leadingOf/deepComments skip them, so nothing is emitted twice
       fromText.foreach((at, _) => headerSpans += (key -> at))
       (fromText ++ fromTree).sortBy(_._1).map(_._2)
 
@@ -593,22 +420,9 @@ object SpoonTir:
         Origin(Option(p.getFile).map(_.getPath).getOrElse("<unknown>"), p.getLine, columnOf(p))
       else Origin.synthetic
 
-    /** the position's COLUMN, or 0 where the unit has no source buffer to search.
-      *
-      * `isValidPosition` does not cover this and the failure is a CRASH, not a bad value: Spoon
-      * computes a column by SCANNING the compilation unit's original source
-      * (`SourcePositionImpl.searchColumnNumber`), and an in-memory unit may have none — the same
-      * null `getOriginalSourceCode` `CLAUDE.md` §4.58 makes the trivia harvest carry its text for.
-      * A position on such a unit is otherwise perfectly good, so the whole translation died on a
-      * `NullPointerException` with no origin and no construct name, which is the one failure shape
-      * this frontend must not have (§4.45).
-      *
-      * ZERO is honest here and is not a fabricated fact (§4.6): every reader of an `Origin` keys on
-      * the FILE and the LINE — `srcmap.tsv`, `errors.tsv`, a finding's location, the correlator —
-      * and the column is decoration none of them joins on. What is refused is inventing a column,
-      * not reporting the origin. A file-backed unit caches its buffer on first read, so this costs a
-      * cached field access per element and changes no port's output: every corpus source is a real
-      * file and every one of them has a buffer. */
+    /** the position's COLUMN, or 0 where the unit has no source buffer to search (an in-memory unit
+      * may have no `getOriginalSourceCode`, and Spoon's own column search then crashes). ZERO is
+      * honest here — every `Origin` reader keys on FILE and LINE, never on the column. */
     private def columnOf(p: spoon.reflect.cu.SourcePosition): Int =
       val cu = p.getCompilationUnit
       if cu == null || cu.getOriginalSourceCode == null then 0 else p.getColumn
@@ -631,23 +445,10 @@ object SpoonTir:
         .mkString(",")
       s"($ps)"
 
-    /** The member's DESCRIPTOR — its source-level parameter spelling, read from the PARSER.
-      *
-      * This is the one place a descriptor is derived for a member the frontend declares, and it is
-      * read HERE, from `CtParameter.getType`, rather than downstream from the `MethodType` this
-      * method is about to build. That ordering is the whole of the `equals` divergence's fix:
-      * `execDef` retypes a 1-argument `equals(Object)`'s parameter to `scala.Any` (Scala's
-      * `Object.equals` takes `Any`), so a descriptor read from `info` says `Any` and every manifest
-      * in existence says `Object`. Read before the retyping there is nothing to reconcile.
-      *
-      * The spelling is `getSimpleName` — grammar-identical to `isDropped`'s, which is what a
-      * `dropMethods` key already matches against, so no existing key changes meaning. An ARRAY is
-      * decomposed STRUCTURALLY rather than taken from `getSimpleName` (which happens to render
-      * `int[]` as well): a Java vararg `T…` is a `CtArrayTypeReference` too, and going through
-      * [[Param.Arr]] makes the two spell identically by construction rather than by coincidence.
-      *
-      * ALL parameters or none ([[Descriptor.total]]): a key with one parameter guessed matches the
-      * wrong overload, which is worse than no key. */
+    /** The member's DESCRIPTOR — its source-level parameter spelling, read from the PARSER (not
+      * from the retyped `MethodType`, so `equals(Object)` stays `Object` rather than `scala.Any`).
+      * Spelling matches `isDropped`'s (`dropMethods` keys against it). ALL parameters or none
+      * ([[Descriptor.total]]) — a partial descriptor matches the wrong overload. */
     private def descriptorOf(m: CtExecutable[?]): Option[Descriptor] =
       def paramOf(r: CtTypeReference[?]): Param = r match
         case null                        => Param.Unresolved
@@ -660,67 +461,25 @@ object SpoonTir:
       Descriptor.total(ps.map(p => scala.util.Try(p.getType).toOption.fold(Param.Unresolved)(paramOf)))
 
     /** Is this executable's declaration a SHADOW — reconstructed from a class file rather than
-      * parsed from a source this run owns?
-      *
-      * The same test `coerceArgsFixed` and `varargPack` use — through [[isExternalCallee]], so there
-      * is ONE spelling of "is this external": `getExecutableDeclaration` is non-null for a JDK
-      * member under `noClasspath` too, so null-ness is not the external signal, and a second
-      * spelling would be a second answer.
-      *
-      * The two absences are DIFFERENT answers and are written out rather than left to `forall`,
-      * which is vacuously true on `None` and therefore hides which one was meant:
-      *
-      *   - NO DECLARING TYPE — an executable Spoon parented to nothing. Nothing in this program
-      *     declares it, so it is external, and that is the same answer the null reference gets;
-      *   - a THROW out of `getParent` — a model in a state this cannot read. Not the same claim:
-      *     the conservative answer is "not external", which suppresses the erasure cast and the
-      *     spread rather than inserting either on no evidence. */
+      * parsed from a source this run owns? The one spelling of "is this external" (via
+      * [[isExternalCallee]]); no declaring type means external, an unreadable parent means
+      * conservatively NOT external (suppresses casts/spreads rather than guessing). */
     private def isShadowDecl(m: CtExecutable[?]): Boolean =
       Option(m.getParent(classOf[CtType[?]])) match
         case scala.None    => true
         case Some(t)       => t.isShadow
 
-    /** …and the same question asked of a call's REFERENCE, which is where every caller starts.
-      *
-      * A reference with no declaration at all is external by the same rule: this program's own
-      * members are parsed, so they have one. */
+    /** …the same question asked of a call's REFERENCE: no declaration at all means external, since
+      * this program's own members are always parsed and therefore have one. */
     private def isExternalCallee(ex: CtExecutableReference[?]): Boolean =
       Option(ex.getExecutableDeclaration) match
         case scala.None => true
         case Some(d)    => isShadowDecl(d)
 
-    /** The `MethodType` of an EXTERNAL member — the fix `ENGINE-LIMITS.md` K15 names, and the fact
-      * every consumer of that seam was blocked on.
-      *
-      * Until this existed, every external member the frontend interned carried `NoType` (measured
-      * at 1157 on one library, `java.lang.Object#toString` included), so no phase could ask what a
-      * method the program does not declare TAKES or RETURNS. That is the whole of K15's consumer
-      * half: a retyped `mutable.Set` handed to a class file's `java.util.Set` formal is a break
-      * nothing could see, because the position-blind retyping moved the call node's type on both
-      * sides while the class file's own signature cannot move at all.
-      *
-      * Two properties, and neither is negotiable:
-      *
-      *  - **it is rendered SCOPE-FREE.** [[tpe]] resolves a type variable by NAME against the
-      *    scopes the walk is currently inside, and fills a raw generic from the names accessible
-      *    HERE. Both are right for a type written in the program and catastrophic for one read out
-      *    of a class file: `java.util.List<E>.add(E)` would bind the callee's `E` to whatever `E`
-      *    the CALLER happens to declare, and — because an external symbol is interned once and
-      *    never clobbered — the first call site to reach it would decide the signature for the
-      *    whole run. So a type variable, an intersection and a raw generic each render as *no
-      *    answer*, never as a name this scope supplies.
-      *  - **ALL of it or NONE of it**, exactly [[Descriptor.total]]'s rule and for a sharper
-      *    reason. A partially-resolvable class file is one the parse was LENIENT about, and a
-      *    signature read from it is not evidence about the slots that DID resolve: the measured
-      *    case is a generated parser's constructor whose one parameter type is itself unresolvable,
-      *    where an arity-correct-looking signature with one hole in it would be read as a fact.
-      *    So one unrenderable slot — parameter or result — leaves the member signature-less, which
-      *    is the state every external member was in before this method existed and which every
-      *    consumer already handles.
-      *
-      * Only for a SHADOW declaration ([[isShadowDecl]]): a member the program declares gets its
-      * real signature from `execDef`, and a second, weaker rendering of the same member is a second
-      * truth about it. */
+    /** The `MethodType` of an EXTERNAL member (ENGINE-LIMITS K15) — only for a SHADOW declaration
+      * ([[isShadowDecl]]). Rendered SCOPE-FREE: a type variable, intersection or raw generic renders
+      * as no answer rather than a name from the CALLER's scope, since an external symbol is interned
+      * once and never clobbered. ALL slots or NONE ([[Descriptor.total]]'s rule). */
     private def externalSignature(m: CtExecutable[?]): TypeRepr =
       if !isShadowDecl(m) then NoType
       else
@@ -735,16 +494,9 @@ object SpoonTir:
         if ret == NoType || slots.exists(_._2 == NoType) then NoType
         else MethodType(slots, ret)
 
-    /** one SLOT of [[externalSignature]] — a parameter's or the result's declared type as a class
-      * file states it, or `NoType` where this program has no scope-free name for it.
-      *
-      * A slot and a type ARGUMENT are not the same question, which is the distinction the two
-      * methods here draw. A slot that cannot be rendered is unknown and says so; an ARGUMENT that
-      * cannot be rendered is `?`, because Spoon reconstructs a shadow type by REFLECTION and a
-      * class file's erasure genuinely does not say — `String.join`'s
-      * `Iterable<? extends CharSequence>` arrives as `Iterable<T>`, echoing the interface's own
-      * formal. `Iterable[?]` records exactly what was read: the head is exact, and the head is the
-      * whole of the question a boundary asks. */
+    /** one SLOT of [[externalSignature]] — a parameter's or result's declared type, or `NoType`
+      * where no scope-free name exists. A slot that cannot render is unknown; a type ARGUMENT that
+      * cannot render is `?` (Spoon's reflective reconstruction loses the exact bound). */
     private def externalSlot(tr: CtTypeReference[?]): TypeRepr = TypeShape.of(tr) match
       case TypeShape.Absent      => NoType
       case TypeShape.Prim(p)     => tpe(p)
@@ -752,24 +504,16 @@ object SpoonTir:
         externalSlot(c) match
           case NoType => NoType
           case e      => AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")), List(e))
-      // a type VARIABLE at the slot itself names something only the CALLEE's scope has, and an
-      // intersection would be filled from names this scope supplies. Neither is a fact about the
-      // class file, so neither is recorded.
+      // a type variable or intersection at the slot names something only the CALLEE's scope has
       case TypeShape.Variable(_)       => NoType
       case TypeShape.Intersection(_, _) => NoType
-      // A wildcard is scope-free — `?` is a fresh existential — and its BOUND would go through the
-      // ARGUMENT rendering, since an unrenderable bound is `?` and not a refusal. That is what the
-      // arm below the variable one said, and it never ran: `NoType` is what this slot has answered
-      // for every `?` since it was written (see `TypeShape`'s doc, `ENGINE-LIMITS.md` G21).
-      // PRESERVED SHADOW — a change here is its own measurement.
+      // PRESERVED SHADOW: wildcard answers NoType here too, not `?` (ENGINE-LIMITS G21)
       case TypeShape.Wildcard(_, _, _) => NoType
       case s @ TypeShape.Named(r, _) =>
         val head  = TypeRef(NoPrefix, typeSym(r))
         val args  = s.args
         val arity = formalArity(r)
-        // `tpe` would fill a bare generic from the names accessible at the READING point — the one
-        // scope this rendering may not consult — so the fill here is the WILDCARD one, which is
-        // what `tpe` itself produces where no name is in scope.
+        // scope-free fill: wildcards, never names from the reading point (`tpe`'s own no-scope answer)
         if args.isEmpty then
           if arity <= 0 then head else AppliedType(head, List.fill(arity)(TypeBounds(NoType, NoType)))
         else AppliedType(head, args.map(externalArg))
@@ -787,17 +531,10 @@ object SpoonTir:
       * [[resolveTypeParamDecl]]. Pushed and popped with `tpScopes` — the two are indexed together. */
     private val tpDecls = collection.mutable.ArrayDeque[Map[String, CtTypeParameter]]()
 
-    /** Render a type as its DECLARATION site would have, not as the current scope would.
-      *
-      * The name-directed raw fill is scope-dependent BY DESIGN — the same raw `AssetLoader`
-      * becomes `AssetLoader[T, P]` inside `setLoader<T, P>` and `AssetLoader[?, ?]` at a field of
-      * a class with no such names. That is wanted: it is what preserves self-reference. What is
-      * NOT wanted is re-rendering a DECLARED entity's type in the reading scope, because then the
-      * engine's own two renderings of one Java type silently agree when the emitted Scala does
-      * not, and the unchecked cast that should bridge them is never emitted.
-      *
-      * A FIELD's type cannot mention a method's type parameters — no scope in Java lets it — so
-      * hiding the executable frames is exact here, not an approximation. */
+    /** Render a type as its DECLARATION site would have, not as the current reading scope would —
+      * the name-directed raw fill is scope-dependent by design, so re-rendering in the reading
+      * scope would silently disagree with the declared type. Hides executable frames only: a
+      * field's type cannot mention a method's type parameters, so this is exact, not approximate. */
     private def atDeclScope[A](f: => A): A =
       val saved = declScopeOnly
       declScopeOnly = true
@@ -815,59 +552,16 @@ object SpoonTir:
     private def resolveTypeParam(name: String): Option[SymId] =
       tpFrameOf(name).map(i => tpScopes(i)(name))
 
-    /** the type an ERASED type-parameter name renders as, or `None` if the name is an ordinary one.
-      *
-      * Consulted ahead of [[resolveTypeParam]] at every variable occurrence, because an erased
-      * parameter was never minted and has no id to resolve to — reaching `resolveTypeParam` it
-      * would take the unresolved-marker arm and report `JS-G12` about a variable the frontend
-      * itself decided not to declare. */
+    /** the type an ERASED type-parameter name renders as, or `None` for an ordinary one. Consulted
+      * AHEAD of [[resolveTypeParam]]: an erased parameter was never minted and has no id. */
     private def erasedTypeParam(name: String): Option[TypeRepr] =
       tpErased.iterator.collectFirst { case m if m.contains(name) => m(name) }
 
-    /** an executable's own type parameters that have NO WRITABLE INSTANTIATION ANYWHERE and carry no
-      * information — java's UNCHECKED generic method, erased at the declaration to its own bound.
-      *
-      * ==The construct==
-      * {{{
-      * <B extends ISequenceBuilder<B, T>> B getBuilder();          // in IRichSequence<T>
-      * public SequenceBuilder getBuilder();                        // @Override, in BasedSequence
-      * }}}
-      * Java permits the second to override the first: JLS 8.4.2 makes a signature a SUBSIGNATURE of
-      * one whose ERASURE it is, so an implementor may drop the type parameter entirely and javac
-      * issues an unchecked warning. Scala has no such rule — a method with no type parameters
-      * cannot override one with them — so the emitted pair is `E038 has a different signature` at
-      * the narrowing declaration and `needs to be abstract` at every concrete class below it, which
-      * is `CLAUDE.md` §1(a)'s *java allows unchecked conversion at a raw type; scala does not*, read
-      * at an override edge instead of at an assignment.
-      *
-      * ==Why the ERASURE is the honest image, and not a loss==
-      * `ENGINE-LIMITS.md` G8 priced four ways of INSTANTIATING such a parameter and every one was
-      * worse, for one reason it measured rather than assumed: **no denotable `X` satisfies
-      * `X <: ISequenceBuilder<X, T>`**. So the parameter is not merely unsound, it is UNWRITABLE —
-      * no caller can supply an argument for it and no implementation can produce one without a cast,
-      * which is why java's own implementors here all write `return (B) …;` under a
-      * `//noinspection unchecked`. A parameter nobody can instantiate and nobody can honour carries
-      * exactly as much information as its bound, and its bound — with the self-reference wildcarded
-      * — is an ordinary type both languages can write. That is the same type `ENGINE-LIMITS.md` G8.7
-      * already ascribes at the USE and found sufficient there; this states it at the DECLARATION,
-      * where it also repairs the override edges a use-site ascription cannot reach.
-      *
-      * ==Three conjuncts, and each one is a way the rule would be wrong without it==
-      *   - **the variable occurs in NO PARAMETER type.** One that does is constrained by its
-      *     argument and both languages infer it the same way — `<E extends Enum<E>> E[]
-      *     getUniverse(Class<E> t)` is ordinary generic java and erasing it would throw away the
-      *     caller's own answer. This is `pinUnconstrainedTypeArgs`' first condition verbatim;
-      *   - **the bound MENTIONS THE VARIABLE ITSELF** — an F-bound. This is the load-bearing
-      *     conjunct and the one G8 measured: an ordinary bound (`<T extends Node> T first()`) has
-      *     denotable instantiations, callers DO write them, and erasing it to `Node` would lose a
-      *     type the port's own code uses. `<T> List<T> emptyList()` is the same case at a vacuous
-      *     bound and declines here twice over;
-      *   - **the RESULT mentions the variable.** Otherwise the parameter is unused and erasing it
-      *     changes no emitted type, so there is nothing to record and nothing to gain.
-      *
-      * Note what this deliberately does NOT do: it does not touch a variable the DECLARING TYPE
-      * owns. `IRichSequence<T>`'s `T` is written at every use and instantiated by every implementor;
-      * only the METHOD's own parameters are candidates. */
+    /** an executable's own type parameters that have NO WRITABLE INSTANTIATION ANYWHERE — java's
+      * UNCHECKED generic method (JLS 8.4.2 subsignature-by-erasure), erased at the declaration to
+      * its own bound. Three conditions, all required: the variable occurs in no PARAMETER type; the
+      * bound MENTIONS THE VARIABLE ITSELF (F-bound, the load-bearing conjunct, ENGINE-LIMITS G8);
+      * the RESULT mentions the variable. Does not touch a variable the DECLARING TYPE owns. */
     private def unwritableResultVars(m: CtExecutable[?]): List[CtTypeParameter] = m match
       case ftd: CtFormalTypeDeclarer =>
         val tps    = ftd.getFormalCtTypeParameters.asScala.toList
@@ -912,14 +606,10 @@ object SpoonTir:
     private def declFrame(tps: List[CtTypeParameter]): Map[String, CtTypeParameter] =
       tps.map(tp => tp.getSimpleName -> tp).toMap
 
-    /** Java's type parameters are ALWAYS reference types: `<T>` means `<T extends Object>`, since
-      * Java has no primitive type arguments. Scala's `[T]` means `T <: Any`, which is STRICTLY
-      * weaker — and the gap is not academic. A value read at such a `T` (through a raw receiver,
-      * say `OrderedMapValues`'s raw `Array keys`, whose `keys.get(i)` Java types as `Object`)
-      * then conforms to nothing that wants `Object`, because `Any` is not `Object`. Restoring the
-      * implicit upper bound is a fact about Java, not about any library. */
-    /** parent formal NAME -> the argument this class supplies, walking supertypes breadth-first so
-      * a grandparent's names are covered too (`AsynchronousAssetLoader<T,P> extends AssetLoader<T,P>`). */
+    // Java's type parameters are always reference types (`<T>` means `<T extends Object>`);
+    // scala's `[T]` means `T <: Any`, strictly weaker — restoring the bound is a java fact (§1a).
+    /** parent formal NAME -> the argument this class supplies, walking supertypes breadth-first
+      * (so a grandparent's names are covered too). */
     private def ancestorsOf(t: CtType[?]): Set[String] =
       val acc = collection.mutable.Set[String](t.getQualifiedName)
       def walk(r: CtTypeReference[?], fuel: Int): Unit =
@@ -935,19 +625,12 @@ object SpoonTir:
         (t match { case c: CtClass[?] => Option(c.getSuperclass).toList; case _ => Nil }) ++
           (t.getSuperInterfaces.asScala.toList)
       ups0.foreach(walk(_, 5))
-      // NOT the class itself: a helper it declares (`removeDuplicates`) is not written in an
-      // ancestor's variables either, so its formals must render outside the override gate too.
+      // NOT the class itself — its own helpers' formals must render outside the override gate too
       acc.toSet - t.getQualifiedName
 
-    /** ONE walk over `t`'s ancestry, in breadth order, yielding every (DECLARING TYPE, formal name,
-      * argument) triple the `extends`/`implements` clauses instantiate.
-      *
-      * Two maps are folded from it and the reason they are one walk is `ENGINE-LIMITS.md` F8's shape
-      * (`CLAUDE.md` §4.56): a second copy of this traversal is a second answer to "what did this
-      * class instantiate its parents' names as", and the two would drift. The FILTER is here rather
-      * than in either consumer because it is about whether the argument can be NAMED at all — an
-      * unresolvable variable renders as the `?I` stub and a wildcard has no name — which is a
-      * precondition for every use, whether the answer fills a raw type or becomes a cast target. */
+    /** ONE walk over `t`'s ancestry, yielding every (DECLARING TYPE, formal name, argument) triple
+      * the `extends`/`implements` clauses instantiate — two consumer maps fold from it so they
+      * cannot drift (ENGINE-LIMITS F8, CLAUDE.md §4.56). Filters unnameable arguments here. */
     private def parentInstantiations(t: CtType[?]): List[(String, String, CtTypeReference[?])] =
       val out = collection.mutable.ListBuffer[(String, String, CtTypeReference[?])]()
       def walk(r: CtTypeReference[?], fuel: Int): Unit =
@@ -958,9 +641,7 @@ object SpoonTir:
             val as = r.getActualTypeArguments.asScala.toList
             if fs.sizeIs == as.size then
               fs.zip(as).foreach { (f, a) =>
-                // skip an argument that names a type variable NOT in scope here: `tpe` renders
-                // those as the unresolved stub `?I`, which is not a legal scala type and reached
-                // the output as `new Array[?I](…)`.
+                // skip an argument naming a type variable not in scope — renders as illegal `?I`
                 val nameable = a match
                   case tv: CtTypeParameterReference => resolveTypeParam(tv.getSimpleName).isDefined
                   case _                            => true
@@ -984,11 +665,8 @@ object SpoonTir:
       }
       out.toMap
 
-    /** …the same instantiations keyed by the DECLARATION rather than by the name — `(owner FQN,
-      * formal name)`, which is exactly `ParentSubst`'s identity in the TIR and is what makes a
-      * lookup evidence rather than a coincidence. [[instantiationOfParents]]'s name key is the one
-      * `inheritedTp` measured at 161/142/141 and is switched off for it; nothing keyed this way can
-      * collide, because two ancestors' `T`s are two different keys. */
+    /** …the same instantiations keyed by DECLARATION rather than name — `(owner FQN, formal name)`,
+      * `ParentSubst`'s own identity — so two ancestors' same-named `T`s cannot collide. */
     private def instantiationByDecl(t: CtType[?]): Map[(String, String), CtTypeReference[?]] =
       val out = collection.mutable.Map[(String, String), CtTypeReference[?]]()
       parentInstantiations(t).foreach { (owner, nm, a) => if !out.contains(owner -> nm) then out(owner -> nm) = a }
@@ -1031,16 +709,9 @@ object SpoonTir:
         case None     => TypeBounds(NoType, objectT)
 
     /** Reconstruct a raw generic type's args from IN-SCOPE type parameters of the same NAME
-      * (wildcards for the rest): `Node` under `Tree[N,V]` → `[N, V, ?]`, `Node` under
-      * `Node[N,V,A]` → `[N, V, A]`, nested `Entries` under `ObjectMap[K,V]` → `[K, V]`, a
-      * libgdx `Array` param → `[T]`. This preserves the self-reference / enclosing
-      * instantiation that a plain wildcard fill erases — the erasure is what turns
-      * `node.parent`, `this.entries1`, `array.items` into path-dependent captures that unify
-      * with nothing. Returns None for a non-generic (arity-0) type.
-      *
-      * Every filled slot is LICENSED first (see [[licensedFills]]) — java stops checking at a raw
-      * use and scala does not, so a name that matches by coincidence re-imposes a bound java never
-      * checked (`ENGINE-LIMITS.md` G30). */
+      * (wildcards for the rest) — preserves self-reference/enclosing instantiation that a plain
+      * wildcard fill erases. `None` for arity-0. Every slot is LICENSED first ([[licensedFills]]),
+      * since java stops checking at a raw use and scala does not (ENGINE-LIMITS G30). */
     private def nameFilledArgs(r: CtTypeReference[?], resolve: String => Option[SymId],
                                resolveDecl: String => Option[CtTypeParameter]): Option[List[TypeRepr]] =
       val formals = typeDeclarationOf(r).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
@@ -1053,37 +724,11 @@ object SpoonTir:
           else TypeBounds(NoType, NoType)
         })
 
-    /** WHICH of a raw type's formals may take the in-scope variable of the same name — `CLAUDE.md`
-      * §4.56 read at a BOUND, and `ENGINE-LIMITS.md` G30's discriminator.
-      *
-      * The fill is a SUBSTITUTION of the raw type's formals by the names in scope, and java licenses
-      * NOTHING about it: JLS 4.8 stops checking at a raw use, so `B extends ReferenceNode` is legal
-      * java however `ReferenceNode`'s own parameters are bounded. Scala checks the applied type, so a
-      * fill has to carry its own evidence that each variable really can stand in the slot it is put
-      * in. Three structural facts do, and no conformance lookup is asked of a `noClasspath` model —
-      * one that answered `false` for a readable hierarchy would drop the fill libGDX's `Tree`/`Node`
-      * family needs, which is the same regression by another route:
-      *
-      *  - the in-scope variable IS the formal — java's F-BOUND idiom, `N extends Node` written
-      *    inside `Node`, where the substitution is the identity;
-      *  - the formal is UNBOUNDED (`extends Object`), which every reference type discharges, and
-      *    java has no primitive type arguments;
-      *  - the two are declared with the SAME bound, spelled the same
-      *    ([[boundSpelling]]) — java's own statement that they range over the same types. libGDX's
-      *    `Tree<N extends Node, V>` passes here (`Node`'s slot 0 asks for `Node` and `Tree`'s `N` is
-      *    declared `Node`); flexmark's `ReferencingNode<…, B extends ReferenceNode>` does not
-      *    (`ReferenceNode`'s slot 1 asks for `Node`, and `B` is declared `ReferenceNode`).
-      *
-      * …and the third fact only holds if the FREE NAMES in that bound mean the same thing on both
-      * sides, so a slot whose formal bound MENTIONS another formal is licensed only where that one
-      * is too — a greatest fixpoint, not a per-slot test. The propagation is not tidiness: scalac
-      * substitutes a declined slot as a PROJECTION rather than as a wildcard, so keeping `R` beside a
-      * declined `B` reads `Type argument R does not conform to upper bound
-      * NodeRepository[ReferenceNode[R, ?, ?]#B]` — measured, at scalac 3.8.4.
-      *
-      * An UNREADABLE bound licenses the fill, which is the third value rather than a `catch` with a
-      * fabricated answer (§4.6): declining there is the `false`-for-a-readable-hierarchy regression
-      * above, arriving through the failure path instead. */
+    /** WHICH of a raw type's formals may take the in-scope variable of the same name (CLAUDE.md
+      * §4.56 at a BOUND, ENGINE-LIMITS G30). Licensed iff: the variable IS the formal (F-bound); the
+      * formal is unbounded; or both declare the SAME bound, spelled the same ([[boundSpelling]]).
+      * Propagates as a greatest fixpoint over free names in the bound. Unreadable bound licenses
+      * the fill (the third value, never a fabricated `catch` answer, §4.6). */
     private def licensedFills(formals: List[CtTypeParameter],
                               resolveDecl: String => Option[CtTypeParameter]): Set[String] =
       val names = formals.map(_.getSimpleName).toSet
@@ -1136,12 +781,9 @@ object SpoonTir:
 
     private def objectT: TypeRepr = TypeRef(NoPrefix, minter.external("java.lang.Object", "Object"))
 
-    /** The ERASURE of a type variable — its first bound with nested variables erased, else Object:
-      * `T` → `Object`, `P extends AssetLoaderParameters<T>` → `AssetLoaderParameters[Object]`.
-      * Used ONLY to build CASTS at wildcard-receiver call sites (see `erasedReceiverView`); it must
-      * never drive a DECLARATION's type — declaring raw fields/params erased instead of wildcard
-      * breaks assignment of concrete generic values (`Array[Object]` refuses `Array[String]`) and
-      * was measured catastrophic (+277). */
+    /** The ERASURE of a type variable — its first bound with nested variables erased, else Object.
+      * Used ONLY to build CASTS at wildcard-receiver call sites — must never drive a DECLARATION's
+      * type (that breaks assignment of concrete generic values, measured catastrophic). */
     private def erasureOfFormal(f: CtTypeParameter, seen: Set[String], depth: Int): TypeRepr =
       Option(f.getSuperclass).filter(_.getQualifiedName != "java.lang.Object") match
         case None    => objectT
@@ -1150,19 +792,8 @@ object SpoonTir:
     private def erasedType(b: CtTypeReference[?], seen: Set[String], depth: Int): TypeRepr =
       if depth <= 0 then objectT
       else TypeShape.of(b) match
-        // a NESTED type variable erases through its own declaration, exactly as a bare one does (see
-        // `erasedFormal`) — collapsing it straight to `Object` made the two sides of the same erased
-        // call disagree: the RECEIVER cast said `Node[Node[Object,Object,Actor], Object, Actor]`
-        // while the ARGUMENT cast for the very same `N` said `Tree[Object, Object]`. `seen` breaks
-        // F-bounded cycles; the depth is pinned to the one both call sites use.
-        // the F-BOUND cycle. Collapsing it to `Object` produces `Node[Object, Object, Actor]`,
-        // which fails `N <: Node[N,V,A]` — and so does every finite unrolling, since `Node` is
-        // invariant in `N`. Java carries the same bound and does not check it at an erased use;
-        // Scala checks. A WILDCARD asserts only that SOME type satisfies the bound, which is
-        // exactly the erased claim, and is the one form scalac accepts here.
-        // …and the WILDCARD arm now stands where its own answer already was: a `?` has no
-        // declaration, so the variable arm below used to reach `getOrElse(objectT)` for it and
-        // answer exactly this. Answer-preserving by derivation, not by measurement.
+        // `seen` breaks F-bounded cycles; wildcard asserts SOME type satisfies the bound, which
+        // scalac accepts where a flat `Object` fails an invariant F-bound. PRESERVED SHADOW G21.
         case TypeShape.Wildcard(_, _, _) => objectT
         case TypeShape.Variable(tv) =>
           if seen(tv.getSimpleName) then TypeBounds(NoType, NoType)
@@ -1175,9 +806,7 @@ object SpoonTir:
         case TypeShape.Intersection(_, bounds) =>
           bounds.headOption.map(erasedType(_, seen, depth)).getOrElse(objectT)
         case TypeShape.Prim(p)      => tpe(p)
-        // no caller passes a null reference here (every one hands over a bound, a component, an
-        // argument or a formal's superclass); `tpe` is the one place that answers for one, so defer
-        // to it rather than inventing a second answer.
+        // no caller passes null here; defer to `tpe`, the one place that answers for it
         case TypeShape.Absent       => tpe(b)
         case s @ TypeShape.Named(r, _) =>
           val head = TypeRef(NoPrefix, typeSym(r))
@@ -1192,12 +821,9 @@ object SpoonTir:
               })
             case args => AppliedType(head, args.map(a => erasedType(a, seen, depth - 1)))
 
-    /** the erasure a DECLARED formal is seen at through an erased receiver: a bare type variable
-      * resolves through `subst` (the receiver's own erased arguments, by formal NAME) or, failing
-      * that, through its declaration (so `P` → `AssetLoaderParameters[Object]`, not `Object`). A RAW
-      * generic formal (`void save(AssetManager, ResourceData)` inside `ParticleBatch<T>`) is emitted
-      * name-FILLED as `ResourceData[T]` — so it too must resolve through `subst`, or the cast we
-      * build would not be the type the declaration actually asks for. */
+    /** the erasure a DECLARED formal is seen at through an erased receiver: resolves through `subst`
+      * (receiver's own erased arguments, by formal NAME) or, failing that, its declaration. A RAW
+      * generic formal is emitted name-FILLED, so it too must resolve through `subst`. */
     /** replace every occurrence of one rendered type by another. */
     private def substRepr(t: TypeRepr, from: TypeRepr, to: TypeRepr): TypeRepr =
       if t == from then to
@@ -1238,15 +864,9 @@ object SpoonTir:
         if args.nonEmpty then args.exists(mentionsTypeVarFilled(_, names))
         else rawFormalsOf(tr).exists(names)
 
-    /** A METHOD type variable declared in terms of the receiver's — `<T extends K> V get(T key)` on
-      * `ObjectMap<K,V>` — depends on the receiver just as surely as a bare `K` formal does. Java
-      * erases the bound along with everything else at a raw receiver, so a caller holding a real
-      * `K` cannot reach that formal without the same erasure the receiver got.
-      *
-      * Bound only, never the variable's own name: a callee's `<T>` that happens to share a name
-      * with one of the receiver's parameters is a different variable, and matching it would be the
-      * name-based confusion [[tpConcrete]] exists to avoid. Depth-limited because a Java bound may
-      * be F-bounded (`N extends Node<N,…>`) and would otherwise recurse forever. */
+    /** A METHOD type variable declared in terms of the receiver's depends on the receiver just as a
+      * bare formal does. Bound only, never the variable's own NAME (a same-named callee `<T>` is a
+      * different variable — the confusion [[tpConcrete]] avoids). Depth-limited (F-bounds). */
     private def boundMentions(tv: CtTypeParameterReference, names: Set[String], fuel: Int = 2): Boolean =
       fuel > 0 && (try
         Option(tv.getDeclaration).flatMap(d => Option(d.getSuperclass))
@@ -1264,9 +884,7 @@ object SpoonTir:
     private def mentionsRawGeneric(tr: CtTypeReference[?]): Boolean = TypeShape.of(tr) match
       case TypeShape.Absent      => false
       case TypeShape.Variable(_) => false
-      // PRESERVED SHADOW (`ENGINE-LIMITS.md` G21): the arm written here descended into the BOUND,
-      // and the variable arm above it answered `false` for every `?` instead. `false` is what this
-      // predicate has said since it was written; changing it is its own measurement.
+      // PRESERVED SHADOW (ENGINE-LIMITS G21) — answers `false`, as the shadowed variable arm did
       case TypeShape.Wildcard(_, _, _)  => false
       case TypeShape.Arr(_, c)          => mentionsRawGeneric(c)
       case TypeShape.Prim(_)            => false
@@ -1274,32 +892,10 @@ object SpoonTir:
         if s.args.nonEmpty then s.args.exists(mentionsRawGeneric)
         else formalArity(s.ref) > 0
 
-    /** the DECLARED type-parameter arity of a type reference — `Map` → 2, `String` → 0.
-      *
-      * ONE function, and the bare `catch` narrowed to the one lookup where an absent value is
-      * NORMAL. It used to read
-      *
-      * {{{ try Option(r.getTypeDeclaration).map(_.getFormalCtTypeParameters.size).getOrElse(0)
-      *     catch { case _: Throwable => 0 } }}}
-      *
-      * at FIVE sites, and the shape is the one `CLAUDE.md` §4.58 names about a harvest and the
-      * auditor hunts for generally: a broad `catch` whose default quietly means *the rule does not
-      * apply*. Here the default means arity ZERO, and arity zero is not "unknown" — it is the
-      * statement that the type takes no arguments, which is what `tpe` then emits. So a resolution
-      * failure inside a declaration Spoon HAS became a raw type rendered un-applied, silently, with
-      * a green compile.
-      *
-      * The two halves are different facts and are now spelled differently:
-      *
-      *   - '''`getTypeDeclaration` absent''' — the type is not on the classpath. Normal, extremely
-      *     common (every external non-generic class), and 0 is the only answer available. Wrapped;
-      *   - '''a declaration that cannot state its own arity''' — an engine-visible defect in the
-      *     model, and it now propagates instead of being absorbed. There is no honest default: this
-      *     function's caller is about to decide how many type arguments to emit.
-      *
-      * Note what this does NOT claim to fix: a RAW use of a generic type whose declaration is
-      * absent still answers 0, because nothing available can say otherwise. That case is the
-      * classpath's, not the catch's. */
+    /** the DECLARED type-parameter arity of a type reference — `Map` → 2, `String` → 0. The `catch`
+      * covers ONLY `getTypeDeclaration` being absent (not on the classpath — normal, arity 0 is the
+      * only answer); a declaration that resolves but cannot state its own arity PROPAGATES rather
+      * than silently answering 0 (CLAUDE.md §4.6). */
     private def formalArity(r: CtTypeReference[?]): Int =
       typeDeclarationOf(r).map(_.getFormalCtTypeParameters.size).getOrElse(0)
 
@@ -1328,47 +924,16 @@ object SpoonTir:
     private def annotationTypeRefOf(a: CtAnnotation[?]): Option[CtTypeReference[?]] =
       try Option(a.getAnnotationType) catch { case _: Throwable => scala.None }
 
-    /** the ONE Spoon lookup for a FIELD's declaration where an absent value is normal —
-      * the field belongs to an external class whose source is not on the classpath. Callers that
-      * receive `None` decline the rule they were about to apply (erased-field view, declared type,
-      * external field type), which is the correct fallback for an unknowable declaration.
-      * `CLAUDE.md` §4.6: one function, one doc, one `catch`.
-      *
-      * Added in wave 2.15 to consolidate five `getFieldDeclaration` sites — two caught and three
-      * bare — into one named helper, matching the pattern of [[typeDeclarationOf]],
-      * [[typeParamDeclOf]], [[execDeclOf]] and [[annotationTypeRefOf]]. */
+    /** the ONE Spoon lookup for a FIELD's declaration where an absent value is normal — external
+      * class not on the classpath. Callers decline the rule they were about to apply. CLAUDE.md §4.6 */
     private def fieldDeclOf(ref: CtFieldReference[?]): Option[CtField[?]] =
       try Option(ref.getFieldDeclaration) catch { case _: Throwable => scala.None }
 
-    /** JAVA'S FUNCTIONAL-INTERFACE QUESTION (JLS 9.8), asked of the class file — the ONE place it
-      * is asked, and the ONLY place it can be.
-      *
-      * See [[balticporter.tir.Sam]] for why the answer is computed here and carried on the node
-      * rather than derived by the phase that acts on it: the TIR interns an external type's members
-      * only where the program REFERENCES them, so a phase deriving the answer from the symbol table
-      * would be reading what this run happened to parse rather than what the class DECLARES
-      * (`CLAUDE.md` §4.56).
-      *
-      * The rule is java's own, item by item, and each item is a refusal the census counts:
-      *
-      *   - the target must be an INTERFACE. Interfaces only, because that is java's rule, and
-      *     because a scala SAM conversion to an abstract CLASS carries a constructor question no
-      *     guard downstream answers;
-      *   - abstract methods are counted INHERITED as well as declared (`getAllMethods`), which is
-      *     why a name-based classification cannot do this job;
-      *   - `static` and `default` methods do not count — a `default` method has a body;
-      *   - a method override-equivalent to a PUBLIC method of `java.lang.Object` does not count.
-      *     That exclusion is not a detail: it is the whole reason `java.util.Comparator`, which
-      *     redeclares `equals(Object)` beside `compare`, is a functional interface at all.
-      *
-      * `java.io.Serializable` is reported BESIDE the answer rather than folded into it, because it
-      * is not a statement about SAM-ness: such a type IS a functional interface and the port
-      * declines the CONVERSION, since a serializable lambda's serialized form is not the anonymous
-      * class's. Two different facts, two different fields.
-      *
-      * The ONE lookup wrapped is [[typeDeclarationOf]]'s, which is where an absent value is normal
-      * (`CLAUDE.md` §4.6) — and its default here is [[Sam.Answer.Unreadable]] and never `No`, so a
-      * classpath gap is counted as one instead of reading as "this port has no SAM sites". */
+    /** JAVA'S FUNCTIONAL-INTERFACE QUESTION (JLS 9.8), computed here from the class file (CLAUDE.md
+      * §4.56) since the TIR only interns members the program references. Target must be an
+      * INTERFACE; abstract methods counted INHERITED (`getAllMethods`); `static`/`default` excluded;
+      * a member override-equivalent to `java.lang.Object`'s excluded. Unreadable → [[Sam.Answer.Unreadable]],
+      * never `No`. `java.io.Serializable` reported BESIDE the answer, not folded into it. */
     private def samAnswerOf(r: CtTypeReference[?]): Sam.Answer =
       typeDeclarationOf(r) match
         case scala.None       => Sam.Answer.Unreadable
@@ -1383,32 +948,16 @@ object SpoonTir:
         case Some(_)          => Sam.Answer.No("the target is a CLASS, not an interface")
 
     /** JLS 9.8's COUNT, as a list — the one place the rule is spelled, so [[samAnswerOf]] and
-      * [[samResultTpt]] cannot disagree about which method a functional interface has.
-      *
-      * '''Counted MODULO OVERRIDING, which the signature key alone does not do.''' JLS 9.8 counts
-      * abstract methods *whose signatures are not override-equivalent*, and a re-declaration is the
-      * ordinary way an interface documents the one it inherits:
-      * `interface F<T> extends Function<Holder, T> { @Override T apply(Holder h); }`. Those two are
-      * ONE method to java, and two to `getSignature`, because the inherited one's erased parameter
-      * is the supertype's variable (`apply(T)`) and the declared one's is the argument
-      * (`apply(Holder)`) — the shape a JVM BRIDGE exists for. Read as two, a functional interface
-      * that java accepts a lambda for answers *not a SAM* to every question this frontend asks
-      * about it.
-      *
-      * The collapse is deliberately structural and conservative: same simple name, same arity, and
-      * the one being dropped is declared by a STRICT SUPERTYPE of the other's declarer. Two
-      * abstract members inherited from UNRELATED supertypes stay two — java would call them
-      * override-equivalent and this does not, which keeps the pre-existing answer for a shape no
-      * corpus library has and which errs toward *not a SAM*. */
+      * [[samResultTpt]] cannot disagree. Counted MODULO OVERRIDING (a re-declared inherited method,
+      * e.g. a JVM bridge shape, is ONE method to java and two to `getSignature`): same simple name,
+      * same arity, dropped one declared by a STRICT SUPERTYPE. Unrelated supertypes stay two. */
     private def samAbstracts(r: CtTypeReference[?]): List[CtMethod[?]] =
       typeDeclarationOf(r) match
         case Some(d: CtInterface[?]) =>
           val all = d.getAllMethods.asScala.toList.filter { m =>
             m.hasModifier(ModifierKind.ABSTRACT) &&
               !m.hasModifier(ModifierKind.STATIC) &&
-              // a `default` method is not abstract, so the modifier test above already declines it;
-              // this is the belt to that brace and is spelled through Spoon's own predicate rather
-              // than through a modifier constant it does not have.
+              // belt-and-brace: modifier test above already declines default methods
               !m.isDefaultMethod &&
               !SpoonTir.ObjectPublicSignatures.contains(m.getSignature)
           }.map(m => m.getSignature -> m).toMap.values.toList
@@ -1425,41 +974,10 @@ object SpoonTir:
           if a.getQualifiedName != b.getQualifiedName
         yield a.isSubtypeOf(b)).getOrElse(false)
 
-    /** THE SAM METHOD'S RESULT TYPE, for a lambda the SOURCE wrote — the second supplier of
-      * [[Tree.Lambda.resultTpt]] and the one `ENGINE-LIMITS.md` I9 left open.
-      *
-      * A java lambda body is a METHOD body: `return` is legal in it and leaves the LAMBDA. Scala's
-      * lambda is an expression, so the emitter interposes a nested `def` (`JS-S21`) — and a `def`
-      * needs a result type, which is the SAM METHOD's and not the functional interface's. An
-      * anonymous class hands the conversion its own `DefDef`; a lambda has no method ANYWHERE in
-      * the program, because javac inferred the type from a class file. This is that class file,
-      * read once, at the only place that holds it.
-      *
-      * ==Asked only where the lambda NEEDS it, which is not the emitter's condition leaking==
-      * The field's meaning is *the type this node's nested `def` must declare*, and a lambda with
-      * no value-returning `return` renders no `def` at all. Filling it everywhere would put a type
-      * on ~every lambda in the corpus that the emitted text never names — and `Xref` registers it
-      * as a USAGE, so a portability or dependency count would move for a type nothing writes.
-      *
-      * ==And a GENERIC result is ADAPTED at the TARGET, which is M6 narrowed one more turn==
-      * `Supplier<String>.get` is declared `T get()`, and `T` is not a name the emitted code can
-      * write. That was left REFUSED on the grounds that substituting the reference's actual
-      * arguments for the declaration's formals is a different mechanism from reading a class file —
-      * true when it was written, and a mechanism-absence argument rather than a semantic one. The
-      * substitution is not a guess: `Function<PatternTypeFlags, Pattern>` says what `R` is, in the
-      * FORMAL of the call the lambda is an argument to, and it is SPOON'S OWN rule that performs it
-      * ([[TypeAdaptor]]), composed along the hierarchy so a `interface F extends Function<A,B>`
-      * target adapts as exactly as a direct one does.
-      *
-      * What stays refused is what the adaptation cannot ANSWER: a result still mentioning a type
-      * variable after it — a RAW target, an unreadable class file, a variable bound by the METHOD
-      * rather than by the type. Those yield `None` and `OmissionCheck.unnameableLambdaReturn` counts
-      * the site, because a guessed `T` or an erased `Object` is §4.6's fabricated fact: it compiles.
-      *
-      * The residue this closes was NOT loud. `ENGINE-LIMITS.md` I9 measured the same construct on
-      * another library at 0 compile errors — a scala `return` inside a closure is a NON-LOCAL RETURN
-      * from the enclosing method, legal and something else entirely — so the count is the only
-      * instrument this has ever had, and it is the count that has to move. */
+    /** THE SAM METHOD'S RESULT TYPE for a lambda the SOURCE wrote (ENGINE-LIMITS I9) — needed since
+      * the emitter interposes a nested `def` needing a result type from the SAM method, not the
+      * interface. A generic result is ADAPTED at the target via Spoon's [[TypeAdaptor]]. Refused
+      * where adaptation cannot answer — counted by `OmissionCheck.unnameableLambdaReturn` (§4.6). */
     private def samResultTpt(l: CtLambda[?]): Option[TypeTree] =
       if !returnsAValue(l) then scala.None
       else samAbstracts(l.getType) match
@@ -1468,28 +986,17 @@ object SpoonTir:
           rt.filter(!mentionsTypeVariable(_, 8)).map(r => tt(tpe(r), l))
         case _ => scala.None
 
-    /** the SAM method's declared result, read IN THE TARGET REFERENCE'S CONTEXT.
-      *
-      * Asked only where the declared type mentions a variable — there is nothing to adapt otherwise,
-      * and an adaptation that rebuilt every SAM result would put a second spelling of the same type
-      * on a node the emitter compares nothing about.
-      *
-      * The `catch` is §4.6-shaped rather than defensive: this frontend runs `noClasspath`, so the
-      * hierarchy `TypeAdaptor` walks may simply not be there, and the default it falls back to is
-      * the UNADAPTED type — which still mentions the variable, so the caller REFUSES and the site
-      * keeps its counted `omissions` row. The default is therefore distinguishable from a real
-      * answer by construction, which is the one property §4.6 asks of a fallback. */
+    /** the SAM method's declared result, read IN THE TARGET REFERENCE'S CONTEXT. Asked only where
+      * the declared type mentions a variable. Default on failure is the UNADAPTED type, which still
+      * mentions the variable — so the caller refuses rather than reading a fabricated answer (§4.6). */
     private def adaptedToTarget(target: CtTypeReference[?], t: CtTypeReference[?]): CtTypeReference[?] =
       if target == null || !mentionsTypeVariable(t, 8) then t
       else
         Option(new TypeAdaptor(target).adaptType(t)).getOrElse(t)
 
-    /** does THIS lambda hold a `return` with a VALUE — stopping at a nested lambda or anonymous
-      * method, whose `return`s are that construct's. The same question `TirEmitter.collectReturns`
-      * and `OmissionCheck.valuedReturns` ask of the lowered tree, asked here of the java because
-      * this runs before the body is translated. Spoon answers it directly: a `CtLambda` IS a
-      * `CtExecutable`, and so is an anonymous class's `CtMethod`, so "the nearest enclosing
-      * executable is me" is exactly the binding rule (JLS 15.27.2) and not an approximation of it. */
+    /** does THIS lambda hold a `return` with a VALUE — stopping at a nested lambda/anonymous method,
+      * whose `return`s are that construct's own (JLS 15.27.2). Asked of the java, before the body
+      * translates, since `TirEmitter`'s equivalent walks the lowered tree. */
     private def returnsAValue(l: CtLambda[?]): Boolean =
       val body = l.getBody
       body != null &&
@@ -1508,21 +1015,10 @@ object SpoonTir:
           case _                          => false) ||
         r.getActualTypeArguments.asScala.exists(mentionsTypeVariable(_, fuel - 1))
 
-    /** does this type's ancestry reach `java.io.Serializable`? Read through the same declaration
-      * lookup, so an UNREADABLE ancestor answers `false` — and that half really cannot disagree in a
-      * direction that converts, because the SAM answer for a type this run cannot read is
-      * `Unreadable` and the site is refused under its own guard.
-      *
-      * ==What that argument does NOT cover, and why the fuel is gone==
-      * It says nothing about a READABLE ancestry that is simply DEEP. Bounded at `fuel = 6` the walk
-      * answered `false` seven links up while the SAM answer was `Yes`, so the site converted a
-      * SERIALIZABLE target — the one thing guard 6 exists to decline — with no error, no moved count
-      * and nothing to see. The comment that stood here read as if the bound were safe.
-      *
-      * The `seen` set is the real bound and always was: a qualified name is walked at most once and
-      * the type graph is finite, so the recursion terminates without a counter. A fuel beside it is
-      * not a belt to that brace, it is a SECOND bound that can only ever be wrong — a hierarchy is
-      * as deep as somebody wrote it, and 6 was a number nothing derived. */
+    /** does this type's ancestry reach `java.io.Serializable`? Unreadable ancestor answers `false`
+      * (the SAM answer for it is `Unreadable`, refused under its own guard). Bounded by `seen`
+      * (each qualified name walked at most once) rather than a fuel counter — a hierarchy is as
+      * deep as somebody wrote it. */
     private def serializableAncestry(r: CtTypeReference[?]): Boolean =
       val seen = collection.mutable.Set.empty[String]
       def walk(x: CtTypeReference[?]): Boolean =
@@ -1555,9 +1051,7 @@ object SpoonTir:
     private def tpResolvable(tr: CtTypeReference[?]): Boolean = TypeShape.of(tr) match
       case TypeShape.Absent       => true
       case TypeShape.Variable(tv) => resolveTypeParam(tv.getSimpleName).isDefined
-      // PRESERVED SHADOW (`ENGINE-LIMITS.md` G21). The variable arm above used to claim every `?`
-      // and answer `resolveTypeParam("?")`, which no scope can define — so `false` is what this has
-      // said for every wildcard since it was written, and the bound-descending arm never ran.
+      // PRESERVED SHADOW (ENGINE-LIMITS G21) — answers `false` for every wildcard
       case TypeShape.Wildcard(_, _, _) => false
       case TypeShape.Arr(_, c)         => tpResolvable(c)
       case s                           => s.args.forall(tpResolvable)
@@ -1573,37 +1067,21 @@ object SpoonTir:
       case s                           => s.args.forall(tpConcrete)
 
     /** [[tpConcrete]] with its one over-exclusion repaired: a type VARIABLE passes when it is
-      * LITERALLY the one in scope here ([[sameVarInScope]] — the same declaration, hence the same
-      * minted symbol, never merely the same name).
-      *
-      * `tpConcrete`'s own doc says what it is protecting against and its neighbour says what it
-      * excludes wrongly: a callee's `<T>` must not silently bind to an unrelated in-scope `T`, and
-      * the CALLER'S OWN variable is not that case — `OrderedMultiMap<K, V>` naming `V` at a call
-      * inside itself is exact, not a guess. Written as its own function rather than as a flag on
-      * `tpConcrete`, because the two answer different questions and every existing caller of that
-      * one must keep the answer it has (F8: one derivation per question, not one function per
-      * shape). */
+      * LITERALLY the one in scope here ([[sameVarInScope]] — same declaration, not just same name).
+      * A separate function, not a flag, since every existing `tpConcrete` caller must keep its
+      * current answer (one derivation per question). */
     private def tpNameableHere(tr: CtTypeReference[?]): Boolean = TypeShape.of(tr) match
       case TypeShape.Absent       => true
       case TypeShape.Variable(tv) => sameVarInScope(tv)
-      // PRESERVED SHADOW (`ENGINE-LIMITS.md` G21) — and the one this entry is ABOUT: a `?` fell
-      // into the variable arm, `sameVarInScope` found no declaration for it, and `Class<?>` was
-      // therefore "not nameable here". `false` is the answer that has been given; the question of
-      // whether a `?` is writable is a question about the POSITION it stands at and is answered
-      // where that position is known.
+      // PRESERVED SHADOW (ENGINE-LIMITS G21) — `Class<?>` answers `false` here
       case TypeShape.Wildcard(_, _, _) => false
       case TypeShape.Arr(_, c)         => tpNameableHere(c)
       case s                           => s.args.forall(tpNameableHere)
-    // …and note this is STRICTLY WEAKER than `tpConcrete`, not a different question: every arm but
-    // the variable one is that function's, so a concrete type passes here too and no caller needs
-    // the disjunction spelled out.
+    // strictly weaker than `tpConcrete` — every non-variable arm agrees, so a concrete type passes too
 
-    /** Is this callee type VARIABLE literally the one in scope here — the same declaration, hence
-      * the same minted symbol, not merely the same NAME? That is the case [[tpConcrete]]'s
-      * name-based caution excludes wrongly: a SELF-CALL inside the declaring class
-      * (`Node<N,V,A>.addToTree(Tree<N,V>, int)` invoked from another `Node` method) names the
-      * caller's own variables, so rendering the formal here is exact, not a guess. Class formals
-      * are minted at `<declaring FQN>$$<name>`, so equality of ids IS declaration identity. */
+    /** Is this callee type VARIABLE literally the one in scope here — same declaration, hence the
+      * same minted symbol, not merely the same NAME (the case [[tpConcrete]] excludes wrongly, e.g.
+      * a self-call inside the declaring class). Class formals mint at `<FQN>$$<name>`. */
     private def sameVarInScope(tv: CtTypeParameterReference): Boolean =
       Option(tv.getDeclaration).map(_.getParent) match
         case Some(ct: CtType[?]) =>
@@ -1611,23 +1089,13 @@ object SpoonTir:
             .contains(minter.resolve(ct.getQualifiedName + "$$" + tv.getSimpleName))
         case _ => false
 
-    /** Concrete, or mentioning only type variables OWNED BY THE CALLEE. Such a variable is never in
-      * scope at the call site, so Java's view of the formal is its erasure — `TextureDescriptor<T
-      * extends Texture>` is `TextureDescriptor<Texture>` there, and an unbounded `<T>` is
-      * `Object` — which is exactly what an unchecked cast must name for Scala to then infer `T`.
-      *
-      * Unbounded variables were once excluded here, on the theory that erasing them to `Object`
-      * defeats an inference that would have worked off the expected type. Measured false: it costs
-      * `AssetManager.load(AssetDescriptor)` — passing a RAW `AssetLoaderParameters` field into
-      * `load(String, Class<T>, AssetLoaderParameters<T>)`, where the sibling `Class` argument
-      * already pins `T = Object` — and the one case it protected was a poly expression, now
-      * excluded at source in [[uncheckedGeneric]]'s `bad` list where it belongs. sge writes the
-      * same two casts by hand (`desc.type.asInstanceOf[Class[Any]]`, `desc.params.asInstanceOf[…
-      * AssetLoaderParameters[Any]]`), which is the shape this produces. */
+    /** Concrete, or mentioning only type variables OWNED BY THE CALLEE — never in scope at the call
+      * site, so Java's view of the formal is its erasure (an unbounded `<T>` is `Object`), which is
+      * what an unchecked cast must name for Scala to infer `T`. Unbounded variables must NOT be
+      * excluded: measured false, costs `AssetManager.load` casts sge also writes by hand. */
     private def calleeBounded(tr: CtTypeReference[?]): Boolean = TypeShape.of(tr) match
       case TypeShape.Absent => true
-      // PRESERVED SHADOW (`ENGINE-LIMITS.md` G21): a `?` has no declaration, so both variable arms
-      // below declined it and the answer was `false` — never the bound walk written under them.
+      // PRESERVED SHADOW (ENGINE-LIMITS G21)
       case TypeShape.Wildcard(_, _, _) => false
       case TypeShape.Variable(tv) if sameVarInScope(tv) => true
       case TypeShape.Variable(tv) =>
@@ -1640,11 +1108,7 @@ object SpoonTir:
     /** `tpe`, but every type variable replaced by the erasure of its bound (see [[calleeBounded]]);
       * identical to `tpe` on a variable-free type. */
     private def tpBoundErased(tr: CtTypeReference[?]): TypeRepr = TypeShape.of(tr) match
-      // PRESERVED SHADOW, and the FOURTEENTH site — one G21's census could not see, because it has
-      // no wildcard ARM to be shadowed. It carried the exclusion on the APPLIED arm instead
-      // (`!r.isInstanceOf[CtWildcardReference]`), which never ran: the variable arm above claimed
-      // every `?` first, found no declaration and answered `objectT`. That is the answer preserved
-      // here, and the dead guard is gone rather than left reading as live.
+      // PRESERVED SHADOW (ENGINE-LIMITS G21) — answers `objectT`, as the variable arm did
       case TypeShape.Wildcard(_, _, _) => objectT
       case TypeShape.Variable(tv) if sameVarInScope(tv) => tpe(tv)
       case TypeShape.Variable(tv) =>
@@ -1708,10 +1172,7 @@ object SpoonTir:
     private def typeVarsOf(tr: CtTypeReference[?]): Set[String] = TypeShape.of(tr) match
       case TypeShape.Absent       => Set.empty
       case TypeShape.Variable(tv) => Set(tv.getSimpleName)
-      // PRESERVED SHADOW (`ENGINE-LIMITS.md` G21) — and the one whose preserved answer is not a
-      // constant: a wildcard reached the variable arm, whose `getSimpleName` for one is the literal
-      // `"?"` (`CtWildcardReferenceImpl`'s constructor sets it), so that is the name this has been
-      // reporting. Never the bound's variables, which is what the arm below it said.
+      // PRESERVED SHADOW (ENGINE-LIMITS G21) — reports the literal name "?", never bound variables
       case TypeShape.Wildcard(w, _, _) => Set(w.getSimpleName)
       case TypeShape.Arr(_, c)         => typeVarsOf(c)
       case TypeShape.Prim(_)           => Set.empty
@@ -1721,25 +1182,14 @@ object SpoonTir:
     private def mentionsAnyTypeVar(tr: CtTypeReference[?]): Boolean = TypeShape.of(tr) match
       case TypeShape.Absent      => false
       case TypeShape.Variable(_) => true
-      // THE FIRST PRESERVED SHADOW FLIPPED (`ENGINE-LIMITS.md` G21). A `?` is NOT a type variable —
-      // it is an existential the source wrote down, and `Class<?>` mentions none. The arm below the
-      // variable one always said so and never ran; while it did not, no rule could ask *did the
-      // source WRITE this argument out of types this port can name*, which is the question G21's
-      // per-position erasure is made of. The BOUND is walked, because `List<? extends T>` really
-      // does mention `T`.
+      // SHADOW FLIPPED (ENGINE-LIMITS G21): `?` mentions no type var itself; its bound is walked
       case TypeShape.Wildcard(_, b, _) => b.exists(mentionsAnyTypeVar)
       case TypeShape.Arr(_, c)         => mentionsAnyTypeVar(c)
       case s                           => s.args.exists(mentionsAnyTypeVar)
 
-    /** Is `actual` the same type as `want` with some type ARGUMENTS collapsed — to `Object` (read
-      * through an erased view) or to a wildcard (our raw fill)? That is precisely the shape of an
-      * UNCHECKED CONVERSION: Java stops checking at a raw or erased use and lets the value flow
-      * into any instantiation, so a mismatch of exactly this shape is one Java performed silently
-      * and Scala needs written out.
-      *
-      * Deliberately narrow. It compares the RENDERED types, so it can only fire where the emitted
-      * Scala really does disagree, and it demands the same type constructor and arity — an
-      * unrelated mismatch, a subtype, or a differently-shaped type is not this and is left alone. */
+    /** Is `actual` the same type as `want` with some type ARGUMENTS collapsed to `Object` or a
+      * wildcard? Exactly the shape of an UNCHECKED CONVERSION java performs silently. Compares
+      * RENDERED types, requires the same type constructor and arity — narrow deliberately. */
     private def uncheckedFrom(actual: TypeRepr, want: TypeRepr): Boolean = (actual, want) match
       case (AppliedType(tc1, as1), AppliedType(tc2, as2)) if tc1 == tc2 && as1.sizeIs == as2.size =>
         as1.zip(as2).exists((a, w) => a != w) &&
@@ -1753,10 +1203,8 @@ object SpoonTir:
       case _                   => false
 
     /** Is this type-parameter reference THE SAME parameter as the one its simple name resolves to
-      * here? `accessibleTp`/`resolveTypeParam` are name-based, so a callee's `<T>` silently binds to
-      * an unrelated in-scope `T`; comparing against the id its own declaring type minted
-      * (`<owner qualified name>$$T`, see [[mintTypeParams]]) makes the identity exact. Method-level
-      * parameters are never the same parameter — they exist only inside the callee. */
+      * here — compared by minted id (`<owner FQN>$$T`), not by name, since a callee's `<T>` could
+      * otherwise silently bind to an unrelated in-scope `T`. Method-level params never match. */
     private def sameTypeParamHere(tv: CtTypeParameterReference): Boolean =
       val owner = (typeParamDeclOf(tv))
         .flatMap(d => Option(d.getParent)).collect { case ct: CtType[?] => ct.getQualifiedName }
@@ -1796,27 +1244,16 @@ object SpoonTir:
       val isRawGeneric = !tr.isInstanceOf[CtTypeParameterReference] &&
         !tr.isInstanceOf[CtArrayTypeReference[?]] && !tr.isInstanceOf[CtIntersectionTypeReference[?]] &&
         !tr.isInstanceOf[CtWildcardReference] && !tr.isPrimitive && tr.getActualTypeArguments.isEmpty
-      // bounds are translated inside `mintTypeParams` with the decl's own frame freshly in scope
-      // (no static-nested boundary crossed), so `resolveTypeParam` is the right, complete source.
+      // bounds translate with the decl's own frame freshly in scope — `resolveTypeParam` is complete here
       (if isRawGeneric then nameFilledArgs(tr, resolveTypeParam, resolveTypeParamDecl) else None) match
         case Some(args) => AppliedType(TypeRef(NoPrefix, typeSym(tr)), args)
         case None       => tpe(tr)
 
     // ---- types ----
-    /** THE TYPE-REFERENCE DISPATCH — the frontend half of the catalog's FOURTH obligation surface,
-      * and the wrapper sits HERE for [[stmtKind]]'s reason: written inside each `case`, an arm
-      * could decline to wrap, and an arm that opts out is the same shape as the defect the
-      * mechanism exists to catch.
-      *
-      * A `CtTypeReference` is neither a statement nor an expression, so neither of the other two
-      * wrappers could ever enter one — which is why ten rows about wildcards, raw fills, F-bounds,
-      * unbound type variables and nested-vs-inner types carried `Attaches.Unmechanised` naming this
-      * exact gap. `SpoonKinds.refNameOf` maps the node's runtime class to its registry name ONCE,
-      * before any arm is tried.
-      *
-      * A NULL reference is not a node and enters no scope: there is nothing there to owe a consult,
-      * which is `SpoonKinds.Claim.Positional`'s rule read at its limit — a node that does not enter
-      * the dispatch owes nothing. Its answer is `objectT`, exactly as the arm it replaces was. */
+    /** THE TYPE-REFERENCE DISPATCH — the frontend half of the catalog's fourth obligation surface.
+      * Wraps HERE rather than per-arm, so no arm can opt out of the consult. `CtTypeReference` is
+      * neither statement nor expression, so neither other wrapper reaches it. `null` enters no
+      * scope and owes nothing; answers `objectT`. */
     private def tpe(tr: CtTypeReference[?]): TypeRepr =
       if tr == null then objectT
       else
@@ -1824,17 +1261,9 @@ object SpoonTir:
         Typing.ofReference(SpoonKinds.refNameOf(tr.getClass), at, tr)(tpeArm(tr, at))
 
     /** JS-G07 and JS-G08 — the two questions a PLAIN class reference is asked, STATED ONCE and
-      * called from both arms that a `CtTypeReference` reaches.
-      *
-      * `slotConsults`' shape at the type surface, and needed for the same reason: the primitive
-      * fast path and the general arm are ONE Spoon kind, so a consult written in the general arm
-      * alone is a hole at every `int`, `boolean` and `void` in the program — which is most of them.
-      *
-      * Both predicates are about a RAW USE (JLS 4.8), which is where java stops checking and scala
-      * cannot: `isRawGenericUse` is the engine's own test for it, so the consult and the fill below
-      * read one predicate rather than two spellings of one. JS-G08 narrows it to the sites where
-      * the fill actually DEPENDS on the frame — a companion body cannot name the class's own
-      * parameters and a nested use can, so one java type genuinely renders two ways. */
+      * called from both arms a `CtTypeReference` reaches (primitive fast path and the general arm
+      * are ONE Spoon kind). Both about a RAW USE (JLS 4.8); G08 narrows to sites where the fill
+      * DEPENDS on the frame (a companion body cannot name the class's own params). */
     private def rawUseConsults(r: CtTypeReference[?], at: Origin)(using Obligations): Unit =
       val raw = isRawGenericUse(r)
       Obligations.consult(JS.G(7), at)(Option.when(raw)(()))
@@ -1845,56 +1274,36 @@ object SpoonTir:
         AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")), List(tpe(arr.getComponentType)))
       case inter: CtIntersectionTypeReference[?] =>
         inter.getBounds.asScala.toList.map(tpe).reduce(AndType(_, _))
-      // `? super java.lang.Object` HAS EXACTLY ONE INHABITANT, and it is not a wildcard.
-      //
-      // Java has no supertype of `Object`, so `List<? super Object>` can only ever be a
-      // `List<Object>` — the lower bound says EVERYTHING, where an upper `? extends Object` says
-      // nothing and is correctly dropped. Rendered `[?]` (both dropped by the same filter) the two
-      // become the same type and a `list.addAll(other)` java accepts by capture conversion has an
-      // element that unifies to `Nothing`: `Required: IterableOnce[Nothing & Any]`, measured at 4
-      // sites on one library. This is not an approximation — it is the only java instantiation, so
-      // naming it loses nothing. A `? super X` for any OTHER `X` really is a family and keeps its
-      // bound.
+      // `? super java.lang.Object` has exactly one inhabitant (`Object`) — java has no supertype
+      // of it, so unlike `? extends Object` this bound must NOT be dropped to a bare wildcard.
       case w: CtWildcardReference =>
         val bound = Option(w.getBoundingType)
         val isObj = bound.exists(_.getQualifiedName == "java.lang.Object")
         val written = bound.filter(_.getQualifiedName != "java.lang.Object")
-        // JS-G01 — java's use-site variance HAS a scala counterpart, in a different grammar. The
-        // difference APPLIES where a bound has to be carried across: a bare `?` is the one form
-        // both languages spell the same way, and `? extends Object` IS a bare `?`.
+        // JS-G01: a bare `?` is the one form both languages spell the same way
         Obligations.consult(JS.G(1), at)(written)
-        // JS-G03 — and `? super Object` is the one wildcard that is not a family at all. Java has
-        // no supertype of `Object`, so the lower bound admits exactly `Object`.
+        // JS-G03: `? super Object` is the one wildcard that is not a family at all
         Obligations.consult(JS.G(3), at)(Option.when(!w.isUpper && isObj)(()))
         if !w.isUpper && isObj then objectT
         else
           val b = written.map(tpe)
           if w.isUpper then TypeBounds(NoType, b.getOrElse(NoType)) else TypeBounds(b.getOrElse(NoType), NoType)
-      // An ERASED parameter ([[unwritableResultVars]]) resolves to its own bound and not to a
-      // binder, so it is answered AHEAD of the marker arm below: it was deliberately never minted,
-      // and reporting `JS-G12` about it would say the frontend could not name a variable it chose
-      // not to declare. JS-G49 is the row that IS about it.
+      // an ERASED parameter ([[unwritableResultVars]]) was deliberately never minted — JS-G49, not G12
       case tv: CtTypeParameterReference if erasedTypeParam(tv.getSimpleName).isDefined =>
         Obligations.consult(JS.G(49), at)(erasedTypeParam(tv.getSimpleName))
-        // …and JS-G12 NOT-FIRED, because this arm inherits the node's obligations (`CLAUDE.md` §3).
-        // `None` is a FACT here rather than a default: a name this frontend ERASED is one it chose
-        // not to declare, which is the opposite of a variable that has no nameable type.
+        // JS-G12 NOT-FIRED: `None` is a fact — an erased name is not one with no nameable type
         Obligations.consult(JS.G(12), at)(scala.None)
         erasedTypeParam(tv.getSimpleName).get
       case tv: CtTypeParameterReference =>
-        // …and JS-G49 NOT-FIRED for the same reason, from the other side: a name that resolves to a
-        // binder here is not one `unwritableResultVars` erased.
+        // JS-G49 NOT-FIRED: a name resolving to a binder here was not erased
         Obligations.consult(JS.G(49), at)(scala.None)
         val here = resolveTypeParam(tv.getSimpleName)
-        // JS-G12 — this is where the frontend finds out that a type variable has NO NAMEABLE type:
-        // the name resolves to no binder in this scope, so what is minted is a MARKER rather than a
-        // name, and the emitter's standing obligation is that it never reaches the output.
+        // JS-G12: no binder in scope mints a MARKER, which must never reach emitted output
         Obligations.consult(JS.G(12), at)(Option.when(here.isEmpty)(()))
         val id = here.getOrElse(minter.external(Symbol.UnresolvedTypeVarPrefix + tv.getSimpleName, tv.getSimpleName))
         TypeRef(NoPrefix, id)
       case p if p.isPrimitive =>
-        // a primitive is a plain `CtTypeReference` and reaches the SAME obligation scope the arm
-        // below does — see `rawUseConsults`.
+        // a primitive reaches the SAME obligation scope the arm below does
         rawUseConsults(p, at)
         TypeRef(NoPrefix, minter.external("scala." + primName(p.getSimpleName), p.getSimpleName))
       case r =>
@@ -1902,34 +1311,22 @@ object SpoonTir:
         val head = TypeRef(NoPrefix, typeSym(r))
         r.getActualTypeArguments.asScala.toList match
           case Nil =>
-            // a RAW use of a generic type — Java allows it, Scala requires arguments. Fill the
-            // declared arity with wildcards (`Class` → `Class[?]`), so the reference type-checks.
-            // (Wildcards beat `Object` overall: a raw value more often flows INTO a generic slot
-            // than needs a concrete arg. The residual raw-into-type-param sites are cast below.)
+            // raw use: fill declared arity with wildcards (`Class` → `Class[?]`) so it type-checks
             val arity = formalArity(r)
-            // a raw use of the class we're currently INSIDE, in a NON-static member (where the class's
-            // own type params are in scope): fill with them (`ArrayMap[K,V]`) instead of wildcards, so
-            // member accesses stay on the enclosing instantiation rather than a path-dependent capture.
+            // a raw use of the enclosing class fills with its own type params, not wildcards
             selfRawStack.headOption match
-              // sge renders a raw SELF-use `[?]` too — `Cell.set(cell: Cell[?])` inside `Cell[T]`.
+              // disabled: sge renders a raw SELF-use `[?]` too
               case Some((cls, params)) if false && !inStatic && cls == typeSym(r) && params.nonEmpty && params.sizeIs == arity =>
                 AppliedType(head, params.map(p => TypeRef(NoPrefix, p)))
               case _ =>
-                // outside the enclosing class: reconstruct args from same-named in-scope params
-                // (nested `Entries` → `Entries[K,V]`, param `Array` → `Array[T]`) so member
-                // projections stay path-INdependent. Gated to non-static contexts — a companion
-                // object can't see the class's type params. Falls back to wildcards.
+                // reconstruct args from same-named in-scope params, else fall back to wildcards
                 if arity <= 0 then head
                 else if inStatic then AppliedType(head, List.fill(arity)(TypeBounds(NoType, NoType)))
                 else
                   val formals = typeDeclarationOf(r).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
                   if formals.isEmpty then AppliedType(head, List.fill(arity)(TypeBounds(NoType, NoType)))
                   else AppliedType(head, formals.map { f =>
-                    // sge renders EVERY raw generic `[?]` — parent, overrides and fields alike
-                    // (`AssetLoader.getDependencies: DynamicArray[AssetDescriptor[?]]`). Filling from
-                    // an in-scope name is only right when the raw type is the enclosing class or
-                    // NESTED in it (`Entries` inside `ObjectMap[K,V]`); for an unrelated generic the
-                    // name match is coincidence and the result is semantically wrong.
+                    // fill from an in-scope name only when the raw type is the enclosing class or nested in it
                     (if nestedInScope(r) then accessibleTp(f.getSimpleName) else scala.None)
                       .map(id => TypeRef(NoPrefix, id))
                       .orElse(inheritedTp(f))                       // what THIS class instantiated it as
@@ -1937,14 +1334,9 @@ object SpoonTir:
                   })
           case args => AppliedType(head, args.map(tpe))
 
-    /** id of a referenced class type — our own (already defined) or an external stub.
-      *
-      * Carries `@FunctionalInterface` from the CLASS FILE into the TIR symbol when the declaration
-      * is readable. The emitter reads this to decide whether a static method reference needs an
-      * explicit lambda (JS-C52): scalac warns on eta-expansion at a non-annotated SAM. REFUTER
-      * polarity (CLAUDE.md §4.56): an unreadable class file leaves the symbol without the
-      * annotation, so the emitter emits the lambda — the safe direction is the one nobody warns
-      * about, and the unsafe direction is a bare name scalac then rejects under `-Werror`. */
+    /** id of a referenced class type — our own or an external stub. Carries `@FunctionalInterface`
+      * from the class file when readable (JS-C52, whether a method reference needs an explicit
+      * lambda). REFUTER polarity (CLAUDE.md §4.56): unreadable means unannotated, the safe direction. */
     private def typeSym(r: CtTypeReference[?]): SymId =
       val anns = try
         val td = r.getTypeDeclaration
@@ -1962,26 +1354,16 @@ object SpoonTir:
       case other     => other.capitalize
 
     // ---- declarations ----
-    /** @param owner
-      *   overrides the DECLARING TYPE as the symbol's owner. Set only for a METHOD-LOCAL class
-      *   (JS-C30), whose owner is the enclosing executable — see the `stmtArm` arm for why the
-      *   declaring type is the wrong answer there.
-      * @param sourceName
-      *   overrides the name the symbol carries. Set only for a local class, where Spoon's
-      *   qualified name holds java's binary disambiguator (`Outer$1Local`) — the right INTERNING
-      *   key and not a legal Scala identifier.
-      * @param selfClass , outerVars
-      *   the ANONYMOUS-class wiring, reused verbatim: a local class reaches the enclosing
-      *   instance's members exactly as an anonymous one does, and captures the enclosing method's
-      *   locals the same way. Empty for every ordinary declaration, which is the pre-existing path.
-      */
+    /** @param owner overrides the DECLARING TYPE as owner; set only for a METHOD-LOCAL class (JS-C30).
+      * @param sourceName overrides the symbol's name; set only for a local class (Spoon's qualified
+      *   name holds java's binary disambiguator, not a legal Scala identifier).
+      * @param selfClass , outerVars the ANONYMOUS-class wiring, reused verbatim for local classes. */
     private def classDef(t: CtType[?], owner: Option[SymId] = scala.None,
                          sourceName: Option[String] = scala.None,
                          selfClass: SymId = SymId.None,
                          outerVars: Map[String, SymId] = Map.empty): Tree.ClassDef =
       val id   = defineType(t, owner, sourceName)
-      // claimed FIRST, before any member translates: the type's Javadoc is attached to the type
-      // element, and a member's `deepComments` must not be able to reach it.
+      // claimed FIRST, before any member translates, so a member's deepComments cannot reach it
       val lead = leadingOf(t)
       val (frame, tpDefs) = mintTypeParams(typeKey(t.getReference), id, t.getFormalCtTypeParameters.asScala.toList)
       tpScopes.prepend(frame); tpIsExec.prepend(false)
@@ -1997,29 +1379,17 @@ object SpoonTir:
       tpExecNames.prepend(if capturesEnclosing(t) then tpExecNames.headOption.getOrElse(Set.empty) else Set.empty)
       val savedStatic = inStatic; inStatic = false // a class body isn't a static context for its instance members
       val parents = superTypes(t)
-      // …carried WITH their source positions, because a field and an initialiser BLOCK are one
-      // sequence in JLS 12.5 step 4 and the body list has to interleave them. See `step4` below.
-      // a LOCAL class takes the anonymous-class body wiring — see the parameter docs. `SymId.None`
-      // and `""` for every other declaration, which is the path every existing caller takes.
+      // fields carry their source positions — JLS 12.5 step 4 interleaves them with init blocks (step4 below)
       val local  = owner.isDefined
       val bodySelf = if local then id else SymId.None
-      // NO `catch` here, and its absence is the point (§4.6): `""` is precisely the value the
-      // NON-local path uses, so a swallowed failure would be indistinguishable from "this is not a
-      // local class" — a fabricated fact, at a value the anonymous-class body wiring then reads.
-      // And the default would be unreachable anyway: `isDropped` and `seenTypes` below call
-      // `t.getQualifiedName` unguarded a few lines later, so a `CtType` that cannot spell its own
-      // name takes the whole translation down there rather than degrading here.
+      // no `catch` — a swallowed failure would be indistinguishable from "not a local class" (§4.6)
       val bodyQName = if local then t.getQualifiedName else ""
       val fields = t.getFields.asScala.toList
         .filterNot(_.isInstanceOf[CtEnumValue[?]])
         .sortBy(posKey)
         .map(f => posKey(f) -> fieldDef(id, f, selfClass, outerVars, bodySelf, bodyQName))
-      // include enum constructors too — the emitter folds their PARAMS into the sealed class's primary
-      // constructor so each constant (`Nearest(GL_NEAREST)`) has a matching parameter to pass to.
-      // Substitutions.dropMethods: a member opted out of mechanical translation (a ready Scala
-      // equivalent is injected in its place, or every use of it was rewritten away). Keyed
-      // `owner#name` for all overloads, or `owner#name(P1,P2)` on erased parameter simple names
-      // for one. Constructors are keyed `<init>` and need that precision to be droppable at all.
+      // include enum constructors — the emitter folds their params into the sealed class's primary ctor
+      // Substitutions.dropMethods, keyed owner#name or owner#name(P1,P2) for one overload
       def isDropped(e: CtExecutable[?], name: String): Boolean =
         subs.dropsMethod(t.getQualifiedName, name,
           e.getParameters.asScala.toList.map(p => Option(p.getType).map(_.getSimpleName).getOrElse("?")))
@@ -2028,13 +1398,9 @@ object SpoonTir:
       def note(e: CtExecutable[?], nm: String, sym: Option[SymId], dropped: Boolean): Unit =
         seenMembers += MemberKey(t.getQualifiedName, nm, descriptorOf(e)) ->
           MemberFacts(sym, execFlags(e), originOf(e), dropped)
-      /** Record what this walk SAW, then translate what survives — the two halves of the same pass,
-        * because this is the last place the dropped half exists at all ([[seenMembers]]).
-        *
-        * The interleave is deliberate and load-bearing: `isDropped` and `descriptorOf` mint nothing,
-        * so the order symbols are MINTED in is exactly what it was before this record existed
-        * (`filterNot` then `map`), and a run's `SymId` assignment — which every deterministic
-        * artifact depends on — cannot move. */
+      /** Record what this walk SAW, then translate what survives — the last place the dropped half
+        * exists ([[seenMembers]]). Interleaved so minting order stays exactly what it was, since a
+        * run's `SymId` assignment is deterministic-artifact-load-bearing. */
       def walked[E <: CtExecutable[?]](es: List[E], nameOf: E => String)(mk: E => Tree.DefDef): List[Tree.DefDef] =
         es.flatMap { e =>
           val nm = nameOf(e)
@@ -2044,12 +1410,7 @@ object SpoonTir:
             note(e, nm, Some(d.symbol), dropped = false)
             List(d)
         }
-      // JS-C43 — A NESTED RECORD ARRIVES WITH NO CONSTRUCTOR AT ALL. Spoon synthesises a record's
-      // implicit canonical constructor for a TOP-LEVEL declaration and not for a nested one
-      // (`getConstructors.size` is 1 and 0, probed on the same file), so the emitted class had no
-      // way to be constructed and no statement assigning a single component. `createCanonical-
-      // ConstructorIfMissing` is Spoon's own repair for exactly this and is idempotent, so it is a
-      // no-op on the top-level shape and on a record that wrote its constructor out.
+      // JS-C43: Spoon does not synthesise a nested record's implicit canonical constructor — repair it
       t match
         case r: CtRecord => r.createCanonicalConstructorIfMissing()
         case _           => ()
@@ -2057,36 +1418,18 @@ object SpoonTir:
         case c: CtClass[?] => walked(c.getConstructors.asScala.toList.sortBy(posKey), _ => "<init>")(
                                 execDef(id, _, "<init>", selfClass, outerVars, false, bodySelf, bodyQName))
         case _             => Nil
-      // ordinary methods went through with the DEFAULT `overrides = false`; only anonymous-class
-      // methods ever consulted the hierarchy. Scala requires `override` where java requires
-      // nothing, and RefChecks — the phase that says so — had never run to report it.
+      // ordinary methods consult the hierarchy for `override` — RefChecks never ran to report its absence (§3)
       val methods = walked(t.getMethods.asScala.toList.sortBy(posKey), _.getSimpleName)(m =>
         execDef(id, m, m.getSimpleName, selfClass, outerVars, overridesInherited(m), bodySelf, bodyQName))
-      // Java INITIALIZER BLOCKS — `static { … }` and instance `{ … }`. These were previously
-      // dropped on the floor: nothing referenced `CtAnonymousExecutable`, so `MathUtils` never
-      // built its sin/cos table, `CRC` never built its table and `Colors` never registered a
-      // colour — a port that compiles clean and computes `sin(x) = 0`. Silent omission is exactly
-      // what this engine forbids (DESIGN.md §3.4), so they are translated like any other executable
-      // and carried as synthetic members; the emitter inlines their body at the right place (a
-      // static block into the companion object, an instance block into the class body), where
-      // Scala runs it at initialisation — the same point Java does.
+      // java initialiser blocks (`static { }`, instance `{ }`) — translated as synthetic members;
+      // silent omission is forbidden (DESIGN.md §3.4). Emitter inlines at the equivalent scala point.
       val initBlocks = t match
         case c: CtClass[?] =>
           c.getAnonymousExecutables.asScala.toList.sortBy(posKey).map { ae =>
             val nm = if ae.hasModifier(ModifierKind.STATIC) then "<clinit>" else "<initblock>"
             val d  = execDef(id, ae, nm, selfClass, outerVars, false, bodySelf, bodyQName)
-            // AN INITIALISER BLOCK IS AN INDEX ENTRY. It is an executable the frontend read out of
-            // Java, and a port really does key policy on one — gdx-vfx replaces the BODY of
-            // `VfxGLUtils#<clinit>`, whose Java branches on a reflective class the base drops.
-            // Left out, the binder found the symbol in the program, found the owner in `seenTypes`,
-            // and concluded from the structure that the ENGINE had minted it: a `SyntheticTarget`
-            // refusal, of a hand-written `static { }` block, which is the opposite of true. The
-            // `policy-binding` check is what caught it (vfx, `policy 0 -> 1`) — the whole reason
-            // that check exists while both answers are still computable.
-            //
-            // NOT routed through `walked`: `dropMethods` is not consulted for an initialiser, and
-            // sending it through the drop test would silently make init blocks droppable — a
-            // widening this commit has no business making.
+            // an initialiser block is an index entry (a port can key policy on it, e.g. body substitution)
+            // NOT routed through `walked`: `dropMethods` does not apply to initialisers
             note(ae, nm, Some(d.symbol), dropped = false)
             posKey(ae) -> d
           }
@@ -2098,58 +1441,25 @@ object SpoonTir:
       tpScopes.remove(0); tpIsExec.remove(0); tpDecls.remove(0); inheritedInst.remove(0); inheritedByDecl.remove(0)
       enclosingFqns.remove(0); ancestorFqns.remove(0)
       selfRawStack.remove(0); tpAccessible.remove(0); tpExecNames.remove(0); inStatic = savedStatic
-      // JLS 12.5 STEP 4 IS ONE SEQUENCE, IN TEXTUAL ORDER — field initialisers and instance
-      // initialiser blocks together (12.4.2 step 9 says the same of the static pair). Grouped
-      // `fields ++ … ++ initBlocks`, every block landed behind every field, so
-      // `{ b = 2; } int b = 5;` emitted the assignment java ran FIRST last and left `b == 2` where
-      // java leaves 5. Valid Scala, no compile error, no check count, and only a run can see it —
-      // C12's shape at the other member of the same step.
-      //
-      // Sorted AFTER every symbol is minted, never before: the minting order stays
-      // fields → ctors → methods → initBlocks, because a run's `SymId` assignment is what every
-      // deterministic artifact is keyed on (see `walked` above for the same reasoning). `sortBy` is
-      // stable, so members with no valid position keep the grouping they had.
+      // JLS 12.5 step 4 is ONE textual-order sequence — fields and instance init blocks interleaved.
+      // Sorted AFTER every symbol is minted (minting order must stay deterministic, `sortBy` is stable).
       val step4 = (fields ++ initBlocks).sortBy(_._1).map(_._2)
-      // JS-C43 — the two things a java RECORD needs that its members do not carry. Both are read
-      // HERE, where the components' field and accessor symbols have just been minted and the
-      // Spoon node is still in hand; neither is derivable downstream (see `recordComponents`).
-      //
-      // `isRecord` is CLEARED where the join failed, and that is the flag's whole contract: it does
-      // not say "java wrote `record`", it says "java wrote `record` AND this program still declares
-      // every member the synthesis reads". A flag that meant only the first would license a
-      // synthesis over a subset of the components.
+      // JS-C43: `isRecord` is CLEARED when the component join fails — it means "record AND every
+      // synthesised member's source still declares", not merely "java wrote `record`".
       val comps = recordComponents(t, id)
       if t.isInstanceOf[CtRecord] then
         minter.defined(typeKey(t.getReference)).foreach((sid, sy) =>
           minter.set(sid, sy.copy(components = comps.getOrElse(Nil),
                                   flags = sy.flags.copy(isRecord = comps.isDefined))))
-        // NOTHING IS DONE TO THE COMPONENT FIELD'S ACCESS, and that was PROBED rather than assumed.
-        // JLS 8.10.1 makes it `private final` and Spoon reports exactly that, so there is no flag to
-        // repair; what the emitted `var x$field` then shows is `TirEmitter.recordClashWidening` —
-        // every renamed field is widened to public, with its own recorded decision, because a name
-        // java read from an enclosing class is not reachable at the new one. A record's field is
-        // renamed on EVERY record (the component, the field and the accessor share one java name),
-        // so that rule always applies here; it is a universal §4.55 rule with its own note and it is
-        // not this row's to narrow.
+        // component field access untouched (JLS 8.10.1 private final); widening is `TirEmitter.recordClashWidening`'s job (§4.55)
       Tree.ClassDef(id, parents, selfType = None,
         body = step4 ++ canonicalised(t, id, comps.getOrElse(Nil), ctors) ++
                accessorBodies(t, id, comps.getOrElse(Nil), methods) ++ nested,
         origin = originOf(t), tparams = tpDefs, enumCases = enumCases, leading = lead)
 
-    /** JS-C43 — an IMPLICIT record accessor RETURNS ITS COMPONENT'S FIELD (JLS 8.10.3), written out.
-      *
-      * The third thing the parser hands over wrong, and the worst of the three. Spoon gives a nested
-      * record's implicit accessor a body whose field read does not resolve, so `def bo()` emitted
-      * `return bo` — which in scala's ONE namespace is the METHOD, and the accessor calls itself
-      * forever. It type-checks; the compile is green; the port stack-overflows the first time
-      * anything reads a component.
-      *
-      * Written out for EVERY implicit accessor rather than only where the resolution failed, so that
-      * the emitted record does not depend on whether it was declared at the top level (where Spoon
-      * resolves the same body correctly). What java derives, this derives, and it derives it once.
-      *
-      * An accessor the record WROTE is untouched — `isImplicit` is the whole test — because that one
-      * is real java whose body may be anything, and JLS 8.10.3 says java calls it. */
+    /** JS-C43 — an IMPLICIT record accessor RETURNS ITS COMPONENT'S FIELD (JLS 8.10.3), written out
+      * explicitly for EVERY implicit accessor (a nested record's, from Spoon, calls itself forever
+      * in scala's one namespace). An accessor the record WROTE is untouched (`isImplicit` gate). */
     private def accessorBodies(t: CtType[?], id: SymId, comps: List[RecordComponent],
                                methods: List[Tree.DefDef]): List[Tree.DefDef] =
       if comps.isEmpty then methods
@@ -2166,43 +1476,23 @@ object SpoonTir:
               val at = d.origin
               val ft = minter.defined(memberKey(id, c.name)).map(_._2.info).getOrElse(NoType)
               val read = Tree.Select(Tree.This(id, TypeRef(NoPrefix, id), at), c.field, ft, at)
-              // `scala.Nothing` on the `Return` and `Unit` on the block — the shapes `stmts` gives a
-              // real `return`, so a derived accessor and a written one are the same tree.
+              // matches `stmts`' shape for a real `return`, so derived and written accessors are the same tree
               val nothing = TypeRef(NoPrefix, minter.external("scala.Nothing", "Nothing"))
               d.copy(rhs = Some(Tree.Block(List(Tree.Return(Some(read), nothing, at)),
                                            Tree.Literal(Constant.UnitC, unitT, at), unitT, at)))
         }
 
-    /** java's RECORD COMPONENTS, in DECLARATION ORDER, each joined to the FIELD and the ACCESSOR
-      * javac derived from it — see [[balticporter.tir.RecordComponent]] for why both.
-      *
-      * Read from the SPOON node and interned through the same keys `fieldDef1` and `execDef` used,
-      * which is what makes the join structural. A name-keyed join at emission cannot work: java
-      * gives the component, the field and the accessor ONE name and scala has one namespace, so the
-      * emitter has already renamed the field by the time anything is written.
-      *
-      * SORTED BY POSITION rather than taken in `getRecordComponents`' iteration order. Spoon's
-      * return type is a `Set` — its implementation happens to be insertion-ordered, which is a fact
-      * about a class this engine does not own — and the order is the whole semantics of `toString`,
-      * `equals`, `hashCode` and every deconstruction.
-      *
-      * ALL OR NOTHING, which is what the `Option` is for. A component whose field or accessor this
-      * program does not DECLARE — a port may `dropMethods` an accessor — answers `None` for the
-      * WHOLE record rather than shortening the list, and `None` is also what clears `isRecord`, so
-      * the class ships exactly as it did before this row was lowered. A SHORT list is the one answer
-      * worse than none: `equals` and `hashCode` over a SUBSET of the components are valid scala
-      * computing something java never computed, at no error and no moved count. `Some(Nil)` is a
-      * different fact and a legal one — `record Empty()` has no components, and java gives it an
-      * `equals` and a `toString` all the same. */
+    /** java's RECORD COMPONENTS, in DECLARATION ORDER, each joined to its FIELD and ACCESSOR by the
+      * same keys `fieldDef1`/`execDef` use — a name-keyed join cannot work once the emitter renames.
+      * SORTED BY POSITION, not Spoon's `Set` iteration order. ALL OR NOTHING: any component missing
+      * its field or accessor answers `None` for the WHOLE record (never a short list, which would
+      * silently compute `equals`/`hashCode` over a subset). `Some(Nil)` for a genuinely empty record. */
     private def recordComponents(t: CtType[?], id: SymId): Option[List[RecordComponent]] = t match
       case r: CtRecord =>
         val declared = r.getRecordComponents.asScala.toList.sortBy(posKey)
         val joined = declared.flatMap { c =>
           val nm  = c.getSimpleName
-          // the ACCESSOR is java's own definition of one (JLS 8.10.3): the NILARY method with the
-          // component's name. Looked up on the Spoon type so that an EXPLICITLY WRITTEN accessor —
-          // which java permits, and which then answers something other than the field — is the one
-          // that is found, exactly as it is the one java calls.
+          // the ACCESSOR is java's own definition (JLS 8.10.3): the nilary method with the component's name
           val acc = t.getMethods.asScala.find(m => m.getSimpleName == nm && m.getParameters.isEmpty)
           for
             (fid, _) <- minter.defined(memberKey(id, nm))
@@ -2213,43 +1503,10 @@ object SpoonTir:
         Option.when(joined.sizeIs == declared.size)(joined)
       case _ => scala.None
 
-    /** THE CANONICAL CONSTRUCTOR AS JLS 8.10.4 DECLARES IT — two repairs, both of them defects the
-      * parser hands over and neither of them visible to a compile.
-      *
-      * ==1. A compact constructor's implicit field assignments==
-      *
-      * `public Point { if (x < 0) throw …; }` is the whole constructor a record may write, and java
-      * appends `this.x = x;` for every component AFTER that body, reading the parameters as the
-      * body left them (which is what makes a compact constructor able to NORMALISE its arguments).
-      * Spoon models the written body and not the appended half, so the emitted class assigned
-      * nothing: every backing field kept its default and every accessor answered `0`/`null`, in a
-      * class that compiles perfectly. That is a §4.4-class defect arriving through a declaration —
-      * no error, no moved count, and only a run could see it.
-      *
-      * The canonical constructor written out IN FULL is untouched, because its assignments are real
-      * java statements the ordinary path already translated; `isCompactConstructor` is Spoon's own
-      * answer to which is which, and it is asked rather than inferred from "does this body assign
-      * the field", which would be a guess about a body that may assign it conditionally.
-      *
-      * Components are matched to parameters BY POSITION — a compact constructor's parameter list is
-      * the header's, in order, by construction (JLS 8.10.4) — never by name.
-      *
-      * ==2. The IMPLICIT constructor's parameter ORDER==
-      *
-      * JLS 8.10.4 makes the canonical constructor's formal parameters the components, IN THE HEADER'S
-      * ORDER. Spoon builds its implicit one from `getFields()`, which is not that order and is not
-      * even stable across component types — `record Prims(boolean bo, byte by, short sh, char ch,
-      * int in, long lo, float fl, double du)` arrives as `(bo, du, fl, lo, in, ch, sh, by)`. The
-      * `CtorFunnel` then promotes those parameters into the emitted class's own list while every
-      * translated `new Prims(…)` keeps java's argument order, so the two disagree PER SLOT: a
-      * compile error where the types differ, and a silently transposed pair where they do not.
-      *
-      * Reordered by WHICH FIELD EACH PARAMETER IS ASSIGNED TO, read out of the constructor's own
-      * body, rather than by matching parameter names to component names. The name correspondence is
-      * real (JLS 8.10.1 gives all three one name) but it is a string test about a list this function
-      * is reordering, and the body already states the pairing structurally. A constructor whose body
-      * does not have that shape — one the record WROTE, which may assign conditionally or not at all
-      * — accounts for no component and is left exactly as it is. */
+    /** THE CANONICAL CONSTRUCTOR AS JLS 8.10.4 DECLARES IT — two parser defects repaired: (1) a
+      * compact constructor's implicit trailing field assignments, appended after Spoon's modeled
+      * body, components matched to parameters BY POSITION; (2) the implicit constructor's parameter
+      * order, reordered to the HEADER's order by reading which field each parameter assigns to. */
     private def canonicalised(t: CtType[?], id: SymId, comps: List[RecordComponent],
                               ctors: List[Tree.DefDef]): List[Tree.DefDef] =
       if comps.isEmpty then ctors
@@ -2302,24 +1559,10 @@ object SpoonTir:
         if inOrder.sizeIs != ps.size || inOrder.sizeIs != want.size then d
         else d.copy(paramss = List(inOrder) ++ d.paramss.drop(1))
 
-    /** a Java enum constant → `EnumCase`: its ctor args, and any per-constant method overrides
-      * (from its anonymous-class body), each keyed under the CONSTANT so it doesn't collide
-      * with the enum's abstract method of the same name.
-      *
-      * ==FIELDS as well as methods==
-      * A Java enum constant's body is an anonymous class body, so it may declare fields — and
-      * `static final` ones at that, since JLS 8.1.3 permits statics in an anonymous class when they
-      * are constant variables. `DefaultRoomType.CASTLE { public static final int MIN_SIZE = 7,
-      * MIN_TOWER = 3; … }` in noise4j is the shape, read UNQUALIFIED from the constant's own
-      * `carve` and `isValid` bodies two lines below. Harvesting only `CtMethod` dropped both,
-      * silently: the emitted `case object` was structurally correct and referred to two names that
-      * did not exist (4 errors, and no check saw them — the omissions check counts what the TIR
-      * carries, and this never reached the TIR at all).
-      *
-      * They need no home of their own. A Scala `case object`'s body IS the constant's scope, so a
-      * `val` there is exactly the Java static's visibility — which is why this is a frontend
-      * harvest and not an emitter change.
-      */
+    /** a Java enum constant → `EnumCase`: ctor args, and any per-constant method/field overrides
+      * from its anonymous-class body, keyed under the CONSTANT so they don't collide with the
+      * enum's abstract members. FIELDS included (JLS 8.1.3 permits `static final` constants in an
+      * anonymous class) — harvesting only `CtMethod` silently dropped them (4 errors, uncounted). */
     private def enumCase(enumId: SymId, v: CtEnumValue[?]): Tree.EnumCase =
       val vlead = leadingOf(v)
       val caseId = minter.define(memberKey(enumId, v.getSimpleName))(sid =>
@@ -2349,27 +1592,10 @@ object SpoonTir:
       * (every member list is `sortBy(posKey)`), so the minted keys are stable across runs. */
     private var anonSeq = 0
 
-    /** A Java ANONYMOUS CLASS — `new Base(args) { members }`.
-      *
-      * Until this existed, `ctorCall` read `CtConstructorCall` and never asked whether the node was
-      * the `CtNewClass` subtype, so every anonymous body in the corpus was DISCARDED: `addListener(
-      * new ClickListener() { public void clicked(…) {…} })` emitted as a bare `new ClickListener()`.
-      * That compiles — a listener with no overrides is a valid listener — and every libGDX button
-      * silently did nothing. Scala's anonymous-class expression is the exact counterpart, so the
-      * members translate through the ordinary declaration machinery.
-      *
-      * Two things differ from a named class:
-      *   - the members are owned by a SYNTHETIC symbol, so their keys cannot collide with the
-      *     enclosing class's (two listeners in one class both declaring `clicked` would otherwise
-      *     intern to one symbol);
-      *   - but their bodies translate with `this` bound to the ENCLOSING class, because that is what
-      *     Spoon reports for the implicit `this` of every enclosing member they reach. The emitter
-      *     renders it `Outer.this.m` — inside a Scala anonymous class a bare `this` is the anonymous
-      *     instance, exactly as in Java.
-      *
-      * Captured locals need no lowering: javac synthesises constructor parameters for them, Scala
-      * closes over them directly. They are seeded by NAME so the xref resolves them to the real
-      * local rather than a stub. */
+    /** A Java ANONYMOUS CLASS — `new Base(args) { members }`. Members are owned by a SYNTHETIC
+      * symbol (so two listeners' `clicked` cannot collide), but bodies translate with `this` bound
+      * to the ENCLOSING class (Spoon's own reading of the implicit `this`; emitter renders
+      * `Outer.this.m`). Captured locals seeded by NAME, closed over directly. */
     private def anonClass(nc: CtNewClass[?], enclosing: SymId, outerVars: Map[String, SymId]): Option[Tree.AnonClass] =
       Option(nc.getAnonymousClass).map { ac =>
         anonSeq += 1
@@ -2380,9 +1606,7 @@ object SpoonTir:
         // the name Spoon gives the anonymous class (`DragAndDrop$1`) — how a `this` inside the body
         // that means the ANONYMOUS instance is recognised.
         val qname = ac.getQualifiedName
-        // register Spoon's qualified name as an ALIAS of the same SymId, so `fieldSym`/`methodSym`
-        // — which resolve the owner via `minter.external(ownerQ, …)` where ownerQ is
-        // `getQualifiedName` — find THIS symbol instead of minting a second one.
+        // alias Spoon's qualified name to this SymId so external lookups find it, not a second one
         minter.alias(qname, id)
         val dropped = List.newBuilder[String]
         val members = ac.getTypeMembers.asScala.toList.sortBy(posKey).flatMap {
@@ -2397,31 +1621,19 @@ object SpoonTir:
             dropped += s"${other.getClass.getSimpleName.stripSuffix("Impl")} ${other.getSimpleName}"
             Nil
         }
-        // java's SAM question, asked ONCE, where the class file is — see `samAnswerOf`. The target
-        // is the type the `new` NAMED, not the anonymous class Spoon synthesised for it.
+        // SAM question asked of the type `new` NAMED, not the anonymous class Spoon synthesised
         val sam = try samAnswerOf(nc.getType) catch { case _: Throwable => Sam.Answer.Unreadable }
         Tree.AnonClass(id, members, originOf(nc), dropped.result(), sam)
       }
 
-    /** Does this anonymous-class method OVERRIDE an inherited one? Scala REQUIRES `override` when
-      * the redefined member is concrete — and `ClickListener.clicked` has an empty body, so every
-      * listener body in libGDX is one — while merely PERMITTING it when the member is abstract
-      * (`Comparator.compare`). Marking every genuine override is therefore both necessary and safe.
-      *
-      * Spoon answers it from the resolved hierarchy; where it cannot (an unresolved supertype under
-      * noClasspath), fall back to a name+arity match over the supertypes that DO resolve, and to
-      * `false` when even that is unknown — an absent `override` fails loudly, a spurious one would
-      * too, so neither can be silent. */
-    /** every java class silently extends `java.lang.Object`, and its members land on scala's `Any`
-      * / `AnyRef` — which scala requires `override` for and java does not. Spoon reports no
-      * inherited declaration for them (there is no `Object` in the model under noClasspath), so the
-      * hierarchy walk below cannot see it. These five are the whole set java lets you redeclare. */
+    /** Does this anonymous-class method OVERRIDE an inherited one? Scala requires `override` when
+      * concrete, permits it when abstract — marking every genuine override is safe either way.
+      * Spoon answers it from the resolved hierarchy where it can; falls back to name+arity over
+      * resolvable supertypes; `java.lang.Object`'s members need [[universalMember]] separately
+      * since Spoon has no `Object` in the model under noClasspath. */
     private def overridesInherited(m: CtMethod[?]): Boolean =
-      // A java STATIC method never overrides — it HIDES. `SnapshotArray.with` and `Array.with` are
-      // two unrelated statics that java resolves by the static type of the receiver; and in scala
-      // they land in COMPANION objects, which inherit nothing from each other at all. Spoon's
-      // `getTopDefinitions` reports the hidden one just as it reports a real override, so this has
-      // to be excluded here rather than relied on downstream.
+      // a java STATIC method never overrides — it HIDES; excluded here since Spoon's own
+      // `getTopDefinitions` cannot tell the two apart
       !(m.isStatic) &&
         (universalMember(m) || inheritedFromSource(m))
 
@@ -2441,40 +1653,21 @@ object SpoonTir:
       if top.exists(_ ne m) then true
       else
         val n   = m.getSimpleName
-        // by full SIGNATURE, not arity: java overloads freely, and `draw(Batch, float)` does not
-        // override an inherited `draw(Batch, int)`. Marking it `override` is an error scala reports
-        // ("overrides nothing") and java has no opinion on — 48 sites in this corpus alone.
+        // by full SIGNATURE, not arity — java overloads freely
         def sig(x: CtMethod[?]): List[String] =
           x.getParameters.asScala.toList.map(p => Option(p.getType).map(_.getQualifiedName).getOrElse("?"))
         val mine = sig(m)
-        // …AND THE ANCESTOR'S SIGNATURE IS READ UNDER THE `extends` CLAUSE'S SUBSTITUTION, which is
-        // what an exact-string comparison silently omits. `AstActionHandler<C, N, A, H>` declares
-        // `processNode(N, boolean, BiConsumer<N, A>)`, and a subclass reached through
-        // `extends NodeVisitor extends AstActionHandler<NodeVisitor, Node, Visitor<Node>, …>`
-        // declares `processNode(Node, boolean, BiConsumer<Node, Visitor<Node>>)`. Those are ONE
-        // member to java (JLS 8.4.2, after the substitution) and two strings here, so the fallback
-        // answered `false` for every override through a generic superclass whose parameter the
-        // method actually mentions — 3 rows on one port, each an emitted member with NO modifier
-        // under a parent that declares it, which `RefChecks` reports as ``needs `override` modifier``
-        // and nothing else can see (`ENGINE-LIMITS.md` K28.2).
-        //
-        // The frame is composed one edge at a time and the actuals of each `extends` clause are read
-        // THROUGH the frame in force where they are WRITTEN — the same composition `actualFor` makes
-        // for the SAM question, at a different value type on purpose: this comparison is over
-        // `getQualifiedName`, which is already erased, so a frame of NAMES is exactly as precise as
-        // the question and a frame of references would be a second, finer answer nothing here reads.
-        //
-        // A RAW supertype contributes an EMPTY frame, so the ancestor's variable stays unsubstituted
-        // and the match declines — java would erase it to its bound, and declining is the direction
-        // whose error is a missing `override` scalac names rather than a spurious one it rejects.
+        // ancestor signature read under the `extends` clause's SUBSTITUTION (ENGINE-LIMITS K28.2) —
+        // an exact-string comparison silently misses an override through a generic superclass.
+        // frame composed one edge at a time; a RAW supertype contributes an EMPTY frame (declines,
+        // which errs toward a missing `override` rather than a spurious one).
         def declares(t: CtTypeReference[?], subst: Map[String, String], fuel: Int): Boolean =
           if t == null || fuel <= 0 then false
           else
             val decl = typeDeclarationOf(t).orNull
             if decl == null then false
             else
-              // this declaration's own frame: its formal parameters bound to the arguments the
-              // `extends` clause wrote, each first read through the frame of the scope it is in.
+              // this declaration's own frame: formals bound to the `extends` clause's arguments
               val formals = decl.getFormalCtTypeParameters.asScala.toList.map(_.getSimpleName)
               val actuals = (t.getActualTypeArguments.asScala.toList)
                 .map { a =>
@@ -2482,9 +1675,7 @@ object SpoonTir:
                   subst.getOrElse(q, q)
                 }
               val here = if formals.sizeIs == actuals.size then formals.zip(actuals).toMap else Map.empty[String, String]
-              // a PRIVATE ancestor method is not inherited at all, so it cannot be overridden:
-              // `GL30Interceptor.check()` is private and `GL31Interceptor.check()` is protected —
-              // two unrelated methods to java, and `override` on the second is an error.
+              // a PRIVATE ancestor method is not inherited, so it cannot be overridden
               decl.getMethods.asScala.exists(x => x.getSimpleName == n && (x ne m) &&
                                                   sig(x).map(s => here.getOrElse(s, s)) == mine &&
                                                   !(x.isPrivate)) ||
@@ -2499,21 +1690,11 @@ object SpoonTir:
     private def defineType(t: CtType[?], owner: Option[SymId] = scala.None,
                           sourceName: Option[String] = scala.None): SymId =
       val q = typeKey(t.getReference)
-      // A substituted type stays in the model with its references resolved (see `Substituted`), but
-      // carries the tag so later phases can rewrite uses into whatever replaces it.
+      // substituted type stays in the model with resolved references, tagged for later rewriting
       val tags: Set[SymTag] = if subs.dropsType(q) then Set(Substituted(q)) else Set.empty
-      // A TYPE's annotation values are constant expressions, so they translate on the ordinary
-      // expression path — and this was the one harvest with no translator to run it, which dropped
-      // every argument-bearing annotation on every type in every port (`ENGINE-LIMITS.md` T16).
-      //
-      // `resolve` FIRST and `define` after: they mint the same id for the same key (`define` calls
-      // `resolve`), so the symbol order every later pass depends on is unchanged and the translator
-      // can be built against the id before the record exists. `methodId = classId = id` is the
-      // shape `enumCase` already uses for an enum constant's arguments — `this` denotes the type,
-      // and a constant expression owns no locals.
-      //
-      // WHICH families are carried is the port's ([[AnnotationPolicy]]); the default claims none,
-      // so this reads exactly as it did before the translator arrived.
+      // a type's annotation values are constant expressions (ENGINE-LIMITS T16); `resolve` first so
+      // the translator can be built against the id before the record exists; WHICH families carry
+      // is the port's ([[AnnotationPolicy]]), default empty
       val (anns, annDropped) =
         annotationsOf(t, Some(new BodyTranslator(minter.resolve(q), minter.resolve(q))), annotations.claims)
       minter.define(q)(id =>
@@ -2521,17 +1702,9 @@ object SpoonTir:
                owner.getOrElse(ownerSym(t)), TypeRef(NoPrefix, id), tags = tags,
                annotations = anns, droppedAnnotations = annDropped, permits = permittedTypes(t)))
 
-    /** java's `permits` clause, INTERNED — see [[balticporter.tir.Symbol.permits]] for why the ids
-      * and not the names, and `TirEmitter.sealOf` for the one question they answer.
-      *
-      * `Minter.external` is exactly the right interning door: a permitted type this program declares
-      * is (or will be) `define`d under the same key, so both sides of the accounting compare one id;
-      * a permitted type the parse never saw — an `excludeGlobs` file, a unit whose translation was
-      * refused — interns as an external stub that no subtype set can contain, which is the case the
-      * seal must be widened for.
-      *
-      * SORTED by key, because Spoon hands back a `Set` and this list reaches an emitted DECISION's
-      * detail: an artifact whose row order is a hash order is one no baseline can diff. */
+    /** java's `permits` clause, INTERNED (ids, not names — [[balticporter.tir.Symbol.permits]]).
+      * A permitted type the parse never saw interns as an external stub no subtype set can contain,
+      * which is the case the seal must widen for. SORTED by key (Spoon hands back a `Set`). */
     private def permittedTypes(t: CtType[?]): List[SymId] =
       t match
         case s: spoon.reflect.declaration.CtSealable =>
@@ -2559,18 +1732,9 @@ object SpoonTir:
     private def selfOf(owner: SymId, selfClass: SymId): SymId =
       if selfClass == SymId.None then owner else selfClass
 
-    /** …inside the DECLARATION obligation scope, which is the third one this frontend opens.
-      *
-      * A field's initialiser is a JLS 5.2 assignment slot exactly as a local's is — `coercedExprOf`
-      * is literally the same call — and it was the one slot no row could be owed at, because a
-      * `CtField` is neither a `CtStatement` nor a `CtExpression` and therefore enters neither
-      * dispatch. `Differences.everySlot` names it now (`Dispatch.Declaration`), and the consults are
-      * the same three, through the same function: a rule stated twice is a rule that gets two
-      * answers (`ENGINE-LIMITS.md` F8).
-      *
-      * The scope opens for EVERY field, initialiser or not — the empty slot list answers `None`
-      * three times and discharges honestly, which is the same shape a local with no initialiser or
-      * a bare `return` already has. */
+    /** …the DECLARATION obligation scope (`Dispatch.Declaration`) — a field initialiser is a JLS
+      * 5.2 assignment slot like a local's, but `CtField` enters neither statement nor expression
+      * dispatch, so it needed its own. Opens for EVERY field, initialiser or not (ENGINE-LIMITS F8). */
     private def fieldDef(owner: SymId, f: CtField[?], selfClass: SymId = SymId.None, outerVars: Map[String, SymId] = Map.empty,
                          anonSelf: SymId = SymId.None, anonQName: String = ""): Tree.ValDef =
       Lowering.of(SpoonKinds.nameOf(f.getClass), Dispatch.Declaration, originOf(f), f)(fieldDef1(owner, f, selfClass, outerVars, anonSelf, anonQName))
@@ -2584,22 +1748,14 @@ object SpoonTir:
         Symbol(sid, f.getSimpleName, qualified(owner, f.getSimpleName), fieldFlags(f), owner, ft,
                annotations = fanns, droppedAnnotations = fannDropped)
       )
-      // a field initializer is a real expression: translate it so its usages are traced,
-      // attributed to the field (not a method).
-      //
-      // A STATIC field's initialiser sees NONE of the class's type parameters — java's rule, and
-      // scala's too once the field lands in the companion object. Carried in the frame for the
-      // reason `execDef` states: an anonymous class in that initialiser declares INSTANCE methods,
-      // which reset the `inStatic` flag the fill site reads.
+      // a STATIC field's initialiser sees NONE of the class's type parameters (java's rule, scala's too)
       val staticFrame = fieldFlags(f).isStatic
       if staticFrame then tpAccessible.prepend(Map.empty)
       val rhs =
         try
           val bt = new BodyTranslator(id, selfOf(owner, selfClass), anonSelf, anonQName)
           bt.seedVars(outerVars)
-          // …AT THE ARM, never inside `coerce` — `coerce` is not reached for a field with no
-          // initialiser, so a consult in there would report a hole at exactly the declarations
-          // where the difference does not apply (`slotConsults`' own note).
+          // at the ARM, never inside `coerce` — unreached for a field with no initialiser
           bt.slotConsultsAt(Option(f.getDefaultExpression).map(f.getType -> _).toList, originOf(f))
           Option(f.getDefaultExpression).map(e => bt.coercedExprOf(f.getType, e))
         finally if staticFrame then tpAccessible.remove(0)
@@ -2613,74 +1769,41 @@ object SpoonTir:
                         anonSelf: SymId = SymId.None, anonQName: String = ""): Tree.DefDef = withStatic(execFlags(m).isStatic) {
       val mkey = memberKey(owner, name + erasedSig(m))
       val id   = minter.resolve(mkey)
-      // claimed before the body translates, so a statement's `deepComments` cannot reach the
-      // method's own Javadoc. No `deepComments` HERE: every statement in the body harvests its
-      // own subtree, which is what puts an expression comment above the statement it was written
-      // in rather than above the whole method.
+      // claimed before the body translates, so a statement's deepComments cannot reach the Javadoc
       val mlead = leadingOf(m)
       val allTps = m match
         case ftd: CtFormalTypeDeclarer => ftd.getFormalCtTypeParameters.asScala.toList
         case _                         => Nil
-      // …minus the ones java itself cannot instantiate. See [[unwritableResultVars]]: these are
-      // ERASED to their own bound rather than declared, so they never reach `mintTypeParams` and no
-      // `[B <: …]` clause is emitted for them.
+      // minus [[unwritableResultVars]] — erased to their own bound, no `[B <: …]` clause emitted
       val erasedTps = unwritableResultVars(m)
       val mtps      = allTps.filterNot(tp => erasedTps.exists(_.getSimpleName == tp.getSimpleName))
       val (frame, tpDefs) = mintTypeParams(mkey, id, mtps)
       val savedOverriding = inOverridingMember
       inOverridingMember = overrides
       tpScopes.prepend(frame); tpIsExec.prepend(true); tpDecls.prepend(declFrame(mtps))
-      // TWO passes, because an F-bound mentions ITSELF: seed every erased name at `?` so that
-      // translating the bound renders the self-reference as a wildcard, then replace the frame with
-      // the bound that produced. One mechanism for both halves — the `?` an F-bound's self-reference
-      // becomes is the same `?` the whole erasure is built out of.
+      // TWO passes: an F-bound mentions ITSELF, so seed `?` first, then replace with the bound it produced
       tpErased.prepend(erasedTps.map(_.getSimpleName -> (TypeBounds(NoType, NoType): TypeRepr)).toMap)
       if erasedTps.nonEmpty then
         val bounds = erasedTps.map(tp => tp.getSimpleName -> tpe(tp.getSuperclass)).toMap
         tpErased.remove(0); tpErased.prepend(bounds)
-      // a method sees its class's accessible params plus its own — and a STATIC one sees ONLY its
-      // own, because java's static context has no access to the class's parameters and scala's
-      // companion object cannot name them either. Carried in the FRAME rather than left to the
-      // `inStatic` flag at the fill site: the flag is per-EXECUTABLE, so it is reset the moment an
-      // anonymous class inside a static initialiser declares an instance method, and the enclosing
-      // class's `T` becomes reachable again. That is `Not found: type T`, three times in gdx-vfx's
-      // `PrioritizedArray` — whose `static final Pool<Wrapper> pool = new Pool<Wrapper>() { … }`
-      // inside `class Wrapper<T>` is written RAW for exactly the reason java gives.
+      // a static method sees ONLY its own params, not the class's — carried in the FRAME, not the
+      // per-executable `inStatic` flag (which an inner anonymous instance method would reset)
       tpAccessible.prepend(
         (if execFlags(m).isStatic then Map.empty else tpAccessible.headOption.getOrElse(Map.empty)) ++ frame)
       tpExecNames.prepend(tpExecNames.headOption.getOrElse(Set.empty) ++ frame.keySet)
       val bt = new BodyTranslator(id, selfOf(owner, selfClass), anonSelf, anonQName)
       bt.seedVars(outerVars) // an anonymous class captures the enclosing method's effectively-final locals
       val ps = m.getParameters.asScala.toList
-      // `public boolean equals (Object obj)` overrides `java.lang.Object.equals`, which in scala is
-      // `equals(x: Any)`. Rendered `equals(obj: Object)` it does not override it — it CLASHES with
-      // it, same signature after erasure, and scala rejects the class outright. `Any` is also the
-      // wider type, so no body that used the parameter can break: `instanceof`, `==` and a cast all
-      // work on it. (52 classes in gdx core; invisible until the last RefChecks error cleared,
-      // since the name-clash check runs in a still later phase.)
+      // `equals(Object)` must render as `equals(x: Any)` or it CLASHES with `AnyRef.equals` after
+      // erasure instead of overriding it — `Any` is wider so no body using the param can break
       def anyForEquals(p: CtParameter[?]): TypeRepr =
         if name == "equals" && ps.sizeIs == 1 &&
            Option(p.getType).exists(_.getQualifiedName == "java.lang.Object")
         then TypeRef(NoPrefix, minter.external("scala.Any", "Any"))
         else tpe(p.getType)
-      // A PARAMETER's annotations are harvested like a field's and a method's.
-      //
-      // They were the one declaration kind `annotationsOf` was never called for, and the omission
-      // was invisible from either end: nothing renders a parameter annotation, so the emitted file
-      // is identical with them and without them, and no check could report a symbol property that
-      // was never populated. It is a real gap, not a formatting one — a Java library states most of
-      // its nullability contract ON PARAMETERS (`@Null Actor a`), and a phase that reads
-      // `Symbol.annotations` therefore saw a library's returns and fields and none of its
-      // arguments. Measured on the corpus's most-annotated port: 389 upstream parameter sites
-      // reaching zero symbols.
-      //
-      // With the body translator in scope, exactly as for a METHOD: an annotation carrying
-      // arguments is then carried whole instead of being reported as undroppable, which is the
-      // difference between `@A(x)` and `@A` — a different annotation (see `annotationsOf`).
-      // The method's fullName, computed from its OWNER whose symbol is already set. This is
-      // `minter.fullNameOf(owner) + "#" + name`, not `minter.fullNameOf(id)` — the latter returns
-      // `"?"` here because the method's own symbol has not been set yet (`minter.set` is below).
-      // Parameters' fullNames are derived from it, so they need it to be known now, not after.
+      // parameter annotations, harvested like a field's/method's (previously never called, silently
+      // dropping nullability contracts stated ON PARAMETERS — 389 sites on the most-annotated port)
+      // fullName computed from OWNER, not `id` (whose symbol is not yet `set`)
       val methodFullName = qualified(owner, name)
       val pvs = ps.map { p =>
         val pt  = anyForEquals(p)
@@ -2705,16 +1828,9 @@ object SpoonTir:
       // `sig` above already carries — see its own note.
       minter.set(id, Symbol(id, name, qualified(owner, name), execFlags(m).copy(isOverride = overrides), owner, sig,
                             annotations = anns, droppedAnnotations = annDropped, descriptor = descriptorOf(m)))
-      // translate the body (with param + type-param scope in place) — this is what makes
-      // Call / field-ref usages and `callersOf` real. Abstract/interface methods have none.
-      //
-      // …and an ANNOTATION TYPE ELEMENT has no body EITHER, which is why this arm read it as an
-      // ordinary abstract method and lost the one thing it does carry. `CtAnnotationMethod`
-      // EXTENDS `CtMethod`, so this arm takes it (§4.56's parser-hierarchy hazard, arrived at
-      // through the dispatch rather than through an arm order), `getBody` is null for every one,
-      // and JLS 9.6.2's DEFAULT hangs off `getDefaultExpression` — a slot nothing here read. It
-      // is the same JLS 5.2 assignment slot a field initialiser is, so it goes through the same
-      // `coercedExprOf` call `fieldDef1` makes.
+      // translate the body — makes Call/field-ref usages and `callersOf` real; abstract/interface
+      // methods have none. An ANNOTATION TYPE ELEMENT also has none, but carries JLS 9.6.2's DEFAULT
+      // off `getDefaultExpression` (§4.56 parser-hierarchy hazard: `CtAnnotationMethod extends CtMethod`)
       val body = Option(m.getBody).map(b => bt.methodBody(b)).orElse(annotationDefault(m, bt))
       tpScopes.remove(0); tpIsExec.remove(0); tpDecls.remove(0); tpAccessible.remove(0); tpExecNames.remove(0)
       tpErased.remove(0)
@@ -2723,35 +1839,22 @@ object SpoonTir:
                   tparams = tpDefs, leading = mlead)
     }
 
-    /** JLS 9.6.2's DEFAULT VALUE, for the one executable that has one and no body.
-      *
-      * `None` for every other executable, which is what makes the `orElse` above exact rather than
-      * a fallback: a java method either HAS a body or is abstract, and only an annotation type
-      * element can be neither and still carry an expression. The emitter reads this `rhs` as the
-      * default of the constructor parameter the element becomes — see `TirEmitter.classDef1`'s
-      * annotation arm, which is the one place a `Tree.DefDef` with a body can be an `@interface`
-      * member at all (JLS 9.6 admits only elements, constants and member types in one). */
+    /** JLS 9.6.2's DEFAULT VALUE, for the one executable that has one and no body — `None`
+      * otherwise. Emitter reads this `rhs` as the default of the constructor parameter the
+      * `@interface` element becomes (`TirEmitter.classDef1`'s annotation arm). */
     private def annotationDefault(m: CtExecutable[?], bt: BodyTranslator): Option[Term] = m match
       case am: CtAnnotationMethod[?] =>
         Option(am.getDefaultExpression).map(e => bt.coercedExprOf(am.getType, e))
       case _ => scala.None
 
-    /** Java annotations on a declaration, plus the names of any this could not carry.
-      *
-      * Annotation element values are constant expressions, so they translate with the ordinary
-      * expression path; one that throws is REPORTED (its annotation goes to `dropped`) rather than
-      * silently emitted without its arguments, which would be the same defect one level down.
-      * Spoon's `@interface` for a JDK/test annotation is a shadow, so the type is taken from the
-      * reference's qualified name and needs no declaration. */
+    /** Java annotations on a declaration, plus the names of any this could not carry. Element values
+      * translate on the ordinary expression path; one that throws is REPORTED (`dropped`), never
+      * silently emitted without its arguments. */
     private def annotationsOf(el: CtElement, bt: Option[BodyTranslator],
                               claimed: String => Boolean = _ => true): (List[Annot], List[String]) =
       val out     = collection.mutable.ListBuffer[Annot]()
       val dropped = collection.mutable.ListBuffer[String]()
-      // …and a set that cannot be READ AT ALL is COUNTED, not read as "this declaration has none"
-      // (§4.6). `Nil` alone is a fabricated fact of the worst kind here: every annotation on the
-      // declaration disappears, `OmissionCheck` sees an empty `droppedAnnotations` and reports
-      // nothing, and a `@Test` or a `@JsonProperty` is simply not there. The sentinel is the one
-      // this function already uses one line down for an annotation whose TYPE will not resolve.
+      // a set that cannot be READ AT ALL is COUNTED, not read as "this declaration has none" (§4.6)
       val as =
         try el.getAnnotations.asScala.toList
         catch { case _: Throwable => dropped += SpoonTir.UnreadableAnnotations; Nil }
@@ -2760,28 +1863,19 @@ object SpoonTir:
         if ref == null then dropped += SpoonTir.UnresolvedAnnotation
         else
           val fqn = ref.getQualifiedName
-          // …and a VALUE LIST that will not read is not an EMPTY one. Left as `Nil` it took the
-          // marker-annotation path below and emitted `@A` BARE — the exact thing the comment under
-          // that path forbids, arriving through a catch rather than through the logic. `None` here
-          // is "unknown" and routes to the reporting arm; `Some(Nil)` is a real marker annotation.
+          // a VALUE LIST that will not read is not an EMPTY one — `None` routes to reporting,
+          // `Some(Nil)` is a real marker annotation
           val vals: Option[List[(String, Object)]] =
             try Some(a.getValues.asScala.toList)
             catch { case _: Throwable => scala.None }
-          // Without an expression translator in scope only MARKER annotations can be carried
-          // faithfully; one with arguments is REPORTED rather than emitted bare, since emitting
-          // `@A` where Java wrote `@A(x)` changes its meaning.
+          // no translator in scope: only MARKER annotations carry; one with args is REPORTED, not emitted bare
           if vals.contains(Nil) then
             out += Annot(TypeRef(NoPrefix, minter.external(fqn, simpleName(fqn))), Nil, originOf(a))
-          // …and one WITH ARGUMENTS is carried only where a translator exists AND the port claims
-          // the family. `claimed` defaults to "every one", which is what a site with a translator
-          // has always done; the TYPE harvest passes the port's policy, whose default claims none.
-          // Either way an uncarried annotation is REPORTED rather than emitted bare — `@A` where
-          // java wrote `@A(x)` is a different annotation.
+          // WITH ARGUMENTS carried only where a translator exists AND the port claims the family
           else if !claimed(fqn) then dropped += fqn
           else (bt, vals) match
             case (None, _)          => dropped += fqn
-            // the value list would not READ — reported, and the arguments are unknown rather than
-            // absent, which is the distinction the `Option` above exists to carry.
+            // value list would not READ — arguments unknown, not absent
             case (_, scala.None)    =>
               dropped += fqn
               dropped += SpoonTir.UnreadableAnnotations
@@ -2792,16 +1886,8 @@ object SpoonTir:
                   k -> arrayShorthand(ref, k, e0, b.exprOf(e0))
                 }
                 out += Annot(TypeRef(NoPrefix, minter.external(fqn, simpleName(fqn))), args, originOf(a))
-              // A TRANSLATION THAT FAILED is not a translation DECLINED, and both used to write the
-              // same one string. `!claimed` and a missing translator are POLICY — the port said no —
-              // while this is the expression path throwing on a constant expression, which is an
-              // engine defect somebody has to be able to see. The FQN stays in the list on its own,
-              // because every consumer of `droppedAnnotations` matches it exactly and by name
-              // (`TestFrameworkTransform` still has to recognise a `@Test` whose arguments would not
-              // translate, or the suite loses a test); the sentinel rides BESIDE it, as
-              // `<unresolved>` already does, so `omissions` shows one extra row saying which of the
-              // two kinds of drop happened. Not folded into the FQN: `Symbol.droppedAnnotations` is
-              // documented as annotations "by name", and a decorated name is a name nothing matches.
+              // a FAILED translation is not a DECLINED one — the sentinel rides BESIDE the bare FQN
+              // (never folded in) so every exact-name consumer still matches it
               catch
                 case _: Throwable =>
                   dropped += fqn
@@ -2835,21 +1921,11 @@ object SpoonTir:
     private def has(m: CtModifiable, k: ModifierKind): Boolean = m.hasModifier(k)
     import ModifierKind.*
 
-    /** Java's FOURTH access level, and it is NOT "no modifier is present".
-      *
-      * "Package-private" is what the JLS calls *default access*, and the language grants public or
-      * private access implicitly in three places where nothing is written (DESIGN §8.7):
-      *
-      *   - a member of an INTERFACE or of an `@interface` is implicitly `public` (JLS 9.4, 9.6) —
-      *     so is a type nested in one (JLS 9.5), and so is an interface FIELD (JLS 9.3);
-      *   - an ENUM constructor is implicitly `private` (JLS 8.9.2), and declaring it `public` or
-      *     `protected` is a compile error, so the absent modifier is the strongest level rather
-      *     than the default one;
-      *   - an enum CONSTANT and an anonymous/local class carry no user-written access at all.
-      *
-      * Reading `hasModifier(PUBLIC)` instead would trust the parser's implicit-modifier model for
-      * exactly the declarations where the model is the thing in question (§4.58), so the rule is
-      * spelled here from the JLS and the DECLARING TYPE, which Spoon reports structurally. */
+    /** Java's FOURTH access level, and it is NOT "no modifier is present". Default access is
+      * granted implicitly in three places (DESIGN §8.7): interface/`@interface` members (JLS 9.4,
+      * 9.6, 9.5, 9.3) are `public`; enum constructors (JLS 8.9.2) are `private`; enum constants and
+      * anonymous/local classes carry no user-written access. Read from the JLS, not
+      * `hasModifier(PUBLIC)`, since the parser's implicit-modifier model is what's in question. */
     private def implicitlyPublic(el: CtElement): Boolean = el match
       case m: CtTypeMember => m.getDeclaringType.isInstanceOf[CtInterface[?]]
       case _               => false
@@ -2876,24 +1952,13 @@ object SpoonTir:
         isAnnotation = isAnnot,
         isAbstract = (has(t, ABSTRACT) || isTrait) && !isAnnot,
         isFinal = has(t, FINAL),
-        // JS-C44 — the RAW java fact and nothing more. Whether scala can reproduce the seal is a
-        // question about where the permitted subtypes LAND, which is an emitted-file question and
-        // therefore the emitter's (`TirEmitter.sealOf`); deciding it here would put half a rule in
-        // a frontend that has no idea what the port writes to which file.
-        //
-        // The OTHER half of java's clause — WHICH types it permits — is not a flag and is recorded
-        // beside this one, on the symbol (`permittedTypes`). The emitter cannot reconstruct it from
-        // the extends-edges it can see: a permitted subtype in a file this run never parsed leaves
-        // no edge at all, and a seal decided from the survivors alone is a seal java did not write.
+        // JS-C44: the RAW java fact only — whether scala can reproduce the seal is the emitter's
+        // question (`TirEmitter.sealOf`). WHICH types are permitted is recorded separately (`permittedTypes`)
         isSealed = has(t, SEALED),
         isTrait = isTrait,
         isEnum = t.isInstanceOf[CtEnum[?]],
-        // JS-C43 — the raw java fact, exactly as `isSealed` above. `CtRecord` extends `CtClass`, so
-        // the class arm takes a record and, before this flag existed, nothing downstream could tell
-        // that it had: the components arrived as ordinary fields, the accessors as ordinary
-        // methods, and the class extended `java.lang.Record` with the three members javac generates
-        // simply absent. Which members that licenses SYNTHESISING is the emitter's question and
-        // this is the one fact it needs.
+        // JS-C43: raw java fact only — `CtRecord extends CtClass`, so without this flag nothing
+        // downstream could tell a record from an ordinary class
         isRecord = t.isInstanceOf[CtRecord],
         isPrivate = priv,
         isProtected = prot,
@@ -2936,14 +2001,9 @@ object SpoonTir:
       val p = el.getPosition
       if p != null && p.isValidPosition then p.getSourceStart else Int.MaxValue
 
-    /** a METHOD-LOCAL class's SOURCE name — JLS 14.3, catalog JS-C30.
-      *
-      * Spoon reports the BINARY simple name for a local class (`1Local` for the first `Local` in a
-      * type), which is the right interning key and is not an identifier: JLS 3.8 says a java
-      * identifier may not BEGIN with a digit, so the leading run of digits is exactly the
-      * disambiguator and stripping it can never eat a name the source wrote. Where the strip would
-      * leave nothing the binary name is kept, which is a name that cannot compile rather than a
-      * name that silently means something else. */
+    /** a METHOD-LOCAL class's SOURCE name (JLS 14.3, catalog JS-C30). Spoon's binary name
+      * (`1Local`) is the interning key, not a legal identifier — strip the leading digit run
+      * (JLS 3.8). Where stripping leaves nothing, keep the binary name (fails loudly, not silently). */
     private def localName(t: CtType[?]): String =
       val binary  = t.getSimpleName
       val stripped = binary.dropWhile(_.isDigit)
@@ -2959,39 +2019,14 @@ object SpoonTir:
       val path = if p != null && p.isValidPosition && p.getFile != null then p.getFile.getPath else "<snippet>"
       throw balticporter.core.Unsupported(path, line, what)
 
-    /** MINT A MARKER instead of failing the whole unit — `DESIGN.md` §6.2/§6.5's first mint site.
-      *
-      * [[unsupported]] is a refusal and it is the RIGHT kind of refusal; what it is not is
-      * per-site. It throws, so one node the frontend cannot model costs the whole COMPILATION
-      * UNIT: a single `record` declaration in a 135-file library takes that file's every other
-      * type with it, and there is no measured step between "the library ports" and "the library
-      * ports except for this file". That is what makes adopting a new syntax family
-      * all-or-nothing, and it is exactly what §6.2's marker exists to replace.
-      *
-      * What changes and what does not: the port still does not ship — the emission gate refuses on
-      * any open marker (§6.4) — but the failure is now the size of the construct, every other
-      * declaration in the unit translates, and the run REPORTS which construct it was, where, and
-      * what a fix would be. Silence is what was never on offer either way (§3.4).
-      *
-      * '''Falls back to the throw where there is no position.''' §6.2 requires a marker to point at
-      * real Java, and [[Tree.Unportable.markerKey]] — the identity the conservation check compares
-      * two programs on — is derived from that origin. A marker at `<synthetic>:0:0` would collide
-      * with every other one, and the check keyed on it would then report nothing, confidently. A
-      * unit-fatal throw for one positionless node is a worse outcome and a truthful one.
-      *
-      * The catalog id comes from [[SpoonKinds]] rather than from a table here: that registry
-      * already says what this frontend does with every kind a Java source can produce, and a second
-      * mapping beside it would be a second answer to one question. */
-    /** `about` is the node the refusal is ABOUT, where that is not the node the marker STANDS at.
-      *
-      * The two are the same at every dispatch default, and they come apart wherever the unlowered
-      * node carries no source POSITION. Spoon builds `CtCasePattern` as an unpositioned wrapper, so
-      * a marker minted at the pattern itself hits the fallback above and the whole unit is lost —
-      * which made the registry's `MarkedUnportable` claim for that kind false, with nothing able to
-      * report it: the claim is prose, and the one spec that would have seen it was written against
-      * a different kind. The enclosing `CtCase` is real java at a real line, which is what §6.2
-      * requires of a marker, while the KIND and therefore the catalog row still come from the node
-      * the frontend actually has no arm for. */
+    /** MINT A MARKER instead of failing the whole compilation unit (DESIGN.md §6.2/§6.5) — the port
+      * still doesn't ship (emission gate refuses any open marker, §6.4), but the failure is now the
+      * size of the construct and the run REPORTS which one, where, and a possible fix. Falls back
+      * to [[unsupported]]'s throw only where there is no position to key [[Tree.Unportable.markerKey]] on. */
+    /** `about` is the node the refusal is ABOUT, where that differs from the node the marker STANDS
+      * at — needed where the unlowered node has no source POSITION (e.g. Spoon's unpositioned
+      * `CtCasePattern`), so the marker anchors on a positioned enclosing node while the KIND still
+      * comes from the node with no arm. */
     private def unlowered(el: CtElement, what: String, tpe: TypeRepr,
                           kind: Option[UnportableKind] = scala.None,
                           about: CtElement = null): Term =
@@ -3003,10 +2038,7 @@ object SpoonTir:
         Tree.Unportable.open(
           inner  = Tree.Literal(Constant.UnitC, unitT, o),
           kind   = kind.getOrElse(UnportableKind.UnmodelledNodeKind(kindName)),
-          // the catalog pointer belongs to the NODE KIND, so it is only right when the refusal IS
-          // about the node kind. A blind spot INSIDE an arm that does dispatch on this kind is a
-          // different fact — the kind is handled, this shape of it is not — and pointing it at the
-          // kind's row would make the registry describe the engine's gap instead of Java's.
+          // catalog pointer only for a refusal about the NODE KIND itself — an in-arm blind spot is a different fact
           diff   = if kind.isEmpty then SpoonKinds.byName.get(kindName).flatMap(_.catalog) else scala.None,
           what   = what,
           tpe    = tpe,
@@ -3014,19 +2046,11 @@ object SpoonTir:
         )
 
     // -----------------------------------------------------------------------
-    /** Translates one method/ctor/field-initializer body into TIR terms, resolving every
-      * reference to a `SymId`. Covered: locals, assignments, `if`/`while`/`return`/`throw`,
-      * blocks, method calls, constructor calls, field/variable access, `this`, casts,
-      * ternary, operators (as `x.op(y)` — the quotes.reflect shape), literals. Constructs
-      * not yet modeled (for-loops, switch, try, lambdas, arrays, method refs) fail loudly
-      * via `Unsupported`, the same anti-omission stance as the BIR frontend — the body node
-      * set grows the same way the BIR one did.
-      *
-      * `classId` is the enclosing class (for `this`); `methodId` owns locals. */
-    /** `anonSelf`/`anonQName` are set only for the members of an ANONYMOUS class: the synthetic
-      * symbol standing for the anonymous instance, and the name Spoon gives it (`DragAndDrop$1`).
-      * `classId` stays the ENCLOSING class, because that is what Spoon reports for the implicit
-      * `this` of every enclosing member the body reaches. */
+    /** Translates one method/ctor/field-initializer body into TIR terms, resolving every reference
+      * to a `SymId`. Unmodeled constructs fail loudly via `Unsupported`.
+      * `classId` is the enclosing class (for `this`); `methodId` owns locals.
+      * `anonSelf`/`anonQName`, set only for an ANONYMOUS class's members: the synthetic instance
+      * symbol and Spoon's name for it — `classId` stays the ENCLOSING class regardless. */
     private final class BodyTranslator(methodId: SymId, classId: SymId,
                                        anonSelf: SymId = SymId.None, anonQName: String = ""):
       private val varIds  = new java.util.IdentityHashMap[CtVariable[?], SymId]()
@@ -3056,42 +2080,28 @@ object SpoonTir:
       private def isOwnThis(ta: CtThisAccess[?]): Boolean =
         Option(ta.getType).map(_.getQualifiedName).forall(_ == minter.fullNameOf(classId))
 
-      /** A `this` used as a VALUE. Inside an anonymous class body it denotes the ANONYMOUS
-        * instance — `DragAndDrop`'s drag listener passes `this` to `stage.cancelTouchFocusExcept(
-        * EventListener, Actor)`, and it means the LISTENER, not the `DragAndDrop`; emitting
-        * `DragAndDrop.this` there is not merely verbose, it is a different object.
-        *
-        * Only for a `this` Spoon EXPLICITLY types as the anonymous class, and only in value
-        * position. As the TARGET of a member access Spoon reports the anonymous class whatever the
-        * member's real owner is (`List`'s key listener calling `setSelectedIndex`, declared on
-        * `List`), so there the existing resolution — which falls back to the bare name Scala
-        * resolves lexically, exactly as Java did — stays in charge. */
+      /** A `this` used as a VALUE. Inside an anonymous class body it denotes the ANONYMOUS instance,
+        * not the enclosing one — only for a `this` Spoon EXPLICITLY types as the anonymous class,
+        * and only in value position (as a member-access TARGET, the existing bare-name resolution
+        * stays in charge, matching java's own lexical resolution). */
       private def thisOf(ta: CtThisAccess[?], el: CtElement): Term =
         if anonSelf != SymId.None && anonQName.nonEmpty &&
            Option(ta.getType).map(_.getQualifiedName).contains(anonQName)
         then Tree.This(anonSelf, TypeRef(NoPrefix, anonSelf), originOf(el))
         else thisTerm(el)
 
-      /** `Outer.this` — the enclosing instance, as its own class symbol. Only for a type that
-        * LEXICALLY ENCLOSES the class the access sits in: Spoon also reports a plain `this` used to
-        * reach an INHERITED member under the member's DECLARING type (`this.isGlobal` inside
-        * `DynamicsModifier.Rotation2D extends DynamicsModifier` comes back typed `DynamicsModifier`),
-        * and qualifying that would name a supertype Scala's `Outer.this` syntax cannot denote. */
+      /** `Outer.this` — the enclosing instance. Only for a type that LEXICALLY ENCLOSES the access;
+        * Spoon also reports a plain `this` typed at an INHERITED member's DECLARING type, which
+        * `Outer.this` syntax cannot denote and must not be qualified as. */
       private def outerThis(ta: CtThisAccess[?]): Option[Term] =
         val q     = ta.getType.getQualifiedName
         var here  = ta.getParent(classOf[CtType[?]])
         var found = false
-        // walk OUT only while each step really captures an enclosing instance (a non-static inner
-        // class); a `static` nested class has no `Outer.this` at all, and Spoon reporting one there
-        // means it was an inherited-member access, not an enclosing-instance one.
+        // walk OUT only while each step captures an enclosing (non-static inner) instance
         while here != null && capturesEnclosing(here) && !found do
           here = here.getDeclaringType
           if here != null && here.getQualifiedName == q then found = true
-        // An ANONYMOUS enclosing class has NO NAME, so Scala has no `Outer.this` for it (`Pixmap`'s
-        // download listener calls its own `failed(t)` from a nested `Runnable`). Emitted bare, the
-        // reference resolves lexically to that enclosing anonymous class's member — which is exactly
-        // what Java resolved it to. Qualifying it with the name Spoon reports (`Pixmap$1`) would
-        // name a type that does not exist in the emitted code.
+        // an ANONYMOUS enclosing class has NO NAME — emitted bare, it resolves lexically as java did
         val anonymous = here match { case c: CtClass[?] => c.isAnonymous; case _ => false }
         Option.when(found && !anonymous) {
           val id = minter.external(q, simpleName(q))
@@ -3112,27 +2122,13 @@ object SpoonTir:
         Tree.Block(sts, unit(el), unitT, originOf(el), trail)
 
       // ---- statement trivia ---------------------------------------------------
-      //
-      // Three things happen per statement, and the ORDER is the whole design:
-      //   1. `leadingOf(s)` claims what Spoon attached to the statement itself;
-      //   2. `stmt(s)` translates it — and every nested statement claims its own comments there;
-      //   3. `deepComments(s)` scoops whatever is LEFT in the subtree — expression-level comments
-      //      the TIR has no node for, which therefore hoist to this statement.
-      // Run (3) before (2) and a comment inside an `if`'s then-branch lands above the `if`.
-      //
-      // A comment with nothing after it inside a block (a trailing `// TODO`) is attached by Spoon
-      // as a STATEMENT of its own, so it is carried as `pending` onto the next statement — and
-      // where there is none it used to be DISCARDED. It had already been CLAIMED by then, so no
-      // coarser harvest could recover it either: claim-then-drop, and the single largest category
-      // of comment this port lost. `Tree.Block.trailing` is where it goes now, which places it
-      // exactly where java wrote it and needs no fallback (see that field's doc).
+      // ORDER matters: (1) leadingOf(s) claims Spoon's own attachment, (2) stmt(s) translates
+      // (nested statements claim their own), (3) deepComments(s) scoops what is left. A trailing
+      // comment with nothing after it goes to `Tree.Block.trailing`, never discarded.
 
       /** Translate a statement list, folding comment-statements into the statement that follows.
-        *
-        * The second half of the pair is what is LEFT when the list ends on comments — the block's
-        * `trailing`. Returned rather than attached here, because a statement list is not always a
-        * block (a `case` arm's is one, a single-statement body's is not) and the caller is the one
-        * that knows which node carries it. */
+        * Second half of the pair is what is LEFT (a block's `trailing`) — returned, not attached,
+        * since not every statement list is a block. */
       private def stmts(ss: List[CtStatement]): (List[Statement], List[Trivia]) =
         val out     = List.newBuilder[Statement]
         var pending = List.empty[Trivia]
@@ -3152,11 +2148,7 @@ object SpoonTir:
         if all.isEmpty then k
         else
           k match
-            // a local variable declaration has a `leading` field of its own — no wrapper needed,
-            // and none wanted: `Tree.Commented` is a TERM and a `ValDef` is not. Same for the two
-            // other DECLARATIONS a java block can hold: a local class and (through a lowering) a
-            // local `def`, both of which have the field and neither of which is a `Term`, so the
-            // wrapper cannot reach them and `case other => other` was dropping the comment.
+            // declarations (ValDef/ClassDef/DefDef) carry their own `leading` field — no `Tree.Commented` wrapper (not a Term)
             case v: Tree.ValDef   => v.copy(leading = all ++ v.leading)
             case c: Tree.ClassDef => c.copy(leading = all ++ c.leading)
             case d: Tree.DefDef   => d.copy(leading = all ++ d.leading)
@@ -3176,22 +2168,13 @@ object SpoonTir:
 
       // ---- statements ----
 
-      /** One statement, with a java LABEL on a non-loop statement turned into [[Tree.Labeled]].
-        *
-        * Java's `LabeledStatement` takes any statement, and `break L` leaves THAT statement — so a
-        * label on an `if`, a bare block or a `switch` is a control-flow construct of its own and
-        * needs a node. A LOOP's label is not wrapped: `While`/`For`/`ForEach`/`DoWhile` read it
-        * with `labelOf` into their own field, because it is also the target of `continue L`, whose
-        * boundary goes around the loop BODY rather than around the loop.
-        *
-        * `Tree.Labeled` therefore appears only where the label has nowhere else to live, and the
-        * two encodings can never both claim one label. */
+      /** One statement, with a java LABEL on a non-loop statement turned into [[Tree.Labeled]] —
+        * `break L` leaves THAT statement, so a labelled `if`/block/`switch` needs a node. A LOOP's
+        * label is read into its own node field instead (also `continue L`'s target). */
       private def stmt(s: CtStatement): Statement =
         val k = stmtKind(s)
         labelOf(s) match
-          // a labelled loop already carries its label; a `ValDef` cannot be labelled at all (JLS
-          // 14.7 — a local declaration is a BlockStatement, not a Statement), so anything else
-          // that is a term gets the wrapper and anything that is not is left exactly as it was.
+          // a labelled loop already carries its label; a `ValDef` cannot be labelled (JLS 14.7)
           case Some(l) if !carriesOwnLabel(k) =>
             k match
               case t: Term => TirTrace.mint(Tree.Labeled(l, t, unitT, originOf(s)))
@@ -3203,15 +2186,9 @@ object SpoonTir:
         case _: Tree.While | _: Tree.For | _: Tree.ForEach | _: Tree.DoWhile => true
         case _                                                               => false
 
-      /** JS-E03/E04's PREDICATE, as one function: the target type when java's implicit narrowing
-        * applies to a compound assignment here, `scala.None` when it does not.
-        *
-        * One function and not two copies, because the two positions this is consulted from are
-        * exactly the pair the catalog splits into two rows — and a predicate copied into both is a
-        * predicate that will be fixed in one. Java's binary numeric promotion lifts
-        * `byte`/`short`/`char` operands to at least `int`, so the op result may be wider than the
-        * target (`byte += byte` computes an `int`); narrow back whenever
-        * `max(rhsRank, intRank) > targetRank`. */
+      /** JS-E03/E04's PREDICATE, as ONE function (not copied at its two consult sites): the target
+        * type when java's implicit narrowing applies to a compound assignment, else `None`. Narrows
+        * whenever `max(rhsRank, intRank) > targetRank` (java's binary numeric promotion). */
       private def compoundNarrow(a: CtOperatorAssignment[?, ?]): Option[CtTypeReference[?]] =
         val lt = a.getAssigned.getType
         val rt = a.getAssignment.getType
@@ -3220,14 +2197,8 @@ object SpoonTir:
             primRank.get(rt.getSimpleName).exists(r => math.max(r, primRank("int")) > l))
         if narrow then Some(lt) else scala.None
 
-      /** THE STATEMENT DISPATCH — and the obligation wrapper sits HERE, not in an arm.
-        *
-        * `Lowering.of` maps the node's runtime class to its registry name ONCE and enters the
-        * obligation scope before any `case` is tried, so an arm is incapable of escaping its
-        * obligations because it never had the choice. Written inside each `case`, the failure mode
-        * would be an arm that declines to wrap — which is the same shape as the defect the
-        * mechanism exists to catch (`DESIGN.md` §2.8). Cost is one `Map` lookup per statement, and
-        * `Nil` for every kind nothing attaches to. */
+      /** THE STATEMENT DISPATCH — obligation wrapper sits HERE, not per-arm, so no arm can opt out
+        * of it (DESIGN.md §2.8). `Lowering.of` maps the runtime class to its registry name once. */
       private def stmtKind(s: CtStatement): Statement =
         // `s` is the SUBJECT — the node itself, so a delegation into the expression dispatch
         // (`case inv: CtInvocation => expr(inv)`) can be joined to this scope by identity.
@@ -3237,9 +2208,7 @@ object SpoonTir:
         case v: CtLocalVariable[?] =>
           val vt = tpe(v.getType)
           val id = defineLocal(v, vt) // sets isMutable when the local is reassigned
-          // the SLOT rows — JS-G09/G13/G14. A local with no initialiser has no slot, the list is
-          // empty and all three answer "does not apply", which is the honest discharge (see
-          // `slotConsults` on why the consult may not live inside `coerce`).
+          // JS-G09/G13/G14 slot rows — no initialiser means empty list, honest "does not apply"
           slotConsults(Option(v.getDefaultExpression).map(v.getType -> _).toList, originOf(v))
           val rhs = Option(v.getDefaultExpression).map(e => coerce(v.getType, e, expr(e)))
           Tree.ValDef(id, tt(vt, v), rhs, originOf(v))
@@ -3248,15 +2217,10 @@ object SpoonTir:
           val lhs = expr(a.getAssigned)
           val rhs = expr(a.getAssignment)
           val op  = opText(a.getKind).getOrElse { unknownOp(a.getKind, a, ty(a)); "?" }
-          // JS-E03, CONSULTED rather than merely done: the catalog attaches it to this dispatch, so
-          // the wrapper reports an arm that returns without asking. `compoundNarrow` is the whole
-          // predicate — `Some(target)` when java's implicit narrowing applies here — which is what
-          // makes the consult a decision the coverage lane can count rather than a formality.
+          // JS-E03 CONSULTED, not just done, so the coverage lane can count the decision
           val narrow = Obligations.consult(JS.E(3), originOf(a))(compoundNarrow(a))
             .map(t => tpe(t))
-          // JS-E17 — the lvalue's single evaluation (F7). The `compound` field carries the operator
-          // and optional narrowing on the IR node; the emitter binds non-trivial lvalue
-          // subexpressions so each is evaluated exactly once.
+          // JS-E17: lvalue single evaluation (F7) — emitter binds non-trivial subexpressions once
           Obligations.consult(JS.E(17), originOf(a))(Some(()))
           Tree.Assign(lhs, rhs, unitT, originOf(a), compound = Some((op, narrow)))
         case a: CtAssignment[?, ?] =>
@@ -3293,13 +2257,8 @@ object SpoonTir:
           val upd  = f.getForUpdate.asScala.toList.map(stmt)
           Tree.For(init, cond, upd, blockTerm(f.getBody), unitT, originOf(f), labelOf(f))
         case t: CtTryWithResource =>
-          // A `collect` here is a SILENT DROP for every shape it does not name, and the SE9 form
-          // (`try (existingEffectivelyFinalLocal) { … }`, JLS 14.20.3) is one: Spoon models that
-          // resource as a variable REFERENCE, not a `CtLocalVariable`, so it fell out of the list
-          // and the emitter closed one resource fewer than java does — with no error, no count and
-          // nothing in the tree to say a resource had been there. Refused LOUDLY instead (M6): the
-          // faithful translation is a fresh alias binding, and minting a local symbol for it is a
-          // change worth making the day a corpus library writes one. None does today.
+          // SE9 form (`try (existingLocal)`, JLS 14.20.3) is a variable REFERENCE, not a
+          // `CtLocalVariable` — refused LOUDLY (M6) rather than silently closing one resource fewer
           val res = t.getResources.asScala.toList.map {
             case lv: CtLocalVariable[?] =>
               val rt = tpe(lv.getType)
@@ -3382,24 +2341,11 @@ object SpoonTir:
         // ship the port (§6.4). `unitT` because a statement produces no value.
         case other => unlowered(other, s"statement ${SpoonKinds.nameOf(other.getClass)}", unitT)
 
-      /** THE ENHANCED-FOR'S ITERABLE, at the type JAVA READ IT AT — `ENGINE-LIMITS.md` G31.
-        *
-        * JLS 14.14.2 does not iterate the expression's own type: it looks `Iterable<T>` up among that
-        * type's supertypes and iterates at `T`. Scala's `for` is a `foreach` CALL on the expression
-        * as written, the java-shaped iterable's `foreach` is an EXTENSION, and applying an extension
-        * to a WILDCARD application means CAPTURE CONVERSION. Dotty performs that by substituting
-        * `Any` for the parameter, which is exact for an ordinary bound and cannot work for an
-        * F-BOUNDED one: the capture's upper bound comes out `Seq[Any]` while its own slot asks for
-        * `Seq[CAP]`, so the application is rejected at an INFERRED type (`E057`). No spelling of the
-        * wildcard repairs it — java's own `Seq<? extends Seq<?>>` fails identically, measured at
-        * scalac 3.8.4 — because the F-bound has no finite unrolling.
-        *
-        * So exactly there, and nowhere else, the operand is put at the supertype java read. The
-        * guard is the F-BOUND and not the wildcard: an ordinary bounded wildcard capture-converts
-        * unaided, and ascribing those would be a correct-but-unnecessary rewrite on every port that
-        * has one (§5's widening rule). Declines where the found `Iterable` argument mentions a type
-        * VARIABLE — that element has no text this scope can write, and inventing one is §4.6's
-        * fabricated fact. */
+      /** THE ENHANCED-FOR'S ITERABLE, at the type JAVA READ IT AT (ENGINE-LIMITS G31). JLS 14.14.2
+        * iterates at `Iterable<T>` found among the supertypes, not the expression's own type — an
+        * F-BOUNDED wildcard capture fails at an INFERRED type in scala (`E057`) unless ascribed here.
+        * Ordinary bounded wildcards are left alone (capture-convert unaided, §5's widening rule).
+        * Declines where the found `Iterable` argument mentions a type VARIABLE (§4.6). */
       private def iterableOperand(e: CtExpression[?]): Term =
         val t  = expr(e)
         val et = try Option(e.getType) catch { case _: Throwable => scala.None }
@@ -3461,11 +2407,8 @@ object SpoonTir:
         }
 
       /** Assignment to a member whose DECLARED (emitted) type is a bare TYPE PARAMETER, where Java's
-        * own view of the access was the ERASED one. Reading a member through a RAW-bounded type
-        * variable (`N extends Node`, `N node; node.parent`) erases it to the bound, so Java accepts
-        * `node.parent = null` and `node.parent = this` unchecked — while the emitted field keeps its
-        * `N`. Restate the unchecked step. Guarded on the parameter's NAME resolving in the current
-        * scope (never emit the `?T` unresolved stub) and on the value not already having that type. */
+        * view of the access was ERASED (a RAW-bounded type variable). Restates the unchecked step.
+        * Guarded on the parameter's name resolving here and the value not already having that type. */
       private def toDeclaredTypeParam(assigned: CtExpression[?], e: CtExpression[?], t: Term): Term =
         declaredTypeOf(assigned) match
           case Some(tp: CtTypeParameterReference) => toTypeParam(tp, e, t)
@@ -3496,65 +2439,22 @@ object SpoonTir:
         * ported assignment/initializer type-checks. */
       private val primRank = Map("byte" -> 1, "short" -> 2, "char" -> 2, "int" -> 3, "long" -> 4, "float" -> 5, "double" -> 6)
 
-      /** Java's UNCHECKED generic conversion. A value whose static type involves a RAW use of a
-        * generic type converts to any instantiation of it without a check (`Class` → `Class<T>`);
-        * and because we render raw uses CONTEXT-dependently (wildcards, or name-directed fill from
-        * the in-scope type parameters), even the *same* Java type written in two scopes can render
-        * differently (`ObjectMap<String, AssetLoader>` → `[String, AssetLoader[?, ?]]` as a field,
-        * `[String, AssetLoader[T, P]]` inside `setLoader<T, P>`). Emit exactly the cast Java
-        * performs implicitly. Gated to a GENERIC target whose type variables all resolve here, so
-        * we never synthesize a `?T` stub; declarations keep their own types untouched. */
-      /** JS-G31 — a POLY EXPRESSION (JLS 15.2): a LAMBDA or a METHOD REFERENCE.
-        *
-        * Neither has a type of its own. Java gives it the type of the slot it fills, and so does
-        * Scala — a function literal SAM-converts when the EXPECTED type is the interface. So a cast
-        * at such an argument is not a conversion java performed and we are writing down; there was
-        * no conversion. Written as a cast the literal is elaborated FIRST, to a `scala.FunctionN`,
-        * and the cast then asserts that a `Function0` is a `Supplier`, which it is not:
-        *
-        * {{{
-        * Optional.ofNullable(location).orElseGet(() -> Paths.get(".").toAbsolutePath())   // java
-        * // ClassCastException: TemplateParser$$Lambda cannot be cast to java.util.function.Supplier
-        * }}}
-        *
-        * PROBED against scala 3.8.4 before this was written, because "does Scala SAM-convert here"
-        * is not a question to answer from first principles: it converts at a WILDCARD-applied slot
-        * (`Supplier[? <: Path]`), at a contravariant one (`Comparator[? super T]`), at both
-        * directions in one formal (`Function[? super K, ? <: V]`) and at a bare `Supplier[?]` — and
-        * it refuses only where java refuses too (a GENERIC function type, which JLS 15.27.3 forbids
-        * a lambda at) or at an INTERSECTION target, which the frontend has no model for. So the
-        * faithful emission is the literal AT THE SLOT and nothing else — never a cast, and never an
-        * anonymous class synthesised where the language already does the work.
-        *
-        * ONE function, because this rule was written twice and the two copies disagreed
-        * (`ENGINE-LIMITS.md` F8's shape): `uncheckedGeneric` had the method-reference case,
-        * `appliedCtorArgs` did not, and the third arm — `knownReceiverArgs` — had no list at all,
-        * which is where all 27 of liqp's failures came from. */
+      /** Java's UNCHECKED generic conversion — a RAW-typed value converts to any instantiation
+        * without a check. Raw uses render CONTEXT-dependently, so the same java type can render two
+        * ways in two scopes; emit exactly the cast java performs implicitly. Gated to targets whose
+        * type variables all resolve here (never synthesize a `?T` stub). */
+      /** JS-G31 — a POLY EXPRESSION (JLS 15.2): a LAMBDA or a METHOD REFERENCE, typed by the slot it
+        * fills, in both languages. A cast at such an argument would elaborate the literal to a
+        * `scala.FunctionN` FIRST, then fail the cast — so the faithful emission is the literal AT
+        * THE SLOT, never a cast (probed against scala 3.8.4 for every SAM-conversion shape). ONE
+        * function: written twice before, the two copies disagreed (ENGINE-LIMITS F8). */
       private def polyExpression(e: CtExpression[?]): Boolean =
         e.isInstanceOf[CtLambda[?]] || e.isInstanceOf[CtExecutableReferenceExpression[?, ?]]
 
       /** JS-G31's answer AT THE CALL — every POLY-EXPRESSION argument restored to what `expr`
-        * produced for it, with any cast an argument arm wrapped it in removed.
-        *
-        * Answered here rather than in each arm, and that is the point: the arms are six and
-        * growing, each with its own reason for casting, and a rule stated once per arm is a rule
-        * that will be missing from the seventh. `expr` folds the java-written casts on an
-        * expression innermost-first, one `Tree.Typed` per `getTypeCasts` entry, so those are
-        * exactly the innermost `own` layers and everything outside them was added by an arm — which
-        * makes "keep what java wrote, drop what we added" decidable rather than a guess.
-        *
-        * `Some` only where the call really has a poly argument, so `fired` counts the sites where
-        * the difference APPLIES and `consulted` counts the calls that asked.
-        *
-        * ==the ARITY is answered per INDEX, never by declining the call==
-        * `args.sizeIs != argEs.size => None` reads to the catalog as *the difference does not apply
-        * at this call*, and that is a vacuous guard: java's own vararg materialisation collapses N
-        * trailing arguments into ONE array term (`varargPack`), so every vararg call with two or
-        * more variadic arguments declined — including for a poly expression in the FIXED prefix,
-        * which lines up position by position. The prefix is paired by index and the packed tail is
-        * answered INSIDE the array against the arguments it was built from. Where no
-        * correspondence can be established at all the answer is still `None`, and it now means what
-        * it says: not "the arity differs" but "nothing here pairs with a source expression". */
+        * produced, with any cast an argument arm added removed. Answered ONCE here rather than per
+        * arm (six and growing). ARITY answered PER INDEX, never by declining the whole call: a
+        * vararg-packed tail is answered INSIDE the array against the arguments it was built from. */
       private def polyArgsUncast(argEs: List[CtExpression[?]], args: List[Term], at: Origin)
                                 (using Obligations): List[Term] =
         Obligations.consult(JS.G(31), at) {
@@ -3565,55 +2465,15 @@ object SpoonTir:
           else packedUncast(argEs, args, poly)
         }.getOrElse(args)
 
-      /** …and the OTHER half of the same sentence: a poly expression takes its type from the SLOT,
-        * and where the slot is an OVERLOAD SET scala cannot use it to type the literal at all.
-        *
-        * [[polyArgsUncast]] removes the type an argument arm gave a lambda; this puts back the ONE
-        * type JAVA ITSELF resolved, at the single shape where leaving the literal bare is not the
-        * faithful emission. A class declaring `tagLine(CharSequence, boolean)` beside
-        * `tagLine(CharSequence, Runnable)` is resolved by javac from the argument's SHAPE; scalac
-        * types a function literal BEFORE it can use an expected type, so all three alternatives fail
-        * at once and the error names none of them as the intended one:
-        *
-        * {{{
-        * fa.tagLine("li", () => fa.text("x"))                          // E134 — none match
-        * fa.tagLine("li", (() => fa.text("x")): java.lang.Runnable)    // java's own resolution
-        * }}}
-        *
-        * PROBED against scala 3.8.4 before this was written, with the NEGATIVE in the same
-        * statement: an unoverloaded `tagIndent(CharSequence, Runnable)` takes the bare literal
-        * exactly as [[polyExpression]] says it does, so ascribing there would be emitted text for
-        * nothing.
-        *
-        * ==an ASCRIPTION, never a CAST — which is why [[polyExpression]]'s refusal still stands==
-        * That refusal is about `asInstanceOf`: written as a cast the literal elaborates to a
-        * `Function0` FIRST and the cast then asserts that a `Function0` is a `Runnable`, which
-        * throws. `TirEmitter.polyOperand` is the arm that renders a `Tree.Typed` over a poly term as
-        * `(e: T)` rather than as a cast, and it exists for precisely this node — so what is minted
-        * here is scala's own SAM conversion at an expected type, and not a conversion java performed
-        * and we are writing down.
-        *
-        * ==three conjuncts, each ruling out emitted text for nothing (`CLAUDE.md` §5)==
-        *   - '''the argument is a LAMBDA.''' A METHOD REFERENCE is a poly expression too and is
-        *     deliberately excluded. `TirEmitter.samAscribed` already answers this same question for
-        *     the two reference forms it renders as a function literal; the third — a STATIC
-        *     reference — renders as a bare qualified NAME, where an ascription APPLIES a nilary
-        *     method (`(r.run: Runnable)` is `Found: Unit`, measured on the same probe). Two
-        *     mechanisms for one question is F8's finding; the lambda is the node that has no other
-        *     answer, and it is the only one this adds;
-        *   - '''the callee is OVERLOADED AT THIS ARITY, and the SLOT names no expected type'''
-        *     ([[overloadedSamSlot]]) — the alternatives either DISAGREE where the lambda stands, or
-        *     agree on a TYPE VARIABLE the call has yet to infer. With one alternative scala already
-        *     has the expected type; with two that agree on a CONCRETE interface the lambda
-        *     discriminates nothing and the ascription would change no resolution;
-        *   - '''the target is NAMEABLE HERE''' ([[tpNameableHere]]) '''and java wrote no cast of its
-        *     own.''' `uncastAdded` keeps the casts the SOURCE wrote, so a term that is already a
-        *     `Tree.Typed` when this runs is java's own and is left alone.
-        *
-        * The target is the LAMBDA'S OWN type — the functional interface javac resolved, and the same
-        * reference [[samResultTpt]] reads its SAM out of. Not the formal re-derived from the callee,
-        * which would be a second spelling of one fact (F8) and would have to answer for a formal
-        * expressed in the callee's own variables, which this position cannot name (G12). */
+      /** …the OTHER half: a poly expression takes its type from the SLOT, and an OVERLOAD SET gives
+        * scala no single slot to type a lambda literal from (javac resolves by argument SHAPE;
+        * scalac types the literal FIRST — `E134`, probed at scala 3.8.4). Ascribes an ASCRIPTION,
+        * never a CAST (polyExpression's refusal still stands — a cast would elaborate the literal
+        * to a `Function0` first, then fail). Fires only when: the argument is a LAMBDA (a method
+        * reference is excluded, handled by `TirEmitter.samAscribed`); the callee is OVERLOADED at
+        * this arity with the slot naming no expected type ([[overloadedSamSlot]]); the target is
+        * NAMEABLE HERE ([[tpNameableHere]]) and java wrote no cast of its own. Target is the
+        * LAMBDA'S OWN type (same as [[samResultTpt]]), never the callee's re-derived formal. */
       private def polyArgsAscribed(ex: CtExecutableReference[?], argEs: List[CtExpression[?]],
                                    args: List[Term]): List[Term] =
         if args.sizeIs != argEs.size then args
@@ -3628,25 +2488,10 @@ object SpoonTir:
             case _ => t
         }
 
-      /** the LAMBDA whose own type is the target this argument has to be ascribed to — the argument
-        * itself, or a BRANCH of a poly CONDITIONAL.
-        *
-        * JLS 15.25 makes `c ? lambda : lambda` a poly expression in its own right: java pushes the
-        * target type THROUGH the conditional and types each branch against it, which is exactly
-        * what a scala ascription on the whole `if` does. Read off the argument's shape rather than
-        * off the emitted term, because that is where java's own rule is stated — and it is the same
-        * sentence `coerce` already answers one artifact over (a conditional's conversion belongs to
-        * its BRANCHES, `ENGINE-LIMITS.md` K30 face 3), met here at a poly operand instead of a
-        * collection.
-        *
-        * The target comes from a branch and the ascription goes on the WHOLE conditional: java
-        * required both branches to be compatible with one target, so one branch names it for both,
-        * and ascribing the branches separately would write the same type twice for a conditional
-        * whose own type is then still inferred.
-        *
-        * `polyExpression` is deliberately NOT widened to match. That predicate is JS-G31's
-        * population — what [[polyArgsUncast]] strips a cast off — and a conditional is not a term
-        * an argument arm wrapped; widening it would move a catalog count for a different question. */
+      /** the LAMBDA whose own type is the target this argument ascribes to — the argument itself,
+        * or a BRANCH of a poly CONDITIONAL (JLS 15.25 pushes the target type through both branches,
+        * ENGINE-LIMITS K30 face 3). Target ascribed on the WHOLE conditional, not each branch.
+        * `polyExpression` deliberately NOT widened to match — different catalog population. */
       private def samLambdaOf(e: CtExpression[?]): Option[CtLambda[?]] = e match
         case l: CtLambda[?]      => Some(l)
         case c: CtConditional[?] =>
@@ -3654,45 +2499,13 @@ object SpoonTir:
         case _                   => scala.None
 
       /** is the callee overloaded at this arity, AND does the slot at argument `i` fail to give
-        * scala an expected type for the literal? — the whole of [[polyArgsAscribed]]'s decision,
-        * read off the declaring type's own members and never off a name.
-        *
-        * ==the slot fails in TWO ways, and this asked only about the first==
-        * The original reading was *do the alternatives DISAGREE at `i`* — `boolean` against
-        * `Runnable`, where no single expected type exists — with the negative beside it: two
-        * alternatives that both take a `Runnable` there give the lambda the same expected type
-        * whichever wins, so ascribing would be emitted text for nothing. That negative is real and
-        * stands. What it does not cover is a slot that is a TYPE VARIABLE THIS CALL HAS YET TO
-        * INFER, where the alternatives agree perfectly and still name no type:
-        *
-        * {{{
-        * <T> MutableDataHolder set(DataKey<T> key, T value);           // both read `T` at index 1
-        * <T> MutableDataHolder set(NullableDataKey<T> key, T value);   // they disagree at index 0
-        * }}}
-        *
-        * Java solves `T` from the KEY and then types the lambda against it; scala must resolve the
-        * overload before it can use either slot, and it resolves by typing the arguments — so a
-        * literal with written parameter types elaborates to a `scala.Function1` first and matches
-        * no alternative. Measured as `Found: CharSequence => Pair[Integer, Integer]`, at a call the
-        * index-local test declined because both formals spell `T`.
-        *
-        * So the second disjunct is the SLOT'S OWN SHAPE rather than a comparison: a formal that is
-        * a type variable is one scala cannot read an expected type out of, and with one alternative
-        * it would have solved it from the sibling anyway — which is why the overload conjunct stays
-        * and this is a disjunct under it rather than a rule of its own.
-        *
-        * The alternatives are the ones SCALA will see, so they are the type's ALL methods rather
-        * than its declared ones: java's overload set spans the hierarchy and so does scala's, and a
-        * declared-only reading would decline exactly where a base class contributes the second
-        * alternative. Compared by the formal's QUALIFIED NAME at that index, because what has to
-        * differ is the SLOT — `boolean` against `Runnable` is the pair this began with — and not the
-        * instantiation, which a generic alternative would make differ for no reason.
-        *
-        * The `catch` is §4.6-shaped and its default is distinguishable from a real answer: an
-        * unreadable declaration yields NO alternatives, so nothing is ascribed and the emission is
-        * byte-for-byte what it was — at worst the loud `E134` this exists to remove, and never a
-        * type invented for a slot. `RuntimeException`, so a deep model's `StackOverflowError` is not
-        * swallowed by a helper (`uncastAdded`'s own rule, one function over). */
+        * scala an expected type — [[polyArgsAscribed]]'s whole decision, read off the declaring
+        * type's ALL methods (not just declared, since java's overload set spans the hierarchy) by
+        * QUALIFIED NAME at that index. Fires when the alternatives DISAGREE at `i`, or agree on a
+        * TYPE VARIABLE the call has yet to infer (scala must resolve the overload by typing the
+        * arguments first, unlike java which solves `T` from another slot). Unreadable declaration →
+        * no alternatives, nothing ascribed (§4.6); `RuntimeException` only, so a deep model's
+        * `StackOverflowError` is not swallowed. */
       private def overloadedSamSlot(ex: CtExecutableReference[?], arity: Int, i: Int): Boolean =
         val alts: List[List[CtTypeReference[?]]] =
           try
@@ -3729,24 +2542,16 @@ object SpoonTir:
           def elems(es: List[Term]): Option[List[Term]] =
             if es.sizeIs != restEs.size then scala.None
             else Some(es.zipWithIndex.map { (t, k) => if poly(fixed + k) then uncastAdded(t, restEs(k)) else t })
-          // the two shapes `varargPack` materialises — a SPREAD at an external callee, an array
-          // literal at one the port declares. A third shape is a pack nobody has built, and
-          // declining on it is the honest answer rather than a guess about which term is which.
+          // the two shapes `varargPack` materialises — a SPREAD or an array literal; a third declines
           val packed = args.last match
             case r: Tree.Repeated => elems(r.elems).map(es => r.copy(elems = es))
             case n: Tree.NewArray => n.init.flatMap(elems).map(es => n.copy(init = Some(es)))
             case _                => scala.None
           packed.map(headTs :+ _)
 
-      /** the casts an ARGUMENT ARM added, removed; the ones the JAVA SOURCE wrote, kept.
-        *
-        * The failure DIRECTION is the whole of the `catch`: an unreadable cast list used to read as
-        * "java wrote NONE", which strips java's own conversions along with the arms', silently and
-        * at the one node kind where that is a semantic change. Unreadable now DECLINES — a term
-        * left exactly as the arms built it is at worst a cast too many, which is the error this
-        * function exists to remove and not a conversion it invented. `RuntimeException`, so a
-        * `StackOverflowError` from a deep tree is not swallowed by a helper (`CLAUDE.md` §4.58's
-        * rule about a `catch` around a harvest, met at an argument list). */
+      /** the casts an ARGUMENT ARM added, removed; the ones the JAVA SOURCE wrote, kept. Unreadable
+        * cast list DECLINES (not "java wrote none") — a term left as-is is at worst a cast too many.
+        * `RuntimeException` only, so a `StackOverflowError` is not swallowed (CLAUDE.md §4.58). */
       private def uncastAdded(t: Term, e: CtExpression[?]): Term =
         val own = try Some(e.getTypeCasts.size) catch { case _: RuntimeException => scala.None }
         def depth(x: Term): Int = x match
@@ -3760,36 +2565,12 @@ object SpoonTir:
         own.fold(t)(n => strip(t, depth(t) - n))
 
       /** THE FORMAL OF AN INHERITED CALLEE, with the ANCESTOR's type variables replaced by what THIS
-        * class instantiated them with — `None` where nothing substitutes.
-        *
-        * ==The gap this closes, and why `uncheckedGeneric` could not see it==
-        * `AstActionHandler<C, N, A, H>` declares `addActionHandler(H handler)`, and
-        * `AttributeProviderAdapter extends AstActionHandler<…, AttributeProvidingHandler<Node>>`
-        * calls it with its own RAW `AttributeProvidingHandler` parameter. Java admits that by
-        * UNCHECKED CONVERSION at a raw type (JLS 5.1.9) and scala has no such rule, so the faithful
-        * emission is the cast java performs implicitly — which is exactly what this function's
-        * caller is for. It declined at the first gate: the formal is literally `H`, a
-        * `CtTypeParameterReference`, and `isGenericUse` answers `false` for one.
-        *
-        * `ENGINE-LIMITS.md` G12 is why that gate is right in general — *a callee's own type
-        * variables do not resolve at the call site*, and a cast naming one renders a `?T` stub. An
-        * INHERITED formal is the one case where they DO: the variable belongs to an ancestor, and
-        * the `extends` clause says what this class instantiated it as. That is the same fact
-        * `ParentSubst` carries in the TIR (`CLAUDE.md` §4.56) and it is EXACT rather than a guess.
-        *
-        * ==Keyed by DECLARATION, never by name==
-        * `(owner FQN, formal name)`, which is `ParentSubst`'s own identity. The name-keyed map beside
-        * it ([[instantiationOfParents]]) is the one `inheritedTp` measured at 161/142/141 and is
-        * switched off for it — an unrelated ancestor's `T` colliding with the `T` being filled. Two
-        * ancestors' `T`s are two different keys here, so a hit is evidence.
-        *
-        * ==What it deliberately does NOT substitute==
-        * A WILDCARD formal (`? extends H`). The substitution would be right and the RENDERING is
-        * not — `tpe` has no shape for a bounded wildcard whose bound this function replaced — and
-        * the failure direction of declining is a MISSED cast, i.e. the loud compile error this
-        * function exists to remove and never a conversion it invented. Complete over the other
-        * three shapes (variable, array, applied) for §4.56's reason: a partial type walk is right
-        * for the target it was written against and silently answers "nothing here" for the next. */
+        * class instantiated them with — `None` where nothing substitutes. Closes the gap where the
+        * formal is literally an ancestor's own type variable (`isGenericUse` declines it, though
+        * ENGINE-LIMITS G12's rule against resolving a callee's own variables does not apply — the
+        * `extends` clause says what THIS class instantiated it as, same fact as `ParentSubst`,
+        * CLAUDE.md §4.56). Keyed by (owner FQN, formal name), never by name alone. Does NOT
+        * substitute a WILDCARD formal (`tpe` has no shape for it) — declines rather than misrenders. */
       /** how many `[]` a type reference carries — the ARITY half of `ENGINE-LIMITS.md` G26's
         * comparison, which is the one thing that decides whether a cast at an inherited formal is a
         * translation or a `ClassCastException`. */
@@ -3800,9 +2581,7 @@ object SpoonTir:
       private def inheritedFormal(tr: CtTypeReference[?], fuel: Int = 6): Option[TypeRepr] =
         if fuel <= 0 then scala.None
         else TypeShape.of(tr) match
-          // the WILDCARD arm now stands above the variable one, which claimed every `?` and
-          // declined it anyway (no declaration to look up) — the doc above says the decline is
-          // deliberate, and it is the answer either way.
+          // wildcard arm above variable — declines either way, deliberately (see doc above)
           case TypeShape.Wildcard(_, _, _) => scala.None
           case TypeShape.Variable(tv) =>
             for
@@ -3827,24 +2606,15 @@ object SpoonTir:
 
       private def uncheckedGeneric(target: CtTypeReference[?], e: CtExpression[?], t: Term,
                                    rawTarget: Boolean = true, ownScope: Boolean = true): Term =
-        // THE TYPE THE ARGUMENT HAS WHERE IT STANDS — [[castType]], not `e.getType`. Java decides
-        // its unchecked conversion (JLS 5.1.9) on the type the value has AT THE SLOT, and a cast is
-        // the one thing that moves it: `gallopRight((Comparable) a[i], …)` at a `Comparable<Object>`
-        // formal is raw-to-parameterised, which is the whole of what this function is for. Read
-        // BEFORE the cast the same argument is an `Object`, which mentions no raw generic at all —
-        // so the one shape java writes this conversion for is the one shape that declined.
+        // the type the argument has WHERE IT STANDS ([[castType]], not `e.getType`) — a cast is
+        // what moves it, and the pre-cast type mentions no raw generic at all
         val et = castType(e)
-        // a CLASS LITERAL is the one expression whose Spoon type lies about raw-ness: `AddAction.class`
-        // types as raw `Class`, yet we emit `classOf[AddAction]` — precisely `Class[AddAction]`. Casting
-        // it (to `Class[Action]`, the formal's bound) would destroy the very inference it feeds.
+        // a CLASS LITERAL's Spoon type lies about raw-ness (`AddAction.class` types raw `Class`,
+        // emits `classOf[AddAction]`); casting it would destroy the inference it feeds
         val classLit = e match
           case fr: CtFieldRead[?] => fr.getVariable.getSimpleName == "class"
           case _                  => false
-        // A METHOD REFERENCE (`Array::new`) belongs with the lambda: both are poly expressions
-        // whose type comes FROM the target, so a cast can only destroy the inference it feeds.
-        // Measured: without this, `addPool(Array.class, Array::new)` casts the supplier to
-        // `PoolSupplier[Object]` while `Array.class` pins `T = Array[?]`, and the overload
-        // resolves against nothing.
+        // a METHOD REFERENCE belongs with the lambda: both are poly expressions typed FROM the target
         val bad = classLit || polyExpression(e) || e.isInstanceOf[CtLiteral[?]] ||
           e.isInstanceOf[CtNewArray[?]] || e.isInstanceOf[CtConditional[?]]
         // …the INHERITED formal, which the gates below cannot reach: a formal written as an
@@ -3852,18 +2622,9 @@ object SpoonTir:
         // `false` for it because the variable is not in THIS class's scope. See [[inheritedFormal]]
         // — the `extends` clause resolves it, exactly and only for that case.
         //
-        // A DIMENSION MISMATCH DECLINES, and that is not tidiness: at an `H[]...` slot java PACKS a
-        // one-dimensional argument into a fresh `H[][]` (`ENGINE-LIMITS.md` G26, javac-verified),
-        // and this port forwards it. A cast over that makes the arity defect COMPILE — the emitted
-        // `handlers.asInstanceOf[Array[Array[H[Node]]]]` is a `checkcast [[L…` against a value that
-        // is `[L…`, i.e. a `ClassCastException` at run time where a loud typer error stood. Measured
-        // at 6 sites on ssg-md; §3's rule is that a green compile says nothing, and trading an error
-        // for a run-time throw is the one direction this engine may not take. The arity fix is G26's
-        // and this stays declined until it ships.
-        //
-        // Computed ONCE and behind the two cheap tests: [[inheritedFormal]] calls `tpe`, so asking
-        // it twice charges the type-lowering obligation consults twice and moves their DENOMINATORS
-        // on every port for nothing (measured on libGDX core, whose emitted text is unchanged).
+        // A DIMENSION MISMATCH DECLINES rather than casts (ENGINE-LIMITS G26): a cast there would
+        // make an arity defect COMPILE and throw at run time instead of a loud typer error (§3).
+        // Computed ONCE, behind the two cheap tests, so the denominators do not move for nothing.
         val inherited =
           if target == null || et == null || bad then scala.None
           else if !mentionsRawGeneric(et) || arrayDims(target) != arrayDims(et) then scala.None
@@ -3876,20 +2637,9 @@ object SpoonTir:
         else if !(if ownScope then tpResolvable(target) else tpConcrete(target) || calleeBounded(target)) then t
         else if !mentionsRawGeneric(et) && !(rawTarget && mentionsRawGeneric(target)) then t
         else
-          // A CALLEE's formal belongs to the callee's declaration, not to the caller. Rendering
-          // `removeDuplicates(Array<AssetDescriptor>)`'s parameter from inside an OVERRIDING method
-          // let that method's inherited instantiation fill it — `Array[AssetDescriptor[Void]]` —
-          // while `removeDuplicates` itself, being no override, declares `Array[AssetDescriptor[?]]`.
-          // Two renderings of one signature, which is this engine's most persistent defect shape.
-          // …but only for a callee this class DECLARES itself (`removeDuplicates`, a private
-          // helper). An INHERITED callee's formals are written in the ancestor's variables and do
-          // need the caller's instantiation; clearing the gate for those too measured 3 -> 35.
-          // The caller's inherited instantiation can only speak about type variables declared by
-          // its OWN ancestors. A formal belonging to any other class — `AssetManager`'s
-          // `injectDependencies(Array<AssetDescriptor>)`, called from `AssetLoadingTask` — must be
-          // rendered without it. Restricting this to same-class callees only was not enough (3 -> 2
-          // instead of 0); clearing it for ALL callees was too much (3 -> 35), because a formal
-          // inherited from an ancestor genuinely is written in the ancestor's variables.
+          // a CALLEE's formal belongs to its own declaration, not the caller's inherited
+          // instantiation — except for a callee this class DECLARES itself, whose formals are
+          // written in ITS OWN variables (measured: restricting too narrowly gave 3->2, too wide 3->35)
           val ownCallee =
             Option(e.getParent(classOf[CtInvocation[?]]))
                   .flatMap(inv => Option(inv.getExecutable.getDeclaringType))
@@ -3900,41 +2650,18 @@ object SpoonTir:
                    finally inOverridingMember = savedOv
           Tree.Typed(t, tt(ct, e), ct, originOf(e))
 
-      /** JS-G13's clause, as a function of the SLOT — java's array covariance (JLS 10.10) put a value
-        * of one array type where another is declared, and scala's `Array` is invariant.
-        *
-        * Extracted so [[coerce]] and [[slotConsults]] read ONE predicate: a consult that re-derived
-        * the condition beside the clause it is about would be a second answer to one question, which
-        * is `ENGINE-LIMITS.md` F8's shape (`CLAUDE.md` §4.56). `coerce` keeps its own `arrayCov`
-        * gate on top — that flag is a fact about the CALLEE (own methods keep the invariant
-        * `Array[T]`), not about the slot. */
+      /** JS-G13's clause, as a function of the SLOT — java's array covariance (JLS 10.10) puts a
+        * value of one array type where another is declared, and scala's `Array` is invariant.
+        * Extracted so [[coerce]]/[[slotConsults]] read ONE predicate (ENGINE-LIMITS F8). */
       private def arrayCovSlot(target: CtTypeReference[?], et: CtTypeReference[?]): Boolean =
         target != null && target.isInstanceOf[CtArrayTypeReference[?]] && et != null &&
           et.isInstanceOf[CtArrayTypeReference[?]] && target.getQualifiedName != et.getQualifiedName
 
-      /** …AND THE SAME QUESTION ASKED AT THE RENDERING, which is the half a java-name test cannot
-        * see.
-        *
-        * [[arrayCovSlot]] compares the two JAVA array types, and that is exact wherever java wrote
-        * two different ones. It answers NO where JAVA'S OWN ERASURE collapses them into one:
-        * `Enum<?>[] universe = getUniverse(elementType)` with `<E extends Enum<E>> E[] getUniverse`
-        * reads `java.lang.Enum[]` on BOTH sides, so there is nothing to compare — while the emitted
-        * term is an `Array[E]` at an `Array[Enum[?]]` slot, and scala's arrays are INVARIANT.
-        *
-        * `ENGINE-LIMITS.md` §0's rule read at a slot: the recorded java type is not a witness of
-        * what the emitter will print. Where the two readings disagree the comparison has to be at
-        * the RENDERING, and the TERM is the only side that has one — which is why this takes the
-        * term rather than `castType(e)`.
-        *
-        * It can only ever ADD a cast where scala would have rejected the slot outright, because two
-        * DIFFERENT `Array[…]` renderings never conform in either direction; where they are equal it
-        * declines by arithmetic. That is the whole of its safety argument, and it is why it rides on
-        * the same `arrayCov` gate rather than on one of its own.
-        *
-        * `want` is HANDED IN rather than looked up, and that is measured rather than stylistic: a
-        * second `tpe(target)` is a second type LOWERING, and the lowering counters are the
-        * denominators every `catalog(consulted)` row prints inside its own text — 1,675 extra
-        * consults on a port whose emission did not move by one byte. */
+      /** …the SAME question asked at the RENDERING, which a java-name test cannot see: java's own
+        * ERASURE can collapse two array types into one (e.g. an F-bounded `<E> E[] getUniverse`),
+        * so [[arrayCovSlot]] finds nothing to compare while the emitted `Array[E]` still disagrees
+        * with `Array[Enum[?]]` (scala arrays are INVARIANT). `want` is HANDED IN, not re-looked-up
+        * — a second `tpe(target)` moves the lowering denominators for nothing (measured, 1,675). */
       private def arrayCovRendered(target: CtTypeReference[?], want: TypeRepr, t: Term): Boolean =
         target != null && target.isInstanceOf[CtArrayTypeReference[?]] &&
           isScalaArrayType(t.tpe) && isScalaArrayType(want) && want != t.tpe
@@ -3946,36 +2673,17 @@ object SpoonTir:
         target != null && et != null && et.isPrimitive && !target.isPrimitive &&
           !target.isInstanceOf[CtTypeParameterReference] && !target.isInstanceOf[CtArrayTypeReference[?]]
 
-      /** JS-G09's question at a slot — java's UNCHECKED CONVERSION (JLS 5.1.9), which is legal at a
-        * raw type and has no scala image but a cast.
-        *
-        * This one is a SHAPE test and deliberately not [[uncheckedGeneric]]'s gate list: the consult
-        * asks *does this difference APPLY here*, and `uncheckedGeneric` answers the narrower
-        * question *and is a cast emittable here* (it declines for a poly expression, for a class
-        * literal, for a callee-bounded formal). A consult keyed on the narrower one would report
-        * "the difference does not apply" at every site where it applies and the engine refuses. */
+      /** JS-G09's question at a slot — java's UNCHECKED CONVERSION (JLS 5.1.9), legal at a raw type,
+        * no scala image but a cast. A SHAPE test, deliberately not [[uncheckedGeneric]]'s narrower
+        * gate list, so a refused site still reports "the difference applies here". */
       private def uncheckedSlot(target: CtTypeReference[?], et: CtTypeReference[?]): Boolean =
         target != null && et != null && isGenericUse(target) &&
           (mentionsRawGeneric(et) || mentionsRawGeneric(target))
 
-      /** THE SLOT ROWS, consulted at every arm that has a slot — JS-G09, JS-G13, JS-G14.
-        *
-        * One function and six call sites, which is the convergence `Differences.everySlot` names: a
-        * local's initialiser, an assignment, a `return`, a call argument, a `new`'s argument and an
-        * array initialiser's element are six node kinds reaching ONE conversion (JLS 5.2), and a rule
-        * stated once per arm is a rule the next arm will not have.
-        *
-        * Called from the ARM and never from [[coerce]]: `coerce` is not reached for a local with no
-        * initialiser, a bare `return` or a zero-argument call, so a consult inside it would leave a
-        * hole at exactly the nodes where the difference does not apply. `slots` is empty at those
-        * nodes, all three consults answer `scala.None`, and the obligation is discharged honestly.
-        *
-        * The type read at each slot is [[castType]], not `e.getType` — the same reading `coerce`
-        * takes, and for the same reason (`ENGINE-LIMITS.md` K17: a cast expression's type IS the
-        * cast's, and it is that type the surrounding context converts). READ BARE, too: `castType`
-        * already answers `null` where Spoon has no answer, and its callers each decline on that, so
-        * a second `catch` around it here could only ever hide a divergence between this reading and
-        * `coerce`'s — which is the same call, two lines apart (`CLAUDE.md` §4.6). */
+      /** THE SLOT ROWS, consulted at every arm that has a slot — JS-G09, JS-G13, JS-G14. One
+        * function, six call sites (`Differences.everySlot`, one JLS 5.2 conversion). Called from the
+        * ARM, never [[coerce]] (unreached for a slot-less node, honest discharge). Reads [[castType]]
+        * bare, same as `coerce` (ENGINE-LIMITS K17, CLAUDE.md §4.6). */
       private def slotConsults(slots: List[(CtTypeReference[?], CtExpression[?])], at: Origin)
                               (using Obligations): Unit =
         val pairs = slots.map((tg, e) => (tg, castType(e)))
@@ -3991,17 +2699,9 @@ object SpoonTir:
       def slotConsultsAt(slots: List[(CtTypeReference[?], CtExpression[?])], at: Origin)
                         (using Obligations): Unit = slotConsults(slots, at)
 
-      /** the (formal, argument) pairs of a call — the slot list [[slotConsults]] wants at the two
-        * call dispatches. Empty where the arities disagree, which is exactly the case `coerceArgs`
-        * declines to coerce.
-        *
-        * The formals are read BARE, exactly as `coerceArgsFixed` reads them one function away. A
-        * `catch` here would answer `Nil`, and `Nil` is not "unknown" — it is *this callee takes no
-        * parameters*, which makes every arity disagree and reports all three slot rows as not
-        * applying at every argument of that call (`CLAUDE.md` §4.6: a default the caller cannot
-        * distinguish from a real answer is a fabricated fact). If this reading throws, the
-        * translation about to run throws on the same call, so swallowing it here only removes the
-        * evidence. */
+      /** the (formal, argument) pairs of a call — the slot list [[slotConsults]] wants. Empty where
+        * arities disagree (same case `coerceArgs` declines). Formals read BARE — a `catch` here
+        * would fabricate "this callee takes no parameters" (CLAUDE.md §4.6). */
       private def argSlots(ex: CtExecutableReference[?], argEs: List[CtExpression[?]]):
           List[(CtTypeReference[?], CtExpression[?])] =
         val formals = ex.getParameters.asScala.toList
@@ -4010,24 +2710,9 @@ object SpoonTir:
       private def coerce(target: CtTypeReference[?], e: CtExpression[?], t: Term, arrayCov: Boolean = true,
                          tpToObject: Boolean = true, unchecked: Boolean = true): Term =
         val isNull = e match { case l: CtLiteral[?] => l.getValue == null; case _ => false }
-        // THE TYPE THE COERCED TERM ACTUALLY HAS — [[castType]], not `e.getType`. Every caller
-        // hands `t = expr(e)`, and `expr` has already folded the casts the SOURCE wrote onto that
-        // term, so `e.getType` describes something that is no longer on the tree. Java agrees: a
-        // cast expression's type IS the cast's type, and it is THAT type the surrounding
-        // assignment or invocation context converts (JLS 5.2, 5.3).
-        //
-        // Where it bites is the `boxing` branch below, because that branch does not merely decide
-        // WHETHER to convert, it names the wrapper to convert TO. `return (long) Math.ceil(d);`
-        // from a method returning `Object` boxes to `java.lang.Long` in java (JLS 5.1.7, at the
-        // cast's type); read as the pre-cast `double` it emitted
-        // `…asInstanceOf[scala.Long].asInstanceOf[java.lang.Double]`, which is an ASSERTION that a
-        // `Long` is a `Double` and throws — `ENGINE-LIMITS.md` K17's rule (a cast is not a
-        // conversion) reached through the wrapper CHOICE rather than through the cast.
-        //
-        // The other direction needs nothing and must not get it: `(double) anObject` is a
-        // checkcast to `java.lang.Double` followed by an unbox in java, never a `Number` dispatch,
-        // so it THROWS for a `Long` — and `asInstanceOf[scala.Double]` on an `Any` throws in
-        // exactly the same 45 cells. Probed both compilers; see K17 face 3.
+        // the type the COERCED TERM actually has — [[castType]], not `e.getType`, since `expr`
+        // already folded java's own casts onto it (JLS 5.2, 5.3). Matters for `boxing` below, which
+        // names the WRAPPER to convert to, not just whether to (ENGINE-LIMITS K17 face 3).
         val et     = castType(e)
         val narrowing = target.isPrimitive && et != null && et.isPrimitive &&
           primRank.get(target.getSimpleName).exists(tr => primRank.get(et.getSimpleName).exists(_ > tr))
@@ -4038,20 +2723,13 @@ object SpoonTir:
         // slot — Java inserts an unchecked downcast; Scala needs it explicit.
         val downcast = et != null && et.getQualifiedName == "java.lang.Object" &&
           !target.isPrimitive && target.getQualifiedName != "java.lang.Object"
-        // a boxed wrapper flowing into a PRIMITIVE slot is Java auto-UNBOXING (possibly with a widening,
-        // `Integer`→`float`); Scala does neither implicitly, so emit the explicit `n.floatValue()`
-        // (every `Number` wrapper carries all the `xxxValue()` accessors; `Boolean`/`Character` their own).
-        // Only a CROSS-type unbox (`Integer`→`float`) needs this — a same-type unbox (`Integer`→`int`)
-        // is already handled by Scala's `Predef.Integer2int`, and forcing `.intValue()` there only
-        // perturbs surrounding resolution.
+        // a boxed wrapper at a PRIMITIVE slot is java auto-UNBOXING (possibly with widening) — emit
+        // the explicit `.xxxValue()`. Only a CROSS-type unbox needs this (same-type is Predef's job)
         if et != null && !et.isPrimitive && target.isPrimitive && wrapperOf.values.toSet(et.getQualifiedName)
           && wrapperOf.get(target.getSimpleName).exists(_ != et.getQualifiedName) then
           return unbox(t, et.getQualifiedName, target.getSimpleName, e)
-        // a LOSSY WIDENING primitive conversion — java widens implicitly (JLS 5.1.2), but Scala's
-        // implicit conversions `int2float`, `long2float` and `long2double` are deprecated since
-        // 2.13.1 because they lose precision. Emit the explicit `.toFloat`/`.toDouble` — the same
-        // spelling the deprecation message requests. This is a (a)-universal rule: a fact about Java
-        // and Scala, true of every codebase.
+        // a LOSSY WIDENING conversion (JLS 5.1.2) — scala's implicit int2float/long2float/long2double
+        // are deprecated (precision loss); emit the explicit `.toFloat`/`.toDouble` instead
         if et != null && et.isPrimitive && target.isPrimitive then
           val pair = (et.getSimpleName, target.getSimpleName)
           val lossyTarget = pair match
@@ -4068,16 +2746,9 @@ object SpoonTir:
         // Java erases `T` to `Object`; Scala's unbounded `T <: Any` does not conform. Cast it.
         val tpObj = tpToObject && et != null && et.isInstanceOf[CtTypeParameterReference] &&
           target.getQualifiedName == "java.lang.Object"
-        // Box to the primitive's WRAPPER (`int` → `java.lang.Integer`), not the (often Object-erased)
-        // formal: the wrapper is what Java autoboxing yields and it satisfies both the erased `Object`
-        // slot AND a real `Integer`/`Number` one — where casting straight to `Object` fails an
-        // `Integer` parameter that Spoon erased at the call reference.
-        //
-        // Hoisted ABOVE `cast` so `arrayCovRendered` can read the rendering this line already
-        // computes. That is not tidiness: a SECOND `tpe(target)` is a second type LOWERING, and the
-        // lowering counters are the denominators every `catalog(consulted)` row prints inside its own
-        // text — measured at 1,675 extra consults on libGDX for an emission that was byte-identical
-        // (G12's own caution, met one predicate over).
+        // box to the primitive's WRAPPER, not the (often Object-erased) formal — satisfies both an
+        // erased `Object` slot and a real `Integer`/`Number` one. Hoisted ABOVE `cast` so
+        // `arrayCovRendered` reuses this rendering rather than a second `tpe(target)` lowering.
         val ct = if boxing then boxedPrimitive(et.getSimpleName) else tpe(target)
         val cast =
           tpObj ||                                                                // T → Object (non-arg)
@@ -4088,33 +2759,15 @@ object SpoonTir:
           boxing ||                                                               // int → Object/Number
           downcast                                                                // Object → specific
         if cast then
-          // …AND A TARGET NAMING AN ANCESTOR'S TYPE VARIABLE IS RENDERED THROUGH THE `extends`
-          // CLAUSE, which is [[uncheckedGeneric]]'s own fact read at the arm beside it. `tpe` has no
-          // meaning for a variable that is not in THIS class's scope and renders a sentinel, so an
-          // array-covariance cast at an inherited `H[]` slot emitted `Array[?]` — a cast whose
-          // target names nothing, which is worse than the mismatch it was inserted to remove. The
-          // substitution is EXACT (`ENGINE-LIMITS.md` G12) and it matters here because the vararg
-          // PACK builds its array at the resolved component: rendered two different ways, the
-          // element and the array around it disagree at every packed call.
-          //
-          // Asked ONLY where a cast is really being emitted and only where the target mentions a
-          // variable at all: [[inheritedFormal]] calls `tpe`, and a lookup inside a value the caller
-          // may not use moves the type-lowering denominators on every port for nothing (G12's own
-          // measurement, libGDX core 82207 -> 82211 against 82207 -> 82209).
+          // a target naming an ANCESTOR's type variable is rendered through the `extends` clause
+          // ([[uncheckedGeneric]]'s own fact, ENGINE-LIMITS G12) — else `tpe` renders a sentinel
+          // `Array[?]`. Asked ONLY where a cast is really emitted, to avoid moving denominators for nothing.
           val cct = if mentionsAnyTypeVar(target) then inheritedFormal(target).getOrElse(ct) else ct
           Tree.Typed(t, tt(cct, e), cct, originOf(e))
         else if unchecked then
-          // A CONDITIONAL's unchecked conversion belongs to its BRANCHES, not to the whole
-          // expression. Java's rules for a reference conditional in an assignment context assign
-          // each operand to the target type separately, which is exactly why `uncheckedGeneric`
-          // refuses the conditional itself: casting a poly expression destroys the inference it
-          // feeds. Refusing without descending simply loses the conversion — measured in
-          // simple-graphs' `AStarSearch.getPath`, `path = end != null ? new AlgorithmPath<>(end) :
-          // Path.EMPTY_PATH`, where the RAW static `EMPTY_PATH` renders `Path[?]` against a `Path[V]`
-          // field and Java's unchecked conversion had nowhere to land.
-          //
-          // Recursing through `coerce` and not `uncheckedGeneric` directly, so a branch gets whatever
-          // conversion IT needs; a nested conditional resolves the same way, one level down.
+          // a CONDITIONAL's unchecked conversion belongs to its BRANCHES (java assigns each operand
+          // to the target type separately, K30 face 3) — recurses through `coerce`, not
+          // `uncheckedGeneric` directly, so each branch gets whatever conversion IT needs
           conditionalBranches(e, t) match
             case Some((c, i)) =>
               val th = coerce(target, c.getThenExpression, i.thenp, arrayCov, tpToObject, unchecked)
@@ -4136,12 +2789,8 @@ object SpoonTir:
         * branch recursion above reads as one case beside it. */
       private def uncheckedOf(target: CtTypeReference[?], e: CtExpression[?], t: Term, ct: TypeRepr): Term =
           val u = uncheckedGeneric(target, e, t)
-          // Java's unchecked conversion, decided on the RENDERED types rather than Spoon's. A value
-          // read through an ERASED receiver (`map.keys$field` off an `OrderedMap[Object, Object]`)
-          // has a Spoon type that still says `Array<K>`, so nothing above sees a mismatch — but the
-          // Scala we emit for it really is `Array[Object]` flowing into an `Array[K]` slot. The TIR
-          // now carries that erased type honestly (see `erasedFieldReceiver`), which is what makes
-          // this decidable here at all.
+          // decided on the RENDERED types, not Spoon's — an erased receiver's Spoon type still says
+          // `Array<K>` while the emitted term is `Array[Object]`, which only the TIR's erased type sees
           if (u ne t) || !tpAccessibleHere(target) || !uncheckedFrom(t.tpe, ct) then u
           else Tree.Typed(t, tt(ct, e), ct, originOf(e))
 
@@ -4152,23 +2801,11 @@ object SpoonTir:
       private val valueMethod = Map(
         "int" -> "intValue", "long" -> "longValue", "float" -> "floatValue", "double" -> "doubleValue",
         "short" -> "shortValue", "byte" -> "byteValue", "boolean" -> "booleanValue", "char" -> "charValue")
-      /** `wrapper.<prim>Value()` — explicit unboxing of a boxed number/boolean/char to a primitive,
-        * and the WIDENING beside it where the shortcut would name a member that does not exist.
-        *
-        * Java's unboxing is TWO conversions: JLS 5.1.8 unboxes at the WRAPPER'S OWN primitive, and
-        * 5.1.2's widening primitive conversion then takes it to the slot. Collapsing them into one
-        * `xxxValue()` keyed on the TARGET is exact for the six `java.lang.Number` wrappers — every
-        * one of them carries the whole `byteValue()`…`doubleValue()` family, so `Long` → `double`
-        * really is `doubleValue()`, which is the shape `ENGINE-LIMITS.md` K17 face 2 measured.
-        *
-        * `Character` and `Boolean` are NOT `Number`s. They carry `charValue()` / `booleanValue()`
-        * and nothing else, so a `Character` at an `int` slot emitted `c.intValue()` — a member no
-        * class in the chain declares. LOUD rather than silent, which is the one thing in its favour.
-        * The two steps are emitted instead: unbox at the wrapper's own primitive, then convert.
-        *
-        * @param from the wrapper's FQN — the SOURCE. Both callers know it (`coerce` from the
-        *             expression's type, `promotedBranch` from the branch's), and the question
-        *             "which primitive does this wrapper actually carry" cannot be asked without it. */
+      /** `wrapper.<prim>Value()` — explicit unboxing to a primitive, plus the WIDENING beside it
+        * where a shortcut would name a nonexistent member. Java's unboxing is TWO conversions (JLS
+        * 5.1.8 then 5.1.2); collapsed to one call for the six `Number` wrappers (ENGINE-LIMITS K17
+        * face 2). `Character`/`Boolean` are NOT `Number`s — emitted as two explicit steps instead.
+        * @param from the wrapper's FQN — the SOURCE, known by both callers. */
       private def unbox(t: Term, from: String, prim: String, e: CtElement): Term =
         def primT(p: String) = TypeRef(NoPrefix, minter.external("scala." + primName(p), p))
         // the wrapper's OWN primitive, and whether reaching `prim` from it needs a second step.
@@ -4177,17 +2814,9 @@ object SpoonTir:
         val step   = if viaOwn then own else prim
         valueMethod.get(step) match
           case Some(vm) =>
-            // owner deliberately left None: the key is already a readable FQN, no portability
-            // rule targets `Number`'s members, and interning `java.lang.Number` HERE moves it
-            // earlier in the id sequence — which re-keys every downstream finding whose owner is
-            // an external member (their `fullName` embeds the raw id). Measured: 2 findings
-            // diffed as removed-and-re-added for no change in what was found.
-            //
-            // The two-step path keys on the WRAPPER instead, and that is not an inconsistency to
-            // tidy: `charValue` is not a `Number` member, so filing it under one would hide it from
-            // any portability rule that names `java.lang.Character` — while MOVING the existing key
-            // would re-key every finding after it for no behavioural gain. New key, honest from the
-            // start; old key, left where it is.
+            // owner deliberately left None for Number members (interning it would re-key every
+            // downstream finding, measured). Two-step path keys on the WRAPPER instead — `charValue`
+            // is not a `Number` member, and moving the existing key would re-key for no gain.
             val vsym = minter.external(if viaOwn then s"$from#$vm" else "java.lang.Number#" + vm, vm)
             val call = Tree.Apply(Tree.Select(t, vsym, NoType, originOf(e)), Nil, vsym, primT(step), originOf(e))
             if viaOwn then Tree.Typed(call, tt(primT(prim), e), primT(prim), originOf(e)) else call
@@ -4197,63 +2826,18 @@ object SpoonTir:
           case Some(fqn) => TypeRef(NoPrefix, minter.external(fqn, simpleName(fqn)))
           case None      => TypeRef(NoPrefix, minter.external("java.lang.Object", "Object"))
 
-      /** Java VARARGS at the CALL SITE. `T...` is emitted as a plain `Array[T]` parameter (Scala's
-        * `T*` would need spread syntax and overload-aware resolution at every call), so a call that
-        * passes the elements POSITIONALLY — `new VertexAttributes(a, b, c)` — has to materialize the
-        * array Java would have built: `new VertexAttributes(scala.Array[VertexAttribute](a, b, c))`.
-        * A call that already passes an array (Java permits that too) is left alone; so is a generic
-        * `T...` component, whose element type would not render at the call site.
-        *
-        * ==…and that convention stops at the program's edge (`ENGINE-LIMITS.md` K6.5, third case)==
-        * The materialised pack is right because BOTH halves are ours: the emitted `def f(xs:
-        * Array[T])` and the emitted `f(Array[T](a, b))` agree by construction. An EXTERNAL callee's
-        * half is a CLASS FILE nothing in this port can move, and scalac reads a java `T...` there as
-        * a REPEATED parameter — so the pack is one argument too many, at every external java vararg
-        * method, which every library meets. `Paths.get(".")` emitted `Paths.get(".",
-        * Array[String]())` and read `Found: Array[String] / Required: String`.
-        *
-        * **The loud half is the smaller half.** Where the repeated element is `Object` the pack
-        * CONFORMS — `Array[Object] <: Object` — so `String.format(fmt, Array[Object](a, b))`
-        * compiles and passes the array as a SINGLE `%s`, which is CLAUDE.md §4.4's shape exactly: no
-        * error, no moved count, and a wrong string at run time. 9 such sites in one library against
-        * 9 that failed to compile.
-        *
-        * So an external callee gets `Tree.Repeated`, which the emitter renders as the ELEMENTS —
-        * `CLAUDE.md` §6's spread with no spread syntax needed, and the same normalisation K6.5's
-        * `Arrays.asList` rewrite already performs one layer up. Ownership is decided STRUCTURALLY
-        * (§4.56) from the DECLARING type being a shadow — a reconstruction from bytecode — never
-        * from the name: a resolution root's java is parsed as source and stays ours, which is what
-        * keeps a dependent port's calls into its base on the materialised form both modules emit. */
-      /** JS-G38's question, as a function of the vararg slot: does the argument in it ALREADY hold
-        * the array java would otherwise have built?
-        *
-        * Named because [[varargPack]] and [[callConsults]] both ask it, and a copy is a second
-        * answer (`ENGINE-LIMITS.md` F8). The two facts inside it are java's own, not conveniences:
-        *
-        *   - the CAST wins where there is one. Spoon types `(String[]) null` by the literal, and it
-        *     is the cast java resolved the slot against, so it is the cast's component that decides.
-        *     OUTERMOST first, which is the head (see [[castType]]);
-        *   - the COMPONENT TYPES have to agree. Java's rule for the slot is ASSIGNABILITY and a
-        *     PRIMITIVE array is assignable to nothing but its own array type, so `int[]` at an
-        *     `Object...`/`T...` slot is not a pass-through at all — java materialises
-        *     `new Object[]{ intArr }`, ONE element holding the array. That is what
-        *     `Arrays.asList(intArr)` (a `List<int[]>` of size 1) and `String.format("%s", intArr)`
-        *     (one `%s`, printing `[I@…`) both are, and reading it as a pass-through is
-        *     `CLAUDE.md` §4.4's shape twice over. A REFERENCE component is left alone —
-        *     `String[] <: Object[]` is java's own array covariance and the forward really is one;
-        *   - a BARE `null` IS the array; `(String) null` is not. The cast names the COMPONENT type,
-        *     which is exactly how java disambiguates the two;
-        *   - …and the ARRAY DIMENSION is what decides the REFERENCE case, which "is the argument an
-        *     array" silently did the work of for as long as no corpus vararg's component was ITSELF
-        *     an array. Java's rule for the slot is assignability to the PARAMETER's array type: at
-        *     an `H[]...` slot the parameter is `H[][]`, a plain `H[]` is assignable to the COMPONENT
-        *     and not to the parameter, so java PACKS. Read as a pass-through the port forwards a
-        *     one-dimensional array into a two-dimensional slot — the ARITY of the emitted call is
-        *     wrong before its element type is. `dims(arg) >= dims(comp) + 1` answers all five of
-        *     `ENGINE-LIMITS.md` G26's javac-probed cells with no subtyping oracle, and every shape
-        *     javac REJECTS (a `String[][]` at a `String...`) is outside it either way. Note the two
-        *     conjuncts are ONE rule read at its two kinds: the primitive test is assignability where
-        *     the component is primitive, this is assignability where it is an array. */
+      /** Java VARARGS at the CALL SITE. `T...` is emitted `Array[T]`, so a call passing elements
+        * POSITIONALLY has to materialize the array java would build; an already-array or generic
+        * component is left alone. Stops at the program's EDGE (ENGINE-LIMITS K6.5): an EXTERNAL
+        * callee's `T...` is a class file scalac reads as REPEATED, so it gets `Tree.Repeated`
+        * (emitted as elements, no spread syntax) instead of a pack. Ownership decided STRUCTURALLY
+        * (§4.56) from the declaring type being a shadow, never from the name. */
+      /** JS-G38's question, as a function of the vararg slot: does the argument ALREADY hold the
+        * array java would otherwise build? Named because [[varargPack]] and [[callConsults]] both
+        * ask it (ENGINE-LIMITS F8). Rules: the CAST wins where there is one (outermost first); a
+        * PRIMITIVE array component must match exactly (java packs `int[]` at `Object...` into ONE
+        * element, CLAUDE.md §4.4); a bare `null` IS the array; ARRAY DIMENSION decides the
+        * reference case via `dims(arg) >= dims(comp) + 1` (java packs at `H[]...`, ENGINE-LIMITS G26). */
       /* …and every one of the three reads below is BARE, because `varargPack` — the TRANSLATION
          this predicate is about, which calls this very function — reads all three bare within ten
          lines: `arr.getComponentType` in its own `comp`, `e.getTypeCasts` in `expr`'s cast fold,
@@ -4275,42 +2859,18 @@ object SpoonTir:
         (casts :+ own).collectFirst { case a: CtArrayTypeReference[?] => a }.exists(componentAgrees) ||
           (e match { case lit: CtLiteral[?] => lit.getValue == null && casts.isEmpty; case _ => false })
 
-      /** the callee's declared parameters, or `scala.None` where the declaration cannot be read —
-        * the ONE lookup where an absent value is normal (`CLAUDE.md` §4.6), shared by [[varargPack]]
-        * and [[callConsults]] so the two never disagree about whether a callee is variadic.
-        *
-        * ==And at a `CtNewClass` the parser SYNTHESISES the declaration this reads==
-        * `CLAUDE.md` §4.59 exactly, met at a constructor. The executable reference of
-        * `new P(a, b) { … }` names the ANONYMOUS SUBTYPE's constructor, and Spoon materialises that
-        * one with a single parameter of NO type and `isVarArgs = false` — which is not "unknown", it
-        * is *this callee is not variadic*, the §4.6 fabricated fact baked into the model rather than
-        * into a `catch`. Every reader here then answers about a constructor java never wrote:
-        * [[varargPack]] leaves N arguments loose against the one `Array[T]` formal the parent's
-        * `T...` emitted, which scala AUTO-TUPLES where the parent declares one constructor (a green
-        * compile, an argument of the wrong shape) and reports an overload failure where it declares
-        * several. The very same `new P(a, b)` WITHOUT a body packs correctly, so nothing about the
-        * translation is inconsistent — only the two `new`s are read from different declarations.
-        *
-        * JLS 15.9.5.1 says what java derives: the anonymous class's constructor takes the SUPERCLASS
-        * constructor's parameters and passes them straight through. So the declaration to read is the
-        * SUPERCLASS's, chosen by the ERASED parameter types the REFERENCE carries — the one part of
-        * `ex` that is not synthesised. An anonymous class over an INTERFACE invokes `Object()`, has
-        * no parameter to match and falls out here, which is the right answer and not a decline. */
+      /** the callee's declared parameters, or `scala.None` where the declaration cannot be read
+        * (CLAUDE.md §4.6), shared by [[varargPack]]/[[callConsults]] so they never disagree. At a
+        * `CtNewClass` the parser SYNTHESISES a wrong declaration (§4.59) — Spoon's anonymous-subtype
+        * constructor has no real parameter list — so the SUPERCLASS's constructor is read instead
+        * (JLS 15.9.5.1), chosen by the ERASED parameter types the reference carries. */
       private def declParams(ex: CtExecutableReference[?]): Option[List[CtParameter[?]]] =
         anonSuperCtor(ex).orElse(execDeclOf(ex))
               .map(_.getParameters.asScala.toList)
 
       /** the SUPERCLASS constructor an anonymous-class construction really invokes — see
-        * [[declParams]]. `scala.None` for every executable that is not one, which is every call in a
-        * program with no anonymous class in it.
-        *
-        * The erased signature the reference carries is matched FIRST and the arity only where it is
-        * unambiguous, in that order and not the other way round: `noClasspath` erases a REFERENCE's
-        * generic formals and not a DECLARATION's (JS-G18), so a generic constructor's names do not
-        * meet and the arity is the honest fallback — while a parent with three one-argument
-        * constructors (`T...`, `T[]...`, `Collection<T>`) is a shape any collection library has, and
-        * there the names are the only thing that tells them apart. Neither answering leaves the
-        * lookup declining exactly as it did before this existed. */
+        * [[declParams]]. Matches the erased signature FIRST, arity only where unambiguous (a
+        * generic constructor's names don't meet under noClasspath erasure, JS-G18). */
       private def anonSuperCtor(ex: CtExecutableReference[?]): Option[CtExecutable[?]] =
         val cands =
           for
@@ -4331,15 +2891,8 @@ object SpoonTir:
             case _          => scala.None
 
       /** THE CALL ROWS, consulted at every call dispatch — JS-G18, JS-G32, JS-G37…G40, JS-G42.
-        *
-        * Called from [[coerceArgs]], which is the ONE function both `invocation` and `ctorCall` reach
-        * unconditionally, so the two dispatches cannot answer differently and an anonymous-class
-        * construction is not a third copy.
-        *
-        * Every predicate is read off the callee's REFERENCE and DECLARATION rather than by re-running
-        * [[varargPack]]: the consult asks *does this difference apply at this call*, which is a
-        * question about the shape, and whether the pack, the spread or the erasure cast came out
-        * right is the edge-case suite's job (`CatalogAreaGSpec`). */
+        * Called from [[coerceArgs]] (the ONE function both `invocation`/`ctorCall` reach). Predicates
+        * read off the REFERENCE/DECLARATION, not by re-running [[varargPack]]. */
       private def callConsults(ex: CtExecutableReference[?], argEs: List[CtExpression[?]], at: Origin)
                               (using Obligations): Unit =
         // BARE, for [[argSlots]]' reason: `coerceArgsFixed` and `passedThrough` both read
@@ -4381,70 +2934,27 @@ object SpoonTir:
             val comp = l.last.getType match
               case arr: CtArrayTypeReference[?] => arr.getComponentType
               case _                            => null
-            // already an array in the vararg slot (`f(arr)`, `f((String[]) null)`) — Java passes it
-            // through, and so do we WHERE THE CALLEE IS OURS. At an EXTERNAL one it becomes a
-            // SPREAD, which is the mirror of the pack below and the same fact: see `passThrough`.
-            // The CASTS matter: Spoon types `(String[]) null` by the literal, not the cast, and
-            // packing it would build `Array[String](null: Array[String])`.
-            // …AND THE COMPONENT TYPES HAVE TO AGREE. Java's rule for the slot is ASSIGNABILITY,
-            // and a PRIMITIVE array is assignable to nothing but its own array type — so `int[]` at
-            // an `Object...`/`T...` slot is not a pass-through at all: java materialises
-            // `new Object[]{ intArr }`, ONE element holding the array. That is the classic gotcha
-            // `Arrays.asList(intArr)` (a `List<int[]>` of size 1) and `String.format("%s", intArr)`
-            // (one `%s`, printing `[I@…`) are both instances of, and reading it as a pass-through is
-            // CLAUDE.md §4.4's shape twice over: `Arrays.asList(intArr*)` compiles and yields a list
-            // of five, `String.format(fmt, intArr*)` changes the call's arity. Neither moves a
-            // count. A REFERENCE component is left alone — `String[] <: Object[]` is java's own
-            // array covariance and the forward really is a forward.
+            // already an array in the vararg slot — passed THROUGH where the callee is ours, a
+            // SPREAD at an external one (see `passThrough`). Component types must agree (java
+            // packs a primitive array mismatch instead, CLAUDE.md §4.4); reference components pass
             val passesArray = argEs.sizeIs == l.size && varargHoldsArray(comp, argEs.last)
-            // A GENERIC vararg component (`static <T> Array<T> with (T... array)`) cannot be named at
-            // the call site — but Java materialises the array from the ARGUMENTS' own type, and
-            // naming that lets Scala infer `T` exactly as Java did. Only when every trailing
-            // argument agrees on one concrete type; a mixed set would need a lub we have no business
-            // computing here.
+            // the vararg element type, in priority order: the DECLARED component when concrete
+            // (preferred over argument inference — ENGINE-LIMITS §0/G1, erase USES never
+            // DECLARATIONS, 94 errors otherwise); else the RECEIVER's instantiation for a known
+            // receiver's own type variable (ENGINE-LIMITS G12); else inferred from the trailing
+            // arguments' own type, only when they all agree on one concrete type
             val elemRef: Option[CtTypeReference[?]] =
               if comp != null && tpConcrete(comp) then Some(comp)
-              // ZERO variadic arguments — `Family.all()` against `all(Class<? extends Component>...)`.
-              // Java materialises an EMPTY array, so there is nothing to infer the element type FROM
-              // and nothing that needs inferring: the declared component type is already exactly what
-              // the parameter renders as. Without this the call emitted no argument at all and the
-              // method looked as though it were missing one, which is how it surfaced.
-              //
-              // Guarded on the component not being a bare type VARIABLE: `static <T> Array<T> with(T...)`
-              // called as `with()` would name a `T` that does not exist at the call site — the same
-              // reason the inference branch below refuses a generic component.
-              // The DECLARED component type, whenever it is not a bare type variable.
-              //
-              // Argument inference is the wrong source here and `Family.all(ComponentA.class)` shows
-              // why: Spoon types a class literal as RAW `Class`, so the inferred element renders
-              // `Class[?]` while the parameter it is being passed to declares
-              // `Array[Class[? <: Component]]` — 94 errors in Ashley's suite, all one shape. This is
-              // ENGINE-LIMITS §0 (two renderings of one Java type: a declaration in one scope, a use
-              // re-rendered in another) and the rule that resolves it is G1, erase USES and never
-              // DECLARATIONS: the array being built is the parameter's own declared type.
-              //
-              // A bare type variable is still excluded — `<T> with(T...)` names a `T` that does not
-              // exist at the call site — and that is what the inference branch below remains for.
               else if comp != null && !comp.isInstanceOf[CtTypeParameterReference] then
                 Some(comp)
-              // A bare `V...` on a KNOWN receiver: `graph.addVertices(0, 1, 2)` where
-              // `graph : DirectedGraph<Integer>`. The element type is not at the call site and is not
-              // inferable from the arguments either — java AUTOBOXES `int` literals into `Integer[]`,
-              // so the argument types (`int`) name the wrong thing and the branch below rejects them
-              // as primitive. It is the RECEIVER that says what `V` is, which is the same rule
-              // `knownReceiverArgs` and `appliedCtorArgs` already apply one level out (ENGINE-LIMITS
-              // G12: a callee's own type variables do not resolve at the call site, but the CLASS's
-              // do, through the receiver's type arguments).
               else if comp != null && recvSubst.contains(comp.getSimpleName) then
                 Some(recvSubst(comp.getSimpleName))
               else
                 val ts = argEs.drop(fixed).map(e => e.getType)
                 Option.when(ts.nonEmpty && ts.forall(t => t != null && !t.isPrimitive && tpConcrete(t)) &&
                             ts.map(_.getQualifiedName).distinct.sizeIs == 1)(ts.head)
-            // the declaring type is a SHADOW exactly when it was reconstructed from bytecode —
-            // the same signal `coerceArgsFixed` reads for the erasure cast, and the only one that
-            // survives `noClasspath` (where `getExecutableDeclaration` is non-null for the JDK too).
-            // ONE answer for both directions: which side of the program's edge the CALLEE is on.
+            // the declaring type is a SHADOW iff reconstructed from bytecode — one answer for
+            // which side of the program's edge the CALLEE is on
             val external = isExternalCallee(ex)
             if comp == null || argEs.sizeIs < fixed then None
             else if passesArray then passedThrough(ex, argEs, external, recvSubst)
@@ -4452,18 +2962,10 @@ object SpoonTir:
             else
               val (head, rest) = argEs.splitAt(fixed)
               val fixedTerms = head.zipWithIndex.map { (e, i) => coerce(l(i).getType, e, expr(e)) }
-              // THE ELEMENT TYPE, with an ANCESTOR's type variables replaced by what THIS class
-              // instantiated them with — the half `ENGINE-LIMITS.md` G26 stated it had no answer for
-              // and wave 5 supplied. The array the pack materialises is the PARAMETER's own declared
-              // component, and where that component is written in the callee's own variables `tpe`
-              // renders the unresolvable one as a `?H` SENTINEL: a type nothing can be passed at,
-              // with the arity right and the element wrong (measured `markers` 0 -> 1, 18 references
-              // in one module). [[inheritedFormal]] is the SAME lookup the inherited-formal cast
-              // uses — keyed by `(declaring type FQN, formal name)`, resolved through the `extends`
-              // clause — so `H[]` renders as the instantiation this class wrote down, and the cast
-              // on the element below then agrees with the array being built around it. `scala.None`
-              // wherever nothing substitutes, which is every component that was already nameable:
-              // argument INFERENCE remains refused here (it is what measured 81 -> 83, twice).
+              // THE ELEMENT TYPE, with an ANCESTOR's type variables replaced (ENGINE-LIMITS G26) —
+              // else `tpe` renders a `?H` sentinel. [[inheritedFormal]] is the SAME lookup the
+              // inherited-formal cast uses; `scala.None` where nothing substitutes. Argument
+              // INFERENCE remains refused here (measured worse, 81 -> 83, twice).
               val ct = inheritedFormal(elemRef.get).getOrElse(tpe(elemRef.get))
               val elems = rest.map(e => coerce(elemRef.get, e, expr(e)))
               val at = AppliedType(TypeRef(NoPrefix, minter.external("scala.Array", "Array")), List(ct))
@@ -4474,32 +2976,10 @@ object SpoonTir:
           case _ => None
 
       /** java already holds the array and passes it WHOLE through the `T...` slot — the MIRROR of
-        * the pack above, and the same fact about the program's edge (`ENGINE-LIMITS.md` K6.5).
-        *
-        * Where the callee is OURS the parameter is emitted `def f(xs: Array[T])`, so passing the
-        * array as it stands is exactly right and nothing has to happen: `None`, which leaves
-        * `coerceArgsFixed` to render the ordinary argument list. That is the case every in-program
-        * vararg method is in, and it is what a dependent port's calls into its BASE are in too — a
-        * resolution root's java is parsed as source and stays ours.
-        *
-        * Where the callee is a CLASS FILE nothing in this port can move, scalac reads that `T...`
-        * as a REPEATED parameter, and a bare array conforms as ONE element. Java's own
-        * vararg-FORWARDING idiom is exactly this shape — `String.format(fmt, args)`,
-        * `Arrays.asList(xs)`, `logger.debug(msg, args)` — so it is not an edge case:
-        *
-        *   - where the repeated element is `Object` the bare array COMPILES and means something
-        *     else. `String.format("%s-%s", args)` prints the array as a single `%s` and then throws
-        *     `MissingFormatArgumentException` for the second — CLAUDE.md §4.4's shape exactly: no
-        *     error, no moved count, and a wrong answer at run time. Measured;
-        *   - otherwise it is an uncounted compile error at every such call.
-        *
-        * So the array is SPREAD, and the spread is faithful rather than a compromise: measured on
-        * 3.8.4, `java.util.Arrays.asList(arr*)` yields a list of `arr.length` elements that still
-        * ALIASES `arr` — writes through it are visible — which is precisely what java's own
-        * pass-through does. (It is the reason a `Buffer` COPY at the same call is refused one layer
-        * up, in the `asList` rewrite; the spread has no such cost.) A bare `null` in the slot is
-        * java's null ARRAY, and `f(null*)` renders it as one: it compiles, and it throws where java
-        * throws. */
+        * the pack above (ENGINE-LIMITS K6.5). Callee OURS: `None`, ordinary argument list. Callee a
+        * CLASS FILE: scalac reads `T...` as REPEATED and a bare array conforms as ONE element (a
+        * silent `Object`-element bug, CLAUDE.md §4.4, or an uncounted compile error otherwise) — so
+        * the array is SPREAD (`arr*`), which still ALIASES `arr` as java's pass-through does. */
       private def passedThrough(ex: CtExecutableReference[?], argEs: List[CtExpression[?]],
                                 external: Boolean,
                                 recvSubst: Map[String, CtTypeReference[?]]): Option[List[Term]] =
@@ -4517,29 +2997,15 @@ object SpoonTir:
       private def coerceArgs(ex: CtExecutableReference[?], argEs: List[CtExpression[?]], at: Origin,
                              recvSubst: Map[String, CtTypeReference[?]] = Map.empty)
                             (using Obligations): List[Term] =
-        // THE CALL DISPATCHES' AREA-G CONSULTS, both families, at the one function `invocation` and
-        // `ctorCall` reach unconditionally — an argument list is where java's method-invocation
-        // conversion (JLS 15.12.4.2) and its assignment conversion (JLS 5.2) are both performed.
-        // `at` is the CALL's origin and not the first argument's, because a zero-argument call has no
-        // argument to point at and a finding owes a line somebody can open.
+        // the CALL dispatches' area-G consults, at the one function both `invocation`/`ctorCall` reach
         callConsults(ex, argEs, at)
         slotConsults(argSlots(ex, argEs), at)
         varargPack(ex, argEs, recvSubst).getOrElse(coerceArgsFixed(ex, argEs, recvSubst))
 
       /** the receiver's own type arguments, by the declaring class's parameter NAMES — `Graph<V>`
-        * called on a `DirectedGraph<Integer>` gives `V -> Integer`.
-        *
-        * Only a fully known instantiation: same arity, every argument nameable here, no wildcards. A
-        * wildcard would put a `?` where a real type has to go, which is the `?T` stub this frontend
-        * refuses to emit everywhere else.
-        *
-        * '''NAMEABLE HERE, not CONCRETE.''' The gate was `tpConcrete`, which answers `false` for a
-        * type PARAMETER — so a field typed at the enclosing class's own variable
-        * (`OrderedSet<V> keySet` inside `OrderedMultiMap<K, V>`) offered the substitution
-        * `E := V` and it was discarded before anything could use it, which is why
-        * `keySet.add(null)` had no type to cast the `null` at. `tpConcrete`'s neighbour already
-        * documents that as the case it "excludes wrongly", and [[tpNameableHere]] is that repair:
-        * the caller's OWN variable is a type this scope can write down. */
+        * called on `DirectedGraph<Integer>` gives `V -> Integer`. Only a fully known instantiation
+        * (same arity, every argument NAMEABLE HERE — not merely CONCRETE, `tpConcrete` excludes the
+        * caller's own variable wrongly, [[tpNameableHere]] is the repair — no wildcards). */
       private def receiverTypeArgs(inv: CtInvocation[?]): Map[String, CtTypeReference[?]] =
         val rt = inv.getTarget match
           case null => null
@@ -4548,15 +3014,9 @@ object SpoonTir:
         typeArgSubst(rt)
 
       /** what a REFERENCE's instantiation says the DECLARING type's formals are — `Bag<V>` says
-        * `E := V` for `class Bag<E>`, by position and by the declaration's own names.
-        *
-        * One derivation, read by [[receiverTypeArgs]] (a call's receiver) and by
-        * [[nullToSamResult]] (a lambda's target). Both ask the same question of a reference and
-        * both need the same two guards: a WILDCARD actual is a capture with no name, and an actual
-        * only the callee can write is §4.6's fabricated fact. Spoon's own `TypeAdaptor` answers
-        * this for a receiver and measurably does NOT for a lambda target — it handed back the
-        * interface's own `V` for a `Factory<T>` target — so the substitution is derived here rather
-        * than asked of it. */
+        * `E := V`, by position. ONE derivation, read by [[receiverTypeArgs]] and by
+        * [[nullToSamResult]] — Spoon's `TypeAdaptor` measurably does NOT answer this for a lambda
+        * target, so it is derived here rather than asked of it. */
       private def typeArgSubst(rt: CtTypeReference[?]): Map[String, CtTypeReference[?]] =
         if rt == null || rt.isPrimitive || rt.isInstanceOf[CtArrayTypeReference[?]] ||
            rt.isInstanceOf[CtTypeParameterReference] || rt.isInstanceOf[CtWildcardReference] then Map.empty
@@ -4568,23 +3028,14 @@ object SpoonTir:
           then formals.map(_.getSimpleName).zip(actuals).toMap
           else Map.empty
 
-      /** @param recvSubst
-        *   the RECEIVER's own type arguments, by the declaring class's parameter names
-        *   ([[receiverTypeArgs]]) — THREADED from [[coerceArgs]] rather than re-derived here,
-        *   because two derivations of one substitution is F8's finding with a longer fuse. Only
-        *   [[nullToTypeParam]] reads it today, and it reads it for G12's rule: a callee's own type
-        *   variables do not resolve at the call site, but the CLASS's do, through the receiver. */
+      /** @param recvSubst the RECEIVER's own type arguments ([[receiverTypeArgs]]) — THREADED from
+        *   [[coerceArgs]], never re-derived (F8). Only [[nullToTypeParam]] reads it, for G12's rule:
+        *   a callee's own type variables do not resolve at the call site, but the CLASS's do. */
       private def coerceArgsFixed(ex: CtExecutableReference[?], argEs: List[CtExpression[?]],
                                   recvSubst: Map[String, CtTypeReference[?]] = Map.empty): List[Term] =
-        // Array covariance at call args is DISABLED for OUR OWN methods — Spoon erases a generic
-        // array formal (`T[]`) to `Object[]`, and casting the arg to `Array[Object]` breaks the
-        // (overloaded) Scala method that actually wants the invariant `Array[T]`. But for EXTERNAL
-        // (JDK/library) callees there is no `Array[T]` Scala overload — the real method genuinely
-        // takes `Object[]` (Java erasure), so `Arrays.fill(items: Array[T], …)` / `copyOf` need the
-        // `items.asInstanceOf[Array[Object]]` erasure cast. Enable covariance only for those.
-        // A JDK/library method's declaration is a SHADOW type (reconstructed from bytecode/reflection);
-        // our own source types are non-shadow. (`getExecutableDeclaration` is non-null even for JDK
-        // methods under noClasspath, so isShadow — not null-ness — is the reliable external signal.)
+        // array covariance at call args DISABLED for OUR OWN methods (Spoon erases `T[]` to
+        // `Object[]`, which would break the overloaded Scala method wanting invariant `Array[T]`) —
+        // enabled only for EXTERNAL callees, whose real (class-file) formal genuinely is `Object[]`
         val external = isExternalCallee(ex)
         val formals = ex.getParameters.asScala.toList
         // Under noClasspath, an executable REFERENCE erases a generic formal `T` to `Object`, so
@@ -4612,24 +3063,11 @@ object SpoonTir:
           }
         else argEs.map(expr)
 
-      /** `null` passed to a callee slot whose real (un-erased) formal is a type parameter — cast it,
-        * so the ported call type-checks (`m(null)` → `m(null.asInstanceOf[T])`). The dominant case is
-        * a self-call inside the generic class, where `T` is in scope at the call site.
-        *
-        * '''And the second case is the RECEIVER's, which is G12's rule and not a widening of the
-        * first.''' A callee's own type variables do not resolve at the call site — that is why the
-        * `resolveTypeParam` arm exists and why it is name-based and therefore narrow — but the
-        * declaring CLASS's do, through the receiver's type arguments: `OrderedSet<E>.add(E)` called
-        * on an `OrderedSet<V>` field inside `OrderedMultiMap<K, V>` says `E := V` exactly, and `V`
-        * is a type this scope can write. Without it the emitted `add(null)` is `Found: Null /
-        * Required: E`, which is what two of ssg-md's five `null`-at-a-type-parameter errors were.
-        *
-        * The receiver's answer is asked FIRST because it is the exact one: `resolveTypeParam` is a
-        * NAME lookup, so a callee's `<E>` could silently find an unrelated in-scope `E`, while
-        * `recvSubst` is keyed on the DECLARING CLASS's own formals. For that same reason it is only
-        * consulted for a variable the class declares — a METHOD's own `<E>` shadowing the class's is
-        * ordinary java, and substituting the class's instantiation into it would be §4.56's name
-        * hazard at a type variable. */
+      /** `null` passed to a callee slot whose real (un-erased) formal is a type parameter — cast it
+        * (`m(null)` → `m(null.asInstanceOf[T])`). Dominant case: a self-call in scope. Second case:
+        * the RECEIVER's, G12's rule — the declaring CLASS's variables resolve through the receiver's
+        * type arguments, tried FIRST (exact, keyed on the DECLARING CLASS's own formals, unlike the
+        * name-based `resolveTypeParam`), and only for a variable the class declares (§4.56). */
       private def nullToTypeParam(e: CtExpression[?], declFormal: Option[CtTypeReference[?]],
                                   recvSubst: Map[String, CtTypeReference[?]], t: Term): Term =
         val isNull = e match { case l: CtLiteral[?] => l.getValue == null; case _ => false }
@@ -4640,53 +3078,21 @@ object SpoonTir:
           case Some(tp: CtTypeParameterReference) if isNull &&
             classOwned(tp) && recvSubst.get(tp.getSimpleName).exists(tpNameableHere) =>
             cast(recvSubst(tp.getSimpleName))
-          // …through the BARRIER-AWARE frame, which is the difference between *this name resolves*
-          // and *this name is WRITABLE here*. The guard was `resolveTypeParam(name).isDefined`,
-          // written to keep the `?T` unresolved stub out of the emitted text — a hazard, not a key
-          // (`CLAUDE.md` §4.55) — and `resolveTypeParam` deliberately sees every enclosing scope's
-          // parameters BY NAME, including ones java forbids naming from here. A `static` member
-          // cannot name its class's (JLS 8.4.4), so
-          // `public static CellWidgetBuilder<Actor> builder() { return of(null); }` inside
-          // `class CellWidget<Widget extends Actor>` — whose `of` declares its OWN `<Widget>` —
-          // ascribed the `null` to a `Widget` that is in scope nowhere in that method:
-          // `Not found: type Widget`.
-          //
-          // [[tpAccessibleHere]] is the engine's own answer to the writability question and is used
-          // by every other cast this frontend builds, so this is one derivation asked at a
-          // twelfth site rather than a new predicate. It is deliberately WEAKER than
-          // `sameVarInScope`, which was tried and is wrong here in both directions: an ENCLOSING
-          // METHOD's own `<T>` is a different declaration from the callee's same-named `<T>` and is
-          // exactly what java inferred (`<T> BehaviorTree<T> createBehaviorTree(String) { return
-          // createBehaviorTree(treeReference, null); }`), and a class's variable bound EXPLICITLY at
-          // the call (`new Pair<K, V>(k, null)` inside `OrderedMultiMap<K, V>`) demonstrably is the
-          // one in scope. Requiring the same DECLARATION cost 2 errors on each of two ports that had
-          // 0, on lanes this change was not aimed at — §5's *a narrowing is not exempt*, caught by
-          // the corpus and not by the port.
-          //
-          // Note the emission COMPILES with no ascription at all wherever scala can infer the
-          // callee's parameter from the expected type, which is why declining costs nothing there.
+          // through the BARRIER-AWARE frame — *is this name WRITABLE here*, not just *does it
+          // resolve* (`resolveTypeParam` sees every enclosing scope by name, including ones java
+          // forbids naming, e.g. a `static` member and its class's, JLS 8.4.4). [[tpAccessibleHere]]
+          // is used by every other cast this frontend builds — deliberately WEAKER than
+          // `sameVarInScope`, which was tried and wrong in both directions (measured 0 -> 2 on two
+          // ports, §5's narrowing-is-not-exempt).
           case Some(tp: CtTypeParameterReference) if isNull && tpAccessibleHere(tp) =>
             cast(tp)
           case _ => t
 
-      /** An ARRAY argument whose emitted element type is not the declared formal's.
-        *
-        * Java arrays are COVARIANT and erase their generic element type; Scala's are INVARIANT.
-        * Each of these is legal in Java and rejected by Scala, and all three occur in libgdx:
-        *   - a wildcard CAPTURE — `addAll(Array<? extends T> a)` calling `addAll(a.items, 0, a.size)`,
-        *     where `a.items` types as `Array[a.T]`, not `Array[T]`;
-        *   - a `T[]` value in an `Object[]` formal — `Sort.sort(Object[], int, int)` receiving `items`;
-        *   - plain covariance, `Sub[]` into a `Super[]` slot.
-        * The reference is bit-identical on the JVM (Java's own check is the runtime
-        * `ArrayStoreException`, which no Scala rendering reproduces either way), so the faithful
-        * port of the Java conversion is an explicit `asInstanceOf` at the USE — never a widened
-        * DECLARATION, which was measured catastrophic (see [[erasureOfFormal]]).
-        *
-        * Driven by the DECLARATION's formal, never the reference's: under noClasspath a reference
-        * erases `T[]` to `Object[]`, and casting to `Array[Object]` is precisely what breaks our own
-        * `addAll(Array[T], …)` — which is why blanket array covariance stays OFF for source callees
-        * in [[coerceArgsFixed]]. Gated on [[formalNameableHere]] so the cast never names a type
-        * variable that is only the callee's, nor one this scope cannot see. */
+      /** An ARRAY argument whose emitted element type is not the declared formal's — java arrays
+        * are COVARIANT with an erased generic element, scala's are INVARIANT. Faithful port is an
+        * explicit `asInstanceOf` at the USE, never a widened DECLARATION (measured catastrophic,
+        * see [[erasureOfFormal]]). Driven by the DECLARATION's formal, never the reference's erased
+        * one. Gated on [[formalNameableHere]] so the cast never names an unwritable variable. */
       private def arrayFormalCast(e: CtExpression[?], declFormal: Option[CtTypeReference[?]], t: Term): Term =
         declFormal match
           case Some(arr: CtArrayTypeReference[?]) if formalNameableHere(arr) && isScalaArrayType(t.tpe) =>
@@ -4711,18 +3117,10 @@ object SpoonTir:
             val rt = Option(inv.getTarget).map(_.getType).orNull
             rt != null && !rt.isPrimitive && isGenericUse(rt) && hasWildcard(tpe(rt))
           case _ => false
-        // …and the THIRD value scala types as wider than `Object` is one THIS FRONTEND made.
-        // `execDef.anyForEquals` retypes a 1-argument `equals(Object)`'s parameter to `scala.Any`,
-        // which is what makes it override `Object.equals` instead of clashing with it — and every
-        // forwarding of that parameter (`SequenceUtils.equals(this, o)`, the ordinary shape for a
-        // library with a shared equality helper) then hands an `Any` to an `Object` slot.
-        //
-        // Read off THIS FRONTEND'S OWN RECORD and not off the java or off the reference's node type
-        // (§4.56): the java says `Object` at both ends and the reference's `ty(e)` says `Object`
-        // too, because the widening happened at the DECLARATION and nowhere else. So the question
-        // is *what did I intern for this symbol* — and a declaration interned at `scala.Any` NEVER
-        // conforms to `java.lang.Object`, which makes the cast exact wherever it fires. It also
-        // BOXES a primitive, which is what java's already-boxed `o` was.
+        // the THIRD value scala types wider than `Object` is one THIS FRONTEND made:
+        // `execDef.anyForEquals` retypes `equals(Object)`'s parameter to `scala.Any`, so forwarding
+        // it hands `Any` to an `Object` slot. Read off THIS FRONTEND's own record (§4.56), not the
+        // java — the widening happened only at the DECLARATION.
         val anyDeclared = t match
           case Tree.Ident(s, _, _) => minter.infoOf(s) match
             case TypeRef(_, a) => minter.fullNameOf(a) == "scala.Any"
@@ -4758,12 +3156,8 @@ object SpoonTir:
         val cases = s.getCases.asScala.toList
         val selT  = Option(s.getSelector.getType).map(tpe).getOrElse(NoType)
         val arms  = switchArms(cases, s, selT, unitT, isExpr = false)
-        // Java's switch with no `default` simply FALLS OUT when nothing matches; scala's `match`
-        // throws `MatchError`. `switch (data[p]) { case '\\': …; case '"': … }` scanning an
-        // ordinary character is the normal path, not an error — it threw on the first letter of
-        // every quoted string. Add the fall-out arm java already has.
-        //
-        // …EXCEPT where java does NOT fall out, which is what [[isEnhanced]] answers.
+        // java's switch with no `default` FALLS OUT; scala's `match` throws `MatchError` — add the
+        // fall-out arm java has, except where [[isEnhanced]] says java does not fall out either
         val needsFallOut = !arms.exists(_.isDefault) && !isEnhanced(cases, s.getSelector)
         // JS-S05 — a `switch` with no `default` FALLS OUT when nothing matches; a `match` with no
         // `case _` throws `MatchError`, and falling out is often the NORMAL path (a scanner reading
@@ -4775,41 +3169,13 @@ object SpoonTir:
           else arms :+ Tree.CaseDef(Nil, None, unit(s), isDefault = true)
         Tree.Match(expr(s.getSelector), withDefault, unitT, originOf(s))
 
-      /** A SWITCH EXPRESSION — JLS 15.28, catalog `JS-S09`. `switch` in value position, with `yield`
-        * (JLS 14.21) as the arm's own way of producing one.
-        *
-        * `CtSwitchExpression` extends `CtExpression` and `CtAbstractSwitch` and NOT `CtSwitch`, so
-        * the statement arm could never have caught it — which is why the construct was refused at
-        * its kind rather than mis-lowered. What it needs is not a new node: a scala `match` IS an
-        * expression, so [[Tree.Match]] already carries the shape and the emitter already renders it
-        * in either position. The work is the arms.
-        *
-        * THREE things differ from the statement form, each of them a JLS rule and not a
-        * convenience:
-        *
-        *   - '''no fall-out arm.''' JLS 15.28.1 requires a switch expression to be EXHAUSTIVE, so
-        *     java never falls out of one — appending `case _ => ()` would answer `()` where java
-        *     answers nothing, and would widen the expression's type to boot. Where java's own
-        *     exhaustiveness fails at run time (a separately-compiled enum that gained a constant)
-        *     it throws, and so does scala's `match`; the two throw different classes and both
-        *     throw, which is the faithful half of that cell;
-        *   - '''an arm produces a VALUE.''' A `yield` written as the arm's last statement IS the
-        *     arm's value and is peeled into the block's result term; one written anywhere else is
-        *     an abrupt completion from depth and stays a [[Tree.Yield]] for the emitter to wrap in
-        *     a value-carrying `boundary`. An arm that cannot complete normally at all — `case 1 ->
-        *     throw new X()`, or a block whose every path yields — carries its last statement as the
-        *     block's result, which java's own definite-completion rule (JLS 15.28.1) is what makes
-        *     safe: the term is a `Throw` or an `if` both of whose branches jump, and both are
-        *     `Nothing` in scala;
-        *   - '''`yield` is NOT unwrapped.''' Spoon normalises an arrow-form STATEMENT arm's
-        *     expression into a `CtYieldStatement` too, which is a parser artifact — java has no
-        *     such construct (JLS 14.21) — so [[caseBody]] undoes it there and leaves it here.
-        *
-        * Everything else is shared with the statement form through [[switchArms]], deliberately:
-        * fallthrough, the labelled-vs-unlabelled break distinction and the empty-arm label
-        * accumulation are the SAME rules at either position (a colon-form switch expression falls
-        * through exactly as a colon-form statement does), and a second copy is the shape
-        * `ENGINE-LIMITS.md` F8 is about. */
+      /** A SWITCH EXPRESSION — JLS 15.28, catalog `JS-S09`. `CtSwitchExpression` does NOT extend
+        * `CtSwitch`, so the statement arm never caught it; `Tree.Match` already renders in either
+        * position, so only the arms differ. THREE JLS rules: no fall-out arm (must be EXHAUSTIVE,
+        * 15.28.1); an arm produces a VALUE (tail `yield` peeled into the result, others stay
+        * [[Tree.Yield]] under a boundary); `yield` NOT unwrapped here (only [[caseBody]] undoes
+        * Spoon's arrow-arm normalisation for statements). Fallthrough/break/label rules shared with
+        * the statement form via [[switchArms]] (ENGINE-LIMITS F8). */
       private def switchExpr(sw: CtSwitchExpression[?, ?])(using Obligations): Term =
         val resT = ty(sw)
         // JS-S09 — always fires: every switch expression needs the image, and choosing `Tree.Match`
@@ -4821,15 +3187,8 @@ object SpoonTir:
                    isExpr = true)
 
       /** the statements of one `case`, with Spoon's ARROW normalisation undone where java has no
-        * such construct.
-        *
-        * Two shapes are flattened. An arrow-form arm with a BLOCK body arrives as a single
-        * `CtBlock`, and its statements are the arm's — the same flattening the colon form has
-        * always needed. An arrow-form STATEMENT arm (`case 1 -> doIt();`) arrives as a
-        * `CtYieldStatement` wrapping the statement expression, which JLS 14.21 says is not a java
-        * construct at all: `yield` is legal only inside a switch EXPRESSION. Carried through, it
-        * would put a [[Tree.Yield]] in a switch statement's arm and the emitter would look for a
-        * boundary that is not there. */
+        * such construct. Flattens an arrow-arm's `CtBlock`; unwraps an arrow STATEMENT arm's
+        * synthetic `CtYieldStatement` (JLS 14.21: `yield` is legal only in a switch EXPRESSION). */
       private def caseBody(c: CtCase[?], isExpr: Boolean): List[CtStatement] =
         val raw = c.getStatements.asScala.toList match
           case List(b: CtBlock[?]) => b.getStatements.asScala.toList
@@ -4921,41 +3280,14 @@ object SpoonTir:
         }
         out.result()
 
-      /** one case LABEL — and the SPLIT `JS-S10` is about.
-        *
-        * A TYPE PATTERN (`case String s ->`, JLS 14.11.1) has an EXACT image and is lowered: a
-        * scala arm's typed pattern binds, narrows and composes with the `if` guard the emitter
-        * already renders, so the whole construct is `Tree.TypePattern` plus `CaseDef.guard`. Note
-        * what that composes with elsewhere and needs no help for: `case null ->` is an ordinary
-        * literal label, which `TirEmitter.selectorCanBeNull` already reads as java's own opt-out
-        * from the implicit NPE (`JS-S08`), and a pattern label makes the switch ENHANCED, which
-        * `isEnhanced` already reads as "java does not fall out of this one".
-        *
-        * A RECORD pattern does too, now that `JS-C43` derives an `unapply` over the very accessors
-        * java reads (JLS 14.30.1) — see [[recordPattern]] for the one distinction it has to make
-        * that a type pattern does not.
-        *
-        * An UNNAMED pattern keeps the refusal, and it is a refusal nobody can trigger: no source
-        * Spoon 11.5 accepts builds a `CtUnnamedPattern` at all (`ENGINE-LIMITS.md` T19).
-        *
-        * THE MARKER IS MINTED HERE rather than reached through `expr`'s default, because the
-        * pattern node carries no source POSITION: Spoon builds `CtCasePattern` as an unpositioned
-        * wrapper, so a marker minted at it falls back to the unit-fatal throw. The enclosing
-        * `CtCase` is real java at a real line; the KIND, and with it the catalog row, still comes
-        * from the pattern the frontend has no arm for. It carries the SELECTOR's type, which is
-        * what a case label's type is — a `CtCasePattern` reports `java.lang.Void`, and typing the
-        * label slot with that would put a type in the tree no later phase could read as the
-        * scrutinee's.
-        *
-        * THE BINDING IS AN ORDINARY LOCAL, and that was worth PROBING rather than assuming, because
-        * the missing position above makes the opposite plausible: java lets two arms of one switch
-        * bind the same NAME (`case String v ->` beside `case Integer v ->`), `defineLocal`'s key is
-        * `name#sourceStart`, and `posKey` answers `Int.MaxValue` where there is no position — so a
-        * pattern variable that inherited the wrapper's missing position would intern both arms'
-        * bindings as ONE symbol with ONE type. It does not: the `CtLocalVariable` inside a
-        * `CtTypePattern` carries its own valid position (measured at two distinct source offsets for
-        * exactly that fixture), so `defineLocal` is exact here with no special case. The unpositioned
-        * node is the WRAPPER and only the wrapper. */
+      /** one case LABEL — the SPLIT `JS-S10` is about. A TYPE PATTERN (JLS 14.11.1) lowers exactly
+        * to `Tree.TypePattern` + `CaseDef.guard`. A RECORD pattern too (`JS-C43`'s derived
+        * `unapply`, see [[recordPattern]]). An UNNAMED pattern stays refused (no source Spoon 11.5
+        * builds one, ENGINE-LIMITS T19). MARKER minted HERE, not via `expr`'s default, since
+        * `CtCasePattern` carries no source POSITION (falls back to the unit-fatal throw otherwise) —
+        * carries the SELECTOR's type, not the pattern's own `java.lang.Void`. The binding is an
+        * ordinary local: probed, its `CtLocalVariable` carries its own valid position even though
+        * the wrapper does not, so two same-named arms intern as two symbols correctly. */
       private def caseLabel(e: CtExpression[?], c: CtCase[?], selT: TypeRepr): Term = e match
         case cp: CtCasePattern => cp.getPattern match
           case tp: CtTypePattern =>
@@ -4970,35 +3302,13 @@ object SpoonTir:
               selT, about = other)
         case other => expr(other)
 
-      /** `case Point(int x, int y) ->` — java's RECORD PATTERN, as scala's constructor pattern.
-        *
-        * THE ONE DISTINCTION THIS HAS TO MAKE, and it is not cosmetic. JLS 14.30.2 calls a component
-        * pattern UNCONDITIONAL when its type already covers the component's, and an unconditional
-        * pattern matches a `null` component; a narrowing one does not. Scala's typed pattern is the
-        * image of the second and NOT of the first — `case One(s: String)` fails on a null `s` where
-        * java's `case One(String s)` binds it — so the two need different scala text, which is what
-        * `Tree.BindPattern` beside `Tree.TypePattern` is for. Both directions measured, in both
-        * languages, on the same fixtures.
-        *
-        * The question is asked of SPOON — `isSubtypeOf`, which is JLS 4.10's own relation — and not
-        * of type equality alone, because a WIDENING pattern (`case One(Object x)` at a `String`
-        * component) is unconditional too. Where it cannot answer, the narrowing arm is taken: a type
-        * test where java performs one is exact, and the residue is a `null` component under a
-        * widening pattern the parser could not resolve, which is the conservative side.
-        *
-        * A component pattern that is neither a type pattern nor a nested record pattern is refused
-        * IN PLACE, at the size of the component, rather than taking the whole label down.
-        *
-        * ==AND THE RECORD ITSELF HAS TO BE ONE THIS RUN LOWERS==
-        *
-        * The extractor this arm names is DERIVED — `JS-C43` writes an `unapply` into the companion of
-        * every record the run emits — so a pattern over a record the run does NOT model has nothing
-        * to name. A java record from a DEPENDENCY is the shape: scala derives no extractor for a
-        * java record read out of a class file, so the emitted `case dep.Rec(x, y)` would be a bare
-        * `Not Found`. Refused per site instead, and refused STRUCTURALLY — the question is *does
-        * this parse hold a `CtRecord` declaration for the type the pattern names*, never a name test
-        * (§4.56). A record in a RESOLUTION ROOT passes, and correctly: the base module emits it, and
-        * `JS-C43` puts the same `unapply` there. */
+      /** `case Point(int x, int y) ->` — java's RECORD PATTERN, as scala's constructor pattern. THE
+        * ONE DISTINCTION: JLS 14.30.2's UNCONDITIONAL component pattern matches `null`, a narrowing
+        * one (`Tree.TypePattern`) does not — scala needs `Tree.BindPattern` for the first. Asked of
+        * SPOON's `isSubtypeOf` (JLS 4.10), narrowing arm taken where it cannot answer. A component
+        * that is neither shape is refused IN PLACE. The RECORD ITSELF must be one this run LOWERS —
+        * `JS-C43`'s derived `unapply` names nothing for a dependency's record — decided
+        * STRUCTURALLY (does this parse hold a `CtRecord` declaration, §4.56), never by name. */
       private def recordPattern(rp: CtRecordPattern, c: CtCase[?], selT: TypeRepr): Term =
         val rt   = tpe(rp.getRecordType)
         val at   = originOf(c)
@@ -5059,38 +3369,12 @@ object SpoonTir:
           case _             => t
         case _                 => t
 
-      /** is this an ENHANCED switch STATEMENT — one java requires to be EXHAUSTIVE (JLS 14.11.2),
-        * and therefore one it does NOT fall out of?
-        *
-        * JLS 14.11.2 gives TWO disjuncts and this asks BOTH, which is a correction: it used to ask
-        * the labels alone, on the argument that a selector outside the classic set
-        * (`char`/`byte`/`short`/`int`, their boxes, `String`, an enum) admits no constant label at
-        * all. JEP 441 is what makes that false — a QUALIFIED ENUM CONSTANT is a constant label at a
-        * selector typed as the enum's SUPERTYPE, and it is neither a pattern nor a `null`, so
-        * nothing in the label list betrays it. Measured against javac 22.0.2: on
-        * `switch (c) { case Coin.HEADS: …; case Coin.TAILS: … }` over a sealed `Currency`, javac
-        * calls the statement AFTER the switch an `unreachable statement` and compiles
-        * `new MatchException` at the fall-out — so a synthesised `case _ => ()` is a silent §4.4,
-        * the exceptional path turned into a no-op.
-        *
-        * ==THE SELECTOR'S TYPE, AND NOT THE LABEL'S SHAPE==
-        *
-        * The tempting cheaper test — "does any label read a qualified enum constant" — is WRONG,
-        * and also measured: `switch (e) { case E.A: return 1; }` on a selector of the enum's own
-        * type compiles, runs and FALLS OUT (JLS 14.11.2's first disjunct is about the selector, and
-        * an enum type is inside the classic set however its constants are spelled). Deciding from
-        * the label would delete the arm java is exercising there.
-        *
-        * ==AND `PROVABLY` OUTSIDE, WHICH IS THE HALF THE OLD ARGUMENT HAD RIGHT==
-        *
-        * Reading the selector's type means RESOLVING it, and `noClasspath` cannot always do that. A
-        * fall-out arm dropped because a type failed to resolve is §4.4's defect in the other
-        * direction, on every classic switch in a corpus — so [[selectorOutsideClassicSet]] answers
-        * `false` wherever it cannot see a declaration, which is exactly the behaviour this question
-        * had before it asked.
-        *
-        * Where it fires, scala's `match` throws `MatchError` where java throws `MatchException`:
-        * both throw, which is the honest image of an exhaustiveness java checks and scala cannot. */
+      /** is this an ENHANCED switch STATEMENT — one java requires EXHAUSTIVE (JLS 14.11.2), so it
+        * does NOT fall out? Asks BOTH of 14.11.2's disjuncts: the LABEL shape (a pattern/`null`), and
+        * the SELECTOR'S TYPE (a QUALIFIED ENUM CONSTANT betrays nothing in the label list, JEP 441 —
+        * javac compiles a `MatchException` throw where a naive read would answer classic). Deciding
+        * from the label alone is WRONG (measured against javac). `noClasspath` unresolvable →
+        * `false` (§4.6, the pre-existing behaviour). Both throw where it fires, different classes. */
       private def isEnhanced(cases: List[CtCase[?]], selector: CtExpression[?]): Boolean =
         cases.exists(_.getCaseExpressions.asScala.exists {
           case _: CtCasePattern      => true
@@ -5128,26 +3412,13 @@ object SpoonTir:
         }
 
       // ---- expressions ----
-      /** the casts the SOURCE wrote, applied innermost-first — each one rendered as the thing java
-        * does AT it, which is not always an assertion.
-        *
-        * `(T) x` is `x.asInstanceOf[T]` for every combination but one, and that one is this row's
-        * own sentence: a cast whose OPERAND is a statically-known boxed WRAPPER and whose target is
-        * a primitive is a CONVERSION in java — JLS 5.1.8 unboxes at the wrapper's own primitive and
-        * 5.1.2 widens from there, so `(double) aLong` is `7.0`. Scala's `asInstanceOf[scala.Double]`
-        * on a reference is `unboxToDouble`, which demands a `java.lang.Double` and throws on a
-        * `Long`. Rendered as a cast the port asserts where java converted.
-        *
-        * WHY THE OPERAND HAS TO BE A KNOWN WRAPPER, and why `Object` and `Number` are deliberately
-        * NOT in this branch. Java's rule for a reference operand it does not know (JLS 5.5) is a
-        * narrowing reference conversion to the EXACT wrapper followed by an unbox — it performs no
-        * `Number` dispatch, so `(double) o` on an `Object` holding a `Long` throws in java too, and
-        * `asInstanceOf[scala.Double]` throws in exactly the same cells. Probed against javac and
-        * scalac 3.8.4 over all 45 of (9 runtime classes x 5 primitives); they agree everywhere.
-        * Converting there would be UNFAITHFUL — it would answer where java raises.
-        *
-        * A same-type unbox (`(int) anInteger`) is left alone for the reason [[coerce]] states: it
-        * is `Predef`'s already, and forcing the accessor only perturbs surrounding resolution. */
+      // ---- expressions ----
+      /** the casts the SOURCE wrote, applied innermost-first. `(T) x` is `x.asInstanceOf[T]` except
+        * one case: a boxed-WRAPPER operand cast to a primitive is a CONVERSION in java (JLS 5.1.8
+        * then 5.1.2), while `asInstanceOf` demands the exact wrapper and throws on a mismatched one
+        * — probed against javac/scalac 3.8.4 over all 45 (runtime class x primitive) cells. `Object`
+        * and `Number` deliberately excluded: java performs no `Number` dispatch there either (JLS
+        * 5.5), so converting would be UNFAITHFUL. Same-type unbox left to `Predef` (see [[coerce]]). */
       private def expr(e: CtExpression[?]): Term =
         val core  = exprNoCast(e)
         val casts = e.getTypeCasts.asScala.toList
@@ -5168,26 +3439,11 @@ object SpoonTir:
         else
           val ct = tpe(target); Tree.Typed(acc, tt(ct, e), ct, originOf(e))
 
-      /** THE TYPE AN EXPRESSION HAS WHERE IT STANDS — after the casts the SOURCE wrote, which is
-        * the OUTERMOST one, which is the HEAD of `getTypeCasts`.
-        *
-        * `e.getType` is Spoon's answer for the expression BEFORE its own casts, and every reader
-        * that dispatches on a receiver's or an operand's static type wants the type javac
-        * dispatched on — `((AsynchronousAssetLoader) loader).unloadAsync(…)` is the whole reason a
-        * source writes one. So the cast list decides, and WHICH END of it is not a matter of taste:
-        * [[expr]] folds it with `foldRight`, so the head becomes the OUTER `Tree.Typed` and
-        * `(Integer)(Object) o` emits `o.asInstanceOf[Object].asInstanceOf[Integer]` — java's own
-        * order, and the head is java's outermost cast.
-        *
-        * ONE function, six callers (`CLAUDE.md` §4.6's shape, and `ENGINE-LIMITS.md` F8's): the
-        * idiom was written six times taking `lastOption`, which is the INNERMOST cast, so every one
-        * of them read the type the source had already converted away from — under a comment that
-        * said "outermost". A seventh reader would have copied the seventh. Null where Spoon has no
-        * answer at all: the callers each decline on that, which is honest rather than fabricating a
-        * default (`CLAUDE.md` §4.6).
-        *
-        * The FROZEN BIR frontend (`SpoonFrontend.typedArg`) holds the same idiom and is left as it
-        * is: no measure lane runs that path, so a change there is unmeasurable by construction. */
+      /** THE TYPE AN EXPRESSION HAS WHERE IT STANDS — after the source's own casts, at the OUTERMOST
+        * one, the HEAD of `getTypeCasts` ([[expr]] folds `foldRight`, so the head is the OUTER
+        * `Tree.Typed`, matching java's order). ONE function, six callers (CLAUDE.md §4.6,
+        * ENGINE-LIMITS F8) — the idiom was written six times taking `lastOption`, the INNERMOST
+        * cast, silently wrong. `null` where Spoon has no answer; callers decline honestly. */
       private def castType(e: CtExpression[?]): CtTypeReference[?] =
         e.getTypeCasts.asScala.headOption.getOrElse(e.getType)
 
@@ -5339,71 +3595,15 @@ object SpoonTir:
         // have — which is the whole reason the marker is a wrapper rather than a hole.
         case other => unlowered(other, s"expression ${SpoonKinds.nameOf(other.getClass)}", ty(e))
 
-      /** JS-E05's NUMERIC half — JLS §15.25.2's binary numeric promotion, performed ON THE OPERAND.
-        *
-        * Java COMPUTES a conditional's type; scala takes the lub of its branches, and wherever
-        * java's answer is a PRIMITIVE the two disagree BY A CONVERSION. The worked example, and the
-        * one that measured it:
-        *
-        * {{{
-        * str.matches("\\d+") ? Long.valueOf(str) : Double.valueOf(str)   // java: a `double`
-        * }}}
-        *
-        * JLS 15.25.2 unboxes both operands, promotes them to `double` and re-boxes the result, so
-        * the expression's type really is `Double` and the `Long` branch really does become one.
-        * Scala's `if` has no such rule: its type is the lub (`java.lang.Number`) and the branch value
-        * stays a `Long`. The engine read java's type correctly and wrote it as a CAST at the
-        * enclosing slot, which is the whole error — `java.lang.Long cannot be cast to
-        * java.lang.Double`. **A cast is not a conversion** (`ENGINE-LIMITS.md` K17).
-        *
-        * So the conversion goes where java performed it — on each operand — and the `if` then really
-        * HAS the type java says it has, which is also why the emitter has nothing left to ascribe.
-        *
-        * ==BOTH DIRECTIONS, because scala 3 has no weak conformance==
-        *
-        * The first cut converted only the NARROWING direction, on the claim that "`if` branches
-        * conform weakly, so a widening needs nothing". That is SCALA 2's rule. Scala 3 dropped weak
-        * conformance and harmonises only where an EXPECTED type reaches the branches, so with none
-        * — a string concatenation, an `Object` slot, a `var` — `if (b) i else d` types as
-        * `Int | Double`, the `Int` branch boxes to a `java.lang.Integer`, and java's `double` is
-        * gone. Probed on 3.8.4: `b ? 3 : 15.25` prints `3` against java's `3.0`, and the
-        * `asInstanceOf[java.lang.Double]` an enclosing slot writes throws on it. The widening cast
-        * is redundant wherever the expected type existed and wrong nowhere, because between two
-        * statically primitive types `asInstanceOf` is a conversion in both directions.
-        *
-        * ==Two things this deliberately does not do==
-        *
-        *   - **it never promotes on its own.** The target is Spoon's own answer for the conditional,
-        *     so §15.25.2's bullet 2 — a `byte` operand against a constant `int` representable in
-        *     `byte` keeps the conditional at `byte` — holds by construction, and this NARROWS the
-        *     constant rather than widening the `byte`. A rule that always promoted would be
-        *     unfaithful in exactly that case;
-        *   - **it does not touch a REFERENCE conditional.** Java's type there is a lub and scala's is
-        *     also a lub; the one shape known to diverge is a `null` branch, which the ascription
-        *     beside this call already carries.
-        *
-        * ==Why the SAME-TYPE unbox happens here and is declined by `coerce`==
-        *
-        * `coerce` leaves `Integer` → `int` to `Predef.Integer2int`, and forcing `.intValue()` at an
-        * argument slot only perturbs the resolution around it. That reasoning needs an EXPECTED type,
-        * and a conditional branch has none — the branch is typed on its own and then lubbed. So a
-        * `java.lang.Double` operand of a `double` conditional stays boxed, the lub misses java's type
-        * by one conversion, and the enclosing coercion asserts a fact that is false. Both operands
-        * are converted here, cross-type and same-type alike.
-        *
-        * ==The operand's type is the one AFTER its own casts==
-        *
-        * `be.getType` is the type Spoon records for the expression BEFORE the source's own casts,
-        * which `expr` applies on top — so the branch is read through [[castType]], whose own doc
-        * says which end of `getTypeCasts` is the outermost and why. Read without them,
-        * `pole == 0 ? (float) Math.asin(…) : pole * PI * 0.5f` looks like a `double` operand of a
-        * `float` conditional and earns a narrowing this pass would emit on top of the one the source
-        * already wrote — a third `asInstanceOf[scala.Float]` on a term that is already a `Float`.
-        * Measured on libGDX before it was read: every such site's digest moved for a cast that says
-        * nothing. Same idiom as every other reader of this question in the file.
-        *
-        * A type Spoon cannot resolve leaves the branch ALONE, which is honest rather than a
-        * fabricated default (`CLAUDE.md` §4.6): it declines to convert, and never asserts a type. */
+      /** JS-E05's NUMERIC half — JLS 15.25.2's binary numeric promotion, performed ON THE OPERAND,
+        * not as a cast at the enclosing slot (a cast is not a conversion, ENGINE-LIMITS K17): java
+        * computes a conditional's PRIMITIVE type where scala takes the lub of its branches, so each
+        * operand is converted here to match. BOTH DIRECTIONS: scala 3 dropped weak conformance
+        * (unlike scala 2), so the WIDENING half is needed too whenever no expected type reaches the
+        * branches (probed at 3.8.4). Never promotes on its own (target is Spoon's own answer) and
+        * never touches a REFERENCE conditional (lub both sides already). Operand read through
+        * [[castType]] (after its OWN casts), same idiom as every other reader in this file. A type
+        * Spoon cannot resolve is left ALONE (§4.6), never asserts a false type. */
       private def promotedBranch(c: CtConditional[?], be: CtExpression[?], t: Term): Term =
         val cj = c.getType
         val bj = castType(be)
@@ -5413,21 +3613,9 @@ object SpoonTir:
           // can stand here in valid java — anything else needed a cast the source itself wrote.
           if wrapperOf.values.toSet(bj.getQualifiedName) then unbox(t, bj.getQualifiedName, cj.getSimpleName, be) else t
         else if primRank.contains(bj.getSimpleName) && primRank.contains(cj.getSimpleName) then
-          // BOTH DIRECTIONS, and there is no third case: the two are primitive and they differ, so
-          // java performed a conversion and the port owes it. The narrowing half is bullet 2's;
-          // the WIDENING half was left out on the claim that "`if` branches conform weakly", which
-          // is SCALA 2's rule — scala 3 dropped weak conformance, so `if (b) i else d` types as
-          // `Int | Double`, the `Int` branch BOXES, and the value java computed as a `double` is a
-          // `java.lang.Integer` at run time. An enclosing `asInstanceOf[java.lang.Double]` then
-          // throws on a shape as small as `b ? 3 : 15.25`, and a string concatenation over it
-          // prints `3` where java prints `3.0`.
-          //
-          // Redundant where an expected type already reaches the branch, and never WRONG:
-          // `asInstanceOf` between two statically primitive types is a CONVERSION in scala, in
-          // both directions (JS-E06), so the widening one says exactly what java's promotion did.
-          // `primRank` is the guard rather than a direction test — it holds the NUMERIC primitives,
-          // and `boolean` is the one primitive no promotion can reach (a `boolean` conditional's
-          // operands are both `boolean`, which the same-name test above has already returned on).
+          // BOTH DIRECTIONS — the two primitives differ, so java converted and the port owes it
+          // (JS-E06: `asInstanceOf` between statically primitive types is a conversion both ways).
+          // Redundant where an expected type already reaches the branch, never WRONG.
           Tree.Typed(t, tt(tpe(cj), be), tpe(cj), originOf(be))
         else t
 
@@ -5504,29 +3692,12 @@ object SpoonTir:
         // NON-LOCAL RETURN from the enclosing method — valid, green, and something else (M6).
         Tree.Lambda(pvs, body, ty(l), originOf(l), resultTpt = samResultTpt(l))
 
-      /** [[nullToTypeParam]]'s rule at the ONE expression position that has no formal to read.
-        *
-        * Every other `null` this frontend ascribes sits in an argument list, so the cast is driven
-        * by `declFormals(i)`. An EXPRESSION-bodied lambda has no such slot: java takes the body's
-        * type from the SAM's RESULT (JLS 15.27.3), and where that result is the target's type
-        * variable the emitted `(o: DataHolder) => null` is `Found: Null / Required: T`. `Null`
-        * conforms to every reference type and to no ABSTRACT one, which is why this fires for a
-        * variable and for nothing else — `x -> null` at a `Function<A, String>` needs no cast and
-        * must not get one.
-        *
-        * The variable is resolved through the TARGET's own instantiation ([[typeArgSubst]]), which
-        * is G12's rule at a lambda: `Factory<V>.make(): V` at a `Factory<T>` target says `V := T`
-        * exactly, keyed on the DECLARING interface's formals rather than on a name. Where the
-        * target says nothing — a raw target, an unreadable declaration, a wildcard actual — the
-        * body keeps its bare `null` and its error, because a guessed `T` is §4.6's fabricated
-        * fact.
-        *
-        * And the ACTUAL has to be abstract too, which is where this is narrower than the argument
-        * arm rather than a copy of it. `Null` conforms to every reference type, so `Factory<String>`
-        * needs nothing and a cast there would be text on every `x -> null` in a corpus for a
-        * failure that cannot happen — an over-approximation being the one shape no count can see
-        * (§5). The condition is exactly scala's: an ABSTRACT type is what `Null` does not
-        * conform to. */
+      /** [[nullToTypeParam]]'s rule at the ONE expression position with no formal: an EXPRESSION-
+        * bodied lambda takes its body type from the SAM's RESULT (JLS 15.27.3), so where that
+        * result is the target's own type variable, `Null` needs an explicit cast (it conforms to
+        * every reference type but no ABSTRACT one). Variable resolved through the TARGET's own
+        * instantiation ([[typeArgSubst]], G12's rule at a lambda). `Factory<String>` (a concrete
+        * actual) needs and gets nothing — an over-approximation no count could see (§5). */
       private def nullToSamResult(l: CtLambda[?], t: Term): Term =
         val isNull = l.getExpression match { case lit: CtLiteral[?] => lit.getValue == null; case _ => false }
         if !isNull then t
@@ -5727,19 +3898,10 @@ object SpoonTir:
             Tree.Select(Tree.Ident(ownerId, TypeRef(NoPrefix, ownerId), originOf(at)), fid2, ty(at), originOf(at))
           case _ => Tree.Select(typeTerm(ta, at), fid, ty(at), originOf(at))
 
-      /** the type that DECLARES a static field `name` (source types only; degrades to None on
-        * shadow/unresolved types).
-        *
-        * The walk is over the whole INHERITANCE CLOSURE — superclass AND superinterfaces — not the
-        * superclass chain alone, because a java INTERFACE CONSTANT is `static` and is inherited
-        * through `implements` (`CLAUDE.md` §1(a)'s own example of the rule). Read up the superclass
-        * only, `Impl.MAX` for `interface Consts { int MAX = 7; }` resolves to nothing, the walk
-        * declines, and the written receiver — whose companion inherits nothing — is emitted.
-        *
-        * Breadth-first with the class edge taken before the interface ones, which is java's own
-        * precedence: a field declared or inherited through the superclass chain SHADOWS one of the
-        * same name reachable through an interface. Two interfaces offering one name is ambiguous in
-        * java too, so nothing here has to break that tie — such a program does not compile. */
+      /** the type that DECLARES a static field `name` (degrades to `None` on shadow/unresolved
+        * types). Walks the WHOLE inheritance closure (superclass AND superinterfaces, CLAUDE.md
+        * §1a — a java interface constant is inherited through `implements` too), breadth-first with
+        * the class edge FIRST (java's own shadowing precedence). */
       private def declaringStaticType(accessed: CtTypeReference[?], name: String): Option[CtType[?]] =
         val seen  = collection.mutable.Set[String]()
         val queue = collection.mutable.Queue[CtType[?]]()
@@ -5763,23 +3925,9 @@ object SpoonTir:
         externalMember(ownerId, ref.getSimpleName, ref.getSimpleName, info = externalFieldType(ref))
 
       /** the DECLARED type of an EXTERNAL field, as a class file states it — [[externalSignature]]'s
-        * fact for the other kind of member, and read by exactly the same rules.
-        *
-        * A field is the one member a phase can meet in value position without a call node, so the
-        * seam it makes is invisible to everything keyed on `Tree.Apply`: an ANTLR context's
-        * `public List<ParseTree> children` really is a `java.util.List`, while the position-blind
-        * retyping moved the SELECT node's type to `Buffer` and no check compares the two.
-        * `ENGINE-LIMITS.md` K15 states the rule for callees; a field is the same fact one node kind
-        * along, and the answer is the same one: ask the class file.
-        *
-        * Rendered SCOPE-FREE through [[externalSlot]], for the reason stated there — a field typed
-        * at the declaring class's own type variable (`Node<N>.parent`) must not bind to whatever
-        * `N` the CALLER declares, because an external symbol is interned once and the first
-        * reference in the run would otherwise decide it for every other. `NoType` is then "no
-        * answer", which is the state every external field was in before this existed.
-        *
-        * Only for a SHADOW declaration: a field the program declares gets its real type from
-        * `fieldDef`, and a second, weaker rendering of the same member is a second truth about it. */
+        * fact for a field (the seam a `Select` node makes is invisible to anything keyed on
+        * `Tree.Apply`, ENGINE-LIMITS K15). Rendered SCOPE-FREE through [[externalSlot]]. Only for a
+        * SHADOW declaration; a program-declared field gets its real type from `fieldDef`. */
       private def externalFieldType(ref: CtFieldReference[?]): TypeRepr =
         fieldDeclOf(ref) match
           case scala.None => NoType // no declaration to read — not evidence of anything
@@ -5787,19 +3935,11 @@ object SpoonTir:
             val shadow = Option(fd.getParent(classOf[CtType[?]])).forall(_.isShadow)
             if !shadow then NoType else externalSlot(fd.getType)
 
-      /** Java's WILDCARD/RAW-receiver calls. When the receiver's static type leaves its arguments
-        * unknown (raw use, or wildcards), Scala gives every member access a fresh CAPTURE — so a
-        * value read off one such receiver never conforms to a formal of another
-        * (`assetDesc.params` : `AssetLoaderParameters[?1.T]` into `asyncLoader.loadAsync`'s
-        * `asyncLoader.P`). Java's own view of such a call is the ERASED one, performed unchecked.
-        * Emit exactly that: cast the RECEIVER to its erased instantiation and each argument whose
-        * declared formal mentions one of the receiver's type variables to that formal's erasure —
-        * both use the same erasure rules, so they agree. Declarations keep their wildcards, which
-        * is what preserves assignment of concrete generic values.
-        *
-        * Gated to calls that genuinely DEPEND on the receiver's type variables; a wildcard receiver
-        * whose callee ignores them needs no cast. Returns the erased receiver type + the receiver's
-        * type-variable names. */
+      /** Java's WILDCARD/RAW-receiver calls: scala gives every member access a fresh CAPTURE, so a
+        * value off one receiver never conforms to another's formal. Java's own view is ERASED,
+        * performed unchecked — cast the RECEIVER to its erased instantiation and each dependent
+        * argument to that formal's erasure (same erasure rules, so they agree). Gated to calls that
+        * genuinely DEPEND on the receiver's type variables. */
       private def erasedReceiverView(inv: CtInvocation[?]): Option[(TypeRepr, Map[String, TypeRepr], Map[String, TypeRepr])] =
         val ex = inv.getExecutable
         if ex.isConstructor then None
@@ -5839,27 +3979,11 @@ object SpoonTir:
               def isFBounded(f: CtTypeParameter): Boolean =
                 Option(f.getSuperclass).exists(b => mentionsTypeVarFilled(b, Set(f.getSimpleName)))
               val anyFBounded = formals.exists(isFBounded)
-              // THE VIEW IS DECIDED PER POSITION, because `unknown` is ONE question asked of the
-              // WHOLE argument list and then applied at every position. That is exact for a RAW use
-              // — nothing is written anywhere — and wrong for the ordinary MIXED one:
-              // `Function<? super D, Class<?>>` leaves position 0 unknown and WRITES position 1, and
-              // java's own view of `apply` there returns `Class<?>`, not `Object`. Erased at both, a
-              // value java handed straight to a `Class<?>` slot arrives needing a conversion java
-              // never performed (`Found: Object / Required: Class[?]`).
-              //
-              // A position is CARRIED only where the source wrote an argument that mentions NO TYPE
-              // VARIABLE, and that second conjunct is the blocker rather than a tuning. This call's
-              // argument side is THREE readings of one erasure — `eraseDependentArgs` off `subst`,
-              // `knownReceiverArgs` off its own substitution, and the erasure `coerceArgsFixed`
-              // synthesises at the executable REFERENCE's already-erased formal — and the receiver's
-              // view has to AGREE with all three or the two halves of one call disagree. They agree
-              // about a variable-free argument, which no substitution can move; they provably do not
-              // about one that mentions a variable, which is libGDX `OrderedMap#putAll` measured at
-              // 0 -> 1 (`ENGINE-LIMITS.md` G21). Until those three are one derivation, this rule
-              // carries only what they cannot disagree about.
-              //
-              // An F-BOUNDED class is excluded whole: there the arguments discharge EACH OTHER's
-              // bounds, and a mixture of written and filled ones discharges nothing.
+              // THE VIEW IS DECIDED PER POSITION — `unknown` asked of the WHOLE list is wrong for a
+              // MIXED one (a position java left WRITTEN must be carried, not erased). Carried only
+              // where the argument mentions NO TYPE VARIABLE (the three erasure readings must AGREE,
+              // ENGINE-LIMITS G21). F-BOUNDED classes excluded whole (arguments discharge each
+              // other's bounds).
               def writtenAt(i: Int): Option[TypeRepr] =
                 if anyFBounded then scala.None
                 else actuals.lift(i).flatMap { a =>
@@ -5877,16 +4001,9 @@ object SpoonTir:
                 // the very type being written. Only `?` discharges the bound.
                 val namedOf = collection.mutable.Map[String, TypeRepr]()
                 val args  = formals.zipWithIndex.map { (f, i) => writtenAt(i).getOrElse {
-                  // Prefer the NAME-DIRECTED fill over the erasure. `Tree tree = getTree();
-                  // tree.remove(this)` inside `Node<N,V,A>` is raw in Java's own source, and the
-                  // erasure has no Scala image at all: `Tree<N extends Node<N,V,?>, V>` admits no
-                  // finite argument, since every candidate must equal the type being written and
-                  // `Tree` is invariant. But `Tree[N, V]` — the enclosing scope's OWN variables —
-                  // discharges the bound by construction, because `N`'s bound is exactly what
-                  // `Tree` asks for. It is also the more faithful reading: Java resolved the raw
-                  // call against the very instantiation the enclosing class is parameterised by.
-                  // Same rule the raw FILL already applies to types (`nameFilledArgs`); this brings
-                  // the erased-receiver path into line with it instead of contradicting it.
+                  // prefer the NAME-DIRECTED fill over the erasure — an F-bound's erasure has no
+                  // finite Scala image, but the enclosing scope's own variables discharge the bound
+                  // by construction (same rule `nameFilledArgs` already applies to types)
                   val named = if inStatic || !anyFBounded then scala.None else accessibleTp(f.getSimpleName)
                   named.map { id => val r = TypeRef(NoPrefix, id); namedOf(f.getSimpleName) = r; r }.getOrElse {
                     if anyFBounded || isFBounded(f) then TypeBounds(NoType, NoType)
@@ -5897,16 +4014,9 @@ object SpoonTir:
                 Some((AppliedType(TypeRef(NoPrefix, typeSym(rt)), args), subst, namedOf.toMap))
               else None
 
-      /** `(N) this` — the SELF-TYPE conversion at a raw call.
-        *
-        * `Tree tree = getTree(); tree.remove(this)` inside `Node<N, V, A>`: `Tree.remove` takes an
-        * `N`, and `this` is a `Node[N, V, A]`, which is not one. Java accepted it solely because
-        * `tree` is raw — and where the receiver is NOT raw, libGDX writes `(N) this` itself, in
-        * this very file. So this is Java's own conversion made explicit, not an invention.
-        *
-        * Restricted to `this`: a general "cast any argument to the named variable" rule reaches
-        * arguments that are already correct and measured 1 -> 11. The self-type is the only one
-        * whose intent a raw receiver leaves unambiguous. */
+      /** `(N) this` — the SELF-TYPE conversion at a raw call. Java accepted `this` at a raw
+        * receiver's `N` formal only because the receiver is raw — libGDX writes `(N) this` itself
+        * where it isn't. Restricted to `this`: a general "cast any argument" rule measured 1 -> 11. */
       private def selfTypeArgs(
           ex: CtExecutableReference[?], argEs: List[CtExpression[?]], args: List[Term],
           nm: Map[String, TypeRepr],
@@ -5950,17 +4060,10 @@ object SpoonTir:
             }
           case _ => args
 
-      /** Java's UNCHECKED conversion at an ARGUMENT, when the RECEIVER's instantiation is KNOWN.
-        * `influencers.addAll(json.readValue("influencers", Array.class, Influencer.class, map))`:
-        * `Array.class` is a RAW class literal, so Java's result is the raw `Array` and the call is
-        * accepted unchecked — while we render that result `Array[?]`, which matches none of
-        * `addAll`'s overloads. The formal Java actually asked for is `Array<? extends T>` with the
-        * receiver's `T`, and the receiver names it (`Array[Influencer]`), so substitute and cast.
-        *
-        * The complement of [[erasedReceiverView]], which handles the receiver whose arguments are
-        * UNKNOWN — the two gates are mutually exclusive. Narrow on both ends: only a formal that
-        * mentions a receiver type variable, only an argument our raw fill actually wildcarded, and
-        * only when the substituted formal is fully nameable here. */
+      /** Java's UNCHECKED conversion at an ARGUMENT, when the RECEIVER's instantiation is KNOWN —
+        * the complement of [[erasedReceiverView]] (whose receiver is UNKNOWN, mutually exclusive).
+        * Narrow: only a formal mentioning a receiver type variable, only an argument our raw fill
+        * wildcarded, only when the substituted formal is fully nameable here. */
       private def knownReceiverArgs(inv: CtInvocation[?], argEs: List[CtExpression[?]], args: List[Term]): List[Term] =
         val rt = inv.getTarget match
           case null => null
@@ -5971,21 +4074,15 @@ object SpoonTir:
         else
           val formals = typeDeclarationOf(rt).map(_.getFormalCtTypeParameters.asScala.toList).getOrElse(Nil)
           val actuals = rt.getActualTypeArguments.asScala.toList
-          // fully KNOWN instantiation: same arity, no wildcards, every variable nameable here
-          // A WILDCARD actual is admitted too. It cannot drive the original cast (that one needs a
-          // fully known instantiation), but it is exactly what makes the NARROWER argument illegal:
-          // `loaders : ObjectMap[Class[?], ObjectMap[String, AssetLoader[?, ?]]]` asks its `put` for
-          // an `AssetLoader[?, ?]` while the value at hand is an `AssetLoader[T, P]`. Java converts
-          // silently at the wildcard; Scala needs it written. See the per-argument guard below.
+          // fully KNOWN instantiation (same arity, every variable nameable). A WILDCARD actual is
+          // admitted too — it cannot drive the cast but makes a NARROWER argument illegal, and java
+          // converts silently there (see the per-argument guard below).
           val known = formals.nonEmpty && actuals.sizeIs == formals.size && actuals.forall(tpResolvable)
           val ps = execDeclOf(inv.getExecutable).map(_.getParameters.asScala.toList.map(_.getType))
           (known, ps) match
             case (true, Some(l)) if l.sizeIs == args.size && argEs.sizeIs == args.size =>
-              // A FIELD receiver's arguments must be rendered as the FIELD's declaration rendered
-              // them. Re-rendering them here let the enclosing method's type parameters feed the
-              // raw fill, so `this.loaders`'s value type came out `ObjectMap[String,
-              // AssetLoader[T, P]]` — identical to the argument, so no cast was emitted — while
-              // the field itself is declared `ObjectMap[String, AssetLoader[?, ?]]` and rejects it.
+              // a FIELD receiver's arguments must be rendered as the FIELD's declaration rendered
+              // them, not re-filled from the enclosing method's own type parameters
               val fieldRecv = inv.getTarget.isInstanceOf[CtFieldAccess[?]]
               val subst = formals.map(_.getSimpleName)
                 .zip(if fieldRecv then atDeclScope(actuals.map(tpe)) else actuals.map(tpe)).toMap
@@ -5994,28 +4091,12 @@ object SpoonTir:
                 val f = l(i)
                 if f == null || !mentionsTypeVarBounded(f, subst.keySet) then t
                 else substFormal(f, subst) match
-                  // `hasWildcard(t.tpe)`: our raw fill wildcarded the ARGUMENT, and the receiver's
-                  // known instantiation says what it really is.
-                  // `uncheckedFrom(ct, t.tpe)`: the reverse — the SLOT is wildcarded and the
-                  // argument is the more precise type. Both are Java's unchecked conversion; only
-                  // the direction differs. A bare `?` target is not a type one can cast to.
-                  // …or the RECEIVER's own type argument is a RAW use (`Array<AssetDescriptor> deps`).
-                  // That is where javac stopped checking: a raw element type accepts any
-                  // instantiation, so `deps.add(new AssetDescriptor<TextureAtlas>(…))` is legal java
-                  // even though our fill typed the element `AssetDescriptor[ParticleEffect]` — the
-                  // name-directed fill having resolved `AssetDescriptor`'s `T` against the enclosing
-                  // loader's. Both sides are concrete for us, so java's silent conversion must be
-                  // written. (The ARGUMENT is not raw here — spoon fills the diamond — so testing
-                  // the argument instead is a no-op; measured.)
-                  // …and `uncheckedFrom(t.tpe, ct)`, the ERASED direction: the ARGUMENT is an
-                  // `Object`-parameterised view of exactly the slot's type. That is what a chain
-                  // through an ERASED RECEIVER produces — `pool.obtain().asInstanceOf[Wrapper[
-                  // Object]].initialize(…)` has result type `Wrapper[Object]` where the slot is
-                  // `Wrapper[T]` — and it is java's unchecked conversion just as much as the other
-                  // two: javac stopped checking at the raw `Pool<Wrapper>` the value came from.
-                  // Narrow by construction: `uncheckedFrom` demands the same type CONSTRUCTOR, the
-                  // same arity, and every differing argument to be `Object` or a wildcard, which is
-                  // precisely the shape of an erased or raw use and of nothing else.
+                  // fires on any of: the ARGUMENT was wildcarded by our raw fill (`hasWildcard`);
+                  // the SLOT is wildcarded and the argument more precise (`uncheckedFrom(ct,t.tpe)`);
+                  // the receiver's own type argument is a RAW use (`rawElement`); the ARGUMENT is an
+                  // Object-parameterised view of the slot's type via an ERASED RECEIVER
+                  // (`uncheckedFrom(t.tpe,ct)`) — all java's unchecked conversion, narrow by
+                  // construction (same type constructor and arity, ENGINE-LIMITS's own shape)
                   case Some(ct) if ct != t.tpe && !ct.isInstanceOf[TypeBounds] &&
                                    (hasWildcard(t.tpe) || uncheckedFrom(ct, t.tpe) ||
                                     uncheckedFrom(t.tpe, ct) || rawElement) =>
@@ -6054,13 +4135,8 @@ object SpoonTir:
       private def invocation(inv: CtInvocation[?])(using Obligations): Term =
         val ex   = inv.getExecutable
         val mid  = methodSym(ex)
-        // JS-C01 / JS-C02 — a java `static` is INHERITED by every subclass and through every
-        // implemented interface; a scala companion inherits nothing, so `Sub.m()` has to be
-        // re-pointed at the type that DECLARES `m`. Consulted at the head of the one arm every
-        // invocation reaches, and read off the reference rather than by re-running
-        // `declaringStaticType`'s BFS: the executable reference already carries its declaring type.
-        // JS-C01 fires wherever the receiver is a TYPE (the position where the difference exists at
-        // all) and JS-C02 where that type is not the declarer — java's inheritance actually used.
+        // JS-C01/C02: a java `static` is INHERITED, a scala companion inherits nothing — re-point
+        // at the DECLARING type. Read off the reference, not by re-running the BFS.
         val staticRecv = inv.getTarget.isInstanceOf[CtTypeAccess[?]]
         Obligations.consult(JS.C(1), originOf(inv))(Option.when(staticRecv)(()))
         Obligations.consult(JS.C(2), originOf(inv))(Option.when(staticRecv && (inv.getTarget match
@@ -6076,12 +4152,8 @@ object SpoonTir:
         // receiver: java inserted a checkcast on the way back out, and `erasedRecvResult` writes it.
         // Read off the view this arm has just computed, never re-derived (§4.56).
         Obligations.consult(JS.G(22), originOf(inv))(Option.when(erasedRecv.isDefined)(()))
-        // JS-G29 / JS-G30 — the two halves of java's inference at a call, consulted TOGETHER because
-        // `pinTypeArgs` forks into them and the fork is exactly the catalog's split: a variable some
-        // FORMAL mentions is determined by its argument and both languages infer it the same way
-        // (G29, the ordinary case), while one no formal mentions is constrained only by its BOUND —
-        // which java resolves TO that bound and scala resolves to `Nothing` (G30). Read off the
-        // callee's DECLARATION, which is where java read them, and not by re-running the pin.
+        // JS-G29/G30: a variable some FORMAL mentions infers the same in both languages (G29); one
+        // no formal mentions resolves to its BOUND in java and `Nothing` in scala (G30)
         val calleeTpNames = execDeclOf(ex)
                                   .collect { case m: CtMethod[?] => m.getFormalCtTypeParameters.asScala.toList }
                                   .getOrElse(Nil).map(_.getSimpleName).toSet
@@ -6140,18 +4212,9 @@ object SpoonTir:
           Tree.Apply(pinTypeArgs(fun, inv, o), args, mid, erasedResult(args, ty(inv)), o), o)
         erasedRecvResult(inv, erasedRecv, app)
 
-      /** The downcast an ERASED RECEIVER's result needs.
-        *
-        * Calling through the erased view ([[erasedReceiverView]]) is Java's own move, and Java pays
-        * for it the same way at the other end: a result declared in the receiver's type variables
-        * comes back ERASED, and every use of it carries an implicit downcast. `OrderedMap<K,V>`'s
-        * `putAll(OrderedMap<T, ? extends V> map)` calls `map.get((T) key)` and hands the result
-        * straight to `put(K, V)` — through `OrderedMap[Object, Object]` that is an `Object`, and
-        * `V` is required. Java inserted the checkcast; this writes it down.
-        *
-        * Gated on the un-erased result being nameable HERE and actually different, so a callee
-        * whose result does not move with the receiver (or one Spoon already types as erased) is
-        * untouched. */
+      /** The downcast an ERASED RECEIVER's result needs — java pays for calling through the erased
+        * view ([[erasedReceiverView]]) with an implicit downcast on the result, which this writes
+        * down. Gated on the un-erased result being nameable HERE and actually different. */
       private def erasedRecvResult(
           inv: CtInvocation[?], recv: Option[(TypeRepr, Map[String, TypeRepr], Map[String, TypeRepr])], app: Term,
       ): Term = recv match
@@ -6159,11 +4222,8 @@ object SpoonTir:
         case Some((_, subst, _)) =>
           val declRet = execDeclOf(inv.getExecutable)
                               .collect { case m: CtMethod[?] => m.getType }
-          // The un-erased reading comes from the receiver's DECLARED arguments, not from Spoon's
-          // type for the call: through a wildcard receiver Spoon reports the CAPTURE (`map.V`),
-          // which has no Scala name. `OrderedMap<T, ? extends V> map` says `V ↦ ? extends V`, and
-          // the bound is what Java's own checkcast lands on — `put(K, V)` accepts it precisely
-          // because every `? extends V` is a `V`.
+          // the un-erased reading comes from the receiver's DECLARED arguments, not Spoon's type
+          // for the call — a wildcard receiver's CAPTURE has no scala name
           val declSubst: Map[String, TypeRepr] =
             val t  = inv.getTarget
             val rt = castType(t)
@@ -6174,20 +4234,8 @@ object SpoonTir:
               case w: CtWildcardReference => Option(w.getBoundingType).filter(_ => w.isUpper).orNull
               case a                      => a
             }).collect { case (n, a) if a != null && tpResolvable(a) => n -> tpe(a) }.toMap
-          // A RAW declared result, read through an ERASED receiver, is where the node's type and the
-          // emitted scala part company (ENGINE-LIMITS §0). `Wrapper initialize(T, int)` called on
-          // `pool.obtain().asInstanceOf[Wrapper[Object]]` EMITS a `Wrapper[Object]` — the receiver
-          // cast decided that — while `ty(inv)` renders the raw `Wrapper` through the caller's own
-          // name-directed fill and says `Wrapper[T]`. Nothing is cast here, because nothing is
-          // wrong with the expression; what is wrong is the type recorded ON it, and every later
-          // rule that consults `tpe` then reasons about a type the output does not have. The one
-          // that matters is `knownReceiverArgs`, which found argument and slot equal and emitted no
-          // unchecked conversion for a conversion java really did perform.
-          //
-          // `substFormal` cannot answer this: it returns `None` for a raw use with arity > 0, by
-          // design, because there is nothing to substitute. The erased instantiation is what the
-          // receiver cast already committed to.
-          // re-TYPE the call node, emitting nothing: `Apply` is the only shape this path produces.
+          // a RAW declared result through an ERASED receiver is where the node's type and the
+          // emitted scala part company (ENGINE-LIMITS §0) — re-TYPE the node, emit nothing
           def retyped(t: Term, want: Option[TypeRepr]): Term = (t, want) match
             case (a: Tree.Apply, Some(w)) if w != a.tpe => a.copy(tpe = w)
             case _                                      => t
@@ -6203,19 +4251,9 @@ object SpoonTir:
                 case _ => retyped(app, rawErasedResult)
             case _ => retyped(app, rawErasedResult)
 
-      /** The result type an ERASED ARGUMENT drags with it.
-        *
-        * `Arrays.copyOf(T[] a, int n): T[]` handed `data.asInstanceOf[Array[Object]]` — the
-        * erasure cast `coerceArgsFixed` inserts for an external array formal — returns an
-        * `Array[Object]`, whatever Spoon says the Java expression's type was. Recording Spoon's
-        * `Array[T]` on the node makes the TIR assert something the emitted Scala does not have, and
-        * then the assignment back into `Array[T]` looks fine to every rule that consults `tpe` and
-        * fails in the compiler.
-        *
-        * Only the erasure WE introduced is modelled, and only where the callee's result actually
-        * moves with that argument (`fill(Object[], Object): void` shares nothing, so nothing
-        * changes). Deciding it from the emitted argument rather than from the declaration matters:
-        * under noClasspath a JDK shadow's formals are not reliable, but what we emitted is. */
+      /** The result type an ERASED ARGUMENT drags with it — recording Spoon's un-erased type would
+        * make the TIR assert what the emitted scala does not have. Only the erasure WE introduced
+        * is modelled, decided from the EMITTED argument (a JDK shadow's formals are unreliable). */
       private def erasedResult(args: List[Term], declared: TypeRepr): TypeRepr =
         val erasedArrayArg = args.exists { case Tree.Typed(_, _, at, _) => at == arrayOfObject; case _ => false }
         declared match
@@ -6283,41 +4321,13 @@ object SpoonTir:
         then Tree.TypeApply(fun, actuals.map(a => tt(tpe(a), inv)), NoType, o)
         else pinUnconstrainedTypeArgs(fun, inv, o)
 
-      /** A method TYPE PARAMETER that appears in NO FORMAL, at a call that gives it no target type
-        * either — `ENGINE-LIMITS.md` G22.
-        *
-        * {{{
-        * <T extends Map<String, ?>> T getRegistry(String name);
-        * …
-        * assertTrue(context.getRegistry(REGISTRY_FOR).isEmpty());
-        * }}}
-        *
-        * Nothing at the call constrains `T`. Java then instantiates it at its BOUND (JLS 18: with no
-        * constraints and no target type, resolution takes the upper bound) and `isEmpty()` resolves;
-        * Scala instantiates an unconstrained variable at its LOWER bound and the selection fails with
-        * `Found: Nothing / Required: ?{ isEmpty: ? }`. Nothing about the receiver or the retyping is
-        * wrong — the two languages disagree about what an unconstrained variable is — so the answer
-        * java gave is written down.
-        *
-        * [[pinTypeArgs]] above is the NEIGHBOURING case and declines here, correctly: it pins what
-        * the ARGUMENTS determined, and no argument mentions `T`. The answer here is a fact about the
-        * DECLARATION instead, which is what makes it a different rule rather than a widening of that
-        * one.
-        *
-        * Four conditions, and each is a way the pin would be wrong without it:
-        *
-        *   - **no formal mentions the variable.** One that does is constrained by its argument, and
-        *     both languages infer it the same way;
-        *   - **the call has no TARGET TYPE.** `Map<String,Integer> m = ctx.getRegistry(k)` gives java
-        *     AND scala the target to infer from, and pinning the bound there would emit
-        *     `Map[String, ?]` where `Map[String, Integer]` was written. The shape with no target is
-        *     the one where scala says `Nothing`: the call standing as the RECEIVER of another
-        *     selection, which is exactly where that `Nothing` is then selected from;
-        *   - **every variable has a REAL bound.** An unbounded `T` means `T extends Object`, and
-        *     pinning that is G24's territory — a bound scala does not read as vacuous — for no gain:
-        *     an `Object` receiver has no member worth selecting;
-        *   - **the bound mentions no type variable of its own.** An F-bound or a bound naming the
-        *     enclosing class's parameter is not a type this call site can write down. */
+      /** A method TYPE PARAMETER that appears in NO FORMAL, at a call with no target type either
+        * (ENGINE-LIMITS G22). Java instantiates it at its BOUND (JLS 18, no constraints/target);
+        * scala instantiates it at `Nothing`, and a selection on `Nothing` fails. [[pinTypeArgs]]
+        * declines here (no argument mentions the variable) — this pins the DECLARATION's answer
+        * instead. Four conditions: no formal mentions the variable; the call has no TARGET TYPE
+        * (it stands as the RECEIVER of another selection); every variable has a REAL bound
+        * (unbounded means `Object`, G24's territory); the bound mentions no type variable of its own. */
       private def pinUnconstrainedTypeArgs(fun: Term, inv: CtInvocation[?], o: Origin): Term =
         Option(inv.getExecutable.getExecutableDeclaration).collect { case m: CtMethod[?] => m } match
           case scala.None => fun
@@ -6332,34 +4342,13 @@ object SpoonTir:
             else Tree.TypeApply(fun, bounds.flatten.map(b => tt(tpe(b), inv)), NoType, o)
 
       /** G22's pin at the shape its FOURTH condition declines — an F-BOUND — by ascribing the
-        * RESULT instead of instantiating the ARGUMENT. `ENGINE-LIMITS.md` G8.7.
-        *
-        * {{{
-        * <B extends ISequenceBuilder<B, T>> B getBuilder();   // in IRichSequence<T>
-        * …
-        * getBuilder().append(padding).append(this).toSequence()
-        * }}}
-        *
-        * The two pins answer the same disagreement — scala instantiates an unconstrained variable at
-        * `Nothing` and a selection on `Nothing` is rejected — and they differ in WHAT can be written
-        * down. A type ARGUMENT must satisfy the bound, and no denotable `X` satisfies
-        * `X <: ISequenceBuilder<X, T>`; that is `ENGINE-LIMITS.md` G8's expressiveness limit, priced
-        * four times. An ASCRIPTION does not have to: the argument still infers `Nothing` (legal —
-        * `Nothing` is below every bound), and what the ascription supplies is the TYPE THE SELECTION
-        * READS. `ISequenceBuilder[?, T]` is a perfectly ordinary type to write there, and its
-        * `append` returns the capture, which is itself an `ISequenceBuilder[capture, T]` — so the
-        * whole java chain re-types with nothing filled in.
-        *
-        * So this is NOT a fifth attempt at G8's fill and must not be read as one. It fires exactly
-        * where the fill CANNOT be written, and its conditions are G22's first three unchanged plus
-        * two of its own:
-        *
-        *   - **the RESULT is one of the method's own variables**, which is what makes the ascription
-        *     land on the value the selection is about;
-        *   - **every named variable in the bound is either the METHOD's own (rendered `?`) or one
-        *     THIS scope can write** (`tpNameableHere`). The first is what makes an F-bound
-        *     expressible at all; the second is §4.6 — a bound naming a variable only the callee
-        *     declares has no honest text, and the call keeps its error. */
+        * RESULT instead of instantiating the ARGUMENT (ENGINE-LIMITS G8.7). No denotable `X`
+        * satisfies an F-bound as a type ARGUMENT (G8's expressiveness limit); an ASCRIPTION does not
+        * need to — the argument still infers `Nothing` (legal), and the ascription supplies the TYPE
+        * THE SELECTION READS instead. NOT a fifth attempt at G8's fill: fires where the fill CANNOT
+        * be written, G22's first three conditions plus: the RESULT is one of the method's own
+        * variables; every named variable in the bound is the METHOD's own (rendered `?`) or writable
+        * here (`tpNameableHere`, §4.6). */
       private def ascribeUnconstrainedResult(inv: CtInvocation[?], app: Term, o: Origin): Term =
         Option(inv.getExecutable.getExecutableDeclaration).collect { case m: CtMethod[?] => m } match
           case scala.None => app
@@ -6523,24 +4512,10 @@ object SpoonTir:
             case _ => args
 
       /** SPECIALISE the erased arguments of a raw constructor call, rather than erasing the precise
-        * ones.
-        *
-        * `new AssetDescriptor(data.filename, data.type, parameter)` inside a scope with no `T`:
-        * argument 2 is read through an erased receiver, so it arrives as `Class[Object]` and pins
-        * `T = Object`; argument 3 is a `ParticleEffectParameter`, so Scala rejects the call. Java
-        * checked none of it — the constructor is raw — but SOME instantiation has to be chosen, and
-        * the one Java means is recoverable: argument 3's own supertype chain reaches
-        * `AssetLoaderParameters<ParticleEffect>`, giving `T = ParticleEffect`.
-        *
-        * Casting the other way (the precise argument DOWN to `AssetLoaderParameters[Object]`) was
-        * tried under three separate gates and measured 23, 5 and 43 errors — see
-        * ENGINE-LIMITS.md G13. It destroys the only information at the call site that says what the
-        * instantiation is. This direction keeps it: the ERASED argument is cast UP to the binding
-        * the precise one implies, which is exactly the unchecked conversion javac performed.
-        *
-        * Deliberately narrow: one class type parameter, a binding found in exactly one place, and
-        * only arguments currently sitting AT the erasure are touched. Returns index -> cast target.
-        */
+        * ones — java checked none of it (constructor is raw), but SOME instantiation must be
+        * chosen, recovered from a precise argument's own supertype chain. Casting the OTHER way
+        * (precise argument DOWN to erased) measured worse (23/5/43 errors, ENGINE-LIMITS G13).
+        * Narrow: one class type parameter, one binding found, only arguments AT the erasure touched. */
       private def rawCtorSpecialisation(
           cc: CtConstructorCall[?], l: List[CtTypeReference[?]], argEs: List[CtExpression[?]], args: List[Term],
       ): Map[Int, TypeRepr] =
@@ -6592,22 +4567,11 @@ object SpoonTir:
               }.toMap
             case _ => Map.empty
 
-      /** An APPLIED generic constructor call whose argument Java unchecked-converted.
-        *
-        * `new AssetDescriptor<T>(data.filename, data.type)` inside `ResourceData<T>`, where the
-        * loop variable `data` is a RAW `AssetData`: Java reads `data.type` at the ERASED `Class`
-        * and converts it to `Class<T>` without a check. We read it through the erased receiver view
-        * — `Class[Object]`, which IS its static type — so Scala then needs the conversion Java made
-        * implicitly, written out.
-        *
-        * The target is the declared formal with the class's own parameters replaced by the call's
-        * EXPLICIT type arguments (`Class<T>` ↦ `Class[T]`, `T` being `ResourceData`'s). Without that
-        * substitution the formal names a variable that exists only inside the callee, which is
-        * exactly why `coerceArgsFixed`'s `uncheckedGeneric` declines these: it would render `?T`.
-        *
-        * The raw counterpart is [[rawCtorArgs]]; this is the applied one. Gated on the ARGUMENT
-        * mentioning a raw generic, so it fires only where Java itself stopped checking — an ordinary
-        * subtype argument is left alone. */
+      /** An APPLIED generic constructor call whose argument java unchecked-converted — read through
+        * the erased receiver view, scala needs the conversion java made implicitly written out.
+        * Target is the declared formal with the class's own parameters substituted by the call's
+        * EXPLICIT type arguments (else `uncheckedGeneric` would render `?T`). Raw counterpart is
+        * [[rawCtorArgs]]. Gated on the ARGUMENT mentioning a raw generic. */
       private def appliedCtorArgs(cc: CtConstructorCall[?], argEs: List[CtExpression[?]], args: List[Term]): List[Term] =
         val actuals = cc.getType.getActualTypeArguments.asScala.toList
         val formals = Option(cc.getType).flatMap(typeDeclarationOf)
@@ -6633,18 +4597,11 @@ object SpoonTir:
             }
           case _ => args
 
-      /** SymId of a called executable — via its declaration (keyed identically to how we
-        * define our own methods, so call sites and defs share one symbol) or, for
-        * unresolved externals, by its reference.
-        *
-        * Under `noClasspath`, `getExecutableDeclaration` can resolve to an UNRELATED type's method
-        * that happens to share the name — e.g. `Gdx.app.getType()` (receiver: `Application`)
-        * resolved to `java.lang.reflect.Field#getType`. The guard is STRUCTURAL: the declaration's
-        * declaring type must be the receiver's static type or one of its SUPERTYPES (an inherited
-        * method still agrees; an unrelated same-named method does not). When the resolution
-        * disagrees, fall through to the reference branch — intern under the RECEIVER's declaring
-        * type with the erased signature, which is what the call names (`CLAUDE.md` §4.56).
-        * `ENGINE-LIMITS.md` G34. */
+      /** SymId of a called executable — via its declaration (keyed identically to how we define our
+        * own methods) or, for unresolved externals, by its reference. Under `noClasspath`,
+        * `getExecutableDeclaration` can resolve to an UNRELATED same-named method — guarded
+        * STRUCTURALLY (declaration's owner must be the receiver's type or a SUPERTYPE); disagreement
+        * falls through to interning by the RECEIVER's declaring type (CLAUDE.md §4.56, ENGINE-LIMITS G34). */
       private def methodSym(ex: CtExecutableReference[?]): SymId =
         Option(ex.getExecutableDeclaration).filter(decl => declAgrees(decl, ex)) match
           case Some(decl) =>
@@ -6736,27 +4693,12 @@ object SpoonTir:
         val id = minter.external(q, simpleName(q))
         Tree.Ident(id, TypeRef(NoPrefix, id), originOf(at))
 
-      /** T14 — the receiver of a STATIC CALL, which is the member's DECLARING type and not the type
-        * the source wrote.
-        *
-        * `java.time.ZoneOffset.systemDefault()` is ordinary java: `systemDefault` is declared
-        * `static` on `ZoneId`, `ZoneOffset extends ZoneId`, and java lets a static be named through
-        * ANY subclass. Scala companion objects inherit nothing from each other, so the same text
-        * emitted verbatim is `value systemDefault is not a member of object java.time.ZoneOffset`,
-        * every time — 20 errors on one library's suite from a single upstream idiom. The
-        * `staticFieldAccess` above is the same fact arriving at a FIELD; this is its other half.
-        *
-        * Read off the SYMBOL'S OWNER, never off the written name (`CLAUDE.md` §4.56): `methodSym`
-        * derives that owner from the resolved executable's own declaration, so it IS the declaring
-        * type wherever the parse resolved one, and is the written type — hence a no-op here — where
-        * it did not. Java resolved the member statically, so this is exact for the same reason
-        * §4.55's renames are: the reference already points at the symbol java chose.
-        *
-        * It re-qualifies for an IN-PROGRAM parent too, where `TirEmitter.classDef`'s companion
-        * re-export would also have delivered the name. That is deliberate, not redundant: naming
-        * the declaring type is what the java means, one mechanism covers both, and the two cannot
-        * disagree — an inaccessible declaring type is equally unnameable by the re-export, which is
-        * emitted as `export <declaring>.*` in the very same file. */
+      /** T14 — the receiver of a STATIC CALL is the member's DECLARING type, not the type the
+        * source wrote (java lets a static be named through ANY subclass; scala companions inherit
+        * nothing — 20 errors on one library from a single upstream idiom). Read off the SYMBOL'S
+        * OWNER, never the written name (CLAUDE.md §4.56) — `methodSym` derives it from the resolved
+        * declaration. Re-qualifies for an IN-PROGRAM parent too (same mechanism as the companion
+        * re-export, so the two cannot disagree). */
       private def staticCallQualifier(ta: CtTypeAccess[?], mid: SymId, at: CtElement): Term =
         val written  = ta.getAccessedType.getQualifiedName
         val declaring = minter.ownerOf(mid)
@@ -6791,21 +4733,11 @@ object SpoonTir:
         Tree.Apply(Tree.Select(Tree.Ident(strSym, TypeRef(NoPrefix, strSym), originOf(el)), vSym, NoType, originOf(el)),
           List(t), vSym, TypeRef(NoPrefix, strSym), originOf(el))
 
-      /** Java's `==` between REFERENCE types is identity; scala's `==` is `equals`.
-        *
-        * Every one of these is a silent semantic change, and inside an `equals` implementation it
-        * is an infinite recursion: `LongArray.equals` opens with java's `if (object == this)`,
-        * which as scala `==` calls `equals` again. The suite found it on the first run — no
-        * compiler ever would have. 151 sites in gdx core; the engine emitted `eq` at none of them.
-        *
-        * `eq` is the faithful operator and it is right for the cases that look like exceptions too:
-        * java compares boxed wrappers, enum constants and interned Strings by identity as well,
-        * and `==` would quietly answer a different question for each.
-        *
-        * Skipped when either side is `null` — scala's `x == null` already IS a reference check and
-        * reads better — and when either static type is PRIMITIVE, where `==` is value equality in
-        * both languages. `Any`-typed operands (java's `equals(Object)` parameter, which scala must
-        * render `equals(Any)`) go through `AnyRef`, since `eq` lives there. */
+      /** Java's `==` between REFERENCE types is identity; scala's `==` is `equals` — inside an
+        * `equals` implementation that is infinite recursion (151 sites in gdx core, found only by
+        * running the suite). `eq` is faithful for boxed wrappers/enums/interned Strings too, since
+        * java compares those by identity as well. Skipped for `null` or PRIMITIVE operands.
+        * `Any`-typed operands go through `AnyRef`, where `eq` lives. */
       /** JS-E14's PREDICATE: java string concatenation with a NON-`String` left operand
         * (`obj + "s"`). Scala has no `+` on `obj`, so the left is stringified
         * (`String.valueOf(obj) + "s"`). `scala.None` — nothing to do — for every other operator,
@@ -6857,17 +4789,10 @@ object SpoonTir:
         Tree.Apply(Tree.Select(o, opId(op), NoType, o.origin), Nil, opId(op), resT, o.origin)
 
       /** the Scala spelling of a java binary operator, or `scala.None` for a kind this arm does not
-        * enumerate.
-        *
-        * An `Option` and not a defaulted string, for the reason [[UnaryOperatorKind]]'s twin arm
-        * gives at length: `BinaryOperatorKind` is a java enum from a DEPENDENCY, not a sealed Scala
-        * one, so scalac cannot check this match and a Spoon upgrade that adds a kind falls through.
-        * The default used to be `"?" + other` — which is not a diagnostic, it is a METHOD NAME:
-        * `binApply` would build `l.?NEWKIND(r)`, the emitter would render it, and the port would
-        * carry a call to a member nobody declares. Best case a compile error naming a symbol that
-        * appears nowhere in the java; worst case, in a position where scalac infers rather than
-        * resolves, nothing at all. `INSTANCEOF` is java's twentieth kind and never reaches here —
-        * the arm above it branches first — so what this enumerates is the nineteen operators. */
+        * enumerate. An `Option`, not a defaulted string: `BinaryOperatorKind` is a java enum scalac
+        * cannot check, and a fabricated name (`"?" + other`) would silently become a real method
+        * call in `binApply`. `INSTANCEOF` (java's twentieth kind) never reaches here; enumerates
+        * the other nineteen. */
       private def opText(k: BinaryOperatorKind): Option[String] =
         import BinaryOperatorKind.*
         k match

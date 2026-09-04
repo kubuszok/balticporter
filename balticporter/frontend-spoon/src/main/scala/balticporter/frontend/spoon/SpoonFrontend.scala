@@ -26,18 +26,9 @@ import scala.jdk.CollectionConverters.*
   * The only module that sees Spoon types (DESIGN.md §3.2 insulation rule).
   *
   * @param preservedAnnotationPrefixes
-  *   annotation packages carried through to the output verbatim, by FQN prefix — CLAUDE.md §1(b),
-  *   mechanism here and policy at the porting program. WHICH annotations are behaviour-bearing is a
-  *   fact about a library and its dependencies, never about java: a serialization framework's
-  *   annotations drive a custom serializer at run time and must survive, a nullness hint is
-  *   advisory and must not, and a cross-platform port would substitute the first set rather than
-  *   keep it. Inlined here the list named one library's dependencies inside a shared module, which
-  *   is the same mistake `ReflectionToPortableTransform` made one layer up.
-  *
-  *   `Nil` — the default — preserves nothing beyond `java.lang.Deprecated` (mapped to
-  *   `scala.deprecated`, which is a java-to-scala fact and stays universal), so "turned off" needs
-  *   no code path. Everything else an element carries is then reported through `unsupported`, which
-  *   is the honest answer for an annotation nobody claimed.
+  *   annotation packages carried through verbatim, by FQN prefix (CLAUDE.md §1(b) policy: which
+  *   annotations are behaviour-bearing is a fact about a library, never about java). `Nil`
+  *   (default) preserves only `java.lang.Deprecated`; anything else is reported via `unsupported`.
   */
 final class SpoonFrontend(preservedAnnotationPrefixes: List[String] = Nil) extends Frontend:
 
@@ -147,11 +138,8 @@ private final class UnitBuilder(sourcePath: String, source: String,
     case p if p.isPrimitive => BType.Prim(p.getSimpleName)
     case r =>
       val args = r.getActualTypeArguments.asScala.toList.map(btype)
-      // Java raw types are illegal in Scala type positions — fill each slot. A type
-      // parameter with a NON-Object, non-self-referential upper bound (F-bounded
-      // handlers: <N extends Node>) fills with that bound so the raw type stays
-      // assignment-compatible with the bound-parameterized form the API expects;
-      // plain Object-bounded params (Map<K,V>) fill with `?` as before.
+      // Java raw types are illegal in Scala type positions — fill each slot: an F-bounded
+      // param (N extends Node) fills with its bound; a plain Object-bounded param fills `?`.
       val filled =
         if args.nonEmpty then args
         else rawFill(r)
