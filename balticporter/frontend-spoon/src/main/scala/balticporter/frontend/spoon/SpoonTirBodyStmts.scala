@@ -24,12 +24,9 @@ private[spoon] trait SpoonTirBodyStmts:
 
   private[spoon] def methodBody(b: CtBlock[?]): Term = blockOf(b.getStatements.asScala.toList, b)
 
-  /** a statement list and the element it came from → a TIR `Block`, with whatever comments
-    * were written after the last statement kept in the block's `trailing` slot.
-    *
-    * The ONE place a `Tree.Block` is built out of `stmts`: the leftover was previously dropped
-    * at each of the three call sites independently, which is exactly the shape that makes a
-    * fix land in two of them. */
+  /** a statement list and the element it came from → a TIR `Block`, with any trailing comments
+    * kept in the block's `trailing` slot. The ONE place a `Tree.Block` is built out of `stmts` —
+    * previously dropped independently at three call sites, exactly the shape a fix misses two of. */
   private[spoon] def blockOf(ss: List[CtStatement], el: CtElement): Tree.Block =
     val (sts, trail) = stmts(ss)
     Tree.Block(sts, unit(el), unitT, originOf(el), trail)
@@ -224,22 +221,11 @@ private[spoon] trait SpoonTirBodyStmts:
     // — Java's empty statement. NOT claimed: leaving it unclaimed lets the enclosing
     // statement's `deepComments` pick the text up, which is the only place left to put it.
     case c: CtComment => Tree.Literal(Constant.UnitC, unitT, originOf(c))
-    // A METHOD-LOCAL NAMED CLASS — JLS 14.3, catalog JS-C30. `Tree.ClassDef` is a `Statement`,
-    // so the node the TIR needs already existed; what was missing was the arm. Two things this
-    // arm decides that the DECLARATION path does not:
-    //
-    //   - the OWNER is the enclosing EXECUTABLE, not the enclosing type. Spoon reports a
-    //     declaring TYPE for a local class (it is nested in the binary name), and taking that
-    //     would make every "is this a member of `Outer`?" question answer yes: the emitter
-    //     would render `Outer#Local`, a type projection naming a member that does not exist.
-    //     Owning it by the method is also the structurally true statement — §4.56's ownership
-    //     chain still reaches the unit through the method, so the symbol stays OWNED;
-    //   - the NAME is java's SOURCE name. Spoon's qualified name carries the binary
-    //     disambiguator (`p.Outer$1Local`), which is the right INTERNING key — the `new Local()`
-    //     reference resolves through it — and is not a legal Scala identifier.
-    //
-    // Captures need no lowering, exactly as for an anonymous class: javac synthesises
-    // constructor parameters for them and Scala closes over them directly.
+    // A METHOD-LOCAL NAMED CLASS — JLS 14.3, catalog JS-C30. Two things this arm decides that the
+    // DECLARATION path does not: OWNER is the enclosing EXECUTABLE, not the enclosing TYPE (Spoon
+    // reports the type, which would render a member reference that does not exist — §4.56's chain
+    // still reaches the unit through the method); NAME is java's SOURCE name (Spoon's is
+    // binary-disambiguated, not a legal identifier). Captures need no lowering.
     case c: CtClass[?] =>
       // JS-C30, consulted rather than merely done: the catalog attaches the row to THIS
       // dispatch, so the wrapper reports an arm that returns without asking. It fires at every
@@ -352,15 +338,11 @@ private[spoon] trait SpoonTirBodyStmts:
     * ported assignment/initializer type-checks. */
   private[spoon] val primRank = Map("byte" -> 1, "short" -> 2, "char" -> 2, "int" -> 3, "long" -> 4, "float" -> 5, "double" -> 6)
 
-  /** Java's UNCHECKED generic conversion — a RAW-typed value converts to any instantiation
-    * without a check. Raw uses render CONTEXT-dependently, so the same java type can render two
-    * ways in two scopes; emit exactly the cast java performs implicitly. Gated to targets whose
-    * type variables all resolve here (never synthesize a `?T` stub). */
-  /** JS-G31 — a POLY EXPRESSION (JLS 15.2): a LAMBDA or a METHOD REFERENCE, typed by the slot it
-    * fills, in both languages. A cast at such an argument would elaborate the literal to a
-    * `scala.FunctionN` FIRST, then fail the cast — so the faithful emission is the literal AT
-    * THE SLOT, never a cast (probed against scala 3.8.4 for every SAM-conversion shape). ONE
-    * function: written twice before, the two copies disagreed (ENGINE-LIMITS F8). */
+  /** Java's UNCHECKED generic conversion — converts a RAW-typed value to any instantiation
+    * without a check; emits exactly the cast java performs implicitly. */
+  /** JS-G31 — a POLY EXPRESSION (JLS 15.2), typed by the slot it fills: a cast would elaborate the
+    * literal to `scala.FunctionN` first then fail, so emit it AT THE SLOT, never a cast (scala
+    * 3.8.4, ENGINE-LIMITS F8). */
   private[spoon] def polyExpression(e: CtExpression[?]): Boolean =
     e.isInstanceOf[CtLambda[?]] || e.isInstanceOf[CtExecutableReferenceExpression[?, ?]]
 
@@ -379,14 +361,10 @@ private[spoon] trait SpoonTirBodyStmts:
     }.getOrElse(args)
 
   /** …the OTHER half: a poly expression takes its type from the SLOT, and an OVERLOAD SET gives
-    * scala no single slot to type a lambda literal from (javac resolves by argument SHAPE;
-    * scalac types the literal FIRST — `E134`, probed at scala 3.8.4). Ascribes an ASCRIPTION,
-    * never a CAST (polyExpression's refusal still stands — a cast would elaborate the literal
-    * to a `Function0` first, then fail). Fires only when: the argument is a LAMBDA (a method
-    * reference is excluded, handled by `TirEmitter.samAscribed`); the callee is OVERLOADED at
-    * this arity with the slot naming no expected type ([[overloadedSamSlot]]); the target is
-    * NAMEABLE HERE ([[tpNameableHere]]) and java wrote no cast of its own. Target is the
-    * LAMBDA'S OWN type (same as [[samResultTpt]]), never the callee's re-derived formal. */
+    * scala no single slot to type a lambda from (javac resolves by SHAPE; scalac types the
+    * literal FIRST, `E134`). Ascribes, never CASTS. Fires only for a LAMBDA argument at an
+    * OVERLOADED callee whose slot names no expected type ([[overloadedSamSlot]]), NAMEABLE HERE
+    * and un-cast in java. Target is the LAMBDA'S OWN type ([[samResultTpt]]), never the callee's. */
   private[spoon] def polyArgsAscribed(ex: CtExecutableReference[?], argEs: List[CtExpression[?]],
                                args: List[Term]): List[Term] =
     if args.sizeIs != argEs.size then args
@@ -412,13 +390,10 @@ private[spoon] trait SpoonTirBodyStmts:
     case _                   => scala.None
 
   /** is the callee overloaded at this arity, AND does the slot at argument `i` fail to give
-    * scala an expected type — [[polyArgsAscribed]]'s whole decision, read off the declaring
-    * type's ALL methods (not just declared, since java's overload set spans the hierarchy) by
-    * QUALIFIED NAME at that index. Fires when the alternatives DISAGREE at `i`, or agree on a
-    * TYPE VARIABLE the call has yet to infer (scala must resolve the overload by typing the
-    * arguments first, unlike java which solves `T` from another slot). Unreadable declaration →
-    * no alternatives, nothing ascribed (§4.6); `RuntimeException` only, so a deep model's
-    * `StackOverflowError` is not swallowed. */
+    * scala an expected type — read off the declaring type's ALL methods (java's overload set
+    * spans the hierarchy) by QUALIFIED NAME. Fires when alternatives DISAGREE at `i`, or agree
+    * on a TYPE VARIABLE not yet inferred. Unreadable declaration → no alternatives (§4.6);
+    * `RuntimeException` only, so a deep model's `StackOverflowError` is not swallowed. */
   private[spoon] def overloadedSamSlot(ex: CtExecutableReference[?], arity: Int, i: Int): Boolean =
     val alts: List[List[CtTypeReference[?]]] =
       try
@@ -478,15 +453,10 @@ private[spoon] trait SpoonTirBodyStmts:
     own.fold(t)(n => strip(t, depth(t) - n))
 
   /** THE FORMAL OF AN INHERITED CALLEE, with the ANCESTOR's type variables replaced by what THIS
-    * class instantiated them with — `None` where nothing substitutes. Closes the gap where the
-    * formal is literally an ancestor's own type variable (`isGenericUse` declines it, though
-    * ENGINE-LIMITS G12's rule against resolving a callee's own variables does not apply — the
-    * `extends` clause says what THIS class instantiated it as, same fact as `ParentSubst`,
-    * CLAUDE.md §4.56). Keyed by (owner FQN, formal name), never by name alone. Does NOT
-    * substitute a WILDCARD formal (`tpe` has no shape for it) — declines rather than misrenders. */
-  /** how many `[]` a type reference carries — the ARITY half of `ENGINE-LIMITS.md` G26's
-    * comparison, which is the one thing that decides whether a cast at an inherited formal is a
-    * translation or a `ClassCastException`. */
+    * class instantiated them with — `None` where nothing substitutes (`extends` says what THIS
+    * class instantiated it as, `ParentSubst`, CLAUDE.md §4.56). Declines a WILDCARD formal. */
+  /** how many `[]` a type reference carries — decides whether a cast at an inherited formal is a
+    * translation or a `ClassCastException` (ENGINE-LIMITS G26). */
   private[spoon] def arrayDims(tr: CtTypeReference[?]): Int = tr match
     case a: CtArrayTypeReference[?] => 1 + arrayDims(a.getComponentType)
     case _                          => 0
@@ -531,13 +501,10 @@ private[spoon] trait SpoonTirBodyStmts:
     val bad = classLit || polyExpression(e) || e.isInstanceOf[CtLiteral[?]] ||
       e.isInstanceOf[CtNewArray[?]] || e.isInstanceOf[CtConditional[?]]
     // …the INHERITED formal, which the gates below cannot reach: a formal written as an
-    // ancestor's own type variable is not a `isGenericUse` at all, and `tpResolvable` answers
-    // `false` for it because the variable is not in THIS class's scope. See [[inheritedFormal]]
-    // — the `extends` clause resolves it, exactly and only for that case.
-    //
-    // A DIMENSION MISMATCH DECLINES rather than casts (ENGINE-LIMITS G26): a cast there would
-    // make an arity defect COMPILE and throw at run time instead of a loud typer error (§3).
-    // Computed ONCE, behind the two cheap tests, so the denominators do not move for nothing.
+    // ancestor's own type variable is not `isGenericUse` at all ([[inheritedFormal]] resolves it
+    // via the `extends` clause). A DIMENSION MISMATCH DECLINES rather than casts (G26) — a cast
+    // would make an arity defect COMPILE and throw at run time instead of a loud typer error.
+    // Computed ONCE, behind the two cheap tests.
     val inherited =
       if target == null || et == null || bad then scala.None
       else if !mentionsRawGeneric(et) || arrayDims(target) != arrayDims(et) then scala.None
@@ -739,18 +706,10 @@ private[spoon] trait SpoonTirBodyStmts:
       case Some(fqn) => TypeRef(NoPrefix, minter.external(fqn, simpleName(fqn)))
       case None      => TypeRef(NoPrefix, minter.external("java.lang.Object", "Object"))
 
-  /** Java VARARGS at the CALL SITE. `T...` is emitted `Array[T]`, so a call passing elements
-    * POSITIONALLY has to materialize the array java would build; an already-array or generic
-    * component is left alone. Stops at the program's EDGE (ENGINE-LIMITS K6.5): an EXTERNAL
-    * callee's `T...` is a class file scalac reads as REPEATED, so it gets `Tree.Repeated`
-    * (emitted as elements, no spread syntax) instead of a pack. Ownership decided STRUCTURALLY
-    * (§4.56) from the declaring type being a shadow, never from the name. */
-  /** JS-G38's question, as a function of the vararg slot: does the argument ALREADY hold the
-    * array java would otherwise build? Named because [[varargPack]] and [[callConsults]] both
-    * ask it (ENGINE-LIMITS F8). Rules: the CAST wins where there is one (outermost first); a
-    * PRIMITIVE array component must match exactly (java packs `int[]` at `Object...` into ONE
-    * element, CLAUDE.md §4.4); a bare `null` IS the array; ARRAY DIMENSION decides the
-    * reference case via `dims(arg) >= dims(comp) + 1` (java packs at `H[]...`, ENGINE-LIMITS G26). */
+  /** Java VARARGS at the CALL SITE (`T...` emitted `Array[T]`) — materializes the array java
+    * would build; already-array/generic components pass through. Stops at an EXTERNAL callee's
+    * `T...` (class file, read REPEATED — K6.5). [[varargHoldsArray]] below: cast wins, primitive
+    * component must match exactly, bare `null` counts, array dimension decides (G26, F8). */
   /* …and every one of the three reads below is BARE, because `varargPack` — the TRANSLATION
      this predicate is about, which calls this very function — reads all three bare within ten
      lines: `arr.getComponentType` in its own `comp`, `e.getTypeCasts` in `expr`'s cast fold,
@@ -992,11 +951,9 @@ private[spoon] trait SpoonTirBodyStmts:
         classOwned(tp) && recvSubst.get(tp.getSimpleName).exists(tpNameableHere) =>
         cast(recvSubst(tp.getSimpleName))
       // through the BARRIER-AWARE frame — *is this name WRITABLE here*, not just *does it
-      // resolve* (`resolveTypeParam` sees every enclosing scope by name, including ones java
-      // forbids naming, e.g. a `static` member and its class's, JLS 8.4.4). [[tpAccessibleHere]]
-      // is used by every other cast this frontend builds — deliberately WEAKER than
-      // `sameVarInScope`, which was tried and wrong in both directions (measured 0 -> 2 on two
-      // ports, §5's narrowing-is-not-exempt).
+      // resolve* (`resolveTypeParam` sees every enclosing scope, including names java forbids).
+      // [[tpAccessibleHere]] is used by every cast this frontend builds — deliberately WEAKER
+      // than `sameVarInScope` (measured 0 -> 2 on two ports, §5's narrowing-is-not-exempt).
       case Some(tp: CtTypeParameterReference) if isNull && tpAccessibleHere(tp) =>
         cast(tp)
       case _ => t
@@ -1083,12 +1040,10 @@ private[spoon] trait SpoonTirBodyStmts:
     Tree.Match(expr(s.getSelector), withDefault, unitT, originOf(s))
 
   /** A SWITCH EXPRESSION — JLS 15.28, catalog `JS-S09`. `CtSwitchExpression` does NOT extend
-    * `CtSwitch`, so the statement arm never caught it; `Tree.Match` already renders in either
-    * position, so only the arms differ. THREE JLS rules: no fall-out arm (must be EXHAUSTIVE,
-    * 15.28.1); an arm produces a VALUE (tail `yield` peeled into the result, others stay
-    * [[Tree.Yield]] under a boundary); `yield` NOT unwrapped here (only [[caseBody]] undoes
-    * Spoon's arrow-arm normalisation for statements). Fallthrough/break/label rules shared with
-    * the statement form via [[switchArms]] (ENGINE-LIMITS F8). */
+    * `CtSwitch`; `Tree.Match` renders in either position, only the arms differ. THREE JLS rules:
+    * no fall-out arm (EXHAUSTIVE, 15.28.1); an arm produces a VALUE (tail `yield` peeled, others
+    * stay [[Tree.Yield]] under a boundary); `yield` not unwrapped here. Fallthrough/break/label
+    * shared with the statement form via [[switchArms]] (ENGINE-LIMITS F8). */
   private[spoon] def switchExpr(sw: CtSwitchExpression[?, ?])(using Obligations): Term =
     val resT = ty(sw)
     // JS-S09 — always fires: every switch expression needs the image, and choosing `Tree.Match`
@@ -1114,13 +1069,11 @@ private[spoon] trait SpoonTirBodyStmts:
       case other => other
     }
 
-  /** ONE java switch's arms, at either of its two positions.
-    *
-    * The fallthrough lowering, the labelled-vs-unlabelled break distinction and the empty-arm
-    * label accumulation are the same rules for a statement and for an expression — java's
-    * colon form falls through in both — so they are stated once. What the caller supplies is
-    * how an arm's BODY becomes a term: a statement arm is a `Unit` block, an expression arm is
-    * a block whose result is the arm's value. */
+  /** ONE java switch's arms, at either of its two positions. The fallthrough lowering, the
+    * labelled-vs-unlabelled break distinction and the empty-arm label accumulation are the same
+    * rules for a statement and an expression — java's colon form falls through in both — so
+    * they are stated once. What the caller supplies is how an arm's BODY becomes a term: a
+    * statement arm is a `Unit` block, an expression arm's block result is the arm's value. */
   private[spoon] def switchArms(cases: List[CtCase[?]], el: CtElement, selT: TypeRepr, resT: TypeRepr,
                          isExpr: Boolean)(using Obligations): List[Tree.CaseDef] =
     // per case: (body without a trailing break, terminated?)
@@ -1193,14 +1146,11 @@ private[spoon] trait SpoonTirBodyStmts:
     }
     out.result()
 
-  /** one case LABEL — the SPLIT `JS-S10` is about. A TYPE PATTERN (JLS 14.11.1) lowers exactly
-    * to `Tree.TypePattern` + `CaseDef.guard`. A RECORD pattern too (`JS-C43`'s derived
-    * `unapply`, see [[recordPattern]]). An UNNAMED pattern stays refused (no source Spoon 11.5
-    * builds one, ENGINE-LIMITS T19). MARKER minted HERE, not via `expr`'s default, since
-    * `CtCasePattern` carries no source POSITION (falls back to the unit-fatal throw otherwise) —
-    * carries the SELECTOR's type, not the pattern's own `java.lang.Void`. The binding is an
-    * ordinary local: probed, its `CtLocalVariable` carries its own valid position even though
-    * the wrapper does not, so two same-named arms intern as two symbols correctly. */
+  /** one case LABEL — the SPLIT `JS-S10` is about. A TYPE PATTERN (JLS 14.11.1) lowers to
+    * `Tree.TypePattern` + `CaseDef.guard`; a RECORD pattern too ([[recordPattern]]). An UNNAMED
+    * pattern stays refused (no source builds one, ENGINE-LIMITS T19). MARKER minted HERE since
+    * `CtCasePattern` carries no source POSITION — carries the SELECTOR's type. The binding is an
+    * ordinary local, interning correctly even when two same-named arms shadow. */
   private[spoon] def caseLabel(e: CtExpression[?], c: CtCase[?], selT: TypeRepr): Term = e match
     case cp: CtCasePattern => cp.getPattern match
       case tp: CtTypePattern =>
@@ -1216,12 +1166,10 @@ private[spoon] trait SpoonTirBodyStmts:
     case other => expr(other)
 
   /** `case Point(int x, int y) ->` — java's RECORD PATTERN, as scala's constructor pattern. THE
-    * ONE DISTINCTION: JLS 14.30.2's UNCONDITIONAL component pattern matches `null`, a narrowing
-    * one (`Tree.TypePattern`) does not — scala needs `Tree.BindPattern` for the first. Asked of
-    * SPOON's `isSubtypeOf` (JLS 4.10), narrowing arm taken where it cannot answer. A component
-    * that is neither shape is refused IN PLACE. The RECORD ITSELF must be one this run LOWERS —
-    * `JS-C43`'s derived `unapply` names nothing for a dependency's record — decided
-    * STRUCTURALLY (does this parse hold a `CtRecord` declaration, §4.56), never by name. */
+    * ONE DISTINCTION: JLS 14.30.2's UNCONDITIONAL component matches `null` ([[Tree.BindPattern]]),
+    * a narrowing one ([[Tree.TypePattern]]) does not — asked of SPOON's `isSubtypeOf`. A
+    * component that is neither shape is refused IN PLACE. The RECORD must be one this run LOWERS
+    * (`JS-C43`'s `unapply`), decided STRUCTURALLY (§4.56), never by name. */
   private[spoon] def recordPattern(rp: CtRecordPattern, c: CtCase[?], selT: TypeRepr): Term =
     val rt   = tpe(rp.getRecordType)
     val at   = originOf(c)
@@ -1259,13 +1207,11 @@ private[spoon] trait SpoonTirBodyStmts:
   private[spoon] def unconditional(component: Option[CtTypeReference[?]], pattern: CtTypeReference[?]): Boolean =
     component.exists(ct => ct == pattern || ct.isSubtypeOf(pattern))
 
-  /** one switch-EXPRESSION arm's statements as a term whose VALUE is the arm's.
-    *
-    * The last statement is the arm's result, and where it is a `yield` the node is peeled: a
-    * tail `yield` is what a scala arm already means, so carrying it would make every arm need a
-    * boundary it does not want. Everything else is left exactly as translated — a `Throw`, or
-    * an `if` whose branches all jump, is `Nothing` in scala and conforms wherever the switch's
-    * type is used, which is java's own definite-completion rule (JLS 15.28.1) doing the work. */
+  /** one switch-EXPRESSION arm's statements as a term whose VALUE is the arm's. The last
+    * statement is the arm's result; a tail `yield` is peeled, since that is what a scala arm
+    * already means and carrying it would need a boundary nobody wants. Everything else is left
+    * exactly as translated — a `Throw`, or an `if` whose branches all jump, is `Nothing` in
+    * scala and conforms, java's own definite-completion rule (JLS 15.28.1) doing the work. */
   private[spoon] def armValue(ss: List[CtStatement], el: CtElement, resT: TypeRepr): Term =
     val (sts, trail)  = stmts(ss)
     val (init, value) = sts.lastOption match
@@ -1283,11 +1229,9 @@ private[spoon] trait SpoonTirBodyStmts:
     case _                 => t
 
   /** is this an ENHANCED switch STATEMENT — one java requires EXHAUSTIVE (JLS 14.11.2), so it
-    * does NOT fall out? Asks BOTH of 14.11.2's disjuncts: the LABEL shape (a pattern/`null`), and
-    * the SELECTOR'S TYPE (a QUALIFIED ENUM CONSTANT betrays nothing in the label list, JEP 441 —
-    * javac compiles a `MatchException` throw where a naive read would answer classic). Deciding
-    * from the label alone is WRONG (measured against javac). `noClasspath` unresolvable →
-    * `false` (§4.6, the pre-existing behaviour). Both throw where it fires, different classes. */
+    * does NOT fall out? Asks BOTH disjuncts: the LABEL shape, and the SELECTOR'S TYPE (a
+    * QUALIFIED ENUM CONSTANT betrays nothing in the label list, JEP 441). Label alone is WRONG
+    * (measured against javac). `noClasspath` unresolvable → `false` (§4.6, pre-existing). */
   private[spoon] def isEnhanced(cases: List[CtCase[?]], selector: CtExpression[?]): Boolean =
     cases.exists(_.getCaseExpressions.asScala.exists {
       case _: CtCasePattern      => true
@@ -1304,13 +1248,10 @@ private[spoon] trait SpoonTirBodyStmts:
     "java.lang.String")
 
   /** does the selector's type PROVABLY resolve to something outside [[ClassicSelectorTypes]]?
-    *
-    * `false` is the answer for everything this cannot see — an absent type, a name that is not
-    * in the set but whose declaration does not resolve, a type parameter, an annotation type —
-    * and that default is the pre-existing behaviour rather than a fabricated fact (§4.6): it
-    * says *this switch keeps the fall-out arm java's classic form has*, which is what every
-    * switch in this engine's corpora got before the question was asked at all. The one lookup
-    * wrapped is the RESOLUTION, where an absent value is normal under `noClasspath`. */
+    * `false` is the answer for everything this cannot see — an absent type, an unresolved name,
+    * a type parameter, an annotation type — the pre-existing behaviour rather than a fabricated
+    * fact (§4.6): keeps the fall-out arm java's classic form has. The one lookup wrapped is the
+    * RESOLUTION, where an absent value is normal under `noClasspath`. */
   private[spoon] def selectorOutsideClassicSet(selector: CtExpression[?]): Boolean =
     val ref = try Option(selector.getType) catch { case _: Throwable => None }
     ref.exists { r =>

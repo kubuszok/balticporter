@@ -1694,12 +1694,11 @@ private[spoon] final class Builder(subs: Substitutions = Substitutions.none,
     }
     (out.toList, dropped.toList)
 
-  /** Java's single-value shorthand for an ARRAY-typed annotation element.
-    *
+  /** Java's single-value shorthand for an ARRAY-typed annotation element —
     * `@SuppressWarnings("unchecked")` means `value = {"unchecked"}`. Scala has no such shorthand
     * and wants `Array("unchecked")`, so the element's DECLARED type decides whether to wrap.
-    * Left alone when the declaration cannot be read — a wrong wrap would be worse than the
-    * compile error it replaces. */
+    * Left alone when the declaration cannot be read — a wrong wrap is worse than the compile
+    * error it replaces. */
   private[spoon] def arrayShorthand(ref: CtTypeReference[?], key: String, e: CtExpression[?], t: Term): Term =
     if e.isInstanceOf[CtNewArray[?]] then t
     else
@@ -1819,13 +1818,10 @@ private[spoon] final class Builder(subs: Substitutions = Substitutions.none,
     throw balticporter.core.Unsupported(path, line, what)
 
   /** MINT A MARKER instead of failing the whole compilation unit (DESIGN.md §6.2/§6.5) — the port
-    * still doesn't ship (emission gate refuses any open marker, §6.4), but the failure is now the
-    * size of the construct and the run REPORTS which one, where, and a possible fix. Falls back
-    * to [[unsupported]]'s throw only where there is no position to key [[Tree.Unportable.markerKey]] on. */
-  /** `about` is the node the refusal is ABOUT, where that differs from the node the marker STANDS
-    * at — needed where the unlowered node has no source POSITION (e.g. Spoon's unpositioned
-    * `CtCasePattern`), so the marker anchors on a positioned enclosing node while the KIND still
-    * comes from the node with no arm. */
+    * still doesn't ship (emission gate refuses any open marker, §6.4), but the run REPORTS which
+    * construct, where, and a possible fix. */
+  /** `about` is the node the refusal is ABOUT, where that differs from the marker's own
+    * POSITION (e.g. Spoon's unpositioned `CtCasePattern`) — KIND still comes from the no-arm node. */
   private[spoon] def unlowered(el: CtElement, what: String, tpe: TypeRepr,
                         kind: Option[UnportableKind] = scala.None,
                         about: CtElement = null): Term =
@@ -1844,12 +1840,10 @@ private[spoon] final class Builder(subs: Substitutions = Substitutions.none,
         origin = o,
       )
 
-  // -----------------------------------------------------------------------
   /** Translates one method/ctor/field-initializer body into TIR terms, resolving every reference
-    * to a `SymId`. Unmodeled constructs fail loudly via `Unsupported`.
-    * `classId` is the enclosing class (for `this`); `methodId` owns locals.
-    * `anonSelf`/`anonQName`, set only for an ANONYMOUS class's members: the synthetic instance
-    * symbol and Spoon's name for it — `classId` stays the ENCLOSING class regardless. */
+    * to a `SymId`. Unmodeled constructs fail loudly via `Unsupported`. `classId` is the enclosing
+    * class (for `this`); `methodId` owns locals. `anonSelf`/`anonQName` set only for an ANONYMOUS
+    * class's members — `classId` stays the ENCLOSING class regardless. */
   private[spoon] final class BodyTranslator(
       private[spoon] val methodId: SymId, private[spoon] val classId: SymId,
       private[spoon] val anonSelf: SymId = SymId.None, private[spoon] val anonQName: String = ""

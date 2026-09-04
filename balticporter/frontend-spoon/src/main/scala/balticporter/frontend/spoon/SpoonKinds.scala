@@ -2,12 +2,10 @@ package balticporter.frontend.spoon
 
 import balticporter.catalog.{DiffId, Area}
 
-/** WHAT THE FRONTEND CLAIMS ABOUT EACH SPOON NODE KIND -- the half of totality scalac
-  * cannot enforce, since `CtElement` has no sealedness. `NodeKindTotalitySpec` asserts this
-  * registry equals the derived kind set from the spoon-core jar, so an upgrade adding a
-  * kind fails the build until it is classified here. Carries NO OBLIGATIONS -- only what
-  * happens to a kind today, not what a lowering arm owes.
-  */
+/** WHAT THE FRONTEND CLAIMS ABOUT EACH SPOON NODE KIND — the half of totality scalac cannot
+  * enforce, since `CtElement` has no sealedness. `NodeKindTotalitySpec` asserts this registry
+  * equals the derived kind set from the spoon-core jar, so an upgrade adding a kind fails the
+  * build until classified here. Carries NO OBLIGATIONS — only what happens today. */
 object SpoonKinds:
 
   /** what the frontend does with a node of this kind. */
@@ -218,12 +216,10 @@ object SpoonKinds:
 
   val byName: Map[String, Kind] = registry.map(k => k.name -> k).toMap
 
-  // -------------------------------------------------------------------------------------------
-  // THE REFERENCE REGISTRY -- spoon.reflect.reference, kept apart from [[registry]] since
-  // it is derived from a different jar scan (a merged total would answer two questions
-  // with one number). Same TOTALITY ARGUMENT: SpoonTir.tpe's match is ORDERED and its
-  // final arm is the supertype's, so an added reference kind is silently absorbed as an
-  // ordinary class reference.
+  // THE REFERENCE REGISTRY -- spoon.reflect.reference, kept apart from [[registry]] since it is
+  // derived from a different jar scan (a merged total would answer two questions with one
+  // number). Same TOTALITY ARGUMENT: `SpoonTir.tpe`'s match is ORDERED and its final arm is the
+  // supertype's, so an added reference kind is silently absorbed as an ordinary class reference.
 
   /** the reference types that are supertypes or mixins, so no parse produces one.
     *
@@ -265,12 +261,11 @@ object SpoonKinds:
 
   val byRefName: Map[String, Kind] = references.map(k => k.name -> k).toMap
 
-  /** the REGISTRY name for a node the parser actually built. Keyed on Spoon's INTERFACE
-    * names (`CtSwitchExpression`), not the parser's own impl class (`...Impl`) -- resolved
-    * structurally (an impl may sit two classes below its interface) rather than by
-    * stripping `Impl`. Among the interfaces a class carries, the MOST SPECIFIC registered
-    * one wins. Falls back to the class's own simple name for a kind outside the registry,
-    * which `NodeKindTotalitySpec` exists to fail on. */
+  /** the REGISTRY name for a node the parser actually built. Keyed on Spoon's INTERFACE names
+    * (`CtSwitchExpression`), not the impl class (`...Impl`) — resolved structurally, not by
+    * stripping `Impl`. Among the interfaces a class carries, the MOST SPECIFIC registered one
+    * wins. Falls back to the class's own simple name outside the registry, which
+    * `NodeKindTotalitySpec` exists to fail on. */
   def nameOf(cls: Class[?]): String = nameIn(cls, byName)
 
   /** the same rule against the REFERENCE registry -- SpoonTir.tpe's key. Its own resolver

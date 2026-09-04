@@ -1,15 +1,9 @@
 package balticporter.frontend.spoon
 
-// =============================================================================
-// FROZEN — the BIR frontend. New work goes on `SpoonTir`, beside this file.
-//
-// This produces `BUnit`s: the untyped Java IR described (and frozen) at the head of
-// `core/Bir.scala`. `SpoonTir` produces a `Program` — symbol table, cross-reference
-// index, phase pipeline — and that is where every rule since has been written.
-//
-// Kept because liqp and xwiki/flexmark still port through it (the corpus
-// programs are listed in `core/Bir.scala`). Fix what they need; add nothing.
-// =============================================================================
+// FROZEN — the BIR frontend. New work goes on `SpoonTir`, beside this file. Produces `BUnit`s
+// (untyped Java IR, `core/Bir.scala`); `SpoonTir` produces a `Program` and is where every rule
+// since has been written. Kept because liqp and xwiki/flexmark still port through it — fix what
+// they need; add nothing.
 
 import balticporter.core.*
 import balticporter.core.BExpr.*
@@ -22,14 +16,11 @@ import spoon.reflect.reference.*
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** Frontend on Spoon 11.x (ECJ underneath, full-classpath mode, comments enabled).
-  * The only module that sees Spoon types (DESIGN.md §3.2 insulation rule).
-  *
-  * @param preservedAnnotationPrefixes
-  *   annotation packages carried through verbatim, by FQN prefix (CLAUDE.md §1(b) policy: which
-  *   annotations are behaviour-bearing is a fact about a library, never about java). `Nil`
-  *   (default) preserves only `java.lang.Deprecated`; anything else is reported via `unsupported`.
-  */
+/** Frontend on Spoon 11.x (ECJ underneath, full-classpath mode, comments enabled). The only
+  * module that sees Spoon types (DESIGN.md §3.2 insulation rule).
+  * @param preservedAnnotationPrefixes annotation packages carried through verbatim, by FQN prefix
+  *   (CLAUDE.md §1(b): which annotations are behaviour-bearing is a library fact, never java's).
+  *   `Nil` preserves only `java.lang.Deprecated`; anything else reported via `unsupported`. */
 final class SpoonFrontend(preservedAnnotationPrefixes: List[String] = Nil) extends Frontend:
 
   def parse(cfg: FrontendConfig): List[BUnit] =
