@@ -7,7 +7,7 @@ range="${1:-}"; bad=0
 if [ -n "$range" ]; then
   # range mode: only comment blocks made of ADDED lines, and narrative words in added comment lines
   narrative=$(git diff "$range" -- '*.scala' | grep -E '^\+\s*(//|\*|/\*)' | grep -viE 'ENGINE-LIMITS|CLAUDE\.md|DESIGN\.md|subplan' \
-    | grep -iE '\b(wave [0-9]|previously|used to|measured at|the earlier|the first time|initially|no longer)\b' || true)
+    | grep -iE '\b(wave [0-9]|previously|used to (be|match|cost|fire|refuse|drop|emit|read)|measured at|the earlier|the first time|initially|the prior one)\b' || true)
   [ -n "$narrative" ] && { echo "!! narrative in added comments:"; echo "$narrative"; bad=1; }
   blocks=$(git diff -U0 "$range" -- '*.scala' | awk '
     /^\+\+\+ / { f=substr($0,7); n=0; next }
