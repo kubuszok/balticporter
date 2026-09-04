@@ -14,19 +14,14 @@ import balticporter.tir.{CheckReport, Decision, IdiomCandidate, IdiomKind, Idiom
   * "the old symbol is vacated, the new one inherited its positions" — and those need the two
   * programs side by side. `out` is the emitted Scala.
   */
-/** @param sources the java the fixture parsed, `fileName -> code`. Handed to the emitter as its
-  *   `javaSource`, because an in-memory snippet's `Origin.javaPath` names a file that does not
-  *   exist — without it the comment-recovery backstop is the one behaviour no spec could reach,
-  *   which is exactly the shape a fixture must not have.
-  * @param decisions everything the phases RECORDED while they ran (`Pipeline.runTraced`). Carried
-  *   rather than re-derived, because a decision is a value one run owns and the log is drained as
-  *   the pipeline goes; a fixture that re-ran the phases to get it would be asserting about a
-  *   second translation.
-  * @param runtimeMode which delivery the fixture's [[plan]] is derived for. A parameter and not a
-  *   constant: `RuntimeMode.Vendored` writes the support sources into the port instead of
-  *   depending on them, so it is a different `RuntimePlan` and therefore a different set of
-  *   `concreteMembers` reaching the emitter — a distinction no spec could reach while this was
-  *   hard-coded. */
+/** @param sources the java the fixture parsed, `fileName -> code`. Handed to the emitter as
+  *   its `javaSource`, since an in-memory snippet's `Origin.javaPath` names a file that
+  *   does not exist.
+  * @param decisions everything the phases RECORDED while they ran (`Pipeline.runTraced`).
+  *   Carried rather than re-derived, since a decision is a value one run owns.
+  * @param runtimeMode which delivery the fixture's [[plan]] is derived for -- a parameter,
+  *   not a constant, since `RuntimeMode.Vendored` yields a different `RuntimePlan` and a
+  *   different `concreteMembers` set. */
 final case class Ported(before: Program, after: Program, phases: List[Phase],
                         sources: Map[String, String] = Map.empty,
                         decisions: List[Decision] = Nil,
@@ -40,27 +35,16 @@ final case class Ported(before: Program, after: Program, phases: List[Phase],
                           * once more than one phase ran. A spec asserting that its phase accounts
                           * for what it retyped has nowhere else to read it. */
                         rewrites: RewriteLog = RewriteLog.discarding,
-                        /** what every `IdiomPhase` CONSIDERED, drained by the pipeline as it went
-                          * (`balticporter.tir.IdiomLog`).
-                          *
-                          * Here for the reason `decisions` and `rewrites` are: the log is a value
-                          * ONE translation owns and is drained at each phase boundary, so a fixture
-                          * that re-ran the phases to get it would be asserting about a second
-                          * translation. It is also the only surface a spec has for an idiom
-                          * transform's REFUSALS, which are its whole safety argument — a spec that
-                          * could only assert on emitted text would be able to see the conversions
-                          * and nothing the phase declined. */
+                        /** what each phase MOVED, observed by the pipeline
+                          * (`balticporter.tir.Rewrite`) -- taken while the pipeline holds
+                          * the symbol table on BOTH sides of a phase, so it cannot be
+                          * re-derived from `before`/`after` alone once more than one phase
+                          * ran. */
                         idioms: IdiomLog = IdiomLog.discarding,
-                        /** the binder the pipeline bound this translation's policy through —
-                          * including its [[balticporter.tir.ResolutionPlan]].
-                          *
-                          * Here for the reason `decisions` and `idioms` are: a plan is a value ONE
-                          * translation owns and it accumulates as the phases run, so a fixture that
-                          * re-ran them to get it would be asserting about a second translation. It
-                          * is also the only surface a spec has for the THIRD staleness state — a
-                          * selection that bound and was never applied moves no emitted text, no
-                          * check count and no decision, so a spec that could only assert on `out`
-                          * would see nothing at all. */
+                        /** what every `IdiomPhase` CONSIDERED, drained by the pipeline as
+                          * it went (`balticporter.tir.IdiomLog`) -- the only surface a
+                          * spec has for an idiom transform's REFUSALS, its whole safety
+                          * argument. */
                         binder: PolicyBinder =
                           new PolicyBinder(new Program(Nil, SymbolTable(Nil), Xref.build(Nil), MemberIndex.empty),
                                            MemberIndex.empty)):
@@ -84,22 +68,14 @@ final case class Ported(before: Program, after: Program, phases: List[Phase],
   /** the emitted Scala for the whole program. */
   lazy val out: String = emitter.emit
 
-  /** the same program emitted in PREVIEW mode (`DESIGN.md` §7.4).
-    *
-    * A SECOND emitter over the same tree, never a flag on the first: an emitter records its own
-    * source map and its own member digests as it goes (`CLAUDE.md` §5.1), so re-emitting through
-    * one instance would leave a spec asserting about a recording made twice. Two instances, two
-    * recordings, and [[out]] stays exactly the text a real run would ship.
-    *
-    * This is the only fixture surface that can see the engine's emission-side REFUSALS at all:
-    * under `preview = false` — the default every measure lane runs — an unrenderable site emits
-    * its residue string and nothing marks it, so a spec written against [[out]] would be asserting
-    * that a comment is present rather than that the engine refused.
-    *
-    * The EMITTER is exposed and not only its text, because what preview mode adds is a recorded
-    * `Decision.Kind.Unrenderable` (`TirEmitter.emissionDecisions`) beside the rendered marker — and
-    * a spec that could only grep for the marker would be back to a text assertion about the one
-    * thing that exists to be structural. */
+  /** the same program emitted in PREVIEW mode (`DESIGN.md` §7.4). A SECOND emitter over the
+    * same tree, never a flag on the first: an emitter records its own source map and member
+    * digests as it goes, so a shared instance would double-record. The only fixture surface
+    * that can see the engine's emission-side REFUSALS: under `preview = false` an
+    * unrenderable site emits its residue string with nothing marking it, so a spec against
+    * [[out]] alone cannot tell a residue from ordinary text. The EMITTER is exposed, not
+    * only its text, so a spec can read the recorded `Decision.Kind.Unrenderable` beside the
+    * marker. */
   lazy val previewEmitter: TirEmitter = emitterWith(preview = true)
 
   lazy val previewOut: String = previewEmitter.emit
@@ -135,16 +111,10 @@ object PortFixture:
   def port(java: String, phases: Phase*): Ported =
     portIn(RuntimeMode.Dependency, java, phases*)
 
-  /** …with the port having SELECTED a remedy at one or more locations
-    * (`balticporter.core.PortManifest.resolutions`).
-    *
-    * The vocabulary is derived from the phases handed in — every `RemedySource` among them — so a
-    * fixture cannot select a remedy nothing offers, and the ACTIVE set is the KNOWN set by
-    * construction. A spec that wants the two to DIFFER (a selection whose declaring phase this run
-    * does not hold) builds the `ResolutionPlan` directly: that is a question about the PLAN and not
-    * about a translation, and a second vocabulary parameter here would make every caller state a
-    * distinction only one of them is asking about.
-    */
+  /** ...with the port having SELECTED a remedy at one or more locations
+    * (`balticporter.core.PortManifest.resolutions`). The vocabulary is derived from the
+    * phases handed in, so a fixture cannot select a remedy nothing offers. A spec wanting
+    * the two to DIFFER builds the `ResolutionPlan` directly. */
   def portResolving(java: String, resolutions: Map[String, String], phases: Phase*): Ported =
     portIn(RuntimeMode.Dependency, java, resolutions, phases.toList)
 
@@ -204,15 +174,10 @@ object PortFixture:
     Ported(before, after, phases, sources.toMap, log.all, mode, catalog, rewrites, idioms,
            binder)
 
-  /** parse only — for tests about the FRONTEND rather than about a phase.
-    *
-    * `fatal = true`, exactly as [[portIn]] and [[portAllIn]] are, and here the argument is one step
-    * stronger than it is for them: an undischarged obligation is a LOWERING ARM that returned
-    * without consulting a difference the catalog attaches to it, so a frontend-only spec is the
-    * closest possible witness to it. This path took `CatalogLog.discarding` — the log for a caller
-    * that does not want one — so the mode where a hole is an error was off in the one place it is
-    * cheapest to see, and every spec here would have gone on passing over a lowering that had
-    * stopped asking. */
+  /** parse only -- for tests about the FRONTEND rather than about a phase. `fatal = true`,
+    * exactly as [[portIn]]/[[portAllIn]], and here one step stronger: an undischarged
+    * obligation is a LOWERING ARM that returned without consulting an attached difference,
+    * so a frontend-only spec is the closest witness to it. */
   def parse(java: String): Program = parseWith(java)._1
 
   /** …and the LOG beside it, so "is this path fatal" is a question a spec can ask. The three
@@ -264,28 +229,16 @@ abstract class PortSuite extends munit.FunSuite:
     assert(p.before.usagesOf(id).nonEmpty, s"$fullName had no usages before the phase — the fixture proves nothing")
     assertEquals(p.after.usagesOf(id), Nil, s"$fullName is still used after the phase")
 
-  // ---------------------------------------------------------------------------------------------
-  // STRUCTURAL assertions.
-  //
-  // The four above all read EMITTED TEXT, and text is the assertion a spec reaches for when it has
-  // nothing better — which is exactly how a rule comes to pass the corpus without being right
-  // (`CLAUDE.md` §3). Three facts about a port are not in its text at all: which non-mechanical
-  // DECISION the engine recorded (`decisions.tsv`, §4.575), which FINDING a check produced
-  // (`findings.tsv`, `DESIGN.md` §6.3), and what the engine REFUSED to render (preview mode, §7.4).
-  // A spec that cannot assert on those can only assert that some string is present, and a string is
-  // present for many reasons.
-  // ---------------------------------------------------------------------------------------------
+  // STRUCTURAL assertions. The four above all read EMITTED TEXT -- the assertion a spec
+  // reaches for when it has nothing better. Three facts are not in the text at all: which
+  // non-mechanical DECISION the engine recorded, which FINDING a check produced, and what
+  // the engine REFUSED to render (preview mode).
 
-  /** a decision of `kind` was RECORDED by the phases that ran.
-    *
-    * `about` is matched as a substring of `subjectFqn` — the name the subject had AT DECISION TIME,
-    * which is the only form that survives a later rename (`Decision`'s own rule). Empty matches any
-    * subject.
-    *
-    * Note what this asserts and what it does not: that the engine recorded the decision, never that
-    * a porter note for it reached the code. Those are two directions of one contract and
-    * `NoteCoverageCheck` is what holds both; a fixture asserting only the first would be satisfied
-    * by a decision nobody can find from the emitted file. */
+  /** a decision of `kind` was RECORDED by the phases that ran. `about` is matched as a
+    * substring of `subjectFqn` -- the name the subject had AT DECISION TIME, the only form
+    * that survives a later rename. Empty matches any subject. Asserts only that the engine
+    * recorded the decision, never that a porter note reached the code
+    * (`NoteCoverageCheck` holds both). */
   def assertDecides(p: Ported, kind: Decision.Kind, about: String = "")(using munit.Location): Unit =
     if !p.decisions.exists(d => d.kind == kind && d.subjectFqn.contains(about)) then
       fail(s"no $kind decision${if about.isEmpty then "" else s" about a subject containing '$about'"}" +
@@ -298,15 +251,10 @@ abstract class PortSuite extends munit.FunSuite:
     if hits.nonEmpty then
       fail(s"$kind was recorded and should not have been:\n${hits.map("  " + render(_)).mkString("\n")}")
 
-  // ---------------------------------------------------------------------------------------------
-  // IDIOM candidates — the surface an idiom transform's SAFETY ARGUMENT is asserted on.
-  //
-  // An idiom transform moves code that already means the right thing, so its licence is not a suite
-  // result but a REFUSAL ENUMERATION: every behavioural difference between the java shape and the
-  // scala shape is made impossible by a guard, made impossible by the emitted shape, or COUNTED. A
-  // spec that could only assert on emitted text would see the conversions and nothing the phase
-  // declined — which is the half that carries the argument.
-  // ---------------------------------------------------------------------------------------------
+  // IDIOM candidates -- the surface an idiom transform's SAFETY ARGUMENT is asserted on. Its
+  // licence is not a suite result but a REFUSAL ENUMERATION: every behavioural difference is
+  // made impossible by a guard, made impossible by the emitted shape, or COUNTED. A spec
+  // asserting only emitted text would see the conversions and nothing the phase declined.
 
   /** the phase CONVERTED a site of `kind`, at a subject containing `about`. */
   def assertIdiomConverts(p: Ported, kind: IdiomKind, about: String = "")(using munit.Location): Unit =
@@ -376,19 +324,13 @@ abstract class PortSuite extends munit.FunSuite:
   private def renderFindings(fs: Seq[CheckReport.Finding]): String =
     if fs.isEmpty then "  (none)" else fs.map("  " + _.render).mkString("\n")
 
-  /** a catalog row was CONSULTED while this fixture was lowered — the structural assertion for
-    * `DESIGN.md` §2.8's obligation surfaces.
-    *
-    * The one an edge-case suite opens with, and it asserts something no text assertion can reach:
-    * that the engine CONSIDERED the difference at this construct. `assertEmits` can only say that
-    * some string is present, and a string is present for many reasons — including a lowering that
-    * happened to produce the right text without ever asking the question, which is precisely the
-    * shape that regresses the day an arm is rewritten.
-    *
-    * `fired` is the second half and is separate on purpose: a consult that is reached and never
-    * applies is the normal state of most rows at most sites, and a suite for the difference's own
-    * edge case wants to say the difference APPLIED here. `assertConsults(p, id, fired = true)` is
-    * that; the default asserts only that the branch was live. */
+  /** a catalog row was CONSULTED while this fixture was lowered -- the structural assertion
+    * for `DESIGN.md` §2.8's obligation surfaces. Asserts that the engine CONSIDERED the
+    * difference at this construct, which `assertEmits` cannot: a string can be present for
+    * many reasons, including a lowering that produced the right text without asking.
+    * `fired` is separate on purpose: a consult that never applies is the normal state of
+    * most rows at most sites; `assertConsults(p, id, fired = true)` asserts the difference
+    * APPLIED here. */
   def assertConsults(p: Ported, id: DiffId, fired: Boolean = false)(using munit.Location): Unit =
     val n = reached(p).consulted(id)
     if n == 0 then
@@ -408,14 +350,10 @@ abstract class PortSuite extends munit.FunSuite:
     if n != 0 then
       fail(s"$id was consulted $n time(s) and should not have been at this construct")
 
-  /** THE LOG WITH BOTH SURFACES IN IT — forcing the emission first, then reading.
-    *
-    * There are two obligation dispatches and only one of them has run by the time a fixture is
-    * constructed. The frontend's consults are recorded while `port(…)` parses; the EMITTER's are
-    * recorded while `out` renders, and `out` is lazy — so an assertion that read the log directly
-    * would report every `Attaches.Rendered` row as never consulted, in a suite whose whole subject
-    * is that they are. Forcing here rather than in each assertion is the F8 shape avoided: one
-    * function, so a fourth assertion added tomorrow cannot be the one that forgets. */
+  /** THE LOG WITH BOTH SURFACES IN IT -- forcing the emission first, then reading. Only the
+    * frontend's consults have run by the time a fixture is constructed; the EMITTER's
+    * consults run lazily on `out`, so reading the log directly would report every
+    * `Attaches.Rendered` row as never consulted. */
   private def reached(p: Ported): CatalogLog =
     val _ = p.out
     p.catalog
