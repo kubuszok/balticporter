@@ -4,7 +4,7 @@ import balticporter.testkit.PortSuite
 import balticporter.tir.{IdiomCandidate, IdiomCheck, IdiomKind, IdiomLog, IdiomVerdict, Origin, Sam, Tree}
 import balticporter.transform.{BeanPropertyTransform, ReturnThisCensus, SamLambda, SamLambdaTransform}
 
-/** WAVE 0 OF THE IDIOM LAYER — the census phases, and the three lanes they feed. */
+/** The idiom census phases and the three lanes they feed. */
 class IdiomCensusSpec extends PortSuite:
 
   // -------------------------------------------------------------------------------------------

@@ -9,7 +9,7 @@
 
 /** Injected replacement: `Array<T>` retargets to `DynamicArray`, and three methods dispatch on a
   * non-literal boolean identity flag `BoolDispatch` cannot handle statically, plus a nested
-  * `Array.ArrayIterable` reference that no longer exists after the retarget. Drop-in parity with
+  * `Array.ArrayIterable` reference the retarget removes. Drop-in parity with
   * sge's hand port (`Iterable[A]`, parenless `iterator`): both a `DynamicArray[A]` constructor
   * (what emitted ashley code passes) and an `ArrayBuffer[A]` one (sge's own tests) are provided. */
 package sge.ecs.utils
