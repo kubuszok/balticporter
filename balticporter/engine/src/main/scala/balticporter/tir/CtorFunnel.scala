@@ -1476,7 +1476,7 @@ object CtorFunnel:
         * Roots that target the parent root directly have empty lists. */
       postBodyValues: Map[SymId, List[Term]],
       /** The parent secondary's params that the post-body uses — `(paramDef, callerArg)`.
-        * Used to derive synthesised parameter names and types. */
+        * Source of the synthesised parameter names and types. */
       postBodyParams: List[(Tree.ValDef, Term)],
       /** The raw post-body statements (un-substituted for post-body params). */
       rawPostBody: List[Statement],
