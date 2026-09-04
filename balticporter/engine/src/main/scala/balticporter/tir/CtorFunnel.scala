@@ -401,8 +401,8 @@ object CtorFunnel:
 
     /** Names the guard that refused parent-delegation resolution, or `None` if not refused.
       * Used by `OmissionCheck` to produce a finding naming the refusal guard.
-      * With post-bodies carried through parameters (not inlined), the only remaining refusals
-      * are `super.m()` or `return` in the post-body. // ENGINE-LIMITS C3 item 4 */
+      * Remaining refusals: `super.m()` or `return` in the post-body, or a loop in the
+      * delegation head around a doubled non-simple argument. // ENGINE-LIMITS C3 */
     def inlineDelegationRefused(cd: Tree.ClassDef, d: Tree.DefDef): Option[String] =
       val p = decided.getOrElse(cd.symbol, Plan.none)
       // only for classes that are NOT synthesised (the synthesis succeeded without this root)
@@ -426,8 +426,8 @@ object CtorFunnel:
                   case Some(_) => scala.None // resolution succeeded — no refusal
                   case scala.None =>
                     Some("parent-delegation resolution refused: the parent constructor's " +
-                      "post-body contains `super.m()` or `return`, which dispatch wrongly " +
-                      "or leave the wrong frame in a subclass")
+                      "post-body contains `super.m()` or `return`, or a loop wraps a " +
+                      "delegation-head argument used more than once")
           }
 
     // ---- the delegation itself: the ONE answer the emitter renders and the check counts ----
@@ -846,6 +846,35 @@ object CtorFunnel:
     case Tree.Typed(e, _, _, _)                         => simple(e)
     case Tree.ArrayLength(a, _, _)                      => simple(a)
     case _                                              => false
+
+  /** Simplify `if (nullExpr != null)` to the else branch when the condition is always false.
+    * Avoids a Scala 3 parser issue with `null.asInstanceOf[T] != null` in `this(...)` arguments
+    * where the true branch contains a block. // ENGINE-LIMITS C3 */
+  private def simplifyNullIf(t: Term): Term =
+    def isNull(t: Term): Boolean = t match
+      case Tree.Literal(Constant.NullC, _, _)  => true
+      case Tree.Typed(e, _, _, _)              => isNull(e)
+      case Tree.Commented(_, e)                => isNull(e)
+      case _                                   => false
+    t match
+      case Tree.If(cond, _, el, _, _) if isNullCompare(cond) => simplifyNullIf(el)
+      case _                                                 => t
+  private def isNullCompare(cond: Term): Boolean = cond match
+    case Tree.Apply(Tree.Select(lhs, _, _, _), List(rhs), _, _, _) => isNull(lhs) && isNull(rhs)
+    case _ => false
+  private def isNull(t: Term): Boolean = t match
+    case Tree.Literal(Constant.NullC, _, _)  => true
+    case Tree.Typed(e, _, _, _)              => isNull(e)
+    case Tree.Commented(_, e)                => isNull(e)
+    case _                                   => false
+
+  /** True when `t` contains an `Opaque` node whose text is in `names`. // ENGINE-LIMITS C3 */
+  private def containsOpaque(t: Any, names: Set[String]): Boolean = t match
+    case Tree.Opaque(txt, _, _, _) => names.exists(n => txt.contains(n))
+    case xs: Iterable[?]        => xs.exists(containsOpaque(_, names))
+    case Some(x)                => containsOpaque(x, names)
+    case p: Product             => p.productIterator.exists(containsOpaque(_, names))
+    case _                      => false
 
   /** True for classes extending a JDK throwable (fixed constructor set). */
   private def jdkThrowableParent(program: Program, cd: Tree.ClassDef): Boolean =
@@ -1322,7 +1351,16 @@ object CtorFunnel:
               rr.rawPostBody.map(StandardTraversal.mapStat(retypePh, _))
           (List(("via$pb", boolType)), retypedBody)
         case _ => (Nil, Nil)
-      val allSlots    = sup ++ pbSlots ++ fs.map(s => (s.name, s.tpe))
+      // delegation-head slots: a doubled non-simple argument bound once; the extends clause reads
+      // `if (dhSlot != null) <expr> else supSlot` (C3)
+      val dhSuperExprs = resolvedResult.map(_.delegHeadSuperExprs).getOrElse(Map.empty)
+      val dhSlotList = resolvedResult.map(_.delegHeadSlots).getOrElse(Nil)
+      val dhSlots: List[(String, TypeRepr)] = dhSlotList.map { (pv, _) =>
+        val pName = program.symbolOf(pv.symbol).map(_.name).getOrElse("p")
+        val slotType = ParentSubst.subst(pv.tpt.tpe, pbSubst)
+        (s"${pName}$$dh", slotType)
+      }
+      val allSlots    = sup ++ dhSlots ++ pbSlots ++ fs.map(s => (s.name, s.tpe))
       // card 4e: detect if we added a boolean guard for value-typed post-body slots, so the
       // delegation values are prepended with the guard value.
       val pbHasBoolGuard = pbSlots.headOption.exists(_._1 == "via$pb") &&
@@ -1336,14 +1374,43 @@ object CtorFunnel:
               Constant.BoolC(contributes), pbSlots.head._2, cd.origin)
             boolVal :: rawPbVals
           else rawPbVals
-        r.symbol -> (superValues(r.symbol) ++ pbVals ++ values.getOrElse(r.symbol, Nil))
+        val dhVals = resolvedResult.map(_.delegHeadValues.getOrElse(r.symbol, Nil)).getOrElse(Nil)
+        val hasDhContrib = resolvedResult.exists(rr =>
+          rr.delegHeadValues.get(r.symbol).exists(_.exists {
+            case Tree.Literal(Constant.NullC, _, _) => false
+            case _                                  => true
+          }))
+        val sv = if !hasDhContrib then superValues(r.symbol)
+          else superValues(r.symbol).zipWithIndex.map { (ea, i) =>
+            if dhSuperExprs.contains(i) then
+              Tree.Literal(Constant.NullC, sup.lift(i).map(_._2).getOrElse(TypeRepr.NoType), cd.origin): Term
+            else ea
+          }
+        r.symbol -> (sv ++ dhVals ++ pbVals ++ values.getOrElse(r.symbol, Nil))
       }.toMap
       // C3: per-java-ctor delegation for child resolution. Roots are directly from delegations;
       // non-roots follow their this(...) chain and compose substitutions.
       val ra = buildRootArgs(program, cd, roots, delegations)
       def synthesise(mark: Option[String]): Option[Plan] =
         val o = cd.origin
-        Some(Plan(scala.None, sup.map((n, ft) => Tree.Opaque(n, ft, o)), Nil, synthetic = allSlots,
+        val superArgsTerms = sup.zipWithIndex.map { case ((n, ft), k) =>
+          if dhSuperExprs.contains(k) then
+            val supRef = Tree.Opaque(n, ft, o)
+            val dhExpr = dhSuperExprs(k)
+            val dhSlotName = dhSlotList.headOption.map { (pv, _) =>
+              val nm = program.symbolOf(pv.symbol).map(_.name).getOrElse("p")
+              s"${nm}$$dh"
+            }.getOrElse("dh$0")
+            val dhSlotType = dhSlots.headOption.map(_._2).getOrElse(TypeRepr.NoType)
+            val dhRef = Tree.Opaque(dhSlotName, dhSlotType, o)
+            val nullLit = Tree.Literal(Constant.NullC, TypeRepr.NoType, o)
+            Tree.Opaque.spliced(
+              List(s"(if (", s" != null) ", s" else ", s")"),
+              List(dhRef, dhExpr, supRef),
+              ft, o)
+          else Tree.Opaque(n, ft, o)
+        }
+        Some(Plan(scala.None, superArgsTerms, Nil, synthetic = allSlots,
                   marker = mark, superSlots = sup.size, fieldSlots = fs,
                   delegations = delegations, consumed = consumedRuns, notSlot = refusedFields,
                   postBodySlots = pbSlots, primaryPostBody = pbPostBody,
@@ -1596,6 +1663,19 @@ object CtorFunnel:
       /** Parent's synthesised primary's slot types, when resolved through a parent plan rather
         * than a unique java root. Overrides `formalsOf` in the caller. // ENGINE-LIMITS C3 */
       resolvedFormals: Option[List[TypeRepr]] = scala.None,
+      /** Delegation-head slots: parent params used >1x whose caller arg is non-simple, bound to
+        * synthesised slots to avoid double evaluation. `(paramDef, firstCallerArg)` — the
+        * paramDef's type is the slot type; the super arg at that formal's position is an
+        * expression referencing the slot. // ENGINE-LIMITS C3 */
+      delegHeadSlots: List[(Tree.ValDef, Term)] = Nil,
+      /** Per-root values for delegation-head slots, in the same order as [[delegHeadSlots]].
+        * Roots that did not go through the doubled parameter have JVM default values. */
+      delegHeadValues: Map[SymId, List[Term]] = Map.empty,
+      /** Per super-arg index, the effective-arg expression that references delegation-head slot
+        * Opaques (e.g., `region$$dh != null ? Array.with(region$$dh) : null`). Only positions
+        * where a delegation-head slot was introduced; other positions use the normal super slot.
+        * The Opaque names must be substituted to the slot names before use. */
+      delegHeadSuperExprs: Map[Int, Term] = Map.empty,
   )
 
   /** Resolve diverging roots through the parent's delegation chain, so they converge on the
@@ -1633,7 +1713,10 @@ object CtorFunnel:
     if resolved.exists(_.isEmpty) then scala.None
     else
       val flat = resolved.flatten
-      val argsMap = flat.map((sym, r) => sym -> r.effectiveArgs).toMap
+      // C3: simplify `if (null != null) A else B` to `B` in effective args — the substitution
+      // of a null callerArg into a null-check produces a tautologically false condition whose
+      // rendering (`null.asInstanceOf[T] != null`) triggers a Scala 3 parser issue in `this(...)`.
+      val argsMap = flat.map((sym, r) => sym -> r.effectiveArgs.map(simplifyNullIf)).toMap
       // verify all roots now target the same parent constructor and same arity
       val effectiveArities = argsMap.values.map(_.size).toList.distinct
       if effectiveArities.sizeIs != 1 then scala.None
@@ -1664,8 +1747,42 @@ object CtorFunnel:
         }.toMap
         // card 4e: track which roots went through a secondary that has a post-body.
         val withPb = flat.collect { case (sym, r) if r.postBody.nonEmpty => sym }.toSet
+        // C3: delegation-head slots — parameters used >1x in the delegation head with
+        // non-simple caller args, bound to synthesised slots.
+        val allDhSlots = flat.flatMap(_._2.delegHeadSlots)
+        val seenDh = collection.mutable.Set[SymId]()
+        val uniqueDhSlots = allDhSlots.filter { (p, _) =>
+          if seenDh(p.symbol) then false else { seenDh += p.symbol; true }
+        }
+        // Per-root values for delegation-head slots. Roots that did NOT go through the doubled
+        // param get JVM default or null.
+        val dhValues = flat.map { (sym, r) =>
+          val contributed = r.delegHeadSlots.map((p, v) => p.symbol -> v).toMap
+          sym -> uniqueDhSlots.map { (pv, _) =>
+            contributed.getOrElse(pv.symbol,
+              javaDefault(program, pv.tpt.tpe, cd.origin)
+                .getOrElse(Tree.Literal(Constant.NullC, TypeRepr.NoType, cd.origin): Term))
+          }
+        }.toMap
+        // Identify which super-arg positions use delegation-head slot Opaques. For each
+        // position, pick the expression from the FIRST root that has a delegation-head slot
+        // (all roots produce structurally equivalent expressions at that position after slot
+        // substitution). The per-root DIRECT value for that super-slot position is replaced by
+        // the slot value; the expression goes into the extends clause.
+        val dhSuperExprs =
+          if uniqueDhSlots.isEmpty then Map.empty[Int, Term]
+          else
+            val sampleArgs = flat.collectFirst { case (_, r) if r.delegHeadSlots.nonEmpty => r.effectiveArgs }.getOrElse(Nil)
+            val opaqueNames = uniqueDhSlots.map { (p, _) =>
+              val nm = program.symbolOf(p.symbol).map(_.name).getOrElse("p")
+              s"${nm}$$dh"
+            }.toSet
+            sampleArgs.zipWithIndex.collect {
+              case (a, i) if containsOpaque(a, opaqueNames) => i -> a
+            }.toMap
         Some(ResolvedResult(parentRootSym, argsMap, pbValues, uniquePbParams, rawPostBody,
-          needsBoolGuard, withPb))
+          needsBoolGuard, withPb, delegHeadSlots = uniqueDhSlots, delegHeadValues = dhValues,
+          delegHeadSuperExprs = dhSuperExprs))
 
   /** Resolve through the parent's SYNTHESISED PLAN when the parent has 2+ java roots but an
     * already-computed synthesised primary. Substitutes the child's `super(args)` into the
@@ -1721,10 +1838,13 @@ object CtorFunnel:
 
   /** Effective args reaching the parent root, un-substituted post-body, and post-body param
     * dependencies for synthesised parameter creation. // ENGINE-LIMITS C3 */
+  /** @param delegHeadSlots parameters used >1x in the delegation head whose caller arg is
+    *   non-simple -- bound to synthesised slots to avoid double evaluation. // ENGINE-LIMITS C3 */
   final case class InlineResult(
       effectiveArgs: List[Term],
       postBody: List[Statement],
-      postBodyParams: List[(Tree.ValDef, Term)]
+      postBodyParams: List[(Tree.ValDef, Term)],
+      delegHeadSlots: List[(Tree.ValDef, Term)] = Nil
   )
 
   /** Follow `currentCtor`'s delegation chain to `targetRoot`. Post-body params are carried
@@ -1787,9 +1907,23 @@ object CtorFunnel:
           found
         }
         def ok(p: Tree.ValDef, a: Term) = simple(a) || (delegLoopFree && delegCounts.getOrElse(p.symbol, 0) <= 1)
-        if ps.length != callerArgs.length || !ps.zip(callerArgs).forall(ok) then scala.None
+        // C3: parameters used >1x with a non-simple caller arg are bound to delegation-head
+        // slots instead of being refused. The slot is an Opaque reference (simple, so safe to
+        // duplicate in the delegation head), and the caller arg is carried separately. Loops in
+        // the delegation head still refuse (the slot binding does not help a loop body).
+        val needsSlot = ps.zip(callerArgs).filter((p, a) =>
+          !simple(a) && delegCounts.getOrElse(p.symbol, 0) > 1)
+        val hasLoop = needsSlot.nonEmpty && !delegLoopFree
+        if ps.length != callerArgs.length || hasLoop then scala.None
         else
-          val subst = ps.zip(callerArgs).map((p, a) => p.symbol -> a).toMap
+          // for needs-slot params, substitute with an Opaque reference instead of the callerArg
+          val slotRefs = needsSlot.map { (p, a) =>
+            val nm = program.symbolOf(p.symbol).map(_.name).getOrElse("p")
+            p.symbol -> Tree.Opaque(s"${nm}$$dh", p.tpt.tpe, d.origin).asInstanceOf[Term]
+          }.toMap
+          val subst = ps.zip(callerArgs).map { (p, a) =>
+            p.symbol -> slotRefs.getOrElse(p.symbol, a)
+          }.toMap
           given Program = program
           val substPh = new Phase:
             def name = "ctor-inline-subst"
@@ -1808,14 +1942,16 @@ object CtorFunnel:
             postBody.foreach(StandardTraversal.mapStat(scanPh, _))
             if !usable then return scala.None
           val pbParams = ps.zip(callerArgs).filter((p, _) => postBodyUsed(p.symbol))
+          val dhSlots: List[(Tree.ValDef, Term)] = needsSlot
           // apply substitution to the delegation's arguments
           val head = headStmt(d)
           head match
             case Some(Tree.Apply(Tree.Select(_, m, _, _), as, _, _, _)) if isInitName(program, m) =>
               val substArgs = as.map(a => StandardTraversal.mapStat(substPh, a).asInstanceOf[Term])
-              if m == targetRoot then Some(InlineResult(substArgs, postBody, pbParams))
+              if m == targetRoot then Some(InlineResult(substArgs, postBody, pbParams, dhSlots))
               else inlineDelegation(program, m, substArgs, targetRoot, depth + 1)
                 .map(inner => InlineResult(inner.effectiveArgs,
-                  inner.postBody ++ postBody, inner.postBodyParams ++ pbParams))
+                  inner.postBody ++ postBody, inner.postBodyParams ++ pbParams,
+                  inner.delegHeadSlots ++ dhSlots))
             case _ => scala.None
       }

@@ -902,7 +902,10 @@ private[emit] trait TirEmitterMembers:
     * delegation JAVA WROTE (§4.56) and at an ABSTRACT type slot (`Null` does not conform). */
   private[emit] def slotArg(a: Term, slot: Option[TypeRepr], i: Int): String = (a, slot) match
     case (Tree.Literal(Constant.NullC, _, _), Some(t)) if !abstractSlot(t) => s"(null: ${tpe(t)})"
-    case _                                                                => term(a, i)
+    // C3: an `if` with a block body in a synthesised delegation misparsed by Scala 3's
+    // `this(...)` grammar -- parenthesise to delimit the expression. // ENGINE-LIMITS C3
+    case (_: Tree.If, _) => s"(${term(a, i)})"
+    case _               => term(a, i)
 
   /** does this slot's type name a TYPE PARAMETER this program declares? `Null` does not conform to
     * one, which is the same fact `CtorFunnel.javaDefault` refuses to mint a `null` for. */

@@ -288,3 +288,85 @@ class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
     assert(clue(plan.superArgs.isEmpty), "no super args without parent plan")
     assert(clue(!plan.isSynthesised), "no synthesis without parent plan")
   }
+
+  // ---- (h) Delegation-head slot: parameter used >1x with non-simple caller arg. C3 ----
+
+  private val dhSlotSrc =
+    """package demo;
+      |public class Wrapper { Object v; public Wrapper(Object v) { this.v = v; } }
+      |public class DhBase {
+      |  int n;
+      |  Object data;
+      |  public DhBase(int n, Object data) { this.n = n; this.data = data; }
+      |  public DhBase(int n, String reg) { this(n, reg != null ? new Wrapper(reg) : null); }
+      |  public DhBase(String s, int n) { this(n, new String(s)); }
+      |}
+      |public class DhSub extends DhBase {
+      |  public DhSub(int n, Object data) { super(n, data); }
+      |  public DhSub(String s, int n) { super(s, n); }
+      |}
+      |""".stripMargin
+
+  private lazy val dhSlotProgram = Pipeline.run(SpoonTir.fromSource(dhSlotSrc), Nil)
+  private lazy val dhSlotOut     = new TirEmitter(dhSlotProgram).emit
+  private lazy val dhSlotDropped = OmissionCheck.droppedSuperArgs(dhSlotProgram)
+
+  test("(h) delegation-head slot: parameter used >1x with non-simple arg is bound to a slot") {
+    assert(clue(dhSlotOut).contains("extends demo.DhBase("),
+      "synthesised primary delegates to the parent root")
+    assert(!clue(dhSlotOut).contains("E134"),
+      "no refusal -- the synthesis succeeded")
+  }
+
+  test("(h) delegation-head slot: no super args dropped") {
+    assertEquals(clue(dhSlotDropped).count(_.owner.contains("DhSub")), 0,
+      "all DhSub roots are expressed via delegation-head slot")
+  }
+
+  test("(h) delegation-head slot: the doubled expression renders with the slot reference") {
+    // the super arg at the doubled position should reference the slot name (dh suffix)
+    assert(clue(dhSlotOut).contains("$dh"),
+      "delegation-head slot parameter present in output")
+  }
+
+  // ---- (h2) Same shape but with a post-body too (like BitmapFont) ----
+
+  private val dhWithPostSrc =
+    """package demo;
+      |public class Wrap2 { Object v; public Wrap2(Object v) { this.v = v; } }
+      |public class FontBase {
+      |  int n;
+      |  Object data;
+      |  boolean owns;
+      |  public FontBase(int n, Object data) { this.n = n; this.data = data; }
+      |  public FontBase(int n, String reg) { this(n, reg != null ? new Wrap2(reg) : null); }
+      |  public FontBase(String s, String img, int n) {
+      |    this(n, new String(s));
+      |    owns = true;
+      |  }
+      |}
+      |public class FontSub extends FontBase {
+      |  public FontSub(int n, Object data) { super(n, data); }
+      |  public FontSub(int n, String reg) { super(n, reg); }
+      |  public FontSub(String s, String img, int n) { super(s, img, n); }
+      |}
+      |""".stripMargin
+
+  private lazy val dhWithPostProgram = Pipeline.run(SpoonTir.fromSource(dhWithPostSrc), Nil)
+  private lazy val dhWithPostOut     = new TirEmitter(dhWithPostProgram).emit
+  private lazy val dhWithPostDropped = OmissionCheck.droppedSuperArgs(dhWithPostProgram)
+
+  test("(h2) delegation-head slot + post-body: synthesis succeeds") {
+    assert(clue(dhWithPostOut).contains("extends demo.FontBase("),
+      "synthesised primary delegates to the parent root")
+  }
+
+  test("(h2) delegation-head slot + post-body: no super args dropped") {
+    assertEquals(clue(dhWithPostDropped).count(_.owner.contains("FontSub")), 0,
+      "all FontSub roots are expressed")
+  }
+
+  test("(h2) delegation-head slot + post-body: boolean guard for ownsTexture-style post-body") {
+    assert(clue(dhWithPostOut).contains("via$pb"),
+      "boolean guard present for param-less post-body")
+  }
