@@ -7,23 +7,32 @@ Porter's own architecture, measured once (mostly on libGDX) so you do not have t
 
 ### Triage 2026-09-04
 
-Full triage of the 161 open ids (`### <ID>` headings without `CLOSED`): **126 closed-in-fact**
-(shrunk to the 4-line CLOSED form, numbers cited in each entry's own `Triage (2026-09-04):`
-line), **6 superseded** (pointer to the closing id/rule), **1 needs-measurement**, **28** still
-open across the 10 families below. Per-id citations are each entry's own `Triage` line.
+Full triage of the 161 open ids (`### <ID>` headings without `CLOSED`), corrected 2026-09-04: a
+REFUSAL is not a closure (campaign contract, `PROGRESS.md` §13: "FIX EVERYTHING — no entry may end
+open, limit, refused or do-not-retry without a measured exit"), so every entry whose own citation
+said "refused", "genuine expressiveness limit", "no Scala image", "not a gap" or "permanent
+language-level limitation" moved from closed-in-fact to its own row below. Corrected split: **109
+closed-in-fact** (shrunk to the 4-line CLOSED form), **20 refused-by-design** (heading's added
+`CLOSED` removed, body kept, citation says what a card would need), **6 superseded** (pointer to
+the closing id/rule), **1 needs-measurement**, **32** still open (families) across 11 families (I newly has open members: six idiom refusals).
+Seven pre-existing entries whose OWN heading mixed `CLOSED` with a genuine residual (K19, X4 named
+by the coordinator, plus G33/K5.10/K15/M10/O6 found the same way) had no `Triage` line at all and
+now do, without any other edit to their heading or body. Per-id citations are each entry's own
+`Triage` line.
 
-| family | open ids | shared mechanism | subplan item |
-|---|---|---|---|
-| C (ctors) | C3, C7 | ctor-funnel residual shapes: guard-3 double-eval, promoted-body-on-every-path | item 4 |
-| CT (context) | CT11 | defer the whole JLS step-9 sequence (field+block), not just the field half | no card yet |
-| D (dependents) | D2, D8, D13, D14 | dependent/base seams: run-time annotation-key screen; redirect+drop pairing check; member-rename manifest spelling; `followMemberRenames` reorder | no card yet |
-| G (generics) | 0.2, G9, G11, G12, G18, G19, G21, G24 | bounds/erasure the port cannot yet write consistently: F-bound erasure at the callee, decl-vs-ref erasure, 3-way argument-erasure unification, `?`-sentinel naming collision | no card yet (G8/G10 already closed as permanent refusals) |
-| K (collections) | K5.6, K14, K16, K23, K37, K38 | retarget/boundary residues: cast-after-retype, retarget→typeMap coercion, scope-seam counting, `spliterator` re-keying, per-dependent and per-entry retarget scoping | no card yet |
-| M (measurement) | M5.12 | Metals BSP-connect timeout (tooling, no §1 kind) | no card yet |
-| O (opaque) | K13.6, O7 | opaque-sentinel/JVM-null unification in `slotUnwrap`; GL-enum-family `ConstantsAs` mint form | no card yet |
-| P (platform) | P9 | force registration + a manifest key for off-JVM `ServiceLoader` codegen | no card yet |
-| T (members) | T7, T16.5 | qualified `super[X]` TIR node; record/annotation-type synthesis (`JS-C43` residues) | no card yet |
-| X (tests) | X7 | headless-graphics native-image loader-path decision | no card yet |
+| family | open (FAMILY) ids | refused-by-design ids | shared mechanism | subplan item |
+|---|---|---|---|---|
+| C (ctors) | C3, C7 | — | ctor-funnel residual shapes: guard-3 double-eval, promoted-body-on-every-path | item 4 |
+| CT (context) | CT11 | — | defer the whole JLS step-9 sequence (field+block), not just the field half | no card yet |
+| D (dependents) | D2, D8, D13, D14 | — | dependent/base seams: run-time annotation-key screen; redirect+drop pairing check; member-rename manifest spelling; `followMemberRenames` reorder | no card yet |
+| G (generics) | 0.2, G9, G11, G12, G18, G19, G21, G24, G33 | G8, G10 | bounds/erasure with no consistent fill or cast to write: F-bound sibling-formal fill, decl-vs-ref erasure, argument-erasure unification, raw-anonymous-class cast, `?`-sentinel naming collision, a cosmetic double-cast | no card yet |
+| K (collections) | K5.6, K14, K16, K23, K37, K38, K5.10 | K5.8, K15, K19 | retarget/boundary residues with no fix path: cast-after-retype, retarget→typeMap coercion, scope-seam counting, `spliterator` re-keying, per-dependent/per-entry retarget scoping, an unobserved symbol-swap residue, untranslated `super`-receiver names, unreadable-class-file bridging, reference-identity-on-a-coercion | no card yet |
+| M (measurement) | M5.12, M10 | — | Metals BSP-connect timeout; a diagnostic id keyed on a mint counter (fix belongs in `Minter.table`, unbuilt) | no card yet |
+| O (opaque) | K13.6, O7, O6 | O3 | opaque-sentinel/JVM-null unification; GL-enum-family `ConstantsAs` mint form; `Key`/`Button`/`HttpStatus` opaque shapes with no vocabulary; a container deeper than one erasure-identity level | no card yet |
+| P (platform) | P9 | P3, P10 | force registration + manifest key for off-JVM `ServiceLoader` codegen; per-library JVM-only-API substitution has no engine-level closure; no shared reflective-registry abstraction across ports | no card yet |
+| T (members) | T7, T16.5 | T10, T17, T18, T20, T21 | qualified `super[X]` TIR node; record/annotation-type synthesis; overloaded enum ctors; overload-resolution-divergence prediction; instanceof-pattern flow scope; JVM `Record` reflection; three un-enum-syntax'able enum shapes | no card yet |
+| X (tests) | X7 | X4 | headless-graphics native-image loader-path decision; MUnit single-instance vs JUnit fresh-instance object identity | no card yet |
+| I (idioms) | — | I1, I2, I3, I4, I5, I6 | six idiom transforms priced and refused on cost/no-evidence/missing-dataflow grounds (`this.type`, instanceof-cascade, StringBuilder, case-class derivation, array-init loops, try/finally lowering) | no card yet |
 
 ## How to read an entry
 
@@ -113,9 +122,9 @@ Triage (2026-09-04): CLOSED-IN-FACT — "Fix: the type argument chosen for a raw
 Fix: wildcards in an `extends` clause take the parameter's DECLARED bound (resolved left-to-right, so a later bound can name an earlier parameter, e.g. `T <: ParticleBatch[D]`), not `AnyRef`.
 Triage (2026-09-04): CLOSED-IN-FACT — "Fix: wildcards in an extends clause take the parameter's DECLARED bound … not AnyRef" — shipped rule, no residue named
 
-### G8. A partially-nameable F-BOUNDED class has no consistent fill — a genuine expressiveness limit — CLOSED
+### G8. A partially-nameable F-BOUNDED class has no consistent fill — a genuine expressiveness limit
 Symptom: partially-nameable F-bounded class has no consistent fill.
-Triage (2026-09-04): CLOSED-IN-FACT — "Genuine expressiveness limit, not a missing case — honest output is 'no Scala image, here's what a hand-porter would write'"
+Triage (2026-09-04): REFUSED-BY-DESIGN — family G: F-bound fill has no consistent single answer across sibling formals — filling one poisons another; no scala image exists to write, and no card exists to close it short of a language-level workaround
 
 ### G8.7 An unconstrained F-BOUNDED result is ASCRIBED, never instantiated — G22's pin at the shape its fourth condition declines. **ssg-md 26 → 20. CLOSED**
 
@@ -149,9 +158,9 @@ Cause: scala CHECKS an F-bound at the erased type where javac does not; latent f
 Fix needed: F-bound-aware erasure — erase `N` to its OWN bound with the recursion cut, not to `Object`.
 Triage (2026-09-04): FAMILY G: F-bound-aware erasure at the callee formal — "Fix needed: F-bound-aware erasure — erase N to its OWN bound with the recursion cut, not to Object" (unbuilt)
 
-### G10. A RAW anonymous class has no faithful Scala image — REFUSED, not approximated — CLOSED
+### G10. A RAW anonymous class has no faithful Scala image — REFUSED, not approximated
 Symptom: a RAW anonymous class with a body has no faithful Scala image (`new ReadOnlySerializer() { … }`) — naming the type argument doesn't help either, since the body is written against the erasure and only overrides under the `Object` instantiation, which fails to conform to the expected parameterised type.
-Triage (2026-09-04): CLOSED-IN-FACT — "Current state: left REFUSED and reported rather than approximated — expect the same wherever a raw anonymous class has a body"
+Triage (2026-09-04): REFUSED-BY-DESIGN — family G: a raw anonymous class body typed against the erasure has no argument-position cast naming the callee's own type variable (G12's dead end) — a card would need that cast mechanism built first
 
 ### G11. Erasing a RECEIVER to its erased view LOSES members — 7 → **41**
 
@@ -310,6 +319,7 @@ Rule: split emission by ARITY, not SAM shape; only the nullary static case needs
 Raw `Iterator.next()`'s implicit `Object` bound (JLS 4.4) meets `CollectionsTransform`'s unbounded `JavaIterator[?]` shim, whose capture is bounded by `Any`: `Found: it.A / Required: Object`. Two obvious guards (result-is-capture; declared-result-is-not-Object) both fired on 0 sites because the frontend records java's own substituted answer and `Iterator#next()` interns with no signature at all.
 Fixed structurally via `CollectionsTransform.capturedObjectRead`, keyed on "receiver is one of the four owned shims with a sole wildcard type argument, none of whose 76 members return bare `Object`". USL 2 -> 0; corpus-wide exactly one other site (libGDX `CharArray#appendAll`), 2 member digests, all check counts flat.
 Residue (OPEN, cosmetic): where the frontend already coerced the argument (G14), emits a harmless double `.asInstanceOf[Object].asInstanceOf[Object]` — belongs to `TirEmitter`'s general `Tree.Typed` collapsing arm (owes JS-G34/JS-E06), not fixed here.
+Triage (2026-09-04): FAMILY G: cosmetic double `.asInstanceOf[Object].asInstanceOf[Object]` belongs to TirEmitter's general `Tree.Typed` collapsing arm (owes `JS-G34`/`JS-E06`), not fixed here
 
 ### G34. Under `noClasspath`, Spoon's `getExecutableDeclaration` resolves to an UNRELATED type's method that shares the name — **gltf 5 errors, 2 of which are D14's; gdx 0 = 0. CLOSED**
 `Gdx.app.getType()` lenient-resolved by name alone to `java.lang.reflect.Field#getType`, so the frontend interned the call under the wrong type and the emitted error named a member never called.
@@ -489,11 +499,11 @@ Method-local named classes were refused by `SpoonTir.stmtKind`; zero corpus site
 liqp discovery 575→637/639 (tests lost 64→2), 0 scalac errors before/after, suite 574/1→631/6. The frontend arm itself was ~20 lines; the real cost was replacing 28 hand-rolled recursions with `StandardTraversal.allClassDefs`/`TirEmitter.allDeclaredClasses` (0 member digests on all 11 lanes for that change alone).
 Rule lifted to CLAUDE.md §3. Two residues left OPEN at 0 corpus sites, both counted: local-class-vs-inner-class name collision, and method-local enum reference mis-spelling/mis-projection.
 
-### T10. A java ENUM CONSTRUCTOR has a BODY, and it runs. **6 libGDX sides silently broken, 0 errors** — CLOSED
+### T10. A java ENUM CONSTRUCTOR has a BODY, and it runs. **6 libGDX sides silently broken, 0 errors**
 Symptom: enum constructor bodies (beyond pure self-assignment) were silently dropped; fields the body computed stayed at their declared defaults, at 0 compile errors and every check count unchanged.
 Numbers: libGDX `Cubemap.CubemapSide` — all 6 sides shipped `up == null`, `getUp(out)` threw; found via anim8's `Dithered.DitherAlgorithm.legibleName` (`toString()` null for 22 constants), only because the same constructor also tripped T11 (a compile error).
 Fix: `EnumCtorBodySpec`.
-Triage (2026-09-04): CLOSED-IN-FACT — "Fix: EnumCtorBodySpec"; kept limits are explicitly "deliberate, not bugs"
+Triage (2026-09-04): REFUSED-BY-DESIGN — family T: an OVERLOADED enum constructor is left entirely untranslated (0 corpus sites so far) — a card would need a case-object-per-overload synthesis the emitter doesn't have
 
 ### T11. A PROMOTED enum constructor parameter IS a member — `name` collides with `Enum.name()`, a DECLARED member collides with it, and "supersedes" was a NAME test — **ssg-md 89 → 81 for the third half** — CLOSED
 Symptom: `E120 Conflicting definitions: var name: String … and def name(): String …` from a promoted parameter colliding with synthesized `Enum.name()`; separately, a promoted parameter collided with a DECLARED accessor of the same name (liqp `Flavor.isLiquidStyleInclude`); separately, a body FIELD a parameter "supersedes" was matched by NAME alone and wrongly dropped when it was really a different member at a different type (ssg-md `HtmlMatch.open`: `Pattern` field vs `String` parameter) — 8 errors, first mis-attributed entirely to `java.util.regex`.
@@ -541,28 +551,28 @@ Not retry: trusting a classification's own wording as a description of the OUTPU
 Next: both real defects (record, annotation type) are named but unbuilt.
 Triage (2026-09-04): FAMILY T: record/annotation-type synthesis gaps — "Next: both real defects (record, annotation type) are named but unbuilt"
 
-### T17. Java resolves an overload in THREE PHASES and Scala in ONE — **the divergence cannot be predicted without a resolver; the RISK is counted instead** — CLOSED
+### T17. Java resolves an overload in THREE PHASES and Scala in ONE — **the divergence cannot be predicted without a resolver; the RISK is counted instead**
 Symptom: a call javac binds to `f(int)` can bind to `f(Object)` in the port — both compile, no error, no moved digest, `CLAUDE.md` §4.4's defect class with no statement form to key on.
-Triage (2026-09-04): CLOSED-IN-FACT — "Refused: modelling scala's resolver … Built instead: overload-risk counts three structural spans" — permanent counted-risk mechanism, shipped
+Triage (2026-09-04): REFUSED-BY-DESIGN — family T: predicting java's 3-phase vs scala's 1-phase overload resolution divergence needs a resolver the size of javac's own — refused as compiler-sized; the risk is counted (`overload-risk`), never predicted
 
-### T18. An `instanceof` PATTERN BINDING is FLOW-SCOPED, and no lexical placement of a `val` is faithful — **REFUSED, and the refusal moved from unit-fatal to per-site** — CLOSED
+### T18. An `instanceof` PATTERN BINDING is FLOW-SCOPED, and no lexical placement of a `val` is faithful — **REFUSED, and the refusal moved from unit-fatal to per-site**
 Three placements tried, each fails a real shape: a `val` at the test site breaks `&&` short-circuiting; a hoisted `var` breaks per-iteration lambda capture (§4.4 class, no compile error); rewriting to `match` is exact but only for the subset where the binding isn't read after the `if`, and needs `Tree.Match` to carry a second provenance so its `break` boundary doesn't steal an enclosing loop's.
-Triage (2026-09-04): CLOSED-IN-FACT — "Refused as a whole; … the refusal shrank from the whole compilation unit to one expression" — permanent refusal, mechanism shipped
+Triage (2026-09-04): REFUSED-BY-DESIGN — family T: instanceof pattern-binding's JLS flow scope has no lexical Scala placement — all three tried placements each break a real shape; a card would need `Tree.Match` to carry a second boundary provenance, unbuilt
 
 ### T19. A RECORD PATTERN is blocked by the RECORD and not by the pattern — **CLOSED once `JS-C43` derived an extractor over the ACCESSORS**; and the UNNAMED pattern is not reachable at all
 Blocked because the emitted record had no extractor at all; unblocked by an `unapply` derived over the ACCESSORS (JLS 14.30.1), never a case-class-style one over constructor params — those two disagree silently on an explicit accessor. Also added JLS 14.30.2's UNCONDITIONAL component pattern as a separate node (`Tree.BindPattern` vs `Tree.TypePattern`, decided via the parser's subtype relation) so a widening/no-test component still matches `null`.
 Cost: 2 IR nodes, 1 frontend arm, 2 emitter arms, 0 corpus sites moved; `PatternSwitchSpec` +6 tests. `CtUnnamedPattern`'s `RefusedLoudly` claim was also corrected to `NeverVisited` — no source Spoon accepts produces one.
 Rule: a gate names the CAPABILITY it needs, never the implementation somebody guessed would supply it.
 
-### T20. A ported record is not a JVM RECORD, and its extractor is a FUNCTION — **three residues `JS-C43` cannot close** — CLOSED
+### T20. A ported record is not a JVM RECORD, and its extractor is a FUNCTION — **three residues `JS-C43` cannot close**
 Symptom: `x.isInstanceOf[java.lang.Record]` true (scalac accepts the `extends` javac refuses), but `x.getClass.isRecord()` false and `getRecordComponents()` null — a reflective serialiser/mapper sees a non-record. Also: java's record pattern runs accessors lazily, stopping at the first failing component; the emitted `unapply` builds the whole tuple first, so ALL accessors run; an accessor's thrown exception arrives raw instead of wrapped in `MatchException`.
 Numbers: 29 side-by-side observations byte-identical against javac for value/behaviour of the declaration itself. All three recorded on the `RecordMembers` decision as porter notes (`reflective=`, `patternAccessors=`, `patternThrow=`).
-Triage (2026-09-04): CLOSED-IN-FACT — "(a) engine — three REFUSALS, not gaps" — permanent language-level limitation, all three recorded on the RecordMembers decision
+Triage (2026-09-04): REFUSED-BY-DESIGN — family T: no scala construct reproduces a JVM `Record` (class-file attribute, lazy per-component matching, unwrapped `MatchException`) — a card would need a consumer-side reflection shim, not attempted
 
-### T21. A ported java enum IS a `java.lang.Enum`, and only the `enum` SYNTAX can say so — **ssg-md 171 → 137, and the shape had been un-askable for five libraries** — CLOSED
+### T21. A ported java enum IS a `java.lang.Enum`, and only the `enum` SYNTAX can say so — **ssg-md 171 → 137, and the shape had been un-askable for five libraries**
 (a) engine — universal (JLS 8.9). Symptom: `class Flags cannot extend java.lang.Enum: only enums defined with the enum syntax can` — the prior `sealed abstract class` + `case object` lowering conforms to no `<E extends Enum<E>>` bound anywhere (36 errors on the first library that wrote one).
 Numbers: ssg-md 171 -> 137. libGDX: 0->0 errors, 44 checks flat, 72 member digests + 82 port-map rows moved, suite 217/4 identical to before. Port map now publishes `form=enum` vs `form=enum-class` for `base-surface`.
-Triage (2026-09-04): CLOSED-IN-FACT — "Refused (kept sealed lowering byte-for-byte, counted via EnumShapeRefusal)" — mechanism shipped, refusals counted by design
+Triage (2026-09-04): REFUSED-BY-DESIGN — family T: three enum shapes stay permanently un-enum-syntax'd (constant with a class body, a name clash with java's second namespace, zero-constant enums) — a card would need per-shape lowering the enum-syntax path can't express
 
 ### T22. An `@interface`'s own ELEMENTS are dropped, and only a library that READS one back can see it — **sge-ai 20 → 16, `trivia(recovered)` 5 → 1. CLOSED**
 `@interface` elements (`String name() default ""`) were emitted as nothing at all — a bare `extends scala.annotation.StaticAnnotation` — invisible until a library reads them back reflectively (gdx-ai, 4x `E008 Not Found`); markers-only annotations in the rest of the corpus never exposed it.
@@ -651,11 +661,11 @@ Symptom: `extends scala.Tuple2[K, V]` fails three ways at once (`final`, wrong c
 Numbers: liqp 49 → 47, `collection-boundary` 12 → 13 (parent restore); liqp main 1 → 0, `collection-boundary` 14 → 15, 3 digests (setValue refusal); correction 0 → 0 errors, suite flat 357/218; ssg-md 13 → 11, 4 digests, checks flat (slot projection, wave 15).
 Triage (2026-09-04): CLOSED-IN-FACT — "correction 0 → 0 errors, suite flat 357/218; ssg-md 13 → 11, 4 digests, checks flat"
 
-### K5.8 A `super` receiver is a SYNTAX question, and it is answered of the RESULT — not of the arm — CLOSED
+### K5.8 A `super` receiver is a SYNTAX question, and it is answered of the RESULT — not of the arm
 Symptom: inherited-call rewrites on a class extending a retyped collection placed `super` illegally — `entrySet()` as bare receiver, `Seq.get` as `super(i)`, operators infix `super ++= m` — E040 syntax errors, worse than the type errors replaced.
 Numbers: liqp 14 → 13 (`superPlaced`); liqp 10 → 9, 3 digests (`superIsThis` fallback, `Sort$SortableMap#toString`); `entrySet()`/`Seq.get` still untranslated under java's names (M6).
 Fix: `TirEmitter.applyStr0` renders operators on a `super` receiver as a selection (`super.++=(m)`); the phase checks the structural property `superPlaced` (every `Tree.Super` stands as a `Select` qualifier) on the BUILT result, covering future rewrites by construction. Fallback `superIsThis` rewrites to `this.m` when no override exists anywhere in the PROGRAM between `super` and `this` (checked transitively).
-Triage (2026-09-04): CLOSED-IN-FACT — "entrySet()/Seq.get still untranslated under java's names (M6)" — accepted residue under the refuse-and-count policy
+Triage (2026-09-04): REFUSED-BY-DESIGN — family K: `entrySet()`/`Seq.get` stay untranslated under java's own names at a `super` receiver — a card would need the rewrite M6's refuse-and-count policy declined to build
 
 ### K5.9 A METHOD REFERENCE is a second NODE SHAPE of a rewrite keyed on a CALL — and it has to be LOWERED — CLOSED
 Symptom: `Map.Entry::getKey` (a `Tree.MethodRef`) hits the emitter's post-phase lambda expansion selecting a member the retyped receiver lacks — `value getKey is not a member of (String, Insertion)`.
@@ -667,6 +677,7 @@ Triage (2026-09-04): CLOSED-IN-FACT — "Numbers: liqp 8 → 7, one site …, 3 
 Built: `Rewrite.accountedBy` declares check lanes per phase; `Pipeline.runTraced` DERIVES what moved by comparing owned symbols' `info` AND their tree-level `tpt`s across the phase (tree-only retyping was previously invisible — 0 blast on all ports once fixed, no engine phase currently writes that shape).
 First run found two unanswered phases (`primitive->opaque`, `type-redirect`) on the largest port; both closed via `PolicyReport`/`opaque-boundary`/`base-surface` lanes, `rewrite-callsites` 2 → 0 on libGDX core; a symbol swap stays an unobserved residue (indistinguishable from a legitimate `Substitutions` drop).
 The generic `usagesOf(s) \ callSites` form is REFUSED as a substitute: 1,077 declaration-moves / 3,045 recorded usages against 152 real seams the four boundary checks count — reasoning without the phase's own `typeMap` is forbidden (§4.56); pre-run site pricing is also refused, since every phase resolves its own symbols inside `run` (0 declarations move if `transformType` is applied beforehand).
+Triage (2026-09-04): FAMILY K: a symbol swap stays an unobserved residue, indistinguishable from a legitimate `Substitutions` drop
 
 ### K6. `java.util.stream` — the CHAIN collapses; and the two rules that make that safe — CLOSED
 Symptom: `xs.stream().filter(p).collect(Collectors.toList())` needs a WHOLE-CHAIN rewrite (`stream()`→receiver-as-collection, `filter` survives, `collect(toList())`→nothing); per-call mapping alone does not type-check.
@@ -761,6 +772,7 @@ Triage (2026-09-04): FAMILY K: move the coercion out of `retarget` into `typeMap
 Tried: retyping is position-blind, so a class-file's own (unmovable) signature at an EXTERNAL callee's result, argument, field, generic pass-through, shim formal or `new`-site was invisible to every boundary check (both sides read the same moved node type); frontend now interns external members' `MethodType`/field types (scope-free, ALL-or-none per class file) and every arm bridges toward what the class file actually declares.
 Numbers: liqp 15 errors/0 findings before -> 86->76->74->70->67->74->74->6 across the arm chain, `collection-boundary` climbing 8->10->0->12->10->16->12->14; jbump caught+fixed a 0->4 error regression from bridging before rewrite; gdx 0 errors/0 digests throughout.
 Rule: where the class file can be READ, bridge (`toJava`/`fromJava`, never toward the node's post-retype type); where it cannot (NoType, partial classpath, minted symbol, refused-static, unreadable pass-through), COUNT and never bridge; a `new` is not a call and needs its own structural test; bridging must run AFTER rewrites, never before.
+Triage (2026-09-04): REFUSED-BY-DESIGN — family K: an unreadable class file (NoType, partial classpath, minted symbol, refused-static) has no signature to bridge toward — permanently counted, never bridged, by definition
 
 ### K16. A `CollectionsTransform` SCOPE is not a way to opt out of its residue — 27 → 47 narrow, 27 → 51 off. DO NOT RETRY
 
@@ -788,6 +800,7 @@ Numbers: liqp 392->552 passing, 183->23 failing, 160 flipped/0 newly failing, er
 Tried: K18's reified coercion builds a NEW wrapper object where java's cast was the IDENTITY; `balticporter.runtime.Wrapping`'s delegating factories close the wrap-then-retest chain (`(Collection)x instanceof List` then recast) by recording what they wrap so every `Reified.is*/as*` looks through transitively — but reference identity/`equals`/`hashCode` on a coerced value are OPEN BY CONSTRUCTION, since no live view can be `eq`/`equals`-identical to what it views, and neither a copy (K15) nor an equals-transparent wrapper is safe.
 Numbers: chain fix at 0 corpus regressions (identity arm kept FIRST in every `as*`; an UNMODIFIABLE wrapper deliberately excluded, or it would write through); identity/equality residue costs nothing today (no corpus port compares by reference); the same CONCRETE-target refusal (K18's `ReifiedOccurrence`) also covers `Tuple2`, unbuilt though arguably safe (immutable, no write-through) — 2 sites in ssg-md's `Pair.equals` silently return `false` for equal `Pair`s, declared as expected failures.
 Rule/next step: if a library's semantics turn on collection reference identity, scope those declarations OUT of the retyping (`RuleScope`) rather than trying a cleverer wrapper; build the `Tuple2` reified pair only if a second library needs it or a `Pair`-comparing consumer appears in production code.
+Triage (2026-09-04): REFUSED-BY-DESIGN — family K: no live view can be `eq`/`equals`-identical to what it views — reference identity/equals/hashCode on a coerced value has no safe encoding; the `Tuple2` reified pair is also named unbuilt
 
 ### K20. A REIFIED TYPE ARGUMENT is read out of the CLASS FILE by someone else — **10 test failures on liqp, 0 compile errors, every check count flat. CLOSED**
 
@@ -817,10 +830,10 @@ Triage (2026-09-04): CLOSED-IN-FACT — "Rule: portability must be checked over 
 Rule: when a check reports zero, name an API you KNOW is present and confirm the check sees it (same move that found P4).
 Triage (2026-09-04): CLOSED-IN-FACT — "Fix: wire the check before the translation (PortRun.RequiredChecks); a silent assumption becomes a number"
 
-### P3. A JVM-only API in the LIBRARY is not an engine gap — CLOSED
+### P3. A JVM-only API in the LIBRARY is not an engine gap
 (b) `Substitutions` + (c) injected sources; not an engine gap. Symptom: `java.lang.reflect`, `Thread`, networking, `java.util.zip`, `java.util.concurrent` in emitted code just means the LIBRARY uses them.
 Fix: per-library substitution — replace the type with an injected implementation, exactly what a hand-port does.
-Triage (2026-09-04): CLOSED-IN-FACT — "Fix: per-library substitution — replace the type with an injected implementation, exactly what a hand-port does" — policy established, not an engine gap
+Triage (2026-09-04): REFUSED-BY-DESIGN — family P: each JVM-only API a library uses is answered per-library via `Substitutions`/injection, one entry at a time — there is no single engine-level fix that closes this class; a card here is bookkeeping, not a build item
 
 ### P4. An EXTERNAL MEMBER is only identifiable through its owner — and it had no owner — CLOSED
 (a) engine — frontend interning. Symptom: 9 of `PortabilityCheck`'s member-level rules (`Class#forName`, `#newInstance`, six reflective readers, `System#getProperty`) had NEVER fired in the project's whole history while the check reported coverage.
@@ -868,11 +881,11 @@ Do NOT retry: assuming P5 closes the non-JVM half.
 Next step: force a `val _ = <RegistrationObject>` ahead of first use (K22's mechanism) plus a new (b) manifest key naming the codegen's generated object FQN — unbuilt because no corpus port builds off the JVM to measure it against.
 Triage (2026-09-04): FAMILY P: force registration ahead of first use plus a (b) manifest key for the codegen's generated object FQN — "Next step: force a val _ = <RegistrationObject> ahead of first use … plus a new (b) manifest key … unbuilt because no corpus port builds off the JVM"
 
-### P10. "Reflective instantiation becomes a REGISTRY" is a SHAPE three ports share and a MECHANISM none of them can deliver — the abstraction that covers all three is a `Map`, and the one that is not a `Map` covers only the two that cannot ship it. **REFUSED, 0 lines shipped against 8 net lines across three ports** — CLOSED
+### P10. "Reflective instantiation becomes a REGISTRY" is a SHAPE three ports share and a MECHANISM none of them can deliver — the abstraction that covers all three is a `Map`, and the one that is not a `Map` covers only the two that cannot ship it. **REFUSED, 0 lines shipped against 8 net lines across three ports**
 (b) refused — mechanism real, home not the engine. Symptom: three ports (libGDX `Pools`, Ashley `ComponentFactories`, gdx-gltf `GLTFExtensionFactories`) independently hand-wrote a `Class`-keyed registry replacing `Class#newInstance` (unavailable off the JVM); looked like one extractable mechanism.
 Numbers: extraction would save 8 net lines across 3 ports and drain 1 finding (Ashley `portability(injected)` 4->3); against that, libGDX's `Pools` gains 0 (its own map is already portable) and Ashley would lose its table's concurrency (runtime module forbids threads).
 Rule: a shape recurring across 3 files is not automatically a mechanism — ask whether the covering abstraction is something the target language already has, and whether the ports that would use it can actually DELIVER it.
-Triage (2026-09-04): CLOSED-IN-FACT — "REFUSED, 0 lines shipped …"; "Do NOT retry unless: a fourth instance appears in a BASE port … AND its miss-policy is read only ONE way"
+Triage (2026-09-04): REFUSED-BY-DESIGN — family P: no shared registry abstraction covers all three reflective-instantiation ports at once (a null-vs-throw miss-policy conflict breaks a single-parameter table) — refused pending a 4th BASE-port instance read only one way
 
 ### P11. A call to an EXTERNAL MEMBER whose arity differs between JVM and JS/Native — **CLOSED; gdx-test JS 1 -> 0, Native 1 -> 0**
 
@@ -972,6 +985,7 @@ Rule: when a target framework offers assertions as both inherited AND object mem
 Tried: calling `@Before` at the head of each test is exact only where setup ASSIGNS the fields it needs; a field carrying state through its own INITIALISER still leaked, since MUnit builds ONE suite instance where JUnit constructs a fresh one per `@Test` — gdx-ai's `ParallelTest` (4 fields initialised in place) got 4/10 failures, all `IllegalStateException`, invisible to every instrument but the suite.
 Fix: hoist java's WHOLE initialisation sequence (JLS 12.5) out of the class body into `override def bpFreshState(): Unit = {zero MY fields; super.bpFreshState(); MY step4; MY ctor body}`, called at the head of every test ahead of `@Before`; a constructor the lowering cannot replay keeps BOTH its constructor and initialisers, refused and counted.
 Numbers: sge-ai test 6/4->10/0; every other converted suite in the corpus BYTE-IDENTICAL (23 suites carry the member, ~200 stateless suites untouched). Rule: object IDENTITY is NOT reproduced (anything outliving the test that holds the instance sees the reset, counted) and is a shape limit, not a bug.
+Triage (2026-09-04): REFUSED-BY-DESIGN — family X: object IDENTITY is not reproduced across a MUnit single-instance suite vs JUnit's fresh-per-test model — permanent shape limit, counted not fixed
 
 ### X5. JUnit lifecycle and enablement — CLOSED, except what has no translation
 
@@ -1123,6 +1137,7 @@ Triage (2026-09-04): CLOSED-IN-FACT — "Fix: baseline/expected-errors … gated
 Tried: `PanamaFfiTransform.handleName` named a downcall handle off the frontend's MINT COUNTER, so interning one extra symbol ANYWHERE earlier shifted every later handle name — one unrelated conversion moved 122 members across 4 Panama types (deterministic, just not STABLE ACROSS COMMITS).
 Fix (EMITTED half, CLOSED): key the disambiguator on WHAT JAVA OVERLOADS ON (erased signature, sorted, derived once) — a lone native gets no suffix, siblings get a stable ordinal that only renumbers when that overload set changes. 122->0.
 Numbers/Rule: the DIAGNOSTIC half (a raw `@<SymId>` in finding/member-key ids via `Minter.external`) stayed OPEN — 263 id-stripped rows for a 4-line change (12 real), 538+2350 for a 5-line change (12+6 real), 12 on a pure additive scope-only wave; no engine-emitted identifier may key on a mint counter — fix belongs in `Minter.table`, NOT `TirPrinter` (this entry's earlier wrong prescription).
+Triage (2026-09-04): FAMILY M: no engine-emitted identifier may key on a mint counter — fix belongs in `Minter.table`, not yet built (263 id-stripped diagnostic rows on ssg-md)
 
 ### M11. A commit that changes EMISSION and does not re-accept the baseline ships a digest ITS OWN CODE CANNOT REPRODUCE — and every lane still exits 0. **CLOSED, and the cost is that the next wave pays for it**
 
@@ -1465,11 +1480,11 @@ Numbers: 3 errors -> 0; `Symbol.descriptor`/`MemberKey` UNAFFECTED by design (fr
 Rule: a phase that retypes a DECLARATION owes every DERIVED signature that mentions it — the TIR stores a parameter's type twice and only one is what a given consumer reads.
 Triage (2026-09-04): CLOSED-IN-FACT — "Numbers: 3 errors -> 0; Symbol.descriptor/MemberKey UNAFFECTED by design … verified port-map/signature both 0"
 
-### O3. An opaque family that lands on an ARRAY ELEMENT is INEXPRESSIBLE — not refused, unreachable — CLOSED
+### O3. An opaque family that lands on an ARRAY ELEMENT is INEXPRESSIBLE — not refused, unreachable
 (a) engine, in the phase's eligibility test/retype loop/coercion. Symptom: `taggablePrim` tested only a bare scalar or a method's bare return, so a declaration whose element is the domain value (`int[] locations`) was INVISIBLE to seeding and propagation (which runs between SYMBOLS, and an array element has none) — 33 real ported type positions the reference hand port types `Array[AttributeLocation]` were simply unreachable, not refused.
 Numbers: engine specs 984=984, corpus 430=430; libGDX core 0 errors, every check/suite identical.
 Rule: CLOSED for exactly ONE container depth (the erasure-identity boundary), not "arrays now work" generally — a deeper container has genuinely no coercion to name.
-Triage (2026-09-04): CLOSED-IN-FACT — "Rule: CLOSED for exactly ONE container depth …, not 'arrays now work' generally — a deeper container has genuinely no coercion to name" — deliberate permanent boundary
+Triage (2026-09-04): REFUSED-BY-DESIGN — family O: a container deeper than one erasure-identity level (e.g. `List[int[]]`) has no coercion to name at all — a card would need a per-element copying bridge with real allocation cost, not attempted
 
 ### O4. An `OpaqueSpec`'s `hints` is a PREDICATE, so the surface fingerprint cannot see it — CLOSED
 (a) engine, in the spec's own type. Symptom: the phase never implemented `SurfacePolicy`, so `PortManifest.fingerprint` compared two instances by NAME ALONE — and even fixed, `hints: Symbol => Boolean` (a lambda) has no stable rendering, so two specs seeding the SAME opaque type from DIFFERENT declarations (the one field a port actually edits) fingerprinted EQUAL, invisible to `ManifestAgreement` and every published port map.
@@ -1488,6 +1503,8 @@ Triage (2026-09-04): CLOSED-IN-FACT — "Numbers: just measure-all green end to 
 Tried: 4 of 8 opaque families sge declares over a java CLASS at that FQN are a case the mechanism has NO vocabulary for (the phase unconditionally MINTS, colliding with any injected replacement) — `Align` has a clean answer; `Input.Key`/`Button` (nested) and `HttpStatus` (constructor+field) remain OPEN with no vocabulary at all.
 Fix (Align only): a new `Existing` target form retypes seeds against an ALREADY-INJECTED opaque type instead of minting a new one (supporting fixes: `FlowPropagation` walks through `Tree.Commented`, `wrapCall` handles the BOXED primitive form, `MergeablePolicy` lets a DEPENDENT seed additional hints). Numbers: Align — gdx 7->0, gdx-test 217/4 unchanged, ashley 0, 123 declarations retyped; dependent blast gdx-vfx 0->8->0, visui 7->26->7.
 Rule (residue): `Key`/`Button` need injecting into an existing companion (scala 3 forbids splitting — unbuilt); `HttpStatus` needs a different mechanism; TextraTypist's own unconnected fields are LATENT, invisible to every count.
+Triage (2026-09-04): FAMILY O: `Key`/`Button` need injecting into an existing companion (scala 3 forbids splitting one — unbuilt); `HttpStatus` needs a different mechanism entirely
+
 ## 14. The IDIOM layer — what was REFUSED, with its number
 
 `DESIGN.md` §8.15 licenses this layer: it has no DIFFERENCE to discharge, so its mandate is the reference ports read as evidence and its safety argument is a REFUSAL ENUMERATION rather than a suite result. This section is the rows that were priced and NOT built, each with the number that decided it. Every one is classified (a)/(b)/(c).
@@ -1512,31 +1529,31 @@ Numbers: textra 122->62 (58 Align rows + 2 sibling-family rows, same bug); gdx 0
 Fix: `minByOption(_.id.raw)` — lowest `SymId` is always the frontend's original — applied to `primSym`, `boxedPrimSym`, `arraySym`.
 Triage (2026-09-04): CLOSED-IN-FACT — "Numbers: textra 122->62 …; gdx 0/0/0/54 held; every dependent unchanged"
 
-### I1. `return this;` → `this.type` — **REFUSED on a measured 2 of 709, §1(a)** — CLOSED
+### I1. `return this;` → `this.type` — **REFUSED on a measured 2 of 709, §1(a)**
 Payoff depends on a split nobody had measured: precision gained only where the declared return type is a STRICT ANCESTOR of the declaring class (fluent builder), not where it already IS the class (self-typed, the common case).
 Numbers: `ReturnThisCensus` on libGDX — 709 methods answer `this`, 678 self-typed, 29 answer something else, only 2 in the ancestor-typed bucket that gains anything (4 on gdx-gltf, 0 elsewhere) — libGDX's own `Vector<T extends Vector<T>>` already self-types.
 Rule: `this.type` on a base constrains every DEPENDENT's override (`SurfaceIntrusion` one level down) — re-read the census before building; it is re-derived every run.
-Triage (2026-09-04): CLOSED-IN-FACT — "REFUSED on a measured 2 of 709, §1(a)" — deliberate, permanent, measured
+Triage (2026-09-04): REFUSED-BY-DESIGN — family I: `return this` -> `this.type` priced at 2 of 709 payoff sites — refused on cost; a card would need `ReturnThisCensus` re-run on every new corpus addition to see if the split moves
 
-### I2. instanceof-cascade → `match` — **REFUSED on three independent mechanisms, §1(b)** — CLOSED
+### I2. instanceof-cascade → `match` — **REFUSED on three independent mechanisms, §1(b)**
 Payoff: 29 chains corpus-wide (libGDX 12, gltf 7, liqp 10), 2-3 arms typically — each blocker alone exceeds it: (1) cannot compose with K18's reified-position runtime disjunction, not expressible as a scala type pattern; (2) java's `else if` RE-EVALUATES the scrutinee per arm, `match` evaluates once — silently different for a non-stable expression, no purity test exists (same open question as F7/JS-E17); (3) arms carry `return`/`boundary.break`, needing the same named-boundary interposition T18 already refused for the same jump-stealing hazard.
-Triage (2026-09-04): CLOSED-IN-FACT — "REFUSED on three independent mechanisms, §1(b)" — deliberate, permanent
+Triage (2026-09-04): REFUSED-BY-DESIGN — family I: instanceof-cascade -> `match` needs a reified-position-compatible pattern encoding, a purity test for a re-evaluated scrutinee, and T18's still-unbuilt named-boundary interposition — three blockers, none closed
 
-### I3. StringBuilder → interpolation — **REFUSED, §1(a), and the evidence is the hand ports'** — CLOSED
+### I3. StringBuilder → interpolation — **REFUSED, §1(a), and the evidence is the hand ports'**
 Both reference ports keep `StringBuilder` and reach for `s"..."` only for one-shot messages — no sampled file replaces a loop-accumulated builder; `java.lang.StringBuilder` is directly usable from scala, nothing to translate. Payoff 15 of 82 `new StringBuilder` sites; the perf claim is only plausible, not measured, and detection needs a dataflow question this engine doesn't have.
-Triage (2026-09-04): CLOSED-IN-FACT — "REFUSED, §1(a), and the evidence is the hand ports'" — deliberate, permanent
+Triage (2026-09-04): REFUSED-BY-DESIGN — family I: `StringBuilder` -> interpolation needs a one-shot-vs-loop dataflow detector the engine doesn't have, and no hand-port evidence licenses it anyway
 
-### I4. equals/hashCode → `case class` / derivation — **REFUSED, §1(b)/(c), zero hand-port evidence** — CLOSED
+### I4. equals/hashCode → `case class` / derivation — **REFUSED, §1(b)/(c), zero hand-port evidence**
 `case class` appears exactly once in the sampled hand port, inside a file-level redesign unifying 4 java classes — not a translation of an equals/hashCode pair. Blockers beyond the absent evidence: a `case class` MINTS 6 new members into the shared surface for a cosmetic gain; its equality is over the PRIMARY CONSTRUCTOR's params, a different set than "declared fields" (decided by the ctor funnel, §8.2); a mutable case class's `hashCode` is a live hazard once an instance is a `HashMap` key, which the corpus's value-shaped classes routinely are. `JS-C43`'s record work (6 cells differ, 2 unrepairable) is the precedent.
-Triage (2026-09-04): CLOSED-IN-FACT — "REFUSED, §1(b)/(c), zero hand-port evidence" — deliberate, permanent
+Triage (2026-09-04): REFUSED-BY-DESIGN — family I: equals/hashCode -> `case class` needs a fields-vs-primary-constructor-params reconciliation plus a live-HashMap-key hazard analysis, and zero hand-port evidence licenses it
 
-### I5. C-style array-init loop → `Array.fill`/`tabulate` — **REFUSED, §1(a), negative evidence** — CLOSED
+### I5. C-style array-init loop → `Array.fill`/`tabulate` — **REFUSED, §1(a), negative evidence**
 `Array.tabulate(n)(f)` allocates the function per call in addition to the array; gating on "provably one-shot" needs a dataflow answer this engine doesn't have. The hand port did the opposite on purpose in hot files (`DelaunayTriangulator.scala`: 12 indexed `while` loops, zero `.map`/`.foreach`, grows a reused buffer). Population <=514 candidates, only 2 confirmed, self-declared under-sampled.
-Triage (2026-09-04): CLOSED-IN-FACT — "REFUSED, §1(a), negative evidence" — deliberate, permanent
+Triage (2026-09-04): REFUSED-BY-DESIGN — family I: C-style array-init loop -> `Array.fill`/`tabulate` needs a provably-one-shot dataflow answer the engine doesn't have; the hand port went the opposite way in hot files
 
-### I6. try/finally-close → `Using` or the JLS 14.20.3 lowering — **REFUSED twice, §1(b)** — CLOSED
+### I6. try/finally-close → `Using` or the JLS 14.20.3 lowering — **REFUSED twice, §1(b)**
 `Using(...)` already forbidden by §4.4 (body holds `return`/`boundary.break` bound outside the try — zero `Using(` sites in either reference corpus). Rewriting a hand-written `finally { r.close(); }` into the JLS lowering changes exception-path BEHAVIOUR: java's pair does not suppress (a close exception during unwinding REPLACES the primary), the lowering PRESERVES the primary and suppresses instead — usually what the author wanted; silently upgrading it is the port disagreeing with the library, green compile, no moved count. Population 16 sites; remaining gain nil, the hand-written form is already idiomatic scala.
-Triage (2026-09-04): CLOSED-IN-FACT — "REFUSED twice, §1(b)" — deliberate, permanent
+Triage (2026-09-04): REFUSED-BY-DESIGN — family I: try/finally-close -> `Using`/JLS lowering changes exception-suppression behaviour (replaces vs suppresses the primary) — refused twice, no safe rewrite exists
 
 ### I7. null → `Option` — **AVAILABLE and off; `Named` is the preferred wrapper target** — CLOSED
 `Target.OptionTarget` is built and spec-tested, closes K13 exactly as `Named` does, stays off: `Some(x)` ALLOCATES on every wrap where `Named`'s opaque `T | Null` is zero-allocation; hand-port evidence agrees (34 `Option[` vs 301 `null` in translated-only files, `Option` only at seams a human identified). No standalone corpus library carries nullability annotations to measure against (7 of 11 upstreams surveyed carry none).
