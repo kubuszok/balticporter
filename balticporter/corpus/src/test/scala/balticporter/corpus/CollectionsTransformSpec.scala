@@ -4,7 +4,7 @@ import balticporter.core.FrontendConfig
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.{PortSuite, Ported}
-import balticporter.tir.{Phase, Pipeline, UsageKind}
+import balticporter.tir.{Phase, Pipeline, PolicyBinder, RunScope, UsageKind}
 import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform}
 
 import java.nio.file.Files
@@ -2282,4 +2282,44 @@ class CollectionsTransformSpec extends PortSuite:
           |}""".stripMargin), ph)
     assertEmits(p, "{ given lowlevel.MkArray[E] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[E]]; lowlevel.util.DynamicArray.apply[E]() }")
     assertNotEmits(p, "given lowlevel.MkArray[java.lang.String]")
+  }
+
+  // A dropped-with-injection receiver keeps its own API -- no retarget owner-fallback fires on
+  // it. No `PortFixture` hook for `RunScope.ownSubstitutedOwners`, so this builds
+  // `Pipeline.runTraced` + a `RunScope` directly. Subplan item 2.
+  test("a receiver DROPPED-WITH-INJECTION keeps its injected API -- no retarget rewrite through the owner fallback") {
+    import CollectionsTransform.RetargetRewrite.*
+    def phase(): CollectionsTransform = new CollectionsTransform(
+      retarget = Map("demo.RMap" -> "lowlevel.util.Thing"),
+      retargetRewrites = Map("demo.RMap" -> Map(
+        ("put", 2) -> Template("$recv.put($0, lowlevel.Nullable($1))"))))
+    val sources = List(
+      "RMap.java" ->
+        """package demo;
+          |public class RMap<K, V> {
+          |  public V put(K k, V v) { return null; }
+          |}""".stripMargin,
+      // GLTFMorphTarget analogue: `put` is INHERITED, not overridden -- lets the owner fallback misfire.
+      "Sub.java" ->
+        """package demo;
+          |public class Sub extends RMap<String, Integer> {}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  void call(Sub s, String k, Integer v) { s.put(k, v); }
+          |}""".stripMargin)
+    val before = SpoonTir.fromSources(sources)
+
+    // control: no drop declared -- owner fallback fires, reproducing the defect (fixture sanity check).
+    val (afterNoGuard, _) = Pipeline.runTraced(before, List(phase()), new PolicyBinder(before, before.members))
+    val outNoGuard = new TirEmitter(afterNoGuard).emit
+    assert(clue(outNoGuard).contains(".put(k, lowlevel.Nullable(v))"))
+
+    // fix: `demo.Sub` is dropped-with-injection -- no retarget rewrite may fire on it.
+    val runScope = RunScope.of(before.units.map(_.symbol).toSet, Map.empty,
+      ownSubstituted = Set("demo.Sub"))
+    val (after, _) = Pipeline.runTraced(before, List(phase()), new PolicyBinder(before, before.members, runScope))
+    val out = new TirEmitter(after).emit
+    assert(clue(out).contains(".put(k, v)"))
+    assert(!out.contains("lowlevel.Nullable("))
   }

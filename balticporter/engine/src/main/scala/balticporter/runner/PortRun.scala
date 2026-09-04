@@ -1637,7 +1637,9 @@ final case class PortRun(
                 // Targets and verdict overrides for in-pipeline portability reasoning.
                 RunScope.PlatformPolicy(targets, verdictOverrides),
                 substituted,
-                memberUp)
+                memberUp,
+                // types this run drops+injects -- retarget must not resolve through the parent (item 2).
+                policySubs.dropTypes)
 
   private def partitionUnits(program: Program): (List[Tree.ClassDef], List[Tree.ClassDef]) =
     if frontend.resolutionRoots.isEmpty then (program.units, Nil)

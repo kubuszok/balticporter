@@ -403,6 +403,8 @@ private[transform] trait CollectionsRetarget:
     // retargetRewrite fires only on Tree.Apply, so this handles the Tree.Select form.
     if retargetRewrites.nonEmpty || retargetRewritesByDesc.nonEmpty then
       val selHead = headSym(sel.qual.tpe)
+      // same guard as retargetRewrite -- dropped-with-injection keeps its own API (item 2).
+      if selHead.exists(h => p.symbolOf(h).exists(s => substitutedOwners(s.fullName))) then return scala.None
       selHead.flatMap(retargetSourceOf).orElse(
         for
           mSym <- p.symbolOf(sel.sym)
@@ -1139,6 +1141,8 @@ private[transform] trait CollectionsRetarget:
     // static companion reference fallback: a static call's receiver Ident carries a freshly
     // minted external SymId not in `remap`, so resolve the source FQN from the method's owner instead.
     val recvHead0 = headSym(recv.tpe)
+    // dropped-with-injection receiver keeps its own API -- owner fallback must not fire (item 2).
+    if recvHead0.exists(h => p.symbolOf(h).exists(s => substitutedOwners(s.fullName))) then return scala.None
     recvHead0.flatMap(retargetSourceOf).orElse(
       for
         mSym   <- p.symbolOf(m)

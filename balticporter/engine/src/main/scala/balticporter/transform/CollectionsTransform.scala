@@ -71,6 +71,9 @@ final class CollectionsTransform(
   /** Resolved bindings for each family source. `Ownership.Either`. */
   private[transform] var boundFamilies: Map[String, Binding[SymId]] = Map.empty
 
+  /** Base's + this run's own SUBSTITUTED (dropped+injected) owners, upstream FQNs. Item 2. */
+  private[transform] var substitutedOwners: Set[String] = Set.empty
+
   def bindPolicy(binder: PolicyBinder): Unit =
     val setting = s"CollectionsTransform(scope) ${scope.productPrefix} entry"
     boundScope = scope.entries.toList.sorted.map(e => e -> binder.bindScope(name, setting, e)).toMap
@@ -82,6 +85,7 @@ final class CollectionsTransform(
       .map(k => k -> binder.bindType(name, SinkSetting, k, Ownership.Either)).toMap
     boundFamilies = families.keys.toList.sorted
       .map(k => k -> binder.bindType(name, FamilySetting, k, Ownership.Either)).toMap
+    substitutedOwners = binder.run.baseSubstitutedOwners ++ binder.run.ownSubstitutedOwners
 
   /** Fingerprint covering scope, mapping table, retargets, carriers and families.
     * Segments omitted when their parameter is empty, so no baseline moves. */

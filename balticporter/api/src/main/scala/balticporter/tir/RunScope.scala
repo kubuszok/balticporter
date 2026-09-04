@@ -77,6 +77,11 @@ trait RunScope:
     * is empty for a base port, a single-module port and every spec. */
   def baseSubstitutedOwners: Set[String] = Set.empty
 
+  /** Types THIS RUN drops and replaces with an injected file. A rewrite dispatcher resolving a
+    * call's table off the callee's owner (rather than the receiver's own type) must not fire on
+    * one of these — the injected surface has its own API. Subplan item 2. */
+  def ownSubstitutedOwners: Set[String] = Set.empty
+
   /** UPSTREAM member descriptors from the base's PUBLISHED PORT MAP — the set a dependent phase
     * reads to decide whether the base RETYPED a parameter (O8 dependent blast, wave 2.11).
     *
@@ -141,17 +146,21 @@ object RunScope:
     *                       answer so every existing construction keeps its behaviour exactly.
     * @param substituted    upstream FQNs of types the base SUBSTITUTED — dropped and replaced by an
     *                       injected file. Detection phases skip these owners so they do not rename
-    *                       members the injected file never renamed (D14, §1.5). Empty for a base port. */
+    *                       members the injected file never renamed (D14, §1.5). Empty for a base port.
+    * @param ownSubstituted see [[RunScope.ownSubstitutedOwners]]. Empty for a run with no drops. */
   def of(emitted: Set[SymId], own: Map[String, Set[String]],
          platform: PlatformPolicy = PlatformPolicy.everyPlatform,
          substituted: Set[String] = Set.empty,
-         memberUpstream: Set[String] = Set.empty): RunScope =
+         memberUpstream: Set[String] = Set.empty,
+         ownSubstituted: Set[String] = Set.empty): RunScope =
     val p = platform
     val s = substituted
     val mu = memberUpstream
+    val os = ownSubstituted
     new RunScope:
       def emits(unit: SymId): Boolean                     = emitted(unit)
       def contributed(phase: String): Option[Set[String]] = own.get(phase)
       override def platform: PlatformPolicy               = p
       override def baseSubstitutedOwners: Set[String]     = s
       override def baseMemberUpstream: Set[String]        = mu
+      override def ownSubstitutedOwners: Set[String]      = os

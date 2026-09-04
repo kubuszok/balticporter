@@ -952,11 +952,22 @@ final class NullabilityTransform(
         rh != SymId.None && mo != SymId.None && rh != mo && !p.owns(rh) && p.owns(mo)
       case _ => false
 
+  /** Base's + this run's own SUBSTITUTED (dropped+injected) owners, upstream FQNs. Item 2. */
+  private def substitutedOwners: Set[String] = runScope.baseSubstitutedOwners ++ runScope.ownSubstitutedOwners
+
+  /** Receiver type dropped+injected -- its surface's nullability is not java's `@Null`, so a
+    * formal wrapped at the (inherited) callee's OWN declaration must not coerce here. Item 2. */
+  private def isSubstitutedReceiver(t: Tree.Apply)(using p: Program): Boolean =
+    val recvHead = t.fun match
+      case s: Tree.Select => headSym(s.qual.tpe)
+      case _              => scala.None
+    recvHead.exists(h => p.symbolOf(h).exists(s => substitutedOwners(s.fullName)))
+
   private def coerceArgs(t: Tree.Apply)(using p: Program): Term =
     // external callee: a class file's formal answers "what TYPE", not "does this slot accept null" —
     // unwrap with `.orNull` (java's default) and count the seam.
-    // retargetted receiver: java formals wrapped at plan time don't describe the target's own API — treat as external.
-    val retargetted = isRetargetted(t)
+    // substituted receiver: java formals wrapped at plan time don't describe its actual API.
+    val retargetted = isRetargetted(t) || isSubstitutedReceiver(t)
     val formals = p.symbolOf(t.method).map(_.info).collect {
       case TypeRepr.MethodType(ps, _, _)                       => ps.map(_._2)
       case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
@@ -965,9 +976,8 @@ final class NullabilityTransform(
     if retargetted then
       t.args.filter(isWrapped).foreach { a =>
         issues += Finding(Issue.UncoercibleSeam, p.symbolOf(t.method).map(_.fullName).getOrElse("?"),
-          "a wrapped argument reaches a retargetted callee — unwrapped because the receiver's " +
-            "type was retargetted and the java method's @Null annotations do not describe the " +
-            "target's API",
+          "a wrapped argument reaches a retargetted or substituted callee — unwrapped because the " +
+            "receiver's type does not describe the java method's @Null-annotated formal",
           a.origin, currentUnit)
       }
       t.copy(args = t.args.map(a => if isWrapped(a) then unwrapOrNull(a) else a))
