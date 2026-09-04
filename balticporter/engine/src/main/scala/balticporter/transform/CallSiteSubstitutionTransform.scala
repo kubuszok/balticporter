@@ -3,80 +3,19 @@ package balticporter.transform
 import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
 import balticporter.tir.*
 
-/** Replace a CALL with ready-made Scala that names the call's own receiver and arguments — the
-  * call-level twin of [[MethodBodyTransform]].
+/** Replaces a CALL with ready-made Scala naming the call's own receiver and arguments — the
+  * call-level twin of [[MethodBodyTransform]], for the shape neither `dropMethods`/`inject` nor
+  * `MethodBodyTransform` can express: keep this method, rewrite one call inside it. ENGINE-LIMITS D7
   *
-  * ==The gap this fills==
-  * A port has three seams for code it must not translate mechanically and all three are
-  * WHOLE-DECLARATION: `Substitutions.dropTypes` removes a type and `inject` supplies a replacement
-  * file, `dropMethods` removes a method and supplies nothing, and [[MethodBodyTransform]] replaces
-  * the body of a method it keeps. None of them can say *keep this method, rewrite this one call in
-  * it* — and that is the shape a dependent module keeps arriving at (`ENGINE-LIMITS.md` D7): the
-  * base drops a member, the dependent still calls it, and the call sits at one line of a 464-line
-  * method that is otherwise entirely mechanical. Replacing that method's body would fork it from
-  * upstream permanently to change one argument; dropping it would delete the feature.
+  * A key is a [[MemberKey]] naming the resolved callee (must be exact — a bare `owner#name` key is
+  * `Ambiguous` over multiple overloads, since one positional template can only fit one arity); the
+  * value is an expression template with `{recv}`, `{arg0}`…`{argN}` (callee parameter positions,
+  * not java call-token positions), `{{`/`}}` for a literal brace. Parsed once at bind time; spliced
+  * as a [[Tree.Opaque]] over terms, never a string. CLAUDE.md §1(b): mechanism is universal, `calls`
+  * is per-library policy; empty = no-op. Every refusal (vararg spread, wrong arity, missing
+  * receiver, method-value reference) is counted, not approximated.
   *
-  * ==What a policy entry says==
-  * {{{
-  * new CallSiteSubstitutionTransform(Map(
-  *   "com.foo.Json#fromJson(Class,FileHandle)" -> "com.bar.Codecs.read({arg0}, {arg1}.readString())",
-  *   "java.util.Collections#sort(List,Comparator)" -> "{arg0}.sortInPlace()(using {arg1})",
-  * ))
-  * }}}
-  * The key is a [[MemberKey]] naming the RESOLVED CALLEE, bound through [[PolicyBinder]] like every
-  * other keyed seam. The value is an EXPRESSION TEMPLATE: ready-made Scala with `{recv}` for the
-  * call's receiver and `{arg0}`…`{argN}` for its arguments, `{{`/`}}` for a literal brace, and
-  * CLAUDE.md §6 applying to what is written around them (fully-qualified names, no imports).
-  *
-  * Two things about the numbering, because both are easy to assume wrongly. It is the CALLEE's
-  * parameter positions, not the java call's token positions: a VARARG method's trailing arguments
-  * are packed into one array before the TIR sees them, so a `f(T, U...)` callee has `{arg0}` and
-  * `{arg1}`, the second being the array. And a receiver is never `{arg0}` — an instance call's
-  * receiver is `{recv}`, and a template that confuses the two is an arity fault at bind time
-  * rather than a wrong rewrite.
-  *
-  * ==Exactness is REQUIRED, and that is what the key grammar is for==
-  * A bare `owner#name` key names every overload, and DESIGN.md §8.1 draws the line here explicitly:
-  * a bare key is legal for `dropMethods` (that is how a reflective family is dropped wholesale) and
-  * is refused for a call-site substitution, because a positional template can only be right for one
-  * arity. The flagship is CLAUDE.md §4.4's `remove`: a key for `remove(Object)` must not rewrite
-  * `remove(int)`, and nothing but the descriptor can tell them apart — `Symbol.fullName` is the
-  * same string for both. So a key that names more than one overload is `Ambiguous` with the
-  * candidates listed, never one of them picked.
-  *
-  * ==The holes are TREES, and the template is parsed ONCE==
-  * The template is parsed at BIND time into literal parts and numbered holes, so a `{arg7}` on a
-  * two-argument callee is a `Malformed` finding before the pipeline runs rather than a compile
-  * error in emitted Scala nobody attributes. At each site the parts and the call's own argument
-  * TERMS are assembled into a [[Tree.Opaque]] with holes — not a string — which is what keeps the
-  * spliced arguments visible to every later phase (the package rename runs LAST, §4.56) and to the
-  * xref. Rendering them is the emitter's job, because printing a term is only ever the emitter's
-  * job.
-  *
-  * ==Refusals, each counted rather than approximated==
-  * A refusal is a call the port asked to rewrite and this phase left alone, which is exactly the
-  * silent no-op [[PolicyReport]] exists for. Each is reported with its Java origin, and none is
-  * best-effort'd:
-  *
-  *   - '''a VARARG SPREAD among the arguments.''' A [[Tree.Repeated]] holds a variable number of
-  *     terms behind one argument position and a positional hole names a term. Spliced anyway it
-  *     would emit a bare comma list into whatever the template wrote around it.
-  *   - '''an argument count this site does not have.''' The callee's declared arity is what the
-  *     template was checked against; a site carrying a different number of terms is one the
-  *     frontend shaped differently, and the positions can no longer be trusted.
-  *   - '''`{recv}` with no receiver.''' A static call, or one java wrote unqualified.
-  *   - '''the callee used as a METHOD VALUE''' (`Foo::bar`). There is no argument list to splice,
-  *     so a template with holes has nothing to say; the reference survives and names a callee the
-  *     port declared it does not call.
-  *
-  * ==Kind==
-  * CLAUDE.md §1(b). The MECHANISM — bind a callee, parse a template, splice the call's own terms —
-  * is a fact about Java and Scala and is the same for every library. WHICH calls and WHAT Scala is
-  * one library's knowledge and arrives as a constructor parameter. An empty map is a no-op with no
-  * code path of its own.
-  *
-  * @param calls
-  *   resolved-callee member key → the expression template to replace each call with.
+  * @param calls resolved-callee member key → the expression template to replace each call with.
   */
 final class CallSiteSubstitutionTransform(calls: Map[String, String] = Map.empty)
     extends Phase, PolicySource, SurfacePolicy, PolicyBound:
@@ -92,9 +31,8 @@ final class CallSiteSubstitutionTransform(calls: Map[String, String] = Map.empty
   private var templates: Map[String, Either[String, Template]] = Map.empty
   private var records: List[PolicyBinder.Record] = Nil
 
-  /** callee symbol → everything a site needs. Built only from keys that BOUND exactly, whose
-    * template PARSED, and whose holes fit the callee's arity — so a faulty entry is a finding and
-    * never a half-applied rewrite. */
+  /** callee symbol → everything a site needs. Built only from keys that bound exactly, whose
+    * template parsed, and whose holes fit the callee's arity. */
   private var bySym: Map[SymId, BoundCall] = Map.empty
 
   /** keys whose overload identity the engine cannot prove, and keys whose template does not fit
@@ -102,10 +40,8 @@ final class CallSiteSubstitutionTransform(calls: Map[String, String] = Map.empty
   private var faults: Map[String, (PolicyIssue, String)] = Map.empty
 
   def bindPolicy(binder: PolicyBinder): Unit =
-    // `Ownership.Either`, and for `TypeRedirectTransform`'s reason rather than by relaxation: what
-    // this phase rewrites is a REFERENCE, and a callee is normally a member this module does not
-    // declare — the JDK's, or a base module's. Bound as `Owned` the whole mechanism would report
-    // its own correct rewrites as never-matched.
+    // Ownership.Either: a callee is normally a member this module does not declare (JDK's or a
+    // base module's); bound as Owned this would report its own correct rewrites as never-matched.
     bound     = calls.keys.toList.sorted.map(k => k -> binder.bindCallee(name, Setting, k)).toMap
     records   = binder.recordsFor(name)
     templates = calls.map((k, t) => k -> Template.parse(t))
@@ -127,24 +63,15 @@ final class CallSiteSubstitutionTransform(calls: Map[String, String] = Map.empty
     bySym  = ok.result()
     faults = bad.result()
 
-  /** the callee's declared parameter count — from the HIT's key when it carries one (the index's
-    * own spelling, or the precise key the author wrote), otherwise from the symbol. `None` only
+  /** the callee's declared parameter count, from the hit's key or else the symbol. `None` only
     * where neither exists, which [[exactnessFault]] has already refused. */
   private def arityOf(program: Program, hit: PolicyBinder.Hit): Option[Int] =
     hit.key.descriptor.map(_.arity)
       .orElse(hit.sym.flatMap(program.symbolOf).flatMap(_.descriptor).map(_.arity))
 
-  /** Can the engine PROVE which overload this key named? `Some(why)` when it cannot.
-    *
-    * The proof is a descriptor, and the one place it can be missing is the one DESIGN.md §8.1
-    * admits: an external member whose declaration the frontend could not resolve is interned with
-    * no parameter spelling at all, so a BARE key matching it matched by owner and name alone —
-    * which is the same string for every overload. A PRECISE key is unaffected by construction: the
-    * binder requires the descriptor to be present and equal before it matches at all.
-    *
-    * Read from the HIT rather than from the declared string, so a bare key that landed on a member
-    * the frontend DID record is accepted — a member with exactly one overload needs no parameter
-    * list to be unambiguous, and the binder has already reported the case where it has more. */
+  /** Can the engine prove which overload this key named? `Some(why)` when it cannot — an external
+    * member the frontend could not resolve interns with no descriptor, so a bare key matches by
+    * owner and name alone, the same string for every overload. DESIGN.md §8.1 */
   private def exactnessFault(program: Program, hit: PolicyBinder.Hit): Option[String] =
     if hit.key.descriptor.isDefined then None
     else if hit.sym.flatMap(program.symbolOf).flatMap(_.descriptor).isDefined then None
@@ -155,11 +82,9 @@ final class CallSiteSubstitutionTransform(calls: Map[String, String] = Map.empty
         "(DESIGN.md §8.1). Write the precise `owner#name(P1,P2)` form; if the spelling is still " +
         "absent the member is outside this run's reach and its calls cannot be substituted safely")
 
-  /** `Some(complaint)` when the template names something this callee cannot supply.
-    *
-    * Checked at BIND time from the callee's own declared arity, which is the whole reason
-    * `Symbol.descriptor` exists: an arity read at match time from one call's argument list would
-    * accept the template and then be wrong at the next site. */
+  /** `Some(complaint)` when the template names something this callee cannot supply. Checked at
+    * bind time from the callee's declared arity — reading it at match time from one call's
+    * argument list would accept the template and then be wrong at the next site. */
   private def templateFault(program: Program, hit: PolicyBinder.Hit, t: Template,
                             arity: Int): Option[String] =
     if t.maxArg.exists(_ >= arity) then
@@ -169,10 +94,8 @@ final class CallSiteSubstitutionTransform(calls: Map[String, String] = Map.empty
       Some("the template names {recv} and the callee is STATIC, so there is no receiver to splice")
     else None
 
-  /** Two modules that rewrite one shared call differently produce call sites that each compile
-    * alone and cannot compile together, which is [[SurfacePolicy]]'s whole subject (§1.5). The
-    * TEMPLATE is fingerprinted as well as the key, because "we both rewrite `Json#fromJson`" is not
-    * agreement when one writes a codec call and the other writes a throw. */
+  /** Two modules rewriting one shared call differently produce sites that cannot compile
+    * together (§1.5), so the template is fingerprinted along with the key. */
   def surfaceFingerprint: String =
     calls.toList.sorted.map((k, v) => s"$k=${v.hashCode.toHexString}").mkString(",")
 
@@ -183,22 +106,16 @@ final class CallSiteSubstitutionTransform(calls: Map[String, String] = Map.empty
   private val refused = collection.mutable.ListBuffer.empty[(String, String, Origin)]
   private val done    = collection.mutable.Map.empty[String, Int]
 
-  /** call sites rewritten, by declared key, in a stable order — so a run can STATE the number
-    * rather than leaving it to be inferred from a diff. Reflects the last [[run]]. */
+  /** call sites rewritten, by declared key, in a stable order. Reflects the last [[run]]. */
   def substituted: List[(String, Int)] = done.toList.sortBy(_._1)
 
-  /** every call this phase was asked to rewrite and did not, with its reason and its Java origin.
-    * A refusal moves no error count and no test — it is a call that still says what upstream said,
-    * in a port that declared it should not. */
+  /** every call this phase was asked to rewrite and did not, with its reason and Java origin. */
   def refusals: List[(String, String, Origin)] =
     refused.toList.distinct.sortBy((k, w, o) => (k, o.javaPath, o.line, w))
 
   /** Never-fired keys, unparseable templates, unprovable overload identity, templates that do not
-    * fit their callee, and every refused SITE.
-    *
-    * The first four are properties of the POLICY and the PROGRAM and are complete the moment the
-    * keys are bound — so a phase that never ran reports the same thing a phase that ran and matched
-    * nothing does. The refusals are properties of the RUN and are empty before it. */
+    * fit their callee, and every refused site. The first four are complete once keys are bound,
+    * before [[run]]; refusals are properties of the run and empty before it. */
   def policyReport: PolicyReport =
     def finding(k: String, issue: PolicyIssue, detail: String) =
       PolicyFinding(name, Setting, k, issue, detail)
@@ -209,12 +126,9 @@ final class CallSiteSubstitutionTransform(calls: Map[String, String] = Map.empty
       faults.toList.sortBy(_._1).map((k, f) => finding(k, f._1, f._2)) ++
       refusals.map((k, why, o) => finding(k, PolicyIssue.Unverifiable,
         s"$why — at ${o.javaPath}:${o.line}, the call is left as upstream wrote it")) ++
-      // A key that BOUND and rewrote NOTHING. Not the same as an unbound key, and it has its own
-      // instruction: the callee is real, so the fault is either that nothing calls it or — the
-      // case that costs a session — that an EARLIER phase already re-pointed those calls, at which
-      // point this phase's callee symbol occurs nowhere and it matches nothing in silence. Ordering
-      // is the port's to fix and nothing else in the pipeline can see it: every count is unchanged
-      // and the emitted code is what the port asked to change.
+      // a key that bound and rewrote nothing: either nothing calls it, or an EARLIER phase already
+      // re-pointed those calls, so this phase's callee symbol occurs nowhere. Ordering is the
+      // port's to fix; nothing else in the pipeline can see it.
       bySym.values.map(_.key).toList.distinct.sorted
         .filterNot(k => done.contains(k) || refused.exists(_._1 == k))
         .map(k => finding(k, PolicyIssue.NeverMatched,
@@ -233,15 +147,9 @@ final class CallSiteSubstitutionTransform(calls: Map[String, String] = Map.empty
     done.clear()
     if bySym.isEmpty then return program
 
-    // DECISION PROVENANCE, one row per (DECLARATION, key) — `Decision.declarationsUsing`'s rule,
-    // read from the PRE-rewrite program, which is the only one that still names the callee.
-    //
-    // Held to the declarations this phase will ACTUALLY rewrite: a row claiming a substitution
-    // that was refused would also emit a porter note claiming it, and a note is the one artifact a
-    // reader takes at face value. `siteFault` is the same predicate the traversal applies, so the
-    // two cannot disagree. The site COUNT goes in the detail because a substitution is not visible
-    // as a name change in the diff — that is what separates it from a redirect — so how many of a
-    // method's calls the port replaced has nowhere else to be said.
+    // one decision row per (declaration, key), read from the pre-rewrite program. Held to
+    // declarations this phase will ACTUALLY rewrite via siteFault, the same predicate the
+    // traversal applies, so a row can never claim a substitution that was refused.
     bySym.toList.sortBy((s, b) => (b.key, s.raw)).foreach { (callee, b) =>
       val calleeFqn = program.symbolOf(callee).map(_.fullName).getOrElse(b.key)
       val rewritten = program.usages(callee).groupBy(_.enclosing).view
@@ -256,9 +164,7 @@ final class CallSiteSubstitutionTransform(calls: Map[String, String] = Map.empty
             kind       = Decision.Kind.SubstitutedCall,
             subject    = encl,
             subjectFqn = Decision.fqnOf(program, encl, calleeFqn),
-            // The KEY is NOT repeated here: `Reason.Configured` already carries it, and
-            // `PorterNote.pairs` renders the classification first — a `key=` in the detail as well
-            // prints the same string twice in one note, which reads as two facts.
+            // key not repeated here: Reason.Configured already carries it.
             detail     = Map(
               "sites" -> rewritten(encl).toString,
               "to"    -> calls(b.key),
@@ -287,9 +193,7 @@ final class CallSiteSubstitutionTransform(calls: Map[String, String] = Map.empty
             done.update(b.key, done.getOrElse(b.key, 0) + 1)
             b.template.splice(receiverOf(t), t.args, t.tpe, t.origin)
 
-  /** `Foo::bar` naming a substituted callee. There is no argument list at a method VALUE, so a
-    * positional template has nothing to splice — and left silent this is a surviving reference to
-    * exactly the member the port declared it does not call. */
+  /** `Foo::bar` naming a substituted callee — no argument list to splice a template into. */
   override def transformTerm(t: Term)(using Program): Term =
     t match
       case mr: Tree.MethodRef if bySym.contains(mr.method) =>
@@ -302,28 +206,23 @@ final class CallSiteSubstitutionTransform(calls: Map[String, String] = Map.empty
 /** the template grammar, and the two structural questions the phase asks of a site. */
 object CallSiteSubstitutionTransform:
 
-  /** the `setting` every finding this phase makes is filed under — the string an agent greps for in
-    * the manifest (§4.575). */
+  /** the `setting` every finding this phase makes is filed under (§4.575). */
   val Setting = "CallSiteSubstitutionTransform(calls)"
 
-  /** one installed key: what an individual call site needs to know, resolved once at bind time. */
+  /** one installed key: what an individual call site needs, resolved once at bind time. */
   final case class Bound(key: String, template: Template, arity: Int, dropped: Boolean)
 
-  /** the RECEIVER term of a call, seen through an explicit type application.
-    *
-    * `xs.sort[T](c)` is `Apply(TypeApply(Select(xs, sort), [T]), …)`, and matching only `Select`
-    * silently skips every explicitly-instantiated call — the shape `CollectionsTransform` records
-    * having been bitten by. A call through a bare `Ident` has no receiver TERM at all (a static, or
-    * an unqualified call on `this`), which is a different answer from "not a call". */
+  /** the receiver term of a call, seen through an explicit type application (`xs.sort[T](c)` is
+    * `Apply(TypeApply(Select(xs, sort), [T]), …)` — matching only `Select` misses it). A bare
+    * `Ident` call has no receiver term at all (static, or unqualified on `this`). */
   def receiverOf(t: Tree.Apply): Option[Term] = t.fun match
     case Tree.Select(r, _, _, _)                          => Some(r)
     case Tree.TypeApply(Tree.Select(r, _, _, _), _, _, _) => Some(r)
     case _                                                => None
 
-  /** Why this SITE cannot take the template — `None` when it can.
-    *
-    * ONE predicate, applied by the traversal that rewrites and by the pass that records the
-    * decisions, so a decision can never claim a substitution the rewrite refused. */
+  /** Why this site cannot take the template — `None` when it can. One predicate, applied by both
+    * the rewriting traversal and the decision recorder, so a decision can never claim a
+    * substitution the rewrite refused. */
   def siteFault(t: Tree.Apply, b: Bound): Option[String] =
     if t.args.exists(a => Tree.uncomment(a).isInstanceOf[Tree.Repeated]) then
       Some("the call passes a VARARG SPREAD, which no positional hole can name")
@@ -339,12 +238,8 @@ object CallSiteSubstitutionTransform:
     case Recv
     case Arg(index: Int)
 
-  /** A parsed expression template — literal parts interleaved with holes.
-    *
-    * Parsed ONCE, at bind time, for the reason DESIGN.md §8.1 gives for binding keys there: a
-    * template fault becomes a finding before the pipeline runs, where the same fault discovered at
-    * emission is a compile error in generated Scala that nobody attributes to a manifest entry.
-    *
+  /** A parsed expression template — literal parts interleaved with holes. Parsed once at bind
+    * time, so a template fault becomes a finding before the pipeline runs. DESIGN.md §8.1
     * `parts` always has exactly one more element than `holes`. */
   final case class Template(parts: List[String], holes: List[Hole]):
     def usesRecv: Boolean   = holes.contains(Hole.Recv)
@@ -362,12 +257,9 @@ object CallSiteSubstitutionTransform:
 
   object Template:
 
-    /** Parse a template, or say precisely what is wrong with it.
-      *
-      * The grammar is deliberately tiny and everything outside it is REFUSED rather than carried
-      * through as literal text, for `MemberKey.parse`'s reason: the failure mode of a lenient parse
-      * is a template that emits `{arg0}` into the output, where it is a compile error naming a
-      * GENERATED file rather than the policy entry that caused it.
+    /** Parse a template, or say precisely what is wrong with it. The grammar is deliberately
+      * tiny and anything outside it is refused rather than carried through as literal text — a
+      * lenient parse would emit `{arg0}` into the output as a compile error nobody can attribute.
       *
       *   - `{recv}`            the call's receiver
       *   - `{arg0}` … `{argN}` its arguments, positionally

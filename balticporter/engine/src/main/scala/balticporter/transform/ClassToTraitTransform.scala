@@ -6,16 +6,11 @@ import balticporter.tir.*
 /** Rewrite a nominated abstract class into a trait and transform every subclass (named and
   * anonymous) to use `override val` members instead of constructor arguments.
   *
-  * ==Declaration side==
-  * The nominated type's OWN ClassDef is rewritten in the TIR: constructors removed, the mapped
-  * parameters become abstract `val` members, flags set to `isTrait`. This is done even though
-  * emission drops the type in favour of the injected file, because the CtorFunnel then sees a
-  * parent with no constructor -- so there is nothing to replay and nothing to widen
-  * (`ctor-replay-widening` does not fire). The emitter's override derivation sees the abstract vals
-  * as parent members, which settles the `max$shadow` rename by section 4.55's implementation-pair rule.
+  * The nominated type's own `ClassDef` is rewritten in the TIR — constructors removed, mapped
+  * parameters become abstract `val` members, `isTrait` set — even though emission may drop it in
+  * favour of an injected file, so the `CtorFunnel` sees a parent with no constructor to replay.
   *
-  * ==Kind==
-  * CLAUDE.md section 1(b). Empty specs = no-op.
+  * CLAUDE.md §1(b). Empty specs = no-op.
   */
 final class ClassToTraitTransform(
     val specs: Map[String, List[ClassToTraitTransform.ParamMapping]] = Map.empty,
@@ -56,7 +51,6 @@ final class ClassToTraitTransform(
     if specs.isEmpty then return program
     given Program = program
 
-    // Resolve nominated types
     resolved = (for
       (fqn, mappings) <- specs.toList
       sym             <- program.symbols.all.find(_.fullName == fqn)
@@ -80,9 +74,8 @@ final class ClassToTraitTransform(
       val ownedFields = program.symbols.all.filter { s =>
         s.owner == sym.id && s.name != "<init>" && !s.flags.isStatic && !s.flags.isAbstract
       }.map(_.name).toSet
-      // Build delegation expansions: for each non-widest parent constructor, trace its
-      // `this(...)` delegation to the widest, collecting the expanded argument list.
-      // Uses valueParams (excluding using clauses) for arity to match superArgsOf.
+      // For each non-widest parent constructor, trace its `this(...)` delegation to the widest,
+      // collecting the expanded argument list (arity via valueParams, matching superArgsOf).
       val widestArity = widestCtor.map(c => CtorFunnel.valueParams(program, c).size).getOrElse(0)
       val ctorDelegations: Map[Int, (List[SymId], List[Term])] = parentCd.toList.flatMap { cd =>
         val allCtors = cd.body.collect { case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == "<init>") => d }
@@ -90,7 +83,6 @@ final class ClassToTraitTransform(
           val arity = CtorFunnel.valueParams(program, ctor).size
           if arity >= widestArity then None // the widest itself needs no expansion
           else
-            // Look at this ctor's head statement for a this(...) delegation
             CtorFunnel.stmtsOf(ctor).headOption.collect { case t: Term => Tree.uncomment(t) }.flatMap {
               case Tree.Apply(Tree.Select(r, m, _, _), delegArgs, _, _, _)
                   if program.symbolOf(m).exists(_.name == "<init>") && !r.isInstanceOf[Tree.Super] && delegArgs.nonEmpty =>
@@ -120,14 +112,9 @@ final class ClassToTraitTransform(
     val units2 = p1.units.map(u => StandardTraversal.mapClassDef(this, u)(using p1))
     val symbols2 = StandardTraversal.mapSymbols(this, p1.symbols)(using p1)
 
-    // 2b) Transitive subclass delegation: classes that extend a class that was REWRITTEN by step 2
-    // (gained a paramful widest constructor via override vals). Their constructors all call
-    // super(...) on the rewritten class, and the same multi-root delegation rewrite applies --
-    // rewriting narrower roots to this(...) delegations targeting the widest constructor of the
-    // subclass itself. This makes the funnel promote the widest constructor as primary.
-    //
-    // Built from the REWRITTEN program: after step 2, each rewritten class (e.g. FlushablePool)
-    // has this(...) delegations in its constructors that the delegation expansion can trace.
+    // 2b) Transitive subclass delegation: a class extending one REWRITTEN by step 2 calls
+    // super(...) on it, so the same multi-root rewrite retargets narrower roots to this(...)
+    // delegations on the widest constructor, promoting it as primary.
     val p2 = p1.rebuilt(units2, symbols2)
     val transitiveResolved: Map[SymId, ResolvedSpec] = buildTransitiveSpecs(p2)
     val units2b = if transitiveResolved.isEmpty then units2
@@ -143,14 +130,13 @@ final class ClassToTraitTransform(
     val finalSyms = (if transitiveResolved.isEmpty then symbols2 else p2.symbols)
     val allSyms = finalSyms.all.map { s =>
       if resolved.contains(s.id) then
-        // The nominated type itself: mark as trait
         s.copy(flags = s.flags.copy(isTrait = true, isAbstract = false))
       else if resolved.values.exists(_.parentSymId == s.owner) && s.name == "<init>" then
-        // Constructor of a nominated type: mark abstract (a trait has no constructor to call)
+        // a trait has no constructor to call
         s.copy(flags = s.flags.copy(isAbstract = true))
       else if resolved.values.exists(_.parentSymId == s.owner) && mappedValNames.contains(s.name) &&
               !s.flags.isStatic then
-        // Mapped field of a nominated type: mark abstract (override vals in subclasses)
+        // override vals in subclasses
         s.copy(flags = s.flags.copy(isAbstract = true, isMutable = false))
       else s
     } ++ newSyms.result()
@@ -162,19 +148,16 @@ final class ClassToTraitTransform(
   private def transformNominatedType(cd: Tree.ClassDef, spec: ResolvedSpec, program: Program): Tree.ClassDef =
     val origin = cd.origin
     val mappedFieldNames = spec.mappings.map(_.valName).toSet
-    // Remove all constructors AND the mapped fields from the body.
-    // The mapped fields are replaced by abstract vals — keeping both causes the
-    // shadow-rename pass (§4.55) to rename the field to `max$field`, which breaks
-    // every reference to `pool.max` in the emitted code.
+    // Mapped fields are replaced by abstract vals; keeping both triggers the §4.55 shadow-rename
+    // pass, renaming the field to `max$field` and breaking every `pool.max` reference.
     val bodyNoCtors = cd.body.filterNot {
       case d: Tree.DefDef => program.symbolOf(d.symbol).exists(_.name == "<init>")
       case d: Tree.ValDef => program.symbolOf(d.symbol).exists(s => mappedFieldNames.contains(s.name))
       case _ => false
     }
-    // Add abstract DEF definitions (parameterless, no body) for the mapped parameters.
-    // DefDef rather than ValDef so the emitter's resolveFieldShadowing recognises the pair:
-    // its implementsInherited test matches "d: Tree.DefDef => d.paramss.isEmpty && d.rhs.isEmpty"
-    // and treats the subclass's override val as an implementation pair rather than a shadow.
+    // DefDef, not ValDef: `resolveFieldShadowing`'s `implementsInherited` test matches a
+    // parameterless, bodyless DefDef, treating the subclass's override val as an implementation
+    // pair rather than a shadow (§4.55).
     val abstractVals = spec.mappings.flatMap { m =>
       if m.index < spec.formalTypes.size then
         val tpe = spec.formalTypes(m.index)
@@ -220,15 +203,9 @@ final class ClassToTraitTransform(
 
     val widestWithArgs = ctorsWithSuperArgs.maxByOption(_._2.size)
 
-    // --- multi-root rewrite: when MULTIPLE constructors call super(...) on the nominated parent
-    // (including nilary super()), rewrite the NARROWER ones into this(...) delegations to the
-    // widest, using the parent's own constructor delegation chain to expand the args. This makes
-    // the widest constructor the funnel's UNIQUE root, so isSafeArg is true and its params become
-    // override val RHSes.
-    //
-    // A nilary super() has no args in `superArgsOf` (which requires nonEmpty), but it IS a root
-    // that calls super on the nominated parent. Pool's own nilary constructor delegates
-    // `this(16, MAX_VALUE)`, so FlushablePool() -> super() -> this(16, MAX_VALUE).
+    // multi-root rewrite: when MULTIPLE constructors call super(...) on the nominated parent
+    // (nilary super() included), rewrite the NARROWER ones into this(...) delegations to the
+    // widest, making it the funnel's UNIQUE root so its params become override val RHSes.
     val roots = ctors.filterNot(c => CtorFunnel.delegatesToThis(program, c))
     val nilaryRoots = roots.filter { c =>
       CtorFunnel.valueParams(program, c).isEmpty &&
@@ -242,8 +219,8 @@ final class ClassToTraitTransform(
     val multipleRootsCallSuper = widestWithArgs.isDefined && superRootSyms.size > 1 &&
       (spec.ctorDelegations.nonEmpty || spec.defaults.nonEmpty)
 
-    // Rewrite narrower roots into this(...) delegations BEFORE computing isSafeArg.
-    // After rewriting, the widest constructor becomes the UNIQUE root.
+    // Narrower roots are rewritten to this(...) delegations BEFORE isSafeArg is computed, so the
+    // widest constructor becomes the unique root.
     val rewrittenBody: List[Statement] = if multipleRootsCallSuper then
       val widestCtor = widestWithArgs.get._1
       cd.body.map {
@@ -254,7 +231,6 @@ final class ClassToTraitTransform(
       }
     else cd.body
 
-    // Re-collect ctors from the (possibly rewritten) body
     val ctors2 = rewrittenBody.collect { case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == "<init>") => d }
 
     val widestWithArgs2 = ctors2
@@ -262,11 +238,9 @@ final class ClassToTraitTransform(
       .filter(_._2.nonEmpty)
       .maxByOption(_._2.size)
 
-    // Check if the widest-with-args constructor is the CLASS's primary (its params will be
-    // promoted to class-level by the ctor funnel). A super arg that references a SECONDARY
-    // ctor's parameter becomes self-referential when placed as an override val RHS at class
-    // body level — `override val max: Int = max` reads ITSELF and evaluates to 0.
-    // After multi-root rewrite, the widest IS the unique root.
+    // A super arg referencing a SECONDARY ctor's parameter becomes self-referential when placed
+    // as an override val RHS — `override val max: Int = max` reads itself and evaluates to 0. After
+    // the multi-root rewrite, the widest constructor is the unique root, so its params are safe.
     val ctorParamSyms: Set[SymId] = widestWithArgs2 match
       case Some((ctor, _)) => ctor.paramss.flatten.map(_.symbol).toSet
       case None => Set.empty
@@ -297,8 +271,7 @@ final class ClassToTraitTransform(
           else None
         }
 
-    // For a transitive subclass (empty mappings, no override vals), only the multi-root
-    // delegation rewrite is needed. Return the rewritten body directly.
+    // A transitive subclass (empty mappings) needs only the multi-root delegation rewrite.
     if overrideVals.isEmpty && multipleRootsCallSuper then
       record(Decision(
         kind       = Decision.Kind.RetypedSignature,
@@ -320,10 +293,9 @@ final class ClassToTraitTransform(
       origin     = origin,
     ))
 
-    // Strip super args from the widest constructor ONLY when not in multi-root mode.
-    // In multi-root mode, the widest root's super(args) must be KEPT so the CtorFunnel sees
-    // it as a unique root with super args and promotes it as primary. The emitter skips
-    // super args when the parent is a trait (§1(b) class-to-trait).
+    // Super args are stripped from the widest constructor ONLY outside multi-root mode; in
+    // multi-root mode they must stay so the CtorFunnel sees a unique root with super args and
+    // promotes it as primary (the emitter skips super args when the parent is a trait).
     val strippedBody = widestWithArgs2 match
       case Some((widestCtor, _)) if !multipleRootsCallSuper =>
         rewrittenBody.map {
@@ -349,8 +321,7 @@ final class ClassToTraitTransform(
 
   override def transformApply(app: Tree.Apply)(using program: Program): Term =
     if resolved.isEmpty then return app
-    // Check if this Apply wraps a New of a nominated type with constructor args
-    // Extract the New from either Apply(New(...), args) or Apply(TypeApply(New(...), targs), args)
+    // Extract the `New` from either `Apply(New(...), args)` or `Apply(TypeApply(New(...), targs), args)`.
     val newNode: Option[Tree.New] = app.fun match
       case n: Tree.New                        => Some(n)
       case Tree.TypeApply(n: Tree.New, _, _, _) => Some(n)
@@ -365,10 +336,8 @@ final class ClassToTraitTransform(
               case Some(anon) =>
                 val origin = app.origin
                 val anonSym = program.symbolOf(anon.symbol).getOrElse(return app)
-                // WITH args: override vals from the actual args; indices beyond args.size
-                // fall back to defaults (a partial constructor: Pool(16) delegates to
-                // Pool(16, Integer.MAX_VALUE), so arg 0 is actual and arg 1 is the default).
-                // WITHOUT args: all from defaults.
+                // WITH args: override vals from the actual args, falling back to defaults past
+                // args.size (a partial constructor). WITHOUT args: all from defaults.
                 val overrideVals = if app.args.nonEmpty then
                   spec.mappings.flatMap { m =>
                     if m.index < app.args.size then
@@ -389,23 +358,18 @@ final class ClassToTraitTransform(
                 val newNew = n.copy(anon = Some(newAnon))
                 Tree.Apply(newNew, Nil, app.method, app.tpe, app.origin)
               case None =>
-                // Non-anonymous new Pool(args) -- strip args
+                // non-anonymous `new C(args)` — strip args
                 if app.args.nonEmpty then Tree.Apply(n, Nil, app.method, app.tpe, app.origin)
                 else app
           case _ => app
 
 
-  /** Fix a RAW `new Pool[?](a,b) { ... }.asInstanceOf[Pool[T]]`.
+  /** Fix a RAW `new Pool[?](a,b) { ... }.asInstanceOf[Pool[T]]`: the `New` node's `tpt` carries
+    * wildcards (`AppliedType(Pool, [TypeBounds])`), making the anonymous class `Pool[Nothing]` and
+    * every abstract member unreachable, while the `Typed` wrapper carries the real type argument.
     *
-    * The TIR dump shows the shape is `Typed(Apply(New(tpt=Pool[?], anon=...), Nil), Pool[T])`.
-    * `transformApply` already stripped args and added override vals, but the `New` node's `tpt`
-    * carries wildcards (`Pool[?]` = `AppliedType(Pool, [TypeBounds])`) making the anonymous class
-    * `Pool[Nothing]` and every abstract member unreachable. The `Typed` wrapper (rendered as
-    * `.asInstanceOf[Pool[T]]`) carries the actual type argument from the field type.
-    *
-    * This hook: (1) replaces the wildcard args with the concrete args from the `Typed` target,
-    * (2) narrows override methods returning `Object` to the actual type argument, and
-    * (3) drops the `Typed` wrapper (the anonymous class now directly IS `Pool[T]`). */
+    * Replaces the wildcard args with the `Typed` target's concrete ones, narrows `Object`-returning
+    * overrides to that argument, and drops the `Typed` wrapper. */
   override def transformTerm(t: Term)(using program: Program): Term =
     if resolved.isEmpty then return t
     t match
@@ -428,12 +392,10 @@ final class ClassToTraitTransform(
                   case _ => None
                 (hasWildcards, targetArgs) match
                   case (true, Some(concreteArgs)) =>
-                    // Replace wildcard args with concrete ones on the tpt
                     val baseTc = newNode.tpt.tpe match
                       case TypeRepr.AppliedType(tc, _) => tc
                       case other => other
                     val fixedTpt = newNode.tpt.copy(tpe = TypeRepr.AppliedType(baseTc, concreteArgs))
-                    // Narrow Object-returning overrides to the actual type argument
                     val fixedAnon = newNode.anon.map { anon =>
                       if concreteArgs.size == 1 then
                         val actualTpe = concreteArgs.head
@@ -452,7 +414,7 @@ final class ClassToTraitTransform(
                       else anon
                     }
                     val fixedNew = newNode.copy(tpt = fixedTpt, anon = fixedAnon)
-                    // Drop the Typed wrapper -- the anonymous class now directly extends Pool[T]
+                    // drop the Typed wrapper -- the anonymous class now directly extends the parent
                     inner.copy(fun = fixedNew, tpe = castTpt.tpe)
                   case _ => t
               case _ => t
@@ -461,18 +423,12 @@ final class ClassToTraitTransform(
 
   // ---- multi-root rewrite: super(args) -> this(expanded_args) for narrower roots ----
 
-  /** Rewrite a constructor's `super(args)` into `this(expanded_args)` using the parent's
-    * own delegation chain. For `FlushablePool(int cap) { super(cap); }` where `Pool(int cap)`
-    * delegates `this(cap, MAX_VALUE)`, the rewrite produces `this(cap_actual, MAX_VALUE)`.
-    *
-    * The expansion substitutes the subclass's actual super args for the parent constructor's
-    * parameter symbols in the delegation args. */
   /** Rewrite a narrower root's `super(args)` into `this(expanded_args)` targeting the widest
     * constructor of THIS class (`targetCtor`), using the parent's own delegation chain. */
   private def rewriteSuperToThis(d: Tree.DefDef, spec: ResolvedSpec, targetCtor: SymId)(using program: Program): Tree.DefDef =
     val superArgs = CtorFunnel.superArgsOf(program, d)
     val arity = superArgs.size
-    // Nilary super(): expand using defaults (Pool() -> this(16, MAX_VALUE))
+    // Nilary super(): expand using defaults.
     if arity == 0 then
       if spec.defaults.nonEmpty then rewriteSuperCallToThis(d, spec.defaults, targetCtor)
       else d
@@ -480,7 +436,6 @@ final class ClassToTraitTransform(
       spec.ctorDelegations.get(arity) match
         case None => d // No delegation chain found for this arity
         case Some((parentParamSyms, delegArgs)) =>
-          // Build substitution map: parent param symbol -> actual arg from subclass's super call
           val subst = parentParamSyms.zip(superArgs).toMap
           val expandedArgs = delegArgs.map(substituteSymbols(_, subst))
           rewriteSuperCallToThis(d, expandedArgs, targetCtor)
@@ -495,9 +450,8 @@ final class ClassToTraitTransform(
         unwrapped match
           case Tree.Apply(Tree.Select(sup: Tree.Super, m, sel, selOrigin), _, method, tpe, appOrigin)
               if program.symbolOf(m).exists(_.name == "<init>") =>
-            // Replace Super with a self-reference (This) and target the WIDEST constructor
-            // of THIS class (not the parent's constructor). `targetCtor` is the SymId of the
-            // widest constructor that will be promoted to primary by the funnel.
+            // Replace Super with a self-reference (This), targeting the WIDEST constructor of
+            // THIS class (not the parent's) — the one the funnel will promote to primary.
             val thisNode = Tree.This(sup.cls, sup.tpe, sup.origin)
             val newSel = Tree.Select(thisNode, targetCtor, sel, selOrigin)
             val newApply: Term = Tree.Apply(newSel, newArgs, method, tpe, appOrigin)
@@ -526,13 +480,9 @@ final class ClassToTraitTransform(
 
   // ---- transitive subclass rewrite ----
 
-  /** Build ResolvedSpecs for classes that extend a class that was REWRITTEN by the main pass
-    * (step 2). These specs carry NO mappings (no override vals), only the delegation chain data
-    * needed for the multi-root rewrite. A FlushablePoolClass extending FlushablePool gets its
-    * constructors rewritten to delegate to the widest via this(...). */
+  /** ResolvedSpecs for classes extending one REWRITTEN by the main pass (step 2): no mappings (no
+    * override vals), only the delegation chain data the multi-root rewrite needs. */
   private def buildTransitiveSpecs(p: Program): Map[SymId, ResolvedSpec] =
-    // Find classes that were rewritten: they're direct subclasses of nominated types and now
-    // have a paramful widest constructor with this(...) delegation chains.
     val rewrittenSyms = resolved.values.map(_.parentSymId).toSet
     val specs = collection.mutable.Map[SymId, ResolvedSpec]()
     p.units.flatMap(u => StandardTraversal.allClassDefs(u)(using p)).foreach { cd =>
@@ -559,8 +509,7 @@ final class ClassToTraitTransform(
               val widestArity = widestCtor.map(c => CtorFunnel.valueParams(p, c).size).getOrElse(0)
               if widestArity > 0 then
                 val formalTypes = widestCtor.toList.flatMap(c => CtorFunnel.valueParams(p, c).map(_.tpt.tpe))
-                // Build delegation chain from the parent's constructors (after rewrite, they
-                // have this(...) delegations that expand narrower calls to the widest)
+                // after rewrite, the parent's constructors carry this(...) delegations to the widest.
                 val defaults = ctors.find(c => CtorFunnel.valueParams(p, c).isEmpty).toList.flatMap { nc =>
                   CtorFunnel.stmtsOf(nc).headOption.collect { case t: Term => Tree.uncomment(t) }.toList.flatMap {
                     case Tree.Apply(Tree.Select(_, m, _, _), args, _, _, _)
@@ -670,15 +619,9 @@ object ClassToTraitTransform:
     fqn: String, mappings: List[ParamMapping], formalTypes: List[TypeRepr],
     defaults: List[Term], ownedFields: Set[String], parentSymId: SymId,
     /** For each non-widest parent constructor: its arity -> the expanded argument list to the
-      * widest constructor, with the parent constructor's own parameter SYMBOLS still in place.
-      * A subclass calling `super(args)` at that arity substitutes its actual args for those
-      * symbols to get the `this(expanded)` delegation it needs.
-      *
-      * Built from the parent's own `this(...)` delegation chain. `Pool()` delegates to
-      * `this(16, MAX_VALUE)`, so arity 0 maps to `[Literal(16), Literal(MAX_VALUE)]`.
-      * `Pool(int cap)` delegates to `this(cap, MAX_VALUE)`, so arity 1 maps to
-      * `[Ident(cap), Literal(MAX_VALUE)]` — the `Ident(cap)` will be substituted with
-      * the actual arg from the subclass's `super(cap_actual)`. */
+      * widest constructor, with the parent's own parameter SYMBOLS still in place — a subclass
+      * calling `super(args)` at that arity substitutes its actual args for those symbols to build
+      * the `this(expanded)` delegation. Built from the parent's own `this(...)` delegation chain. */
     ctorDelegations: Map[Int, (List[SymId], List[Term])] = Map.empty,
   )
 
