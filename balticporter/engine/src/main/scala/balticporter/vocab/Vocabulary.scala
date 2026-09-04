@@ -6,29 +6,17 @@ import balticporter.core.BExpr.*
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** Tier-2 vocabulary (DESIGN.md §3.7): diffable data tables mapping Java symbols
-  * onto Scala counterparts. Two entry kinds for now:
+/** Diffable data tables mapping Java symbols onto Scala counterparts.
   *
-  *   type java.util.ArrayList -> scala.collection.mutable.ArrayBuffer
-  *   method java.util.ArrayList#add -> append
-  *
-  * `type` rewrites every occurrence of the qualified name (type positions,
-  * constructor calls, static owners, class literals, method references).
-  * `method` renames calls resolved to `Owner#name` — matched against the
-  * ORIGINAL owner, so tables read in upstream vocabulary.
-  *
-  * Tables are pure data; call-shape adaptations tables can't express are
-  * Tier-3 passes (DESIGN.md §2.4).
-  */
+  * Entry kinds: `type A -> B` (rewrites all occurrences), `method O#m -> n` (renames calls
+  * matched against the original owner), `getter O#m -> n` (nilary call to parenless member). */
 final case class Vocabulary(
     typeMap: Map[String, String],
     methodMap: Map[(String, String), String],
-    /** nilary Java calls that are parameterless members in Scala: `getter O#m -> n`. */
     getterMap: Map[(String, String), String] = Map.empty,
 ):
   def isEmpty: Boolean = typeMap.isEmpty && methodMap.isEmpty && getterMap.isEmpty
 
-  /** joins cache fingerprints — sorted, content-only. */
   def digestInput: String =
     (typeMap.toList.sorted.map((a, b) => s"type $a -> $b") ++
       methodMap.toList.sortBy(_._1).map { case ((o, m), n) => s"method $o#$m -> $n" } ++
@@ -41,10 +29,7 @@ final case class Vocabulary(
 object Vocabulary:
   val empty: Vocabulary = Vocabulary(Map.empty, Map.empty)
 
-  /** Parses the table format. Lines: `type A -> B`, `method O#m -> n`,
-    * blank, or `#` comments. Anything else is a hard error (data must not
-    * drift silently).
-    */
+  /** Parse the table format. Unparseable lines are a hard error. */
   def parse(lines: List[String], where: String): Vocabulary =
     val types = Map.newBuilder[String, String]
     val methods = Map.newBuilder[(String, String), String]
@@ -68,8 +53,7 @@ object Vocabulary:
   def loadFile(p: Path): Vocabulary =
     parse(Files.readAllLines(p).asScala.toList, p.toString)
 
-/** Applies a vocabulary to a unit: method renames first (matched on original
-  * owners), then type renames everywhere. */
+/** Apply a vocabulary to a unit: method renames first, then type renames. */
 final class VocabPass(v: Vocabulary) extends BirPass:
   def id = "vocab/apply"
   def version = 1
@@ -79,7 +63,6 @@ final class VocabPass(v: Vocabulary) extends BirPass:
       else
         unit.copy(types = unit.types.map(BirTransform.mapTypeDecl(_) {
           case c: Call if c.args.isEmpty && c.ownerQ.exists(o => v.getterMap.contains((o, c.name))) =>
-            // nilary call -> parameterless Scala member (prints without parens)
             val n = v.getterMap((c.ownerQ.get, c.name))
             c.recv match
               case Recv.On(r)          => Select(r, n)
@@ -95,8 +78,7 @@ final class VocabPass(v: Vocabulary) extends BirPass:
     if v.typeMap.isEmpty then renamed
     else QNameMap(renamed)(q => v.typeMap.getOrElse(q, q))
 
-/** Tier-3 example rule: prefix package rename (`liqp` -> `ported.liqp`),
-  * rewriting the unit package and every reference into the renamed tree. */
+/** Prefix package rename, rewriting the unit package and every reference. */
 final class PackageRenamePass(from: String, to: String) extends BirPass:
   def id = s"rename/$from->$to"
   def version = 1
