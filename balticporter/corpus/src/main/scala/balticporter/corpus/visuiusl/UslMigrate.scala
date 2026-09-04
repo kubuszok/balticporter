@@ -4,49 +4,24 @@ import balticporter.runner.PortConfig
 
 import java.nio.file.Path
 
-/** Migrate **USL** — VisUI's skin-definition language compiler (`usl/src/main/java`, 18 files /
+/** Migrate **USL** -- VisUI's skin-definition language compiler (`usl/src/main/java`, 18 files /
   * 1,604 LOC: a lexer, a recursive parser, a style merger and a JSON writer).
   *
   *   corpus/runMain balticporter.corpus.visuiusl.UslMigrate [--determinism=full]
   *
-  * ==This program is ONE LINE, and that is the point==
-  * The whole port is `balticporter/corpus/ports/visui-usl/main.conf` — read that, not this file.
-  * What remains here is a `main` whose only job is to name the configuration and give the run its
-  * report identity: `CheckReport.dir` is derived from the main class's simple name, so a per-port
-  * `main` is what keeps `port-report/UslMigrate` a stable measurement baseline across any later
-  * rename of the module (CLAUDE.md §2.1's third exemption).
+  * The whole port is `balticporter/corpus/ports/visui-usl/main.conf` -- read that, not this file.
+  * This `main` only names it and gives the run its report identity.
   *
-  * ==A STANDALONE port, and NOT a scope edit to its sibling==
-  * `sge-visui` ports VisUI's `ui/` module as a DEPENDENT of libGDX core. This ports the OTHER
-  * gradle module in the same upstream checkout, and it is its own port root rather than a glob
-  * added to that one. The reasoning is in the conf and the short form is that upstream publishes
-  * these as two maven coordinates at two independent versions, that `com.kotcrab.vis.ui` and
-  * `com.kotcrab.vis.usl` are siblings rather than one package root, and that `VisUiPolicy` already
-  * narrowed its `governs` claim in writing so that "the follow-up states its own".
+  * A STANDALONE port, not a scope edit to `sge-visui` (which ports the sibling `ui/` module):
+  * upstream publishes the two as independent maven coordinates at independent versions, and
+  * `com.kotcrab.vis.ui`/`com.kotcrab.vis.usl` are siblings rather than one package root.
   *
-  * ==THE CORPUS'S FIRST CHANCE TO EXCEED A REFERENCE PORT==
-  * Every other library here is measured against a hand port that already exists, and the best a
-  * mechanical port has managed is parity plus a licence file. The reference hand port
-  * (`../sge/sge-extension/visui`) **never ported USL at all** — grepped: no file under it names
-  * `usl`, `Lexer`, `StyleMerger` or `USLJsonWriter`. So there is no reference to match here, and
-  * anything this engine emits is a capability sge does not have. CLAUDE.md §3.5 is explicit that a
-  * skip is not a model — "this project exists precisely to port what sge left out" — and this is
-  * the first time that sentence has a whole upstream module behind it.
-  *
-  * ==What it forces the engine to get right==
-  *   1. **A hand-written CHARACTER SCANNER.** `Lexer` and `Parser` are ordinary imperative java
-  *      driven by a `char` index, whose whole behaviour is invisible to a compile. The obvious
-  *      thing to fear is CLAUDE.md §4.4's post-increment row — **28 post-increment/decrement
-  *      sites** — and it was MEASURED rather than assumed: all 28 are in STATEMENT position and no
-  *      increment here is read as a VALUE, so that row is not reachable in this library and this
-  *      port is evidence about it in neither direction (`PROGRESS.md` §10.9.13.2). What the oracle
-  *      does reach is the rest of the scanner: the jump lowering, the reference `==` on enum
-  *      tokens, and the retyped collections' iteration ORDER.
-  *   2. **A ZERO-AUTHORING ORACLE.** Upstream ships both sides of the answer: 19 `.usl` fixtures
-  *      under `usl/styles`, six `test-*.usl`/`test-*-expected.json` pairs under the test
-  *      resources, and a `uiskin.json` checked into `ui/src/main/resources` that the root build
-  *      compiles FROM one of those fixtures. Nobody has to write a test for any of it; see
-  *      `test.conf` and `PROGRESS.md` §10.9.13 for what it verdicts.
+  * The corpus's first chance to EXCEED a reference port: the reference hand port never ported USL
+  * at all (CLAUDE.md §3.5 -- a skip is not a model), so this is a whole capability sge does not
+  * have. Forces the engine to get right: a hand-written CHARACTER SCANNER (`Lexer`/`Parser`,
+  * driven by a `char` index -- 28 post-increment sites, all in STATEMENT position and none read as
+  * a VALUE, MEASURED not assumed, `PROGRESS.md` §10.9.13.2); and a ZERO-AUTHORING ORACLE (upstream
+  * ships both `.usl` fixtures and their expected `.json` output, see `test.conf`).
   */
 object UslMigrate:
 

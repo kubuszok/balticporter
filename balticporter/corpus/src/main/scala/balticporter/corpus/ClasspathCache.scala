@@ -4,28 +4,14 @@ import java.io.File
 import java.nio.file.{Files, Path}
 
 /** The frontend classpath every port resolves once and CACHES — with the coordinates it was
-  * resolved from recorded beside it.
-  *
-  * ==Why one mechanism==
-  * Five porting programs wrote this loop independently (liqp and its test port, simple-graphs,
-  * ashley, gltf, screenmanager), each with the same two lessons pasted into a comment: merge `cs`'s
-  * streams so a failure is reportable, then keep only the line holding a jar, because taking the
-  * whole output once cached `Downloading https…` as a classpath entry. A lesson that has to be
-  * pasted is a mechanism that has not been written (CLAUDE.md §1(b)): the MECHANICS are identical
-  * and only the COORDINATES differ, so the coordinates are the parameter and this is the mechanism.
-  *
-  * ==THE FINGERPRINT, which is the reason this file exists==
-  * Every one of those loops asked one question — "does the cache file exist?" — and a cache keyed
-  * on nothing else answers `yes` to a question nobody asked: after a coordinate BUMP the stale
-  * line is reused, silently, and the port is resolved against the versions it used to declare. It
-  * fails as the worst kind of failure this project has: an import that resolves WRONGLY rather than
-  * one that fails, so the port emits nonsense and reports success (CLAUDE.md §5.1). Nothing else
-  * would catch it — no count moves, and the port compiles.
-  *
-  * So the resolver INVOCATION — coordinates, repositories, exclusions, in order — is written to a
-  * sidecar (`<cache>.coords`) and compared before the line is reused. A sidecar rather than a
-  * header INSIDE the file, because the file is read by `PortConfig.classpathFile`, which splits the
-  * whole text on the path separator: a comment line there is a classpath entry that does not exist.
+  * resolved from recorded beside it. Five porting programs wrote this loop independently
+  * (§1(b): the MECHANICS are identical, only the COORDINATES differ). The resolver INVOCATION
+  * (coordinates, repositories, exclusions, in order) is written to a sidecar (`<cache>.coords`)
+  * and compared before a cached line is reused — an unresolved import resolves WRONGLY rather
+  * than failing (CLAUDE.md §5.1), so a stale line after a coordinate bump would be undetectable
+  * by any count. A sidecar rather than a header INSIDE the file: `PortConfig.classpathFile` splits
+  * the whole text on the path separator, so a comment line there is a classpath entry that does
+  * not exist.
   */
 object ClasspathCache:
 
@@ -38,15 +24,9 @@ object ClasspathCache:
   private def sidecar(cache: Path): Path = cache.resolveSibling(cache.getFileName.toString + ".coords")
 
   /** is this cache reusable FOR THESE COORDINATES — a non-empty line, resolved from this exact
-    * invocation, EVERY ENTRY OF WHICH STILL EXISTS? A file with no sidecar is a line from before
-    * this check existed, and is refetched once rather than trusted.
-    *
-    * The third conjunct is the second lesson this file learned the hard way: the line names jars
-    * inside a cache the port does not own (`~/Library/Caches/Coursier`), and a cache is evicted —
-    * measured 2026-08-26, the whole `com/github/tommyettinger/` tree gone, so two ports (textra,
-    * screens) reported `DID NOT RUN` with Spoon's `InvalidClassPathException` as the only witness,
-    * and a seeding script then promoted their STALE `run-latest` into the baseline (CLAUDE.md §5.1).
-    * A line whose jars are gone is not a cache hit; it is refetched, which `cs` answers in seconds. */
+    * invocation, EVERY ENTRY OF WHICH STILL EXISTS? A file with no sidecar is refetched once
+    * rather than trusted. The third conjunct guards against an evicted external jar cache
+    * (`~/Library/Caches/Coursier`): a line whose jars are gone is not a cache hit. */
   def fresh(cache: Path, key: String): Boolean =
     Files.exists(cache) && Files.readString(cache).trim.nonEmpty &&
       Files.exists(sidecar(cache)) && Files.readString(sidecar(cache)).trim == key &&
@@ -60,16 +40,10 @@ object ClasspathCache:
     Files.writeString(sidecar(cache), key + "\n")
     cache
 
-  /** `cs fetch --classpath`, filtered to the one line that holds jars.
-    *
-    * `cs` writes PROGRESS to stderr and the classpath to stdout; merged here so a failure is
-    * reportable, then filtered — taking the whole output once cached `Downloading https…` as a
-    * classpath entry and the frontend refused the run with "Downloading https does not exist".
-    *
-    * A failure is FATAL rather than an empty classpath, for the reason above: an
-    * `import static org.junit.Assert.assertEquals` the frontend cannot resolve does not fail, it
-    * resolves WRONGLY — to an unqualified call on the enclosing class — so a port built with no
-    * classpath emits nonsense and reports success.
+  /** `cs fetch --classpath`, filtered to the one line that holds jars. `cs` writes PROGRESS to
+    * stderr and the classpath to stdout; merged here so a failure is reportable, then filtered
+    * (the raw stdout once cached `Downloading https…` as a classpath entry). A failure is FATAL
+    * rather than an empty classpath: an unresolved import resolves WRONGLY, not fails.
     *
     * @param label the port, for the message an operator will read
     * @param extraArgs repositories, exclusions — anything before the coordinates; part of the key

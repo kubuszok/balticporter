@@ -7,42 +7,23 @@ import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** Migrate **anim8-gdx** (`src/main/java`, 16 types — GIF/PNG8/APNG writers and the dithering and
+/** Migrate **anim8-gdx** (`src/main/java`, 16 types -- GIF/PNG8/APNG writers and the dithering and
   * palette-reduction machinery behind them) through the TIR.
   *
   *   corpus/runMain balticporter.corpus.anim8.Anim8Migrate [--determinism=full]
   *
-  * ==Why anim8-gdx is in the corpus==
-  * It is the corpus's first library whose difficulty is per-LINE rather than per-file. 16 files
-  * hold 19,594 lines — `PNG8` alone is 8,351 and `PaletteReducer` 5,989 — and the shape that
-  * dominates them is not found anywhere in libGDX, Ashley or simple-graphs:
+  * The corpus's first library whose difficulty is per-LINE rather than per-file (16 files, 19,594
+  * lines -- `PNG8` alone is 8,351). Two shapes not found elsewhere: enormous constant data
+  * (`ConstantData`'s ISO-8859-1 string literals up to 47,935 characters, decoded in a
+  * `static { }` block, verified byte-for-byte by the port's own suite rather than by length); and
+  * bulk bit-pattern arithmetic (`OtherMath`'s spline/probit/cbrt/atan2 approximations) covering
+  * every CLAUDE.md §4.4 form at once.
   *
-  *   - **enormous constant data.** `ConstantData` is 108 lines of Java holding four string literals
-  *     of 47,935 / 6,390 / 6,390 / 6,390 characters, in ISO-8859-1, full of control characters and
-  *     high bytes, decoded with `getBytes(StandardCharsets.ISO_8859_1)` inside a `static { }` block.
-  *     Every byte of that has to survive the frontend, the TIR and the emitter unchanged, and
-  *     nothing but a running assertion can prove that it did — which is exactly why this port's
-  *     suite pins actual byte values at known indices rather than lengths (see `src/test`).
-  *   - **arithmetic in bulk.** `OtherMath`'s `barronSpline`/`probit`/`cbrt`/`atan2` are bit-pattern
-  *     approximations built on `NumberUtils.floatToIntBits` and hex float literals (`0x1p-8`).
-  *     Every CLAUDE.md §4.4 form that translates to valid Scala meaning something else lives here.
-  *
-  * ==A DEPENDENT port==
-  * Every one of the 16 files resolves against libGDX core — `Pixmap`, `FileHandle`, `Color`, `Gdx`,
-  * `Array`, `ByteArray`, `FloatArray`, `IntIntMap`, `OrderedMap`, `NumberUtils`, `MathUtils`,
-  * `Interpolation`, `StreamUtils`, `Disposable` — so `gdx/src` is a RESOLUTION root, parsed so
-  * references resolve and never emitted here, and the policy is [[LibgdxPolicy.core]] extended
-  * rather than restated (CLAUDE.md §1.5). `LibgdxCoreMigrate` emits the base and the two are
-  * compiled together by `just anim8-measure`.
-  *
-  * ==Scope==
-  * `src/main/java` only. `src/test/java` (20 files) is deliberately excluded and named rather than
-  * silently dropped: it contains no `@Test` at all. Every file in it is an `ApplicationAdapter`
-  * demo or a JMH-style startup bench driven by `gdx-backend-lwjgl3` — `StillImageDemo`,
-  * `VideoConvertDemo`, `InteractiveReducer`, `ShaderCaptureDemo` and friends — which needs a
-  * desktop backend, and no backend is ported. There is therefore NO upstream suite to migrate, and
-  * this port's only behavioural evidence is the hand-written suite in `ported/sge-anim8/src/test/scala`
-  * (CLAUDE.md §3: a green compile says nothing about behaviour). See PROGRESS.md.
+  * A DEPENDENT port: `gdx/src` is a RESOLUTION root, policy is [[LibgdxPolicy.core]] EXTENDED
+  * (CLAUDE.md §1.5). Scope is `src/main/java` only; `src/test/java` (20 files, zero `@Test`, all
+  * `ApplicationAdapter` demos needing a desktop backend) is excluded. No upstream suite; this
+  * port's only behavioural evidence is the hand-written suite in `ported/sge-anim8/src/test/scala`
+  * (CLAUDE.md §3).
   */
 object Anim8Migrate:
 
@@ -79,53 +60,28 @@ object Anim8Migrate:
       nextStep    = "just anim8-measure",
     ).execute()
 
-/** anim8-gdx's per-library policy — a DEPENDENT of libGDX core's.
-  *
-  * The base's `dropTypes`, `dropMethods`, `packageRenames` and signature-affecting phases are
-  * INHERITED, not restated: they are facts about the surface anim8 compiles against, and a
-  * dependent that re-declared them would be free to drift. What anim8 adds is its own namespace
-  * claim, its own rename, and whatever its own 16 files need.
-  *
-  * `inject` is deliberately NOT inherited (see [[balticporter.core.PortManifest]]): a drop is an
-  * observation about the shared API and binds every module that sees it, but exactly one module
-  * ships each replacement file. libGDX core ships the replacements for the types it dropped.
-  */
+/** anim8-gdx's per-library policy -- a DEPENDENT of libGDX core's. `dropTypes`/`dropMethods`/
+  * `packageRenames`/signature-affecting phases are INHERITED, not restated; `inject` is NOT
+  * inherited (exactly one module ships each replacement file). */
 object Anim8Policy:
 
   def core(repoRoot: Path): PortManifest =
     LibgdxPolicy.core(repoRoot).extendedBy(PortManifest(
       name    = "sge-anim8",
       governs = Set("com.github.tommyettinger.anim8"),
-      // sge puts anim8 at `sge.anim8` (`../sge/sge-extension/anim8/src/main/scala/sge/anim8`), so
-      // the whole namespace moves with one pair. libGDX's `com.badlogic.gdx -> sge` is INHERITED
-      // from the base manifest, not restated; longest-prefix-wins keeps the two apart.
+      // sge puts anim8 at sge.anim8; libGDX's com.badlogic.gdx -> sge is INHERITED, not restated.
       packageRenames = Map("com.github.tommyettinger.anim8" -> "sge.anim8"),
-      // ONE PER-LOCATION SELECTION on `jdk-surface` (`DESIGN.md` §8.16/§8.21), at the biggest
-      // `unhandled` row in the corpus. The key is the finding's own SUBJECT COLUMN verbatim, because
-      // that lane files one row per external MEMBER rather than per calling declaration — so a port
-      // pastes what it read (§8.18's printed-key-is-a-bindable-key rule).
-      //
-      // READ: 195 sites, all of them `java.util.Arrays.fill(<float[]>, 0, w, 0)` in `PNG8`'s and
-      // `AnimatedGif`'s dithering loops, clearing an error-diffusion row between scanlines. The
-      // receiver is a `scala.Array[scala.Float]` — a `float[]` on the JVM and under both non-JVM
-      // backends' array model — so the emitted call is the java call, unchanged and correct. The
-      // phase has no table entry for it and that is what the row says; it does NOT say the call is
-      // broken (`JdkSurfaceCheck`'s own doc), and here it is the whole reason nothing was ever
-      // written: `Arrays.fill` over a primitive array is not a collection operation and has no
-      // scala-collection image to be mapped onto. Coverage by coincidence, examined.
-      //
-      // The other six `java.util.Arrays` rows on this port stay, deliberately. They are the same
-      // SHAPE and this entry is not a claim about the family: `copyOf`, `sort` and the `byte[]`/
-      // `int[]` fills each want their own reading, and a port that accepted them in one gesture
-      // would be doing exactly what a per-location menu exists to stop.
+      // ONE PER-LOCATION SELECTION on `jdk-surface` (`DESIGN.md` §8.16/§8.21): 195 sites of
+      // `java.util.Arrays.fill(<float[]>, 0, w, 0)` in dithering loops -- a primitive-array
+      // receiver with no scala-collection image to map onto, so the phase's silence is coverage
+      // by coincidence, examined and accepted. The other six `Arrays` rows stay: same shape, not
+      // a claim about the family.
       resolutions = Map(
         "java.util.Arrays#fill(float[],int,int,float)" -> "accept-jdk-member",
       ),
       surface = List(
-        // LAST, deliberately, for the reason AshleyPolicy states: this reads what the BASE
-        // actually emitted and reports a reference the base does not ship, so it must run after
-        // any seam that re-points such a reference, or it reports the very sites the next phase
-        // repairs. A residue check, exactly like `PortabilityCheck`.
+        // LAST, deliberately (as AshleyPolicy): reads what the BASE actually emitted; must run
+        // after any seam re-pointing such a reference.
         balticporter.transform.PortMapTransform.forBases("sge"),
       ),
       // THE REFERENCE HAND PORT for sge-anim8. NOT inherited (DESIGN.md §8.23).

@@ -2,62 +2,15 @@ package balticporter.corpus.libgdx
 
 import balticporter.tir.*
 
-/** THE WORKED EXAMPLE of a CLAUDE.md §1(c) rule — a phase that lives OUTSIDE the engine.
-  *
-  * ==Read this first if you are porting a library==
-  * Every other phase in this repository lives in `core/transform`, including the one CLAUDE.md
-  * names as the canonical (c) (`PrimitiveToOpaqueTransform`). So there was no precedent for the thing a
-  * consumer actually has to do: write a rule that only their library could ever want, put it in
-  * their own repository, and get it into the pipeline. This file is that precedent, and it is
-  * deliberately in `corpus` — the stand-in for "the porting program's own repository" — and
-  * not in `core`.
-  *
-  * Three things it demonstrates, and they are the three a new port needs:
-  *
-  *  1. **Where the file goes.** Beside the migration program, in the porting repository. It names
-  *     `com.badlogic.gdx` freely; the §1 enforcement grep covers `api`, `engine`,
-  *     `frontend-spoon` and `runtime`, and it is precisely the point that a (c) rule is not there.
-  *  2. **How it enters the pipeline.** As an ordinary element of `PortRun(phases = …)`. It
-  *     implements `balticporter.tir.Phase` and nothing else; nothing has to be registered for the
-  *     Scala path to run it. A port driven from a `.conf` instead names it, and THAT costs the
-  *     five-line [[GdxSharedIteratorFactory]] beside this file plus one `META-INF/services` line —
-  *     still in the porting repository, still compiled by the consumer's own build. See
-  *     DESIGN.md §5.7 for why a name resolving through `ServiceLoader` is the only indirection a
-  *     config file is allowed.
-  *  3. **How it is tested.** With `balticporter.testkit.PortSuite`, on a Java snippet, in the
-  *     porting repository's own test source set. See `GdxSharedIteratorRuleSpec`.
-  *
-  * ==Why this rule is genuinely (c) and not a (b) with the policy inlined==
-  * §1 says to reach for (c) only after establishing that the mechanism cannot be shared. What is
-  * encoded here is not a list of names — it is a libGDX INVARIANT:
-  *
-  * > `com.badlogic.gdx.utils.Array.iterator()` does not allocate. It returns one of two iterators
-  * > cached on the collection, reset in place, so that iteration costs nothing on Android's GC.
-  * > libGDX documents the consequence: nested iteration over the SAME collection reuses the same
-  * > iterator, the inner loop resets it, and the outer loop then terminates early — silently. The
-  * > fix libGDX itself prescribes is to construct a fresh `new Array.ArrayIterator<>(a)` for the
-  * > inner loop.
-  *
-  * A "collections whose iterator is cached" parameter would make this look like a (b), but the
-  * mechanism — knowing that the hazard is NESTING, that the fix is a distinct iterator type, and
-  * that the outer loop is the one that misbehaves — is a statement about libGDX's allocation
-  * strategy. No other library shares it, and parameterising it would produce a phase that no second
-  * library could instantiate meaningfully. That is exactly the test §1 sets.
-  *
-  * ==Why it REPORTS rather than rewrites==
-  * The faithful fix is to re-point the inner loop at a freshly constructed iterator, which changes
-  * emitted code. This rule ships as an analysis first, for one honest reason: it was written during
-  * a refactor whose acceptance criterion was that no measured number moves (CLAUDE.md §5), and a
-  * rewriting phase would have moved several at once with nothing to attribute them to. The
-  * detection is the hard half and it is complete; the rewrite is a follow-up, on its own
-  * measurement. An analysis is a first-class `Phase` — `run` is the full-control entry point the
-  * trait exists to offer — and this one reports through `CheckReport` like every other check, so a
-  * finding lands in `findings.tsv` beside the engine's own.
-  *
-  * ==What it finds in the corpus==
-  * The count is printed on every run and persisted as the `gdx-shared-iterator` check. A rule that
-  * finds nothing is still doing its job — see CLAUDE.md §3 on checks that report zero — but the
-  * number is what says whether the hazard is present, and it must not be assumed either way.
+/** A CLAUDE.md §1(c) rule — a phase living OUTSIDE the engine, in `corpus` (the stand-in for "the
+  * porting program's own repository"), because `com.badlogic.gdx.utils.Array.iterator()` returns
+  * a CACHED iterator reset in place, so nested iteration over the same collection makes the inner
+  * loop reset the outer's and terminate it early, silently — a libGDX allocation-strategy
+  * invariant, not a Java/Scala fact, so no `Set` parameter would let a second library instantiate
+  * it meaningfully (§1's own test). Enters the pipeline as an ordinary `Phase` element of
+  * `PortRun(phases = …)`; a `.conf`-driven port instead names it via [[GdxSharedIteratorFactory]].
+  * REPORTS rather than rewrites: written during a §5 flat-refactor, so a rewriting phase moving
+  * several sites at once with nothing to attribute them to was deferred as its own measurement.
   */
 final class GdxSharedIteratorRule extends Phase:
 
@@ -92,12 +45,8 @@ final class GdxSharedIteratorRule extends Phase:
   def findings: List[Finding] = found.toList
 
   /** Full-control entry point: a whole-program analysis, then the program returned UNCHANGED.
-    *
-    * The nesting question is answered with `StandardTraversal.scanTerm` over each candidate loop's
-    * body rather than with a private recursion. That is not style: two of the four silent
-    * correctness defects this project has found were hand-rolled walks that stopped one node short
-    * (CLAUDE.md §3), and a walk that misses a node kind here reports zero hazards from a program
-    * that has them — the worst answer a check can give. */
+    * Uses `StandardTraversal.scanTerm` rather than a private recursion (CLAUDE.md §3: a walk that
+    * misses a node kind reports zero hazards from a program that has them). */
   override def run(program: Program): Program =
     given Program = program
     found.clear()

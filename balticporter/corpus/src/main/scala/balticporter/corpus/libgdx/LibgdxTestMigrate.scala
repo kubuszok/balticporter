@@ -8,27 +8,11 @@ import scala.jdk.CollectionConverters.*
 
 /** Port libGDX's own JUnit suite (`gdx/test`) through the same pipeline as `gdx/src`.
   *
-  * This is the port's only BEHAVIOURAL gate. Everything `LibgdxCoreMigrate` measures is *compiles*,
-  * and four silent correctness defects have already been found in this corpus that compiled green —
-  * dropped `static { }` blocks, dropped `super(args)`, dropped anonymous-class bodies, and the
-  * typer-only blind spot itself. `gdx/test` carries 221 `@Test` methods making ~900 assertions;
-  * those assertions are the only evidence of behaviour this project can have.
-  *
-  * The test sources are CONVERTED; `gdx/src` is a RESOLUTION root only — it is ported separately by
-  * [[LibgdxCoreMigrate]], and re-emitting it here would fork the output. That split is what
-  * `FrontendConfig.resolutionRoots` is for, and deciding which units it makes this run's own is now
-  * [[balticporter.runner.PortRun]]'s job rather than a hand-maintained FQN set here.
-  *
-  * The transform pipeline is not restated here at all: it arrives from `LibgdxPolicy.core`'s
-  * manifest, which this module extends with `TestFrameworkTransform`. The version of this file that
-  * listed the shared phases again — minus two, with a comment arguing that test code touches
-  * neither the reflection wrapper nor the class table — was right, but nothing checked it and the
-  * next module would have had to make the same argument from scratch. That is the drift
-  * `CLAUDE.md` §1 warns about, and a `PortManifest` is what removes the opportunity for it.
-  *
-  * This program had never called `PortabilityCheck` — the check existed, the main port ran it, and
-  * this one silently did not, because check invocation was copy-paste. It runs every check now
-  * because `PortRun` runs every check; there is no longer a way to write a port that does not.
+  * The port's only BEHAVIOURAL gate (CLAUDE.md §3: `LibgdxCoreMigrate` measures only *compiles*).
+  * 221 `@Test` methods, ~900 assertions -- the only evidence of behaviour this project can have.
+  * `gdx/src` is a RESOLUTION root only, ported separately by [[LibgdxCoreMigrate]]; re-emitting it
+  * here would fork the output. The transform pipeline arrives from `LibgdxPolicy.core`'s manifest
+  * (this module adds only `TestFrameworkTransform`), never restated.
   */
 object LibgdxTestMigrate:
 
@@ -37,21 +21,9 @@ object LibgdxTestMigrate:
     val srcRoot  = repoRoot.resolve("../sge/original-src/libgdx/gdx/src").normalize
     val testRoot = repoRoot.resolve("../sge/original-src/libgdx/gdx/test").normalize
 
-    // -----------------------------------------------------------------------------------------
-    // EXCLUDED FILES — each is a type the base's retargets eliminated from the port's surface.
-    //
-    // CharArrayTest: 30 @Test methods exercising `com.badlogic.gdx.utils.CharArray`, which is
-    // retargetted to `lowlevel.util.DynamicArray[Char]` (sge `docs/contributing/type-mappings.md`:
-    // "ByteArray, CharArray, FloatArray, IntArray, LongArray, ShortArray -> DynamicArray[T]
-    // Unified via MkArray type class"). sge ported NO CharArrayTest at all — its own test file for
-    // Queue and Bits is `sge/utils/QueueBitsTest` (a hand-written suite exercising the stdlib
-    // replacements, not the upstream shapes). The type under test does not exist in the port; every
-    // assertion is about a member the retarget rewrote, so what would compile is a suite exercising
-    // DynamicArray's API through a mechanical translation — not an honest port of libGDX's own
-    // test intentions.
-    //
-    // The 30 lost tests are counted by `test_discovery_guard` and held in `expected-lost`.
-    // -----------------------------------------------------------------------------------------
+    // EXCLUDED: CharArrayTest (30 @Test) exercises com.badlogic.gdx.utils.CharArray, retargetted
+    // to DynamicArray[Char]; sge ported no CharArrayTest either (its QueueBitsTest exercises the
+    // stdlib replacements directly instead). Counted by test_discovery_guard, held in expected-lost.
     val excludedFiles = Set(
       "com/badlogic/gdx/utils/CharArrayTest.java",
     )
@@ -69,10 +41,8 @@ object LibgdxTestMigrate:
       sourceSet = SourceSet.Test,
       frontend  = FrontendConfig(testRoot, files, Nil, resolutionRoots = List(srcRoot)),
       phases    = Nil, // supplied by the manifest — the two sources are mutually exclusive
-      // A DEPENDENT of `LibgdxPolicy.core`: the shared surface arrives as a value, not as a copy.
-      // It adds `TestFrameworkTransform` and inherits everything else, and `ManifestAgreement`
-      // verifies on every run that the 605 types it resolves against but does not convert are
-      // modelled exactly as the module that emits them models them.
+      // A DEPENDENT of `LibgdxPolicy.core`: adds TestFrameworkTransform, inherits everything else;
+      // ManifestAgreement verifies the 605 resolved-but-unconverted types agree with the base.
       manifest  = Some(LibgdxPolicy.test(repoRoot)),
       provenance = Some(Provenance(
         upstreamName     = "libGDX",
@@ -86,16 +56,10 @@ object LibgdxTestMigrate:
       // twice — which the JVM tolerates only while the copies agree and the Scala.js/Native
       // linkers reject outright.
       runtimeMode = RuntimeMode.Dependency,
-      // NOTHING is injected alongside the converted suites, so there are no `supportSources`.
-      // `TestFrameworkTransform` used to write a `balticporter.runtime.Asserts` façade re-declaring
-      // JUnit's assertions in java's argument order; that was SHAPE ADAPTATION the transform can do
-      // itself, and it has been deleted. The suites retype onto `munit.FunSuite` — a dependency the
-      // generated project declares, not a source this run emits.
-      //
-      // The rule that decides this, and the only rule that admits anything to `balticporter-runtime`:
-      // semantics the target LACKS become a dependency (the collection shims — scala has no
-      // removal-capable iterator); shapes the engine can emit correctly are emitted, and nothing
-      // ships.
+      // NOTHING is injected alongside the converted suites (no `supportSources`): the suites
+      // retype onto munit.FunSuite, a declared dependency, never a source this run emits. The rule
+      // for `balticporter-runtime`: semantics the target LACKS become a dependency; shapes the
+      // engine can emit correctly are emitted, and nothing ships.
       determinism = Determinism.fromArgs(args.toSeq),
       nextStep    = "just gdx-test-measure",
     ).execute()

@@ -7,42 +7,20 @@ import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** Migrate **gdx-gltf** (`gltf/src`, 135 types / 11,307 lines — a glTF 2.0 loader, exporter and
-  * PBR rendering pipeline for libGDX) through the TIR.
+/** Migrate **gdx-gltf** (`gltf/src`, 135 types / 11,307 lines -- a glTF 2.0 loader,
+  * exporter and PBR rendering pipeline for libGDX) through the TIR.
   *
   *   corpus/runMain balticporter.corpus.gltf.GltfMigrate [--determinism=full]
   *
-  * ==Why gdx-gltf is in the corpus==
-  * It is the largest port after libGDX core itself, and the first one whose difficulty is
-  * INHERITANCE DEPTH rather than file count or line count. Its 135 types are stacked on libGDX's
-  * 3D pipeline: `PBRShader extends DefaultShader extends BaseShader extends BaseShaderProvider`,
-  * `Scene`/`SceneManager` over `ModelInstance`/`RenderableProvider`, sixteen `Attribute`
-  * subclasses over `Attribute`'s `register`/`compareTo` protocol, and `AnimationControllerHack`
-  * which reaches into `AnimationController`'s protected state. Every one of those parents is
-  * EMITTED Scala this run never sees — it resolves against libGDX's Java (CLAUDE.md §1.5) — so
-  * the port is a sustained test of whether the base's transforms produce a surface a deep
-  * subclass hierarchy can actually extend.
+  * The largest port after libGDX core, and the first whose difficulty is INHERITANCE
+  * DEPTH: 135 types stacked several levels deep on libGDX's 3D pipeline, every parent
+  * EMITTED Scala this run never sees (resolved against libGDX's Java, CLAUDE.md §1.5). The
+  * first genuine THIRD-PARTY extension in the corpus (not written by libGDX's authors). A
+  * DEPENDENT port: `gdx/src` is a RESOLUTION root, policy is [[LibgdxPolicy.core]] EXTENDED.
   *
-  * It is also the first library in the corpus that is a genuine THIRD-PARTY extension: unlike
-  * Ashley and anim8 it is not written by libGDX's authors, so its use of the base API is the use
-  * a downstream consumer makes, not the use the base's own tests make.
-  *
-  * ==A DEPENDENT port==
-  * All 118 distinct `com.badlogic.*` imports across the 135 files resolve inside `gdx/src` —
-  * there is no backend or extension reference anywhere in the library — so `gdx/src` is a
-  * RESOLUTION root, parsed so references resolve and never emitted here, and the policy is
-  * [[LibgdxPolicy.core]] extended rather than restated (CLAUDE.md §1.5). `LibgdxCoreMigrate`
-  * emits the base and the two are compiled together by `just gltf-measure`.
-  *
-  * ==Scope==
-  * `gltf/src` only. Deliberately excluded, and named rather than silently dropped:
-  *
-  *   - `demo/` (35 files) — a libGDX application with desktop, html and android launchers.
-  *   - `ibl-composer/` (25 files) — an authoring tool (a VisUI desktop app for baking IBL maps).
-  *   - six of the seven files in `gltf/test` — see [[GltfTestMigrate]], which explains why.
-  *
-  * `gltf/test/net/mgsx/gltf/scene3d/attributes/AttributesCompareTest.java` (8 `@Test` methods) IS
-  * in scope and is ported by [[GltfTestMigrate]] as a dependent of this run.
+  * Scope: `gltf/src` only. `demo/` and `ibl-composer/` (an authoring tool) are excluded;
+  * six of `gltf/test`'s seven files too (see [[GltfTestMigrate]]) -- the seventh
+  * (`AttributesCompareTest.java`, 8 `@Test`) is in scope, ported as a dependent.
   */
 object GltfMigrate:
 
@@ -61,8 +39,7 @@ object GltfMigrate:
       label     = "sge-gltf",
       portRoot  = repoRoot.resolve("ported/sge-gltf"),
       sourceSet = SourceSet.Main,
-      // libGDX core is a RESOLUTION root: parsed so every reference resolves, never emitted here.
-      // `LibgdxCoreMigrate` emits it, and the two are compiled together.
+      // libGDX core is a RESOLUTION root, compiled together by LibgdxCoreMigrate.
       frontend  = FrontendConfig(base, files, Nil, resolutionRoots = List(gdxSrc)),
       phases    = Nil, // supplied by the manifest — the two sources are mutually exclusive
       manifest  = Some(GltfPolicy.core(repoRoot)),
@@ -73,97 +50,52 @@ object GltfMigrate:
         sourcePathPrefix = "gltf/src",
         sourceRoot       = base.toString,
       )),
-      // NOT `Vendored`: `LibgdxCoreMigrate` already vendors the collection shims into the module
-      // this output is compiled beside. Vendoring again would define every support type twice —
-      // which the JVM tolerates only while the copies agree, and the Scala.js/Native linkers reject.
+      // NOT Vendored: LibgdxCoreMigrate already vendors the collection shims into this
+      // module.
       runtimeMode = RuntimeMode.Dependency,
       determinism = Determinism.fromArgs(args.toSeq),
       nextStep    = "just gltf-measure",
     ).execute()
 
-/** gdx-gltf's per-library policy — a DEPENDENT of libGDX core's.
-  *
-  * The base's `dropTypes`, `dropMethods`, `packageRenames` and signature-affecting phases are
-  * INHERITED, not restated: they are facts about the surface gdx-gltf compiles against, and a
-  * dependent that re-declared them would be free to drift. What gdx-gltf adds is its own namespace
-  * claim, its own rename, and whatever its own 135 files need.
-  *
-  * `inject` is deliberately NOT inherited (see [[balticporter.core.PortManifest]]): a drop is an
-  * observation about the shared API and binds every module that sees it, but exactly one module
-  * ships each replacement file. libGDX core ships the replacements for the types it dropped.
-  */
+/** gdx-gltf's per-library policy -- a DEPENDENT of libGDX core's. `dropTypes`/`dropMethods`/
+  * `packageRenames`/signature-affecting phases are INHERITED, not restated; `inject` is
+  * NOT inherited (exactly one module ships each replacement file). */
 object GltfPolicy:
 
   def core(repoRoot: Path): PortManifest =
     LibgdxPolicy.core(repoRoot).extendedBy(PortManifest(
       name    = "sge-gltf",
       governs = Set("net.mgsx.gltf"),
-      // sge puts gdx-gltf at `sge.gltf` (`../sge/sge-extension/gltf/src/main/scala/sge/gltf`),
-      // package for package: `net/mgsx/gltf/scene3d/shaders` is `sge/gltf/scene3d/shaders`, all 28
-      // subpackages carried straight through. One prefix pair moves the whole library. libGDX's
-      // `com.badlogic.gdx -> sge` is INHERITED from the base manifest, not restated; longest-
-      // prefix-wins keeps the two apart.
+      // sge puts gdx-gltf at sge.gltf, package for package. libGDX's own
+      // com.badlogic.gdx -> sge is INHERITED, not restated.
       packageRenames = Map("net.mgsx.gltf" -> "sge.gltf"),
-      // ONE PER-LOCATION SELECTION (`DESIGN.md` §8.16/§8.21) — the `omissions` lane's only
-      // answerable kind, at this port's only row of it.
-      //
-      // `CtorFunnel` promoted the NILARY `GLTFLoaderBase()` — whose java body is `this(null)` — so
-      // its inlined five statements are the emitted class body and run on EVERY construction path.
-      // `GLTFLoaderBase(TextureResolver)` is therefore an ESCAPING path: java ran those statements
-      // once, the port runs them twice. That is what `omissions`' `promoted constructor body runs on
-      // every path` counts, and the engine deliberately does not decide whether it MATTERS —
-      // `CtorFunnel.Plans.promotionEscapes` says in as many words that this is "NOT a purity
-      // question about the body", because the answer depends on what the other constructor
-      // overwrites (ENGINE-LIMITS.md C6/C7, where refusing the promotion measured 0 -> 41 errors).
-      //
-      // READ, at this site. The five statements are `textureResolver = null` plus four `new`s, and
-      // the secondary re-assigns all five before the object escapes its own constructor:
-      //
-      //   this.textureResolver = null                              // overwritten one line later
-      //   this.animationLoader = new AnimationLoader()             // \
-      //   this.nodeResolver    = new NodeResolver()                //  | four objects allocated
-      //   this.meshLoader      = new MeshLoader()                  //  | and immediately discarded
-      //   this.skinLoader      = new SkinLoader()                  // /
-      //
-      // All four have java's implicit no-arg constructor and initialise nothing but their own
-      // containers — `AnimationLoader` an `Array`, `NodeResolver` and `MeshLoader` an `ObjectMap`,
-      // `SkinLoader` an `int` field. No static state, no registry, no I/O, so nothing observes the
-      // discarded copies; and `null` is upstream's own sentinel for `textureResolver` (`load()`
-      // tests it and builds a default), so even the transient value is one this class already
-      // handles. The final state on both paths is java's, exactly. This is the "most only waste an
-      // allocation" half of C6's own census, stated per site with the port's name on it.
-      //
-      // The class's OTHER omission rows are untouched and stay: nine `super(args) dropped` on
-      // `PBRTextureAttribute`, `PBRCubemapAttribute` and `ModelInstanceHack` are LOSSES (a
-      // `super(type, texture)` that builds an untextured attribute), and no accept exists for them.
+      // ONE PER-LOCATION SELECTION (`DESIGN.md` §8.16/§8.21): CtorFunnel promoted the
+      // NILARY GLTFLoaderBase() (java body `this(null)`), so its five statements run on
+      // EVERY construction path, including the secondary constructor that re-assigns all
+      // five before escape. `promotionEscapes` deliberately does not decide whether this
+      // MATTERS (`ENGINE-LIMITS.md` C6/C7) -- READ at this site: all four discarded objects
+      // have no-arg constructors initialising only their own empty containers, no static
+      // state, no I/O, so nothing observes the waste and both paths reach java's exact
+      // final state. The class's OTHER omission rows (nine `super(args) dropped`) are real
+      // LOSSES and stay unaccepted.
       resolutions = Map(
         "net.mgsx.gltf.loaders.shared.GLTFLoaderBase#<init>(TextureResolver)" -> "accept-promoted-body",
       ),
-      // 3.1az: GLTFMorphTarget extends ObjectMap<String, Integer>, and lls ObjectMap is final.
-      // The hand port (../sge/sge-extension/gltf) extends HashMap[String, Int] instead —
-      // the whole Json.Serializable interface is dead (Json is dropped by the base), and the
-      // injected replacement at gltf-overrides/sge/gltf/data/geometry/GLTFMorphTarget.scala
-      // reproduces that shape. K37 SubclassOfTarget, section 1(c).
+      // 3.1az: GLTFMorphTarget extends ObjectMap<String, Integer>, and lls ObjectMap is
+      // final -- the hand port extends HashMap[String, Int] instead (Json.Serializable is
+      // dead, Json is dropped by the base); the injected replacement reproduces that shape
+      // (K37 SubclassOfTarget, §1c).
       dropTypes = Set("net.mgsx.gltf.data.geometry.GLTFMorphTarget"),
       // gdx-gltf's OWN replacements. `inject` is not inherited — exactly one module ships each
       // replacement file, and libGDX core ships the ones for the types IT dropped.
       inject  = List(repoRoot.resolve("balticporter/corpus/gltf-overrides")),
       surface = List(
-        // ==THE THREE REFLECTIVE SITES, and why all three are a GWT workaround rather than a need==
-        //
-        // gdx-gltf reaches `com.badlogic.gdx.utils.reflect.ClassReflection` in exactly three
-        // methods, and the base drops that type: reflective instantiation is the one thing Scala.js
-        // and Scala Native cannot do. Two of the three say so themselves, in an upstream comment —
-        // "call X via reflection to avoid compilation error with GWT" — so the reflection is not
-        // what the code MEANS, it is how it dodged a compiler that is not in this port's target
-        // set. CLAUDE.md §3.5: the reference hand port (`../sge/sge-extension/gltf`) SOLVED both
-        // the same way, `PixmapBinaryLoaderHack.scala` and `GLTFBinaryExporter.savePNG` each making
-        // the direct call the facade was emulating, with the WebGL guard kept.
-        //
-        // The bodies are written in the port's FINAL namespace: `MethodBodyTransform` splices them
-        // verbatim and the package rename never sees them, while the KEYS are upstream because the
-        // phase matches them against the model before the rename runs. Getting that backwards is
-        // one compile error naming `net.mgsx` in a file that declares `package sge.gltf`.
+        // THE THREE REFLECTIVE SITES are a GWT workaround, not a genuine need: two say so
+        // in an upstream comment ("call X via reflection to avoid compilation error with
+        // GWT"). CLAUDE.md §3.5: the reference hand port SOLVED both the same way, making
+        // the direct call the facade was emulating (WebGL guard kept). KEY is upstream
+        // namespace (matched before rename); BODY is the port's FINAL namespace (spliced
+        // verbatim).
         new balticporter.transform.MethodBodyTransform(Map(
           // 1. `new Pixmap(bytes, off, len)`, reached through `getConstructor(…).newInstance(…)`.
           "net.mgsx.gltf.loaders.shared.texture.PixmapBinaryLoaderHack#load" ->
@@ -186,12 +118,10 @@ object GltfPolicy:
               |    sge.graphics.PixmapIO.writePNG(file, pixmap)
               |  }
               |}""".stripMargin,
-          // 3. The one site where reflection was doing real work: `ext` fabricates a material
-          //    extension object from its `Class`. No direct call replaces that, so it takes the
-          //    factory registry the base's own injected `Pools` and Ashley's `ComponentFactories`
-          //    both take — `GLTFExtensionFactories`, injected by THIS module (see `inject`).
-          //    Everything else in the 335-line exporter translates mechanically, which is exactly
-          //    the case `MethodBodyTransform` exists for.
+          // 3. the one site where reflection did real work: fabricates a material extension
+          //    object from its Class -- takes the factory registry the base's Pools and
+          //    Ashley's ComponentFactories both take (GLTFExtensionFactories, injected by
+          //    this module).
           "net.mgsx.gltf.exporters.GLTFMaterialExporter#ext" ->
             """{
               |  if (m.extensions == null) {
@@ -205,37 +135,20 @@ object GltfPolicy:
               |  }
               |  e
               |}""".stripMargin,
-          // A FOURTH entry stood here and is GONE, which is worth a line because its absence is the
-          // measurement: `AnimationsPlayer#clearAnimations` carried upstream's own body plus an
-          // ascription, to work around the engine dropping java's `protected` (`ENGINE-LIMITS.md`
-          // T12 — both `setAnimation` overloads shipped public, `setAnimation(null)` became
-          // `E051 Ambiguous overload`). `DESIGN.md` §8.7 renders `protected` as
-          // `protected[<package>]`, dotty prunes the inaccessible alternative before overload
-          // resolution, and the call resolves exactly as javac resolved it. The condition its own
-          // comment named has been met, so the entry retires rather than being kept "just in case".
+          // A FOURTH entry (AnimationsPlayer#clearAnimations, an ascription working around
+          // ENGINE-LIMITS T12's dropped `protected`) retired once T12 closed: DESIGN.md §8.7
+          // now renders `protected` as `protected[<package>]` and overload resolution
+          // matches javac's.
         )),
-        // ==THE THREE DEAD `Json` CALL SITES, and why the seam for them ships DISABLED==
+        // THE THREE DEAD Json CALL SITES ship the repair seam DISABLED: the base's injected
+        // Json facade raises on every reflective path, so gdx-gltf's three calls into it
+        // compile and are INERT at run time. `CallSiteSubstitutionTransform` was DRY-RUN
+        // against exactly these three keys (3/3 bound), but the entry stays OUT until a
+        // replacement codec is injected -- the reference hand port's answer is 2,268 lines
+        // of Jsoniter codecs this port has not adopted (`PROGRESS.md` §gdx-gltf).
         //
-        // libGDX core drops `com.badlogic.gdx.utils.Json` (reflection is the one thing Scala.js and
-        // Native cannot do) and injects a facade whose reflective paths raise. gdx-gltf calls into
-        // it three times, so those three calls compile and are INERT at run time:
-        //
-        //   SeparatedDataFileResolver.java:30  Json#fromJson(Class,FileHandle)
-        //   BinaryDataFileResolver.java:97     Json#fromJson(Class,String)
-        //   GLTFExporter.java:241              Json#prettyPrint(Object)
-        //
-        // `CallSiteSubstitutionTransform` is the mechanism that repairs them, and it was DRY-RUN
-        // against exactly these three keys: 3/3 bound, 3 sites rewritten, 0 policy findings, each
-        // at the line above. What is missing is the other side — the reference hand port replaced
-        // the whole reflective path with 2,268 lines of Jsoniter codecs (`GLTFCodecs`,
-        // `GLTFExporterJson`), which is a decision THIS port has not made. Naming a codec that does
-        // not exist would trade three inert calls for three that do not compile, so the entry stays
-        // out until the codecs are injected. See `PROGRESS.md` §gdx-gltf.
-        //
-        // LAST, deliberately, for the reason AshleyPolicy states: this reads what the BASE
-        // actually emitted and reports a reference the base does not ship, so it must run after
-        // any seam that re-points such a reference, or it reports the very sites the next phase
-        // repairs. A residue check, exactly like `PortabilityCheck`.
+        // LAST, deliberately (as AshleyPolicy): reads what the BASE actually emitted; must
+        // run after any seam re-pointing such a reference.
         balticporter.transform.PortMapTransform.forBases("sge"),
       ),
       // THE REFERENCE HAND PORT for sge-gltf. NOT inherited (DESIGN.md §8.23).

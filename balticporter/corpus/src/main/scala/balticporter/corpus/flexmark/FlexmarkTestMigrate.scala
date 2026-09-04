@@ -6,43 +6,21 @@ import balticporter.runner.PortConfig
 import java.io.File
 import java.nio.file.{Files, Path}
 
-/** Port **flexmark-util**'s own JUnit suite — 52 files, **730 plain `@Test`** — through the same
-  * pipeline as the twelve modules milestone 1 converts.
+/** Port **flexmark-util**'s own JUnit suite -- 52 files, **730 plain `@Test`** -- through
+  * the same pipeline as the twelve modules milestone 1 converts.
   *
   *   corpus/runMain balticporter.corpus.flexmark.FlexmarkTestMigrate [--determinism=full]
   *
-  * The port is `balticporter/corpus/ports/ssg-md/test.conf`; this `main` names it, ensures the test
-  * classpath that conf points at exists, and gives the run its report identity (`CheckReport.dir`
-  * comes from the main class's simple name, so `port-report/FlexmarkTestMigrate` is a baseline of
-  * its own and ssg-md MAIN's numbers cannot move because this ran — `CLAUDE.md` §2.1). See
-  * [[FlexmarkMigrate]] for why that is all a migration program is.
-  *
-  * ==This is the port's FIRST behavioural evidence, and until it runs there is none==
-  * `PROGRESS.md` §10.6 called the absent suite "the largest single thing wrong with this port", and
-  * `CLAUDE.md` §3 is the reason: an error count is typer-only, and not one of §4.4's Java forms
-  * moves it. flexmark is a character-level markdown parser, so the population §4.4 governs here is
-  * the largest any corpus library has had — a `BasedSequence` family that is 62 files of
-  * subsequence arithmetic, `switch` and `break` at every block start, post-increment in every
-  * scanner loop.
-  *
-  * ==Why THIS tree, when the twelve scoped modules ship no `src/test` at all==
-  * The split `flexmark-util-*` libraries are tested from the `flexmark-util` AGGREGATOR, whose own
-  * `src/main/java` is empty and whose pom depends on all eleven. So the suite for the code
-  * milestone 1 emits lives in a thirteenth module the main port does not convert, which is exactly
-  * what `just md-measure`'s discovery block asserts when it reports zero and says the zero is a
-  * fact about the SCOPE.
-  *
-  * ==What makes it worth RUNNING rather than merely counting==
-  * The tree is unusually clean for `TestFrameworkTransform` — **no `@RunWith(Parameterized.class)`
-  * anywhere**, no `@Ignore`, no test-class inheritance — so what it exercises is the LIBRARY rather
-  * than the conversion. Its two refusals are `@Rule ExpectedException` (six files) and nine
-  * `@RunWith(Suite.class)` aggregators that declare no `@Test` of their own; the phase reports both
-  * itself, with the `CLAUDE.md` §1 classification, and `test.conf`'s D-mdt-3 says what each costs.
-  *
-  * A DEPENDENT of [[FlexmarkMigrate]]: it resolves against the twelve modules' Java, never against
-  * the Scala that port emitted, so `base = "main.conf"` inherits the base's `packageRenames`
-  * (`com.vladsch.flexmark` -> `ssg.md`, `util.builder` -> `util.build`) and both surface phases
-  * rather than restating them (`CLAUDE.md` §1.5).
+  * The port is `balticporter/corpus/ports/ssg-md/test.conf`; this `main` names it and
+  * gives the run its own report identity (`CLAUDE.md` §2.1). The port's FIRST behavioural
+  * evidence (CLAUDE.md §3: an error count is typer-only). Lives in the `flexmark-util`
+  * AGGREGATOR module (a thirteenth module the main port does not convert -- its own
+  * `src/main/java` is empty, so the split libraries' tests live there instead). Unusually
+  * clean for `TestFrameworkTransform` (no `@RunWith(Parameterized.class)`, no `@Ignore`, no
+  * test-class inheritance); its two refusals (`@Rule ExpectedException`, nine
+  * `@RunWith(Suite.class)` aggregators) are reported with the `CLAUDE.md` §1 classification.
+  * A DEPENDENT of [[FlexmarkMigrate]]: resolves against the twelve modules' Java, inheriting
+  * the base's renames and surface phases via `base = "main.conf"` (`CLAUDE.md` §1.5).
   */
 object FlexmarkTestMigrate:
 
@@ -50,28 +28,13 @@ object FlexmarkTestMigrate:
     FlexmarkTestClasspath.ensure(FlexmarkPort.repoRoot)
     PortConfig.load(FlexmarkPort.conf("test.conf"), args.toSeq).execute()
 
-/** flexmark's TEST frontend classpath: everything [[FlexmarkClasspath]] resolves, plus JUnit.
-  *
-  * ==What the pom DECLARES at test scope, and what arrives with it==
-  * Exactly ONE coordinate. `flexmark-util/pom.xml` names `junit:junit` with no version and the
-  * parent pom's `dependencyManagement` pins **4.13.2**, which is where the version is read from —
-  * `AshleyClasspath`'s rule, whose cost is recorded there: guessing a modern Mockito for Ashley
-  * cost a full cycle. `org.hamcrest:hamcrest-core:1.3` arrives with junit TRANSITIVELY and is
-  * deliberately NOT named here even though two of these test files import it, because a port
-  * resolves what the library DECLARES.
-  *
-  * ==Why the MAIN classpath is part of it==
-  * `resolutionRoots` is flexmark's Java SOURCE, so the frontend type-checks the twelve modules
-  * while modelling the suite and needs every jar that source needs — which is
-  * `org.jetbrains:annotations:24.0.1`, compile-scope on every `flexmark-util-*` pom and imported by
-  * 594 covered files (`FlexmarkClasspath`, D-md-3). It arrives by DELEGATING to that object's
-  * `ensure`, never by a second copy of the coordinate here: two lists of one jar is F8's defect
-  * with a longer fuse.
-  *
-  * ==Why this is a FILE the conf points at, and not a list in the conf==
-  * The realistic source of a classpath is a dependency resolver, and a conf that inlined `cs`'s
-  * output would be regenerated by hand on every bump. A config file naming a COMMAND to run would
-  * be the strings-that-are-secretly-code the transform SPI exists to keep out (`CLAUDE.md` §1.5).
+/** flexmark's TEST frontend classpath: everything [[FlexmarkClasspath]] resolves, plus
+  * JUnit. Exactly ONE test-scope coordinate (`junit:junit`, version pinned by the parent
+  * pom's `dependencyManagement`, `AshleyClasspath`'s read-the-declaration rule);
+  * `hamcrest-core` arrives transitively and is deliberately NOT named. The MAIN classpath
+  * is included because `resolutionRoots` is flexmark's Java source, so the frontend needs
+  * every jar that source needs too -- delegated to [[FlexmarkClasspath]]'s `ensure`, never
+  * duplicated. Written to a FILE rather than inlined in the conf (`CLAUDE.md` §1.5).
   */
 object FlexmarkTestClasspath:
 
@@ -80,14 +43,9 @@ object FlexmarkTestClasspath:
 
   def cache(repoRoot: Path): Path = repoRoot.resolve("out/flexmark-test-classpath.txt")
 
-  /** Guarantee the test classpath file exists and AGREES with the main one, building it if not.
-    *
-    * The agreement check is `LiqpTestClasspath`'s and is not tidiness: the cached line is reusable
-    * only if it still STARTS with the main classpath, entry for entry — anything else is a line
-    * built against a different resolution of the base port — AND was resolved from the test
-    * coordinates this port declares NOW. The prefix check follows the BASE, so on its own it would
-    * answer a test-scope version bump with the jar the port used to declare.
-    */
+  /** Guarantee the test classpath file exists and AGREES with the main one, building it if
+    * not: the cached line is reusable only if it still STARTS with the main classpath,
+    * entry for entry, AND was resolved from the test coordinates this port declares NOW. */
   def ensure(repoRoot: Path): Path =
     val mainEntries =
       Files

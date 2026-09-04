@@ -8,43 +8,25 @@ import java.nio.file.{Files, Path}
 
 import scala.jdk.CollectionConverters.*
 
-/** Migrate **liqp** (`src/main/java`, 135 types — a Java implementation of the Liquid templating
-  * engine, backed by an ANTLR grammar).
+/** Migrate **liqp** (`src/main/java`, 135 types -- a Java Liquid templating engine backed
+  * by an ANTLR grammar).
   *
   *   corpus/runMain balticporter.corpus.liqp.LiqpMigrate [--determinism=full]
   *
-  * ==This program is a `main` and a classpath, and that is all==
-  * The port is `balticporter/corpus/ports/liqp/main.conf` — read that, not this file. What is here is the
-  * `main` that names the configuration and gives the run its report identity (`CheckReport.dir` is
-  * derived from the main class's simple name, so a per-port `main` is what keeps
-  * `port-report/LiqpMigrate` a stable measurement baseline), plus [[LiqpClasspath]], which is the
-  * one thing a conf cannot hold: a classpath is produced by a resolver and a compiler, and a
-  * config file naming a command to run would be the strings-that-are-secretly-code the transform
-  * SPI exists to keep out (CLAUDE.md §1.5).
+  * The port is `balticporter/corpus/ports/liqp/main.conf` -- read that, not this file. This
+  * is the `main` that names it and gives the run its report identity, plus
+  * [[LiqpClasspath]] (a classpath is produced by a resolver and a compiler, which a
+  * `.conf` cannot hold).
   *
-  * ==Why liqp is in the corpus==
-  * It is the FIRST library from outside the gdx/sge family, and it is here for what it moves from
-  * §1(c) toward §1(b) toward §1(a). Four things no corpus library has exercised before:
+  * First library outside the gdx/sge family: a THIRD-PARTY API surface (jackson, antlr4,
+  * strftime4j) beyond the JDK/ported-module seams `CollectionsTransform` has priced
+  * before; a `ServiceLoader` (`ENGINE-LIMITS.md` CT7 territory, for real rather than in a
+  * fixture); a GENERATED PARSER it does not own (see [[LiqpClasspath]]); and a reference
+  * port that is `../ssg/ssg-liquid`, not sge (CLAUDE.md §3.5).
   *
-  *   1. **A third-party API surface.** libGDX, Ashley, simple-graphs, noise4j and jbump between
-  *      them depend on the JDK and on each other. liqp depends on jackson, on antlr4's runtime and
-  *      on strftime4j, so every question `CollectionsTransform` answers at a JDK seam is asked
-  *      again at a seam that is neither the JDK nor a ported module — `ObjectMapper.convertValue`
-  *      taking a `java.util.Map` is not a shim boundary the phase has ever had to price.
-  *   2. **`ServiceLoader`.** `liqp/spi` discovers `TypesSupport` implementations reflectively.
-  *      That is `ENGINE-LIMITS.md` CT7 territory — a class a FRAMEWORK instantiates has no caller
-  *      to change — on a library that really does it, rather than in a test fixture.
-  *   3. **A generated parser it does not own.** See [[LiqpClasspath]]: 9 432 lines of ANTLR output
-  *      in a package (`liquid.parser.v4`) that is not the library's own, and that references back
-  *      INTO the library. Milestone 1 treats it as external.
-  *   4. **A reference port that is not sge.** `../ssg/ssg-liquid` is the hand-written Scala port of
-  *      this same library, so CLAUDE.md §3.5 has something to consult here that is not the engine's
-  *      usual witness.
-  *
-  * ==Milestone 1 is the SKELETON and the WALL==
-  * This port is not expected to compile. It exists so that the first error census is a MEASURED
-  * number classified per CLAUDE.md §1 rather than an estimate, and the wall is worked down after
-  * that census exists. `PROGRESS.md` §liqp holds the numbers.
+  * Milestone 1 is the SKELETON and the WALL: not expected to compile, so the first error
+  * census is MEASURED and classified per CLAUDE.md §1 (`PROGRESS.md` §liqp holds the
+  * numbers).
   */
 object LiqpMigrate:
 
@@ -66,52 +48,23 @@ object LiqpPort:
     * the lane compares nothing, so a change is a change in both places. */
   def upstream: Path = repoRoot.resolve("../ssg/original-src/liqp").normalize
 
-/** liqp's FRONTEND classpath: the six jars its `pom.xml` declares, plus the ANTLR-generated parser
-  * compiled to class files.
+/** liqp's FRONTEND classpath: the six jars its `pom.xml` declares, plus the ANTLR-generated
+  * parser compiled to class files.
   *
-  * ==Why the parser is a CLASSPATH input and not a source root (decision D-liqp-1)==
-  * liqp's own sources `import liquid.parser.v4.LiquidLexer` / `LiquidParser` / `NodeVisitor`. Those
-  * six files are ANTLR OUTPUT — 9 432 lines — generated from the `.g4` grammars in
-  * `src/main/antlr4` by the `antlr4-maven-plugin`, into `target/generated-sources/antlr4`, and they
-  * are UNTRACKED: present in a checkout that has been built, absent in a fresh one. (The grammar
-  * path is written in words rather than as a glob on purpose: a slash-star inside a Scala doc
-  * comment OPENS a nested comment and swallows the rest of the file — CLAUDE.md §4.58's own rule,
-  * met here by a hand-written file rather than by the emitter.) Milestone 1 therefore resolves them the
-  * way it resolves jackson: externally, by class file, with the emitted Scala naming them fully
-  * qualified and the compile lane putting the same directory on scalac's classpath. Porting the
-  * generated parser THROUGH the engine is a recorded later milestone (a second module of this
-  * port), not a thing to decide by accident here.
+  * The generated parser (`liquid.parser.v4`, ~9432 lines under `src/main/antlr4`,
+  * UNTRACKED) is resolved as a CLASSPATH input rather than a source root (D-liqp-1):
+  * porting it through the engine is a later, separate milestone. A missing generated tree
+  * is FATAL (CLAUDE.md §5.1) -- an unresolved `import liquid.parser.v4...` resolves
+  * WRONGLY rather than failing outright.
   *
-  * ==A missing generated tree is FATAL==
-  * Never a silently smaller port. CLAUDE.md §5.1's rule for a missing `--tests` path applies with
-  * more force to a frontend classpath: `import liquid.parser.v4.LiquidParser` that the frontend
-  * cannot resolve does not fail — it resolves WRONGLY, and the port emits nonsense and reports
-  * success. The refusal below carries the regeneration command, because the agent that meets it is
-  * in a fresh checkout and has no way to know that `target/` is where the input lives.
+  * javac needs `-sourcepath`/`-implicit:none`, not a plain compile: `LiquidParser` and
+  * `liqp` are mutually recursive (see [[rewriteReferences]] for D-liqp-1b, the WHICH
+  * sourcepath).
   *
-  * ==Why `-implicit:none` and a `-sourcepath`, and not a plain `javac`==
-  * The generated parser does not compile alone: `LiquidParser` has a member of type
-  * `liqp.TemplateParser.ErrorMode`, so the ANTLR output and the library that consumes it are
-  * mutually recursive. A SOURCEPATH resolves that and `-implicit:none` keeps javac from writing
-  * class files for what it read there, so the output directory holds the 84 class files of
-  * `liquid/parser/v4` and NOTHING else. That distinction is the whole point: liqp's own types must
-  * reach the frontend as SOURCE, from the port's `sourceRoot`, and a second class file of a ported
-  * type on any classpath here is an older definition of something this port emits.
-  *
-  * WHICH sourcepath is [[rewriteReferences]]'s decision D-liqp-1b, read there: not liqp's own
-  * sources any more, but a shape-honest stub of the ONE type the parser reaches back into, at the
-  * name the port EMITS it under.
-  *
-  * ==What the coordinates are read from==
-  * `pom.xml`, verbatim, including the one that looks like a typo and is not: `jackson.databind
-  * .version` is **2.13.4.2** while `jackson.version` is 2.15.0 — two properties, and the port
-  * resolves what the library DECLARES (the rule `AshleyClasspath` records, where guessing a modern
-  * Mockito cost a full cycle). Note that `cs` then applies HIGHEST-version conflict resolution
-  * where maven applies nearest-wins, so `jackson-datatype-jsr310:2.15.0`'s own dependency promotes
-  * databind to 2.15.0 in the resolved line. That is a resolver difference, not a policy one, and it
-  * is recorded here rather than papered over with a `--force-version`: the declared coordinate is
-  * what this file states, and the day the promotion matters this note is what says where it came
-  * from.
+  * Coordinates are read verbatim from `pom.xml`, including the deliberate version split
+  * (`jackson.databind.version` 2.13.4.2 vs `jackson.version` 2.15.0) -- `cs` then resolves
+  * `jackson-datatype-jsr310`'s own dependency to promote databind to 2.15.0, a resolver
+  * difference recorded rather than papered over.
   */
 object LiqpClasspath:
 
@@ -136,51 +89,21 @@ object LiqpClasspath:
     * of a build product: never edited, deleted and rewritten on every rebuild. */
   def parserSources(repoRoot: Path): Path = repoRoot.resolve("out/liqp-parser-src")
 
-  /** DECISION D-liqp-1b — THE GENERATED PARSER IS REWRITTEN INTO THE EMITTED NAMESPACE BEFORE JAVAC
-    * READS IT.
+  /** DECISION D-liqp-1b -- THE GENERATED PARSER IS REWRITTEN INTO THE EMITTED NAMESPACE
+    * BEFORE JAVAC READS IT.
     *
-    * D-liqp-1 and D-liqp-2 CUT EACH OTHER, and this is where the cut is answered. Treating the
-    * generated parser as external keeps it at `liquid.parser.v4`, compiled against upstream `liqp`;
-    * renaming the port to `ssg.liquid` means nothing named `liqp` is emitted. `LiquidParser` has a
-    * member typed `liqp.TemplateParser.ErrorMode`, so the port's own call sites hand a
-    * `ssg.liquid.TemplateParser.ErrorMode` to a formal declared `liqp.TemplateParser.ErrorMode` —
-    * three compile errors that no manifest key can close, because none of them rewrites an ARGUMENT.
-    *
-    * But the generated parser is not a DEPENDENCY: it is a BUILD PRODUCT of this port's own build
-    * step, regenerated from the grammars under `src/main/antlr4` on demand and untracked. (Spelt in
-    * words: a slash-star-star inside a Scala doc comment OPENS a nested comment and swallows the
-    * rest of the file — CLAUDE.md §4.58's own rule, and it cost this file a compile.) A build
-    * product may be
-    * built against whatever this build is producing — so the sources are copied, their references
-    * INTO the ported library are rewritten to the emitted namespace, and javac compiles THAT.
-    *
-    * ==Two rewrites, and the second is the one that is easy to get silently wrong==
-    *   1. the PACKAGE, `liqp.` -> `ssg.liquid.`, cut only at a `.` (CLAUDE.md §4.56). The parser's
-    *      own package `liquid.parser.v4` is untouched, and so is any identifier that merely
-    *      CONTAINS `liqp` — a prefix is not a structural fact about anything;
-    *   2. the ENUM CONSTANT ACCESS. The port emits a java enum as a Scala `sealed abstract class`
-    *      plus a companion `object` of `case object`s, and Scala's static forwarders put
-    *      `values()`/`valueOf(String)` on the companion CLASS while each constant is a static field
-    *      of the MODULE class (`…$ErrorMode$`). So `ErrorMode.LAX` compiles against a java enum and
-    *      is a `NoSuchFieldError` at RUN time, which is precisely the failure a compile cannot see
-    *      (CLAUDE.md §3). `ErrorMode.valueOf("LAX")` reaches the forwarder, returns the singleton,
-    *      and `==` still holds — measured.
-    *
-    * ==What javac resolves `ssg.liquid.TemplateParser` against==
-    * `balticporter/corpus/ports/liqp/javac-stub`, handed to javac as a `-sourcepath` with `-implicit:none`, so
-    * it is READ and never WRITTEN: the output directory holds `liquid/parser/v4` and nothing else,
-    * and no second definition of a ported type can reach the frontend or scalac. The stub is
-    * SHAPE-HONEST about the Scala that stands at that FQN at run time — it declares no constants,
-    * so an un-rewritten `ErrorMode.LAX` is a javac error rather than a run-time one.
-    *
-    * ==And the gate is javac itself==
-    * Upstream `liqp` is on NO classpath of this step any more — not as sources, not as classes — so
-    * a reference the rewrite missed cannot resolve and the build refuses. That replaces the whole
-    * of the previous arrangement: `out/liqp-upstream-classes` (upstream liqp compiled beside the
-    * parser, for scalac only) existed solely so that the seam arrived as a type error instead of as
-    * `AssertionError: failure to resolve inner class` out of `ClassfileParser`, and there is no seam
-    * left for it to soften. ONE directory of class files now serves the frontend, scalac and the
-    * test run. */
+    * D-liqp-1 (external classpath) and D-liqp-2 (`liqp -> ssg.liquid` package rename) CUT
+    * EACH OTHER: `LiquidParser` has a member typed `liqp.TemplateParser.ErrorMode`, so an
+    * un-rewritten reference hands the port's own type to a formal declared in the upstream
+    * namespace. The generated parser is a BUILD PRODUCT, not a dependency, so its sources
+    * are copied and their references into the ported library rewritten (package prefix,
+    * and enum CONSTANT access -- a java enum becomes a Scala `sealed abstract class` +
+    * companion, so `ErrorMode.LAX` compiles against the java shape and is a run-time
+    * `NoSuchFieldError`; `.valueOf("LAX")` reaches the static forwarder correctly). javac
+    * then resolves the rewritten references against a SHAPE-HONEST STUB (`javac-stub`,
+    * read via `-sourcepath`, never written), so an un-rewritten reference is a compile
+    * error there rather than a run-time one, and upstream `liqp` is on NO classpath of
+    * this step at all. */
   private val LibraryPackage = "liqp"
 
   /** the emitted namespace, D-liqp-2's `packageRenames { liqp = "ssg.liquid" }`. Stated here and in
@@ -204,29 +127,15 @@ object LiqpClasspath:
   private def regenerate: String =
     s"cd ${LiqpPort.upstream} && ./mvnw -q generate-sources"
 
-  /** Guarantee the classpath file and the compiled parser exist, building both once if they do
-    * not. Returns the file's path.
+  /** Guarantee the classpath file and the compiled parser exist, building both once if
+    * they do not.
     *
-    * FOUR things are checked, not just the file:
-    *
-    *   - the parser CLASSES: the classpath line names the parser directory, so a cached line beside
-    *     a `clean`ed `out/` is a classpath that resolves to nothing — exactly the failure mode the
-    *     fatality above exists to prevent, arriving by the back door;
-    *   - the COORDINATES the line was resolved from ([[ClasspathCache]]): this port's `pom.xml`
-    *     pins six of them, including one that reads like a typo and is not, and a cache keyed on
-    *     existence alone would answer a bump with the versions the port used to declare — an
-    *     unresolvable import that resolves WRONGLY rather than failing. The key carries D-liqp-1b's
-    *     REWRITE POLICY beside them, because the classes those coordinates produce depend on it: a
-    *     cache keyed on coordinates alone would reuse parser classes compiled against the OTHER
-    *     namespace, which is the same silent-wrong-resolution failure one hop out;
-    *   - …and the GENERATED SOURCES ([[generatedDigest]]), which is the input javac actually reads
-    *     and was the one the key did not name. The tree is untracked and regenerated by
-    *     `./mvnw generate-sources`, so a grammar change produces new `.java` under an UNCHANGED key
-    *     beside a `parserClasses` directory that still holds `.class` files — and
-    *     [[hasParserClasses]] is an existence test. The port then resolves against a parser it no
-    *     longer has, which is this cache's own stated failure (an import that resolves WRONGLY
-    *     rather than failing) one input further in, and nothing reports it: the port compiles and
-    *     every count is flat. */
+    * FOUR things are checked: the parser CLASSES exist (a cached line beside a
+    * `clean`ed `out/` resolves to nothing); the COORDINATES ([[ClasspathCache]]) and
+    * D-liqp-1b's REWRITE POLICY (a bump or policy change must not reuse classes compiled
+    * under the old namespace); and the GENERATED SOURCES digest ([[generatedDigest]]) --
+    * untracked and regenerated by `./mvnw generate-sources`, so a grammar change must
+    * invalidate the cache even though the coordinates did not move. */
   def ensure(repoRoot: Path): Path =
     val out     = cache(repoRoot)
     val classes = parserClasses(repoRoot)
@@ -243,19 +152,10 @@ object LiqpClasspath:
   private[liqp] def rewritePolicy: String =
     (s"$LibraryPackage->$EmittedPackage" :: EnumTypes.map("enum:" + _)).mkString(" ")
 
-  /** the generated tree as ONE string — every `.java` under it, by RELATIVE PATH and by CONTENT,
-    * in a stable order.
-    *
-    * Both halves are load-bearing and each covers what the other misses. CONTENT alone misses a
-    * RENAME (ANTLR renames a generated class when the grammar's own name changes, and javac then
-    * produces a class file at a name nothing imports); the PATH SET alone misses every edit to a
-    * rule body, which is the ordinary case. Sorted, because `Files.walk` order is a filesystem
-    * fact and a key that depends on one is a key two checkouts disagree about.
-    *
-    * An ABSENT tree digests to a stated value rather than throwing, and a DISTINCT one: this is
-    * consulted on a freshness question, before [[compileParser]]'s refusal, which is the right
-    * place for the fatality because it can print the command that fixes it. A tree that vanished
-    * must not answer "fresh" with the cache of the tree that was there. */
+  /** the generated tree as ONE string -- every `.java` under it, by RELATIVE PATH and
+    * CONTENT, in a stable sorted order (PATH catches an ANTLR rename; CONTENT catches a
+    * rule-body edit). Digests an ABSENT tree to a stated value rather than throwing, so a
+    * vanished tree does not answer "fresh" with the cache of the tree that was there. */
   private[liqp] def generatedDigest(gen: Path): String =
     val body =
       if !Files.isDirectory(gen) then "<absent>"
@@ -277,47 +177,20 @@ object LiqpClasspath:
       finally s.close()
     }
 
-  /** the jars for these coordinates, through the mechanism every port shares
-    * ([[balticporter.corpus.ClasspathCache]] — the `cs` invocation, the stream merge and the
-    * jar-line filter, once).
-    *
-    * Takes its coordinates rather than reading [[Coordinates]] so that [[LiqpTestClasspath]] can
-    * resolve the ONE test-scope coordinate the same way. */
+  /** the jars for these coordinates, through the shared
+    * [[balticporter.corpus.ClasspathCache]] mechanism. Takes coordinates explicitly so
+    * [[LiqpTestClasspath]] can resolve its one test-scope coordinate the same way. */
   private[liqp] def fetch(coordinates: List[String]): List[String] =
     ClasspathCache.fetch("liqp", coordinates)
 
-  /** rewrite one generated source's references INTO the ported library (D-liqp-1b), and say how
-    * many of each kind moved.
+  /** rewrite one generated source's references INTO the ported library (D-liqp-1b),
+    * returning how many of each kind moved. Both rules cut only at a `.` (CLAUDE.md
+    * §4.56); the caller refuses a rewrite that moved nothing at all.
     *
-    * Both rules cut only at a `.` (CLAUDE.md §4.56). The package rule matches `liqp.` only where a
-    * qualified name STARTS — the lookbehind rejects `myliqp.` and `other.liqp.`, and nothing
-    * matches a bare identifier that merely contains the string. The enum rule matches a
-    * SCREAMING_CASE selector off one of [[EnumTypes]] and nothing wider, so a `static final`
-    * constant on any other type is untouched.
-    *
-    * Returned counts are printed and the caller refuses a rewrite that moved nothing at all — a
-    * build step whose policy fires nowhere is a decision that silently did not happen.
-    *
-    * ==WHAT THIS REWRITE CANNOT SEE, and why that is currently safe==
-    * It is a TEXT rewrite over java source, so it does not distinguish CODE from a STRING LITERAL
-    * or a COMMENT. A `"liqp.Foo"` inside a literal would be rewritten exactly as an import is, and
-    * nothing downstream could report it: javac is happy either way, the port compiles, and the only
-    * symptom is a runtime string — a reflective class name, a generated error message, a token
-    * table entry — that names a class nobody has. That is `CLAUDE.md` §3's shape arriving through a
-    * build step.
-    *
-    * It is safe TODAY as an observation about the input, not as a property of the rule: the whole
-    * ANTLR output holds **exactly one** occurrence of the string, `import liqp.TemplateParser;` on
-    * line 5 of `LiquidParser.java`, and zero inside a literal or a comment. A generated parser is
-    * the one input where that is plausible to stay true — its literals are the grammar's own token
-    * text — but it is not guaranteed, and the shape to watch is a `_LITERAL_NAMES`/`_SYMBOLIC_NAMES`
-    * table or a `@header {}` block carrying java source through into a string.
-    *
-    * If a hit ever appears, the fix is NOT a cleverer regex: a lexer that tells the three apart is
-    * the only thing that can, and that is javac's job, not a `Pattern`'s. The honest answer would be
-    * to rewrite the generated `import` line ALONE and leave every other occurrence to fail loudly
-    * against the stub, which is what makes the current one-hit input worth re-deriving rather than
-    * assuming. */
+    * It is a TEXT rewrite and cannot distinguish CODE from a STRING LITERAL or COMMENT --
+    * currently safe because the whole ANTLR output holds exactly ONE occurrence of the
+    * string (`import liqp.TemplateParser;`), not guaranteed in general. A hit inside a
+    * literal would need a lexer, not a cleverer regex, to tell the three apart. */
   private[liqp] def rewriteReferences(text: String): (String, Int, Int) =
     val pkg = java.util.regex.Pattern.compile(
       raw"(?<![\p{L}\p{N}_$$.])" + java.util.regex.Pattern.quote(LibraryPackage) + raw"\.")
@@ -344,12 +217,8 @@ object LiqpClasspath:
     m.appendTail(sb)
     (sb.toString, n)
 
-  /** javac the ANTLR output into `classes`, D-liqp-1b's rewrite first.
-    *
-    * ONE output directory, read by the frontend, by scalac and by the test run. What used to be two
-    * — the frontend's parser-only copy and a scalac copy carrying upstream `liqp` beside it — was
-    * the price of compiling the parser against a namespace the port does not emit, and the rewrite
-    * is what removes that price rather than softening it. */
+  /** javac the ANTLR output into `classes`, D-liqp-1b's rewrite first -- ONE output
+    * directory, read by the frontend, scalac and the test run. */
   private def compileParser(repoRoot: Path, jars: List[String], classes: Path): Unit =
     val gen = generatedSources
     val sources =

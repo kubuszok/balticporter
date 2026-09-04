@@ -41,12 +41,8 @@ object AshleyTestMigrate:
       label     = "sge-ecs-test",
       portRoot  = repoRoot.resolve("ported/sge-ecs"),
       sourceSet = SourceSet.Test,
-      // The suite's own test dependencies must be on the frontend's classpath or Spoon cannot
-      // resolve `import static org.mockito.Mockito.*` and silently reads `mock(...)` as an
-      // UNQUALIFIED call on the suite itself — which then emits as `this.mock(...)` and fails to
-      // compile with "value mock is not a member of EntityListenerTests". 12 errors, all one cause,
-      // and the same shape as the `import static org.junit.Assert.*` trap recorded in
-      // ENGINE-LIMITS.md §6: an unresolved static import does not fail, it RESOLVES WRONGLY.
+      // an unresolved `import static org.mockito.Mockito.*` resolves WRONGLY (as an unqualified
+      // call on the suite itself), not fails -- 12 errors, all one cause, ENGINE-LIMITS.md §6.
       frontend  = FrontendConfig(testRoot, files, AshleyClasspath.resolve(repoRoot),
                                  resolutionRoots = List(ashleySrc, gdxSrc)),
       phases    = Nil, // supplied by the manifest — the two sources are mutually exclusive
@@ -65,31 +61,16 @@ object AshleyTestMigrate:
       nextStep    = "scala-cli test the three emitted source sets together",
     ).execute()
 
-/** Ashley's TEST-scope dependencies, for shadow-class resolution only.
-  *
-  * The suite uses JUnit 4 and Mockito. Neither is translated — `TestFrameworkTransform` converts
-  * the JUnit surface, and the Mockito calls survive into the emitted Scala as ordinary references
-  * the target build resolves. The jars are needed at FRONTEND time so Spoon can resolve the static
-  * imports; without them an unresolved static import does not fail, it resolves WRONGLY, to an
-  * unqualified call on the enclosing class.
-  *
-  * Versions are Ashley's OWN, from `build.gradle`: JUnit 4.13.2 and Mockito **1.10.19**. The
-  * version matters and guessing a modern one costs three errors: `ComponentClassFactory` uses
-  * `org.mockito.asm` to generate Component classes at runtime, and that package was removed in
-  * Mockito 2.x. A port resolves the dependencies the library DECLARES, not the ones that look
-  * current.
-  * Cached, like `LiqpClasspath`, so a run does not depend on the network.
+/** Ashley's TEST-scope dependencies, for shadow-class resolution only. JUnit 4 and Mockito;
+  * neither is translated (`TestFrameworkTransform` converts the JUnit surface, Mockito calls
+  * survive as ordinary references). Versions are Ashley's OWN (JUnit 4.13.2, Mockito 1.10.19):
+  * `ComponentClassFactory` uses `org.mockito.asm`, removed in Mockito 2.x, so guessing a modern
+  * version costs three errors.
   */
 object AshleyClasspath:
 
-  /** the versions Ashley's own `build.gradle` declares — see above for what guessing a modern
-    * Mockito cost. */
+  /** the versions Ashley's own `build.gradle` declares. */
   val Coordinates: List[String] = List("junit:junit:4.13.2", "org.mockito:mockito-core:1.10.19")
 
   def resolve(repoRoot: Path): List[Path] =
-    // through the shared mechanism, which also RECORDS these coordinates beside the cache: reused
-    // for a different set, a cached line resolves this suite's imports against versions the port no
-    // longer declares — and an import that resolves WRONGLY does not fail, it emits nonsense
-    // (`ClasspathCache`). A fetch failure is fatal there rather than an empty classpath here, for
-    // the same reason: a quiet fallback looks like a port bug two stages later.
     ClasspathCache.entries(repoRoot.resolve("out/ashley-test-classpath.txt"), "ashley-test", Coordinates)

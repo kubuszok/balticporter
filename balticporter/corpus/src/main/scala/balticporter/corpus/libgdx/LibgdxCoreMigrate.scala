@@ -8,24 +8,12 @@ import balticporter.transform.{ClassTableTransform, CollectionsTransform, Mutabl
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters.*
 
-/** Migrate libGDX's CORE module (`gdx/src`, 605 types — the backend-agnostic, JDK-only heart
-  * of libGDX) through the TIR to the `ported/sge` sbt submodule, then compile it with
-  * `sbt sge/compile`.
+/** Migrate libGDX's CORE module (`gdx/src`) through the TIR to the `ported/sge` sbt submodule.
   *
   *   corpus/runMain balticporter.corpus.libgdx.LibgdxCoreMigrate [--raw] [--determinism=full]
   *
-  * `--raw` skips the transform pipeline (libGDX core uses its own collections, so the java
-  * collections transform barely applies here; the port is essentially structural).
-  *
-  * ==This file is POLICY ONLY==
-  * Everything below the `PortRun(...)` call used to live here too — the dropped-type emission skip,
-  * the support-source write-out, the injection copy, and the two substitution checks — about 80
-  * lines of ENGINE logic that the skill for adding a library told the next port to copy. That is
-  * the `ReflectionToPortableTransform` mistake one level up (CLAUDE.md §1), and it is why
-  * [[LibgdxTestMigrate]] went its whole life without calling `PortabilityCheck`. It is all in
-  * [[balticporter.runner.PortRun]] now, where it cannot be forgotten. What is left here is what
-  * genuinely differs between libGDX and the next library: the manifest, the transform arguments,
-  * and the provenance.
+  * `--raw` skips the transform pipeline. This file is POLICY ONLY; engine mechanics live in
+  * [[balticporter.runner.PortRun]] — what's here is the manifest, transform args, provenance.
   */
 object LibgdxCoreMigrate:
 
@@ -66,26 +54,14 @@ object LibgdxCoreMigrate:
     ).execute()
 
 /** libGDX's per-library policy, in one place because two source sets share it.
-  *
-  * CLAUDE.md §1: none of this may live in the engine. What is here is the WHICH — which types are
-  * not translated, which wrapper forwards to which receiver, which reflective lookup becomes which
-  * table. The engine holds the mechanism for each, parameterised.
+  * CLAUDE.md §1: the WHICH, not the mechanism.
   */
 object LibgdxPolicy:
 
-  /** libGDX core's policy AS A VALUE — the thing every dependent module imports and extends.
-    *
-    * Everything in it is shared-surface policy: the types and methods this port does not translate
-    * mechanically, and the phases that reshape the signatures a dependent module compiles against.
-    * What is NOT here is what a dependent may decide for itself — its source set, its provenance,
-    * its `runtimeMode`, and its own injections. See [[balticporter.core.PortManifest]] for where
-    * that line is drawn and why `inject` sits on the must-differ side of it.
-    *
-    * `governs` is the namespace claim. libGDX's own test suite declares its suites INSIDE
-    * `com.badlogic.gdx` (`com.badlogic.gdx.utils.JsonTest` and friends), so a prefix cannot
-    * separate the two modules — which is exactly why the substitution half of the agreement check
-    * works from unit origins instead. The claim is still worth stating: it is what catches a
-    * dependent that renames part of this namespace on its own.
+  /** libGDX core's policy AS A VALUE — imported and extended by every dependent module.
+    * Shared-surface policy only: drop/rename tables and the phases that reshape signatures a
+    * dependent compiles against (CLAUDE.md §1.5). `governs` is the namespace claim; the test
+    * suite lives inside it too, so substitution agreement works from unit origins, not a prefix.
     */
   def core(repoRoot: Path): PortManifest =
     val s = substitutions(repoRoot)
@@ -96,47 +72,20 @@ object LibgdxPolicy:
       dropMethods = s.dropMethods,
       inject      = s.inject,
       surface     = mainPhases,
-      // The namespace the CONSUMER actually uses. sge is `package sge`, with libGDX's own
-      // subpackages carried straight through — `sge/maps`, `sge/scenes`, `sge/math`, `sge/graphics`
-      // are all there in the hand port — so one prefix pair moves the whole library and
-      // longest-prefix-wins does the rest.
-      //
-      // Emitting the upstream namespace was never a cosmetic mismatch: neither sge nor ssg can
-      // adopt output that declares `com.badlogic.gdx`, because their entire dependent codebase is
-      // written against the renamed one.
-      //
-      // The keys of every OTHER policy — dropTypes, dropMethods, the forwarder and class-table
-      // maps — stay upstream, because they are consulted at the frontend, before this runs.
+      // upstream namespace stays in every OTHER policy's keys (consulted at the frontend,
+      // before this runs); packageRenames is the one map the consumer actually sees.
       packageRenames = Map("com.badlogic.gdx" -> "sge"),
-      // ---- wave 1.3: type renames from the `Migration notes: Renames:` census ----
-      // sge renamed `List` to `SgeList` to avoid the clash with `scala.List` (1 file). The
-      // upstream FQN is the key; a bare simple name renames in place.
+      // sge renamed List to SgeList to avoid clash with scala.List (1 file)
       typeRenames    = Map(
         "com.badlogic.gdx.scenes.scene2d.ui.List" -> "SgeList", // avoids clash with scala.List (1 sge file)
       ),
       resolutions    = reviewedBoundaries,
-      // THE ARTIFACT THIS MODULE'S BUILD ADDS — what a `Verdict.Depend` is answered WITH
-      // (CLAUDE.md §1.5). This manifest declares no `targets`, so it claims all three, and 37 sites
-      // of this port's own emitted code name `java.util.Locale`: `I18NBundle` and its loader, which
-      // is a whole feature of the library rather than an incidental call. Locale EXISTS on both
-      // non-JVM backends, in `scala-java-locales` (`JS-L65`), so the reader's action was never to
-      // remove one of those calls — it was this line, and `dependency-coverage` had reported all 37
-      // on every run since the lane existed.
-      //
-      // ONE entry: nothing here calls `java.time` or `java.text`, and an entry naming an artifact
-      // no requirement wants is now a `policy` finding of its own. It is NOT inherited (§1.5's
-      // right-hand column, `inject`'s line): every dependent's own emitted code is Locale-free, so
-      // each of the six declares nothing and the `dependency-coverage` residue it reports is an
-      // honest zero rather than a credit taken from here.
-      //
-      // `cross = Platform` is what the artifact IS — `scala-java-locales_sjs1_3` and
-      // `_native0.5_3` are published beside `_3`, so `%%` would ask a JS build for the JVM jar.
+      // THE ARTIFACT THIS MODULE'S BUILD ADDS (CLAUDE.md §1.5). Locale calls (I18NBundle)
+      // need scala-java-locales; not inherited — each dependent declares its own if it needs it.
       dependencies   = List(
         balticporter.catalog.ArtifactDep("io.github.cquiroz", "scala-java-locales", "1.5.4",
                                          balticporter.catalog.CrossKind.Platform),
-        // `lowlevel.Nullable` — the opaque wrapper the `Named` nullability target emits into every
-        // annotated declaration's type. The coordinate is the port's to state, never the engine's
-        // (§1), and the version is sge's own `Versions.lls` from its `build.sbt`.
+      // lowlevel.Nullable's opaque wrapper — coordinate is the port's to state (§1).
         balticporter.catalog.ArtifactDep("com.kubuszok", "lls", "0.3.0"),
       ),
       // THE REFERENCE HAND PORT for sge. NOT inherited (DESIGN.md §8.23).
@@ -144,83 +93,34 @@ object LibgdxPolicy:
         repoRoot.resolve("../sge/sge/src/main/scala").normalize))),
     )
 
-  /** THE BOUNDARY ROWS THIS PORT HAS READ AND ACCEPTS — `DESIGN.md` §8.16.
-    *
-    * Every entry here is the same statement, at a site somebody opened: *the residue this check
-    * counts is the right outcome here*. That statement had no spelling before the menu — the three
-    * boundary counts could only ever go up, because a review that concluded "this one is fine" had
-    * nowhere to be recorded — and it is deliberately not the same statement as any of the keys these
-    * checks point at, each of which changes what the port EMITS. Nothing below moves a byte; each
-    * row leaves its refusal lane and arrives in `remediation(resolved)` with the key that moved it.
-    *
-    * They are on `core` and not on a dependent because they are facts about libGDX core's OWN
-    * declarations, which is what §1.5 puts in the inherited column. A dependent binds them and drains
-    * nothing, because a finding about a base's unit is the base's (`ENGINE-LIMITS.md` D2).
+  /** Boundary rows this port has read and accepted (`DESIGN.md` §8.16) — each leaves its
+    * refusal lane and moves to `remediation(resolved)`. On `core`, not a dependent: these are
+    * facts about libGDX core's own declarations (`ENGINE-LIMITS.md` D2).
     */
   def reviewedBoundaries: Map[String, String] = Map(
-    // `System.identityHashCode` is specified to answer "the same hash code that would be returned by
-    // the default hashCode(), regardless of the object's class" — it reads the object's IDENTITY and
-    // never its representation, which is the exact question `OpaqueEgress` asks. Note the other five
-    // rows in this lane STAY: `StringBuilder#append(Object)`, `Objects#toString`, `Object#equals`,
-    // `Comparable#compareTo` and `Comparator#compare` all read the value they are handed, so a
-    // retyped collection reaching one of them is precisely K21 face 1 and is still counted.
-    //
-    // BARE because it is EXACT: this method has exactly one overload and a bare key names the set.
-    // It used to be bare because it had to be — a finding's owner column carries `Symbol.fullName`,
-    // which the frontend interns for an external member with FULLY QUALIFIED parameters, while a
-    // `Descriptor` is SIMPLE names, so `identityHashCode(java.lang.Object)` copied out of the report
-    // was `never matched`. The binder compares descriptors through `Descriptor.matches` now (simple
-    // names on both sides), so either spelling binds and this is a choice.
+    // identityHashCode reads OBJECT IDENTITY only — exactly OpaqueEgress's question.
     "java.lang.System#identityHashCode" -> "accept-opaque-egress",
 
-    // `Stage` is the scene graph's root and is the most-written `new` in libGDX's own documentation:
-    // application code builds one. Nothing INSIDE the library constructs it, which is why the closure
-    // sees no instantiation, and the external ancestor the warning keys on is `java.lang.AutoCloseable`
-    // — a JDK interface every `Disposable` has, not a framework base type. So this is the second of
-    // the two cases the check says it cannot tell apart ("if YOUR USERS construct it, this is correct
-    // as it stands and the clause is part of the ported API"), and a `selfSupplied` entry would be
-    // the wrong answer: it would take the context away from the caller who has one.
+    // Stage is constructed by application code, not the library; the caller owns the context.
     "com.badlogic.gdx.scenes.scene2d.Stage" -> "accept-unconstructed-thread",
 
-    // TWO rows, one key — the broadcast this grammar is per-declaration for. Both reads are inside
-    // the anonymous `GLErrorListener` that IS this `static final` field's initialiser: its
-    // `onError(int)` overrides the interface's, so its signature is not this program's to change, and
-    // the field runs at class initialisation, before any caller exists to pass a context. The two
-    // spelled alternatives are both worse here — `lazy-init` would change WHEN a diagnostic listener
-    // is built for no benefit, and `boundary = "residual-global"` is a WHOLE-PHASE setting that would
-    // re-spell every residual read in the library to serve these two.
+    // GLErrorListener field is a static initialiser overriding an interface method; no caller
+    // context exists at that point.
     "com.badlogic.gdx.graphics.profiling.GLErrorListener#LOGGING_LISTENER" -> "accept-residual-global",
 
-    // K13 CLOSED: the four `accept-scoped-out` and `accept-abstract-type-parameter` entries at
-    // `List$ListStyle#{background,down,over}` and `Skin#optional` were the K13 exit's residual
-    // resolutions — with the `Named` target, `Nullable[T]` composes at every `T` and no scope exit
-    // is needed, so those findings no longer fire and the selections are deleted.
   )
 
-  /** libGDX's own JUnit suite, as a DEPENDENT of [[core]].
-    *
-    * It adds one phase and inherits everything else. The hand-written pipeline it replaces listed
-    * the shared phases again, minus two, with a comment arguing that the two were unnecessary — a
-    * correct argument that nothing checked and that the next module would have had to make again.
-    */
-  /** P11: the `@Rule TestWatcher watcher` field's anonymous class body calls
-    * `desc.getTestClass().getSimpleName()`, and munit's JS/Native Description.getTestClass
-    * returns `Option[Class[_]]` instead of `Class<?>`. MUnit has no `@Rule` protocol so
-    * the field is dead on every platform — drop it via `dropMethods` and exclude it from
-    * `bpFreshState` via `dropFields`. Diagnostic-only divergence: JVM loses the
-    * "--- ClassName: method ---" println on test failure. */
+  /** libGDX's own JUnit suite, as a DEPENDENT of [[core]]. Adds one phase and inherits
+    * everything else. */
+  /** P11: watcher field is dead on every munit platform (no @Rule protocol); dropped via
+    * dropMethods/dropFields. JVM loses a diagnostic println on test failure. */
   private val watcherDrop = "com.badlogic.gdx.utils.JsonMatcherTests#watcher"
 
   def test(repoRoot: Path): PortManifest = core(repoRoot).extendedBy(PortManifest(
     name    = "sge-test",
     dropMethods = Set(watcherDrop),
     surface = List(new TestFrameworkTransform(dropFields = Set(watcherDrop)), selfSuppliedSuites,
-      // --- 3.1ae: gdx-test residue ---
-      // JsonMatcherTests' two static toString helpers use CharArray as a string builder
-      // (append(String, String), replaceAll(String, String), toString). DynamicArray[Char] has
-      // none of these. sge dropped the CharArray string-builder API entirely (type-mappings.md:
-      // "CharArray -> DynamicArray[T]", CharArrayTest excluded at fdc30967). Replace with
-      // java.lang.StringBuilder, which is what these helpers are doing.
+      // 3.1ae: sge dropped CharArray's string-builder API; replace with java.lang.StringBuilder.
       new balticporter.transform.MethodBodyTransform(Map(
         "com.badlogic.gdx.utils.JsonMatcherTests#toString(JsonMatcher,String[])" ->
           """{
@@ -245,11 +145,8 @@ object LibgdxPolicy:
             |}""".stripMargin,
       )),
     ),
-    // P11: munit's JS/Native `org.junit.runner.Description` declares these members parenless
-    // (munit 1.2.0, `Description.scala`: `def getMethodName: String`, `def getTestClass: Option[…]`,
-    // `def getAnnotations: List[…]`). The JVM resolves the java `Description` class file where they
-    // have `()`. Emitting calls WITHOUT parens is legal on both: Scala 3 auto-applies a Java nullary
-    // method, and the parenless Scala `def` is its own match.
+    // P11: munit JS/Native Description declares these parenless; the JVM class file has ().
+    // Both call forms are legal on both — Scala 3 auto-applies, the parenless def is its own match.
     externalParenless = Set(
       "org.junit.runner.Description#getTestClass",
       "org.junit.runner.Description#getMethodName",
@@ -257,35 +154,13 @@ object LibgdxPolicy:
     ),
   ))
 
-  /** THE ONE `selfSupplied` ENTRY — `ENGINE-LIMITS.md` CT7, contributed the way CT8 says a dependent
-    * contributes: a [[ContextHolderExtension]], which has NO field in which the shared half could be
-    * restated.
-    *
-    * `AnimationControllerTest` constructs `new Model()`, `Model` is one of the 188 classes
-    * [[globalsToContext]] threads, so the instantiate edge threads the suite and `attach = "class"`
-    * puts the clause on its constructor. Every step of that is the design working — and MUnit
-    * constructs a suite REFLECTIVELY, which cannot supply a `using`. The result compiled at 0 errors
-    * with `context-seam` 0 and `policy` 0, and five tests silently stopped running; only §5.1's
-    * `tests.tsv` DID-NOT-RUN gate saw it.
-    *
-    * So the suite takes the context WITHOUT taking a parameter: java's constructor signature stands
-    * and the engine emits `private given sge.Sge = sge.SgeTestFixture.testSge()` at the head of its
-    * body. That is the reference hand port's own shape for this very file
-    * (`../sge/.../AnimationControllerTest.scala`), reached from policy rather than by editing
-    * generated code — which §5.5 forbids and which no consumer could do anyway.
-    *
-    * ==Why the value is an ABSENT-SERVICE fixture and not a noop one==
-    * See `ported/sge/src/test/scala/sge/SgeTestFixture.scala`. The one affected suite reaches no
-    * service at all, so a stub that ANSWERS would let a test pass while asserting nothing about the
-    * thing it was answering for.
-    *
-    * ==Why this is the DEPENDENT's manifest and not the base's==
-    * The key is a declaration in the TEST source set, which the base neither parses nor emits.
-    * Putting it in [[core]] would bind every module that inherits the base — six of them — to a
-    * `selfSupplied` key none of them can ever match, which is six permanently unclearable `policy`
-    * rows: exactly the noise floor [[beanProperties]] already documents. The entry sits inside
-    * `governs = com.badlogic.gdx` and is admitted because the screen asks what the base EMITS, per
-    * its published port map, and the base emits nothing at that name (`ENGINE-LIMITS.md` CT9). */
+  /** THE ONE `selfSupplied` ENTRY (`ENGINE-LIMITS.md` CT7): `AnimationControllerTest` is
+    * constructed reflectively by MUnit, so the threaded context cannot reach it as a parameter.
+    * The suite takes the context without one — an emitted
+    * `private given sge.Sge = sge.SgeTestFixture.testSge()`, matching the reference hand port.
+    * Lives on the DEPENDENT (test source set): the key names a test declaration the base never
+    * parses.
+    */
   def selfSuppliedSuites: balticporter.transform.GlobalsToImplicitsTransform =
     new balticporter.transform.GlobalsToImplicitsTransform(extensions = List(
       balticporter.transform.ContextHolderExtension(
@@ -297,29 +172,16 @@ object LibgdxPolicy:
       )
     ))
 
-  /** Typed substitution manifest: constructs sge dropped upstream (and their ready-made Scala
-    * replacements). `dropTypes`/`dropMethods` are the seams for opting an in-source type or method
-    * out of mechanical translation when a replacement is supplied here.
-    *
-    * NB: a dropped type is still PARSED — only its OUTPUT is replaced by the injected Scala.
-    * Removing it from the model instead would leave references to it unresolved, silently degrading
-    * translation of the code that USES it (a `Field` of unknown type stops being recognised as a
-    * non-String operand, so Java string concat loses its `String.valueOf` wrap). */
+  /** Typed substitution manifest: constructs sge dropped upstream, and their Scala replacements.
+    * A dropped type is still PARSED — only its OUTPUT is replaced — so references to it still
+    * resolve. */
   def substitutions(repoRoot: Path): Substitutions = Substitutions(
-    // `utils.reflect` is libGDX's thin cross-platform wrapper over `java.lang.reflect`. sge does
-    // not port it — the reflection-driven decoding it served was replaced by Kindlings'
-    // Jsoniter/UBJson codecs — so it is substituted wholesale by injected Scala at the same FQNs.
+    // utils.reflect (java.lang.reflect wrapper) is replaced by Kindlings' Jsoniter/UBJson codecs.
     dropTypes = Set(
-      // the reflection-based serializer itself — replaced by Kindlings Jsoniter/UBJson codecs.
-      // (JsonValue/JsonReader/JsonWriter/JsonMatcher are DOM/parsing types and port fine.)
+      // reflection-based serializer — replaced by Kindlings Jsoniter/UBJson codecs.
       "com.badlogic.gdx.utils.Json",
-      // `Pools` fabricated a pool from a `Class` via `ReflectionPool` (reflective no-arg ctor
-      // lookup + invoke) — the one thing Scala.js/Native cannot do. Replaced by an injected
-      // `Pools` whose creation path takes a factory; `ReflectionPool` is dropped outright
-      // (upstream deprecated it for the factory-backed `DefaultPool`, which ports mechanically).
-      // --- 3.2g: Pool class-to-trait (ecs drop-in parity) ---
-      // sge hand-ported Pool as a TRAIT with abstract vals (justified, kind=api; AD-003).
-      // The injected file reproduces sge's Pool trait; ClassToTraitTransform rewrites subclasses.
+      // wave 3.2g: Pools/Pool -> injected trait with abstract vals (sge AD-003);
+      // ClassToTraitTransform rewrites subclasses.
       "com.badlogic.gdx.utils.Pool",
       "com.badlogic.gdx.utils.Pools",
       // dropped with NO replacement — every reference eliminated, so CHECK 2 proves they are gone
@@ -331,58 +193,33 @@ object LibgdxPolicy:
       "com.badlogic.gdx.utils.reflect.Constructor",
       "com.badlogic.gdx.utils.reflect.Method",
       "com.badlogic.gdx.utils.reflect.ReflectionException",
-      // `NetJavaImpl` implements `Net`'s HTTP half over `java.net.HttpURLConnection` — a type
-      // Scala.js and Scala Native do not have, so NO member of it survives to either target and
-      // there is nothing to port mechanically. It is a BACKEND helper: nothing in `gdx/src`
-      // references it (the desktop/android backends do), so like `ReflectionPool` it is dropped
-      // with no replacement and CHECK 2 proves the references are gone. The portable `Net`
-      // interface, `HttpRequestBuilder`, `HttpStatus` and `HttpParametersUtils` all stay.
-      //
-      // NB — dropping it CONCEALS a real engine gap, recorded in ENGINE-LIMITS.md K2: the one
-      // compile error it produced was `CollectionsTransform` rewriting OUR signature to
-      // `mutable.Map[String, Buffer[String]]` while the body returned an unported JDK method's
-      // real `java.util.Map`. That JDK/Scala collection boundary is universal and still open;
-      // this drop is justified by portability alone and must not be read as closing it.
+      // NetJavaImpl (java.net.HttpURLConnection-based) has no JS/Native target and no in-corpus
+      // caller — dropped with no replacement. NB: conceals ENGINE-LIMITS K2, a still-open
+      // JDK/Scala collection boundary gap, not closed by this drop.
       "com.badlogic.gdx.net.NetJavaImpl",
-      // dropped with NO replacement, and the pairing is the whole of what keeps
-      // `sge/utils/Disposable.scala` from shipping: [[disposableRedirect]] re-points every
-      // REFERENCE at `java.lang.AutoCloseable` and a redirect never deletes a declaration
-      // (`ENGINE-LIMITS.md` D8). There is nothing to inject — the target is the JDK's own type,
-      // which already exists everywhere the port compiles.
+      // dropped with no replacement; disableRedirect re-points references at
+      // java.lang.AutoCloseable (a redirect never deletes a declaration, ENGINE-LIMITS D8).
       "com.badlogic.gdx.utils.Disposable",
-      // O6 CLOSED: `Align` is a class of `static final int` constants, replaced by an injected
-      // `opaque type Align = Int` (sge's convention). The retype is handled by
-      // `PrimitiveToOpaqueTransform(Existing)` below; this drop prevents the java class from being
-      // emitted alongside the injection. The class is still PARSED — its static members are visible
-      // to every reference in the ported code.
+      // O6 CLOSED: Align -> injected `opaque type Align = Int` (sge convention), retyped by
+      // PrimitiveToOpaqueTransform(Existing) below.
       "com.badlogic.gdx.utils.Align",
-      // wave 3.1a: retargetted to mutable.BitSet (sge type-mappings.md: "Bits -> mutable.BitSet").
-      // 0 callers in gdx/src; the retarget serves dependents (ashley uses Bits for entity masks).
+      // wave 3.1a: retargetted to mutable.BitSet (0 callers in gdx/src; serves ashley).
       "com.badlogic.gdx.utils.Bits",
-      // wave 3.1a: retargetted to lowlevel.util.ObjectMap (lls 0.3.0). sge type-mappings.md:
-      // "ObjectMap -> ObjectMap[K,V]" (extracted to lls). Same member API (get, put, containsKey,
-      // remove, putAll, clear, size, isEmpty, etc. — verified via javap on lls_3-0.3.0.jar), so
-      // retarget only — no Kind-based rewrites needed. lls's constructor is PRIVATE, so the
-      // Construct rewrite routes `new ObjectMap(args)` through the companion's transparent inline
-      // `apply` (in TASTy, erased from bytecode). Inner types (Entry, Keys, Values, Entries) are
-      // NOT in lls — references to them from non-dropped files are compile errors, COUNTED.
+      // wave 3.1a: retargetted to lowlevel.util.ObjectMap (lls). Same member API (verified via
+      // javap); inner types (Entry/Keys/Values/Entries) are NOT in lls — references to them are
+      // counted compile errors.
       "com.badlogic.gdx.utils.ObjectMap",
       // wave 3.1a: retargetted to lowlevel.util.ObjectSet (lls 0.3.0). Same pattern as ObjectMap.
       "com.badlogic.gdx.utils.ObjectSet",
-      // wave 3.1b: ObjectMap/ObjectSet SUBCLASSES — retargetted to their lls equivalents.
-      // lls's ObjectMap is `final class`, so gdx subclasses cannot extend it; they are independent
-      // types in lls. sge type-mappings.md: "OrderedMap -> OrderedMap[K,V]",
-      // "OrderedSet -> OrderedSet[A]", "IdentityMap -> ArrayMap[K,V]" (lls has no IdentityMap;
-      // ArrayMap with identity semantics is the closest equivalent).
+      // wave 3.1b: OrderedMap/OrderedSet/IdentityMap retargetted to their lls equivalents
+      // (lls's ObjectMap is final, so gdx subclasses become independent lls types;
+      // IdentityMap -> ArrayMap with identity semantics, lls has no IdentityMap).
       "com.badlogic.gdx.utils.OrderedMap",
       "com.badlogic.gdx.utils.OrderedSet",
       "com.badlogic.gdx.utils.IdentityMap",
-      // wave 3.1d: the remaining MAP family — all retargetted to lowlevel.util.ObjectMap.
-      // sge type-mappings.md: "IntMap, IntIntMap, IntFloatMap, LongMap, ObjectIntMap, ObjectFloatMap,
-      // ObjectLongMap -> ObjectMap[K,V]". lls has no primitive-keyed specialisations; the runtime
-      // cost of boxing is accepted (same as sge's choice). These types' own static `tableSize` and
-      // references to `ObjectMap.dummy` disappear with the type itself — every remaining caller is
-      // inside one of these dropped files.
+      // wave 3.1d: remaining MAP family retargetted to lowlevel.util.ObjectMap — lls has no
+      // primitive-keyed specialisations, boxing accepted (matches sge's own choice). Static
+      // members/references disappear with the type; every remaining caller is in a dropped file.
       "com.badlogic.gdx.utils.IntMap",
       "com.badlogic.gdx.utils.LongMap",
       "com.badlogic.gdx.utils.IntIntMap",
@@ -390,23 +227,15 @@ object LibgdxPolicy:
       "com.badlogic.gdx.utils.ObjectIntMap",
       "com.badlogic.gdx.utils.ObjectFloatMap",
       "com.badlogic.gdx.utils.ObjectLongMap",
-      // wave 3.1d: gdx's ArrayMap retargetted to lowlevel.util.ArrayMap.
-      // sge type-mappings.md: "ArrayMap, IdentityMap -> ArrayMap[K,V]". IdentityMap already
-      // retargetted in wave 3.1b; gdx's own ArrayMap is the same lls type. Deprecated
-      // constructors taking Class already in dropMethods.
+      // wave 3.1d: ArrayMap -> lowlevel.util.ArrayMap. Deprecated Class-taking ctors already
+      // in dropMethods.
       "com.badlogic.gdx.utils.ArrayMap",
-      // wave 3.1d: IntSet retargetted to lowlevel.util.ObjectSet.
-      // sge type-mappings.md: "ObjectSet, IntSet -> ObjectSet[A]". lls has no primitive-element
-      // set specialisation; IntSet -> ObjectSet[Int] with boxing accepted.
+      // wave 3.1d: IntSet -> lowlevel.util.ObjectSet[Int] (boxing accepted; lls has no
+      // primitive-element set).
       "com.badlogic.gdx.utils.IntSet",
-      // wave 3.1n: Array family retargetted to lowlevel.util.DynamicArray.
-      // sge type-mappings.md: "ByteArray, CharArray, FloatArray, IntArray, LongArray, ShortArray
-      // -> DynamicArray[T]" (unified via MkArray type class). Array<T> -> DynamicArray[T],
-      // SnapshotArray/DelayedRemovalArray -> DynamicArray (lls DynamicArray has begin/end for
-      // snapshot support). BooleanArray -> DynamicArray[Boolean] (lls MkArray$OfBooleans exists).
-      // Queue -> mutable.ArrayDeque (sge type-mappings.md: "Queue -> Scala stdlib queues";
-      // sge's own QueueBitsTest uses mutable.ArrayDeque). Retargetted separately from the
-      // DynamicArray family because ArrayDeque is stdlib, not lls.
+      // wave 3.1n: Array family -> lowlevel.util.DynamicArray (unified via MkArray type class);
+      // SnapshotArray/DelayedRemovalArray -> DynamicArray (begin/end support snapshotting);
+      // BooleanArray -> DynamicArray[Boolean]; Queue -> mutable.ArrayDeque (stdlib, not lls).
       "com.badlogic.gdx.utils.Array",
       "com.badlogic.gdx.utils.SnapshotArray",
       "com.badlogic.gdx.utils.DelayedRemovalArray",
@@ -466,69 +295,31 @@ object LibgdxPolicy:
       "com.badlogic.gdx.graphics.g3d.particles.AssetTypeRegistry#classFor"
   ))
 
-  /** libGDX routes every reflective operation through `ClassReflection` so its GWT/Android
-    * backends can supply their own implementation. sge drops that wrapper: it targets Scala
-    * Native and Scala.js, where runtime reflection does not exist. But most of what the corpus
-    * actually calls is not reflection at all — these are plain `java.lang.Class` members that
-    * both platforms DO provide, reached through the call's first argument. Re-pointing them
-    * leaves behind exactly the members that genuinely need replacing (`forName` above, and the
-    * declared-field/method/constructor readers, which stay in `Substitutions.dropTypes`). */
+  /** libGDX routes reflection through `ClassReflection` for its GWT/Android backends; sge
+    * drops the wrapper (no runtime reflection off the JVM). Most calls are plain
+    * `java.lang.Class` members both Scala.js and Native DO provide -- forwarded here;
+    * genuine reflection stays in `Substitutions.dropTypes`. */
   def unwrapReflection: StaticForwarderTransform = new StaticForwarderTransform(List(
     StaticForwarderTransform.Forwarder(
       wrapper  = "com.badlogic.gdx.utils.reflect.ClassReflection",
       receiver = "java.lang.Class",
-      // exactly the wrapper's OWN one-arg pass-throughs to `java.lang.Class` that the corpus
-      // reaches. `getName` sat here from the first draft and matched nothing on any run —
-      // `ClassReflection` never declared it — and the `policy / never matched` finding that
-      // reported it is the check this line answers to: a key that matches nothing is either a
-      // typo for a member that needed forwarding, or dead policy. This one was dead.
+      // one-arg pass-throughs to java.lang.Class the corpus reaches (getName was dead
+      // policy, removed).
       members  = Set("getSimpleName", "isInstance", "isAssignableFrom", "isArray",
                      "isEnum", "isInterface", "isPrimitive", "isAnnotation", "getComponentType"),
     )
   ))
 
-  /** `java.util.Comparator` → `scala.math.Ordering`, the port's one RETARGET entry.
-    *
-    * A retarget moves a type at every occurrence and API-maps it NOWHERE — no kind, no factory, no
-    * `coerce` boundary. What licenses that here is a single fact about the two standard libraries:
-    * Scala declares `trait Ordering[T] extends java.util.Comparator[T]`, so the scala target is
-    * usable everywhere the java source was. Three consequences, and they are the whole of what this
-    * entry costs:
-    *
-    *   - a declaration moves BARE. An `Ordering[T]` reaching a slot that still says `Comparator` —
-    *     the JDK's own `Arrays.sort`, the engine's `JavaCollections.sort` — already IS one, so
-    *     nothing is bridged and `CollectionBoundaryCheck` has nothing to count;
-    *   - `implements Comparator<T>` becomes `extends Ordering[T]` with the `compare(a, b)` under it
-    *     structurally unchanged, because `compare` is `Ordering`'s ONE abstract member. That is also
-    *     what keeps an anonymous `new Comparator<Pixmap>(){…}` — libGDX has four — a valid
-    *     `new Ordering[Pixmap]{…}`, and a java lambda SAM-convertible;
-    *   - no call site is rewritten at all. `cmp.compare(a, b)` binds to `Ordering.compare`.
-    *
-    * ==Why there is no companion call-site table==
-    * `Collections.sort(xs, c)` → `xs.sortInPlace()(using c)` is expressible in the M4 template
-    * language and is REFUTED by the compiler: `sortInPlace` is a `mutable.IndexedSeqOps` member and
-    * `java.util.List` maps to `mutable.Buffer`, which is not one. After the retarget the existing
-    * `JavaCollections.sort` arm is already correct, and `Arrays.sort`'s idiomatic counterpart trades
-    * java's documented stability guarantee for legibility, which is not a trade a seam may make
-    * silently. Measured — `DESIGN.md` §8.12 and `ComparatorOrderingPortSpec`.
-    *
-    * This is SHARED SURFACE and therefore lives in [[core]] alone (§1.5): a base whose `Comparator`s
-    * became `Ordering`s and a dependent whose did not emit signatures that cannot meet. It joins the
-    * phase's `surfaceFingerprint` for exactly that reason. And it is a parameter of the
-    * `CollectionsTransform` this manifest ALREADY carries — not a second instance of it, which is
-    * what `ENGINE-LIMITS.md` D9 closes for a base with dependents. */
+  /** `java.util.Comparator` -> `scala.math.Ordering`, the port's one RETARGET entry --
+    * moves the type at every occurrence with no coercion, licensed by
+    * `Ordering[T] extends Comparator[T]`. No call site is rewritten. SHARED SURFACE, lives
+    * in [[core]] alone (§1.5); a parameter of the existing `CollectionsTransform`, not a
+    * second instance (`ENGINE-LIMITS.md` D9). */
   def comparatorRetarget: Map[String, String] =
     Map("java.util.Comparator" -> "scala.math.Ordering")
 
-  /** `com.badlogic.gdx.utils.Bits` -> `scala.collection.mutable.BitSet`.
-    *
-    * sge's type-mappings.md: "Bits -> mutable.BitSet". 0 callers in gdx/src; the retarget sits
-    * on the base so dependents (ashley uses Bits for entity masks) inherit it through
-    * `extendedBy`. Dropped from `substitutions.dropTypes` so the java class is not emitted.
-    *
-    * The `retargetRewrites` table maps the member names that differ between `Bits` and `BitSet`:
-    * `get(i)` -> `apply(i)`, `set(i)` -> `addOne(i)`, `clear(i)` -> `subtractOne(i)`, etc.
-    * These fire only on dependents that actually call them; the base has 0 callers. */
+  /** `com.badlogic.gdx.utils.Bits` -> `scala.collection.mutable.BitSet` (sge type-mappings.md).
+    * 0 callers in gdx/src; sits on the base so dependents (ashley) inherit it via `extendedBy`. */
   def bitsRetarget: Map[String, String] =
     Map("com.badlogic.gdx.utils.Bits" -> "scala.collection.mutable.BitSet")
 
@@ -559,41 +350,20 @@ object LibgdxPolicy:
       ("intersects", 1)   -> Template("($recv & $0).nonEmpty"),
       // bits.getAndClear(i) -> { val was = bits(i); bits -= i; was }
       ("getAndClear", 1)  -> Template("{ val bpWas = $recv($0); $recv -= $0; bpWas }"),
-      // bits.getAndSet(i) -> { val was = bits(i); bits += i; !was } (returns true if ALREADY set = was NOT set before)
-      // Java's getAndSet returns true if the bit was ALREADY set BEFORE the operation.
-      // Wait: java says "returns true if the bit was already set" which means "was NOT changed".
-      // Actually the javadoc says "returns true if the bit was already set", so: { val was = bits(i); bits += i; was }
+      // java's getAndSet returns true if the bit was ALREADY set (before the operation)
       ("getAndSet", 1)    -> Template("{ val bpWas = $recv($0); $recv += $0; bpWas }"),
       // bits.clear() (no args) -> clear all bits. BitSet.clear() exists.
       ("clear", 0)        -> Rename("clear"),
       // bits.notEmpty() -> nonEmpty (parenless on BitSet)
       ("notEmpty", 0)     -> Chain(List("nonEmpty")),
-      // bits.isEmpty() -> isEmpty (parenless on BitSet)
-      // Note: bean-property may have renamed isEmpty->empty. The retarget rewrite
-      // ("empty", 0) -> Rename("isEmpty") below reverses it. But BitSet.empty returns
-      // a new empty BitSet (not a Boolean), so we MUST reach "isEmpty" not "empty".
+      // bean-property may rename isEmpty->empty; this reverses it back to BitSet.isEmpty
       ("empty", 0)        -> Chain(List("isEmpty")),
     ))
 
-  /** `ObjectMap` and `ObjectSet` retargetted to their lls equivalents.
-    *
-    * sge type-mappings.md: "ObjectMap -> ObjectMap[K,V]", "ObjectSet -> ObjectSet[A]" (extracted
-    * to lls). Same member API (get, put, containsKey, remove, add, contains, etc. — verified via
-    * `javap` on lls_3-0.3.0.jar), so retarget only — no Kind-based rewrites needed.
-    *
-    * lls's constructor is PRIVATE, so `new ObjectMap(args)` must be routed through the companion's
-    * transparent inline `apply` (exists in TASTy, erased from JVM bytecode). The `Construct`
-    * rewrite emits `lowlevel.util.ObjectMap.apply[K,V](args)`, which the Scala compiler resolves
-    * from the TASTy and inlines. Three arities:
-    *   - `("<init>", 0)` → `apply()` — default capacity 51, loadFactor 0.8
-    *   - `("<init>", 1)` → `apply(capacity)` — all gdx/src uses are int-typed (capacity)
-    *   - `("<init>", 2)` → `apply(capacity, loadFactor)`
-    * The copy constructor `ObjectMap(ObjectMap)` at arity 1 does NOT appear in gdx/src outside
-    * dropped files; if a dependent needs it, `from` is the companion's public factory for copies.
-    *
-    * Inner types (`ObjectMap.Entry`, `ObjectMap.Keys`, `ObjectMap.Values`, `ObjectMap.Entries`)
-    * are NOT present in lls — references to them from non-dropped files are compile errors,
-    * COUNTED on the `collection-retarget` lane. */
+  /** `ObjectMap`/`ObjectSet` retargetted to their lls equivalents (sge type-mappings.md).
+    * Same member API (verified via `javap`); lls's ctor is PRIVATE so `new` routes through
+    * the companion's transparent inline `apply`. Inner types (Entry/Keys/Values/Entries) are
+    * NOT in lls -- references to them are counted on `collection-retarget`. */
   def libCollectionRetargets: Map[String, String] = Map(
     "com.badlogic.gdx.utils.ObjectMap" -> "lowlevel.util.ObjectMap",
     "com.badlogic.gdx.utils.ObjectSet" -> "lowlevel.util.ObjectSet",
@@ -656,13 +426,9 @@ object LibgdxPolicy:
     "com.badlogic.gdx.utils.IntFloatMap$Entry" -> "scala.Tuple2",
   )
 
-  /** TYPE ARGUMENT MAPPING for arity-changing retargets — describes how to fill the target type's
-    * type arguments from the source type's when the arities differ.
-    *
-    * `IntMap<V>` (1 param) -> `ObjectMap[K,V]` (2 params): first arg is always `Int`, second is
-    * carried from the source's only type parameter. `IntIntMap` (0 params) -> `ObjectMap[K,V]`
-    * (2 params): both args are fixed. Without this mapping, the retarget would emit
-    * `ObjectMap[V]` (1 arg for a 2-param target) or bare `ObjectMap` (0 args for IntIntMap). */
+  /** TYPE ARGUMENT MAPPING for arity-changing retargets: how to fill the target type's type
+    * arguments from the source's when arities differ, e.g. `IntMap<V>` (1 param) ->
+    * `ObjectMap[K,V]` (2 params). */
   def libCollectionRetargetTypeArgs: Map[String, List[balticporter.transform.CollectionsTransform.RetargetArg]] =
     import balticporter.transform.CollectionsTransform.RetargetArg.*
     Map(
@@ -911,15 +677,9 @@ object LibgdxPolicy:
         ("notEmpty", 0) -> Rename("nonEmpty"),
         ("entries", 0) -> ForEach("foreach", 1),
       ),
-      // wave 3.1n: Array family -> DynamicArray.
-      // lls DynamicArray.apply[T: MkArray](capacity, ordered) — MkArray resolves for concrete T.
-      // A type-parameter T at a construction needs MkArray[T] threaded: COUNTED (state the count).
-      // BoolDispatch: Array's `identity` boolean at flagIndex=1 dispatches to ByRef/non-ByRef.
-      // DynamicArray has: apply(i), update(i,v), removeValue/removeValueByRef,
-      // contains/containsByRef, indexOf/indexOfByRef, lastIndexOf/lastIndexOfByRef,
-      // containsAll/containsAllByRef, containsAny/containsAnyByRef, removeAll/removeAllByRef,
-      // replaceFirst/replaceFirstByRef, replaceAll/replaceAllByRef.
-      // No ForEach needed: DynamicArray supports `for (x <- da)` natively (verified).
+      // wave 3.1n: Array family -> DynamicArray. A type-parameter T at a construction needs
+      // MkArray[T] threaded: COUNTED. BoolDispatch: Array's `identity` boolean at flagIndex=1
+      // dispatches to ByRef/non-ByRef. No ForEach: DynamicArray supports `for (x <- da)` natively.
       "com.badlogic.gdx.utils.Array" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"),
         ("<init>", 1) -> Construct("lowlevel.util.DynamicArray", "apply"), // fallback — desc keys win
@@ -967,22 +727,13 @@ object LibgdxPolicy:
         // DynamicArray uses inline MkArray; the supplier/class arg is dropped.
         ("of", 3) -> Template("$Target.apply[$T0]($1)"),
         ("of", 1) -> Template("$Target.apply[$T0]()"),
-        // wave 3.1au: toString(separator) — lls DynamicArray wraps in "[...]" and returns
-        // "[]" on empty; java's Array.toString(separator) joins with no brackets, "" on empty
-        // (Array.java:665, every primitive array alike). iterator.mkString is java's shape.
+        // wave 3.1au: toString(sep) needs no brackets (java joins bare) -- iterator.mkString matches
         ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
-        // --- 3.1af: gdx-test runtime ---
-        // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
-        // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
-        // contract a caller catches (LongArrayTest.popPeekFirstTest), so it is restated at the
-        // call — CLAUDE.md §4.4, "a rename onto a stdlib member with a different failure class".
+        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds) -- CLAUDE.md §4.4
         ("peek", 0)  -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
         ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
         ("pop", 0)   -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
-        // removeRange(start, end): java's `end` is INCLUSIVE, and it refuses end >= size and
-        // start > end (Array.java:372-375); lls's is exclusive [start, end) and an empty or
-        // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
-        // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
+        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive -- CLAUDE.md §4.4
         ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
       ),
       // SnapshotArray extends Array — same rewrites. lls DynamicArray has begin()/end() for
@@ -1014,22 +765,13 @@ object LibgdxPolicy:
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("append", 3)       -> Rename("addAll"),
         ("with", 1)         -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
-        // wave 3.1au: toString(separator) — lls DynamicArray wraps in "[...]" and returns
-        // "[]" on empty; java's Array.toString(separator) joins with no brackets, "" on empty
-        // (Array.java:665, every primitive array alike). iterator.mkString is java's shape.
+        // wave 3.1au: toString(sep) needs no brackets (java joins bare) -- iterator.mkString matches
         ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
-        // --- 3.1af: gdx-test runtime ---
-        // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
-        // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
-        // contract a caller catches (LongArrayTest.popPeekFirstTest), so it is restated at the
-        // call — CLAUDE.md §4.4, "a rename onto a stdlib member with a different failure class".
+        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds) -- CLAUDE.md §4.4
         ("peek", 0)  -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
         ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
         ("pop", 0)   -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
-        // removeRange(start, end): java's `end` is INCLUSIVE, and it refuses end >= size and
-        // start > end (Array.java:372-375); lls's is exclusive [start, end) and an empty or
-        // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
-        // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
+        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive -- CLAUDE.md §4.4
         ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
       ),
       "com.badlogic.gdx.utils.DelayedRemovalArray" -> Map(
@@ -1058,22 +800,13 @@ object LibgdxPolicy:
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("append", 3)       -> Rename("addAll"),
         ("with", 1)         -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
-        // wave 3.1au: toString(separator) — lls DynamicArray wraps in "[...]" and returns
-        // "[]" on empty; java's Array.toString(separator) joins with no brackets, "" on empty
-        // (Array.java:665, every primitive array alike). iterator.mkString is java's shape.
+        // wave 3.1au: toString(sep) needs no brackets (java joins bare) -- iterator.mkString matches
         ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
-        // --- 3.1af: gdx-test runtime ---
-        // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
-        // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
-        // contract a caller catches (LongArrayTest.popPeekFirstTest), so it is restated at the
-        // call — CLAUDE.md §4.4, "a rename onto a stdlib member with a different failure class".
+        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds) -- CLAUDE.md §4.4
         ("peek", 0)  -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
         ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
         ("pop", 0)   -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
-        // removeRange(start, end): java's `end` is INCLUSIVE, and it refuses end >= size and
-        // start > end (Array.java:372-375); lls's is exclusive [start, end) and an empty or
-        // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
-        // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
+        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive -- CLAUDE.md §4.4
         ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
       ),
       // Primitive arrays: no identity flag (no BoolDispatch needed), same get->apply, set->update.
@@ -1098,22 +831,13 @@ object LibgdxPolicy:
         // IntArray.add(4 args): DynamicArray has up to 3-arg add; split into two calls.
         ("add", 4)      -> Template("{ $recv.add($0, $1); $recv.add($2, $3) }"),
         ("with", 1)     -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
-        // wave 3.1au: toString(separator) — lls DynamicArray wraps in "[...]" and returns
-        // "[]" on empty; java's Array.toString(separator) joins with no brackets, "" on empty
-        // (Array.java:665, every primitive array alike). iterator.mkString is java's shape.
+        // wave 3.1au: toString(sep) needs no brackets (java joins bare) -- iterator.mkString matches
         ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
-        // --- 3.1af: gdx-test runtime ---
-        // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
-        // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
-        // contract a caller catches (LongArrayTest.popPeekFirstTest), so it is restated at the
-        // call — CLAUDE.md §4.4, "a rename onto a stdlib member with a different failure class".
+        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds) -- CLAUDE.md §4.4
         ("peek", 0)  -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
         ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
         ("pop", 0)   -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
-        // removeRange(start, end): java's `end` is INCLUSIVE, and it refuses end >= size and
-        // start > end (Array.java:372-375); lls's is exclusive [start, end) and an empty or
-        // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
-        // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
+        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive -- CLAUDE.md §4.4
         ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
         // --- 3.1ah: dependents ---
         // shrink/resize/ensureCapacity/setSize return int[] in java; DynamicArray returns Unit.
@@ -1141,22 +865,13 @@ object LibgdxPolicy:
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("with", 1)     -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
-        // wave 3.1au: toString(separator) — lls DynamicArray wraps in "[...]" and returns
-        // "[]" on empty; java's Array.toString(separator) joins with no brackets, "" on empty
-        // (Array.java:665, every primitive array alike). iterator.mkString is java's shape.
+        // wave 3.1au: toString(sep) needs no brackets (java joins bare) -- iterator.mkString matches
         ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
-        // --- 3.1af: gdx-test runtime ---
-        // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
-        // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
-        // contract a caller catches (LongArrayTest.popPeekFirstTest), so it is restated at the
-        // call — CLAUDE.md §4.4, "a rename onto a stdlib member with a different failure class".
+        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds) -- CLAUDE.md §4.4
         ("peek", 0)  -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
         ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
         ("pop", 0)   -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
-        // removeRange(start, end): java's `end` is INCLUSIVE, and it refuses end >= size and
-        // start > end (Array.java:372-375); lls's is exclusive [start, end) and an empty or
-        // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
-        // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
+        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive -- CLAUDE.md §4.4
         ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
         // --- 3.1ah: dependents ---
         ("shrink", 0)   -> Template("{ $recv.shrink(); $recv }.items"),
@@ -1201,22 +916,13 @@ object LibgdxPolicy:
         // LongArray.resize(int) is protected, returns long[]; DynamicArray has no resize.
         // setSize + items is the faithful image: allocate to newSize, pad with zeros, return array.
         ("resize", 1)   -> Template("{ $recv.setSize($0); $recv }.items"),
-        // wave 3.1au: toString(separator) — lls DynamicArray wraps in "[...]" and returns
-        // "[]" on empty; java's Array.toString(separator) joins with no brackets, "" on empty
-        // (Array.java:665, every primitive array alike). iterator.mkString is java's shape.
+        // wave 3.1au: toString(sep) needs no brackets (java joins bare) -- iterator.mkString matches
         ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
-        // --- 3.1af: gdx-test runtime ---
-        // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
-        // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
-        // contract a caller catches (LongArrayTest.popPeekFirstTest), so it is restated at the
-        // call — CLAUDE.md §4.4, "a rename onto a stdlib member with a different failure class".
+        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds) -- CLAUDE.md §4.4
         ("peek", 0)  -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
         ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
         ("pop", 0)   -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
-        // removeRange(start, end): java's `end` is INCLUSIVE, and it refuses end >= size and
-        // start > end (Array.java:372-375); lls's is exclusive [start, end) and an empty or
-        // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
-        // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
+        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive -- CLAUDE.md §4.4
         ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
         // ensureCapacity(n) RETURNS the backing array in java and refuses n < 0; it grows only
         // when size + n exceeds the array, and then to max(max(8, size + n), size * 1.75)
@@ -1248,22 +954,13 @@ object LibgdxPolicy:
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("with", 1)     -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
-        // wave 3.1au: toString(separator) — lls DynamicArray wraps in "[...]" and returns
-        // "[]" on empty; java's Array.toString(separator) joins with no brackets, "" on empty
-        // (Array.java:665, every primitive array alike). iterator.mkString is java's shape.
+        // wave 3.1au: toString(sep) needs no brackets (java joins bare) -- iterator.mkString matches
         ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
-        // --- 3.1af: gdx-test runtime ---
-        // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
-        // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
-        // contract a caller catches (LongArrayTest.popPeekFirstTest), so it is restated at the
-        // call — CLAUDE.md §4.4, "a rename onto a stdlib member with a different failure class".
+        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds) -- CLAUDE.md §4.4
         ("peek", 0)  -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
         ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
         ("pop", 0)   -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
-        // removeRange(start, end): java's `end` is INCLUSIVE, and it refuses end >= size and
-        // start > end (Array.java:372-375); lls's is exclusive [start, end) and an empty or
-        // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
-        // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
+        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive -- CLAUDE.md §4.4
         ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
         // --- 3.1ah: dependents ---
         ("shrink", 0)   -> Template("{ $recv.shrink(); $recv }.items"),
@@ -1291,22 +988,13 @@ object LibgdxPolicy:
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("with", 1)     -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
-        // wave 3.1au: toString(separator) — lls DynamicArray wraps in "[...]" and returns
-        // "[]" on empty; java's Array.toString(separator) joins with no brackets, "" on empty
-        // (Array.java:665, every primitive array alike). iterator.mkString is java's shape.
+        // wave 3.1au: toString(sep) needs no brackets (java joins bare) -- iterator.mkString matches
         ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
-        // --- 3.1af: gdx-test runtime ---
-        // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
-        // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
-        // contract a caller catches (LongArrayTest.popPeekFirstTest), so it is restated at the
-        // call — CLAUDE.md §4.4, "a rename onto a stdlib member with a different failure class".
+        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds) -- CLAUDE.md §4.4
         ("peek", 0)  -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
         ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
         ("pop", 0)   -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
-        // removeRange(start, end): java's `end` is INCLUSIVE, and it refuses end >= size and
-        // start > end (Array.java:372-375); lls's is exclusive [start, end) and an empty or
-        // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
-        // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
+        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive -- CLAUDE.md §4.4
         ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
         // ensureCapacity(n) RETURNS the backing array in java and refuses n < 0; it grows only
         // when size + n exceeds the array, and then to max(max(8, size + n), size * 1.75)
@@ -1340,22 +1028,13 @@ object LibgdxPolicy:
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("append", 3)   -> Rename("addAll"),
         ("with", 1)     -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
-        // wave 3.1au: toString(separator) — lls DynamicArray wraps in "[...]" and returns
-        // "[]" on empty; java's Array.toString(separator) joins with no brackets, "" on empty
-        // (Array.java:665, every primitive array alike). iterator.mkString is java's shape.
+        // wave 3.1au: toString(sep) needs no brackets (java joins bare) -- iterator.mkString matches
         ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
-        // --- 3.1af: gdx-test runtime ---
-        // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
-        // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
-        // contract a caller catches (LongArrayTest.popPeekFirstTest), so it is restated at the
-        // call — CLAUDE.md §4.4, "a rename onto a stdlib member with a different failure class".
+        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds) -- CLAUDE.md §4.4
         ("peek", 0)  -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
         ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
         ("pop", 0)   -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
-        // removeRange(start, end): java's `end` is INCLUSIVE, and it refuses end >= size and
-        // start > end (Array.java:372-375); lls's is exclusive [start, end) and an empty or
-        // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
-        // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
+        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive -- CLAUDE.md §4.4
         ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
         // --- 3.1ah: dependents ---
         ("shrink", 0)   -> Template("{ $recv.shrink(); $recv }.items"),
@@ -1385,22 +1064,13 @@ object LibgdxPolicy:
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
         ("with", 1)     -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
-        // wave 3.1au: toString(separator) — lls DynamicArray wraps in "[...]" and returns
-        // "[]" on empty; java's Array.toString(separator) joins with no brackets, "" on empty
-        // (Array.java:665, every primitive array alike). iterator.mkString is java's shape.
+        // wave 3.1au: toString(sep) needs no brackets (java joins bare) -- iterator.mkString matches
         ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
-        // --- 3.1af: gdx-test runtime ---
-        // peek/first/pop: java throws IllegalStateException on an empty array (Array.java:424,
-        // every primitive array alike); lls throws IndexOutOfBoundsException. The CLASS is the
-        // contract a caller catches (LongArrayTest.popPeekFirstTest), so it is restated at the
-        // call — CLAUDE.md §4.4, "a rename onto a stdlib member with a different failure class".
+        // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds) -- CLAUDE.md §4.4
         ("peek", 0)  -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
         ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
         ("pop", 0)   -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.pop() }"),
-        // removeRange(start, end): java's `end` is INCLUSIVE, and it refuses end >= size and
-        // start > end (Array.java:372-375); lls's is exclusive [start, end) and an empty or
-        // inverted range is a no-op. Bind both bounds once, restate java's two refusals, then
-        // translate the bound (CLAUDE.md §4.4, "an inclusive range bound").
+        // removeRange: java's end is INCLUSIVE and refuses end>=size / start>end; lls is exclusive -- CLAUDE.md §4.4
         ("removeRange", 2) -> Template("{ val bpS = $0; val bpE = $1; if (bpE >= $recv.size) throw new java.lang.IndexOutOfBoundsException(\"end can't be >= size: \" + bpE + \" >= \" + $recv.size); if (bpS > bpE) throw new java.lang.IndexOutOfBoundsException(\"start can't be > end: \" + bpS + \" > \" + bpE); $recv.removeRange(bpS, bpE + 1) }"),
         // --- 3.1ah: dependents ---
         ("shrink", 0)   -> Template("{ $recv.shrink(); $recv }.items"),
@@ -1432,11 +1102,8 @@ object LibgdxPolicy:
         ("iterator", 0)     -> Chain(List("iterator")),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
-        // --- 3.1af: gdx-test runtime ---
-        // Queue.toString() -> "[a, b, c]"; ArrayDeque.toString -> "ArrayDeque(a, b, c)".
-        // Java's format is part of the contract the test asserts (QueueTest.toStringTest).
-        // ONE call, not `"[" + … + "]"`: a template is spliced verbatim, so a `+` chain hands a
-        // following `.equals(…)` to the `"]"` literal (3 E007 on QueueTest, wave 3.1af).
+        // toString format is part of QueueTest's contract; ONE template call, not a `+` chain
+        // (a `+` hands a following `.equals` to the `"]"` literal -- 3 E007, wave 3.1af).
         ("toString", 0)     -> Template("$recv.mkString(\"[\", \", \", \"]\")"),
         // Queue.toString(sep) -> elements joined by sep, no brackets.
         ("toString", 1)     -> Template("$recv.mkString($0)"),
@@ -1623,139 +1290,35 @@ object LibgdxPolicy:
       ),
     )
 
-  /** `com.badlogic.gdx.utils.Disposable` → `java.lang.AutoCloseable`, with `dispose` → `close`.
-    *
-    * libGDX's `Disposable` is `void dispose()` and nothing else — the JDK's own `AutoCloseable`
-    * under a different name, minus `try`-with-resources and minus `scala.util.Using`. A consumer
-    * that keeps the ported name gets neither, forever, for a type that carries no information the
-    * JDK's does not; sge's users write `Using(new Pixmap(…))` in ordinary Scala the moment the
-    * parent is the JDK's.
-    *
-    * The redirect alone would emit 47 classes claiming to be an `AutoCloseable` while declaring
-    * `dispose()`, so the entry carries `memberRenames` and the phase renames the member's whole
-    * PRE-REDIRECT override component first (see [[TypeRedirectTransform]] for why the two cannot be
-    * two phases). 66 declarations move together; the 8 `void dispose()` elsewhere in the library
-    * that implement no `Disposable` — `LifecycleListener`, `ApplicationListener`, `Game`,
-    * `ApplicationAdapter`, `ImmediateModeRenderer`(`20`), `ParticleController`, and a `Timer`
-    * anonymous body — keep the name, correctly, because they are a different member.
-    *
-    * ==Why the paired `dropTypes` entry below is not optional==
-    * A redirect re-points REFERENCES and never deletes a DECLARATION (`ENGINE-LIMITS.md` D8). This
-    * port OWNS `Disposable`, so without the drop it would emit `sge/utils/Disposable.scala` — a
-    * trait nothing refers to, beside 47 classes that all extend the JDK type instead. Nothing
-    * reports it: the port still compiles at 0 errors and every check reports the same number. There
-    * is no injection, because there is nothing to replace the type WITH; `java.lang.AutoCloseable`
-    * already exists.
-    *
-    * ==Shared surface, and the first base phase that has to MERGE==
-    * This is a fact about signatures every dependent compiles against, so it lives in [[core]]
-    * (§1.5). It is also a phase two dependents CONSTRUCT for themselves — ashley's `ReflectionPool`
-    * redirect and screens' ten guacamole entries — which made it the case `ENGINE-LIMITS.md` D9
-    * blocked and `MergeablePolicy` closes: the base's instance and each dependent's fold into one,
-    * at the base's pipeline position, and the base's published `policy=` digest does not move.
-    * Ashley's added subject is inside libGDX's `governs` claim and is legal because the base DROPS
-    * it (`DESIGN.md` §8.13). */
+  /** `com.badlogic.gdx.utils.Disposable` -> `java.lang.AutoCloseable`, with `dispose` ->
+    * `close` -- the JDK's own type under a different name. `memberRenames` renames the whole
+    * PRE-REDIRECT override component (66 declarations) so unrelated `void dispose()` members
+    * elsewhere keep their name. Paired `dropTypes` entry is required: a redirect re-points
+    * references but never deletes the declaration (`ENGINE-LIMITS.md` D8). SHARED SURFACE,
+    * lives in [[core]] (§1.5); `MergeablePolicy` folds dependents' own redirects into this
+    * one instance (D9). */
   def disposableRedirect: balticporter.transform.TypeRedirectTransform =
     new balticporter.transform.TypeRedirectTransform(
       redirects     = Map("com.badlogic.gdx.utils.Disposable" -> "java.lang.AutoCloseable"),
       memberRenames = Map("com.badlogic.gdx.utils.Disposable" -> Map("dispose" -> "close")),
     )
 
-  /** libGDX's JavaBean accessor pairs that the reference hand port turned into Scala properties —
-    * `def x` / `def x_=(v)`, with every call site rewritten through them (DESIGN.md §8.5).
-    *
-    * ==Why an INCLUDE LIST and not a pattern (§1b, and the whole of what makes this policy)==
-    * Measured against the reference port, not assumed. libGDX core emits 3,234 `get*`/`set*`/`is*`
-    * methods; sge KEPT 1,375 of them (684 distinct names) and converted ~223 — a ~14 percent
-    * conversion rate, concentrated almost entirely in `maps.*`, `audio` and `scene2d.utils`, with
-    * `scene2d.ui`'s big widgets, `graphics.g3d`, `physics` and `utils` untouched. sge even converts
-    * the SAME pair differently in two types: `MapLayer#opacity` is a computed `def`, `MapObject#opacity`
-    * is a `var`. A blanket `getX` -> `x` rule would rewrite some three thousand members a careful human
-    * deliberately left alone, so the map below IS the policy and the engine holds only the mechanism.
-    *
-    * ==Where it comes from==
-    * Every entry is a conversion sge DOCUMENTED in a `Renames:` header — 132 of its 549 files carry
-    * one — joined to the upstream FQN through each header's `Original source:` line. Nothing here is
-    * derived or extrapolated. The harvest was 144 rows over 38 upstream types; **133 remain, and the
-    * eleven that went were noise rather than policy** (below).
-    *
-    * ==AN ENTRY NAMES A COMPONENT, so a per-IMPLEMENTOR entry is a duplicate==
-    * The phase renames the whole override COMPONENT — that is the design's point — so an entry on the
-    * type that DECLARES a member already reaches every implementor of it, and a second entry naming
-    * an implementor renames exactly the same set again. The `Drawable` family's `getLeftWidth` rows
-    * were collapsed to the one INTERFACE entry when the harvest was written; the same collapse was
-    * owed to two more families and is now taken: `isManaged` is declared abstract on `GLTexture`
-    * (three per-implementor rows for `Cubemap`, `Texture` and `TextureArray` said it three times) and
-    * `TiledMapTile` declares all seven of its properties (thirteen rows across
-    * `AnimatedTiledMapTile` and `StaticTiledMapTile` said six of them twice). **The duplicates were
-    * never inert**: each recorded its own `RenamedMember` decision per member of the component and
-    * rendered its own porter note beside the code, so a reader of `StaticTiledMapTile.scala` was
-    * being told twice, in two different `key=`s, why one method is called `id`.
-    *
-    * ==Refusals are the expected outcome for some of it, and they are COUNTED==
-    * A pair is applied whole or not at all, and each refusal is a `PolicyIssue.Unverifiable` finding
-    * with its cause plus a `ScopedOut` decision. **Two remain, and both are real pending work**:
-    * `ScrollPane#scrollX` and `#scrollY` hit a name the emitter's §4.55 passes will not relocate, and
-    * completing those get-only entries against an upstream that has setters is a manifest edit
-    * nobody has made. **Three others were PERMANENTLY refused and are deleted** —
-    * `VertexAttributes#getOffset(int)`, `Polygon#getVertex(int,Vector2)`,
-    * `Polygon#getCentroid(Vector2)` all take ARGUMENTS, so there is no nilary getter to convert and
-    * the phase will refuse them on every run for as long as the upstream stands. A finding that can
-    * never be cleared is a noise floor: it makes `policy > 0` the normal state of this port and
-    * teaches its next reader to skim the number that the two survivors need them to read.
-    *
-    * A twelve-refusal sixth cause is GONE and worth naming so nobody re-adds a workaround for it:
-    * `Selection`/`VertexAttributes`/`TiledMapTileSet`/`OrientedBoundingBox` implement `java.lang.Iterable`,
-    * `Comparable` or `Serializable`, and their override components used to anchor on an unparsed
-    * external. `ExternalSurface.jdkPlatform` closes those member sets exactly (`ENGINE-LIMITS.md` K12),
-    * so all twelve now apply.
-    *
-    * ==Shared surface (§1.5)==
-    * This changes emitted SIGNATURES, so it is `SurfacePolicy` and lives in [[core]] alone: a base whose
-    * `getOpacity()` became `def opacity` and a dependent whose did not emit signatures that cannot meet.
-    * No dependent CONSTRUCTS a `bean-properties` phase, so there is exactly one instance in every
-    * effective pipeline and nothing has to merge (§1.5's instance-count question, asked before writing
-    * this). It runs FIRST in the pipeline so the descriptors it matches are java's own — `runsBefore`
-    * states that for the two engine phases whose names are static, and the list position states the rest.
-    */
+  /** libGDX's JavaBean accessor pairs the reference hand port turned into Scala properties
+    * (`def x`/`def x_=`), harvested from sge's `Renames:` file headers (`DESIGN.md` §8.5). An
+    * INCLUDE LIST, not a pattern: sge converts only ~14% of get/set methods, inconsistently
+    * by type. Per-COMPONENT, not per-implementor (would duplicate). SHARED SURFACE, lives in
+    * [[core]] alone (§1.5); runs FIRST in the pipeline. */
   def beanProperties: balticporter.transform.BeanPropertyTransform =
-    // WHOLE-PROGRAM detection: `Everywhere()` auto-detects bean pairs (getX/setX -> x/x_=) across
-    // the whole library. Dependents follow the base's published shape through
-    // `PortMapTransform.followMemberRenames` rather than re-deciding (wave 1.2h).
-    // Measured: base 0, gdx-test 217/4, screens 0/16-0, vfx 0/64-0, ai 0/108-2-2,
-    // textra 0, gltf 0, visui 7 (floor).
+    // WHOLE-PROGRAM detection (Everywhere()); dependents follow the base's published shape
+    // via PortMapTransform.followMemberRenames rather than re-deciding.
     new balticporter.transform.BeanPropertyTransform(beanPropertyPairs, beanPropertyTargets, scope = balticporter.tir.RuleScope.Everywhere())
 
-  /** WHICH pairs collapse to a plain `var`/`val` instead of a `def` pair (`DESIGN.md` §8.5).
-    *
-    * Per ENTRY, because that is where the decision belongs: `def-pair` is the default and every
-    * entry not named here keeps exactly the form it has always had. The phase REFUSES a mismatch
-    * rather than picking — a `var` needs the setter java published and a `val` needs storage nothing
-    * writes — so a wrong answer here is a counted `idiom(refused)` row and never a silent change of
-    * surface.
-    *
-    * ==THIS LIST IS THE WHOLE COLLAPSIBLE POPULATION, refusals included==
-    * The first tranche was 13 hand-read `com.badlogic.gdx.maps` entries; widening it to every pair
-    * the run reported collapsible asked for **77 more and got 47**, at 0 compile errors. The 30 that
-    * did not are one shape under one guard — `MutableStorage`, a GET-ONLY property over storage the
-    * program assigns elsewhere (`ClickListener#pressed`, `DragAndDrop#currentDragActor`,
-    * `Polygon#vertices`, …). Their refusal is PERMANENT and correct rather than an engine gap: a
-    * `val` there would not compile and a `var` would publish a writer java never had, so the `def`
-    * pair is the faithful form.
-    *
-    * They are declared ANYWAY. A permanent refusal in `policy` would be a noise floor — that lane is
-    * a work list an operator is meant to clear, and this file carries the lesson one policy up. This
-    * one lands in `idiom(refused)`, which is a DENOMINATOR, and the difference is the whole reason
-    * the idiom layer has three lanes: a declared entry makes the run SAY `MutableStorage` at that
-    * property, while dropping the entry makes it say `NotRequested`, which would be false.
-    *
-    * `MapLayer#opacity` is the one collapsible-looking pair that is NOT here, for the neighbouring
-    * reason: its getter multiplies by the parent's, so it is computed and never converts. Named so a
-    * reader does not add it back.
-    *
-    * What the run then reports is the honest denominator, with nothing left unasked: 30
-    * `ComputedBody`, 30 `MutableStorage`, 14 `OverriddenBelow`, 2 `PairRefused`, 1
-    * `ConcreteRelative`, 0 `NotRequested`. */
+  /** WHICH pairs collapse to a plain `var`/`val` instead of a `def` pair (`DESIGN.md` §8.5) --
+    * `def-pair` is the default for everything not named here. The phase REFUSES a mismatch
+    * rather than picking (a counted `idiom(refused)` row, never a silent surface change).
+    * Declared even for PERMANENT refusals (`MutableStorage` get-only properties) so the run's
+    * denominator stays honest. `MapLayer#opacity` is deliberately absent: its getter is
+    * computed, never a stored value. */
   def beanPropertyTargets: Map[String, balticporter.transform.BeanPropertyTransform.Target] =
     import balticporter.transform.BeanPropertyTransform.Target
     Map(
@@ -2407,27 +1970,11 @@ object LibgdxPolicy:
     // Measured with the bean switch: same six-port table (wave 1.2h).
     new balticporter.transform.NullaryArityTransform(scope = balticporter.tir.RuleScope.Everywhere())
 
-  /** EMPTY, AND IT IS THE POSITION THAT IS THE POLICY — libGDX renames none of its own members.
-    *
-    * `disposableRedirect` below renames `dispose -> close` across the whole override component of
-    * `com.badlogic.gdx.utils.Disposable`, and `java.lang.AutoCloseable#close` is not a name anything
-    * may negotiate. Every DEPENDENT that declares a `Disposable` implementor which already has a
-    * `close()` of its own therefore inherits a collision this base created, and
-    * `MemberRenamer.OnCollision.Refuse` refuses the component whole — correctly, since which of two
-    * members keeps a name is not the engine's to invent (`ENGINE-LIMITS.md` D13). The dependent's
-    * answer is a `member-rename` entry moving ITS OWN member out of the way, and such an entry has
-    * to run BEFORE the redirect.
-    *
-    * A dependent cannot put a phase early in a pipeline it did not write: an unmerged dependent
-    * phase lands at the END of the effective surface, and a `runsBefore` edge from there POSTPONES
-    * the phase it names past everything declared in between — measured on `sge-visui` as
-    * `type-redirect` moving past `globals->implicits`, `context-seam 42 -> 41`, at 0 emitted bytes
-    * (`Pipeline.order`'s own recorded failure shape). What CAN place it is the merge: `SurfaceFold`
-    * puts a merged phase at the BASE's position, so this empty instance IS the position, and a
-    * dependent's table merges into it. `MemberRenameTransform` with no entries is a structural
-    * no-op — §1(b)'s "turned off needs no code path" — so this costs every other port exactly one
-    * fingerprint field and nothing else.
-    */
+  /** EMPTY, and the POSITION is the policy -- libGDX renames none of its own members.
+    * `disposableRedirect` renames `dispose -> close` on `Disposable`'s whole component; a
+    * dependent implementor with its own `close()` must move IT out of the way BEFORE the
+    * redirect, which only a MERGE can arrange early in an unowned pipeline (`SurfaceFold`
+    * places a merged phase at the BASE's position). No entries here = structural no-op. */
   def memberRenames: balticporter.transform.MemberRenameTransform =
     new balticporter.transform.MemberRenameTransform(
       // ---- wave 1.3: member renames from the `Migration notes: Renames:` census ----
@@ -2437,72 +1984,19 @@ object LibgdxPolicy:
         // `type` is a Scala reserved word; sge renamed the field to `eventType` (1 sge file).
         // The `getType`/`setType` bean pair is handled separately by `beanProperties`.
         "com.badlogic.gdx.scenes.scene2d.InputEvent#type" -> "eventType",
-        // `toString(T)` clashes with `Any.toString()` at the same name; sge renamed it to
-        // `itemToString` (1 sge file). REFUSED (policy 3 -> 4): the override component reaches
-        // `java.lang.Object#toString`, which the program cannot move. The rename is declared so
-        // `api-parity` can trace the intent; the refusal is a counted `policy` finding.
+        // toString(T) clashes with Any.toString(); REFUSED (policy 3->4) since the override
+        // component reaches java.lang.Object#toString, which the program cannot move.
         "com.badlogic.gdx.scenes.scene2d.ui.List#toString(T)" -> "itemToString",
       ),
     )
 
-  /** `com.badlogic.gdx.Gdx` — eleven `public static` fields read from 100 files — retired into a
-    * `sge.Sge` threaded as a `using` parameter (DESIGN.md §8.4).
-    *
-    * ==Every value here is a fact about libGDX, and none of it is derivable (§1b)==
-    * WHICH class is an ambient context, what its counterpart is called, where each static went and
-    * what happens at the edges. The mechanism — find the reads, close over five edges, add a clause,
-    * rewrite the read through a path, count every seam — is the engine's and names no library.
-    *
-    * ==`attach = "class"`, and it is a MEASUREMENT and not a preference==
-    * The two modes were priced against the same library before either was enabled (PROGRESS §11.12).
-    * Class attachment threads **275 declarations in 177 files** and refuses nothing; method
-    * attachment threads **2,497 in 324** and FREEZES 32 declarations across 15 override components,
-    * every one of them anchored on `Runnable`, `Comparable` or another parent this program does not
-    * declare. 177 files against the 100 that name `Gdx.` upstream is 1.77×, beside the reference hand
-    * port's own 1.6×; method attachment's 3.3× is the number that is wrong. Class attachment is also
-    * the reference port's shape — 82 % of its attachment sites are constructors.
-    *
-    * ==The member map is PATH-valued, and the two-hop half is why the bean pairs exist==
-    * `app` was re-homed onto the bundle as `application`; the five `gl*` were never really the
-    * global's at all — they duplicated what `Graphics` owns — so they are two-hop reads through
-    * `graphics`, matching the reference port, where two-hop reads are 305 of 557. `gl` is upstream's
-    * alias for `gl20` and maps to the same path. See [[beanPropertyPairs]] for the four
-    * `Graphics#gl2x` entries that give those paths a member to land on.
-    *
-    * ==`boundary = "refuse"`==
-    * A site the closure cannot reach keeps naming `Gdx` and is a COUNTED `context-seam` row, rather
-    * than being quietly re-pointed at a companion `global` — which would retire the static and keep
-    * the singleton. The two exceptions are named below.
-    *
-    * ==The two `sites` entries, and why `lazy-init` is opt-in per site==
-    * Both are STATIC FIELD INITIALISERS that CONSTRUCT a now-threaded type, which is the one shape
-    * with no signature to thread and no caller to take a clause from. `lazy-init` moves the
-    * initialisation from first ACTIVE USE of the class (java's rule) to first READ of the field, and
-    * the two coincide only when nothing else in the class is touched first — a fact the mechanism
-    * cannot know, so it is never a default. Each is a `DeferredInit` decision, a porter note and a
-    * counted seam. `Table#cellPool` was invisible until `ENGINE-LIMITS.md` CT5 cleared the 55 errors
-    * around it and CT6 gave a `new` at a GENERIC class an instantiate edge at all.
-    *
-    * ==No `promoteToClass`, and no `scope`==
-    * Class attachment changes no method signature, so no trait ever needed to become an
-    * `abstract class`; and the run refuses nothing, so there is nothing to scope out. Both being
-    * EMPTY is the measurement, not an omission — `attach = "method"` is where the refusals live.
-    *
-    * ==Shared surface, ONE instance, and the half a dependent adds (§1.5)==
-    * The clause is on emitted constructors, so this is `SurfacePolicy` and lives in [[core]] alone:
-    * a base whose `Mesh` takes `(using sge.Sge)` and a dependent whose does not emit signatures that
-    * cannot meet. `sites` and `selfSupplied` are keyed on DECLARATIONS, though, and a dependent's
-    * boundaries are in the DEPENDENT's own types — so gdx-vfx and this library's own test module
-    * each contribute a `ContextHolderExtension`, which the merge folds in at this position
-    * (`ENGINE-LIMITS.md` CT8, CT9).
-    *
-    * ==Position: LAST==
-    * Two things in this list move what it reads. [[disposableRedirect]] re-points libGDX's own
-    * `Disposable` at `java.lang.AutoCloseable`, which gives 24 threaded classes an ancestor this
-    * program does not declare and is therefore 24 of the 25 `unconstructed-thread` WARNINGS this
-    * port reports; [[beanProperties]] is what makes `graphics.gl20` resolvable at all. A dry run of
-    * this phase alone reports 1 warning, not 25 — CLAUDE.md §5, and it is why the number is quoted
-    * from the pipeline. */
+  /** `com.badlogic.gdx.Gdx`'s `public static` fields retired into `sge.Sge`, threaded as a
+    * `using` parameter (`DESIGN.md` §8.4). `attach = "class"`: measured against method
+    * attachment, which freezes declarations anchored on an external parent the program
+    * doesn't declare. `sites` marks the two CONSTRUCT-at-init sites `LazyInit` (no caller to
+    * take a clause from). SHARED SURFACE, lives in [[core]] alone (§1.5); dependents fold
+    * their own `ContextHolderExtension`s in at this position. Position: LAST (after
+    * [[disposableRedirect]] and [[beanProperties]], which change what it reads). */
   def globalsToContext: balticporter.transform.GlobalsToImplicitsTransform =
     new balticporter.transform.GlobalsToImplicitsTransform(holders = List(
       balticporter.transform.ContextHolder(
@@ -2535,10 +2029,8 @@ object LibgdxPolicy:
         ),
       )
     ),
-    // wave 3.1v: classes whose retarget constructions need `MkArray[T]` in scope.
-    // sge's Octree uses ClassTag (different retarget target); the port's retarget to lls types
-    // requires MkArray, which is the right bound for the lls factory's inline summon.
-    // BufferedParticleBatch is abstract; the clause propagates to subclass constructors.
+    // wave 3.1v: classes whose lls retarget constructions need MkArray[T] in scope;
+    // BufferedParticleBatch is abstract, so the clause propagates to subclass constructors.
     requiredGivens = Map(
       "com.badlogic.gdx.math.Octree" -> "lowlevel.MkArray",
       "com.badlogic.gdx.math.BSpline" -> "lowlevel.MkArray",
@@ -2548,38 +2040,14 @@ object LibgdxPolicy:
       "com.badlogic.gdx.graphics.glutils.GLFrameBuffer" -> "lowlevel.MkArray",
     ))
 
-  /** libGDX's GL texture handle — the `int` that is really a texture name — as an opaque type, which
-    * is what the reference hand port declares (`sge/graphics/GLHandle.scala`) and APPLIES to a ported
-    * declaration (`GLTexture.scala:42`).
-    *
-    * ==Why ONE family and not the eight sge declares (§1c, and it is a MEASUREMENT)==
-    * `TextureHandle` is the only one of sge's handle types CONFIGURED here, and the census behind
-    * that has been corrected once — read PROGRESS §11.25's table, not this list, and note which rows
-    * it retracts. `ProgramHandle`/`ShaderHandle` (`ShaderProgram` keeps `private var program: Int`),
-    * `FramebufferHandle`/`RenderbufferHandle` (`GLFrameBuffer` keeps `Int`) and `BufferHandle` are a
-    * typed layer offered to CONSUMERS beside the raw one — their home is `GLHandleOps`, extension
-    * methods on `GL20`, and `GL20.scala:89` keeps `def glGenTexture(): Int` to prove it.
-    * Configuring those five would emit a surface the reference port deliberately does not have.
-    * `UniformLocation` is NOT one of them (it types 32 positions in `ShaderProgram`/`BaseShader`, all
-    * ported declarations) — now configured as [[uniformLocation]], wave 2.7. `GLEnum` is a third
-    * shape again:
-    * sge types `GL20`/`GL30` FORMALS with 15 families and MINTS a named vocabulary for them, which
-    * this mechanism cannot do — `ENGINE-LIMITS.md` §13 O7, an open (b) with an exit criterion.
-    *
-    * ==The FENCE is load-bearing, and its reason is structural rather than measured==
-    * `FlowPropagation.refSym` admits a NULLARY CALL, so `glHandle = Gdx.gl.glGenTexture()` is a real
-    * flow edge to `GL20#glGenTexture`, whose `int` return makes it eligible. Unfenced, the seed set
-    * would grow into the GL interface and retype it — which sge does not do. With the four GL
-    * interfaces scoped out, every one of those crossings becomes a COUNTED coercion instead, and
-    * they are 30 of them (14 wraps + 16 unwraps).
-    *
-    * ==Shared surface, one instance, one mint (§1.5)==
-    * The retyped signatures are what every dependent compiles against, so this lives in [[core]] and
-    * is inherited through `extendedBy`. No dependent CONSTRUCTS a `primitive->opaque` phase, so
-    * nothing merges — but the phase RUNS in every dependent, which is a different question and the
-    * one `ENGINE-LIMITS.md` §13 O5 answers: the minted `TextureHandle` object belongs to the module
-    * that declares the HINTS, and a dependent retypes and coerces against the object this module
-    * emitted. */
+  /** libGDX's GL texture handle -- the `int` that is really a texture name -- as an opaque
+    * type, matching the reference hand port's `GLHandle.scala` (applied to
+    * `GLTexture.scala:42`). Only `TextureHandle` is configured (§1c) -- the others are a
+    * typed layer offered to CONSUMERS the reference port does NOT surface on ported
+    * declarations themselves (`PROGRESS.md` §11.25). The four GL interfaces are FENCED out
+    * of propagation, or a nullary `glGenTexture()` flow edge would retype the whole GL
+    * interface. SHARED SURFACE, lives in [[core]] (§1.5); phase RUNS in dependents too,
+    * coercing against the object THIS module minted (`ENGINE-LIMITS.md` §13 O5). */
   def textureHandle: balticporter.transform.PrimitiveToOpaqueTransform =
     new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
       fqn        = "com.badlogic.gdx.graphics.TextureHandle",
@@ -2590,33 +2058,13 @@ object LibgdxPolicy:
         "com.badlogic.gdx.graphics.GL31", "com.badlogic.gdx.graphics.GL32")),
     ))
 
-  /** libGDX's `Align` — a class of `static final int` constants — as an opaque type.
-    *
-    * ==O6 CLOSED: retype against an EXISTING/injected type==
-    * `com.badlogic.gdx.utils.Align` is a java class whose entire body is
-    * `static public final int center = 1 << 0; …`. sge's `sge.utils.Align` is
-    * `opaque type Align = Int` plus extension methods, and every ported declaration that java
-    * typed `int align` is typed `Align`.
-    *
-    * Two mechanisms, one seam each, no new one:
-    *   - the DEFINITION: `Substitutions.dropTypes` drops the java class, `inject` supplies the
-    *     hand-written `Align.scala` (copied from sge's own file, stripped of sge-specific imports).
-    *   - the RETYPE: `PrimitiveToOpaqueTransform(OpaqueSpec(target = Existing(…)))` seeds from the
-    *     align-typed FIELDS, propagates to their getters/setters/parameters, and coerces at every
-    *     boundary through `Align(rawInt)` / `Align.toInt(value)`.
-    *
-    * ==CENSUS: 13 field hints, propagation discovers the rest==
-    * Each field hint is the fully-qualified name of a `private int align`-typed field. The flow
-    * propagation grows the seed set to every getter/setter/parameter reachable by a pure-move flow
-    * from these fields. The METHODS (`setAlign(int)`, `getX(int alignment)`, etc.) and their
-    * PARAMETERS are discovered, not listed.
-    *
-    * ==Shared surface, composed via `MergeablePolicy` (§1.5)==
-    * Inherited through `extendedBy`. A dependent that needs to seed ADDITIONAL declarations (ones
-    * propagation cannot reach from the base's field hints) constructs its own instance with the same
-    * `fqn`/`target`/`underlying` and its own `hints`; `surfaceFold` merges the two by union. gdx-vfx
-    * is the first (4 parameters whose only connection to the family is bitwise ops against `Align`
-    * constants). */
+  /** libGDX's `Align` -- a class of `static final int` constants -- as an opaque type
+    * against an EXISTING/injected type (O6 CLOSED): `Substitutions.dropTypes` drops the
+    * java class, `inject` supplies sge's own `Align.scala` (`opaque type Align = Int` +
+    * extensions); `PrimitiveToOpaqueTransform(OpaqueSpec(target = Existing(...)))` seeds
+    * from align-typed FIELDS and propagates to getters/setters/parameters, coercing via
+    * `Align(rawInt)` / `Align.toInt(value)`. SHARED SURFACE, composed via `MergeablePolicy`
+    * (§1.5): a dependent seeding additional declarations unions its own `hints`. */
   def align: balticporter.transform.PrimitiveToOpaqueTransform =
     new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
       fqn        = "com.badlogic.gdx.utils.Align",
@@ -2646,27 +2094,12 @@ object LibgdxPolicy:
       underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
     ))
 
-  /** GL uniform locations — the `int` that is really a distinct domain value, given a real type.
-    *
-    * ==Census from sge (CLAUDE.md §3.5)==
-    * `sge.graphics.GLHandle.scala:96` declares `opaque type UniformLocation = Int` with `apply`,
-    * `toInt`, `notFound = -1`, and arithmetic extensions (`+`, `-`, `>=`, `<`). `ShaderProgram`
-    * stores them as `MutableMap[String, UniformLocation]` (java: `ObjectIntMap<String> uniforms`)
-    * and every `setUniform*` overload that takes a location by `int` takes it by `UniformLocation`.
-    * `BaseShader.locations` is `Array[UniformLocation]` (java: `int locations[]`).
-    *
-    * ==Existing target, following the Align pattern==
-    * There is no java class `UniformLocation`, so nothing is dropped. The opaque type is injected
-    * as `sge.graphics.UniformLocation` under `libgdx-overrides/` and the OpaqueSpec uses
-    * `Target.Existing(typeFqn = "sge.graphics.UniformLocation", …)` to retype against it. The
-    * injected file carries the comparison extensions (`>=`, `<`, `+`, `-`) that sge declares.
-    *
-    * ==SEED: `fetchUniformLocation` — the return value seeds, propagation discovers the rest==
-    * The one method that PRODUCES uniform locations. Both overloads are overloaded, so the fullName
-    * includes the descriptor. `BaseShader#locations` is a second seed (`int[]`, O3).
-    *
-    * ==FENCE: same as textureHandle==
-    * The GL interfaces are scoped out, preventing propagation into `GL20#glGetUniformLocation`. */
+  /** GL uniform locations -- the `int` that is really a distinct domain value -- as an
+    * opaque type following the Align pattern: no java class to drop, injected as
+    * `sge.graphics.UniformLocation` under `libgdx-overrides/` with sge's own comparison
+    * extensions (`>=`, `<`, `+`, `-`). Seeds: `fetchUniformLocation`'s return (the one
+    * producer) and `BaseShader#locations` (`int[]`, O3). Same GL-interface FENCE as
+    * [[textureHandle]]. */
   def uniformLocation: balticporter.transform.PrimitiveToOpaqueTransform =
     new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
       fqn        = "com.badlogic.gdx.graphics.UniformLocation",
@@ -2685,52 +2118,27 @@ object LibgdxPolicy:
         "com.badlogic.gdx.graphics.GL31", "com.badlogic.gdx.graphics.GL32")),
     ))
 
-  /** libGDX's own `@Null` moved OUT of an annotation the Scala compiler ignores and INTO the type
-    * — `lowlevel.Nullable[T]`, the hand port's own wrapper (DESIGN.md §8.6's N1).
-    *
-    * ==Why this is the base manifest's business (§1.5)==
-    * A nullable return is a fact about the SHARED SURFACE. A base emitting `Nullable[Actor]` and a
-    * dependent emitting `Actor` for the same member each compile alone and cannot compile together,
-    * so the entry lives here once and every dependent inherits it through `extendedBy`. No dependent
-    * CONSTRUCTS a `nullability` of its own, so there is one instance in every effective pipeline and
-    * nothing has to merge.
-    *
-    * ==`Named` CLOSES K13==
-    * The union floor `T | Null` is NOT transparent at an abstract `T` — measured at 35 errors from
-    * 632 declarations, every one inside a generic container, and a scope exit list of 12 entries
-    * maintained by hand. `Nullable[T]` IS a proper type that composes at every `T`: the
-    * abstract-type-parameter class disappears entirely, and the scope exit list with it. The K13
-    * exit that was the union floor's SECOND exit is this target's DEFAULT — no scope needed. */
+  /** libGDX's own `@Null` moved OUT of the annotation and INTO the type --
+    * `lowlevel.Nullable[T]`, the hand port's own wrapper (`DESIGN.md` §8.6 N1). SHARED
+    * SURFACE, lives here once, inherited via `extendedBy` (§1.5). `Named` CLOSES K13: the
+    * union floor `T | Null` is not transparent at an abstract `T`; `Nullable[T]` composes
+    * at every `T`, so the abstract-type-parameter scope exit this target replaces is gone
+    * entirely. */
   def nullability: balticporter.transform.NullabilityTransform =
     new balticporter.transform.NullabilityTransform(
       annotations = Set("com.badlogic.gdx.utils.Null"),
       target      = balticporter.transform.NullabilityTransform.Target.Named("lowlevel.Nullable"),
       scope       = balticporter.tir.RuleScope.Everywhere(nullabilityErasureExempt),
-      // K13.6 CLOSED: `IntMap.get(int)` returns `V` without `@Null` but CAN return null. After
-      // the retarget to lls `ObjectMap`, `get(K)` returns `Nullable[V]` natively. The 2-arg
-      // `get(K, V)` returns `V` and is not wrapped. `ObjectMap.get(K)` and `LongMap.get(long)` have
-      // `@Null` on the return and are handled by the annotation-based plan. 3.1al: `.orNull`
-      // Template on every map type forces the 1-arg overload (Scala 3's return-type-sensitive
-      // overload resolution picks `get(K,V):V` over `get(K):Nullable[V]` when the expected type
-      // is `V`). `orNull` is NOT actually deprecated (the annotation triggers -Werror, forcing
-      // @nowarn with a reason); SuppressionPhase places `@nowarn("msg=deprecated")` on every
-      // member containing a Template-produced `.orNull`.
+      // K13.6 CLOSED: after retarget to lls ObjectMap, get(K) returns Nullable[V] natively;
+      // 3.1al's .orNull Template forces the 1-arg overload where Scala would otherwise pick
+      // get(K,V):V (SuppressionPhase places @nowarn on the resulting deprecated-orNull call).
     )
 
-  /** Types whose `@Null`-annotated overload sets create ERASURE CONFLICTS under Named mode.
-    *
-    * `Nullable[A]` erases to `Object` (the opaque type's underlying is `A | NestedNone`), so
-    * `f(Nullable[String])` and `f(Nullable[Object])` share an erasure. In Union mode
-    * `String | Null` erases to `String` and `Object | Null` to `Object` — distinct. With Named,
-    * every `@Null`-annotated overload of the same arity erases to the same descriptor.
-    *
-    * The scope holds back these types' `@Null` declarations: they keep their upstream types and
-    * markers. Each is a COUNTED `ScopedOut` decision with a porter note.
-    *
-    * CharArray: 10 `append` overloads, all `@Null` on a different reference type, all erasing to
-    * `append(Object, …)`.
-    * Image: 3 constructors taking `@Null NinePatch`, `@Null TextureRegion`, `@Null Drawable`,
-    * all erasing to `<init>(Object, Sge)`. */
+  /** Types whose `@Null`-annotated overload sets create ERASURE CONFLICTS under Named mode:
+    * `Nullable[A]` erases to `Object`, so distinct `@Null`-annotated overloads of the same
+    * arity collide (Union mode kept them distinct). Scoped OUT, kept upstream-typed; each a
+    * COUNTED `ScopedOut` decision with a porter note. (CharArray: 10 `append` overloads;
+    * Image: 3 constructors -- all erase to one descriptor.) */
   def nullabilityErasureExempt: Set[String] = Set(
     "com.badlogic.gdx.utils.CharArray",
     "com.badlogic.gdx.scenes.scene2d.ui.Image",
@@ -2739,8 +2147,3 @@ object LibgdxPolicy:
     "com.badlogic.gdx.utils.Pools",
   )
 
-  // K13 CLOSED: the `nullabilityExempt` set was the K13 exit for the `Union` floor — with
-  // `Named("lowlevel.Nullable")`, `Nullable[T]` IS a proper type that composes at every `T`, so
-  // the abstract-type-parameter class disappears entirely. The 12 scope entries that held back 92
-  // of 632 declarations to clear 35 errors are deleted, not just emptied — the `Group#findActor`
-  // member key with them. Every generic container and generic widget is now retyped unscopped.
