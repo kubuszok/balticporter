@@ -91,17 +91,17 @@ class ConstantDataSuite extends munit.FunSuite {
     // The `static { }` block that fills these is the second one in the file and it reads the three
     // grids above. A dropped static initializer is one of the four silent defects CLAUDE.md §3
     // names, and an all-zero float array is exactly what it looks like.
-    for (m, n) <- List(
+    for ((m, n) <- List(
         (ConstantData.TRI_BLUE_NOISE_MULTIPLIERS, "TRI_BLUE_NOISE_MULTIPLIERS"),
         (ConstantData.TRI_BLUE_NOISE_MULTIPLIERS_B, "TRI_BLUE_NOISE_MULTIPLIERS_B"),
         (ConstantData.TRI_BLUE_NOISE_MULTIPLIERS_C, "TRI_BLUE_NOISE_MULTIPLIERS_C"),
-      )
-    do
+      )) {
       assertEquals(m.length, 4096, n)
       assert(m.exists(_ != 0f), s"$n is all zero — its static initializer did not run")
       // upstream: "a median value of about 1.0"; half between 1 and 4.232604 and half the inverses.
       val mean = m.map(_.toDouble).sum / m.length
       assert(mean > 0.8 && mean < 2.0, s"$n mean $mean is not near 1.0")
+    }
   }
 
 }

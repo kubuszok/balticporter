@@ -25,6 +25,7 @@ Detail for `CLAUDE.md` §5, §5.1 and §5.4.
 | `just measure-all` | every lane with `BP_FULL=1`, SERIALLY |
 | `just <lane>-measure-full` | adds JS, Native and ref-flags compiles |
 | `just decision-counts`, `members-unchanged`, `baseline-{list,show,diff,accept}`, `upstream-pin`, `deps-lint`, `catalog-coverage` | sizes, blast radius, baselines, vendored pins (mismatch FATAL), coordinates vs manifest, corpus-wide catalog rows |
+| `just injections-lint` | every injected/vendored shim (`corpus/*-overrides/`, `ported/*/src/`, `runtime/src/main/`) parses under `-no-indent` (parser-only, per file) |
 | `just ecs-dropin`, `ecs-divergence`, `dropin-all` | sge-ecs drop-in and divergence census (NOT in `measure-all`; red until parity) |
 
 Re-derive both sides (`grep -E '^[a-z0-9-]+-measure[a-z0-9-]*:' Justfile`) rather than trusting a
@@ -84,7 +85,8 @@ never a DEFECT (a residue cited as *measured worse*, a LOSS, a WORK ITEM). The a
 - `expected-errors.ref` (`sbt_ref_compile`, `port-*-ref` projects with sge/ssg's `scalacOptions` —
   `-no-indent -Werror -Wunused:…`, `DESIGN.md` §8.24): errors AND warnings counted; `-Xmacro-settings`
   dropped; a dependent's `-ref` `dependsOn` the base's JVM row with `-nowarn`. Every shim under
-  `balticporter/corpus/*-overrides/`, `ported/*/src/` and `balticporter/runtime/` uses brace syntax.
+  `balticporter/corpus/*-overrides/`, `ported/*/src/` and `balticporter/runtime/` uses brace syntax
+  (checked by `just injections-lint`).
 - `expected-lost` (`test_discovery_guard`): liqp's `!! TESTS LOST — 64 of 639` was a constant nobody
   read; a RECOVERED test is acknowledged, not absorbed. `TestDiff.disappeared` gates too.
 - `findings.tsv` (`findings_baseline_guard`, `cut -f2-` drops the line-ordered id): counts hold over

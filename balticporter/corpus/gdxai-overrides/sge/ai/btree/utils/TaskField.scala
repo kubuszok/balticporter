@@ -50,7 +50,7 @@ final class TaskField private[utils] (
     typeName: String,
     coerce: (java.lang.Object, sge.ai.btree.utils.DistributionAdapters) => java.lang.Object,
     assign: (java.lang.Object, java.lang.Object) => Unit,
-):
+) {
 
   /** java's `Field#getName()`. */
   def getName(): String = fieldName
@@ -66,3 +66,4 @@ final class TaskField private[utils] (
 
   /** java's `field.set(task, valueObject)`. */
   def set(task: java.lang.Object, value: java.lang.Object): Unit = assign(task, value)
+}

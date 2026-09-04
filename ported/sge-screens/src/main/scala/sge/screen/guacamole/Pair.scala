@@ -19,17 +19,20 @@ package sge.screen.guacamole
   * null-tolerant on both sides — a `case class` would derive `==` that is null-tolerant too, but
   * would also add `copy`, `unapply` and a companion this port has no upstream counterpart for.
   */
-final class Pair[X, Y](val x: X, val y: Y):
+final class Pair[X, Y](val x: X, val y: Y) {
 
   override def toString: String = "Pair{" + x + "," + y + "}"
 
-  override def equals(other: Any): Boolean = other match
+  override def equals(other: Any): Boolean = other match {
     case that: Pair[?, ?] => java.util.Objects.equals(that.x, this.x) && java.util.Objects.equals(that.y, this.y)
     case _                => false
+  }
 
-  override def hashCode(): Int =
+  override def hashCode(): Int = {
     val prime = 31
     var result = 1
-    result = prime * result + (if x == null then 0 else x.hashCode())
-    result = prime * result + (if y == null then 0 else y.hashCode())
+    result = prime * result + (if (x == null) 0 else x.hashCode())
+    result = prime * result + (if (y == null) 0 else y.hashCode())
     result
+  }
+}

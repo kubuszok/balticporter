@@ -95,16 +95,18 @@ class ScreenmanagerSuite extends munit.FunSuite {
 
   /** Concrete `TimedTransition` that records what the four-argument render was handed. */
   private class RecordingTimedTransition(duration: Float, interpolation: sge.math.Interpolation)
-      extends TimedTransition(duration, interpolation):
+      extends TimedTransition(duration, interpolation) {
     def this(duration: Float) = this(duration, null)
     var lastProgress: Float = -1f
     var renderCount: Int    = 0
     override def render(delta: Float, last: sge.graphics.g2d.TextureRegion,
-                        curr: sge.graphics.g2d.TextureRegion, progress: Float): Unit =
+                        curr: sge.graphics.g2d.TextureRegion, progress: Float): Unit = {
       lastProgress = progress
       renderCount += 1
+    }
     override def resize(width: Int, height: Int): Unit = ()
     override def close(): Unit                         = ()
+  }
 
   test("TimedTransition: isDone after the duration elapses, and show() resets it (upstream)") {
     val t = new RecordingTimedTransition(5)
@@ -140,8 +142,9 @@ class ScreenmanagerSuite extends munit.FunSuite {
   }
 
   test("TimedTransition: interpolation is applied to progress, not to delta") {
-    val square: sge.math.Interpolation = new sge.math.Interpolation:
+    val square: sge.math.Interpolation = new sge.math.Interpolation {
       override def apply(a: Float): Float = a * a
+    }
     val t = new RecordingTimedTransition(1.0f, square)
     t.show()
     t.render(0.5f, null, null)
@@ -214,11 +217,12 @@ class ScreenmanagerSuite extends munit.FunSuite {
   }
 
   test("ScreenTransition: show/hide default to no-ops and the clear colour defaults to BLACK") {
-    val t = new ScreenTransition:
+    val t = new ScreenTransition {
       override def render(d: Float, l: sge.graphics.g2d.TextureRegion, c: sge.graphics.g2d.TextureRegion): Unit = ()
       override def done: Boolean                           = true
       override def resize(width: Int, height: Int): Unit = ()
       override def close(): Unit                         = ()
+    }
     t.show()
     t.hide()
     assertEquals(t.clearColor.get, sge.graphics.Color.BLACK)

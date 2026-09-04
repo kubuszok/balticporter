@@ -4878,6 +4878,38 @@ deps-lint:
       exit 1
     fi
 
+# Every injected/vendored shim must parse under -no-indent, parser-phase only (CLAUDE.md §5).
+[doc("fail when an injected shim or vendored runtime file uses indentation syntax (-no-indent)")]
+injections-lint:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    FILES=$(git ls-files 'balticporter/corpus/*-overrides/**/*.scala' 'ported/*/src/**/*.scala' 'balticporter/runtime/src/main/**/*.scala')
+    if [ -z "$FILES" ]; then
+      echo "injections-lint: no injected/vendored files found"
+      exit 0
+    fi
+    N=$(echo "$FILES" | wc -l | tr -d ' ')
+    echo "-- injections-lint: $N file(s) under corpus/*-overrides, ported/*/src, runtime/src/main --"
+    bad=0
+    for f in $FILES; do
+      OUT=$(scala-cli compile --scala {{scala_version}} --server=false --jvm {{jdk_version}} \
+        --scalac-option -Ystop-after:parser --scalac-option -no-indent \
+        --scalac-option -Werror \
+        --scalac-option -Wunused:imports,privates,locals,patvars,nowarn \
+        "$f" 2>&1)
+      if [ $? -ne 0 ]; then
+        bad=1
+        echo "!! $f — indentation syntax under -no-indent:"
+        echo "$OUT" | sed 's/\x1b\[[0-9;]*m//g' | grep -E "^$f:|^-- Error:" | sed 's/^/     /'
+      fi
+    done
+    if [ "$bad" = "0" ]; then
+      echo "injections-lint: all $N file(s) parse under -no-indent"
+    else
+      echo "!! injections-lint FAILED — rewrite the file(s) above in brace syntax (CLAUDE.md §5)"
+      exit 1
+    fi
+
 [doc("check every vendored upstream tree against the reference repo's submodule pin")]
 upstream-pin:
     #!/usr/bin/env bash
