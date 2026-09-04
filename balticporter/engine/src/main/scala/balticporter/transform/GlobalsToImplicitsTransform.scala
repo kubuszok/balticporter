@@ -3,113 +3,21 @@ package balticporter.transform
 import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource}
 import balticporter.tir.*
 
-/** GLOBALS → CONTEXT: a Java class whose `static` state is really an ambient CONTEXT becomes a value
-  * threaded through the program as a Scala 3 `using` parameter (DESIGN.md §8.4).
-  *
-  * ==What survives from the predecessor, and why it is worth naming==
-  * A call into a threaded method changes '''nothing at the call site''' — the argument arrives from
-  * the `using` in scope. That is what makes the mechanism scale to the 562 read sites measured in
-  * one corpus library, and it is why "no decision row per call site" is a derivation rather than a
-  * shortcut. The `Reason.Configured` provenance shape, the factory's refusal of an absent key, and
-  * the traversal-based rewrite are kept for the same reason: they were right.
-  *
-  * ==Two live SILENT mistranslations this replacement closes==
-  * Both were in the predecessor's core, both produced broken emitted code with zero decisions and
-  * zero findings, and they are why this is a replacement rather than an extension:
-  *
-  *   - a `static { }` block is a synthetic class-initialiser `DefDef` with a `MethodType`, so it
-  *     passed the is-a-method test, SEEDED, and received a `using` parameter — and the emitter
-  *     inlines only its BODY into the companion, dropping the parameter and leaving the context
-  *     identifier unresolved;
-  *   - a FIELD initialiser's read is enclosed by the FIELD symbol, which failed the is-a-method seed
-  *     test, and the rewrite visited only `DefDef` arms — so the initialiser still named a member
-  *     that was no longer static.
-  *
-  * Here a class initialiser and a field initialiser are BOUNDARIES by construction: they have no
-  * signature to thread anything through, [[ContextNeed.siteOf]] resolves them as such, and every one
-  * of them is a counted [[ContextSeamCheck]] row.
-  *
-  * ==The closure is a directed reachability over five edge kinds==
-  * See [[ContextNeed]]. The predecessor closed its seeds under `callersOf` alone, which is unsound
-  * in BOTH directions at once because Java resolved every virtual call to the DECLARED member.
-  *
-  * ==The read shape is an anonymous `(using T)` plus a summon, and that is forced by evidence==
-  * A reference hand port repaired two files AWAY from named context parameters, with the reason
-  * recorded: a parameter named after the renamed root package SHADOWS it and breaks every qualified
-  * reference in scope — and this engine emits ONLY fully-qualified names. Nothing reads the name
-  * (`using` resolution and `summon` never do), so anonymity costs nothing, and 98.2 % of that hand
-  * port's 557 context reads are the inline summon idiom. The clause is therefore emitted as
-  * `(using T)` with no parameter name at all.
-  *
-  * ==The member map is PATH-valued==
-  * `gl -> "graphics.gl20"` is a two-hop rewrite, and in the reference port two-hop reads are 305 of
-  * 557 (56 %). The same shape answers the WRITE problem — the bundle stays immutable and the
-  * mutability lives on the service — so `Holder.f = x` write-throughs along the mapped path.
-  * '''The mechanism never mints mutability the mapped type does not declare''': a path ending on a
-  * `val` is a compile error at that one line, attributable through the source map.
-  *
-  * ==There is no ambient `given`, and that is the load-bearing reversal==
-  * The predecessor synthesised `given C = new C()` in the companion, which made every
-  * unthreaded→threaded seam compile silently and reintroduced the global with extra steps. Without
-  * it, an unthreaded owned caller of a threaded callee is IMPOSSIBLE BY CONSTRUCTION — the closure
-  * would have threaded it — except across a refused boundary, and those sites are exactly what
-  * [[ContextSeamCheck]] counts.
-  *
-  * ==A class a FRAMEWORK instantiates has no caller to change==
-  * The closure reasons from the program: it may add a parameter because it can see, and fix, every
-  * `new`. A test suite, a `ServiceLoader` implementation and a bean are constructed reflectively from
-  * OUTSIDE, so the closure sees no instantiation at all and concludes, correctly and uselessly, that
-  * nothing has to be fixed — and a `using` clause on such a constructor emits code that compiles
-  * perfectly and cannot be constructed at run time. Measured: 0 scalac errors, 0 seams, 0 policy
-  * findings, and a whole suite silently gone (`ENGINE-LIMITS.md` CT7).
-  *
-  * So attachment has a THIRD answer beside "take the clause" and "be a boundary" —
-  * [[ContextHolder.selfSupplied]]: this declaration takes the context WITHOUT taking a parameter,
-  * from a `private given` member whose expression the PORT supplies. Which declarations those are is
-  * not derivable; the SHAPE is, and [[ContextSeamCheck.Kind.UnconstructedThread]] warns on it.
-  *
-  * ==Kind==
-  * CLAUDE.md §1(b). The mechanism — find the reads, close over five edges, add a clause, rewrite the
-  * read through a path — is a fact about Java and Scala. WHICH class is an ambient context, what its
-  * counterpart is called and which of its fields map where is a fact about one library and arrives
-  * as a constructor parameter ([[ContextHolder]]). An empty `holders` list is a structural no-op:
-  * `run` returns its input before building anything.
-  *
-  * ==Shared surface, and the half of it a DEPENDENT may add to==
-  * It changes emitted signatures, so its holders live in the BASE manifest: a dependent resolves
-  * against the base's Java and must see the same threading, or the two ports each compile alone and
-  * cannot compile together (§1.5).
-  *
-  * But `sites` and `selfSupplied` are keyed on DECLARATIONS, and a dependent's boundaries are in the
-  * DEPENDENT's own types — which the base neither governs nor parses. Measured: four counted seams in
-  * a dependent whose own diagnostic told its reader to *give the site a `sites` policy*, with no
-  * manifest in which to write one (`ENGINE-LIMITS.md` CT8). So this declares `MergeablePolicy`, the
-  * shared half ([[ContextHolder.sharedSurface]]) must AGREE between two instances, the
-  * per-declaration half UNIONS refusing same-key-different-value, and what a dependent writes is a
-  * [[ContextHolderExtension]] — a value with no field in which the shared half could be restated.
+/** GLOBALS → CONTEXT: a Java class whose `static` state is an ambient CONTEXT becomes a value
+  * threaded through the program as a Scala 3 `using` parameter, found by a five-edge closure over
+  * [[ContextNeed]] and rewritten through [[ContextHolder]]'s member map. A class/field initialiser
+  * is a BOUNDARY (no signature to thread through); a framework-constructed class takes
+  * [[ContextHolder.selfSupplied]] instead of a clause.
+  * CLAUDE.md §1(b), §1.5; DESIGN.md §8.4; ENGINE-LIMITS CT4, CT6, CT7, CT8, CT9
   */
 final class GlobalsToImplicitsTransform(
     val holders: List[ContextHolder] = Nil,
-    /** what a DEPENDENT contributes — the per-declaration half of a holder the BASE declares
-      * (`ENGINE-LIMITS.md` CT8). Empty in a base, which is why every existing fingerprint is
-      * byte-identical. */
+    /** the per-declaration half of a holder the BASE declares; empty in a base. ENGINE-LIMITS CT8 */
     val extensions: List[ContextHolderExtension] = Nil,
-    /** A DIRECT instruction to add `(using GivenType[T])` to a class's constructors, where `T`
-      * is the class's own type parameter at a given index. Keyed on the class's upstream FQN;
-      * value is the fully-qualified given type, optionally suffixed with `:N` to name the
-      * type-parameter index (0-based, default 0). E.g. `"lowlevel.MkArray"` applies to the first
-      * type parameter, `"lowlevel.MkArray:1"` to the second.
-      *
-      * ==Why this is a (b) key on THIS phase==
-      * The MECHANISM is the same as the context holder's clause attachment — find the constructors,
-      * add a `using` parameter. What differs is WHICH type: a holder threads a concrete context
-      * (`Sge`), and this threads a type-class instance applied to the class's own type parameter
-      * (e.g. `MkArray[T]` on `Octree[T]`). A `retargetConstruct` emits `ObjectSet.apply[T]()`
-      * whose `inline` factory summons `MkArray[T]` — the clause is what puts it in scope.
-      *
-      * Every `new Octree[Foo](...)` caller supplies `MkArray[Foo]` by inline given resolution.
-      * An abstract class's clause propagates to subclass constructors through `extends`.
-      * An empty map is the default and the no-op. */
+    /** Adds `(using GivenType[T])` to a class's constructors, `T` its own type parameter at a given
+      * index. Keyed on the class's upstream FQN; value is the given type FQN, optionally suffixed
+      * `:N` for the type-parameter index (0-based, default 0). Propagates to subclass constructors
+      * through `extends`. Empty map is the no-op. */
     val requiredGivens: Map[String, String] = Map.empty,
 ) extends Phase, Rewrite, PolicySource, MergeablePolicy, PolicyBound:
 
@@ -117,21 +25,15 @@ final class GlobalsToImplicitsTransform(
 
   def name = "globals->implicits"
 
-  /** the lane that counts every place the threading STOPPED — a declaration a framework constructs
-    * reflectively, a hand-written caller no manifest key can add a clause to, a residual global
-    * (`Rewrite`, and CLAUDE.md §1's "a class a FRAMEWORK instantiates has no caller to change"). */
+  /** counts every place threading stopped: a reflectively-constructed declaration, a hand-written
+    * caller no key can add a clause to, a residual global. */
   def accountedBy: Set[String] = Set(ContextSeamCheck.Name)
 
-  /** every policy key is written in the UPSTREAM namespace, and the package rename runs LAST
-    * (§4.56). */
+  /** policy keys are written in the UPSTREAM namespace; package rename runs LAST (§4.56). */
   override def runsBefore: Set[String] = Set("package-rename")
 
-  /** THE HOLDERS THIS INSTANCE ACTUALLY RUNS — each with the extensions that name it folded in.
-    *
-    * Everything downstream reads this and not [[holders]]: an extension is policy, and a phase that
-    * bound one table and ran another would be the §1(b) silent no-op twice over. A DANGLING
-    * extension — one naming a holder nothing in the chain declares — folds into nothing and is
-    * reported by [[danglingFindings]]. */
+  /** the holders this instance runs, each with its extensions folded in. A dangling extension —
+    * naming a holder nothing in the chain declares — folds into nothing; see [[danglingFindings]]. */
   lazy val effectiveHolders: List[ContextHolder] =
     holders.map(h => extensions.filter(_.holder == h.holder).foldLeft(h)(_ extendedBy _))
 
@@ -139,30 +41,17 @@ final class GlobalsToImplicitsTransform(
     extensions.filterNot(e => holders.exists(_.holder == e.holder))
 
   /** the effective policy, sorted and rendered — two modules that agree must compare equal (§1.5).
-    *
-    * Read off [[effectiveHolders]] and not off the two lists, so a module that states a holder with
-    * its entries INLINE and one that states the same thing as holder-plus-extension fingerprint the
-    * same — which is what makes §8.13's containment test (`bases.mergedWith(mine)` leaves `mine`
-    * unchanged) work for a `mirroring` module. A dangling extension is rendered beside them, or a
-    * dependent that contributes only extensions would be indistinguishable from a phase with no
-    * policy at all. */
+    * Read off [[effectiveHolders]] so a holder stated inline and one stated as holder+extension
+    * fingerprint the same. */
   def surfaceFingerprint: String =
     val rg = if requiredGivens.isEmpty then "" else
       "|rg=" + requiredGivens.toList.sorted.map((k, v) => s"$k->$v").mkString(",")
     (effectiveHolders.map(_.fingerprint) ++ dangling.map(_.fingerprint)).sorted.mkString(";") + rg
 
-  /** every shared-surface SUBJECT this instance's policy is keyed on — the holder FQNs (of holders
-    * AND of extensions, so a dependent naming a base's holder is a subject the screen can see), plus
-    * every per-declaration key, every promotion and every scope entry, each through
-    * [[MergeablePolicy.subjectOf]].
-    *
-    * '''The per-declaration keys are the half that matters''', and they are why this phase needed
-    * the screen as much as the merge: a `sites` or `selfSupplied` key names a DECLARATION, and a
-    * dependent that names one of the BASE's re-shapes a surface it does not own — the base emitted
-    * that declaration threaded and the dependent would emit it deferred, or unthreaded, or holding
-    * a `given` the base never wrote. A dependent naming its OWN types passes, which is the whole
-    * point; the base's own holder FQN is in the base's subjects too, so a merge never reports it as
-    * ADDED and an extension of an inherited holder is admitted for the honest reason. */
+  /** every shared-surface SUBJECT this instance's policy is keyed on — holder FQNs (of holders and
+    * of extensions), every per-declaration key, every promotion and every scope entry, through
+    * [[MergeablePolicy.subjectOf]]. A dependent naming one of the base's own DECLARATIONS re-shapes
+    * a surface it does not own; naming its own types is the point. */
   def subjects: Set[String] =
     val fromHolders = holders.flatMap(h =>
       (Set(h.holder) ++ h.sites.keySet ++ h.selfSupplied.keySet ++ h.retain.keySet ++
@@ -171,30 +60,14 @@ final class GlobalsToImplicitsTransform(
     val fromGivens = requiredGivens.keySet
     (fromHolders ++ fromExts ++ fromGivens).map(MergeablePolicy.subjectOf).toSet
 
-  /** THE MERGE CONTRACT (DESIGN.md §8.13), and the division is `ContextHolder.sharedSurface` —
-    * which is a value on the policy rather than a list here, because "which half of this is the
-    * SHARED SURFACE" is a fact about the policy and a phase that spelled it twice would drift.
+  /** THE MERGE CONTRACT (DESIGN.md §8.13); division is `ContextHolder.sharedSurface`.
+    *   - holders UNION by holder FQN; a holder only one side declares is an addition.
+    *   - a holder BOTH sides declare must AGREE on its shared surface, or the merge refuses.
+    *   - `sites` and `selfSupplied` UNION, refusing same-key-different-value.
+    *   - extensions carry across; a dangling one folds into whatever the merge brings into scope.
     *
-    *   - '''holders UNION by holder FQN.''' A holder only one side declares is an addition — a
-    *     dependent with a global of its own is entitled to one — and the `governs` screen is what
-    *     refuses it when the FQN is inside a base's claim.
-    *   - '''a holder BOTH sides declare must AGREE on its shared surface, or the merge refuses.'''
-    *     Two answers for the context type, the member map, the attachment mode, the read shape or
-    *     the boundary default is a choice, and a choice is the thing a refusal exists to prevent:
-    *     the base emitted its own types with one of them and the dependent resolves against that
-    *     Java, so the two ports would each compile alone and could not compile together.
-    *   - '''`sites` and `selfSupplied` UNION, refusing same-key-different-value.''' They are keyed
-    *     on DECLARATIONS, and CT8 is exactly the case where the declaration is the dependent's.
-    *   - '''extensions carry across, and a dangling one becomes an ordinary extension of whatever
-    *     the merge just brought into scope.''' That is the mechanism: vfx's extension names
-    *     `com.badlogic.gdx.Gdx`, which is dangling in vfx's own instance and folds into the base's
-    *     holder in the merged one.
-    *
-    * `added` is the SUBJECT side of what the later instance contributes — every subject it holds
-    * that this one did not. Those are the names a dependent could use to re-shape a base's emitted
-    * surface, which is what `SurfaceFold` screens against `governs`, and they are the keys the run
-    * holds this module's own policy findings to.
-    */
+    * `added` is every subject the later instance holds that this one did not — what `SurfaceFold`
+    * screens against `governs`. */
   def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
     case o: GlobalsToImplicitsTransform =>
       val mine   = holders.map(h => h.holder -> h).toMap
@@ -219,18 +92,15 @@ final class GlobalsToImplicitsTransform(
         v2       <- mine(k).selfSupplied.get(key)
         if v2 != v
       yield s"""both modules make "$key" self-supplied, from "$v2" and from "$v""""
-      // …and a RETAINED member's NAME, which is emitted surface: two modules that retain one type's
-      // context under two names emit two members, and whichever `selfSupplied` expression names one
-      // of them compiles against exactly one of the two ports.
+      // a retained member's NAME is emitted surface: two names for one type's retained context
+      // means whichever `selfSupplied` expression names one compiles against only one port.
       val retainClash = for
         k        <- (mine.keySet & theirs.keySet).toList.sorted
         (key, v) <- theirs(k).retain.toList.sorted
         v2       <- mine(k).retain.get(key)
         if v2 != v
       yield s"""both modules RETAIN the context on "$key", as "$v2" and as "$v""""
-      // …and a CACHED accessor's name, for the retained member's reason exactly: it is emitted
-      // surface, and whichever `selfSupplied` expression reads `<Type>.<name>` compiles against one
-      // of the two ports and not the other.
+      // same reason for a CACHED accessor's name.
       val cacheClash = for
         k        <- (mine.keySet & theirs.keySet).toList.sorted
         (key, v) <- theirs(k).cache.toList.sorted
@@ -270,23 +140,14 @@ final class GlobalsToImplicitsTransform(
   private var boundStatics: Map[String, Map[String, List[SymId]]] = Map.empty
   private var boundHolder: Map[String, SymId]                     = Map.empty
   private var boundPromote: Map[String, Set[SymId]]               = Map.empty
-  /** the `sites` entries the binder RESOLVED, per holder: key → the symbols it named. Both halves
-    * are needed — the symbols are a `lazy-init` entry's candidate subjects, and the KEY SET is what
-    * the dead-binding report is the complement of (`ENGINE-LIMITS.md` CT6). */
+  /** `sites` entries resolved per holder: key -> symbols named. Used for the CT6 dead-binding
+    * report and as a `lazy-init` entry's candidate subjects. */
   private var boundSites: Map[String, Map[String, List[SymId]]]   = Map.empty
-  /** the `selfSupplied` entries the binder RESOLVED, per holder: the TYPE symbol → its policy key.
-    * The key is kept beside the symbol because it is the string an agent edits (§4.575) and it is
-    * what the decision's `Reason.Configured` carries. */
+  /** `selfSupplied` entries resolved per holder: TYPE symbol -> its policy key (§4.575). */
   private var boundSelf: Map[String, Map[SymId, String]]          = Map.empty
-  /** the `retain` entries the binder RESOLVED, per holder: the TYPE symbol → the POLICY KEY that
-    * named it — the KEY and not the member name, for [[boundSelf]]'s reason: the key is the string an
-    * agent edits (§4.575), it is what a `Reason.Configured` carries, and it is what the dead-binding
-    * report has to name. The member name is one lookup away through [[ContextHolder.retain]], and
-    * going the other way is a match on a VALUE two entries could share. */
+  /** `retain` entries resolved per holder: TYPE symbol -> the policy key that named it. */
   private var boundRetain: Map[String, Map[SymId, String]]        = Map.empty
-  /** the `cache` entries the binder RESOLVED, per holder: the TYPE symbol → the POLICY KEY that
-    * named it. [[boundRetain]]'s shape and [[boundRetain]]'s reasons — the key is what an agent
-    * edits, what a `Reason.Configured` carries and what the dead-binding report names. */
+  /** `cache` entries resolved per holder: TYPE symbol -> the policy key that named it. */
   private var boundCache: Map[String, Map[SymId, String]]         = Map.empty
   /** `requiredGivens` entries resolved to the class symbol — class SymId -> given type FQN. */
   private var boundGivens: Map[SymId, String]                     = Map.empty
@@ -402,19 +263,14 @@ final class GlobalsToImplicitsTransform(
     malformed = bad.toList
     records   = binder.recordsFor(name)
 
-  /** the never-fired half (from the BINDING, so it is complete whether or not this phase ran) plus
-    * this phase's own malformed entries and counted refusals. */
+  /** the never-fired half plus this phase's own malformed entries and counted refusals. */
   def policyReport: PolicyReport =
     PolicyReport.fromBindings(records) ++
       PolicyReport(malformed ++ danglingFindings ++ refusals.toList ++ deadSites.toList)
 
-  /** AN EXTENSION NAMING A HOLDER NOTHING DECLARES — CT8's own never-fired shape.
-    *
-    * An extension is the per-declaration half of somebody else's holder, so it does nothing at all
-    * unless a manifest in the chain declares that holder. `PolicyBinder` cannot see this: the
-    * extension's own keys bind perfectly against a program that has them, and it is the HOLDER the
-    * chain is missing. Derived from the policy rather than from a run, so a phase that never ran
-    * reports it too — the reason `PolicyReport.fromBindings` exists one layer up. */
+  /** an extension naming a holder nothing in the chain declares — `PolicyBinder` cannot see this,
+    * since the extension's own keys bind against a program that has them; it is the HOLDER
+    * that's missing. ENGINE-LIMITS CT8 */
   private def danglingFindings: List[PolicyFinding] = dangling.map { e =>
     PolicyFinding(name, "GlobalsToImplicitsTransform(extensions)", e.holder, PolicyIssue.Malformed,
       "this module extends a holder that neither it nor any of its bases declares, so every entry " +
@@ -431,18 +287,10 @@ final class GlobalsToImplicitsTransform(
 
   private val refusals = collection.mutable.ListBuffer.empty[PolicyFinding]
 
-  /** A BOUND `sites` ENTRY THAT SELECTED NO SITE — `ENGINE-LIMITS.md` CT6's second face, and the
-    * third face of "never fired".
-    *
-    * `PolicyBinder.bindMembers` asks *does this program declare this member*, and a real field
-    * answers `yes` whether or not anything in the run ever reaches it. CT6 measured exactly that:
-    * two `lazy-init` keys were added to a real port, both BOUND, `policy` stayed at its floor, and
-    * the emitted output was byte-identical with them and without them. A byte-identity experiment is
-    * not a report; this is.
-    *
-    * Only entries whose BINDING succeeded are reported, or an entry naming a member this program
-    * does not have would be reported twice — once by the binder as `NeverMatched` and once here —
-    * for one mistake with one fix. */
+  /** a bound `sites` entry that selected no site — `bindMembers` asks whether the program declares
+    * the member, not whether the run ever reaches it, so this reports the residue that binding alone
+    * cannot see. Only entries whose binding succeeded are reported, so a truly absent member is
+    * reported once, by the binder, and not twice. ENGINE-LIMITS CT6 */
   private val deadSites = collection.mutable.ListBuffer.empty[PolicyFinding]
 
   private def recordDeadSites(h: ContextHolder, fired: Set[String]): Unit =
@@ -470,12 +318,8 @@ final class GlobalsToImplicitsTransform(
 
   private val seamLog = collection.mutable.ListBuffer.empty[ContextSeamCheck.Finding]
 
-  /** Every seam this run drew, restricted to the units it actually EMITS.
-    *
-    * The same filter `OmissionCheck` and `CollectionBoundaryCheck` carry, for the same measured
-    * reason: a DEPENDENT port's `Program` holds its base module's units too, and a seam inside one
-    * of those is the BASE's finding, reported by a repository that cannot act on it
-    * (`ENGINE-LIMITS.md` D2). A base port passes `program.units` and this is the identity. */
+  /** every seam this run drew, restricted to the units it actually emits — a dependent's `Program`
+    * holds its base's units too, and a seam inside one of those is the base's finding. ENGINE-LIMITS D2 */
   def seams(program: Program, units: List[Tree.ClassDef]): List[ContextSeamCheck.Finding] =
     val own = units.map(_.symbol).toSet
     def unitOf(s: SymId, fuel: Int = 64): SymId =
@@ -496,35 +340,22 @@ final class GlobalsToImplicitsTransform(
     if boundGivens.isEmpty then afterHolders
     else applyRequiredGivens(afterHolders)
 
-  /** Add `(using GivenType[T])` clauses to constructors of classes listed in `requiredGivens`,
-    * where `T` is the class's own first type parameter. The applied type is built structurally
-    * so the package rename reaches every component of it.
-    *
-    * Unlike the holder-based threading, this does NOT run a closure — the class is named directly,
-    * and every caller of `new C[X](...)` supplies `GivenType[X]` by inline given resolution. An
-    * abstract class's clause propagates to subclass constructors through `extends`.
+  /** Adds `(using GivenType[T])` clauses to constructors of classes listed in `requiredGivens`,
+    * `T` the class's own first type parameter, built structurally so the package rename reaches it.
+    * Unlike holder-based threading this runs no closure: the class is named directly, and callers
+    * supply the given by inline resolution. An abstract class's clause propagates through `extends`.
     */
   private def applyRequiredGivens(program0: Program): Program =
     val mint = new Minter(program0)
     val o = Origin.synthetic
 
-    // --- 3.1ar: transitive closure over requiredGivens.
-    // A generic class C[T] that constructs a bounded-given class B[T] with its OWN first type
-    // parameter needs the same given (MkArray[T]) threaded through its own constructors.
-    // Fixed-point: repeat until no new classes are discovered. Section 1(a) — a universal fact
-    // about inline given resolution: the factory's summonInline cannot resolve a type parameter
-    // that is not in scope, and the caller's caller has the same constraint.
+    // transitive closure: a generic class C[T] constructing a bounded-given class B[T] with its
+    // own first type parameter needs the same given threaded through its own constructors.
     val allClassDefs = program0.units.flatMap(StandardTraversal.allClassDefs(_)(using program0))
-    // Check if a class constructs a bounded-given class using its own first type parameter.
-    // Uses xref: a `new B[T](...)` registers as `Instantiate` usage of B's symbol.
     def findBoundedConstruction(cd: Tree.ClassDef): Option[String] =
       if cd.tparams.isEmpty then return None
       val firstTp = cd.tparams.head.symbol
-      // Collect all Instantiate usages INSIDE this class's body. The xref maps symbol -> usages,
-      // so check which bounded-given class symbols are instantiated inside this class.
       boundGivens.view.flatMap { (givenClassSym, givenFqn) =>
-        // Check if this class's body instantiates the given class with first-tparam as first arg.
-        // Walk the Tree.New nodes in the body.
         def hasInstantiation(stmts: List[Statement]): Boolean = stmts.exists(hasNew)
         def hasNew(t: Tree): Boolean = t match
           case Tree.New(tpt, _, _, _) =>
@@ -560,12 +391,8 @@ final class GlobalsToImplicitsTransform(
             changed = true
           }
 
-    // --- 3.1as: parse the given-FQN value. A value may contain `|` to name MULTIPLE givens,
-    // each optionally suffixed with `:N` for the type-parameter index (0-based, default 0).
-    // `"lowlevel.MkArray"` -> one given at tparam 0.
-    // `"lowlevel.MkArray:1"` -> one given at tparam 1.
-    // `"lowlevel.MkArray:0|lowlevel.MkArray:1"` -> two givens, one per type parameter.
-    // A `Map[K, V]` that constructs both `DynamicArray[K]` and `DynamicArray[V]` needs both.
+    // a value may contain `|` to name MULTIPLE givens, each optionally suffixed `:N` for the
+    // type-parameter index (0-based, default 0) — e.g. "lowlevel.MkArray:0|lowlevel.MkArray:1"
     def parseGivenSpec(raw: String): List[(String, Int)] =
       raw.split('|').toList.map { part =>
         part.lastIndexOf(':') match
@@ -645,25 +472,19 @@ final class GlobalsToImplicitsTransform(
     given Program = program0
     val mint  = new Minter(program0)
     val graph = OverrideGraph.build(program0)
-    // an entry whose expression is empty is MALFORMED and reported as such; it must not also take
-    // the type out of the threading, or one mistake would silently produce a second, worse one.
+    // an entry with an empty expression is malformed and reported; it must not also unthread its type.
     val selfSupplied = boundSelf.getOrElse(h.holder, Map.empty)
       .filter((_, k) => h.selfSupplied.get(k).exists(_.trim.nonEmpty))
-    /** the type → the Scala the port wrote for it, which the emitter splices verbatim. */
+    /** the type → the Scala the port wrote for it, spliced verbatim by the emitter. */
     val selfSource: Map[SymId, String] = selfSupplied.map((s, k) => s -> h.selfSupplied(k))
-    /** the type → the MEMBER NAME its retained context is readable under. Bound entries only; a
-      * malformed name is already reported and must not also emit a member, for the same reason a
-      * `selfSupplied` entry with an empty expression must not also leave its type unthreaded. */
+    /** the type → the member name its retained context is readable under. Bound entries only. */
     val retainOf: Map[SymId, String] =
       boundRetain.getOrElse(h.holder, Map.empty).flatMap((s, k) => h.retain.get(k).map(s -> _))
-    /** the type → the MEMBER NAME its CACHED context is readable under — [[retainOf]]'s shape at
-      * the fifth key, bound entries only for the same reason. */
+    /** the type → the member name its CACHED context is readable under. */
     val cacheOf: Map[SymId, String] =
       boundCache.getOrElse(h.holder, Map.empty).flatMap((s, k) => h.cache.get(k).map(s -> _))
-    /** the types a `cache` entry ACTUALLY minted on — the run's own record, and the complement of
-      * the dead-binding report. A `cache` key binds against a real class whether or not the closure
-      * threaded a single method of it, which is exactly the blindness `ENGINE-LIMITS.md` CT6
-      * measured for `sites` and `retain`. */
+    /** the types a `cache` entry actually minted on — complements the dead-binding report, since a
+      * `cache` key binds against a real class whether or not the closure threaded it. ENGINE-LIMITS CT6 */
     val cacheFired = collection.mutable.Set.empty[SymId]
     val need  = new ContextNeed(program0, graph, h, statics, boundPromote.getOrElse(h.holder, Set.empty),
                                 (k, s, key, d, o, e) => seamLog += ContextSeamCheck.Finding(k, s, key, d, o, e),
@@ -687,9 +508,8 @@ final class GlobalsToImplicitsTransform(
     def segSym(seg: String): SymId =
       segCache.getOrElseUpdate(seg, mint.member(seg, MemberKey(ctxFqn, seg).render, ctxSym, TypeRepr.NoType, Flags()))
 
-    /** `scala.Predef.summon[T]`, or `T.apply()`. Built STRUCTURALLY and not as text: a minted
-      * context's FQN is in the upstream namespace and the package rename runs last, so a name
-      * spliced into a string would be the one reference the rename cannot see. */
+    /** `scala.Predef.summon[T]`, or `T.apply()`. Built structurally, not as text — a name spliced
+      * into a string would be the one reference the package rename (§4.56) cannot see. */
     def contextExpr: Term = h.reader match
       case ContextReader.Summon =>
         Tree.TypeApply(Tree.Ident(summonSym, ctxRef, o), List(TypeTree(ctxRef, o)), ctxRef, o)
@@ -709,13 +529,8 @@ final class GlobalsToImplicitsTransform(
           "initialised at first READ instead of at class initialisation", Decision.originOf(program0, d.field), d.field)
         record(Decision(
           kind = Decision.Kind.DeferredInit, subject = d.field, subjectFqn = s.fullName,
-          // no `key` in the DETAIL: `Reason.Configured` already carries it, and a porter note
-          // renders the classification's pairs first and the detail's after — so a duplicate key
-          // appears TWICE in the emitted comment.
+          // no `key` in detail: `Reason.Configured` already carries it (§4.575).
           detail = Map(
-            // WHICH initialiser it came out of — a `<clinit>` assignment or the field's own
-            // initialiser. A note that names the wrong one says something false about code the
-            // reader is holding, which is the whole reason a note sits beside the declaration.
             "from" -> (if d.clinit == SymId.None then "the field's own initialiser"
                        else "assigned by the class initialiser"),
             "to"   -> s"a `def` over a cache, taking `(using $ctxFqn)`",
@@ -751,18 +566,11 @@ final class GlobalsToImplicitsTransform(
           t.copy(paramss = t.paramss :+ List(mint.usingParam(t.symbol, ctxFqn, ctxRef, t.origin)))
         else t
 
-      /** THE FIFTH ANSWER (`ContextHolder.cache`): the private holder, the throwing accessor, and
-        * `<held> = summon[T]` at the head of every threaded METHOD this type declares.
-        *
-        * It runs AHEAD of the three arms below and independently of all of them, because the shape
-        * it serves is in none of their populations: an all-`static` holder takes its clause on its
-        * methods, so it is in no `threadedClasses`, and the arm that would have seen it is the
-        * `t` that returns its input unchanged.
-        *
-        * A CONSTRUCTOR is excluded even where the closure threaded one. Its body is the constructor
-        * region's (`DESIGN.md` §8.2) and a statement prepended there is a statement the funnel may
-        * promote, replay or re-order — and a cache written from a constructor is [[ContextHolder.retain]]'s
-        * question, which has its own answer one key up. */
+      /** [[ContextHolder.cache]]: emits the private holder, the throwing accessor, and
+        * `<held> = summon[T]` at the head of every threaded METHOD this type declares. Runs ahead
+        * of the arms below, for an all-`static` holder no `threadedClasses` arm would otherwise
+        * see. A constructor is excluded — its body is the constructor region (DESIGN.md §8.2), and
+        * a cache written from one is [[ContextHolder.retain]]'s question instead. */
       private def cached(t: Tree.ClassDef)(using Program): Tree.ClassDef =
         cacheOf.get(t.symbol).fold(t) { nm =>
           val p = summon[Program]
@@ -782,22 +590,10 @@ final class GlobalsToImplicitsTransform(
             })
         }
 
-      /** DOES THIS TYPE'S COMPANION NEED ONE TOO? — a scala `class` and its `object` are TWO
-        * SCOPES, and java's one namespace is what hides it.
-        *
-        * The third answer emits `private given` at the head of the type's body, which is exactly
-        * right for every summon in an INSTANCE member and reaches not one in a `static` member: the
-        * statics are lowered into the companion, and a companion does not see the class's instance
-        * members. So a java type whose reads are on its static side takes the answer, is reported as
-        * answered, and still emits `No given` at every one of them — measured on the first port
-        * whose framework-instantiated types were java `enum`s (`PROGRESS.md` §10.9.7 family 1).
-        *
-        * Two conjuncts, and the second is what keeps the pair from colliding. A type this program
-        * emits as a MODULE has one body for both halves, so a second given there would be a second
-        * candidate in ONE scope and every `summon` in it ambiguous — the exact failure
-        * `Minter.retainedMember` avoids by not being `given` at all. And a type that declares no
-        * static member has no companion for the given to go in, so emitting one would be text for
-        * nothing (§5's over-approximation, the one shape no count can see). */
+      /** Does this type's companion need its own `given` too? A scala `class` and its `object` are
+        * two scopes, so a `private given` at the head of the class body reaches no `summon` in a
+        * `static` member. Skipped where the type emits as a MODULE (one shared scope — a second
+        * given would collide) or declares no static member (nothing for it to serve). */
       private def needsStaticGiven(t: Tree.ClassDef)(using p: Program): Boolean =
         !p.symbolOf(t.symbol).exists(_.flags.isModule) &&
           t.body.exists { case d: Definition => p.symbolOf(d.symbol).exists(_.flags.isStatic)
@@ -805,26 +601,20 @@ final class GlobalsToImplicitsTransform(
 
       override def transformClassDef(t0: Tree.ClassDef)(using Program): Tree.ClassDef =
         val t = cached(t0)
-        // THE THIRD ANSWER (`ENGINE-LIMITS.md` CT7): no clause anywhere, and a `given` member at the
-        // HEAD of the body instead. At the head because a class body is a constructor: a statement
-        // that uses the context before the given is initialised would read `null`, and the reference
-        // hand port writes it first for the same reason.
+        // ENGINE-LIMITS CT7: no clause anywhere; a `given` member at the HEAD of the body instead
+        // (a class body is a constructor, so a use ahead of it would read `null`).
         if need.selfSuppliedClasses(t.symbol) then
           t.copy(body = mint.givenMembers(t.symbol, ctxFqn, ctxRef, selfSource(t.symbol), t.origin,
                                           companion = needsStaticGiven(t)) ++ t.body)
         else if !need.threadedClasses(t.symbol) then t
         else
-          // THE RETAINED MEMBER, at the HEAD for the reason the `given` above is: a class body is a
-          // constructor, and a statement reading it earlier would read `null`. It rides on the
-          // threaded arm and nowhere else — a type with no clause has no context to keep, and the
-          // policy entry that named one is a counted `NeverMatched` instead.
+          // the retained member, at the HEAD for the `given` case's reason. Rides on the threaded
+          // arm only — a type with no clause has no context to keep.
           val retained = retainOf.get(t.symbol)
             .map(nm => mint.retainedMember(t.symbol, nm, ctxRef, contextExpr, t.origin)).toList
           val ctors = t.body.collect { case d: Tree.DefDef if isCtor(summon[Program], d.symbol) => d.symbol }
           if ctors.isEmpty then
-            // A java INTERFACE has no constructor, so a trait the manifest promoted to an abstract
-            // class has nothing to hang the clause on and one is minted — the promotion is only half
-            // done otherwise, which is the shape of defect a refusal is supposed to prevent.
+            // a java interface has no constructor; a trait promoted to an abstract class needs one minted.
             val at   = t.origin
             val ctor = mint.member(ContextNeed.CtorName,
               MemberKey(summon[Program].symbolOf(t.symbol).map(_.fullName).getOrElse("?"),
@@ -867,21 +657,16 @@ final class GlobalsToImplicitsTransform(
     recordDeadSelf(h, need)
     recordDeadRetain(h, need)
     recordDeadCache(h, cacheFired.toSet)
-    // LAST: `readPlan` above is what consults a residual-global/refuse `sites` entry, so anything
-    // read before it would report an entry that had not been asked yet.
+    // LAST: `readPlan` above consults residual-global/refuse `sites` entries.
     recordDeadSites(h, need.firedSites)
     out.rebuilt(xref = Xref.build(out.units))
 
   // ---- the minted context type ----------------------------------------------------------------
 
-  /** Synthesize the context type: one `var` per mapped field, plus `var global` when a residual read
-    * exists.
-    *
-    * Every member is a `var` with a defaulted initialiser, which is the HOLDER'S OWN shape (a bag of
-    * mutable statics) moved onto an instance — so a consumer's bootstrap sets them exactly where it
-    * used to set `Holder.field = …`, and a global rebinding still write-throughs. A hand port writes
-    * an immutable case class with a private constructor, `@implicitNotFound` and accessor sugar
-    * instead; that is precisely what `inject` is for, and the mint deliberately does not guess it. */
+  /** Synthesizes the context type: one `var` per mapped field, plus `var global` when a residual read
+    * exists — the holder's own shape (a bag of mutable statics) moved onto an instance, so a
+    * consumer's bootstrap sets them where it used to set `Holder.field = …`. `inject` a richer type
+    * (immutable case class, accessor sugar) instead of relying on this to guess one. */
   private def mintContext(p: Program, h: ContextHolder, fqn: String, ctxSym: SymId, ctxRef: TypeRepr,
                           statics: Map[SymId, String], globalSym: SymId, mint: Minter): Program =
     val o = Origin.synthetic
@@ -912,20 +697,14 @@ final class GlobalsToImplicitsTransform(
 
   // ---- the DERIVED residual holder ------------------------------------------------------------
 
-  /** The holder survives iff something still READS it — DERIVED, neither a knob nor a fixed answer.
-    *
-    * Every mapped static whose reads all moved onto the context is dropped from the holder; a static
-    * with a residual read stays, and that read is already a counted `residual-global-read` seam. A
-    * deprecated forwarding object would be the ambient `given` with extra steps, and a policy knob
-    * would be a second way to state what the closure has already computed (§5.1's *derived, not
-    * listed*). */
+  /** The holder survives iff something still READS it — derived, not a knob. Every mapped static
+    * whose reads all moved onto the context is dropped; a residual read stays, already counted as a
+    * `residual-global-read` seam. */
   private def residualHolder(p: Program, h: ContextHolder, statics: Map[SymId, String]): Program =
     val gone = statics.keySet.filter(s => !p.usages(s).exists(_.kind == UsageKind.TermRef))
     if gone.isEmpty then return p
     gone.toList.sortBy(_.raw).foreach { s =>
-      // the SUBJECT is the OWNING TYPE, not the member: a dropped member has no declaration for a
-      // note to sit above, so `PorterNote.InBody` puts it at the head of the type's body — which the
-      // emitter looks up by the TYPE's symbol. The member's own name is `subjectFqn`.
+      // subject is the OWNING TYPE: a dropped member has no declaration for `PorterNote.InBody`.
       p.symbolOf(s).foreach(sym => record(Decision(
         kind = Decision.Kind.DroppedMember, subject = sym.owner, subjectFqn = sym.fullName,
         detail = Map(
@@ -948,15 +727,13 @@ final class GlobalsToImplicitsTransform(
   // ---- provenance -----------------------------------------------------------------------------
 
   /** One row per DECLARATION whose emitted signature moved. Nothing for a CALL into a threaded
-    * declaration: its argument is supplied by the `using` in scope, so the call site did not change
-    * at all — which is the whole reason `using` was chosen over an explicit parameter. */
+    * declaration — its argument is supplied by the `using` in scope, so the call site is unchanged. */
   private def recordDecisions(p: Program, h: ContextHolder, need: ContextNeed, ctxFqn: String): Unit =
     val deferredFields = need.deferrals.map(_.field).toSet
     def row(s: SymId, to: String): Unit =
       p.symbolOf(s).foreach(sym => record(Decision(
         kind = Decision.Kind.RetypedSignature, subject = s, subjectFqn = sym.fullName,
-        // no `key`: `Reason.Configured(name, h.holder)` below already carries it, and a decider
-        // that spells it twice renders `key=… key=…` in the porter note.
+        // no `key`: `Reason.Configured(name, h.holder)` below already carries it.
         detail = Map("from" -> "reads the holder's static state, or reaches something that does",
                      "to" -> to) ++ need.via(s).map("via" -> _) ++
           Map("why" -> ("the ambient state this declaration read is threaded to it explicitly; a " +
@@ -979,12 +756,9 @@ final class GlobalsToImplicitsTransform(
       )))
     }
 
-  /** One row per FRAMEWORK-INSTANTIATED type — CLAUDE.md §1(b)'s third answer, recorded.
-    *
-    * It is an `InjectedMember` and not a `RetypedSignature` because that is precisely what happened:
-    * the signature did NOT move (which is the whole point), and what the port gained is a member the
-    * engine put there. The subject is the TYPE, so the porter note sits above the emitted `class`
-    * line — where an agent reading the generated file asks the question. */
+  /** One row per FRAMEWORK-INSTANTIATED type — CLAUDE.md §1(b)'s third answer, recorded. An
+    * `InjectedMember` and not a `RetypedSignature`: the signature did not move, the port gained a
+    * member instead. Subject is the TYPE, so the note sits above the emitted `class` line. */
   private def recordSelfSupplied(p: Program, h: ContextHolder, need: ContextNeed, ctxFqn: String,
                                  bound: Map[SymId, String], src: Map[SymId, String]): Unit =
     need.selfSuppliedClasses.toList.sortBy(_.raw).foreach { c =>
@@ -1004,13 +778,9 @@ final class GlobalsToImplicitsTransform(
       )))
     }
 
-  /** ONE ROW PER TYPE THAT KEPT ITS CONTEXT — `ContextHolder.retain`.
-    *
-    * An `InjectedMember` for `recordSelfSupplied`'s reason and with the opposite emphasis: the
-    * signature DID move (the clause is on the constructors either way) and what this decision is
-    * about is the MEMBER, which is emitted SURFACE a consumer can see and which java never declared.
-    * A reader of the generated file finds a public `val` with no upstream line behind it, and the
-    * note above the `class` is the only place that can say who asked for it and what reads it. */
+  /** ONE ROW PER TYPE THAT KEPT ITS CONTEXT — `ContextHolder.retain`. An `InjectedMember`: the
+    * signature did move (the clause is on the constructors either way), and this decision is about
+    * the MEMBER — emitted surface java never declared. */
   private def recordRetained(p: Program, h: ContextHolder, need: ContextNeed, ctxFqn: String,
                              retained: Map[SymId, String]): Unit =
     val keyOf = boundRetain.getOrElse(h.holder, Map.empty)
@@ -1033,13 +803,8 @@ final class GlobalsToImplicitsTransform(
       )))
     }
 
-  /** ONE ROW PER TYPE THAT CACHED ITS CONTEXT — `ContextHolder.cache`.
-    *
-    * An `InjectedMember` for [[recordRetained]]'s reason: no signature moved (the clauses were
-    * already on the methods) and what the port gained is two members the engine put on the emitted
-    * companion — one of them PUBLIC, so it is surface a consumer can see and java never declared.
-    * The subject is the TYPE, so the note sits above the emitted `object`/`class` line, where a
-    * reader of the generated file finds an accessor with no upstream line behind it. */
+  /** ONE ROW PER TYPE THAT CACHED ITS CONTEXT — `ContextHolder.cache`. An `InjectedMember`: no
+    * signature moved, the port gained two companion members, one PUBLIC. Subject is the TYPE. */
   private def recordCached(p: Program, h: ContextHolder, ctxFqn: String,
                            cached: Map[SymId, String], fired: Set[SymId]): Unit =
     val keyOf = boundCache.getOrElse(h.holder, Map.empty)
@@ -1063,10 +828,8 @@ final class GlobalsToImplicitsTransform(
       )))
     }
 
-  /** A BOUND `cache` ENTRY ON A TYPE THAT DECLARES NO THREADED METHOD — [[recordDeadRetain]]'s shape
-    * at the fifth key, and it fails in exactly the same place: the entry exists BECAUSE some other
-    * declaration's `selfSupplied` expression reads the accessor, so an entry that emitted nothing
-    * leaves that expression naming something that is not there, in a DIFFERENT file from the key. */
+  /** A bound `cache` entry on a type that declares no threaded method: no holder/accessor emitted,
+    * so a `selfSupplied` expression reading the accessor names something not there. */
   private def recordDeadCache(h: ContextHolder, fired: Set[SymId]): Unit =
     boundCache.getOrElse(h.holder, Map.empty).toList
       .filterNot((c, _) => fired(c)).map((_, k) => k).distinct.sorted.foreach { k =>
@@ -1081,11 +844,8 @@ final class GlobalsToImplicitsTransform(
             "constructors, or find out why nothing in it is threaded")
       }
 
-  /** A BOUND `retain` ENTRY ON A TYPE THE CLOSURE NEVER THREADED — [[recordDeadSelf]]'s shape at the
-    * fourth key, and it is the one where silence would be worst: the entry exists BECAUSE some other
-    * declaration's `selfSupplied` expression names the member, so an entry that emitted nothing
-    * leaves that expression naming something that is not there — a compile error in a DIFFERENT file
-    * from the key that caused it. */
+  /** A bound `retain` entry on a type the closure never threaded: no member emitted, so a
+    * `selfSupplied` expression naming it is a compile error in a different file from this key. */
   private def recordDeadRetain(h: ContextHolder, need: ContextNeed): Unit =
     boundRetain.getOrElse(h.holder, Map.empty).toList
       .filterNot((c, _) => need.threadedClasses(c)).map((_, k) => k).distinct.sorted.foreach { k =>
@@ -1098,19 +858,13 @@ final class GlobalsToImplicitsTransform(
             "is not threaded")
       }
 
-  /** A BOUND `selfSupplied` ENTRY THE CLOSURE NEVER REACHED — the third answer's own dead binding.
-    *
-    * `PolicyBinder.bindType` asks *does this program declare this type*, which a real class answers
-    * whether or not the threading would ever have touched it. An entry naming a class the closure
-    * does not reach takes nothing out of the threading and emits no `given` member, so removing it
-    * would change no emitted byte — the exact blindness CT6 measured for `sites`, one key over. */
+  /** A bound `selfSupplied` entry the closure never reached: emits no `given` member, so removing
+    * it changes no emitted byte — the same blindness CT6 measured for `sites`. */
   private def recordDeadSelf(h: ContextHolder, need: ContextNeed): Unit =
     val reached = need.selfSuppliedClasses
     boundSelf.getOrElse(h.holder, Map.empty).toList.filterNot((s, _) => reached(s))
       .map((_, k) => k)
-      // an entry with no expression is already reported as `Malformed`, and one mistake gets one
-      // finding: reported as both, the second reading ("your key names nothing the closure reached")
-      // contradicts the first and the reader has to work out which is true.
+      // an entry with no expression is already `Malformed`; do not also report it here.
       .filter(k => h.selfSupplied.get(k).exists(_.trim.nonEmpty))
       .sorted.foreach { k =>
         deadSites += PolicyFinding(name, s"GlobalsToImplicitsTransform(holders) `${h.holder}`.selfSupplied",
@@ -1138,9 +892,7 @@ object GlobalsToImplicitsTransform:
 
   def isCtor(p: Program, s: SymId): Boolean = p.symbolOf(s).exists(_.name == "<init>")
 
-  /** A symbol MINTER for one holder's run. A value the run owns, never phase-instance state: the
-    * predecessor kept a `ListBuffer` on the phase object and drained it never, so a phase instance
-    * run twice accumulated the first run's symbols into the second's table. */
+  /** A symbol MINTER for one holder's run — a value the run owns, never phase-instance state. */
   final class Minter(program: Program):
     private var next = program.symbols.all.map(_.id.raw).maxOption.getOrElse(-1) + 1
     private val buf  = collection.mutable.ListBuffer.empty[Symbol]
@@ -1167,45 +919,25 @@ object GlobalsToImplicitsTransform:
       buf += Symbol(id, nm, full, flags, owner, info)
       id
 
-    /** THE CLAUSE. Anonymous — the emitted parameter has no name at all, because a context parameter
-      * named after an emitted root package shadows it and breaks every fully-qualified reference in
-      * scope, and this engine emits nothing but fully-qualified references. Nothing reads the name:
-      * `using` resolution and `summon` never do. One per owner, so a declaration visited twice does
-      * not grow two clauses. */
+    /** the clause — anonymous, since a named parameter would shadow a fully-qualified reference and
+      * nothing reads the name (`using`/`summon` never do). One per owner. */
     def usingParam(owner: SymId, ctxFqn: String, ctxRef: TypeRepr, at: Origin): Tree.ValDef =
       val id = usings.getOrElseUpdate(owner,
         member("", MemberKey(ctxFqn, "<using>").render, owner, ctxRef, Flags(isParam = true, isGiven = true)))
       Tree.ValDef(id, TypeTree(ctxRef, at), scala.None, at)
 
-    /** THE THIRD ANSWER's member: `private given <ctx> = <the port's expression>`, at the head of a
-      * framework-instantiated type's body (`ENGINE-LIMITS.md` CT7).
-      *
-      * ANONYMOUS, for the same reason [[usingParam]] is: a name here would be a name this engine
-      * minted into a class whose every other reference is fully qualified, and nothing reads a
-      * given's name. `private`, which is the reference hand port's shape and is what keeps the
-      * member off the type's published surface — it is machinery, not API.
-      *
-      * The RHS is [[Tree.Opaque]] — the node for a term the TIR does not model, kept typed so the
-      * tree stays whole — because the expression is Scala the frontend never saw. It is emitted
-      * verbatim and is NOT type-checked by the engine: the target compiler is the gate, and a
-      * mis-spelled fixture is one error at one line the source map attributes.
-      */
+    /** `private given <ctx> = <the port's expression>`, at the head of a framework-instantiated
+      * type's body (ENGINE-LIMITS CT7). Anonymous and `private` for [[usingParam]]'s reasons — off
+      * the published surface. RHS is [[Tree.Opaque]] (Scala the frontend never saw), emitted
+      * verbatim and not type-checked here; the target compiler is the gate. */
     def givenMember(owner: SymId, ctxFqn: String, ctxRef: TypeRepr, src: String, at: Origin): Tree.ValDef =
       val id = givens.getOrElseUpdate(owner,
         member("", MemberKey(ctxFqn, "<given>").render, owner, ctxRef,
                Flags(isGiven = true, isPrivate = true)))
       Tree.ValDef(id, TypeTree(ctxRef, at), Some(Tree.Opaque(src, ctxRef, at)), at)
 
-    /** …and the SAME member for the COMPANION, where `companion` says the type has one.
-      *
-      * A scala `class` and its `object` are two SCOPES and java's one namespace is what hides it:
-      * the instance member above answers every summon in an instance method and NOT ONE in a
-      * `static` method, whose emitted home is the companion. Two givens, never one with a choice —
-      * a java type routinely reads the context on both sides, and they are in scopes that cannot
-      * see each other, so neither is a substitute for the other and neither can shadow it.
-      *
-      * The static one is anonymous and `private` for the instance one's reasons, and a SECOND id
-      * for the same owner, since a Scala member belongs to exactly one of the two bodies. */
+    /** the same member for the COMPANION, where `companion` says the type has one — two scopes, so
+      * a `static` method's summon needs its own given; a second id for the same owner. */
     def givenMembers(owner: SymId, ctxFqn: String, ctxRef: TypeRepr, src: String, at: Origin,
                      companion: Boolean): List[Tree.ValDef] =
       val inst = givenMember(owner, ctxFqn, ctxRef, src, at)
@@ -1218,20 +950,10 @@ object GlobalsToImplicitsTransform:
 
     private val staticGivens = collection.mutable.Map.empty[SymId, SymId]
 
-    /** THE RETAINED CONTEXT: `val <nm>: <ctx> = <the context expression>`, at the head of a threaded
-      * type's body ([[ContextHolder.retain]]).
-      *
-      * NAMED and PUBLIC, which is the opposite of the two members above and is the whole point:
-      * those two are machinery nothing outside the type reads, and this one exists precisely so that
-      * something outside the type CAN. Its name is emitted surface and comes from the policy for
-      * that reason. It is NOT `given` — the clause is already in scope inside this body, and a second
-      * candidate of the same type would make every `summon` in it ambiguous.
-      *
-      * The RHS is the phase's own context expression (`summon[T]`, or `T.apply()`), built
-      * STRUCTURALLY by the caller: a minted context's FQN is upstream and the package rename runs
-      * last, so a name spliced as text here would be the one reference the rename cannot see.
-      *
-      * One per owner, so a class visited twice does not grow two members. */
+    /** `val <nm>: <ctx> = <context expr>`, at the head of a threaded type's body
+      * ([[ContextHolder.retain]]) — NAMED and PUBLIC, unlike the machinery members above, so code
+      * outside the type can read it. Not `given` — a second candidate would make `summon` ambiguous
+      * inside this body. One per owner. */
     def retainedMember(owner: SymId, nm: String, ctxRef: TypeRepr, rhs: Term, at: Origin): Tree.ValDef =
       val id = retains.getOrElseUpdate(owner,
         member(nm, MemberKey(program.symbolOf(owner).map(_.fullName).getOrElse("?"), nm).render,
@@ -1242,23 +964,11 @@ object GlobalsToImplicitsTransform:
 
     private val caches = collection.mutable.Map.empty[SymId, (SymId, SymId)]
 
-    /** THE CACHED CONTEXT: a PRIVATE `var` holder and a PUBLIC accessor over it, both `static`, so
-      * the emitter puts them on the type's companion — which is where an all-`static` java holder's
-      * threaded methods already are.
-      *
-      * TWO members and not one, and that is the whole design rather than a detail. A public `var`
-      * would let anything write it and would answer `null` before anything had; the accessor is a
-      * `def` that THROWS, which is the same contract java's own `getSkin()`-shaped preconditions
-      * state (`IllegalStateException`) and is louder than java rather than quieter (CLAUDE.md §1's
-      * rule for an obligation the engine's own translation created).
-      *
-      * The holder carries NO initialiser: the emitter renders a `var` with no rhs as
-      * `scala.compiletime.uninitialized`, which is what every other field this engine emits without
-      * one already reads, and `eq null` is exactly the test that answers it.
-      *
-      * The message names the type's SIMPLE name, which is stable under a package rename — the FQN
-      * is not, and a message naming the upstream one would say something false about the file the
-      * reader is holding (§4.56). One pair per owner, so a class visited twice does not grow two. */
+    /** a PRIVATE `var` holder and a PUBLIC accessor, both `static`, on the type's companion. Two
+      * members deliberately: a public `var` would answer `null` before anything wrote it, so the
+      * accessor THROWS instead (`IllegalStateException`, java's own precondition contract, CLAUDE.md
+      * §1). The holder has no initialiser (renders as `scala.compiletime.uninitialized`, tested with
+      * `eq null`). The message names the type's SIMPLE name, stable under a package rename (§4.56). */
     def cachedContext(owner: SymId, nm: String, ctxFqn: String, ctxRef: TypeRepr,
                       at: Origin): (Tree.ValDef, Tree.DefDef) =
       val ownerFqn = program.symbolOf(owner).map(_.fullName).getOrElse("?")
@@ -1284,11 +994,8 @@ object GlobalsToImplicitsTransform:
        Tree.DefDef(acc, Nil, TypeTree(ctxRef, at),
                    Some(Tree.If(cond, boom, Tree.Ident(hold, ctxRef, at), ctxRef, at)), at))
 
-    /** `<held> = <the context expression>` at the HEAD of a threaded method's body — the capture.
-      *
-      * At the head for [[givenMember]]'s reason read at a method: anything in the body that reaches
-      * the accessor (directly, or through a callee this method invokes) must find the value already
-      * there, and java's own lifecycle methods do exactly that. */
+    /** `<held> = <context expr>` at the HEAD of a threaded method's body — the capture, so anything
+      * the body calls finds the value already there. */
     def prependStore(hold: SymId, ctxRef: TypeRepr, rhs: Term, body: Term): Term =
       val store = Tree.Assign(Tree.Ident(hold, ctxRef, body.origin), rhs, TypeRepr.NoType, body.origin)
       body match

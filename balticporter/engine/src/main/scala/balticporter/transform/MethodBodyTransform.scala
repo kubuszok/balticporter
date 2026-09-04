@@ -3,72 +3,22 @@ package balticporter.transform
 import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
 import balticporter.tir.*
 
-/** Replace a named method's BODY with ready-made Scala, keeping everything else about the class
-  * mechanically translated.
+/** Replaces a named method's body with ready-made Scala, keeping the rest of the class
+  * mechanically translated — the seam for "keep this class, replace these bodies" that
+  * `dropTypes`/`inject` (whole file) and `dropMethods` (removal only) cannot express. Runs as a
+  * phase so the replacement lands in the TIR before checks read it. Refuses constructors:
+  * `CtorFunnel` derives the primary constructor and replayable `super(args)` from bodies.
+  * CLAUDE.md §1(b): mechanism is universal, `bodies` is per-library policy; empty = no-op.
   *
-  * ==The gap this fills==
-  * A port has two existing seams for code it must not translate mechanically, and they are both
-  * whole-declaration: `Substitutions.dropTypes` removes a TYPE and `inject` supplies a replacement
-  * FILE; `dropMethods` removes a METHOD and supplies nothing. Neither can say *keep this class,
-  * replace these two bodies* — so a class that is 200 lines of ordinary code plus one method the
-  * target platform cannot express had to be dropped and hand-written in full, and from that moment
-  * it no longer tracks upstream.
-  *
-  * The worked example is Ashley's `Engine.createComponent`, which calls
-  * `ClassReflection.newInstance(componentType)` and catches `ReflectionException` — two types the
-  * libGDX port drops, because reflective instantiation is the one thing Scala.js and Scala Native
-  * cannot do. Everything else in `Engine` ports mechanically. Dropping the type to fix one method
-  * would fork 200 lines; dropping the method leaves its callers with nothing.
-  *
-  * ==Why a PHASE and not a `Substitutions` field==
-  * Running as a phase means the replacement lands in the TIR *before* the checks read it. The
-  * original body's references to dropped types are gone by the time `PortabilityCheck`,
-  * `RewriteTrace` and `SubstitutionCheck` run, so each reports the truth about what will ship. A
-  * text substitution applied at emission would leave every check reasoning about a body the port
-  * does not emit — the [[balticporter.tir.OmissionCheck]] failure mode in a new place.
-  *
-  * `Tree.Opaque` is the existing node for "a term the TIR does not model, kept typed so the tree
-  * stays whole"; [[PanamaFfiTransform]] already replaces a `native` method's body with one. This
-  * phase is that pattern with the source text supplied by policy instead of generated.
-  *
-  * ==Kind==
-  * CLAUDE.md §1(b): the MECHANISM — locate a member by key, swap its body, keep its signature — is
-  * a fact about Java and Scala and is the same for every library. WHICH members and WHAT Scala is a
-  * fact about one library and arrives as a constructor parameter. An empty map is a no-op.
-  *
-  * ==What it deliberately does NOT do==
-  *   - **It never changes a signature.** The body is replaced; parameters, type parameters and the
-  *     return type stay exactly as translated, so every call site still type-checks and
-  *     `RewriteTrace`'s signature-consistency check remains meaningful. A port that needs a
-  *     different signature wants `dropMethods` plus a replacement type, not this.
-  *   - **It refuses CONSTRUCTORS.** `CtorFunnel` makes whole-program decisions about which
-  *     constructor becomes the Scala primary and which `super(args)` can be replayed, all derived
-  *     from constructor BODIES. Swapping one underneath it would silently invalidate that analysis,
-  *     so a `<init>` key is reported as `Malformed` rather than honoured.
-  *
-  * @param bodies
-  *   member key → the Scala to use as that member's body. Keys follow the same convention as
-  *   `Substitutions.dropMethods`: `owner#name` matches EVERY overload of that name, and
-  *   `owner#name(P1,P2)` — the erased parameter type SIMPLE names — matches exactly one. Prefer the
-  *   precise form; the bare form on an overloaded member gives every overload the same body, which
-  *   is almost never what is meant and is reported as `Unverifiable`.
-  *
-  *   The text is spliced at term position, so a multi-statement body must be a block: `{ … }`. It
-  *   is emitted verbatim and is NOT type-checked by the engine — the target compiler is the gate,
-  *   and CLAUDE.md §6 applies to what you write (fully-qualified names, no imports, `args*` for a
-  *   vararg spread).
+  * @param bodies member key (`owner#name` or precise `owner#name(P1,P2)`) → Scala source spliced
+  *   verbatim at term position (block form for multi-statement); not type-checked by the engine.
   */
 final class MethodBodyTransform(val bodies: Map[String, String] = Map.empty)
     extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound:
   def name: String = "method-body-substitution"
 
-  /** What the RUN resolved each declared key to, before the pipeline started (§8.1) — and the only
-    * thing this phase is allowed to learn about which members its keys name.
-    *
-    * '''`bySym` is where the bare-versus-precise precedence now lives, and it is ORDERED.''' With
-    * both `X#m` and `X#m(int)` declared, the precise key must win at the member both name; built
-    * from an unordered map it would win or lose by hash order, which is the kind of thing that is
-    * right for a year and then is not. Bare first, precise last, both sorted. */
+  /** What the run resolved each declared key to. `bySym` orders bare keys before precise ones so
+    * a precise `X#m(int)` wins over a bare `X#m` at the same member deterministically. */
   private var bound: Map[String, Binding[List[PolicyBinder.Hit]]] = Map.empty
   private var bySym: Map[SymId, String] = Map.empty
   private var records: List[PolicyBinder.Record] = Nil
@@ -81,26 +31,16 @@ final class MethodBodyTransform(val bodies: Map[String, String] = Map.empty)
       .partition((k, _) => MemberKey.parse(k).toOption.exists(_.isBare))
     bySym = (bare ++ precise).flatMap((k, b) => b.toOption.getOrElse(Nil).flatMap(_.sym).map(_ -> k)).toMap
 
-  /** Two modules that replace different bodies do not disagree about the shared SURFACE — a body is
-    * not a signature, and exactly one module emits each type. The keys are fingerprinted anyway:
-    * disagreeing about *which* members are hand-supplied is a policy divergence worth surfacing,
-    * and the cost of reporting it is one string. The body text is included because a base and a
-    * dependent that supply different Scala for one member have certainly made a mistake. */
+  /** A body is not a signature, so two modules replacing different bodies don't disagree about
+    * the shared surface — but keys are fingerprinted anyway, including body text, since a base and
+    * a dependent supplying different Scala for one member is a policy mistake worth surfacing. */
   def surfaceFingerprint: String =
     bodies.toList.sorted.map((k, v) => s"$k=${v.hashCode.toHexString}").mkString(",")
 
-  /** Independent keys UNION; same key with different body REFUSES — because a body is a replacement
-    * somebody hand-wrote, and two different replacements for one member is a conflict only a human
-    * can resolve.
-    *
-    * This merge is what lets a dependent declare its own `MethodBodyTransform` alongside the base's
-    * inherited one — the base replaces 20 bodies in libGDX core, the dependent replaces 1 in its own
-    * module, and `surfaceFold` composes them into one instance. Without it, every dependent that
-    * inherits the base's instance and also declares its own gets a fatal `SurfaceDivergence`.
-    *
-    * Same key, same body (by value equality on the text) is accepted silently — it is the same
-    * decision stated twice, which a `base.extendedBy(…)` can do legitimately when the key names a
-    * member visible from both modules. */
+  /** Independent keys union; same key with a different body refuses (a conflict only a human can
+    * resolve). Same key, same body is accepted silently — the same decision stated twice, which
+    * `base.extendedBy(…)` can do legitimately. Lets a dependent's own instance merge with the
+    * base's via `surfaceFold` instead of a fatal `SurfaceDivergence`. */
   def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
     case o: MethodBodyTransform =>
       val conflicts = for
@@ -120,20 +60,14 @@ final class MethodBodyTransform(val bodies: Map[String, String] = Map.empty)
 
   private var applied: List[String] = Nil
 
-  /** Declared keys that matched nothing, plus the two shapes this phase refuses.
-    *
-    * The never-fired half comes from the BINDING and is therefore complete before [[run]]; the two
-    * refusals are facts about what the bound members ARE, which is also knowable without running.
-    * The private `var report` this replaces could only speak after a run, so a phase list that
-    * never reached this phase reported an empty policy — silence that read as "every key fired". */
+  /** Declared keys that matched nothing, plus the two shapes this phase refuses — both known from
+    * the binding, complete before [[run]]. */
   def policyReport: PolicyReport =
     PolicyReport.fromBindings(records) ++ PolicyReport(
       bound.toList.sortBy(_._1).flatMap { (k, b) =>
         b match
           case Binding.Bound(_, hits, _) =>
-            // A REFUSED key is not an UNMATCHED key. Reported as both, the second reading ("your key
-            // is a typo") contradicts the first ("your key names a constructor") and the reader has
-            // to work out which is true.
+            // a refused key is not an unmatched key — report them separately, not both.
             val ctors = hits.count(_.key.name == "<init>")
             val refuse = Option.when(ctors > 0)(
               PolicyFinding(name, "MethodBodyTransform", k, PolicyIssue.Malformed,
@@ -150,10 +84,7 @@ final class MethodBodyTransform(val bodies: Map[String, String] = Map.empty)
           case _ => Nil
       })
 
-  /** Member keys whose body was actually replaced, in a stable order — so a run can state the
-    * number rather than leaving it to be inferred. A replaced body also changes that member's
-    * digest in `srcmap`/`members.tsv`, which is what makes the change visible in a baseline diff
-    * even when no count moves (CLAUDE.md §3: the translation and its check arrive together). */
+  /** Member keys whose body was actually replaced, in a stable order. CLAUDE.md §3 */
   def substituted: List[String] = applied.sorted
 
   override def run(program: Program): Program =
@@ -168,16 +99,12 @@ final class MethodBodyTransform(val bodies: Map[String, String] = Map.empty)
         case None => d
         case Some(k) =>
           val nm = program.symbolOf(d.symbol).map(_.name).getOrElse("")
-          // The refusal is REPORTED by `policyReport`, from the binding; here it only declines
-          // to rewrite.
+          // refusal is reported by policyReport from the binding; here it only declines to rewrite.
           if nm == "<init>" then d
           else
             done += k
-            // DECISION PROVENANCE, one row per REPLACED MEMBER. Already declaration-level by
-            // construction — this phase's unit of work IS a member — so there is nothing to
-            // group. The signature is deliberately absent from `detail`: it did not move (that
-            // is the phase's contract), and a call site cannot see from it that the behaviour
-            // behind it is not upstream's. This row is the only place that says so.
+            // one decision row per replaced member; signature omitted from detail since it is
+            // unchanged — this row is the only place that says the behaviour isn't upstream's.
             record(Decision(
               kind       = Decision.Kind.SubstitutedBody,
               subject    = d.symbol,
@@ -201,9 +128,7 @@ final class MethodBodyTransform(val bodies: Map[String, String] = Map.empty)
         case c: Tree.ClassDef => rewrite(c)
         case other            => other
       }
-      // Walk enum constant bodies too — a constant's body is a SEPARATE field (`EnumCase.body`),
-      // and without this a key naming a member inside a constant is matched by the binder but never
-      // visited by the rewriter (ENGINE-LIMITS.md T23).
+      // walk enum constant bodies too — a constant's body is a separate field. ENGINE-LIMITS T23
       val cases = cd.enumCases.map { ec =>
         ec.copy(body = ec.body.map {
           case d: Tree.DefDef => rewriteDef(d, owner)

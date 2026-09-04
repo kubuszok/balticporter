@@ -3,20 +3,11 @@ package balticporter.transform
 import balticporter.tir.*
 
 /** Java lets a method reassign its parameters; Scala parameters are `val`. For each parameter
-  * written to in its method body, rename the PARAMETER to `name$arg` and prepend a mutable
-  * local `var name: T = name$arg` — so every existing body reference (which resolves by SymId
-  * to the parameter) now binds to the `var`, and the reassignment type-checks.
-  *
-  * A structural Java→Scala transform, symbol-driven: the parameter symbol is repurposed as the
-  * local `var` (keeping its name and all its references), and a fresh symbol takes the actual
-  * parameter slot. No reference rewriting is needed — identity does the work.
-  *
-  * KNOWN LIMIT, out of this transform's shape: a LAMBDA's own parameter. Java lets one be
-  * reassigned (`(x) -> { x = x + 1; return x; }` compiles); Scala's function parameters are `val`,
-  * so the emitted lambda does not. This pass rewrites `DefDef.paramss` and a `Tree.Lambda` has no
-  * `DefDef`, so nothing here reaches it. It degrades loudly — the emitted `x = x + 1` is a compile
-  * error at the port, not a behavioural difference — and fixing it means giving `Tree.Lambda` the
-  * same param-slot rewrite, not widening the scan.
+  * written to in its method body, renames the PARAMETER to `name$arg` and prepends a mutable
+  * local `var name: T = name$arg`, so every existing body reference binds to the `var` and the
+  * reassignment type-checks — symbol-driven, no reference rewriting needed.
+  * KNOWN LIMIT: a LAMBDA's own reassigned parameter is not reached (no `DefDef` to rewrite);
+  * degrades loudly as a compile error, not a behavioural difference.
   */
 final class MutableParamsTransform extends Phase:
   def name = "reassigned-params->var"
@@ -39,10 +30,7 @@ final class MutableParamsTransform extends Phase:
       written.foreach { p =>
         program.symbolOf(p).foreach { s => argOf(p) = mint(s); nowVar += p }
       }
-    // walk with the STANDARD traversal: it reaches every `DefDef` in the tree, INCLUDING the
-    // methods of an anonymous class (`new ClickListener() { … }`), which a hand-rolled recursion
-    // over class bodies alone does not — and libGDX reassigns parameters inside listener bodies
-    // constantly (`ScrollPane`'s `deltaX = 0`, `Interpolation`'s `a = a * 2`).
+    // StandardTraversal reaches every `DefDef`, including an anonymous class's methods (§3).
     locally {
       given Program = program
       val scan = new Phase:
@@ -52,17 +40,12 @@ final class MutableParamsTransform extends Phase:
     }
     if argOf.isEmpty then return program
 
-    // param symbol becomes a mutable local (same name/id → references follow); fresh arg symbol
-    // (isParam) takes the slot. Drop isParam/isMutable bookkeeping accordingly.
+    // param symbol becomes a mutable local (same name/id -> references follow); fresh arg symbol
+    // (isParam) takes the slot.
     val symbols0 = program.symbols.all.map { s =>
       if nowVar(s.id) then s.copy(flags = s.flags.copy(isParam = false, isMutable = true)) else s
     }
-    // DECISION PROVENANCE: one row per METHOD whose parameter SLOTS moved — never one per
-    // parameter, since a method has ONE emitted signature and that is what an agent is reading.
-    // The parameter symbol keeps its name and becomes the `var`; a fresh `name$arg` takes the
-    // slot, so the emitted signature really does differ from java's and nothing else in the port
-    // says why. Universal: java lets a method reassign its parameters and scala's are `val`, which
-    // is true of every codebase and takes no policy.
+    // one decision row per METHOD whose parameter slots moved, not per parameter.
     argOf.keys.toList
       .flatMap(p => program.symbolOf(p).map(s => s.owner -> s.name))
       .groupBy(_._1)
@@ -104,11 +87,9 @@ final class MutableParamsTransform extends Phase:
       Tree.ValDef(v.symbol, v.tpt, Some(Tree.Ident(argOf(v.symbol), v.tpt.tpe, o)), o))
     val isCtor = summon[Program].symbolOf(d.symbol).exists(_.name == "<init>")
     val body = d.rhs match
-      // `copy`, never a fresh `Tree.Block`: the block carries end-of-body trivia, and a rebuild
-      // from its parts silently drops whatever field the rebuild does not name.
+      // `copy`, never a fresh `Tree.Block`: preserves end-of-body trivia the rebuild would drop.
       case Some(b @ Tree.Block(stats, _, _, _, _)) =>
-        // a constructor body must LEAD with `this(...)`/`super(...)` delegation — insert the
-        // `var` shadows right AFTER it, not before.
+        // a constructor body must LEAD with `this(...)`/`super(...)` delegation.
         stats match
           case (deleg @ Tree.Apply(Tree.Select(_, m, _, _), _, _, _, _)) :: rest
               if isCtor && summon[Program].symbolOf(m).exists(_.name == "<init>") =>
@@ -118,21 +99,10 @@ final class MutableParamsTransform extends Phase:
       case None        => Tree.Block(prelude, Tree.Literal(Constant.UnitC, TypeRepr.NoType, o), TypeRepr.NoType, o)
     d.copy(paramss = paramss2, rhs = Some(body))
 
-  /** A constructor's leading `super(…)`/`this(…)` reads the PARAMETER SLOTS, never the `var`s.
-    *
-    * The `var` is prepended AFTER the delegation (JLS 8.8.7 makes the delegation the constructor's
-    * first statement), so at that point it does not exist yet — and the value is the same either
-    * way, because nothing can have run to reassign it. Left naming the repurposed parameter symbol,
-    * the delegation names a local declared below it.
-    *
-    * That reads as a cosmetic ordering bug and is not, because of where the delegation ENDS UP: the
-    * constructor funnel hoists it into the emitted `extends` clause, whose arguments are evaluated
-    * before the class body exists at all. So a promoted constructor emitted
-    * `class Base(byteOffset$arg: Int, …) extends Segment(…, byteOffset, …)` with `var byteOffset =
-    * byteOffset$arg` in the body — `Not found: byteOffset`, on a class whose parameter is right
-    * there. Fixing it HERE rather than at the funnel keeps one answer for both shapes: a secondary
-    * constructor that is not promoted has the same statement in the same wrong order.
-    */
+  /** A constructor's leading `super(…)`/`this(…)` reads the PARAMETER SLOTS, never the `var`s — the
+    * `var` is prepended AFTER the delegation (JLS 8.8.7), so it does not exist yet there. Left
+    * naming the repurposed parameter symbol, a promoted constructor's funnel hoists the delegation
+    * into the `extends` clause, evaluated before the class body — `Not found: byteOffset`. */
   private def slotsInDelegation(deleg: Term)(using Program): Term =
     val toSlot = new Phase:
       def name = "reassigned-params->var/delegation"
@@ -140,31 +110,10 @@ final class MutableParamsTransform extends Phase:
         argOf.get(t.sym).map(a => t.copy(sym = a)).getOrElse(t)
     StandardTraversal.mapTerm(toSlot, deleg)
 
-  /** Parameters (from `params`) that are the target of an assignment anywhere in `t`.
-    *
-    * Scanned with [[StandardTraversal.scanTerm]] rather than a private recursion. The recursion
-    * this replaced enumerated node kinds by hand and had gone stale in the ways such a list always
-    * does — no `NewArray` case, so `new int[]{ p++ }` and `new int[p++]` were not seen; no
-    * `Repeated`, so a vararg argument `f(p++)` was not seen; and, worst because it is ordinary
-    * Java, `Block.stats` was filtered to `case x: Term`, which DROPS every `ValDef` — so the
-    * initialiser of a local (`int c = s.charAt(i++)`) was not scanned at all.
-    *
-    * All three degrade loudly rather than silently: the parameter stays a `val`, the emitted
-    * reassignment does not compile, and the port's error count says so. That is why this is
-    * hardening and not a bug fix — but "loud" is only true while somebody is reading the count,
-    * and the node list would have gone stale again at the next `Tree` case added. Missing a node
-    * kind is now impossible by construction; the map traversal is total over `Term`.
-    *
-    * Scanning MORE of the tree cannot produce a false positive: `params` holds this method's own
-    * parameter symbols, and a symbol identifies its binder uniquely. The two node kinds the scan
-    * newly descends into — a `Tree.Lambda` body and a `Tree.New`'s anonymous-class body — cannot
-    * assign an ENCLOSING method's parameter in legal Java at all, which is why the old recursion
-    * got away with returning `Nil` for both. javac, on `Runnable lam(int p) { return () -> { p = p
-    * + 1; }; }`, says "local variables referenced from a lambda expression must be final or
-    * effectively final", and the same for an inner class. So those two cases are genuinely
-    * unreachable HERE and no test pins them; what an anonymous method does to its OWN parameters
-    * is reached by the `DefDef` walk in [[run]] instead, and is pinned there.
-    */
+  /** Parameters (from `params`) that are the target of an assignment anywhere in `t`. Uses
+    * [[StandardTraversal.scanTerm]] — total over `Term`, so no node kind can be missed (§3).
+    * Descending into a `Tree.Lambda` body or a `Tree.New`'s anonymous-class body cannot false-positive:
+    * javac refuses reassigning an enclosing method's parameter from either. */
   private def reassignedIn(t: Term, params: Set[SymId])(using Program): Set[SymId] =
     StandardTraversal.scanTerm(t, Set.empty[SymId]) { (found, x) =>
       x match
