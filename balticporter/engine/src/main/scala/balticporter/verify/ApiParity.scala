@@ -2,11 +2,8 @@ package balticporter.verify
 
 import balticporter.core.*
 
-/** Structural API-parity: every non-private member of the ORIGINAL Java unit must be
-  * present in the emitted Scala skeleton (the computed covenant — DESIGN.md §3.11 gate 2).
-  * Nothing can be omitted silently; constructor shapes are exempt (the funnel legally
-  * restructures them), private members are not required.
-  */
+/** Every non-private member of the original Java unit must appear in the emitted Scala skeleton.
+  * Constructor shapes are exempt (the funnel restructures them); private members are not required. */
 object ApiParity:
 
   final case class Expectation(path: String, name: String, arity: Option[Int]):
@@ -28,7 +25,6 @@ object ApiParity:
     val statics =
       t.staticMethods.filter(m => visible(m.mods)).map(m => Expectation(companion, m.name, Some(m.params.length))) ++
         t.staticFields.filter(f => visible(f.mods)).map(f => Expectation(companion, f.name, None))
-    // nested static types live in the companion object of the outer type
     val nested = t.nested.flatMap(n => ofType(n, companion))
     self :: instance ++ statics ++ nested
 

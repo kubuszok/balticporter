@@ -2,19 +2,11 @@ package balticporter.verify
 
 import scala.meta.*
 
-/** Declaration-skeleton comparison between engine output and the accepted hand port.
+/** Skeleton comparison between engine output and the accepted hand port.
   *
-  * Compares the member surface (kind + name + arity, nested via owner paths), not
-  * types or bodies — Tier 2/3 idiom passes (DataView, Nullable, package renames)
-  * change types everywhere, but the *shape* of a faithful port must match modulo a
-  * small set of known idioms. Divergences are classified (the corpus-diff gate, DESIGN.md §3.11):
-  *
-  *   - SKELETON_EQUAL — surfaces identical
-  *   - IDIOM          — every difference explained by a known hand-port idiom
-  *                      (getter/setter collapse today; grows as idioms are cataloged)
-  *   - DIFF           — unexplained differences (missing rule, rule bug, or hand-port
-  *                      divergence to investigate)
-  */
+  * Compares kind + name + arity, nested via owner paths. Divergences are classified as
+  * `SkeletonEqual`, `Idiom` (getter/setter collapse, mutability, static placement),
+  * `HandAdditions`, or `Diff`. */
 object SkeletonDiff:
 
   final case class Member(path: String, kind: String, name: String, arity: Int):
@@ -90,17 +82,13 @@ object SkeletonDiff:
       extraInHand: List[Member],    // hand port has, engine lacks
       explained: List[String],
   ):
-    /** Stable fingerprint of the (post-idiom) diff — accepted-divergence ledger entries
-      * pin this, so a changed diff invalidates the acceptance instead of hiding it.
-      */
+    /** Stable fingerprint of the post-idiom diff. Ledger entries pin this. */
     def fingerprint: String =
       val text = (missingInHand.map("−" + _.key) ++ extraInHand.map("+" + _.key)).sorted.mkString("\n")
       val d = java.security.MessageDigest.getInstance("SHA-256").digest(text.getBytes("UTF-8"))
       d.take(6).map(b => f"$b%02x").mkString
 
-  /** Applies per-file rename mappings (manifest `Renames:` entries) to engine members
-    * before comparison — names and path segments both.
-    */
+  /** Apply per-file rename mappings to engine members before comparison. */
   def applyRenames(members: List[Member], renames: Map[String, String]): List[Member] =
     if renames.isEmpty then members
     else
@@ -117,8 +105,7 @@ object SkeletonDiff:
     var extra = hand.filterNot(m => engineKeys.contains(m.key))
     val explained = List.newBuilder[String]
 
-    // Idiom: getter/setter collapse — engine `def getX/0` where the hand port (anywhere
-    // in its full skeleton, including val class params) exposes the property `x`.
+    // Idiom: getter/setter collapse
     def propName(n: String, prefix: String): Option[String] =
       if n.length > prefix.length && n.startsWith(prefix) then
         Some(n(prefix.length).toLower.toString + n.drop(prefix.length + 1))
@@ -136,14 +123,13 @@ object SkeletonDiff:
     }
     setterLike.foreach(s => explained += s"setter-collapse: ${s.name}")
     missing = restMissing2
-    // the hand-port property members that explain collapsed getters/setters are expected
+    // hand-port property members explained by collapsed getters/setters
     val explainedProps = (getterLike ++ setterLike).flatMap { m =>
       List("get", "is", "set").flatMap(propName(m.name, _)).flatMap(p => List(p, p + "_="))
     }.toSet
     extra = extra.filterNot(h => explainedProps.contains(h.name))
 
-    // Idiom: property-kind drift — same path+name as val/var/plain-ctor-param on the
-    // other side (mutability narrowed, or val param vs captured plain param).
+    // Idiom: property-kind drift (val/var/param on the other side)
     val propKinds = Set("val", "var", "param")
     val (varToVal, restMissing3) = missing.partition { m =>
       propKinds.contains(m.kind) &&
@@ -154,10 +140,7 @@ object SkeletonDiff:
     val varToValNames = varToVal.map(v => (v.path, v.name)).toSet
     extra = extra.filterNot(h => varToValNames.contains((h.path, h.name)))
 
-    // Idiom: static placement — the engine emits Java statics in the companion
-    // (/X$/m); sge-style hand ports freely move members between the class and its
-    // object (or nest types in the class body). Pair members that agree on
-    // kind+name+arity and whose paths differ only by the `$` companion marker.
+    // Idiom: static placement (class vs companion path differs by `$`)
     def normPath(path: String): String = path.split('/').map(_.stripSuffix("$")).mkString("/")
     val (placed, restMissing4) = missing.partition { m =>
       extra.exists(h => normPath(h.path) == normPath(m.path) && h.kind == m.kind && h.name == m.name && h.arity == m.arity)
@@ -167,8 +150,7 @@ object SkeletonDiff:
     val placedKeys = placed.map(m => (normPath(m.path), m.kind, m.name, m.arity)).toSet
     extra = extra.filterNot(h => placedKeys.contains((normPath(h.path), h.kind, h.name, h.arity)))
 
-    // plain ctor params are constructor-locals, not API surface — they exist in the
-    // skeleton only as evidence for the val↔param idiom above
+    // plain ctor params: evidence for the val/param idiom above, not API surface
     missing = missing.filterNot(_.kind == "param")
     extra = extra.filterNot(_.kind == "param")
 
@@ -176,8 +158,6 @@ object SkeletonDiff:
       if missing.isEmpty && extra.isEmpty then
         if explained.result().isEmpty then Status.SkeletonEqual else Status.Idiom
       else if missing.isEmpty then
-        // the engine lost nothing; the hand port added members (factories, helpers) —
-        // "equal or better" territory, but listed for review
         Status.HandAdditions
       else Status.Diff
     Result(status, missing, extra, explained.result())
