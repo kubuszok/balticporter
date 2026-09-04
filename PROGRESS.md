@@ -1405,3 +1405,47 @@ M5.11). Every count and `tests.tsv` row identical to the scala-cli lane at the s
 Residue: the migration (Spoon parse of ~600 java files + pipeline + checks, ~100 s) is now the
 bottleneck; a per-step timer and a parse cache keyed on the vendored tree's hash are the next
 instrument and the next candidate respectively.
+
+### 13.27 Body substitutions — audit (2026-09-04)
+
+Every `MethodBodyTransform` key in the corpus, classified per the design card (§8): (i) hand-port
+divergence with a recorded verdict, (ii) engine gap papered over, (iii) reflection replacement
+(Phase 1.11 `RegistryTransform`, P10), (iv) upstream version break (§3.5 fourth question). No
+`.conf`-spelled `bodies`/`methodBody` keys exist (grep over `balticporter/corpus/ports/*/*.conf`
+hit only prose). Grouped rows share one classification; every key is listed.
+
+| key(s) | port | class | replacement (item/id or verdict row) | note |
+|---|---|---|---|---|
+| `VisTextField#focusField`, `#next(boolean)`, `$TextFieldClickListener#touchDown(...)` | visui | iv | item 6 | gdx 1.14.0 (VisUI target) vs vendored 1.14.1 `OnscreenKeyboard.show` |
+| `Dialogs#getStackTrace(Throwable)`, `#getStackTrace(Throwable,CharArray)` | visui | ii | item 7 | missing retarget row `CharArray#append(Object)` |
+| `JsonMatcherTests#toString(JsonMatcher,String[])`, `#toString(Array)` | gdx-test | i | uncited — no `ported/sge/divergence-verdicts.tsv` | comment 3.1ae: sge dropped CharArray builder API |
+| `AssetManager#clear` | gdx | ii | item 11 (untriaged) | no comment recorded; nested synchronized/foreachKey, unattributed |
+| `AssetManager#getAssetFileName` | gdx | ii | item 11 | `return` inside a retargeted ForEach lambda not lowered to `boundary.break` |
+| `FirstPersonCameraController#keyUp(int)` | gdx | ii | item 11 | `IntIntMap#remove(K,int)` missing retargetRewrite row |
+| `ModelLoader#getDependencies`, `ParticleEffectLoader#getDependencies` | gdx | ii | item 11 | Tuple2 construct-then-assign(`_1`/`_2`) pattern unhandled |
+| `Node#calculateBoneTransforms(boolean)`, `ModelInstance#invalidate(Node)` | gdx | ii | item 11 | `IndexedField` retargetRewrite missing for OrderedMap `keys(i)`/`values(i)` |
+| `NodePart#set(NodePart)`, `MapProperties#putAll(MapProperties)` | gdx | ii | item 11 (likely permanent) | `collection-internal`: covariant `putAll` formal has no image on invariant target |
+| `Selection#iterator` | gdx | ii | item 1-family | Chain yields `Iterator[T]`; wrap until "Array retarget wave" aligns types |
+| `Selection#toArray`, `#toArray(Array)` | gdx | ii | item 1b (re-check: may now be closed) | local `MkArray` given via `createRef`, same shape item 1b fixed |
+| `ArraySelection#validate` | gdx | ii | item 11 | `RetargetBoundaryCheck` `IteratorRemove` kind: Chain iterator has no `.remove()` |
+| `SelectBox#getSelectedIndex`, `List#getSelectedIndex` | gdx | ii | K37 | `collection-internal`: `OrderedSet <: ObjectSet` has no image in lls |
+| `BitmapFont#<init>(BitmapFontData,TextureRegion,boolean)` | gdx | ii | item 11 | `Array.with(arr)` is a static/companion call; retargetRewrites handles instance calls only |
+| `AssetLoadingTask#removeDuplicates` | gdx | ii | item 11 | redundant `preserveOrder` write for DynamicArray's fixed-order semantics |
+| `MapLayers#getByType(Class)`, `MapObjects#getByType(Class)` | gdx | ii | item 1b-family (bounded tyvar) | inline `MkArray` given resolves only for `T <: AnyRef`, not `T <: MapLayer` |
+| `Actor#<clinit>` | gdx | ii | item 11 | `Construct` rewrite misses `new DynamicArray()` inside a companion static-init lambda |
+| `PixmapBinaryLoaderHack#load`, `GLTFBinaryExporter#savePNG` | gltf | i | uncited — no `ported/sge-gltf/divergence-verdicts.tsv`; cites CLAUDE.md §3.5 in-line | GWT reflection workaround; hand port makes the direct call instead |
+| `GLTFMaterialExporter#ext` | gltf | iii | Phase 1.11 / P10 | Class-keyed factory registry (`GLTFExtensionFactories`), same shape as Ashley's |
+| `Parser#compileTokenPattern`, `#getResetReplacement` | textra | ii | K37 / item 11 | `CollectChainedCall` residue on `collection-retarget` |
+| `TextraListBox#getSelectedIndex`, `TextraSelectBox#getSelectedIndex` | textra | ii | K37 | `collection-internal`: `OrderedSet` does not extend `ObjectSet` |
+| `VfxGLUtils#<clinit>`, `VfxFrameBuffer#getBoundFboHandle`, `VfxGLUtils#getBoundFboHandle` | vfx | ii | CT11 / item 5-family | static-init needs threaded `Sge` context; holder pattern not yet generalised |
+| `CircularBuffer#resize(int)` | ai | ii | item 1b (re-check: may now be closed) | `ArrayReflection.newInstance` for `T[]` component == Object; same shape as `typeVarEvidence` fix |
+| `Task#cloneTask()` | ai | ii | item 11 (untriaged) | verbatim java contract refusal (`@throws TaskCloneException`); no generic emitter for it |
+| `...openTask(String,boolean)`, `...findMetadata(Class)`, `...getField(Class,String)`, `...setField(Field,Task,Object)`, `...castValue(Field,Object)` (`BehaviorTreeParser$DefaultBehaviorTreeReader`) | ai | iii | Phase 1.11 / P10 | named verbatim in the design card as the reflection-replacement family |
+| `Engine#createComponent(Class)` | ashley | iii | Phase 1.11 / P10 + `divergence-verdicts.tsv:146` (`Engine#componentFactories`, justified) | `ComponentFactories` registry |
+| `PooledEngine$ComponentPools#freeAll(Array)` | ashley | ii | item 11 | retarget boundary: raw `Array` param is `DynamicArray[?]`, element access needs explicit cast |
+| `PooledEngine$ComponentPools#clear()` | ashley | ii | item 11 | `TypeRedirectTransform` resolved the lambda formal as the parent `Pool[?]`, not the retyped field type |
+| `ImmutableArrayTests#forbiddenRemoval` | ashley | i | `divergence-verdicts.tsv:141` (`ImmutableArraySuite`, justified) | java `iterator().remove()` throws; Scala's `Iterator` has none — verify read-only instead |
+
+Counts by class: i=5, ii=33, iii=7, iv=3 (48 keys, 29 grouped rows).
+Counts by port: visui=5 (iv=3, ii=2), gdx=22 (i=2 test, ii=20 main), gltf=3 (i=2, iii=1),
+textra=4 (ii=4), vfx=3 (ii=3), ai=7 (ii=2, iii=5), ashley=4 (i=1, ii=2, iii=1).
