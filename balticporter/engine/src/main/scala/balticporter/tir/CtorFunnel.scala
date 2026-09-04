@@ -838,6 +838,27 @@ object CtorFunnel:
       case TypeRepr.PolyType(_, TypeRepr.MethodType(ps, _, _)) => ps.map(_._2)
     }.getOrElse(Nil)
 
+  /** Substitution map for CONSTRUCTOR type parameters (JLS 8.8.4 generic constructors).
+    * A child primary cannot declare method-level type parameters, so each is replaced with a
+    * use-site wildcard bounded by its upper bound: `T extends Texture` becomes `? <: Texture`.
+    * The bounds are themselves substituted through `classSubst` (a class-level `ParentSubst` map)
+    * so that a bound referencing a class type parameter is resolved.
+    * When `targets` names ALL parent constructors, the map covers every constructor type parameter
+    * the post-body params or formals might reference. // G25, card 4e */
+  private def ctorTypeParamSubst(program: Program, targets: List[SymId],
+                                  classSubst: Map[SymId, TypeRepr]): Map[SymId, TypeRepr] =
+    targets.flatMap { target =>
+      program.definitionOf(target).collect { case d: Tree.DefDef => d }.toList.flatMap { d =>
+        d.tparams.map { tp =>
+          val bounds = program.symbolOf(tp.symbol).map(_.info).collect {
+            case TypeRepr.TypeBounds(lo, hi) => TypeRepr.TypeBounds(
+              ParentSubst.subst(lo, classSubst), ParentSubst.subst(hi, classSubst))
+          }.getOrElse(TypeRepr.AnyBounds)
+          tp.symbol -> bounds
+        }
+      }
+    }.toMap
+
   /** Classify which of the JDK's four throwable constructors was reached. Read off the target's
     * formals, not the argument types. `None` if outside the four. */
   private enum ThrowableCtor:
@@ -1194,8 +1215,12 @@ object CtorFunnel:
       def passesThrough(c: Tree.DefDef): Boolean =
         val ps = valueParams(program, c).map(_.symbol)
         superArgsOf(program, c).map { case Tree.Ident(x, _, _) => x; case _ => SymId.None } == ps && ps.nonEmpty
-      // formals from parent's signature, substituted through this class's instantiation
-      val formals = formalsOf(program, target).map(ParentSubst.subst(_, ParentSubst.of(cd)(using program)))
+      // formals from parent's signature, substituted through this class's instantiation.
+      // G25: class type params first, then constructor type params as wildcards (card 4e).
+      val classSubst = ParentSubst.of(cd)(using program)
+      val ctorSubst  = ctorTypeParamSubst(program, targets, classSubst)
+      val formals = formalsOf(program, target).map(t =>
+        ParentSubst.subst(ParentSubst.subst(t, classSubst), ctorSubst))
       // collision test: a root whose params exactly match the formals
       val collides = roots.exists(valueParams(program, _).map(_.tpt.tpe) == formals)
       // also check APPLICABILITY: a narrower real ctor can shadow the synthesis // ENGINE-LIMITS C8
@@ -1223,27 +1248,39 @@ object CtorFunnel:
       val (fs, values, consumedRuns, refusedFields) = fieldSlotsOf(program, cd, roots)
       val sup = formals.zipWithIndex.map((ft, k) => (s"sup$$$k", ft))
       // C3 item 4: post-body slots for the parent secondary's post-delegation body.
+      // G25 + card 4e: apply both class and constructor type param substitutions.
+      val pbSubst = classSubst ++ ctorSubst
       val (pbSlots, pbPostBody) = resolvedResult match
         case Some(rr) if rr.postBodyParams.nonEmpty =>
           given Program = program
-          val ptSubst = ParentSubst.of(cd)
-          val slots = rr.postBodyParams.map { (pv, _) =>
+          val typedSlots = rr.postBodyParams.map { (pv, _) =>
             val pName = program.symbolOf(pv.symbol).map(_.name).getOrElse("p")
-            val slotType = ParentSubst.subst(pv.tpt.tpe, ptSubst)
+            val slotType = ParentSubst.subst(pv.tpt.tpe, pbSubst)
             (s"${pName}$$", slotType)
           }
-          val paramSubst = rr.postBodyParams.zip(slots).map { case ((pv, _), (slotName, slotTpe)) =>
+          // card 4e: if the first slot is value-typed, null cannot guard the post-body.
+          // Prepend a boolean guard; the emitter reads `via$pb` as the boolean condition.
+          val needsBoolGuard = typedSlots.headOption.exists((_, t) => javaDefault(program, t, cd.origin).exists {
+            case Tree.Literal(Constant.NullC, _, _) => false; case _ => true
+          })
+          val boolSlot =
+            if needsBoolGuard then
+              val boolSym = program.symbols.all.find(_.fullName == "scala.Boolean").map(_.id).getOrElse(SymId.None)
+              List(("via$pb", TypeRepr.TypeRef(TypeRepr.NoPrefix, boolSym)))
+            else Nil
+          val slots = boolSlot ++ typedSlots
+          val paramSubst = rr.postBodyParams.zip(typedSlots).map { case ((pv, _), (slotName, slotTpe)) =>
             pv.symbol -> Tree.Opaque(slotName, slotTpe, cd.origin).asInstanceOf[Term]
           }.toMap
           val substPh = new Phase:
             def name = "ctor-postbody-subst"
             override def transformIdent(t: Tree.Ident)(using Program): Term = paramSubst.getOrElse(t.sym, t)
           val substBody = rr.rawPostBody.map(s => StandardTraversal.mapStat(substPh, s))
-          val retypedBody = if ptSubst.isEmpty then substBody // G25
+          val retypedBody = if pbSubst.isEmpty then substBody // G25
             else
               val retypePh = new Phase:
                 def name = "ctor-postbody-retype"
-                override def transformType(t: TypeRepr)(using Program): TypeRepr = ParentSubst.subst(t, ptSubst)
+                override def transformType(t: TypeRepr)(using Program): TypeRepr = ParentSubst.subst(t, pbSubst)
               substBody.map(StandardTraversal.mapStat(retypePh, _))
           (slots, retypedBody)
         case Some(rr) if rr.boolGuard =>
@@ -1251,18 +1288,28 @@ object CtorFunnel:
           given Program = program
           val boolSym = program.symbols.all.find(_.fullName == "scala.Boolean").map(_.id).getOrElse(SymId.None)
           val boolType = TypeRepr.TypeRef(TypeRepr.NoPrefix, boolSym)
-          val ptSubst = ParentSubst.of(cd)
-          val retypedBody = if ptSubst.isEmpty then rr.rawPostBody
+          val retypedBody = if pbSubst.isEmpty then rr.rawPostBody
             else
               val retypePh = new Phase:
                 def name = "ctor-postbody-retype"
-                override def transformType(t: TypeRepr)(using Program): TypeRepr = ParentSubst.subst(t, ptSubst)
+                override def transformType(t: TypeRepr)(using Program): TypeRepr = ParentSubst.subst(t, pbSubst)
               rr.rawPostBody.map(StandardTraversal.mapStat(retypePh, _))
           (List(("via$pb", boolType)), retypedBody)
         case _ => (Nil, Nil)
       val allSlots    = sup ++ pbSlots ++ fs.map(s => (s.name, s.tpe))
+      // card 4e: detect if we added a boolean guard for value-typed post-body slots, so the
+      // delegation values are prepended with the guard value.
+      val pbHasBoolGuard = pbSlots.headOption.exists(_._1 == "via$pb") &&
+        resolvedResult.exists(rr => !rr.boolGuard && rr.postBodyParams.nonEmpty)
       val delegations = roots.map { r =>
-        val pbVals = resolvedResult.map(_.postBodyValues.getOrElse(r.symbol, Nil)).getOrElse(Nil)
+        val rawPbVals = resolvedResult.map(_.postBodyValues.getOrElse(r.symbol, Nil)).getOrElse(Nil)
+        val pbVals =
+          if pbHasBoolGuard then
+            val contributes = resolvedResult.exists(_.rootsWithPostBody(r.symbol))
+            val boolVal: Term = Tree.Literal(
+              Constant.BoolC(contributes), pbSlots.head._2, cd.origin)
+            boolVal :: rawPbVals
+          else rawPbVals
         r.symbol -> (superValues(r.symbol) ++ pbVals ++ values.getOrElse(r.symbol, Nil))
       }.toMap
       def synthesise(mark: Option[String]): Option[Plan] =
@@ -1478,7 +1525,9 @@ object CtorFunnel:
       /** The raw post-body statements (un-substituted for post-body params). */
       rawPostBody: List[Statement],
       /** True when the post-body uses no params and needs a boolean guard slot. */
-      boolGuard: Boolean = false
+      boolGuard: Boolean = false,
+      /** Roots that went through a secondary with a post-body (card 4e: boolean guard). */
+      rootsWithPostBody: Set[SymId] = Set.empty
   )
 
   /** Resolve diverging roots through the parent's delegation chain, so they converge on the
@@ -1532,11 +1581,21 @@ object CtorFunnel:
             val v: Term = Tree.Literal(if r.postBody.nonEmpty then Constant.BoolC(true) else Constant.BoolC(false),
               TypeRepr.TypeRef(TypeRepr.NoPrefix, boolSym), cd.origin)
             sym -> List(v)
-          else if r.postBodyParams.isEmpty then
-            sym -> uniquePbParams.map(_ => Tree.Literal(Constant.NullC, TypeRepr.NoType, cd.origin): Term)
-          else sym -> r.postBodyParams.map(_._2)
+          else
+            // card 4e: map against uniquePbParams, using actual values for params this root
+            // contributes and JVM defaults for the rest (a root going through a 2-arg chain
+            // does not contribute the 7-arg chain's params, but the slot list needs all).
+            val contributed = r.postBodyParams.map((p, v) => p.symbol -> v).toMap
+            sym -> uniquePbParams.map { (pv, _) =>
+              contributed.getOrElse(pv.symbol,
+                javaDefault(program, pv.tpt.tpe, cd.origin)
+                  .getOrElse(Tree.Literal(Constant.NullC, TypeRepr.NoType, cd.origin): Term))
+            }
         }.toMap
-        Some(ResolvedResult(parentRootSym, argsMap, pbValues, uniquePbParams, rawPostBody, needsBoolGuard))
+        // card 4e: track which roots went through a secondary that has a post-body.
+        val withPb = flat.collect { case (sym, r) if r.postBody.nonEmpty => sym }.toSet
+        Some(ResolvedResult(parentRootSym, argsMap, pbValues, uniquePbParams, rawPostBody,
+          needsBoolGuard, withPb))
 
   /** Effective args reaching the parent root, un-substituted post-body, and post-body param
     * dependencies for synthesised parameter creation. // ENGINE-LIMITS C3 */

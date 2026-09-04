@@ -184,3 +184,66 @@ class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
     assert(clue(refusedDropped).exists(_.owner.contains("RetSub")),
       "super args reported as dropped for the refused root")
   }
+
+  // ---- (d) Generic constructor type param -> wildcard slot type // G25, card 4e ----
+
+  private val genericCtorSrc =
+    """package demo;
+      |public class B {}
+      |public class Box<E> { E value; public Box(E v) { this.value = v; } }
+      |public class GenBase {
+      |  int n;
+      |  Object kept;
+      |  public GenBase(int n) { this.n = n; }
+      |  public <T extends B> GenBase(int n, Box<T> box) { this(n); this.kept = box; }
+      |}
+      |public class GenSub extends GenBase {
+      |  public GenSub(int n, Box<B> box) { super(n, box); }
+      |  public GenSub(int n) { super(n); }
+      |}
+      |""".stripMargin
+
+  private val genericCtorProgram = Pipeline.run(SpoonTir.fromSource(genericCtorSrc), Nil)
+  private val genericCtorOut     = new TirEmitter(genericCtorProgram).emit
+
+  test("(d) generic ctor type param: slot type is wildcard-bounded, not bare T") {
+    assert(clue(genericCtorOut).contains("extends demo.GenBase(sup$0)"),
+      "synthesised primary at parent root's parameter")
+    // The slot for `Box<T>` where `T extends B` should be `Box[? <: B]`, not `Box[T]`.
+    assert(clue(genericCtorOut).contains("Box[? <: demo.B]"),
+      "constructor type param rendered as wildcard with bound")
+    assert(!clue(genericCtorOut).contains("Box[T]"),
+      "no bare T in the slot type")
+  }
+
+  // ---- (e) Value-typed post-body input -> slot defaults to JVM zero + boolean guard // card 4e ----
+
+  private val valueSlotSrc =
+    """package demo;
+      |public class ValBase {
+      |  int n;
+      |  float offset;
+      |  public ValBase(int n) { this.n = n; }
+      |  public ValBase(int n, float offset) { this(n); this.offset = offset; }
+      |}
+      |public class ValSub extends ValBase {
+      |  public ValSub(int n, float offset) { super(n, offset); }
+      |  public ValSub(int n) { super(n); }
+      |}
+      |""".stripMargin
+
+  private val valueSlotProgram = Pipeline.run(SpoonTir.fromSource(valueSlotSrc), Nil)
+  private val valueSlotOut     = new TirEmitter(valueSlotProgram).emit
+
+  test("(e) value-typed post-body input: slot defaults to 0f with boolean guard") {
+    assert(clue(valueSlotOut).contains("extends demo.ValBase(sup$0)"),
+      "synthesised primary at parent root's parameter")
+    // The slot for `float offset` should be `offset$: Float`, not null-guarded.
+    assert(clue(valueSlotOut).contains("offset$"),
+      "value-typed post-body slot present")
+    // A boolean guard controls the post-body since Float cannot be null-checked.
+    assert(clue(valueSlotOut).contains("via$pb"),
+      "boolean guard for value-typed post-body input")
+    assert(clue(valueSlotOut).contains("if (via$pb)"),
+      "guard uses boolean condition, not null check")
+  }
