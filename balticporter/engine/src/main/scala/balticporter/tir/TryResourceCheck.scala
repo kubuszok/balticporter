@@ -1,40 +1,16 @@
 package balticporter.tir
 
-/** Every java try-with-resources whose RESOURCES the emitter did not lower.
+/** Try-with-resources whose resources the emitter did not lower (JLS 14.20.3).
   *
-  * The §4.4 defect this counts: `try (R r = …) { … }` closes `r` when the block finishes for ANY
-  * reason — normal completion, an exception, or a jump — in reverse declaration order, and BEFORE
-  * this `try`'s own `catch`/`finally` runs (JLS 14.20.3.1/14.20.3.2). Scala has no such statement.
-  * A structural per-node translator that emits the `try` and forgets the resources produces valid
-  * Scala in which the resource is never bound and never closed.
-  *
-  * That is exactly what this engine shipped: `Tree.Try.resources` was populated by the frontend and
-  * printed by `TirPrinter`, and `TirEmitter.tryStr` computed the rendered resource text into a
-  * local it never interpolated. A resource REFERENCED inside its own body then failed to compile,
-  * which is loud and self-correcting; a resource opened for its side effect alone —
-  * `try (var lock = acquire()) { … }`, an entirely idiomatic shape — compiled cleanly with the lock
-  * never acquired and never released. No error, no moved count, no failing test, and nothing in the
-  * emitted file to say a statement had been there at all.
-  *
-  * '''Why this is not the emitter's own answer read back.''' The resource-carrying `try`s are found
-  * HERE, from the trees, by walking with `StandardTraversal`; the emitter contributes only the set
-  * of sites it actually lowered. So the two disagree exactly when a `try` reached the output through
-  * a path that does not lower — which is the failure worth counting, and the one a tally the emitter
-  * owned on its own could never report.
-  *
-  * ==Why a count of zero is still worth having==
-  * No library in the corpus writes a try-with-resources today (ten upstream trees, zero sites), so
-  * this check reports 0 everywhere it currently runs. That is the point: the defect was latent for
-  * the life of the TIR backend precisely because no measurement would have moved if a library HAD
-  * used one, and the first library that does must not rediscover it by reading emitted Scala.
-  */
+  * Walks the tree independently of the emitter; disagrees when a `try` with resources
+  * reached the output without lowering. Findings are §1(a) engine gaps.
+  * Currently reports 0 on all ports (no corpus library uses try-with-resources). */
 object TryResourceCheck:
 
   val Name = "try-resource"
 
   enum Issue:
-    /** a `try` carries resources and the emitter closed none of them: the whole statement form is
-      * gone from the output. */
+    /** A `try` carries resources and the emitter lowered none of them. */
     case UnloweredResource
 
   object Issue:
@@ -58,23 +34,15 @@ object TryResourceCheck:
       CheckReport.Finding(Name, issue.toString, owner, CheckReport.relativise(origin.javaPath),
         origin.line, detail)
 
-  /** @param lowered which `try`s the emitter lowered ([[balticporter.emit.TirEmitter.resourceLowerings]],
-    *                keyed by [[Tree.Try.id]]). `_ => false` is the un-repaired engine, which is how
-    *                the negative test asks this check whether it can report at all.
-    *
-    *                Keyed by the TOKEN for the reasons `BreakCatchCheck` spells out: an
-    *                `Origin` is not unique across `try`s (a nested one-liner shares one, and every
-    *                synthesised `try` carries `Origin.synthetic`), so an origin-keyed answer lets a
-    *                lowered `try` vouch for an unlowered sibling; and object identity is not
-    *                available either, since `StandardTraversal` rebuilds every node it walks.
+  /** @param lowered which `try`s the emitter lowered, keyed by [[Tree.Try.id]].
+    *                `_ => false` reproduces the un-repaired engine.
     */
   def check(program: Program, units: List[Tree.ClassDef], lowered: Tree.Try => Boolean): List[Finding] =
     given Program = program
     units.flatMap(inUnit(_, lowered))
 
   private def inUnit(u: Tree.ClassDef, lowered: Tree.Try => Boolean)(using program: Program): List[Finding] =
-    // which member each `try` sits in — the same shape, and the same caveat, as `BreakCatchCheck`:
-    // keyed by `Origin` and deciding only the OWNER NAME a finding prints, never whether to report.
+    // owner name per try (Origin key -- same shape as BreakCatchCheck)
     val ownerOf = collection.mutable.Map.empty[Origin, String]
     val claim = (s: SymId, t: Option[Term]) =>
       t.foreach(x => tryOriginsIn(x).foreach(o => ownerOf.getOrElseUpdate(o, fqn(s))))

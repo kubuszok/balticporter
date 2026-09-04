@@ -1,105 +1,16 @@
 package balticporter.tir
 
-/** A PORTER NOTE — one [[Decision]], rendered as a comment BESIDE the code it explains.
-  *
-  * ## Why the decision channel is not enough on its own
-  *
-  * `decisions.tsv` answers "why does the port look like this" for an agent that knows the artifact
-  * exists, holds the run directory, and thinks to join on a name. The agent this project actually
-  * has (CLAUDE.md §4.45) is reading ONE emitted file in another repository, and the question it
-  * asks is asked at a line of Scala: *why is this field called `style$shadow`, why is this method
-  * simply absent, why does this file live in a package the upstream never had.* A record in a
-  * sibling TSV cannot be found from there.
-  *
-  * So the note is the same fact, placed where the question is asked. It is DERIVED — the emitter
-  * renders only decisions whose subject it is emitting, and invents nothing — which is what keeps
-  * the two artifacts from being able to disagree, and what makes [[NoteCoverageCheck]] a real
-  * check rather than a tautology.
-  *
-  * ## The grammar
-  *
-  * {{{
-  * /* porter: <kind-slug> k=v … — <free text> */
-  * }}}
-  *
-  * One line unless the free text does not fit, in which case the text moves to a second line and
-  * the comment closes there. Deliberately ONE grammar for every kind, and deliberately greppable:
-  * `grep -rn '/\* porter:' src_managed` is the whole inventory of non-mechanical translation in a
-  * port, and `grep 'porter: dropped-member'` is one class of it.
-  *
-  * `<kind-slug>` is [[Decision.Kind]] in kebab case — the enum, not a string a decider chose, for
-  * the reason `Decision.Kind` is closed at all.
-  *
-  * `k=v` pairs are the decision's `detail`, sorted, with `why` lifted out as the free text, plus
-  * the §1 classification: `reason=universal|configured|library-rule` and then `rule=` (universal /
-  * library rule) or `phase=`+`key=` (configured). The classification is not decoration — it is the
-  * first question an agent has, and it is what says which repository the fix lives in.
-  *
-  * ## Two things a note must never do
-  *
-  *   - '''Open a comment.''' Scala block comments NEST and Java's do not (§4.58), so a `/*` or
-  *     `*/` reaching a note's text would swallow the rest of the file. Every rendered value goes
-  *     through [[safe]]; there is no path that skips it.
-  *   - '''Displace trivia.''' The upstream's own comment is the thing a licence obliges the port to
-  *     reproduce and the thing a reader wants first. Original trivia is emitted FIRST and the note
-  *     LAST, immediately above the member — enforced at each call site in the emitter, and visible
-  *     as an ordering the [[TriviaCheck]] would fail if it were ever inverted into the comment's
-  *     place.
-  */
+/** A [[Decision]] rendered as a `/* porter: <slug> k=v … */` comment beside the code.
+  * DERIVED — the emitter renders only decisions it is emitting, never invents.
+  * Values go through [[safe]] (no `/*`/`*/`). Original trivia is emitted first, note last. */
 object PorterNote:
 
   /** the token every note starts with, and the only thing a scan needs to know. */
   val Marker = "/* porter:"
 
-  /** Which kinds MUST be rendered beside the code, and are therefore what [[NoteCoverageCheck]]
-    * holds the emitter to.
-    *
-    * The line is drawn at "would a reader of this line be unable to explain it from the line
-    * itself". A rename, a drop, a substitution and an injection all leave the emitted code saying
-    * something the upstream Java does not, with no local evidence of why.
-    *
-    * The two that are NOT here are not oversights:
-    *
-    *   - [[Decision.Kind.RetypedSignature]] — the new type is written in the declaration and the
-    *     diff against the Java shows it; a note per retyped member is 335 comments on libGDX core
-    *     restating what the signature already says, and the noise would bury the ones that carry
-    *     information nothing else does. Note its COMPLEMENT, [[Decision.Kind.ScopedOut]], IS
-    *     rendered, and the asymmetry is the line above applied rather than broken: a declaration
-    *     that kept its upstream type looks like a translation nobody performed, and the diff shows
-    *     nothing because nothing changed. It is also rare where the other is not — one row per
-    *     declaration a policy entry names, against one per retyped member. The same reading puts
-    *     [[Decision.Kind.ReifiedTypeArg]] here rather than beside `RetypedSignature`: the note is
-    *     about the ONE type argument that did not move in a declaration whose others did, and no
-    *     diff can show a thing that stayed the same.
-    *   - [[Decision.Kind.RedirectedCall]] — recorded per DECLARATION for the reason
-    *     `Decision.declarationsUsing` gives, and the rewritten call is right there in the body.
-    *     Note its sibling [[Decision.Kind.SubstitutedCall]] IS rendered, and the asymmetry is the
-    *     line above applied rather than broken: a redirect leaves the call's SHAPE intact, so a
-    *     reader diffing against the Java sees one name change and can act on it; a substitution
-    *     replaces the whole expression with text the port wrote, so the emitted line may have no
-    *     counterpart in the Java at all — and the source map points at a line that says something
-    *     else. That is the same reason `SubstitutedBody` is rendered one level up.
-    *
-    * [[Decision.Kind.FunnelledCtor]] USED to sit in that list, on the reasoning that "the emitted
-    * class has one primary and N secondaries, which is the funnel, in the code". That reasoning was
-    * written when the funnel could only PROMOTE — and for a promotion it is true: the primary is a
-    * java constructor, spelled as java spelled it, and the reader's diff shows a reordering. It is
-    * false for a SYNTHESIS (`DESIGN.md` §8.2), which is what the funnel now does for most classes
-    * that have more than one constructor: the reader is looking at a `protected` constructor **no
-    * java declared**, whose parameters are named `sup$0` and `f$name`, possibly followed by a
-    * parameter of a companion type called `Funnel` that exists for no runtime purpose at all. There
-    * is no line of upstream java it corresponds to, so the source map cannot answer it either, and
-    * the answer — which slot came from which parent formal, which field was refused a slot and why,
-    * why the arity has one more parameter than the signature needs — is exactly what the decision's
-    * `slots` / `notSlot` / `disambiguator` detail already carries. That is §4.575's case in its
-    * purest form: an invented member is the one member whose explanation cannot be read off the
-    * code.
-    *
-    * (Its ESCAPING paths remain a different matter and are counted by
-    * `OmissionCheck.promotedBodyOnEveryPath`; that is a finding, not a note.)
-    *
-    * Add a kind here and the check immediately demands it — which is the point.
-    */
+  /** Kinds that MUST be rendered beside the code — [[NoteCoverageCheck]] enforces this.
+    * Line: a reader of the emitted code cannot explain the construct without the note.
+    * Excludes `RetypedSignature` (visible in the diff) and `RedirectedCall` (visible in the body). */
   val Rendered: Set[Decision.Kind] =
     import Decision.Kind.*
     Set(RenamedType, RenamedPackage, RenamedMember, DroppedType, DroppedMember,
@@ -107,68 +18,22 @@ object PorterNote:
         Unrenderable, ScopedOut, RetainedSignature, DeferredInit, FunnelledCtor, RetainedParent,
         ReifiedTypeArg,
         BeanAccessor, ForcedClassInit, WidenedSeal, RecordMembers, SamLambda, CollapsedProperty,
-        // …and a MENU CHOICE. It is here rather than beside `RetypedSignature` for the line this
-        // list is drawn on: the emitted text is a translation the engine could have done another way
-        // and did not, so a reader diffing against the java sees a shape with no local evidence of
-        // WHY it is that shape rather than the other one. The alternatives existed; one word in this
-        // port's manifest chose between them, and nothing but a note can say so at the line.
         SelectedRemedy,
-        // …and a MODIFIER the port removed. Here for the reason `RetainedSignature` is: the emitted
-        // member differs from the mechanical translation by exactly one word, and that word is the
-        // one a reader diffing against the java reads as a lost `@Override`. The note is the only
-        // place the parent that justified it — a type the java file never names — can be said.
         StrippedOverride,
-        // …and a PARENT the phase dropped. `RetainedParent` is here for the mirror reason and the
-        // argument is stronger in this direction: a retained parent still appears in the emitted
-        // `extends` clause, so a reader can at least SEE it; a subsumed one is text that is simply
-        // absent, and the java `implements` clause it came from is one line the diff shows as
-        // untranslated.
         SubsumedParent,
-        // …and the member synthesised over it. Here for `StrippedOverride`'s reason read one step
-        // further: that one is a word a reader can miss, this one is a whole `def` that is in NO
-        // java file, calling a member whose name is in no java file either. Without the note the
-        // only honest reading of `override def get(k: K): Option[V] = scala.Option(this.get$java(k))`
-        // is that somebody hand-edited a generated tree.
         BridgedMember,
-        // …and the class whose state is rebuilt per test. Here for `ForcedClassInit`'s reason: the
-        // emitted text is a field initialiser that has apparently been DELETED, a java `final` that
-        // has become a `var`, and a `def` in no java file — three edits with one cause, which is a
-        // difference between two test frameworks and is written down in neither file.
         RebuiltPerTest,
-        // …and a nullary method whose `()` was dropped. Here because a parameterless `def` and a
-        // nilary `def ()` look identical in the emitted Scala except for the missing parens, and a
-        // reader diffing against the java sees a call that is `o.x` rather than `o.x()` — the note
-        // is what says the conversion was deliberate rather than an engine defect.
         ParenlessConversion,
-        // …and a DEPRECATED LINT CALL suppressed with `@nowarn`. Here because a reader of the
-        // emitted `@scala.annotation.nowarn("msg=deprecated")` is owed the reason it is there —
-        // the method the body calls is deprecated as a lint measure by the target library, the same
-        // pattern sge uses at every Java interop boundary (`nullable-guide.md`).
         SuppressedWarning,
-        // …and a MEMBER the phase added. Here because a reader of the emitted member is looking at
-        // a `def` that is in NO java file, and the source map cannot answer that — the same shape
-        // as `BeanAccessor` and `RecordMembers`, one mechanism over.
         AddedMember)
 
-  /** WHERE each rendered kind's note goes, which is not a style question: the three answers are
-    * three different pieces of machinery and a kind in the wrong one is a note that never appears.
-    *
-    *   - [[AtDeclaration]] — the subject IS emitted, so the note sits immediately above it (after
-    *     its original trivia). Every rename, every substituted body, every widening.
-    *   - [[InBody]] — the subject is a TYPE and the decision is about something that is NOT in it.
-    *     A dropped member has no `def` to sit above, so its note goes at the head of the owning
-    *     type's body, where a reader looking for the member finds it instead.
-    *   - [[NotInTree]] — no emitted unit corresponds to the subject at all. A dropped TYPE's note
-    *     is carried by the INJECTED file that supplies its FQN (`PortRun` prepends it at copy
-    *     time); when nothing replaces it, `decisions.tsv` and the port map are the whole record,
-    *     and that is the honest answer rather than a note in a file that does not exist.
-    */
+  /** Placement: [[AtDeclaration]] (emitted subject), [[InBody]] (dropped member, at body head),
+    * [[NotInTree]] (dropped type, carried by injected file). A kind in the wrong set never appears. */
   val InBody: Set[Decision.Kind]    = Set(Decision.Kind.DroppedMember, Decision.Kind.AddedMember)
   val NotInTree: Set[Decision.Kind] = Set(Decision.Kind.DroppedType)
   val AtDeclaration: Set[Decision.Kind] = Rendered -- InBody -- NotInTree
 
-  /** `RenamedMember` -> `renamed-member`. The enum name is the source; a decider never names a
-    * slug, so two deciders cannot spell one act two ways. */
+  /** `RenamedMember` -> `renamed-member`. Derived from the enum name. */
   def slug(k: Decision.Kind): String =
     k.toString.flatMap(c => if c.isUpper then "-" + c.toLower else c.toString).stripPrefix("-")
 
@@ -176,25 +41,10 @@ object PorterNote:
   private lazy val bySlug: Map[String, Decision.Kind] =
     Decision.Kind.values.map(k => slug(k) -> k).toMap
 
-  /** The grammar's primitives, which are the GRAMMAR's and not the note's — [[KeyValues]] carries
-    * them, with the two rules (neutralise anything that could open or close a Scala comment; quote
-    * a value that contains whitespace) and the measurements behind each. The port map's `shape`
-    * column is the second consumer (`DESIGN.md` §8.3), and one grammar with two renderings is
-    * exactly the drift §4.56 is about. */
+  /** Grammar primitives shared with the port map's `shape` column via [[KeyValues]]. */
   export KeyValues.{safe, value}
 
-  /** the `k=v` half, in a fixed order: the §1 classification first (it is the question an agent
-    * asks first), then the decision's own detail, sorted.
-    *
-    * '''The two are CONCATENATED, not reconciled, and that is the decider's obligation rather than
-    * this function's.''' A `Reason.Configured` contributes `key=`; a decider that puts the same
-    * string in `detail` gets `key=… key=…` in the comment beside the code, which is what three
-    * phases shipped and what `PortRun`'s three drop loops still do (PROGRESS §12.4). Deduplicating
-    * here would be the wrong layer twice over: it
-    * would leave `decisions.tsv`'s `detail` column restating its own `reason` column — the same
-    * redundancy, in the artifact this function never touches — and it would silently swallow a
-    * `key` a future decider means as something OTHER than the classification's. So [[Decision]]'s
-    * `detail` says never to restate it, and this stays a concatenation. */
+  /** The `k=v` pairs: §1 classification first, then detail sorted. Concatenated, not deduplicated. */
   def pairs(d: Decision): List[(String, String)] =
     val cls = ("reason" -> d.reason.className) :: (d.reason match
       case Reason.Universal(r)     => List("rule" -> r)
@@ -202,9 +52,7 @@ object PorterNote:
       case Reason.Configured(p, k) => List("phase" -> p, "key" -> k))
     cls ++ d.detail.filterNot(_._1 == "why").toList.sorted
 
-  /** Render one decision at `indent`, with a trailing newline. `""` for a kind that carries no
-    * note — so a call site can splice this in unconditionally and a kind leaving [[Rendered]]
-    * removes its notes with no other edit. */
+  /** Render one decision at `indent`. Returns `""` for non-[[Rendered]] kinds. */
   def render(d: Decision, indent: String, width: Int = 110): String =
     if !Rendered(d.kind) then ""
     else
@@ -215,15 +63,10 @@ object PorterNote:
         case Some(w) if head.length + w.length + 6 <= width       => s"$head — $w */\n"
         case Some(w)                                              => s"$head\n$indent   — $w */\n"
 
-  /** One note as it stands IN THE EMITTED TEXT. `kind` is `None` for a slug no [[Decision.Kind]]
-    * has — which is not a parse failure to swallow but the loudest thing this scan can find: a
-    * note nothing in the engine could have derived. */
+  /** One note parsed from emitted text. `kind` is `None` for an unknown slug. */
   final case class Found(slug: String, kind: Option[Decision.Kind])
 
-  /** every note in `text`, in order. Deliberately reads only the SLUG: the `k=v` half is for a
-    * human and for grep, and a check that parsed it would be asserting on a rendering rather than
-    * on the fact. [[NoteCoverageCheck]] joins on what the emitter RECORDED instead, which is the
-    * only side that can be authoritative about which decision produced which note. */
+  /** Every note in `text`, in order. Reads only the slug — [[NoteCoverageCheck]] joins on recordings. */
   def scan(text: String): List[Found] =
     val out = collection.mutable.ListBuffer.empty[Found]
     var i   = text.indexOf(Marker)
@@ -234,11 +77,6 @@ object PorterNote:
       i = text.indexOf(Marker, i + Marker.length)
     out.toList
 
-  /** What the EMITTER printed, recorded as it printed it — the same discipline as
-    * [[SrcMap.Recording]], and a value one emitter owns rather than a process-global table (§5.1).
-    *
-    * `subject` is the SymId the note was rendered for, which is what makes the coverage check a
-    * join rather than a name match: a member renamed by the emitter has a different name at
-    * emission than the decision recorded, and every name-keyed version of this check was quietly
-    * empty on exactly the decisions it exists to police. */
+  /** What the emitter printed — a value one emitter owns. `subject` is the SymId,
+    * enabling a join that survives renames (a name-keyed check was empty on renamed decisions). */
   final case class Printed(kind: Decision.Kind, subject: SymId, subjectFqn: String, unit: String)

@@ -2,36 +2,14 @@ package balticporter.tir
 
 import java.nio.file.{Files, Path}
 
-/** The correlation step as a REQUEST, so it can be run in-process or from a command line.
-  *
-  * ==Why this is not just a `main`==
-  *
-  * It used to be. `CorrelateMain` was the whole of it, which meant the only way to correlate was to
-  * start a second JVM — fine for a shell script that has just run a compiler, useless for a porting
-  * program that drives the compile itself and already holds the run directory. Splitting the
-  * REQUEST from the argument parsing costs nothing and gives `balticporter.runner.PortRun` an
-  * in-process path ([[PortRun.correlate]]) while leaving the standalone entry point intact —
-  * correlation must stay runnable against a compile or test log produced independently of a
-  * migration run, because that is how an agent debugging a wall actually uses it.
-  *
-  * ==Paths are ABSOLUTE, and that is load-bearing==
-  *
-  * Every path in a request is resolved against [[DebugFlags.root]] before use. sbt's non-forked
-  * `run` has the SUBPROJECT as its working directory, so a relative path that reads correctly in a
-  * shell silently resolves to nothing here, and the whole correlation then reports "0 units" as if
-  * the port had no members. [[Request.absolute]] is where that is fixed once; a missing input is
-  * additionally NAMED, with the directory it was looked for in.
-  */
+/** Correlation step as a request — runnable in-process ([[PortRun.correlate]]) or from CLI.
+  * All paths are resolved against [[DebugFlags.root]] before use; a missing declared input is fatal. */
 object CorrelateRun:
 
-  /** @param srcmaps  `scope -> srcmap.tsv`; scope is `main` or `test` so a library frame can be
-    *                 preferred over a test frame when anchoring a failure.
-    * @param out      where errors.tsv / tests.tsv / correlate.txt go — normally a run directory.
-    * @param baseline the promotable artifacts to diff against.
-    * @param markers  `unit<TAB>member` regions the engine marked approximate (Stage 2). Absent is
-    *                 the state today and every scalac error lands in the engine-gap lane, which is
-    *                 the honest answer while the engine marks nothing.
-    */
+  /** @param srcmaps  `scope -> srcmap.tsv`; scope is `main` or `test`.
+    * @param out      output directory for errors.tsv / tests.tsv / correlate.txt.
+    * @param baseline baseline directory to diff against.
+    * @param markers  `unit<TAB>member` approximate regions (Stage 2). */
   final case class Request(
       srcmaps: List[(String, Path)] = Nil,
       scalac: Option[Path] = scala.None,
@@ -40,7 +18,7 @@ object CorrelateRun:
       baseline: Option[Path] = scala.None,
       markers: Option[Path] = scala.None,
   ):
-    /** every path made absolute against the engine root — see the class doc. */
+    /** Every path made absolute against [[DebugFlags.root]]. */
     def absolute: Request =
       def abs(p: Path): Path = if p.isAbsolute then p.normalize else DebugFlags.root.resolve(p).normalize
       copy(srcmaps = srcmaps.map((s, p) => s -> abs(p)), scalac = scalac.map(abs), tests = tests.map(abs),
@@ -50,10 +28,7 @@ object CorrelateRun:
 
   final case class Result(report: String, regressed: Boolean, errors: List[Correlate.LocatedError], tests: List[Correlate.LocatedTest])
 
-  /** A declared input that is not there. Fatal, and it names both the path and what it was resolved
-    * against, because the overwhelmingly common cause is a RELATIVE path: sbt's non-forked `run`
-    * has the subproject as its working directory, so a path that reads correctly in a shell script
-    * resolves to nothing here. */
+  /** Fatal — a declared input path was not found. Names the path and its resolution root. */
   final class MissingInput(val paths: List[Path])
       extends RuntimeException(
         s"[correlate] ${paths.size} declared input(s) NOT FOUND — refusing to report on a file it " +
@@ -68,14 +43,6 @@ object CorrelateRun:
     val base   = req.baselineDir
     Files.createDirectories(outDir)
 
-    // A missing input file is FATAL — see the class doc on why a silent one is so expensive.
-    //
-    // It used to be a line on stderr, which the measure lanes filter out of the correlate output
-    // by design. The run then produced a header-only `tests.tsv` and a headline of "tests 0
-    // passing, 0 failing" from a test log it had never opened: a WHOLE SUITE reported as green
-    // because a path was wrong. That is worse than any diagnostic this tool can emit, so a
-    // declared input that does not exist stops the run. An input that is genuinely optional is
-    // omitted from the request, not passed as a path that does not resolve.
     val missing = (req.srcmaps.map(_._2) ++ req.scalac ++ req.tests ++ req.markers)
       .filterNot(Files.isRegularFile(_))
     if missing.nonEmpty then
@@ -92,25 +59,15 @@ object CorrelateRun:
         .filterNot(l => l.startsWith("#") || l.isBlank).map(_.trim).toSet
     }.getOrElse(Set.empty)
 
-    // The member-digest delta spans EVERY source map supplied, not just the port `out` names.
-    // A test failure is anchored on a LIBRARY member, and the library is a different port from the
-    // suite: comparing only the test port's members would report "0 changed" for a change that
-    // rewrote half the library — which is exactly the case the flag exists for. Latest digests come
-    // from the maps just loaded; each map's baseline is its own port's `baseline/members.tsv`.
+    // digest delta spans all supplied source maps (a test failure anchors on a library member)
     val portDirs    = req.srcmaps.map(_._2).flatMap(p => Option(p.getParent).flatMap(x => Option(x.getParent)))
     val baseMembers = portDirs.flatMap(port => SrcMap.parseMembers(port.resolve("baseline/members.tsv"))).toMap ++
                       SrcMap.parseMembers(base.resolve("members.tsv"))
     val nowMembers  = entries.map(e => s"${e.unit}\t${e.member}" -> e.digest).toMap
-    // With no member baseline, EVERY member differs from nothing — reporting that as "changed"
-    // would decorate every finding with a flag that means nothing. No baseline ⇒ no claim.
+    // no baseline ⇒ no claim — every member would diff against nothing
     val changed     = if baseMembers.isEmpty then Set.empty[String] else Correlate.changedMembers(baseMembers, nowMembers)
 
-    // The DROPPED TYPES of every port whose map is loaded, in BOTH namespaces. `PortRun` writes the
-    // file beside the source map on every run, so the expected-failure set follows the manifest
-    // automatically; the union is right because a test suite's failure lands in the LIBRARY's
-    // dropped type, which is a different port from the suite (exactly the shape the digest union
-    // above exists for). Each row carries its own emitted name, so unioning two ports that rename
-    // differently stays correct — nothing here re-derives a namespace it cannot see.
+    // union of dropped types from all loaded ports, in both namespaces
     val dropped = (req.srcmaps.map(_._2.getParent) ++ portDirs.map(_.resolve("run-latest")) :+ outDir)
       .distinct.flatMap(d => Correlate.parseDropped(d.resolve("dropped-types.tsv"))).toSet
 
@@ -147,25 +104,7 @@ object CorrelateRun:
     Files.writeString(outDir.resolve("correlate.txt"), report)
     Result(report, regressed, located, locatedTst)
 
-/** The correlation step as a COMMAND the measure lanes run AFTER the compiler and the test runner
-  * have produced their output.
-  *
-  * {{{
-  * engine/runMain balticporter.tir.CorrelateMain \
-  *   --srcmap      port-report/<MainPort>/run-latest/srcmap.tsv \
-  *   --srcmap      test=port-report/<TestPort>/run-latest/srcmap.tsv \
-  *   --scalac      /tmp/compile.txt \
-  *   --tests       /tmp/test.txt \
-  *   --out         port-report/<TestPort>/run-latest \
-  *   --baseline    port-report/<TestPort>/baseline
-  * }}}
-  *
-  * It stays a separate process on purpose even though [[CorrelateRun]] can now be called in-process:
-  * a compiler and a test runner both run long after the migration JVM has exited, the join is over
-  * FILES, and an agent debugging a wall needs to correlate a log it produced by hand. Paths are
-  * explicit rather than derived because [[CheckReport.dir]]'s main-class derivation would name
-  * *this* program, not the port.
-  */
+/** CLI entry point for [[CorrelateRun]] — the measure lanes run this after the compiler/test runner. */
 object CorrelateMain:
 
   private def usage(): Nothing =
@@ -211,9 +150,7 @@ object CorrelateMain:
         case other                  => System.err.println(s"unknown option: $other"); usage()
       i += 1
 
-    // A missing input exits NON-ZERO with the paths on stdout as well as stderr: the measure
-    // scripts filter stderr out of the correlate block, and a shell that cannot see why a
-    // correlation produced nothing reports the run as green.
+    // missing input on stdout AND stderr — measure scripts filter stderr from the correlate block
     val result =
       try
         CorrelateRun.run(CorrelateRun.Request(

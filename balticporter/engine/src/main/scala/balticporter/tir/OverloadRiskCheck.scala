@@ -2,57 +2,19 @@ package balticporter.tir
 
 import balticporter.catalog.FixKind
 
-/** Every emitted CALL whose candidate set spans one of JAVA'S OWN RESOLUTION PHASES — the risk
-  * catalog rows `JS-C22` (JLS 15.12.2) and `JS-C23` (JLS 15.12.2.5) carry, counted rather than
-  * resolved.
-  *
-  * ==What the difference is==
-  * Java chooses an overload in THREE PHASES: strict (no boxing, no varargs), then loose (boxing and
-  * unboxing allowed), then variable-arity. A candidate admitted in an earlier phase WINS outright —
-  * javac never looks at a later phase once one succeeds. Scala resolves in ONE phase, with
-  * conversions and default arguments in scope, and then applies its own most-specific rule, which
-  * PREFERS A NON-GENERIC ALTERNATIVE where java's does not (`JS-C23`). So a call the java compiler
-  * bound to one member can bind to another in the port, silently, with no compile error: both
-  * alternatives typecheck, which is the entire premise of the difference.
-  *
-  * ==Why this is a COUNTER and never a resolver==
-  * Predicting the divergence means modelling scala's overload resolution well enough to disagree
-  * with javac about a program neither compiler has rejected — a compiler-sized project, and
-  * `ENGINE-LIMITS.md` says so rather than half-building one. What is affordable, and what was a
-  * total silence before, is the RISK: the calls where the two rules can possibly differ.
-  *
-  * ==The population is derived from JLS 15.12.2'S OWN PHASE BOUNDARIES==
-  * Not from "this call is overloaded", which is most calls in a library and a review list nobody
-  * reads. The three phases are separated by exactly two things — BOXING (phase 1 to 2) and VARARGS
-  * (phase 2 to 3) — and the tie-break inside a phase is where the generic rule differs. So there are
-  * exactly three ways for the java rule and the scala rule to disagree, and each is a fact about the
-  * CANDIDATE SET alone:
-  *
-  *   - [[Issue.VarargPhaseSpan]] — a fixed-arity candidate and a variable-arity candidate are both
-  *     applicable to this argument count. Java tries the fixed one first and only falls back;
-  *     scala has no such staging;
-  *   - [[Issue.BoxingPhaseSpan]] — two applicable candidates take a PRIMITIVE and its WRAPPER (or a
-  *     universal type) at the same position. Java admits the primitive one in phase 1 and the other
-  *     only in phase 2; scala boxes freely and picks by specificity;
-  *   - [[Issue.GenericTieBreak]] — an applicable candidate is GENERIC and another is not
-  *     (`JS-C23`). Java's most-specific rule does not prefer the non-polymorphic alternative;
-  *     scala's relative-weight rule does.
-  *
-  * A candidate set separated only by unrelated REFERENCE types is deliberately not reported: both
-  * languages admit those in one phase and pick by applicability, and reporting them would bury the
-  * three real spans under every overload in the library. That is a NARROWING and it is stated rather
-  * than hidden — see [[Report]], which carries its own denominator so the over-approximation's rate
-  * is a number on every run and not a claim in this comment.
-  *
-  * ==Three limits, all structural==
-  * The candidate set is what the PROGRAM DECLARES. An external callee's overloads live in a class
-  * file the frontend interns lazily and only on reference, so a call into the JDK or a dependency
-  * has a candidate set this check cannot see — it is not reported, and that is stated rather than
-  * counted as a zero. And ancestors are followed only where the program declares them: an inherited
-  * overload from an external supertype is invisible for the same reason. The third is `super.f(x)`,
-  * whose candidate set is the SUPERCLASS's and which is therefore left at the callee's own owner
-  * rather than widened to the receiver's type — see [[rootOf]] and `ENGINE-LIMITS.md` T17.
-  */
+/** Every emitted CALL whose candidate set spans one of JAVA'S OWN RESOLUTION PHASES — catalog rows
+  * `JS-C22` (JLS 15.12.2) and `JS-C23` (JLS 15.12.2.5), counted rather than resolved. Java resolves
+  * in THREE PHASES (strict, then loose/boxing, then variable-arity) and a candidate admitted in an
+  * earlier phase WINS outright; scala resolves in ONE phase and prefers a non-generic alternative
+  * where java's rule does not (JS-C23) — so a call can silently bind a different member with no
+  * compile error on either side. COUNTED rather than resolved: predicting the divergence needs
+  * scala's own resolution modelled well enough to contradict javac, a compiler-sized project
+  * (ENGINE-LIMITS T17). The population is derived from JLS 15.12.2's own phase boundaries — three
+  * ways to disagree ([[Issue.VarargPhaseSpan]], [[Issue.BoxingPhaseSpan]],
+  * [[Issue.GenericTieBreak]]) — never from "this call is overloaded", which would bury the real
+  * spans in noise; see [[Report]]'s own denominator. Structural limits: an external callee's
+  * overloads (JDK, dependency) are invisible to this check, as is an inherited overload from an
+  * external supertype; `super.f(x)`'s candidate set stays at the callee's own owner ([[rootOf]]). */
 object OverloadRiskCheck extends RemedySource:
 
   val Name = "overload-risk"
@@ -102,34 +64,14 @@ object OverloadRiskCheck extends RemedySource:
     * `Remedy.alsoKinds` is what stops a member with two of them being able to drain only one. */
   private val AllKinds = Issue.values.toList.map(_.toString)
 
-  /** PIN THE ALTERNATIVE JAVAC BOUND — the ascription, and the only face of this lane the engine can
-    * mechanise.
-    *
-    * ==What is derivable and what is not==
-    * `ENGINE-LIMITS.md` T17 rules out the general act: predicting WHICH member scala will bind means
-    * modelling scala's own resolution — implicits, defaults, relative weight — well enough to
-    * disagree with javac about a program neither compiler has rejected, which is a compiler-sized
-    * project. That is not what this remedy does, and the difference is the whole of its safety
-    * argument: **which member JAVAC bound is not predicted, it is READ** — the frontend resolved the
-    * call, so `Tree.Apply.method` IS javac's answer. What the remedy carries out is naming that
-    * answer explicitly, and the only question left is whether the name can be WRITTEN.
-    *
-    * ==So the shape is a METHOD-VALUE ASCRIPTION, which is already shipped==
-    * `(recv.m: (A, B) => R)(x, y)`. Scala picks an overload at an ascribed method value by the
-    * EXPECTED TYPE, which is exactly what pins it, and `TirEmitter.numericOverloadAscription` has
-    * emitted this shape unconditionally for one closed face (exact-match-against-widening at a
-    * numeric literal) since before this menu existed. This is that emission with its trigger moved
-    * from a hard-coded predicate to a port's selection — not a new mechanism.
-    *
-    * ==And it REFUSES wherever the name cannot be written, which is counted rather than guessed==
-    * See [[ascription]] for the enumeration. A refusal records nothing, so the finding stays in the
-    * lane, and a selection that refused everywhere is reported as `NeverApplied` rather than as
-    * silence — which is the difference between a remedy that did not apply and a lane that stopped
-    * asking.
-    *
-    * EMISSION-AFFECTING, and it is the reason the field exists: two modules ascribing one shared
-    * declaration's call differently would emit two ports that each compile alone (§1.5).
-    */
+  /** PIN THE ALTERNATIVE JAVAC BOUND — the ascription, and the only face of this lane the engine
+    * can mechanise. Which member JAVAC bound is not predicted, it is READ (`Tree.Apply.method` IS
+    * javac's answer) — the remedy only writes that name down, as a METHOD-VALUE ASCRIPTION
+    * (`(recv.m: (A, B) => R)(x, y)`), which scala picks an overload at by the EXPECTED TYPE. Same
+    * shape `TirEmitter.numericOverloadAscription` already emits unconditionally for one closed
+    * face. REFUSES wherever the name cannot be written (see [[ascription]]), counted rather than
+    * guessed. EMISSION-AFFECTING: two modules ascribing one shared call differently would emit two
+    * ports that each compile alone (§1.5). */
   val AscribeJavacChoice: Remedy = Remedy(
     id = "ascribe-javac-choice", lane = Name, kind = Issue.VarargPhaseSpan.toString,
     emissionAffecting = true, fix = FixKind.Universal,
@@ -137,18 +79,10 @@ object OverloadRiskCheck extends RemedySource:
       "single-phase resolution cannot pick another",
     alsoKinds = AllKinds.filterNot(_ == Issue.VarargPhaseSpan.toString))
 
-  /** …and the other answer, which is a STATEMENT and not an act: the operator read this call, read
-    * the candidates the finding names, and accepts that scala may bind another.
-    *
-    * Not a suppression. The row moves into `remediation(resolved)` with the port's name on it and a
-    * porter note beside the emitted call, so what was an unexamined risk becomes an examined one —
-    * which is the only thing that can ever empty an over-approximated lane honestly. A port that
-    * merely wants the number smaller has no way to write this without saying, per member, that
-    * somebody looked.
-    *
-    * NOT emission-affecting: it changes no tree, so two modules may disagree about it exactly as
-    * they may disagree about `verdictOverrides`.
-    */
+  /** the other answer, a STATEMENT and not an act: the operator read this call and accepts that
+    * scala may bind another. Not a suppression — the row moves into `remediation(resolved)` with a
+    * porter note beside the emitted call, so an unexamined risk becomes an examined one. NOT
+    * emission-affecting: changes no tree, so two modules may disagree about it. */
   val AcceptRisk: Remedy = Remedy(
     id = "accept-risk", lane = Name, kind = Issue.VarargPhaseSpan.toString,
     emissionAffecting = false, fix = FixKind.Universal,
@@ -156,24 +90,11 @@ object OverloadRiskCheck extends RemedySource:
       "different alternative than javac did",
     alsoKinds = AllKinds.filterNot(_ == Issue.VarargPhaseSpan.toString))
 
-  /** …and WHAT IS NOT ON THE MENU, stated where the menu is so a reader sees a refusal and not a gap.
-    *
-    *   - '''resolve the call — auto-ascribe at every spanning site'''. RULED OUT, `ENGINE-LIMITS.md`
-    *     T17: an ENGINE act needs to know that scala and javac disagree HERE, and that is scala's
-    *     resolution modelled well enough to contradict javac about a program both compilers accept.
-    *     [[AscribeJavacChoice]] is not a weaker version of it — it does not predict anything, it
-    *     writes down an answer the frontend already has, and it fires only where a PORT asked;
-    *   - '''ascribe the ARGUMENT rather than the method'''. REFUSED: it does not pin anything. The
-    *     candidates in a `BoxingPhaseSpan` differ by a primitive against its wrapper, and an
-    *     argument ascribed to either one still admits both alternatives under scala's single phase —
-    *     the expected type has to sit on the METHOD for the choice to be made there;
-    *   - '''a per-callee table — "always bind `remove(int)`"'''. REFUSED: the phase java resolved in
-    *     is a fact about the ARGUMENTS at one site, not about the member, so a table would state one
-    *     answer for calls java answered differently. The key is per member for exactly this reason
-    *     (`DESIGN.md` §8.16), and the finding names the candidates so the reader decides per site;
-    *   - '''emit both and let scalac pick'''. There is nothing to emit: both alternatives typecheck,
-    *     which is the entire premise of the lane.
-    */
+  /** WHAT IS NOT ON THE MENU: auto-ascribe at every spanning site (RULED OUT, T17 — that needs
+    * scala's resolution modelled well enough to contradict javac); ascribe the ARGUMENT rather than
+    * the method (REFUSED — the expected type must sit on the METHOD to pin the choice); a
+    * per-callee table (REFUSED — the phase is a fact about the ARGUMENTS at one site, not the
+    * member, §8.16); emit both and let scalac pick (nothing to emit — both typecheck). */
   def remedies: List[Remedy] = List(AscribeJavacChoice, AcceptRisk)
 
   /** one call at risk. `alternatives` names the candidates so a reader can dismiss the row without
@@ -276,9 +197,8 @@ object OverloadRiskCheck extends RemedySource:
     "scala.Byte", "scala.Short", "scala.Char", "scala.Int",
     "scala.Long", "scala.Float", "scala.Double", "scala.Boolean")
 
-  /** …and their wrappers, which is the OTHER side of JLS 5.1.7's boxing conversion — the one
-    * conversion that separates java's phase 1 from its phase 2. The wrapper keeps its JAVA name:
-    * `java.lang.Integer` is a class the port references and does not declare. */
+  /** the OTHER side of JLS 5.1.7's boxing conversion — java's phase 1/phase 2 boundary. The
+    * wrapper keeps its JAVA name: a class the port references and does not declare. */
   private val wrapperOf = Map(
     "scala.Byte" -> "java.lang.Byte", "scala.Short" -> "java.lang.Short",
     "scala.Char" -> "java.lang.Character", "scala.Int" -> "java.lang.Integer",
@@ -286,49 +206,26 @@ object OverloadRiskCheck extends RemedySource:
     "scala.Double" -> "java.lang.Double", "scala.Boolean" -> "java.lang.Boolean")
 
   /** a slot that admits a BOXED value and nothing narrower. Deliberately just these three and not
-    * `java.lang.Number`/`Comparable`: a wrapper's supertypes admit the box too, but so do a dozen
-    * other reference types, and widening this set is how a phase-boundary count turns into an
-    * everything-is-overloaded count. The narrowing is stated in [[Report]]'s denominator. */
+    * java.lang.Number/Comparable, whose wider reference set would turn a phase-boundary count into
+    * an everything-is-overloaded count; the narrowing is stated in [[Report]]'s denominator. */
   private val universals = Set("java.lang.Object", "scala.Any", "scala.AnyRef")
 
-  /** the head symbol of a type, for the receiver root below and for [[Overloads]]'s parent walk —
-    * one function, because the two ask the same question and a `ThisType` reaching only one of them
-    * is how an implicit receiver stops resolving. */
+  /** the head symbol of a type, shared by the receiver root below and [[Overloads]]'s parent walk
+    * so a ThisType reaching only one of them cannot stop an implicit receiver resolving. */
   private def headSym(t: TypeRepr): Option[SymId] = t match
     case TypeRepr.TypeRef(_, s)      => Some(s)
     case TypeRepr.AppliedType(tc, _) => headSym(tc)
     case TypeRepr.ThisType(c)        => Some(c)
     case _                           => scala.None
 
-  /** WHERE JAVA LOOKED — the receiver's STATIC TYPE, which is the type whose members (its own and
-    * its inherited ones) JLS 15.12.1 makes the candidate set.
-    *
-    * Not the resolved callee's OWNER, which is where the winner happened to be DECLARED. The two
-    * coincide whenever the winner is the most derived declaration and differ exactly when it is
-    * not: javac binds `f(1)` to an inherited `P.f(int)` in phase 1 while the subclass `C` declares
-    * `f(Integer)`, so an upward-only climb from `P` never sees the candidate that spans the
-    * boundary — the `BoxingPhaseSpan` this lane exists for, invisible in the one direction it is
-    * most likely to arrive in. Rooting at the receiver is a strict WIDENING of the old set (the
-    * owner is always the receiver's type or an ancestor of it), so nothing previously reported can
-    * be lost.
-    *
-    * Three shapes, and the fallback is what keeps the widening honest:
-    *
-    *   - a SELECT — the qualifier's type head. `T.f(x)`, `x.f(y)` and the implicit `this.f(y)` are
-    *     all this, because the frontend renders the last as a `This` qualifier whose type is a
-    *     `ThisType`;
-    *   - a bare IDENT — the ENCLOSING class, which is what java resolves a simple name against and
-    *     which no node in the expression carries. The caller supplies it (the check tracks it on
-    *     the traversal, the emitter has it on its class stack); `SymId.None` where it does not, and
-    *     the fallback then answers;
-    *   - `super.f(x)` — NOT widened. Java resolves it over the SUPERCLASS's members and the
-    *     receiver root here would be the subclass's, which is a set java never considered. Left at
-    *     the callee's owner and stated in `ENGINE-LIMITS.md` T17.
-    *
-    * The guard is the whole of the safety argument: a root is used only where its candidate set
-    * CONTAINS the member javac actually bound. Java's set must contain the winner, so a root whose
-    * set does not is a root this reasoning got wrong — an unowned receiver type, a type variable, a
-    * `null` enclosing class — and the pre-widening root answers instead. */
+  /** WHERE JAVA LOOKED — the receiver's STATIC TYPE, JLS 15.12.1's candidate set — not the resolved
+    * callee's OWNER, which is where the winner happened to be DECLARED (the two differ when the
+    * winner is inherited and a subclass declares a boundary-spanning overload). Rooting at the
+    * receiver strictly WIDENS the old set. Three shapes: a SELECT's qualifier head; a bare IDENT
+    * resolves against the ENCLOSING class (supplied by the caller, `SymId.None` where absent);
+    * `super.f(x)` is NOT widened (java resolves over the SUPERCLASS, ENGINE-LIMITS T17). The guard
+    * is the whole safety argument: a root is used only where its candidate set CONTAINS the member
+    * javac actually bound. */
   private def rootOf(a: Tree.Apply, callee: SymId, owner: SymId, name: String,
                      ov: Overloads, enclosing: SymId)(using Program): SymId =
     def unwrap(t: Term): Term = t match
@@ -344,21 +241,11 @@ object OverloadRiskCheck extends RemedySource:
     then candidate
     else owner
 
-  /** WHAT THIS CALL RISKS, or nothing.
-    *
-    * `None` where the question does not arise at all — an external callee (its overloads are in a
-    * class file), or fewer than two program-declared candidates applicable to this argument count.
-    * `Some(n, fs)` otherwise, with `n` the size of the applicable candidate set, so a caller that
-    * wants the denominator gets it from the same computation that produced the findings and the two
-    * cannot disagree.
-    *
-    * `enclosing` is the class the call is written IN — see [[rootOf]], which needs it for the one
-    * shape that carries no receiver. `SymId.None` is honest and costs only that shape's widening.
-    *
-    * `declaration` is the MEMBER it is written in, which nothing here reads and which every row
-    * carries: it is the granularity a `resolutions` key has, so a caller that wants to ask "did the
-    * port choose something for this row?" needs it on the row rather than re-derived from a second
-    * walk (`CLAUDE.md` §4.56 — two derivations of one fact are free to disagree). */
+  /** WHAT THIS CALL RISKS, or nothing. `None` where the question does not arise (external callee,
+    * or fewer than two applicable program-declared candidates); `Some(n, fs)` with `n` the
+    * applicable candidate count, from the same computation that produced the findings. `enclosing`
+    * is the class the call is written IN, needed by [[rootOf]]. `declaration` is the MEMBER it is
+    * written in, carried on every row rather than re-derived (§4.56). */
   def analyse(a: Tree.Apply, ov: Overloads, enclosing: SymId = SymId.None,
               declaration: SymId = SymId.None)(using p: Program): Option[(Int, List[Finding])] =
     if !p.owns(a.method) then scala.None
@@ -372,9 +259,7 @@ object OverloadRiskCheck extends RemedySource:
         val cands = ov.sameName(root, name).filter(applicable(_, a.args.size))
         if cands.sizeIs < 2 then scala.None
         else
-          // the ROOT and not the callee's owner: the row's whole job is to let a reader re-derive
-          // the candidate set without re-deriving it, and the set is a fact about the type java
-          // looked in.
+          // the ROOT and not the callee's owner: the set is a fact about the type java looked in.
           val ownerName = p.symbolOf(root).map(_.fullName).getOrElse("?")
           val alts      = cands.map(spell).sorted
           def f(i: Issue) = Finding(i, ownerName, s"$name/${a.args.size}", alts, a.origin, declaration)
@@ -389,10 +274,8 @@ object OverloadRiskCheck extends RemedySource:
   def risks(a: Tree.Apply, ov: Overloads, enclosing: SymId = SymId.None)(using Program): List[Finding] =
     analyse(a, ov, enclosing).map(_._2).getOrElse(Nil)
 
-  /** JLS 15.12.2's own arity test, and the only part of applicability this check performs: a
-    * fixed-arity candidate takes exactly its parameter count, a variable-arity one takes that many
-    * less the pack, or more. TYPES are deliberately not checked — that is the resolver this is not,
-    * and the narrowing is reported as the denominator rather than assumed away. */
+  /** JLS 15.12.2's own arity test, the only part of applicability this check performs. TYPES are
+    * deliberately not checked — that is the resolver this is not; reported as the denominator. */
   private def applicable(d: Tree.DefDef, n: Int)(using Program): Boolean =
     val k = d.paramss.flatten.size
     if isVararg(d) then n >= k - 1 else n == k
@@ -400,10 +283,9 @@ object OverloadRiskCheck extends RemedySource:
   private def isVararg(d: Tree.DefDef)(using p: Program): Boolean =
     d.paramss.flatten.lastOption.exists(v => p.symbolOf(v.symbol).exists(_.flags.isVararg))
 
-  /** java's phase 1 / phase 2 boundary, read off the candidates: two FIXED-arity candidates of the
-    * same length whose parameter at some position is a primitive on one side and that primitive's
-    * wrapper (or a universal slot) on the other. A vararg candidate is excluded here because its
-    * own span is the row above, and reporting both for one pair would double-count one call. */
+  /** java's phase 1/2 boundary: two FIXED-arity candidates of the same length whose parameter at
+    * some position is a primitive on one side and its wrapper (or a universal slot) on the other.
+    * Vararg excluded — its own span is the row above, and reporting both would double-count. */
   private def boxingSpan(cands: List[Tree.DefDef])(using Program): Boolean =
     val fixed = cands.filterNot(isVararg)
     fixed.combinations(2).exists { pair =>
@@ -431,45 +313,15 @@ object OverloadRiskCheck extends RemedySource:
   // the walk
   // -------------------------------------------------------------------------------------------
 
-  /** every call in this subtree, paired with the class it is WRITTEN IN — the innermost `ClassDef`
-    * that CONTAINS it.
-    *
-    * `rootOf` needs that class for the one shape carrying no receiver at all, so getting it wrong
-    * is not a reporting detail: it reads the candidate set out of a type java never looked in.
-    *
-    * ==WHY A PRODUCT-REFLECTION WALK AND NOT `StandardTraversal`==
-    *
-    * `Jumps`'s reason, one construct over. A `StandardTraversal` phase reaches every node by
-    * contract and cannot express "which construct am I INSIDE", so the attribution used to be
-    * derived from the traversal's bottom-up ORDER: hold each call unclaimed until some `ClassDef`
-    * closes, on the stated invariant that the first one to close is the innermost one containing
-    * it. That is false for a SIBLING — `void go() { f(1); } static class Inner extends A { … }`
-    * hands `go`'s call to `Inner`, whose own overload set climbs to the callee and therefore passes
-    * `rootOf`'s guard. Measured: one `BoxingPhaseSpan` reported at owner `A$Inner` for a call java
-    * had no choice about at all.
-    *
-    * The walk is TOTAL by construction — every node reaches the `Product` arm, so no node kind can
-    * be forgotten (§3's real concern) — and it descends INTO an `Apply` because a call's arguments
-    * hold calls of their own. An ANONYMOUS class is deliberately not a boundary: `Tree.AnonClass`
-    * is not a `ClassDef`, its symbol is not in the overload index, and a bare name written there
-    * resolves against the enclosing class exactly as `rootOf` would then answer.
-    *
-    * …and with the MEMBER it is written in beside the class, which is a second question and not a
-    * refinement of the first: the class is what java resolved the NAME against, the member is what a
-    * `resolutions` key names. Which declarations those are is `Decision.isKeyable` and NOT this
-    * walk's own state, and the difference is the anonymous class: a `DefDef` inside one is a real
-    * declaration whose owner is a type, so a walk that reset its member at every `DefDef` attributed
-    * a call written in `Outer$1.clicked` to `Outer$1#clicked` — a name no `resolutions` key can
-    * write, and NOT the name the applier used for the same call (it walks the enclosing member's
-    * whole body, anonymous subtrees included). Applied row and residue row then named different
-    * declarations, the lane fell by 0 and `remediation(resolved)` gained 1, with both answers honest
-    * and neither measurable. One predicate, read by both sides.
-    *
-    * A local `val` falls out of the same test rather than out of a `decl == SymId.None` position
-    * check: its owner is the METHOD, and a FIELD's is the class. The walk still has to carry `decl`,
-    * because the owner chain cannot recover the enclosing member from an anonymous class's method —
-    * `SpoonTir.anonClass` interns the anon type under the enclosing CLASS — so only a walk that
-    * descended through the member knows it. */
+  /** every call in this subtree, paired with the class it is WRITTEN IN (the innermost ClassDef
+    * containing it, which [[rootOf]] needs for the no-receiver shape) and the MEMBER it is written
+    * in (a second, independent question — `Decision.isKeyable`, not a refinement of the class,
+    * since an anonymous class's DefDef is a real declaration whose owner is a type). A PRODUCT-
+    * REFLECTION walk rather than StandardTraversal, since a traversal phase cannot express "which
+    * construct am I INSIDE" — a bottom-up closing-order derivation misattributed a sibling class's
+    * call (measured: one BoxingPhaseSpan reported at the wrong owner). TOTAL by construction;
+    * descends into an Apply for nested calls; an ANONYMOUS class is not a boundary (its symbol is
+    * not in the overload index, so a bare name resolves against the enclosing class). */
   private def callsIn(t: Any, enclosing: SymId, decl: SymId,
                       f: (Tree.Apply, SymId, SymId) => Unit)(using p: Program): Unit = t match
     case c: Tree.ClassDef => c.productIterator.foreach(callsIn(_, c.symbol, SymId.None, f))
@@ -485,14 +337,9 @@ object OverloadRiskCheck extends RemedySource:
     case _                => ()
 
   /** Over the units the run EMITS — the same D2 filter every other per-site report carries.
-    *
-    * @param resolutions what the port SELECTED, as the phase recorded it. A row a remedy answered
-    *   has left this lane for `remediation(resolved)` and must not be counted twice (`CLAUDE.md`
-    *   §5). Matched at the SITE and not at the declaration: a selection broadcasts across a member,
-    *   but `ascribe-javac-choice` REFUSES at a call whose alternative cannot be written, so a member
-    *   with two calls may have one answered and one not — drained per declaration the lane would
-    *   fall by two where `resolved` gained one. Empty is the default and the pre-menu behaviour.
-    */
+    * @param resolutions what the port SELECTED. Matched at the SITE and not the declaration: a
+    *   selection broadcasts across a member, but `ascribe-javac-choice` REFUSES per call, so a
+    *   member with two calls may have one answered and one not. Empty is the pre-menu default. */
   def check(program: Program, units: List[Tree.ClassDef], ov: Overloads,
             resolutions: ResolutionPlan = ResolutionPlan.empty): Report =
     given Program = program
@@ -516,44 +363,14 @@ object OverloadRiskCheck extends RemedySource:
   // THE MENU, CARRIED OUT
   // -------------------------------------------------------------------------------------------
 
-  /** CAN JAVAC'S ALTERNATIVE BE WRITTEN HERE? — the whole of [[AscribeJavacChoice]]'s guard, and the
-    * `Some`/`None` is the difference between an act and a counted refusal.
-    *
-    * The answer is a `MethodType`, which is the SIGNATURE of the member the frontend resolved: the
-    * emitter renders it `(A, B) => R` through its own type printer, so every rename, retype and
-    * package move that runs after this phase reaches it exactly as it reaches any other type. A
-    * phase that produced the ascription as TEXT would be writing the upstream namespace into the
-    * output (§4.56) — which is why the phase mints a node and prints nothing.
-    *
-    * Every arm below is a shape where the ascription would be WRONG rather than merely ugly, and
-    * each is refused rather than approximated:
-    *
-    *   - a GENERIC callee — a polymorphic method value has no plain function type, so the
-    *     ascription would either not compile or instantiate the parameters at whatever scala infers,
-    *     which is a different member;
-    *   - a VARARG callee — `JS-G37` emits its pack as `Array[T]`, so the emitted arity is not java's
-    *     and a function type built from java's parameters names a signature the port does not have;
-    *   - a CONSTRUCTOR — `new C(x)` has no method value to ascribe at all;
-    *   - an OPERATOR (`scala.<op>#…`) — the emitter renders it infix, and an ascription would have
-    *     to change the call's whole shape;
-    *   - a STATIC callee — java lets a static be called through an INSTANCE and the emitter has to
-    *     move the receiver (JS-C06); wrapping the callee here would take that arm's place and emit a
-    *     companion member selected on a value;
-    *   - a `super` receiver — scala admits `super` only as a member selection's qualifier, so there
-    *     is no method value to ascribe (and `rootOf` already leaves such a call at its own owner);
-    *   - a SPREAD argument, or an argument count that is not the callee's — the call is not the
-    *     plain application this shape assumes;
-    *   - a parameter or result type that is a bare WILDCARD — `(?) => R` names nothing.
-    *
-    * The finding STAYS IN THE LANE — the residue is what says the port asked for something the
-    * engine could not do here — and the refusal is COUNTED beside it ([[Decline]]), one row per
-    * declined SITE naming its guard. It used to be recorded nowhere at all, and the failure that
-    * exposes is a PARTIAL one: a selection BROADCASTS across the member it names, so a member with
-    * two risky calls can have one ascribed and one declined, which produced an applied row, a lane
-    * residue, no refusal row, and no `NeverApplied` (the key did fire, once). Nothing said the
-    * engine had refused anything — `CLAUDE.md` §3's refusal-enumeration rule read at a menu, and the
-    * exact shape `Resolution.RefusedKind` exists for.
-    */
+  /** CAN JAVAC'S ALTERNATIVE BE WRITTEN HERE? — the whole of [[AscribeJavacChoice]]'s guard; the
+    * `Some`/`None` is the difference between an act and a counted refusal. The answer is a
+    * `MethodType`, the SIGNATURE of the member the frontend resolved, minted as a node so every
+    * later rename/retype/package move reaches it exactly as any other type (§4.56 — never printed
+    * as text). Each `no(...)` arm below is a shape where the ascription would be WRONG rather than
+    * merely ugly; every refusal is COUNTED ([[Decline]]), one row per declined SITE naming its
+    * guard, since a selection broadcasts across a member and one risky call may be ascribed while
+    * a sibling is declined (§3's refusal-enumeration rule read at a menu). */
   def ascription(a: Tree.Apply)(using p: Program): Either[Decline, TypeRepr.MethodType] =
     def no(guard: String, why: String) = Left(Decline(guard, why))
     def bareWildcard(t: TypeRepr): Boolean = t.isInstanceOf[TypeRepr.TypeBounds]
@@ -611,37 +428,17 @@ object OverloadRiskCheck extends RemedySource:
                 d.returnTpt.tpe))
     }
 
-  /** WHY THE ASCRIPTION COULD NOT BE WRITTEN HERE — the guard, as the refusal population groups by,
-    * and the sentence its reader acts on.
-    *
-    * Produced by [[ascription]] itself and by nothing else, which is the same rule the emission and
-    * the refusal already shared: two derivations of "can this be written" would eventually let the
-    * phase refuse a call the emitter would have printed, or the reverse. */
+  /** WHY THE ASCRIPTION COULD NOT BE WRITTEN HERE — the guard the refusal population groups by.
+    * Produced by [[ascription]] itself and nothing else, so emission and refusal cannot drift. */
   final case class Decline(guard: String, why: String)
 
-  /** THE MENU, CARRIED OUT — a phase, for `HeapPollutionCheck.Apply`'s reason (a resolution has to be
-    * recorded before emission, and this check runs after it) plus one this lane adds: the
-    * `ascribe-javac-choice` half REWRITES A NODE, and only a phase may.
-    *
-    * ==One decision point, so the count and the emission cannot disagree==
-    * The phase decides, records, and mints the node the emitter renders. The alternative — the
-    * emitter re-deriving "did the port select here?" while the phase records — is two derivations of
-    * one fact, free to drift, and `CLAUDE.md` §4.56 is a list of exactly that failure. What the
-    * emitter contributes is the one thing a phase may not do: PRINTING (the ascription's type text).
-    *
-    * ==The ascription is a `Tree.Typed` over the callee, and the `Apply` survives==
-    * Wrapping the whole call in an `Opaque` would drain the lane structurally — the check would stop
-    * seeing a call there at all — and that is precisely what makes it wrong: the drain would then be
-    * a SIDE EFFECT of the rewrite rather than a recorded move, and a call whose ascription refused
-    * would be indistinguishable from one that was never asked about. Keeping the `Apply` keeps every
-    * row visible and lets the ledger say which of them moved.
-    *
-    * ==Per DECLARATION, walked with `StandardTraversal`==
-    * The selection key is a member, so the phase asks at each `DefDef`/`ValDef` and rewrites within
-    * it. The inner walk is `StandardTraversal.mapTerm` — never a private recursion (§3) — and the
-    * enclosing CLASS handed to `rootOf` is the declaration's own owner, which is what java resolved a
-    * bare name against.
-    */
+  /** THE MENU, CARRIED OUT — a phase (a resolution must be recorded before emission), since
+    * `ascribe-javac-choice` REWRITES A NODE and only a phase may. One decision point: the phase
+    * decides, records, and mints the node the emitter renders (never a second emitter-side
+    * derivation, §4.56). The ascription is a `Tree.Typed` over the callee, and the `Apply` SURVIVES
+    * — wrapping the call in an Opaque would drain the lane as a side effect of the rewrite rather
+    * than a recorded move. Per DECLARATION, walked with `StandardTraversal.mapTerm` (§3); the
+    * enclosing CLASS handed to `rootOf` is the declaration's own owner. */
   final class Apply extends Phase, PolicyBound:
     def name: String = "overload-risk/remedy"
 
@@ -661,20 +458,14 @@ object OverloadRiskCheck extends RemedySource:
         index = Some(program -> new Overloads(program))
         try super.run(program) finally index = scala.None
 
-    /** …at a declaration a `resolutions` key can NAME, through the same `Decision.isKeyable` the
-      * check reads. An anonymous class's method is skipped HERE and covered by the enclosing
-      * member's own walk, which descends through the whole body — so the site is answerable, and it
-      * is answerable under the one name a port can write. Asked separately, the two sides named
-      * different declarations for one call and the drain silently stopped matching. */
+    /** at a declaration a `resolutions` key can NAME (`Decision.isKeyable`, same as the check).
+      * An anonymous class's method is skipped HERE, covered by the enclosing member's own walk. */
     override def transformDefDef(d: Tree.DefDef)(using p: Program): Tree.DefDef =
       if !Decision.isKeyable(p, d.symbol) then d
       else d.rhs.flatMap(rewritten(d.symbol, _)).fold(d)(b => d.copy(rhs = Some(b)))
 
-    /** A FIELD initialiser holds calls too, and a field is a declaration a `resolutions` key can
-      * name. A LOCAL `val` is not: it is a statement inside a member, its symbol's owner is that
-      * member, and attributing a call to it would hand every port a key naming something no manifest
-      * grammar reaches. Decided from OWNERSHIP (§4.56) — the owner is a class — never from position
-      * in a body. */
+    /** A FIELD initialiser holds calls too and is a nameable declaration; a LOCAL val is not (its
+      * owner is the enclosing member). Decided from OWNERSHIP (§4.56), never body position. */
     override def transformValDef(v: Tree.ValDef)(using p: Program): Tree.ValDef =
       if !Decision.isKeyable(p, v.symbol) then v
       else v.rhs.flatMap(rewritten(v.symbol, _)).fold(v)(b => v.copy(rhs = Some(b)))
@@ -697,11 +488,10 @@ object OverloadRiskCheck extends RemedySource:
     private def act(a: Tree.Apply, decl: SymId, subject: String, enclosing: SymId, ov: Overloads)
                    (using Program): Term =
       // A call this run has ALREADY answered — the bottom-up traversal hands a nested declaration's
-      // body to its enclosing one a second time, and acting twice would put two ledger rows and two
-      // ascriptions on one site. Keyed on the site, which is what the ledger records.
+      // body to its enclosing one a second time. Keyed on the site.
       val fs = risks(a, ov, enclosing).filterNot(f =>
         plan.all.exists(x => x.origin == f.origin && x.remedy.lane == Name))
-      // one entry per KIND that fired here — the selection is one key, so at most one remedy answers.
+      // one entry per KIND that fired here — one selection key, so at most one remedy answers.
       val chosen = fs.flatMap(f => plan.selected(decl, Name, f.issue.toString).map(f -> _))
       chosen.headOption match
         case scala.None                                                => a
@@ -712,14 +502,8 @@ object OverloadRiskCheck extends RemedySource:
         case Some((f0, r0)) =>
           ascription(a) match
             // REFUSED — the alternative cannot be written here, so the findings STAY in the lane and
-            // the decline is COUNTED, naming its guard (`Resolution.RefusedKind`). Recorded nowhere,
-            // a PARTIAL refusal was invisible: a selection broadcasts, so a member with two risky
-            // calls could have one ascribed and one declined, leaving an applied row, a lane residue,
-            // no refusal row and no `NeverApplied` — nothing saying the engine had refused anything.
-            //
-            // ONE row per declined SITE and not per KIND: a call files up to three of JLS 15.12.2's
-            // boundaries and this is one act declining once. The applied side counts per kind for the
-            // opposite reason — there the lane FALLS, and by exactly as many rows as it gained.
+            // the decline is COUNTED, naming its guard. ONE row per declined SITE and not per KIND:
+            // a call files up to three JLS 15.12.2 boundaries and this is one act declining once.
             case Left(d) =>
               plan.refuse(r0, subject, f0.origin, d.guard,
                 s"${d.why} — the ${chosen.size} `$Name` row(s) at `${f0.member}` (line " +
@@ -730,27 +514,19 @@ object OverloadRiskCheck extends RemedySource:
                 s"call to `${f.member}` pinned to the alternative javac bound"))
               a.copy(fun = Tree.Typed(a.fun, TypeTree(mt, a.origin), mt, a.origin))
 
-    /** one ledger row per DRAINED ROW, never one per call: a call may have filed two of JLS
-      * 15.12.2's boundaries and one act answers both, so the lane falls by two and
-      * `remediation(resolved)` must gain two.
-      *
-      * The SITE's line rides in the text, and that is not decoration. A selection BROADCASTS, so one
-      * key answers every matching call in the member, and the porter note sits at the DECLARATION —
-      * two sites therefore put two notes above one `def`, and without the line they are the same
-      * sentence twice, which reads as a duplicated note rather than as two answered calls. */
+    /** one ledger row per DRAINED ROW, never one per call: a call may file two JLS 15.12.2
+      * boundaries and one act answers both. The SITE's line rides in the text since a selection
+      * BROADCASTS and the porter note sits at the DECLARATION — without the line two answered
+      * calls read as one duplicated note. */
     private def record(r: Resolution, subject: String, decl: SymId, f: Finding, what: String): Unit =
       plan.applied(r, subject, decl, f.origin,
         s"$what at line ${f.origin.line} (${f.issue}); candidates: ${f.alternatives.mkString(", ")}")
 
   /** grouped one-line summary, worst family first, each with its §1 classification — and the
-    * DENOMINATOR first, because an over-approximation whose rate a reader cannot see is one they
-    * will learn to ignore. */
+    * DENOMINATOR first, since an over-approximation whose rate a reader cannot see gets ignored. */
   def summary(r: Report): String =
-    // "…and NOT ANSWERED" is not decoration. The denominator is the population this walk saw, which
-    // a `resolutions` selection does not change — but `findings` is what is left after the drain, so
-    // reading the third number as "how many span a phase" would understate the population by exactly
-    // the rows a port took responsibility for, in a line whose whole job is to make the
-    // over-approximation's rate visible.
+    // "and NOT ANSWERED": findings is what remains after the drain, so the third number would
+    // otherwise understate the population by the rows a port took responsibility for.
     val scale =
       s"  ${r.calls} program-declared call(s) examined, ${r.overloaded} with more than one " +
         s"applicable candidate, ${r.findings.size} spanning a java resolution phase and not " +

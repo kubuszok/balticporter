@@ -1,43 +1,9 @@
 package balticporter.tir
 
-/** Turns a portability FINDING into the manifest line that would fix it.
-  *
-  * ==Why this exists==
-  *
-  * CLAUDE.md §4.45: the engine's consumer is an agent in ANOTHER repository, and "an error an
-  * agent cannot classify as (a) engine bug, (b) configure an existing phase, or (c) write a
-  * library-specific rule costs it a full investigation." `PortReport` already answers *which kind*
-  * a finding is, per check. This is the next step down: for the shapes the engine can recognise
-  * with certainty, it answers *which line to paste*, computed from the program being ported.
-  *
-  * Every FQN in a rendered snippet comes from the `Program`; the engine names only its own
-  * mechanisms (`Substitutions`, `StaticForwarderTransform.Forwarder`, `ClassTableTransform`). The
-  * CLAUDE.md §1 grep therefore stays clean by construction — there is no library table here to
-  * grow.
-  *
-  * ==The design constraint that shaped it: a WRONG suggestion is worse than none==
-  *
-  * A suggestion an agent must disprove costs it a cycle, which is more than the finding alone
-  * would have. So this is deliberately three templates and a fallback, not a suggestion engine:
-  *
-  *  - each template states a fact that is CHECKED against the program, never inferred from a name;
-  *  - a template that cannot verify its precondition does not fire;
-  *  - anything not covered by a template is reported as an OBSERVATION — what was measured about
-  *    the finding's distribution — with no fix proposed.
-  *
-  * The confidence on every suggestion is about the ENGINE's part of the claim, and stops there.
-  * "Every use of these APIs is inside one type" is measurable and is what `High` asserts; whether
-  * that type may be dropped, and what should replace it, is the port's judgement and is always
-  * stated as the operator's remaining decision.
-  *
-  * ==What it can see, and the frontend fix that made two of the three possible==
-  *
-  * Two templates need to know which external MEMBER a call reaches, not merely which external
-  * type. That was unavailable until external members carried their owner id (`Minter.external`):
-  * an external member's `fullName` is an interning key, so `owner#name` is the only place its
-  * identity lives, and it was `SymId.None` for the whole history of the project. The same defect
-  * blinded nine `PortabilityCheck` rules. Both are fixed by the same one-field change.
-  */
+/** Turns a portability finding into a manifest-line suggestion, computed from the program.
+  * Three templates (drop, static-forwarder, class-table) each verify a precondition against
+  * the program before firing; anything unmatched is reported as an observation with no fix.
+  * // CLAUDE.md §4.45 */
 object Remediator:
 
   enum Confidence(val label: String):
@@ -48,8 +14,7 @@ object Remediator:
     /** nothing is proposed — this is a measurement of the finding's shape. */
     case Observation extends Confidence("observation")
 
-  /** One remediation. `observed` is always populated and is the part that is measured; `snippet`
-    * is present only when a template verified its precondition. */
+  /** One suggestion. `snippet` is present only when a template verified its precondition. */
   final case class Suggestion(
       mechanism: String,
       subject: String,
@@ -57,16 +22,8 @@ object Remediator:
       observed: String,
       snippet: Option[String] = None,
       caveat: Option[String] = None,
-      /** THE MACHINE-READABLE HALF of the same computation the snippet renders.
-        *
-        * It exists because the loop this file opens is now closed from the other end: a port can
-        * SELECT one of these templates (`DESIGN.md` §8.16) and the engine carries it out, which
-        * needs the VALUES — the wrapper, the receiver, the member set — and not a line of Scala a
-        * phase would have to parse back. Parsing the snippet was the alternative and it is the shape
-        * §4.56 refuses: a string is not a structural fact about anything.
-        *
-        * Built in the same expression as `snippet`, so the two cannot describe different templates;
-        * empty for the OBSERVATION fallback, which proposes nothing to carry out. */
+      /** Machine-readable values of the same computation `snippet` renders.
+        * Empty for the observation fallback. */
       payload: Map[String, String] = Map.empty,
   ):
     def render: String =
@@ -75,9 +32,7 @@ object Remediator:
       val cav  = caveat.map(c => s"\n      ! $c").getOrElse("")
       head + snip + cav
 
-    /** the persisted form. The snippet leads the detail because that is the actionable half and a
-      * human render truncates from the right; `path` stays `-` rather than being repurposed, since
-      * every other consumer of that column treats it as a source path. */
+    /** Persisted form. Snippet leads the detail; `path` stays `-`. */
     def report: CheckReport.Finding =
       CheckReport.Finding("remediation", mechanism, subject, "-", 0,
         snippet.map(s => s"$s  ·  ").getOrElse("") +
@@ -85,9 +40,7 @@ object Remediator:
 
   // -------------------------------------------------------------------------
 
-  /** Suggestions for the violations given. Pass the EMITTED violations: a violation inside a type
-    * the manifest already drops has been remediated, and re-suggesting it is exactly the wasted
-    * cycle this file exists to avoid. */
+  /** Suggestions for the given violations. Pass the EMITTED violations only. */
   def suggest(program: Program, violations: List[PortabilityCheck.Violation]): List[Suggestion] =
     if violations.isEmpty then Nil
     else
@@ -99,12 +52,7 @@ object Remediator:
       val rest        = observations(program, sited.filterNot((v, _) => covered(v.api)))
       (chokepoints ++ forwarders ++ classTables).map(_._1) ++ rest
 
-  /** the `CheckReport` feed, so the snippets are persisted and diffed rather than scrolling past
-    * in a terminal — the same failure the checks themselves had, when their results were stdout-only,
-    * truncated, never persisted and never diffed, so "did my change move omissions from 31 to 33" had
-    * no answer but scrollback archaeology. The
-    * findings are RETURNED, not written: `PortRun` records every check, which is what makes
-    * `RequiredChecks` able to assert that each one reached `findings.tsv`. */
+  /** Findings for `CheckReport`. Returned, not written; `PortRun` records them. */
   def reports(suggestions: List[Suggestion]): List[CheckReport.Finding] = suggestions.map(_.report)
 
   def summary(suggestions: List[Suggestion]): String =
@@ -115,27 +63,13 @@ object Remediator:
   // Template 1 — every use of an unportable API is inside ONE type the port declares.
   // -------------------------------------------------------------------------
 
-  /** `Substitutions(dropTypes = Set(W))`.
-    *
-    * The measured claim is exact: if every site of APIs a1…an lies inside `W`, then removing `W`
-    * removes all of them, and nothing else in the port has to change. That is the shape libGDX's
-    * `NetJavaImpl` and `ReflectionPool` drops actually had, and it is the one fact about a
-    * portability finding that a manifest edit can act on directly.
-    *
-    * Two grades, and the difference is measured rather than guessed: a `W` nothing else references
-    * can be dropped outright (`High`); a `W` other units reference needs an injected replacement
-    * at the same FQN or the port stops compiling, which `SubstitutionCheck` would then report as a
-    * dangling reference (`Medium`).
-    */
+  /** Template 1: `Substitutions(dropTypes = Set(W))`.
+    * `High` when nothing else references `W`; `Medium` when other units do (needs injection). */
   private def dropSuggestions(
       program: Program,
       sited: List[(PortabilityCheck.Violation, Option[SymId])],
   ): List[(Suggestion, Set[String])] =
-    // an api is chokepointed when EVERY one of its sites resolves to the same declared type.
-    // NB `.toList` before the flatMap, and it is load-bearing: flat-mapping the Map directly
-    // builds a Map keyed by the wrapper, so a type that chokepoints four APIs kept ONE of them
-    // and the other three fell through to the observation fallback — a suggestion that understated
-    // itself while looking complete.
+    // `.toList` before flatMap: flat-mapping a Map directly would lose APIs sharing a wrapper
     val choke = sited.groupBy(_._1.api).toList.flatMap { (api, vs) =>
       vs.map(_._2).distinct match
         case List(Some(w)) if declares(program, w) => Some(w -> api)
@@ -144,8 +78,7 @@ object Remediator:
     choke.groupBy(_._1).toList.sortBy((w, _) => fullName(program, w)).map { (w, pairs) =>
       val apis  = pairs.map(_._2).toSet
       val name  = fullName(program, w)
-      // sites OF THE CHOKEPOINTED APIS, not every violation inside `w`: the type may also hold a
-      // site of an api that occurs elsewhere too, and counting it here would overstate the claim.
+      // sites of the chokepointed APIs only, not every violation inside `w`
       val sites = sited.count((v, o) => o.contains(w) && apis(v.api))
       val outside = externalReferrers(program, w)
       val obs = s"all $sites site(s) of ${apis.size} JVM-only API(s) are inside this one declared " +
@@ -159,12 +92,7 @@ object Remediator:
          apis)
       else
         val (touched, total) = memberSpread(program, w, sited)
-        // Dropping a type to remove an API that two of its ninety members use is true and useless.
-        // The ratio is stated rather than thresholded — an engine that decided "disproportionate"
-        // for the operator would be guessing at the port's shape.
         val proportion =
-          // `touched` counts enclosing DEFINITIONS, which may be nested (an anonymous class body),
-          // so it is only comparable to the declared-member count when it does not exceed it.
           if total > 0 && touched > 0 && touched <= total then
             s"; $touched of its $total member(s) touch the API" +
               (if touched * 2 < total then
@@ -180,7 +108,7 @@ object Remediator:
          apis)
     }
 
-  /** how much of `w` is implicated: (members holding a violation site, members declared). */
+  /** (members holding a violation site, total members declared in `w`). */
   private def memberSpread(
       program: Program,
       w: SymId,
@@ -196,19 +124,9 @@ object Remediator:
   // Template 2 — a declared static wrapper that merely forwards to the real receiver.
   // -------------------------------------------------------------------------
 
-  /** `StaticForwarderTransform.Forwarder(wrapper, receiver, members)`.
-    *
-    * The precondition is checked, not named: a declared `static W.m(x: X, rest…)` whose body calls
-    * `X#m` — the same member name, on an external type, with the method's own first parameter's
-    * type as the owner. That is exactly the rewrite the phase performs, so a match is evidence
-    * rather than a resemblance.
-    *
-    * The important half is what is EXCLUDED. A wrapper member that forwards to an `X#m` which is
-    * itself an unportable finding must NOT be inlined: forwarding relocates the JVM dependency
-    * from the wrapper to the call site and the port is no more portable than before. Those are
-    * listed by name as the residue that still needs a real replacement — which is the same
-    * residue `StaticForwarderTransform`'s own doc comment says the phase exists to keep explicit.
-    */
+  /** Template 2: `StaticForwarderTransform.Forwarder(wrapper, receiver, members)`.
+    * Precondition checked: a static `W.m(x: X, ...)` forwarding to `X#m`.
+    * Excludes members that are themselves unportable (forwarding would relocate the dependency). */
   private def forwarderSuggestions(
       program: Program,
       sited: List[(PortabilityCheck.Violation, Option[SymId])],
@@ -217,7 +135,6 @@ object Remediator:
     if implicated.isEmpty then Nil
     else
       val unportableMembers = sited.map(_._1.api).toSet
-      // (wrapper, receiver) -> forwarded member names, and the ones that must not be forwarded
       val hits = collection.mutable.Map.empty[(SymId, SymId), (Set[String], Set[String])]
       for
         m <- program.symbols.all
@@ -256,8 +173,7 @@ object Remediator:
         case _ => scala.None
       }
 
-  /** `enc` is a declared static method named `member` whose FIRST parameter has type `receiver` —
-    * i.e. the shape `StaticForwarderTransform` rewrites. Returns the type that declares it. */
+  /** Returns the declaring type if `enc` is a static forwarding wrapper for `member` on `receiver`. */
   private def forwardingWrapperOf(program: Program, enc: SymId, member: String, receiver: SymId): Option[SymId] =
     for
       s  <- program.symbolOf(enc)
@@ -273,31 +189,9 @@ object Remediator:
   // Template 3 — a runtime class lookup by NAME.
   // -------------------------------------------------------------------------
 
-  /** `ClassTableTransform(Map(callee -> table))`.
-    *
-    * Scoped to `Class.forName` alone, and that is not timidity. The phase replaces the whole
-    * receiver-and-call with `Table.member(args)`, which is faithful only for a STATIC lookup whose
-    * argument is the name — `c.newInstance()` rewritten the same way would silently lose `c`. A
-    * template that guessed which reflective calls are static would produce exactly the wrong
-    * suggestion this file's design forbids.
-    *
-    * `Medium` because the destination table cannot be computed: it is a type the port has to
-    * write, listing the classes it can name. The KEY is exact, and the key is the part that is
-    * easy to get wrong — it is `owner#member` of the CALLEE, which is not what a reader looking at
-    * the emitted code would guess.
-    *
-    * ==And the key it prints must be one a FRONT DOOR can accept — which `java.lang.Class#forName`
-    * is not==
-    * Both doors bind this key with `Ownership.Owned`: `ClassTableTransform.bindPolicy` calls
-    * `bindMembers` at its default, and the `class-table` REMEDY declares
-    * `Remedy.Subject.OwnedMember`, so `ResolutionPlan.of` binds it through `bindMember` at the same
-    * ownership. An EXTERNAL member is `ExternalOnly` at both — the whole point of that refusal — so
-    * a snippet naming `java.lang.Class#forName` is a line an agent pastes and then gets a policy
-    * finding for, which is strictly worse for its reader than silence (this file's own opening
-    * argument). The direct-site case therefore says, in as many words, that THERE IS NO SELECTABLE
-    * KEY here, and proposes nothing: the mechanism needs a member this program DECLARES, and a
-    * direct call names java's own.
-    */
+  /** Template 3: `ClassTableTransform(Map(callee -> table))`. Scoped to `Class.forName`.
+    * `Medium` because the destination table must be hand-written. Key must be an OWNED member;
+    * a direct `Class.forName` call has no selectable key and gets an observation only. */
   private def classTableSuggestions(
       program: Program,
       sited: List[(PortabilityCheck.Violation, Option[SymId])],
@@ -305,9 +199,7 @@ object Remediator:
     val lookups = sited.filter((v, _) => v.api == ClassForName)
     if lookups.isEmpty then Nil
     else
-      // the port's OWN forwarding wrapper is the ONLY key either door can bind: redirecting
-      // `W.forName` leaves W's body (the `Class.forName` call itself) as the only thing to drop,
-      // which is what makes the wrapper removable at all.
+      // only the port's own forwarding wrapper is a bindable key
       val wrappers = lookups.flatMap { (v, _) =>
         program.symbolOf(v.enclosing).filter(s => s.flags.isStatic && declares(program, s.owner))
           .map(s => s"${fullName(program, s.owner)}#${s.name}")
@@ -322,9 +214,6 @@ object Remediator:
             Map("callee" -> w, "sites" -> lookups.size.toString)),
             Set(ClassForName)))
         case ws =>
-          // NOTHING PROPOSED. Both front doors take an OWNED member key, and every remaining shape
-          // here names java's own: no wrapper at all (a direct `Class.forName`), or several, where
-          // picking one would redirect a third of the sites and say nothing about the rest.
           val shape =
             if ws.isEmpty then s"${lookups.size} direct site(s) of `$ClassForName`"
             else s"${lookups.size} site(s) reached through ${ws.size} of this port's own static " +
@@ -347,10 +236,7 @@ object Remediator:
   // Fallback — measured, never proposed.
   // -------------------------------------------------------------------------
 
-  /** Everything no template matched. This says what the distribution IS and stops: an api used
-    * from eight unrelated types has no single seam, and inventing one for it is the failure mode
-    * that costs the reader more than silence would.
-    */
+  /** Observation fallback for APIs no template matched. Reports distribution, proposes nothing. */
   private def observations(
       program: Program,
       sited: List[(PortabilityCheck.Violation, Option[SymId])],
@@ -374,7 +260,7 @@ object Remediator:
   private def fullName(program: Program, s: SymId): String =
     program.symbolOf(s).map(_.fullName).getOrElse("?")
 
-  /** every DECLARED type other than `w` that references `w`. */
+  /** Every declared type other than `w` that references `w`. */
   private def externalReferrers(program: Program, w: SymId): List[String] =
     program.usages(w)
       .flatMap(u => PortabilityCheck.owningType(program, u.enclosing))

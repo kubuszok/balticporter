@@ -2,59 +2,23 @@ package balticporter.tir
 
 import balticporter.catalog.FixKind
 
-/** Every declaration whose VARARG parameter has a NON-REIFIABLE component type — java's heap
-  * pollution, carried into the port with nothing on the Scala side that mentions it.
-  *
-  * ==What the difference actually is (catalog `JS-G41`, JLS 9.6.4.7 and 4.12.2)==
-  * A `T...`/`List<String>...` parameter is an array of a type the JVM cannot check, so the array
-  * javac creates at each call site can be polluted and the method body can hand out a value of the
-  * wrong type with no `ClassCastException` where the mistake was made. **Java's own answer is not a
-  * fix, it is a CONVERSATION**: javac WARNS at the declaration, and `@SafeVarargs` is the author
-  * asserting they checked the body. Neither half exists in Scala — there is no `@SafeVarargs`, and
-  * scalac issues no such warning — so both the risk and the acknowledgement cross the port
-  * silently.
-  *
-  * '''There is nothing to translate, which is exactly why this is a COUNTER and not an obligation
-  * the emission can discharge.''' The port reproduces java's semantics precisely: the unsoundness
-  * is identical on both sides, and a phase that "fixed" it would be emitting a different program.
-  * What can be reported is WHERE the port inherited it, which is a number a reader can act on and
-  * was a silence before.
-  *
-  * ==And the annotation makes it WORSE than a silence, which is the part worth seeing==
-  * `SpoonTir.annotationsOf` carries a MARKER annotation unconditionally, so `@SafeVarargs` is
-  * emitted verbatim onto the Scala method — where it is decoration twice over. `JS-G37` renders a
-  * java `T...` as a plain `Array[T]` parameter (the port materialises the array at its own call
-  * sites), so the emitted method is not even variadic, and scalac neither checks the annotation's
-  * placement nor derives anything from it. A reader of the emitted file sees java's acknowledgement
-  * of a risk sitting on a declaration where it says nothing at all.
-  *
-  * ==Both halves are counted, and the UNACKNOWLEDGED one is the population that matters==
-  * A census keyed on the annotation would report java's acknowledgements and call that the risk —
-  * which is `CLAUDE.md` §4.56's lesson about an instrument whose silence is a wrong answer. The
-  * declarations javac warned about and the author never annotated carry the same unsoundness and
-  * have no marker of any kind, so they are the ones a reader cannot otherwise find. Reifiability is
-  * JLS 4.7's own rule, asked of the emitted component type: a type VARIABLE is not reifiable, and
-  * neither is a parameterised type unless every argument is an UNBOUNDED wildcard.
-  *
-  * '''Why the reifiability test is structural.''' "Is this a type variable" is answered from the
-  * symbol's own `info` being a [[TypeRepr.TypeBounds]] — which is what `SpoonTir.mintTypeParams`
-  * gives a type parameter and what nothing else has — never from the `$$` in its interning key
-  * (§4.56).
-  */
+/** Counts every declaration whose vararg parameter has a non-reifiable component type
+  * (java's heap pollution, catalog `JS-G41`). Reports `Acknowledged` (java had `@SafeVarargs`)
+  * and `Unacknowledged` (javac warned, author did not annotate). Nothing to translate --
+  * the port reproduces java's unsoundness exactly; this makes it a number.
+  * // JLS 9.6.4.7, JLS 4.7, JLS 4.12.2 */
 object HeapPollutionCheck extends RemedySource:
 
   val Name = "heap-pollution"
 
-  /** java's own annotation, by FQN. The one library-free string in this file, beside the emitted
-    * spelling of an array — both are facts about java and about this engine's own rendering. */
+  /** java's own annotation FQN. */
   private val SafeVarargs = "java.lang.SafeVarargs"
   private val ScalaArray  = "scala.Array"
 
   enum Issue:
-    /** java wrote `@SafeVarargs`: the author asserted the body is safe, and the assertion crosses
-      * into the emitted file as an annotation that says nothing to scalac. */
+    /** Java wrote `@SafeVarargs`; the annotation is inert in scala. */
     case Acknowledged
-    /** javac WARNED at this declaration and the author left it; nothing on the Scala side warns. */
+    /** Javac warned and the author did not annotate; nothing warns in scala. */
     case Unacknowledged
 
   object Issue:
@@ -73,53 +37,19 @@ object HeapPollutionCheck extends RemedySource:
           "Nothing in the emitted file mentions it and no other count can see it."
 
   // -------------------------------------------------------------------------------------------
-  // THE MENU (`DESIGN.md` §8.16) — what a port may ASK FOR at one of these declarations
+  // THE MENU (DESIGN.md §8.16)
   // -------------------------------------------------------------------------------------------
 
-  /** JAVA'S OWN ANSWER, GIVEN A HOME — the operator states that the vararg use at this member is
-    * safe, and the row moves from the residue into `remediation(resolved)`.
-    *
-    * ==Why an acknowledgement is a REMEDY and not a suppression==
-    * There is nothing to translate here and there never will be: the port reproduces java's
-    * unsoundness exactly, so a phase that "fixed" it would be emitting a different program. What
-    * java HAS and scala has not is the CONVERSATION — javac warns at the declaration and
-    * `@SafeVarargs` is the author answering it. This remedy is that answer, carried out where the
-    * java one could not be: it is recorded as a `Decision`, so it reaches `decisions.tsv` AND the
-    * emitted line as a porter note (§4.575), which is strictly more than the java said, because
-    * scalac neither checks `@SafeVarargs`'s placement nor derives anything from it.
-    *
-    * ==NOT emission-affecting, and that is a claim about the SIGNATURE==
-    * Applying it changes no type, no parameter and no body — only the porter note, which is a
-    * comment. Two modules choosing differently therefore cannot produce two ports that compile
-    * alone and fail together, which is exactly the test §1.5 puts a selection to.
-    *
-    * ==It answers `Unacknowledged` ALONE, on purpose==
-    * An `Acknowledged` row is a DIFFERENT statement — java's own author already made this call, and
-    * the row exists to say that the promise crossed into a file where nothing can check it.
-    * Draining it with the port's own acknowledgement would erase the distinction the two kinds were
-    * split for, and would let a port report zero for a lane whose whole point is that java's
-    * assertion is now unverified. The two kinds here PARTITION the lane; they do not split a site.
-    */
+  /** Acknowledge that the vararg use at this member is safe. NOT emission-affecting.
+    * Answers `Unacknowledged` only; `Acknowledged` rows are java's own assertion, kept apart. */
   val Acknowledge: Remedy = Remedy(
     id = "acknowledge", lane = Name, kind = Issue.Unacknowledged.toString,
     emissionAffecting = false, fix = FixKind.Universal,
     what = "the operator states this vararg use is safe — java's `@SafeVarargs` conversation, " +
       "carried out where java could not always hold it")
 
-  /** …and WHAT IS NOT ON THE MENU, stated where the menu is so a reader sees a refusal and not a gap.
-    *
-    *   - '''emit a scala-side marker equivalent to `@SafeVarargs`'''. REFUSED. Scala has no warning
-    *     to suppress, so the marker would be inert exactly as the carried-over annotation already is
-    *     (see the class doc: `@SafeVarargs` crosses verbatim onto a method whose vararg is now a
-    *     plain `Array` parameter, where scalac derives nothing from it). A second inert marker is a
-    *     mechanism a port could select and get nothing from, which is worse than the count;
-    *   - '''prove the body safe'''. REFUSED as a remedy: it is not a choice a port makes, it is an
-    *     analysis nothing here performs. [[Acknowledge]] is the honest shape — the operator asserts
-    *     it, and the assertion is RECORDED with their name on it rather than derived;
-    *   - '''change the emitted signature so the pollution cannot arise'''. REFUSED: the port would
-    *     stop being the library. `JS-G37` already renders a `T…` as `Array[T]`, and narrowing it
-    *     further is a different API.
-    */
+  /** Not on the menu: emitting a scala-side marker (inert), proving the body safe
+    * (an analysis, not a port choice), or narrowing the signature (different API). */
   def remedies: List[Remedy] = List(Acknowledge)
 
   /** @param param     the vararg parameter's name
@@ -135,13 +65,8 @@ object HeapPollutionCheck extends RemedySource:
       CheckReport.Finding(Name, issue.toString, owner, CheckReport.relativise(origin.javaPath),
         origin.line, detail)
 
-  /** THE PREDICATE, STATED ONCE — read by this check and by the emitter's `JS-G41` consult, so the
-    * count and the obligation cannot disagree about which declarations the row is even about
-    * (`ENGINE-LIMITS.md` F8's rule).
-    *
-    * `None` where the declaration carries no unchecked vararg at all, which is the answer at the
-    * overwhelming majority of methods and is what makes the consult a discharge rather than a fire.
-    */
+  /** Shared predicate for this check and the emitter's JS-G41 consult.
+    * Returns `None` for declarations with no unchecked vararg. // ENGINE-LIMITS F8 */
   def uncheckedVararg(d: Tree.DefDef)(using p: Program): Option[Finding] =
     val owner = p.symbolOf(d.symbol).map(_.fullName).getOrElse("?")
     val ack   = p.symbolOf(d.symbol).exists(_.annotations.exists(a => headFqn(a.tpe).contains(SafeVarargs)))
@@ -152,35 +77,26 @@ object HeapPollutionCheck extends RemedySource:
           render(componentOf(v.tpt.tpe)), d.origin)
     }
 
-  /** the element of the array a `T...` became (`JS-G37`), or the type itself where a phase has
-    * already moved it off `scala.Array` — in which case there is no component to judge and the
-    * type stands in for one. */
+  /** The array element type, or the type itself if no longer `scala.Array`. */
   private def componentOf(t: TypeRepr)(using Program): TypeRepr = t match
     case TypeRepr.AppliedType(tc, List(a)) if headFqn(tc).contains(ScalaArray) => a
     case other                                                                    => other
 
-  /** JLS 4.7, asked of the emitted type. Deliberately CONSERVATIVE in the direction that reports:
-    * a shape this algebra cannot classify is left reifiable, because a row a reader cannot check is
-    * worse than a silence they can. */
+  /** JLS 4.7 reifiability test. Conservative: unclassifiable shapes are left reifiable. */
   private def reifiable(t: TypeRepr)(using Program): Boolean = t match
     case TypeRepr.TypeRef(_, s) => !isTypeVariable(s)
-    // …an ARRAY is reifiable iff its COMPONENT is (JLS 4.7's own clause), and it has to be its own
-    // arm because an array is spelled as an application here: read through the general rule below,
-    // `String[]…` would be reported for having a non-wildcard argument, which javac does not warn
-    // about and this lane would then be counting a risk that is not there.
+    // an array is reifiable iff its component is (JLS 4.7)
     case TypeRepr.AppliedType(tc, List(a)) if headFqn(tc).contains(ScalaArray) => reifiable(a)
     case TypeRepr.AppliedType(tc, as)                                         => reifiable(tc) && as.forall(unboundedWildcard)
     case TypeRepr.AndType(_, _)                                               => false
     case TypeRepr.OrType(_, _)                                                => false
     case _                                                                    => true
 
-  /** a type PARAMETER, structurally: `SpoonTir.mintTypeParams` gives one its BOUNDS as its `info`,
-    * and no other symbol kind has a `TypeBounds` there. Never the `$$` in the interning key. */
+  /** A type parameter, structurally: has `TypeBounds` as its `info` and `isParam`. */
   private def isTypeVariable(s: SymId)(using p: Program): Boolean =
     p.symbolOf(s).exists(x => x.flags.isParam && x.info.isInstanceOf[TypeRepr.TypeBounds])
 
-  /** `List<?>` is reifiable and `List<? extends X>` is not — JLS 4.7's one distinction between two
-    * things that render two characters apart. */
+  /** JLS 4.7: `List<?>` is reifiable, `List<? extends X>` is not. */
   private def unboundedWildcard(t: TypeRepr)(using Program): Boolean = t match
     case TypeRepr.TypeBounds(_, hi) =>
       hi == TypeRepr.NoType ||
@@ -197,21 +113,11 @@ object HeapPollutionCheck extends RemedySource:
     case TypeRepr.TypeBounds(_, hi)   => if hi == TypeRepr.NoType then "?" else s"? <: ${render(hi)}"
     case other                        => headFqn(other).getOrElse(other.toString)
 
-  /** Over the units the run EMITS — the same D2 filter every other per-site report carries.
-    *
-    * @param resolutions what the port SELECTED, as the phase above recorded it. A row a remedy
-    *   answered has left this lane for `remediation(resolved)`, and reporting it here as well would
-    *   put two rows on one site and leave the lane unable to fall by what `resolved` gained
-    *   (`CLAUDE.md` §5). Read off the LEDGER and not off the manifest, so a selection the phase
-    *   examined and refused still has its finding — see [[ResolutionPlan.appliedAt]]. Empty is the
-    *   default and the pre-menu behaviour exactly.
-    */
+  /** Check over the units the run emits (D2). `resolutions` drains rows a remedy answered. */
   def check(program: Program, units: List[Tree.ClassDef],
             resolutions: ResolutionPlan = ResolutionPlan.empty): List[Finding] =
     given Program = program
     val out = collection.mutable.ListBuffer.empty[Finding]
-    // `StandardTraversal`, never a private recursion (§3): a vararg declaration inside an ANONYMOUS
-    // class lives in a TERM, and a walk over class bodies would find none of them.
     val scan = new Phase:
       def name: String = "heap-pollution/scan"
       override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef =
@@ -222,31 +128,8 @@ object HeapPollutionCheck extends RemedySource:
     units.foreach(u => StandardTraversal.mapClassDef(scan, u))
     out.toList.sortBy(f => (f.issue.toString, f.origin.javaPath, f.origin.line, f.param))
 
-  /** THE MENU, CARRIED OUT — a phase, because a resolution has to be recorded BEFORE emission.
-    *
-    * ==Why the applier is not the check==
-    * The check runs after the units are written, which is exactly right for a count and impossible
-    * for a resolution: an applied one produces a `Decision`, the emitter renders that decision as a
-    * porter note while it writes the member (§4.575), and the run records its decisions before the
-    * first file is emitted. Recorded from the check the row would reach `decisions.tsv` too late for
-    * any note — a `NoteCoverageCheck` failure at best, and at worst a decision the reader at the
-    * line is never told about. So the DECLARER of the menu is this check (it mints the rows, and
-    * `PortRun.CheckRemedies` is where it says so) and the CARRIER is a phase in the pipeline. Both
-    * read [[uncheckedVararg]], which is the predicate stated once, so the count and the application
-    * cannot disagree about which declarations the row is about.
-    *
-    * ==A no-op with no selections, by construction==
-    * With an empty plan every `transformDefDef` returns immediately, and the phase is woven into
-    * every port for that reason: it has no constructor policy of its own — its whole configuration
-    * is `PortManifest.resolutions`, which is already part of the surface fingerprint — so there is
-    * nothing for two modules to configure differently and nothing for a `surface` line to add.
-    *
-    * ==And it applies only where THIS RUN emits the declaration==
-    * A dependent's `Program` contains its base's units, so an inherited selection binds there too;
-    * applied, it would file a `remediation(resolved)` row about a declaration this module does not
-    * emit — `ENGINE-LIMITS.md` D2 read at the resolution ledger. `RunScope` is the run's own answer
-    * and arrives on the binder like every other thing a phase may not derive from the tree.
-    */
+  /** Pipeline phase that records remedy decisions before emission.
+    * No-op with an empty plan. Scoped to this run's own declarations (D2). */
   final class Apply extends Phase, PolicyBound:
     def name: String = "heap-pollution/remedy"
 
@@ -257,10 +140,7 @@ object HeapPollutionCheck extends RemedySource:
       plan  = binder.resolutions
       scope = binder.run
 
-    /** the NO-OP, taken before the traversal rather than inside it: with no selections the phase has
-      * nothing it could do, and returning the program untouched means it does not even rebuild the
-      * units — which is what makes "the menu's arrival is flat" a structural claim rather than a
-      * measured one. */
+    /** No-op when empty: returns program untouched without rebuilding units. */
     override def run(program: Program): Program =
       if plan.isEmpty then program else super.run(program)
 

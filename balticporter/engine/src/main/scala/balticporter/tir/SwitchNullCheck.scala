@@ -1,38 +1,16 @@
 package balticporter.tir
 
-/** Every java `switch` on a REFERENCE type whose translation would fall out on `null` instead of
-  * throwing.
+/** Reference-typed `switch` selectors where `null` falls out instead of throwing NPE.
   *
-  * The §4.4 defect this counts: java throws a `NullPointerException` the instant a `switch` on a
-  * `String`, a boxed primitive or an enum sees a null selector (JLS 14.11.2 for enums, 14.11's
-  * general text otherwise). It is IMPLICIT — a classic switch has no `case null` syntax, so there
-  * is no way to write one that tolerates null. Scala's `match` special-cases nothing: `null` fails
-  * every literal and constructor pattern and reaches whatever the LAST arm is, which since the
-  * fall-out arm was added is an arm that quietly does nothing.
-  *
-  * So this and the missing fall-out arm are ONE mechanism read at two selector values. Without the
-  * fall-out arm an ordinary value throws `MatchError` where java falls out; without this one a null
-  * value falls out where java throws. Both are silent to a compile: the emitted `match` is valid
-  * Scala either way and no count moves.
-  *
-  * '''Why this is not the emitter's own answer read back.''' The reference-typed switches are found
-  * HERE, from the trees, by walking with `StandardTraversal` and asking the scrutinee's own type
-  * whether a java primitive could have produced it; the emitter contributes only the set of
-  * switches it actually guarded. So `_ => false` reproduces the un-repaired engine on the same
-  * trees, and the two disagree exactly when a switch reaches the output through a path that does
-  * not guard.
-  *
-  * A switch whose java already writes `case null ->` (SE21's pattern-switch escape hatch, JLS
-  * 14.11.1) is not a finding and must not gain a synthetic throw: that label is java code
-  * deliberately handling null, and a throw ahead of it would invert the behaviour it exists to
-  * state.
-  */
+  * Walks the tree independently of the emitter; disagrees when the emitter missed a guard.
+  * A switch whose java writes `case null ->` (SE21) is excluded. Findings are §1(a) engine
+  * gaps. // CLAUDE.md §4.4 */
 object SwitchNullCheck:
 
   val Name = "switch-null"
 
   enum Issue:
-    /** a reference-typed selector reaches an arm that does nothing, where java throws. */
+    /** A reference-typed selector reaches the default arm, where java throws NPE. */
     case NullFallsOut
 
   object Issue:
@@ -55,11 +33,7 @@ object SwitchNullCheck:
       CheckReport.Finding(Name, issue.toString, owner, CheckReport.relativise(origin.javaPath),
         origin.line, detail)
 
-  /** @param guarded which switches the emitter gave a `case null` arm
-    *                ([[balticporter.emit.TirEmitter.switchNullGuards]], keyed by
-    *                [[Tree.Match.id]] — an `Origin` is not unique across nodes and
-    *                `StandardTraversal` rebuilds every node it walks, so neither can be the key).
-    */
+  /** @param guarded which switches the emitter guarded, keyed by [[Tree.Match.id]]. */
   def check(program: Program, units: List[Tree.ClassDef], guarded: Tree.Match => Boolean): List[Finding] =
     given Program = program
     units.flatMap(inUnit(_, guarded))
@@ -85,12 +59,11 @@ object SwitchNullCheck:
     }
     out.toList
 
-  /** could this selector be null? Everything that is not one of the types a java PRIMITIVE renders
-    * as — read from the one set the emitter reads, so the repair and the check cannot drift. */
+  /** True unless the selector is a scala value class (reads the emitter's own set). */
   private def nullable(t: TypeRepr)(using Program): Boolean =
     !headSymOf(t).map(fqn).exists(balticporter.emit.TirEmitter.ScalaValueClasses.contains)
 
-  /** does the java already write a `null` case label? SE21's opt-out, and not a finding. */
+  /** True if java already writes `case null ->` (SE21 opt-out). */
   private def writesNull(m: Tree.Match): Boolean =
     m.cases.exists(_.labels.exists {
       case Tree.Literal(Constant.NullC, _, _) => true

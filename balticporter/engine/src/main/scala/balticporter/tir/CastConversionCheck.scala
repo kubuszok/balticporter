@@ -1,39 +1,16 @@
 package balticporter.tir
 
-/** Every emitted CAST whose target is a primitive and whose operand is a WRAPPER of a DIFFERENT
-  * primitive — java's unboxing conversion, rendered as a scala type ASSERTION that throws.
+/** Casts where the operand is a wrapper of a DIFFERENT primitive than the target -- java's
+  * unboxing conversion (JLS 5.1.8) rendered as a scala type assertion that throws.
   *
-  * ==The difference, at the one cell that is checkable here (catalog `JS-E06`, `ENGINE-LIMITS.md` K17)==
-  * `(double) aLong` is a CONVERSION in java: JLS 5.1.8 unboxes at the wrapper's own primitive and
-  * 5.1.2 widens from there, so the value is `7.0`. `aLong.asInstanceOf[scala.Double]` is
-  * `unboxToDouble`, which demands a `java.lang.Double` and throws `ClassCastException` on a `Long`.
-  * The two are the same syntax and different programs, with a green compile and no moved count.
-  *
-  * '''The frontend already answers it''' — `SpoonTir.castOf`/`coerce` emit `v.doubleValue()` for
-  * exactly this shape, from the type the operand HAS in the java. So the cell cannot arise from a
-  * translation, and this check exists for the residue the row's own status names: **a value some
-  * later PHASE retypes after the frontend has decided.** A retyping moves an operand's static type
-  * and moves no cast, so a `Tree.Typed` that was an assertion when it was built can become a
-  * conversion by the time it is rendered — with nothing between the two to notice.
-  *
-  * ==Why it is a lane that reports ZERO, and why that is the point==
-  * No corpus port retypes a wrapper into another wrapper, so this counts 0 on all fifteen. That is
-  * the same state `try-resource` is in, and `try-resource`'s own history is the argument: the
-  * construct was dropped WHOLE for the life of a backend precisely because nothing was counting a
-  * path nobody had exercised. A lane at zero is a claim that can fail; a path with no lane is not.
-  *
-  * '''The predicate is stated ONCE''' and read by the emitter's `JS-E06` consult as well as by this
-  * check, so the obligation and the count cannot disagree about which casts the row is about
-  * (`ENGINE-LIMITS.md` F8's rule). A SAME-type unbox (`Integer` at `scala.Int`) is deliberately not
-  * here: scalac's `unboxToInt` is java's own conversion at that cell, and forcing anything would
-  * only perturb the resolution around it.
-  */
+  * The frontend handles this shape (`SpoonTir.castOf`); this check catches the residue where
+  * a later phase retyped the operand. The predicate is shared with the emitter's consult.
+  * // ENGINE-LIMITS K17, catalog JS-E06 */
 object CastConversionCheck:
 
   val Name = "cast-conversion"
 
-  /** java's eight wrappers and the emitted primitive each one unboxes to (JLS 5.1.8). java's own
-    * table, not a library's. */
+  /** Java's eight wrappers and the primitive each one unboxes to (JLS 5.1.8). */
   private val Unboxes = Map(
     "java.lang.Byte"      -> "scala.Byte",
     "java.lang.Short"     -> "scala.Short",
@@ -46,7 +23,7 @@ object CastConversionCheck:
   )
 
   enum Issue:
-    /** the operand is a wrapper, the target another primitive: java converts and this asserts. */
+    /** Operand is a wrapper, target is a different primitive: java converts, scala asserts. */
     case UnboxAsserted
 
   object Issue:
@@ -69,7 +46,7 @@ object CastConversionCheck:
       CheckReport.Finding(Name, issue.toString, owner, CheckReport.relativise(origin.javaPath),
         origin.line, detail)
 
-  /** THE PREDICATE. `None` at every cast that is not this cell, which is every cast in the corpus. */
+  /** `None` at every cast that is not a cross-type unbox. */
   def crossTypeUnbox(t: Tree.Typed)(using p: Program): Option[(String, String)] =
     for
       src <- fqn(t.expr.tpe)
@@ -83,12 +60,10 @@ object CastConversionCheck:
     case TypeRepr.AppliedType(tc, _) => fqn(tc)
     case _                           => scala.None
 
-  /** Over the units the run EMITS — the same D2 filter every other per-site report carries. */
+  /** Over the units the run emits (D2 ownership filter). */
   def check(program: Program, units: List[Tree.ClassDef]): List[Finding] =
     given Program = program
     val out = collection.mutable.ListBuffer.empty[Finding]
-    // `StandardTraversal`, never a private recursion (§3): a cast inside an anonymous class's body
-    // lives in a TERM, and it is exactly the position a retyping phase reaches.
     val scan = new Phase:
       def name: String = "cast-conversion/scan"
       private def claim(owner: SymId, t: Option[Term])(using p: Program): Unit =

@@ -6,75 +6,24 @@ import java.nio.file.{Files, Path}
 
 import scala.jdk.CollectionConverters.*
 
-/** THE SECOND DELIVERABLE OF A PORT THAT IS NOT `.scala` — a classpath resource, carried into the
-  * port with NEITHER of its namespaces moved, because it has none.
+/** Classpath resources copied verbatim into the port's build product.
   *
-  * ==What it closes, and why nothing else could==
-  * A library reads its own resource through a STRING LITERAL — `getResourceAsStream("/p/q/x.props")`
-  * in a static initialiser, a file handle built from `"p/q/skin.json"` at first use. A rename decides
-  * ownership STRUCTURALLY and never from a string (`CLAUDE.md` §4.56), so that literal is one no
-  * phase may touch: the emitted code asks for the UPSTREAM path, which is the right emission and
-  * leaves an obligation nothing in the pipeline discharged. The port then names a resource the run
-  * does not ship, and the failure is [[ServiceProviders]]' exactly — no compile error, no check
-  * count, no member digest, and the evidence arrives in somebody else's build as an
-  * `ExceptionInInitializerError` from a static table that was never read, or as a toolkit that
-  * refuses to start.
-  *
-  * Two libraries in two different families is what promoted this from a per-port workaround to
-  * policy: one reads a single properties table for an entity map, the other loads its whole skin,
-  * its i18n bundles and six shaders through hardcoded paths and will not start without them.
-  *
-  * ==COPY, where a descriptor is a REWRITE — the two are siblings and the port picks by CONTENT==
-  * [[ServiceProviders]] exists because a `META-INF/services` file is FQNs all the way down: its NAME
-  * is an interface's and its LINES are implementations', so a renaming port MUST move both or ship a
-  * file advertising a service it does not declare. Everything else on the classpath is bytes the
-  * program merely LOCATES — a skin, a font, a shader, a properties table, an image — so the bytes go
-  * across untouched and the path with them. Rewriting one of these would break the single lookup it
-  * exists for; copying a descriptor would break the loader. One mechanism each, and neither is a
-  * special case of the other.
-  *
-  * ==DECLARED, never scanned — `DESIGN.md` §8.17's argument with a sharper measurement==
-  * A resource ROOT is not a source root. Which of a library's resources are part of the DERIVED WORK
-  * is a fact about that library, and an upstream resource root routinely holds files belonging to the
-  * UPSTREAM BUILD rather than to the library: a cross-compiler module definition, a native-toolchain
-  * configuration. Measured on the first port to take this key: of the 24 files under its upstream
-  * resource root, 22 are the library's own and 2 are its build's — and one of those two NAMES the
-  * upstream package this port renames, so shipping it would advertise sources that do not exist. A
-  * scan ships both; a declaration is the port stating what its output contains. The reference hand
-  * port of that same library ships exactly those 22, which is the control.
-  *
-  * ==Three residues, counted rather than assumed==
-  *   - a path the emitted code NAMES that this port does not ship, where the file is sitting under a
-  *     root the port already declared. That is the defect this object exists for, seen before the
-  *     consumer's build sees it;
-  *   - a resource SHIPPED that no emitted literal names — legitimate, because a resource routinely
-  *     names another (an atlas names its image, a skin names its fonts) and no phase can walk a
-  *     resource's own content, and also exactly what a stale declaration looks like. Stated, never
-  *     repaired;
-  *   - a declared tree with NO files, which is indistinguishable from the resource being absent —
-  *     the failure this key exists to remove.
-  *
-  * A declared file that is not there is FATAL and is the CALLER's check, `Provenance.notices`' rule
-  * exactly: a resource the port meant to ship and silently did not looks identical to one it
-  * shipped.
-  */
+  * Declared per-library via `ResourceTree` (DESIGN.md §8.22). The run copies each declared file,
+  * reports undeclared files that emitted code names, and flags empty trees.
+  * A declared file that is not there is FATAL (the caller's check). */
 object PortResources:
 
-  /** the `CheckReport` lane. Recorded only by a run whose manifest declares at least one tree — see
-    * `PortRun.requiredChecks` for why the requirement is conditional and not the row. */
+  /** The `CheckReport` lane; conditional on the manifest declaring at least one tree. */
   val Name: String = "resources"
 
   enum Kind:
-    /** the file was copied, byte for byte, to the path the emitted code names. The POSITIVE row: a
-      * lane that only ever reported trouble could hold its bar at zero by shipping nothing, which is
-      * `CLAUDE.md` §5's trivia-family rule read one artifact over. */
+    /** The file was copied and the emitted code names this path. */
     case Shipped
-    /** an emitted string literal names this path, the file EXISTS under a root this port declared,
-      * and the port did not declare the file. */
+    /** Emitted code names this path but the port did not ship it. */
     case NamedUnshipped
-    /** shipped, and no emitted literal names it — see the object doc's second residue. */
+    /** Shipped, but no emitted literal names it. */
     case Unnamed
-    /** a declared tree that ships no file at all. */
+    /** A declared tree that ships no file at all. */
     case Empty
 
     def slug: String = this match
@@ -83,38 +32,22 @@ object PortResources:
       case Unnamed        => "unnamed"
       case Empty          => "empty"
 
-  /** ONE resource, planned: where it is read from and the classpath path it keeps at both ends.
-    *
-    * [[path]] is `/`-separated and is BOTH halves — the file to read under `root` and the path to
-    * write under the resource root — which is what makes the emitted literal comparable to it
-    * without anything reconstructing a second spelling. */
+  /** One planned resource: source `root` and `/`-separated `path` used for both read and write. */
   final case class Res(root: Path, path: String):
     def source: Path = path.split('/').foldLeft(root)((p, seg) => p.resolve(seg))
-    /** the classpath form a `Class.getResourceAsStream` literal is written in. */
+    /** The classpath form a `getResourceAsStream` literal uses. */
     def absolute: String = "/" + path
 
-  /** PLAN every declared file. Pure — no filesystem writes and no report — so a spec asserts the
-    * copy and the residue without a run directory (`CheckReport`'s own argument). */
+  /** Plan every declared file. Pure -- no filesystem writes. */
   def plan(trees: List[ResourceTree]): List[Res] =
     trees.flatMap(t => t.files.map(f => Res(t.root, normalise(f))))
 
-  /** a declared path with its accidents removed, so `"./a/b"`, `"a//b"` and `"/a/b"` are one entry.
-    * A leading `/` is how a `getResourceAsStream` literal is written and is NOT part of the path
-    * under the root; keeping it would resolve the copy against the filesystem root. */
+  /** Normalise a declared path: strip leading `/`, collapse `//`, remove `.` segments. */
   private def normalise(p: String): String =
     p.split('/').iterator.filter(s => s.nonEmpty && s != ".").mkString("/")
 
-  /** every file under the declared roots this port did NOT declare — the CANDIDATE list, and the
-    * only population the [[Kind.NamedUnshipped]] question may be asked of.
-    *
-    * The engine walks a root to ASK, never to SHIP: a scan that shipped would put the upstream
-    * build's own files in the deliverable (see the object doc), while a scan that only proposes
-    * leaves every decision with the port and cannot be wrong about the output. That is the
-    * candidate-list shape `CLAUDE.md` §1 already asks of a reflective-sink list, one artifact over.
-    *
-    * Bounded by the declared roots on purpose. A string literal that merely LOOKS like a path is not
-    * evidence of anything (§4.6's fabricated fact); a literal that equals the path of a file sitting
-    * under a root this port declared is. */
+  /** Undeclared files under declared roots -- candidates for [[Kind.NamedUnshipped]].
+    * Walked to ASK, never to SHIP (a scan would include upstream build files). */
   def candidates(trees: List[ResourceTree], declared: List[Res]): List[Res] =
     val have = declared.map(r => (r.root.toString, r.path)).toSet
     trees.distinctBy(_.root.toString).flatMap { t =>
@@ -130,13 +63,9 @@ object PortResources:
         finally walk.close()
     }
 
-  /** the lane: one row per resource shipped, plus each residue.
-    *
-    * @param named does the EMITTED PROGRAM hold a string literal naming this classpath path? Asked
-    *              of both spellings, because both are ordinary java — a `getResourceAsStream` is
-    *              written with a leading `/` and a classpath file handle without one. Supplied by the
-    *              run from the literals of the units it OWNS (`ENGINE-LIMITS.md` D2), so a dependent
-    *              does not answer for its base's lookups.
+  /** One row per shipped resource plus each residue.
+    * @param named whether the emitted program holds a string literal naming this classpath path
+    *              (checked in both `/path` and bare forms; scoped to this module's own units).
     */
   def findings(shipped: List[Res], candidates: List[Res], trees: List[ResourceTree],
                named: String => Boolean): List[CheckReport.Finding] =
@@ -175,12 +104,8 @@ object PortResources:
 
     empties ++ unshipped ++ rows
 
-  /** WRITE the planned resources under `resourceRoot`, VERBATIM, returning what was written.
-    *
-    * Not gated on the artifact layer, for `Provenance.notices`' reason: this is a DELIVERABLE, and
-    * one that shipped only when a diagnostic switch was on would be met by accident. What keeps it
-    * scoped is the empty default and the destination — `src_managed/`, the build product this run
-    * already owns and `clean` already removes (§5.5). */
+  /** Copy the planned resources under `resourceRoot`, verbatim, returning what was written.
+    * Not gated on the artifact layer (licence deliverable). Destination is `src_managed/`. */
   def write(rs: List[Res], resourceRoot: Path): List[Path] =
     rs.map { r =>
       val dst = r.path.split('/').foldLeft(resourceRoot)((p, seg) => p.resolve(seg))

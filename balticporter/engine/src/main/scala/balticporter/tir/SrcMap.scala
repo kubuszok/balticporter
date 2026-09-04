@@ -2,50 +2,12 @@ package balticporter.tir
 
 import java.nio.file.{Files, Path}
 
-/** MEMBER-LEVEL PROVENANCE for emitted Scala — the source map that makes a compiler error, or a
-  * test failure, attributable to a member and to the Java it came from.
-  * (DESIGN.md §6.3.)
-  *
-  * ## The problem this closes
-  *
-  * Every TIR node carries an [[Origin]], and the emitter knows the line it is writing — but the two
-  * never met. Emitted Scala therefore had no provenance at all below the FILE: an agent reading
-  * `Array.scala:1183: value + is not a member of …` had to open the file, read the emitted code,
-  * work out which member it landed in, and reverse the emitter to guess which Java produced it.
-  * For every error, on every iteration, without this session's context — and the consumer of this
-  * engine is an agent in ANOTHER repository (CLAUDE.md §4.45).
-  *
-  * With `srcmap.tsv` that join is mechanical: file+line → member → Java file+line.
-  *
-  * ## Two artifacts, because they answer two questions and churn at different rates
-  *
-  *   - `srcmap.tsv` — `member → emitted line range → Java origin`. POSITIONAL, so it moves whenever
-  *     anything above a member moves. It is a build product, never a baseline.
-  *   - `members.tsv` — `member → digest of its emitted text`. Line-free by construction, so it
-  *     changes exactly when a member's OUTPUT changes. That is the promotable baseline, and the
-  *     one that answers "which members did my engine change" — the blast radius, before any
-  *     compile cycle (DESIGN.md §6.3). The measured limit it addresses is recorded in
-  *     the same document: with the whole transform pipeline switched off, every check reports
-  *     IDENTICAL numbers, so the check diff cannot see a transform regression. A member digest can.
-  *
-  * ## Why the Java path here does NOT come from `balticporter.reportPathRoot`
-  *
-  * CLAUDE.md §4.6: a value carrying MEASUREMENT IDENTITY must come from the PORT, not the
-  * operator. [[CheckReport.relativise]] anchors on a flag that only the measure lanes set, so a
-  * migration run directly produces a baseline that diffs as removed-and-re-added against one
-  * produced through the script.
-  *
-  * A port already knows its own source root and does not have to be told: a unit's `Origin` ends
-  * in the unit's own package path (`…/com/badlogic/gdx/utils/Array.java` for
-  * `com.badlogic.gdx.utils.Array`), so stripping that suffix YIELDS the root
-  * ([[sourceRootOf]]). No flag, no script, same answer from any checkout. The flag is consulted
-  * only as a fallback, for a unit whose emitted FQN no longer matches its origin (a package
-  * rename), and the raw path is the last resort.
-  */
+/** Member-level source map: `srcmap.tsv` (positional, build product) and `members.tsv`
+  * (digest-only baseline). Joins compiler/test output back to (member, Java origin).
+  * Java paths are derived from [[sourceRootOf]], not from `balticporter.reportPathRoot`. */
 object SrcMap:
 
-  /** one emitted member. `start`/`end` are 1-based, inclusive, in the unit's emitted FILE — which
-    * is what a compiler and a stack trace both report. */
+  /** One emitted member. `start`/`end` are 1-based inclusive line numbers in the emitted file. */
   final case class Entry(
       unit: String,
       member: String,
@@ -55,9 +17,7 @@ object SrcMap:
       javaPath: String,
       javaLine: Int,
       digest: String,
-      /** `main` or `test` — which of a port's two source sets the unit was emitted into. Set when
-        * the map is LOADED, not when it is written: the emitter does not know, and the correlator
-        * is the only consumer that cares (it prefers a library frame over a test frame). */
+      /** `main` or `test`. Set when loaded, not when written. */
       scope: String = "main",
   ):
     def tsv: String        = s"$unit\t$member\t$kind\t$start\t$end\t$javaPath\t$javaLine\t$digest"
@@ -96,11 +56,8 @@ object SrcMap:
   // the port's own source root
   // ---------------------------------------------------------------------------
 
-  /** The directory a unit's Java file sits under once its package path is removed — i.e. the
-    * port's Java source root, derived from the port's own data rather than from a flag.
-    *
-    * `scala.None` when the origin does not end in the unit's package path, which is exactly the
-    * case (a renamed package, a synthetic origin) where guessing would be wrong. */
+  /** The port's Java source root, derived by stripping the unit's package path from `javaPath`.
+    * `None` when the origin does not end in the package path (renamed package, synthetic origin). */
   def sourceRootOf(unitFqn: String, javaPath: String): Option[String] =
     val top    = unitFqn.takeWhile(_ != '$')
     val suffix = "/" + top.replace('.', '/') + ".java"
@@ -121,24 +78,11 @@ object SrcMap:
   // recording — a VALUE the emitter accumulates, written by the orchestrator
   // ---------------------------------------------------------------------------
 
-  /** Gated on exactly what [[CheckReport]] is gated on, so one switch (`balticporter.report=off`)
-    * turns the whole artifact layer off and a unit-test JVM produces nothing. */
+  /** Gated on [[CheckReport.enabled]]. */
   def enabled: Boolean = CheckReport.enabled
 
-  /** One emitter's source map: what it recorded, and what it could not locate.
-    *
-    * This used to be a PROCESS-GLOBAL table populated as a side effect of `TirEmitter.emitUnit`,
-    * with a shutdown hook writing it. That is a hazard, not merely inelegant: sbt runs every suite
-    * in one JVM, so two emitters — an emitter spec and a determinism double-emission alike —
-    * contaminated one shared table, and `SrcMapEmitSpec` had to filter the global by unit name to
-    * survive a full `testOnly *`. The map is a property of ONE emission, so it is a value that one
-    * emitter owns and `PortRun` writes.
-    *
-    * `missed` is a member the emitter rendered but could not locate in the finished unit. It is a
-    * HOLE in the map — a diagnostic landing there is attributed to whatever member happens to
-    * enclose it — so it is counted and printed rather than dropped. Zero on this corpus; if it ever
-    * is not, the cause is a rendering path that post-processes a member's text after `memberStat`
-    * returned it, and the fix is to record it at the site that does. */
+  /** One emitter's source map — a value one emitter owns, written by `PortRun`.
+    * `missed` entries are holes where a rendered member could not be located in the finished unit. */
   final case class Recording(entries: List[Entry], missed: List[String] = Nil):
     def isEmpty: Boolean = entries.isEmpty
     def units: Int       = entries.map(_.unit).distinct.size
@@ -146,14 +90,12 @@ object SrcMap:
   object Recording:
     val empty: Recording = Recording(Nil, Nil)
 
-  /** Write one emitter's map into a run directory. Called by the orchestrator, which is the layer
-    * that knows a run is happening and which directory is its own. */
+  /** Write one emitter's map into a run directory. */
   def write(out: Path, rec: Recording): Unit =
     val all = rec.entries.sortBy(e => (e.unit, e.start, e.member))
     Files.createDirectories(out)
     Files.writeString(out.resolve("srcmap.tsv"), (Header :: all.map(_.tsv)).mkString("", "\n", "\n"))
-    // members.tsv is sorted by NAME, not by position: a member that only moved must not move in
-    // the file that is meant to show what CHANGED.
+    // members.tsv sorted by name, not position, so a positional shift does not move a digest row
     Files.writeString(out.resolve("members.tsv"),
       (MembersHeader :: all.sortBy(e => (e.unit, e.member, e.kind)).map(_.memberTsv)).mkString("", "\n", "\n"))
     println(s"[balticporter] srcmap: ${all.size} members over ${all.map(_.unit).distinct.size} units -> $out" +
@@ -164,13 +106,8 @@ object SrcMap:
   // lookup
   // ---------------------------------------------------------------------------
 
-  /** Resolution of a compiler position or a stack frame back to an emitted member.
-    *
-    * Neither input names a unit directly: a compiler reports a FILE PATH under whatever output
-    * root the port chose, and a stack frame reports a runtime CLASS name that may be a nested
-    * type, a companion (`Foo$`) or a lambda (`Foo$$anonfun$3`). Both are resolved by SUFFIX /
-    * PREFIX matching against the units the map knows, so the map never has to record the output
-    * directory — which the emitter does not know either (the porting program picks it). */
+  /** Resolves a compiler path or stack-frame class name to an emitted member.
+    * Uses suffix/prefix matching against known units — no output directory needed. */
   final class Index(val entries: List[Entry]):
     val byUnit: Map[String, List[Entry]] = entries.groupBy(_.unit)
     val units: Set[String]               = byUnit.keySet
@@ -178,10 +115,7 @@ object SrcMap:
 
     def isEmpty: Boolean = entries.isEmpty
 
-    /** A compiler-reported path → the unit
-      * (`…/src_managed/main/scala/com/badlogic/gdx/utils/Array.scala` → `…utils.Array`). Longest
-      * matching path suffix wins, so an output root that happens to contain package-shaped
-      * directories cannot shorten the match. */
+    /** Compiler-reported path → unit. Longest matching path suffix wins. */
     def unitForFile(file: String): Option[String] =
       val n = file.replace('\\', '/').stripSuffix(".scala")
       if n.isEmpty then scala.None
@@ -189,9 +123,7 @@ object SrcMap:
         val cands = 0 :: n.iterator.zipWithIndex.collect { case ('/', i) => i + 1 }.toList
         cands.iterator.flatMap(i => byPathForm.get(n.substring(i))).nextOption()
 
-    /** A stack frame's runtime class → the top-level unit whose FILE those bytes were emitted into
-      * (`com.badlogic.gdx.utils.ObjectMap$Entries` / `…$` / `…$$anonfun$3` all → `…utils.ObjectMap`).
-      * Cuts only at `.` and `$`, longest first, so `com.foo.Bar` never matches `com.foo.Barn`. */
+    /** Runtime class → top-level unit. Cuts at `.` and `$`, longest first. */
     def unitForClass(className: String): Option[String] =
       val n = className.replace('/', '.')
       if units(n) then Some(n)
@@ -212,8 +144,7 @@ object SrcMap:
     def resolveFrame(className: String, line: Int): Option[Entry] =
       unitForClass(className).flatMap(u => at(u, line).orElse(unitEntry(u)))
 
-    /** the unit's own entry — the answer when a line falls between members (a blank line, the
-      * closing brace, the package clause). Better than nothing: it still names the Java FILE. */
+    /** Fallback entry for a line between members — still names the Java file. */
     def unitEntry(unit: String): Option[Entry] =
       byUnit.get(unit).flatMap(_.find(e => e.member == unit && e.kind == "class"))
         .orElse(byUnit.get(unit).flatMap(_.minByOption(_.start)))

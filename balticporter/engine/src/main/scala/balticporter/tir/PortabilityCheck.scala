@@ -2,122 +2,48 @@ package balticporter.tir
 
 import balticporter.catalog.{ApiRow, ApiRows, DiffId, FixKind, Platform}
 
-/** Which JDK APIs the port still depends on that a cross-platform target cannot provide.
+/** Which JDK APIs the port still depends on that a cross-platform target cannot provide. sge
+  * targets Scala Native and Scala.js as well as the JVM, so a port can compile clean and test
+  * green and still be JVM-only (`utils.reflect`, `Class`-driven serialization have no off-JVM
+  * counterpart). Compiling with `--js` does NOT catch this — Scala.js type-checks against the
+  * JDK's signatures; only the LINKER fails, and only on what is reachable from an entry point,
+  * which a library does not have. This check is the pre-flight version: the TIR already knows
+  * every external symbol referenced anywhere, so violations are enumerated exactly for ALL code.
+  * Deliberately narrow — a rule earns its place by being a known removal reason.
   *
-  * sge targets Scala Native and Scala.js as well as the JVM, and that is WHY several libGDX
-  * facilities were removed rather than ported: `utils.reflect` and the `Class`-driven `Json`
-  * serializer have no counterpart off the JVM. A port can look finished — compile clean, tests
-  * green — and still be JVM-only.
+  * §1(b), parameterised on the TARGET SET: WHICH rules apply is a fact about the BACKENDS a module
+  * is ported for (`java.nio.file` is absent on Scala.js, present on Native — seven of this list's
+  * rules were measurably too broad for Native 0.5.x). Every [[Rule]] carries the platforms it is a
+  * refusal FOR; [[rulesFor]] selects by declared targets, defaulting to all three.
   *
-  * Compiling with `--js` does NOT catch this: Scala.js type-checks against the JDK's signatures,
-  * so `java.lang.reflect.Field` and `Class.forName` compile without complaint. The failure appears
-  * only when the Scala.js LINKER runs ("Referring to non-existent class java.lang.reflect.Field"),
-  * and linking reports only what is reachable from an entry point — which a library does not have.
-  *
-  * This check is the pre-flight version, and is strictly more thorough for a library: the TIR
-  * already knows every external symbol referenced anywhere in the program, so violations are
-  * enumerated exactly, with source locations, for ALL code rather than the reachable subset. The
-  * linker remains the end-to-end authority once an application entry point exists.
-  *
-  * Deliberately narrow: it encodes the rules we have actually established, rather than pretending
-  * to model the whole of Scala.js/Native JDK support. A rule earns its place by being a known
-  * removal reason.
-  *
-  * ==This is CLAUDE.md §1(b), and the parameter is the TARGET SET==
-  * The mechanism — match a rule against [[ExternalUsage]], report every site — is the same for every
-  * library and does not change. What differs is WHICH rules apply, and the answer is a fact about
-  * the BACKENDS a module is ported for: `java.nio.file` is absent on Scala.js and fully implemented
-  * on Scala Native, so one shared verdict is wrong for one of them whichever way it is written. Nine
-  * families disagree that way and SEVEN of this list's rules were measurably too broad for Scala
-  * Native 0.5.x — `java.nio.channels.`, `java.nio.file.`, `java.util.concurrent.`, `java.lang.Thread`,
-  * `java.lang.ProcessBuilder`, `java.util.zip.`, `java.net.` — with `java.lang.System#getProperty` an
-  * eighth found the same way.
-  *
-  * So every [[Rule]] carries the set of platforms it is a refusal FOR, and [[rulesFor]] selects the
-  * ones any declared target asks about. `PortManifest.targets` defaults to all three, which is
-  * exactly the behaviour this list had when there was one list: a port that declares nothing is
-  * checked as it was, and the re-scoping is observable only to a port that says `targets = [jvm,
-  * native]` and takes the drop as its own decision.
-  *
-  * ==The FACT lives in the catalog; this list is the MATCHER==
-  * Each rule cites the `balticporter.catalog.ApiRows` row that holds the availability claim and its
-  * version anchor, and `PortabilityRuleMatrixSpec` holds the two together: a rule may not claim a
-  * platform on which its own cited row says `Keep`. That is the direction that matters — the
-  * registry cannot silently drift away from a rule that keeps firing — and it deliberately does not
-  * generate the list, because a generated list would drop every rule the survey has no row for
-  * (`org.junit.`, `org.hamcrest.`, `java.lang.ClassLoader`, the exact `Class#…` readers) and that is
-  * a lane reset rather than a re-scoping.
-  */
+  * The FACT lives in the catalog (`balticporter.catalog.ApiRows`); this list is the MATCHER — a
+  * rule may not claim a platform its own cited row says `Keep` (`PortabilityRuleMatrixSpec`). Not
+  * generated from the survey, since that would drop every rule with no survey row
+  * (`org.junit.`, `org.hamcrest.`). */
 object PortabilityCheck extends RemedySource:
 
-  /** THE `CheckReport` LANE THIS CHECK'S EMITTED-CODE RESIDUE IS COUNTED IN — one spelling, here,
-    * because `Remedy.lane`'s own scaladoc asks for exactly that ("not a string literal, so a renamed
-    * lane is a compile error rather than a silently unwired claim") and this lane had THREE: the
-    * orchestrator's `PortRun.PortabilityEmitted`, [[AcceptJvmOnly]]'s own literal, and
-    * `RemediationTransform.Lane`'s. Three literals agree by inspection and cannot be made to disagree
-    * by a compiler, which is the whole of the objection: a lane renamed in one of them would leave a
-    * remedy claiming to drain a check that no longer exists, at no error and no moved count, and the
-    * only symptom would be a `remediation(resolved)` row beside a residue that never fell.
-    *
-    * It lives on the CHECK and not on the orchestrator because the check is what MINTS the rows;
-    * `PortRun` names it as this run's report lane and `RemediationTransform`'s remedies read it as
-    * the lane they drain. */
+  /** THE `CheckReport` LANE THIS CHECK'S EMITTED-CODE RESIDUE IS COUNTED IN — one spelling, since a
+    * lane had THREE literals to agree by inspection: `PortRun.PortabilityEmitted`,
+    * [[AcceptJvmOnly]]'s own, and `RemediationTransform.Lane`'s. Lives on the CHECK, which mints
+    * the rows; `PortRun` and `RemediationTransform` both read it. */
   val EmittedLane: String = "portability(emitted)"
 
-  /** THE ONE REMEDY THIS CHECK CAN CARRY OUT — see [[AcceptJvmOnly]]. Declared here rather than on a
-    * phase because this lane's producer IS a check: a plain object the orchestrator calls, which is
-    * exactly the half of the residue population `RemedySource` exists beside `Phase` for. */
+  /** THE ONE REMEDY THIS CHECK CAN CARRY OUT — see [[AcceptJvmOnly]]. Declared here since this
+    * lane's producer IS a check, not a phase. */
   def remedies: List[Remedy] = List(AcceptJvmOnly)
 
-  /** …and WHAT IS NOT ON THIS MENU, stated where the menu is so a reader sees a refusal and not a
-    * gap (`OverloadRiskCheck`'s convention).
-    *
-    *   - '''drop the type / inline the wrapper / redirect the lookup'''. These ARE on a menu — the
-    *     PHASE's (`balticporter.transform.RemediationTransform`), because each changes the tree and
-    *     a resolution has to be recorded before emission. A check runs after all of it, so the
-    *     object that DECLARES a menu and the phase that CARRIES it out are two things;
-    *   - '''suppress the row'''. REFUSED, and [[AcceptJvmOnly]] is not a quiet version of it: an
-    *     acceptance moves the row into `remediation(resolved)` with the port's name on it, so what
-    *     was an unexamined dependency becomes an examined one. A port that merely wants the number
-    *     smaller narrows `PortManifest.targets`, which is a statement about the module and is
-    *     already the knob;
-    *   - '''a per-API acceptance keyed on the FQN'''. REFUSED: that is `verdictOverrides`, which
-    *     exists, is per-`DiffId`, and is read by `rulesFor` before this check walks anything. A
-    *     second spelling of it here would be two tables answering one question.
-    *
-    * '''And why [[Remedy.AnyKind]] rather than `alsoKinds`.''' Wave B's field enumerates the kinds
-    * one remedy answers, which is exact for a lane whose kinds are a closed enum. This lane's kind
-    * column is the offending API's FQN — an open set of hundreds — so an enumeration would have to
-    * be rewritten every time a rule is added, and a remedy declaring one API would answer one row of
-    * one port. The two are the same idea at two cardinalities, and the phase asks
-    * `ResolutionPlan.selected(target, remedy)` (by globally-unique id) rather than by kind, so
-    * nothing collides. */
+  /** WHAT IS NOT ON THIS MENU: drop/inline/redirect are on the PHASE's menu
+    * (`RemediationTransform`), which changes the tree before this check runs; suppressing the row
+    * is REFUSED (narrow `PortManifest.targets` instead); a per-API acceptance keyed on the FQN is
+    * REFUSED (`verdictOverrides` already does this, read by `rulesFor`). [[Remedy.AnyKind]] rather
+    * than `alsoKinds`: this lane's kind column is the offending API's FQN, an open set. */
 
-  /** `accept-jvm-only` — *this location is JVM-only and I know it; stop reporting it.*
-    *
-    * ==What it does, and what it deliberately does not==
-    * It changes NO tree. It moves a row out of `portability(emitted)` and into
-    * `remediation(resolved)`, which is why `emissionAffecting` is `false` — the one remedy so far
-    * that `DESIGN.md` §8.16 predicted would belong in §1.5's not-inherited column if any ever did.
-    * (The FIELD is what states that; `PortManifest.resolutions` is still inherited as a whole,
-    * because it holds the other three as well.)
-    *
-    * ==The CONSISTENCY test, and the finding it produced==
-    * A port's `PortManifest.targets` is a statement about the MODULE: *this port is built for these
-    * backends*. Accepting a JVM-only API at a location is a statement about the same module in the
-    * opposite direction, so the two cannot both be true — and the honest answers are the two knobs
-    * that already exist: narrow `targets`, or state a `verdictOverrides` entry for the API this port
-    * ships its own answer for. So a selection on a port whose `targets` include Scala.js or Scala
-    * Native is REPORTED as a contradiction and never applied.
-    *
-    * '''That test makes the apply arm unreachable, and it is a RESULT rather than an oversight.'''
-    * `rulesFor` filters the rule list by the declared targets and NO rule in it asks about the JVM,
-    * so a port with `targets = Set(Jvm)` has zero portability findings and nothing to accept, while
-    * any other port contradicts itself by accepting. Measured on the corpus: 0 of the rules name
-    * `Platform.Jvm`. What the remedy is therefore FOR is the contradiction itself — a port reaching
-    * for "accept" is told, with the two real knobs named, instead of silently ignoring the row,
-    * which is what every port does today. `ENGINE-LIMITS.md` P6 carries the number and the reasoning.
-    */
+  /** `accept-jvm-only` — *this location is JVM-only and I know it; stop reporting it.* Changes NO
+    * tree, moves a row into `remediation(resolved)` (`emissionAffecting = false`). CONSISTENCY
+    * test: a port's `targets` says which backends it is built for, so accepting a JVM-only API
+    * while `targets` includes Scala.js/Native is REPORTED as a contradiction and never applied —
+    * making the apply arm unreachable by construction (0 of the rules name `Platform.Jvm`,
+    * ENGINE-LIMITS P6). The honest answers are narrowing `targets` or a `verdictOverrides` entry. */
   val AcceptJvmOnly: Remedy = Remedy(
     id = "accept-jvm-only", lane = EmittedLane, kind = Remedy.AnyKind,
     emissionAffecting = false, fix = FixKind.Universal, subject = Remedy.Subject.OwnedMember,
@@ -126,15 +52,12 @@ object PortabilityCheck extends RemedySource:
       "Scala Native")
 
   /** @param api         a prefix (`java.nio.file.`) or an exact `owner#member`
-    * @param why         one sentence, and it is what the reader acts on
+    * @param why         one sentence, what the reader acts on
     * @param exactMember which of the two `api` is
-    * @param on          THE PLATFORMS THIS RULE IS A REFUSAL FOR. A rule that applied to a port
-    *                    whichever backends it targets is a rule that tells a JVM+Native port to
-    *                    remove seven categories of API that work perfectly on both.
-    * @param at          the catalog row holding the availability FACT and its version anchor.
-    *                    `None` only where the javalib survey has no row — a non-JDK dependency
-    *                    (`org.junit.`) or a member whose family row cannot express it
-    */
+    * @param on          THE PLATFORMS THIS RULE IS A REFUSAL FOR — a rule applying regardless of
+    *                    target would tell a JVM+Native port to remove APIs that work on both.
+    * @param at          the catalog row holding the availability FACT. `None` only where the
+    *                    javalib survey has no row (a non-JDK dependency). */
   final case class Rule(
       api: String,
       why: String,
@@ -169,23 +92,10 @@ object PortabilityCheck extends RemedySource:
     Rule("java.lang.reflect.", "runtime reflection does not exist on Scala.js / Native",
       at = p(24)),
     Rule("java.lang.ClassLoader", "no class loading off the JVM"),
-    // Reflection was the only thing this checked until 2026-07-28, so it reported ZERO for a
-    // corpus containing an HTTP client, a thread pool and NIO channels. A check that reports zero
-    // is only as good as its coverage — the same failure as the annotations one, and found the
-    // same way: by asking why a known-unportable class was not being flagged.
-    //
-    // THE EIGHT RE-SCOPED RULES. Each was written as a fact about "off the JVM" and is a fact about
-    // Scala.js alone: Scala Native 0.5.x implements every one of these families for real —
-    // `Path`/`Files`/`WatchService`, 60+ `java.util.concurrent` files ported from JSR-166, real OS
-    // threads, `Process`/`ProcessBuilder`/`ProcessHandle`, a `java.util.zip` recently bug-fixed for
-    // UTF-8, sockets with IPv6, and a `System.getenv` that reads the real environment. A JVM+Native
-    // port was being told to remove seven categories of API that work on both of its targets, which
-    // is the over-conservative rule §1's balance section warns about, and the fix is the target set
-    // rather than a second list.
-    // …and the MEMBER-LEVEL exceptions to two of them, which is why they come FIRST: a re-scoped
-    // prefix says "Native is fine here" and Native is not fine at every member under it. `find`
-    // takes the first match, so the specific rule has to precede the family or its `why` never
-    // reaches a reader targeting both.
+    // THE EIGHT RE-SCOPED RULES: each was written as a fact about "off the JVM" and is really a
+    // fact about Scala.js alone — Scala Native 0.5.x implements every one of these for real.
+    // MEMBER-LEVEL exceptions come FIRST: `find` takes the first match, so a specific rule must
+    // precede its family or the exception never fires.
     Rule("java.net.IDN", "the class exists on both backends and is unusable on either without " +
       "ICU-like tables — a hand-written RFC 3492 Punycode replacement is what a reference port " +
       "shipped, which is direct evidence the JDK class is not viable cross-platform",
@@ -217,36 +127,17 @@ object PortabilityCheck extends RemedySource:
     Rule("java.lang.ProcessBuilder", "a browser cannot spawn a process; Scala Native has " +
       "Process/ProcessBuilder/ProcessHandle for real",
       on = Rule.JsOnly, at = p(21)),
-    // A ported TEST SUITE is the project's only behavioural gate, and a JUnit one runs on the JVM
-    // alone — neither Scala.js nor Native has JUnit. Emitting java's tests as JUnit-in-Scala
-    // therefore produces a gate that cannot execute on the platforms the port EXISTS for, while
-    // looking like full test coverage. Cross-platform Scala wants MUnit (or utest); converting is
-    // structural, not a rename, because a `@Test` method becomes a `test("…") { … }` block.
+    // A JUnit suite runs on the JVM alone; MUnit/utest is the cross-platform answer.
     Rule("org.junit.", "JUnit is JVM-only; cross-platform Scala needs MUnit/utest"),
     Rule("junit.framework.", "JUnit 3 is JVM-only; cross-platform Scala needs MUnit/utest"),
-    // Hamcrest is JUnit's OTHER assertion vocabulary — `assertThat(x, is(equalTo(y)))` — and it
-    // arrives transitively with junit rather than as a declared dependency, which is exactly why
-    // it was missed. `TestFrameworkTransform` deliberately does not translate it (MUnit has no
-    // matcher algebra to map a matcher onto) and PRINTS what it left behind; nothing RECORDED it,
-    // because the two rules above name the framework and not the vocabulary reached through it.
-    // A suite could therefore be 100% hamcrest and every portability lane read zero — the same
-    // "a check reporting zero is only as good as its coverage" failure as the reflection-only
-    // list above, found the same way: by asking why a known-unportable package was not flagged.
+    // Hamcrest is JUnit's OTHER assertion vocabulary, arriving TRANSITIVELY, easy to miss.
     Rule("org.hamcrest.", "Hamcrest is JVM-only, and arrives TRANSITIVELY with junit; MUnit has no " +
       "matcher algebra, so each `assertThat(x, is(y))` has to become the assertion it means"),
-    // The EIGHTH, and its `why` was not merely too broad but inaccurate: Scala.js DOES implement
-    // `getProperty`, against a table populated at LINK time from the build's own options. It
-    // compiles, it runs, and it returns whatever the port configured — never the live host's value.
-    // Saying "JVM-only" of that sends a reader to delete a call that works.
     Rule("java.lang.System#getProperty", "Scala.js answers getProperty from a LINK-TIME-configured " +
       "properties table, never the live host's — it works, with values the build decides, which is a " +
       "caveat to read rather than a call to remove; Scala Native has the real thing",
       exactMember = true, on = Rule.JsOnly, at = p(33)),
-    // …and its SIBLING, which had no rule at all and is the OPPOSITE shape. The one member the old
-    // "system properties are JVM-only" sentence was true of was the one nothing checked: Scala.js's
-    // `getenv()` is unconditionally an empty map and `getenv(name)` unconditionally null, while
-    // Scala Native reads the real environment. A read that silently returns nothing is exactly the
-    // §4.4 class of defect — no exception, no count, a plausible wrong answer.
+    // the OPPOSITE shape: getenv silently returns empty/null rather than throwing.
     Rule("java.lang.System#getenv", "Scala.js returns an empty map from getenv() and null from " +
       "getenv(name), always and without failing — so a read silently answers 'not set' rather than " +
       "throwing; Scala Native reads the real environment. The OPPOSITE shape from getProperty",
@@ -254,41 +145,15 @@ object PortabilityCheck extends RemedySource:
     Rule("java.util.zip.", "no zlib in a browser without a JS dependency; Scala Native implements " +
       "the family and recently bug-fixed it for UTF-8",
       on = Rule.JsOnly, at = p(28)),
-    // The one COLLECTION on this list, and the one row of the platform survey whose answer is a
-    // REFUSAL rather than a mapping. Every other absent `java.util` type has a Scala counterpart
-    // with the same meaning and is retyped by `CollectionsTransform`; this one has none anywhere.
-    // JS's own `WeakMap` requires OBJECT keys and cannot be enumerated, so it cannot back a `Map`
-    // — and degrading to a strong-referencing map would compile, pass, and silently change what the
-    // program retains, which is exactly what `Collections.unmodifiableXxx` was correctly refused
-    // for (ENGINE-LIMITS M6). Native has the real thing, so the rule is JS-only and a JVM+Native
-    // port is told nothing.
-    //
-    // NOTE the rule list is HAND-WRITTEN and does NOT derive from `ApiRows`: a survey row saying
-    // `Refuse` on a platform produces no question by itself, which is why this row sat stated and
-    // unasked. The two are joined by `at`, and that is the whole of the join.
+    // The one COLLECTION on this list whose answer is a REFUSAL, not a mapping (ENGINE-LIMITS M6).
+    // HAND-WRITTEN, does NOT derive from ApiRows: a Refuse row produces no question by itself.
     Rule("java.util.WeakHashMap", "JS's WeakMap requires object keys and cannot enumerate, so no " +
       "faithful target exists there and a strong-referencing map would silently change what the " +
       "program retains; Scala Native has the real class",
       on = Rule.JsOnly, at = l(37)),
-    // `ServiceLoader` is JVM-only twice over, and the SECOND reason is the one nothing else can
-    // see. It is reflective instantiation, so Scala.js / Native cannot provide it — and it reads a
-    // `META-INF/services` FILE, which this engine does not emit: the pipeline produces `.scala` and
-    // nothing else, so the providers are constructed from OUTSIDE the closure (CLAUDE.md §1's
-    // "a class a FRAMEWORK instantiates has no caller to change") off a resource no phase carries.
-    // With that file absent the loader finds zero providers, the registration silently no-ops, and
-    // there is no compile error, no other check count and no finding. This rule is not the fix —
-    // the port has to ship the file by hand, and a rename moves both its NAME and its CONTENTS —
-    // but it is what makes the dependence a NUMBER rather than a thing someone has to remember.
-    // …and the two platforms need DIFFERENT verdicts, which one rule with one `why` was hiding: a
-    // NATIVE-only port has a cheaper fix available than a JS-targeting one, and could not learn it
-    // from a sentence that said "JVM-only". The JS rule is first because it is the stricter of the
-    // two — a port targeting both is told the thing that stops it dead.
-    //
-    // BOTH ARE DEPENDENCY RULES NOW, because the row's non-JVM verdicts are `Depend` (DESIGN.md
-    // §8.19): the API exists off the JVM, in a cross-platform wrapper, so the reader's action is a
-    // `libraryDependencies` line plus a redirect and never "remove this call". The rules stay two
-    // because what is TRUE of the two platforms is still different, and that difference is what a
-    // reader needs to size the change.
+    // ServiceLoader is JVM-only twice over: reflective instantiation, and it reads a
+    // META-INF/services FILE this engine does not emit. BOTH DEPENDENCY RULES now (DESIGN.md
+    // §8.19's Depend verdict) since the API exists off the JVM via a cross-platform wrapper.
     Rule("java.util.ServiceLoader", "the class does not exist in the Scala.js javalib at all, so " +
       "this is a COMPILE-TIME resolution failure there rather than a linker one — Scala.js reaches " +
       "providers only by REGISTRATION, which is what the wrapper's build-time codegen supplies from " +
@@ -311,27 +176,16 @@ object PortabilityCheck extends RemedySource:
     Rule("java.lang.Class#getFields", "reflective member access is JVM-only", exactMember = true, at = p(24)),
     Rule("java.lang.Class#getMethods", "reflective member access is JVM-only", exactMember = true, at = p(24)),
     Rule("java.lang.Class#getConstructor", "reflective member access is JVM-only", exactMember = true, at = p(24)),
-    // The SINGULAR readers, added the moment the rules above started firing at all. They are the
-    // same family as their plural twins — each returns a `java.lang.reflect.*` — and leaving them
-    // out was invisible while no member rule fired. It stopped being invisible immediately:
-    // `Remediator` reads this list to decide which members of a static wrapper may be inlined, and
-    // with no rule for `getDeclaredField` it offered to forward one, which would have moved a
-    // reflective call from the wrapper to every call site while reporting the port improved.
-    // A gap in a rule list is not neutral once something else reasons from it.
+    // the SINGULAR readers — same family as their plural twins; a gap here let Remediator offer to
+    // forward a reflective call while reporting the port improved.
     Rule("java.lang.Class#getDeclaredField", "reflective member access is JVM-only", exactMember = true, at = p(24)),
     Rule("java.lang.Class#getDeclaredMethod", "reflective member access is JVM-only", exactMember = true, at = p(24)),
     Rule("java.lang.Class#getField", "reflective member access is JVM-only", exactMember = true, at = p(24)),
     Rule("java.lang.Class#getMethod", "reflective member access is JVM-only", exactMember = true, at = p(24)),
     // ---- TIME, TEXT AND LOCALE — the refusals. The whole area had ZERO rules. ----
-    //
-    // A survey of it found twenty rows and not one of them was checked, so a library formatting a
-    // date or collating a string passed this check clean while being unbuildable on either non-JVM
-    // backend. Most of the area is a DEPENDENCY rather than a refusal (`scala-java-time`,
-    // `scala-java-locales`), and those rows live on the `dependency-coverage` lane — conflating the
-    // two makes the finding unanswerable, because the reader is told to remove a call that a
-    // one-line `libraryDependencies` entry makes correct. What is HERE is the residue: the classes
-    // for which no implementation exists in any surveyed source tree, platform javalib and
-    // third-party artifact alike.
+    // Most of the area is a DEPENDENCY rather than a refusal (scala-java-time, scala-java-locales),
+    // living on the dependency-coverage lane instead. What is HERE is the residue: classes with no
+    // implementation in any surveyed source tree, platform javalib or third-party artifact.
     Rule("java.text.MessageFormat", "no implementation anywhere surveyed — not in either core " +
       "javalib, not in the locales artifact. The only path is a hand-written shim over the format " +
       "subset one library actually uses, which is §1(c) knowledge about that library",
@@ -353,14 +207,9 @@ object PortabilityCheck extends RemedySource:
       "and it is not a TimeZone shim: rewrite the CALL SITE where it can be rewritten, and shim " +
       "only the surface a caller strictly needs",
       at = l(71)),
-    // ---- TIME, TEXT AND LOCALE — the DEPENDENCIES. Twenty rows, and NOT ONE was checked. ----
-    //
-    // These are the other half of the area, and they are a different KIND of answer: the API exists
-    // off the JVM, in an artifact the build has to add. Reported as an unportability the finding is
-    // unanswerable — the reader is told to remove a call that a one-line `libraryDependencies` entry
-    // makes correct — so `Verdict.Depend` routes them to `dependency-coverage` instead, and
-    // `rulesFor` never yields one. They are HERE, in the same list, because the matcher, the
-    // enumeration and the citation are identical; only the finding kind differs.
+    // ---- TIME, TEXT AND LOCALE — the DEPENDENCIES. ----
+    // The API exists off the JVM, in an artifact the build must add, so Verdict.Depend routes
+    // these to dependency-coverage instead — only the finding kind differs from the refusals above.
     Rule("java.time.ZoneId#of", "zone lookup is BY STRING, so the whole IANA database ships unless " +
       "the build generates a trimmed one — this is a BUILD-TIME action (`sbt-tzdb`) and not only a " +
       "library add, and the untrimmed database is a measurable bundle cost",
@@ -408,24 +257,16 @@ object PortabilityCheck extends RemedySource:
       on = Rule.JsOnly, at = p(32)),
   )
 
-  /** THE §1(b) PARAMETER APPLIED: the UNPORTABILITY rules any of `targets` asks about.
-    *
-    * An empty target set selects nothing and makes the check a no-op, which is §1(b)'s own rule for
-    * a parameter's empty value — but it is deliberately NOT the default any port gets. See
-    * `PortManifest.targets`: the default is all three platforms, i.e. what this check did before it
-    * had a parameter, so no port's baseline moves by acquiring one.
-    *
-    * The complement is [[dependencyRulesFor]], and the two PARTITION [[all]].
-    */
+  /** THE §1(b) PARAMETER APPLIED: the UNPORTABILITY rules any of `targets` asks about. An empty
+    * target set is the no-op but NOT the default a port gets (`PortManifest.targets` defaults to
+    * all three, so no baseline moves by acquiring the parameter). Complement is
+    * [[dependencyRulesFor]]; the two PARTITION [[all]]. */
   def rulesFor(targets: Set[Platform], overrides: Overrides = Map.empty): List[Rule] =
     all.filter(r => stillAsks(r, targets, overrides) && !isDependency(r, targets, overrides))
 
-  /** …and the rules whose answer is an ARTIFACT rather than a removal.
-    *
-    * These feed `DependencyCheck`, never `portability(*)`. A `Verdict.Depend` is a build-graph fact
-    * — the API exists off the JVM, in something the build does not name — and reported as an
-    * unportability the finding is unanswerable: the reader is told to remove a call that one
-    * `libraryDependencies` line makes correct. */
+  /** the rules whose answer is an ARTIFACT rather than a removal — feeds `DependencyCheck`, never
+    * `portability(*)`, since a `Verdict.Depend` finding is unanswerable as an unportability (the
+    * reader would be told to remove a call one `libraryDependencies` line makes correct). */
   def dependencyRulesFor(targets: Set[Platform], overrides: Overrides = Map.empty): List[Rule] =
     all.filter(r => stillAsks(r, targets, overrides) && isDependency(r, targets, overrides))
 
@@ -433,30 +274,18 @@ object PortabilityCheck extends RemedySource:
   type Overrides = Map[DiffId, Map[Platform, balticporter.catalog.Verdict]]
 
   /** Does this rule still ask a question of any declared target, AFTER the port's own overrides?
-    *
-    * Without an override this is exactly [[Rule.asks]], because commit 1's spec already forbids a
-    * rule from claiming a platform its row calls `Keep`. WITH one it is the port's own escape: a
-    * `verdictOverrides` entry saying `Keep` is a statement that this port accepts the JDK type on
-    * that backend, and the rule then leaves BOTH lanes rather than falling through to the
-    * unportability one. What such an override cannot touch is `by`, the availability FACT.
-    *
-    * A rule with no cited row always asks — there is nothing to override. */
+    * Without an override this is exactly [[Rule.asks]]. WITH one, a `verdictOverrides` entry
+    * saying `Keep` is the port accepting the JDK type on that backend, so the rule leaves BOTH
+    * lanes. A rule with no cited row always asks — nothing to override. */
   private def stillAsks(r: Rule, targets: Set[Platform], overrides: Overrides): Boolean =
     r.asks(targets) && rowOf(r).forall { row =>
       r.on.intersect(targets).exists(p => row.verdictOn(p, overrides).actionable)
     }
 
-  /** Is every platform this rule still asks about answered by an ARTIFACT?
-    *
-    * ALL rather than ANY, deliberately, and `DependencyCoverageSpec` asserts that no rule in the
-    * list is MIXED — some targets `Depend` and others not — so the classification is exact rather
-    * than a rounding. A rule with no cited row is never a dependency: the survey is where a
-    * coordinate comes from, and a rule with no row (`org.junit.`, `ClassLoader`) has none to give.
-    *
-    * Read THROUGH the overrides, which is what makes the third of `dependency-coverage`'s three
-    * conjuncts structural rather than a second filter that could disagree with the first: a port
-    * that declared it ships its own shim has changed the verdict, so the row stops being a
-    * dependency here and never becomes a requirement at all. */
+  /** Is every platform this rule still asks about answered by an ARTIFACT? ALL rather than ANY:
+    * `DependencyCoverageSpec` asserts no rule in the list is MIXED. A rule with no cited row is
+    * never a dependency. Read THROUGH the overrides, so a port shipping its own shim changes the
+    * verdict here rather than in a second, potentially disagreeing filter. */
   private def isDependency(r: Rule, targets: Set[Platform], overrides: Overrides): Boolean =
     rowOf(r).exists { row =>
       val asked = r.on.intersect(targets).filter(p => row.verdictOn(p, overrides).actionable)
@@ -466,47 +295,21 @@ object PortabilityCheck extends RemedySource:
   /** THE CATALOG ROW behind a rule, where the survey has one. */
   def rowOf(r: Rule): Option[ApiRow] = r.at.flatMap(ApiRows.byId.get)
 
-  /** Every violation the PROGRAM references. Recorded by the orchestrator as `portability(all)`,
-    * separately from `inEmittedCode` below: the two numbers answer different questions (what the
-    * program references vs. what the SHIPPED code references) and a run that reports only one of
-    * them cannot show a substitution moving a violation out of the deliverable. */
+  /** Every violation the PROGRAM references. Recorded as `portability(all)`, separately from
+    * `inEmittedCode` below — the two answer different questions (referenced vs. SHIPPED). */
   def check(program: Program, rules: List[Rule] = all): List[Violation] =
     checkAll(program, rules)
 
-  /** Does `rule` name `fullName`? THE ONE MATCHER, and it cuts at a separator.
-    *
-    * A bare `startsWith` is §4.56's own hazard — `java.foo` covering `java.foobar` — and it was
-    * live here rather than hypothetical: `java.lang.Thread` covered `java.lang.ThreadLocal`, which
-    * Scala.js implements. The existing prefixes end in `.` and a `RuleScope.covers` call takes the
-    * separator from the NAME, so the trailing one is stripped before asking: `java.nio.file` covers
-    * `java.nio.file.Path` and does not cover a `java.nio.filesystem` nobody has written yet. */
+  /** Does `rule` name `fullName`? THE ONE MATCHER, cutting at a separator — a bare `startsWith` is
+    * §4.56's hazard (`java.lang.Thread` covered `java.lang.ThreadLocal`, which Scala.js implements). */
   def names(rule: Rule, fullName: String): Boolean =
     val prefix = if rule.api.nonEmpty && RuleScope.isBoundary(rule.api.last) then rule.api.init else rule.api
     RuleScope.covers(fullName, prefix)
 
-  /** The RULE FILTER, over an enumeration this object no longer owns.
-    *
-    * The walk it used to perform inline — every referenced symbol, its `owner#name` (a MEMBER is
-    * identified that way, since an external member's own `fullName` is an interning key), and every
-    * recorded usage — is [[ExternalUsage.all]], because it answers more questions than [[all]]
-    * asks and throwing it away was the reason no artifact of a port's external dependencies
-    * existed anywhere.
-    *
-    * This sentence used to say *"these 34 rules"*. It was never 34: the list was 21 when the number
-    * was last edited beside it and is [[all]]`.size` now, and nothing computed either. The
-    * count is DELETED here rather than corrected — a corrected constant is a constant that goes
-    * stale again — and the run states the derived one instead (`PortRun`'s PORTABILITY line). This
-    * is `PROGRESS.md` §12.3's rule ("a residue number restated in prose beside the artifact that
-    * computes it is a number that goes stale silently") reproduced inside the engine's own source,
-    * and it escaped: the commit subjects `9eba29b3` (*"rules 34 -> 35"*) and `0aa10cd6`
-    * (*"rules 35 -> 36"*) both quote this phantom while the list they edited went 25 -> 26 -> 27.
-    * Those two subjects are WRONG and cannot be regenerated; do not trust a rule count from the
-    * git log.
-    *
-    * The lift is order-preserving on purpose: [[ExternalUsage.all]] iterates
-    * `program.referenced.toList` and each symbol's usages in exactly the order this loop did, so
-    * `portability(all)`'s promoted baseline in thirteen lanes is byte-identical rather than
-    * merely equal in count. */
+  /** The RULE FILTER, over [[ExternalUsage.all]] (every referenced symbol's `owner#name` and
+    * usages), which answers more questions than [[all]] asks. Order-preserving on purpose:
+    * `ExternalUsage.all` iterates in the same order this loop did, so `portability(all)`'s
+    * baseline stays byte-identical rather than merely equal in count. */
   private def checkAll(program: Program, rules: List[Rule]): List[Violation] =
     ExternalUsage.all(program).flatMap { row =>
       val hit = rules.find { r =>
@@ -535,30 +338,18 @@ object PortabilityCheck extends RemedySource:
             else climb(sym.owner, fuel - 1)
     climb(from, 64)
 
-  /** Violations occurring in code that is actually EMITTED. A violation inside a substituted type
-    * is not shipped — that type's declaration is dropped — so counting it would overstate the
-    * problem; the point of the number is what the FINAL code depends on. */
-  /** @param isExcluded
-    *   a type this run does NOT ship. Two disjoint reasons, and both must be here or the number
-    *   describes something other than the deliverable:
-    *
-    *   - the port DROPPED it (`Substitutions.dropTypes`) — the original reason for this filter;
-    *   - the run merely RESOLVED against it (`FrontendConfig.resolutionRoots`) — another module's
-    *     unit, which that module reports and this one must not.
-    *
-    *   The second was missing and the misattribution was total, not marginal: Ashley, a 21-file
-    *   dependent of libGDX core, reported **67 portability sites of which none were Ashley's**.
-    *   Every one belonged to the 605 units it only resolved against. Scaled across sge's 17
-    *   extension modules, each would have re-reported the base's entire finding set as its own.
-    */
+  /** Violations occurring in code that is actually EMITTED — a violation inside a substituted
+    * (dropped) type would overstate the problem.
+    * @param isExcluded a type this run does NOT ship: either the port DROPPED it
+    *   (`Substitutions.dropTypes`) or the run merely RESOLVED against it
+    *   (`FrontendConfig.resolutionRoots`, another module's unit). The second was missing once and
+    *   the misattribution was total: Ashley reported 67 sites, none its own. */
   def inEmittedCode(program: Program, violations: List[Violation], isExcluded: SymId => Boolean): List[Violation] =
     violations.filterNot(v => owningType(program, v.enclosing).exists(isExcluded))
 
-  /** INJECTED replacements never pass through the TIR — they are copied verbatim — so the symbol
-    * table cannot see them. They are still shipped, so scan their text for the same rules. Coarse
-    * by nature (no symbols to resolve), but it closes the hole that matters: a hand-written shim
-    * that quietly reintroduces the very API the substitution was meant to remove.
-    */
+  /** INJECTED replacements are copied verbatim, so the symbol table cannot see them; scan their
+    * text for the same rules instead. Coarse, but closes the hole: a hand-written shim quietly
+    * reintroducing the API the substitution was meant to remove. */
   def inInjectedSource(fileName: String, source: String, rules: List[Rule] = all): List[InjectedViolation] =
     // comments discuss the very APIs being removed (a swap-point note naming `newInstance` is not
     // a use of it), so scan code lines only — otherwise the count is noise.
@@ -572,26 +363,17 @@ object PortabilityCheck extends RemedySource:
       if n == 0 then Nil else List(InjectedViolation(fileName, needle, n, r.why))
     }
 
-  /** One injected file's use of an API its substitution was meant to remove.
-    *
-    * The COUNT is deliberately carried in the `line` column and left out of the finding id: a shim
-    * gaining a second use of an API it already used is the same finding, and should not read as one
-    * fixed plus one new. */
+  /** One injected file's use of an API its substitution was meant to remove. The COUNT is carried
+    * in the `line` column and left out of the finding id, so a second use is not a new finding. */
   final case class InjectedViolation(file: String, api: String, count: Int, why: String):
     def render: String = s"$file: $api × $count — $why"
     def report: CheckReport.Finding =
       CheckReport.Finding("portability(injected)", api, file, file, count, why)
 
   /** grouped one-line summary, most-referenced first, followed by the remediation block when the
-    * caller computed one. A finding an agent can act on beats a finding it must first investigate
-    * (CLAUDE.md §4.45) — [[Remediator]] states the mechanism and, where the precondition is
-    * verifiable, the literal manifest line.
-    *
-    * `fixes` is a PARAMETER. It used to be a `private var` written by [[inEmittedCode]] and read
-    * back here, keyed to the exact violation list, because `summary` has no `Program` and there was
-    * no orchestrator to hold the pair. There is one now: `PortRun` computes both and passes them
-    * together, so there is no hidden state to go stale and no ordering requirement between two
-    * calls. */
+    * caller computed one (§4.45 — [[Remediator]] states the mechanism and, where verifiable, the
+    * literal manifest line). `fixes` is a PARAMETER, computed and passed together by `PortRun`, so
+    * there is no hidden state to go stale. */
   def summary(violations: List[Violation], fixes: List[Remediator.Suggestion] = Nil): String =
     if violations.isEmpty then "  none"
     else

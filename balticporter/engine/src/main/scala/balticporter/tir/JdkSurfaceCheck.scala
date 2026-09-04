@@ -2,73 +2,17 @@ package balticporter.tir
 
 import balticporter.catalog.FixKind
 
-/** The port's JDK WALL, named — every `java.*` member the emitted code still calls, classified by
-  * what the port's own machinery does about it, before any compiler runs.
-  *
-  * ==Why this exists==
-  * JDK coverage in this engine grew one compile error and one failing test at a time: a shim was
-  * written when a call would not compile, a mapping arm added when a lane went red, a refusal
-  * recorded in a doc comment and a `case _ => None`. Every one of those decisions is real; NONE of
-  * them was ever written down anywhere a new library's first run could read. So a `Collections.swap`
-  * demand surfaced as a compile error three lanes after the library was added, and ENGINE-LIMITS K9
-  * — enhanced-for over a JDK iterable the port KEPT — surfaced as two `value foreach is not a
-  * member of java.util.List` errors that read like an engine bug.
-  *
-  * The demand was always visible: [[ExternalUsage]] is the enumeration the portability check
-  * already performed. This classifies it.
-  *
-  * ==The classification, and where each answer comes from==
-  * Every answer comes from a table SOMETHING ELSE owns — CLAUDE.md §4.56's general form, that a
-  * conclusion about a type may only come from what a phase itself DID to that type:
-  *
-  * | disposition | source of truth | who fixes it |
-  * |---|---|---|
-  * | `Shimmed` | the runtime artifact's member map, pinned to the published sources by a spec | nobody — engine, done |
-  * | `Mapped` | the retyping phase's own tables, and the phase RAN | nobody |
-  * | `Mappable` | the same tables, and the phase did NOT run in this port | §1(b) — enable the phase, or keep the JDK deliberately |
-  * | `Refused` | [[Refusals]], each entry carrying `why` and its `ENGINE-LIMITS.md` citation | §1(a) with a citation |
-  * | `Kept` | nothing claims this member: it is emitted verbatim against the JDK and compiles | nobody |
-  * | `Unhandled` | — | '''the finding''': a phase retyped this member's owner and has no rewrite for it |
-  * | `KeptIterable` | — | '''the finding''': K9, derived |
-  * | `StaleRefusal` | — | '''the finding''': a refusal contradicted by a table that now handles it |
-  *
-  * ==`Kept` is not a hole in "anything unclassified is a finding"==
-  * It is what makes that sentence mean something. `java.lang.Math#max` is referenced hundreds of
-  * times across this corpus, is available on the JVM, Scala.js and Native alike, and is emitted
-  * verbatim — reporting it would put hundreds of rows of noise in front of the one row that says
-  * `Collections#rotate` has no translation, and a report whose false positives must be routinely
-  * ignored trains its readers to ignore it (CLAUDE.md §4.45). A member is a FINDING when the port's
-  * own machinery has already moved the ground under it: the owner was retyped and the member was
-  * not, or the loop that iterates it will not compile. `Kept` names everything the port never
-  * touched, and it is COUNTED in the summary rather than hidden.
-  *
-  * ==The rows are the surface AFTER the pipeline, and that is the whole point==
-  * A member whose call the phase actually REWROTE is no longer referenced, so it does not appear
-  * here at all — the strongest possible outcome, and the reason the summary's `mapped` count is
-  * smaller than a reader expects. `Mapped` survives for the rewrites that keep the java member
-  * SYMBOL and change only its shape: every `parenless` strip (`xs.size()` → `xs.size`), `get(i)` →
-  * `xs(i)`, and every arm that re-selects the same `m` on a retyped receiver. So the disposition
-  * still means "the phase's table names this member", and a `mapped` row is a call the port emits
-  * against a Scala collection rather than a dependency on the JDK.
-  *
-  * ==What `Unhandled` does and does not claim==
-  * It claims the phase has no ENTRY for this member. It does not claim the emitted call is broken:
-  * a `java.util.List#indexOf` on a `mutable.Buffer` survives because Scala happens to spell the
-  * member the same way. That is coverage by coincidence — nothing recorded it, nothing would notice
-  * it changing — so it is a row in the work list and not a silent pass, which is the whole point of
-  * baselining the initial numbers.
-  */
+/** Classifies every `java.*` member the emitted code calls by disposition: `Shimmed`, `Mapped`,
+  * `Mappable`, `Refused`, `Kept`, `Unhandled`, `KeptIterable` (K9), or `StaleRefusal`.
+  * `Unhandled` = phase retyped the owner but has no entry for the member.
+  * `Kept` = untouched JDK code (counted, not reported as a finding).
+  * Reads from post-pipeline surface; a fully rewritten call is simply absent. */
 object JdkSurfaceCheck extends RemedySource:
 
   /** the check's name in `findings.tsv`. */
   val Name = "jdk-surface"
 
-  /** The namespaces this report is ABOUT.
-    *
-    * A namespace SELECTION — which surface is being reported — and not a structural conclusion
-    * about a type, which is the thing §4.56 forbids deciding from a name: nothing below decides
-    * that a member is portable, shimmed, mapped or refused because of what it is called. Cut at a
-    * separator for §4.56's other corollary, so `javax` never covers `javaxfoo`. */
+  /** Namespace selection for this report. Cut at separator per §4.56. */
   val JdkNamespaces: List[String] = List("java", "javax")
 
   private def inJdk(fqn: String): Boolean =

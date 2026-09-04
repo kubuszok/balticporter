@@ -2,33 +2,11 @@ package balticporter.tir
 
 import java.nio.file.{Files, Path}
 
-/** SHOW the §4.6 flag resolution — which layer defines each flag right now, what the merged result
-  * is, and what a run already recorded. `just debug-flags [PORT]`.
+/** Renders the §4.6 flag resolution: layers, effective merge, and what a port's last run recorded.
   *
-  * {{{
-  * engine/runMain balticporter.tir.DebugFlagsMain --root /path/to/checkout [--port LibgdxCoreMigrate]
-  * }}}
-  *
-  * ==Why this is a program and not a `cat`==
-  *
-  * Two files and a precedence rule look like something a shell can print, and that is the trap: the
-  * rule ("system property, then `debug.properties`, then `run.properties`") would then exist twice,
-  * and the copy that explains a run would be free to disagree with the copy that performs it. So
-  * the merge is [[DebugFlags.resolution]] — the same fold [[DebugFlags.get]] uses — and this class
-  * only renders it.
-  *
-  * ==What it can and cannot see==
-  *
-  * The layer this JVM CANNOT speak for is the system properties of the migration, because the
-  * migration is a JVM forked from a long-running `sbt -client` server: its `-D`s come from
-  * `build.sbt`, never from the caller's command line or environment (that is the whole reason the
-  * marker files exist). So the system-property layer printed here is THIS process's, labelled as
-  * such, and the two FILE layers are the ones that genuinely predict the next run.
-  *
-  * `--port` closes the remaining gap from the other end: the run's own report records the flags it
-  * actually saw ([[CheckReport]] writes them into `report.md`), so "did my flag reach the run" is
-  * answerable after the fact instead of by re-running with a print statement.
-  */
+  * Uses [[DebugFlags.resolution]] (the same fold [[DebugFlags.get]] reads). The system-property
+  * layer shown is THIS process's, not the forked migration's. `--port` shows what the last run
+  * actually saw. `just debug-flags [PORT]`. */
 object DebugFlagsMain:
 
   private def usage(): Nothing =
@@ -53,8 +31,7 @@ object DebugFlagsMain:
       i += 1
     println(render(root, DebugFlags.sysFlags, port))
 
-  /** the whole report as a string — separable from the argument parsing so a spec can assert on it
-    * (the shape every other main in this package follows, and for the same reason). */
+  /** The whole report as a string, separable from argument parsing for testability. */
   def render(root: Path, sysProps: Map[String, String], port: Option[String]): String =
     val sb     = new StringBuilder
     val layers = DebugFlags.layers(root, sysProps)
@@ -79,12 +56,9 @@ object DebugFlagsMain:
         val shadow =
           if r.shadowed.isEmpty then ""
           else s"  (shadows ${r.shadowed.map((s, v) => s"$s=$v").mkString(", ")})"
-        // A key nothing reads is a flag that does nothing, and the run it was meant for looks
-        // entirely normal — the failure `just debug-flags` is called about, one spelling earlier.
+        // a key nothing reads is a flag that does nothing
         val unknown = if DebugFlags.known.contains(r.key) then "" else "   !! UNKNOWN KEY — nothing reads it"
-        // …and the other thing an operator cannot see: a flag whose effect is on EMITTED TEXT and
-        // which a PORT is supposed to state. Left set here it changes what every later run in this
-        // checkout writes, with no count moving (§4.6).
+        // port-supplied flag left here silently changes emitted output
         val fallback =
           if DebugFlags.PortSupplied.contains(r.key)
           then "   (FALLBACK — a port states this in its own configuration and IGNORES this flag; " +
@@ -93,9 +67,7 @@ object DebugFlagsMain:
         sb.append(s"  ${r.key.padTo(w, ' ')} = ${r.value}   [${r.source}]$shadow$unknown$fallback\n")
       }
 
-    // The failure this exists to make visible: a hand-written entry that no accessor will ever
-    // look up, because every key is read as `balticporter.<name>`. It is a flag that does nothing,
-    // and nothing else in the engine can report it — the run it was meant for is simply normal.
+    // entries no accessor reads (every key must start with `balticporter.`)
     val ignored = layers.filter(_.ignored.nonEmpty)
     if ignored.nonEmpty then
       sb.append("\n!! IGNORED — entries no accessor can read; every key must start with `balticporter.`:\n")
@@ -110,7 +82,7 @@ object DebugFlagsMain:
     port.foreach(p => sb.append('\n').append(recorded(root, p)))
     sb.result()
 
-  /** what the named port's LAST run recorded — the other end of the same question. */
+  /** What the named port's last run recorded. */
   private def recorded(root: Path, port: String): String =
     val dir = root.resolve(s"port-report/$port/run-latest")
     val md  = dir.resolve("report.md")
