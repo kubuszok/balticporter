@@ -1106,6 +1106,8 @@ object LibgdxPolicy:
         ("with", 1)     -> Template("{ val bpW = $0; val bpWd = $Target.apply[$T0](bpW.length); bpWd.addAll(bpW, 0, bpW.length); bpWd }"),
         // wave 3.1au: toString(sep) needs no brackets (java joins bare) -- iterator.mkString matches
         ("toString", 1) -> Template("$recv.iterator.mkString($0)"),
+        // item 7: CharArray.toString() returns the chars, not DynamicArray's own toString.
+        ("toString", 0) -> Template("new java.lang.String($recv.toArray)"),
         // peek/first/pop restate java's IllegalStateException (lls throws IndexOutOfBounds) -- CLAUDE.md §4.4
         ("peek", 0)  -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.peek }"),
         ("first", 0) -> Template("{ if ($recv.isEmpty) throw new java.lang.IllegalStateException(\"Array is empty.\"); $recv.first }"),
@@ -1245,10 +1247,8 @@ object LibgdxPolicy:
       "com.badlogic.gdx.utils.LongArray"            -> primArrayInitByDesc(Descriptor(List(Param.Named("LongArray"))), longArrDesc, "scala.Long"),
       "com.badlogic.gdx.utils.ShortArray"           -> primArrayInitByDesc(Descriptor(List(Param.Named("ShortArray"))), shortArrDesc, "scala.Short"),
       "com.badlogic.gdx.utils.ByteArray"            -> primArrayInitByDesc(Descriptor(List(Param.Named("ByteArray"))), byteArrDesc, "scala.Byte"),
-      // CharArray: init-by-desc AND append overloads (arity 1 is ambiguous — char/CharSequence/String/int).
-      // append(char) -> add(char), append(CharSequence)/append(String) -> counted (no single-expression
-      // translation — sge iterates char-by-char), append(int) -> counted (same reason — `add(c.toChar)`
-      // needs a cast the Rename entry cannot express).
+      // CharArray: init-by-desc AND append overloads (arity 1 is ambiguous — char/CharSequence/
+      // String/Object/int, each a separate descriptor row below).
       "com.badlogic.gdx.utils.CharArray"            -> (primArrayInitByDesc(Descriptor(List(Param.Named("CharArray"))), charArrDesc, "scala.Char") ++ Map(
         // CharArray(String) -> construct from string's char array.
         ("<init>", Descriptor(List(Param.Named("String")))) ->
@@ -1269,6 +1269,9 @@ object LibgdxPolicy:
         // append(int) -> add(c.toChar) — the int is a codepoint, cast to Char.
         ("append", Descriptor(List(Param.Prim("int")))) ->
           Template("$recv.add($0.toChar)"),
+        // item 7: append(Object) is java's own String.valueOf(obj) then the chars.
+        ("append", Descriptor(List(Param.Named("Object")))) ->
+          Template("{ val bpCa = java.lang.String.valueOf($0).toCharArray; $recv.addAll(bpCa, 0, bpCa.length); $recv }"),
         // indexOf(String) -> indexOf(Char): DynamicArray.indexOf takes a single element.
         // Java's CharArray.indexOf(String) is a substring search; the only occurrence
         // in gdx/src is indexOf("\n"), a single-char string, so .charAt(0) is faithful.

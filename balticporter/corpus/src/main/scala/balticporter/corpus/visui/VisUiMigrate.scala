@@ -185,104 +185,10 @@ object VisUiPolicy:
           ),
           underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
         )),
-        // 3.1ba: body substitutions, THREE FAMILIES — (1) VisTextField keyboard.show(boolean) ->
-        // show(TextField)/close(): vendored libGDX 1.14.1 changed the signature after VisUI's
-        // 1.14.0 (§3.5); (2) Dialogs.getStackTrace: CharArray.append(Object) has no
-        // DynamicArray[Char] equivalent post-retarget, so the hand port's StringBuilder rewrite
-        // is carried instead; (3) Draggable#BLOCKER (CT11): counted `unsuppliable-use`.
-        new balticporter.transform.MethodBodyTransform(Map(
-          // --- (1) keyboard.show(boolean) -> show(TextField) / close() ---
-          "com.kotcrab.vis.ui.widget.VisTextField#focusField" ->
-            """{
-              |  if (this.disabled$field) {
-              |    return
-              |  } else ()
-              |  val stage: sge.scenes.scene2d.Stage = this.stage.orNull
-              |  sge.visui.FocusManager.switchFocus(stage, this)
-              |  this.cursorPosition = 0
-              |  this.selectionStart$field = 0
-              |  this.calculateOffsets()
-              |  if (stage != null) {
-              |    stage.setKeyboardFocus(lowlevel.Nullable(this))
-              |  } else ()
-              |  this.keyboard.show(this)
-              |  this.hasSelection = true
-              |}""".stripMargin,
-          "com.kotcrab.vis.ui.widget.VisTextField#next(boolean)" ->
-            """{
-              |  val stage: sge.scenes.scene2d.Stage = this.stage.orNull
-              |  if (stage == null) {
-              |    return
-              |  } else ()
-              |  this.parent.get.localToStageCoordinates(sge.visui.widget.VisTextField.tmp1.set(this.x, this.y))
-              |  var textField: sge.visui.widget.VisTextField = this.findNextTextField(stage.actors, null, sge.visui.widget.VisTextField.tmp2, sge.visui.widget.VisTextField.tmp1, up)
-              |  if (textField == null) {
-              |    if (up) {
-              |      sge.visui.widget.VisTextField.tmp1.set(java.lang.Float.MIN_VALUE, java.lang.Float.MIN_VALUE)
-              |    } else {
-              |      sge.visui.widget.VisTextField.tmp1.set(java.lang.Float.MAX_VALUE, java.lang.Float.MAX_VALUE)
-              |    }
-              |    textField = this.findNextTextField(this.stage.get.actors, null, sge.visui.widget.VisTextField.tmp2, sge.visui.widget.VisTextField.tmp1, up)
-              |  } else ()
-              |  if (textField != null) {
-              |    textField.focusField()
-              |    textField.cursorPosition = textField.text.length()
-              |  } else {
-              |    this.keyboard.close()
-              |  }
-              |}""".stripMargin,
-          "com.kotcrab.vis.ui.widget.VisTextField$TextFieldClickListener#touchDown(InputEvent,float,float,int,int)" ->
-            """{
-              |  if (!super.touchDown(event, x, y, pointer, button)) {
-              |    return false
-              |  } else ()
-              |  if ((pointer == 0) && (button != 0)) {
-              |    return false
-              |  } else ()
-              |  if (VisTextField.this.disabled$field) {
-              |    return true
-              |  } else ()
-              |  val stage: sge.scenes.scene2d.Stage = VisTextField.this.stage.orNull
-              |  sge.visui.FocusManager.switchFocus(stage, VisTextField.this)
-              |  this.setCursorPosition(x, y)
-              |  VisTextField.this.selectionStart$field = VisTextField.this.cursor
-              |  if (stage != null) {
-              |    stage.setKeyboardFocus(lowlevel.Nullable(VisTextField.this))
-              |  } else ()
-              |  if (VisTextField.this.readOnly$field == false) {
-              |    VisTextField.this.keyboard.show(VisTextField.this)
-              |  } else ()
-              |  VisTextField.this.hasSelection = true
-              |  return true
-              |}""".stripMargin,
-          // --- (2) Dialogs.getStackTrace: StringBuilder instead of DynamicArray[Char] ---
-          // Dialogs.getStackTrace(Throwable): DynamicArray[Char].toString would print
-          // "[a, b, c]"; reconstruct via new String(builder.toArray) instead.
-          "com.kotcrab.vis.ui.util.dialog.Dialogs#getStackTrace(Throwable)" ->
-            """{
-              |  val builder: lowlevel.util.DynamicArray[scala.Char] = lowlevel.util.DynamicArray.apply[scala.Char]()
-              |  sge.visui.util.dialog.Dialogs.getStackTrace(throwable, builder)
-              |  return new java.lang.String(builder.toArray)
-              |}""".stripMargin,
-          // Dialogs.getStackTrace(Throwable,CharArray): CharArray.append(Object) has no
-          // DynamicArray[Char] equivalent -- convert each element to a char array and addAll.
-          "com.kotcrab.vis.ui.util.dialog.Dialogs#getStackTrace(Throwable,CharArray)" ->
-            """{
-              |  val msg: java.lang.String = throwable.getMessage()
-              |  if (msg != null) {
-              |    { val bpCa = msg.toString.toCharArray; builder.addAll(bpCa, 0, bpCa.length) }
-              |    { val bpCa = "\n\n".toString.toCharArray; builder.addAll(bpCa, 0, bpCa.length) }
-              |  } else ()
-              |  for (element <- throwable.getStackTrace()) {
-              |    { val bpCa = element.toString.toCharArray; builder.addAll(bpCa, 0, bpCa.length) }
-              |    { val bpCa = "\n".toString.toCharArray; builder.addAll(bpCa, 0, bpCa.length) }
-              |  }
-              |  if (throwable.getCause() != null) {
-              |    { val bpCa = "\nCaused by: ".toString.toCharArray; builder.addAll(bpCa, 0, bpCa.length) }
-              |    sge.visui.util.dialog.Dialogs.getStackTrace(throwable.getCause(), builder)
-              |  } else ()
-              |}""".stripMargin,
-        )),
+        // items 6-7: the two body-substitution families here are retired. (1) keyboard.show
+        // (boolean): upstream-version break, not carried -- ported/sge-visui/divergence-
+        // verdicts.tsv (`VisTextField#keyboard.show`). (2) Dialogs.getStackTrace: replaced by
+        // the CharArray append(Object)/toString(0) retarget rows in LibgdxCoreMigrate.scala.
         // LAST, deliberately (as AshleyPolicy/GdxAiPolicy/TextraTypistPolicy): reads what
         // the BASE actually emitted; must run after any seam re-pointing such a reference.
         balticporter.transform.PortMapTransform.forBases("sge"),
