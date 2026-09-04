@@ -1,41 +1,18 @@
 package balticporter.tir
 
 /** WHAT THE FRONTEND SAW — every executable it walked, INCLUDING the ones it was about to drop.
-  *
-  * ==Why this has to exist, and why it has to be the FRONTEND that publishes it==
-  * A `dropMethods` key names a member that, by the time any phase runs, has no `SymId`, no `Symbol`
-  * and no row in the symbol table: the frontend filters the executable out BEFORE the method symbol
-  * is minted. So the key cannot be resolved against a `Program` at all, and a binder that tried
-  * would report every drop that WORKED as a typo.
-  *
-  * The general rule, worth stating because it also explains why a dropped TYPE has no `srcmap` entry
-  * (CLAUDE.md §4.56): '''policy that REMOVES something can only be bound where the thing still
-  * exists, which is the frontend.''' That is what makes [[PolicyBinder]] two-stage, and this is
-  * stage one.
-  *
-  * ==What it is deliberately NOT==
-  * It is not "every member the engine can see". A member the ENGINE minted after the frontend ran —
-  * a synthetic constructor, a lowered lifecycle method — is in NEITHER of the two places a policy
-  * key may legitimately name, and that is exactly how [[PolicyBinder]] tells a typo (`NeverMatched`)
-  * from a key naming something policy has no standing to address (`SyntheticTarget`). The two read
-  * identically in a findings file and mean opposite things. Adding synthetics here would delete that
-  * distinction.
-  *
-  * It also subsumes the mutable `matchedKeys` tally `Substitutions` carried, whose own scaladoc
-  * apologised for being a mutable field on a `case class` that `copy()` silently empties.
-  */
+  * A `dropMethods` key names a member that by the time any phase runs has no `SymId` — the
+  * frontend filters it BEFORE minting one — so policy that REMOVES something can only be bound
+  * where the thing still exists (CLAUDE.md §4.56), making [[PolicyBinder]] two-stage. NOT every
+  * member the ENGINE minted afterward — that distinguishes `NeverMatched` from `SyntheticTarget`. */
 final class MemberIndex(
     /** a LIST per key, not one entry. Two members can share one identity in this grammar — a class
       * with two `static { }` blocks has two `<clinit>()`s — and a map would silently keep one of
       * them, which is the shape of every defect this index exists to prevent. */
     private val byKey: Map[MemberKey, List[MemberFacts]],
-    /** every TYPE the frontend walked, by qualified name.
-      *
-      * A separate field and not `byKey.map(_.owner)`, because the question it answers is "did the
-      * frontend SEE this owner" and a type with no executables at all would otherwise answer no.
-      * That is the whole of `PolicyBinder`'s structural test for an engine-minted member — the
-      * frontend walked the owner and did not record the member — and it is wrong for exactly the
-      * types a derived set would omit. */
+    /** every TYPE the frontend walked, by qualified name. A separate field, not `byKey.map(_.owner)`
+      * — a type with no executables would otherwise answer "not seen", which is wrong for
+      * `PolicyBinder`'s structural test (frontend walked the owner, did not record the member). */
     val types: Set[String],
 ):
 
@@ -49,11 +26,9 @@ final class MemberIndex(
       .flatMap((k, fs) => fs.map(k -> _)).toList.sortBy(_._1.render)
 
   /** …for a key, precise or bare. A precise key names one identity; a bare key names the set.
-    *
-    * A precise key is matched through `Descriptor.matches` over the overload set rather than by a
-    * `Map` lookup on the whole `MemberKey`, so a parameter written QUALIFIED — which is how every
-    * report shows one — names the member it obviously means. The lookup is per POLICY KEY and there
-    * are tens of those in a manifest, so the scan costs nothing a run can measure. */
+    * Matched through `Descriptor.matches` over the overload set, not a `Map` lookup on the whole
+    * `MemberKey`, so a QUALIFIED parameter (as every report shows one) still names the obvious
+    * member. */
   def matching(k: MemberKey): List[(MemberKey, MemberFacts)] =
     if k.isBare then overloads(k.owner, k.name)
     else
@@ -79,12 +54,7 @@ object MemberIndex:
     new MemberIndex(entries.groupMap(_._1)(_._2).view.mapValues(_.toList).toMap, types)
 
 /** What the frontend knew about one executable at the moment it walked it.
-  *
-  * @param sym
-  *   its interned symbol — `None` for a member the frontend DROPPED, which is the whole reason this
-  *   record exists rather than a `Set[MemberKey]`.
-  * @param dropped
-  *   did policy remove it? A dropped member is still an ANSWER: its key fired, and reporting it as
-  *   never-matched is the failure this index prevents.
-  */
+  * @param sym its interned symbol — `None` for a DROPPED member, the whole reason this exists
+  *   rather than a `Set[MemberKey]` @param dropped did policy remove it? A dropped member is still
+  *   an ANSWER — reporting it never-matched is the failure this index prevents. */
 final case class MemberFacts(sym: Option[SymId], flags: Flags, origin: Origin, dropped: Boolean)

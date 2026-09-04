@@ -2,50 +2,11 @@ package balticporter.tir
 
 import balticporter.catalog.FixKind
 
-/** THE MENU — one named thing the engine can DO at one location, offered by the phase or check that
-  * can do it.
-  *
-  * ==Why a menu exists at all==
-  * `CLAUDE.md` §1 splits every rule three ways: (a) universal, (b) a mechanism the engine owns whose
-  * policy a manifest supplies, (c) a rule that could only ever apply to one library. That split is
-  * about MECHANISMS, and it leaves a gap the corpus keeps falling into: a difference with no single
-  * right answer, where the engine can perform any of two or three faithful translations and only the
-  * port knows which one it wants HERE. Today the port's only reachable answers are "accept the
-  * finding" and "write a (c) rule", and the second is a whole compiled artifact for a decision that
-  * is one word long.
-  *
-  * A remedy is that one word. The phase or check that mints the residue finding declares the
-  * alternatives it can carry out; a port SELECTS one per location
-  * ([[balticporter.core.PortManifest.resolutions]]); the engine applies it and both halves are
-  * counted ([[Resolution]]). Nothing about the mechanism moves into the manifest — the manifest
-  * names a choice from a list the engine published, which is exactly the shape §1(b) already has
-  * for a `RuleScope` and a `verdictOverrides` entry.
-  *
-  * ==What a declaration has to carry, and why each half is not optional==
-  *   - [[id]] is GLOBALLY UNIQUE across every source in a run, which is what lets the selection key
-  *     stay flat: `"owner#member" = "remedy-id"` and never a compound `(lane, kind, id)`. A port
-  *     writes one string and the engine knows which phase it is talking to. Uniqueness is enforced
-  *     where the vocabulary is assembled ([[RemedyVocabulary.from]]), because that is the only layer
-  *     that sees two declarers at once;
-  *   - [[lane]] and [[kind]] name the RESIDUE this remedy drains — the `CheckReport` check and the
-  *     finding kind within it. Without them a resolution is a verdict with no denominator: the
-  *     refusal lane it empties must fall by exactly the number that moved into `remediation(resolved)`
-  *     (`CLAUDE.md` §5's trivia-family rule, one artifact over), and nothing can check that if the
-  *     remedy does not say which lane it is draining;
-  *   - [[emissionAffecting]] is what puts a selection in §1.5's MUST-agree column. A remedy that
-  *     changes emitted text at a shared declaration and is chosen differently by two modules
-  *     produces two ports that each compile alone and cannot compile together. Declared rather than
-  *     assumed, because the day a remedy only re-files a finding under another lane, that one
-  *     belongs in the not-inherited column beside `verdictOverrides` and the field is where the
-  *     difference is stated;
-  *   - [[fix]] is `CLAUDE.md` §1's classification of the REMEDY ITSELF — which repository owns the
-  *     code that carries it out. It is not the classification of the SELECTION, which is always
-  *     §1(b) by construction (a manifest key), and that is why this is a
-  *     [[balticporter.catalog.FixKind]] and not a [[Reason]]: a `Reason.Configured` needs the phase
-  *     and the key an applied resolution has and a declared remedy does not. The catalog's enum is
-  *     REUSED rather than restated — two enums with the same three cases would be two vocabularies
-  *     for one question, which is what `RemedyHint` and this type already avoid by sharing it.
-  */
+/** THE MENU — one named thing the engine can DO at one location, offered by the phase or check
+  * that can do it, for a difference with no single right answer. The phase/check declares
+  * alternatives; a port SELECTS one ([[PortManifest.resolutions]]); the engine applies and counts
+  * both halves ([[Resolution]]). @field id GLOBALLY UNIQUE @field lane/kind the residue drained
+  * @field emissionAffecting puts it in §1.5's MUST-agree column @field fix owning repository (`FixKind`). */
 final case class Remedy(
     /** the globally-unique, kebab-case slug a manifest writes. Published API — see [[Remedy.badId]]
       * for the grammar and why anything outside it is refused rather than normalised. */
@@ -63,28 +24,11 @@ final case class Remedy(
     /** one sentence: what the port gets if it picks this. Rendered in the menu and in the porter
       * note beside the code, so it is written for a reader who is holding neither. */
     what: String,
-    /** the OTHER kinds in [[lane]] this same remedy also answers. Empty by default, which is the
-      * one-kind remedy the mechanism shipped with and the reading every existing declarer keeps.
-      *
-      * ==Why a lane's kinds are sometimes FACETS of one decision==
-      * A `kind` normally PARTITIONS a lane into questions a port answers separately —
-      * `heap-pollution`'s `Acknowledged` and `Unacknowledged` are two statements about two different
-      * declarations, and a remedy for one has nothing to say about the other. A lane may instead
-      * split ONE SITE into several rows: `overload-risk` files up to three at a single call, because
-      * JLS 15.12.2's three phase boundaries are three ways for the SAME candidate set to diverge. One
-      * act — pin javac's alternative, or accept the divergence — answers all of them, and it is taken
-      * once.
-      *
-      * Without this field such a lane needs one id per kind, and the selection key is per MEMBER
-      * ([[Resolution]]) — so a member holding two kinds could answer only ONE of them and its
-      * remaining rows would be residue no key can ever drain. That is a bar the MECHANISM cannot
-      * meet, not a port's omission, and it is exactly what `DESIGN.md` §8.16 refused the compound key
-      * for: writing one decision three times is three places to be wrong.
-      *
-      * It does NOT widen across lanes, and that is what keeps the accounting readable: a remedy
-      * drains rows in exactly one `CheckReport` check, so `CLAUDE.md` §5's rule — the drained lane
-      * falls by exactly what `remediation(resolved)` gained — still reads off one number.
-      */
+    /** the OTHER kinds in [[lane]] this same remedy also answers. Empty by default (one-kind
+      * remedy). A lane may split ONE SITE into several rows (`overload-risk` files up to three at
+      * one call, JLS 15.12.2's three phase boundaries), and one act answers all of them — without
+      * this a member holding two kinds could answer only one, leaving undrainable residue
+      * (`DESIGN.md` §8.16). Does NOT widen across lanes, keeping the accounting one number. */
     alsoKinds: List[String] = Nil,
     /** WHAT KIND OF THING THE SELECTION KEY NAMES — see [[Remedy.Subject]]. Defaulted to
       * `OwnedMember`, which is what every remedy whose residue sits at a declaration this run emits
@@ -108,20 +52,11 @@ final case class Remedy(
     * [[overlaps]] is the only reader and treats it as the whole lane. */
   def kinds: Set[String] = (kind :: alsoKinds).toSet
 
-  /** COULD THIS REMEDY AND THAT ONE ANSWER THE SAME ROW? — the question a CONFLICT is, and it is
-    * not "are they on the same lane".
-    *
-    * [[ResolutionPlan.selected]] dispatches by `(lane, kind)`, so two selections at one declaration
-    * on one lane whose kinds are DISJOINT are both live and both do their job — `heap-pollution`'s
-    * `Acknowledged` and `Unacknowledged` are two statements about two different rows, and a port
-    * making both has written no duplicate. Asked as lane equality alone the pair is reported as
-    * `ConflictingSelection` and the port is told to delete one of two entries it needs, which is a
-    * finding with no way to comply with it.
-    *
-    * `AnyKind` overlaps everything on its lane by construction: a remedy that answers every kind
-    * cannot be disjoint from one that answers some. Derived here rather than at the one caller so
-    * it stays in step with [[answers]] — the same field read by two sites is §4.56's fast-path
-    * guard waiting to happen. */
+  /** COULD THIS REMEDY AND THAT ONE ANSWER THE SAME ROW? — not "are they on the same lane".
+    * [[ResolutionPlan.selected]] dispatches by `(lane, kind)`, so two selections with DISJOINT
+    * kinds on one lane are both live (e.g. `heap-pollution`'s `Acknowledged`/`Unacknowledged`);
+    * lane equality alone would report `ConflictingSelection` with no way to comply. `AnyKind`
+    * overlaps everything on its lane by construction. */
   def overlaps(other: Remedy): Boolean =
     lane == other.lane && (kind == Remedy.AnyKind || other.kind == Remedy.AnyKind ||
       kinds.exists(other.kinds))
@@ -130,50 +65,17 @@ final case class Remedy(
 
 object Remedy:
 
-  /** the [[Remedy.kind]] of a remedy that answers EVERY kind in its lane — [[alsoKinds]] at the
-    * cardinality an enumeration cannot reach.
-    *
-    * `alsoKinds` ENUMERATES, which is exact for a lane whose kinds are a closed enum (`overload-risk`
-    * has three phase spans, `heap-pollution` two acknowledgements) and unwritable for one whose kind
-    * column is an OPEN set: `portability(emitted)` files each row under the offending API's FQN, of
-    * which there are hundreds and one more every time a rule is added. A per-location remedy there is
-    * about the LOCATION and not about one API — declaring `kind = "java.net.URL"` would be a remedy
-    * that answers one row of one port, and enumerating the rule list here would put a two-hundred-name
-    * string in every finding this remedy ever writes.
-    *
-    * It is read in [[answers]] and nowhere else, so [[ResolutionPlan.drain]] and
-    * [[ResolutionPlan.appliedAt]] both honour it without a second code path — which is the whole
-    * reason it is a `kind` value rather than a fourth field somebody has to remember to consult
-    * (`CLAUDE.md` §4.56's fast-path guard, one type over). */
+  /** the [[Remedy.kind]] of a remedy that answers EVERY kind in its lane — [[alsoKinds]] at a
+    * cardinality enumeration cannot reach: `portability(emitted)` files under an offending API's
+    * FQN, an OPEN set with hundreds of values, so a per-location remedy there is about the LOCATION
+    * and cannot enumerate. Read only in [[answers]], so [[drain]]/[[appliedAt]] honour it uniformly. */
   val AnyKind: String = "*"
 
-  /** WHAT A SELECTION KEY FOR THIS REMEDY NAMES.
-    *
-    * `DESIGN.md` §8.16 shipped with one answer — a `MemberKey` naming a declaration the run owns —
-    * because the plumbing shipped with no menu and there was nothing to disagree with it. The first
-    * menus disagreed with it twice, and neither is an exotic case:
-    *
-    *   - a residue can sit at a TYPE, with no member to name. A class threaded with a `using` clause
-    *     that nothing in the program constructs (`ENGINE-LIMITS.md` CT7) is a fact about the CLASS —
-    *     it has as many constructors as java gave it and the clause is on all of them — so a member
-    *     key would have to pick one of them arbitrarily, and a bare one would be `Ambiguous`;
-    *   - a residue can sit at a member this program does NOT declare. An egress row asks *does this
-    *     external method read the representation I hand it?* and is deduplicated BY CALLEE for
-    *     exactly that reason, so the thing a port has an opinion about is the callee — the same
-    *     string it would write into the phase's own sink list. Keyed at the enclosing declaration
-    *     instead, one row would answer for a site chosen by a `min(path, line)` that moves whenever
-    *     the upstream does.
-    *
-    * So the SUBJECT KIND is the remedy's to declare, and the plan binds each key the way its remedy
-    * says (`ResolutionPlan.of`). Doing it the other way round — binding every key with
-    * `Ownership.Either` and letting the subject fall out — would make a typo'd owned key bind to an
-    * interned external and then report as `NeverApplied` ("the key names a declaration this run
-    * OWNS"), which is a sentence that would be false.
-    *
-    * There is deliberately no `ExternalType`: no residue in this engine sits at one, and a case
-    * nothing produces is a case no spec can hold to its meaning. Adding it is one line the day a
-    * remedy needs it.
-    */
+  /** WHAT A SELECTION KEY FOR THIS REMEDY NAMES. `DESIGN.md` §8.16's original answer — a
+    * `MemberKey` naming a declaration the run owns — fails at a residue sitting at a TYPE (no
+    * member to name, e.g. `ENGINE-LIMITS.md` CT7) or at a member this program does NOT declare (an
+    * egress row, deduplicated BY CALLEE). So the SUBJECT KIND is the remedy's own to declare, and
+    * the plan binds each key accordingly (`ResolutionPlan.of`) — no `ExternalType` yet: nothing produces it. */
   enum Subject(val ownership: Ownership, val isType: Boolean):
     /** `owner#member`, naming a declaration this run emits — the default and the common case. */
     case OwnedMember    extends Subject(Ownership.Owned, false)
@@ -199,38 +101,19 @@ object Remedy:
     else if !id.head.isLetter then Some(s"'$id' does not start with a letter")
     else scala.None
 
-/** A PHASE OR CHECK THAT OFFERS REMEDIES.
-  *
-  * A trait beside [[Phase]] rather than a field on it, for [[IdiomPhase]]'s reason: a phase that
-  * offers nothing should not be asked, and a CHECK is not a phase at all — half the residue lanes a
-  * remedy could drain are produced by plain objects the orchestrator calls. Both answer here.
-  *
-  * The vocabulary a RUN can act on is assembled from the sources the run actually holds — the
-  * pipeline's phases plus the checks the orchestrator registers — which is `Rewrite.accountedBy`'s
-  * shape one level up: a claim a phase makes about itself, gathered per run rather than kept in a
-  * table somebody has to remember to edit.
-  */
+/** A PHASE OR CHECK THAT OFFERS REMEDIES. A trait beside [[Phase]] rather than a field on it, for
+  * [[IdiomPhase]]'s reason: a CHECK is not a phase at all, and half the residue lanes a remedy
+  * could drain are plain objects the orchestrator calls. The vocabulary a RUN can act on is
+  * assembled from the sources the run actually holds. */
 trait RemedySource:
   /** every remedy this source can carry out. Empty is the honest answer for a source that offers
     * none, and is the default nothing has to state. */
   def remedies: List[Remedy]
 
-/** EVERY REMEDY VISIBLE AT ONE MOMENT, by id — assembled, never enumerated in a table.
-  *
-  * Two different sets are built from this type and the difference between them is the whole of the
-  * `resolutions` staleness story:
-  *
-  *   - the KNOWN set — every remedy this engine and this classpath ship, whether or not the port
-  *     put the declaring phase in its pipeline. A `.conf` naming an id outside it is a
-  *     [[ConfigError]] at load, because it is a typo and no run could ever act on it;
-  *   - the ACTIVE set — the remedies of the sources THIS RUN holds. An id that is known and not
-  *     active is a port that selected a remedy from a phase it did not enable: a policy finding
-  *     naming the phase, never silence.
-  *
-  * Assembly REFUSES a duplicate id rather than picking one, exactly as `TransformRegistry` refuses
-  * two factories claiming one name: an id is published API and a port that wrote it is entitled to
-  * know which mechanism answered.
-  */
+/** EVERY REMEDY VISIBLE AT ONE MOMENT, by id — assembled, never enumerated in a table. Two sets:
+  * KNOWN (every remedy the engine/classpath ship — a `.conf` naming an id outside it is a
+  * [[ConfigError]] at load) and ACTIVE (this run's sources — a known-but-inactive id is a policy
+  * finding, never silence). Refuses a duplicate id rather than picking one, like `TransformRegistry`. */
 final class RemedyVocabulary private (
     val byId: Map[String, Remedy],
     /** id → the class name of the source that declared it, for the duplicate error and for the

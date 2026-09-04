@@ -2,65 +2,11 @@ package balticporter.tir
 
 import java.nio.file.{Files, Path}
 
-/** Run-time switches for DIAGNOSIS — the kill switch of CLAUDE.md §4.6, promoted from folklore
-  * (edit a function to return early, gate it on a marker file, recompile) to a flag.
-  *
-  * ## Why there are two sources, and why a shell environment variable is not one of them
-  *
-  * The canonical way this engine is driven is `sbt -client "corpus/runMain …"`. `-client`
-  * talks to a LONG-RUNNING sbt server that was started with whatever environment the shell had at
-  * the time, and the migration then runs in a JVM forked from THAT server. So:
-  *
-  *   - an environment variable exported in the operator's shell never reaches the migration —
-  *     this is the trap CLAUDE.md §4.6 records;
-  *   - a `-D` on the operator's command line does not either, because the forked JVM's options
-  *     come from the build definition, not the caller.
-  *
-  * Therefore flags resolve from, in increasing precedence:
-  *
-  *   1. `<root>/.balticporter/run.properties`   — written by a SCRIPT before it invokes sbt
-  *   2. `<root>/.balticporter/debug.properties` — hand-written by the operator/agent, wins over (1)
-  *   3. system properties                       — for a direct `java`/test invocation, and for a
-  *                                                main class that sets them before it runs a pipeline
-  *
-  * `<root>` is `-Dbalticporter.root` when the build supplies it (it does for the corpus programs),
-  * else the working directory. `.balticporter/` is already gitignored, so a marker file is never a
-  * commit hazard. Both files are optional; with neither present and no system property set, every
-  * flag below is empty and every consumer is a no-op.
-  *
-  * ## The flags
-  *
-  * | key | effect |
-  * |---|---|
-  * | `balticporter.skipPhases=a,b` (or `*`) | [[Pipeline.run]] does not run those phases |
-  * | `balticporter.dumpTirBefore=a`         | print the TIR of the program BEFORE phase `a` |
-  * | `balticporter.dumpTirAfter=a`          | print the TIR of the program AFTER phase `a` |
-  * | `balticporter.dumpOnly=com.x.Y`        | narrow both dumps to one unit's full name |
-  * | `balticporter.tracePhases=true`        | one line per phase: name, units, symbols |
-  * | `balticporter.traceNode=Typed,Apply`   | [[TirTrace]] prints construction provenance |
-  * | `balticporter.report=off`              | disable check persistence ([[CheckReport]]) |
-  * | `balticporter.reportDir=<path>`        | where check results go (default derived, see there) |
-  * | `balticporter.reportPathRoot=<path>`   | source root to make finding paths RELATIVE to |
-  * | `balticporter.baseReports=<p1:p2>`     | EXTRA directories to look for a base's published port map in |
-  *
-  * The marker FILES are read once and cached — a flag must not change under a run, or two halves
-  * of one measurement disagree (CLAUDE.md §5). The cache is keyed on [[root]], which is the one
-  * thing that cannot change under a run, so pointing the root at another directory (a test, a
-  * diagnostic asked about another checkout) re-reads rather than answering from another root's
-  * files. The accessors themselves are `def`s over `System.getProperty`, which is what lets a main
-  * class set a flag for the pipeline it is about to run, and lets a test exercise one without a
-  * fresh JVM.
-  *
-  * ## Why the resolution is also a VALUE ([[resolution]])
-  *
-  * "Why did my flag not reach the run" is the question this whole mechanism generates, and it is
-  * unanswerable from the flags themselves: [[get]] returns the winner and says nothing about which
-  * layer supplied it, which layers it shadowed, or which entries no layer will ever supply because
-  * they are missing the `balticporter.` prefix. So the merge is exposed as data — one [[Resolved]]
-  * per key, carrying its source and what it shadowed — and `just debug-flags` prints it. It is the
-  * SAME fold [[get]] uses, deliberately: a diagnostic that recomputes the precedence rule is a
-  * second truth about it, and would eventually disagree with the runs it claims to explain.
-  */
+/** Run-time switches for DIAGNOSIS — the kill switch of CLAUDE.md §4.6, promoted from folklore to
+  * a flag. Resolves (increasing precedence): `run.properties` (script-written), `debug.properties`
+  * (operator-written), system properties — never a shell env var or `-D`, since `sbt -client`'s
+  * migration JVM is forked from a server neither reaches. `<root>` is `-Dbalticporter.root` or the
+  * cwd; absent files/props means every flag is empty. See `just debug-flags`. */
 object DebugFlags:
 
   val Prefix = "balticporter."
@@ -78,12 +24,9 @@ object DebugFlags:
     List(r.resolve(".balticporter/run.properties"), r.resolve(".balticporter/debug.properties"))
 
   /** One source of flags, named. Layers are always listed in INCREASING precedence, so a fold that
-    * keeps the last wins — which is the whole of the resolution rule, in one place.
-    *
-    * `ignored` is the half of the answer nothing else has: a properties file may hold entries
-    * `get` will never look up, because a key without the `balticporter.` prefix cannot be reached
-    * by any accessor. Written by hand — `skipPhases=*` for `balticporter.skipPhases=*` — that is a
-    * flag that silently does nothing, which is the §1(b) no-op this engine refuses everywhere. */
+    * keeps the last wins. `ignored` holds entries `get` will never look up (missing the
+    * `balticporter.` prefix or a misspelled key) — a flag that silently does nothing, the §1(b)
+    * no-op this engine refuses everywhere. */
   final case class Layer(name: String, file: Option[Path], props: Map[String, String], ignored: Map[String, String]):
     def present: Boolean = file.forall(Files.isRegularFile(_))
 
@@ -150,13 +93,9 @@ object DebugFlags:
   ).map(Prefix + _)
 
   /** Keys a PORT normally supplies from its own configuration, for which this flag is only the
-    * fallback — for a tool that has no port configuration at all (`DebugEmit`, `CorrelateMain`) and
-    * for §4.45's consumer before it has written a manifest.
-    *
-    * `just debug-flags` marks them, and the marking is the point: these are the flags whose effect is
-    * on EMITTED TEXT rather than on a diagnostic, so a leftover entry is a checkout that emits
-    * differently at the same commit with every count identical (§4.6's `reportPathRoot` lesson). An
-    * operator seeing one set here should be asking whether the port ought to be stating it instead. */
+    * fallback (a tool with no port configuration, or §4.45's consumer before it has a manifest).
+    * `just debug-flags` marks them: their effect is on EMITTED TEXT, so a leftover entry makes a
+    * checkout emit differently at the same commit with every count identical (§4.6). */
   val PortSupplied: Set[String] = Set(Prefix + "baseReports")
 
   /** raw lookup: system property wins, then marker files (debug over run). */
@@ -174,26 +113,11 @@ object DebugFlags:
   def path(key: String): Option[Path] =
     get(key).map(v => root.resolve(v).normalize)
 
-  /** EXTRA directories to look for a base module's published port map in, in order — THE FALLBACK
-    * ONLY (see [[PortSupplied]]).
-    *
-    * §4.45's consumer is an agent in ANOTHER REPOSITORY, pointing a published Baltic Porter at its
-    * own Java. It has no `port-report/` tree of this checkout's shape — its base's map arrives from
-    * wherever that base's port was run, or unpacked from an artifact — so the default search root
-    * (the parent of THIS run's report directory) finds nothing and every base-surface question
-    * degrades to `Unknown` with no way to say otherwise.
-    *
-    * '''A PORT states this itself''' (`PortManifest.baseReports`), and where it does, this flag is
-    * not consulted at all: a base's map decides EMITTED TEXT, so which maps a run discovers belongs
-    * to the run's identity and not to an operator's session — left here, a leftover entry makes two
-    * checkouts at the same commit emit differently with every count identical, which is exactly
-    * `reportPathRoot`'s lesson one input further in. `PortMap.searchPath` is the one place the two
-    * meet, and it CHOOSES rather than merges: merging would leave that failure in place for every
-    * port that had stated its own.
-    *
-    * Separated by the platform path separator, so a value is pasteable from a classpath. Relative
-    * entries resolve against [[root]], as every other path flag does. Empty is the ordinary case and
-    * makes this a no-op by arithmetic rather than by a branch. */
+  /** EXTRA directories to look for a base module's published port map in — THE FALLBACK ONLY (see
+    * [[PortSupplied]]). §4.45's consumer has no `port-report/` tree of this checkout's shape, so
+    * the default search root finds nothing. A PORT states this itself (`PortManifest.baseReports`)
+    * where it can; a leftover flag entry here makes two checkouts at the same commit emit
+    * differently, with every count identical. `PortMap.searchPath` CHOOSES rather than merges. */
   def baseReports: List[Path] =
     get("baseReports").toList
       .flatMap(_.split(java.io.File.pathSeparatorChar).toList)

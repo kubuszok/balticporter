@@ -1,40 +1,10 @@
 package balticporter.tir
 
-/** RENAME A MEMBER — and everything that must move with it (DESIGN.md §8.5).
-  *
-  * ==What this adds over the four §4.55 passes already in the emitter==
-  * Those rename FIELDS, LOCALS and PARAMETERS — things that do not override — and the field-vs-method
-  * pass renames the *field* precisely to avoid touching a method's override obligations. So the
-  * engine has never renamed a METHOD, has no member-level override edges, no external-anchor
-  * refusal, and no `Reason.Configured` path: all four are Universal by construction, and a policy
-  * rename is not. This closes those five gaps and nothing else — it changes NAMES, never shapes.
-  * An arity change (`getX()` → `x`) is the CONSUMER's tree edit; see `BeanPropertyTransform`.
-  *
-  * ==Reference propagation is free, and the reason is §4.55's exactness argument==
-  * A rename is a SYMBOL TABLE rewrite. The emitter renders every reference through the symbol's
-  * name, every reference node carries its `SymId`, and Java resolved all of this STATICALLY — so
-  * each reference already points at the symbol Java chose, and re-pointing the symbol re-points
-  * exactly those references and no others. There is one table rewrite for the whole request list,
-  * not one per request.
-  *
-  * ==All of a component, or none of it==
-  * Every request is expanded through [[OverrideGraph.closureOf]] before anything is written, and a
-  * closure that reaches a declaration this program cannot move — an unparsed parent, a resolution
-  * root's declaration — is REFUSED WHOLE and counted. Half a rename compiles and breaks a contract
-  * silently, which is the class of defect this type exists to prevent.
-  *
-  * Requests also refuse in GROUPS. A property is two accessors and half a property is not a
-  * property, so [[Request.group]] (defaulting to the policy key) says which requests stand or fall
-  * together. Nothing is half-applied: refusals are decided before the single table rewrite.
-  *
-  * ==Collision handling DELEGATES rather than re-implements==
-  * `SuffixUntilFree` is §4.55's own idiom. `DeferToEmitter` is the one that matters for a property
-  * rename: the emitter's four passes still run after every transform, so a method that lands on a
-  * private field's name is resolved by `TirEmitter.resolveMemberClashes` renaming the FIELD to
-  * `x$field` — which is legal, and which this type does not have to duplicate. It refuses only when
-  * the collision is with something those passes will NOT move: another METHOD, or a static field
-  * (which lands in the companion, where none of the four passes reaches it).
-  */
+/** RENAME A MEMBER — and everything that must move with it (DESIGN.md §8.5). Closes what the four
+  * §4.55 passes leave open (all Universal): METHOD renames, override edges, external-anchor
+  * refusal, `Reason.Configured`. A SYMBOL TABLE rewrite — reference propagation is free since java
+  * resolved statically. Expands through [[OverrideGraph.closureOf]] first: an unmovable closure
+  * REFUSES WHOLE (counted); requests refuse in GROUPS ([[Request.group]]). */
 object MemberRenamer:
 
   /** what to do when the requested name is already taken in the component's classes. */
@@ -48,32 +18,11 @@ object MemberRenamer:
       * exactly when every collider is a non-static FIELD. Anything else refuses. */
     case DeferToEmitter
 
-  /** One rename asked for.
-    *
-    * @param member
-    *   any declaration of the component; the closure finds the rest.
-    * @param reason
-    *   the caller's §1 classification, verbatim on every decision this produces. A policy rename is
-    *   `Reason.Configured(phase, key)` with the manifest entry as the key (§4.575).
-    * @param key
-    *   the declared policy entry, for the finding and the note.
-    * @param group
-    *   requests that stand or fall together. Defaults to [[key]], which is what a per-entry policy
-    *   wants; a caller with two entries that must agree names one group for both.
-    * @param detachedParents
-    *   external types the CALLER has already removed from THIS member's emitted hierarchy, by FQN.
-    *   The world screen below refuses a component that reaches a declaration this program cannot
-    *   move, which is exact for a class that keeps java's parent and WRONG for one a phase has
-    *   re-parented: a `class C implements java.util.Map` emitted as
-    *   `extends scala.collection.mutable.Map` no longer overrides `java.util.Map#put` at all, so
-    *   anchoring the rename on that class file freezes a component against a type the emitted code
-    *   does not mention. That is §4.56's rule read at the renamer — the only party entitled to say
-    *   an anchor is gone is the phase that removed it — so this is a set the caller states and
-    *   nothing the graph could derive. PER REQUEST rather than per call, because whether a parent
-    *   was removed is a fact about ONE class: the same phase that drops a subsumed shim from three
-    *   classes leaves it on every other class in the same program, and a call-wide set would rename
-    *   their members too. Empty by default, which is every caller that moves no parent.
-    */
+  /** One rename asked for. @param member any declaration of the component; the closure finds the
+    * rest @param reason the caller's §1 classification @param key the declared policy entry
+    * @param group requests that stand or fall together, defaults to [[key]] @param detachedParents
+    * external types the CALLER has already re-parented away from THIS member's hierarchy, by FQN —
+    * states what the graph cannot derive (§4.56), PER REQUEST since removal is a per-class fact. */
   final case class Request(member: SymId, newName: String, reason: Reason, key: String, group: String,
                            detachedParents: Set[String] = Set.empty)
 
@@ -86,12 +35,8 @@ object MemberRenamer:
   final case class Refusal(request: Request, why: String, anchors: Set[(String, String)] = Set.empty):
     def render: String = s"""${request.key}: "${request.newName}" — $why"""
 
-  /** Expand, screen, then rewrite ONCE.
-    *
-    * @return
-    *   the rewritten program (identical, `eq`-wise, when nothing applied) and one [[Refusal]] per
-    *   request that did not.
-    */
+  /** Expand, screen, then rewrite ONCE. @return the rewritten program (identical, `eq`-wise, when
+    * nothing applied) and one [[Refusal]] per request that did not. */
   def rename(p: Program, graph: OverrideGraph, requests: List[Request],
              onCollision: OnCollision, out: DecisionLog): (Program, List[Refusal]) =
 
@@ -147,11 +92,9 @@ object MemberRenamer:
     sweepGroups()
 
     // ---- 4. collisions, against EFFECTIVE names, PARENTS-FIRST (§4.55) ----
-    //
     // `eff` reads the PENDING assignment first, so a descendant is held against what its ancestor
-    // will actually be called. Reading original names is the mistake §4.55 records: it renamed
-    // `CheckBox.style` and `TextButton.style` to the same `style$shadow` and moved the collision up
-    // a level. Parents-first ordering is what makes `SuffixUntilFree`'s answer stable.
+    // will actually be called — reading original names is §4.55's own mistake (moved a collision
+    // up a level instead of resolving it). Parents-first is what keeps `SuffixUntilFree` stable.
     val assign = collection.mutable.Map.empty[SymId, String]
     def nameOf(m: SymId): String = p.symbolOf(m).map(_.name).getOrElse("")
     def eff(m: SymId): String    = assign.getOrElse(m, nameOf(m))
@@ -168,23 +111,14 @@ object MemberRenamer:
       (owners.map(depthOf(_)).minOption.getOrElse(0), r.key, r.member.raw)
     }
 
-    /** the collision pass over the SURVIVORS, from an empty table.
-      *
-      * Rebuilding rather than patching is the whole point. Two requests may name members of ONE
-      * component — step 3 only refuses them when they ask for DIFFERENT names — and
-      * `SuffixUntilFree` writes its answer per request, so rolling one back has to undo an
-      * assignment the other still needs. Patched (remove the refused request's members, then
-      * backfill anything unassigned with `r.newName`), the survivor's component came out on the
-      * RAW requested name: the suffix search's entire answer discarded, and the component landed on
-      * the very name the search had found taken. Nothing sees that — it compiles as an ordinary
-      * clash somewhere else, or not at all, and no count moves.
-      *
-      * Re-running is also what makes the answer honest: `collidersOf` reads PENDING assignments
-      * through `eff`, so with fewer of them a member may keep its original name and collide
-      * differently. The caller loops until no new refusal appears. */
-    // members of a request GROUP getting the SAME target name — OVERLOADS of the same java member,
-    // which java already ensures have distinct erasures. These are NOT colliders; they are
-    // overloads that will coexist under the new name just as they coexisted under the old one.
+    /** the collision pass over the SURVIVORS, from an empty table. Rebuilding rather than
+      * patching: `SuffixUntilFree` writes its answer per request, and patching would strand a
+      * survivor's component on its RAW requested name — undetected, since nothing counts it.
+      * Re-running is what makes it honest: `collidersOf` reads PENDING assignments, so fewer of
+      * them can change who a member collides with. The caller loops until no new refusal appears. */
+
+    // members of a request GROUP getting the SAME target name are OVERLOADS of one java member
+    // (java already ensures distinct erasures), not colliders — they coexist under the new name.
     val sameGroupMembers = collection.mutable.Map.empty[String, Set[SymId]]
     closures.foreach { (r, c) =>
       val key = r.group + "=" + r.newName
@@ -276,24 +210,17 @@ object MemberRenamer:
     if i >= 0 && s.fullName.substring(i + 1) == s.name then s.fullName.substring(0, i + 1) + to
     else s.fullName
 
-  /** is this collider one the emitter's §4.55 passes will move out of the way?
-    *
-    * Exactly a NON-STATIC FIELD: `resolveMemberClashes` renames a field clashing with a method of
-    * its class or any descendant, and `resolveFieldShadowing` renames one shadowing an inherited
-    * member — between them, a field above, below or beside the renamed method. A STATIC field is
-    * neither: it emits into the companion, which neither pass reaches. */
+  /** is this collider one the emitter's §4.55 passes will move out of the way? Exactly a
+    * NON-STATIC FIELD: `resolveMemberClashes`/`resolveFieldShadowing` rename a field clashing with
+    * or shadowing a method; a STATIC field emits into the companion, which neither pass reaches. */
   private def isMovableField(p: Program, m: SymId): Boolean =
     p.symbolOf(m).exists(s => !PolicyBinder.isExecutable(s.info) && !s.flags.isStatic)
 
   // ---- SYMBOLIC NAME SUPPORT — `@scala.annotation.targetName` (CLAUDE.md §1(b)) ----
 
-  /** Is this a SYMBOLIC Scala member name — one composed entirely of operator characters, or a
-    * `unary_` prefix name?
-    *
-    * Scala has two kinds of identifiers: ALPHANUMERIC (letter/digit/underscore) and SYMBOLIC (a
-    * sequence of "operator characters" as defined by `scala.Char.isUnicodeIdentifierPart` inverted
-    * against the alphanumeric set). A symbolic name on the JVM must carry `@targetName` for binary
-    * compatibility and `-Werror`-clean output. */
+  /** Is this a SYMBOLIC Scala member name — entirely operator characters, or `unary_`-prefixed?
+    * Scala has ALPHANUMERIC and SYMBOLIC identifiers; a symbolic name on the JVM must carry
+    * `@targetName` for binary compatibility and `-Werror`-clean output. */
   def isSymbolic(name: String): Boolean =
     name.nonEmpty && (isOperatorName(name) || isUnaryName(name))
 

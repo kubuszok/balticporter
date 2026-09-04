@@ -1,21 +1,10 @@
 package balticporter.tir
 
-/** What a run may CONCLUDE about a type it did not emit — the view that replaces bare `Program`
-  * access for every non-owned question (`DESIGN.md` §8.3). A dependent's `Program` CONTAINS its
-  * base (parsed via `resolutionRoots`), so recomputing an answer over it is not the base's answer
-  * (`ENGINE-LIMITS.md` D2/D4/D5/D6). A drift CHECK cannot close this after the fact: it would need
-  * the published answer anyway, so this is a construction-time restriction instead — ask the view,
-  * get one of three [[Answer]]s, and an [[Answer.Unknown]] that shaped emitted text fails the run.
-  *
-  * `Program.owned` is the WRONG predicate here: it is a program-vs-JDK filter (roots on ALL
-  * `program.units`, base included), not a mine-vs-base one. [[owns]] answers the second question.
-  * Exhausting fuel counts as NOT owned, so the run asks the contract rather than guessing.
-  *
-  * Not fully achievable: three questions (a base type collapsed to an `object`, a base primary a
-  * subclass cannot reach, a base `private` member a replay needs) have no local repair once the
-  * base is already emitted, so the contract buys ATTRIBUTION and REFUSE-AND-COUNT instead of an
-  * answer.
-  */
+/** What a run may CONCLUDE about a type it did not emit — replaces bare `Program` access for every
+  * non-owned question (`DESIGN.md` §8.3). A dependent's `Program` CONTAINS its base, so
+  * recomputing an answer over it is not the base's answer (`ENGINE-LIMITS.md` D2/D4/D5/D6); this
+  * is a construction-time restriction — ask, get one of three [[Answer]]s, and an
+  * [[Answer.Unknown]] shaping emitted text fails the run. `Program.owned` is the WRONG predicate. */
 trait Surface:
 
   /** Does THIS run emit the declaration of `s`? The one structural climb (§4.56): the owner chain
@@ -45,30 +34,19 @@ trait Surface:
 object Surface:
 
   /** An unanswered question, with what the run did about it.
-    *
-    * @param fatal the answer SHAPED EMITTED TEXT. `PortRun` fails on any of these, because falling
-    *              back to a local derivation is exactly how `ENGINE-LIMITS.md` D4 produced three
-    *              compile errors while every check in the run reported clean.
-    * @param fix   which of §1's three kinds the fix is, spelled for an agent in another repository
-    *              (§4.45). A finding an agent cannot classify costs it a full investigation.
-    */
+    * @param fatal the answer SHAPED EMITTED TEXT — `PortRun` fails on any of these, since a local
+    *   fallback is exactly how `ENGINE-LIMITS.md` D4 produced 3 compile errors with every check clean.
+    * @param fix which of §1's three kinds the fix is, for an agent in another repository (§4.45). */
   final case class Gap(subject: String, why: String, module: Option[String], fatal: Boolean, fix: String):
     def render: String =
       s"${if fatal then "FATAL" else "gap"}: $subject — $why" +
         module.fold("")(m => s"  [base: $m]") + s"  [$fix]"
 
-  /** Three answers, and the third is the point. A question about a symbol this run does not emit is
-    * either answered by the base's published contract or it is NOT ANSWERED — never quietly
-    * recomputed over a program the base never had.
-    *
-    * '''`Own` CARRIES NOTHING, and that is a deliberate departure from §8.3's sketch''' (which spelt
-    * it `Own(a: A)`). An owned type's shape is what THIS run emits, and most of it — the
-    * class-vs-object collapse above all — does not exist until the emitter takes the branch that
-    * decides it. A view that carried the value would have to pre-compute every answer, from the same
-    * indexes the emitter reads, before emission: a SECOND derivation of exactly the thing this view
-    * exists to stop being derived twice, and one free to disagree with what was written. `Own` says
-    * "you emit this declaration — your own derivation is the answer", which is both the truth and
-    * the only shape that cannot drift. */
+  /** Three answers, and the third is the point: a question about a symbol this run does not emit
+    * is either answered by the base's published contract, or NOT ANSWERED — never recomputed over
+    * a program the base never had. `Own` CARRIES NOTHING (a departure from §8.3's sketch): an
+    * owned type's shape does not exist until the emitter takes the branch that decides it, so
+    * carrying a value would be a second derivation free to disagree with what was written. */
   enum Answer[+A]:
     /** this run emits the declaration: derive locally, and the derivation IS the answer. */
     case Own
@@ -105,20 +83,11 @@ object Surface:
       /** the EMITTED names the companion declares itself — what an `export` exclusion list must be
         * built from, rather than recomputed from the base's Java. */
       statics: List[String] = Nil,
-      /** The emitted primary's parameter slots, in §8.1's DESCRIPTOR grammar (`int,String`) — the
-        * same source-level spelling a manifest key uses, so a contract row and a policy key are
-        * never in two grammars. `Some(Descriptor.empty)` is a nilary primary.
-        *
-        * `None` where the declaration has no constructor question at all: a Java interface, emitted
-        * as a `trait`. A type COLLAPSED to `form=object` still reports the primary the funnel
-        * planned for its Java class — the collapse is what makes it unreachable, and `form` is the
-        * key that says so. Reading `primary` without `form` is therefore not a complete question.
-        *
-        * A `?` slot is a parameter whose type this engine could not spell in the descriptor
-        * grammar, and it is also what a §8.2 MARKER renders as: the marker's type is
-        * companion-`protected` and is deliberately never named (`disambiguator=marker` is the fact).
-        * The two are told apart by `disambiguator`, which is the only place the distinction is
-        * needed. */
+      /** The emitted primary's parameter slots, in §8.1's DESCRIPTOR grammar (`int,String`) — same
+        * spelling a manifest key uses. `Some(Descriptor.empty)` is nilary; `None` means no
+        * constructor question (a trait). A collapsed `form=object` still reports the planned
+        * primary — `form` is what makes it unreachable. A `?` slot is either an unspellable type or
+        * a §8.2 marker, told apart by `disambiguator`. */
       primary: Option[Descriptor] = scala.None,
       /** WHY that one — `unique-root` | `widest-root` | `no-arg-root` | `promoted-nilary` |
         * `synthesised-primary` | `not-funnelled` | `no-constructor`. It tells a dependent what would
@@ -164,48 +133,23 @@ object Surface:
       /** `class` | `companion`. A Java static lands in the companion; a dependent emitting
         * `Base.m()` needs the BASE's answer, not its own. */
       placement: String = "class",
-      /** THE ONE KEY A `Dropped` MEMBER ROW CARRIES: the ENGINE RULE that refused to emit it, in the
-        * `Reason` grammar the decision log uses (`ctor-funnel/nilary-dropped(C11)`).
-        *
-        * Every other key here describes an emitted declaration, and a refused member has none. What a
-        * consumer needs instead is WHOSE DECISION IT WAS, because that decides which of §1's three
-        * kinds the fix is and therefore which repository it lives in: a member absent from
-        * `dropMethods` is the base's POLICY and the dependent can ask for it back, while a member the
-        * engine could not render is a §1(a) refusal the base must work around by hand (§1.5's
-        * `inject`). Empty for every row a policy drop produced, which is the ordinary case.
-        *
-        * Rule-shaped and therefore whitespace-free on purpose: the `k=v` grammar quotes a value
-        * containing whitespace, and a sentence here would put a quoted paragraph in a TSV column. The
-        * sentence belongs in `decisions.tsv` and in the porter note, both of which the base already
-        * writes. */
+      /** THE ONE KEY A `Dropped` MEMBER ROW CARRIES: the ENGINE RULE that refused to emit it, in
+        * the `Reason` grammar (`ctor-funnel/nilary-dropped(C11)`). Whose decision it was decides
+        * which of §1's kinds the fix is: absent from `dropMethods` is the base's POLICY; an engine
+        * refusal is §1(a), worked around via `inject`. Empty for a policy drop (the ordinary case). */
       refusal: String = "",
-      /** `var` | `val` — this member is a java BEAN PAIR the base COLLAPSED into a property, and
-        * this is the shape it emitted. Empty for every member that is what java declared, which is
-        * almost all of them.
-        *
-        * It has to be published, and a dependent cannot derive it. The collapse verdict is
-        * WHOLE-PROGRAM: `overriddenBelow` ranges over the run's descendants and `writtenSymbols`
-        * over the run's assignments, and a dependent's model CONTAINS its base's units — so a
-        * dependent that declares one subclass overriding the accessor, or one write of the field,
-        * RE-DERIVES `Refuse` for a pair the base collapsed. Two ports that each compile alone and
-        * cannot compile together (§1.5), at an EQUAL `SurfacePolicy` fingerprint, because the
-        * manifest entry is identical on both sides and only the program differs.
-        *
-        * What the base's map said WITHOUT this key could not answer it either: a collapsed pair
-        * emits a member row keyed on the PROPERTY and no rows for the accessors, and so does a
-        * member java simply declared under that name. The absence of an accessor row is not
-        * evidence — a `dropMethods` entry produces the same absence — so the answer is stated. */
+      /** `var` | `val` — this member is a java BEAN PAIR the base COLLAPSED into a property, in
+        * this shape. Empty for what java declared as-is. Must be PUBLISHED: the collapse verdict is
+        * WHOLE-PROGRAM (`overriddenBelow`/`writtenSymbols` over the run's descendants), so a
+        * dependent whose model CONTAINS the base's units can RE-DERIVE `Refuse` at an EQUAL
+        * fingerprint (§1.5). Absence of an accessor row is not evidence (a drop looks the same). */
       form: String = "",
   )
 
   /** '''NOT carried, and named rather than left to be discovered.''' §8.3's schema listed a
-    * `promotedParam` key — "this member exists only because the funnel promoted a constructor
-    * parameter", which a dependent's §4.55 pass has to see because it is a member in Scala and not
-    * in Java. A member row exists for every EMITTED DECLARATION, and a promoted parameter has none:
-    * it IS the class's parameter list, so the source map records no row for it and there is nothing
-    * for the key to hang on. `primary=` says what the parameters ARE, which answers the constructor
-    * question; the §4.55 clash question stays open until the map carries rows for engine-minted
-    * members. Recorded here because a key silently absent from a schema reads as an oversight. */
+    * `promotedParam` key — but a promoted parameter IS the class's parameter list, so the source
+    * map has no row for it to hang a key on; `primary=` already answers the constructor question.
+    * Named here because a key silently absent from a schema reads as an oversight. */
   private[tir] val NotCarried: List[String] = List("promotedParam")
 
   // ---------------------------------------------------------------------------
@@ -288,16 +232,11 @@ object Surface:
     if rendered.isEmpty then Descriptor.empty
     else Descriptor(rendered.split(',').toList.map(Descriptor.paramOf))
 
-/** The surface of a run that has NO base: every unit in the program is this run's own.
-  *
-  * The default parameter for every consumer, so a single-module port, a spec, a snippet and
-  * `DebugEmit` all behave exactly as they did before the view existed — and so that a consumer
-  * cannot take a different code path under test than it does in a port, which is how a mechanism
-  * ships untested. It answers `Unknown` for a symbol it does not own (a JDK type), which is the
-  * truth: no contract describes `java.lang.Object`, and nothing asks.
-  *
-  * It lives in `api` beside the trait because a §1(c) rule in another repository writing a spec for
-  * its own phase needs a `Surface` and must not have to reach into the engine for one. */
+/** The surface of a run that has NO base: every unit in the program is this run's own. The
+  * default for every consumer, so a single-module port, a spec, `DebugEmit` all behave exactly as
+  * before the view existed — and a consumer cannot take a different path under test than in a
+  * port. Answers `Unknown` for a symbol it does not own (a JDK type), truthfully. Lives in `api`
+  * so a §1(c) rule's own spec does not have to reach into the engine for a `Surface`. */
 final class TrivialSurface(program: Program) extends Surface:
   private lazy val owned: Set[SymId] = program.owned
   def owns(s: SymId): Boolean        = owned(s)

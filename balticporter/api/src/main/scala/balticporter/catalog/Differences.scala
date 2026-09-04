@@ -24,14 +24,9 @@ object Differences:
   // obligations are not declared. Written down rather than defaulted, so a row added
   // tomorrow gets no claim nobody made; `catalog(unmechanised)` counts them.
 
-  /** the four `Tree` kinds a LOOP is, as one attachment.
-    *
-    * `Attaches.Both` nests, so this is a chain of four leaves and not a list — a list is the shape a
-    * per-library policy takes and `DifferenceTakesNoParameterSpec` rejects one in any row field.
-    * Named once because two rows own the whole family: an unlabelled jump binds to the innermost
-    * loop (`JS-S01`) and an interposed boundary steals one (`JS-S03`), and both are decided in
-    * `TirEmitter.loopWithJumps`, which every loop arm goes through. Writing the chain twice would be
-    * the F8 shape — one rule, two copies, and the next loop kind added to the IR is on only one. */
+  /** the four `Tree` kinds a LOOP is, as one attachment — a chain, not a list (a list is per-library
+    * policy, rejected by `DifferenceTakesNoParameterSpec`). Both `JS-S01`/`JS-S03` route through
+    * `TirEmitter.loopWithJumps`, so the family is named once here rather than twice. */
 
   private val everyLoop: Attaches =
     Both(Rendered("While"), Both(Rendered("For"), Both(Rendered("ForEach"), Rendered("DoWhile"))))
@@ -50,18 +45,14 @@ object Differences:
   private val everyStaticFieldRead: Attaches =
     Both(Lowered("CtFieldRead", Dispatch.Expression), Lowered("CtFieldWrite", Dispatch.Expression))
 
-  /** every dispatch at which a value flows into a DECLARED TYPE -- java's assignment
-    * conversion (JLS 5.2), through the one function `SpoonTir.coerce` -- but a slot is not
-    * a node kind: seven distinct kinds reach it, including a FIELD initialiser, which
-    * enters neither of the frontend's two dispatches and was UNREACHABLE until named
-    * explicitly. Convergence point: `SpoonTir.slotConsults`, stated ONCE (`ENGINE-LIMITS.md`
-    * F8), called from the ARM rather than from `coerce` (which is not reached for a local
-    * with no initialiser, a bare `return`, or a zero-arg call). */
-  /** the CALL dispatches, as one attachment -- an invocation and a `new` resolve ONE
-    * method-invocation conversion (JLS 15.12.4.2), all reaching `SpoonTir.coerceArgs`.
-    * `CtNewClass` is named separately because `SpoonKinds.nameOf` answers the MOST SPECIFIC
-    * registered interface, so an anonymous-class `new` would otherwise skip the vararg
-    * pack java performed for it. */
+  /** every dispatch at which a value flows into a DECLARED TYPE — java's assignment conversion
+    * (JLS 5.2), through `SpoonTir.coerce`, but a slot is not one node kind: seven distinct kinds
+    * reach it (e.g. a field initialiser). Convergence point: `SpoonTir.slotConsults`, stated ONCE
+    * (`ENGINE-LIMITS.md` F8). */
+
+  /** the CALL dispatches, as one attachment — an invocation and a `new` resolve ONE
+    * method-invocation conversion (JLS 15.12.4.2), reaching `SpoonTir.coerceArgs`. `CtNewClass` is
+    * named separately since `SpoonKinds.nameOf` answers the MOST SPECIFIC registered interface. */
   private val everyCall: Attaches =
     Both(Lowered("CtInvocation", Dispatch.Expression),
       Both(Lowered("CtConstructorCall", Dispatch.Expression),
@@ -148,12 +139,9 @@ object Differences:
       "JLS 15.26", "SLS 6.12.4 — an assignment has type `Unit`",
       NoImpact, Handled, InCode("SpoonTir.exprNoCast's CtAssignment arm carries the argument in a comment"),
       Universal, "SpoonTir.exprNoCast's CtAssignment arm -> Tree.Block(List(Assign), lhs)", Lowered("CtAssignment", Dispatch.Expression)),
-    // The row JS-E02/E03/E04 each cover HALF of. Those three are about the VALUE and the NARROWING;
-    // this one is about how many times the LVALUE is evaluated. Attached at `Either` because both
-    // dispatches lower the same node and both owe it. The frontend consults, and the emitter binds
-    // each non-trivial lvalue subexpression to a temporary so each is evaluated exactly once
-    // (`ENGINE-LIMITS.md` F7 — CLOSED). Simple lvalues (every subexpression is an ident/this/literal)
-    // keep the direct form: no semantic difference, no digest churn.
+    // JS-E02/E03/E04 cover the VALUE and NARROWING; this row covers how many times the LVALUE is
+    // evaluated (F7, CLOSED) — the emitter binds each non-trivial lvalue subexpression to a
+    // temporary so it evaluates once. Simple lvalues keep the direct form.
     Difference(eId(17), "a compound assignment and `++`/`--` evaluate the LVALUE ONCE — its array reference, its index, its target",
       "JLS 15.26.2, 15.14.2, 15.15.1",
       "SLS 6.12.4 — `l op= r` expands to `l = l op r`, and every occurrence of `l` is evaluated",
@@ -324,12 +312,9 @@ object Differences:
       "JLS 15.12.4.1", "UNCITED — a companion call has no receiver slot to put the expression in",
       Mixed, Handled, NoTwin, Universal,
       "TirEmitter.staticThroughInstance with effectFree — emits `{ recv; Owner.m(args) }` where the receiver can have effects", Rendered("Apply")),
-    // This row read `NonDiff("no observable difference except through JS-C08")` until K22 measured
-    // it wrong. The argument behind that verdict was that scala's object-access trigger fires at
-    // least as often as any JLS 12.4.1 case, "since every `T.x` read is an object access" — true of
-    // items 2-4, and FALSE of items 1 and 7, which read no member at all. `new T` runs a
-    // constructor and touches no object; a subclass's initialisation touches only the subclass's.
-    // A class initialiser therefore lands in the companion and never runs.
+    // Read `NonDiff` until K22 measured it wrong: scala's object-access trigger does NOT fire for
+    // every JLS 12.4.1 case — `new T` and a subclass's own initialisation touch no member, so a
+    // class initialiser lands in the companion and never runs.
     Difference(cId(7), "JLS's class-initialisation TRIGGER list vs Scala's uniform accessor trigger",
       "JLS 12.4.1", "UNCITED — a Scala object initialises on first access to any member",
       Silent,
@@ -350,12 +335,9 @@ object Differences:
       "JLS 12.4.2", "UNCITED — an object body is one sequence, so the order has to survive the frontend",
       Silent, Handled, el("C12"), Universal,
       "SpoonTir.classDef's merged position-key sort over fields and init blocks; TirEmitter.orderBody's isStep4, which covers `<clinit>`", Rendered("ClassDef")),
-    // `NonDiff("shared JVM mechanism")` until K22 face 2 measured it wrong, for the same shape of
-    // reason as JS-C07's: the mechanism IS shared for a java class and a scala COMPANION is not one.
-    // The JVM lets a thread that is already initialising `T` re-enter `T` and read whatever its
-    // statics hold; a module in a MUTUAL cycle has not assigned `MODULE$` at all yet, so the
-    // re-entrant read is not a default, it is a failure. Invisible until JS-C07's repair started
-    // putting java's own trigger at `new`, which is what walks into the cycle.
+    // Read `NonDiff("shared JVM mechanism")` until K22 face 2 measured it wrong: a scala COMPANION
+    // is not the shared mechanism java's class is — the JVM lets a re-entrant thread read a
+    // half-initialised class's statics, but a module in a MUTUAL cycle has no `MODULE$` yet.
     Difference(cId(10), "circular class initialisation delivers DEFAULT values on the same thread",
       "JLS 12.4.2", "UNCITED — a scala module in a MUTUAL cycle has no MODULE$ yet, and throws",
       Loud,
@@ -500,16 +482,10 @@ object Differences:
       // by the same one arm that lowers every other reference, and making that arm owe this row
       // would demand a consult at every type in every program.
       Cited("collections")),
-    // LOWERED as a PLAIN FINAL CLASS with javac's four members written out, not a `case class`
-    // (priced against javac cell by cell, §4.4's record row). Three parser errors were found by
-    // fixtures and repaired in the frontend: a compact constructor's JLS 8.10.4 appended field
-    // assignments were missing; the canonical constructor's parameters arrived in FIELD order
-    // rather than the header's; and a NESTED record arrived with no constructor and self-calling
-    // accessors. `Partial`, not `Handled`, for THREE residues no image can close (recorded on the
-    // `RecordMembers` decision): scalac emits no JVM `Record` attribute; a record pattern is a
-    // matching PROCESS and `unapply` a FUNCTION, so every accessor runs where java stops at the
-    // first failure; and an accessor's exception arrives raw rather than wrapped in
-    // `MatchException`.
+    // LOWERED as a plain final class with javac's four members written out (§4.4's record row),
+    // not a `case class`. `Partial`, not `Handled`: scalac emits no JVM `Record` attribute; a
+    // record pattern is a matching PROCESS and `unapply` a FUNCTION (accessors run past the first
+    // failure); an accessor's exception arrives raw, not wrapped in `MatchException`.
     Difference(cId(43), "Java `record`",
       "JLS 8.10", "UNCITED — a case class differs in accessor naming, in three facets of `toString`, in `hashCode`, in float equality and in what its extractor reads",
       Loud,
@@ -599,24 +575,17 @@ object Differences:
     Difference(gId(4), "a captured wildcard on ITERATION has no nameable type",
       "JLS 5.1.10, 14.14.2", "UNCITED — the capture cannot be written, so an alias plus a widening cast is the image",
       Loud, Handled, el("K7"), Universal, "TirEmitter.widenedBinding in the Tree.ForEach arm", Rendered("ForEach")),
-    // NOT the type surface, and finding that out is what wiring it was for. The elimination is
-    // decided ABOVE `TirEmitter.tpe` — `deWildcardedArgs` REPLACES the wildcard before any type is
-    // rendered, so the `TypeBounds` arm never sees the slot this row is about. That is `JS-G39`'s
-    // rule read at the other end (the decision belongs to the CONSUMING node), and the consuming
-    // node is the declaration whose `extends` clause it is. The evidence read
-    // `SpoonTir.erasureOfFormal and the formal-bound fill in SpoonTir.tpe`, which is the FRONTEND's
-    // erasure machinery and decides nothing about a parent.
+    // Decided ABOVE `TirEmitter.tpe`: `deWildcardedArgs` REPLACES the wildcard before any type is
+    // rendered, so the `TypeBounds` arm never sees this slot — `JS-G39`'s rule (decision belongs to
+    // the CONSUMING node, here the `extends` clause's owner).
     Difference(gId(5), "a wildcard in an `extends` clause takes the parameter's DECLARED bound",
       "JLS 4.5.1, 8.1.4", "UNCITED — no wildcard is legal in a parent, so the bound has to be filled",
       Loud, Handled, el("G7"), Universal,
       "TirEmitter.deWildcardedArgs — a wildcard argument takes its own written bound, else the type PARAMETER's declared upper bound, else AnyRef, resolving left to right so a later bound can name an earlier parameter",
       Rendered("ClassDef")),
-    // …and the evidence here named a fill that is SWITCHED OFF: `inheritedTp` opens
-    // `if true || noInheritFill || !inOverridingMember then None`, so the name-directed
-    // parent-instantiation fill has answered `None` unconditionally since the sge-design revert.
-    // What makes a parent and its overrides agree today is `rawParentAlignment`, a whole-program
-    // pass at emitter construction — which is the CITATION surface and not a dispatch, exactly as
-    // `resolveFieldShadowing` is for JS-C04.
+    // The name-directed parent-instantiation fill (`inheritedTp`) answers `None` unconditionally
+    // since the sge-design revert. What keeps a parent and its overrides in agreement today is
+    // `rawParentAlignment`, a whole-program pass — the citation surface, not a dispatch.
     Difference(gId(6), "a de-wildcarded raw PARENT and its overrides must agree",
       "JLS 4.8, 8.4.8.1", "UNCITED — an override is checked against the parent as emitted",
       Loud, Handled, el("G6"), Universal,
@@ -713,14 +682,10 @@ object Differences:
       "JLS 4.8", "UNCITED — the receiver view and the member's type through it must be produced together",
       Loud, Handled, el("G21"), Universal, "SpoonTir.erasedRecvResult; ErasedReceiverResultSpec",
       Lowered("CtInvocation", Dispatch.Expression)),
-    // The status is `NonDiff` and the twin is gone, and BOTH were misattributions this wave found by
-    // re-reading the entry rather than the row. `ENGINE-LIMITS.md` G23 is the wildcard-bound entry
-    // (`?` is bounded by `Object` in java and by `Any` in scala) and says nothing about unboxing; the
-    // row cited it because JS-G03 does, one line up. And the SENTENCE this row states — unboxing a
-    // null throws NPE — is true in both languages by the same mechanism: scala unboxes through
-    // `Predef.Integer2int`, an instance method on the wrapper, so a null receiver is an NPE exactly
-    // where java's `intValue()` is. What `coerce`'s unbox clause really translates is a CROSS-TYPE
-    // unbox (`Integer` at a `float` slot), which is `JS-E06`/K17 face 2's fact and not this one.
+    // Both were misattributions found by re-reading the entry: `ENGINE-LIMITS.md` G23 is the
+    // wildcard-bound entry and says nothing about unboxing. Unboxing `null` throws NPE in both
+    // languages the same way (scala via `Predef.Integer2int`) — a CROSS-TYPE unbox is JS-E06/K17's
+    // fact, not this one.
     Difference(gId(24), "unboxing `null` throws NPE",
       "JLS 5.1.8", "UNCITED — the same unboxing, through the same wrapper method",
       NoImpact, NonDiff("scala unboxes through an instance method on the wrapper, so a null unbox is an NPE on both sides"),
@@ -780,25 +745,18 @@ object Differences:
     Difference(gId(39), "an EXTERNAL callee's `T...` is read by scalac as a REPEATED parameter",
       "JLS 15.12.4.2", "UNCITED — a class file's `T...` is a repeated parameter, so a bare array conforms as ONE element",
       Silent, Handled, el("K6.5"), Universal, "Tir.Tree.Repeated, emitted when SpoonTir.isExternalCallee holds",
-      // …and the emitter half attaches at `Apply`, NOT at `Repeated`, which is the trap this row
-      // walked into first. `TirEmitter.argTerms` FLATTENS a `Tree.Repeated` in an argument position
-      // before the dispatch ever sees it — a fact about the POSITION (a node rendering `""` would
-      // leave `f(a, )`) — so the node never enters `term`, the arm never runs, and an attachment
-      // there would be a claim that reads as coverage and can never fail: no consult, and no hole
-      // either, because a node that does not enter the dispatch owes nothing. That is
-      // `SpoonKinds.Claim.Positional` seen at the OTHER end of the pipeline. The decision is taken
-      // where the flattening is, which is the enclosing `Apply`.
+      // …and the emitter half attaches at `Apply`, NOT `Repeated`: `TirEmitter.argTerms` FLATTENS
+      // a `Tree.Repeated` argument before the dispatch sees it, so the node never enters `term` and
+      // an attachment there would be unfalsifiable coverage. `SpoonKinds.Claim.Positional` seen from
+      // the other end — decided where the flattening is, the enclosing `Apply`.
       Both(everyCall, Rendered("Apply"))),
     Difference(gId(40), "the COMPOSITION of JS-G38 and JS-G39 — an array forwarded through an external vararg slot",
       "JLS 15.12.4.2", "UNCITED — only a spec over the composition finds it",
       Loud, Handled, el("K6.5"), Universal, "SpoonTir.passedThrough -> Tir.Tree.Spread",
       Both(everyCall, Rendered("Spread"))),
-    // The evidence string used to read "the annotation is on SpoonFrontend's dropped list", which
-    // described the BIR path only: `SpoonTir.annotationsOf` has NO ignore list and carries every
-    // MARKER annotation, so `@SafeVarargs` reaches the emitted file — onto a method whose vararg
-    // JS-G37 has already turned into a plain `Array` parameter, where scalac neither checks its
-    // placement nor derives anything from it. Read one path over, the row's own claim was wrong
-    // about which half of the difference the port actually has.
+    // `SpoonTir.annotationsOf` has NO ignore list and carries every MARKER annotation, so
+    // `@SafeVarargs` reaches the emitted file onto a vararg JS-G37 already turned into a plain
+    // `Array` parameter, where scalac neither checks nor derives from it.
     Difference(gId(41), "`@SafeVarargs` and heap pollution",
       "JLS 9.6.4.7, 4.12.2", "UNCITED — no `@SafeVarargs` and no unchecked-vararg warning exist, so the unsoundness is carried over unmarked",
       // NOT `Handled`, and not `Open` either. The port reproduces java's heap pollution EXACTLY —
@@ -822,13 +780,10 @@ object Differences:
     Difference(gId(48), "a REIFIED type occurrence asks about a RUNTIME OBJECT, so a retyping moves the question and not the answer",
       "JLS 15.20.2, 5.5, 4.7",
       "SLS 12.1 — `isInstanceOf`/`asInstanceOf` test the ERASED runtime class, exactly as java does",
-      // `Partial`, not `Handled`, and the correction is JS-C44's from one chunk earlier: the fix
-      // answers java's question over BOTH representations wherever a live view exists, and where the
-      // target is a CONCRETE retyped type there is no view to answer over at all — so the emitted
-      // code keeps java's question asked of the wrong classes and the port SHIPS that. It is
-      // counted, which is what changed; it is not translated. `ENGINE-LIMITS.md` K18 reads CLOSED
-      // for the face it measured, and rule (i) exempts a partial row precisely because it states
-      // which half is missing.
+      // `Partial`, not `Handled` — java's question is answered over BOTH representations wherever
+      // a live view exists; where the target is a CONCRETE retyped type there is no view, so the
+      // port ships java's question asked of the wrong classes, counted not translated.
+      // `ENGINE-LIMITS.md` K18, rule (i) exempts a partial row that states which half is missing.
       Silent, Partial("a reified occurrence whose target is a CONCRETE retyped type — a hash map, a " +
         "buffer, a tuple — has no live view to answer over, so it is REFUSED and counted " +
         "(CollectionBoundaryCheck.Issue.ReifiedOccurrence) rather than answered, and one corpus " +
@@ -837,13 +792,10 @@ object Differences:
       "CollectionsTransform.reifiedTest/reifiedCast -> JavaCollections.Reified; the concrete-target " +
         "refusal is CollectionBoundaryCheck.Issue.ReifiedOccurrence",
       Cited("collections")),
-    // A SUBSIGNATURE is java's licence to override a generic method with its own ERASURE, and it is
-    // the same permission JS-G07 and JS-G14 are about, read at an OVERRIDE EDGE rather than at a use
-    // or an assignment: `<B extends ISequenceBuilder<B,T>> B getBuilder()` is overridden by
-    // `SequenceBuilder getBuilder()`, javac warns `unchecked` and compiles, and scala has no rule
-    // that lets a method with no type parameters override one with them. `Loud` at both ends —
-    // `E038 has a different signature` at the narrowing declaration and `needs to be abstract` at
-    // every concrete class below it.
+    // A SUBSIGNATURE is java's licence to override a generic method with its own ERASURE (JS-G07,
+    // JS-G14, read at an OVERRIDE EDGE): scala has no rule letting a method with no type parameters
+    // override one with them. `Loud` at both ends — `E038` at the narrowing declaration, `needs to
+    // be abstract` at every concrete class below it.
     Difference(gId(49), "an UNCHECKED override: java lets a method's ERASURE be a SUBSIGNATURE of a generic one",
       "JLS 8.4.2, 8.4.8.1", "UNCITED — scala has no subsignature rule; a method with no type parameters cannot override one with them",
       Loud, Handled, el("G8.10"), Universal,
@@ -863,12 +815,11 @@ object Differences:
   // -------------------------------------------------------------------------------------------
 
   /** which rows the frontend's lowering dispatch owes a consult for, keyed on (Spoon kind,
-    * dispatch). `Dispatch.Either` expands to both, so a caller never has to ask twice, and a kind
-    * nothing attaches to answers `Nil` — which is the fast path [[Lowering.of]] takes and the
-    * reason the wrapper costs nothing on the overwhelming majority of nodes. */
+    * dispatch). `Dispatch.Either` expands to both; a kind nothing attaches to answers `Nil`, the
+    * fast path [[Lowering.of]] takes. */
+
   /** a row's attachment, FLATTENED — `Both` is a tree and every index below wants its leaves. One
-    * function, so the three readers (the lowering index, the rendering index and `mechanised`) can
-    * never disagree about what a two-surface row attaches to. */
+    * function, so the three readers (lowering index, rendering index, `mechanised`) never disagree. */
   def leaves(a: Attaches): List[Attaches] = a match
     case Attaches.Both(x, y) => leaves(x) ++ leaves(y)
     case one                 => List(one)
@@ -923,20 +874,10 @@ object Differences:
     * `EmissionFieldCoverageSpec`. */
   def renderedTypeKinds: Set[String] = owedRenderType.keySet
 
-  /** rows whose discharge surface EXISTS — the only rows an "unreached" claim may be made about.
-    *
-    * The narrowing is the whole point: a lane reporting "this row is live" on the strength of a
-    * surface nobody built would be reporting about a mechanism, not about the port.
-    *
-    * A `Both` row counts as mechanised when EVERY leaf is — a row half of whose discharge is
-    * instrumented is a row the lane may not claim, and the honest spelling for the other half is a
-    * leaf that still says `Unmechanised`.
-    *
-    * Written as the COMPLEMENT of the two honest negatives rather than as a list of the surfaces,
-    * because a list is what the fourth surface would not have been on: `just catalog-coverage`'s
-    * own filter named the surfaces that existed the day it was written, and twenty rows then became
-    * invisible to it in both directions (`CLAUDE.md` §4.56). A surface added tomorrow is included
-    * here by construction. */
+  /** rows whose discharge surface EXISTS — the only rows an "unreached" claim may be made about. A
+    * `Both` row counts as mechanised when EVERY leaf is. Stated as the COMPLEMENT of the two honest
+    * negatives rather than a list of surfaces, so a surface added tomorrow is included by
+    * construction (`just catalog-coverage`'s own filter once named only what existed, CLAUDE.md §4.56). */
   def mechanised: List[Difference] = all.filter(d => leaves(d.attaches).forall {
     case _: Attaches.Unmechanised | _: Attaches.NoObligation => false
     case _                                                   => true
@@ -968,12 +909,10 @@ object Differences:
     Retired(gId(47), Some(gId(43)), "the arity rule shared by all five forms; see JS-G44"),
   )
 
-/** catalog ids, spelled the way a lowering arm spells them: `JS.E(3)` is `JS-E03`.
-  *
-  * A FUNCTION rather than 126 named vals, because a hand-written list of ids is a list the next row
-  * is not on. Citing an id the registry does not have is caught at the CONSULT (rule (ii),
-  * `CatalogCheck.consultsOpenRows`) rather than by whether somebody remembered to add a `val` —
-  * which is the same choice `SpoonKinds` makes about node kinds, and for the same reason. */
+/** catalog ids, spelled the way a lowering arm spells them: `JS.E(3)` is `JS-E03`. A FUNCTION
+  * rather than 126 named vals — citing an id the registry lacks is caught at the CONSULT
+  * (`CatalogCheck.consultsOpenRows`) rather than by a missing `val`, as `SpoonKinds` does for
+  * node kinds. */
 object JS:
   def E(n: Int): DiffId = DiffId(Area.E, n)
   def S(n: Int): DiffId = DiffId(Area.S, n)

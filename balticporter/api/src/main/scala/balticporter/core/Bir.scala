@@ -1,42 +1,9 @@
 package balticporter.core
 
-// =============================================================================
 // FROZEN — the BIR path. New work goes on the TIR.
-//
-// Two substrates exist. This is the older one: a resolved-but-untyped Java IR
-// (`BUnit`/`BType`/`BExpr`) with its own frontend (`SpoonFrontend`) and its own
-// printer (`ScalaPrinter`), driven by `runner/M0Pipeline`. `DESIGN.md` §2.2 declares
-// it the wrong substrate: it has no symbol table, no cross-reference index and no
-// phase model, so a rewrite cannot ask "who else uses this" and every rule is a
-// local pattern match.
-//
-// The TIR (`api/.../tir/Tir.scala`, `frontend-spoon/SpoonTir`, `engine/.../TirEmitter`)
-// carries every CLAUDE.md §3/§4.4 lesson, all of the checks, all of the production
-// transforms and the MUnit conversion. Since `runner/PortRun` it also carries the
-// operational machinery this path was the only home for: the action cache
-// (`TirCacheKey`, in this file's neighbour `Cache.scala`), determinism by
-// double-translation, `SbtGen` wiring and provenance.
-//
-// It is NOT deleted, and must not be. SEVEN corpus programs still translate through
-// it — LiqpCorpus, LiqpM0, XwikiProject, XwikiSurvey, FlexmarkCorpus,
-// BumpDemo, VocabDemo — covering liqp and
-// xwiki/flexmark, which are ssg's Java libraries.
-// (It was nine: jbump's scout, `JbumpCorpus`, was retired when jbump became a real
-// TIR port, and `LiqpProject` — the BIR whole-corpus ASSEMBLY for liqp, with its own
-// sbt emission, its own JUnit4 test translation and one hand-written override —
-// went the same way once `balticporter/corpus/ports/liqp/{main,test}.conf` and `just liqp-measure`
-// did all of it through the TIR and MEASURED it. That is the shape of this list's
-// retirement — a library leaves it by being ported properly, not by having its scout
-// deleted. liqp's two remaining scouts survey; they do not assemble.)
-// (SpoonTirEmitProject is NOT a dependent: it translates through the TIR and touches
-// this path only for `M0Pipeline.compileGate` — do not put it on a migration work list.)
-// Moving them to
-// the TIR is a separate, measured piece of work (PROGRESS.md §Publishability 1.1); until
-// it is done, deleting this deletes their ports.
-//
-// So: fix what those callers need, add nothing. A new rule, check or emission
-// feature belongs on the TIR, where the whole engine can see it.
-// =============================================================================
+// A resolved-but-untyped java IR with no symbol table, no xref, no phase model
+// (DESIGN.md §2.2). Not deleted: seven corpus programs (liqp, xwiki, flexmark)
+// still translate through it. Fix what those callers need, add nothing here.
 
 /** Comment kinds preserved from source. Text is stored verbatim including delimiters. */
 enum TriviaKind:

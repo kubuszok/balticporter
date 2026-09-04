@@ -1,26 +1,10 @@
 package balticporter.core
 
-/** Lexes every comment out of a Java source file (skipping string/char literals).
-  * Used for the comment-preservation invariant — independent of Spoon's attachment
-  * heuristics, so a comment Spoon fails to attach is still caught if we drop it.
-  *
-  * In `core` rather than beside a frontend because it reads TEXT and knows nothing about any
-  * parser: both the BIR path and the TIR path's `balticporter.tir.TriviaCheck` need the same
-  * answer, and a second copy of a lexer is a second set of edge cases.
-  *
-  * ## Why a comment carries its OFFSET
-  *
-  * A comment's identity in a file is its POSITION, and three consumers need it:
-  *
-  *   - the frontend's file-leading harvest decides "above the first line of code" positionally,
-  *     because a parser's attachment model demonstrably loses one of two consecutive leading
-  *     blocks (`ENGINE-LIMITS.md` V3) — text is the only side that can see all of them;
-  *   - the emitter's recovery backstop anchors a comment on the member whose Java span contains
-  *     it, which is a comparison between two line numbers and needs the first one to be real;
-  *   - `balticporter.tir.TriviaCheck` reported a finding's line by `indexOf` over the comment's
-  *     TEXT, which names the FIRST occurrence — so every one of a file's repeated `// TODO`s was
-  *     reported at the same wrong line.
-  */
+/** Lexes every comment out of a Java source file (skipping string/char literals), independent of
+  * Spoon's attachment heuristics — for the comment-preservation invariant. Lives in `core` since
+  * both the BIR and TIR paths need the same answer. Carries each comment's OFFSET: the file-leading
+  * harvest needs positional truth (a parser loses one of two leading blocks, `ENGINE-LIMITS.md` V3),
+  * and `TriviaCheck` needs a real position rather than `indexOf`'s first-occurrence match. */
 object CommentScanner:
 
   /** one comment, with the offset it starts at. `end` is derived rather than stored: the text is
@@ -75,13 +59,9 @@ object CommentScanner:
     out.result()
 
   /** The offset of the first character a JAVA COMPILER would read as code — whitespace and
-    * comments skipped, exactly as a scanner skips them.
-    *
-    * This is the whole definition of "file-leading": a comment is the file's own iff no code
-    * precedes it. Deliberately not "before the `package` keyword", which is the same answer in
-    * every well-formed file and needs a token search that a comment containing the word `package`
-    * would defeat.
-    */
+    * comments skipped, exactly as a scanner skips them. The whole definition of "file-leading": a
+    * comment is the file's own iff no code precedes it. Not "before `package`" — a comment
+    * containing the word `package` would defeat a token search. */
   def firstCodeOffset(source: String): Int =
     val n  = source.length
     val cs = scanAt(source).iterator.buffered

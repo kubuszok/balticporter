@@ -2,20 +2,9 @@ package balticporter.tir
 
 /** MEMBER-LEVEL correspondence across a hierarchy — *the set of declarations that must change
   * together, or none of them* (DESIGN.md §8.5, §8.11). Edges keyed by NAME AND DESCRIPTOR
-  * ([[Symbol.descriptor]]), because `(name, arity)` alone was measured insufficient
-  * (`ENGINE-LIMITS.md` D1: 263 findings, 118 ambiguous); where a descriptor is missing the edge is
-  * still taken but REPORTED ([[OverrideGraph.Closure.approximate]]).
-  *
-  * The invariant: a signature change applies to '''all of a component or none of it'''.
-  * [[closureOf]] answers what the component IS; `Closure.isAnchored` answers whether the program
-  * may change it at all — CONSERVATIVELY: a parent this program did not parse could declare the
-  * member under any name, so with no surface data the closure refuses (a counted over-refusal, not
-  * a silent contract break). Surface data arrives as a value ([[ExternalSurface]]) rather than
-  * being guessed.
-  *
-  * Built with `StandardTraversal` so anonymous-class and enum-constant bodies are NODES (CLAUDE.md
-  * §3): a class-only walk misses an override living in either.
-  */
+  * ([[Symbol.descriptor]]) — `(name, arity)` alone was measured insufficient (`ENGINE-LIMITS.md`
+  * D1). [[closureOf]] answers what a component IS; `Closure.isAnchored` whether it may be changed
+  * at all, CONSERVATIVELY. Built with `StandardTraversal` so anon/enum bodies are NODES (§3). */
 final class OverrideGraph private (
     private val program: Program,
     private val nodes: Map[SymId, OverrideGraph.Node],
@@ -95,16 +84,9 @@ final class OverrideGraph private (
     else signatureOf(m).toList.flatMap(sig => descendantsOf(owner).flatMap(d => matchingDown(d, sig, owner))).distinct
 
   /** THE CLOSURE — every declaration that must change together with `m`, plus the reasons this
-    * program may not be allowed to change them.
-    *
-    * The walk is the connected component, not one hop up and one hop down: from every member it
-    * reaches it walks up and down again, so two interfaces declaring the same signature and one
-    * class implementing both close into ONE closure rather than two overlapping halves. Cycle-safe
-    * (a corrupt parent edge cannot hang a phase) and order-independent (the result is a `Set`).
-    *
-    * A member that is not an executable is its own closure with no external anchors: a field does
-    * not override anything, so nothing has to move with it.
-    */
+    * program may not be allowed to change them. The walk is the connected COMPONENT (not one hop
+    * up/down), cycle-safe and order-independent. A non-executable member (e.g. a field) is its own
+    * closure with no external anchors. */
   def closureOf(m: SymId): Closure =
     signatureOf(m) match
       // …and a PRIVATE member takes the same arm for the same kind of reason: a field does not
@@ -176,20 +158,11 @@ final class OverrideGraph private (
     membersOf(a).filter(inherited)
       .filter(x => signatureOf(x).exists(s => s.matches(sig) || asSeenFrom(s, a, from).matches(sig)))
 
-  /** IS THIS MEMBER IN AN OVERRIDE RELATION AT ALL? — JLS 8.2 and 8.4.8.1, and the one modifier
-    * that answers `no` outright.
-    *
-    * A `private` member is NOT INHERITED (8.2), so it neither overrides nor is overridden nor is
-    * hidden: it is its own component, and no ancestor — parsed or unparsed — can be declaring the
-    * member it overrides, because there is none to declare. Every other modifier still
-    * participates; `static` HIDES rather than overrides and a hiding pair still has to move
-    * together under a rename, so it is deliberately not on this list.
-    *
-    * The wrong answer here is a LEGITIMATE one and that is what makes it expensive: an
-    * over-approximate component reads as *this program may not re-sign these*, which is exactly
-    * what an honest anchor says. Measured on a library whose i18n lookups are `private static`
-    * methods of java `enum`s: five components frozen on `java.lang.Enum#getBundle`, a member
-    * `java.lang.Enum` does not declare and could not inherit from anything if it did. */
+  /** IS THIS MEMBER IN AN OVERRIDE RELATION AT ALL? — JLS 8.2/8.4.8.1. Only `private` answers `no`
+    * outright (NOT INHERITED, 8.2): it is its own component, no ancestor can declare what it
+    * overrides. `static` HIDES rather than overrides and still participates (a hiding pair must
+    * move together). A wrong answer here over-approximates the closure, which is the honest
+    * anchor — measured freezing five components on `java.lang.Enum#getBundle`. */
   private def inherited(m: SymId): Boolean =
     !program.symbolOf(m).exists(_.flags.isPrivate)
 
@@ -201,27 +174,11 @@ final class OverrideGraph private (
     membersOf(d).filter(inherited)
       .filter(x => signatureOf(x).exists(s => s.matches(sig) || s.matches(seen)))
 
-  /** `sig`, declared in `ancestor`, spelled as the descendant `from` sees it.
-    *
-    * ==Why an edge needs this at all==
-    * A descriptor spells a parameter by its written SIMPLE NAME (`Param.Named`), so a member
-    * declared `Pair<T,…> parseOption(BasedSequence, T, MessageProvider)` in `OptionParser<T>` and
-    * the override `parseOption(BasedSequence, TocOptions, MessageProvider)` in a class that
-    * `implements OptionParser<TocOptions>` are the same member to java (JLS 8.4.2) and two
-    * different strings here. Compared as strings the edge is simply ABSENT — the parent's
-    * declaration is not in the child's closure, the child reads as overriding nothing this program
-    * declares, and every consumer of the graph then answers a question about half a component.
-    *
-    * The `extends` clause says what the argument is, so the substitution is EXACT rather than a
-    * guess — `ParentSubst`'s own claim, and this is that one derivation asked at a DESCRIPTOR
-    * instead of at a `TypeRepr`. Only the ancestor's OWN parameters are resolved, by their symbols
-    * rather than by name, so two unrelated ancestors that both call a parameter `T` cannot collide.
-    *
-    * ==It only ever ADDS edges==
-    * The callers try the unsubstituted comparison first and this one second. An edge that exists
-    * today therefore cannot disappear, which matters because a lost edge SHRINKS a closure — and a
-    * closure that lost its anchor is an under-refusal, the one direction DESIGN.md §8.5 refuses to
-    * trade for. */
+  /** `sig`, declared in `ancestor`, spelled as the descendant `from` sees it. A descriptor spells a
+    * parameter by SIMPLE NAME, so java's one member (JLS 8.4.2) resolved through two type-parameter
+    * spellings compares as two strings; this substitutes through the `extends` clause (EXACT,
+    * `ParentSubst`'s own claim, resolved by symbol not name). Only ADDS edges — tried second, after
+    * the unsubstituted comparison, since a lost edge SHRINKS a closure (DESIGN.md §8.5). */
   private def asSeenFrom(sig: Signature, ancestor: SymId, from: SymId): Signature =
     val byName = tparamSpelling(ancestor, from)
     if byName.isEmpty then sig
@@ -290,21 +247,16 @@ final class OverrideGraph private (
 
 object OverrideGraph:
 
-  /** one declared TYPE: classes, anonymous bodies and enum-constant bodies alike.
-    *
-    * `parentTypes` carries the same edges as `parents` WITH their type arguments, which is what an
-    * override edge across a generic parent has to be read through — see [[OverrideGraph.asSeenFrom]].
-    * Two lists rather than one because every other consumer wants the head symbol and would
-    * otherwise re-derive it per question. */
+  /** one declared TYPE: classes, anonymous bodies and enum-constant bodies alike. `parentTypes`
+    * carries the same edges as `parents` WITH their type arguments, for reading an override edge
+    * across a generic parent ([[OverrideGraph.asSeenFrom]]). Two lists since other consumers want
+    * the head symbol without re-deriving it. */
   private[tir] final case class Node(sym: SymId, parents: List[SymId], members: List[SymId],
                                      parentTypes: List[TypeRepr] = Nil)
 
-  /** A member's identity as an EDGE is keyed on: its name and its parameter spelling.
-    *
-    * `arity` is carried beside the descriptor and used only when one side has none — the D1
-    * fallback, kept so that a component is never silently split in half, and marked
-    * [[Signature.approximate]] so nothing downstream can mistake it for the exact answer.
-    */
+  /** A member's identity as an EDGE, keyed on name and parameter spelling. `arity` is the D1
+    * fallback used only when one side has no descriptor, so a component is never silently split —
+    * and [[Signature.approximate]] marks it so nothing downstream mistakes it for exact. */
   final case class Signature(name: String, descriptor: Option[Descriptor], arity: Int, approximate: Boolean):
     /** the same member, across two types. Descriptors decide when both sides have one; otherwise
       * arity does, and the side that lacked one is already flagged approximate. */
@@ -313,24 +265,11 @@ object OverrideGraph:
         case (Some(a), Some(b)) => a == b
         case _                  => arity == that.arity)
 
-  /** WHAT MUST CHANGE TOGETHER, and what forbids changing it.
-    *
-    * @param members
-    *   every declaration this program has for the component, `m` included — interface declarations,
-    *   superclass declarations, every override below, every anonymous- and enum-constant-body
-    *   implementation.
-    * @param externalAnchors
-    *   `(type FQN, member name)` for each parent type this program never parsed whose surface could
-    *   not rule the member out. Non-empty ⇒ the component reaches a declaration this program does
-    *   not own and cannot move.
-    * @param baseAnchors
-    *   declarations owned by a RESOLUTION ROOT rather than by this module (`ENGINE-LIMITS.md` D2).
-    *   A subset of [[members]]: they are part of the component, and they are also the reason the
-    *   component is frozen.
-    * @param approximate
-    *   members whose edge was taken by NAME AND ARITY because a descriptor was missing — reported,
-    *   never guessed (DESIGN.md §8.11).
-    */
+  /** WHAT MUST CHANGE TOGETHER, and what forbids changing it. @param members every declaration
+    * this program has for the component, `m` included @param externalAnchors `(type FQN, member
+    * name)` for a parent this program never parsed whose surface could not rule the member out —
+    * non-empty means the component cannot move @param baseAnchors members owned by a RESOLUTION
+    * ROOT (D2) @param approximate members whose edge was taken by NAME+ARITY, reported. */
   final case class Closure(
       members: Set[SymId],
       externalAnchors: Set[(String, String)],
@@ -355,16 +294,10 @@ object OverrideGraph:
           s"(${e.mkString(", ")}) and ${b.size} owned by a resolution root (${b.mkString(", ")})")
 
   /** Build the graph for one program.
-    *
-    * @param external
-    *   what is known about the members of types this program did NOT parse. The default knows
-    *   `java.lang.Object` and nothing else, which is the honest state of the engine today: every
-    *   other unparsed parent anchors.
-    * @param baseUnits
-    *   the top-level units this run RESOLVES AGAINST but does not convert (`PortRun`'s foreign
-    *   partition). Empty — the default, and the single-module case — means every unit is this
-    *   module's and no closure is base-anchored.
-    */
+    * @param external what is known about types this program did NOT parse — default knows only
+    *   `java.lang.Object`, so every other unparsed parent anchors
+    * @param baseUnits top-level units this run RESOLVES AGAINST but does not convert (`PortRun`'s
+    *   foreign partition) — empty (default) means no closure is base-anchored. */
   def build(p: Program,
             external: ExternalSurface = ExternalSurface.default,
             baseUnits: Set[SymId] = Set.empty): OverrideGraph =
@@ -416,25 +349,11 @@ object OverrideGraph:
     case TypeRepr.AppliedType(tc, _) => headOf(tc)
     case _                           => scala.None
 
-/** WHAT IS KNOWN about the members of types this program did not parse.
-  *
-  * A VALUE and not a predicate, for [[RuleScope]]'s reason: the answer has to be reportable. A
-  * closure refused because `java.util.Map$Entry` might declare the member is a refusal an agent can
-  * act on; a refusal from an opaque `(String, String) => Boolean` is not.
-  *
-  * ==The default knows what the PLATFORM fixes, and nothing else==
-  * `java.lang.Object` is universal knowledge about Java — §1(a), not any library's policy — and it
-  * has to be here because [[OverrideGraph]] cannot see it in the tree: the frontend filters
-  * `java.lang.Object` out of every parent list on purpose, so without this a rename of `toString`
-  * would read as unanchored. Beside it are the platform interfaces whose member sets are CLOSED
-  * ([[ExternalSurface.jdkPlatform]]) — `Serializable` declares nothing, `Comparable` declares
-  * `compareTo`, and no library can add to either. Everything else unparsed is [[mayDeclare]] =
-  * true: refuse, count, and lift the refusal the day the type's surface is genuinely known.
-  *
-  * @param known
-  *   FQN → the members that type declares. A type PRESENT here is answered exactly, so an absence
-  *   from its set is proof. A type ABSENT here is unknown, and unknown anchors.
-  */
+/** WHAT IS KNOWN about the members of types this program did not parse — a VALUE not a predicate,
+  * so a refusal is reportable ([[RuleScope]]'s reason). Default knows `java.lang.Object`
+  * (§1a — the frontend filters it from parent lists) plus the CLOSED platform interfaces
+  * ([[ExternalSurface.jdkPlatform]]); everything else unparsed is [[mayDeclare]] = true: refuse,
+  * count, lift the day the surface is known. @param known FQN → declared members; absent = unknown, anchors. */
 final case class ExternalSurface(known: Map[String, Set[ExternalSurface.Member]] = Map.empty):
 
   /** could `fqn` declare something `sig` would rename? Unknown ⇒ YES, deliberately. */
@@ -486,65 +405,11 @@ object ExternalSurface:
   def javaLangObjectDeclares(sig: OverrideGraph.Signature): Boolean =
     javaLangObjectMembers.exists(_.name == sig.name)
 
-  /** The PLATFORM interfaces whose member sets are fixed by the JDK, so an absence really is proof.
-    *
-    * ==Why these are §1(a) and a demand-derived surface is not==
-    * `java.lang.Object` is here because the frontend hides it; these are here because they are
-    * CLOSED. `java.io.Serializable` declares nothing at all, `java.lang.Comparable` declares
-    * `compareTo`, `java.lang.Iterable` declares three methods, and no library can add to any of
-    * them. That is a fact about Java in exactly the sense §1(a) means, and it is the only kind of
-    * entry this map may hold: `known`'s contract is that a type present here is answered EXACTLY,
-    * so an absence from its member set is proof and the anchor lifts.
-    *
-    * A surface derived from what a program CALLS cannot go here, however tempting the seam
-    * (`ENGINE-LIMITS.md` K12 said it could, and that is now corrected there with the measurement).
-    * The rows say which members a program references, not which members a type declares, so an
-    * absence from them proves nothing — and turning `OverrideGraph`'s counted over-refusal into an
-    * unnoticed under-refusal is the trade DESIGN.md §8.5 explicitly chose against.
-    *
-    * ==Arity-only on purpose==
-    * No `descriptor`, so [[Member.matches]] falls back to name-and-arity, which OVER-matches. The
-    * direction of that error is refusal, which is the safe one — the same reason
-    * [[javaLangObjectDeclares]] matches on the name alone.
-    *
-    * Nothing here is a library's policy and nothing here is a guess: each set is the whole of what
-    * the interface declares in the Java it is written for. A type whose surface is large or version-
-    * dependent (`java.util.Comparator`, whose default methods grew across releases) is deliberately
-    * ABSENT — unknown anchors, and an incomplete entry is worse than no entry.
-    *
-    * ==VERSION-DEPENDENT IS NOT UNENUMERABLE, and `java.lang.CharSequence` is the difference==
-    * The paragraph above collapses two reasons into one, and `CharSequence` is the type that pulls
-    * them apart. It was left out because its surface GREW (`chars()` in 8, `isEmpty()` in 15) — a
-    * true observation and not, on its own, an argument: the frontend PINS a compliance level
-    * (`SpoonTir.buildModel` sets 21), so "which members does this interface declare" has exactly one
-    * answer for every tree this engine ever sees, and it is enumerable. `Comparator` stays out for
-    * the OTHER reason — its surface is large enough that writing it down is a transcription somebody
-    * would have to keep true — and the two are different failures. State it, and the anchor for a
-    * java FIELD named `chars` on a `CharSequence` implementor lifts; leave it out, and the field
-    * cannot be renamed, which `RefChecks` reports as `private variable chars cannot override method
-    * chars` on the day the port reaches zero (`ENGINE-LIMITS.md` K28.2).
-    *
-    * The set is the INSTANCE members only. `CharSequence.compare(CharSequence, CharSequence)` (11)
-    * is `static`, and a java interface's statics are not inherited at all (JLS 8.4.8), so it is not
-    * a member any implementor could be answering for — including it would anchor a field named
-    * `compare` on evidence that does not exist.
-    *
-    * ==`java.lang.Enum` IS ABSENT ON PURPOSE, AND FOR NEITHER OF THE TWO REASONS ABOVE==
-    * It is the one candidate whose surface argument is STRONGER than any interface's here and which
-    * is still not stated. JLS 8.1.4 makes it a compile-time error for a class to name `Enum` as its
-    * direct superclass, so the only `extends Enum` edge anywhere is the one the compiler writes for
-    * an `enum` declaration: nothing can add to it, nothing can interpose, and its members are fixed
-    * at the compliance level the frontend PINS. Left out, it anchors every member of every java
-    * enum, because an enum's one unparsed ancestor is `Enum` and an unknown surface `mayDeclare`s
-    * anything — which really does produce refusals naming members `Enum` could never declare
-    * (`java.lang.Enum#getBundle`, `java.lang.Enum#grid`, measured six times on one port). Every
-    * clause of that is true, and the entry is still refused, because stating it MEASURED WORSE:
-    * `ENGINE-LIMITS.md` CT10 has the number (**32 -> 41 errors, 51 member digests**). The anchor is
-    * not what was stopping that family — it was MASKING what was, and lifting it threads half a
-    * call chain whose other half is an `override final toString()` that can take no clause. The id
-    * sits here rather than the option sitting silently missing (`CLAUDE.md` §5); it is admissible
-    * the day CT10's enum-clause half closes, and not before.
-    */
+  /** The PLATFORM interfaces whose member sets are fixed by the JDK, so an absence really is
+    * proof — CLOSED (§1a), never a demand-derived surface (`ENGINE-LIMITS.md` K12). Arity-only
+    * (over-matches toward refusal, the safe direction); a version-dependent or large surface
+    * (`Comparator`) stays deliberately ABSENT — unknown anchors. `java.lang.Enum` is deliberately
+    * absent too: stating it measured WORSE (`ENGINE-LIMITS.md` CT10, 32→41 errors). */
   val jdkPlatform: Map[String, Set[Member]] = Map(
     "java.io.Serializable"     -> Set.empty,
     "java.lang.Cloneable"      -> Set.empty,

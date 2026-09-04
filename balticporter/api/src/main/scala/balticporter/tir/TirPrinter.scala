@@ -1,34 +1,10 @@
 package balticporter.tir
 
-/** A readable, STABLE rendering of the TIR — the thing you need to compare two phases' output.
-  *
-  * Case-class `toString` is not a substitute and was the only option before this existed: a
-  * `Tree.ClassDef` prints its whole `TypeRepr` graph inline, renders every symbol as an opaque
-  * `SymId` integer, wraps at no column and repeats an applied type in full at every occurrence.
-  * Diffing two of those tells you nothing.
-  *
-  * Two properties this printer has that `toString` does not:
-  *
-  *   - **Symbols read as names.** `TypeRef(NoPrefix, SymId(4132))` is unreadable and, worse, the
-  *     integer is INTERNING-ORDER dependent (`Tir.scala` — `SymId` is an opaque `Int` handed out
-  *     as symbols are discovered), so it changes when an unrelated file is added. [[Style.debug]]
-  *     prints `fullName#id` because the id is what a `SymId`-keyed log line carries;
-  *     [[Style.canonical]] prints the name ALONE, which is what a persisted artifact or a
-  *     run-over-run digest must contain.
-  *   - **Types are printed once, in surface syntax.** `AppliedType(TypeRef(_, LIST), TypeBounds(
-  *     NoType, TypeRef(_, W)))` reads `List[? <: Widget]`.
-  *
-  * The rendering is total over `Tree` and `TypeRepr` — a node kind added to the IR without a case
-  * here is a compiler exhaustivity warning, not a silently unprinted subtree. That matters for the
-  * same reason CLAUDE.md §3 insists on `StandardTraversal`: two of this project's four silent
-  * correctness defects were traversals that stopped one node short.
-  *
-  * `ParamRef` deliberately does NOT recurse into its binder. Expanding it would re-print the
-  * whole enclosing signature at every parameter occurrence — unreadable and quadratic — and does
-  * not terminate at all for a binder that transitively contains the `ParamRef`. It renders as the
-  * binder-relative parameter NAME, which is also what makes the canonical form independent of
-  * binder identity.
-  */
+/** A readable, STABLE rendering of the TIR — for comparing two phases' output. Unlike case-class
+  * `toString` (opaque INTERNING-ORDER-dependent `SymId` integers, `TypeRepr` graphs inline):
+  * [[Style.debug]] prints `fullName#id`, [[Style.canonical]] the name alone; types print once in
+  * surface syntax. Total over `Tree`/`TypeRepr` (a missing case is a compiler warning — CLAUDE.md
+  * §3). `ParamRef` renders binder-relative, never recursing into its binder (non-terminating). */
 object TirPrinter:
 
   /** `showIds`: append `#<SymId>` to every symbol. Interning-order dependent — debugging only,
@@ -40,14 +16,9 @@ object TirPrinter:
   object Style:
     /** what you read on a terminal while diagnosing one phase. */
     val debug: Style = Style(showIds = true, showOrigins = true)
-    /** what you DIFF: no ids, no line numbers, no clock — and no trivia.
-      *
-      * Trivia is elided here for the same reason origins are. A dump exists to answer "what did
-      * this phase do to the tree", and libGDX's `AssetManager` carries 400 lines of Javadoc that
-      * would bury the twelve nodes a phase actually moved. The comments are content, not
-      * structure, and no phase reads them.
-      *
-      * Which is exactly why [[digest]] does NOT use this style — see there. */
+    /** what you DIFF: no ids, no line numbers, no clock — and no trivia. A dump answers "what did
+      * this phase do to the tree", and 400 lines of Javadoc would bury twelve moved nodes.
+      * [[digest]] does NOT use this style — see there. */
     val canonical: Style = Style(showIds = false, showOrigins = false, showTrivia = false)
     /** canonical PLUS trivia: everything that reaches the emitted file and nothing that does not.
       * The identity a content digest must be taken over. */
@@ -66,15 +37,10 @@ object TirPrinter:
     * (DESIGN.md §2.6). */
   def canonical(t: Tree)(using Program): String = render(t, Style.canonical)
 
-  /** sha-256 of the unit's IDENTITY form, hex. Stable across runs of the same input; changes
-    * exactly when anything that reaches the emitted file changes.
-    *
-    * NOT `sha256(canonical(t))`, which it was until trivia existed. `balticporter.core.TirCacheKey`
-    * keys the action cache on this, and the cache stores EMITTED TEXT — so anything the emitter
-    * writes has to be inside the digest or a source edit that only touched a comment gets a cache
-    * HIT and re-serves the previous file, with the previous comment. That failure is silent, it
-    * survives a `clean`, and no count moves; `Style.identity` closes it by construction rather
-    * than by remembering to add each new field. */
+  /** sha-256 of the unit's IDENTITY form, hex — stable across runs, changes exactly when anything
+    * reaching the emitted file changes. NOT `sha256(canonical(t))` (that excludes trivia):
+    * `TirCacheKey` keys the action cache on this, and the cache stores EMITTED TEXT, so a
+    * comment-only edit must not produce a cache HIT that re-serves the old comment. */
   def digest(t: Tree)(using Program): String = sha256(render(t, Style.identity))
 
   def sha256(s: String): String =

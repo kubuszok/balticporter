@@ -1,12 +1,9 @@
 package balticporter.tir
 
-/** Typed IR (TIR) — the re-compiler's working representation. See DESIGN.md §2.
-  *
-  * Shaped like `scala.quoted.Quotes#reflect` (`TypeRepr`, `Tree`/`Statement`/`Definition`/`Term`/
-  * `TypeTree`, `Symbol`) but a close analog rather than Quotes itself, exposing MORE: `Origin`
-  * (cross-language provenance), `SymTag` (open domain semantics), and a WHOLE-PROGRAM `XrefIndex`
-  * (Quotes is per-macro-expansion only). Every node carries a fully STRUCTURED `TypeRepr`, resolved
-  * from Spoon, never re-inferred.
+/** Typed IR (TIR) — the re-compiler's working representation.
+  * Shaped like `scala.quoted.Quotes#reflect` but exposes `Origin`, `SymTag` and a whole-program
+  * `XrefIndex`; every node carries a fully structured `TypeRepr`, resolved from Spoon.
+  * DESIGN.md §2.
   */
 
 /** Provenance to the original source. Our addition over Quotes' positions. */
@@ -40,13 +37,11 @@ object SymId:
   def apply(i: Int): SymId          = i
   extension (s: SymId) def raw: Int = s
 
-/** what a java METHOD REFERENCE's referenced executable declares — see [[Tree.MethodRef.referent]].
-  * The two cases are JLS 15.13.1's split at `Type::name`: a `static` method is a qualified NAME, an
-  * instance method is an UNBOUND reference whose receiver becomes the SAM's FIRST parameter (JLS
-  * 15.13.3). BOTH carry the ARITY: scala does NOT eta-expand a NULLARY method from a bare name, so
-  * `Type::nilaryStatic` at a supplier-shaped SAM must emit as a lambda too (`ENGINE-LIMITS.md`
-  * G32). At PACKAGE level, not inside `object Tree`: `EmissionFieldCoverageSpec` scans `Tree`'s
-  * case classes for a pinned node census. */
+/** What a java METHOD REFERENCE's referenced executable declares — see [[Tree.MethodRef.referent]].
+  * JLS 15.13.1: a `static` method is a qualified name; an instance method is unbound, receiver
+  * becomes the SAM's first parameter. Both carry ARITY — scala does not eta-expand a nullary
+  * method from a bare name. `ENGINE-LIMITS.md` G32.
+  */
 enum Referent:
   case Static(arity: Int)
   case Instance(arity: Int)
@@ -61,22 +56,11 @@ final case class Flags(
     isTrait: Boolean = false,
     isModule: Boolean = false, // `object`
     isEnum: Boolean = false,
-    /** Java `record` (JLS 8.10) — a declaration whose components javac turns into a private final
-      * field, a bare-name accessor, a canonical constructor and `equals`/`hashCode`/`toString`.
-      *
-      * A FLAG and not "does this class extend `java.lang.Record`", although both hold of every
-      * record. The parent is a fact about a class file the port cannot write — scalac emits no JVM
-      * record, so `Class.isRecord` is false whatever is named in the `extends` clause — and, going
-      * the other way, scalac ACCEPTS `extends java.lang.Record` on a class that is not one, where
-      * javac refuses it outright (JLS 8.1.4, both halves measured). What licenses synthesising the
-      * four members javac generated is the java DECLARATION, and this flag is it.
-      *
-      * It carries ONE more conjunct than "java wrote `record`", deliberately: *and this program
-      * still declares every member the synthesis reads*. A port may `dropMethods` an accessor, and
-      * a synthesis over a SUBSET of the components would emit an `equals` and a `hashCode` java
-      * never computed, at no error and no moved count. So a record whose [[Symbol.components]]
-      * could not be joined in full arrives with this flag CLEAR and ships exactly as it did before
-      * the row was lowered — which is loud, at §3's gate. */
+    /** True iff java declared this a `record` (JLS 8.10) AND every component in [[Symbol.components]]
+      * survived (a `dropMethods`'d accessor clears it) — licenses synthesising the accessor,
+      * canonical constructor, `equals`/`hashCode`/`toString`. Not derivable from `extends
+      * java.lang.Record` (scalac emits no JVM record and accepts that clause on non-records too).
+      */
     isRecord: Boolean = false,
     /** Java `@interface` — a declaration of an ANNOTATION type, not an ordinary interface. */
     isAnnotation: Boolean = false,
@@ -93,15 +77,11 @@ final case class Flags(
     isParamAccessor: Boolean = false,
     isPrivate: Boolean = false,
     isProtected: Boolean = false,
-    /** Java's FOURTH access level — "default", or package-private: no `public`/`protected`/`private`
-      * modifier at all. Three of Java's four levels used to collapse onto "neither of the two
-      * booleans above", so a declaration written with no modifier produced flags byte-identical to a
-      * `public` one and the TIR could not even STATE that a type was package-private (DESIGN §8.7).
-      *
-      * It is the JLS-EFFECTIVE level, not the presence of a modifier: an interface member is
-      * implicitly `public` and an enum constructor implicitly `private`, so neither is this.
-      * Exactly one of `isPrivate`, `isProtected`, `isPackagePrivate` is set, or all three are clear
-      * and the declaration is public. */
+    /** Java's fourth access level — package-private (no modifier written). The JLS-effective level,
+      * not modifier presence: an interface member implicitly `public`, an enum constructor
+      * implicitly `private`, are not this. Exactly one of `isPrivate`/`isProtected`/
+      * `isPackagePrivate` is set, or all three clear means public. DESIGN.md §8.7.
+      */
     isPackagePrivate: Boolean = false,
     isStatic: Boolean = false, // JavaStatic
     isNative: Boolean = false, // Java `native` (JNI) — a Panama-FFI rewrite target
@@ -120,33 +100,18 @@ trait SymTag
 enum TriviaKind:
   case Line, Block, Javadoc
 
-/** One comment, VERBATIM — delimiters included, sliced out of the original source buffer rather
-  * than re-printed from a parsed model.
-  *
-  * Why the text is a raw slice and not a normalised body: a comment is the one artefact of a port
-  * whose whole value is its exact words. Re-printed from `CtComment.toString` a Javadoc loses
-  * `@param` alignment, `<pre>` blocks and — critically — the exact wording of a LICENCE, which is
-  * the one comment a derived work is legally obliged to reproduce (CLAUDE.md §4.57). Slicing keeps
-  * that honest by construction rather than by a rendering rule nobody checks.
-  *
-  * Deliberately NOT shared with `balticporter.core.Trivia` (the BIR path's identical-looking
-  * record): that file is FROZEN and slated for deletion once its ten corpus programs move over,
-  * and a TIR node referring to it would make the TIR undeletable-with-it. Four duplicated lines is
-  * the cheaper of the two costs. */
+/** One comment, verbatim — delimiters included, sliced out of the original source buffer rather
+  * than re-printed from a parsed model, so exact wording (licence text, `@param` alignment,
+  * `<pre>` blocks) survives. CLAUDE.md §4.57. Deliberately NOT shared with the frozen
+  * `balticporter.core.Trivia` (BIR path).
+  */
 final case class Trivia(kind: TriviaKind, text: String)
 
-/** A Java ANNOTATION on a declaration — `@Test`, `@Override`, `@Deprecated`, `@Null`.
-  *
-  * Carried because dropping annotations is not cosmetic. A JUnit suite whose `@Test` did not
-  * survive runs ZERO tests and reports SUCCESS: green build, green suite, nothing executed — the
-  * only silent-omission defect found in this corpus that manufactures the evidence that behaviour
-  * is fine, and one that conceals itself by disabling the very gate meant to catch such things.
-  * Beyond tests, `@Override` is checkable intent, `@Deprecated` and `@Null` are API contract, and
-  * `@SuppressWarnings` is deliberate.
-  *
-  * `args` are the annotation's element values, by name (Java's single-element `@A(x)` is named
-  * `value`) — dropping an ARGUMENT is the same defect one level down, so they are carried as real
-  * `Term`s rather than text. */
+/** A Java annotation on a declaration — `@Test`, `@Override`, `@Deprecated`, `@Null`.
+  * `args` are its element values, by name (a single-element `@A(x)` is named `value`), carried as
+  * real `Term`s rather than text — a dropped argument is the same silent-omission defect as a
+  * dropped annotation (e.g. a `@Test` that fails to survive runs zero tests and reports success).
+  */
 final case class Annot(tpe: TypeRepr, args: List[(String, Term)], origin: Origin)
 
 /** A declaration's symbol record (the analog of `reflect.Symbol`'s backing data).
@@ -161,12 +126,7 @@ final case class Symbol(
     flags: Flags,
     owner: SymId,           // SymId.None at the root
     info: TypeRepr,
-    // `privateWithin` — a `SymId` stub mirroring `reflect.Symbol`, populated nowhere and read
-    // nowhere — used to sit here. It is now `Flags.isPackagePrivate`, and deliberately NOT a
-    // symbol: a `SymId` cannot name a package in this TIR, because packages are `fullName`
-    // segments and not symbols (DESIGN §8.7). The qualifier a `private[p]` renders with is derived
-    // from the emitter's CURRENT emitted package, which is a fact the emitter has and no symbol
-    // carries.
+    // no `privateWithin`: a `private[p]` qualifier is derived from the emitter's current package, not carried as a symbol (DESIGN.md §8.7).
     origin: Origin = Origin.synthetic,
     tags: Set[SymTag] = Set.empty,
     /** the declaration's Java annotations, in source order. See [[Annot]] — losing these is a
@@ -175,83 +135,40 @@ final case class Symbol(
     /** annotations the frontend could NOT carry, by name — reported by `OmissionCheck` rather
       * than discarded, so a gap here is a number on every run. */
     droppedAnnotations: List[String] = Nil,
-    /** the member's PARAMETER SPELLING — the half of member identity [[fullName]] does not carry,
-      * and the whole of overload identity. See [[Descriptor]] for the grammar and for the two
-      * cross-grammar divergences it closes.
-      *
-      * Three readings of `None`, and only one of them is a gap:
-      *
-      *  - a FIELD, a TYPE, a parameter, a local — not an executable, so there is nothing to spell.
-      *    `owner#name` is its COMPLETE identity, and a binder that reported this as unresolved would
-      *    produce a finding for every field in the program.
-      *  - an EXTERNAL member whose declaration the frontend could not resolve. That one IS a gap,
-      *    and it is the surviving residue of the arity fallback this field replaces — made LOUD at
-      *    bind time here rather than silently degrading to arity at match time.
-      *  - a member with one unnameable formal: ALL of them or none ([[Descriptor.total]]).
-      *
-      * NEVER folded into [[fullName]] and never printed by `TirPrinter.canonical`: it is a symbol
-      * PROPERTY, not part of the symbol's NAME, and every promoted artifact in every lane is keyed
-      * on the name. See [[MemberKey]] for the whole of that argument. */
+    /** The member's parameter spelling — the half of member identity [[fullName]] does not carry;
+      * see [[Descriptor]] for the grammar. `None` means: not an executable, OR an unresolvable
+      * external member (a real gap), OR every formal is unnameable ([[Descriptor.total]]). Never
+      * folded into [[fullName]] or printed by `TirPrinter.canonical` — see [[MemberKey]].
+      */
     descriptor: Option[Descriptor] = None,
-    /** java's `permits` clause — the types this `sealed` declaration NAMES as its subclasses (JLS
-      * 8.1.1.2). Empty for everything that is not a sealed type, and empty for a sealed type that
-      * omitted the clause because java infers it from the compilation unit.
-      *
-      * '''Interned, never a name.''' The one question this list is asked is *does the set of
-      * subtypes this program declares account for every type java permitted* — and a permitted type
-      * the parse never saw (an `excludeGlobs` file, a unit-fatal refusal) is precisely the case that
-      * must be detected. A NAME could not answer it: the permitted string is written in the UPSTREAM
-      * namespace and a rename runs last (§4.56), so a name-keyed join would report every permitted
-      * type unaccounted on a renaming port and none on any other. An interned id is the structural
-      * answer — a permitted type the program declares resolves to the SAME id its `ClassDef` carries
-      * (`Minter.external` never clobbers a definition), and one it does not stays an external stub
-      * that no subtype set can contain.
-      *
-      * It is NOT a [[Flags]], although it travels with `Flags.isSealed`: flags mirror
-      * `reflect.Flags`, and `permits` is a class-header CLAUSE rather than a modifier. */
+    /** Java's `permits` clause (JLS 8.1.1.2) — subtype `SymId`s, interned rather than named so a
+      * permitted type the parse never saw resolves to an external stub instead of a rename-sensitive
+      * string (CLAUDE.md §4.56). Empty for a non-sealed type or an inferred clause. Not a [[Flags]]
+      * (a class-header clause, not a modifier), though it travels with `Flags.isSealed`.
+      */
     permits: List[SymId] = Nil,
-    /** java's RECORD COMPONENTS, in DECLARATION ORDER — empty for everything that is not a record.
-      *
-      * Order is the whole of it: `equals`, `hashCode`, `toString` and every deconstruction read the
-      * components in the order the header wrote them, so a `Set` (which is what Spoon hands back)
-      * is not the shape this can be carried in. Sorted by source position at the harvest.
-      *
-      * INTERNED, for [[permits]]'s reason and one more of its own: the field, the accessor and the
-      * component all share ONE java name (JLS 8.10.1) and scala has one namespace, so the emitter's
-      * clash resolution renames the field (`x` -> `x$field`) before anything is written. A
-      * name-keyed lookup at emission would therefore find the accessor for both, which is not a
-      * hypothetical — it is the shape every record has. */
+    /** Java's record components (JLS 8.10.1), in declaration order — required because `equals`/
+      * `hashCode`/`toString`/deconstruction all read them positionally, so this cannot be a `Set`
+      * (sorted by source position at harvest). Interned rather than name-keyed: field, accessor and
+      * component share one java name, and emission renames the field (`x` -> `x$field`).
+      */
     components: List[RecordComponent] = Nil,
 )
 
-/** one java RECORD COMPONENT (JLS 8.10.1) — the three declarations java derives from one name.
-  *
-  * `field` and `accessor` are both carried because java reads DIFFERENT ones: `equals`, `hashCode`
-  * and `toString` are generated over the FIELDS (measured — a record whose accessor is overridden
-  * to double its component still prints and hashes the undoubled field), while a record PATTERN
-  * deconstructs through the ACCESSOR (JLS 14.30.1, measured at the same fixture: the pattern binds
-  * the doubled value). A synthesis that read one of the two for both would be right on every record
-  * that does not override an accessor, which is most of them.
-  *
-  * @param name the component's own name — the java one, before any clash resolution, which is what
-  *   java's `toString` prints as the `name=` label.
+/** One java record component (JLS 8.10.1). `field` and `accessor` are carried separately because
+  * java reads different ones: `equals`/`hashCode`/`toString` read the FIELD, a record pattern
+  * deconstructs through the ACCESSOR (JLS 14.30.1) — an overridden accessor can make them diverge.
+  * @param name the component's java name, before any clash resolution.
   */
 final case class RecordComponent(name: String, field: SymId, accessor: SymId)
 
 object Symbol:
 
-  /** The `fullName` a frontend interns a type VARIABLE it could not resolve under.
-    *
-    * A java type argument may name a variable that has no binder in the reading scope — the
-    * INFERRED argument of a diamond (`new ArrayList<>(coll)`) is the standing case, and a callee's
-    * own `<T>` reached from outside is another. There is no symbol to point at, so the frontend
-    * mints one whose name is a marker rather than a name.
-    *
-    * `?` opens it because no java identifier and no java FQN can, so the marker is unambiguous and
-    * costs no field. Spelled HERE and read through [[isUnresolvedTypeVar]] by both sides: it is a
-    * convention BETWEEN a frontend and the emitter, and a convention spelled twice is one that
-    * drifts. What the emitter owes it is that such a symbol NEVER reaches the output — `?E` names
-    * nothing in Scala and does not even lex (`ENGINE-LIMITS.md` G2 settles what does: `?`). */
+  /** The `fullName` prefix a frontend mints for a type variable it could not resolve a binder for
+    * (e.g. a diamond's inferred argument). `?` is unambiguous since no java identifier can start
+    * with it. Read through [[isUnresolvedTypeVar]] by both frontend and emitter — such a symbol must
+    * never reach emitted output. `ENGINE-LIMITS.md` G2.
+    */
   val UnresolvedTypeVarPrefix = "?"
 
   def isUnresolvedTypeVar(fullName: String): Boolean = fullName.startsWith(UnresolvedTypeVarPrefix)
@@ -335,11 +252,10 @@ final case class TypeTree(tpe: TypeRepr, origin: Origin) extends Tree
 
 object Tree:
   // ---- definitions ----
-  /** class / trait / object / enum. `parents` are the (typed) super constructors /
-    * mixins; `selfType` carries `self: S =>` and F-bounded self annotations; `tparams`
-    * are the class's own type parameters as `TypeDef`s whose `rhs` is a `TypeBounds`
-    * — so a class F-bound `class C[T <: IRich[T]]` is a first-class, walkable node
-    * (the bound references `T`'s own symbol, and the xref traces it). */
+  /** class / trait / object / enum. `parents` are the (typed) super constructors/mixins;
+    * `selfType` carries `self: S =>`; `tparams` are the class's own type params as `TypeDef`s
+    * whose `rhs` is a `TypeBounds`, so an F-bound like `class C[T <: IRich[T]]` is walkable.
+    */
   final case class ClassDef(
       symbol: SymId,
       parents: List[Term | TypeTree],
@@ -350,19 +266,11 @@ object Tree:
       enumCases: List[EnumCase] = Nil,
       /** the type's OWN comments — its Javadoc and anything else written directly above it. */
       leading: List[Trivia] = Nil,
-      /** comments that belong to the FILE rather than to this type: everything above the `package`
-        * clause, plus anything hanging off the imports. That is where the Apache/BSD notice lives
-        * in every library in this corpus, and it is why it is a SECOND field instead of being
-        * merged into `leading`.
-        *
-        * The distinction is one the emitter needs and cannot recover: a `package` clause must
-        * precede the class, so a file header merged into `leading` would be emitted BELOW the
-        * `package` line — legal, but no longer the file's header. And a Java file with two
-        * top-level types becomes two Scala files, each of which is a derived work in its own
-        * right; each therefore carries the notice, which is the one place the frontend's
-        * claimed-once rule is deliberately not applied ([[Trivia]], `SpoonTir.fileHeader`).
-        *
-        * Non-empty only on a top-level unit; a nested `ClassDef` has no file of its own. */
+      /** Comments belonging to the FILE rather than this type — everything above `package` plus
+        * anything on the imports (where a licence notice lives). Kept separate from `leading`
+        * because emitting it there would land below the `package` clause. Non-empty only on a
+        * top-level unit; a two-type java file becomes two Scala files, each carrying the notice.
+        */
       unitLeading: List[Trivia] = Nil,
   ) extends Definition
 
@@ -399,24 +307,17 @@ object Tree:
   /** `super` (receiver of `super.m(...)` / `super(...)`) — distinct from `this` so the
     * backend can emit `super`-dispatch and constructor delegation correctly. */
   final case class Super(cls: SymId, tpe: TypeRepr, origin: Origin)                     extends Term
-  /** the BODY of a Java anonymous class — `new Base(args) { members }`. `symbol` is a synthetic
-    * type symbol that OWNS the members (so their keys never collide with the enclosing class's,
-    * and `this` inside them names the anonymous instance, as in Java). `body` carries fields,
-    * methods and instance-initializer blocks; `dropped` names any member the frontend could NOT
-    * translate, so [[OmissionCheck]] can report it instead of losing it silently.
-    *
-    * An empty `body` is meaningful: `new Base(){}` (the super-type-token idiom) really has none.
-    * `New.anon = None` means "not an anonymous class at all", which is why the distinction is an
-    * `Option` and not a possibly-empty list. */
+  /** The body of a java anonymous class — `new Base(args) { members }`. `symbol` is a synthetic
+    * type that owns the members; `body` carries fields/methods/init blocks; `dropped` names any
+    * member the frontend could not translate, for [[OmissionCheck]]. An empty `body` is meaningful
+    * (`new Base(){}`); `New.anon = None` means "not anonymous at all".
+    */
   final case class AnonClass(symbol: SymId, body: List[Statement], origin: Origin, dropped: List[String] = Nil,
-                             /** what the CLASS FILE says about the type this anonymous class named —
-                               * see [[Sam]] for why the question is answered in the frontend and
-                               * carried here rather than asked by the phase that acts on it.
-                               *
-                               * Defaults to [[Sam.Answer.unknown]], which is the conservative arm:
-                               * a tree nobody asked the question about refuses loudly in
-                               * `idiom(refused)` rather than converting on a fact nothing
-                               * established. */
+                             /** What the class file says about the type this anonymous class named
+                               * — see [[Sam]] for why the frontend answers this rather than the
+                               * acting phase. Defaults to [[Sam.Answer.unknown]], the conservative
+                               * arm: an unasked tree refuses loudly in `idiom(refused)`.
+                               */
                              sam: Sam.Answer = Sam.Answer.unknown)
 
   /** `new T` / `new T { … }`. `anon` is present exactly when Java wrote an anonymous-class body
@@ -426,72 +327,36 @@ object Tree:
   final case class New(tpt: TypeTree, tpe: TypeRepr, origin: Origin, anon: Option[AnonClass] = None) extends Term
   final case class Apply(fun: Term, args: List[Term], method: SymId, tpe: TypeRepr, origin: Origin) extends Term
   final case class TypeApply(fun: Term, targs: List[TypeTree], tpe: TypeRepr, origin: Origin)       extends Term
-  /** @param compound
-    *   `Some((op, narrowOpt))` when this is a COMPOUND ASSIGNMENT (`lhs op= rhs`): `op` is the
-    *   binary operator name ("+", "*", …) and `narrowOpt` is the implicit narrowing type
-    *   (JLS 15.26.2) when the compound result must be cast back to the lvalue's type (`byte += int`
-    *   computes an `int` and narrows to `byte`). `rhs` is the right-hand OPERAND only (not
-    *   `lhs.op(rhs)`), and `lhs` appears exactly once in the node — the fact CLAUDE.md §4.4's
-    *   switch-expression row mandates ("carry the java construct on the node"). `None` for a plain
-    *   assignment. */
+  /** @param compound `Some((op, narrowOpt))` for a compound assignment (`lhs op= rhs`): `op` is
+    *   the operator, `narrowOpt` the implicit narrowing type when the result casts back to the
+    *   lvalue's type (JLS 15.26.2, e.g. `byte += int`). `rhs` is the right operand only; `lhs`
+    *   appears once in the node. `None` for a plain assignment.
+    */
   final case class Assign(lhs: Term, rhs: Term, tpe: TypeRepr, origin: Origin,
                           compound: Option[(String, Option[TypeRepr])] = None)          extends Term
-  /** @param trailing
-    *   comments written at the END of the block, after the last statement — the one comment
-    *   position java has and the TIR had no carrier for.
-    *
-    *   A frontend folds a comment onto the statement that FOLLOWS it; a comment with nothing
-    *   after it therefore had nowhere to go, and was dropped after being claimed — which put it
-    *   beyond every coarser harvest too. It is not a rare shape: an empty override body whose
-    *   whole content is `// Do nothing by default.`, commented-out code at the tail of a method,
-    *   and a switch arm whose comment became trailing the moment the case-terminator `break` was
-    *   filtered out (CLAUDE.md §4.4) are all this.
-    *
-    *   A slot here places them EXACTLY, because end-of-block is precisely where java had them —
-    *   no hoisting to a surviving node, which `ENGINE-LIMITS.md` V1 refuses for the right reason
-    *   (a comment printed above a member says something false about it). */
+  /** @param trailing comments after the block's last statement — the one position a frontend that
+    *   folds comments onto the FOLLOWING statement cannot carry otherwise (e.g. an empty override
+    *   body whose only content is `// Do nothing by default.`). Placed exactly at end-of-block,
+    *   never hoisted to a surviving node. `ENGINE-LIMITS.md` V1.
+    */
   final case class Block(stats: List[Statement], expr: Term, tpe: TypeRepr, origin: Origin,
                          trailing: List[Trivia] = Nil) extends Term
-  /** anonymous function (`reflect.Closure`/`Block(DefDef,Closure)` simplified).
-    *
-    * @param resultTpt THE SAM METHOD'S OWN RESULT TYPE, where whoever built this node knew it.
-    *
-    * A java lambda body is a METHOD body, so `return` is legal in it and means *leave the lambda*;
-    * a scala lambda is an EXPRESSION and rejects `return` outright. The emitter restores java's
-    * meaning by interposing a nested `def` (`JS-S21`) — and a `def` needs a RESULT TYPE, which is
-    * the method's and never the functional interface's. `tpe` above is the INTERFACE
-    * (`java.util.Comparator[String]`); the type the `def` needs is `compare`'s `int`, and no
-    * amount of reading `tpe` produces it, which is `ENGINE-LIMITS.md` M6's own sentence and was
-    * true of every lambda in the IR until a node could carry the answer.
-    *
-    * `None` means NOBODY KNEW, never `Unit`: the emitter then falls back to the one case it can
-    * decide from the body alone (every `return` valueless ⇒ a java `void` lambda) and REFUSES the
-    * rest, loudly and counted (`OmissionCheck.unnameableLambdaReturn`). §4.6's rule literally — a
-    * default indistinguishable from a real answer is a fabricated fact, and a guessed result type
-    * is a `def` that COMPILES while meaning something else.
-    *
-    * Who fills it in is a fact about who holds a `DefDef`: `SamLambdaTransform` converts an
-    * anonymous class and therefore holds the anon's own method, `returnTpt` included. A lambda the
-    * SOURCE wrote has no `DefDef` anywhere — java wrote the body and javac inferred the type from
-    * the target — so the frontend leaves this `None` and M6's refusal stands there, narrowed to
-    * exactly the sites where nothing in the program states the type. */
+  /** Anonymous function (`reflect.Closure`/`Block(DefDef,Closure)` simplified).
+    * @param resultTpt the SAM method's OWN result type (never the interface's `tpe`) — needed
+    *   since java lambda bodies allow `return` (leaves the lambda), restored via a nested `def`
+    *   needing a result type. `None`: falls back to void-lambda detection, refuses the rest,
+    *   counted (`ENGINE-LIMITS.md` M6). */
   final case class Lambda(params: List[ValDef], body: Term, tpe: TypeRepr, origin: Origin,
                           resultTpt: Option[TypeTree] = None) extends Term
   final case class If(cond: Term, thenp: Term, elsep: Term, tpe: TypeRepr, origin: Origin) extends Term
   final case class Typed(expr: Term, tpt: TypeTree, tpe: TypeRepr, origin: Origin)      extends Term
   /** varargs sequence (`reflect.Repeated`). */
   final case class Repeated(elems: List[Term], tpe: TypeRepr, origin: Origin)           extends Term
-  /** `expr*` — an ARRAY passed THROUGH a repeated parameter, which is one argument and not a list.
-    *
-    * The mirror of [[Repeated]], and needed for the same reason: java lets a call fill a `T...`
-    * slot with an array it already holds (`String.format(fmt, args)`), and the callee's half decides
-    * what that means. Where the callee is OURS the parameter is emitted `Array[T]` and the array is
-    * passed as it stands — no node. Where the callee is a CLASS FILE scalac reads `T...` as a
-    * REPEATED parameter, so the bare array conforms as ONE element; the faithful form is the spread
-    * (`ENGINE-LIMITS.md` K6.5, fourth case).
-    *
-    * `tpe` is the ARRAY's type, because that is what the term still is — the `*` is a fact about the
-    * position, exactly as `Repeated`'s flattening is. */
+  /** `expr*` — an array passed through a repeated (`T...`) parameter as one argument. The mirror
+    * of [[Repeated]]: a class-file callee reads `T...` as varargs, so a bare array would conform as
+    * ONE element; the spread is the faithful form (`ENGINE-LIMITS.md` K6.5). `tpe` is the array's
+    * own type — `*` is a fact about position, not about the type.
+    */
   final case class Spread(expr: Term, tpe: TypeRepr, origin: Origin)                    extends Term
   /** `return e` — imperative early exit (Java bodies). `tpe` is Nothing. */
   final case class Return(expr: Option[Term], tpe: TypeRepr, origin: Origin)            extends Term
@@ -511,25 +376,11 @@ object Tree:
   final case class ForEach(binding: ValDef, iterable: Term, body: Term, tpe: TypeRepr, origin: Origin, label: Option[String] = None) extends Term
   /** `for (init; cond; update) body` (Java classic-for). */
   final case class For(init: List[Statement], cond: Option[Term], update: List[Statement], body: Term, tpe: TypeRepr, origin: Origin, label: Option[String] = None) extends Term
-  /** `try (resources) body catch cases finally fin`. `resources` are the try-with-resources
-    * bindings (empty for a plain `try`); each is auto-closed — a lowering concern for the
-    * backend, kept structural here.
-    *
-    * @param id WHICH `try` this is, for the one question two `try`s must never share an answer to:
-    *           did the emitter put a `Break` re-throw arm on it (`ENGINE-LIMITS.md` K16 / CLAUDE.md
-    *           §4.4)? Neither of the two obvious keys can carry it —
-    *
-    *             - an `Origin` is a path, a line and a column, and a nested one-liner shares all
-    *               three, while every SYNTHESISED `try` carries `Origin.synthetic`;
-    *             - object identity does not survive `StandardTraversal`, which rebuilds every node
-    *               it walks (a `scan` is a `map` with a side effect), so the emitter's node and the
-    *               check's are different objects for the same `try`.
-    *
-    *           A token minted at construction survives both: `copy` carries it, so every rebuild is
-    *           the SAME try, and two separately constructed `try`s are never confused. It is
-    *           excluded from `equals`/`hashCode` — an identity is not part of the value — and it
-    *           reaches no emitted text, no artifact and no printer, so nothing about a run's output
-    *           depends on it. */
+  /** `try (resources) body catch cases finally fin`. `resources` are try-with-resources bindings,
+    * auto-closed by the backend.
+    * @param id a token identifying THIS `try`, minted at construction, carried through `copy` —
+    *   neither `Origin` nor object identity survives synthesis/rebuild reliably, so checks can
+    *   ask "did you guard this one". */
   final case class Try(resources: List[ValDef], body: Term, catches: List[CatchCase],
                        finalizer: Option[Term], tpe: TypeRepr, origin: Origin,
                        id: TryId = TryId.fresh()) extends Term:
@@ -542,32 +393,16 @@ object Tree:
     override def hashCode: Int = (resources, body, catches, finalizer, tpe, origin).hashCode
   /** one `catch (param) body`; `param.tpt` may be an `OrType` for multi-catch. */
   final case class CatchCase(param: ValDef, body: Term)
-  /** `scrutinee match { cases }` (from a Java switch).
-    *
-    * Carries a token for the same reason [[Try]] does: the `switch-null` check has to ask the
-    * emitter "did you guard THIS one", and neither an `Origin` (two switches can share a path,
-    * line and column, and every synthesised node carries `Origin.synthetic`) nor object identity
-    * (`StandardTraversal` rebuilds every node it walks) can answer that. */
+  /** `scrutinee match { cases }` (from a java switch). Carries an identity token for the same
+    * reason [[Try]] does — the `switch-null` check asks "did you guard THIS one", and neither
+    * `Origin` nor object identity survives synthesis/rebuild reliably.
+    */
   final case class Match(scrutinee: Term, cases: List[CaseDef], tpe: TypeRepr, origin: Origin,
-                         /** was this a switch EXPRESSION in the java (JLS 15.28), or a switch
-                           * STATEMENT (14.11)?
-                           *
-                           * One `Tree.Match` renders both, because a scala `match` IS an expression
-                           * — but the two java constructs BIND A `yield` differently and nothing
-                           * else in the node says which one this was. JLS 14.21 sends a `yield` to
-                           * the innermost enclosing switch EXPRESSION, and a switch STATEMENT
-                           * between it and its target is simply an intervening construct: javac
-                           * (22.0.2) runs `case 1 -> { switch (b) { case 2: yield 10; … } yield 20; }`
-                           * and answers 10. Read as "any `Tree.Match` re-binds a yield", the outer
-                           * arm got no value-carrying boundary and the inner statement switch
-                           * minted one at ITS own type — a `break(10)` at a `Label[Unit]`, which is
-                           * loudly uncompilable.
-                           *
-                           * `tpe` cannot stand in for this. A statement switch types as `Unit` and
-                           * a switch expression never does, so the pair happens to be
-                           * distinguishable today — but that is a coincidence of java's rule that a
-                           * switch expression has a value, not a fact this IR states, and a phase
-                           * that retypes a `Match` would silently decide a parsing question. */
+                         /** Was this a switch EXPRESSION (JLS 15.28) or STATEMENT (14.11) in java?
+                           * One `Tree.Match` renders both, but they bind `yield` differently (JLS
+                           * 14.21 targets the innermost switch EXPRESSION, skipping a nested
+                           * statement switch). `tpe` cannot stand in — a statement switch's `Unit`
+                           * type is coincidental, not this fact. */
                          isExpr: Boolean = false,
                          id: MatchId = MatchId.fresh()) extends Term:
     // structural equality EXCLUDING `id`, exactly as `Try` does — every existing comparison keeps
@@ -580,18 +415,10 @@ object Tree:
     override def hashCode: Int = (scrutinee, cases, tpe, origin, isExpr).hashCode
   /** one case: `labels` are the constant patterns (empty ⇒ `default`/`case _`). */
   final case class CaseDef(labels: List[Term], guard: Option[Term], body: Term, isDefault: Boolean)
-  /** a method value `qualifier :: method` (`Foo::bar`, `x::baz`, `Foo::new`).
-    *
-    * [[referent]] is what the PARSER read off the referenced executable, and it is on the node
-    * because the two facts it carries are not reliably on the SYMBOL. An external member is
-    * interned with no `Flags` at all, so `flags.isStatic` answers `false` for `java.util.Objects`'s
-    * statics; and its `info` is `NoType` wherever one slot cannot be named scope-free, so
-    * `Comparable::compareTo`'s `MethodType` is absent because its one parameter is a type VARIABLE.
-    * Both then read as a positive statement about java — *not static*, *takes no arguments* — which
-    * is `CLAUDE.md` §4.6's fabricated fact at a method reference, and the two happen to fail in
-    * OPPOSITE directions (a static expanded as an unbound instance reference, an unbound instance
-    * reference expanded with no arguments). The arity survives a lenient parse even where the TYPES
-    * do not: `getParameters` erases what each slot says, never how many there are. */
+  /** A method value `qualifier :: method` (`Foo::bar`, `x::baz`, `Foo::new`). [[referent]] is
+    * what the PARSER read off the executable, kept off the symbol because an external member's
+    * `Flags`/`info` are absent or `NoType` wherever a slot cannot be named scope-free — reading
+    * those as "not static"/"no arguments" would be fabricated (CLAUDE.md §4.6). */
   final case class MethodRef(qualifier: Either[TypeTree, Term], method: SymId, tpe: TypeRepr,
                              origin: Origin, referent: Referent) extends Term
   /** `break` / `break label` — loop/switch exit. `tpe` is Nothing. */
@@ -599,91 +426,36 @@ object Tree:
   /** `continue` / `continue label`. `tpe` is Nothing. */
   final case class Continue(label: Option[String], tpe: TypeRepr, origin: Origin)        extends Term
 
-  /** `yield v` from a switch EXPRESSION's arm, at a position that is NOT the arm's value — JLS
-    * 14.21.
-    *
-    * Only the non-tail ones reach the IR, and that is the whole design. A `yield` written as the
-    * last statement of an arm is the arm's VALUE and needs no node: the frontend peels it into the
-    * arm block's result term, which is what scala's `match` arm already means. One written anywhere
-    * else — inside an `if`, inside a nested block, before another statement — is an ABRUPT
-    * COMPLETION of the enclosing switch expression from arbitrary depth, and scala has no
-    * expression-level jump. Its exact image is a value-carrying `scala.util.boundary`, which the
-    * emitter interposes around the ARM exactly as it interposes one for a mid-case `break`, and
-    * this node is what tells it to.
-    *
-    * `tpe` is Nothing: a `yield` completes abruptly, so it produces no value where it stands — the
-    * value it carries belongs to the switch expression. Modelled as [[Break]] and [[Return]] are,
-    * for the same reason.
-    *
-    * A `yield` NEVER reaches a switch STATEMENT's arm. Spoon normalises an arrow-form statement
-    * arm (`case 1 -> doIt();`) into a `CtYieldStatement` wrapping the statement expression, which
-    * is a parser artifact and not java — JLS 14.21 permits `yield` only inside a switch expression
-    * — so the frontend unwraps it there rather than carrying a node java does not have. */
+  /** `yield v` from a switch expression's arm, at a NON-tail position (JLS 14.21) — a tail
+    * `yield` is peeled into the arm's result term instead. Models an abrupt completion from
+    * arbitrary depth, emitted as a value-carrying `scala.util.boundary` around the arm; `tpe` is
+    * `Nothing`. Never in a switch STATEMENT's arm — Spoon's `CtYieldStatement` is unwrapped there.
+    */
   final case class Yield(value: Term, tpe: TypeRepr, origin: Origin)                     extends Term
 
-  /** `case String s ->` — java's TYPE PATTERN standing as a case label (JLS 14.11.1, 14.30.1).
-    *
-    * A `Term` because [[CaseDef.labels]] is a list of them, and valid in NO OTHER POSITION: the
-    * emitter renders it `name: Type`, which is a pattern and not an expression. Modelled as a node
-    * rather than as a `Typed(Ident(bind), tpt)` because those two mean different things — a `Typed`
-    * is an ascription of a term that already exists, and this BINDS one that does not.
-    *
-    * `bind` is a local symbol the frontend mints for the pattern's variable, interned against the
-    * enclosing `CtCase` rather than against the variable: java lets two arms of one switch bind the
-    * same NAME, and Spoon gives the pattern wrapper no source position for a per-variable key to
-    * use, so keying on the variable would intern both arms' bindings as one symbol with one type.
-    *
-    * A RECORD pattern is [[RecordPattern]] and an UNCONDITIONAL component pattern is [[BindPattern]]
-    * — three nodes for three different scala texts, rather than one node with a flag. */
+  /** `case String s ->` — java's type pattern as a case label (JLS 14.11.1, 14.30.1). A `Term`
+    * because [[CaseDef.labels]] is a list of them; BINDS a variable rather than ascribing one
+    * that exists. `bind` is interned against the enclosing `CtCase` (java allows two arms to
+    * reuse a name). See [[RecordPattern]], [[BindPattern]] for the other pattern nodes. */
   final case class TypePattern(bind: SymId, tpt: TypeTree, tpe: TypeRepr, origin: Origin) extends Term
 
-  /** `case Point(int x, int y) ->` — java's RECORD PATTERN (JLS 14.30.1), as a case label.
-    *
-    * Scala's constructor pattern is the exact image, and the languages differ only in what they
-    * deconstruct THROUGH: java calls the record's ACCESSORS and scala calls an `unapply`. `JS-C43`
-    * derives one over exactly those accessors on every emitted record, which is what makes this
-    * node renderable at all — and what makes it EXACT rather than approximate, because an overridden
-    * accessor changes what java binds and would not change what a case class's generated extractor
-    * bound (`ENGINE-LIMITS.md` T19, T20).
-    *
-    * `patterns` are the component patterns IN ORDER, each a [[BindPattern]], a [[TypePattern]] or a
-    * nested `RecordPattern`. Which of the first two a component takes is JLS 14.30.2's own
-    * distinction and it is not cosmetic: an UNCONDITIONAL component pattern matches a `null`
-    * component and a scala type test does not (measured, both languages).
-    *
-    * `tpt` is the RECORD's type. The emitter names the extractor through it — the companion's VALUE
-    * path — never through the scrutinee, which may be any supertype. */
+  /** `case Point(int x, int y) ->` — java's record pattern (JLS 14.30.1). Deconstructs through
+    * the record's accessors via `JS-C43`'s generated `unapply`, exact even when overridden
+    * (`ENGINE-LIMITS.md` T19, T20). `patterns` are component patterns in order, per JLS 14.30.2.
+    * `tpt` is the record's type, used to name the extractor via the companion. */
   final case class RecordPattern(tpt: TypeTree, patterns: List[Term], tpe: TypeRepr, origin: Origin) extends Term
 
-  /** `case Point(x, y)`'s `x` — a component binding with NO type test (JLS 14.30.2's UNCONDITIONAL
-    * pattern), which is what java writes when the pattern's type already covers the component's.
-    *
-    * Its own node and not a [[TypePattern]] whose test happens to be trivial, because the two are
-    * different scala programs at a `null` component: `case One(s)` binds `null` and `case One(s:
-    * String)` does not match at all. Java's answer is the first (measured: `new One(null)` matches
-    * `case One(String s)` and does NOT match `case Two(String s, int n)` where the component is
-    * `Object`), so the two cases must be spellable apart.
-    *
-    * Valid only INSIDE a [[RecordPattern]]: a bare binding standing as a whole case label would be
-    * scala's catch-all, which is a different arm from java's. */
+  /** `case Point(x, y)`'s `x` — a component binding with NO type test (JLS 14.30.2's unconditional
+    * pattern). Its own node rather than a trivial [[TypePattern]] because the two differ at a
+    * `null` component (`case One(s)` binds it, `case One(s: String)` does not match). Valid only
+    * inside a [[RecordPattern]].
+    */
   final case class BindPattern(bind: SymId, tpe: TypeRepr, origin: Origin) extends Term
 
-  /** `name: stmt` — a java label on a statement that is NOT a loop, the target of `break name`.
-    *
-    * Java's `LabeledStatement` accepts ANY statement, and `break L` leaves exactly that statement
-    * — an `if`, a bare block and a `switch` are all legal targets, and all three occur in the
-    * corpus (`JsonReader`'s `outer:` on an `if`, `TextField`'s `keys:`/`selection:` on blocks,
-    * `GlyphLayout`'s `runEnded:` on a block). Modelled as a WRAPPER rather than as an `Option`
-    * field on every statement node for the obvious reason, and because the boundary the backend
-    * emits really is a construct around the statement.
-    *
-    * LOOPS do NOT use this node: `While`/`For`/`ForEach`/`DoWhile` carry the label in their own
-    * `label` field, because a loop's label is the target of `continue L` as well, and the two
-    * jumps need boundaries in DIFFERENT places (around the loop / around its body). Splitting
-    * them would put that decision in two places; the frontend is the one that chooses, and it
-    * only mints a `Labeled` for a non-loop statement.
-    *
-    * `tpe` is Unit — java's labelled statement is a statement, never a value. */
+  /** `name: stmt` — a java label on a NON-loop statement, the target of `break name`. A wrapper
+    * rather than an `Option` field, since the backend emits a real construct around the
+    * statement. Loops carry their label in their own `label` field instead, since `continue L`
+    * needs a boundary elsewhere (around the body, not the loop). `tpe` is `Unit`. */
   final case class Labeled(name: String, stmt: Term, tpe: TypeRepr, origin: Origin)      extends Term
   /** `assert cond` / `assert cond : msg`. `tpe` is Unit. */
   final case class Assert(cond: Term, msg: Option[Term], tpe: TypeRepr, origin: Origin)  extends Term
@@ -694,56 +466,11 @@ object Tree:
   /** `synchronized (lock) body`. `tpe` is Unit. */
   final case class Synchronized(lock: Term, body: Term, tpe: TypeRepr, origin: Origin)   extends Term
 
-  /** THE MARKER — a construct with no faithful Scala image, recorded IN THE TREE.
-    *
-    * `DESIGN.md` §6.2, built. What §3.4 forbids is not best effort; it is SILENT best effort, and
-    * until this node existed the engine had two answers and no third. `TirEmitter.unrenderable` is
-    * one — four call sites, whose shipping-default output is a comment and `()`, in a mode no
-    * measure lane runs. `SpoonTir.unsupported` is the other, and it is a THROW that is not
-    * per-site: it fails the whole COMPILATION UNIT, so one unmodelled declaration in a 135-file
-    * library does not cost one node, it costs that file. This is the per-site record that makes
-    * adopting a new syntax family an incremental, measured step instead of an all-or-nothing one.
-    *
-    * ==Why it lives in the tree==
-    *
-    * §6.2 rejects three alternatives, each for a reason this codebase has already paid for once,
-    * and they are not re-argued here. The short form: trees have no identity — [[StandardTraversal]]
-    * rebuilds every node on every phase — so a side table has nothing stable to key on and a phase
-    * that deletes a subtree leaves an entry that either vanishes silently or falsely blocks; a
-    * `diag` field on every node touches every construction site for something empty almost
-    * everywhere; and symbol tags cannot pin the exact expression that the fence, the error
-    * correlation and the diff all need.
-    *
-    * ==What a phase sees==
-    *
-    * The traversal recurses INTO [[inner]] and rebuilds the wrapper, so every phase's hooks reach
-    * the approximation exactly as they reach any other term — and a phase that pattern-matches for
-    * a specific shape simply fails to match a wrapped one and leaves it alone. '''The safe default
-    * is marker-preserved, code-untouched.''' Erasing a marker requires deliberately matching it and
-    * constructing a replacement, which is the point: discharge is an explicit act
-    * ([[MarkerState.Resolved]]), and `MarkerCheck` is what tells a discharge from an erasure. Those
-    * two are the same size in the output and nothing like each other in a port.
-    *
-    * ==What emission does==
-    *
-    * An `Open` marker is never shipped. In deliverable mode the gate runs before anything is
-    * written (§6.4) and the tree is not written at all; the emitter, asked to render one anyway —
-    * which is what a fixture with no orchestrator around it does — emits `compiletime.error`, so
-    * the loudest available answer is also the DEFAULT one. In best-effort mode it renders as
-    * [[inner]] inside deterministic comment fences and the file gains a banner. A `Resolved` marker
-    * renders as its inner and nothing else: it is a record of work done, not a residue.
-    *
-    * @param inner the approximation. For a construct with no approximation at all this is the unit
-    *   literal, and it is deliberately NOT an `Option`: every consumer would then carry a branch
-    *   for "no term here", and a node the emitter cannot render is one the gate catches anyway
-    * @param kind  the taxonomy — a CLOSED engine enum ([[UnportableKind]])
-    * @param state `Open` until a phase discharges it
-    * @param diff  the `balticporter.catalog` row this marker is an INSTANCE of, where one names it.
-    *   `None` is an honest state: inventing a row to point at would make the registry describe the
-    *   engine's failures instead of Java and Scala
-    * @param what  one line, in the mint site's own words. The taxonomy says which FAMILY the
-    *   failure belongs to; this says which member of it
-    */
+  /** A construct with no faithful Scala image, recorded IN the tree per-site rather than failing
+    * the whole unit (`DESIGN.md` §6.2). `Open` is never shipped in deliverable mode; best-effort
+    * renders [[inner]] in comment fences, untouched by any phase that does not discharge it.
+    * @param inner the approximation @param kind the taxonomy ([[UnportableKind]]) @param diff the
+    *   optional catalog row this instances @param what one line in the mint site's own words */
   final case class Unportable(inner: Term, kind: UnportableKind, state: MarkerState,
                               diff: Option[balticporter.catalog.DiffId], what: String,
                               tpe: TypeRepr, origin: Origin) extends Term:
@@ -753,14 +480,11 @@ object Tree:
     def resolved(byPhase: String, how: String): Unportable =
       copy(state = MarkerState.Resolved(byPhase, how))
 
-    /** the identity a CONSERVATION check compares two programs on.
-      *
-      * Not object identity and not a `SymId`: the traversal rebuilds every node on every phase —
-      * §6.2's own reason for rejecting a side table — and a marker is minted at an EXPRESSION,
-      * which has no symbol. The origin plus the mint site's own words is what survives a rebuild,
-      * and it is distinguishing only because [[Unportable.open]] refuses a synthetic origin:
-      * `<synthetic>:0:0` would collapse every marker in the program onto one key, and the check
-      * keyed on it would then report nothing, confidently. */
+    /** The identity a conservation check compares two programs on — origin plus the mint site's
+      * own words, since object identity and `SymId` don't survive a phase rebuild. Distinguishing
+      * only because [[Unportable.open]] refuses a synthetic origin (which would collapse every
+      * marker onto one key).
+      */
     def markerKey: String = s"${kind.label}@${origin.javaPath}:${origin.line}:${origin.col}|$what"
 
   object Unportable:
@@ -788,33 +512,10 @@ object Tree:
       * that the rule is not theoretical. */
     def safe(s: String): String = s.replace("/*", "/ *").replace("*/", "* /")
 
-  /** an as-yet-unmodeled TERM, kept typed (a full structured `tpe`) so the tree stays
-    * whole while the node set grows. TYPES are never opaque; only unmodeled terms are.
-    *
-    * ==`holes` — ready-made Scala with TREES spliced into it==
-    * The plain form is closed text: a hand-written method body, a generated FFI downcall. A
-    * CALL-SITE substitution cannot be, because its replacement has to name the receiver and the
-    * arguments of the call it replaces, and those are TERMS the phase is holding — a `Buffer` the
-    * collections phase has already retyped, an argument that is itself a call. So `raw` may carry
-    * NUMBERED HOLES ([[Opaque.hole]]) and `holes` supplies one term per index; the emitter renders
-    * each hole with its own term rendering and splices the result ([[spliced]]).
-    *
-    * Three properties follow from the holes being trees rather than text, and each of them is the
-    * reason it is done this way:
-    *
-    *   - '''a later phase still sees them.''' `StandardTraversal` maps into `holes`, so the package
-    *     rename, the collections retyping and every check reach a spliced argument exactly as they
-    *     reach any other term. Text would be invisible to all of them — the failure §4.56 describes
-    *     for policy written in the wrong namespace, one layer down.
-    *   - '''the xref still records them.''' A symbol used only inside a hole is a real usage; read
-    *     as text it would look dead.
-    *   - '''nothing has to render Scala outside the emitter.''' A phase cannot print a term (the
-    *     emitter is the only thing that can), which is precisely why the substitution cannot be
-    *     performed as a string at the phase.
-    *
-    * `holes = Nil` — the default, and every existing construction site — is the closed form, and
-    * [[spliced]] then returns `raw` untouched: no marker scan runs, so text that happens to contain
-    * one cannot be misread. */
+  /** An as-yet-unmodeled TERM, kept typed so the tree stays whole (types are never opaque, only
+    * terms). `raw` is closed Scala text; a call-site substitution may carry NUMBERED HOLES
+    * ([[Opaque.hole]]) with `holes` supplying one term per index, so later phases and xref still
+    * reach the spliced arguments ([[spliced]]). `holes = Nil` is the closed default. */
   final case class Opaque(raw: String, tpe: TypeRepr, origin: Origin, holes: List[Term] = Nil)
       extends Term:
 
@@ -855,23 +556,10 @@ object Tree:
         s"Opaque.spliced: ${parts.size} literal parts for ${holes.size} holes — expected ${holes.size + 1}")
       Opaque(parts.head + parts.tail.zipWithIndex.map((p, i) => hole(i) + p).mkString, tpe, origin, holes)
 
-  /** A statement with the comments written above it. The one node that exists purely to carry
-    * [[Trivia]], and the reason DECLARATIONS do not need one: a field, method or class has a
-    * `leading` field of its own, while a STATEMENT inside a body is an ordinary `Term` with
-    * nowhere to put it and forty case classes that would each need the field.
-    *
-    * It is transparent to everything by design. `tpe` and `origin` delegate, so a `Commented`
-    * types and locates exactly as its statement does; [[StandardTraversal]] recurses into `stmt`
-    * and REBUILDS the wrapper, so a phase that overrides no hook passes it through untouched and
-    * a phase that rewrites the inner term keeps the comment. The frontend only ever wraps a
-    * statement that HAS a comment, so a body with none is byte-for-byte the tree it was before
-    * this node existed.
-    *
-    * What it is NOT transparent to is a pattern match on statement SHAPE — `stmtsOf(ctor).head
-    * match { case Tree.Apply(Tree.Select(…)) => … }` stops matching the moment somebody writes a
-    * comment above a `super(…)` call, and that particular one silently drops the super call
-    * (CLAUDE.md §4.4). Every such site matches through [[Uncommented]] instead; grep for it before
-    * writing a new one. */
+  /** A statement with the comments written above it — exists purely to carry [[Trivia]] for a
+    * STATEMENT. Transparent by design: `tpe`/`origin` delegate, [[StandardTraversal]] rebuilds
+    * the wrapper. NOT transparent to a pattern match on statement shape — match through
+    * [[Uncommented]] instead, or a comment above e.g. `super(…)` silently drops it (CLAUDE.md §4.4). */
   final case class Commented(leading: List[Trivia], stmt: Term) extends Term:
     def tpe: TypeRepr  = stmt.tpe
     def origin: Origin = stmt.origin
@@ -938,12 +626,10 @@ enum UsageKind:
   * symbol). `enclosing` is what makes `callersOf` a real call-graph edge. */
 final case class Usage(kind: UsageKind, site: Tree, enclosing: SymId = SymId.None)
 
-/** Whole-program cross-reference index: symbol → its definition, and symbol → every
-  * usage site KINDED by position (term refs AND every type position — external type,
-  * type argument, member type, mixin, bound, self-type — since `TypeRef`/`TermRef`
-  * name symbols wherever they occur). This is what Quotes cannot give you across a
-  * program. Built by [[Xref.build]] over the tree, so it RE-DERIVES after each phase
-  * rewrites — the pipeline rebuilds it between phases. */
+/** Whole-program cross-reference index: symbol → its definition, and symbol → every usage site,
+  * kinded by position (term refs and every type position). Built by [[Xref.build]] over the tree
+  * and re-derived after each phase rewrite — the pipeline rebuilds it between phases.
+  */
 final class XrefIndex(
     private val defs: Map[SymId, Definition],
     private val usagesBySym: Map[SymId, List[Usage]],
@@ -965,15 +651,11 @@ final class Program(
     val units: List[Tree.ClassDef],
     val symbols: SymbolTable,
     val xref: XrefIndex,
-    /** WHAT THE FRONTEND SAW, dropped members included — see [[MemberIndex]].
-      *
-      * '''A REQUIRED parameter, not a defaulted field, and that is the whole design of this
-      * commit.''' There are 28 `new Program(...)` sites outside tests and `Pipeline.runTraced`
-      * rebuilds a fresh `Program` after EVERY phase; a default would have been silently dropped at
-      * 27 of them and at every phase boundary — a regression no check count could see, which is
-      * precisely the class of defect this repository has shipped before. Required, the migration is
-      * mechanical and the compiler performs it. [[rebuilt]] is then THE way a phase returns a
-      * program, so the next whole-program value costs one line instead of another 28. */
+    /** What the frontend saw, dropped members included — see [[MemberIndex]]. A required
+      * parameter, not defaulted: `Pipeline.runTraced` rebuilds a fresh `Program` after every
+      * phase, so a default would silently drop this at every boundary. [[rebuilt]] is the way a
+      * phase returns a program.
+      */
     val members: MemberIndex,
 ):
   export xref.{definitionOf, usagesOf, usages, referenced}
@@ -992,23 +674,11 @@ final class Program(
       members: MemberIndex = this.members,
   ): Program = new Program(units, symbols, xref, members)
 
-  /** Symbols this program DECLARES, as opposed to externals the frontend interned on first
-    * reference — CLAUDE.md §4.56's "decide ownership STRUCTURALLY, never by name", as a value.
-    *
-    * The frontend interns an external symbol lazily with `owner = SymId.None` and no `Definition`,
-    * while everything the program declares hangs off a top-level unit through the `owner` chain. So
-    * a symbol is owned iff climbing its owners reaches a [[units]] symbol — stronger than "has a
-    * definition", which anonymous-class symbols do not.
-    *
-    * It lives here, on the substrate, because it is not one phase's business: a rename asks it
-    * before rewriting a prefix, and any rule that takes a [[RuleScope]] must ask it before deciding
-    * that a policy entry FIRED — an entry naming a JDK type otherwise matches the interned external,
-    * does nothing at all, and is reported as having matched (the §1(b) silent no-op). A §1(c) rule
-    * compiles against `balticporter-api` alone (DESIGN.md §3.2), so the predicate has to be reachable
-    * from here or it will be written a third time.
-    *
-    * Fuel-bounded: a corrupt owner cycle must not hang a phase, and a symbol that exhausts the fuel
-    * counts as NOT owned — deciding on a guess is the failure this predicate exists to prevent. */
+  /** Symbols this program declares, vs. externals interned lazily on first reference — CLAUDE.md
+    * §4.56's "decide ownership structurally, never by name". Owned iff climbing the `owner` chain
+    * reaches a [[units]] symbol. Used before any prefix rename and by any `RuleScope`-taking rule.
+    * Fuel-bounded: a corrupt owner cycle counts as not-owned rather than hanging.
+    */
   lazy val owned: Set[SymId] =
     val roots = units.map(_.symbol).toSet
     def rooted(s: SymId, fuel: Int): Boolean =

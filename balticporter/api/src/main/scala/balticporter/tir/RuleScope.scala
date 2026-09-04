@@ -1,89 +1,10 @@
 package balticporter.tir
 
-/** WHERE a generic rewriting rule applies — the CLAUDE.md §1(b) half of every phase that RETYPES
-  * declarations.
-  *
-  * ==Why every retyping rule needs one==
-  * `CollectionsTransform` and `PrimitiveToOpaqueTransform` share a mechanism — move a set of
-  * declarations onto a different type and carry every reference with them — and differ only in
-  * WHICH declarations. Until a port can say "everything except these" or "only these", the answer
-  * is always "everything", and a library with one hand-written bridge class that must keep the JDK
-  * shape has no way to say so except by not running the phase at all. That is the §1(b) failure
-  * mode exactly: a mechanism with its policy inlined.
-  *
-  * Two directions, because the two ports that need this need opposite things:
-  *
-  *   - [[RuleScope.Everywhere]] with an OPT-OUT list — the shape of a library that is mostly
-  *     mechanical and has a handful of types it must not touch;
-  *   - [[RuleScope.Only]] with an INCLUDE list — the shape of an opaque-type rule, where the port
-  *     names a few seeds and the rest is discovered by
-  *     [[balticporter.tir.RuleScope]]-constrained flow propagation.
-  *
-  * `Everywhere(Set.empty)` — the default everywhere this appears — makes the difference a NO-OP:
-  * every symbol is in scope, so a phase configured with it takes the same code path it took before
-  * scopes existed. That is §1(b)'s requirement that an empty parameter needs no code path, and it
-  * is the property the measure lanes assert (0 members changed).
-  *
-  * ==Matching is by FULLY-QUALIFIED NAME, cut at a SEPARATOR — CLAUDE.md §4.56==
-  * An entry names one of three things, and one rule covers all three because `Symbol.fullName` is
-  * hierarchical:
-  *
-  * {{{
-  * "com.foo"           a PACKAGE — covers its types and their members
-  * "com.foo.Bar"       a TYPE    — covers its members and its nested types
-  * "com.foo.Bar#baz"   a MEMBER  — covers that member (and its parameters)
-  * }}}
-  *
-  * A prefix ALONE is not a structural fact about anything (§4.56, measured twice: a package rename
-  * that turned `java.lang.String` into `j.lang.String`, and a cast dropped because its source type
-  * had a `java.` prefix). So the match cuts only at one of the three separators `Symbol.fullName`
-  * uses — `.` between packages and the top-level type, `$` before a nested type, `#` before a
-  * member — and `com.foo` therefore does NOT cover `com.foobar`. [[RuleScope.covers]] is the one
-  * implementation of that rule; `balticporter.core.PortManifest.covers` forwards to it rather than
-  * keeping a second copy, because two copies of a rule this easy to get wrong is one copy too
-  * many.
-  *
-  * ==And a SYMBOL is matched through its OWNERS, not through its own name alone==
-  * That is not a convenience. Two of the four declaration kinds a retyping rule reaches carry a
-  * `fullName` that no name-only test can place, and both were found by running this against the
-  * frontend rather than by reading it:
-  *
-  *   - a method-LOCAL is named by its SIMPLE NAME (`SpoonTir.defineLocal`), so a local in
-  *     `com.foo.Bar#m` is called `i`;
-  *   - a PARAMETER is named `?#i`. The frontend qualifies it against its method before the method's
-  *     own record is set, so the owner half of the name is the minter's placeholder.
-  *
-  * For those two the name is not merely insufficient, it is ACTIVELY WRONG and must not be
-  * consulted: a bare `items` entry matched every local called `items` in the whole program, and `?`
-  * would cover every parameter. [[RuleScope.placedByOwnName]] is the structural test — a symbol
-  * whose owner is a METHOD is placed by its method, never by its own name — and it is deliberately
-  * not a shape test on the string, which would have unplaced a top-level type in the default
-  * package and still let `?#i` through.
-  *
-  * [[RuleScope.entryFor(program:balticporter\.tir\.Program,sym:balticporter\.tir\.Symbol)*]] climbs
-  * the owner chain instead, which also gives the containment the three forms above promise: a
-  * parameter of a scoped member is in scope with it, and a member of a scoped type is in scope with
-  * the type, whatever its own `fullName` happens to be. A rule that read the name alone would have
-  * scoped every field and method correctly and silently left every parameter and local behind — a
-  * half-retyped signature, which is a compile error one call away and reads as a broken mapping.
-  *
-  * ==A scope selects DECLARATIONS — ask it only about symbols the program OWNS==
-  * The symbol table also holds every EXTERNAL the frontend interned on first reference, and those
-  * have fully-qualified names that a policy entry can match perfectly: `Everywhere(Set("java.util.
-  * List"))` names the interned `java.util.List` and nothing else. There is no declaration there to
-  * hold back and no body to leave alone, so the phase does exactly nothing — while the entry counts
-  * as having FIRED and [[neverFired]] therefore reports nothing. A silent no-op that looks like a
-  * working knob is the §1(b) failure this type exists to prevent, so a phase filters its candidates
-  * through `Program.owned` (structural, §4.56) before asking, and reports an entry whose only
-  * matches were external as [[neverFired]] with WHY — for a mapping phase, the JDK side is the
-  * MAPPING, not the scope.
-  *
-  * ==What this deliberately is NOT==
-  * It is not a predicate. A `Symbol => Boolean` would be strictly more expressive and could not be
-  * reported on: [[neverFired]] is what turns a typo'd entry from a silent no-op into a §1(b)
-  * `PolicyFinding`, and that needs the DECLARED entries as data. A port that genuinely needs a
-  * predicate has one — `PrimitiveToOpaqueTransform`'s `hints` — and it is a seed, not a scope.
-  */
+/** WHERE a generic rewriting rule applies — the CLAUDE.md §1(b) half of every retyping phase.
+  * `Everywhere(except)`/`Only(include)`, default `Everywhere(Set.empty)` (no-op). Matched by
+  * FULLY-QUALIFIED NAME cut at a SEPARATOR (`.`/`$`/`#`, §4.56), through OWNERS not name alone
+  * (a local/parameter's own `fullName` is unusable), and only against symbols the program OWNS
+  * (an external match fires silently). NOT a predicate — [[neverFired]] needs DECLARED entries. */
 enum RuleScope:
 
   /** apply everywhere, EXCEPT the listed packages/types/members. `Set.empty` is the whole program
@@ -115,14 +36,10 @@ enum RuleScope:
     * quote, because it is the string an agent edits (CLAUDE.md §4.575). */
   def entryFor(fullName: String): Option[String] = RuleScope.longestPrefix(fullName, entries)
 
-  /** …for a SYMBOL, deciding from the owner chain when the symbol's own name does not — see the
-    * class doc for why a name-only test cannot place a method-local, and why for those two kinds it
-    * must not be CONSULTED at all.
-    *
-    * Fuel-bounded: a corrupt owner chain must not hang a scope decision, and the failure direction
-    * is "no entry names it", which for [[Everywhere]] means IN scope (the pre-scope behaviour) and
-    * for [[Only]] means OUT (nothing is rewritten without being asked for). Both are the
-    * conservative answer for their direction. */
+  /** …for a SYMBOL, deciding from the owner chain when the symbol's own name does not (a
+    * method-local's `fullName` cannot place it — see the class doc). Fuel-bounded: a corrupt owner
+    * chain must not hang a decision. Failure direction is "no entry names it" — IN scope for
+    * [[Everywhere]] (pre-scope behaviour), OUT for [[Only]] — both conservative for their side. */
   def entryFor(program: Program, sym: Symbol, fuel: Int = 64): Option[String] =
     if entries.isEmpty then scala.None
     else
@@ -142,14 +59,10 @@ enum RuleScope:
     case Everywhere(_) => entryFor(program, sym).isEmpty
     case Only(_)       => entryFor(program, sym).isDefined
 
-  /** Declared entries that named nothing in this run — the §1(b) silent-no-op report.
-    *
-    * `fired` is what the phase OBSERVED matching, which is the only honest input: a key that names
-    * a type this program does not contain is a typo or policy left behind by an upstream rename,
-    * and it is invisible to every count (`PolicyReport`'s whole reason for existing). The phase
-    * builds the `PolicyFinding`s, not this value — `balticporter.core` depends on
-    * `balticporter.tir` and not the other way round, and a scope has no business knowing the shape
-    * of a report. */
+  /** Declared entries that named nothing in this run — the §1(b) silent-no-op report. `fired` is
+    * what the phase OBSERVED matching — a key naming nothing is a typo or leftover upstream-rename
+    * policy, invisible to every count otherwise. The phase builds `PolicyFinding`s, not this value:
+    * `core` depends on `tir`, not vice versa. */
   def neverFired(fired: Set[String]): Set[String] = entries -- fired
 
   /** a stable, order-independent rendering, for [[balticporter.core.SurfacePolicy]]. Sorted, or two
@@ -169,35 +82,18 @@ object RuleScope:
   def isBoundary(c: Char): Boolean = c == '.' || c == '$' || c == '#'
 
   /** Does this symbol's OWN `fullName` place it, or is the owner chain the only evidence there is?
-    *
-    * The test is STRUCTURAL — the symbol's owner is a method — and not a shape test on the string,
-    * for the reason §4.56 gives about every string test: a name is not a fact about anything. A
-    * "does it contain a separator" test would also have declared a top-level type in the DEFAULT
-    * package unplaceable, and would still have let `?#p` through.
-    *
-    * What it prevents is a real match, not a hypothetical one: a method-LOCAL is named by its
-    * SIMPLE NAME (`SpoonTir.defineLocal`), so an entry reading `items` — a plausible typo for
-    * `com.foo.Model#items`, and the exact shape of a policy line copied without its type — matched
-    * EVERY local called `items` in the program, in every class, silently. A PARAMETER is `?#p`, which
-    * a `?` entry covers at a separator by the same accident. Neither name identifies anything, so
-    * neither is consulted; both symbols are still placed, by their method, which is the containment
-    * the class doc promises.
-    *
-    * Fuel is not needed here: this looks one level up, and the caller is already bounded. */
+    * STRUCTURAL (the owner is a method), never a shape test on the string (§4.56): a method-LOCAL
+    * is named by its SIMPLE NAME (`items` matches every local called `items` in the program) and a
+    * PARAMETER is `?#p`, both silently. Neither name identifies anything, so neither is consulted. */
   def placedByOwnName(program: Program, sym: Symbol): Boolean =
     !program.symbolOf(sym.owner).exists(_.info match
       case _: TypeRepr.MethodType | _: TypeRepr.PolyType => true
       case _                                             => false)
 
-  /** does `prefix` — a package, a type or a member FQN — NAME `fullName`?
-    *
-    * The whole §4.56 trap in four lines: a bare `startsWith` makes `com.foo` cover `com.foobar`,
-    * and every honest entry that happens to share a prefix with an unrelated name then rewrites it,
-    * silently, with a green compile. The cut must land on a separator or on the end of the string.
-    *
-    * An EMPTY prefix names nothing rather than everything: an empty entry in a policy set is a
-    * mistake (a stray comma, a blank line in a generated list), and reading it as "the whole
-    * program" would turn one typo into a scope that swallows the port. */
+  /** does `prefix` — a package, a type or a member FQN — NAME `fullName`? The whole §4.56 trap in
+    * one line: a bare `startsWith` makes `com.foo` cover `com.foobar`, silently, with a green
+    * compile — the cut must land on a separator or end-of-string. An EMPTY prefix names nothing
+    * rather than everything (a stray comma must not swallow the whole port). */
   def covers(fullName: String, prefix: String): Boolean =
     prefix.nonEmpty && fullName.startsWith(prefix) &&
       (fullName.length == prefix.length || isBoundary(fullName.charAt(prefix.length)))

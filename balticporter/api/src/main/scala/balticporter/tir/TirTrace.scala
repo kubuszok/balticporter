@@ -1,33 +1,10 @@
 package balticporter.tir
 
 /** CONSTRUCTION PROVENANCE for a node kind, behind a flag — "which code produced this?"
-  *
-  * The technique it replaces: a session that needed to know where a spurious `Tree.Typed` came
-  * from added a tracer to all sixteen of its construction sites by hand, ran, read the stack, and
-  * deleted them again. CLAUDE.md §4.6 records the lesson (a kill switch beats another condition)
-  * but not the tool.
-  *
-  * The constraint, stated by the audit that asked for this: **do NOT add a field to every node.**
-  * A `provenance` field would touch every case class and every construction site in the frontend
-  * and the transforms, be `None` almost everywhere, and change the equality of every node — and
-  * the codebase's precedent is targeted carriage on the node that needs it
-  * (`AnonClass.dropped`, `Symbol.droppedAnnotations`), not universal fields.
-  *
-  * So provenance is not carried at all: it is PRINTED at the moment of construction, from the
-  * live stack, and only for the node kinds named in `balticporter.traceNode`. The node is
-  * returned unchanged and identity, equality and memory are untouched — with the flag unset this
-  * is one `Set.isEmpty` check.
-  *
-  * Usage at a construction site:
-  * {{{ TirTrace.mint(Tree.Typed(expr, tpt, tpe, origin)) }}}
-  *
-  * ## Status: the mechanism is here, the call sites are NOT wired
-  *
-  * Every construction site of the node kinds worth tracing lives in the Spoon frontend and the
-  * Scala emitter. Wiring them is a one-line change per site and is deliberately left to whoever
-  * next debugs one of those files; nothing else can be traced from here, because construction is
-  * the one event that happens outside any traversal the engine controls.
-  */
+  * (CLAUDE.md §4.6's kill switch, generalized). No field added to every node (identity/equality
+  * untouched) — instead PRINTED at construction, from the live stack, only for kinds named in
+  * `balticporter.traceNode`. Usage: `TirTrace.mint(Tree.Typed(...))`. STATUS: mechanism exists,
+  * call sites are NOT wired — wiring is a one-line change left to whoever debugs a construction site. */
 object TirTrace:
 
   /** node kinds to trace, e.g. `balticporter.traceNode=Typed,Apply`. `*` traces every wrapped

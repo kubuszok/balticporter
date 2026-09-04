@@ -1,12 +1,10 @@
 package balticporter.tir
 
-/** MEMBER IDENTITY — one grammar for "which member", written once and read once. `Symbol.fullName`
-  * is `owner#name` with NO parameter list, so overload identity had FIVE independent spellings
-  * across the engine before this — a local arity test was measured as insufficient (118
-  * `Ambiguous` of 263). A SEPARATE FIELD rather than a fourth `fullName` separator: widening
-  * `fullName` would move every row of every promoted artifact keyed on it, and a descriptor's `.`/`$`
-  * would give a package rename a place to cut INSIDE a parameter list (CLAUDE.md §4.56's trap).
-  */
+/** MEMBER IDENTITY — one grammar for "which member", written once and read once.
+  * `Symbol.fullName` is `owner#name` with NO parameter list, so overload identity had FIVE
+  * independent spellings across the engine before this (118 `Ambiguous` of 263, measured). A
+  * SEPARATE FIELD rather than a fourth `fullName` separator — widening it would move every keyed
+  * artifact, and a `.`/`$` descriptor would give a rename a cut INSIDE a parameter list. */
 final case class MemberKey(owner: String, name: String, descriptor: Option[Descriptor]):
 
   /** the string a policy author writes — `owner#name` or `owner#name(P1,P2)`. Round-trips through
@@ -22,24 +20,11 @@ final case class MemberKey(owner: String, name: String, descriptor: Option[Descr
   /** the same member with its parameter list forgotten — what an overload SET is grouped by. */
   def bare: MemberKey = if isBare then this else copy(descriptor = None)
 
-  /** COULD THESE TWO KEYS NAME ONE MEMBER? — the question every policy layer that compares two
-    * DECLARED keys has to ask, and the one they were all asking of the STRINGS.
-    *
-    * `Foo#bar` and `Foo#bar(int)` are two legal spellings of one selection wherever `bar` has a
-    * single overload, and a comparison by string says they are unrelated. Both directions of that
-    * are wrong and both were live in `ManifestAgreement`: a base's `Foo#bar = accept-risk` beside a
-    * dependent's `Foo#bar(int) = ascribe-javac-choice` is two contradictory answers about one member
-    * with NO divergence reported, and a mirroring module restating its base's selection under the
-    * other spelling took a fatal `MissingResolution` for agreeing.
-    *
-    * Two DISTINCT descriptors are a different matter and stay unrelated: a source-level descriptor is
-    * injective within an overload set ([[Descriptor]]), so `bar(int)` and `bar(String)` really are two
-    * members and reporting them as one answer would be the over-approximation in the other direction.
-    * So: same owner, same name, and at least one side bare — or the very same descriptor.
-    *
-    * It is deliberately NOT `equals`: this is a "may", asked before a `Program` exists. Where one
-    * does, the BINDER answers exactly (`ResolutionPlan.troubles`' conflict lane compares the
-    * declarations two keys BOUND to), and the two are the same rule at two levels of evidence. */
+  /** COULD THESE TWO KEYS NAME ONE MEMBER? — asked of DECLARED keys, never `equals` (a "may",
+    * before a `Program` exists). `Foo#bar` and `Foo#bar(int)` are two legal spellings of one
+    * selection when `bar` has a single overload; string comparison missed real disagreements in
+    * `ManifestAgreement` (measured). Two DISTINCT descriptors stay unrelated (injective within an
+    * overload set). Where a `Program` exists, the BINDER answers exactly instead. */
   def overlaps(other: MemberKey): Boolean =
     owner == other.owner && name == other.name &&
       (isBare || other.isBare || descriptor == other.descriptor)
@@ -51,25 +36,11 @@ object MemberKey:
     * that is right there. */
   final case class Malformed(key: String, what: String)
 
-  /** Parse a declared policy key.
-    *
-    * The grammar is deliberately small and everything outside it is REFUSED rather than
-    * best-effort'd, because the failure mode of a lenient parse is a key that binds to the wrong
-    * member and says nothing:
-    *
-    * {{{
-    * com.foo.Bar#baz              a member, every overload      (bare)
-    * com.foo.Bar#baz(int,String)  exactly one overload
-    * com.foo.Bar#baz()            the NO-ARGUMENT overload — not the same as the bare form
-    * com.foo.Outer$Inner#<init>(int)   a nested owner, a constructor
-    * com.foo.Enum#CONSTANT#member      an enum constant's body member — the LAST `#` separates
-    * }}}
-    *
-    * A type ARGUMENT is the one refusal worth naming precisely: `X#m(Class<T>)` is what an author
-    * writes when they copy a Java signature, and it can never match, since the grammar is the
-    * ERASED source spelling. Reported as malformed AT the `<` rather than silently as never-matched,
-    * because those two readings contradict each other and the reader then has to work out which is
-    * true. */
+  /** Parse a declared policy key. Small grammar, REFUSED rather than best-effort'd — a lenient
+    * parse binds to the wrong member silently. `owner#name` (bare, every overload),
+    * `owner#name(P1,P2)` (one overload), `owner#name()` (nilary, distinct from bare),
+    * `Outer$Inner#<init>(int)`, `Enum#CONSTANT#member` (last `#` separates). A type ARGUMENT
+    * (`Class<T>`) is refused as MALFORMED at the `<`, since the grammar is the erased spelling. */
   def parse(key: String): Either[Malformed, MemberKey] =
     def bad(what: String) = Left(Malformed(key, what))
 
@@ -128,14 +99,9 @@ object MemberKey:
       }
 
   /** Parse a MEMBER SEGMENT against an owner named separately — `dispose`, or `dispose()` for the
-    * nilary overload alone.
-    *
-    * A policy whose keys are nested UNDER their owner (`"a.B" { dispose = "close" }`) has the two
-    * halves already apart, and splicing them back together at the reader is how a phase ends up
-    * building member identity from a string — the exact shape `PolicyKeyLintSpec` forbids. The
-    * splice belongs in the one file that owns this grammar, so it lives here and the reader gets a
-    * parsed [[MemberKey]] or a [[Malformed]] with the same message any other key would produce.
-    */
+    * nilary overload alone. A policy nested UNDER its owner has the halves already apart; splicing
+    * them at the reader would build member identity from a string (forbidden by
+    * `PolicyKeyLintSpec`), so the splice lives here instead. */
   def parseIn(owner: String, member: String): Either[Malformed, MemberKey] =
     if owner.isEmpty then Left(Malformed(member, "the owner is empty: a member key names its declaring type in full"))
     else if member.contains('#') then
@@ -143,22 +109,15 @@ object MemberKey:
         "member alone (`dispose`), or one overload of it (`dispose()`)"))
     else parse(spell(owner, member)).left.map(m => m.copy(key = member))
 
-  /** The `owner#member` SPELLING of a segment key that [[parseIn]] could not parse — the same
-    * splice, in the same file, for the one caller a `MemberKey` cannot serve.
-    *
-    * A finding about a malformed segment has no parsed key to [[render]], and reporting it under
-    * the bare segment alone is not a cosmetic loss: `MergeablePolicy.subjectOf` reads a finding's
-    * key for its leading FQN, so a bare `dispose()` yields `dispose()` as its own subject, matches
-    * no manifest's contributed set, and the run's own-keys filter DROPS the finding — a malformed
-    * entry silently unreported on exactly the merged phase where a dependent's typo lives. */
+  /** The `owner#member` SPELLING of a segment key that [[parseIn]] could not parse. A malformed
+    * segment has no parsed key to [[render]], so reporting it bare would give
+    * `MergeablePolicy.subjectOf` the wrong leading FQN and silently drop the finding under the
+    * run's own-keys filter. */
   def spell(owner: String, member: String): String = owner + "#" + member
 
-  /** [[MemberKey.overlaps]] over two DECLARED strings — what a manifest layer holds.
-    *
-    * A key outside the grammar (a TYPE key, which has no `#`, or a typo the binder will refuse) is
-    * compared by string, which is exact for the first and honest for the second: an unparseable key
-    * names nothing, so claiming it might name the same member as another would be a fact invented
-    * about a string (§4.6). */
+  /** [[MemberKey.overlaps]] over two DECLARED strings — what a manifest layer holds. A key outside
+    * the grammar (a TYPE key, or a typo) is compared by string, exact for the first and honest for
+    * the second: an unparseable key names nothing, so claiming an overlap would be invented (§4.6). */
   def mayNameSame(a: String, b: String): Boolean =
     (parse(a), parse(b)) match
       case (Right(x), Right(y)) => x.overlaps(y)
@@ -176,14 +135,10 @@ object MemberKey:
 
   def apply(owner: String, name: String): MemberKey = MemberKey(owner, name, scala.None)
 
-/** ONE parameter's SOURCE-LEVEL spelling.
-  *
-  * Not a JVM erasure, and that is sound rather than convenient: Java forbids two methods in one
-  * class with the same erasure, so source-level spelling is ALREADY injective within an overload set
-  * (`void m(T)` beside `void m(String)` is legal and the two spell differently; `<X> void m(X)`
-  * beside `void m(Object)` is illegal). The descriptor therefore does not need to be truly erased —
-  * it needs to be CONSISTENTLY DERIVED. That is what keeps a manifest key exactly the string a
-  * policy author already writes. */
+/** ONE parameter's SOURCE-LEVEL spelling. Not a JVM erasure, and that is sound: java forbids two
+  * methods with the same erasure, so source spelling is already injective within an overload set
+  * (`void m(T)` vs `void m(String)` differ; `<X> void m(X)` vs `void m(Object)` is illegal). The
+  * descriptor needs only to be CONSISTENTLY DERIVED, keeping a key the string a policy author writes. */
 enum Param:
   /** a class, interface or type variable, by SIMPLE name — `Class`, `String`, `Entry`, `T`. */
   case Named(simpleName: String)
@@ -204,19 +159,10 @@ enum Param:
     case Arr(of)    => of.render + "[]"
     case Unresolved => "?"
 
-  /** …the SIMPLE spelling, which is what this grammar is: `java.lang.Object` is `Object` and
-    * `java.util.Map$Entry` is `Entry`.
-    *
-    * A [[Named]] is supposed to hold a simple name already — [[Descriptor]] says so — and a POLICY
-    * AUTHOR routinely writes the qualified one, because that is what the reports show them. An
-    * external member's `Symbol.fullName` is its interning key, so a `collection-boundary` row prints
-    * `…#identityHashCode(java.lang.Object)`; copied into a manifest that key matched NOTHING, and two
-    * ports carry a comment explaining that it must be written bare. This is that trap removed rather
-    * than documented.
-    *
-    * Cut only at a SEPARATOR and only at the LAST one (§4.56): `.` between packages and the
-    * top-level type, `$` before a nested type. A key already written simply is its own answer, so the
-    * normalisation is the identity on every key any manifest holds today. */
+  /** …the SIMPLE spelling: `java.lang.Object` is `Object`. A policy author routinely writes the
+    * qualified form (what reports show them via `Symbol.fullName`), which used to match NOTHING —
+    * this removes the trap rather than documenting it. Cut only at the LAST separator (§4.56):
+    * `.` between packages/top-level type, `$` before a nested type. */
   def simple: Param = this match
     case Named(n)   => Named(n.substring(math.max(n.lastIndexOf('.'), n.lastIndexOf('$')) + 1))
     case Prim(n)    => Prim(n)
@@ -224,41 +170,18 @@ enum Param:
     case Unresolved => Unresolved
 
 /** A member's parameter spelling — the half of member identity `Symbol.fullName` does not carry.
-  *
-  * ==The two divergences this closes, and where they came from==
-  * Both were latent, both invisible to every count, and neither is exercised by the current corpus —
-  * which is what makes them a trap set for the NEXT library rather than a present defect:
-  *
-  *  - '''an ARRAY parameter.''' Spoon's `getSimpleName` for an array reference is
-  *    `component + "[]"`, so a manifest key spells `Owner#copy(int[])`; the TIR renders the same
-  *    type `AppliedType(Array, [Int])` and a key built from the tycon's name spelled it
-  *    `Owner#copy(Array)`. One member, two keys, each invisible to the other seam. A Java `T…`
-  *    vararg is an array reference too, so every vararg member had the same split. This type spells
-  *    it `int[]` on BOTH sides — Java's own spelling, and the one that changes no existing key.
-  *  - '''`equals(Object)`.''' The frontend deliberately retypes a 1-argument `equals`'s parameter to
-  *    `scala.Any` before building the `MethodType`, because Scala's `Object.equals` takes `Any`. A
-  *    descriptor read from `info` therefore says `Any` and a manifest says `Object`. This is closed
-  *    AT THE SOURCE — the descriptor is read from the frontend's parser BEFORE the retyping — rather
-  *    than reconciled downstream, so `Object` is simply what the field says. [[ofInfo]] is the one
-  *    place the old answer survives, and it survives on purpose (see its own note).
-  */
+  * Two latent divergences closed here: an ARRAY parameter (Spoon spells `int[]`, the TIR's tycon
+  * name spelled `Array` — both sides now spell it `int[]`, java's own form), and `equals(Object)`
+  * (the frontend retypes its parameter to `scala.Any`; the descriptor is read BEFORE that retyping,
+  * so it stays `Object` — [[ofInfo]] is the one place the old `Any` answer survives on purpose). */
 final case class Descriptor(params: List[Param]):
   /** the spelling: SIMPLE names, comma-separated, no spaces — `int,String,Class`. */
   def render: String = params.map(_.render).mkString(",")
   def arity: Int     = params.size
-  /** DOES A DECLARED DESCRIPTOR NAME THIS ONE? — compared through [[Param.simple]] on both sides.
-    *
-    * Never `==`, and the reason is one an equality cannot express: this grammar is the SIMPLE
-    * spelling, while every report a policy author copies a key out of shows the QUALIFIED one (an
-    * external member's `Symbol.fullName` is its interning key, parameters and all). Two ports carry a
-    * comment saying "write it bare, the descriptor form never matches" — which is a trap documented
-    * twice and removed nowhere, and the binder holds both strings at the moment it fails.
-    *
-    * Arity first, because that is the cheap half and the one that is never ambiguous. What this can
-    * admit that `==` could not is two overloads whose parameter simple names collide across packages
-    * (`m(java.util.List)` beside `m(com.foo.List)`, which java permits): both then match one key, and
-    * the binder's own `Ambiguous` refusal names them with their qualified signatures — a refusal that
-    * says which two, rather than a silent pick. */
+  /** DOES A DECLARED DESCRIPTOR NAME THIS ONE? — compared through [[Param.simple]], never `==`: a
+    * policy author copies the QUALIFIED spelling out of a report, while this grammar is SIMPLE.
+    * Arity checked first (cheap, never ambiguous). Two overloads whose simple names collide across
+    * packages both match one key; the binder's `Ambiguous` refusal then names both, qualified. */
   def matches(other: Descriptor): Boolean =
     params.sizeIs == other.params.size &&
       params.iterator.zip(other.params.iterator).forall((a, b) => a.simple == b.simple)
@@ -300,18 +223,10 @@ object Descriptor:
     else if Primitives(spelling) then Param.Prim(spelling)
     else Param.Named(spelling)
 
-  /** The ENGINE's derivation, from a symbol's `info`.
-    *
-    * This is the FALLBACK, not the source: it answers for a symbol the frontend interned without a
-    * declaration, and for a member the ENGINE minted after the frontend ran (a synthetic primary has
-    * no Java behind it and still needs a descriptor in the same grammar, so a published contract row
-    * and a policy key can never be in two spellings).
-    *
-    * '''It cannot answer for `equals`, and does not pretend to.''' `info` has already been retyped
-    * (`equals(Object)` reads `Any`), and inverting that here would put the retyping rule in a second
-    * place — the general form of §4.56's lesson: a derivation may only conclude what its own input
-    * says. For every member the frontend declared, `Symbol.descriptor` is the answer and this is not
-    * consulted; a spec pins the agreement, and pins `equals` as its one exception. */
+  /** The ENGINE's derivation, from a symbol's `info` — a FALLBACK, not the source: answers for a
+    * symbol interned without a declaration, or a member the engine minted. Cannot answer for
+    * `equals`: `info` is already retyped (`equals(Object)` reads `Any`), and inverting that here
+    * would duplicate the retyping rule (§4.56). `Symbol.descriptor` is consulted first where it exists. */
   def ofInfo(program: Program, info: TypeRepr): Option[Descriptor] =
     def params(t: TypeRepr): Option[List[TypeRepr]] = t match
       case TypeRepr.MethodType(ps, _, _) => Some(ps.map(_._2))
@@ -319,13 +234,10 @@ object Descriptor:
       case _                             => scala.None
     params(info).flatMap(ps => total(ps.map(paramOfType(program, _))))
 
-  /** ONE parameter position's spelling, from its type.
-    *
-    * Extracted from [[ofInfo]] rather than copied, for `ParentSubst`'s own reason (§4.56: one
-    * derivation, not one per caller). [[OverrideGraph]] needs it to read a PARENT's descriptor
-    * through the arguments a subclass instantiates it with, and a second walk that spelled
-    * `scala.Array[X]` as `Array` rather than `X[]` would make the two sides of one override edge
-    * incomparable in exactly the family the edge is hardest to see. */
+  /** ONE parameter position's spelling, from its type. Extracted from [[ofInfo]] rather than
+    * copied (§4.56: one derivation). [[OverrideGraph]] reads a PARENT's descriptor through a
+    * subclass's instantiation arguments; a second walk spelling `scala.Array[X]` differently would
+    * make the two sides of an override edge incomparable. */
   def paramOfType(program: Program, t: TypeRepr): Param =
     def nameOf(s: SymId): Param = program.symbolOf(s).map(_.name).fold(Param.Unresolved)(paramOf)
     t match

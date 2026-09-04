@@ -1,29 +1,10 @@
 package balticporter.tir
 
-/** The ONE `k=v` payload grammar this engine writes — space-separated pairs, sorted, values that
-  * contain whitespace quoted (CLAUDE.md §4.575).
-  *
-  * It was invented for the PORTER NOTE and it is now also the payload of the port map's `shape`
-  * column (`DESIGN.md` §8.3). Two renderings of one grammar is exactly the shape §4.56 warns about
-  * — a reader that learns the note's spelling and then meets a second, nearly-identical one — so the
-  * primitives live here, in `api`, where a §1(c) rule can reach them, and both consumers delegate.
-  *
-  * Two facts that are not style, both learned by getting them wrong once:
-  *
-  *   - '''a value containing whitespace MUST be quoted.''' The pair list is whitespace-separated, so
-  *     an unquoted `key=com.example.a -> b` is three tokens and every reader truncates the value at
-  *     the first space. That is how the note-coverage check's first run reported 594 notes as
-  *     unbacked: both sides read a value neither had written.
-  *   - '''nothing may open or close a comment.''' A note is emitted INSIDE a Scala block comment and
-  *     Scala block comments NEST (§4.58), so a value carrying an opening delimiter swallows the rest
-  *     of the file — as this very doc comment did, once, while stating the rule.
-  *     [[safe]] spaces the delimiters apart rather than rejecting the value: a value that cannot be
-  *     rendered safely is still information, and dropping it would make the note say less than the
-  *     TSV for no reason a reader could see.
-  *
-  * Both are properties of the GRAMMAR, not of the note, which is why they moved here rather than
-  * being restated at the second consumer.
-  */
+/** The ONE `k=v` payload grammar this engine writes — space-separated pairs, sorted, whitespace
+  * values quoted (CLAUDE.md §4.575). Also the port map's `shape` column (`DESIGN.md` §8.3); lives
+  * in `api` so both consumers delegate rather than restating it (§4.56). Unquoted whitespace
+  * truncates a value (measured: 594 notes reported unbacked); [[safe]] SPACES delimiter characters
+  * apart rather than rejecting, since a value carrying `/*`/`*/` could swallow the rest of the file. */
 object KeyValues:
 
   /** Neutralise anything that could open or close a comment, and flatten to one line. */
@@ -42,12 +23,9 @@ object KeyValues:
   def render(pairs: List[(String, String)]): String =
     pairs.map((k, v) => s"$k=${value(v)}").mkString(" ")
 
-  /** …and back. Unknown keys are kept: a payload written by a NEWER engine must degrade to "I do
-    * not understand this key", never to a parse failure that discards the keys this engine does
-    * understand (`DESIGN.md` §8.3's per-question degradation).
-    *
-    * A malformed token — no `=`, or a quote that never closes — is skipped rather than throwing, for
-    * the same reason: one bad pair must not cost the row. */
+  /** …and back. Unknown keys are kept: a payload from a NEWER engine degrades to "I do not
+    * understand this key", never a parse failure (`DESIGN.md` §8.3). A malformed token (no `=`, an
+    * unclosed quote) is skipped, not thrown — one bad pair must not cost the row. */
   def parse(payload: String): Map[String, String] =
     val out = collection.mutable.LinkedHashMap.empty[String, String]
     var i   = 0

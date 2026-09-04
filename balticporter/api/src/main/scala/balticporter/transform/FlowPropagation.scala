@@ -3,90 +3,24 @@ package balticporter.transform
 import balticporter.tir.*
 
 /** PURE-MOVE FLOW PROPAGATION — "a scoped rewrite carries its call sites with it", as a value.
-  *
-  * ==What it is for==
-  * Every rule that RETYPES a declaration has the same second half: the declaration is one symbol,
-  * and the program is full of OTHER symbols that must move with it or the port stops type-checking.
-  * A field becomes an opaque type and its getter's return type has to follow; a parameter becomes a
-  * Scala collection and every local initialised from it has to follow. Naming all of them in the
-  * port's policy is not viable — the whole reason [[balticporter.tir.RuleScope]] can be short is
-  * that the seeds it names are GROWN here.
-  *
-  * The growth is not a guess. Java resolved every reference STATICALLY, and the frontend recorded
-  * the resolution as a `SymId` on every node — so "this value moves from `a` to `b`" is read off
-  * the TIR rather than inferred, which is CLAUDE.md §4.56's rule ("decide structurally, never from
-  * a name") applied to flow instead of to ownership.
-  *
-  * ==What counts as a PURE MOVE==
-  * An edge `(a, b)` means a value moves between `a` and `b` with nothing done to it, so the two
-  * must share a type:
-  *
-  *   - `a = b` — assignment between two references;
-  *   - `val a = b` — an initialiser that is a bare reference;
-  *   - `return b` inside `a` — including a method body's tail, through blocks and `if` branches;
-  *   - `f(b)` where `b` lands on `f`'s parameter `a`.
-  *
-  * ARITHMETIC is deliberately not an edge. `layer + 1` yields a plain value, which correctly BREAKS
-  * the chain — that is what makes an opaque type an opaque type rather than an alias, and it is why
-  * a rule using this can insert a coercion at the break instead of retyping through it.
-  *
-  * ==Why the walk is hand-written, and the one thing that makes that safe==
-  * CLAUDE.md §3 says to walk with `StandardTraversal` and never a private recursion, because a
-  * hand-rolled walk stops at whatever its author forgot. Here — as in
-  * `CollectionsTransform.coerceReturns` and `CollectionBoundaryCheck.returnsIn` — the walk is
-  * DELIBERATELY BOUNDED: it visits only the node kinds that can carry a pure move, the default arm
-  * does not descend, and a node kind it does not know is therefore a MISSED EDGE.
-  *
-  * Read the failure direction, because it is the whole argument: a missed edge is a declaration
-  * NOT brought into the rewrite, which is a value of the old type meeting a slot of the new one —
-  * a compile error at that line for an opaque rule, and a `CollectionBoundaryCheck` finding for a
-  * scoped collections rule. Loud, attributable, at the site. A spurious edge would be the opposite:
-  * a declaration silently retyped for a flow that does not exist. So the walk is allowed to be
-  * incomplete and is not allowed to be wrong, and it is written to fail on that side.
-  *
-  * Known and unclosed, for the same reason: bodies reached only through a `Lambda`, an anonymous
-  * class (`Tree.New.anon`), a `Try`, a `Match`, or a `for`/`foreach`
-  * contribute no edges. Each is a missed edge, never a wrong one.
-  * `Tree.Commented` is CLOSED — a comment wrapper does not change flow semantics, and not
-  * descending into it silently broke 6 edges on `TiledDrawable`'s `isCenterVertical`/
-  * `isCenterHorizontal` calls, which happened to sit behind a `// Left center partials` comment.
-  *
-  * ==Why this is in `api` and not in `engine`==
-  * DESIGN.md §3.2's criterion is operational: *a §1(c) rule and its spec must compile against `api`
-  * alone*. CLAUDE.md §1 says every rule that RETYPES declarations takes a
-  * [[balticporter.tir.RuleScope]] and carries its call sites with it — so a consumer's own retyping
-  * rule needs exactly this, and needing it from `engine` would drag in the emitter, `PortRun` and
-  * Spoon to grow a seed set. It imports `balticporter.tir` and nothing else, which is the same test
-  * `Pipeline` passes.
-  */
+  * Grows a [[balticporter.tir.RuleScope]]'s seeds by walking PURE MOVE edges (assignment, bare
+  * initialiser, `return`, argument-to-parameter — read off the TIR's `SymId`s, CLAUDE.md §4.56;
+  * ARITHMETIC breaks the chain deliberately). Hand-written, DELIBERATELY BOUNDED (CLAUDE.md §3):
+  * a missed edge fails LOUD at the site, never silently wrong. Lives in `api`, not `engine`. */
 object FlowPropagation:
 
-  /** Grow `seeds` to every ELIGIBLE symbol connected to one of them by pure-move flows.
-    *
-    * A UNION-FIND over the flow edges, because the relation is symmetric and transitive by
-    * construction: if `a` and `b` must share a type and `b` and `c` must share a type, all three
-    * must. Restricting to `eligible` BEFORE the union is what keeps a chain from leaking through a
-    * symbol the caller does not consider a candidate (an `Object`-typed temporary between two
-    * `int`s is not a move of an `int`).
-    *
-    * @param eligible which symbols may join a chain at all — for an opaque rule, "its `info` is the
-    *                 underlying primitive"; for a collections rule, "its `info` names a mapped
-    *                 collection". A phase supplies this from ITS OWN record of what it retypes
-    *                 (§4.56), never from a name test.
-    * @return the seeds that are eligible, plus everything reachable from them. A seed that is not
-    *         eligible contributes nothing and is not returned — an inert hint is silent, which is
-    *         the honest answer and is what a never-fired policy report exists to say instead.
-    */
+  /** Grow `seeds` to every ELIGIBLE symbol connected by pure-move flows — a UNION-FIND over the
+    * flow edges (symmetric, transitive by construction). Restricting to `eligible` BEFORE the
+    * union keeps a chain from leaking through a non-candidate symbol. @param eligible which
+    * symbols may join, from the phase's OWN retyping record (§4.56), never a name test. @return
+    * eligible seeds plus everything reachable — an ineligible seed contributes nothing. */
   def grow(program: Program, seeds: Set[SymId], eligible: SymId => Boolean): Set[SymId] =
     grow(edges(program), seeds, eligible)
 
-  /** …over an edge set the caller ALREADY has.
-    *
-    * Not an optimisation for its own sake: a scope that must attribute each grown declaration to
-    * the POLICY ENTRY that reached it (CLAUDE.md §4.575 — the key in a `Reason.Configured` is the
-    * manifest entry verbatim) grows once per entry, and re-walking a 600-file program once per
-    * entry to answer the same question is the difference between a knob a port can use and one it
-    * cannot. */
+  /** …over an edge set the caller ALREADY has. Not an optimisation for its own sake: a scope that
+    * must attribute each grown declaration to the POLICY ENTRY that reached it (CLAUDE.md §4.575)
+    * grows once per entry, and re-walking a 600-file program per entry is the difference between a
+    * usable knob and an unusable one. */
   def grow(edges: List[(SymId, SymId)], seeds: Set[SymId], eligible: SymId => Boolean): Set[SymId] =
     val parent = collection.mutable.Map[SymId, SymId]()
     def find(x: SymId): SymId =
@@ -107,13 +41,10 @@ object FlowPropagation:
   def edges(program: Program): List[(SymId, SymId)] =
     val out = collection.mutable.ListBuffer[(SymId, SymId)]()
 
-    /** the symbol a term REFERS to, when it is a bare reference. A nullary call is one: `x = o.get()`
-      * moves whatever `get` returns, and the method's own symbol is what carries that type.
-      *
-      * An ARRAY ELEMENT READ (`arr[i]`) returns the ARRAY's symbol, because the element is a pure
-      * move of what the array holds — exactly as O3 made the array itself a carrier of its element
-      * type. The mirror direction (element WRITE: `arr[i] = v`) also flows through `refSym` when
-      * the `ArrayAccess` appears as the LHS of an `Assign`. */
+    /** the symbol a term REFERS to, when it is a bare reference — a nullary call counts (`x =
+      * o.get()` moves whatever `get` returns). An ARRAY ELEMENT READ returns the ARRAY's symbol
+      * (a pure move of what it holds, mirroring O3's array-as-carrier); element WRITE flows through
+      * this too when `ArrayAccess` is the LHS of an `Assign`. */
     def refSym(t: Term): Option[SymId] = t match
       case Tree.Ident(s, _, _)         => Some(s)
       case Tree.Select(_, s, _, _)     => Some(s)

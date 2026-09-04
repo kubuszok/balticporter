@@ -1,16 +1,9 @@
 package balticporter.catalog
 
-/** Renders the registry as markdown — `just catalog`.
-  *
-  * THE OUTPUT IS A BUILD PRODUCT, and that is the whole design. `CLAUDE.md` §5.5 says emitted code
-  * lives in a gitignored directory because a `git status` that cannot tell a DECISION from an
-  * ARTEFACT defeats the measurement discipline; a generated document is the same thing one medium
-  * over. Committed, this markdown would be a seventh document nobody loads (§3.6), it would accrete
-  * a status section, and it would start disagreeing with the code it was generated from. So it goes
-  * to `.balticporter/`, which is gitignored, and the code stays the single truth.
-  *
-  * It writes to stdout and lets the caller redirect, because a renderer that owns a path is a
-  * renderer with a second opinion about where the answer lives. */
+/** Renders the registry as markdown — `just catalog`. THE OUTPUT IS A BUILD PRODUCT: committed it
+  * would be a seventh document nobody loads (§3.6) that disagrees with the code it came from, so
+  * it goes to `.balticporter/` (gitignored, CLAUDE.md §5.5). Writes to stdout, letting the caller
+  * redirect — a renderer that owns a path has a second opinion about where the answer lives. */
 object CatalogDoc:
 
   def render: String =

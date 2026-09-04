@@ -37,14 +37,10 @@ enum Verdict:
   /** no faithful target exists — say so loudly rather than degrade */
   case Refuse(why: String)
 
-  /** Does a port TARGETING THIS PLATFORM have to do something about the row?
-    *
-    * `Keep` is the only "nothing to do", and everything else is work of one kind or another — which
-    * is what makes this the criterion a portability rule is derived through rather than
-    * `isInstanceOf[Refuse]`. Two of the engine's oldest rules settle it: `java.lang.Thread` and
-    * `java.util.concurrent.` are `MapTo` on Scala.js (a per-backend trait, the reference port's own
-    * answer) and have been reported as violations since the check had a rule for them. Reading only
-    * `Refuse` would have deleted both, which is the lane reset the platform chunk exists not to be. */
+  /** Does a port TARGETING THIS PLATFORM have to do something about the row? `Keep` is the only
+    * "nothing to do" — the criterion a portability rule derives through, not `isInstanceOf[Refuse]`.
+    * `java.lang.Thread`/`java.util.concurrent.` are `MapTo` on Scala.js and reported as violations;
+    * reading only `Refuse` would have deleted both. */
   def actionable: Boolean = this != Keep
 
   /** …and WHICH KIND of work. A `Depend` is a BUILD-GRAPH fact — the API exists, in an artifact the
@@ -66,29 +62,11 @@ enum CrossKind:
     * which a port declaring a platform-cross dependency necessarily has. */
   case Platform
 
-/** a build-graph coordinate a [[Verdict.Depend]] names.
-  *
-  * Every field is a literal or an enum case. What is deliberately NOT here is the PLATFORM SET: a
-  * `platforms` field would be a second statement of something the ROW already makes — which
-  * platforms need the artifact is exactly `verdict`'s per-platform map, and two coordinates for one
-  * artifact (`MessageDigest` wants `scala-crypto` on Scala.js and `scala-native-crypto` on Native)
-  * are two `Depend` verdicts rather than one dep with a set. It would also be the one shape
-  * `ApiRowCarriesNoPolicySpec` forbids outright.
-  *
-  * @param resolver
-  *   WHERE the artifact resolves from, when that is not the default repository. A fact about the
-  *   ARTIFACT and not about the port, exactly as [[cross]] is — and it fails the same way when it is
-  *   absent: `%%` written where `%%%` was meant asks for a jar that does not exist, and a coordinate
-  *   published outside Maven Central asks a resolver set that has never heard of it. `None` is the
-  *   default and means the ordinary resolver set, so every coordinate written before this field
-  *   existed says exactly what it always did and no generated build moves.
-  *
-  *   ONE URL, not a name/URL pair and not a collection. The NAME an sbt `resolvers` entry needs
-  *   carries no information a reader could check, so [[balticporter.sbtgen.SbtGen.Dep]] derives it
-  *   from the URL — deterministically, which is what stops it from lying — and a coordinate
-  *   resolvable from two places is one this file has no way to choose between.
-  *   `ApiRowCarriesNoPolicySpec` forbids a collection in a row for its own reason, and an `Option`
-  *   of a literal is exactly what stays inside it. */
+/** a build-graph coordinate a [[Verdict.Depend]] names — every field a literal or enum case, never
+  * a PLATFORM SET (`verdict`'s per-platform map already states it; two artifacts for one need are
+  * two `Depend` verdicts, not a dep with a set — `ApiRowCarriesNoPolicySpec`).
+  * @param resolver WHERE the artifact resolves from when not default (a fact about the ARTIFACT,
+  *   like [[cross]]); `None` is the ordinary set. ONE URL, since `SbtGen.Dep` derives the name from it. */
 final case class ArtifactDep(org: String, name: String, rev: String, cross: CrossKind = CrossKind.Scala,
                              resolver: Option[String] = scala.None):
   override def toString: String = s"$org${CrossKind.sep(cross)}$name:$rev"
@@ -100,31 +78,11 @@ object CrossKind:
     case Scala    => "::"
     case Platform => ":::"
 
-/** ONE ROW of the library and platform halves — `JS-L` and `JS-P`.
-  *
-  * A DIFFERENT KIND OF ROW from a [[Difference]], which is why it has its own shape rather than
-  * being forced into that one: a `Difference` states a rule of two LANGUAGES and is true forever; an
-  * `ApiRow` states what an IMPLEMENTATION shipped, which is true as of a version and false after the
-  * next release. That is what [[asOf]] is for and why it is not decoration.
-  *
-  * THE NO-POLICY RULE, and it is the `JS-{E,S,C,G}` no-parameter rule adapted rather than relaxed:
-  * an `ApiRow` legitimately carries per-platform MAPS, because JS and Native genuinely disagree and
-  * a single shared verdict is exactly what makes a rule wrong for one of them. What it may NOT carry
-  * is a `RuleScope`, a predicate, or a TARGET SET. A row says what is true of a platform; WHICH
-  * platforms a port cares about is the port's, and it lives in the manifest.
-  * `ApiRowCarriesNoPolicySpec` is that line, mechanised.
-  *
-  * @param fqn     a PREFIX (`java.nio.file.`, cut only at a separator) or an exact member
-  *                (`java.lang.System#getenv`)
-  * @param exact   which of the two `fqn` is
-  * @param by      availability per platform — the (a) FACT
-  * @param verdict the recommended action per platform — a DEFAULT
-  * @param asOf    the versions the claim is anchored to, e.g. `scala-js -> 1.22.0`. EMPTY means the
-  *                source survey stated none, and `why` must then say `UNSTATED` out loud: a coverage
-  *                claim with no version goes stale on the next release, and a claim that cannot say
-  *                when it was true is one nothing can ever re-check
-  * @param why     ONE sentence
-  */
+/** ONE ROW of the library and platform halves — `JS-L`/`JS-P`. Unlike a [[Difference]] (a rule of
+  * two LANGUAGES, true forever), this states what an IMPLEMENTATION shipped, true as of a version
+  * ([[asOf]]). May carry per-platform MAPS but NOT a `RuleScope`/predicate/target set — WHICH
+  * platforms a port cares about is the manifest's (`ApiRowCarriesNoPolicySpec`). @param fqn a
+  * PREFIX or exact member @param asOf versions the claim anchors to, empty means `why`=UNSTATED. */
 final case class ApiRow(
     id: DiffId,
     fqn: String,
@@ -135,15 +93,9 @@ final case class ApiRow(
     why: String,
 ):
 
-  /** The verdict THIS PORT reads for `p` — the row's own recommendation unless the port overrode it.
-    *
-    * The two halves of a row are two epistemic kinds and only one of them is overridable. [[by]] is
-    * the (a) FACT: *`java.time` is absent on Scala Native at 0.5.11* is true of every port, and a
-    * manifest that could contradict it is a manifest in which a port silently declares a gap closed.
-    * [[verdict]] is a RECOMMENDATION — another port may ship its own shim, vendor a subset, or accept
-    * the refusal — so it is the half `PortManifest.verdictOverrides` reaches, and the override is a
-    * `Decision` naming the manifest entry verbatim.
-    */
+  /** The verdict THIS PORT reads for `p` — the row's own recommendation unless overridden. [[by]]
+    * is the (a) FACT (no manifest may contradict it); [[verdict]] is a RECOMMENDATION, the half
+    * `PortManifest.verdictOverrides` reaches, recorded as a `Decision` naming the entry verbatim. */
   def verdictOn(p: Platform, overrides: Map[DiffId, Map[Platform, Verdict]] = Map.empty): Verdict =
     overrides.get(id).flatMap(_.get(p)).getOrElse(verdict(p))
 
@@ -151,36 +103,11 @@ final case class ApiRow(
   def actionableOn(targets: Set[Platform], overrides: Map[DiffId, Map[Platform, Verdict]] = Map.empty): Set[Platform] =
     targets.filter(p => verdictOn(p, overrides).actionable)
 
-/** The library and platform halves of the catalog.
-  *
-  * SOURCE AND ITS LIMITS, stated because a coverage claim without its provenance is the thing this
-  * file exists to stop: every row is transcribed from a source-tree survey of the two javalibs, at
-  * the versions in [[JsNative]]. Where that survey did not reach a platform the row carries
-  * `UNSTATED` and says so in its `why` rather than guessing — there are several, and they are the
-  * rows a later pass should measure first.
-  *
-  * WHAT READS IT, and what each half of a row decides. It is no longer a registry without a
-  * consumer — `PortabilityCheck.rowOf` joins a rule to its row through `Rule.at`, and two questions
-  * are answered from there on every run:
-  *
-  *   - WHICH LANE a rule is in. `isDependency` asks whether every platform the rule still asks about
-  *     answers with an ARTIFACT, and that decides `rulesFor` (the removal lane, `portability(*)`)
-  *     against `dependencyRulesFor` (the build-graph lane, `dependency-coverage`). A rule with no
-  *     cited row is never a dependency: the survey is where a coordinate comes from, and a rule with
-  *     no row has none to give;
-  *   - WHETHER IT STILL ASKS AT ALL. `stillAsks` reads [[ApiRow.verdictOn]], which is the one half of
-  *     a row a port may override — so a `verdictOverrides` entry saying `Keep` retires the rule from
-  *     both lanes, and one saying it ships a shim stops the row from ever becoming a requirement.
-  *     [[ApiRow.by]], the availability FACT, no manifest can contradict.
-  *
-  * `DependencyCheck.requirements` is the third reader and the one that consumes an [[ArtifactDep]]:
-  * the coordinates a finding names are this file's, per platform, because two backends can want
-  * different artifacts for one API.
-  *
-  * WHERE THE ROWS ARE STILL SILENT is the honest residue: a row the survey did not reach carries
-  * `UNSTATED` in `asOf` and says so in its `why`, and `catalog(uncited)` counts the registry rows
-  * with no Scala-side citation on every run. Neither is hidden inside a number about the port.
-  */
+/** The library and platform halves of the catalog. Every row is transcribed from a source-tree
+  * survey of the two javalibs at [[JsNative]]'s versions; where the survey did not reach a
+  * platform the row carries `UNSTATED` in `why`. Read by `PortabilityCheck.rowOf`
+  * (`isDependency`/`stillAsks`, through the port-overridable [[ApiRow.verdictOn]]) and
+  * `DependencyCheck.requirements` (per-platform `ArtifactDep`). `catalog(uncited)` counts the rest. */
 object ApiRows:
 
   private def l(n: Int) = DiffId(L, n)
@@ -192,14 +119,9 @@ object ApiRows:
   private val TimeLib                = Map("scala-java-time" -> "2.6.0")
   private val LocaleLib              = Map("scala-java-locales" -> "1.5.4")
 
-  // THE CROSS KIND IS CHECKED AGAINST THE REPOSITORY, not inferred from the organisation. An
-  // artifact a `Depend` names is one a NON-JVM backend has to resolve, so the question the row is
-  // really answering is "does this exist for scala.js / native", and every one of the four below is
-  // published per PLATFORM as well as per Scala version — `scala-java-time_sjs1_3` and
-  // `scala-java-time_native0.5_3` exist beside `scala-java-time_3`, `scala-native-crypto` exists at
-  // `_native0.5_3` and NOWHERE else. Spelled `%%` (the default this file used to take) the emitted
-  // build asks for the JVM jar on a JS build, which for the first three RESOLVES and then fails at
-  // link time, and for the fourth resolves nothing at all.
+  // THE CROSS KIND IS CHECKED AGAINST THE REPOSITORY, not inferred from the organisation: these
+  // four are published per PLATFORM as well as per Scala version, and `%%` (the old default) would
+  // resolve the JVM jar on a JS build — resolving-then-failing at link time, or resolving nothing.
   private val ScalaJavaTime   = ArtifactDep("io.github.cquiroz", "scala-java-time", "2.6.0", CrossKind.Platform)
   private val ScalaJavaTzdb   = ArtifactDep("io.github.cquiroz", "scala-java-time-tzdb", "2.6.0", CrossKind.Platform)
   private val ScalaJavaLocale = ArtifactDep("io.github.cquiroz", "scala-java-locales", "1.5.4", CrossKind.Platform)
@@ -214,19 +136,11 @@ object ApiRows:
   // it rather than silently corrected, because inventing a replacement artifact is the one thing a
   // survey row may not do (CLAUDE.md §4.6: an answer the caller cannot tell from a real one).
   private val CrossCrypto     = ArtifactDep("com.dedipresta", "scala-crypto", "1.0.0", CrossKind.Platform)
-  // …and the sixth is the first coordinate this engine's own maintainer publishes (DESIGN.md §8.19):
-  // a cross-platform stand-in for a JDK family that EXISTS on all three backends with DIFFERENT
-  // mechanics, rather than a third party's fill-in for one that is absent. It is `%%%` for the
-  // reason every row above is — `multiarch-serviceloader_sjs1_3` and `_native0.5_3` are published
-  // beside `_3` — and it is the first to need a RESOLVER: the artifact is on the Central Portal
-  // SNAPSHOT repository and on NO release repository, so a build naming the coordinate and not the
-  // repository resolves nothing.
-  //
-  // THE REVISION IS PROVISIONAL, until multiarch-scala's next release: `0.4.0-12-gc168b2f-SNAPSHOT`
-  // is a git-described snapshot of that repository's `master`, and the release that supersedes it
-  // will carry a plain version and need no `resolver` at all. Both halves move together when it
-  // lands, and the check matches on organisation and NAME and never on the revision, so a port
-  // pinning either one is covered.
+  // …and the sixth is the first coordinate this engine's own maintainer publishes (DESIGN.md
+  // §8.19): a cross-platform stand-in for a JDK family that EXISTS on all three backends with
+  // DIFFERENT mechanics. `%%%`, and the first to need a RESOLVER (Central Portal SNAPSHOT only).
+  // THE REVISION IS PROVISIONAL until multiarch-scala's next release; the check matches on
+  // organisation and NAME, never revision, so a port pinning either is covered.
   private val MultiArchSpi    = ArtifactDep("com.kubuszok", "multiarch-serviceloader", "0.4.0-12-gc168b2f-SNAPSHOT",
     CrossKind.Platform, Some("https://central.sonatype.com/repository/maven-snapshots"))
 
@@ -321,12 +235,9 @@ object ApiRows:
     row(l(34), "java.util.EnumMap", true,
       (Full, Shim("engine runtime")), (Absent, Shim("engine runtime")), (Absent, Shim("engine runtime")), JsNative,
       "absent on both non-JVM backends AND no Scala type reproduces the ordinal-array iteration-order guarantee, so a shim rather than a map is the honest answer"),
-    // A SHIM and not a `mapped(…, "scala.collection.mutable.Set", …)`, which is what this row said
-    // until the mapping was built. The availability half is right — Native has it, Scala.js does
-    // not — and it is not the whole question: `EnumSet` GUARANTEES iteration in ordinal order and a
-    // `mutable.Set` does not, so the map would have reproduced the gap and dropped the guarantee,
-    // which is `JS-C42` and the failure mode the engine refuses by name. Its sibling row above said
-    // `Shim` for the same reason all along; the two are one decision.
+    // A SHIM, not a mapping: availability is right (Native has it, JS does not) but `EnumSet`
+    // GUARANTEES ordinal iteration order and `mutable.Set` does not, so mapping would drop the
+    // guarantee (`JS-C42`). Its sibling row above says `Shim` for the same reason.
     row(l(35), "java.util.EnumSet", true,
       (Full, Shim("engine runtime")), (Absent, Shim("engine runtime")), (Full, Shim("engine runtime")), JsNative,
       "absent on Scala.js, and no Scala set reproduces the ordinal-order iteration guarantee, so a shim rather than a map is the honest answer"),
@@ -515,13 +426,9 @@ object ApiRows:
       (Stub("Array/AccessibleObject/Executable and the exception types are present; Method/Field/Constructor dispatch is not"),
       Refuse("no reflective dispatch; it breaks the Scala Native link")), JsNative,
       "covers Class.forName, Method.invoke, the Field accessors and Constructor.newInstance; the Native link failure was measured directly and fixed by per-platform substitution"),
-    // THE AVAILABILITY HALVES STILL DISAGREE and the VERDICTS no longer do — which is what a
-    // cross-platform wrapper IS (DESIGN.md §8.19). JS has no class to reference; Native has a real
-    // one whose `load` is a LINK-TIME INTRINSIC accepting only a literal `classOf`, so no
-    // `Class`-taking API can delegate to it and `nativeConfig.withServiceProviders` enlistment
-    // serves only direct `load(classOf[Concrete])` sites. That measured correction is why the Native
-    // verdict is no longer `MapTo("link-time provider enlistment")`: the enlistment is real and it
-    // is not reachable from a ported library's generic lookup.
+    // THE AVAILABILITY HALVES STILL DISAGREE and the VERDICTS no longer do (DESIGN.md §8.19): JS
+    // has no class to reference, Native's `load` is a LINK-TIME INTRINSIC accepting only a literal
+    // `classOf`, so no `Class`-taking API can delegate to it and generic lookup cannot reach it.
     row(p(25), "java.util.ServiceLoader", false,
       (Full, Keep), (Absent, Depend(MultiArchSpi)),
       (Partial("real, but `load` is a LINK-TIME intrinsic that only accepts a literal classOf, so no Class-taking wrapper can call it"), Depend(MultiArchSpi)), JsNative,

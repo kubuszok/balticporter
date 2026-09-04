@@ -1,48 +1,10 @@
 package balticporter.tir
 
 /** The map from an ANCESTOR's type PARAMETERS to the arguments a subclass instantiates them with —
-  * *the one derivation every synthesiser that copies a parent signature into a subclass must run*.
-  *
-  * ==What it is for==
-  * Java lets a class inherit a member whose signature is written in its PARENT's scope. Every
-  * mechanism that materialises such a member INTO the subclass — a diamond-disambiguating forwarder
-  * ([[TirEmitter]]), a synthesised primary constructor whose slots are the parent constructor's
-  * formals ([[CtorFunnel]]), a replayed constructor body — copies types that mention the parent's
-  * type parameters, and **the subclass declares none of them**. The result is valid-looking Scala
-  * naming a type that is not in scope:
-  *
-  * {{{
-  *   // java:  class Impl extends Base<Leaf>          Base<T> { T[] split(char c); Base(Node<T> n); }
-  *   override def split(c: Char): Array[T] = …        // Not found: type T
-  *   class Impl protected (sup$0: Node[T])            // Not found: type T
-  * }}}
-  *
-  * The instantiation is written in the `extends` clause, so the substitution is EXACT rather than a
-  * guess: `Base[Leaf]` says `T = Leaf`, and every occurrence of the parent's `T` in a member
-  * materialised here means `Leaf`.
-  *
-  * ==Why it is ONE derivation and not one per caller==
-  * `CLAUDE.md` §4.56: three sites needed this map, one had it (the constructor replay), and the
-  * other two were emitting the parent's own spelling. A rule derived per caller is a rule two of
-  * whose callers are wrong, and the two that were wrong were wrong in the same way at the same
-  * hierarchy. Stated once here, growing a fourth synthesiser costs a call rather than a rediscovery.
-  *
-  * ==TRANSITIVE, because the member need not come from the immediate parent==
-  * A forwarder disambiguates a method the SUPERCLASS chain supplies, and a replay lifts statements
-  * that may be a grandparent's. `Impl extends Mid[Leaf]`, `Mid<X> extends Base<X>`, and the copied
-  * signature names `Base`'s `T`: the walk composes each level's instantiation through the one below
-  * it, so `T -> X -> Leaf` collapses to `T -> Leaf` in a single map.
-  *
-  * A subclass that passes its OWN parameter through (`class Foo[X] extends Bar[X]`) maps `Bar`'s
-  * `T` to `Foo`'s `X` — a type the emitted class really does declare, which is why the answer is a
-  * substitution and never an erasure.
-  *
-  * ==What it deliberately does not do==
-  * It maps only the parameters of ancestors this program DECLARES: an external parent's type
-  * parameters are a fact about a class file and no phase may move them (§4.56), and a class file the
-  * run could not read supplies no `ClassDef` to read `tparams` off. An unmapped parameter is left
-  * exactly as it was, which is the previous behaviour — so an empty map is a no-op and a caller can
-  * always run it. */
+  * the one derivation any synthesiser copying a parent signature into a subclass must run (a
+  * diamond forwarder, `CtorFunnel`, a replayed body). The `extends` clause makes it EXACT.
+  * TRANSITIVE — composes each level (`T -> X -> Leaf` collapses to `T -> Leaf`); maps only
+  * ancestors this program DECLARES (an external parent's params are a class-file fact, §4.56). */
 object ParentSubst:
 
   /** the ancestors' type parameters, mapped to what `cd` instantiates them with. Empty for a class
@@ -50,21 +12,16 @@ object ParentSubst:
   def of(cd: Tree.ClassDef)(using Program): Map[SymId, TypeRepr] =
     ofParents(cd.parents.map { case tt: TypeTree => tt.tpe; case t: Term => t.tpe })
 
-  /** …from the PARENT TYPES alone, for a declaration that is not a [[Tree.ClassDef]].
-    *
-    * An ANONYMOUS CLASS is the one that needs it: `new Base<Leaf>() { … }` instantiates its parent
-    * exactly as an `extends` clause does, and it has no `ClassDef` to read the clause off — the
-    * instantiation lives in the `Tree.New`'s `tpt`. [[of]] is this function against a class's own
-    * clause, so the two can never derive different maps for one hierarchy. */
+  /** …from the PARENT TYPES alone, for a declaration that is not a [[Tree.ClassDef]]. An ANONYMOUS
+    * CLASS needs it: `new Base<Leaf>() { … }` instantiates its parent in the `Tree.New`'s `tpt`,
+    * with no `ClassDef` to read a clause off. [[of]] is this against a class's own clause, so the
+    * two can never derive different maps for one hierarchy. */
   def ofParents(parents: List[TypeRepr])(using program: Program): Map[SymId, TypeRepr] =
     def classOfSym(s: SymId): Option[Tree.ClassDef] =
       program.definitionOf(s).collect { case c: Tree.ClassDef => c }
-    // A NON-GENERIC PARENT IS STILL A STEP IN THE CHAIN, and reading only the applied ones is how
-    // this walk was first written — right for the immediate parent, and silently answering "there
-    // is nothing above here" for every hierarchy with a plain class in the middle. The corpus shape
-    // is exactly that: `Mapped extends Impl`, `Impl extends Base[Leaf]`, and the forwarded member's
-    // `T` is `Base`'s. A bare `TypeRef` binds nothing of its own (there are no arguments to bind)
-    // and must not stop the climb.
+    // A NON-GENERIC PARENT IS STILL A STEP IN THE CHAIN — reading only applied parents silently
+    // answers "nothing above here" for a plain class in the middle (`Mapped extends Impl extends
+    // Base[Leaf]`, forwarded `T` is `Base`'s). A bare `TypeRef` binds nothing but must not stop the climb.
     def headArgs(t: TypeRepr): Option[(SymId, List[TypeRepr])] = t match
       case TypeRepr.AppliedType(TypeRepr.TypeRef(_, s), as) => Some(s -> as)
       case TypeRepr.TypeRef(_, s)                           => Some(s -> Nil)
@@ -86,17 +43,10 @@ object ParentSubst:
         }
     walk(parents, Map.empty, 0)
 
-  /** rewrite every occurrence of a mapped type parameter in `t`.
-    *
-    * COMPLETE over [[TypeRepr]] rather than over the two shapes the first caller happened to need:
-    * a forwarder's return type is `Array[T]`, a constructor formal is `Node[T]`, and the next one
-    * will be an intersection or a method type. A partial recursion here is `CLAUDE.md` §4.56's
-    * fast-path guard read at a type walk — right for the target it was written against, silently
-    * answering "nothing to substitute" for every target added since.
-    *
-    * BINDERS ARE NOT ENTERED. `PolyType`/`TypeLambda` introduce their own parameters and a
-    * substitution that descended into one could capture; nothing in a java-derived signature needs
-    * it, and refusing is the answer that cannot be wrong. */
+  /** rewrite every occurrence of a mapped type parameter in `t`. COMPLETE over [[TypeRepr]] rather
+    * than the shapes the first caller happened to need — a partial recursion is §4.56's fast-path
+    * guard at a type walk. BINDERS ARE NOT ENTERED: `PolyType`/`TypeLambda` could capture, and
+    * nothing in a java-derived signature needs it. */
   def subst(t: TypeRepr, m: Map[SymId, TypeRepr]): TypeRepr =
     if m.isEmpty then t
     else

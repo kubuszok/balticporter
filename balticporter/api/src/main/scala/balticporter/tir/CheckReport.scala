@@ -3,24 +3,10 @@ package balticporter.tir
 import java.nio.file.{Files, Path}
 
 /** PERSISTENCE and DIFF for the engine's checks — `before->after`, mechanically. Every check
-  * records its FULL result here; this writes it to a machine-readable file and diffs it against a
-  * committed baseline. Truncation stays at the human stdout render and never reaches the artifact.
-  *
-  * The ORCHESTRATOR records, not each check (`balticporter.runner.PortRun` invokes every check
-  * unconditionally, so checks stay pure functions of a `Program`): `PortRun.RequiredChecks` names
-  * every check a run must have recorded, compared against [[snapshot]], so a number reaching
-  * stdout and never `findings.tsv` fails the run. Recording is a no-op unless [[enabled]].
-  *
-  * `record` registers the check's name even for an empty result, so `counts.tsv` distinguishes
-  * "omissions: 0" from "never invoked", and [[diff]] reports a check's disappearance as a WARNING
-  * rather than an improvement to zero.
-  *
-  * `findings.tsv`: one TSV line per finding (not JSON — a one-finding change stays a one-line
-  * diff), sorted by (check, kind, owner, path, line, detail), with no timestamps, absolute paths,
-  * hash-order iteration or `SymId`. `id` is sha-256 over `check|kind|owner|path|detail`, excluding
-  * the LINE NUMBER so an upstream whitespace edit does not orphan a baseline entry (DESIGN.md
-  * §6.3/§6.5, R7).
-  */
+  * records its FULL result here; this writes a machine-readable file and diffs against a committed
+  * baseline. The ORCHESTRATOR records (checks stay pure functions of a `Program`); `record`
+  * registers even an empty result, so `counts.tsv` distinguishes "0" from "never invoked".
+  * `findings.tsv` id = sha-256 excluding the LINE NUMBER, so a whitespace edit orphans nothing. */
 object CheckReport:
 
   /** one finding, flattened to the columns every check has in common. `check` is the gate that
@@ -73,21 +59,11 @@ object CheckReport:
   // enablement and location
   // ---------------------------------------------------------------------------
 
-  /** On when the build supplies `balticporter.root` (it does for a corpus migration and would for
-    * any `PortRun`), or when a report dir is named explicitly, or when forced with
-    * `balticporter.report=on`. Off inside a plain unit-test JVM, which has none of those — a test
-    * suite must not litter a repository with run artifacts. `balticporter.report=off` disables it
-    * everywhere.
-    *
-    * …and off, WHATEVER the flags say, when there is no port identity to name a directory after
-    * (see [[mainClassKey]]). §5.1's rule is that an artifact write is gated on the artifact layer
-    * without exception, and this is the same gate the unconditional `PortMap.write` needed: with a
-    * report directory derived from `sun.java.command`, a forked test JVM answers with the BUILD
-    * TOOL's main — `sbt.internal.worker1.WorkerMain` under sbt 2 — and any suite that turned
-    * reporting on without naming a directory published `<subproject>/port-report/WorkerMain/` into
-    * the checkout. A `git status` that cannot tell a decision from an artefact is what §5.5's
-    * discipline rests on. An explicit `reportDir` still enables it, because a caller that NAMED a
-    * directory has supplied the identity the fallback could not derive. */
+  /** On when the build supplies `balticporter.root`, or a report dir is named, or forced with
+    * `balticporter.report=on`. Off in a plain unit-test JVM (no litter). Off WHATEVER the flags
+    * say when there is no port identity to name a directory after (`sun.java.command` under sbt 2
+    * forked tests answers `WorkerMain`, which would publish into the checkout) — §5.1's gate.
+    * An explicit `reportDir` still enables it, since the caller supplied the identity. */
   def enabled: Boolean =
     DebugFlags.get("report").map(_ == "off") match
       case Some(true) => false
@@ -95,38 +71,25 @@ object CheckReport:
         DebugFlags.get("reportDir").isDefined ||
         ((DebugFlags.bool("report") || sys.props.contains(DebugFlags.Prefix + "root")) && mainClassKey.isDefined)
 
-  /** `balticporter.reportDir`, else `port-report/<main class simple name>` under the root.
-    *
-    * Deriving it from the main class is deliberate: it is per-PORT without the engine knowing any
-    * port's name (CLAUDE.md §1 — nothing in `core` may name a ported library), it separates two
-    * migration programs in the same repository automatically, and it needs no configuration at
-    * the call site, which is the only way it could work at all while the migration programs are
-    * copy-paste.
-    *
-    * [[NoMainClass]] is what it resolves to when nothing can be derived. Nothing WRITES there —
-    * [[enabled]] is false in exactly that case — but the path stays total, because `PortMap`
-    * discovers a base's map through this directory's PARENT and reading is not writing. */
+  /** `balticporter.reportDir`, else `port-report/<main class simple name>` under the root. Derived
+    * from the main class deliberately — per-PORT without the engine naming a library (§1), and no
+    * call-site configuration needed. [[NoMainClass]] is the total-but-unwritten fallback ([[enabled]]
+    * is false there); `PortMap` still discovers a base's map through this directory's PARENT. */
   def dir: Path =
     DebugFlags.path("reportDir").getOrElse(DebugFlags.root.resolve(s"port-report/${mainClassKey.getOrElse(NoMainClass)}"))
 
   /** the placeholder segment for "this JVM has no port identity"; see [[dir]]. */
   private[tir] val NoMainClass = "default"
 
-  /** Mains that belong to the BUILD, not to a port. A report directory named after one of these is
-    * a directory in the checkout with a run's artifacts in it and no run that asked for them.
-    *
-    * A prefix test on a string is normally the thing CLAUDE.md §4.56 forbids — but there is no
-    * structure to read here. `sun.java.command` is a JVM property whose value is a bare command
-    * line, so the only fact available is the name, and the honest move is to make the negative
-    * explicit and short rather than to invent a structural claim it cannot support. */
+  /** Mains that belong to the BUILD, not to a port — a report directory named after one would be
+    * a directory of unrequested artifacts. A prefix test §4.56 normally forbids, but there is no
+    * structure to read in `sun.java.command`'s bare command line — the honest move is an explicit,
+    * short negative rather than an invented structural claim. */
   private val BuildToolMains = List("sbt.", "xsbt.", "org.scalatest.", "munit.", "org.junit.")
 
-  /** the launching main class's simple name, when it is a PORT's own migration program.
-    *
-    * `scala.None` when this JVM was launched by the build tool, or when the command is absent or
-    * not a plain class name. The measure lanes are unaffected: each runs a migration `main` whose
-    * class is the port's own, which is exactly the identity CLAUDE.md §2.1 keeps stable across a
-    * module rename. */
+  /** the launching main class's simple name, when it is a PORT's own migration program. `None`
+    * when launched by the build tool or the command is absent/not a plain class name. Measure
+    * lanes are unaffected: each runs a migration `main`, the identity CLAUDE.md §2.1 keeps stable. */
   private[tir] def mainClassKey: Option[String] =
     Option(System.getProperty("sun.java.command"))
       .map(_.split(' ').head)
@@ -147,15 +110,10 @@ object CheckReport:
       val abs = Path.of(p)
       if !abs.isAbsolute then p
       else
-        // Resolve SYMLINKS on both sides first. A checkout reached through a symlinked parent (a
-        // git worktree, a mounted source tree) otherwise relativises to a stack of `..` segments
-        // that depends on where the link lives — deterministic, but different from the same
-        // baseline computed in the primary checkout, which defeats the point.
-        //
-        // Through `RealPath` (§5.4's one implementation) rather than a local helper. The local one
-        // fell back to a BARE `normalize`, so a relative root stayed relative, `relativize` threw
-        // "different type of Path", and the outer catch below returned `p` — the raw absolute path
-        // this function's own doc promises never to emit.
+        // Resolve SYMLINKS on both sides first — a symlinked parent (a git worktree, a mounted
+        // source tree) otherwise relativises to a `..` stack that depends on the link's location,
+        // deterministic but different from the primary checkout's baseline (§5.4). Through
+        // `RealPath`, not a local helper — the local one fell back to a bare `normalize` and threw.
         balticporter.core.RealPath.relativize(root, abs).toString.replace('\\', '/')
     catch case _: Exception => p
 

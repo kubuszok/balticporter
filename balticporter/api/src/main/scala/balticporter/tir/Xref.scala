@@ -1,21 +1,10 @@
 package balticporter.tir
 
-/** Builds the whole-program [[XrefIndex]] by walking every unit's TREE — the same
-  * structure phases rewrite — so the index RESPONDS to phase/plugin rewrites the
-  * moment the pipeline rebuilds it. Every symbol occurrence is recorded with a
-  * [[UsageKind]] naming its position, so `usagesOf(sym)` traces a type used as an
-  * external type, a type argument, a member type, a mixin, a bound, a self-type — not
-  * just as a call. Descends BOTH the tree structure and the `TypeRepr` inside every
-  * type occurrence, since a symbol can hide arbitrarily deep in an applied/bounded type.
-  *
-  * Externals (JDK/library symbols) need no definition here: they appear as `TypeRef`
-  * targets and are recorded as usages with no `definitionOf`, which is exactly what
-  * `usagesOf(java.util.List)` needs for the collection/FFI rewrites.
-  *
-  * Known model gap: class-level type parameters are not yet distinct tree nodes, so a
-  * class F-bound `class C[T <: IRich[T]]` is not walked here; method/poly signatures
-  * and wildcard bounds ARE (via `TypeBounds`/`PolyType` inside walked types).
-  */
+/** Builds the whole-program [[XrefIndex]] by walking every unit's TREE, so it RESPONDS to
+  * phase/plugin rewrites as soon as the pipeline rebuilds it. Every occurrence carries a
+  * [[UsageKind]] naming its position; descends both tree structure AND `TypeRepr`. Externals need
+  * no `definitionOf` — they appear as bare `TypeRef` usages. Known gap: class-level F-bounds are
+  * not yet distinct tree nodes (method/poly signatures ARE walked). */
 object Xref:
   def build(units: List[Tree.ClassDef]): XrefIndex =
     val defs   = collection.mutable.Map.empty[SymId, Definition]
@@ -43,13 +32,9 @@ object Xref:
       case TypeRepr.ThisType(cls)        => rec(cls, kind, site)
       case TypeRepr.SuperType(a, b)      => walkType(a, kind, site); walkType(b, kind, site)
       // KNOWN UNDER-LABELLING, deliberate: this arm REPLACES the kind it was called with, so a
-      // symbol reached through an application is `Tycon`/`TypeArg` whatever position the caller was
-      // describing — `walkType(tpt.tpe, Instantiate, n)` at a `Tree.New` labels a GENERIC class
-      // `Tycon`, for `new C<X>()` and for a raw `new C()` alike. `ENGINE-LIMITS.md` CT6 is the
-      // worked example and says why it stays: `UsageKind` is a shared index read by the portability
-      // check, the rewrite trace and the external-surface walk, so re-labelling here is its own
-      // thirteen-port measure cycle. A consumer that needs the position asks the NODE (`u.site`),
-      // which is a structural fact, rather than this label.
+      // symbol reached through an application labels `Tycon`/`TypeArg` whatever position the caller
+      // was describing (`ENGINE-LIMITS.md` CT6). `UsageKind` is a shared index across three checks,
+      // so re-labelling is its own thirteen-port cycle; a consumer needing position asks `u.site`.
       case TypeRepr.AppliedType(tycon, args) =>
         walkType(tycon, UsageKind.Tycon, site); args.foreach(walkType(_, UsageKind.TypeArg, site))
       case TypeRepr.AndType(l, r)        => walkType(l, UsageKind.Mixin, site); walkType(r, UsageKind.Mixin, site)

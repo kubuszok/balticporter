@@ -1,43 +1,10 @@
 package balticporter.catalog
 
 /** THE DIFFERENCE CATALOG — every Java-vs-Scala semantic difference this engine knows about, as
-  * CODE rather than as a document.
-  *
-  * WHY CODE. Four reasons, in descending weight:
-  *
-  *   1. a lowering arm, a transform and a check must be able to CITE a row, and a coverage lane
-  *      must be able to report that a row is never reached. A markdown table can do neither;
-  *   2. `CLAUDE.md` §3.6 admits six documents and forbids a seventh, and none of the six fits — 126
-  *      rows would swamp `DESIGN.md` (decisions, not inventories), `ENGINE-LIMITS.md` is measured
-  *      dead ends and most of these rows are neither measured nor dead ends, `PROGRESS.md` is
-  *      per-port state;
-  *   3. `CLAUDE.md` §4.45 — the consumer is an agent in ANOTHER repository. A catalog that ships in
-  *      the engine jar is one that agent has; a table in this repo's markdown is one it does not;
-  *   4. the precedent is this codebase's own (`DESIGN.md` §6.2 on `UnportableKind`): *a closed
-  *      engine enum — a new kind is an engine change that arrives with its mint sites and its
-  *      report text, which is the correct friction*. A [[Difference]] is that, one level finer.
-  *
-  * THE HARD RULE THAT PROTECTS `CLAUDE.md` §1's TAXONOMY: **a [[Difference]] takes no parameter.**
-  * No `RuleScope`, no `Set[String]`, no predicate, no `SurfacePolicy`. A difference is a fact about
-  * Java and Scala; if it needs to know something about a LIBRARY it is not a difference, it is a
-  * (b) phase's policy, and it belongs in that phase's constructor where §1.5's merge contract
-  * already governs it. `DifferenceTakesNoParameterSpec` is that rule, mechanised — every field of
-  * every row, recursively, must be a literal or an enum case.
-  *
-  * `attaches` ARRIVED WITH ITS FIRST SURFACE, and each later surface retired the rows that were
-  * waiting for it: [[Lowering]] at the frontend's two node dispatches, [[Rendering]] at the
-  * emitter's, [[Typing]] at both ends' TYPE dispatches, and [[CatalogLog.cite]] for a whole-program
-  * pass. A row whose discharge site still has no mechanism SAYS SO — [[Attaches.Unmechanised]],
-  * counted in its own lane, 112 → 88 → 47 → 20 → 10 as the surfaces landed. A field that claimed
-  * coverage on the strength of a surface that does not exist would make the lane checking it report
-  * every row as fine, which is worse than no lane. `tests` is still absent for the same reason: the
-  * edge-case suites are per-area waves and a row pointing at a suite nobody wrote is a claim.
-  *
-  * NO ROW MAY CARRY A NUMBER. Numbers live where §3.6 says: a measurement in `ENGINE-LIMITS.md` or
-  * `PROGRESS.md`, and the row points at it with its [[Twin]]. This includes the catalog's own SIZE
-  * — `Differences.all.size` is derived and is written down nowhere, which is `PortabilityCheck`'s
-  * phantom "34 rules" lesson applied to the thing that recorded it.
-  */
+  * CODE rather than a document. Enables citation and coverage reporting (a markdown table cannot),
+  * ships to §4.45's agent in another repository, and follows `UnportableKind`'s closed-enum
+  * discipline (DESIGN.md §6.2). HARD RULE: a [[Difference]] takes no parameter — every row is a
+  * literal or enum case. No row carries a number: measurements live in ENGINE-LIMITS/PROGRESS. */
 object Catalog
 
 /** the JLS area a difference belongs to. The letter is part of every id and never changes. */
@@ -74,12 +41,9 @@ enum Severity:
   /** a checked NON-difference: the two languages agree and this row records that they were checked */
   case NoImpact
 
-/** where the engine stands on a difference TODAY.
-  *
-  * A status is a claim about a moving target — four headline rows went from `Open` to fixed inside
-  * one week while the document describing them was being written — so it is re-derived
-  * mechanically (`scripts/catalog-status.sh`) and pinned by `ClosedTwinStatusSpec`, never
-  * transcribed by hand from a document. */
+/** where the engine stands on a difference TODAY. Re-derived mechanically (`scripts/catalog-status.sh`)
+  * and pinned by `ClosedTwinStatusSpec`, never transcribed by hand — a status is a claim about a
+  * moving target. */
 enum Status:
   /** the engine reproduces Java's meaning; [[Difference.evidence]] names the symbol that does it */
   case Handled
@@ -126,45 +90,19 @@ enum FixKind:
   case NoFix
 
   /** WHICH REPOSITORY the fix lives in, spelled as [[balticporter.tir.Reason.section]] spells it —
-    * one vocabulary, because a reader meeting a catalog row's classification and then a decision's
-    * must not have to work out that they are the same three answers.
-    *
-    * A method rather than an enum PARAMETER, deliberately: `DifferenceTakesNoParameterSpec` holds
-    * every catalog value to being a literal or a bare enum case, and a parameter here would make
-    * `FixKind.Universal` stop being one. */
+    * one vocabulary. A method rather than an enum PARAMETER: `DifferenceTakesNoParameterSpec`
+    * holds every catalog value to a literal or bare case. */
   def section: String = this match
     case Universal     => "§1(a) ENGINE"
     case Parameterised => "§1(b) PER-LIBRARY POLICY"
     case LibraryRule   => "§1(c) LIBRARY RULE"
     case NoFix         => "no fix owed"
 
-/** ONE ROW of the language half of the catalog — `JS-{E,S,C,G}`.
-  *
-  * Every field is a literal or an enum case, and `DifferenceTakesNoParameterSpec` enforces exactly
-  * that. See [[Catalog]] for why that rule is the single most important guard rail here.
-  *
-  * @param id        stable, never reused (see [[DiffId]])
-  * @param title     ONE line. A row that needs three paragraphs is a `DESIGN.md` decision or an
-  *                  `ENGINE-LIMITS.md` measurement, and the row cites it instead
-  * @param jls       the Java citation, verbatim section numbers
-  * @param scala     the Scala-side rule, with a citation where one was located and the literal
-  *                  prefix `UNCITED — ` where none was. The gap is DATA rather than a footnote:
-  *                  `ClosedTwinStatusSpec` counts it, so "we could not find the reference page" is
-  *                  a number that can go down instead of a sentence nobody re-reads
-  * @param severity  what a mishandling would look like
-  * @param status    re-derived against HEAD, never copied from a document
-  * @param twin      the empirical record; not optional for a row claiming [[Status.Open]]
-  * @param fix       §1's classification of the FIX
-  * @param evidence  the SYMBOL that handles the difference, or — for an open row — the symbol where
-  *                  the gap is, with the file when the symbol alone is ambiguous. **Never a line
-  *                  number**: this pass alone re-read a dozen line numbers that had moved, and a
-  *                  registry of 126 stale line numbers would be worse than none
-  * @param attaches  WHERE the engine owes a decision about this row, and therefore what a coverage
-  *                  lane may claim about it. See [[Attaches]] — including its two honest negatives,
-  *                  `Unmechanised` (the surface is not built) and `NoObligation` (no surface is
-  *                  owed), which are counted apart because collapsing them hides the first inside
-  *                  the second
-  */
+/** ONE ROW of the language half of the catalog — `JS-{E,S,C,G}`. Every field a literal or enum
+  * case (`DifferenceTakesNoParameterSpec`, see [[Catalog]]). @param id stable @param title one
+  * line (longer belongs in DESIGN/ENGINE-LIMITS, cited) @param jls/scala citations, `UNCITED — `
+  * prefix where none was found (counted) @param status re-derived, never copied @param evidence the
+  * SYMBOL, never a line number (they go stale) @param attaches WHERE a decision is owed ([[Attaches]]). */
 final case class Difference(
     id: DiffId,
     title: String,

@@ -1,31 +1,10 @@
 package balticporter.core
 
 /** What a PARAMETERISED phase has to say about the POLICY it was handed — the CLAUDE.md §1(b)
-  * half of a rule, supplied by the library's manifest rather than written into the engine.
-  *
-  * The MECHANISM of a (b) rule is engine code, and the engine's own tests cover it. Its POLICY is
-  * a bag of strings the engine cannot type-check: a misspelled `dropTypes` entry, a wrapper class
-  * renamed upstream, a redirect key naming a member that no longer exists. Each of those is a
-  * NO-OP, and a no-op is invisible — the port emits, compiles, and quietly keeps the construct the
-  * policy was written to remove. That is the same shape as every silent omission this engine has
-  * been bitten by (CLAUDE.md §3), one level up: the omission is in the CONFIGURATION.
-  *
-  * The opposite failure is already covered — a drop that FIRED and left a dangling reference is a
-  * `RewriteTrace` orphaned call, and a substitution whose declaration survives emission is caught
-  * by the migration's "substitutions removed" check. This is the symmetric half: the rule that
-  * never fired at all.
-  *
-  * Two properties make it useful to an agent in another repository (CLAUDE.md §4.45):
-  *
-  *  - Every finding is CLASSIFIED. An unmatched key is always a §1(b) problem — the mechanism
-  *    works, the policy is wrong — so the fix is in that library's manifest and never in the
-  *    engine. A finding whose reader cannot tell (a) from (b) from (c) costs a full investigation.
-  *  - Findings are COLLECTED, not printed. Each (b) phase exposes a [[PolicySource.policyReport]]
-  *    and writes nothing to stdout; an orchestrator gathers the reports from the phases it already
-  *    holds ([[PolicyReport.collect]]) and decides whether to print them, fail the run, or file
-  *    them. That is also why nothing here needs a call-site change to become reachable: the caller
-  *    already holds the `Substitutions` value and the phase instances it configured.
-  */
+  * half of a rule, since a bag-of-strings policy the engine cannot type-check (a misspelled key,
+  * a stale FQN) is a silent no-op otherwise (§3's omission shape, one level up). Every finding is
+  * CLASSIFIED (fix is always the manifest, never the engine) and COLLECTED, not printed — each
+  * phase exposes [[PolicySource.policyReport]] and the orchestrator decides what to do with it. */
 final case class PolicyFinding(
     /** the phase's `name`, or the type of the policy value for a non-phase seam. */
     phase: String,
@@ -39,14 +18,10 @@ final case class PolicyFinding(
       * behaviour, so every construction that predates the field says exactly what it always did. */
     about: PolicyFinding.About = PolicyFinding.About.TheKey,
 ):
-  /** One grep-able line that ENDS in the §1 classification, because that is what the reader has to
-    * act on: no engine change is ever the right response to any of these.
-    *
-    * The classification differs by [[about]], and that is not decoration. For a finding about the
-    * KEY the fix really is the manifest entry the key is quoted from. For one about THIS RUN the key
-    * may be a BASE's — inherited through `surfaceFold`, correct there, and not a string this module
-    * can edit — while what produced the finding is this module's own declarations. Sending that
-    * reader to a manifest they do not own is the §4.45 failure the classification exists to prevent. */
+  /** One grep-able line that ENDS in the §1 classification, since no engine change is ever the
+    * right response to any of these. Differs by [[about]]: a finding about the KEY points at the
+    * manifest entry quoted from it; one about THIS RUN may be a BASE's inherited key, correct
+    * there, while what produced the finding is this module's own declarations. */
   def render: String =
     s"""$phase — $setting: "$key" ${issue.label}: $detail""" + (about match
       case PolicyFinding.About.TheKey =>
@@ -57,35 +32,11 @@ final case class PolicyFinding(
 
 object PolicyFinding:
 
-  /** WHICH QUESTION a finding answers, which decides whether a module that did not DECLARE the key
-    * may still be told about it.
-    *
-    * ==Why this is not the same question as `issue`==
-    * [[PolicyIssue]] says what the engine could PROVE about a key. This says whose fact the finding
-    * is, and the two are independent: the same `Unverifiable` can be *your entry names a member
-    * whose shape I cannot check* (about the key) and *your program's own declarations made me refuse
-    * a rewrite this run* (about the run).
-    *
-    * ==What it is FOR, measured==
-    * `PortRun` holds a MERGED phase's findings to the subjects the fold recorded THIS manifest as
-    * contributing — right for a key, because an inherited entry that matched nothing here belongs to
-    * whichever module declared it and `ManifestAgreement` says which. Applied to a REFUSAL the run
-    * made, it drops the only report of a decision this module's own code caused. Measured on
-    * `sge-visui`: the base's `Disposable#dispose -> close` rename refused, whole and correctly,
-    * because two of the DEPENDENT's own declarations are already called `close`
-    * (`MemberRenamer.OnCollision.Refuse`) — and the port then emitted five classes claiming
-    * `java.lang.AutoCloseable` and implementing none of it, with eight `value dispose is not a
-    * member of` errors and **`policy` reading 0**. Nothing else could see it: the base's own run does
-    * not refuse (its program has no `VisWindow`), the fingerprints are EQUAL because there is one
-    * instance, every other count is flat, and the sole trace was a `ScopedOut` row in
-    * `decisions.tsv` — the artifact §4.575 writes for an agent holding the run directory, not the one
-    * an operator reads.
-    *
-    * The split is structural rather than a per-phase opinion: a finding derived from a BINDING is
-    * about the key by construction ([[PolicyReport.fromBindings]] — the key named nothing), and a
-    * finding a phase files while RUNNING is about this run. A phase that says nothing keeps the old
-    * answer.
-    */
+  /** WHICH QUESTION a finding answers, deciding whether a module that did not DECLARE the key may
+    * still be told about it. Independent of [[PolicyIssue]] (what the engine could PROVE): the same
+    * `Unverifiable` can be about the key's shape OR about a refusal this run's own declarations
+    * caused — the latter must not be dropped by an inherited-key filter (measured on `sge-visui`,
+    * `policy` reading 0 with 8 errors). Structural: binding-derived is about the key, running-phase about the run. */
   enum About:
     /** the declared entry is at fault — a typo, a stale name, a malformed shape. Filterable to the
       * module that declared it, and the default. */
@@ -110,22 +61,11 @@ enum PolicyIssue(val label: String):
   /** the key or its value is not in the shape the phase documents, so it could never match. */
   case Malformed extends PolicyIssue("malformed")
 
-  /** the key BOUND to a declaration this run owns, and the thing it selected never happened.
-    *
-    * ==Why this is a fourth case where the binder's five collapse into three==
-    * [[PolicyReport.issueOf]] maps five [[balticporter.tir.NotBound]] reasons onto three issues on
-    * the stated ground that the issue says what the READER should do, and those five all answer one
-    * question — did the key name anything? This does not. A
-    * [[balticporter.tir.ResolutionPlan]] entry can bind perfectly, name a live remedy, and still do
-    * nothing, because the FINDING the remedy resolves did not occur this run. Reported as
-    * [[NeverMatched]] it would send its author looking for a member that is right there; reported as
-    * [[Unverifiable]] it would say the engine could not check something, when the engine checked and
-    * the answer was zero. The reader's action is its own: find out whether the site went away, or
-    * whether something earlier in the pipeline already answered it.
-    *
-    * It is the source-side half of `CLAUDE.md` §5.5's declared-beside-applied split: a run that
-    * printed only what it applied could not tell a port that asked for nothing from a port whose
-    * every request was inert. */
+  /** the key BOUND to a declaration this run owns, and the thing it selected never happened — a
+    * FOURTH case distinct from [[PolicyReport.issueOf]]'s three: a `ResolutionPlan` entry can bind
+    * perfectly, name a live remedy, and still do nothing because the finding it resolves did not
+    * occur this run. Reported as `NeverMatched`/`Unverifiable` would mislead. The source-side half
+    * of CLAUDE.md §5.5's declared-beside-applied split. */
   case NeverApplied extends PolicyIssue("bound, and never applied")
 
 final case class PolicyReport(findings: List[PolicyFinding]):
@@ -147,12 +87,8 @@ object PolicyReport:
     PolicyReport(sources.iterator.flatMap(_.policyReport.findings).toList)
 
   /** The never-fired report, derived from what the RUN BOUND — one row per key that did not.
-    *
-    * `PolicyBinder` lives in `balticporter.tir` and cannot produce a `PolicyReport`, because `core`
-    * depends on `tir` and not the other way round (the same rule `RuleScope.neverFired` follows and
-    * documents). So the binder owns the ANSWERS and this owns their classification, which is the
-    * right split anyway: a binding is a fact, a `PolicyIssue` is a judgement about what its reader
-    * should do. */
+    * `PolicyBinder` lives in `balticporter.tir` and cannot produce a `PolicyReport` (`core` depends
+    * on `tir`, not vice versa) — so the binder owns the ANSWERS and this owns the classification. */
   def fromBindings(records: Iterable[balticporter.tir.PolicyBinder.Record]): PolicyReport =
     import balticporter.tir.Binding
     PolicyReport(records.iterator.collect {
@@ -162,13 +98,8 @@ object PolicyReport:
     }.toList)
 
   /** The per-location REMEDY SELECTIONS that did not do what their author asked
-    * ([[balticporter.tir.ResolutionPlan.troubles]]), classified.
-    *
-    * Here rather than on the plan for [[fromBindings]]' reason exactly: `ResolutionPlan` lives in
-    * `balticporter.tir` and cannot produce a `PolicyReport`, because `core` depends on `tir` and not
-    * the other way round. The plan owns the ANSWERS and this owns their classification, which is the
-    * right split anyway — a trouble is a fact, a `PolicyIssue` is a judgement about what its reader
-    * should do next. */
+    * ([[balticporter.tir.ResolutionPlan.troubles]]), classified. Here for [[fromBindings]]'s
+    * reason: `ResolutionPlan` lives in `tir` and cannot produce a `PolicyReport`. */
   def fromResolutions(troubles: Iterable[balticporter.tir.ResolutionPlan.Trouble]): PolicyReport =
     import balticporter.tir.{Resolution, ResolutionPlan}
     PolicyReport(troubles.iterator.map { t =>
@@ -188,24 +119,13 @@ object PolicyReport:
     }.toList)
 
   /** The ARTIFACT declarations that answered nothing — `PortManifest.dependencies` entries no
-    * requirement in this module's own emitted code names (`DependencyCheck.unneeded`).
-    *
-    * Here for [[fromBindings]]' reason once more, and with one difference worth stating: the other
-    * two seams are keys naming DECLARATIONS, and this one names a BUILD COORDINATE, so the finding
-    * is filed under the manifest field rather than under a phase. There is no phase to file it
-    * under — `dependencies` is read by the check and by the build generator and by nothing that
-    * runs.
-    *
-    * The key is the coordinate as [[balticporter.catalog.ArtifactDep]] itself renders one — the
-    * same spelling the `dependency-coverage` findings print, so the entry a reader removes and the
-    * requirement they were told about are one string apart. */
-  /** …and the DETAIL is the CHECK's sentence, not this function's.
-    *
-    * It used to be one paragraph written here, and most of that paragraph was a caveat: *or a surface
-    * phase redirected into it, in which case do not remove it* — the blind spot named rather than
-    * closed (`ENGINE-LIMITS.md` P8). With the check reading both programs, the reader is in exactly
-    * one of two removable cells and each wants a different investigation, so the sentence is the one
-    * `DependencyCheck.Cell` carries and this function does not get to have an opinion about it. */
+    * requirement in this module's own emitted code names (`DependencyCheck.unneeded`). Filed under
+    * the manifest field, not a phase — `dependencies` has none. Key is the coordinate spelled as
+    * `dependency-coverage` findings print it. */
+
+  /** …and the DETAIL is the CHECK's sentence, not this function's — the reader is in one of two
+    * removable cells (`DependencyCheck.Cell`) each wanting different investigation, so this
+    * function does not get an opinion about it (`ENGINE-LIMITS.md` P8). */
   def fromDependencies(unneeded: Iterable[(balticporter.catalog.ArtifactDep, String)]): PolicyReport =
     PolicyReport(unneeded.iterator.map { (d, why) =>
       PolicyFinding(DependencySeam, DependencySetting, d.toString, PolicyIssue.NeverApplied, why)
@@ -216,23 +136,10 @@ object PolicyReport:
   val DependencySeam    = "dependencies"
   val DependencySetting = "PortManifest.dependencies"
 
-  /** [[balticporter.tir.NotBound]] → [[PolicyIssue]]. This mapping adds NO case, deliberately: the
-    * issue says what the READER should do, and the binder's five reasons are five answers to ONE
-    * question — did the key name anything — with only three actions between them (it named nothing,
-    * it named more than you can act on, it could never have named anything). The binder's finer
-    * distinctions survive in the DETAIL, which is where they are actionable.
-    *
-    * ([[PolicyIssue.NeverApplied]] is a fourth case and does not contradict that: it answers a
-    * DIFFERENT question — the key bound and the thing it asked for did not happen — and its own doc
-    * says why collapsing it into either neighbour misleads.)
-    *
-    * Two mappings worth stating because they are choices:
-    *   - `ExternalOnly` → `NeverMatched`. From the manifest's point of view the entry did nothing,
-    *     which is exactly what `NeverMatched` means to its reader; the detail says WHY, which is
-    *     what `RuleScope`'s doc has asked for since the scope existed.
-    *   - `SyntheticTarget` → `Malformed`. It could never legitimately have matched, so it belongs
-    *     with the keys that are not keys — and NOT with the typos, which is the confusion the
-    *     binder's own enum exists to prevent. */
+  /** [[balticporter.tir.NotBound]] → [[PolicyIssue]]. Adds NO case: the binder's five reasons are
+    * five answers to ONE question (did the key name anything) with only three reader actions;
+    * finer distinctions survive in the DETAIL. `ExternalOnly` → `NeverMatched` (did nothing);
+    * `SyntheticTarget` → `Malformed` (could never have matched — not a typo). */
   private def issueOf(why: balticporter.tir.NotBound): PolicyIssue =
     import balticporter.tir.NotBound
     why match
@@ -243,11 +150,7 @@ object PolicyReport:
       case NotBound.SyntheticTarget(_) => PolicyIssue.Malformed
 
 /** Implemented by every §1(b) seam — a phase taking a policy parameter, or a policy VALUE like
-  * [[Substitutions]] that is consulted rather than run. Report a no-op policy, never a no-op run.
-  *
-  * Contract: reading this is cheap and side-effect free, and it reflects the LAST run/consultation
-  * of that instance. Empty policy in, empty report out — a phase configured with nothing has
-  * nothing to complain about (CLAUDE.md §1(b): "an empty parameter must make the phase a no-op").
-  */
+  * [[Substitutions]] consulted rather than run. Report a no-op policy, never a no-op run. Reading
+  * is cheap, side-effect free, reflects the LAST run; empty policy in, empty report out (§1b). */
 trait PolicySource:
   def policyReport: PolicyReport

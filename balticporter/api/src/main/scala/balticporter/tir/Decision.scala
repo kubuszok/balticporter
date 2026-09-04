@@ -5,12 +5,8 @@ import java.nio.file.{Files, Path}
 /** DECISION PROVENANCE — why the emitted code looks the way it does. [[SrcMap]] answers "which Java
   * produced this Scala"; a `Decision` answers "why is this not a mechanical translation" — durable
   * and machine-joinable (`decisions.tsv`), for an agent in another repository (CLAUDE.md §4.45).
-  * [[Reason]] is a constructor parameter, not free text, so every decision carries its §1
-  * classification ((a) engine, (b) policy, (c) library rule) — free text still goes in
-  * `detail("why")`. `subjectFqn` captures the name AT DECISION TIME rather than at write time: a
-  * package rename runs last (§4.56), so re-deriving the name later would silently relabel every
-  * earlier decision into the emitted namespace.
-  */
+  * [[Reason]] classifies it into §1's three kinds; `subjectFqn` captures the name AT DECISION TIME,
+  * since a package rename runs last (§4.56) and re-deriving it later would relabel old decisions. */
 final case class Decision(
     kind: Decision.Kind,
     /** the symbol the decision is ABOUT, when the decider holds one. `SymId.None` for a decision
@@ -19,15 +15,9 @@ final case class Decision(
     /** the subject's fully-qualified name AT DECISION TIME — see the class doc. */
     subjectFqn: String,
     /** kind-specific pairs: `from`/`to` for a rename, `file` for an artefact copied in, `why` for
-      * free text. Sorted at write time.
-      *
-      * '''Never restate what [[Reason]] already carries.''' A `Reason.Configured(phase, key)` IS
-      * the policy entry, and both consumers print the two side by side — `PorterNote.pairs` emits
-      * the classification and then this map, so a `key` here renders `key=… key=…` in the comment
-      * beside the code, and `tsv` writes a `reason` column holding `phase:key` immediately before
-      * a `detail` column repeating it. Three phases did exactly that and it reached emitted output;
-      * the sites that remain are `PortRun`'s three drop loops (PROGRESS §12.4). Put a NARROWER or
-      * DIFFERENT string here if a decider has one; never the same one. */
+      * free text. Sorted at write time. NEVER restate what [[Reason]] already carries — a
+      * `Reason.Configured(phase, key)` IS the policy entry and both consumers print it beside this
+      * map, so a `key` here duplicates it in output; use a NARROWER or DIFFERENT string instead. */
     detail: Map[String, String],
     reason: Reason,
     origin: Origin,
@@ -43,76 +33,10 @@ final case class Decision(
 
 object Decision:
 
-  /** What was decided. CLOSED on purpose: an open string would make `decisions.tsv` ungroupable and
-    * let two deciders describe the same act two ways. Add a case when a decider needs one — the
-    * cost of the enum is the one edit that forces the name to be agreed.
-    *
-    *   - [[RenamedType]]      — a type is emitted under a different NAME (not merely a different
-    *                            package): a shadowing fix, a collision with a Scala keyword.
-    *   - [[RenamedPackage]]   — a symbol's namespace moved ([[balticporter.transform.PackageRenameTransform]]).
-    *   - [[RenamedMember]]    — a field or method was renamed, e.g. because Java allows a name Scala
-    *                            does not (§4.55).
-    *   - [[DroppedType]]      — a type is deliberately NOT emitted; something else supplies its FQN.
-    *   - [[DroppedMember]]    — one member is deliberately not emitted, the rest of its type is.
-    *   - [[SubstitutedBody]]  — a method KEPT its signature and had its body replaced.
-    *   - [[SubstitutedCall]]  — a CALL was replaced by a ready-made expression naming its receiver
-    *                            and arguments. Distinct from [[RedirectedCall]], and the two are
-    *                            not a candidate for merging: a redirect swaps the CALLEE and leaves
-    *                            the call's shape alone, so the emitted line still reads as the
-    *                            Java's call with a different name on it; a substitution replaces
-    *                            the whole expression, and the result may be a field read, a `using`
-    *                            application or nothing that looks like a call at all. Merged, "how
-    *                            many call sites still resemble their Java" stops being answerable —
-    *                            and it is the question that says whether a port's bodies can still
-    *                            be diffed against upstream.
-    *   - [[InjectedMember]]   — a definition in the output came from a hand-written file, not from
-    *                            the frontend.
-    *   - [[RedirectedCall]]   — a call site now names a different target (class table, static
-    *                            forwarder, port map redirect).
-    *   - [[RetypedSignature]] — a declaration's type changed (collections shims, opaque types,
-    *                            raw-generic erasure).
-    *   - [[ScopedOut]]        — the COMPLEMENT of the above, and it needs a kind of its own for the
-    *                            reason `decisions.tsv` exists at all: a retyping rule's
-    *                            [[RuleScope]] deliberately held this declaration back, so it keeps
-    *                            its upstream type while the code around it moved. The row that
-    *                            would have explained it is the one that is NOT there, and "why is
-    *                            this field a `java.util.List` when every other file says `Buffer`"
-    *                            then has no answer anywhere in the run. Always `Reason.Configured`
-    *                            — an exclusion is a policy entry by construction.
-    *   - [[FunnelledCtor]]    — Java's constructor set was funnelled into one primary plus
-    *                            secondaries, promoting parameters and locals to members.
-    *   - [[DroppedSuperCall]] — a secondary constructor's `super(args)` could not be expressed and
-    *                            its arguments are gone (`ENGINE-LIMITS.md` C3). Distinct from
-    *                            [[FunnelledCtor]], which is the nomination itself: one class may
-    *                            funnel successfully and still drop one root's super arguments, and
-    *                            merging them would make "how many paths lost their arguments"
-    *                            unanswerable.
-    *   - [[WidenedVisibility]]— a declaration ships WIDER than java wrote it. One kind for members
-    *                            and types alike (DESIGN.md §8.7), with the `cause` pair saying
-    *                            which residual it is: a REPLAYED parent constructor's statements
-    *                            that must still reach a private member one level down; a `protected
-    *                            static`, which a scala companion cannot express; a §4.55 field
-    *                            RENAME, whose new name scala's own access rules do not make
-    *                            reachable from everywhere java read the old one; a package the
-    *                            port's own renames merged or split. The faithful part of the
-    *                            visibility mapping records NOTHING — the diff is the change — so
-    *                            every row here is a place the port could not be faithful.
-    *   - [[DeferredInit]]     — a static's initialisation moved out of the class initialiser and
-    *                            onto the first READ of it, because the initialiser needed a context
-    *                            it had no signature to receive (DESIGN.md §8.4). It is the one
-    *                            EAGER→LAZY change the engine makes, it is always asked for per site,
-    *                            and it pays for a kind of its own because no existing one states
-    *                            what changed: the declaration's TYPE is untouched, so
-    *                            [[RetypedSignature]] would be a lie, and its body is not replaced,
-    *                            so [[SubstitutedBody]] would be another. Java runs a class
-    *                            initialiser at first ACTIVE USE of the class and the rewritten form
-    *                            runs at first read of the field; a reader has to be told that, at
-    *                            the declaration, which is why this kind carries a porter note.
-    *   - [[Unrenderable]]     — the engine has no faithful Scala for this construct and said so in
-    *                            the output (preview mode, [[balticporter.tir.Decision]] E9). Under
-    *                            the shipping default the construct is refused and COUNTED instead
-    *                            (`ENGINE-LIMITS.md` M6) and no row of this kind is written.
-    */
+  /** What was decided. CLOSED on purpose: an open string would make `decisions.tsv` ungroupable.
+    * Renamed{Type,Package,Member}, Dropped{Type,Member}, Substituted{Body,Call}, InjectedMember,
+    * RedirectedCall, RetypedSignature, ScopedOut, FunnelledCtor, DroppedSuperCall,
+    * WidenedVisibility, DeferredInit, Unrenderable — see each case's own doc where one exists. */
   enum Kind:
     case RenamedType, RenamedPackage, RenamedMember
     case DroppedType, DroppedMember
@@ -123,19 +47,13 @@ object Decision:
     case RetainedParent
     /** a generic type ARGUMENT kept in the upstream namespace because a third party reifies it out
       * of the class file's generic signature (`ENGINE-LIMITS.md` K20) — jackson's `TypeReference`,
-      * Gson's `TypeToken`, `java.lang.Class`. [[ScopedOut]]'s reasoning applies verbatim and is why
-      * this is not folded into it: a declaration that kept its upstream type looks like a
-      * translation nobody performed, and the diff shows nothing because nothing changed. It is not
-      * [[ScopedOut]] itself because the two answer different questions — a scope holds a whole
-      * DECLARATION back, and this holds back ONE POSITION inside a declaration whose every other
-      * type moved, which is the fact a reader of that line needs. */
+      * Gson's `TypeToken`, `java.lang.Class`. Not [[ScopedOut]]: that holds back a whole
+      * DECLARATION, this holds back ONE POSITION inside a declaration whose every other type moved. */
     case ReifiedTypeArg
     /** a value handed to an external REFLECTIVE SINK at an opaque slot, presented in java's own
-      * representation at run time (`ENGINE-LIMITS.md` K21 face 1). [[ReifiedTypeArg]]'s third party
-      * one end of the call over: that one reads the class file's TYPE ARGUMENTS, this one reads the
-      * OBJECT. It is a separate kind because the two are fixed in different places — the carrier by
-      * NOT retyping a position, this one by a bridge at the USE — and a reader who is told only
-      * "the third party reifies things" cannot tell which of the two a line is. */
+      * representation at run time (`ENGINE-LIMITS.md` K21 face 1). The other end of
+      * [[ReifiedTypeArg]]'s call: that reads the class file's TYPE ARGUMENTS, this reads the OBJECT
+      * — fixed differently (a carrier not retyping a position vs. a bridge at the use). */
     case BridgedEgress
     /** java-bean accessors added beside a field java declared `public`, because scala emits no
       * public JVM field and a framework auto-detecting one sees nothing (`ENGINE-LIMITS.md` K21
@@ -143,234 +61,91 @@ object Decision:
       * carrying a note: the reader is looking at a `def getA()` with no upstream line behind it,
       * and the source map cannot answer that. */
     case BeanAccessor
-    /** a statement INVENTED in a class body (or in a companion's) whose only purpose is to touch
-      * this type's companion `object`, because java would have initialised the CLASS at that
-      * moment and Scala initialises the OBJECT at a different one (`ENGINE-LIMITS.md` K22, JLS
-      * 12.4.1). Like [[BeanAccessor]] it is a member no java declared, and it is the one line in an
-      * emitted file whose purpose is invisible from its text: `val _ = com.foo.T` reads as
-      * dead code to every reader who does not already know that a `static { }` block landed in the
-      * companion. The DETAIL says WHICH of java's triggers this statement stands for, because the
-      * list is short and knowing which one is what tells a reader whether their own path is
-      * covered. */
+    /** a statement invented to touch this type's companion `object`, because java initialises the
+      * CLASS at that moment and scala initialises the OBJECT at a different one (`ENGINE-LIMITS.md`
+      * K22, JLS 12.4.1). Invisible from its own text (`val _ = com.foo.T` reads as dead code); the
+      * DETAIL says which of java's triggers this statement stands for. */
     case ForcedClassInit
-    /** a java `sealed` hierarchy shipped as an ORDINARY OPEN type, because scala's `sealed` is
-      * FILE-scoped and has no `permits` clause to name a subclass in another file with (JLS 8.1.1.2,
-      * catalog `JS-C44`). Kept apart from [[WidenedVisibility]] although both widen: that one is
-      * about an ACCESS LEVEL and `Visibility` decides it over the whole program, while this is about
-      * who may EXTEND the type and is decided at the declaration from where its subtypes land. A
-      * reader of the emitted `class` sees no modifier missing — there is nothing in the text to
-      * notice — which is exactly the case §4.575 says a note exists for. The DETAIL says how many
-      * subtypes this program declares and how many of them leave this file, because "the seal could
-      * not be kept" and "nothing in this program extends it" are different situations with the same
-      * emitted shape. */
+    /** a java `sealed` hierarchy shipped as an ordinary OPEN type, since scala's `sealed` is
+      * file-scoped with no cross-file `permits` (JLS 8.1.1.2, catalog `JS-C44`). Apart from
+      * [[WidenedVisibility]] (access level, program-wide) — this is about who may EXTEND, decided
+      * at the declaration. DETAIL: how many subtypes declared, how many leave this file. */
     case WidenedSeal
-    /** the `equals`/`hashCode`/`toString` javac DERIVES from a java record's components (JLS
-      * 8.10.3), written out, plus the `unapply` scala needs to deconstruct one and java does not
-      * have (catalog `JS-C43`). [[BeanAccessor]]'s and [[ForcedClassInit]]'s case for carrying a
-      * note, one construct over: no java line declares any of these, so the source map has nothing
-      * to point at and a reader of the emitted `override def toString` cannot tell it from a member
-      * somebody wrote.
-      *
-      * The DETAIL says which of the four were written and which the record declared for itself,
-      * because a record may override any of the three and then the absence is java's own decision —
-      * and it names the one part of the construct no image carries, since scalac emits no JVM
-      * record: `Class.isRecord` answers false and `getRecordComponents` answers null, which a
-      * framework that discovers records reflectively will act on. */
+    /** the `equals`/`hashCode`/`toString` javac derives from a record's components (JLS 8.10.3),
+      * written out, plus the `unapply` scala needs and java lacks (catalog `JS-C43`) — no java line
+      * declares any of these, so the source map has nothing to point at. DETAIL: which of the four
+      * were written vs. record-declared, and that `Class.isRecord` is false on the emitted class. */
     case RecordMembers
-    /** an anonymous class implementing a single-abstract-method interface was emitted as a LAMBDA,
-      * ascribed to that interface (`DESIGN.md` §8.15).
-      *
-      * The mechanical translation is the anonymous class and it is perfectly correct, so the reader
-      * at the line is owed the reason the port went the other way — and one thing more, which is
-      * why this kind carries data rather than sharing an existing one: java's anonymous class has a
-      * STABLE CLASS NAME (`Outer$1`) that a `getClass().getName()`, a `getSimpleName()`, a
-      * `toString()` or a log line can print, and a lambda's is a hidden class spelled
-      * `Outer$$Lambda$14/0x…`. No structural guard can reach that — every reference to a value can
-      * reach `getClass()` — so it is a residue RECORDED on the conversion, where §4.45's reader is,
-      * and `was=` is the name it had. */
+    /** an anonymous SAM-implementing class was emitted as a LAMBDA instead (`DESIGN.md` §8.15) —
+      * correct but not the mechanical translation, so the reader is owed why. Also: java's anon
+      * class has a stable name (`Outer$1`) a `getClass()`/log line can print; a lambda's is a
+      * hidden-class name. No structural guard can catch that — `was=` is the name it had. */
     case SamLambda
-    /** a java BEAN PAIR over a trivial backing field was emitted as a scala `var`/`val`, the two
-      * accessors deleted and the field's declaration made the property (`DESIGN.md` §8.5).
-      *
-      * [[SamLambda]]'s case for carrying data rather than sharing a kind, one construct over. The
-      * mechanical translation — `def x` / `def x_=`, bodies verbatim — already compiles and already
-      * behaves identically, so the reader at the line is owed the reason the port went further; and
-      * one thing more that no emitted text can say: the JVM METHOD NAMES moved. `getName()` and
-      * `setName()` became `name()` and `name_$eq()`, which is invisible to the compiler, to every
-      * count and to every test, and visible to exactly the reflective reader `ENGINE-LIMITS.md` K21
-      * is about. `was=` is what those methods were called. */
+    /** a java bean pair over a trivial backing field was emitted as a scala `var`/`val`, accessors
+      * deleted (`DESIGN.md` §8.5) — already correct as `def x`/`def x_=`, so the reader is owed why
+      * it went further: the JVM METHOD NAMES moved (`getName()`/`setName()` → `name()`/`name_$eq()`),
+      * invisible to compiler/count/test, visible to reflection (`ENGINE-LIMITS.md` K21). `was=`. */
     case CollapsedProperty
-    /** the port SELECTED one of the remedies a phase or check OFFERED at this declaration, and the
-      * engine carried it out ([[Remedy]], [[AppliedResolution]]).
-      *
-      * A kind of its own rather than the kind of whatever the remedy DID, and the reason is the one
-      * §4.575 gives: the reader at the line is looking at emitted text that no other port with the
-      * same engine and the same java would have, and the fact that explains it is not in the code —
-      * it is one word in this port's manifest. `Reason.Configured` names the entry to edit; this
-      * kind is what says the entry was a MENU CHOICE rather than a table lookup, which is the
-      * difference between "change this value" and "there was another option and somebody picked
-      * this one". The DETAIL carries the remedy's id, the residue lane it drained and which of §1's
-      * three kinds owns the code that carried it out. */
+    /** the port SELECTED one of the remedies a phase or check OFFERED at this declaration
+      * ([[Remedy]], [[AppliedResolution]]) — a kind of its own because the fact explaining the
+      * emitted text is one word in the manifest, not code (CLAUDE.md §4.575). DETAIL: the remedy's
+      * id, the lane it drained, and which of §1's kinds carried it out. */
     case SelectedRemedy
-    /** a declaration's type was NOT retyped, because the declaration OVERRIDES one whose signature
-      * lives in a COMPILED CLASS FILE (§4.56: an unowned symbol's signature is a fact about a class
-      * file, and no phase may move it).
-      *
-      * [[ScopedOut]]'s reasoning and emphatically not [[ScopedOut]] itself, because the two answer
-      * different questions and only one of them has an answer a port can act on. A scope is a
-      * POLICY: `Reason.Configured`, a manifest entry verbatim, and a reader told to widen or narrow
-      * it. This is a UNIVERSAL refusal with no key anywhere — the java said `extends
-      * java.util.AbstractSet` and the class file says what `containsAll` takes, so there is nothing
-      * for a port to change and telling its reader to edit a scope would cost them the session
-      * §4.45 is about. It is not [[RetainedParent]] either: that one keeps a PARENT the target
-      * cannot be, and this keeps a MEMBER's formals under a parent that was kept for its own
-      * reasons.
-      *
-      * Rendered as a note for [[ScopedOut]]'s reason read verbatim: a declaration that kept its
-      * upstream type looks like a translation nobody performed, and the diff against the java shows
-      * nothing at all, because nothing changed. */
+    /** a declaration's type was NOT retyped because it OVERRIDES a signature living in a COMPILED
+      * CLASS FILE (CLAUDE.md §4.56: unowned signatures are facts, no phase may move them). Not
+      * [[ScopedOut]] (a policy key, editable) — universal refusal with no key anywhere. Not
+      * [[RetainedParent]] either (keeps a parent, not a member's formals). */
     case RetainedSignature
-    /** the `override` modifier java's own hierarchy justified was REMOVED, because the parent that
-      * justified it is not the parent the port emits (`ENGINE-LIMITS.md` K28).
-      *
-      * A phase that RE-PARENTS a class onto a target of its own choosing has moved the far side of
-      * every override in it. The modifier is the frontend's honest answer about JAVA — the member
-      * really did override `java.util.Map#containsKey` — and it is a statement about a type the
-      * emitted class no longer extends, so scalac reads `E037 overrides nothing` or `E038 different
-      * signature` at a member whose body, name and formals are all correct. Stripping it is not a
-      * repair of the member; it is the modifier catching up with the parent.
-      *
-      * A kind of its own rather than [[RetypedSignature]]'s, and the line is the one §4.575 draws:
-      * nothing about the member's TYPE moved, so `decisions.tsv`'s retyping rows say nothing about
-      * it, and the emitted text differs from the mechanical translation by one word that a reader
-      * diffing against the java would otherwise read as the port having lost java's `@Override`.
-      * What the DETAIL has to carry is the PARENT — the reader's next question is *overrides
-      * nothing in WHAT*, and the answer is a type the java file does not name.
-      *
-      * Note the pair it makes with [[RetainedSignature]]: that one keeps a member's FORMALS because
-      * an unmoved class file declares them, this one drops a MODIFIER because a moved parent does
-      * not. Both are §1(a) refusals with no key anywhere. */
+    /** the `override` modifier java's hierarchy justified was REMOVED, because the parent that
+      * justified it is not the parent the port emits (`ENGINE-LIMITS.md` K28) — the modifier
+      * catching up with a re-parented class, not a member repair. Not [[RetypedSignature]]: nothing
+      * about the member's TYPE moved. DETAIL carries the PARENT the java no longer names. */
     case StrippedOverride
-    /** a PARENT the mapping minted was DROPPED, because another parent the same mapping minted
-      * already carries the relation java wrote it for (`ENGINE-LIMITS.md` K28.1).
-      *
-      * [[RetainedParent]]'s mirror image and deliberately not the same kind: that one keeps JAVA's
-      * parent because the target cannot BE one, and this one removes the phase's OWN parent because
-      * a second parent of its own subsumes it. Java relates two interfaces at one member spelled two
-      * ways — `Map`'s `entrySet().iterator()` beside `Iterable`'s `iterator()` — and scala has ONE
-      * namespace, so a class minted onto both a `scala.collection` trait and a standalone shim
-      * declares one member at two arities and can never compile. No repair at the member helps: the
-      * conflict is in the parents (`CLAUDE.md` §4.5), which is why this is a decision about the
-      * `extends` clause rather than about anything inside the class.
-      *
-      * What the DETAIL has to carry is the parent that SUBSUMES it, because a reader diffing the
-      * emitted class against the java sees one `implements` clause simply gone and nothing local
-      * says which of the remaining parents took over its relation. */
+    /** a PARENT the mapping minted was DROPPED because another minted parent already carries the
+      * relation java wrote it for (`ENGINE-LIMITS.md` K28.1) — mirror of [[RetainedParent]] (which
+      * keeps JAVA's parent). Two minted parents can declare one member at two arities, which cannot
+      * compile (CLAUDE.md §4.5); DETAIL carries the parent that SUBSUMES it. */
     case SubsumedParent
     /** a member the minted parent DECLARES, synthesised over the java member it renamed out of the
-      * way (`ENGINE-LIMITS.md` K28.1).
-      *
-      * [[StrippedOverride]]'s other half, and the family no modifier repairs: a class re-parented
-      * onto `scala.collection.mutable.{Map, Set, Buffer}` owes that trait's abstract surface, and
-      * java's own members are the wrong SHAPE for it — `put(K,V): V` against `Option[V]`,
-      * `iterator(): JavaIterator[A]` against a parameterless `Iterator[A]`, `size(): Int` against a
-      * member that is `final`. Retyping java's member closes the row and DELETES whatever its result
-      * type was carrying; renaming it moves a name and nothing else, and the synthesised member over
-      * it is what the parent asked for.
-      *
-      * Two things the detail must carry, neither recoverable from the emitted text: the java member
-      * this delegates to under its NEW name (a reader diffing against the java sees a member that is
-      * not in the java file at all, calling one whose name is not in it either), and — where the
-      * bridge is `refused` — the guard, since a refusal that reaches the emitted file as a throw is
-      * indistinguishable from a member the library itself declined to implement. The RENAME beside
-      * it is a [[RenamedMember]] row of its own, filed by the renamer, so the pair is two decisions
-      * about two declarations rather than one row claiming both. */
+      * way (`ENGINE-LIMITS.md` K28.1) — [[StrippedOverride]]'s other half, where java's member is
+      * the wrong SHAPE for the trait it owes (e.g. `put(K,V): V` vs `Option[V]`). DETAIL carries the
+      * renamed java member it delegates to, and the guard when the bridge is refused. */
     case BridgedMember
     /** a converted TEST CLASS rebuilds its own instance state before every test, because JUnit 4
-      * CONSTRUCTS A FRESH INSTANCE per `@Test` and MUnit runs one suite instance
-      * (`ENGINE-LIMITS.md` X4).
-      *
-      * [[ForcedClassInit]]'s case one construct over, and the same shape of invisibility: the
-      * declaration java wrote is a field with an initialiser, the emitted one is a `var` at the JVM
-      * default with its initialiser MOVED into a member no java file declares, and every test body
-      * opens with a call to it. Nothing in that text says why — a reader diffing against the java
-      * sees an initialiser that has apparently been deleted, a `final` that has become mutable, and
-      * a `def` nobody wrote — and the fact that explains all three is a difference between two test
-      * FRAMEWORKS, which is nowhere in either file.
-      *
-      * The DETAIL says how many fields were hoisted, whether the constructor body was replayed, and
-      * which ancestor the member chains to, because "this class rebuilds its state" and "this class
-      * rebuilds its state AND its base's" are different claims with the same emitted shape. */
+      * constructs a FRESH INSTANCE per `@Test` and MUnit runs one suite instance
+      * (`ENGINE-LIMITS.md` X4) — the initialiser moves into a member no java file declares. DETAIL:
+      * how many fields hoisted, whether the ctor body replayed, which ancestor it chains to. */
     case RebuiltPerTest
-    /** a nullary java method whose `()` was dropped, making it a scala PARAMETERLESS `def` — the
-      * sge reference port's empirical convention for getter-like members. Like [[SamLambda]] and
-      * [[CollapsedProperty]], the mechanical translation (the nilary form) already compiles and
-      * already behaves identically, so the reader at the line is owed the reason the port went
-      * the other way. The DETAIL carries `from` (the original `name()` spelling) and `to` (the
-      * parameterless `name`). */
+    /** a nullary java method whose `()` was dropped, making it a scala PARAMETERLESS `def` — sge's
+      * empirical getter convention. Already compiles and behaves identically either way, so the
+      * reader is owed why. DETAIL: `from` (original `name()`), `to` (parameterless `name`). */
     case ParenlessConversion
-    /** the mechanical port added `@scala.annotation.nowarn("msg=deprecated")` to a member
-      * declaration whose body calls a METHOD the target library deliberately DEPRECIATES AS LINT —
-      * sge's `orNull` on `lowlevel.Nullable` is the first instance: the lint drives callers toward
-      * `fold`/`foreach`/`getOrElse`, and every interop boundary suppresses it with `@nowarn`. The
-      * port's slot coercion calls `.orNull` at every non-primitive unwrap, so the same annotation is
-      * owed on every member where one lands.
-      *
-      * A kind of its own rather than folded into [[RetypedSignature]], because the ANNOTATION is not
-      * about the member's type or body — it is about a USAGE the member happens to contain, and a
-      * reader of the emitted `@nowarn` is owed the reason it is there. The DETAIL says which method
+    /** `@scala.annotation.nowarn("msg=deprecated")` added to a member whose body calls a method the
+      * target library deliberately deprecates as lint (e.g. sge's `orNull`). About a USAGE inside
+      * the member, not its type/body, so not folded into [[RetypedSignature]]. DETAIL: which method
       * triggered the suppression. */
     case SuppressedWarning
     /** a `(using GivenType[T])` clause added to a class's constructors because a retarget
       * construction inside its body needs the given in scope — the class's callers supply it by
       * inline given resolution. */
     case RequiredGiven
-    /** a local definition or private member was DELETED, its binding DISCARDED (kept the
-      * side-effecting init as a bare expression), or SUPPRESSED with `@nowarn("msg=unused")`,
-      * because Scala's `-Wunused:locals,privates` (part of sge/ssg strict flags under `-Werror`)
-      * reports a symbol Java compiles silently.
-      *
-      * Three sub-actions, from most aggressive to least:
-      *  - '''deleted''' — side-effect-free init, never read. Safe to remove entirely.
-      *  - '''discarded-binding''' — side-effecting init, never read. The expression is kept as a
-      *    bare statement and the binding dropped.
-      *  - '''suppressed''' — `@nowarn("msg=unused")`. Used for `serialVersionUID` (the JVM reads
-      *    it reflectively), for private members whose init may have side effects, and for the
-      *    counted refusal (a private field a framework might read reflectively, K21's shape).
-      *
-      * §1(a) universal — Java has no `-Wunused` equivalent; every port under strict flags needs
-      * this. */
+    /** a local/private member was DELETED, its binding DISCARDED (side-effecting init kept as a
+      * bare expression), or SUPPRESSED with `@nowarn("msg=unused")`, because
+      * `-Wunused:locals,privates` under `-Werror` reports what java compiles silently. §1(a)
+      * universal. DETAIL names which of the three sub-actions and why. */
     case UnusedSymbolHandled
-    /** a member ADDED to a class by `AddMembersTransform` — verbatim Scala text spliced at the end
-      * of the owner's body, for a member the hand port wrote and the upstream java does not declare.
-      *
-      * [[InjectedMember]]'s case one seam over: that one is about a whole FILE the port supplies,
-      * this one is about a MEMBER inside a mechanically-translated class. The DETAIL says what was
-      * added (`member`, `arity`) and cites the reference port's source, because a reader of the
-      * emitted `def registerComponentFactory` is looking at a member no java file declares and the
-      * source map cannot answer that. */
+    /** a member ADDED to a class by `AddMembersTransform` — verbatim Scala spliced at the end of
+      * the owner's body, for a member the hand port wrote that upstream java does not declare.
+      * Unlike [[InjectedMember]] (a whole file), this is one member in a translated class. DETAIL:
+      * what was added (`member`, `arity`) and the reference port's source. */
     case AddedMember
 
   val Header ="#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 
-  /** The DECLARATIONS a per-SITE rewrite reached, each with the earliest origin inside it.
-    *
-    * Every redirect phase rewrites EXPRESSIONS, and every one of them nevertheless records once per
-    * DECLARATION. The reader is an agent diffing an emitted file against its upstream Java, and a
-    * site-level rewrite is already visible in that diff — `ClassReflection.forName(s)` reads as
-    * `AssetTypeRegistry.classFor(s)` right there. What the diff cannot say is WHICH POLICY ENTRY
-    * did it, and that is one fact per (declaration, key), not one per occurrence. Recorded per site
-    * it would be the same sentence 240 times, burying every decision that is not a redirect —
-    * which is the failure `PortMapTransform.callSites` already documents for a per-site FINDING.
-    *
-    * The enclosing declaration is read from the xref, which records it on every usage
-    * ([[Usage.enclosing]]); a phase that tracked "the definition I am currently inside" with its
-    * own walk would be the hand-rolled traversal CLAUDE.md §3 forbids. A usage recorded outside any
-    * definition keeps `SymId.None` and is reported under the callee's own name rather than dropped.
-    *
-    * The origin is the EARLIEST site in the declaration, by (file, line), so two runs of the same
-    * program agree on it whatever order the xref hands the usages back in.
-    */
+  /** The DECLARATIONS a per-SITE rewrite reached, each with the earliest origin inside it. Recorded
+    * once per declaration (not per occurrence) since a site-level rewrite is already visible in the
+    * diff — what the diff can't say is WHICH POLICY ENTRY did it. Enclosing declaration read from
+    * the xref ([[Usage.enclosing]]); origin is the earliest (file, line), for determinism. */
   def declarationsUsing(program: Program, sym: SymId): List[(SymId, Origin)] =
     program
       .usages(sym)
@@ -390,19 +165,10 @@ object Decision:
   def fqnOf(program: Program, s: SymId, fallback: String): String =
     program.symbolOf(s).map(_.fullName).filter(_.nonEmpty).getOrElse(fallback)
 
-  /** WHERE a declaration lives — read from the TREE, never from the symbol.
-    *
-    * `Symbol.origin` exists but the frontend does not populate it: positions live on the tree
-    * nodes, and every `Symbol` a run holds carries `Origin.synthetic`. A decision anchored on it
-    * therefore writes `<synthetic>` in the one column that makes the row navigable — the same
-    * unnavigable shape `PortRun`'s nested-drop rule already exists to prevent, arriving from the
-    * other side. (Caught by a spec, not by a compile: the field is there and the type checks.)
-    *
-    * A symbol with no definition of its own borrows its OWNER's, which is right for the only thing
-    * that matters here — the enclosing type is in the SAME FILE by construction, so the row stays
-    * navigable and the line is the nearest one the run can honestly point at. Fuel-bounded, so a
-    * corrupt owner chain cannot hang a recording pass.
-    */
+  /** WHERE a declaration lives — read from the TREE, never from the symbol (`Symbol.origin` is
+    * unpopulated; every `Symbol` carries `Origin.synthetic`). A symbol with no definition of its
+    * own borrows its OWNER's, keeping the row navigable in the same file. Fuel-bounded, so a
+    * corrupt owner chain cannot hang a recording pass. */
   def originOf(program: Program, s: SymId, fuel: Int = 16): Origin =
     program.definitionOf(s).map(_.origin).filter(o => o.javaPath.nonEmpty && o != Origin.synthetic) match
       case Some(o) => o
@@ -411,50 +177,18 @@ object Decision:
         program.symbolOf(s).map(_.owner).filter(_ != SymId.None)
           .map(originOf(program, _, fuel - 1)).getOrElse(Origin.synthetic)
 
-  /** Is `s` a DECLARATION in the sense this channel records — a class, a field or a method — as
-    * opposed to a parameter, a type parameter or a method-local?
-    *
-    * A retyping phase rewrites every symbol's `info`, parameters and locals included, and each of
-    * those is ALREADY covered by the declaration that encloses it: a method's `info` is a
-    * `MethodType` carrying its parameter types, so a parameter whose type moved moved the method's
-    * signature and is one decision, not two. Recording both restates one fact per parameter, which
-    * on libGDX is several thousand rows saying what the method's row already said.
-    *
-    * Decided STRUCTURALLY, from the owner chain — a parameter's and a local's owner is the METHOD
-    * (`SpoonTir` interns them that way), a member's owner is a TYPE. Not from the `isParam` flag
-    * alone, which locals do not carry.
-    */
+  /** Is `s` a DECLARATION this channel records — a class, field or method — as opposed to a
+    * parameter/type-parameter/local, whose retyping is already covered by the enclosing
+    * declaration's own `info`. Decided STRUCTURALLY from the owner chain: a parameter's/local's
+    * owner is the METHOD, a member's owner is a TYPE — never from the `isParam` flag alone. */
   def isDeclaration(program: Program, s: Symbol): Boolean =
     !s.flags.isParam && !program.symbolOf(s.owner).exists(o => isMethodLike(o.info))
 
   /** …and the STRICTER question a per-location POLICY KEY asks: can `owner#member` NAME this?
-    *
-    * [[isDeclaration]] answers what this channel RECORDS, and it is deliberately generous — an
-    * anonymous class's method is a declaration in that sense (its owner is a type, not a method), and
-    * a decision recorded about one is a decision a reader can act on. A `PortManifest.resolutions`
-    * key cannot name it: the owner's `fullName` is `Outer$1`, minted from a per-class counter that
-    * renumbers whenever a `new` is added above it (`ENGINE-LIMITS.md` M10's shape), so a key written
-    * against it is a key that moves under an unrelated upstream edit. A method-LOCAL `val` is
-    * unnameable for the other reason — its owner is the METHOD, and the grammar has no spelling for
-    * one.
-    *
-    * So a lane that both MINTS rows at declarations and APPLIES a remedy at them needs this, and
-    * needs both halves to read the SAME function: `OverloadRiskCheck`'s two sides answered it
-    * separately, and a call inside an anonymous class in a member's body was attributed to the anon
-    * method by the check and to the enclosing member by the applier — so the applied row and the
-    * residue row named different declarations, the lane fell by 0 and `remediation(resolved)` gained
-    * 1. Nothing measured it: both answers are honest, they are just not the same one.
-    *
-    * The answer is a fact about the OWNER (§4.56): the owner's definition is a `Tree.ClassDef` this
-    * program declares. An anonymous class has no `Definition` at all, and a method's is a `DefDef` —
-    * so both fall out of the same test rather than needing a case each.
-    *
-    * ==What this cannot do, and where the walk has to answer instead==
-    * It says whether a symbol IS keyable; it cannot say WHICH keyable declaration an unkeyable one
-    * belongs to, and the owner chain does not hold that: an anonymous class is interned under the
-    * enclosing CLASS (`SpoonTir.anonClass`), never under the member whose body holds the `new`. That
-    * member is known only to a WALK that descended through it, which is why the two sides of a lane
-    * share this predicate and each applies it at its own traversal rather than sharing a climb. */
+    * [[isDeclaration]] is generous (an anon class's method counts); this refuses it — the owner's
+    * `fullName` is minted from a per-class counter that renumbers on unrelated edits
+    * (`ENGINE-LIMITS.md` M10). Both the check and the remedy-applier must read the SAME function
+    * here, or they can attribute one call to two different declarations (measured: lane 0, resolved +1). */
   def isKeyable(program: Program, s: SymId): Boolean =
     program.symbolOf(s).map(_.owner).flatMap(program.definitionOf).exists(_.isInstanceOf[Tree.ClassDef])
 
@@ -503,17 +237,9 @@ object Decision:
       if i < 0 then scala.None else Some(kv.substring(0, i) -> kv.substring(i + 1))
     }.toMap
 
-/** WHY a decision was made, in CLAUDE.md §1's three kinds. Mandatory on every [[Decision]] — see
-  * `Decision`'s class doc for why this is a type and not a sentence.
-  *
-  *   - [[Reason.Universal]]   — §1(a): a fact about Java and Scala, true of every codebase. The
-  *                              `rule` names it (e.g. "java-static-inherited-constant").
-  *   - [[Reason.Configured]]  — §1(b): a parameterised mechanism fired on a POLICY ENTRY. `phase`
-  *                              is the mechanism, `key` the entry — which together are exactly what
-  *                              an agent must edit in the library's manifest to change the outcome.
-  *   - [[Reason.LibraryRule]] — §1(c): a rule that could only ever apply to one library, plugged in
-  *                              by the porting program. `rule` names it.
-  */
+/** WHY a decision was made, in CLAUDE.md §1's three kinds — mandatory on every [[Decision]].
+  * [[Reason.Universal]] (§1a, `rule` names it), [[Reason.Configured]] (§1b, `phase`+`key` name
+  * the manifest entry to edit), [[Reason.LibraryRule]] (§1c, `rule` names the plugged-in rule). */
 enum Reason:
   case Universal(rule: String)
   case Configured(phase: String, key: String)
@@ -550,15 +276,8 @@ object Reason:
     case _              => Universal(detail)
 
 /** One RUN's decisions — a value the [[Pipeline]] owns and hands back, never a process-global
-  * table.
-  *
-  * This is the same rule §5.1 states for the source map, and for the same measured reason: sbt runs
-  * every suite in one JVM, so a global accumulates two runs' decisions into one artifact and a
-  * spec can only survive by filtering the global by name. A log belongs to the run it describes.
-  *
-  * Thread-safe because a phase may one day walk units in parallel, and because the cost of a
-  * concurrent queue is nothing beside the cost of finding out that it was needed.
-  */
+  * table (§5.1's rule for the source map: sbt runs every suite in one JVM, so a global would
+  * accumulate two runs' decisions into one artifact). Thread-safe for a future parallel walk. */
 final class DecisionLog:
   private val q = new java.util.concurrent.ConcurrentLinkedQueue[Decision]()
 
