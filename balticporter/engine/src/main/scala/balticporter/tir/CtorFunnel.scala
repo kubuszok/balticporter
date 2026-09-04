@@ -40,9 +40,16 @@ object CtorFunnel:
         * Kept separate from [[primaryParams]] so "is this constructor nilary" asks java's list.
         * Always trailing. // ENGINE-LIMITS CT4 */
       givens: List[List[Tree.ValDef]] = Nil,
-      /** Per-root post-delegation bodies from `resolvedThroughParent`, already substituted and
-        * retyped. Spliced after `this(...)` to reproduce parent constructor side-effects. */
-      inlinedBodies: Map[SymId, List[Statement]] = Map.empty,
+      /** Post-body parameter slots from `resolvedThroughParent`: parameters the parent secondary's
+        * post-delegation body uses, carried as synthesised class parameters so the primary's body
+        * can replay the post-body without double evaluation. Positioned after super slots and
+        * before field slots. Each is `(name, nullable type)` — null for roots that did not go
+        * through that parent secondary. // ENGINE-LIMITS C3 item 4 */
+      postBodySlots: List[(String, TypeRepr)] = Nil,
+      /** Parent secondary's post-delegation body, guarded by a null check on the post-body
+        * parameter. Rendered in the synthesised primary's class body (not in each secondary).
+        * Already retyped through the child's `extends` clause. */
+      primaryPostBody: List[Statement] = Nil,
       /** True when the promoted root passes its own parameters straight through to super,
         * enabling positional delegation for all siblings. */
       collapse: Boolean = false,
@@ -365,14 +372,16 @@ object CtorFunnel:
     def replayFor(cd: Tree.ClassDef, d: Tree.DefDef): Option[List[Statement]] =
       replays.get((cd.symbol, d.symbol))
 
-    /** Post-delegation body from `resolvedThroughParent`, already substituted and retyped.
-      * `None` when no inlined body exists. Does not overlap with [[replayFor]]. */
-    def inlinedBodyFor(cd: Tree.ClassDef, d: Tree.DefDef): Option[List[Statement]] =
-      val p = decided.getOrElse(cd.symbol, Plan.none)
-      p.inlinedBodies.get(d.symbol).filter(_.nonEmpty)
+    /** Post-body statements for the synthesised primary's class body (guarded by a null check).
+      * Non-empty only when `resolvedThroughParent` produced a post-body carried through a
+      * parameter. Rendered once in the class body, not per-secondary. */
+    def primaryPostBodyFor(cd: Tree.ClassDef): List[Statement] =
+      decided.getOrElse(cd.symbol, Plan.none).primaryPostBody
 
-    /** Names the guard that refused parent-delegation inlining, or `None` if not refused.
-      * Used by `OmissionCheck` to produce a finding naming the refusal guard. */
+    /** Names the guard that refused parent-delegation resolution, or `None` if not refused.
+      * Used by `OmissionCheck` to produce a finding naming the refusal guard.
+      * With post-bodies carried through parameters (not inlined), the only remaining refusals
+      * are `super.m()` or `return` in the post-body. // ENGINE-LIMITS C3 item 4 */
     def inlineDelegationRefused(cd: Tree.ClassDef, d: Tree.DefDef): Option[String] =
       val p = decided.getOrElse(cd.symbol, Plan.none)
       // only for classes that are NOT synthesised (the synthesis succeeded without this root)
@@ -393,12 +402,11 @@ object CtorFunnel:
               if target == parentRootSym || args.isEmpty then scala.None
               else
                 inlineDelegation(program, target, args, parentRootSym, depth = 0) match
-                  case Some(_) => scala.None // inlining succeeded — no refusal
+                  case Some(_) => scala.None // resolution succeeded — no refusal
                   case scala.None =>
-                    Some("parent-delegation inlining refused: double-use of a non-simple argument " +
-                      "(the parent constructor's parameter is used in both the delegation and the " +
-                      "post-body, and the caller's argument expression is not simple enough to " +
-                      "evaluate twice safely)")
+                    Some("parent-delegation resolution refused: the parent constructor's " +
+                      "post-body contains `super.m()` or `return`, which dispatch wrongly " +
+                      "or leave the wrong frame in a subclass")
           }
 
     // ---- the delegation itself: the ONE answer the emitter renders and the check counts ----
@@ -1167,15 +1175,15 @@ object CtorFunnel:
     // admissibility: ONE parent constructor target, ONE arity, ONE context clause shape
     val rootGivens = roots.map(r => givenClauses(program, r))
     // super slots: uniform (same target/arity), resolved through parent, or padded (throwable)
-    var resolvedBodies: Map[SymId, List[Statement]] = Map.empty
+    var resolvedResult: Option[ResolvedResult] = scala.None
     val slotArgs: Option[(SymId, Map[SymId, List[Term]])] =
       Option.when(targets.sizeIs == 1 && arities.sizeIs == 1)(
         targets.head -> roots.map(r => r.symbol -> superArgsOf(program, r)).toMap)
         // resolve through parent delegation chain when roots call different parent secondaries
         .orElse(Option.when(targets.sizeIs > 1 && !throwablePad)(
-          resolvedThroughParent(program, cd, roots, calls)).flatten.map { (root, args, bodies) =>
-            resolvedBodies = bodies
-            (root, args)
+          resolvedThroughParent(program, cd, roots, calls)).flatten.map { rr =>
+            resolvedResult = Some(rr)
+            (rr.parentRoot, rr.argsMap)
           })
         .orElse(Option.when(throwablePad)(throwablePadding(program, roots)).flatten)
     if roots.sizeIs < 2 || roots.exists(_.tparams.nonEmpty) then scala.None
@@ -1217,31 +1225,42 @@ object CtorFunnel:
       // field slots change the signature, so derive them before collision/shadowing checks
       val (fs, values, consumedRuns, refusedFields) = fieldSlotsOf(program, cd, roots)
       val sup = formals.zipWithIndex.map((ft, k) => (s"sup$$$k", ft))
-      // super slots first, then field slots
-      val allSlots    = sup ++ fs.map(s => (s.name, s.tpe))
-      val delegations = roots.map { r =>
-        r.symbol -> (superValues(r.symbol) ++ values.getOrElse(r.symbol, Nil))
-      }.toMap
-      // retype inlined bodies through parent type-parameter instantiation // ENGINE-LIMITS G25
-      val retypedBodies: Map[SymId, List[Statement]] =
-        if resolvedBodies.values.forall(_.isEmpty) then Map.empty
-        else
+      // C3 item 4: post-body slots for the parent secondary's post-delegation body.
+      val (pbSlots, pbPostBody) = resolvedResult match
+        case Some(rr) if rr.postBodyParams.nonEmpty =>
           given Program = program
           val ptSubst = ParentSubst.of(cd)
-          resolvedBodies.map { (sym, body) =>
-            if body.isEmpty || ptSubst.isEmpty then sym -> body
-            else
-              val ph = new Phase:
-                def name = "ctor-inline-retype"
-                override def transformType(t: TypeRepr)(using Program): TypeRepr = ParentSubst.subst(t, ptSubst)
-              sym -> body.map(StandardTraversal.mapStat(ph, _))
+          val slots = rr.postBodyParams.map { (pv, _) =>
+            val pName = program.symbolOf(pv.symbol).map(_.name).getOrElse("p")
+            val slotType = ParentSubst.subst(pv.tpt.tpe, ptSubst)
+            (s"${pName}$$", slotType)
           }
+          val paramSubst = rr.postBodyParams.zip(slots).map { case ((pv, _), (slotName, slotTpe)) =>
+            pv.symbol -> Tree.Opaque(slotName, slotTpe, cd.origin).asInstanceOf[Term]
+          }.toMap
+          val substPh = new Phase:
+            def name = "ctor-postbody-subst"
+            override def transformIdent(t: Tree.Ident)(using Program): Term = paramSubst.getOrElse(t.sym, t)
+          val substBody = rr.rawPostBody.map(s => StandardTraversal.mapStat(substPh, s))
+          val retypedBody = if ptSubst.isEmpty then substBody // G25
+            else
+              val retypePh = new Phase:
+                def name = "ctor-postbody-retype"
+                override def transformType(t: TypeRepr)(using Program): TypeRepr = ParentSubst.subst(t, ptSubst)
+              substBody.map(StandardTraversal.mapStat(retypePh, _))
+          (slots, retypedBody)
+        case _ => (Nil, Nil)
+      val allSlots    = sup ++ pbSlots ++ fs.map(s => (s.name, s.tpe))
+      val delegations = roots.map { r =>
+        val pbVals = resolvedResult.map(_.postBodyValues.getOrElse(r.symbol, Nil)).getOrElse(Nil)
+        r.symbol -> (superValues(r.symbol) ++ pbVals ++ values.getOrElse(r.symbol, Nil))
+      }.toMap
       def synthesise(mark: Option[String]): Option[Plan] =
         val o = cd.origin
         Some(Plan(scala.None, sup.map((n, ft) => Tree.Opaque(n, ft, o)), Nil, synthetic = allSlots,
                   marker = mark, superSlots = sup.size, fieldSlots = fs,
                   delegations = delegations, consumed = consumedRuns, notSlot = refusedFields,
-                  inlinedBodies = retypedBodies,
+                  postBodySlots = pbSlots, primaryPostBody = pbPostBody,
                   // the roots agree (checked above), so any one of them names the clause the
                   // synthesised primary must carry for every secondary's `this(...)` to resolve.
                   givens = rootGivens.headOption.getOrElse(Nil)))
@@ -1435,13 +1454,29 @@ object CtorFunnel:
         if args.nonEmpty && isInitName(program, m) => m
     case _ => SymId.None
 
-  /** Inline parent delegation chains so diverging roots converge on the parent's unique root.
-    * Returns `(parentRoot, argsMap, bodiesMap)` or `None`. */
+  /** Result of [[resolvedThroughParent]]: the parent root, per-root effective args, per-root
+    * post-body param values, and the shared post-body params and statements. */
+  final case class ResolvedResult(
+      parentRoot: SymId,
+      argsMap: Map[SymId, List[Term]],
+      /** Per-root values for the post-body params (in the order of [[postBodyParams]]).
+        * Roots that target the parent root directly have empty lists. */
+      postBodyValues: Map[SymId, List[Term]],
+      /** The parent secondary's params that the post-body uses — `(paramDef, callerArg)`.
+        * Used to derive synthesised parameter names and types. */
+      postBodyParams: List[(Tree.ValDef, Term)],
+      /** The raw post-body statements (un-substituted for post-body params). */
+      rawPostBody: List[Statement]
+  )
+
+  /** Resolve diverging roots through the parent's delegation chain, so they converge on the
+    * parent's unique root. Returns the parent root, per-root effective args, and post-body info
+    * for synthesised parameter creation. // ENGINE-LIMITS C3 item 4 */
   private def resolvedThroughParent(
       program: Program, cd: Tree.ClassDef,
       roots: List[Tree.DefDef],
       calls: List[(SymId, List[Term])]
-  ): Option[(SymId, Map[SymId, List[Term]], Map[SymId, List[Statement]])] =
+  ): Option[ResolvedResult] =
     // find the PARENT class's ClassDef from the first parent in the extends clause
     val parentSym = parentSyms(cd).headOption.getOrElse(SymId.None)
     val parentCd  = program.definitionOf(parentSym).collect { case c: Tree.ClassDef => c }.getOrElse(return scala.None)
@@ -1456,30 +1491,50 @@ object CtorFunnel:
     val resolved = roots.zip(calls).map { case (dependentRoot, (target, superArgs)) =>
       // is this target already the parent root?
       if target == parentRootSym then
-        Some((dependentRoot.symbol, superArgs, List.empty[Statement]))
+        Some((dependentRoot.symbol, InlineResult(superArgs, Nil, Nil)))
       else
         // follow the parent's delegation chain: the target is a parent secondary
         // substitute the dependent root's super args into the parent secondary's body
         // and follow the `this(args)` delegation to find what reaches the parent root
         inlineDelegation(program, target, superArgs, parentRootSym, depth = 0)
-          .map((effectiveArgs, postBody) => (dependentRoot.symbol, effectiveArgs, postBody))
+          .map(result => (dependentRoot.symbol, result))
     }
     if resolved.exists(_.isEmpty) then scala.None
     else
       val flat = resolved.flatten
-      val argsMap   = flat.map((sym, args, _) => sym -> args).toMap
-      val bodiesMap = flat.map((sym, _, body) => sym -> body).toMap
+      val argsMap = flat.map((sym, r) => sym -> r.effectiveArgs).toMap
       // verify all roots now target the same parent constructor and same arity
       val effectiveArities = argsMap.values.map(_.size).toList.distinct
       if effectiveArities.sizeIs != 1 then scala.None
-      else Some((parentRootSym, argsMap, bodiesMap))
+      else
+        val allPbParams = flat.flatMap(_._2.postBodyParams)
+        val seenPb = collection.mutable.Set[SymId]()
+        val uniquePbParams = allPbParams.filter { (p, _) =>
+          if seenPb(p.symbol) then false else { seenPb += p.symbol; true }
+        }
+        val rawPostBody = flat.map(_._2.postBody).find(_.nonEmpty).getOrElse(Nil)
+        val pbValues = flat.map { (sym, r) =>
+          if r.postBodyParams.isEmpty then sym -> uniquePbParams.map(_ => Tree.Literal(Constant.NullC, TypeRepr.NoType, cd.origin): Term)
+          else sym -> r.postBodyParams.map(_._2)
+        }.toMap
+        Some(ResolvedResult(parentRootSym, argsMap, pbValues, uniquePbParams, rawPostBody))
 
-  /** Follow `currentCtor`'s delegation chain to `targetRoot`, substituting args. Returns
-    * `(effective args, post-bodies)`. Refuses on `super.m()`, `return`, or unsafe substitution. */
+  /** Effective args reaching the parent root, un-substituted post-body, and post-body param
+    * dependencies for synthesised parameter creation. // ENGINE-LIMITS C3 */
+  final case class InlineResult(
+      effectiveArgs: List[Term],
+      postBody: List[Statement],
+      postBodyParams: List[(Tree.ValDef, Term)]
+  )
+
+  /** Follow `currentCtor`'s delegation chain to `targetRoot`. Post-body params are carried
+    * through synthesised parameters (not inlined), so non-simple args are allowed there.
+    * Refuses on `super.m()`, `return` in the post-body, or unsafe delegation substitution.
+    * // ENGINE-LIMITS C3 */
   private def inlineDelegation(
       program: Program, currentCtor: SymId, callerArgs: List[Term],
       targetRoot: SymId, depth: Int
-  ): Option[(List[Term], List[Statement])] =
+  ): Option[InlineResult] =
     if depth > 6 then scala.None
     else
       program.definitionOf(currentCtor).collect { case d: Tree.DefDef => d }.flatMap { d =>
@@ -1490,8 +1545,24 @@ object CtorFunnel:
           case Some(Tree.Apply(Tree.Select(r, m, _, _), _, _, _, _))
             if isInitName(program, m) && !r.isInstanceOf[Tree.Super] => stms.tail
           case _ => Nil
-        // count uses across the whole body (delegation args AND post-body)
-        lazy val counts = stms.foldLeft(Map.empty[SymId, Int]) { (acc, st) =>
+        val postBodyUsed: Set[SymId] =
+          if postBody.isEmpty then Set.empty
+          else
+            val used = collection.mutable.Set[SymId]()
+            val paramSet = ps.map(_.symbol).toSet
+            given Program = program
+            val ph = new Phase:
+              def name = "ctor-inline-postbody-uses"
+              override def transformIdent(t: Tree.Ident)(using Program): Term =
+                if paramSet(t.sym) then used += t.sym
+                t
+            postBody.foreach(StandardTraversal.mapStat(ph, _))
+            used.toSet
+        // C3: count uses in the delegation head only, not the post-body.
+        val headArgs = headStmt(d) match
+          case Some(Tree.Apply(Tree.Select(_, m, _, _), as, _, _, _)) if isInitName(program, m) => as
+          case _ => Nil
+        lazy val delegCounts = headArgs.foldLeft(Map.empty[SymId, Int]) { (acc, a) =>
           var m = acc
           given Program = program
           val ph = new Phase:
@@ -1499,10 +1570,10 @@ object CtorFunnel:
             override def transformIdent(t: Tree.Ident)(using Program): Term =
               m = m.updated(t.sym, m.getOrElse(t.sym, 0) + 1)
               t
-          StandardTraversal.mapStat(ph, st)
+          StandardTraversal.mapStat(ph, a)
           m
         }
-        lazy val loopFree = !stms.exists { st =>
+        lazy val delegLoopFree = !headArgs.exists { a =>
           given Program = program
           var found = false
           val ph = new Phase:
@@ -1512,10 +1583,10 @@ object CtorFunnel:
                 case _: Tree.While | _: Tree.DoWhile | _: Tree.For | _: Tree.ForEach | _: Tree.Lambda => found = true
                 case _ => ()
               t
-          StandardTraversal.mapStat(ph, st)
+          StandardTraversal.mapStat(ph, a)
           found
         }
-        def ok(p: Tree.ValDef, a: Term) = simple(a) || (loopFree && counts.getOrElse(p.symbol, 0) <= 1)
+        def ok(p: Tree.ValDef, a: Term) = simple(a) || (delegLoopFree && delegCounts.getOrElse(p.symbol, 0) <= 1)
         if ps.length != callerArgs.length || !ps.zip(callerArgs).forall(ok) then scala.None
         else
           val subst = ps.zip(callerArgs).map((p, a) => p.symbol -> a).toMap
@@ -1524,8 +1595,7 @@ object CtorFunnel:
             def name = "ctor-inline-subst"
             override def transformIdent(t: Tree.Ident)(using Program): Term = subst.getOrElse(t.sym, t)
           // usability: refuse `super.m()` and `return` in the post-body
-          val substPostBody = postBody.map(s => StandardTraversal.mapStat(substPh, s))
-          if substPostBody.nonEmpty then
+          if postBody.nonEmpty then
             var usable = true
             val scanPh = new Phase:
               def name = "ctor-inline-usable"
@@ -1535,15 +1605,17 @@ object CtorFunnel:
                   case _: Tree.Return => usable = false
                   case _              => ()
                 t
-            substPostBody.foreach(StandardTraversal.mapStat(scanPh, _))
+            postBody.foreach(StandardTraversal.mapStat(scanPh, _))
             if !usable then return scala.None
+          val pbParams = ps.zip(callerArgs).filter((p, _) => postBodyUsed(p.symbol))
           // apply substitution to the delegation's arguments
           val head = headStmt(d)
           head match
             case Some(Tree.Apply(Tree.Select(_, m, _, _), as, _, _, _)) if isInitName(program, m) =>
               val substArgs = as.map(a => StandardTraversal.mapStat(substPh, a).asInstanceOf[Term])
-              if m == targetRoot then Some((substArgs, substPostBody))
+              if m == targetRoot then Some(InlineResult(substArgs, postBody, pbParams))
               else inlineDelegation(program, m, substArgs, targetRoot, depth + 1)
-                .map((args, innerBody) => (args, innerBody ++ substPostBody))
+                .map(inner => InlineResult(inner.effectiveArgs,
+                  inner.postBody ++ postBody, inner.postBodyParams ++ pbParams))
             case _ => scala.None
       }

@@ -870,10 +870,8 @@ private[emit] trait TirEmitterMembers:
   private[emit] def ctorBody(cdef: Tree.DefDef, i: Int): String =
     val stats  = CtorFunnel.stmtsOf(cdef)
     val replay = currentClass.flatMap(plans.replayFor(_, cdef)).getOrElse(Nil)
-    // INLINED BODY — the parent constructor chain's post-delegation statements, when reached
-    // through resolvedThroughParent: substituted and retyped into this class's scope, positioned
-    // like `replay` (after the delegation, before this secondary's own body); never overlaps it.
-    val inlined = currentClass.flatMap(plans.inlinedBodyFor(_, cdef)).getOrElse(Nil)
+    // C3 item 4: post-bodies now in the primary's class body, not per-secondary.
+    val inlined: List[Statement] = Nil
     // the head is read THROUGH its comments, re-emitted above the delegation that replaces it.
     val headTrivia = stats.headOption.collect { case t: Term => Tree.triviaOn(t) }.getOrElse(Nil)
     val plan  = currentClass.map(plans(_)).getOrElse(CtorFunnel.Plan.none)

@@ -444,9 +444,18 @@ private[emit] trait TirEmitterDecls:
                      !reentrantBearers.contains(cd.symbol)
                   then forceCompanion(cd, cd.symbol, balticporter.tir.ClassInitTriggerCheck.Instantiation, i + 1)
                   else ""
+    // C3 item 4 — parent secondary's post-body, guarded by a null check. // ENGINE-LIMITS C3
+    val postBody = currentClass.map(plans.primaryPostBodyFor(_)).getOrElse(Nil)
+    val postBodyStr =
+      if postBody.isEmpty || plan.postBodySlots.isEmpty then ""
+      else
+        val guardParam = plan.postBodySlots.head._1
+        val pbStats = postBody.map(stat(_, i + 2)).filter(_.trim.nonEmpty)
+        if pbStats.isEmpty then ""
+        else s"${ind(i + 1)}if ($guardParam != null) {\n${pbStats.mkString("\n")}\n${ind(i + 1)}}"
     // JS-C43 — the members javac derives from a record header, which no java declaration carries.
     val (recMembers, recStatics, recNote) = recordMembers(cd, s, i)
-    val body0   = joinStats(List(bnote, force, body1, recMembers.mkString("\n")).filter(_.nonEmpty))
+    val body0   = joinStats(List(bnote, force, postBodyStr, body1, recMembers.mkString("\n")).filter(_.nonEmpty))
     val diamonds = diamondOverrides(cd, i + 1)
     val body    = if diamonds.isEmpty then body0 else joinStats(List(body0).filter(_.nonEmpty) ++ diamonds)
     val open    = if body.isEmpty && self.isEmpty then "" else s" {\n$self$body\n${ind(i)}}"
