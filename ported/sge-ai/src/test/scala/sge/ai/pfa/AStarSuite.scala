@@ -82,7 +82,7 @@ final class GridGraph(val width: Int, val height: Int) extends IndexedGraph[Grid
         // Remove connections that lead to the blocked node
         var i = conns.size - 1
         while (i >= 0) {
-          if (conns.get(i).toNode.index == idx) {
+          if (conns(i).toNode.index == idx) {
             conns.removeIndex(i)
           }
           i -= 1
