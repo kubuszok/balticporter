@@ -1,31 +1,5 @@
 /** The PORT half of jbump's differential probe. Its twin is `ProbeJava.java` beside it, and
-  * `just jbump-measure` runs both and diffs the transcripts line for line.
-  *
-  * ==Why this exists, and what it is NOT==
-  * jbump ships no test suite — its `test` gradle module is a runnable libGDX demo with zero `@Test`
-  * methods — so there is nothing for the engine to port and this port would otherwise have NO
-  * behavioural evidence at all. CLAUDE.md §3 is unambiguous that a green compile is not evidence:
-  * four silent correctness defects in libGDX core all compiled cleanly, and not one of §4.4's ten
-  * Java forms moves a compile-error count. jbump contains six of those ten.
-  *
-  * So this is **not a ported test** and must never be counted as one. It is a measurement harness,
-  * in the same category as `scripts/_lib.sh`: hand-written, owned by this port, and the only thing
-  * that can make a behavioural claim about jbump reproducible (CLAUDE.md §5 — a number no lane
-  * reproduces is not a measurement). The moment upstream grows a real suite, that suite replaces
-  * this and the lane says so.
-  *
-  * ==Why a DIFFERENTIAL probe rather than assertions==
-  * An assertion encodes what its author believed jbump does; a diff against the upstream Java
-  * encodes what jbump actually does. The authority is the Java, run on the same inputs in the same
-  * order, so no expected value is ever written down and none can be written down wrong. It also
-  * makes the probe cheap to widen: one more `println` on each side.
-  *
-  * ==Two places it deliberately names the PORT's surface rather than the upstream's==
-  * Both are load-bearing, and a change in either is a surface change this probe should fail on:
-  *   - `MathUtils.random$field` — upstream's `random` FIELD, renamed by §4.55 because the class also
-  *     has `random(int)` methods;
-  *   - `ArrayBuffer` where Java passes `ArrayList` — `CollectionsTransform` retyped those slots.
-  */
+  * `just jbump-measure` runs both and diffs the transcripts line for line. */
 object Probe:
 
   def main(args: Array[String]): Unit =
