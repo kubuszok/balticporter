@@ -1439,6 +1439,18 @@ hit only prose). Grouped rows share one classification; every key is listed.
 | `Engine#createComponent(Class)` | ashley | iii | Phase 1.11 / P10 + `divergence-verdicts.tsv:146` (`Engine#componentFactories`, justified) | `ComponentFactories` registry |
 | `ImmutableArrayTests#forbiddenRemoval` | ashley | i | `divergence-verdicts.tsv:141` (`ImmutableArraySuite`, justified) | java `iterator().remove()` throws; Scala's `Iterator` has none — verify read-only instead |
 
+**Reflection census (2026-09-05, read-only, `.balticporter/reflection-census.tsv` 260 rows over every port root)**:
+client sites by purpose — instantiate-by-class 10 (3 live outside dropped types: ashley `Engine#createComponent`,
+gltf `GLTFMaterialExporter#ext`, ai `Task#cloneTask`; + parser `openTask` = `newInstance(forName(s))`),
+instantiate-by-name 9, array-create 14 (11 in dropped/lls types; the rest `MkArray`/`ClassTag`), field-r/w 26,
+method-invoke 14, type-test 53 (portable `java.lang.Class`), **serialise 99** (Skin 15, particles 49, textra
+FWSkin 32, gltf 1, liqp 2), service-load 1. The 97 `Json#readValue`-family sites compile against the injected
+inert `Json` facade that THROWS on every reflective path — the corpus's largest silent run-time refusal, and no
+lane counts it (obligation for the registry wave). Reclassified: vfx's three iii keys are P3/CT11 (a constant
+name of an absent GWT class + lazy init), not P10; `CircularBuffer#resize` stays (array-create over `Object`).
+The P10 mechanism is `RegistryTransform(spec)` keyed `Class[T] -> () => T` ONLY (design card in the residue
+subplan §19); wave 1 = ashley (the one hand port with a registry to reach parity with), wave 2 = gltf + ai.
+
 Counts by class: i=5, ii=18, iii=8, iv=3 (34 keys, 19 grouped rows); retired 2026-09-04: `Selection#iterator`, `MapLayers/MapObjects#getByType`; 2026-09-05: `BitmapFont#<init>(…)` (dead key), `Selection#toArray` x2, vfx x3 reclassified iii; 2026-09-05b: `FirstPersonCameraController#keyUp` (IntIntMap remove Template), `Node#calculateBoneTransforms` + `ModelInstance#invalidate` (IndexedField via), `NodePart#set` + `MapProperties#putAll` (putAll compiles without cast); 2026-09-05c: `Actor#<clinit>` (Construct at C::new), `AssetManager#getAssetFileName` (return inside nested foreachEntry), `ModelLoader#getDependencies` + `ParticleEffectLoader#getDependencies` (Tuple2 construct-then-assign fold); 2026-09-05d: `AssetManager#clear` (Keys toArray Template + getAndIncrement), `ArraySelection#validate` (OrderedSet removing iterator K36), `AssetLoadingTask#removeDuplicates` (DropWrite K36) (ii=10 remain).
 Counts by port: visui=5 (iv=3, ii=2), gdx=9 (i=2 test, ii=7 main), gltf=3 (i=2, iii=1),
 textra=2 (ii=2), vfx=3 (iii=3), ai=7 (ii=2, iii=5), ashley=2 (i=1, iii=1).
