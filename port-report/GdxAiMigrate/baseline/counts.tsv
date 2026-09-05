@@ -9,7 +9,7 @@ api-parity(mutability)	28
 api-parity(null-model)	39
 api-parity(opaque)	0
 api-parity(operator)	0
-api-parity(port-extra)	565
+api-parity(port-extra)	568
 api-parity(rename)	0
 api-parity(signature)	134
 api-parity(static-placement)	8
@@ -50,6 +50,13 @@ portability(all)	154
 portability(emitted)	1
 portability(injected)	0
 porter-notes	4
+registry(by-name)	0
+registry(facade)	0
+registry(guarded-call)	1
+registry(jvm-only-miss)	2
+registry(non-class-arg)	0
+registry(out-of-scope)	0
+registry(self-clone)	0
 remediation	1
 rewrite-callsites	1
 signature	10

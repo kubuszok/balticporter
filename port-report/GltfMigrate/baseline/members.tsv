@@ -98,6 +98,17 @@ sge.gltf.data.data.GLTFBufferView	sge.gltf.data.data.GLTFBufferView#byteLength	v
 sge.gltf.data.data.GLTFBufferView	sge.gltf.data.data.GLTFBufferView#byteOffset	val	5e6bb5be474a2f21
 sge.gltf.data.data.GLTFBufferView	sge.gltf.data.data.GLTFBufferView#byteStride	val	5ac674b16315a17d
 sge.gltf.data.data.GLTFBufferView	sge.gltf.data.data.GLTFBufferView#target	val	c16a80a7a5741341
+sge.gltf.data.extensions.GLTFExtensionFactories	sge.gltf.data.extensions.GLTFExtensionFactories	class	e2441173869f19a4
+sge.gltf.data.extensions.GLTFExtensionFactories	sge.gltf.data.extensions.GLTFExtensionFactories#<stmt10>	stmt	066f2bfef48ce42b
+sge.gltf.data.extensions.GLTFExtensionFactories	sge.gltf.data.extensions.GLTFExtensionFactories#<stmt1>	stmt	00696e913ada2d98
+sge.gltf.data.extensions.GLTFExtensionFactories	sge.gltf.data.extensions.GLTFExtensionFactories#<stmt2>	stmt	02dfee65e146fb9c
+sge.gltf.data.extensions.GLTFExtensionFactories	sge.gltf.data.extensions.GLTFExtensionFactories#<stmt3>	stmt	8e9722b7bcdcc1ed
+sge.gltf.data.extensions.GLTFExtensionFactories	sge.gltf.data.extensions.GLTFExtensionFactories#<stmt4>	stmt	941232c57d3d5e3d
+sge.gltf.data.extensions.GLTFExtensionFactories	sge.gltf.data.extensions.GLTFExtensionFactories#<stmt5>	stmt	3263b8b5318b2d1f
+sge.gltf.data.extensions.GLTFExtensionFactories	sge.gltf.data.extensions.GLTFExtensionFactories#<stmt6>	stmt	d44cd557c3da6186
+sge.gltf.data.extensions.GLTFExtensionFactories	sge.gltf.data.extensions.GLTFExtensionFactories#<stmt7>	stmt	17046d56686e749a
+sge.gltf.data.extensions.GLTFExtensionFactories	sge.gltf.data.extensions.GLTFExtensionFactories#<stmt8>	stmt	948500509e5133e3
+sge.gltf.data.extensions.GLTFExtensionFactories	sge.gltf.data.extensions.GLTFExtensionFactories#<stmt9>	stmt	6536ebed5da25efd
 sge.gltf.data.extensions.KHRLightsPunctual	sge.gltf.data.extensions.KHRLightsPunctual	class	c010d953f216c5a7
 sge.gltf.data.extensions.KHRLightsPunctual	sge.gltf.data.extensions.KHRLightsPunctual#EXT	val	a87407e69c2ff51b
 sge.gltf.data.extensions.KHRLightsPunctual	sge.gltf.data.extensions.KHRLightsPunctual#map(GLTFLight)	def	dfc422919ca79dd9
@@ -317,7 +328,7 @@ sge.gltf.exporters.GLTFLightExporter	sge.gltf.exporters.GLTFLightExporter#<stmt1
 sge.gltf.exporters.GLTFLightExporter	sge.gltf.exporters.GLTFLightExporter#base	val	65161fa26adad039
 sge.gltf.exporters.GLTFLightExporter	sge.gltf.exporters.GLTFLightExporter#export(ObjectMap<Node,BaseLight<?>>)	def	700c8cf497692577
 sge.gltf.exporters.GLTFLightExporter	sge.gltf.exporters.GLTFLightExporter#map(GLTFLight,BaseLight<?>)	def	66ccf0880c6fe340
-sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter	class	6300a5b369ada0ba
+sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter	class	6b10bc1255c70e05
 sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#<stmt1>	stmt	23fd91ae01f58830
 sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#base	val	65161fa26adad039
 sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#defaultNull(Color,Color)	def	cce95d47d7d6c6a6
@@ -325,7 +336,7 @@ sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#
 sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#defaultNull(boolean,boolean)	def	f60661edaecf227a
 sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#export(JavaIterable<Node>)	def	4b7046cf5e908acf
 sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#export(Material)	def	aaf7b4aa84bab36b
-sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#ext(GLTFMaterial,Class<T>,String)	def	db38d39b3d7e34ea
+sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#ext(GLTFMaterial,Class<T>,String)	def	bf358ef814516d96
 sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#extEmissive(GLTFMaterial)	def	044bac082432401c
 sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#extIOR(GLTFMaterial)	def	8b98cb5809b86927
 sge.gltf.exporters.GLTFMaterialExporter	sge.gltf.exporters.GLTFMaterialExporter#extIridescence(GLTFMaterial)	def	f9024f21aa896f13

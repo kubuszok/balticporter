@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-gltf	engine=balticporter/0.1.0-SNAPSHOT	sources=005dfe42009b3a9c	files=134	policy=6b9b3535808c3863	jdk=22
+# balticporter port map	schema=4	module=sge-gltf	engine=balticporter/0.1.0-SNAPSHOT	sources=005dfe42009b3a9c	files=134	policy=67c9715a2597ad51	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	net.mgsx.gltf.data.GLTF	sge.gltf.data.GLTF	Renamed	-		0		form=class parents=sge.gltf.data.GLTFObject primary=() primaryKind=unique-root primaryVis=public
 type	net.mgsx.gltf.data.GLTFAsset	sge.gltf.data.GLTFAsset	Renamed	-		0		form=class parents=sge.gltf.data.GLTFObject primary=() primaryKind=unique-root primaryVis=public
@@ -19,6 +19,7 @@ type	net.mgsx.gltf.data.data.GLTFAccessorSparseIndices	sge.gltf.data.data.GLTFAc
 type	net.mgsx.gltf.data.data.GLTFAccessorSparseValues	sge.gltf.data.data.GLTFAccessorSparseValues	Renamed	-		0		form=class parents=sge.gltf.data.GLTFObject primary=() primaryKind=unique-root primaryVis=public
 type	net.mgsx.gltf.data.data.GLTFBuffer	sge.gltf.data.data.GLTFBuffer	Renamed	-		0		form=class parents=sge.gltf.data.GLTFEntity primary=() primaryKind=unique-root primaryVis=public
 type	net.mgsx.gltf.data.data.GLTFBufferView	sge.gltf.data.data.GLTFBufferView	Renamed	-		0		form=class parents=sge.gltf.data.GLTFEntity primary=() primaryKind=unique-root primaryVis=public
+type	net.mgsx.gltf.data.extensions.GLTFExtensionFactories	sge.gltf.data.extensions.GLTFExtensionFactories	Renamed	-		0		form=object
 type	net.mgsx.gltf.data.extensions.KHRLightsPunctual	sge.gltf.data.extensions.KHRLightsPunctual	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
 type	net.mgsx.gltf.data.extensions.KHRLightsPunctual$GLTFLight	sge.gltf.data.extensions.KHRLightsPunctual$GLTFLight	Renamed	-		0		companion=yes form=class parents=sge.gltf.data.GLTFObject primary=() primaryKind=unique-root primaryVis=public statics=TYPE_DIRECTIONAL,TYPE_POINT,TYPE_SPOT
 type	net.mgsx.gltf.data.extensions.KHRLightsPunctual$GLTFLightNode	sge.gltf.data.extensions.KHRLightsPunctual$GLTFLightNode	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public
@@ -200,7 +201,6 @@ type		balticporter.runtime.JavaOptionalDouble	Added	-		0
 type		balticporter.runtime.JavaOptionalInt	Added	-		0		
 type		balticporter.runtime.JavaOptionalLong	Added	-		0		
 type		balticporter.runtime.JavaStack	Added	-		0		
-type		sge.gltf.data.extensions.GLTFExtensionFactories	Added	-		0		
 member	net.mgsx.gltf.data.GLTF#accessors	sge.gltf.data.GLTF#accessors	Renamed	-	net/mgsx/gltf/data/GLTF.java	34	3a208a9caa01c90c	
 member	net.mgsx.gltf.data.GLTF#animations	sge.gltf.data.GLTF#animations	Renamed	-	net/mgsx/gltf/data/GLTF.java	31	da6240a7fd257481	
 member	net.mgsx.gltf.data.GLTF#asset	sge.gltf.data.GLTF#asset	Renamed	-	net/mgsx/gltf/data/GLTF.java	20	60eb279421820364	
@@ -281,6 +281,16 @@ member	net.mgsx.gltf.data.data.GLTFBufferView#byteLength	sge.gltf.data.data.GLTF
 member	net.mgsx.gltf.data.data.GLTFBufferView#byteOffset	sge.gltf.data.data.GLTFBufferView#byteOffset	Renamed	-	net/mgsx/gltf/data/data/GLTFBufferView.java	6	5e6bb5be474a2f21	
 member	net.mgsx.gltf.data.data.GLTFBufferView#byteStride	sge.gltf.data.data.GLTFBufferView#byteStride	Renamed	-	net/mgsx/gltf/data/data/GLTFBufferView.java	7	5ac674b16315a17d	
 member	net.mgsx.gltf.data.data.GLTFBufferView#target	sge.gltf.data.data.GLTFBufferView#target	Renamed	-	net/mgsx/gltf/data/data/GLTFBufferView.java	7	c16a80a7a5741341	
+member	net.mgsx.gltf.data.extensions.GLTFExtensionFactories#<stmt10>	sge.gltf.data.extensions.GLTFExtensionFactories#<stmt10>	Renamed	-	<synthetic>	0	066f2bfef48ce42b	
+member	net.mgsx.gltf.data.extensions.GLTFExtensionFactories#<stmt1>	sge.gltf.data.extensions.GLTFExtensionFactories#<stmt1>	Renamed	-	<synthetic>	0	00696e913ada2d98	
+member	net.mgsx.gltf.data.extensions.GLTFExtensionFactories#<stmt2>	sge.gltf.data.extensions.GLTFExtensionFactories#<stmt2>	Renamed	-	<synthetic>	0	02dfee65e146fb9c	
+member	net.mgsx.gltf.data.extensions.GLTFExtensionFactories#<stmt3>	sge.gltf.data.extensions.GLTFExtensionFactories#<stmt3>	Renamed	-	<synthetic>	0	8e9722b7bcdcc1ed	
+member	net.mgsx.gltf.data.extensions.GLTFExtensionFactories#<stmt4>	sge.gltf.data.extensions.GLTFExtensionFactories#<stmt4>	Renamed	-	<synthetic>	0	941232c57d3d5e3d	
+member	net.mgsx.gltf.data.extensions.GLTFExtensionFactories#<stmt5>	sge.gltf.data.extensions.GLTFExtensionFactories#<stmt5>	Renamed	-	<synthetic>	0	3263b8b5318b2d1f	
+member	net.mgsx.gltf.data.extensions.GLTFExtensionFactories#<stmt6>	sge.gltf.data.extensions.GLTFExtensionFactories#<stmt6>	Renamed	-	<synthetic>	0	d44cd557c3da6186	
+member	net.mgsx.gltf.data.extensions.GLTFExtensionFactories#<stmt7>	sge.gltf.data.extensions.GLTFExtensionFactories#<stmt7>	Renamed	-	<synthetic>	0	17046d56686e749a	
+member	net.mgsx.gltf.data.extensions.GLTFExtensionFactories#<stmt8>	sge.gltf.data.extensions.GLTFExtensionFactories#<stmt8>	Renamed	-	<synthetic>	0	948500509e5133e3	
+member	net.mgsx.gltf.data.extensions.GLTFExtensionFactories#<stmt9>	sge.gltf.data.extensions.GLTFExtensionFactories#<stmt9>	Renamed	-	<synthetic>	0	6536ebed5da25efd	
 member	net.mgsx.gltf.data.extensions.KHRLightsPunctual#EXT	sge.gltf.data.extensions.KHRLightsPunctual#EXT	Renamed	-	net/mgsx/gltf/data/extensions/KHRLightsPunctual.java	21	a87407e69c2ff51b	placement=companion
 member	net.mgsx.gltf.data.extensions.KHRLightsPunctual#map(GLTFLight)	sge.gltf.data.extensions.KHRLightsPunctual#map(GLTFLight)	Renamed	-	net/mgsx/gltf/data/extensions/KHRLightsPunctual.java	60	dfc422919ca79dd9	placement=companion
 member	net.mgsx.gltf.data.extensions.KHRLightsPunctual$GLTFLight#TYPE_DIRECTIONAL	sge.gltf.data.extensions.KHRLightsPunctual$GLTFLight#TYPE_DIRECTIONAL	Renamed	-	net/mgsx/gltf/data/extensions/KHRLightsPunctual.java	30	89cbbf5d2b322b2f	placement=companion
@@ -474,7 +484,7 @@ member	net.mgsx.gltf.exporters.GLTFMaterialExporter#defaultNull(Color,ColorAttri
 member	net.mgsx.gltf.exporters.GLTFMaterialExporter#defaultNull(boolean,boolean)	sge.gltf.exporters.GLTFMaterialExporter#defaultNull(boolean,boolean)	Renamed	-	net/mgsx/gltf/exporters/GLTFMaterialExporter.java	229	f60661edaecf227a	vis=private
 member	net.mgsx.gltf.exporters.GLTFMaterialExporter#export(JavaIterable)	sge.gltf.exporters.GLTFMaterialExporter#export(JavaIterable<Node>)	Renamed	-	net/mgsx/gltf/exporters/GLTFMaterialExporter.java	53	4b7046cf5e908acf	
 member	net.mgsx.gltf.exporters.GLTFMaterialExporter#export(Material)	sge.gltf.exporters.GLTFMaterialExporter#export(Material)	Renamed	-	net/mgsx/gltf/exporters/GLTFMaterialExporter.java	62	aaf7b4aa84bab36b	vis=private
-member	net.mgsx.gltf.exporters.GLTFMaterialExporter#ext(GLTFMaterial,Class,String)	sge.gltf.exporters.GLTFMaterialExporter#ext(GLTFMaterial,Class<T>,String)	Renamed	-	net/mgsx/gltf/exporters/GLTFMaterialExporter.java	212	db38d39b3d7e34ea	vis=private
+member	net.mgsx.gltf.exporters.GLTFMaterialExporter#ext(GLTFMaterial,Class,String)	sge.gltf.exporters.GLTFMaterialExporter#ext(GLTFMaterial,Class<T>,String)	Renamed	-	net/mgsx/gltf/exporters/GLTFMaterialExporter.java	212	bf358ef814516d96	vis=private
 member	net.mgsx.gltf.exporters.GLTFMaterialExporter#extEmissive(GLTFMaterial)	sge.gltf.exporters.GLTFMaterialExporter#extEmissive(GLTFMaterial)	Renamed	-	net/mgsx/gltf/exporters/GLTFMaterialExporter.java	196	044bac082432401c	vis=private
 member	net.mgsx.gltf.exporters.GLTFMaterialExporter#extIOR(GLTFMaterial)	sge.gltf.exporters.GLTFMaterialExporter#extIOR(GLTFMaterial)	Renamed	-	net/mgsx/gltf/exporters/GLTFMaterialExporter.java	192	8b98cb5809b86927	vis=private
 member	net.mgsx.gltf.exporters.GLTFMaterialExporter#extIridescence(GLTFMaterial)	sge.gltf.exporters.GLTFMaterialExporter#extIridescence(GLTFMaterial)	Renamed	-	net/mgsx/gltf/exporters/GLTFMaterialExporter.java	204	f9024f21aa896f13	vis=private

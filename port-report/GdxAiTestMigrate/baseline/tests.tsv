@@ -15,7 +15,7 @@ sge.ai.btree.TaskSuite	Status enum has exactly 5 values	pass
 sge.ai.btree.TaskSuite	Status enum values are FRESH, RUNNING, FAILED, SUCCEEDED, CANCELLED	pass
 sge.ai.btree.TaskSuite	cancel() calls end()	pass
 sge.ai.btree.TaskSuite	cancel() sets status to CANCELLED	pass
-sge.ai.btree.TaskSuite	cloneTask clones guard	fail
+sge.ai.btree.TaskSuite	cloneTask clones guard	pass
 sge.ai.btree.TaskSuite	cloneTask creates independent copy	fail
 sge.ai.btree.TaskSuite	end() is called when task fails	pass
 sge.ai.btree.TaskSuite	end() is called when task succeeds	pass
