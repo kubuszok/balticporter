@@ -28,8 +28,9 @@ the migrator class name, which does not track a module rename.
 
 | port (migrator) | upstream | licence | compile (JVM/JS/Native/ref) | tests |
 |---|---|---|---|---|
+| `lls` (`LlsMigrate`) | libGDX `gdx/src`, the 12 utils/math files lls carries headers for | Apache-2.0 | 100/100/100/100 (census, §13.28) | lls suite not reached (main at 100) |
 | `sge` (`LibgdxCoreMigrate`) | libGDX `gdx/src` | Apache-2.0 | 0/0/0/0 | — |
-| `sge-test` (`LibgdxTestMigrate`) | libGDX `gdx/test` | Apache-2.0 | 0/0/0/51 | 191: 184 pass, 7 fail (expected-lost 30) |
+| `sge-test` (`LibgdxTestMigrate`) | libGDX `gdx/test` | Apache-2.0 | 0/0/0/1 (M5.13) | 191: 187 pass, 4 fail (expected-lost 30) |
 | `sge-ecs` (`AshleyMigrate`) | Ashley `ashley/src` | Apache-2.0 | 0/0/0/0 | — |
 | `sge-ecs-test` (`AshleyTestMigrate`) | Ashley `ashley/tests` | Apache-2.0 | 0/0/0/0 | 112: 108 pass, 2 fail, 2 skipped |
 | `sge-ecs` drop-in (`AshleyDropIn`) | — | — | 408/408/408 (JVM/JS/Native) | 0/0/0 pass — expected red until parity, not in `measure-all` |

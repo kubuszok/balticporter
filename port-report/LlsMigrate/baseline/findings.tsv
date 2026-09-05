@@ -1,0 +1,1156 @@
+#id	check	kind	owner	path	line	detail
+c0cf632c1784	api-parity(collection-retarget)	collection-retarget	DynamicArray#select	/DynamicArray	0	result type differs: emitted 'java.lang.Iterable[T]', reference 'Iterable[A]'
+80db672ef203	api-parity(factory)	factory	ArrayMap$#apply	/ArrayMap$	0	def apply/0 in reference port only
+d7286f961ade	api-parity(factory)	factory	ArrayMap$#apply	/ArrayMap$	0	def apply/1 in reference port only
+b0993292016c	api-parity(factory)	factory	ArrayMap$#apply	/ArrayMap$	0	def apply/2 in reference port only
+6941b200e50c	api-parity(factory)	factory	ArrayMap$#from	/ArrayMap$	0	def from/1 in reference port only
+35e0dd48a784	api-parity(factory)	factory	DynamicArray$#apply	/DynamicArray$	0	def apply/0 in reference port only
+0d70529edd7b	api-parity(factory)	factory	DynamicArray$#apply	/DynamicArray$	0	def apply/1 in reference port only
+b3ff8f9af5aa	api-parity(factory)	factory	DynamicArray$#apply	/DynamicArray$	0	def apply/2 in reference port only
+ce7bd551b22d	api-parity(factory)	factory	DynamicArray$#from	/DynamicArray$	0	def from/1 in reference port only
+ce7bd551b22d/2	api-parity(factory)	factory	DynamicArray$#from	/DynamicArray$	0	def from/1 in reference port only
+40c2fd338bcf	api-parity(factory)	factory	DynamicArray$#of	/DynamicArray$	0	def of/1 in emitted port only
+40c2fd338bcf/2	api-parity(factory)	factory	DynamicArray$#of	/DynamicArray$	0	def of/1 in emitted port only
+e53c649a0c98	api-parity(factory)	factory	DynamicArray$#of	/DynamicArray$	0	def of/3 in emitted port only
+e53c649a0c98/2	api-parity(factory)	factory	DynamicArray$#of	/DynamicArray$	0	def of/3 in emitted port only
+52e4cb1e133a	api-parity(factory)	factory	DynamicArray$#wrap	/DynamicArray$	0	def wrap/1 in reference port only
+c7175b4a27d0	api-parity(factory)	factory	ObjectMap$#apply	/ObjectMap$	0	def apply/0 in reference port only
+18424fb6d056	api-parity(factory)	factory	ObjectMap$#apply	/ObjectMap$	0	def apply/1 in reference port only
+799ffc523642	api-parity(factory)	factory	ObjectMap$#apply	/ObjectMap$	0	def apply/2 in reference port only
+415b1e767887	api-parity(factory)	factory	ObjectMap$#from	/ObjectMap$	0	def from/1 in reference port only
+a1b483b11657	api-parity(factory)	factory	ObjectSet$#apply	/ObjectSet$	0	def apply/0 in reference port only
+19daaff24d55	api-parity(factory)	factory	ObjectSet$#apply	/ObjectSet$	0	def apply/1 in reference port only
+e08567aa4268	api-parity(factory)	factory	ObjectSet$#apply	/ObjectSet$	0	def apply/2 in reference port only
+c1dc32e84965	api-parity(factory)	factory	ObjectSet$#from	/ObjectSet$	0	def from/1 in reference port only
+8bb1ebd54baf	api-parity(factory)	factory	OrderedMap$#apply	/OrderedMap$	0	def apply/0 in reference port only
+4776716aba4c	api-parity(factory)	factory	OrderedMap$#apply	/OrderedMap$	0	def apply/1 in reference port only
+c1cefa4a14a6	api-parity(factory)	factory	OrderedMap$#apply	/OrderedMap$	0	def apply/2 in reference port only
+bfe24ecdb73d	api-parity(factory)	factory	OrderedMap$#from	/OrderedMap$	0	def from/1 in reference port only
+19dc575884f5	api-parity(factory)	factory	OrderedSet$#apply	/OrderedSet$	0	def apply/0 in reference port only
+04269c912018	api-parity(factory)	factory	OrderedSet$#apply	/OrderedSet$	0	def apply/1 in reference port only
+cbdeadde931a	api-parity(factory)	factory	OrderedSet$#apply	/OrderedSet$	0	def apply/2 in reference port only
+7306e477b520	api-parity(factory)	factory	OrderedSet$#from	/OrderedSet$	0	def from/1 in reference port only
+05262c4e8a69	api-parity(hand-port-extra)	hand-port-extra	#ArrayFilteredView		0	object ArrayFilteredView/0 in reference port only
+64e3d7487157	api-parity(hand-port-extra)	hand-port-extra	#ArrayFilteredView		0	type ArrayFilteredView/0 in reference port only
+a81c34e2d710	api-parity(hand-port-extra)	hand-port-extra	#ArrayView		0	object ArrayView/0 in reference port only
+71f1d72c2959	api-parity(hand-port-extra)	hand-port-extra	#ArrayView		0	type ArrayView/0 in reference port only
+a6b1b3403fb3	api-parity(hand-port-extra)	hand-port-extra	#ComparableTimSort		0	class ComparableTimSort/0 in reference port only
+3f355e3ff72d	api-parity(hand-port-extra)	hand-port-extra	#Eval		0	enum Eval/0 in reference port only
+48f5678eb48a	api-parity(hand-port-extra)	hand-port-extra	#Eval		0	object Eval/0 in reference port only
+0fa7db1e2f38	api-parity(hand-port-extra)	hand-port-extra	#MkArray		0	object MkArray/0 in reference port only
+7dea1d9febb1	api-parity(hand-port-extra)	hand-port-extra	#MkArray		0	trait MkArray/0 in reference port only
+207c967b78a7	api-parity(hand-port-extra)	hand-port-extra	#Nullable		0	object Nullable/0 in reference port only
+284b0307a270	api-parity(hand-port-extra)	hand-port-extra	#Nullable		0	type Nullable/0 in reference port only
+1e9d7632c848	api-parity(hand-port-extra)	hand-port-extra	#Resource		0	object Resource/0 in reference port only
+55934a7043b2	api-parity(hand-port-extra)	hand-port-extra	#Resource		0	type Resource/0 in reference port only
+c711f8c76398	api-parity(hand-port-extra)	hand-port-extra	#TimSort		0	class TimSort/0 in reference port only
+b0a29dd43b3b	api-parity(hand-port-extra)	hand-port-extra	#leanView		0	def leanView/0 in reference port only
+b0a29dd43b3b/2	api-parity(hand-port-extra)	hand-port-extra	#leanView		0	def leanView/0 in reference port only
+931834c3fc74	api-parity(hand-port-extra)	hand-port-extra	ArrayFilteredView$#flatMap	/ArrayFilteredView$	0	def flatMap/2 in reference port only
+e87b79f4bdfd	api-parity(hand-port-extra)	hand-port-extra	ArrayFilteredView$#foreach	/ArrayFilteredView$	0	def foreach/1 in reference port only
+f2a4424e7d05	api-parity(hand-port-extra)	hand-port-extra	ArrayFilteredView$#map	/ArrayFilteredView$	0	def map/2 in reference port only
+4fdb9f123483	api-parity(hand-port-extra)	hand-port-extra	ArrayFilteredView$#withFilter	/ArrayFilteredView$	0	def withFilter/1 in reference port only
+3c71c5467acb	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#containsValue	/ArrayMap	0	def containsValue/1 in reference port only [rename candidates: clear, containsKey, ensureCapacity, equals, equalsIdentity, get, getKeyAt, getValueAt, indexOfKey, putAll, removeIndex, removeKey, resize, truncate]
+d5818c89c815	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#foreachEntry	/ArrayMap	0	def foreachEntry/1 in reference port only [rename candidates: clear, containsKey, ensureCapacity, equals, equalsIdentity, get, getKeyAt, getValueAt, indexOfKey, putAll, removeIndex, removeKey, resize, truncate]
+ac9a047ac298	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#foreachKey	/ArrayMap	0	def foreachKey/1 in reference port only [rename candidates: clear, containsKey, ensureCapacity, equals, equalsIdentity, get, getKeyAt, getValueAt, indexOfKey, putAll, removeIndex, removeKey, resize, truncate]
+fadf12a42394	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#foreachValue	/ArrayMap	0	def foreachValue/1 in reference port only [rename candidates: clear, containsKey, ensureCapacity, equals, equalsIdentity, get, getKeyAt, getValueAt, indexOfKey, putAll, removeIndex, removeKey, resize, truncate]
+f248282bce03	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#indexOfValue	/ArrayMap	0	def indexOfValue/1 in reference port only [rename candidates: clear, containsKey, ensureCapacity, equals, equalsIdentity, get, getKeyAt, getValueAt, indexOfKey, putAll, removeIndex, removeKey, resize, truncate]
+bfd5c15b7c9b	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#newCapacity	/ArrayMap	0	val newCapacity/0 in reference port only
+1178760f325b	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#nonEmpty	/ArrayMap	0	def nonEmpty/0 in reference port only [rename candidates: clear, entries, firstKey, firstValue, hashCode, isEmpty, iterator, keys, notEmpty, peekKey, peekValue, reverse, shrink, shuffle, toString, values]
+1457761389b5	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#preserveOrder	/ArrayMap	0	val preserveOrder/0 in reference port only
+63c050d6a23d	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#setKeyAt	/ArrayMap	0	def setKeyAt/2 in reference port only [rename candidates: containsValue, get, getKey, indexOfValue, put, removeValue, setKey, setValue]
+7a64879ebf26	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#setValueAt	/ArrayMap	0	def setValueAt/2 in reference port only [rename candidates: containsValue, get, getKey, indexOfValue, put, removeValue, setKey, setValue]
+ec29807a1da3	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#size	/ArrayMap	0	def size/0 in reference port only [rename candidates: clear, entries, firstKey, firstValue, hashCode, isEmpty, iterator, keys, notEmpty, peekKey, peekValue, reverse, shrink, shuffle, toString, values]
+b3ab4fa42b74	api-parity(hand-port-extra)	hand-port-extra	ArrayView$#In	/ArrayView$	0	type In/0 in reference port only
+880c1505e446	api-parity(hand-port-extra)	hand-port-extra	ArrayView$#Out	/ArrayView$	0	type Out/0 in reference port only
+ec59eae8b389	api-parity(hand-port-extra)	hand-port-extra	ArrayView$#flatMap	/ArrayView$	0	def flatMap/2 in reference port only
+98bc9cdcb1de	api-parity(hand-port-extra)	hand-port-extra	ArrayView$#foreach	/ArrayView$	0	def foreach/1 in reference port only
+29a78da772b7	api-parity(hand-port-extra)	hand-port-extra	ArrayView$#length	/ArrayView$	0	def length/0 in reference port only
+d86d6a3b5984	api-parity(hand-port-extra)	hand-port-extra	ArrayView$#map	/ArrayView$	0	def map/2 in reference port only
+9980145d61e0	api-parity(hand-port-extra)	hand-port-extra	ArrayView$#withFilter	/ArrayView$	0	def withFilter/1 in reference port only
+f55e012257f0	api-parity(hand-port-extra)	hand-port-extra	ArrayView$#zipWithIndex	/ArrayView$	0	def zipWithIndex/0 in reference port only
+21347717d7a1	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#a	/ComparableTimSort	0	val a/0 in reference port only
+21347717d7a1/2	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#a	/ComparableTimSort	0	val a/0 in reference port only
+22ad4ac3bd53	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#base1	/ComparableTimSort	0	var base1/0 in reference port only
+40dec0852c84	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#base2	/ComparableTimSort	0	val base2/0 in reference port only
+e70912768f6a	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#breakOuter	/ComparableTimSort	0	var breakOuter/0 in reference port only
+e70912768f6a/2	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#breakOuter	/ComparableTimSort	0	var breakOuter/0 in reference port only
+ff0576a0fcb1	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#count1	/ComparableTimSort	0	var count1/0 in reference port only
+ff0576a0fcb1/2	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#count1	/ComparableTimSort	0	var count1/0 in reference port only
+483989199c11	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#count2	/ComparableTimSort	0	var count2/0 in reference port only
+483989199c11/2	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#count2	/ComparableTimSort	0	var count2/0 in reference port only
+82d3a8032146	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#cursor1	/ComparableTimSort	0	var cursor1/0 in reference port only
+82d3a8032146/2	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#cursor1	/ComparableTimSort	0	var cursor1/0 in reference port only
+0497f0a0c3b0	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#cursor2	/ComparableTimSort	0	var cursor2/0 in reference port only
+0497f0a0c3b0/2	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#cursor2	/ComparableTimSort	0	var cursor2/0 in reference port only
+6765c42328ef	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#dest	/ComparableTimSort	0	var dest/0 in reference port only
+6765c42328ef/2	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#dest	/ComparableTimSort	0	var dest/0 in reference port only
+1d0eb7ab5e40	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#doContinue	/ComparableTimSort	0	var doContinue/0 in reference port only
+1d0eb7ab5e40/2	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#doContinue	/ComparableTimSort	0	var doContinue/0 in reference port only
+0b5d0acd3dcf	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#doSort	/ComparableTimSort	0	def doSort/3 in reference port only
+3aa3b26b89aa	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#done	/ComparableTimSort	0	var done/0 in reference port only
+3aa3b26b89aa/2	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#done	/ComparableTimSort	0	var done/0 in reference port only
+8c1d670fdb51	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#gallopContinue	/ComparableTimSort	0	var gallopContinue/0 in reference port only
+8c1d670fdb51/2	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#gallopContinue	/ComparableTimSort	0	var gallopContinue/0 in reference port only
+cd30fc4d2c55	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#k	/ComparableTimSort	0	val k/0 in reference port only
+de2dc039746d	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#len1	/ComparableTimSort	0	var len1/0 in reference port only
+de2dc039746d/2	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#len1	/ComparableTimSort	0	var len1/0 in reference port only
+de2dc039746d/3	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#len1	/ComparableTimSort	0	var len1/0 in reference port only
+911efcf246ac	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#len2	/ComparableTimSort	0	var len2/0 in reference port only
+911efcf246ac/2	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#len2	/ComparableTimSort	0	var len2/0 in reference port only
+911efcf246ac/3	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#len2	/ComparableTimSort	0	var len2/0 in reference port only
+e9f79504747f	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#localMinGallop	/ComparableTimSort	0	var localMinGallop/0 in reference port only
+e9f79504747f/2	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#localMinGallop	/ComparableTimSort	0	var localMinGallop/0 in reference port only
+8dd1455177ea	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#n	/ComparableTimSort	0	var n/0 in reference port only
+8dd1455177ea/2	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#n	/ComparableTimSort	0	var n/0 in reference port only
+e2dd994cde21	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#newArray	/ComparableTimSort	0	val newArray/0 in reference port only
+67e190ed4829	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#newSize	/ComparableTimSort	0	var newSize/0 in reference port only
+06a4278fbef0	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort$#i	/ComparableTimSort$	0	var i/0 in reference port only [rename candidates: lastOfs, lastOfs, left, nRemaining, ofs, ofs, r, right, runHi, runLen]
+7428de1cfa7d	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort$#j	/ComparableTimSort$	0	var j/0 in reference port only [rename candidates: lastOfs, lastOfs, left, nRemaining, ofs, ofs, r, right, runHi, runLen]
+b5afa2ad5069	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort$#n_var	/ComparableTimSort$	0	var n_var/0 in reference port only [rename candidates: lastOfs, lastOfs, left, nRemaining, ofs, ofs, r, right, runHi, runLen]
+257da4b833eb	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort$#sort	/ComparableTimSort$	0	def sort/1 in reference port only
+056b89c9d990	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort$#sort	/ComparableTimSort$	0	def sort/3 in reference port only
+75d655ef8764	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort$#start_var	/ComparableTimSort$	0	var start_var/0 in reference port only [rename candidates: lastOfs, lastOfs, left, nRemaining, ofs, ofs, r, right, runHi, runLen]
+8855e5d3ff64	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#+=	/DynamicArray	0	def +=/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+98bb9114e7aa	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#--=	/DynamicArray	0	def --=/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+45ec1cf2a748	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#-=	/DynamicArray	0	def -=/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+a06732d66916	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#apply	/DynamicArray	0	def apply/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+74266e3929d0	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#begin	/DynamicArray	0	def begin/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, notEmpty, peek, pop, random, reverse, shrink, shuffle, sort, toArray, toString]
+f43ca8c6e491	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#contains	/DynamicArray	0	def contains/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+95aa977f9cf9	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#containsAll	/DynamicArray	0	def containsAll/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+a85c7f836fad	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#containsAllByRef	/DynamicArray	0	def containsAllByRef/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+1d2f640bc7bc	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#containsAny	/DynamicArray	0	def containsAny/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+aec3d2d4a6c1	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#containsAnyByRef	/DynamicArray	0	def containsAnyByRef/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+ca3bdaacdb1c	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#containsByRef	/DynamicArray	0	def containsByRef/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+9430e7e89024	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#count	/DynamicArray	0	def count/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+2c259d55e9c5	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#end	/DynamicArray	0	def end/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, notEmpty, peek, pop, random, reverse, shrink, shuffle, sort, toArray, toString]
+8bc195fd65ca	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#exists	/DynamicArray	0	def exists/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+86cfc0c2c125	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#find	/DynamicArray	0	def find/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+a356ef66db7d	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#forall	/DynamicArray	0	def forall/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+70b1e4f3d7f3	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#foreach	/DynamicArray	0	def foreach/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+781d0e84ee01	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#indexOf	/DynamicArray	0	def indexOf/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+0caf56a77a58	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#indexOfByRef	/DynamicArray	0	def indexOfByRef/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+f8392059c26a	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#indexWhere	/DynamicArray	0	def indexWhere/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+4f1c8f30bbf6	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#items	/DynamicArray	0	def items/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, notEmpty, peek, pop, random, reverse, shrink, shuffle, sort, toArray, toString]
+b1722c9ba5a7	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#last	/DynamicArray	0	def last/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, notEmpty, peek, pop, random, reverse, shrink, shuffle, sort, toArray, toString]
+701c4ef2ddf1	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#lastIndexOf	/DynamicArray	0	def lastIndexOf/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+11973ff547f8	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#lastIndexOfByRef	/DynamicArray	0	def lastIndexOfByRef/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+cf6548225853	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#needed	/DynamicArray	0	val needed/0 in reference port only
+2fc9a898471c	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#newCapacity	/DynamicArray	0	val newCapacity/0 in reference port only
+dea14899e126	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#nonEmpty	/DynamicArray	0	def nonEmpty/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, notEmpty, peek, pop, random, reverse, shrink, shuffle, sort, toArray, toString]
+8f1a8e4754a4	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#preserveOrder	/DynamicArray	0	val preserveOrder/0 in reference port only
+b3e0c523f55d	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#removeAll	/DynamicArray	0	def removeAll/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+626932d28fd0	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#removeAllByRef	/DynamicArray	0	def removeAllByRef/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+4a3cf63a00aa	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#removeValue	/DynamicArray	0	def removeValue/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+ae604ab90ac3	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#removeValueByRef	/DynamicArray	0	def removeValueByRef/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
+ad3b4538e1f7	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#replaceAll	/DynamicArray	0	def replaceAll/2 in reference port only [rename candidates: add, contains, containsAll, containsAny, indexOf, insert, insertRange, lastIndexOf, removeAll, removeRange, removeValue, selectRanked, selectRankedIndex, set, swap]
+d766438b5741	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#replaceAllByRef	/DynamicArray	0	def replaceAllByRef/2 in reference port only [rename candidates: add, contains, containsAll, containsAny, indexOf, insert, insertRange, lastIndexOf, removeAll, removeRange, removeValue, selectRanked, selectRankedIndex, set, swap]
+0a734570f3c3	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#replaceFirst	/DynamicArray	0	def replaceFirst/2 in reference port only [rename candidates: add, contains, containsAll, containsAny, indexOf, insert, insertRange, lastIndexOf, removeAll, removeRange, removeValue, selectRanked, selectRankedIndex, set, swap]
+23a1b875d7d1	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#replaceFirstByRef	/DynamicArray	0	def replaceFirstByRef/2 in reference port only [rename candidates: add, contains, containsAll, containsAny, indexOf, insert, insertRange, lastIndexOf, removeAll, removeRange, removeValue, selectRanked, selectRankedIndex, set, swap]
+693527a492c1	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#size	/DynamicArray	0	def size/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, notEmpty, peek, pop, random, reverse, shrink, shuffle, sort, toArray, toString]
+834d834d8000	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#update	/DynamicArray	0	def update/2 in reference port only [rename candidates: add, contains, containsAll, containsAny, indexOf, insert, insertRange, lastIndexOf, removeAll, removeRange, removeValue, selectRanked, selectRankedIndex, set, swap]
+72ed94dd96cb	api-parity(hand-port-extra)	hand-port-extra	DynamicArray$#items	/DynamicArray$	0	val items/0 in reference port only
+ac06cc777b31	api-parity(hand-port-extra)	hand-port-extra	DynamicArray$#wrapRefUnchecked	/DynamicArray$	0	def wrapRefUnchecked/1 in reference port only [rename candidates: of, of, with]
+168d5a693aec	api-parity(hand-port-extra)	hand-port-extra	Eval#*>	/Eval	0	def *>/1 in reference port only
+4cedf7161371	api-parity(hand-port-extra)	hand-port-extra	Eval#<*	/Eval	0	def <*/1 in reference port only
+069e3968e41d	api-parity(hand-port-extra)	hand-port-extra	Eval#>>	/Eval	0	def >>/1 in reference port only
+d573df6d43e5	api-parity(hand-port-extra)	hand-port-extra	Eval#Impure	/Eval	0	case Impure/0 in reference port only
+f4d7d8e95c3f	api-parity(hand-port-extra)	hand-port-extra	Eval#Pure	/Eval	0	case Pure/0 in reference port only
+4b8dbba0bb6a	api-parity(hand-port-extra)	hand-port-extra	Eval#as	/Eval	0	def as/1 in reference port only
+e9f880a399ca	api-parity(hand-port-extra)	hand-port-extra	Eval#flatMap	/Eval	0	def flatMap/1 in reference port only
+9a8121986c1a	api-parity(hand-port-extra)	hand-port-extra	Eval#flatTap	/Eval	0	def flatTap/1 in reference port only
+dde89833afee	api-parity(hand-port-extra)	hand-port-extra	Eval#flatten	/Eval	0	def flatten/1 in reference port only
+eeab0ee55a6f	api-parity(hand-port-extra)	hand-port-extra	Eval#map	/Eval	0	def map/1 in reference port only
+52496e189295	api-parity(hand-port-extra)	hand-port-extra	Eval#map2	/Eval	0	def map2/2 in reference port only
+aa272798c3bd	api-parity(hand-port-extra)	hand-port-extra	Eval#mapTap	/Eval	0	def mapTap/1 in reference port only
+f1b3528ef459	api-parity(hand-port-extra)	hand-port-extra	Eval#run	/Eval	0	def run/0 in reference port only
+a50bd712912e	api-parity(hand-port-extra)	hand-port-extra	Eval#tuple	/Eval	0	def tuple/1 in reference port only
+35d622baa865	api-parity(hand-port-extra)	hand-port-extra	Eval#void	/Eval	0	def void/0 in reference port only
+4bf1daded3c0	api-parity(hand-port-extra)	hand-port-extra	Eval$#apply	/Eval$	0	def apply/1 in reference port only
+cf2eb8b09cad	api-parity(hand-port-extra)	hand-port-extra	Eval$#defer	/Eval$	0	def defer/1 in reference port only
+e01f06b9be15	api-parity(hand-port-extra)	hand-port-extra	Eval$#pure	/Eval$	0	def pure/1 in reference port only
+71e8c8b24c25	api-parity(hand-port-extra)	hand-port-extra	Eval$#void	/Eval$	0	def void/0 in reference port only
+9cd0514b65cd	api-parity(hand-port-extra)	hand-port-extra	MathUtils$#randomGenerator	/MathUtils$	0	val randomGenerator/0 in reference port only [rename candidates: E, FLOAT_ROUNDING_ERROR, HALF_PI, PI, PI2, degRad, degreesToRadians, nanoToSec, radDeg, radiansToDegrees]
+44c42d546f67	api-parity(hand-port-extra)	hand-port-extra	MathUtils$#table	/MathUtils$	0	val table/0 in reference port only [rename candidates: E, FLOAT_ROUNDING_ERROR, HALF_PI, PI, PI2, degRad, degreesToRadians, nanoToSec, radDeg, radiansToDegrees]
+b42eb627cb0d	api-parity(hand-port-extra)	hand-port-extra	MkArray#castArray	/MkArray	0	def castArray/1 in reference port only
+970e6d44d23d	api-parity(hand-port-extra)	hand-port-extra	MkArray#castIn	/MkArray	0	def castIn/1 in reference port only
+8a624c98e2fd	api-parity(hand-port-extra)	hand-port-extra	MkArray#compareAcross	/MkArray	0	def compareAcross/5 in reference port only
+99fdd3e5717c	api-parity(hand-port-extra)	hand-port-extra	MkArray#compareAt	/MkArray	0	def compareAt/4 in reference port only
+d0871d48a437	api-parity(hand-port-extra)	hand-port-extra	MkArray#copyElement	/MkArray	0	def copyElement/4 in reference port only
+babfe9ee5884	api-parity(hand-port-extra)	hand-port-extra	MkArray#copyOf	/MkArray	0	def copyOf/2 in reference port only
+dacb5a09d96c	api-parity(hand-port-extra)	hand-port-extra	MkArray#copyOfRange	/MkArray	0	def copyOfRange/3 in reference port only
+52183e1844aa	api-parity(hand-port-extra)	hand-port-extra	MkArray#create	/MkArray	0	def create/1 in reference port only
+3f873efd88f5	api-parity(hand-port-extra)	hand-port-extra	MkArray#elemEquals	/MkArray	0	def elemEquals/2 in reference port only
+ab4976d23067	api-parity(hand-port-extra)	hand-port-extra	MkArray#get	/MkArray	0	def get/2 in reference port only
+fe6bff2148d1	api-parity(hand-port-extra)	hand-port-extra	MkArray#nullOut	/MkArray	0	def nullOut/2 in reference port only
+32ad4932968e	api-parity(hand-port-extra)	hand-port-extra	MkArray#nullOutRange	/MkArray	0	def nullOutRange/3 in reference port only
+f98591f96567	api-parity(hand-port-extra)	hand-port-extra	MkArray#set	/MkArray	0	def set/3 in reference port only
+ca22fa4af44c	api-parity(hand-port-extra)	hand-port-extra	MkArray#swap	/MkArray	0	def swap/3 in reference port only
+ef03103d66a9	api-parity(hand-port-extra)	hand-port-extra	MkArray$#OfBooleans	/MkArray$	0	class OfBooleans/0 in reference port only
+79c41f6d3cf8	api-parity(hand-port-extra)	hand-port-extra	MkArray$#OfBytes	/MkArray$	0	class OfBytes/0 in reference port only
+f07b5184fdfb	api-parity(hand-port-extra)	hand-port-extra	MkArray$#OfChars	/MkArray$	0	class OfChars/0 in reference port only
+20992e028ce3	api-parity(hand-port-extra)	hand-port-extra	MkArray$#OfDoubles	/MkArray$	0	class OfDoubles/0 in reference port only
+0eea288c66b8	api-parity(hand-port-extra)	hand-port-extra	MkArray$#OfFloats	/MkArray$	0	class OfFloats/0 in reference port only
+cab97fe7d4e9	api-parity(hand-port-extra)	hand-port-extra	MkArray$#OfInts	/MkArray$	0	class OfInts/0 in reference port only
+a4d0e6ad0092	api-parity(hand-port-extra)	hand-port-extra	MkArray$#OfLongs	/MkArray$	0	class OfLongs/0 in reference port only
+bfa24beea644	api-parity(hand-port-extra)	hand-port-extra	MkArray$#OfRefs	/MkArray$	0	class OfRefs/0 in reference port only
+f8a0cf36705a	api-parity(hand-port-extra)	hand-port-extra	MkArray$#OfShorts	/MkArray$	0	class OfShorts/0 in reference port only
+3deac3278175	api-parity(hand-port-extra)	hand-port-extra	MkArray$#ofBooleanAs	/MkArray$	0	def ofBooleanAs/0 in reference port only
+f1d4151f5f6c	api-parity(hand-port-extra)	hand-port-extra	MkArray$#ofByteAs	/MkArray$	0	def ofByteAs/0 in reference port only
+1a17cd1395cf	api-parity(hand-port-extra)	hand-port-extra	MkArray$#ofCharAs	/MkArray$	0	def ofCharAs/0 in reference port only
+b400a5b632fd	api-parity(hand-port-extra)	hand-port-extra	MkArray$#ofDoubleAs	/MkArray$	0	def ofDoubleAs/0 in reference port only
+81e313665e5f	api-parity(hand-port-extra)	hand-port-extra	MkArray$#ofFloatAs	/MkArray$	0	def ofFloatAs/0 in reference port only
+f67b5420ca43	api-parity(hand-port-extra)	hand-port-extra	MkArray$#ofIntAs	/MkArray$	0	def ofIntAs/0 in reference port only
+b59e4c949fb2	api-parity(hand-port-extra)	hand-port-extra	MkArray$#ofLongAs	/MkArray$	0	def ofLongAs/0 in reference port only
+95dc0b419c5a	api-parity(hand-port-extra)	hand-port-extra	MkArray$#ofShortAs	/MkArray$	0	def ofShortAs/0 in reference port only
+0ad7713c81ae	api-parity(hand-port-extra)	hand-port-extra	MkArray$#resolve	/MkArray$	0	def resolve/1 in reference port only
+92c0fbea8a5b	api-parity(hand-port-extra)	hand-port-extra	MkArray$#withResolved	/MkArray$	0	def withResolved/2 in reference port only
+4372d194f6f1	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBooleans#castArray	/MkArray$/OfBooleans	0	def castArray/1 in reference port only
+dae302e4adc1	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBooleans#castIn	/MkArray$/OfBooleans	0	def castIn/1 in reference port only
+4c397b697ec1	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBooleans#compareAcross	/MkArray$/OfBooleans	0	def compareAcross/5 in reference port only
+1d24cbd0b746	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBooleans#compareAt	/MkArray$/OfBooleans	0	def compareAt/4 in reference port only
+2f9d50d277f6	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBooleans#copyElement	/MkArray$/OfBooleans	0	def copyElement/4 in reference port only
+3e2b935507f3	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBooleans#copyOf	/MkArray$/OfBooleans	0	def copyOf/2 in reference port only
+9b1d88c89890	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBooleans#copyOfRange	/MkArray$/OfBooleans	0	def copyOfRange/3 in reference port only
+ceadd7320e7f	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBooleans#create	/MkArray$/OfBooleans	0	def create/1 in reference port only
+64b233682b6e	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBooleans#elemEquals	/MkArray$/OfBooleans	0	def elemEquals/2 in reference port only
+ac140cae9757	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBooleans#get	/MkArray$/OfBooleans	0	def get/2 in reference port only
+caa1d18b46ce	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBooleans#nullOut	/MkArray$/OfBooleans	0	def nullOut/2 in reference port only
+027dae20ae85	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBooleans#nullOutRange	/MkArray$/OfBooleans	0	def nullOutRange/3 in reference port only
+d73d3b2ed2c3	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBooleans#set	/MkArray$/OfBooleans	0	def set/3 in reference port only
+26c8bbdfba8b	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBooleans#swap	/MkArray$/OfBooleans	0	def swap/3 in reference port only
+cc8b28bfc694	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBytes#castArray	/MkArray$/OfBytes	0	def castArray/1 in reference port only
+4d5fe853be5d	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBytes#castIn	/MkArray$/OfBytes	0	def castIn/1 in reference port only
+86afb3549e82	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBytes#compareAcross	/MkArray$/OfBytes	0	def compareAcross/5 in reference port only
+304dc0e5b6fc	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBytes#compareAt	/MkArray$/OfBytes	0	def compareAt/4 in reference port only
+bbf0b93d6111	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBytes#copyElement	/MkArray$/OfBytes	0	def copyElement/4 in reference port only
+79376775570e	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBytes#copyOf	/MkArray$/OfBytes	0	def copyOf/2 in reference port only
+d74d376fa029	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBytes#copyOfRange	/MkArray$/OfBytes	0	def copyOfRange/3 in reference port only
+8651ab9f6c6e	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBytes#create	/MkArray$/OfBytes	0	def create/1 in reference port only
+c9a13200e1d6	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBytes#elemEquals	/MkArray$/OfBytes	0	def elemEquals/2 in reference port only
+cfddc519fa74	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBytes#get	/MkArray$/OfBytes	0	def get/2 in reference port only
+85591192c440	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBytes#nullOut	/MkArray$/OfBytes	0	def nullOut/2 in reference port only
+530d87ce1b22	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBytes#nullOutRange	/MkArray$/OfBytes	0	def nullOutRange/3 in reference port only
+76a1c95cac55	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBytes#set	/MkArray$/OfBytes	0	def set/3 in reference port only
+71d0cde352b2	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfBytes#swap	/MkArray$/OfBytes	0	def swap/3 in reference port only
+1cb7708bbefb	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfChars#castArray	/MkArray$/OfChars	0	def castArray/1 in reference port only
+2b74c8ea426c	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfChars#castIn	/MkArray$/OfChars	0	def castIn/1 in reference port only
+5d0989b9b609	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfChars#compareAcross	/MkArray$/OfChars	0	def compareAcross/5 in reference port only
+d1b8dc41c47a	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfChars#compareAt	/MkArray$/OfChars	0	def compareAt/4 in reference port only
+3c1b8d297897	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfChars#copyElement	/MkArray$/OfChars	0	def copyElement/4 in reference port only
+b1a308a992e5	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfChars#copyOf	/MkArray$/OfChars	0	def copyOf/2 in reference port only
+94e055313768	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfChars#copyOfRange	/MkArray$/OfChars	0	def copyOfRange/3 in reference port only
+e054af576174	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfChars#create	/MkArray$/OfChars	0	def create/1 in reference port only
+6c3c809b8adb	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfChars#elemEquals	/MkArray$/OfChars	0	def elemEquals/2 in reference port only
+73a735b2a5cd	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfChars#get	/MkArray$/OfChars	0	def get/2 in reference port only
+ea48abacaf60	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfChars#nullOut	/MkArray$/OfChars	0	def nullOut/2 in reference port only
+e7b185a2a60e	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfChars#nullOutRange	/MkArray$/OfChars	0	def nullOutRange/3 in reference port only
+569c4fb73e22	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfChars#set	/MkArray$/OfChars	0	def set/3 in reference port only
+30d94e5a032d	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfChars#swap	/MkArray$/OfChars	0	def swap/3 in reference port only
+4a601e899765	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfDoubles#castArray	/MkArray$/OfDoubles	0	def castArray/1 in reference port only
+4f1b7a237415	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfDoubles#castIn	/MkArray$/OfDoubles	0	def castIn/1 in reference port only
+bfe6d3af305c	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfDoubles#compareAcross	/MkArray$/OfDoubles	0	def compareAcross/5 in reference port only
+0048a58c50cf	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfDoubles#compareAt	/MkArray$/OfDoubles	0	def compareAt/4 in reference port only
+10e8c6e4ee57	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfDoubles#copyElement	/MkArray$/OfDoubles	0	def copyElement/4 in reference port only
+25ff08da3a96	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfDoubles#copyOf	/MkArray$/OfDoubles	0	def copyOf/2 in reference port only
+38bc3fd4967e	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfDoubles#copyOfRange	/MkArray$/OfDoubles	0	def copyOfRange/3 in reference port only
+e4ab13625174	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfDoubles#create	/MkArray$/OfDoubles	0	def create/1 in reference port only
+19d71b0449ef	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfDoubles#elemEquals	/MkArray$/OfDoubles	0	def elemEquals/2 in reference port only
+502d005150c5	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfDoubles#get	/MkArray$/OfDoubles	0	def get/2 in reference port only
+bb7db6090b52	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfDoubles#nullOut	/MkArray$/OfDoubles	0	def nullOut/2 in reference port only
+2655c96db117	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfDoubles#nullOutRange	/MkArray$/OfDoubles	0	def nullOutRange/3 in reference port only
+0b2d8fc3167d	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfDoubles#set	/MkArray$/OfDoubles	0	def set/3 in reference port only
+ca92441ccb5e	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfDoubles#swap	/MkArray$/OfDoubles	0	def swap/3 in reference port only
+dcc1c56cb0ac	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfFloats#castArray	/MkArray$/OfFloats	0	def castArray/1 in reference port only
+35e41c68a43e	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfFloats#castIn	/MkArray$/OfFloats	0	def castIn/1 in reference port only
+7264d445a52c	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfFloats#compareAcross	/MkArray$/OfFloats	0	def compareAcross/5 in reference port only
+3e5b41dc3c61	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfFloats#compareAt	/MkArray$/OfFloats	0	def compareAt/4 in reference port only
+ef2fb164de0a	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfFloats#copyElement	/MkArray$/OfFloats	0	def copyElement/4 in reference port only
+d5eb975aa248	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfFloats#copyOf	/MkArray$/OfFloats	0	def copyOf/2 in reference port only
+a6903ea702e1	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfFloats#copyOfRange	/MkArray$/OfFloats	0	def copyOfRange/3 in reference port only
+e162aa776786	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfFloats#create	/MkArray$/OfFloats	0	def create/1 in reference port only
+13b3343accdd	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfFloats#elemEquals	/MkArray$/OfFloats	0	def elemEquals/2 in reference port only
+9b72719cda18	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfFloats#get	/MkArray$/OfFloats	0	def get/2 in reference port only
+7fc62310600b	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfFloats#nullOut	/MkArray$/OfFloats	0	def nullOut/2 in reference port only
+d961d5537a22	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfFloats#nullOutRange	/MkArray$/OfFloats	0	def nullOutRange/3 in reference port only
+940bb399e263	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfFloats#set	/MkArray$/OfFloats	0	def set/3 in reference port only
+191a6ae18bb2	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfFloats#swap	/MkArray$/OfFloats	0	def swap/3 in reference port only
+f806d5f5c290	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfInts#castArray	/MkArray$/OfInts	0	def castArray/1 in reference port only
+cdf1115a882c	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfInts#castIn	/MkArray$/OfInts	0	def castIn/1 in reference port only
+dd7e9db22526	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfInts#compareAcross	/MkArray$/OfInts	0	def compareAcross/5 in reference port only
+6b3799030019	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfInts#compareAt	/MkArray$/OfInts	0	def compareAt/4 in reference port only
+d9565e4d4c91	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfInts#copyElement	/MkArray$/OfInts	0	def copyElement/4 in reference port only
+ea8107c6e4be	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfInts#copyOf	/MkArray$/OfInts	0	def copyOf/2 in reference port only
+cfafab910830	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfInts#copyOfRange	/MkArray$/OfInts	0	def copyOfRange/3 in reference port only
+5f54e09ee088	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfInts#create	/MkArray$/OfInts	0	def create/1 in reference port only
+19154ab8ef8e	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfInts#elemEquals	/MkArray$/OfInts	0	def elemEquals/2 in reference port only
+fecfc8bfdd5e	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfInts#get	/MkArray$/OfInts	0	def get/2 in reference port only
+f837964d7dda	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfInts#nullOut	/MkArray$/OfInts	0	def nullOut/2 in reference port only
+1827032f7a99	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfInts#nullOutRange	/MkArray$/OfInts	0	def nullOutRange/3 in reference port only
+7b15de57c8e8	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfInts#set	/MkArray$/OfInts	0	def set/3 in reference port only
+6aa6b5262f27	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfInts#swap	/MkArray$/OfInts	0	def swap/3 in reference port only
+c39419c1c468	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfLongs#castArray	/MkArray$/OfLongs	0	def castArray/1 in reference port only
+4ac54842c3e8	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfLongs#castIn	/MkArray$/OfLongs	0	def castIn/1 in reference port only
+33d7c5ac600c	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfLongs#compareAcross	/MkArray$/OfLongs	0	def compareAcross/5 in reference port only
+f51a7f741fb1	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfLongs#compareAt	/MkArray$/OfLongs	0	def compareAt/4 in reference port only
+b81e11252720	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfLongs#copyElement	/MkArray$/OfLongs	0	def copyElement/4 in reference port only
+2c8c43da1d82	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfLongs#copyOf	/MkArray$/OfLongs	0	def copyOf/2 in reference port only
+530164b2d0e2	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfLongs#copyOfRange	/MkArray$/OfLongs	0	def copyOfRange/3 in reference port only
+d53e7510f96d	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfLongs#create	/MkArray$/OfLongs	0	def create/1 in reference port only
+5e93cb9e3f27	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfLongs#elemEquals	/MkArray$/OfLongs	0	def elemEquals/2 in reference port only
+8cac844e79d8	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfLongs#get	/MkArray$/OfLongs	0	def get/2 in reference port only
+e0a5c4a68922	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfLongs#nullOut	/MkArray$/OfLongs	0	def nullOut/2 in reference port only
+bd8d0a4738fa	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfLongs#nullOutRange	/MkArray$/OfLongs	0	def nullOutRange/3 in reference port only
+7197f9cb751e	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfLongs#set	/MkArray$/OfLongs	0	def set/3 in reference port only
+d6d3618819ee	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfLongs#swap	/MkArray$/OfLongs	0	def swap/3 in reference port only
+99fc70d93488	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfRefs#castArray	/MkArray$/OfRefs	0	def castArray/1 in reference port only
+21dcc6996ea6	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfRefs#castIn	/MkArray$/OfRefs	0	def castIn/1 in reference port only
+60823de0df15	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfRefs#compareAcross	/MkArray$/OfRefs	0	def compareAcross/5 in reference port only
+f49eada51a20	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfRefs#compareAt	/MkArray$/OfRefs	0	def compareAt/4 in reference port only
+0f437fb74679	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfRefs#copyElement	/MkArray$/OfRefs	0	def copyElement/4 in reference port only
+f4e9e49223cc	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfRefs#copyOf	/MkArray$/OfRefs	0	def copyOf/2 in reference port only
+2daab963ee1f	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfRefs#copyOfRange	/MkArray$/OfRefs	0	def copyOfRange/3 in reference port only
+bd0b99d3f728	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfRefs#create	/MkArray$/OfRefs	0	def create/1 in reference port only
+402dfa0a712b	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfRefs#elemEquals	/MkArray$/OfRefs	0	def elemEquals/2 in reference port only
+d535fed33421	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfRefs#get	/MkArray$/OfRefs	0	def get/2 in reference port only
+8f1a9f4851c5	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfRefs#nullOut	/MkArray$/OfRefs	0	def nullOut/2 in reference port only
+cfded0a335dc	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfRefs#nullOutRange	/MkArray$/OfRefs	0	def nullOutRange/3 in reference port only
+7f3cee0056dc	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfRefs#set	/MkArray$/OfRefs	0	def set/3 in reference port only
+680193e2fe00	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfRefs#swap	/MkArray$/OfRefs	0	def swap/3 in reference port only
+414b94c64402	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfShorts#castArray	/MkArray$/OfShorts	0	def castArray/1 in reference port only
+acadeec8b305	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfShorts#castIn	/MkArray$/OfShorts	0	def castIn/1 in reference port only
+763491c17871	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfShorts#compareAcross	/MkArray$/OfShorts	0	def compareAcross/5 in reference port only
+6404fe4fe40c	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfShorts#compareAt	/MkArray$/OfShorts	0	def compareAt/4 in reference port only
+6bb0d45873d7	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfShorts#copyElement	/MkArray$/OfShorts	0	def copyElement/4 in reference port only
+94d7d5e4dad6	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfShorts#copyOf	/MkArray$/OfShorts	0	def copyOf/2 in reference port only
+d730c0795565	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfShorts#copyOfRange	/MkArray$/OfShorts	0	def copyOfRange/3 in reference port only
+5baa2e4d126c	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfShorts#create	/MkArray$/OfShorts	0	def create/1 in reference port only
+3fe7d0e05841	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfShorts#elemEquals	/MkArray$/OfShorts	0	def elemEquals/2 in reference port only
+5c72f75e774a	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfShorts#get	/MkArray$/OfShorts	0	def get/2 in reference port only
+c34cb9f42231	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfShorts#nullOut	/MkArray$/OfShorts	0	def nullOut/2 in reference port only
+27a7f9138fa3	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfShorts#nullOutRange	/MkArray$/OfShorts	0	def nullOutRange/3 in reference port only
+d28cf91d962c	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfShorts#set	/MkArray$/OfShorts	0	def set/3 in reference port only
+66ebde9ccfbe	api-parity(hand-port-extra)	hand-port-extra	MkArray$.OfShorts#swap	/MkArray$/OfShorts	0	def swap/3 in reference port only
+437f30071302	api-parity(hand-port-extra)	hand-port-extra	Nullable$#Impl	/Nullable$	0	type Impl/0 in reference port only
+8da898fe7487	api-parity(hand-port-extra)	hand-port-extra	Nullable$#Null	/Nullable$	0	def Null/0 in reference port only
+0d6f463aaf9c	api-parity(hand-port-extra)	hand-port-extra	Nullable$#apply	/Nullable$	0	def apply/1 in reference port only
+0d6f463aaf9c/2	api-parity(hand-port-extra)	hand-port-extra	Nullable$#apply	/Nullable$	0	def apply/1 in reference port only
+0d6f463aaf9c/3	api-parity(hand-port-extra)	hand-port-extra	Nullable$#apply	/Nullable$	0	def apply/1 in reference port only
+0d6f463aaf9c/4	api-parity(hand-port-extra)	hand-port-extra	Nullable$#apply	/Nullable$	0	def apply/1 in reference port only
+b582fa984618	api-parity(hand-port-extra)	hand-port-extra	Nullable$#contains	/Nullable$	0	def contains/1 in reference port only
+935c4982fe21	api-parity(hand-port-extra)	hand-port-extra	Nullable$#empty	/Nullable$	0	def empty/0 in reference port only
+36d127b63255	api-parity(hand-port-extra)	hand-port-extra	Nullable$#equals	/Nullable$	0	def equals/1 in reference port only
+a0146f2d902b	api-parity(hand-port-extra)	hand-port-extra	Nullable$#exists	/Nullable$	0	def exists/1 in reference port only
+60c6dda096b5	api-parity(hand-port-extra)	hand-port-extra	Nullable$#filter	/Nullable$	0	def filter/1 in reference port only
+d00760979f05	api-parity(hand-port-extra)	hand-port-extra	Nullable$#flatMap	/Nullable$	0	def flatMap/1 in reference port only
+7a1067cb9068	api-parity(hand-port-extra)	hand-port-extra	Nullable$#flatten	/Nullable$	0	def flatten/0 in reference port only
+823cd9fdcf2c	api-parity(hand-port-extra)	hand-port-extra	Nullable$#fold	/Nullable$	0	def fold/2 in reference port only
+4c48211dff43	api-parity(hand-port-extra)	hand-port-extra	Nullable$#forall	/Nullable$	0	def forall/1 in reference port only
+5d09b0bbe131	api-parity(hand-port-extra)	hand-port-extra	Nullable$#foreach	/Nullable$	0	def foreach/1 in reference port only
+457206c9234a	api-parity(hand-port-extra)	hand-port-extra	Nullable$#fromOption	/Nullable$	0	def fromOption/1 in reference port only
+960f552d5878	api-parity(hand-port-extra)	hand-port-extra	Nullable$#get	/Nullable$	0	def get/0 in reference port only
+61d9da8c8268	api-parity(hand-port-extra)	hand-port-extra	Nullable$#getOrElse	/Nullable$	0	def getOrElse/1 in reference port only
+8f45797f2c44	api-parity(hand-port-extra)	hand-port-extra	Nullable$#hashCode	/Nullable$	0	def hashCode/0 in reference port only
+b84a617c6c3a	api-parity(hand-port-extra)	hand-port-extra	Nullable$#isDefined	/Nullable$	0	def isDefined/0 in reference port only
+86d94313a074	api-parity(hand-port-extra)	hand-port-extra	Nullable$#isEmpty	/Nullable$	0	def isEmpty/0 in reference port only
+cb00c4ebab6b	api-parity(hand-port-extra)	hand-port-extra	Nullable$#map	/Nullable$	0	def map/1 in reference port only
+309c76f693b9	api-parity(hand-port-extra)	hand-port-extra	Nullable$#orElse	/Nullable$	0	def orElse/1 in reference port only
+638d4c49f968	api-parity(hand-port-extra)	hand-port-extra	Nullable$#orNull	/Nullable$	0	def orNull/0 in reference port only
+7cceb04053ae	api-parity(hand-port-extra)	hand-port-extra	Nullable$#toOption	/Nullable$	0	def toOption/0 in reference port only
+7240b82e6603	api-parity(hand-port-extra)	hand-port-extra	Nullable$#toString	/Nullable$	0	def toString/0 in reference port only
+0de6ba5ee6ed	api-parity(hand-port-extra)	hand-port-extra	Nullable$#unapply	/Nullable$	0	def unapply/1 in reference port only
+67d5e568a89c	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#containsValue	/ObjectMap	0	def containsValue/1 in reference port only [rename candidates: clear, containsKey, ensureCapacity, equals, equalsIdentity, get, place, putAll, remove, shrink, toString]
+5faa3bb8b392	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#findKey	/ObjectMap	0	def findKey/1 in reference port only [rename candidates: clear, containsKey, ensureCapacity, equals, equalsIdentity, get, place, putAll, remove, shrink, toString]
+dcec694bb79c	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#foreachEntry	/ObjectMap	0	def foreachEntry/1 in reference port only [rename candidates: clear, containsKey, ensureCapacity, equals, equalsIdentity, get, place, putAll, remove, shrink, toString]
+1a111066076d	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#foreachKey	/ObjectMap	0	def foreachKey/1 in reference port only [rename candidates: clear, containsKey, ensureCapacity, equals, equalsIdentity, get, place, putAll, remove, shrink, toString]
+e09d8e64e403	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#foreachValue	/ObjectMap	0	def foreachValue/1 in reference port only [rename candidates: clear, containsKey, ensureCapacity, equals, equalsIdentity, get, place, putAll, remove, shrink, toString]
+2429bed7b1f6	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#nonEmpty	/ObjectMap	0	def nonEmpty/0 in reference port only [rename candidates: clear, entries, hashCode, isEmpty, iterator, keys, notEmpty, toString, values]
+fc353fc4aaf2	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#oldFilled	/ObjectMap	0	val oldFilled/0 in reference port only [rename candidates: key, keyTable, keyTable, oldCapacity, oldKeyTable, oldValueTable, other]
+721dad64cd21	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#oldValTable	/ObjectMap	0	val oldValTable/0 in reference port only [rename candidates: key, keyTable, keyTable, oldCapacity, oldKeyTable, oldValueTable, other]
+5fa86d499bdc	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#size	/ObjectMap	0	def size/0 in reference port only [rename candidates: clear, entries, hashCode, isEmpty, iterator, keys, notEmpty, toString, values]
+c68c14b5256e	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#toStringImpl	/ObjectMap	0	def toStringImpl/2 in reference port only [rename candidates: containsValue, findKey, get, put, toString]
+5fc5afa59014	api-parity(hand-port-extra)	hand-port-extra	ObjectMap$#mask	/ObjectMap$	0	val mask/0 in reference port only [rename candidates: keyTable, n]
+09c8550703e8	api-parity(hand-port-extra)	hand-port-extra	ObjectMap$#shift	/ObjectMap$	0	val shift/0 in reference port only [rename candidates: keyTable, n]
+3292762b629a	api-parity(hand-port-extra)	hand-port-extra	ObjectMap$#threshold	/ObjectMap$	0	val threshold/0 in reference port only [rename candidates: keyTable, n]
+3097dcdb4425	api-parity(hand-port-extra)	hand-port-extra	ObjectMap$#ts	/ObjectMap$	0	val ts/0 in reference port only [rename candidates: keyTable, n]
+3097dcdb4425/2	api-parity(hand-port-extra)	hand-port-extra	ObjectMap$#ts	/ObjectMap$	0	val ts/0 in reference port only [rename candidates: keyTable, n]
+c0e754bf3dea	api-parity(hand-port-extra)	hand-port-extra	ObjectSet#foreach	/ObjectSet	0	def foreach/1 in reference port only [rename candidates: add, addAll, addAll, addAll, clear, contains, ensureCapacity, equals, get, place, remove, shrink, toString]
+7bb4fc0caaf6	api-parity(hand-port-extra)	hand-port-extra	ObjectSet#nonEmpty	/ObjectSet	0	def nonEmpty/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, notEmpty, toString]
+7f194d8957ec	api-parity(hand-port-extra)	hand-port-extra	ObjectSet#oldFilled	/ObjectSet	0	val oldFilled/0 in reference port only [rename candidates: key, keyTable, keyTable, oldCapacity, oldKeyTable, other]
+d2ba5fe17dc0	api-parity(hand-port-extra)	hand-port-extra	ObjectSet#size	/ObjectSet	0	def size/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, notEmpty, toString]
+0df02f86679b	api-parity(hand-port-extra)	hand-port-extra	ObjectSet#toArray	/ObjectSet	0	def toArray/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, notEmpty, toString]
+0ad6bb352c62	api-parity(hand-port-extra)	hand-port-extra	ObjectSet$#mask	/ObjectSet$	0	val mask/0 in reference port only [rename candidates: tableSize]
+e3174b1bc7ad	api-parity(hand-port-extra)	hand-port-extra	ObjectSet$#shift	/ObjectSet$	0	val shift/0 in reference port only [rename candidates: tableSize]
+eb1be464819e	api-parity(hand-port-extra)	hand-port-extra	ObjectSet$#threshold	/ObjectSet$	0	val threshold/0 in reference port only [rename candidates: tableSize]
+955d2caf8bbb	api-parity(hand-port-extra)	hand-port-extra	ObjectSet$#ts	/ObjectSet$	0	val ts/0 in reference port only [rename candidates: tableSize]
+35dede83ee07	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#containsKey	/OrderedMap	0	def containsKey/1 in reference port only [rename candidates: clear, putAll, remove, removeIndex]
+b86f0376a984	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#containsValue	/OrderedMap	0	def containsValue/1 in reference port only [rename candidates: clear, putAll, remove, removeIndex]
+82c8cf8f678d	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#containsValue	/OrderedMap	0	def containsValue/2 in reference port only [rename candidates: alter, alterIndex, put, toString]
+92876ebd2196	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#ensureCapacity	/OrderedMap	0	def ensureCapacity/1 in reference port only [rename candidates: clear, putAll, remove, removeIndex]
+1dc66329eecf	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#equals	/OrderedMap	0	def equals/1 in reference port only [rename candidates: clear, putAll, remove, removeIndex]
+f388327be774	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#equalsIdentity	/OrderedMap	0	def equalsIdentity/1 in reference port only [rename candidates: clear, putAll, remove, removeIndex]
+2bc2e66f5ce1	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#findKey	/OrderedMap	0	def findKey/1 in reference port only [rename candidates: clear, putAll, remove, removeIndex]
+288ed64af68d	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#findKey	/OrderedMap	0	def findKey/2 in reference port only [rename candidates: alter, alterIndex, put, toString]
+6435ca84bbf6	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#foreachEntry	/OrderedMap	0	def foreachEntry/1 in reference port only [rename candidates: clear, putAll, remove, removeIndex]
+95f9e015dfea	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#foreachKey	/OrderedMap	0	def foreachKey/1 in reference port only [rename candidates: clear, putAll, remove, removeIndex]
+146647fff9b6	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#foreachValue	/OrderedMap	0	def foreachValue/1 in reference port only [rename candidates: clear, putAll, remove, removeIndex]
+7f0d5b815805	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#get	/OrderedMap	0	def get/1 in reference port only [rename candidates: clear, putAll, remove, removeIndex]
+975f4a601d2a	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#get	/OrderedMap	0	def get/2 in reference port only [rename candidates: alter, alterIndex, put, toString]
+e628ba49032f	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#hashCode	/OrderedMap	0	def hashCode/0 in reference port only [rename candidates: clear, entries, iterator, keys, orderedKeys, values]
+2843744e455e	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#isEmpty	/OrderedMap	0	def isEmpty/0 in reference port only [rename candidates: clear, entries, iterator, keys, orderedKeys, values]
+b1f1e36b44f5	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#loadFactor	/OrderedMap	0	def loadFactor/0 in reference port only [rename candidates: clear, entries, iterator, keys, orderedKeys, values]
+46013b624cbb	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#nonEmpty	/OrderedMap	0	def nonEmpty/0 in reference port only [rename candidates: clear, entries, iterator, keys, orderedKeys, values]
+b7983c631349	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#shrink	/OrderedMap	0	def shrink/1 in reference port only [rename candidates: clear, putAll, remove, removeIndex]
+611e28dca6fe	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#size	/OrderedMap	0	def size/0 in reference port only [rename candidates: clear, entries, iterator, keys, orderedKeys, values]
+396c4a8dece1	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#toString	/OrderedMap	0	def toString/0 in reference port only [rename candidates: clear, entries, iterator, keys, orderedKeys, values]
+6a365f3d3607	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#toString	/OrderedMap	0	def toString/1 in reference port only [rename candidates: clear, putAll, remove, removeIndex]
+96761c30960f	api-parity(hand-port-extra)	hand-port-extra	OrderedMap$#keys	/OrderedMap$	0	val keys/0 in reference port only
+6e3c156add7f	api-parity(hand-port-extra)	hand-port-extra	OrderedMap$#map	/OrderedMap$	0	val map/0 in reference port only
+6271c4fdd9e1	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#contains	/OrderedSet	0	def contains/1 in reference port only [rename candidates: add, addAll, clear, ensureCapacity, equals, remove, removeIndex, toString]
+5b62cee0a20c	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#foreach	/OrderedSet	0	def foreach/1 in reference port only [rename candidates: add, addAll, clear, ensureCapacity, equals, remove, removeIndex, toString]
+c78fda591c2c	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#get	/OrderedSet	0	def get/1 in reference port only [rename candidates: add, addAll, clear, ensureCapacity, equals, remove, removeIndex, toString]
+367a384794d3	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#isEmpty	/OrderedSet	0	def isEmpty/0 in reference port only [rename candidates: clear, first, hashCode, iterator, orderedItems, toString]
+0951d90d66f9	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#loadFactor	/OrderedSet	0	def loadFactor/0 in reference port only [rename candidates: clear, first, hashCode, iterator, orderedItems, toString]
+85eb4bfe88e4	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#nonEmpty	/OrderedSet	0	def nonEmpty/0 in reference port only [rename candidates: clear, first, hashCode, iterator, orderedItems, toString]
+4321ff9ef1f8	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#shrink	/OrderedSet	0	def shrink/1 in reference port only [rename candidates: add, addAll, clear, ensureCapacity, equals, remove, removeIndex, toString]
+981fe3bc275a	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#size	/OrderedSet	0	def size/0 in reference port only [rename candidates: clear, first, hashCode, iterator, orderedItems, toString]
+1a55cf017aef	api-parity(hand-port-extra)	hand-port-extra	OrderedSet#toArray	/OrderedSet	0	def toArray/0 in reference port only [rename candidates: clear, first, hashCode, iterator, orderedItems, toString]
+54e965aafbc9	api-parity(hand-port-extra)	hand-port-extra	OrderedSet$#items	/OrderedSet$	0	val items/0 in reference port only
+80341e1a85cc	api-parity(hand-port-extra)	hand-port-extra	OrderedSet$#set	/OrderedSet$	0	val set/0 in reference port only
+fd4c611b249e	api-parity(hand-port-extra)	hand-port-extra	QuickSelect#select	/QuickSelect	0	def select/5 in reference port only
+59b494774e02	api-parity(hand-port-extra)	hand-port-extra	Resource$#allocate	/Resource$	0	def allocate/0 in reference port only
+8950346ede49	api-parity(hand-port-extra)	hand-port-extra	Resource$#eval	/Resource$	0	def eval/0 in reference port only
+debf315bd54b	api-parity(hand-port-extra)	hand-port-extra	Resource$#flatMap	/Resource$	0	def flatMap/1 in reference port only
+f8032382213c	api-parity(hand-port-extra)	hand-port-extra	Resource$#fromCloseable	/Resource$	0	def fromCloseable/1 in reference port only
+317d609cb5a8	api-parity(hand-port-extra)	hand-port-extra	Resource$#make	/Resource$	0	def make/2 in reference port only
+394e9e293289	api-parity(hand-port-extra)	hand-port-extra	Resource$#map	/Resource$	0	def map/1 in reference port only
+bce821826002	api-parity(hand-port-extra)	hand-port-extra	Resource$#pure	/Resource$	0	def pure/1 in reference port only
+9edf43737349	api-parity(hand-port-extra)	hand-port-extra	Resource$#run	/Resource$	0	def run/0 in reference port only
+c7db2c0c5c4b	api-parity(hand-port-extra)	hand-port-extra	Select$#select	/Select$	0	def select/5 in reference port only
+b878f75d4790	api-parity(hand-port-extra)	hand-port-extra	Select$#selectIndex	/Select$	0	def selectIndex/5 in reference port only
+cb135c00923f	api-parity(hand-port-extra)	hand-port-extra	Sort$#sort	/Sort$	0	def sort/5 in reference port only
+b08dc9b309e1	api-parity(hand-port-extra)	hand-port-extra	TimSort#a	/TimSort	0	val a/0 in reference port only
+b08dc9b309e1/2	api-parity(hand-port-extra)	hand-port-extra	TimSort#a	/TimSort	0	val a/0 in reference port only
+18962539b3b9	api-parity(hand-port-extra)	hand-port-extra	TimSort#base1	/TimSort	0	var base1/0 in reference port only
+09dfb7dcd684	api-parity(hand-port-extra)	hand-port-extra	TimSort#base2	/TimSort	0	val base2/0 in reference port only
+f3430a752d2a	api-parity(hand-port-extra)	hand-port-extra	TimSort#breakOuter	/TimSort	0	var breakOuter/0 in reference port only
+f3430a752d2a/2	api-parity(hand-port-extra)	hand-port-extra	TimSort#breakOuter	/TimSort	0	var breakOuter/0 in reference port only
+a19b06726038	api-parity(hand-port-extra)	hand-port-extra	TimSort#c	/TimSort	0	val c/0 in reference port only
+a19b06726038/2	api-parity(hand-port-extra)	hand-port-extra	TimSort#c	/TimSort	0	val c/0 in reference port only
+400cb5e02532	api-parity(hand-port-extra)	hand-port-extra	TimSort#count1	/TimSort	0	var count1/0 in reference port only
+400cb5e02532/2	api-parity(hand-port-extra)	hand-port-extra	TimSort#count1	/TimSort	0	var count1/0 in reference port only
+2cad46b35a79	api-parity(hand-port-extra)	hand-port-extra	TimSort#count2	/TimSort	0	var count2/0 in reference port only
+2cad46b35a79/2	api-parity(hand-port-extra)	hand-port-extra	TimSort#count2	/TimSort	0	var count2/0 in reference port only
+1fa138e61d64	api-parity(hand-port-extra)	hand-port-extra	TimSort#cursor1	/TimSort	0	var cursor1/0 in reference port only
+1fa138e61d64/2	api-parity(hand-port-extra)	hand-port-extra	TimSort#cursor1	/TimSort	0	var cursor1/0 in reference port only
+4b21fc28004e	api-parity(hand-port-extra)	hand-port-extra	TimSort#cursor2	/TimSort	0	var cursor2/0 in reference port only
+4b21fc28004e/2	api-parity(hand-port-extra)	hand-port-extra	TimSort#cursor2	/TimSort	0	var cursor2/0 in reference port only
+c0e740823b5c	api-parity(hand-port-extra)	hand-port-extra	TimSort#dest	/TimSort	0	var dest/0 in reference port only
+c0e740823b5c/2	api-parity(hand-port-extra)	hand-port-extra	TimSort#dest	/TimSort	0	var dest/0 in reference port only
+e4382464e556	api-parity(hand-port-extra)	hand-port-extra	TimSort#doContinue	/TimSort	0	var doContinue/0 in reference port only
+e4382464e556/2	api-parity(hand-port-extra)	hand-port-extra	TimSort#doContinue	/TimSort	0	var doContinue/0 in reference port only
+a168ce7f2011	api-parity(hand-port-extra)	hand-port-extra	TimSort#doSort	/TimSort	0	def doSort/5 in reference port only
+e64d4a7911c8	api-parity(hand-port-extra)	hand-port-extra	TimSort#done	/TimSort	0	var done/0 in reference port only
+e64d4a7911c8/2	api-parity(hand-port-extra)	hand-port-extra	TimSort#done	/TimSort	0	var done/0 in reference port only
+f5b53ab935da	api-parity(hand-port-extra)	hand-port-extra	TimSort#gallopContinue	/TimSort	0	var gallopContinue/0 in reference port only
+f5b53ab935da/2	api-parity(hand-port-extra)	hand-port-extra	TimSort#gallopContinue	/TimSort	0	var gallopContinue/0 in reference port only
+bf0663209195	api-parity(hand-port-extra)	hand-port-extra	TimSort#k	/TimSort	0	val k/0 in reference port only
+4b9f654f7e17	api-parity(hand-port-extra)	hand-port-extra	TimSort#len1	/TimSort	0	var len1/0 in reference port only
+4b9f654f7e17/2	api-parity(hand-port-extra)	hand-port-extra	TimSort#len1	/TimSort	0	var len1/0 in reference port only
+4b9f654f7e17/3	api-parity(hand-port-extra)	hand-port-extra	TimSort#len1	/TimSort	0	var len1/0 in reference port only
+5e60daa0a800	api-parity(hand-port-extra)	hand-port-extra	TimSort#len2	/TimSort	0	var len2/0 in reference port only
+5e60daa0a800/2	api-parity(hand-port-extra)	hand-port-extra	TimSort#len2	/TimSort	0	var len2/0 in reference port only
+5e60daa0a800/3	api-parity(hand-port-extra)	hand-port-extra	TimSort#len2	/TimSort	0	var len2/0 in reference port only
+8e77e30a61a4	api-parity(hand-port-extra)	hand-port-extra	TimSort#localMinGallop	/TimSort	0	var localMinGallop/0 in reference port only
+8e77e30a61a4/2	api-parity(hand-port-extra)	hand-port-extra	TimSort#localMinGallop	/TimSort	0	var localMinGallop/0 in reference port only
+c6e97798e329	api-parity(hand-port-extra)	hand-port-extra	TimSort#mk	/TimSort	0	val mk/0 in reference port only
+c6e97798e329/2	api-parity(hand-port-extra)	hand-port-extra	TimSort#mk	/TimSort	0	val mk/0 in reference port only
+6e358ab3d77e	api-parity(hand-port-extra)	hand-port-extra	TimSort#n	/TimSort	0	var n/0 in reference port only
+6e358ab3d77e/2	api-parity(hand-port-extra)	hand-port-extra	TimSort#n	/TimSort	0	var n/0 in reference port only
+430c759ec0dd	api-parity(hand-port-extra)	hand-port-extra	TimSort#newSize	/TimSort	0	var newSize/0 in reference port only
+8aade053cecb	api-parity(hand-port-extra)	hand-port-extra	TimSort$#i	/TimSort$	0	var i/0 in reference port only [rename candidates: lastOfs, lastOfs, left, nRemaining, ofs, ofs, r, right, runHi, runLen]
+742b1355ce5b	api-parity(hand-port-extra)	hand-port-extra	TimSort$#j	/TimSort$	0	var j/0 in reference port only [rename candidates: lastOfs, lastOfs, left, nRemaining, ofs, ofs, r, right, runHi, runLen]
+d4255fa7dea7	api-parity(hand-port-extra)	hand-port-extra	TimSort$#n_var	/TimSort$	0	var n_var/0 in reference port only [rename candidates: lastOfs, lastOfs, left, nRemaining, ofs, ofs, r, right, runHi, runLen]
+5f99496b93b0	api-parity(hand-port-extra)	hand-port-extra	TimSort$#sort	/TimSort$	0	def sort/3 in reference port only
+5940053074eb	api-parity(hand-port-extra)	hand-port-extra	TimSort$#sort	/TimSort$	0	def sort/5 in reference port only
+4a6404eaa879	api-parity(hand-port-extra)	hand-port-extra	TimSort$#start_var	/TimSort$	0	var start_var/0 in reference port only [rename candidates: lastOfs, lastOfs, left, nRemaining, ofs, ofs, r, right, runHi, runLen]
+a5da5493d691	api-parity(mutability)	mutability	ObjectMap#i	/ObjectMap	0	kind differs: emitted var, reference val
+63c47ce71c69	api-parity(mutability)	mutability	ObjectMap#loadFactor	/ObjectMap	0	kind differs: emitted var, reference val
+cb82e4343f26	api-parity(mutability)	mutability	ObjectSet#loadFactor	/ObjectSet	0	kind differs: emitted var, reference val
+80ebc43e200a	api-parity(null-model)	null-model	ArrayMap#get	/ArrayMap	0	result type differs: emitted 'V', reference 'Nullable[V]'
+93c93d4f79db	api-parity(null-model)	null-model	ArrayMap#getKey	/ArrayMap	0	result type differs: emitted 'K', reference 'Nullable[K]'
+b41e873b6aa7	api-parity(null-model)	null-model	ArrayMap#removeKey	/ArrayMap	0	result type differs: emitted 'V', reference 'Nullable[V]'
+287a461f8a73	api-parity(null-model)	null-model	ObjectMap#findKey	/ObjectMap	0	result type differs: emitted 'K', reference 'Nullable[K]'
+205551858c8f	api-parity(null-model)	null-model	ObjectMap#get	/ObjectMap	0	result type differs: emitted 'V', reference 'Nullable[V]'
+c35459c8f5ed	api-parity(null-model)	null-model	ObjectMap#put	/ObjectMap	0	result type differs: emitted 'V', reference 'Nullable[V]'
+2e9e5909fe84	api-parity(null-model)	null-model	ObjectMap#remove	/ObjectMap	0	result type differs: emitted 'V', reference 'Nullable[V]'
+bc9a4debdd80	api-parity(null-model)	null-model	OrderedMap#put	/OrderedMap	0	result type differs: emitted 'V', reference 'Nullable[V]'
+e5cfd142fff4	api-parity(null-model)	null-model	OrderedMap#remove	/OrderedMap	0	result type differs: emitted 'V', reference 'Nullable[V]'
+4fafbf88fedc	api-parity(null-model)	null-model	OrderedMap#removeIndex	/OrderedMap	0	result type differs: emitted 'V', reference 'Nullable[V]'
+ffc20a113554	api-parity(opaque)	opaque	ObjectSet#addAll	/ObjectSet	0	result type differs: emitted 'scala.Boolean', reference 'Unit'
+31d18f5dd7ea	api-parity(port-extra)	port-extra	#Select		0	class Select/0 in emitted port only
+0d36135cb959	api-parity(port-extra)	port-extra	#Sort		0	class Sort/0 in emitted port only
+e3baea638d44	api-parity(port-extra)	port-extra	#a		0	val a/0 in emitted port only
+e3baea638d44/2	api-parity(port-extra)	port-extra	#a		0	val a/0 in emitted port only
+e3baea638d44/3	api-parity(port-extra)	port-extra	#a		0	val a/0 in emitted port only
+e3baea638d44/4	api-parity(port-extra)	port-extra	#a		0	val a/0 in emitted port only
+a57b096dd564	api-parity(port-extra)	port-extra	#base1		0	var base1/0 in emitted port only
+a57b096dd564/2	api-parity(port-extra)	port-extra	#base1		0	var base1/0 in emitted port only
+aac0c7b9eb3a	api-parity(port-extra)	port-extra	#base2		0	val base2/0 in emitted port only
+aac0c7b9eb3a/2	api-parity(port-extra)	port-extra	#base2		0	val base2/0 in emitted port only
+afd116330d53	api-parity(port-extra)	port-extra	#c		0	val c/0 in emitted port only
+afd116330d53/2	api-parity(port-extra)	port-extra	#c		0	val c/0 in emitted port only
+203002b8f759	api-parity(port-extra)	port-extra	#count1		0	var count1/0 in emitted port only
+203002b8f759/2	api-parity(port-extra)	port-extra	#count1		0	var count1/0 in emitted port only
+203002b8f759/3	api-parity(port-extra)	port-extra	#count1		0	var count1/0 in emitted port only
+203002b8f759/4	api-parity(port-extra)	port-extra	#count1		0	var count1/0 in emitted port only
+d1fe855f325a	api-parity(port-extra)	port-extra	#count2		0	var count2/0 in emitted port only
+d1fe855f325a/2	api-parity(port-extra)	port-extra	#count2		0	var count2/0 in emitted port only
+d1fe855f325a/3	api-parity(port-extra)	port-extra	#count2		0	var count2/0 in emitted port only
+d1fe855f325a/4	api-parity(port-extra)	port-extra	#count2		0	var count2/0 in emitted port only
+3cb22e9ebcad	api-parity(port-extra)	port-extra	#cursor1		0	var cursor1/0 in emitted port only
+3cb22e9ebcad/2	api-parity(port-extra)	port-extra	#cursor1		0	var cursor1/0 in emitted port only
+3cb22e9ebcad/3	api-parity(port-extra)	port-extra	#cursor1		0	var cursor1/0 in emitted port only
+3cb22e9ebcad/4	api-parity(port-extra)	port-extra	#cursor1		0	var cursor1/0 in emitted port only
+8120b12d1611	api-parity(port-extra)	port-extra	#cursor2		0	var cursor2/0 in emitted port only
+8120b12d1611/2	api-parity(port-extra)	port-extra	#cursor2		0	var cursor2/0 in emitted port only
+8120b12d1611/3	api-parity(port-extra)	port-extra	#cursor2		0	var cursor2/0 in emitted port only
+8120b12d1611/4	api-parity(port-extra)	port-extra	#cursor2		0	var cursor2/0 in emitted port only
+eab2324d3892	api-parity(port-extra)	port-extra	#dest		0	var dest/0 in emitted port only
+eab2324d3892/2	api-parity(port-extra)	port-extra	#dest		0	var dest/0 in emitted port only
+eab2324d3892/3	api-parity(port-extra)	port-extra	#dest		0	var dest/0 in emitted port only
+eab2324d3892/4	api-parity(port-extra)	port-extra	#dest		0	var dest/0 in emitted port only
+49757e98a3ab	api-parity(port-extra)	port-extra	#doSort		0	def doSort/3 in emitted port only
+1e901296bd0e	api-parity(port-extra)	port-extra	#doSort		0	def doSort/4 in emitted port only
+4419eaa48f22	api-parity(port-extra)	port-extra	#k		0	val k/0 in emitted port only
+4419eaa48f22/2	api-parity(port-extra)	port-extra	#k		0	val k/0 in emitted port only
+128d117e44b7	api-parity(port-extra)	port-extra	#len		0	val len/0 in emitted port only
+128d117e44b7/2	api-parity(port-extra)	port-extra	#len		0	val len/0 in emitted port only
+68244be442d6	api-parity(port-extra)	port-extra	#len1		0	var len1/0 in emitted port only
+68244be442d6/2	api-parity(port-extra)	port-extra	#len1		0	var len1/0 in emitted port only
+59ad44107afd	api-parity(port-extra)	port-extra	#len2		0	var len2/0 in emitted port only
+59ad44107afd/2	api-parity(port-extra)	port-extra	#len2		0	var len2/0 in emitted port only
+3f56acd36221	api-parity(port-extra)	port-extra	#minGallop		0	var minGallop/0 in emitted port only
+3f56acd36221/2	api-parity(port-extra)	port-extra	#minGallop		0	var minGallop/0 in emitted port only
+3f56acd36221/3	api-parity(port-extra)	port-extra	#minGallop		0	var minGallop/0 in emitted port only
+3f56acd36221/4	api-parity(port-extra)	port-extra	#minGallop		0	var minGallop/0 in emitted port only
+63207dc6b4fd	api-parity(port-extra)	port-extra	#n		0	var n/0 in emitted port only
+63207dc6b4fd/2	api-parity(port-extra)	port-extra	#n		0	var n/0 in emitted port only
+63207dc6b4fd/3	api-parity(port-extra)	port-extra	#n		0	var n/0 in emitted port only
+63207dc6b4fd/4	api-parity(port-extra)	port-extra	#n		0	var n/0 in emitted port only
+0945256f4ba7	api-parity(port-extra)	port-extra	#newArray		0	val newArray/0 in emitted port only
+0945256f4ba7/2	api-parity(port-extra)	port-extra	#newArray		0	val newArray/0 in emitted port only
+0945256f4ba7/3	api-parity(port-extra)	port-extra	#newArray		0	val newArray/0 in emitted port only
+0945256f4ba7/4	api-parity(port-extra)	port-extra	#newArray		0	val newArray/0 in emitted port only
+2b88440b82eb	api-parity(port-extra)	port-extra	#newSize		0	var newSize/0 in emitted port only
+2b88440b82eb/2	api-parity(port-extra)	port-extra	#newSize		0	var newSize/0 in emitted port only
+150566ac1381	api-parity(port-extra)	port-extra	#stackLen		0	val stackLen/0 in emitted port only
+150566ac1381/2	api-parity(port-extra)	port-extra	#stackLen		0	val stackLen/0 in emitted port only
+278447b4f5ea	api-parity(port-extra)	port-extra	#tmp		0	val tmp/0 in emitted port only
+278447b4f5ea/2	api-parity(port-extra)	port-extra	#tmp		0	val tmp/0 in emitted port only
+278447b4f5ea/3	api-parity(port-extra)	port-extra	#tmp		0	val tmp/0 in emitted port only
+278447b4f5ea/4	api-parity(port-extra)	port-extra	#tmp		0	val tmp/0 in emitted port only
+57ddf31d942b	api-parity(port-extra)	port-extra	ArrayMap#entries	/ArrayMap	0	def entries/0 in emitted port only [rename candidates: clear, firstKey, firstValue, hashCode, isEmpty, nonEmpty, peekKey, peekValue, reverse, shrink, shuffle, size, toString]
+8b65e082e42f	api-parity(port-extra)	port-extra	ArrayMap#iterator	/ArrayMap	0	def iterator/0 in emitted port only [rename candidates: clear, firstKey, firstValue, hashCode, isEmpty, nonEmpty, peekKey, peekValue, reverse, shrink, shuffle, size, toString]
+9b64a72421e4	api-parity(port-extra)	port-extra	ArrayMap#keys	/ArrayMap	0	def keys/0 in emitted port only [rename candidates: clear, firstKey, firstValue, hashCode, isEmpty, nonEmpty, peekKey, peekValue, reverse, shrink, shuffle, size, toString]
+2098f44cd5f9	api-parity(port-extra)	port-extra	ArrayMap#notEmpty	/ArrayMap	0	def notEmpty/0 in emitted port only [rename candidates: clear, firstKey, firstValue, hashCode, isEmpty, nonEmpty, peekKey, peekValue, reverse, shrink, shuffle, size, toString]
+f1fe566cac88	api-parity(port-extra)	port-extra	ArrayMap#ordered	/ArrayMap	0	var ordered/0 in emitted port only
+1ec961bdd6bb	api-parity(port-extra)	port-extra	ArrayMap#resize	/ArrayMap	0	def resize/1 in emitted port only [rename candidates: clear, containsKey, containsValue, ensureCapacity, equals, equalsIdentity, foreachEntry, foreachKey, foreachValue, get, getKeyAt, getValueAt, indexOfKey, indexOfValue, putAll, removeIndex, removeKey, truncate]
+ff6867da8127	api-parity(port-extra)	port-extra	ArrayMap#setKey	/ArrayMap	0	def setKey/2 in emitted port only [rename candidates: containsValue, get, getKey, indexOfValue, put, removeValue, setKeyAt, setValueAt]
+93defc484134	api-parity(port-extra)	port-extra	ArrayMap#setValue	/ArrayMap	0	def setValue/2 in emitted port only [rename candidates: containsValue, get, getKey, indexOfValue, put, removeValue, setKeyAt, setValueAt]
+520e89569f8a	api-parity(port-extra)	port-extra	ArrayMap#size	/ArrayMap	0	var size/0 in emitted port only
+5c973c78dd89	api-parity(port-extra)	port-extra	ArrayMap#values	/ArrayMap	0	def values/0 in emitted port only [rename candidates: clear, firstKey, firstValue, hashCode, isEmpty, nonEmpty, peekKey, peekValue, reverse, shrink, shuffle, size, toString]
+00027c0e43eb	api-parity(port-extra)	port-extra	ArrayMap$#Entries	/ArrayMap$	0	class Entries/0 in emitted port only
+21111f758eb5	api-parity(port-extra)	port-extra	ArrayMap$#Funnel	/ArrayMap$	0	class Funnel/0 in emitted port only
+6be1fa659d4b	api-parity(port-extra)	port-extra	ArrayMap$#Keys	/ArrayMap$	0	class Keys/0 in emitted port only
+2ac38c26a931	api-parity(port-extra)	port-extra	ArrayMap$#Values	/ArrayMap$	0	class Values/0 in emitted port only
+95c2b66a9be2	api-parity(port-extra)	port-extra	ArrayMap$.Entries#hasNext	/ArrayMap$/Entries	0	def hasNext/0 in emitted port only
+71486d6e847a	api-parity(port-extra)	port-extra	ArrayMap$.Entries#iterator	/ArrayMap$/Entries	0	def iterator/0 in emitted port only
+907bd883e66f	api-parity(port-extra)	port-extra	ArrayMap$.Entries#map	/ArrayMap$/Entries	0	var map/0 in emitted port only
+678ae19750a7	api-parity(port-extra)	port-extra	ArrayMap$.Entries#next	/ArrayMap$/Entries	0	def next/0 in emitted port only
+0f0449edd721	api-parity(port-extra)	port-extra	ArrayMap$.Entries#remove	/ArrayMap$/Entries	0	def remove/0 in emitted port only
+2b983b22ec03	api-parity(port-extra)	port-extra	ArrayMap$.Entries#reset	/ArrayMap$/Entries	0	def reset/0 in emitted port only
+efb6dd112f8d	api-parity(port-extra)	port-extra	ArrayMap$.Keys#hasNext	/ArrayMap$/Keys	0	def hasNext/0 in emitted port only
+3f4dd22c8255	api-parity(port-extra)	port-extra	ArrayMap$.Keys#iterator	/ArrayMap$/Keys	0	def iterator/0 in emitted port only
+257d77fad4c3	api-parity(port-extra)	port-extra	ArrayMap$.Keys#map	/ArrayMap$/Keys	0	var map/0 in emitted port only
+ccc211d9ff00	api-parity(port-extra)	port-extra	ArrayMap$.Keys#next	/ArrayMap$/Keys	0	def next/0 in emitted port only
+febfea06d89a	api-parity(port-extra)	port-extra	ArrayMap$.Keys#remove	/ArrayMap$/Keys	0	def remove/0 in emitted port only
+2421912055fc	api-parity(port-extra)	port-extra	ArrayMap$.Keys#reset	/ArrayMap$/Keys	0	def reset/0 in emitted port only
+cbd8f8100cc4	api-parity(port-extra)	port-extra	ArrayMap$.Keys#toArray	/ArrayMap$/Keys	0	def toArray/0 in emitted port only
+64fbae695e8e	api-parity(port-extra)	port-extra	ArrayMap$.Keys#toArray	/ArrayMap$/Keys	0	def toArray/1 in emitted port only
+367eace1f49d	api-parity(port-extra)	port-extra	ArrayMap$.Values#hasNext	/ArrayMap$/Values	0	def hasNext/0 in emitted port only
+f6b49ba80f1e	api-parity(port-extra)	port-extra	ArrayMap$.Values#iterator	/ArrayMap$/Values	0	def iterator/0 in emitted port only
+c7d62ca16fc8	api-parity(port-extra)	port-extra	ArrayMap$.Values#map	/ArrayMap$/Values	0	var map/0 in emitted port only
+5bf41e6b19b1	api-parity(port-extra)	port-extra	ArrayMap$.Values#next	/ArrayMap$/Values	0	def next/0 in emitted port only
+b950bc263536	api-parity(port-extra)	port-extra	ArrayMap$.Values#remove	/ArrayMap$/Values	0	def remove/0 in emitted port only
+263b7af954fd	api-parity(port-extra)	port-extra	ArrayMap$.Values#reset	/ArrayMap$/Values	0	def reset/0 in emitted port only
+4e769b8a9d8a	api-parity(port-extra)	port-extra	ArrayMap$.Values#toArray	/ArrayMap$/Values	0	def toArray/0 in emitted port only
+f45f2e28f90e	api-parity(port-extra)	port-extra	ArrayMap$.Values#toArray	/ArrayMap$/Values	0	def toArray/1 in emitted port only
+94b697580489	api-parity(port-extra)	port-extra	ComparableTimSort$#Funnel	/ComparableTimSort$	0	class Funnel/0 in emitted port only
+c6de57eae8dd	api-parity(port-extra)	port-extra	ComparableTimSort$#force	/ComparableTimSort$	0	val force/0 in emitted port only [rename candidates: m, m, maxOfs, maxOfs, maxOfs, maxOfs, mid, n, pivot, t, tmp, tmp]
+51108fec59cf	api-parity(port-extra)	port-extra	ComparableTimSort$#initRunLen	/ComparableTimSort$	0	val initRunLen/0 in emitted port only [rename candidates: m, m, maxOfs, maxOfs, maxOfs, maxOfs, mid, n, pivot, t, tmp, tmp]
+8dc51f1b6dd6	api-parity(port-extra)	port-extra	ComparableTimSort$#minRun	/ComparableTimSort$	0	val minRun/0 in emitted port only [rename candidates: m, m, maxOfs, maxOfs, maxOfs, maxOfs, mid, n, pivot, t, tmp, tmp]
+b2c11f7efc95	api-parity(port-extra)	port-extra	ComparableTimSort$#nRemaining	/ComparableTimSort$	0	var nRemaining/0 in emitted port only [rename candidates: i, j, lastOfs, lastOfs, left, n_var, ofs, ofs, r, right, runHi, start_var]
+42ce0b43fef7	api-parity(port-extra)	port-extra	ComparableTimSort$#runLen	/ComparableTimSort$	0	var runLen/0 in emitted port only [rename candidates: i, j, lastOfs, lastOfs, left, n_var, ofs, ofs, r, right, runHi, start_var]
+9aad9295a8b5	api-parity(port-extra)	port-extra	ComparableTimSort$#ts	/ComparableTimSort$	0	val ts/0 in emitted port only [rename candidates: m, m, maxOfs, maxOfs, maxOfs, maxOfs, mid, n, pivot, t, tmp, tmp]
+02132b3aa2ae	api-parity(port-extra)	port-extra	DynamicArray#add	/DynamicArray	0	def add/4 in emitted port only
+c629c0a9f6a7	api-parity(port-extra)	port-extra	DynamicArray#contains	/DynamicArray	0	def contains/2 in emitted port only [rename candidates: add, insert, insertRange, removeRange, replaceAll, replaceAllByRef, replaceFirst, replaceFirstByRef, selectRanked, selectRankedIndex, swap, update]
+2209474661de	api-parity(port-extra)	port-extra	DynamicArray#containsAll	/DynamicArray	0	def containsAll/2 in emitted port only [rename candidates: add, insert, insertRange, removeRange, replaceAll, replaceAllByRef, replaceFirst, replaceFirstByRef, selectRanked, selectRankedIndex, swap, update]
+0737bc5c9d35	api-parity(port-extra)	port-extra	DynamicArray#containsAny	/DynamicArray	0	def containsAny/2 in emitted port only [rename candidates: add, insert, insertRange, removeRange, replaceAll, replaceAllByRef, replaceFirst, replaceFirstByRef, selectRanked, selectRankedIndex, swap, update]
+6f72a06f61a4	api-parity(port-extra)	port-extra	DynamicArray#get	/DynamicArray	0	def get/1 in emitted port only [rename candidates: +=, --=, -=, add, addAll, addAll, apply, contains, containsAll, containsAllByRef, containsAny, containsAnyByRef, containsByRef, count, ensureCapacity, equals, equalsIdentity, exists, find, forall, foreach, indexOf, indexOfByRef, indexWhere, lastIndexOf, lastIndexOfByRef, removeAll, removeAllByRef, removeIndex, removeValue, removeValueByRef, select, setSize, sort, sort, toString, truncate]
+e76f39f461ab	api-parity(port-extra)	port-extra	DynamicArray#indexOf	/DynamicArray	0	def indexOf/2 in emitted port only [rename candidates: add, insert, insertRange, removeRange, replaceAll, replaceAllByRef, replaceFirst, replaceFirstByRef, selectRanked, selectRankedIndex, swap, update]
+4df17a4bad99	api-parity(port-extra)	port-extra	DynamicArray#items	/DynamicArray	0	var items/0 in emitted port only
+bb58183368dd	api-parity(port-extra)	port-extra	DynamicArray#lastIndexOf	/DynamicArray	0	def lastIndexOf/2 in emitted port only [rename candidates: add, insert, insertRange, removeRange, replaceAll, replaceAllByRef, replaceFirst, replaceFirstByRef, selectRanked, selectRankedIndex, swap, update]
+d001bda8cb5e	api-parity(port-extra)	port-extra	DynamicArray#notEmpty	/DynamicArray	0	def notEmpty/0 in emitted port only [rename candidates: begin, clear, end, first, hashCode, isEmpty, items, iterator, last, nonEmpty, peek, pop, random, reverse, shrink, shuffle, size, toArray, toString]
+6a1c409944b2	api-parity(port-extra)	port-extra	DynamicArray#ordered	/DynamicArray	0	var ordered/0 in emitted port only
+6e95964385d8	api-parity(port-extra)	port-extra	DynamicArray#removeAll	/DynamicArray	0	def removeAll/2 in emitted port only [rename candidates: add, insert, insertRange, removeRange, replaceAll, replaceAllByRef, replaceFirst, replaceFirstByRef, selectRanked, selectRankedIndex, swap, update]
+f494b9d1825b	api-parity(port-extra)	port-extra	DynamicArray#removeValue	/DynamicArray	0	def removeValue/2 in emitted port only [rename candidates: add, insert, insertRange, removeRange, replaceAll, replaceAllByRef, replaceFirst, replaceFirstByRef, selectRanked, selectRankedIndex, swap, update]
+e42cb0d83d58	api-parity(port-extra)	port-extra	DynamicArray#replaceAll	/DynamicArray	0	def replaceAll/3 in emitted port only [rename candidates: add, addAll]
+5368db2bffaf	api-parity(port-extra)	port-extra	DynamicArray#replaceFirst	/DynamicArray	0	def replaceFirst/3 in emitted port only [rename candidates: add, addAll]
+e0e6af54c659	api-parity(port-extra)	port-extra	DynamicArray#resize	/DynamicArray	0	def resize/1 in emitted port only [rename candidates: +=, --=, -=, add, addAll, addAll, apply, contains, containsAll, containsAllByRef, containsAny, containsAnyByRef, containsByRef, count, ensureCapacity, equals, equalsIdentity, exists, find, forall, foreach, indexOf, indexOfByRef, indexWhere, lastIndexOf, lastIndexOfByRef, removeAll, removeAllByRef, removeIndex, removeValue, removeValueByRef, select, setSize, sort, sort, toString, truncate]
+baa12ad25d12	api-parity(port-extra)	port-extra	DynamicArray#set	/DynamicArray	0	def set/2 in emitted port only [rename candidates: add, insert, insertRange, removeRange, replaceAll, replaceAllByRef, replaceFirst, replaceFirstByRef, selectRanked, selectRankedIndex, swap, update]
+21cdb08dbf77	api-parity(port-extra)	port-extra	DynamicArray#size	/DynamicArray	0	var size/0 in emitted port only
+70883df6aa73	api-parity(port-extra)	port-extra	DynamicArray#sort	/DynamicArray	0	def sort/0 in emitted port only [rename candidates: begin, clear, end, first, hashCode, isEmpty, items, iterator, last, nonEmpty, peek, pop, random, reverse, shrink, shuffle, size, toArray, toString]
+8e6751f0e791	api-parity(port-extra)	port-extra	DynamicArray#toArray	/DynamicArray	0	def toArray/1 in emitted port only [rename candidates: +=, --=, -=, add, addAll, addAll, apply, contains, containsAll, containsAllByRef, containsAny, containsAnyByRef, containsByRef, count, ensureCapacity, equals, equalsIdentity, exists, find, forall, foreach, indexOf, indexOfByRef, indexWhere, lastIndexOf, lastIndexOfByRef, removeAll, removeAllByRef, removeIndex, removeValue, removeValueByRef, select, setSize, sort, sort, toString, truncate]
+8e6751f0e791/2	api-parity(port-extra)	port-extra	DynamicArray#toArray	/DynamicArray	0	def toArray/1 in emitted port only [rename candidates: +=, --=, -=, add, addAll, addAll, apply, contains, containsAll, containsAllByRef, containsAny, containsAnyByRef, containsByRef, count, ensureCapacity, equals, equalsIdentity, exists, find, forall, foreach, indexOf, indexOfByRef, indexWhere, lastIndexOf, lastIndexOfByRef, removeAll, removeAllByRef, removeIndex, removeValue, removeValueByRef, select, setSize, sort, sort, toString, truncate]
+9b439f330ccc	api-parity(port-extra)	port-extra	DynamicArray$#ArrayIterable	/DynamicArray$	0	class ArrayIterable/0 in emitted port only
+198659d829cd	api-parity(port-extra)	port-extra	DynamicArray$#ArrayIterator	/DynamicArray$	0	class ArrayIterator/0 in emitted port only
+8c68937dadab	api-parity(port-extra)	port-extra	DynamicArray$#Funnel	/DynamicArray$	0	class Funnel/0 in emitted port only
+93633cf37c2c	api-parity(port-extra)	port-extra	DynamicArray$#with	/DynamicArray$	0	def with/1 in emitted port only [rename candidates: apply, from, from, wrap, wrapRefUnchecked]
+d54d7339abb8	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterable#allowRemove	/DynamicArray$/ArrayIterable	0	var allowRemove/0 in emitted port only
+9b9bcc142ed6	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterable#array	/DynamicArray$/ArrayIterable	0	var array/0 in emitted port only
+5cd1a3d1045f	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterable#iterator	/DynamicArray$/ArrayIterable	0	def iterator/0 in emitted port only
+4661ce4ad47d	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterator#allowRemove	/DynamicArray$/ArrayIterator	0	var allowRemove/0 in emitted port only
+095626f462e7	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterator#array	/DynamicArray$/ArrayIterator	0	var array/0 in emitted port only
+abbda2524eb0	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterator#hasNext	/DynamicArray$/ArrayIterator	0	def hasNext/0 in emitted port only
+5e50a100860a	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterator#iterator	/DynamicArray$/ArrayIterator	0	def iterator/0 in emitted port only
+4f1283193dc6	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterator#next	/DynamicArray$/ArrayIterator	0	def next/0 in emitted port only
+d3245efc56da	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterator#remove	/DynamicArray$/ArrayIterator	0	def remove/0 in emitted port only
+b5d865d10df9	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterator#reset	/DynamicArray$/ArrayIterator	0	def reset/0 in emitted port only
+78ee9ccd90dc	api-parity(port-extra)	port-extra	MathUtils$#i	/MathUtils$	0	var i/0 in emitted port only
+0df5159f9612	api-parity(port-extra)	port-extra	ObjectMap#entries	/ObjectMap	0	def entries/0 in emitted port only [rename candidates: clear, hashCode, isEmpty, nonEmpty, size, toString]
+f73147722402	api-parity(port-extra)	port-extra	ObjectMap#iterator	/ObjectMap	0	def iterator/0 in emitted port only [rename candidates: clear, hashCode, isEmpty, nonEmpty, size, toString]
+f7163719bb11	api-parity(port-extra)	port-extra	ObjectMap#key	/ObjectMap	0	val key/0 in emitted port only [rename candidates: i, loadFactor, oldCapacity, oldFilled, oldKeyTable, oldValTable]
+a4b5e80bb283	api-parity(port-extra)	port-extra	ObjectMap#keyTable	/ObjectMap	0	val keyTable/0 in emitted port only [rename candidates: i, loadFactor, oldCapacity, oldFilled, oldKeyTable, oldValTable]
+a4b5e80bb283/2	api-parity(port-extra)	port-extra	ObjectMap#keyTable	/ObjectMap	0	val keyTable/0 in emitted port only [rename candidates: i, loadFactor, oldCapacity, oldFilled, oldKeyTable, oldValTable]
+d79d9b69e812	api-parity(port-extra)	port-extra	ObjectMap#keyTable	/ObjectMap	0	var keyTable/0 in emitted port only [rename candidates: i, i, i]
+0ebe8d5c6115	api-parity(port-extra)	port-extra	ObjectMap#keys	/ObjectMap	0	def keys/0 in emitted port only [rename candidates: clear, hashCode, isEmpty, nonEmpty, size, toString]
+287f7d36fa9e	api-parity(port-extra)	port-extra	ObjectMap#mask	/ObjectMap	0	var mask/0 in emitted port only [rename candidates: i, i, i]
+d80e753a1de8	api-parity(port-extra)	port-extra	ObjectMap#notEmpty	/ObjectMap	0	def notEmpty/0 in emitted port only [rename candidates: clear, hashCode, isEmpty, nonEmpty, size, toString]
+033097734014	api-parity(port-extra)	port-extra	ObjectMap#oldValueTable	/ObjectMap	0	val oldValueTable/0 in emitted port only [rename candidates: i, loadFactor, oldCapacity, oldFilled, oldKeyTable, oldValTable]
+486fff165acd	api-parity(port-extra)	port-extra	ObjectMap#other	/ObjectMap	0	val other/0 in emitted port only [rename candidates: i, loadFactor, oldCapacity, oldFilled, oldKeyTable, oldValTable]
+259644f96b3d	api-parity(port-extra)	port-extra	ObjectMap#place	/ObjectMap	0	def place/1 in emitted port only [rename candidates: clear, containsKey, containsValue, ensureCapacity, equals, equalsIdentity, findKey, foreachEntry, foreachKey, foreachValue, get, putAll, remove, shrink, toString]
+b6ecf60f4eef	api-parity(port-extra)	port-extra	ObjectMap#shift	/ObjectMap	0	var shift/0 in emitted port only [rename candidates: i, i, i]
+5e549eaad240	api-parity(port-extra)	port-extra	ObjectMap#size	/ObjectMap	0	var size/0 in emitted port only [rename candidates: i, i, i]
+9b4f50372687	api-parity(port-extra)	port-extra	ObjectMap#threshold	/ObjectMap	0	var threshold/0 in emitted port only [rename candidates: i, i, i]
+27f81710b0cd	api-parity(port-extra)	port-extra	ObjectMap#toString	/ObjectMap	0	def toString/2 in emitted port only [rename candidates: containsValue, findKey, get, put, toStringImpl]
+ae3883cf7ecd	api-parity(port-extra)	port-extra	ObjectMap#valueTable	/ObjectMap	0	var valueTable/0 in emitted port only [rename candidates: i, i, i]
+2a0a5bcb3fed	api-parity(port-extra)	port-extra	ObjectMap#values	/ObjectMap	0	def values/0 in emitted port only [rename candidates: clear, hashCode, isEmpty, nonEmpty, size, toString]
+0350f1544e59	api-parity(port-extra)	port-extra	ObjectMap$#Entries	/ObjectMap$	0	class Entries/0 in emitted port only
+3949dac3b4cb	api-parity(port-extra)	port-extra	ObjectMap$#Entry	/ObjectMap$	0	class Entry/0 in emitted port only
+a5e17c093770	api-parity(port-extra)	port-extra	ObjectMap$#Keys	/ObjectMap$	0	class Keys/0 in emitted port only
+afec212f7937	api-parity(port-extra)	port-extra	ObjectMap$#Values	/ObjectMap$	0	class Values/0 in emitted port only
+3d61a02f0c70	api-parity(port-extra)	port-extra	ObjectMap$#keyTable	/ObjectMap$	0	val keyTable/0 in emitted port only [rename candidates: mask, shift, threshold, ts, ts]
+4cea999b19e5	api-parity(port-extra)	port-extra	ObjectMap$#map	/ObjectMap$	0	var map/0 in emitted port only
+9693be8df780	api-parity(port-extra)	port-extra	ObjectMap$#n	/ObjectMap$	0	val n/0 in emitted port only [rename candidates: mask, shift, threshold, ts, ts]
+e53d133331c7	api-parity(port-extra)	port-extra	ObjectMap$#remove	/ObjectMap$	0	def remove/0 in emitted port only [rename candidates: apply]
+d3fbcd3d2f18	api-parity(port-extra)	port-extra	ObjectMap$#reset	/ObjectMap$	0	def reset/0 in emitted port only [rename candidates: apply]
+b14c76200340	api-parity(port-extra)	port-extra	ObjectMap$.Entries#hasNext	/ObjectMap$/Entries	0	def hasNext/0 in emitted port only
+4d09bc71c32b	api-parity(port-extra)	port-extra	ObjectMap$.Entries#iterator	/ObjectMap$/Entries	0	def iterator/0 in emitted port only
+8dbde312476f	api-parity(port-extra)	port-extra	ObjectMap$.Entries#next	/ObjectMap$/Entries	0	def next/0 in emitted port only
+1d13c0ffa4dc	api-parity(port-extra)	port-extra	ObjectMap$.Entry#key	/ObjectMap$/Entry	0	var key/0 in emitted port only
+0463f2f4f51e	api-parity(port-extra)	port-extra	ObjectMap$.Entry#toString	/ObjectMap$/Entry	0	def toString/0 in emitted port only
+03277056426d	api-parity(port-extra)	port-extra	ObjectMap$.Entry#value	/ObjectMap$/Entry	0	var value/0 in emitted port only
+0cebff4162a3	api-parity(port-extra)	port-extra	ObjectMap$.Keys#hasNext	/ObjectMap$/Keys	0	def hasNext/0 in emitted port only
+568ff46fa981	api-parity(port-extra)	port-extra	ObjectMap$.Keys#iterator	/ObjectMap$/Keys	0	def iterator/0 in emitted port only
+5962fdedb6f1	api-parity(port-extra)	port-extra	ObjectMap$.Keys#next	/ObjectMap$/Keys	0	def next/0 in emitted port only
+6bf1ec0bdce1	api-parity(port-extra)	port-extra	ObjectMap$.Keys#toArray	/ObjectMap$/Keys	0	def toArray/0 in emitted port only
+202232be8727	api-parity(port-extra)	port-extra	ObjectMap$.Keys#toArray	/ObjectMap$/Keys	0	def toArray/1 in emitted port only
+d961854b9f4e	api-parity(port-extra)	port-extra	ObjectMap$.Values#hasNext	/ObjectMap$/Values	0	def hasNext/0 in emitted port only
+6802ad75e827	api-parity(port-extra)	port-extra	ObjectMap$.Values#iterator	/ObjectMap$/Values	0	def iterator/0 in emitted port only
+254d370f7e2f	api-parity(port-extra)	port-extra	ObjectMap$.Values#next	/ObjectMap$/Values	0	def next/0 in emitted port only
+7d6da1fd8a64	api-parity(port-extra)	port-extra	ObjectMap$.Values#toArray	/ObjectMap$/Values	0	def toArray/0 in emitted port only
+f6b8fffb3cc9	api-parity(port-extra)	port-extra	ObjectMap$.Values#toArray	/ObjectMap$/Values	0	def toArray/1 in emitted port only
+729fc6dac911	api-parity(port-extra)	port-extra	ObjectSet#addAll	/ObjectSet	0	def addAll/3 in emitted port only
+729fc6dac911/2	api-parity(port-extra)	port-extra	ObjectSet#addAll	/ObjectSet	0	def addAll/3 in emitted port only
+44a27f673c0c	api-parity(port-extra)	port-extra	ObjectSet#iterator	/ObjectSet	0	def iterator/0 in emitted port only [rename candidates: clear, first, hashCode, isEmpty, nonEmpty, size, toArray, toString]
+9d791f1416f7	api-parity(port-extra)	port-extra	ObjectSet#key	/ObjectSet	0	val key/0 in emitted port only [rename candidates: loadFactor, oldCapacity, oldFilled, oldKeyTable]
+065784f867e3	api-parity(port-extra)	port-extra	ObjectSet#keyTable	/ObjectSet	0	val keyTable/0 in emitted port only [rename candidates: loadFactor, oldCapacity, oldFilled, oldKeyTable]
+065784f867e3/2	api-parity(port-extra)	port-extra	ObjectSet#keyTable	/ObjectSet	0	val keyTable/0 in emitted port only [rename candidates: loadFactor, oldCapacity, oldFilled, oldKeyTable]
+c43b885164d5	api-parity(port-extra)	port-extra	ObjectSet#keyTable	/ObjectSet	0	var keyTable/0 in emitted port only [rename candidates: i, i, i]
+001346cfc813	api-parity(port-extra)	port-extra	ObjectSet#mask	/ObjectSet	0	var mask/0 in emitted port only [rename candidates: i, i, i]
+8f2c8e18da30	api-parity(port-extra)	port-extra	ObjectSet#notEmpty	/ObjectSet	0	def notEmpty/0 in emitted port only [rename candidates: clear, first, hashCode, isEmpty, nonEmpty, size, toArray, toString]
+4add3c6ddbf9	api-parity(port-extra)	port-extra	ObjectSet#other	/ObjectSet	0	val other/0 in emitted port only [rename candidates: loadFactor, oldCapacity, oldFilled, oldKeyTable]
+7c6cc514c5dc	api-parity(port-extra)	port-extra	ObjectSet#place	/ObjectSet	0	def place/1 in emitted port only [rename candidates: add, addAll, addAll, clear, contains, ensureCapacity, equals, foreach, get, remove, shrink, toString]
+4c87ec74e545	api-parity(port-extra)	port-extra	ObjectSet#shift	/ObjectSet	0	var shift/0 in emitted port only [rename candidates: i, i, i]
+c8d7dbcaf842	api-parity(port-extra)	port-extra	ObjectSet#size	/ObjectSet	0	var size/0 in emitted port only [rename candidates: i, i, i]
+108052b149c7	api-parity(port-extra)	port-extra	ObjectSet#threshold	/ObjectSet	0	var threshold/0 in emitted port only [rename candidates: i, i, i]
+d270d4e653a5	api-parity(port-extra)	port-extra	ObjectSet$#ObjectSetIterator	/ObjectSet$	0	class ObjectSetIterator/0 in emitted port only
+e6b7d4fc68f4	api-parity(port-extra)	port-extra	ObjectSet$#tableSize	/ObjectSet$	0	val tableSize/0 in emitted port only [rename candidates: mask, shift, threshold, ts]
+a30ec8620a13	api-parity(port-extra)	port-extra	ObjectSet$#with	/ObjectSet$	0	def with/1 in emitted port only [rename candidates: apply, from]
+f3bb90088de9	api-parity(port-extra)	port-extra	ObjectSet$.ObjectSetIterator#hasNext	/ObjectSet$/ObjectSetIterator	0	def hasNext/0 in emitted port only
+733fc9d0057f	api-parity(port-extra)	port-extra	ObjectSet$.ObjectSetIterator#iterator	/ObjectSet$/ObjectSetIterator	0	def iterator/0 in emitted port only
+87da0d4e23b5	api-parity(port-extra)	port-extra	ObjectSet$.ObjectSetIterator#keyTable	/ObjectSet$/ObjectSetIterator	0	val keyTable/0 in emitted port only
+b1444a2a5180	api-parity(port-extra)	port-extra	ObjectSet$.ObjectSetIterator#n	/ObjectSet$/ObjectSetIterator	0	val n/0 in emitted port only
+628456b7a6e4	api-parity(port-extra)	port-extra	ObjectSet$.ObjectSetIterator#next	/ObjectSet$/ObjectSetIterator	0	def next/0 in emitted port only
+c392486c078f	api-parity(port-extra)	port-extra	ObjectSet$.ObjectSetIterator#remove	/ObjectSet$/ObjectSetIterator	0	def remove/0 in emitted port only
+ce09945bbad8	api-parity(port-extra)	port-extra	ObjectSet$.ObjectSetIterator#reset	/ObjectSet$/ObjectSetIterator	0	def reset/0 in emitted port only
+93d6f9a0e791	api-parity(port-extra)	port-extra	ObjectSet$.ObjectSetIterator#set	/ObjectSet$/ObjectSetIterator	0	var set/0 in emitted port only
+95cef00d42d8	api-parity(port-extra)	port-extra	ObjectSet$.ObjectSetIterator#toArray	/ObjectSet$/ObjectSetIterator	0	def toArray/0 in emitted port only
+576122c122fb	api-parity(port-extra)	port-extra	ObjectSet$.ObjectSetIterator#toArray	/ObjectSet$/ObjectSetIterator	0	def toArray/1 in emitted port only
+130846b83f44	api-parity(port-extra)	port-extra	OrderedMap#entries	/OrderedMap	0	def entries/0 in emitted port only [rename candidates: clear, hashCode, isEmpty, loadFactor, nonEmpty, orderedKeys, size, toString]
+a57519dc04ca	api-parity(port-extra)	port-extra	OrderedMap#iterator	/OrderedMap	0	def iterator/0 in emitted port only [rename candidates: clear, hashCode, isEmpty, loadFactor, nonEmpty, orderedKeys, size, toString]
+56adb006eb5e	api-parity(port-extra)	port-extra	OrderedMap#keys	/OrderedMap	0	def keys/0 in emitted port only [rename candidates: clear, hashCode, isEmpty, loadFactor, nonEmpty, orderedKeys, size, toString]
+853541cd24ce	api-parity(port-extra)	port-extra	OrderedMap#toString	/OrderedMap	0	def toString/2 in emitted port only [rename candidates: alter, alterIndex, containsValue, findKey, get, put]
+044144ccd87c	api-parity(port-extra)	port-extra	OrderedMap#values	/OrderedMap	0	def values/0 in emitted port only [rename candidates: clear, hashCode, isEmpty, loadFactor, nonEmpty, orderedKeys, size, toString]
+8afb5b12cbb6	api-parity(port-extra)	port-extra	OrderedMap$#OrderedMapEntries	/OrderedMap$	0	class OrderedMapEntries/0 in emitted port only
+09bb9ace8e19	api-parity(port-extra)	port-extra	OrderedMap$#OrderedMapKeys	/OrderedMap$	0	class OrderedMapKeys/0 in emitted port only
+eef8bcc77074	api-parity(port-extra)	port-extra	OrderedMap$#OrderedMapValues	/OrderedMap$	0	class OrderedMapValues/0 in emitted port only
+faa04466292a	api-parity(port-extra)	port-extra	OrderedMap$.OrderedMapEntries#keys	/OrderedMap$/OrderedMapEntries	0	var keys/0 in emitted port only
+87e9cb94e3c6	api-parity(port-extra)	port-extra	OrderedMap$.OrderedMapEntries#next	/OrderedMap$/OrderedMapEntries	0	def next/0 in emitted port only
+3e6c34138a9c	api-parity(port-extra)	port-extra	OrderedMap$.OrderedMapEntries#remove	/OrderedMap$/OrderedMapEntries	0	def remove/0 in emitted port only
+d2e1bec5065d	api-parity(port-extra)	port-extra	OrderedMap$.OrderedMapEntries#reset	/OrderedMap$/OrderedMapEntries	0	def reset/0 in emitted port only
+cebd61e52b89	api-parity(port-extra)	port-extra	OrderedMap$.OrderedMapKeys#keys	/OrderedMap$/OrderedMapKeys	0	var keys/0 in emitted port only
+60065b37fc53	api-parity(port-extra)	port-extra	OrderedMap$.OrderedMapKeys#next	/OrderedMap$/OrderedMapKeys	0	def next/0 in emitted port only
+700a5bf7403d	api-parity(port-extra)	port-extra	OrderedMap$.OrderedMapKeys#remove	/OrderedMap$/OrderedMapKeys	0	def remove/0 in emitted port only
+c921a228856e	api-parity(port-extra)	port-extra	OrderedMap$.OrderedMapKeys#reset	/OrderedMap$/OrderedMapKeys	0	def reset/0 in emitted port only
+df4b64928346	api-parity(port-extra)	port-extra	OrderedMap$.OrderedMapKeys#toArray	/OrderedMap$/OrderedMapKeys	0	def toArray/0 in emitted port only
+ee9aa34b3018	api-parity(port-extra)	port-extra	OrderedMap$.OrderedMapKeys#toArray	/OrderedMap$/OrderedMapKeys	0	def toArray/1 in emitted port only
+190f46836b34	api-parity(port-extra)	port-extra	OrderedMap$.OrderedMapValues#keys	/OrderedMap$/OrderedMapValues	0	var keys/0 in emitted port only
+7cb58f5dce30	api-parity(port-extra)	port-extra	OrderedMap$.OrderedMapValues#next	/OrderedMap$/OrderedMapValues	0	def next/0 in emitted port only
+d210e5dbf839	api-parity(port-extra)	port-extra	OrderedMap$.OrderedMapValues#remove	/OrderedMap$/OrderedMapValues	0	def remove/0 in emitted port only
+1f05ad240022	api-parity(port-extra)	port-extra	OrderedMap$.OrderedMapValues#reset	/OrderedMap$/OrderedMapValues	0	def reset/0 in emitted port only
+ad424c400a88	api-parity(port-extra)	port-extra	OrderedMap$.OrderedMapValues#toArray	/OrderedMap$/OrderedMapValues	0	def toArray/0 in emitted port only
+4b9098130200	api-parity(port-extra)	port-extra	OrderedMap$.OrderedMapValues#toArray	/OrderedMap$/OrderedMapValues	0	def toArray/1 in emitted port only
+a1f4982208dc	api-parity(port-extra)	port-extra	OrderedSet#items	/OrderedSet	0	var items/0 in emitted port only
+381ec9c27519	api-parity(port-extra)	port-extra	OrderedSet#iterator	/OrderedSet	0	def iterator/0 in emitted port only [rename candidates: clear, first, hashCode, isEmpty, loadFactor, nonEmpty, orderedItems, size, toArray, toString]
+3d78a7f302f1	api-parity(port-extra)	port-extra	OrderedSet$#OrderedSetIterator	/OrderedSet$	0	class OrderedSetIterator/0 in emitted port only
+229426c0c4c2	api-parity(port-extra)	port-extra	OrderedSet$#with	/OrderedSet$	0	def with/1 in emitted port only [rename candidates: apply, from]
+d542db7ca685	api-parity(port-extra)	port-extra	OrderedSet$.OrderedSetIterator#items	/OrderedSet$/OrderedSetIterator	0	var items/0 in emitted port only
+49df17985c86	api-parity(port-extra)	port-extra	OrderedSet$.OrderedSetIterator#next	/OrderedSet$/OrderedSetIterator	0	def next/0 in emitted port only
+e4ddfb88357e	api-parity(port-extra)	port-extra	OrderedSet$.OrderedSetIterator#remove	/OrderedSet$/OrderedSetIterator	0	def remove/0 in emitted port only
+8851b0165a70	api-parity(port-extra)	port-extra	OrderedSet$.OrderedSetIterator#reset	/OrderedSet$/OrderedSetIterator	0	def reset/0 in emitted port only
+65275b83c377	api-parity(port-extra)	port-extra	OrderedSet$.OrderedSetIterator#toArray	/OrderedSet$/OrderedSetIterator	0	def toArray/0 in emitted port only
+f5e06f91fd88	api-parity(port-extra)	port-extra	OrderedSet$.OrderedSetIterator#toArray	/OrderedSet$/OrderedSetIterator	0	def toArray/1 in emitted port only
+3cb615200cd3	api-parity(port-extra)	port-extra	QuickSelect#i	/QuickSelect	0	var i/0 in emitted port only [rename candidates: storage]
+9132bd9584b0	api-parity(port-extra)	port-extra	QuickSelect#result	/QuickSelect	0	var result/0 in emitted port only [rename candidates: storage]
+acfff9a571b6	api-parity(port-extra)	port-extra	QuickSelect#select	/QuickSelect	0	def select/4 in emitted port only
+a459bfe85458	api-parity(port-extra)	port-extra	Select#i	/Select	0	var i/0 in emitted port only
+a459bfe85458/2	api-parity(port-extra)	port-extra	Select#i	/Select	0	var i/0 in emitted port only
+f8446b576c83	api-parity(port-extra)	port-extra	Select#select	/Select	0	def select/4 in emitted port only
+8034c27f0596	api-parity(port-extra)	port-extra	Select#selectIndex	/Select	0	def selectIndex/4 in emitted port only
+4d171f21f380	api-parity(port-extra)	port-extra	Select$#instance	/Select$	0	def instance/0 in emitted port only
+3cc68039cb81	api-parity(port-extra)	port-extra	Sort#sort	/Sort	0	def sort/2 in emitted port only
+3cc68039cb81/2	api-parity(port-extra)	port-extra	Sort#sort	/Sort	0	def sort/2 in emitted port only
+62210598b2b0	api-parity(port-extra)	port-extra	Sort#sort	/Sort	0	def sort/4 in emitted port only
+e488049197d0	api-parity(port-extra)	port-extra	Sort$#instance	/Sort$	0	def instance/0 in emitted port only
+166fba9b701a	api-parity(port-extra)	port-extra	TimSort$#Funnel	/TimSort$	0	class Funnel/0 in emitted port only
+47bea961926f	api-parity(port-extra)	port-extra	TimSort$#force	/TimSort$	0	val force/0 in emitted port only [rename candidates: m, m, maxOfs, maxOfs, maxOfs, maxOfs, mid, n, pivot, t, tmp, tmp]
+a58a28a1391b	api-parity(port-extra)	port-extra	TimSort$#initRunLen	/TimSort$	0	val initRunLen/0 in emitted port only [rename candidates: m, m, maxOfs, maxOfs, maxOfs, maxOfs, mid, n, pivot, t, tmp, tmp]
+b712180fabc4	api-parity(port-extra)	port-extra	TimSort$#minRun	/TimSort$	0	val minRun/0 in emitted port only [rename candidates: m, m, maxOfs, maxOfs, maxOfs, maxOfs, mid, n, pivot, t, tmp, tmp]
+00c77964b59d	api-parity(port-extra)	port-extra	TimSort$#nRemaining	/TimSort$	0	var nRemaining/0 in emitted port only [rename candidates: i, j, lastOfs, lastOfs, left, n_var, ofs, ofs, r, right, runHi, start_var]
+15842f984b54	api-parity(port-extra)	port-extra	TimSort$#runLen	/TimSort$	0	var runLen/0 in emitted port only [rename candidates: i, j, lastOfs, lastOfs, left, n_var, ofs, ofs, r, right, runHi, start_var]
+239eeac53d25	api-parity(port-extra)	port-extra	TimSort$#ts	/TimSort$	0	val ts/0 in emitted port only [rename candidates: m, m, maxOfs, maxOfs, maxOfs, maxOfs, mid, n, pivot, t, tmp, tmp]
+56ada10a2ff1	api-parity(signature)	signature	#ArrayMap		0	modifiers differ: emitted , reference final
+86a4471e6d70	api-parity(signature)	signature	#ArrayMap		0	parents differ: emitted-only [java.lang.Iterable[lowlevel.util.ObjectMap.Entry[K, V]]], reference-only []
+1fb762082136	api-parity(signature)	signature	#ArrayMap		0	type params differ: emitted '[K <: java.lang.Object, V <: java.lang.Object]', reference '[K, V]'
+45773c038de6	api-parity(signature)	signature	#DynamicArray		0	modifiers differ: emitted , reference final
+cb8e0802e941	api-parity(signature)	signature	#DynamicArray		0	parents differ: emitted-only [java.lang.Iterable[T]], reference-only []
+0ab6213e33bf	api-parity(signature)	signature	#DynamicArray		0	type params differ: emitted '[T <: java.lang.Object]', reference '[A]'
+c974da79d720	api-parity(signature)	signature	#ObjectMap		0	modifiers differ: emitted , reference final
+90448b0e80ec	api-parity(signature)	signature	#ObjectMap		0	parents differ: emitted-only [java.lang.Iterable[lowlevel.util.ObjectMap.Entry[K, V]]], reference-only []
+2e28caac5ab8	api-parity(signature)	signature	#ObjectMap		0	type params differ: emitted '[K <: java.lang.Object, V <: java.lang.Object]', reference '[K, V]'
+ead4994096cb	api-parity(signature)	signature	#ObjectSet		0	modifiers differ: emitted , reference final
+bc868c009d39	api-parity(signature)	signature	#ObjectSet		0	parents differ: emitted-only [java.lang.Iterable[T]], reference-only []
+b454e53f58e9	api-parity(signature)	signature	#ObjectSet		0	type params differ: emitted '[T <: java.lang.Object]', reference '[A]'
+71a9b22e7042	api-parity(signature)	signature	#OrderedMap		0	modifiers differ: emitted , reference final
+fc51f26c10d9	api-parity(signature)	signature	#OrderedMap		0	parents differ: emitted-only [lowlevel.util.ObjectMap[K, V]], reference-only []
+60857b9fd591	api-parity(signature)	signature	#OrderedMap		0	type params differ: emitted '[K <: java.lang.Object, V <: java.lang.Object]', reference '[K, V]'
+46968bc82f6d	api-parity(signature)	signature	#OrderedSet		0	modifiers differ: emitted , reference final
+0d5b5dc26c9d	api-parity(signature)	signature	#OrderedSet		0	parents differ: emitted-only [lowlevel.util.ObjectSet[T]], reference-only []
+3dd3d1aaebdc	api-parity(signature)	signature	#OrderedSet		0	type params differ: emitted '[T <: java.lang.Object]', reference '[A]'
+3688547ea260	api-parity(signature)	signature	#QuickSelect		0	modifiers differ: emitted , reference final
+747856442ece	api-parity(signature)	signature	#QuickSelect		0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
+37b95e51ce43	api-parity(signature)	signature	ArrayMap#equalsIdentity	/ArrayMap	0	param 0 type differs: emitted 'java.lang.Object', reference 'Any'
+22d42abee400	api-parity(signature)	signature	ArrayMap#putAll	/ArrayMap	0	param 0 type differs: emitted 'ArrayMap[? <: K, ? <: V]', reference 'ArrayMap[K, V]'
+22d42abee400/2	api-parity(signature)	signature	ArrayMap#putAll	/ArrayMap	0	param 0 type differs: emitted 'ArrayMap[? <: K, ? <: V]', reference 'ArrayMap[K, V]'
+215f3accf5c1	api-parity(signature)	signature	DynamicArray#add	/DynamicArray	0	param 0 type differs: emitted 'T', reference 'A'
+215f3accf5c1/2	api-parity(signature)	signature	DynamicArray#add	/DynamicArray	0	param 0 type differs: emitted 'T', reference 'A'
+215f3accf5c1/3	api-parity(signature)	signature	DynamicArray#add	/DynamicArray	0	param 0 type differs: emitted 'T', reference 'A'
+c4c7d2b7e1b3	api-parity(signature)	signature	DynamicArray#add	/DynamicArray	0	param 1 type differs: emitted 'T', reference 'A'
+c4c7d2b7e1b3/2	api-parity(signature)	signature	DynamicArray#add	/DynamicArray	0	param 1 type differs: emitted 'T', reference 'A'
+cdc7f4f6d76c	api-parity(signature)	signature	DynamicArray#add	/DynamicArray	0	param 2 type differs: emitted 'T', reference 'A'
+53a0d72100bb	api-parity(signature)	signature	DynamicArray#addAll	/DynamicArray	0	param 0 type differs: emitted 'DynamicArray[? <: T]', reference 'Array[A]'
+29e1b8986ddd	api-parity(signature)	signature	DynamicArray#addAll	/DynamicArray	0	param 0 type differs: emitted 'DynamicArray[? <: T]', reference 'DynamicArray[? <: A]'
+83751806739c	api-parity(signature)	signature	DynamicArray#addAll	/DynamicArray	0	param 0 type differs: emitted 'scala.Array[T]', reference 'Iterable[A]'
+c04eabf6446c	api-parity(signature)	signature	DynamicArray#ensureCapacity	/DynamicArray	0	result type differs: emitted 'scala.Array[T]', reference 'Unit'
+d17428231ef8	api-parity(signature)	signature	DynamicArray#equalsIdentity	/DynamicArray	0	param 0 type differs: emitted 'java.lang.Object', reference 'Any'
+55862c4cc2d1	api-parity(signature)	signature	DynamicArray#first	/DynamicArray	0	result type differs: emitted 'T', reference 'A'
+ad9bb85ce2e0	api-parity(signature)	signature	DynamicArray#insert	/DynamicArray	0	param 1 type differs: emitted 'T', reference 'A'
+0d355c8b3bf2	api-parity(signature)	signature	DynamicArray#iterator	/DynamicArray	0	modifiers differ: emitted override, reference
+a09e3039ca26	api-parity(signature)	signature	DynamicArray#iterator	/DynamicArray	0	result type differs: emitted 'lowlevel.util.DynamicArray.ArrayIterator[T]', reference 'Iterator[A]'
+eaee455a95dc	api-parity(signature)	signature	DynamicArray#peek	/DynamicArray	0	result type differs: emitted 'T', reference 'A'
+d7772e6cac9e	api-parity(signature)	signature	DynamicArray#pop	/DynamicArray	0	result type differs: emitted 'T', reference 'A'
+452720754e52	api-parity(signature)	signature	DynamicArray#random	/DynamicArray	0	result type differs: emitted 'T', reference 'Nullable[A]'
+80c7d4bcf9ac	api-parity(signature)	signature	DynamicArray#removeIndex	/DynamicArray	0	result type differs: emitted 'T', reference 'A'
+ade44939d66b	api-parity(signature)	signature	DynamicArray#select	/DynamicArray	0	param 0 type differs: emitted 'lowlevel.util.Predicate[T]', reference 'A => Boolean'
+420251b6f526	api-parity(signature)	signature	DynamicArray#selectRanked	/DynamicArray	0	param 0 type differs: emitted 'java.util.Comparator[T]', reference 'Ordering[A]'
+660099ea6d72	api-parity(signature)	signature	DynamicArray#selectRanked	/DynamicArray	0	result type differs: emitted 'T', reference 'A'
+3556e1e7354e	api-parity(signature)	signature	DynamicArray#selectRankedIndex	/DynamicArray	0	param 0 type differs: emitted 'java.util.Comparator[T]', reference 'Ordering[A]'
+2638eeec367f	api-parity(signature)	signature	DynamicArray#setSize	/DynamicArray	0	result type differs: emitted 'scala.Array[T]', reference 'Unit'
+1b538489f07c	api-parity(signature)	signature	DynamicArray#shrink	/DynamicArray	0	result type differs: emitted 'scala.Array[T]', reference 'Unit'
+1839733fff65	api-parity(signature)	signature	DynamicArray#sort	/DynamicArray	0	param 0 type differs: emitted 'java.util.Comparator[? >: T]', reference 'Ordering[A]'
+1ef06ced7788	api-parity(signature)	signature	DynamicArray#toArray	/DynamicArray	0	result type differs: emitted 'scala.Array[T]', reference 'Array[A]'
+6cc14a70677e	api-parity(signature)	signature	MathUtils$#E	/MathUtils$	0	modifiers differ: emitted final, reference
+eaba239cb6db	api-parity(signature)	signature	MathUtils$#FLOAT_ROUNDING_ERROR	/MathUtils$	0	modifiers differ: emitted inline, reference
+a3cf2ce37573	api-parity(signature)	signature	MathUtils$#HALF_PI	/MathUtils$	0	modifiers differ: emitted final, reference
+9f7084ef2877	api-parity(signature)	signature	MathUtils$#PI	/MathUtils$	0	modifiers differ: emitted final, reference
+83254bafadbf	api-parity(signature)	signature	MathUtils$#PI2	/MathUtils$	0	modifiers differ: emitted final, reference
+dc93a4769f81	api-parity(signature)	signature	MathUtils$#atanUncheckedDeg	/MathUtils$	0	result type differs: emitted 'scala.Double', reference 'Float'
+915087d398a9	api-parity(signature)	signature	MathUtils$#degRad	/MathUtils$	0	modifiers differ: emitted final, reference
+aa4c2f49bebd	api-parity(signature)	signature	MathUtils$#degreesToRadians	/MathUtils$	0	modifiers differ: emitted final, reference
+0662b2c99a64	api-parity(signature)	signature	MathUtils$#nanoToSec	/MathUtils$	0	modifiers differ: emitted final, reference
+4af0bcbbbb1b	api-parity(signature)	signature	MathUtils$#radDeg	/MathUtils$	0	modifiers differ: emitted final, reference
+bc1f8923b177	api-parity(signature)	signature	MathUtils$#radiansToDegrees	/MathUtils$	0	modifiers differ: emitted final, reference
+52abec2248cd	api-parity(signature)	signature	ObjectMap#containsValue	/ObjectMap	0	param 0 type differs: emitted 'java.lang.Object', reference 'V'
+80f372cb0235	api-parity(signature)	signature	ObjectMap#equalsIdentity	/ObjectMap	0	param 0 type differs: emitted 'java.lang.Object', reference 'Any'
+4f82be6ef346	api-parity(signature)	signature	ObjectMap#findKey	/ObjectMap	0	param 0 type differs: emitted 'java.lang.Object', reference 'V'
+c28d9081e186	api-parity(signature)	signature	ObjectMap#get	/ObjectMap	0	param 0 type differs: emitted 'T', reference 'K'
+4b8f69865ce9	api-parity(signature)	signature	ObjectMap#putAll	/ObjectMap	0	param 0 type differs: emitted 'ObjectMap[? <: K, ? <: V]', reference 'ObjectMap[K, V]'
+e12491e0d988	api-parity(signature)	signature	ObjectSet#add	/ObjectSet	0	param 0 type differs: emitted 'T', reference 'A'
+1ad7449b0b28	api-parity(signature)	signature	ObjectSet#addAll	/ObjectSet	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[? <: T]', reference 'ObjectSet[A]'
+f315bc9f7472	api-parity(signature)	signature	ObjectSet#addAll	/ObjectSet	0	param 0 type differs: emitted 'scala.Array[T]', reference 'DynamicArray[? <: A]'
+f53b75b47ec3	api-parity(signature)	signature	ObjectSet#contains	/ObjectSet	0	param 0 type differs: emitted 'T', reference 'A'
+cad66df96d73	api-parity(signature)	signature	ObjectSet#first	/ObjectSet	0	result type differs: emitted 'T', reference 'A'
+0c861f884969	api-parity(signature)	signature	ObjectSet#get	/ObjectSet	0	param 0 type differs: emitted 'T', reference 'A'
+9f3ce0297510	api-parity(signature)	signature	ObjectSet#get	/ObjectSet	0	result type differs: emitted 'T', reference 'Nullable[A]'
+3f9555be5acd	api-parity(signature)	signature	ObjectSet#remove	/ObjectSet	0	param 0 type differs: emitted 'T', reference 'A'
+07c72cb2dded	api-parity(signature)	signature	OrderedMap#clear	/OrderedMap	0	modifiers differ: emitted override, reference
+07c72cb2dded/2	api-parity(signature)	signature	OrderedMap#clear	/OrderedMap	0	modifiers differ: emitted override, reference
+b0f9ff30d699	api-parity(signature)	signature	OrderedMap#put	/OrderedMap	0	modifiers differ: emitted override, reference
+4b41a7e29e39	api-parity(signature)	signature	OrderedMap#putAll	/OrderedMap	0	param 0 type differs: emitted 'OrderedMap[T, ? <: V]', reference 'OrderedMap[K, V]'
+9efcdc12dd45	api-parity(signature)	signature	OrderedMap#remove	/OrderedMap	0	modifiers differ: emitted override, reference
+a6a0ee38c2a5	api-parity(signature)	signature	OrderedSet#add	/OrderedSet	0	modifiers differ: emitted override, reference
+4de166732f91	api-parity(signature)	signature	OrderedSet#add	/OrderedSet	0	param 0 type differs: emitted 'T', reference 'A'
+4de166732f91/2	api-parity(signature)	signature	OrderedSet#add	/OrderedSet	0	param 0 type differs: emitted 'T', reference 'A'
+ebb292c3e4fb	api-parity(signature)	signature	OrderedSet#addAll	/OrderedSet	0	param 0 type differs: emitted 'OrderedSet[T]', reference 'OrderedSet[A]'
+3e186f11ec9d	api-parity(signature)	signature	OrderedSet#alter	/OrderedSet	0	param 0 type differs: emitted 'T', reference 'A'
+25f6eccef6d6	api-parity(signature)	signature	OrderedSet#alter	/OrderedSet	0	param 1 type differs: emitted 'T', reference 'A'
+3d4bdaae3c6f	api-parity(signature)	signature	OrderedSet#alterIndex	/OrderedSet	0	param 1 type differs: emitted 'T', reference 'A'
+041bd3325d0f	api-parity(signature)	signature	OrderedSet#clear	/OrderedSet	0	modifiers differ: emitted override, reference
+041bd3325d0f/2	api-parity(signature)	signature	OrderedSet#clear	/OrderedSet	0	modifiers differ: emitted override, reference
+873b0a9501ce	api-parity(signature)	signature	OrderedSet#ensureCapacity	/OrderedSet	0	modifiers differ: emitted override, reference
+75082c1f8189	api-parity(signature)	signature	OrderedSet#first	/OrderedSet	0	modifiers differ: emitted override, reference
+246932a79d61	api-parity(signature)	signature	OrderedSet#first	/OrderedSet	0	result type differs: emitted 'T', reference 'A'
+d5aa354e7fb5	api-parity(signature)	signature	OrderedSet#orderedItems	/OrderedSet	0	result type differs: emitted 'lowlevel.util.DynamicArray[T]', reference 'DynamicArray[A]'
+e7b3f0095fb6	api-parity(signature)	signature	OrderedSet#remove	/OrderedSet	0	modifiers differ: emitted override, reference
+3479ee5fc9e4	api-parity(signature)	signature	OrderedSet#remove	/OrderedSet	0	param 0 type differs: emitted 'T', reference 'A'
+ccdd58ed4607	api-parity(signature)	signature	OrderedSet#removeIndex	/OrderedSet	0	result type differs: emitted 'T', reference 'A'
+4fe32f639005	api-parity(signature)	signature	OrderedSet#toString	/OrderedSet	0	modifiers differ: emitted override, reference
+82fec1a961b6	api-parity(static-placement)	static-placement	ComparableTimSort#tmp	/ComparableTimSort	0	val tmp/0 in reference port only
+82fec1a961b6/2	api-parity(static-placement)	static-placement	ComparableTimSort#tmp	/ComparableTimSort	0	val tmp/0 in reference port only
+6c13b4b3f9ba	api-parity(static-placement)	static-placement	Select#comparison	/Select	0	val comparison/0 in emitted port only
+6c13b4b3f9ba/2	api-parity(static-placement)	static-placement	Select#comparison	/Select	0	val comparison/0 in emitted port only
+d75575ea556e	api-parity(static-placement)	static-placement	Select#highestIdx	/Select	0	var highestIdx/0 in emitted port only
+b115ad81b0cd	api-parity(static-placement)	static-placement	Select#lowestIdx	/Select	0	var lowestIdx/0 in emitted port only
+52c35564c638	api-parity(static-placement)	static-placement	Select$#comparison	/Select$	0	val comparison/0 in reference port only
+52c35564c638/2	api-parity(static-placement)	static-placement	Select$#comparison	/Select$	0	val comparison/0 in reference port only
+11d5ae3a01f5	api-parity(static-placement)	static-placement	Select$#highestIdx	/Select$	0	var highestIdx/0 in reference port only
+89bee338285b	api-parity(static-placement)	static-placement	Select$#lowestIdx	/Select$	0	var lowestIdx/0 in reference port only
+24ccde19d889	api-parity(static-placement)	static-placement	Sort#sort	/Sort	0	def sort/1 in emitted port only
+24ccde19d889/2	api-parity(static-placement)	static-placement	Sort#sort	/Sort	0	def sort/1 in emitted port only
+f0b9110653e7	api-parity(static-placement)	static-placement	Sort#sort	/Sort	0	def sort/3 in emitted port only
+1915acbca984	api-parity(static-placement)	static-placement	Sort$#sort	/Sort$	0	def sort/1 in reference port only
+1915acbca984/2	api-parity(static-placement)	static-placement	Sort$#sort	/Sort$	0	def sort/1 in reference port only
+708ded3c453b	api-parity(static-placement)	static-placement	Sort$#sort	/Sort$	0	def sort/3 in reference port only
+708ded3c453b/2	api-parity(static-placement)	static-placement	Sort$#sort	/Sort$	0	def sort/3 in reference port only
+708ded3c453b/3	api-parity(static-placement)	static-placement	Sort$#sort	/Sort$	0	def sort/3 in reference port only
+148d9f769deb	api-parity(static-placement)	static-placement	TimSort#tmp	/TimSort	0	val tmp/0 in reference port only
+148d9f769deb/2	api-parity(static-placement)	static-placement	TimSort#tmp	/TimSort	0	val tmp/0 in reference port only
+9eea21c3d520	catalog(consulted)	reached	JS-C01	com/badlogic/gdx/math/MathUtils.java	119	lowering CtInvocation/Expression — consulted 656, fired 208, declarations 0: a Java `static` is INHERITED by every subclass; a Scala companion inherits nothing
+c9232d130b26	catalog(consulted)	reached	JS-C02	-	0	lowering CtInvocation/Expression + lowering CtFieldRead/Expression + lowering CtFieldWrite/Expression — consulted 2268, fired 0, declarations 0: interface constants are inherited through `implements`
+dfea29bc33b3	catalog(consulted)	reached	JS-C03	com/badlogic/gdx/utils/OrderedMap.java	43	rendering ClassDef — consulted 28, fired 2, declarations 0: static HIDING is resolved by the STATIC type of the qualifier
+cc0d8af856b0	catalog(consulted)	reached	JS-C04	-	0	phase field-shadowing — consulted 0, fired 0, declarations 2: a subclass field SHADOWS a superclass field — two storage cells, not one
+6888e12c4663	catalog(consulted)	reached	JS-C05	com/badlogic/gdx/math/MathUtils.java	34	lowering CtFieldRead/Expression + lowering CtFieldWrite/Expression — consulted 1612, fired 200, declarations 0: a static nested constant reached through a SUBCLASS's name, and `import static`
+e1ed8607fcad	catalog(consulted)	reached	JS-C06	-	0	rendering Apply — consulted 2506, fired 0, declarations 0: `anInstance.staticMethod()` evaluates the receiver FOR ITS SIDE EFFECTS and discards it
+8ead3f387aa3	catalog(consulted)	reached	JS-C07	com/badlogic/gdx/math/MathUtils.java	25	rendering ClassDef — consulted 28, fired 4, declarations 0: JLS's class-initialisation TRIGGER list vs Scala's uniform accessor trigger
+e7ec00a61ab7	catalog(consulted)	reached	JS-C08	com/badlogic/gdx/math/MathUtils.java	33	rendering ValDef — consulted 675, fired 11, declarations 0: a CONSTANT VARIABLE is inlined, so reading it never triggers class initialisation
+f18b46c5c770	catalog(consulted)	reached	JS-C09	com/badlogic/gdx/math/MathUtils.java	25	rendering ClassDef — consulted 28, fired 4, declarations 0: several `static { }` blocks and static field initialisers run in ONE textual order
+1c2841f4d2ce	catalog(consulted)	reached	JS-C10	-	0	rendering ClassDef — consulted 28, fired 0, declarations 0: circular class initialisation delivers DEFAULT values on the same thread
+b31efd3c1485	catalog(consulted)	reached	JS-C13	com/badlogic/gdx/math/MathUtils.java	25	rendering ClassDef — consulted 28, fired 28, declarations 0: JLS 12.5's instance-creation sequence, whole
+32857ab7aadd	catalog(consulted)	reached	JS-C14	com/badlogic/gdx/utils/ObjectMap.java	538	rendering ClassDef — consulted 28, fired 7, declarations 0: the superclass constructor runs before this class's field initialisers
+664289ded302	catalog(consulted)	reached	JS-C16	com/badlogic/gdx/math/MathUtils.java	59	rendering DefDef — consulted 396, fired 1, declarations 0: instance initialiser blocks
+a8b36241bec9	catalog(consulted)	reached	JS-C17	-	0	lowering CtNewClass/Expression — consulted 174, fired 0, declarations 0: double-brace initialisation is an anonymous subclass plus an instance initialiser
+2b1cc9f6abde	catalog(consulted)	reached	JS-C18	-	0	rendering ClassDef — consulted 28, fired 0, declarations 0: field initialisers and instance-init blocks are ONE step-4 sequence in textual order, not two buckets
+7b6beeabf034	catalog(consulted)	reached	JS-C19	com/badlogic/gdx/utils/Array.java	30	rendering ClassDef — consulted 28, fired 10, declarations 0: `this(...)` / `super(...)` in a secondary constructor — Scala's secondary constructors cannot call `super`
+39486262d6fa	catalog(consulted)	reached	JS-C20	com/badlogic/gdx/utils/Array.java	30	rendering ClassDef — consulted 28, fired 4, declarations 0: the implicit `super()` and the default constructor
+8430018e1c12	catalog(consulted)	reached	JS-C21	com/badlogic/gdx/utils/Array.java	30	rendering ClassDef — consulted 28, fired 10, declarations 0: constructor overload resolution, against Scala's textual-anteriority rule
+a78acf0f85c6	catalog(consulted)	reached	JS-C22	com/badlogic/gdx/utils/Array.java	151	rendering Apply — consulted 2506, fired 12, declarations 0: Java's THREE-PHASE applicability (strict, then loose, then varargs) has no Scala counterpart
+db532e9da533	catalog(consulted)	reached	JS-C23	-	0	rendering Apply — consulted 2506, fired 0, declarations 0: most-specific tie-break: Scala prefers a NON-GENERIC alternative and Java does not
+9dc108158e56	catalog(consulted)	reached	JS-C25	com/badlogic/gdx/utils/Array.java	552	rendering DefDef — consulted 396, fired 86, declarations 0: `override` is mandatory in Scala and absent in Java
+5d0bc1d65338	catalog(consulted)	reached	JS-C29	com/badlogic/gdx/utils/Array.java	30	rendering-type TypeRef — consulted 3252, fired 1021, declarations 0: a static NESTED class and an INNER class are different types, and only one is path-dependent
+04eb7253b28a	catalog(consulted)	reached	JS-C31	-	0	lowering CtNewClass/Expression — consulted 174, fired 0, declarations 0: anonymous class construction and capture
+f7c2dcdb990e	catalog(consulted)	reached	JS-C33	com/badlogic/gdx/utils/Array.java	708	rendering ClassDef — consulted 28, fired 6, declarations 0: the interface default-method diamond is resolved by JLS's two rules, not by trait linearization
+e835f1610f33	catalog(consulted)	reached	JS-C34	com/badlogic/gdx/utils/OrderedMap.java	43	rendering ClassDef — consulted 28, fired 2, declarations 0: interface statics are not inherited AT ALL, not even by an implementor
+4587a540a78e	catalog(consulted)	reached	JS-C36	-	0	rendering ValDef — consulted 675, fired 0, declarations 0: an interface field is implicitly `public static final`
+6832f5cdc01d	catalog(consulted)	reached	JS-C37	-	0	rendering ClassDef — consulted 28, fired 0, declarations 0: `name()`, `values()` and `valueOf` are SYNTHESISED on every Java enum
+4d1cf3d6a22e	catalog(consulted)	reached	JS-C38	-	0	rendering ClassDef — consulted 28, fired 0, declarations 0: a promoted enum constructor parameter IS a member, and `name` collides with `Enum.name()`
+1b43fd114e87	catalog(consulted)	reached	JS-C39	-	0	rendering ClassDef — consulted 28, fired 0, declarations 0: `ordinal()` is part of every Java enum's surface, mentioned or not
+28aae393676d	catalog(consulted)	reached	JS-C40	-	0	rendering ClassDef — consulted 28, fired 0, declarations 0: enum constants with PER-CONSTANT class bodies
+f77b61c9568d	catalog(consulted)	reached	JS-C43	-	0	rendering ClassDef — consulted 28, fired 0, declarations 0: Java `record`
+5b02b6d3a6eb	catalog(consulted)	reached	JS-C44	-	0	rendering ClassDef — consulted 28, fired 0, declarations 0: `sealed` / `non-sealed` / `permits`
+2da293fc840d	catalog(consulted)	reached	JS-C45	com/badlogic/gdx/math/MathUtils.java	30	rendering ValDef — consulted 675, fired 46, declarations 0: a `final` field's JMM safe-publication guarantee
+14288c772f98	catalog(consulted)	reached	JS-C46	-	0	phase member-clash — consulted 0, fired 0, declarations 8: Java has TWO name namespaces and Scala has one
+f864ef18a720	catalog(consulted)	reached	JS-C47	com/badlogic/gdx/math/MathUtils.java	57	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1099, fired 38, declarations 0: package-private becomes `private[pkg]`
+839578a7d401	catalog(consulted)	reached	JS-C48	com/badlogic/gdx/utils/Array.java	486	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1099, fired 10, declarations 0: Java's `protected` also grants SAME-PACKAGE access, and accessibility is an input to overload resolution
+4f7195f239b9	catalog(consulted)	reached	JS-C49	com/badlogic/gdx/utils/Array.java	760	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1099, fired 3, declarations 0: Java's `private` reaches the whole enclosing TOP-LEVEL class; Scala's reaches only the template
+4558e64ccfea	catalog(consulted)	reached	JS-C50	com/badlogic/gdx/math/MathUtils.java	57	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1099, fired 38, declarations 0: Java's default access is package-private and Scala's is public — INVERTED
+b9b9e66692a0	catalog(consulted)	reached	JS-C51	-	0	rendering ClassDef — consulted 28, fired 0, declarations 0: a `return` in a CONSTRUCTOR body, whose promotion puts it in the class body
+a051949914d8	catalog(consulted)	reached	JS-E01	com/badlogic/gdx/utils/Array.java	222	lowering CtBinaryOperator/Expression — consulted 1625, fired 34, declarations 0: `==`/`!=` are REFERENCE identity in Java; Scala's `==` calls `equals`
+fc8c990bdbd5	catalog(consulted)	reached	JS-E02	com/badlogic/gdx/utils/Array.java	120	lowering CtUnaryOperator/Expression — consulted 186, fired 87, declarations 0: postfix/prefix `++`/`--` USED AS A VALUE yields the value before the update — the VALUE only; the operand's single evaluation is JS-E17
+6173b702394b	catalog(consulted)	reached	JS-E03	com/badlogic/gdx/math/MathUtils.java	119	lowering CtOperatorAssignment/Statement — consulted 97, fired 2, declarations 0: compound assignment NARROWS implicitly to the left-hand type — STATEMENT position; the lvalue's single evaluation is JS-E17
+bc56a44e1e1a	catalog(consulted)	reached	JS-E05	com/badlogic/gdx/math/MathUtils.java	185	lowering CtConditional/Expression — consulted 33, fired 33, declarations 0: the conditional operator's type is computed, not the syntactic lub of its branches
+d89ef1b35665	catalog(consulted)	reached	JS-E06	-	0	rendering Typed — consulted 485, fired 0, declarations 0: a primitive cast is a CONVERSION in Java and an assertion in Scala once a phase has retyped the value
+c089abf478fd	catalog(consulted)	reached	JS-E14	com/badlogic/gdx/utils/ObjectMap.java	481	lowering CtBinaryOperator/Expression — consulted 1625, fired 2, declarations 0: string concatenation with a NON-`String` left operand
+c49292057610	catalog(consulted)	reached	JS-E15	com/badlogic/gdx/utils/ObjectMap.java	195	lowering CtAssignment/Expression — consulted 4, fired 4, declarations 0: an assignment IS an expression, with the assigned value
+ce4ad6d3fbc7	catalog(consulted)	reached	JS-E17	com/badlogic/gdx/math/MathUtils.java	117	lowering CtOperatorAssignment/Either — consulted 97, fired 97, declarations 0: a compound assignment and `++`/`--` evaluate the LVALUE ONCE — its array reference, its index, its target
+09cd8b6c5e9d	catalog(consulted)	reached	JS-E19	-	0	lowering CtConstructorCall/Expression — consulted 174, fired 0, declarations 0: a BOXING CONSTRUCTOR — `new Double(v)` — is deprecated for removal; the JDK names `valueOf`
+9af386b454a2	catalog(consulted)	reached	JS-G01	com/badlogic/gdx/utils/Array.java	94	lowering-type CtWildcardReference + rendering-type TypeBounds — consulted 411, fired 281, declarations 0: use-site wildcards, with the matching bound grammar
+65e2fd2496d3	catalog(consulted)	reached	JS-G03	-	0	lowering-type CtWildcardReference — consulted 268, fired 0, declarations 0: `? super Object` has exactly one inhabitant
+393cec8ff6d0	catalog(consulted)	reached	JS-G05	-	0	rendering ClassDef — consulted 28, fired 0, declarations 0: a wildcard in an `extends` clause takes the parameter's DECLARED bound
+e479fa7275ec	catalog(consulted)	reached	JS-G07	<synthetic>	0	lowering-type CtTypeReference — consulted 13639, fired 441, declarations 0: a RAW type erases the REFERENCE's generics, not the class's
+3089a5406cf8	catalog(consulted)	reached	JS-G08	com/badlogic/gdx/utils/Array.java	692	lowering-type CtTypeReference — consulted 13639, fired 245, declarations 0: the same raw Java type renders DIFFERENTLY per scope, and correctly so
+aa2422baed94	catalog(consulted)	reached	JS-G09	com/badlogic/gdx/utils/Array.java	88	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 2482, fired 98, declarations 0: UNCHECKED CONVERSION at a raw type is legal in Java and is not in Scala
+3de1e3eed514	catalog(consulted)	reached	JS-G10	-	0	lowering CtNewClass/Expression — consulted 174, fired 0, declarations 0: a RAW anonymous class WITH a body
+4b8c1f8f1c86	catalog(consulted)	reached	JS-G11	-	0	rendering ClassDef — consulted 28, fired 0, declarations 0: a partially-nameable F-BOUNDED raw fill
+b91794f9d304	catalog(consulted)	reached	JS-G12	<synthetic>	0	lowering-type CtTypeParameterReference + rendering-type TypeRef — consulted 6365, fired 8, declarations 0: a diamond's inference variable has NO NAMEABLE type
+6302b7431981	catalog(consulted)	reached	JS-G13	com/badlogic/gdx/utils/Array.java	64	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 2482, fired 93, declarations 0: Java arrays are COVARIANT, with a runtime `ArrayStoreException`; Scala's are invariant
+532c24e99f92	catalog(consulted)	reached	JS-G14	-	0	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 2482, fired 0, declarations 0: a primitive at a generic slot boxes to the WRAPPER, not to the formal
+3d066c5f4386	catalog(consulted)	reached	JS-G15	com/badlogic/gdx/utils/ObjectMap.java	95	lowering CtNewArray/Expression — consulted 21, fired 9, declarations 0: GENERIC ARRAY CREATION is illegal in Java, so only the cast idiom reaches the engine
+01dc36e8b61f	catalog(consulted)	reached	JS-G17	com/badlogic/gdx/utils/Array.java	104	rendering ArrayLength + rendering MethodRef — consulted 70, fired 70, declarations 0: `.length`, an array's `Class` object, and `T[]::new`
+4558a007ff94	catalog(consulted)	reached	JS-G18	com/badlogic/gdx/math/MathUtils.java	119	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression — consulted 830, fired 333, declarations 0: under `noClasspath` a REFERENCE erases and a DECLARATION does not
+c7483ca7ff9f	catalog(consulted)	reached	JS-G21	com/badlogic/gdx/utils/Array.java	623	rendering InstanceOf — consulted 8, fired 8, declarations 0: `instanceof` is restricted to REIFIABLE types, and SE16 added a pattern binding
+c2fd4cda3459	catalog(consulted)	reached	JS-G22	com/badlogic/gdx/utils/ArrayMap.java	455	lowering CtInvocation/Expression — consulted 656, fired 40, declarations 0: a raw member access through an ERASED RECEIVER types the CALL, not just the receiver
+79806eccc1a9	catalog(consulted)	reached	JS-G29	com/badlogic/gdx/utils/Array.java	95	lowering CtInvocation/Expression — consulted 656, fired 35, declarations 0: diamond inference in the ordinary case
+a83fb772803b	catalog(consulted)	reached	JS-G30	-	0	lowering CtInvocation/Expression — consulted 656, fired 0, declarations 0: an UNCONSTRAINED method type parameter: Java infers its BOUND and Scala infers `Nothing`
+4b0377208895	catalog(consulted)	reached	JS-G31	com/badlogic/gdx/utils/Array.java	80	lowering CtInvocation/Expression — consulted 830, fired 2, declarations 0: a POLY EXPRESSION must never be cast as a whole
+874bf8a173ed	catalog(consulted)	reached	JS-G32	com/badlogic/gdx/utils/Array.java	499	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression — consulted 830, fired 78, declarations 0: a callee's OWN type variables never resolve at the caller
+3daec61bfea6	catalog(consulted)	reached	JS-G34	-	0	rendering Typed — consulted 485, fired 0, declarations 0: a Java INTERSECTION in a cast becomes Scala's `&`
+cf0712b64e0e	catalog(consulted)	reached	JS-G35	com/badlogic/gdx/utils/Sort.java	30	rendering ClassDef + rendering DefDef — consulted 424, fired 1, declarations 0: Scala CHECKS an F-bound where javac does not
+e741a6e042db	catalog(consulted)	reached	JS-G37	-	0	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression — consulted 830, fired 0, declarations 0: `T...` is an `Array[T]`, materialised at the port's OWN call sites
+aa2c826dc265	catalog(consulted)	reached	JS-G38	com/badlogic/gdx/utils/ObjectSet.java	350	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression — consulted 830, fired 2, declarations 0: a vararg slot ALREADY holding an array must not be re-packed — and neither a primitive array nor an under-dimensioned one forwards
+632d17e35fb0	catalog(consulted)	reached	JS-G39	-	0	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + rendering Apply — consulted 3336, fired 0, declarations 0: an EXTERNAL callee's `T...` is read by scalac as a REPEATED parameter
+a0dd804630fe	catalog(consulted)	reached	JS-G40	-	0	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + rendering Spread — consulted 830, fired 0, declarations 0: the COMPOSITION of JS-G38 and JS-G39 — an array forwarded through an external vararg slot
+f5d5daa7da8f	catalog(consulted)	reached	JS-G41	com/badlogic/gdx/utils/Array.java	160	rendering DefDef — consulted 396, fired 5, declarations 0: `@SafeVarargs` and heap pollution
+6c81f000b0eb	catalog(consulted)	reached	JS-G42	com/badlogic/gdx/utils/ObjectSet.java	350	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression — consulted 830, fired 2, declarations 0: a generic vararg's COMPONENT element type has four layered sources
+7cf0a0b9859e	catalog(consulted)	reached	JS-G49	-	0	lowering-type CtTypeParameterReference — consulted 3113, fired 0, declarations 0: an UNCHECKED override: java lets a method's ERASURE be a SUBSIGNATURE of a generic one
+3705b3b7f409	catalog(consulted)	reached	JS-S01	com/badlogic/gdx/utils/Array.java	399	rendering While + rendering For + rendering ForEach + rendering DoWhile — consulted 141, fired 12, declarations 0: an unlabelled `break`/`continue` binds LEXICALLY to the innermost enclosing loop or switch
+0c4ef937fb5b	catalog(consulted)	reached	JS-S03	-	0	rendering While + rendering For + rendering ForEach + rendering DoWhile — consulted 141, fired 0, declarations 0: a `boundary` the emitter INTERPOSES steals the enclosing loop's un-annotated jumps
+6e0ea2db22bb	catalog(consulted)	reached	JS-S04	com/badlogic/gdx/utils/ComparableTimSort.java	241	lowering CtSwitch/Statement — consulted 2, fired 2, declarations 0: switch FALLTHROUGH runs the next case's statements
+e6dc881a4eae	catalog(consulted)	reached	JS-S05	-	0	lowering CtSwitch/Statement — consulted 2, fired 0, declarations 0: a `switch` with no `default` FALLS OUT; a `match` with no `case _` throws
+92a490e0d6a3	catalog(consulted)	reached	JS-S06	-	0	rendering Match — consulted 2, fired 0, declarations 0: an unlabelled `break` in the MIDDLE of a case ends the CASE
+f38a4815ee1e	catalog(consulted)	reached	JS-S07	com/badlogic/gdx/utils/ComparableTimSort.java	241	lowering CtSwitch/Statement — consulted 2, fired 2, declarations 0: only an UNLABELLED trailing `break` terminates a case; a labelled one leaves the LOOP
+071393ae9ead	catalog(consulted)	reached	JS-S08	-	0	rendering Match — consulted 2, fired 0, declarations 0: a `null` selector throws NPE IMPLICITLY — a classic switch has no `case null` to opt out with
+058745f5efaa	catalog(consulted)	reached	JS-S10	-	0	lowering CtSwitch/Statement + lowering CtSwitchExpression/Expression — consulted 2, fired 0, declarations 0: pattern and record switch, with sealed exhaustiveness
+5cca3487a2b9	catalog(consulted)	reached	JS-S17	com/badlogic/gdx/math/MathUtils.java	61	rendering For — consulted 82, fired 82, declarations 0: the classic `for`'s UPDATE runs on `continue`, and its `ForInit` scopes to the loop
+0982a2dd78f2	catalog(consulted)	reached	JS-S18	com/badlogic/gdx/utils/ComparableTimSort.java	95	lowering CtDo/Statement + rendering DoWhile — consulted 24, fired 24, declarations 0: `do`-`while` — Scala 3 removed it
+63a48bf27892	catalog(consulted)	reached	JS-S19	com/badlogic/gdx/utils/Array.java	33	rendering ValDef — consulted 675, fired 89, declarations 0: definite assignment for LOCALS — Java rejects a read before assignment
+846a60268729	catalog(consulted)	reached	JS-S21	-	0	rendering Lambda — consulted 3, fired 0, declarations 0: `return` inside a lambda body returns from the LAMBDA, not from the method
+982ee8e1c88a	catalog(consulted)	reached	JS-S25	com/badlogic/gdx/utils/ObjectMap.java	127	rendering DefDef — consulted 396, fired 2, declarations 0: Java REJECTS unreachable code and Scala allows it — composed with `break`
+9c22be7f2f32	catalog(uncited)	handled	JS-C01	-	0	UNCITED — a companion object has no inheritance relation to its class's parents (JLS side: JLS 8.2, 8.4.8): a Java `static` is INHERITED by every subclass; a Scala companion inherits nothing
+3047600ceab7	catalog(uncited)	handled	JS-C02	-	0	UNCITED — as JS-C01, through the interface edge (JLS side: JLS 9.3, 8.1.5): interface constants are inherited through `implements`
+c16eaa596e70	catalog(uncited)	handled	JS-C03	-	0	UNCITED — a companion re-export must not merge a redeclaration away (JLS side: JLS 8.4.8.2): static HIDING is resolved by the STATIC type of the qualifier
+e6043578ce6b	catalog(uncited)	handled	JS-C04	-	0	UNCITED — a same-named Scala member is an OVERRIDE, virtually dispatched (JLS side: JLS 8.3, 6.4.1): a subclass field SHADOWS a superclass field — two storage cells, not one
+86b74f79634f	catalog(uncited)	handled	JS-C05	-	0	UNCITED — fully-qualified emission removes the question (JLS side: JLS 6.5.6, 7.5.3): a static nested constant reached through a SUBCLASS's name, and `import static`
+2974cd95acc0	catalog(uncited)	handled	JS-C06	-	0	UNCITED — a companion call has no receiver slot to put the expression in (JLS side: JLS 15.12.4.1): `anInstance.staticMethod()` evaluates the receiver FOR ITS SIDE EFFECTS and discards it
+4f45994343df	catalog(uncited)	handled	JS-C08	-	0	UNCITED — `inline val` is the image; a typed `val` triggers the initialiser (JLS side: JLS 4.12.4, 13.1): a CONSTANT VARIABLE is inlined, so reading it never triggers class initialisation
+aaa662dea242	catalog(uncited)	handled	JS-C09	-	0	UNCITED — an object body is one sequence, so the order has to survive the frontend (JLS side: JLS 12.4.2): several `static { }` blocks and static field initialisers run in ONE textual order
+8ba79dfd3e53	catalog(uncited)	handled	JS-C14	-	0	UNCITED — the same order, once a primary constructor exists to host it (JLS side: JLS 12.5): the superclass constructor runs before this class's field initialisers
+02f8becc671a	catalog(uncited)	handled	JS-C16	-	0	UNCITED — a statement in the class body is the image (JLS side: JLS 8.6): instance initialiser blocks
+0a2cd2c7c4e4	catalog(uncited)	handled	JS-C18	-	0	UNCITED — the same sequence, which a frontend that groups by NODE KIND has already lost (JLS side: JLS 12.5): field initialisers and instance-init blocks are ONE step-4 sequence in textual order, not two buckets
+d0d12b068c78	catalog(uncited)	handled	JS-C19	-	0	UNCITED — only a primary constructor may call the superclass constructor (JLS side: JLS 8.8.7.1): `this(...)` / `super(...)` in a secondary constructor — Scala's secondary constructors cannot call `super`
+4d00dc03e31e	catalog(uncited)	handled	JS-C20	-	0	UNCITED — a Scala class always has a primary constructor (JLS side: JLS 8.8.7, 8.8.9): the implicit `super()` and the default constructor
+4d6d05b50ca8	catalog(uncited)	handled	JS-C25	-	0	UNCITED — an override without the modifier is an error (JLS side: JLS 8.4.8.1): `override` is mandatory in Scala and absent in Java
+977ba26281ed	catalog(uncited)	handled	JS-C29	-	0	UNCITED — `Outer#Inner` is the type projection; `outer.Inner` is the path-dependent type (JLS side: JLS 8.1.3): a static NESTED class and an INNER class are different types, and only one is path-dependent
+198cdb711811	catalog(uncited)	handled	JS-C30	-	0	UNCITED — Scala has a direct counterpart; only the capture wiring is missing (JLS side: JLS 14.3): method-LOCAL named classes
+00424df3de72	catalog(uncited)	handled	JS-C31	-	0	UNCITED — the same construct, with a synthesised name (JLS side: JLS 15.9.5): anonymous class construction and capture
+f546fdbb040c	catalog(uncited)	handled	JS-C34	-	0	UNCITED — a corollary of JS-C01 at the interface edge (JLS side: JLS 8.4.8, 9.3): interface statics are not inherited AT ALL, not even by an implementor
+ebfa8edb083a	catalog(uncited)	handled	JS-C36	-	0	UNCITED — a corollary of JS-C01, JS-C02 and JS-C08 (JLS side: JLS 9.3): an interface field is implicitly `public static final`
+e29f2e7f69a9	catalog(uncited)	handled	JS-C37	-	0	UNCITED — a Scala 3 `enum` has a different, non-identical surface: it inherits `name()` from `java.lang.Enum` and its desugaring supplies `values`/`valueOf`, but `values` is PARENLESS where java writes `values()` (JLS side: JLS 8.9.3): `name()`, `values()` and `valueOf` are SYNTHESISED on every Java enum
+5669b52f1725	catalog(uncited)	handled	JS-C38	-	0	UNCITED — a constructor parameter becomes a class member (JLS side: JLS 8.9.2): a promoted enum constructor parameter IS a member, and `name` collides with `Enum.name()`
+8d3678233c95	catalog(uncited)	handled	JS-C39	-	0	UNCITED — nothing supplies it unless it is emitted (JLS side: JLS 8.9.3): `ordinal()` is part of every Java enum's surface, mentioned or not
+e5904b642252	catalog(uncited)	handled	JS-C45	-	0	UNCITED — a `val` carries the same guarantee (JLS side: JLS 17.5): a `final` field's JMM safe-publication guarantee
+e17fc42e19ae	catalog(uncited)	handled	JS-C46	-	0	UNCITED — one namespace, resolved innermost-first (JLS side: JLS 6.5): Java has TWO name namespaces and Scala has one
+a3ec5cfa1317	catalog(uncited)	handled	JS-C47	-	0	UNCITED — a qualified `private` is the image (JLS side: JLS 6.6.1): package-private becomes `private[pkg]`
+82c8c3f34227	catalog(uncited)	handled	JS-C48	-	0	UNCITED — Scala's `protected` grants no package access (JLS side: JLS 6.6.2, 15.12.1): Java's `protected` also grants SAME-PACKAGE access, and accessibility is an input to overload resolution
+96a65a55af95	catalog(uncited)	handled	JS-C49	-	0	UNCITED — a qualified `private[TopLevel]` is the image (JLS side: JLS 6.6.1): Java's `private` reaches the whole enclosing TOP-LEVEL class; Scala's reaches only the template
+09ba489df46e	catalog(uncited)	handled	JS-C50	-	0	UNCITED — emitting nothing means public, which is the wrong default (JLS side: JLS 6.6.1): Java's default access is package-private and Scala's is public — INVERTED
+301231c6a335	catalog(uncited)	handled	JS-C51	-	0	UNCITED — a scala class body is not a method, so `return` is rejected outright (JLS side: JLS 14.17, 8.8.7): a `return` in a CONSTRUCTOR body, whose promotion puts it in the class body
+c3a88d5d57d5	catalog(uncited)	handled	JS-E02	-	0	UNCITED — Scala has no increment operator; `x += 1` has type `Unit` (JLS side: JLS 15.14.2, 15.15.1): postfix/prefix `++`/`--` USED AS A VALUE yields the value before the update — the VALUE only; the operand's single evaluation is JS-E17
+35e8bdb7bea4	catalog(uncited)	handled	JS-E05	-	0	UNCITED — an `if` expression types as the lub of its branches (JLS side: JLS 15.25.2): the conditional operator's type is computed, not the syntactic lub of its branches
+4621dd1cc77f	catalog(uncited)	handled	JS-E14	-	0	UNCITED — `+` on a non-`String` left operand is that type's own `+` (JLS side: JLS 15.18.1): string concatenation with a NON-`String` left operand
+0a8469e3664d	catalog(uncited)	handled	JS-E19	-	0	UNCITED — scalac's `-deprecation` under the reference build's `-Werror` makes each site an error (12 in one port) (JLS side: JDK 9 `@Deprecated(since="9", forRemoval=true)` on every `java.lang` wrapper constructor): a BOXING CONSTRUCTOR — `new Double(v)` — is deprecated for removal; the JDK names `valueOf`
+13ea96c7898b	catalog(uncited)	handled	JS-G01	-	0	UNCITED — `?` with `<:`/`>:` bounds (JLS side: JLS 4.5.1): use-site wildcards, with the matching bound grammar
+cc4aa3708886	catalog(uncited)	handled	JS-G03	-	0	UNCITED — the corresponding Scala bound is not the same set (JLS side: JLS 4.5.1): `? super Object` has exactly one inhabitant
+ce54f52fc24d	catalog(uncited)	handled	JS-G04	-	0	UNCITED — the capture cannot be written, so an alias plus a widening cast is the image (JLS side: JLS 5.1.10, 14.14.2): a captured wildcard on ITERATION has no nameable type
+239a622020c9	catalog(uncited)	handled	JS-G05	-	0	UNCITED — no wildcard is legal in a parent, so the bound has to be filled (JLS side: JLS 4.5.1, 8.1.4): a wildcard in an `extends` clause takes the parameter's DECLARED bound
+671d9e12a408	catalog(uncited)	handled	JS-G06	-	0	UNCITED — an override is checked against the parent as emitted (JLS side: JLS 4.8, 8.4.8.1): a de-wildcarded raw PARENT and its overrides must agree
+b9ed2336e33b	catalog(uncited)	handled	JS-G07	-	0	UNCITED — `[?]` everywhere is the only fill that round-trips across an override (JLS side: JLS 4.8): a RAW type erases the REFERENCE's generics, not the class's
+78e531d9d040	catalog(uncited)	handled	JS-G08	-	0	UNCITED — the rendering depends on whether the scope is an override (JLS side: JLS 4.8): the same raw Java type renders DIFFERENTLY per scope, and correctly so
+a059b1d2b6bb	catalog(uncited)	handled	JS-G09	-	0	UNCITED — an explicit cast is the image (JLS side: JLS 5.1.9): UNCHECKED CONVERSION at a raw type is legal in Java and is not in Scala
+ac8d477920fa	catalog(uncited)	handled	JS-G12	-	0	UNCITED — the marker must never be printed (JLS side: JLS 15.9.1, 18): a diamond's inference variable has NO NAMEABLE type
+cb60a8255fcd	catalog(uncited)	handled	JS-G13	-	0	UNCITED — `Array[T]` is invariant, so a cast is needed at the use (JLS side: JLS 4.10.3, 10.10): Java arrays are COVARIANT, with a runtime `ArrayStoreException`; Scala's are invariant
+0cde26b00cef	catalog(uncited)	handled	JS-G15	-	0	UNCITED — the same restriction, reached through JS-G13's generality (JLS side: JLS 15.10.1): GENERIC ARRAY CREATION is illegal in Java, so only the cast idiom reaches the engine
+8e8bf19fb753	catalog(uncited)	handled	JS-G17	-	0	UNCITED — `.length` is a method and the array constructor reference is a lambda (JLS side: JLS 10.7, 15.13): `.length`, an array's `Class` object, and `T[]::new`
+a8b012018b9c	catalog(uncited)	handled	JS-G18	-	0	UNCITED — a producer/consumer erasure conflict the frontend has to resolve (JLS side: JLS 4.6): under `noClasspath` a REFERENCE erases and a DECLARATION does not
+097007e1109e	catalog(uncited)	handled	JS-G22	-	0	UNCITED — the receiver view and the member's type through it must be produced together (JLS side: JLS 4.8): a raw member access through an ERASED RECEIVER types the CALL, not just the receiver
+b9b2f192761b	catalog(uncited)	handled	JS-G29	-	0	UNCITED — Scala infers the same arguments where they are determined (JLS side: JLS 15.9.1): diamond inference in the ordinary case
+1587c7edf556	catalog(uncited)	handled	JS-G30	-	0	UNCITED — an unconstrained inference variable resolves to the lower bound (JLS side: JLS 18.1.3): an UNCONSTRAINED method type parameter: Java infers its BOUND and Scala infers `Nothing`
+c6a03c1fe7db	catalog(uncited)	handled	JS-G31	-	0	UNCITED — no Scala 3 reference page located; the SAM-conversion behaviour is probed, not cited (JLS side: JLS 15.2): a POLY EXPRESSION must never be cast as a whole
+835fcc8d210c	catalog(uncited)	handled	JS-G32	-	0	UNCITED — the callee's variables are not in scope at the call site (JLS side: JLS 18.5.1): a callee's OWN type variables never resolve at the caller
+4ec1ed5b5c8a	catalog(uncited)	handled	JS-G33	-	0	UNCITED — no Scala 3 reference page located for the eligibility rule (JLS side: JLS 9.8, 15.27.3): SAM conversion eligibility
+9c80181f29bf	catalog(uncited)	handled	JS-G34	-	0	UNCITED — `A & B` is the image (JLS side: JLS 4.9, 15.16): a Java INTERSECTION in a cast becomes Scala's `&`
+b983cac13b87	catalog(uncited)	handled	JS-G35	-	0	UNCITED — the bound is checked at every use, so a naive erasure is rejected (JLS side: JLS 4.4): Scala CHECKS an F-bound where javac does not
+a0165a369d1e	catalog(uncited)	handled	JS-G37	-	0	UNCITED — a declared vararg becomes an array parameter, so callers must pack (JLS side: JLS 8.4.1, 15.12.4.2): `T...` is an `Array[T]`, materialised at the port's OWN call sites
+0fe21c846504	catalog(uncited)	handled	JS-G38	-	0	UNCITED — ASSIGNABILITY to the parameter's array type decides, never `is an array`: a primitive array is assignable to nothing but its own, and at a `T[]...` slot a one-dimensional argument is assignable to the COMPONENT only (JLS side: JLS 15.12.4.2): a vararg slot ALREADY holding an array must not be re-packed — and neither a primitive array nor an under-dimensioned one forwards
+1a207f77540c	catalog(uncited)	handled	JS-G39	-	0	UNCITED — a class file's `T...` is a repeated parameter, so a bare array conforms as ONE element (JLS side: JLS 15.12.4.2): an EXTERNAL callee's `T...` is read by scalac as a REPEATED parameter
+924371cff7ae	catalog(uncited)	handled	JS-G40	-	0	UNCITED — only a spec over the composition finds it (JLS side: JLS 15.12.4.2): the COMPOSITION of JS-G38 and JS-G39 — an array forwarded through an external vararg slot
+f8943e1b9286	catalog(uncited)	handled	JS-G42	-	0	UNCITED — the DECLARATION is the source that is correct in all four (JLS side: JLS 15.12.4.2, 18): a generic vararg's COMPONENT element type has four layered sources
+f19ad35b5053	catalog(uncited)	handled	JS-G43	-	0	UNCITED — each form is a different lambda, and `Flags.isStatic` is the discriminator (JLS side: JLS 15.13): METHOD REFERENCES are five forms sharing one syntax — static, unbound, bound, constructor, array constructor
+0ba9aa82c787	catalog(uncited)	handled	JS-G49	-	0	UNCITED — scala has no subsignature rule; a method with no type parameters cannot override one with them (JLS side: JLS 8.4.2, 8.4.8.1): an UNCHECKED override: java lets a method's ERASURE be a SUBSIGNATURE of a generic one
+864970b851e2	catalog(uncited)	handled	JS-S01	-	0	UNCITED — `boundary`/`break` resolve the innermost `Label` in implicit scope (JLS side: JLS 14.15, 14.16): an unlabelled `break`/`continue` binds LEXICALLY to the innermost enclosing loop or switch
+baa652a5468f	catalog(uncited)	handled	JS-S02	-	0	UNCITED — Scala has no labelled statement; a named `boundary` is the image (JLS side: JLS 14.7): a LABEL sits on any statement, not only on a loop
+151125719bb7	catalog(uncited)	handled	JS-S03	-	0	UNCITED — `boundary.break` with no `using` resolves the innermost `Label` (JLS side: JLS 14.15): a `boundary` the emitter INTERPOSES steals the enclosing loop's un-annotated jumps
+275c52696dbc	catalog(uncited)	handled	JS-S04	-	0	UNCITED — a `match` arm never falls through (JLS side: JLS 14.11.3): switch FALLTHROUGH runs the next case's statements
+992f43fbf6e0	catalog(uncited)	handled	JS-S05	-	0	UNCITED — an unmatched `match` throws `MatchError` (JLS side: JLS 14.11.3): a `switch` with no `default` FALLS OUT; a `match` with no `case _` throws
+cf8f90e23ba9	catalog(uncited)	handled	JS-S06	-	0	UNCITED — a `match` arm cannot be left early (JLS side: JLS 14.15): an unlabelled `break` in the MIDDLE of a case ends the CASE
+7f10e6c09f25	catalog(uncited)	handled	JS-S07	-	0	UNCITED — no counterpart; the two must be told apart before stripping (JLS side: JLS 14.15): only an UNLABELLED trailing `break` terminates a case; a labelled one leaves the LOOP
+97b9cfa9f5c3	catalog(uncited)	handled	JS-S08	-	0	UNCITED — `null` matches no literal pattern and reaches the last arm (JLS side: JLS 14.11.2): a `null` selector throws NPE IMPLICITLY — a classic switch has no `case null` to opt out with
+0f3c40f5f2f7	catalog(uncited)	handled	JS-S09	-	0	UNCITED — a `match` is already an expression, so the image exists (JLS side: JLS 15.28, 14.21): switch EXPRESSIONS and `yield`
+430dd93f51a8	catalog(uncited)	handled	JS-S11	-	0	UNCITED — `scala.util.boundary.Break` extends `RuntimeException` (JLS side: JLS 14.15, 14.20): a translated CATCH swallows a translated JUMP — `boundary.Break` is a `RuntimeException`
+ddb00ef3eec4	catalog(uncited)	handled	JS-S13	-	0	UNCITED — no counterpart statement; `Using` is not one (it is a lambda) (JLS side: JLS 14.20.3): try-with-resources closes on ANY completion, in reverse order, before this try's own catch
+60e97f8ed28b	catalog(uncited)	handled	JS-S14	-	0	UNCITED — a union type in the pattern (JLS side: JLS 14.20): multi-catch `A | B`
+974224a3c2de	catalog(uncited)	handled	JS-S15	-	0	UNCITED — the same, by construction of the emitted loop (JLS side: JLS 14.14.2): the enhanced-for expression is evaluated ONCE, and arrays and `Iterable` differ
+a36f6e8ee774	catalog(uncited)	handled	JS-S16	-	0	UNCITED — a `for` binding is a `val` (JLS side: JLS 14.14.2): the enhanced-for BINDING may be reassigned in the body, and may be declared at a supertype
+98ba228d9f2d	catalog(uncited)	handled	JS-S17	-	0	UNCITED — `while` has no update clause, so it has to be placed (JLS side: JLS 14.14.1): the classic `for`'s UPDATE runs on `continue`, and its `ForInit` scopes to the loop
+d461084a2020	catalog(uncited)	handled	JS-S18	-	0	UNCITED — Scala 3 has no `do`-`while`; `while ({ body; cond }) ()` is the image (JLS side: JLS 14.13): `do`-`while` — Scala 3 removed it
+62291c7fd294	catalog(uncited)	handled	JS-S21	-	0	UNCITED — a `return` in a Scala lambda is a non-local return from the enclosing method (JLS side: JLS 15.27.2): `return` inside a lambda body returns from the LAMBDA, not from the method
+bd6e520e2d23	catalog(uncited)	handled	JS-S22	-	0	UNCITED — `.synchronized`, with the same monitor bytecode (JLS side: JLS 14.19): `synchronized` as a statement
+1c3b367e92aa	catalog(uncited)	handled	JS-S25	-	0	UNCITED — Scala has no unreachable-statement rule (JLS side: JLS 14.21): Java REJECTS unreachable code and Scala allows it — composed with `break`
+ce670f1fd3f7	catalog(uncited)	handled	JS-S26	-	0	UNCITED — Scala's `for (x <- xs) { ... }` desugars to `.foreach(x => ...)` and `return` inside the lambda is a non-local return, deprecated/errored under `-Werror` (JLS side: JLS 14.14.2): a `return` inside an enhanced-for body becomes a NON-LOCAL RETURN in Scala's `.foreach` desugaring
+1c32968f82ee	catalog(uncited)	non-diff	JS-C11	-	0	UNCITED — the same JVM mechanism (JLS side: JLS 12.4.2): a superclass is initialised before its subclass
+420f8947e9ff	catalog(uncited)	non-diff	JS-C15	-	0	UNCITED — the identical hazard (JLS side: JLS 12.5): a virtual call from a constructor sees UNINITIALISED subclass state
+7f39b3ac3114	catalog(uncited)	non-diff	JS-C27	-	0	UNCITED — the same rule (JLS side: JLS 8.4.8.3): covariant return types
+fcfdede1771b	catalog(uncited)	non-diff	JS-C28	-	0	UNCITED — a source-to-source port never sees one (JLS side: JLS 13.1): bridge methods
+ba28de187562	catalog(uncited)	non-diff	JS-C32	-	0	UNCITED — Scala captures a `var` too, so it is a superset (JLS side: JLS 4.12.4): a captured local must be EFFECTIVELY FINAL in Java
+5636d9e7c1a1	catalog(uncited)	non-diff	JS-C35	-	0	UNCITED — a private trait member is the image (JLS side: JLS 9.4): interface `private` methods
+56c451bc112c	catalog(uncited)	non-diff	JS-E08	-	0	UNCITED — the same distinction exists, with the same bytecode (JLS side: JLS 15.22.2): `&`/`|`/`^` on `boolean` are non-short-circuit and `&&`/`||` are not
+261cc8583230	catalog(uncited)	non-diff	JS-E09	-	0	UNCITED — the shift operators mask identically on the JVM (JLS side: JLS 15.19): a shift distance is masked to the operand's width
+74252df3bd41	catalog(uncited)	non-diff	JS-E10	-	0	UNCITED — shared JVM instructions (JLS side: JLS 15.17): integer division and remainder, and the floating-point edge cases
+e05a70ecb428	catalog(uncited)	non-diff	JS-E11	-	0	UNCITED — the same evaluation order (JLS side: JLS 15.26.1, 10.4): an array store evaluates its operands before the bounds check
+c4f2f43a2b59	catalog(uncited)	non-diff	JS-E12	-	0	UNCITED — the same order (JLS side: JLS 15.12.4.1, 15.12.4.4): the receiver's null check happens after the arguments are evaluated
+8faf04024f4b	catalog(uncited)	non-diff	JS-G19	-	0	UNCITED — the same erasure, and javac already rejected the clash (JLS side: JLS 4.6, 8.4.2): post-erasure overload clash
+d6776d4b162e	catalog(uncited)	non-diff	JS-G24	-	0	UNCITED — the same unboxing, through the same wrapper method (JLS side: JLS 5.1.8): unboxing `null` throws NPE
+a5bf97900dd8	catalog(uncited)	non-diff	JS-G28	-	0	UNCITED — `Predef.Integer2int` applies where Java unboxed (JLS side: JLS 5.1.7): the `Int`/`Integer` boundary, and scalac's own boxing
+548e67ff7aa6	catalog(uncited)	non-diff	JS-S20	-	0	UNCITED — Scala permits the shadowing Java rejects (JLS side: JLS 14.4.3): redeclaring a local in a nested block
+7d8932747dbf	catalog(uncited)	non-diff	JS-S24	-	0	UNCITED — the same `athrow` (JLS side: JLS 14.18): `throw null`
+7e52b616aeb9	catalog(uncited)	open	JS-C12	-	0	UNCITED — Scala reads the field's default rather than rejecting (JLS side: JLS 8.3.3): a FORWARD REFERENCE to a later field is a Java compile error and a silent default read in Scala
+737cb70cfc1e	catalog(uncited)	open	JS-G02	-	0	UNCITED — Scala captures per use, so the two uses are unrelated (JLS side: JLS 5.1.10): CAPTURE CONVERSION relates two uses of one wildcard in a single expression
+848f3c3cb684	catalog(uncited)	open	JS-G16	-	0	UNCITED — `Array[T]` construction requires a `ClassTag[T]` in scope (JLS side: JLS 15.10.1): Scala's `Array[T]` needs a `ClassTag` to be CONSTRUCTED
+7fcce12e4d53	catalog(uncited)	open	JS-G36	-	0	UNCITED — an override's own bounds must match the parent's, not be re-derived (JLS side: JLS 8.4.4, 8.4.2): an override's TYPE-PARAMETER BOUNDS must be copied from the parent
+2a69d596b86d	catalog(uncited)	open	JS-S23	-	0	UNCITED — Scala's `assert` runs unless elided at COMPILE time by `-Xelide-below` (JLS side: JLS 14.10): `assert` is enabled at RUN TIME by `-ea` and OFF by default, so the condition is not evaluated
+da9fdd090960	catalog(uncited)	partial	JS-C07	-	0	UNCITED — a Scala object initialises on first access to any member (JLS side: JLS 12.4.1): JLS's class-initialisation TRIGGER list vs Scala's uniform accessor trigger
+46945079273e	catalog(uncited)	partial	JS-C10	-	0	UNCITED — a scala module in a MUTUAL cycle has no MODULE$ yet, and throws (JLS side: JLS 12.4.2): circular class initialisation delivers DEFAULT values on the same thread
+3eb95dacff41	catalog(uncited)	partial	JS-C13	-	0	UNCITED — a Scala class body IS its constructor, so the sequence is an emission order (JLS side: JLS 12.5): JLS 12.5's instance-creation sequence, whole
+b6cd5a2dc738	catalog(uncited)	partial	JS-C17	-	0	UNCITED — the anonymous class carries its captures the same way (JLS side: JLS 8.6, 15.9.5): double-brace initialisation is an anonymous subclass plus an instance initialiser
+d905aea93fab	catalog(uncited)	partial	JS-C21	-	0	UNCITED — an overload defined later in the file is not visible to an earlier one (JLS side: JLS 8.8.8, 15.9.3): constructor overload resolution, against Scala's textual-anteriority rule
+e1fb5d56403a	catalog(uncited)	partial	JS-C22	-	0	UNCITED — Scala resolves in one phase, with implicit conversions and defaults in scope (JLS side: JLS 15.12.2): Java's THREE-PHASE applicability (strict, then loose, then varargs) has no Scala counterpart
+333708aa11b1	catalog(uncited)	partial	JS-C23	-	0	UNCITED — the relative-weight rule prefers the non-polymorphic alternative (JLS side: JLS 15.12.2.5): most-specific tie-break: Scala prefers a NON-GENERIC alternative and Java does not
+ae5cfa19d12e	catalog(uncited)	partial	JS-C33	-	0	UNCITED — linearization picks the last mixin, which is not Java's answer (JLS side: JLS 9.4.1): the interface default-method diamond is resolved by JLS's two rules, not by trait linearization
+a340c7c8bf95	catalog(uncited)	partial	JS-C40	-	0	UNCITED — an anonymous subclass per constant (JLS side: JLS 8.9.1): enum constants with PER-CONSTANT class bodies
+261c9cf8e01e	catalog(uncited)	partial	JS-C43	-	0	UNCITED — a case class differs in accessor naming, in three facets of `toString`, in `hashCode`, in float equality and in what its extractor reads (JLS side: JLS 8.10): Java `record`
+81408e8bc1b8	catalog(uncited)	partial	JS-C44	-	0	UNCITED — Scala has no `non-sealed` and no explicit `permits`; `sealed` restricts extension to the declaring FILE (JLS side: JLS 8.1.1.2, 9.1.1.4): `sealed` / `non-sealed` / `permits`
+cc2a0541da83	catalog(uncited)	partial	JS-E06	-	0	UNCITED — `asInstanceOf` converts at a statically primitive type and checks otherwise (JLS side: JLS 5.5): a primitive cast is a CONVERSION in Java and an assertion in Scala once a phase has retyped the value
+fd095324d8b5	catalog(uncited)	partial	JS-E07	-	0	UNCITED — weak conformance does not apply at a type-parameter slot (JLS side: JLS 5.6.2): binary numeric promotion does not reach a GENERIC call boundary
+5825ef13bc59	catalog(uncited)	partial	JS-G14	-	0	UNCITED — the target type of the boxing is the wrapper class (JLS side: JLS 5.1.7, 5.3): a primitive at a generic slot boxes to the WRAPPER, not to the formal
+6b82c730de56	catalog(uncited)	partial	JS-G20	-	0	UNCITED — the JLS timing is automatic; the retyping interaction is not (JLS side: JLS 5.5, 5.1.9): an unchecked cast's TIMING — a cast that only becomes impossible AFTER a retyping
+9a63f98ef44f	catalog(uncited)	partial	JS-G21	-	0	UNCITED — Scala patterns bind, but the binding's SCOPE has no image (JLS side: JLS 4.7, 15.20.2): `instanceof` is restricted to REIFIABLE types, and SE16 added a pattern binding
+e445206dd30c	catalog(uncited)	partial	JS-G41	-	0	UNCITED — no `@SafeVarargs` and no unchecked-vararg warning exist, so the unsoundness is carried over unmarked (JLS side: JLS 9.6.4.7, 4.12.2): `@SafeVarargs` and heap pollution
+37f11477a37d	catalog(uncited)	partial	JS-S10	-	0	UNCITED — a scala typed pattern is the image of one half and a constructor pattern over JS-C43's derived extractor is the image of the other (JLS side: JLS 14.11.1, 14.30): pattern and record switch, with sealed exhaustiveness
+c04d5171b5d5	catalog(uncited)	partial	JS-S12	-	0	UNCITED — the same rule; what is missing is a test of it (JLS side: JLS 14.20.2): a `finally` completing abruptly DISCARDS the try's own abrupt completion
+e99b4ca06c8d	catalog(uncited)	partial	JS-S19	-	0	UNCITED — Scala requires an initialiser instead, so the analysis has no image (JLS side: JLS 16): definite assignment for LOCALS — Java rejects a read before assignment
+3aec4136cd71	catalog(uncited)	refused	JS-G10	-	0	UNCITED — no faithful Scala image exists (JLS side: JLS 4.8, 15.9.5): a RAW anonymous class WITH a body
+61dcbf0d631c	catalog(uncited)	refused	JS-G11	-	0	UNCITED — a genuine expressiveness limit; four closing attempts measured worse (JLS side: JLS 4.5, 4.8): a partially-nameable F-BOUNDED raw fill
+342eaae73650	catalog(undischarged)	declared open	JS-C12	com/badlogic/gdx/math/MathUtils.java	30	ValDef/Either lowered 675 time(s) without consulting it — a FORWARD REFERENCE to a later field is a Java compile error and a silent default read in Scala
+812d4354442a	catalog(undischarged)	declared open	JS-G02	com/badlogic/gdx/utils/Array.java	94	CtWildcardReference/Either lowered 268 time(s) without consulting it — CAPTURE CONVERSION relates two uses of one wildcard in a single expression
+cc6ad37c818e	catalog(undischarged)	declared open	JS-G16	com/badlogic/gdx/math/MathUtils.java	57	NewArray/Either lowered 30 time(s) without consulting it — Scala's `Array[T]` needs a `ClassTag` to be CONSTRUCTED
+37df39ebdae2	catalog(undischarged)	declared open	JS-G36	com/badlogic/gdx/math/MathUtils.java	73	DefDef/Either lowered 396 time(s) without consulting it — an override's TYPE-PARAMETER BOUNDS must be copied from the parent
+0332b5177b8d	catalog(undischarged)	declared open	JS-S23	com/badlogic/gdx/utils/ComparableTimSort.java	116	Assert/Either lowered 136 time(s) without consulting it — `assert` is enabled at RUN TIME by `-ea` and OFF by default, so the condition is not evaluated
+17de2f733972	catalog(unmechanised)	partial	JS-G20	-	0	the row is per-phase DISCIPLINE across every retyping phase rather than one mechanism, so there is no dispatch and no single phase that could own the citation; what measures it is the `collection-retarget` lane (`RetargetBoundaryCheck`), which runs beside the obligation log and not through it: an unchecked cast's TIMING — a cast that only becomes impossible AFTER a retyping
+6c4d695fa9eb	catalog(unreached)	handled	JS-C30	-	0	never reached by this port — SpoonTir.stmtArm's CtClass arm -> SpoonTir.classDef with the enclosing EXECUTABLE as owner and SpoonTir.localName for java's source name; the anonymous-class body wiring reused verbatim for captures and for `this`; StandardTraversal.allClassDefs, which is what every whole-program pass walks to reach it at all: method-LOCAL named classes
+598b3ef5cbfd	catalog(unreached)	handled	JS-C42	-	0	never reached by this port — CollectionsTransform.typeMap sends both to balticporter.runtime.JavaEnumMap/JavaEnumSet, which order by ordinal; JavaEnumCollectionsSpec asserts the order against an insertion order that would expose a stdlib map: `EnumMap`/`EnumSet` GUARANTEE declaration-order iteration
+e9b2e82c0798	catalog(unreached)	handled	JS-C52	-	0	never reached by this port — SpoonFrontend.preservedAnnotations carries @FunctionalInterface; TirEmitter's static MethodRef arm emits an explicit lambda to avoid eta-expansion entirely: `@FunctionalInterface` governs Scala's eta-expansion warning — a static method reference at a non-annotated SAM warns under `-Werror`
+2bb3baa092f4	catalog(unreached)	handled	JS-E04	-	0	never reached by this port — SpoonTir.exprArm's CtOperatorAssignment arm, via the same SpoonTir.compoundNarrow JS-E03 consults: compound assignment NARROWS implicitly to the left-hand type — EXPRESSION position; the lvalue's single evaluation is JS-E17
+f2dbc882cb20	catalog(unreached)	handled	JS-G04	-	0	never reached by this port — TirEmitter.widenedBinding in the Tree.ForEach arm: a captured wildcard on ITERATION has no nameable type
+d84efff450fd	catalog(unreached)	handled	JS-G06	-	0	never reached by this port — TirEmitter.rawParentAlignment — deWildcardedArgs decides the parent's arguments and the SAME substitution re-renders the overriding parameters, so agreement is by construction rather than by two rules coinciding: a de-wildcarded raw PARENT and its overrides must agree
+8230f0326cf9	catalog(unreached)	handled	JS-G33	-	0	never reached by this port — TirEmitter.samAscribed: SAM conversion eligibility
+2f7bf99cc26e	catalog(unreached)	handled	JS-G43	-	0	never reached by this port — SpoonTir.methodRef -> Tir.Tree.MethodRef; TirEmitter's Tree.MethodRef arm: METHOD REFERENCES are five forms sharing one syntax — static, unbound, bound, constructor, array constructor
+7212fc4560fd	catalog(unreached)	handled	JS-S02	-	0	never reached by this port — Tir.Tree.Labeled; TirEmitter's Tree.Labeled arm and labelNeedsBoundary: a LABEL sits on any statement, not only on a loop
+0b212b837e2a	catalog(unreached)	handled	JS-S09	-	0	never reached by this port — SpoonTir.switchExpr — no fall-out arm, since the JLS makes a switch expression exhaustive; `yield` peeled at the tail and carried as Tree.Yield elsewhere, which TirEmitter.matchStr wraps in a value-carrying arm boundary: switch EXPRESSIONS and `yield`
+ff4b05ba7235	catalog(unreached)	handled	JS-S11	-	0	never reached by this port — TirEmitter.tryStr's guard, via Jumps.catchesBreak; BreakCatchCheck: a translated CATCH swallows a translated JUMP — `boundary.Break` is a `RuntimeException`
+11a2065a85a1	catalog(unreached)	handled	JS-S13	-	0	never reached by this port — TirEmitter.tryStr -> resourceStr; TryResourceCheck: try-with-resources closes on ANY completion, in reverse order, before this try's own catch
+3ffe007a4fd2	catalog(unreached)	handled	JS-S14	-	0	never reached by this port — SpoonTir.tryStmt's getMultiTypes reduce to OrType: multi-catch `A | B`
+a5203eb664e0	catalog(unreached)	handled	JS-S15	-	0	never reached by this port — SpoonTir's CtForEach -> Tree.ForEach; TirEmitter emits the iterable once: the enhanced-for expression is evaluated ONCE, and arrays and `Iterable` differ
+4b2757113798	catalog(unreached)	handled	JS-S16	-	0	never reached by this port — TirEmitter's Tree.ForEach arm — widenedBinding and reassignsBinding: the enhanced-for BINDING may be reassigned in the body, and may be declared at a supertype
+5cacf247ae70	catalog(unreached)	handled	JS-S22	-	0	never reached by this port — SpoonTir's CtSynchronized -> Tree.Synchronized: `synchronized` as a statement
+96954a87dde5	catalog(unreached)	handled	JS-S26	-	0	never reached by this port — TirEmitter's Tree.ForEach arm: returnsIn(body) triggers while-loop lowering with scala-style .iterator/.hasNext/.next(): a `return` inside an enhanced-for body becomes a NON-LOCAL RETURN in Scala's `.foreach` desugaring
+899ecbae6578	catalog(unreached)	open	JS-C12	-	0	never reached by this port — nothing detects it; order preservation is the only mitigation, and TirEmitter.orderBody's `forward reference` note is about promoted LOCALS: a FORWARD REFERENCE to a later field is a Java compile error and a silent default read in Scala
+44fa26dac023	catalog(unreached)	open	JS-G02	-	0	never reached by this port — no rewrite exists; the fix is local (bind to a named local) and none is synthesised: CAPTURE CONVERSION relates two uses of one wildcard in a single expression
+8a5797530e5d	catalog(unreached)	open	JS-G16	-	0	never reached by this port — TirEmitter's Tree.NewArray arm is where the construction is written and where the tag would have to be; RewriteTrace's scaladoc names this as the canonical hand-built rewrite, and nothing synthesises it. LATENT rather than dormant: java forbids `new T[n]`, and the one path that MINTS a NewArray (SpoonTir.varargPack) resolves a concrete element type first: Scala's `Array[T]` needs a `ClassTag` to be CONSTRUCTED
+5b2447d63d6a	catalog(unreached)	open	JS-G36	-	0	never reached by this port — no symbol copies parent bounds; SpoonTir.erasureOfFormal is per-declaration: an override's TYPE-PARAMETER BOUNDS must be copied from the parent
+4f1a6f635368	catalog(unreached)	open	JS-S23	-	0	never reached by this port — SpoonTir's CtAssert -> Tir.Tree.Assert -> TirEmitter's unconditional `assert(...)`; no decision, no note, no check: `assert` is enabled at RUN TIME by `-ea` and OFF by default, so the condition is not evaluated
+e81d70943de3	catalog(unreached)	partial	JS-E07	-	0	never reached by this port — TestFrameworkTransform.promote: binary numeric promotion does not reach a GENERIC call boundary
+8104070e5ac0	catalog(unreached)	partial	JS-G48	-	0	never reached by this port — CollectionsTransform.reifiedTest/reifiedCast -> JavaCollections.Reified; the concrete-target refusal is CollectionBoundaryCheck.Issue.ReifiedOccurrence: a REIFIED type occurrence asks about a RUNTIME OBJECT, so a retyping moves the question and not the answer
+43d98c05241b	catalog(unreached)	partial	JS-S12	-	0	never reached by this port — TirEmitter.tryStr's `fl`: a `finally` completing abruptly DISCARDS the try's own abrupt completion
+6342b97a77c2	heap-pollution	Unacknowledged	lowlevel.util.DynamicArray#addAll	com/badlogic/gdx/utils/Array.java	160	vararg `array` has component `lowlevel.util.DynamicArray$$T`, which JLS 4.7 does not make reifiable: java WARNED here and the author did not annotate it, and scala has neither the warning nor the annotation — the unsoundness crosses unmarked
+4ad334af9c7a	heap-pollution	Unacknowledged	lowlevel.util.DynamicArray#with	com/badlogic/gdx/utils/Array.java	704	vararg `array` has component `@283#with(T[])$$T`, which JLS 4.7 does not make reifiable: java WARNED here and the author did not annotate it, and scala has neither the warning nor the annotation — the unsoundness crosses unmarked
+bc1f3acc21d0	heap-pollution	Unacknowledged	lowlevel.util.ObjectSet#addAll	com/badlogic/gdx/utils/ObjectSet.java	151	vararg `array` has component `lowlevel.util.ObjectSet$$T`, which JLS 4.7 does not make reifiable: java WARNED here and the author did not annotate it, and scala has neither the warning nor the annotation — the unsoundness crosses unmarked
+5f29bc7eadf4	heap-pollution	Unacknowledged	lowlevel.util.ObjectSet#with	com/badlogic/gdx/utils/ObjectSet.java	348	vararg `array` has component `@1058#with(T[])$$T`, which JLS 4.7 does not make reifiable: java WARNED here and the author did not annotate it, and scala has neither the warning nor the annotation — the unsoundness crosses unmarked
+8b2ab6fe729b	heap-pollution	Unacknowledged	lowlevel.util.OrderedSet#with	com/badlogic/gdx/utils/OrderedSet.java	251	vararg `array` has component `@1476#with(T[])$$T`, which JLS 4.7 does not make reifiable: java WARNED here and the author did not annotate it, and scala has neither the warning nor the annotation — the unsoundness crosses unmarked
+1cf311025cef	idiom(refused)	NarrowedReturn	com.badlogic.gdx.utils.Array$ArrayIterator#iterator	com/badlogic/gdx/utils/Array.java	752	kind=NarrowedReturn guard=SelfTyped — a method that answers `this`; the declared return type is ALREADY the declaring class, so `this.type` buys precision only at a call on a SUBCLASS — real, but small, and it is the bucket that makes a blanket narrowing mostly churn
+a32b403c9e6d	idiom(refused)	NarrowedReturn	com.badlogic.gdx.utils.ObjectMap$Entries#iterator	com/badlogic/gdx/utils/ObjectMap.java	562	kind=NarrowedReturn guard=SelfTyped — a method that answers `this`; the declared return type is ALREADY the declaring class, so `this.type` buys precision only at a call on a SUBCLASS — real, but small, and it is the bucket that makes a blanket narrowing mostly churn
+146a011d29db	idiom(refused)	NarrowedReturn	com.badlogic.gdx.utils.ObjectMap$Keys#iterator	com/badlogic/gdx/utils/ObjectMap.java	622	kind=NarrowedReturn guard=SelfTyped — a method that answers `this`; the declared return type is ALREADY the declaring class, so `this.type` buys precision only at a call on a SUBCLASS — real, but small, and it is the bucket that makes a blanket narrowing mostly churn
+6b26334598ca	idiom(refused)	NarrowedReturn	com.badlogic.gdx.utils.ObjectMap$Values#iterator	com/badlogic/gdx/utils/ObjectMap.java	586	kind=NarrowedReturn guard=SelfTyped — a method that answers `this`; the declared return type is ALREADY the declaring class, so `this.type` buys precision only at a call on a SUBCLASS — real, but small, and it is the bucket that makes a blanket narrowing mostly churn
+6fedab76b1f4	idiom(refused)	NarrowedReturn	com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator#iterator	com/badlogic/gdx/utils/ObjectSet.java	424	kind=NarrowedReturn guard=SelfTyped — a method that answers `this`; the declared return type is ALREADY the declaring class, so `this.type` buys precision only at a call on a SUBCLASS — real, but small, and it is the bucket that makes a blanket narrowing mostly churn
+4ea5c73f2e40	omissions	promoted constructor body runs on every path	lowlevel.util.ObjectMap	com/badlogic/gdx/utils/ObjectMap.java	78	8 statement(s) of the promoted constructor also run here; java ran them only on its own path
+4ea5c73f2e40/2	omissions	promoted constructor body runs on every path	lowlevel.util.ObjectMap	com/badlogic/gdx/utils/ObjectMap.java	85	8 statement(s) of the promoted constructor also run here; java ran them only on its own path
+4ea5c73f2e40/3	omissions	promoted constructor body runs on every path	lowlevel.util.ObjectMap	com/badlogic/gdx/utils/ObjectMap.java	100	8 statement(s) of the promoted constructor also run here; java ran them only on its own path
+b3fe500f7f76	omissions	promoted constructor body runs on every path	lowlevel.util.ObjectSet	com/badlogic/gdx/utils/ObjectSet.java	73	7 statement(s) of the promoted constructor also run here; java ran them only on its own path
+b3fe500f7f76/2	omissions	promoted constructor body runs on every path	lowlevel.util.ObjectSet	com/badlogic/gdx/utils/ObjectSet.java	80	7 statement(s) of the promoted constructor also run here; java ran them only on its own path
+b3fe500f7f76/3	omissions	promoted constructor body runs on every path	lowlevel.util.ObjectSet	com/badlogic/gdx/utils/ObjectSet.java	94	7 statement(s) of the promoted constructor also run here; java ran them only on its own path
+ba76497872ef	omissions	promoted constructor body runs on every path	lowlevel.util.OrderedMap	com/badlogic/gdx/utils/OrderedMap.java	53	1 statement(s) of the promoted constructor also run here; java ran them only on its own path
+ba76497872ef/2	omissions	promoted constructor body runs on every path	lowlevel.util.OrderedMap	com/badlogic/gdx/utils/OrderedMap.java	61	1 statement(s) of the promoted constructor also run here; java ran them only on its own path
+ba76497872ef/3	omissions	promoted constructor body runs on every path	lowlevel.util.OrderedMap	com/badlogic/gdx/utils/OrderedMap.java	67	1 statement(s) of the promoted constructor also run here; java ran them only on its own path
+5f82d3c923dd	omissions	promoted constructor body runs on every path	lowlevel.util.OrderedSet	com/badlogic/gdx/utils/OrderedSet.java	51	1 statement(s) of the promoted constructor also run here; java ran them only on its own path
+5f82d3c923dd/2	omissions	promoted constructor body runs on every path	lowlevel.util.OrderedSet	com/badlogic/gdx/utils/OrderedSet.java	56	1 statement(s) of the promoted constructor also run here; java ran them only on its own path
+5f82d3c923dd/3	omissions	promoted constructor body runs on every path	lowlevel.util.OrderedSet	com/badlogic/gdx/utils/OrderedSet.java	61	1 statement(s) of the promoted constructor also run here; java ran them only on its own path
+1b1f3beced48	omissions	super(args) dropped	lowlevel.util.OrderedMap	com/badlogic/gdx/utils/OrderedMap.java	53	1 argument(s) discarded
+6b02d1febbc6	omissions	super(args) dropped	lowlevel.util.OrderedMap	com/badlogic/gdx/utils/OrderedMap.java	61	2 argument(s) discarded
+1b1f3beced48/2	omissions	super(args) dropped	lowlevel.util.OrderedMap	com/badlogic/gdx/utils/OrderedMap.java	67	1 argument(s) discarded
+867b1ad421d1	omissions	super(args) dropped	lowlevel.util.OrderedSet	com/badlogic/gdx/utils/OrderedSet.java	51	2 argument(s) discarded
+50d0213a73fe	omissions	super(args) dropped	lowlevel.util.OrderedSet	com/badlogic/gdx/utils/OrderedSet.java	56	1 argument(s) discarded
+50d0213a73fe/2	omissions	super(args) dropped	lowlevel.util.OrderedSet	com/badlogic/gdx/utils/OrderedSet.java	61	1 argument(s) discarded
+44be58408ad3	overload-risk	VarargPhaseSpan	lowlevel.util.DynamicArray	com/badlogic/gdx/utils/Array.java	151	call to `addAll/3` has 3 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (lowlevel.util.DynamicArray, scala.Int, scala.Int), (scala.Array)…, (scala.Array, scala.Int, scala.Int) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
+44be58408ad3/2	overload-risk	VarargPhaseSpan	lowlevel.util.DynamicArray	com/badlogic/gdx/utils/Array.java	157	call to `addAll/3` has 3 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (lowlevel.util.DynamicArray, scala.Int, scala.Int), (scala.Array)…, (scala.Array, scala.Int, scala.Int) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
+44be58408ad3/3	overload-risk	VarargPhaseSpan	lowlevel.util.DynamicArray	com/badlogic/gdx/utils/Array.java	161	call to `addAll/3` has 3 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (lowlevel.util.DynamicArray, scala.Int, scala.Int), (scala.Array)…, (scala.Array, scala.Int, scala.Int) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
+849c001aa03f	overload-risk	VarargPhaseSpan	lowlevel.util.DynamicArray	com/badlogic/gdx/utils/ArrayMap.java	642	call to `addAll/3` has 3 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (lowlevel.util.DynamicArray, scala.Int, scala.Int), (scala.Array)…, (scala.Array, scala.Int, scala.Int) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
+849c001aa03f/2	overload-risk	VarargPhaseSpan	lowlevel.util.DynamicArray	com/badlogic/gdx/utils/ArrayMap.java	685	call to `addAll/3` has 3 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (lowlevel.util.DynamicArray, scala.Int, scala.Int), (scala.Array)…, (scala.Array, scala.Int, scala.Int) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
+48cce9d6f5c0	overload-risk	VarargPhaseSpan	lowlevel.util.DynamicArray	com/badlogic/gdx/utils/OrderedMap.java	300	call to `addAll/3` has 3 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (lowlevel.util.DynamicArray, scala.Int, scala.Int), (scala.Array)…, (scala.Array, scala.Int, scala.Int) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
+deba9f9ca224	overload-risk	VarargPhaseSpan	lowlevel.util.DynamicArray	com/badlogic/gdx/utils/OrderedSet.java	240	call to `addAll/3` has 3 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (lowlevel.util.DynamicArray, scala.Int, scala.Int), (scala.Array)…, (scala.Array, scala.Int, scala.Int) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
+9f0390207c9d	overload-risk	VarargPhaseSpan	lowlevel.util.ObjectSet	com/badlogic/gdx/utils/ObjectSet.java	142	call to `addAll/3` has 3 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (lowlevel.util.DynamicArray, scala.Int, scala.Int), (scala.Array)…, (scala.Array, scala.Int, scala.Int) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
+9f0390207c9d/2	overload-risk	VarargPhaseSpan	lowlevel.util.ObjectSet	com/badlogic/gdx/utils/ObjectSet.java	148	call to `addAll/3` has 3 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (lowlevel.util.DynamicArray, scala.Int, scala.Int), (scala.Array)…, (scala.Array, scala.Int, scala.Int) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
+9f0390207c9d/3	overload-risk	VarargPhaseSpan	lowlevel.util.ObjectSet	com/badlogic/gdx/utils/ObjectSet.java	152	call to `addAll/3` has 3 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (lowlevel.util.DynamicArray, scala.Int, scala.Int), (scala.Array)…, (scala.Array, scala.Int, scala.Int) — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
+8528d36f9790	overload-risk	VarargPhaseSpan	lowlevel.util.ObjectSet	com/badlogic/gdx/utils/ObjectSet.java	350	call to `addAll/1` has 3 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (lowlevel.util.DynamicArray), (lowlevel.util.ObjectSet), (scala.Array)… — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
+c6a514eda1e1	overload-risk	VarargPhaseSpan	lowlevel.util.OrderedSet	com/badlogic/gdx/utils/OrderedSet.java	253	call to `addAll/1` has 4 applicable candidates spanning java's resolution phases (VarargPhaseSpan): (lowlevel.util.DynamicArray), (lowlevel.util.ObjectSet), (lowlevel.util.OrderedSet), (scala.Array)… — javac bound one and scala resolves in a single phase, so the port may name the other with no error on either side
+cff995631466	unused-symbol(handled)	deleted	com.badlogic.gdx.math.MathUtils#BIG_ENOUGH_CEIL	com/badlogic/gdx/math/MathUtils.java	603	unused private val — deleted
+6bf63d6ba11c	unused-symbol(handled)	deleted	com.badlogic.gdx.utils.Array#predicateIterable	com/badlogic/gdx/utils/Array.java	39	unused private var — deleted
