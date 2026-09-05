@@ -40,8 +40,8 @@ the migrator class name, which does not track a module rename.
 | `sge-screens` (`ScreensMigrate`) | libgdx-screenmanager | Apache-2.0 | 0/0/0/29 | 16 hand-written, all passing |
 | `sge-vfx` (`VfxMigrate`) | gdx-vfx | Apache-2.0 | 0/0/0/2 | 64 hand-written, all passing |
 | `sge-ai` (`GdxAiMigrate`) | gdx-ai `gdx-ai/src` | Apache-2.0 | 0/0/0/9 | — |
-| `sge-ai-test` (`GdxAiTestMigrate`) | gdx-ai `gdx-ai/tests` | Apache-2.0 | 0/0/0/9 | 10: 10 pass, expected-lost 0 |
-| `sge-ai-diff` (`GdxAiDifferential`) | hand port's own suite, run against emitted `sge.ai.*` | — | 0 | 95: 93 pass, 2 declared (§10.7.12) |
+| `sge-ai-test` (`GdxAiTestMigrate`) | gdx-ai `gdx-ai/tests` | Apache-2.0 | 0/0/0/0 | 10 emitted, 105 outcomes: 104 pass, 1 declared (`cloneTask` fixture, B4), expected-lost 0 |
+| `sge-ai-diff` (`GdxAiDifferential`) | hand port's own suite, run against emitted `sge.ai.*` | — | 0 | 95: 94 pass, 1 declared (§10.7.12; the clone-guard test passes since the registry, 2026-09-05) |
 | `sge-textra` (`TextraTypistMigrate`) | TextraTypist | Apache-2.0 + MIT | 0/—/—/3 | no upstream `@Test` |
 | `sge-textra-diff` (`TextraTypistDifferential`) | hand port's own suite, run against emitted `sge.textra.*` | — | 0 | 165: 165 pass, 0 declared |
 | `sge-graphs` (`SimpleGraphsMigrate`) | simple-graphs `src/main` | MIT | 0/0/0/0 | — |
