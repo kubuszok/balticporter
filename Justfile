@@ -904,6 +904,13 @@ anim8-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/anim8measure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/anim8measure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/anim8measure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    # BEFORE the suite: a renamed hand test must not leave these three numbers STALE (promote30).
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-sge-anim8JS/compile" "$REPORT"
+      sbt_xplat_compile native "port-sge-anim8Native/compile" "$REPORT"
+      sbt_ref_compile "port-sge-anim8-ref/compile" "$REPORT"
+    fi
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/anim8measure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/anim8measure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
@@ -939,12 +946,6 @@ anim8-measure:
     fi
 
 
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-sge-anim8JS/compile" "$REPORT"
-      sbt_xplat_compile native "port-sge-anim8Native/compile" "$REPORT"
-      sbt_ref_compile "port-sge-anim8-ref/compile" "$REPORT"
-    fi
 
     headline "$ERRORS" "$REPORT"
 
