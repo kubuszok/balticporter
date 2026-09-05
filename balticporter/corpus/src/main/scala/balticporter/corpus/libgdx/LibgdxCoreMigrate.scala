@@ -1,6 +1,7 @@
 package balticporter.corpus.libgdx
 
 import balticporter.core.{FrontendConfig, ParityRef, PortManifest, Provenance, ResourceTree, RuntimeMode, Substitutions}
+import balticporter.corpus.LlsClasspath
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 import balticporter.tir.{Descriptor, Param}
 import balticporter.transform.{ClassTableTransform, CollectionsTransform, MutableParamsTransform, PanamaFfiTransform, StaticForwarderTransform, TestFrameworkTransform}
@@ -29,7 +30,7 @@ object LibgdxCoreMigrate:
       label     = "sge",
       portRoot  = repoRoot.resolve("ported/sge"),
       sourceSet = SourceSet.Main,
-      frontend  = FrontendConfig(base, files, Nil, Nil),
+      frontend  = FrontendConfig(base, files, LlsClasspath.entries(repoRoot), Nil),
       phases    = Nil, // supplied by the manifest — the two sources are mutually exclusive
       // The BASE manifest. `libgdx-test` is a dependent of exactly this value, so the two runs
       // cannot disagree about the shared surface by construction, and `ManifestAgreement` verifies

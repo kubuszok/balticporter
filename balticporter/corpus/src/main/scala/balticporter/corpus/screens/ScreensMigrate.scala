@@ -1,6 +1,6 @@
 package balticporter.corpus.screens
 
-import balticporter.corpus.ClasspathCache
+import balticporter.corpus.{ClasspathCache, LlsClasspath}
 import balticporter.core.{FrontendConfig, ParityRef, PortManifest, Provenance, RuntimeMode}
 import balticporter.corpus.libgdx.LibgdxPolicy
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
@@ -28,7 +28,7 @@ object ScreensMigrate:
       frontend  = FrontendConfig(
         base,
         ScreensPort.javaFiles(base),
-        classpath       = ScreensClasspath.entries(repoRoot),
+        classpath       = LlsClasspath.entries(repoRoot) ++ ScreensClasspath.entries(repoRoot),
         resolutionRoots = List(gdxSrc),
       ),
       phases     = Nil, // supplied by the manifest — the two sources are mutually exclusive

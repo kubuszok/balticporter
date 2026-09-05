@@ -279,8 +279,10 @@ private[transform] trait CollectionsRetarget:
     * FRONTEND interned; `false` when the ancestry is unknowable (K18, CLAUDE.md §4.56). */
   private def provablyUnrelated(target: SymId, operand: SymId)(using p: Program): Boolean =
     val targetFqn = p.symbolOf(target).map(_.fullName).getOrElse("")
-    // find the frontend's own SymId for this type -- its ClassDef carries the parent list
-    val frontendSym = p.symbols.all.find(s => s.fullName == targetFqn && s.id != target)
+    // find a SymId for this type that has a ClassDef — the frontend's interned symbol or a
+    // declared one. Multiple minted symbols may share the fullName; pick the one with ancestry.
+    val frontendSym = p.symbols.all.find(s => s.fullName == targetFqn && s.id != target
+      && p.definitionOf(s.id).isDefined)
     frontendSym match
       case Some(fs) =>
         val og = OverrideGraph.build(p)

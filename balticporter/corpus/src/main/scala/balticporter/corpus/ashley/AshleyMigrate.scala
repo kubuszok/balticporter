@@ -1,6 +1,7 @@
 package balticporter.corpus.ashley
 
 import balticporter.core.{FrontendConfig, ParityRef, PortManifest, Provenance, RuntimeMode}
+import balticporter.corpus.LlsClasspath
 import balticporter.corpus.libgdx.LibgdxPolicy
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 
@@ -31,7 +32,7 @@ object AshleyMigrate:
       sourceSet = SourceSet.Main,
       // libGDX core is a RESOLUTION root: parsed so every reference resolves, never emitted here.
       // `LibgdxCoreMigrate` emits it, and the two are compiled together.
-      frontend  = FrontendConfig(base, files, Nil, resolutionRoots = List(gdxSrc)),
+      frontend  = FrontendConfig(base, files, LlsClasspath.entries(repoRoot), resolutionRoots = List(gdxSrc)),
       phases    = Nil, // supplied by the manifest — the two sources are mutually exclusive
       manifest  = Some(AshleyPolicy.core(repoRoot)),
       provenance = Some(Provenance(

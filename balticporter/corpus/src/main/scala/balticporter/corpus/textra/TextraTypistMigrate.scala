@@ -1,7 +1,7 @@
 package balticporter.corpus.textra
 
 import balticporter.core.{FrontendConfig, ParityRef, PortManifest, Provenance, RuntimeMode}
-import balticporter.corpus.ClasspathCache
+import balticporter.corpus.{ClasspathCache, LlsClasspath}
 import balticporter.corpus.libgdx.LibgdxPolicy
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 
@@ -31,7 +31,7 @@ object TextraTypistMigrate:
       label     = "sge-textra",
       portRoot  = repoRoot.resolve("ported/sge-textra"),
       sourceSet = SourceSet.Main,
-      frontend  = FrontendConfig(base, files, TextraTypistClasspath.entries(repoRoot),
+      frontend  = FrontendConfig(base, files, LlsClasspath.entries(repoRoot) ++ TextraTypistClasspath.entries(repoRoot),
                                  resolutionRoots = List(gdxSrc)),
       phases    = Nil, // supplied by the manifest — the two sources are mutually exclusive
       manifest  = Some(TextraTypistPolicy.core(repoRoot)),
