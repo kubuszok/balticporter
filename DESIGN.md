@@ -426,6 +426,13 @@ set already contains its base's — `RuntimeMode.Vendored` on a dependent would 
 type the base already ships. Every dependent in this corpus is therefore `RuntimeMode.Dependency`
 while its base vendors (`ENGINE-LIMITS.md` P10).
 
+**A recurring SHAPE becomes a MINTED phase, never a `runtime/` support type.** Three ports hand-wrote
+a `Class`-keyed instantiation registry; `runtime` still refuses to ship one, because the covering
+abstraction is a `Map` the target language already has, and because the three ports disagree about
+what an unregistered key answers. `RegistryTransform` (§1(b)) resolves both: it MINTS the table and
+its two members INTO the port at a declared placement, so each port keeps its own names and its own
+`Miss`, and nothing shared has to hold all three (`ENGINE-LIMITS.md` P10).
+
 ### 3.8 Override layer
 
 Replayable, never patches on generated text, in descending preference: (1) rules/phases — whole

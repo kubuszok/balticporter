@@ -1278,12 +1278,14 @@ anim8, liqp-test), draining `omissions` 97→92, `jdk-surface` 57→55, `remedia
 
 ### 12.2.8 Deliberately not built
 
-Cited by `ENGINE-LIMITS.md`. Reflective-instantiation-to-registry as a §1(b) phase — READ OUT AND
-REFUSED (`ENGINE-LIMITS.md` P10): the three hand-written instances (`Pools`, `ComponentFactories`,
-`GLTFExtensionFactories`) need a `Class`-keyed `Map`, which the runtime package's own admission test
-excludes, and the extraction would save only 8 net lines across three ports. The loud-refusal facade
-(static half + throwing reflective half) stays hand-written — its split is a semantic fact about
-each library's API (§1(c)), not a scaffoldable shape.
+Cited by `ENGINE-LIMITS.md`. Reflective-instantiation-to-registry as a SHARED SUPPORT TYPE stays
+refused (`ENGINE-LIMITS.md` P10): the covering abstraction is a `Class`-keyed `Map`, which the
+runtime package's own admission test excludes, and no one table can hold three ports' miss policies.
+The MECHANISM shipped instead — `RegistryTransform` (§1b) MINTS the table and its `register`/`create`
+into each port at a declared placement, so nothing shared has to agree; wave 1 is ashley (§13.27),
+wave 2 is gdx-gltf + gdx-ai. The loud-refusal facade (static half + throwing reflective half) stays
+hand-written — its split is a semantic fact about each library's API (§1(c)), not a scaffoldable
+shape — but every call of a facade member a port NAMES is now counted (`registry(facade)`).
 
 ### 12.3 Counted residues that are not defects
 
@@ -1436,7 +1438,6 @@ hit only prose). Grouped rows share one classification; every key is listed.
 | `CircularBuffer#resize(int)` | ai | iii | Phase 1.11 / P10 | `ArrayReflection.newInstance` — gdx reflection the base drops; measured alive 2026-09-04 (`value ArrayReflection is not a member`) |
 | `Task#cloneTask()` | ai | iii | Phase 1.11 / P10 | the java falls back to `ClassReflection.newInstance(getClass())`, a reflective self-clone the port drops; the body keeps `TASK_CLONER` and throws the contract's own `TaskCloneException` — a registry (P10) is the mechanical image, not an emitter (reclassified 2026-09-05) |
 | `...openTask(String,boolean)`, `...findMetadata(Class)`, `...getField(Class,String)`, `...setField(Field,Task,Object)`, `...castValue(Field,Object)` (`BehaviorTreeParser$DefaultBehaviorTreeReader`) | ai | iii | Phase 1.11 / P10 | named verbatim in the design card as the reflection-replacement family |
-| `Engine#createComponent(Class)` | ashley | iii | Phase 1.11 / P10 + `divergence-verdicts.tsv:146` (`Engine#componentFactories`, justified) | `ComponentFactories` registry |
 | `ImmutableArrayTests#forbiddenRemoval` | ashley | i | `divergence-verdicts.tsv:141` (`ImmutableArraySuite`, justified) | java `iterator().remove()` throws; Scala's `Iterator` has none — verify read-only instead |
 
 **Reflection census (2026-09-05, read-only, 260 sites over every port root)**:
@@ -1445,15 +1446,21 @@ gltf `GLTFMaterialExporter#ext`, ai `Task#cloneTask`; + parser `openTask` = `new
 instantiate-by-name 9, array-create 14 (11 in dropped/lls types; the rest `MkArray`/`ClassTag`), field-r/w 26,
 method-invoke 14, type-test 53 (portable `java.lang.Class`), **serialise 99** (Skin 15, particles 49, textra
 FWSkin 32, gltf 1, liqp 2), service-load 1. The 97 `Json#readValue`-family sites compile against the injected
-inert `Json` facade that THROWS on every reflective path — the corpus's largest silent run-time refusal, and no
-lane counts it (obligation for the registry wave). Reclassified: vfx's three iii keys are P3/CT11 (a constant
+inert `Json` facade that THROWS on every reflective path — the corpus's largest silent run-time refusal. The lane
+now EXISTS (`registry(facade)`, `RegistryTransform(facadeMembers)`) and records 0: no port has yet NAMED the
+facade's reflective members, which is the remaining half of that obligation. Reclassified: vfx's three iii keys are P3/CT11 (a constant
 name of an absent GWT class + lazy init), not P10; `CircularBuffer#resize` stays (array-create over `Object`).
-The P10 mechanism is `RegistryTransform(spec)` keyed `Class[T] -> () => T` ONLY (design card in the residue
-subplan §19); wave 1 = ashley (the one hand port with a registry to reach parity with), wave 2 = gltf + ai.
+The P10 mechanism is `RegistryTransform(spec)` keyed `Class[T] -> () => T` ONLY. **Wave 1 (ashley) is
+BUILT**: the `Engine#createComponent(Class)` body key and the injected `ComponentFactories.scala` are
+both retired, the registry is MINTED at `Placement.Object` with `miss = JvmReflect` — 0 errors held on
+JVM/JS/Native/ref, 108/2/2 held, `portability(injected)` 4 -> 0, `registry(jvm-only-miss)` 0 -> 2 (js, native),
+every other lane byte-identical, gdx `members-unchanged` 0.
+Wave 2 = gltf `GLTFMaterialExporter#ext` + ai; ai's `Task#cloneTask` is a `registry(self-clone)`
+refusal under any non-reflective miss and needs the library's own clone contract instead.
 
-Counts by class: i=5, ii=18, iii=8, iv=3 (34 keys, 19 grouped rows); retired 2026-09-04: `Selection#iterator`, `MapLayers/MapObjects#getByType`; 2026-09-05: `BitmapFont#<init>(…)` (dead key), `Selection#toArray` x2, vfx x3 reclassified iii; 2026-09-05b: `FirstPersonCameraController#keyUp` (IntIntMap remove Template), `Node#calculateBoneTransforms` + `ModelInstance#invalidate` (IndexedField via), `NodePart#set` + `MapProperties#putAll` (putAll compiles without cast); 2026-09-05c: `Actor#<clinit>` (Construct at C::new), `AssetManager#getAssetFileName` (return inside nested foreachEntry), `ModelLoader#getDependencies` + `ParticleEffectLoader#getDependencies` (Tuple2 construct-then-assign fold); 2026-09-05d: `AssetManager#clear` (Keys toArray Template + getAndIncrement), `ArraySelection#validate` (OrderedSet removing iterator K36), `AssetLoadingTask#removeDuplicates` (DropWrite K36) (ii=10 remain).
+Counts by class: i=5, ii=18, iii=7, iv=3 (33 keys, 18 grouped rows); retired 2026-09-04: `Selection#iterator`, `MapLayers/MapObjects#getByType`; 2026-09-05: `BitmapFont#<init>(…)` (dead key), `Selection#toArray` x2, vfx x3 reclassified iii; 2026-09-05b: `FirstPersonCameraController#keyUp` (IntIntMap remove Template), `Node#calculateBoneTransforms` + `ModelInstance#invalidate` (IndexedField via), `NodePart#set` + `MapProperties#putAll` (putAll compiles without cast); 2026-09-05c: `Actor#<clinit>` (Construct at C::new), `AssetManager#getAssetFileName` (return inside nested foreachEntry), `ModelLoader#getDependencies` + `ParticleEffectLoader#getDependencies` (Tuple2 construct-then-assign fold); 2026-09-05d: `AssetManager#clear` (Keys toArray Template + getAndIncrement), `ArraySelection#validate` (OrderedSet removing iterator K36), `AssetLoadingTask#removeDuplicates` (DropWrite K36) (ii=10 remain); 2026-09-05e: `Engine#createComponent(Class)` (`RegistryTransform`, P10 wave 1).
 Counts by port: visui=5 (iv=3, ii=2), gdx=9 (i=2 test, ii=7 main), gltf=3 (i=2, iii=1),
-textra=2 (ii=2), vfx=3 (iii=3), ai=7 (ii=2, iii=5), ashley=2 (i=1, iii=1).
+textra=2 (ii=2), vfx=3 (iii=3), ai=7 (ii=2, iii=5), ashley=1 (i=1).
 
 ### 13.28 lls — the base beneath sge (decided 2026-09-05)
 

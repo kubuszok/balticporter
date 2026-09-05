@@ -131,17 +131,6 @@ object AshleyPolicy:
         // 3.2g: Pool is dropped+injected as sge's trait in the BASE manifest;
         // ClassToTraitTransform (also in the base) rewrites subclasses -- Ashley inherits
         // both, no instance declared here.
-        new balticporter.transform.MethodBodyTransform(Map(
-        // Engine.createComponent is the one reflective site in Ashley's 21 files
-        // (ClassReflection.newInstance/ReflectionException, both dropped by the base); the
-        // rest of Engine translates mechanically, so this replaces the BODY only, signature
-        // untouched. Wraps in Nullable(...) since `nullableMembers` retyped the return; a null
-        // normalises to Nullable.empty, matching the hand port.
-        "com.badlogic.ashley.core.Engine#createComponent(Class)" ->
-          "lowlevel.Nullable(sge.ecs.ComponentFactories.create(componentType))",
-        // ImmutableArray is DROPPED and injected (see `dropTypes` above), so no body transforms
-        // are needed for its methods.
-        )),
         // SIX MEMBERS WHOSE RETURN TYPE IS NULLABLE, per sge's migration notes (no java
         // annotation carries this). Keys use the name as it exists when NullabilityTransform
         // runs (AFTER bean collapse), UPSTREAM namespace. `Entity#getComponent` names both
@@ -179,10 +168,30 @@ object AshleyPolicy:
             balticporter.transform.AddMembersTransform.MemberSpec(
               name   = "registerComponentFactory",
               arity  = 2,
-              source = "def registerComponentFactory[T <: sge.ecs.Component](componentClass: Class[T], factory: () => T): Unit = componentFactories.put(componentClass, factory)",
+              // BOTH tables on purpose: `componentFactories` is the PROTECTED surface sge declares
+              // and a subclass may read, and `ComponentFactories` (minted by `registry` below) is
+              // where `createComponent` and `ComponentPool` look the key up. Registering in one
+              // only would leave the other answering "not registered".
+              source = "def registerComponentFactory[T <: sge.ecs.Component](componentClass: Class[T], factory: () => T): Unit = { componentFactories.put(componentClass, factory); sge.ecs.ComponentFactories.register(componentClass, factory) }",
               reason = balticporter.tir.Reason.Configured("add-members", "com.badlogic.ashley.core.Engine#registerComponentFactory"),
               why    = Some("sge factory registry (sge commit 80b3fc64, ISS-723): cross-platform component creation, required on Scala.js/Native"),
             ),
+          ),
+        )),
+        // Ashley's one reflective instantiation site (`Engine#createComponent`): the registry is
+        // MINTED, not injected (`ENGINE-LIMITS.md` P10). `miss = JvmReflect` is DECLARED and its
+        // non-JVM cost COUNTED (`registry(jvm-only-miss)`): the suite instantiates component
+        // classes nothing registers. `handles` names the exception whose thrower this retires.
+        new balticporter.transform.RegistryTransform(List(
+          balticporter.transform.RegistryTransform.Registry(
+            callee    = "com.badlogic.gdx.utils.reflect.ClassReflection#newInstance",
+            placement = balticporter.transform.RegistryTransform.Placement.Object(
+              "com.badlogic.ashley.core.ComponentFactories",
+              balticporter.transform.RegistryTransform.Spelling("factories", "register", "create")),
+            scope     = balticporter.tir.RuleScope.Only(Set("com.badlogic.ashley")),
+            handles   = Set("com.badlogic.gdx.utils.reflect.ReflectionException"),
+            miss      = balticporter.transform.RegistryTransform.Miss.JvmReflect,
+            bound     = Some("sge.ecs.Component"),
           ),
         )),
         // LAST, deliberately: reads what the BASE actually emitted; must run AFTER the

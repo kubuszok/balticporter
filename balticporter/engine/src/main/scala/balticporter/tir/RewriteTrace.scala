@@ -64,13 +64,28 @@ object RewriteTrace:
       // `values`/`valueOf` are synthesised by both java and scala enum
       val enumSynthetic = (sym.map(_.name).exists(Set("values", "valueOf"))) &&
         ownerD.exists(d => program.symbolOf(d.symbol).exists(_.flags.isEnum))
-      if known || enumSynthetic || !ownerD.exists(_.isInstanceOf[Tree.ClassDef]) then Nil
+      // …and a member SPLICED AS VERBATIM TEXT has no `Definition` BY CONSTRUCTION (`add-members`,
+      // `registry`): its declaration sits in the owner's body as a `Tree.Opaque`, where
+      // `definitionOf` cannot reach it, so "no declaration left" would be a false claim
+      // (`ENGINE-LIMITS.md` P10). The text is the only reading available.
+      val asText = ownerD.collect { case cd: Tree.ClassDef => cd }
+        .exists(cd => sym.exists(x => declaresAsText(cd, x.name)))
+      if known || enumSynthetic || asText || !ownerD.exists(_.isInstanceOf[Tree.ClassDef]) then Nil
       else
         val name = sym.map(_.fullName).getOrElse("?")
         program.usages(s).collect {
           case Usage(UsageKind.Call, a: Tree.Apply, _) =>
             Mismatch("call to a member with no declaration", s, name, 0, a.args.size, a.origin)
         }
+    }
+
+  /** Does this class body DECLARE `name` as spliced TEXT? A member the engine minted verbatim has
+    * no `Definition`, so the text itself is the only evidence there is: a `def`/`val`/`var` at that
+    * name in one of the body's `Tree.Opaque` statements (`ENGINE-LIMITS.md` P10). */
+  private[tir] def declaresAsText(cd: Tree.ClassDef, name: String): Boolean =
+    cd.body.exists {
+      case o: Tree.Opaque => List("def", "val", "var").exists(k => o.raw.contains(s"$k $name"))
+      case _              => false
     }
 
   private def typeArity(program: Program): List[Mismatch] =

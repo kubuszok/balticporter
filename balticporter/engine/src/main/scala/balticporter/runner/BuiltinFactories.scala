@@ -19,7 +19,7 @@ object BuiltinFactories:
     new PortMapMigrationFactory,
     new PrimitiveToOpaqueFactory, new GlobalsToImplicitsFactory, new BeanPropertyFactory,
     new NullabilityFactory, new PublicFieldAccessorFactory, new RemediationFactory,
-    new ClassToTraitFactory,
+    new ClassToTraitFactory, new RegistryFactory,
   )
 
 // (a) — no policy; empty config object
@@ -407,3 +407,42 @@ final class ClassToTraitFactory extends TransformFactory:
         }.toMap
       case None => Map.empty
     new ClassToTraitTransform(specs)
+
+/** `{ transform = "registry", facadeMembers = [...], entries = [ { callee, placement { … }, scope,
+  * seeds, handles, miss, bound } ] }`
+  *
+  * `placement` carries `object` OR `member` (the FQN) plus `table`/`register`/`create`; `miss` is
+  * `"null"`, `"jvm-reflect"`, or `{ throw = "fqn", message = "…" }`. Empty `entries` is a no-op. */
+final class RegistryFactory extends TransformFactory:
+  def name = RegistryTransform.Name
+  def fromConfig(config: ConfigView): Phase =
+    val entries = config.children("entries").getOrElse(Nil).map { e =>
+      val p  = e.requireChild("placement")
+      val sp = RegistryTransform.Spelling(
+        table    = p.requireString("table"),
+        register = p.requireString("register"),
+        create   = p.requireString("create"))
+      val placement = (p.string("object"), p.string("member")) match
+        case (Some(_), Some(_)) => throw ConfigError(p.path,
+          "a placement is `object` OR `member`, never both — one mints a top-level object, the " +
+            "other puts the registry on a type the port already emits")
+        case (Some(o), scala.None) => RegistryTransform.Placement.Object(o, sp)
+        case (scala.None, Some(m)) => RegistryTransform.Placement.Member(m, sp)
+        case _ => throw ConfigError(p.path, "a placement declares `object` or `member`")
+      val miss = e.child("miss") match
+        case Some(t) => RegistryTransform.Miss.Throw(t.requireString("throw"), t.string("message").getOrElse(""))
+        case scala.None => e.enumerated("miss", Map(
+          "null"        -> RegistryTransform.Miss.Null,
+          "jvm-reflect" -> RegistryTransform.Miss.JvmReflect,
+        )).getOrElse(RegistryTransform.Miss.Null)
+      RegistryTransform.Registry(
+        callee    = e.requireString("callee"),
+        placement = placement,
+        // this phase MINTS, so its no-op — and its default — is `Only(Set.empty)` (§1(b)).
+        scope     = TransformFactory.scopeOf(e, default = RuleScope.Only(Set.empty)),
+        seeds     = e.strings("seeds").getOrElse(Nil),
+        handles   = e.strings("handles").getOrElse(Nil).toSet,
+        miss      = miss,
+        bound     = e.string("bound"))
+    }
+    new RegistryTransform(entries, config.strings("facadeMembers").getOrElse(Nil).toSet)

@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
 import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, IdiomCheck, IdiomLog, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, RemedySource, RemedyVocabulary, ResolutionPlan, OverloadRiskCheck, Remediator, RewriteCallSitesCheck, RewriteLog, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
-import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionInternalCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, OpaqueBoundaryCheck, PackageRenameTransform, PortMapTransform, PrimitiveToOpaqueTransform, PublicFieldAccessorTransform, RetargetBoundaryCheck, SuppressionPhase, UnusedSymbolTransform}
+import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionInternalCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, OpaqueBoundaryCheck, PackageRenameTransform, PortMapTransform, PrimitiveToOpaqueTransform, PublicFieldAccessorTransform, RegistryCheck, RegistryTransform, RetargetBoundaryCheck, SuppressionPhase, UnusedSymbolTransform}
 import balticporter.verify.ApiParityCheck
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -243,6 +243,17 @@ final case class PortRun(
         CheckReport.record(OpaqueBoundaryCheck.Name, bnd.map(_.report))
         say(s"OPAQUE BOUNDARY (seams the primitive-to-opaque retyping could not close): ${bnd.size}")
         println(OpaqueBoundaryCheck.summary(bnd))
+    }
+
+    // ---- registry refusals (one lane per KIND — §4.45; only when the phase carries a spec) ----
+    locally {
+      val regs = effectivePhases.collect {
+        case r: RegistryTransform if r.entries.nonEmpty || r.facadeMembers.nonEmpty => r }
+      if regs.nonEmpty then
+        val fs = regs.flatMap(_.findings)
+        RegistryCheck.record(fs)
+        say(s"REGISTRY (reflective instantiation this port could not key on a `Class`): ${fs.size}")
+        println(RegistryCheck.summary(fs))
     }
 
     // ---- test-framework refusals (only when the phase ran) ----
@@ -483,7 +494,13 @@ final case class PortRun(
     jdkFindings.take(20).foreach(f => println("  " + f.render))
     if jdkFindings.sizeIs > 20 then println(s"  … ${jdkFindings.size - 20} more (see findings.tsv)")
     // Three idiom lanes, unconditional, scoped to this module's own declarations. // D2
-    val ownPaths = checkedUnits.map(u => PortRun.real(java.nio.file.Paths.get(u.origin.javaPath)).toString).toSet
+    // …by PATH, so a unit with NO java path must not join the set: the moment a phase MINTS one
+    // (`registry`, `primitive-to-opaque`), `<synthetic>` becomes an OWNED path and every
+    // origin-less candidate in the whole program — a BASE's included — passes this filter
+    // (measured: 2 `idiom(refused)` rows for a base type on a dependent, P10). CLAUDE.md §4.56
+    val ownPaths = checkedUnits.map(_.origin.javaPath)
+      .filter(p => p.nonEmpty && p != Origin.synthetic.javaPath)
+      .map(p => PortRun.real(java.nio.file.Paths.get(p)).toString).toSet
     val ownIdioms = new IdiomLog
     ownIdioms.recordAll(translated.idioms.all.filter(c =>
       ownPaths.contains(PortRun.real(java.nio.file.Paths.get(c.origin.javaPath)).toString)))
@@ -1425,7 +1442,13 @@ final case class PortRun(
       (if manifest.exists(_.parity.isDefined) then ApiParityCheck.AllLanes else Set.empty) ++
       // Opaque boundary (conditional on pipeline).
       (if effectivePhases.exists(_.isInstanceOf[PrimitiveToOpaqueTransform]) then
-         Set(OpaqueBoundaryCheck.Name) else Set.empty)
+         Set(OpaqueBoundaryCheck.Name) else Set.empty) ++
+      // Registry lanes (conditional on a NON-EMPTY spec: an empty instance is a no-op and must not
+      // move a baseline on every port that merely carries one — §1(b)'s fingerprint no-op rule).
+      (if effectivePhases.exists {
+            case r: RegistryTransform => r.entries.nonEmpty || r.facadeMembers.nonEmpty
+            case _                    => false
+          } then RegistryCheck.AllLanes else Set.empty)
 
   private def verifyRecorded(): Unit =
     if CheckReport.enabled then
