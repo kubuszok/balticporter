@@ -809,6 +809,104 @@ class ApiParityCheckSpec extends munit.FunSuite:
     assert(divs.head.detail.startsWith("param 0 type differs"), divs.head.detail)
   }
 
+  // ---- a divergence the ENGINE makes by a CATALOG rule is `rule`, not `signature` ----
+
+  test("an `inline val` at a java constant variable is api-parity(rule), citing JS-C08") {
+    val divs = divergences(
+      """object C:
+        |  inline val X = 0
+        |""".stripMargin,
+      """object C:
+        |  val X: Int = 0
+        |""".stripMargin)
+    assertEquals(divs.map(_.family), List("rule"), divs.map(_.detail).toString)
+    assertEquals(divs.head.detail,
+      "rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), " +
+        "reference val")
+  }
+
+  test("a hand-written `final val` is a SECOND difference — the rule owns `inline` alone") {
+    val divs = divergences(
+      """object C:
+        |  inline val X = 0
+        |""".stripMargin,
+      """object C:
+        |  final val X: Int = 0
+        |""".stripMargin)
+    // `final` is the SECOND difference: the rule owns `inline` alone, so this stays `signature`.
+    assertEquals(divs.map(_.family), List("signature"), divs.map(_.detail).toString)
+  }
+
+  test("`inline` at a NON-literal initialiser is not the constant rule — it stays signature") {
+    val divs = divergences(
+      """object C:
+        |  inline val X = compute()
+        |""".stripMargin,
+      """object C:
+        |  val X: Int = compute()
+        |""".stripMargin)
+    assertEquals(divs.map(_.family), List("signature"), divs.map(_.detail).toString)
+  }
+
+  test("`inline` on a DEF is not the constant rule") {
+    val divs = divergences(
+      """object C:
+        |  inline def x: Int = 0
+        |""".stripMargin,
+      """object C:
+        |  def x: Int = 0
+        |""".stripMargin)
+    assertEquals(divs.map(_.family), List("signature"), divs.map(_.detail).toString)
+  }
+
+  test("a NON-constant `static final` — emitted `val`, hand `val` — is no divergence at all") {
+    val divs = divergences(
+      """object C:
+        |  val X: Int = compute()
+        |""".stripMargin,
+      """object C:
+        |  val X: Int = compute()
+        |""".stripMargin)
+    assertEquals(divs.map(d => (d.family, d.detail)), Nil)
+  }
+
+  test("`rule` is a family of its own — never `unclassified`, and it has a §1 classification") {
+    assert(ApiParityCheck.Families.contains("rule"))
+    assert(ApiParityCheck.Classification.contains("rule"))
+    assert(ApiParityCheck.AllLanes.contains("api-parity(rule)"))
+    val divs = divergences(
+      """object C:
+        |  inline val X = 0
+        |""".stripMargin,
+      """object C:
+        |  val X: Int = 0
+        |""".stripMargin)
+    assertEquals(divs.map(_.report(Map.empty).check), List("api-parity(rule)"))
+    assert(!divs.exists(_.family == "unclassified"))
+  }
+
+  test("`inline` on the HAND-PORT side is not this rule — the engine made no such spelling") {
+    val divs = divergences(
+      """object C:
+        |  val X: Int = 0
+        |""".stripMargin,
+      """object C:
+        |  inline val X = 0
+        |""".stripMargin)
+    assertEquals(divs.map(_.family), List("signature"), divs.map(_.detail).toString)
+  }
+
+  test("a negated literal is still a constant initialiser") {
+    val divs = divergences(
+      """object C:
+        |  inline val X = -1
+        |""".stripMargin,
+      """object C:
+        |  val X: Int = -1
+        |""".stripMargin)
+    assertEquals(divs.map(_.family), List("rule"), divs.map(_.detail).toString)
+  }
+
   // ---- helpers ----
 
   private def writeTempScala(name: String, content: String): java.nio.file.Path =

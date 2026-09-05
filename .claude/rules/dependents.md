@@ -125,12 +125,14 @@ map and says so quietly. The `port-report/<main class>/` directory is the MEASUR
   OMISSION — java wins, the hand-added test is adapted or dropped with the finding recorded; API
   divergence (name, arity, property, slot type) — EXACT parity with the hand port, carried as a rule
   marked `unjustified` with a porter note. `not-a-divergence` is a defect of `api-parity`'s
-  precision — three are closed by construction: a hand-port FILE whose header names no upstream
+  precision — four are closed by construction: a hand-port FILE whose header names no upstream
   (`ParityRef.upstreamMarkers`; empty = every file a party) is listed as
   `api-parity(hand-original)` and compared against nothing, only a DIRECT member of a
-  template body, a top-level scope or an extension group is surface at all, and a type parameter's
+  template body, a top-level scope or an extension group is surface at all, a type parameter's
   NAME is not API — the parameters in scope canonicalise to `$0…` by POSITION (the owner's first,
   then the declaration's own) on both sides, so an alpha-renaming (`[T]` vs `[A]`) is no
-  divergence while BOUNDS and ARITY still are.
+  divergence while BOUNDS and ARITY still are — and a divergence whose WHOLE difference the ENGINE
+  makes by a CATALOG rule is `api-parity(rule)` with the `JS-…` id in the row, never `signature`
+  (`JS-C08`: `inline val` at a java constant variable, `DESIGN.md` §8.23).
   `ported/<module>/divergence-verdicts.tsv` is joined into `divergence.tsv` and promoted by
   `just baseline-accept` (`DESIGN.md` §8.25).

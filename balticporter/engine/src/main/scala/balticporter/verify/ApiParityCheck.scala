@@ -30,6 +30,7 @@ object ApiParityCheck:
     "operator",           // symbolic name / @targetName on one side
     "factory",            // companion apply/from/wrap vs public constructor; private ctor
     "file-merge",         // same FQN in different file/nesting (informational)
+    "rule",               // the ONLY difference is one the engine makes by a CATALOG rule
     "signature",          // same name+arity, any other type difference (catch-all)
     "unclassified",       // everything else — the work list
   )
@@ -85,6 +86,10 @@ object ApiParityCheck:
     "file-merge" -> (
       "INFORMATIONAL: same FQN in a different file or nesting — no behavioural difference, " +
         "informational only."),
+    "rule" -> (
+      "§1(a) ENGINE: the ONLY difference is one the engine makes BY A CATALOG RULE, so the row is " +
+        "a decided question, not a hand-port spelling one. The detail names the `JS-…` id whose " +
+        "translation produced the emitted spelling; java's behaviour is what the engine kept."),
     "signature" -> (
       "UNKNOWN: same name and arity but different type signature — the catch-all for type-level " +
         "differences not yet classified into a specific family."),
@@ -106,6 +111,7 @@ object ApiParityCheck:
       modifiers: Set[String] = Set.empty,
       accessLevel: String = "public",
       targetName: String = "",
+      constantInit: Boolean = false,
   ):
     /** Structural key: path + kind-class + name + arity. val/var/param grouped together. */
     def matchKey: String =
@@ -424,6 +430,7 @@ object ApiParityCheck:
               resultType = renderType(d.decltpe, substFor(scope, Nil)),
               modifiers = extractModifiers(d.mods),
               accessLevel = extractAccessLevel(d.mods),
+              constantInit = constantInitialiser(d.rhs),
             )
           case _ => ()
         }
@@ -509,6 +516,14 @@ object ApiParityCheck:
 
   private def defArity(clauses: List[Term.ParamClause]): Int =
     clauses.map(_.values.length).sum
+
+  /** A CONSTANT initialiser — a value literal, optionally negated. `null` and `()` are neither a
+    * primitive nor a String, so neither is a java constant variable (JLS 4.12.4). */
+  private def constantInitialiser(rhs: Term): Boolean = rhs match
+    case _: Lit.Null | _: Lit.Unit => false
+    case _: Lit                    => true
+    case Term.ApplyUnary(op, arg)  => op.value == "-" && constantInitialiser(arg)
+    case _                         => false
 
   /** Two rendered types match after normalising FQN-vs-simple-name spelling. */
   private[verify] def typesMatch(a: String, b: String): Boolean =
@@ -739,10 +754,30 @@ object ApiParityCheck:
         out += Divergence("opaque", Some(e), Some(r),
           s"opaque modifier differs: emitted ${e.modifiers}, reference ${r.modifiers}")
       else
-        out += Divergence("signature", Some(e), Some(r),
-          s"modifiers differ: emitted ${e.modifiers.mkString(",")}, reference ${r.modifiers.mkString(",")}")
+        inlineConstantRule(e, r, modDiff) match
+          case Some(detail) => out += Divergence("rule", Some(e), Some(r), detail)
+          case None =>
+            out += Divergence("signature", Some(e), Some(r),
+              s"modifiers differ: emitted ${e.modifiers.mkString(",")}, reference ${r.modifiers.mkString(",")}")
 
     out.result()
+
+  /** The engine renders a java CONSTANT VARIABLE `inline val <n> = <literal>` so that reading it
+    * triggers no class initialiser (`CLAUDE.md` §4.4, catalog `JS-C08`, JLS 4.12.4/13.1). Where
+    * `inline` is the WHOLE modifier difference the row is that decided rule, not a hand-port
+    * spelling question. Read off the emitted SHAPE — no `Decision` is recorded per declaration for
+    * this rendering; when one is, read that instead. */
+  private def inlineConstantRule(
+      e: SurfaceDecl,
+      r: SurfaceDecl,
+      modDiff: Set[String],
+  ): Option[String] =
+    val refSpelling = (r.modifiers.toList.sorted :+ r.kind).mkString(" ")
+    Option.when(
+      modDiff == Set("inline") && e.modifiers.contains("inline") &&
+        e.kind == "val" && e.constantInit
+    )(s"rule ${balticporter.catalog.JS.C(8)}: emitted inline val (a java constant variable is " +
+      s"inlined, JLS 4.12.4/13.1), reference $refSpelling")
 
   private def classifyTypePairDivergence(emitted: String, reference: String): String =
     val eNull = isNullWrapped(emitted)

@@ -2024,13 +2024,22 @@ same parser both sides; public/protected only) in the engine; POLICY (which hand
 package mapping, which header markers make a hand-port file a PARTY) per-library in
 `PortManifest.parity: ParityRef`. Empty = no-op, records nothing. A check
 rather than a script, so it lands in `findings.tsv`/baselines/`RequiredChecks`
-(required-when-declared, like §8.17/§8.22). Fifteen families (`ApiParityCheck.Families`, the enum is
+(required-when-declared, like §8.17/§8.22). Sixteen families (`ApiParityCheck.Families`, the enum is
 the count — never restated in prose, which went stale once already), each its own lane
 (`api-parity(<family>)`), `unclassified=0` the gate: `accessor`, `static-placement`, `mutability`,
 `rename`, `visibility`, `hand-port-extra`, `hand-original`, `port-extra`, `null-model`,
-`collection-retarget`, `opaque`, `operator`, `factory`, `file-merge`, `signature`, plus
+`collection-retarget`, `opaque`, `operator`, `factory`, `file-merge`, `rule`, `signature`, plus
 `unclassified` (the work list). NOT inherited — a hand port is a fact about THIS module's
 destination, not shared surface.
+
+**`rule` — a divergence the ENGINE makes by a CATALOG rule is not a spelling question.** Where the
+WHOLE difference is one a `JS-…` row already decided, the row is answered and the detail names the
+id; sending it to `divergence-investigator` asks a question this repository has already answered
+against java's behaviour. The first is `JS-C08`: a java CONSTANT VARIABLE is rendered `inline val`
+so reading it triggers no class initialiser (JLS 4.12.4/13.1, `CLAUDE.md` §4.4), where the hand port
+writes `val` — `inline` as the whole modifier difference at a `val` with a literal initialiser.
+Read off the emitted SHAPE, because no `Decision` is recorded per declaration for that rendering;
+when one is, the classifier reads the decision instead.
 
 **Precision of the two surfaces.** Both are read the same way, and both defects were measured on the
 same run: a hand-port FILE whose header (first 40 lines) names none of `ParityRef.upstreamMarkers` is
