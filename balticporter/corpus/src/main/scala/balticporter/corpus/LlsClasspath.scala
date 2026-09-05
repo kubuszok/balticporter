@@ -9,8 +9,9 @@ object LlsClasspath:
 
   val Coordinates: List[String] = List("com.kubuszok:lls_3:0.3.0")
 
-  /** Exclude the Scala stdlib — adding it to Spoon's source classpath confuses ECJ's resolution
-    * and produces 218 errors where the test port expected 0. Only the lls jar is needed. */
+  /** Only lls's own class files are wanted; the Scala stdlib is excluded. NOT for the gdx
+    * TEST port: with this jar on its Spoon classpath the test port reads 218 errors
+    * (`ENGINE-LIMITS.md` M5.13), so `LibgdxTestMigrate` keeps `Nil`. */
   private val ExcludeArgs: List[String] = List(
     "--exclude", "org.scala-lang:scala3-library_3",
     "--exclude", "org.scala-lang:scala-library",

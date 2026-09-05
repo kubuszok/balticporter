@@ -101,38 +101,29 @@ private[spoon] final class Builder(subs: Substitutions = Substitutions.none,
                 MemberIndex(seenMembers.toList, seenTypes.toSet), interned)
 
   /** Intern classpath types so downstream phases inherit `isFinal` and parents (K18).
-    * Returns minimal ClassDefs for the xref — NOT added to `units`, so they are never emitted.
-    * Resolves via `createReference(fqn).getTypeDeclaration` — works in noClasspath mode for JDK
-    * types and any jar on `FrontendConfig.classpath`. Silently skips unresolvable FQNs. */
+    * Minimal ClassDefs for the xref only — never in `units`, never emitted. An FQN the
+    * classpath does not reach reads `None` through [[typeDeclarationOf]] (§4.6) and the
+    * downstream seam stays counted. */
   private def internFromClasspath(factory: spoon.reflect.factory.Factory,
                                   fqns: Set[String]): List[Tree.ClassDef] =
     fqns.toList.sorted.flatMap { fqn =>
-      try
-        val ref = factory.Type().createReference(fqn)
-        val ct = ref.getTypeDeclaration
-        if ct == null then None
-        else
-          val isFinal = ct.hasModifier(ModifierKind.FINAL)
-          val name = fqn.substring(fqn.lastIndexOf('.') + 1)
-          val id = minter.external(fqn, name, flags = Flags(isFinal = isFinal))
-          // parents: superclass (if not Object) + interfaces, each interned as an external symbol
-          val sc = ct match
-            case c: CtClass[?] => Option(c.getSuperclass)
-                .filter(_.getQualifiedName != "java.lang.Object")
-            case _ => None
-          val ifaces = ct.getSuperInterfaces.asScala.toList
-          val parentRefs = (sc.toList ++ ifaces).map { pref =>
-            val pFqn  = pref.getQualifiedName
-            val pName = pFqn.substring(pFqn.lastIndexOf('.') + 1)
-            val pFinal = try
-              val ptd = pref.getTypeDeclaration
-              if ptd != null then ptd.hasModifier(ModifierKind.FINAL) else false
-            catch case _: Exception => false
-            val pid = minter.external(pFqn, pName, flags = Flags(isFinal = pFinal))
-            TypeTree(TypeRef(NoPrefix, pid), Origin.synthetic)
-          }
-          Some(Tree.ClassDef(id, parentRefs, selfType = None, body = Nil, origin = Origin.synthetic))
-      catch case _: Exception => None
+      typeDeclarationOf(factory.Type().createReference(fqn)).map { ct =>
+        val isFinal = ct.hasModifier(ModifierKind.FINAL)
+        val name = fqn.substring(fqn.lastIndexOf('.') + 1)
+        val id = minter.external(fqn, name, flags = Flags(isFinal = isFinal))
+        val sc = ct match
+          case c: CtClass[?] => Option(c.getSuperclass).filter(_.getQualifiedName != "java.lang.Object")
+          case _ => None
+        val ifaces = ct.getSuperInterfaces.asScala.toList
+        val parentRefs = (sc.toList ++ ifaces).map { pref =>
+          val pFqn   = pref.getQualifiedName
+          val pName  = pFqn.substring(pFqn.lastIndexOf('.') + 1)
+          val pFinal = typeDeclarationOf(pref).exists(_.hasModifier(ModifierKind.FINAL))
+          val pid    = minter.external(pFqn, pName, flags = Flags(isFinal = pFinal))
+          TypeTree(TypeRef(NoPrefix, pid), Origin.synthetic)
+        }
+        Tree.ClassDef(id, parentRefs, selfType = None, body = Nil, origin = Origin.synthetic)
+      }
     }
 
   // ---- trivia (the original comments) -------------------------------------

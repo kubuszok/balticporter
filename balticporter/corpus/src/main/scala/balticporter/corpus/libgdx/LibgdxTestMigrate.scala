@@ -36,6 +36,7 @@ object LibgdxTestMigrate:
       label     = "sge-test",
       portRoot  = repoRoot.resolve("ported/sge"),
       sourceSet = SourceSet.Test,
+      // classpath stays Nil: the lls jar here costs 218 errors (`ENGINE-LIMITS.md` M5.13).
       frontend  = FrontendConfig(testRoot, files, Nil, resolutionRoots = List(srcRoot)),
       phases    = Nil, // supplied by the manifest — the two sources are mutually exclusive
       // A DEPENDENT of `LibgdxPolicy.core`: adds TestFrameworkTransform, inherits everything else;
