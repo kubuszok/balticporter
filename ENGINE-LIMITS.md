@@ -22,8 +22,8 @@ now do, without any other edit to their heading or body. Per-id citations are ea
 
 | family | open (FAMILY) ids | refused-by-design ids | shared mechanism | subplan item |
 |---|---|---|---|---|
-| C (ctors) | C3, C7 | — | ctor-funnel residual shapes: guard-3 double-eval, promoted-body-on-every-path | item 4 |
-| CT (context) | CT11 | — | defer the whole JLS step-9 sequence (field+block), not just the field half | no card yet |
+| C (ctors) | C3, C7 | — | ctor-funnel residual shapes: promoted-body-on-every-path; C3's 4c (synthesis through a synthesised parent), 4d (delegation-head slot) and 4g/CT13 landed 2026-09-05 with two counted refusals (a slotted head argument naming another parameter; colliding post-body slot names) | item 4 |
+| CT (context) | — | — | CT11 closed by subplan item 5 (holder + throwing accessor, init at the first threaded static method); CT13 closed 2026-09-05 | — |
 | D (dependents) | D2, D8, D13, D14 | — | dependent/base seams: run-time annotation-key screen; redirect+drop pairing check; member-rename manifest spelling; `followMemberRenames` reorder | no card yet |
 | G (generics) | 0.2, G9, G11, G12, G18, G19, G21, G24, G33 | G8, G10 | bounds/erasure with no consistent fill or cast to write: F-bound sibling-formal fill, decl-vs-ref erasure, argument-erasure unification, raw-anonymous-class cast, `?`-sentinel naming collision, a cosmetic double-cast | no card yet |
 | K (collections) | K5.6, K14, K16, K23, K37, K38, K5.10 | K5.8, K15, K19 | retarget/boundary residues with no fix path: cast-after-retype, retarget→typeMap coercion, scope-seam counting, `spliterator` re-keying, per-dependent/per-entry retarget scoping, an unobserved symbol-swap residue, untranslated `super`-receiver names, unreadable-class-file bridging, reference-identity-on-a-coercion | no card yet |
