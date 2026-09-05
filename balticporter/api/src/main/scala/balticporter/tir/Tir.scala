@@ -657,6 +657,10 @@ final class Program(
       * phase returns a program.
       */
     val members: MemberIndex,
+    /** Classpath types interned by the frontend for ancestry resolution (K18). NOT emitted —
+      * excluded from [[units]]. Carried through [[rebuilt]] and included in every xref rebuild
+      * so `definitionOf` and `OverrideGraph` see them. Empty default is the no-op. */
+    val internedDefs: List[Tree.ClassDef] = Nil,
 ):
   export xref.{definitionOf, usagesOf, usages, referenced}
 
@@ -672,7 +676,7 @@ final class Program(
       symbols: SymbolTable = this.symbols,
       xref: XrefIndex = this.xref,
       members: MemberIndex = this.members,
-  ): Program = new Program(units, symbols, xref, members)
+  ): Program = new Program(units, symbols, xref, members, internedDefs)
 
   /** Symbols this program declares, vs. externals interned lazily on first reference — CLAUDE.md
     * §4.56's "decide ownership structurally, never by name". Owned iff climbing the `owner` chain

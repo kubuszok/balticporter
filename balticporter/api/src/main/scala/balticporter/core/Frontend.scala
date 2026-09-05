@@ -30,6 +30,10 @@ final case class FrontendConfig(
       * whether a family is WANTED — per-library (`ENGINE-LIMITS.md` T16). TYPE-level only: method/
       * parameter annotations already translate; see [[AnnotationPolicy]] for the matching rule. */
     preservedAnnotations: AnnotationPolicy = AnnotationPolicy.none,
+    /** Extra type FQNs to intern from the classpath — `isFinal` and parents read from the class
+      * file so a downstream phase (e.g. `CollectionsTransform.mint`) inherits them. §1(b):
+      * mechanism universal, FQNs per-library; empty default is the no-op (K18). */
+    internTypes: Set[String] = Set.empty,
 )
 
 /** WHICH annotation families a port claims, and the one question anything asks of it. A VALUE

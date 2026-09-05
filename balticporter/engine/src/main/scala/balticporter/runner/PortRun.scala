@@ -1459,6 +1459,20 @@ final case class PortRun(
     }
     first ++ spliced
 
+  /** Retarget target FQNs the frontend should intern from the classpath (K18). */
+  private def collectInternTypes(): Set[String] =
+    effectivePhases.collect { case c: CollectionsTransform =>
+      val fromRetarget = c.retarget.values.toSet
+      val fromTypeArgs = c.retargetTypeArgs.values.flatten.flatMap(collectRetargetArgFqns).toSet
+      fromRetarget ++ fromTypeArgs
+    }.foldLeft(Set.empty[String])(_ ++ _)
+
+  private def collectRetargetArgFqns(arg: CollectionsTransform.RetargetArg): Set[String] = arg match
+    case CollectionsTransform.RetargetArg.FixedType(fqn)     => Set(fqn)
+    case CollectionsTransform.RetargetArg.Applied(fqn, inner) =>
+      Set(fqn) ++ inner.flatMap(collectRetargetArgFqns)
+    case _ => Set.empty
+
   /** Whether this run resolves against sources outside its own tree (structural dependent). */
   private def foreignRoots: Boolean =
     val src = PortRun.real(frontend.sourceRoot)
@@ -1545,11 +1559,13 @@ final case class PortRun(
     )
 
   private def translateOnce(): PortRun.Translated =
-    val types   = SpoonTir.buildModel(frontend, lenient = lenient)
+    val enrichedFrontend = frontend.copy(internTypes = frontend.internTypes ++ collectInternTypes())
+    val types   = SpoonTir.buildModel(enrichedFrontend, lenient = lenient)
     // Catalog log: per-translation (Determinism.Full translates twice). fatal=false: counts, not aborts.
     val catalog = new balticporter.catalog.CatalogLog(fatal = false)
     // Preserved annotations (T16): empty default, travels with frontend config.
-    val parsed  = SpoonTir.fromTypes(types, policySubs, catalog, frontend.preservedAnnotations)
+    val parsed  = SpoonTir.fromTypes(types, policySubs, catalog, enrichedFrontend.preservedAnnotations,
+                                     enrichedFrontend.internTypes)
     // Policy binding: resolved before any phase runs, per-translation.
     val binder = new PolicyBinder(parsed, parsed.members, runScope(parsed))
     bindDeclaredPolicy(binder)

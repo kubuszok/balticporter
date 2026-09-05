@@ -189,7 +189,7 @@ object Pipeline:
         phase.cites.clear()     // …and this run's citations only, for the same reason
         phase match { case ip: IdiomPhase => ip.candidates.clear(); case _ => () } // …and its candidates
         val out  = phase.run(prog)
-        val next = out.rebuilt(xref = Xref.build(out.units))
+        val next = out.rebuilt(xref = Xref.build(out.units ++ out.internedDefs))
         recordPatch(rewrites, phase, prog, next)
         log.recordAll(phase.decisions.drain())
         phase.cites.foreach((id, decl) => catalog.cite(id, decl))

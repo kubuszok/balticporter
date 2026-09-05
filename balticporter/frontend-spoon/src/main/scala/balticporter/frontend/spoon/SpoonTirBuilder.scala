@@ -90,12 +90,50 @@ private[spoon] final class Builder(subs: Substitutions = Substitutions.none,
   private[spoon] val seenMembers = collection.mutable.ListBuffer.empty[(MemberKey, MemberFacts)]
   private[spoon] val seenTypes   = collection.mutable.Set.empty[String]
 
-  private[spoon] def build(types: List[CtType[?]]): Program =
+  private[spoon] def build(types: List[CtType[?]], internTypes: Set[String] = Set.empty): Program =
     // headers harvested BEFORE any type translates — positional claim must run first (§4.58)
     val headers = types.map(fileHeader)
     val units   = types.zip(headers).map((t, h) => classDef(t).copy(unitLeading = h))
-    new Program(units, minter.table, Xref.build(units),
-                MemberIndex(seenMembers.toList, seenTypes.toSet))
+    // Intern extra classpath types so downstream phases inherit isFinal and parents (K18).
+    val interned = if internTypes.isEmpty || types.isEmpty then Nil
+                   else internFromClasspath(types.head.getFactory, internTypes)
+    new Program(units, minter.table, Xref.build(units ++ interned),
+                MemberIndex(seenMembers.toList, seenTypes.toSet), interned)
+
+  /** Intern classpath types so downstream phases inherit `isFinal` and parents (K18).
+    * Returns minimal ClassDefs for the xref — NOT added to `units`, so they are never emitted.
+    * Resolves via `createReference(fqn).getTypeDeclaration` — works in noClasspath mode for JDK
+    * types and any jar on `FrontendConfig.classpath`. Silently skips unresolvable FQNs. */
+  private def internFromClasspath(factory: spoon.reflect.factory.Factory,
+                                  fqns: Set[String]): List[Tree.ClassDef] =
+    fqns.toList.sorted.flatMap { fqn =>
+      try
+        val ref = factory.Type().createReference(fqn)
+        val ct = ref.getTypeDeclaration
+        if ct == null then None
+        else
+          val isFinal = ct.hasModifier(ModifierKind.FINAL)
+          val name = fqn.substring(fqn.lastIndexOf('.') + 1)
+          val id = minter.external(fqn, name, flags = Flags(isFinal = isFinal))
+          // parents: superclass (if not Object) + interfaces, each interned as an external symbol
+          val sc = ct match
+            case c: CtClass[?] => Option(c.getSuperclass)
+                .filter(_.getQualifiedName != "java.lang.Object")
+            case _ => None
+          val ifaces = ct.getSuperInterfaces.asScala.toList
+          val parentRefs = (sc.toList ++ ifaces).map { pref =>
+            val pFqn  = pref.getQualifiedName
+            val pName = pFqn.substring(pFqn.lastIndexOf('.') + 1)
+            val pFinal = try
+              val ptd = pref.getTypeDeclaration
+              if ptd != null then ptd.hasModifier(ModifierKind.FINAL) else false
+            catch case _: Exception => false
+            val pid = minter.external(pFqn, pName, flags = Flags(isFinal = pFinal))
+            TypeTree(TypeRef(NoPrefix, pid), Origin.synthetic)
+          }
+          Some(Tree.ClassDef(id, parentRefs, selfType = None, body = Nil, origin = Origin.synthetic))
+      catch case _: Exception => None
+    }
 
   // ---- trivia (the original comments) -------------------------------------
   // verbatim slices out of the source buffer; a CLAIMED set so a coarse harvest only scoops

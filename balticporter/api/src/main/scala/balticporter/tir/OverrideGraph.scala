@@ -304,6 +304,8 @@ object OverrideGraph:
     given Program = p
     val collector = new Collector
     p.units.foreach(u => StandardTraversal.mapClassDef(collector, u))
+    // Interned classpath types participate in ancestry resolution (K18).
+    p.internedDefs.foreach(u => StandardTraversal.mapClassDef(collector, u))
     val nodes    = collector.nodes.map(n => n.sym -> n).toMap
     val children = nodes.values.toList
       .flatMap(n => n.parents.map(_ -> n.sym))

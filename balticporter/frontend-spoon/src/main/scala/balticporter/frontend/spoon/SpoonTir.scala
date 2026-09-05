@@ -43,8 +43,9 @@ object SpoonTir:
     * (CLAUDE.md §5.1); default is a fresh discarding log. */
   def fromTypes(types: List[CtType[?]], subs: Substitutions = Substitutions.none,
                 catalog: CatalogLog = CatalogLog.discarding,
-                annotations: AnnotationPolicy = AnnotationPolicy.none): Program =
-    new Builder(subs, catalog = catalog, annotations = annotations).build(types)
+                annotations: AnnotationPolicy = AnnotationPolicy.none,
+                internTypes: Set[String] = Set.empty): Program =
+    new Builder(subs, catalog = catalog, annotations = annotations).build(types, internTypes)
 
   /** Build the Spoon model over a whole closure and return its top-level types. Full classpath by
     * default; `lenient` uses noClasspath mode so unconfigured external deps still parse (unresolved
@@ -98,8 +99,9 @@ object SpoonTir:
   def fromSource(code: String, fileName: String = "Snippet.java",
                  subs: Substitutions = Substitutions.none,
                  catalog: CatalogLog = CatalogLog.discarding,
-                 annotations: AnnotationPolicy = AnnotationPolicy.none): Program =
-    fromSources(List(fileName -> code), subs, catalog, annotations)
+                 annotations: AnnotationPolicy = AnnotationPolicy.none,
+                 internTypes: Set[String] = Set.empty): Program =
+    fromSources(List(fileName -> code), subs, catalog, annotations, internTypes)
 
   /** The same, over several compilation units — needed to test package-boundary rules (default
     * access, `protected`, cross-package overrides) that one snippet cannot exercise. Each pair is
@@ -107,7 +109,8 @@ object SpoonTir:
   def fromSources(sources: List[(String, String)],
                   subs: Substitutions = Substitutions.none,
                   catalog: CatalogLog = CatalogLog.discarding,
-                  annotations: AnnotationPolicy = AnnotationPolicy.none): Program =
+                  annotations: AnnotationPolicy = AnnotationPolicy.none,
+                  internTypes: Set[String] = Set.empty): Program =
     val launcher = new Launcher
     val env      = launcher.getEnvironment
     env.setComplianceLevel(21)
@@ -117,7 +120,7 @@ object SpoonTir:
     val model = launcher.buildModel()
     val tops  = model.getAllTypes.asScala.toList.filter(_.getDeclaringType == null)
     // VirtualFile has no source buffer of its own — pass texts explicitly or comments re-print (§4.58)
-    new Builder(subs, sources.toMap, catalog, annotations).build(tops)
+    new Builder(subs, sources.toMap, catalog, annotations).build(tops, internTypes)
 
   /** The one classification of a Spoon type reference. Since `CtWildcardReference` extends
     * `CtTypeParameterReference`, the wildcard arm must be matched ABOVE the variable arm or `?`
