@@ -426,8 +426,9 @@ object CtorFunnel:
                   case Some(_) => scala.None // resolution succeeded — no refusal
                   case scala.None =>
                     Some("parent-delegation resolution refused: the parent constructor's " +
-                      "post-body contains `super.m()` or `return`, or a loop wraps a " +
-                      "delegation-head argument used more than once")
+                      "post-body contains `super.m()` or `return`, a loop wraps a " +
+                      "delegation-head argument used more than once, or such an argument " +
+                      "also mentions another parameter")
           }
 
     // ---- the delegation itself: the ONE answer the emitter renders and the check counts ----
@@ -1914,7 +1915,20 @@ object CtorFunnel:
         val needsSlot = ps.zip(callerArgs).filter((p, a) =>
           !simple(a) && delegCounts.getOrElse(p.symbol, 0) > 1)
         val hasLoop = needsSlot.nonEmpty && !delegLoopFree
-        if ps.length != callerArgs.length || hasLoop then scala.None
+        // a slotted head argument stays in the CLASS HEADER: another parameter it mentions would be
+        // substituted with the caller's own constructor parameter, out of scope there — refused
+        def mentions(a: Term): Set[SymId] =
+          given Program = program
+          val s = collection.mutable.Set[SymId]()
+          val ph = new Phase:
+            def name = "ctor-inline-mentions"
+            override def transformIdent(t: Tree.Ident)(using Program): Term = { s += t.sym; t }
+          StandardTraversal.mapStat(ph, a)
+          s.toSet
+        val paramSyms = ps.map(_.symbol).toSet
+        val mixedHead = needsSlot.exists { (p, _) =>
+          headArgs.exists { a => val m = mentions(a); m(p.symbol) && (m - p.symbol).exists(paramSyms) } }
+        if ps.length != callerArgs.length || hasLoop || mixedHead then scala.None
         else
           // for needs-slot params, substitute with an Opaque reference instead of the callerArg
           val slotRefs = needsSlot.map { (p, a) =>

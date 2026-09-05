@@ -370,3 +370,33 @@ class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
     assert(clue(dhWithPostOut).contains("via$pb"),
       "boolean guard present for param-less post-body")
   }
+
+  // ---- (h3) a doubled parameter whose head argument ALSO mentions another parameter: the
+  // expression would land in the class header naming the child's own parameter — refused ----
+
+  private val mixedSrc =
+    """package demo;
+      |public class Style { public Style(Object font, Object color) {} }
+      |public class Skin { public Object getFont(String n) { return null; } public Object getColor(String n) { return null; } }
+      |public class Lbl {
+      |  public Lbl(Object text, Style style) {}
+      |  public Lbl(Object text, Skin skin, String fontName, Object color) { this(text, new Style(skin.getFont(fontName), color)); }
+      |  public Lbl(Object text, Skin skin, String fontName, String colorName) { this(text, new Style(skin.getFont(fontName), skin.getColor(colorName))); }
+      |}
+      |public class VisLbl extends Lbl {
+      |  static Skin skin() { return new Skin(); }
+      |  public VisLbl(Object text, Style style) { super(text, style); }
+      |  public VisLbl(Object text, String fontName, Object color) { super(text, skin(), fontName, color); }
+      |  public VisLbl(Object text, String fontName, String colorName) { super(text, skin(), fontName, colorName); }
+      |}
+      |""".stripMargin
+
+  private lazy val mixedProgram = Pipeline.run(SpoonTir.fromSource(mixedSrc), Nil)
+  private lazy val mixedOut     = new TirEmitter(mixedProgram).emit
+
+  test("(h3) a slotted head argument mentioning another parameter is refused and counted") {
+    assert(!clue(mixedOut).contains("$dh"), "no delegation-head slot")
+    assert(!clue(mixedOut).contains("extends demo.Lbl(") || !mixedOut.contains("getFont(fontName)"),
+      "the child's parameter names never reach the class header")
+    assert(clue(OmissionCheck.droppedSuperArgs(mixedProgram)).nonEmpty, "the refusal is counted")
+  }
