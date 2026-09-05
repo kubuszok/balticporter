@@ -1434,7 +1434,7 @@ hit only prose). Grouped rows share one classification; every key is listed.
 | `GLTFMaterialExporter#ext` | gltf | iii | Phase 1.11 / P10 | Class-keyed factory registry (`GLTFExtensionFactories`), same shape as Ashley's |
 | `Parser#compileTokenPattern`, `#getResetReplacement` | textra | ii | K37 / item 11 | `CollectChainedCall` residue on `collection-retarget` |
 | `TextraListBox#getSelectedIndex`, `TextraSelectBox#getSelectedIndex` | textra | ii | K37 | `collection-internal`: `OrderedSet` does not extend `ObjectSet` |
-| `VfxGLUtils#<clinit>`, `VfxFrameBuffer#getBoundFboHandle`, `VfxGLUtils#getBoundFboHandle` | vfx | ii | CT11 / item 5-family | static-init needs threaded `Sge` context; holder pattern not yet generalised |
+| `VfxGLUtils#<clinit>`, `VfxFrameBuffer#getBoundFboHandle`, `VfxGLUtils#getBoundFboHandle` | vfx | iii | Phase 1.11 / P10 | `<clinit>` reflectively probes a GWT-only extension (`ClassReflection.newInstance`) before `new DefaultVfxGlExtension()`; the two accessors carry the lazy init the emptied `<clinit>` no longer performs (CT11 shape) — all three fall with the reflection card, not with item 5 (re-read 2026-09-05) |
 | `CircularBuffer#resize(int)` | ai | iii | Phase 1.11 / P10 | `ArrayReflection.newInstance` — gdx reflection the base drops; measured alive 2026-09-04 (`value ArrayReflection is not a member`) |
 | `Task#cloneTask()` | ai | ii | item 11 (untriaged) | verbatim java contract refusal (`@throws TaskCloneException`); no generic emitter for it |
 | `...openTask(String,boolean)`, `...findMetadata(Class)`, `...getField(Class,String)`, `...setField(Field,Task,Object)`, `...castValue(Field,Object)` (`BehaviorTreeParser$DefaultBehaviorTreeReader`) | ai | iii | Phase 1.11 / P10 | named verbatim in the design card as the reflection-replacement family |
@@ -1443,6 +1443,6 @@ hit only prose). Grouped rows share one classification; every key is listed.
 | `PooledEngine$ComponentPools#clear()` | ashley | ii | item 11 | `TypeRedirectTransform` resolved the lambda formal as the parent `Pool[?]`, not the retyped field type |
 | `ImmutableArrayTests#forbiddenRemoval` | ashley | i | `divergence-verdicts.tsv:141` (`ImmutableArraySuite`, justified) | java `iterator().remove()` throws; Scala's `Iterator` has none — verify read-only instead |
 
-Counts by class: i=5, ii=32, iii=8, iv=3 (48 keys, 29 grouped rows); retired 2026-09-04: `Selection#iterator`, `MapLayers/MapObjects#getByType`; 2026-09-05: `BitmapFont#<init>(…)` (a constructor is never substituted — the key was dead) (ii=28 remain).
+Counts by class: i=5, ii=32, iii=8, iv=3 (48 keys, 29 grouped rows); retired 2026-09-04: `Selection#iterator`, `MapLayers/MapObjects#getByType`; 2026-09-05: `BitmapFont#<init>(…)` (a constructor is never substituted — the key was dead) (ii=25 remain; vfx ×3 reclassified iii).
 Counts by port: visui=5 (iv=3, ii=2), gdx=22 (i=2 test, ii=20 main), gltf=3 (i=2, iii=1),
 textra=4 (ii=4), vfx=3 (ii=3), ai=7 (ii=2, iii=5), ashley=4 (i=1, ii=2, iii=1).
