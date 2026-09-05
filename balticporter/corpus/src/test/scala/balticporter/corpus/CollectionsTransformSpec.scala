@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.{PortSuite, Ported}
 import balticporter.tir.{Decision, Phase, Pipeline, PolicyBinder, RunScope, UsageKind}
-import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform, NullaryArityTransform, RetargetBoundaryCheck}
+import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform, NullaryArityTransform, RetargetBoundaryCheck, TypeRedirectTransform}
 
 import java.nio.file.Files
 
@@ -2850,4 +2850,77 @@ class CollectionsTransformSpec extends PortSuite:
     assertEmits(p, "lowlevel.util.DynamicArray")
     // toArray(1): collects into the provided array
     assertEmits(p, ".foreach(bpA.add); bpA")
+  }
+
+  test("a RAW retarget parameter reads as Object-bounded, not unbounded wildcard") {
+    // Java's raw `Coll` erases its element to Object (JLS 4.8). After retarget the unbounded
+    // wildcard must become `? <: Object` so that `apply(i)` conforms to Object slots.
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.Coll" -> "demo.Target"),
+      retargetRewrites = Map("demo.Coll" -> Map(
+        ("<init>", 0) -> CollectionsTransform.RetargetRewrite.Construct("demo.Target", "apply"))))
+    val p = portAll(List(
+      "Coll.java" ->
+        """package demo;
+          |public class Coll<T> {
+          |  public int size() { return 0; }
+          |  public T get(int i) { return null; }
+          |  public Coll() {}
+          |}""".stripMargin,
+      "Target.java" ->
+        """package demo;
+          |public class Target<T> extends Coll<T> {
+          |  public static <T> Target<T> apply() { return new Target<T>(); }
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  @SuppressWarnings("rawtypes")
+          |  Object first(Coll raw) { return raw.get(0); }
+          |}""".stripMargin), ph)
+    // `? <: java.lang.Object`, not bare `?`
+    assertEmits(p, "demo.Target[? <: java.lang.Object]")
+    assertNotEmits(p, "demo.Target[?]")
+  }
+
+  test("ForEach lambda parameter typed from the RECEIVER's type args, not the loop variable's declared type") {
+    // When TypeRedirectTransform narrows the receiver's value type while the loop variable
+    // is declared with a parent type, the lambda must use the receiver's type argument.
+    import CollectionsTransform.RetargetRewrite.*
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.MyMap" -> "demo.LlsMap"),
+      retargetRewrites = Map("demo.MyMap" -> Map(
+        ("values", 0) -> Collect("foreachValue", "demo.DArr"))))
+    val redirect = new TypeRedirectTransform(Map("demo.OldVal" -> "demo.NewVal"))
+    val p = portAll(List(
+      "OldVal.java" ->
+        """package demo;
+          |public class OldVal { public void doIt() {} }""".stripMargin,
+      "NewVal.java" ->
+        """package demo;
+          |public class NewVal extends OldVal { public void doExtra() {} }""".stripMargin,
+      "MyMap.java" ->
+        """package demo;
+          |public class MyMap<K, V> {
+          |  public java.util.Iterator<V> values() { return null; }
+          |}""".stripMargin,
+      "LlsMap.java" ->
+        """package demo;
+          |public class LlsMap<K, V> extends MyMap<K, V> {
+          |  public void foreachValue(java.util.function.Consumer<V> f) {}
+          |}""".stripMargin,
+      "DArr.java" ->
+        """package demo;
+          |public class DArr<T> { public void add(T t) {} }""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  void walk(MyMap<String, NewVal> m) {
+          |    for (OldVal v : m.values()) { v.doIt(); }
+          |  }
+          |}""".stripMargin), redirect, ph)
+    // The lambda parameter should be typed from the receiver's value type (NewVal after redirect),
+    // not from the loop variable's declared type (OldVal).
+    assertEmits(p, "demo.NewVal")
+    assertNotEmits(p, "(bpFe$0: demo.OldVal)")
   }

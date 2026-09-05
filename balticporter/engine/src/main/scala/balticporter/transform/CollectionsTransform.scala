@@ -1212,8 +1212,13 @@ final class CollectionsTransform(
       // bound when present. Upper-only is left alone HERE — a DECLARATION (a parameter, a field)
       // may keep `?`, which is valid Scala and the right image of java's own covariant wildcard;
       // stripping the upper bound is licensed only at a CAST TARGET, see [[stripCastWildcard]].
+      // An UNBOUNDED wildcard (`?`) from a raw java type is bounded by Object: java's raw erasure
+      // is Object (JLS 4.8), so `T[?]` must read as `T[? <: Object]` — without this, `apply`
+      // returns `Any` and does not conform to `Object` slots. G2, CLAUDE.md §1(b).
+      val objectRef = TypeRepr.TypeRef(TypeRepr.NoPrefix, objectSym)
       val stripped = args.map {
         case TypeRepr.TypeBounds(lo, _) if lo != TypeRepr.NoType => lo
+        case TypeRepr.TypeBounds(TypeRepr.NoType, TypeRepr.NoType) => TypeRepr.TypeBounds(TypeRepr.NoType, objectRef)
         case a => a
       }
       if stripped == args then t else TypeRepr.AppliedType(tc, stripped)

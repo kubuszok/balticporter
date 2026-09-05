@@ -684,7 +684,13 @@ private[transform] trait CollectionsRetarget:
         Tree.Apply(Tree.Select(recv, tgtSym, TypeRepr.NoType, so), List(lambda), tgtSym, unitTpe, so)
       else
         // recv.foreachKey(k => body) or recv.foreachValue(v => body)
-        val paramTpe = fe.binding.tpt.tpe
+        // Derive the lambda parameter type from the RECEIVER's type arguments (one derivation),
+        // not the loop variable's declared type: a TypeRedirectTransform may have narrowed the
+        // receiver's value type while the loop variable still names the parent. G2, CLAUDE.md §1(b).
+        val paramTpe =
+          if rewrite.targetMethod.contains("Key") then keyType(recv.tpe).getOrElse(fe.binding.tpt.tpe)
+          else if rewrite.targetMethod.contains("Value") then valueType(recv.tpe).getOrElse(fe.binding.tpt.tpe)
+          else elemType(recv.tpe).getOrElse(fe.binding.tpt.tpe)
         val eSym = forEachElemPool(n)
         val param = Tree.ValDef(eSym, TypeTree(paramTpe, so), scala.None, so)
         val rewrittenBody = rewriteBindingRefs(bound, eSym, paramTpe, fe.body, so)

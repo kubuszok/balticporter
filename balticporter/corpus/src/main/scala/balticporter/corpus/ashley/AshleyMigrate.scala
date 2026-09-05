@@ -140,16 +140,6 @@ object AshleyPolicy:
           "lowlevel.Nullable(sge.ecs.ComponentFactories.create(componentType))",
         // ImmutableArray is DROPPED and injected (see `dropTypes` above), so no body transforms
         // are needed for its methods.
-        // freeAll(Array): after retarget the RAW Array param becomes DynamicArray[?],
-        // whose apply(i) does not conform to Object; iterate and cast explicitly.
-        "com.badlogic.ashley.core.PooledEngine$ComponentPools#freeAll(Array)" ->
-          """{ if (objects == null) throw new java.lang.IllegalArgumentException("objects cannot be null.")
-            |  else { var i: scala.Int = 0; val n: scala.Int = objects.size; while (i < n) { { val obj = objects.apply(i).asInstanceOf[java.lang.Object]; if (obj != null) this.free(obj) else () }; i = i + 1 } } }""".stripMargin,
-        // clear(): after TypeRedirect the pools field is ObjectMap[Class[?],
-        // ComponentPool], but the frontend resolved the formal as the parent Pool[?] --
-        // replace with a correctly-typed lambda.
-        "com.badlogic.ashley.core.PooledEngine$ComponentPools#clear()" ->
-          "this.pools.foreachValue((pool: sge.ecs.ComponentPool[?]) => pool.clear())",
         )),
         // SIX MEMBERS WHOSE RETURN TYPE IS NULLABLE, per sge's migration notes (no java
         // annotation carries this). Keys use the name as it exists when NullabilityTransform
