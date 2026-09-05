@@ -17,8 +17,8 @@ class DitherAlgorithmSuite extends munit.FunSuite {
 
   import Dithered.DitherAlgorithm
 
-  test("all 22 algorithms exist") {
-    assertEquals(DitherAlgorithm.values().length, 22)
+  test("all 24 algorithms exist") {
+    assertEquals(DitherAlgorithm.values().length, 24)
   }
 
   test("ALL is the cached values() array and holds every constant") {
@@ -43,7 +43,7 @@ class DitherAlgorithmSuite extends munit.FunSuite {
       DitherAlgorithm.values().map(_.legibleName).toList,
       List("None", "GradientNoise", "Pattern", "Diffusion", "BlueNoise", "ChaoticNoise", "Scatter",
            "Neue", "Roberts", "Woven", "Dodgy", "Loaf", "Wren", "Overboard", "Burkes", "Oceanic",
-           "Seaside", "Gourd", "Blunt", "Banter", "Marten", "Additive"),
+           "Seaside", "Gourd", "Blunt", "Banter", "Marten", "Additive", "Bayer", "Baydient"),
     )
     assertEquals(DitherAlgorithm.WREN.legibleName, "Wren")
   }

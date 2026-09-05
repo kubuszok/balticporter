@@ -335,6 +335,12 @@ some pairs.
 
 ## 7. anim8-gdx — the port whose difficulty is per LINE
 
+**Upstream re-pin 2026-09-05**: sge's `original-src/anim8-gdx` submodule moved to `89e0557` (2026-08-20:
+`BAYER`, `BAYDIENT` dithers, `analyzeBayer`/`reduceBaydient`/`writeBayerDithered` families); the port
+follows (222 digests, 8 new members), the hand-written `DitherAlgorithmSuite` pins 24 constants now
+(java wins). The lanes reported it as a SUITE REGRESSION because no baseline records the vendored
+commit — instrument card: record `upstreamCommit` per port and print `UPSTREAM MOVED a -> b` first.
+
 `com.github.tommyettinger.anim8 → sge.anim8`, Apache-2.0. Dependent of `sge` (`RuntimeMode.Dependency`,
 compiled with libGDX core's emitted Scala on one invocation). 16 files, 19,594 lines, dominated by
 huge constant data (`ConstantData`, `PaletteReducer`) and bit-pattern arithmetic (`OtherMath`).
