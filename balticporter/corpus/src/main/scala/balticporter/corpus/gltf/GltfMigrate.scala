@@ -104,27 +104,40 @@ object GltfPolicy:
               |    sge.graphics.PixmapIO.writePNG(file, pixmap)
               |  }
               |}""".stripMargin,
-          // 3. the one site where reflection did real work: fabricates a material extension
-          //    object from its Class -- takes the factory registry the base's Pools and
-          //    Ashley's ComponentFactories both take (GLTFExtensionFactories, injected by
-          //    this module).
-          "net.mgsx.gltf.exporters.GLTFMaterialExporter#ext" ->
-            """{
-              |  if (m.extensions == null) {
-              |    m.extensions = new sge.gltf.data.GLTFExtensions()
-              |  }
-              |  var e: T = m.extensions.get(`type`, ext)
-              |  if (e == null) {
-              |    this.base.useExtension(ext, false)
-              |    e = sge.gltf.data.extensions.GLTFExtensionFactories.create(`type`)
-              |    m.extensions.set(ext, e)
-              |  }
-              |  e
-              |}""".stripMargin,
+          // A THIRD entry (GLTFMaterialExporter#ext) is retired by `RegistryTransform` below:
+          // the registry is MINTED, so the body is java's own again.
           // A FOURTH entry (AnimationsPlayer#clearAnimations, an ascription working around
           // ENGINE-LIMITS T12's dropped `protected`) retired once T12 closed: DESIGN.md §8.7
-          // now renders `protected` as `protected[<package>]` and overload resolution
-          // matches javac's.
+          // renders `protected` as `protected[<package>]` and matches javac's resolution.
+        )),
+        // gdx-gltf's ONE reflective instantiation: `GLTFMaterialExporter#ext` fabricates a
+        // material-extension object from its `Class`. The registry is MINTED at the placement
+        // (`ENGINE-LIMITS.md` P10) and replaces the injected `GLTFExtensionFactories.scala`;
+        // `seeds` are the seven extensions upstream itself defines, `handles` names the
+        // exception whose thrower this retires, and `miss` restates java's own answer.
+        new balticporter.transform.RegistryTransform(List(
+          balticporter.transform.RegistryTransform.Registry(
+            callee    = "com.badlogic.gdx.utils.reflect.ClassReflection#newInstance",
+            placement = balticporter.transform.RegistryTransform.Placement.Object(
+              "net.mgsx.gltf.data.extensions.GLTFExtensionFactories",
+              balticporter.transform.RegistryTransform.Spelling("factories", "register", "create")),
+            scope     = balticporter.tir.RuleScope.Only(Set("net.mgsx.gltf")),
+            seeds     = List(
+              "net.mgsx.gltf.data.extensions.KHRMaterialsEmissiveStrength",
+              "net.mgsx.gltf.data.extensions.KHRMaterialsIOR",
+              "net.mgsx.gltf.data.extensions.KHRMaterialsIridescence",
+              "net.mgsx.gltf.data.extensions.KHRMaterialsSpecular",
+              "net.mgsx.gltf.data.extensions.KHRMaterialsTransmission",
+              "net.mgsx.gltf.data.extensions.KHRMaterialsUnlit",
+              "net.mgsx.gltf.data.extensions.KHRMaterialsVolume",
+            ),
+            handles   = Set("com.badlogic.gdx.utils.reflect.ReflectionException"),
+            // java: `catch (ReflectionException) { throw new GdxRuntimeException(error) }` --
+            // the same exception type, with the message the registry can give.
+            miss      = balticporter.transform.RegistryTransform.Miss.Throw(
+              "sge.utils.GdxRuntimeException",
+              "no factory registered for glTF material extension "),
+          ),
         )),
         // THE THREE DEAD Json CALL SITES ship the repair seam DISABLED: the base's injected
         // Json facade raises on every reflective path, so gdx-gltf's three calls compile and are

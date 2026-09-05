@@ -88,11 +88,10 @@ object GdxAiPolicy:
               balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx.ai")),
           ),
         ),
-        // THE TWO SINGLE-SITE REFLECTIVE MEMBERS — Ashley's Engine#createComponent shape,
-        // twice. Ordinary algorithmic code with one member reaching the base's dropped
-        // reflect package; dropping either TYPE would fork it from upstream, dropping the
-        // METHOD strands its callers. Signature untouched. KEY is upstream namespace; BODY
-        // is spliced verbatim in the port's FINAL namespace.
+        // THE ONE SINGLE-SITE REFLECTIVE MEMBER LEFT — ordinary algorithmic code with one
+        // member reaching the base's dropped reflect package; dropping the TYPE would fork it
+        // from upstream, dropping the METHOD strands its callers. Signature untouched. KEY is
+        // upstream namespace; BODY is spliced verbatim in the port's FINAL namespace.
         new balticporter.transform.MethodBodyTransform(Map(
           // ArrayReflection.newInstance(items.getClass().getComponentType(), n): NOT an
           // approximation -- this class's own ctor writes (T[]) new Object[capacity], so
@@ -113,22 +112,9 @@ object GdxAiPolicy:
               |    this.items = newItems
               |  }""".stripMargin,
 
-          // ClassReflection.newInstance(this.getClass()) — a reflective SELF-CLONE with no
-          // mechanical image; the reference hand port's alternative is not one this phase
-          // makes. JAVA'S OWN CONTRACT REFUSAL (§1): cloneTask declares `@throws
-          // TaskCloneException`, so throwing one is conforming. TASK_CLONER is java's own
-          // escape hatch, kept verbatim.
-          "com.badlogic.gdx.ai.btree.Task#cloneTask()" ->
-            """{
-              |    if (sge.ai.btree.Task.TASK_CLONER != null) {
-              |      try sge.ai.btree.Task.TASK_CLONER.cloneTask(this)
-              |      catch { case t: java.lang.Throwable => throw new sge.ai.btree.TaskCloneException(t) }
-              |    } else throw new sge.ai.btree.TaskCloneException(
-              |      "cloneTask() without a Task.TASK_CLONER needs reflective instantiation, which " +
-              |      "this port does not have (com.badlogic.gdx.utils.reflect is dropped: Scala.js " +
-              |      "and Scala Native cannot do it). Set Task.TASK_CLONER, which is the same escape " +
-              |      "hatch upstream documents for GWT.")
-              |  }""".stripMargin,
+          // `Task#cloneTask()` is retired by `RegistryTransform` below, which keys its
+          // `ClassReflection.newInstance(this.getClass())` fallback on the `Class` value;
+          // TASK_CLONER and java's `TaskCloneException` handler stay as java wrote them.
 
           // THE BEHAVIOUR-TREE PARSER — FIVE BODIES, nothing else in the file moves.
           // DefaultBehaviorTreeReader asked the JVM three run-time questions (build this
@@ -136,8 +122,11 @@ object GdxAiPolicy:
           // injected `sge.ai.btree.utils.TaskRegistry`, adapted from the hand port's own
           // trio. WHAT THE PORT LOSES: java's mechanism is OPEN, a table is CLOSED.
 
-          // ClassReflection.newInstance(ClassReflection.forName(className)); the catch is
-          // kept so the registry's refusal arrives at the caller in java's own words.
+          // `newInstance(forName(className))` STAYS a body: `RegistryTransform` keys on a
+          // `Class` VALUE, and the name half would need a SCOPED, mergeable
+          // `ClassTableTransform` — the phase takes neither, and the base already binds
+          // `forName` globally (`ENGINE-LIMITS.md` P10). The catch is kept so the table's
+          // refusal arrives at the caller in java's own words.
           "com.badlogic.gdx.ai.btree.utils.BehaviorTreeParser$DefaultBehaviorTreeReader#openTask(String,boolean)" ->
             """{
               |    try {
@@ -254,6 +243,21 @@ object GdxAiPolicy:
             """{
               |    field.cast(value, this.btParser.distributionAdapters)
               |  }""".stripMargin,
+        )),
+        // gdx-ai's ONE keyable reflective instantiation: `Task#cloneTask`'s fallback
+        // `ClassReflection.newInstance(this.getClass())`. `miss = JvmReflect` is DECLARED,
+        // its non-JVM cost COUNTED, and it is what admits a SELF-CLONE (`ENGINE-LIMITS.md`
+        // P10). `handles` is EMPTY: java's `catch` raises `TaskCloneException` where the miss
+        // arm answers null, so java's handler STAYS and the delta is a counted lane row.
+        new balticporter.transform.RegistryTransform(List(
+          balticporter.transform.RegistryTransform.Registry(
+            callee    = "com.badlogic.gdx.utils.reflect.ClassReflection#newInstance",
+            placement = balticporter.transform.RegistryTransform.Placement.Object(
+              "com.badlogic.gdx.ai.btree.TaskFactories",
+              balticporter.transform.RegistryTransform.Spelling("factories", "register", "create")),
+            scope     = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx.ai")),
+            miss      = balticporter.transform.RegistryTransform.Miss.JvmReflect,
+          ),
         )),
         // LAST, deliberately (as AshleyPolicy): reads what the BASE actually emitted, must
         // run after any seam re-pointing such a reference. Milestone 1 has no such seam yet —

@@ -1432,12 +1432,10 @@ hit only prose). Grouped rows share one classification; every key is listed.
 | `JsonMatcherTests#toString(JsonMatcher,String[])`, `#toString(Array)` | gdx-test | i | uncited — no `ported/sge/divergence-verdicts.tsv` | comment 3.1ae: sge dropped CharArray builder API |
 | `SelectBox#getSelectedIndex`, `List#getSelectedIndex` | gdx | ii | K37 | `collection-internal`: `OrderedSet <: ObjectSet` has no image in lls |
 | `PixmapBinaryLoaderHack#load`, `GLTFBinaryExporter#savePNG` | gltf | i | uncited — no `ported/sge-gltf/divergence-verdicts.tsv`; cites CLAUDE.md §3.5 in-line | GWT reflection workaround; hand port makes the direct call instead |
-| `GLTFMaterialExporter#ext` | gltf | iii | Phase 1.11 / P10 | Class-keyed factory registry (`GLTFExtensionFactories`), same shape as Ashley's |
 | `TextraListBox#getSelectedIndex`, `TextraSelectBox#getSelectedIndex` | textra | ii | K37 | `collection-internal`: `OrderedSet` does not extend `ObjectSet` |
 | `VfxGLUtils#<clinit>`, `VfxFrameBuffer#getBoundFboHandle`, `VfxGLUtils#getBoundFboHandle` | vfx | iii | Phase 1.11 / P10 | `<clinit>` reflectively probes a GWT-only extension (`ClassReflection.newInstance`) before `new DefaultVfxGlExtension()`; the two accessors carry the lazy init the emptied `<clinit>` no longer performs (CT11 shape) — all three fall with the reflection card, not with item 5 (re-read 2026-09-05) |
 | `CircularBuffer#resize(int)` | ai | iii | Phase 1.11 / P10 | `ArrayReflection.newInstance` — gdx reflection the base drops; measured alive 2026-09-04 (`value ArrayReflection is not a member`) |
-| `Task#cloneTask()` | ai | iii | Phase 1.11 / P10 | the java falls back to `ClassReflection.newInstance(getClass())`, a reflective self-clone the port drops; the body keeps `TASK_CLONER` and throws the contract's own `TaskCloneException` — a registry (P10) is the mechanical image, not an emitter (reclassified 2026-09-05) |
-| `...openTask(String,boolean)`, `...findMetadata(Class)`, `...getField(Class,String)`, `...setField(Field,Task,Object)`, `...castValue(Field,Object)` (`BehaviorTreeParser$DefaultBehaviorTreeReader`) | ai | iii | Phase 1.11 / P10 | named verbatim in the design card as the reflection-replacement family |
+| `...openTask(String,boolean)`, `...findMetadata(Class)`, `...getField(Class,String)`, `...setField(Field,Task,Object)`, `...castValue(Field,Object)` (`BehaviorTreeParser$DefaultBehaviorTreeReader`) | ai | iii | Phase 1.11 / P10 | `openTask` is `newInstance(forName(s))` and STOPS on the name half (P10 wave 2): `ClassTableTransform` takes no `RuleScope` and is no `MergeablePolicy`, and the base already binds `forName` globally. The other four are the `TaskField` (c), not P10 |
 | `ImmutableArrayTests#forbiddenRemoval` | ashley | i | `divergence-verdicts.tsv:141` (`ImmutableArraySuite`, justified) | java `iterator().remove()` throws; Scala's `Iterator` has none — verify read-only instead |
 
 **Reflection census (2026-09-05, read-only, 260 sites over every port root)**:
@@ -1455,12 +1453,26 @@ BUILT**: the `Engine#createComponent(Class)` body key and the injected `Componen
 both retired, the registry is MINTED at `Placement.Object` with `miss = JvmReflect` — 0 errors held on
 JVM/JS/Native/ref, 108/2/2 held, `portability(injected)` 4 -> 0, `registry(jvm-only-miss)` 0 -> 2 (js, native),
 every other lane byte-identical, gdx `members-unchanged` 0.
-Wave 2 = gltf `GLTFMaterialExporter#ext` + ai; ai's `Task#cloneTask` is a `registry(self-clone)`
-refusal under any non-reflective miss and needs the library's own clone contract instead.
+**Wave 2 (gltf + ai) is BUILT**: `GLTFMaterialExporter#ext` and `Task#cloneTask()` are retired body
+keys and the injected `GLTFExtensionFactories.scala` is deleted; both registries are MINTED at
+`Placement.Object`. gltf 0 errors held on JVM/JS/Native (`.ref` 2 held), suite 29/1 held, all seven
+`registry(*)` lanes 0 (`miss = Throw` restates java's own `GdxRuntimeException`), 7 seeds each
+verified to have a nilary ctor (`policy` 2 held), members blast 15 = 11 minted + 2 changed members.
+ai 0 errors held on all four, `registry(jvm-only-miss)` 0 -> 2 (js, native), `registry(guarded-call)`
+0 -> 1 (`handles` deliberately EMPTY: java wraps the failure in `TaskCloneException`, the miss arm
+answers null), `api-parity(port-extra)` 565 -> 568 (the minted object and its two public members),
+the 20 `api-parity(hand-port-extra) *#newInstance` rows held, members blast 8 = 4 minted + 2 changed.
+ai-test 103/2 -> 104/1 and ai-diff 93/2 -> 94/1: `cloneTask clones guard` now PASSES (its
+`expected-failures.tsv` row is deleted), `cloneTask creates independent copy` still fails because
+`CountingTask` has no nilary ctor and `Miss.JvmReflect` answers null where java raised
+`ReflectionException`. gdx `members-unchanged` 0, no finding moved. Wave 2's two STOPS are P10's
+`Next` line: a `Miss` arm that reflects AND restates java's throw, and the scoped, mergeable
+`ClassTableTransform` `openTask`'s name half needs.
 
-Counts by class: i=5, ii=18, iii=7, iv=3 (33 keys, 18 grouped rows); retired 2026-09-04: `Selection#iterator`, `MapLayers/MapObjects#getByType`; 2026-09-05: `BitmapFont#<init>(…)` (dead key), `Selection#toArray` x2, vfx x3 reclassified iii; 2026-09-05b: `FirstPersonCameraController#keyUp` (IntIntMap remove Template), `Node#calculateBoneTransforms` + `ModelInstance#invalidate` (IndexedField via), `NodePart#set` + `MapProperties#putAll` (putAll compiles without cast); 2026-09-05c: `Actor#<clinit>` (Construct at C::new), `AssetManager#getAssetFileName` (return inside nested foreachEntry), `ModelLoader#getDependencies` + `ParticleEffectLoader#getDependencies` (Tuple2 construct-then-assign fold); 2026-09-05d: `AssetManager#clear` (Keys toArray Template + getAndIncrement), `ArraySelection#validate` (OrderedSet removing iterator K36), `AssetLoadingTask#removeDuplicates` (DropWrite K36) (ii=10 remain); 2026-09-05e: `Engine#createComponent(Class)` (`RegistryTransform`, P10 wave 1).
-Counts by port: visui=5 (iv=3, ii=2), gdx=9 (i=2 test, ii=7 main), gltf=3 (i=2, iii=1),
-textra=2 (ii=2), vfx=3 (iii=3), ai=7 (ii=2, iii=5), ashley=1 (i=1).
+Counts by class, LIVE and re-derived from the table above: i=5, ii=6, iii=9, iv=3 (23 keys, 10
+grouped rows). Retired ledger — 2026-09-04: `Selection#iterator`, `MapLayers/MapObjects#getByType`; 2026-09-05: `BitmapFont#<init>(…)` (dead key), `Selection#toArray` x2, vfx x3 reclassified iii; 2026-09-05b: `FirstPersonCameraController#keyUp` (IntIntMap remove Template), `Node#calculateBoneTransforms` + `ModelInstance#invalidate` (IndexedField via), `NodePart#set` + `MapProperties#putAll` (putAll compiles without cast); 2026-09-05c: `Actor#<clinit>` (Construct at C::new), `AssetManager#getAssetFileName` (return inside nested foreachEntry), `ModelLoader#getDependencies` + `ParticleEffectLoader#getDependencies` (Tuple2 construct-then-assign fold); 2026-09-05d: `AssetManager#clear` (Keys toArray Template + getAndIncrement), `ArraySelection#validate` (OrderedSet removing iterator K36), `AssetLoadingTask#removeDuplicates` (DropWrite K36) (ii=10 remain); 2026-09-05e: `Engine#createComponent(Class)` (`RegistryTransform`, P10 wave 1); 2026-09-05f: `GLTFMaterialExporter#ext` and `Task#cloneTask()` (`RegistryTransform`, P10 wave 2).
+Counts by port, same derivation: visui=5 (iv=3, ii=2), gdx-test=2 (i=2), gdx=2 (ii=2), gltf=2 (i=2),
+textra=2 (ii=2), vfx=3 (iii=3), ai=6 (iii=6), ashley=1 (i=1).
 
 ### 13.28 lls — the base beneath sge (decided 2026-09-05)
 
