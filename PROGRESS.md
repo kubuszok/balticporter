@@ -1567,6 +1567,14 @@ package rename rewrote an EXTERNAL FQN under the port's prefix (the class moved 
 rename must ask ownership, §4.56); (iii) 4 singles (`Json#newInstance` catch-param reassignment, two array
 `Found:` mismatches, a `Serializer[Object]` variance).
 
+**lls goes first (maintainer, 2026-09-05).** `ported/lls` is L0's first artifact: the twelve lls sources plus the
+seven libGDX helpers they reference (`RandomXS128`, `ArraySupplier`, `Collections`, `GdxRuntimeException`, `Null`,
+`Predicate`, `reflect.ArrayReflection`), universal phases only — **19 files, 0 JVM errors** (was 149 as a
+twelve-file census); lls's own 52-file suite compiles against that java-shaped API with 536 errors, the gauge the
+rungs must drive down. The first rungs are ORDERED by experiments on this 19-file port (a run is ~2 minutes), then
+libGDX core extends the lls port (`LibgdxPolicy.core = LlsPolicy.core.extendedBy(…)`) instead of retargeting onto
+the lls jar.
+
 Rungs (decision | footprint in gdx/src | platform | phase today): L1 bean properties + nullary arity (1,422/928;
 none; yes) · L2 collections onto lls + Comparator->Ordering (989 uses, 55; partly unblocks JS/Native; yes) ·
 L3 no reflection + Json dropped (54 calls/17 files, 23 Json files; UNBLOCKS JS+Native; yes) · L4 JNI->Panama
