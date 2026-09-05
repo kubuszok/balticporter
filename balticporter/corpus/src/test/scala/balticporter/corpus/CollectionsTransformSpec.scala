@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.{PortSuite, Ported}
 import balticporter.tir.{Phase, Pipeline, PolicyBinder, RunScope, UsageKind}
-import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform, NullaryArityTransform}
+import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform, NullaryArityTransform, RetargetBoundaryCheck}
 
 import java.nio.file.Files
 
@@ -2476,4 +2476,213 @@ class CollectionsTransformSpec extends PortSuite:
     // The IndexedField fires on the array access, the Collect fires on calls
     assertEmits(p, ".getKeyAt(0)")
     assertNotEmits(p, ".keys[")
+  }
+
+  // ---------------------------------------------------------------------------
+  // Construct at C::new — CT6 face C (CLAUDE.md §4.56)
+  // ---------------------------------------------------------------------------
+
+  test("a RETARGET Construct applies to C::new — the factory lambda replaces the ctor reference") {
+    import CollectionsTransform.RetargetRewrite.*
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.MyArr" -> "demo.LlsArr"),
+      retargetRewrites = Map("demo.MyArr" -> Map(
+        ("<init>", 0) -> Construct("demo.LlsArr", "apply", fillTypeArgs = true))))
+    val p = portAll(List(
+      "MyArr.java" ->
+        """package demo;
+          |public class MyArr<T> {}""".stripMargin,
+      "LlsArr.java" ->
+        """package demo;
+          |public class LlsArr<T> {
+          |  public static <T> LlsArr<T> apply() { return null; }
+          |}""".stripMargin,
+      "Supplier.java" ->
+        """package demo;
+          |@FunctionalInterface
+          |public interface Supplier<T> { T get(); }""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  void register(Supplier<MyArr<String>> s) {}
+          |  void test() { register(MyArr::new); }
+          |}""".stripMargin), ph)
+    assertEmits(p, "demo.LlsArr.apply")
+    assertNotEmits(p, "new demo.LlsArr")
+    assertNotEmits(p, "new demo.MyArr")
+  }
+
+  // ---------------------------------------------------------------------------
+  // return inside a NESTED retargetForEach — boundary lifts to the outer level
+  // ---------------------------------------------------------------------------
+
+  test("a return inside a NESTED retarget for-each wraps at the outermost level") {
+    import CollectionsTransform.RetargetRewrite.*
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.ObjMap" -> "demo.LlsMap"),
+      retargetRewrites = Map("demo.ObjMap" -> Map(
+        ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("keys", 0)    -> Collect("foreachKey", "demo.LlsArr"),
+        ("<init>", 0)  -> Construct("demo.LlsMap", "apply"))))
+    val p = portAll(List(
+      "ObjMap.java" ->
+        """package demo;
+          |public class ObjMap<K, V> implements Iterable<java.util.Map.Entry<K, V>> {
+          |  public java.util.Iterator<java.util.Map.Entry<K, V>> iterator() { return null; }
+          |  public void foreachEntry(java.util.function.BiConsumer<K, V> c) {}
+          |  public void foreachKey(java.util.function.Consumer<K> c) {}
+          |}""".stripMargin,
+      "LlsMap.java" ->
+        """package demo;
+          |public class LlsMap<K, V> {
+          |  public void foreachEntry(java.util.function.BiConsumer<K, V> c) {}
+          |  public void foreachKey(java.util.function.Consumer<K> c) {}
+          |}""".stripMargin,
+      "LlsArr.java" ->
+        """package demo;
+          |public class LlsArr<T> {
+          |  public void add(T e) {}
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  String find(ObjMap<String, ObjMap<String, Integer>> outer, int target) {
+          |    for (java.util.Map.Entry<String, ObjMap<String, Integer>> e1 : outer) {
+          |      for (java.util.Map.Entry<String, Integer> e2 : e1.getValue()) {
+          |        if (e2.getValue() == target) return e2.getKey();
+          |      }
+          |    }
+          |    return null;
+          |  }
+          |}""".stripMargin), ph)
+    // the boundary wraps at the method level, not inside the inner lambda
+    assertEmitsMatch(p, """boundary\[""")
+    assertEmitsMatch(p, """boundary\.break\(""")
+    assertNotEmits(p, "for (")
+  }
+
+  // ---------------------------------------------------------------------------
+  // Tuple2 construct-then-assign fold (entry copy-construction)
+  // ---------------------------------------------------------------------------
+
+  test("a RETARGET Entry default-construct then contiguous _1/_2 assign folds into Tuple2(v1, v2)") {
+    import CollectionsTransform.RetargetRewrite.*
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.MyEntry" -> "scala.Tuple2"),
+      retargetRewrites = Map("demo.MyEntry" -> Map(
+        ("<init>", 0) -> Construct("scala.Tuple2", "apply", fillTypeArgs = true))))
+    val p = portAll(List(
+      "MyEntry.java" ->
+        """package demo;
+          |public class MyEntry<K, V> {
+          |  public K key;
+          |  public V value;
+          |  public MyEntry() { this.key = null; this.value = null; }
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  void test(java.util.List<MyEntry<String, Integer>> list) {
+          |    MyEntry<String, Integer> e = new MyEntry<String, Integer>();
+          |    e.key = "hello";
+          |    e.value = 42;
+          |    list.add(e);
+          |  }
+          |}""".stripMargin), ph)
+    // the three statements (new + 2 assigns) fold into one construction
+    assertEmits(p, "\"hello\"")
+    assertEmits(p, "42")
+    // the Uses.test body constructs Tuple2 directly, no separate field assignments
+    assertNotEmits(p, "e._1 =")
+    assertNotEmits(p, "e._2 =")
+  }
+
+  // ---------------------------------------------------------------------------
+  // Counted refusal: Construct at C::new with arity > argParamSyms pool (CT6)
+  // ---------------------------------------------------------------------------
+
+  test("a C::new at a retarget Construct with arity > 4 is COUNTED on collection-retarget") {
+    import CollectionsTransform.RetargetRewrite.*
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.Wide" -> "demo.LlsWide"),
+      retargetRewrites = Map("demo.Wide" -> Map(
+        ("<init>", 5) -> Construct("demo.LlsWide", "apply"))))
+    val p = portAll(List(
+      "Wide.java" ->
+        """package demo;
+          |public class Wide<T> {
+          |  public Wide(T a, T b, T c, T d, T e) {}
+          |}""".stripMargin,
+      "LlsWide.java" ->
+        """package demo;
+          |public class LlsWide<T> {
+          |  public static <T> LlsWide<T> apply(T a, T b, T c, T d, T e) { return null; }
+          |}""".stripMargin,
+      "Supplier.java" ->
+        """package demo;
+          |@FunctionalInterface
+          |public interface Supplier5<A,B,C,D,E,R> { R get(A a, B b, C c, D d, E e); }""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  void register(Supplier5<String,String,String,String,String,Wide<String>> s) {}
+          |  void test() { register(Wide::new); }
+          |}""".stripMargin), ph)
+    val fs = ph.retargetBoundary(p.after)
+    assert(clue(fs).exists(_.what.contains("constructor reference arity")),
+      s"expected a finding for arity > pool, got: $fs")
+  }
+
+  // ---------------------------------------------------------------------------
+  // Counted refusal: nested loops returning at different labels
+  // ---------------------------------------------------------------------------
+
+  test("nested for-each loops with returns at DIFFERENT labels are COUNTED on collection-retarget") {
+    import CollectionsTransform.RetargetRewrite.*
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.ObjMap" -> "demo.LlsMap"),
+      retargetRewrites = Map("demo.ObjMap" -> Map(
+        ("entries", 0) -> ForEach("foreachEntry", 2),
+        ("<init>", 0)  -> Construct("demo.LlsMap", "apply"))))
+    val p = portAll(List(
+      "Entry.java" ->
+        """package demo;
+          |public class Entry<K, V> {
+          |  public K key;
+          |  public V value;
+          |}""".stripMargin,
+      "ObjMap.java" ->
+        """package demo;
+          |public class ObjMap<K, V> implements Iterable<Entry<K, V>> {
+          |  public java.util.Iterator<Entry<K, V>> iterator() { return null; }
+          |  public void foreachEntry(java.util.function.BiConsumer<K, V> c) {}
+          |}""".stripMargin,
+      "LlsMap.java" ->
+        """package demo;
+          |public class LlsMap<K, V> {
+          |  public void foreachEntry(java.util.function.BiConsumer<K, V> c) {}
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  String find(ObjMap<String, ObjMap<String, Integer>> outer) {
+          |    for (Entry<String, ObjMap<String, Integer>> e1 : outer) {
+          |      ObjMap<String, Integer> a = e1.value;
+          |      ObjMap<String, Integer> b = e1.value;
+          |      for (Entry<String, Integer> e2 : a) {
+          |        if (e2.value == 1) return e2.key;
+          |      }
+          |      for (Entry<String, Integer> e3 : b) {
+          |        if (e3.value == 2) return e3.key;
+          |      }
+          |    }
+          |    return null;
+          |  }
+          |}""".stripMargin), ph)
+    val fs = ph.retargetBoundary(p.after)
+    assert(clue(fs).exists(_.what.contains("nested loops returning")),
+      s"expected a finding for multiple inner labels, got: $fs")
+    // the first inner label IS lifted -- boundary wraps the outer, so emitted code is in shape
+    assertEmitsMatch(p, """boundary\[""")
+    assertEmitsMatch(p, """boundary\.break\(""")
   }

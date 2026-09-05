@@ -1324,7 +1324,8 @@ final class CollectionsTransform(
     if retargetEntryTargets.isEmpty then b
     else foldEntryCopyConstruction(b)
 
-  /** A METHOD REFERENCE at a member this phase rewrites — `Map.Entry::getKey` inside a stream.
+  /** A METHOD REFERENCE at a member this phase rewrites — `Map.Entry::getKey` inside a stream,
+    * or `C::new` at a retarget source with a `Construct` entry (CT6 face C, CLAUDE.md §4.56).
     *
     * Lowers the reference into a lambda with the rewritten term as body.
     * Bound references (`expr::m`) bind the receiver ONCE (JLS 15.13.3).
@@ -1337,7 +1338,12 @@ final class CollectionsTransform(
     mr.qualifier match
       case Left(tt) if !mr.referent.isInstanceOf[Referent.Static] =>
         kindOf.get(headSym(tt.tpe).getOrElse(SymId.None)) match
-          case None    => mr
+          case None    =>
+            // CT6: a `C::new` reference at a retarget source with a Construct entry —
+            // emit the factory lambda through `retargetConstruct` (one derivation). §4.56
+            retargetConstructRef(mr, tt) match
+              case Some(lam) => lam
+              case scala.None => mr
           case Some(k) =>
             val o    = mr.origin
             val self = Tree.Ident(selfParamSym, tt.tpe, o)
@@ -1385,6 +1391,30 @@ final class CollectionsTransform(
                   val lam    = Tree.Lambda(params, body, mr.tpe, o)
                   if stats.isEmpty then lam else Tree.Block(stats, lam, mr.tpe, o)
       case _ => mr
+
+  /** `C::new` at a retarget source — builds a synthetic `Tree.Apply(Tree.New, args)` and
+    * delegates to `retargetConstruct` so the factory-call derivation is ONE path. The result
+    * is wrapped in a lambda whose parameters match the constructor's arity. CT6 face C. */
+  private[transform] def retargetConstructRef(mr: Tree.MethodRef, tt: TypeTree)(using p: Program): Option[Term] =
+    val isCtor = p.symbolOf(mr.method).exists(_.name == "<init>")
+    if !isCtor then return scala.None
+    val arity = mr.referent match
+      case Referent.Instance(n) => n
+      case _                    => return scala.None
+    if arity > argParamSyms.size then
+      retargetSeam("constructor reference arity > argParamSyms pool",
+        s"C::new with arity $arity", "Construct not applied — pool has ${argParamSyms.size}",
+        mr.origin, SymId.None)
+      return scala.None
+    val o = mr.origin
+    val newNode = Tree.New(tt, tt.tpe, o)
+    val ps = argParamSyms.take(arity).toList
+    val args = ps.map(s => Tree.Ident(s, TypeRepr.NoType, o))
+    val syntheticApply = Tree.Apply(newNode, args, mr.method, tt.tpe, o)
+    retargetConstruct(syntheticApply).map { body =>
+      val params = ps.map(s => Tree.ValDef(s, TypeTree(TypeRepr.NoType, o), scala.None, o))
+      Tree.Lambda(params, body, mr.tpe, o)
+    }
 
   /** replace the head (type-constructor) symbol of a `TypeRef` / `AppliedType`, keeping args. */
   private[transform] def withHead(t: TypeRepr, s: SymId): TypeRepr = t match

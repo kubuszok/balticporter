@@ -65,7 +65,8 @@ private[transform] trait CollectionsBoundary:
 
   /** Retarget boundary check scoped to emitted units. */
   def retargetBoundary(program: Program, units: List[Tree.ClassDef]): List[RetargetBoundaryCheck.Finding] =
-    RetargetBoundaryCheck.check(program, units, effectiveRetarget)
+    RetargetBoundaryCheck.check(program, units, effectiveRetarget) ++
+      retargetRefusals.toList.filter(f => emittedPaths(units).contains(f.origin.javaPath))
 
   /** the java symbols this run's mapping sends to a target that CANNOT BE A PARENT — see
     * [[restoreUninheritableParents]]. EMPTY unless the program actually names one, which makes the
@@ -86,6 +87,10 @@ private[transform] trait CollectionsBoundary:
     * [[boundary]], because it is the same residue `CollectionBoundaryCheck` counts and a reader
     * looking for "what did the retyping leave open" must find all of it in one place. */
   private[transform] val externalSeams = collection.mutable.ListBuffer[CollectionBoundaryCheck.Finding]()
+
+  /** retarget refusals recorded during the transform — shapes `retargetConstructRef` and
+    * `collectAndDrainNestedLabels` could not handle. Reported through [[retargetBoundary]]. */
+  private[transform] val retargetRefusals = collection.mutable.ListBuffer[RetargetBoundaryCheck.Finding]()
 
   /** A parent whose target cannot be inherited (e.g. `Map.Entry` to `Tuple2` which is final)
     * is left as java's; the seam is counted. No-op when [[uninheritableSyms]] is empty.
@@ -970,6 +975,12 @@ private[transform] trait CollectionsBoundary:
   private[transform] def seam(slot: String, expected: String, actual: String, origin: Origin, enclosing: SymId,
                    issue: CollectionBoundaryCheck.Issue = CollectionBoundaryCheck.Issue.ExternalCallee): Unit =
     externalSeams += CollectionBoundaryCheck.Finding(issue, slot, expected, actual, origin, enclosing)
+
+  /** record a retarget refusal for [[retargetBoundary]] to report on `collection-retarget`. */
+  private[transform] def retargetSeam(what: String, produced: String, slot: String,
+                   origin: Origin, enclosing: SymId,
+                   issue: RetargetBoundaryCheck.Issue = RetargetBoundaryCheck.Issue.ExternalProducer): Unit =
+    retargetRefusals += RetargetBoundaryCheck.Finding(issue, what, produced, slot, origin, enclosing)
 
   /** Bridge a scala collection into a shim-typed parameter, at the call site — `java.util.List`
     * becomes `Buffer`, `java.lang.Iterable` becomes [[JavaIterable]], and together they leave the

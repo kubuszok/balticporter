@@ -570,6 +570,13 @@ private[transform] trait CollectionsRetarget:
     def bodyWithBreaks(body: Term): Term =
       if !hasReturn then body
       else rewriteReturnsToBreaks(body, label.get, so)
+    // a NESTED for-each whose inner was already lowered may have registered its Apply for
+    // boundary wrapping. Collect those labels BEFORE the rewrite methods (which create new
+    // tree nodes and break identity), so we can register the OUTER apply with the inner's
+    // label after construction. CLAUDE.md §4.4 (boundary interposition).
+    val liftedLabels =
+      if hasReturn || retFeReturnApplies.isEmpty then Nil
+      else collectAndDrainNestedLabels(fe.body)
     // unique lambda parameter symbols per rewrite, or nested entry loops shadow each other
     val n = { val i = forEachSeq; forEachSeq += 1
       require(i < forEachKeyPool.length,
@@ -597,7 +604,32 @@ private[transform] trait CollectionsRetarget:
         val lambda = Tree.Lambda(List(param), bodyWithBreaks(rewrittenBody), unitTpe, so)
         Tree.Apply(Tree.Select(recv, tgtSym, TypeRepr.NoType, so), List(lambda), tgtSym, unitTpe, so)
     if hasReturn then retFeReturnApplies.put(apply, label.get)
+    // register the outer with the first lifted label — wrapReturnBoundary creates one boundary
+    // and the inner boundary.break already names this label
+    liftedLabels.headOption.foreach(lbl => retFeReturnApplies.put(apply, lbl))
+    if liftedLabels.sizeIs > 1 then
+      retargetSeam("nested loops returning at different labels",
+        s"${liftedLabels.size} inner loops with return", "outer boundary lifts only the first",
+        fe.origin, fe.binding.symbol)
     Some(apply)
+
+  /** Walk the for-each body BEFORE rewrite methods run, collecting labels from inner applies
+    * registered in [[retFeReturnApplies]] and removing them. The rewrite methods create new tree
+    * nodes, breaking the identity [[retFeReturnApplies]] is keyed on. Stops at defs and
+    * anonymous classes (own return scope). */
+  private[transform] def collectAndDrainNestedLabels(body: Any): List[String] =
+    val labels = collection.mutable.ListBuffer.empty[String]
+    def walk(node: Any): Unit = node match
+      case _: Tree.DefDef | _: Tree.AnonClass => ()
+      case t: Term if retFeReturnApplies.containsKey(t) =>
+        labels += retFeReturnApplies.get(t)
+        retFeReturnApplies.remove(t)
+      case xs: Iterable[?] => xs.foreach(walk)
+      case Some(x) => walk(x)
+      case p: Product => p.productIterator.foreach(walk)
+      case _ => ()
+    walk(body)
+    labels.toList
 
   /** Emit a standalone `Collect` block: `{ val r$coN = Into[E](); recv.via(r$coN.add); r$coN }`,
     * for keys()/values() calls `retargetRewrite` left as `None` so `retargetForEach` could

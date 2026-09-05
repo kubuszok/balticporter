@@ -1784,70 +1784,6 @@ object LibgdxPolicy:
                |    this.tasks.clear()
                |  }
                |}""".stripMargin,
-           // wave 3.1m: AssetManager.getAssetFileName — bare-map iteration with return inside a
-           // retargetForEach lambda. sge: nested foreachEntry with boundary.break.
-           "com.badlogic.gdx.assets.AssetManager#getAssetFileName" ->
-             """{
-               |  scala.util.boundary[java.lang.String] { (retFe: scala.util.boundary.Label[java.lang.String]) ?=>
-               |    this.assets.foreachEntry((assetType: java.lang.Class[?], assetsByType: lowlevel.util.ObjectMap[java.lang.String, sge.assets.AssetManager.RefCountedContainer]) => {
-               |      assetsByType.foreachEntry((fileName: java.lang.String, refCounted: sge.assets.AssetManager.RefCountedContainer) => {
-               |        val obj: java.lang.Object = refCounted.`object`
-               |        if ((obj.asInstanceOf[scala.AnyRef] eq asset) || asset.equals(obj)) {
-               |          scala.util.boundary.break(fileName)(using retFe)
-               |        } else ()
-               |      })
-               |    })
-               |    return null
-               |  }
-               |}""".stripMargin,
-           // wave 3.1m: ModelLoader.getDependencies — Tuple2 default-construct then assign _1/_2.
-           // sge: val item = (fileName, d). The method is large; replace only relevant lines.
-           "com.badlogic.gdx.assets.loaders.ModelLoader#getDependencies" ->
-             """{
-               |  val deps: lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]] = lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]()
-               |  val data: sge.graphics.g3d.model.data.ModelData = this.loadModelData(file, parameters)
-               |  if (data == null) {
-               |    return deps
-               |  } else ()
-               |  val item: scala.Tuple2[java.lang.String, sge.graphics.g3d.model.data.ModelData] = (fileName, data)
-               |  this.items.synchronized {
-               |    this.items.add(item)
-               |  }
-               |  val textureParameter: sge.assets.loaders.TextureLoader.TextureParameter = if (parameters != null) parameters.textureParameter else this.defaultParameters.textureParameter
-               |  for (modelMaterial <- data.materials) {
-               |    if (modelMaterial.textures != null) {
-               |      for (modelTexture <- modelMaterial.textures) {
-               |        deps.add(new sge.assets.AssetDescriptor(modelTexture.fileName, classOf[sge.graphics.Texture], textureParameter))
-               |      }
-               |    } else ()
-               |  }
-               |  return deps
-               |}""".stripMargin,
-           // wave 3.1m: ParticleEffectLoader.getDependencies — Tuple2 default-construct then
-           // assign _1/_2. Same pattern as ModelLoader. Construct the tuple at once.
-           "com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader#getDependencies" ->
-             """{
-               |  val json: sge.utils.Json = new sge.utils.Json()
-               |  val data: sge.graphics.g3d.particles.ResourceData[sge.graphics.g3d.particles.ParticleEffect] = json.fromJson(classOf[sge.graphics.g3d.particles.ResourceData[?]], file).asInstanceOf[sge.graphics.g3d.particles.ResourceData[sge.graphics.g3d.particles.ParticleEffect]]
-               |  var assets: lowlevel.util.DynamicArray[sge.graphics.g3d.particles.ResourceData.AssetData[?]] = null
-               |  this.items.synchronized {
-               |    val entry: scala.Tuple2[java.lang.String, sge.graphics.g3d.particles.ResourceData[sge.graphics.g3d.particles.ParticleEffect]] = (fileName, data)
-               |    this.items.add(entry)
-               |    assets = data.assets.asInstanceOf[lowlevel.util.DynamicArray[sge.graphics.g3d.particles.ResourceData.AssetData[?]]]
-               |  }
-               |  val descriptors: lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]] = lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]().asInstanceOf[lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]]
-               |  for (assetData <- assets) {
-               |    if (!this.resolve(assetData.filename).exists) {
-               |      assetData.filename = file.parent().child(scala.Predef.summon[sge.Sge].files.internal(assetData.filename).name).path()
-               |    } else ()
-               |    if (assetData.asInstanceOf[sge.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type` eq classOf[sge.graphics.g3d.particles.ParticleEffect]) {
-               |      descriptors.add(new sge.assets.AssetDescriptor(assetData.filename, assetData.asInstanceOf[sge.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`.asInstanceOf[java.lang.Class[sge.graphics.g3d.particles.ParticleEffect]], parameter))
-               |    } else {
-               |      descriptors.add(new sge.assets.AssetDescriptor(assetData.filename, assetData.asInstanceOf[sge.graphics.g3d.particles.ResourceData.AssetData[java.lang.Object]].`type`))
-               |    }
-               |  }
-               |  return descriptors.asInstanceOf[lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]]
-               |}""".stripMargin,
            // wave 3.1m: ArraySelection.validate — Chain iterator returns Iterator[T], but the loop
            // body calls iter.remove(). sge: collect removals into a DynamicArray, then remove.
            "com.badlogic.gdx.scenes.scene2d.utils.ArraySelection#validate" ->
@@ -1911,15 +1847,6 @@ object LibgdxPolicy:
                |    }; j = j - 1 } }
                |  }; i = i + 1 } }
                |}""".stripMargin,
-           // wave 3.1t: Actor.<clinit> — `new DynamicArray()` inside a lambda in the companion's
-           // static initialiser. DynamicArray's constructor is private; must use the factory.
-           "com.badlogic.gdx.scenes.scene2d.Actor#<clinit>" ->
-             """{
-               |  Actor.POOLS.addPool(classOf[sge.math.Rectangle], ((() => new sge.math.Rectangle()): sge.utils.DefaultPool.PoolSupplier[sge.math.Rectangle]))
-               |  Actor.POOLS.addPool(classOf[lowlevel.util.DynamicArray[?]], ((() => lowlevel.util.DynamicArray[AnyRef]()): sge.utils.DefaultPool.PoolSupplier[lowlevel.util.DynamicArray[?]]))
-               |  Actor.POOLS.addPool(classOf[sge.graphics.g2d.GlyphLayout], ((() => new sge.graphics.g2d.GlyphLayout()): sge.utils.DefaultPool.PoolSupplier[sge.graphics.g2d.GlyphLayout]))
-               |  Actor.POOLS.addPool(classOf[sge.scenes.scene2d.utils.ChangeListener.ChangeEvent], ((() => new sge.scenes.scene2d.utils.ChangeListener.ChangeEvent()): sge.utils.DefaultPool.PoolSupplier[sge.scenes.scene2d.utils.ChangeListener.ChangeEvent]))
-               |}""".stripMargin
          )),
          // --- 3.2g: Pool class-to-trait (ecs drop-in parity) ---
          // sge hand-ported Pool as a TRAIT with abstract vals (justified, kind=api; AD-003).
