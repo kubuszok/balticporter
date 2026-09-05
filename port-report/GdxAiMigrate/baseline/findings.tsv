@@ -88,43 +88,14 @@ e8971c1b0b31	api-parity(accessor)	accessor	Wander#setWanderRate	/Wander	0	def se
 4852a8eee24c	api-parity(factory)	factory	DefaultGraphPath$#apply	/DefaultGraphPath$	0	def apply/0 in reference port only
 29bdacbb1b2e	api-parity(factory)	factory	DefaultGraphPath$#apply	/DefaultGraphPath$	0	def apply/1 in reference port only
 8bfe75528998	api-parity(hand-port-extra)	hand-port-extra	#BehaviorTreeLibrary		0	object BehaviorTreeLibrary/0 in reference port only
-2bf46ddc7eed	api-parity(hand-port-extra)	hand-port-extra	#CLOSED		0	val CLOSED/0 in reference port only
 4714395ca104	api-parity(hand-port-extra)	hand-port-extra	#DefaultGraphPath		0	object DefaultGraphPath/0 in reference port only
 d000316035f0	api-parity(hand-port-extra)	hand-port-extra	#EqualsByReferenceStopCondition		0	class EqualsByReferenceStopCondition/0 in reference port only
 809c746c9993	api-parity(hand-port-extra)	hand-port-extra	#EqualsMethodStopCondition		0	class EqualsMethodStopCondition/0 in reference port only
-1770270a4e02	api-parity(hand-port-extra)	hand-port-extra	#OPEN		0	val OPEN/0 in reference port only
 1e4079e1c022	api-parity(hand-port-extra)	hand-port-extra	#PendingMessageCallback		0	trait PendingMessageCallback/0 in reference port only
 19f1eb2110e1	api-parity(hand-port-extra)	hand-port-extra	#PrioritySchedulableRecord		0	class PrioritySchedulableRecord/0 in reference port only
 81e3fe187aba	api-parity(hand-port-extra)	hand-port-extra	#SchedulableRecord		0	class SchedulableRecord/0 in reference port only
 80000cf81f05	api-parity(hand-port-extra)	hand-port-extra	#SlotCostProvider		0	trait SlotCostProvider/0 in reference port only
 8142de80626a	api-parity(hand-port-extra)	hand-port-extra	#StopCondition		0	trait StopCondition/0 in reference port only
-9afe4a9a5d9d	api-parity(hand-port-extra)	hand-port-extra	#UNVISITED		0	val UNVISITED/0 in reference port only
-4aad3cdd819f	api-parity(hand-port-extra)	hand-port-extra	#addChildToTask		0	def addChildToTask/1 in reference port only
-82e2b6b8651a	api-parity(hand-port-extra)	hand-port-extra	#assignmentEase		0	var assignmentEase/0 in reference port only
-db33ca53d9f6	api-parity(hand-port-extra)	hand-port-extra	#category		0	var category/0 in reference port only
-a894c92596ae	api-parity(hand-port-extra)	hand-port-extra	#childFail		0	def childFail/1 in reference port only
-eb8c748b246e	api-parity(hand-port-extra)	hand-port-extra	#childRunning		0	def childRunning/2 in reference port only
-661b0978da8a	api-parity(hand-port-extra)	hand-port-extra	#childSuccess		0	def childSuccess/1 in reference port only
-3b4d4f4debb4	api-parity(hand-port-extra)	hand-port-extra	#compareTo		0	def compareTo/1 in reference port only
-3b4d4f4debb4/2	api-parity(hand-port-extra)	hand-port-extra	#compareTo		0	def compareTo/1 in reference port only
-fa1e5f95f4c1	api-parity(hand-port-extra)	hand-port-extra	#connection		0	var connection/0 in reference port only
-f94a91cf670d	api-parity(hand-port-extra)	hand-port-extra	#copyTo		0	def copyTo/1 in reference port only
-ee98533f9a31	api-parity(hand-port-extra)	hand-port-extra	#costAndSlots		0	val costAndSlots/0 in reference port only
-1d6a566a1cc8	api-parity(hand-port-extra)	hand-port-extra	#costSoFar		0	var costSoFar/0 in reference port only
-b00e4c170e99	api-parity(hand-port-extra)	hand-port-extra	#currentLevel		0	var currentLevel/0 in reference port only
-11e9d87d57ac	api-parity(hand-port-extra)	hand-port-extra	#finalizeSearch		0	def finalizeSearch/1 in reference port only
-94e8ed89e529	api-parity(hand-port-extra)	hand-port-extra	#getChild		0	def getChild/1 in reference port only
-6fde9e6b15a8	api-parity(hand-port-extra)	hand-port-extra	#getChildCount		0	def getChildCount/0 in reference port only
-5c0dd3bb94e8	api-parity(hand-port-extra)	hand-port-extra	#getEstimatedTotalCost		0	def getEstimatedTotalCost/0 in reference port only
-b18be908a44e	api-parity(hand-port-extra)	hand-port-extra	#hpf		0	var hpf/0 in reference port only
-767666ed77d3	api-parity(hand-port-extra)	hand-port-extra	#hpfRequest		0	var hpfRequest/0 in reference port only
-ba9d8b373479	api-parity(hand-port-extra)	hand-port-extra	#initializeSearch		0	def initializeSearch/1 in reference port only
-4fe625801ff5	api-parity(hand-port-extra)	hand-port-extra	#levelOfNodes		0	var levelOfNodes/0 in reference port only
-0912211477b5	api-parity(hand-port-extra)	hand-port-extra	#newInstance		0	def newInstance/0 in reference port only
-d2646f48c068	api-parity(hand-port-extra)	hand-port-extra	#node		0	var node/0 in reference port only
-cdb1a5db6a4b	api-parity(hand-port-extra)	hand-port-extra	#run		0	def run/0 in reference port only
-a0c6709a8f93	api-parity(hand-port-extra)	hand-port-extra	#search		0	def search/2 in reference port only
-fed70686dc3b	api-parity(hand-port-extra)	hand-port-extra	#searchId		0	var searchId/0 in reference port only
 f79a3eb91d3e	api-parity(hand-port-extra)	hand-port-extra	AlwaysFail#newInstance	/AlwaysFail	0	def newInstance/0 in reference port only
 ad5c563d5b43	api-parity(hand-port-extra)	hand-port-extra	AlwaysSucceed#newInstance	/AlwaysSucceed	0	def newInstance/0 in reference port only
 3cef8a8a8344	api-parity(hand-port-extra)	hand-port-extra	BehaviorTree#getChildCount	/BehaviorTree	0	def getChildCount/0 in reference port only [rename candidates: childCount, object, removeListeners, reset, resetTask, run, step]
@@ -132,11 +103,6 @@ f92eec51d3f7	api-parity(hand-port-extra)	hand-port-extra	BehaviorTree#getObject	
 0b3fcef56e4c	api-parity(hand-port-extra)	hand-port-extra	BehaviorTree#newInstance	/BehaviorTree	0	def newInstance/0 in reference port only [rename candidates: childCount, object, removeListeners, reset, resetTask, run, step]
 c9af08d1ae0e	api-parity(hand-port-extra)	hand-port-extra	BehaviorTree#setObject	/BehaviorTree	0	def setObject/1 in reference port only [rename candidates: addChildToTask, addListener, childFail, childSuccess, copyTo, getChild, object_=, removeListener]
 e31ba7e997e1	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeLibrary$#InternalFileHandleResolver	/BehaviorTreeLibrary$	0	object InternalFileHandleResolver/0 in reference port only
-50413e3fa324	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeLibrary$#exists	/BehaviorTreeLibrary$	0	def exists/0 in reference port only
-a897023bc7ab	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeLibrary$#read	/BehaviorTreeLibrary$	0	def read/0 in reference port only
-9e233baba41f	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeLibrary$#readString	/BehaviorTreeLibrary$	0	def readString/1 in reference port only
-c99bb88b59d8	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeLibrary$#reader	/BehaviorTreeLibrary$	0	def reader/0 in reference port only
-741db0f44453	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeLibrary$#reader	/BehaviorTreeLibrary$	0	def reader/1 in reference port only
 6a83e7f80598	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeLibrary$.InternalFileHandleResolver$#resolve	/BehaviorTreeLibrary$/InternalFileHandleResolver$	0	def resolve/1 in reference port only
 f8454885807e	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeLibraryManager#library	/BehaviorTreeLibraryManager	0	var library/0 in reference port only
 f6d69cb56509	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#AttrInfo	/BehaviorTreeParser$	0	class AttrInfo/0 in reference port only
@@ -146,52 +112,12 @@ b1c48c35cb05	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#Deb
 e8da923c69cb	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#TaskMeta	/BehaviorTreeParser$	0	class TaskMeta/0 in reference port only
 eae3eba29ffc	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#TaskMeta	/BehaviorTreeParser$	0	object TaskMeta/0 in reference port only
 e859205e3ccf	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#TaskRegistry	/BehaviorTreeParser$	0	class TaskRegistry/0 in reference port only
-638aad66b40a	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#attribute	/BehaviorTreeParser$	0	def attribute/3 in reference port only
-638aad66b40a/2	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#attribute	/BehaviorTreeParser$	0	def attribute/3 in reference port only
-638aad66b40a/3	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#attribute	/BehaviorTreeParser$	0	def attribute/3 in reference port only
-638aad66b40a/4	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#attribute	/BehaviorTreeParser$	0	def attribute/3 in reference port only
-638aad66b40a/5	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#attribute	/BehaviorTreeParser$	0	def attribute/3 in reference port only
-b502079fa0f0	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#branchMeta	/BehaviorTreeParser$	0	val branchMeta/0 in reference port only [rename candidates: DEBUG_HIGH, DEBUG_LOW, DEBUG_NONE]
-e589885997fe	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#classes	/BehaviorTreeParser$	0	val classes/0 in reference port only [rename candidates: DEBUG_HIGH, DEBUG_LOW, DEBUG_NONE]
-25557d3fbc1f	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#decoratorMeta	/BehaviorTreeParser$	0	val decoratorMeta/0 in reference port only [rename candidates: DEBUG_HIGH, DEBUG_LOW, DEBUG_NONE]
-fa848e6ff61e	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#e	/BehaviorTreeParser$	0	val e/0 in reference port only [rename candidates: DEBUG_HIGH, DEBUG_LOW, DEBUG_NONE]
-525c736787af	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#enter	/BehaviorTreeParser$	0	def enter/3 in reference port only
-525c736787af/2	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#enter	/BehaviorTreeParser$	0	def enter/3 in reference port only
-525c736787af/3	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#enter	/BehaviorTreeParser$	0	def enter/3 in reference port only
-525c736787af/4	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#enter	/BehaviorTreeParser$	0	def enter/3 in reference port only
-525c736787af/5	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#enter	/BehaviorTreeParser$	0	def enter/3 in reference port only
-0069eaaa2e04	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#exit	/BehaviorTreeParser$	0	def exit/1 in reference port only
-0069eaaa2e04/2	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#exit	/BehaviorTreeParser$	0	def exit/1 in reference port only
-0069eaaa2e04/3	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#exit	/BehaviorTreeParser$	0	def exit/1 in reference port only
-0069eaaa2e04/4	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#exit	/BehaviorTreeParser$	0	def exit/1 in reference port only
-0069eaaa2e04/5	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#exit	/BehaviorTreeParser$	0	def exit/1 in reference port only
-e3768c49816f	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#i	/BehaviorTreeParser$	0	var i/0 in reference port only
-0f92870912a3	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#init	/BehaviorTreeParser$	0	def init/1 in reference port only
-5cdbb1aea3a6	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#inited	/BehaviorTreeParser$	0	def inited/0 in reference port only
-2b0767d7803c	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#isRootTree	/BehaviorTreeParser$	0	def isRootTree/0 in reference port only
-4422c9525b2a	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#leafMeta	/BehaviorTreeParser$	0	val leafMeta/0 in reference port only [rename candidates: DEBUG_HIGH, DEBUG_LOW, DEBUG_NONE]
-afaed09073fc	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#n	/BehaviorTreeParser$	0	val n/0 in reference port only [rename candidates: DEBUG_HIGH, DEBUG_LOW, DEBUG_NONE]
-af1ae716a9e6	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#referenceCount	/BehaviorTreeParser$	0	var referenceCount/0 in reference port only
-61ae6aaeb29b	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#result	/BehaviorTreeParser$	0	var result/0 in reference port only
-e89b2a1ef357	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#rootTask	/BehaviorTreeParser$	0	var rootTask/0 in reference port only
-12c6be061302	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#rootTaskInstance	/BehaviorTreeParser$	0	def rootTaskInstance/0 in reference port only
-fe729bcd9784	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#statementName	/BehaviorTreeParser$	0	def statementName/0 in reference port only
-1a89e8cdf9e7	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#statementName	/BehaviorTreeParser$	0	val statementName/0 in reference port only [rename candidates: DEBUG_HIGH, DEBUG_LOW, DEBUG_NONE]
-1a89e8cdf9e7/2	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#statementName	/BehaviorTreeParser$	0	val statementName/0 in reference port only [rename candidates: DEBUG_HIGH, DEBUG_LOW, DEBUG_NONE]
-1a89e8cdf9e7/3	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#statementName	/BehaviorTreeParser$	0	val statementName/0 in reference port only [rename candidates: DEBUG_HIGH, DEBUG_LOW, DEBUG_NONE]
-1a89e8cdf9e7/4	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$#statementName	/BehaviorTreeParser$	0	val statementName/0 in reference port only [rename candidates: DEBUG_HIGH, DEBUG_LOW, DEBUG_NONE]
 d89af678c579	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$.AttrInfo#fieldName	/BehaviorTreeParser$/AttrInfo	0	val fieldName/0 in reference port only
 824f5bee2639	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$.AttrInfo#required	/BehaviorTreeParser$/AttrInfo	0	val required/0 in reference port only
 119b52ce869f	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$.AttrInfo#setter	/BehaviorTreeParser$/AttrInfo	0	val setter/0 in reference port only
-1d84cb4b8d93	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#adjustedIndent	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	val adjustedIndent/0 in reference port only [rename candidates: a, ai, attrs, cached, className, className, entries, entry, f, i, maxChildren, meta, metadata, minChildren, oldTree, stackedParent, stackedTask, stackedTask, taskAttributes, tree, valueObject]
-bbc417184cf0	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#ct	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	val ct/0 in reference port only [rename candidates: a, ai, attrs, cached, className, className, entries, entry, f, i, maxChildren, meta, metadata, minChildren, oldTree, stackedParent, stackedTask, stackedTask, taskAttributes, tree, valueObject]
 7b346a761b71	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#getParser	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	def getParser/0 in reference port only [rename candidates: endLine, endStatement, parser]
-ea334ad3de01	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#importName	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	val importName/0 in reference port only [rename candidates: a, ai, attrs, cached, className, className, entries, entry, f, i, maxChildren, meta, metadata, minChildren, oldTree, stackedParent, stackedTask, stackedTask, taskAttributes, tree, valueObject]
-d5caf6df7284	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#newTree	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	val newTree/0 in reference port only [rename candidates: a, ai, attrs, cached, className, className, entries, entry, f, i, maxChildren, meta, metadata, minChildren, oldTree, stackedParent, stackedTask, stackedTask, taskAttributes, tree, valueObject]
-d81c06cff54c	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#resolvedAlias	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	val resolvedAlias/0 in reference port only [rename candidates: a, ai, attrs, cached, className, className, entries, entry, f, i, maxChildren, meta, metadata, minChildren, oldTree, stackedParent, stackedTask, stackedTask, taskAttributes, tree, valueObject]
-809107809700	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#resolvedName	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	val resolvedName/0 in reference port only [rename candidates: a, ai, attrs, cached, className, className, entries, entry, f, i, maxChildren, meta, metadata, minChildren, oldTree, stackedParent, stackedTask, stackedTask, taskAttributes, tree, valueObject]
 a191b8df8fac	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#setParser	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	def setParser/1 in reference port only [rename candidates: parser_=, startLine]
-c2d2d7a483aa	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#taskRegistry	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	val taskRegistry/0 in reference port only [rename candidates: a, ai, attrs, cached, className, className, entries, entry, f, i, maxChildren, meta, metadata, minChildren, oldTree, stackedParent, stackedTask, stackedTask, taskAttributes, tree, valueObject]
+2d528f43d6a5	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#taskRegistry	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	val taskRegistry/0 in reference port only
 ba39804fb887	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$.TaskMeta#attributes	/BehaviorTreeParser$/TaskMeta	0	val attributes/0 in reference port only
 9a379877ddc4	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$.TaskMeta#maxChildren	/BehaviorTreeParser$/TaskMeta	0	val maxChildren/0 in reference port only
 514d101b5aa5	api-parity(hand-port-extra)	hand-port-extra	BehaviorTreeParser$.TaskMeta#minChildren	/BehaviorTreeParser$/TaskMeta	0	val minChildren/0 in reference port only
@@ -252,10 +178,10 @@ dd3c5becd74d	api-parity(hand-port-extra)	hand-port-extra	EqualsMethodStopConditi
 a06f576ca9fd	api-parity(hand-port-extra)	hand-port-extra	FieldOfViewProximity#radius	/FieldOfViewProximity	0	var radius/0 in reference port only [rename candidates: lastTime, ownerOrientation, toAgent]
 358b72d0e785	api-parity(hand-port-extra)	hand-port-extra	FollowPath#getInternalTargetPosition	/FollowPath	0	def getInternalTargetPosition/0 in reference port only [rename candidates: getPath, getPathOffset, getPredictionTime, internalTargetPosition, isArriveEnabled, pathParam]
 9629132cdf9b	api-parity(hand-port-extra)	hand-port-extra	FollowPath#pathParam	/FollowPath	0	val pathParam/0 in reference port only
-70bba2aa7ca0	api-parity(hand-port-extra)	hand-port-extra	Formation#motionModerator	/Formation	0	var motionModerator/0 in reference port only [rename candidates: anchor, driftOffset, i, positionOffset, slotAssignments]
-4aae2af8ef61	api-parity(hand-port-extra)	hand-port-extra	Formation#pattern	/Formation	0	var pattern/0 in reference port only [rename candidates: anchor, driftOffset, i, positionOffset, slotAssignments]
+ed84ff6b1cdd	api-parity(hand-port-extra)	hand-port-extra	Formation#motionModerator	/Formation	0	var motionModerator/0 in reference port only [rename candidates: anchor, driftOffset, positionOffset, slotAssignments]
+156d6a9ad2bb	api-parity(hand-port-extra)	hand-port-extra	Formation#pattern	/Formation	0	var pattern/0 in reference port only [rename candidates: anchor, driftOffset, positionOffset, slotAssignments]
 9de89f5fcf1a	api-parity(hand-port-extra)	hand-port-extra	Formation#slotAssignmentAt	/Formation	0	def slotAssignmentAt/1 in reference port only [rename candidates: addMember, anchorPoint_=, changePattern, getSlotAssignmentAt, motionModerator_=, pattern_=, removeMember, slotAssignmentStrategy_=]
-4ca9fe1e991e	api-parity(hand-port-extra)	hand-port-extra	Formation#slotAssignmentStrategy	/Formation	0	var slotAssignmentStrategy/0 in reference port only [rename candidates: anchor, driftOffset, i, positionOffset, slotAssignments]
+5ea011391543	api-parity(hand-port-extra)	hand-port-extra	Formation#slotAssignmentStrategy	/Formation	0	var slotAssignmentStrategy/0 in reference port only [rename candidates: anchor, driftOffset, positionOffset, slotAssignments]
 d82fa6fb6230	api-parity(hand-port-extra)	hand-port-extra	FormationPattern#numberOfSlots_=	/FormationPattern	0	def numberOfSlots_=/1 in reference port only [rename candidates: setNumberOfSlots, supportsSlots]
 dc0e3e646f97	api-parity(hand-port-extra)	hand-port-extra	GaussianDoubleDistribution#mean	/GaussianDoubleDistribution	0	val mean/0 in reference port only
 e9887267e3bd	api-parity(hand-port-extra)	hand-port-extra	GaussianDoubleDistribution#standardDeviation	/GaussianDoubleDistribution	0	val standardDeviation/0 in reference port only
@@ -266,7 +192,6 @@ ccaefc70ed42	api-parity(hand-port-extra)	hand-port-extra	GaussianFloatDistributi
 6a4105f19631	api-parity(hand-port-extra)	hand-port-extra	GraphPath#getCount	/GraphPath	0	def getCount/0 in reference port only [rename candidates: clear, count, reverse]
 07fe05d65fa6	api-parity(hand-port-extra)	hand-port-extra	GroupBehavior#proximity	/GroupBehavior	0	var proximity/0 in reference port only
 9911bf530c8a	api-parity(hand-port-extra)	hand-port-extra	HierarchicalGraph#getLevelCount	/HierarchicalGraph	0	def getLevelCount/0 in reference port only [rename candidates: levelCount]
-8b5dc126c2dc	api-parity(hand-port-extra)	hand-port-extra	HierarchicalPathFinder#finished	/HierarchicalPathFinder	0	val finished/0 in reference port only
 483ca938c153	api-parity(hand-port-extra)	hand-port-extra	Include#isLazy	/Include	0	var isLazy/0 in reference port only [rename candidates: lazy, subtree]
 470ea6dc23fe	api-parity(hand-port-extra)	hand-port-extra	Include#newInstance	/Include	0	def newInstance/0 in reference port only [rename candidates: cloneTask, reset, start]
 b04760f50dc9	api-parity(hand-port-extra)	hand-port-extra	IndexedAStarPathFinder#searchInternal	/IndexedAStarPathFinder	0	def searchInternal/3 in reference port only [rename candidates: initSearch, search]
@@ -275,8 +200,6 @@ b04760f50dc9	api-parity(hand-port-extra)	hand-port-extra	IndexedAStarPathFinder#
 6965fd13176f	api-parity(hand-port-extra)	hand-port-extra	IndexedHierarchicalGraph#levelCount	/IndexedHierarchicalGraph	0	var levelCount/0 in reference port only [rename candidates: level]
 3c3897386935	api-parity(hand-port-extra)	hand-port-extra	Interpose#getInternalTargetPosition	/Interpose	0	def getInternalTargetPosition/0 in reference port only [rename candidates: getAgentA, getAgentB, getInterpositionRatio, internalTargetPosition]
 fc340e667afc	api-parity(hand-port-extra)	hand-port-extra	Invert#newInstance	/Invert	0	def newInstance/0 in reference port only
-c600451763fa	api-parity(hand-port-extra)	hand-port-extra	Jump$#targetLinearVelocity	/Jump$	0	val targetLinearVelocity/0 in reference port only
-4f03e7ed8011	api-parity(hand-port-extra)	hand-port-extra	Jump$#targetPosition	/Jump$	0	var targetPosition/0 in reference port only [rename candidates: DEBUG_ENABLED]
 8515febabc08	api-parity(hand-port-extra)	hand-port-extra	LeafTask#getChildCount	/LeafTask	0	def getChildCount/0 in reference port only [rename candidates: childCount, execute, run]
 03ac34a0bd47	api-parity(hand-port-extra)	hand-port-extra	LinePath#getSegments	/LinePath	0	def getSegments/0 in reference port only [rename candidates: createParam, endPoint, length, open, segments, startPoint]
 8086c7d884ff	api-parity(hand-port-extra)	hand-port-extra	LinePath$.LinePathParam#segmentIndex	/LinePath$/LinePathParam	0	var segmentIndex/0 in reference port only
@@ -288,7 +211,7 @@ a586898c3d8e	api-parity(hand-port-extra)	hand-port-extra	LinePath$.Segment#lengt
 a4c4b2b56d02	api-parity(hand-port-extra)	hand-port-extra	MessageDispatcher#addListeners	/MessageDispatcher	0	def addListeners/3 in reference port only [rename candidates: dispatchMessage, dispatchMessage, dispatchMessage, dispatchMessage, dispatchMessage]
 fb7b2671ef44	api-parity(hand-port-extra)	hand-port-extra	MessageDispatcher#clearAllListeners	/MessageDispatcher	0	def clearAllListeners/0 in reference port only [rename candidates: clear, clearListeners, clearProviders, clearQueue, debugEnabled, update]
 8f92a23ad770	api-parity(hand-port-extra)	hand-port-extra	MessageDispatcher#clearAllProviders	/MessageDispatcher	0	def clearAllProviders/0 in reference port only [rename candidates: clear, clearListeners, clearProviders, clearQueue, debugEnabled, update]
-f63f05efa41f	api-parity(hand-port-extra)	hand-port-extra	MessageDispatcher#debugEnabled	/MessageDispatcher	0	var debugEnabled/0 in reference port only [rename candidates: handledCount, i, msgListeners, msgProviders, pool, queue]
+f124af9e0ef9	api-parity(hand-port-extra)	hand-port-extra	MessageDispatcher#debugEnabled	/MessageDispatcher	0	var debugEnabled/0 in reference port only [rename candidates: msgListeners, msgProviders, pool, queue]
 c0076aade349	api-parity(hand-port-extra)	hand-port-extra	MessageDispatcher#dispatchMessage	/MessageDispatcher	0	def dispatchMessage/7 in reference port only
 aba0917a1d8f	api-parity(hand-port-extra)	hand-port-extra	MessageDispatcher#removeListeners	/MessageDispatcher	0	def removeListeners/2 in reference port only [rename candidates: addListener, addListeners, addProvider, addProviders, dispatchMessage, dispatchMessage, dispatchMessage, removeListener, removeListener]
 98fb2ed34098	api-parity(hand-port-extra)	hand-port-extra	MessageDispatcher#scanQueue	/MessageDispatcher	0	def scanQueue/2 in reference port only [rename candidates: addListener, addListeners, addProvider, addProviders, dispatchMessage, dispatchMessage, dispatchMessage, removeListener, removeListener]
@@ -298,8 +221,6 @@ ea9232e6e240	api-parity(hand-port-extra)	hand-port-extra	Parallel$#Orchestrator	
 9737b7899ffe	api-parity(hand-port-extra)	hand-port-extra	Parallel$#Policy	/Parallel$	0	enum Policy/0 in reference port only
 99f7bae5c09e	api-parity(hand-port-extra)	hand-port-extra	Parallel$.Orchestrator#Join	/Parallel$/Orchestrator	0	case Join/0 in reference port only
 4fcd5189c36e	api-parity(hand-port-extra)	hand-port-extra	Parallel$.Orchestrator#Resume	/Parallel$/Orchestrator	0	case Resume/0 in reference port only
-185af45bbbb2	api-parity(hand-port-extra)	hand-port-extra	Parallel$.Orchestrator#child	/Parallel$/Orchestrator	0	val child/0 in reference port only
-185af45bbbb2/2	api-parity(hand-port-extra)	hand-port-extra	Parallel$.Orchestrator#child	/Parallel$/Orchestrator	0	val child/0 in reference port only
 fb816328f643	api-parity(hand-port-extra)	hand-port-extra	Parallel$.Policy#Selector	/Parallel$/Policy	0	case Selector/0 in reference port only
 320a332fd931	api-parity(hand-port-extra)	hand-port-extra	Parallel$.Policy#Sequence	/Parallel$/Policy	0	case Sequence/0 in reference port only
 0072f446327f	api-parity(hand-port-extra)	hand-port-extra	ParallelSideRayConfiguration#length	/ParallelSideRayConfiguration	0	var length/0 in reference port only
@@ -313,9 +234,7 @@ f672c3755f0d	api-parity(hand-port-extra)	hand-port-extra	PathFinderRequestContro
 0ce92e171a0a	api-parity(hand-port-extra)	hand-port-extra	PathFinderRequestControl#timeTolerance	/PathFinderRequestControl	0	var timeTolerance/0 in reference port only
 d08b6c03edf9	api-parity(hand-port-extra)	hand-port-extra	PathFinderRequestControl#timepiece	/PathFinderRequestControl	0	var timepiece/0 in reference port only
 a3076def0081	api-parity(hand-port-extra)	hand-port-extra	PendingMessageCallback#report	/PendingMessageCallback	0	def report/6 in reference port only
-e3bcb0286e06	api-parity(hand-port-extra)	hand-port-extra	PriorityQueue#pos	/PriorityQueue	0	var pos/0 in reference port only [rename candidates: c, child, k, k, newCapacity, queue, set]
-e3bcb0286e06/2	api-parity(hand-port-extra)	hand-port-extra	PriorityQueue#pos	/PriorityQueue	0	var pos/0 in reference port only [rename candidates: c, child, k, k, newCapacity, queue, set]
-5178b43ec3ad	api-parity(hand-port-extra)	hand-port-extra	PriorityQueue#uniqueness	/PriorityQueue	0	var uniqueness/0 in reference port only [rename candidates: c, child, k, k, newCapacity, queue, set]
+b68d09407208	api-parity(hand-port-extra)	hand-port-extra	PriorityQueue#uniqueness	/PriorityQueue	0	var uniqueness/0 in reference port only [rename candidates: queue, set]
 c45e9a28bd9d	api-parity(hand-port-extra)	hand-port-extra	PrioritySchedulableRecord#priority	/PrioritySchedulableRecord	0	val priority/0 in reference port only
 27fce49c43fc	api-parity(hand-port-extra)	hand-port-extra	PrioritySteering#selectedBehaviorIndex	/PrioritySteering	0	var selectedBehaviorIndex/0 in reference port only [rename candidates: behaviors, epsilon]
 b9878697de95	api-parity(hand-port-extra)	hand-port-extra	ProximityBase#agents	/ProximityBase	0	var agents/0 in reference port only
@@ -325,8 +244,8 @@ e190294e4c10	api-parity(hand-port-extra)	hand-port-extra	Pursue#getActualMaxLine
 e62726a586f0	api-parity(hand-port-extra)	hand-port-extra	Random#successDistribution	/Random	0	var successDistribution/0 in reference port only
 543766df2003	api-parity(hand-port-extra)	hand-port-extra	RandomSelector#newInstance	/RandomSelector	0	def newInstance/0 in reference port only [rename candidates: start]
 22157c54d245	api-parity(hand-port-extra)	hand-port-extra	RandomSequence#newInstance	/RandomSequence	0	def newInstance/0 in reference port only [rename candidates: start]
-b2b4c074b580	api-parity(hand-port-extra)	hand-port-extra	RayConfigurationBase#owner	/RayConfigurationBase	0	var owner/0 in reference port only [rename candidates: i]
-8da801768a70	api-parity(hand-port-extra)	hand-port-extra	RayConfigurationBase#rays	/RayConfigurationBase	0	var rays/0 in reference port only [rename candidates: i]
+a6217eef362a	api-parity(hand-port-extra)	hand-port-extra	RayConfigurationBase#owner	/RayConfigurationBase	0	var owner/0 in reference port only
+bad58eaef39c	api-parity(hand-port-extra)	hand-port-extra	RayConfigurationBase#rays	/RayConfigurationBase	0	var rays/0 in reference port only
 060d254cdaee	api-parity(hand-port-extra)	hand-port-extra	Repeat#newInstance	/Repeat	0	def newInstance/0 in reference port only [rename candidates: condition, reset, start]
 3076d18650e5	api-parity(hand-port-extra)	hand-port-extra	SchedulableRecord#frequency	/SchedulableRecord	0	val frequency/0 in reference port only
 406431eeb6be	api-parity(hand-port-extra)	hand-port-extra	SchedulableRecord#phase	/SchedulableRecord	0	val phase/0 in reference port only
@@ -346,13 +265,10 @@ ba52f2b9677a	api-parity(hand-port-extra)	hand-port-extra	StateMachine#setGlobalS
 74b6ba8e2525	api-parity(hand-port-extra)	hand-port-extra	SteeringBehavior#getActualLimiter	/SteeringBehavior	0	def getActualLimiter/0 in reference port only [rename candidates: actualLimiter, getLimiter, getOwner, isEnabled]
 5a6a3b9bf7b4	api-parity(hand-port-extra)	hand-port-extra	StopCondition#shouldStopSearch	/StopCondition	0	def shouldStopSearch/2 in reference port only
 e0b3b43d19d4	api-parity(hand-port-extra)	hand-port-extra	Success#newInstance	/Success	0	def newInstance/0 in reference port only [rename candidates: execute]
-d6913de34720	api-parity(hand-port-extra)	hand-port-extra	Task#child	/Task	0	val child/0 in reference port only
 0aafffb9dd67	api-parity(hand-port-extra)	hand-port-extra	Task#getChildCount	/Task	0	def getChildCount/0 in reference port only [rename candidates: cancel, childCount, cloneTask, end, fail, guard, object, reset, resetTask, run, running, start, status, success]
 5b20d47a823e	api-parity(hand-port-extra)	hand-port-extra	Task#getObject	/Task	0	def getObject/0 in reference port only [rename candidates: cancel, childCount, cloneTask, end, fail, guard, object, reset, resetTask, run, running, start, status, success]
 8ae012185430	api-parity(hand-port-extra)	hand-port-extra	Task#getStatus	/Task	0	def getStatus/0 in reference port only [rename candidates: cancel, childCount, cloneTask, end, fail, guard, object, reset, resetTask, run, running, start, status, success]
 4cac006e12ac	api-parity(hand-port-extra)	hand-port-extra	Task#guard	/Task	0	var guard/0 in reference port only [rename candidates: control, tree]
-0330d6252548	api-parity(hand-port-extra)	hand-port-extra	Task#i	/Task	0	var i/0 in reference port only [rename candidates: control, tree]
-91ad9b0d36a9	api-parity(hand-port-extra)	hand-port-extra	Task#n	/Task	0	val n/0 in reference port only
 688e4a23924d	api-parity(hand-port-extra)	hand-port-extra	Task#newInstance	/Task	0	def newInstance/0 in reference port only [rename candidates: cancel, childCount, cloneTask, end, fail, guard, object, reset, resetTask, run, running, start, status, success]
 77080d4c8cd2	api-parity(hand-port-extra)	hand-port-extra	Task$#taskCloner	/Task$	0	var taskCloner/0 in reference port only [rename candidates: TASK_CLONER]
 dee400697fc2	api-parity(hand-port-extra)	hand-port-extra	Telegram#timestamp	/Telegram	0	var timestamp/0 in reference port only [rename candidates: extraInfo, message, receiver, returnReceiptStatus, sender]
@@ -386,8 +302,6 @@ bb9ff08e487a	api-parity(hand-port-extra)	hand-port-extra	Wait#newInstance	/Wait	
 f14ebb02cb37	api-parity(mutability)	mutability	BehaviorTreeLibrary#repository	/BehaviorTreeLibrary	0	kind differs: emitted var, reference val
 fc051d41f525	api-parity(mutability)	mutability	BehaviorTreeLibrary#resolver	/BehaviorTreeLibrary	0	kind differs: emitted var, reference val
 ac38debf3f57	api-parity(mutability)	mutability	BehaviorTreeParser#distributionAdapters	/BehaviorTreeParser	0	kind differs: emitted var, reference val
-aa977616abc5	api-parity(mutability)	mutability	BehaviorTreeParser$.DefaultBehaviorTreeReader#expected	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	kind differs: emitted var, reference val
-e01e053a2fa0	api-parity(mutability)	mutability	BehaviorTreeParser$.DefaultBehaviorTreeReader#task	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	kind differs: emitted var, reference val
 4da15c392544	api-parity(mutability)	mutability	BehaviorTreeReader#reportsComments	/BehaviorTreeReader	0	kind differs: emitted var, reference val
 25334604124a	api-parity(mutability)	mutability	BlendedSteering#list	/BlendedSteering	0	kind differs: emitted var, reference val
 99719e4e019b	api-parity(mutability)	mutability	BranchTask#children	/BranchTask	0	kind differs: emitted var, reference val
@@ -520,7 +434,6 @@ bd624bb4ec4d	api-parity(port-extra)	port-extra	BehaviorTree#object	/BehaviorTree
 eafb7f185178	api-parity(port-extra)	port-extra	BehaviorTree#object_=	/BehaviorTree	0	def object_=/1 in emitted port only [rename candidates: addChildToTask, addListener, childFail, childSuccess, copyTo, getChild, removeListener, setObject]
 7ae493090ba3	api-parity(port-extra)	port-extra	BehaviorTree#rootTask	/BehaviorTree	0	var rootTask/0 in emitted port only
 00ab75c2f9ba	api-parity(port-extra)	port-extra	BehaviorTree$#GuardEvaluator	/BehaviorTree$	0	object GuardEvaluator/0 in emitted port only
-8f2e2a894723	api-parity(port-extra)	port-extra	BehaviorTree$#childCount	/BehaviorTree$	0	def childCount/0 in emitted port only
 1b6e837f2324	api-parity(port-extra)	port-extra	BehaviorTree$.GuardEvaluator$#Funnel	/BehaviorTree$/GuardEvaluator$	0	class Funnel/0 in emitted port only
 ea0363c743b2	api-parity(port-extra)	port-extra	BehaviorTreeLibraryManager#library	/BehaviorTreeLibraryManager	0	def library/0 in emitted port only
 dcbe175bf709	api-parity(port-extra)	port-extra	BehaviorTreeLibraryManager#library_=	/BehaviorTreeLibraryManager	0	def library_=/1 in emitted port only [rename candidates: createBehaviorTree, createRootTask]
@@ -532,49 +445,19 @@ f0672c8d91ae	api-parity(port-extra)	port-extra	BehaviorTreeLoader#loadSync	/Beha
 394e73db3a80	api-parity(port-extra)	port-extra	BehaviorTreeLoader$.BehaviorTreeParameter#blackboard	/BehaviorTreeLoader$/BehaviorTreeParameter	0	var blackboard/0 in emitted port only
 5414d636224d	api-parity(port-extra)	port-extra	BehaviorTreeLoader$.BehaviorTreeParameter#parser	/BehaviorTreeLoader$/BehaviorTreeParameter	0	var parser/0 in emitted port only
 2562adb3a025	api-parity(port-extra)	port-extra	BehaviorTreeParser#btReader	/BehaviorTreeParser	0	var btReader/0 in emitted port only [rename candidates: debugLevel]
-c74b2cf8b115	api-parity(port-extra)	port-extra	BehaviorTreeParser$#DEBUG_HIGH	/BehaviorTreeParser$	0	val DEBUG_HIGH/0 in emitted port only [rename candidates: DebugHigh, DebugLow, DebugNone, branchMeta, classes, decoratorMeta, e, leafMeta, n, statementName, statementName, statementName, statementName]
-884038601d5f	api-parity(port-extra)	port-extra	BehaviorTreeParser$#DEBUG_LOW	/BehaviorTreeParser$	0	val DEBUG_LOW/0 in emitted port only [rename candidates: DebugHigh, DebugLow, DebugNone, branchMeta, classes, decoratorMeta, e, leafMeta, n, statementName, statementName, statementName, statementName]
-5aa87b0aaa75	api-parity(port-extra)	port-extra	BehaviorTreeParser$#DEBUG_NONE	/BehaviorTreeParser$	0	val DEBUG_NONE/0 in emitted port only [rename candidates: DebugHigh, DebugLow, DebugNone, branchMeta, classes, decoratorMeta, e, leafMeta, n, statementName, statementName, statementName, statementName]
+0eb263f86f51	api-parity(port-extra)	port-extra	BehaviorTreeParser$#DEBUG_HIGH	/BehaviorTreeParser$	0	val DEBUG_HIGH/0 in emitted port only [rename candidates: DebugHigh, DebugLow, DebugNone]
+785fdcd9d959	api-parity(port-extra)	port-extra	BehaviorTreeParser$#DEBUG_LOW	/BehaviorTreeParser$	0	val DEBUG_LOW/0 in emitted port only [rename candidates: DebugHigh, DebugLow, DebugNone]
+b9c89b38b3b1	api-parity(port-extra)	port-extra	BehaviorTreeParser$#DEBUG_NONE	/BehaviorTreeParser$	0	val DEBUG_NONE/0 in emitted port only [rename candidates: DebugHigh, DebugLow, DebugNone]
 1a20e5ed3351	api-parity(port-extra)	port-extra	BehaviorTreeParser$#DefaultBehaviorTreeReader	/BehaviorTreeParser$	0	object DefaultBehaviorTreeReader/0 in emitted port only
-52933f629a2e	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#a	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	val a/0 in emitted port only [rename candidates: adjustedIndent, ct, expected, i, importName, maxChildren, metadata, minChildren, newTree, resolvedAlias, resolvedName, stackedParent, stackedTask, stackedTask, task, taskRegistry, tree]
-6d425beee696	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#ai	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	val ai/0 in emitted port only [rename candidates: adjustedIndent, ct, expected, i, importName, maxChildren, metadata, minChildren, newTree, resolvedAlias, resolvedName, stackedParent, stackedTask, stackedTask, task, taskRegistry, tree]
-2959c1c573d1	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#alias	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	var alias/0 in emitted port only
-65c71f076bd1	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#attrs	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	val attrs/0 in emitted port only [rename candidates: adjustedIndent, ct, expected, i, importName, maxChildren, metadata, minChildren, newTree, resolvedAlias, resolvedName, stackedParent, stackedTask, stackedTask, task, taskRegistry, tree]
 7ce08781ffe6	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#btParser	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	var btParser/0 in emitted port only
-5767d1c22478	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#cached	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	val cached/0 in emitted port only [rename candidates: adjustedIndent, ct, expected, i, importName, maxChildren, metadata, minChildren, newTree, resolvedAlias, resolvedName, stackedParent, stackedTask, stackedTask, task, taskRegistry, tree]
 91c11f940071	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#castValue	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	def castValue/2 in emitted port only [rename candidates: attribute]
-c3857baed61d	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#className	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	val className/0 in emitted port only [rename candidates: adjustedIndent, ct, expected, i, importName, maxChildren, metadata, minChildren, newTree, resolvedAlias, resolvedName, stackedParent, stackedTask, stackedTask, task, taskRegistry, tree]
-c3857baed61d/2	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#className	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	val className/0 in emitted port only [rename candidates: adjustedIndent, ct, expected, i, importName, maxChildren, metadata, minChildren, newTree, resolvedAlias, resolvedName, stackedParent, stackedTask, stackedTask, task, taskRegistry, tree]
-60058104cca6	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#className	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	var className/0 in emitted port only
-7d9598a41a5f	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#clazz	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	var clazz/0 in emitted port only
-daacc656bee6	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#entries	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	val entries/0 in emitted port only [rename candidates: adjustedIndent, ct, expected, i, importName, maxChildren, metadata, minChildren, newTree, resolvedAlias, resolvedName, stackedParent, stackedTask, stackedTask, task, taskRegistry, tree]
-a43d04f7331a	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#entry	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	val entry/0 in emitted port only [rename candidates: adjustedIndent, ct, expected, i, importName, maxChildren, metadata, minChildren, newTree, resolvedAlias, resolvedName, stackedParent, stackedTask, stackedTask, task, taskRegistry, tree]
-3cc63202fb47	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#f	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	val f/0 in emitted port only [rename candidates: adjustedIndent, ct, expected, i, importName, maxChildren, metadata, minChildren, newTree, resolvedAlias, resolvedName, stackedParent, stackedTask, stackedTask, task, taskRegistry, tree]
 87bf4325f0dd	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#guardChain	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	var guardChain/0 in emitted port only
-93291b281aa7	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#meta	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	val meta/0 in emitted port only [rename candidates: adjustedIndent, ct, expected, i, importName, maxChildren, metadata, minChildren, newTree, resolvedAlias, resolvedName, stackedParent, stackedTask, stackedTask, task, taskRegistry, tree]
-855a8987b67f	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#oldTree	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	val oldTree/0 in emitted port only [rename candidates: adjustedIndent, ct, expected, i, importName, maxChildren, metadata, minChildren, newTree, resolvedAlias, resolvedName, stackedParent, stackedTask, stackedTask, task, taskRegistry, tree]
 6d61d0512be5	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#parser	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	def parser/0 in emitted port only [rename candidates: endLine, endStatement, getParser]
 5197c61036d9	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#parser_=	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	def parser_=/1 in emitted port only [rename candidates: setParser, startLine]
 054adf9c22a7	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#stack	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	var stack/0 in emitted port only
-fcc3a539b445	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#taskAttributes	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	val taskAttributes/0 in emitted port only [rename candidates: adjustedIndent, ct, expected, i, importName, maxChildren, metadata, minChildren, newTree, resolvedAlias, resolvedName, stackedParent, stackedTask, stackedTask, task, taskRegistry, tree]
-99e1e1d1ed44	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader#valueObject	/BehaviorTreeParser$/DefaultBehaviorTreeReader	0	val valueObject/0 in emitted port only [rename candidates: adjustedIndent, ct, expected, i, importName, maxChildren, metadata, minChildren, newTree, resolvedAlias, resolvedName, stackedParent, stackedTask, stackedTask, task, taskRegistry, tree]
 23b3d5e3084b	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader$#StackedTask	/BehaviorTreeParser$/DefaultBehaviorTreeReader$	0	class StackedTask/0 in emitted port only
 b092957b56b7	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader$#Statement	/BehaviorTreeParser$/DefaultBehaviorTreeReader$	0	object Statement/0 in emitted port only
 613abfdca2d1	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader$#Subtree	/BehaviorTreeParser$/DefaultBehaviorTreeReader$	0	class Subtree/0 in emitted port only
-d6c4b8acdd92	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader$#alias	/BehaviorTreeParser$/DefaultBehaviorTreeReader$	0	val alias/0 in emitted port only
-898d73c8e729	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader$#attribute	/BehaviorTreeParser$/DefaultBehaviorTreeReader$	0	def attribute/3 in emitted port only
-e372f0c23d22	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader$#attributes	/BehaviorTreeParser$/DefaultBehaviorTreeReader$	0	var attributes/0 in emitted port only
-2daffedc380b	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader$#classes	/BehaviorTreeParser$/DefaultBehaviorTreeReader$	0	val classes/0 in emitted port only
-5b306934acec	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader$#cn	/BehaviorTreeParser$/DefaultBehaviorTreeReader$	0	val cn/0 in emitted port only
-e7dfecad05e1	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader$#enter	/BehaviorTreeParser$/DefaultBehaviorTreeReader$	0	def enter/3 in emitted port only
-c9f0af35832c	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader$#exit	/BehaviorTreeParser$/DefaultBehaviorTreeReader$	0	def exit/1 in emitted port only
-70328b42519e	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader$#fieldName	/BehaviorTreeParser$/DefaultBehaviorTreeReader$	0	var fieldName/0 in emitted port only
-afab5b90f319	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader$#fqcn	/BehaviorTreeParser$/DefaultBehaviorTreeReader$	0	val fqcn/0 in emitted port only
-134d808ded47	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader$#maxChildren	/BehaviorTreeParser$/DefaultBehaviorTreeReader$	0	var maxChildren/0 in emitted port only
-fe90a4bedd87	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader$#minChildren	/BehaviorTreeParser$/DefaultBehaviorTreeReader$	0	var minChildren/0 in emitted port only
-ee1d72e21ce7	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader$#name	/BehaviorTreeParser$/DefaultBehaviorTreeReader$	0	var name/0 in emitted port only
-cc72372e0393	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader$#ordinal	/BehaviorTreeParser$/DefaultBehaviorTreeReader$	0	def ordinal/0 in emitted port only
-86d1f3b2f596	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader$#required	/BehaviorTreeParser$/DefaultBehaviorTreeReader$	0	var required/0 in emitted port only
 71b507f84082	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader$.StackedTask#lineNumber	/BehaviorTreeParser$/DefaultBehaviorTreeReader$/StackedTask	0	var lineNumber/0 in emitted port only
 b9d528c0ad36	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader$.StackedTask#metadata	/BehaviorTreeParser$/DefaultBehaviorTreeReader$/StackedTask	0	var metadata/0 in emitted port only
 28366c4e4d01	api-parity(port-extra)	port-extra	BehaviorTreeParser$.DefaultBehaviorTreeReader$.StackedTask#name	/BehaviorTreeParser$/DefaultBehaviorTreeReader$/StackedTask	0	var name/0 in emitted port only
@@ -719,13 +602,13 @@ b047e8aaba8b	api-parity(port-extra)	port-extra	FollowPath#setTarget	/FollowPath	
 9f9d1c5c2a86	api-parity(port-extra)	port-extra	FollowPath#setTimeToTarget	/FollowPath	0	def setTimeToTarget/1 in emitted port only [rename candidates: calculateRealSteering]
 a342eb8e7b6d	api-parity(port-extra)	port-extra	Formation#anchorPoint	/Formation	0	def anchorPoint/0 in emitted port only [rename candidates: slotAssignmentCount, updateSlotAssignments, updateSlots]
 e457039078e5	api-parity(port-extra)	port-extra	Formation#anchorPoint_=	/Formation	0	def anchorPoint_=/1 in emitted port only [rename candidates: addMember, changePattern, removeMember, slotAssignmentAt]
-d7fc42d8a010	api-parity(port-extra)	port-extra	Formation#driftOffset	/Formation	0	var driftOffset/0 in emitted port only [rename candidates: anchor, i, motionModerator, pattern, slotAssignmentStrategy]
+36b4354107d0	api-parity(port-extra)	port-extra	Formation#driftOffset	/Formation	0	var driftOffset/0 in emitted port only [rename candidates: anchor, motionModerator, pattern, slotAssignmentStrategy]
 6467a348ab0c	api-parity(port-extra)	port-extra	Formation#getSlotAssignmentAt	/Formation	0	def getSlotAssignmentAt/1 in emitted port only [rename candidates: addMember, changePattern, removeMember, slotAssignmentAt]
 425b277e3a66	api-parity(port-extra)	port-extra	Formation#motionModerator	/Formation	0	def motionModerator/0 in emitted port only [rename candidates: slotAssignmentCount, updateSlotAssignments, updateSlots]
 f72d04f29170	api-parity(port-extra)	port-extra	Formation#motionModerator_=	/Formation	0	def motionModerator_=/1 in emitted port only [rename candidates: addMember, changePattern, removeMember, slotAssignmentAt]
 13cf65491429	api-parity(port-extra)	port-extra	Formation#pattern	/Formation	0	def pattern/0 in emitted port only [rename candidates: slotAssignmentCount, updateSlotAssignments, updateSlots]
 bf58dad65aa0	api-parity(port-extra)	port-extra	Formation#pattern_=	/Formation	0	def pattern_=/1 in emitted port only [rename candidates: addMember, changePattern, removeMember, slotAssignmentAt]
-bbcbe5d3794c	api-parity(port-extra)	port-extra	Formation#positionOffset	/Formation	0	var positionOffset/0 in emitted port only [rename candidates: anchor, i, motionModerator, pattern, slotAssignmentStrategy]
+af3de85d8788	api-parity(port-extra)	port-extra	Formation#positionOffset	/Formation	0	var positionOffset/0 in emitted port only [rename candidates: anchor, motionModerator, pattern, slotAssignmentStrategy]
 3f0c83fa2528	api-parity(port-extra)	port-extra	Formation#slotAssignmentStrategy	/Formation	0	def slotAssignmentStrategy/0 in emitted port only [rename candidates: slotAssignmentCount, updateSlotAssignments, updateSlots]
 f3aa73c4ca8b	api-parity(port-extra)	port-extra	Formation#slotAssignmentStrategy_=	/Formation	0	def slotAssignmentStrategy_=/1 in emitted port only [rename candidates: addMember, changePattern, removeMember, slotAssignmentAt]
 8deb061525f5	api-parity(port-extra)	port-extra	FormationPattern#setNumberOfSlots	/FormationPattern	0	def setNumberOfSlots/1 in emitted port only [rename candidates: numberOfSlots_=, supportsSlots]
@@ -768,8 +651,6 @@ e22682c0eca1	api-parity(port-extra)	port-extra	Hide#toObstacle	/Hide	0	var toObs
 3b22274299c1	api-parity(port-extra)	port-extra	HierarchicalPathFinder#levelRequest	/HierarchicalPathFinder	0	var levelRequest/0 in emitted port only
 a10e15cf1a6a	api-parity(port-extra)	port-extra	HierarchicalPathFinder#levelRequestControl	/HierarchicalPathFinder	0	var levelRequestControl/0 in emitted port only
 df49f66c7a8f	api-parity(port-extra)	port-extra	HierarchicalPathFinder$#LevelPathFinderRequest	/HierarchicalPathFinder$	0	object LevelPathFinderRequest/0 in emitted port only
-4277e8a9ac6f	api-parity(port-extra)	port-extra	HierarchicalPathFinder$#finalizeSearch	/HierarchicalPathFinder$	0	def finalizeSearch/1 in emitted port only
-f2ce3e080346	api-parity(port-extra)	port-extra	HierarchicalPathFinder$#initializeSearch	/HierarchicalPathFinder$	0	def initializeSearch/1 in emitted port only
 7bd929bc941c	api-parity(port-extra)	port-extra	Include#lazy	/Include	0	var lazy/0 in emitted port only [rename candidates: isLazy, subtree]
 277c1e325390	api-parity(port-extra)	port-extra	Include$#Funnel	/Include$	0	class Funnel/0 in emitted port only
 5edcb91776ec	api-parity(port-extra)	port-extra	IndexedAStarPathFinder#nodeRecords	/IndexedAStarPathFinder	0	var nodeRecords/0 in emitted port only [rename candidates: stopCondition]
@@ -778,7 +659,6 @@ de4abc7170ee	api-parity(port-extra)	port-extra	IndexedAStarPathFinder#search	/In
 19ee99e1003c	api-parity(port-extra)	port-extra	IndexedAStarPathFinder$#EqualsByReferenceStopCondition	/IndexedAStarPathFinder$	0	class EqualsByReferenceStopCondition/0 in emitted port only
 65899fbba189	api-parity(port-extra)	port-extra	IndexedAStarPathFinder$#EqualsMethodStopCondition	/IndexedAStarPathFinder$	0	class EqualsMethodStopCondition/0 in emitted port only
 ecb6a81d92d4	api-parity(port-extra)	port-extra	IndexedAStarPathFinder$#StopCondition	/IndexedAStarPathFinder$	0	trait StopCondition/0 in emitted port only
-6bddd375dcb7	api-parity(port-extra)	port-extra	IndexedAStarPathFinder$#estimatedTotalCost	/IndexedAStarPathFinder$	0	def estimatedTotalCost/0 in emitted port only
 d7cd7012a3a7	api-parity(port-extra)	port-extra	IndexedAStarPathFinder$.EqualsByReferenceStopCondition#shouldStopSearch	/IndexedAStarPathFinder$/EqualsByReferenceStopCondition	0	def shouldStopSearch/2 in emitted port only
 d2222caf0b84	api-parity(port-extra)	port-extra	IndexedAStarPathFinder$.EqualsMethodStopCondition#shouldStopSearch	/IndexedAStarPathFinder$/EqualsMethodStopCondition	0	def shouldStopSearch/2 in emitted port only
 4a7b43bd62d0	api-parity(port-extra)	port-extra	IndexedAStarPathFinder$.StopCondition#shouldStopSearch	/IndexedAStarPathFinder$/StopCondition	0	def shouldStopSearch/2 in emitted port only
@@ -799,7 +679,7 @@ f374d8d9b40c	api-parity(port-extra)	port-extra	Jump#setLimiter	/Jump	0	def setLi
 17087276a836	api-parity(port-extra)	port-extra	Jump#setOwner	/Jump	0	def setOwner/1 in emitted port only [rename candidates: calculateRealSteering, setJumpDescriptor, setTakeoffTolerance]
 d37e8ab705b4	api-parity(port-extra)	port-extra	Jump#setTarget	/Jump	0	def setTarget/1 in emitted port only [rename candidates: calculateRealSteering, setJumpDescriptor, setTakeoffTolerance]
 fd6005015ecb	api-parity(port-extra)	port-extra	Jump#setTimeToTarget	/Jump	0	def setTimeToTarget/1 in emitted port only [rename candidates: calculateRealSteering, setJumpDescriptor, setTakeoffTolerance]
-adac43576d4d	api-parity(port-extra)	port-extra	Jump$#DEBUG_ENABLED	/Jump$	0	var DEBUG_ENABLED/0 in emitted port only [rename candidates: targetPosition]
+44c80861ebcf	api-parity(port-extra)	port-extra	Jump$#DEBUG_ENABLED	/Jump$	0	var DEBUG_ENABLED/0 in emitted port only
 45e9866c5d21	api-parity(port-extra)	port-extra	LeafTask#childCount	/LeafTask	0	def childCount/0 in emitted port only [rename candidates: execute, getChildCount, run]
 d2455f890f85	api-parity(port-extra)	port-extra	LinePath#nearestPointOnCurrentSegment	/LinePath	0	var nearestPointOnCurrentSegment/0 in emitted port only
 f02772eb5408	api-parity(port-extra)	port-extra	LinePath#nearestPointOnPath	/LinePath	0	var nearestPointOnPath/0 in emitted port only
@@ -854,11 +734,10 @@ d5ae900719f0	api-parity(port-extra)	port-extra	MessageDispatcher#dispatchMessage
 7fde7ad44a75/3	api-parity(port-extra)	port-extra	MessageDispatcher#dispatchMessage	/MessageDispatcher	0	def dispatchMessage/5 in emitted port only
 7fde7ad44a75/4	api-parity(port-extra)	port-extra	MessageDispatcher#dispatchMessage	/MessageDispatcher	0	def dispatchMessage/5 in emitted port only
 72e31ef344de	api-parity(port-extra)	port-extra	MessageDispatcher#dispatchMessage	/MessageDispatcher	0	def dispatchMessage/6 in emitted port only
-dcdbe38933ce	api-parity(port-extra)	port-extra	MessageDispatcher#listeners	/MessageDispatcher	0	val listeners/0 in emitted port only
-a42d5853ecd7	api-parity(port-extra)	port-extra	MessageDispatcher#msgListeners	/MessageDispatcher	0	var msgListeners/0 in emitted port only [rename candidates: debugEnabled, handledCount, i]
-47936ba0e187	api-parity(port-extra)	port-extra	MessageDispatcher#msgProviders	/MessageDispatcher	0	var msgProviders/0 in emitted port only [rename candidates: debugEnabled, handledCount, i]
-62538eff9587	api-parity(port-extra)	port-extra	MessageDispatcher#pool	/MessageDispatcher	0	var pool/0 in emitted port only [rename candidates: debugEnabled, handledCount, i]
-62da02680b42	api-parity(port-extra)	port-extra	MessageDispatcher#queue	/MessageDispatcher	0	var queue/0 in emitted port only [rename candidates: debugEnabled, handledCount, i]
+163b7208a29d	api-parity(port-extra)	port-extra	MessageDispatcher#msgListeners	/MessageDispatcher	0	var msgListeners/0 in emitted port only [rename candidates: debugEnabled]
+2310883b4618	api-parity(port-extra)	port-extra	MessageDispatcher#msgProviders	/MessageDispatcher	0	var msgProviders/0 in emitted port only [rename candidates: debugEnabled]
+3f533eb5798b	api-parity(port-extra)	port-extra	MessageDispatcher#pool	/MessageDispatcher	0	var pool/0 in emitted port only [rename candidates: debugEnabled]
+770ac7763429	api-parity(port-extra)	port-extra	MessageDispatcher#queue	/MessageDispatcher	0	var queue/0 in emitted port only [rename candidates: debugEnabled]
 4f9008973540	api-parity(port-extra)	port-extra	MessageDispatcher#scanQueue	/MessageDispatcher	0	def scanQueue/1 in emitted port only [rename candidates: clearListeners, clearListeners, clearProviders, clearProviders, handleMessage, update]
 87a639ed72d5	api-parity(port-extra)	port-extra	MessageDispatcher#update	/MessageDispatcher	0	def update/0 in emitted port only [rename candidates: clear, clearAllListeners, clearAllProviders, clearQueue]
 d13a57822d13	api-parity(port-extra)	port-extra	MessageDispatcher$#PendingMessageCallback	/MessageDispatcher$	0	trait PendingMessageCallback/0 in emitted port only
@@ -910,13 +789,10 @@ c19e52f3c0bf	api-parity(port-extra)	port-extra	PathFinderQueue#currentRequest	/P
 ef05862300e5	api-parity(port-extra)	port-extra	PathFinderRequestControl$#DEBUG	/PathFinderRequestControl$	0	val DEBUG/0 in emitted port only
 122d0018d89c	api-parity(port-extra)	port-extra	PooledBehaviorTreeLibrary#getPool	/PooledBehaviorTreeLibrary	0	def getPool/1 in emitted port only [rename candidates: clear, newBehaviorTree]
 7d26402d9139	api-parity(port-extra)	port-extra	PooledBehaviorTreeLibrary#pools	/PooledBehaviorTreeLibrary	0	var pools/0 in emitted port only
-7428154d13e1	api-parity(port-extra)	port-extra	PriorityQueue#k	/PriorityQueue	0	var k/0 in emitted port only [rename candidates: c, child, newCapacity, pos, pos, uniqueness]
-7428154d13e1/2	api-parity(port-extra)	port-extra	PriorityQueue#k	/PriorityQueue	0	var k/0 in emitted port only [rename candidates: c, child, newCapacity, pos, pos, uniqueness]
-1a8aaf233a2f	api-parity(port-extra)	port-extra	PriorityQueue#queue	/PriorityQueue	0	var queue/0 in emitted port only [rename candidates: c, child, newCapacity, pos, pos, uniqueness]
-26431eec99df	api-parity(port-extra)	port-extra	PriorityQueue#set	/PriorityQueue	0	var set/0 in emitted port only [rename candidates: c, child, newCapacity, pos, pos, uniqueness]
+b56b8598eb00	api-parity(port-extra)	port-extra	PriorityQueue#queue	/PriorityQueue	0	var queue/0 in emitted port only [rename candidates: uniqueness]
+7cfae4766d60	api-parity(port-extra)	port-extra	PriorityQueue#set	/PriorityQueue	0	var set/0 in emitted port only [rename candidates: uniqueness]
 54d1b02844df	api-parity(port-extra)	port-extra	PriorityQueue#uniqueness	/PriorityQueue	0	def uniqueness/0 in emitted port only [rename candidates: clear, peek, poll, size]
 06c585494d64	api-parity(port-extra)	port-extra	PriorityQueue#uniqueness_=	/PriorityQueue	0	def uniqueness_=/1 in emitted port only [rename candidates: add, get]
-c172ef4cff5a	api-parity(port-extra)	port-extra	PriorityScheduler$#priority	/PriorityScheduler$	0	var priority/0 in emitted port only
 b5dc56a61b4a	api-parity(port-extra)	port-extra	PrioritySteering#selectedBehaviorIndex	/PrioritySteering	0	def selectedBehaviorIndex/0 in emitted port only
 c5b6cd06e841	api-parity(port-extra)	port-extra	PrioritySteering#setEnabled	/PrioritySteering	0	def setEnabled/1 in emitted port only [rename candidates: add, calculateRealSteering]
 f779468fc386	api-parity(port-extra)	port-extra	PrioritySteering#setLimiter	/PrioritySteering	0	def setLimiter/1 in emitted port only [rename candidates: add, calculateRealSteering]
@@ -930,7 +806,6 @@ f779468fc386	api-parity(port-extra)	port-extra	PrioritySteering#setLimiter	/Prio
 0b6d5e5ee6c3	api-parity(port-extra)	port-extra	RadiusProximity#lastTime	/RadiusProximity	0	var lastTime/0 in emitted port only [rename candidates: radius]
 d46049186974	api-parity(port-extra)	port-extra	RadiusProximity#radius	/RadiusProximity	0	def radius/0 in emitted port only
 a584f5063dbb	api-parity(port-extra)	port-extra	RadiusProximity#radius_=	/RadiusProximity	0	def radius_=/1 in emitted port only [rename candidates: findNeighbors]
-4c111868112c	api-parity(port-extra)	port-extra	RayConfigurationBase#i	/RayConfigurationBase	0	var i/0 in emitted port only [rename candidates: owner, rays]
 fbb015d0a9a4	api-parity(port-extra)	port-extra	RayConfigurationBase#owner	/RayConfigurationBase	0	def owner/0 in emitted port only
 8005b6582fc3	api-parity(port-extra)	port-extra	RayConfigurationBase#owner_=	/RayConfigurationBase	0	def owner_=/1 in emitted port only
 1972f9e7b855	api-parity(port-extra)	port-extra	RayConfigurationBase#rays	/RayConfigurationBase	0	def rays/0 in emitted port only
@@ -962,13 +837,6 @@ d836a3cb0089	api-parity(port-extra)	port-extra	SingleRayConfiguration#length	/Si
 a11be44880e4	api-parity(port-extra)	port-extra	SingleRunningChildBranch#cancelRunningChildren	/SingleRunningChildBranch	0	def cancelRunningChildren/1 in emitted port only [rename candidates: childFail, childSuccess, copyTo]
 dd1c4f175358	api-parity(port-extra)	port-extra	SoftRoleSlotAssignmentStrategy#filledSlots	/SoftRoleSlotAssignmentStrategy	0	var filledSlots/0 in emitted port only
 65e899c214d3	api-parity(port-extra)	port-extra	SoftRoleSlotAssignmentStrategy$#SlotCostProvider	/SoftRoleSlotAssignmentStrategy$	0	trait SlotCostProvider/0 in emitted port only
-e1c945b75377	api-parity(port-extra)	port-extra	SoftRoleSlotAssignmentStrategy$#assignmentEase	/SoftRoleSlotAssignmentStrategy$	0	var assignmentEase/0 in emitted port only
-95702e1cb792	api-parity(port-extra)	port-extra	SoftRoleSlotAssignmentStrategy$#compareTo	/SoftRoleSlotAssignmentStrategy$	0	def compareTo/1 in emitted port only
-95702e1cb792/2	api-parity(port-extra)	port-extra	SoftRoleSlotAssignmentStrategy$#compareTo	/SoftRoleSlotAssignmentStrategy$	0	def compareTo/1 in emitted port only
-1d053e5f0bc8	api-parity(port-extra)	port-extra	SoftRoleSlotAssignmentStrategy$#cost	/SoftRoleSlotAssignmentStrategy$	0	var cost/0 in emitted port only
-adaef6b7dd81	api-parity(port-extra)	port-extra	SoftRoleSlotAssignmentStrategy$#costAndSlots	/SoftRoleSlotAssignmentStrategy$	0	var costAndSlots/0 in emitted port only
-40e57bd6d99e	api-parity(port-extra)	port-extra	SoftRoleSlotAssignmentStrategy$#member	/SoftRoleSlotAssignmentStrategy$	0	var member/0 in emitted port only
-30c67436ba6f	api-parity(port-extra)	port-extra	SoftRoleSlotAssignmentStrategy$#slotNumber	/SoftRoleSlotAssignmentStrategy$	0	var slotNumber/0 in emitted port only
 4424055037f7	api-parity(port-extra)	port-extra	SoftRoleSlotAssignmentStrategy$.SlotCostProvider#getCost	/SoftRoleSlotAssignmentStrategy$/SlotCostProvider	0	def getCost/2 in emitted port only
 555e167ca3c9	api-parity(port-extra)	port-extra	StackStateMachine#currentState	/StackStateMachine	0	def currentState/0 in emitted port only [rename candidates: getCurrentState, getPreviousState, revertToPreviousState]
 d3ccad182542	api-parity(port-extra)	port-extra	StackStateMachine#previousState	/StackStateMachine	0	def previousState/0 in emitted port only [rename candidates: getCurrentState, getPreviousState, revertToPreviousState]
@@ -1024,7 +892,6 @@ e8a2815a0569	api-parity(port-extra)	port-extra	TaskRegistry$#asString	/TaskRegis
 6ab748c77935	api-parity(port-extra)	port-extra	TaskRegistry$#metaOf	/TaskRegistry$	0	def metaOf/1 in emitted port only
 17348c4c389d	api-parity(port-extra)	port-extra	TaskRegistry$#newTask	/TaskRegistry$	0	def newTask/1 in emitted port only
 4975e120a0e4	api-parity(port-extra)	port-extra	TaskRegistry$#register	/TaskRegistry$	0	def register/2 in emitted port only
-13f343bf3ed2	api-parity(port-extra)	port-extra	TaskRegistry$#t	/TaskRegistry$	0	val t/0 in emitted port only
 641ece7a03d2	api-parity(port-extra)	port-extra	TaskRegistry$.Attr#field	/TaskRegistry$/Attr	0	val field/0 in emitted port only
 aba333dfa9ed	api-parity(port-extra)	port-extra	TaskRegistry$.Attr#fieldName	/TaskRegistry$/Attr	0	val fieldName/0 in emitted port only
 1456b29d873b	api-parity(port-extra)	port-extra	TaskRegistry$.Attr#name	/TaskRegistry$/Attr	0	val name/0 in emitted port only
@@ -1037,8 +904,6 @@ aad18e647956	api-parity(port-extra)	port-extra	Telegram#timestamp_=	/Telegram	0	
 27ccde8851bb	api-parity(port-extra)	port-extra	TriangularDoubleDistribution#high	/TriangularDoubleDistribution	0	def high/0 in emitted port only [rename candidates: nextDouble]
 9d28236801bf	api-parity(port-extra)	port-extra	TriangularDoubleDistribution#low	/TriangularDoubleDistribution	0	def low/0 in emitted port only [rename candidates: nextDouble]
 118305c3af81	api-parity(port-extra)	port-extra	TriangularDoubleDistribution#mode	/TriangularDoubleDistribution	0	def mode/0 in emitted port only [rename candidates: nextDouble]
-37992dba3ef9	api-parity(port-extra)	port-extra	TriangularDoubleDistribution$#d	/TriangularDoubleDistribution$	0	val d/0 in emitted port only
-f7faf9037547	api-parity(port-extra)	port-extra	TriangularDoubleDistribution$#u	/TriangularDoubleDistribution$	0	val u/0 in emitted port only
 9e51bdfbc5aa	api-parity(port-extra)	port-extra	TriangularFloatDistribution#high	/TriangularFloatDistribution	0	def high/0 in emitted port only [rename candidates: nextFloat]
 a5df40edfeb0	api-parity(port-extra)	port-extra	TriangularFloatDistribution#low	/TriangularFloatDistribution	0	def low/0 in emitted port only [rename candidates: nextFloat]
 26bc4e74ecf9	api-parity(port-extra)	port-extra	TriangularFloatDistribution#mode	/TriangularFloatDistribution	0	def mode/0 in emitted port only [rename candidates: nextFloat]
@@ -1205,62 +1070,6 @@ f7e08def71a5	api-parity(signature)	signature	DistributionAdapters$#Adapter	/Dist
 f30750a90272	api-parity(signature)	signature	DistributionAdapters$#FloatAdapter	/DistributionAdapters$	0	type params differ: emitted '[D <: sge.ai.utils.random.FloatDistribution]', reference '[D <: FloatDistribution]'
 859431a4f1b0	api-parity(signature)	signature	DistributionAdapters$#IntegerAdapter	/DistributionAdapters$	0	type params differ: emitted '[D <: sge.ai.utils.random.IntegerDistribution]', reference '[D <: IntegerDistribution]'
 561a5e295807	api-parity(signature)	signature	DistributionAdapters$#LongAdapter	/DistributionAdapters$	0	type params differ: emitted '[D <: sge.ai.utils.random.LongDistribution]', reference '[D <: LongDistribution]'
-2ceb9c903739	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-2ceb9c903739/2	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-2ceb9c903739/3	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-2ceb9c903739/4	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-2ceb9c903739/5	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-2ceb9c903739/6	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-2ceb9c903739/7	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-2ceb9c903739/8	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-2ceb9c903739/9	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-2ceb9c903739/10	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-2ceb9c903739/11	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-2ceb9c903739/12	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-2ceb9c903739/13	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-2ceb9c903739/14	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-fe0f3ddfb809	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	param 0 type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-fe0f3ddfb809/2	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	param 0 type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-fe0f3ddfb809/3	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	param 0 type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-fe0f3ddfb809/4	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	param 0 type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-fe0f3ddfb809/5	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	param 0 type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-fe0f3ddfb809/6	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	param 0 type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-fe0f3ddfb809/7	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	param 0 type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-fe0f3ddfb809/8	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	param 0 type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-fe0f3ddfb809/9	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	param 0 type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-fe0f3ddfb809/10	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	param 0 type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-fe0f3ddfb809/11	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	param 0 type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-fe0f3ddfb809/12	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	param 0 type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-fe0f3ddfb809/13	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	param 0 type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-fe0f3ddfb809/14	api-parity(signature)	signature	DistributionAdapters$#toDistribution	/DistributionAdapters$	0	param 0 type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-d6c4c31904c3	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-d6c4c31904c3/2	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-d6c4c31904c3/3	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-d6c4c31904c3/4	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-d6c4c31904c3/5	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-d6c4c31904c3/6	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-d6c4c31904c3/7	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-d6c4c31904c3/8	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-d6c4c31904c3/9	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-d6c4c31904c3/10	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-d6c4c31904c3/11	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-d6c4c31904c3/12	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-d6c4c31904c3/13	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-d6c4c31904c3/14	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	modifiers differ: emitted override, reference
-1036214e5f7d	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	result type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-1036214e5f7d/2	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	result type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-1036214e5f7d/3	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	result type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-1036214e5f7d/4	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	result type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-1036214e5f7d/5	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	result type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-1036214e5f7d/6	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	result type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-1036214e5f7d/7	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	result type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-1036214e5f7d/8	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	result type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-1036214e5f7d/9	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	result type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-1036214e5f7d/10	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	result type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-1036214e5f7d/11	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	result type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-1036214e5f7d/12	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	result type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-1036214e5f7d/13	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	result type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-1036214e5f7d/14	api-parity(signature)	signature	DistributionAdapters$#toParameters	/DistributionAdapters$	0	result type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
 e1e3245a63f0	api-parity(signature)	signature	DistributionAdapters$.Adapter#toDistribution	/DistributionAdapters$/Adapter	0	param 0 type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
 7236dbc4b950	api-parity(signature)	signature	DistributionAdapters$.Adapter#toParameters	/DistributionAdapters$/Adapter	0	result type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
 f426f4ca65c4	api-parity(signature)	signature	FollowFlowField$#FlowField	/FollowFlowField$	0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]]'
@@ -1310,13 +1119,6 @@ a4a3b632f87a	api-parity(signature)	signature	TaskCloner#cloneTask	/TaskCloner	0	
 5e54008fa4d3	api-parity(signature)	signature	Telegram$#RETURN_RECEIPT_SENT	/Telegram$	0	modifiers differ: emitted inline, reference
 502ed400a74b	api-parity(signature)	signature	Telegram$#RETURN_RECEIPT_UNNEEDED	/Telegram$	0	modifiers differ: emitted inline, reference
 b40b194db78d	api-parity(signature)	signature	TelegramProvider#provideMessageInfo	/TelegramProvider	0	result type differs: emitted 'java.lang.Object', reference 'Nullable[Any]'
-de45f5fc39f7	api-parity(static-placement)	static-placement	BehaviorTree$#addChildToTask	/BehaviorTree$	0	def addChildToTask/1 in emitted port only
-8b748b2b950d	api-parity(static-placement)	static-placement	BehaviorTree$#childFail	/BehaviorTree$	0	def childFail/1 in emitted port only
-f55c1a9859c9	api-parity(static-placement)	static-placement	BehaviorTree$#childRunning	/BehaviorTree$	0	def childRunning/2 in emitted port only
-52d835e19879	api-parity(static-placement)	static-placement	BehaviorTree$#childSuccess	/BehaviorTree$	0	def childSuccess/1 in emitted port only
-400b2277f7d7	api-parity(static-placement)	static-placement	BehaviorTree$#copyTo	/BehaviorTree$	0	def copyTo/1 in emitted port only
-b2ab9e697c54	api-parity(static-placement)	static-placement	BehaviorTree$#getChild	/BehaviorTree$	0	def getChild/1 in emitted port only
-cd2d53de9f18	api-parity(static-placement)	static-placement	BehaviorTree$#run	/BehaviorTree$	0	def run/0 in emitted port only
 7c8837c2d7f6	api-parity(static-placement)	static-placement	DistributionAdapters$.Adapter#parseDouble	/DistributionAdapters$/Adapter	0	def parseDouble/1 in reference port only
 7d10d281c58e	api-parity(static-placement)	static-placement	DistributionAdapters$.Adapter#parseFloat	/DistributionAdapters$/Adapter	0	def parseFloat/1 in reference port only
 c4fa524e9ca6	api-parity(static-placement)	static-placement	DistributionAdapters$.Adapter#parseInteger	/DistributionAdapters$/Adapter	0	def parseInteger/1 in reference port only
@@ -1325,7 +1127,6 @@ ae7eacb7fde9	api-parity(static-placement)	static-placement	DistributionAdapters$
 6b75009e2a58	api-parity(static-placement)	static-placement	DistributionAdapters$.Adapter$#parseFloat	/DistributionAdapters$/Adapter$	0	def parseFloat/1 in emitted port only
 4b4098b60a36	api-parity(static-placement)	static-placement	DistributionAdapters$.Adapter$#parseInteger	/DistributionAdapters$/Adapter$	0	def parseInteger/1 in emitted port only
 608b825406db	api-parity(static-placement)	static-placement	DistributionAdapters$.Adapter$#parseLong	/DistributionAdapters$/Adapter$	0	def parseLong/1 in emitted port only
-525b6884f0e2	api-parity(static-placement)	static-placement	HierarchicalPathFinder$#search	/HierarchicalPathFinder$	0	def search/2 in emitted port only
 c9ce99693415	api-parity(visibility)	visibility	Alignment#calculateRealSteering	/Alignment	0	access differs: emitted 'protected[steer]', reference 'protected'
 14b0263966c4	api-parity(visibility)	visibility	Arrive#arrivalTolerance	/Arrive	0	access differs: emitted 'protected[behaviors]', reference 'public'
 f4dd1b00929a	api-parity(visibility)	visibility	Arrive#arrive	/Arrive	0	access differs: emitted 'protected[behaviors]', reference 'protected'
@@ -1412,9 +1213,6 @@ decbdcf35bb1	api-parity(visibility)	visibility	LoopDecorator#loop	/LoopDecorator
 582dca127874	api-parity(visibility)	visibility	MatchVelocity#calculateRealSteering	/MatchVelocity	0	access differs: emitted 'protected[steer]', reference 'protected'
 bc91ca0ffc8e	api-parity(visibility)	visibility	MatchVelocity#target	/MatchVelocity	0	access differs: emitted 'protected[behaviors]', reference 'public'
 544e8d60f6e6	api-parity(visibility)	visibility	MatchVelocity#timeToTarget	/MatchVelocity	0	access differs: emitted 'protected[behaviors]', reference 'public'
-c4ae6dd9abdb	api-parity(visibility)	visibility	MessageDispatcher$#initialCapacity	/MessageDispatcher$	0	access differs: emitted 'protected[sge]', reference 'protected'
-10ff2431bd96	api-parity(visibility)	visibility	MessageDispatcher$#max	/MessageDispatcher$	0	access differs: emitted 'protected[sge]', reference 'protected'
-cbe87af47c3b	api-parity(visibility)	visibility	MessageDispatcher$#newObject	/MessageDispatcher$	0	access differs: emitted 'protected[sge]', reference 'protected'
 83974a317865	api-parity(visibility)	visibility	Parallel#copyTo	/Parallel	0	access differs: emitted 'protected[btree]', reference 'protected'
 02d99a4a85e6	api-parity(visibility)	visibility	PooledBehaviorTreeLibrary#newBehaviorTree	/PooledBehaviorTreeLibrary	0	access differs: emitted 'protected[utils]', reference 'protected'
 97f4cd59af7f	api-parity(visibility)	visibility	PriorityScheduler#frame	/PriorityScheduler	0	access differs: emitted 'protected[sched]', reference 'protected'

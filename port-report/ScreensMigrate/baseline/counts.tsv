@@ -3,7 +3,8 @@ api-parity(accessor)	0
 api-parity(collection-retarget)	0
 api-parity(factory)	0
 api-parity(file-merge)	0
-api-parity(hand-port-extra)	22
+api-parity(hand-original)	0
+api-parity(hand-port-extra)	19
 api-parity(mutability)	4
 api-parity(null-model)	0
 api-parity(opaque)	33

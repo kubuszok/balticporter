@@ -21,7 +21,6 @@ b713c17a8f83	api-parity(hand-port-extra)	hand-port-extra	GaussianBlurEffect$.Con
 2df6bb8e5f8d	api-parity(hand-port-extra)	hand-port-extra	GaussianBlurEffect$.Tap#Tap5x5	/GaussianBlurEffect$/Tap	0	case Tap5x5/0 in reference port only
 131d76b6c7dd	api-parity(hand-port-extra)	hand-port-extra	GaussianBlurEffect$.Tap#radius	/GaussianBlurEffect$/Tap	0	val radius/0 in reference port only
 258dcf09ddfb	api-parity(hand-port-extra)	hand-port-extra	MultipassEffectWrapper#passes	/MultipassEffectWrapper	0	var passes/0 in reference port only [rename candidates: effect]
-c140619f6a5f	api-parity(hand-port-extra)	hand-port-extra	PrioritizedArray#sorted	/PrioritizedArray	0	val sorted/0 in reference port only
 650b2738cbb8	api-parity(hand-port-extra)	hand-port-extra	ShaderVfxEffect#program	/ShaderVfxEffect	0	val program/0 in reference port only
 3d05e9fb6bba	api-parity(hand-port-extra)	hand-port-extra	VfxEffect#disabled	/VfxEffect	0	var disabled/0 in reference port only
 bd6f5d48b856	api-parity(hand-port-extra)	hand-port-extra	VfxFrameBuffer#getBoundFboHandle	/VfxFrameBuffer	0	def getBoundFboHandle/0 in reference port only [rename candidates: begin, boundFboHandle, clearRenderers, close, drawing, end, fbo, initialized, pixelFormat, projectionMatrix, reset, texture, transformMatrix, viewport]
@@ -41,10 +40,7 @@ a4859203b924	api-parity(hand-port-extra)	hand-port-extra	VfxFrameBuffer$.Rendere
 1fe0131b7605	api-parity(hand-port-extra)	hand-port-extra	VfxFrameBuffer$.ShapeRendererAdapter#getTransform	/VfxFrameBuffer$/ShapeRendererAdapter	0	def getTransform/0 in reference port only [rename candidates: flush, projection, reset, shapeRenderer, transform]
 8c3d82aca277	api-parity(hand-port-extra)	hand-port-extra	VfxFrameBuffer$.ShapeRendererAdapter#setProjection	/VfxFrameBuffer$/ShapeRendererAdapter	0	def setProjection/1 in reference port only [rename candidates: initialize, projection_=, transform_=]
 15adf7d46ea7	api-parity(hand-port-extra)	hand-port-extra	VfxFrameBuffer$.ShapeRendererAdapter#setTransform	/VfxFrameBuffer$/ShapeRendererAdapter	0	def setTransform/1 in reference port only [rename candidates: initialize, projection_=, transform_=]
-7f3da550af5f	api-parity(hand-port-extra)	hand-port-extra	VfxFrameBufferQueue#buf	/VfxFrameBufferQueue	0	val buf/0 in reference port only
-ccaa299cb94e	api-parity(hand-port-extra)	hand-port-extra	VfxFrameBufferRenderer#fragSrc	/VfxFrameBufferRenderer	0	val fragSrc/0 in reference port only
 245787dba1f8	api-parity(hand-port-extra)	hand-port-extra	VfxFrameBufferRenderer#getMesh	/VfxFrameBufferRenderer	0	def getMesh/0 in reference port only [rename candidates: close, mesh, rebind]
-1e9d5bb57e80	api-parity(hand-port-extra)	hand-port-extra	VfxFrameBufferRenderer#vertSrc	/VfxFrameBufferRenderer	0	val vertSrc/0 in reference port only
 2b7131a3fd0e	api-parity(hand-port-extra)	hand-port-extra	VfxGLUtils$#getBoundFboHandle	/VfxGLUtils$	0	def getBoundFboHandle/1 in reference port only [rename candidates: getViewport]
 a68941f8cee2	api-parity(hand-port-extra)	hand-port-extra	VfxGLUtils$#initExtension	/VfxGLUtils$	0	def initExtension/1 in reference port only [rename candidates: getViewport]
 8817de66d1ca	api-parity(hand-port-extra)	hand-port-extra	VfxManager#getPingPongWrapper	/VfxManager	0	def getPingPongWrapper/0 in reference port only [rename candidates: anyEnabledEffects, applyEffects, applyingEffects, beginInputCapture, blendingEnabled, capturing, cleanUpBuffers, close, disabled, endInputCapture, height, pingPongWrapper, pixelFormat, rebind, removeAllEffects, renderContext, renderToScreen, resultBuffer, width]
@@ -53,10 +49,8 @@ a68941f8cee2	api-parity(hand-port-extra)	hand-port-extra	VfxGLUtils$#initExtensi
 b4ce62dec301	api-parity(hand-port-extra)	hand-port-extra	VfxRenderContext#bufferPool	/VfxRenderContext	0	val bufferPool/0 in reference port only
 bcdd2c437ab4	api-parity(hand-port-extra)	hand-port-extra	VfxRenderContext#bufferRenderer	/VfxRenderContext	0	val bufferRenderer/0 in reference port only
 eaeee5b21419	api-parity(hand-port-extra)	hand-port-extra	VfxRenderContext#pixelFormat	/VfxRenderContext	0	val pixelFormat/0 in reference port only
-95671c57ea7e	api-parity(hand-port-extra)	hand-port-extra	ViewportQuadMesh#attrs	/ViewportQuadMesh	0	val attrs/0 in reference port only
 6aade405f643	api-parity(hand-port-extra)	hand-port-extra	ViewportQuadMesh#close	/ViewportQuadMesh	0	def close/0 in reference port only [rename candidates: dispose, mesh]
 44093a9b2db3	api-parity(hand-port-extra)	hand-port-extra	ViewportQuadMesh#getMesh	/ViewportQuadMesh	0	def getMesh/0 in reference port only [rename candidates: dispose, mesh]
-1b9e8c3b1fec	api-parity(hand-port-extra)	hand-port-extra	ViewportQuadMesh#m	/ViewportQuadMesh	0	val m/0 in reference port only
 2b314d4b657c	api-parity(hand-port-extra)	hand-port-extra	VignettingEffect#saturationControlEnabled	/VignettingEffect	0	val saturationControlEnabled/0 in reference port only
 3b6f7678476b	api-parity(mutability)	mutability	BloomEffect$.Settings#baseIntensity	/BloomEffect$/Settings	0	kind differs: emitted var, reference val
 eeab512aac90	api-parity(mutability)	mutability	BloomEffect$.Settings#baseSaturation	/BloomEffect$/Settings	0	kind differs: emitted var, reference val
@@ -66,8 +60,6 @@ eeab512aac90	api-parity(mutability)	mutability	BloomEffect$.Settings#baseSaturat
 f9be9ce03fc4	api-parity(mutability)	mutability	BloomEffect$.Settings#blurAmount	/BloomEffect$/Settings	0	kind differs: emitted var, reference val
 d1b2521fd617	api-parity(mutability)	mutability	BloomEffect$.Settings#blurPasses	/BloomEffect$/Settings	0	kind differs: emitted var, reference val
 fd6c991c6051	api-parity(mutability)	mutability	BloomEffect$.Settings#blurType	/BloomEffect$/Settings	0	kind differs: emitted var, reference val
-6d9e4a421422	api-parity(mutability)	mutability	GaussianBlurEffect#distance	/GaussianBlurEffect	0	kind differs: emitted var, reference val
-b01a8e507736	api-parity(mutability)	mutability	GaussianBlurEffect#index	/GaussianBlurEffect	0	kind differs: emitted var, reference val
 1333782e5cb8	api-parity(mutability)	mutability	GaussianBlurEffect$.Convolve1DEffect#length	/GaussianBlurEffect$/Convolve1DEffect	0	kind differs: emitted var, reference val
 b2ff9746e801	api-parity(mutability)	mutability	VfxFrameBufferPool#freeBuffers	/VfxFrameBufferPool	0	kind differs: emitted var, reference val
 d83308d25f10	api-parity(mutability)	mutability	VfxFrameBufferPool#managedBuffers	/VfxFrameBufferPool	0	kind differs: emitted var, reference val
@@ -131,15 +123,9 @@ c113fa7326f1	api-parity(port-extra)	port-extra	FxaaEffect#fxaaSpanMax	/FxaaEffec
 d2d01ebef96b	api-parity(port-extra)	port-extra	FxaaEffect#setReduceMin	/FxaaEffect	0	def setReduceMin/1 in emitted port only [rename candidates: reduceMin_=, reduceMul_=, spanMax_=]
 70e50ae3e023	api-parity(port-extra)	port-extra	FxaaEffect#setReduceMul	/FxaaEffect	0	def setReduceMul/1 in emitted port only [rename candidates: reduceMin_=, reduceMul_=, spanMax_=]
 2da2cbf2a106	api-parity(port-extra)	port-extra	FxaaEffect#setSpanMax	/FxaaEffect	0	def setSpanMax/1 in emitted port only [rename candidates: reduceMin_=, reduceMul_=, spanMax_=]
-ba97f40f5ac9	api-parity(port-extra)	port-extra	GaussianBlurEffect#X	/GaussianBlurEffect	0	val X/0 in emitted port only [rename candidates: distance, dx, dy, index, outOffsetsH, outOffsetsV, outWeights, sigma, sigmaRoot, size, twoSigmaSquare]
-e6cc1d1fc1f8	api-parity(port-extra)	port-extra	GaussianBlurEffect#Y	/GaussianBlurEffect	0	val Y/0 in emitted port only [rename candidates: distance, dx, dy, index, outOffsetsH, outOffsetsV, outWeights, sigma, sigmaRoot, size, twoSigmaSquare]
-63c31d26ad53	api-parity(port-extra)	port-extra	GaussianBlurEffect#radius	/GaussianBlurEffect	0	val radius/0 in emitted port only [rename candidates: distance, dx, dy, index, outOffsetsH, outOffsetsV, outWeights, sigma, sigmaRoot, size, twoSigmaSquare]
-63c31d26ad53/2	api-parity(port-extra)	port-extra	GaussianBlurEffect#radius	/GaussianBlurEffect	0	val radius/0 in emitted port only [rename candidates: distance, dx, dy, index, outOffsetsH, outOffsetsV, outWeights, sigma, sigmaRoot, size, twoSigmaSquare]
 e055141e3681	api-parity(port-extra)	port-extra	GaussianBlurEffect#type	/GaussianBlurEffect	0	def type/0 in emitted port only [rename candidates: amount, blurType, close, passes, rebind]
 c1050a6014e2	api-parity(port-extra)	port-extra	GaussianBlurEffect#type_=	/GaussianBlurEffect	0	def type_=/1 in emitted port only [rename candidates: amount_=, passes_=, setType, update]
 b9a8483f445b	api-parity(port-extra)	port-extra	GaussianBlurEffect$#Convolve1DEffect	/GaussianBlurEffect$	0	object Convolve1DEffect/0 in emitted port only
-c1546422e6e5	api-parity(port-extra)	port-extra	GaussianBlurEffect$#Tap3x3	/GaussianBlurEffect$	0	case Tap3x3/0 in emitted port only
-65e24927fbd8	api-parity(port-extra)	port-extra	GaussianBlurEffect$#Tap5x5	/GaussianBlurEffect$	0	case Tap5x5/0 in emitted port only
 a497b4bcd443	api-parity(port-extra)	port-extra	GaussianBlurEffect$.Convolve1DEffect#setWeights	/GaussianBlurEffect$/Convolve1DEffect	0	def setWeights/3 in emitted port only [rename candidates: render]
 b10068a08756	api-parity(port-extra)	port-extra	GaussianBlurEffect$.Convolve2DEffect#length	/GaussianBlurEffect$/Convolve2DEffect	0	def length/0 in emitted port only
 f52657abb32e	api-parity(port-extra)	port-extra	GaussianBlurEffect$.Convolve2DEffect#offsetsHor	/GaussianBlurEffect$/Convolve2DEffect	0	def offsetsHor/0 in emitted port only
@@ -158,9 +144,6 @@ f4656c47941e	api-parity(port-extra)	port-extra	MultipassEffectWrapper#passes_=	/
 d59b0e77fd82	api-parity(port-extra)	port-extra	PrioritizedArray$#PrioritizedArrayIterable	/PrioritizedArray$	0	class PrioritizedArrayIterable/0 in emitted port only
 254fc4c47b0e	api-parity(port-extra)	port-extra	PrioritizedArray$#PrioritizedArrayIterator	/PrioritizedArray$	0	class PrioritizedArrayIterator/0 in emitted port only
 1ec49ea98626	api-parity(port-extra)	port-extra	PrioritizedArray$#Wrapper	/PrioritizedArray$	0	object Wrapper/0 in emitted port only
-1efc77c13398	api-parity(port-extra)	port-extra	PrioritizedArray$#compare	/PrioritizedArray$	0	def compare/2 in emitted port only
-cdecb83fdba0	api-parity(port-extra)	port-extra	PrioritizedArray$#initialize	/PrioritizedArray$	0	def initialize/2 in emitted port only
-8b30a97d67b2	api-parity(port-extra)	port-extra	PrioritizedArray$#reset	/PrioritizedArray$	0	def reset/0 in emitted port only
 c0def2d7b1f0	api-parity(port-extra)	port-extra	PrioritizedArray$.PrioritizedArrayIterable#allowRemove	/PrioritizedArray$/PrioritizedArrayIterable	0	var allowRemove/0 in emitted port only
 eba37dc70da5	api-parity(port-extra)	port-extra	PrioritizedArray$.PrioritizedArrayIterable#array	/PrioritizedArray$/PrioritizedArrayIterable	0	var array/0 in emitted port only
 5194cd10a7e1	api-parity(port-extra)	port-extra	PrioritizedArray$.PrioritizedArrayIterable#iterator	/PrioritizedArray$/PrioritizedArrayIterable	0	def iterator/0 in emitted port only
@@ -171,9 +154,6 @@ eba37dc70da5	api-parity(port-extra)	port-extra	PrioritizedArray$.PrioritizedArra
 3a4e5f11343b	api-parity(port-extra)	port-extra	PrioritizedArray$.PrioritizedArrayIterator#next	/PrioritizedArray$/PrioritizedArrayIterator	0	def next/0 in emitted port only
 e52f84a21719	api-parity(port-extra)	port-extra	PrioritizedArray$.PrioritizedArrayIterator#remove	/PrioritizedArray$/PrioritizedArrayIterator	0	def remove/0 in emitted port only
 a6c5d3e19ede	api-parity(port-extra)	port-extra	PrioritizedArray$.PrioritizedArrayIterator#reset	/PrioritizedArray$/PrioritizedArrayIterator	0	def reset/0 in emitted port only
-212431bba35a	api-parity(port-extra)	port-extra	PrioritizedArray$.Wrapper$#initialCapacity	/PrioritizedArray$/Wrapper$	0	val initialCapacity/0 in emitted port only
-1252a25349b5	api-parity(port-extra)	port-extra	PrioritizedArray$.Wrapper$#max	/PrioritizedArray$/Wrapper$	0	val max/0 in emitted port only
-691a48178020	api-parity(port-extra)	port-extra	PrioritizedArray$.Wrapper$#newObject	/PrioritizedArray$/Wrapper$	0	def newObject/0 in emitted port only
 e0a24f2781f5	api-parity(port-extra)	port-extra	RadialBlurEffect#passes	/RadialBlurEffect	0	var passes/0 in emitted port only
 53ddbb1935ab	api-parity(port-extra)	port-extra	ShaderVfxEffect#program	/ShaderVfxEffect	0	def program/0 in emitted port only [rename candidates: close, rebind]
 3d05feaeb63f	api-parity(port-extra)	port-extra	UniformBatcher#reset	/UniformBatcher	0	def reset/0 in emitted port only [rename candidates: end]
@@ -218,7 +198,7 @@ e9e0bce6f866	api-parity(port-extra)	port-extra	VfxFrameBuffer$.RendererAdapter#p
 12819bac710e	api-parity(port-extra)	port-extra	VfxFrameBuffer$.ShapeRendererAdapter$#Funnel	/VfxFrameBuffer$/ShapeRendererAdapter$	0	class Funnel/0 in emitted port only
 af91803752cf	api-parity(port-extra)	port-extra	VfxFrameBufferPool#height	/VfxFrameBufferPool	0	var height/0 in emitted port only [rename candidates: freePeak, pixelFormat]
 a36411f7640d	api-parity(port-extra)	port-extra	VfxFrameBufferPool#width	/VfxFrameBufferPool	0	var width/0 in emitted port only [rename candidates: freePeak, pixelFormat]
-4ead8af52d72	api-parity(port-extra)	port-extra	VfxFrameBufferQueue#buffers	/VfxFrameBufferQueue	0	var buffers/0 in emitted port only [rename candidates: i]
+497e660bc193	api-parity(port-extra)	port-extra	VfxFrameBufferQueue#buffers	/VfxFrameBufferQueue	0	var buffers/0 in emitted port only
 7fff52b67795	api-parity(port-extra)	port-extra	VfxFrameBufferRenderer#mesh	/VfxFrameBufferRenderer	0	def mesh/0 in emitted port only [rename candidates: close, getMesh, rebind]
 0e42284ad5de	api-parity(port-extra)	port-extra	VfxGLUtils$#getBoundFboHandle	/VfxGLUtils$	0	def getBoundFboHandle/0 in emitted port only
 62037478fc8b	api-parity(port-extra)	port-extra	VfxManager#pingPongWrapper	/VfxManager	0	def pingPongWrapper/0 in emitted port only [rename candidates: anyEnabledEffects, applyEffects, applyingEffects, beginInputCapture, blendingEnabled, capturing, cleanUpBuffers, close, disabled, endInputCapture, getPingPongWrapper, height, pixelFormat, rebind, removeAllEffects, renderContext, renderToScreen, resultBuffer, width]
@@ -228,26 +208,17 @@ b18c3d2c0706	api-parity(port-extra)	port-extra	VfxRenderContext#bufferPool	/VfxR
 a9d854d57605	api-parity(port-extra)	port-extra	VfxRenderContext#bufferRenderer	/VfxRenderContext	0	def bufferRenderer/0 in emitted port only [rename candidates: bufferHeight, bufferWidth, close, rebind, viewportMesh]
 c2ad42619aa0	api-parity(port-extra)	port-extra	VfxRenderContext#pixelFormat	/VfxRenderContext	0	def pixelFormat/0 in emitted port only [rename candidates: bufferHeight, bufferWidth, close, rebind, viewportMesh]
 60d8349db3b2	api-parity(port-extra)	port-extra	VfxWidgetGroup#act	/VfxWidgetGroup	0	def act/1 in emitted port only
-ca6a054a4bce	api-parity(port-extra)	port-extra	VfxWidgetGroup#assignLocalMatrices	/VfxWidgetGroup	0	def assignLocalMatrices/2 in emitted port only
 80cea758b0dc	api-parity(port-extra)	port-extra	VfxWidgetGroup#draw	/VfxWidgetGroup	0	def draw/2 in emitted port only
 3e2a95c1aadc	api-parity(port-extra)	port-extra	VfxWidgetGroup#drawChildren	/VfxWidgetGroup	0	def drawChildren/2 in emitted port only
-6dfe043fee96	api-parity(port-extra)	port-extra	VfxWidgetGroup#flush	/VfxWidgetGroup	0	def flush/0 in emitted port only
-f9f55b4f611e	api-parity(port-extra)	port-extra	VfxWidgetGroup#height	/VfxWidgetGroup	0	var height/0 in emitted port only
-b241304819d9	api-parity(port-extra)	port-extra	VfxWidgetGroup#initialize	/VfxWidgetGroup	0	def initialize/1 in emitted port only
 5bd0b0f3132f	api-parity(port-extra)	port-extra	VfxWidgetGroup#matchWidgetSize	/VfxWidgetGroup	0	def matchWidgetSize/0 in emitted port only
 bb575419d8b5	api-parity(port-extra)	port-extra	VfxWidgetGroup#matchWidgetSize_=	/VfxWidgetGroup	0	def matchWidgetSize_=/1 in emitted port only
-236d10736dbd	api-parity(port-extra)	port-extra	VfxWidgetGroup#ppu	/VfxWidgetGroup	0	val ppu/0 in emitted port only
-a0d45ac7e262	api-parity(port-extra)	port-extra	VfxWidgetGroup#restoreOwnMatrices	/VfxWidgetGroup	0	def restoreOwnMatrices/0 in emitted port only
 68e9c11e6463	api-parity(port-extra)	port-extra	VfxWidgetGroup#setCullingArea	/VfxWidgetGroup	0	def setCullingArea/1 in emitted port only
 2cbbda6a333f	api-parity(port-extra)	port-extra	VfxWidgetGroup#sizeChanged	/VfxWidgetGroup	0	def sizeChanged/0 in emitted port only
 4f361e57fc59	api-parity(port-extra)	port-extra	VfxWidgetGroup#stage_=	/VfxWidgetGroup	0	def stage_=/1 in emitted port only
 9e6531bca5dc	api-parity(port-extra)	port-extra	VfxWidgetGroup#transform_=	/VfxWidgetGroup	0	def transform_=/1 in emitted port only
 e795bfa2bf34	api-parity(port-extra)	port-extra	VfxWidgetGroup#updateManager	/VfxWidgetGroup	0	def updateManager/0 in emitted port only
 0b518e7342d6	api-parity(port-extra)	port-extra	VfxWidgetGroup#updateManager_=	/VfxWidgetGroup	0	def updateManager_=/1 in emitted port only
-3bb6f9eb1716	api-parity(port-extra)	port-extra	VfxWidgetGroup#updateOwnProjection	/VfxWidgetGroup	0	def updateOwnProjection/0 in emitted port only
 0fcacfb329e4	api-parity(port-extra)	port-extra	VfxWidgetGroup#vfxManager	/VfxWidgetGroup	0	def vfxManager/0 in emitted port only
-bde2348a5dc1	api-parity(port-extra)	port-extra	VfxWidgetGroup#viewport	/VfxWidgetGroup	0	val viewport/0 in emitted port only
-a6908d8011ed	api-parity(port-extra)	port-extra	VfxWidgetGroup#width	/VfxWidgetGroup	0	var width/0 in emitted port only
 b620646572d3	api-parity(port-extra)	port-extra	ViewportQuadMesh#dispose	/ViewportQuadMesh	0	def dispose/0 in emitted port only [rename candidates: close, getMesh]
 2715e3bdc6ac	api-parity(port-extra)	port-extra	ViewportQuadMesh#mesh	/ViewportQuadMesh	0	def mesh/0 in emitted port only [rename candidates: close, getMesh]
 ab089b351fd8	api-parity(port-extra)	port-extra	VignettingEffect#saturationControlEnabled	/VignettingEffect	0	def saturationControlEnabled/0 in emitted port only [rename candidates: centerX, centerY, intensity, rebind, saturation, saturationMul, vignetteX, vignetteY]
@@ -285,7 +256,6 @@ ac94ada35559	api-parity(signature)	signature	VfxFrameBufferPool#managedBuffers	/
 956b5a33bb1a	api-parity(signature)	signature	VfxManager$#MAX_FRAME_BUFFER_SIDE	/VfxManager$	0	modifiers differ: emitted inline, reference
 ddef93a5d0d0	api-parity(signature)	signature	VfxPingPongWrapper#reset	/VfxPingPongWrapper	0	modifiers differ: emitted override, reference
 bf79f3993fbc	api-parity(signature)	signature	ViewportQuadMesh$#verts	/ViewportQuadMesh$	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
-7cb7433286f8	api-parity(static-placement)	static-placement	PrioritizedArray$#toString	/PrioritizedArray$	0	def toString/0 in emitted port only
 1ec39a1e7977	api-parity(visibility)	visibility	CompositeVfxEffect#managedEffects	/CompositeVfxEffect	0	access differs: emitted 'protected[effects]', reference 'protected'
 ebbcccb73853	api-parity(visibility)	visibility	CompositeVfxEffect#register	/CompositeVfxEffect	0	access differs: emitted 'protected[effects]', reference 'protected'
 89672d84552e	api-parity(visibility)	visibility	CompositeVfxEffect#unregister	/CompositeVfxEffect	0	access differs: emitted 'protected[effects]', reference 'protected'

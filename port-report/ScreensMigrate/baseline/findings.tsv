@@ -1,8 +1,5 @@
 #id	check	kind	owner	path	line	detail
 7a4af50a82fe	api-parity(hand-port-extra)	hand-port-extra	#QuadMeshGenerator		0	object QuadMeshGenerator/0 in reference port only
-f691b1fbf70f	api-parity(hand-port-extra)	hand-port-extra	#close		0	def close/0 in reference port only
-ec619c761da4	api-parity(hand-port-extra)	hand-port-extra	#render		0	def render/1 in reference port only
-e083b99c4eb3	api-parity(hand-port-extra)	hand-port-extra	#resize		0	def resize/2 in reference port only
 97686507f487	api-parity(hand-port-extra)	hand-port-extra	ManagedGame#inputMultiplexer	/ManagedGame	0	val inputMultiplexer/0 in reference port only [rename candidates: inputProcessor]
 29eceec4450e	api-parity(hand-port-extra)	hand-port-extra	ManagedGame#screenManager	/ManagedGame	0	val screenManager/0 in reference port only [rename candidates: inputProcessor]
 0662c9a24b99	api-parity(hand-port-extra)	hand-port-extra	QuadMeshGenerator$#createFullScreenQuad	/QuadMeshGenerator$	0	def createFullScreenQuad/3 in reference port only
