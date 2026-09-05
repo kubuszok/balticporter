@@ -2014,14 +2014,24 @@ leave a stale file on the consumer's classpath, the one state `src_managed/` exi
 
 **Decision.** §1(b): MECHANISM (parse both Scala surfaces with scalameta's Scala 3 dialect — §4.56,
 same parser both sides; public/protected only) in the engine; POLICY (which hand-port tree, which
-package mapping) per-library in `PortManifest.parity: ParityRef`. Empty = no-op, records nothing. A
-check rather than a script, so it lands in `findings.tsv`/baselines/`RequiredChecks`
-(required-when-declared, like §8.17/§8.22). Fourteen families (`ApiParityCheck.Families`, the enum is
+package mapping, which header markers make a hand-port file a PARTY) per-library in
+`PortManifest.parity: ParityRef`. Empty = no-op, records nothing. A check
+rather than a script, so it lands in `findings.tsv`/baselines/`RequiredChecks`
+(required-when-declared, like §8.17/§8.22). Fifteen families (`ApiParityCheck.Families`, the enum is
 the count — never restated in prose, which went stale once already), each its own lane
 (`api-parity(<family>)`), `unclassified=0` the gate: `accessor`, `static-placement`, `mutability`,
-`rename`, `visibility`, `hand-port-extra`, `port-extra`, `null-model`, `collection-retarget`,
-`opaque`, `operator`, `factory`, `file-merge`, `signature`, plus `unclassified` (the work list). NOT
-inherited — a hand port is a fact about THIS module's destination, not shared surface.
+`rename`, `visibility`, `hand-port-extra`, `hand-original`, `port-extra`, `null-model`,
+`collection-retarget`, `opaque`, `operator`, `factory`, `file-merge`, `signature`, plus
+`unclassified` (the work list). NOT inherited — a hand port is a fact about THIS module's
+destination, not shared surface.
+
+**Precision of the two surfaces.** Both are read the same way, and both defects were measured on the
+same run: a hand-port FILE whose header (first 40 lines) names none of `ParityRef.upstreamMarkers` is
+the hand port's OWN code — it is listed once per top-level type as `hand-original` and compared
+against nothing, and an emitted type of that name leaves the comparison with it rather than becoming
+`port-extra` (empty markers = every file a party, §1b's no-op). And SURFACE is what is reachable from
+outside: a direct member of a template body, of a top-level scope, or of an extension group. A
+declaration inside a method body, a block or an inaccessible template is neither, on either side.
 
 ### 8.23b The JDK a lane compiles with — `jdk_version`, and why `-release 17` is a different number
 

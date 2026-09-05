@@ -622,6 +622,122 @@ class ApiParityCheckSpec extends munit.FunSuite:
     assert(!ApiParityCheck.isNullWrapped("Int"))
   }
 
+  // ---- a hand-port file is a PARTY only if its header names an upstream (CLAUDE.md §1b) ----
+
+  private val partySrc =
+    """/* Ported from com.example.Widget.
+      | * Original source: Widget.java
+      | */
+      |class Widget:
+      |  def width: Int = 1
+      |""".stripMargin
+
+  private val originalSrc =
+    """/*
+      | * A helper this hand port wrote itself.
+      | * Origin: hand-written for this port, no upstream twin.
+      | */
+      |class Helper:
+      |  def assist(x: Int): Int = x
+      |  val label: String = "h"
+      |""".stripMargin
+
+  private val extensionsOnlySrc =
+    """package foo
+      |extension (s: String) def shout: String = s
+      |""".stripMargin
+
+  private val headerlessSrc =
+    """object Bare:
+      |  def go(): Unit = ()
+      |""".stripMargin
+
+  private def handPortTree(): java.nio.file.Path =
+    val dir = java.nio.file.Files.createTempDirectory("api-parity-markers-")
+    dir.toFile.deleteOnExit()
+    List("Widget.scala" -> partySrc, "Helper.scala" -> originalSrc, "Bare.scala" -> headerlessSrc,
+         "StringOps.scala" -> extensionsOnlySrc)
+      .foreach { (n, c) =>
+        val f = dir.resolve(n)
+        java.nio.file.Files.writeString(f, c)
+        f.toFile.deleteOnExit()
+      }
+    dir
+
+  private def emittedTree(): java.nio.file.Path =
+    writeTempScala("Widget.scala",
+      """class Widget:
+        |  def width: Int = 1
+        |""".stripMargin)
+
+  test("a file with no upstream marker yields hand-original rows and no extra rows") {
+    import balticporter.core.ParityRef
+    val ref = ParityRef(roots = List(handPortTree()))
+    val findings = ApiParityCheck.check(ref, emittedTree(), Map.empty)
+    val original = findings.filter(_.kind == "hand-original")
+    // `StringOps` declares no top-level TYPE: listed under its own file name, or its extension
+    // methods would leave the comparison with nothing saying so.
+    assertEquals(original.map(_.owner).sorted, List("Bare", "Helper", "StringOps"))
+    assert(original.forall(_.detail.startsWith("no upstream marker in header")),
+      s"unexpected detail: ${original.map(_.detail)}")
+    assert(original.exists(_.detail.contains("Origin: hand-written for this port")),
+      s"the Origin line should be quoted: ${original.map(_.detail)}")
+    assert(!findings.exists(f => f.kind == "hand-port-extra"),
+      s"no member of an original file is a divergence: ${findings.map(f => (f.kind, f.detail))}")
+    assert(!findings.exists(f => f.kind == "port-extra"),
+      s"the emitted twin has nothing extra: ${findings.map(f => (f.kind, f.detail))}")
+  }
+
+  test("upstreamMarkers = Nil makes every file a party — the pre-parameter classification") {
+    import balticporter.core.ParityRef
+    val ref = ParityRef(roots = List(handPortTree()), upstreamMarkers = Nil)
+    val findings = ApiParityCheck.check(ref, emittedTree(), Map.empty)
+    assert(!findings.exists(_.kind == "hand-original"), "no file is an original when markers is empty")
+    val extra = findings.filter(_.kind == "hand-port-extra").map(_.owner).toSet
+    assert(extra.contains("#Helper") && extra.contains("#Bare") && extra.contains("#shout"),
+      s"every original's declarations are hand-port-extra again: $extra")
+  }
+
+  // ---- a LOCAL declaration is not public surface ----
+
+  test("parseSurface skips declarations inside method bodies, blocks and private templates") {
+    val src =
+      """package foo
+        |class Outer:
+        |  def run(): Int =
+        |    val local = 1
+        |    def helper(y: Int): Int = y
+        |    class Inner:
+        |      val deep: Int = 2
+        |    local + helper(1)
+        |  private def hidden(): Int =
+        |    var cursor1 = 0
+        |    cursor1
+        |private class Secret:
+        |  val a: Int = 1
+        |""".stripMargin
+
+    val decls = ApiParityCheck.parseSurface(List(writeTempScala("Outer.scala", src))).toOption.get
+    val names = decls.map(_.name).toSet
+    assert(names.contains("Outer") && names.contains("run"), s"surface lost its members: $decls")
+    List("local", "helper", "Inner", "deep", "hidden", "cursor1", "Secret", "a").foreach { n =>
+      assert(!names.contains(n), s"$n is not public surface: $decls")
+    }
+  }
+
+  test("extension methods and package-object members stay surface") {
+    val src =
+      """package foo
+        |package object bar:
+        |  def inPackageObject(x: Int): Int = x
+        |extension (s: String) def shout: String = s
+        |""".stripMargin
+    val decls = ApiParityCheck.parseSurface(List(writeTempScala("Ext.scala", src))).toOption.get
+    val names = decls.map(_.name).toSet
+    assert(names.contains("inPackageObject"), s"package-object member lost: $decls")
+    assert(names.contains("shout"), s"extension method lost: $decls")
+  }
+
   // ---- helpers ----
 
   private def writeTempScala(name: String, content: String): java.nio.file.Path =

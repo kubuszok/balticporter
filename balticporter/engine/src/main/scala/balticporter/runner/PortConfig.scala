@@ -167,6 +167,9 @@ object PortConfig:
         ParityRef(
           roots          = p.strings("roots").getOrElse(Nil).map(resolvePath(dir, _)),
           packageMapping = p.stringMap("packageMapping").getOrElse(Map.empty),
+          // Header substrings making a hand-port file a party; absent = the default spellings,
+          // explicit `[]` = every file is a party (§1b's no-op).
+          upstreamMarkers = p.strings("upstreamMarkers").getOrElse(ParityRef.DefaultUpstreamMarkers),
         )),
     )
     view.string("base") match

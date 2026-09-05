@@ -14,4 +14,13 @@ final case class ParityRef(
       * manifest's `effectivePackageRenames` is not the right inverse. Empty means use the
       * manifest renames. */
     packageMapping: Map[String, String] = Map.empty,
+    /** header substrings that make a hand-port FILE a party to the comparison; a file naming none
+      * of them is listed as `api-parity(hand-original)` and compared against nothing. EMPTY = every
+      * file is a party (the pre-parameter behaviour, §1b's no-op). */
+    upstreamMarkers: List[String] = ParityRef.DefaultUpstreamMarkers,
 )
+
+object ParityRef:
+  /** The spellings the reference hand ports write above a ported file's own declarations. */
+  val DefaultUpstreamMarkers: List[String] =
+    List("Ported from", "Original source:", "Covenant-java-reference:")

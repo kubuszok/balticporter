@@ -1471,9 +1471,11 @@ Errors by upstream file: `Array` 28, `ArrayMap` 23, `ComparableTimSort` 22, `Mat
 `mutable-params` phase configured), 68 `E006`/`E008` at the libGDX types outside the twelve —
 `ArraySupplier` 15, `GdxRuntimeException` 11, `Null` 9, `Collections` 6, `reflect` 4,
 `Predicate` 3+4 `predicateIterable`, `RandomXS128` 1 — plus 12 `-=`/`+=` on those types.
-`api-parity` 868 rows, **0 unclassified**: hand-port-extra 444, port-extra 263, signature 96,
-factory 30, static-placement 20, null-model 10, mutability 3, collection-retarget 1, opaque 1,
-accessor/operator/rename/visibility/file-merge 0. Residues: `jdk-surface` 0 (46 external `java.*`
+`api-parity` 425 rows, **0 unclassified**: hand-port-extra 102, port-extra 169, signature 96,
+factory 30, null-model 10, static-placement 8, hand-original 6, mutability 2, collection-retarget 1,
+opaque 1, accessor/operator/rename/visibility/file-merge 0. (Was 868 — 444/263/20/3 — before
+`ParityRef.upstreamMarkers` excluded lls's five own files and the surface walk stopped reporting
+locals.) Residues: `jdk-surface` 0 (46 external `java.*`
 members classified, 0 unresolved), no `collection-*` lanes (no `CollectionsTransform`),
 `portability(all)` 0 against 37 rules, omissions 18 (12 promoted-ctor-body, 6 dropped `super(args)`),
 `overload-risk` 12, `heap-pollution` 5, `idiom(refused)` 5, trivia 0/0/0, break residue 0,

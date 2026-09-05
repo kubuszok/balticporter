@@ -124,6 +124,10 @@ map and says so quietly. The `port-report/<main class>/` directory is the MEASUR
   `justified` names the rule or injection to carry. `unjustified` splits by KIND: BEHAVIOUR or
   OMISSION — java wins, the hand-added test is adapted or dropped with the finding recorded; API
   divergence (name, arity, property, slot type) — EXACT parity with the hand port, carried as a rule
-  marked `unjustified` with a porter note. `not-a-divergence` is a defect of `api-parity`'s precision.
+  marked `unjustified` with a porter note. `not-a-divergence` is a defect of `api-parity`'s
+  precision — two are closed by construction: a hand-port FILE whose header names no upstream
+  (`ParityRef.upstreamMarkers`; empty = every file a party) is listed as
+  `api-parity(hand-original)` and compared against nothing, and only a DIRECT member of a
+  template body, a top-level scope or an extension group is surface at all.
   `ported/<module>/divergence-verdicts.tsv` is joined into `divergence.tsv` and promoted by
   `just baseline-accept` (`DESIGN.md` §8.25).

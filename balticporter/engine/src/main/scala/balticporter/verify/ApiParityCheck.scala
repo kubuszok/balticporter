@@ -22,6 +22,7 @@ object ApiParityCheck:
     "rename",             // same shape, different name (usually a known rename)
     "visibility",         // different access level
     "hand-port-extra",    // declared only in the hand port (hand port added API)
+    "hand-original",      // hand-port file with no upstream marker in its header (informational)
     "port-extra",         // declared only in the emitted port (java the hand port skipped)
     "null-model",         // T | Null vs Nullable[T] vs Option[T] vs bare T
     "collection-retarget", // collection family type difference (java.util.* vs scala.collection.*)
@@ -58,6 +59,10 @@ object ApiParityCheck:
       "§1(c) LIBRARY-SPECIFIC or INFORMATIONAL: the hand port declares members the emitted port " +
         "does not have. These are hand-port additions (factory methods, helpers, redesigned APIs) " +
         "that a mechanical port cannot and should not reproduce."),
+    "hand-original" -> (
+      "INFORMATIONAL: a hand-port FILE whose header names no upstream source (`ParityRef." +
+        "upstreamMarkers`). It is the hand port's own code, twin to no ported declaration, so its " +
+        "members are compared against nothing. One row per top-level type."),
     "port-extra" -> (
       "§1(a) ENGINE or §1(b) CONFIGURED: the emitted port declares members the hand port does " +
         "not have. These are java members the hand port skipped — either deliberately (drops) or " +
@@ -163,30 +168,78 @@ object ApiParityCheck:
   private def extractParents(templ: Template): List[String] =
     templ.inits.map(_.tpe.syntax)
 
+  /** A hand-port file whose header names no upstream source: listed, never compared. */
+  final case class HandOriginal(path: String, types: List[String], hint: String)
+
+  /** How many leading lines of a file count as its header. */
+  private val HeaderLines = 40
+
+  /** Lines quoted in a `hand-original` row when the header says where the file DID come from. */
+  private val OriginHints = List("Origin:", "-original")
+
   /** Parse all `.scala` files under the given roots into surface declarations. */
   def parseSurface(roots: List[Path]): Either[String, List[SurfaceDecl]] =
+    parseSurface(roots, Nil).map(_._1)
+
+  /** Parse the roots, splitting PARTIES (header names an upstream source) from originals.
+    * Empty `markers` makes every file a party — the no-op (`CLAUDE.md` §1b). */
+  def parseSurface(
+      roots: List[Path],
+      markers: List[String],
+  ): Either[String, (List[SurfaceDecl], List[HandOriginal])] =
     val files = roots.flatMap { root =>
       if !Files.isDirectory(root) then Nil
       else Files.walk(root).iterator().asScala
         .filter(p => p.toString.endsWith(".scala") && Files.isRegularFile(p))
         .toList
+        .sorted
+        .map(f => (root, f))
     }
-    val errors = List.newBuilder[String]
-    val decls  = List.newBuilder[SurfaceDecl]
-    files.foreach { f =>
-      val text = Files.readString(f)
+    val errors   = List.newBuilder[String]
+    val decls    = List.newBuilder[SurfaceDecl]
+    val original = List.newBuilder[HandOriginal]
+    files.foreach { (root, f) =>
+      val text  = Files.readString(f)
       val label = f.toString
       val input = Input.VirtualFile(label, text)
       dialects.Scala3(input).parse[Source] match
         case Parsed.Success(tree) =>
-          collectDecls(tree, "", decls)
+          val header = text.linesIterator.take(HeaderLines).toList
+          if markers.isEmpty || markers.exists(m => header.exists(_.contains(m))) then
+            collectDecls(tree, "", decls)
+          else
+            val own = List.newBuilder[SurfaceDecl]
+            collectDecls(tree, "", own)
+            val mine  = own.result().filterNot(_.name.contains('$'))
+            val types = mine.filter(d => d.path.isEmpty && TypeKinds.contains(d.kind))
+              .map(_.name).distinct.sorted
+            val hint  = header.find(h => OriginHints.exists(h.contains)).map(_.trim).getOrElse("")
+            // A file that declares nothing public took nothing out of the comparison.
+            if mine.nonEmpty then original += HandOriginal(relativeTo(root, f), types, hint)
         case e: Parsed.Error =>
           errors += s"$label: ${e.message}"
     }
     val errs = errors.result()
     if errs.nonEmpty then Left(errs.mkString("; "))
     // `$` in a member name is phase-minted or scalac-internal, never API surface
-    else Right(decls.result().filterNot(_.name.contains('$')).sortBy(d => (d.path, d.kind, d.name, d.arity)))
+    else Right((
+      decls.result().filterNot(_.name.contains('$')).sortBy(d => (d.path, d.kind, d.name, d.arity)),
+      original.result(),
+    ))
+
+  private val TypeKinds = Set("class", "trait", "object", "enum", "type")
+
+  /** A file named against its own root — an absolute path would make every baseline machine-specific. */
+  private def relativeTo(root: Path, file: Path): String =
+    try balticporter.core.RealPath.relativize(root, file).toString.replace('\\', '/')
+    catch case _: Exception => file.getFileName.toString
+
+  /** The top-level type a declaration belongs to; paths carry no package (`normalisePath`). */
+  private def rootType(d: SurfaceDecl): Option[String] =
+    val segs = d.path.stripPrefix("/").split('/').filter(_.nonEmpty)
+    if segs.nonEmpty then Some(segs.head.stripSuffix("$"))
+    else if TypeKinds.contains(d.kind) then Some(d.name)
+    else None
 
   private def collectDecls(tree: Tree, path: String, out: collection.mutable.Builder[SurfaceDecl, List[SurfaceDecl]]): Unit =
     /** Public or protected -- both are API surface for subclassing. */
@@ -197,7 +250,7 @@ object ApiParityCheck:
       }
 
     def walkTemplate(templ: Template, path: String): Unit =
-      templ.body.stats.foreach(walk(_, path))
+      templ.body.stats.foreach(member(_, path))
 
     def ctorParams(name: String, isCase: Boolean, ctor: Ctor.Primary, path: String): Unit =
       ctor.paramClauses.flatMap(_.values).foreach { p =>
@@ -224,7 +277,10 @@ object ApiParityCheck:
     def defParamTypes(clauses: List[Term.ParamClause]): List[String] =
       clauses.flatMap(_.values).map(p => renderType(p.decltpe))
 
-    def walk(t: Tree, path: String): Unit = t match
+    /** A DIRECT member of a template body, of a top-level scope or of an extension group — the
+      * only declarations that are public surface. A declaration inside a method body, a block, a
+      * lambda or an INACCESSIBLE template is unreachable from outside and is not walked. */
+    def member(t: Tree, path: String): Unit = t match
       case d: Defn.Class if isAccessible(d.mods) =>
         out += SurfaceDecl(
           path = path,
@@ -382,9 +438,20 @@ object ApiParityCheck:
           modifiers = extractModifiers(d.mods),
           accessLevel = extractAccessLevel(d.mods),
         )
-      case _ => t.children.foreach(walk(_, path))
+      case d: Defn.ExtensionGroup =>
+        d.body match
+          case b: Term.Block => b.stats.foreach(member(_, path))
+          case one           => member(one, path)
+      case _ => ()
 
-    walk(tree, path)
+    /** Source, packages and package objects carry surface without being it. */
+    def top(t: Tree, path: String): Unit = t match
+      case s: Source     => s.stats.foreach(top(_, path))
+      case p: Pkg        => p.stats.foreach(top(_, path))
+      case p: Pkg.Object => p.templ.body.stats.foreach(member(_, path))
+      case other         => member(other, path)
+
+    top(tree, path)
 
   private def defArity(clauses: List[Term.ParamClause]): Int =
     clauses.map(_.values.length).sum
@@ -756,7 +823,7 @@ object ApiParityCheck:
       renames: Map[String, String],
   ): List[CheckReport.Finding] =
     val emittedResult   = parseSurface(List(emitDir))
-    val referenceResult = parseSurface(ref.roots)
+    val referenceResult = parseSurface(ref.roots, ref.upstreamMarkers)
 
     (emittedResult, referenceResult) match
       case (Left(err), _) =>
@@ -765,10 +832,40 @@ object ApiParityCheck:
       case (_, Left(err)) =>
         List(CheckReport.Finding(lane("unclassified"), "parse-error", "reference", "", 0,
           s"could not parse reference sources: $err"))
-      case (Right(emitted), Right(reference)) =>
+      case (Right(emitted), Right((reference, originals))) =>
         val effectiveRenames = if ref.packageMapping.nonEmpty then ref.packageMapping else renames
-        val divergences = compare(emitted, reference, effectiveRenames)
-        divergences.map(_.report(effectiveRenames))
+        // A type ONLY an excluded file declares leaves the comparison on BOTH sides: the emitted
+        // twin has nothing left to diverge from, and `port-extra` would report its every member.
+        // A name a PARTY file also declares keeps its twin — paths carry no package, so the two
+        // can be different types (`normalisePath`).
+        val emittedTypes = emitted.flatMap(rootType).toSet
+        val excluded     = originals.flatMap(_.types).toSet -- reference.flatMap(rootType).toSet
+        val compared     = emitted.filterNot(d => rootType(d).exists(excluded.contains))
+        val divergences  = compare(compared, reference, effectiveRenames)
+        originals.flatMap(handOriginal(_, emittedTypes, excluded)) ++
+          divergences.map(_.report(effectiveRenames))
+
+  /** One informational row per top-level type in a hand-port file with no upstream marker. */
+  private def handOriginal(
+      o: HandOriginal,
+      emittedTypes: Set[String],
+      excluded: Set[String],
+  ): List[CheckReport.Finding] =
+    // A file with no top-level type (top-level defs, an extension group) is listed under its own
+    // name: an excluded file that appears in no row is an exclusion nothing can see.
+    val owners = if o.types.nonEmpty then o.types else List(stemOf(o.path))
+    val none   = if o.types.nonEmpty then "" else "; no top-level type"
+    owners.map { t =>
+      val hint  = if o.hint.isEmpty then "" else s"; ${o.hint}"
+      val twin  = if excluded.contains(t) && emittedTypes.contains(t) then
+                    s"; the emitted port declares $t — its members are compared against nothing"
+                  else ""
+      CheckReport.Finding(lane("hand-original"), "hand-original", t, o.path, 0,
+        s"no upstream marker in header$none$hint$twin")
+    }
+
+  private def stemOf(path: String): String =
+    path.split('/').last.stripSuffix(".scala")
 
   /** Summary line for stdout, counts by family. */
   def summary(findings: List[CheckReport.Finding]): String =
