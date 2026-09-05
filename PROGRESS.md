@@ -1323,6 +1323,15 @@ gated across all fifteen maps, negative-tested on a real lane.
 
 ## 13. The parity campaign — every module, every sge/ssg adjustment, every limit (decided 2026-08-25)
 
+**SUPERSEDED 2026-09-05 (maintainer): the drop-in/exact-parity bar below is replaced by the LADDER.** The hand
+ports were LLM-written and mid-rewrite; nobody is downstream. The goal is a libGDX port (core, then desktop /
+browser / android backends) on JVM, Scala.js and Scala Native, usable for a demo at Scala Days 2026 (12–13 Oct),
+correct by TESTS, with sge's ARCHITECTURAL DECISIONS re-applied one rung at a time — each rung a compiling,
+tested manifest variant with its own lane and baseline; JS/Native only after the rungs that unblock them;
+api-parity, divergence verdicts, the drop-in lane and the `.ref` gate are INFORMATIONAL from here. §13.29 is the
+ladder; the decision table and phases below are kept as history.
+
+
 The goal: an agent in sge or ssg regenerates its port from upstream java WITHOUT editing this
 repository. What separates emitted code from the hand ports is per-module policy those agents would
 otherwise invent, plus every engine gap that keeps such policy from being expressible. Decided
@@ -1540,4 +1549,28 @@ no base to answer them, so `PortRun` refuses the run (`DESIGN.md` §8.3, `PortRu
 cannot answer them either — libGDX core publishes `sge.utils.*`, not `lowlevel.util.*`. Standalone
 therefore means the rest of libGDX is EXTERNAL and unresolved, which is where the 68 `E006`/`E008`
 above come from; wave 3 answers them by making this manifest libGDX core's base.
+
+### 13.29 The ladder (decided 2026-09-05; rung list derived from sge's architecture docs, order proposed)
+
+**L0 — universal translation only** (`LibgdxL0Migrate` -> `ported/sge-l0`, `just gdx-l0-measure`, JVM): `surface`
+holds only `MutableParamsTransform` (universal, per-port today); `packageRenames` and the `List -> SgeList` rename
+stay so member keys compare across rungs; no drop, inject, resolutions or parity. **First reading 2026-09-05: 611
+files, 310 errors** — foreach 225 (java enhanced-for over libGDX's OWN `java.lang.Iterable` implementors: K9 desugars
+only a KEPT JDK iterable), E067 59 (JNI `native` methods rendered as bodiless declarations: `BufferUtils`,
+`Gdx2DPixmap`, `ETC1`, … — `@native` is the honest L0 spelling), `Json#readValue` overload 16 (T17),
+`SharedLibraryLoader` absent 6, singles 4. Two universal cards close ~284 of 310.
+
+Rungs (decision | footprint in gdx/src | platform | phase today): L1 bean properties + nullary arity (1,422/928;
+none; yes) · L2 collections onto lls + Comparator->Ordering (989 uses, 55; partly unblocks JS/Native; yes) ·
+L3 no reflection + Json dropped (54 calls/17 files, 23 Json files; UNBLOCKS JS+Native; yes) · L4 JNI->Panama
+(59 natives; prerequisite Native+JS; JVM downcalls only) · L5 Disposable->AutoCloseable + member renames (147;
+none; yes) · L6 opaque types (32 in sge, 3 configured; none) · L7 Nullable (650 `@Null`; none; yes) · L8
+implicit `Sge` (267 reads/79 files + 336 `Gdx.gl`; every backend; yes; late — ctor signatures, CT7) · L9
+Pool->trait + adapters collapsed (Pool only) · L10 GdxRuntimeException->SgeError (650; NONE) · L11
+async->Future (Gears/Ox; JS no threads; NONE) · L12+ JS, Native, backends, demo. Fixed edges: L1 first (keys name
+members); L2 before L7 (engine edge); L3 before JS/Native; L8 late. Free: L5/L6/L7; L3 vs L4. Gate per rung: 0
+JVM errors, suite not below the previous rung, expected deltas named. Rungs are manifest FRAGMENTS folded inside
+`LibgdxPolicy` (never `extendedBy`); each rung its own port root, lane and baseline. Exposure: the two core body
+substitutions (`getSelectedIndex` x2) and the two test ones are L2 policy; the ten injected files map to
+L3/L4/L6/L8/L9; the `NetJavaImpl` drop conceals K2 (universal).
 
