@@ -246,10 +246,10 @@ final class TirEmitter(
         .filterNot(d => !paramful && CtorFunnel.delegationOnlyNilary(program, d).isDefined)
         .map(d => Descriptor(CtorFunnel.valueParams(program, d).map(v => descriptorParam(v.tpt.tpe))))
 
-  /** One type in the descriptor grammar, via `Descriptor.ofInfo`. */
-  private[emit] def descriptorParam(t: TypeRepr): Param =
-    Descriptor.ofInfo(program, TypeRepr.MethodType(List("_" -> t), TypeRepr.NoType))
-      .flatMap(_.params.headOption).getOrElse(Param.Unresolved)
+  /** One type in the descriptor grammar. THE derivation, shared with `CtorFunnel`'s local plan so
+    * a published slot and a dependent's re-derivation of it cannot be spelled differently
+    * (ENGINE-LIMITS D15). */
+  private[emit] def descriptorParam(t: TypeRepr): Param = Descriptor.paramOfType(program, t)
 
   // Porter notes: indexed by SymId (survives renames), not by name.
 

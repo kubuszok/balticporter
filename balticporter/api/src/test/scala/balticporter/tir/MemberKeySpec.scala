@@ -169,3 +169,51 @@ class MemberKeySpec extends munit.FunSuite:
     assert(!MemberKey.of("X#m(java.util.List)").descriptor.get
              .matches(MemberKey.of("X#m(Map)").descriptor.get))
   }
+
+  // -------------------------------------------------------------------------
+  // D-c: the spelling is a function of the TYPE, not of a `Symbol.name`
+  // -------------------------------------------------------------------------
+
+  /** A program holding both spellings of one value class: the frontend interns java's `boolean`
+    * under the scala fullName with java's own simple name, while a phase that MINTS the same type
+    * names it `Boolean`. Two symbols, one `fullName` — `ENGINE-LIMITS.md` D15. */
+  private def twoBooleans: (Program, SymId, SymId, SymId) =
+    val fromJava = Symbol(SymId(1), "boolean", "scala.Boolean", Flags(), SymId.None, TypeRepr.NoType)
+    val fromMint = Symbol(SymId(2), "Boolean", "scala.Boolean", Flags(), SymId.None, TypeRepr.NoType)
+    val boxed    = Symbol(SymId(3), "Boolean", "java.lang.Boolean", Flags(), SymId.None, TypeRepr.NoType)
+    val p = new Program(Nil, SymbolTable(List(fromJava, fromMint, boxed)), Xref.build(Nil), MemberIndex.empty)
+    (p, fromJava.id, fromMint.id, boxed.id)
+
+  private def spell(p: Program, s: SymId): Param =
+    Descriptor.paramOfType(p, TypeRepr.TypeRef(TypeRepr.NoPrefix, s))
+
+  test("a MINTED value class and the frontend's own primitive spell the SAME slot — one derivation") {
+    val (p, fromJava, fromMint, _) = twoBooleans
+    // The base publishes a synthesised primary's post-body slot from the type a PHASE minted; the
+    // dependent re-derives that slot from the type the FRONTEND interned. Reading `Symbol.name`
+    // made the answer depend on which of two same-`fullName` symbols an unordered lookup reached —
+    // a spelling that moved when the classpath grew.
+    assertEquals(spell(p, fromJava), Param.Prim("boolean"))
+    assertEquals(spell(p, fromMint), Param.Prim("boolean"))
+    assertEquals(spell(p, fromJava), spell(p, fromMint))
+  }
+
+  test("a BOXED formal stays boxed — the table is keyed on the type's IDENTITY, not on its name") {
+    val (p, _, fromMint, boxed) = twoBooleans
+    assertEquals(spell(p, boxed), Param.Named("Boolean"))
+    assertNotEquals(spell(p, boxed), spell(p, fromMint))
+    // …and an ARRAY of either keeps java's own spelling on both sides.
+    val arr = Symbol(SymId(4), "Array", "scala.Array", Flags(), SymId.None, TypeRepr.NoType)
+    val p2  = new Program(Nil, SymbolTable(p.symbols.all.toList :+ arr), Xref.build(Nil), MemberIndex.empty)
+    def arrOf(s: SymId) = Descriptor.paramOfType(p2, TypeRepr.AppliedType(
+      TypeRepr.TypeRef(TypeRepr.NoPrefix, arr.id), List(TypeRepr.TypeRef(TypeRepr.NoPrefix, s))))
+    assertEquals(arrOf(fromMint), Param.Arr(Param.Prim("boolean")))
+    assertEquals(arrOf(boxed), Param.Arr(Param.Named("Boolean")))
+  }
+
+  test("EVERY value class a java primitive is interned under has a java spelling — no gap, no extra") {
+    // The map is the inverse of the frontend's `primName`; a missing entry leaves that primitive's
+    // slot spelled by whichever symbol won, which is the defect this closes.
+    assertEquals(Descriptor.ValueClassPrimitives.values.toSet, Descriptor.Primitives)
+    assert(Descriptor.ValueClassPrimitives.keys.forall(_.startsWith("scala.")))
+  }

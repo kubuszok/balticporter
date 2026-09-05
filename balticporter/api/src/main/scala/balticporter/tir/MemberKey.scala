@@ -212,6 +212,15 @@ object Descriptor:
   val Primitives: Set[String] =
     Set("int", "long", "short", "byte", "char", "boolean", "float", "double", "void")
 
+  /** Java's primitive at the SCALA value class the frontend interns it under (`boolean` →
+    * `scala.Boolean`, the frontend's `primName`). The spelling is read off a type's
+    * IDENTITY, never off a `Symbol.name`: an engine-minted value class carries a scala-spelled
+    * name and two symbols may share one `fullName` (CLAUDE.md §4.56, ENGINE-LIMITS D15). */
+  val ValueClassPrimitives: Map[String, String] = Map(
+    "scala.Boolean" -> "boolean", "scala.Byte"   -> "byte",   "scala.Short"  -> "short",
+    "scala.Char"    -> "char",    "scala.Int"    -> "int",    "scala.Long"   -> "long",
+    "scala.Float"   -> "float",   "scala.Double" -> "double", "scala.Unit"   -> "void")
+
   /** one written parameter → a [[Param]]. `int[][]` nests; an empty or `?` spelling is
     * [[Param.Unresolved]]. */
   def paramOf(spelling: String): Param =
@@ -239,7 +248,9 @@ object Descriptor:
     * subclass's instantiation arguments; a second walk spelling `scala.Array[X]` differently would
     * make the two sides of an override edge incomparable. */
   def paramOfType(program: Program, t: TypeRepr): Param =
-    def nameOf(s: SymId): Param = program.symbolOf(s).map(_.name).fold(Param.Unresolved)(paramOf)
+    def nameOf(s: SymId): Param =
+      program.symbolOf(s).map(y => ValueClassPrimitives.getOrElse(y.fullName, y.name))
+        .fold(Param.Unresolved)(paramOf)
     t match
       // the array un-map: `scala.Array[X]` is written `X[]`, which is what the frontend's own
       // parser spells and what a manifest already contains.

@@ -280,9 +280,7 @@ object CtorFunnel:
 
     /** Render the primary's slots in the contract's descriptor grammar. */
     private def renderedPrimary(cd: Tree.ClassDef, p: Plan): String =
-      def param(t: TypeRepr): Param =
-        Descriptor.ofInfo(program, TypeRepr.MethodType(List("_" -> t), TypeRepr.NoType))
-          .flatMap(_.params.headOption).getOrElse(Param.Unresolved)
+      def param(t: TypeRepr): Param = Descriptor.paramOfType(program, t)
       val slots =
         if p.isSynthesised then p.synthetic.map((_, t) => param(t)) ++ p.marker.map(_ => Param.Unresolved).toList
         else p.primaryParams.map(v => param(v.tpt.tpe))

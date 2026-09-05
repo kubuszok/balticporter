@@ -566,3 +566,80 @@ class BaseSurfaceSpec extends munit.FunSuite:
     assertEquals(shapes.types.get("p.Pair").flatMap(_.primary).map(_.render), Some("int,int"))
     assertEquals(shapes.types.get("p.Pair").map(_.primaryKind), Some("unique-root"))
   }
+
+  // -------------------------------------------------------------------------
+  // 2.5 D15 — a PUBLISHED slot and its re-derivation are ONE derivation
+  // -------------------------------------------------------------------------
+
+  /** `Base()` is a SECONDARY whose body runs AFTER its `this(1)` delegation and reads no parameter,
+    * so `Guarded`'s synthesised primary carries the boolean guard slot `via$pb` — a slot whose type
+    * a PHASE minted rather than the frontend interning it from java. `Boxed`'s primary is java's
+    * own and takes the WRAPPER, which must not be spelled as a primitive. */
+  private val guardedBase = Map(
+    "p/Base.java" -> """package p;
+      |public class Base {
+      |  public int n;
+      |  public boolean ready;
+      |  public Base(int n) { this.n = n; }
+      |  public Base(String tag) { this(tag.length()); ready = true; }
+      |}""".stripMargin,
+    "p/Guarded.java" -> """package p;
+      |public class Guarded extends Base {
+      |  public Guarded(int n) { super(n); }
+      |  public Guarded(String tag) { super(tag); }
+      |}""".stripMargin,
+    "p/Boxed.java" -> """package p;
+      |public class Boxed {
+      |  public Boolean flag; public boolean raw;
+      |  public Boxed(Boolean flag, boolean raw) { this.flag = flag; this.raw = raw; }
+      |}""".stripMargin,
+  )
+
+  /** the shapes a BASE publishes for its own tree, with the text it emitted — the same recording a
+    * real base run writes. */
+  private def published(files: Map[String, String]): (Map[String, Surface.TypeShape], String) =
+    val root = Files.createTempDirectory("base-surface-publish")
+    files.foreach { (rel, body) =>
+      val f = root.resolve(rel)
+      Files.createDirectories(f.getParent)
+      Files.writeString(f, body)
+    }
+    val p = SpoonTir.fromTypes(SpoonTir.buildModel(
+      FrontendConfig(root, files.keys.toList.sorted, Nil), lenient = true))
+    val emitter = new TirEmitter(p)
+    val text    = emitter.emit
+    (emitter.emittedShapes.types, text)
+
+  test("D15: a synthesised primary's PRIMITIVE slot publishes as a primitive, and re-derives equal") {
+    val (rows, text) = published(guardedBase)
+    val guarded = rows.getOrElse("p.Guarded", fail(s"no row for p.Guarded in ${rows.keys.toList.sorted}"))
+    assertEquals(clue(guarded.primaryKind), "synthesised-primary", "the fixture lost its synthesis")
+    // the slot exists, and its type is the VALUE CLASS a phase minted — not a type the frontend
+    // interned from java, which is what makes the two derivations reachable from two symbols.
+    assert(clue(text).contains("via$pb: scala.Boolean"), "the fixture lost its boolean guard slot")
+    // the guard slot is java's `boolean`, not the wrapper's name: the slot's type is a value class
+    // a phase minted, and its spelling is read off the type's identity (ENGINE-LIMITS D15).
+    assertEquals(clue(guarded.primary.map(_.render)), Some("int,boolean"))
+
+    // …and the DEPENDENT, which does not emit `p.Guarded`, re-derives that row locally and agrees.
+    val (p, root) = model(guardedBase, Map("q/Mine.java" -> "package q; public class Mine { }"))
+    val surface = new PublishedSurface(p, ownedUnits(p, root),
+      List("base-mod" -> contract("base-mod", rows.toList*)))
+    val plans = CtorFunnel.Plans(p, Some(surface))
+    plans(p.units.head)
+    assertEquals(clue(surface.gaps.filter(_.subject == "p.Guarded")), Nil,
+      "the base's published slot and the dependent's local derivation are ONE derivation")
+  }
+
+  test("D15 NEGATIVE: a BOXED formal stays boxed on both sides — the fix is not a primitive rewrite") {
+    val rows  = published(guardedBase)._1
+    val boxed = rows.getOrElse("p.Boxed", fail("no row for p.Boxed"))
+    assertEquals(clue(boxed.primary.map(_.render)), Some("Boolean,boolean"))
+
+    val (p, root) = model(guardedBase, Map("q/Mine.java" -> "package q; public class Mine { }"))
+    val surface = new PublishedSurface(p, ownedUnits(p, root),
+      List("base-mod" -> contract("base-mod", rows.toList*)))
+    val plans = CtorFunnel.Plans(p, Some(surface))
+    plans(p.units.head)
+    assertEquals(clue(surface.gaps.filter(_.subject == "p.Boxed")), Nil)
+  }
