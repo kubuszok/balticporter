@@ -1468,24 +1468,21 @@ becomes `LlsPolicy.core.extendedBy(...)`; the six `retarget` entries and their r
 `collection-retarget` measured before/after. Expected to surface: many-to-one type collapse
 (`IntArray`/`FloatArray`/… -> `DynamicArray[Prim]`), a spelling no manifest key has today.
 
-**Wave 1 numbers** (`just lls-measure-full`, `port-report/LlsMigrate`, unbaselined — the run wrote
-them, the primary promotes). 12 files emitted, 0 dropped, 0 injected; 605 -> 12 units, 1,802 symbols.
-Compile 100 JVM / 100 js / 100 native / 100 `.ref`; `lls-suite-compile-errors` 149, all 149 in MAIN
-sources — lls's 18 test files (423 `test(…)`) were never reached, so the suite has no number yet.
-Errors by upstream file: `Array` 28, `ArrayMap` 23, `ComparableTimSort` 22, `MathUtils` 22,
-`ObjectMap` 5; the other seven emit at 0. By kind: 32 `E052` reassigned java parameter (no
-`mutable-params` phase configured), 68 `E006`/`E008` at the libGDX types outside the twelve —
-`ArraySupplier` 15, `GdxRuntimeException` 11, `Null` 9, `Collections` 6, `reflect` 4,
-`Predicate` 3+4 `predicateIterable`, `RandomXS128` 1 — plus 12 `-=`/`+=` on those types.
-`api-parity` 425 rows, **0 unclassified**: hand-port-extra 102, port-extra 169, signature 96,
-factory 30, null-model 10, static-placement 8, hand-original 6, mutability 2, collection-retarget 1,
-opaque 1, accessor/operator/rename/visibility/file-merge 0. (Was 868 — 444/263/20/3 — before
-`ParityRef.upstreamMarkers` excluded lls's five own files and the surface walk stopped reporting
-locals.) Residues: `jdk-surface` 0 (46 external `java.*`
-members classified, 0 unresolved), no `collection-*` lanes (no `CollectionsTransform`),
-`portability(all)` 0 against 37 rules, omissions 18 (12 promoted-ctor-body, 6 dropped `super(args)`),
-`overload-risk` 12, `heap-pollution` 5, `idiom(refused)` 5, trivia 0/0/0, break residue 0,
-`markers` 0, `manifest` 0, `base-surface` 0, decisions 84, port map 28 types / 556 members.
+**Wave 1 numbers** (`just lls-measure-full`, `port-report/LlsMigrate`, promoted 2026-09-05). 12 files
+emitted, 0 dropped, 0 injected. Compile **149** JVM / 149 js / 149 native / 149 `.ref` — the run that
+read 100 was the FIRST compile of the port in a checkout (twice: agent worktree and primary; every
+later compile, clean or warm, reads 149 with `TimSort` at 22 like `ComparableTimSort`), so 149 is the
+floor. `lls-suite-compile-errors` 149 = MAIN again (lls's 18 test files, 423 `test(…)`, not reached).
+Errors by upstream file: `Array` 28, `ArrayMap` 23, `TimSort` 22, `ComparableTimSort` 22, `MathUtils` 22,
+`ObjectMap` 16, `OrderedMap` 6, `ObjectSet` 5, `OrderedSet` 3, `Select` 2; `Sort`, `QuickSelect` at 0.
+By kind: `E008` 88 / `E006` 18 at the libGDX types outside the twelve (`ArraySupplier`,
+`GdxRuntimeException`, `Null`, `Collections`, `reflect`, `Predicate`, `RandomXS128`) and `E052` 43
+reassigned java parameters (no `mutable-params` phase configured). `api-parity` after the precision
+fix: **425 rows, 0 unclassified** — port-extra 169, hand-port-extra 102, signature 96, factory 30,
+null-model 10, static-placement 8, hand-original 6 (lls's own files), mutability 2, opaque 1,
+collection-retarget 1. Residues: `jdk-surface` 0, no `collection-*` lanes (no `CollectionsTransform`),
+`portability(all)` 0, omissions 18, `overload-risk` 12, `heap-pollution` 5, `idiom(refused)` 5,
+`manifest` 0, `base-surface` 0, port map 28 types / 556 members.
 
 `gdx/src` is NOT a resolution root, which the wave planned it to be: as one it puts 593 libGDX types
 the port does not emit into the program and 300 of their contract questions shape emitted text with

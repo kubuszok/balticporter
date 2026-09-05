@@ -161,3 +161,9 @@ derived from the port's own configuration, never the operator.
   so the parser attributes its tests to the last clean header. Read `$MEASURE_TMP/<lane>run.txt`
   for the exception first — md-ext's was an NPE in a class initialiser reading an undeclared
   classpath resource (`PortManifest.resources`), not a lane flake (2026-09-05).
+- **The first compile of a NEW port in a checkout under-reports** (lls, 2026-09-05: 100 in the first
+  compile of each of two checkouts, 149 in every later one — clean, warm, js, native, `.ref` alike —
+  with `TimSort` reading 0 beside its twin `ComparableTimSort` at 22). A new port's floor is taken
+  from the SECOND compile, and a `clean` for a non-zero-floor port runs BEFORE the migrator: `clean`
+  deletes `src_managed` (§5.5), so between migrate and compile it counts the hand-written half alone.
+
