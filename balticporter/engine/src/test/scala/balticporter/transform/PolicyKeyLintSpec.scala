@@ -81,11 +81,23 @@ class PolicyKeyLintSpec extends munit.FunSuite:
           "a rewrite-target name or a member/arity — it names no member, it is a synthetic symbol " +
           "namespace for minted SymIds and a fingerprint rendering format"),
     ),
-    // CollectionsRetarget/Reified/Boundary split out of CollectionsTransform (context diet S3):
+    // CollectionsRetarget/Reified/Boundary/Policy/Calls split out of CollectionsTransform (context diet S3):
     // same phase, same sites, same reasoning as the `CollectionsTransform.scala` entry above —
     // each `fullName ==` below is a mint-or-reuse lookup against a WELL-KNOWN external FQN
     // (`java.util.Iterator`, `balticporter.runtime.JavaIterator`, `scala.Array`, `java.lang.Object`,
-    // the phase's own `StreamFqn`, `scala.collection.
+    // the phase's own `StreamFqn`, `scala.collection`).
+    "CollectionsCalls.scala" -> Map(
+      "fullName ==" ->
+        ("the JDK side of this phase is a TYPE MAPPING keyed by FQN — mint-or-reuse against " +
+          "`scala.Int`/`scala.Array`/`java.lang.Object`, externals the " +
+          "program never declares, exactly as in `CollectionsTransform.scala`"),
+    ),
+    "CollectionsPolicy.scala" -> Map(
+      "interpolated #" ->
+        ("the `#` in `retargetRewritesDigest` and `retargetIndexedFieldsDigest` separates a SOURCE " +
+          "FQN from a rewrite-target name or a member/arity — it names no member, it is a " +
+          "fingerprint rendering format, exactly as in `CollectionsTransform.scala`"),
+    ),
     "CollectionsRetarget.scala" -> Map(
       "fullName ==" ->
         ("the JDK side of this phase is a TYPE MAPPING keyed by FQN — mint-or-reuse against " +

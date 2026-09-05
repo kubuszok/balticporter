@@ -5,24 +5,30 @@ import java.nio.file.{Files, Path}
 /** The phase's HANDLED TABLES against the phase's own arms — a bijection, both directions. */
 class CollectionsHandledDerivationSpec extends munit.FunSuite:
 
-  private val source: String =
+  private val engineDir: String =
     val is = Option(getClass.getClassLoader.getResourceAsStream("balticporter/engine-source-dir.txt"))
       .getOrElse(fail("balticporter/engine-source-dir.txt is missing — engine's Test resourceGenerator did not run"))
-    val dir = try new String(is.readAllBytes(), "UTF-8").trim finally is.close()
-    Files.readString(Path.of(dir).resolve("balticporter/transform/CollectionsTransform.scala"))
+    try new String(is.readAllBytes(), "UTF-8").trim finally is.close()
+
+  private val source: String =
+    Files.readString(Path.of(engineDir).resolve("balticporter/transform/CollectionsTransform.scala"))
+
+  /** Call rewrites live in CollectionsCalls.scala (split out of CollectionsTransform, context diet S3). */
+  private val callsSource: String =
+    Files.readString(Path.of(engineDir).resolve("balticporter/transform/CollectionsCalls.scala"))
 
   /** the text of ONE function's arms: from its `def` to the next TOP-LEVEL doc comment (two spaces
     * of indent). A doc comment nested inside the function is indented four and cannot end the cut,
     * which is what lets `rewrite`'s `onShim` note stay where it is. */
-  private def region(defLine: String): String =
-    val from = source.indexOf(defLine)
-    assert(from >= 0, s"`$defLine` is not in CollectionsTransform — the derivation reads the wrong shape")
-    val to = source.indexOf("\n  /** ", from)
+  private def region(src: String, defLine: String): String =
+    val from = src.indexOf(defLine)
+    assert(from >= 0, s"`$defLine` is not in the source — the derivation reads the wrong shape")
+    val to = src.indexOf("\n  /** ", from)
     assert(to > from, s"no top-level doc comment closes `$defLine` — the cut would run to EOF")
-    source.substring(from, to)
+    src.substring(from, to)
 
-  private val staticArms   = region("private def staticRewrite")
-  private val instanceArms = region("private def rewrite(k: Kind")
+  private val staticArms   = region(callsSource, "private[transform] def staticRewrite")
+  private val instanceArms = region(callsSource, "private[transform] def rewrite(k: Kind")
 
   /** every `"owner#name"` STRING LITERAL in the static arms — which is exactly how `staticRewrite`
     * identifies a receiver-less JDK member — PLUS the static-FIELD table, which is the same question
@@ -42,7 +48,7 @@ class CollectionsHandledDerivationSpec extends munit.FunSuite:
   /** …plus the `parenless` set, which is an arm of its own (`case (n, Nil, _) if parenless(n)`) and
     * is declared outside the region above. */
   private def parenlessNames: Set[String] =
-    """(?s)private val parenless = Set\((.*?)\)""".r.findFirstMatchIn(source)
+    """(?s)private\[transform\] val parenless = Set\((.*?)\)""".r.findFirstMatchIn(callsSource)
       .map(m => """"([A-Za-z0-9_]+)"""".r.findAllMatchIn(m.group(1)).map(_.group(1)).toSet)
       .getOrElse(fail("could not find the `parenless` set — the derivation is reading the wrong shape"))
 
