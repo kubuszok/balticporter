@@ -1218,7 +1218,10 @@ final class CollectionsTransform(
       val objectRef = TypeRepr.TypeRef(TypeRepr.NoPrefix, objectSym)
       val stripped = args.map {
         case TypeRepr.TypeBounds(lo, _) if lo != TypeRepr.NoType => lo
-        case TypeRepr.TypeBounds(TypeRepr.NoType, TypeRepr.NoType) => TypeRepr.TypeBounds(TypeRepr.NoType, objectRef)
+        // only at a type THIS PHASE retargeted: a runtime shim declares `[?]` itself, and an override
+        // of its member must keep that spelling or clash after erasure (simplegraphs 0 -> 4)
+        case TypeRepr.TypeBounds(TypeRepr.NoType, TypeRepr.NoType) if retargetTargetToSource.contains(s) =>
+          TypeRepr.TypeBounds(TypeRepr.NoType, objectRef)
         case a => a
       }
       if stripped == args then t else TypeRepr.AppliedType(tc, stripped)

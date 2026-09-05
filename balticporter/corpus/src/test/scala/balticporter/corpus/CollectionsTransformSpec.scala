@@ -2924,3 +2924,18 @@ class CollectionsTransformSpec extends PortSuite:
     assertEmits(p, "demo.NewVal")
     assertNotEmits(p, "(bpFe$0: demo.OldVal)")
   }
+
+  test("a raw JDK-family parameter in an OVERRIDE keeps the shim's `[?]` — the Object bound is for retarget targets only") {
+    val ph = new CollectionsTransform()
+    val p = port(
+      """package demo;
+        |import java.util.*;
+        |class Bag<T> extends AbstractCollection<T> {
+        |  public Iterator<T> iterator() { return null; }
+        |  public int size() { return 0; }
+        |  public boolean containsAll(Collection c) { return false; }
+        |}
+        |""".stripMargin, ph)
+    assertEmits(p, "containsAll(c: balticporter.runtime.JavaCollection[?])")
+    assertNotEmits(p, "JavaCollection[? <: java.lang.Object]")
+  }
