@@ -1581,6 +1581,14 @@ usable-test oracle is a DIFFERENTIAL lane (lls's suite against the emitted port 
 as `textra-diff` does). Then libGDX core extends the lls port (`LibgdxPolicy.core = LlsPolicy.core.extendedBy(…)`) instead
 of retargeting onto the lls jar.
 
+**Scope decided 2026-09-06 (maintainer): the whole utilities family, enriched with lls's added APIs.** `LlsMigrate.Files`
+= every platform-free collection, pool and helper under `utils` plus `math.MathUtils`, closed over `utils`/`math` with no
+escape (54 java files -> 65 Scala units; excluded on purpose: `Pools`, `PerformanceCounter(s)`, `Scaling`, `QuadTreeFloat`,
+`ReflectionPool` and the `reflect` wrappers, which reach `Gdx`, scene2d or `java.lang.reflect`). With `nullable` +
+`ordering`: **JVM 0 / JS 0 / Native 0**, `.ref` 190 (informational). The enrichment (132 members and factories lls added on its
+twelve types, by analogy on the primitive-specialised siblings) is the next lls wave; the differential lane over lls's suite
+is its oracle.
+
 Rungs (decision | footprint in gdx/src | platform | phase today): L1 bean properties + nullary arity (1,422/928;
 none; yes) · L2 collections onto lls + Comparator->Ordering (989 uses, 55; partly unblocks JS/Native; yes) ·
 L3 no reflection + Json dropped (54 calls/17 files, 23 Json files; UNBLOCKS JS+Native; yes) · L4 JNI->Panama
