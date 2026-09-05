@@ -3154,13 +3154,6 @@ md-ext-measure:
       sbt_ref_compile "port-ssg-md-ext-ref/compile" "$EREPORT"
     fi
 
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-ssg-md-extJS/compile" "$EREPORT"
-      sbt_xplat_compile native "port-ssg-md-extNative/compile" "$EREPORT"
-      sbt_ref_compile "port-ssg-md-ext-ref/compile" "$EREPORT"
-    fi
-
     headline "$ERRORS" "$EREPORT"
 
 # ---------------------------------------------------------------------------------------------
