@@ -3091,6 +3091,13 @@ md-ext-measure:
     sbt_compile "port-ssg-md-extJVM/Test/compile" "$MEASURE_TMP"/mdextmeasure.txt
     ERRORS=$SBT_ERRORS
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/mdextmeasure.txt
+
+    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
+    if [ "${BP_FULL:-0}" = "1" ]; then
+      sbt_xplat_compile js "port-ssg-md-extJS/compile" "$EREPORT"
+      sbt_xplat_compile native "port-ssg-md-extNative/compile" "$EREPORT"
+      sbt_ref_compile "port-ssg-md-ext-ref/compile" "$EREPORT"
+    fi
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/mdextmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/mdextmeasure.txt))"
     error_baseline_guard "$ERRORS" "$EREPORT"
     # …and the SPLIT, from the path scalac printed in each error header. `md-measure`'s figure is what
@@ -3146,13 +3153,6 @@ md-ext-measure:
       echo "   that line stops printing this milestone has a compile and no evidence (CLAUDE.md §3)."
     fi
 
-
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-ssg-md-extJS/compile" "$EREPORT"
-      sbt_xplat_compile native "port-ssg-md-extNative/compile" "$EREPORT"
-      sbt_ref_compile "port-ssg-md-ext-ref/compile" "$EREPORT"
-    fi
 
     headline "$ERRORS" "$EREPORT"
 

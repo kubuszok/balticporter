@@ -154,3 +154,9 @@ Three parts were bitten: `PortRun.converted` (635 files instead of 30), `CheckRe
 in a worktree, 44 vfx + 6 noise4j digests at one commit). Ownership of a unit is
 `FrontendConfig.files`, not a path prefix. `balticporter.reportPathRoot` is set by the lanes and
 derived from the port's own configuration, never the operator.
+
+- `OUTCOMES LOST` / a test row that moved to the PREVIOUS suite: the suite threw before munit's
+  header line completed (a stderr stack trace splices into the header, `…scala:149)ssg.md.ext…:`),
+  so the parser attributes its tests to the last clean header. Read `$MEASURE_TMP/<lane>run.txt`
+  for the exception first — md-ext's was an NPE in a class initialiser reading an undeclared
+  classpath resource (`PortManifest.resources`), not a lane flake (2026-09-05).

@@ -395,6 +395,10 @@ def portSourceGenerators(dir: String): Seq[Setting[?]] = Seq(
   // Also add the port's src/ directory to unmanaged sources (for hand-written shims/tests).
   Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / dir / "src" / "main" / "scala",
   Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "ported" / dir / "src" / "test" / "scala",
+  // The resources a manifest declares (`PortManifest.resources`) are emitted beside the code
+  // (CLAUDE.md §5.5) and are part of the classpath the emitted code reads at run time.
+  Compile / unmanagedResourceDirectories += (ThisBuild / baseDirectory).value / "ported" / dir / "src_managed" / "main" / "resources",
+  Test / unmanagedResourceDirectories += (ThisBuild / baseDirectory).value / "ported" / dir / "src_managed" / "test" / "resources",
 )
 
 // JS/Native platform settings shared by every port's cross rows.

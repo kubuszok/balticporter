@@ -164,7 +164,7 @@ ssg.md.ext.tables.MarkdownSortTableTest	ssg.md.ext.tables.MarkdownSortTableTest#
 ssg.md.ext.tables.MarkdownSortTableTest	ssg.md.ext.tables.MarkdownSortTableTest#<stmt7>	stmt	0b792398f1f2bc05
 ssg.md.ext.tables.MarkdownSortTableTest	ssg.md.ext.tables.MarkdownSortTableTest#<stmt8>	stmt	93a1cf80b76a25b8
 ssg.md.ext.tables.MarkdownSortTableTest	ssg.md.ext.tables.MarkdownSortTableTest#<stmt9>	stmt	8e8dea8ec7825dc0
-ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest	class	5f2da51c641eed82
+ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest	class	58358ae6010e2655
 ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest#<stmt10>	stmt	22d015a05a3bdbe5
 ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest#<stmt11>	stmt	f96572ede76beb90
 ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest#<stmt12>	stmt	83e03cca42fa49ba
@@ -175,7 +175,7 @@ ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest#<stmt16>
 ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest#<stmt17>	stmt	8e386be82c19f49d
 ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest#<stmt18>	stmt	f1b15f91efa3c41c
 ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest#<stmt19>	stmt	58926a75c1ab0533
-ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest#<stmt1>	stmt	26c711c2c168377b
+ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest#<stmt1>	stmt	a40b0d405ea6c57b
 ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest#<stmt20>	stmt	52f42c595b3dbecb
 ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest#<stmt21>	stmt	10a9085773b03288
 ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest#<stmt22>	stmt	329a4e9a603c7549
@@ -266,7 +266,7 @@ ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest#markdown
 ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest#markdown8	val	8b03dbd0e333f54f
 ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest#test_LeftCaretAfter2Spaces()	def	d36538cb7dbec7c4
 ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest#test_LeftCaretAfter3Spaces()	def	4e843896154e2bf6
-ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase	class	3e014d2ef850112c
+ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase	class	ae20f83fd89c83bb
 ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#assertCellInfo(String,int,int,Integer,Integer,TableCellOffsetInfo)	def	4ca49add9e4ec00e
 ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#assertIndexOf(String,int,int,IndexSpanOffset)	def	ec09c2bc7c2ee43a
 ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#assertIndexOf(int,int,IndexSpanOffset)	def	e9d346a0991fa6f6
@@ -274,14 +274,14 @@ ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#
 ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#formatOptionsAsIs(CharSequence,DataHolder)	def	9133664382996511
 ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#getFormattedTable(MarkdownTable)	def	903918aa75a58c89
 ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#getFormattedTables(Array<MarkdownTable>)	def	64b25cb17b48f63b
-ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#getSortedTable(MarkdownTable,Array<ColumnSort>)	def	7f23029dc42116fa
+ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#getSortedTable(MarkdownTable,Array<ColumnSort>)	def	e2e880d079e021d9
 ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#getTable(CharSequence)	def	95f1736a0ce2edc7
 ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#getTable(CharSequence,DataHolder)	def	fa38af470da48182
 ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#getTables(CharSequence)	def	a4f77426a009a0a6
 ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#getTables(CharSequence,DataHolder)	def	1eabb55323a2b804
 ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#getTransposedTable(MarkdownTable)	def	aa62d85b495d36d9
 ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#getTransposedTable(MarkdownTable,int)	def	97055694984a11e5
-ssg.md.ext.tables.MarkdownTransposeTableTest	ssg.md.ext.tables.MarkdownTransposeTableTest	class	438f7aa106ed9239
+ssg.md.ext.tables.MarkdownTransposeTableTest	ssg.md.ext.tables.MarkdownTransposeTableTest	class	eee112ee38684208
 ssg.md.ext.tables.MarkdownTransposeTableTest	ssg.md.ext.tables.MarkdownTransposeTableTest#<stmt10>	stmt	4254a240e1a66ed8
 ssg.md.ext.tables.MarkdownTransposeTableTest	ssg.md.ext.tables.MarkdownTransposeTableTest#<stmt1>	stmt	95882c24afe7e92d
 ssg.md.ext.tables.MarkdownTransposeTableTest	ssg.md.ext.tables.MarkdownTransposeTableTest#<stmt2>	stmt	fffe96e771787e15
@@ -292,13 +292,6 @@ ssg.md.ext.tables.MarkdownTransposeTableTest	ssg.md.ext.tables.MarkdownTranspose
 ssg.md.ext.tables.MarkdownTransposeTableTest	ssg.md.ext.tables.MarkdownTransposeTableTest#<stmt7>	stmt	7bc0f4a5ec20800f
 ssg.md.ext.tables.MarkdownTransposeTableTest	ssg.md.ext.tables.MarkdownTransposeTableTest#<stmt8>	stmt	d5b0c266a9d7c923
 ssg.md.ext.tables.MarkdownTransposeTableTest	ssg.md.ext.tables.MarkdownTransposeTableTest#<stmt9>	stmt	639c2a8c07d91386
-ssg.md.ext.tables.MarkdownTransposeTableTest	ssg.md.ext.tables.MarkdownTransposeTableTest#markdown1	val	666b0057711b0e01
-ssg.md.ext.tables.MarkdownTransposeTableTest	ssg.md.ext.tables.MarkdownTransposeTableTest#markdown2	val	bb78e402d89dc008
-ssg.md.ext.tables.MarkdownTransposeTableTest	ssg.md.ext.tables.MarkdownTransposeTableTest#markdown3	val	2b0571adcfaa13cc
-ssg.md.ext.tables.MarkdownTransposeTableTest	ssg.md.ext.tables.MarkdownTransposeTableTest#markdown4	val	d5f96dafedbde046
-ssg.md.ext.tables.MarkdownTransposeTableTest	ssg.md.ext.tables.MarkdownTransposeTableTest#transposed1	val	320559e60f6012a6
-ssg.md.ext.tables.MarkdownTransposeTableTest	ssg.md.ext.tables.MarkdownTransposeTableTest#transposed2	val	50592738ed6be158
-ssg.md.ext.tables.MarkdownTransposeTableTest	ssg.md.ext.tables.MarkdownTransposeTableTest#transposed3	val	14dcd80e7d0763ce
 ssg.md.ext.tables.MarkdownTransposeTableTest	ssg.md.ext.tables.MarkdownTransposeTableTest#transposedNoCaption1	val	e2e815ad05322c2b
 ssg.md.ext.tables.MarkdownTransposeTableTest	ssg.md.ext.tables.MarkdownTransposeTableTest#transposedNoCaption2	val	7385cc587778b979
 ssg.md.ext.tables.MarkdownTransposeTableTest	ssg.md.ext.tables.MarkdownTransposeTableTest#transposedNoCaption3	val	c991212d06b126ad
