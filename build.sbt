@@ -374,6 +374,8 @@ lazy val corpus = project
 
 // Shared settings every ported project carries.
 def portSettings(dir: String): Seq[Setting[?]] = Seq(
+  // sbt caps PRINTED diagnostics at maxErrors (100): lls read 100 where "149 errors found" (2026-09-05).
+  maxErrors := 100000,
   publish / skip := true,
   scalacOptions := Seq("-nowarn"),
   cleanFiles += (ThisBuild / baseDirectory).value / "ported" / dir / "src_managed",
@@ -455,6 +457,7 @@ val llsFlags: Seq[String] = Seq(
 // the compile inputs keeps every ref compile a real compile.
 def refPortSettings(dir: String): Seq[Setting[?]] = Seq(
   publish / skip := true,
+  maxErrors := 100000,
   Compile / scalacOptions += s"-Xmacro-settings:balticporter.refNonce=${System.nanoTime}",
 ) ++ portSourceGenerators(dir)
 

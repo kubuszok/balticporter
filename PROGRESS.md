@@ -1515,10 +1515,9 @@ becomes `LlsPolicy.core.extendedBy(...)`; the six `retarget` entries and their r
 (`IntArray`/`FloatArray`/… -> `DynamicArray[Prim]`), a spelling no manifest key has today.
 
 **Wave 1 numbers** (`just lls-measure-full`, `port-report/LlsMigrate`, promoted 2026-09-05). 12 files
-emitted, 0 dropped, 0 injected. Compile **149** JVM / 149 js / 149 native / 149 `.ref` — the run that
-read 100 was the FIRST compile of the port in a checkout (twice: agent worktree and primary; every
-later compile, clean or warm, reads 149 with `TimSort` at 22 like `ComparableTimSort`), so 149 is the
-floor. `lls-suite-compile-errors` 149 = MAIN again (lls's 18 test files, 423 `test(…)`, not reached).
+emitted, 0 dropped, 0 injected. Compile **149** JVM / 149 js / 149 native / 149 `.ref` (scalac's `149 errors found`; a lane read 100
+wherever sbt's `maxErrors` cap of 100 PRINTED diagnostics applied — every port project sets
+`maxErrors := 100000` since 2026-09-05). `lls-suite-compile-errors` 149 = MAIN again (lls's 18 test files, 423 `test(…)`, not reached).
 Errors by upstream file: `Array` 28, `ArrayMap` 23, `TimSort` 22, `ComparableTimSort` 22, `MathUtils` 22,
 `ObjectMap` 16, `OrderedMap` 6, `ObjectSet` 5, `OrderedSet` 3, `Select` 2; `Sort`, `QuickSelect` at 0.
 By kind: `E008` 88 / `E006` 18 at the libGDX types outside the twelve (`ArraySupplier`,

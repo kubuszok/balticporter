@@ -169,11 +169,12 @@ derived from the port's own configuration, never the operator.
   so the parser attributes its tests to the last clean header. Read `$MEASURE_TMP/<lane>run.txt`
   for the exception first — md-ext's was an NPE in a class initialiser reading an undeclared
   classpath resource (`PortManifest.resources`), not a lane flake (2026-09-05).
-- **The first compile of a NEW port in a checkout under-reports** (lls, 2026-09-05: 100 in the first
-  compile of each of two checkouts, 149 in every later one — clean, warm, js, native, `.ref` alike —
-  with `TimSort` reading 0 beside its twin `ComparableTimSort` at 22). A new port's floor is taken
-  from the SECOND compile, and a `clean` for a non-zero-floor port runs BEFORE the migrator: `clean`
-  deletes `src_managed` (§5.5), so between migrate and compile it counts the hand-written half alone.
+- **sbt prints at most `maxErrors` (100) diagnostics; the lane counts diagnostics.** lls read 100 on
+  every REAL compile while scalac said `149 errors found` (2026-09-05); the 149 the lanes had read came
+  from a cached-failure replay that printed more. Every port and `-ref` project sets `maxErrors :=
+  100000` (`portSettings`/`refPortSettings`); a `-Xmax-errors` scalac flag does not lift sbt's cap. A
+  `clean` for a non-zero-floor port runs BEFORE the migrator (`clean` deletes `src_managed`, §5.5).
+
 - **sbt 2's disk action cache replays a previously FAILED compile without its diagnostics**
   (`sbt.util.CachedCompileFailure`, liqp `.ref` 2026-09-05: 3 -> "no countable error"); `clean` does
   not bypass it. The `-ref` projects carry a per-execution nonce in `scalacOptions`
