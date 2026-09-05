@@ -1952,7 +1952,10 @@ lls-measure:
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another (ENGINE-LIMITS M5.10).
     jdk_guard "$REPORT"
-    echo "-- compile (sbt port-llsJVM/compile) --"
+    echo "-- compile (sbt port-llsJVM/compile, from a CLEAN state) --"
+    # At a triple-digit floor the count depends on zinc's state: clean 100, warm after a failed
+    # compile 149 (2026-09-05). Clean first so the number is a fact about the emitted code.
+    _sbt_run "port-llsJVM/clean" >/dev/null 2>&1
     sbt_compile "port-llsJVM/compile" "$MEASURE_TMP"/llsmeasure.txt
     ERRORS=$SBT_ERRORS
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/llsmeasure.txt
