@@ -115,6 +115,7 @@ md_ext_module := "ported/ssg-md-ext"
 # lls's port root. Its upstream is `{{gdx_src}}/src` — the same vendored libGDX tree `gdx_module`
 # converts, restricted to the twelve sources lls carries `Ported from` headers for
 # (`LlsMigrate.Files` is the authority; `PROGRESS.md` §13.28).
+lls_rungs     := env_var_or_default("LLS_RUNGS", "")   # decision rungs above L0 for an experiment run (PROGRESS 13.29)
 lls_module    := "ported/lls"
 
 # The lls CHECKOUT: the HAND-WRITTEN half `port-lls` compiles beside the emitted twelve, and the
@@ -1879,7 +1880,7 @@ lls-measure:
     # failed compile 149, 2026-09-05). `clean` also deletes src_managed (§5.5), so it runs BEFORE
     # the migrator regenerates it, never between the migrator and the compile.
     _sbt_run "port-llsJVM/clean" >/dev/null 2>&1
-    MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.lls.LlsMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.lls.LlsMigrate --rungs={{lls_rungs}}" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$MIGRATE_OUT"; then
       echo "!! LlsMigrate DID NOT RUN — refusing to measure stale output"
       grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$MIGRATE_OUT" | head -20

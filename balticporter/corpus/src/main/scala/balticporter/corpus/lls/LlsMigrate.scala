@@ -2,7 +2,7 @@ package balticporter.corpus.lls
 
 import balticporter.core.{FrontendConfig, ParityRef, PortManifest, Provenance, RuntimeMode}
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
-import balticporter.transform.MutableParamsTransform
+import balticporter.transform.{CollectionsTransform, MutableParamsTransform, NullabilityTransform}
 
 import java.nio.file.Path
 
@@ -40,6 +40,9 @@ object LlsMigrate:
   def main(args: Array[String]): Unit =
     val repoRoot = Path.of(sys.props.getOrElse("balticporter.root", ".")).toAbsolutePath.normalize
     val base     = repoRoot.resolve("../sge/original-src/libgdx/gdx/src").normalize
+    // `--rungs=nullable,ordering`: the decision rungs switched on above L0 (PROGRESS.md §13.29).
+    val rungs    = args.collectFirst { case a if a.startsWith("--rungs=") => a.stripPrefix("--rungs=") }
+      .toList.flatMap(_.split(',')).map(_.trim).filter(_.nonEmpty).toSet
 
     PortRun(
       label     = "lls",
@@ -51,7 +54,7 @@ object LlsMigrate:
       // of libGDX is EXTERNAL: unresolved, and counted like any other foreign symbol.
       frontend  = FrontendConfig(base, Files, Nil, resolutionRoots = Nil),
       phases    = Nil, // supplied by the manifest — the two sources are mutually exclusive
-      manifest  = Some(LlsPolicy.core(repoRoot)),
+      manifest  = Some(LlsPolicy.core(repoRoot, rungs)),
       provenance = Some(Provenance(
         upstreamName     = "libGDX",
         upstreamCommit   = VendoredCommit.of(base),
@@ -72,7 +75,18 @@ object LlsMigrate:
   * run reports is a measurement rather than a policy decision. */
 object LlsPolicy:
 
-  def core(repoRoot: Path): PortManifest =
+  /** The decision rungs a run may switch on above L0, each a manifest fragment (PROGRESS.md §13.29). */
+  val Rungs: Map[String, List[balticporter.tir.Phase]] = Map(
+    "nullable" -> List(new NullabilityTransform(
+      annotations = Set("com.badlogic.gdx.utils.Null"),
+      target      = NullabilityTransform.Target.Named("lowlevel.Nullable"),
+      scope       = balticporter.tir.RuleScope.Everywhere(Set.empty))),
+    "ordering" -> List(new CollectionsTransform(retarget = Map("java.util.Comparator" -> "scala.math.Ordering"))),
+  )
+
+  def core(repoRoot: Path, rungs: Set[String] = Set.empty): PortManifest =
+    val unknown = rungs -- Rungs.keySet
+    require(unknown.isEmpty, s"unknown lls rungs: ${unknown.mkString(",")}; known: ${Rungs.keys.toList.sorted.mkString(",")}")
     PortManifest(
       name    = "lls",
       governs = Set("com.badlogic.gdx.utils", "com.badlogic.gdx.math"),
@@ -88,7 +102,7 @@ object LlsPolicy:
       ),
       // L0 of the lls ladder: the universal phases only (`MutableParamsTransform` is universal but
       // per-port today); the decision rungs are added one at a time (PROGRESS.md §13.29).
-      surface = List(new MutableParamsTransform),
+      surface = List(new MutableParamsTransform) ++ Rungs.toList.sortBy(_._1).collect { case (k, ps) if rungs(k) => ps }.flatten,
       // THE REFERENCE HAND PORT for lls. NOT inherited (DESIGN.md §8.23).
       parity = Some(ParityRef(roots = List(
         repoRoot.resolve("../lls/lls/src/main/scala").normalize))),
