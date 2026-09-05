@@ -670,7 +670,7 @@ sge.assets.AssetLoadingTask	sge.assets.AssetLoadingTask#resolve(AssetLoader<?,?>
 sge.assets.AssetLoadingTask	sge.assets.AssetLoadingTask#startTime	val	5f94555c383349d5
 sge.assets.AssetLoadingTask	sge.assets.AssetLoadingTask#unload()	def	a58c9e90307d9598
 sge.assets.AssetLoadingTask	sge.assets.AssetLoadingTask#update()	def	41b5d605a1030d38
-sge.assets.AssetManager	sge.assets.AssetManager	class	97d3423acb13986c
+sge.assets.AssetManager	sge.assets.AssetManager	class	d94ea2388358c509
 sge.assets.AssetManager	sge.assets.AssetManager#<init>(FileHandleResolver,Sge)	ctor	f006578cf261f193
 sge.assets.AssetManager	sge.assets.AssetManager#<init>(Sge)	ctor	446ebab82c903ff7
 sge.assets.AssetManager	sge.assets.AssetManager#<stmt1>	stmt	8eaa1e4803ca9ec3
@@ -700,7 +700,7 @@ sge.assets.AssetManager	sge.assets.AssetManager#get(String,Class<T>)	def	5b6f129
 sge.assets.AssetManager	sge.assets.AssetManager#get(String,Class<T>,boolean)	def	586659310fe2b669
 sge.assets.AssetManager	sge.assets.AssetManager#get(String,boolean)	def	b06aa0fabc45276a
 sge.assets.AssetManager	sge.assets.AssetManager#getAll(Class<T>,DynamicArray<T>)	def	44ab2f3a2eaab11f
-sge.assets.AssetManager	sge.assets.AssetManager#getAssetFileName(T)	def	b01be748c36bc89e
+sge.assets.AssetManager	sge.assets.AssetManager#getAssetFileName(T)	def	92c1def701f1b31f
 sge.assets.AssetManager	sge.assets.AssetManager#getAssetType(String)	def	9292003ff49b8807
 sge.assets.AssetManager	sge.assets.AssetManager#getDependencies(String)	def	aa0df922d13bb451
 sge.assets.AssetManager	sge.assets.AssetManager#getLoader(Class<T>)	def	32e5425323cb20b6
@@ -796,9 +796,9 @@ sge.assets.loaders.I18NBundleLoader	sge.assets.loaders.I18NBundleLoader$I18NBund
 sge.assets.loaders.I18NBundleLoader	sge.assets.loaders.I18NBundleLoader$I18NBundleParameter#<stmt2>	stmt	75b60f4e76d1d551
 sge.assets.loaders.I18NBundleLoader	sge.assets.loaders.I18NBundleLoader$I18NBundleParameter#encoding	val	75579ba2e652d937
 sge.assets.loaders.I18NBundleLoader	sge.assets.loaders.I18NBundleLoader$I18NBundleParameter#locale	val	5bdf933e3ada03cf
-sge.assets.loaders.ModelLoader	sge.assets.loaders.ModelLoader	class	101565879bfeb14c
+sge.assets.loaders.ModelLoader	sge.assets.loaders.ModelLoader	class	4cb9cfd21a2270bd
 sge.assets.loaders.ModelLoader	sge.assets.loaders.ModelLoader#defaultParameters	val	3a34c47a3c045ffa
-sge.assets.loaders.ModelLoader	sge.assets.loaders.ModelLoader#getDependencies(String,FileHandle,P)	def	2fcd5f99b3b98270
+sge.assets.loaders.ModelLoader	sge.assets.loaders.ModelLoader#getDependencies(String,FileHandle,P)	def	1ce0ccf7467e04cd
 sge.assets.loaders.ModelLoader	sge.assets.loaders.ModelLoader#items	val	819c976a94912ab7
 sge.assets.loaders.ModelLoader	sge.assets.loaders.ModelLoader#loadAsync(AssetManager,String,FileHandle,P)	def	8e45a5728444ef31
 sge.assets.loaders.ModelLoader	sge.assets.loaders.ModelLoader#loadModel(FileHandle)	def	b20237eb957805e2
@@ -5823,8 +5823,8 @@ sge.graphics.g3d.particles.ParticleEffect	sge.graphics.g3d.particles.ParticleEff
 sge.graphics.g3d.particles.ParticleEffect	sge.graphics.g3d.particles.ParticleEffect#translate(Vector3)	def	a5f285bd4043427c
 sge.graphics.g3d.particles.ParticleEffect	sge.graphics.g3d.particles.ParticleEffect#update()	def	0b2d886b22e2d15d
 sge.graphics.g3d.particles.ParticleEffect	sge.graphics.g3d.particles.ParticleEffect#update(float)	def	5af985e18a1f9994
-sge.graphics.g3d.particles.ParticleEffectLoader	sge.graphics.g3d.particles.ParticleEffectLoader	class	42a54b6d510686c6
-sge.graphics.g3d.particles.ParticleEffectLoader	sge.graphics.g3d.particles.ParticleEffectLoader#getDependencies(String,FileHandle,ParticleEffectLoadParameter)	def	8579dacabd4a4834
+sge.graphics.g3d.particles.ParticleEffectLoader	sge.graphics.g3d.particles.ParticleEffectLoader	class	fb9e64ec4b78d7c1
+sge.graphics.g3d.particles.ParticleEffectLoader	sge.graphics.g3d.particles.ParticleEffectLoader#getDependencies(String,FileHandle,ParticleEffectLoadParameter)	def	101c35ef00d6bf0a
 sge.graphics.g3d.particles.ParticleEffectLoader	sge.graphics.g3d.particles.ParticleEffectLoader#items	val	786842e7e0805b71
 sge.graphics.g3d.particles.ParticleEffectLoader	sge.graphics.g3d.particles.ParticleEffectLoader#loadAsync(AssetManager,String,FileHandle,ParticleEffectLoadParameter)	def	44f7142184ce6d6c
 sge.graphics.g3d.particles.ParticleEffectLoader	sge.graphics.g3d.particles.ParticleEffectLoader#loadSync(AssetManager,String,FileHandle,ParticleEffectLoadParameter)	def	048c2820d88a175d
@@ -12170,8 +12170,8 @@ sge.scenes.scene2d.Action	sge.scenes.scene2d.Action#target	val	673f76aaff692453
 sge.scenes.scene2d.Action	sge.scenes.scene2d.Action#target()	def	47d67ece1c54dc09
 sge.scenes.scene2d.Action	sge.scenes.scene2d.Action#target_=(Actor)	def	1657db4f02c579ba
 sge.scenes.scene2d.Action	sge.scenes.scene2d.Action#toString()	def	bf0999284c19077b
-sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor	class	5beeff9ca02b125e
-sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor#<clinit>	init	f1facb05082e08b5
+sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor	class	f0043cb22df739b5
+sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor#<clinit>	init	000a49bdc9e2d03b
 sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor#POOLS	val	812711f18d77a316
 sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor#act(float)	def	5bc85302d0441a15
 sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor#actions	val	a3833c3c5f82c93c

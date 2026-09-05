@@ -26,7 +26,7 @@ class-init-trigger	2
 collection-boundary	31
 collection-closure	0
 collection-internal	0
-collection-retarget	430
+collection-retarget	435
 context-seam	40
 dependency-coverage	0
 dependency-coverage(all)	37
@@ -58,7 +58,7 @@ substitution(emitted)	0
 switch-null	0
 trivia	0
 trivia(deliberate)	4
-trivia(recovered)	13
+trivia(recovered)	12
 try-resource	0
 unused-symbol(handled)	117
 unused-symbol(refused)	0

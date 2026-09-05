@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge	engine=balticporter/0.1.0-SNAPSHOT	sources=d4e1a1128812d482	files=597	policy=f9178e5e64dcdc5b	jdk=22
+# balticporter port map	schema=4	module=sge	engine=balticporter/0.1.0-SNAPSHOT	sources=d4e1a1128812d482	files=597	policy=d31df897a6f235bf	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -1635,7 +1635,7 @@ member	com.badlogic.gdx.assets.AssetManager#get(String,Class)	sge.assets.AssetMa
 member	com.badlogic.gdx.assets.AssetManager#get(String,Class,boolean)	sge.assets.AssetManager#get(String,Class<T>,boolean)	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	167	586659310fe2b669	
 member	com.badlogic.gdx.assets.AssetManager#get(String,boolean)	sge.assets.AssetManager#get(String,boolean)	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	150	b06aa0fabc45276a	
 member	com.badlogic.gdx.assets.AssetManager#getAll(Class,DynamicArray)	sge.assets.AssetManager#getAll(Class<T>,DynamicArray<T>)	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	186	44ab2f3a2eaab11f	
-member	com.badlogic.gdx.assets.AssetManager#getAssetFileName(T)	sge.assets.AssetManager#getAssetFileName(T)	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	295	b01be748c36bc89e	
+member	com.badlogic.gdx.assets.AssetManager#getAssetFileName(T)	sge.assets.AssetManager#getAssetFileName(T)	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	295	92c1def701f1b31f	
 member	com.badlogic.gdx.assets.AssetManager#getAssetType(String)	sge.assets.AssetManager#getAssetType(String)	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	809	9292003ff49b8807	
 member	com.badlogic.gdx.assets.AssetManager#getDependencies(String)	sge.assets.AssetManager#getDependencies(String)	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	804	aa0df922d13bb451	
 member	com.badlogic.gdx.assets.AssetManager#getLoader(Class)	sge.assets.AssetManager#getLoader(Class<T>)	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	330	32e5425323cb20b6	
@@ -1721,7 +1721,7 @@ member	com.badlogic.gdx.assets.loaders.I18NBundleLoader$I18NBundleParameter#<stm
 member	com.badlogic.gdx.assets.loaders.I18NBundleLoader$I18NBundleParameter#encoding	sge.assets.loaders.I18NBundleLoader$I18NBundleParameter#encoding	Renamed	-	com/badlogic/gdx/assets/loaders/I18NBundleLoader.java	86	75579ba2e652d937	
 member	com.badlogic.gdx.assets.loaders.I18NBundleLoader$I18NBundleParameter#locale	sge.assets.loaders.I18NBundleLoader$I18NBundleParameter#locale	Renamed	-	com/badlogic/gdx/assets/loaders/I18NBundleLoader.java	85	5bdf933e3ada03cf	
 member	com.badlogic.gdx.assets.loaders.ModelLoader#defaultParameters	sge.assets.loaders.ModelLoader#defaultParameters	Renamed	-	com/badlogic/gdx/assets/loaders/ModelLoader.java	41	3a34c47a3c045ffa	
-member	com.badlogic.gdx.assets.loaders.ModelLoader#getDependencies(String,FileHandle,P)	sge.assets.loaders.ModelLoader#getDependencies(String,FileHandle,P)	Renamed	-	com/badlogic/gdx/assets/loaders/ModelLoader.java	73	2fcd5f99b3b98270	
+member	com.badlogic.gdx.assets.loaders.ModelLoader#getDependencies(String,FileHandle,P)	sge.assets.loaders.ModelLoader#getDependencies(String,FileHandle,P)	Renamed	-	com/badlogic/gdx/assets/loaders/ModelLoader.java	73	1ce0ccf7467e04cd	
 member	com.badlogic.gdx.assets.loaders.ModelLoader#items	sge.assets.loaders.ModelLoader#items	Renamed	-	com/badlogic/gdx/assets/loaders/ModelLoader.java	40	819c976a94912ab7	
 member	com.badlogic.gdx.assets.loaders.ModelLoader#loadAsync(AssetManager,String,FileHandle,P)	sge.assets.loaders.ModelLoader#loadAsync(AssetManager,String,FileHandle,P)	Renamed	-	com/badlogic/gdx/assets/loaders/ModelLoader.java	98	8e45a5728444ef31	
 member	com.badlogic.gdx.assets.loaders.ModelLoader#loadModel(FileHandle)	sge.assets.loaders.ModelLoader#loadModel(FileHandle)	Renamed	-	com/badlogic/gdx/assets/loaders/ModelLoader.java	68	b20237eb957805e2	
@@ -6523,7 +6523,7 @@ member	com.badlogic.gdx.graphics.g3d.particles.ParticleEffect#start()	sge.graphi
 member	com.badlogic.gdx.graphics.g3d.particles.ParticleEffect#translate(Vector3)	sge.graphics.g3d.particles.ParticleEffect#translate(Vector3)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleEffect.java	115	a5f285bd4043427c	
 member	com.badlogic.gdx.graphics.g3d.particles.ParticleEffect#update()	sge.graphics.g3d.particles.ParticleEffect#update()	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleEffect.java	69	0b2d886b22e2d15d	
 member	com.badlogic.gdx.graphics.g3d.particles.ParticleEffect#update(float)	sge.graphics.g3d.particles.ParticleEffect#update(float)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleEffect.java	74	5af985e18a1f9994	
-member	com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader#getDependencies(String,FileHandle,ParticleEffectLoadParameter)	sge.graphics.g3d.particles.ParticleEffectLoader#getDependencies(String,FileHandle,ParticleEffectLoadParameter)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleEffectLoader.java	55	8579dacabd4a4834	
+member	com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader#getDependencies(String,FileHandle,ParticleEffectLoadParameter)	sge.graphics.g3d.particles.ParticleEffectLoader#getDependencies(String,FileHandle,ParticleEffectLoadParameter)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleEffectLoader.java	55	101c35ef00d6bf0a	
 member	com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader#items	sge.graphics.g3d.particles.ParticleEffectLoader#items	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleEffectLoader.java	44	786842e7e0805b71	
 member	com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader#loadAsync(AssetManager,String,FileHandle,ParticleEffectLoadParameter)	sge.graphics.g3d.particles.ParticleEffectLoader#loadAsync(AssetManager,String,FileHandle,ParticleEffectLoadParameter)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleEffectLoader.java	51	44f7142184ce6d6c	
 member	com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader#loadSync(AssetManager,String,FileHandle,ParticleEffectLoadParameter)	sge.graphics.g3d.particles.ParticleEffectLoader#loadSync(AssetManager,String,FileHandle,ParticleEffectLoadParameter)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleEffectLoader.java	118	048c2820d88a175d	
@@ -12567,7 +12567,7 @@ member	com.badlogic.gdx.scenes.scene2d.Action#getTarget	sge.scenes.scene2d.Actio
 member	com.badlogic.gdx.scenes.scene2d.Action#getTarget()	sge.scenes.scene2d.Action#target()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Action.java	79	47d67ece1c54dc09	
 member	com.badlogic.gdx.scenes.scene2d.Action#setTarget(Actor)	sge.scenes.scene2d.Action#target_=(Actor)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Action.java	74	1657db4f02c579ba	
 member	com.badlogic.gdx.scenes.scene2d.Action#toString()	sge.scenes.scene2d.Action#toString()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Action.java	107	bf0999284c19077b	
-member	com.badlogic.gdx.scenes.scene2d.Actor#<clinit>	sge.scenes.scene2d.Actor#<clinit>	Renamed	body	com/badlogic/gdx/scenes/scene2d/Actor.java	63	f1facb05082e08b5	placement=companion
+member	com.badlogic.gdx.scenes.scene2d.Actor#<clinit>	sge.scenes.scene2d.Actor#<clinit>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	63	000a49bdc9e2d03b	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.Actor#POOLS	sge.scenes.scene2d.Actor#POOLS	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	61	812711f18d77a316	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.Actor#act(float)	sge.scenes.scene2d.Actor#act(float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	103	5bc85302d0441a15	
 member	com.badlogic.gdx.scenes.scene2d.Actor#getActions	sge.scenes.scene2d.Actor#actions	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	74	a3833c3c5f82c93c	name=actions$field
@@ -18336,7 +18336,7 @@ member	com.badlogic.gdx.utils.PooledLinkedList#tail	sge.utils.PooledLinkedList#t
 member	com.badlogic.gdx.utils.PooledLinkedList$Item#next	sge.utils.PooledLinkedList$Item#next	Renamed	-	com/badlogic/gdx/utils/PooledLinkedList.java	24	23b85c14c90b7f37	
 member	com.badlogic.gdx.utils.PooledLinkedList$Item#payload	sge.utils.PooledLinkedList$Item#payload	Renamed	-	com/badlogic/gdx/utils/PooledLinkedList.java	23	f7fde6347a4763f8	
 member	com.badlogic.gdx.utils.PooledLinkedList$Item#prev	sge.utils.PooledLinkedList$Item#prev	Renamed	-	com/badlogic/gdx/utils/PooledLinkedList.java	25	ae2b6a3f0486c765	
-member	com.badlogic.gdx.utils.Pools#<clinit>	sge.utils.Pools#<clinit>	Renamed	-	com/badlogic/gdx/utils/Pools.java	41	a746ac2938abb740	placement=companion
+member	com.badlogic.gdx.utils.Pools#<clinit>	sge.utils.Pools#<clinit>	Renamed	-	com/badlogic/gdx/utils/Pools.java	41	65d2242aa3640a4b	placement=companion
 member	com.badlogic.gdx.utils.Pools#THROW_ON_REFLECTION_POOL_CREATION	sge.utils.Pools#THROW_ON_REFLECTION_POOL_CREATION	Renamed	-	com/badlogic/gdx/utils/Pools.java	39	5b4626bc98dd0a90	placement=companion
 member	com.badlogic.gdx.utils.Pools#WARN_ON_REFLECTION_POOL_CREATION	sge.utils.Pools#WARN_ON_REFLECTION_POOL_CREATION	Renamed	-	com/badlogic/gdx/utils/Pools.java	38	9e9a85b96a8ad99a	placement=companion
 member	com.badlogic.gdx.utils.Pools#free(Object)	sge.utils.Pools#free(Object)	Renamed	-	com/badlogic/gdx/utils/Pools.java	127	7056f6025f83e96f	placement=companion
