@@ -840,8 +840,9 @@ into a live task class. Milestone 1 converts everything upstream compiles instea
   `maxChildren`) were dropped from the emitted class — CLOSED, `ENGINE-LIMITS.md` T22: elements
   become `val` constructor parameters. Retention (reading one back via `getAnnotation`) stays open
   but moot — family 1 removes the reflective reads.
-- `sge-ai-diff`'s 2 declared failures (`Task.cloneTask()` on both `sge.ai.btree.TaskSuite` tests) —
-  the port is right; the hand port redesigned `Task` with a `newInstance()` member instead.
+- `sge-ai-diff`'s 1 declared failure (`cloneTask creates independent copy`: the hand fixture has no nilary
+  ctor; java throws `TaskCloneException` there, B4) — the guard test passes since the registry (2026-09-05);
+  the hand port redesigned `Task` with a `newInstance()` member instead.
 - 14 of 24 hand-port suite files / 101 of 196 tests are class (c), not an engine gap: 52 tests behind
   an API shape the hand port changed (`Timepiece` param, `Parallel` arity, a collapsed overload), 20
   behind the parser registry redesign, 17 behind a property reshape (`Steerable`/`Location`/`Pool`),
