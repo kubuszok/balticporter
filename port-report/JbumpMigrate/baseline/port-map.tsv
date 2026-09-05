@@ -68,7 +68,7 @@ member	com.dongbat.jbump.Collisions#h2s	sge.jbump.Collisions#h2s	Renamed	-	com/d
 member	com.dongbat.jbump.Collisions#isEmpty()	sge.jbump.Collisions#isEmpty()	Renamed	-	com/dongbat/jbump/Collisions.java	154	807246b9e46248e0	
 member	com.dongbat.jbump.Collisions#items	sge.jbump.Collisions#items	Renamed	-	com/dongbat/jbump/Collisions.java	50	017fde693f63e726	
 member	com.dongbat.jbump.Collisions#keySort(Buffer,BooleanArray)	sge.jbump.Collisions#keySort(Buffer<Integer>,BooleanArray)	Renamed	-	com/dongbat/jbump/Collisions.java	235	80cda84a5b182a38	
-member	com.dongbat.jbump.Collisions#keySort(Buffer,Buffer)	sge.jbump.Collisions#keySort(Buffer<Integer>,Buffer<?>)	Renamed	-	com/dongbat/jbump/Collisions.java	184	9d558edc34b16317	
+member	com.dongbat.jbump.Collisions#keySort(Buffer,Buffer)	sge.jbump.Collisions#keySort(Buffer<Integer>,Buffer<?>)	Renamed	-	com/dongbat/jbump/Collisions.java	184	509fa2c735a6404c	
 member	com.dongbat.jbump.Collisions#keySort(Buffer,FloatArray)	sge.jbump.Collisions#keySort(Buffer<Integer>,FloatArray)	Renamed	-	com/dongbat/jbump/Collisions.java	201	3d1d4b0ea1677511	
 member	com.dongbat.jbump.Collisions#keySort(Buffer,IntArray)	sge.jbump.Collisions#keySort(Buffer<Integer>,IntArray)	Renamed	-	com/dongbat/jbump/Collisions.java	218	17f2a7bcfda52a5e	
 member	com.dongbat.jbump.Collisions#moveXs	sge.jbump.Collisions#moveXs	Renamed	-	com/dongbat/jbump/Collisions.java	36	63e6d627f61174ce	
@@ -217,10 +217,10 @@ member	com.dongbat.jbump.World#project_c	sge.jbump.World#project_c	Renamed	-	com
 member	com.dongbat.jbump.World#project_dictItemsInCellRect	sge.jbump.World#project_dictItemsInCellRect	Renamed	-	com/dongbat/jbump/World.java	238	78b0af67691bc8ae	vis=private
 member	com.dongbat.jbump.World#project_visited	sge.jbump.World#project_visited	Renamed	-	com/dongbat/jbump/World.java	236	3443d89d7e17bbb7	vis=private
 member	com.dongbat.jbump.World#queryPoint(float,float,CollisionFilter,ArrayBuffer)	sge.jbump.World#queryPoint(float,float,CollisionFilter,ArrayBuffer<Item<?>>)	Renamed	-	com/dongbat/jbump/World.java	502	f8b0429f7aaec1ca	
-member	com.dongbat.jbump.World#queryRay(float,float,float,float,CollisionFilter,ArrayBuffer)	sge.jbump.World#queryRay(float,float,float,float,CollisionFilter,ArrayBuffer<Item<?>>)	Renamed	-	com/dongbat/jbump/World.java	572	028cc3bcb92f5921	
+member	com.dongbat.jbump.World#queryRay(float,float,float,float,CollisionFilter,ArrayBuffer)	sge.jbump.World#queryRay(float,float,float,float,CollisionFilter,ArrayBuffer<Item<?>>)	Renamed	-	com/dongbat/jbump/World.java	572	dbb3c759842182c4	
 member	com.dongbat.jbump.World#queryRayWithCoords(float,float,float,float,CollisionFilter,ArrayBuffer)	sge.jbump.World#queryRayWithCoords(float,float,float,float,CollisionFilter,ArrayBuffer<ItemInfo>)	Renamed	-	com/dongbat/jbump/World.java	593	30b6c3f8f0f55df6	
 member	com.dongbat.jbump.World#queryRect(float,float,float,float,CollisionFilter,ArrayBuffer)	sge.jbump.World#queryRect(float,float,float,float,CollisionFilter,ArrayBuffer<Item<?>>)	Renamed	-	com/dongbat/jbump/World.java	478	982ce6b8f065595d	
-member	com.dongbat.jbump.World#querySegment(float,float,float,float,CollisionFilter,ArrayBuffer)	sge.jbump.World#querySegment(float,float,float,float,CollisionFilter,ArrayBuffer<Item<?>>)	Renamed	-	com/dongbat/jbump/World.java	525	70f68a99b03408d3	
+member	com.dongbat.jbump.World#querySegment(float,float,float,float,CollisionFilter,ArrayBuffer)	sge.jbump.World#querySegment(float,float,float,float,CollisionFilter,ArrayBuffer<Item<?>>)	Renamed	-	com/dongbat/jbump/World.java	525	1bf742107f31a34c	
 member	com.dongbat.jbump.World#querySegmentWithCoords(float,float,float,float,CollisionFilter,ArrayBuffer)	sge.jbump.World#querySegmentWithCoords(float,float,float,float,CollisionFilter,ArrayBuffer<ItemInfo>)	Renamed	-	com/dongbat/jbump/World.java	542	7e0c261f465dd5a5	
 member	com.dongbat.jbump.World#query_c	sge.jbump.World#query_c	Renamed	-	com/dongbat/jbump/World.java	469	15901daacffced06	vis=private
 member	com.dongbat.jbump.World#query_dictItemsInCellRect	sge.jbump.World#query_dictItemsInCellRect	Renamed	-	com/dongbat/jbump/World.java	470	fe651e38e57d88af	vis=private

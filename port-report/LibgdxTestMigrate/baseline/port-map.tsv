@@ -184,7 +184,7 @@ member	com.badlogic.gdx.utils.FlushablePoolTest$FlushablePoolClass#<init>()	sge.
 member	com.badlogic.gdx.utils.FlushablePoolTest$FlushablePoolClass#<init>(int)	sge.utils.FlushablePoolTest$FlushablePoolClass#<init>(int)	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	105	7c9654eaa2c0046b	
 member	com.badlogic.gdx.utils.FlushablePoolTest$FlushablePoolClass#newObject()	sge.utils.FlushablePoolTest$FlushablePoolClass#newObject()	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	114	ffb27375591c3a47	
 member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt10>	sge.utils.JsonMatcherTests#<stmt10>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1193	018d77992ea6201a	
-member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt11>	sge.utils.JsonMatcherTests#<stmt11>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1209	7f4f609e2025287f	
+member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt11>	sge.utils.JsonMatcherTests#<stmt11>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1209	0947b9786192d621	
 member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt12>	sge.utils.JsonMatcherTests#<stmt12>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1262	f8acc687edbb3517	
 member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt13>	sge.utils.JsonMatcherTests#<stmt13>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1283	91fd280ecd58262a	
 member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt14>	sge.utils.JsonMatcherTests#<stmt14>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1347	2e7a9e7272a80e4a	
@@ -289,7 +289,7 @@ member	com.badlogic.gdx.utils.QueueTest#<stmt6>	sge.utils.QueueTest#<stmt6>	Rena
 member	com.badlogic.gdx.utils.QueueTest#<stmt7>	sge.utils.QueueTest#<stmt7>	Renamed	-	com/badlogic/gdx/utils/QueueTest.java	195	24de996a7f005d49	
 member	com.badlogic.gdx.utils.QueueTest#<stmt8>	sge.utils.QueueTest#<stmt8>	Renamed	-	com/badlogic/gdx/utils/QueueTest.java	237	e3e7d9e2784ddd9d	
 member	com.badlogic.gdx.utils.QueueTest#<stmt9>	sge.utils.QueueTest#<stmt9>	Renamed	-	com/badlogic/gdx/utils/QueueTest.java	257	8cf62d30c6072eae	
-member	com.badlogic.gdx.utils.QueueTest#assertEqualsAndHash(ArrayDeque,ArrayDeque)	sge.utils.QueueTest#assertEqualsAndHash(ArrayDeque<?>,ArrayDeque<?>)	Renamed	-	com/badlogic/gdx/utils/QueueTest.java	376	1a3fe482c1240b92	vis=private
+member	com.badlogic.gdx.utils.QueueTest#assertEqualsAndHash(ArrayDeque,ArrayDeque)	sge.utils.QueueTest#assertEqualsAndHash(ArrayDeque<?>,ArrayDeque<?>)	Renamed	-	com/badlogic/gdx/utils/QueueTest.java	376	1f1a2a268f0c574b	vis=private
 member	com.badlogic.gdx.utils.QueueTest#assertValues(ArrayDeque,Array)	sge.utils.QueueTest#assertValues(ArrayDeque<Integer>,Array<Integer>)	Renamed	-	com/badlogic/gdx/utils/QueueTest.java	381	e9d7c725fc0bfec3	vis=private
 member	com.badlogic.gdx.utils.SortTest#<stmt10>	sge.utils.SortTest#<stmt10>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	153	ac24d312d6f13e59	
 member	com.badlogic.gdx.utils.SortTest#<stmt11>	sge.utils.SortTest#<stmt11>	Renamed	-	com/badlogic/gdx/utils/SortTest.java	169	50c3f9f56e46970d	

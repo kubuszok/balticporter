@@ -1529,7 +1529,7 @@ member	com.badlogic.gdx.Net$HttpResponseListener#handleHttpResponse(HttpResponse
 member	com.badlogic.gdx.Preferences#clear()	sge.Preferences#clear()	Renamed	-	com/badlogic/gdx/Preferences.java	78	717a0052bf89055f	
 member	com.badlogic.gdx.Preferences#contains(String)	sge.Preferences#contains(String)	Renamed	-	com/badlogic/gdx/Preferences.java	76	0c5aae68441c82e4	
 member	com.badlogic.gdx.Preferences#flush()	sge.Preferences#flush()	Renamed	-	com/badlogic/gdx/Preferences.java	83	2ac38b9c953bf915	
-member	com.badlogic.gdx.Preferences#get()	sge.Preferences#get()	Renamed	-	com/badlogic/gdx/Preferences.java	74	dbc22eb2525f4a9f	
+member	com.badlogic.gdx.Preferences#get()	sge.Preferences#get()	Renamed	-	com/badlogic/gdx/Preferences.java	74	381327c185264221	
 member	com.badlogic.gdx.Preferences#getBoolean(String)	sge.Preferences#getBoolean(String)	Renamed	-	com/badlogic/gdx/Preferences.java	53	b5c2fb92521f0476	
 member	com.badlogic.gdx.Preferences#getBoolean(String,boolean)	sge.Preferences#getBoolean(String,boolean)	Renamed	-	com/badlogic/gdx/Preferences.java	63	b20bc088ca394ad2	
 member	com.badlogic.gdx.Preferences#getFloat(String)	sge.Preferences#getFloat(String)	Renamed	-	com/badlogic/gdx/Preferences.java	59	04f5c4ab4a047be8	
@@ -1540,7 +1540,7 @@ member	com.badlogic.gdx.Preferences#getLong(String)	sge.Preferences#getLong(Stri
 member	com.badlogic.gdx.Preferences#getLong(String,long)	sge.Preferences#getLong(String,long)	Renamed	-	com/badlogic/gdx/Preferences.java	67	bc93073883051259	
 member	com.badlogic.gdx.Preferences#getString(String)	sge.Preferences#getString(String)	Renamed	-	com/badlogic/gdx/Preferences.java	61	755a7a49fdf40549	
 member	com.badlogic.gdx.Preferences#getString(String,String)	sge.Preferences#getString(String,String)	Renamed	-	com/badlogic/gdx/Preferences.java	71	7f512fc7c8289f53	
-member	com.badlogic.gdx.Preferences#put(Map)	sge.Preferences#put(Map<String,?>)	Renamed	-	com/badlogic/gdx/Preferences.java	51	20ba834f810ab0b5	
+member	com.badlogic.gdx.Preferences#put(Map)	sge.Preferences#put(Map<String,?>)	Renamed	-	com/badlogic/gdx/Preferences.java	51	8180221f3c680004	
 member	com.badlogic.gdx.Preferences#putBoolean(String,boolean)	sge.Preferences#putBoolean(String,boolean)	Renamed	-	com/badlogic/gdx/Preferences.java	41	6fe6f72180017ba2	
 member	com.badlogic.gdx.Preferences#putFloat(String,float)	sge.Preferences#putFloat(String,float)	Renamed	-	com/badlogic/gdx/Preferences.java	47	74b4c53fd9acf5c6	
 member	com.badlogic.gdx.Preferences#putInteger(String,int)	sge.Preferences#putInteger(String,int)	Renamed	-	com/badlogic/gdx/Preferences.java	43	296468e2ee3493c0	
@@ -5267,7 +5267,7 @@ member	com.badlogic.gdx.graphics.g2d.TextureAtlas#dispose()	sge.graphics.g2d.Tex
 member	com.badlogic.gdx.graphics.g2d.TextureAtlas#createPatch(String)	sge.graphics.g2d.TextureAtlas#createPatch(String)	Renamed	-	com/badlogic/gdx/graphics/g2d/TextureAtlas.java	228	ff9163c63c527e6c	
 member	com.badlogic.gdx.graphics.g2d.TextureAtlas#createSprite(String)	sge.graphics.g2d.TextureAtlas#createSprite(String)	Renamed	-	com/badlogic/gdx/graphics/g2d/TextureAtlas.java	180	0ea813d283479814	
 member	com.badlogic.gdx.graphics.g2d.TextureAtlas#createSprite(String,int)	sge.graphics.g2d.TextureAtlas#createSprite(String,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/TextureAtlas.java	189	9cd1d42e85bd4446	
-member	com.badlogic.gdx.graphics.g2d.TextureAtlas#createSprites()	sge.graphics.g2d.TextureAtlas#createSprites()	Renamed	-	com/badlogic/gdx/graphics/g2d/TextureAtlas.java	169	1a2fcb3e0ab52925	
+member	com.badlogic.gdx.graphics.g2d.TextureAtlas#createSprites()	sge.graphics.g2d.TextureAtlas#createSprites()	Renamed	-	com/badlogic/gdx/graphics/g2d/TextureAtlas.java	169	da1944165e39c4b6	
 member	com.badlogic.gdx.graphics.g2d.TextureAtlas#createSprites(String)	sge.graphics.g2d.TextureAtlas#createSprites(String)	Renamed	-	com/badlogic/gdx/graphics/g2d/TextureAtlas.java	203	3209242f08733dc2	
 member	com.badlogic.gdx.graphics.g2d.TextureAtlas#findRegion(String)	sge.graphics.g2d.TextureAtlas#findRegion(String)	Renamed	-	com/badlogic/gdx/graphics/g2d/TextureAtlas.java	136	349775ee8492fac5	
 member	com.badlogic.gdx.graphics.g2d.TextureAtlas#findRegion(String,int)	sge.graphics.g2d.TextureAtlas#findRegion(String,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/TextureAtlas.java	144	3ab50ebde0d04661	
@@ -14375,7 +14375,7 @@ member	com.badlogic.gdx.scenes.scene2d.ui.List#getItemHeight	sge.scenes.scene2d.
 member	com.badlogic.gdx.scenes.scene2d.ui.List#getItemHeight()	sge.scenes.scene2d.ui.SgeList#itemHeight()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	388	89a5ba538c051131	
 member	com.badlogic.gdx.scenes.scene2d.ui.List#getItems	sge.scenes.scene2d.ui.SgeList#items	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	48	a0f71e8cfa1b2bb1	name=items$field
 member	com.badlogic.gdx.scenes.scene2d.ui.List#getItems()	sge.scenes.scene2d.ui.SgeList#items()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	384	5b1a9e1b0d46b5dd	
-member	com.badlogic.gdx.scenes.scene2d.ui.List#setItems(DynamicArray)	sge.scenes.scene2d.ui.SgeList#items_=(DynamicArray<?>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	358	53f8c48207c79dff	
+member	com.badlogic.gdx.scenes.scene2d.ui.List#setItems(DynamicArray)	sge.scenes.scene2d.ui.SgeList#items_=(DynamicArray<?>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	358	b4ca3582f6309498	
 member	com.badlogic.gdx.scenes.scene2d.ui.List#getKeyListener	sge.scenes.scene2d.ui.SgeList#keyListener	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	55	61495dc21cea14c7	name=keyListener$field
 member	com.badlogic.gdx.scenes.scene2d.ui.List#getKeyListener()	sge.scenes.scene2d.ui.SgeList#keyListener()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	430	deb648b8901d4bc2	
 member	com.badlogic.gdx.scenes.scene2d.ui.List#layout()	sge.scenes.scene2d.ui.SgeList#layout()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/List.java	173	42ef0c4e72d64cef	
@@ -15084,7 +15084,7 @@ member	com.badlogic.gdx.scenes.scene2d.ui.Tree#drawOver(N,Drawable,Batch,float,f
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree#drawSelection(N,Drawable,Batch,float,float,float,float)	sge.scenes.scene2d.ui.Tree#drawSelection(N,Drawable,Batch,float,float,float,float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	333	60b4da57cfc489b1	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree#expandAll()	sge.scenes.scene2d.ui.Tree#expandAll()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	567	d6e435d2b333a093	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree#expandAll(DynamicArray)	sge.scenes.scene2d.ui.Tree#expandAll(DynamicArray<?>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	571	70f0c320f0550799	placement=companion
-member	com.badlogic.gdx.scenes.scene2d.ui.Tree#findExpandedValues(DynamicArray,DynamicArray)	sge.scenes.scene2d.ui.Tree#findExpandedValues(DynamicArray<?>,DynamicArray<?>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	527	93840d3af4cae948	placement=companion
+member	com.badlogic.gdx.scenes.scene2d.ui.Tree#findExpandedValues(DynamicArray,DynamicArray)	sge.scenes.scene2d.ui.Tree#findExpandedValues(DynamicArray<?>,DynamicArray<?>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	527	92650a8d6c8c186c	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree#findExpandedValues(DynamicArray)	sge.scenes.scene2d.ui.Tree#findExpandedValues(DynamicArray<V>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	513	f524007fe1ad8858	
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree#findNode(DynamicArray,Object)	sge.scenes.scene2d.ui.Tree#findNode(DynamicArray<?>,Object)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	542	f0189a05453e1d8f	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.ui.Tree#findNode(V)	sge.scenes.scene2d.ui.Tree#findNode(V)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Tree.java	537	a1df6d05bb8f3d5c	
@@ -15778,8 +15778,8 @@ member	com.badlogic.gdx.utils.Array#containsAll(DynamicArray,boolean)	sge.utils.
 member	com.badlogic.gdx.utils.Array#containsAny(DynamicArray,boolean)	sge.utils.Array#containsAny(DynamicArray<?>,boolean)	Renamed	-	com/badlogic/gdx/utils/Array.java	293	52dc6e3acd84ad1c	
 member	com.badlogic.gdx.utils.Array#isEmpty()	sge.utils.Array#empty()	Renamed	-	com/badlogic/gdx/utils/Array.java	449	e897a01b28c863ea	
 member	com.badlogic.gdx.utils.Array#ensureCapacity(int)	sge.utils.Array#ensureCapacity(int)	Renamed	-	com/badlogic/gdx/utils/Array.java	469	5df22d3873477533	
-member	com.badlogic.gdx.utils.Array#equals(Any)	sge.utils.Array#equals(Any)	Renamed	-	com/badlogic/gdx/utils/Array.java	620	f0f5e7ff3bea1ff9	
-member	com.badlogic.gdx.utils.Array#equalsIdentity(Object)	sge.utils.Array#equalsIdentity(Object)	Renamed	-	com/badlogic/gdx/utils/Array.java	637	f8f0b26321fa07cd	
+member	com.badlogic.gdx.utils.Array#equals(Any)	sge.utils.Array#equals(Any)	Renamed	-	com/badlogic/gdx/utils/Array.java	620	0317ab87dba7d4a3	
+member	com.badlogic.gdx.utils.Array#equalsIdentity(Object)	sge.utils.Array#equalsIdentity(Object)	Renamed	-	com/badlogic/gdx/utils/Array.java	637	ee6e890ee47f302d	
 member	com.badlogic.gdx.utils.Array#first()	sge.utils.Array#first()	Renamed	-	com/badlogic/gdx/utils/Array.java	438	03db713a2632ba34	
 member	com.badlogic.gdx.utils.Array#get(int)	sge.utils.Array#get(int)	Renamed	-	com/badlogic/gdx/utils/Array.java	172	81cc56b7ab0dc324	
 member	com.badlogic.gdx.utils.Array#hashCode()	sge.utils.Array#hashCode()	Renamed	-	com/badlogic/gdx/utils/Array.java	607	11e5c747fabe5206	
@@ -15858,8 +15858,8 @@ member	com.badlogic.gdx.utils.ArrayMap#ensureCapacity(int)	sge.utils.ArrayMap#en
 member	com.badlogic.gdx.utils.ArrayMap#entries()	sge.utils.ArrayMap#entries()	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	502	2668fa242f018278	
 member	com.badlogic.gdx.utils.ArrayMap#entries1	sge.utils.ArrayMap#entries1	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	39	4647b0a0f9b871c6	vis=private
 member	com.badlogic.gdx.utils.ArrayMap#entries2	sge.utils.ArrayMap#entries2	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	39	ea4c1c4089ba1eeb	vis=private
-member	com.badlogic.gdx.utils.ArrayMap#equals(Any)	sge.utils.ArrayMap#equals(Any)	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	442	6eb64fc494e624c9	
-member	com.badlogic.gdx.utils.ArrayMap#equalsIdentity(Object)	sge.utils.ArrayMap#equalsIdentity(Object)	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	462	045a77a8cdd75d06	
+member	com.badlogic.gdx.utils.ArrayMap#equals(Any)	sge.utils.ArrayMap#equals(Any)	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	442	d5d090f134ea67db	
+member	com.badlogic.gdx.utils.ArrayMap#equalsIdentity(Object)	sge.utils.ArrayMap#equalsIdentity(Object)	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	462	46093043d6a88c9c	
 member	com.badlogic.gdx.utils.ArrayMap#firstKey()	sge.utils.ArrayMap#firstKey()	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	191	6197584f34fc3a9a	
 member	com.badlogic.gdx.utils.ArrayMap#firstValue()	sge.utils.ArrayMap#firstValue()	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	196	593510bdfec443cf	
 member	com.badlogic.gdx.utils.ArrayMap#get(K)	sge.utils.ArrayMap#get(K)	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	146	82f4345d2f6a13d7	
@@ -15919,7 +15919,7 @@ member	com.badlogic.gdx.utils.ArrayMap$Keys#next()	sge.utils.ArrayMap$Keys#next(
 member	com.badlogic.gdx.utils.ArrayMap$Keys#remove()	sge.utils.ArrayMap$Keys#remove()	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	671	029263d0fb1f4547	
 member	com.badlogic.gdx.utils.ArrayMap$Keys#reset()	sge.utils.ArrayMap$Keys#reset()	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	676	4bca3075772a8f6b	
 member	com.badlogic.gdx.utils.ArrayMap$Keys#toArray()	sge.utils.ArrayMap$Keys#toArray()	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	680	15d3ceacd6f07dd3	
-member	com.badlogic.gdx.utils.ArrayMap$Keys#toArray(DynamicArray)	sge.utils.ArrayMap$Keys#toArray(DynamicArray<?>)	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	684	871ebe7c66d78d04	
+member	com.badlogic.gdx.utils.ArrayMap$Keys#toArray(DynamicArray)	sge.utils.ArrayMap$Keys#toArray(DynamicArray<?>)	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	684	0f26d126d0fee863	
 member	com.badlogic.gdx.utils.ArrayMap$Keys#valid	sge.utils.ArrayMap$Keys#valid	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	650	01d045a83c9f074c	
 member	com.badlogic.gdx.utils.ArrayMap$Values#<stmt1>	sge.utils.ArrayMap$Values#<stmt1>	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	610	0f9b2209291df2a6	
 member	com.badlogic.gdx.utils.ArrayMap$Values#hasNext()	sge.utils.ArrayMap$Values#hasNext()	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	613	7f96b28364ac4bca	
@@ -15930,7 +15930,7 @@ member	com.badlogic.gdx.utils.ArrayMap$Values#next()	sge.utils.ArrayMap$Values#n
 member	com.badlogic.gdx.utils.ArrayMap$Values#remove()	sge.utils.ArrayMap$Values#remove()	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	628	029263d0fb1f4547	
 member	com.badlogic.gdx.utils.ArrayMap$Values#reset()	sge.utils.ArrayMap$Values#reset()	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	633	4bca3075772a8f6b	
 member	com.badlogic.gdx.utils.ArrayMap$Values#toArray()	sge.utils.ArrayMap$Values#toArray()	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	637	7c63de8f160912c5	
-member	com.badlogic.gdx.utils.ArrayMap$Values#toArray(DynamicArray)	sge.utils.ArrayMap$Values#toArray(DynamicArray<?>)	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	641	94daac491ad190b6	
+member	com.badlogic.gdx.utils.ArrayMap$Values#toArray(DynamicArray)	sge.utils.ArrayMap$Values#toArray(DynamicArray<?>)	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	641	f39a29dffbb0dec1	
 member	com.badlogic.gdx.utils.ArrayMap$Values#valid	sge.utils.ArrayMap$Values#valid	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	607	01d045a83c9f074c	
 member	com.badlogic.gdx.utils.ArraySupplier#ANY	sge.utils.ArraySupplier#ANY	Renamed	-	com/badlogic/gdx/utils/ArraySupplier.java	9	43dd32c387a92590	placement=companion
 member	com.badlogic.gdx.utils.ArraySupplier#get(int)	sge.utils.ArraySupplier#get(int)	Renamed	-	com/badlogic/gdx/utils/ArraySupplier.java	17	07055233a039bcce	
@@ -16299,8 +16299,8 @@ member	com.badlogic.gdx.utils.CharArray#append(long)	sge.utils.CharArray#append(
 member	com.badlogic.gdx.utils.CharArray#append(long,int)	sge.utils.CharArray#append(long,int)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	639	03c5e1bc7278784c	
 member	com.badlogic.gdx.utils.CharArray#append(long,int,char)	sge.utils.CharArray#append(long,int,char)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	647	ed85f486327da2c7	
 member	com.badlogic.gdx.utils.CharArray#appendAll(Array)	sge.utils.CharArray#appendAll(Array<T>)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	818	83f542c6ba326646	
-member	com.badlogic.gdx.utils.CharArray#appendAll(JavaIterable)	sge.utils.CharArray#appendAll(JavaIterable<?>)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	802	bccaaebf6e0fc7cd	
-member	com.badlogic.gdx.utils.CharArray#appendAll(JavaIterator)	sge.utils.CharArray#appendAll(JavaIterator<?>)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	810	beec99bbdea5bcca	
+member	com.badlogic.gdx.utils.CharArray#appendAll(JavaIterable)	sge.utils.CharArray#appendAll(JavaIterable<?>)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	802	489b9c167cbfa219	
+member	com.badlogic.gdx.utils.CharArray#appendAll(JavaIterator)	sge.utils.CharArray#appendAll(JavaIterator<?>)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	810	0f426eb6f4459ea5	
 member	com.badlogic.gdx.utils.CharArray#appendCodePoint(int)	sge.utils.CharArray#appendCodePoint(int)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	1204	07871c20d28d112e	
 member	com.badlogic.gdx.utils.CharArray#appendFalse(int)	sge.utils.CharArray#appendFalse(int)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	827	e3132db3e17f593a	vis=private
 member	com.badlogic.gdx.utils.CharArray#appendFixedWidthPadLeft(Object,int,char)	sge.utils.CharArray#appendFixedWidthPadLeft(Object,int,char)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	847	f7b43b6fa2533441	
@@ -16320,8 +16320,8 @@ member	com.badlogic.gdx.utils.CharArray#appendSeparator(char,int)	sge.utils.Char
 member	com.badlogic.gdx.utils.CharArray#appendTo(Appendable)	sge.utils.CharArray#appendTo(Appendable)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	1144	8b4260508807b8b6	
 member	com.badlogic.gdx.utils.CharArray#appendTrue(int)	sge.utils.CharArray#appendTrue(int)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	1158	895457ba144df1ff	vis=private
 member	com.badlogic.gdx.utils.CharArray#appendWithSeparators(Array,String)	sge.utils.CharArray#appendWithSeparators(Array<Object>,String)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	1189	65d5bd611eb8e7e2	
-member	com.badlogic.gdx.utils.CharArray#appendWithSeparators(JavaIterable,String)	sge.utils.CharArray#appendWithSeparators(JavaIterable<?>,String)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	1169	d119b7f52f2d658e	
-member	com.badlogic.gdx.utils.CharArray#appendWithSeparators(JavaIterator,String)	sge.utils.CharArray#appendWithSeparators(JavaIterator<?>,String)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	1177	c0a76076b74c2591	
+member	com.badlogic.gdx.utils.CharArray#appendWithSeparators(JavaIterable,String)	sge.utils.CharArray#appendWithSeparators(JavaIterable<?>,String)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	1169	211a66a21c8a433f	
+member	com.badlogic.gdx.utils.CharArray#appendWithSeparators(JavaIterator,String)	sge.utils.CharArray#appendWithSeparators(JavaIterator<?>,String)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	1177	c0808507864c800e	
 member	com.badlogic.gdx.utils.CharArray#appendln()	sge.utils.CharArray#appendln()	Renamed	-	com/badlogic/gdx/utils/CharArray.java	995	da12742855a287f8	
 member	com.badlogic.gdx.utils.CharArray#appendln(Array)	sge.utils.CharArray#appendln(Array<char>)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	904	105edf7cf85adccb	
 member	com.badlogic.gdx.utils.CharArray#appendln(Array,int,int)	sge.utils.CharArray#appendln(Array<char>,int,int)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	910	cacb9bcf12b103a0	
@@ -16531,7 +16531,7 @@ member	com.badlogic.gdx.utils.DefaultPool#poolTypeSupplier	sge.utils.DefaultPool
 member	com.badlogic.gdx.utils.DefaultPool$PoolSupplier#get()	sge.utils.DefaultPool$PoolSupplier#get()	Renamed	-	com/badlogic/gdx/utils/DefaultPool.java	47	fe370e924718e808	
 member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(Array)	sge.utils.DelayedRemovalArray#<init>(Array<T>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	75	f8aeae5a2f400aa0	
 member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(ArraySupplier)	sge.utils.DelayedRemovalArray#<init>(ArraySupplier<Array<T>>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	62	190bd4b28a753bcb	
-member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(DynamicArray)	sge.utils.DelayedRemovalArray#<init>(DynamicArray<?>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	41	1f2a6b2b2eaad87b	
+member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(DynamicArray)	sge.utils.DelayedRemovalArray#<init>(DynamicArray<?>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	41	546b8f776354fb2d	
 member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(boolean,Array,int,int)	sge.utils.DelayedRemovalArray#<init>(boolean,Array<T>,int,int)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	58	055f8abb1c023736	
 member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(boolean,int)	sge.utils.DelayedRemovalArray#<init>(boolean,int)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	54	15ec0b0108f80f23	
 member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(boolean,int,ArraySupplier)	sge.utils.DelayedRemovalArray#<init>(boolean,int,ArraySupplier<Array<T>>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	45	ba92fa66cc468c43	
@@ -16961,7 +16961,7 @@ member	com.badlogic.gdx.utils.IntMap$MapIterator#valid	sge.utils.IntMap$MapItera
 member	com.badlogic.gdx.utils.IntMap$Values#hasNext()	sge.utils.IntMap$Values#hasNext()	Renamed	-	com/badlogic/gdx/utils/IntMap.java	626	0f26128f88d59033	
 member	com.badlogic.gdx.utils.IntMap$Values#iterator()	sge.utils.IntMap$Values#iterator()	Renamed	-	com/badlogic/gdx/utils/IntMap.java	644	1a7f5446725899dd	
 member	com.badlogic.gdx.utils.IntMap$Values#next()	sge.utils.IntMap$Values#next()	Renamed	-	com/badlogic/gdx/utils/IntMap.java	631	fc2a46428f590ee7	
-member	com.badlogic.gdx.utils.IntMap$Values#toArray()	sge.utils.IntMap$Values#toArray	Renamed	-	com/badlogic/gdx/utils/IntMap.java	649	6e690d0c69eba457	form=parenless
+member	com.badlogic.gdx.utils.IntMap$Values#toArray()	sge.utils.IntMap$Values#toArray	Renamed	-	com/badlogic/gdx/utils/IntMap.java	649	608abaffa38a6605	form=parenless
 member	com.badlogic.gdx.utils.tableSize	tableSize	Renamed	-	com/badlogic/gdx/utils/IntMap.java	92	80e9f64f18a709e6	name=tableSize$p
 member	com.badlogic.gdx.utils.IntSet#<init>()	sge.utils.IntSet#<init>()	Renamed	-	com/badlogic/gdx/utils/IntSet.java	66	a30a248909563a33	
 member	com.badlogic.gdx.utils.IntSet#<init>(ObjectSet)	sge.utils.IntSet#<init>(ObjectSet<int>)	Renamed	-	com/badlogic/gdx/utils/IntSet.java	93	d7103b74d52a9518	
@@ -17071,7 +17071,7 @@ member	com.badlogic.gdx.utils.Json#readField(Object,String,JsonValue)	sge.utils.
 member	com.badlogic.gdx.utils.Json#readField(Object,String,String,Class,JsonValue)	sge.utils.Json#readField(Object,String,String,Class<?>,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	865	92ce6b29c52b9754	
 member	com.badlogic.gdx.utils.Json#readField(Object,String,String,JsonValue)	sge.utils.Json#readField(Object,String,String,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	860	40299e8d0100b969	
 member	com.badlogic.gdx.utils.Json#readFields(Object,JsonValue)	sge.utils.Json#readFields(Object,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	895	6a8b0f1d19535b39	
-member	com.badlogic.gdx.utils.Json#readValue(Class,Class,JsonValue)	sge.utils.Json#readValue(Class<T>,Class<?>,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	987	624843c9d9731b09	
+member	com.badlogic.gdx.utils.Json#readValue(Class,Class,JsonValue)	sge.utils.Json#readValue(Class<T>,Class<?>,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	987	4530d77ac68449ec	
 member	com.badlogic.gdx.utils.Json#readValue(Class,Class,T,JsonValue)	sge.utils.Json#readValue(Class<T>,Class<?>,T,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	973	881173bc82b68708	
 member	com.badlogic.gdx.utils.Json#readValue(Class,JsonValue)	sge.utils.Json#readValue(Class<T>,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	980	9f8eb0357fe9eb7b	
 member	com.badlogic.gdx.utils.Json#readValue(String,Class,Class,JsonValue)	sge.utils.Json#readValue(String,Class<T>,Class<?>,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	958	ea118db4ab50531f	
@@ -17125,7 +17125,7 @@ member	com.badlogic.gdx.utils.Json#writeObjectStart(String,Class,Class)	sge.util
 member	com.badlogic.gdx.utils.Json#writeType(Class)	sge.utils.Json#writeType(Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	768	c4b4d9f0c37aeb2f	
 member	com.badlogic.gdx.utils.Json#writeValue(Object)	sge.utils.Json#writeValue(Object)	Renamed	-	com/badlogic/gdx/utils/Json.java	473	9ecf3cf85a5ec845	
 member	com.badlogic.gdx.utils.Json#writeValue(Object,Class)	sge.utils.Json#writeValue(Object,Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	483	4cc3aee03f6e468a	
-member	com.badlogic.gdx.utils.Json#writeValue(Object,Class,Class)	sge.utils.Json#writeValue(Object,Class<?>,Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	492	acc7438752b642a4	
+member	com.badlogic.gdx.utils.Json#writeValue(Object,Class,Class)	sge.utils.Json#writeValue(Object,Class<?>,Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	492	73e1c0236dd4e10e	
 member	com.badlogic.gdx.utils.Json#writeValue(String,Object)	sge.utils.Json#writeValue(String,Object)	Renamed	-	com/badlogic/gdx/utils/Json.java	431	09e4ed305c996a8f	
 member	com.badlogic.gdx.utils.Json#writeValue(String,Object,Class)	sge.utils.Json#writeValue(String,Object,Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	448	853c448cac6ce658	
 member	com.badlogic.gdx.utils.Json#writeValue(String,Object,Class,Class)	sge.utils.Json#writeValue(String,Object,Class<?>,Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	462	75105a00bc71a8ae	
@@ -17751,7 +17751,7 @@ member	com.badlogic.gdx.utils.LongMap$MapIterator#valid	sge.utils.LongMap$MapIte
 member	com.badlogic.gdx.utils.LongMap$Values#hasNext()	sge.utils.LongMap$Values#hasNext()	Renamed	-	com/badlogic/gdx/utils/LongMap.java	626	0f26128f88d59033	
 member	com.badlogic.gdx.utils.LongMap$Values#iterator()	sge.utils.LongMap$Values#iterator()	Renamed	-	com/badlogic/gdx/utils/LongMap.java	644	1a7f5446725899dd	
 member	com.badlogic.gdx.utils.LongMap$Values#next()	sge.utils.LongMap$Values#next()	Renamed	-	com/badlogic/gdx/utils/LongMap.java	631	4f05de48c71bd316	
-member	com.badlogic.gdx.utils.LongMap$Values#toArray()	sge.utils.LongMap$Values#toArray	Renamed	-	com/badlogic/gdx/utils/LongMap.java	649	6e690d0c69eba457	form=parenless
+member	com.badlogic.gdx.utils.LongMap$Values#toArray()	sge.utils.LongMap$Values#toArray	Renamed	-	com/badlogic/gdx/utils/LongMap.java	649	608abaffa38a6605	form=parenless
 member	com.badlogic.gdx.utils.tableSize	tableSize	Renamed	-	com/badlogic/gdx/utils/LongMap.java	91	de4209bb3e9cd33d	name=tableSize$p
 member	com.badlogic.gdx.utils.LongQueue#<init>()	sge.utils.LongQueue#<init>()	Renamed	-	com/badlogic/gdx/utils/LongQueue.java	39	eebbf817a3e48a44	
 member	com.badlogic.gdx.utils.LongQueue#<stmt1>	sge.utils.LongQueue#<stmt1>	Renamed	-	com/badlogic/gdx/utils/LongQueue.java	45	fe08100e7201e3dd	
@@ -18044,8 +18044,8 @@ member	com.badlogic.gdx.utils.ObjectMap#ensureCapacity(int)	sge.utils.ObjectMap#
 member	com.badlogic.gdx.utils.ObjectMap#entries()	sge.utils.ObjectMap#entries()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	414	1fdf8b423d8a8707	
 member	com.badlogic.gdx.utils.ObjectMap#entries1	sge.utils.ObjectMap#entries1	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	67	c1c847031296fb71	
 member	com.badlogic.gdx.utils.ObjectMap#entries2	sge.utils.ObjectMap#entries2	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	67	94991bfa96262459	
-member	com.badlogic.gdx.utils.ObjectMap#equals(Any)	sge.utils.ObjectMap#equals(Any)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	333	49821f2a940ccfeb	
-member	com.badlogic.gdx.utils.ObjectMap#equalsIdentity(Nullable)	sge.utils.ObjectMap#equalsIdentity(Nullable<Object>)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	355	a6e37eda2374b8e6	
+member	com.badlogic.gdx.utils.ObjectMap#equals(Any)	sge.utils.ObjectMap#equals(Any)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	333	fc43b2c8a092ac0c	
+member	com.badlogic.gdx.utils.ObjectMap#equalsIdentity(Nullable)	sge.utils.ObjectMap#equalsIdentity(Nullable<Object>)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	355	c382c41888a101e1	
 member	com.badlogic.gdx.utils.ObjectMap#findKey(Nullable,boolean)	sge.utils.ObjectMap#findKey(Nullable<Object>,boolean)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	275	dbf10a219a0f91d2	
 member	com.badlogic.gdx.utils.ObjectMap#get(K,Nullable)	sge.utils.ObjectMap#get(K,Nullable<V>)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	182	599212fdcf8f7f20	
 member	com.badlogic.gdx.utils.ObjectMap#get(T)	sge.utils.ObjectMap#get(T)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	176	c94ea38387072916	
@@ -18125,7 +18125,7 @@ member	com.badlogic.gdx.utils.ObjectSet#clear(int)	sge.utils.ObjectSet#clear(int
 member	com.badlogic.gdx.utils.ObjectSet#contains(T)	sge.utils.ObjectSet#contains(T)	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	242	5a1a7c5799ee2836	
 member	com.badlogic.gdx.utils.ObjectSet#isEmpty()	sge.utils.ObjectSet#empty()	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	208	b020041b8e5034a6	
 member	com.badlogic.gdx.utils.ObjectSet#ensureCapacity(int)	sge.utils.ObjectSet#ensureCapacity(int)	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	260	080ff6d878296b45	
-member	com.badlogic.gdx.utils.ObjectSet#equals(Any)	sge.utils.ObjectSet#equals(Any)	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	292	ac82dd3bd66d2fee	
+member	com.badlogic.gdx.utils.ObjectSet#equals(Any)	sge.utils.ObjectSet#equals(Any)	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	292	889fb65b2323ea4f	
 member	com.badlogic.gdx.utils.ObjectSet#first()	sge.utils.ObjectSet#first	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	251	a9d56a517745bc2b	form=parenless
 member	com.badlogic.gdx.utils.ObjectSet#get(T)	sge.utils.ObjectSet#get(T)	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	246	94e899ced7ba3347	
 member	com.badlogic.gdx.utils.ObjectSet#hashCode()	sge.utils.ObjectSet#hashCode()	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	282	13f00597c4957132	
@@ -18191,14 +18191,14 @@ member	com.badlogic.gdx.utils.OrderedMap$OrderedMapEntries#reset()	sge.utils.Ord
 member	com.badlogic.gdx.utils.OrderedMap$OrderedMapKeys#<stmt1>	sge.utils.OrderedMap$OrderedMapKeys#<stmt1>	Renamed	-	com/badlogic/gdx/utils/OrderedMap.java	273	034bb0ec03f47b0e	
 member	com.badlogic.gdx.utils.OrderedMap$OrderedMapKeys#keys	sge.utils.OrderedMap$OrderedMapKeys#keys	Renamed	-	com/badlogic/gdx/utils/OrderedMap.java	269	0dd483cc3c5a4ed4	
 member	com.badlogic.gdx.utils.OrderedMap$OrderedMapKeys#next()	sge.utils.OrderedMap$OrderedMapKeys#next()	Renamed	-	com/badlogic/gdx/utils/OrderedMap.java	282	321c5cb6a885d213	
-member	com.badlogic.gdx.utils.OrderedMap$OrderedMapKeys#remove()	sge.utils.OrderedMap$OrderedMapKeys#remove()	Renamed	-	com/badlogic/gdx/utils/OrderedMap.java	292	31a958567fca4c24	
+member	com.badlogic.gdx.utils.OrderedMap$OrderedMapKeys#remove()	sge.utils.OrderedMap$OrderedMapKeys#remove()	Renamed	-	com/badlogic/gdx/utils/OrderedMap.java	292	c724e6f83d270ab2	
 member	com.badlogic.gdx.utils.OrderedMap$OrderedMapKeys#reset()	sge.utils.OrderedMap$OrderedMapKeys#reset()	Renamed	-	com/badlogic/gdx/utils/OrderedMap.java	276	8d30ee1fad7b2ed4	
 member	com.badlogic.gdx.utils.OrderedMap$OrderedMapKeys#toArray()	sge.utils.OrderedMap$OrderedMapKeys#toArray()	Renamed	-	com/badlogic/gdx/utils/OrderedMap.java	306	737830c2fabdf1ba	
 member	com.badlogic.gdx.utils.OrderedMap$OrderedMapKeys#toArray(DynamicArray)	sge.utils.OrderedMap$OrderedMapKeys#toArray(DynamicArray<K>)	Renamed	-	com/badlogic/gdx/utils/OrderedMap.java	299	57d58f5840df7ee7	
-member	com.badlogic.gdx.utils.OrderedMap$OrderedMapValues#<stmt1>	sge.utils.OrderedMap$OrderedMapValues#<stmt1>	Renamed	-	com/badlogic/gdx/utils/OrderedMap.java	316	897533753ecfc12c	
-member	com.badlogic.gdx.utils.OrderedMap$OrderedMapValues#keys	sge.utils.OrderedMap$OrderedMapValues#keys	Renamed	-	com/badlogic/gdx/utils/OrderedMap.java	312	2db1cbb3792b1198	
+member	com.badlogic.gdx.utils.OrderedMap$OrderedMapValues#<stmt1>	sge.utils.OrderedMap$OrderedMapValues#<stmt1>	Renamed	-	com/badlogic/gdx/utils/OrderedMap.java	316	351761607c993d4e	
+member	com.badlogic.gdx.utils.OrderedMap$OrderedMapValues#keys	sge.utils.OrderedMap$OrderedMapValues#keys	Renamed	-	com/badlogic/gdx/utils/OrderedMap.java	312	dc68b2b07a9c5522	
 member	com.badlogic.gdx.utils.OrderedMap$OrderedMapValues#next()	sge.utils.OrderedMap$OrderedMapValues#next()	Renamed	-	com/badlogic/gdx/utils/OrderedMap.java	325	108d41f6319435a6	
-member	com.badlogic.gdx.utils.OrderedMap$OrderedMapValues#remove()	sge.utils.OrderedMap$OrderedMapValues#remove()	Renamed	-	com/badlogic/gdx/utils/OrderedMap.java	335	31a958567fca4c24	
+member	com.badlogic.gdx.utils.OrderedMap$OrderedMapValues#remove()	sge.utils.OrderedMap$OrderedMapValues#remove()	Renamed	-	com/badlogic/gdx/utils/OrderedMap.java	335	c724e6f83d270ab2	
 member	com.badlogic.gdx.utils.OrderedMap$OrderedMapValues#reset()	sge.utils.OrderedMap$OrderedMapValues#reset()	Renamed	-	com/badlogic/gdx/utils/OrderedMap.java	319	8d30ee1fad7b2ed4	
 member	com.badlogic.gdx.utils.OrderedMap$OrderedMapValues#toArray()	sge.utils.OrderedMap$OrderedMapValues#toArray()	Renamed	-	com/badlogic/gdx/utils/OrderedMap.java	354	826db06b066a3d73	
 member	com.badlogic.gdx.utils.OrderedMap$OrderedMapValues#toArray(DynamicArray)	sge.utils.OrderedMap$OrderedMapValues#toArray(DynamicArray<V>)	Renamed	-	com/badlogic/gdx/utils/OrderedMap.java	342	e3ef56088c7c3170	
@@ -18214,7 +18214,7 @@ member	com.badlogic.gdx.utils.OrderedSet#alterIndex(int,T)	sge.utils.OrderedSet#
 member	com.badlogic.gdx.utils.OrderedSet#clear()	sge.utils.OrderedSet#clear()	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	142	637ec89359783082	
 member	com.badlogic.gdx.utils.OrderedSet#clear(int)	sge.utils.OrderedSet#clear(int)	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	137	eed11fc3be7225eb	
 member	com.badlogic.gdx.utils.OrderedSet#ensureCapacity(int)	sge.utils.OrderedSet#ensureCapacity(int)	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	91	645dceb5a872876d	
-member	com.badlogic.gdx.utils.OrderedSet#equals(Any)	sge.utils.OrderedSet#equals(Any)	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	165	e1d938f3b301e2ce	
+member	com.badlogic.gdx.utils.OrderedSet#equals(Any)	sge.utils.OrderedSet#equals(Any)	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	165	c774dace2dbf1746	
 member	com.badlogic.gdx.utils.OrderedSet#first()	sge.utils.OrderedSet#first	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	151	ed9c54cdcf232ce3	form=parenless
 member	com.badlogic.gdx.utils.OrderedSet#hashCode()	sge.utils.OrderedSet#hashCode()	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	155	7b22ca4a5977673d	
 member	com.badlogic.gdx.utils.OrderedSet#items	sge.utils.OrderedSet#items	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	44	af600b45d1c1db54	
@@ -18230,7 +18230,7 @@ member	com.badlogic.gdx.utils.OrderedSet#with(Array)	sge.utils.OrderedSet#with(A
 member	com.badlogic.gdx.utils.OrderedSet$OrderedSetIterator#<stmt1>	sge.utils.OrderedSet$OrderedSetIterator#<stmt1>	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	216	f16e35f07d599ab2	
 member	com.badlogic.gdx.utils.OrderedSet$OrderedSetIterator#items	sge.utils.OrderedSet$OrderedSetIterator#items	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	212	7835768cc3a88ba8	
 member	com.badlogic.gdx.utils.OrderedSet$OrderedSetIterator#next()	sge.utils.OrderedSet$OrderedSetIterator#next()	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	224	fbabcf08032da224	
-member	com.badlogic.gdx.utils.OrderedSet$OrderedSetIterator#remove()	sge.utils.OrderedSet$OrderedSetIterator#remove()	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	233	8a1504a15c23c6dc	
+member	com.badlogic.gdx.utils.OrderedSet$OrderedSetIterator#remove()	sge.utils.OrderedSet$OrderedSetIterator#remove()	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	233	51717ef39d815849	
 member	com.badlogic.gdx.utils.OrderedSet$OrderedSetIterator#reset()	sge.utils.OrderedSet$OrderedSetIterator#reset()	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	219	6395ba4d21cbf8db	
 member	com.badlogic.gdx.utils.OrderedSet$OrderedSetIterator#toArray()	sge.utils.OrderedSet$OrderedSetIterator#toArray()	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	246	ea8a5ae2716e74a4	
 member	com.badlogic.gdx.utils.OrderedSet$OrderedSetIterator#toArray(DynamicArray)	sge.utils.OrderedSet$OrderedSetIterator#toArray(DynamicArray<K>)	Renamed	-	com/badlogic/gdx/utils/OrderedSet.java	239	1c48b87b7dbb4428	
@@ -18340,8 +18340,8 @@ member	com.badlogic.gdx.utils.Pools#<clinit>	sge.utils.Pools#<clinit>	Renamed	-	
 member	com.badlogic.gdx.utils.Pools#THROW_ON_REFLECTION_POOL_CREATION	sge.utils.Pools#THROW_ON_REFLECTION_POOL_CREATION	Renamed	-	com/badlogic/gdx/utils/Pools.java	39	5b4626bc98dd0a90	placement=companion
 member	com.badlogic.gdx.utils.Pools#WARN_ON_REFLECTION_POOL_CREATION	sge.utils.Pools#WARN_ON_REFLECTION_POOL_CREATION	Renamed	-	com/badlogic/gdx/utils/Pools.java	38	9e9a85b96a8ad99a	placement=companion
 member	com.badlogic.gdx.utils.Pools#free(Object)	sge.utils.Pools#free(Object)	Renamed	-	com/badlogic/gdx/utils/Pools.java	127	7056f6025f83e96f	placement=companion
-member	com.badlogic.gdx.utils.Pools#freeAll(DynamicArray)	sge.utils.Pools#freeAll(DynamicArray<?>)	Renamed	-	com/badlogic/gdx/utils/Pools.java	136	a83d165a57b2b6a0	placement=companion
-member	com.badlogic.gdx.utils.Pools#freeAll(DynamicArray,boolean)	sge.utils.Pools#freeAll(DynamicArray<?>,boolean)	Renamed	-	com/badlogic/gdx/utils/Pools.java	142	9e71732f6067796a	placement=companion
+member	com.badlogic.gdx.utils.Pools#freeAll(DynamicArray)	sge.utils.Pools#freeAll(DynamicArray<?>)	Renamed	-	com/badlogic/gdx/utils/Pools.java	136	9716bfabb885cc15	placement=companion
+member	com.badlogic.gdx.utils.Pools#freeAll(DynamicArray,boolean)	sge.utils.Pools#freeAll(DynamicArray<?>,boolean)	Renamed	-	com/badlogic/gdx/utils/Pools.java	142	96187eaf87a42d79	placement=companion
 member	com.badlogic.gdx.utils.Pools#get(Class,Sge)	sge.utils.Pools#get(Class<T>,Sge)	Renamed	-	com/badlogic/gdx/utils/Pools.java	100	de229a3afcb676f3	placement=companion
 member	com.badlogic.gdx.utils.Pools#get(Class,int,Sge)	sge.utils.Pools#get(Class<T>,int,Sge)	Renamed	-	com/badlogic/gdx/utils/Pools.java	85	a6516d90a5763f25	placement=companion
 member	com.badlogic.gdx.utils.Pools#obtain(Class,Sge)	sge.utils.Pools#obtain(Class<T>,Sge)	Renamed	-	com/badlogic/gdx/utils/Pools.java	122	6fc17c21943fad58	placement=companion
@@ -18422,8 +18422,8 @@ member	com.badlogic.gdx.utils.Queue#addLast(Nullable)	sge.utils.Queue#addLast(Nu
 member	com.badlogic.gdx.utils.Queue#clear()	sge.utils.Queue#clear()	Renamed	-	com/badlogic/gdx/utils/Queue.java	312	eb6ecf55dedea163	
 member	com.badlogic.gdx.utils.Queue#isEmpty()	sge.utils.Queue#empty()	Renamed	-	com/badlogic/gdx/utils/Queue.java	261	c75cc5157e0f9a87	
 member	com.badlogic.gdx.utils.Queue#ensureCapacity(int)	sge.utils.Queue#ensureCapacity(int)	Renamed	-	com/badlogic/gdx/utils/Queue.java	109	a9efd6739e1c43fe	
-member	com.badlogic.gdx.utils.Queue#equals(Any)	sge.utils.Queue#equals(Any)	Renamed	-	com/badlogic/gdx/utils/Queue.java	398	79be27a08de066e0	
-member	com.badlogic.gdx.utils.Queue#equalsIdentity(Object)	sge.utils.Queue#equalsIdentity(Object)	Renamed	-	com/badlogic/gdx/utils/Queue.java	428	cc3b8d25250835c9	
+member	com.badlogic.gdx.utils.Queue#equals(Any)	sge.utils.Queue#equals(Any)	Renamed	-	com/badlogic/gdx/utils/Queue.java	398	19116ba3be832d19	
+member	com.badlogic.gdx.utils.Queue#equalsIdentity(Object)	sge.utils.Queue#equalsIdentity(Object)	Renamed	-	com/badlogic/gdx/utils/Queue.java	428	819f0aad18c3f5c7	
 member	com.badlogic.gdx.utils.Queue#first()	sge.utils.Queue#first()	Renamed	-	com/badlogic/gdx/utils/Queue.java	269	b19322b6cb805400	
 member	com.badlogic.gdx.utils.Queue#get(int)	sge.utils.Queue#get(int)	Renamed	-	com/badlogic/gdx/utils/Queue.java	298	ffb8150711610045	
 member	com.badlogic.gdx.utils.Queue#hashCode()	sge.utils.Queue#hashCode()	Renamed	-	com/badlogic/gdx/utils/Queue.java	378	8134f480e0392a26	
@@ -18574,7 +18574,7 @@ member	com.badlogic.gdx.utils.ShortArray#truncate(int)	sge.utils.ShortArray#trun
 member	com.badlogic.gdx.utils.ShortArray#with(Array)	sge.utils.ShortArray#with(Array<short>)	Renamed	-	com/badlogic/gdx/utils/ShortArray.java	469	70ca3faaab6911ff	placement=companion
 member	com.badlogic.gdx.utils.SnapshotArray#<init>(Array)	sge.utils.SnapshotArray#<init>(Array<T>)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	86	f8aeae5a2f400aa0	
 member	com.badlogic.gdx.utils.SnapshotArray#<init>(ArraySupplier)	sge.utils.SnapshotArray#<init>(ArraySupplier<Array<T>>)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	73	190bd4b28a753bcb	
-member	com.badlogic.gdx.utils.SnapshotArray#<init>(DynamicArray)	sge.utils.SnapshotArray#<init>(DynamicArray<?>)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	52	1f2a6b2b2eaad87b	
+member	com.badlogic.gdx.utils.SnapshotArray#<init>(DynamicArray)	sge.utils.SnapshotArray#<init>(DynamicArray<?>)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	52	546b8f776354fb2d	
 member	com.badlogic.gdx.utils.SnapshotArray#<init>(boolean,Array,int,int)	sge.utils.SnapshotArray#<init>(boolean,Array<T>,int,int)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	69	055f8abb1c023736	
 member	com.badlogic.gdx.utils.SnapshotArray#<init>(boolean,int)	sge.utils.SnapshotArray#<init>(boolean,int)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	65	15ec0b0108f80f23	
 member	com.badlogic.gdx.utils.SnapshotArray#<init>(boolean,int,ArraySupplier)	sge.utils.SnapshotArray#<init>(boolean,int,ArraySupplier<Array<T>>)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	56	ba92fa66cc468c43	

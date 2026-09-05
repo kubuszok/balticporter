@@ -266,14 +266,14 @@ ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest#markdown
 ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest#markdown8	val	8b03dbd0e333f54f
 ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest#test_LeftCaretAfter2Spaces()	def	d36538cb7dbec7c4
 ssg.md.ext.tables.MarkdownTableTest	ssg.md.ext.tables.MarkdownTableTest#test_LeftCaretAfter3Spaces()	def	4e843896154e2bf6
-ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase	class	ae20f83fd89c83bb
+ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase	class	2f7b0d6eac14f615
 ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#assertCellInfo(String,int,int,Integer,Integer,TableCellOffsetInfo)	def	4ca49add9e4ec00e
 ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#assertIndexOf(String,int,int,IndexSpanOffset)	def	ec09c2bc7c2ee43a
 ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#assertIndexOf(int,int,IndexSpanOffset)	def	e9d346a0991fa6f6
 ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#formatOptions(CharSequence,DataHolder)	def	058e75eba9c7edd7
 ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#formatOptionsAsIs(CharSequence,DataHolder)	def	9133664382996511
 ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#getFormattedTable(MarkdownTable)	def	903918aa75a58c89
-ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#getFormattedTables(Array<MarkdownTable>)	def	64b25cb17b48f63b
+ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#getFormattedTables(Array<MarkdownTable>)	def	c51fb94875d69408
 ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#getSortedTable(MarkdownTable,Array<ColumnSort>)	def	e2e880d079e021d9
 ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#getTable(CharSequence)	def	95f1736a0ce2edc7
 ssg.md.ext.tables.MarkdownTableTestBase	ssg.md.ext.tables.MarkdownTableTestBase#getTable(CharSequence,DataHolder)	def	fa38af470da48182

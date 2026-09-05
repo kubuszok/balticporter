@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-ecs	engine=balticporter/0.1.0-SNAPSHOT	sources=181dec8c688f5a38	files=20	policy=a78cc1558762b13e	jdk=22
+# balticporter port map	schema=4	module=sge-ecs	engine=balticporter/0.1.0-SNAPSHOT	sources=181dec8c688f5a38	files=20	policy=9d7697ba66c2bb1b	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.ashley.core.Component	sge.ecs.Component	Renamed	-		0		form=trait
 type	com.badlogic.ashley.core.ComponentMapper	sge.ecs.ComponentMapper	Renamed	-		0		companion=yes flags=final form=class primary=(Class) primaryKind=unique-root primaryVis=private statics=getFor tparams="[T <: sge.ecs.Component]"
@@ -301,9 +301,9 @@ member	com.badlogic.ashley.core.PooledEngine#removeEntityInternal(Entity)	sge.ec
 member	com.badlogic.ashley.core.PooledEngine$ComponentPools#<stmt1>	sge.ecs.PooledEngine$ComponentPools#<stmt1>	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	146	bbcf9e46bf8d7436	
 member	com.badlogic.ashley.core.PooledEngine$ComponentPools#<stmt2>	sge.ecs.PooledEngine$ComponentPools#<stmt2>	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	147	3d9447d474ae91fe	
 member	com.badlogic.ashley.core.PooledEngine$ComponentPools#<stmt3>	sge.ecs.PooledEngine$ComponentPools#<stmt3>	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	148	c54125699dbbdf04	
-member	com.badlogic.ashley.core.PooledEngine$ComponentPools#clear()	sge.ecs.PooledEngine$ComponentPools#clear()	Renamed	body	com/badlogic/ashley/core/PooledEngine.java	186	43a86c3f68fba508	
+member	com.badlogic.ashley.core.PooledEngine$ComponentPools#clear()	sge.ecs.PooledEngine$ComponentPools#clear()	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	186	b9881b84bec87d8b	
 member	com.badlogic.ashley.core.PooledEngine$ComponentPools#free(Object)	sge.ecs.PooledEngine$ComponentPools#free(Object)	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	162	7458896344acd868	
-member	com.badlogic.ashley.core.PooledEngine$ComponentPools#freeAll(DynamicArray)	sge.ecs.PooledEngine$ComponentPools#freeAll(DynamicArray<?>)	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	176	be2df2194aaf64e9	
+member	com.badlogic.ashley.core.PooledEngine$ComponentPools#freeAll(DynamicArray)	sge.ecs.PooledEngine$ComponentPools#freeAll(DynamicArray<?>)	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	176	eebf2935215194da	
 member	com.badlogic.ashley.core.PooledEngine$ComponentPools#initialSize	sge.ecs.PooledEngine$ComponentPools#initialSize	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	142	58e45a752cc817b8	
 member	com.badlogic.ashley.core.PooledEngine$ComponentPools#maxSize	sge.ecs.PooledEngine$ComponentPools#maxSize	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	143	c5c89c47d615bfe4	
 member	com.badlogic.ashley.core.PooledEngine$ComponentPools#obtain(Class)	sge.ecs.PooledEngine$ComponentPools#obtain(Class<T>)	Renamed	-	com/badlogic/ashley/core/PooledEngine.java	151	432e7e4543b324dd	
