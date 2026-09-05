@@ -1381,7 +1381,7 @@ above; this is the corpus-wide summary.
 | `sge-noise` | 0 | closed |
 | `sge-jbump` | 0 | closed |
 | `ssg-liquid` / `-test` | 3 / 3 | K18/G24 residue (§10.5) |
-| `ssg-md` / `-test` | 127 / 136 | `-Wunused` family, largest port (main 136 -> 127 on 2026-09-05; test unmeasured since) |
+| `ssg-md` / `-test` | 126 / 126 | `-Wunused` family, largest port (136 -> 126 on 2026-09-05) |
 | `ssg-md-ext` | 183 | `-Wunused` family (2026-09-05: 187 -> 183; the admonition SVG resources are now declared and shipped, the suite no longer dies in `<clinit>`) |
 | USL / USL-test | 3 / 3 | `-Wunused` family |
 | `sge-visui` | 3 | three `OnscreenKeyboard.show(Boolean)` sites: gdx 1.14.0 vs vendored 1.14.1 (§3.5's fourth question), counted |
