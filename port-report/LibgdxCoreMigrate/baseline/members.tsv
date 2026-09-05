@@ -13595,7 +13595,7 @@ sge.scenes.scene2d.ui.ImageTextButton	sge.scenes.scene2d.ui.ImageTextButton$Imag
 sge.scenes.scene2d.ui.ImageTextButton	sge.scenes.scene2d.ui.ImageTextButton$ImageTextButtonStyle#imageDown	val	7cca593989868b0d
 sge.scenes.scene2d.ui.ImageTextButton	sge.scenes.scene2d.ui.ImageTextButton$ImageTextButtonStyle#imageOver	val	6c48b58d1d247b42
 sge.scenes.scene2d.ui.ImageTextButton	sge.scenes.scene2d.ui.ImageTextButton$ImageTextButtonStyle#imageUp	val	46f0d875548b39b0
-sge.scenes.scene2d.ui.Label	sge.scenes.scene2d.ui.Label	class	44b0e468145512c7
+sge.scenes.scene2d.ui.Label	sge.scenes.scene2d.ui.Label	class	51002772598d131d
 sge.scenes.scene2d.ui.Label	sge.scenes.scene2d.ui.Label#<init>(Nullable<CharSequence>,Skin,Sge)	ctor	94df6e7811d1bc8f
 sge.scenes.scene2d.ui.Label	sge.scenes.scene2d.ui.Label#<init>(Nullable<CharSequence>,Skin,String,Color,Sge)	ctor	07ae6fba05f5c021
 sge.scenes.scene2d.ui.Label	sge.scenes.scene2d.ui.Label#<init>(Nullable<CharSequence>,Skin,String,Sge)	ctor	64dc2e1874f58814
@@ -13638,7 +13638,7 @@ sge.scenes.scene2d.ui.Label	sge.scenes.scene2d.ui.Label#setEllipsis(Nullable<Str
 sge.scenes.scene2d.ui.Label	sge.scenes.scene2d.ui.Label#setEllipsis(boolean)	def	1bc5346a33a5aa4e
 sge.scenes.scene2d.ui.Label	sge.scenes.scene2d.ui.Label#setFontScale(float)	def	f9f7db3b05fc3c2a
 sge.scenes.scene2d.ui.Label	sge.scenes.scene2d.ui.Label#setFontScale(float,float)	def	5b7b4ad0abc7cf68
-sge.scenes.scene2d.ui.Label	sge.scenes.scene2d.ui.Label#setText(Nullable<CharSequence>)	def	5624476e43799866
+sge.scenes.scene2d.ui.Label	sge.scenes.scene2d.ui.Label#setText(Nullable<CharSequence>)	def	f842b08ef487de2e
 sge.scenes.scene2d.ui.Label	sge.scenes.scene2d.ui.Label#setText(int)	def	2c4e1ff3256f5591
 sge.scenes.scene2d.ui.Label	sge.scenes.scene2d.ui.Label#style	val	9152dfe1e3af00f9
 sge.scenes.scene2d.ui.Label	sge.scenes.scene2d.ui.Label#style()	def	a1dc2ca9e9447e22

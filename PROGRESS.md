@@ -28,7 +28,7 @@ the migrator class name, which does not track a module rename.
 
 | port (migrator) | upstream | licence | compile (JVM/JS/Native/ref) | tests |
 |---|---|---|---|---|
-| `sge` (`LibgdxCoreMigrate`) | libGDX `gdx/src` | Apache-2.0 | 0/0/0/51 | — |
+| `sge` (`LibgdxCoreMigrate`) | libGDX `gdx/src` | Apache-2.0 | 0/0/0/0 | — |
 | `sge-test` (`LibgdxTestMigrate`) | libGDX `gdx/test` | Apache-2.0 | 0/0/0/51 | 191: 184 pass, 7 fail (expected-lost 30) |
 | `sge-ecs` (`AshleyMigrate`) | Ashley `ashley/src` | Apache-2.0 | 0/0/0/0 | — |
 | `sge-ecs-test` (`AshleyTestMigrate`) | Ashley `ashley/tests` | Apache-2.0 | 0/0/0/0 | 112: 108 pass, 2 fail, 2 skipped |
@@ -1369,7 +1369,7 @@ above; this is the corpus-wide summary.
 
 | port | `.ref` errors | dominant family |
 |---|---:|---|
-| `sge` / `sge-test` | 1 / 1 | 2026-09-05 (was 51): one provably-false type test at a FINAL retarget target (`Label`: `CharSequence` vs `DynamicArray[?]`, K18) — the frontend now interns `final` for the types it sees; the retarget target `DynamicArray` is minted from an FQN and never seen, so its finality stays unknowable (follow-up: intern retarget targets from the classpath) |
+| `sge` / `sge-test` | 0 / 1 | 2026-09-05 (was 51 / 1): `FrontendConfig.internTypes` reads `isFinal`/parents of every retarget target off the classpath (lls jar via `LlsClasspath`, K18) and the `Label` type test renders as a literal `false`; the TEST port keeps `.ref` 1 because the same jar on its Spoon classpath costs 218 errors (`ENGINE-LIMITS.md` M5.13) |
 | `sge-ecs` / `sge-ecs-test` | 0 / 0 | closed |
 | `sge-ecs` drop-in (JVM/JS/Native) | 408 / 408 / 408 | `-no-indent` cascade from the injected `ComponentFactories.scala`, not in `measure-all` |
 | `sge-anim8` | 6 | same `-Wunused` family |
