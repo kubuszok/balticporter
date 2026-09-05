@@ -434,6 +434,13 @@ val ssgFlags: Seq[String] = Seq(
   "-Werror", "-Wimplausible-patterns", "-Wrecurse-with-default",
   "-Wenum-comment-discard", "-Wunused:imports,privates,locals,patvars,nowarn",
 )
+// lls/build.sbt's `commonSettings` scalacOptions, with `-Wconf:cat=deprecation:info` dropped —
+// a DEMOTION, and a reference compile that demotes measures less than the reference build does.
+val llsFlags: Seq[String] = Seq(
+  "-deprecation", "-feature", "-no-indent",
+  "-Werror", "-Wimplausible-patterns", "-Wrecurse-with-default",
+  "-Wenum-comment-discard", "-Wunused:imports,privates,locals,patvars,nowarn",
+)
 
 // Shared settings for `port-*-ref` projects: the reference repo's own scalacOptions instead of
 // `-nowarn`. JVM-only plain projects sharing the port's source generators, so a compile under the
@@ -810,6 +817,45 @@ lazy val `port-ssg-md-ext` = (projectMatrix in file("ported/ssg-md-ext"))
   .nativePlatform(scalaVersions = Seq(scalaV), settings = portNativeSettings)
 
 // ---------------------------------------------------------------------------------------------
+// port-lls — the twelve libGDX sources lls carries `Ported from` headers for (ported/lls).
+// Standalone, and deliberately WITHOUT `com.kubuszok %% lls`: this port replaces that artifact.
+//
+// lls's HAND-WRITTEN half (Nullable, MkArray, ArrayView, Eval, Resource) and its whole test tree
+// are read IN PLACE from the lls checkout — never copied (CLAUDE.md §5.5, PROGRESS.md §13.28).
+// The excludeFilter names the twelve this port EMITS, so the two halves cannot both define a type
+// and a file lls hand-writes later arrives with no build edit. Test coordinates are lls's own.
+// ---------------------------------------------------------------------------------------------
+
+/** The twelve emitted file names — what `port-lls` must NOT also read from the lls checkout. */
+val llsEmittedFileNames: Set[String] = Set(
+  "DynamicArray.scala", "ObjectMap.scala", "ObjectSet.scala", "OrderedMap.scala",
+  "OrderedSet.scala", "ArrayMap.scala", "Sort.scala", "TimSort.scala",
+  "ComparableTimSort.scala", "Select.scala", "QuickSelect.scala", "MathUtils.scala",
+)
+
+lazy val `port-lls` = (projectMatrix in file("ported/lls"))
+  .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
+  .settings(portSettings("lls") *)
+  .settings(portSourceGenerators("lls") *)
+  .settings(
+    name := "balticporter-port-lls",
+    libraryDependencies ++= Seq(
+      "org.scalameta"  %% "munit"            % "1.3.5"  % Test,
+      "org.scalameta"  %% "munit-scalacheck" % "1.3.0"  % Test,
+      "org.scalacheck" %% "scalacheck"       % "1.20.0" % Test,
+    ),
+    Compile / unmanagedSourceDirectories +=
+      (ThisBuild / baseDirectory).value / ".." / "lls" / "lls" / "src" / "main" / "scala",
+    Compile / unmanagedSources / excludeFilter :=
+      sbt.io.HiddenFileFilter || new sbt.io.SimpleFileFilter(f => llsEmittedFileNames(f.getName)),
+    Test / unmanagedSourceDirectories +=
+      (ThisBuild / baseDirectory).value / ".." / "lls" / "lls" / "src" / "test" / "scala",
+  )
+  .jvmPlatform(scalaVersions = Seq(scalaV))
+  .jsPlatform(scalaVersions = Seq(scalaV), settings = portJsSettings)
+  .nativePlatform(scalaVersions = Seq(scalaV), settings = portNativeSettings)
+
+// ---------------------------------------------------------------------------------------------
 // DIFFERENTIAL LANE PROJECTS — test-only projects that compile the HAND-WRITTEN adapted suite
 // against the port's emitted main classpath, WITHOUT including the port's emitted test sources
 // (`src_managed/test/scala`). The three differential lanes (`ai-diff-measure`,
@@ -1120,6 +1166,15 @@ lazy val `port-ssg-md-ext-ref` = (project in file(".ports/ssg-md-ext-ref"))
     ),
   )
 
+// The EMITTED tree alone, under lls's own flags: lls's hand-written half is deliberately absent
+// here, so `.ref` counts diagnostics this port produced and none it merely compiles beside.
+lazy val `port-lls-ref` = (project in file(".ports/lls-ref"))
+  .settings(refPortSettings("lls") *)
+  .settings(
+    name := "balticporter-port-lls-ref",
+    scalacOptions := llsFlags,
+  )
+
 // ---------------------------------------------------------------------------------------------
 // `ports` — an aggregate of EVERY ported module, NOT part of `root`. `sbt ports/compile`
 // reaches them all; `sbt compile` stays the engine's. The aggregate is over projectRefs so
@@ -1175,12 +1230,16 @@ lazy val ports = project
   .aggregate(
     `port-ssg-md-ext`.projectRefs *
   )
+  .aggregate(
+    `port-lls`.projectRefs *
+  )
   .aggregate(`port-sge-ai-diff`, `port-sge-textra-diff`, `port-sge-visui-diff`)
   .aggregate(
     `port-sge-ref`, `port-sge-ecs-ref`, `port-sge-graphs-ref`, `port-sge-anim8-ref`,
     `port-sge-noise-ref`, `port-sge-jbump-ref`, `port-sge-gltf-ref`, `port-sge-screens-ref`,
     `port-sge-vfx-ref`, `port-sge-ai-ref`, `port-sge-textra-ref`, `port-sge-visui-ref`,
     `port-sge-visui-usl-ref`, `port-ssg-liquid-ref`, `port-ssg-md-ref`, `port-ssg-md-ext-ref`,
+    `port-lls-ref`,
   )
   .settings(
     name := "balticporter-ports",

@@ -120,6 +120,12 @@ Emitted Scala goes to `<portRoot>/src_managed/{main,test}/scala` — gitignored,
 `sbt clean`, never `src/` (`CLAUDE.md` §5.5). `src/` holds only the hand-written part of a port.
 Do not try to redirect this; the layout is the contract.
 
+**Where the port replaces PART of an existing hand-written module**, that module's other half is a
+build setting, never a copy: `Compile / unmanagedSourceDirectories += <checkout>/src/main/scala`
+with `unmanagedSources / excludeFilter` naming the files this port EMITS, and its suite as
+`Test / unmanagedSourceDirectories`. Copying makes `git status` unable to tell a decision from an
+artefact (§5.5), and the two halves would define the same type twice (`port-lls`, `PROGRESS.md` §13.28).
+
 **Name the port for its DESTINATION, not for the upstream library** (`CLAUDE.md` §2.1): the
 directory, the top-level `label` and `manifest.name` all take the id of the module the emitted
 Scala is going to BECOME in the consuming project — `sge-graphs`, not `simple-graphs`. Those three

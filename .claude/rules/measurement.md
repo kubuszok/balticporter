@@ -19,6 +19,7 @@ Detail for `CLAUDE.md` §5, §5.1 and §5.4.
 | `just ai-test-measure` | gdx-ai's JUnit suite, compiled WITH libGDX core and gdx-ai |
 | `just ai-diff-measure`, `textra-diff-measure`, `visui-diff-measure` | DIFFERENTIAL gates — the hand port's own suite against the emitted port (no xplat compiles) |
 | `just sg-measure`, `noise4j-measure`, `jbump-measure` | simple-graphs + suite; noise4j (no upstream tests); jbump (ships NO suite, re-derives that zero) |
+| `just lls-measure` | the twelve libGDX sources lls ported — then lls's OWN MUnit suite against them, as a second number (`expected-errors.suite`) |
 | `just usl-measure` / `usl-test-measure` | USL, its own port root / its 7-`@Test` suite |
 | `just liqp-measure` | liqp + its 105-file suite — RUN when it compiles |
 | `just md-measure` / `md-test-measure` / `md-ext-measure` | flexmark core + eleven util modules / the 730-`@Test` suite / extensions as ONE dependent port |

@@ -1461,3 +1461,27 @@ becomes `LlsPolicy.core.extendedBy(...)`; the six `retarget` entries and their r
 `collection-retarget` measured before/after. Expected to surface: many-to-one type collapse
 (`IntArray`/`FloatArray`/… -> `DynamicArray[Prim]`), a spelling no manifest key has today.
 
+**Wave 1 numbers** (`just lls-measure-full`, `port-report/LlsMigrate`, unbaselined — the run wrote
+them, the primary promotes). 12 files emitted, 0 dropped, 0 injected; 605 -> 12 units, 1,802 symbols.
+Compile 100 JVM / 100 js / 100 native / 100 `.ref`; `lls-suite-compile-errors` 149, all 149 in MAIN
+sources — lls's 18 test files (423 `test(…)`) were never reached, so the suite has no number yet.
+Errors by upstream file: `Array` 28, `ArrayMap` 23, `ComparableTimSort` 22, `MathUtils` 22,
+`ObjectMap` 5; the other seven emit at 0. By kind: 32 `E052` reassigned java parameter (no
+`mutable-params` phase configured), 68 `E006`/`E008` at the libGDX types outside the twelve —
+`ArraySupplier` 15, `GdxRuntimeException` 11, `Null` 9, `Collections` 6, `reflect` 4,
+`Predicate` 3+4 `predicateIterable`, `RandomXS128` 1 — plus 12 `-=`/`+=` on those types.
+`api-parity` 868 rows, **0 unclassified**: hand-port-extra 444, port-extra 263, signature 96,
+factory 30, static-placement 20, null-model 10, mutability 3, collection-retarget 1, opaque 1,
+accessor/operator/rename/visibility/file-merge 0. Residues: `jdk-surface` 0 (46 external `java.*`
+members classified, 0 unresolved), no `collection-*` lanes (no `CollectionsTransform`),
+`portability(all)` 0 against 37 rules, omissions 18 (12 promoted-ctor-body, 6 dropped `super(args)`),
+`overload-risk` 12, `heap-pollution` 5, `idiom(refused)` 5, trivia 0/0/0, break residue 0,
+`markers` 0, `manifest` 0, `base-surface` 0, decisions 84, port map 28 types / 556 members.
+
+`gdx/src` is NOT a resolution root, which the wave planned it to be: as one it puts 593 libGDX types
+the port does not emit into the program and 300 of their contract questions shape emitted text with
+no base to answer them, so `PortRun` refuses the run (`DESIGN.md` §8.3, `PortRun.scala:331`). A base
+cannot answer them either — libGDX core publishes `sge.utils.*`, not `lowlevel.util.*`. Standalone
+therefore means the rest of libGDX is EXTERNAL and unresolved, which is where the 68 `E006`/`E008`
+above come from; wave 3 answers them by making this manifest libGDX core's base.
+
