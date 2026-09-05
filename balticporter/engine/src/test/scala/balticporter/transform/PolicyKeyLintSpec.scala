@@ -182,6 +182,12 @@ class PolicyKeyLintSpec extends munit.FunSuite:
           "lambda, and those are precisely the ones java bound to the ANON through this root. The " +
           "phase has no policy keys at all — it is §1(a) and takes no parameters"),
     ),
+    "RegistryTransform.scala" -> Map(
+      "fullName ==" ->
+        ("two lookups by a NAME the port DECLARED or java fixes: the placement owner is the FQN the " +
+          "manifest names (find-or-create, as MemberRenameTransform's target), and `java.lang.Class` " +
+          "is the one universal reified carrier (K20) — a well-known external type, never a member key"),
+    ),
     "ClassTableTransform.scala" -> Map(
       "fullName ==" ->
         ("the redirect DESTINATION is an injected table this program never parses — mint or reuse, " +

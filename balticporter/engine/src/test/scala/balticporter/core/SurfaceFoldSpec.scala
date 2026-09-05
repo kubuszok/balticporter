@@ -2,7 +2,7 @@ package balticporter.core
 
 import balticporter.core.ManifestAgreement.Kind
 import balticporter.tir.{Phase, RuleScope}
-import balticporter.transform.{ClassTableTransform, NullabilityTransform, TypeRedirectTransform}
+import balticporter.transform.{ClassTableTransform, NullabilityTransform, StaticForwarderTransform, TypeRedirectTransform}
 
 /** The merge contract — DESIGN.md §8.13, closing `ENGINE-LIMITS.md` D9. */
 class SurfaceFoldSpec extends munit.FunSuite:
@@ -149,9 +149,13 @@ class SurfaceFoldSpec extends munit.FunSuite:
   }
 
   test("NO CONTRACT: a phase that declares no merge diverges exactly as it did before") {
-    val dep = base(List(new ClassTableTransform(Map("com.demo.W#of" -> "com.demo.T#classFor"))))
+    // `ClassTableTransform` gained a `MergeablePolicy` (c6f412f7); the contract-less example is now
+    // `StaticForwarderTransform`, which declares none.
+    val dep = base(List(new StaticForwarderTransform(List(
+        StaticForwarderTransform.Forwarder("com.demo.W", "com.demo.T", Set("of"))))))
       .extendedBy(PortManifest("dep",
-        surface = List(new ClassTableTransform(Map("com.demo.W#of" -> "com.demo.OTHER#classFor")))))
+        surface = List(new StaticForwarderTransform(List(
+          StaticForwarderTransform.Forwarder("com.demo.W", "com.demo.OTHER", Set("of")))))))
     assertEquals(dep.effectiveSurface.size, 2)
     assertEquals(dep.surfaceFold.refusals.map(_.cause), List(SurfaceFold.Cause.NoContract))
     val f = ManifestAgreement.check(Some(dep), Nil, foreignRoots = true)
