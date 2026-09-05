@@ -449,8 +449,13 @@ val llsFlags: Seq[String] = Seq(
 // block AFTER calling this, because sbt 2.0's `-Wunused` deduplication can drop a project-level
 // `-Wunused:imports,...` when `ThisBuild / scalacOptions` carries `-Wunused:all`. Setting it
 // separately after this helper avoids the interaction.
+// A -ref project exists to READ scalac's diagnostics under the reference flags. sbt 2's disk action
+// cache replays a previously FAILED compile as `CachedCompileFailure` WITHOUT them, and `clean` does
+// not bypass it (liqp `.ref`, 2026-09-05; `.claude/rules/measurement.md`). A per-execution nonce in
+// the compile inputs keeps every ref compile a real compile.
 def refPortSettings(dir: String): Seq[Setting[?]] = Seq(
   publish / skip := true,
+  Compile / scalacOptions += s"-Xmacro-settings:balticporter.refNonce=${System.nanoTime}",
 ) ++ portSourceGenerators(dir)
 
 // ---------------------------------------------------------------------------------------------

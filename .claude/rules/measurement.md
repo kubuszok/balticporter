@@ -174,4 +174,10 @@ derived from the port's own configuration, never the operator.
   with `TimSort` reading 0 beside its twin `ComparableTimSort` at 22). A new port's floor is taken
   from the SECOND compile, and a `clean` for a non-zero-floor port runs BEFORE the migrator: `clean`
   deletes `src_managed` (§5.5), so between migrate and compile it counts the hand-written half alone.
+- **sbt 2's disk action cache replays a previously FAILED compile without its diagnostics**
+  (`sbt.util.CachedCompileFailure`, liqp `.ref` 2026-09-05: 3 -> "no countable error"); `clean` does
+  not bypass it. The `-ref` projects carry a per-execution nonce in `scalacOptions`
+  (`refPortSettings`) so every diagnostics compile is a real one; `compile_guard` names a replay
+  instead of calling it DID NOT RUN. A JVM port with a non-zero floor that starts replaying gets the
+  same nonce, never a `clean`.
 

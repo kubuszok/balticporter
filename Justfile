@@ -4412,6 +4412,17 @@ lane-selfcheck:
     want "a MISSING jvm.txt is fatal, never clean" "$rc" "1"
     case "$out" in *"NO JVM RECORD"*) ok "…because 'nothing compared this' reads exactly like 'this compares clean'" ;; *) bad "…says which comparison never happened" ;; esac
 
+
+    # compile_guard: sbt 2 replays a previously FAILED compile from its action cache WITHOUT the
+    # diagnostics (liqp .ref, 2026-09-05) — that is not a zero and must be named as a replay.
+    C="$T/cg"; mkdir -p "$C"
+    printf 'sbt.util.CachedCompileFailure$anon$1: Compilation failed\n\tat sbt.util.CachedCompileFailure.toException(CachedCompileFailure.scala:23)\n' > "$C/cap"
+    out=$( (compile_guard 1 0 "$C/cap") 2>&1 ); rc=$?
+    want "a cached failure replayed without diagnostics FAILS the lane" "$rc" "1"
+    case "$out" in *"CACHED FAILURE REPLAYED"*) ok "…and is named as a REPLAY, never DID NOT RUN" ;; *) bad "…names the replay" ;; esac
+    printf 'something else\n' > "$C/cap"
+    out=$( (compile_guard 1 0 "$C/cap") 2>&1 ); rc=$?
+    case "$out" in *"COMPILE DID NOT RUN"*) ok "…while a plain no-output failure still reads DID NOT RUN" ;; *) bad "…keeps DID NOT RUN for the plain case" ;; esac
     echo "-- reconcile_outcomes --"
     printf '  + a 0.0s\n  + b 0.0s\n' > "$T/run.txt"
     want "an emitted test with NO outcome line is a failure" "$(reconcile_outcomes "$T/run.txt" 3 > /dev/null; echo $?)" "1"

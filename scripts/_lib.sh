@@ -732,6 +732,13 @@ for proc in os.popen('pgrep -f sbt-launch.jar').read().split():
 # the one measured abort against the namespace the port emits (D-liqp-1b).
 compile_guard() {
   local st="$1" errors="$2" file="$3"
+  if [ "$st" != "0" ] && [ "$errors" = "0" ] && grep -q 'sbt.util.CachedCompileFailure' "$file"; then
+    echo "!! CACHED FAILURE REPLAYED WITHOUT DIAGNOSTICS — sbt 2's action cache answered this compile"
+    echo "   from a previous failed run and printed none of its errors; this is not a count. The build"
+    echo "   must keep this compile uncacheable (a -ref project carries a per-run nonce, build.sbt"
+    echo "   refPortSettings); refusing to report 0. Capture: $file"
+    exit 1
+  fi
   if [ "$st" != "0" ] && [ "$errors" = "0" ]; then
     echo "!! COMPILE DID NOT RUN — scala-cli exited $st with no countable error; refusing to report 0"
     tail -5 "$file" | sed 's/^/     /'
