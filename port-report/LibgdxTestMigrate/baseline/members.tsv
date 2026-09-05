@@ -29,14 +29,14 @@ sge.math.BSplineTest	sge.math.BSplineTest#<stmt4>	stmt	d1c0263578c8bb50
 sge.math.BSplineTest	sge.math.BSplineTest#<stmt5>	stmt	b70ca4019efd28ca
 sge.math.BSplineTest	sge.math.BSplineTest#<stmt6>	stmt	65e739801b9512b0
 sge.math.BSplineTest	sge.math.BSplineTest#<stmt7>	stmt	cbb9f0d24a48b702
-sge.math.BezierTest	sge.math.BezierTest	class	d419683f0f737bc1
+sge.math.BezierTest	sge.math.BezierTest	class	415d3f2c3fe2f16a
 sge.math.BezierTest	sge.math.BezierTest#<stmt1>	stmt	3884336c78c2f77d
 sge.math.BezierTest	sge.math.BezierTest#bezier	val	13fb74ab25b4b836
 sge.math.BezierTest	sge.math.BezierTest#bpFreshState()	def	0e55b7a9fe28795a
 sge.math.BezierTest	sge.math.BezierTest#create(Array<Vector2>)	def	613fedff9883a1be
 sge.math.BezierTest	sge.math.BezierTest#epsilon	val	cb1c6d5dceb7bd89
 sge.math.BezierTest	sge.math.BezierTest#epsilonApprimations	val	913ef38309382da6
-sge.math.BezierTest	sge.math.BezierTest#parameters()	def	edb36ff664696050
+sge.math.BezierTest	sge.math.BezierTest#parameters()	def	114ac82cdbbf710d
 sge.math.BezierTest	sge.math.BezierTest#setup()	def	120a62b16fdbd7b3
 sge.math.BezierTest	sge.math.BezierTest#type	val	a4d8d9baf56ea868
 sge.math.BezierTest	sge.math.BezierTest#useSetter	val	1d5f5e30d70dc1ae
@@ -120,7 +120,7 @@ sge.utils.FlushablePoolTest	sge.utils.FlushablePoolTest$FlushablePoolClass	class
 sge.utils.FlushablePoolTest	sge.utils.FlushablePoolTest$FlushablePoolClass#<init>()	ctor	6d74b7aedc15fb9a
 sge.utils.FlushablePoolTest	sge.utils.FlushablePoolTest$FlushablePoolClass#<init>(int)	ctor	7c9654eaa2c0046b
 sge.utils.FlushablePoolTest	sge.utils.FlushablePoolTest$FlushablePoolClass#newObject()	def	ffb27375591c3a47
-sge.utils.JsonMatcherTests	sge.utils.JsonMatcherTests	class	25de9c59fa1fe0ae
+sge.utils.JsonMatcherTests	sge.utils.JsonMatcherTests	class	b58c8cb50ca7173e
 sge.utils.JsonMatcherTests	sge.utils.JsonMatcherTests#<stmt10>	stmt	018d77992ea6201a
 sge.utils.JsonMatcherTests	sge.utils.JsonMatcherTests#<stmt11>	stmt	7f4f609e2025287f
 sge.utils.JsonMatcherTests	sge.utils.JsonMatcherTests#<stmt12>	stmt	f8acc687edbb3517
@@ -154,7 +154,7 @@ sge.utils.JsonMatcherTests	sge.utils.JsonMatcherTests#copy(JsonValue,DynamicArra
 sge.utils.JsonMatcherTests	sge.utils.JsonMatcherTests#json	val	db8e49d79003bd09
 sge.utils.JsonMatcherTests	sge.utils.JsonMatcherTests#printResults(JsonMatcher,DynamicArray<JsonValue>,String,Array<String>,Array<String>)	def	75a745af19a00357
 sge.utils.JsonMatcherTests	sge.utils.JsonMatcherTests#rejectAll(String,String,String,Array<String>)	def	205aefb2b24171c6
-sge.utils.JsonMatcherTests	sge.utils.JsonMatcherTests#test(Nullable<String>,String,Array<String>,Array<String>)	def	98cc89b8f50101ac
+sge.utils.JsonMatcherTests	sge.utils.JsonMatcherTests#test(Nullable<String>,String,Array<String>,Array<String>)	def	99df5f153f569aa4
 sge.utils.JsonMatcherTests	sge.utils.JsonMatcherTests#test(String,Array<String>,Array<String>)	def	b4928c4dbebb4c06
 sge.utils.JsonMatcherTests	sge.utils.JsonMatcherTests#test(String,String,Array<String>)	def	e826507e0a259b90
 sge.utils.JsonMatcherTests	sge.utils.JsonMatcherTests#toString(DynamicArray<JsonValue>)	def	4c258bcc5a6c3ff7

@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-textra	engine=balticporter/0.1.0-SNAPSHOT	sources=9ebd6e69043d4bb1	files=92	policy=d2f37a14704ce2e6	jdk=22
+# balticporter port map	schema=4	module=sge-textra	engine=balticporter/0.1.0-SNAPSHOT	sources=9ebd6e69043d4bb1	files=92	policy=f2b25d58006a0f58	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.github.tommyettinger.textra.BitmapFontSupport	sge.textra.BitmapFontSupport	Renamed	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=private
 type	com.github.tommyettinger.textra.BitmapFontSupport$JsonFontData	sge.textra.BitmapFontSupport$JsonFontData	Renamed	-		0		form=class parents=sge.graphics.g2d.BitmapFont$BitmapFontData primary=(String) primaryKind=synthesised-primary primaryVis=protected secondaries=();(FileHandle);(FileHandle,String);(FileHandle,String,boolean)
@@ -234,7 +234,7 @@ member	com.github.tommyettinger.textra.Font#<init>(FileHandle,Sge)	sge.textra.Fo
 member	com.github.tommyettinger.textra.Font#<init>(FileHandle,TextureRegion,DistanceFieldType,float,float,float,float,boolean,Sge)	sge.textra.Font#<init>(FileHandle,TextureRegion,DistanceFieldType,float,float,float,float,boolean,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	2313	fae6bd030f91fb0b	
 member	com.github.tommyettinger.textra.Font#<init>(FileHandle,TextureRegion,boolean,Sge)	sge.textra.Font#<init>(FileHandle,TextureRegion,boolean,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	3159	39d4c0284ae2b4f6	
 member	com.github.tommyettinger.textra.Font#<init>(FileHandle,TextureRegion,float,float,float,float,boolean,boolean,Sge)	sge.textra.Font#<init>(FileHandle,TextureRegion,float,float,float,float,boolean,boolean,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	3187	bdffe69db234ae68	
-member	com.github.tommyettinger.textra.Font#<init>(Font,Sge)	sge.textra.Font#<init>(Font,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	1910	e0257b17d202426e	
+member	com.github.tommyettinger.textra.Font#<init>(Font,Sge)	sge.textra.Font#<init>(Font,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	1910	cf39858466e5d336	
 member	com.github.tommyettinger.textra.Font#<init>(Sge)	sge.textra.Font#<init>(Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	1858	b01996716f3a8711	
 member	com.github.tommyettinger.textra.Font#<init>(String,DistanceFieldType,Sge)	sge.textra.Font#<init>(String,DistanceFieldType,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	1879	46f716b32b049b38	
 member	com.github.tommyettinger.textra.Font#<init>(String,DistanceFieldType,float,float,float,float,Sge)	sge.textra.Font#<init>(String,DistanceFieldType,float,float,float,float,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	2052	8877941ecfc5ace5	
@@ -442,7 +442,7 @@ member	com.github.tommyettinger.textra.Font#setName(String)	sge.textra.Font#setN
 member	com.github.tommyettinger.textra.Font#setObliqueStrength(float)	sge.textra.Font#setObliqueStrength(float)	Renamed	-	com/github/tommyettinger/textra/Font.java	3883	6b2969560442b748	
 member	com.github.tommyettinger.textra.Font#setOutlineStrength(float)	sge.textra.Font#setOutlineStrength(float)	Renamed	-	com/github/tommyettinger/textra/Font.java	3901	0c1bea82c38398e5	
 member	com.github.tommyettinger.textra.Font#setPaddingForBitmapFont(int,int,int,int)	sge.textra.Font#setPaddingForBitmapFont(int,int,int,int)	Renamed	-	com/github/tommyettinger/textra/Font.java	938	a9a030cf46bae2f6	placement=companion
-member	com.github.tommyettinger.textra.Font#setSharing(boolean)	sge.textra.Font#setSharing(boolean)	Renamed	-	com/github/tommyettinger/textra/Font.java	3451	3b177c3785f48d80	
+member	com.github.tommyettinger.textra.Font#setSharing(boolean)	sge.textra.Font#setSharing(boolean)	Renamed	-	com/github/tommyettinger/textra/Font.java	3451	39ea0941e02db47b	
 member	com.github.tommyettinger.textra.Font#setStrikethroughMetrics(float,float,float,float)	sge.textra.Font#setStrikethroughMetrics(float,float,float,float)	Renamed	-	com/github/tommyettinger/textra/Font.java	3684	2954aba2e0af8e97	
 member	com.github.tommyettinger.textra.Font#setStrikethroughPosition(float,float)	sge.textra.Font#setStrikethroughPosition(float,float)	Renamed	-	com/github/tommyettinger/textra/Font.java	3678	9d24f1a4811ac088	
 member	com.github.tommyettinger.textra.Font#setTextureFilter()	sge.textra.Font#setTextureFilter()	Renamed	-	com/github/tommyettinger/textra/Font.java	3825	8fb4e21e3e516aa8	
@@ -484,7 +484,7 @@ member	com.github.tommyettinger.textra.Font$FontFamily#<init>(Array,Sge)	sge.tex
 member	com.github.tommyettinger.textra.Font$FontFamily#<init>(Array,int,int,Sge)	sge.textra.Font$FontFamily#<init>(Array<Font>,int,int,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	545	d48a16d19e6cf1e5	
 member	com.github.tommyettinger.textra.Font$FontFamily#<init>(Array,Array,Sge)	sge.textra.Font$FontFamily#<init>(Array<String>,Array<Font>,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	567	5a3f5d1156137aa2	
 member	com.github.tommyettinger.textra.Font$FontFamily#<init>(Array,Array,int,int,Sge)	sge.textra.Font$FontFamily#<init>(Array<String>,Array<Font>,int,int,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	584	e6e9c1016d9a9ab0	
-member	com.github.tommyettinger.textra.Font$FontFamily#<init>(FWSkin,Sge)	sge.textra.Font$FontFamily#<init>(FWSkin,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	658	6046fe1381914e66	
+member	com.github.tommyettinger.textra.Font$FontFamily#<init>(FWSkin,Sge)	sge.textra.Font$FontFamily#<init>(FWSkin,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	658	6961d3237cd4a5ab	
 member	com.github.tommyettinger.textra.Font$FontFamily#<init>(FontFamily,Sge)	sge.textra.Font$FontFamily#<init>(FontFamily,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	685	7f8848289ed9f286	
 member	com.github.tommyettinger.textra.Font$FontFamily#<init>(OrderedMap,Sge)	sge.textra.Font$FontFamily#<init>(OrderedMap<String,Font>,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	604	88680857f2194e52	
 member	com.github.tommyettinger.textra.Font$FontFamily#<init>(Sge)	sge.textra.Font$FontFamily#<init>(Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	519	6e970d79f5b21976	
@@ -492,7 +492,7 @@ member	com.github.tommyettinger.textra.Font$FontFamily#<init>(Skin,Sge)	sge.text
 member	com.github.tommyettinger.textra.Font$FontFamily#connected	sge.textra.Font$FontFamily#connected	Renamed	-	com/github/tommyettinger/textra/Font.java	507	93b24ecae7350db9	
 member	com.github.tommyettinger.textra.Font$FontFamily#fontAliases	sge.textra.Font$FontFamily#fontAliases	Renamed	-	com/github/tommyettinger/textra/Font.java	514	9beb9153b8797b46	
 member	com.github.tommyettinger.textra.Font$FontFamily#get(String)	sge.textra.Font$FontFamily#get(String)	Renamed	-	com/github/tommyettinger/textra/Font.java	696	52d844828dd906e2	
-member	com.github.tommyettinger.textra.Font$FontFamily#initBitmapFonts(Skin)	sge.textra.Font$FontFamily#initBitmapFonts(Skin)	Renamed	-	com/github/tommyettinger/textra/Font.java	630	580d1b25c2d92491	vis=private[Font]
+member	com.github.tommyettinger.textra.Font$FontFamily#initBitmapFonts(Skin)	sge.textra.Font$FontFamily#initBitmapFonts(Skin)	Renamed	-	com/github/tommyettinger/textra/Font.java	630	2cc0e8a4e4254f32	vis=private[Font]
 member	com.github.tommyettinger.textra.Font$FontFamily#resizeDistanceFields(float,float)	sge.textra.Font$FontFamily#resizeDistanceFields(float,float)	Renamed	-	com/github/tommyettinger/textra/Font.java	706	e3e9ec86333b8446	
 member	com.github.tommyettinger.textra.Font$FontFamily#resizeDistanceFields(float,float,Viewport)	sge.textra.Font$FontFamily#resizeDistanceFields(float,float,Viewport)	Renamed	-	com/github/tommyettinger/textra/Font.java	718	e0649daa9451f6ed	
 member	com.github.tommyettinger.textra.Font$GlyphRegion#<init>(AtlasRegion)	sge.textra.Font$GlyphRegion#<init>(AtlasRegion)	Renamed	-	com/github/tommyettinger/textra/Font.java	196	e526af408a0ce205	
@@ -865,7 +865,7 @@ member	com.github.tommyettinger.textra.KnownFonts#getYataghanMSDF(Sge)	sge.textr
 member	com.github.tommyettinger.textra.KnownFonts#initialize(Sge)	sge.textra.KnownFonts#initialize(Sge)	Renamed	-	com/github/tommyettinger/textra/KnownFonts.java	118	0bf3fc5f3099036b	placement=companion
 member	com.github.tommyettinger.textra.KnownFonts#initialize(String,String,String,String,String,String,String,String,Sge)	sge.textra.KnownFonts#initialize(String,String,String,String,String,String,String,String,Sge)	Renamed	-	com/github/tommyettinger/textra/KnownFonts.java	157	44a3cb14fb0d63ce	placement=companion
 member	com.github.tommyettinger.textra.KnownFonts#instance	sge.textra.KnownFonts#instance	Renamed	-	com/github/tommyettinger/textra/KnownFonts.java	101	a3c59f57d3568686	placement=companion vis=private
-member	com.github.tommyettinger.textra.KnownFonts#loadUnicodeAtlas(FileHandle,FileHandle,boolean,Sge)	sge.textra.KnownFonts#loadUnicodeAtlas(FileHandle,FileHandle,boolean,Sge)	Renamed	-	com/github/tommyettinger/textra/KnownFonts.java	5364	5ae44e12ca091a65	placement=companion
+member	com.github.tommyettinger.textra.KnownFonts#loadUnicodeAtlas(FileHandle,FileHandle,boolean,Sge)	sge.textra.KnownFonts#loadUnicodeAtlas(FileHandle,FileHandle,boolean,Sge)	Renamed	-	com/github/tommyettinger/textra/KnownFonts.java	5364	3a306eea4778b442	placement=companion
 member	com.github.tommyettinger.textra.KnownFonts#loaded	sge.textra.KnownFonts#loaded	Renamed	-	com/github/tommyettinger/textra/KnownFonts.java	241	9f8d2df901e3a952	vis=private
 member	com.github.tommyettinger.textra.KnownFonts#materialDesign	sge.textra.KnownFonts#materialDesign	Renamed	-	com/github/tommyettinger/textra/KnownFonts.java	6432	8a0922b93aba1bd0	vis=private
 member	com.github.tommyettinger.textra.KnownFonts#msdfShader	sge.textra.KnownFonts#msdfShader	Renamed	-	com/github/tommyettinger/textra/KnownFonts.java	184	06b7b0be068dded0	vis=private
@@ -2707,7 +2707,7 @@ member	com.github.tommyettinger.textra.utils.Palette#VIOLET	sge.textra.utils.Pal
 member	com.github.tommyettinger.textra.utils.Palette#WHITE	sge.textra.utils.Palette#WHITE	Renamed	-	com/github/tommyettinger/textra/utils/Palette.java	704	c96d71cc4acbf90a	placement=companion
 member	com.github.tommyettinger.textra.utils.Palette#YELLOW	sge.textra.utils.Palette#YELLOW	Renamed	-	com/github/tommyettinger/textra/utils/Palette.java	616	a3a33e2b56ac0f94	placement=companion
 member	com.github.tommyettinger.textra.utils.Palette#addColor(String,int)	sge.textra.utils.Palette#addColor(String,int)	Renamed	-	com/github/tommyettinger/textra/utils/Palette.java	1022	769684c44411daeb	placement=companion
-member	com.github.tommyettinger.textra.utils.Palette#appendToKnownColors()	sge.textra.utils.Palette#appendToKnownColors()	Renamed	-	com/github/tommyettinger/textra/utils/Palette.java	1008	6ef2e0bbb78b557a	placement=companion
+member	com.github.tommyettinger.textra.utils.Palette#appendToKnownColors()	sge.textra.utils.Palette#appendToKnownColors()	Renamed	-	com/github/tommyettinger/textra/utils/Palette.java	1008	36bec297a6453312	placement=companion
 member	com.github.tommyettinger.textra.utils.Palette#apricot	sge.textra.utils.Palette#apricot	Renamed	-	com/github/tommyettinger/textra/utils/Palette.java	319	f898299ca9a33368	placement=companion
 member	com.github.tommyettinger.textra.utils.Palette#black	sge.textra.utils.Palette#black	Renamed	-	com/github/tommyettinger/textra/utils/Palette.java	77	8ee43c924a0cb6ec	placement=companion
 member	com.github.tommyettinger.textra.utils.Palette#blue	sge.textra.utils.Palette#blue	Renamed	-	com/github/tommyettinger/textra/utils/Palette.java	165	bd9e3b72755d9bf4	placement=companion

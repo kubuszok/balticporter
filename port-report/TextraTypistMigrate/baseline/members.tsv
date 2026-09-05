@@ -55,7 +55,7 @@ sge.textra.FWSkin	sge.textra.FWSkin#resizeDistanceFields(float,float)	def	bc2743
 sge.textra.FWSkin	sge.textra.FWSkin#resizeDistanceFields(float,float,Viewport)	def	872739497a2a4cf4
 sge.textra.FWSkinLoader	sge.textra.FWSkinLoader	class	046dde7ae15a7348
 sge.textra.FWSkinLoader	sge.textra.FWSkinLoader#newSkin(TextureAtlas)	def	b6b43ebbecb6b17c
-sge.textra.Font	sge.textra.Font	class	62ca2a6ab078950d
+sge.textra.Font	sge.textra.Font	class	e1a3b1964ef9b840
 sge.textra.Font	sge.textra.Font#<init>(BitmapFont,DistanceFieldType,float,float,float,float,Sge)	ctor	3f35b8db976a48a2
 sge.textra.Font	sge.textra.Font#<init>(BitmapFont,DistanceFieldType,float,float,float,float,boolean,Sge)	ctor	ec72cb0eb19f7582
 sge.textra.Font	sge.textra.Font#<init>(BitmapFont,Sge)	ctor	33367f8ac5417815
@@ -66,7 +66,7 @@ sge.textra.Font	sge.textra.Font#<init>(FileHandle,Sge)	ctor	a3ecf4c25dc5f248
 sge.textra.Font	sge.textra.Font#<init>(FileHandle,TextureRegion,DistanceFieldType,float,float,float,float,boolean,Sge)	ctor	fae6bd030f91fb0b
 sge.textra.Font	sge.textra.Font#<init>(FileHandle,TextureRegion,boolean,Sge)	ctor	39d4c0284ae2b4f6
 sge.textra.Font	sge.textra.Font#<init>(FileHandle,TextureRegion,float,float,float,float,boolean,boolean,Sge)	ctor	bdffe69db234ae68
-sge.textra.Font	sge.textra.Font#<init>(Font,Sge)	ctor	e0257b17d202426e
+sge.textra.Font	sge.textra.Font#<init>(Font,Sge)	ctor	cf39858466e5d336
 sge.textra.Font	sge.textra.Font#<init>(Sge)	ctor	b01996716f3a8711
 sge.textra.Font	sge.textra.Font#<init>(String,DistanceFieldType,Sge)	ctor	46f716b32b049b38
 sge.textra.Font	sge.textra.Font#<init>(String,DistanceFieldType,float,float,float,float,Sge)	ctor	8877941ecfc5ace5
@@ -274,7 +274,7 @@ sge.textra.Font	sge.textra.Font#setName(String)	def	c7e62f4f619b4c51
 sge.textra.Font	sge.textra.Font#setObliqueStrength(float)	def	6b2969560442b748
 sge.textra.Font	sge.textra.Font#setOutlineStrength(float)	def	0c1bea82c38398e5
 sge.textra.Font	sge.textra.Font#setPaddingForBitmapFont(int,int,int,int)	def	a9a030cf46bae2f6
-sge.textra.Font	sge.textra.Font#setSharing(boolean)	def	3b177c3785f48d80
+sge.textra.Font	sge.textra.Font#setSharing(boolean)	def	39ea0941e02db47b
 sge.textra.Font	sge.textra.Font#setStrikethroughMetrics(float,float,float,float)	def	2954aba2e0af8e97
 sge.textra.Font	sge.textra.Font#setStrikethroughPosition(float,float)	def	9d24f1a4811ac088
 sge.textra.Font	sge.textra.Font#setTextureFilter()	def	8fb4e21e3e516aa8
@@ -313,12 +313,12 @@ sge.textra.Font	sge.textra.Font#xAdvance(Font,float,long)	def	2110e00ea394aeb6
 sge.textra.Font	sge.textra.Font#yAdjust	val	212c5714857b414b
 sge.textra.Font	sge.textra.Font$DistanceFieldType	class	b77a700d65dbed5e
 sge.textra.Font	sge.textra.Font$DistanceFieldType#ALL	val	ed8ef27a6cb156f7
-sge.textra.Font	sge.textra.Font$FontFamily	class	f1edd8c7efb9fc8f
+sge.textra.Font	sge.textra.Font$FontFamily	class	ed824548e7e9fda0
 sge.textra.Font	sge.textra.Font$FontFamily#<init>(Array<Font>,Sge)	ctor	a4a54491053b793d
 sge.textra.Font	sge.textra.Font$FontFamily#<init>(Array<Font>,int,int,Sge)	ctor	d48a16d19e6cf1e5
 sge.textra.Font	sge.textra.Font$FontFamily#<init>(Array<String>,Array<Font>,Sge)	ctor	5a3f5d1156137aa2
 sge.textra.Font	sge.textra.Font$FontFamily#<init>(Array<String>,Array<Font>,int,int,Sge)	ctor	e6e9c1016d9a9ab0
-sge.textra.Font	sge.textra.Font$FontFamily#<init>(FWSkin,Sge)	ctor	6046fe1381914e66
+sge.textra.Font	sge.textra.Font$FontFamily#<init>(FWSkin,Sge)	ctor	6961d3237cd4a5ab
 sge.textra.Font	sge.textra.Font$FontFamily#<init>(FontFamily,Sge)	ctor	7f8848289ed9f286
 sge.textra.Font	sge.textra.Font$FontFamily#<init>(OrderedMap<String,Font>,Sge)	ctor	88680857f2194e52
 sge.textra.Font	sge.textra.Font$FontFamily#<init>(Sge)	ctor	6e970d79f5b21976
@@ -326,7 +326,7 @@ sge.textra.Font	sge.textra.Font$FontFamily#<init>(Skin,Sge)	ctor	a816e4d136fa98d
 sge.textra.Font	sge.textra.Font$FontFamily#connected	val	93b24ecae7350db9
 sge.textra.Font	sge.textra.Font$FontFamily#fontAliases	val	9beb9153b8797b46
 sge.textra.Font	sge.textra.Font$FontFamily#get(String)	def	52d844828dd906e2
-sge.textra.Font	sge.textra.Font$FontFamily#initBitmapFonts(Skin)	def	580d1b25c2d92491
+sge.textra.Font	sge.textra.Font$FontFamily#initBitmapFonts(Skin)	def	2cc0e8a4e4254f32
 sge.textra.Font	sge.textra.Font$FontFamily#resizeDistanceFields(float,float)	def	e3e9ec86333b8446
 sge.textra.Font	sge.textra.Font$FontFamily#resizeDistanceFields(float,float,Viewport)	def	e0649daa9451f6ed
 sge.textra.Font	sge.textra.Font$GlyphRegion	class	bf10947ca6062582
@@ -438,7 +438,7 @@ sge.textra.Justify	sge.textra.Justify#<stmt3>	stmt	090b7cc1755c962f
 sge.textra.Justify	sge.textra.Justify#affectAllGlyphs	val	46278066e17a8be4
 sge.textra.Justify	sge.textra.Justify#affectSpaces	val	885f5cc9e22e5399
 sge.textra.Justify	sge.textra.Justify#ignoreLastLine	val	27ab1706e6e1eafd
-sge.textra.KnownFonts	sge.textra.KnownFonts	class	b023ab48be7ebb28
+sge.textra.KnownFonts	sge.textra.KnownFonts	class	1518f94db830cd06
 sge.textra.KnownFonts	sge.textra.KnownFonts#<clinit>	init	2cc816a2164b3e3c
 sge.textra.KnownFonts	sge.textra.KnownFonts#<stmt1>	stmt	03581a5cc4f39ea3
 sge.textra.KnownFonts	sge.textra.KnownFonts#<stmt2>	stmt	d6396844112bd278
@@ -707,7 +707,7 @@ sge.textra.KnownFonts	sge.textra.KnownFonts#getYataghanMSDF(Sge)	def	50943972016
 sge.textra.KnownFonts	sge.textra.KnownFonts#initialize(Sge)	def	0bf3fc5f3099036b
 sge.textra.KnownFonts	sge.textra.KnownFonts#initialize(String,String,String,String,String,String,String,String,Sge)	def	44a3cb14fb0d63ce
 sge.textra.KnownFonts	sge.textra.KnownFonts#instance	val	a3c59f57d3568686
-sge.textra.KnownFonts	sge.textra.KnownFonts#loadUnicodeAtlas(FileHandle,FileHandle,boolean,Sge)	def	5ae44e12ca091a65
+sge.textra.KnownFonts	sge.textra.KnownFonts#loadUnicodeAtlas(FileHandle,FileHandle,boolean,Sge)	def	3a306eea4778b442
 sge.textra.KnownFonts	sge.textra.KnownFonts#loaded	val	9f8d2df901e3a952
 sge.textra.KnownFonts	sge.textra.KnownFonts#materialDesign	val	8a0922b93aba1bd0
 sge.textra.KnownFonts	sge.textra.KnownFonts#msdfShader	val	06b7b0be068dded0
@@ -2529,7 +2529,7 @@ sge.textra.utils.NoiseUtils	sge.textra.utils.NoiseUtils#noise1D(float,int)	def	4
 sge.textra.utils.NoiseUtils	sge.textra.utils.NoiseUtils#octaveBicubicNoise1D(float,int)	def	336aba7a315ece60
 sge.textra.utils.NoiseUtils	sge.textra.utils.NoiseUtils#octaveNoise1D(float,int)	def	40a296cac8728c65
 sge.textra.utils.NoiseUtils	sge.textra.utils.NoiseUtils#triangleWave(float)	def	af78b658144f4f3d
-sge.textra.utils.Palette	sge.textra.utils.Palette	class	1e84066895aa3d72
+sge.textra.utils.Palette	sge.textra.utils.Palette	class	c33f6874d3def9a3
 sge.textra.utils.Palette	sge.textra.utils.Palette#<clinit>	init	175f44957b53516f
 sge.textra.utils.Palette	sge.textra.utils.Palette#<clinit>	init	6bf8c1c8c75e2f38
 sge.textra.utils.Palette	sge.textra.utils.Palette#<clinit>	init	b852a0dfc0ce281a
@@ -2654,7 +2654,7 @@ sge.textra.utils.Palette	sge.textra.utils.Palette#VIOLET	val	fa41a6ba8714d5bb
 sge.textra.utils.Palette	sge.textra.utils.Palette#WHITE	val	c96d71cc4acbf90a
 sge.textra.utils.Palette	sge.textra.utils.Palette#YELLOW	val	a3a33e2b56ac0f94
 sge.textra.utils.Palette	sge.textra.utils.Palette#addColor(String,int)	def	769684c44411daeb
-sge.textra.utils.Palette	sge.textra.utils.Palette#appendToKnownColors()	def	6ef2e0bbb78b557a
+sge.textra.utils.Palette	sge.textra.utils.Palette#appendToKnownColors()	def	36bec297a6453312
 sge.textra.utils.Palette	sge.textra.utils.Palette#apricot	val	f898299ca9a33368
 sge.textra.utils.Palette	sge.textra.utils.Palette#black	val	8ee43c924a0cb6ec
 sge.textra.utils.Palette	sge.textra.utils.Palette#blue	val	bd9e3b72755d9bf4

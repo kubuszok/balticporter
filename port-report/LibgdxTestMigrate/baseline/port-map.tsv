@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-test	engine=balticporter/0.1.0-SNAPSHOT	sources=c14a4a76df2f11c6	files=28	policy=577c974697d64c9e	jdk=22
+# balticporter port map	schema=4	module=sge-test	engine=balticporter/0.1.0-SNAPSHOT	sources=c14a4a76df2f11c6	files=28	policy=bf0c0ef9572358d4	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest	sge.graphics.g3d.utils.AnimationControllerTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=,assertSameAnimation
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest	sge.graphics.g3d.utils.AnimationDescTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=epsilon
@@ -115,7 +115,7 @@ member	com.badlogic.gdx.math.BezierTest#bpFreshState()	sge.math.BezierTest#bpFre
 member	com.badlogic.gdx.math.BezierTest#create(Array)	sge.math.BezierTest#create(Array<Vector2>)	Renamed	-	com/badlogic/gdx/math/BezierTest.java	49	613fedff9883a1be	
 member	com.badlogic.gdx.math.BezierTest#epsilon	sge.math.BezierTest#epsilon	Renamed	-	com/badlogic/gdx/math/BezierTest.java	20	cb1c6d5dceb7bd89	placement=companion vis=private
 member	com.badlogic.gdx.math.BezierTest#epsilonApprimations	sge.math.BezierTest#epsilonApprimations	Renamed	-	com/badlogic/gdx/math/BezierTest.java	21	913ef38309382da6	placement=companion vis=private
-member	com.badlogic.gdx.math.BezierTest#parameters()	sge.math.BezierTest#parameters()	Renamed	-	com/badlogic/gdx/math/BezierTest.java	28	edb36ff664696050	placement=companion
+member	com.badlogic.gdx.math.BezierTest#parameters()	sge.math.BezierTest#parameters()	Renamed	-	com/badlogic/gdx/math/BezierTest.java	28	114ac82cdbbf710d	placement=companion
 member	com.badlogic.gdx.math.BezierTest#setup()	sge.math.BezierTest#setup()	Renamed	-	com/badlogic/gdx/math/BezierTest.java	45	120a62b16fdbd7b3	
 member	com.badlogic.gdx.math.BezierTest#type	sge.math.BezierTest#type	Renamed	-	com/badlogic/gdx/math/BezierTest.java	37	a4d8d9baf56ea868	
 member	com.badlogic.gdx.math.BezierTest#useSetter	sge.math.BezierTest#useSetter	Renamed	-	com/badlogic/gdx/math/BezierTest.java	40	1d5f5e30d70dc1ae	
@@ -216,7 +216,7 @@ member	com.badlogic.gdx.utils.JsonMatcherTests#copy(JsonValue,DynamicArray)	sge.
 member	com.badlogic.gdx.utils.JsonMatcherTests#json	sge.utils.JsonMatcherTests#json	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1516	db8e49d79003bd09	placement=companion vis=private
 member	com.badlogic.gdx.utils.JsonMatcherTests#printResults(JsonMatcher,DynamicArray,String,Array,Array)	sge.utils.JsonMatcherTests#printResults(JsonMatcher,DynamicArray<JsonValue>,String,Array<String>,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1477	75a745af19a00357	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#rejectAll(String,String,String,Array)	sge.utils.JsonMatcherTests#rejectAll(String,String,String,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1146	205aefb2b24171c6	placement=companion
-member	com.badlogic.gdx.utils.JsonMatcherTests#test(Nullable,String,Array,Array)	sge.utils.JsonMatcherTests#test(Nullable<String>,String,Array<String>,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1443	98cc89b8f50101ac	placement=companion
+member	com.badlogic.gdx.utils.JsonMatcherTests#test(Nullable,String,Array,Array)	sge.utils.JsonMatcherTests#test(Nullable<String>,String,Array<String>,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1443	99df5f153f569aa4	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#test(String,Array,Array)	sge.utils.JsonMatcherTests#test(String,Array<String>,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1439	b4928c4dbebb4c06	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#test(String,String,Array)	sge.utils.JsonMatcherTests#test(String,String,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1435	e826507e0a259b90	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#toString(DynamicArray)	sge.utils.JsonMatcherTests#toString(DynamicArray<JsonValue>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1505	4c258bcc5a6c3ff7	placement=companion

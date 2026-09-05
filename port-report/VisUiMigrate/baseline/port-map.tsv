@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-visui	engine=balticporter/0.1.0-SNAPSHOT	sources=7a29c946918c2898	files=162	policy=8d14d54a1002c662	jdk=22
+# balticporter port map	schema=4	module=sge-visui	engine=balticporter/0.1.0-SNAPSHOT	sources=7a29c946918c2898	files=162	policy=8b8925fb04b9bbb6	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.kotcrab.vis.ui.FocusManager	sge.visui.FocusManager	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
 type	com.kotcrab.vis.ui.Focusable	sge.visui.Focusable	Renamed	-		0		form=trait
@@ -427,7 +427,7 @@ member	com.kotcrab.vis.ui.building.OneColumnTableBuilder#fillTable(Table)	sge.vi
 member	com.kotcrab.vis.ui.building.OneRowTableBuilder#<init>(Padding,Sge)	sge.visui.building.OneRowTableBuilder#<init>(Padding,Sge)	Renamed	-	com/kotcrab/vis/ui/building/OneRowTableBuilder.java	36	b53743db285edfe3	
 member	com.kotcrab.vis.ui.building.OneRowTableBuilder#<init>(int,int,Padding,Sge)	sge.visui.building.OneRowTableBuilder#<init>(int,int,Padding,Sge)	Renamed	-	com/kotcrab/vis/ui/building/OneRowTableBuilder.java	45	a774002d43e21315	
 member	com.kotcrab.vis.ui.building.OneRowTableBuilder#<init>(int,int,Sge)	sge.visui.building.OneRowTableBuilder#<init>(int,int,Sge)	Renamed	-	com/kotcrab/vis/ui/building/OneRowTableBuilder.java	40	6d8e3c598d0e2243	
-member	com.kotcrab.vis.ui.building.OneRowTableBuilder#fillTable(Table)	sge.visui.building.OneRowTableBuilder#fillTable(Table)	Renamed	-	com/kotcrab/vis/ui/building/OneRowTableBuilder.java	51	8cc7b300e1cc7050	
+member	com.kotcrab.vis.ui.building.OneRowTableBuilder#fillTable(Table)	sge.visui.building.OneRowTableBuilder#fillTable(Table)	Renamed	-	com/kotcrab/vis/ui/building/OneRowTableBuilder.java	51	ad0237e3589338a3	
 member	com.kotcrab.vis.ui.building.StandardTableBuilder#<init>(Padding,Sge)	sge.visui.building.StandardTableBuilder#<init>(Padding,Sge)	Renamed	-	com/kotcrab/vis/ui/building/StandardTableBuilder.java	35	b53743db285edfe3	
 member	com.kotcrab.vis.ui.building.StandardTableBuilder#<init>(int,int,Padding,Sge)	sge.visui.building.StandardTableBuilder#<init>(int,int,Padding,Sge)	Renamed	-	com/kotcrab/vis/ui/building/StandardTableBuilder.java	44	a774002d43e21315	
 member	com.kotcrab.vis.ui.building.StandardTableBuilder#<init>(int,int,Sge)	sge.visui.building.StandardTableBuilder#<init>(int,int,Sge)	Renamed	-	com/kotcrab/vis/ui/building/StandardTableBuilder.java	39	6d8e3c598d0e2243	
@@ -596,7 +596,7 @@ member	com.kotcrab.vis.ui.building.utilities.layouts.GridTableLayout#withRowSize
 member	com.badlogic.gdx.Sge#<given-static>	sge.Sge#<given-static>	Renamed	-	com/kotcrab/vis/ui/building/utilities/layouts/TableLayout.java	33	d09065f391ab080a	placement=companion vis=private[TabbedPane]
 member	com.badlogic.gdx.Sge#<given>	sge.Sge#<given>	Renamed	-	com/kotcrab/vis/ui/building/utilities/layouts/TableLayout.java	33	d09065f391ab080a	vis=private[TabbedPane]
 member	com.kotcrab.vis.ui.building.utilities.layouts.TableLayout#convertToActor(Array)	sge.visui.building.utilities.layouts.TableLayout#convertToActor(Array<Actor>)	Renamed	-	com/kotcrab/vis/ui/building/utilities/layouts/TableLayout.java	50	8298c99e7200d0eb	
-member	com.kotcrab.vis.ui.building.utilities.layouts.TableLayout#convertToTable(TableBuilder,Array)	sge.visui.building.utilities.layouts.TableLayout#convertToTable(TableBuilder,Array<CellWidget<?>>)	Renamed	-	com/kotcrab/vis/ui/building/utilities/layouts/TableLayout.java	58	2c8c28832ffe2fc5	placement=companion
+member	com.kotcrab.vis.ui.building.utilities.layouts.TableLayout#convertToTable(TableBuilder,Array)	sge.visui.building.utilities.layouts.TableLayout#convertToTable(TableBuilder,Array<CellWidget<?>>)	Renamed	-	com/kotcrab/vis/ui/building/utilities/layouts/TableLayout.java	58	ad639a7088fdacb2	placement=companion
 member	com.kotcrab.vis.ui.building.utilities.layouts.TableLayout#grid(int)	sge.visui.building.utilities.layouts.TableLayout#grid(int)	Renamed	-	com/kotcrab/vis/ui/building/utilities/layouts/TableLayout.java	66	758f7c159272f6fa	placement=companion
 member	com.kotcrab.vis.ui.i18n.BundleText#format()	sge.visui.i18n.BundleText#format()	Renamed	-	com/kotcrab/vis/ui/i18n/BundleText.java	32	0a3044b6f6698089	
 member	com.kotcrab.vis.ui.i18n.BundleText#format(Array)	sge.visui.i18n.BundleText#format(Array<Object>)	Renamed	-	com/kotcrab/vis/ui/i18n/BundleText.java	35	82bc0cf0541f60e9	
@@ -608,7 +608,7 @@ member	com.kotcrab.vis.ui.layout.DragPane#<stmt1>	sge.visui.layout.DragPane#<stm
 member	com.kotcrab.vis.ui.layout.DragPane#<stmt2>	sge.visui.layout.DragPane#<stmt2>	Renamed	-	com/kotcrab/vis/ui/layout/DragPane.java	69	f50f89577e94e42d	
 member	com.kotcrab.vis.ui.layout.DragPane#<stmt3>	sge.visui.layout.DragPane#<stmt3>	Renamed	-	com/kotcrab/vis/ui/layout/DragPane.java	70	780cf0c39886fa85	
 member	com.kotcrab.vis.ui.layout.DragPane#accept(Actor)	sge.visui.layout.DragPane#accept(Actor)	Renamed	-	com/kotcrab/vis/ui/layout/DragPane.java	366	89ba4ff3ea548846	
-member	com.kotcrab.vis.ui.layout.DragPane#setActor(Nullable)	sge.visui.layout.DragPane#actor_=(Nullable<WidgetGroup>)	Renamed	-	com/kotcrab/vis/ui/layout/DragPane.java	138	675f7bd1243599e0	
+member	com.kotcrab.vis.ui.layout.DragPane#setActor(Nullable)	sge.visui.layout.DragPane#actor_=(Nullable<WidgetGroup>)	Renamed	-	com/kotcrab/vis/ui/layout/DragPane.java	138	c83b94b3b1dc66e8	
 member	com.kotcrab.vis.ui.layout.DragPane#addActor(Actor)	sge.visui.layout.DragPane#addActor(Actor)	Renamed	-	com/kotcrab/vis/ui/layout/DragPane.java	310	16968729e87e7a21	
 member	com.kotcrab.vis.ui.layout.DragPane#addActorAfter(Actor,Actor)	sge.visui.layout.DragPane#addActorAfter(Actor,Actor)	Renamed	-	com/kotcrab/vis/ui/layout/DragPane.java	316	654a81cbd40f149d	
 member	com.kotcrab.vis.ui.layout.DragPane#addActorAt(int,Actor)	sge.visui.layout.DragPane#addActorAt(int,Actor)	Renamed	-	com/kotcrab/vis/ui/layout/DragPane.java	322	eb923c1020c608d7	
@@ -636,7 +636,7 @@ member	com.kotcrab.vis.ui.layout.DragPane#invalidate()	sge.visui.layout.DragPane
 member	com.kotcrab.vis.ui.layout.DragPane#listener	sge.visui.layout.DragPane#listener	Renamed	-	com/kotcrab/vis/ui/layout/DragPane.java	45	706e0969bcd88664	vis=private
 member	com.kotcrab.vis.ui.layout.DragPane#removeActor(Actor)	sge.visui.layout.DragPane#removeActor(Actor)	Renamed	-	com/kotcrab/vis/ui/layout/DragPane.java	274	3eca575bb3bf29f0	
 member	com.kotcrab.vis.ui.layout.DragPane#removeActor(Actor,boolean)	sge.visui.layout.DragPane#removeActor(Actor,boolean)	Renamed	-	com/kotcrab/vis/ui/layout/DragPane.java	291	b8608cf2cf86f50d	
-member	com.kotcrab.vis.ui.layout.DragPane#removeListener()	sge.visui.layout.DragPane#removeListener()	Renamed	-	com/kotcrab/vis/ui/layout/DragPane.java	236	a4d71e22a00c604c	vis=private
+member	com.kotcrab.vis.ui.layout.DragPane#removeListener()	sge.visui.layout.DragPane#removeListener()	Renamed	-	com/kotcrab/vis/ui/layout/DragPane.java	236	a49b309fa8181c18	vis=private
 member	com.kotcrab.vis.ui.layout.DragPane#setBounds(float,float,float,float)	sge.visui.layout.DragPane#setBounds(float,float,float,float)	Renamed	-	com/kotcrab/vis/ui/layout/DragPane.java	217	43baed7b2291800b	
 member	com.kotcrab.vis.ui.layout.DragPane#setHeight(float)	sge.visui.layout.DragPane#setHeight(float)	Renamed	-	com/kotcrab/vis/ui/layout/DragPane.java	231	3a10d3494b3a61c9	
 member	com.kotcrab.vis.ui.layout.DragPane#setListener(DragPaneListener)	sge.visui.layout.DragPane#setListener(DragPaneListener)	Renamed	-	com/kotcrab/vis/ui/layout/DragPane.java	358	5dfc1f299e5a5225	
@@ -807,7 +807,7 @@ member	com.kotcrab.vis.ui.util.ToastManager#UNTIL_CLOSED	sge.visui.util.ToastMan
 member	com.kotcrab.vis.ui.util.ToastManager#getAlignment	sge.visui.util.ToastManager#alignment	Renamed	-	com/kotcrab/vis/ui/util/ToastManager.java	56	66f134a5c7bcdb64	name=alignment$field
 member	com.kotcrab.vis.ui.util.ToastManager#getAlignment()	sge.visui.util.ToastManager#alignment()	Renamed	-	com/kotcrab/vis/ui/util/ToastManager.java	265	5b9972ee1b834ade	
 member	com.kotcrab.vis.ui.util.ToastManager#setAlignment(Align)	sge.visui.util.ToastManager#alignment_=(Align)	Renamed	-	com/kotcrab/vis/ui/util/ToastManager.java	273	31929a6ceb870d8a	
-member	com.kotcrab.vis.ui.util.ToastManager#clear()	sge.visui.util.ToastManager#clear()	Renamed	-	com/kotcrab/vis/ui/util/ToastManager.java	173	6da64ae22d38374a	
+member	com.kotcrab.vis.ui.util.ToastManager#clear()	sge.visui.util.ToastManager#clear()	Renamed	-	com/kotcrab/vis/ui/util/ToastManager.java	173	b256db83188c1ca9	
 member	com.kotcrab.vis.ui.util.ToastManager#getMessagePadding	sge.visui.util.ToastManager#messagePadding	Renamed	-	com/kotcrab/vis/ui/util/ToastManager.java	55	27597c30ce3048c8	name=messagePadding$field
 member	com.kotcrab.vis.ui.util.ToastManager#getMessagePadding()	sge.visui.util.ToastManager#messagePadding()	Renamed	-	com/kotcrab/vis/ui/util/ToastManager.java	255	d086ba891f664586	
 member	com.kotcrab.vis.ui.util.ToastManager#setMessagePadding(int)	sge.visui.util.ToastManager#messagePadding_=(int)	Renamed	-	com/kotcrab/vis/ui/util/ToastManager.java	260	e89a47330c816bc2	
@@ -855,7 +855,7 @@ member	com.kotcrab.vis.ui.util.Validators$LesserThanValidator#setUseEquals(boole
 member	com.kotcrab.vis.ui.util.Validators$LesserThanValidator#validateInput(String)	sge.visui.util.Validators$LesserThanValidator#validateInput(String)	Renamed	-	com/kotcrab/vis/ui/util/Validators.java	75	25220f6a326dee70	
 member	com.kotcrab.vis.ui.util.adapter.AbstractListAdapter#clickListener	sge.visui.util.adapter.AbstractListAdapter#clickListener	Renamed	-	com/kotcrab/vis/ui/util/adapter/AbstractListAdapter.java	58	066785e1ca142f96	vis=private
 member	com.kotcrab.vis.ui.util.adapter.AbstractListAdapter#deselectView(ViewT)	sge.visui.util.adapter.AbstractListAdapter#deselectView(ViewT)	Renamed	-	com/kotcrab/vis/ui/util/adapter/AbstractListAdapter.java	180	5edbba61b0e046a1	
-member	com.kotcrab.vis.ui.util.adapter.AbstractListAdapter#fillTable(VisTable)	sge.visui.util.adapter.AbstractListAdapter#fillTable(VisTable)	Renamed	-	com/kotcrab/vis/ui/util/adapter/AbstractListAdapter.java	66	85927db8430e547f	
+member	com.kotcrab.vis.ui.util.adapter.AbstractListAdapter#fillTable(VisTable)	sge.visui.util.adapter.AbstractListAdapter#fillTable(VisTable)	Renamed	-	com/kotcrab/vis/ui/util/adapter/AbstractListAdapter.java	66	80aab6ebae9dd980	
 member	com.kotcrab.vis.ui.util.adapter.AbstractListAdapter#itemAdded(ItemT)	sge.visui.util.adapter.AbstractListAdapter#itemAdded(ItemT)	Renamed	-	com/kotcrab/vis/ui/util/adapter/AbstractListAdapter.java	102	f0b64a3be06ecbff	
 member	com.kotcrab.vis.ui.util.adapter.AbstractListAdapter#itemRemoved(ItemT)	sge.visui.util.adapter.AbstractListAdapter#itemRemoved(ItemT)	Renamed	-	com/kotcrab/vis/ui/util/adapter/AbstractListAdapter.java	106	bf72a78891f0c95b	
 member	com.kotcrab.vis.ui.util.adapter.AbstractListAdapter#itemsChanged()	sge.visui.util.adapter.AbstractListAdapter#itemsChanged()	Renamed	-	com/kotcrab/vis/ui/util/adapter/AbstractListAdapter.java	120	25c0d02e03e20cae	
@@ -1032,7 +1032,7 @@ member	com.kotcrab.vis.ui.util.dialog.Dialogs#BUTTON_DETAILS	sge.visui.util.dial
 member	com.kotcrab.vis.ui.util.dialog.Dialogs#BUTTON_OK	sge.visui.util.dialog.Dialogs#BUTTON_OK	Renamed	-	com/kotcrab/vis/ui/util/dialog/Dialogs.java	46	ce28e11189d611ea	placement=companion vis=private
 member	com.kotcrab.vis.ui.util.dialog.Dialogs#createScrollPane(Actor,Sge)	sge.visui.util.dialog.Dialogs#createScrollPane(Actor,Sge)	Renamed	-	com/kotcrab/vis/ui/util/dialog/Dialogs.java	191	6667c8ab6c697508	placement=companion vis=private
 member	com.kotcrab.vis.ui.util.dialog.Dialogs#getStackTrace(Throwable)	sge.visui.util.dialog.Dialogs#getStackTrace(Throwable)	Renamed	-	com/kotcrab/vis/ui/util/dialog/Dialogs.java	198	1318e3136a74a69f	placement=companion vis=private
-member	com.kotcrab.vis.ui.util.dialog.Dialogs#getStackTrace(Throwable,DynamicArray)	sge.visui.util.dialog.Dialogs#getStackTrace(Throwable,DynamicArray<char>)	Renamed	-	com/kotcrab/vis/ui/util/dialog/Dialogs.java	204	df23fe230cb13f1d	placement=companion vis=private
+member	com.kotcrab.vis.ui.util.dialog.Dialogs#getStackTrace(Throwable,DynamicArray)	sge.visui.util.dialog.Dialogs#getStackTrace(Throwable,DynamicArray<char>)	Renamed	-	com/kotcrab/vis/ui/util/dialog/Dialogs.java	204	2a488894fea15814	placement=companion vis=private
 member	com.kotcrab.vis.ui.util.dialog.Dialogs#showConfirmDialog(Stage,String,String,Array,Array,ConfirmDialogListener,Sge)	sge.visui.util.dialog.Dialogs#showConfirmDialog(Stage,String,String,Array<String>,Array<T>,ConfirmDialogListener<T>,Sge)	Renamed	-	com/kotcrab/vis/ui/util/dialog/Dialogs.java	98	36fe921c2327778d	placement=companion
 member	com.kotcrab.vis.ui.util.dialog.Dialogs#showDetailsDialog(Stage,String,String,String,Sge)	sge.visui.util.dialog.Dialogs#showDetailsDialog(Stage,String,String,String,Sge)	Renamed	-	com/kotcrab/vis/ui/util/dialog/Dialogs.java	176	0aa7e29bb137b74f	placement=companion
 member	com.kotcrab.vis.ui.util.dialog.Dialogs#showDetailsDialog(Stage,String,String,String,boolean,Sge)	sge.visui.util.dialog.Dialogs#showDetailsDialog(Stage,String,String,String,boolean,Sge)	Renamed	-	com/kotcrab/vis/ui/util/dialog/Dialogs.java	184	af1173ed94641fd9	placement=companion
@@ -1590,7 +1590,7 @@ member	com.kotcrab.vis.ui.widget.MenuBar#mainTable	sge.visui.widget.MenuBar#main
 member	com.kotcrab.vis.ui.widget.MenuBar#menuItems	sge.visui.widget.MenuBar#menuItems	Renamed	-	com/kotcrab/vis/ui/widget/MenuBar.java	30	83d4e7a8e215acfc	vis=private
 member	com.kotcrab.vis.ui.widget.MenuBar#menuListener	sge.visui.widget.MenuBar#menuListener	Renamed	-	com/kotcrab/vis/ui/widget/MenuBar.java	35	ee26b4d4cf467a8f	vis=private
 member	com.kotcrab.vis.ui.widget.MenuBar#menus	sge.visui.widget.MenuBar#menus	Renamed	-	com/kotcrab/vis/ui/widget/MenuBar.java	33	dbc9ee793078fe8e	vis=private
-member	com.kotcrab.vis.ui.widget.MenuBar#rebuild()	sge.visui.widget.MenuBar#rebuild()	Renamed	-	com/kotcrab/vis/ui/widget/MenuBar.java	84	cb1cc6213834d139	vis=private
+member	com.kotcrab.vis.ui.widget.MenuBar#rebuild()	sge.visui.widget.MenuBar#rebuild()	Renamed	-	com/kotcrab/vis/ui/widget/MenuBar.java	84	1288aea090847f05	vis=private
 member	com.kotcrab.vis.ui.widget.MenuBar#removeMenu(Menu)	sge.visui.widget.MenuBar#removeMenu(Menu)	Renamed	-	com/kotcrab/vis/ui/widget/MenuBar.java	67	8ccffade029b421a	
 member	com.kotcrab.vis.ui.widget.MenuBar#setMenuListener(MenuBarListener)	sge.visui.widget.MenuBar#setMenuListener(MenuBarListener)	Renamed	-	com/kotcrab/vis/ui/widget/MenuBar.java	116	d158e20693b9cf5f	
 member	com.kotcrab.vis.ui.widget.MenuBar#getTable()	sge.visui.widget.MenuBar#table()	Renamed	-	com/kotcrab/vis/ui/widget/MenuBar.java	121	734c393b558c1b08	
@@ -2749,7 +2749,7 @@ member	com.kotcrab.vis.ui.widget.file.FileChooser#setMultiSelectionEnabled(boole
 member	com.kotcrab.vis.ui.widget.file.FileChooser#notifyListenerAndCloseDialog(DynamicArray)	sge.visui.widget.file.FileChooser#notifyListenerAndCloseDialog(DynamicArray<FileHandle>)	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	714	e00acbcde8ffd835	vis=private
 member	com.kotcrab.vis.ui.widget.file.FileChooser#preferencesIO	sge.visui.widget.file.FileChooser#preferencesIO	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	114	cfd6a5299fddefdf	vis=private
 member	com.kotcrab.vis.ui.widget.file.FileChooser#rebuildFileList()	sge.visui.widget.file.FileChooser#rebuildFileList()	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	873	2e0c867367f48c96	vis=private
-member	com.kotcrab.vis.ui.widget.file.FileChooser#rebuildFileList(boolean)	sge.visui.widget.file.FileChooser#rebuildFileList(boolean)	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	877	2d4d96035f8b2b00	vis=private
+member	com.kotcrab.vis.ui.widget.file.FileChooser#rebuildFileList(boolean)	sge.visui.widget.file.FileChooser#rebuildFileList(boolean)	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	877	a5d3abcfddb20bd9	vis=private
 member	com.kotcrab.vis.ui.widget.file.FileChooser#rebuildFileRootsCache()	sge.visui.widget.file.FileChooser#rebuildFileRootsCache()	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	838	c03d1aeba3ed9e9f	vis=private
 member	com.kotcrab.vis.ui.widget.file.FileChooser#rebuildShortcutsFavoritesPanel()	sge.visui.widget.file.FileChooser#rebuildShortcutsFavoritesPanel()	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	865	be7f1052a4b72bf8	vis=private
 member	com.kotcrab.vis.ui.widget.file.FileChooser#rebuildShortcutsList()	sge.visui.widget.file.FileChooser#rebuildShortcutsList()	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	833	3df1f6e8cd04bbb2	vis=private
@@ -2762,7 +2762,7 @@ member	com.kotcrab.vis.ui.widget.file.FileChooser#reloadPreferences(boolean)	sge
 member	com.kotcrab.vis.ui.widget.file.FileChooser#removeFavorite(FileHandle)	sge.visui.widget.file.FileChooser#removeFavorite(FileHandle)	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	1016	0034c6c6e3016a95	
 member	com.kotcrab.vis.ui.widget.file.FileChooser#removeInvalidSelections()	sge.visui.widget.file.FileChooser#removeInvalidSelections()	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	1115	d9dac5c656038817	vis=private
 member	com.kotcrab.vis.ui.widget.file.FileChooser#saveLastDirectory	sge.visui.widget.file.FileChooser#saveLastDirectory	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	81	7dc45e24c25965ad	placement=companion vis=private
-member	com.kotcrab.vis.ui.widget.file.FileChooser#selectAll()	sge.visui.widget.file.FileChooser#selectAll()	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	1057	70141fa2ae79c174	vis=private
+member	com.kotcrab.vis.ui.widget.file.FileChooser#selectAll()	sge.visui.widget.file.FileChooser#selectAll()	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	1057	046eb538fd3804e9	vis=private
 member	com.kotcrab.vis.ui.widget.file.FileChooser#selectedFileTextField	sge.visui.widget.file.FileChooser#selectedFileTextField	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	152	25b42193aa2065eb	vis=private
 member	com.kotcrab.vis.ui.widget.file.FileChooser#selectedItems	sge.visui.widget.file.FileChooser#selectedItems	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	122	83adfa45df45aaff	vis=private
 member	com.kotcrab.vis.ui.widget.file.FileChooser#selectedShortcut	sge.visui.widget.file.FileChooser#selectedShortcut	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	123	9cda3210ae9828b3	vis=private
@@ -2816,7 +2816,7 @@ member	com.kotcrab.vis.ui.widget.file.FileChooser#tmpVector	sge.visui.widget.fil
 member	com.kotcrab.vis.ui.widget.file.FileChooser#updateFavoriteFolderButton()	sge.visui.widget.file.FileChooser#updateFavoriteFolderButton()	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	437	c26080a8a846a9cb	vis=private
 member	com.kotcrab.vis.ui.widget.file.FileChooser#updateFileTypeSelectBox()	sge.visui.widget.file.FileChooser#updateFileTypeSelectBox()	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	571	b7ac2f3aba2e95df	vis=private
 member	com.kotcrab.vis.ui.widget.file.FileChooser#updateSelectedFileFieldText()	sge.visui.widget.file.FileChooser#updateSelectedFileFieldText()	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	1089	0329718b59b2ffab	vis=private
-member	com.kotcrab.vis.ui.widget.file.FileChooser#updateSelectedFileFieldText(boolean)	sge.visui.widget.file.FileChooser#updateSelectedFileFieldText(boolean)	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	1093	8e6dc75aaad7c599	vis=private
+member	com.kotcrab.vis.ui.widget.file.FileChooser#updateSelectedFileFieldText(boolean)	sge.visui.widget.file.FileChooser#updateSelectedFileFieldText(boolean)	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	1093	de41e5298579bc48	vis=private
 member	com.kotcrab.vis.ui.widget.file.FileChooser#getViewMode	sge.visui.widget.file.FileChooser#viewMode	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	87	789ae82a287818a7	name=viewMode$field
 member	com.kotcrab.vis.ui.widget.file.FileChooser#getViewMode()	sge.visui.widget.file.FileChooser#viewMode()	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	1151	6c5c716e5274c48c	
 member	com.kotcrab.vis.ui.widget.file.FileChooser#viewModeButton	sge.visui.widget.file.FileChooser#viewModeButton	Renamed	-	com/kotcrab/vis/ui/widget/file/FileChooser.java	149	0269bc953ba32bc2	vis=private
@@ -3077,7 +3077,7 @@ member	com.kotcrab.vis.ui.widget.file.internal.FileListAdapter#<stmt1>	sge.visui
 member	com.kotcrab.vis.ui.widget.file.internal.FileListAdapter#<stmt2>	sge.visui.widget.file.internal.FileListAdapter#<stmt2>	Renamed	-	com/kotcrab/vis/ui/widget/file/internal/FileListAdapter.java	36	8181a331e83a4087	
 member	com.kotcrab.vis.ui.widget.file.internal.FileListAdapter#chooser	sge.visui.widget.file.internal.FileListAdapter#chooser	Renamed	-	com/kotcrab/vis/ui/widget/file/internal/FileListAdapter.java	29	4f998316eb175fc0	
 member	com.kotcrab.vis.ui.widget.file.internal.FileListAdapter#createView(FileHandle)	sge.visui.widget.file.internal.FileListAdapter#createView(FileHandle)	Renamed	-	com/kotcrab/vis/ui/widget/file/internal/FileListAdapter.java	40	3e8ef475a23440eb	
-member	com.kotcrab.vis.ui.widget.file.internal.FileListAdapter#fillTable(VisTable)	sge.visui.widget.file.internal.FileListAdapter#fillTable(VisTable)	Renamed	-	com/kotcrab/vis/ui/widget/file/internal/FileListAdapter.java	45	033ee239aea884c6	
+member	com.kotcrab.vis.ui.widget.file.internal.FileListAdapter#fillTable(VisTable)	sge.visui.widget.file.internal.FileListAdapter#fillTable(VisTable)	Renamed	-	com/kotcrab/vis/ui/widget/file/internal/FileListAdapter.java	45	0d34c120f931a720	
 member	com.kotcrab.vis.ui.widget.file.internal.FileListAdapter#gridGroup	sge.visui.widget.file.internal.FileListAdapter#gridGroup	Renamed	-	com/kotcrab/vis/ui/widget/file/internal/FileListAdapter.java	31	a174912e6777fcf2	
 member	com.kotcrab.vis.ui.widget.file.internal.FileListAdapter#getOrderedViews	sge.visui.widget.file.internal.FileListAdapter#orderedViews	Renamed	-	com/kotcrab/vis/ui/widget/file/internal/FileListAdapter.java	30	9416da812b110d6d	name=orderedViews$field
 member	com.kotcrab.vis.ui.widget.file.internal.FileListAdapter#getOrderedViews()	sge.visui.widget.file.internal.FileListAdapter#orderedViews()	Renamed	-	com/kotcrab/vis/ui/widget/file/internal/FileListAdapter.java	80	e42025d7385913b8	
