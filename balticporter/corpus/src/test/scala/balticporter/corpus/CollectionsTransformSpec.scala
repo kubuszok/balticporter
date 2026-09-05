@@ -2332,3 +2332,148 @@ class CollectionsTransformSpec extends PortSuite:
       "U.java" -> "package demo;\nclass U { Object o; boolean f() { return o instanceof CharArr; } }"), ph)
     assertEmits(p, "isInstanceOf[lowlevel.util.DynamicArray[?]]")
   }
+
+  // -------------------------------------------------------------------------------------
+  // IndexedField with default via/viaWrite (apply/update)
+
+  test("IndexedField default via: recv.items[i] -> recv.apply(i)") {
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.Coll" -> "demo.Target"),
+      retargetRewrites = Map("demo.Coll" -> Map(
+        ("items", 0) -> CollectionsTransform.RetargetRewrite.IndexedField("items"))))
+    val p = portAll(List(
+      "Coll.java" ->
+        """package demo;
+          |public class Coll<T> {
+          |  public T[] items;
+          |}""".stripMargin,
+      "Target.java" ->
+        """package demo;
+          |public class Target<T> {
+          |  public T apply(int i) { return null; }
+          |  public void update(int i, T v) {}
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  String read(Coll<String> c) { return c.items[0]; }
+          |}""".stripMargin), ph)
+    assertEmits(p, ".apply(0)")
+    assertNotEmits(p, ".items")
+  }
+
+  test("IndexedField default viaWrite: recv.items[i] = v -> recv.update(i, v)") {
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.Coll" -> "demo.Target"),
+      retargetRewrites = Map("demo.Coll" -> Map(
+        ("items", 0) -> CollectionsTransform.RetargetRewrite.IndexedField("items"))))
+    val p = portAll(List(
+      "Coll.java" ->
+        """package demo;
+          |public class Coll<T> {
+          |  public T[] items;
+          |}""".stripMargin,
+      "Target.java" ->
+        """package demo;
+          |public class Target<T> {
+          |  public T apply(int i) { return null; }
+          |  public void update(int i, T v) {}
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  void write(Coll<String> c) { c.items[0] = "x"; }
+          |}""".stripMargin), ph)
+    assertEmits(p, ".update(0,")
+    assertNotEmits(p, ".items")
+  }
+
+  // IndexedField with non-default via/viaWrite — the ArrayMap keys/values pattern
+
+  test("IndexedField custom via: recv.keys[i] -> recv.getKeyAt(i) via retargetIndexedFields") {
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.AMap" -> "demo.Target"),
+      retargetIndexedFields = Map("demo.AMap" -> Map(
+        "keys" -> CollectionsTransform.RetargetRewrite.IndexedField("keys", via = "getKeyAt", viaWrite = "setKeyAt"))))
+    val p = portAll(List(
+      "AMap.java" ->
+        """package demo;
+          |public class AMap<K,V> {
+          |  public K[] keys;
+          |  public V[] values;
+          |}""".stripMargin,
+      "Target.java" ->
+        """package demo;
+          |public class Target<K,V> {
+          |  public K getKeyAt(int i) { return null; }
+          |  public void setKeyAt(int i, K k) {}
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  String readKey(AMap<String,Integer> m) { return m.keys[0]; }
+          |}""".stripMargin), ph)
+    assertEmits(p, ".getKeyAt(0)")
+    assertNotEmits(p, ".keys")
+  }
+
+  test("IndexedField custom viaWrite: recv.keys[i] = v -> recv.setKeyAt(i, v) via retargetIndexedFields") {
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.AMap" -> "demo.Target"),
+      retargetIndexedFields = Map("demo.AMap" -> Map(
+        "keys" -> CollectionsTransform.RetargetRewrite.IndexedField("keys", via = "getKeyAt", viaWrite = "setKeyAt"))))
+    val p = portAll(List(
+      "AMap.java" ->
+        """package demo;
+          |public class AMap<K,V> {
+          |  public K[] keys;
+          |  public V[] values;
+          |}""".stripMargin,
+      "Target.java" ->
+        """package demo;
+          |public class Target<K,V> {
+          |  public K getKeyAt(int i) { return null; }
+          |  public void setKeyAt(int i, K k) {}
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  void writeKey(AMap<String,Integer> m) { m.keys[0] = "x"; }
+          |}""".stripMargin), ph)
+    assertEmits(p, ".setKeyAt(0,")
+    assertNotEmits(p, ".keys")
+  }
+
+  test("IndexedField in retargetIndexedFields coexists with Collect in retargetRewrites at same name") {
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.AMap" -> "demo.Target"),
+      retargetRewrites = Map("demo.AMap" -> Map(
+        ("keys", 0) -> CollectionsTransform.RetargetRewrite.Collect("foreachKey", "demo.DArr"))),
+      retargetIndexedFields = Map("demo.AMap" -> Map(
+        "keys" -> CollectionsTransform.RetargetRewrite.IndexedField("keys", via = "getKeyAt", viaWrite = "setKeyAt"))))
+    val p = portAll(List(
+      "AMap.java" ->
+        """package demo;
+          |public class AMap<K,V> {
+          |  public K[] keys;
+          |  public K[] keys() { return keys; }
+          |}""".stripMargin,
+      "Target.java" ->
+        """package demo;
+          |public class Target<K,V> {
+          |  public K getKeyAt(int i) { return null; }
+          |  public void setKeyAt(int i, K k) {}
+          |  public void foreachKey(java.util.function.Consumer<K> f) {}
+          |}""".stripMargin,
+      "DArr.java" ->
+        """package demo;
+          |public class DArr<T> {}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  String indexed(AMap<String,Integer> m) { return m.keys[0]; }
+          |}""".stripMargin), ph)
+    // The IndexedField fires on the array access, the Collect fires on calls
+    assertEmits(p, ".getKeyAt(0)")
+    assertNotEmits(p, ".keys[")
+  }

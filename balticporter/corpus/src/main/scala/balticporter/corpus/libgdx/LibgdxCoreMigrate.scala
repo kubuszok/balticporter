@@ -691,7 +691,7 @@ object LibgdxPolicy:
         ("getAndIncrement", 3) -> Template("{ val bpK = $0; val bpOld = $recv.get(bpK, $1); $recv.put(bpK, bpOld + $2); bpOld }"),
         // remove(key, default): return removed value or default if absent.
         // ObjectMap.remove(K) returns null if absent; cast the boxed result.
-        ("remove", 2) -> Template("{ val bpK = $0; if ($recv.containsKey(bpK)) { val bpV = $recv.get(bpK, $1); $recv.remove(bpK); bpV } else $1 }"),
+        ("remove", 2) -> Template("$recv.remove($0).getOrElse($1)"),
       ),
       "com.badlogic.gdx.utils.IntFloatMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
@@ -704,7 +704,7 @@ object LibgdxPolicy:
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1ah: dependents ---
         ("getAndIncrement", 3) -> Template("{ val bpK = $0; val bpOld = $recv.get(bpK, $1); $recv.put(bpK, bpOld + $2); bpOld }"),
-        ("remove", 2) -> Template("{ val bpK = $0; if ($recv.containsKey(bpK)) { val bpV = $recv.get(bpK, $1); $recv.remove(bpK); bpV } else $1 }"),
+        ("remove", 2) -> Template("$recv.remove($0).getOrElse($1)"),
       ),
       "com.badlogic.gdx.utils.ObjectIntMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
@@ -717,7 +717,7 @@ object LibgdxPolicy:
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1ah: dependents ---
         ("getAndIncrement", 3) -> Template("{ val bpK = $0; val bpOld = $recv.get(bpK, $1); $recv.put(bpK, bpOld + $2); bpOld }"),
-        ("remove", 2) -> Template("{ val bpK = $0; if ($recv.containsKey(bpK)) { val bpV = $recv.get(bpK, $1); $recv.remove(bpK); bpV } else $1 }"),
+        ("remove", 2) -> Template("$recv.remove($0).getOrElse($1)"),
       ),
       "com.badlogic.gdx.utils.ObjectFloatMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
@@ -730,7 +730,7 @@ object LibgdxPolicy:
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1ah: dependents ---
         ("getAndIncrement", 3) -> Template("{ val bpK = $0; val bpOld = $recv.get(bpK, $1); $recv.put(bpK, bpOld + $2); bpOld }"),
-        ("remove", 2) -> Template("{ val bpK = $0; if ($recv.containsKey(bpK)) { val bpV = $recv.get(bpK, $1); $recv.remove(bpK); bpV } else $1 }"),
+        ("remove", 2) -> Template("$recv.remove($0).getOrElse($1)"),
       ),
       "com.badlogic.gdx.utils.ObjectLongMap" -> Map(
         ("<init>", 0) -> Construct("lowlevel.util.ObjectMap", "apply"),
@@ -743,7 +743,7 @@ object LibgdxPolicy:
         ("values", 0)  -> Collect("foreachValue", "lowlevel.util.DynamicArray"),
         // --- 3.1ah: dependents ---
         ("getAndIncrement", 3) -> Template("{ val bpK = $0; val bpOld = $recv.get(bpK, $1); $recv.put(bpK, bpOld + $2); bpOld }"),
-        ("remove", 2) -> Template("{ val bpK = $0; if ($recv.containsKey(bpK)) { val bpV = $recv.get(bpK, $1); $recv.remove(bpK); bpV } else $1 }"),
+        ("remove", 2) -> Template("$recv.remove($0).getOrElse($1)"),
       ),
       // wave 3.1d: gdx's ArrayMap -> lowlevel.util.ArrayMap (same as IdentityMap's target)
       "com.badlogic.gdx.utils.ArrayMap" -> Map(
@@ -1713,6 +1713,18 @@ object LibgdxPolicy:
       "lowlevel.util.DynamicArray.wrap($0)",
   )
 
+  /** Indexed field rewrites for retarget sources where a field and a method of the same name
+    * need different rewrite kinds (ArrayMap `keys`/`values`). // CLAUDE.md §1(b) */
+  def libRetargetIndexedFields: Map[String, Map[String, CollectionsTransform.RetargetRewrite.IndexedField]] = {
+    import balticporter.transform.CollectionsTransform.RetargetRewrite.IndexedField
+    Map(
+      "com.badlogic.gdx.utils.ArrayMap" -> Map(
+        "keys" -> IndexedField("keys", via = "getKeyAt", viaWrite = "setKeyAt"),
+        "values" -> IndexedField("values", via = "getValueAt", viaWrite = "setValueAt"),
+      ),
+    )
+  }
+
   /** the `gdx/src` pipeline. Universal phases first, then the three §1(b) phases configured above,
     * then the one §1(c) rule libGDX plugs in from OUTSIDE the engine
     * ([[GdxSharedIteratorRule]]). */
@@ -1722,7 +1734,8 @@ object LibgdxPolicy:
                                   retargetRewrites = bitsRetargetRewrites ++ libCollectionConstructRewrites,
                                   retargetRewritesByDesc = libCollectionConstructRewritesByDesc,
                                   retargetTypeArgs = libCollectionRetargetTypeArgs,
-                                  retargetCoercions = libRetargetCoercions), new MutableParamsTransform,
+                                  retargetCoercions = libRetargetCoercions,
+                                  retargetIndexedFields = libRetargetIndexedFields), new MutableParamsTransform,
          new PanamaFfiTransform(), unwrapReflection, classTable, new GdxSharedIteratorRule,
          memberRenames, disposableRedirect, textureHandle, align, uniformLocation,
          nullability, globalsToContext,
@@ -1776,13 +1789,6 @@ object LibgdxPolicy:
                |    return null
                |  }
                |}""".stripMargin,
-           // wave 3.1m: FirstPersonCameraController.keyUp — IntIntMap.remove(key, defaultValue)
-           // becomes ObjectMap.remove(key), dropping the unused default. sge: keys.remove(keycode).
-           "com.badlogic.gdx.graphics.g3d.utils.FirstPersonCameraController#keyUp(int)" ->
-             """{
-               |  this.keys.remove(keycode)
-               |  return true
-               |}""".stripMargin,
            // wave 3.1m: ModelLoader.getDependencies — Tuple2 default-construct then assign _1/_2.
            // sge: val item = (fileName, d). The method is large; replace only relevant lines.
            "com.badlogic.gdx.assets.loaders.ModelLoader#getDependencies" ->
@@ -1830,86 +1836,6 @@ object LibgdxPolicy:
                |    }
                |  }
                |  return descriptors.asInstanceOf[lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]]
-               |}""".stripMargin,
-           // wave 3.1m: Node.calculateBoneTransforms — keys$field(i) -> getKeyAt(i),
-           // values$field(i) -> getValueAt(i). sge: getKeyAt(i) / getValueAt(i).
-           "com.badlogic.gdx.graphics.g3d.model.Node#calculateBoneTransforms(boolean)" ->
-             """{
-               |  for (part <- this.parts) scala.util.boundary { {
-               |    if (((part.invBoneBindTransforms == null) || (part.bones == null)) || (part.invBoneBindTransforms.size != part.bones.length)) {
-               |      scala.util.boundary.break(())
-               |    } else ()
-               |    val n: scala.Int = part.invBoneBindTransforms.size;
-               |    { var i: scala.Int = 0; while (i < n) { {
-               |      part.bones(i).set(part.invBoneBindTransforms.getKeyAt(i).globalTransform).mul(part.invBoneBindTransforms.getValueAt(i))
-               |    }; i = i + 1 } }
-               |  } }
-               |  if (recursive) {
-               |    for (child <- this.children$field) {
-               |      child.calculateBoneTransforms(true)
-               |    }
-               |  } else ()
-               |}""".stripMargin,
-           // wave 3.1m: ModelInstance.invalidate(Node) — keys$field(j) -> getKeyAt(j),
-           // setKeyAt(j, v) for the write case. sge: getKeyAt(j) / setKeyAt(j, severed).
-           "com.badlogic.gdx.graphics.g3d.ModelInstance#invalidate(Node)" ->
-             """{
-               |  for (part <- node.parts) {
-               |    val bindPose: lowlevel.util.ArrayMap[sge.graphics.g3d.model.Node, sge.math.Matrix4] = part.invBoneBindTransforms
-               |    if (bindPose != null) {
-               |      { var j: scala.Int = 0; while (j < bindPose.size) { {
-               |        bindPose.setKeyAt(j, this.getNode(bindPose.getKeyAt(j).id))
-               |      }; j = j + 1 } }
-               |    } else ()
-               |    if (!this.materials.containsByRef(part.material)) {
-               |      val midx: scala.Int = this.materials.indexOf(part.material)
-               |      if (midx < 0) {
-               |        this.materials.add({
-               |          part.material = part.material.copy()
-               |          part.material
-               |        })
-               |      } else {
-               |        part.material = this.materials(midx)
-               |      }
-               |    } else ()
-               |  }
-               |  for (child <- node.children$field) {
-               |    this.invalidate(child)
-               |  }
-               |}""".stripMargin,
-           // wave 3.1m: NodePart.set — putAll with wildcard cast on invariant lls ArrayMap.
-           // sge: map.putAll(otherBindTransforms) with no cast. collection-internal seam — java's
-           // covariant putAll formal has no image on the invariant lls type.
-           "com.badlogic.gdx.graphics.g3d.model.NodePart#set(NodePart)" ->
-             """{
-               |  this.meshPart.set(other.meshPart)
-               |  this.material = other.material
-               |  if (other.invBoneBindTransforms == null) {
-               |    this.invBoneBindTransforms = null
-               |    this.bones = null
-               |  } else {
-               |    if (this.invBoneBindTransforms == null) {
-               |      this.invBoneBindTransforms = lowlevel.util.ArrayMap.apply(true, other.invBoneBindTransforms.size)
-               |    } else {
-               |      this.invBoneBindTransforms.clear()
-               |    }
-               |    this.invBoneBindTransforms.putAll(other.invBoneBindTransforms)
-               |    if ((this.bones == null) || (this.bones.length != this.invBoneBindTransforms.size)) {
-               |      this.bones = new scala.Array[sge.math.Matrix4](this.invBoneBindTransforms.size)
-               |    } else ();
-               |    { var i: scala.Int = 0; while (i < this.bones.length) { {
-               |      if (this.bones(i) == null) {
-               |        this.bones(i) = new sge.math.Matrix4()
-               |      } else ()
-               |    }; i = i + 1 } }
-               |  }
-               |  return this
-               |}""".stripMargin,
-           // wave 3.1m: MapProperties.putAll — same wildcard cast as NodePart.set.
-           // sge: this.properties.putAll(properties.properties) with no cast.
-           "com.badlogic.gdx.maps.MapProperties#putAll(MapProperties)" ->
-             """{
-               |  this.properties.putAll(properties.properties)
                |}""".stripMargin,
            // wave 3.1m: ArraySelection.validate — Chain iterator returns Iterator[T], but the loop
            // body calls iter.remove(). sge: collect removals into a DynamicArray, then remove.

@@ -47,6 +47,12 @@ final class CollectionsTransform(
       * `$0` = actual value. Rendered as `Tree.Opaque.spliced` at type boundaries.
       * Empty = no-op. `MergeablePolicy` unions; same pair with different template refuses. */
     val retargetCoercions: Map[(String, String), String] = Map.empty,
+    /** Indexed field rewrites keyed by (source FQN, field name) to [[RetargetRewrite.IndexedField]].
+      * Separate from [[retargetRewrites]] so a field and a method of the same name can coexist
+      * (e.g. ArrayMap `keys` method -> Collect AND `keys` field -> IndexedField). Scanned
+      * alongside [[retargetRewrites]] for `indexedFieldSyms`. Empty = no-op.
+      * // CLAUDE.md §1(b) */
+    val retargetIndexedFields: Map[String, Map[String, CollectionsTransform.RetargetRewrite.IndexedField]] = Map.empty,
 ) extends Phase, Rewrite, RequiresRuntime, PolicySource, SurfacePolicy, MergeablePolicy, PolicyBound,
     CollectionsRetarget, CollectionsReified, CollectionsBoundary:
   def name = "java-collections->scala"
@@ -103,6 +109,8 @@ final class CollectionsTransform(
         "carriers=" + reifiedCarriers.toList.sorted.mkString(",")),
       scala.Option.when(families.nonEmpty)(
         "families=" + familiesDigest),
+      scala.Option.when(retargetIndexedFields.nonEmpty)(
+        "retargetIndexedFields=" + retargetIndexedFieldsDigest),
     ).flatten
     s"${scope.fingerprint};${parts.mkString(";")}"
 
@@ -138,9 +146,13 @@ final class CollectionsTransform(
       // --- retargetTypeArgs clashes: same source FQN, different arg mapping ---
       val typeArgsClash = (retargetTypeArgs.keySet & o.retargetTypeArgs.keySet)
         .filter(k => retargetTypeArgs(k) != o.retargetTypeArgs(k))
+      // --- retargetIndexedFields clashes ---
+      val idxFieldClash = (retargetIndexedFields.keySet & o.retargetIndexedFields.keySet)
+        .filter(k => retargetIndexedFields(k) != o.retargetIndexedFields(k))
       // --- carrier/sink disagreements are NOT surface and therefore NOT a refusal ---
       if retargetClash.nonEmpty || familyClash.nonEmpty || crossClash.nonEmpty ||
-          scopeClash.nonEmpty || rewriteClash.nonEmpty || descRewriteClash.nonEmpty || typeArgsClash.nonEmpty then
+          scopeClash.nonEmpty || rewriteClash.nonEmpty || descRewriteClash.nonEmpty ||
+          typeArgsClash.nonEmpty || idxFieldClash.nonEmpty then
         Left(
           (retargetClash.toList.sorted.map(k =>
              s"""both modules retarget "$k", to "${retarget(k)}" and "${o.retarget(k)}"""") ++
@@ -158,7 +170,9 @@ final class CollectionsTransform(
            descRewriteClash.toList.sorted.map(k =>
              s"""both modules declare descriptor-keyed retarget rewrites for "$k" and disagree""") ++
            typeArgsClash.toList.sorted.map(k =>
-             s"""both modules declare retarget type args for "$k" and disagree"""))
+             s"""both modules declare retarget type args for "$k" and disagree""") ++
+           idxFieldClash.toList.sorted.map(k =>
+             s"""both modules declare retarget indexed fields for "$k" and disagree"""))
             .mkString("; ") +
             " — two answers for one key is a rewrite whose outcome depends on which manifest was read")
       else
@@ -172,6 +186,7 @@ final class CollectionsTransform(
         val mergedCarriers = reifiedCarriers ++ o.reifiedCarriers
         val mergedSinks = reflectiveSinks ++ o.reflectiveSinks
         val mergedCoercions = retargetCoercions ++ o.retargetCoercions
+        val mergedIndexedFields = retargetIndexedFields ++ o.retargetIndexedFields
         val addedRetargetSubjects = (o.retarget.keySet -- retarget.keySet).map(MergeablePolicy.subjectOf)
         val addedFamilySubjects = (o.families.keySet -- families.keySet).map(MergeablePolicy.subjectOf)
         Right(MergeablePolicy.Merged(
@@ -185,7 +200,8 @@ final class CollectionsTransform(
             reflectiveSinks  = mergedSinks,
             families         = mergedFamilies,
             familyScopes     = mergedFamilyScopes,
-            retargetCoercions = mergedCoercions),
+            retargetCoercions = mergedCoercions,
+            retargetIndexedFields = mergedIndexedFields),
           addedRetargetSubjects ++ addedFamilySubjects))
     case other =>
       Left(s"`${other.name}` is not a `CollectionsTransform`, so there is no table to compose")
@@ -217,6 +233,10 @@ final class CollectionsTransform(
     require(orphanDescRewrites.isEmpty,
       s"CollectionsTransform: retargetRewritesByDesc key(s) ${orphanDescRewrites.mkString(", ")} have no " +
         "matching retarget entry — a rewrite table for a type this phase does not retarget is dead code")
+    val orphanIndexedFields = retargetIndexedFields.keySet -- retarget.keySet
+    require(orphanIndexedFields.isEmpty,
+      s"CollectionsTransform: retargetIndexedFields key(s) ${orphanIndexedFields.mkString(", ")} have no " +
+        "matching retarget entry — an indexed-field table for a type this phase does not retarget is dead code")
   }
 
   /** JDK + families merged type map: java FQN to (scala FQN, Kind). */
@@ -253,7 +273,11 @@ final class CollectionsTransform(
         else s"Chain(${ms.mkString(";")};parens=${ps.toList.sorted.mkString(",")})"
         if da then s"$base;dropArgs" else base
       case CollectionsTransform.RetargetRewrite.FieldWrite(f, m) => s"FieldWrite($f,$m)"
-      case CollectionsTransform.RetargetRewrite.IndexedField(f) => s"IndexedField($f)"
+      case CollectionsTransform.RetargetRewrite.IndexedField(f, v, vw) =>
+        val extra = List(
+          scala.Option.when(v != "apply")(s"via=$v"),
+          scala.Option.when(vw != "update")(s"viaWrite=$vw")).flatten
+        if extra.isEmpty then s"IndexedField($f)" else s"IndexedField($f,${extra.mkString(",")})"
       case CollectionsTransform.RetargetRewrite.Template(e) => s"Template($e)"
     val arityEntries = retargetRewrites.toList.sortBy(_._1).flatMap { (src, tbl) =>
       tbl.toList.sortBy(_._1.toString).map { case ((m, ar), rw) => s"$src#$m/$ar->${renderRw(rw)}" }
@@ -275,6 +299,20 @@ final class CollectionsTransform(
       retargetTypeArgs.toList.sortBy(_._1).map { (src, args) =>
         s"$src->${args.map(renderArg).mkString(",")}"
       }.mkString(";")).take(16)
+
+  /** Digest of [[retargetIndexedFields]]. Sorted by (source FQN, field name); renders each entry
+    * the same way as [[retargetRewritesDigest]] renders an `IndexedField`. */
+  private[transform] def retargetIndexedFieldsDigest: String =
+    val entries = retargetIndexedFields.toList.sortBy(_._1).flatMap { (src, tbl) =>
+      tbl.toList.sortBy(_._1).map { case (fld, idx) =>
+        val extra = List(
+          scala.Option.when(idx.via != "apply")(s"via=${idx.via}"),
+          scala.Option.when(idx.viaWrite != "update")(s"viaWrite=${idx.viaWrite}")).flatten
+        val rw = if extra.isEmpty then s"IndexedField($fld)" else s"IndexedField($fld,${extra.mkString(",")})"
+        s"$src#$fld->$rw"
+      }
+    }
+    balticporter.tir.TirPrinter.sha256(entries.mkString(",")).take(16)
 
   /** The java types this phase retypes. */
   def mappedTypes: Set[String] = typeMap.keySet
@@ -666,15 +704,25 @@ final class CollectionsTransform(
     // retargetIndexedField fires, the Select's member symbol may have been remapped. We match on
     // the ORIGINAL source member SymId (the field declared by the source type), keyed to its
     // source FQN so we can look up the rewrite table.
-    indexedFieldSyms = retargetRewrites.flatMap { (srcFqn, tbl) =>
-      tbl.collect { case ((fieldName, 0), _: CollectionsTransform.RetargetRewrite.IndexedField) =>
-        // find the source type's SymId and then its member with this name
+    // Scans BOTH retargetRewrites and retargetIndexedFields (the latter avoids a key collision
+    // when a field and a method of the same name need different rewrite kinds).
+    val rwIdxFields = retargetRewrites.flatMap { (srcFqn, tbl) =>
+      tbl.collect { case ((fieldName, 0), idx: CollectionsTransform.RetargetRewrite.IndexedField) =>
         program.symbols.all.filter(s => s.fullName == srcFqn).flatMap { ownerSym =>
           program.symbols.all.filter(m => m.owner == ownerSym.id && m.name == fieldName)
-            .map(m => m.id -> srcFqn)
+            .map(m => m.id -> (srcFqn, idx))
         }
       }.flatten
     }
+    val separateIdxFields = retargetIndexedFields.flatMap { (srcFqn, tbl) =>
+      tbl.flatMap { (fieldName, idx) =>
+        program.symbols.all.filter(s => s.fullName == srcFqn).flatMap { ownerSym =>
+          program.symbols.all.filter(m => m.owner == ownerSym.id && m.name == fieldName)
+            .map(m => m.id -> (srcFqn, idx))
+        }
+      }
+    }
+    indexedFieldSyms = rwIdxFields ++ separateIdxFields
 
     // resolve FixedType and Applied FQNs — reuse an EXISTING symbol where one is already in
     // byScala or in the program, so no FQN ends up with two SymIds. 3.1ai / O9: minting a
@@ -721,10 +769,19 @@ final class CollectionsTransform(
           members.map(m => (src, m) -> mint(m, s"$src#retargetRewrite:$m"))
         case CollectionsTransform.RetargetRewrite.FieldWrite(_, method) =>
           List((src, method) -> mint(method, s"$src#retargetRewrite:$method"))
-        case _: CollectionsTransform.RetargetRewrite.IndexedField =>
-          Nil // no minted symbol needed — the field select is stripped, not renamed
+        case CollectionsTransform.RetargetRewrite.IndexedField(_, v, vw) =>
+          // always mint symbols for via/viaWrite — the handler resolves them by name from
+          // retargetRewriteSyms; a default-via IndexedField on a source with no Rename("apply")
+          // would otherwise fall through to updateSym.
+          List((src, v) -> mint(v, s"$src#retargetRewrite:$v"),
+               (src, vw) -> mint(vw, s"$src#retargetRewrite:$vw"))
         case _: CollectionsTransform.RetargetRewrite.Template =>
           Nil // no minted symbol needed — the template is rendered as Opaque text
+      }
+    } ++ retargetIndexedFields.flatMap { (src, tbl) =>
+      tbl.values.flatMap { idx =>
+        List((src, idx.via) -> mint(idx.via, s"$src#retargetRewrite:${idx.via}"),
+             (src, idx.viaWrite) -> mint(idx.viaWrite, s"$src#retargetRewrite:${idx.viaWrite}"))
       }
     } ++ retargetRewritesByDesc.flatMap { (src, tbl) =>
       tbl.values.flatMap {
@@ -2250,11 +2307,11 @@ object CollectionsTransform:
       * (`Assign` vs `Select`/`Apply`) and coexist at one key. */
     case class FieldWrite(field: String, method: String) extends RetargetRewrite
 
-    /** Indexed field bypass: `recv.field[i]` -> `recv(i)`, for a java public backing-array field
-      * whose target's own indexed access (`apply`/`update`) replaces it. Fires in
-      * `retargetSelectRewrite` by stripping the field select so the enclosing `ArrayAccess`
-      * reads straight off the receiver. */
-    case class IndexedField(field: String) extends RetargetRewrite
+    /** Indexed field bypass: `recv.field[i]` -> `recv.via(i)`, `field[i] = v` -> `recv.viaWrite(i, v)`.
+      * `via`/`viaWrite` default to `apply`/`update`; non-default enters the fingerprint.
+      * Fires in `retargetSelectRewrite` by stripping the field select.
+      * // CLAUDE.md §1(b) */
+    case class IndexedField(field: String, via: String = "apply", viaWrite: String = "update") extends RetargetRewrite
 
     /** Expression template with placeholders (`$recv`, `$0`/`$1`… for arguments, `$T0`… for the
       * receiver's type arguments as text, `$Target` for the retarget target's FQN as text),

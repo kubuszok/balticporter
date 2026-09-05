@@ -90,9 +90,8 @@ private[transform] trait CollectionsRetarget:
   /** SOURCE member SymIds for IndexedField entries — the `items` field SymId on each retarget
     * source type. Used by [[retargetIndexedField]] to match the member by SYMBOL after the
     * bottom-up traversal has already visited (and potentially remapped) the `Select` node.
-    * Keyed on `(ownerFqn, fieldName)` -> source SymId, so we identify the source FQN for the
-    * rewrite table lookup. */
-  private[transform] var indexedFieldSyms: Map[SymId, String] = Map.empty
+    * Carries the (source FQN, IndexedField entry) so the handler reads `via`/`viaWrite`. */
+  private[transform] var indexedFieldSyms: Map[SymId, (String, CollectionsTransform.RetargetRewrite.IndexedField)] = Map.empty
   /** Monotonic counter for unique lambda parameter names in [[retargetForEach]]. */
   private[transform] var forEachSeq: Int = 0
   private[transform] var forEachKeyPool: Array[SymId] = Array.empty
@@ -358,37 +357,46 @@ private[transform] trait CollectionsRetarget:
     if indexedFieldSyms.isEmpty then return scala.None
     aa.array match
       case sel: Tree.Select =>
-        indexedFieldSyms.get(sel.sym).flatMap { srcFqn =>
-          val applySym = retargetRewriteSyms.getOrElse((srcFqn, "apply"),
-            byScalaSyms.getOrElse("apply", updateSym))
+        indexedFieldSyms.get(sel.sym).flatMap { (srcFqn, idx) =>
+          val viaSym = retargetRewriteSyms.getOrElse((srcFqn, idx.via),
+            byScalaSyms.getOrElse(idx.via, updateSym))
           Some(Tree.Apply(
-            Tree.Select(sel.qual, applySym, aa.tpe, aa.origin),
-            List(aa.index), applySym, aa.tpe, aa.origin))
+            Tree.Select(sel.qual, viaSym, aa.tpe, aa.origin),
+            List(aa.index), viaSym, aa.tpe, aa.origin))
         }
       case _ => scala.None
 
-  /** An indexed field write — `arr.items[i] = v` -> `arr.update(i, v)`. Same SymId-based
-    * matching as [[retargetIndexedField]]. */
+  /** An indexed field write — `arr.items[i] = v` -> `arr.viaWrite(i, v)`. Same SymId-based
+    * matching as [[retargetIndexedField]]; uses the entry's `viaWrite` method. */
   private[transform] def retargetIndexedFieldWrite(a: Tree.Assign)(using p: Program): Option[Term] =
     if indexedFieldSyms.isEmpty then return scala.None
     a.lhs match
       case aa: Tree.ArrayAccess => aa.array match
         case sel: Tree.Select =>
-          indexedFieldSyms.get(sel.sym).map { srcFqn =>
+          indexedFieldSyms.get(sel.sym).map { (srcFqn, idx) =>
+            val viaWriteSym = retargetRewriteSyms.getOrElse((srcFqn, idx.viaWrite),
+              byScalaSyms.getOrElse(idx.viaWrite, updateSym))
             Tree.Apply(
-              Tree.Select(sel.qual, updateSym, TypeRepr.NoType, a.origin),
-              List(aa.index, a.rhs), updateSym, TypeRepr.NoType, a.origin)
+              Tree.Select(sel.qual, viaWriteSym, TypeRepr.NoType, a.origin),
+              List(aa.index, a.rhs), viaWriteSym, TypeRepr.NoType, a.origin)
           }
         case _ => scala.None
       // children are mapped before this method sees the Assign, so the LHS ArrayAccess has
-      // already become Apply(Select(recv, applySym), List(idx)) — match that shape.
+      // already become Apply(Select(recv, viaSym), List(idx)) — match that shape.
       case app: Tree.Apply => app.fun match
-        case sel: Tree.Select if app.args.size == 1 && methodName(sel.sym) == "apply" =>
+        case sel: Tree.Select if app.args.size == 1 =>
+          val mName = methodName(sel.sym)
           val recv = sel.qual
-          headSym(recv.tpe).flatMap(retargetTargetToSource.get).map { _ =>
-            Tree.Apply(
-              Tree.Select(recv, updateSym, TypeRepr.NoType, a.origin),
-              List(app.args.head, a.rhs), updateSym, TypeRepr.NoType, a.origin)
+          headSym(recv.tpe).flatMap(retargetTargetToSource.get).flatMap { srcFqn =>
+            // find the IndexedField entry whose `via` matches the already-rewritten method name
+            indexedFieldSyms.values.collectFirst {
+              case (src, idx) if src == srcFqn && idx.via == mName =>
+                val viaWriteSym = retargetRewriteSyms.getOrElse((srcFqn, idx.viaWrite),
+                  byScalaSyms.getOrElse(idx.viaWrite, updateSym))
+                Tree.Apply(
+                  Tree.Select(recv, viaWriteSym, TypeRepr.NoType, a.origin),
+                  List(app.args.head, a.rhs), viaWriteSym, TypeRepr.NoType, a.origin)
+            }
           }
         case _ => scala.None
       case _ => scala.None

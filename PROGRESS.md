@@ -1421,10 +1421,7 @@ hit only prose). Grouped rows share one classification; every key is listed.
 | `JsonMatcherTests#toString(JsonMatcher,String[])`, `#toString(Array)` | gdx-test | i | uncited — no `ported/sge/divergence-verdicts.tsv` | comment 3.1ae: sge dropped CharArray builder API |
 | `AssetManager#clear` | gdx | ii | item 11 (untriaged) | no comment recorded; nested synchronized/foreachKey, unattributed |
 | `AssetManager#getAssetFileName` | gdx | ii | item 11 | `return` inside a retargeted ForEach lambda not lowered to `boundary.break` |
-| `FirstPersonCameraController#keyUp(int)` | gdx | ii | item 11 | `IntIntMap#remove(K,int)` missing retargetRewrite row |
 | `ModelLoader#getDependencies`, `ParticleEffectLoader#getDependencies` | gdx | ii | item 11 | Tuple2 construct-then-assign(`_1`/`_2`) pattern unhandled |
-| `Node#calculateBoneTransforms(boolean)`, `ModelInstance#invalidate(Node)` | gdx | ii | item 11 | `IndexedField` retargetRewrite missing for OrderedMap `keys(i)`/`values(i)` |
-| `NodePart#set(NodePart)`, `MapProperties#putAll(MapProperties)` | gdx | ii | item 11 (likely permanent) | `collection-internal`: covariant `putAll` formal has no image on invariant target |
 | `ArraySelection#validate` | gdx | ii | item 11 | `RetargetBoundaryCheck` `IteratorRemove` kind: Chain iterator has no `.remove()` |
 | `SelectBox#getSelectedIndex`, `List#getSelectedIndex` | gdx | ii | K37 | `collection-internal`: `OrderedSet <: ObjectSet` has no image in lls |
 | `AssetLoadingTask#removeDuplicates` | gdx | ii | item 11 | redundant `preserveOrder` write for DynamicArray's fixed-order semantics |
@@ -1442,6 +1439,6 @@ hit only prose). Grouped rows share one classification; every key is listed.
 | `PooledEngine$ComponentPools#clear()` | ashley | ii | item 11 | `TypeRedirectTransform` resolved the lambda formal as the parent `Pool[?]`, not the retyped field type |
 | `ImmutableArrayTests#forbiddenRemoval` | ashley | i | `divergence-verdicts.tsv:141` (`ImmutableArraySuite`, justified) | java `iterator().remove()` throws; Scala's `Iterator` has none — verify read-only instead |
 
-Counts by class: i=5, ii=30, iii=8, iv=3 (46 keys, 28 grouped rows); retired 2026-09-04: `Selection#iterator`, `MapLayers/MapObjects#getByType`; 2026-09-05: `BitmapFont#<init>(…)` (a constructor is never substituted — the key was dead) ; `Selection#toArray` ×2 (ii=23 remain; vfx ×3 reclassified iii).
-Counts by port: visui=5 (iv=3, ii=2), gdx=20 (i=2 test, ii=18 main), gltf=3 (i=2, iii=1),
-textra=4 (ii=4), vfx=3 (ii=3), ai=7 (ii=2, iii=5), ashley=4 (i=1, ii=2, iii=1).
+Counts by class: i=5, ii=25, iii=8, iv=3 (41 keys, 25 grouped rows); retired 2026-09-04: `Selection#iterator`, `MapLayers/MapObjects#getByType`; 2026-09-05: `BitmapFont#<init>(…)` (dead key), `Selection#toArray` x2, vfx x3 reclassified iii; 2026-09-05b: `FirstPersonCameraController#keyUp` (IntIntMap remove Template), `Node#calculateBoneTransforms` + `ModelInstance#invalidate` (IndexedField via), `NodePart#set` + `MapProperties#putAll` (putAll compiles without cast) (ii=18 remain).
+Counts by port: visui=5 (iv=3, ii=2), gdx=15 (i=2 test, ii=13 main), gltf=3 (i=2, iii=1),
+textra=4 (ii=4), vfx=3 (iii=3), ai=7 (ii=2, iii=5), ashley=4 (i=1, ii=2, iii=1).

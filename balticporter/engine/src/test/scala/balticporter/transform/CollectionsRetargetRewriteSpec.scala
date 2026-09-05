@@ -468,7 +468,7 @@ class CollectionsRetargetRewriteSpec extends munit.FunSuite {
   // ---- IndexedField ----
 
   test("IndexedField toString is readable") {
-    assertEquals(IndexedField("items").toString, "IndexedField(items)")
+    assertEquals(IndexedField("items").toString, "IndexedField(items,apply,update)")
   }
 
   test("IndexedField changes the fingerprint") {
