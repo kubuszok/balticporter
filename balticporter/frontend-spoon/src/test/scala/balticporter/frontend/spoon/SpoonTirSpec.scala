@@ -215,3 +215,36 @@ class SpoonTirSpec extends munit.FunSuite:
     // …and a port may write the trailing dot or not and get the same answer.
     assertEquals(AnnotationPolicy(List("com.foo.")).claims("com.foo.Bar"), p.claims("com.foo.Bar"))
   }
+
+  // ---- isFinal on external types (K18) ----
+
+  test("an external FINAL class (java.lang.String) is interned with isFinal = true") {
+    val p = SpoonTir.fromSource(
+      """package demo;
+        |class T { String s; }
+        |""".stripMargin)
+    val strSym = p.symbols.all.find(_.fullName == "java.lang.String")
+    assert(clue(strSym).isDefined)
+    assert(clue(strSym.get.flags.isFinal), "String is a final class")
+  }
+
+  test("an external NON-FINAL class (java.util.ArrayList) is interned with isFinal = false") {
+    val p = SpoonTir.fromSource(
+      """package demo;
+        |import java.util.ArrayList;
+        |class T { ArrayList<String> xs; }
+        |""".stripMargin)
+    val alSym = p.symbols.all.find(_.fullName == "java.util.ArrayList")
+    assert(clue(alSym).isDefined)
+    assert(!clue(alSym.get.flags.isFinal), "ArrayList is not final")
+  }
+
+  test("an external INTERFACE (java.lang.CharSequence) is interned with isFinal = false") {
+    val p = SpoonTir.fromSource(
+      """package demo;
+        |class T { CharSequence cs; }
+        |""".stripMargin)
+    val csSym = p.symbols.all.find(_.fullName == "java.lang.CharSequence")
+    assert(clue(csSym).isDefined)
+    assert(!clue(csSym.get.flags.isFinal), "CharSequence is an interface, never final")
+  }

@@ -1140,17 +1140,21 @@ private[spoon] final class Builder(subs: Substitutions = Substitutions.none,
         case args => AppliedType(head, args.map(tpe))
 
   /** id of a referenced class type — our own or an external stub. Carries `@FunctionalInterface`
-    * from the class file when readable (JS-C52, whether a method reference needs an explicit
-    * lambda). REFUTER polarity (CLAUDE.md §4.56): unreadable means unannotated, the safe direction. */
+    * and `isFinal` from the class file when readable (JS-C52, K18). REFUTER polarity (CLAUDE.md
+    * §4.56): unreadable means unannotated and not-final, the safe direction. */
   private[spoon] def typeSym(r: CtTypeReference[?]): SymId =
-    val anns = try
+    val (anns, flags) = try
       val td = r.getTypeDeclaration
-      if td != null && td.getAnnotations.asScala.exists(
-        _.getAnnotationType.getQualifiedName == "java.lang.FunctionalInterface")
-      then List(Annot(TypeRef(NoPrefix, minter.external("java.lang.FunctionalInterface", "FunctionalInterface")), Nil, Origin.synthetic))
-      else Nil
-    catch case _: Exception => Nil // unreadable class file — refuter polarity: treat as unannotated
-    minter.external(typeKey(r), r.getSimpleName, annotations = anns)
+      if td != null then
+        val a = if td.getAnnotations.asScala.exists(
+          _.getAnnotationType.getQualifiedName == "java.lang.FunctionalInterface")
+        then List(Annot(TypeRef(NoPrefix, minter.external("java.lang.FunctionalInterface", "FunctionalInterface")), Nil, Origin.synthetic))
+        else Nil
+        val f = Flags(isFinal = td.hasModifier(ModifierKind.FINAL))
+        (a, f)
+      else (Nil, Flags())
+    catch case _: Exception => (Nil, Flags()) // unreadable class file — refuter polarity
+    minter.external(typeKey(r), r.getSimpleName, annotations = anns, flags = flags)
 
   private[spoon] def primName(j: String): String = j match
     case "int"     => "Int";  case "long"    => "Long";  case "short"  => "Short"

@@ -238,3 +238,81 @@ class CollectionsReifiedSpec extends PortSuite:
     assert(!cited.exists(_.contains("untouched")),
            "a citation is per DECLARATION, and this one's test is not at a mapped type")
   }
+
+  // -------------------------------------------------------------------------
+  // provably-false: a FINAL retarget target unrelated to the operand (K18)
+  // -------------------------------------------------------------------------
+
+  test("a type test at a FINAL retarget target unrelated to the operand emits the literal false") {
+    // Source is non-generic (like gdx's CharArray) retargeted with FixedType args.
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.SrcArr" -> "demo.Target"),
+      retargetTypeArgs = Map("demo.SrcArr" -> List(
+        CollectionsTransform.RetargetArg.FixedType("scala.Char"))))
+    val p = portAll(List(
+      "SrcArr.java" ->
+        """package demo;
+          |public class SrcArr {}""".stripMargin,
+      "Target.java" ->
+        """package demo;
+          |public final class Target<T> {}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  boolean check(CharSequence cs) { return cs instanceof SrcArr; }
+          |}""".stripMargin), ph)
+    assert(clue(p.out).contains("false"), "the test is provably false and emits the literal")
+    assertNotEmits(p, "isInstanceOf")
+    val reified = ph.boundary(p.after)
+      .filter(_.issue == CollectionBoundaryCheck.Issue.ReifiedOccurrence)
+    assertEquals(clue(reified).size, 1)
+    assert(reified.head.detail.contains("provably false"))
+  }
+
+  test("a type test at a NON-FINAL retarget target keeps the erased instanceof (finality unknown)") {
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.SrcArr" -> "demo.Target"),
+      retargetTypeArgs = Map("demo.SrcArr" -> List(
+        CollectionsTransform.RetargetArg.FixedType("scala.Char"))))
+    val p = portAll(List(
+      "SrcArr.java" ->
+        """package demo;
+          |public class SrcArr {}""".stripMargin,
+      "Target.java" ->
+        """package demo;
+          |public class Target<T> {}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  boolean check(CharSequence cs) { return cs instanceof SrcArr; }
+          |}""".stripMargin), ph)
+    assertEmits(p, "isInstanceOf[demo.Target[?]]")
+    val reified = ph.boundary(p.after)
+      .filter(_.issue == CollectionBoundaryCheck.Issue.ReifiedOccurrence)
+    assertEquals(clue(reified).size, 1)
+    assert(reified.head.detail.contains("erased test"))
+  }
+
+  test("a type test at a FINAL retarget target that EXTENDS the operand keeps the erased instanceof") {
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.SrcArr" -> "demo.Target"),
+      retargetTypeArgs = Map("demo.SrcArr" -> List(
+        CollectionsTransform.RetargetArg.FixedType("scala.Char"))))
+    val p = portAll(List(
+      "SrcArr.java" ->
+        """package demo;
+          |public class SrcArr {}""".stripMargin,
+      "Target.java" ->
+        """package demo;
+          |public final class Target<T> implements java.lang.CharSequence {
+          |  public int length() { return 0; }
+          |  public char charAt(int i) { return 0; }
+          |  public CharSequence subSequence(int s, int e) { return this; }
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  boolean check(CharSequence cs) { return cs instanceof SrcArr; }
+          |}""".stripMargin), ph)
+    assertEmits(p, "isInstanceOf[demo.Target[?]]")
+  }

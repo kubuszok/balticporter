@@ -46,15 +46,16 @@ private[spoon] final class Minter:
     * every ownership-keyed lookup (e.g. `PortabilityCheck`) silently never fires. */
   private[spoon] def external(key: String, name: String, owner: SymId = SymId.None,
                descriptor: Option[Descriptor] = None, info: TypeRepr = NoType,
-               annotations: List[Annot] = Nil): SymId =
+               annotations: List[Annot] = Nil, flags: Flags = Flags()): SymId =
     val id = resolve(key)
-    if !syms.contains(id) then syms(id) = Symbol(id, name, key, Flags(), owner, info, descriptor = descriptor, annotations = annotations)
+    if !syms.contains(id) then syms(id) = Symbol(id, name, key, flags, owner, info, descriptor = descriptor, annotations = annotations)
     else
       // fill holes only — never overwrite a real declaration (that happens via `define`)
       var s = syms(id)
       if descriptor.isDefined && s.descriptor.isEmpty then s = s.copy(descriptor = descriptor)
       if info != NoType && s.info == NoType then s = s.copy(info = info)
       if annotations.nonEmpty && s.annotations.isEmpty then s = s.copy(annotations = annotations)
+      if flags.isFinal && !s.flags.isFinal then s = s.copy(flags = s.flags.copy(isFinal = true))
       syms(id) = s
     id
 

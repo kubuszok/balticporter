@@ -529,7 +529,10 @@ final class CollectionsTransform(
     var next  = program.symbols.all.map(_.id.raw).maxOption.getOrElse(-1) + 1
     def mint(name: String, full: String): SymId =
       val id = SymId(next); next += 1
-      added += Symbol(id, name, full, Flags(), SymId.None, TypeRepr.NoType)
+      // inherit isFinal from the frontend's interned symbol when it read the class file (K18)
+      val flags = program.symbols.all.find(_.fullName == full)
+        .map(s => Flags(isFinal = s.flags.isFinal)).getOrElse(Flags())
+      added += Symbol(id, name, full, flags, SymId.None, TypeRepr.NoType)
       id
     // one scala symbol per DISTINCT scala type (so two java types mapping to the same
     // scala type — e.g. Deque & ArrayDeque → ArrayDeque — share it and its kind).
@@ -1319,7 +1322,9 @@ final class CollectionsTransform(
           a.copy(rhs = coerce(want, a.rhs, wantScoped))
     case ty: Tree.Typed if impossibleShimCast(ty) => ty.expr
     case ty: Tree.Typed   => reifiedCast(stripCastWildcard(ty))
-    case io: Tree.InstanceOf => reifiedTest(wildcardReifiedTest(io))
+    case io: Tree.InstanceOf => wildcardReifiedTest(io) match
+      case io2: Tree.InstanceOf => reifiedTest(io2)
+      case provablyFalse        => provablyFalse
     case fe: Tree.ForEach =>
       retargetForEach(fe).getOrElse {
         val wt = writeThroughEntries(fe)

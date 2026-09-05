@@ -248,16 +248,50 @@ private[transform] trait CollectionsRetarget:
   // // ENGINE-LIMITS K20
 
   /** A type test at a retarget target keeps no type ARGUMENT: java checked the erased class only,
-    * and scalac refuses an unchecked one (E092); the element kind stays untested — counted (K18). */
-  private[transform] def wildcardReifiedTest(t: Tree.InstanceOf)(using p: Program): Tree.InstanceOf =
+    * and scalac refuses an unchecked one (E092); the element kind stays untested — counted (K18).
+    * When the target head is KNOWN final and unrelated to the operand's static type the test is
+    * the literal `false` — no subclass can bridge two unrelated hierarchies (K18). */
+  private[transform] def wildcardReifiedTest(t: Tree.InstanceOf)(using p: Program): Term =
     t.tpt.tpe match
       case TypeRepr.AppliedType(tc @ TypeRepr.TypeRef(_, s), args) if retargetTargetToSource.contains(s) && args.nonEmpty =>
         val wild = TypeRepr.AppliedType(tc, args.map(_ => TypeRepr.TypeBounds(TypeRepr.NoType, TypeRepr.NoType)))
-        seam("type test at retarget type (K18)", TirPrinter.tpe(t.tpt.tpe, TirPrinter.Style.canonical),
-             "erased test — the element kind is not checked", t.origin, SymId.None,
-             issue = CollectionBoundaryCheck.Issue.ReifiedOccurrence)
-        t.copy(tpt = TypeTree(wild, t.tpt.origin))
+        val operandHead = headSym(t.expr.tpe)
+        val targetSym = p.symbolOf(s)
+        // provably false: the target is final and unrelated to the operand's static type.
+        // The target's ancestry must be KNOWN (it has a ClassDef, so the override graph tracks
+        // its parents); unknown ancestry is conservatively treated as possibly related.
+        if targetSym.exists(_.flags.isFinal) && operandHead.exists(oh => oh != s && provablyUnrelated(s, oh)) then
+          val operandFqn = operandHead.flatMap(p.symbolOf).map(_.fullName).getOrElse("?")
+          val targetFqn = targetSym.map(_.fullName).getOrElse("?")
+          seam("type test at retarget type (K18)", TirPrinter.tpe(t.tpt.tpe, TirPrinter.Style.canonical),
+               s"provably false: final target $targetFqn unrelated to $operandFqn", t.origin, SymId.None,
+               issue = CollectionBoundaryCheck.Issue.ReifiedOccurrence)
+          Tree.Literal(Constant.BoolC(false), t.tpe, t.origin)
+        else
+          seam("type test at retarget type (K18)", TirPrinter.tpe(t.tpt.tpe, TirPrinter.Style.canonical),
+               "erased test — the element kind is not checked", t.origin, SymId.None,
+               issue = CollectionBoundaryCheck.Issue.ReifiedOccurrence)
+          t.copy(tpt = TypeTree(wild, t.tpt.origin))
       case _ => t
+
+  /** The target's ancestry IS KNOWN and does NOT include `operand`. Looks up by FQN to find the
+    * FRONTEND's SymId (the minted target SymId is distinct). A class-file fact read from what the
+    * FRONTEND interned; `false` when the ancestry is unknowable (K18, CLAUDE.md §4.56). */
+  private def provablyUnrelated(target: SymId, operand: SymId)(using p: Program): Boolean =
+    val targetFqn = p.symbolOf(target).map(_.fullName).getOrElse("")
+    // find the frontend's own SymId for this type -- its ClassDef carries the parent list
+    val frontendSym = p.symbols.all.find(s => s.fullName == targetFqn && s.id != target)
+    frontendSym match
+      case Some(fs) =>
+        val og = OverrideGraph.build(p)
+        val hasDefinition = p.definitionOf(fs.id).isDefined
+        if !hasDefinition then false // ancestry unknowable for an external stub
+        else
+          val operandFqn = p.symbolOf(operand).map(_.fullName).getOrElse("")
+          !og.ancestorsOf(fs.id).contains(operand) &&
+            !og.externalAncestorsOf(fs.id).exists(_ == operandFqn) &&
+            operand != target
+      case None => false // no frontend symbol, ancestry unknowable
 
   /** A `classOf[T]` literal whose inner type was retarget-mapped — syncs the `const` field to
     * match, since `mapTerm` remaps `tpe` but not the `Constant.ClassOfC` the emitter reads. Counted
