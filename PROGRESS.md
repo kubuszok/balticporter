@@ -1368,7 +1368,7 @@ above; this is the corpus-wide summary.
 
 | port | `.ref` errors | dominant family |
 |---|---:|---|
-| `sge` / `sge-test` | 5 / 5 | 2026-09-05 (was 51): 2 unset private fields under class-to-trait (a correctness defect, card 4g in flight), 1 provably-false type test at a final retarget target (K18, finality unreadable), 2 `@nowarn` inside hand bodies (8b) |
+| `sge` / `sge-test` | 1 / 1 | 2026-09-05 (was 51): one provably-false type test at a FINAL retarget target (`Label`: `CharSequence` vs `DynamicArray[?]`, K18) — finality of an external type is a class-file fact the frontend does not intern yet |
 | `sge-ecs` / `sge-ecs-test` | 0 / 0 | closed |
 | `sge-ecs` drop-in (JVM/JS/Native) | 408 / 408 / 408 | `-no-indent` cascade from the injected `ComponentFactories.scala`, not in `measure-all` |
 | `sge-anim8` | 6 | same `-Wunused` family |
