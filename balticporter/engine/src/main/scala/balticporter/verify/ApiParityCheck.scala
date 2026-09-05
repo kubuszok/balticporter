@@ -119,12 +119,42 @@ object ApiParityCheck:
 
     override def toString: String = s"$path: $kind $name/$arity"
 
-  private def renderType(tpe: Option[Type]): String =
-    tpe.map(_.syntax).getOrElse("")
+  /** A type parameter's NAME is not API: the parameters in scope canonicalise to `$0…` BY
+    * POSITION (the owner's first, then the declaration's own) before any type is rendered, so an
+    * alpha-renaming is no divergence (`CLAUDE.md` §3.5). BOUNDS and ARITY are still compared;
+    * `<: java.lang.Object`, `<: Any` and no bound are one absent bound. */
+  private def substFor(outer: List[String], own: List[String]): Map[String, String] =
+    (outer ++ own).zipWithIndex.collect { case (n, i) if n.nonEmpty => n -> s"$$$i" }.toMap
 
-  private def renderTypeParams(tparams: List[Type.Param]): String =
+  private def tparamNames(tparams: List[Type.Param]): List[String] =
+    tparams.map(_.name.value)
+
+  /** A `Type.Select`'s name is a member of its prefix, never a parameter in scope: not walked. */
+  private def canonicalise(t: Tree, subst: Map[String, String]): Tree =
+    if subst.isEmpty then t
+    else
+      t.transform {
+        case n: Type.Name if subst.contains(n.value) => Type.Name(subst(n.value))
+        case sel: Type.Select                        => sel
+      }
+
+  private def renderType(tpe: Option[Type], subst: Map[String, String]): String =
+    tpe.map(t => canonicalise(t, subst).syntax).getOrElse("")
+
+  private def renderType(tpe: Type, subst: Map[String, String]): String =
+    canonicalise(tpe, subst).syntax
+
+  private def renderTypeParams(tparams: List[Type.Param], subst: Map[String, String]): String =
     if tparams.isEmpty then ""
-    else tparams.map(_.syntax).mkString("[", ", ", "]")
+    else tparams.map(p => canonicalise(stripAbsentBound(p), subst).syntax).mkString("[", ", ", "]")
+
+  private def stripAbsentBound(p: Type.Param): Type.Param =
+    p.tbounds.hi match
+      case Some(hi) if isAbsentBound(hi.syntax) => p.copy(tbounds = p.tbounds.copy(hi = None))
+      case _                                    => p
+
+  private def isAbsentBound(t: String): Boolean =
+    Set("Object", "Any").contains(normalizeTypeName(t.trim.stripPrefix("_root_.")))
 
   private def extractModifiers(mods: List[Mod]): Set[String] =
     mods.flatMap {
@@ -165,8 +195,8 @@ object ApiParityCheck:
           case _ => None
     }.flatten.getOrElse("")
 
-  private def extractParents(templ: Template): List[String] =
-    templ.inits.map(_.tpe.syntax)
+  private def extractParents(templ: Template, subst: Map[String, String]): List[String] =
+    templ.inits.map(i => renderType(i.tpe, subst))
 
   /** A hand-port file whose header names no upstream source: listed, never compared. */
   final case class HandOriginal(path: String, types: List[String], hint: String)
@@ -241,7 +271,12 @@ object ApiParityCheck:
     else if TypeKinds.contains(d.kind) then Some(d.name)
     else None
 
-  private def collectDecls(tree: Tree, path: String, out: collection.mutable.Builder[SurfaceDecl, List[SurfaceDecl]]): Unit =
+  private def collectDecls(
+      tree: Tree,
+      path: String,
+      out: collection.mutable.Builder[SurfaceDecl, List[SurfaceDecl]],
+      outer: List[String] = Nil,
+  ): Unit =
     /** Public or protected -- both are API surface for subclassing. */
     def isAccessible(mods: List[Mod]): Boolean =
       !mods.exists {
@@ -249,10 +284,16 @@ object ApiParityCheck:
         case _              => false
       }
 
-    def walkTemplate(templ: Template, path: String): Unit =
-      templ.body.stats.foreach(member(_, path))
+    def walkTemplate(templ: Template, path: String, scope: List[String]): Unit =
+      templ.body.stats.foreach(member(_, path, scope))
 
-    def ctorParams(name: String, isCase: Boolean, ctor: Ctor.Primary, path: String): Unit =
+    def ctorParams(
+        name: String,
+        isCase: Boolean,
+        ctor: Ctor.Primary,
+        path: String,
+        subst: Map[String, String],
+    ): Unit =
       ctor.paramClauses.flatMap(_.values).foreach { p =>
         val paramKind = p.mods
           .collectFirst {
@@ -267,97 +308,107 @@ object ApiParityCheck:
               kind = k,
               name = p.name.value,
               arity = 0,
-              resultType = renderType(p.decltpe),
+              resultType = renderType(p.decltpe, subst),
               modifiers = extractModifiers(p.mods),
               accessLevel = extractAccessLevel(p.mods),
             )
         }
       }
 
-    def defParamTypes(clauses: List[Term.ParamClause]): List[String] =
-      clauses.flatMap(_.values).map(p => renderType(p.decltpe))
+    def defParamTypes(clauses: List[Term.ParamClause], subst: Map[String, String]): List[String] =
+      clauses.flatMap(_.values).map(p => renderType(p.decltpe, subst))
 
     /** A DIRECT member of a template body, of a top-level scope or of an extension group — the
       * only declarations that are public surface. A declaration inside a method body, a block, a
       * lambda or an INACCESSIBLE template is unreachable from outside and is not walked. */
-    def member(t: Tree, path: String): Unit = t match
+    def member(t: Tree, path: String, scope: List[String]): Unit = t match
       case d: Defn.Class if isAccessible(d.mods) =>
+        val own   = tparamNames(d.tparamClause.values)
+        val subst = substFor(scope, own)
         out += SurfaceDecl(
           path = path,
           kind = "class",
           name = d.name.value,
           arity = 0,
-          typeParams = renderTypeParams(d.tparamClause.values),
-          parents = extractParents(d.templ),
+          typeParams = renderTypeParams(d.tparamClause.values, subst),
+          parents = extractParents(d.templ, subst),
           modifiers = extractModifiers(d.mods),
           accessLevel = extractAccessLevel(d.mods),
         )
-        ctorParams(d.name.value, d.mods.exists(_.isInstanceOf[Mod.Case]), d.ctor, path)
-        walkTemplate(d.templ, s"$path/${d.name.value}")
+        ctorParams(d.name.value, d.mods.exists(_.isInstanceOf[Mod.Case]), d.ctor, path, subst)
+        walkTemplate(d.templ, s"$path/${d.name.value}", scope ++ own)
       case d: Defn.Trait if isAccessible(d.mods) =>
+        val own   = tparamNames(d.tparamClause.values)
+        val subst = substFor(scope, own)
         out += SurfaceDecl(
           path = path,
           kind = "trait",
           name = d.name.value,
           arity = 0,
-          typeParams = renderTypeParams(d.tparamClause.values),
-          parents = extractParents(d.templ),
+          typeParams = renderTypeParams(d.tparamClause.values, subst),
+          parents = extractParents(d.templ, subst),
           modifiers = extractModifiers(d.mods),
           accessLevel = extractAccessLevel(d.mods),
         )
-        walkTemplate(d.templ, s"$path/${d.name.value}")
+        walkTemplate(d.templ, s"$path/${d.name.value}", scope ++ own)
       case d: Defn.Object if isAccessible(d.mods) =>
         out += SurfaceDecl(
           path = path,
           kind = "object",
           name = d.name.value,
           arity = 0,
-          parents = extractParents(d.templ),
+          parents = extractParents(d.templ, substFor(scope, Nil)),
           modifiers = extractModifiers(d.mods),
           accessLevel = extractAccessLevel(d.mods),
         )
-        walkTemplate(d.templ, s"$path/${d.name.value}$$")
+        walkTemplate(d.templ, s"$path/${d.name.value}$$", scope)
       case d: Defn.Enum if isAccessible(d.mods) =>
+        val own   = tparamNames(d.tparamClause.values)
+        val subst = substFor(scope, own)
         out += SurfaceDecl(
           path = path,
           kind = "enum",
           name = d.name.value,
           arity = 0,
-          typeParams = renderTypeParams(d.tparamClause.values),
-          parents = extractParents(d.templ),
+          typeParams = renderTypeParams(d.tparamClause.values, subst),
+          parents = extractParents(d.templ, subst),
           modifiers = extractModifiers(d.mods),
           accessLevel = extractAccessLevel(d.mods),
         )
-        ctorParams(d.name.value, isCase = false, d.ctor, path)
-        walkTemplate(d.templ, s"$path/${d.name.value}")
+        ctorParams(d.name.value, isCase = false, d.ctor, path, subst)
+        walkTemplate(d.templ, s"$path/${d.name.value}", scope ++ own)
       case d: Defn.EnumCase =>
         out += SurfaceDecl(path, "case", d.name.value, 0)
       case d: Defn.RepeatedEnumCase =>
         d.cases.foreach(c => out += SurfaceDecl(path, "case", c.value, 0))
       case d: Defn.Def if isAccessible(d.mods) =>
         val clauses = d.paramClauseGroups.flatMap(_.paramClauses)
+        val tps     = d.paramClauseGroups.flatMap(_.tparamClause.values)
+        val subst   = substFor(scope, tparamNames(tps))
         out += SurfaceDecl(
           path = path,
           kind = "def",
           name = d.name.value,
           arity = defArity(clauses),
-          paramTypes = defParamTypes(clauses),
-          resultType = renderType(d.decltpe),
-          typeParams = renderTypeParams(d.paramClauseGroups.flatMap(_.tparamClause.values)),
+          paramTypes = defParamTypes(clauses, subst),
+          resultType = renderType(d.decltpe, subst),
+          typeParams = renderTypeParams(tps, subst),
           modifiers = extractModifiers(d.mods),
           accessLevel = extractAccessLevel(d.mods),
           targetName = extractTargetName(d.mods),
         )
       case d: Decl.Def if isAccessible(d.mods) =>
         val clauses = d.paramClauseGroups.flatMap(_.paramClauses)
+        val tps     = d.paramClauseGroups.flatMap(_.tparamClause.values)
+        val subst   = substFor(scope, tparamNames(tps))
         out += SurfaceDecl(
           path = path,
           kind = "def",
           name = d.name.value,
           arity = defArity(clauses),
-          paramTypes = defParamTypes(clauses),
-          resultType = d.decltpe.syntax,
-          typeParams = renderTypeParams(d.paramClauseGroups.flatMap(_.tparamClause.values)),
+          paramTypes = defParamTypes(clauses, subst),
+          resultType = renderType(d.decltpe, subst),
+          typeParams = renderTypeParams(tps, subst),
           modifiers = extractModifiers(d.mods),
           accessLevel = extractAccessLevel(d.mods),
           targetName = extractTargetName(d.mods),
@@ -370,7 +421,7 @@ object ApiParityCheck:
               kind = "val",
               name = p.name.value,
               arity = 0,
-              resultType = renderType(d.decltpe),
+              resultType = renderType(d.decltpe, substFor(scope, Nil)),
               modifiers = extractModifiers(d.mods),
               accessLevel = extractAccessLevel(d.mods),
             )
@@ -384,7 +435,7 @@ object ApiParityCheck:
               kind = "val",
               name = p.name.value,
               arity = 0,
-              resultType = d.decltpe.syntax,
+              resultType = renderType(d.decltpe, substFor(scope, Nil)),
               modifiers = extractModifiers(d.mods),
               accessLevel = extractAccessLevel(d.mods),
             )
@@ -398,7 +449,7 @@ object ApiParityCheck:
               kind = "var",
               name = p.name.value,
               arity = 0,
-              resultType = renderType(d.decltpe),
+              resultType = renderType(d.decltpe, substFor(scope, Nil)),
               modifiers = extractModifiers(d.mods),
               accessLevel = extractAccessLevel(d.mods),
             )
@@ -412,7 +463,7 @@ object ApiParityCheck:
               kind = "var",
               name = p.name.value,
               arity = 0,
-              resultType = d.decltpe.syntax,
+              resultType = renderType(d.decltpe, substFor(scope, Nil)),
               modifiers = extractModifiers(d.mods),
               accessLevel = extractAccessLevel(d.mods),
             )
@@ -424,7 +475,8 @@ object ApiParityCheck:
           kind = "type",
           name = d.name.value,
           arity = 0,
-          typeParams = renderTypeParams(d.tparamClause.values),
+          typeParams = renderTypeParams(
+            d.tparamClause.values, substFor(scope, tparamNames(d.tparamClause.values))),
           modifiers = extractModifiers(d.mods),
           accessLevel = extractAccessLevel(d.mods),
         )
@@ -434,22 +486,24 @@ object ApiParityCheck:
           kind = "type",
           name = d.name.value,
           arity = 0,
-          typeParams = renderTypeParams(d.tparamClause.values),
+          typeParams = renderTypeParams(
+            d.tparamClause.values, substFor(scope, tparamNames(d.tparamClause.values))),
           modifiers = extractModifiers(d.mods),
           accessLevel = extractAccessLevel(d.mods),
         )
       case d: Defn.ExtensionGroup =>
+        val inner = scope ++ tparamNames(d.paramClauseGroup.toList.flatMap(_.tparamClause.values))
         d.body match
-          case b: Term.Block => b.stats.foreach(member(_, path))
-          case one           => member(one, path)
+          case b: Term.Block => b.stats.foreach(member(_, path, inner))
+          case one           => member(one, path, inner)
       case _ => ()
 
     /** Source, packages and package objects carry surface without being it. */
     def top(t: Tree, path: String): Unit = t match
       case s: Source     => s.stats.foreach(top(_, path))
       case p: Pkg        => p.stats.foreach(top(_, path))
-      case p: Pkg.Object => p.templ.body.stats.foreach(member(_, path))
-      case other         => member(other, path)
+      case p: Pkg.Object => p.templ.body.stats.foreach(member(_, path, outer))
+      case other         => member(other, path, outer)
 
     top(tree, path)
 

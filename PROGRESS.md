@@ -1478,9 +1478,9 @@ Errors by upstream file: `Array` 28, `ArrayMap` 23, `TimSort` 22, `ComparableTim
 By kind: `E008` 88 / `E006` 18 at the libGDX types outside the twelve (`ArraySupplier`,
 `GdxRuntimeException`, `Null`, `Collections`, `reflect`, `Predicate`, `RandomXS128`) and `E052` 43
 reassigned java parameters (no `mutable-params` phase configured). `api-parity` after the precision
-fix: **425 rows, 0 unclassified** — port-extra 169, hand-port-extra 102, signature 96, factory 30,
-null-model 10, static-placement 8, hand-original 6 (lls's own files), mutability 2, opaque 1,
-collection-retarget 1. Residues: `jdk-surface` 0, no `collection-*` lanes (no `CollectionsTransform`),
+fixes: **388 rows, 0 unclassified** — port-extra 169, hand-port-extra 102, signature 58, factory 30,
+null-model 12, static-placement 8, hand-original 6 (lls's own files), mutability 2, opaque 1,
+collection-retarget 0. Residues: `jdk-surface` 0, no `collection-*` lanes (no `CollectionsTransform`),
 `portability(all)` 0, omissions 18, `overload-risk` 12, `heap-pollution` 5, `idiom(refused)` 5,
 `manifest` 0, `base-surface` 0, port map 28 types / 556 members.
 

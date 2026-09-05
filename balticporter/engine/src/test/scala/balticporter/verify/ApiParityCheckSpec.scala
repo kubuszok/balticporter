@@ -100,7 +100,7 @@ class ApiParityCheckSpec extends munit.FunSuite:
     assertEquals(bar.resultType, "Boolean")
   }
 
-  test("parseSurface extracts type params") {
+  test("parseSurface extracts type params, canonicalised by position") {
     val src =
       """class Container[T]:
         |  def get[U <: T](key: String): U = ???
@@ -110,9 +110,10 @@ class ApiParityCheckSpec extends munit.FunSuite:
     assert(result.isRight)
     val decls = result.toOption.get
     val container = decls.find(d => d.name == "Container").get
-    assertEquals(container.typeParams, "[T]")
+    assertEquals(container.typeParams, "[$0]")
     val get = decls.find(d => d.name == "get").get
-    assertEquals(get.typeParams, "[U <: T]")
+    assertEquals(get.typeParams, "[$1 <: $0]")
+    assertEquals(get.resultType, "$1")
   }
 
   test("parseSurface extracts parents") {
@@ -736,6 +737,76 @@ class ApiParityCheckSpec extends munit.FunSuite:
     val names = decls.map(_.name).toSet
     assert(names.contains("inPackageObject"), s"package-object member lost: $decls")
     assert(names.contains("shout"), s"extension method lost: $decls")
+  }
+
+  // ---- a type parameter's NAME is not API (alpha-equivalence, CLAUDE.md §3.5) ----
+
+  private def divergences(emittedSrc: String, referenceSrc: String): List[ApiParityCheck.Divergence] =
+    val e = ApiParityCheck.parseSurface(List(writeTempScala("C.scala", emittedSrc))).toOption.get
+    val r = ApiParityCheck.parseSurface(List(writeTempScala("C.scala", referenceSrc))).toOption.get
+    ApiParityCheck.compare(e, r, Map.empty)
+
+  test("a consistent alpha-renaming of a class type parameter is no divergence") {
+    val divs = divergences(
+      """class C[T]:
+        |  def add(x: T): T = x
+        |""".stripMargin,
+      """class C[A]:
+        |  def add(x: A): A = x
+        |""".stripMargin)
+    assertEquals(divs.map(d => (d.family, d.detail)), Nil)
+  }
+
+  test("a BOUND still diverges: one type-params row, not one per member") {
+    val divs = divergences(
+      """class C[T <: Comparable[T]]:
+        |  def add(x: T): T = x
+        |""".stripMargin,
+      """class C[A]:
+        |  def add(x: A): A = x
+        |""".stripMargin)
+    assertEquals(divs.map(_.family), List("signature"), divs.map(_.detail).toString)
+    assert(divs.head.detail.startsWith("type params differ"), divs.head.detail)
+  }
+
+  test("ARITY still diverges: a parameter on one side only") {
+    val divs = divergences("class C[T]", "class C[A, B]")
+    assertEquals(divs.map(_.family), List("signature"), divs.map(_.detail).toString)
+    assert(divs.head.detail.startsWith("type params differ"), divs.head.detail)
+  }
+
+  test("a member's OWN type parameter is alpha-renamed too, under the owner's") {
+    val divs = divergences(
+      """class C[T]:
+        |  def map[U](f: U): T = ???
+        |""".stripMargin,
+      """class C[A]:
+        |  def map[B](f: B): A = ???
+        |""".stripMargin)
+    assertEquals(divs.map(d => (d.family, d.detail)), Nil)
+  }
+
+  test("`T <: java.lang.Object` and an unbounded `A` are one absent bound") {
+    val divs = divergences(
+      """class C[T <: java.lang.Object]:
+        |  def id(x: T): T = x
+        |""".stripMargin,
+      """class C[A]:
+        |  def id(x: A): A = x
+        |""".stripMargin)
+    assertEquals(divs.map(d => (d.family, d.detail)), Nil)
+  }
+
+  test("a member type parameter standing where the OWNER's stands still diverges") {
+    val divs = divergences(
+      """class C[K, V]:
+        |  def get[T](key: T): V = ???
+        |""".stripMargin,
+      """class C[K, V]:
+        |  def get(key: K): V = ???
+        |""".stripMargin)
+    assertEquals(divs.map(_.family), List("signature"), divs.map(_.detail).toString)
+    assert(divs.head.detail.startsWith("param 0 type differs"), divs.head.detail)
   }
 
   // ---- helpers ----
