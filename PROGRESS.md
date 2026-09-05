@@ -1571,9 +1571,15 @@ rename must ask ownership, §4.56); (iii) 4 singles (`Json#newInstance` catch-pa
 seven libGDX helpers they reference (`RandomXS128`, `ArraySupplier`, `Collections`, `GdxRuntimeException`, `Null`,
 `Predicate`, `reflect.ArrayReflection`), universal phases only — **19 files, 0 JVM errors** (was 149 as a
 twelve-file census); lls's own 52-file suite compiles against that java-shaped API with 536 errors, the gauge the
-rungs must drive down. The first rungs are ORDERED by experiments on this 19-file port (a run is ~2 minutes), then
-libGDX core extends the lls port (`LibgdxPolicy.core = LlsPolicy.core.extendedBy(…)`) instead of retargeting onto
-the lls jar.
+rungs must drive down. Rung experiments 2026-09-05 (`LLS_RUNGS=…`, `--rungs=`): `nullable` (22 `@Null` -> `lowlevel.Nullable`)
+0 errors, gauge 536; `ordering` (`java.util.Comparator` -> `scala.math.Ordering`, 30 sites) 0 errors, gauge 532; both 0 errors,
+gauge 532 — independent and free, so their order is not a question. **With both, lls compiles on JVM 0 / JS 0 / Native 0**
+(`.ref` 72, informational); `java.lang.reflect.Array.newInstance` behind `ArrayReflection` compiles on JS/Native — the
+type-class replacement (MkArray) is a run-time and design question, not a compile blocker. The suite gauge is bound to
+lls's API SHAPE (factories, operators, `size` as a def, ByRef variants), a parity question, not a kept decision: the
+usable-test oracle is a DIFFERENTIAL lane (lls's suite against the emitted port through an enumerated name/shim table,
+as `textra-diff` does). Then libGDX core extends the lls port (`LibgdxPolicy.core = LlsPolicy.core.extendedBy(…)`) instead
+of retargeting onto the lls jar.
 
 Rungs (decision | footprint in gdx/src | platform | phase today): L1 bean properties + nullary arity (1,422/928;
 none; yes) · L2 collections onto lls + Comparator->Ordering (989 uses, 55; partly unblocks JS/Native; yes) ·
