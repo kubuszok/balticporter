@@ -1958,13 +1958,6 @@ object LibgdxPolicy:
                |  val selected: lowlevel.util.OrderedSet[T] = this.selection$field.items
                |  return if (selected.size == 0) -1 else this.items$field.indexOf(selected.first)
                |}""".stripMargin,
-           // wave 3.1t: BitmapFont secondary ctor — `Array.with(arr)` is a static call on the
-           // retarget source's companion, which the retarget mechanism cannot rewrite (it handles
-           // INSTANCE calls). Replace with `DynamicArray.wrap(arr)` which zero-copy wraps the array.
-           "com.badlogic.gdx.graphics.g2d.BitmapFont#<init>(BitmapFontData,TextureRegion,boolean)" ->
-             """{
-               |  this(data, if (region != null) lowlevel.util.DynamicArray.wrap(scala.Array[sge.graphics.g2d.TextureRegion](region)) else null.asInstanceOf[lowlevel.util.DynamicArray[sge.graphics.g2d.TextureRegion]], integer)
-               |}""".stripMargin,
            // wave 3.1t: removeDuplicates — java set/restore preserveOrder which is a val in
            // DynamicArray (immutable constructor parameter). DynamicArray.removeIndex always
            // preserves order (unlike gdx Array which optionally swaps the last element in),
