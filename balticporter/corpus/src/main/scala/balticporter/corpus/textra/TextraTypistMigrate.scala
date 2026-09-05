@@ -123,36 +123,6 @@ object TextraTypistPolicy:
         // SelectBox selectedIndex: lls `OrderedSet` does NOT extend `ObjectSet` (K37), inline
         // `selection.items` directly. Font ctor/loadJSON: counted `CollectChainedCall` residue.
         new balticporter.transform.MethodBodyTransform(Map(
-          // --- (1) Parser: collect keys directly into tokens ---
-          "com.github.tommyettinger.textra.Parser#compileTokenPattern" ->
-            """{
-              |  val sb: java.lang.StringBuilder = new java.lang.StringBuilder()
-              |  sb.append("(?<!\\{)\\{(")
-              |  val tokens: lowlevel.util.DynamicArray[java.lang.String] = lowlevel.util.DynamicArray.apply[java.lang.String]()
-              |  sge.textra.TypingConfig.EFFECT_START_TOKENS.foreachKey(tokens.add)
-              |  sge.textra.TypingConfig.EFFECT_END_TOKENS.foreachKey(tokens.add)
-              |  for (token <- sge.textra.InternalToken.values()) {
-              |    tokens.add(token.name)
-              |  }
-              |  { var i: scala.Int = 0; while (i < tokens.size) { {
-              |    sb.append(tokens.apply(i))
-              |    if ((i + 1) < tokens.size) sb.append('|') else ()
-              |  }; i = i + 1 } }
-              |  sb.append(")(?:\\=([^\\{\\}]+))?\\}")
-              |  return regexodus.Pattern.compile(sb.toString(), regexodus.REFlags.IGNORE_CASE)
-              |}""".stripMargin,
-          "com.github.tommyettinger.textra.Parser#getResetReplacement" ->
-            """{
-              |  val tokens: lowlevel.util.DynamicArray[java.lang.String] = lowlevel.util.DynamicArray.apply[java.lang.String]()
-              |  sge.textra.TypingConfig.EFFECT_END_TOKENS.foreachKey(tokens.add)
-              |  tokens.add("NORMAL")
-              |  val sb: java.lang.StringBuilder = new java.lang.StringBuilder("[ ]")
-              |  for (token <- tokens) {
-              |    sb.append('{').append(token).append('}')
-              |  }
-              |  sge.textra.TypingConfig.dirtyEffectMaps = false
-              |  return sb.toString()
-              |}""".stripMargin,
           // --- (2) selectedIndex: inline selection.items usage ---
           "com.github.tommyettinger.textra.TextraListBox#getSelectedIndex" ->
             """{
