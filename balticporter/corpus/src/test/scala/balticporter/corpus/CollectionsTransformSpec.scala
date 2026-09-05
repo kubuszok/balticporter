@@ -4,7 +4,7 @@ import balticporter.core.FrontendConfig
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.testkit.{PortSuite, Ported}
-import balticporter.tir.{Phase, Pipeline, PolicyBinder, RunScope, UsageKind}
+import balticporter.tir.{Decision, Phase, Pipeline, PolicyBinder, RunScope, UsageKind}
 import balticporter.transform.{CollectionBoundaryCheck, CollectionsTransform, NullaryArityTransform, RetargetBoundaryCheck}
 
 import java.nio.file.Files
@@ -2258,12 +2258,14 @@ class CollectionsTransformSpec extends PortSuite:
     if nullary then portAll(java, ph, new NullaryArityTransform(balticporter.tir.RuleScope.Only(Set("demo"))))
     else portAll(java, ph)
 
-  test("a Chain ending in `iterator` keeps its members under the JavaIterator wrap — parenless Select") {
-    assertEmits(chainIteratorFixture(nullary = true), "JavaIterator.from(this.selected.orderedItems.iterator)")
+  test("a Chain ending in `iterator` on OrderedSet emits JavaIterator.removing — parenless Select") {
+    assertEmits(chainIteratorFixture(nullary = true), "JavaIterator.removing(")
+    assertNotEmits(chainIteratorFixture(nullary = true), "JavaIterator.from(")
   }
 
-  test("a Chain ending in `iterator` keeps its members under the JavaIterator wrap — Apply") {
-    assertEmits(chainIteratorFixture(nullary = false), "JavaIterator.from(this.selected.orderedItems.iterator)")
+  test("a Chain ending in `iterator` on OrderedSet emits JavaIterator.removing — Apply") {
+    assertEmits(chainIteratorFixture(nullary = false), "JavaIterator.removing(")
+    assertNotEmits(chainIteratorFixture(nullary = false), "JavaIterator.from(")
   }
 
   test("set-iterator retarget: toArray Template, hasNext Chain, typed chain at a non-JavaIterator slot") {
@@ -2685,4 +2687,167 @@ class CollectionsTransformSpec extends PortSuite:
     // the first inner label IS lifted -- boundary wraps the outer, so emitted code is in shape
     assertEmitsMatch(p, """boundary\[""")
     assertEmitsMatch(p, """boundary\.break\(""")
+  }
+
+  // --- K36: removing iterator over a retargeted set ---
+
+  test("a Chain(orderedItems, iterator) on a retarget target OrderedSet emits JavaIterator.removing") {
+    import CollectionsTransform.RetargetRewrite.*
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.OSet" -> "lowlevel.util.OrderedSet"),
+      retargetRewrites = Map("demo.OSet" -> Map(("iterator", 0) -> Chain(List("orderedItems", "iterator")))))
+    val p = portAll(List(
+      "OSet.java" ->
+        """package demo;
+          |public class OSet<T> implements Iterable<T> {
+          |  public java.util.Iterator<T> iterator() { return null; }
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses<T> {
+          |  java.util.Iterator<T> iter(OSet<T> s) { return s.iterator(); }
+          |}""".stripMargin), ph)
+    assertEmits(p, "JavaIterator.removing(")
+    assertEmits(p, "orderedItems.size")
+    assertEmits(p, "orderedItems.apply(")
+    assertEmits(p, ".removeIndex(")
+    assertNotEmits(p, "JavaIterator.from(")
+  }
+
+  // --- K36: DropWrite — dropped field write, read mapped, decision recorded ---
+
+  test("DropWrite drops the write, maps the read to readTarget, and records DroppedFieldWrite") {
+    import CollectionsTransform.RetargetRewrite.*
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.Arr" -> "demo.Target"),
+      retargetRewrites = Map("demo.Arr" -> Map(
+        ("flag", 0) -> DropWrite("flag", "flagVal", "Target.flagVal is a constructor parameter"))))
+    val p = portAll(List(
+      "Arr.java" ->
+        """package demo;
+          |public class Arr { public boolean flag; }""".stripMargin,
+      "Target.java" ->
+        """package demo;
+          |public class Target { public boolean flagVal() { return true; } }""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  boolean read(Arr a) { return a.flag; }
+          |  void write(Arr a) { a.flag = true; }
+          |}""".stripMargin), ph)
+    // read side: renamed to flagVal
+    assertEmits(p, ".flagVal")
+    // write side: side-effect-free RHS removed entirely (no `()` in statement position)
+    assertNotEmits(p, ".flag = true")
+    assertNotEmits(p, ".flagVal = true")
+    assertNotEmits(p, "();")  // no stray unit literal
+    // decision recorded
+    assertDecides(p, Decision.Kind.DroppedFieldWrite, "flag")
+  }
+
+  test("DropWrite with an effectful RHS keeps the RHS as a bare expression statement") {
+    import CollectionsTransform.RetargetRewrite.*
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.Arr" -> "demo.Target"),
+      retargetRewrites = Map("demo.Arr" -> Map(
+        ("flag", 0) -> DropWrite("flag", "flagVal", "Target.flagVal is a constructor parameter"))))
+    val p = portAll(List(
+      "Arr.java" ->
+        """package demo;
+          |public class Arr { public boolean flag; }""".stripMargin,
+      "Target.java" ->
+        """package demo;
+          |public class Target { public boolean flagVal() { return true; } }""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  void write(Arr a) { a.flag = compute(); }
+          |  static boolean compute() { return true; }
+          |}""".stripMargin), ph)
+    // effectful RHS kept as bare expression
+    assertEmits(p, "compute()")
+    assertNotEmits(p, ".flagVal = ")
+    assertDecides(p, Decision.Kind.DroppedFieldWrite, "flag")
+  }
+
+  // --- K36: forEach trailing unit ---
+
+  test("a retarget forEach whose last statement is a value-returning call appends ()") {
+    import CollectionsTransform.RetargetRewrite.*
+    val ph = new CollectionsTransform(
+      retarget = Map("demo.Coll" -> "demo.Target"),
+      retargetRewrites = Map("demo.Coll" -> Map(
+        ("entries", 0) -> ForEach("foreach", 1),
+        ("valueOp", 1) -> Template("{ val bpK = $0; val bpOld = $recv.get(bpK); $recv.put(bpK, bpOld); bpOld }"))))
+    val p = portAll(List(
+      "Coll.java" ->
+        """package demo;
+          |public class Coll<T> implements Iterable<T> {
+          |  public java.util.Iterator<T> iterator() { return null; }
+          |  public int valueOp(T key) { return 0; }
+          |}""".stripMargin,
+      "Target.java" ->
+        """package demo;
+          |public class Target<T> {
+          |  public void foreach(java.util.function.Consumer<T> f) {}
+          |  public int get(T key) { return 0; }
+          |  public int put(T key, int v) { return 0; }
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses {
+          |  void test(Coll<String> c) { for (String s : c) c.valueOp(s); }
+          |}""".stripMargin), ph)
+    // the Template's trailing value is replaced with () to suppress E190/E129
+    assertEmits(p, "bpOld); () }")
+    assertNotEmits(p, "; bpOld }")
+  }
+
+  // --- K36: ObjectMap$Keys toArray Template ---
+
+  test("map-iterator toArray Template builds a DynamicArray from the iterator via foreach") {
+    import CollectionsTransform.RetargetRewrite.*
+    import CollectionsTransform.RetargetArg.*
+    val ph = new CollectionsTransform(
+      retarget = Map(
+        "demo.MyMap" -> "lowlevel.util.ObjectMap",
+        "demo.MyMap$Keys" -> "scala.collection.Iterator",
+        "demo.Arr" -> "lowlevel.util.DynamicArray"),
+      retargetRewrites = Map(
+        "demo.MyMap" -> Map(
+          ("keys", 0) -> Collect("foreachKey", "lowlevel.util.DynamicArray")),
+        "demo.MyMap$Keys" -> Map(
+          ("hasNext", 0) -> Chain(List("hasNext")),
+          ("toArray", 0) -> Template("{ given lowlevel.MkArray[$T0] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[$T0]]; val bpR: lowlevel.util.DynamicArray[$T0] = lowlevel.util.DynamicArray[$T0](); $recv.foreach(bpR.add); bpR }"),
+          ("toArray", 1) -> Template("{ val bpA = $0; $recv.foreach(bpA.add); bpA }")),
+        "demo.Arr" -> Map(
+          ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"))),
+      retargetTypeArgs = Map(
+        "demo.MyMap$Keys" -> List(SourceArg(0))))
+    val p = portAll(List(
+      "Arr.java" ->
+        """package demo;
+          |public class Arr<T> { public Arr() {} public void add(T t) {} }""".stripMargin,
+      "MyMap.java" ->
+        """package demo;
+          |public class MyMap<K, V> {
+          |  public static class Keys<K> implements java.util.Iterator<K> {
+          |    public Arr<K> toArray() { return new Arr<K>(); }
+          |    public Arr<K> toArray(Arr<K> a) { return a; }
+          |    public boolean hasNext() { return false; }
+          |    public K next() { return null; }
+          |  }
+          |  public Keys<K> keys() { return new Keys<K>(); }
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses<K, V> {
+          |  Arr<K> collect(MyMap<K, V> m) { return m.keys().toArray(); }
+          |  Arr<K> collectInto(MyMap<K, V> m, Arr<K> a) { return m.keys().toArray(a); }
+          |}""".stripMargin), ph)
+    // toArray(0): builds a DynamicArray from the iterator via foreach
+    assertEmits(p, "foreach(bpR.add)")
+    assertEmits(p, "lowlevel.util.DynamicArray")
+    // toArray(1): collects into the provided array
+    assertEmits(p, ".foreach(bpA.add); bpA")
   }

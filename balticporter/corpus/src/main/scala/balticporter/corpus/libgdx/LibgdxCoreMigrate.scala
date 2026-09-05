@@ -539,8 +539,16 @@ object LibgdxPolicy:
         ("get", 1)     -> Template("$recv.get($0).orNull"),
       ),
       // `it.hasNext()` is parenless on scala's Iterator
-      "com.badlogic.gdx.utils.ObjectMap$Keys"        -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
-      "com.badlogic.gdx.utils.ObjectMap$Values"      -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      "com.badlogic.gdx.utils.ObjectMap$Keys"        -> Map(
+        ("hasNext", 0) -> Chain(List("hasNext")),
+        ("toArray", 0) -> Template("{ given lowlevel.MkArray[$T0] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[$T0]]; val bpR: lowlevel.util.DynamicArray[$T0] = lowlevel.util.DynamicArray[$T0](); $recv.foreach(bpR.add); bpR }"),
+        ("toArray", 1) -> Template("{ val bpA = $0; $recv.foreach(bpA.add); bpA }"),
+      ),
+      "com.badlogic.gdx.utils.ObjectMap$Values"      -> Map(
+        ("hasNext", 0) -> Chain(List("hasNext")),
+        ("toArray", 0) -> Template("{ given lowlevel.MkArray[$T0] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[$T0]]; val bpR: lowlevel.util.DynamicArray[$T0] = lowlevel.util.DynamicArray[$T0](); $recv.foreach(bpR.add); bpR }"),
+        ("toArray", 1) -> Template("{ val bpA = $0; $recv.foreach(bpA.add); bpA }"),
+      ),
       "com.badlogic.gdx.utils.ObjectMap$Entries"     -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
       "com.badlogic.gdx.utils.IntMap$Keys"           -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
       "com.badlogic.gdx.utils.IntMap$Values"         -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
@@ -815,9 +823,9 @@ object LibgdxPolicy:
         // wave 3.1o: field-write images. DynamicArray exposes `size` as a METHOD (getter only),
         // so `arr.size = n` must become `arr.setSize(n)`. `setSize` handles both growing (pads
         // with defaults) and shrinking (truncates), which is java's Array.size field semantics.
-        // `arr.ordered` -> `arr.preserveOrder` (boolean, read-only on DynamicArray).
+        // `arr.ordered` read -> `arr.preserveOrder`; write dropped (immutable ctor param, K36).
         ("size", 0)         -> FieldWrite("size", "setSize"),
-        ("ordered", 0)      -> Rename("preserveOrder"),
+        ("ordered", 0)      -> DropWrite("ordered", "preserveOrder", "DynamicArray always preserves order; preserveOrder is a constructor parameter"),
         ("items", 0)        -> IndexedField("items"),
         // wave 3.1p: toArray. DynamicArray.toArray is parenless (def toArray: Array[A], ClassTag-based).
         // Java's Array.toArray() -> da.toArray (parenless). Java's Array.toArray(Class) drops the
@@ -866,7 +874,7 @@ object LibgdxPolicy:
         ("empty", 0)        -> Rename("isEmpty"),
         ("iterator", 0)     -> Chain(List("iterator")),
         ("size", 0)         -> FieldWrite("size", "setSize"),
-        ("ordered", 0)      -> Rename("preserveOrder"),
+        ("ordered", 0)      -> DropWrite("ordered", "preserveOrder", "DynamicArray always preserves order; preserveOrder is a constructor parameter"),
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
@@ -901,7 +909,7 @@ object LibgdxPolicy:
         ("empty", 0)        -> Rename("isEmpty"),
         ("iterator", 0)     -> Chain(List("iterator")),
         ("size", 0)         -> FieldWrite("size", "setSize"),
-        ("ordered", 0)      -> Rename("preserveOrder"),
+        ("ordered", 0)      -> DropWrite("ordered", "preserveOrder", "DynamicArray always preserves order; preserveOrder is a constructor parameter"),
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
@@ -928,7 +936,7 @@ object LibgdxPolicy:
         ("empty", 0)    -> Rename("isEmpty"),
         ("iterator", 0) -> Chain(List("iterator")),
         ("size", 0)     -> FieldWrite("size", "setSize"),
-        ("ordered", 0)  -> Rename("preserveOrder"),
+        ("ordered", 0)  -> DropWrite("ordered", "preserveOrder", "DynamicArray always preserves order; preserveOrder is a constructor parameter"),
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
@@ -967,7 +975,7 @@ object LibgdxPolicy:
         ("empty", 0)    -> Rename("isEmpty"),
         ("iterator", 0) -> Chain(List("iterator")),
         ("size", 0)     -> FieldWrite("size", "setSize"),
-        ("ordered", 0)  -> Rename("preserveOrder"),
+        ("ordered", 0)  -> DropWrite("ordered", "preserveOrder", "DynamicArray always preserves order; preserveOrder is a constructor parameter"),
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
@@ -1001,7 +1009,7 @@ object LibgdxPolicy:
         ("empty", 0)    -> Rename("isEmpty"),
         ("iterator", 0) -> Chain(List("iterator")),
         ("size", 0)     -> FieldWrite("size", "setSize"),
-        ("ordered", 0)  -> Rename("preserveOrder"),
+        ("ordered", 0)  -> DropWrite("ordered", "preserveOrder", "DynamicArray always preserves order; preserveOrder is a constructor parameter"),
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
@@ -1056,7 +1064,7 @@ object LibgdxPolicy:
         ("empty", 0)    -> Rename("isEmpty"),
         ("iterator", 0) -> Chain(List("iterator")),
         ("size", 0)     -> FieldWrite("size", "setSize"),
-        ("ordered", 0)  -> Rename("preserveOrder"),
+        ("ordered", 0)  -> DropWrite("ordered", "preserveOrder", "DynamicArray always preserves order; preserveOrder is a constructor parameter"),
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
@@ -1090,7 +1098,7 @@ object LibgdxPolicy:
         ("empty", 0)    -> Rename("isEmpty"),
         ("iterator", 0) -> Chain(List("iterator")),
         ("size", 0)     -> FieldWrite("size", "setSize"),
-        ("ordered", 0)  -> Rename("preserveOrder"),
+        ("ordered", 0)  -> DropWrite("ordered", "preserveOrder", "DynamicArray always preserves order; preserveOrder is a constructor parameter"),
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
@@ -1129,7 +1137,7 @@ object LibgdxPolicy:
         ("empty", 0)    -> Rename("isEmpty"),
         ("iterator", 0) -> Chain(List("iterator")),
         ("size", 0)     -> FieldWrite("size", "setSize"),
-        ("ordered", 0)  -> Rename("preserveOrder"),
+        ("ordered", 0)  -> DropWrite("ordered", "preserveOrder", "DynamicArray always preserves order; preserveOrder is a constructor parameter"),
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
@@ -1168,7 +1176,7 @@ object LibgdxPolicy:
         ("empty", 0)    -> Rename("isEmpty"),
         ("iterator", 0) -> Chain(List("iterator")),
         ("size", 0)     -> FieldWrite("size", "setSize"),
-        ("ordered", 0)  -> Rename("preserveOrder"),
+        ("ordered", 0)  -> DropWrite("ordered", "preserveOrder", "DynamicArray always preserves order; preserveOrder is a constructor parameter"),
         ("items", 0)        -> IndexedField("items"),
         ("toArray", 0)      -> Chain(List("toArray")),
         ("toArray", 1)      -> Chain(List("toArray"), dropArgs = true),
@@ -1751,71 +1759,7 @@ object LibgdxPolicy:
          memberRenames, disposableRedirect, textureHandle, align, uniformLocation,
          nullability, globalsToContext,
          new balticporter.transform.MethodBodyTransform(Map(
-           "com.badlogic.gdx.assets.AssetManager#clear" ->
-             """{
-               |  this.synchronized {
-               |    this.loadQueue.clear()
-               |  }
-               |  this.finishLoading()
-               |  this.synchronized {
-               |    val dependencyCount = scala.collection.mutable.HashMap[java.lang.String, scala.Int]()
-               |    while (this.assetTypes.size > 0) {
-               |      dependencyCount.clear()
-               |      val assetNames = lowlevel.util.DynamicArray[java.lang.String]()
-               |      this.assetTypes.foreachKey(assetNames.add)
-               |      assetNames.foreach { asset =>
-               |        this.assetDependencies.get(asset).foreach { dependencies =>
-               |          dependencies.foreach { dependency =>
-               |            dependencyCount(dependency) = dependencyCount.getOrElse(dependency, 0) + 1
-               |          }
-               |        }
-               |      }
-               |      assetNames.foreach { asset =>
-               |        if (dependencyCount.getOrElse(asset, 0) == 0) this.unload(asset)
-               |      }
-               |    }
-               |    this.assets.clear(51)
-               |    this.assetTypes.clear(51)
-               |    this.assetDependencies.clear(51)
-               |    this.loaded = 0
-               |    this.toLoad = 0
-               |    this.peakTasks = 0
-               |    this.loadQueue.clear()
-               |    this.tasks.clear()
-               |  }
-               |}""".stripMargin,
-           // wave 3.1m: ArraySelection.validate — Chain iterator returns Iterator[T], but the loop
-           // body calls iter.remove(). sge: collect removals into a DynamicArray, then remove.
-           "com.badlogic.gdx.scenes.scene2d.utils.ArraySelection#validate" ->
-             """{
-               |  val array: lowlevel.util.DynamicArray[T] = this.array
-               |  if (array.size == 0) {
-               |    this.clear()
-               |    return
-               |  } else ()
-               |  var changed: scala.Boolean = false
-               |  val toRemove: lowlevel.util.DynamicArray[T] = {
-               |    @scala.annotation.nowarn("msg=unused local definition")
-               |    given lowlevel.MkArray[T] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[T]]
-               |    lowlevel.util.DynamicArray[T]()
-               |  }
-               |  val iter = this.items.orderedItems.iterator
-               |  while (iter.hasNext) {
-               |    val selected: T = iter.next().asInstanceOf[T]
-               |    if (!array.contains(selected)) {
-               |      toRemove.add(selected)
-               |      changed = true
-               |    } else ()
-               |  }
-               |  toRemove.foreach(this.selected.remove)
-               |  if (this.required && (this.selected.size == 0)) {
-               |    this.set(array.first)
-               |  } else {
-               |    if (changed) {
-               |      this.changed()
-               |    } else ()
-               |  }
-               |}""".stripMargin,
+           // AssetManager#clear, ArraySelection#validate: retired by K36 rows.
            // wave 3.1m: SelectBox.selectedIndex — OrderedSet vs ObjectSet (broken subtyping edge).
            // sge: val sel = selection.items (inferred OrderedSet). Fix: widen the type annotation
            // from ObjectSet to OrderedSet. collection-internal seam — java's OrderedSet <: ObjectSet
@@ -1831,22 +1775,7 @@ object LibgdxPolicy:
                |  val selected: lowlevel.util.OrderedSet[T] = this.selection$field.items
                |  return if (selected.size == 0) -1 else this.items$field.indexOf(selected.first)
                |}""".stripMargin,
-           // wave 3.1t: removeDuplicates — java set/restore preserveOrder which is a val in
-           // DynamicArray (immutable constructor parameter). DynamicArray.removeIndex always
-           // preserves order (unlike gdx Array which optionally swaps the last element in),
-           // so setting preserveOrder to true is unnecessary. Drop both writes.
-           "com.badlogic.gdx.assets.AssetLoadingTask#removeDuplicates" ->
-             """{
-               |  { var i: scala.Int = 0; while (i < array.size) { {
-               |    val fn: java.lang.String = array.apply(i).fileName
-               |    val `type`: java.lang.Class[?] = array.apply(i).asInstanceOf[sge.assets.AssetDescriptor[java.lang.Object]].`type`.asInstanceOf[java.lang.Class[?]];
-               |    { var j: scala.Int = array.size - 1; while (j > i) { {
-               |      if ((`type` eq array.apply(j).asInstanceOf[sge.assets.AssetDescriptor[java.lang.Object]].`type`) && fn.equals(array.apply(j).fileName)) {
-               |        array.removeIndex(j)
-               |      } else ()
-               |    }; j = j - 1 } }
-               |  }; i = i + 1 } }
-               |}""".stripMargin,
+           // AssetLoadingTask#removeDuplicates: retired by DropWrite K36.
          )),
          // --- 3.2g: Pool class-to-trait (ecs drop-in parity) ---
          // sge hand-ported Pool as a TRAIT with abstract vals (justified, kind=api; AD-003).

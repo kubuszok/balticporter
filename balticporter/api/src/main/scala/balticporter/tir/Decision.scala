@@ -139,6 +139,10 @@ object Decision:
       * Unlike [[InjectedMember]] (a whole file), this is one member in a translated class. DETAIL:
       * what was added (`member`, `arity`) and the reference port's source. */
     case AddedMember
+    /** a field WRITE was dropped because the target's field is immutable (a constructor parameter
+      * or absent) and the write is semantically a no-op. DETAIL: the field name and the reason.
+      * `ENGINE-LIMITS.md` K36. */
+    case DroppedFieldWrite
 
   val Header ="#kind\tsubjectFqn\treasonClass\treasonDetail\torigin\tline\tdetail"
 

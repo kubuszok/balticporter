@@ -17,10 +17,11 @@ obligations (scope, `SurfacePolicy`, counting, `accountedBy`) are `.claude/rules
   call rewrites and boundary counts; `familyScopes` is per-ENTRY `RuleScope` (D12).
 - `retarget` retypes a library type usable wherever the java source was (the scala target extends
   or implements the java source, so no coercion is needed). `retargetRewrites` keys `(name, arity)`,
-  `retargetRewritesByDesc` keys `(name, Descriptor)` for overloads (descriptor wins); nine rewrite
+  `retargetRewritesByDesc` keys `(name, Descriptor)` for overloads (descriptor wins); ten rewrite
   variants: `Rename`, `BoolDispatch(flagIndex, onTrue, onFalse)`, `Construct(companion, factory,
   fillTypeArgs, dropTrailing)`, `ForEach(via, arity)`, `Collect(via, into)`, `Chain(members, parens,
-  dropArgs)`, `FieldWrite(field, method)`, `IndexedField(field)`, `Template(expr)` with `$recv`,
+  dropArgs)`, `FieldWrite(field, method)`, `DropWrite(field, readTarget, why)`,
+  `IndexedField(field)`, `Template(expr)` with `$recv`,
   `$0`..., `$T0`..., `$Target` holes. `retargetTypeArgs` maps arity-changing retargets
   (`SourceArg`/`FixedType`); `retargetCoercions` maps `(actualHead, expectedHead)` to templates.
 - `MergeablePolicy`: independent keys union; same source with a different target refuses; scope

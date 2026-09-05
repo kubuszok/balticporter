@@ -283,6 +283,23 @@ private[transform] trait CollectionsRetarget:
       lit.copy(const = Constant.ClassOfC(mapped))
     else lit
 
+  /** K36: record a DroppedFieldWrite decision. Side-effect-free RHS: empty opaque (emitter strips
+    * it from the statement list). Effectful RHS: bare expression statement. */
+  private def dropWriteResult(sel: Tree.Select, srcFqn: String,
+      dw: CollectionsTransform.RetargetRewrite.DropWrite, rhs: Term, so: Origin)(using p: Program): Option[Term] =
+    val fqn = p.symbolOf(sel.sym).map(_.fullName).getOrElse(MemberKey(srcFqn, dw.field, None).render)
+    self.record(Decision(
+      kind       = Decision.Kind.DroppedFieldWrite,
+      subject    = sel.sym,
+      subjectFqn = fqn,
+      detail     = Map("field" -> dw.field, "why" -> dw.why),
+      reason     = Reason.Configured("CollectionsTransform", s"retargetRewrite:DropWrite(${dw.field})"),
+      origin     = so))
+    if UnusedSymbolTransform.isSideEffectFreeTerm(rhs) then
+      Some(Tree.Opaque("", TypeRepr.NoType, so))
+    else
+      Some(rhs)
+
   /** A field write on a retarget target — `recv.field = value` -> `recv.method(value)` — for a
     * java field the target exposes only as a method. Keyed on symbol via
     * [[retargetTargetToSource]], never a name (§4.56). */
@@ -292,8 +309,8 @@ private[transform] trait CollectionsRetarget:
       case sel: Tree.Select =>
         headSym(sel.qual.tpe).flatMap(retargetTargetToSource.get).flatMap { srcFqn =>
           val mName = methodName(sel.sym)
-          lookupRewrite(srcFqn, mName, 0, None).flatMap {
-            case CollectionsTransform.RetargetRewrite.FieldWrite(_, method) =>
+          lookupRewrite(srcFqn, mName, 0, None) match
+            case Some(CollectionsTransform.RetargetRewrite.FieldWrite(_, method)) =>
               retargetRewriteSyms.get((srcFqn, method)).map { tgtSym =>
                 // compound assignment (size -= 1) expands to method(field op rhs)
                 val effectiveRhs = a.compound match
@@ -311,8 +328,19 @@ private[transform] trait CollectionsRetarget:
                   Tree.Select(sel.qual, tgtSym, TypeRepr.NoType, a.origin),
                   List(effectiveRhs), tgtSym, TypeRepr.NoType, a.origin)
               }
-            case _ => scala.None
-          }
+            // K36: drop the write — the target's field is immutable. Record a decision.
+            case Some(dw: CollectionsTransform.RetargetRewrite.DropWrite) =>
+              dropWriteResult(sel, srcFqn, dw, a.rhs, a.origin)
+            case _ =>
+              // K36: the read-side Select handler may have renamed the LHS to readTarget already
+              // (bottom-up traversal). Try matching the mName as a DropWrite's readTarget.
+              retargetRewrites.get(srcFqn).flatMap { tbl =>
+                tbl.values.collectFirst {
+                  case dw @ CollectionsTransform.RetargetRewrite.DropWrite(_, rt, _) if rt == mName =>
+                    dropWriteResult(sel, srcFqn, dw, a.rhs, a.origin).getOrElse(
+                      Tree.Opaque("", TypeRepr.NoType, a.origin))
+                }
+              }
         }
       case _ => scala.None
 
@@ -439,6 +467,11 @@ private[transform] trait CollectionsRetarget:
             retargetRewriteSyms.get((srcFqn, target)).map { tgtSym =>
               Tree.Select(sel.qual, tgtSym, sel.tpe, sel.origin)
             }
+          // DropWrite read side: rename to readTarget (same as Rename). K36.
+          case CollectionsTransform.RetargetRewrite.DropWrite(_, readTarget, _) =>
+            retargetRewriteSyms.get((srcFqn, readTarget)).map { tgtSym =>
+              Tree.Select(sel.qual, tgtSym, sel.tpe, sel.origin)
+            }
           // A chain ending in `iterator` at a retarget target: wrap with JavaIterator.from
           // only when the SLOT expects JavaIterator, mirroring the Apply path (K36).
           case CollectionsTransform.RetargetRewrite.Chain(members, hasParens, _)
@@ -528,6 +561,60 @@ private[transform] trait CollectionsRetarget:
     * enclosing for-each loop. Guards: map-kind source, loop-binding receiver, pure path, no
     * reassignment. Detached entries (no loop) stay refused. `ENGINE-LIMITS.md` K2. */
 
+  /** K36: when the emitter would render a non-Unit expression as the forEach lambda's last line,
+    * append `()` so `-Wvalue-discard` does not warn — java's for body has no value. The emitter
+    * strips a trailing `Literal(UnitC)` from a Block with stats, so the effective tail is the
+    * last stat; only non-Unit-shaped stats (Opaque/Block from a retarget Template) need the fix.
+    * K36, CLAUDE.md S4.4. */
+  private def ensureUnitBody(body: Term, so: Origin): Term =
+    def mayReturnValue(s: Statement): Boolean = s match
+      case _: Tree.Assign  => false
+      case _: Tree.ForEach => false
+      case _: Tree.For     => false
+      case _: Tree.While   => false
+      case _: Tree.DoWhile => false
+      case _: Tree.If      => false // if/else in statement position
+      case Tree.Literal(Constant.UnitC, _, _) => false
+      case Tree.Apply(_, _, _, tpe, _) if tpe == unitTpe && unitTpe != TypeRepr.NoType => false
+      case _               => true  // Opaque (Template), Block, Apply with unknown/non-Unit type
+    def appendUnit(t: Term): Term = t match
+      // Opaque block text: inject `; ()` before the closing `}`
+      case o: Tree.Opaque if o.raw.stripTrailing().endsWith("}") =>
+        val trimmed = o.raw.stripTrailing()
+        // Strip the trailing expression before `}` (the value java's for body discarded) and
+        // replace with `()`. Finds the last `;` before `}` and drops everything after it.
+        val lastSemi = trimmed.lastIndexOf(';', trimmed.length - 2)
+        if lastSemi >= 0 then o.copy(raw = trimmed.substring(0, lastSemi + 1) + " () }")
+        else o.copy(raw = "()")
+      // Block: recurse into expr (Template result wrapped in receiver bindings)
+      case b: Tree.Block =>
+        val fixed = appendUnit(b.expr)
+        if !(fixed eq b.expr) then b.copy(expr = fixed)
+        else b.copy(stats = b.stats :+ b.expr, expr = Tree.Opaque("()", unitTpe, so))
+      case _ =>
+        Tree.Block(List(t), Tree.Opaque("()", unitTpe, so), unitTpe, so)
+    body match
+      case b: Tree.Block if b.stats.nonEmpty =>
+        b.expr match
+          case Tree.Literal(Constant.UnitC, _, _) =>
+            b.stats.lastOption match
+              case Some(last) if mayReturnValue(last) =>
+                val fixed = appendUnit(last.asInstanceOf[Term])
+                b.copy(stats = b.stats.init :+ fixed)
+              case _ => body
+          case expr if mayReturnValue(expr) =>
+            b.copy(expr = appendUnit(expr))
+          case _ => body
+      case _ if mayReturnValue(body) => appendUnit(body)
+      case _ => body
+
+  /** K36: apply `ensureUnitBody` to a non-retarget ForEach node whose body was rewritten by a
+    * Template. The emitter lowers ForEach to `.foreach { x => body }`, which discards body's
+    * value under `-Wvalue-discard` when it is not Unit. */
+  private[transform] def ensureUnitForEachBody(fe: Tree.ForEach): Tree.ForEach =
+    val fixed = ensureUnitBody(fe.body, fe.origin)
+    if fixed eq fe.body then fe else fe.copy(body = fixed)
+
   /** Lower a for-each over a retarget target's entries/keys/values into a lambda-based iteration
     * method. `return` in body is refused and counted (non-local return). Arity-2 rewrites
     * `.key`/`.value` selects to lambda parameters. */
@@ -593,7 +680,7 @@ private[transform] trait CollectionsRetarget:
         val kParam = Tree.ValDef(kSym, TypeTree(kTpe, so), scala.None, so)
         val vParam = Tree.ValDef(vSym, TypeTree(vTpe, so), scala.None, so)
         val rewrittenBody = rewriteEntrySelects(bound, kSym, kTpe, vSym, vTpe, fe.body, so)
-        val lambda = Tree.Lambda(List(kParam, vParam), bodyWithBreaks(rewrittenBody), unitTpe, so)
+        val lambda = Tree.Lambda(List(kParam, vParam), ensureUnitBody(bodyWithBreaks(rewrittenBody), so), unitTpe, so)
         Tree.Apply(Tree.Select(recv, tgtSym, TypeRepr.NoType, so), List(lambda), tgtSym, unitTpe, so)
       else
         // recv.foreachKey(k => body) or recv.foreachValue(v => body)
@@ -601,7 +688,7 @@ private[transform] trait CollectionsRetarget:
         val eSym = forEachElemPool(n)
         val param = Tree.ValDef(eSym, TypeTree(paramTpe, so), scala.None, so)
         val rewrittenBody = rewriteBindingRefs(bound, eSym, paramTpe, fe.body, so)
-        val lambda = Tree.Lambda(List(param), bodyWithBreaks(rewrittenBody), unitTpe, so)
+        val lambda = Tree.Lambda(List(param), ensureUnitBody(bodyWithBreaks(rewrittenBody), so), unitTpe, so)
         Tree.Apply(Tree.Select(recv, tgtSym, TypeRepr.NoType, so), List(lambda), tgtSym, unitTpe, so)
     if hasReturn then retFeReturnApplies.put(apply, label.get)
     // register the outer with the first lifted label — wrapReturnBoundary creates one boundary
@@ -723,6 +810,14 @@ private[transform] trait CollectionsRetarget:
         val riName  = "bp$ri"
         Some(Tree.Opaque.spliced(
           List(s"{ val $tmpName = ", s"; balticporter.runtime.JavaIterator.removing(() => $tmpName.size, ($riName: scala.Int) => $tmpName.apply($riName), ($riName: scala.Int) => { $tmpName.removeIndex($riName); () }) }"),
+          List(recv), tpe, so))
+      case "lowlevel.util.OrderedSet" =>
+        // K36: size and apply via orderedItems, removal via removeIndex on the SET (shrinks both).
+        val n = { collectSeq += 1; collectSeq }
+        val tmpName = s"bp$$os$n"
+        val riName  = "bp$ri"
+        Some(Tree.Opaque.spliced(
+          List(s"{ val $tmpName = ", s"; balticporter.runtime.JavaIterator.removing(() => $tmpName.orderedItems.size, ($riName: scala.Int) => $tmpName.orderedItems.apply($riName), ($riName: scala.Int) => { $tmpName.removeIndex($riName); () }) }"),
           List(recv), tpe, so))
       case _ => scala.None
 
@@ -1363,6 +1458,8 @@ private[transform] trait CollectionsRetarget:
         // FieldWrite is handled in transformTerm on Tree.Assign; a call reaching here is a
         // same-(name,arity) method call — return None.
         case _: CollectionsTransform.RetargetRewrite.FieldWrite => scala.None
+        // DropWrite is handled in retargetFieldWrite (Assign path); the read side fires on Select.
+        case _: CollectionsTransform.RetargetRewrite.DropWrite => scala.None
         // IndexedField is handled in retargetSelectRewrite; a call reaching here is standalone on the field.
         case _: CollectionsTransform.RetargetRewrite.IndexedField => scala.None
       }

@@ -273,6 +273,7 @@ final class CollectionsTransform(
         else s"Chain(${ms.mkString(";")};parens=${ps.toList.sorted.mkString(",")})"
         if da then s"$base;dropArgs" else base
       case CollectionsTransform.RetargetRewrite.FieldWrite(f, m) => s"FieldWrite($f,$m)"
+      case CollectionsTransform.RetargetRewrite.DropWrite(f, rt, _) => s"DropWrite($f,$rt)"
       case CollectionsTransform.RetargetRewrite.IndexedField(f, v, vw) =>
         val extra = List(
           scala.Option.when(v != "apply")(s"via=$v"),
@@ -769,6 +770,8 @@ final class CollectionsTransform(
           members.map(m => (src, m) -> mint(m, s"$src#retargetRewrite:$m"))
         case CollectionsTransform.RetargetRewrite.FieldWrite(_, method) =>
           List((src, method) -> mint(method, s"$src#retargetRewrite:$method"))
+        case CollectionsTransform.RetargetRewrite.DropWrite(_, readTarget, _) =>
+          List((src, readTarget) -> mint(readTarget, s"$src#retargetRewrite:$readTarget"))
         case CollectionsTransform.RetargetRewrite.IndexedField(_, v, vw) =>
           // always mint symbols for via/viaWrite — the handler resolves them by name from
           // retargetRewriteSyms; a default-via IndexedField on a source with no Rename("apply")
@@ -802,6 +805,8 @@ final class CollectionsTransform(
           members.map(m => (src, m) -> mint(m, s"$src#retargetRewrite:$m"))
         case CollectionsTransform.RetargetRewrite.FieldWrite(_, method) =>
           List((src, method) -> mint(method, s"$src#retargetRewrite:$method"))
+        case CollectionsTransform.RetargetRewrite.DropWrite(_, readTarget, _) =>
+          List((src, readTarget) -> mint(readTarget, s"$src#retargetRewrite:$readTarget"))
         case _: CollectionsTransform.RetargetRewrite.IndexedField => Nil
         case _: CollectionsTransform.RetargetRewrite.Template => Nil
       }
@@ -1307,7 +1312,11 @@ final class CollectionsTransform(
     case ty: Tree.Typed if impossibleShimCast(ty) => ty.expr
     case ty: Tree.Typed   => reifiedCast(stripCastWildcard(ty))
     case io: Tree.InstanceOf => reifiedTest(wildcardReifiedTest(io))
-    case fe: Tree.ForEach => retargetForEach(fe).getOrElse(writeThroughEntries(fe))
+    case fe: Tree.ForEach =>
+      retargetForEach(fe).getOrElse {
+        val wt = writeThroughEntries(fe)
+        ensureUnitForEachBody(wt)
+      }
     case mr: Tree.MethodRef => lowerMethodRef(mr)
     case lit @ Tree.Literal(Constant.ClassOfC(tp), tpe, _) => retargetClassOf(lit, tp, tpe)
     case sel: Tree.Select => retargetSelectRewrite(sel).getOrElse(staticFieldRewrite(sel).getOrElse(externalFieldProducer(sel)))
@@ -2336,6 +2345,11 @@ object CollectionsTransform:
       * `Rename`/`Chain` occupies for the read side — the two fire on different node kinds
       * (`Assign` vs `Select`/`Apply`) and coexist at one key. */
     case class FieldWrite(field: String, method: String) extends RetargetRewrite
+
+    /** Dropped field write: `recv.field = value` is elided (the target's field is immutable or the
+      * write is a no-op), and `recv.field` on the read side maps to `readTarget`. A
+      * `Decision.Kind.DroppedFieldWrite` is recorded at each dropped site. K36. */
+    case class DropWrite(field: String, readTarget: String, why: String) extends RetargetRewrite
 
     /** Indexed field bypass: `recv.field[i]` -> `recv.via(i)`, `field[i] = v` -> `recv.viaWrite(i, v)`.
       * `via`/`viaWrite` default to `apply`/`update`; non-default enters the fingerprint.
