@@ -42,7 +42,9 @@ class ForEachFBoundReceiverSpec extends PortSuite:
         |}
         |""".stripMargin
     )
-    assertEmits(p, "<- xs)")
+    // K9 (2026-09-05): a program type reaching `java.lang.Iterable` with no `foreach` iterates by
+    // java's own protocol; the F-bound guard still interposes no view.
+    assertEmits(p, "xs.iterator()")
     assertNotEmits(p, "xs.asInstanceOf[java.lang.Iterable")
   }
 
@@ -58,6 +60,8 @@ class ForEachFBoundReceiverSpec extends PortSuite:
         |}
         |""".stripMargin
     )
-    assertEmits(p, "<- xs)")
+    // K9 (2026-09-05): a program type reaching `java.lang.Iterable` with no `foreach` iterates by
+    // java's own protocol; the F-bound guard still interposes no view.
+    assertEmits(p, "xs.iterator()")
     assertNotEmits(p, "xs.asInstanceOf[java.lang.Iterable")
   }
