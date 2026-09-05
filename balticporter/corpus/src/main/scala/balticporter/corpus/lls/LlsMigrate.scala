@@ -2,6 +2,7 @@ package balticporter.corpus.lls
 
 import balticporter.core.{FrontendConfig, ParityRef, PortManifest, Provenance, RuntimeMode}
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
+import balticporter.transform.MutableParamsTransform
 
 import java.nio.file.Path
 
@@ -12,20 +13,28 @@ import java.nio.file.Path
   * rather than a drop or a shim (`PROGRESS.md` §13.28). */
 object LlsMigrate:
 
-  /** The twelve, sorted, as `PROGRESS.md` §13.28 names them. */
+  /** The twelve lls ported plus the seven libGDX helpers they reference (the reference closure over
+    * `gdx/src`), so rung L0 is a self-contained faithful translation (PROGRESS.md §13.29). */
   val Files: List[String] = List(
     "com/badlogic/gdx/math/MathUtils.java",
+    "com/badlogic/gdx/math/RandomXS128.java",
     "com/badlogic/gdx/utils/Array.java",
     "com/badlogic/gdx/utils/ArrayMap.java",
+    "com/badlogic/gdx/utils/ArraySupplier.java",
+    "com/badlogic/gdx/utils/Collections.java",
     "com/badlogic/gdx/utils/ComparableTimSort.java",
+    "com/badlogic/gdx/utils/GdxRuntimeException.java",
+    "com/badlogic/gdx/utils/Null.java",
     "com/badlogic/gdx/utils/ObjectMap.java",
     "com/badlogic/gdx/utils/ObjectSet.java",
     "com/badlogic/gdx/utils/OrderedMap.java",
     "com/badlogic/gdx/utils/OrderedSet.java",
+    "com/badlogic/gdx/utils/Predicate.java",
     "com/badlogic/gdx/utils/QuickSelect.java",
     "com/badlogic/gdx/utils/Select.java",
     "com/badlogic/gdx/utils/Sort.java",
     "com/badlogic/gdx/utils/TimSort.java",
+    "com/badlogic/gdx/utils/reflect/ArrayReflection.java",
   )
 
   def main(args: Array[String]): Unit =
@@ -77,6 +86,9 @@ object LlsPolicy:
       typeRenames = Map(
         "com.badlogic.gdx.utils.Array" -> "DynamicArray",
       ),
+      // L0 of the lls ladder: the universal phases only (`MutableParamsTransform` is universal but
+      // per-port today); the decision rungs are added one at a time (PROGRESS.md §13.29).
+      surface = List(new MutableParamsTransform),
       // THE REFERENCE HAND PORT for lls. NOT inherited (DESIGN.md §8.23).
       parity = Some(ParityRef(roots = List(
         repoRoot.resolve("../lls/lls/src/main/scala").normalize))),
