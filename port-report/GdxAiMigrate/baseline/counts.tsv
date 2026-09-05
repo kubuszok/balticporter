@@ -52,7 +52,7 @@ portability(injected)	0
 porter-notes	4
 registry(by-name)	0
 registry(facade)	0
-registry(guarded-call)	1
+registry(guarded-call)	0
 registry(jvm-only-miss)	2
 registry(non-class-arg)	0
 registry(out-of-scope)	0

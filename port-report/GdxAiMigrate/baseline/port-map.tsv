@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-ai	engine=balticporter/0.1.0-SNAPSHOT	sources=9c2fec9564d77ee6	files=164	policy=4403775277023fb4	jdk=22
+# balticporter port map	schema=4	module=sge-ai	engine=balticporter/0.1.0-SNAPSHOT	sources=9c2fec9564d77ee6	files=164	policy=9122ec69d43fc1ea	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.ai.DefaultTimepiece	sge.ai.DefaultTimepiece	Renamed	-		0		form=class parents=sge.ai.Timepiece primary=(float) primaryKind=unique-root primaryVis=public secondaries=()
 type	com.badlogic.gdx.ai.FileSystem	sge.ai.FileSystem	Renamed	-		0		form=trait
@@ -432,7 +432,7 @@ member	com.badlogic.gdx.ai.btree.Task#getChildCount()	sge.ai.btree.Task#childCou
 member	com.badlogic.gdx.ai.btree.Task#childFail(Task)	sge.ai.btree.Task#childFail(Task<E>)	Renamed	-	com/badlogic/gdx/ai/btree/Task.java	216	e4cd1e977c8ae05c	
 member	com.badlogic.gdx.ai.btree.Task#childRunning(Task,Task)	sge.ai.btree.Task#childRunning(Task<E>,Task<E>)	Renamed	-	com/badlogic/gdx/ai/btree/Task.java	222	c3cf24bfda848a11	
 member	com.badlogic.gdx.ai.btree.Task#childSuccess(Task)	sge.ai.btree.Task#childSuccess(Task<E>)	Renamed	-	com/badlogic/gdx/ai/btree/Task.java	211	f9330f52205cee5b	
-member	com.badlogic.gdx.ai.btree.Task#cloneTask()	sge.ai.btree.Task#cloneTask()	Renamed	-	com/badlogic/gdx/ai/btree/Task.java	258	79a6c63990fb784d	
+member	com.badlogic.gdx.ai.btree.Task#cloneTask()	sge.ai.btree.Task#cloneTask()	Renamed	-	com/badlogic/gdx/ai/btree/Task.java	258	082276ca6f626e9c	
 member	com.badlogic.gdx.ai.btree.Task#control	sge.ai.btree.Task#control	Renamed	-	com/badlogic/gdx/ai/btree/Task.java	78	08e072f65d8bedf7	
 member	com.badlogic.gdx.ai.btree.Task#copyTo(Task)	sge.ai.btree.Task#copyTo(Task<E>)	Renamed	-	com/badlogic/gdx/ai/btree/Task.java	280	ad4aab6de825f330	
 member	com.badlogic.gdx.ai.btree.Task#end()	sge.ai.btree.Task#end()	Renamed	-	com/badlogic/gdx/ai/btree/Task.java	175	7396dc2bc1d7344d	
@@ -459,7 +459,7 @@ member	com.badlogic.gdx.ai.btree.TaskCloner#cloneTask(Task)	sge.ai.btree.TaskClo
 member	com.badlogic.gdx.ai.btree.TaskCloner#freeTask(Task)	sge.ai.btree.TaskCloner#freeTask(Task<T>)	Renamed	-	com/badlogic/gdx/ai/btree/TaskCloner.java	33	96950a869653edc0	
 member	com.badlogic.gdx.ai.btree.TaskFactories#<stmt1>	sge.ai.btree.TaskFactories#<stmt1>	Renamed	-	<synthetic>	0	00696e913ada2d98	
 member	com.badlogic.gdx.ai.btree.TaskFactories#<stmt2>	sge.ai.btree.TaskFactories#<stmt2>	Renamed	-	<synthetic>	0	02dfee65e146fb9c	
-member	com.badlogic.gdx.ai.btree.TaskFactories#<stmt3>	sge.ai.btree.TaskFactories#<stmt3>	Renamed	-	<synthetic>	0	0a27a582474c2b8f	
+member	com.badlogic.gdx.ai.btree.TaskFactories#<stmt3>	sge.ai.btree.TaskFactories#<stmt3>	Renamed	-	<synthetic>	0	534c0fff9ffbd242	
 member	com.badlogic.gdx.ai.btree.branch.DynamicGuardSelector#<init>(Array)	sge.ai.btree.branch.DynamicGuardSelector#<init>(Array<Task<E>>)	Renamed	-	com/badlogic/gdx/ai/btree/branch/DynamicGuardSelector.java	45	4a46e2be0b8bbe2b	
 member	com.badlogic.gdx.ai.btree.branch.DynamicGuardSelector#<init>(DynamicArray)	sge.ai.btree.branch.DynamicGuardSelector#<init>(DynamicArray<Task<E>>)	Renamed	-	com/badlogic/gdx/ai/btree/branch/DynamicGuardSelector.java	52	49a3e875870d3b29	
 member	com.badlogic.gdx.ai.btree.branch.DynamicGuardSelector#childFail(Task)	sge.ai.btree.branch.DynamicGuardSelector#childFail(Task<E>)	Renamed	-	com/badlogic/gdx/ai/btree/branch/DynamicGuardSelector.java	69	55636e74b69d4744	
