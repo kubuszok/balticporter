@@ -431,21 +431,38 @@ private[transform] trait CollectionsRetarget:
             retargetRewriteSyms.get((srcFqn, target)).map { tgtSym =>
               Tree.Select(sel.qual, tgtSym, sel.tpe, sel.origin)
             }
-          // a parameterless iterator on a retarget target whose declared return is JavaIterator[T]
-          // (java.util.Iterator redirect): NullaryArityTransform already made this a Select, so
-          // the Chain handler in retargetRewrite never sees it — wrap with JavaIterator.from.
+          // A chain ending in `iterator` at a retarget target: wrap with JavaIterator.from
+          // only when the SLOT expects JavaIterator, mirroring the Apply path (K36).
           case CollectionsTransform.RetargetRewrite.Chain(members, hasParens, _)
               if members.lastOption.contains("iterator") && iteratorFromSym != SymId.None =>
-            // K36: for targets supporting indexed removal, emit a removing iterator over the receiver.
-            val targetFqn = effectiveRetarget.get(srcFqn)
-            val removingResult = targetFqn.flatMap(tgt => emitRemovingIterator(sel.qual, tgt, sel.tpe, sel.origin))
-            if removingResult.isDefined then Some(removingResult.get)
+            // The iterator type itself may be retargeted to scala.collection.Iterator (e.g.
+            // ObjectSetIterator -> Iterator). In that case the slot accepts Iterator and
+            // no JavaIterator.from wrap is needed; the return-seam coercion handles it
+            // where the slot expects JavaIterator. Check the method's declared return type
+            // (sel.tpe is NoType for a Select inside an Apply). K36.
+            val iterRetHead = p.symbolOf(sel.sym).flatMap(s => infoResultHead(s.info))
+            val iterTypeRetargeted = iterRetHead.flatMap(h =>
+              p.symbolOf(h).flatMap(s => effectiveRetarget.get(s.fullName))).isDefined
+            if iterTypeRetargeted then
+              // The iterator type is retargeted; no JavaIterator wrap. Carry the retyped
+              // return type on the terminal node so the next rewrite's $T0 resolves.
+              val rawRet = p.symbolOf(sel.sym).map(_.info).map {
+                case TypeRepr.MethodType(_, result, _) => result
+                case TypeRepr.PolyType(_, result)      => result
+                case other                             => other
+              }.getOrElse(TypeRepr.NoType)
+              val retTpe = StandardTraversal.mapType(self, rawRet)
+              chainSelect(sel.qual, srcFqn, members, hasParens, sel.origin, retTpe)
             else
-              // the chain's own members first (`orderedItems.iterator`), then the shim wrap
-              chainSelect(sel.qual, srcFqn, members, hasParens, sel.origin).map { cur =>
-                Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, sel.origin),
-                           List(cur), iteratorFromSym, sel.tpe, sel.origin)
-              }
+              // K36: for targets supporting indexed removal, emit a removing iterator.
+              val targetFqn = effectiveRetarget.get(srcFqn)
+              val removingResult = targetFqn.flatMap(tgt => emitRemovingIterator(sel.qual, tgt, sel.tpe, sel.origin))
+              if removingResult.isDefined then Some(removingResult.get)
+              else
+                chainSelect(sel.qual, srcFqn, members, hasParens, sel.origin).map { cur =>
+                  Tree.Apply(Tree.Ident(iteratorFromSym, TypeRepr.NoType, sel.origin),
+                             List(cur), iteratorFromSym, sel.tpe, sel.origin)
+                }
           // Chain at a Select (parenless, made so by bean-property/NullaryArityTransform):
           // apply with no arguments, same logic as the Apply path. The outer Apply may still
           // wrap this in () if java called it with (); tracked in selectChainRewritten to strip it.
@@ -456,10 +473,19 @@ private[transform] trait CollectionsRetarget:
           // `("length", 0) -> Template("(if ($recv.isEmpty) 0 else $recv.last + 1)")`).
           // Rendered with an empty argument list; only $recv and type-level placeholders
           // ($T0, $Target) are available. Same caveat as Chain above — tracked for the Apply path.
+          // Decline when a higher-arity entry also exists for this method: the Select is the fun
+          // of an Apply whose args the Apply path can see but this path cannot.
           case CollectionsTransform.RetargetRewrite.Template(expr) =>
-            val result = renderTemplate(expr, sel.qual, Nil, srcFqn, sel.tpe, sel.origin)
-            selectChainRewritten.add(result)
-            Some(result)
+            val hasHigherArity = retargetRewrites.get(srcFqn).exists(_.keysIterator.exists {
+              case (n, a) => n == mName && a > 0
+            }) || remappedDescRewrites.get(srcFqn).exists(_.keysIterator.exists {
+              case (n, _) => n == mName
+            })
+            if hasHigherArity then scala.None
+            else
+              val result = renderTemplate(expr, sel.qual, Nil, srcFqn, sel.tpe, sel.origin)
+              selectChainRewritten.add(result)
+              Some(result)
           // IndexedField is NOT handled here — it fires only on Tree.ArrayAccess (see
           // retargetIndexedField). Stripping the field select on a bare Tree.Select would turn
           // `someMethod(arr.items)` into `someMethod(arr)`, changing the type from Array[T] to
@@ -628,14 +654,19 @@ private[transform] trait CollectionsRetarget:
     * read-only `JavaIterator.from`). */
   /** A `Chain` rewrite applied at a parenless Select: `qual.m1.m2…`, each member with or
     * without `()` as the row says; `None` when a member has no minted symbol. */
-  private def chainSelect(qual: Term, srcFqn: String, members: List[String], hasParens: String => Boolean, so: Origin): Option[Term] =
+  /** @param terminalTpe type for the last node; `NoType` keeps every node untyped. */
+  private def chainSelect(qual: Term, srcFqn: String, members: List[String], hasParens: String => Boolean, so: Origin,
+      terminalTpe: TypeRepr = TypeRepr.NoType): Option[Term] =
     val syms = members.flatMap(m => retargetRewriteSyms.get((srcFqn, m)))
     if syms.size != members.size then scala.None
     else
-      def step(recv: Term, s: SymId, m: String): Term =
-        if hasParens(m) then Tree.Apply(Tree.Select(recv, s, TypeRepr.NoType, so), Nil, s, TypeRepr.NoType, so)
-        else Tree.Select(recv, s, TypeRepr.NoType, so)
-      val cur = syms.zip(members).foldLeft(qual) { case (acc, (s, m)) => step(acc, s, m) }
+      def step(recv: Term, s: SymId, m: String, isLast: Boolean): Term =
+        val tp = if isLast then terminalTpe else TypeRepr.NoType
+        if hasParens(m) then Tree.Apply(Tree.Select(recv, s, TypeRepr.NoType, so), Nil, s, tp, so)
+        else Tree.Select(recv, s, tp, so)
+      val cur = syms.zip(members).zipWithIndex.foldLeft(qual) { case (acc, ((s, m), idx)) =>
+        step(acc, s, m, idx == members.size - 1)
+      }
       selectChainRewritten.add(cur)
       Some(cur)
 
@@ -1082,10 +1113,12 @@ private[transform] trait CollectionsRetarget:
       val ph = s"$$$i"
       if findTermPh(text, ph).nonEmpty then termPh(ph) = args(i)
     val counts = termPh.map { (ph, _) => ph -> findTermPh(text, ph).size }.toMap
-    // placeholders appearing >1 time bind to a temp val; subsequent occurrences become the temp name
+    // placeholders appearing >1 time bind to a temp val; subsequent occurrences become the temp name.
+    // Type-arg placeholders ($T0, $T1, ...) are TYPES, not terms — they must NOT be bound to a val.
     val bindings = scala.collection.mutable.ListBuffer.empty[(String, Term, String)]
     for (ph, term) <- termPh do
-      if counts.getOrElse(ph, 0) > 1 then
+      val isTypeArgPh = ph.startsWith("$T") && ph.length > 2 && ph.charAt(2).isDigit
+      if counts.getOrElse(ph, 0) > 1 && !isTypeArgPh then
         templateSeq += 1
         val tmpName = s"bp$$tpl$templateSeq"
         bindings += ((ph, term, tmpName))
@@ -1099,9 +1132,11 @@ private[transform] trait CollectionsRetarget:
           pos0 = p + ph.length
         sb.append(text.substring(pos0))
         text = sb.toString
-    // split around remaining (single-occurrence) placeholders to build parts/holes
+    // split around remaining placeholders (single-occurrence terms, and multi-occurrence
+    // type-arg placeholders that were not val-bound) to build parts/holes
+    val boundPhs = bindings.map(_._1).toSet
     val positions = scala.collection.mutable.ListBuffer.empty[(Int, Int, String)]
-    for (ph, _) <- termPh if counts.getOrElse(ph, 0) <= 1 do
+    for (ph, _) <- termPh if !boundPhs.contains(ph) do
       for p <- findTermPh(text, ph) do
         positions += ((p, p + ph.length, ph))
     val sortedPositions = positions.sortBy(_._1).toList

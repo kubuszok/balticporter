@@ -440,6 +440,11 @@ object LibgdxPolicy:
     // the iterator types are counted on the collection-retarget lane.
     "com.badlogic.gdx.utils.IntIntMap$Entry" -> "scala.Tuple2",
     "com.badlogic.gdx.utils.IntFloatMap$Entry" -> "scala.Tuple2",
+    // set-iterator types -> scala.collection.Iterator: ObjectSetIterator declares toArray/hasNext/
+    // next/remove; OrderedSetIterator extends it. Retargeted so chain-iterator callers (Selection#toArray)
+    // resolve members on scala.collection.Iterator without body substitutions.
+    "com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator" -> "scala.collection.Iterator",
+    "com.badlogic.gdx.utils.OrderedSet$OrderedSetIterator" -> "scala.collection.Iterator",
   )
 
   /** TYPE ARGUMENT MAPPING for arity-changing retargets: how to fill the target type's type
@@ -492,6 +497,9 @@ object LibgdxPolicy:
       "com.badlogic.gdx.utils.ByteArray"     -> List(FixedType("scala.Byte")),
       "com.badlogic.gdx.utils.CharArray"     -> List(FixedType("scala.Char")),
       "com.badlogic.gdx.utils.BooleanArray"  -> List(FixedType("scala.Boolean")),
+      // set-iterator types: 1-param ObjectSetIterator<T> / OrderedSetIterator<T> -> Iterator[T]
+      "com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator" -> List(SourceArg(0)),
+      "com.badlogic.gdx.utils.OrderedSet$OrderedSetIterator" -> List(SourceArg(0)),
     )
 
   // MkArray evidence at a type-variable element: sge's own `createRef` cast (subplan 1b)
@@ -547,6 +555,18 @@ object LibgdxPolicy:
       "com.badlogic.gdx.utils.ArrayMap$Keys"         -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
       "com.badlogic.gdx.utils.ArrayMap$Values"       -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
       "com.badlogic.gdx.utils.ArrayMap$Entries"      -> Map(("hasNext", 0) -> Chain(List("hasNext"))),
+      // set-iterator types: hasNext is parenless; toArray builds a DynamicArray from the iterator.
+      // toArray(1) collects into the caller's provided array. remove left to IteratorRemove count (K36).
+      "com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator" -> Map(
+        ("hasNext", 0) -> Chain(List("hasNext")),
+        ("toArray", 0) -> Template("{ given lowlevel.MkArray[$T0] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[$T0]]; val bpR: lowlevel.util.DynamicArray[$T0] = lowlevel.util.DynamicArray[$T0](); $recv.foreach(bpR.add); bpR }"),
+        ("toArray", 1) -> Template("{ val bpA = $0; $recv.foreach(bpA.add); bpA }"),
+      ),
+      "com.badlogic.gdx.utils.OrderedSet$OrderedSetIterator" -> Map(
+        ("hasNext", 0) -> Chain(List("hasNext")),
+        ("toArray", 0) -> Template("{ given lowlevel.MkArray[$T0] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[$T0]]; val bpR: lowlevel.util.DynamicArray[$T0] = lowlevel.util.DynamicArray[$T0](); $recv.foreach(bpR.add); bpR }"),
+        ("toArray", 1) -> Template("{ val bpA = $0; $recv.foreach(bpA.add); bpA }"),
+      ),
       // Entry arity-0: java's default-constructed Entry with both fields null.
       // Construct routes `new Tuple2()` -> `Tuple2.apply(null.asInstanceOf[K], null.asInstanceOf[V])`.
       // Every Entry source needs the entry, since retargetTargetToSource maps to whichever
@@ -1890,26 +1910,6 @@ object LibgdxPolicy:
            "com.badlogic.gdx.maps.MapProperties#putAll(MapProperties)" ->
              """{
                |  this.properties.putAll(properties.properties)
-               |}""".stripMargin,
-           // wave 3.1m: Selection.toArray() — Chain produces Iterator whose toArray needs ClassTag.
-           // Collect from the OrderedSet directly into an sge.utils.Array. sge: selected.foreach(result.add).
-           // sge: `val result = DynamicArray.createRef[T](); selected.foreach(result.add); result`
-           // createRef provides `given MkArray[A] = MkArray.anyRef.asInstanceOf[MkArray[A]]` locally
-           "com.badlogic.gdx.scenes.scene2d.utils.Selection#toArray" ->
-             """{
-               |  val result: lowlevel.util.DynamicArray[T] = {
-               |    @scala.annotation.nowarn("msg=unused local definition")
-               |    given lowlevel.MkArray[T] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[T]]
-               |    lowlevel.util.DynamicArray[T]()
-               |  }
-               |  this.selected.foreach(result.add)
-               |  return result
-               |}""".stripMargin,
-           // wave 3.1m: Selection.toArray(Array<T>) — same pattern, collect into the provided array.
-           "com.badlogic.gdx.scenes.scene2d.utils.Selection#toArray(Array)" ->
-             """{
-               |  this.selected.foreach(array.add)
-               |  return array
                |}""".stripMargin,
            // wave 3.1m: ArraySelection.validate — Chain iterator returns Iterator[T], but the loop
            // body calls iter.remove(). sge: collect removals into a DynamicArray, then remove.

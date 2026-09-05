@@ -2266,6 +2266,62 @@ class CollectionsTransformSpec extends PortSuite:
     assertEmits(chainIteratorFixture(nullary = false), "JavaIterator.from(this.selected.orderedItems.iterator)")
   }
 
+  test("set-iterator retarget: toArray Template, hasNext Chain, typed chain at a non-JavaIterator slot") {
+    import CollectionsTransform.RetargetRewrite.*
+    import CollectionsTransform.RetargetArg.*
+    val ph = new CollectionsTransform(
+      retarget = Map(
+        "demo.MySet" -> "lowlevel.util.OrderedSet",
+        "demo.MySet$MySetIter" -> "scala.collection.Iterator",
+        "demo.Arr" -> "lowlevel.util.DynamicArray"),
+      retargetRewrites = Map(
+        "demo.MySet" -> Map(
+          ("iterator", 0) -> Chain(List("orderedItems", "iterator"))),
+        "demo.MySet$MySetIter" -> Map(
+          ("hasNext", 0) -> Chain(List("hasNext")),
+          ("toArray", 0) -> Template("{ @scala.annotation.nowarn(\"msg=unused local definition\") given lowlevel.MkArray[$T0] = lowlevel.MkArray.anyRef[AnyRef].asInstanceOf[lowlevel.MkArray[$T0]]; val bpR: lowlevel.util.DynamicArray[$T0] = lowlevel.util.DynamicArray[$T0](); $recv.foreach(bpR.add); bpR }"),
+          ("toArray", 1) -> Template("{ val bpA = $0; $recv.foreach(bpA.add); bpA }")),
+        "demo.Arr" -> Map(
+          ("<init>", 0) -> Construct("lowlevel.util.DynamicArray", "apply"))),
+      retargetTypeArgs = Map(
+        "demo.MySet$MySetIter" -> List(SourceArg(0))))
+    val p = portAll(List(
+      "Arr.java" ->
+        """package demo;
+          |public class Arr<T> { public Arr() {} public void add(T t) {} }""".stripMargin,
+      "MySet.java" ->
+        """package demo;
+          |public class MySet<T> implements Iterable<T> {
+          |  public static class MySetIter<T> implements java.util.Iterator<T> {
+          |    public Arr<T> toArray() { return new Arr<T>(); }
+          |    public Arr<T> toArray(Arr<T> a) { return a; }
+          |    public boolean hasNext() { return false; }
+          |    public T next() { return null; }
+          |  }
+          |  public MySetIter<T> iterator() { return new MySetIter<T>(); }
+          |  public Object[] orderedItems;
+          |}""".stripMargin,
+      "Uses.java" ->
+        """package demo;
+          |class Uses<T> {
+          |  Arr<T> collect(MySet<T> s) { return s.iterator().toArray(); }
+          |  Arr<T> collectInto(MySet<T> s, Arr<T> a) { return s.iterator().toArray(a); }
+          |  java.util.Iterator<T> asIter(MySet<T> s) { return s.iterator(); }
+          |}""".stripMargin), ph)
+    // toArray(0): builds a DynamicArray from the iterator via foreach
+    assertEmits(p, "foreach(bpR.add)")
+    assertEmits(p, "lowlevel.util.DynamicArray")
+    // toArray(1): collects into the provided array
+    assertEmits(p, ".foreach(bpA.add); bpA")
+    // hasNext is parenless on scala.collection.Iterator
+    assertNotEmits(p, ".hasNext()")
+    // asIter slot expects JavaIterator — chain wraps with JavaIterator.from
+    assertEmits(p, "JavaIterator.from(")
+    // collect slot does NOT wrap — the slot accepts the retarget image (DynamicArray, not JavaIterator)
+    // verify no double-wrapping of toArray: the Template builds the result, no JavaIterator involved
+    assertNotEmits(p, "JavaIterator.from(s.orderedItems.iterator).toArray")
+  }
+
   test("a type test at a PARAMETERISED retarget target is erased to a wildcard and counted (K18)") {
     import CollectionsTransform.RetargetArg.*
     val ph = new CollectionsTransform(

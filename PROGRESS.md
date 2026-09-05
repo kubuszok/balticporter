@@ -1425,7 +1425,6 @@ hit only prose). Grouped rows share one classification; every key is listed.
 | `ModelLoader#getDependencies`, `ParticleEffectLoader#getDependencies` | gdx | ii | item 11 | Tuple2 construct-then-assign(`_1`/`_2`) pattern unhandled |
 | `Node#calculateBoneTransforms(boolean)`, `ModelInstance#invalidate(Node)` | gdx | ii | item 11 | `IndexedField` retargetRewrite missing for OrderedMap `keys(i)`/`values(i)` |
 | `NodePart#set(NodePart)`, `MapProperties#putAll(MapProperties)` | gdx | ii | item 11 (likely permanent) | `collection-internal`: covariant `putAll` formal has no image on invariant target |
-| `Selection#toArray`, `#toArray(Array)` | gdx | ii | 8b(k) | `selected.iterator().toArray()` selects a member of gdx `OrderedSetIterator`, which the chain turned into an untyped scala `Iterator`; retarget the set iterators as item 1 did the map ones |
 | `ArraySelection#validate` | gdx | ii | item 11 | `RetargetBoundaryCheck` `IteratorRemove` kind: Chain iterator has no `.remove()` |
 | `SelectBox#getSelectedIndex`, `List#getSelectedIndex` | gdx | ii | K37 | `collection-internal`: `OrderedSet <: ObjectSet` has no image in lls |
 | `AssetLoadingTask#removeDuplicates` | gdx | ii | item 11 | redundant `preserveOrder` write for DynamicArray's fixed-order semantics |
@@ -1443,6 +1442,6 @@ hit only prose). Grouped rows share one classification; every key is listed.
 | `PooledEngine$ComponentPools#clear()` | ashley | ii | item 11 | `TypeRedirectTransform` resolved the lambda formal as the parent `Pool[?]`, not the retyped field type |
 | `ImmutableArrayTests#forbiddenRemoval` | ashley | i | `divergence-verdicts.tsv:141` (`ImmutableArraySuite`, justified) | java `iterator().remove()` throws; Scala's `Iterator` has none — verify read-only instead |
 
-Counts by class: i=5, ii=32, iii=8, iv=3 (48 keys, 29 grouped rows); retired 2026-09-04: `Selection#iterator`, `MapLayers/MapObjects#getByType`; 2026-09-05: `BitmapFont#<init>(…)` (a constructor is never substituted — the key was dead) (ii=25 remain; vfx ×3 reclassified iii).
-Counts by port: visui=5 (iv=3, ii=2), gdx=22 (i=2 test, ii=20 main), gltf=3 (i=2, iii=1),
+Counts by class: i=5, ii=30, iii=8, iv=3 (46 keys, 28 grouped rows); retired 2026-09-04: `Selection#iterator`, `MapLayers/MapObjects#getByType`; 2026-09-05: `BitmapFont#<init>(…)` (a constructor is never substituted — the key was dead) ; `Selection#toArray` ×2 (ii=23 remain; vfx ×3 reclassified iii).
+Counts by port: visui=5 (iv=3, ii=2), gdx=20 (i=2 test, ii=18 main), gltf=3 (i=2, iii=1),
 textra=4 (ii=4), vfx=3 (ii=3), ai=7 (ii=2, iii=5), ashley=4 (i=1, ii=2, iii=1).
