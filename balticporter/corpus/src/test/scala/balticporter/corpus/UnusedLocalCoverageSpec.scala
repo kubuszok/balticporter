@@ -18,6 +18,7 @@ class UnusedLocalCoverageSpec extends PortSuite:
       |  int m(int t) { int dt = 1 - t; return t; }
       |  static int s(int t) { int t3 = t * t; return t; }
       |  Runnable r() { return new Runnable() { public void run() {} void dead(int q) {} }; }
+      |  Object carrier() { return new Object() { private String name = "tobi"; private int n = 3; }; }
       |}
       |""".stripMargin
 
@@ -36,7 +37,11 @@ class UnusedLocalCoverageSpec extends PortSuite:
     assertEmits(ported, "C.compute(3)")
   }
 
-  test("a non-override method of an anonymous class that nothing calls is dead code, deleted") {
-    assertNotEmits(ported, "def dead")
-    assertEmits(ported, "def run()")
+  test("a non-override method of an anonymous class is KEPT (it may implement a default method) and suppressed") {
+    assertEmitsMatch(ported, """nowarn\("msg=unused"\)[^\n]*\n[^\n]*def dead\(""")
+  }
+
+  test("an anonymous class's private field is state for its consumer (reflection, K21): kept, suppressed") {
+    assertEmits(ported, "name: java.lang.String = \"tobi\"")
+    assertEmits(ported, "n: scala.Int = 3")
   }

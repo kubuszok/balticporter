@@ -85,7 +85,9 @@ final class UnusedSymbolTransform extends Phase:
     val toSuppress = collection.mutable.Map[SymId, String]()  // sym -> nowarn msg
     val refused    = collection.mutable.ListBuffer[(String, String, Origin)]()  // (fqn, guard, origin)
 
-    def classifyPrivateMember(v: Tree.ValDef): Unit =
+    /** @param anon an anonymous class exists to CARRY state for the framework it is handed to,
+      *             which reads its fields reflectively (K21): never deleted, only suppressed */
+    def classifyPrivateMember(v: Tree.ValDef, anon: Boolean = false): Unit =
       program.symbolOf(v.symbol).foreach { s =>
         if !s.flags.isPrivate || s.flags.isParam || s.flags.isParamAccessor then ()
         else if isSubstitutionReferenced(s) then
@@ -93,17 +95,15 @@ final class UnusedSymbolTransform extends Phase:
         else if s.name == "serialVersionUID" then
           toSuppress(v.symbol) = "msg=unused"
         else if isUnreferenced(v.symbol) then
-          if UnusedSymbolTransform.isSideEffectFree(v.rhs, opName) then toDelete += v.symbol
+          if !anon && UnusedSymbolTransform.isSideEffectFree(v.rhs, opName) then toDelete += v.symbol
           else toSuppress(v.symbol) = "msg=unused"
         else if isWriteOnly(v.symbol) && s.flags.isMutable then
           toSuppress(v.symbol) = "msg=not read"
       }
 
-    /** @param anon in an anonymous class a non-override method is unreachable by name, so it is
-      *             classified as a private one would be */
-    def classifyPrivateDef(d: Tree.DefDef, anon: Boolean = false): Unit =
+    def classifyPrivateDef(d: Tree.DefDef): Unit =
       program.symbolOf(d.symbol).foreach { s =>
-        if (s.flags.isPrivate || (anon && !s.flags.isOverride)) && !s.flags.isParam && isUnreferenced(d.symbol) &&
+        if s.flags.isPrivate && !s.flags.isParam && isUnreferenced(d.symbol) &&
            s.name != "<init>" && !s.name.endsWith("_=") &&
            !Set("equals", "hashCode", "toString", "clone", "finalize").contains(s.name) then
           if isSubstitutionReferenced(s) then
@@ -129,10 +129,15 @@ final class UnusedSymbolTransform extends Phase:
         }
         StandardTraversal.allAnonClasses(cd).foreach { (anon, _) =>
           anon.body.foreach {
-            case v: Tree.ValDef => classifyPrivateMember(v)
+            case v: Tree.ValDef => classifyPrivateMember(v, anon = true)
+            // an anonymous method without the override flag may still implement a DEFAULT method
+            // (java 8): deleting it would hand the call to the default at 0 errors — suppressed only
             case d: Tree.DefDef =>
-              classifyPrivateDef(d, anon = true)
-              if program.symbolOf(d.symbol).exists(_.flags.isOverride) then classifyNonPrivateDef(d)
+              classifyPrivateDef(d)
+              program.symbolOf(d.symbol).foreach { s =>
+                if !s.flags.isPrivate && !s.flags.isOverride && !s.flags.isParam && s.name != "<init>" &&
+                   isUnreferenced(d.symbol) then toSuppress(d.symbol) = "msg=unused"
+              }
             case _ => ()
           }
         }

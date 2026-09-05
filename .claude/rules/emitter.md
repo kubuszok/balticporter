@@ -187,3 +187,6 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   (`UnusedSymbolTransform`'s discard was a no-op for 15 locals while its decision was recorded).
 - scalac's `-Wunused` texts: a write-only `var` (local or private) is "not read", an unreferenced
   private is "unused"; a compound assignment READS; `@nowarn` on the definition suppresses both.
+- A recorded decision the rewrite never applied hides a misclassification: the moment the
+  unused-symbol rewrite reached anonymous bodies, 16 liqp tests failed — an anonymous class's
+  private field is state its consumer reads reflectively (K21), so it is suppressed, never deleted.
