@@ -783,7 +783,7 @@ sge.textra.Line	sge.textra.Line#reset()	def	0d78585ae928d137
 sge.textra.Line	sge.textra.Line#size(float,float)	def	e072573ee6fcc4ea
 sge.textra.Line	sge.textra.Line#toString()	def	4e248bb5a887488d
 sge.textra.Line	sge.textra.Line#width	val	e3add5f388a29b62
-sge.textra.Parser	sge.textra.Parser	class	11bb9bb4ef0097e8
+sge.textra.Parser	sge.textra.Parser	class	607326009b1c1bf9
 sge.textra.Parser	sge.textra.Parser#BOOLEAN_TRUE	val	901a909e79461476
 sge.textra.Parser	sge.textra.Parser#BRACKET_MINUS_TO_TAG	val	456f2f924c941afb
 sge.textra.Parser	sge.textra.Parser#COLOR_MARKUP_TO_TAG	val	7d860d68f0e484ac
@@ -800,8 +800,8 @@ sge.textra.Parser	sge.textra.Parser#PATTERN_TOKEN_STRIP	val	74d392c77d66627b
 sge.textra.Parser	sge.textra.Parser#RESET_REPLACEMENT	val	b8fd205debd7265a
 sge.textra.Parser	sge.textra.Parser#RESET_TAG	val	141b37ae2d254e9c
 sge.textra.Parser	sge.textra.Parser#UNDO_TAG	val	61f98b37ba8413e2
-sge.textra.Parser	sge.textra.Parser#compileTokenPattern()	def	2122b9ec596978f9
-sge.textra.Parser	sge.textra.Parser#getResetReplacement()	def	8f0ee9cf21290b44
+sge.textra.Parser	sge.textra.Parser#compileTokenPattern()	def	1ebf4bef8458d533
+sge.textra.Parser	sge.textra.Parser#getResetReplacement()	def	8ab458de8c601528
 sge.textra.Parser	sge.textra.Parser#handleBracketMinusMarkup(String)	def	fd88ac5f2f67c708
 sge.textra.Parser	sge.textra.Parser#parseRegularTokens(TypingLabel)	def	fff94809cede2168
 sge.textra.Parser	sge.textra.Parser#parseReplacements(TypingLabel)	def	f0c05261b8d3a715

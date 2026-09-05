@@ -8,7 +8,7 @@ api-parity(mutability)	22
 api-parity(null-model)	43
 api-parity(opaque)	12
 api-parity(operator)	0
-api-parity(port-extra)	642
+api-parity(port-extra)	645
 api-parity(rename)	0
 api-parity(signature)	472
 api-parity(static-placement)	26
@@ -26,7 +26,7 @@ class-init-trigger	0
 collection-boundary	0
 collection-closure	0
 collection-internal	0
-collection-retarget	78
+collection-retarget	80
 context-seam	45
 dependency-coverage	0
 dependency-coverage(all)	37
