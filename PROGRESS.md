@@ -1326,6 +1326,7 @@ otherwise invent, plus every engine gap that keeps such policy from being expres
 | java vs hand-port behaviour | java is the default contract. Every divergence goes through the `divergence-investigator` agent: justified ⇒ a NAMED rule/injection; unjustified ⇒ a hand-port defect, adapted or dropped with the finding recorded. |
 | `ENGINE-LIMITS.md` | FIX EVERYTHING. No entry may end open, limit, refused or do-not-retry without a measured exit. |
 | non-java hand ports | port the java sge KEPT; the non-java half (Rust freetype, GLFW controllers, Rapier, platform bindings) stays hand-written `src/`. gdx-box2d/bullet and the non-java ssg modules are out by construction. |
+| lls (the base beneath sge) | decided 2026-09-05: `lowlevel-scala` joins the corpus as `ported/lls`, the BASE `sge` extends (§13.28). Its API is held to the same rule as every hand port: an UNJUSTIFIED divergence from java is fixed IN LLS, never carried as a rule. Justified hardening is exactly three things: `Nullable` for null-returning methods, `final` where possible, additional tests. |
 | CI / publishing | sge/ssg's job once they consume; the `just` lanes are the gate here. |
 | vendored upstream trees | re-pinned to the commit sge/ssg's submodule holds; a mismatch is FATAL. |
 
@@ -1433,3 +1434,30 @@ hit only prose). Grouped rows share one classification; every key is listed.
 Counts by class: i=5, ii=18, iii=8, iv=3 (34 keys, 19 grouped rows); retired 2026-09-04: `Selection#iterator`, `MapLayers/MapObjects#getByType`; 2026-09-05: `BitmapFont#<init>(…)` (dead key), `Selection#toArray` x2, vfx x3 reclassified iii; 2026-09-05b: `FirstPersonCameraController#keyUp` (IntIntMap remove Template), `Node#calculateBoneTransforms` + `ModelInstance#invalidate` (IndexedField via), `NodePart#set` + `MapProperties#putAll` (putAll compiles without cast); 2026-09-05c: `Actor#<clinit>` (Construct at C::new), `AssetManager#getAssetFileName` (return inside nested foreachEntry), `ModelLoader#getDependencies` + `ParticleEffectLoader#getDependencies` (Tuple2 construct-then-assign fold); 2026-09-05d: `AssetManager#clear` (Keys toArray Template + getAndIncrement), `ArraySelection#validate` (OrderedSet removing iterator K36), `AssetLoadingTask#removeDuplicates` (DropWrite K36) (ii=10 remain).
 Counts by port: visui=5 (iv=3, ii=2), gdx=9 (i=2 test, ii=7 main), gltf=3 (i=2, iii=1),
 textra=2 (ii=2), vfx=3 (iii=3), ai=7 (ii=2, iii=5), ashley=2 (i=1, iii=1).
+
+### 13.28 lls — the base beneath sge (decided 2026-09-05)
+
+`/Users/dev/Workspaces/kubuszok/lls` (module `lls/`, v0.3.0, 47 commits) carries `Ported from`
+headers for 12 libGDX sources — `utils.{Array, ObjectMap, ObjectSet, OrderedMap, OrderedSet,
+ArrayMap, Sort, TimSort, ComparableTimSort, Select, QuickSelect}`, `math.MathUtils` — beside five
+hand-written originals (`Nullable`, `MkArray`, `ArrayView`, `Eval`, `Resource`) and 52 test files.
+Today every sge port RETARGETS onto it (`LibgdxCoreMigrate` drops six of the twelve types and maps
+them through `retarget`/`retargetRewrites`; ~437 `collection-retarget` rows are that mapping's
+residue), and the classpath does not reach the frontend (`.ref` 1 at `Label`, K37's `OrderedSet`).
+
+Bar: **API parity with a verdict per row, not a drop-in of lls's internals.** lls is a
+re-implementation (private ctor + factories, `MkArray` backing, `filled: Array[Boolean]` for the
+null-key sentinel, `OrderedMap` DELEGATING to `ObjectMap`, copy-on-write snapshots); each
+representation delta is one recorded `divergence-verdicts.tsv` row, never a mechanism. API rows:
+justified only as `Nullable`/`final`/tests; everything else is fixed in lls (user, 2026-09-05).
+
+Waves: (1) census port — `ported/lls`, `label = "lls"`, sourceSet = the 12 files,
+`packageRenames` `com.badlogic.gdx.utils -> lowlevel.util`, `com.badlogic.gdx.math -> lowlevel.math`,
+`typeRenames` `Array -> DynamicArray`, parity root `../lls/lls/src/main/scala`, lls's hand-written
+half and test tree joined as unmanaged source dirs of `port-lls` (never edited); the lane reports
+errors, `api-parity` by family, and the lls suite's compile — NO engine edits, every gap counted.
+(2) verdicts through `divergence-investigator`, `OrderedSet <: ObjectSet` first. (3) `LibgdxPolicy.core`
+becomes `LlsPolicy.core.extendedBy(...)`; the six `retarget` entries and their rewrite tables go,
+`collection-retarget` measured before/after. Expected to surface: many-to-one type collapse
+(`IntArray`/`FloatArray`/… -> `DynamicArray[Prim]`), a spelling no manifest key has today.
+
