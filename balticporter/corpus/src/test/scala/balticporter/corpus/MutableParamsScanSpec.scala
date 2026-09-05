@@ -112,3 +112,38 @@ class MutableParamsScanSpec extends munit.FunSuite:
     assertEquals(clue(superArgsOf("Plain")), List("off$p, n$p"))
     assert(!ctorOut.linesIterator.filter(_.contains("class Plain")).exists(_.contains("$arg")), clue(ctorOut))
   }
+
+  /** JLS 14.20 — java's EXCEPTION parameter is reassignable too (only a multi-catch's is
+    * implicitly final); scala's is a pattern binding, i.e. a `val`. */
+  private val catchSrc =
+    """package demo;
+      |class Handler {
+      |  Object retry() {
+      |    try { return work(); }
+      |    catch (Exception ex) {
+      |      try { return fallback(); }
+      |      catch (RuntimeException second) { ex = second; }
+      |      throw new IllegalStateException("failed", ex);
+      |    }
+      |  }
+      |  // CONTROL: never reassigned, so the binding stays java's own name
+      |  Object plain() { try { return work(); } catch (Exception e) { return e.getMessage(); } }
+      |  Object work() { return null; }
+      |  Object fallback() { return null; }
+      |}
+      |""".stripMargin
+
+  private val catchOut =
+    new TirEmitter(Pipeline.run(SpoonTir.fromSource(catchSrc), List(new MutableParamsTransform))).emit
+
+  test("a reassigned catch parameter binds `$arg` and opens its handler with the var") {
+    assert(clue(catchOut).contains("case ex$arg: java.lang.Exception =>"))
+    assert(catchOut.contains("var ex: java.lang.Exception = ex$arg"))
+    assert(catchOut.contains("ex = second"))
+  }
+
+  test("a catch parameter that is never reassigned is left ALONE") {
+    assert(clue(catchOut).contains("case e: java.lang.Exception =>"))
+    assert(!catchOut.contains("e$arg"))
+    assert(!catchOut.contains("second$arg"))
+  }

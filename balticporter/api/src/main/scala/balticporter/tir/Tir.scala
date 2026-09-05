@@ -87,6 +87,12 @@ final case class Flags(
     isNative: Boolean = false, // Java `native` (JNI) — a Panama-FFI rewrite target
     isCovariant: Boolean = false,
     isContravariant: Boolean = false,
+    /** the FRONTEND resolved a declaration for this type — in the source set, on the frontend
+      * classpath, or from the class file. AFFIRMATIVE evidence, never a refutation (CLAUDE.md
+      * §4.56): a symbol nothing set this on may be one a PHASE minted, and that is not a
+      * class-file name. Set by `SpoonTirBuilder.typeSym`; read by `PackageRenameTransform`,
+      * where only a resolved external keeps its own FQN. */
+    isResolved: Boolean = false,
 )
 
 /** Open, extensible domain semantics attached to symbols by transforms. */

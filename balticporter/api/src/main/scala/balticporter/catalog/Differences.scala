@@ -170,6 +170,12 @@ object Differences:
       Silent, Handled, Predicted, Universal,
       "SpoonTir.ctorCall: isBoxedWrapper && one argument -> `<Wrapper>.valueOf(arg)`; the ONE delta is JS-E01's cache (a `new` is a distinct object, `valueOf` may not be) — no corpus site compares a fresh box by identity; BoxingCtorSpec",
       Lowered("CtConstructorCall", Dispatch.Expression)),
+    Difference(eId(20), "a PRIMITIVE class literal — `int.class` is statically `Class<Integer>`, not `Class<int>`",
+      "JLS 15.8.2 — `p.class` for a primitive `p` denotes the `Class` object for `p` and has type `Class<P>`, `P` the wrapper",
+      "SLS 12.5 / `Predef.classOf[T]: Class[T]` — `classOf[Int]` IS `Integer.TYPE` at RUNTIME and `Class[Int]` STATICALLY, and `Class` is invariant, so no `Class[T <: Object]` slot accepts it",
+      Loud, Handled, Rule44, Universal,
+      "TirEmitter.primitiveClassLiteral over Descriptor.ValueClassBoxes — `classOf[Int].asInstanceOf[java.lang.Class[java.lang.Integer]]` keeps the runtime object AND java's static type; PrimitiveClassLiteralSpec",
+      Rendered("Literal")),
   )
 
   // -------------------------------------------------------------------------------------------

@@ -221,6 +221,17 @@ object Descriptor:
     "scala.Char"    -> "char",    "scala.Int"    -> "int",    "scala.Long"   -> "long",
     "scala.Float"   -> "float",   "scala.Double" -> "double", "scala.Unit"   -> "void")
 
+  /** …and the WRAPPER java names for each (JLS 5.1.7, plus `void`/`Void`, which only a class
+    * literal reaches — JLS 15.8.2). Keyed the same way as [[ValueClassPrimitives]] so the two
+    * cannot drift; `void` has no boxing conversion and is in this map for the class-literal
+    * reading alone (`JS-E20`). */
+  val ValueClassBoxes: Map[String, String] = Map(
+    "scala.Boolean" -> "java.lang.Boolean", "scala.Byte"   -> "java.lang.Byte",
+    "scala.Short"   -> "java.lang.Short",   "scala.Char"   -> "java.lang.Character",
+    "scala.Int"     -> "java.lang.Integer", "scala.Long"   -> "java.lang.Long",
+    "scala.Float"   -> "java.lang.Float",   "scala.Double" -> "java.lang.Double",
+    "scala.Unit"    -> "java.lang.Void")
+
   /** one written parameter → a [[Param]]. `int[][]` nests; an empty or `?` spelling is
     * [[Param.Unresolved]]. */
   def paramOf(spelling: String): Param =

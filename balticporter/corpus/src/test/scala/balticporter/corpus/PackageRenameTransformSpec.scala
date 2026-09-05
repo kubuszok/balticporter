@@ -441,3 +441,73 @@ class PackageRenameTransformSpec extends munit.FunSuite:
     assert(PackageRenameTransform.check(before, p.upstreamTable).matched("com.example.demo.Widget") > 0)
     assertEquals(PackageRenameTransform.check(a, p.upstreamTable).matched, Map.empty[String, Int])
   }
+
+  // ---------------------------------------------------------------------------
+  // an UNOWNED symbol under a port prefix — CLAUDE.md §4.56: a class-file FQN no phase may move
+  // ---------------------------------------------------------------------------
+
+  private val withExternal = SpoonTir.fromSource(
+    """package com.example.demo;
+      |public class Uses {
+      |  public boolean go() { return com.example.ext.Loader.isMac; }
+      |}
+      |""".stripMargin)
+
+  private val extFqn = "com.example.ext.Loader"
+
+  /** the same program with `Loader` marked RESOLVED — what a frontend classpath holding the class
+    * file produces, which no unit-test source root can supply. */
+  private def resolvingExternal: Program =
+    val t = withExternal.symbols.all.foldLeft(withExternal.symbols) { (acc, s) =>
+      if s.fullName.startsWith(extFqn) then acc.updated(s.copy(flags = s.flags.copy(isResolved = true)))
+      else acc
+    }
+    withExternal.rebuilt(symbols = t)
+
+  private val toSge = Map("com.example" -> "sge.ui")
+
+  test("an UNRESOLVED external under the port's prefix moves — nothing says its FQN is fixed") {
+    assert(withExternal.symbols.all.exists(s => s.fullName == extFqn && !s.flags.isResolved),
+           clue = "the frontend claimed a resolution it does not have")
+    val after = Pipeline.run(withExternal, List(new PackageRenameTransform(toSge)))
+    assert(names(after).contains("sge.ui.ext.Loader"))
+    assert(!names(after).contains(extFqn))
+  }
+
+  test("a RESOLVED, undropped external under the prefix keeps its class-file FQN") {
+    val after = Pipeline.run(resolvingExternal, List(new PackageRenameTransform(toSge)))
+    assert(names(after).contains(extFqn), clue = "a resolved external was moved out of its namespace")
+    assert(!names(after).contains("sge.ui.ext.Loader"))
+    // the port's OWN declarations still move — the rule narrows nothing else
+    assert(names(after).contains("sge.ui.demo.Uses"))
+  }
+
+  test("…and moves after all when the port DROPS it: the replacement is the port's own") {
+    val after = Pipeline.run(resolvingExternal,
+                             List(new PackageRenameTransform(toSge, drops = Set(extFqn))))
+    assert(names(after).contains("sge.ui.ext.Loader"))
+    assert(!names(after).contains(extFqn))
+  }
+
+  test("a symbol outside every port prefix is untouched, resolved or not") {
+    val after = Pipeline.run(withExternal, List(new PackageRenameTransform(toSge)))
+    assert(!names(after).exists(_.startsWith("sge.ui.java")))
+  }
+
+  test("…or when the port INJECTS ready-made Scala at the RENAMED name: upstream declares it nowhere") {
+    val after = Pipeline.run(resolvingExternal,
+                             List(new PackageRenameTransform(toSge, injected = Set("sge.ui.ext.Loader"))))
+    assert(names(after).contains("sge.ui.ext.Loader"))
+    assert(!names(after).contains(extFqn))
+  }
+
+  test("an injection at some OTHER name moves nothing — the set is matched, never approximated") {
+    val after = Pipeline.run(resolvingExternal,
+                             List(new PackageRenameTransform(toSge, injected = Set("sge.ui.ext.Other"))))
+    assert(names(after).contains(extFqn))
+  }
+
+  test("a MEMBER of a resolved external stays with its owner — resolution is the TYPE's fact") {
+    val after = Pipeline.run(resolvingExternal, List(new PackageRenameTransform(toSge)))
+    assert(!names(after).exists(_.startsWith("sge.ui.ext.Loader")))
+  }

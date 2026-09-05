@@ -2,7 +2,8 @@ package balticporter.transform
 
 import balticporter.tir.*
 
-/** Java lets a method reassign its parameters; Scala parameters are `val`. For each parameter
+/** Java lets a method reassign its parameters, and its EXCEPTION parameters (JLS 14.20 — only a
+  * multi-catch's is implicitly final); Scala's are `val` and a pattern binding. For each one
   * written to in its body, renames it to `name$arg` and prepends a mutable local
   * `var name: T = name$arg`, so every body reference binds to the `var`. KNOWN LIMIT: a LAMBDA's
   * own reassigned parameter is not reached — degrades loudly as a compile error. */
@@ -12,6 +13,9 @@ final class MutableParamsTransform extends Phase:
   private val minted = collection.mutable.ListBuffer[Symbol]()
   // param SymId → fresh arg SymId, for every parameter reassigned somewhere in its method.
   private val argOf  = collection.mutable.Map[SymId, SymId]()
+  // …and the same for a CATCH parameter, kept apart: a catch clause is rewritten where it stands,
+  // not at the enclosing `DefDef`'s parameter list, and the two decisions read differently.
+  private val catchArgOf = collection.mutable.Map[SymId, SymId]()
   private val nowVar = collection.mutable.Set[SymId]()
 
   override def run(program: Program): Program =
@@ -27,15 +31,25 @@ final class MutableParamsTransform extends Phase:
       written.foreach { p =>
         program.symbolOf(p).foreach { s => argOf(p) = mint(s); nowVar += p }
       }
-    // StandardTraversal reaches every `DefDef`, including an anonymous class's methods (§3).
+    def scanTry(t: Tree.Try)(using Program): Unit =
+      t.catches.foreach { c =>
+        val p = c.param.symbol
+        if !catchArgOf.contains(p) && reassignedIn(c.body, Set(p)).nonEmpty then
+          program.symbolOf(p).foreach { s => catchArgOf(p) = mint(s); nowVar += p }
+      }
+    // StandardTraversal reaches every `DefDef`, including an anonymous class's methods, and every
+    // `Try` wherever a term can appear — a field initialiser's as much as a method body's (§3).
     locally {
       given Program = program
       val scan = new Phase:
         def name = "reassigned-params->var/scan"
         override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef = { scanDef(d); d }
+        override def transformTerm(t: Term)(using Program): Term = t match
+          case x: Tree.Try => scanTry(x); x
+          case other       => other
       program.units.foreach(u => StandardTraversal.mapClassDef(scan, u))
     }
-    if argOf.isEmpty then return program
+    if argOf.isEmpty && catchArgOf.isEmpty then return program
 
     // param symbol becomes a mutable local (same name/id -> references follow); fresh arg symbol
     // (isParam) takes the slot.
@@ -65,11 +79,37 @@ final class MutableParamsTransform extends Phase:
         }
       }
 
+    // …and one row per DECLARATION holding a rewritten catch clause, keyed the same way.
+    catchArgOf.keys.toList
+      .flatMap(p => program.symbolOf(p).map(s => s.owner -> s.name))
+      .groupBy(_._1)
+      .foreach { (owner, ps) =>
+        program.symbolOf(owner).foreach { m =>
+          record(Decision(
+            kind       = Decision.Kind.RetypedSignature,
+            subject    = owner,
+            subjectFqn = m.fullName,
+            detail = Map(
+              "params" -> ps.map(_._2).distinct.sorted.mkString(", "),
+              "from"   -> "java exception parameters, reassigned in the handler",
+              "to"     -> "`<name>$arg` catch bindings, with a leading `var <name> = <name>$arg`",
+              "why"    -> ("java lets a handler reassign its exception parameter (JLS 14.20); a " +
+                "scala pattern binding is a `val`, so the reassignment would not compile"),
+            ),
+            reason = Reason.Universal("reassigned-param-to-var"),
+            origin = Decision.originOf(program, owner),
+          ))
+        }
+      }
+
     val symbols = SymbolTable(symbols0 ++ minted)
     given Program = program.rebuilt(symbols = symbols)
     val rewrite = new Phase:
       def name = "reassigned-params->var/rewrite"
       override def transformDefDef(d: Tree.DefDef)(using Program): Tree.DefDef = rewriteDef(d)
+      override def transformTerm(t: Term)(using Program): Term = t match
+        case x: Tree.Try => rewriteTry(x)
+        case other       => other
     val units = program.units.map(u => StandardTraversal.mapClassDef(rewrite, u))
     program.rebuilt(units, symbols)
 
@@ -95,6 +135,26 @@ final class MutableParamsTransform extends Phase:
       case Some(other) => Tree.Block(prelude, other, other.tpe, o)
       case None        => Tree.Block(prelude, Tree.Literal(Constant.UnitC, TypeRepr.NoType, o), TypeRepr.NoType, o)
     d.copy(paramss = paramss2, rhs = Some(body))
+
+  /** The same move at a CATCH: the pattern binds `name$arg` and the handler opens with
+    * `var name: T = name$arg`, so every reference in the body still reads `name`. The clause is
+    * rewritten where it stands — a catch has no parameter list to rename (JLS 14.20). */
+  private def rewriteTry(t: Tree.Try)(using Program): Tree.Try =
+    if !t.catches.exists(c => catchArgOf.contains(c.param.symbol)) then t
+    else
+      t.copy(catches = t.catches.map { c =>
+        catchArgOf.get(c.param.symbol) match
+          case scala.None => c
+          case Some(a) =>
+            val o    = c.body.origin
+            val decl = Tree.ValDef(c.param.symbol, c.param.tpt,
+                                   Some(Tree.Ident(a, c.param.tpt.tpe, o)), o)
+            val body = c.body match
+              // `copy`, never a fresh Block: end-of-body trivia the rebuild would drop (rewriteDef).
+              case b @ Tree.Block(stats, _, _, _, _) => b.copy(stats = decl :: stats)
+              case other => Tree.Block(List(decl), other, other.tpe, o)
+            Tree.CatchCase(c.param.copy(symbol = a), body)
+      })
 
   /** A constructor's leading `super(…)`/`this(…)` reads the PARAMETER SLOTS, never the `var`s — the
     * `var` is prepended AFTER the delegation (JLS 8.8.7), so it does not exist yet there. Left

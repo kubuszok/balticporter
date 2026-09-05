@@ -56,6 +56,10 @@ private[spoon] final class Minter:
       if info != NoType && s.info == NoType then s = s.copy(info = info)
       if annotations.nonEmpty && s.annotations.isEmpty then s = s.copy(annotations = annotations)
       if flags.isFinal && !s.flags.isFinal then s = s.copy(flags = s.flags.copy(isFinal = true))
+      // `isResolved` fills the same way: resolution is a property of the NAME against the
+      // frontend classpath, so the first reference that resolved it answers for every later one,
+      // and a `define` for a type the model declares replaces the stub whole.
+      if flags.isResolved && !s.flags.isResolved then s = s.copy(flags = s.flags.copy(isResolved = true))
       syms(id) = s
     id
 

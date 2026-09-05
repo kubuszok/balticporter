@@ -1,5 +1,6 @@
 package balticporter.corpus.libgdx
 
+import balticporter.corpus.JnigenClasspath
 import balticporter.core.{FrontendConfig, PortManifest, Provenance, ResourceTree, RuntimeMode}
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 import balticporter.transform.MutableParamsTransform
@@ -26,7 +27,9 @@ object LibgdxL0Migrate:
       label     = "sge-l0",
       portRoot  = repoRoot.resolve("ported/sge-l0"),
       sourceSet = SourceSet.Main,
-      frontend  = FrontendConfig(base, files, Nil, Nil),
+      // gdx-jnigen-loader carries `SharedLibraryLoader`, which `gdx/src` references and no
+      // longer declares; without it on the classpath Spoon resolves no declaration for it.
+      frontend  = FrontendConfig(base, files, JnigenClasspath.entries(repoRoot), Nil),
       phases    = Nil,
       manifest  = Some(LibgdxLadder.universal(repoRoot)),
       provenance = Some(Provenance(

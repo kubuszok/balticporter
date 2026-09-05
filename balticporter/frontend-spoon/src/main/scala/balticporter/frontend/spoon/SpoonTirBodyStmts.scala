@@ -525,9 +525,33 @@ private[spoon] trait SpoonTirBodyStmts:
               .exists(dt => !ancestorFqns.headOption.getOrElse(Set.empty).contains(dt.getQualifiedName))
       val savedOv = inOverridingMember
       if ownCallee then inOverridingMember = false
-      val ct = try if ownScope then tpe(target) else tpBoundErased(target)
+      val ct = try if ownScope then tpe(target)
+                   else calleeInferredTarget(target, e).getOrElse(tpBoundErased(target))
                finally inOverridingMember = savedOv
       Tree.Typed(t, tt(ct, e), ct, originOf(e))
+
+  /** The type java's UNCHECKED CONVERSION actually converts TO, where the callee's formal is its
+    * own type VARIABLE and this call INFERRED it: `setSerializer(Class<T>, Serializer<T>)` given
+    * `Foo.class` converts a raw `Serializer` to `Serializer<Foo>` (JLS 5.1.9, 18), not to `T`'s
+    * bound. `None` where the parser supplies no inference or a name is not writable here — then
+    * the bound erasure stands. */
+  private[spoon] def calleeInferredTarget(target: CtTypeReference[?], e: CtExpression[?]): Option[TypeRepr] =
+    Option(e.getParent(classOf[CtInvocation[?]])).flatMap { inv =>
+      val fs = Option(inv.getExecutable.getExecutableDeclaration).collect {
+        case m: CtMethod[?] => m.getFormalCtTypeParameters.asScala.toList
+      }.getOrElse(Nil)
+      val as = inv.getActualTypeArguments.asScala.toList
+      if fs.isEmpty || fs.sizeIs != as.size then scala.None
+      else
+        val subst = fs.map(_.getSimpleName).zip(as)
+          .collect { case (n, a) if a != null && tpNameableHere(a) => n -> tpe(a) }.toMap
+        // EVERY variable, or none: a partial substitution leaves `substFormal`'s by-NAME fallback
+        // to answer for the rest, and that resolves an enclosing scope's variable of the same
+        // spelling (CLAUDE.md §4.56).
+        val vars = typeVarsOf(target)
+        if subst.isEmpty || vars.isEmpty || !vars.forall(subst.contains) then scala.None
+        else substFormal(target, subst)
+    }
 
   /** JS-G13's clause, as a function of the SLOT — java's array covariance (JLS 10.10) puts a
     * value of one array type where another is declared, and scala's `Array` is invariant.

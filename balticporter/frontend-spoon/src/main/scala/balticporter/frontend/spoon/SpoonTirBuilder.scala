@@ -690,24 +690,27 @@ private[spoon] final class Builder(subs: Substitutions = Substitutions.none,
   /** [[mentionsTypeVar]], but aware that a RAW generic use is emitted name-FILLED from the
     * same-named in-scope parameters — so `ResourceData` inside `ParticleBatch<T>` really does
     * depend on `T`, even though nothing in the Spoon type says so. */
-  private[spoon] def mentionsTypeVarFilled(tr: CtTypeReference[?], names: Set[String]): Boolean = tr match
-    case tv: CtTypeParameterReference => names(tv.getSimpleName) || boundMentions(tv, names)
-    case arr: CtArrayTypeReference[?] => mentionsTypeVarFilled(arr.getComponentType, names)
+  private[spoon] def mentionsTypeVarFilled(tr: CtTypeReference[?], names: Set[String], fuel: Int = 2): Boolean = tr match
+    case tv: CtTypeParameterReference => names(tv.getSimpleName) || boundMentions(tv, names, fuel)
+    case arr: CtArrayTypeReference[?] => mentionsTypeVarFilled(arr.getComponentType, names, fuel)
     case _ =>
       val args = tr.getActualTypeArguments.asScala.toList
-      if args.nonEmpty then args.exists(mentionsTypeVarFilled(_, names))
+      if args.nonEmpty then args.exists(mentionsTypeVarFilled(_, names, fuel))
       else rawFormalsOf(tr).exists(names)
 
   /** A METHOD type variable declared in terms of the receiver's depends on the receiver just as a
     * bare formal does. Bound only, never the variable's own NAME (a same-named callee `<T>` is a
-    * different variable — the confusion [[tpConcrete]] avoids). Depth-limited (F-bounds). */
+    * different variable — the confusion [[tpConcrete]] avoids). Depth-limited on BOUND HOPS, and
+    * the limit is THREADED THROUGH [[mentionsTypeVarFilled]]: a bound reached through a type
+    * ARGUMENT re-entered this function at full fuel, so a cyclic F-bound recursed until the
+    * `catch` below swallowed a `StackOverflowError` — 41 s of migration became 19 min. */
   private[spoon] def boundMentions(tv: CtTypeParameterReference, names: Set[String], fuel: Int = 2): Boolean =
     fuel > 0 && (try
       Option(tv.getDeclaration).flatMap(d => Option(d.getSuperclass))
         .filter(_.getQualifiedName != "java.lang.Object")
         .exists {
           case b: CtTypeParameterReference => names(b.getSimpleName) || boundMentions(b, names, fuel - 1)
-          case b                           => mentionsTypeVarFilled(b, names)
+          case b                           => mentionsTypeVarFilled(b, names, fuel - 1)
         }
     catch { case _: Throwable => false })
 
@@ -1169,8 +1172,10 @@ private[spoon] final class Builder(subs: Substitutions = Substitutions.none,
         case args => AppliedType(head, args.map(tpe))
 
   /** id of a referenced class type — our own or an external stub. Carries `@FunctionalInterface`
-    * and `isFinal` from the class file when readable (JS-C52, K18). REFUTER polarity (CLAUDE.md
-    * §4.56): unreadable means unannotated and not-final, the safe direction. */
+    * and `isFinal` from the class file when readable (JS-C52, K18), and `isResolved` where Spoon
+    * DID find a declaration — in the model, on the frontend classpath, or by reflection.
+    * Affirmative (CLAUDE.md §4.56): unreadable means unannotated, not-final and "no declaration
+    * reached us", never "this type does not exist". */
   private[spoon] def typeSym(r: CtTypeReference[?]): SymId =
     val (anns, flags) = try
       val td = r.getTypeDeclaration
@@ -1179,10 +1184,10 @@ private[spoon] final class Builder(subs: Substitutions = Substitutions.none,
           _.getAnnotationType.getQualifiedName == "java.lang.FunctionalInterface")
         then List(Annot(TypeRef(NoPrefix, minter.external("java.lang.FunctionalInterface", "FunctionalInterface")), Nil, Origin.synthetic))
         else Nil
-        val f = Flags(isFinal = td.hasModifier(ModifierKind.FINAL))
+        val f = Flags(isFinal = td.hasModifier(ModifierKind.FINAL), isResolved = true)
         (a, f)
       else (Nil, Flags())
-    catch case _: Exception => (Nil, Flags()) // unreadable class file — refuter polarity
+    catch case _: Exception => (Nil, Flags()) // unreadable class file — no affirmative evidence
     minter.external(typeKey(r), r.getSimpleName, annotations = anns, flags = flags)
 
   private[spoon] def primName(j: String): String = j match

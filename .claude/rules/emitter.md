@@ -99,6 +99,20 @@ Detail for `CLAUDE.md` §4.55, §4.56, §4.57, §4.575, §4.58, §4.59 and §4.6
   site is `OverrideGraph` (see `.claude/rules/collections.md`).
 - **A refusal predicate reads a SHAPE** (`CtorFunnel.supersedes`, C3's correction): read the lane as
   a population; MAY-assign on the prologue side, MUST-assign on the replay side.
+- **An UNOWNED symbol under the port's own prefix is renamed only where the FRONTEND RESOLVED no
+  declaration for its TYPE, or the PORT SUPPLIES the name.** The phase moved every symbol under a
+  prefix covering an owned symbol, for the replacements a port ships (8 errors without it) — and
+  with them a RESOLVABLE third-party class in the same namespace: libGDX moved
+  `SharedLibraryLoader` into `gdx-jnigen-loader` and the port renamed a class it neither declares
+  nor replaces (6 errors). The rule is three structural facts, no name test: `Flags.isResolved`,
+  set by `SpoonTirBuilder.typeSym` where Spoon FOUND a declaration; `Substitutions.dropTypes`
+  (upstream) and `PortManifest.injectedFqns` (emitted), either of which says the port supplies the
+  name. **Polarity is AFFIRMATIVE and the count is the proof of it**: a refuting `isUnresolved`
+  read a PHASE-MINTED name (an `OpaqueSpec` type the base mints, seen from a dependent) as
+  resolved and cost textra 2 errors, and a `dropTypes`-only supply test cost the full port 7 — a
+  type upstream no longer declares is INJECTED with nothing to drop. Resolution is the TYPE's
+  fact: a member climbs to its owner. The classpath is the other half — a port whose upstream moved
+  a class to another artifact DECLARES the artifact and puts the jar on `FrontendConfig.classpath`.
 - **A recursion that reads RIGHT**: twenty-eight `cd.body.foreach { case c: Tree.ClassDef => … }`
   walks were exact only while the frontend refused method-local classes; `Tree.ClassDef` is a
   `Statement`. State the walk once (`StandardTraversal.allClassDefs`, `TirEmitter.allDeclaredClasses`).

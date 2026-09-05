@@ -531,6 +531,9 @@ private[spoon] trait SpoonTirBodyExprs:
           val actuals = rt.getActualTypeArguments.asScala.toList
           val unknown = formals.nonEmpty && (actuals.isEmpty || actuals.exists(_.isInstanceOf[CtWildcardReference]))
           val names   = formals.map(_.getSimpleName).toSet
+          // The RESULT is deliberately NOT asked (`ENGINE-LIMITS.md` K40): a raw type erases its
+          // members whole (JLS 4.8), but Spoon reports a CAPTURE as raw, so a result-driven view
+          // erases receivers java never erased — 3 refusal specs and 4 errors, measured.
           val depends =
             execDeclOf(ex)
                   .map(_.getParameters.asScala.toList.map(_.getType))
@@ -872,8 +875,9 @@ private[spoon] trait SpoonTirBodyExprs:
     // bound it to the wrapper (`Class[Integer]`). Pinning `T=Integer` fixes it and lets
     // `Predef.Integer2int` unbox the result. Pinning other kinds (raw generics → `Array[?]`,
     // path-dependent types) only disturbs overload resolution, so leave those to free inference.
+    // A PRIMITIVE class literal in the argument list is the pin's main case, not an exclusion:
+    // the emitter now writes it at java's own static type (`JS-E20`).
     if formals > 0 && actuals.nonEmpty && actuals.sizeIs == formals && actuals.forall(isBoxedWrapper)
-      && !inv.getArguments.asScala.exists(isPrimitiveClassLiteral)
     then Tree.TypeApply(fun, actuals.map(a => tt(tpe(a), inv)), NoType, o)
     else pinUnconstrainedTypeArgs(fun, inv, o)
 
@@ -973,17 +977,6 @@ private[spoon] trait SpoonTirBodyExprs:
       case p: CtInvocation[?]   => p.getTarget eq inv
       case p: CtFieldAccess[?]  => p.getTarget eq inv
       case _                    => false
-
-  /** `int.class` etc. — Java types a primitive class literal as `Class<Integer>` (boxed), but we
-    * emit it as `classOf[scala.Int]` (`Class[Int]`). Baseline inference binds a `Class<T>` param's
-    * `T` to the primitive and matches; pinning `T` to the boxed wrapper would break that. So a
-    * call carrying one of these must keep inference free — don't pin its type arguments. */
-  private[spoon] def isPrimitiveClassLiteral(e: CtExpression[?]): Boolean = e match
-    case fr: CtFieldRead[?] if fr.getVariable.getSimpleName == "class" =>
-      fr.getTarget match
-        case ta: CtTypeAccess[?] => ta.getAccessedType.isPrimitive
-        case _                   => false
-    case _ => false
 
   private[spoon] val boxedWrappers = Set(
     "java.lang.Integer", "java.lang.Long", "java.lang.Short", "java.lang.Byte",

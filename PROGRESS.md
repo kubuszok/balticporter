@@ -1560,12 +1560,31 @@ only a KEPT JDK iterable), E067 59 (JNI `native` methods rendered as bodiless de
 `Gdx2DPixmap`, `ETC1`, … — `@native` is the honest L0 spelling), `Json#readValue` overload 16 (T17),
 `SharedLibraryLoader` absent 6, singles 4. **Two universal fixes the same day: 310 -> 26** (enhanced-for uses java's
 iterator protocol for any program type reaching `java.lang.Iterable` without a `foreach`; a JNI `native` method no FFI
-phase rewrote is emitted `@scala.native`); the full port stayed byte-flat (0 errors, 0 members). L0 residue, each a
-universal card: (i) 16 `Json#readValue` sites — java's `int.class` is statically `Class<Integer>` (JLS 15.8.2) and
-must be emitted at that type where a `Class<T extends Object>` slot takes it; (ii) 6 `SharedLibraryLoader` — the
-package rename rewrote an EXTERNAL FQN under the port's prefix (the class moved to `gdx-jnigen-loader` upstream; the
-rename must ask ownership, §4.56); (iii) 4 singles (`Json#newInstance` catch-param reassignment, two array
-`Found:` mismatches, a `Serializer[Object]` variance).
+phase rewrote is emitted `@scala.native`); the full port stayed byte-flat (0 errors, 0 members).
+**Five more universal fixes, 2026-09-05: 26 -> 2 typer errors**, both K40's counted residue — and BEHIND them 11
+`RefChecks` rows, measured on the one run that reached typer-0 and hidden again the moment the two came back
+(§3/G30): one family, `ENGINE-LIMITS.md` K39. The five: (i) a PRIMITIVE class
+literal is emitted at java's own static type (`classOf[Int].asInstanceOf[java.lang.Class[java.lang.Integer]]`,
+catalog `JS-E20`, §4.4) and `pinTypeArgs` no longer declines a call carrying one — 16 rows, and the two halves are
+one fix (the pin was excluded BECAUSE the literal was emitted at `Class[Int]`; without it scala infers `T` from the
+expected type and asks for `Class[Object & Int]`); (ii) `PackageRenameTransform` moves an UNOWNED symbol under a
+port prefix only where the frontend RESOLVED no declaration for its type (`Flags.isResolved`, affirmative) or the
+port SUPPLIES the name (`dropTypes` upstream, `injectedFqns` emitted), plus `JnigenClasspath` on L0's frontend
+classpath — 6 rows; a seventh universal fix came out of measuring it, `mentionsTypeVarFilled`'s F-bound fuel, which
+reset on every hop through a type ARGUMENT and turned ssg-md's 41 s migration into 19 min of swallowed
+`StackOverflowError`; (iii)
+two of the four singles, each universal: a reassigned CATCH parameter is java's exception parameter and takes
+`MutableParamsTransform`'s `$arg` + `var` (JLS 14.20); and java's UNCHECKED CONVERSION at an argument converts to
+the type THIS CALL INFERRED (`Serializer<TintedDrawable>`), not to the variable's bound. The OTHER TWO are K40 —
+a raw receiver's erased view driven by the member's RESULT, and the `Object[]` cast at a declared `T[]` formal:
+both java-correct, both refused here because Spoon reports a CAPTURE as raw, both COUNTED. Corpus cost of the
+five, all four lanes re-measured: 0 errors on gdx/liqp/textra/md; 0 members moved on liqp; 18 on gdx and 20 on textra
+(ssg-md 0), and EVERY one is a primitive class-literal site (`read(Json,JsonValue)`, `getJsonLoader`,
+`ParallelArray#allocateChannel`) — the unattributed residue is empty. Engine 1234, frontend-spoon 137, api 72 and
+corpus 1542/1544 green (the two are `ForEachFBoundReceiverSpec`, failing identically at this section's base
+commit). Every port needs `catalog(consulted) +1` acknowledged for the new `JS-E20` row, and gdx/textra a
+`portability(all)` +2 for the two `java.lang.reflect.Constructor` members the pinned call now reaches; nothing
+else moved, and no baseline was promoted here.
 
 **lls goes first (maintainer, 2026-09-05).** `ported/lls` is L0's first artifact: the twelve lls sources plus the
 seven libGDX helpers they reference (`RandomXS128`, `ArraySupplier`, `Collections`, `GdxRuntimeException`, `Null`,

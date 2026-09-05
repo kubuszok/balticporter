@@ -20,6 +20,14 @@ final class PackageRenameTransform(
     /** upstream TYPE FQNs whose boundary move the port declares deliberate. An entry that refuses
       * nothing is itself reported. */
     allowPackageSplit: Set[String] = Set.empty,
+    /** the port's `Substitutions.dropTypes`, UPSTREAM namespace: one of the two ways a port
+      * SUPPLIES the declaration at a name and so owns it ([[run]]). NOT this phase's own policy
+      * and NOT part of [[surfaceFingerprint]]: the manifest already publishes both, and two
+      * spellings of one key is what `ManifestAgreement` exists to prevent (CLAUDE.md §1.5). */
+    drops: Set[String] = Set.empty,
+    /** …and the other way: `PortManifest.injectedFqns`, EMITTED namespace — ready-made Scala the
+      * port ships at a name upstream no longer declares. */
+    injected: Set[String] = Set.empty,
 ) extends Phase,
       PolicyBound,
       PolicySource,
@@ -264,10 +272,13 @@ final class PackageRenameTransform(
         renames.keySet.filter(p => ownedNames.exists(n => PackageRenameTransform.longestMatch(n, Set(p)).isDefined)) ++
           acceptedTypes.keySet
       val table = hoisted.symbols.all.foldLeft(hoisted.symbols) { (t, s) =>
-        // owned, or merely under one of the renamed prefixes — a dropped type's injected
-        // replacement is interned as external but lives in the library's own namespace, so its
-        // references must move with the rename too (ENGINE-LIMITS: 8 errors without this).
-        if !(owned(s.id) || PackageRenameTransform.longestMatch(s.fullName, portOwnedPrefixes).isDefined) then t
+        // owned, or an UNOWNED symbol under a renamed prefix that this port really owns the name
+        // of: the frontend RESOLVED no declaration for it (a phase minted it, or nothing declares
+        // it), or the port SUPPLIES one — a drop or an injection (ENGINE-LIMITS: 8 errors without
+        // that arm). A RESOLVED external the port does not replace keeps its class-file FQN, which
+        // no phase may move (CLAUDE.md §4.56).
+        if !(owned(s.id) || (PackageRenameTransform.longestMatch(s.fullName, portOwnedPrefixes).isDefined &&
+                             movableExternal(hoisted, s))) then t
         else
           PackageRenameTransform.longestMatch(s.fullName, accepted.keySet) match
             case scala.None => t
@@ -280,6 +291,18 @@ final class PackageRenameTransform(
       recordMoves(hoisted, table)
       // trees and the xref are keyed by SymId and stay valid verbatim.
       hoisted.rebuilt(symbols = table)
+
+  /** May a symbol the program does NOT declare, sitting under one of this port's own prefixes,
+    * move with the rename? Only where the frontend recorded NO resolution for its TYPE — a name a
+    * PHASE minted, or one nothing on the classpath declares — or where the PORT SUPPLIES the
+    * declaration at that name (it dropped the type, or ships injected Scala at the renamed FQN).
+    * A RESOLVED external the port does not replace keeps its class-file FQN. CLAUDE.md §4.56 */
+  private def movableExternal(program: Program, s: Symbol): Boolean =
+    val root = PackageRenameTransform.typeRootOf(program, s)
+    !root.flags.isResolved ||
+      PackageRenameTransform.longestMatch(root.fullName, drops).isDefined ||
+      (injected.nonEmpty &&
+        injected(PackageRenameTransform.typeHeadOf(renamed(root.fullName, accepted))))
 
   /** Promotes every accepted `flattenNestedTypes` entry to a top-level unit: the `ClassDef` leaves
     * its enclosing body, the symbol's owner becomes `SymId.None`, and the file header is carried
@@ -419,6 +442,13 @@ object PackageRenameTransform:
     * not a `cd.body` recursion, which misses a method-local class (JLS 14.3). */
   private[transform] def allClasses(program: Program): List[Tree.ClassDef] =
     program.units.flatMap(u => StandardTraversal.allClassDefs(u)(using program))
+
+  /** the TYPE a symbol belongs to — climbing owners to the outermost, `s` itself for a type. A
+    * MEMBER carries no resolution of its own: the class file its owner came from is what fixes the
+    * name, so a whole subtree answers with one bit (CLAUDE.md §4.56). */
+  private[transform] def typeRootOf(program: Program, s: Symbol, fuel: Int = 64): Symbol =
+    if fuel <= 0 || s.owner == SymId.None then s
+    else program.symbolOf(s.owner).fold(s)(o => typeRootOf(program, o, fuel - 1))
 
   /** every symbol under `root` in the owner chain, `root` included. */
   private def under(program: Program, root: SymId): Set[SymId] =

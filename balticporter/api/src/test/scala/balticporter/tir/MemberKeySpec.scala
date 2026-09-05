@@ -217,3 +217,12 @@ class MemberKeySpec extends munit.FunSuite:
     assertEquals(Descriptor.ValueClassPrimitives.values.toSet, Descriptor.Primitives)
     assert(Descriptor.ValueClassPrimitives.keys.forall(_.startsWith("scala.")))
   }
+
+  test("…and a WRAPPER for every one of them, keyed identically — JS-E20 reads the two together") {
+    assertEquals(Descriptor.ValueClassBoxes.keySet, Descriptor.ValueClassPrimitives.keySet)
+    assert(Descriptor.ValueClassBoxes.values.forall(_.startsWith("java.lang.")))
+    assertEquals(Descriptor.ValueClassBoxes("scala.Int"), "java.lang.Integer")
+    assertEquals(Descriptor.ValueClassBoxes("scala.Char"), "java.lang.Character")
+    // `void` has no boxing conversion; it is here for the class literal alone (JLS 15.8.2)
+    assertEquals(Descriptor.ValueClassBoxes("scala.Unit"), "java.lang.Void")
+  }

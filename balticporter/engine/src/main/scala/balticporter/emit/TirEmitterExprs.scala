@@ -67,7 +67,8 @@ private[emit] trait TirEmitterExprs:
 
   private[emit] def termArm(t: Term, i: Int)(using Obligations): String = t match
     case Tree.Ident(s, _, _)            => if isTypeRef(s) then typeValue(s) else staticRef(s)
-    case Tree.Literal(c, _, _)          => constant(c)
+    case l @ Tree.Literal(c, _, _)      =>
+      Obligations.consult(JS.E(20), l.origin)(primitiveClassLiteral(c)).getOrElse(constant(c))
     case Tree.This(s, _, _)             => thisRef(s)
     case Tree.Super(_, _, _)            => "super"
     // A RECEIVER IS AN OPERAND: `.m` binds tighter than every control-flow expression and than
@@ -1067,6 +1068,16 @@ private[emit] trait TirEmitterExprs:
     case Constant.NullC      => "null"
     case Constant.UnitC      => "()"
     case Constant.ClassOfC(t) => s"classOf[${tpe(t)}]"
+
+  /** JS-E20 — a PRIMITIVE class literal. `int.class` is statically `Class<Integer>` (JLS 15.8.2)
+    * while scala's `classOf[Int]` is `Class[Int]`, which no `Class[T <: Object]` slot accepts.
+    * Both facts kept: the runtime object stays the primitive class, the STATIC type becomes
+    * java's. `None` at every other constant, which is where the consult does not apply. */
+  private[emit] def primitiveClassLiteral(c: Constant): Option[String] = c match
+    case Constant.ClassOfC(t @ TypeRepr.TypeRef(_, s)) =>
+      Descriptor.ValueClassBoxes.get(sym(s).fullName)
+        .map(b => s"classOf[${tpe(t)}].asInstanceOf[java.lang.Class[$b]]")
+    case _ => scala.None
 
   /** A PREFIX operator and its operand, with the two kept as two tokens. Scala's lexer takes a
     * maximal run of operator characters as ONE identifier, so a prefix `-` against an operand

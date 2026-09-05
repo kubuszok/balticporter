@@ -109,7 +109,16 @@ final case class PortRun(
     val flat  = manifest.map(_.effectiveFlattenNestedTypes).getOrElse(flattenNestedTypes)
     val split = manifest.map(_.effectiveAllowPackageSplit).getOrElse(allowPackageSplit)
     if renames.isEmpty && types.isEmpty && subs2.isEmpty && flat.isEmpty then scala.None
-    else Some(new PackageRenameTransform(renames, types, subs2, flat, split))
+    else Some(new PackageRenameTransform(renames, types, subs2, flat, split,
+                                         policySubs.dropTypes, injectedNames))
+
+  /** the EMITTED FQNs this port's policy chain ships ready-made Scala at — the second half of
+    * *does the port supply the declaration at this name?* (`PackageRenameTransform.injected`).
+    * Read through `PortManifest.injectedFqns`, the ONE derivation `PortMap` and the copy loop
+    * use, so a rename and a report can never disagree about which names the port owns. */
+  private def injectedNames: Set[String] = manifest match
+    case Some(m)    => m.policyChain.flatMap(_.injectedFqns).toSet
+    case scala.None => Substitutions.injectedSources(subs.inject).map(_._1).toSet
 
   /** Upstream name translated to the emitted namespace. */
   private def emittedName(fqn: String): String = renamePhase.fold(fqn)(_.emittedName(fqn))
