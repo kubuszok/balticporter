@@ -1,0 +1,192 @@
+#suite	test	status
+lowlevel.ArrayViewTest	Array + IArray + zipWithIndex nested	pass
+lowlevel.ArrayViewTest	IArray for comprehension with guard and yield	pass
+lowlevel.ArrayViewTest	IArray leanView flatMap	pass
+lowlevel.ArrayViewTest	IArray leanView foreach	pass
+lowlevel.ArrayViewTest	IArray leanView map	pass
+lowlevel.ArrayViewTest	IArray leanView withFilter foreach	pass
+lowlevel.ArrayViewTest	IArray leanView zipWithIndex foreach	pass
+lowlevel.ArrayViewTest	IArray length	pass
+lowlevel.ArrayViewTest	IArray yield with guard	pass
+lowlevel.ArrayViewTest	IArray yield with zipWithIndex	pass
+lowlevel.ArrayViewTest	chained withFilter	pass
+lowlevel.ArrayViewTest	empty IArray all operations	pass
+lowlevel.ArrayViewTest	empty array all operations	pass
+lowlevel.ArrayViewTest	empty array foreach is no-op	pass
+lowlevel.ArrayViewTest	flatMap expands elements	pass
+lowlevel.ArrayViewTest	flatMap producing empty arrays	pass
+lowlevel.ArrayViewTest	flatMap with guard	pass
+lowlevel.ArrayViewTest	for comprehension single generator	pass
+lowlevel.ArrayViewTest	for comprehension with guard	pass
+lowlevel.ArrayViewTest	for comprehension with guard and yield	pass
+lowlevel.ArrayViewTest	for comprehension with yield	pass
+lowlevel.ArrayViewTest	for comprehension with zipWithIndex	pass
+lowlevel.ArrayViewTest	for comprehension zipWithIndex + guard + yield	pass
+lowlevel.ArrayViewTest	guard on outer + guard on inner	pass
+lowlevel.ArrayViewTest	guard on zipWithIndex then nested array	pass
+lowlevel.ArrayViewTest	leanView foreach iterates all elements	pass
+lowlevel.ArrayViewTest	leanView foreach with strings	pass
+lowlevel.ArrayViewTest	length	pass
+lowlevel.ArrayViewTest	map produces new array	pass
+lowlevel.ArrayViewTest	map with type change	pass
+lowlevel.ArrayViewTest	mixed Array and IArray in nested for	pass
+lowlevel.ArrayViewTest	multiple guards on same array	pass
+lowlevel.ArrayViewTest	nested for comprehension	pass
+lowlevel.ArrayViewTest	nested for comprehension with yield	pass
+lowlevel.ArrayViewTest	nested for comprehension with zipWithIndex	pass
+lowlevel.ArrayViewTest	nested for yield produces nested arrays	pass
+lowlevel.ArrayViewTest	outer guard, inner zipWithIndex	pass
+lowlevel.ArrayViewTest	outer zipWithIndex, inner guard	pass
+lowlevel.ArrayViewTest	single element array operations	pass
+lowlevel.ArrayViewTest	three nested arrays foreach	pass
+lowlevel.ArrayViewTest	withFilter flatMap	pass
+lowlevel.ArrayViewTest	withFilter foreach skips non-matching	pass
+lowlevel.ArrayViewTest	withFilter map produces filtered array	pass
+lowlevel.ArrayViewTest	yield with guard	pass
+lowlevel.ArrayViewTest	yield with zipWithIndex	pass
+lowlevel.ArrayViewTest	zipWithIndex filtered then mapped	pass
+lowlevel.ArrayViewTest	zipWithIndex foreach provides element and index	pass
+lowlevel.ArrayViewTest	zipWithIndex map	pass
+lowlevel.ArrayViewTest	zipWithIndex withFilter foreach	pass
+lowlevel.NullableTest	Nullable of Nullable.empty is non-empty	pass
+lowlevel.NullableTest	Nullable with Boolean	pass
+lowlevel.NullableTest	Nullable with Double	pass
+lowlevel.NullableTest	Nullable with Int	pass
+lowlevel.NullableTest	apply wraps non-null value	pass
+lowlevel.NullableTest	apply wraps null as empty	pass
+lowlevel.NullableTest	contains false for non-matching value	pass
+lowlevel.NullableTest	contains false on empty	pass
+lowlevel.NullableTest	contains true for matching value	pass
+lowlevel.NullableTest	double-nested empty Nullable flatten works	pass
+lowlevel.NullableTest	empty Nullable reuses cached NestedNone instance	pass
+lowlevel.NullableTest	empty creates empty Nullable	pass
+lowlevel.NullableTest	exists false on empty	pass
+lowlevel.NullableTest	exists false when predicate doesn't match	pass
+lowlevel.NullableTest	exists true when predicate matches	pass
+lowlevel.NullableTest	filter keeps matching value	pass
+lowlevel.NullableTest	filter on empty returns empty	pass
+lowlevel.NullableTest	filter removes non-matching value	pass
+lowlevel.NullableTest	flatMap on empty	pass
+lowlevel.NullableTest	flatMap on non-empty	pass
+lowlevel.NullableTest	flatMap on non-empty to empty	pass
+lowlevel.NullableTest	flatten empty	pass
+lowlevel.NullableTest	flatten non-empty of empty	pass
+lowlevel.NullableTest	flatten non-empty of non-empty	pass
+lowlevel.NullableTest	fold on empty uses onEmpty	pass
+lowlevel.NullableTest	fold on non-empty uses onSome	pass
+lowlevel.NullableTest	forall false when predicate doesn't match	pass
+lowlevel.NullableTest	forall true on empty	pass
+lowlevel.NullableTest	forall true when predicate matches	pass
+lowlevel.NullableTest	foreach on empty does not call function	pass
+lowlevel.NullableTest	foreach on non-empty calls function	pass
+lowlevel.NullableTest	fromOption None	pass
+lowlevel.NullableTest	fromOption Some	pass
+lowlevel.NullableTest	get on empty throws NullPointerException	pass
+lowlevel.NullableTest	get on non-empty returns value	pass
+lowlevel.NullableTest	getOrElse on empty returns default	pass
+lowlevel.NullableTest	getOrElse on non-empty returns value	pass
+lowlevel.NullableTest	isDefined false for empty	pass
+lowlevel.NullableTest	isDefined true for non-empty	pass
+lowlevel.NullableTest	isEmpty false for non-empty	pass
+lowlevel.NullableTest	isEmpty true for empty	pass
+lowlevel.NullableTest	map on empty	pass
+lowlevel.NullableTest	map on non-empty	pass
+lowlevel.NullableTest	nested NestedNone up to depth 9 reuses cached instances	pass
+lowlevel.NullableTest	nested Nullable flatten preserves value	pass
+lowlevel.NullableTest	non-null value is stored directly without wrapper allocation	pass
+lowlevel.NullableTest	orElse on empty returns alternative	pass
+lowlevel.NullableTest	orElse on non-empty returns self	pass
+lowlevel.NullableTest	wrapping Nullable.empty reuses cached NestedNone	pass
+lowlevel.math.MathUtilsTest	atan2Deg360	pass
+lowlevel.math.MathUtilsTest	cosDeg	pass
+lowlevel.math.MathUtilsTest	lerpAngle	pass
+lowlevel.math.MathUtilsTest	lerpAngleDeg	pass
+lowlevel.math.MathUtilsTest	lerpAngleDegCrossingZero	pass
+lowlevel.math.MathUtilsTest	lerpAngleDegCrossingZeroBackwards	pass
+lowlevel.math.MathUtilsTest	map	pass
+lowlevel.math.MathUtilsTest	norm	pass
+lowlevel.math.MathUtilsTest	randomLong	pass
+lowlevel.math.MathUtilsTest	sinDeg	pass
+lowlevel.math.MathUtilsTest	tan uses range-reduced value	pass
+lowlevel.math.MathUtilsTest	tanDeg	pass
+lowlevel.util.EvalTest	*> sequences and keeps second	pass
+lowlevel.util.EvalTest	<* sequences and keeps first	pass
+lowlevel.util.EvalTest	>> sequences and keeps second	pass
+lowlevel.util.EvalTest	Eval.apply re-evaluates each run	pass
+lowlevel.util.EvalTest	apply defers evaluation	pass
+lowlevel.util.EvalTest	as replaces value	pass
+lowlevel.util.EvalTest	deep flatMap chain is stack-safe	pass
+lowlevel.util.EvalTest	defer defers thunk	pass
+lowlevel.util.EvalTest	flatMap chains computations	pass
+lowlevel.util.EvalTest	flatMap defers	pass
+lowlevel.util.EvalTest	flatTap runs side effect and returns original value	pass
+lowlevel.util.EvalTest	flatten unwraps nested Eval	pass
+lowlevel.util.EvalTest	map chains	pass
+lowlevel.util.EvalTest	map defers computation	pass
+lowlevel.util.EvalTest	map transforms value	pass
+lowlevel.util.EvalTest	map2 combines two Evals	pass
+lowlevel.util.EvalTest	mapTap runs function and returns original value	pass
+lowlevel.util.EvalTest	pure wraps value	pass
+lowlevel.util.EvalTest	side effects execute in order	pass
+lowlevel.util.EvalTest	tuple pairs two Evals	pass
+lowlevel.util.EvalTest	void discards value	pass
+lowlevel.util.EvalTest	void produces unit	pass
+lowlevel.util.ObjectSetTest	add N items then contains all N	pass
+lowlevel.util.ObjectSetTest	add and contains	pass
+lowlevel.util.ObjectSetTest	add duplicate returns false	pass
+lowlevel.util.ObjectSetTest	add many elements and verify all present	pass
+lowlevel.util.ObjectSetTest	add then remove all leaves size 0	pass
+lowlevel.util.ObjectSetTest	addAll from DynamicArray	pass
+lowlevel.util.ObjectSetTest	addAll from another ObjectSet	pass
+lowlevel.util.ObjectSetTest	clear	pass
+lowlevel.util.ObjectSetTest	empty set has size 0	pass
+lowlevel.util.ObjectSetTest	ensureCapacity does not lose elements	pass
+lowlevel.util.ObjectSetTest	first on empty set throws	pass
+lowlevel.util.ObjectSetTest	first returns an element	pass
+lowlevel.util.ObjectSetTest	foreach visits all elements	pass
+lowlevel.util.ObjectSetTest	foreach visits each element exactly once	pass
+lowlevel.util.ObjectSetTest	remove	pass
+lowlevel.util.ObjectSetTest	remove all elements leaves empty set	pass
+lowlevel.util.ObjectSetTest	remove non-existent returns false	pass
+lowlevel.util.ObjectSetTest	shrink does not lose elements	pass
+lowlevel.util.OrderedSetTest	add all from another set	pass
+lowlevel.util.OrderedSetTest	add and contains	pass
+lowlevel.util.OrderedSetTest	add duplicate returns false	pass
+lowlevel.util.OrderedSetTest	clear	pass
+lowlevel.util.OrderedSetTest	empty set	pass
+lowlevel.util.OrderedSetTest	first	pass
+lowlevel.util.OrderedSetTest	foreach visits in order	pass
+lowlevel.util.OrderedSetTest	insertion order preserved	pass
+lowlevel.util.OrderedSetTest	insertion order preserved after remove	pass
+lowlevel.util.OrderedSetTest	many elements maintain order	pass
+lowlevel.util.OrderedSetTest	remove	pass
+lowlevel.util.ResourceTest	allocate returns value and cleanup function	pass
+lowlevel.util.ResourceTest	eval exposes underlying Eval	pass
+lowlevel.util.ResourceTest	flatMap chains resources	pass
+lowlevel.util.ResourceTest	flatMap cleans up in reverse order	pass
+lowlevel.util.ResourceTest	fromCloseable creates resource from Closeable	pass
+lowlevel.util.ResourceTest	make cleanup runs after use	pass
+lowlevel.util.ResourceTest	make creates and cleans up resource	pass
+lowlevel.util.ResourceTest	map preserves cleanup	pass
+lowlevel.util.ResourceTest	map transforms resource value	pass
+lowlevel.util.ResourceTest	nested map and flatMap	pass
+lowlevel.util.ResourceTest	pure resource cleanup is safe no-op	pass
+lowlevel.util.ResourceTest	pure wraps value without cleanup	pass
+lowlevel.util.ResourceTest	run cleans up resource after use	pass
+lowlevel.util.SelectTest	select all equal elements	pass
+lowlevel.util.SelectTest	select kthLowest=1 returns minimum	pass
+lowlevel.util.SelectTest	select kthLowest=3 returns 3rd smallest	pass
+lowlevel.util.SelectTest	select kthLowest=size returns maximum	pass
+lowlevel.util.SelectTest	select large array with quickselect path	pass
+lowlevel.util.SelectTest	select median element	pass
+lowlevel.util.SelectTest	select single element array	pass
+lowlevel.util.SelectTest	select throws on empty array (size < 1)	fail
+lowlevel.util.SelectTest	select throws when kthLowest > size	fail
+lowlevel.util.SelectTest	select two element array min and max	pass
+lowlevel.util.SelectTest	select with custom reverse ordering	pass
+lowlevel.util.SelectTest	select with string ordering	pass
+lowlevel.util.SelectTest	select with string ordering quickselect path	pass
+lowlevel.util.SelectTest	select with subset size	pass
+lowlevel.util.SelectTest	selectIndex kthLowest=1 returns index of minimum	pass
+lowlevel.util.SelectTest	selectIndex kthLowest=size returns index of maximum	pass
+lowlevel.util.SelectTest	selectIndex returns valid index for middle elements	pass

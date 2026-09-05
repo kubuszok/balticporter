@@ -1,33 +1,13 @@
 #id	check	kind	owner	path	line	detail
-80db672ef203	api-parity(factory)	factory	ArrayMap$#apply	/ArrayMap$	0	def apply/0 in reference port only
-d7286f961ade	api-parity(factory)	factory	ArrayMap$#apply	/ArrayMap$	0	def apply/1 in reference port only
-b0993292016c	api-parity(factory)	factory	ArrayMap$#apply	/ArrayMap$	0	def apply/2 in reference port only
 6941b200e50c	api-parity(factory)	factory	ArrayMap$#from	/ArrayMap$	0	def from/1 in reference port only
-35e0dd48a784	api-parity(factory)	factory	DynamicArray$#apply	/DynamicArray$	0	def apply/0 in reference port only
-0d70529edd7b	api-parity(factory)	factory	DynamicArray$#apply	/DynamicArray$	0	def apply/1 in reference port only
-b3ff8f9af5aa	api-parity(factory)	factory	DynamicArray$#apply	/DynamicArray$	0	def apply/2 in reference port only
-ce7bd551b22d	api-parity(factory)	factory	DynamicArray$#from	/DynamicArray$	0	def from/1 in reference port only
-ce7bd551b22d/2	api-parity(factory)	factory	DynamicArray$#from	/DynamicArray$	0	def from/1 in reference port only
 40c2fd338bcf	api-parity(factory)	factory	DynamicArray$#of	/DynamicArray$	0	def of/1 in emitted port only
 40c2fd338bcf/2	api-parity(factory)	factory	DynamicArray$#of	/DynamicArray$	0	def of/1 in emitted port only
 e53c649a0c98	api-parity(factory)	factory	DynamicArray$#of	/DynamicArray$	0	def of/3 in emitted port only
 e53c649a0c98/2	api-parity(factory)	factory	DynamicArray$#of	/DynamicArray$	0	def of/3 in emitted port only
 52e4cb1e133a	api-parity(factory)	factory	DynamicArray$#wrap	/DynamicArray$	0	def wrap/1 in reference port only
-c7175b4a27d0	api-parity(factory)	factory	ObjectMap$#apply	/ObjectMap$	0	def apply/0 in reference port only
-18424fb6d056	api-parity(factory)	factory	ObjectMap$#apply	/ObjectMap$	0	def apply/1 in reference port only
-799ffc523642	api-parity(factory)	factory	ObjectMap$#apply	/ObjectMap$	0	def apply/2 in reference port only
 415b1e767887	api-parity(factory)	factory	ObjectMap$#from	/ObjectMap$	0	def from/1 in reference port only
-a1b483b11657	api-parity(factory)	factory	ObjectSet$#apply	/ObjectSet$	0	def apply/0 in reference port only
-19daaff24d55	api-parity(factory)	factory	ObjectSet$#apply	/ObjectSet$	0	def apply/1 in reference port only
-e08567aa4268	api-parity(factory)	factory	ObjectSet$#apply	/ObjectSet$	0	def apply/2 in reference port only
 c1dc32e84965	api-parity(factory)	factory	ObjectSet$#from	/ObjectSet$	0	def from/1 in reference port only
-8bb1ebd54baf	api-parity(factory)	factory	OrderedMap$#apply	/OrderedMap$	0	def apply/0 in reference port only
-4776716aba4c	api-parity(factory)	factory	OrderedMap$#apply	/OrderedMap$	0	def apply/1 in reference port only
-c1cefa4a14a6	api-parity(factory)	factory	OrderedMap$#apply	/OrderedMap$	0	def apply/2 in reference port only
 bfe24ecdb73d	api-parity(factory)	factory	OrderedMap$#from	/OrderedMap$	0	def from/1 in reference port only
-19dc575884f5	api-parity(factory)	factory	OrderedSet$#apply	/OrderedSet$	0	def apply/0 in reference port only
-04269c912018	api-parity(factory)	factory	OrderedSet$#apply	/OrderedSet$	0	def apply/1 in reference port only
-cbdeadde931a	api-parity(factory)	factory	OrderedSet$#apply	/OrderedSet$	0	def apply/2 in reference port only
 7306e477b520	api-parity(factory)	factory	OrderedSet$#from	/OrderedSet$	0	def from/1 in reference port only
 066cef32bed8	api-parity(hand-original)	hand-original	ArrayFilteredView	lowlevel/ArrayView.scala	0	no upstream marker in header
 da5b3e51d01f	api-parity(hand-original)	hand-original	ArrayView	lowlevel/ArrayView.scala	0	no upstream marker in header
@@ -37,69 +17,26 @@ fedb14a16f2a	api-parity(hand-original)	hand-original	MkArray	lowlevel/MkArray.sc
 85af42983db4	api-parity(hand-original)	hand-original	Resource	lowlevel/util/Resource.scala	0	no upstream marker in header; *   SGE-original file, no LibGDX counterpart
 a6b1b3403fb3	api-parity(hand-port-extra)	hand-port-extra	#ComparableTimSort		0	class ComparableTimSort/0 in reference port only
 c711f8c76398	api-parity(hand-port-extra)	hand-port-extra	#TimSort		0	class TimSort/0 in reference port only
-3c71c5467acb	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#containsValue	/ArrayMap	0	def containsValue/1 in reference port only [rename candidates: clear, containsKey, ensureCapacity, equals, equalsIdentity, get, getKeyAt, getValueAt, indexOfKey, putAll, removeIndex, removeKey, resize, truncate]
-d5818c89c815	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#foreachEntry	/ArrayMap	0	def foreachEntry/1 in reference port only [rename candidates: clear, containsKey, ensureCapacity, equals, equalsIdentity, get, getKeyAt, getValueAt, indexOfKey, putAll, removeIndex, removeKey, resize, truncate]
-ac9a047ac298	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#foreachKey	/ArrayMap	0	def foreachKey/1 in reference port only [rename candidates: clear, containsKey, ensureCapacity, equals, equalsIdentity, get, getKeyAt, getValueAt, indexOfKey, putAll, removeIndex, removeKey, resize, truncate]
-fadf12a42394	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#foreachValue	/ArrayMap	0	def foreachValue/1 in reference port only [rename candidates: clear, containsKey, ensureCapacity, equals, equalsIdentity, get, getKeyAt, getValueAt, indexOfKey, putAll, removeIndex, removeKey, resize, truncate]
-f248282bce03	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#indexOfValue	/ArrayMap	0	def indexOfValue/1 in reference port only [rename candidates: clear, containsKey, ensureCapacity, equals, equalsIdentity, get, getKeyAt, getValueAt, indexOfKey, putAll, removeIndex, removeKey, resize, truncate]
-1178760f325b	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#nonEmpty	/ArrayMap	0	def nonEmpty/0 in reference port only [rename candidates: clear, entries, firstKey, firstValue, hashCode, isEmpty, iterator, keys, notEmpty, peekKey, peekValue, reverse, shrink, shuffle, toString, values]
 1457761389b5	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#preserveOrder	/ArrayMap	0	val preserveOrder/0 in reference port only
-63c050d6a23d	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#setKeyAt	/ArrayMap	0	def setKeyAt/2 in reference port only [rename candidates: containsValue, get, getKey, indexOfValue, put, removeValue, setKey, setValue]
-7a64879ebf26	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#setValueAt	/ArrayMap	0	def setValueAt/2 in reference port only [rename candidates: containsValue, get, getKey, indexOfValue, put, removeValue, setKey, setValue]
-ec29807a1da3	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#size	/ArrayMap	0	def size/0 in reference port only [rename candidates: clear, entries, firstKey, firstValue, hashCode, isEmpty, iterator, keys, notEmpty, peekKey, peekValue, reverse, shrink, shuffle, toString, values]
+b3e543b42daa	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#setKeyAt	/ArrayMap	0	def setKeyAt/2 in reference port only [rename candidates: containsValue, get, getKey, indexOfValue, put, removeValue, setKey, setValue, update]
+af284a60ff4b	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#setValueAt	/ArrayMap	0	def setValueAt/2 in reference port only [rename candidates: containsValue, get, getKey, indexOfValue, put, removeValue, setKey, setValue, update]
+b29f4da72e43	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#size	/ArrayMap	0	def size/0 in reference port only [rename candidates: clear, entries, firstKey, firstValue, hashCode, isEmpty, iterator, keys, nonEmpty, notEmpty, peekKey, peekValue, reverse, shrink, shuffle, toString, values]
 0b5d0acd3dcf	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#doSort	/ComparableTimSort	0	def doSort/3 in reference port only
 257da4b833eb	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort$#sort	/ComparableTimSort$	0	def sort/1 in reference port only
 056b89c9d990	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort$#sort	/ComparableTimSort$	0	def sort/3 in reference port only
-8855e5d3ff64	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#+=	/DynamicArray	0	def +=/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-98bb9114e7aa	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#--=	/DynamicArray	0	def --=/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-45ec1cf2a748	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#-=	/DynamicArray	0	def -=/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-a06732d66916	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#apply	/DynamicArray	0	def apply/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-74266e3929d0	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#begin	/DynamicArray	0	def begin/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, notEmpty, peek, pop, random, reverse, shrink, shuffle, sort, toArray, toString]
-f43ca8c6e491	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#contains	/DynamicArray	0	def contains/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-95aa977f9cf9	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#containsAll	/DynamicArray	0	def containsAll/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-a85c7f836fad	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#containsAllByRef	/DynamicArray	0	def containsAllByRef/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-1d2f640bc7bc	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#containsAny	/DynamicArray	0	def containsAny/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-aec3d2d4a6c1	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#containsAnyByRef	/DynamicArray	0	def containsAnyByRef/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-ca3bdaacdb1c	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#containsByRef	/DynamicArray	0	def containsByRef/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-9430e7e89024	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#count	/DynamicArray	0	def count/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-2c259d55e9c5	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#end	/DynamicArray	0	def end/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, notEmpty, peek, pop, random, reverse, shrink, shuffle, sort, toArray, toString]
-8bc195fd65ca	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#exists	/DynamicArray	0	def exists/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-86cfc0c2c125	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#find	/DynamicArray	0	def find/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-a356ef66db7d	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#forall	/DynamicArray	0	def forall/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-70b1e4f3d7f3	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#foreach	/DynamicArray	0	def foreach/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-781d0e84ee01	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#indexOf	/DynamicArray	0	def indexOf/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-0caf56a77a58	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#indexOfByRef	/DynamicArray	0	def indexOfByRef/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-f8392059c26a	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#indexWhere	/DynamicArray	0	def indexWhere/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-4f1c8f30bbf6	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#items	/DynamicArray	0	def items/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, notEmpty, peek, pop, random, reverse, shrink, shuffle, sort, toArray, toString]
-b1722c9ba5a7	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#last	/DynamicArray	0	def last/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, notEmpty, peek, pop, random, reverse, shrink, shuffle, sort, toArray, toString]
-701c4ef2ddf1	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#lastIndexOf	/DynamicArray	0	def lastIndexOf/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-11973ff547f8	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#lastIndexOfByRef	/DynamicArray	0	def lastIndexOfByRef/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-dea14899e126	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#nonEmpty	/DynamicArray	0	def nonEmpty/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, notEmpty, peek, pop, random, reverse, shrink, shuffle, sort, toArray, toString]
+49dee0ebb216	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#begin	/DynamicArray	0	def begin/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, last, nonEmpty, notEmpty, peek, pop, preserveOrder, random, reverse, shrink, shuffle, sort, toArray, toString]
+8e699ae98d85	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#end	/DynamicArray	0	def end/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, last, nonEmpty, notEmpty, peek, pop, preserveOrder, random, reverse, shrink, shuffle, sort, toArray, toString]
+f0163f495d3f	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#items	/DynamicArray	0	def items/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, last, nonEmpty, notEmpty, peek, pop, preserveOrder, random, reverse, shrink, shuffle, sort, toArray, toString]
 8f1a8e4754a4	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#preserveOrder	/DynamicArray	0	val preserveOrder/0 in reference port only
-b3e0c523f55d	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#removeAll	/DynamicArray	0	def removeAll/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-626932d28fd0	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#removeAllByRef	/DynamicArray	0	def removeAllByRef/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-4a3cf63a00aa	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#removeValue	/DynamicArray	0	def removeValue/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-ae604ab90ac3	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#removeValueByRef	/DynamicArray	0	def removeValueByRef/1 in reference port only [rename candidates: add, addAll, addAll, ensureCapacity, equals, equalsIdentity, get, removeIndex, resize, select, setSize, sort, toArray, toArray, toString, truncate]
-ad3b4538e1f7	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#replaceAll	/DynamicArray	0	def replaceAll/2 in reference port only [rename candidates: add, contains, containsAll, containsAny, indexOf, insert, insertRange, lastIndexOf, removeAll, removeRange, removeValue, selectRanked, selectRankedIndex, set, swap]
-d766438b5741	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#replaceAllByRef	/DynamicArray	0	def replaceAllByRef/2 in reference port only [rename candidates: add, contains, containsAll, containsAny, indexOf, insert, insertRange, lastIndexOf, removeAll, removeRange, removeValue, selectRanked, selectRankedIndex, set, swap]
-0a734570f3c3	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#replaceFirst	/DynamicArray	0	def replaceFirst/2 in reference port only [rename candidates: add, contains, containsAll, containsAny, indexOf, insert, insertRange, lastIndexOf, removeAll, removeRange, removeValue, selectRanked, selectRankedIndex, set, swap]
-23a1b875d7d1	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#replaceFirstByRef	/DynamicArray	0	def replaceFirstByRef/2 in reference port only [rename candidates: add, contains, containsAll, containsAny, indexOf, insert, insertRange, lastIndexOf, removeAll, removeRange, removeValue, selectRanked, selectRankedIndex, set, swap]
-693527a492c1	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#size	/DynamicArray	0	def size/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, notEmpty, peek, pop, random, reverse, shrink, shuffle, sort, toArray, toString]
-834d834d8000	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#update	/DynamicArray	0	def update/2 in reference port only [rename candidates: add, contains, containsAll, containsAny, indexOf, insert, insertRange, lastIndexOf, removeAll, removeRange, removeValue, selectRanked, selectRankedIndex, set, swap]
-ac06cc777b31	api-parity(hand-port-extra)	hand-port-extra	DynamicArray$#wrapRefUnchecked	/DynamicArray$	0	def wrapRefUnchecked/1 in reference port only [rename candidates: of, of, with]
+2f3fc1cd53d5	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#size	/DynamicArray	0	def size/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, last, nonEmpty, notEmpty, peek, pop, preserveOrder, random, reverse, shrink, shuffle, sort, toArray, toString]
+c7c29473b76b	api-parity(hand-port-extra)	hand-port-extra	DynamicArray$#wrapRefUnchecked	/DynamicArray$	0	def wrapRefUnchecked/1 in reference port only [rename candidates: apply, from, of, of, with]
 9cd0514b65cd	api-parity(hand-port-extra)	hand-port-extra	MathUtils$#randomGenerator	/MathUtils$	0	val randomGenerator/0 in reference port only [rename candidates: E, FLOAT_ROUNDING_ERROR, HALF_PI, PI, PI2, degRad, degreesToRadians, nanoToSec, radDeg, radiansToDegrees]
-67d5e568a89c	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#containsValue	/ObjectMap	0	def containsValue/1 in reference port only [rename candidates: clear, containsKey, ensureCapacity, equals, equalsIdentity, get, place, putAll, remove, shrink, toString]
-5faa3bb8b392	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#findKey	/ObjectMap	0	def findKey/1 in reference port only [rename candidates: clear, containsKey, ensureCapacity, equals, equalsIdentity, get, place, putAll, remove, shrink, toString]
-dcec694bb79c	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#foreachEntry	/ObjectMap	0	def foreachEntry/1 in reference port only [rename candidates: clear, containsKey, ensureCapacity, equals, equalsIdentity, get, place, putAll, remove, shrink, toString]
-1a111066076d	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#foreachKey	/ObjectMap	0	def foreachKey/1 in reference port only [rename candidates: clear, containsKey, ensureCapacity, equals, equalsIdentity, get, place, putAll, remove, shrink, toString]
-e09d8e64e403	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#foreachValue	/ObjectMap	0	def foreachValue/1 in reference port only [rename candidates: clear, containsKey, ensureCapacity, equals, equalsIdentity, get, place, putAll, remove, shrink, toString]
-2429bed7b1f6	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#nonEmpty	/ObjectMap	0	def nonEmpty/0 in reference port only [rename candidates: clear, entries, hashCode, isEmpty, iterator, keys, notEmpty, toString, values]
-5fa86d499bdc	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#size	/ObjectMap	0	def size/0 in reference port only [rename candidates: clear, entries, hashCode, isEmpty, iterator, keys, notEmpty, toString, values]
-c68c14b5256e	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#toStringImpl	/ObjectMap	0	def toStringImpl/2 in reference port only [rename candidates: containsValue, findKey, get, put, toString]
-c0e754bf3dea	api-parity(hand-port-extra)	hand-port-extra	ObjectSet#foreach	/ObjectSet	0	def foreach/1 in reference port only [rename candidates: add, addAll, addAll, addAll, clear, contains, ensureCapacity, equals, get, place, remove, shrink, toString]
-7bb4fc0caaf6	api-parity(hand-port-extra)	hand-port-extra	ObjectSet#nonEmpty	/ObjectSet	0	def nonEmpty/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, notEmpty, toString]
-d2ba5fe17dc0	api-parity(hand-port-extra)	hand-port-extra	ObjectSet#size	/ObjectSet	0	def size/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, notEmpty, toString]
-0df02f86679b	api-parity(hand-port-extra)	hand-port-extra	ObjectSet#toArray	/ObjectSet	0	def toArray/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, notEmpty, toString]
+f80c14e9ec86	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#containsValue	/ObjectMap	0	def containsValue/1 in reference port only [rename candidates: +=, -=, apply, clear, containsKey, ensureCapacity, equals, equalsIdentity, foreachEntry, foreachKey, foreachValue, get, place, putAll, remove, shrink, toString]
+b0d722b099fd	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#findKey	/ObjectMap	0	def findKey/1 in reference port only [rename candidates: +=, -=, apply, clear, containsKey, ensureCapacity, equals, equalsIdentity, foreachEntry, foreachKey, foreachValue, get, place, putAll, remove, shrink, toString]
+57113ab71ce7	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#size	/ObjectMap	0	def size/0 in reference port only [rename candidates: clear, entries, hashCode, isEmpty, iterator, keys, nonEmpty, notEmpty, toString, values]
+18c59a99f147	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#toStringImpl	/ObjectMap	0	def toStringImpl/2 in reference port only [rename candidates: containsValue, findKey, get, put, toString, update]
+bd003748a346	api-parity(hand-port-extra)	hand-port-extra	ObjectSet#size	/ObjectSet	0	def size/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, nonEmpty, notEmpty, toString]
+b2bf091d0cac	api-parity(hand-port-extra)	hand-port-extra	ObjectSet#toArray	/ObjectSet	0	def toArray/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, nonEmpty, notEmpty, toString]
 35dede83ee07	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#containsKey	/OrderedMap	0	def containsKey/1 in reference port only [rename candidates: clear, putAll, remove, removeIndex]
 b86f0376a984	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#containsValue	/OrderedMap	0	def containsValue/1 in reference port only [rename candidates: clear, putAll, remove, removeIndex]
 82c8cf8f678d	api-parity(hand-port-extra)	hand-port-extra	OrderedMap#containsValue	/OrderedMap	0	def containsValue/2 in reference port only [rename candidates: alter, alterIndex, put, toString]
@@ -146,6 +83,9 @@ f4d79ea950c5	api-parity(null-model)	null-model	ArrayMap#get	/ArrayMap	0	result t
 941705560189	api-parity(null-model)	null-model	OrderedMap#put	/OrderedMap	0	param 1 type differs: emitted 'lowlevel.Nullable[$1]', reference '$1'
 246432bff2d1	api-parity(null-model)	null-model	OrderedMap#removeIndex	/OrderedMap	0	result type differs: emitted '$1', reference 'Nullable[$1]'
 ffc20a113554	api-parity(opaque)	opaque	ObjectSet#addAll	/ObjectSet	0	result type differs: emitted 'scala.Boolean', reference 'Unit'
+79061ec30230	api-parity(operator)	operator	DynamicArray#+=	/DynamicArray	0	@targetName differs: emitted '', reference 'plusEquals'
+4ffbf27cfdba	api-parity(operator)	operator	DynamicArray#--=	/DynamicArray	0	@targetName differs: emitted '', reference 'minusMinusEquals'
+b585e1b67009	api-parity(operator)	operator	DynamicArray#-=	/DynamicArray	0	@targetName differs: emitted '', reference 'minusEquals'
 11325fc94e40	api-parity(port-extra)	port-extra	#Align		0	object Align/0 in emitted port only
 248fde941421	api-parity(port-extra)	port-extra	#ArrayReflection		0	object ArrayReflection/0 in emitted port only
 488cc435edd4	api-parity(port-extra)	port-extra	#ArraySupplier		0	object ArraySupplier/0 in emitted port only
@@ -254,6 +194,8 @@ c390c99fdf4d	api-parity(port-extra)	port-extra	Align$#toString	/Align$	0	def toS
 2542b97e2b1b	api-parity(port-extra)	port-extra	Align$#top	/Align$	0	val top/0 in emitted port only
 f88a62a3ee40	api-parity(port-extra)	port-extra	Align$#topLeft	/Align$	0	val topLeft/0 in emitted port only
 d564b5e65f52	api-parity(port-extra)	port-extra	Align$#topRight	/Align$	0	val topRight/0 in emitted port only
+62d85a9c449c	api-parity(port-extra)	port-extra	ArrayMap#+=	/ArrayMap	0	def +=/1 in emitted port only [rename candidates: clear, containsKey, containsValue, ensureCapacity, equals, equalsIdentity, foreachEntry, foreachKey, foreachValue, get, getKeyAt, getValueAt, indexOfKey, indexOfValue, putAll, removeIndex, removeKey, truncate]
+5eecdc6c7397	api-parity(port-extra)	port-extra	ArrayMap#-=	/ArrayMap	0	def -=/1 in emitted port only [rename candidates: clear, containsKey, containsValue, ensureCapacity, equals, equalsIdentity, foreachEntry, foreachKey, foreachValue, get, getKeyAt, getValueAt, indexOfKey, indexOfValue, putAll, removeIndex, removeKey, truncate]
 57ddf31d942b	api-parity(port-extra)	port-extra	ArrayMap#entries	/ArrayMap	0	def entries/0 in emitted port only [rename candidates: clear, firstKey, firstValue, hashCode, isEmpty, nonEmpty, peekKey, peekValue, reverse, shrink, shuffle, size, toString]
 8b65e082e42f	api-parity(port-extra)	port-extra	ArrayMap#iterator	/ArrayMap	0	def iterator/0 in emitted port only [rename candidates: clear, firstKey, firstValue, hashCode, isEmpty, nonEmpty, peekKey, peekValue, reverse, shrink, shuffle, size, toString]
 9b64a72421e4	api-parity(port-extra)	port-extra	ArrayMap#keys	/ArrayMap	0	def keys/0 in emitted port only [rename candidates: clear, firstKey, firstValue, hashCode, isEmpty, nonEmpty, peekKey, peekValue, reverse, shrink, shuffle, size, toString]
@@ -263,6 +205,7 @@ f1fe566cac88	api-parity(port-extra)	port-extra	ArrayMap#ordered	/ArrayMap	0	var 
 ff6867da8127	api-parity(port-extra)	port-extra	ArrayMap#setKey	/ArrayMap	0	def setKey/2 in emitted port only [rename candidates: containsValue, get, getKey, indexOfValue, put, removeValue, setKeyAt, setValueAt]
 93defc484134	api-parity(port-extra)	port-extra	ArrayMap#setValue	/ArrayMap	0	def setValue/2 in emitted port only [rename candidates: containsValue, get, getKey, indexOfValue, put, removeValue, setKeyAt, setValueAt]
 520e89569f8a	api-parity(port-extra)	port-extra	ArrayMap#size	/ArrayMap	0	var size/0 in emitted port only
+cbada9a799ad	api-parity(port-extra)	port-extra	ArrayMap#update	/ArrayMap	0	def update/2 in emitted port only [rename candidates: containsValue, get, getKey, indexOfValue, put, removeValue, setKeyAt, setValueAt]
 5c973c78dd89	api-parity(port-extra)	port-extra	ArrayMap#values	/ArrayMap	0	def values/0 in emitted port only [rename candidates: clear, firstKey, firstValue, hashCode, isEmpty, nonEmpty, peekKey, peekValue, reverse, shrink, shuffle, size, toString]
 00027c0e43eb	api-parity(port-extra)	port-extra	ArrayMap$#Entries	/ArrayMap$	0	class Entries/0 in emitted port only
 21111f758eb5	api-parity(port-extra)	port-extra	ArrayMap$#Funnel	/ArrayMap$	0	class Funnel/0 in emitted port only
@@ -373,6 +316,8 @@ c3d29d9b009b	api-parity(port-extra)	port-extra	Bits#length	/Bits	0	def length/0 
 205a2e445eeb	api-parity(port-extra)	port-extra	Bits#set	/Bits	0	def set/1 in emitted port only
 4c7418cd85de	api-parity(port-extra)	port-extra	Bits#xor	/Bits	0	def xor/1 in emitted port only
 d8b9a5ad911e	api-parity(port-extra)	port-extra	Bits$#Funnel	/Bits$	0	class Funnel/0 in emitted port only
+097b562309a5	api-parity(port-extra)	port-extra	BooleanArray#+=	/BooleanArray	0	def +=/1 in emitted port only
+5b18e892f075	api-parity(port-extra)	port-extra	BooleanArray#--=	/BooleanArray	0	def --=/1 in emitted port only
 436f54eac647	api-parity(port-extra)	port-extra	BooleanArray#add	/BooleanArray	0	def add/1 in emitted port only
 5fe5171ca993	api-parity(port-extra)	port-extra	BooleanArray#add	/BooleanArray	0	def add/2 in emitted port only
 ff3b41d85a8f	api-parity(port-extra)	port-extra	BooleanArray#add	/BooleanArray	0	def add/3 in emitted port only
@@ -381,16 +326,25 @@ ff3b41d85a8f	api-parity(port-extra)	port-extra	BooleanArray#add	/BooleanArray	0	
 6a30f19c7e4e/2	api-parity(port-extra)	port-extra	BooleanArray#addAll	/BooleanArray	0	def addAll/1 in emitted port only
 38c727df4987	api-parity(port-extra)	port-extra	BooleanArray#addAll	/BooleanArray	0	def addAll/3 in emitted port only
 38c727df4987/2	api-parity(port-extra)	port-extra	BooleanArray#addAll	/BooleanArray	0	def addAll/3 in emitted port only
+aa7a39355511	api-parity(port-extra)	port-extra	BooleanArray#apply	/BooleanArray	0	def apply/1 in emitted port only
 e9b64ece9a18	api-parity(port-extra)	port-extra	BooleanArray#clear	/BooleanArray	0	def clear/0 in emitted port only
+9c7e6a63a33b	api-parity(port-extra)	port-extra	BooleanArray#count	/BooleanArray	0	def count/1 in emitted port only
 4b88ee9204d3	api-parity(port-extra)	port-extra	BooleanArray#ensureCapacity	/BooleanArray	0	def ensureCapacity/1 in emitted port only
 8d75b2dbbd8f	api-parity(port-extra)	port-extra	BooleanArray#equals	/BooleanArray	0	def equals/1 in emitted port only
+38d6f5b8e075	api-parity(port-extra)	port-extra	BooleanArray#exists	/BooleanArray	0	def exists/1 in emitted port only
+6a4bf00d8360	api-parity(port-extra)	port-extra	BooleanArray#find	/BooleanArray	0	def find/1 in emitted port only
 2f4b03976af7	api-parity(port-extra)	port-extra	BooleanArray#first	/BooleanArray	0	def first/0 in emitted port only
+3dce0eee1f23	api-parity(port-extra)	port-extra	BooleanArray#forall	/BooleanArray	0	def forall/1 in emitted port only
+319df620d65d	api-parity(port-extra)	port-extra	BooleanArray#foreach	/BooleanArray	0	def foreach/1 in emitted port only
 8088372bb3af	api-parity(port-extra)	port-extra	BooleanArray#get	/BooleanArray	0	def get/1 in emitted port only
 ac3eddf2fb0d	api-parity(port-extra)	port-extra	BooleanArray#hashCode	/BooleanArray	0	def hashCode/0 in emitted port only
+6dbc96f71d61	api-parity(port-extra)	port-extra	BooleanArray#indexWhere	/BooleanArray	0	def indexWhere/1 in emitted port only
 5f6655fd4f12	api-parity(port-extra)	port-extra	BooleanArray#insert	/BooleanArray	0	def insert/2 in emitted port only
 dbb28933c3d6	api-parity(port-extra)	port-extra	BooleanArray#insertRange	/BooleanArray	0	def insertRange/2 in emitted port only
 29a75bc66b01	api-parity(port-extra)	port-extra	BooleanArray#isEmpty	/BooleanArray	0	def isEmpty/0 in emitted port only
 31722e70d5eb	api-parity(port-extra)	port-extra	BooleanArray#items	/BooleanArray	0	var items/0 in emitted port only
+a1f948c83522	api-parity(port-extra)	port-extra	BooleanArray#last	/BooleanArray	0	def last/0 in emitted port only
+aa799e3bd3e1	api-parity(port-extra)	port-extra	BooleanArray#nonEmpty	/BooleanArray	0	def nonEmpty/0 in emitted port only
 4a7278f445ed	api-parity(port-extra)	port-extra	BooleanArray#notEmpty	/BooleanArray	0	def notEmpty/0 in emitted port only
 b2b244e19be2	api-parity(port-extra)	port-extra	BooleanArray#ordered	/BooleanArray	0	var ordered/0 in emitted port only
 d5e6484de1a7	api-parity(port-extra)	port-extra	BooleanArray#peek	/BooleanArray	0	def peek/0 in emitted port only
@@ -413,8 +367,16 @@ e5a1b6d080fe	api-parity(port-extra)	port-extra	BooleanArray#toArray	/BooleanArra
 5122d9a91378	api-parity(port-extra)	port-extra	BooleanArray#toString	/BooleanArray	0	def toString/0 in emitted port only
 47945a7e0f53	api-parity(port-extra)	port-extra	BooleanArray#toString	/BooleanArray	0	def toString/1 in emitted port only
 e092c21563e3	api-parity(port-extra)	port-extra	BooleanArray#truncate	/BooleanArray	0	def truncate/1 in emitted port only
+77c0b87637e5	api-parity(port-extra)	port-extra	BooleanArray#update	/BooleanArray	0	def update/2 in emitted port only
 a2bfe58a90cf	api-parity(port-extra)	port-extra	BooleanArray$#Funnel	/BooleanArray$	0	class Funnel/0 in emitted port only
+450709331bd6	api-parity(port-extra)	port-extra	BooleanArray$#apply	/BooleanArray$	0	def apply/0 in emitted port only
+64b349ebba30	api-parity(port-extra)	port-extra	BooleanArray$#apply	/BooleanArray$	0	def apply/1 in emitted port only
+49ea78fd91db	api-parity(port-extra)	port-extra	BooleanArray$#apply	/BooleanArray$	0	def apply/2 in emitted port only
+2032ab48423c	api-parity(port-extra)	port-extra	BooleanArray$#from	/BooleanArray$	0	def from/1 in emitted port only
 398e2d237c3f	api-parity(port-extra)	port-extra	BooleanArray$#with	/BooleanArray$	0	def with/1 in emitted port only
+0a1b04259e76	api-parity(port-extra)	port-extra	ByteArray#+=	/ByteArray	0	def +=/1 in emitted port only
+532ff82120ca	api-parity(port-extra)	port-extra	ByteArray#--=	/ByteArray	0	def --=/1 in emitted port only
+0fba5ffd067a	api-parity(port-extra)	port-extra	ByteArray#-=	/ByteArray	0	def -=/1 in emitted port only
 fbbaffcf0aad	api-parity(port-extra)	port-extra	ByteArray#add	/ByteArray	0	def add/1 in emitted port only
 38e62a150623	api-parity(port-extra)	port-extra	ByteArray#add	/ByteArray	0	def add/2 in emitted port only
 6b044bfced90	api-parity(port-extra)	port-extra	ByteArray#add	/ByteArray	0	def add/3 in emitted port only
@@ -423,23 +385,32 @@ fbbaffcf0aad	api-parity(port-extra)	port-extra	ByteArray#add	/ByteArray	0	def ad
 9388cc685f6b/2	api-parity(port-extra)	port-extra	ByteArray#addAll	/ByteArray	0	def addAll/1 in emitted port only
 78c29d23ac22	api-parity(port-extra)	port-extra	ByteArray#addAll	/ByteArray	0	def addAll/3 in emitted port only
 78c29d23ac22/2	api-parity(port-extra)	port-extra	ByteArray#addAll	/ByteArray	0	def addAll/3 in emitted port only
+7e3697fe694e	api-parity(port-extra)	port-extra	ByteArray#apply	/ByteArray	0	def apply/1 in emitted port only
 509c292bf5d9	api-parity(port-extra)	port-extra	ByteArray#clear	/ByteArray	0	def clear/0 in emitted port only
 30043c2761b9	api-parity(port-extra)	port-extra	ByteArray#contains	/ByteArray	0	def contains/1 in emitted port only
+5d2dbd42ce31	api-parity(port-extra)	port-extra	ByteArray#count	/ByteArray	0	def count/1 in emitted port only
 919bcbeab551	api-parity(port-extra)	port-extra	ByteArray#ensureCapacity	/ByteArray	0	def ensureCapacity/1 in emitted port only
 f3ebab76d618	api-parity(port-extra)	port-extra	ByteArray#equals	/ByteArray	0	def equals/1 in emitted port only
+fd040988d10b	api-parity(port-extra)	port-extra	ByteArray#exists	/ByteArray	0	def exists/1 in emitted port only
+5fe977cb2496	api-parity(port-extra)	port-extra	ByteArray#find	/ByteArray	0	def find/1 in emitted port only
 a3e498168e5e	api-parity(port-extra)	port-extra	ByteArray#first	/ByteArray	0	def first/0 in emitted port only
+5c745655e8df	api-parity(port-extra)	port-extra	ByteArray#forall	/ByteArray	0	def forall/1 in emitted port only
+d77d95fe3648	api-parity(port-extra)	port-extra	ByteArray#foreach	/ByteArray	0	def foreach/1 in emitted port only
 63155bb12701	api-parity(port-extra)	port-extra	ByteArray#get	/ByteArray	0	def get/1 in emitted port only
 36dbcc20b059	api-parity(port-extra)	port-extra	ByteArray#hashCode	/ByteArray	0	def hashCode/0 in emitted port only
 b62c80e971c0	api-parity(port-extra)	port-extra	ByteArray#incr	/ByteArray	0	def incr/1 in emitted port only
 e41e78de8116	api-parity(port-extra)	port-extra	ByteArray#incr	/ByteArray	0	def incr/2 in emitted port only
 6ac222376c8d	api-parity(port-extra)	port-extra	ByteArray#indexOf	/ByteArray	0	def indexOf/1 in emitted port only
+1ded74d28e89	api-parity(port-extra)	port-extra	ByteArray#indexWhere	/ByteArray	0	def indexWhere/1 in emitted port only
 e434d4dab1c8	api-parity(port-extra)	port-extra	ByteArray#insert	/ByteArray	0	def insert/2 in emitted port only
 56b6ac24ab0f	api-parity(port-extra)	port-extra	ByteArray#insertRange	/ByteArray	0	def insertRange/2 in emitted port only
 965d5eb26348	api-parity(port-extra)	port-extra	ByteArray#isEmpty	/ByteArray	0	def isEmpty/0 in emitted port only
 f774e0356802	api-parity(port-extra)	port-extra	ByteArray#items	/ByteArray	0	var items/0 in emitted port only
+d63268174978	api-parity(port-extra)	port-extra	ByteArray#last	/ByteArray	0	def last/0 in emitted port only
 dc76c598575b	api-parity(port-extra)	port-extra	ByteArray#lastIndexOf	/ByteArray	0	def lastIndexOf/1 in emitted port only
 672b36a8cd04	api-parity(port-extra)	port-extra	ByteArray#mul	/ByteArray	0	def mul/1 in emitted port only
 6689a1299648	api-parity(port-extra)	port-extra	ByteArray#mul	/ByteArray	0	def mul/2 in emitted port only
+4468111c838f	api-parity(port-extra)	port-extra	ByteArray#nonEmpty	/ByteArray	0	def nonEmpty/0 in emitted port only
 847e5b1d3128	api-parity(port-extra)	port-extra	ByteArray#notEmpty	/ByteArray	0	def notEmpty/0 in emitted port only
 f563cd635440	api-parity(port-extra)	port-extra	ByteArray#ordered	/ByteArray	0	var ordered/0 in emitted port only
 c956a8f6e895	api-parity(port-extra)	port-extra	ByteArray#peek	/ByteArray	0	def peek/0 in emitted port only
@@ -464,8 +435,16 @@ da492e3ebb12	api-parity(port-extra)	port-extra	ByteArray#shuffle	/ByteArray	0	de
 382bf25cfd71	api-parity(port-extra)	port-extra	ByteArray#toString	/ByteArray	0	def toString/0 in emitted port only
 1757e8caf7b4	api-parity(port-extra)	port-extra	ByteArray#toString	/ByteArray	0	def toString/1 in emitted port only
 ff015d1f6e80	api-parity(port-extra)	port-extra	ByteArray#truncate	/ByteArray	0	def truncate/1 in emitted port only
+5603b4cc1813	api-parity(port-extra)	port-extra	ByteArray#update	/ByteArray	0	def update/2 in emitted port only
 5fc38d0a16d8	api-parity(port-extra)	port-extra	ByteArray$#Funnel	/ByteArray$	0	class Funnel/0 in emitted port only
+355287581316	api-parity(port-extra)	port-extra	ByteArray$#apply	/ByteArray$	0	def apply/0 in emitted port only
+5a387d41996e	api-parity(port-extra)	port-extra	ByteArray$#apply	/ByteArray$	0	def apply/1 in emitted port only
+a4555778fa4a	api-parity(port-extra)	port-extra	ByteArray$#apply	/ByteArray$	0	def apply/2 in emitted port only
+23fbce5c73fc	api-parity(port-extra)	port-extra	ByteArray$#from	/ByteArray$	0	def from/1 in emitted port only
 15b59e1ac9ad	api-parity(port-extra)	port-extra	ByteArray$#with	/ByteArray$	0	def with/1 in emitted port only
+70ca16475d9b	api-parity(port-extra)	port-extra	CharArray#+=	/CharArray	0	def +=/1 in emitted port only
+f8ffb97cdcaa	api-parity(port-extra)	port-extra	CharArray#--=	/CharArray	0	def --=/1 in emitted port only
+490a8c37ba21	api-parity(port-extra)	port-extra	CharArray#-=	/CharArray	0	def -=/1 in emitted port only
 c4022a8fa6ce	api-parity(port-extra)	port-extra	CharArray#add	/CharArray	0	def add/1 in emitted port only
 db50d9c89de6	api-parity(port-extra)	port-extra	CharArray#add	/CharArray	0	def add/2 in emitted port only
 f61af9e9e3fe	api-parity(port-extra)	port-extra	CharArray#add	/CharArray	0	def add/3 in emitted port only
@@ -540,6 +519,7 @@ c230f18a0dcb/2	api-parity(port-extra)	port-extra	CharArray#appendln	/CharArray	0
 c230f18a0dcb/3	api-parity(port-extra)	port-extra	CharArray#appendln	/CharArray	0	def appendln/3 in emitted port only
 c230f18a0dcb/4	api-parity(port-extra)	port-extra	CharArray#appendln	/CharArray	0	def appendln/3 in emitted port only
 c230f18a0dcb/5	api-parity(port-extra)	port-extra	CharArray#appendln	/CharArray	0	def appendln/3 in emitted port only
+99363d2db673	api-parity(port-extra)	port-extra	CharArray#apply	/CharArray	0	def apply/1 in emitted port only
 00b5829b4d0b	api-parity(port-extra)	port-extra	CharArray#capacity	/CharArray	0	def capacity/0 in emitted port only
 706b21b6968f	api-parity(port-extra)	port-extra	CharArray#charAt	/CharArray	0	def charAt/1 in emitted port only
 3a5dcdc78325	api-parity(port-extra)	port-extra	CharArray#clear	/CharArray	0	def clear/0 in emitted port only
@@ -549,6 +529,7 @@ a9a48c23ca6f	api-parity(port-extra)	port-extra	CharArray#codePointAt	/CharArray	
 b22d117b6748	api-parity(port-extra)	port-extra	CharArray#contains	/CharArray	0	def contains/1 in emitted port only
 b22d117b6748/2	api-parity(port-extra)	port-extra	CharArray#contains	/CharArray	0	def contains/1 in emitted port only
 cc2b879bf10e	api-parity(port-extra)	port-extra	CharArray#containsIgnoreCase	/CharArray	0	def containsIgnoreCase/1 in emitted port only
+8b20d79c811f	api-parity(port-extra)	port-extra	CharArray#count	/CharArray	0	def count/1 in emitted port only
 3b22f1a6952b	api-parity(port-extra)	port-extra	CharArray#delete	/CharArray	0	def delete/2 in emitted port only
 6dab10c93592	api-parity(port-extra)	port-extra	CharArray#deleteAll	/CharArray	0	def deleteAll/1 in emitted port only
 6dab10c93592/2	api-parity(port-extra)	port-extra	CharArray#deleteAll	/CharArray	0	def deleteAll/1 in emitted port only
@@ -564,7 +545,11 @@ a80c36fd364d/2	api-parity(port-extra)	port-extra	CharArray#equals	/CharArray	0	d
 19b4b009ee26	api-parity(port-extra)	port-extra	CharArray#equalsIgnoreCase	/CharArray	0	def equalsIgnoreCase/1 in emitted port only
 19b4b009ee26/2	api-parity(port-extra)	port-extra	CharArray#equalsIgnoreCase	/CharArray	0	def equalsIgnoreCase/1 in emitted port only
 376489f79a97	api-parity(port-extra)	port-extra	CharArray#equalsString	/CharArray	0	def equalsString/1 in emitted port only
+1400fa3da9eb	api-parity(port-extra)	port-extra	CharArray#exists	/CharArray	0	def exists/1 in emitted port only
+110a4cd1bf68	api-parity(port-extra)	port-extra	CharArray#find	/CharArray	0	def find/1 in emitted port only
 760d76f6d615	api-parity(port-extra)	port-extra	CharArray#first	/CharArray	0	def first/0 in emitted port only
+01805f2db154	api-parity(port-extra)	port-extra	CharArray#forall	/CharArray	0	def forall/1 in emitted port only
+fac30c2046e6	api-parity(port-extra)	port-extra	CharArray#foreach	/CharArray	0	def foreach/1 in emitted port only
 268a2a510006	api-parity(port-extra)	port-extra	CharArray#get	/CharArray	0	def get/1 in emitted port only
 d82fffc71df0	api-parity(port-extra)	port-extra	CharArray#getChars	/CharArray	0	def getChars/1 in emitted port only
 4a064a05ba9d	api-parity(port-extra)	port-extra	CharArray#getChars	/CharArray	0	def getChars/4 in emitted port only
@@ -576,6 +561,7 @@ f68fcab0efe2	api-parity(port-extra)	port-extra	CharArray#incr	/CharArray	0	def i
 d9433c5e55e2	api-parity(port-extra)	port-extra	CharArray#indexOf	/CharArray	0	def indexOf/2 in emitted port only
 d9433c5e55e2/2	api-parity(port-extra)	port-extra	CharArray#indexOf	/CharArray	0	def indexOf/2 in emitted port only
 995d4e9f0185	api-parity(port-extra)	port-extra	CharArray#indexOfIgnoreCase	/CharArray	0	def indexOfIgnoreCase/2 in emitted port only
+c4ccf5738071	api-parity(port-extra)	port-extra	CharArray#indexWhere	/CharArray	0	def indexWhere/1 in emitted port only
 f648927e700a	api-parity(port-extra)	port-extra	CharArray#insert	/CharArray	0	def insert/2 in emitted port only
 f648927e700a/2	api-parity(port-extra)	port-extra	CharArray#insert	/CharArray	0	def insert/2 in emitted port only
 f648927e700a/3	api-parity(port-extra)	port-extra	CharArray#insert	/CharArray	0	def insert/2 in emitted port only
@@ -589,6 +575,7 @@ ce8e24506bb9	api-parity(port-extra)	port-extra	CharArray#insert	/CharArray	0	def
 71644190d64f	api-parity(port-extra)	port-extra	CharArray#insertRange	/CharArray	0	def insertRange/2 in emitted port only
 6d977c7c2673	api-parity(port-extra)	port-extra	CharArray#isEmpty	/CharArray	0	def isEmpty/0 in emitted port only
 81453707ef81	api-parity(port-extra)	port-extra	CharArray#items	/CharArray	0	var items/0 in emitted port only
+306628e8ed71	api-parity(port-extra)	port-extra	CharArray#last	/CharArray	0	def last/0 in emitted port only
 9c9b89eeb89f	api-parity(port-extra)	port-extra	CharArray#lastIndexOf	/CharArray	0	def lastIndexOf/1 in emitted port only
 9c9b89eeb89f/2	api-parity(port-extra)	port-extra	CharArray#lastIndexOf	/CharArray	0	def lastIndexOf/1 in emitted port only
 eacc14535d49	api-parity(port-extra)	port-extra	CharArray#lastIndexOf	/CharArray	0	def lastIndexOf/2 in emitted port only
@@ -598,6 +585,7 @@ a32b5f0bcb7c	api-parity(port-extra)	port-extra	CharArray#length	/CharArray	0	def
 ca19af5dd18b	api-parity(port-extra)	port-extra	CharArray#midString	/CharArray	0	def midString/2 in emitted port only
 da1b464e83bd	api-parity(port-extra)	port-extra	CharArray#mul	/CharArray	0	def mul/1 in emitted port only
 ca2b6e252b74	api-parity(port-extra)	port-extra	CharArray#mul	/CharArray	0	def mul/2 in emitted port only
+e88b43694fba	api-parity(port-extra)	port-extra	CharArray#nonEmpty	/CharArray	0	def nonEmpty/0 in emitted port only
 ad9cb1c15892	api-parity(port-extra)	port-extra	CharArray#notEmpty	/CharArray	0	def notEmpty/0 in emitted port only
 223358c9e4a2	api-parity(port-extra)	port-extra	CharArray#offsetByCodePoints	/CharArray	0	def offsetByCodePoints/2 in emitted port only
 fcf2954c5644	api-parity(port-extra)	port-extra	CharArray#ordered	/CharArray	0	var ordered/0 in emitted port only
@@ -646,10 +634,15 @@ b543acab8608	api-parity(port-extra)	port-extra	CharArray#toString	/CharArray	0	d
 d047cf7932ba	api-parity(port-extra)	port-extra	CharArray#trim	/CharArray	0	def trim/0 in emitted port only
 0e59c2fb4d1e	api-parity(port-extra)	port-extra	CharArray#trimToSize	/CharArray	0	def trimToSize/0 in emitted port only
 325e225db5f5	api-parity(port-extra)	port-extra	CharArray#truncate	/CharArray	0	def truncate/1 in emitted port only
+372e063e04f0	api-parity(port-extra)	port-extra	CharArray#update	/CharArray	0	def update/2 in emitted port only
 dd3dfeca1f0f	api-parity(port-extra)	port-extra	CharArray#validateIndex	/CharArray	0	def validateIndex/1 in emitted port only
 62ace01dccd7	api-parity(port-extra)	port-extra	CharArray#validateRange	/CharArray	0	def validateRange/2 in emitted port only
 8cc8756c89f2	api-parity(port-extra)	port-extra	CharArray#writer	/CharArray	0	def writer/0 in emitted port only
 37ccd62a499a	api-parity(port-extra)	port-extra	CharArray$#Funnel	/CharArray$	0	class Funnel/0 in emitted port only
+ac3dd9896b02	api-parity(port-extra)	port-extra	CharArray$#apply	/CharArray$	0	def apply/0 in emitted port only
+134ba2172f5c	api-parity(port-extra)	port-extra	CharArray$#apply	/CharArray$	0	def apply/1 in emitted port only
+f14ff0425a3b	api-parity(port-extra)	port-extra	CharArray$#apply	/CharArray$	0	def apply/2 in emitted port only
+84b885423f32	api-parity(port-extra)	port-extra	CharArray$#from	/CharArray$	0	def from/1 in emitted port only
 086b01146dcc	api-parity(port-extra)	port-extra	CharArray$#numChars	/CharArray$	0	def numChars/2 in emitted port only
 086b01146dcc/2	api-parity(port-extra)	port-extra	CharArray$#numChars	/CharArray$	0	def numChars/2 in emitted port only
 da7431e2d935	api-parity(port-extra)	port-extra	CharArray$#with	/CharArray$	0	def with/1 in emitted port only
@@ -680,6 +673,10 @@ ce2e66db5d24	api-parity(port-extra)	port-extra	DelayedRemovalArray#sort	/Delayed
 0a045ac38de8	api-parity(port-extra)	port-extra	DelayedRemovalArray#sort	/DelayedRemovalArray	0	def sort/1 in emitted port only
 4a58f88df780	api-parity(port-extra)	port-extra	DelayedRemovalArray#swap	/DelayedRemovalArray	0	def swap/2 in emitted port only
 540339679e27	api-parity(port-extra)	port-extra	DelayedRemovalArray#truncate	/DelayedRemovalArray	0	def truncate/1 in emitted port only
+67f23564cf9c	api-parity(port-extra)	port-extra	DelayedRemovalArray$#apply	/DelayedRemovalArray$	0	def apply/0 in emitted port only
+913f7d98ab3e	api-parity(port-extra)	port-extra	DelayedRemovalArray$#apply	/DelayedRemovalArray$	0	def apply/1 in emitted port only
+106b2829bae7	api-parity(port-extra)	port-extra	DelayedRemovalArray$#apply	/DelayedRemovalArray$	0	def apply/2 in emitted port only
+bd204c73c228	api-parity(port-extra)	port-extra	DelayedRemovalArray$#from	/DelayedRemovalArray$	0	def from/1 in emitted port only
 48206b093927	api-parity(port-extra)	port-extra	DelayedRemovalArray$#with	/DelayedRemovalArray$	0	def with/1 in emitted port only
 02132b3aa2ae	api-parity(port-extra)	port-extra	DynamicArray#add	/DynamicArray	0	def add/4 in emitted port only
 c629c0a9f6a7	api-parity(port-extra)	port-extra	DynamicArray#contains	/DynamicArray	0	def contains/2 in emitted port only [rename candidates: add, insert, insertRange, removeRange, replaceAll, replaceAllByRef, replaceFirst, replaceFirstByRef, selectRanked, selectRankedIndex, swap, update]
@@ -691,6 +688,7 @@ e76f39f461ab	api-parity(port-extra)	port-extra	DynamicArray#indexOf	/DynamicArra
 bb58183368dd	api-parity(port-extra)	port-extra	DynamicArray#lastIndexOf	/DynamicArray	0	def lastIndexOf/2 in emitted port only [rename candidates: add, insert, insertRange, removeRange, replaceAll, replaceAllByRef, replaceFirst, replaceFirstByRef, selectRanked, selectRankedIndex, swap, update]
 d001bda8cb5e	api-parity(port-extra)	port-extra	DynamicArray#notEmpty	/DynamicArray	0	def notEmpty/0 in emitted port only [rename candidates: begin, clear, end, first, hashCode, isEmpty, items, iterator, last, nonEmpty, peek, pop, random, reverse, shrink, shuffle, size, toArray, toString]
 6a1c409944b2	api-parity(port-extra)	port-extra	DynamicArray#ordered	/DynamicArray	0	var ordered/0 in emitted port only
+3993ff7cc791	api-parity(port-extra)	port-extra	DynamicArray#preserveOrder	/DynamicArray	0	def preserveOrder/0 in emitted port only [rename candidates: begin, clear, end, first, hashCode, isEmpty, items, iterator, last, nonEmpty, peek, pop, random, reverse, shrink, shuffle, size, toArray, toString]
 6e95964385d8	api-parity(port-extra)	port-extra	DynamicArray#removeAll	/DynamicArray	0	def removeAll/2 in emitted port only [rename candidates: add, insert, insertRange, removeRange, replaceAll, replaceAllByRef, replaceFirst, replaceFirstByRef, selectRanked, selectRankedIndex, swap, update]
 f494b9d1825b	api-parity(port-extra)	port-extra	DynamicArray#removeValue	/DynamicArray	0	def removeValue/2 in emitted port only [rename candidates: add, insert, insertRange, removeRange, replaceAll, replaceAllByRef, replaceFirst, replaceFirstByRef, selectRanked, selectRankedIndex, swap, update]
 e42cb0d83d58	api-parity(port-extra)	port-extra	DynamicArray#replaceAll	/DynamicArray	0	def replaceAll/3 in emitted port only [rename candidates: add, addAll]
@@ -715,6 +713,9 @@ abbda2524eb0	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterator#hasNe
 4f1283193dc6	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterator#next	/DynamicArray$/ArrayIterator	0	def next/0 in emitted port only
 d3245efc56da	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterator#remove	/DynamicArray$/ArrayIterator	0	def remove/0 in emitted port only
 b5d865d10df9	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterator#reset	/DynamicArray$/ArrayIterator	0	def reset/0 in emitted port only
+02070de81da9	api-parity(port-extra)	port-extra	FloatArray#+=	/FloatArray	0	def +=/1 in emitted port only
+666a7767bc78	api-parity(port-extra)	port-extra	FloatArray#--=	/FloatArray	0	def --=/1 in emitted port only
+705ad907f08e	api-parity(port-extra)	port-extra	FloatArray#-=	/FloatArray	0	def -=/1 in emitted port only
 0fb225cd94f0	api-parity(port-extra)	port-extra	FloatArray#add	/FloatArray	0	def add/1 in emitted port only
 ad979bc36c23	api-parity(port-extra)	port-extra	FloatArray#add	/FloatArray	0	def add/2 in emitted port only
 63684fdbe7ea	api-parity(port-extra)	port-extra	FloatArray#add	/FloatArray	0	def add/3 in emitted port only
@@ -723,24 +724,33 @@ ad979bc36c23	api-parity(port-extra)	port-extra	FloatArray#add	/FloatArray	0	def 
 23d3900c940e/2	api-parity(port-extra)	port-extra	FloatArray#addAll	/FloatArray	0	def addAll/1 in emitted port only
 d58c535ffa69	api-parity(port-extra)	port-extra	FloatArray#addAll	/FloatArray	0	def addAll/3 in emitted port only
 d58c535ffa69/2	api-parity(port-extra)	port-extra	FloatArray#addAll	/FloatArray	0	def addAll/3 in emitted port only
+1f0ec59d4092	api-parity(port-extra)	port-extra	FloatArray#apply	/FloatArray	0	def apply/1 in emitted port only
 6549dbf96fcb	api-parity(port-extra)	port-extra	FloatArray#clear	/FloatArray	0	def clear/0 in emitted port only
 5ef584e20ee6	api-parity(port-extra)	port-extra	FloatArray#contains	/FloatArray	0	def contains/1 in emitted port only
+c59287b4a4eb	api-parity(port-extra)	port-extra	FloatArray#count	/FloatArray	0	def count/1 in emitted port only
 1dd05f4e7702	api-parity(port-extra)	port-extra	FloatArray#ensureCapacity	/FloatArray	0	def ensureCapacity/1 in emitted port only
 6d19ca6ae4e6	api-parity(port-extra)	port-extra	FloatArray#equals	/FloatArray	0	def equals/1 in emitted port only
 c0bf96781456	api-parity(port-extra)	port-extra	FloatArray#equals	/FloatArray	0	def equals/2 in emitted port only
+9bc067f1a702	api-parity(port-extra)	port-extra	FloatArray#exists	/FloatArray	0	def exists/1 in emitted port only
+3c3a90f73bbd	api-parity(port-extra)	port-extra	FloatArray#find	/FloatArray	0	def find/1 in emitted port only
 160e474eb82d	api-parity(port-extra)	port-extra	FloatArray#first	/FloatArray	0	def first/0 in emitted port only
+77571cff9c8b	api-parity(port-extra)	port-extra	FloatArray#forall	/FloatArray	0	def forall/1 in emitted port only
+3330e9ecdf58	api-parity(port-extra)	port-extra	FloatArray#foreach	/FloatArray	0	def foreach/1 in emitted port only
 af05cc16e9eb	api-parity(port-extra)	port-extra	FloatArray#get	/FloatArray	0	def get/1 in emitted port only
 a8f94043322e	api-parity(port-extra)	port-extra	FloatArray#hashCode	/FloatArray	0	def hashCode/0 in emitted port only
 0ada05378621	api-parity(port-extra)	port-extra	FloatArray#incr	/FloatArray	0	def incr/1 in emitted port only
 94062be27133	api-parity(port-extra)	port-extra	FloatArray#incr	/FloatArray	0	def incr/2 in emitted port only
 f9ee1fb5f899	api-parity(port-extra)	port-extra	FloatArray#indexOf	/FloatArray	0	def indexOf/1 in emitted port only
+036f2caa593f	api-parity(port-extra)	port-extra	FloatArray#indexWhere	/FloatArray	0	def indexWhere/1 in emitted port only
 383716488b4e	api-parity(port-extra)	port-extra	FloatArray#insert	/FloatArray	0	def insert/2 in emitted port only
 bdb9eafe8d66	api-parity(port-extra)	port-extra	FloatArray#insertRange	/FloatArray	0	def insertRange/2 in emitted port only
 7df380c4181e	api-parity(port-extra)	port-extra	FloatArray#isEmpty	/FloatArray	0	def isEmpty/0 in emitted port only
 d87b90f25da7	api-parity(port-extra)	port-extra	FloatArray#items	/FloatArray	0	var items/0 in emitted port only
+56bb850f5797	api-parity(port-extra)	port-extra	FloatArray#last	/FloatArray	0	def last/0 in emitted port only
 105c677096b9	api-parity(port-extra)	port-extra	FloatArray#lastIndexOf	/FloatArray	0	def lastIndexOf/1 in emitted port only
 075c394edc2b	api-parity(port-extra)	port-extra	FloatArray#mul	/FloatArray	0	def mul/1 in emitted port only
 37f8bc139473	api-parity(port-extra)	port-extra	FloatArray#mul	/FloatArray	0	def mul/2 in emitted port only
+1138b92e22cd	api-parity(port-extra)	port-extra	FloatArray#nonEmpty	/FloatArray	0	def nonEmpty/0 in emitted port only
 b579b2607576	api-parity(port-extra)	port-extra	FloatArray#notEmpty	/FloatArray	0	def notEmpty/0 in emitted port only
 987ca0229bd2	api-parity(port-extra)	port-extra	FloatArray#ordered	/FloatArray	0	var ordered/0 in emitted port only
 2b42daa127f3	api-parity(port-extra)	port-extra	FloatArray#peek	/FloatArray	0	def peek/0 in emitted port only
@@ -765,7 +775,12 @@ f608188b8f93	api-parity(port-extra)	port-extra	FloatArray#shuffle	/FloatArray	0	
 569dfdbcabec	api-parity(port-extra)	port-extra	FloatArray#toString	/FloatArray	0	def toString/0 in emitted port only
 3a30c628f75f	api-parity(port-extra)	port-extra	FloatArray#toString	/FloatArray	0	def toString/1 in emitted port only
 1b40765baadb	api-parity(port-extra)	port-extra	FloatArray#truncate	/FloatArray	0	def truncate/1 in emitted port only
+a5519038f341	api-parity(port-extra)	port-extra	FloatArray#update	/FloatArray	0	def update/2 in emitted port only
 8cbe693bf27a	api-parity(port-extra)	port-extra	FloatArray$#Funnel	/FloatArray$	0	class Funnel/0 in emitted port only
+623260952f1b	api-parity(port-extra)	port-extra	FloatArray$#apply	/FloatArray$	0	def apply/0 in emitted port only
+3dbd1740beb4	api-parity(port-extra)	port-extra	FloatArray$#apply	/FloatArray$	0	def apply/1 in emitted port only
+94610c2424c6	api-parity(port-extra)	port-extra	FloatArray$#apply	/FloatArray$	0	def apply/2 in emitted port only
+882f5172d3e1	api-parity(port-extra)	port-extra	FloatArray$#from	/FloatArray$	0	def from/1 in emitted port only
 0b22fcb06171	api-parity(port-extra)	port-extra	FloatArray$#with	/FloatArray$	0	def with/1 in emitted port only
 03c1afc8972e	api-parity(port-extra)	port-extra	FlushablePool#flush	/FlushablePool	0	def flush/0 in emitted port only
 0dcd3a2b633d	api-parity(port-extra)	port-extra	FlushablePool#free	/FlushablePool	0	def free/1 in emitted port only
@@ -774,6 +789,12 @@ f608188b8f93	api-parity(port-extra)	port-extra	FloatArray#shuffle	/FloatArray	0	
 f7f52e0838e3	api-parity(port-extra)	port-extra	FlushablePool#obtained	/FlushablePool	0	var obtained/0 in emitted port only
 f26b8b8810a2	api-parity(port-extra)	port-extra	IdentityMap#hashCode	/IdentityMap	0	def hashCode/0 in emitted port only
 a8ba655d6ded	api-parity(port-extra)	port-extra	IdentityMap#place	/IdentityMap	0	def place/1 in emitted port only
+f286115490c2	api-parity(port-extra)	port-extra	IdentityMap$#apply	/IdentityMap$	0	def apply/0 in emitted port only
+88444d480733	api-parity(port-extra)	port-extra	IdentityMap$#apply	/IdentityMap$	0	def apply/1 in emitted port only
+b1dbe997e91f	api-parity(port-extra)	port-extra	IdentityMap$#apply	/IdentityMap$	0	def apply/2 in emitted port only
+99e8bad54320	api-parity(port-extra)	port-extra	IntArray#+=	/IntArray	0	def +=/1 in emitted port only
+b4885bee18e7	api-parity(port-extra)	port-extra	IntArray#--=	/IntArray	0	def --=/1 in emitted port only
+9c27dd3f1636	api-parity(port-extra)	port-extra	IntArray#-=	/IntArray	0	def -=/1 in emitted port only
 6983587afd95	api-parity(port-extra)	port-extra	IntArray#add	/IntArray	0	def add/1 in emitted port only
 f69ad8431ce3	api-parity(port-extra)	port-extra	IntArray#add	/IntArray	0	def add/2 in emitted port only
 0c3aec2f4d3e	api-parity(port-extra)	port-extra	IntArray#add	/IntArray	0	def add/3 in emitted port only
@@ -782,23 +803,32 @@ c79b51d66fb5	api-parity(port-extra)	port-extra	IntArray#addAll	/IntArray	0	def a
 c79b51d66fb5/2	api-parity(port-extra)	port-extra	IntArray#addAll	/IntArray	0	def addAll/1 in emitted port only
 53c3be605392	api-parity(port-extra)	port-extra	IntArray#addAll	/IntArray	0	def addAll/3 in emitted port only
 53c3be605392/2	api-parity(port-extra)	port-extra	IntArray#addAll	/IntArray	0	def addAll/3 in emitted port only
+bb45c47e138d	api-parity(port-extra)	port-extra	IntArray#apply	/IntArray	0	def apply/1 in emitted port only
 e3b0a6eb6a16	api-parity(port-extra)	port-extra	IntArray#clear	/IntArray	0	def clear/0 in emitted port only
 9c71bf75508b	api-parity(port-extra)	port-extra	IntArray#contains	/IntArray	0	def contains/1 in emitted port only
+06064d6061b2	api-parity(port-extra)	port-extra	IntArray#count	/IntArray	0	def count/1 in emitted port only
 3638ebf29755	api-parity(port-extra)	port-extra	IntArray#ensureCapacity	/IntArray	0	def ensureCapacity/1 in emitted port only
 fa44f087980a	api-parity(port-extra)	port-extra	IntArray#equals	/IntArray	0	def equals/1 in emitted port only
+733981681bfb	api-parity(port-extra)	port-extra	IntArray#exists	/IntArray	0	def exists/1 in emitted port only
+26d764e42d7d	api-parity(port-extra)	port-extra	IntArray#find	/IntArray	0	def find/1 in emitted port only
 df901f7fe256	api-parity(port-extra)	port-extra	IntArray#first	/IntArray	0	def first/0 in emitted port only
+ff6ee6f9a3d1	api-parity(port-extra)	port-extra	IntArray#forall	/IntArray	0	def forall/1 in emitted port only
+9bd1b225a8f1	api-parity(port-extra)	port-extra	IntArray#foreach	/IntArray	0	def foreach/1 in emitted port only
 f82fb890754b	api-parity(port-extra)	port-extra	IntArray#get	/IntArray	0	def get/1 in emitted port only
 ef31868ff7dc	api-parity(port-extra)	port-extra	IntArray#hashCode	/IntArray	0	def hashCode/0 in emitted port only
 fc81326ba3e8	api-parity(port-extra)	port-extra	IntArray#incr	/IntArray	0	def incr/1 in emitted port only
 076cc071ae18	api-parity(port-extra)	port-extra	IntArray#incr	/IntArray	0	def incr/2 in emitted port only
 6a58f88e5900	api-parity(port-extra)	port-extra	IntArray#indexOf	/IntArray	0	def indexOf/1 in emitted port only
+db72e69e0364	api-parity(port-extra)	port-extra	IntArray#indexWhere	/IntArray	0	def indexWhere/1 in emitted port only
 006457cae234	api-parity(port-extra)	port-extra	IntArray#insert	/IntArray	0	def insert/2 in emitted port only
 3c316f6e364b	api-parity(port-extra)	port-extra	IntArray#insertRange	/IntArray	0	def insertRange/2 in emitted port only
 ba6955bf8064	api-parity(port-extra)	port-extra	IntArray#isEmpty	/IntArray	0	def isEmpty/0 in emitted port only
 d7674a8e04b3	api-parity(port-extra)	port-extra	IntArray#items	/IntArray	0	var items/0 in emitted port only
+5bc3ded796c2	api-parity(port-extra)	port-extra	IntArray#last	/IntArray	0	def last/0 in emitted port only
 1c432d63470f	api-parity(port-extra)	port-extra	IntArray#lastIndexOf	/IntArray	0	def lastIndexOf/1 in emitted port only
 b1f195f827ce	api-parity(port-extra)	port-extra	IntArray#mul	/IntArray	0	def mul/1 in emitted port only
 356407bf8a5d	api-parity(port-extra)	port-extra	IntArray#mul	/IntArray	0	def mul/2 in emitted port only
+1a7c195feecc	api-parity(port-extra)	port-extra	IntArray#nonEmpty	/IntArray	0	def nonEmpty/0 in emitted port only
 0c693cce369d	api-parity(port-extra)	port-extra	IntArray#notEmpty	/IntArray	0	def notEmpty/0 in emitted port only
 7f94095abe9a	api-parity(port-extra)	port-extra	IntArray#ordered	/IntArray	0	var ordered/0 in emitted port only
 230a66aacbf3	api-parity(port-extra)	port-extra	IntArray#peek	/IntArray	0	def peek/0 in emitted port only
@@ -823,8 +853,14 @@ edc5e60a92ae	api-parity(port-extra)	port-extra	IntArray#swap	/IntArray	0	def swa
 2f2d027abe13	api-parity(port-extra)	port-extra	IntArray#toString	/IntArray	0	def toString/0 in emitted port only
 df28fdcb367c	api-parity(port-extra)	port-extra	IntArray#toString	/IntArray	0	def toString/1 in emitted port only
 7ad1e2fb1147	api-parity(port-extra)	port-extra	IntArray#truncate	/IntArray	0	def truncate/1 in emitted port only
+38b98b89e265	api-parity(port-extra)	port-extra	IntArray#update	/IntArray	0	def update/2 in emitted port only
 404411e996d2	api-parity(port-extra)	port-extra	IntArray$#Funnel	/IntArray$	0	class Funnel/0 in emitted port only
+f7b82c78d580	api-parity(port-extra)	port-extra	IntArray$#apply	/IntArray$	0	def apply/0 in emitted port only
+14d8db2dcbfa	api-parity(port-extra)	port-extra	IntArray$#apply	/IntArray$	0	def apply/1 in emitted port only
+50b397b7ceb0	api-parity(port-extra)	port-extra	IntArray$#apply	/IntArray$	0	def apply/2 in emitted port only
+ca035ecadecc	api-parity(port-extra)	port-extra	IntArray$#from	/IntArray$	0	def from/1 in emitted port only
 31716d7957a5	api-parity(port-extra)	port-extra	IntArray$#with	/IntArray$	0	def with/1 in emitted port only
+0d445122fdd3	api-parity(port-extra)	port-extra	IntFloatMap#+=	/IntFloatMap	0	def +=/1 in emitted port only
 2cc64534a05d	api-parity(port-extra)	port-extra	IntFloatMap#clear	/IntFloatMap	0	def clear/0 in emitted port only
 b39b574683ef	api-parity(port-extra)	port-extra	IntFloatMap#clear	/IntFloatMap	0	def clear/1 in emitted port only
 817774857778	api-parity(port-extra)	port-extra	IntFloatMap#containsKey	/IntFloatMap	0	def containsKey/1 in emitted port only
@@ -835,6 +871,9 @@ bb578f71084e	api-parity(port-extra)	port-extra	IntFloatMap#entries	/IntFloatMap	
 5b05a765de63	api-parity(port-extra)	port-extra	IntFloatMap#equals	/IntFloatMap	0	def equals/1 in emitted port only
 bbd3b1fdd62f	api-parity(port-extra)	port-extra	IntFloatMap#findKey	/IntFloatMap	0	def findKey/2 in emitted port only
 da16fd863645	api-parity(port-extra)	port-extra	IntFloatMap#findKey	/IntFloatMap	0	def findKey/3 in emitted port only
+540738818ef5	api-parity(port-extra)	port-extra	IntFloatMap#foreachEntry	/IntFloatMap	0	def foreachEntry/1 in emitted port only
+760e2341bfc9	api-parity(port-extra)	port-extra	IntFloatMap#foreachKey	/IntFloatMap	0	def foreachKey/1 in emitted port only
+26a9c7637d9e	api-parity(port-extra)	port-extra	IntFloatMap#foreachValue	/IntFloatMap	0	def foreachValue/1 in emitted port only
 68b88418081e	api-parity(port-extra)	port-extra	IntFloatMap#get	/IntFloatMap	0	def get/2 in emitted port only
 eb480c699a97	api-parity(port-extra)	port-extra	IntFloatMap#getAndIncrement	/IntFloatMap	0	def getAndIncrement/3 in emitted port only
 407335731dba	api-parity(port-extra)	port-extra	IntFloatMap#hasZeroValue	/IntFloatMap	0	var hasZeroValue/0 in emitted port only
@@ -845,6 +884,7 @@ a771283ab733	api-parity(port-extra)	port-extra	IntFloatMap#keyTable	/IntFloatMap
 78fffd5449c5	api-parity(port-extra)	port-extra	IntFloatMap#keys	/IntFloatMap	0	def keys/0 in emitted port only
 c861dbf98a3e	api-parity(port-extra)	port-extra	IntFloatMap#loadFactor	/IntFloatMap	0	var loadFactor/0 in emitted port only
 7832bd2ecb82	api-parity(port-extra)	port-extra	IntFloatMap#mask	/IntFloatMap	0	var mask/0 in emitted port only
+53bd862d95a4	api-parity(port-extra)	port-extra	IntFloatMap#nonEmpty	/IntFloatMap	0	def nonEmpty/0 in emitted port only
 801aa5135684	api-parity(port-extra)	port-extra	IntFloatMap#notEmpty	/IntFloatMap	0	def notEmpty/0 in emitted port only
 b15f63afb6b2	api-parity(port-extra)	port-extra	IntFloatMap#place	/IntFloatMap	0	def place/1 in emitted port only
 1817c796cc7f	api-parity(port-extra)	port-extra	IntFloatMap#put	/IntFloatMap	0	def put/2 in emitted port only
@@ -856,6 +896,7 @@ c17f41e3c3c1	api-parity(port-extra)	port-extra	IntFloatMap#shrink	/IntFloatMap	0
 3c702d6d245e	api-parity(port-extra)	port-extra	IntFloatMap#size	/IntFloatMap	0	var size/0 in emitted port only
 4ecad5f24613	api-parity(port-extra)	port-extra	IntFloatMap#threshold	/IntFloatMap	0	var threshold/0 in emitted port only
 68e0d843da3e	api-parity(port-extra)	port-extra	IntFloatMap#toString	/IntFloatMap	0	def toString/0 in emitted port only
+fae006ad5c28	api-parity(port-extra)	port-extra	IntFloatMap#update	/IntFloatMap	0	def update/2 in emitted port only
 c96ac8d1a71a	api-parity(port-extra)	port-extra	IntFloatMap#valueTable	/IntFloatMap	0	var valueTable/0 in emitted port only
 451961c6eead	api-parity(port-extra)	port-extra	IntFloatMap#values	/IntFloatMap	0	def values/0 in emitted port only
 7ab17c133c52	api-parity(port-extra)	port-extra	IntFloatMap#zeroValue	/IntFloatMap	0	var zeroValue/0 in emitted port only
@@ -867,6 +908,9 @@ c4387ba8990f	api-parity(port-extra)	port-extra	IntFloatMap$#Entries	/IntFloatMap
 1e2977dfea95	api-parity(port-extra)	port-extra	IntFloatMap$#MapIterator	/IntFloatMap$	0	object MapIterator/0 in emitted port only
 1a1eb0ef38cd	api-parity(port-extra)	port-extra	IntFloatMap$#Values	/IntFloatMap$	0	class Values/0 in emitted port only
 fe92de0920be	api-parity(port-extra)	port-extra	IntFloatMap$#Values	/IntFloatMap$	0	object Values/0 in emitted port only
+ad326ee13ed2	api-parity(port-extra)	port-extra	IntFloatMap$#apply	/IntFloatMap$	0	def apply/0 in emitted port only
+ba9c64e8e49c	api-parity(port-extra)	port-extra	IntFloatMap$#apply	/IntFloatMap$	0	def apply/1 in emitted port only
+6a2965ce0941	api-parity(port-extra)	port-extra	IntFloatMap$#apply	/IntFloatMap$	0	def apply/2 in emitted port only
 ecf4c68f02bb	api-parity(port-extra)	port-extra	IntFloatMap$.Entries#hasNext	/IntFloatMap$/Entries	0	def hasNext/0 in emitted port only
 f248dad9a3d5	api-parity(port-extra)	port-extra	IntFloatMap$.Entries#iterator	/IntFloatMap$/Entries	0	def iterator/0 in emitted port only
 e010d88d6c30	api-parity(port-extra)	port-extra	IntFloatMap$.Entries#next	/IntFloatMap$/Entries	0	def next/0 in emitted port only
@@ -882,6 +926,7 @@ be6e7fd14d38	api-parity(port-extra)	port-extra	IntFloatMap$.Values#iterator	/Int
 083281fc7210	api-parity(port-extra)	port-extra	IntFloatMap$.Values#next	/IntFloatMap$/Values	0	def next/0 in emitted port only
 15084ccd86f8	api-parity(port-extra)	port-extra	IntFloatMap$.Values#toArray	/IntFloatMap$/Values	0	def toArray/0 in emitted port only
 23730860b2c8	api-parity(port-extra)	port-extra	IntFloatMap$.Values#toArray	/IntFloatMap$/Values	0	def toArray/1 in emitted port only
+fd61812ce897	api-parity(port-extra)	port-extra	IntIntMap#+=	/IntIntMap	0	def +=/1 in emitted port only
 36619b252ef4	api-parity(port-extra)	port-extra	IntIntMap#clear	/IntIntMap	0	def clear/0 in emitted port only
 25007c05940c	api-parity(port-extra)	port-extra	IntIntMap#clear	/IntIntMap	0	def clear/1 in emitted port only
 ad1cf6621b2c	api-parity(port-extra)	port-extra	IntIntMap#containsKey	/IntIntMap	0	def containsKey/1 in emitted port only
@@ -890,6 +935,9 @@ ad1cf6621b2c	api-parity(port-extra)	port-extra	IntIntMap#containsKey	/IntIntMap	
 c2c54d3b4d8e	api-parity(port-extra)	port-extra	IntIntMap#entries	/IntIntMap	0	def entries/0 in emitted port only
 6e938df45b49	api-parity(port-extra)	port-extra	IntIntMap#equals	/IntIntMap	0	def equals/1 in emitted port only
 066a408a2ad1	api-parity(port-extra)	port-extra	IntIntMap#findKey	/IntIntMap	0	def findKey/2 in emitted port only
+1364929d0e56	api-parity(port-extra)	port-extra	IntIntMap#foreachEntry	/IntIntMap	0	def foreachEntry/1 in emitted port only
+3210e8448cc3	api-parity(port-extra)	port-extra	IntIntMap#foreachKey	/IntIntMap	0	def foreachKey/1 in emitted port only
+73a61ff6f26b	api-parity(port-extra)	port-extra	IntIntMap#foreachValue	/IntIntMap	0	def foreachValue/1 in emitted port only
 b0a5521aa40b	api-parity(port-extra)	port-extra	IntIntMap#get	/IntIntMap	0	def get/2 in emitted port only
 4c514c0f16b1	api-parity(port-extra)	port-extra	IntIntMap#getAndIncrement	/IntIntMap	0	def getAndIncrement/3 in emitted port only
 b41a5667fb07	api-parity(port-extra)	port-extra	IntIntMap#hasZeroValue	/IntIntMap	0	var hasZeroValue/0 in emitted port only
@@ -900,6 +948,7 @@ eeb80e27a0d8	api-parity(port-extra)	port-extra	IntIntMap#keyTable	/IntIntMap	0	v
 29bcdd52e31a	api-parity(port-extra)	port-extra	IntIntMap#keys	/IntIntMap	0	def keys/0 in emitted port only
 bf61ac3bb1b6	api-parity(port-extra)	port-extra	IntIntMap#loadFactor	/IntIntMap	0	var loadFactor/0 in emitted port only
 f3ce69f7de1b	api-parity(port-extra)	port-extra	IntIntMap#mask	/IntIntMap	0	var mask/0 in emitted port only
+27dd953ba29c	api-parity(port-extra)	port-extra	IntIntMap#nonEmpty	/IntIntMap	0	def nonEmpty/0 in emitted port only
 1e81f0561440	api-parity(port-extra)	port-extra	IntIntMap#notEmpty	/IntIntMap	0	def notEmpty/0 in emitted port only
 a8c85f1db764	api-parity(port-extra)	port-extra	IntIntMap#place	/IntIntMap	0	def place/1 in emitted port only
 8a92ff3976c4	api-parity(port-extra)	port-extra	IntIntMap#put	/IntIntMap	0	def put/2 in emitted port only
@@ -911,6 +960,7 @@ c7bfd7a8fd42	api-parity(port-extra)	port-extra	IntIntMap#shrink	/IntIntMap	0	def
 8ec72e14e1ca	api-parity(port-extra)	port-extra	IntIntMap#size	/IntIntMap	0	var size/0 in emitted port only
 b2959540b1c8	api-parity(port-extra)	port-extra	IntIntMap#threshold	/IntIntMap	0	var threshold/0 in emitted port only
 b62a4f2831e9	api-parity(port-extra)	port-extra	IntIntMap#toString	/IntIntMap	0	def toString/0 in emitted port only
+ce73c345f738	api-parity(port-extra)	port-extra	IntIntMap#update	/IntIntMap	0	def update/2 in emitted port only
 6e9a06d4a7cd	api-parity(port-extra)	port-extra	IntIntMap#valueTable	/IntIntMap	0	var valueTable/0 in emitted port only
 8cf12e26268e	api-parity(port-extra)	port-extra	IntIntMap#values	/IntIntMap	0	def values/0 in emitted port only
 d71d7664d1e7	api-parity(port-extra)	port-extra	IntIntMap#zeroValue	/IntIntMap	0	var zeroValue/0 in emitted port only
@@ -922,6 +972,9 @@ f7dc11968321	api-parity(port-extra)	port-extra	IntIntMap$#Keys	/IntIntMap$	0	obj
 94ab5694b30f	api-parity(port-extra)	port-extra	IntIntMap$#MapIterator	/IntIntMap$	0	object MapIterator/0 in emitted port only
 4c02f059778d	api-parity(port-extra)	port-extra	IntIntMap$#Values	/IntIntMap$	0	class Values/0 in emitted port only
 e122a1bb9d61	api-parity(port-extra)	port-extra	IntIntMap$#Values	/IntIntMap$	0	object Values/0 in emitted port only
+faedb791bcc5	api-parity(port-extra)	port-extra	IntIntMap$#apply	/IntIntMap$	0	def apply/0 in emitted port only
+9f71b0280784	api-parity(port-extra)	port-extra	IntIntMap$#apply	/IntIntMap$	0	def apply/1 in emitted port only
+e90c161c19b5	api-parity(port-extra)	port-extra	IntIntMap$#apply	/IntIntMap$	0	def apply/2 in emitted port only
 c472482d8f7c	api-parity(port-extra)	port-extra	IntIntMap$.Entries#hasNext	/IntIntMap$/Entries	0	def hasNext/0 in emitted port only
 ed0844d21a36	api-parity(port-extra)	port-extra	IntIntMap$.Entries#iterator	/IntIntMap$/Entries	0	def iterator/0 in emitted port only
 27b6306cbaff	api-parity(port-extra)	port-extra	IntIntMap$.Entries#next	/IntIntMap$/Entries	0	def next/0 in emitted port only
@@ -937,6 +990,9 @@ d03bebc2435a	api-parity(port-extra)	port-extra	IntIntMap$.Keys#toArray	/IntIntMa
 cb8d93cab93c	api-parity(port-extra)	port-extra	IntIntMap$.Values#next	/IntIntMap$/Values	0	def next/0 in emitted port only
 ba433fa97661	api-parity(port-extra)	port-extra	IntIntMap$.Values#toArray	/IntIntMap$/Values	0	def toArray/0 in emitted port only
 7051cdc95c96	api-parity(port-extra)	port-extra	IntIntMap$.Values#toArray	/IntIntMap$/Values	0	def toArray/1 in emitted port only
+0d3a5b245c33	api-parity(port-extra)	port-extra	IntMap#+=	/IntMap	0	def +=/1 in emitted port only
+31d6be6496e6	api-parity(port-extra)	port-extra	IntMap#-=	/IntMap	0	def -=/1 in emitted port only
+fa4ee43576d3	api-parity(port-extra)	port-extra	IntMap#apply	/IntMap	0	def apply/1 in emitted port only
 9e06dd2cff4a	api-parity(port-extra)	port-extra	IntMap#clear	/IntMap	0	def clear/0 in emitted port only
 6a9f5cad2d68	api-parity(port-extra)	port-extra	IntMap#clear	/IntMap	0	def clear/1 in emitted port only
 c688b0564f4a	api-parity(port-extra)	port-extra	IntMap#containsKey	/IntMap	0	def containsKey/1 in emitted port only
@@ -946,6 +1002,9 @@ c688b0564f4a	api-parity(port-extra)	port-extra	IntMap#containsKey	/IntMap	0	def 
 dadf4705c24b	api-parity(port-extra)	port-extra	IntMap#equals	/IntMap	0	def equals/1 in emitted port only
 e250392a6fb0	api-parity(port-extra)	port-extra	IntMap#equalsIdentity	/IntMap	0	def equalsIdentity/1 in emitted port only
 ecb7c8c5cef1	api-parity(port-extra)	port-extra	IntMap#findKey	/IntMap	0	def findKey/3 in emitted port only
+db337657dcc4	api-parity(port-extra)	port-extra	IntMap#foreachEntry	/IntMap	0	def foreachEntry/1 in emitted port only
+1ef08af8ee71	api-parity(port-extra)	port-extra	IntMap#foreachKey	/IntMap	0	def foreachKey/1 in emitted port only
+f620bd534dc7	api-parity(port-extra)	port-extra	IntMap#foreachValue	/IntMap	0	def foreachValue/1 in emitted port only
 8315a571aa60	api-parity(port-extra)	port-extra	IntMap#get	/IntMap	0	def get/1 in emitted port only
 b44e5ec9bd17	api-parity(port-extra)	port-extra	IntMap#get	/IntMap	0	def get/2 in emitted port only
 672b4547e3d1	api-parity(port-extra)	port-extra	IntMap#hasZeroValue	/IntMap	0	var hasZeroValue/0 in emitted port only
@@ -956,6 +1015,7 @@ c78cb3fb7f2f	api-parity(port-extra)	port-extra	IntMap#iterator	/IntMap	0	def ite
 21aad57b061a	api-parity(port-extra)	port-extra	IntMap#keys	/IntMap	0	def keys/0 in emitted port only
 0bb08421594a	api-parity(port-extra)	port-extra	IntMap#loadFactor	/IntMap	0	var loadFactor/0 in emitted port only
 b4c9276fe7df	api-parity(port-extra)	port-extra	IntMap#mask	/IntMap	0	var mask/0 in emitted port only
+b31009cbf11c	api-parity(port-extra)	port-extra	IntMap#nonEmpty	/IntMap	0	def nonEmpty/0 in emitted port only
 0bd4a3a8de6a	api-parity(port-extra)	port-extra	IntMap#notEmpty	/IntMap	0	def notEmpty/0 in emitted port only
 5867b8d0a227	api-parity(port-extra)	port-extra	IntMap#place	/IntMap	0	def place/1 in emitted port only
 9a0649656a16	api-parity(port-extra)	port-extra	IntMap#put	/IntMap	0	def put/2 in emitted port only
@@ -966,6 +1026,7 @@ e876184b8c80	api-parity(port-extra)	port-extra	IntMap#shrink	/IntMap	0	def shrin
 f726b8787bda	api-parity(port-extra)	port-extra	IntMap#size	/IntMap	0	var size/0 in emitted port only
 80c1b3551712	api-parity(port-extra)	port-extra	IntMap#threshold	/IntMap	0	var threshold/0 in emitted port only
 7c44131b9d83	api-parity(port-extra)	port-extra	IntMap#toString	/IntMap	0	def toString/0 in emitted port only
+b9a7ee7559e7	api-parity(port-extra)	port-extra	IntMap#update	/IntMap	0	def update/2 in emitted port only
 8a4367ba158c	api-parity(port-extra)	port-extra	IntMap#valueTable	/IntMap	0	var valueTable/0 in emitted port only
 4cd292e09873	api-parity(port-extra)	port-extra	IntMap#values	/IntMap	0	def values/0 in emitted port only
 d8a985f290dc	api-parity(port-extra)	port-extra	IntMap#zeroValue	/IntMap	0	var zeroValue/0 in emitted port only
@@ -977,6 +1038,9 @@ d5981b142ae8	api-parity(port-extra)	port-extra	IntMap$#Keys	/IntMap$	0	object Ke
 ba2c2ff1678f	api-parity(port-extra)	port-extra	IntMap$#MapIterator	/IntMap$	0	object MapIterator/0 in emitted port only
 69ac560930af	api-parity(port-extra)	port-extra	IntMap$#Values	/IntMap$	0	class Values/0 in emitted port only
 85d7c9de0c7b	api-parity(port-extra)	port-extra	IntMap$#Values	/IntMap$	0	object Values/0 in emitted port only
+bf6d1315806e	api-parity(port-extra)	port-extra	IntMap$#apply	/IntMap$	0	def apply/0 in emitted port only
+f68577902ad2	api-parity(port-extra)	port-extra	IntMap$#apply	/IntMap$	0	def apply/1 in emitted port only
+6cf5eb17d90e	api-parity(port-extra)	port-extra	IntMap$#apply	/IntMap$	0	def apply/2 in emitted port only
 6716a3f44cca	api-parity(port-extra)	port-extra	IntMap$.Entries#hasNext	/IntMap$/Entries	0	def hasNext/0 in emitted port only
 59862d58362b	api-parity(port-extra)	port-extra	IntMap$.Entries#iterator	/IntMap$/Entries	0	def iterator/0 in emitted port only
 28d5746d625c	api-parity(port-extra)	port-extra	IntMap$.Entries#next	/IntMap$/Entries	0	def next/0 in emitted port only
@@ -992,6 +1056,8 @@ e4b714d9ec89	api-parity(port-extra)	port-extra	IntMap$.Values#hasNext	/IntMap$/V
 8996806be19f	api-parity(port-extra)	port-extra	IntMap$.Values#next	/IntMap$/Values	0	def next/0 in emitted port only
 00db1769ebee	api-parity(port-extra)	port-extra	IntMap$.Values#remove	/IntMap$/Values	0	def remove/0 in emitted port only
 e6397ef09016	api-parity(port-extra)	port-extra	IntMap$.Values#toArray	/IntMap$/Values	0	def toArray/0 in emitted port only
+51842cb026f3	api-parity(port-extra)	port-extra	IntSet#+=	/IntSet	0	def +=/1 in emitted port only
+14bcea7af780	api-parity(port-extra)	port-extra	IntSet#-=	/IntSet	0	def -=/1 in emitted port only
 5e4be14a2b70	api-parity(port-extra)	port-extra	IntSet#add	/IntSet	0	def add/1 in emitted port only
 dd87beb33322	api-parity(port-extra)	port-extra	IntSet#addAll	/IntSet	0	def addAll/1 in emitted port only
 dd87beb33322/2	api-parity(port-extra)	port-extra	IntSet#addAll	/IntSet	0	def addAll/1 in emitted port only
@@ -1001,9 +1067,13 @@ dd87beb33322/3	api-parity(port-extra)	port-extra	IntSet#addAll	/IntSet	0	def add
 9d6e95b6f2a3	api-parity(port-extra)	port-extra	IntSet#clear	/IntSet	0	def clear/0 in emitted port only
 fe693da11bf8	api-parity(port-extra)	port-extra	IntSet#clear	/IntSet	0	def clear/1 in emitted port only
 142c4ee2c763	api-parity(port-extra)	port-extra	IntSet#contains	/IntSet	0	def contains/1 in emitted port only
+84ea726405bb	api-parity(port-extra)	port-extra	IntSet#count	/IntSet	0	def count/1 in emitted port only
 1c559de5db0e	api-parity(port-extra)	port-extra	IntSet#ensureCapacity	/IntSet	0	def ensureCapacity/1 in emitted port only
 5899968ff861	api-parity(port-extra)	port-extra	IntSet#equals	/IntSet	0	def equals/1 in emitted port only
+b87b291b812b	api-parity(port-extra)	port-extra	IntSet#exists	/IntSet	0	def exists/1 in emitted port only
 620237671261	api-parity(port-extra)	port-extra	IntSet#first	/IntSet	0	def first/0 in emitted port only
+9ea41e691d98	api-parity(port-extra)	port-extra	IntSet#forall	/IntSet	0	def forall/1 in emitted port only
+bbf1852e619d	api-parity(port-extra)	port-extra	IntSet#foreach	/IntSet	0	def foreach/1 in emitted port only
 7dd21c0c08c2	api-parity(port-extra)	port-extra	IntSet#hasZeroValue	/IntSet	0	var hasZeroValue/0 in emitted port only
 a1c85ee850d2	api-parity(port-extra)	port-extra	IntSet#hashCode	/IntSet	0	def hashCode/0 in emitted port only
 aecddf0584ca	api-parity(port-extra)	port-extra	IntSet#isEmpty	/IntSet	0	def isEmpty/0 in emitted port only
@@ -1011,6 +1081,7 @@ aecddf0584ca	api-parity(port-extra)	port-extra	IntSet#isEmpty	/IntSet	0	def isEm
 bf5c5a5e49a7	api-parity(port-extra)	port-extra	IntSet#keyTable	/IntSet	0	var keyTable/0 in emitted port only
 45aa328626bd	api-parity(port-extra)	port-extra	IntSet#loadFactor	/IntSet	0	var loadFactor/0 in emitted port only
 e5a9b4c33f88	api-parity(port-extra)	port-extra	IntSet#mask	/IntSet	0	var mask/0 in emitted port only
+fbbe54779939	api-parity(port-extra)	port-extra	IntSet#nonEmpty	/IntSet	0	def nonEmpty/0 in emitted port only
 53ec04f4c106	api-parity(port-extra)	port-extra	IntSet#notEmpty	/IntSet	0	def notEmpty/0 in emitted port only
 ba4e038311b3	api-parity(port-extra)	port-extra	IntSet#place	/IntSet	0	def place/1 in emitted port only
 bc9641ab38e8	api-parity(port-extra)	port-extra	IntSet#remove	/IntSet	0	def remove/1 in emitted port only
@@ -1021,6 +1092,9 @@ ac4fba8797f7	api-parity(port-extra)	port-extra	IntSet#shrink	/IntSet	0	def shrin
 a610fdedc576	api-parity(port-extra)	port-extra	IntSet#toString	/IntSet	0	def toString/0 in emitted port only
 a2f64a791d2e	api-parity(port-extra)	port-extra	IntSet$#IntSetIterator	/IntSet$	0	class IntSetIterator/0 in emitted port only
 4833e824abf7	api-parity(port-extra)	port-extra	IntSet$#IntSetIterator	/IntSet$	0	object IntSetIterator/0 in emitted port only
+078d29a1b408	api-parity(port-extra)	port-extra	IntSet$#apply	/IntSet$	0	def apply/0 in emitted port only
+936a4a2f57fa	api-parity(port-extra)	port-extra	IntSet$#apply	/IntSet$	0	def apply/1 in emitted port only
+4ad1bfaccc82	api-parity(port-extra)	port-extra	IntSet$#apply	/IntSet$	0	def apply/2 in emitted port only
 dda33ec7b362	api-parity(port-extra)	port-extra	IntSet$#with	/IntSet$	0	def with/1 in emitted port only
 70f73566e17e	api-parity(port-extra)	port-extra	IntSet$.IntSetIterator#hasNext	/IntSet$/IntSetIterator	0	var hasNext/0 in emitted port only
 301b69e2637e	api-parity(port-extra)	port-extra	IntSet$.IntSetIterator#next	/IntSet$/IntSetIterator	0	def next/0 in emitted port only
@@ -1171,6 +1245,9 @@ e542a29b08d0	api-parity(port-extra)	port-extra	JavaStack#peek	/JavaStack	0	def p
 56329ff5c6a6	api-parity(port-extra)	port-extra	JavaStack#pop	/JavaStack	0	def pop/0 in emitted port only
 70b8a90f5567	api-parity(port-extra)	port-extra	JavaStack#push	/JavaStack	0	def push/1 in emitted port only
 ce4fa8859809	api-parity(port-extra)	port-extra	JavaStack#search	/JavaStack	0	def search/1 in emitted port only
+081ab23d614b	api-parity(port-extra)	port-extra	LongArray#+=	/LongArray	0	def +=/1 in emitted port only
+b2c76d165de2	api-parity(port-extra)	port-extra	LongArray#--=	/LongArray	0	def --=/1 in emitted port only
+b46f1dd95b43	api-parity(port-extra)	port-extra	LongArray#-=	/LongArray	0	def -=/1 in emitted port only
 2adce9b8ecc4	api-parity(port-extra)	port-extra	LongArray#add	/LongArray	0	def add/1 in emitted port only
 099218871cf9	api-parity(port-extra)	port-extra	LongArray#add	/LongArray	0	def add/2 in emitted port only
 5f0d8c78c3e2	api-parity(port-extra)	port-extra	LongArray#add	/LongArray	0	def add/3 in emitted port only
@@ -1179,23 +1256,32 @@ ce4fa8859809	api-parity(port-extra)	port-extra	JavaStack#search	/JavaStack	0	def
 866b60997e57/2	api-parity(port-extra)	port-extra	LongArray#addAll	/LongArray	0	def addAll/1 in emitted port only
 51263389dd9f	api-parity(port-extra)	port-extra	LongArray#addAll	/LongArray	0	def addAll/3 in emitted port only
 51263389dd9f/2	api-parity(port-extra)	port-extra	LongArray#addAll	/LongArray	0	def addAll/3 in emitted port only
+094b8cfc0b20	api-parity(port-extra)	port-extra	LongArray#apply	/LongArray	0	def apply/1 in emitted port only
 ce5e5294814f	api-parity(port-extra)	port-extra	LongArray#clear	/LongArray	0	def clear/0 in emitted port only
 23dfebb018e6	api-parity(port-extra)	port-extra	LongArray#contains	/LongArray	0	def contains/1 in emitted port only
+c62459674522	api-parity(port-extra)	port-extra	LongArray#count	/LongArray	0	def count/1 in emitted port only
 32378d27469d	api-parity(port-extra)	port-extra	LongArray#ensureCapacity	/LongArray	0	def ensureCapacity/1 in emitted port only
 ae10a06abb06	api-parity(port-extra)	port-extra	LongArray#equals	/LongArray	0	def equals/1 in emitted port only
+83b7c8d935ed	api-parity(port-extra)	port-extra	LongArray#exists	/LongArray	0	def exists/1 in emitted port only
+d2ac2e133e5d	api-parity(port-extra)	port-extra	LongArray#find	/LongArray	0	def find/1 in emitted port only
 8d21bb7cf31b	api-parity(port-extra)	port-extra	LongArray#first	/LongArray	0	def first/0 in emitted port only
+a26c17fded40	api-parity(port-extra)	port-extra	LongArray#forall	/LongArray	0	def forall/1 in emitted port only
+7d559d088548	api-parity(port-extra)	port-extra	LongArray#foreach	/LongArray	0	def foreach/1 in emitted port only
 f6999f0427fd	api-parity(port-extra)	port-extra	LongArray#get	/LongArray	0	def get/1 in emitted port only
 9c6b9dd40fea	api-parity(port-extra)	port-extra	LongArray#hashCode	/LongArray	0	def hashCode/0 in emitted port only
 29dd57e30835	api-parity(port-extra)	port-extra	LongArray#incr	/LongArray	0	def incr/1 in emitted port only
 06373f25c7b5	api-parity(port-extra)	port-extra	LongArray#incr	/LongArray	0	def incr/2 in emitted port only
 1d7cecbc3741	api-parity(port-extra)	port-extra	LongArray#indexOf	/LongArray	0	def indexOf/1 in emitted port only
+569ccab2e56e	api-parity(port-extra)	port-extra	LongArray#indexWhere	/LongArray	0	def indexWhere/1 in emitted port only
 720a90af4c5c	api-parity(port-extra)	port-extra	LongArray#insert	/LongArray	0	def insert/2 in emitted port only
 c0ad4b30ac39	api-parity(port-extra)	port-extra	LongArray#insertRange	/LongArray	0	def insertRange/2 in emitted port only
 0613896c9343	api-parity(port-extra)	port-extra	LongArray#isEmpty	/LongArray	0	def isEmpty/0 in emitted port only
 542b670ddacb	api-parity(port-extra)	port-extra	LongArray#items	/LongArray	0	var items/0 in emitted port only
+b657db004e43	api-parity(port-extra)	port-extra	LongArray#last	/LongArray	0	def last/0 in emitted port only
 cfa5c5c219c5	api-parity(port-extra)	port-extra	LongArray#lastIndexOf	/LongArray	0	def lastIndexOf/1 in emitted port only
 bc929880cf12	api-parity(port-extra)	port-extra	LongArray#mul	/LongArray	0	def mul/1 in emitted port only
 548df3f1315e	api-parity(port-extra)	port-extra	LongArray#mul	/LongArray	0	def mul/2 in emitted port only
+9439dfedbac0	api-parity(port-extra)	port-extra	LongArray#nonEmpty	/LongArray	0	def nonEmpty/0 in emitted port only
 14b284fbbc8a	api-parity(port-extra)	port-extra	LongArray#notEmpty	/LongArray	0	def notEmpty/0 in emitted port only
 53004a6c1653	api-parity(port-extra)	port-extra	LongArray#ordered	/LongArray	0	var ordered/0 in emitted port only
 152516beeaf7	api-parity(port-extra)	port-extra	LongArray#peek	/LongArray	0	def peek/0 in emitted port only
@@ -1220,8 +1306,16 @@ f51a97ada0a8	api-parity(port-extra)	port-extra	LongArray#toArray	/LongArray	0	de
 b38c7f260bc9	api-parity(port-extra)	port-extra	LongArray#toString	/LongArray	0	def toString/0 in emitted port only
 ea8c5833777c	api-parity(port-extra)	port-extra	LongArray#toString	/LongArray	0	def toString/1 in emitted port only
 c3c918fc8a5f	api-parity(port-extra)	port-extra	LongArray#truncate	/LongArray	0	def truncate/1 in emitted port only
+c55f8dc9da75	api-parity(port-extra)	port-extra	LongArray#update	/LongArray	0	def update/2 in emitted port only
 03a07de7ee68	api-parity(port-extra)	port-extra	LongArray$#Funnel	/LongArray$	0	class Funnel/0 in emitted port only
+9c4ef5cc5d30	api-parity(port-extra)	port-extra	LongArray$#apply	/LongArray$	0	def apply/0 in emitted port only
+ccb82bafa901	api-parity(port-extra)	port-extra	LongArray$#apply	/LongArray$	0	def apply/1 in emitted port only
+ed381200872c	api-parity(port-extra)	port-extra	LongArray$#apply	/LongArray$	0	def apply/2 in emitted port only
+a1cd14558332	api-parity(port-extra)	port-extra	LongArray$#from	/LongArray$	0	def from/1 in emitted port only
 6824d2a48073	api-parity(port-extra)	port-extra	LongArray$#with	/LongArray$	0	def with/1 in emitted port only
+080bb7b10a2d	api-parity(port-extra)	port-extra	LongMap#+=	/LongMap	0	def +=/1 in emitted port only
+613fe0b7bbf8	api-parity(port-extra)	port-extra	LongMap#-=	/LongMap	0	def -=/1 in emitted port only
+fc7701262778	api-parity(port-extra)	port-extra	LongMap#apply	/LongMap	0	def apply/1 in emitted port only
 4ae8b7e9f553	api-parity(port-extra)	port-extra	LongMap#clear	/LongMap	0	def clear/0 in emitted port only
 444792da86f8	api-parity(port-extra)	port-extra	LongMap#clear	/LongMap	0	def clear/1 in emitted port only
 dc54f27f5c9c	api-parity(port-extra)	port-extra	LongMap#containsKey	/LongMap	0	def containsKey/1 in emitted port only
@@ -1231,6 +1325,9 @@ e049c922f8eb	api-parity(port-extra)	port-extra	LongMap#entries	/LongMap	0	def en
 45edcc9110c3	api-parity(port-extra)	port-extra	LongMap#equals	/LongMap	0	def equals/1 in emitted port only
 c782677d0da6	api-parity(port-extra)	port-extra	LongMap#equalsIdentity	/LongMap	0	def equalsIdentity/1 in emitted port only
 34175b755e72	api-parity(port-extra)	port-extra	LongMap#findKey	/LongMap	0	def findKey/3 in emitted port only
+9fd955368034	api-parity(port-extra)	port-extra	LongMap#foreachEntry	/LongMap	0	def foreachEntry/1 in emitted port only
+555c7534eef4	api-parity(port-extra)	port-extra	LongMap#foreachKey	/LongMap	0	def foreachKey/1 in emitted port only
+88f54a14ddb8	api-parity(port-extra)	port-extra	LongMap#foreachValue	/LongMap	0	def foreachValue/1 in emitted port only
 5efb8d12a49b	api-parity(port-extra)	port-extra	LongMap#get	/LongMap	0	def get/1 in emitted port only
 b8312588a321	api-parity(port-extra)	port-extra	LongMap#get	/LongMap	0	def get/2 in emitted port only
 e86004672093	api-parity(port-extra)	port-extra	LongMap#hasZeroValue	/LongMap	0	var hasZeroValue/0 in emitted port only
@@ -1241,6 +1338,7 @@ b8f2cfe7dc04	api-parity(port-extra)	port-extra	LongMap#iterator	/LongMap	0	def i
 a6790ad1e768	api-parity(port-extra)	port-extra	LongMap#keys	/LongMap	0	def keys/0 in emitted port only
 028aa8ce7ff8	api-parity(port-extra)	port-extra	LongMap#loadFactor	/LongMap	0	var loadFactor/0 in emitted port only
 aeca6d6ee0af	api-parity(port-extra)	port-extra	LongMap#mask	/LongMap	0	var mask/0 in emitted port only
+05420e341c3e	api-parity(port-extra)	port-extra	LongMap#nonEmpty	/LongMap	0	def nonEmpty/0 in emitted port only
 2291cd5d6d9d	api-parity(port-extra)	port-extra	LongMap#notEmpty	/LongMap	0	def notEmpty/0 in emitted port only
 89fba6540dcc	api-parity(port-extra)	port-extra	LongMap#place	/LongMap	0	def place/1 in emitted port only
 438bbc41d34d	api-parity(port-extra)	port-extra	LongMap#put	/LongMap	0	def put/2 in emitted port only
@@ -1251,6 +1349,7 @@ bf986e533bc9	api-parity(port-extra)	port-extra	LongMap#putAll	/LongMap	0	def put
 3b7ae4aa5227	api-parity(port-extra)	port-extra	LongMap#size	/LongMap	0	var size/0 in emitted port only
 78934c167c65	api-parity(port-extra)	port-extra	LongMap#threshold	/LongMap	0	var threshold/0 in emitted port only
 efd223280ebf	api-parity(port-extra)	port-extra	LongMap#toString	/LongMap	0	def toString/0 in emitted port only
+3c7e07942c01	api-parity(port-extra)	port-extra	LongMap#update	/LongMap	0	def update/2 in emitted port only
 9dc1e3cb67e8	api-parity(port-extra)	port-extra	LongMap#valueTable	/LongMap	0	var valueTable/0 in emitted port only
 b1e5b4fb680f	api-parity(port-extra)	port-extra	LongMap#values	/LongMap	0	def values/0 in emitted port only
 4304866dd793	api-parity(port-extra)	port-extra	LongMap#zeroValue	/LongMap	0	var zeroValue/0 in emitted port only
@@ -1262,6 +1361,9 @@ e92228fad2ae	api-parity(port-extra)	port-extra	LongMap$#Entries	/LongMap$	0	obje
 be9a351a5682	api-parity(port-extra)	port-extra	LongMap$#MapIterator	/LongMap$	0	object MapIterator/0 in emitted port only
 87ee5bd735ea	api-parity(port-extra)	port-extra	LongMap$#Values	/LongMap$	0	class Values/0 in emitted port only
 dcef071604b6	api-parity(port-extra)	port-extra	LongMap$#Values	/LongMap$	0	object Values/0 in emitted port only
+939d1e9973a8	api-parity(port-extra)	port-extra	LongMap$#apply	/LongMap$	0	def apply/0 in emitted port only
+49955153034b	api-parity(port-extra)	port-extra	LongMap$#apply	/LongMap$	0	def apply/1 in emitted port only
+fb4e75702d1d	api-parity(port-extra)	port-extra	LongMap$#apply	/LongMap$	0	def apply/2 in emitted port only
 e0d8657c4c0c	api-parity(port-extra)	port-extra	LongMap$.Entries#hasNext	/LongMap$/Entries	0	def hasNext/0 in emitted port only
 6ee6b5dd0eef	api-parity(port-extra)	port-extra	LongMap$.Entries#iterator	/LongMap$/Entries	0	def iterator/0 in emitted port only
 258f1fb11030	api-parity(port-extra)	port-extra	LongMap$.Entries#next	/LongMap$/Entries	0	def next/0 in emitted port only
@@ -1307,6 +1409,7 @@ a88c2e1074f4	api-parity(port-extra)	port-extra	NumberUtils$#floatToRawIntBits	/N
 541260207e56	api-parity(port-extra)	port-extra	NumberUtils$#intBitsToFloat	/NumberUtils$	0	def intBitsToFloat/1 in emitted port only
 dbd533332e7b	api-parity(port-extra)	port-extra	NumberUtils$#intToFloatColor	/NumberUtils$	0	def intToFloatColor/1 in emitted port only
 c3b876cbb83e	api-parity(port-extra)	port-extra	NumberUtils$#longBitsToDouble	/NumberUtils$	0	def longBitsToDouble/1 in emitted port only
+4f6809e12532	api-parity(port-extra)	port-extra	ObjectFloatMap#+=	/ObjectFloatMap	0	def +=/1 in emitted port only
 d36428486cca	api-parity(port-extra)	port-extra	ObjectFloatMap#clear	/ObjectFloatMap	0	def clear/0 in emitted port only
 fbd05297a408	api-parity(port-extra)	port-extra	ObjectFloatMap#clear	/ObjectFloatMap	0	def clear/1 in emitted port only
 0aacedc62e00	api-parity(port-extra)	port-extra	ObjectFloatMap#containsKey	/ObjectFloatMap	0	def containsKey/1 in emitted port only
@@ -1317,6 +1420,9 @@ fbd05297a408	api-parity(port-extra)	port-extra	ObjectFloatMap#clear	/ObjectFloat
 07aa95b0f9fe	api-parity(port-extra)	port-extra	ObjectFloatMap#equals	/ObjectFloatMap	0	def equals/1 in emitted port only
 f0fb573f10ae	api-parity(port-extra)	port-extra	ObjectFloatMap#findKey	/ObjectFloatMap	0	def findKey/1 in emitted port only
 db863b3e9dff	api-parity(port-extra)	port-extra	ObjectFloatMap#findKey	/ObjectFloatMap	0	def findKey/2 in emitted port only
+f7ec4e5a3f0c	api-parity(port-extra)	port-extra	ObjectFloatMap#foreachEntry	/ObjectFloatMap	0	def foreachEntry/1 in emitted port only
+e91eb6b4f45a	api-parity(port-extra)	port-extra	ObjectFloatMap#foreachKey	/ObjectFloatMap	0	def foreachKey/1 in emitted port only
+472b4667b6b3	api-parity(port-extra)	port-extra	ObjectFloatMap#foreachValue	/ObjectFloatMap	0	def foreachValue/1 in emitted port only
 c95131ea1cfe	api-parity(port-extra)	port-extra	ObjectFloatMap#get	/ObjectFloatMap	0	def get/2 in emitted port only
 e5b59cd00158	api-parity(port-extra)	port-extra	ObjectFloatMap#getAndIncrement	/ObjectFloatMap	0	def getAndIncrement/3 in emitted port only
 a642cd66d360	api-parity(port-extra)	port-extra	ObjectFloatMap#hashCode	/ObjectFloatMap	0	def hashCode/0 in emitted port only
@@ -1326,6 +1432,7 @@ ab6f34725535	api-parity(port-extra)	port-extra	ObjectFloatMap#isEmpty	/ObjectFlo
 c442e05608a5	api-parity(port-extra)	port-extra	ObjectFloatMap#keys	/ObjectFloatMap	0	def keys/0 in emitted port only
 2f3edcbce1be	api-parity(port-extra)	port-extra	ObjectFloatMap#loadFactor	/ObjectFloatMap	0	var loadFactor/0 in emitted port only
 c538e5ee50e8	api-parity(port-extra)	port-extra	ObjectFloatMap#mask	/ObjectFloatMap	0	var mask/0 in emitted port only
+dcd2455857d0	api-parity(port-extra)	port-extra	ObjectFloatMap#nonEmpty	/ObjectFloatMap	0	def nonEmpty/0 in emitted port only
 c6c16f645846	api-parity(port-extra)	port-extra	ObjectFloatMap#notEmpty	/ObjectFloatMap	0	def notEmpty/0 in emitted port only
 92b13eeffb76	api-parity(port-extra)	port-extra	ObjectFloatMap#place	/ObjectFloatMap	0	def place/1 in emitted port only
 b6a6d4a0afc3	api-parity(port-extra)	port-extra	ObjectFloatMap#put	/ObjectFloatMap	0	def put/2 in emitted port only
@@ -1338,12 +1445,16 @@ c6874b6e9d24	api-parity(port-extra)	port-extra	ObjectFloatMap#size	/ObjectFloatM
 f073b58525c5	api-parity(port-extra)	port-extra	ObjectFloatMap#threshold	/ObjectFloatMap	0	var threshold/0 in emitted port only
 61084291b10f	api-parity(port-extra)	port-extra	ObjectFloatMap#toString	/ObjectFloatMap	0	def toString/0 in emitted port only
 6c7e9e7cae2c	api-parity(port-extra)	port-extra	ObjectFloatMap#toString	/ObjectFloatMap	0	def toString/1 in emitted port only
+1d76e2a6c70e	api-parity(port-extra)	port-extra	ObjectFloatMap#update	/ObjectFloatMap	0	def update/2 in emitted port only
 59666f2c0b07	api-parity(port-extra)	port-extra	ObjectFloatMap#valueTable	/ObjectFloatMap	0	var valueTable/0 in emitted port only
 35c204ed0112	api-parity(port-extra)	port-extra	ObjectFloatMap#values	/ObjectFloatMap	0	def values/0 in emitted port only
 467f8b449185	api-parity(port-extra)	port-extra	ObjectFloatMap$#Entries	/ObjectFloatMap$	0	class Entries/0 in emitted port only
 3f9bb38c945f	api-parity(port-extra)	port-extra	ObjectFloatMap$#Entry	/ObjectFloatMap$	0	class Entry/0 in emitted port only
 97432910e131	api-parity(port-extra)	port-extra	ObjectFloatMap$#Keys	/ObjectFloatMap$	0	class Keys/0 in emitted port only
 5669d1ac1ddc	api-parity(port-extra)	port-extra	ObjectFloatMap$#Values	/ObjectFloatMap$	0	class Values/0 in emitted port only
+863de14a392f	api-parity(port-extra)	port-extra	ObjectFloatMap$#apply	/ObjectFloatMap$	0	def apply/0 in emitted port only
+98432b4bbcda	api-parity(port-extra)	port-extra	ObjectFloatMap$#apply	/ObjectFloatMap$	0	def apply/1 in emitted port only
+ea4092c295a0	api-parity(port-extra)	port-extra	ObjectFloatMap$#apply	/ObjectFloatMap$	0	def apply/2 in emitted port only
 65160d88e2f5	api-parity(port-extra)	port-extra	ObjectFloatMap$.Entries#hasNext	/ObjectFloatMap$/Entries	0	def hasNext/0 in emitted port only
 431f46181e77	api-parity(port-extra)	port-extra	ObjectFloatMap$.Entries#iterator	/ObjectFloatMap$/Entries	0	def iterator/0 in emitted port only
 1b30f2735853	api-parity(port-extra)	port-extra	ObjectFloatMap$.Entries#next	/ObjectFloatMap$/Entries	0	def next/0 in emitted port only
@@ -1362,6 +1473,7 @@ a98b95a2de7a	api-parity(port-extra)	port-extra	ObjectFloatMap$.Keys#next	/Object
 e76faafc0b1d	api-parity(port-extra)	port-extra	ObjectFloatMap$.Values#next	/ObjectFloatMap$/Values	0	def next/0 in emitted port only
 03fcca634c07	api-parity(port-extra)	port-extra	ObjectFloatMap$.Values#toArray	/ObjectFloatMap$/Values	0	def toArray/0 in emitted port only
 57132fdb9fec	api-parity(port-extra)	port-extra	ObjectFloatMap$.Values#toArray	/ObjectFloatMap$/Values	0	def toArray/1 in emitted port only
+d7cff1f511d1	api-parity(port-extra)	port-extra	ObjectIntMap#+=	/ObjectIntMap	0	def +=/1 in emitted port only
 602fe900be2a	api-parity(port-extra)	port-extra	ObjectIntMap#clear	/ObjectIntMap	0	def clear/0 in emitted port only
 136a7d5d97d9	api-parity(port-extra)	port-extra	ObjectIntMap#clear	/ObjectIntMap	0	def clear/1 in emitted port only
 f4ca4445abd2	api-parity(port-extra)	port-extra	ObjectIntMap#containsKey	/ObjectIntMap	0	def containsKey/1 in emitted port only
@@ -1370,6 +1482,9 @@ d172770d984c	api-parity(port-extra)	port-extra	ObjectIntMap#containsValue	/Objec
 0eb0a750ae42	api-parity(port-extra)	port-extra	ObjectIntMap#entries	/ObjectIntMap	0	def entries/0 in emitted port only
 9782b8dff317	api-parity(port-extra)	port-extra	ObjectIntMap#equals	/ObjectIntMap	0	def equals/1 in emitted port only
 a6e73ac952eb	api-parity(port-extra)	port-extra	ObjectIntMap#findKey	/ObjectIntMap	0	def findKey/1 in emitted port only
+0febaaf67651	api-parity(port-extra)	port-extra	ObjectIntMap#foreachEntry	/ObjectIntMap	0	def foreachEntry/1 in emitted port only
+7e2c54ceef40	api-parity(port-extra)	port-extra	ObjectIntMap#foreachKey	/ObjectIntMap	0	def foreachKey/1 in emitted port only
+e8e01a9b5a7e	api-parity(port-extra)	port-extra	ObjectIntMap#foreachValue	/ObjectIntMap	0	def foreachValue/1 in emitted port only
 b6806aab22fb	api-parity(port-extra)	port-extra	ObjectIntMap#get	/ObjectIntMap	0	def get/2 in emitted port only
 2e3548a09b8d	api-parity(port-extra)	port-extra	ObjectIntMap#getAndIncrement	/ObjectIntMap	0	def getAndIncrement/3 in emitted port only
 ec8a2be75029	api-parity(port-extra)	port-extra	ObjectIntMap#hashCode	/ObjectIntMap	0	def hashCode/0 in emitted port only
@@ -1379,6 +1494,7 @@ f77d4c3114c4	api-parity(port-extra)	port-extra	ObjectIntMap#keyTable	/ObjectIntM
 6ade89ffd730	api-parity(port-extra)	port-extra	ObjectIntMap#keys	/ObjectIntMap	0	def keys/0 in emitted port only
 b60c3b7f15a8	api-parity(port-extra)	port-extra	ObjectIntMap#loadFactor	/ObjectIntMap	0	var loadFactor/0 in emitted port only
 938138dc9d4b	api-parity(port-extra)	port-extra	ObjectIntMap#mask	/ObjectIntMap	0	var mask/0 in emitted port only
+abec14ba5bc1	api-parity(port-extra)	port-extra	ObjectIntMap#nonEmpty	/ObjectIntMap	0	def nonEmpty/0 in emitted port only
 925e7e29c811	api-parity(port-extra)	port-extra	ObjectIntMap#notEmpty	/ObjectIntMap	0	def notEmpty/0 in emitted port only
 01eb18025d36	api-parity(port-extra)	port-extra	ObjectIntMap#place	/ObjectIntMap	0	def place/1 in emitted port only
 1b66f1f132e1	api-parity(port-extra)	port-extra	ObjectIntMap#put	/ObjectIntMap	0	def put/2 in emitted port only
@@ -1391,12 +1507,16 @@ b4bb990a372a	api-parity(port-extra)	port-extra	ObjectIntMap#size	/ObjectIntMap	0
 2fd02cd75598	api-parity(port-extra)	port-extra	ObjectIntMap#threshold	/ObjectIntMap	0	var threshold/0 in emitted port only
 16197aaad170	api-parity(port-extra)	port-extra	ObjectIntMap#toString	/ObjectIntMap	0	def toString/0 in emitted port only
 9d0d1e988916	api-parity(port-extra)	port-extra	ObjectIntMap#toString	/ObjectIntMap	0	def toString/1 in emitted port only
+0226b0281267	api-parity(port-extra)	port-extra	ObjectIntMap#update	/ObjectIntMap	0	def update/2 in emitted port only
 46d8ba9a707a	api-parity(port-extra)	port-extra	ObjectIntMap#valueTable	/ObjectIntMap	0	var valueTable/0 in emitted port only
 74d0442aa7fe	api-parity(port-extra)	port-extra	ObjectIntMap#values	/ObjectIntMap	0	def values/0 in emitted port only
 c87f2a61e0f4	api-parity(port-extra)	port-extra	ObjectIntMap$#Entries	/ObjectIntMap$	0	class Entries/0 in emitted port only
 b732a2362305	api-parity(port-extra)	port-extra	ObjectIntMap$#Entry	/ObjectIntMap$	0	class Entry/0 in emitted port only
 8823b5063b71	api-parity(port-extra)	port-extra	ObjectIntMap$#Keys	/ObjectIntMap$	0	class Keys/0 in emitted port only
 f29b673f3dc1	api-parity(port-extra)	port-extra	ObjectIntMap$#Values	/ObjectIntMap$	0	class Values/0 in emitted port only
+7f8395ee747e	api-parity(port-extra)	port-extra	ObjectIntMap$#apply	/ObjectIntMap$	0	def apply/0 in emitted port only
+5e784c0c9a31	api-parity(port-extra)	port-extra	ObjectIntMap$#apply	/ObjectIntMap$	0	def apply/1 in emitted port only
+487e645d335e	api-parity(port-extra)	port-extra	ObjectIntMap$#apply	/ObjectIntMap$	0	def apply/2 in emitted port only
 7ce1e16bf744	api-parity(port-extra)	port-extra	ObjectIntMap$.Entries#hasNext	/ObjectIntMap$/Entries	0	def hasNext/0 in emitted port only
 8a98329bab49	api-parity(port-extra)	port-extra	ObjectIntMap$.Entries#iterator	/ObjectIntMap$/Entries	0	def iterator/0 in emitted port only
 f6254d3b2ad8	api-parity(port-extra)	port-extra	ObjectIntMap$.Entries#next	/ObjectIntMap$/Entries	0	def next/0 in emitted port only
@@ -1415,6 +1535,7 @@ db3ac20aee09	api-parity(port-extra)	port-extra	ObjectIntMap$.Values#iterator	/Ob
 20128ba80b21	api-parity(port-extra)	port-extra	ObjectIntMap$.Values#next	/ObjectIntMap$/Values	0	def next/0 in emitted port only
 77e239923af1	api-parity(port-extra)	port-extra	ObjectIntMap$.Values#toArray	/ObjectIntMap$/Values	0	def toArray/0 in emitted port only
 a248583cde72	api-parity(port-extra)	port-extra	ObjectIntMap$.Values#toArray	/ObjectIntMap$/Values	0	def toArray/1 in emitted port only
+dd08a0af62cf	api-parity(port-extra)	port-extra	ObjectLongMap#+=	/ObjectLongMap	0	def +=/1 in emitted port only
 73384556e76a	api-parity(port-extra)	port-extra	ObjectLongMap#clear	/ObjectLongMap	0	def clear/0 in emitted port only
 c564a3c6bc2d	api-parity(port-extra)	port-extra	ObjectLongMap#clear	/ObjectLongMap	0	def clear/1 in emitted port only
 261c02ad3a0b	api-parity(port-extra)	port-extra	ObjectLongMap#containsKey	/ObjectLongMap	0	def containsKey/1 in emitted port only
@@ -1423,6 +1544,9 @@ f462464c8953	api-parity(port-extra)	port-extra	ObjectLongMap#ensureCapacity	/Obj
 d981e6d8a0ff	api-parity(port-extra)	port-extra	ObjectLongMap#entries	/ObjectLongMap	0	def entries/0 in emitted port only
 3070628c2c3e	api-parity(port-extra)	port-extra	ObjectLongMap#equals	/ObjectLongMap	0	def equals/1 in emitted port only
 fca6d6c0a065	api-parity(port-extra)	port-extra	ObjectLongMap#findKey	/ObjectLongMap	0	def findKey/1 in emitted port only
+a41d48aaeea9	api-parity(port-extra)	port-extra	ObjectLongMap#foreachEntry	/ObjectLongMap	0	def foreachEntry/1 in emitted port only
+3f086ace4aaa	api-parity(port-extra)	port-extra	ObjectLongMap#foreachKey	/ObjectLongMap	0	def foreachKey/1 in emitted port only
+71fbfe4d8818	api-parity(port-extra)	port-extra	ObjectLongMap#foreachValue	/ObjectLongMap	0	def foreachValue/1 in emitted port only
 290a11683624	api-parity(port-extra)	port-extra	ObjectLongMap#get	/ObjectLongMap	0	def get/2 in emitted port only
 6bc965eac455	api-parity(port-extra)	port-extra	ObjectLongMap#getAndIncrement	/ObjectLongMap	0	def getAndIncrement/3 in emitted port only
 6c6db595895b	api-parity(port-extra)	port-extra	ObjectLongMap#hashCode	/ObjectLongMap	0	def hashCode/0 in emitted port only
@@ -1432,6 +1556,7 @@ f664a1df266e	api-parity(port-extra)	port-extra	ObjectLongMap#keyTable	/ObjectLon
 979e4bcf8d29	api-parity(port-extra)	port-extra	ObjectLongMap#keys	/ObjectLongMap	0	def keys/0 in emitted port only
 a89af1175124	api-parity(port-extra)	port-extra	ObjectLongMap#loadFactor	/ObjectLongMap	0	var loadFactor/0 in emitted port only
 4343004b1a96	api-parity(port-extra)	port-extra	ObjectLongMap#mask	/ObjectLongMap	0	var mask/0 in emitted port only
+d5537bab6f87	api-parity(port-extra)	port-extra	ObjectLongMap#nonEmpty	/ObjectLongMap	0	def nonEmpty/0 in emitted port only
 a64255e2c6a6	api-parity(port-extra)	port-extra	ObjectLongMap#notEmpty	/ObjectLongMap	0	def notEmpty/0 in emitted port only
 10354482ca19	api-parity(port-extra)	port-extra	ObjectLongMap#place	/ObjectLongMap	0	def place/1 in emitted port only
 8da657b7d655	api-parity(port-extra)	port-extra	ObjectLongMap#put	/ObjectLongMap	0	def put/2 in emitted port only
@@ -1444,12 +1569,16 @@ c392abf85b6b	api-parity(port-extra)	port-extra	ObjectLongMap#remove	/ObjectLongM
 fa4e0656be0e	api-parity(port-extra)	port-extra	ObjectLongMap#threshold	/ObjectLongMap	0	var threshold/0 in emitted port only
 a65b3eb9951a	api-parity(port-extra)	port-extra	ObjectLongMap#toString	/ObjectLongMap	0	def toString/0 in emitted port only
 dc0bd8f29b7a	api-parity(port-extra)	port-extra	ObjectLongMap#toString	/ObjectLongMap	0	def toString/1 in emitted port only
+f3781aafb448	api-parity(port-extra)	port-extra	ObjectLongMap#update	/ObjectLongMap	0	def update/2 in emitted port only
 af497e05c48f	api-parity(port-extra)	port-extra	ObjectLongMap#valueTable	/ObjectLongMap	0	var valueTable/0 in emitted port only
 49aef82189f2	api-parity(port-extra)	port-extra	ObjectLongMap#values	/ObjectLongMap	0	def values/0 in emitted port only
 921dc84cabf3	api-parity(port-extra)	port-extra	ObjectLongMap$#Entries	/ObjectLongMap$	0	class Entries/0 in emitted port only
 526f889344b2	api-parity(port-extra)	port-extra	ObjectLongMap$#Entry	/ObjectLongMap$	0	class Entry/0 in emitted port only
 b8c6058d1890	api-parity(port-extra)	port-extra	ObjectLongMap$#Keys	/ObjectLongMap$	0	class Keys/0 in emitted port only
 bc7fff94336a	api-parity(port-extra)	port-extra	ObjectLongMap$#Values	/ObjectLongMap$	0	class Values/0 in emitted port only
+04358155aefa	api-parity(port-extra)	port-extra	ObjectLongMap$#apply	/ObjectLongMap$	0	def apply/0 in emitted port only
+cd8f12c65ece	api-parity(port-extra)	port-extra	ObjectLongMap$#apply	/ObjectLongMap$	0	def apply/1 in emitted port only
+bbe3e74c8d57	api-parity(port-extra)	port-extra	ObjectLongMap$#apply	/ObjectLongMap$	0	def apply/2 in emitted port only
 88868c00002b	api-parity(port-extra)	port-extra	ObjectLongMap$.Entries#hasNext	/ObjectLongMap$/Entries	0	def hasNext/0 in emitted port only
 0e657115ebca	api-parity(port-extra)	port-extra	ObjectLongMap$.Entries#iterator	/ObjectLongMap$/Entries	0	def iterator/0 in emitted port only
 0694d99c5f98	api-parity(port-extra)	port-extra	ObjectLongMap$.Entries#next	/ObjectLongMap$/Entries	0	def next/0 in emitted port only
@@ -1468,6 +1597,8 @@ e8a570d08d9b	api-parity(port-extra)	port-extra	ObjectLongMap$.Values#iterator	/O
 86be0f770c1f	api-parity(port-extra)	port-extra	ObjectLongMap$.Values#next	/ObjectLongMap$/Values	0	def next/0 in emitted port only
 ae17df365539	api-parity(port-extra)	port-extra	ObjectLongMap$.Values#toArray	/ObjectLongMap$/Values	0	def toArray/0 in emitted port only
 2b5e391b130c	api-parity(port-extra)	port-extra	ObjectLongMap$.Values#toArray	/ObjectLongMap$/Values	0	def toArray/1 in emitted port only
+bef44aba85b0	api-parity(port-extra)	port-extra	ObjectMap#+=	/ObjectMap	0	def +=/1 in emitted port only [rename candidates: clear, containsKey, containsValue, ensureCapacity, equals, equalsIdentity, findKey, foreachEntry, foreachKey, foreachValue, get, putAll, remove, shrink, toString]
+6a7fe189c907	api-parity(port-extra)	port-extra	ObjectMap#-=	/ObjectMap	0	def -=/1 in emitted port only [rename candidates: clear, containsKey, containsValue, ensureCapacity, equals, equalsIdentity, findKey, foreachEntry, foreachKey, foreachValue, get, putAll, remove, shrink, toString]
 0df5159f9612	api-parity(port-extra)	port-extra	ObjectMap#entries	/ObjectMap	0	def entries/0 in emitted port only [rename candidates: clear, hashCode, isEmpty, nonEmpty, size, toString]
 f73147722402	api-parity(port-extra)	port-extra	ObjectMap#iterator	/ObjectMap	0	def iterator/0 in emitted port only [rename candidates: clear, hashCode, isEmpty, nonEmpty, size, toString]
 26e2c41d857c	api-parity(port-extra)	port-extra	ObjectMap#keyTable	/ObjectMap	0	var keyTable/0 in emitted port only
@@ -1479,6 +1610,7 @@ f668912c1e39	api-parity(port-extra)	port-extra	ObjectMap#shift	/ObjectMap	0	var 
 afa042326bc8	api-parity(port-extra)	port-extra	ObjectMap#size	/ObjectMap	0	var size/0 in emitted port only
 43e7dc9486fc	api-parity(port-extra)	port-extra	ObjectMap#threshold	/ObjectMap	0	var threshold/0 in emitted port only
 27f81710b0cd	api-parity(port-extra)	port-extra	ObjectMap#toString	/ObjectMap	0	def toString/2 in emitted port only [rename candidates: containsValue, findKey, get, put, toStringImpl]
+e25bfe1341a1	api-parity(port-extra)	port-extra	ObjectMap#update	/ObjectMap	0	def update/2 in emitted port only [rename candidates: containsValue, findKey, get, put, toStringImpl]
 75af300d500a	api-parity(port-extra)	port-extra	ObjectMap#valueTable	/ObjectMap	0	var valueTable/0 in emitted port only
 2a0a5bcb3fed	api-parity(port-extra)	port-extra	ObjectMap#values	/ObjectMap	0	def values/0 in emitted port only [rename candidates: clear, hashCode, isEmpty, nonEmpty, size, toString]
 0350f1544e59	api-parity(port-extra)	port-extra	ObjectMap$#Entries	/ObjectMap$	0	class Entries/0 in emitted port only
@@ -1501,8 +1633,13 @@ d961854b9f4e	api-parity(port-extra)	port-extra	ObjectMap$.Values#hasNext	/Object
 254d370f7e2f	api-parity(port-extra)	port-extra	ObjectMap$.Values#next	/ObjectMap$/Values	0	def next/0 in emitted port only
 7d6da1fd8a64	api-parity(port-extra)	port-extra	ObjectMap$.Values#toArray	/ObjectMap$/Values	0	def toArray/0 in emitted port only
 f6b8fffb3cc9	api-parity(port-extra)	port-extra	ObjectMap$.Values#toArray	/ObjectMap$/Values	0	def toArray/1 in emitted port only
+37a6bae0cca1	api-parity(port-extra)	port-extra	ObjectSet#+=	/ObjectSet	0	def +=/1 in emitted port only [rename candidates: add, addAll, addAll, clear, contains, ensureCapacity, equals, foreach, get, remove, shrink, toString]
+b48910e3f38e	api-parity(port-extra)	port-extra	ObjectSet#-=	/ObjectSet	0	def -=/1 in emitted port only [rename candidates: add, addAll, addAll, clear, contains, ensureCapacity, equals, foreach, get, remove, shrink, toString]
 729fc6dac911	api-parity(port-extra)	port-extra	ObjectSet#addAll	/ObjectSet	0	def addAll/3 in emitted port only
 729fc6dac911/2	api-parity(port-extra)	port-extra	ObjectSet#addAll	/ObjectSet	0	def addAll/3 in emitted port only
+2ea25d807f6b	api-parity(port-extra)	port-extra	ObjectSet#count	/ObjectSet	0	def count/1 in emitted port only [rename candidates: add, addAll, addAll, clear, contains, ensureCapacity, equals, foreach, get, remove, shrink, toString]
+ef8dcab56cbc	api-parity(port-extra)	port-extra	ObjectSet#exists	/ObjectSet	0	def exists/1 in emitted port only [rename candidates: add, addAll, addAll, clear, contains, ensureCapacity, equals, foreach, get, remove, shrink, toString]
+5726b5280a59	api-parity(port-extra)	port-extra	ObjectSet#forall	/ObjectSet	0	def forall/1 in emitted port only [rename candidates: add, addAll, addAll, clear, contains, ensureCapacity, equals, foreach, get, remove, shrink, toString]
 44a27f673c0c	api-parity(port-extra)	port-extra	ObjectSet#iterator	/ObjectSet	0	def iterator/0 in emitted port only [rename candidates: clear, first, hashCode, isEmpty, nonEmpty, size, toArray, toString]
 7f132a9c8665	api-parity(port-extra)	port-extra	ObjectSet#keyTable	/ObjectSet	0	var keyTable/0 in emitted port only
 25955b8c584f	api-parity(port-extra)	port-extra	ObjectSet#mask	/ObjectSet	0	var mask/0 in emitted port only
@@ -1658,6 +1795,9 @@ ebae249f1bc8	api-parity(port-extra)	port-extra	RandomXS128$#Funnel	/RandomXS128$
 f8446b576c83	api-parity(port-extra)	port-extra	Select#select	/Select	0	def select/4 in emitted port only
 8034c27f0596	api-parity(port-extra)	port-extra	Select#selectIndex	/Select	0	def selectIndex/4 in emitted port only
 4d171f21f380	api-parity(port-extra)	port-extra	Select$#instance	/Select$	0	def instance/0 in emitted port only
+14af9823c92f	api-parity(port-extra)	port-extra	ShortArray#+=	/ShortArray	0	def +=/1 in emitted port only
+0a3c0353ed3c	api-parity(port-extra)	port-extra	ShortArray#--=	/ShortArray	0	def --=/1 in emitted port only
+7576deff7f06	api-parity(port-extra)	port-extra	ShortArray#-=	/ShortArray	0	def -=/1 in emitted port only
 1e3a178e06d0	api-parity(port-extra)	port-extra	ShortArray#add	/ShortArray	0	def add/1 in emitted port only
 1e3a178e06d0/2	api-parity(port-extra)	port-extra	ShortArray#add	/ShortArray	0	def add/1 in emitted port only
 cf4aaa153bef	api-parity(port-extra)	port-extra	ShortArray#add	/ShortArray	0	def add/2 in emitted port only
@@ -1667,23 +1807,32 @@ cf4aaa153bef	api-parity(port-extra)	port-extra	ShortArray#add	/ShortArray	0	def 
 236b995cef1e/2	api-parity(port-extra)	port-extra	ShortArray#addAll	/ShortArray	0	def addAll/1 in emitted port only
 537201bae932	api-parity(port-extra)	port-extra	ShortArray#addAll	/ShortArray	0	def addAll/3 in emitted port only
 537201bae932/2	api-parity(port-extra)	port-extra	ShortArray#addAll	/ShortArray	0	def addAll/3 in emitted port only
+3d2f93aed317	api-parity(port-extra)	port-extra	ShortArray#apply	/ShortArray	0	def apply/1 in emitted port only
 d6ddbe6ea13b	api-parity(port-extra)	port-extra	ShortArray#clear	/ShortArray	0	def clear/0 in emitted port only
 6c9437beded5	api-parity(port-extra)	port-extra	ShortArray#contains	/ShortArray	0	def contains/1 in emitted port only
+40b025add0b6	api-parity(port-extra)	port-extra	ShortArray#count	/ShortArray	0	def count/1 in emitted port only
 29d650b66b6f	api-parity(port-extra)	port-extra	ShortArray#ensureCapacity	/ShortArray	0	def ensureCapacity/1 in emitted port only
 db046b279dbc	api-parity(port-extra)	port-extra	ShortArray#equals	/ShortArray	0	def equals/1 in emitted port only
+534ff51a1f48	api-parity(port-extra)	port-extra	ShortArray#exists	/ShortArray	0	def exists/1 in emitted port only
+d98cfb2743e6	api-parity(port-extra)	port-extra	ShortArray#find	/ShortArray	0	def find/1 in emitted port only
 455752726c09	api-parity(port-extra)	port-extra	ShortArray#first	/ShortArray	0	def first/0 in emitted port only
+caa92a8bb443	api-parity(port-extra)	port-extra	ShortArray#forall	/ShortArray	0	def forall/1 in emitted port only
+97f93b841f1d	api-parity(port-extra)	port-extra	ShortArray#foreach	/ShortArray	0	def foreach/1 in emitted port only
 2908bcd544a3	api-parity(port-extra)	port-extra	ShortArray#get	/ShortArray	0	def get/1 in emitted port only
 ff5e32c157f3	api-parity(port-extra)	port-extra	ShortArray#hashCode	/ShortArray	0	def hashCode/0 in emitted port only
 17461a74e72f	api-parity(port-extra)	port-extra	ShortArray#incr	/ShortArray	0	def incr/1 in emitted port only
 84caad77f0a2	api-parity(port-extra)	port-extra	ShortArray#incr	/ShortArray	0	def incr/2 in emitted port only
 a8d46a3ec42d	api-parity(port-extra)	port-extra	ShortArray#indexOf	/ShortArray	0	def indexOf/1 in emitted port only
+8a57756406ef	api-parity(port-extra)	port-extra	ShortArray#indexWhere	/ShortArray	0	def indexWhere/1 in emitted port only
 ddfe164837ab	api-parity(port-extra)	port-extra	ShortArray#insert	/ShortArray	0	def insert/2 in emitted port only
 b193f1b9aa1f	api-parity(port-extra)	port-extra	ShortArray#insertRange	/ShortArray	0	def insertRange/2 in emitted port only
 da40cbb6617f	api-parity(port-extra)	port-extra	ShortArray#isEmpty	/ShortArray	0	def isEmpty/0 in emitted port only
 e746eda605bd	api-parity(port-extra)	port-extra	ShortArray#items	/ShortArray	0	var items/0 in emitted port only
+07a664def286	api-parity(port-extra)	port-extra	ShortArray#last	/ShortArray	0	def last/0 in emitted port only
 fd1fe27e3e95	api-parity(port-extra)	port-extra	ShortArray#lastIndexOf	/ShortArray	0	def lastIndexOf/1 in emitted port only
 8d3341514fec	api-parity(port-extra)	port-extra	ShortArray#mul	/ShortArray	0	def mul/1 in emitted port only
 744b93b085b4	api-parity(port-extra)	port-extra	ShortArray#mul	/ShortArray	0	def mul/2 in emitted port only
+637d6afc09eb	api-parity(port-extra)	port-extra	ShortArray#nonEmpty	/ShortArray	0	def nonEmpty/0 in emitted port only
 0c061b641b79	api-parity(port-extra)	port-extra	ShortArray#notEmpty	/ShortArray	0	def notEmpty/0 in emitted port only
 ea4f1bc06f8e	api-parity(port-extra)	port-extra	ShortArray#ordered	/ShortArray	0	var ordered/0 in emitted port only
 0c501c9031be	api-parity(port-extra)	port-extra	ShortArray#peek	/ShortArray	0	def peek/0 in emitted port only
@@ -1708,7 +1857,12 @@ e03a7d3dfc83	api-parity(port-extra)	port-extra	ShortArray#toArray	/ShortArray	0	
 073bfe3ce074	api-parity(port-extra)	port-extra	ShortArray#toString	/ShortArray	0	def toString/0 in emitted port only
 dd05462b991f	api-parity(port-extra)	port-extra	ShortArray#toString	/ShortArray	0	def toString/1 in emitted port only
 d98384082328	api-parity(port-extra)	port-extra	ShortArray#truncate	/ShortArray	0	def truncate/1 in emitted port only
+34cbb37faf30	api-parity(port-extra)	port-extra	ShortArray#update	/ShortArray	0	def update/2 in emitted port only
 d83d7d8f994f	api-parity(port-extra)	port-extra	ShortArray$#Funnel	/ShortArray$	0	class Funnel/0 in emitted port only
+5ba31b6be0b5	api-parity(port-extra)	port-extra	ShortArray$#apply	/ShortArray$	0	def apply/0 in emitted port only
+e0fe7d4c5146	api-parity(port-extra)	port-extra	ShortArray$#apply	/ShortArray$	0	def apply/1 in emitted port only
+b34d4416d271	api-parity(port-extra)	port-extra	ShortArray$#apply	/ShortArray$	0	def apply/2 in emitted port only
+c3a0a1df319c	api-parity(port-extra)	port-extra	ShortArray$#from	/ShortArray$	0	def from/1 in emitted port only
 a379ffa223c9	api-parity(port-extra)	port-extra	ShortArray$#with	/ShortArray$	0	def with/1 in emitted port only
 51e5ebbc2897	api-parity(port-extra)	port-extra	SnapshotArray#begin	/SnapshotArray	0	def begin/0 in emitted port only
 b9e11ae5f812	api-parity(port-extra)	port-extra	SnapshotArray#clear	/SnapshotArray	0	def clear/0 in emitted port only
@@ -1730,6 +1884,10 @@ e217fd50d239	api-parity(port-extra)	port-extra	SnapshotArray#sort	/SnapshotArray
 af557ac902b8	api-parity(port-extra)	port-extra	SnapshotArray#sort	/SnapshotArray	0	def sort/1 in emitted port only
 d974f88d9511	api-parity(port-extra)	port-extra	SnapshotArray#swap	/SnapshotArray	0	def swap/2 in emitted port only
 8af6d9d62b76	api-parity(port-extra)	port-extra	SnapshotArray#truncate	/SnapshotArray	0	def truncate/1 in emitted port only
+09cb314c2c1c	api-parity(port-extra)	port-extra	SnapshotArray$#apply	/SnapshotArray$	0	def apply/0 in emitted port only
+70974702c3f8	api-parity(port-extra)	port-extra	SnapshotArray$#apply	/SnapshotArray$	0	def apply/1 in emitted port only
+591564842d4a	api-parity(port-extra)	port-extra	SnapshotArray$#apply	/SnapshotArray$	0	def apply/2 in emitted port only
+94419db1a8de	api-parity(port-extra)	port-extra	SnapshotArray$#from	/SnapshotArray$	0	def from/1 in emitted port only
 30653b21abcc	api-parity(port-extra)	port-extra	SnapshotArray$#with	/SnapshotArray$	0	def with/1 in emitted port only
 3cc68039cb81	api-parity(port-extra)	port-extra	Sort#sort	/Sort	0	def sort/2 in emitted port only
 3cc68039cb81/2	api-parity(port-extra)	port-extra	Sort#sort	/Sort	0	def sort/2 in emitted port only
@@ -1785,31 +1943,74 @@ ecc573e2b787	api-parity(signature)	signature	#OrderedMap		0	parents differ: emit
 7376ba8e2649	api-parity(signature)	signature	#OrderedSet		0	parents differ: emitted-only [lowlevel.util.ObjectSet[$0]], reference-only []
 3688547ea260	api-parity(signature)	signature	#QuickSelect		0	modifiers differ: emitted , reference final
 37b95e51ce43	api-parity(signature)	signature	ArrayMap#equalsIdentity	/ArrayMap	0	param 0 type differs: emitted 'java.lang.Object', reference 'Any'
+a7a877314e74	api-parity(signature)	signature	ArrayMap#foreachEntry	/ArrayMap	0	modifiers differ: emitted , reference inline
+d37da5c8fc01	api-parity(signature)	signature	ArrayMap#foreachEntry	/ArrayMap	0	param 0 type differs: emitted '($0, $1) => scala.Unit', reference '($0, $1) => Unit'
+6662e8081424	api-parity(signature)	signature	ArrayMap#foreachKey	/ArrayMap	0	modifiers differ: emitted , reference inline
+eafee2672033	api-parity(signature)	signature	ArrayMap#foreachKey	/ArrayMap	0	param 0 type differs: emitted '$0 => scala.Unit', reference '$0 => Unit'
+dd4756635ea0	api-parity(signature)	signature	ArrayMap#foreachValue	/ArrayMap	0	modifiers differ: emitted , reference inline
+00a2516f9264	api-parity(signature)	signature	ArrayMap#foreachValue	/ArrayMap	0	param 0 type differs: emitted '$1 => scala.Unit', reference '$1 => Unit'
 703b0b8494b9	api-parity(signature)	signature	ArrayMap#putAll	/ArrayMap	0	param 0 type differs: emitted 'ArrayMap[_ <: $0, _ <: $1]', reference 'ArrayMap[$0, $1]'
 703b0b8494b9/2	api-parity(signature)	signature	ArrayMap#putAll	/ArrayMap	0	param 0 type differs: emitted 'ArrayMap[_ <: $0, _ <: $1]', reference 'ArrayMap[$0, $1]'
+6d988904cf17	api-parity(signature)	signature	ArrayMap$#apply	/ArrayMap$	0	modifiers differ: emitted , reference inline
+6d988904cf17/2	api-parity(signature)	signature	ArrayMap$#apply	/ArrayMap$	0	modifiers differ: emitted , reference inline
+6d988904cf17/3	api-parity(signature)	signature	ArrayMap$#apply	/ArrayMap$	0	modifiers differ: emitted , reference inline
+5667ffdfa193	api-parity(signature)	signature	DynamicArray#--=	/DynamicArray	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[$0]', reference 'DynamicArray[_ <: $0]'
 bf59c870629b	api-parity(signature)	signature	DynamicArray#addAll	/DynamicArray	0	param 0 type differs: emitted 'DynamicArray[_ <: $0]', reference 'Array[$0]'
 766898071129	api-parity(signature)	signature	DynamicArray#addAll	/DynamicArray	0	param 0 type differs: emitted 'scala.Array[$0]', reference 'Iterable[$0]'
+1a48041f45ce	api-parity(signature)	signature	DynamicArray#count	/DynamicArray	0	modifiers differ: emitted , reference inline
+f9a0a96575c4	api-parity(signature)	signature	DynamicArray#count	/DynamicArray	0	param 0 type differs: emitted '$0 => scala.Boolean', reference '$0 => Boolean'
 1f1febd0d82f	api-parity(signature)	signature	DynamicArray#ensureCapacity	/DynamicArray	0	result type differs: emitted 'scala.Array[$0]', reference 'Unit'
 d17428231ef8	api-parity(signature)	signature	DynamicArray#equalsIdentity	/DynamicArray	0	param 0 type differs: emitted 'java.lang.Object', reference 'Any'
+e91cf2ec2ffa	api-parity(signature)	signature	DynamicArray#exists	/DynamicArray	0	modifiers differ: emitted , reference inline
+2a7ce07de466	api-parity(signature)	signature	DynamicArray#exists	/DynamicArray	0	param 0 type differs: emitted '$0 => scala.Boolean', reference '$0 => Boolean'
+68d240d4b9a3	api-parity(signature)	signature	DynamicArray#find	/DynamicArray	0	modifiers differ: emitted , reference inline
+0850b7dc75f5	api-parity(signature)	signature	DynamicArray#find	/DynamicArray	0	param 0 type differs: emitted '$0 => scala.Boolean', reference '$0 => Boolean'
+62a264304b88	api-parity(signature)	signature	DynamicArray#forall	/DynamicArray	0	modifiers differ: emitted , reference inline
+581814b34ac9	api-parity(signature)	signature	DynamicArray#forall	/DynamicArray	0	param 0 type differs: emitted '$0 => scala.Boolean', reference '$0 => Boolean'
+2b178e7bc0e8	api-parity(signature)	signature	DynamicArray#foreach	/DynamicArray	0	modifiers differ: emitted , reference inline
+9ae002cf2c04	api-parity(signature)	signature	DynamicArray#foreach	/DynamicArray	0	param 0 type differs: emitted '$0 => scala.Unit', reference '$0 => Unit'
+10f87477481b	api-parity(signature)	signature	DynamicArray#indexWhere	/DynamicArray	0	modifiers differ: emitted , reference inline
+b578db536afe	api-parity(signature)	signature	DynamicArray#indexWhere	/DynamicArray	0	param 0 type differs: emitted '$0 => scala.Boolean', reference '$0 => Boolean'
 0d355c8b3bf2	api-parity(signature)	signature	DynamicArray#iterator	/DynamicArray	0	modifiers differ: emitted override, reference
 f7993a53fb6f	api-parity(signature)	signature	DynamicArray#iterator	/DynamicArray	0	result type differs: emitted 'lowlevel.util.DynamicArray.ArrayIterator[$0]', reference 'Iterator[$0]'
 c75359c114b3	api-parity(signature)	signature	DynamicArray#select	/DynamicArray	0	param 0 type differs: emitted 'lowlevel.util.Predicate[$0]', reference '$0 => Boolean'
 d5b335a2ef32	api-parity(signature)	signature	DynamicArray#select	/DynamicArray	0	result type differs: emitted 'balticporter.runtime.JavaIterable[$0]', reference 'Iterable[$0]'
 ba30f285df65	api-parity(signature)	signature	DynamicArray#setSize	/DynamicArray	0	result type differs: emitted 'scala.Array[$0]', reference 'Unit'
 3403693023fe	api-parity(signature)	signature	DynamicArray#shrink	/DynamicArray	0	result type differs: emitted 'scala.Array[$0]', reference 'Unit'
+f96c4606db57	api-parity(signature)	signature	DynamicArray$#apply	/DynamicArray$	0	modifiers differ: emitted , reference inline
+f96c4606db57/2	api-parity(signature)	signature	DynamicArray$#apply	/DynamicArray$	0	modifiers differ: emitted , reference inline
+f96c4606db57/3	api-parity(signature)	signature	DynamicArray$#apply	/DynamicArray$	0	modifiers differ: emitted , reference inline
+9d1eaf454768	api-parity(signature)	signature	DynamicArray$#from	/DynamicArray$	0	modifiers differ: emitted , reference inline
 dc93a4769f81	api-parity(signature)	signature	MathUtils$#atanUncheckedDeg	/MathUtils$	0	result type differs: emitted 'scala.Double', reference 'Float'
 7b58fe699d31	api-parity(signature)	signature	ObjectMap#containsValue	/ObjectMap	0	param 0 type differs: emitted 'lowlevel.Nullable[java.lang.Object]', reference '$1'
 815c9dd66784	api-parity(signature)	signature	ObjectMap#equalsIdentity	/ObjectMap	0	param 0 type differs: emitted 'lowlevel.Nullable[java.lang.Object]', reference 'Any'
 5e7d525e79d2	api-parity(signature)	signature	ObjectMap#findKey	/ObjectMap	0	param 0 type differs: emitted 'lowlevel.Nullable[java.lang.Object]', reference '$1'
+b831061cb18d	api-parity(signature)	signature	ObjectMap#foreachEntry	/ObjectMap	0	modifiers differ: emitted , reference inline
+8201280689c9	api-parity(signature)	signature	ObjectMap#foreachEntry	/ObjectMap	0	param 0 type differs: emitted '($0, lowlevel.Nullable[$1]) => scala.Unit', reference '($0, $1) => Unit'
+8c239c4f2aef	api-parity(signature)	signature	ObjectMap#foreachKey	/ObjectMap	0	modifiers differ: emitted , reference inline
+320c8a0816c9	api-parity(signature)	signature	ObjectMap#foreachKey	/ObjectMap	0	param 0 type differs: emitted '$0 => scala.Unit', reference '$0 => Unit'
+bdf74706e190	api-parity(signature)	signature	ObjectMap#foreachValue	/ObjectMap	0	modifiers differ: emitted , reference inline
+8909007452fc	api-parity(signature)	signature	ObjectMap#foreachValue	/ObjectMap	0	param 0 type differs: emitted 'lowlevel.Nullable[$1] => scala.Unit', reference '$1 => Unit'
 e7ec41e4fa3d	api-parity(signature)	signature	ObjectMap#get	/ObjectMap	0	param 0 type differs: emitted '$2', reference '$0'
 1483cf8171be	api-parity(signature)	signature	ObjectMap#putAll	/ObjectMap	0	param 0 type differs: emitted 'ObjectMap[_ <: $0, _ <: $1]', reference 'ObjectMap[$0, $1]'
+5e62e8f96492	api-parity(signature)	signature	ObjectMap$#apply	/ObjectMap$	0	modifiers differ: emitted , reference inline
+5e62e8f96492/2	api-parity(signature)	signature	ObjectMap$#apply	/ObjectMap$	0	modifiers differ: emitted , reference inline
+5e62e8f96492/3	api-parity(signature)	signature	ObjectMap$#apply	/ObjectMap$	0	modifiers differ: emitted , reference inline
 619013ed8543	api-parity(signature)	signature	ObjectSet#addAll	/ObjectSet	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[_ <: $0]', reference 'ObjectSet[$0]'
 2fc9beb05628	api-parity(signature)	signature	ObjectSet#addAll	/ObjectSet	0	param 0 type differs: emitted 'scala.Array[$0]', reference 'DynamicArray[_ <: $0]'
+1ff5a09ff776	api-parity(signature)	signature	ObjectSet#foreach	/ObjectSet	0	modifiers differ: emitted , reference inline
+a5f69d38b260	api-parity(signature)	signature	ObjectSet#foreach	/ObjectSet	0	param 0 type differs: emitted '$0 => scala.Unit', reference '$0 => Unit'
+6c23540ff575	api-parity(signature)	signature	ObjectSet$#apply	/ObjectSet$	0	modifiers differ: emitted , reference inline
+6c23540ff575/2	api-parity(signature)	signature	ObjectSet$#apply	/ObjectSet$	0	modifiers differ: emitted , reference inline
+6c23540ff575/3	api-parity(signature)	signature	ObjectSet$#apply	/ObjectSet$	0	modifiers differ: emitted , reference inline
 07c72cb2dded	api-parity(signature)	signature	OrderedMap#clear	/OrderedMap	0	modifiers differ: emitted override, reference
 07c72cb2dded/2	api-parity(signature)	signature	OrderedMap#clear	/OrderedMap	0	modifiers differ: emitted override, reference
 b0f9ff30d699	api-parity(signature)	signature	OrderedMap#put	/OrderedMap	0	modifiers differ: emitted override, reference
 dfdbee5a6c00	api-parity(signature)	signature	OrderedMap#putAll	/OrderedMap	0	param 0 type differs: emitted 'OrderedMap[$2, _ <: $1]', reference 'OrderedMap[$0, $1]'
 9efcdc12dd45	api-parity(signature)	signature	OrderedMap#remove	/OrderedMap	0	modifiers differ: emitted override, reference
+de69c356b71e	api-parity(signature)	signature	OrderedMap$#apply	/OrderedMap$	0	modifiers differ: emitted , reference inline
+de69c356b71e/2	api-parity(signature)	signature	OrderedMap$#apply	/OrderedMap$	0	modifiers differ: emitted , reference inline
+de69c356b71e/3	api-parity(signature)	signature	OrderedMap$#apply	/OrderedMap$	0	modifiers differ: emitted , reference inline
 a6a0ee38c2a5	api-parity(signature)	signature	OrderedSet#add	/OrderedSet	0	modifiers differ: emitted override, reference
 041bd3325d0f	api-parity(signature)	signature	OrderedSet#clear	/OrderedSet	0	modifiers differ: emitted override, reference
 041bd3325d0f/2	api-parity(signature)	signature	OrderedSet#clear	/OrderedSet	0	modifiers differ: emitted override, reference
@@ -1817,6 +2018,11 @@ a6a0ee38c2a5	api-parity(signature)	signature	OrderedSet#add	/OrderedSet	0	modifi
 75082c1f8189	api-parity(signature)	signature	OrderedSet#first	/OrderedSet	0	modifiers differ: emitted override, reference
 e7b3f0095fb6	api-parity(signature)	signature	OrderedSet#remove	/OrderedSet	0	modifiers differ: emitted override, reference
 4fe32f639005	api-parity(signature)	signature	OrderedSet#toString	/OrderedSet	0	modifiers differ: emitted override, reference
+e1bbc8bb1b9d	api-parity(signature)	signature	OrderedSet$#apply	/OrderedSet$	0	modifiers differ: emitted , reference inline
+e1bbc8bb1b9d/2	api-parity(signature)	signature	OrderedSet$#apply	/OrderedSet$	0	modifiers differ: emitted , reference inline
+e1bbc8bb1b9d/3	api-parity(signature)	signature	OrderedSet$#apply	/OrderedSet$	0	modifiers differ: emitted , reference inline
+9ca86e3b52a5	api-parity(static-placement)	static-placement	ArrayMap#apply	/ArrayMap	0	def apply/1 in emitted port only
+66dc91380f2b	api-parity(static-placement)	static-placement	ObjectMap#apply	/ObjectMap	0	def apply/1 in emitted port only
 24ccde19d889	api-parity(static-placement)	static-placement	Sort#sort	/Sort	0	def sort/1 in emitted port only
 24ccde19d889/2	api-parity(static-placement)	static-placement	Sort#sort	/Sort	0	def sort/1 in emitted port only
 f0b9110653e7	api-parity(static-placement)	static-placement	Sort#sort	/Sort	0	def sort/3 in emitted port only
@@ -1827,7 +2033,7 @@ f0b9110653e7	api-parity(static-placement)	static-placement	Sort#sort	/Sort	0	def
 708ded3c453b/3	api-parity(static-placement)	static-placement	Sort$#sort	/Sort$	0	def sort/3 in reference port only
 fcd5cff8bb8b	catalog(consulted)	reached	JS-C01	com/badlogic/gdx/math/MathUtils.java	119	lowering CtInvocation/Expression — consulted 2425, fired 602, declarations 0: a Java `static` is INHERITED by every subclass; a Scala companion inherits nothing
 93e4dba392c0	catalog(consulted)	reached	JS-C02	-	0	lowering CtInvocation/Expression + lowering CtFieldRead/Expression + lowering CtFieldWrite/Expression — consulted 8601, fired 0, declarations 0: interface constants are inherited through `implements`
-6d23c6fa7162	catalog(consulted)	reached	JS-C03	com/badlogic/gdx/utils/DefaultPool.java	20	rendering ClassDef — consulted 120, fired 5, declarations 0: static HIDING is resolved by the STATIC type of the qualifier
+8291d485547b	catalog(consulted)	reached	JS-C03	com/badlogic/gdx/utils/DefaultPool.java	20	rendering ClassDef — consulted 120, fired 6, declarations 0: static HIDING is resolved by the STATIC type of the qualifier
 cc0d8af856b0	catalog(consulted)	reached	JS-C04	-	0	phase field-shadowing — consulted 0, fired 0, declarations 2: a subclass field SHADOWS a superclass field — two storage cells, not one
 60377d993285	catalog(consulted)	reached	JS-C05	com/badlogic/gdx/math/MathUtils.java	34	lowering CtFieldRead/Expression + lowering CtFieldWrite/Expression — consulted 6176, fired 364, declarations 0: a static nested constant reached through a SUBCLASS's name, and `import static`
 410015cdb110	catalog(consulted)	reached	JS-C06	-	0	rendering Apply — consulted 8000, fired 0, declarations 0: `anInstance.staticMethod()` evaluates the receiver FOR ITS SIDE EFFECTS and discards it
