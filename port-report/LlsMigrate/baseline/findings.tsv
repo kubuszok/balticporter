@@ -321,7 +321,16 @@ f8446b576c83	api-parity(port-extra)	port-extra	Select#select	/Select	0	def selec
 62210598b2b0	api-parity(port-extra)	port-extra	Sort#sort	/Sort	0	def sort/4 in emitted port only
 e488049197d0	api-parity(port-extra)	port-extra	Sort$#instance	/Sort$	0	def instance/0 in emitted port only
 166fba9b701a	api-parity(port-extra)	port-extra	TimSort$#Funnel	/TimSort$	0	class Funnel/0 in emitted port only
+8b2acf778045	api-parity(rule)	rule	MathUtils$#E	/MathUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 eaf0b8fbe886	api-parity(rule)	rule	MathUtils$#FLOAT_ROUNDING_ERROR	/MathUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+5213ce2d6918	api-parity(rule)	rule	MathUtils$#HALF_PI	/MathUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+8afd28b5c2de	api-parity(rule)	rule	MathUtils$#PI	/MathUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+b89aede619e2	api-parity(rule)	rule	MathUtils$#PI2	/MathUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+aee6aa3f4b85	api-parity(rule)	rule	MathUtils$#degRad	/MathUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+a5e678d856f8	api-parity(rule)	rule	MathUtils$#degreesToRadians	/MathUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+1e528b090081	api-parity(rule)	rule	MathUtils$#nanoToSec	/MathUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+57af8656514b	api-parity(rule)	rule	MathUtils$#radDeg	/MathUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+253eec0cf8cb	api-parity(rule)	rule	MathUtils$#radiansToDegrees	/MathUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 56ada10a2ff1	api-parity(signature)	signature	#ArrayMap		0	modifiers differ: emitted , reference final
 e15f23bbb31d	api-parity(signature)	signature	#ArrayMap		0	parents differ: emitted-only [java.lang.Iterable[lowlevel.util.ObjectMap.Entry[$0, $1]]], reference-only []
 45773c038de6	api-parity(signature)	signature	#DynamicArray		0	modifiers differ: emitted , reference final
@@ -350,16 +359,7 @@ c831961526ec	api-parity(signature)	signature	DynamicArray#selectRanked	/DynamicA
 ba30f285df65	api-parity(signature)	signature	DynamicArray#setSize	/DynamicArray	0	result type differs: emitted 'scala.Array[$0]', reference 'Unit'
 3403693023fe	api-parity(signature)	signature	DynamicArray#shrink	/DynamicArray	0	result type differs: emitted 'scala.Array[$0]', reference 'Unit'
 5363431ca881	api-parity(signature)	signature	DynamicArray#sort	/DynamicArray	0	param 0 type differs: emitted 'java.util.Comparator[_ >: $0]', reference 'Ordering[$0]'
-6cc14a70677e	api-parity(signature)	signature	MathUtils$#E	/MathUtils$	0	modifiers differ: emitted final, reference
-a3cf2ce37573	api-parity(signature)	signature	MathUtils$#HALF_PI	/MathUtils$	0	modifiers differ: emitted final, reference
-9f7084ef2877	api-parity(signature)	signature	MathUtils$#PI	/MathUtils$	0	modifiers differ: emitted final, reference
-83254bafadbf	api-parity(signature)	signature	MathUtils$#PI2	/MathUtils$	0	modifiers differ: emitted final, reference
 dc93a4769f81	api-parity(signature)	signature	MathUtils$#atanUncheckedDeg	/MathUtils$	0	result type differs: emitted 'scala.Double', reference 'Float'
-915087d398a9	api-parity(signature)	signature	MathUtils$#degRad	/MathUtils$	0	modifiers differ: emitted final, reference
-aa4c2f49bebd	api-parity(signature)	signature	MathUtils$#degreesToRadians	/MathUtils$	0	modifiers differ: emitted final, reference
-0662b2c99a64	api-parity(signature)	signature	MathUtils$#nanoToSec	/MathUtils$	0	modifiers differ: emitted final, reference
-4af0bcbbbb1b	api-parity(signature)	signature	MathUtils$#radDeg	/MathUtils$	0	modifiers differ: emitted final, reference
-bc1f8923b177	api-parity(signature)	signature	MathUtils$#radiansToDegrees	/MathUtils$	0	modifiers differ: emitted final, reference
 4eac0750c13a	api-parity(signature)	signature	ObjectMap#containsValue	/ObjectMap	0	param 0 type differs: emitted 'java.lang.Object', reference '$1'
 80f372cb0235	api-parity(signature)	signature	ObjectMap#equalsIdentity	/ObjectMap	0	param 0 type differs: emitted 'java.lang.Object', reference 'Any'
 99e548dfa8a9	api-parity(signature)	signature	ObjectMap#findKey	/ObjectMap	0	param 0 type differs: emitted 'java.lang.Object', reference '$1'
@@ -426,6 +426,7 @@ f864ef18a720	catalog(consulted)	reached	JS-C47	com/badlogic/gdx/math/MathUtils.j
 4f7195f239b9	catalog(consulted)	reached	JS-C49	com/badlogic/gdx/utils/Array.java	760	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1099, fired 3, declarations 0: Java's `private` reaches the whole enclosing TOP-LEVEL class; Scala's reaches only the template
 4558e64ccfea	catalog(consulted)	reached	JS-C50	com/badlogic/gdx/math/MathUtils.java	57	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1099, fired 38, declarations 0: Java's default access is package-private and Scala's is public — INVERTED
 b9b9e66692a0	catalog(consulted)	reached	JS-C51	-	0	rendering ClassDef — consulted 28, fired 0, declarations 0: a `return` in a CONSTRUCTOR body, whose promotion puts it in the class body
+3c5732f3defd	catalog(consulted)	reached	JS-C53	com/badlogic/gdx/math/MathUtils.java	30	rendering ValDef — consulted 675, fired 20, declarations 0: a java `final` FIELD carries two facts onto a `val`: no reassignment, and no OVERRIDE
 a051949914d8	catalog(consulted)	reached	JS-E01	com/badlogic/gdx/utils/Array.java	222	lowering CtBinaryOperator/Expression — consulted 1625, fired 34, declarations 0: `==`/`!=` are REFERENCE identity in Java; Scala's `==` calls `equals`
 fc8c990bdbd5	catalog(consulted)	reached	JS-E02	com/badlogic/gdx/utils/Array.java	120	lowering CtUnaryOperator/Expression — consulted 186, fired 87, declarations 0: postfix/prefix `++`/`--` USED AS A VALUE yields the value before the update — the VALUE only; the operand's single evaluation is JS-E17
 6173b702394b	catalog(consulted)	reached	JS-E03	com/badlogic/gdx/math/MathUtils.java	119	lowering CtOperatorAssignment/Statement — consulted 97, fired 2, declarations 0: compound assignment NARROWS implicitly to the left-hand type — STATEMENT position; the lvalue's single evaluation is JS-E17

@@ -169,6 +169,7 @@ c9d2a8e7eb44	api-parity(port-extra)	port-extra	PaletteReducer$#sort	/PaletteRedu
 dd4fed3bc2cf	api-parity(port-extra)	port-extra	QualityPalette$#forwardLight	/QualityPalette$	0	def forwardLight/1 in emitted port only
 5c72324a7928	api-parity(port-extra)	port-extra	QualityPalette$#reverseLight	/QualityPalette$	0	def reverseLight/1 in emitted port only
 16ebfcea2c58	api-parity(rule)	rule	PaletteReducer$#TBM_BITS	/PaletteReducer$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+82b10e0ccdff	api-parity(rule)	rule	PaletteReducer$#TBM_MASK	/PaletteReducer$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 210db3a6e20e	api-parity(signature)	signature	AnimatedGif#colorTab	/AnimatedGif	0	result type differs: emitted 'scala.Array[scala.Byte]', reference 'Array[Byte] | Null'
 451ee2b197b3	api-parity(signature)	signature	AnimatedGif#indexedPixels	/AnimatedGif	0	result type differs: emitted 'scala.Array[scala.Byte]', reference 'Array[Byte] | Null'
 4f083da7e4ed	api-parity(signature)	signature	AnimatedGif#usedEntry	/AnimatedGif	0	result type differs: emitted 'scala.Array[scala.Boolean]', reference 'Array[Boolean]'
@@ -255,7 +256,6 @@ c3853271ea88	api-parity(signature)	signature	PaletteReducer$#OKLAB	/PaletteReduc
 659158c77ff8	api-parity(signature)	signature	PaletteReducer$#OKLAB	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Array[scala.Float]]', reference 'Array[Array[Float]]'
 859e0b1b4396	api-parity(signature)	signature	PaletteReducer$#SNUGGLY	/PaletteReducer$	0	modifiers differ: emitted final, reference
 1a90f1e9be7b	api-parity(signature)	signature	PaletteReducer$#SNUGGLY	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
-8ab87de7e794	api-parity(signature)	signature	PaletteReducer$#TBM_MASK	/PaletteReducer$	0	modifiers differ: emitted final, reference
 b2389a1a65c6	api-parity(signature)	signature	PaletteReducer$#TRIANGULAR_BYTE_LOOKUP	/PaletteReducer$	0	modifiers differ: emitted final, reference
 e8b0c6156e11	api-parity(signature)	signature	PaletteReducer$#TRIANGULAR_BYTE_LOOKUP	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
 fe1bf5af22a1	api-parity(signature)	signature	PaletteReducer$#TRI_BAYER_MATRIX_128	/PaletteReducer$	0	modifiers differ: emitted final, reference
@@ -413,6 +413,7 @@ fdb3d405c58a	catalog(consulted)	reached	JS-C48	com/github/tommyettinger/anim8/An
 9c30d54bc0bb	catalog(consulted)	reached	JS-C49	-	0	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 4052, fired 0, declarations 0: Java's `private` reaches the whole enclosing TOP-LEVEL class; Scala's reaches only the template
 833d91faa924	catalog(consulted)	reached	JS-C50	com/github/tommyettinger/anim8/ChunkBuffer.java	31	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 4052, fired 43, declarations 0: Java's default access is package-private and Scala's is public — INVERTED
 aa56f4818d70	catalog(consulted)	reached	JS-C51	-	0	rendering ClassDef — consulted 19, fired 0, declarations 0: a `return` in a CONSTRUCTOR body, whose promotion puts it in the class body
+2918d2f34b5d	catalog(consulted)	reached	JS-C53	com/github/tommyettinger/anim8/AnimatedPNG.java	80	rendering ValDef — consulted 3660, fired 52, declarations 0: a java `final` FIELD carries two facts onto a `val`: no reassignment, and no OVERRIDE
 e233f9a25ee9	catalog(consulted)	reached	JS-E01	com/github/tommyettinger/anim8/PaletteReducer.java	2450	lowering CtBinaryOperator/Expression — consulted 39616, fired 580, declarations 0: `==`/`!=` are REFERENCE identity in Java; Scala's `==` calls `equals`
 173fdf5b3a95	catalog(consulted)	reached	JS-E02	com/github/tommyettinger/anim8/AnimatedGif.java	474	lowering CtUnaryOperator/Expression — consulted 3050, fired 841, declarations 0: postfix/prefix `++`/`--` USED AS A VALUE yields the value before the update — the VALUE only; the operand's single evaluation is JS-E17
 0115babb3d78	catalog(consulted)	reached	JS-E03	../../../../libgdx/gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFont.java	750	lowering CtOperatorAssignment/Statement — consulted 2683, fired 36, declarations 0: compound assignment NARROWS implicitly to the left-hand type — STATEMENT position; the lvalue's single evaluation is JS-E17

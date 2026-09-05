@@ -322,8 +322,21 @@ a48fc6348d01	api-parity(port-extra)	port-extra	TextureResolver#loadTextures	/Tex
 acaaab1d82cc	api-parity(port-extra)	port-extra	TransmissionSource#batch	/TransmissionSource	0	var batch/0 in emitted port only
 e4d996287fcc	api-parity(port-extra)	port-extra	TransmissionSource#begin	/TransmissionSource	0	def begin/1 in emitted port only [rename candidates: end, render]
 b54412d5db7f	api-parity(port-extra)	port-extra	TransmissionSource#end	/TransmissionSource	0	def end/0 in emitted port only [rename candidates: close]
+6eafeb359178	api-parity(rule)	rule	AnimationControllerHack$.Transform#rotation	/AnimationControllerHack$/Transform	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+eb19c956c3b4	api-parity(rule)	rule	AnimationControllerHack$.Transform#scale	/AnimationControllerHack$/Transform	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+2af375e61b9e	api-parity(rule)	rule	AnimationControllerHack$.Transform#translation	/AnimationControllerHack$/Transform	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+3084fe767622	api-parity(rule)	rule	AnimationControllerHack$.Transform#weights	/AnimationControllerHack$/Transform	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 154fea1d1407	api-parity(rule)	rule	CascadeShadowMapAttribute$#Alias	/CascadeShadowMapAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+896f7ccc5b6a	api-parity(rule)	rule	CascadeShadowMapAttribute$#Type	/CascadeShadowMapAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+b36bb1f0c043	api-parity(rule)	rule	ClippingPlaneAttribute$#Type	/ClippingPlaneAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 4ff4577547db	api-parity(rule)	rule	ClippingPlaneAttribute$#TypeAlias	/ClippingPlaneAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+dbfd61d31570	api-parity(rule)	rule	CubicQuaternion#tangentIn	/CubicQuaternion	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+f0ddfc419beb	api-parity(rule)	rule	CubicQuaternion#tangentOut	/CubicQuaternion	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+72a0c88ab1b8	api-parity(rule)	rule	CubicVector3#tangentIn	/CubicVector3	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+a05988469514	api-parity(rule)	rule	CubicVector3#tangentOut	/CubicVector3	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+72b226996d59	api-parity(rule)	rule	DirectionalLightEx#baseColor	/DirectionalLightEx	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+af34a389f520	api-parity(rule)	rule	FogAttribute#value	/FogAttribute	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+e0b54081f5e2	api-parity(rule)	rule	FogAttribute$#FogEquation	/FogAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 7eb9962d6c46	api-parity(rule)	rule	FogAttribute$#FogEquationAlias	/FogAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 8e6f5b108f66	api-parity(rule)	rule	GLTFLoaderBase$#TAG	/GLTFLoaderBase$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 627869a44cfa	api-parity(rule)	rule	GLTFTypes$#C_BYTE	/GLTFTypes$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
@@ -339,6 +352,12 @@ baaae201a2ad	api-parity(rule)	rule	GLTFTypes$#TYPE_SCALAR	/GLTFTypes$	0	rule JS-
 1054a67824b1	api-parity(rule)	rule	GLTFTypes$#TYPE_VEC2	/GLTFTypes$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 f63565254881	api-parity(rule)	rule	GLTFTypes$#TYPE_VEC3	/GLTFTypes$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 50bc349eaf7b	api-parity(rule)	rule	GLTFTypes$#TYPE_VEC4	/GLTFTypes$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+dbf655466a19	api-parity(rule)	rule	IBLBuilder#farGroundColor	/IBLBuilder	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+1d23851cb7d5	api-parity(rule)	rule	IBLBuilder#farSkyColor	/IBLBuilder	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+6fc1bc81acd9	api-parity(rule)	rule	IBLBuilder#nearGroundColor	/IBLBuilder	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+682a7951c405	api-parity(rule)	rule	IBLBuilder#nearSkyColor	/IBLBuilder	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+d1f81e74c649	api-parity(rule)	rule	IBLBuilder$.Light#color	/IBLBuilder$/Light	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+720b575af705	api-parity(rule)	rule	IBLBuilder$.Light#direction	/IBLBuilder$/Light	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 fb97fcd786d5	api-parity(rule)	rule	KHRLightsPunctual$#EXT	/KHRLightsPunctual$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 f6d59b7958da	api-parity(rule)	rule	KHRLightsPunctual$.GLTFLight$#TYPE_DIRECTIONAL	/KHRLightsPunctual$/GLTFLight$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 610e215c4e4d	api-parity(rule)	rule	KHRLightsPunctual$.GLTFLight$#TYPE_POINT	/KHRLightsPunctual$/GLTFLight$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
@@ -352,44 +371,161 @@ e850809fb4d9	api-parity(rule)	rule	KHRMaterialsTransmission$#EXT	/KHRMaterialsTr
 32a5e7aa46f6	api-parity(rule)	rule	KHRMaterialsUnlit$#EXT	/KHRMaterialsUnlit$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 2ad82a10c0bf	api-parity(rule)	rule	KHRMaterialsVolume$#EXT	/KHRMaterialsVolume$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 2140ef4c39f3	api-parity(rule)	rule	KHRTextureTransform$#EXT	/KHRTextureTransform$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+f921909ce41c	api-parity(rule)	rule	MirrorAttribute$#Specular	/MirrorAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 3ea6e57750f8	api-parity(rule)	rule	MirrorAttribute$#SpecularAlias	/MirrorAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+f299b53f275c	api-parity(rule)	rule	MirrorSourceAttribute#normal	/MirrorSourceAttribute	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+b914b6776e3c	api-parity(rule)	rule	MirrorSourceAttribute$#Type	/MirrorSourceAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 37e50f2fc87e	api-parity(rule)	rule	MirrorSourceAttribute$#TypeAlias	/MirrorSourceAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+7507cff42531	api-parity(rule)	rule	PBRColorAttribute$#BaseColorFactor	/PBRColorAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 f9c32658f267	api-parity(rule)	rule	PBRColorAttribute$#BaseColorFactorAlias	/PBRColorAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 a4d405cb586e	api-parity(rule)	rule	PBRCommon$#MAX_MORPH_TARGETS	/PBRCommon$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+0451cfbc8f97	api-parity(rule)	rule	PBRCubemapAttribute$#DiffuseEnv	/PBRCubemapAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 6dd955dae8bf	api-parity(rule)	rule	PBRCubemapAttribute$#DiffuseEnvAlias	/PBRCubemapAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+156dbc55882a	api-parity(rule)	rule	PBRCubemapAttribute$#SpecularEnv	/PBRCubemapAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 a1329ab4d402	api-parity(rule)	rule	PBRCubemapAttribute$#SpecularEnvAlias	/PBRCubemapAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+f1a600dd2f78	api-parity(rule)	rule	PBRFlagAttribute$#Unlit	/PBRFlagAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 45bb8b74231b	api-parity(rule)	rule	PBRFlagAttribute$#UnlitAlias	/PBRFlagAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+efcc668cc6c6	api-parity(rule)	rule	PBRFloatAttribute$#EmissiveIntensity	/PBRFloatAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 8c50188d021c	api-parity(rule)	rule	PBRFloatAttribute$#EmissiveIntensityAlias	/PBRFloatAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+2e5eee99c5dd	api-parity(rule)	rule	PBRFloatAttribute$#IOR	/PBRFloatAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 b78cfe56e1a1	api-parity(rule)	rule	PBRFloatAttribute$#IORAlias	/PBRFloatAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+af236b53b521	api-parity(rule)	rule	PBRFloatAttribute$#Metallic	/PBRFloatAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 5a5ab9755582	api-parity(rule)	rule	PBRFloatAttribute$#MetallicAlias	/PBRFloatAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+75606181fd7c	api-parity(rule)	rule	PBRFloatAttribute$#NormalScale	/PBRFloatAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 d2f3fb3712e1	api-parity(rule)	rule	PBRFloatAttribute$#NormalScaleAlias	/PBRFloatAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+1051a3ac109b	api-parity(rule)	rule	PBRFloatAttribute$#OcclusionStrength	/PBRFloatAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 b41eed598891	api-parity(rule)	rule	PBRFloatAttribute$#OcclusionStrengthAlias	/PBRFloatAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+0ecc195cc3d8	api-parity(rule)	rule	PBRFloatAttribute$#Roughness	/PBRFloatAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 acd0ede9b91b	api-parity(rule)	rule	PBRFloatAttribute$#RoughnessAlias	/PBRFloatAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+6afe9271eb15	api-parity(rule)	rule	PBRFloatAttribute$#ShadowBias	/PBRFloatAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 fc22030508ef	api-parity(rule)	rule	PBRFloatAttribute$#ShadowBiasAlias	/PBRFloatAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+7acba7262db8	api-parity(rule)	rule	PBRFloatAttribute$#SpecularFactor	/PBRFloatAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 afd6b575c142	api-parity(rule)	rule	PBRFloatAttribute$#SpecularFactorAlias	/PBRFloatAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+af6aff92f295	api-parity(rule)	rule	PBRFloatAttribute$#TransmissionFactor	/PBRFloatAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 4a8f65a8fa87	api-parity(rule)	rule	PBRFloatAttribute$#TransmissionFactorAlias	/PBRFloatAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a78d771d1e2b	api-parity(rule)	rule	PBRHDRColorAttribute$#Specular	/PBRHDRColorAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 00d0e96c3626	api-parity(rule)	rule	PBRHDRColorAttribute$#SpecularAlias	/PBRHDRColorAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 ee891d3ca265	api-parity(rule)	rule	PBRIridescenceAttribute$#Alias	/PBRIridescenceAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+8bf8faf520c5	api-parity(rule)	rule	PBRIridescenceAttribute$#Type	/PBRIridescenceAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+680227f892fd	api-parity(rule)	rule	PBRMatrixAttribute#matrix	/PBRMatrixAttribute	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+423bcaadd9c3	api-parity(rule)	rule	PBRMatrixAttribute$#EnvRotation	/PBRMatrixAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 9ca6a0afb15c	api-parity(rule)	rule	PBRMatrixAttribute$#EnvRotationAlias	/PBRMatrixAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+98c71d3bf6ce	api-parity(rule)	rule	PBRShader$#baseColorFactorSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+7c7df5ec76a1	api-parity(rule)	rule	PBRShader$#baseColorFactorUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+96b581a1ad3e	api-parity(rule)	rule	PBRShader$#baseColorTextureSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+aff771a67447	api-parity(rule)	rule	PBRShader$#baseColorTextureUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+dbfec4d5d555	api-parity(rule)	rule	PBRShader$#brdfLUTTextureSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+e308eea0ec2c	api-parity(rule)	rule	PBRShader$#brdfLUTTextureUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+cb0d9dda5ac5	api-parity(rule)	rule	PBRShader$#clippingPlaneSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+6129a542aaed	api-parity(rule)	rule	PBRShader$#clippingPlaneUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+d939458d5343	api-parity(rule)	rule	PBRShader$#diffuseEnvTextureSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+6db519ff98be	api-parity(rule)	rule	PBRShader$#diffuseEnvTextureUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+75bc533bb345	api-parity(rule)	rule	PBRShader$#emissiveScaledColor	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+79d6480812da	api-parity(rule)	rule	PBRShader$#emissiveTextureSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+acac3efe88c1	api-parity(rule)	rule	PBRShader$#emissiveTextureUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+394ead054e1c	api-parity(rule)	rule	PBRShader$#envRotationSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+aab1e211e289	api-parity(rule)	rule	PBRShader$#envRotationUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+3ff363b84d7f	api-parity(rule)	rule	PBRShader$#fogEquationSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+2fc6237a4ef7	api-parity(rule)	rule	PBRShader$#fogEquationUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+263446630d93	api-parity(rule)	rule	PBRShader$#iorSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+a48481c7affa	api-parity(rule)	rule	PBRShader$#iorUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+9cab1404f34b	api-parity(rule)	rule	PBRShader$#iridescenceFactorSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+1c8ef5732528	api-parity(rule)	rule	PBRShader$#iridescenceFactorUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+df12bffe6655	api-parity(rule)	rule	PBRShader$#iridescenceIORSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+3d7ad1487d21	api-parity(rule)	rule	PBRShader$#iridescenceIORUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+44ef51b3cf21	api-parity(rule)	rule	PBRShader$#iridescenceTextureSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+9793469d901e	api-parity(rule)	rule	PBRShader$#iridescenceTextureUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+a9113094b5a5	api-parity(rule)	rule	PBRShader$#iridescenceThicknessMaxSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+d3fda6c1a3d8	api-parity(rule)	rule	PBRShader$#iridescenceThicknessMaxUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+3cd2f8ebaa6f	api-parity(rule)	rule	PBRShader$#iridescenceThicknessMinSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+79afddf3a03c	api-parity(rule)	rule	PBRShader$#iridescenceThicknessMinUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+df7b43de4d44	api-parity(rule)	rule	PBRShader$#iridescenceThicknessTextureSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+4b4d682c4e8a	api-parity(rule)	rule	PBRShader$#iridescenceThicknessTextureUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+edd2fa1ac09a	api-parity(rule)	rule	PBRShader$#metallicRoughnessSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+d736e58989a2	api-parity(rule)	rule	PBRShader$#metallicRoughnessTextureSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+fdb82d613d17	api-parity(rule)	rule	PBRShader$#metallicRoughnessTextureUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+7e5f9a3afddd	api-parity(rule)	rule	PBRShader$#metallicRoughnessUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+65ad5df3e41a	api-parity(rule)	rule	PBRShader$#mirrorNormalSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+e31c70110fe5	api-parity(rule)	rule	PBRShader$#normalScaleSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+21d8115cdbb7	api-parity(rule)	rule	PBRShader$#normalScaleUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+c7139e480908	api-parity(rule)	rule	PBRShader$#normalTextureSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+d6ecf9bb9fb3	api-parity(rule)	rule	PBRShader$#normalTextureUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+9ab75c1b2050	api-parity(rule)	rule	PBRShader$#occlusionStrengthSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+6b5f8176b2a7	api-parity(rule)	rule	PBRShader$#occlusionStrengthUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+74578060680a	api-parity(rule)	rule	PBRShader$#occlusionTextureSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+1b1c26110958	api-parity(rule)	rule	PBRShader$#occlusionTextureUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+d36d6e3faae8	api-parity(rule)	rule	PBRShader$#projViewTransSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+c2c58a6cab35	api-parity(rule)	rule	PBRShader$#projViewTransUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+3de9cf268c71	api-parity(rule)	rule	PBRShader$#shadowBiasSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+01baf6b33795	api-parity(rule)	rule	PBRShader$#shadowBiasUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+f2e744732bce	api-parity(rule)	rule	PBRShader$#specularColorFactorSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+f7cf2d0567bc	api-parity(rule)	rule	PBRShader$#specularColorFactorUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+46bcdaf97465	api-parity(rule)	rule	PBRShader$#specularColorTextureSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+12d5627abda2	api-parity(rule)	rule	PBRShader$#specularColorTextureUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+28e8590c72e2	api-parity(rule)	rule	PBRShader$#specularEnvTextureSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+f003020cf48b	api-parity(rule)	rule	PBRShader$#specularEnvTextureUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+def5fd0ff631	api-parity(rule)	rule	PBRShader$#specularFactorSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+478ddbd26f52	api-parity(rule)	rule	PBRShader$#specularFactorTextureSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+87f74bece085	api-parity(rule)	rule	PBRShader$#specularFactorTextureUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+756779bcf1a5	api-parity(rule)	rule	PBRShader$#specularFactorUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+858b0ce1e8c5	api-parity(rule)	rule	PBRShader$#specularMirrorMipmapSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+b5fdf01c0849	api-parity(rule)	rule	PBRShader$#specularMirrorMipmapUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+78d3c8f5bc0c	api-parity(rule)	rule	PBRShader$#specularMirrorTextureSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+adde1b66c849	api-parity(rule)	rule	PBRShader$#specularMirrorTextureUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+677a72ee90ec	api-parity(rule)	rule	PBRShader$#thicknessFactorSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+b56658240952	api-parity(rule)	rule	PBRShader$#thicknessFactorUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+96176486f078	api-parity(rule)	rule	PBRShader$#thicknessTextureSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+f64b02df1706	api-parity(rule)	rule	PBRShader$#thicknessTextureUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+b9f5cfe0d7b0	api-parity(rule)	rule	PBRShader$#transmissionFactorSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+736b470e9740	api-parity(rule)	rule	PBRShader$#transmissionFactorUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+7a2c9da5f2c6	api-parity(rule)	rule	PBRShader$#transmissionSourceMipmapSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+86b2e19c527d	api-parity(rule)	rule	PBRShader$#transmissionSourceMipmapUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+d2bda12eabfc	api-parity(rule)	rule	PBRShader$#transmissionSourceTextureSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+8bc10f846691	api-parity(rule)	rule	PBRShader$#transmissionSourceTextureUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+d35f5abf0c33	api-parity(rule)	rule	PBRShader$#transmissionTextureSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+8741fc38e87a	api-parity(rule)	rule	PBRShader$#transmissionTextureUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+bd1d782d3ccc	api-parity(rule)	rule	PBRShader$#viewportInvSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+805af4e34632	api-parity(rule)	rule	PBRShader$#viewportInvUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+43823850dfa9	api-parity(rule)	rule	PBRShader$#volumeColorSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+77dec27aa351	api-parity(rule)	rule	PBRShader$#volumeColorUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+0beb33ba43d0	api-parity(rule)	rule	PBRShader$#volumeDistanceSetter	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+0f9dba6c4bb4	api-parity(rule)	rule	PBRShader$#volumeDistanceUniform	/PBRShader$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 014d748e45eb	api-parity(rule)	rule	PBRShaderConfig$#DEFAULT_GAMMA	/PBRShaderConfig$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 a0d639d9cf4d	api-parity(rule)	rule	PBRShaderProvider$#TAG	/PBRShaderProvider$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+9c30d4d697cc	api-parity(rule)	rule	PBRTextureAttribute$#BRDFLUTTexture	/PBRTextureAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 a4c63e291452	api-parity(rule)	rule	PBRTextureAttribute$#BRDFLUTTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+635a3736df4f	api-parity(rule)	rule	PBRTextureAttribute$#BaseColorTexture	/PBRTextureAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 3c6c5d457e47	api-parity(rule)	rule	PBRTextureAttribute$#BaseColorTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+8859d53ec147	api-parity(rule)	rule	PBRTextureAttribute$#EmissiveTexture	/PBRTextureAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 cf9be43201d7	api-parity(rule)	rule	PBRTextureAttribute$#EmissiveTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+667bfe724a4c	api-parity(rule)	rule	PBRTextureAttribute$#IridescenceTexture	/PBRTextureAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 dfd77e660a45	api-parity(rule)	rule	PBRTextureAttribute$#IridescenceTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+2687755374b3	api-parity(rule)	rule	PBRTextureAttribute$#IridescenceThicknessTexture	/PBRTextureAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 9e29cff72ae5	api-parity(rule)	rule	PBRTextureAttribute$#IridescenceThicknessTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+03248a92925e	api-parity(rule)	rule	PBRTextureAttribute$#MetallicRoughnessTexture	/PBRTextureAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 d27be7724026	api-parity(rule)	rule	PBRTextureAttribute$#MetallicRoughnessTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+f669f7d55617	api-parity(rule)	rule	PBRTextureAttribute$#NormalTexture	/PBRTextureAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 fd7e948d6349	api-parity(rule)	rule	PBRTextureAttribute$#NormalTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+528e409a8534	api-parity(rule)	rule	PBRTextureAttribute$#OcclusionTexture	/PBRTextureAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 6623f9128c43	api-parity(rule)	rule	PBRTextureAttribute$#OcclusionTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+570a7aa699f0	api-parity(rule)	rule	PBRTextureAttribute$#SpecularColorTexture	/PBRTextureAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 bcf939b9d5df	api-parity(rule)	rule	PBRTextureAttribute$#SpecularColorTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+1a9eac78a0e2	api-parity(rule)	rule	PBRTextureAttribute$#SpecularFactorTexture	/PBRTextureAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 9deeb838bf74	api-parity(rule)	rule	PBRTextureAttribute$#SpecularFactorTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+43d8ac76f337	api-parity(rule)	rule	PBRTextureAttribute$#ThicknessTexture	/PBRTextureAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 71374d581f5f	api-parity(rule)	rule	PBRTextureAttribute$#ThicknessTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+f3b604219ed8	api-parity(rule)	rule	PBRTextureAttribute$#TransmissionSourceTexture	/PBRTextureAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 ed3012558e4d	api-parity(rule)	rule	PBRTextureAttribute$#TransmissionSourceTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+9317419b2dcf	api-parity(rule)	rule	PBRTextureAttribute$#TransmissionTexture	/PBRTextureAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 31b384c1efd1	api-parity(rule)	rule	PBRTextureAttribute$#TransmissionTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 a0e04968546d	api-parity(rule)	rule	PBRVertexAttributes$.Usage$#NormalTarget	/PBRVertexAttributes$/Usage$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 ee4c13651e0f	api-parity(rule)	rule	PBRVertexAttributes$.Usage$#PositionTarget	/PBRVertexAttributes$/Usage$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 40a02a0c44dc	api-parity(rule)	rule	PBRVertexAttributes$.Usage$#TangentTarget	/PBRVertexAttributes$/Usage$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+7c2e349dcf73	api-parity(rule)	rule	PBRVolumeAttribute#attenuationColor	/PBRVolumeAttribute	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 c16339f8754e	api-parity(rule)	rule	PBRVolumeAttribute$#Alias	/PBRVolumeAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+9f61976a66aa	api-parity(rule)	rule	PBRVolumeAttribute$#Type	/PBRVolumeAttribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+cd24444b530c	api-parity(rule)	rule	SceneSkybox#environment	/SceneSkybox	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+0ff28577a19d	api-parity(rule)	rule	TransmissionSource#attribute	/TransmissionSource	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 f3c48c2056e6	api-parity(signature)	signature	#CubicVector3		0	modifiers differ: emitted , reference final,case
 afa64bc550cb	api-parity(signature)	signature	#CubicVector3		0	parents differ: emitted-only [sge.math.Vector3], reference-only []
 5a06800985ea	api-parity(signature)	signature	#GLBAssetLoader		0	parents differ: emitted-only [sge.assets.loaders.AsynchronousAssetLoader[sge.gltf.scene3d.scene.SceneAsset, sge.gltf.loaders.shared.SceneAssetLoaderParameters]], reference-only [AsynchronousAssetLoader[SceneAsset, SceneAssetLoaderParameters]]
@@ -401,10 +537,6 @@ ea63c4a9f2d0	api-parity(signature)	signature	#SceneAssetLoaderParameters		0	pare
 66e5e315228f	api-parity(signature)	signature	#SceneRenderableSorter		0	parents differ: emitted-only [scala.math.Ordering[sge.graphics.g3d.Renderable]], reference-only [Comparator[Renderable]]
 f884327be9e3	api-parity(signature)	signature	AnimationControllerHack$#applyAnimationPlus	/AnimationControllerHack$	0	param 0 type differs: emitted 'lowlevel.util.ObjectMap[sge.graphics.g3d.model.Node, sge.gltf.scene3d.animation.AnimationControllerHack.Transform]', reference 'ObjectMap[Node, Transform]'
 a8b1723428c9	api-parity(signature)	signature	AnimationControllerHack$#applyAnimationPlus	/AnimationControllerHack$	0	param 1 type differs: emitted 'sge.utils.Pool[sge.gltf.scene3d.animation.AnimationControllerHack.Transform]', reference 'Pool[Transform]'
-32c2dd63708a	api-parity(signature)	signature	AnimationControllerHack$.Transform#rotation	/AnimationControllerHack$/Transform	0	modifiers differ: emitted final, reference
-a25ccb6c6894	api-parity(signature)	signature	AnimationControllerHack$.Transform#scale	/AnimationControllerHack$/Transform	0	modifiers differ: emitted final, reference
-482e5ea0cc65	api-parity(signature)	signature	AnimationControllerHack$.Transform#translation	/AnimationControllerHack$/Transform	0	modifiers differ: emitted final, reference
-32feead28436	api-parity(signature)	signature	AnimationControllerHack$.Transform#weights	/AnimationControllerHack$/Transform	0	modifiers differ: emitted final, reference
 09c423b19220	api-parity(signature)	signature	AnimationLoader#animations	/AnimationLoader	0	modifiers differ: emitted final, reference
 61044bfcc48b	api-parity(signature)	signature	AnimationLoader#animations	/AnimationLoader	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.g3d.model.Animation]', reference 'DynamicArray[Animation]'
 e62151d6ee30	api-parity(signature)	signature	AnimationLoader#load	/AnimationLoader	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[sge.gltf.data.animation.GLTFAnimation]', reference 'Nullable[ArrayBuffer[GLTFAnimation]]'
@@ -414,18 +546,11 @@ e62151d6ee30	api-parity(signature)	signature	AnimationLoader#load	/AnimationLoad
 a4627f5eb17f	api-parity(signature)	signature	CascadeShadowMap#lights	/CascadeShadowMap	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.gltf.scene3d.lights.DirectionalShadowLight]', reference 'DynamicArray[DirectionalShadowLight]'
 7028610f228d	api-parity(signature)	signature	CascadeShadowMap#setCascades	/CascadeShadowMap	0	param 3 type differs: emitted 'lowlevel.util.DynamicArray[scala.Float]', reference 'DynamicArray[Float]'
 5a7fc6d1bd59	api-parity(signature)	signature	CascadeShadowMap#splitRates	/CascadeShadowMap	0	result type differs: emitted 'lowlevel.util.DynamicArray[scala.Float]', reference 'DynamicArray[Float]'
-260e2f7ba4cd	api-parity(signature)	signature	CascadeShadowMapAttribute$#Type	/CascadeShadowMapAttribute$	0	modifiers differ: emitted final, reference
-75b2fad0b2d2	api-parity(signature)	signature	ClippingPlaneAttribute$#Type	/ClippingPlaneAttribute$	0	modifiers differ: emitted final, reference
-3ee403f95238	api-parity(signature)	signature	CubicQuaternion#tangentIn	/CubicQuaternion	0	modifiers differ: emitted final, reference
-bbffad5e2ced	api-parity(signature)	signature	CubicQuaternion#tangentOut	/CubicQuaternion	0	modifiers differ: emitted final, reference
-c0f98bdba8b5	api-parity(signature)	signature	CubicVector3#tangentIn	/CubicVector3	0	modifiers differ: emitted final, reference
-510a09fab685	api-parity(signature)	signature	CubicVector3#tangentOut	/CubicVector3	0	modifiers differ: emitted final, reference
 e0672c4cde7c	api-parity(signature)	signature	DataResolver#readBufferFloat	/DataResolver	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
 aa281d1988e0	api-parity(signature)	signature	DataResolver#readBufferUByte	/DataResolver	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
 1d30864bcae3	api-parity(signature)	signature	DataResolver#readBufferUByteAsFloat	/DataResolver	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
 db0a948c7b3c	api-parity(signature)	signature	DataResolver#readBufferUShort	/DataResolver	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
 718a430935e4	api-parity(signature)	signature	DataResolver#readBufferUShortAsFloat	/DataResolver	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
-f72ce271f59e	api-parity(signature)	signature	DirectionalLightEx#baseColor	/DirectionalLightEx	0	modifiers differ: emitted final, reference
 df32a6c29934	api-parity(signature)	signature	DirectionalLightEx#equals	/DirectionalLightEx	0	param 0 type differs: emitted 'sge.graphics.g3d.environment.DirectionalLight', reference 'Any'
 32802cd644ad	api-parity(signature)	signature	DirectionalShadowLight#center	/DirectionalShadowLight	0	modifiers differ: emitted final, reference
 6eaad9d0ebef	api-parity(signature)	signature	DirectionalShadowLight#depthMap	/DirectionalShadowLight	0	result type differs: emitted 'sge.graphics.g3d.utils.TextureDescriptor[?]', reference 'TextureDescriptor[Texture]'
@@ -443,8 +568,6 @@ ba3c14c82005	api-parity(signature)	signature	EnvironmentUtil$#FACE_NAMES_NP	/Env
 2d66cc19786e	api-parity(signature)	signature	EnvironmentUtil$#createCubemap	/EnvironmentUtil$	0	param 5 type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
 aa2cd47872a0	api-parity(signature)	signature	FacedMultiCubemapData#data	/FacedMultiCubemapData	0	result type differs: emitted 'scala.Array[sge.graphics.TextureData]', reference 'Array[TextureData]'
 5e342795047a	api-parity(signature)	signature	FogAttribute#set	/FogAttribute	0	result type differs: emitted 'sge.graphics.g3d.Attribute', reference 'FogAttribute'
-ae4d3cc9c058	api-parity(signature)	signature	FogAttribute#value	/FogAttribute	0	modifiers differ: emitted final, reference
-70cd51a93b57	api-parity(signature)	signature	FogAttribute$#FogEquation	/FogAttribute$	0	modifiers differ: emitted final, reference
 a4e9d676933f	api-parity(signature)	signature	GLBAssetLoader#getDependencies	/GLBAssetLoader	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]', reference 'DynamicArray[AssetDescriptor[?]]'
 b3afc0dab6ad	api-parity(signature)	signature	GLBLoader#load	/GLBLoader	0	param 0 type differs: emitted 'scala.Array[scala.Byte]', reference 'Array[Byte]'
 694bd1fb0427	api-parity(signature)	signature	GLTF#accessors	/GLTF	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.gltf.data.data.GLTFAccessor]', reference 'Nullable[ArrayBuffer[GLTFAccessor]]'
@@ -525,14 +648,8 @@ ae20bee1690c	api-parity(signature)	signature	GLTFTypes$#mapTextureMagFilter	/GLT
 6f037742cb9d	api-parity(signature)	signature	GLTFTypes$#mapTextureMinFilter	/GLTFTypes$	0	param 0 type differs: emitted 'java.lang.Integer', reference 'Nullable[Int]'
 ed6173aa5aef	api-parity(signature)	signature	GLTFTypes$#mapTextureSampler	/GLTFTypes$	0	param 0 type differs: emitted 'sge.graphics.g3d.utils.TextureDescriptor[sge.graphics.Texture]', reference 'TextureDescriptor[Texture]'
 143052b8c70d	api-parity(signature)	signature	GLTFpbrMetallicRoughness#baseColorFactor	/GLTFpbrMetallicRoughness	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Nullable[Array[Float]]'
-406b46672aa1	api-parity(signature)	signature	IBLBuilder#farGroundColor	/IBLBuilder	0	modifiers differ: emitted final, reference
-2d630c2a7e5e	api-parity(signature)	signature	IBLBuilder#farSkyColor	/IBLBuilder	0	modifiers differ: emitted final, reference
 2a09c3da6c08	api-parity(signature)	signature	IBLBuilder#lights	/IBLBuilder	0	modifiers differ: emitted final, reference
 4731c9bc30cc	api-parity(signature)	signature	IBLBuilder#lights	/IBLBuilder	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.gltf.scene3d.utils.IBLBuilder.Light]', reference 'DynamicArray[IBLBuilder.Light]'
-36e373658cca	api-parity(signature)	signature	IBLBuilder#nearGroundColor	/IBLBuilder	0	modifiers differ: emitted final, reference
-704b053853bf	api-parity(signature)	signature	IBLBuilder#nearSkyColor	/IBLBuilder	0	modifiers differ: emitted final, reference
-113f3b87d265	api-parity(signature)	signature	IBLBuilder$.Light#color	/IBLBuilder$/Light	0	modifiers differ: emitted final, reference
-b277920c2db7	api-parity(signature)	signature	IBLBuilder$.Light#direction	/IBLBuilder$/Light	0	modifiers differ: emitted final, reference
 490d5c3fbbef	api-parity(signature)	signature	ImageResolver#getPixmaps	/ImageResolver	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.Pixmap]', reference 'ArrayBuffer[Pixmap]'
 05713be53ed7	api-parity(signature)	signature	ImageResolver#getPixmaps	/ImageResolver	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.Pixmap]', reference 'ArrayBuffer[Pixmap]'
 58d70428ca3a	api-parity(signature)	signature	ImageResolver#load	/ImageResolver	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[sge.gltf.data.texture.GLTFImage]', reference 'Nullable[ArrayBuffer[GLTFImage]]'
@@ -552,128 +669,13 @@ ad924f9b4a3d	api-parity(signature)	signature	KHRMaterialsVolume#attenuationColor
 a7fc98c0a256	api-parity(signature)	signature	MaterialLoaderBase#loadMaterials	/MaterialLoaderBase	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[sge.gltf.data.material.GLTFMaterial]', reference 'Nullable[ArrayBuffer[GLTFMaterial]]'
 df260df86356	api-parity(signature)	signature	MeshTangentSpaceGenerator$#computeTangentSpace	/MeshTangentSpaceGenerator$	0	param 0 type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
 13ba7b50deb7	api-parity(signature)	signature	MeshTangentSpaceGenerator$#computeTangentSpace	/MeshTangentSpaceGenerator$	0	param 1 type differs: emitted 'scala.Array[scala.Short]', reference 'Array[Short]'
-0a2287bf704e	api-parity(signature)	signature	MirrorAttribute$#Specular	/MirrorAttribute$	0	modifiers differ: emitted final, reference
 ceff660d422d	api-parity(signature)	signature	MirrorSource#mirrorAttribute	/MirrorSource	0	modifiers differ: emitted final, reference
-9747eb258558	api-parity(signature)	signature	MirrorSourceAttribute#normal	/MirrorSourceAttribute	0	modifiers differ: emitted final, reference
 217b55d98145	api-parity(signature)	signature	MirrorSourceAttribute#set	/MirrorSourceAttribute	0	param 0 type differs: emitted 'sge.graphics.g3d.utils.TextureDescriptor[sge.graphics.Texture]', reference 'TextureDescriptor[Texture]'
 c882303b4f8a	api-parity(signature)	signature	MirrorSourceAttribute#textureDescription	/MirrorSourceAttribute	0	modifiers differ: emitted final, reference
 b2385aa33efc	api-parity(signature)	signature	MirrorSourceAttribute#textureDescription	/MirrorSourceAttribute	0	result type differs: emitted 'sge.graphics.g3d.utils.TextureDescriptor[sge.graphics.Texture]', reference 'TextureDescriptor[Texture]'
-d9989ce4126f	api-parity(signature)	signature	MirrorSourceAttribute$#Type	/MirrorSourceAttribute$	0	modifiers differ: emitted final, reference
 6df5503bad0d	api-parity(signature)	signature	NodeAnimationHack#weights	/NodeAnimationHack	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.g3d.model.NodeKeyframe[sge.gltf.scene3d.model.WeightVector]]', reference 'DynamicArray[NodeKeyframe[WeightVector]]'
 b940cb712e1d	api-parity(signature)	signature	NodePlus#morphTargetNames	/NodePlus	0	result type differs: emitted 'lowlevel.util.DynamicArray[java.lang.String]', reference 'Nullable[DynamicArray[String]]'
-be4420f83c77	api-parity(signature)	signature	PBRColorAttribute$#BaseColorFactor	/PBRColorAttribute$	0	modifiers differ: emitted final, reference
-9a71e9d277e2	api-parity(signature)	signature	PBRCubemapAttribute$#DiffuseEnv	/PBRCubemapAttribute$	0	modifiers differ: emitted final, reference
-4d47ad9ea720	api-parity(signature)	signature	PBRCubemapAttribute$#SpecularEnv	/PBRCubemapAttribute$	0	modifiers differ: emitted final, reference
-457f42335c0f	api-parity(signature)	signature	PBRFlagAttribute$#Unlit	/PBRFlagAttribute$	0	modifiers differ: emitted final, reference
-4aeea0a433a8	api-parity(signature)	signature	PBRFloatAttribute$#EmissiveIntensity	/PBRFloatAttribute$	0	modifiers differ: emitted final, reference
-78ed0b8f068b	api-parity(signature)	signature	PBRFloatAttribute$#IOR	/PBRFloatAttribute$	0	modifiers differ: emitted final, reference
-556652b542a3	api-parity(signature)	signature	PBRFloatAttribute$#Metallic	/PBRFloatAttribute$	0	modifiers differ: emitted final, reference
-412f851b9726	api-parity(signature)	signature	PBRFloatAttribute$#NormalScale	/PBRFloatAttribute$	0	modifiers differ: emitted final, reference
-80d7e7a89cfe	api-parity(signature)	signature	PBRFloatAttribute$#OcclusionStrength	/PBRFloatAttribute$	0	modifiers differ: emitted final, reference
-f4f01d5ead52	api-parity(signature)	signature	PBRFloatAttribute$#Roughness	/PBRFloatAttribute$	0	modifiers differ: emitted final, reference
-09ad3dd42eec	api-parity(signature)	signature	PBRFloatAttribute$#ShadowBias	/PBRFloatAttribute$	0	modifiers differ: emitted final, reference
-aede97fcac35	api-parity(signature)	signature	PBRFloatAttribute$#SpecularFactor	/PBRFloatAttribute$	0	modifiers differ: emitted final, reference
-8d1a560b7730	api-parity(signature)	signature	PBRFloatAttribute$#TransmissionFactor	/PBRFloatAttribute$	0	modifiers differ: emitted final, reference
-f60d2c6cf242	api-parity(signature)	signature	PBRHDRColorAttribute$#Specular	/PBRHDRColorAttribute$	0	modifiers differ: emitted final, reference
-9e9e38b418ef	api-parity(signature)	signature	PBRIridescenceAttribute$#Type	/PBRIridescenceAttribute$	0	modifiers differ: emitted final, reference
-5cdd1569d97f	api-parity(signature)	signature	PBRMatrixAttribute#matrix	/PBRMatrixAttribute	0	modifiers differ: emitted final, reference
-ef0c61392617	api-parity(signature)	signature	PBRMatrixAttribute$#EnvRotation	/PBRMatrixAttribute$	0	modifiers differ: emitted final, reference
 bfe534339f9b	api-parity(signature)	signature	PBRShader#u_csmSamplers	/PBRShader	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[UniformLocation]'
-3bf8b31a15d1	api-parity(signature)	signature	PBRShader$#baseColorFactorSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-5fa38cd716a7	api-parity(signature)	signature	PBRShader$#baseColorFactorUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-061a6c7d46f4	api-parity(signature)	signature	PBRShader$#baseColorTextureSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-47e223ceb2cd	api-parity(signature)	signature	PBRShader$#baseColorTextureUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-61088d489c8f	api-parity(signature)	signature	PBRShader$#brdfLUTTextureSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-b75480c031ed	api-parity(signature)	signature	PBRShader$#brdfLUTTextureUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-02035be54bda	api-parity(signature)	signature	PBRShader$#clippingPlaneSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-4589a6561788	api-parity(signature)	signature	PBRShader$#clippingPlaneUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-5993c0790201	api-parity(signature)	signature	PBRShader$#diffuseEnvTextureSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-efe8efb98773	api-parity(signature)	signature	PBRShader$#diffuseEnvTextureUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-8357d46023f6	api-parity(signature)	signature	PBRShader$#emissiveScaledColor	/PBRShader$	0	modifiers differ: emitted final, reference
-054203121bbf	api-parity(signature)	signature	PBRShader$#emissiveTextureSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-1412c2489660	api-parity(signature)	signature	PBRShader$#emissiveTextureUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-0e773f52dabf	api-parity(signature)	signature	PBRShader$#envRotationSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-b57f1c69eb33	api-parity(signature)	signature	PBRShader$#envRotationUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-6a3cd66e4b85	api-parity(signature)	signature	PBRShader$#fogEquationSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-74f85ade1f27	api-parity(signature)	signature	PBRShader$#fogEquationUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-fbb9d0017fce	api-parity(signature)	signature	PBRShader$#iorSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-2db65f66333a	api-parity(signature)	signature	PBRShader$#iorUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-bdb905d35f2f	api-parity(signature)	signature	PBRShader$#iridescenceFactorSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-73aa5c8a65a5	api-parity(signature)	signature	PBRShader$#iridescenceFactorUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-e62fe5433acb	api-parity(signature)	signature	PBRShader$#iridescenceIORSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-0061a9106ec7	api-parity(signature)	signature	PBRShader$#iridescenceIORUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-5cb2b2a30021	api-parity(signature)	signature	PBRShader$#iridescenceTextureSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-0d99865cef08	api-parity(signature)	signature	PBRShader$#iridescenceTextureUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-f721dc41d5aa	api-parity(signature)	signature	PBRShader$#iridescenceThicknessMaxSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-d78fd1f1806a	api-parity(signature)	signature	PBRShader$#iridescenceThicknessMaxUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-d2e15d6509da	api-parity(signature)	signature	PBRShader$#iridescenceThicknessMinSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-7875aa1704dc	api-parity(signature)	signature	PBRShader$#iridescenceThicknessMinUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-d8fa537554a1	api-parity(signature)	signature	PBRShader$#iridescenceThicknessTextureSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-c2fe04cd3ea6	api-parity(signature)	signature	PBRShader$#iridescenceThicknessTextureUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-063746c54c9f	api-parity(signature)	signature	PBRShader$#metallicRoughnessSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-677651325164	api-parity(signature)	signature	PBRShader$#metallicRoughnessTextureSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-232da64620a9	api-parity(signature)	signature	PBRShader$#metallicRoughnessTextureUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-9c661e24bf89	api-parity(signature)	signature	PBRShader$#metallicRoughnessUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-af2c29d83f58	api-parity(signature)	signature	PBRShader$#mirrorNormalSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-04ed9d9b2d70	api-parity(signature)	signature	PBRShader$#normalScaleSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-4977caa954ba	api-parity(signature)	signature	PBRShader$#normalScaleUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-3a5099882af1	api-parity(signature)	signature	PBRShader$#normalTextureSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-92f206d70666	api-parity(signature)	signature	PBRShader$#normalTextureUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-37ac6c372cbd	api-parity(signature)	signature	PBRShader$#occlusionStrengthSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-90a28e4d1cc2	api-parity(signature)	signature	PBRShader$#occlusionStrengthUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-a2f7e9dc844f	api-parity(signature)	signature	PBRShader$#occlusionTextureSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-39708d826adf	api-parity(signature)	signature	PBRShader$#occlusionTextureUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-b2e22c2a992d	api-parity(signature)	signature	PBRShader$#projViewTransSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-b6a5a657b362	api-parity(signature)	signature	PBRShader$#projViewTransUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-944485ee6fcb	api-parity(signature)	signature	PBRShader$#shadowBiasSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-6f9e195d1d69	api-parity(signature)	signature	PBRShader$#shadowBiasUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-de9ae4388e96	api-parity(signature)	signature	PBRShader$#specularColorFactorSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-56b40a9160dc	api-parity(signature)	signature	PBRShader$#specularColorFactorUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-0f83899c90cf	api-parity(signature)	signature	PBRShader$#specularColorTextureSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-c6ac76b64b93	api-parity(signature)	signature	PBRShader$#specularColorTextureUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-a977702beedf	api-parity(signature)	signature	PBRShader$#specularEnvTextureSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-8f65b0809cf5	api-parity(signature)	signature	PBRShader$#specularEnvTextureUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-2b4db9473797	api-parity(signature)	signature	PBRShader$#specularFactorSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-a16b092eb47a	api-parity(signature)	signature	PBRShader$#specularFactorTextureSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-d07b5f25cc9e	api-parity(signature)	signature	PBRShader$#specularFactorTextureUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-313a77ac6d30	api-parity(signature)	signature	PBRShader$#specularFactorUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-d33f792e6d49	api-parity(signature)	signature	PBRShader$#specularMirrorMipmapSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-b692c8c1ab5b	api-parity(signature)	signature	PBRShader$#specularMirrorMipmapUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-a153d108fbcb	api-parity(signature)	signature	PBRShader$#specularMirrorTextureSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-6ff23f89bbb0	api-parity(signature)	signature	PBRShader$#specularMirrorTextureUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-3240eb2fe888	api-parity(signature)	signature	PBRShader$#thicknessFactorSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-20bedbc180ec	api-parity(signature)	signature	PBRShader$#thicknessFactorUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-e174aa5978a4	api-parity(signature)	signature	PBRShader$#thicknessTextureSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-30d310768a14	api-parity(signature)	signature	PBRShader$#thicknessTextureUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-f4b5ff8a64db	api-parity(signature)	signature	PBRShader$#transmissionFactorSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-cdbc71d4cb93	api-parity(signature)	signature	PBRShader$#transmissionFactorUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-af16700b161e	api-parity(signature)	signature	PBRShader$#transmissionSourceMipmapSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-2dce320f81ca	api-parity(signature)	signature	PBRShader$#transmissionSourceMipmapUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-2cd54a13b5fd	api-parity(signature)	signature	PBRShader$#transmissionSourceTextureSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-f41097a94746	api-parity(signature)	signature	PBRShader$#transmissionSourceTextureUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-bb090e5b36f5	api-parity(signature)	signature	PBRShader$#transmissionTextureSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-e12f12c82ad9	api-parity(signature)	signature	PBRShader$#transmissionTextureUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-65e999886fdb	api-parity(signature)	signature	PBRShader$#viewportInvSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-779b07d6c5ef	api-parity(signature)	signature	PBRShader$#viewportInvUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-5a3d719408a3	api-parity(signature)	signature	PBRShader$#volumeColorSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-fdb955347506	api-parity(signature)	signature	PBRShader$#volumeColorUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-e942af7eb340	api-parity(signature)	signature	PBRShader$#volumeDistanceSetter	/PBRShader$	0	modifiers differ: emitted final, reference
-6f4ddedb8fc5	api-parity(signature)	signature	PBRShader$#volumeDistanceUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-3aaf7b9f5369	api-parity(signature)	signature	PBRTextureAttribute$#BRDFLUTTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-720843fd7fc4	api-parity(signature)	signature	PBRTextureAttribute$#BaseColorTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-b79fd55cc020	api-parity(signature)	signature	PBRTextureAttribute$#EmissiveTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-1ed3922a271e	api-parity(signature)	signature	PBRTextureAttribute$#IridescenceTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-f2ccdb3b56d9	api-parity(signature)	signature	PBRTextureAttribute$#IridescenceThicknessTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-01238f1c6040	api-parity(signature)	signature	PBRTextureAttribute$#MetallicRoughnessTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-7071b34e43d9	api-parity(signature)	signature	PBRTextureAttribute$#NormalTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-d5967bbf695b	api-parity(signature)	signature	PBRTextureAttribute$#OcclusionTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-8789d5817d60	api-parity(signature)	signature	PBRTextureAttribute$#SpecularColorTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-cb585c33911d	api-parity(signature)	signature	PBRTextureAttribute$#SpecularFactorTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-f5f1515709ed	api-parity(signature)	signature	PBRTextureAttribute$#ThicknessTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-614c504d87df	api-parity(signature)	signature	PBRTextureAttribute$#TransmissionSourceTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-ce9391da5a9a	api-parity(signature)	signature	PBRTextureAttribute$#TransmissionTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-d991365096f0	api-parity(signature)	signature	PBRVolumeAttribute#attenuationColor	/PBRVolumeAttribute	0	modifiers differ: emitted final, reference
-e78549667c4e	api-parity(signature)	signature	PBRVolumeAttribute$#Type	/PBRVolumeAttribute$	0	modifiers differ: emitted final, reference
 9cada16000ad	api-parity(signature)	signature	Scene#cameras	/Scene	0	modifiers differ: emitted final, reference
 4506cb00e723	api-parity(signature)	signature	Scene#cameras	/Scene	0	result type differs: emitted 'lowlevel.util.ObjectMap[sge.graphics.g3d.model.Node, sge.graphics.Camera]', reference 'ObjectMap[Node, Camera]'
 6f1d72ff3c39	api-parity(signature)	signature	Scene#getRenderables	/Scene	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.g3d.Renderable]', reference 'DynamicArray[Renderable]'
@@ -691,7 +693,6 @@ dd5ed42e8d78	api-parity(signature)	signature	Scene#lights	/Scene	0	result type d
 89588e3e6f73	api-parity(signature)	signature	SceneModel#cameras	/SceneModel	0	result type differs: emitted 'lowlevel.util.ObjectMap[sge.graphics.g3d.model.Node, sge.graphics.Camera]', reference 'ObjectMap[Node, Camera]'
 340c725d0c69	api-parity(signature)	signature	SceneModel#lights	/SceneModel	0	result type differs: emitted 'lowlevel.util.ObjectMap[sge.graphics.g3d.model.Node, sge.graphics.g3d.environment.BaseLight[?]]', reference 'ObjectMap[Node, BaseLight[?]]'
 730cc772fd28	api-parity(signature)	signature	SceneRenderableSorter#sort	/SceneRenderableSorter	0	param 1 type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.g3d.Renderable]', reference 'DynamicArray[Renderable]'
-22e3f46cb31b	api-parity(signature)	signature	SceneSkybox#environment	/SceneSkybox	0	modifiers differ: emitted final, reference
 fd5aa61f91f8	api-parity(signature)	signature	SceneSkybox#getRenderables	/SceneSkybox	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.g3d.Renderable]', reference 'DynamicArray[Renderable]'
 0acf8b088928	api-parity(signature)	signature	SceneSkybox#getRenderables	/SceneSkybox	0	param 1 type differs: emitted 'sge.utils.Pool[sge.graphics.g3d.Renderable]', reference 'Pool[Renderable]'
 9df432b5f561	api-parity(signature)	signature	SkinLoader#load	/SkinLoader	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[sge.gltf.data.scene.GLTFSkin]', reference 'Nullable[ArrayBuffer[GLTFSkin]]'
@@ -705,7 +706,6 @@ d8a1659e8648	api-parity(signature)	signature	TextureResolver#glSamplers	/Texture
 1c56ca67289c	api-parity(signature)	signature	TextureResolver#texturesMipmap	/TextureResolver	0	result type differs: emitted 'lowlevel.util.ObjectMap[java.lang.Integer, sge.graphics.Texture]', reference 'HashMap[Int, Texture]'
 30f42343b7e1	api-parity(signature)	signature	TextureResolver#texturesSimple	/TextureResolver	0	modifiers differ: emitted final, reference
 e40a985944f4	api-parity(signature)	signature	TextureResolver#texturesSimple	/TextureResolver	0	result type differs: emitted 'lowlevel.util.ObjectMap[java.lang.Integer, sge.graphics.Texture]', reference 'HashMap[Int, Texture]'
-b2ad18dfadf3	api-parity(signature)	signature	TransmissionSource#attribute	/TransmissionSource	0	modifiers differ: emitted final, reference
 21a09bc72874	api-parity(signature)	signature	TransmissionSource#render	/TransmissionSource	0	param 0 type differs: emitted 'balticporter.runtime.JavaIterable[sge.graphics.g3d.RenderableProvider]', reference 'Iterable[RenderableProvider]'
 52af3c713840	api-parity(signature)	signature	WeightVector#values	/WeightVector	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
 1e8e3ae512b4	api-parity(static-placement)	static-placement	PBRShaderProvider#TAG	/PBRShaderProvider	0	val TAG/0 in reference port only
@@ -822,6 +822,7 @@ fca04609d39f	catalog(consulted)	reached	JS-C48	net/mgsx/gltf/exporters/GLTFAnima
 7a089ff0ba0b	catalog(consulted)	reached	JS-C49	net/mgsx/gltf/exporters/GLTFAnimationExporter.java	43	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 2437, fired 13, declarations 0: Java's `private` reaches the whole enclosing TOP-LEVEL class; Scala's reaches only the template
 3bf95f498721	catalog(consulted)	reached	JS-C50	net/mgsx/gltf/exporters/GLTFAnimationExporter.java	29	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 2437, fired 23, declarations 0: Java's default access is package-private and Scala's is public — INVERTED
 fae83db7b384	catalog(consulted)	reached	JS-C51	-	0	rendering ClassDef — consulted 150, fired 0, declarations 0: a `return` in a CONSTRUCTOR body, whose promotion puts it in the class body
+89afa40e0489	catalog(consulted)	reached	JS-C53	net/mgsx/gltf/data/GLTFExtensions.java	11	rendering ValDef — consulted 1656, fired 201, declarations 0: a java `final` FIELD carries two facts onto a `val`: no reassignment, and no OVERRIDE
 d9524bc677ef	catalog(consulted)	reached	JS-E01	net/mgsx/gltf/exporters/GLTFAnimationExporter.java	218	lowering CtBinaryOperator/Expression — consulted 30688, fired 633, declarations 0: `==`/`!=` are REFERENCE identity in Java; Scala's `==` calls `equals`
 b20362731353	catalog(consulted)	reached	JS-E02	net/mgsx/gltf/loaders/gltf/SeparatedDataFileResolver.java	74	lowering CtUnaryOperator/Expression — consulted 2805, fired 749, declarations 0: postfix/prefix `++`/`--` USED AS A VALUE yields the value before the update — the VALUE only; the operand's single evaluation is JS-E17
 024bdb28a8ea	catalog(consulted)	reached	JS-E03	../../../libgdx/gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFont.java	750	lowering CtOperatorAssignment/Statement — consulted 1805, fired 36, declarations 0: compound assignment NARROWS implicitly to the left-hand type — STATEMENT position; the lvalue's single evaluation is JS-E17

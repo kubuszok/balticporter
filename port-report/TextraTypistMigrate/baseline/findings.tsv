@@ -1143,15 +1143,53 @@ cc964983de4f	api-parity(port-extra)	port-extra	ZipperEffect#extent	/ZipperEffect
 11e3119ced85	api-parity(rule)	rule	BlockUtils$#ALL_BLOCK_CHARS	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 b47af9fc972f	api-parity(rule)	rule	BlockUtils$#THIN_ACROSS	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 1d313f5d03ed	api-parity(rule)	rule	BlockUtils$#THIN_END	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+4b535cd11fa4	api-parity(rule)	rule	BlockUtils$#THIN_OVER	/BlockUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 e1399339a96b	api-parity(rule)	rule	BlockUtils$#THIN_START	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 702f54e0c18e	api-parity(rule)	rule	BlockUtils$#TWIN_ACROSS	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 2a50272817fa	api-parity(rule)	rule	BlockUtils$#TWIN_END1	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 075c3c88251a	api-parity(rule)	rule	BlockUtils$#TWIN_END2	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e18d4f3cafd0	api-parity(rule)	rule	BlockUtils$#TWIN_OVER1	/BlockUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+feec94c339b2	api-parity(rule)	rule	BlockUtils$#TWIN_OVER2	/BlockUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 7ed06e35e1b6	api-parity(rule)	rule	BlockUtils$#TWIN_START1	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 ee634a0fe03d	api-parity(rule)	rule	BlockUtils$#TWIN_START2	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 8b652347e5e9	api-parity(rule)	rule	BlockUtils$#WIDE_ACROSS	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 7e60438ab66a	api-parity(rule)	rule	BlockUtils$#WIDE_END	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+6e0c967ea4a9	api-parity(rule)	rule	BlockUtils$#WIDE_OVER	/BlockUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 adb7720cd0b5	api-parity(rule)	rule	BlockUtils$#WIDE_START	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+1bda0e68c3c6	api-parity(rule)	rule	ColorLookup$#DESCRIPTIVE	/ColorLookup$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+cd5bf885d943	api-parity(rule)	rule	ColorLookup$#INSTANCE	/ColorLookup$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+2c1839d664e9	api-parity(rule)	rule	Font$#ALTERNATE_MODES_MASK	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+da2ae427b03c	api-parity(rule)	rule	Font$#BLACK_OUTLINE	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+f83be5169101	api-parity(rule)	rule	Font$#BLUE_OUTLINE	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+d6e97556cd9f	api-parity(rule)	rule	Font$#BOLD	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+884031c1c564	api-parity(rule)	rule	Font$#CONTEXT	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+bef619575183	api-parity(rule)	rule	Font$#DROP_SHADOW	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+30f3e1ac4fae	api-parity(rule)	rule	Font$#ERROR	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+c8e0630c7e67	api-parity(rule)	rule	Font$#HALO	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+91427f5b4dcf	api-parity(rule)	rule	Font$#JOSTLE	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+9bdc4a254e14	api-parity(rule)	rule	Font$#MIDSCRIPT	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+a51f85f301ce	api-parity(rule)	rule	Font$#NEON	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+99b98ba0bf98	api-parity(rule)	rule	Font$#NOTE	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+5e55a441a6bd	api-parity(rule)	rule	Font$#OBLIQUE	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+fd7ed49d92ab	api-parity(rule)	rule	Font$#RED_OUTLINE	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+11e9a9fac0dc	api-parity(rule)	rule	Font$#SHINY	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+8594e6aacf84	api-parity(rule)	rule	Font$#SMALL_CAPS	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+d720ea2c3da0	api-parity(rule)	rule	Font$#STRIKETHROUGH	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+03986d13c5dc	api-parity(rule)	rule	Font$#SUBSCRIPT	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+97ddd2a58423	api-parity(rule)	rule	Font$#SUGGEST	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+be90ce36a1ee	api-parity(rule)	rule	Font$#SUPERSCRIPT	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+96b3c9a0162e	api-parity(rule)	rule	Font$#UNDERLINE	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+cd2a9a359d9e	api-parity(rule)	rule	Font$#WARN	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+ae79465bdf8c	api-parity(rule)	rule	Font$#WHITE_OUTLINE	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+a70b29ed8b28	api-parity(rule)	rule	Font$#YELLOW_OUTLINE	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+9f2b61c879ab	api-parity(rule)	rule	Font$#msdfFragmentShader	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+d29cd09bab5e	api-parity(rule)	rule	Font$#sdfBlackOutlineFragmentShader	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+9c8bdf5e8ec1	api-parity(rule)	rule	Font$#sdfBlackOutlineFragmentShaderUsingDerivatives	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+cb910a820203	api-parity(rule)	rule	Font$#sdfFragmentShader	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+9bb5e6dae333	api-parity(rule)	rule	Font$#sdfFragmentShaderUsingDerivatives	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+757647105b0a	api-parity(rule)	rule	Font$#vertexShader	/Font$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+69c5806ff168	api-parity(rule)	rule	Font$.FontFamily#connected	/Font$/FontFamily	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+ac4ebc19731a	api-parity(rule)	rule	Font$.FontFamily#fontAliases	/Font$/FontFamily	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 db47dc8c23c3	api-parity(rule)	rule	KnownFonts$#ABYSSINICA_SIL	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 7319d8035b11	api-parity(rule)	rule	KnownFonts$#ASUL	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 4bd410c9e5d5	api-parity(rule)	rule	KnownFonts$#AUBREY	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
@@ -1300,6 +1338,9 @@ b938248c35d0	api-parity(rule)	rule	Palette$#teal	/Palette$	0	rule JS-C08: emitte
 5433cb86ebf8	api-parity(rule)	rule	Palette$#white	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 1841aba15768	api-parity(rule)	rule	Palette$#yellow	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 e3ee223314d3	api-parity(rule)	rule	TextureArrayPolygonSpriteBatch$#TEXTURE_INDEX_ATTRIBUTE	/TextureArrayPolygonSpriteBatch$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+4f523de9055f	api-parity(rule)	rule	TextureArrayPolygonSpriteBatch$#VERTEX_SIZE	/TextureArrayPolygonSpriteBatch$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+191e0c2695a2	api-parity(rule)	rule	TextureArrayShaderCompiler$#GET_TEXTURE_FROM_ARRAY_PLACEHOLDER	/TextureArrayShaderCompiler$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference final val
+40bfade1bdfa	api-parity(rule)	rule	TokenCategory$#ALL	/TokenCategory$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 5ae803e2ca95	api-parity(signature)	signature	#CaseInsensitiveIntMap		0	parents differ: emitted-only [balticporter.runtime.JavaIterable[sge.textra.utils.CaseInsensitiveIntMap.Entry]], reference-only []
 4319c0c6b79f	api-parity(signature)	signature	#Font		0	parents differ: emitted-only [java.lang.AutoCloseable], reference-only []
 6b282bec09c4	api-parity(signature)	signature	#TextraField		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Widget, sge.scenes.scene2d.utils.Disableable], reference-only []
@@ -1311,10 +1352,6 @@ ea2264797500	api-parity(signature)	signature	#TextureArrayPolygonSpriteBatch		0	
 3baa0c460993	api-parity(signature)	signature	#TypingTooltip		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Tooltip[sge.textra.TypingLabel]], reference-only [Tooltip[TypingLabel]]
 e8a29049218c	api-parity(signature)	signature	BlockUtils$#BOX_DRAWING	/BlockUtils$	0	modifiers differ: emitted final, reference
 a7e3a75da504	api-parity(signature)	signature	BlockUtils$#BOX_DRAWING	/BlockUtils$	0	result type differs: emitted 'scala.Array[scala.Array[scala.Float]]', reference 'Array[Array[Float]]'
-e6f5b8da2411	api-parity(signature)	signature	BlockUtils$#THIN_OVER	/BlockUtils$	0	modifiers differ: emitted final, reference
-713c8e34326c	api-parity(signature)	signature	BlockUtils$#TWIN_OVER1	/BlockUtils$	0	modifiers differ: emitted final, reference
-9dd71a7fc25a	api-parity(signature)	signature	BlockUtils$#TWIN_OVER2	/BlockUtils$	0	modifiers differ: emitted final, reference
-38ad2d3345fe	api-parity(signature)	signature	BlockUtils$#WIDE_OVER	/BlockUtils$	0	modifiers differ: emitted final, reference
 1ca98ed5afd5	api-parity(signature)	signature	CaseInsensitiveIntMap#iterator	/CaseInsensitiveIntMap	0	modifiers differ: emitted override, reference
 a05d3a57e8f1	api-parity(signature)	signature	CaseInsensitiveIntMap#putAll	/CaseInsensitiveIntMap	0	param 0 type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
 77a09591dc30	api-parity(signature)	signature	CaseInsensitiveIntMap#putAll	/CaseInsensitiveIntMap	0	param 1 type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
@@ -1326,8 +1363,6 @@ bc78acd89977	api-parity(signature)	signature	CaseInsensitiveIntMap$.Keys#toArray
 5a8929a8dde6	api-parity(signature)	signature	CaseInsensitiveIntMap$.Values#toArray	/CaseInsensitiveIntMap$/Values	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[scala.Int]', reference 'DynamicArray[Int]'
 4eef4f2a9748	api-parity(signature)	signature	CaseInsensitiveIntMap$.Values#toArray	/CaseInsensitiveIntMap$/Values	0	result type differs: emitted 'lowlevel.util.DynamicArray[scala.Int]', reference 'DynamicArray[Int]'
 4eef4f2a9748/2	api-parity(signature)	signature	CaseInsensitiveIntMap$.Values#toArray	/CaseInsensitiveIntMap$/Values	0	result type differs: emitted 'lowlevel.util.DynamicArray[scala.Int]', reference 'DynamicArray[Int]'
-cfaade7aed83	api-parity(signature)	signature	ColorLookup$#DESCRIPTIVE	/ColorLookup$	0	modifiers differ: emitted final, reference
-56b6981b289d	api-parity(signature)	signature	ColorLookup$#INSTANCE	/ColorLookup$	0	modifiers differ: emitted final, reference
 5a148acfbcbe	api-parity(signature)	signature	ColorUtils$#mix	/ColorUtils$	0	param 0 type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
 6405a6bc0d4e	api-parity(signature)	signature	ColorUtils$#multiplyAllAlpha	/ColorUtils$	0	param 0 type differs: emitted 'scala.Array[scala.Array[scala.Int]]', reference 'Array[Array[Int]]'
 c9a57c8f13e2	api-parity(signature)	signature	ColorUtils$#multiplyAllAlpha	/ColorUtils$	0	result type differs: emitted 'scala.Array[scala.Array[scala.Int]]', reference 'Array[Array[Int]]'
@@ -1360,40 +1395,8 @@ ba21dc0dd6e0	api-parity(signature)	signature	Font#storedStates	/Font	0	result ty
 9c0bbc483f6a	api-parity(signature)	signature	Font#tempLayout	/Font	0	modifiers differ: emitted final, reference
 1565d7830652	api-parity(signature)	signature	Font#vertices	/Font	0	modifiers differ: emitted final, reference
 113ded4b4624	api-parity(signature)	signature	Font#vertices	/Font	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
-c4ab2b371310	api-parity(signature)	signature	Font$#ALTERNATE_MODES_MASK	/Font$	0	modifiers differ: emitted final, reference
-5a3b7c27e931	api-parity(signature)	signature	Font$#BLACK_OUTLINE	/Font$	0	modifiers differ: emitted final, reference
-c939c85b66e4	api-parity(signature)	signature	Font$#BLUE_OUTLINE	/Font$	0	modifiers differ: emitted final, reference
-1cc0eccb6266	api-parity(signature)	signature	Font$#BOLD	/Font$	0	modifiers differ: emitted final, reference
-658ca2c70c20	api-parity(signature)	signature	Font$#CONTEXT	/Font$	0	modifiers differ: emitted final, reference
-178034e392aa	api-parity(signature)	signature	Font$#DROP_SHADOW	/Font$	0	modifiers differ: emitted final, reference
-e5d9a7e2f83a	api-parity(signature)	signature	Font$#ERROR	/Font$	0	modifiers differ: emitted final, reference
-e14563666fdf	api-parity(signature)	signature	Font$#HALO	/Font$	0	modifiers differ: emitted final, reference
-7e7d090ceb25	api-parity(signature)	signature	Font$#JOSTLE	/Font$	0	modifiers differ: emitted final, reference
-2b340c5320ea	api-parity(signature)	signature	Font$#MIDSCRIPT	/Font$	0	modifiers differ: emitted final, reference
-f5e831f651e2	api-parity(signature)	signature	Font$#NEON	/Font$	0	modifiers differ: emitted final, reference
-f7dcd009924b	api-parity(signature)	signature	Font$#NOTE	/Font$	0	modifiers differ: emitted final, reference
-fd3598370c93	api-parity(signature)	signature	Font$#OBLIQUE	/Font$	0	modifiers differ: emitted final, reference
-4364461c9c3a	api-parity(signature)	signature	Font$#RED_OUTLINE	/Font$	0	modifiers differ: emitted final, reference
-cc7bd5aba36e	api-parity(signature)	signature	Font$#SHINY	/Font$	0	modifiers differ: emitted final, reference
-70425d850641	api-parity(signature)	signature	Font$#SMALL_CAPS	/Font$	0	modifiers differ: emitted final, reference
-88be6e392a28	api-parity(signature)	signature	Font$#STRIKETHROUGH	/Font$	0	modifiers differ: emitted final, reference
-c61c32d2b846	api-parity(signature)	signature	Font$#SUBSCRIPT	/Font$	0	modifiers differ: emitted final, reference
-6915599819dd	api-parity(signature)	signature	Font$#SUGGEST	/Font$	0	modifiers differ: emitted final, reference
-37d8cb7b2ae5	api-parity(signature)	signature	Font$#SUPERSCRIPT	/Font$	0	modifiers differ: emitted final, reference
-67327203fb9d	api-parity(signature)	signature	Font$#UNDERLINE	/Font$	0	modifiers differ: emitted final, reference
-6744635e4863	api-parity(signature)	signature	Font$#WARN	/Font$	0	modifiers differ: emitted final, reference
-f88e56848437	api-parity(signature)	signature	Font$#WHITE_OUTLINE	/Font$	0	modifiers differ: emitted final, reference
-035391ad5f21	api-parity(signature)	signature	Font$#YELLOW_OUTLINE	/Font$	0	modifiers differ: emitted final, reference
-f2b48cae1004	api-parity(signature)	signature	Font$#msdfFragmentShader	/Font$	0	modifiers differ: emitted final, reference
 880ffaa56c43	api-parity(signature)	signature	Font$#paddingForBitmapFont	/Font$	0	modifiers differ: emitted final, reference
 eaba1671ec7d	api-parity(signature)	signature	Font$#paddingForBitmapFont	/Font$	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
-00b0725595b9	api-parity(signature)	signature	Font$#sdfBlackOutlineFragmentShader	/Font$	0	modifiers differ: emitted final, reference
-28bc9ca24cec	api-parity(signature)	signature	Font$#sdfBlackOutlineFragmentShaderUsingDerivatives	/Font$	0	modifiers differ: emitted final, reference
-c877720d8574	api-parity(signature)	signature	Font$#sdfFragmentShader	/Font$	0	modifiers differ: emitted final, reference
-ad2e43fc622c	api-parity(signature)	signature	Font$#sdfFragmentShaderUsingDerivatives	/Font$	0	modifiers differ: emitted final, reference
-30d31e365849	api-parity(signature)	signature	Font$#vertexShader	/Font$	0	modifiers differ: emitted final, reference
-8171e92c8c83	api-parity(signature)	signature	Font$.FontFamily#connected	/Font$/FontFamily	0	modifiers differ: emitted final, reference
-a6b8315f00b7	api-parity(signature)	signature	Font$.FontFamily#fontAliases	/Font$/FontFamily	0	modifiers differ: emitted final, reference
 5e5cb93e555c	api-parity(signature)	signature	ImageTextraButton#setStyle	/ImageTextraButton	0	param 0 type differs: emitted 'sge.scenes.scene2d.ui.Button.ButtonStyle', reference 'Styles.ImageTextButtonStyle'
 5e5cb93e555c/2	api-parity(signature)	signature	ImageTextraButton#setStyle	/ImageTextraButton	0	param 0 type differs: emitted 'sge.scenes.scene2d.ui.Button.ButtonStyle', reference 'Styles.ImageTextButtonStyle'
 5e4c3f168a7a	api-parity(signature)	signature	ImageTypingButton#newLabel	/ImageTypingButton	0	result type differs: emitted 'sge.textra.TypingLabel', reference 'TextraLabel'
@@ -1573,9 +1576,6 @@ ec43218a5deb/2	api-parity(signature)	signature	TextureArrayPolygonSpriteBatch#dr
 113c68a423f7	api-parity(signature)	signature	TextureArrayPolygonSpriteBatch#draw	/TextureArrayPolygonSpriteBatch	0	param 4 type differs: emitted 'scala.Array[scala.Short]', reference 'Array[Short]'
 2897769155b7	api-parity(signature)	signature	TextureArrayPolygonSpriteBatch#setupMatrices	/TextureArrayPolygonSpriteBatch	0	modifiers differ: emitted override, reference
 a4f253bf8b20	api-parity(signature)	signature	TextureArrayPolygonSpriteBatch#switchTexture	/TextureArrayPolygonSpriteBatch	0	modifiers differ: emitted override, reference
-9b9abf5b34fd	api-parity(signature)	signature	TextureArrayPolygonSpriteBatch$#VERTEX_SIZE	/TextureArrayPolygonSpriteBatch$	0	modifiers differ: emitted final, reference
-70b4b1ea5595	api-parity(signature)	signature	TextureArrayShaderCompiler$#GET_TEXTURE_FROM_ARRAY_PLACEHOLDER	/TextureArrayShaderCompiler$	0	modifiers differ: emitted inline, reference final
-0f5cc0e51ece	api-parity(signature)	signature	TokenCategory$#ALL	/TokenCategory$	0	modifiers differ: emitted final, reference
 6c7504f5996e	api-parity(signature)	signature	TypingCheckBox#newImage	/TypingCheckBox	0	result type differs: emitted 'sge.scenes.scene2d.ui.Image', reference 'Nullable[AnyRef]'
 130b5f33046d	api-parity(signature)	signature	TypingCheckBox#setStyle	/TypingCheckBox	0	param 0 type differs: emitted 'sge.scenes.scene2d.ui.Button.ButtonStyle', reference 'Styles.TextButtonStyle'
 130b5f33046d/2	api-parity(signature)	signature	TypingCheckBox#setStyle	/TypingCheckBox	0	param 0 type differs: emitted 'sge.scenes.scene2d.ui.Button.ButtonStyle', reference 'Styles.TextButtonStyle'
@@ -1880,6 +1880,7 @@ d4a57c952683	catalog(consulted)	reached	JS-C45	com/github/tommyettinger/textra/C
 39306fff9be4	catalog(consulted)	reached	JS-C50	com/github/tommyettinger/textra/InternalToken.java	56	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 5236, fired 142, declarations 0: Java's default access is package-private and Scala's is public — INVERTED
 8ea7f570bc9d	catalog(consulted)	reached	JS-C51	com/github/tommyettinger/textra/effects/StylistEffect.java	84	rendering ClassDef — consulted 125, fired 1, declarations 0: a `return` in a CONSTRUCTOR body, whose promotion puts it in the class body
 b551952aeceb	catalog(consulted)	reached	JS-C52	com/github/tommyettinger/textra/ColorLookup.java	38	rendering MethodRef — consulted 42, fired 2, declarations 0: `@FunctionalInterface` governs Scala's eta-expansion warning — a static method reference at a non-annotated SAM warns under `-Werror`
+24f840a026f0	catalog(consulted)	reached	JS-C53	com/github/tommyettinger/textra/ColorLookup.java	38	rendering ValDef — consulted 3575, fired 147, declarations 0: a java `final` FIELD carries two facts onto a `val`: no reassignment, and no OVERRIDE
 26da9815f82e	catalog(consulted)	reached	JS-E01	../../../../libgdx/gdx/src/com/badlogic/gdx/Net.java	229	lowering CtBinaryOperator/Expression — consulted 37692, fired 643, declarations 0: `==`/`!=` are REFERENCE identity in Java; Scala's `==` calls `equals`
 001f53532dd1	catalog(consulted)	reached	JS-E02	../../../../libgdx/gdx/src/com/badlogic/gdx/InputEventQueue.java	51	lowering CtUnaryOperator/Expression — consulted 4047, fired 1449, declarations 0: postfix/prefix `++`/`--` USED AS A VALUE yields the value before the update — the VALUE only; the operand's single evaluation is JS-E17
 df8435ae777e	catalog(consulted)	reached	JS-E03	../../../../libgdx/gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFont.java	750	lowering CtOperatorAssignment/Statement — consulted 2499, fired 47, declarations 0: compound assignment NARROWS implicitly to the left-hand type — STATEMENT position; the lvalue's single evaluation is JS-E17

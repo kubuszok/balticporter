@@ -11,6 +11,7 @@ api-parity(opaque)	0
 api-parity(operator)	0
 api-parity(port-extra)	68
 api-parity(rename)	0
+api-parity(rule)	0
 api-parity(signature)	29
 api-parity(static-placement)	0
 api-parity(unclassified)	0
@@ -18,7 +19,7 @@ api-parity(visibility)	8
 base-surface	19
 break-catch	0
 cast-conversion	0
-catalog(consulted)	103
+catalog(consulted)	104
 catalog(uncited)	124
 catalog(undischarged)	4
 catalog(unmechanised)	1

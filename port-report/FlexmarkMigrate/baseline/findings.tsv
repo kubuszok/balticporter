@@ -5572,36 +5572,188 @@ b8fc2f3aa45e	api-parity(port-extra)	port-extra	TranslationHandlerImpl#myTranslat
 03dea72009a3	api-parity(port-extra)	port-extra	TranslationHandlerImpl#myTranslationStore	/TranslationHandlerImpl	0	var myTranslationStore/0 in emitted port only
 5e68592bf00a	api-parity(port-extra)	port-extra	WhiteSpace#getAstExtra	/WhiteSpace	0	def getAstExtra/1 in emitted port only [rename candidates: astExtra]
 9fa8855c439b	api-parity(port-extra)	port-extra	Wrapping#wrapped	/Wrapping	0	def wrapped/0 in emitted port only
+110e8a6c4c06	api-parity(rule)	rule	AttributablePart$#ID	/AttributablePart$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+8023aa610cdf	api-parity(rule)	rule	AttributablePart$#LINK	/AttributablePart$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+94f97edc859d	api-parity(rule)	rule	AttributablePart$#NODE	/AttributablePart$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+5e09690da8e3	api-parity(rule)	rule	AttributablePart$#NODE_POSITION	/AttributablePart$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 969b93ab5109	api-parity(rule)	rule	Attribute$#CLASS_ATTR	/Attribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 a76d5606fec2	api-parity(rule)	rule	Attribute$#ID_ATTR	/Attribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 df6c90a652fa	api-parity(rule)	rule	Attribute$#LINK_STATUS_ATTR	/Attribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 2744553e95cc	api-parity(rule)	rule	Attribute$#NAME_ATTR	/Attribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+3f044dd7f8f7	api-parity(rule)	rule	Attribute$#NO_FOLLOW	/Attribute$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 d1206919d630	api-parity(rule)	rule	Attribute$#STYLE_ATTR	/Attribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 c30a62f29e3e	api-parity(rule)	rule	Attribute$#TARGET_ATTR	/Attribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 d3ac76918af8	api-parity(rule)	rule	Attribute$#TITLE_ATTR	/Attribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e418dcd707ca	api-parity(rule)	rule	Attributes$#EMPTY	/Attributes$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 f899c0c4e785	api-parity(rule)	rule	BasedOptionsHolder$#F_APPLICATION_OPTIONS	/BasedOptionsHolder$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+162b13397fa8	api-parity(rule)	rule	BasedOptionsHolder$#F_COLLECT_FIRST256_STATS	/BasedOptionsHolder$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+98a32dc72b9d	api-parity(rule)	rule	BasedOptionsHolder$#F_COLLECT_SEGMENTED_STATS	/BasedOptionsHolder$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+a8e1e6da5a76	api-parity(rule)	rule	BasedOptionsHolder$#F_FULL_SEGMENTED_SEQUENCES	/BasedOptionsHolder$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 bd71433e82e8	api-parity(rule)	rule	BasedOptionsHolder$#F_LIBRARY_OPTIONS	/BasedOptionsHolder$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+63438890ff11	api-parity(rule)	rule	BasedOptionsHolder$#F_NO_ANCHORS	/BasedOptionsHolder$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+ab5a17739574	api-parity(rule)	rule	BasedOptionsHolder$#F_TREE_SEGMENTED_SEQUENCES	/BasedOptionsHolder$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+29ec7f3510c5	api-parity(rule)	rule	BasedOptionsHolder$#O_COLLECT_FIRST256_STATS	/BasedOptionsHolder$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+74d1128a178a	api-parity(rule)	rule	BasedOptionsHolder$#O_COLLECT_SEGMENTED_STATS	/BasedOptionsHolder$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+b0397429d876	api-parity(rule)	rule	BasedOptionsHolder$#O_FULL_SEGMENTED_SEQUENCES	/BasedOptionsHolder$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+212516d4062b	api-parity(rule)	rule	BasedOptionsHolder$#O_NO_ANCHORS	/BasedOptionsHolder$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+87d2751d91d3	api-parity(rule)	rule	BasedOptionsHolder$#O_TREE_SEGMENTED_SEQUENCES	/BasedOptionsHolder$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+d9cb49337b1d	api-parity(rule)	rule	BasedSequence$#EMPTY	/BasedSequence$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+8d613133e354	api-parity(rule)	rule	BasedSequence$#EMPTY_ARRAY	/BasedSequence$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+b803df151bfa	api-parity(rule)	rule	BasedSequence$#EMPTY_SEGMENTS	/BasedSequence$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+e5fb76693afe	api-parity(rule)	rule	BasedSequence$#EOL	/BasedSequence$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+c04ad09932d5	api-parity(rule)	rule	BasedSequence$#LINE_SEP	/BasedSequence$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+ad8af246d44d	api-parity(rule)	rule	BasedSequence$#NULL	/BasedSequence$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+88d6648bc9ef	api-parity(rule)	rule	BasedSequence$#SPACE	/BasedSequence$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 e1072f863970	api-parity(rule)	rule	BlockQuoteParser$#MARKER_CHAR	/BlockQuoteParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 095a9f21b7e2	api-parity(rule)	rule	BooleanOptionParser$#KEY_OPTION_0_PARAMETERS_1_IGNORED	/BooleanOptionParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 6a8c9626fdf8	api-parity(rule)	rule	BooleanOptionParser$#OPTION_0_PARAMETERS_1_IGNORED	/BooleanOptionParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+29595689276a	api-parity(rule)	rule	ChangeCase$#toLowerCase	/ChangeCase$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+7470b17e0e89	api-parity(rule)	rule	ChangeCase$#toUpperCase	/ChangeCase$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+4a8a120f5ee8	api-parity(rule)	rule	CharMapper$#IDENTITY	/CharMapper$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+b0a3f95faf35	api-parity(rule)	rule	CharPredicate$#ALL	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+6e661a6a0e46	api-parity(rule)	rule	CharPredicate$#ANY_EOL	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+25613f102856	api-parity(rule)	rule	CharPredicate$#ANY_EOL_NUL	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+87af01f7fc5b	api-parity(rule)	rule	CharPredicate$#BACKSLASH	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+24d2e207938f	api-parity(rule)	rule	CharPredicate$#BINARY_DIGITS	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+2dc4d31eeed0	api-parity(rule)	rule	CharPredicate$#BLANKSPACE	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+85d08d7fa00a	api-parity(rule)	rule	CharPredicate$#DECIMAL_DIGITS	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+00c673ca9037	api-parity(rule)	rule	CharPredicate$#EOL	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+f03ff7f482db	api-parity(rule)	rule	CharPredicate$#HASH	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+15a26a18e3e3	api-parity(rule)	rule	CharPredicate$#HEXADECIMAL_DIGITS	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+8709df4b32d5	api-parity(rule)	rule	CharPredicate$#LINE_SEP	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+48b147cf8413	api-parity(rule)	rule	CharPredicate$#NONE	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+ab04343d79e7	api-parity(rule)	rule	CharPredicate$#OCTAL_DIGITS	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+2fbef6839493	api-parity(rule)	rule	CharPredicate$#SLASH	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+b96e63297b8b	api-parity(rule)	rule	CharPredicate$#SPACE	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+e1bc2051d78e	api-parity(rule)	rule	CharPredicate$#SPACE_ANY_EOL	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+f40428f357d9	api-parity(rule)	rule	CharPredicate$#SPACE_EOL	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+c14d48b47217	api-parity(rule)	rule	CharPredicate$#SPACE_TAB	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+74542cfa13cd	api-parity(rule)	rule	CharPredicate$#SPACE_TAB_EOL	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+d16a6f2777e0	api-parity(rule)	rule	CharPredicate$#SPACE_TAB_LINE_SEP	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+72956903b0cc	api-parity(rule)	rule	CharPredicate$#SPACE_TAB_NBSP	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+e4ceddbb9c61	api-parity(rule)	rule	CharPredicate$#SPACE_TAB_NBSP_EOL	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+b1095de47a71	api-parity(rule)	rule	CharPredicate$#SPACE_TAB_NBSP_LINE_SEP	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+da7bd3ef7f91	api-parity(rule)	rule	CharPredicate$#SPACE_TAB_NUL	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+549195418052	api-parity(rule)	rule	CharPredicate$#TAB	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+ae3d9363d36a	api-parity(rule)	rule	CharPredicate$#WHITESPACE	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+a4181cbd8591	api-parity(rule)	rule	CharPredicate$#WHITESPACE_NBSP	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+78ca82ced95b	api-parity(rule)	rule	CharPredicate$#WHITESPACE_NBSP_OR_NUL	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+56ee4d58444d	api-parity(rule)	rule	CharPredicate$#WHITESPACE_OR_NUL	/CharPredicate$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+591da7b6d86f	api-parity(rule)	rule	CharWidthProvider$#NULL	/CharWidthProvider$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+8bfaac4d14b7	api-parity(rule)	rule	CoreNodeRenderer$#CODE_CONTENT	/CoreNodeRenderer$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+96871669fce4	api-parity(rule)	rule	CoreNodeRenderer$#LOOSE_LIST_ITEM	/CoreNodeRenderer$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+518acf70d77b	api-parity(rule)	rule	CoreNodeRenderer$#PARAGRAPH_LINE	/CoreNodeRenderer$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+6a4993d46f2b	api-parity(rule)	rule	CoreNodeRenderer$#TIGHT_LIST_ITEM	/CoreNodeRenderer$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+2ab94de48f09	api-parity(rule)	rule	DataHolder$#NULL	/DataHolder$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+208c0296cb9f	api-parity(rule)	rule	Document$#NULL	/Document$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+854e8931f319	api-parity(rule)	rule	DocumentParser$#INLINE_PARSER_FACTORY	/DocumentParser$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+5b615e623b04	api-parity(rule)	rule	EmbeddedAttributeProvider$#Factory	/EmbeddedAttributeProvider$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+a5cea630b8b9	api-parity(rule)	rule	Escaping$#AMP_BACKSLASH_SET	/Escaping$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+e37dd5ed26f7	api-parity(rule)	rule	Escaping$#ESCAPABLE	/Escaping$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 fc62d70d4e55	api-parity(rule)	rule	Escaping$#ESCAPABLE_CHARS	/Escaping$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 388e9d841260	api-parity(rule)	rule	FormatControlProcessor$#CLOSE_COMMENT	/FormatControlProcessor$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 df4bc869439f	api-parity(rule)	rule	FormatControlProcessor$#OPEN_COMMENT	/FormatControlProcessor$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a4403794ccf6	api-parity(rule)	rule	Formatter$#LINK_MARKER_COMMENT_PATTERN	/Formatter$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 96f38310031b	api-parity(rule)	rule	HtmlBlockParser$#HTML_COMMENT_CLOSE	/HtmlBlockParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 7a5e84d0d55d	api-parity(rule)	rule	HtmlBlockParser$#HTML_COMMENT_OPEN	/HtmlBlockParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+0240557f29e8	api-parity(rule)	rule	HtmlIdGenerator$#NULL	/HtmlIdGenerator$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+104eae25c725	api-parity(rule)	rule	ISegmentBuilder$#F_DEFAULT	/ISegmentBuilder$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+8c44c707262f	api-parity(rule)	rule	ISegmentBuilder$#F_INCLUDE_ANCHORS	/ISegmentBuilder$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+6f48a9a306f9	api-parity(rule)	rule	ISegmentBuilder$#F_TRACK_FIRST256	/ISegmentBuilder$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+a5c399fd8073	api-parity(rule)	rule	ISegmentBuilder$#O_INCLUDE_ANCHORS	/ISegmentBuilder$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+7f9350ee9134	api-parity(rule)	rule	ISegmentBuilder$#O_TRACK_FIRST256	/ISegmentBuilder$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+6063d435aac5	api-parity(rule)	rule	LineAppendable$#F_COLLAPSE_WHITESPACE	/LineAppendable$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+742ba8767e7c	api-parity(rule)	rule	LineAppendable$#F_CONVERT_TABS	/LineAppendable$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+0207a7a83653	api-parity(rule)	rule	LineAppendable$#F_FORMAT_ALL	/LineAppendable$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+87828f97efd1	api-parity(rule)	rule	LineAppendable$#F_PASS_THROUGH	/LineAppendable$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+8fa87f8bec42	api-parity(rule)	rule	LineAppendable$#F_PREFIX_PRE_FORMATTED	/LineAppendable$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+02decdf3dc14	api-parity(rule)	rule	LineAppendable$#F_TRIM_LEADING_EOL	/LineAppendable$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+645497e11c09	api-parity(rule)	rule	LineAppendable$#F_TRIM_LEADING_WHITESPACE	/LineAppendable$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+6136f2c5170d	api-parity(rule)	rule	LineAppendable$#F_TRIM_TRAILING_WHITESPACE	/LineAppendable$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+4182bbc6367e	api-parity(rule)	rule	LineAppendable$#F_WHITESPACE_REMOVAL	/LineAppendable$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+edc09c1ddb5f	api-parity(rule)	rule	LineAppendable$#O_COLLAPSE_WHITESPACE	/LineAppendable$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+a7f0f5b72c8f	api-parity(rule)	rule	LineAppendable$#O_CONVERT_TABS	/LineAppendable$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+5a24b52ee9f5	api-parity(rule)	rule	LineAppendable$#O_PASS_THROUGH	/LineAppendable$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+961da29ff695	api-parity(rule)	rule	LineAppendable$#O_PREFIX_PRE_FORMATTED	/LineAppendable$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+b1339eddebb6	api-parity(rule)	rule	LineAppendable$#O_TRIM_LEADING_EOL	/LineAppendable$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+70f4695400c2	api-parity(rule)	rule	LineAppendable$#O_TRIM_LEADING_WHITESPACE	/LineAppendable$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+fbb8c97b6cef	api-parity(rule)	rule	LineAppendable$#O_TRIM_TRAILING_WHITESPACE	/LineAppendable$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+02fe63fde4ce	api-parity(rule)	rule	LineInfo$#BLANK_PREFIX	/LineInfo$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+6c396bece8ee	api-parity(rule)	rule	LineInfo$#BLANK_TEXT	/LineInfo$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+a3aa182f5ab7	api-parity(rule)	rule	LineInfo$#F_BLANK_PREFIX	/LineInfo$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+a8e128a309f3	api-parity(rule)	rule	LineInfo$#F_BLANK_TEXT	/LineInfo$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+0e53282e886f	api-parity(rule)	rule	LineInfo$#F_PREFORMATTED	/LineInfo$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+41d9dcbbd2b9	api-parity(rule)	rule	LineInfo$#NULL	/LineInfo$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+5ed5f6e014b1	api-parity(rule)	rule	LineInfo$#PREFORMATTED	/LineInfo$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+237a2408dae8	api-parity(rule)	rule	LinkResolver$#NULL	/LinkResolver$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+7e1620301ef1	api-parity(rule)	rule	LinkStatus$#INVALID	/LinkStatus$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+0a2f105edd2d	api-parity(rule)	rule	LinkStatus$#NOT_FOUND	/LinkStatus$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+6b769d0d4dfa	api-parity(rule)	rule	LinkStatus$#UNCHECKED	/LinkStatus$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+e3cfc8e1ae74	api-parity(rule)	rule	LinkStatus$#UNKNOWN	/LinkStatus$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+d104f3e3749a	api-parity(rule)	rule	LinkStatus$#VALID	/LinkStatus$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+65865d2a6fad	api-parity(rule)	rule	LinkType$#IMAGE	/LinkType$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+911b7b9f5de9	api-parity(rule)	rule	LinkType$#IMAGE_REF	/LinkType$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+ddb0781b51d8	api-parity(rule)	rule	LinkType$#LINK	/LinkType$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+65f09942ba55	api-parity(rule)	rule	LinkType$#LINK_REF	/LinkType$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+42d55900e706	api-parity(rule)	rule	MarkdownTable$#ALL_SUFFIXES_NO_SORT	/MarkdownTable$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+aedaa410d016	api-parity(rule)	rule	MarkdownTable$#ALL_SUFFIXES_SORT	/MarkdownTable$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+301c7e595567	api-parity(rule)	rule	MarkdownTable$#COLON_TRIM_CHARS	/MarkdownTable$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+9aa632a8578b	api-parity(rule)	rule	MarkdownTable$#NO_SUFFIXES	/MarkdownTable$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+27f373ce3b0e	api-parity(rule)	rule	MessageProvider$#DEFAULT	/MessageProvider$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+cb15ce11f6ba	api-parity(rule)	rule	Node$#AST_ADAPTER	/Node$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 8ef9977df93f	api-parity(rule)	rule	Node$#SPLICE	/Node$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+ef1848239135	api-parity(rule)	rule	NodeClassifier$#INSTANCE	/NodeClassifier$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+6110ee2486b4	api-parity(rule)	rule	NullEncoder$#decodeNull	/NullEncoder$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+f2c73bbd5169	api-parity(rule)	rule	NullEncoder$#encodeNull	/NullEncoder$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 8630339663f1	api-parity(rule)	rule	OptionsParser$#KEY_OPTION_0_DOES_NOT_MATCH	/OptionsParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 e840f94f0fd1	api-parity(rule)	rule	OptionsParser$#KEY_OPTION_0_IS_AMBIGUOUS	/OptionsParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 029e211ec132	api-parity(rule)	rule	OptionsParser$#OPTION_0_DOES_NOT_MATCH	/OptionsParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 758f4d8c0cb2	api-parity(rule)	rule	OptionsParser$#OPTION_0_IS_AMBIGUOUS	/OptionsParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+bc9006165344	api-parity(rule)	rule	Parsing#ASCII_CLOSE_PUNCTUATION	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+c8db28378818	api-parity(rule)	rule	Parsing#ASCII_OPEN_PUNCTUATION	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+741373051551	api-parity(rule)	rule	Parsing#ASCII_PUNCTUATION	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+490acc179a51	api-parity(rule)	rule	Parsing#CDATA	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+b7102f3e9df2	api-parity(rule)	rule	Parsing#DOUBLEQUOTEDVALUE	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+78bf98b8c668	api-parity(rule)	rule	Parsing#EOL	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+cc24ef83b7a0	api-parity(rule)	rule	Parsing#ESCAPABLE	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+6490f9f8db3d	api-parity(rule)	rule	Parsing#ESCAPED_CHAR	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+df47d72269c4	api-parity(rule)	rule	Parsing#FINAL_SPACE	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+2803c2e73e1a	api-parity(rule)	rule	Parsing#HTMLCOMMENT	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+cc7edd88f419	api-parity(rule)	rule	Parsing#LINE_END	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+ead8b8d9f157	api-parity(rule)	rule	Parsing#LINK_LABEL	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+9350d15944cc	api-parity(rule)	rule	Parsing#LINK_TITLE	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+f1a4c34a96c2	api-parity(rule)	rule	Parsing#LINK_TITLE_STRING	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+411bafd36011	api-parity(rule)	rule	Parsing#PROCESSINGINSTRUCTION	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+69105469a7d2	api-parity(rule)	rule	Parsing#PUNCTUATION	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+8e98a8913e53	api-parity(rule)	rule	Parsing#PUNCTUATION_CLOSE	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+e65f7904fa31	api-parity(rule)	rule	Parsing#PUNCTUATION_CLOSE_ONLY	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+d610d3b03f46	api-parity(rule)	rule	Parsing#PUNCTUATION_ONLY	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+968b89d84d5b	api-parity(rule)	rule	Parsing#PUNCTUATION_OPEN	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+fd1c5b97a0e2	api-parity(rule)	rule	Parsing#PUNCTUATION_OPEN_ONLY	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+e7b46e93aec7	api-parity(rule)	rule	Parsing#REST_OF_LINE	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+061b1f3b9a51	api-parity(rule)	rule	Parsing#SINGLEQUOTEDVALUE	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+0d3959fe64ec	api-parity(rule)	rule	Parsing#SP	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+4712c9222b4a	api-parity(rule)	rule	Parsing#SPNI	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+a867795d6ee2	api-parity(rule)	rule	Parsing#SPNL	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+327318d91201	api-parity(rule)	rule	Parsing#SPNL_URL	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+f26dd47bae38	api-parity(rule)	rule	Parsing#TICKS	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+a2451ccfb110	api-parity(rule)	rule	Parsing#TICKS_HERE	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+865c352995b2	api-parity(rule)	rule	Parsing#UNICODE_WHITESPACE_CHAR	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+9f592e1688b7	api-parity(rule)	rule	Parsing#WHITESPACE	/Parsing	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+651e034bc512	api-parity(rule)	rule	Parsing$#INTELLIJ_DUMMY_IDENTIFIER	/Parsing$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+295d41cc8eeb	api-parity(rule)	rule	Parsing$#INTELLIJ_DUMMY_IDENTIFIER_CHAR	/Parsing$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 1d5e7f400a3e	api-parity(rule)	rule	Parsing$#ST_CDATA	/Parsing$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 5259f6ba8d78	api-parity(rule)	rule	Parsing$#ST_DOUBLEQUOTEDVALUE	/Parsing$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 b7fc1685ee71	api-parity(rule)	rule	Parsing$#ST_HTMLCOMMENT	/Parsing$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 faeb1875593f	api-parity(rule)	rule	Parsing$#ST_PROCESSINGINSTRUCTION	/Parsing$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 b0f0e06d744d	api-parity(rule)	rule	Parsing$#ST_SINGLEQUOTEDVALUE	/Parsing$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+f956b67fcaaa	api-parity(rule)	rule	Parsing$#XML_NAMESPACE	/Parsing$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+e0eb8e3e5f5d	api-parity(rule)	rule	Parsing$#XML_NAMESPACE_CHAR	/Parsing$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 d2ecf9c1beb1	api-parity(rule)	rule	Parsing$#XML_NAMESPACE_START	/Parsing$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 ecbedfc0b8a7	api-parity(rule)	rule	PegdownExtensions$#ABBREVIATIONS	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 ae2582fa2200	api-parity(rule)	rule	PegdownExtensions$#ALL	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+87d697b30bc3	api-parity(rule)	rule	PegdownExtensions$#ALL_OPTIONALS	/PegdownExtensions$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+d4a99aa8398e	api-parity(rule)	rule	PegdownExtensions$#ALL_WITH_OPTIONALS	/PegdownExtensions$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 37201e5ffb44	api-parity(rule)	rule	PegdownExtensions$#ANCHORLINKS	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 415079ea28c7	api-parity(rule)	rule	PegdownExtensions$#ATXHEADERSPACE	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 ccec6db4e96d	api-parity(rule)	rule	PegdownExtensions$#AUTOLINKS	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
@@ -5611,6 +5763,9 @@ e9aa3b139f1f	api-parity(rule)	rule	PegdownExtensions$#DEFINITIONS	/PegdownExtens
 cee5c960102b	api-parity(rule)	rule	PegdownExtensions$#FENCED_CODE_BLOCKS	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 a3a28a72d2db	api-parity(rule)	rule	PegdownExtensions$#FOOTNOTES	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 e123eee378bd	api-parity(rule)	rule	PegdownExtensions$#FORCELISTITEMPARA	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+bf66f195cd56	api-parity(rule)	rule	PegdownExtensions$#GITHUB_COMMENT_COMPATIBLE	/PegdownExtensions$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+c89c794a651b	api-parity(rule)	rule	PegdownExtensions$#GITHUB_DOCUMENT_COMPATIBLE	/PegdownExtensions$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+b04f934677ef	api-parity(rule)	rule	PegdownExtensions$#GITHUB_WIKI_COMPATIBLE	/PegdownExtensions$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 387998b6d0ba	api-parity(rule)	rule	PegdownExtensions$#HARDWRAPS	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 ed04ed51aad1	api-parity(rule)	rule	PegdownExtensions$#INSERTED	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 701645da4893	api-parity(rule)	rule	PegdownExtensions$#MULTI_LINE_IMAGE_URLS	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
@@ -5619,6 +5774,7 @@ a7bb17805199	api-parity(rule)	rule	PegdownExtensions$#NOT_USED	/PegdownExtension
 ca6a2d4372c6	api-parity(rule)	rule	PegdownExtensions$#QUOTES	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 9a720169863b	api-parity(rule)	rule	PegdownExtensions$#RELAXEDHRULES	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 d23231e3a9ac	api-parity(rule)	rule	PegdownExtensions$#SMARTS	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+662accb0420e	api-parity(rule)	rule	PegdownExtensions$#SMARTYPANTS	/PegdownExtensions$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 4b69f57e70c0	api-parity(rule)	rule	PegdownExtensions$#STRIKETHROUGH	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 cbc8d1c8da26	api-parity(rule)	rule	PegdownExtensions$#SUBSCRIPT	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 e3a1f6ae18d1	api-parity(rule)	rule	PegdownExtensions$#SUPERSCRIPT	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
@@ -5631,12 +5787,42 @@ e3a1f6ae18d1	api-parity(rule)	rule	PegdownExtensions$#SUPERSCRIPT	/PegdownExtens
 2eb445ecc1ac	api-parity(rule)	rule	PegdownExtensions$#UNUSABLE	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 67ea0e85124d	api-parity(rule)	rule	PegdownExtensions$#UNUSED_ALL	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 0cb59241e60c	api-parity(rule)	rule	PegdownExtensions$#WIKILINKS	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+dfd1f664d5eb	api-parity(rule)	rule	Range$#EMPTY	/Range$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+5d6317c503d0	api-parity(rule)	rule	Range$#NULL	/Range$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+9bab1ab8070f	api-parity(rule)	rule	RichSequence$#EMPTY_ARRAY	/RichSequence$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+ec9ce56a3627	api-parity(rule)	rule	RichSequence$#NULL	/RichSequence$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+314613b4252f	api-parity(rule)	rule	RomanNumeral$#LIMITED_LOWERCASE_ROMAN_NUMERAL	/RomanNumeral$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+25499b30fdc2	api-parity(rule)	rule	RomanNumeral$#LIMITED_ROMAN_NUMERAL	/RomanNumeral$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+eb9096e0c899	api-parity(rule)	rule	RomanNumeral$#LOWERCASE_ROMAN_NUMERAL	/RomanNumeral$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+48308a46e193	api-parity(rule)	rule	RomanNumeral$#ROMAN_NUMERAL	/RomanNumeral$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+bd6e9249abca	api-parity(rule)	rule	Seg$#ANCHOR_0	/Seg$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+4df452264c69	api-parity(rule)	rule	Seg$#F_TEXT_OPTION	/Seg$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+b17899d5c4d4	api-parity(rule)	rule	Seg$#MAX_TEXT_OFFSET	/Seg$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+39ffdc2bdcc8	api-parity(rule)	rule	Seg$#NULL	/Seg$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+7efb4af75c04	api-parity(rule)	rule	Segment$#TYPE_ANCHOR	/Segment$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference final val
+794f0e987898	api-parity(rule)	rule	Segment$#TYPE_LENGTH_BYTES	/Segment$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference final val
+77df5d4dede3	api-parity(rule)	rule	Segment$#TYPE_MASK	/Segment$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference final val
+4c22bffd3b97	api-parity(rule)	rule	Segment$#TYPE_NO_SIZE_BYTES	/Segment$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference final val
+f530c078bff3	api-parity(rule)	rule	Segment$#TYPE_REPEATED_ASCII	/Segment$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference final val
+7f4cbb4e8a89	api-parity(rule)	rule	Segment$#TYPE_REPEATED_EOL	/Segment$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference final val
+c1c0479a0310	api-parity(rule)	rule	Segment$#TYPE_REPEATED_SPACE	/Segment$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference final val
+777a91e90540	api-parity(rule)	rule	Segment$#TYPE_REPEATED_TEXT	/Segment$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference final val
+d3232a182e6b	api-parity(rule)	rule	Segment$#TYPE_START_BYTES	/Segment$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference final val
+72c047b7ac69	api-parity(rule)	rule	Segment$#TYPE_TEXT	/Segment$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference final val
+a0c388b73634	api-parity(rule)	rule	Segment$#TYPE_TEXT_ASCII	/Segment$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference final val
 4fd12fe5662d	api-parity(rule)	rule	SegmentBuilderBase$#MIN_PART_CAPACITY	/SegmentBuilderBase$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+94a5971fca51	api-parity(rule)	rule	SegmentStats$#NOT_REPEATED_CHAR	/SegmentStats$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+726d884392fc	api-parity(rule)	rule	SegmentStats$#NULL_REPEATED_CHAR	/SegmentStats$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 1b9704f14eae	api-parity(rule)	rule	SequenceUtils$#ANY_EOL	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 6a9e15d5fb33	api-parity(rule)	rule	SequenceUtils$#ENC_NUL	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 ccbfca5d2c02	api-parity(rule)	rule	SequenceUtils$#EOL	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+d20d292882e6	api-parity(rule)	rule	SequenceUtils$#EOL_CHAR	/SequenceUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+2f9fe573d09f	api-parity(rule)	rule	SequenceUtils$#EOL_CHAR1	/SequenceUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+5bb1fed75cd6	api-parity(rule)	rule	SequenceUtils$#EOL_CHAR2	/SequenceUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+a827bb401564	api-parity(rule)	rule	SequenceUtils$#LINE_SEP	/SequenceUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 7190aa57b105	api-parity(rule)	rule	SequenceUtils$#LS	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 f5ed395fdba5	api-parity(rule)	rule	SequenceUtils$#NBSP	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+3fe56992d170	api-parity(rule)	rule	SequenceUtils$#NBSP_CHARS	/SequenceUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 c6cbd3d28c6d	api-parity(rule)	rule	SequenceUtils$#NUL	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 f2eb88726c10	api-parity(rule)	rule	SequenceUtils$#SPACE	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 5c37fe45ec3b	api-parity(rule)	rule	SequenceUtils$#SPACE_EOL	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
@@ -5646,18 +5832,42 @@ f2eb88726c10	api-parity(rule)	rule	SequenceUtils$#SPACE	/SequenceUtils$	0	rule J
 e8d1a1e6c987	api-parity(rule)	rule	SequenceUtils$#SPLIT_INCLUDE_DELIM_PARTS	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 d37b27e9bf2e	api-parity(rule)	rule	SequenceUtils$#SPLIT_SKIP_EMPTY	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 fb1710f2c7d9	api-parity(rule)	rule	SequenceUtils$#SPLIT_TRIM_PARTS	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+4d33e56023ff	api-parity(rule)	rule	SequenceUtils$#SPLIT_TRIM_SKIP_EMPTY	/SequenceUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 a866cab7da4f	api-parity(rule)	rule	SequenceUtils$#US	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+f8c4826dce6d	api-parity(rule)	rule	SequenceUtils$#US_CHARS	/SequenceUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 8bb08535fe9e	api-parity(rule)	rule	SequenceUtils$#WHITESPACE	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 2149b4aed7d3	api-parity(rule)	rule	SequenceUtils$#WHITESPACE_NBSP	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+72d148ba8c8a	api-parity(rule)	rule	SpaceMapper$#fromNonBreakSpace	/SpaceMapper$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+18a8f9900faf	api-parity(rule)	rule	SpaceMapper$#toNonBreakSpace	/SpaceMapper$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+ef665442a486	api-parity(rule)	rule	TableCaptionSection$#DEFAULT_CELL	/TableCaptionSection$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+bf9571c789c0	api-parity(rule)	rule	TableCaptionSection$#NULL_CELL	/TableCaptionSection$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+2bfe0808a6f9	api-parity(rule)	rule	TableCell$#DEFAULT_CELL	/TableCell$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+bb988b0e0b46	api-parity(rule)	rule	TableCell$#NOT_TRACKED	/TableCell$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+72bd8c404c61	api-parity(rule)	rule	TableCell$#NULL	/TableCell$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+5ae7e110102a	api-parity(rule)	rule	TableCellManipulator$#BREAK	/TableCellManipulator$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 14a95c1a100c	api-parity(rule)	rule	TableCellOffsetInfo$#ROW_END	/TableCellOffsetInfo$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 009b28ba19c2	api-parity(rule)	rule	TableCellOffsetInfo$#ROW_START	/TableCellOffsetInfo$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 0355f98ee176	api-parity(rule)	rule	TableCellOffsetInfo$#TEXT_END	/TableCellOffsetInfo$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 e1434f4f5b5e	api-parity(rule)	rule	TableCellOffsetInfo$#TEXT_START	/TableCellOffsetInfo$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+1ca9a35e1fd5	api-parity(rule)	rule	TableFormatOptions$#INTELLIJ_DUMMY_IDENTIFIER	/TableFormatOptions$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+17e55d2af4a9	api-parity(rule)	rule	TableFormatOptions$#INTELLIJ_DUMMY_IDENTIFIER_CHAR	/TableFormatOptions$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+253350ccb60f	api-parity(rule)	rule	TableFormatOptions$#INTELLIJ_DUMMY_IDENTIFIER_SET	/TableFormatOptions$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+38d7262a1b33	api-parity(rule)	rule	TableManipulator$#NULL	/TableManipulator$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+4a29c917c204	api-parity(rule)	rule	TableRowManipulator$#BREAK	/TableRowManipulator$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+1e24fd51d5db	api-parity(rule)	rule	TableSeparatorSection$#DEFAULT_CELL	/TableSeparatorSection$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+709e41b00fda	api-parity(rule)	rule	TemplateUtil$#NULL_RESOLVER	/TemplateUtil$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+5e85832ab00f	api-parity(rule)	rule	TextContainer$#F_ADD_SPACES_BETWEEN_NODES	/TextContainer$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+4f091397cc42	api-parity(rule)	rule	TextContainer$#F_FOR_HEADING_ID	/TextContainer$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 e40b007f624b	api-parity(rule)	rule	TextContainer$#F_LINK_ANCHOR	/TextContainer$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 2434626ba230	api-parity(rule)	rule	TextContainer$#F_LINK_NODE_TEXT	/TextContainer$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 ff6448ad8421	api-parity(rule)	rule	TextContainer$#F_LINK_PAGE_REF	/TextContainer$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 1f6d9cae6d14	api-parity(rule)	rule	TextContainer$#F_LINK_TEXT	/TextContainer$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a07f6a8dc2dc	api-parity(rule)	rule	TextContainer$#F_LINK_TEXT_TYPE	/TextContainer$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 60d4e63891c9	api-parity(rule)	rule	TextContainer$#F_LINK_URL	/TextContainer$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+155be8457ba8	api-parity(rule)	rule	TextContainer$#F_NODE_TEXT	/TextContainer$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+33985a921466	api-parity(rule)	rule	TextContainer$#F_NO_TRIM_REF_TEXT_END	/TextContainer$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+ba895c0bd427	api-parity(rule)	rule	TextContainer$#F_NO_TRIM_REF_TEXT_START	/TextContainer$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+fb22aaae42e2	api-parity(rule)	rule	UriContentResolver$#NULL	/UriContentResolver$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 d8170e6bc9ad	api-parity(signature)	signature	#AstActionHandler		0	type params differ: emitted '[$0 <: AstActionHandler[$0, $1, $2, $3], $1, $2 <: ssg.md.util.visitor.AstAction[$1], $3 <: ssg.md.util.visitor.AstHandler[$1, $2]]', reference '[$0 <: AstActionHandler[$0, $1, $2, $3], $1, $2 <: AstAction[$1], $3 <: AstHandler[$1, $2]]'
 d52926901f8b	api-parity(signature)	signature	#AstHandler		0	type params differ: emitted '[$0, $1 <: ssg.md.util.visitor.AstAction[_ >: $0]]', reference '[$0, $1 <: AstAction[_ >: $0]]'
 dd6763365d5f	api-parity(signature)	signature	#Attribute		0	parents differ: emitted-only [ssg.md.util.misc.Immutable[Attribute, ssg.md.util.html.MutableAttribute]], reference-only [Immutable[Attribute, MutableAttribute]]
@@ -5772,12 +5982,7 @@ d262a32ce4c5	api-parity(signature)	signature	AstActionHandler#addActionHandlers	
 98147a4c6bf6	api-parity(signature)	signature	AstActionHandler#processChildren	/AstActionHandler	0	param 1 type differs: emitted 'java.util.function.BiConsumer[$1, $2]', reference '($1, $2) => Unit'
 228d345cfd28	api-parity(signature)	signature	AstActionHandler#processNode	/AstActionHandler	0	param 2 type differs: emitted 'java.util.function.BiConsumer[$1, $2]', reference '($1, $2) => Unit'
 08317c4523ef	api-parity(signature)	signature	AstActionHandler#processNodeOnly	/AstActionHandler	0	param 2 type differs: emitted 'java.util.function.BiFunction[$1, $2, $4]', reference '($1, $2) => $4'
-55a421b22fb9	api-parity(signature)	signature	AttributablePart$#ID	/AttributablePart$	0	modifiers differ: emitted final, reference
-0cc6606ee912	api-parity(signature)	signature	AttributablePart$#LINK	/AttributablePart$	0	modifiers differ: emitted final, reference
-8c0c6c995848	api-parity(signature)	signature	AttributablePart$#NODE	/AttributablePart$	0	modifiers differ: emitted final, reference
-70039c16e4c1	api-parity(signature)	signature	AttributablePart$#NODE_POSITION	/AttributablePart$	0	modifiers differ: emitted final, reference
 d0a4edea6e54	api-parity(signature)	signature	Attribute$#NON_RENDERING_WHEN_EMPTY	/Attribute$	0	modifiers differ: emitted final, reference
-ea43f3e5abeb	api-parity(signature)	signature	Attribute$#NO_FOLLOW	/Attribute$	0	modifiers differ: emitted final, reference
 068146783028	api-parity(signature)	signature	AttributeProviderAdapter#addHandler	/AttributeProviderAdapter	0	param 0 type differs: emitted 'ssg.md.ast.util.AttributeProvidingHandler[?]', reference 'AttributeProvidingHandler[? <: Node]'
 b3516fa51593	api-parity(signature)	signature	AttributeProviderAdapter#addHandlers	/AttributeProviderAdapter	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[ssg.md.ast.util.AttributeProvidingHandler[?]]', reference 'ju.Collection[AttributeProvidingHandler[? <: Node]]'
 24030ee84934	api-parity(signature)	signature	AttributeProviderFactory#apply	/AttributeProviderFactory	0	modifiers differ: emitted , reference override
@@ -5787,18 +5992,7 @@ b3516fa51593	api-parity(signature)	signature	AttributeProviderAdapter#addHandler
 e40942fb04af	api-parity(signature)	signature	Attributes#forEach	/Attributes	0	param 0 type differs: emitted 'java.util.function.BiConsumer[java.lang.String, ssg.md.util.html.Attribute]', reference '(String, Attribute) => Unit'
 846efe35c384	api-parity(signature)	signature	Attributes#keySet	/Attributes	0	result type differs: emitted 'scala.collection.mutable.Set[java.lang.String]', reference 'Set[String]'
 a9d53c5157b2	api-parity(signature)	signature	Attributes#values	/Attributes	0	result type differs: emitted 'balticporter.runtime.JavaCollection[ssg.md.util.html.Attribute]', reference 'Iterable[Attribute]'
-fe730074795c	api-parity(signature)	signature	Attributes$#EMPTY	/Attributes$	0	modifiers differ: emitted final, reference
 6aa502ac21a8	api-parity(signature)	signature	BasedOffsetTracker#sequence	/BasedOffsetTracker	0	modifiers differ: emitted final, reference
-db1d31645332	api-parity(signature)	signature	BasedOptionsHolder$#F_COLLECT_FIRST256_STATS	/BasedOptionsHolder$	0	modifiers differ: emitted final, reference
-655c1d3562ab	api-parity(signature)	signature	BasedOptionsHolder$#F_COLLECT_SEGMENTED_STATS	/BasedOptionsHolder$	0	modifiers differ: emitted final, reference
-bc884599775f	api-parity(signature)	signature	BasedOptionsHolder$#F_FULL_SEGMENTED_SEQUENCES	/BasedOptionsHolder$	0	modifiers differ: emitted final, reference
-49b36c6b6d7c	api-parity(signature)	signature	BasedOptionsHolder$#F_NO_ANCHORS	/BasedOptionsHolder$	0	modifiers differ: emitted final, reference
-1ca7e97bc58d	api-parity(signature)	signature	BasedOptionsHolder$#F_TREE_SEGMENTED_SEQUENCES	/BasedOptionsHolder$	0	modifiers differ: emitted final, reference
-42a65925183c	api-parity(signature)	signature	BasedOptionsHolder$#O_COLLECT_FIRST256_STATS	/BasedOptionsHolder$	0	modifiers differ: emitted final, reference
-78ba50bf953d	api-parity(signature)	signature	BasedOptionsHolder$#O_COLLECT_SEGMENTED_STATS	/BasedOptionsHolder$	0	modifiers differ: emitted final, reference
-4fac66970109	api-parity(signature)	signature	BasedOptionsHolder$#O_FULL_SEGMENTED_SEQUENCES	/BasedOptionsHolder$	0	modifiers differ: emitted final, reference
-3b1403f10c46	api-parity(signature)	signature	BasedOptionsHolder$#O_NO_ANCHORS	/BasedOptionsHolder$	0	modifiers differ: emitted final, reference
-df5554fd125c	api-parity(signature)	signature	BasedOptionsHolder$#O_TREE_SEGMENTED_SEQUENCES	/BasedOptionsHolder$	0	modifiers differ: emitted final, reference
 a539a9b0a818	api-parity(signature)	signature	BasedOptionsHolder$#SEGMENTED_STATS	/BasedOptionsHolder$	0	modifiers differ: emitted final, reference
 962a6c7405b7	api-parity(signature)	signature	BasedOptionsHolder$#SEGMENTED_STATS	/BasedOptionsHolder$	0	result type differs: emitted 'ssg.md.util.data.NullableDataKey[ssg.md.util.sequence.builder.SegmentedSequenceStats]', reference 'NullableDataKey[SegmentedSequenceStats]'
 513dd0d211ed	api-parity(signature)	signature	BasedOptionsSequence$#of	/BasedOptionsSequence$	0	param 1 type differs: emitted 'ssg.md.util.misc.BitFieldSet[ssg.md.util.sequence.BasedOptionsHolder.Options]', reference 'BitFieldSet[BasedOptionsHolder.Options]'
@@ -5812,15 +6006,8 @@ ff8caccb733f	api-parity(signature)	signature	BasedSequence#baseLineColumnAtEnd	/
 f1e259fa7d78	api-parity(signature)	signature	BasedSequence#baseLineColumnAtStart	/BasedSequence	0	result type differs: emitted 'ssg.md.util.misc.Pair[java.lang.Integer, java.lang.Integer]', reference 'Pair[Integer, Integer]'
 b2a8f8525c36	api-parity(signature)	signature	BasedSequence#getBase	/BasedSequence	0	result type differs: emitted 'java.lang.Object', reference 'AnyRef'
 1e2a39ca9da8	api-parity(signature)	signature	BasedSequence#getBuilder	/BasedSequence	0	result type differs: emitted 'ssg.md.util.sequence.builder.SequenceBuilder', reference '$0'
-c8ac1ae8d045	api-parity(signature)	signature	BasedSequence$#EMPTY	/BasedSequence$	0	modifiers differ: emitted final, reference
-92a1ba4fffed	api-parity(signature)	signature	BasedSequence$#EMPTY_ARRAY	/BasedSequence$	0	modifiers differ: emitted final, reference
 f9ca408b494a	api-parity(signature)	signature	BasedSequence$#EMPTY_LIST	/BasedSequence$	0	modifiers differ: emitted final, reference
 b4eb7058bfd5	api-parity(signature)	signature	BasedSequence$#EMPTY_LIST	/BasedSequence$	0	result type differs: emitted 'scala.collection.mutable.Buffer[BasedSequence]', reference 'ju.List[BasedSequence]'
-4507fb6e5d81	api-parity(signature)	signature	BasedSequence$#EMPTY_SEGMENTS	/BasedSequence$	0	modifiers differ: emitted final, reference
-a5f928716630	api-parity(signature)	signature	BasedSequence$#EOL	/BasedSequence$	0	modifiers differ: emitted final, reference
-79095c144f58	api-parity(signature)	signature	BasedSequence$#LINE_SEP	/BasedSequence$	0	modifiers differ: emitted final, reference
-53864c4debfc	api-parity(signature)	signature	BasedSequence$#NULL	/BasedSequence$	0	modifiers differ: emitted final, reference
-650860f1eb58	api-parity(signature)	signature	BasedSequence$#SPACE	/BasedSequence$	0	modifiers differ: emitted final, reference
 5b6d9128e761	api-parity(signature)	signature	BasedSequenceImpl#baseLineColumnAtEnd	/BasedSequenceImpl	0	result type differs: emitted 'ssg.md.util.misc.Pair[java.lang.Integer, java.lang.Integer]', reference 'Pair[Integer, Integer]'
 863872ff1209	api-parity(signature)	signature	BasedSequenceImpl#baseLineColumnAtIndex	/BasedSequenceImpl	0	result type differs: emitted 'ssg.md.util.misc.Pair[java.lang.Integer, java.lang.Integer]', reference 'Pair[Integer, Integer]'
 b6cbfa1aa34e	api-parity(signature)	signature	BasedSequenceImpl#baseLineColumnAtStart	/BasedSequenceImpl	0	result type differs: emitted 'ssg.md.util.misc.Pair[java.lang.Integer, java.lang.Integer]', reference 'Pair[Integer, Integer]'
@@ -5872,45 +6059,12 @@ dda783810f98	api-parity(signature)	signature	BuilderBase#build	/BuilderBase	0	re
 0eb18c88e2d8	api-parity(signature)	signature	BuilderBase#extensions	/BuilderBase	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[? <: ssg.md.util.misc.Extension]', reference 'java.util.Collection[? <: Extension]'
 a6ad889575a1	api-parity(signature)	signature	BuilderBase#removeApiPoint	/BuilderBase	0	param 0 type differs: emitted 'java.lang.Object', reference 'AnyRef'
 df0ddb142017	api-parity(signature)	signature	BuilderBase$#removeExtensions	/BuilderBase$	0	param 1 type differs: emitted 'balticporter.runtime.JavaCollection[java.lang.Class[? <: ssg.md.util.misc.Extension]]', reference 'java.util.Collection[Class[? <: Extension]]'
-e83c46d81673	api-parity(signature)	signature	ChangeCase$#toLowerCase	/ChangeCase$	0	modifiers differ: emitted final, reference
-53adb2a5f61e	api-parity(signature)	signature	ChangeCase$#toUpperCase	/ChangeCase$	0	modifiers differ: emitted final, reference
-5d7e3d187b65	api-parity(signature)	signature	CharMapper$#IDENTITY	/CharMapper$	0	modifiers differ: emitted final, reference
 72109e66785a	api-parity(signature)	signature	CharPredicate#negate	/CharPredicate	0	modifiers differ: emitted override, reference
 db61b00c6e6a	api-parity(signature)	signature	CharPredicate#test	/CharPredicate	0	modifiers differ: emitted override, reference
-fe8f56ca30b1	api-parity(signature)	signature	CharPredicate$#ALL	/CharPredicate$	0	modifiers differ: emitted final, reference
-b074e2ec4db7	api-parity(signature)	signature	CharPredicate$#ANY_EOL	/CharPredicate$	0	modifiers differ: emitted final, reference
-705ea107c709	api-parity(signature)	signature	CharPredicate$#ANY_EOL_NUL	/CharPredicate$	0	modifiers differ: emitted final, reference
-0937004736f0	api-parity(signature)	signature	CharPredicate$#BACKSLASH	/CharPredicate$	0	modifiers differ: emitted final, reference
-7e78ee6bd2de	api-parity(signature)	signature	CharPredicate$#BINARY_DIGITS	/CharPredicate$	0	modifiers differ: emitted final, reference
-66609c74e1ef	api-parity(signature)	signature	CharPredicate$#BLANKSPACE	/CharPredicate$	0	modifiers differ: emitted final, reference
-336ba103c9dc	api-parity(signature)	signature	CharPredicate$#DECIMAL_DIGITS	/CharPredicate$	0	modifiers differ: emitted final, reference
-b922c0178123	api-parity(signature)	signature	CharPredicate$#EOL	/CharPredicate$	0	modifiers differ: emitted final, reference
-a979d26b96e9	api-parity(signature)	signature	CharPredicate$#HASH	/CharPredicate$	0	modifiers differ: emitted final, reference
-d3b702fadbe8	api-parity(signature)	signature	CharPredicate$#HEXADECIMAL_DIGITS	/CharPredicate$	0	modifiers differ: emitted final, reference
-c0a32373247b	api-parity(signature)	signature	CharPredicate$#LINE_SEP	/CharPredicate$	0	modifiers differ: emitted final, reference
-ea5478eac54a	api-parity(signature)	signature	CharPredicate$#NONE	/CharPredicate$	0	modifiers differ: emitted final, reference
-8a893b258165	api-parity(signature)	signature	CharPredicate$#OCTAL_DIGITS	/CharPredicate$	0	modifiers differ: emitted final, reference
-884ab3933fab	api-parity(signature)	signature	CharPredicate$#SLASH	/CharPredicate$	0	modifiers differ: emitted final, reference
-192c4ef1c85e	api-parity(signature)	signature	CharPredicate$#SPACE	/CharPredicate$	0	modifiers differ: emitted final, reference
-79ccf843de04	api-parity(signature)	signature	CharPredicate$#SPACE_ANY_EOL	/CharPredicate$	0	modifiers differ: emitted final, reference
-e658f9966a17	api-parity(signature)	signature	CharPredicate$#SPACE_EOL	/CharPredicate$	0	modifiers differ: emitted final, reference
-83779f6eef93	api-parity(signature)	signature	CharPredicate$#SPACE_TAB	/CharPredicate$	0	modifiers differ: emitted final, reference
-2a984aaead8c	api-parity(signature)	signature	CharPredicate$#SPACE_TAB_EOL	/CharPredicate$	0	modifiers differ: emitted final, reference
-80a8e3e6c160	api-parity(signature)	signature	CharPredicate$#SPACE_TAB_LINE_SEP	/CharPredicate$	0	modifiers differ: emitted final, reference
-9aec1624c61e	api-parity(signature)	signature	CharPredicate$#SPACE_TAB_NBSP	/CharPredicate$	0	modifiers differ: emitted final, reference
-05da8a05862a	api-parity(signature)	signature	CharPredicate$#SPACE_TAB_NBSP_EOL	/CharPredicate$	0	modifiers differ: emitted final, reference
-0d17e2345885	api-parity(signature)	signature	CharPredicate$#SPACE_TAB_NBSP_LINE_SEP	/CharPredicate$	0	modifiers differ: emitted final, reference
-c268feb70182	api-parity(signature)	signature	CharPredicate$#SPACE_TAB_NUL	/CharPredicate$	0	modifiers differ: emitted final, reference
-f257ba2520f3	api-parity(signature)	signature	CharPredicate$#TAB	/CharPredicate$	0	modifiers differ: emitted final, reference
-61f2bb4c6ffa	api-parity(signature)	signature	CharPredicate$#WHITESPACE	/CharPredicate$	0	modifiers differ: emitted final, reference
-0d4609485c62	api-parity(signature)	signature	CharPredicate$#WHITESPACE_NBSP	/CharPredicate$	0	modifiers differ: emitted final, reference
-01c1343f1c8a	api-parity(signature)	signature	CharPredicate$#WHITESPACE_NBSP_OR_NUL	/CharPredicate$	0	modifiers differ: emitted final, reference
-0449c92f8118	api-parity(signature)	signature	CharPredicate$#WHITESPACE_OR_NUL	/CharPredicate$	0	modifiers differ: emitted final, reference
 c806a7553422	api-parity(signature)	signature	CharPredicate$#anyOf	/CharPredicate$	0	param 0 type differs: emitted 'scala.Array[scala.Char]', reference 'Char*'
 f6833263ce75	api-parity(signature)	signature	CharRecoveryOptimizer#apply	/CharRecoveryOptimizer	0	param 1 type differs: emitted 'scala.Array[java.lang.Object]', reference 'Array[Object]'
 8f69d8162d5d	api-parity(signature)	signature	CharRecoveryOptimizer#apply	/CharRecoveryOptimizer	0	result type differs: emitted 'scala.Array[java.lang.Object]', reference 'Array[Object]'
 cbee48a79414	api-parity(signature)	signature	CharSubSequence#getBase	/CharSubSequence	0	result type differs: emitted 'scala.Array[scala.Char]', reference 'AnyRef'
-e58a09cb5e34	api-parity(signature)	signature	CharWidthProvider$#NULL	/CharWidthProvider$	0	modifiers differ: emitted final, reference
 079b7767ae67	api-parity(signature)	signature	ClassificationBag#categoriesBitSet	/ClassificationBag	0	modifiers differ: emitted final, reference
 079b7767ae67/2	api-parity(signature)	signature	ClassificationBag#categoriesBitSet	/ClassificationBag	0	modifiers differ: emitted final, reference
 f5f2f56cb583	api-parity(signature)	signature	ClassificationBag#categoriesBitSet	/ClassificationBag	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[_ <: $0]', reference 'java.util.Collection[_ <: $0]'
@@ -5943,15 +6097,10 @@ fea9c7e48a30	api-parity(signature)	signature	CoreNodeFormatter$#UNWRAPPED_AUTO_L
 1d3886532728	api-parity(signature)	signature	CoreNodeFormatter$#UNWRAPPED_AUTO_LINKS_MAP	/CoreNodeFormatter$	0	modifiers differ: emitted final, reference
 575701eb9490	api-parity(signature)	signature	CoreNodeFormatter$#UNWRAPPED_AUTO_LINKS_MAP	/CoreNodeFormatter$	0	result type differs: emitted 'ssg.md.util.data.DataKey[scala.collection.mutable.HashSet[java.lang.String]]', reference 'DataKey[java.util.HashSet[String]]'
 7268301e04f5	api-parity(signature)	signature	CoreNodeRenderer#getNodeRenderingHandlers	/CoreNodeRenderer	0	result type differs: emitted 'scala.collection.mutable.Set[ssg.md.html.renderer.NodeRenderingHandler[?]]', reference 'Nullable[Set[NodeRenderingHandler[?]]]'
-c21e539f826d	api-parity(signature)	signature	CoreNodeRenderer$#CODE_CONTENT	/CoreNodeRenderer$	0	modifiers differ: emitted final, reference
-12e81cece6f5	api-parity(signature)	signature	CoreNodeRenderer$#LOOSE_LIST_ITEM	/CoreNodeRenderer$	0	modifiers differ: emitted final, reference
-cea47573ab18	api-parity(signature)	signature	CoreNodeRenderer$#PARAGRAPH_LINE	/CoreNodeRenderer$	0	modifiers differ: emitted final, reference
-3b18cb81dff0	api-parity(signature)	signature	CoreNodeRenderer$#TIGHT_LIST_ITEM	/CoreNodeRenderer$	0	modifiers differ: emitted final, reference
 abfa7801326c	api-parity(signature)	signature	CustomBlockParserFactory#apply	/CustomBlockParserFactory	0	modifiers differ: emitted , reference override
 90a5a15e52dd	api-parity(signature)	signature	DataHolder#getAll	/DataHolder	0	result type differs: emitted 'scala.collection.mutable.Map[? <: ssg.md.util.data.DataKeyBase[?], java.lang.Object]', reference 'Map[? <: DataKeyBase[?], AnyRef]'
 bdb5360a6586	api-parity(signature)	signature	DataHolder#getKeys	/DataHolder	0	result type differs: emitted 'balticporter.runtime.JavaCollection[? <: ssg.md.util.data.DataKeyBase[?]]', reference 'Collection[? <: DataKeyBase[?]]'
 0815cd031588	api-parity(signature)	signature	DataHolder#getOrCompute	/DataHolder	0	result type differs: emitted 'java.lang.Object', reference 'AnyRef'
-8e12df179359	api-parity(signature)	signature	DataHolder$#NULL	/DataHolder$	0	modifiers differ: emitted final, reference
 2d896f84245c	api-parity(signature)	signature	DataKeyAggregator#invokeAfterSet	/DataKeyAggregator	0	result type differs: emitted 'scala.collection.mutable.Set[java.lang.Class[?]]', reference 'Nullable[Set[Class[?]]]'
 d4c48379a742	api-parity(signature)	signature	DataSet#dataSet	/DataSet	0	result type differs: emitted 'scala.collection.mutable.HashMap[ssg.md.util.data.DataKeyBase[?], java.lang.Object]', reference 'HashMap[DataKeyBase[?], AnyRef]'
 168f64a65503	api-parity(signature)	signature	DataSet#getAll	/DataSet	0	result type differs: emitted 'scala.collection.mutable.Map[? <: ssg.md.util.data.DataKeyBase[?], java.lang.Object]', reference 'Map[? <: DataKeyBase[?], AnyRef]'
@@ -5985,11 +6134,9 @@ e18ecf47fe36	api-parity(signature)	signature	DescendantNodeIterator#forEachRemai
 2adb5f9dcc84	api-parity(signature)	signature	Document#getAll	/Document	0	result type differs: emitted 'scala.collection.mutable.Map[? <: ssg.md.util.data.DataKeyBase[?], java.lang.Object]', reference 'Map[? <: DataKeyBase[?], AnyRef]'
 ac369370a5ee	api-parity(signature)	signature	Document#getKeys	/Document	0	result type differs: emitted 'balticporter.runtime.JavaCollection[? <: ssg.md.util.data.DataKeyBase[?]]', reference 'Collection[? <: DataKeyBase[?]]'
 c8e390ab48e3	api-parity(signature)	signature	Document#getOrCompute	/Document	0	result type differs: emitted 'java.lang.Object', reference 'AnyRef'
-6896469d4d9b	api-parity(signature)	signature	Document$#NULL	/Document$	0	modifiers differ: emitted final, reference
 1f59b4d0bb70	api-parity(signature)	signature	Document$#merge	/Document$	0	param 0 type differs: emitted 'scala.Array[ssg.md.util.data.DataHolder]', reference 'DataHolder*'
 f8f049c22de3	api-parity(signature)	signature	DocumentParser#blockPreProcessorDependencies	/DocumentParser	0	result type differs: emitted 'scala.collection.mutable.Buffer[scala.collection.mutable.Buffer[ssg.md.parser.block.BlockPreProcessorFactory]]', reference 'List[List[BlockPreProcessorFactory]]'
 2ecda0fc6d7f	api-parity(signature)	signature	DocumentParser#paragraphPreProcessorDependencies	/DocumentParser	0	result type differs: emitted 'scala.collection.mutable.Buffer[scala.collection.mutable.Buffer[ssg.md.parser.block.ParagraphPreProcessorFactory]]', reference 'List[List[ParagraphPreProcessorFactory]]'
-b6f4662f9348	api-parity(signature)	signature	DocumentParser$#INLINE_PARSER_FACTORY	/DocumentParser$	0	modifiers differ: emitted final, reference
 cbcbb1e2e600	api-parity(signature)	signature	DocumentParser$#calculateBlockParserFactories	/DocumentParser$	0	param 1 type differs: emitted 'scala.collection.mutable.Buffer[ssg.md.parser.block.CustomBlockParserFactory]', reference 'List[CustomBlockParserFactory]'
 20494d1870e4	api-parity(signature)	signature	DocumentParser$#calculateBlockParserFactories	/DocumentParser$	0	result type differs: emitted 'scala.collection.mutable.Buffer[ssg.md.parser.block.CustomBlockParserFactory]', reference 'List[CustomBlockParserFactory]'
 c592c87008fe	api-parity(signature)	signature	DocumentParser$#calculateBlockPreProcessors	/DocumentParser$	0	param 1 type differs: emitted 'scala.collection.mutable.Buffer[ssg.md.parser.block.BlockPreProcessorFactory]', reference 'List[BlockPreProcessorFactory]'
@@ -5997,9 +6144,6 @@ e0dc24ffbc8b	api-parity(signature)	signature	DocumentParser$#calculateBlockPrePr
 1f20500460f1	api-parity(signature)	signature	DocumentParser$#calculateParagraphPreProcessors	/DocumentParser$	0	param 1 type differs: emitted 'scala.collection.mutable.Buffer[ssg.md.parser.block.ParagraphPreProcessorFactory]', reference 'List[ParagraphPreProcessorFactory]'
 86ed491d71dc	api-parity(signature)	signature	DocumentParser$#calculateParagraphPreProcessors	/DocumentParser$	0	result type differs: emitted 'scala.collection.mutable.Buffer[scala.collection.mutable.Buffer[ssg.md.parser.block.ParagraphPreProcessorFactory]]', reference 'List[List[ParagraphPreProcessorFactory]]'
 5db207738910	api-parity(signature)	signature	DocumentPostProcessorFactory#getNodeTypes	/DocumentPostProcessorFactory	0	result type differs: emitted 'scala.collection.mutable.Map[java.lang.Class[?], scala.collection.mutable.Set[java.lang.Class[?]]]', reference 'Nullable[Map[Class[?], Set[Class[?]]]]'
-b950ef7cb920	api-parity(signature)	signature	EmbeddedAttributeProvider$#Factory	/EmbeddedAttributeProvider$	0	modifiers differ: emitted final, reference
-13cfc7e26870	api-parity(signature)	signature	Escaping$#AMP_BACKSLASH_SET	/Escaping$	0	modifiers differ: emitted final, reference
-0080919832fc	api-parity(signature)	signature	Escaping$#ESCAPABLE	/Escaping$	0	modifiers differ: emitted final, reference
 5b872f7b8484	api-parity(signature)	signature	Extension$#EMPTY_LIST	/Extension$	0	modifiers differ: emitted final, reference
 2566b2852a51	api-parity(signature)	signature	Extension$#EMPTY_LIST	/Extension$	0	result type differs: emitted 'balticporter.runtime.JavaCollection[Extension]', reference 'List[Extension]'
 30dddc9aec79	api-parity(signature)	signature	FencedCodeBlockParser#getBlock	/FencedCodeBlockParser	0	result type differs: emitted 'ssg.md.util.ast.Block', reference 'FencedCodeBlock'
@@ -6074,7 +6218,6 @@ d211b3e2548b	api-parity(signature)	signature	Formatter$#KEEP_HARD_LINE_BREAKS	/F
 8e37926807c8	api-parity(signature)	signature	Formatter$#KEEP_IMAGE_LINKS_AT_START	/Formatter$	0	result type differs: emitted 'ssg.md.util.data.DataKey[java.lang.Boolean]', reference 'DataKey[Boolean]'
 143866b9b472	api-parity(signature)	signature	Formatter$#KEEP_SOFT_LINE_BREAKS	/Formatter$	0	modifiers differ: emitted final, reference
 e7e24c47992a	api-parity(signature)	signature	Formatter$#KEEP_SOFT_LINE_BREAKS	/Formatter$	0	result type differs: emitted 'ssg.md.util.data.DataKey[java.lang.Boolean]', reference 'DataKey[Boolean]'
-b734173118df	api-parity(signature)	signature	Formatter$#LINK_MARKER_COMMENT_PATTERN	/Formatter$	0	modifiers differ: emitted final, reference
 2a254d834292	api-parity(signature)	signature	Formatter$#LISTS_ITEM_CONTENT_AFTER_SUFFIX	/Formatter$	0	modifiers differ: emitted final, reference
 39ddbdbeab1c	api-parity(signature)	signature	Formatter$#LISTS_ITEM_CONTENT_AFTER_SUFFIX	/Formatter$	0	result type differs: emitted 'ssg.md.util.data.DataKey[java.lang.Boolean]', reference 'DataKey[Boolean]'
 5efaf722a4c6	api-parity(signature)	signature	Formatter$#LIST_ADD_BLANK_LINE_BEFORE	/Formatter$	0	modifiers differ: emitted final, reference
@@ -6204,7 +6347,6 @@ c1459cc92011	api-parity(signature)	signature	HtmlDeepParser$#BLOCK_TAGS	/HtmlDee
 695dc849d230	api-parity(signature)	signature	HtmlDeepParser$#OPTIONAL_TAGS	/HtmlDeepParser$	0	result type differs: emitted 'scala.collection.mutable.Map[java.lang.String, scala.collection.mutable.Set[java.lang.String]]', reference 'Map[String, Set[String]]'
 7f7c974dd133	api-parity(signature)	signature	HtmlDeepParser$#VOID_TAGS	/HtmlDeepParser$	0	result type differs: emitted 'scala.collection.mutable.Set[java.lang.String]', reference 'Set[String]'
 74059ac8da70	api-parity(signature)	signature	HtmlEntity#collectText	/HtmlEntity	0	param 0 type differs: emitted 'ssg.md.util.sequence.builder.ISequenceBuilder[? <: ssg.md.util.sequence.builder.ISequenceBuilder[?, ssg.md.util.sequence.BasedSequence], ssg.md.util.sequence.BasedSequence]', reference 'ISequenceBuilder[? <: ISequenceBuilder[?, BasedSequence], BasedSequence]'
-f25a262709dc	api-parity(signature)	signature	HtmlIdGenerator$#NULL	/HtmlIdGenerator$	0	modifiers differ: emitted final, reference
 10f7caeedb6a	api-parity(signature)	signature	HtmlInnerVisitorExt$#VISIT_HANDLERS	/HtmlInnerVisitorExt$	0	result type differs: emitted 'scala.Array[ssg.md.util.ast.VisitHandler[?]]', reference 'Array[VisitHandler[?]]'
 21b98eff9c11	api-parity(signature)	signature	HtmlInnerVisitorExt$#VISIT_HANDLERS	/HtmlInnerVisitorExt$	0	type params differ: emitted '[$0 <: ssg.md.ast.util.HtmlInnerVisitor]', reference '[$0 <: HtmlInnerVisitor]'
 43470e58badf	api-parity(signature)	signature	HtmlRenderer#attributeProviderFactories	/HtmlRenderer	0	result type differs: emitted 'scala.collection.mutable.Buffer[ssg.md.html.AttributeProviderFactory]', reference 'List[AttributeProviderFactory]'
@@ -6441,11 +6583,6 @@ cccf9b90a925/5	api-parity(signature)	signature	IRichSequenceBase#splitList	/IRic
 91dd33f9c8d2	api-parity(signature)	signature	IRichSequenceBase#toStringOrNull	/IRichSequenceBase	0	modifiers differ: emitted override, reference
 8e3e037aed5e	api-parity(signature)	signature	ISegmentBuilder#getSegments	/ISegmentBuilder	0	result type differs: emitted 'balticporter.runtime.JavaIterable[ssg.md.util.sequence.builder.Seg]', reference 'java.lang.Iterable[Seg]'
 b4327cc87b75	api-parity(signature)	signature	ISegmentBuilder#iterator	/ISegmentBuilder	0	result type differs: emitted 'balticporter.runtime.JavaIterator[java.lang.Object]', reference 'java.util.Iterator[Object]'
-541cce22f9e6	api-parity(signature)	signature	ISegmentBuilder$#F_DEFAULT	/ISegmentBuilder$	0	modifiers differ: emitted final, reference
-7f04aaaff933	api-parity(signature)	signature	ISegmentBuilder$#F_INCLUDE_ANCHORS	/ISegmentBuilder$	0	modifiers differ: emitted final, reference
-07395841740e	api-parity(signature)	signature	ISegmentBuilder$#F_TRACK_FIRST256	/ISegmentBuilder$	0	modifiers differ: emitted final, reference
-6fd65fe473d4	api-parity(signature)	signature	ISegmentBuilder$#O_INCLUDE_ANCHORS	/ISegmentBuilder$	0	modifiers differ: emitted final, reference
-1d333d2dba17	api-parity(signature)	signature	ISegmentBuilder$#O_TRACK_FIRST256	/ISegmentBuilder$	0	modifiers differ: emitted final, reference
 03d567a5b0ca	api-parity(signature)	signature	ISequenceBuilder#addAll	/ISequenceBuilder	0	param 0 type differs: emitted 'balticporter.runtime.JavaIterable[? <: java.lang.CharSequence]', reference 'Iterable[? <: CharSequence]'
 3fe5752e67c2	api-parity(signature)	signature	ISequenceBuilder#append	/ISequenceBuilder	0	modifiers differ: emitted override, reference
 862805c54c69	api-parity(signature)	signature	ISequenceBuilder#append	/ISequenceBuilder	0	param 0 type differs: emitted 'balticporter.runtime.JavaIterable[? <: java.lang.CharSequence]', reference 'Iterable[? <: CharSequence]'
@@ -6515,24 +6652,8 @@ a6ad452058c7	api-parity(signature)	signature	LightInlineParserImpl#matchWithGrou
 313ae9080f45	api-parity(signature)	signature	LineAppendable#iterator	/LineAppendable	0	result type differs: emitted 'balticporter.runtime.JavaIterator[ssg.md.util.sequence.LineInfo]', reference 'java.util.Iterator[LineInfo]'
 709ae4124175	api-parity(signature)	signature	LineAppendable#setOptions	/LineAppendable	0	param 0 type differs: emitted 'scala.Array[ssg.md.util.sequence.LineAppendable.Options]', reference 'LineAppendable.Options*'
 c7a8fae4402e	api-parity(signature)	signature	LineAppendable#setOptions	/LineAppendable	0	param 0 type differs: emitted 'ssg.md.util.misc.BitFieldSet[ssg.md.util.sequence.LineAppendable.Options]', reference 'BitFieldSet[LineAppendable.Options]'
-aec36bd642b8	api-parity(signature)	signature	LineAppendable$#F_COLLAPSE_WHITESPACE	/LineAppendable$	0	modifiers differ: emitted final, reference
-1d4f698bf561	api-parity(signature)	signature	LineAppendable$#F_CONVERT_TABS	/LineAppendable$	0	modifiers differ: emitted final, reference
-0d90ae8e696e	api-parity(signature)	signature	LineAppendable$#F_FORMAT_ALL	/LineAppendable$	0	modifiers differ: emitted final, reference
-bfa326109292	api-parity(signature)	signature	LineAppendable$#F_PASS_THROUGH	/LineAppendable$	0	modifiers differ: emitted final, reference
-acc04720d188	api-parity(signature)	signature	LineAppendable$#F_PREFIX_PRE_FORMATTED	/LineAppendable$	0	modifiers differ: emitted final, reference
-2779d3838c07	api-parity(signature)	signature	LineAppendable$#F_TRIM_LEADING_EOL	/LineAppendable$	0	modifiers differ: emitted final, reference
-c29348b22fbb	api-parity(signature)	signature	LineAppendable$#F_TRIM_LEADING_WHITESPACE	/LineAppendable$	0	modifiers differ: emitted final, reference
-8371de631664	api-parity(signature)	signature	LineAppendable$#F_TRIM_TRAILING_WHITESPACE	/LineAppendable$	0	modifiers differ: emitted final, reference
-5f8a92b61b49	api-parity(signature)	signature	LineAppendable$#F_WHITESPACE_REMOVAL	/LineAppendable$	0	modifiers differ: emitted final, reference
-3b2a0f18096e	api-parity(signature)	signature	LineAppendable$#O_COLLAPSE_WHITESPACE	/LineAppendable$	0	modifiers differ: emitted final, reference
-ed666e3f60af	api-parity(signature)	signature	LineAppendable$#O_CONVERT_TABS	/LineAppendable$	0	modifiers differ: emitted final, reference
 820b527bf2fe	api-parity(signature)	signature	LineAppendable$#O_FORMAT_ALL	/LineAppendable$	0	modifiers differ: emitted final, reference
 f6adc175daec	api-parity(signature)	signature	LineAppendable$#O_FORMAT_ALL	/LineAppendable$	0	result type differs: emitted 'ssg.md.util.misc.BitFieldSet[ssg.md.util.sequence.LineAppendable.Options]', reference 'BitFieldSet[Options]'
-e1cf1e2be336	api-parity(signature)	signature	LineAppendable$#O_PASS_THROUGH	/LineAppendable$	0	modifiers differ: emitted final, reference
-1d47115e89f9	api-parity(signature)	signature	LineAppendable$#O_PREFIX_PRE_FORMATTED	/LineAppendable$	0	modifiers differ: emitted final, reference
-b2ef61d03199	api-parity(signature)	signature	LineAppendable$#O_TRIM_LEADING_EOL	/LineAppendable$	0	modifiers differ: emitted final, reference
-225ba5fb7116	api-parity(signature)	signature	LineAppendable$#O_TRIM_LEADING_WHITESPACE	/LineAppendable$	0	modifiers differ: emitted final, reference
-d19486aa4254	api-parity(signature)	signature	LineAppendable$#O_TRIM_TRAILING_WHITESPACE	/LineAppendable$	0	modifiers differ: emitted final, reference
 0d5947060a71	api-parity(signature)	signature	LineAppendable$#toOptionSet	/LineAppendable$	0	param 0 type differs: emitted 'scala.Array[ssg.md.util.sequence.LineAppendable.Options]', reference 'Options*'
 a01effb52243	api-parity(signature)	signature	LineAppendable$#toOptionSet	/LineAppendable$	0	result type differs: emitted 'ssg.md.util.misc.BitFieldSet[ssg.md.util.sequence.LineAppendable.Options]', reference 'BitFieldSet[Options]'
 a01effb52243/2	api-parity(signature)	signature	LineAppendable$#toOptionSet	/LineAppendable$	0	result type differs: emitted 'ssg.md.util.misc.BitFieldSet[ssg.md.util.sequence.LineAppendable.Options]', reference 'BitFieldSet[Options]'
@@ -6545,32 +6666,15 @@ f9290640f253	api-parity(signature)	signature	LineAppendableImpl#getOptionSet	/Li
 4105b555aa64	api-parity(signature)	signature	LineCollectingVisitor#collectAndGetRanges	/LineCollectingVisitor	0	result type differs: emitted 'scala.collection.mutable.Buffer[ssg.md.util.sequence.Range]', reference 'ju.List[Range]'
 eb4e3ffdcd04	api-parity(signature)	signature	LineCollectingVisitor#getEOLs	/LineCollectingVisitor	0	result type differs: emitted 'scala.collection.mutable.Buffer[java.lang.Integer]', reference 'ju.List[Integer]'
 113418eabec1	api-parity(signature)	signature	LineCollectingVisitor#getLines	/LineCollectingVisitor	0	result type differs: emitted 'scala.collection.mutable.Buffer[ssg.md.util.sequence.Range]', reference 'ju.List[Range]'
-9c03ed80bd1d	api-parity(signature)	signature	LineInfo$#BLANK_PREFIX	/LineInfo$	0	modifiers differ: emitted final, reference
-5f5c6383c3f7	api-parity(signature)	signature	LineInfo$#BLANK_TEXT	/LineInfo$	0	modifiers differ: emitted final, reference
-3739778f8bfc	api-parity(signature)	signature	LineInfo$#F_BLANK_PREFIX	/LineInfo$	0	modifiers differ: emitted final, reference
-d6c9e63ac254	api-parity(signature)	signature	LineInfo$#F_BLANK_TEXT	/LineInfo$	0	modifiers differ: emitted final, reference
-400816b02cb4	api-parity(signature)	signature	LineInfo$#F_PREFORMATTED	/LineInfo$	0	modifiers differ: emitted final, reference
-ea4d0dbd4fb5	api-parity(signature)	signature	LineInfo$#NULL	/LineInfo$	0	modifiers differ: emitted final, reference
-3fe1e6ad4ee4	api-parity(signature)	signature	LineInfo$#PREFORMATTED	/LineInfo$	0	modifiers differ: emitted final, reference
 757860a1ab21	api-parity(signature)	signature	LinkNode#collectText	/LinkNode	0	param 0 type differs: emitted 'ssg.md.util.sequence.builder.ISequenceBuilder[? <: ssg.md.util.sequence.builder.ISequenceBuilder[?, ssg.md.util.sequence.BasedSequence], ssg.md.util.sequence.BasedSequence]', reference 'ISequenceBuilder[? <: ISequenceBuilder[?, BasedSequence], BasedSequence]'
 636bb9fedb98	api-parity(signature)	signature	LinkRefProcessorData#nestingIndex	/LinkRefProcessorData	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
 b0abf689eb3c	api-parity(signature)	signature	LinkRefProcessorData#processors	/LinkRefProcessorData	0	result type differs: emitted 'scala.collection.mutable.Buffer[ssg.md.parser.LinkRefProcessorFactory]', reference 'List[LinkRefProcessorFactory]'
 e0d4af6aa050	api-parity(signature)	signature	LinkRefProcessorFactory#apply	/LinkRefProcessorFactory	0	modifiers differ: emitted , reference override
-e75386161134	api-parity(signature)	signature	LinkResolver$#NULL	/LinkResolver$	0	modifiers differ: emitted final, reference
 7cab50343502	api-parity(signature)	signature	LinkResolverAdapter#addHandler	/LinkResolverAdapter	0	param 0 type differs: emitted 'ssg.md.ast.util.LinkResolvingHandler[?]', reference 'LinkResolvingHandler[? <: Node]'
 742fb0676821	api-parity(signature)	signature	LinkResolverAdapter#addHandlers	/LinkResolverAdapter	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[ssg.md.ast.util.LinkResolvingHandler[?]]', reference 'ju.Collection[LinkResolvingHandler[? <: Node]]'
 64710d5caa47	api-parity(signature)	signature	LinkResolverAdapter#addHandlers	/LinkResolverAdapter	0	param 0 type differs: emitted 'scala.Array[ssg.md.ast.util.LinkResolvingHandler[?]]', reference 'Array[LinkResolvingHandler[? <: Node]]'
 2c1ca4698e5a	api-parity(signature)	signature	LinkResolverFactory#apply	/LinkResolverFactory	0	modifiers differ: emitted , reference override
 2767453d952a	api-parity(signature)	signature	LinkResolvingHandler$#LinkResolvingVisitor	/LinkResolvingHandler$	0	type params differ: emitted '[$0 <: ssg.md.util.ast.Node]', reference '[$0 <: Node]'
-290a67d15eb6	api-parity(signature)	signature	LinkStatus$#INVALID	/LinkStatus$	0	modifiers differ: emitted final, reference
-d9a0f8ffcb24	api-parity(signature)	signature	LinkStatus$#NOT_FOUND	/LinkStatus$	0	modifiers differ: emitted final, reference
-a9549bccde05	api-parity(signature)	signature	LinkStatus$#UNCHECKED	/LinkStatus$	0	modifiers differ: emitted final, reference
-0845c12a2f59	api-parity(signature)	signature	LinkStatus$#UNKNOWN	/LinkStatus$	0	modifiers differ: emitted final, reference
-78d131566e04	api-parity(signature)	signature	LinkStatus$#VALID	/LinkStatus$	0	modifiers differ: emitted final, reference
-35c3f04f6c67	api-parity(signature)	signature	LinkType$#IMAGE	/LinkType$	0	modifiers differ: emitted final, reference
-c62010ba4b89	api-parity(signature)	signature	LinkType$#IMAGE_REF	/LinkType$	0	modifiers differ: emitted final, reference
-830a09cfbf86	api-parity(signature)	signature	LinkType$#LINK	/LinkType$	0	modifiers differ: emitted final, reference
-0a741fbd87c8	api-parity(signature)	signature	LinkType$#LINK_REF	/LinkType$	0	modifiers differ: emitted final, reference
 0a6e4ce6dc21	api-parity(signature)	signature	ListItemParser#getBlock	/ListItemParser	0	result type differs: emitted 'ssg.md.util.ast.Block', reference 'ListItem'
 e246c1cd88ab	api-parity(signature)	signature	ListOptions#getItemMarkerSuffixes	/ListOptions	0	result type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
 1bf4115dc594	api-parity(signature)	signature	ListOptions#itemMarkerSuffixes	/ListOptions	0	result type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
@@ -6594,10 +6698,6 @@ e49d5e21bfec	api-parity(signature)	signature	MarkdownTable#getMinColumnsWithoutC
 3ba6cad7ecd7	api-parity(signature)	signature	MarkdownTable#getMinColumnsWithoutRows	/MarkdownTable	0	param 1 type differs: emitted 'scala.Array[scala.Int]', reference 'Int*'
 1abeac83a8a6	api-parity(signature)	signature	MarkdownTable#getTrackedOffsets	/MarkdownTable	0	result type differs: emitted 'scala.collection.mutable.Buffer[ssg.md.util.format.TrackedOffset]', reference 'JList[TrackedOffset]'
 81eb5a963358	api-parity(signature)	signature	MarkdownTable#sorted	/MarkdownTable	0	param 0 type differs: emitted 'scala.Array[ssg.md.util.format.ColumnSort]', reference 'Array[ColumnSort]'
-e98a5e3bfedc	api-parity(signature)	signature	MarkdownTable$#ALL_SUFFIXES_NO_SORT	/MarkdownTable$	0	modifiers differ: emitted final, reference
-f99101f36f7d	api-parity(signature)	signature	MarkdownTable$#ALL_SUFFIXES_SORT	/MarkdownTable$	0	modifiers differ: emitted final, reference
-9505d56b67f1	api-parity(signature)	signature	MarkdownTable$#COLON_TRIM_CHARS	/MarkdownTable$	0	modifiers differ: emitted final, reference
-0d3b12d34022	api-parity(signature)	signature	MarkdownTable$#NO_SUFFIXES	/MarkdownTable$	0	modifiers differ: emitted final, reference
 806e16c0ab1b	api-parity(signature)	signature	MarkdownWriterBase#addIndentOnFirstEOL	/MarkdownWriterBase	0	result type differs: emitted '$0', reference 'LineAppendable'
 2b179f145493	api-parity(signature)	signature	MarkdownWriterBase#addPrefix	/MarkdownWriterBase	0	result type differs: emitted '$0', reference 'LineAppendable'
 2b179f145493/2	api-parity(signature)	signature	MarkdownWriterBase#addPrefix	/MarkdownWriterBase	0	result type differs: emitted '$0', reference 'LineAppendable'
@@ -6638,7 +6738,6 @@ e8df36975a9f	api-parity(signature)	signature	MarkdownWriterBase#setOptions	/Mark
 83b662c06538	api-parity(signature)	signature	MarkdownWriterBase#unIndentNoEol	/MarkdownWriterBase	0	result type differs: emitted '$0', reference 'LineAppendable'
 14ce30537d00	api-parity(signature)	signature	MergeLinkResolver$#Factory	/MergeLinkResolver$	0	parents differ: emitted-only [ssg.md.html.LinkResolverFactory], reference-only [IndependentLinkResolverFactory]
 b3e99e02db4f	api-parity(signature)	signature	MessageProvider#message	/MessageProvider	0	param 2 type differs: emitted 'scala.Array[java.lang.Object]', reference 'AnyRef*'
-4182e6ebf286	api-parity(signature)	signature	MessageProvider$#DEFAULT	/MessageProvider$	0	modifiers differ: emitted final, reference
 32f811bafc6a	api-parity(signature)	signature	MutableAttributeImpl#getValueMap	/MutableAttributeImpl	0	result type differs: emitted 'scala.collection.mutable.Map[java.lang.String, java.lang.String]', reference 'LinkedHashMap[String, String]'
 4f729f10ac18	api-parity(signature)	signature	MutableAttributeImpl#removeValue	/MutableAttributeImpl	0	result type differs: emitted 'MutableAttributeImpl', reference 'MutableAttribute'
 e5f45be98d6d	api-parity(signature)	signature	MutableAttributeImpl#replaceValue	/MutableAttributeImpl	0	result type differs: emitted 'MutableAttributeImpl', reference 'MutableAttribute'
@@ -6656,14 +6755,12 @@ b9722f8887a0	api-parity(signature)	signature	Node#countDirectAncestorsOfType	/No
 b18140bacf8e	api-parity(signature)	signature	Node#isOrDescendantOfType	/Node	0	param 0 type differs: emitted 'scala.Array[java.lang.Class[?]]', reference 'Class[?]*'
 9ef0825d976a	api-parity(signature)	signature	Node#lineColumnAtIndex	/Node	0	result type differs: emitted 'ssg.md.util.misc.Pair[java.lang.Integer, java.lang.Integer]', reference 'Pair[Integer, Integer]'
 0518275e0965	api-parity(signature)	signature	Node#lineColumnAtStart	/Node	0	result type differs: emitted 'ssg.md.util.misc.Pair[java.lang.Integer, java.lang.Integer]', reference 'Pair[Integer, Integer]'
-2515bc6db1fe	api-parity(signature)	signature	Node$#AST_ADAPTER	/Node$	0	modifiers differ: emitted final, reference
 c51de6eeceb8	api-parity(signature)	signature	Node$#EMPTY_SEGMENTS	/Node$	0	modifiers differ: emitted final, reference
 22d0801f4dc7	api-parity(signature)	signature	Node$#EMPTY_SEGMENTS	/Node$	0	result type differs: emitted 'scala.Array[ssg.md.util.sequence.BasedSequence]', reference 'Array[BasedSequence]'
 c76cb58cdf8c	api-parity(signature)	signature	Node$#getLeadSegment	/Node$	0	param 0 type differs: emitted 'scala.Array[ssg.md.util.sequence.BasedSequence]', reference 'Array[BasedSequence]'
 d1f264c10991	api-parity(signature)	signature	Node$#getNodeOfTypeIndex	/Node$	0	param 1 type differs: emitted 'scala.Array[java.lang.Class[?]]', reference 'Class[?]*'
 a53fd2a09a5c	api-parity(signature)	signature	Node$#getTrailSegment	/Node$	0	param 0 type differs: emitted 'scala.Array[ssg.md.util.sequence.BasedSequence]', reference 'Array[BasedSequence]'
 da2ff6051b1e	api-parity(signature)	signature	Node$#spanningChars	/Node$	0	param 0 type differs: emitted 'scala.Array[ssg.md.util.sequence.BasedSequence]', reference 'BasedSequence*'
-a87a2fb811bb	api-parity(signature)	signature	NodeClassifier$#INSTANCE	/NodeClassifier$	0	modifiers differ: emitted final, reference
 9f0359d84fd4	api-parity(signature)	signature	NodeCollectingVisitor#getSubClassingBag	/NodeCollectingVisitor	0	result type differs: emitted 'ssg.md.util.collection.SubClassingBag[ssg.md.util.ast.Node]', reference 'SubClassingBag[Node]'
 f310fd725488	api-parity(signature)	signature	NodeFormatter#getNodeClasses	/NodeFormatter	0	result type differs: emitted 'scala.collection.mutable.Set[java.lang.Class[?]]', reference 'Nullable[Set[Class[?]]]'
 325d35025351	api-parity(signature)	signature	NodeFormatter#getNodeFormattingHandlers	/NodeFormatter	0	result type differs: emitted 'scala.collection.mutable.Set[ssg.md.formatter.NodeFormattingHandler[?]]', reference 'Nullable[Set[NodeFormattingHandler[?]]]'
@@ -6730,8 +6827,6 @@ ecce475822d0	api-parity(signature)	signature	NodeRepository$#transferReferences	
 b8246e4a71b9	api-parity(signature)	signature	NodeVisitor$#EMPTY_HANDLERS	/NodeVisitor$	0	modifiers differ: emitted final, reference
 2db9458f4e55	api-parity(signature)	signature	NodeVisitor$#EMPTY_HANDLERS	/NodeVisitor$	0	result type differs: emitted 'scala.Array[ssg.md.util.ast.VisitHandler[?]]', reference 'Array[VisitHandler[?]]'
 e2851eadbff3	api-parity(signature)	signature	NotNullValueSupplier#get	/NotNullValueSupplier	0	modifiers differ: emitted override, reference
-e5af07486868	api-parity(signature)	signature	NullEncoder$#decodeNull	/NullEncoder$	0	modifiers differ: emitted final, reference
-c1117b30c0e3	api-parity(signature)	signature	NullEncoder$#encodeNull	/NullEncoder$	0	modifiers differ: emitted final, reference
 8efd9fffd77c	api-parity(signature)	signature	OptionParser#parseOption	/OptionParser	0	result type differs: emitted 'ssg.md.util.misc.Pair[$0, scala.collection.mutable.Buffer[ssg.md.util.options.ParsedOption[$0]]]', reference 'Pair[$0, java.util.List[ParsedOption[$0]]]'
 7838b73d55b1	api-parity(signature)	signature	OptionsParser#parseOption	/OptionsParser	0	result type differs: emitted 'ssg.md.util.misc.Pair[$0, scala.collection.mutable.Buffer[ssg.md.util.options.ParsedOption[$0]]]', reference 'Pair[$0, java.util.List[ParsedOption[$0]]]'
 fccd400caad5	api-parity(signature)	signature	OrderedMap#addAll	/OrderedMap	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[_ <: scala.Tuple2[_ <: $0, _ <: $1]]', reference 'java.util.Collection[_ <: JMap.Entry[_ <: $0, _ <: $1]]'
@@ -7054,47 +7149,6 @@ c7fb416bea76	api-parity(signature)	signature	ParserEmulationProfile#family	/Pars
 3b7ac07933e4	api-parity(signature)	signature	ParserEmulationProfile$#PEGDOWN_EXTENSIONS	/ParserEmulationProfile$	0	modifiers differ: emitted final, reference
 76acbe14db35	api-parity(signature)	signature	ParserEmulationProfile$#PEGDOWN_EXTENSIONS	/ParserEmulationProfile$	0	result type differs: emitted 'ssg.md.util.data.DataKey[java.lang.Integer]', reference 'DataKey[Int]'
 8d152dcaff15	api-parity(signature)	signature	ParserParams#messages	/ParserParams	0	result type differs: emitted 'scala.collection.mutable.Buffer[ssg.md.util.options.ParserMessage]', reference 'Nullable[ArrayBuffer[ParserMessage]]'
-127a07369e28	api-parity(signature)	signature	Parsing#ASCII_CLOSE_PUNCTUATION	/Parsing	0	modifiers differ: emitted final, reference
-0061af39fd3c	api-parity(signature)	signature	Parsing#ASCII_OPEN_PUNCTUATION	/Parsing	0	modifiers differ: emitted final, reference
-4106b06648e1	api-parity(signature)	signature	Parsing#ASCII_PUNCTUATION	/Parsing	0	modifiers differ: emitted final, reference
-8e6995792218	api-parity(signature)	signature	Parsing#CDATA	/Parsing	0	modifiers differ: emitted final, reference
-35db8e92e0c9	api-parity(signature)	signature	Parsing#DOUBLEQUOTEDVALUE	/Parsing	0	modifiers differ: emitted final, reference
-12c773afaa72	api-parity(signature)	signature	Parsing#EOL	/Parsing	0	modifiers differ: emitted final, reference
-5213f98885e9	api-parity(signature)	signature	Parsing#ESCAPABLE	/Parsing	0	modifiers differ: emitted final, reference
-acc627bd9c23	api-parity(signature)	signature	Parsing#ESCAPED_CHAR	/Parsing	0	modifiers differ: emitted final, reference
-fc481bc6ee33	api-parity(signature)	signature	Parsing#FINAL_SPACE	/Parsing	0	modifiers differ: emitted final, reference
-2a8690513941	api-parity(signature)	signature	Parsing#HTMLCOMMENT	/Parsing	0	modifiers differ: emitted final, reference
-1242efd34bc0	api-parity(signature)	signature	Parsing#LINE_END	/Parsing	0	modifiers differ: emitted final, reference
-b86ba797b98c	api-parity(signature)	signature	Parsing#LINK_LABEL	/Parsing	0	modifiers differ: emitted final, reference
-e9aca67f02dd	api-parity(signature)	signature	Parsing#LINK_TITLE	/Parsing	0	modifiers differ: emitted final, reference
-0438d456ca6e	api-parity(signature)	signature	Parsing#LINK_TITLE_STRING	/Parsing	0	modifiers differ: emitted final, reference
-dcf6be6ccbee	api-parity(signature)	signature	Parsing#PROCESSINGINSTRUCTION	/Parsing	0	modifiers differ: emitted final, reference
-6a6317238e6c	api-parity(signature)	signature	Parsing#PUNCTUATION	/Parsing	0	modifiers differ: emitted final, reference
-1236d241a3c0	api-parity(signature)	signature	Parsing#PUNCTUATION_CLOSE	/Parsing	0	modifiers differ: emitted final, reference
-d3be96883766	api-parity(signature)	signature	Parsing#PUNCTUATION_CLOSE_ONLY	/Parsing	0	modifiers differ: emitted final, reference
-62a6af61deaa	api-parity(signature)	signature	Parsing#PUNCTUATION_ONLY	/Parsing	0	modifiers differ: emitted final, reference
-1c4b8dbeba15	api-parity(signature)	signature	Parsing#PUNCTUATION_OPEN	/Parsing	0	modifiers differ: emitted final, reference
-287520619542	api-parity(signature)	signature	Parsing#PUNCTUATION_OPEN_ONLY	/Parsing	0	modifiers differ: emitted final, reference
-859b28732697	api-parity(signature)	signature	Parsing#REST_OF_LINE	/Parsing	0	modifiers differ: emitted final, reference
-6cb9727f4fdd	api-parity(signature)	signature	Parsing#SINGLEQUOTEDVALUE	/Parsing	0	modifiers differ: emitted final, reference
-2179924514f2	api-parity(signature)	signature	Parsing#SP	/Parsing	0	modifiers differ: emitted final, reference
-604e2b10b03f	api-parity(signature)	signature	Parsing#SPNI	/Parsing	0	modifiers differ: emitted final, reference
-5ea3019dcf97	api-parity(signature)	signature	Parsing#SPNL	/Parsing	0	modifiers differ: emitted final, reference
-c4ea6af423ff	api-parity(signature)	signature	Parsing#SPNL_URL	/Parsing	0	modifiers differ: emitted final, reference
-547869532f15	api-parity(signature)	signature	Parsing#TICKS	/Parsing	0	modifiers differ: emitted final, reference
-58d49fe3138f	api-parity(signature)	signature	Parsing#TICKS_HERE	/Parsing	0	modifiers differ: emitted final, reference
-e307d1eb4f23	api-parity(signature)	signature	Parsing#UNICODE_WHITESPACE_CHAR	/Parsing	0	modifiers differ: emitted final, reference
-e699eb887d8a	api-parity(signature)	signature	Parsing#WHITESPACE	/Parsing	0	modifiers differ: emitted final, reference
-e1e4b2786766	api-parity(signature)	signature	Parsing$#INTELLIJ_DUMMY_IDENTIFIER	/Parsing$	0	modifiers differ: emitted final, reference
-bc83a2ca7867	api-parity(signature)	signature	Parsing$#INTELLIJ_DUMMY_IDENTIFIER_CHAR	/Parsing$	0	modifiers differ: emitted final, reference
-655e2dc2c037	api-parity(signature)	signature	Parsing$#XML_NAMESPACE	/Parsing$	0	modifiers differ: emitted final, reference
-3866b5cf08b0	api-parity(signature)	signature	Parsing$#XML_NAMESPACE_CHAR	/Parsing$	0	modifiers differ: emitted final, reference
-688064e875a1	api-parity(signature)	signature	PegdownExtensions$#ALL_OPTIONALS	/PegdownExtensions$	0	modifiers differ: emitted final, reference
-71bbabb75e19	api-parity(signature)	signature	PegdownExtensions$#ALL_WITH_OPTIONALS	/PegdownExtensions$	0	modifiers differ: emitted final, reference
-a219944bc8a8	api-parity(signature)	signature	PegdownExtensions$#GITHUB_COMMENT_COMPATIBLE	/PegdownExtensions$	0	modifiers differ: emitted final, reference
-b1a8bca9c578	api-parity(signature)	signature	PegdownExtensions$#GITHUB_DOCUMENT_COMPATIBLE	/PegdownExtensions$	0	modifiers differ: emitted final, reference
-7a2383e64ff1	api-parity(signature)	signature	PegdownExtensions$#GITHUB_WIKI_COMPATIBLE	/PegdownExtensions$	0	modifiers differ: emitted final, reference
-1efd751a1697	api-parity(signature)	signature	PegdownExtensions$#SMARTYPANTS	/PegdownExtensions$	0	modifiers differ: emitted final, reference
 a51d513a02c6	api-parity(signature)	signature	PhasedNodeFormatter#getFormattingPhases	/PhasedNodeFormatter	0	result type differs: emitted 'scala.collection.mutable.Set[ssg.md.formatter.FormattingPhase]', reference 'Nullable[Set[FormattingPhase]]'
 04e5da29b2a9	api-parity(signature)	signature	PhasedNodeRenderer#getRenderingPhases	/PhasedNodeRenderer	0	result type differs: emitted 'scala.collection.mutable.Set[ssg.md.html.renderer.RenderingPhase]', reference 'Nullable[Set[RenderingPhase]]'
 5ff00e308dd3	api-parity(signature)	signature	PlaceholderReplacer$#replaceAll	/PlaceholderReplacer$	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[$0]', reference 'java.util.Collection[$0]'
@@ -7110,41 +7164,18 @@ b6ce701db80e	api-parity(signature)	signature	PostProcessorManager$#processDocume
 779383d65ab2	api-parity(signature)	signature	PostProcessorManager$.PostProcessorDependencyStage#dependents	/PostProcessorManager$/PostProcessorDependencyStage	0	result type differs: emitted 'scala.collection.mutable.Buffer[ssg.md.parser.PostProcessorFactory]', reference 'List[PostProcessorFactory]'
 b7bf5230b42f	api-parity(signature)	signature	PostProcessorManager$.PostProcessorDependencyStage#myNodeMap	/PostProcessorManager$/PostProcessorDependencyStage	0	result type differs: emitted 'scala.collection.mutable.Map[java.lang.Class[? <: ssg.md.util.ast.Node], scala.collection.mutable.Set[java.lang.Class[?]]]', reference 'Map[Class[? <: Node], Set[Class[?]]]'
 4d49a427019d	api-parity(signature)	signature	PrefixedSubSequence#getBase	/PrefixedSubSequence	0	result type differs: emitted 'java.lang.Object', reference 'AnyRef'
-1bf8c09fb476	api-parity(signature)	signature	Range$#EMPTY	/Range$	0	modifiers differ: emitted final, reference
-408ff2a3178e	api-parity(signature)	signature	Range$#NULL	/Range$	0	modifiers differ: emitted final, reference
 4b022c5a6128	api-parity(signature)	signature	RefNode#collectText	/RefNode	0	param 0 type differs: emitted 'ssg.md.util.sequence.builder.ISequenceBuilder[? <: ssg.md.util.sequence.builder.ISequenceBuilder[?, ssg.md.util.sequence.BasedSequence], ssg.md.util.sequence.BasedSequence]', reference 'ISequenceBuilder[? <: ISequenceBuilder[?, BasedSequence], BasedSequence]'
 cb7f6dfff20b	api-parity(signature)	signature	ReferenceRepository#getReferencedElements	/ReferenceRepository	0	result type differs: emitted 'scala.collection.mutable.Set[ssg.md.ast.Reference]', reference 'ju.Set[Reference]'
 5547f79a791d	api-parity(signature)	signature	ReplacedTextMapper#getRegions	/ReplacedTextMapper	0	result type differs: emitted 'scala.collection.mutable.ArrayBuffer[ssg.md.util.sequence.ReplacedTextRegion]', reference 'ju.ArrayList[ReplacedTextRegion]'
 a887862da42d	api-parity(signature)	signature	ReplacedTextMapper#getReplacedSegments	/ReplacedTextMapper	0	result type differs: emitted 'scala.collection.mutable.ArrayBuffer[ssg.md.util.sequence.BasedSequence]', reference 'ju.ArrayList[BasedSequence]'
 5709ec857be9	api-parity(signature)	signature	ResolvedContent#content	/ResolvedContent	0	result type differs: emitted 'scala.Array[scala.Byte]', reference 'Nullable[Array[Byte]]'
 02d12a3a827b	api-parity(signature)	signature	ResolvedContent#withContent	/ResolvedContent	0	param 0 type differs: emitted 'scala.Array[scala.Byte]', reference 'Nullable[Array[Byte]]'
-82891106cfdd	api-parity(signature)	signature	RichSequence$#EMPTY_ARRAY	/RichSequence$	0	modifiers differ: emitted final, reference
-7c8dd3bed2d6	api-parity(signature)	signature	RichSequence$#NULL	/RichSequence$	0	modifiers differ: emitted final, reference
 fe1c91544781	api-parity(signature)	signature	RichSequenceImpl#emptyArray	/RichSequenceImpl	0	result type differs: emitted 'scala.Array[ssg.md.util.sequence.RichSequence]', reference 'Array[RichSequence]'
 d12d454c7215	api-parity(signature)	signature	RichSequenceImpl#getBuilder	/RichSequenceImpl	0	result type differs: emitted 'ssg.md.util.sequence.builder.ISequenceBuilder[?, ssg.md.util.sequence.RichSequence]', reference '$0'
-a4d8371538f6	api-parity(signature)	signature	RomanNumeral$#LIMITED_LOWERCASE_ROMAN_NUMERAL	/RomanNumeral$	0	modifiers differ: emitted final, reference
-391c8ea95643	api-parity(signature)	signature	RomanNumeral$#LIMITED_ROMAN_NUMERAL	/RomanNumeral$	0	modifiers differ: emitted final, reference
-a5dd26bece8a	api-parity(signature)	signature	RomanNumeral$#LOWERCASE_ROMAN_NUMERAL	/RomanNumeral$	0	modifiers differ: emitted final, reference
-0584fe29fae8	api-parity(signature)	signature	RomanNumeral$#ROMAN_NUMERAL	/RomanNumeral$	0	modifiers differ: emitted final, reference
 43e4c815605d	api-parity(signature)	signature	ScopedDataSet#getAll	/ScopedDataSet	0	result type differs: emitted 'scala.collection.mutable.Map[? <: ssg.md.util.data.DataKeyBase[?], java.lang.Object]', reference 'Map[? <: DataKeyBase[?], AnyRef]'
 33d876e1c867	api-parity(signature)	signature	ScopedDataSet#getKeys	/ScopedDataSet	0	result type differs: emitted 'balticporter.runtime.JavaCollection[? <: ssg.md.util.data.DataKeyBase[?]]', reference 'Collection[? <: DataKeyBase[?]]'
 be2b534b40bb	api-parity(signature)	signature	ScopedDataSet#getOrCompute	/ScopedDataSet	0	result type differs: emitted 'java.lang.Object', reference 'AnyRef'
-c522c1eb0488	api-parity(signature)	signature	Seg$#ANCHOR_0	/Seg$	0	modifiers differ: emitted final, reference
-df81145e6aac	api-parity(signature)	signature	Seg$#F_TEXT_OPTION	/Seg$	0	modifiers differ: emitted final, reference
-4adc7c59a447	api-parity(signature)	signature	Seg$#MAX_TEXT_OFFSET	/Seg$	0	modifiers differ: emitted final, reference
-880768a1a3f8	api-parity(signature)	signature	Seg$#NULL	/Seg$	0	modifiers differ: emitted final, reference
 3fdf27e84c3d	api-parity(signature)	signature	Segment#bytes	/Segment	0	result type differs: emitted 'scala.Array[scala.Byte]', reference 'Array[Byte]'
-eebd7dde5492	api-parity(signature)	signature	Segment$#TYPE_ANCHOR	/Segment$	0	modifiers differ: emitted inline, reference final
-98fae533fd56	api-parity(signature)	signature	Segment$#TYPE_LENGTH_BYTES	/Segment$	0	modifiers differ: emitted inline, reference final
-e9f30269e4cf	api-parity(signature)	signature	Segment$#TYPE_MASK	/Segment$	0	modifiers differ: emitted inline, reference final
-81da97093f73	api-parity(signature)	signature	Segment$#TYPE_NO_SIZE_BYTES	/Segment$	0	modifiers differ: emitted inline, reference final
-628f4d8d05b8	api-parity(signature)	signature	Segment$#TYPE_REPEATED_ASCII	/Segment$	0	modifiers differ: emitted inline, reference final
-333cf70dc3d1	api-parity(signature)	signature	Segment$#TYPE_REPEATED_EOL	/Segment$	0	modifiers differ: emitted inline, reference final
-f30505e8ec56	api-parity(signature)	signature	Segment$#TYPE_REPEATED_SPACE	/Segment$	0	modifiers differ: emitted inline, reference final
-1bc090d3d857	api-parity(signature)	signature	Segment$#TYPE_REPEATED_TEXT	/Segment$	0	modifiers differ: emitted inline, reference final
-d4227ce7b0ec	api-parity(signature)	signature	Segment$#TYPE_START_BYTES	/Segment$	0	modifiers differ: emitted inline, reference final
-4b3b9bca37ab	api-parity(signature)	signature	Segment$#TYPE_TEXT	/Segment$	0	modifiers differ: emitted inline, reference final
-76dccddc6e26	api-parity(signature)	signature	Segment$#TYPE_TEXT_ASCII	/Segment$	0	modifiers differ: emitted inline, reference final
 0d62b20ffb83	api-parity(signature)	signature	Segment$#addChar	/Segment$	0	param 0 type differs: emitted 'scala.Array[scala.Byte]', reference 'Array[Byte]'
 b13c7f4bf5f9	api-parity(signature)	signature	Segment$#addCharAscii	/Segment$	0	param 0 type differs: emitted 'scala.Array[scala.Byte]', reference 'Array[Byte]'
 a9857f9152fd	api-parity(signature)	signature	Segment$#addChars	/Segment$	0	param 0 type differs: emitted 'scala.Array[scala.Byte]', reference 'Array[Byte]'
@@ -7179,8 +7210,6 @@ a0d648ae045f	api-parity(signature)	signature	SegmentBuilderBase#toStringWithRang
 8329328bbf65	api-parity(signature)	signature	SegmentOptimizer#apply	/SegmentOptimizer	0	result type differs: emitted 'scala.Array[java.lang.Object]', reference 'Array[Object]'
 ae209c5ff3ce	api-parity(signature)	signature	SegmentOptimizer$#insert	/SegmentOptimizer$	0	param 0 type differs: emitted 'scala.Array[java.lang.Object]', reference 'Array[Object]'
 0b7792fd46e3	api-parity(signature)	signature	SegmentOptimizer$#insert	/SegmentOptimizer$	0	result type differs: emitted 'scala.Array[java.lang.Object]', reference 'Array[Object]'
-06b0b137cc08	api-parity(signature)	signature	SegmentStats$#NOT_REPEATED_CHAR	/SegmentStats$	0	modifiers differ: emitted final, reference
-f27b23297da1	api-parity(signature)	signature	SegmentStats$#NULL_REPEATED_CHAR	/SegmentStats$	0	modifiers differ: emitted final, reference
 b3f04aaf2b6f	api-parity(signature)	signature	SegmentTree#segmentBytes	/SegmentTree	0	result type differs: emitted 'scala.Array[scala.Byte]', reference 'Array[Byte]'
 01df745226bb	api-parity(signature)	signature	SegmentTree#treeData	/SegmentTree	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
 54c4df9e2dd9	api-parity(signature)	signature	SegmentTree$#aggrLength	/SegmentTree$	0	param 1 type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
@@ -7205,13 +7234,6 @@ d15cf53e1914	api-parity(signature)	signature	SegmentedSequenceStats$#StatsEntry	
 4f5245f1a488	api-parity(signature)	signature	SegmentedSequenceStats$#StatsEntry	/SegmentedSequenceStats$	0	parents differ: emitted-only [java.lang.Comparable[ssg.md.util.sequence.builder.SegmentedSequenceStats.StatsEntry]], reference-only [Comparable[StatsEntry]]
 c6918567b5dc	api-parity(signature)	signature	SequenceUtils$#EMPTY_INDICES	/SequenceUtils$	0	modifiers differ: emitted final, reference
 659c52188f0d	api-parity(signature)	signature	SequenceUtils$#EMPTY_INDICES	/SequenceUtils$	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
-cd66f328398a	api-parity(signature)	signature	SequenceUtils$#EOL_CHAR	/SequenceUtils$	0	modifiers differ: emitted final, reference
-0ee0053a4153	api-parity(signature)	signature	SequenceUtils$#EOL_CHAR1	/SequenceUtils$	0	modifiers differ: emitted final, reference
-76af87f8a6a1	api-parity(signature)	signature	SequenceUtils$#EOL_CHAR2	/SequenceUtils$	0	modifiers differ: emitted final, reference
-055b1caf0b70	api-parity(signature)	signature	SequenceUtils$#LINE_SEP	/SequenceUtils$	0	modifiers differ: emitted final, reference
-cd26afbb9c97	api-parity(signature)	signature	SequenceUtils$#NBSP_CHARS	/SequenceUtils$	0	modifiers differ: emitted final, reference
-d9a6911b4fb8	api-parity(signature)	signature	SequenceUtils$#SPLIT_TRIM_SKIP_EMPTY	/SequenceUtils$	0	modifiers differ: emitted final, reference
-d0b438ab1f97	api-parity(signature)	signature	SequenceUtils$#US_CHARS	/SequenceUtils$	0	modifiers differ: emitted final, reference
 6fd8f78f7902	api-parity(signature)	signature	SequenceUtils$#blankLinesRemovedRanges	/SequenceUtils$	0	result type differs: emitted 'scala.collection.mutable.Buffer[ssg.md.util.sequence.Range]', reference 'ju.List[Range]'
 6fd8f78f7902/2	api-parity(signature)	signature	SequenceUtils$#blankLinesRemovedRanges	/SequenceUtils$	0	result type differs: emitted 'scala.collection.mutable.Buffer[ssg.md.util.sequence.Range]', reference 'ju.List[Range]'
 6fd8f78f7902/3	api-parity(signature)	signature	SequenceUtils$#blankLinesRemovedRanges	/SequenceUtils$	0	result type differs: emitted 'scala.collection.mutable.Buffer[ssg.md.util.sequence.Range]', reference 'ju.List[Range]'
@@ -7382,8 +7404,6 @@ d0b7adb5875d	api-parity(signature)	signature	SharedDataKeys$#UNESCAPE_SPECIAL_CH
 23ceaad9409e	api-parity(signature)	signature	SoftLineBreak#collectText	/SoftLineBreak	0	param 0 type differs: emitted 'ssg.md.util.sequence.builder.ISequenceBuilder[? <: ssg.md.util.sequence.builder.ISequenceBuilder[?, ssg.md.util.sequence.BasedSequence], ssg.md.util.sequence.BasedSequence]', reference 'ISequenceBuilder[? <: ISequenceBuilder[?, BasedSequence], BasedSequence]'
 cf1e348689dc	api-parity(signature)	signature	SpaceInsertingSequenceBuilder#addAll	/SpaceInsertingSequenceBuilder	0	param 0 type differs: emitted 'balticporter.runtime.JavaIterable[? <: java.lang.CharSequence]', reference 'Iterable[? <: CharSequence]'
 491f344f379f	api-parity(signature)	signature	SpaceInsertingSequenceBuilder#append	/SpaceInsertingSequenceBuilder	0	param 0 type differs: emitted 'balticporter.runtime.JavaIterable[? <: java.lang.CharSequence]', reference 'Iterable[? <: CharSequence]'
-7176cd286718	api-parity(signature)	signature	SpaceMapper$#fromNonBreakSpace	/SpaceMapper$	0	modifiers differ: emitted final, reference
-fb9fd3ddaeb5	api-parity(signature)	signature	SpaceMapper$#toNonBreakSpace	/SpaceMapper$	0	modifiers differ: emitted final, reference
 73bbd5723ed7	api-parity(signature)	signature	SpecialLeadInCharsHandler#escape	/SpecialLeadInCharsHandler	0	param 2 type differs: emitted 'java.util.function.Consumer[java.lang.CharSequence]', reference 'CharSequence => Unit'
 e63045c6e1b4	api-parity(signature)	signature	SpecialLeadInCharsHandler#unEscape	/SpecialLeadInCharsHandler	0	param 2 type differs: emitted 'java.util.function.Consumer[java.lang.CharSequence]', reference 'CharSequence => Unit'
 d9188123456f	api-parity(signature)	signature	SpecialLeadInHandler#escape	/SpecialLeadInHandler	0	param 2 type differs: emitted 'java.util.function.Consumer[java.lang.CharSequence]', reference 'CharSequence => Unit'
@@ -7403,12 +7423,6 @@ c8b411fe01a4/2	api-parity(signature)	signature	SubClassingBag#typeBitSet	/SubCla
 3accf8cd919e	api-parity(signature)	signature	SubClassingBag#typeBitSet	/SubClassingBag	0	param 1 type differs: emitted 'balticporter.runtime.JavaCollection[java.lang.Class[?]]', reference 'java.util.Collection[Class[?]]'
 f1e96a874d66	api-parity(signature)	signature	SubClassingBag#typeBitSet	/SubClassingBag	0	param 1 type differs: emitted 'scala.Array[java.lang.Class[?]]', reference 'Array[Class[?]]'
 544cd3ca12aa	api-parity(signature)	signature	SubSequence#getBase	/SubSequence	0	result type differs: emitted 'java.lang.CharSequence', reference 'AnyRef'
-cd33f5a10d37	api-parity(signature)	signature	TableCaptionSection$#DEFAULT_CELL	/TableCaptionSection$	0	modifiers differ: emitted final, reference
-158e4452ae8c	api-parity(signature)	signature	TableCaptionSection$#NULL_CELL	/TableCaptionSection$	0	modifiers differ: emitted final, reference
-8cb0b97616e6	api-parity(signature)	signature	TableCell$#DEFAULT_CELL	/TableCell$	0	modifiers differ: emitted final, reference
-8a63b6469b6f	api-parity(signature)	signature	TableCell$#NOT_TRACKED	/TableCell$	0	modifiers differ: emitted final, reference
-5de6a4acec7b	api-parity(signature)	signature	TableCell$#NULL	/TableCell$	0	modifiers differ: emitted final, reference
-d96be4e21054	api-parity(signature)	signature	TableCellManipulator$#BREAK	/TableCellManipulator$	0	modifiers differ: emitted final, reference
 811f7dfb3c74	api-parity(signature)	signature	TableCellOffsetInfo#nextOffsetStop	/TableCellOffsetInfo	0	param 0 type differs: emitted 'scala.collection.mutable.Map[ssg.md.util.format.TableSectionType, java.lang.Integer]', reference 'Nullable[JMap[TableSectionType, Integer]]'
 f6febd8f9462	api-parity(signature)	signature	TableCellOffsetInfo#previousOffsetStop	/TableCellOffsetInfo	0	param 0 type differs: emitted 'scala.collection.mutable.Map[ssg.md.util.format.TableSectionType, java.lang.Integer]', reference 'Nullable[JMap[TableSectionType, Integer]]'
 de26237c4a65	api-parity(signature)	signature	TableFormatOptions$#FORMAT_CHAR_WIDTH_PROVIDER	/TableFormatOptions$	0	modifiers differ: emitted final, reference
@@ -7443,19 +7457,12 @@ fde9f6060538	api-parity(signature)	signature	TableFormatOptions$#FORMAT_TABLE_MA
 fe4f9df771de	api-parity(signature)	signature	TableFormatOptions$#FORMAT_TABLE_SPACE_AROUND_PIPES	/TableFormatOptions$	0	result type differs: emitted 'ssg.md.util.data.DataKey[java.lang.Boolean]', reference 'DataKey[Boolean]'
 f16a4462281c	api-parity(signature)	signature	TableFormatOptions$#FORMAT_TABLE_TRIM_CELL_WHITESPACE	/TableFormatOptions$	0	modifiers differ: emitted final, reference
 e6326bf4d8d9	api-parity(signature)	signature	TableFormatOptions$#FORMAT_TABLE_TRIM_CELL_WHITESPACE	/TableFormatOptions$	0	result type differs: emitted 'ssg.md.util.data.DataKey[java.lang.Boolean]', reference 'DataKey[Boolean]'
-376ac6db25be	api-parity(signature)	signature	TableFormatOptions$#INTELLIJ_DUMMY_IDENTIFIER	/TableFormatOptions$	0	modifiers differ: emitted final, reference
-4ec140d2bb2d	api-parity(signature)	signature	TableFormatOptions$#INTELLIJ_DUMMY_IDENTIFIER_CHAR	/TableFormatOptions$	0	modifiers differ: emitted final, reference
-aa3ed3b80813	api-parity(signature)	signature	TableFormatOptions$#INTELLIJ_DUMMY_IDENTIFIER_SET	/TableFormatOptions$	0	modifiers differ: emitted final, reference
-5c4be2f84905	api-parity(signature)	signature	TableManipulator$#NULL	/TableManipulator$	0	modifiers differ: emitted final, reference
 deffa941107d	api-parity(signature)	signature	TableRow#getCells	/TableRow	0	result type differs: emitted 'scala.collection.mutable.Buffer[ssg.md.util.format.TableCell]', reference 'JList[TableCell]'
 6c15c4fb883e	api-parity(signature)	signature	TableRowManipulator#apply	/TableRowManipulator	0	param 2 type differs: emitted 'scala.collection.mutable.ArrayBuffer[ssg.md.util.format.TableRow]', reference 'ArrayList[TableRow]'
-9c526fa6a7be	api-parity(signature)	signature	TableRowManipulator$#BREAK	/TableRowManipulator$	0	modifiers differ: emitted final, reference
 03cb8c3c4c9d	api-parity(signature)	signature	TableSection#getRows	/TableSection	0	result type differs: emitted 'scala.collection.mutable.ArrayBuffer[ssg.md.util.format.TableRow]', reference 'ArrayList[TableRow]'
 84bc05898aba	api-parity(signature)	signature	TableSection#rows	/TableSection	0	modifiers differ: emitted final, reference
 67275f0d3a2c	api-parity(signature)	signature	TableSection#rows	/TableSection	0	result type differs: emitted 'scala.collection.mutable.ArrayBuffer[ssg.md.util.format.TableRow]', reference 'ArrayList[TableRow]'
-a70401fcaad6	api-parity(signature)	signature	TableSeparatorSection$#DEFAULT_CELL	/TableSeparatorSection$	0	modifiers differ: emitted final, reference
 bf4050df6815	api-parity(signature)	signature	TemplateUtil$#MappedResolver	/TemplateUtil$	0	modifiers differ: emitted , reference final
-f86752016af7	api-parity(signature)	signature	TemplateUtil$#NULL_RESOLVER	/TemplateUtil$	0	modifiers differ: emitted final, reference
 be7a0e006906	api-parity(signature)	signature	TemplateUtil$.MappedResolver#resolve	/TemplateUtil$/MappedResolver	0	param 0 type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
 f7357b09010b	api-parity(signature)	signature	TemplateUtil$.MappedResolver#resolved	/TemplateUtil$/MappedResolver	0	result type differs: emitted 'scala.collection.mutable.Map[java.lang.String, java.lang.String]', reference 'mutable.Map[String, String]'
 75dcfd23d374	api-parity(signature)	signature	TemplateUtil$.Resolver#resolve	/TemplateUtil$/Resolver	0	param 0 type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
@@ -7463,12 +7470,6 @@ f7357b09010b	api-parity(signature)	signature	TemplateUtil$.MappedResolver#resolv
 61960519f0db	api-parity(signature)	signature	TextBase#collectText	/TextBase	0	param 0 type differs: emitted 'ssg.md.util.sequence.builder.ISequenceBuilder[? <: ssg.md.util.sequence.builder.ISequenceBuilder[?, ssg.md.util.sequence.BasedSequence], ssg.md.util.sequence.BasedSequence]', reference 'ISequenceBuilder[? <: ISequenceBuilder[?, BasedSequence], BasedSequence]'
 f0e246be19af	api-parity(signature)	signature	TextContainer#collectEndText	/TextContainer	0	param 0 type differs: emitted 'ssg.md.util.sequence.builder.ISequenceBuilder[? <: ssg.md.util.sequence.builder.ISequenceBuilder[?, ssg.md.util.sequence.BasedSequence], ssg.md.util.sequence.BasedSequence]', reference 'ISequenceBuilder[? <: ISequenceBuilder[?, BasedSequence], BasedSequence]'
 dc55303794f8	api-parity(signature)	signature	TextContainer#collectText	/TextContainer	0	param 0 type differs: emitted 'ssg.md.util.sequence.builder.ISequenceBuilder[? <: ssg.md.util.sequence.builder.ISequenceBuilder[?, ssg.md.util.sequence.BasedSequence], ssg.md.util.sequence.BasedSequence]', reference 'ISequenceBuilder[? <: ISequenceBuilder[?, BasedSequence], BasedSequence]'
-5fa7af3c7876	api-parity(signature)	signature	TextContainer$#F_ADD_SPACES_BETWEEN_NODES	/TextContainer$	0	modifiers differ: emitted final, reference
-706048e523d2	api-parity(signature)	signature	TextContainer$#F_FOR_HEADING_ID	/TextContainer$	0	modifiers differ: emitted final, reference
-a235397986f0	api-parity(signature)	signature	TextContainer$#F_LINK_TEXT_TYPE	/TextContainer$	0	modifiers differ: emitted final, reference
-47f4c8f774c5	api-parity(signature)	signature	TextContainer$#F_NODE_TEXT	/TextContainer$	0	modifiers differ: emitted final, reference
-e96acd752a64	api-parity(signature)	signature	TextContainer$#F_NO_TRIM_REF_TEXT_END	/TextContainer$	0	modifiers differ: emitted final, reference
-319ea2e27394	api-parity(signature)	signature	TextContainer$#F_NO_TRIM_REF_TEXT_START	/TextContainer$	0	modifiers differ: emitted final, reference
 3ac6d8aa7f72	api-parity(signature)	signature	TextNodeConverter#getMergedList	/TextNodeConverter	0	result type differs: emitted 'scala.collection.mutable.Buffer[ssg.md.util.ast.Node]', reference 'ju.List[Node]'
 c66a7beafe45	api-parity(signature)	signature	TextNodeMergingList#getMergedList	/TextNodeMergingList	0	result type differs: emitted 'scala.collection.mutable.Buffer[ssg.md.util.ast.Node]', reference 'ju.List[Node]'
 7cc7e3b186bd	api-parity(signature)	signature	TrackedOffsetList#add	/TrackedOffsetList	0	modifiers differ: emitted , reference override
@@ -7523,7 +7524,6 @@ f13850ecf4f2	api-parity(signature)	signature	TranslationHandlerImpl#getTranslati
 54423268a000/2	api-parity(signature)	signature	TranslationHandlerImpl#postProcessNonTranslating	/TranslationHandlerImpl	0	param 0 type differs: emitted 'java.util.function.Function[java.lang.String, java.lang.CharSequence]', reference 'String => CharSequence'
 c17a40f83750	api-parity(signature)	signature	TranslationHandlerImpl#postProcessNonTranslating	/TranslationHandlerImpl	0	param 1 type differs: emitted 'java.util.function.Supplier[$0]', reference '() => $0'
 8b4b3379bbd6	api-parity(signature)	signature	TranslationHandlerImpl#setTranslatedTexts	/TranslationHandlerImpl	0	param 0 type differs: emitted 'scala.collection.mutable.Buffer[? <: java.lang.CharSequence]', reference 'List[? <: CharSequence]'
-a959f6de02b9	api-parity(signature)	signature	UriContentResolver$#NULL	/UriContentResolver$	0	modifiers differ: emitted final, reference
 86829e28b69b	api-parity(signature)	signature	UriContentResolverFactory#apply	/UriContentResolverFactory	0	modifiers differ: emitted , reference override
 0bce25986d4d	api-parity(signature)	signature	Utils$#compareNullable	/Utils$	0	type params differ: emitted '[$0 <: java.lang.Comparable[$0]]', reference '[$0 <: Comparable[$0]]'
 7b83a72c4864	api-parity(signature)	signature	Utils$#endsWith	/Utils$	0	param 1 type differs: emitted 'scala.Array[java.lang.String]', reference 'String*'
@@ -7807,6 +7807,7 @@ d6248a7ea44d	catalog(consulted)	reached	JS-C45	flexmark-util-ast/src/main/java/c
 196100ba25f2	catalog(consulted)	reached	JS-C50	flexmark-util-ast/src/main/java/com/vladsch/flexmark/util/ast/Node.java	34	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 11745, fired 242, declarations 0: Java's default access is package-private and Scala's is public — INVERTED
 a6c9d1556dda	catalog(consulted)	reached	JS-C51	-	0	rendering ClassDef — consulted 557, fired 0, declarations 0: a `return` in a CONSTRUCTOR body, whose promotion puts it in the class body
 4f77a372d937	catalog(consulted)	reached	JS-C52	flexmark-util-sequence/src/main/java/com/vladsch/flexmark/util/sequence/builder/SegmentBuilderBase.java	638	rendering MethodRef — consulted 160, fired 3, declarations 0: `@FunctionalInterface` governs Scala's eta-expansion warning — a static method reference at a non-annotated SAM warns under `-Werror`
+9c4c3221412a	catalog(consulted)	reached	JS-C53	flexmark-util-ast/src/main/java/com/vladsch/flexmark/util/ast/BlockContent.java	12	rendering ValDef — consulted 5086, fired 757, declarations 0: a java `final` FIELD carries two facts onto a `val`: no reassignment, and no OVERRIDE
 e47b744b58d8	catalog(consulted)	reached	JS-E01	flexmark-util-ast/src/main/java/com/vladsch/flexmark/util/ast/Document.java	98	lowering CtBinaryOperator/Expression — consulted 7956, fired 345, declarations 0: `==`/`!=` are REFERENCE identity in Java; Scala's `==` calls `equals`
 70f0540f8f74	catalog(consulted)	reached	JS-E02	flexmark-util-ast/src/main/java/com/vladsch/flexmark/util/ast/Node.java	519	lowering CtUnaryOperator/Expression — consulted 1077, fired 96, declarations 0: postfix/prefix `++`/`--` USED AS A VALUE yields the value before the update — the VALUE only; the operand's single evaluation is JS-E17
 1befc2216b87	catalog(consulted)	reached	JS-E03	flexmark-util-sequence/src/main/java/com/vladsch/flexmark/util/sequence/builder/tree/Segment.java	640	lowering CtOperatorAssignment/Statement — consulted 177, fired 1, declarations 0: compound assignment NARROWS implicitly to the left-hand type — STATEMENT position; the lvalue's single evaluation is JS-E17

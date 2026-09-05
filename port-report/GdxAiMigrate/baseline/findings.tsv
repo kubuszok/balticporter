@@ -933,6 +933,7 @@ b43bbcc7da70	api-parity(port-extra)	port-extra	Wander#setEnabled	/Wander	0	def s
 9349c8dde8a5	api-parity(port-extra)	port-extra	Wander#setTarget	/Wander	0	def setTarget/1 in emitted port only [rename candidates: calculateRealSteering]
 9895288c9bb5	api-parity(port-extra)	port-extra	Wander#setTimeToTarget	/Wander	0	def setTimeToTarget/1 in emitted port only [rename candidates: calculateRealSteering]
 d99327039a7d	api-parity(port-extra)	port-extra	Wander#wanderCenter	/Wander	0	def wanderCenter/0 in emitted port only [rename candidates: getInternalTargetPosition, getWanderCenter]
+fd07c08003f1	api-parity(rule)	rule	NullLimiter$#NEUTRAL_LIMITER	/NullLimiter$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 aab20f7a0974	api-parity(rule)	rule	PathFinderQueue$#TIME_TOLERANCE	/PathFinderQueue$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 07194ea51c64	api-parity(rule)	rule	PathFinderRequest$#SEARCH_DONE	/PathFinderRequest$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 c3737cbce6a7	api-parity(rule)	rule	PathFinderRequest$#SEARCH_FINALIZED	/PathFinderRequest$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
@@ -1048,7 +1049,6 @@ f0613b4bad4c	api-parity(signature)	signature	LinePath$#Segment	/LinePath$	0	type
 8009e6b802cb	api-parity(signature)	signature	MessageDispatcher#addProviders	/MessageDispatcher	0	param 1 type differs: emitted 'scala.Array[scala.Int]', reference 'Int*'
 34fbf539147d	api-parity(signature)	signature	MessageDispatcher#clearListeners	/MessageDispatcher	0	param 0 type differs: emitted 'scala.Array[scala.Int]', reference 'Int*'
 5cd2c2366dbf	api-parity(signature)	signature	MessageDispatcher#clearProviders	/MessageDispatcher	0	param 0 type differs: emitted 'scala.Array[scala.Int]', reference 'Int*'
-0f026bb8a492	api-parity(signature)	signature	NullLimiter$#NEUTRAL_LIMITER	/NullLimiter$	0	modifiers differ: emitted final, reference
 202adb016bec	api-parity(signature)	signature	Parallel$.Orchestrator#execute	/Parallel$/Orchestrator	0	param 0 type differs: emitted 'Parallel[?]', reference 'Parallel[$0]'
 62d30f36ce6a	api-parity(signature)	signature	Parallel$.Policy#onChildFail	/Parallel$/Policy	0	param 0 type differs: emitted 'Parallel[?]', reference 'Parallel[$0]'
 fe2bc5df056e	api-parity(signature)	signature	Parallel$.Policy#onChildSuccess	/Parallel$/Policy	0	param 0 type differs: emitted 'Parallel[?]', reference 'Parallel[$0]'
@@ -1274,6 +1274,7 @@ e40fb5129eda	catalog(consulted)	reached	JS-C43	-	0	rendering ClassDef — consul
 2bc474e91cc7	catalog(consulted)	reached	JS-C49	com/badlogic/gdx/ai/btree/utils/BehaviorTreeParser.java	303	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 2261, fired 16, declarations 0: Java's `private` reaches the whole enclosing TOP-LEVEL class; Scala's reaches only the template
 fc54bd21d9c8	catalog(consulted)	reached	JS-C50	com/badlogic/gdx/ai/btree/utils/BehaviorTreeLoader.java	42	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 2261, fired 63, declarations 0: Java's default access is package-private and Scala's is public — INVERTED
 f708d3185bfd	catalog(consulted)	reached	JS-C51	-	0	rendering ClassDef — consulted 210, fired 0, declarations 0: a `return` in a CONSTRUCTOR body, whose promotion puts it in the class body
+ba22e936987f	catalog(consulted)	reached	JS-C53	com/badlogic/gdx/ai/StandaloneFileSystem.java	65	rendering ValDef — consulted 861, fired 36, declarations 0: a java `final` FIELD carries two facts onto a `val`: no reassignment, and no OVERRIDE
 bbd9458d8e2d	catalog(consulted)	reached	JS-E01	../../../libgdx/gdx/src/com/badlogic/gdx/Net.java	229	lowering CtBinaryOperator/Expression — consulted 30088, fired 634, declarations 0: `==`/`!=` are REFERENCE identity in Java; Scala's `==` calls `equals`
 a75ef0d20f10	catalog(consulted)	reached	JS-E02	../../../libgdx/gdx/src/com/badlogic/gdx/InputEventQueue.java	51	lowering CtUnaryOperator/Expression — consulted 2774, fired 767, declarations 0: postfix/prefix `++`/`--` USED AS A VALUE yields the value before the update — the VALUE only; the operand's single evaluation is JS-E17
 0abf6edfbaad	catalog(consulted)	reached	JS-E03	../../../libgdx/gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFont.java	750	lowering CtOperatorAssignment/Statement — consulted 1750, fired 36, declarations 0: compound assignment NARROWS implicitly to the left-hand type — STATEMENT position; the lvalue's single evaluation is JS-E17

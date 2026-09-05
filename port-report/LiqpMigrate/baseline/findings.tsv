@@ -605,6 +605,12 @@ af58c0ecf5c3	api-parity(port-extra)	port-extra	TemplateParser$.Builder$#Funnel	/
 9fa8855c439b	api-parity(port-extra)	port-extra	Wrapping#wrapped	/Wrapping	0	def wrapped/0 in emitted port only
 bb0ba60e1feb	api-parity(rule)	rule	Absolute_Url$#config	/Absolute_Url$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 7030924a0251	api-parity(rule)	rule	Absolute_Url$#url	/Absolute_Url$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+982303bd127c	api-parity(rule)	rule	AtomNode$#BLANK	/AtomNode$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+876d85fa498e	api-parity(rule)	rule	AtomNode$#EMPTY	/AtomNode$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+bf492bdf8762	api-parity(rule)	rule	Filters$#EMPTY	/Filters$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+6f771a5d9bde	api-parity(rule)	rule	Insertions$#EMPTY	/Insertions$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+f30c7ab5868d	api-parity(rule)	rule	Insertions$#JEKYLL_INSERTIONS	/Insertions$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+07e9ee9bc8fa	api-parity(rule)	rule	Insertions$#STANDARD_INSERTIONS	/Insertions$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 7e21fb30674a	api-parity(rule)	rule	Relative_Url$#baseurl	/Relative_Url$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 2a4804addb71	api-parity(rule)	rule	Relative_Url$#site	/Relative_Url$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 cab8f6dcf08c	api-parity(rule)	rule	TemplateContext$#REGISTRY_CYCLE	/TemplateContext$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
@@ -613,6 +619,8 @@ db43a784de4d	api-parity(rule)	rule	TemplateContext$#REGISTRY_FOR_STACK	/Template
 b792ef27f7ae	api-parity(rule)	rule	TemplateContext$#REGISTRY_IFCHANGED	/TemplateContext$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 4a23815b7924	api-parity(rule)	rule	TemplateContext$#REGISTRY_ITERATION_PROTECTOR	/TemplateContext$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 107251d03b1e	api-parity(rule)	rule	TemplateContext$#REGISTRY_ROOT_FOLDER	/TemplateContext$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+4b3fdbc93522	api-parity(rule)	rule	TemplateParser$#DEFAULT_FLAVOR	/TemplateParser$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+603a5ec58a7f	api-parity(rule)	rule	TemplateParser$#DEFAULT_LOCALE	/TemplateParser$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 c8a7a2f2233b	api-parity(signature)	signature	#LocalFSNameResolver		0	modifiers differ: emitted , reference final
 93d93a746c82	api-parity(signature)	signature	#Template		0	modifiers differ: emitted , reference final
 769d6429d25f	api-parity(signature)	signature	#TemplateParser		0	modifiers differ: emitted , reference final
@@ -635,8 +643,6 @@ be2953eaa82c	api-parity(signature)	signature	At_Most#apply	/At_Most	0	param 0 ty
 3c8dc022f70b	api-parity(signature)	signature	At_Most#apply	/At_Most	0	param 2 type differs: emitted 'scala.Array[java.lang.Object]', reference 'Array[DataView]'
 aef163e687d0	api-parity(signature)	signature	At_Most#apply	/At_Most	0	result type differs: emitted 'java.lang.Object', reference 'DataView'
 52f40f7f943c	api-parity(signature)	signature	AtomNode#render	/AtomNode	0	result type differs: emitted 'java.lang.Object', reference 'DataView'
-8694ecb46f1f	api-parity(signature)	signature	AtomNode$#BLANK	/AtomNode$	0	modifiers differ: emitted final, reference
-7b7a67ed9440	api-parity(signature)	signature	AtomNode$#EMPTY	/AtomNode$	0	modifiers differ: emitted final, reference
 e306b61e5023	api-parity(signature)	signature	AtomNode$#isBlank	/AtomNode$	0	param 0 type differs: emitted 'java.lang.Object', reference 'DataView'
 554fb35c32e0	api-parity(signature)	signature	AtomNode$#isEmpty	/AtomNode$	0	param 0 type differs: emitted 'java.lang.Object', reference 'DataView'
 23cd5aaa3c09	api-parity(signature)	signature	AttributeNode#render	/AttributeNode	0	result type differs: emitted 'java.lang.Object', reference 'DataView'
@@ -705,7 +711,6 @@ d4acccfaaec6	api-parity(signature)	signature	Filter#get	/Filter	0	param 1 type d
 fb33d1a9a460	api-parity(signature)	signature	Filters#getMap	/Filters	0	result type differs: emitted 'scala.collection.mutable.Map[java.lang.String, ssg.liquid.filters.Filter]', reference 'JMap[String, Filter]'
 a57ef9192902	api-parity(signature)	signature	Filters#mergeWith	/Filters	0	param 0 type differs: emitted 'scala.collection.mutable.Buffer[ssg.liquid.filters.Filter]', reference 'JList[Filter]'
 adf5ccb522f0	api-parity(signature)	signature	Filters#values	/Filters	0	result type differs: emitted 'balticporter.runtime.JavaCollection[ssg.liquid.filters.Filter]', reference 'JCollection[Filter]'
-d6e669b7f39a	api-parity(signature)	signature	Filters$#EMPTY	/Filters$	0	modifiers differ: emitted final, reference
 392d6f131ccb	api-parity(signature)	signature	Filters$#of	/Filters$	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[ssg.liquid.filters.Filter]', reference 'JCollection[Filter]'
 660b9c61cefd	api-parity(signature)	signature	Filters$#of	/Filters$	0	param 0 type differs: emitted 'scala.Array[ssg.liquid.filters.Filter]', reference 'JMap[String, Filter]'
 bec419e92e4c	api-parity(signature)	signature	Filters$#of	/Filters$	0	param 0 type differs: emitted 'scala.collection.mutable.Map[java.lang.String, ssg.liquid.filters.Filter]', reference 'Filter*'
@@ -735,9 +740,6 @@ da276c186786	api-parity(signature)	signature	Insertion#render	/Insertion	0	param
 bc7636bfbc94	api-parity(signature)	signature	Insertion#render	/Insertion	0	result type differs: emitted 'java.lang.Object', reference 'DataView'
 18262fbfd4c7	api-parity(signature)	signature	InsertionNode#render	/InsertionNode	0	result type differs: emitted 'java.lang.Object', reference 'DataView'
 f392d1760d2e	api-parity(signature)	signature	Insertions#values	/Insertions	0	result type differs: emitted 'balticporter.runtime.JavaCollection[ssg.liquid.Insertion]', reference 'JCollection[Insertion]'
-4e4ff5d2c850	api-parity(signature)	signature	Insertions$#EMPTY	/Insertions$	0	modifiers differ: emitted final, reference
-13a5aa5141f1	api-parity(signature)	signature	Insertions$#JEKYLL_INSERTIONS	/Insertions$	0	modifiers differ: emitted final, reference
-9d0a1f300d5b	api-parity(signature)	signature	Insertions$#STANDARD_INSERTIONS	/Insertions$	0	modifiers differ: emitted final, reference
 a3c3a69f5501	api-parity(signature)	signature	Insertions$#of	/Insertions$	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[ssg.liquid.Insertion]', reference 'JCollection[Insertion]'
 d277fe178e44	api-parity(signature)	signature	Insertions$#of	/Insertions$	0	param 0 type differs: emitted 'scala.Array[ssg.liquid.Insertion]', reference 'Insertion*'
 93d325457947	api-parity(signature)	signature	Insertions$#of	/Insertions$	0	param 0 type differs: emitted 'scala.collection.mutable.Map[java.lang.String, ssg.liquid.Insertion]', reference 'JMap[String, Insertion]'
@@ -916,9 +918,7 @@ ba041dc0017f	api-parity(signature)	signature	TemplateContext#remove	/TemplateCon
 0cd66dd0d373	api-parity(signature)	signature	TemplateParser#parse	/TemplateParser	0	param 0 type differs: emitted 'java.lang.String', reference 'java.io.InputStream'
 6e83cbe64e65	api-parity(signature)	signature	TemplateParser#parse	/TemplateParser	0	param 0 type differs: emitted 'java.nio.file.Path', reference 'FilePath'
 fff768b8dcff	api-parity(signature)	signature	TemplateParser$#DEFAULT	/TemplateParser$	0	modifiers differ: emitted final, reference lazy
-86a96a253ac9	api-parity(signature)	signature	TemplateParser$#DEFAULT_FLAVOR	/TemplateParser$	0	modifiers differ: emitted final, reference
 36849450aa03	api-parity(signature)	signature	TemplateParser$#DEFAULT_JEKYLL	/TemplateParser$	0	modifiers differ: emitted final, reference lazy
-8f63ce10e013	api-parity(signature)	signature	TemplateParser$#DEFAULT_LOCALE	/TemplateParser$	0	modifiers differ: emitted final, reference
 4d57b1ac7410	api-parity(signature)	signature	TemplateParser$.Builder#withEnvironmentMapConfigurator	/TemplateParser$/Builder	0	param 0 type differs: emitted 'java.util.function.Consumer[scala.collection.mutable.Map[java.lang.String, java.lang.Object]]', reference 'Consumer[JMap[String, AnyRef]]'
 341d69276880	api-parity(signature)	signature	Times#apply	/Times	0	param 0 type differs: emitted 'java.lang.Object', reference 'DataView'
 9ab5c0fb203f	api-parity(signature)	signature	Times#apply	/Times	0	param 2 type differs: emitted 'scala.Array[java.lang.Object]', reference 'Array[DataView]'
@@ -1008,6 +1008,7 @@ f7a07f3a3d29	catalog(consulted)	reached	JS-C45	liqp/Insertion.java	18	rendering 
 6198ce4c7b94	catalog(consulted)	reached	JS-C50	liqp/Insertions.java	153	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1443, fired 40, declarations 0: Java's default access is package-private and Scala's is public — INVERTED
 bb326e834721	catalog(consulted)	reached	JS-C51	-	0	rendering ClassDef — consulted 157, fired 0, declarations 0: a `return` in a CONSTRUCTOR body, whose promotion puts it in the class body
 89994a6b00c7	catalog(consulted)	reached	JS-C52	-	0	rendering MethodRef — consulted 4, fired 0, declarations 0: `@FunctionalInterface` governs Scala's eta-expansion warning — a static method reference at a non-annotated SAM warns under `-Werror`
+ad8a52406b7c	catalog(consulted)	reached	JS-C53	liqp/Insertions.java	39	rendering ValDef — consulted 761, fired 22, declarations 0: a java `final` FIELD carries two facts onto a `val`: no reassignment, and no OVERRIDE
 d07ca9016e7e	catalog(consulted)	reached	JS-E01	liqp/Insertions.java	130	lowering CtBinaryOperator/Expression — consulted 686, fired 17, declarations 0: `==`/`!=` are REFERENCE identity in Java; Scala's `==` calls `equals`
 79ecd5edd9d9	catalog(consulted)	reached	JS-E02	liqp/Examples.java	82	lowering CtUnaryOperator/Expression — consulted 67, fired 2, declarations 0: postfix/prefix `++`/`--` USED AS A VALUE yields the value before the update — the VALUE only; the operand's single evaluation is JS-E17
 b1fce0cbcd67	catalog(consulted)	reached	JS-E03	-	0	lowering CtOperatorAssignment/Statement — consulted 7, fired 0, declarations 0: compound assignment NARROWS implicitly to the left-hand type — STATEMENT position; the lvalue's single evaluation is JS-E17

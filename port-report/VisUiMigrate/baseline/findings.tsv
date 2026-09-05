@@ -1440,6 +1440,7 @@ fa92ad273f5f	api-parity(rule)	rule	AbstractSuggestionPopup$#MAX_SUGGESTIONS	/Abs
 15940d699bf7	api-parity(rule)	rule	ButtonBar$#LINUX_ORDER	/ButtonBar$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 bb43a1d9c488	api-parity(rule)	rule	ButtonBar$#OSX_ORDER	/ButtonBar$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 6937d95f89ec	api-parity(rule)	rule	ButtonBar$#WINDOWS_ORDER	/ButtonBar$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+386764c374af	api-parity(rule)	rule	CellWidget$#EMPTY	/CellWidget$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 eceed533b2bf	api-parity(rule)	rule	ChannelBar$#MODE_ALPHA	/ChannelBar$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 097585369be3	api-parity(rule)	rule	ChannelBar$#MODE_B	/ChannelBar$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 a09a99376517	api-parity(rule)	rule	ChannelBar$#MODE_G	/ChannelBar$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
@@ -1447,6 +1448,15 @@ a09a99376517	api-parity(rule)	rule	ChannelBar$#MODE_G	/ChannelBar$	0	rule JS-C08
 cd26291ede51	api-parity(rule)	rule	ChannelBar$#MODE_R	/ChannelBar$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 f35b7019a737	api-parity(rule)	rule	ChannelBar$#MODE_S	/ChannelBar$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 71ab214e13a9	api-parity(rule)	rule	ChannelBar$#MODE_V	/ChannelBar$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a8c15a307bc0	api-parity(rule)	rule	FileChooser$#DEFAULT_KEY	/FileChooser$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+427a6d547b4b	api-parity(rule)	rule	Padding$#PAD_0	/Padding$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+2586f73da45a	api-parity(rule)	rule	Padding$#PAD_2	/Padding$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+dfbf3038b3ce	api-parity(rule)	rule	Padding$#PAD_4	/Padding$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+2e44ac263015	api-parity(rule)	rule	Padding$#PAD_8	/Padding$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+df5cbe673653	api-parity(rule)	rule	PrefHeightIfVisibleValue$#INSTANCE	/PrefHeightIfVisibleValue$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+6a6342b70a8d	api-parity(rule)	rule	PrefWidthIfVisibleValue$#INSTANCE	/PrefWidthIfVisibleValue$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+9203a4d8d1e0	api-parity(rule)	rule	Validators$#FLOATS	/Validators$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
+aee31408f357	api-parity(rule)	rule	Validators$#INTEGERS	/Validators$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 fee960b2ae30	api-parity(signature)	signature	#AbstractListAdapter		0	type params differ: emitted '[$0, $1 <: sge.scenes.scene2d.Actor]', reference '[$0, $1 <: Actor]'
 aff7aee04c1e	api-parity(signature)	signature	#Alignment		0	parents differ: emitted-only [java.lang.Enum[Alignment]], reference-only []
 1c01d288b860	api-parity(signature)	signature	#ArrayAdapter		0	type params differ: emitted '[$0, $1 <: sge.scenes.scene2d.Actor]', reference '[$0, $1 <: Actor]'
@@ -1484,7 +1494,6 @@ d432e70307d2	api-parity(signature)	signature	BundleText#format	/BundleText	0	par
 024781d2f0a3	api-parity(signature)	signature	ButtonBar$#ButtonType	/ButtonBar$	0	parents differ: emitted-only [java.lang.Enum[ButtonType]], reference-only []
 a98800fe2e19	api-parity(signature)	signature	ButtonBar$.ButtonType#toString	/ButtonBar$/ButtonType	0	modifiers differ: emitted override,final, reference override
 f026f883d8be	api-parity(signature)	signature	CellWidget$#CellWidgetBuilder	/CellWidget$	0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Actor]', reference '[$0 <: Actor]'
-0ee6bea6ab5c	api-parity(signature)	signature	CellWidget$#EMPTY	/CellWidget$	0	modifiers differ: emitted final, reference
 29dd385b698d	api-parity(signature)	signature	CellWidget$#builder	/CellWidget$	0	result type differs: emitted 'sge.visui.building.utilities.CellWidget.CellWidgetBuilder[sge.scenes.scene2d.Actor]', reference 'CellWidgetBuilder[Actor]'
 fb7268a8ace0	api-parity(signature)	signature	CellWidget$#of	/CellWidget$	0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Actor]', reference '[$0 <: Actor]'
 5572c69dd391	api-parity(signature)	signature	CellWidget$#using	/CellWidget$	0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Actor]', reference '[$0 <: Actor]'
@@ -1507,7 +1516,6 @@ e056c2cc5f04	api-parity(signature)	signature	DragPane#findActor	/DragPane	0	type
 dad0eaea12c2	api-parity(signature)	signature	DriveCheckerService$#RootMode	/DriveCheckerService$	0	parents differ: emitted-only [java.lang.Enum[RootMode]], reference-only []
 5eff8f302601	api-parity(signature)	signature	FileChooser#highlightFiles	/FileChooser	0	param 0 type differs: emitted 'scala.Array[sge.files.FileHandle]', reference 'FileHandle*'
 794f8c1f2357	api-parity(signature)	signature	FileChooser#setSelectedFiles	/FileChooser	0	param 0 type differs: emitted 'scala.Array[sge.files.FileHandle]', reference 'FileHandle*'
-b11316a3369f	api-parity(signature)	signature	FileChooser$#DEFAULT_KEY	/FileChooser$	0	modifiers differ: emitted final, reference
 f509fa14124e	api-parity(signature)	signature	FileChooser$#DefaultFileDeleter	/FileChooser$	0	modifiers differ: emitted final, reference
 c68f4221ae04	api-parity(signature)	signature	FileChooser$#FileSorting	/FileChooser$	0	parents differ: emitted-only [java.lang.Enum[FileSorting]], reference-only []
 479a0a49175e	api-parity(signature)	signature	FileChooser$#HistoryPolicy	/FileChooser$	0	parents differ: emitted-only [java.lang.Enum[HistoryPolicy]], reference-only []
@@ -1563,15 +1571,9 @@ bcfb8e5e5b9f	api-parity(signature)	signature	Nullables$#areAllNull	/Nullables$	0
 f17d895a9f37	api-parity(signature)	signature	Nullables$#isNotNull	/Nullables$	0	param 0 type differs: emitted 'java.lang.Object', reference 'AnyRef'
 74b96ed52180	api-parity(signature)	signature	Nullables$#isNull	/Nullables$	0	param 0 type differs: emitted 'java.lang.Object', reference 'AnyRef'
 783177c9e2e3	api-parity(signature)	signature	OsUtils$#getShortcutFor	/OsUtils$	0	param 0 type differs: emitted 'scala.Array[scala.Int]', reference 'Key*'
-1b888e9b9815	api-parity(signature)	signature	Padding$#PAD_0	/Padding$	0	modifiers differ: emitted final, reference
-503a7acd1890	api-parity(signature)	signature	Padding$#PAD_2	/Padding$	0	modifiers differ: emitted final, reference
-91e785cdc0ac	api-parity(signature)	signature	Padding$#PAD_4	/Padding$	0	modifiers differ: emitted final, reference
-bfd8a0e926c6	api-parity(signature)	signature	Padding$#PAD_8	/Padding$	0	modifiers differ: emitted final, reference
 c69318fc169f	api-parity(signature)	signature	PopupMenu#add	/PopupMenu	0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Actor]', reference '[$0 <: Actor]'
 ae010eaf76e1	api-parity(signature)	signature	PrefHeightIfVisibleValue#get	/PrefHeightIfVisibleValue	0	param 0 type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.Actor]', reference 'Nullable[Actor]'
-4452181db9b4	api-parity(signature)	signature	PrefHeightIfVisibleValue$#INSTANCE	/PrefHeightIfVisibleValue$	0	modifiers differ: emitted final, reference
 fb5b925c693e	api-parity(signature)	signature	PrefWidthIfVisibleValue#get	/PrefWidthIfVisibleValue	0	param 0 type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.Actor]', reference 'Nullable[Actor]'
-87e8f4221f3e	api-parity(signature)	signature	PrefWidthIfVisibleValue$#INSTANCE	/PrefWidthIfVisibleValue$	0	modifiers differ: emitted final, reference
 367ab51150df	api-parity(signature)	signature	PreferencesIO#loadFavorites	/PreferencesIO	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.files.FileHandle]', reference 'DynamicArray[FileHandle]'
 cfb06b98c0af	api-parity(signature)	signature	PreferencesIO#loadRecentDirectories	/PreferencesIO	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.files.FileHandle]', reference 'DynamicArray[FileHandle]'
 9ceb4265948b	api-parity(signature)	signature	PreferencesIO#saveFavorites	/PreferencesIO	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[sge.files.FileHandle]', reference 'DynamicArray[FileHandle]'
@@ -1598,8 +1600,6 @@ fd2def025925	api-parity(signature)	signature	TableBuilder#build	/TableBuilder	0	
 a137d9e68482	api-parity(signature)	signature	ToastManager#toasts	/ToastManager	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.visui.widget.toast.Toast]', reference 'ArrayBuffer[Toast]'
 e50f167ec72c	api-parity(signature)	signature	ToastManager$#UNTIL_CLOSED	/ToastManager$	0	modifiers differ: emitted final, reference
 d32590544280	api-parity(signature)	signature	Tooltip#contentCell	/Tooltip	0	result type differs: emitted 'sge.scenes.scene2d.ui.Cell[sge.scenes.scene2d.Actor]', reference 'Cell[Actor]'
-bbf0b66c94ab	api-parity(signature)	signature	Validators$#FLOATS	/Validators$	0	modifiers differ: emitted final, reference
-a84f17024e03	api-parity(signature)	signature	Validators$#INTEGERS	/Validators$	0	modifiers differ: emitted final, reference
 bffe45f7dc2b	api-parity(signature)	signature	VisCheckBox#imageStackCell	/VisCheckBox	0	result type differs: emitted 'sge.scenes.scene2d.ui.Cell[sge.scenes.scene2d.ui.Stack]', reference 'Cell[Stack]'
 42da096eb2d0	api-parity(signature)	signature	VisDialog#button	/VisDialog	0	param 1 type differs: emitted 'java.lang.Object', reference 'Nullable[AnyRef]'
 42da096eb2d0/2	api-parity(signature)	signature	VisDialog#button	/VisDialog	0	param 1 type differs: emitted 'java.lang.Object', reference 'Nullable[AnyRef]'
@@ -1846,6 +1846,7 @@ f99565a0e68b	catalog(consulted)	reached	JS-C46	-	0	phase member-clash — consul
 807f5cdc3c89	catalog(consulted)	reached	JS-C49	com/kotcrab/vis/ui/Locales.java	142	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 4184, fired 65, declarations 0: Java's `private` reaches the whole enclosing TOP-LEVEL class; Scala's reaches only the template
 0c03329529c4	catalog(consulted)	reached	JS-C50	com/kotcrab/vis/ui/util/adapter/AbstractListAdapter.java	248	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 4184, fired 90, declarations 0: Java's default access is package-private and Scala's is public — INVERTED
 383790d08886	catalog(consulted)	reached	JS-C51	-	0	rendering ClassDef — consulted 281, fired 0, declarations 0: a `return` in a CONSTRUCTOR body, whose promotion puts it in the class body
+c8ebc03528d0	catalog(consulted)	reached	JS-C53	com/kotcrab/vis/ui/building/utilities/CellWidget.java	33	rendering ValDef — consulted 1769, fired 45, declarations 0: a java `final` FIELD carries two facts onto a `val`: no reassignment, and no OVERRIDE
 f1a0abf2af7f	catalog(consulted)	reached	JS-E01	../../../../../libgdx/gdx/src/com/badlogic/gdx/Net.java	229	lowering CtBinaryOperator/Expression — consulted 31192, fired 662, declarations 0: `==`/`!=` are REFERENCE identity in Java; Scala's `==` calls `equals`
 1428dfa4df73	catalog(consulted)	reached	JS-E02	../../../../../libgdx/gdx/src/com/badlogic/gdx/InputEventQueue.java	51	lowering CtUnaryOperator/Expression — consulted 2810, fired 735, declarations 0: postfix/prefix `++`/`--` USED AS A VALUE yields the value before the update — the VALUE only; the operand's single evaluation is JS-E17
 c3847b84a598	catalog(consulted)	reached	JS-E03	../../../../../libgdx/gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFont.java	750	lowering CtOperatorAssignment/Statement — consulted 1786, fired 36, declarations 0: compound assignment NARROWS implicitly to the left-hand type — STATEMENT position; the lvalue's single evaluation is JS-E17
