@@ -1,6 +1,7 @@
-# balticporter port map	schema=4	module=sge-ecs	engine=balticporter/0.1.0-SNAPSHOT	sources=181dec8c688f5a38	files=20	policy=9d7697ba66c2bb1b	jdk=22
+# balticporter port map	schema=4	module=sge-ecs	engine=balticporter/0.1.0-SNAPSHOT	sources=181dec8c688f5a38	files=20	policy=03e5f5fe9c46ebee	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.ashley.core.Component	sge.ecs.Component	Renamed	-		0		form=trait
+type	sge.ecs.ComponentFactories	sge.ecs.ComponentFactories	Ported	-		0		form=object
 type	com.badlogic.ashley.core.ComponentMapper	sge.ecs.ComponentMapper	Renamed	-		0		companion=yes flags=final form=class primary=(Class) primaryKind=unique-root primaryVis=private statics=getFor tparams="[T <: sge.ecs.Component]"
 type	com.badlogic.ashley.core.ComponentOperationHandler	sge.ecs.ComponentOperationHandler	Renamed	-		0		companion=yes form=class primary=(BooleanInformer) primaryKind=unique-root primaryVis=public statics=BooleanInformer,ComponentOperation,ComponentOperationPool
 type	sge.ecs.ComponentOperationHandler$BooleanInformer	sge.ecs.ComponentOperationHandler$BooleanInformer	Ported	-		0		form=trait
@@ -91,9 +92,11 @@ type		balticporter.runtime.JavaOptionalDouble	Added	-		0
 type		balticporter.runtime.JavaOptionalInt	Added	-		0		
 type		balticporter.runtime.JavaOptionalLong	Added	-		0		
 type		balticporter.runtime.JavaStack	Added	-		0		
-type		sge.ecs.ComponentFactories	Added	-		0		
 type		sge.ecs.ComponentPool	Added	-		0		
 type		sge.ecs.FamilyVarargs	Added	-		0		
+member	sge.ecs.ComponentFactories#<stmt1>	sge.ecs.ComponentFactories#<stmt1>	Ported	-	<synthetic>	0	00696e913ada2d98	
+member	sge.ecs.ComponentFactories#<stmt2>	sge.ecs.ComponentFactories#<stmt2>	Ported	-	<synthetic>	0	784b36c29c3d6b54	
+member	sge.ecs.ComponentFactories#<stmt3>	sge.ecs.ComponentFactories#<stmt3>	Ported	-	<synthetic>	0	cce678731b3f49f2	
 member	com.badlogic.ashley.core.ComponentMapper#<stmt1>	sge.ecs.ComponentMapper#<stmt1>	Renamed	-	com/badlogic/ashley/core/ComponentMapper.java	46	15069be015cac980	
 member	com.badlogic.ashley.core.ComponentMapper#componentType	sge.ecs.ComponentMapper#componentType	Renamed	-	com/badlogic/ashley/core/ComponentMapper.java	25	ce377d122dd71ba0	vis=private
 member	com.badlogic.ashley.core.ComponentMapper#get(Entity)	sge.ecs.ComponentMapper#get(Entity)	Renamed	-	com/badlogic/ashley/core/ComponentMapper.java	36	590f9f799a97d00e	
@@ -127,7 +130,7 @@ member	com.badlogic.ashley.core.ComponentType#getIndex	sge.ecs.ComponentType#ind
 member	com.badlogic.ashley.core.ComponentType#getIndex()	sge.ecs.ComponentType#index()	Renamed	-	com/badlogic/ashley/core/ComponentType.java	40	ba955b5453cd3bd6	
 member	com.badlogic.ashley.core.ComponentType#typeIndex	sge.ecs.ComponentType#typeIndex	Renamed	-	com/badlogic/ashley/core/ComponentType.java	31	091acd0349b3754b	placement=companion vis=private
 member	sge.ecs.Engine#<stmt1>	sge.ecs.Engine#<stmt1>	Ported	-	<synthetic>	0	035a2eb0d3607ce7	
-member	sge.ecs.Engine#<stmt2>	sge.ecs.Engine#<stmt2>	Ported	-	<synthetic>	0	326331fe27b23dcc	
+member	sge.ecs.Engine#<stmt2>	sge.ecs.Engine#<stmt2>	Ported	-	<synthetic>	0	2ca640536f98276a	
 member	com.badlogic.ashley.core.Engine#addEntity(Entity)	sge.ecs.Engine#addEntity(Entity)	Renamed	-	com/badlogic/ashley/core/Engine.java	80	4c7404fdc04bdd58	
 member	com.badlogic.ashley.core.Engine#addEntityInternal(Entity)	sge.ecs.Engine#addEntityInternal(Entity)	Renamed	-	com/badlogic/ashley/core/Engine.java	254	dbbe70d4ae988445	
 member	com.badlogic.ashley.core.Engine#addEntityListener(EntityListener)	sge.ecs.Engine#addEntityListener(EntityListener)	Renamed	-	com/badlogic/ashley/core/Engine.java	186	2b4b1fc8c28ffe0c	
@@ -138,7 +141,7 @@ member	com.badlogic.ashley.core.Engine#addSystem(EntitySystem)	sge.ecs.Engine#ad
 member	com.badlogic.ashley.core.Engine#componentAdded	sge.ecs.Engine#componentAdded	Renamed	-	com/badlogic/ashley/core/Engine.java	46	71b0e78ee18f4e60	vis=private
 member	com.badlogic.ashley.core.Engine#componentOperationHandler	sge.ecs.Engine#componentOperationHandler	Renamed	-	com/badlogic/ashley/core/Engine.java	51	ab4931333c1158b1	vis=private
 member	com.badlogic.ashley.core.Engine#componentRemoved	sge.ecs.Engine#componentRemoved	Renamed	-	com/badlogic/ashley/core/Engine.java	47	af966bae88db6e71	vis=private
-member	com.badlogic.ashley.core.Engine#createComponent(Class)	sge.ecs.Engine#createComponent(Class<T>)	Renamed	body	com/badlogic/ashley/core/Engine.java	67	ffc71d348aef9059	
+member	com.badlogic.ashley.core.Engine#createComponent(Class)	sge.ecs.Engine#createComponent(Class<T>)	Renamed	-	com/badlogic/ashley/core/Engine.java	67	2a764a4092164fb4	
 member	com.badlogic.ashley.core.Engine#createEntity()	sge.ecs.Engine#createEntity()	Renamed	-	com/badlogic/ashley/core/Engine.java	60	c42e530c76567745	
 member	com.badlogic.ashley.core.Engine#empty	sge.ecs.Engine#empty	Renamed	-	com/badlogic/ashley/core/Engine.java	44	c37fd584df2998db	placement=companion vis=private
 member	com.badlogic.ashley.core.Engine#entityManager	sge.ecs.Engine#entityManager	Renamed	-	com/badlogic/ashley/core/Engine.java	50	080ce18296665ef0	vis=private

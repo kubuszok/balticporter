@@ -48,8 +48,15 @@ policy	2
 port-map	0
 portability(all)	153
 portability(emitted)	0
-portability(injected)	4
+portability(injected)	0
 porter-notes	0
+registry(by-name)	0
+registry(facade)	0
+registry(guarded-call)	0
+registry(jvm-only-miss)	2
+registry(non-class-arg)	0
+registry(out-of-scope)	0
+registry(self-clone)	0
 remediation	0
 rewrite-callsites	1
 signature	14

@@ -34,6 +34,13 @@ portability(all)	155
 portability(emitted)	1
 portability(injected)	1
 porter-notes	0
+registry(by-name)	0
+registry(facade)	0
+registry(guarded-call)	0
+registry(jvm-only-miss)	0
+registry(non-class-arg)	0
+registry(out-of-scope)	0
+registry(self-clone)	0
 remediation	1
 rewrite-callsites	1
 signature	14
