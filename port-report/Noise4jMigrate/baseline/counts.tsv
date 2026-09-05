@@ -54,3 +54,4 @@ trivia(recovered)	0
 try-resource	0
 unused-symbol(handled)	0
 unused-symbol(refused)	0
+upstream	noise4j@440388c298783266f938be7789556e61c8f14460

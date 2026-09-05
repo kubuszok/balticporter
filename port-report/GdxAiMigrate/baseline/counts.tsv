@@ -62,3 +62,4 @@ trivia(recovered)	2
 try-resource	0
 unused-symbol(handled)	3
 unused-symbol(refused)	0
+upstream	gdx-ai@6726e345248ddcad7cec0737f6ad83e4e028266d

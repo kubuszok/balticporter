@@ -62,3 +62,4 @@ trivia(recovered)	2
 try-resource	0
 unused-symbol(handled)	0
 unused-symbol(refused)	0
+upstream	gdx-vfx@2e4425932e69385df23ad8eaa3732984fd77f433

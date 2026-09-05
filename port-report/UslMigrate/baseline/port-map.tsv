@@ -30,9 +30,9 @@ type		balticporter.runtime.JavaOptionalDouble	Added	-		0
 type		balticporter.runtime.JavaOptionalInt	Added	-		0		
 type		balticporter.runtime.JavaOptionalLong	Added	-		0		
 type		balticporter.runtime.JavaStack	Added	-		0		
-member	com.kotcrab.vis.usl.CollectionUtils#getCardinalityMap(JavaCollection)	sge.visui.usl.CollectionUtils#getCardinalityMap(JavaCollection<?>)	Renamed	-	com/kotcrab/vis/usl/CollectionUtils.java	72	f0ebd6040b1a38a4	placement=companion
-member	com.kotcrab.vis.usl.CollectionUtils#getFreq(Object,Map)	sge.visui.usl.CollectionUtils#getFreq(Object,Map<?,?>)	Renamed	-	com/kotcrab/vis/usl/CollectionUtils.java	53	f1034700506277d9	placement=companion vis=private
-member	com.kotcrab.vis.usl.CollectionUtils#isEqualCollection(JavaCollection,JavaCollection)	sge.visui.usl.CollectionUtils#isEqualCollection(JavaCollection<?>,JavaCollection<?>)	Renamed	-	com/kotcrab/vis/usl/CollectionUtils.java	32	fc445d9a24a803e5	placement=companion
+member	com.kotcrab.vis.usl.CollectionUtils#getCardinalityMap(JavaCollection)	sge.visui.usl.CollectionUtils#getCardinalityMap(JavaCollection<?>)	Renamed	-	com/kotcrab/vis/usl/CollectionUtils.java	72	bf139b44e2057917	placement=companion
+member	com.kotcrab.vis.usl.CollectionUtils#getFreq(Object,Map)	sge.visui.usl.CollectionUtils#getFreq(Object,Map<?,?>)	Renamed	-	com/kotcrab/vis/usl/CollectionUtils.java	53	96c1e8e527b63d33	placement=companion vis=private
+member	com.kotcrab.vis.usl.CollectionUtils#isEqualCollection(JavaCollection,JavaCollection)	sge.visui.usl.CollectionUtils#isEqualCollection(JavaCollection<?>,JavaCollection<?>)	Renamed	-	com/kotcrab/vis/usl/CollectionUtils.java	32	ecc11730428543f3	placement=companion
 member	com.kotcrab.vis.usl.additionalIncludeDir	additionalIncludeDir	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	41	9fb099c257b8dc0b	name=additionalIncludeDir$p
 member	com.kotcrab.vis.usl.IncludeLoader#<stmt1>	sge.visui.usl.IncludeLoader#<stmt1>	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	38	2858866261f20560	
 member	com.kotcrab.vis.usl.IncludeLoader#<stmt2>	sge.visui.usl.IncludeLoader#<stmt2>	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	39	9271c3a7ee5c35fa	

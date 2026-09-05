@@ -47,3 +47,4 @@ trivia(recovered)	0
 try-resource	0
 unused-symbol(handled)	0
 unused-symbol(refused)	0
+upstream	gdx-gltf@683054a88382f71e8472abbc1c29931277c1cf22

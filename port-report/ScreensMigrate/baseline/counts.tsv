@@ -62,3 +62,4 @@ trivia(recovered)	1
 try-resource	0
 unused-symbol(handled)	0
 unused-symbol(refused)	0
+upstream	libgdx-screenmanager@0c350bfd771f241fbe38bc6dd17f82d6e5a7aad9

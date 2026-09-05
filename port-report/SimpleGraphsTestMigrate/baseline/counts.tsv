@@ -43,3 +43,4 @@ trivia(recovered)	0
 try-resource	0
 unused-symbol(handled)	0
 unused-symbol(refused)	0
+upstream	simple-graphs@f7e17a832144fad3a97dfbd18a74997602aae19b

@@ -59,3 +59,4 @@ trivia(recovered)	5
 try-resource	0
 unused-symbol(handled)	13
 unused-symbol(refused)	0
+upstream	flexmark-java@bcfe84a3ab6d23d04adce3e5a0bae45c6b791d14
