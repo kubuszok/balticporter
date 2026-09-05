@@ -8053,6 +8053,27 @@ e859bb966ff2	api-parity(port-extra)	port-extra	WikiLinkNodeFormatter$#FORMATTING
 5beb0e43b326	api-parity(port-extra)	port-extra	WikiLinkNodeRenderer#options	/WikiLinkNodeRenderer	0	var options/0 in emitted port only
 9c6ba47c7079	api-parity(port-extra)	port-extra	WikiNode#getAstExtra	/WikiNode	0	def getAstExtra/1 in emitted port only [rename candidates: astExtra]
 9a3d1ed0e272	api-parity(port-extra)	port-extra	YamlFrontMatterNode#key	/YamlFrontMatterNode	0	var key/0 in emitted port only
+cbdd9f5a6ce5	api-parity(rule)	rule	AsideBlockParser$#MARKER_CHAR	/AsideBlockParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+597b7af670df	api-parity(rule)	rule	AudioLink$#PREFIX	/AudioLink$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+1eecba69bd45	api-parity(rule)	rule	EmbedLink$#PREFIX	/EmbedLink$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+fbb77a5ae5e5	api-parity(rule)	rule	EmojiReference$#EMOJI_REFERENCE_TXT	/EmojiReference$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+3a0a64aa613a	api-parity(rule)	rule	EmojiReference$#githubUrl	/EmojiReference$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+6b5899ee0687	api-parity(rule)	rule	EnumeratedReferences$#EMPTY_TYPE	/EnumeratedReferences$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+639d40e0cb2e	api-parity(rule)	rule	JekyllTagBlockParser$#INCLUDE_TAG	/JekyllTagBlockParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+5b991220421f	api-parity(rule)	rule	PictureLink$#PREFIX	/PictureLink$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+173619bd0c08	api-parity(rule)	rule	TocLevelsOptionParser$#KEY_OPTION_0_VALUE_1_NOT_INTEGER	/TocLevelsOptionParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+14f5148777ac	api-parity(rule)	rule	TocLevelsOptionParser$#KEY_OPTION_0_VALUE_1_NOT_IN_RANGE	/TocLevelsOptionParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+fcad57dfbe57	api-parity(rule)	rule	TocLevelsOptionParser$#KEY_OPTION_0_VALUE_1_TRUNCATED_TO_EMPTY_RANGE	/TocLevelsOptionParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+5ae5f81563f4	api-parity(rule)	rule	TocLevelsOptionParser$#KEY_OPTION_0_VALUE_1_TRUNCATED_TO_RANGE_2	/TocLevelsOptionParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+78fc888f81a4	api-parity(rule)	rule	TocLevelsOptionParser$#OPTION_0_VALUE_1_NOT_INTEGER	/TocLevelsOptionParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+8b99ad534cb7	api-parity(rule)	rule	TocLevelsOptionParser$#OPTION_0_VALUE_1_NOT_IN_RANGE	/TocLevelsOptionParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+b0c71b0f546c	api-parity(rule)	rule	TocLevelsOptionParser$#OPTION_0_VALUE_1_TRUNCATED_TO_EMPTY_RANGE	/TocLevelsOptionParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+012ed9f0868e	api-parity(rule)	rule	TocLevelsOptionParser$#OPTION_0_VALUE_1_TRUNCATED_TO_RANGE_2	/TocLevelsOptionParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+40db0fc4dc28	api-parity(rule)	rule	TocOptions$#DEFAULT_TITLE	/TocOptions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+090cd76fd3d0	api-parity(rule)	rule	TocOptions$#DEFAULT_TITLE_LEVEL	/TocOptions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+54cf653c6097	api-parity(rule)	rule	TocOptions$#VALID_LEVELS	/TocOptions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+1959d85a586d	api-parity(rule)	rule	VideoLink$#PREFIX	/VideoLink$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+daae5337cdfd	api-parity(rule)	rule	WikiNode$#SEPARATOR_CHAR	/WikiNode$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 a13aebe9d158	api-parity(signature)	signature	#Abbreviation		0	parents differ: emitted-only [ssg.md.util.ast.ReferencingNode[ssg.md.ext.abbreviation.internal.AbbreviationRepository, ssg.md.ext.abbreviation.AbbreviationBlock]], reference-only [ReferencingNode[AbbreviationRepository, AbbreviationBlock]]
 775b6ffc81e9	api-parity(signature)	signature	#AbbreviationBlock		0	parents differ: emitted-only [ssg.md.util.ast.ReferenceNode[ssg.md.ext.abbreviation.internal.AbbreviationRepository, AbbreviationBlock, ssg.md.ext.abbreviation.Abbreviation]], reference-only [ReferenceNode[AbbreviationRepository, AbbreviationBlock, Abbreviation]]
 1ab47a66eae4	api-parity(signature)	signature	#AbbreviationNodeFormatter		0	parents differ: emitted-only [ssg.md.formatter.NodeRepositoryFormatter[ssg.md.ext.abbreviation.internal.AbbreviationRepository, ssg.md.ext.abbreviation.AbbreviationBlock, ssg.md.ext.abbreviation.Abbreviation]], reference-only [NodeRepositoryFormatter[AbbreviationRepository, AbbreviationBlock, Abbreviation]]
@@ -8160,7 +8181,6 @@ e9c58abdcb56	api-parity(signature)	signature	AnchorLinkExtension$#ANCHORLINKS_WR
 73abaff59954	api-parity(signature)	signature	AnchorLinkNodeRenderer#getNodeRenderingHandlers	/AnchorLinkNodeRenderer	0	result type differs: emitted 'scala.collection.mutable.Set[ssg.md.html.renderer.NodeRenderingHandler[?]]', reference 'Nullable[Set[NodeRenderingHandler[?]]]'
 4ed7aaa5f4c4	api-parity(signature)	signature	AnchorLinkVisitorExt$#VISIT_HANDLERS	/AnchorLinkVisitorExt$	0	result type differs: emitted 'scala.Array[ssg.md.util.ast.VisitHandler[?]]', reference 'Array[VisitHandler[?]]'
 dd4663531556	api-parity(signature)	signature	AnchorLinkVisitorExt$#VISIT_HANDLERS	/AnchorLinkVisitorExt$	0	type params differ: emitted '[$0 <: ssg.md.ext.anchorlink.AnchorLinkVisitor]', reference '[$0 <: AnchorLinkVisitor]'
-b69f3f21260e	api-parity(signature)	signature	AsideBlockParser$#MARKER_CHAR	/AsideBlockParser$	0	modifiers differ: emitted inline, reference
 a690875223d6	api-parity(signature)	signature	AsideExtension#extend	/AsideExtension	0	param 0 type differs: emitted 'ssg.md.formatter.Formatter.Builder', reference 'Parser.Builder'
 e86d0f9dc691	api-parity(signature)	signature	AsideExtension#extend	/AsideExtension	0	param 0 type differs: emitted 'ssg.md.html.HtmlRenderer.Builder', reference 'Formatter.Builder'
 068966482e75	api-parity(signature)	signature	AsideExtension$#ALLOW_LEADING_SPACE	/AsideExtension$	0	modifiers differ: emitted final, reference
@@ -8230,7 +8250,6 @@ dfbc5659df73	api-parity(signature)	signature	AttributesNodeFormatter$#ATTRIBUTE_
 9f1dbd272961	api-parity(signature)	signature	AttributesNodeRenderer#getNodeRenderingHandlers	/AttributesNodeRenderer	0	result type differs: emitted 'scala.collection.mutable.Set[ssg.md.html.renderer.NodeRenderingHandler[?]]', reference 'Nullable[Set[NodeRenderingHandler[?]]]'
 71101399d289	api-parity(signature)	signature	AttributesVisitorExt$#VISIT_HANDLERS	/AttributesVisitorExt$	0	result type differs: emitted 'scala.Array[ssg.md.util.ast.VisitHandler[?]]', reference 'Array[VisitHandler[?]]'
 7d1aec10bd6f	api-parity(signature)	signature	AttributesVisitorExt$#VISIT_HANDLERS	/AttributesVisitorExt$	0	type params differ: emitted '[$0 <: ssg.md.ext.attributes.AttributesVisitor]', reference '[$0 <: AttributesVisitor]'
-d3e38b0b6e18	api-parity(signature)	signature	AudioLink$#PREFIX	/AudioLink$	0	modifiers differ: emitted inline, reference
 726d9632ebde	api-parity(signature)	signature	AudioLinkVisitorExt$#VISIT_HANDLERS	/AudioLinkVisitorExt$	0	result type differs: emitted 'scala.Array[ssg.md.util.ast.VisitHandler[?]]', reference 'Array[VisitHandler[?]]'
 4295f2173dfc	api-parity(signature)	signature	AudioLinkVisitorExt$#VISIT_HANDLERS	/AudioLinkVisitorExt$	0	type params differ: emitted '[$0 <: ssg.md.ext.media.tags.AudioLinkVisitor]', reference '[$0 <: AudioLinkVisitor]'
 ace8285636b5	api-parity(signature)	signature	AutolinkExtension$#IGNORE_LINKS	/AutolinkExtension$	0	modifiers differ: emitted final, reference
@@ -8256,7 +8275,6 @@ c20751fe631b	api-parity(signature)	signature	DefinitionExtension$#MARKER_SPACES	
 ac7e1f1cc3ee	api-parity(signature)	signature	DefinitionNodeRenderer#getNodeRenderingHandlers	/DefinitionNodeRenderer	0	result type differs: emitted 'scala.collection.mutable.Set[ssg.md.html.renderer.NodeRenderingHandler[?]]', reference 'Nullable[Set[NodeRenderingHandler[?]]]'
 e1fa58998cef	api-parity(signature)	signature	DefinitionVisitorExt$#VISIT_HANDLERS	/DefinitionVisitorExt$	0	result type differs: emitted 'scala.Array[ssg.md.util.ast.VisitHandler[?]]', reference 'Array[VisitHandler[?]]'
 3f8301f7d177	api-parity(signature)	signature	DefinitionVisitorExt$#VISIT_HANDLERS	/DefinitionVisitorExt$	0	type params differ: emitted '[$0 <: ssg.md.ext.definition.DefinitionVisitor]', reference '[$0 <: DefinitionVisitor]'
-794c85d06c1a	api-parity(signature)	signature	EmbedLink$#PREFIX	/EmbedLink$	0	modifiers differ: emitted inline, reference
 5fe59113837b	api-parity(signature)	signature	EmbedLinkVisitorExt$#VISIT_HANDLERS	/EmbedLinkVisitorExt$	0	result type differs: emitted 'scala.Array[ssg.md.util.ast.VisitHandler[?]]', reference 'Array[VisitHandler[?]]'
 ab33d03b92dd	api-parity(signature)	signature	EmbedLinkVisitorExt$#VISIT_HANDLERS	/EmbedLinkVisitorExt$	0	type params differ: emitted '[$0 <: ssg.md.ext.media.tags.EmbedLinkVisitor]', reference '[$0 <: EmbedLinkVisitor]'
 1dbbecc0f14b	api-parity(signature)	signature	Emoji#collectText	/Emoji	0	param 0 type differs: emitted 'ssg.md.util.sequence.builder.ISequenceBuilder[? <: ssg.md.util.sequence.builder.ISequenceBuilder[?, ssg.md.util.sequence.BasedSequence], ssg.md.util.sequence.BasedSequence]', reference 'ISequenceBuilder[? <: ISequenceBuilder[?, BasedSequence], BasedSequence]'
@@ -8279,10 +8297,8 @@ e71d54dd4eaf	api-parity(signature)	signature	EmojiExtension$#USE_UNICODE_FILE_NA
 f863c986a6a1	api-parity(signature)	signature	EmojiNodeFormatter#getNodeClasses	/EmojiNodeFormatter	0	result type differs: emitted 'scala.collection.mutable.Set[java.lang.Class[?]]', reference 'Nullable[Set[Class[?]]]'
 5ecff3ffbb1f	api-parity(signature)	signature	EmojiNodeFormatter#getNodeFormattingHandlers	/EmojiNodeFormatter	0	result type differs: emitted 'scala.collection.mutable.Set[ssg.md.formatter.NodeFormattingHandler[?]]', reference 'Nullable[Set[NodeFormattingHandler[?]]]'
 5df93a110083	api-parity(signature)	signature	EmojiNodeRenderer#getNodeRenderingHandlers	/EmojiNodeRenderer	0	result type differs: emitted 'scala.collection.mutable.Set[ssg.md.html.renderer.NodeRenderingHandler[?]]', reference 'Nullable[Set[NodeRenderingHandler[?]]]'
-9bcf787cd9a9	api-parity(signature)	signature	EmojiReference$#EMOJI_REFERENCE_TXT	/EmojiReference$	0	modifiers differ: emitted inline, reference
 2469e6054fc9	api-parity(signature)	signature	EmojiReference$#EmojiBrowserType	/EmojiReference$	0	parents differ: emitted-only [java.lang.Enum[EmojiBrowserType]], reference-only []
 0107b826d23e	api-parity(signature)	signature	EmojiReference$#getEmojiList	/EmojiReference$	0	result type differs: emitted 'scala.collection.mutable.Buffer[ssg.md.ext.emoji.internal.EmojiReference.Emoji]', reference 'JList[EmojiData]'
-f974f81a0998	api-parity(signature)	signature	EmojiReference$#githubUrl	/EmojiReference$	0	modifiers differ: emitted inline, reference
 1dd8af10d817	api-parity(signature)	signature	EmojiResolvedShortcut#emoji	/EmojiResolvedShortcut	0	result type differs: emitted 'ssg.md.ext.emoji.internal.EmojiReference.Emoji', reference 'Nullable[EmojiData]'
 64ee78a73a35	api-parity(signature)	signature	EmojiShortcuts$#getEmojiFromShortcut	/EmojiShortcuts$	0	result type differs: emitted 'ssg.md.ext.emoji.internal.EmojiReference.Emoji', reference 'Nullable[EmojiData]'
 0c224ba2c050	api-parity(signature)	signature	EmojiShortcuts$#getEmojiFromURI	/EmojiShortcuts$	0	result type differs: emitted 'ssg.md.ext.emoji.internal.EmojiReference.Emoji', reference 'Nullable[EmojiData]'
@@ -8315,7 +8331,6 @@ f29f595b2a63	api-parity(signature)	signature	EnumeratedReferenceVisitorExt$#VISI
 fcd3f03b776f	api-parity(signature)	signature	EnumeratedReferences#getEnumeratedReferenceOrdinals	/EnumeratedReferences	0	result type differs: emitted 'scala.Array[ssg.md.ext.enumerated.reference.EnumeratedReferenceRendering]', reference 'Array[EnumeratedReferenceRendering]'
 dc36fd718d26	api-parity(signature)	signature	EnumeratedReferences$#EMPTY_ORDINALS	/EnumeratedReferences$	0	modifiers differ: emitted final, reference
 79d8e1d43386	api-parity(signature)	signature	EnumeratedReferences$#EMPTY_ORDINALS	/EnumeratedReferences$	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
-38ec7f8e4eb2	api-parity(signature)	signature	EnumeratedReferences$#EMPTY_TYPE	/EnumeratedReferences$	0	modifiers differ: emitted inline, reference
 efe44b1f2d1b	api-parity(signature)	signature	EnumeratedReferences$#renderReferenceOrdinals	/EnumeratedReferences$	0	param 0 type differs: emitted 'scala.Array[ssg.md.ext.enumerated.reference.EnumeratedReferenceRendering]', reference 'Array[EnumeratedReferenceRendering]'
 ee4599f3efc8	api-parity(signature)	signature	EscapedCharacterNodeRenderer#getNodeRenderingHandlers	/EscapedCharacterNodeRenderer	0	result type differs: emitted 'scala.collection.mutable.Set[ssg.md.html.renderer.NodeRenderingHandler[?]]', reference 'Nullable[Set[NodeRenderingHandler[?]]]'
 56a4c44f20a2	api-parity(signature)	signature	EscapedCharacterVisitorExt$#VISIT_HANDLERS	/EscapedCharacterVisitorExt$	0	result type differs: emitted 'scala.Array[ssg.md.util.ast.VisitHandler[?]]', reference 'Array[VisitHandler[?]]'
@@ -8440,7 +8455,6 @@ f23e125a80f5	api-parity(signature)	signature	JekyllFrontMatterNodeFormatter#getN
 eb761ec9a542	api-parity(signature)	signature	JekyllFrontMatterNodeRenderer#getNodeRenderingHandlers	/JekyllFrontMatterNodeRenderer	0	result type differs: emitted 'scala.collection.mutable.Set[ssg.md.html.renderer.NodeRenderingHandler[?]]', reference 'Nullable[Set[NodeRenderingHandler[?]]]'
 c286fd46ecab	api-parity(signature)	signature	JekyllFrontMatterVisitorExt$#VISIT_HANDLERS	/JekyllFrontMatterVisitorExt$	0	result type differs: emitted 'scala.Array[ssg.md.util.ast.VisitHandler[?]]', reference 'Array[VisitHandler[?]]'
 192b217ccc0a	api-parity(signature)	signature	JekyllFrontMatterVisitorExt$#VISIT_HANDLERS	/JekyllFrontMatterVisitorExt$	0	type params differ: emitted '[$0 <: ssg.md.ext.jekyll.front.matter.JekyllFrontMatterVisitor]', reference '[$0 <: JekyllFrontMatterVisitor]'
-ab3066077c11	api-parity(signature)	signature	JekyllTagBlockParser$#INCLUDE_TAG	/JekyllTagBlockParser$	0	modifiers differ: emitted inline, reference
 945b3face811	api-parity(signature)	signature	JekyllTagExtension#extend	/JekyllTagExtension	0	param 0 type differs: emitted 'ssg.md.formatter.Formatter.Builder', reference 'Parser.Builder'
 1444ca3baafb	api-parity(signature)	signature	JekyllTagExtension#extend	/JekyllTagExtension	0	param 0 type differs: emitted 'ssg.md.html.HtmlRenderer.Builder', reference 'Formatter.Builder'
 b27ae0cf08db	api-parity(signature)	signature	JekyllTagExtension$#CONTENT_RESOLVER_FACTORIES	/JekyllTagExtension$	0	modifiers differ: emitted final, reference
@@ -8508,7 +8522,6 @@ e009412386ef	api-parity(signature)	signature	NodeAttributeRepository#put	/NodeAt
 1922a7c2ee6b	api-parity(signature)	signature	NodeAttributeRepository#putAll	/NodeAttributeRepository	0	modifiers differ: emitted , reference override
 7471fa8ca63e	api-parity(signature)	signature	NodeAttributeRepository#putAll	/NodeAttributeRepository	0	param 0 type differs: emitted 'scala.collection.mutable.Map[? <: ssg.md.util.ast.Node, ? <: scala.collection.mutable.ArrayBuffer[ssg.md.ext.attributes.AttributesNode]]', reference 'ju.Map[? <: Node, ? <: ju.ArrayList[AttributesNode]]'
 c8f2c82397bf	api-parity(signature)	signature	NodeAttributeRepository#values	/NodeAttributeRepository	0	result type differs: emitted 'scala.collection.Iterable[scala.collection.mutable.ArrayBuffer[ssg.md.ext.attributes.AttributesNode]]', reference 'ju.Collection[ju.ArrayList[AttributesNode]]'
-f8ff8fa7a679	api-parity(signature)	signature	PictureLink$#PREFIX	/PictureLink$	0	modifiers differ: emitted inline, reference
 0f829e9f13ad	api-parity(signature)	signature	PictureLinkVisitorExt$#VISIT_HANDLERS	/PictureLinkVisitorExt$	0	result type differs: emitted 'scala.Array[ssg.md.util.ast.VisitHandler[?]]', reference 'Array[VisitHandler[?]]'
 bb3b1fb2585c	api-parity(signature)	signature	PictureLinkVisitorExt$#VISIT_HANDLERS	/PictureLinkVisitorExt$	0	type params differ: emitted '[$0 <: ssg.md.ext.media.tags.PictureLinkVisitor]', reference '[$0 <: PictureLinkVisitor]'
 5f3bc466dc1f	api-parity(signature)	signature	ResizableImageInlineParserExtension$#IMAGE_PATTERN	/ResizableImageInlineParserExtension$	0	modifiers differ: emitted final, reference
@@ -8710,14 +8723,6 @@ f4437d62dbd6	api-parity(signature)	signature	TocExtension$#LIST_TYPE	/TocExtensi
 71237b444160	api-parity(signature)	signature	TocExtension$#TOC_CONTENT	/TocExtension$	0	modifiers differ: emitted final, reference
 7bbd15b5a409	api-parity(signature)	signature	TocExtension$#TOC_LIST	/TocExtension$	0	modifiers differ: emitted final, reference
 e00d6901e3a3	api-parity(signature)	signature	TocLevelsOptionParser#parseOption	/TocLevelsOptionParser	0	result type differs: emitted 'ssg.md.util.misc.Pair[ssg.md.ext.toc.internal.TocOptions, scala.collection.mutable.Buffer[ssg.md.util.options.ParsedOption[ssg.md.ext.toc.internal.TocOptions]]]', reference 'Pair[TocOptions, java.util.List[ParsedOption[TocOptions]]]'
-2e741a08e421	api-parity(signature)	signature	TocLevelsOptionParser$#KEY_OPTION_0_VALUE_1_NOT_INTEGER	/TocLevelsOptionParser$	0	modifiers differ: emitted inline, reference
-61c243fe614b	api-parity(signature)	signature	TocLevelsOptionParser$#KEY_OPTION_0_VALUE_1_NOT_IN_RANGE	/TocLevelsOptionParser$	0	modifiers differ: emitted inline, reference
-e13ecaf52975	api-parity(signature)	signature	TocLevelsOptionParser$#KEY_OPTION_0_VALUE_1_TRUNCATED_TO_EMPTY_RANGE	/TocLevelsOptionParser$	0	modifiers differ: emitted inline, reference
-ae4e16e39882	api-parity(signature)	signature	TocLevelsOptionParser$#KEY_OPTION_0_VALUE_1_TRUNCATED_TO_RANGE_2	/TocLevelsOptionParser$	0	modifiers differ: emitted inline, reference
-82021761facb	api-parity(signature)	signature	TocLevelsOptionParser$#OPTION_0_VALUE_1_NOT_INTEGER	/TocLevelsOptionParser$	0	modifiers differ: emitted inline, reference
-068bf26250f6	api-parity(signature)	signature	TocLevelsOptionParser$#OPTION_0_VALUE_1_NOT_IN_RANGE	/TocLevelsOptionParser$	0	modifiers differ: emitted inline, reference
-bc238a95277a	api-parity(signature)	signature	TocLevelsOptionParser$#OPTION_0_VALUE_1_TRUNCATED_TO_EMPTY_RANGE	/TocLevelsOptionParser$	0	modifiers differ: emitted inline, reference
-3cdbc24031d5	api-parity(signature)	signature	TocLevelsOptionParser$#OPTION_0_VALUE_1_TRUNCATED_TO_RANGE_2	/TocLevelsOptionParser$	0	modifiers differ: emitted inline, reference
 645c3702cfa7	api-parity(signature)	signature	TocNodeRenderer#getNodeRenderingHandlers	/TocNodeRenderer	0	result type differs: emitted 'scala.collection.mutable.Set[ssg.md.html.renderer.NodeRenderingHandler[?]]', reference 'Nullable[Set[NodeRenderingHandler[?]]]'
 089bc34b786e	api-parity(signature)	signature	TocOptionTypes$#OPTIONS	/TocOptionTypes$	0	modifiers differ: emitted final, reference
 6185fbf3073b	api-parity(signature)	signature	TocOptionTypes$#OPTIONS	/TocOptionTypes$	0	result type differs: emitted 'scala.Array[ssg.md.util.options.OptionParser[ssg.md.ext.toc.internal.TocOptions]]', reference 'Array[OptionParser[TocOptions]]'
@@ -8729,9 +8734,6 @@ a953f4f79bdb	api-parity(signature)	signature	TocOptions#withListClass	/TocOption
 6d56ba8df5cc	api-parity(signature)	signature	TocOptions#withTitle	/TocOptions	0	param 0 type differs: emitted 'java.lang.CharSequence', reference 'String'
 5e4f723613d9	api-parity(signature)	signature	TocOptions$#DEFAULT	/TocOptions$	0	modifiers differ: emitted final, reference
 0c37c017205f	api-parity(signature)	signature	TocOptions$#DEFAULT_LEVELS	/TocOptions$	0	modifiers differ: emitted final, reference
-8dbaa1bcd178	api-parity(signature)	signature	TocOptions$#DEFAULT_TITLE	/TocOptions$	0	modifiers differ: emitted inline, reference
-ab84af739b8f	api-parity(signature)	signature	TocOptions$#DEFAULT_TITLE_LEVEL	/TocOptions$	0	modifiers differ: emitted inline, reference
-f83915ad9c3b	api-parity(signature)	signature	TocOptions$#VALID_LEVELS	/TocOptions$	0	modifiers differ: emitted inline, reference
 968b004f1d80	api-parity(signature)	signature	TocOptions$#getLevels	/TocOptions$	0	param 0 type differs: emitted 'scala.Array[scala.Int]', reference 'Int*'
 b440b1ecf81f	api-parity(signature)	signature	TocUtils$#TOC_CONTENT	/TocUtils$	0	modifiers differ: emitted final, reference
 089c7ad20b17	api-parity(signature)	signature	TocUtils$#TOC_LIST	/TocUtils$	0	modifiers differ: emitted final, reference
@@ -8784,7 +8786,6 @@ ce1647430e82	api-parity(signature)	signature	TypographicNodeRenderer#getNodeRend
 1b6b0660c942	api-parity(signature)	signature	TypographicSmarts#collectText	/TypographicSmarts	0	param 0 type differs: emitted 'ssg.md.util.sequence.builder.ISequenceBuilder[? <: ssg.md.util.sequence.builder.ISequenceBuilder[?, ssg.md.util.sequence.BasedSequence], ssg.md.util.sequence.BasedSequence]', reference 'ISequenceBuilder[? <: ISequenceBuilder[?, BasedSequence], BasedSequence]'
 5761f7d58592	api-parity(signature)	signature	TypographicVisitorExt$#VISIT_HANDLERS	/TypographicVisitorExt$	0	result type differs: emitted 'scala.Array[ssg.md.util.ast.VisitHandler[?]]', reference 'Array[VisitHandler[?]]'
 dfdb4a6c77d9	api-parity(signature)	signature	TypographicVisitorExt$#VISIT_HANDLERS	/TypographicVisitorExt$	0	type params differ: emitted '[$0 <: ssg.md.ext.typographic.TypographicVisitor]', reference '[$0 <: TypographicVisitor]'
-74bb7a6de186	api-parity(signature)	signature	VideoLink$#PREFIX	/VideoLink$	0	modifiers differ: emitted inline, reference
 c315d5c3f5ab	api-parity(signature)	signature	VideoLinkVisitorExt$#VISIT_HANDLERS	/VideoLinkVisitorExt$	0	result type differs: emitted 'scala.Array[ssg.md.util.ast.VisitHandler[?]]', reference 'Array[VisitHandler[?]]'
 4ecda372f139	api-parity(signature)	signature	VideoLinkVisitorExt$#VISIT_HANDLERS	/VideoLinkVisitorExt$	0	type params differ: emitted '[$0 <: ssg.md.ext.media.tags.VideoLinkVisitor]', reference '[$0 <: VideoLinkVisitor]'
 9b47b95acc8a	api-parity(signature)	signature	WikiImageVisitorExt$#VISIT_HANDLERS	/WikiImageVisitorExt$	0	result type differs: emitted 'scala.Array[ssg.md.util.ast.VisitHandler[?]]', reference 'Array[VisitHandler[?]]'
@@ -8831,7 +8832,6 @@ d5db976b4b11	api-parity(signature)	signature	WikiLinkOptions#getImagePrefix	/Wik
 6621c0a8a189	api-parity(signature)	signature	WikiLinkVisitorExt$#VISIT_HANDLERS	/WikiLinkVisitorExt$	0	result type differs: emitted 'scala.Array[ssg.md.util.ast.VisitHandler[?]]', reference 'Array[VisitHandler[?]]'
 481e0f614275	api-parity(signature)	signature	WikiLinkVisitorExt$#VISIT_HANDLERS	/WikiLinkVisitorExt$	0	type params differ: emitted '[$0 <: ssg.md.ext.wikilink.WikiLinkVisitor]', reference '[$0 <: WikiLinkVisitor]'
 7aa49532ca6b	api-parity(signature)	signature	WikiNode#collectText	/WikiNode	0	param 0 type differs: emitted 'ssg.md.util.sequence.builder.ISequenceBuilder[? <: ssg.md.util.sequence.builder.ISequenceBuilder[?, ssg.md.util.sequence.BasedSequence], ssg.md.util.sequence.BasedSequence]', reference 'ISequenceBuilder[? <: ISequenceBuilder[?, BasedSequence], BasedSequence]'
-b8d647279d4c	api-parity(signature)	signature	WikiNode$#SEPARATOR_CHAR	/WikiNode$	0	modifiers differ: emitted inline, reference
 dbef49e6a00f	api-parity(signature)	signature	YamlFrontMatterExtension#extend	/YamlFrontMatterExtension	0	param 0 type differs: emitted 'ssg.md.formatter.Formatter.Builder', reference 'Parser.Builder'
 70c0c39cb443	api-parity(signature)	signature	YamlFrontMatterNode#getValues	/YamlFrontMatterNode	0	result type differs: emitted 'scala.collection.mutable.Buffer[java.lang.String]', reference 'JList[String]'
 dee77e101bc6	api-parity(signature)	signature	YamlFrontMatterNodeFormatter#getFormattingPhases	/YamlFrontMatterNodeFormatter	0	result type differs: emitted 'scala.collection.mutable.Set[ssg.md.formatter.FormattingPhase]', reference 'Nullable[Set[FormattingPhase]]'

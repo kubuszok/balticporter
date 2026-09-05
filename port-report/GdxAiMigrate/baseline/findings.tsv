@@ -933,6 +933,14 @@ b43bbcc7da70	api-parity(port-extra)	port-extra	Wander#setEnabled	/Wander	0	def s
 9349c8dde8a5	api-parity(port-extra)	port-extra	Wander#setTarget	/Wander	0	def setTarget/1 in emitted port only [rename candidates: calculateRealSteering]
 9895288c9bb5	api-parity(port-extra)	port-extra	Wander#setTimeToTarget	/Wander	0	def setTimeToTarget/1 in emitted port only [rename candidates: calculateRealSteering]
 d99327039a7d	api-parity(port-extra)	port-extra	Wander#wanderCenter	/Wander	0	def wanderCenter/0 in emitted port only [rename candidates: getInternalTargetPosition, getWanderCenter]
+aab20f7a0974	api-parity(rule)	rule	PathFinderQueue$#TIME_TOLERANCE	/PathFinderQueue$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+07194ea51c64	api-parity(rule)	rule	PathFinderRequest$#SEARCH_DONE	/PathFinderRequest$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+c3737cbce6a7	api-parity(rule)	rule	PathFinderRequest$#SEARCH_FINALIZED	/PathFinderRequest$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+f9e287462f6d	api-parity(rule)	rule	PathFinderRequest$#SEARCH_INITIALIZED	/PathFinderRequest$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+642fa011e9a5	api-parity(rule)	rule	PathFinderRequest$#SEARCH_NEW	/PathFinderRequest$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+3c43178e2b29	api-parity(rule)	rule	Telegram$#RETURN_RECEIPT_NEEDED	/Telegram$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+2400d4d35953	api-parity(rule)	rule	Telegram$#RETURN_RECEIPT_SENT	/Telegram$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+51f84e3fd7b4	api-parity(rule)	rule	Telegram$#RETURN_RECEIPT_UNNEEDED	/Telegram$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 6e156793a4dd	api-parity(signature)	signature	#Alignment		0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
 172e9521c68b	api-parity(signature)	signature	#Arrive		0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
 0a6b5c4c9abe	api-parity(signature)	signature	#BlendedSteering		0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
@@ -1046,11 +1054,6 @@ f0613b4bad4c	api-parity(signature)	signature	LinePath$#Segment	/LinePath$	0	type
 fe2bc5df056e	api-parity(signature)	signature	Parallel$.Policy#onChildSuccess	/Parallel$/Policy	0	param 0 type differs: emitted 'Parallel[?]', reference 'Parallel[$0]'
 f9ad97f62baf	api-parity(signature)	signature	ParallelSideRayConfiguration#updateRays	/ParallelSideRayConfiguration	0	result type differs: emitted 'scala.Array[sge.ai.utils.Ray[$0]]', reference 'Array[Ray[$0]]'
 1283b2b7b3f7	api-parity(signature)	signature	PathFinder#searchConnectionPath	/PathFinder	0	param 3 type differs: emitted 'sge.ai.pfa.GraphPath[sge.ai.pfa.Connection[$0]]', reference 'GraphPath[Connection[$0]]'
-116252108d43	api-parity(signature)	signature	PathFinderQueue$#TIME_TOLERANCE	/PathFinderQueue$	0	modifiers differ: emitted inline, reference
-ae17f6502fb5	api-parity(signature)	signature	PathFinderRequest$#SEARCH_DONE	/PathFinderRequest$	0	modifiers differ: emitted inline, reference
-bb3ce6aa0d4c	api-parity(signature)	signature	PathFinderRequest$#SEARCH_FINALIZED	/PathFinderRequest$	0	modifiers differ: emitted inline, reference
-0f29f4829867	api-parity(signature)	signature	PathFinderRequest$#SEARCH_INITIALIZED	/PathFinderRequest$	0	modifiers differ: emitted inline, reference
-03d9ad11c372	api-parity(signature)	signature	PathFinderRequest$#SEARCH_NEW	/PathFinderRequest$	0	modifiers differ: emitted inline, reference
 0da3aeace3d2	api-parity(signature)	signature	PrioritySteering#behaviors	/PrioritySteering	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.ai.steer.SteeringBehavior[$0]]', reference 'DynamicArray[SteeringBehavior[$0]]'
 bb636c0787fa	api-parity(signature)	signature	Proximity$#ProximityCallback	/Proximity$	0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
 7c2c4e997147	api-parity(signature)	signature	RayConfiguration#updateRays	/RayConfiguration	0	result type differs: emitted 'scala.Array[sge.ai.utils.Ray[$0]]', reference 'Array[Ray[$0]]'
@@ -1063,9 +1066,6 @@ c5a6338ab1ab	api-parity(signature)	signature	SingleRunningChildBranch#randomChil
 79315cb4f6dd	api-parity(signature)	signature	SlotAssignmentStrategy#updateSlotAssignments	/SlotAssignmentStrategy	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[sge.ai.fma.SlotAssignment[$0]]', reference 'DynamicArray[SlotAssignment[$0]]'
 3aa5353804fe	api-parity(signature)	signature	SoftRoleSlotAssignmentStrategy#updateSlotAssignments	/SoftRoleSlotAssignmentStrategy	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[sge.ai.fma.SlotAssignment[$0]]', reference 'DynamicArray[SlotAssignment[$0]]'
 9dcd1b0274e4	api-parity(signature)	signature	Telegram#extraInfo	/Telegram	0	result type differs: emitted 'java.lang.Object', reference 'Nullable[Any]'
-59f9b8200895	api-parity(signature)	signature	Telegram$#RETURN_RECEIPT_NEEDED	/Telegram$	0	modifiers differ: emitted inline, reference
-5e54008fa4d3	api-parity(signature)	signature	Telegram$#RETURN_RECEIPT_SENT	/Telegram$	0	modifiers differ: emitted inline, reference
-502ed400a74b	api-parity(signature)	signature	Telegram$#RETURN_RECEIPT_UNNEEDED	/Telegram$	0	modifiers differ: emitted inline, reference
 b40b194db78d	api-parity(signature)	signature	TelegramProvider#provideMessageInfo	/TelegramProvider	0	result type differs: emitted 'java.lang.Object', reference 'Nullable[Any]'
 7c8837c2d7f6	api-parity(static-placement)	static-placement	DistributionAdapters$.Adapter#parseDouble	/DistributionAdapters$/Adapter	0	def parseDouble/1 in reference port only
 7d10d281c58e	api-parity(static-placement)	static-placement	DistributionAdapters$.Adapter#parseFloat	/DistributionAdapters$/Adapter	0	def parseFloat/1 in reference port only

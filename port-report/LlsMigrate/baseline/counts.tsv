@@ -11,7 +11,8 @@ api-parity(opaque)	1
 api-parity(operator)	0
 api-parity(port-extra)	169
 api-parity(rename)	0
-api-parity(signature)	58
+api-parity(rule)	1
+api-parity(signature)	57
 api-parity(static-placement)	8
 api-parity(unclassified)	0
 api-parity(visibility)	0

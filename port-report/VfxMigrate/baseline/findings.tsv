@@ -223,6 +223,15 @@ b620646572d3	api-parity(port-extra)	port-extra	ViewportQuadMesh#dispose	/Viewpor
 2715e3bdc6ac	api-parity(port-extra)	port-extra	ViewportQuadMesh#mesh	/ViewportQuadMesh	0	def mesh/0 in emitted port only [rename candidates: close, getMesh]
 ab089b351fd8	api-parity(port-extra)	port-extra	VignettingEffect#saturationControlEnabled	/VignettingEffect	0	def saturationControlEnabled/0 in emitted port only [rename candidates: centerX, centerY, intensity, rebind, saturation, saturationMul, vignetteX, vignetteY]
 4a907146dc04	api-parity(port-extra)	port-extra	VignettingEffect#saturationEnabled	/VignettingEffect	0	var saturationEnabled/0 in emitted port only
+2f13534e3bf5	api-parity(rule)	rule	ShaderVfxEffect$#TEXTURE_HANDLE0	/ShaderVfxEffect$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+cf05fe634367	api-parity(rule)	rule	ShaderVfxEffect$#TEXTURE_HANDLE1	/ShaderVfxEffect$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a8f34feca961	api-parity(rule)	rule	ShaderVfxEffect$#TEXTURE_HANDLE2	/ShaderVfxEffect$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+51baac7d388f	api-parity(rule)	rule	ShaderVfxEffect$#TEXTURE_HANDLE3	/ShaderVfxEffect$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+30926cff3e3a	api-parity(rule)	rule	ShaderVfxEffect$#TEXTURE_HANDLE4	/ShaderVfxEffect$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+2e9573ba88c1	api-parity(rule)	rule	ShaderVfxEffect$#TEXTURE_HANDLE5	/ShaderVfxEffect$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+24a83e4741e4	api-parity(rule)	rule	ShaderVfxEffect$#TEXTURE_HANDLE6	/ShaderVfxEffect$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+05e1bc3149be	api-parity(rule)	rule	ShaderVfxEffect$#TEXTURE_HANDLE7	/ShaderVfxEffect$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+3611e9bd6b53	api-parity(rule)	rule	VfxManager$#MAX_FRAME_BUFFER_SIDE	/VfxManager$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 cc138865855a	api-parity(signature)	signature	#PrioritizedArray		0	parents differ: emitted-only [balticporter.runtime.JavaIterable[$0]], reference-only [Iterable[$0]]
 c613829a01fa	api-parity(signature)	signature	#UniformBatcher		0	parents differ: emitted-only [sge.utils.Pool.Poolable], reference-only []
 c5c25734af33	api-parity(signature)	signature	#VfxPingPongWrapper		0	parents differ: emitted-only [sge.utils.Pool.Poolable], reference-only []
@@ -237,14 +246,6 @@ af2177dd020b	api-parity(signature)	signature	CompositeVfxEffect#unregister	/Comp
 c5f12f5102ec	api-parity(signature)	signature	PrioritizedArray#iterator	/PrioritizedArray	0	result type differs: emitted 'balticporter.runtime.JavaIterator[$0]', reference 'Iterator[$0]'
 4d928783e1dd	api-parity(signature)	signature	PrioritizedArray#size	/PrioritizedArray	0	modifiers differ: emitted , reference override
 a630da2fd07c	api-parity(signature)	signature	ShaderVfxEffect#setUniform	/ShaderVfxEffect	0	param 2 type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
-7f0147dfc3c8	api-parity(signature)	signature	ShaderVfxEffect$#TEXTURE_HANDLE0	/ShaderVfxEffect$	0	modifiers differ: emitted inline, reference
-19ac937e7fd6	api-parity(signature)	signature	ShaderVfxEffect$#TEXTURE_HANDLE1	/ShaderVfxEffect$	0	modifiers differ: emitted inline, reference
-4b53db969250	api-parity(signature)	signature	ShaderVfxEffect$#TEXTURE_HANDLE2	/ShaderVfxEffect$	0	modifiers differ: emitted inline, reference
-8fd6ccce2512	api-parity(signature)	signature	ShaderVfxEffect$#TEXTURE_HANDLE3	/ShaderVfxEffect$	0	modifiers differ: emitted inline, reference
-17a999979602	api-parity(signature)	signature	ShaderVfxEffect$#TEXTURE_HANDLE4	/ShaderVfxEffect$	0	modifiers differ: emitted inline, reference
-f14df9fc4594	api-parity(signature)	signature	ShaderVfxEffect$#TEXTURE_HANDLE5	/ShaderVfxEffect$	0	modifiers differ: emitted inline, reference
-82adce420488	api-parity(signature)	signature	ShaderVfxEffect$#TEXTURE_HANDLE6	/ShaderVfxEffect$	0	modifiers differ: emitted inline, reference
-9745964accdb	api-parity(signature)	signature	ShaderVfxEffect$#TEXTURE_HANDLE7	/ShaderVfxEffect$	0	modifiers differ: emitted inline, reference
 939c0989670e	api-parity(signature)	signature	UniformBatcher#set	/UniformBatcher	0	param 2 type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
 ae5322b7b676	api-parity(signature)	signature	VfxFrameBuffer$#BatchRendererAdapter	/VfxFrameBuffer$	0	parents differ: emitted-only [sge.utils.Pool.Poolable], reference-only []
 5447a8585399	api-parity(signature)	signature	VfxFrameBuffer$#ShapeRendererAdapter	/VfxFrameBuffer$	0	parents differ: emitted-only [sge.utils.Pool.Poolable], reference-only []
@@ -252,7 +253,6 @@ f76304baf361	api-parity(signature)	signature	VfxFrameBuffer$.BatchRendererAdapte
 3fb2d8f10417	api-parity(signature)	signature	VfxFrameBuffer$.ShapeRendererAdapter#reset	/VfxFrameBuffer$/ShapeRendererAdapter	0	modifiers differ: emitted override, reference
 852993b46b34	api-parity(signature)	signature	VfxFrameBufferPool#freeBuffers	/VfxFrameBufferPool	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.vfx.framebuffer.VfxFrameBuffer]', reference 'ArrayBuffer[VfxFrameBuffer]'
 ac94ada35559	api-parity(signature)	signature	VfxFrameBufferPool#managedBuffers	/VfxFrameBufferPool	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.vfx.framebuffer.VfxFrameBuffer]', reference 'ArrayBuffer[VfxFrameBuffer]'
-956b5a33bb1a	api-parity(signature)	signature	VfxManager$#MAX_FRAME_BUFFER_SIDE	/VfxManager$	0	modifiers differ: emitted inline, reference
 ddef93a5d0d0	api-parity(signature)	signature	VfxPingPongWrapper#reset	/VfxPingPongWrapper	0	modifiers differ: emitted override, reference
 bf79f3993fbc	api-parity(signature)	signature	ViewportQuadMesh$#verts	/ViewportQuadMesh$	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
 1ec39a1e7977	api-parity(visibility)	visibility	CompositeVfxEffect#managedEffects	/CompositeVfxEffect	0	access differs: emitted 'protected[effects]', reference 'protected'

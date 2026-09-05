@@ -1432,6 +1432,21 @@ d664172ba8a0	api-parity(port-extra)	port-extra	VisValue#getter	/VisValue	0	var g
 67900cc6dc24	api-parity(port-extra)	port-extra	VisWindow#stage_=	/VisWindow	0	def stage_=/1 in emitted port only [rename candidates: fadeIn, fadeOut, setCenterOnAdd, setKeepWithinParent, setStage]
 5748e8b30947	api-parity(port-extra)	port-extra	WordHighlightRule#color	/WordHighlightRule	0	var color/0 in emitted port only
 5c529bb9c42b	api-parity(port-extra)	port-extra	WordHighlightRule#word	/WordHighlightRule	0	var word/0 in emitted port only
+fa92ad273f5f	api-parity(rule)	rule	AbstractSuggestionPopup$#MAX_SUGGESTIONS	/AbstractSuggestionPopup$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+478f116a953b	api-parity(rule)	rule	BasicColorPicker$#BAR_HEIGHT	/BasicColorPicker$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+62f6f2a1c65b	api-parity(rule)	rule	BasicColorPicker$#BAR_WIDTH	/BasicColorPicker$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+90c9fe2c6c1f	api-parity(rule)	rule	BasicColorPicker$#FIELD_WIDTH	/BasicColorPicker$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+8c11c690da36	api-parity(rule)	rule	BasicColorPicker$#PALETTE_SIZE	/BasicColorPicker$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+15940d699bf7	api-parity(rule)	rule	ButtonBar$#LINUX_ORDER	/ButtonBar$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+bb43a1d9c488	api-parity(rule)	rule	ButtonBar$#OSX_ORDER	/ButtonBar$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+6937d95f89ec	api-parity(rule)	rule	ButtonBar$#WINDOWS_ORDER	/ButtonBar$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+eceed533b2bf	api-parity(rule)	rule	ChannelBar$#MODE_ALPHA	/ChannelBar$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+097585369be3	api-parity(rule)	rule	ChannelBar$#MODE_B	/ChannelBar$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a09a99376517	api-parity(rule)	rule	ChannelBar$#MODE_G	/ChannelBar$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+20c0255cdbd0	api-parity(rule)	rule	ChannelBar$#MODE_H	/ChannelBar$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+cd26291ede51	api-parity(rule)	rule	ChannelBar$#MODE_R	/ChannelBar$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+f35b7019a737	api-parity(rule)	rule	ChannelBar$#MODE_S	/ChannelBar$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+71ab214e13a9	api-parity(rule)	rule	ChannelBar$#MODE_V	/ChannelBar$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 fee960b2ae30	api-parity(signature)	signature	#AbstractListAdapter		0	type params differ: emitted '[$0, $1 <: sge.scenes.scene2d.Actor]', reference '[$0, $1 <: Actor]'
 aff7aee04c1e	api-parity(signature)	signature	#Alignment		0	parents differ: emitted-only [java.lang.Enum[Alignment]], reference-only []
 1c01d288b860	api-parity(signature)	signature	#ArrayAdapter		0	type params differ: emitted '[$0, $1 <: sge.scenes.scene2d.Actor]', reference '[$0, $1 <: Actor]'
@@ -1456,7 +1471,6 @@ a104743542a6	api-parity(signature)	signature	#VisValue		0	parents differ: emitte
 0823db85c643	api-parity(signature)	signature	AbstractListAdapter#sort	/AbstractListAdapter	0	param 0 type differs: emitted 'scala.math.Ordering[$0]', reference 'Comparator[$0]'
 97e968c669c9	api-parity(signature)	signature	AbstractListAdapter#viewListener	/AbstractListAdapter	0	result type differs: emitted 'sge.visui.widget.ListView[?]#ListAdapterListener', reference 'Nullable[ListView.ListAdapterListener[$0]]'
 a3b78c4ec813	api-parity(signature)	signature	AbstractListAdapter$#ListSelection	/AbstractListAdapter$	0	type params differ: emitted '[$0, $1 <: sge.scenes.scene2d.Actor]', reference '[$0, $1 <: Actor]'
-5273964fdf9c	api-parity(signature)	signature	AbstractSuggestionPopup$#MAX_SUGGESTIONS	/AbstractSuggestionPopup$	0	modifiers differ: emitted inline, reference
 6cbba7ba1ea3	api-parity(signature)	signature	ArrayAdapter#iterable	/ArrayAdapter	0	result type differs: emitted 'balticporter.runtime.JavaIterable[$0]', reference 'Iterable[$0]'
 8214be7f6972	api-parity(signature)	signature	ArrayAdapter#sort	/ArrayAdapter	0	param 0 type differs: emitted 'scala.math.Ordering[$0]', reference 'Comparator[$0]'
 d092e896adb6	api-parity(signature)	signature	ArrayListAdapter#addAll	/ArrayListAdapter	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[_ <: $0]', reference 'util.Collection[_ <: $0]'
@@ -1466,15 +1480,8 @@ d092e896adb6	api-parity(signature)	signature	ArrayListAdapter#addAll	/ArrayListA
 ed96bf6448da	api-parity(signature)	signature	ArrayListAdapter#sort	/ArrayListAdapter	0	param 0 type differs: emitted 'scala.math.Ordering[$0]', reference 'Comparator[$0]'
 6130ee6b2821	api-parity(signature)	signature	BaseHighlighter#process	/BaseHighlighter	0	param 1 type differs: emitted 'lowlevel.util.DynamicArray[sge.visui.util.highlight.Highlight]', reference 'DynamicArray[Highlight]'
 ed25e8f3458c	api-parity(signature)	signature	BaseHighlighter#word	/BaseHighlighter	0	param 1 type differs: emitted 'scala.Array[java.lang.String]', reference 'String*'
-5179878a3d5f	api-parity(signature)	signature	BasicColorPicker$#BAR_HEIGHT	/BasicColorPicker$	0	modifiers differ: emitted inline, reference
-d2b413d999b1	api-parity(signature)	signature	BasicColorPicker$#BAR_WIDTH	/BasicColorPicker$	0	modifiers differ: emitted inline, reference
-687129eae166	api-parity(signature)	signature	BasicColorPicker$#FIELD_WIDTH	/BasicColorPicker$	0	modifiers differ: emitted inline, reference
-190cd7b999ec	api-parity(signature)	signature	BasicColorPicker$#PALETTE_SIZE	/BasicColorPicker$	0	modifiers differ: emitted inline, reference
 d432e70307d2	api-parity(signature)	signature	BundleText#format	/BundleText	0	param 0 type differs: emitted 'scala.Array[java.lang.Object]', reference 'AnyRef*'
 024781d2f0a3	api-parity(signature)	signature	ButtonBar$#ButtonType	/ButtonBar$	0	parents differ: emitted-only [java.lang.Enum[ButtonType]], reference-only []
-4fdf593ee234	api-parity(signature)	signature	ButtonBar$#LINUX_ORDER	/ButtonBar$	0	modifiers differ: emitted inline, reference
-f3e12ad0f1dd	api-parity(signature)	signature	ButtonBar$#OSX_ORDER	/ButtonBar$	0	modifiers differ: emitted inline, reference
-e4f6338fe518	api-parity(signature)	signature	ButtonBar$#WINDOWS_ORDER	/ButtonBar$	0	modifiers differ: emitted inline, reference
 a98800fe2e19	api-parity(signature)	signature	ButtonBar$.ButtonType#toString	/ButtonBar$/ButtonType	0	modifiers differ: emitted override,final, reference override
 f026f883d8be	api-parity(signature)	signature	CellWidget$#CellWidgetBuilder	/CellWidget$	0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Actor]', reference '[$0 <: Actor]'
 0ee6bea6ab5c	api-parity(signature)	signature	CellWidget$#EMPTY	/CellWidget$	0	modifiers differ: emitted final, reference
@@ -1483,13 +1490,6 @@ fb7268a8ace0	api-parity(signature)	signature	CellWidget$#of	/CellWidget$	0	type 
 5572c69dd391	api-parity(signature)	signature	CellWidget$#using	/CellWidget$	0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Actor]', reference '[$0 <: Actor]'
 b59e4430a5a4	api-parity(signature)	signature	CellWidget$#wrap	/CellWidget$	0	param 0 type differs: emitted 'scala.Array[sge.scenes.scene2d.Actor]', reference 'Actor*'
 58263ef46fb5	api-parity(signature)	signature	CellWidget$#wrap	/CellWidget$	0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Actor]', reference '[$0 <: Actor]'
-7991138f49b4	api-parity(signature)	signature	ChannelBar$#MODE_ALPHA	/ChannelBar$	0	modifiers differ: emitted inline, reference
-6771f13517a4	api-parity(signature)	signature	ChannelBar$#MODE_B	/ChannelBar$	0	modifiers differ: emitted inline, reference
-a428f282c96b	api-parity(signature)	signature	ChannelBar$#MODE_G	/ChannelBar$	0	modifiers differ: emitted inline, reference
-56d6342c2622	api-parity(signature)	signature	ChannelBar$#MODE_H	/ChannelBar$	0	modifiers differ: emitted inline, reference
-5654e5ba3950	api-parity(signature)	signature	ChannelBar$#MODE_R	/ChannelBar$	0	modifiers differ: emitted inline, reference
-9d83bdfd2ed7	api-parity(signature)	signature	ChannelBar$#MODE_S	/ChannelBar$	0	modifiers differ: emitted inline, reference
-9e64ae119e3e	api-parity(signature)	signature	ChannelBar$#MODE_V	/ChannelBar$	0	modifiers differ: emitted inline, reference
 e98fdcdbe53d	api-parity(signature)	signature	ColorPickerText#format	/ColorPickerText	0	modifiers differ: emitted override,final, reference override
 e98fdcdbe53d/2	api-parity(signature)	signature	ColorPickerText#format	/ColorPickerText	0	modifiers differ: emitted override,final, reference override
 94e9e08a8e21	api-parity(signature)	signature	ColorPickerText#format	/ColorPickerText	0	param 0 type differs: emitted 'scala.Array[java.lang.Object]', reference 'AnyRef*'

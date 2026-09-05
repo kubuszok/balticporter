@@ -1140,6 +1140,166 @@ cbd32febf2ea	api-parity(port-extra)	port-extra	WaveEffect#speed	/WaveEffect	0	va
 0dd73c0965cb	api-parity(port-extra)	port-extra	ZipperEffect#distance	/ZipperEffect	0	var distance/0 in emitted port only
 2a70cd27c453	api-parity(port-extra)	port-extra	ZipperEffect#elastic	/ZipperEffect	0	var elastic/0 in emitted port only
 cc964983de4f	api-parity(port-extra)	port-extra	ZipperEffect#extent	/ZipperEffect	0	var extent/0 in emitted port only
+11e3119ced85	api-parity(rule)	rule	BlockUtils$#ALL_BLOCK_CHARS	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+b47af9fc972f	api-parity(rule)	rule	BlockUtils$#THIN_ACROSS	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+1d313f5d03ed	api-parity(rule)	rule	BlockUtils$#THIN_END	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e1399339a96b	api-parity(rule)	rule	BlockUtils$#THIN_START	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+702f54e0c18e	api-parity(rule)	rule	BlockUtils$#TWIN_ACROSS	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+2a50272817fa	api-parity(rule)	rule	BlockUtils$#TWIN_END1	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+075c3c88251a	api-parity(rule)	rule	BlockUtils$#TWIN_END2	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+7ed06e35e1b6	api-parity(rule)	rule	BlockUtils$#TWIN_START1	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+ee634a0fe03d	api-parity(rule)	rule	BlockUtils$#TWIN_START2	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+8b652347e5e9	api-parity(rule)	rule	BlockUtils$#WIDE_ACROSS	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+7e60438ab66a	api-parity(rule)	rule	BlockUtils$#WIDE_END	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+adb7720cd0b5	api-parity(rule)	rule	BlockUtils$#WIDE_START	/BlockUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+db47dc8c23c3	api-parity(rule)	rule	KnownFonts$#ABYSSINICA_SIL	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+7319d8035b11	api-parity(rule)	rule	KnownFonts$#ASUL	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+4bd410c9e5d5	api-parity(rule)	rule	KnownFonts$#AUBREY	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+ef04111f3cd6	api-parity(rule)	rule	KnownFonts$#A_STARRY	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+9a40c9b3e5dc	api-parity(rule)	rule	KnownFonts$#BIRDLAND_AEROPLANE	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+8564573b06d8	api-parity(rule)	rule	KnownFonts$#BITTER	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+b4771875c5fe	api-parity(rule)	rule	KnownFonts$#BONHEUR_ROYALE	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e220db8449bb	api-parity(rule)	rule	KnownFonts$#CANADA1500	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+af160a0c472f	api-parity(rule)	rule	KnownFonts$#CASCADIA_MONO	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+cd2465529d2d	api-parity(rule)	rule	KnownFonts$#CAVEAT	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+6da605edd6cd	api-parity(rule)	rule	KnownFonts$#CHANGA_ONE	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+9f75656a95d9	api-parity(rule)	rule	KnownFonts$#COMIC_MONO	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+6c17741002d9	api-parity(rule)	rule	KnownFonts$#COMPUTER_SAYS_NO	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+23f04800d9c9	api-parity(rule)	rule	KnownFonts$#CORDATA_16X26	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+22b1e63a4e84	api-parity(rule)	rule	KnownFonts$#COZETTE	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+dc399e521e1c	api-parity(rule)	rule	KnownFonts$#CRETE_ROUND	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+c4bac831d08c	api-parity(rule)	rule	KnownFonts$#DEJAVU_SANS	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+0a5b0c40adbf	api-parity(rule)	rule	KnownFonts$#DEJAVU_SANS_CONDENSED	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+d583a669fafc	api-parity(rule)	rule	KnownFonts$#DEJAVU_SANS_MONO	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+0ad1749462b1	api-parity(rule)	rule	KnownFonts$#DEJAVU_SERIF	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+96332046f36b	api-parity(rule)	rule	KnownFonts$#DEJAVU_SERIF_CONDENSED	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+88a8683b6fc2	api-parity(rule)	rule	KnownFonts$#DINISH	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+445c6cf7a282	api-parity(rule)	rule	KnownFonts$#DINISH_CONDENSED	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+30c59ca78277	api-parity(rule)	rule	KnownFonts$#DINISH_CONDENSED_HEAVY	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e96c3568ad97	api-parity(rule)	rule	KnownFonts$#DINISH_CONDENSED_LIGHT	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+566cd9091839	api-parity(rule)	rule	KnownFonts$#DINISH_EXPANDED	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+9e412fa7d5b9	api-parity(rule)	rule	KnownFonts$#DINISH_EXPANDED_HEAVY	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+bcbdbcafa833	api-parity(rule)	rule	KnownFonts$#DINISH_EXPANDED_LIGHT	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+b5cad8166f4e	api-parity(rule)	rule	KnownFonts$#DINISH_HEAVY	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+3f087504cb37	api-parity(rule)	rule	KnownFonts$#DINISH_LIGHT	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+86f895869495	api-parity(rule)	rule	KnownFonts$#GENTIUM	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+402d65c2a94b	api-parity(rule)	rule	KnownFonts$#GENTIUM_UN_ITALIC	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a995087ecdb2	api-parity(rule)	rule	KnownFonts$#GLACIAL_INDIFFERENCE	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+cc4ec062aad3	api-parity(rule)	rule	KnownFonts$#GO_NOTO_UNIVERSAL	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+3a7bf11e7704	api-parity(rule)	rule	KnownFonts$#GRENZE	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+d148a0ebb6d9	api-parity(rule)	rule	KnownFonts$#HANAZONO	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+d1436c438b21	api-parity(rule)	rule	KnownFonts$#IBM_8X16	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+c6f552075c47	api-parity(rule)	rule	KnownFonts$#IBM_8X16_SAD	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+914a0ac523c7	api-parity(rule)	rule	KnownFonts$#INCONSOLATA_LGC	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+14325c838b84	api-parity(rule)	rule	KnownFonts$#IOSEVKA	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+26e1ff86e797	api-parity(rule)	rule	KnownFonts$#IOSEVKA_SLAB	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+acab39c51676	api-parity(rule)	rule	KnownFonts$#KINGTHINGS_FOUNDATION	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+8e51129b7a26	api-parity(rule)	rule	KnownFonts$#KINGTHINGS_PETROCK	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e9a82c092215	api-parity(rule)	rule	KnownFonts$#LANAPIXEL	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+95dde960a36c	api-parity(rule)	rule	KnownFonts$#LEAGUE_GOTHIC	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a24aea94f19e	api-parity(rule)	rule	KnownFonts$#LIBERTINUS_SERIF	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+27ddca9720bd	api-parity(rule)	rule	KnownFonts$#LIBERTINUS_SERIF_SEMIBOLD	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+ff40bbf34edd	api-parity(rule)	rule	KnownFonts$#MAPLE_MONO	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e66ed21c2d56	api-parity(rule)	rule	KnownFonts$#MA_SHAN_ZHENG	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+6776465fb5e6	api-parity(rule)	rule	KnownFonts$#MONOGRAM	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+889649f6c1b9	api-parity(rule)	rule	KnownFonts$#MONOGRAM_ITALIC	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+b3e260935377	api-parity(rule)	rule	KnownFonts$#MOON_DANCE	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a4898908fefc	api-parity(rule)	rule	KnownFonts$#NOW_ALT	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e0d43cc901d9	api-parity(rule)	rule	KnownFonts$#NUGOTHIC	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+84e92aecd328	api-parity(rule)	rule	KnownFonts$#OPEN_SANS	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+9acdf26e3bd9	api-parity(rule)	rule	KnownFonts$#OSTRICH_BLACK	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a6fa4742d868	api-parity(rule)	rule	KnownFonts$#OVERLOCK	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+4678babcc948	api-parity(rule)	rule	KnownFonts$#OVERLOCK_UN_ITALIC	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+fe8177adf58d	api-parity(rule)	rule	KnownFonts$#OXANIUM	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+b63456660186	api-parity(rule)	rule	KnownFonts$#PANGOLIN	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+406a97197664	api-parity(rule)	rule	KnownFonts$#PROTEST_REVOLUTION	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+80eb681df094	api-parity(rule)	rule	KnownFonts$#QUANPIXEL	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+c3778cac0de4	api-parity(rule)	rule	KnownFonts$#ROBOTO_CONDENSED	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+d446f6a15a4a	api-parity(rule)	rule	KnownFonts$#SANCREEK	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+10d113d4e2b6	api-parity(rule)	rule	KnownFonts$#SELAWIK	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+ca432ffe3a99	api-parity(rule)	rule	KnownFonts$#SELAWIK_BOLD	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+22dc32e1c06c	api-parity(rule)	rule	KnownFonts$#SOUR_GUMMY	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+ba57268d397d	api-parity(rule)	rule	KnownFonts$#SPECIAL_ELITE	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+7a6a6899db43	api-parity(rule)	rule	KnownFonts$#TANGERINE	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e0b0db00bf18	api-parity(rule)	rule	KnownFonts$#TILLANA	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+d3f91228d21a	api-parity(rule)	rule	KnownFonts$#YANONE_KAFFEESATZ	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+316777ed7bc1	api-parity(rule)	rule	KnownFonts$#YATAGHAN	/KnownFonts$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e88107aa9fe0	api-parity(rule)	rule	Palette$#BLACK	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e50bc5052fa8	api-parity(rule)	rule	Palette$#BLUE	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e5889fc1b34f	api-parity(rule)	rule	Palette$#BROWN	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+4f5308170a6a	api-parity(rule)	rule	Palette$#CHARTREUSE	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+fcf6f7db8b13	api-parity(rule)	rule	Palette$#CLEAR	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+ec4cd77974e7	api-parity(rule)	rule	Palette$#CORAL	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+6fd145bba6c0	api-parity(rule)	rule	Palette$#CYAN	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+1df6129e0c47	api-parity(rule)	rule	Palette$#DARK_GRAY	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+505d2f2a9a7e	api-parity(rule)	rule	Palette$#FIREBRICK	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+060100e1dc04	api-parity(rule)	rule	Palette$#FOREST	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+8683ab0fd0d7	api-parity(rule)	rule	Palette$#GOLD	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+9ea0f2e44d0c	api-parity(rule)	rule	Palette$#GOLDENROD	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+1ae50531b737	api-parity(rule)	rule	Palette$#GRAY	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+ffc2c221b9ce	api-parity(rule)	rule	Palette$#GREEN	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+9255d8e823b1	api-parity(rule)	rule	Palette$#LIGHT_GRAY	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+194a95263a16	api-parity(rule)	rule	Palette$#LIME	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+c719dd53e5b3	api-parity(rule)	rule	Palette$#MAGENTA	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a3bada9fd605	api-parity(rule)	rule	Palette$#MAROON	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+261496209f7e	api-parity(rule)	rule	Palette$#NAVY	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+ef0e1e90833a	api-parity(rule)	rule	Palette$#OLIVE	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+6df9bb482fdc	api-parity(rule)	rule	Palette$#ORANGE	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+77e6325b9dee	api-parity(rule)	rule	Palette$#PINK	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+aa28ca79e556	api-parity(rule)	rule	Palette$#PURPLE	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+dcdfb3f3c72c	api-parity(rule)	rule	Palette$#RED	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+3bdf6d5e5d1f	api-parity(rule)	rule	Palette$#ROYAL	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+9f6cb85ffdd7	api-parity(rule)	rule	Palette$#SALMON	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+f6d3755267da	api-parity(rule)	rule	Palette$#SCARLET	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+8186de368345	api-parity(rule)	rule	Palette$#SKY	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+2bb25ac3d26c	api-parity(rule)	rule	Palette$#SLATE	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+cb55ecc2a32d	api-parity(rule)	rule	Palette$#TAN	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+efe56215f5d0	api-parity(rule)	rule	Palette$#TEAL	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+819807d490a3	api-parity(rule)	rule	Palette$#VIOLET	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+afb739b8dea4	api-parity(rule)	rule	Palette$#WHITE	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+340e80436ab3	api-parity(rule)	rule	Palette$#YELLOW	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+5a4d3665ae3a	api-parity(rule)	rule	Palette$#apricot	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+93d6c826c5a5	api-parity(rule)	rule	Palette$#black	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+1bb1d7659875	api-parity(rule)	rule	Palette$#blue	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+37064d2fd53b	api-parity(rule)	rule	Palette$#brown	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a3fcbbc00d4e	api-parity(rule)	rule	Palette$#butter	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+54e770779f4d	api-parity(rule)	rule	Palette$#cactus	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+8363b50afc56	api-parity(rule)	rule	Palette$#chartreuse	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+dde2c9b2a4d0	api-parity(rule)	rule	Palette$#chocolate	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+4535952da976	api-parity(rule)	rule	Palette$#cobalt	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+918422351343	api-parity(rule)	rule	Palette$#cyan	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+d275d653f9e9	api-parity(rule)	rule	Palette$#denim	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+70d1dd69e1cb	api-parity(rule)	rule	Palette$#ember	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a1c4441ec2a7	api-parity(rule)	rule	Palette$#fern	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+fbe3a22c6199	api-parity(rule)	rule	Palette$#gray	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+dd8810fe0f0a	api-parity(rule)	rule	Palette$#green	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+04f87d26543c	api-parity(rule)	rule	Palette$#indigo	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+3fd13220efe4	api-parity(rule)	rule	Palette$#jade	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+d34792ef5de4	api-parity(rule)	rule	Palette$#lavender	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+d18a1f032d67	api-parity(rule)	rule	Palette$#lime	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+b97f8e596cbe	api-parity(rule)	rule	Palette$#magenta	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+1b88d3e98654	api-parity(rule)	rule	Palette$#mauve	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+8a4c9a25069c	api-parity(rule)	rule	Palette$#moss	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+8f7b52e8a3e2	api-parity(rule)	rule	Palette$#navy	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+df60b56ea6e5	api-parity(rule)	rule	Palette$#orange	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+6f0e4d17d9f3	api-parity(rule)	rule	Palette$#peach	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+cc6d771a0a03	api-parity(rule)	rule	Palette$#plum	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e10975a0972d	api-parity(rule)	rule	Palette$#purple	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+d445fc3a906d	api-parity(rule)	rule	Palette$#raspberry	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+d67722fecc3e	api-parity(rule)	rule	Palette$#red	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+4019fc9cebb2	api-parity(rule)	rule	Palette$#rose	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+f08c1733266e	api-parity(rule)	rule	Palette$#saffron	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e97d4b7b756c	api-parity(rule)	rule	Palette$#sage	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+4f81c32ccebc	api-parity(rule)	rule	Palette$#salmon	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+621660486abc	api-parity(rule)	rule	Palette$#silver	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+07a32af094e2	api-parity(rule)	rule	Palette$#sky	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+48e64b92ca4f	api-parity(rule)	rule	Palette$#tan	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+b938248c35d0	api-parity(rule)	rule	Palette$#teal	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+041412cd5edd	api-parity(rule)	rule	Palette$#transparent	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+1357ee3f5572	api-parity(rule)	rule	Palette$#violet	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+5433cb86ebf8	api-parity(rule)	rule	Palette$#white	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+1841aba15768	api-parity(rule)	rule	Palette$#yellow	/Palette$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e3ee223314d3	api-parity(rule)	rule	TextureArrayPolygonSpriteBatch$#TEXTURE_INDEX_ATTRIBUTE	/TextureArrayPolygonSpriteBatch$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 5ae803e2ca95	api-parity(signature)	signature	#CaseInsensitiveIntMap		0	parents differ: emitted-only [balticporter.runtime.JavaIterable[sge.textra.utils.CaseInsensitiveIntMap.Entry]], reference-only []
 4319c0c6b79f	api-parity(signature)	signature	#Font		0	parents differ: emitted-only [java.lang.AutoCloseable], reference-only []
 6b282bec09c4	api-parity(signature)	signature	#TextraField		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Widget, sge.scenes.scene2d.utils.Disableable], reference-only []
@@ -1149,24 +1309,12 @@ ae9ad6062b0c	api-parity(signature)	signature	#TextraTooltip		0	parents differ: e
 ea2264797500	api-parity(signature)	signature	#TextureArrayPolygonSpriteBatch		0	parents differ: emitted-only [sge.graphics.g2d.PolygonSpriteBatch], reference-only [PolygonBatch]
 9af5fbac0530	api-parity(signature)	signature	#TypingListBox		0	parents differ: emitted-only [sge.textra.TextraListBox[$0], sge.scenes.scene2d.utils.Cullable], reference-only [TextraListBox]
 3baa0c460993	api-parity(signature)	signature	#TypingTooltip		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Tooltip[sge.textra.TypingLabel]], reference-only [Tooltip[TypingLabel]]
-131fbbb6baa9	api-parity(signature)	signature	BlockUtils$#ALL_BLOCK_CHARS	/BlockUtils$	0	modifiers differ: emitted inline, reference
 e8a29049218c	api-parity(signature)	signature	BlockUtils$#BOX_DRAWING	/BlockUtils$	0	modifiers differ: emitted final, reference
 a7e3a75da504	api-parity(signature)	signature	BlockUtils$#BOX_DRAWING	/BlockUtils$	0	result type differs: emitted 'scala.Array[scala.Array[scala.Float]]', reference 'Array[Array[Float]]'
-5c6bbce18ef4	api-parity(signature)	signature	BlockUtils$#THIN_ACROSS	/BlockUtils$	0	modifiers differ: emitted inline, reference
-a7526f3c971c	api-parity(signature)	signature	BlockUtils$#THIN_END	/BlockUtils$	0	modifiers differ: emitted inline, reference
 e6f5b8da2411	api-parity(signature)	signature	BlockUtils$#THIN_OVER	/BlockUtils$	0	modifiers differ: emitted final, reference
-762501f920e5	api-parity(signature)	signature	BlockUtils$#THIN_START	/BlockUtils$	0	modifiers differ: emitted inline, reference
-7c11662171ee	api-parity(signature)	signature	BlockUtils$#TWIN_ACROSS	/BlockUtils$	0	modifiers differ: emitted inline, reference
-3859ab3c561d	api-parity(signature)	signature	BlockUtils$#TWIN_END1	/BlockUtils$	0	modifiers differ: emitted inline, reference
-d943f03c3d94	api-parity(signature)	signature	BlockUtils$#TWIN_END2	/BlockUtils$	0	modifiers differ: emitted inline, reference
 713c8e34326c	api-parity(signature)	signature	BlockUtils$#TWIN_OVER1	/BlockUtils$	0	modifiers differ: emitted final, reference
 9dd71a7fc25a	api-parity(signature)	signature	BlockUtils$#TWIN_OVER2	/BlockUtils$	0	modifiers differ: emitted final, reference
-adf0697a5780	api-parity(signature)	signature	BlockUtils$#TWIN_START1	/BlockUtils$	0	modifiers differ: emitted inline, reference
-303d43857e75	api-parity(signature)	signature	BlockUtils$#TWIN_START2	/BlockUtils$	0	modifiers differ: emitted inline, reference
-0ae8cfc44857	api-parity(signature)	signature	BlockUtils$#WIDE_ACROSS	/BlockUtils$	0	modifiers differ: emitted inline, reference
-b3e1f82bf220	api-parity(signature)	signature	BlockUtils$#WIDE_END	/BlockUtils$	0	modifiers differ: emitted inline, reference
 38ad2d3345fe	api-parity(signature)	signature	BlockUtils$#WIDE_OVER	/BlockUtils$	0	modifiers differ: emitted final, reference
-4ca10880959d	api-parity(signature)	signature	BlockUtils$#WIDE_START	/BlockUtils$	0	modifiers differ: emitted inline, reference
 1ca98ed5afd5	api-parity(signature)	signature	CaseInsensitiveIntMap#iterator	/CaseInsensitiveIntMap	0	modifiers differ: emitted override, reference
 a05d3a57e8f1	api-parity(signature)	signature	CaseInsensitiveIntMap#putAll	/CaseInsensitiveIntMap	0	param 0 type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
 77a09591dc30	api-parity(signature)	signature	CaseInsensitiveIntMap#putAll	/CaseInsensitiveIntMap	0	param 1 type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
@@ -1250,92 +1398,20 @@ a6b8315f00b7	api-parity(signature)	signature	Font$.FontFamily#fontAliases	/Font$
 5e5cb93e555c/2	api-parity(signature)	signature	ImageTextraButton#setStyle	/ImageTextraButton	0	param 0 type differs: emitted 'sge.scenes.scene2d.ui.Button.ButtonStyle', reference 'Styles.ImageTextButtonStyle'
 5e4c3f168a7a	api-parity(signature)	signature	ImageTypingButton#newLabel	/ImageTypingButton	0	result type differs: emitted 'sge.textra.TypingLabel', reference 'TextraLabel'
 5e4c3f168a7a/2	api-parity(signature)	signature	ImageTypingButton#newLabel	/ImageTypingButton	0	result type differs: emitted 'sge.textra.TypingLabel', reference 'TextraLabel'
-8e140176e351	api-parity(signature)	signature	KnownFonts$#ABYSSINICA_SIL	/KnownFonts$	0	modifiers differ: emitted inline, reference
-cabb28841f1d	api-parity(signature)	signature	KnownFonts$#ASUL	/KnownFonts$	0	modifiers differ: emitted inline, reference
-13d6e224ab61	api-parity(signature)	signature	KnownFonts$#AUBREY	/KnownFonts$	0	modifiers differ: emitted inline, reference
-3e35a25ce7dc	api-parity(signature)	signature	KnownFonts$#A_STARRY	/KnownFonts$	0	modifiers differ: emitted inline, reference
-1639c24de9a2	api-parity(signature)	signature	KnownFonts$#BIRDLAND_AEROPLANE	/KnownFonts$	0	modifiers differ: emitted inline, reference
-137caad231b0	api-parity(signature)	signature	KnownFonts$#BITTER	/KnownFonts$	0	modifiers differ: emitted inline, reference
-f19136f430c8	api-parity(signature)	signature	KnownFonts$#BONHEUR_ROYALE	/KnownFonts$	0	modifiers differ: emitted inline, reference
-dc1b418df1cf	api-parity(signature)	signature	KnownFonts$#CANADA1500	/KnownFonts$	0	modifiers differ: emitted inline, reference
-ec12e8bdcbf4	api-parity(signature)	signature	KnownFonts$#CASCADIA_MONO	/KnownFonts$	0	modifiers differ: emitted inline, reference
-15209f46fbe0	api-parity(signature)	signature	KnownFonts$#CAVEAT	/KnownFonts$	0	modifiers differ: emitted inline, reference
-72fcc530b2e0	api-parity(signature)	signature	KnownFonts$#CHANGA_ONE	/KnownFonts$	0	modifiers differ: emitted inline, reference
-bf79012d72a6	api-parity(signature)	signature	KnownFonts$#COMIC_MONO	/KnownFonts$	0	modifiers differ: emitted inline, reference
-34c308ca76a7	api-parity(signature)	signature	KnownFonts$#COMPUTER_SAYS_NO	/KnownFonts$	0	modifiers differ: emitted inline, reference
-48d040e07b79	api-parity(signature)	signature	KnownFonts$#CORDATA_16X26	/KnownFonts$	0	modifiers differ: emitted inline, reference
-af75b4f067ff	api-parity(signature)	signature	KnownFonts$#COZETTE	/KnownFonts$	0	modifiers differ: emitted inline, reference
-1d2c59e398fc	api-parity(signature)	signature	KnownFonts$#CRETE_ROUND	/KnownFonts$	0	modifiers differ: emitted inline, reference
-bdade2772c22	api-parity(signature)	signature	KnownFonts$#DEJAVU_SANS	/KnownFonts$	0	modifiers differ: emitted inline, reference
-57497331fcb7	api-parity(signature)	signature	KnownFonts$#DEJAVU_SANS_CONDENSED	/KnownFonts$	0	modifiers differ: emitted inline, reference
-6d50b7dc6b67	api-parity(signature)	signature	KnownFonts$#DEJAVU_SANS_MONO	/KnownFonts$	0	modifiers differ: emitted inline, reference
-ebe10afde8a7	api-parity(signature)	signature	KnownFonts$#DEJAVU_SERIF	/KnownFonts$	0	modifiers differ: emitted inline, reference
-6111f7e5221b	api-parity(signature)	signature	KnownFonts$#DEJAVU_SERIF_CONDENSED	/KnownFonts$	0	modifiers differ: emitted inline, reference
-c5cf574342d7	api-parity(signature)	signature	KnownFonts$#DINISH	/KnownFonts$	0	modifiers differ: emitted inline, reference
-0d955754c666	api-parity(signature)	signature	KnownFonts$#DINISH_CONDENSED	/KnownFonts$	0	modifiers differ: emitted inline, reference
-745177810cfa	api-parity(signature)	signature	KnownFonts$#DINISH_CONDENSED_HEAVY	/KnownFonts$	0	modifiers differ: emitted inline, reference
-7b26fd2b3a49	api-parity(signature)	signature	KnownFonts$#DINISH_CONDENSED_LIGHT	/KnownFonts$	0	modifiers differ: emitted inline, reference
-6dde09b3a0df	api-parity(signature)	signature	KnownFonts$#DINISH_EXPANDED	/KnownFonts$	0	modifiers differ: emitted inline, reference
-cf87e23c450a	api-parity(signature)	signature	KnownFonts$#DINISH_EXPANDED_HEAVY	/KnownFonts$	0	modifiers differ: emitted inline, reference
-16bbc3fee99d	api-parity(signature)	signature	KnownFonts$#DINISH_EXPANDED_LIGHT	/KnownFonts$	0	modifiers differ: emitted inline, reference
-d5c354d5e508	api-parity(signature)	signature	KnownFonts$#DINISH_HEAVY	/KnownFonts$	0	modifiers differ: emitted inline, reference
-52ae6407ed2f	api-parity(signature)	signature	KnownFonts$#DINISH_LIGHT	/KnownFonts$	0	modifiers differ: emitted inline, reference
 0eb689ec3f35	api-parity(signature)	signature	KnownFonts$#FNT_NAMES	/KnownFonts$	0	modifiers differ: emitted final, reference
 c8eb36165759	api-parity(signature)	signature	KnownFonts$#FNT_NAMES	/KnownFonts$	0	result type differs: emitted 'lowlevel.util.OrderedSet[java.lang.String]', reference 'LinkedHashSet[String]'
-7e588dbdbc42	api-parity(signature)	signature	KnownFonts$#GENTIUM	/KnownFonts$	0	modifiers differ: emitted inline, reference
-956bffaa31fc	api-parity(signature)	signature	KnownFonts$#GENTIUM_UN_ITALIC	/KnownFonts$	0	modifiers differ: emitted inline, reference
-f1da383c468f	api-parity(signature)	signature	KnownFonts$#GLACIAL_INDIFFERENCE	/KnownFonts$	0	modifiers differ: emitted inline, reference
-3ff2958c842c	api-parity(signature)	signature	KnownFonts$#GO_NOTO_UNIVERSAL	/KnownFonts$	0	modifiers differ: emitted inline, reference
-f74ac1901102	api-parity(signature)	signature	KnownFonts$#GRENZE	/KnownFonts$	0	modifiers differ: emitted inline, reference
-442b75c5eb00	api-parity(signature)	signature	KnownFonts$#HANAZONO	/KnownFonts$	0	modifiers differ: emitted inline, reference
-cd600c9ac18b	api-parity(signature)	signature	KnownFonts$#IBM_8X16	/KnownFonts$	0	modifiers differ: emitted inline, reference
-7fb6c4df54bd	api-parity(signature)	signature	KnownFonts$#IBM_8X16_SAD	/KnownFonts$	0	modifiers differ: emitted inline, reference
-345ef0fcca3a	api-parity(signature)	signature	KnownFonts$#INCONSOLATA_LGC	/KnownFonts$	0	modifiers differ: emitted inline, reference
-52b3ec364ad6	api-parity(signature)	signature	KnownFonts$#IOSEVKA	/KnownFonts$	0	modifiers differ: emitted inline, reference
-00d1c83afa43	api-parity(signature)	signature	KnownFonts$#IOSEVKA_SLAB	/KnownFonts$	0	modifiers differ: emitted inline, reference
 944ec825abf8	api-parity(signature)	signature	KnownFonts$#JSON_NAMES	/KnownFonts$	0	modifiers differ: emitted final, reference
 87c8a97f8219	api-parity(signature)	signature	KnownFonts$#JSON_NAMES	/KnownFonts$	0	result type differs: emitted 'lowlevel.util.OrderedSet[java.lang.String]', reference 'LinkedHashSet[String]'
-d61fe0a064bb	api-parity(signature)	signature	KnownFonts$#KINGTHINGS_FOUNDATION	/KnownFonts$	0	modifiers differ: emitted inline, reference
-eae6167a28e0	api-parity(signature)	signature	KnownFonts$#KINGTHINGS_PETROCK	/KnownFonts$	0	modifiers differ: emitted inline, reference
-24eb896b67ff	api-parity(signature)	signature	KnownFonts$#LANAPIXEL	/KnownFonts$	0	modifiers differ: emitted inline, reference
-eb32f6de9822	api-parity(signature)	signature	KnownFonts$#LEAGUE_GOTHIC	/KnownFonts$	0	modifiers differ: emitted inline, reference
-7c6697d5e234	api-parity(signature)	signature	KnownFonts$#LIBERTINUS_SERIF	/KnownFonts$	0	modifiers differ: emitted inline, reference
-75c85ed64e5a	api-parity(signature)	signature	KnownFonts$#LIBERTINUS_SERIF_SEMIBOLD	/KnownFonts$	0	modifiers differ: emitted inline, reference
 3febdabbfd50	api-parity(signature)	signature	KnownFonts$#LIMITED_JSON_NAMES	/KnownFonts$	0	modifiers differ: emitted final, reference
 324b1ac01b79	api-parity(signature)	signature	KnownFonts$#LIMITED_JSON_NAMES	/KnownFonts$	0	result type differs: emitted 'lowlevel.util.OrderedSet[java.lang.String]', reference 'LinkedHashSet[String]'
-5ae447a93034	api-parity(signature)	signature	KnownFonts$#MAPLE_MONO	/KnownFonts$	0	modifiers differ: emitted inline, reference
-cf14dced551c	api-parity(signature)	signature	KnownFonts$#MA_SHAN_ZHENG	/KnownFonts$	0	modifiers differ: emitted inline, reference
-1eace2315999	api-parity(signature)	signature	KnownFonts$#MONOGRAM	/KnownFonts$	0	modifiers differ: emitted inline, reference
-c243e8315744	api-parity(signature)	signature	KnownFonts$#MONOGRAM_ITALIC	/KnownFonts$	0	modifiers differ: emitted inline, reference
-cf13abe40bf9	api-parity(signature)	signature	KnownFonts$#MOON_DANCE	/KnownFonts$	0	modifiers differ: emitted inline, reference
 cd090579876d	api-parity(signature)	signature	KnownFonts$#MSDF_NAMES	/KnownFonts$	0	modifiers differ: emitted final, reference
 c4e1933bc9d5	api-parity(signature)	signature	KnownFonts$#MSDF_NAMES	/KnownFonts$	0	result type differs: emitted 'lowlevel.util.OrderedSet[java.lang.String]', reference 'LinkedHashSet[String]'
-cf6087eafe5a	api-parity(signature)	signature	KnownFonts$#NOW_ALT	/KnownFonts$	0	modifiers differ: emitted inline, reference
-f2e210e1d2be	api-parity(signature)	signature	KnownFonts$#NUGOTHIC	/KnownFonts$	0	modifiers differ: emitted inline, reference
-885cac464b59	api-parity(signature)	signature	KnownFonts$#OPEN_SANS	/KnownFonts$	0	modifiers differ: emitted inline, reference
-714c02375061	api-parity(signature)	signature	KnownFonts$#OSTRICH_BLACK	/KnownFonts$	0	modifiers differ: emitted inline, reference
-d99926c856a2	api-parity(signature)	signature	KnownFonts$#OVERLOCK	/KnownFonts$	0	modifiers differ: emitted inline, reference
-de90e26760ba	api-parity(signature)	signature	KnownFonts$#OVERLOCK_UN_ITALIC	/KnownFonts$	0	modifiers differ: emitted inline, reference
-10cf2b0864f5	api-parity(signature)	signature	KnownFonts$#OXANIUM	/KnownFonts$	0	modifiers differ: emitted inline, reference
-762ebde2cd76	api-parity(signature)	signature	KnownFonts$#PANGOLIN	/KnownFonts$	0	modifiers differ: emitted inline, reference
-b98088a44fdd	api-parity(signature)	signature	KnownFonts$#PROTEST_REVOLUTION	/KnownFonts$	0	modifiers differ: emitted inline, reference
-3ad829396061	api-parity(signature)	signature	KnownFonts$#QUANPIXEL	/KnownFonts$	0	modifiers differ: emitted inline, reference
-5af634e5e534	api-parity(signature)	signature	KnownFonts$#ROBOTO_CONDENSED	/KnownFonts$	0	modifiers differ: emitted inline, reference
 f5424aa77dae	api-parity(signature)	signature	KnownFonts$#SAD_NAMES	/KnownFonts$	0	modifiers differ: emitted final, reference
 b104613b0ff9	api-parity(signature)	signature	KnownFonts$#SAD_NAMES	/KnownFonts$	0	result type differs: emitted 'lowlevel.util.OrderedSet[java.lang.String]', reference 'LinkedHashSet[String]'
-50e5dbc69982	api-parity(signature)	signature	KnownFonts$#SANCREEK	/KnownFonts$	0	modifiers differ: emitted inline, reference
 48ab82015f01	api-parity(signature)	signature	KnownFonts$#SDF_NAMES	/KnownFonts$	0	modifiers differ: emitted final, reference
 8aae6f405439	api-parity(signature)	signature	KnownFonts$#SDF_NAMES	/KnownFonts$	0	result type differs: emitted 'lowlevel.util.OrderedSet[java.lang.String]', reference 'LinkedHashSet[String]'
-d220fd0c26d6	api-parity(signature)	signature	KnownFonts$#SELAWIK	/KnownFonts$	0	modifiers differ: emitted inline, reference
-6f294a6a3943	api-parity(signature)	signature	KnownFonts$#SELAWIK_BOLD	/KnownFonts$	0	modifiers differ: emitted inline, reference
-31b161e76b7a	api-parity(signature)	signature	KnownFonts$#SOUR_GUMMY	/KnownFonts$	0	modifiers differ: emitted inline, reference
-1240fce798f7	api-parity(signature)	signature	KnownFonts$#SPECIAL_ELITE	/KnownFonts$	0	modifiers differ: emitted inline, reference
 e8f66c13e015	api-parity(signature)	signature	KnownFonts$#STANDARD_NAMES	/KnownFonts$	0	modifiers differ: emitted final, reference
 ec401a096a38	api-parity(signature)	signature	KnownFonts$#STANDARD_NAMES	/KnownFonts$	0	result type differs: emitted 'lowlevel.util.OrderedSet[java.lang.String]', reference 'LinkedHashSet[String]'
-aa4f85785dd2	api-parity(signature)	signature	KnownFonts$#TANGERINE	/KnownFonts$	0	modifiers differ: emitted inline, reference
-820c0dc09be9	api-parity(signature)	signature	KnownFonts$#TILLANA	/KnownFonts$	0	modifiers differ: emitted inline, reference
-75f538ca1a05	api-parity(signature)	signature	KnownFonts$#YANONE_KAFFEESATZ	/KnownFonts$	0	modifiers differ: emitted inline, reference
-1d51a9e8b732	api-parity(signature)	signature	KnownFonts$#YATAGHAN	/KnownFonts$	0	modifiers differ: emitted inline, reference
 f1be93921d15	api-parity(signature)	signature	KnownFonts$#getAll	/KnownFonts$	0	result type differs: emitted 'scala.Array[sge.textra.Font]', reference 'Array[Font]'
 40bcd973319b	api-parity(signature)	signature	KnownFonts$#getAllMSDF	/KnownFonts$	0	result type differs: emitted 'scala.Array[sge.textra.Font]', reference 'Array[Font]'
 a4186058f97f	api-parity(signature)	signature	KnownFonts$#getAllSDF	/KnownFonts$	0	result type differs: emitted 'scala.Array[sge.textra.Font]', reference 'Array[Font]'
@@ -1355,86 +1431,11 @@ a6e3327784a1	api-parity(signature)	signature	Layout#sizing	/Layout	0	result type
 b317d2b536b4	api-parity(signature)	signature	Line#glyphs	/Line	0	result type differs: emitted 'lowlevel.util.DynamicArray[scala.Long]', reference 'ArrayBuffer[Long]'
 4f630fc757d9	api-parity(signature)	signature	Palette$#ALIASES	/Palette$	0	modifiers differ: emitted final, reference
 914f8a231f48	api-parity(signature)	signature	Palette$#ALIASES	/Palette$	0	result type differs: emitted 'lowlevel.util.ObjectMap[java.lang.String, scala.Int]', reference 'MutableMap[String, Int]'
-929b06732ccf	api-parity(signature)	signature	Palette$#BLACK	/Palette$	0	modifiers differ: emitted inline, reference
-1c0256294ecc	api-parity(signature)	signature	Palette$#BLUE	/Palette$	0	modifiers differ: emitted inline, reference
-ac741115d64b	api-parity(signature)	signature	Palette$#BROWN	/Palette$	0	modifiers differ: emitted inline, reference
-7049cf00dc82	api-parity(signature)	signature	Palette$#CHARTREUSE	/Palette$	0	modifiers differ: emitted inline, reference
-01674d266e18	api-parity(signature)	signature	Palette$#CLEAR	/Palette$	0	modifiers differ: emitted inline, reference
-1bb9d319966c	api-parity(signature)	signature	Palette$#CORAL	/Palette$	0	modifiers differ: emitted inline, reference
-3449fcd51655	api-parity(signature)	signature	Palette$#CYAN	/Palette$	0	modifiers differ: emitted inline, reference
-d34f49dd6f96	api-parity(signature)	signature	Palette$#DARK_GRAY	/Palette$	0	modifiers differ: emitted inline, reference
-3052630f4292	api-parity(signature)	signature	Palette$#FIREBRICK	/Palette$	0	modifiers differ: emitted inline, reference
-65d25e5dcf49	api-parity(signature)	signature	Palette$#FOREST	/Palette$	0	modifiers differ: emitted inline, reference
-d3eeee342182	api-parity(signature)	signature	Palette$#GOLD	/Palette$	0	modifiers differ: emitted inline, reference
-58f82b83434d	api-parity(signature)	signature	Palette$#GOLDENROD	/Palette$	0	modifiers differ: emitted inline, reference
-1a32a31e3acf	api-parity(signature)	signature	Palette$#GRAY	/Palette$	0	modifiers differ: emitted inline, reference
-c413f49af2bb	api-parity(signature)	signature	Palette$#GREEN	/Palette$	0	modifiers differ: emitted inline, reference
-55387c9ce565	api-parity(signature)	signature	Palette$#LIGHT_GRAY	/Palette$	0	modifiers differ: emitted inline, reference
-616f01426406	api-parity(signature)	signature	Palette$#LIME	/Palette$	0	modifiers differ: emitted inline, reference
 0ea490087360	api-parity(signature)	signature	Palette$#LIST	/Palette$	0	modifiers differ: emitted final, reference
 cd80008f1776	api-parity(signature)	signature	Palette$#LIST	/Palette$	0	result type differs: emitted 'lowlevel.util.DynamicArray[scala.Int]', reference 'ArrayBuffer[Int]'
-2188d63a5128	api-parity(signature)	signature	Palette$#MAGENTA	/Palette$	0	modifiers differ: emitted inline, reference
-4d10c54d10c4	api-parity(signature)	signature	Palette$#MAROON	/Palette$	0	modifiers differ: emitted inline, reference
 a4a5253e9b93	api-parity(signature)	signature	Palette$#NAMED	/Palette$	0	modifiers differ: emitted final, reference
 821e08ffc036	api-parity(signature)	signature	Palette$#NAMED	/Palette$	0	result type differs: emitted 'lowlevel.util.ObjectMap[java.lang.String, scala.Int]', reference 'MutableMap[String, Int]'
 7ce921bf0942	api-parity(signature)	signature	Palette$#NAMES	/Palette$	0	result type differs: emitted 'lowlevel.util.DynamicArray[java.lang.String]', reference 'ArrayBuffer[String]'
-62f07d2870b5	api-parity(signature)	signature	Palette$#NAVY	/Palette$	0	modifiers differ: emitted inline, reference
-4bcde9cae57a	api-parity(signature)	signature	Palette$#OLIVE	/Palette$	0	modifiers differ: emitted inline, reference
-f2b2ca7e310c	api-parity(signature)	signature	Palette$#ORANGE	/Palette$	0	modifiers differ: emitted inline, reference
-94cbd669067c	api-parity(signature)	signature	Palette$#PINK	/Palette$	0	modifiers differ: emitted inline, reference
-c5753386b66e	api-parity(signature)	signature	Palette$#PURPLE	/Palette$	0	modifiers differ: emitted inline, reference
-fee901d15ea5	api-parity(signature)	signature	Palette$#RED	/Palette$	0	modifiers differ: emitted inline, reference
-ff854927e122	api-parity(signature)	signature	Palette$#ROYAL	/Palette$	0	modifiers differ: emitted inline, reference
-82f744ca20c0	api-parity(signature)	signature	Palette$#SALMON	/Palette$	0	modifiers differ: emitted inline, reference
-a5c92aa210ce	api-parity(signature)	signature	Palette$#SCARLET	/Palette$	0	modifiers differ: emitted inline, reference
-d55f7f65287e	api-parity(signature)	signature	Palette$#SKY	/Palette$	0	modifiers differ: emitted inline, reference
-4a371621f261	api-parity(signature)	signature	Palette$#SLATE	/Palette$	0	modifiers differ: emitted inline, reference
-ffa1e38de82b	api-parity(signature)	signature	Palette$#TAN	/Palette$	0	modifiers differ: emitted inline, reference
-457b32d9aa8a	api-parity(signature)	signature	Palette$#TEAL	/Palette$	0	modifiers differ: emitted inline, reference
-e6759da78cfc	api-parity(signature)	signature	Palette$#VIOLET	/Palette$	0	modifiers differ: emitted inline, reference
-dec5ef87a799	api-parity(signature)	signature	Palette$#WHITE	/Palette$	0	modifiers differ: emitted inline, reference
-00dc7724ec2f	api-parity(signature)	signature	Palette$#YELLOW	/Palette$	0	modifiers differ: emitted inline, reference
-c07954647a82	api-parity(signature)	signature	Palette$#apricot	/Palette$	0	modifiers differ: emitted inline, reference
-6df7edb8d963	api-parity(signature)	signature	Palette$#black	/Palette$	0	modifiers differ: emitted inline, reference
-2e611accd7b4	api-parity(signature)	signature	Palette$#blue	/Palette$	0	modifiers differ: emitted inline, reference
-0de7e490e719	api-parity(signature)	signature	Palette$#brown	/Palette$	0	modifiers differ: emitted inline, reference
-bb765ce8431c	api-parity(signature)	signature	Palette$#butter	/Palette$	0	modifiers differ: emitted inline, reference
-dce9ab5abb09	api-parity(signature)	signature	Palette$#cactus	/Palette$	0	modifiers differ: emitted inline, reference
-cfc79f373920	api-parity(signature)	signature	Palette$#chartreuse	/Palette$	0	modifiers differ: emitted inline, reference
-0984d0440169	api-parity(signature)	signature	Palette$#chocolate	/Palette$	0	modifiers differ: emitted inline, reference
-6556cab71c42	api-parity(signature)	signature	Palette$#cobalt	/Palette$	0	modifiers differ: emitted inline, reference
-7d27318a2aa8	api-parity(signature)	signature	Palette$#cyan	/Palette$	0	modifiers differ: emitted inline, reference
-a9de0b349790	api-parity(signature)	signature	Palette$#denim	/Palette$	0	modifiers differ: emitted inline, reference
-ae64613a9765	api-parity(signature)	signature	Palette$#ember	/Palette$	0	modifiers differ: emitted inline, reference
-055b9dc009d2	api-parity(signature)	signature	Palette$#fern	/Palette$	0	modifiers differ: emitted inline, reference
-d1b23024f03e	api-parity(signature)	signature	Palette$#gray	/Palette$	0	modifiers differ: emitted inline, reference
-e9271731bf16	api-parity(signature)	signature	Palette$#green	/Palette$	0	modifiers differ: emitted inline, reference
-e96f11f1d69b	api-parity(signature)	signature	Palette$#indigo	/Palette$	0	modifiers differ: emitted inline, reference
-017c93b7b157	api-parity(signature)	signature	Palette$#jade	/Palette$	0	modifiers differ: emitted inline, reference
-8f544a9dfc6d	api-parity(signature)	signature	Palette$#lavender	/Palette$	0	modifiers differ: emitted inline, reference
-8c8cac0486cd	api-parity(signature)	signature	Palette$#lime	/Palette$	0	modifiers differ: emitted inline, reference
-34d25110a0a9	api-parity(signature)	signature	Palette$#magenta	/Palette$	0	modifiers differ: emitted inline, reference
-8bf915c933a0	api-parity(signature)	signature	Palette$#mauve	/Palette$	0	modifiers differ: emitted inline, reference
-e487f944777f	api-parity(signature)	signature	Palette$#moss	/Palette$	0	modifiers differ: emitted inline, reference
-0a35bed78c78	api-parity(signature)	signature	Palette$#navy	/Palette$	0	modifiers differ: emitted inline, reference
-7162f42142cd	api-parity(signature)	signature	Palette$#orange	/Palette$	0	modifiers differ: emitted inline, reference
-ca1c798a2103	api-parity(signature)	signature	Palette$#peach	/Palette$	0	modifiers differ: emitted inline, reference
-78ee7ea5b422	api-parity(signature)	signature	Palette$#plum	/Palette$	0	modifiers differ: emitted inline, reference
-3dc166b5679f	api-parity(signature)	signature	Palette$#purple	/Palette$	0	modifiers differ: emitted inline, reference
-23625116e00c	api-parity(signature)	signature	Palette$#raspberry	/Palette$	0	modifiers differ: emitted inline, reference
-1c81e98e7178	api-parity(signature)	signature	Palette$#red	/Palette$	0	modifiers differ: emitted inline, reference
-1f9629d0a00f	api-parity(signature)	signature	Palette$#rose	/Palette$	0	modifiers differ: emitted inline, reference
-443a69dbcd8b	api-parity(signature)	signature	Palette$#saffron	/Palette$	0	modifiers differ: emitted inline, reference
-2014d53a15b2	api-parity(signature)	signature	Palette$#sage	/Palette$	0	modifiers differ: emitted inline, reference
-ea15f14d1006	api-parity(signature)	signature	Palette$#salmon	/Palette$	0	modifiers differ: emitted inline, reference
-915bb5720b75	api-parity(signature)	signature	Palette$#silver	/Palette$	0	modifiers differ: emitted inline, reference
-541989cf712d	api-parity(signature)	signature	Palette$#sky	/Palette$	0	modifiers differ: emitted inline, reference
-bb705afdb60e	api-parity(signature)	signature	Palette$#tan	/Palette$	0	modifiers differ: emitted inline, reference
-4fee1aac88e2	api-parity(signature)	signature	Palette$#teal	/Palette$	0	modifiers differ: emitted inline, reference
-44fc13fea956	api-parity(signature)	signature	Palette$#transparent	/Palette$	0	modifiers differ: emitted inline, reference
-790cd31bb798	api-parity(signature)	signature	Palette$#violet	/Palette$	0	modifiers differ: emitted inline, reference
-c1c1d78d3a32	api-parity(signature)	signature	Palette$#white	/Palette$	0	modifiers differ: emitted inline, reference
-3968eca0da3b	api-parity(signature)	signature	Palette$#yellow	/Palette$	0	modifiers differ: emitted inline, reference
 c8ee630aa7b8	api-parity(signature)	signature	StringUtils$#join	/StringUtils$	0	param 1 type differs: emitted 'scala.Array[java.lang.CharSequence]', reference 'CharSequence*'
 db6f864cab31	api-parity(signature)	signature	StringUtils$#shuffleWords	/StringUtils$	0	param 1 type differs: emitted 'java.util.Random', reference 'JRandom'
 03743d208d2e	api-parity(signature)	signature	StringUtils$#unsignedHexArray	/StringUtils$	0	result type differs: emitted 'scala.Array[scala.Char]', reference 'Array[Char]'
@@ -1572,7 +1573,6 @@ ec43218a5deb/2	api-parity(signature)	signature	TextureArrayPolygonSpriteBatch#dr
 113c68a423f7	api-parity(signature)	signature	TextureArrayPolygonSpriteBatch#draw	/TextureArrayPolygonSpriteBatch	0	param 4 type differs: emitted 'scala.Array[scala.Short]', reference 'Array[Short]'
 2897769155b7	api-parity(signature)	signature	TextureArrayPolygonSpriteBatch#setupMatrices	/TextureArrayPolygonSpriteBatch	0	modifiers differ: emitted override, reference
 a4f253bf8b20	api-parity(signature)	signature	TextureArrayPolygonSpriteBatch#switchTexture	/TextureArrayPolygonSpriteBatch	0	modifiers differ: emitted override, reference
-c11a02e061a8	api-parity(signature)	signature	TextureArrayPolygonSpriteBatch$#TEXTURE_INDEX_ATTRIBUTE	/TextureArrayPolygonSpriteBatch$	0	modifiers differ: emitted inline, reference
 9b9abf5b34fd	api-parity(signature)	signature	TextureArrayPolygonSpriteBatch$#VERTEX_SIZE	/TextureArrayPolygonSpriteBatch$	0	modifiers differ: emitted final, reference
 70b4b1ea5595	api-parity(signature)	signature	TextureArrayShaderCompiler$#GET_TEXTURE_FROM_ARRAY_PLACEHOLDER	/TextureArrayShaderCompiler$	0	modifiers differ: emitted inline, reference final
 0f5cc0e51ece	api-parity(signature)	signature	TokenCategory$#ALL	/TokenCategory$	0	modifiers differ: emitted final, reference

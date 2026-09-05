@@ -322,6 +322,74 @@ a48fc6348d01	api-parity(port-extra)	port-extra	TextureResolver#loadTextures	/Tex
 acaaab1d82cc	api-parity(port-extra)	port-extra	TransmissionSource#batch	/TransmissionSource	0	var batch/0 in emitted port only
 e4d996287fcc	api-parity(port-extra)	port-extra	TransmissionSource#begin	/TransmissionSource	0	def begin/1 in emitted port only [rename candidates: end, render]
 b54412d5db7f	api-parity(port-extra)	port-extra	TransmissionSource#end	/TransmissionSource	0	def end/0 in emitted port only [rename candidates: close]
+154fea1d1407	api-parity(rule)	rule	CascadeShadowMapAttribute$#Alias	/CascadeShadowMapAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+4ff4577547db	api-parity(rule)	rule	ClippingPlaneAttribute$#TypeAlias	/ClippingPlaneAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+7eb9962d6c46	api-parity(rule)	rule	FogAttribute$#FogEquationAlias	/FogAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+8e6f5b108f66	api-parity(rule)	rule	GLTFLoaderBase$#TAG	/GLTFLoaderBase$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+627869a44cfa	api-parity(rule)	rule	GLTFTypes$#C_BYTE	/GLTFTypes$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+66ce2fae54d1	api-parity(rule)	rule	GLTFTypes$#C_FLOAT	/GLTFTypes$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+2d24ebb26b48	api-parity(rule)	rule	GLTFTypes$#C_SHORT	/GLTFTypes$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+4250d7e78699	api-parity(rule)	rule	GLTFTypes$#C_UBYTE	/GLTFTypes$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+4512a5b63c91	api-parity(rule)	rule	GLTFTypes$#C_UINT	/GLTFTypes$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+180b3780e647	api-parity(rule)	rule	GLTFTypes$#C_USHORT	/GLTFTypes$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+ccd210fa12fd	api-parity(rule)	rule	GLTFTypes$#TYPE_MAT2	/GLTFTypes$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+2ce9bd35039d	api-parity(rule)	rule	GLTFTypes$#TYPE_MAT3	/GLTFTypes$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+356ec988cf0f	api-parity(rule)	rule	GLTFTypes$#TYPE_MAT4	/GLTFTypes$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+baaae201a2ad	api-parity(rule)	rule	GLTFTypes$#TYPE_SCALAR	/GLTFTypes$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+1054a67824b1	api-parity(rule)	rule	GLTFTypes$#TYPE_VEC2	/GLTFTypes$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+f63565254881	api-parity(rule)	rule	GLTFTypes$#TYPE_VEC3	/GLTFTypes$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+50bc349eaf7b	api-parity(rule)	rule	GLTFTypes$#TYPE_VEC4	/GLTFTypes$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+fb97fcd786d5	api-parity(rule)	rule	KHRLightsPunctual$#EXT	/KHRLightsPunctual$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+f6d59b7958da	api-parity(rule)	rule	KHRLightsPunctual$.GLTFLight$#TYPE_DIRECTIONAL	/KHRLightsPunctual$/GLTFLight$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+610e215c4e4d	api-parity(rule)	rule	KHRLightsPunctual$.GLTFLight$#TYPE_POINT	/KHRLightsPunctual$/GLTFLight$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+0974eccf14fb	api-parity(rule)	rule	KHRLightsPunctual$.GLTFLight$#TYPE_SPOT	/KHRLightsPunctual$/GLTFLight$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+187714fee559	api-parity(rule)	rule	KHRMaterialsEmissiveStrength$#EXT	/KHRMaterialsEmissiveStrength$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+d6d7dfb0d0f3	api-parity(rule)	rule	KHRMaterialsIOR$#EXT	/KHRMaterialsIOR$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+5dadbe59326c	api-parity(rule)	rule	KHRMaterialsIridescence$#EXT	/KHRMaterialsIridescence$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+15fb5fd74aa5	api-parity(rule)	rule	KHRMaterialsPBRSpecularGlossiness$#EXT	/KHRMaterialsPBRSpecularGlossiness$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+21a33e24fa43	api-parity(rule)	rule	KHRMaterialsSpecular$#EXT	/KHRMaterialsSpecular$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e850809fb4d9	api-parity(rule)	rule	KHRMaterialsTransmission$#EXT	/KHRMaterialsTransmission$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+32a5e7aa46f6	api-parity(rule)	rule	KHRMaterialsUnlit$#EXT	/KHRMaterialsUnlit$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+2ad82a10c0bf	api-parity(rule)	rule	KHRMaterialsVolume$#EXT	/KHRMaterialsVolume$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+2140ef4c39f3	api-parity(rule)	rule	KHRTextureTransform$#EXT	/KHRTextureTransform$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+3ea6e57750f8	api-parity(rule)	rule	MirrorAttribute$#SpecularAlias	/MirrorAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+37e50f2fc87e	api-parity(rule)	rule	MirrorSourceAttribute$#TypeAlias	/MirrorSourceAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+f9c32658f267	api-parity(rule)	rule	PBRColorAttribute$#BaseColorFactorAlias	/PBRColorAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a4d405cb586e	api-parity(rule)	rule	PBRCommon$#MAX_MORPH_TARGETS	/PBRCommon$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+6dd955dae8bf	api-parity(rule)	rule	PBRCubemapAttribute$#DiffuseEnvAlias	/PBRCubemapAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a1329ab4d402	api-parity(rule)	rule	PBRCubemapAttribute$#SpecularEnvAlias	/PBRCubemapAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+45bb8b74231b	api-parity(rule)	rule	PBRFlagAttribute$#UnlitAlias	/PBRFlagAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+8c50188d021c	api-parity(rule)	rule	PBRFloatAttribute$#EmissiveIntensityAlias	/PBRFloatAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+b78cfe56e1a1	api-parity(rule)	rule	PBRFloatAttribute$#IORAlias	/PBRFloatAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+5a5ab9755582	api-parity(rule)	rule	PBRFloatAttribute$#MetallicAlias	/PBRFloatAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+d2f3fb3712e1	api-parity(rule)	rule	PBRFloatAttribute$#NormalScaleAlias	/PBRFloatAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+b41eed598891	api-parity(rule)	rule	PBRFloatAttribute$#OcclusionStrengthAlias	/PBRFloatAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+acd0ede9b91b	api-parity(rule)	rule	PBRFloatAttribute$#RoughnessAlias	/PBRFloatAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+fc22030508ef	api-parity(rule)	rule	PBRFloatAttribute$#ShadowBiasAlias	/PBRFloatAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+afd6b575c142	api-parity(rule)	rule	PBRFloatAttribute$#SpecularFactorAlias	/PBRFloatAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+4a8f65a8fa87	api-parity(rule)	rule	PBRFloatAttribute$#TransmissionFactorAlias	/PBRFloatAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+00d0e96c3626	api-parity(rule)	rule	PBRHDRColorAttribute$#SpecularAlias	/PBRHDRColorAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+ee891d3ca265	api-parity(rule)	rule	PBRIridescenceAttribute$#Alias	/PBRIridescenceAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+9ca6a0afb15c	api-parity(rule)	rule	PBRMatrixAttribute$#EnvRotationAlias	/PBRMatrixAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+014d748e45eb	api-parity(rule)	rule	PBRShaderConfig$#DEFAULT_GAMMA	/PBRShaderConfig$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a0d639d9cf4d	api-parity(rule)	rule	PBRShaderProvider$#TAG	/PBRShaderProvider$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a4c63e291452	api-parity(rule)	rule	PBRTextureAttribute$#BRDFLUTTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+3c6c5d457e47	api-parity(rule)	rule	PBRTextureAttribute$#BaseColorTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+cf9be43201d7	api-parity(rule)	rule	PBRTextureAttribute$#EmissiveTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+dfd77e660a45	api-parity(rule)	rule	PBRTextureAttribute$#IridescenceTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+9e29cff72ae5	api-parity(rule)	rule	PBRTextureAttribute$#IridescenceThicknessTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+d27be7724026	api-parity(rule)	rule	PBRTextureAttribute$#MetallicRoughnessTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+fd7e948d6349	api-parity(rule)	rule	PBRTextureAttribute$#NormalTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+6623f9128c43	api-parity(rule)	rule	PBRTextureAttribute$#OcclusionTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+bcf939b9d5df	api-parity(rule)	rule	PBRTextureAttribute$#SpecularColorTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+9deeb838bf74	api-parity(rule)	rule	PBRTextureAttribute$#SpecularFactorTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+71374d581f5f	api-parity(rule)	rule	PBRTextureAttribute$#ThicknessTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+ed3012558e4d	api-parity(rule)	rule	PBRTextureAttribute$#TransmissionSourceTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+31b384c1efd1	api-parity(rule)	rule	PBRTextureAttribute$#TransmissionTextureAlias	/PBRTextureAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a0e04968546d	api-parity(rule)	rule	PBRVertexAttributes$.Usage$#NormalTarget	/PBRVertexAttributes$/Usage$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+ee4c13651e0f	api-parity(rule)	rule	PBRVertexAttributes$.Usage$#PositionTarget	/PBRVertexAttributes$/Usage$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+40a02a0c44dc	api-parity(rule)	rule	PBRVertexAttributes$.Usage$#TangentTarget	/PBRVertexAttributes$/Usage$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+c16339f8754e	api-parity(rule)	rule	PBRVolumeAttribute$#Alias	/PBRVolumeAttribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 f3c48c2056e6	api-parity(signature)	signature	#CubicVector3		0	modifiers differ: emitted , reference final,case
 afa64bc550cb	api-parity(signature)	signature	#CubicVector3		0	parents differ: emitted-only [sge.math.Vector3], reference-only []
 5a06800985ea	api-parity(signature)	signature	#GLBAssetLoader		0	parents differ: emitted-only [sge.assets.loaders.AsynchronousAssetLoader[sge.gltf.scene3d.scene.SceneAsset, sge.gltf.loaders.shared.SceneAssetLoaderParameters]], reference-only [AsynchronousAssetLoader[SceneAsset, SceneAssetLoaderParameters]]
@@ -346,10 +414,8 @@ e62151d6ee30	api-parity(signature)	signature	AnimationLoader#load	/AnimationLoad
 a4627f5eb17f	api-parity(signature)	signature	CascadeShadowMap#lights	/CascadeShadowMap	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.gltf.scene3d.lights.DirectionalShadowLight]', reference 'DynamicArray[DirectionalShadowLight]'
 7028610f228d	api-parity(signature)	signature	CascadeShadowMap#setCascades	/CascadeShadowMap	0	param 3 type differs: emitted 'lowlevel.util.DynamicArray[scala.Float]', reference 'DynamicArray[Float]'
 5a7fc6d1bd59	api-parity(signature)	signature	CascadeShadowMap#splitRates	/CascadeShadowMap	0	result type differs: emitted 'lowlevel.util.DynamicArray[scala.Float]', reference 'DynamicArray[Float]'
-4e4cde795b30	api-parity(signature)	signature	CascadeShadowMapAttribute$#Alias	/CascadeShadowMapAttribute$	0	modifiers differ: emitted inline, reference
 260e2f7ba4cd	api-parity(signature)	signature	CascadeShadowMapAttribute$#Type	/CascadeShadowMapAttribute$	0	modifiers differ: emitted final, reference
 75b2fad0b2d2	api-parity(signature)	signature	ClippingPlaneAttribute$#Type	/ClippingPlaneAttribute$	0	modifiers differ: emitted final, reference
-93b8b167a8a1	api-parity(signature)	signature	ClippingPlaneAttribute$#TypeAlias	/ClippingPlaneAttribute$	0	modifiers differ: emitted inline, reference
 3ee403f95238	api-parity(signature)	signature	CubicQuaternion#tangentIn	/CubicQuaternion	0	modifiers differ: emitted final, reference
 bbffad5e2ced	api-parity(signature)	signature	CubicQuaternion#tangentOut	/CubicQuaternion	0	modifiers differ: emitted final, reference
 c0f98bdba8b5	api-parity(signature)	signature	CubicVector3#tangentIn	/CubicVector3	0	modifiers differ: emitted final, reference
@@ -379,7 +445,6 @@ aa2cd47872a0	api-parity(signature)	signature	FacedMultiCubemapData#data	/FacedMu
 5e342795047a	api-parity(signature)	signature	FogAttribute#set	/FogAttribute	0	result type differs: emitted 'sge.graphics.g3d.Attribute', reference 'FogAttribute'
 ae4d3cc9c058	api-parity(signature)	signature	FogAttribute#value	/FogAttribute	0	modifiers differ: emitted final, reference
 70cd51a93b57	api-parity(signature)	signature	FogAttribute$#FogEquation	/FogAttribute$	0	modifiers differ: emitted final, reference
-88b9a621e8da	api-parity(signature)	signature	FogAttribute$#FogEquationAlias	/FogAttribute$	0	modifiers differ: emitted inline, reference
 a4e9d676933f	api-parity(signature)	signature	GLBAssetLoader#getDependencies	/GLBAssetLoader	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]', reference 'DynamicArray[AssetDescriptor[?]]'
 b3afc0dab6ad	api-parity(signature)	signature	GLBLoader#load	/GLBLoader	0	param 0 type differs: emitted 'scala.Array[scala.Byte]', reference 'Array[Byte]'
 694bd1fb0427	api-parity(signature)	signature	GLTF#accessors	/GLTF	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.gltf.data.data.GLTFAccessor]', reference 'Nullable[ArrayBuffer[GLTFAccessor]]'
@@ -416,7 +481,6 @@ bece11ec165c	api-parity(signature)	signature	GLTFExtras#entries	/GLTFExtras	0	re
 7e94ee39d9c7	api-parity(signature)	signature	GLTFExtras#keys	/GLTFExtras	0	result type differs: emitted 'lowlevel.util.DynamicArray[java.lang.String]', reference 'ArrayBuffer[String]'
 e5e954b3b02e	api-parity(signature)	signature	GLTFExtras#value	/GLTFExtras	0	result type differs: emitted 'sge.utils.JsonValue', reference 'Nullable[Json]'
 8e1f574f5151	api-parity(signature)	signature	GLTFImage#bufferView	/GLTFImage	0	result type differs: emitted 'java.lang.Integer', reference 'Nullable[Int]'
-0ce9da43976e	api-parity(signature)	signature	GLTFLoaderBase$#TAG	/GLTFLoaderBase$	0	modifiers differ: emitted inline, reference
 913a915ae5ae	api-parity(signature)	signature	GLTFLoaderBase$#supportedExtensions	/GLTFLoaderBase$	0	modifiers differ: emitted final, reference
 51fa2ca51816	api-parity(signature)	signature	GLTFLoaderBase$#supportedExtensions	/GLTFLoaderBase$	0	result type differs: emitted 'lowlevel.util.ObjectSet[java.lang.String]', reference 'HashSet[String]'
 04a35c3094c7	api-parity(signature)	signature	GLTFMaterial#emissiveFactor	/GLTFMaterial	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Nullable[Array[Float]]'
@@ -447,19 +511,6 @@ f4c1c09d2911	api-parity(signature)	signature	GLTFSkin#skeleton	/GLTFSkin	0	resul
 97592bd18a70	api-parity(signature)	signature	GLTFTexture#sampler	/GLTFTexture	0	result type differs: emitted 'java.lang.Integer', reference 'Nullable[Int]'
 cfe6cdab892f	api-parity(signature)	signature	GLTFTexture#source	/GLTFTexture	0	result type differs: emitted 'java.lang.Integer', reference 'Nullable[Int]'
 a73fecdc39ea	api-parity(signature)	signature	GLTFTextureInfo#index	/GLTFTextureInfo	0	result type differs: emitted 'java.lang.Integer', reference 'Nullable[Int]'
-c9e69dff670e	api-parity(signature)	signature	GLTFTypes$#C_BYTE	/GLTFTypes$	0	modifiers differ: emitted inline, reference
-a49b43de7b43	api-parity(signature)	signature	GLTFTypes$#C_FLOAT	/GLTFTypes$	0	modifiers differ: emitted inline, reference
-e2eae4a388f1	api-parity(signature)	signature	GLTFTypes$#C_SHORT	/GLTFTypes$	0	modifiers differ: emitted inline, reference
-4adc011c7afe	api-parity(signature)	signature	GLTFTypes$#C_UBYTE	/GLTFTypes$	0	modifiers differ: emitted inline, reference
-d5d067a2b0ea	api-parity(signature)	signature	GLTFTypes$#C_UINT	/GLTFTypes$	0	modifiers differ: emitted inline, reference
-45679f30035d	api-parity(signature)	signature	GLTFTypes$#C_USHORT	/GLTFTypes$	0	modifiers differ: emitted inline, reference
-4e90fe3a95c6	api-parity(signature)	signature	GLTFTypes$#TYPE_MAT2	/GLTFTypes$	0	modifiers differ: emitted inline, reference
-99d62fb4fe4e	api-parity(signature)	signature	GLTFTypes$#TYPE_MAT3	/GLTFTypes$	0	modifiers differ: emitted inline, reference
-90bc207c1827	api-parity(signature)	signature	GLTFTypes$#TYPE_MAT4	/GLTFTypes$	0	modifiers differ: emitted inline, reference
-dc51c750796f	api-parity(signature)	signature	GLTFTypes$#TYPE_SCALAR	/GLTFTypes$	0	modifiers differ: emitted inline, reference
-85614d4ba40a	api-parity(signature)	signature	GLTFTypes$#TYPE_VEC2	/GLTFTypes$	0	modifiers differ: emitted inline, reference
-d67910c319cd	api-parity(signature)	signature	GLTFTypes$#TYPE_VEC3	/GLTFTypes$	0	modifiers differ: emitted inline, reference
-6cd7df7e4953	api-parity(signature)	signature	GLTFTypes$#TYPE_VEC4	/GLTFTypes$	0	modifiers differ: emitted inline, reference
 1f3e43557464	api-parity(signature)	signature	GLTFTypes$#map	/GLTFTypes$	0	param 1 type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
 1f3e43557464/2	api-parity(signature)	signature	GLTFTypes$#map	/GLTFTypes$	0	param 1 type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
 1f3e43557464/3	api-parity(signature)	signature	GLTFTypes$#map	/GLTFTypes$	0	param 1 type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
@@ -485,29 +536,16 @@ b277920c2db7	api-parity(signature)	signature	IBLBuilder$.Light#direction	/IBLBui
 490d5c3fbbef	api-parity(signature)	signature	ImageResolver#getPixmaps	/ImageResolver	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.Pixmap]', reference 'ArrayBuffer[Pixmap]'
 05713be53ed7	api-parity(signature)	signature	ImageResolver#getPixmaps	/ImageResolver	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.Pixmap]', reference 'ArrayBuffer[Pixmap]'
 58d70428ca3a	api-parity(signature)	signature	ImageResolver#load	/ImageResolver	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[sge.gltf.data.texture.GLTFImage]', reference 'Nullable[ArrayBuffer[GLTFImage]]'
-3eda62b37a5f	api-parity(signature)	signature	KHRLightsPunctual$#EXT	/KHRLightsPunctual$	0	modifiers differ: emitted inline, reference
 76cbeafcdf93	api-parity(signature)	signature	KHRLightsPunctual$.GLTFLight#color	/KHRLightsPunctual$/GLTFLight	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
-8e11c68b5b7b	api-parity(signature)	signature	KHRLightsPunctual$.GLTFLight$#TYPE_DIRECTIONAL	/KHRLightsPunctual$/GLTFLight$	0	modifiers differ: emitted inline, reference
-1f7dc731ad67	api-parity(signature)	signature	KHRLightsPunctual$.GLTFLight$#TYPE_POINT	/KHRLightsPunctual$/GLTFLight$	0	modifiers differ: emitted inline, reference
-34c54688e981	api-parity(signature)	signature	KHRLightsPunctual$.GLTFLight$#TYPE_SPOT	/KHRLightsPunctual$/GLTFLight$	0	modifiers differ: emitted inline, reference
 5f01e33ce2cb	api-parity(signature)	signature	KHRLightsPunctual$.GLTFLightNode#light	/KHRLightsPunctual$/GLTFLightNode	0	result type differs: emitted 'java.lang.Integer', reference 'Nullable[Int]'
 28459822ae22	api-parity(signature)	signature	KHRLightsPunctual$.GLTFLights#lights	/KHRLightsPunctual$/GLTFLights	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.gltf.data.extensions.KHRLightsPunctual.GLTFLight]', reference 'Nullable[ArrayBuffer[GLTFLight]]'
-49a973fd0bf5	api-parity(signature)	signature	KHRMaterialsEmissiveStrength$#EXT	/KHRMaterialsEmissiveStrength$	0	modifiers differ: emitted inline, reference
-c41998420118	api-parity(signature)	signature	KHRMaterialsIOR$#EXT	/KHRMaterialsIOR$	0	modifiers differ: emitted inline, reference
-1f6bdf6940b2	api-parity(signature)	signature	KHRMaterialsIridescence$#EXT	/KHRMaterialsIridescence$	0	modifiers differ: emitted inline, reference
 0ee2b449ac13	api-parity(signature)	signature	KHRMaterialsPBRSpecularGlossiness#diffuseFactor	/KHRMaterialsPBRSpecularGlossiness	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Nullable[Array[Float]]'
 ddab44ff5ed3	api-parity(signature)	signature	KHRMaterialsPBRSpecularGlossiness#specularFactor	/KHRMaterialsPBRSpecularGlossiness	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Nullable[Array[Float]]'
-fc1db434b45b	api-parity(signature)	signature	KHRMaterialsPBRSpecularGlossiness$#EXT	/KHRMaterialsPBRSpecularGlossiness$	0	modifiers differ: emitted inline, reference
 26e9704403b3	api-parity(signature)	signature	KHRMaterialsSpecular#specularColorFactor	/KHRMaterialsSpecular	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
-626eb5e77973	api-parity(signature)	signature	KHRMaterialsSpecular$#EXT	/KHRMaterialsSpecular$	0	modifiers differ: emitted inline, reference
-a5de40b8b514	api-parity(signature)	signature	KHRMaterialsTransmission$#EXT	/KHRMaterialsTransmission$	0	modifiers differ: emitted inline, reference
-df13b37868a1	api-parity(signature)	signature	KHRMaterialsUnlit$#EXT	/KHRMaterialsUnlit$	0	modifiers differ: emitted inline, reference
 ad924f9b4a3d	api-parity(signature)	signature	KHRMaterialsVolume#attenuationColor	/KHRMaterialsVolume	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
-8a46dbf43282	api-parity(signature)	signature	KHRMaterialsVolume$#EXT	/KHRMaterialsVolume$	0	modifiers differ: emitted inline, reference
 35b164f53a0b	api-parity(signature)	signature	KHRTextureTransform#offset	/KHRTextureTransform	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
 1605fcea3ac8	api-parity(signature)	signature	KHRTextureTransform#scale	/KHRTextureTransform	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
 5c4583b42711	api-parity(signature)	signature	KHRTextureTransform#texCoord	/KHRTextureTransform	0	result type differs: emitted 'java.lang.Integer', reference 'Nullable[Int]'
-408ee657330f	api-parity(signature)	signature	KHRTextureTransform$#EXT	/KHRTextureTransform$	0	modifiers differ: emitted inline, reference
 47b4dff81e36	api-parity(signature)	signature	LightUtils$#getLightsInfo	/LightUtils$	0	param 1 type differs: emitted 'balticporter.runtime.JavaIterable[sge.graphics.g3d.environment.BaseLight[?]]', reference 'Iterable[BaseLight[?]]'
 92e1f9884f49	api-parity(signature)	signature	MaterialConverter$#makeCompatible	/MaterialConverter$	0	param 0 type differs: emitted 'balticporter.runtime.JavaIterable[sge.graphics.g3d.Material]', reference 'Iterable[Material]'
 2748307e923b	api-parity(signature)	signature	MaterialLoader#loadMaterials	/MaterialLoader	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[sge.gltf.data.material.GLTFMaterial]', reference 'Nullable[ArrayBuffer[GLTFMaterial]]'
@@ -515,50 +553,31 @@ a7fc98c0a256	api-parity(signature)	signature	MaterialLoaderBase#loadMaterials	/M
 df260df86356	api-parity(signature)	signature	MeshTangentSpaceGenerator$#computeTangentSpace	/MeshTangentSpaceGenerator$	0	param 0 type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
 13ba7b50deb7	api-parity(signature)	signature	MeshTangentSpaceGenerator$#computeTangentSpace	/MeshTangentSpaceGenerator$	0	param 1 type differs: emitted 'scala.Array[scala.Short]', reference 'Array[Short]'
 0a2287bf704e	api-parity(signature)	signature	MirrorAttribute$#Specular	/MirrorAttribute$	0	modifiers differ: emitted final, reference
-505b2fa1a704	api-parity(signature)	signature	MirrorAttribute$#SpecularAlias	/MirrorAttribute$	0	modifiers differ: emitted inline, reference
 ceff660d422d	api-parity(signature)	signature	MirrorSource#mirrorAttribute	/MirrorSource	0	modifiers differ: emitted final, reference
 9747eb258558	api-parity(signature)	signature	MirrorSourceAttribute#normal	/MirrorSourceAttribute	0	modifiers differ: emitted final, reference
 217b55d98145	api-parity(signature)	signature	MirrorSourceAttribute#set	/MirrorSourceAttribute	0	param 0 type differs: emitted 'sge.graphics.g3d.utils.TextureDescriptor[sge.graphics.Texture]', reference 'TextureDescriptor[Texture]'
 c882303b4f8a	api-parity(signature)	signature	MirrorSourceAttribute#textureDescription	/MirrorSourceAttribute	0	modifiers differ: emitted final, reference
 b2385aa33efc	api-parity(signature)	signature	MirrorSourceAttribute#textureDescription	/MirrorSourceAttribute	0	result type differs: emitted 'sge.graphics.g3d.utils.TextureDescriptor[sge.graphics.Texture]', reference 'TextureDescriptor[Texture]'
 d9989ce4126f	api-parity(signature)	signature	MirrorSourceAttribute$#Type	/MirrorSourceAttribute$	0	modifiers differ: emitted final, reference
-d5a21eb7f786	api-parity(signature)	signature	MirrorSourceAttribute$#TypeAlias	/MirrorSourceAttribute$	0	modifiers differ: emitted inline, reference
 6df5503bad0d	api-parity(signature)	signature	NodeAnimationHack#weights	/NodeAnimationHack	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.g3d.model.NodeKeyframe[sge.gltf.scene3d.model.WeightVector]]', reference 'DynamicArray[NodeKeyframe[WeightVector]]'
 b940cb712e1d	api-parity(signature)	signature	NodePlus#morphTargetNames	/NodePlus	0	result type differs: emitted 'lowlevel.util.DynamicArray[java.lang.String]', reference 'Nullable[DynamicArray[String]]'
 be4420f83c77	api-parity(signature)	signature	PBRColorAttribute$#BaseColorFactor	/PBRColorAttribute$	0	modifiers differ: emitted final, reference
-5752a331ec52	api-parity(signature)	signature	PBRColorAttribute$#BaseColorFactorAlias	/PBRColorAttribute$	0	modifiers differ: emitted inline, reference
-2ec12171d052	api-parity(signature)	signature	PBRCommon$#MAX_MORPH_TARGETS	/PBRCommon$	0	modifiers differ: emitted inline, reference
 9a71e9d277e2	api-parity(signature)	signature	PBRCubemapAttribute$#DiffuseEnv	/PBRCubemapAttribute$	0	modifiers differ: emitted final, reference
-fbbfe9b0432b	api-parity(signature)	signature	PBRCubemapAttribute$#DiffuseEnvAlias	/PBRCubemapAttribute$	0	modifiers differ: emitted inline, reference
 4d47ad9ea720	api-parity(signature)	signature	PBRCubemapAttribute$#SpecularEnv	/PBRCubemapAttribute$	0	modifiers differ: emitted final, reference
-ca384f4dccc8	api-parity(signature)	signature	PBRCubemapAttribute$#SpecularEnvAlias	/PBRCubemapAttribute$	0	modifiers differ: emitted inline, reference
 457f42335c0f	api-parity(signature)	signature	PBRFlagAttribute$#Unlit	/PBRFlagAttribute$	0	modifiers differ: emitted final, reference
-8a8316ad14ed	api-parity(signature)	signature	PBRFlagAttribute$#UnlitAlias	/PBRFlagAttribute$	0	modifiers differ: emitted inline, reference
 4aeea0a433a8	api-parity(signature)	signature	PBRFloatAttribute$#EmissiveIntensity	/PBRFloatAttribute$	0	modifiers differ: emitted final, reference
-9102e22a59b6	api-parity(signature)	signature	PBRFloatAttribute$#EmissiveIntensityAlias	/PBRFloatAttribute$	0	modifiers differ: emitted inline, reference
 78ed0b8f068b	api-parity(signature)	signature	PBRFloatAttribute$#IOR	/PBRFloatAttribute$	0	modifiers differ: emitted final, reference
-402b6aa48a35	api-parity(signature)	signature	PBRFloatAttribute$#IORAlias	/PBRFloatAttribute$	0	modifiers differ: emitted inline, reference
 556652b542a3	api-parity(signature)	signature	PBRFloatAttribute$#Metallic	/PBRFloatAttribute$	0	modifiers differ: emitted final, reference
-360d4ebbefd6	api-parity(signature)	signature	PBRFloatAttribute$#MetallicAlias	/PBRFloatAttribute$	0	modifiers differ: emitted inline, reference
 412f851b9726	api-parity(signature)	signature	PBRFloatAttribute$#NormalScale	/PBRFloatAttribute$	0	modifiers differ: emitted final, reference
-522c0b5edc0c	api-parity(signature)	signature	PBRFloatAttribute$#NormalScaleAlias	/PBRFloatAttribute$	0	modifiers differ: emitted inline, reference
 80d7e7a89cfe	api-parity(signature)	signature	PBRFloatAttribute$#OcclusionStrength	/PBRFloatAttribute$	0	modifiers differ: emitted final, reference
-0281163680e5	api-parity(signature)	signature	PBRFloatAttribute$#OcclusionStrengthAlias	/PBRFloatAttribute$	0	modifiers differ: emitted inline, reference
 f4f01d5ead52	api-parity(signature)	signature	PBRFloatAttribute$#Roughness	/PBRFloatAttribute$	0	modifiers differ: emitted final, reference
-af93af55b025	api-parity(signature)	signature	PBRFloatAttribute$#RoughnessAlias	/PBRFloatAttribute$	0	modifiers differ: emitted inline, reference
 09ad3dd42eec	api-parity(signature)	signature	PBRFloatAttribute$#ShadowBias	/PBRFloatAttribute$	0	modifiers differ: emitted final, reference
-c8f390f49fcb	api-parity(signature)	signature	PBRFloatAttribute$#ShadowBiasAlias	/PBRFloatAttribute$	0	modifiers differ: emitted inline, reference
 aede97fcac35	api-parity(signature)	signature	PBRFloatAttribute$#SpecularFactor	/PBRFloatAttribute$	0	modifiers differ: emitted final, reference
-3e7d75a5247f	api-parity(signature)	signature	PBRFloatAttribute$#SpecularFactorAlias	/PBRFloatAttribute$	0	modifiers differ: emitted inline, reference
 8d1a560b7730	api-parity(signature)	signature	PBRFloatAttribute$#TransmissionFactor	/PBRFloatAttribute$	0	modifiers differ: emitted final, reference
-cfc9772007e4	api-parity(signature)	signature	PBRFloatAttribute$#TransmissionFactorAlias	/PBRFloatAttribute$	0	modifiers differ: emitted inline, reference
 f60d2c6cf242	api-parity(signature)	signature	PBRHDRColorAttribute$#Specular	/PBRHDRColorAttribute$	0	modifiers differ: emitted final, reference
-ed465c714bbe	api-parity(signature)	signature	PBRHDRColorAttribute$#SpecularAlias	/PBRHDRColorAttribute$	0	modifiers differ: emitted inline, reference
-c6cfe9199459	api-parity(signature)	signature	PBRIridescenceAttribute$#Alias	/PBRIridescenceAttribute$	0	modifiers differ: emitted inline, reference
 9e9e38b418ef	api-parity(signature)	signature	PBRIridescenceAttribute$#Type	/PBRIridescenceAttribute$	0	modifiers differ: emitted final, reference
 5cdd1569d97f	api-parity(signature)	signature	PBRMatrixAttribute#matrix	/PBRMatrixAttribute	0	modifiers differ: emitted final, reference
 ef0c61392617	api-parity(signature)	signature	PBRMatrixAttribute$#EnvRotation	/PBRMatrixAttribute$	0	modifiers differ: emitted final, reference
-53d07b7c9d0b	api-parity(signature)	signature	PBRMatrixAttribute$#EnvRotationAlias	/PBRMatrixAttribute$	0	modifiers differ: emitted inline, reference
 bfe534339f9b	api-parity(signature)	signature	PBRShader#u_csmSamplers	/PBRShader	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[UniformLocation]'
 3bf8b31a15d1	api-parity(signature)	signature	PBRShader$#baseColorFactorSetter	/PBRShader$	0	modifiers differ: emitted final, reference
 5fa38cd716a7	api-parity(signature)	signature	PBRShader$#baseColorFactorUniform	/PBRShader$	0	modifiers differ: emitted final, reference
@@ -640,39 +659,20 @@ e12f12c82ad9	api-parity(signature)	signature	PBRShader$#transmissionTextureUnifo
 fdb955347506	api-parity(signature)	signature	PBRShader$#volumeColorUniform	/PBRShader$	0	modifiers differ: emitted final, reference
 e942af7eb340	api-parity(signature)	signature	PBRShader$#volumeDistanceSetter	/PBRShader$	0	modifiers differ: emitted final, reference
 6f4ddedb8fc5	api-parity(signature)	signature	PBRShader$#volumeDistanceUniform	/PBRShader$	0	modifiers differ: emitted final, reference
-3b8f0dc65d30	api-parity(signature)	signature	PBRShaderConfig$#DEFAULT_GAMMA	/PBRShaderConfig$	0	modifiers differ: emitted inline, reference
-bb081e10b9a9	api-parity(signature)	signature	PBRShaderProvider$#TAG	/PBRShaderProvider$	0	modifiers differ: emitted inline, reference
 3aaf7b9f5369	api-parity(signature)	signature	PBRTextureAttribute$#BRDFLUTTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-b462a415af68	api-parity(signature)	signature	PBRTextureAttribute$#BRDFLUTTextureAlias	/PBRTextureAttribute$	0	modifiers differ: emitted inline, reference
 720843fd7fc4	api-parity(signature)	signature	PBRTextureAttribute$#BaseColorTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-f6e077ee7242	api-parity(signature)	signature	PBRTextureAttribute$#BaseColorTextureAlias	/PBRTextureAttribute$	0	modifiers differ: emitted inline, reference
 b79fd55cc020	api-parity(signature)	signature	PBRTextureAttribute$#EmissiveTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-5e6cba937b22	api-parity(signature)	signature	PBRTextureAttribute$#EmissiveTextureAlias	/PBRTextureAttribute$	0	modifiers differ: emitted inline, reference
 1ed3922a271e	api-parity(signature)	signature	PBRTextureAttribute$#IridescenceTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-e0bbc983338d	api-parity(signature)	signature	PBRTextureAttribute$#IridescenceTextureAlias	/PBRTextureAttribute$	0	modifiers differ: emitted inline, reference
 f2ccdb3b56d9	api-parity(signature)	signature	PBRTextureAttribute$#IridescenceThicknessTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-86056bdd4593	api-parity(signature)	signature	PBRTextureAttribute$#IridescenceThicknessTextureAlias	/PBRTextureAttribute$	0	modifiers differ: emitted inline, reference
 01238f1c6040	api-parity(signature)	signature	PBRTextureAttribute$#MetallicRoughnessTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-c2a3755f086c	api-parity(signature)	signature	PBRTextureAttribute$#MetallicRoughnessTextureAlias	/PBRTextureAttribute$	0	modifiers differ: emitted inline, reference
 7071b34e43d9	api-parity(signature)	signature	PBRTextureAttribute$#NormalTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-013177742992	api-parity(signature)	signature	PBRTextureAttribute$#NormalTextureAlias	/PBRTextureAttribute$	0	modifiers differ: emitted inline, reference
 d5967bbf695b	api-parity(signature)	signature	PBRTextureAttribute$#OcclusionTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-e789fca53565	api-parity(signature)	signature	PBRTextureAttribute$#OcclusionTextureAlias	/PBRTextureAttribute$	0	modifiers differ: emitted inline, reference
 8789d5817d60	api-parity(signature)	signature	PBRTextureAttribute$#SpecularColorTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-c72f99d8d05e	api-parity(signature)	signature	PBRTextureAttribute$#SpecularColorTextureAlias	/PBRTextureAttribute$	0	modifiers differ: emitted inline, reference
 cb585c33911d	api-parity(signature)	signature	PBRTextureAttribute$#SpecularFactorTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-d4abb7a019c1	api-parity(signature)	signature	PBRTextureAttribute$#SpecularFactorTextureAlias	/PBRTextureAttribute$	0	modifiers differ: emitted inline, reference
 f5f1515709ed	api-parity(signature)	signature	PBRTextureAttribute$#ThicknessTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-5e014b307ffc	api-parity(signature)	signature	PBRTextureAttribute$#ThicknessTextureAlias	/PBRTextureAttribute$	0	modifiers differ: emitted inline, reference
 614c504d87df	api-parity(signature)	signature	PBRTextureAttribute$#TransmissionSourceTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-ea22b4484be4	api-parity(signature)	signature	PBRTextureAttribute$#TransmissionSourceTextureAlias	/PBRTextureAttribute$	0	modifiers differ: emitted inline, reference
 ce9391da5a9a	api-parity(signature)	signature	PBRTextureAttribute$#TransmissionTexture	/PBRTextureAttribute$	0	modifiers differ: emitted final, reference
-f8d766bbe09a	api-parity(signature)	signature	PBRTextureAttribute$#TransmissionTextureAlias	/PBRTextureAttribute$	0	modifiers differ: emitted inline, reference
-ea603002bfe9	api-parity(signature)	signature	PBRVertexAttributes$.Usage$#NormalTarget	/PBRVertexAttributes$/Usage$	0	modifiers differ: emitted inline, reference
-2194a5f46a55	api-parity(signature)	signature	PBRVertexAttributes$.Usage$#PositionTarget	/PBRVertexAttributes$/Usage$	0	modifiers differ: emitted inline, reference
-c5286378cb7f	api-parity(signature)	signature	PBRVertexAttributes$.Usage$#TangentTarget	/PBRVertexAttributes$/Usage$	0	modifiers differ: emitted inline, reference
 d991365096f0	api-parity(signature)	signature	PBRVolumeAttribute#attenuationColor	/PBRVolumeAttribute	0	modifiers differ: emitted final, reference
-46c95bb9642d	api-parity(signature)	signature	PBRVolumeAttribute$#Alias	/PBRVolumeAttribute$	0	modifiers differ: emitted inline, reference
 e78549667c4e	api-parity(signature)	signature	PBRVolumeAttribute$#Type	/PBRVolumeAttribute$	0	modifiers differ: emitted final, reference
 9cada16000ad	api-parity(signature)	signature	Scene#cameras	/Scene	0	modifiers differ: emitted final, reference
 4506cb00e723	api-parity(signature)	signature	Scene#cameras	/Scene	0	result type differs: emitted 'lowlevel.util.ObjectMap[sge.graphics.g3d.model.Node, sge.graphics.Camera]', reference 'ObjectMap[Node, Camera]'

@@ -321,6 +321,7 @@ f8446b576c83	api-parity(port-extra)	port-extra	Select#select	/Select	0	def selec
 62210598b2b0	api-parity(port-extra)	port-extra	Sort#sort	/Sort	0	def sort/4 in emitted port only
 e488049197d0	api-parity(port-extra)	port-extra	Sort$#instance	/Sort$	0	def instance/0 in emitted port only
 166fba9b701a	api-parity(port-extra)	port-extra	TimSort$#Funnel	/TimSort$	0	class Funnel/0 in emitted port only
+eaf0b8fbe886	api-parity(rule)	rule	MathUtils$#FLOAT_ROUNDING_ERROR	/MathUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 56ada10a2ff1	api-parity(signature)	signature	#ArrayMap		0	modifiers differ: emitted , reference final
 e15f23bbb31d	api-parity(signature)	signature	#ArrayMap		0	parents differ: emitted-only [java.lang.Iterable[lowlevel.util.ObjectMap.Entry[$0, $1]]], reference-only []
 45773c038de6	api-parity(signature)	signature	#DynamicArray		0	modifiers differ: emitted , reference final
@@ -350,7 +351,6 @@ ba30f285df65	api-parity(signature)	signature	DynamicArray#setSize	/DynamicArray	
 3403693023fe	api-parity(signature)	signature	DynamicArray#shrink	/DynamicArray	0	result type differs: emitted 'scala.Array[$0]', reference 'Unit'
 5363431ca881	api-parity(signature)	signature	DynamicArray#sort	/DynamicArray	0	param 0 type differs: emitted 'java.util.Comparator[_ >: $0]', reference 'Ordering[$0]'
 6cc14a70677e	api-parity(signature)	signature	MathUtils$#E	/MathUtils$	0	modifiers differ: emitted final, reference
-eaba239cb6db	api-parity(signature)	signature	MathUtils$#FLOAT_ROUNDING_ERROR	/MathUtils$	0	modifiers differ: emitted inline, reference
 a3cf2ce37573	api-parity(signature)	signature	MathUtils$#HALF_PI	/MathUtils$	0	modifiers differ: emitted final, reference
 9f7084ef2877	api-parity(signature)	signature	MathUtils$#PI	/MathUtils$	0	modifiers differ: emitted final, reference
 83254bafadbf	api-parity(signature)	signature	MathUtils$#PI2	/MathUtils$	0	modifiers differ: emitted final, reference

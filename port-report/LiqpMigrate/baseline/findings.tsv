@@ -603,6 +603,16 @@ af58c0ecf5c3	api-parity(port-extra)	port-extra	TemplateParser$.Builder$#Funnel	/
 6b0da6d65c97	api-parity(port-extra)	port-extra	TypesSupport#configureCustomDateTypes	/TypesSupport	0	def configureCustomDateTypes/0 in emitted port only
 72414ec88c20	api-parity(port-extra)	port-extra	TypesSupport#configureTypesForReferencing	/TypesSupport	0	def configureTypesForReferencing/1 in emitted port only
 9fa8855c439b	api-parity(port-extra)	port-extra	Wrapping#wrapped	/Wrapping	0	def wrapped/0 in emitted port only
+bb0ba60e1feb	api-parity(rule)	rule	Absolute_Url$#config	/Absolute_Url$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+7030924a0251	api-parity(rule)	rule	Absolute_Url$#url	/Absolute_Url$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+7e21fb30674a	api-parity(rule)	rule	Relative_Url$#baseurl	/Relative_Url$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+2a4804addb71	api-parity(rule)	rule	Relative_Url$#site	/Relative_Url$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+cab8f6dcf08c	api-parity(rule)	rule	TemplateContext$#REGISTRY_CYCLE	/TemplateContext$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e82ef9cc8905	api-parity(rule)	rule	TemplateContext$#REGISTRY_FOR	/TemplateContext$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+db43a784de4d	api-parity(rule)	rule	TemplateContext$#REGISTRY_FOR_STACK	/TemplateContext$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+b792ef27f7ae	api-parity(rule)	rule	TemplateContext$#REGISTRY_IFCHANGED	/TemplateContext$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+4a23815b7924	api-parity(rule)	rule	TemplateContext$#REGISTRY_ITERATION_PROTECTOR	/TemplateContext$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+107251d03b1e	api-parity(rule)	rule	TemplateContext$#REGISTRY_ROOT_FOLDER	/TemplateContext$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 c8a7a2f2233b	api-parity(signature)	signature	#LocalFSNameResolver		0	modifiers differ: emitted , reference final
 93d93a746c82	api-parity(signature)	signature	#Template		0	modifiers differ: emitted , reference final
 769d6429d25f	api-parity(signature)	signature	#TemplateParser		0	modifiers differ: emitted , reference final
@@ -612,8 +622,6 @@ c8a7a2f2233b	api-parity(signature)	signature	#LocalFSNameResolver		0	modifiers d
 34149ef03db1	api-parity(signature)	signature	Absolute_Url#apply	/Absolute_Url	0	param 0 type differs: emitted 'java.lang.Object', reference 'DataView'
 bf50e22c078d	api-parity(signature)	signature	Absolute_Url#apply	/Absolute_Url	0	param 2 type differs: emitted 'scala.Array[java.lang.Object]', reference 'Array[DataView]'
 2a9e6080e3fd	api-parity(signature)	signature	Absolute_Url#apply	/Absolute_Url	0	result type differs: emitted 'java.lang.Object', reference 'DataView'
-0d981feccbbc	api-parity(signature)	signature	Absolute_Url$#config	/Absolute_Url$	0	modifiers differ: emitted inline, reference
-3d41f13e5db3	api-parity(signature)	signature	Absolute_Url$#url	/Absolute_Url$	0	modifiers differ: emitted inline, reference
 51ed3eb67766	api-parity(signature)	signature	AndNode#render	/AndNode	0	result type differs: emitted 'java.lang.Object', reference 'DataView'
 9edb0a75f5e1	api-parity(signature)	signature	Append#apply	/Append	0	param 0 type differs: emitted 'java.lang.Object', reference 'DataView'
 675e704d6c4a	api-parity(signature)	signature	Append#apply	/Append	0	param 2 type differs: emitted 'scala.Array[java.lang.Object]', reference 'Array[DataView]'
@@ -823,8 +831,6 @@ c466ff9f1de9	api-parity(signature)	signature	Push#apply	/Push	0	result type diff
 ac9787c78cdd	api-parity(signature)	signature	Relative_Url#apply	/Relative_Url	0	param 0 type differs: emitted 'java.lang.Object', reference 'DataView'
 f988a806e8f3	api-parity(signature)	signature	Relative_Url#apply	/Relative_Url	0	param 2 type differs: emitted 'scala.Array[java.lang.Object]', reference 'Array[DataView]'
 9ca3a43a3e9b	api-parity(signature)	signature	Relative_Url#apply	/Relative_Url	0	result type differs: emitted 'java.lang.Object', reference 'DataView'
-192097b679d0	api-parity(signature)	signature	Relative_Url$#baseurl	/Relative_Url$	0	modifiers differ: emitted inline, reference
-98452f232b9b	api-parity(signature)	signature	Relative_Url$#site	/Relative_Url$	0	modifiers differ: emitted inline, reference
 fa784cd18666	api-parity(signature)	signature	Remove#apply	/Remove	0	param 0 type differs: emitted 'java.lang.Object', reference 'DataView'
 4c552077e347	api-parity(signature)	signature	Remove#apply	/Remove	0	param 2 type differs: emitted 'scala.Array[java.lang.Object]', reference 'Array[DataView]'
 5a5e751f6b49	api-parity(signature)	signature	Remove#apply	/Remove	0	result type differs: emitted 'java.lang.Object', reference 'DataView'
@@ -904,12 +910,6 @@ c1e94fa35316/2	api-parity(signature)	signature	Template#renderToObjectUnguarded	
 774fd2f7d4ab	api-parity(signature)	signature	TemplateContext#put	/TemplateContext	0	result type differs: emitted 'java.lang.Object', reference 'DataView'
 774fd2f7d4ab/2	api-parity(signature)	signature	TemplateContext#put	/TemplateContext	0	result type differs: emitted 'java.lang.Object', reference 'DataView'
 ba041dc0017f	api-parity(signature)	signature	TemplateContext#remove	/TemplateContext	0	result type differs: emitted 'java.lang.Object', reference 'DataView'
-2b3788d2906a	api-parity(signature)	signature	TemplateContext$#REGISTRY_CYCLE	/TemplateContext$	0	modifiers differ: emitted inline, reference
-9c9062c2143a	api-parity(signature)	signature	TemplateContext$#REGISTRY_FOR	/TemplateContext$	0	modifiers differ: emitted inline, reference
-d076f7d65717	api-parity(signature)	signature	TemplateContext$#REGISTRY_FOR_STACK	/TemplateContext$	0	modifiers differ: emitted inline, reference
-666402e3d1c6	api-parity(signature)	signature	TemplateContext$#REGISTRY_IFCHANGED	/TemplateContext$	0	modifiers differ: emitted inline, reference
-9e67ff7dcaab	api-parity(signature)	signature	TemplateContext$#REGISTRY_ITERATION_PROTECTOR	/TemplateContext$	0	modifiers differ: emitted inline, reference
-3fa279394209	api-parity(signature)	signature	TemplateContext$#REGISTRY_ROOT_FOLDER	/TemplateContext$	0	modifiers differ: emitted inline, reference
 76f617e9c1ca	api-parity(signature)	signature	TemplateParser#environmentMapConfigurator	/TemplateParser	0	result type differs: emitted 'java.util.function.Consumer[scala.collection.mutable.Map[java.lang.String, java.lang.Object]]', reference 'Consumer[JMap[String, AnyRef]]'
 72a4a3b0e1c4	api-parity(signature)	signature	TemplateParser#parse	/TemplateParser	0	param 0 type differs: emitted 'java.io.InputStream', reference 'java.io.Reader'
 9c6bbbd3ff15	api-parity(signature)	signature	TemplateParser#parse	/TemplateParser	0	param 0 type differs: emitted 'java.io.Reader', reference 'String'

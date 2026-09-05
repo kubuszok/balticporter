@@ -5572,6 +5572,92 @@ b8fc2f3aa45e	api-parity(port-extra)	port-extra	TranslationHandlerImpl#myTranslat
 03dea72009a3	api-parity(port-extra)	port-extra	TranslationHandlerImpl#myTranslationStore	/TranslationHandlerImpl	0	var myTranslationStore/0 in emitted port only
 5e68592bf00a	api-parity(port-extra)	port-extra	WhiteSpace#getAstExtra	/WhiteSpace	0	def getAstExtra/1 in emitted port only [rename candidates: astExtra]
 9fa8855c439b	api-parity(port-extra)	port-extra	Wrapping#wrapped	/Wrapping	0	def wrapped/0 in emitted port only
+969b93ab5109	api-parity(rule)	rule	Attribute$#CLASS_ATTR	/Attribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a76d5606fec2	api-parity(rule)	rule	Attribute$#ID_ATTR	/Attribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+df6c90a652fa	api-parity(rule)	rule	Attribute$#LINK_STATUS_ATTR	/Attribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+2744553e95cc	api-parity(rule)	rule	Attribute$#NAME_ATTR	/Attribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+d1206919d630	api-parity(rule)	rule	Attribute$#STYLE_ATTR	/Attribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+c30a62f29e3e	api-parity(rule)	rule	Attribute$#TARGET_ATTR	/Attribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+d3ac76918af8	api-parity(rule)	rule	Attribute$#TITLE_ATTR	/Attribute$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+f899c0c4e785	api-parity(rule)	rule	BasedOptionsHolder$#F_APPLICATION_OPTIONS	/BasedOptionsHolder$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+bd71433e82e8	api-parity(rule)	rule	BasedOptionsHolder$#F_LIBRARY_OPTIONS	/BasedOptionsHolder$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e1072f863970	api-parity(rule)	rule	BlockQuoteParser$#MARKER_CHAR	/BlockQuoteParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+095a9f21b7e2	api-parity(rule)	rule	BooleanOptionParser$#KEY_OPTION_0_PARAMETERS_1_IGNORED	/BooleanOptionParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+6a8c9626fdf8	api-parity(rule)	rule	BooleanOptionParser$#OPTION_0_PARAMETERS_1_IGNORED	/BooleanOptionParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+fc62d70d4e55	api-parity(rule)	rule	Escaping$#ESCAPABLE_CHARS	/Escaping$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+388e9d841260	api-parity(rule)	rule	FormatControlProcessor$#CLOSE_COMMENT	/FormatControlProcessor$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+df4bc869439f	api-parity(rule)	rule	FormatControlProcessor$#OPEN_COMMENT	/FormatControlProcessor$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+96f38310031b	api-parity(rule)	rule	HtmlBlockParser$#HTML_COMMENT_CLOSE	/HtmlBlockParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+7a5e84d0d55d	api-parity(rule)	rule	HtmlBlockParser$#HTML_COMMENT_OPEN	/HtmlBlockParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+8ef9977df93f	api-parity(rule)	rule	Node$#SPLICE	/Node$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+8630339663f1	api-parity(rule)	rule	OptionsParser$#KEY_OPTION_0_DOES_NOT_MATCH	/OptionsParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e840f94f0fd1	api-parity(rule)	rule	OptionsParser$#KEY_OPTION_0_IS_AMBIGUOUS	/OptionsParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+029e211ec132	api-parity(rule)	rule	OptionsParser$#OPTION_0_DOES_NOT_MATCH	/OptionsParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+758f4d8c0cb2	api-parity(rule)	rule	OptionsParser$#OPTION_0_IS_AMBIGUOUS	/OptionsParser$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+1d5e7f400a3e	api-parity(rule)	rule	Parsing$#ST_CDATA	/Parsing$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+5259f6ba8d78	api-parity(rule)	rule	Parsing$#ST_DOUBLEQUOTEDVALUE	/Parsing$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+b7fc1685ee71	api-parity(rule)	rule	Parsing$#ST_HTMLCOMMENT	/Parsing$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+faeb1875593f	api-parity(rule)	rule	Parsing$#ST_PROCESSINGINSTRUCTION	/Parsing$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+b0f0e06d744d	api-parity(rule)	rule	Parsing$#ST_SINGLEQUOTEDVALUE	/Parsing$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+d2ecf9c1beb1	api-parity(rule)	rule	Parsing$#XML_NAMESPACE_START	/Parsing$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+ecbedfc0b8a7	api-parity(rule)	rule	PegdownExtensions$#ABBREVIATIONS	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+ae2582fa2200	api-parity(rule)	rule	PegdownExtensions$#ALL	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+37201e5ffb44	api-parity(rule)	rule	PegdownExtensions$#ANCHORLINKS	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+415079ea28c7	api-parity(rule)	rule	PegdownExtensions$#ATXHEADERSPACE	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+ccec6db4e96d	api-parity(rule)	rule	PegdownExtensions$#AUTOLINKS	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e9aa3b139f1f	api-parity(rule)	rule	PegdownExtensions$#DEFINITIONS	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+32a250270080	api-parity(rule)	rule	PegdownExtensions$#EXTANCHORLINKS	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+0b07735f7a67	api-parity(rule)	rule	PegdownExtensions$#EXTANCHORLINKS_WRAP	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+cee5c960102b	api-parity(rule)	rule	PegdownExtensions$#FENCED_CODE_BLOCKS	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a3a28a72d2db	api-parity(rule)	rule	PegdownExtensions$#FOOTNOTES	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e123eee378bd	api-parity(rule)	rule	PegdownExtensions$#FORCELISTITEMPARA	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+387998b6d0ba	api-parity(rule)	rule	PegdownExtensions$#HARDWRAPS	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+ed04ed51aad1	api-parity(rule)	rule	PegdownExtensions$#INSERTED	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+701645da4893	api-parity(rule)	rule	PegdownExtensions$#MULTI_LINE_IMAGE_URLS	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+02363ab8f36f	api-parity(rule)	rule	PegdownExtensions$#NONE	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a7bb17805199	api-parity(rule)	rule	PegdownExtensions$#NOT_USED	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+ca6a2d4372c6	api-parity(rule)	rule	PegdownExtensions$#QUOTES	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+9a720169863b	api-parity(rule)	rule	PegdownExtensions$#RELAXEDHRULES	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+d23231e3a9ac	api-parity(rule)	rule	PegdownExtensions$#SMARTS	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+4b69f57e70c0	api-parity(rule)	rule	PegdownExtensions$#STRIKETHROUGH	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+cbc8d1c8da26	api-parity(rule)	rule	PegdownExtensions$#SUBSCRIPT	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e3a1f6ae18d1	api-parity(rule)	rule	PegdownExtensions$#SUPERSCRIPT	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+89516a4388b4	api-parity(rule)	rule	PegdownExtensions$#SUPPRESS_ALL_HTML	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+6d784dc06b5b	api-parity(rule)	rule	PegdownExtensions$#SUPPRESS_HTML_BLOCKS	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+3bcea415739e	api-parity(rule)	rule	PegdownExtensions$#SUPPRESS_INLINE_HTML	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+40a248574bfb	api-parity(rule)	rule	PegdownExtensions$#TABLES	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+9eecd0873a20	api-parity(rule)	rule	PegdownExtensions$#TASKLISTITEMS	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+6bb0c35daebe	api-parity(rule)	rule	PegdownExtensions$#TOC	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+2eb445ecc1ac	api-parity(rule)	rule	PegdownExtensions$#UNUSABLE	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+67ea0e85124d	api-parity(rule)	rule	PegdownExtensions$#UNUSED_ALL	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+0cb59241e60c	api-parity(rule)	rule	PegdownExtensions$#WIKILINKS	/PegdownExtensions$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+4fd12fe5662d	api-parity(rule)	rule	SegmentBuilderBase$#MIN_PART_CAPACITY	/SegmentBuilderBase$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+1b9704f14eae	api-parity(rule)	rule	SequenceUtils$#ANY_EOL	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+6a9e15d5fb33	api-parity(rule)	rule	SequenceUtils$#ENC_NUL	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+ccbfca5d2c02	api-parity(rule)	rule	SequenceUtils$#EOL	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+7190aa57b105	api-parity(rule)	rule	SequenceUtils$#LS	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+f5ed395fdba5	api-parity(rule)	rule	SequenceUtils$#NBSP	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+c6cbd3d28c6d	api-parity(rule)	rule	SequenceUtils$#NUL	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+f2eb88726c10	api-parity(rule)	rule	SequenceUtils$#SPACE	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+5c37fe45ec3b	api-parity(rule)	rule	SequenceUtils$#SPACE_EOL	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+8f8278408599	api-parity(rule)	rule	SequenceUtils$#SPACE_TAB	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+634b4d3b0375	api-parity(rule)	rule	SequenceUtils$#SPC	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+9dc8d466c34a	api-parity(rule)	rule	SequenceUtils$#SPLIT_INCLUDE_DELIMS	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e8d1a1e6c987	api-parity(rule)	rule	SequenceUtils$#SPLIT_INCLUDE_DELIM_PARTS	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+d37b27e9bf2e	api-parity(rule)	rule	SequenceUtils$#SPLIT_SKIP_EMPTY	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+fb1710f2c7d9	api-parity(rule)	rule	SequenceUtils$#SPLIT_TRIM_PARTS	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+a866cab7da4f	api-parity(rule)	rule	SequenceUtils$#US	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+8bb08535fe9e	api-parity(rule)	rule	SequenceUtils$#WHITESPACE	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+2149b4aed7d3	api-parity(rule)	rule	SequenceUtils$#WHITESPACE_NBSP	/SequenceUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+14a95c1a100c	api-parity(rule)	rule	TableCellOffsetInfo$#ROW_END	/TableCellOffsetInfo$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+009b28ba19c2	api-parity(rule)	rule	TableCellOffsetInfo$#ROW_START	/TableCellOffsetInfo$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+0355f98ee176	api-parity(rule)	rule	TableCellOffsetInfo$#TEXT_END	/TableCellOffsetInfo$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e1434f4f5b5e	api-parity(rule)	rule	TableCellOffsetInfo$#TEXT_START	/TableCellOffsetInfo$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+e40b007f624b	api-parity(rule)	rule	TextContainer$#F_LINK_ANCHOR	/TextContainer$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+2434626ba230	api-parity(rule)	rule	TextContainer$#F_LINK_NODE_TEXT	/TextContainer$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+ff6448ad8421	api-parity(rule)	rule	TextContainer$#F_LINK_PAGE_REF	/TextContainer$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+1f6d9cae6d14	api-parity(rule)	rule	TextContainer$#F_LINK_TEXT	/TextContainer$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
+60d4e63891c9	api-parity(rule)	rule	TextContainer$#F_LINK_URL	/TextContainer$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 d8170e6bc9ad	api-parity(signature)	signature	#AstActionHandler		0	type params differ: emitted '[$0 <: AstActionHandler[$0, $1, $2, $3], $1, $2 <: ssg.md.util.visitor.AstAction[$1], $3 <: ssg.md.util.visitor.AstHandler[$1, $2]]', reference '[$0 <: AstActionHandler[$0, $1, $2, $3], $1, $2 <: AstAction[$1], $3 <: AstHandler[$1, $2]]'
 d52926901f8b	api-parity(signature)	signature	#AstHandler		0	type params differ: emitted '[$0, $1 <: ssg.md.util.visitor.AstAction[_ >: $0]]', reference '[$0, $1 <: AstAction[_ >: $0]]'
 dd6763365d5f	api-parity(signature)	signature	#Attribute		0	parents differ: emitted-only [ssg.md.util.misc.Immutable[Attribute, ssg.md.util.html.MutableAttribute]], reference-only [Immutable[Attribute, MutableAttribute]]
@@ -5690,15 +5776,8 @@ d262a32ce4c5	api-parity(signature)	signature	AstActionHandler#addActionHandlers	
 0cc6606ee912	api-parity(signature)	signature	AttributablePart$#LINK	/AttributablePart$	0	modifiers differ: emitted final, reference
 8c0c6c995848	api-parity(signature)	signature	AttributablePart$#NODE	/AttributablePart$	0	modifiers differ: emitted final, reference
 70039c16e4c1	api-parity(signature)	signature	AttributablePart$#NODE_POSITION	/AttributablePart$	0	modifiers differ: emitted final, reference
-755d8c7bd3b4	api-parity(signature)	signature	Attribute$#CLASS_ATTR	/Attribute$	0	modifiers differ: emitted inline, reference
-2fe421ad412f	api-parity(signature)	signature	Attribute$#ID_ATTR	/Attribute$	0	modifiers differ: emitted inline, reference
-0b0dc1ffd5c6	api-parity(signature)	signature	Attribute$#LINK_STATUS_ATTR	/Attribute$	0	modifiers differ: emitted inline, reference
-b83538d67dd2	api-parity(signature)	signature	Attribute$#NAME_ATTR	/Attribute$	0	modifiers differ: emitted inline, reference
 d0a4edea6e54	api-parity(signature)	signature	Attribute$#NON_RENDERING_WHEN_EMPTY	/Attribute$	0	modifiers differ: emitted final, reference
 ea43f3e5abeb	api-parity(signature)	signature	Attribute$#NO_FOLLOW	/Attribute$	0	modifiers differ: emitted final, reference
-e2decdda63eb	api-parity(signature)	signature	Attribute$#STYLE_ATTR	/Attribute$	0	modifiers differ: emitted inline, reference
-38c0b824fe24	api-parity(signature)	signature	Attribute$#TARGET_ATTR	/Attribute$	0	modifiers differ: emitted inline, reference
-d2a866f8b45e	api-parity(signature)	signature	Attribute$#TITLE_ATTR	/Attribute$	0	modifiers differ: emitted inline, reference
 068146783028	api-parity(signature)	signature	AttributeProviderAdapter#addHandler	/AttributeProviderAdapter	0	param 0 type differs: emitted 'ssg.md.ast.util.AttributeProvidingHandler[?]', reference 'AttributeProvidingHandler[? <: Node]'
 b3516fa51593	api-parity(signature)	signature	AttributeProviderAdapter#addHandlers	/AttributeProviderAdapter	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[ssg.md.ast.util.AttributeProvidingHandler[?]]', reference 'ju.Collection[AttributeProvidingHandler[? <: Node]]'
 24030ee84934	api-parity(signature)	signature	AttributeProviderFactory#apply	/AttributeProviderFactory	0	modifiers differ: emitted , reference override
@@ -5710,11 +5789,9 @@ e40942fb04af	api-parity(signature)	signature	Attributes#forEach	/Attributes	0	pa
 a9d53c5157b2	api-parity(signature)	signature	Attributes#values	/Attributes	0	result type differs: emitted 'balticporter.runtime.JavaCollection[ssg.md.util.html.Attribute]', reference 'Iterable[Attribute]'
 fe730074795c	api-parity(signature)	signature	Attributes$#EMPTY	/Attributes$	0	modifiers differ: emitted final, reference
 6aa502ac21a8	api-parity(signature)	signature	BasedOffsetTracker#sequence	/BasedOffsetTracker	0	modifiers differ: emitted final, reference
-fa7a07c09a74	api-parity(signature)	signature	BasedOptionsHolder$#F_APPLICATION_OPTIONS	/BasedOptionsHolder$	0	modifiers differ: emitted inline, reference
 db1d31645332	api-parity(signature)	signature	BasedOptionsHolder$#F_COLLECT_FIRST256_STATS	/BasedOptionsHolder$	0	modifiers differ: emitted final, reference
 655c1d3562ab	api-parity(signature)	signature	BasedOptionsHolder$#F_COLLECT_SEGMENTED_STATS	/BasedOptionsHolder$	0	modifiers differ: emitted final, reference
 bc884599775f	api-parity(signature)	signature	BasedOptionsHolder$#F_FULL_SEGMENTED_SEQUENCES	/BasedOptionsHolder$	0	modifiers differ: emitted final, reference
-d5ecf6eb7048	api-parity(signature)	signature	BasedOptionsHolder$#F_LIBRARY_OPTIONS	/BasedOptionsHolder$	0	modifiers differ: emitted inline, reference
 49b36c6b6d7c	api-parity(signature)	signature	BasedOptionsHolder$#F_NO_ANCHORS	/BasedOptionsHolder$	0	modifiers differ: emitted final, reference
 1ca7e97bc58d	api-parity(signature)	signature	BasedOptionsHolder$#F_TREE_SEGMENTED_SEQUENCES	/BasedOptionsHolder$	0	modifiers differ: emitted final, reference
 42a65925183c	api-parity(signature)	signature	BasedOptionsHolder$#O_COLLECT_FIRST256_STATS	/BasedOptionsHolder$	0	modifiers differ: emitted final, reference
@@ -5785,14 +5862,11 @@ cf99087b9cd1	api-parity(signature)	signature	BitSetIterator#forEachRemaining	/Bi
 522340cc1c35	api-parity(signature)	signature	BlockNodeVisitor#processNode	/BlockNodeVisitor	0	param 2 type differs: emitted 'java.util.function.BiConsumer[ssg.md.util.ast.Node, ssg.md.util.ast.Visitor[ssg.md.util.ast.Node]]', reference '(Node, Visitor[Node]) => Unit'
 909bd481902a	api-parity(signature)	signature	BlockPreProcessorFactory#apply	/BlockPreProcessorFactory	0	modifiers differ: emitted , reference override
 bbabd993b4df	api-parity(signature)	signature	BlockPreProcessorFactory#getBlockTypes	/BlockPreProcessorFactory	0	result type differs: emitted 'scala.collection.mutable.Set[java.lang.Class[? <: ssg.md.util.ast.Block]]', reference 'Set[Class[? <: Block]]'
-4d25bd7b25ad	api-parity(signature)	signature	BlockQuoteParser$#MARKER_CHAR	/BlockQuoteParser$	0	modifiers differ: emitted inline, reference
 765039160d08	api-parity(signature)	signature	BlockStart$#of	/BlockStart$	0	param 0 type differs: emitted 'scala.Array[ssg.md.parser.block.BlockParser]', reference 'BlockParser*'
 ed6c5bd89ef2	api-parity(signature)	signature	BlockStartImpl#blockParsers	/BlockStartImpl	0	result type differs: emitted 'scala.Array[ssg.md.parser.block.BlockParser]', reference 'BlockParser*'
 485f067b642e	api-parity(signature)	signature	BlockVisitorExt$#VISIT_HANDLERS	/BlockVisitorExt$	0	result type differs: emitted 'scala.Array[ssg.md.util.ast.VisitHandler[?]]', reference 'Array[VisitHandler[?]]'
 316451388631	api-parity(signature)	signature	BlockVisitorExt$#VISIT_HANDLERS	/BlockVisitorExt$	0	type params differ: emitted '[$0 <: ssg.md.ast.util.BlockVisitor]', reference '[$0 <: BlockVisitor]'
 17ac180564f9	api-parity(signature)	signature	BooleanOptionParser#parseOption	/BooleanOptionParser	0	result type differs: emitted 'ssg.md.util.misc.Pair[$0, scala.collection.mutable.Buffer[ssg.md.util.options.ParsedOption[$0]]]', reference 'Pair[$0, java.util.List[ParsedOption[$0]]]'
-1a8a646356bd	api-parity(signature)	signature	BooleanOptionParser$#KEY_OPTION_0_PARAMETERS_1_IGNORED	/BooleanOptionParser$	0	modifiers differ: emitted inline, reference
-bf6e352d8dda	api-parity(signature)	signature	BooleanOptionParser$#OPTION_0_PARAMETERS_1_IGNORED	/BooleanOptionParser$	0	modifiers differ: emitted inline, reference
 9697e2af73a2	api-parity(signature)	signature	BuilderBase#addExtensionApiPoint	/BuilderBase	0	param 0 type differs: emitted 'java.lang.Object', reference 'AnyRef'
 dda783810f98	api-parity(signature)	signature	BuilderBase#build	/BuilderBase	0	result type differs: emitted 'java.lang.Object', reference 'AnyRef'
 0eb18c88e2d8	api-parity(signature)	signature	BuilderBase#extensions	/BuilderBase	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[? <: ssg.md.util.misc.Extension]', reference 'java.util.Collection[? <: Extension]'
@@ -5926,12 +6000,9 @@ e0dc24ffbc8b	api-parity(signature)	signature	DocumentParser$#calculateBlockPrePr
 b950ef7cb920	api-parity(signature)	signature	EmbeddedAttributeProvider$#Factory	/EmbeddedAttributeProvider$	0	modifiers differ: emitted final, reference
 13cfc7e26870	api-parity(signature)	signature	Escaping$#AMP_BACKSLASH_SET	/Escaping$	0	modifiers differ: emitted final, reference
 0080919832fc	api-parity(signature)	signature	Escaping$#ESCAPABLE	/Escaping$	0	modifiers differ: emitted final, reference
-92ad808506c9	api-parity(signature)	signature	Escaping$#ESCAPABLE_CHARS	/Escaping$	0	modifiers differ: emitted inline, reference
 5b872f7b8484	api-parity(signature)	signature	Extension$#EMPTY_LIST	/Extension$	0	modifiers differ: emitted final, reference
 2566b2852a51	api-parity(signature)	signature	Extension$#EMPTY_LIST	/Extension$	0	result type differs: emitted 'balticporter.runtime.JavaCollection[Extension]', reference 'List[Extension]'
 30dddc9aec79	api-parity(signature)	signature	FencedCodeBlockParser#getBlock	/FencedCodeBlockParser	0	result type differs: emitted 'ssg.md.util.ast.Block', reference 'FencedCodeBlock'
-bb58b39c6cf7	api-parity(signature)	signature	FormatControlProcessor$#CLOSE_COMMENT	/FormatControlProcessor$	0	modifiers differ: emitted inline, reference
-3a6ec2f728cf	api-parity(signature)	signature	FormatControlProcessor$#OPEN_COMMENT	/FormatControlProcessor$	0	modifiers differ: emitted inline, reference
 499f380cd42c	api-parity(signature)	signature	Formatter#mergeRender	/Formatter	0	param 0 type differs: emitted 'scala.Array[ssg.md.util.ast.Document]', reference 'Array[Document]'
 499f380cd42c/2	api-parity(signature)	signature	Formatter#mergeRender	/Formatter	0	param 0 type differs: emitted 'scala.Array[ssg.md.util.ast.Document]', reference 'Array[Document]'
 499f380cd42c/3	api-parity(signature)	signature	Formatter#mergeRender	/Formatter	0	param 0 type differs: emitted 'scala.Array[ssg.md.util.ast.Document]', reference 'Array[Document]'
@@ -6128,8 +6199,6 @@ e53d657b1b52	api-parity(signature)	signature	HtmlAppendableBase#setOptions	/Html
 df3694a200eb	api-parity(signature)	signature	HtmlAppendableBase#unIndent	/HtmlAppendableBase	0	result type differs: emitted '$0', reference 'LineAppendable'
 47792ddb4d9f	api-parity(signature)	signature	HtmlAppendableBase#unIndentNoEol	/HtmlAppendableBase	0	result type differs: emitted '$0', reference 'LineAppendable'
 7ed26d5039d8	api-parity(signature)	signature	HtmlBlockParser#getBlock	/HtmlBlockParser	0	result type differs: emitted 'ssg.md.util.ast.Block', reference 'HtmlBlockBase'
-5a5c869d5b4d	api-parity(signature)	signature	HtmlBlockParser$#HTML_COMMENT_CLOSE	/HtmlBlockParser$	0	modifiers differ: emitted inline, reference
-a7fec2b91645	api-parity(signature)	signature	HtmlBlockParser$#HTML_COMMENT_OPEN	/HtmlBlockParser$	0	modifiers differ: emitted inline, reference
 c1459cc92011	api-parity(signature)	signature	HtmlDeepParser$#BLOCK_TAGS	/HtmlDeepParser$	0	result type differs: emitted 'scala.collection.mutable.Set[java.lang.String]', reference 'Set[String]'
 433516e846f4	api-parity(signature)	signature	HtmlDeepParser$#HtmlMatch	/HtmlDeepParser$	0	parents differ: emitted-only [java.lang.Enum[HtmlMatch]], reference-only []
 695dc849d230	api-parity(signature)	signature	HtmlDeepParser$#OPTIONAL_TAGS	/HtmlDeepParser$	0	result type differs: emitted 'scala.collection.mutable.Map[java.lang.String, scala.collection.mutable.Set[java.lang.String]]', reference 'Map[String, Set[String]]'
@@ -6590,7 +6659,6 @@ b18140bacf8e	api-parity(signature)	signature	Node#isOrDescendantOfType	/Node	0	p
 2515bc6db1fe	api-parity(signature)	signature	Node$#AST_ADAPTER	/Node$	0	modifiers differ: emitted final, reference
 c51de6eeceb8	api-parity(signature)	signature	Node$#EMPTY_SEGMENTS	/Node$	0	modifiers differ: emitted final, reference
 22d0801f4dc7	api-parity(signature)	signature	Node$#EMPTY_SEGMENTS	/Node$	0	result type differs: emitted 'scala.Array[ssg.md.util.sequence.BasedSequence]', reference 'Array[BasedSequence]'
-6b60e10c94e4	api-parity(signature)	signature	Node$#SPLICE	/Node$	0	modifiers differ: emitted inline, reference
 c76cb58cdf8c	api-parity(signature)	signature	Node$#getLeadSegment	/Node$	0	param 0 type differs: emitted 'scala.Array[ssg.md.util.sequence.BasedSequence]', reference 'Array[BasedSequence]'
 d1f264c10991	api-parity(signature)	signature	Node$#getNodeOfTypeIndex	/Node$	0	param 1 type differs: emitted 'scala.Array[java.lang.Class[?]]', reference 'Class[?]*'
 a53fd2a09a5c	api-parity(signature)	signature	Node$#getTrailSegment	/Node$	0	param 0 type differs: emitted 'scala.Array[ssg.md.util.sequence.BasedSequence]', reference 'Array[BasedSequence]'
@@ -6666,10 +6734,6 @@ e5af07486868	api-parity(signature)	signature	NullEncoder$#decodeNull	/NullEncode
 c1117b30c0e3	api-parity(signature)	signature	NullEncoder$#encodeNull	/NullEncoder$	0	modifiers differ: emitted final, reference
 8efd9fffd77c	api-parity(signature)	signature	OptionParser#parseOption	/OptionParser	0	result type differs: emitted 'ssg.md.util.misc.Pair[$0, scala.collection.mutable.Buffer[ssg.md.util.options.ParsedOption[$0]]]', reference 'Pair[$0, java.util.List[ParsedOption[$0]]]'
 7838b73d55b1	api-parity(signature)	signature	OptionsParser#parseOption	/OptionsParser	0	result type differs: emitted 'ssg.md.util.misc.Pair[$0, scala.collection.mutable.Buffer[ssg.md.util.options.ParsedOption[$0]]]', reference 'Pair[$0, java.util.List[ParsedOption[$0]]]'
-78561d0dbe87	api-parity(signature)	signature	OptionsParser$#KEY_OPTION_0_DOES_NOT_MATCH	/OptionsParser$	0	modifiers differ: emitted inline, reference
-a63dd9fa69ee	api-parity(signature)	signature	OptionsParser$#KEY_OPTION_0_IS_AMBIGUOUS	/OptionsParser$	0	modifiers differ: emitted inline, reference
-8b83e15cac9b	api-parity(signature)	signature	OptionsParser$#OPTION_0_DOES_NOT_MATCH	/OptionsParser$	0	modifiers differ: emitted inline, reference
-4eaf6a673086	api-parity(signature)	signature	OptionsParser$#OPTION_0_IS_AMBIGUOUS	/OptionsParser$	0	modifiers differ: emitted inline, reference
 fccd400caad5	api-parity(signature)	signature	OrderedMap#addAll	/OrderedMap	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[_ <: scala.Tuple2[_ <: $0, _ <: $1]]', reference 'java.util.Collection[_ <: JMap.Entry[_ <: $0, _ <: $1]]'
 30cde58ca7e8	api-parity(signature)	signature	OrderedMap#computeIfMissing	/OrderedMap	0	param 1 type differs: emitted 'java.util.function.Function[_ >: $0, _ <: $1]', reference 'JFunction[_ >: $0, _ <: $1]'
 ac4dec924201	api-parity(signature)	signature	OrderedMap#containsKey	/OrderedMap	0	modifiers differ: emitted , reference override
@@ -7023,51 +7087,14 @@ e307d1eb4f23	api-parity(signature)	signature	Parsing#UNICODE_WHITESPACE_CHAR	/Pa
 e699eb887d8a	api-parity(signature)	signature	Parsing#WHITESPACE	/Parsing	0	modifiers differ: emitted final, reference
 e1e4b2786766	api-parity(signature)	signature	Parsing$#INTELLIJ_DUMMY_IDENTIFIER	/Parsing$	0	modifiers differ: emitted final, reference
 bc83a2ca7867	api-parity(signature)	signature	Parsing$#INTELLIJ_DUMMY_IDENTIFIER_CHAR	/Parsing$	0	modifiers differ: emitted final, reference
-f6a2ccc85e3f	api-parity(signature)	signature	Parsing$#ST_CDATA	/Parsing$	0	modifiers differ: emitted inline, reference
-2aaeb15f41aa	api-parity(signature)	signature	Parsing$#ST_DOUBLEQUOTEDVALUE	/Parsing$	0	modifiers differ: emitted inline, reference
-a368d1e6bdda	api-parity(signature)	signature	Parsing$#ST_HTMLCOMMENT	/Parsing$	0	modifiers differ: emitted inline, reference
-23e248aa8250	api-parity(signature)	signature	Parsing$#ST_PROCESSINGINSTRUCTION	/Parsing$	0	modifiers differ: emitted inline, reference
-8293e7f8b335	api-parity(signature)	signature	Parsing$#ST_SINGLEQUOTEDVALUE	/Parsing$	0	modifiers differ: emitted inline, reference
 655e2dc2c037	api-parity(signature)	signature	Parsing$#XML_NAMESPACE	/Parsing$	0	modifiers differ: emitted final, reference
 3866b5cf08b0	api-parity(signature)	signature	Parsing$#XML_NAMESPACE_CHAR	/Parsing$	0	modifiers differ: emitted final, reference
-b038af2222bc	api-parity(signature)	signature	Parsing$#XML_NAMESPACE_START	/Parsing$	0	modifiers differ: emitted inline, reference
-f6fe924e1fc3	api-parity(signature)	signature	PegdownExtensions$#ABBREVIATIONS	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-459afaffe675	api-parity(signature)	signature	PegdownExtensions$#ALL	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
 688064e875a1	api-parity(signature)	signature	PegdownExtensions$#ALL_OPTIONALS	/PegdownExtensions$	0	modifiers differ: emitted final, reference
 71bbabb75e19	api-parity(signature)	signature	PegdownExtensions$#ALL_WITH_OPTIONALS	/PegdownExtensions$	0	modifiers differ: emitted final, reference
-e58d63ca4823	api-parity(signature)	signature	PegdownExtensions$#ANCHORLINKS	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-82e036a1eb07	api-parity(signature)	signature	PegdownExtensions$#ATXHEADERSPACE	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-dd559d040e24	api-parity(signature)	signature	PegdownExtensions$#AUTOLINKS	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-870c2c0acc6e	api-parity(signature)	signature	PegdownExtensions$#DEFINITIONS	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-6e50056c108a	api-parity(signature)	signature	PegdownExtensions$#EXTANCHORLINKS	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-bf4ec0c2baba	api-parity(signature)	signature	PegdownExtensions$#EXTANCHORLINKS_WRAP	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-6e44fb6de4c0	api-parity(signature)	signature	PegdownExtensions$#FENCED_CODE_BLOCKS	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-c5e90aa4c4d6	api-parity(signature)	signature	PegdownExtensions$#FOOTNOTES	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-7809517553f0	api-parity(signature)	signature	PegdownExtensions$#FORCELISTITEMPARA	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
 a219944bc8a8	api-parity(signature)	signature	PegdownExtensions$#GITHUB_COMMENT_COMPATIBLE	/PegdownExtensions$	0	modifiers differ: emitted final, reference
 b1a8bca9c578	api-parity(signature)	signature	PegdownExtensions$#GITHUB_DOCUMENT_COMPATIBLE	/PegdownExtensions$	0	modifiers differ: emitted final, reference
 7a2383e64ff1	api-parity(signature)	signature	PegdownExtensions$#GITHUB_WIKI_COMPATIBLE	/PegdownExtensions$	0	modifiers differ: emitted final, reference
-38554f9d6893	api-parity(signature)	signature	PegdownExtensions$#HARDWRAPS	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-cc54fa1c1b6a	api-parity(signature)	signature	PegdownExtensions$#INSERTED	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-af024ed7e2f9	api-parity(signature)	signature	PegdownExtensions$#MULTI_LINE_IMAGE_URLS	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-2558931fa28a	api-parity(signature)	signature	PegdownExtensions$#NONE	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-886cfc8778ea	api-parity(signature)	signature	PegdownExtensions$#NOT_USED	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-1dbdb21e5c67	api-parity(signature)	signature	PegdownExtensions$#QUOTES	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-747ab6df6909	api-parity(signature)	signature	PegdownExtensions$#RELAXEDHRULES	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-0582bad83e31	api-parity(signature)	signature	PegdownExtensions$#SMARTS	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
 1efd751a1697	api-parity(signature)	signature	PegdownExtensions$#SMARTYPANTS	/PegdownExtensions$	0	modifiers differ: emitted final, reference
-eee4644fed01	api-parity(signature)	signature	PegdownExtensions$#STRIKETHROUGH	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-858e95d31c04	api-parity(signature)	signature	PegdownExtensions$#SUBSCRIPT	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-c53d36466de4	api-parity(signature)	signature	PegdownExtensions$#SUPERSCRIPT	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-41a67258766c	api-parity(signature)	signature	PegdownExtensions$#SUPPRESS_ALL_HTML	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-b3a4ea7f8c60	api-parity(signature)	signature	PegdownExtensions$#SUPPRESS_HTML_BLOCKS	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-bbda35ce68be	api-parity(signature)	signature	PegdownExtensions$#SUPPRESS_INLINE_HTML	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-e9f9fbedf737	api-parity(signature)	signature	PegdownExtensions$#TABLES	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-5ea4d62d0e50	api-parity(signature)	signature	PegdownExtensions$#TASKLISTITEMS	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-e8b1ca1f41d5	api-parity(signature)	signature	PegdownExtensions$#TOC	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-0babe35b5aed	api-parity(signature)	signature	PegdownExtensions$#UNUSABLE	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-0ce3dbdc11f8	api-parity(signature)	signature	PegdownExtensions$#UNUSED_ALL	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
-3eb74b340c95	api-parity(signature)	signature	PegdownExtensions$#WIKILINKS	/PegdownExtensions$	0	modifiers differ: emitted inline, reference
 a51d513a02c6	api-parity(signature)	signature	PhasedNodeFormatter#getFormattingPhases	/PhasedNodeFormatter	0	result type differs: emitted 'scala.collection.mutable.Set[ssg.md.formatter.FormattingPhase]', reference 'Nullable[Set[FormattingPhase]]'
 04e5da29b2a9	api-parity(signature)	signature	PhasedNodeRenderer#getRenderingPhases	/PhasedNodeRenderer	0	result type differs: emitted 'scala.collection.mutable.Set[ssg.md.html.renderer.RenderingPhase]', reference 'Nullable[Set[RenderingPhase]]'
 5ff00e308dd3	api-parity(signature)	signature	PlaceholderReplacer$#replaceAll	/PlaceholderReplacer$	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[$0]', reference 'java.util.Collection[$0]'
@@ -7146,7 +7173,6 @@ a0d648ae045f	api-parity(signature)	signature	SegmentBuilderBase#toStringWithRang
 49798838cb87	api-parity(signature)	signature	SegmentBuilderBase#toStringWithRangesVisibleWhitespace	/SegmentBuilderBase	0	modifiers differ: emitted override, reference
 18f8d4eb7da8	api-parity(signature)	signature	SegmentBuilderBase$#EMPTY_PARTS	/SegmentBuilderBase$	0	modifiers differ: emitted final, reference
 89893410eaf3	api-parity(signature)	signature	SegmentBuilderBase$#EMPTY_PARTS	/SegmentBuilderBase$	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
-be8ba2317e7c	api-parity(signature)	signature	SegmentBuilderBase$#MIN_PART_CAPACITY	/SegmentBuilderBase$	0	modifiers differ: emitted inline, reference
 2faa4b79a1f9	api-parity(signature)	signature	SegmentOffsetTree#startIndices	/SegmentOffsetTree	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
 1453a43548f2	api-parity(signature)	signature	SegmentOffsetTree$#build	/SegmentOffsetTree$	0	param 0 type differs: emitted 'balticporter.runtime.JavaIterable[ssg.md.util.sequence.builder.Seg]', reference 'java.lang.Iterable[Seg]'
 0f33e3de92e5	api-parity(signature)	signature	SegmentOptimizer#apply	/SegmentOptimizer	0	param 1 type differs: emitted 'scala.Array[java.lang.Object]', reference 'Array[Object]'
@@ -7177,32 +7203,15 @@ c68cb9ce8c20	api-parity(signature)	signature	SegmentedSequence$#create	/Segmente
 f02f9b52304d	api-parity(signature)	signature	SegmentedSequence$#create	/SegmentedSequence$	0	param 1 type differs: emitted 'balticporter.runtime.JavaIterable[? <: ssg.md.util.sequence.BasedSequence]', reference 'java.lang.Iterable[? <: BasedSequence]'
 d15cf53e1914	api-parity(signature)	signature	SegmentedSequenceStats$#StatsEntry	/SegmentedSequenceStats$	0	modifiers differ: emitted , reference final
 4f5245f1a488	api-parity(signature)	signature	SegmentedSequenceStats$#StatsEntry	/SegmentedSequenceStats$	0	parents differ: emitted-only [java.lang.Comparable[ssg.md.util.sequence.builder.SegmentedSequenceStats.StatsEntry]], reference-only [Comparable[StatsEntry]]
-e07188de7c6a	api-parity(signature)	signature	SequenceUtils$#ANY_EOL	/SequenceUtils$	0	modifiers differ: emitted inline, reference
 c6918567b5dc	api-parity(signature)	signature	SequenceUtils$#EMPTY_INDICES	/SequenceUtils$	0	modifiers differ: emitted final, reference
 659c52188f0d	api-parity(signature)	signature	SequenceUtils$#EMPTY_INDICES	/SequenceUtils$	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
-8f609c95f315	api-parity(signature)	signature	SequenceUtils$#ENC_NUL	/SequenceUtils$	0	modifiers differ: emitted inline, reference
-45bce31d781b	api-parity(signature)	signature	SequenceUtils$#EOL	/SequenceUtils$	0	modifiers differ: emitted inline, reference
 cd66f328398a	api-parity(signature)	signature	SequenceUtils$#EOL_CHAR	/SequenceUtils$	0	modifiers differ: emitted final, reference
 0ee0053a4153	api-parity(signature)	signature	SequenceUtils$#EOL_CHAR1	/SequenceUtils$	0	modifiers differ: emitted final, reference
 76af87f8a6a1	api-parity(signature)	signature	SequenceUtils$#EOL_CHAR2	/SequenceUtils$	0	modifiers differ: emitted final, reference
 055b1caf0b70	api-parity(signature)	signature	SequenceUtils$#LINE_SEP	/SequenceUtils$	0	modifiers differ: emitted final, reference
-a0e521752517	api-parity(signature)	signature	SequenceUtils$#LS	/SequenceUtils$	0	modifiers differ: emitted inline, reference
-7735fa36da6c	api-parity(signature)	signature	SequenceUtils$#NBSP	/SequenceUtils$	0	modifiers differ: emitted inline, reference
 cd26afbb9c97	api-parity(signature)	signature	SequenceUtils$#NBSP_CHARS	/SequenceUtils$	0	modifiers differ: emitted final, reference
-2c5e265cafca	api-parity(signature)	signature	SequenceUtils$#NUL	/SequenceUtils$	0	modifiers differ: emitted inline, reference
-505ec7b3d639	api-parity(signature)	signature	SequenceUtils$#SPACE	/SequenceUtils$	0	modifiers differ: emitted inline, reference
-0d190aab3a2d	api-parity(signature)	signature	SequenceUtils$#SPACE_EOL	/SequenceUtils$	0	modifiers differ: emitted inline, reference
-4fb4c2fffc1e	api-parity(signature)	signature	SequenceUtils$#SPACE_TAB	/SequenceUtils$	0	modifiers differ: emitted inline, reference
-d046605a9c37	api-parity(signature)	signature	SequenceUtils$#SPC	/SequenceUtils$	0	modifiers differ: emitted inline, reference
-aa5496a18df8	api-parity(signature)	signature	SequenceUtils$#SPLIT_INCLUDE_DELIMS	/SequenceUtils$	0	modifiers differ: emitted inline, reference
-a69ebe163195	api-parity(signature)	signature	SequenceUtils$#SPLIT_INCLUDE_DELIM_PARTS	/SequenceUtils$	0	modifiers differ: emitted inline, reference
-71bd4992eee1	api-parity(signature)	signature	SequenceUtils$#SPLIT_SKIP_EMPTY	/SequenceUtils$	0	modifiers differ: emitted inline, reference
-cc830c52d4b2	api-parity(signature)	signature	SequenceUtils$#SPLIT_TRIM_PARTS	/SequenceUtils$	0	modifiers differ: emitted inline, reference
 d9a6911b4fb8	api-parity(signature)	signature	SequenceUtils$#SPLIT_TRIM_SKIP_EMPTY	/SequenceUtils$	0	modifiers differ: emitted final, reference
-003542e10eec	api-parity(signature)	signature	SequenceUtils$#US	/SequenceUtils$	0	modifiers differ: emitted inline, reference
 d0b438ab1f97	api-parity(signature)	signature	SequenceUtils$#US_CHARS	/SequenceUtils$	0	modifiers differ: emitted final, reference
-f57c6c5b173c	api-parity(signature)	signature	SequenceUtils$#WHITESPACE	/SequenceUtils$	0	modifiers differ: emitted inline, reference
-340d6d761a01	api-parity(signature)	signature	SequenceUtils$#WHITESPACE_NBSP	/SequenceUtils$	0	modifiers differ: emitted inline, reference
 6fd8f78f7902	api-parity(signature)	signature	SequenceUtils$#blankLinesRemovedRanges	/SequenceUtils$	0	result type differs: emitted 'scala.collection.mutable.Buffer[ssg.md.util.sequence.Range]', reference 'ju.List[Range]'
 6fd8f78f7902/2	api-parity(signature)	signature	SequenceUtils$#blankLinesRemovedRanges	/SequenceUtils$	0	result type differs: emitted 'scala.collection.mutable.Buffer[ssg.md.util.sequence.Range]', reference 'ju.List[Range]'
 6fd8f78f7902/3	api-parity(signature)	signature	SequenceUtils$#blankLinesRemovedRanges	/SequenceUtils$	0	result type differs: emitted 'scala.collection.mutable.Buffer[ssg.md.util.sequence.Range]', reference 'ju.List[Range]'
@@ -7402,10 +7411,6 @@ cd33f5a10d37	api-parity(signature)	signature	TableCaptionSection$#DEFAULT_CELL	/
 d96be4e21054	api-parity(signature)	signature	TableCellManipulator$#BREAK	/TableCellManipulator$	0	modifiers differ: emitted final, reference
 811f7dfb3c74	api-parity(signature)	signature	TableCellOffsetInfo#nextOffsetStop	/TableCellOffsetInfo	0	param 0 type differs: emitted 'scala.collection.mutable.Map[ssg.md.util.format.TableSectionType, java.lang.Integer]', reference 'Nullable[JMap[TableSectionType, Integer]]'
 f6febd8f9462	api-parity(signature)	signature	TableCellOffsetInfo#previousOffsetStop	/TableCellOffsetInfo	0	param 0 type differs: emitted 'scala.collection.mutable.Map[ssg.md.util.format.TableSectionType, java.lang.Integer]', reference 'Nullable[JMap[TableSectionType, Integer]]'
-094f8feb0c01	api-parity(signature)	signature	TableCellOffsetInfo$#ROW_END	/TableCellOffsetInfo$	0	modifiers differ: emitted inline, reference
-ba7f9b6b549c	api-parity(signature)	signature	TableCellOffsetInfo$#ROW_START	/TableCellOffsetInfo$	0	modifiers differ: emitted inline, reference
-13691c36f4f8	api-parity(signature)	signature	TableCellOffsetInfo$#TEXT_END	/TableCellOffsetInfo$	0	modifiers differ: emitted inline, reference
-9d778b1304eb	api-parity(signature)	signature	TableCellOffsetInfo$#TEXT_START	/TableCellOffsetInfo$	0	modifiers differ: emitted inline, reference
 de26237c4a65	api-parity(signature)	signature	TableFormatOptions$#FORMAT_CHAR_WIDTH_PROVIDER	/TableFormatOptions$	0	modifiers differ: emitted final, reference
 9806832e9c64	api-parity(signature)	signature	TableFormatOptions$#FORMAT_CHAR_WIDTH_PROVIDER	/TableFormatOptions$	0	result type differs: emitted 'ssg.md.util.data.DataKey[ssg.md.util.format.CharWidthProvider]', reference 'DataKey[CharWidthProvider]'
 0014ad6789d9	api-parity(signature)	signature	TableFormatOptions$#FORMAT_TABLE_ADJUST_COLUMN_WIDTH	/TableFormatOptions$	0	modifiers differ: emitted final, reference
@@ -7460,12 +7465,7 @@ f0e246be19af	api-parity(signature)	signature	TextContainer#collectEndText	/TextC
 dc55303794f8	api-parity(signature)	signature	TextContainer#collectText	/TextContainer	0	param 0 type differs: emitted 'ssg.md.util.sequence.builder.ISequenceBuilder[? <: ssg.md.util.sequence.builder.ISequenceBuilder[?, ssg.md.util.sequence.BasedSequence], ssg.md.util.sequence.BasedSequence]', reference 'ISequenceBuilder[? <: ISequenceBuilder[?, BasedSequence], BasedSequence]'
 5fa7af3c7876	api-parity(signature)	signature	TextContainer$#F_ADD_SPACES_BETWEEN_NODES	/TextContainer$	0	modifiers differ: emitted final, reference
 706048e523d2	api-parity(signature)	signature	TextContainer$#F_FOR_HEADING_ID	/TextContainer$	0	modifiers differ: emitted final, reference
-d3db343fd930	api-parity(signature)	signature	TextContainer$#F_LINK_ANCHOR	/TextContainer$	0	modifiers differ: emitted inline, reference
-e35352078d84	api-parity(signature)	signature	TextContainer$#F_LINK_NODE_TEXT	/TextContainer$	0	modifiers differ: emitted inline, reference
-731c9eb3f659	api-parity(signature)	signature	TextContainer$#F_LINK_PAGE_REF	/TextContainer$	0	modifiers differ: emitted inline, reference
-4202965a1d6a	api-parity(signature)	signature	TextContainer$#F_LINK_TEXT	/TextContainer$	0	modifiers differ: emitted inline, reference
 a235397986f0	api-parity(signature)	signature	TextContainer$#F_LINK_TEXT_TYPE	/TextContainer$	0	modifiers differ: emitted final, reference
-8b11e5b5fc8e	api-parity(signature)	signature	TextContainer$#F_LINK_URL	/TextContainer$	0	modifiers differ: emitted inline, reference
 47f4c8f774c5	api-parity(signature)	signature	TextContainer$#F_NODE_TEXT	/TextContainer$	0	modifiers differ: emitted final, reference
 e96acd752a64	api-parity(signature)	signature	TextContainer$#F_NO_TRIM_REF_TEXT_END	/TextContainer$	0	modifiers differ: emitted final, reference
 319ea2e27394	api-parity(signature)	signature	TextContainer$#F_NO_TRIM_REF_TEXT_START	/TextContainer$	0	modifiers differ: emitted final, reference

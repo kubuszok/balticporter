@@ -168,6 +168,7 @@ c9d2a8e7eb44	api-parity(port-extra)	port-extra	PaletteReducer$#sort	/PaletteRedu
 2c8ff418f1fe	api-parity(port-extra)	port-extra	QualityPalette$#Funnel	/QualityPalette$	0	class Funnel/0 in emitted port only
 dd4fed3bc2cf	api-parity(port-extra)	port-extra	QualityPalette$#forwardLight	/QualityPalette$	0	def forwardLight/1 in emitted port only
 5c72324a7928	api-parity(port-extra)	port-extra	QualityPalette$#reverseLight	/QualityPalette$	0	def reverseLight/1 in emitted port only
+16ebfcea2c58	api-parity(rule)	rule	PaletteReducer$#TBM_BITS	/PaletteReducer$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
 210db3a6e20e	api-parity(signature)	signature	AnimatedGif#colorTab	/AnimatedGif	0	result type differs: emitted 'scala.Array[scala.Byte]', reference 'Array[Byte] | Null'
 451ee2b197b3	api-parity(signature)	signature	AnimatedGif#indexedPixels	/AnimatedGif	0	result type differs: emitted 'scala.Array[scala.Byte]', reference 'Array[Byte] | Null'
 4f083da7e4ed	api-parity(signature)	signature	AnimatedGif#usedEntry	/AnimatedGif	0	result type differs: emitted 'scala.Array[scala.Boolean]', reference 'Array[Boolean]'
@@ -254,7 +255,6 @@ c3853271ea88	api-parity(signature)	signature	PaletteReducer$#OKLAB	/PaletteReduc
 659158c77ff8	api-parity(signature)	signature	PaletteReducer$#OKLAB	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Array[scala.Float]]', reference 'Array[Array[Float]]'
 859e0b1b4396	api-parity(signature)	signature	PaletteReducer$#SNUGGLY	/PaletteReducer$	0	modifiers differ: emitted final, reference
 1a90f1e9be7b	api-parity(signature)	signature	PaletteReducer$#SNUGGLY	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
-efb9d4cd0b9e	api-parity(signature)	signature	PaletteReducer$#TBM_BITS	/PaletteReducer$	0	modifiers differ: emitted inline, reference
 8ab87de7e794	api-parity(signature)	signature	PaletteReducer$#TBM_MASK	/PaletteReducer$	0	modifiers differ: emitted final, reference
 b2389a1a65c6	api-parity(signature)	signature	PaletteReducer$#TRIANGULAR_BYTE_LOOKUP	/PaletteReducer$	0	modifiers differ: emitted final, reference
 e8b0c6156e11	api-parity(signature)	signature	PaletteReducer$#TRIANGULAR_BYTE_LOOKUP	/PaletteReducer$	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
