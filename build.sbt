@@ -527,6 +527,17 @@ lazy val `port-sge-graphs` = (projectMatrix in file("ported/sge-graphs"))
   .nativePlatform(scalaVersions = Seq(scalaV), settings = portNativeSettings)
 
 // ---------------------------------------------------------------------------------------------
+// port-sge-l0 — libGDX core, rung L0 of the ladder (ported/sge-l0): the universal translation
+// alone, JVM only. Its compile count is the ladder's floor (PROGRESS.md §13).
+// ---------------------------------------------------------------------------------------------
+lazy val `port-sge-l0` = (projectMatrix in file("ported/sge-l0"))
+  .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
+  .settings(portSettings("sge-l0") *)
+  .settings(portSourceGenerators("sge-l0") *)
+  .settings(name := "balticporter-port-sge-l0")
+  .jvmPlatform(scalaVersions = Seq(scalaV))
+
+// ---------------------------------------------------------------------------------------------
 // port-sge-anim8 — anim8-gdx (ported/sge-anim8). Dependent on sge. sge_relaxed_flags.
 // No upstream suite; hand-written MUnit tests in src/test/scala.
 // ---------------------------------------------------------------------------------------------
@@ -1192,6 +1203,9 @@ lazy val ports = project
   .in(file(".ports"))
   .aggregate(
     `port-sge`.projectRefs *
+  )
+  .aggregate(
+    `port-sge-l0`.projectRefs *
   )
   .aggregate(
     `port-sge-ecs`.projectRefs *

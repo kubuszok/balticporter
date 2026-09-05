@@ -84,6 +84,7 @@ core_project  := "engine"                # holds balticporter.tir.CorrelateMain
 
 # ported modules (their emitted Scala lives in <module>/src_managed/{main,test}/scala)
 gdx_module    := "ported/sge"
+gdx_l0_module := "ported/sge-l0"             # rung L0 of the libGDX ladder (PROGRESS 13): universal translation only
 ashley_module := "ported/sge-ecs"
 sg_module     := "ported/sge-graphs"
 anim8_module  := "ported/sge-anim8"
@@ -535,6 +536,48 @@ report_root   := env_var_or_default("BP_REPORT", justfile_directory() / "port-re
 
 _default:
     @{{just_executable()}} --list --unsorted
+
+# ---------------------------------------------------------------------------------------------
+# libGDX core, rung L0 — the UNIVERSAL translation alone (no drop/inject/surface policy), emitted to
+# `ported/sge-l0`. JVM compile + correlation only: the ladder's floor (PROGRESS.md §13).
+# ---------------------------------------------------------------------------------------------
+[doc("libGDX core rung L0 — universal translation only: emit, checks, compile, correlate")]
+gdx-l0-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+    write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{gdx_src}}"
+    REPORT="$ROOT/port-report/LibgdxL0Migrate"
+    MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxL0Migrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    if ! grep -qE "wrote [0-9]+ Scala files" <<<"$MIGRATE_OUT"; then
+      echo "!! MIGRATION DID NOT RUN — refusing to measure stale output"
+      grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$MIGRATE_OUT" | head -20
+      exit 1
+    fi
+    echo "-- migration (ALL checks, untruncated, as the migration printed them) --"
+    sed -n '/building model over/,/wrote [0-9]* Scala files/p' <<<"$MIGRATE_OUT"
+    echo
+    echo "-- checks: persisted, untruncated, diffed against the baseline --"
+    show_check_report "$REPORT"
+    upstream_guard "$REPORT"
+    findings_baseline_guard "$REPORT"
+    port_map_guard "$REPORT"
+    echo
+    break_residue {{gdx_l0_module}}/src_managed/main/scala
+    jdk_guard "$REPORT"
+    echo "-- compile (sbt port-sge-l0JVM/compile) --"
+    sbt_compile "port-sge-l0JVM/compile" "$MEASURE_TMP"/gdxl0measure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/gdxl0measure.txt
+    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/gdxl0measure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/gdxl0measure.txt))"
+    error_baseline_guard "$ERRORS" "$REPORT"
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gdxl0measure.txt | sort | uniq -c | sort -rn | head
+    echo
+    echo "-- correlation: every error located to its member and its Java origin --"
+    correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/gdxl0measure.txt --srcmap "$REPORT/run-latest/srcmap.tsv"
+    headline "$ERRORS" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
 # libGDX core — emit, checks, break residue, compile, correlate.
