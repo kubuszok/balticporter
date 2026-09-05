@@ -91,7 +91,7 @@ final class RegistryTransform(
     if entries.isEmpty && facadeMembers.isEmpty then ""
     else
       val es = entries.map(e =>
-        s"${e.callee}->${Placement.render(e.placement)}/${e.miss}" +
+        s"${e.callee}->${Placement.render(e.placement)}/${Miss.render(e.miss)}" +
           e.bound.fold("")(b => s"<:$b") +
           (if e.seeds.isEmpty then "" else e.seeds.sorted.mkString("(", ",", ")")) +
           (if e.scope.isUnrestricted then "" else s"[${e.scope.fingerprint}]")).sorted.mkString(",")
@@ -202,7 +202,7 @@ final class RegistryTransform(
     // another module emits (D2).
     val offJvm = runScope.platform.targets.filterNot(_ == balticporter.catalog.Platform.Jvm)
       .toList.map(_.toString).sorted
-    here.map(s => s.entryIx -> s.entry).distinct.filter((_, e) => e.miss == Miss.JvmReflect)
+    here.map(s => s.entryIx -> s.entry).distinct.filter((_, e) => e.miss.isInstanceOf[Miss.JvmReflect])
       .sortBy(_._1).foreach { (i, e) =>
         offJvm.foreach(t =>
           found += RegistryCheck.Finding(RegistryCheck.Issue.JvmOnlyMiss, slotOf(i),
@@ -265,7 +265,7 @@ final class RegistryTransform(
             detail     = Map(
               "from" -> e.callee,
               "to"   -> to,
-              "miss" -> e.miss.toString,
+              "miss" -> Miss.render(e.miss),
               "why"  -> ("reflective instantiation has no counterpart off the JVM, so this port " +
                 "keys construction on the `Class` value through a registry it supplies itself"),
             ),
@@ -305,7 +305,7 @@ final class RegistryTransform(
             refuse(RegistryCheck.Issue.ByName,
               s"`${e.callee}`'s class is chosen by a STRING at run time, so no registration can " +
                 "exist for it — a name table (`ClassTableTransform`) is the mechanism for this")
-          else if namedAt(program, arg, "getClass") && e.miss != Miss.JvmReflect then
+          else if namedAt(program, arg, "getClass") && !e.miss.isInstanceOf[Miss.JvmReflect] then
             refuse(RegistryCheck.Issue.SelfClone,
               s"`${e.callee}(getClass())` clones an arbitrary subtype, and with miss=${e.miss} the " +
                 "registry answers only for keys somebody registered")
@@ -437,10 +437,16 @@ final class RegistryTransform(
     case Miss.Throw(fqn, msg) =>
       val q = '"'.toString
       s"throw new $fqn($q${msg.replace("\"", "\\\"")}$q + componentType.getName())"
-    case Miss.JvmReflect =>
+    case Miss.JvmReflect(onFailure) =>
+      // java's own answer where reflection FAILS, never a silent null unless the port says so.
+      val failed = onFailure match
+        case Miss.OnFailure.Null => "null.asInstanceOf[T]"
+        case Miss.OnFailure.Throw(fqn, msg) =>
+          val q = '"'.toString
+          s"throw new $fqn($q${msg.replace("\"", "\\\"")}$q + componentType.getName())"
       "{ try componentType.getConstructor().newInstance() catch { " +
         "case _: java.lang.NoSuchMethodException | _: java.lang.InstantiationException | " +
-        "_: java.lang.IllegalAccessException => null.asInstanceOf[T] ; " +
+        s"_: java.lang.IllegalAccessException => $failed ; " +
         "case ex: java.lang.reflect.InvocationTargetException => throw ex.getCause } }"
 
 object RegistryTransform:
@@ -485,12 +491,28 @@ object RegistryTransform:
       s"${owner(p)}:${s.table}/${s.register}/${s.create}"
 
   /** What an unregistered key answers. Three outcomes and not one: a port that must not throw, a
-    * port whose contract has its own exception, and the JVM's own reflective answer (P10's measured
-    * conflict — a single-parameter table could not hold all three). */
+    * port whose contract has its own exception, and the JVM's own reflective answer, which carries
+    * what java's OWN contract says when the reflection itself fails (P10's measured conflict). */
   enum Miss:
     case Null
     case Throw(fqn: String, message: String)
-    case JvmReflect
+    case JvmReflect(onFailure: Miss.OnFailure = Miss.OnFailure.Null)
+
+  object Miss:
+
+    /** What a [[Miss.JvmReflect]] arm answers when REFLECTION fails — the type has no visible
+      * nilary constructor, or its constructor threw. `Null` is what a java `catch` returning null
+      * meant; `Throw` restates java's own wrapping exception at that site (P10 STOP (a)). */
+    enum OnFailure:
+      case Null
+      case Throw(fqn: String, message: String)
+
+    /** The SURFACE rendering. `JvmReflect` with the default `Null` failure renders as the string it
+      * rendered before `onFailure` existed, so the parameter's arrival is flat on every port that
+      * does not use it (§1(b)'s fingerprint no-op rule). */
+    def render(m: Miss): String = m match
+      case JvmReflect(OnFailure.Null) => "JvmReflect"
+      case other                      => other.toString
 
   /** one classified call site. */
   private[transform] final case class Site(entryIx: Int, entry: Registry, call: Tree.Apply, unit: SymId)

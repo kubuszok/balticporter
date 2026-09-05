@@ -181,11 +181,15 @@ final class RemediationFactory extends TransformFactory:
   def fromConfig(config: ConfigView): Phase =
     new RemediationTransform(classTables = config.stringMap("classTables").getOrElse(Map.empty))
 
-/** `{ transform = "class-table", redirects { "a.B#forName" = "c.D#classFor" } }` */
+/** `{ transform = "class-table", redirects { "a.B#forName" = "c.D#classFor" }, scope { … } }`
+  *
+  * A REDIRECT, so its scope defaults to the unrestricted `Everywhere(Set.empty)` it ran under
+  * before it had one (`.claude/rules/phases.md`). */
 final class ClassTableFactory extends TransformFactory:
   def name = "class-table"
   def fromConfig(config: ConfigView): Phase =
-    new ClassTableTransform(config.stringMap("redirects").getOrElse(Map.empty))
+    new ClassTableTransform(config.stringMap("redirects").getOrElse(Map.empty),
+      TransformFactory.scopeOf(config, default = RuleScope.everywhere))
 
 /** `.conf` shape for `type-redirect`: `redirects` maps upstream FQN to either a bare string (flat
   * form) or an object carrying `to`, `memberRenames`, `scope`. */
@@ -430,10 +434,16 @@ final class RegistryFactory extends TransformFactory:
         case (scala.None, Some(m)) => RegistryTransform.Placement.Member(m, sp)
         case _ => throw ConfigError(p.path, "a placement declares `object` or `member`")
       val miss = e.child("miss") match
-        case Some(t) => RegistryTransform.Miss.Throw(t.requireString("throw"), t.string("message").getOrElse(""))
+        // `jvmReflect` REFLECTS and answers this on a reflective failure; the bare form THROWS
+        // for every unregistered key (`ENGINE-LIMITS.md` P10).
+        case Some(t) => t.child("jvmReflect") match
+          case Some(j) => RegistryTransform.Miss.JvmReflect(RegistryTransform.Miss.OnFailure.Throw(
+            j.requireString("throw"), j.string("message").getOrElse("")))
+          case scala.None =>
+            RegistryTransform.Miss.Throw(t.requireString("throw"), t.string("message").getOrElse(""))
         case scala.None => e.enumerated("miss", Map(
           "null"        -> RegistryTransform.Miss.Null,
-          "jvm-reflect" -> RegistryTransform.Miss.JvmReflect,
+          "jvm-reflect" -> RegistryTransform.Miss.JvmReflect(RegistryTransform.Miss.OnFailure.Null),
         )).getOrElse(RegistryTransform.Miss.Null)
       RegistryTransform.Registry(
         callee    = e.requireString("callee"),

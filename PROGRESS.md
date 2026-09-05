@@ -1436,7 +1436,7 @@ hit only prose). Grouped rows share one classification; every key is listed.
 | `TextraListBox#getSelectedIndex`, `TextraSelectBox#getSelectedIndex` | textra | ii | K37 | `collection-internal`: `OrderedSet` does not extend `ObjectSet` |
 | `VfxGLUtils#<clinit>`, `VfxFrameBuffer#getBoundFboHandle`, `VfxGLUtils#getBoundFboHandle` | vfx | iii | Phase 1.11 / P10 | `<clinit>` reflectively probes a GWT-only extension (`ClassReflection.newInstance`) before `new DefaultVfxGlExtension()`; the two accessors carry the lazy init the emptied `<clinit>` no longer performs (CT11 shape) — all three fall with the reflection card, not with item 5 (re-read 2026-09-05) |
 | `CircularBuffer#resize(int)` | ai | iii | Phase 1.11 / P10 | `ArrayReflection.newInstance` — gdx reflection the base drops; measured alive 2026-09-04 (`value ArrayReflection is not a member`) |
-| `...openTask(String,boolean)`, `...findMetadata(Class)`, `...getField(Class,String)`, `...setField(Field,Task,Object)`, `...castValue(Field,Object)` (`BehaviorTreeParser$DefaultBehaviorTreeReader`) | ai | iii | Phase 1.11 / P10 | `openTask` is `newInstance(forName(s))` and STOPS on the name half (P10 wave 2): `ClassTableTransform` takes no `RuleScope` and is no `MergeablePolicy`, and the base already binds `forName` globally. The other four are the `TaskField` (c), not P10 |
+| `...openTask(String,boolean)`, `...findMetadata(Class)`, `...getField(Class,String)`, `...setField(Field,Task,Object)`, `...castValue(Field,Object)` (`BehaviorTreeParser$DefaultBehaviorTreeReader`) | ai | iii | Phase 1.11 / P10 | `openTask` is `newInstance(forName(s))` and STOPS on THREE shapes (P10 wave 3, re-measured): `ClassTableTransform` now HAS the `RuleScope` + `MergeablePolicy`, but the base's unrestricted `Everywhere(Set.empty)` is disjoint from nothing, `RegistryTransform` keys `mapping` on the CALLEE so `openTask` and `cloneTask` cannot carry different `miss`/`handles`, and `decorator.Random` has no nilary ctor for `create` to build (C11). The other four are the `TaskField` (c), not P10 |
 | `ImmutableArrayTests#forbiddenRemoval` | ashley | i | `divergence-verdicts.tsv:141` (`ImmutableArraySuite`, justified) | java `iterator().remove()` throws; Scala's `Iterator` has none — verify read-only instead |
 
 **Reflection census (2026-09-05, read-only, 260 sites over every port root)**:
@@ -1466,9 +1466,22 @@ the 20 `api-parity(hand-port-extra) *#newInstance` rows held, members blast 8 = 
 ai-test 103/2 -> 104/1 and ai-diff 93/2 -> 94/1: `cloneTask clones guard` now PASSES (its
 `expected-failures.tsv` row is deleted), `cloneTask creates independent copy` still fails because
 `CountingTask` has no nilary ctor and `Miss.JvmReflect` answers null where java raised
-`ReflectionException`. gdx `members-unchanged` 0, no finding moved. Wave 2's two STOPS are P10's
-`Next` line: a `Miss` arm that reflects AND restates java's throw, and the scoped, mergeable
-`ClassTableTransform` `openTask`'s name half needs.
+`ReflectionException`. gdx `members-unchanged` 0, no finding moved.
+**Wave 3 CLOSES the first of wave 2's two STOPS**: `Miss.JvmReflect(onFailure)` (`Null`, which renders
+as the pre-parameter string so every other port's `policy=` is flat, or `Throw(fqn, message)`) lets ai
+declare java's own `Task.java:270` wrap, and `handles = ReflectionException` then elides the handler
+the rewrite made dead — `registry(guarded-call)` 1 -> 0, `registry(jvm-only-miss)` 2 and the other five
+lanes held, 0 errors held on JVM/js/native/ref, every other ai check byte-identical, `members.tsv`
+blast 4 (the `cloneTask` body and the minted `create`, each with its class digest), residue EMPTY;
+ai-test 104/1 and ai-diff 94/1 held, the differential's declared row re-anchored at the minted
+registry (`expected 1, unexpected 0`) because the port now raises JAVA'S OWN `TaskCloneException`
+where it raised an NPE, and what the hand suite asserts is the reference port's added `newInstance()`.
+gdx `members-unchanged` 0 with findings and the WHOLE port-map byte-identical. **The second STOP is
+still open and now has three named shapes** (P10 (b1)/(b2)/(b3)): `ClassTableTransform` HAS its
+`RuleScope` and `MergeablePolicy` (disjoint scopes compose, overlapping refuse), and `openTask` still
+stays a body — the base must narrow its own `forName` redirect first (a gdx `policy=` move of its
+own), `RegistryTransform` must admit per SITE before one callee can carry two entries, and
+`decorator.Random` would still need a hand-written factory.
 
 Counts by class, LIVE and re-derived from the table above: i=5, ii=6, iii=9, iv=3 (23 keys, 10
 grouped rows). Retired ledger — 2026-09-04: `Selection#iterator`, `MapLayers/MapObjects#getByType`; 2026-09-05: `BitmapFont#<init>(…)` (dead key), `Selection#toArray` x2, vfx x3 reclassified iii; 2026-09-05b: `FirstPersonCameraController#keyUp` (IntIntMap remove Template), `Node#calculateBoneTransforms` + `ModelInstance#invalidate` (IndexedField via), `NodePart#set` + `MapProperties#putAll` (putAll compiles without cast); 2026-09-05c: `Actor#<clinit>` (Construct at C::new), `AssetManager#getAssetFileName` (return inside nested foreachEntry), `ModelLoader#getDependencies` + `ParticleEffectLoader#getDependencies` (Tuple2 construct-then-assign fold); 2026-09-05d: `AssetManager#clear` (Keys toArray Template + getAndIncrement), `ArraySelection#validate` (OrderedSet removing iterator K36), `AssetLoadingTask#removeDuplicates` (DropWrite K36) (ii=10 remain); 2026-09-05e: `Engine#createComponent(Class)` (`RegistryTransform`, P10 wave 1); 2026-09-05f: `GLTFMaterialExporter#ext` and `Task#cloneTask()` (`RegistryTransform`, P10 wave 2).

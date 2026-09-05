@@ -171,3 +171,30 @@ class RuleScopeSpec extends munit.FunSuite:
     assertNotEquals(RuleScope.Everywhere(Set("a")).fingerprint, RuleScope.Only(Set("a")).fingerprint)
     assertNotEquals(RuleScope.Everywhere(Set("a")).fingerprint, RuleScope.Everywhere(Set("a", "b")).fingerprint)
   }
+
+  // -------------------------------------------------------------------------
+  // disjointness — whether two scoped instances of ONE rule can compose (P10)
+  // -------------------------------------------------------------------------
+
+  test("two Everywhere scopes always OVERLAP — each is the whole program bar a finite set") {
+    assert(!RuleScope.disjoint(RuleScope.Everywhere(), RuleScope.Everywhere()))
+    assert(!RuleScope.disjoint(RuleScope.Everywhere(Set("com.a")), RuleScope.Everywhere(Set("com.b"))))
+  }
+
+  test("an Only avoids an Everywhere exactly when every entry it names is EXCLUDED there") {
+    val only = RuleScope.Only(Set("com.foo.ext"))
+    assert(!RuleScope.disjoint(RuleScope.Everywhere(), only))
+    assert(RuleScope.disjoint(RuleScope.Everywhere(Set("com.foo.ext")), only))
+    assert(RuleScope.disjoint(RuleScope.Everywhere(Set("com.foo")), only))
+    // §4.56: the cut lands on a separator, so a merely-shared prefix excludes nothing.
+    assert(!RuleScope.disjoint(RuleScope.Everywhere(Set("com.foo.extra")), only))
+    assert(RuleScope.disjoint(only, RuleScope.Everywhere(Set("com.foo.ext"))))
+  }
+
+  test("two Only scopes are disjoint unless one NAMES the other, either way round") {
+    assert(RuleScope.disjoint(RuleScope.Only(Set("com.a")), RuleScope.Only(Set("com.b"))))
+    assert(!RuleScope.disjoint(RuleScope.Only(Set("com.a")), RuleScope.Only(Set("com.a.B"))))
+    assert(!RuleScope.disjoint(RuleScope.Only(Set("com.a.B")), RuleScope.Only(Set("com.a"))))
+    // an EMPTY Only is a no-op, so it claims nothing and is disjoint from everything.
+    assert(RuleScope.disjoint(RuleScope.Only(Set.empty), RuleScope.Everywhere()))
+  }

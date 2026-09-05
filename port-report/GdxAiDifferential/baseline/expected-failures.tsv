@@ -6,29 +6,33 @@
 # below has to be stated rather than left to a mechanism, and exactly why it is a claim someone
 # has to defend.
 #
-# THE ROW IS ONE FACT, AND IT IS A `Miss` SHAPE THE ENGINE HAS NOT GOT. `Task.cloneTask()` in java
-# instantiates the task reflectively (`com.badlogic.gdx.utils.reflect.ClassReflection.newInstance`);
-# this port keys that on a `Class`-value registry whose declared `miss` REPRODUCES the JVM's own
-# reflection (`RegistryTransform`, `ENGINE-LIMITS.md` P10), so a task with a nilary constructor now
-# clones exactly as java does. `CountingTask` has no nilary constructor: java raised a
-# `ReflectionException` and `cloneTask` wrapped it in the `TaskCloneException` its contract
-# declares, where the miss arm answers `null` and `copyTo(null)` raises an NPE. `Miss` offers
-# `Null`, `Throw` and `JvmReflect`, and no arm that reflects AND restates java's throw; `Throw`
-# alone refuses a self-clone outright (`registry(self-clone)`).
+# THE ROW IS ONE FACT, AND IT IS A HAND-PORT DIVERGENCE, NOT AN ENGINE GAP. `Task.cloneTask()` in
+# java instantiates the task reflectively (`com.badlogic.gdx.utils.reflect.ClassReflection
+# .newInstance`) and, for a type with no visible nilary constructor, javac's own contract raises
+# `ReflectionException` which `cloneTask` wraps in the `TaskCloneException` it declares
+# (`Task.java:266-272`). This port keys that on a `Class`-value registry whose `miss` reproduces
+# the JVM's reflection AND its failure — `Miss.JvmReflect(OnFailure.Throw("sge.ai.btree
+# .TaskCloneException", …))` with `handles = ReflectionException`, so java's now-dead handler is
+# elided exactly (`RegistryTransform`, `ENGINE-LIMITS.md` P10 wave 3). `CountingTask` takes a
+# constructor argument, so THE PORT NOW DOES WHAT JAVA DOES: it raises `TaskCloneException`.
+# The test still fails because it asserts a SUCCESSFUL clone, which java cannot deliver either.
 #
-# The REFERENCE port answers the same question differently: it added a `newInstance()` member to
-# `Task` so that cloning needs no reflection at all. That is a REDESIGN of the library's surface,
-# not a translation of it — so this test asserts the hand port's answer against the mechanical
-# port's, and java's own source is the oracle where the two disagree. The suite's fixtures still
-# DECLARE `newInstance()` (mapping row M7 drops only the `override` keyword, since this port's
-# `Task` has no such member to override); what they cannot do is make this port's `cloneTask()`
-# call it.
+# The REFERENCE port answers the same question differently: it added an abstract `newInstance()`
+# member to `Task` so that cloning needs no reflection at all, and the suite's `CountingTask`
+# overrides it. That is a REDESIGN of the library's surface, not a translation of it — so this
+# test asserts the hand port's answer against the mechanical port's, and java's own source is the
+# oracle where the two disagree (CLAUDE.md §3.5: behaviour — java wins). The suite's fixtures
+# still DECLARE `newInstance()` (mapping row M7 drops only the `override` keyword, since this
+# port's `Task` has no such member to override); what they cannot do is make this port's
+# `cloneTask()` call it.
 #
-# WHAT WOULD MAKE THIS ROW WRONG. If `Miss` gains a reflective arm that restates java's throw, or
-# the port gains a `TASK_CLONER` default, this test passes and `test-failures.tsv` reports the
-# declared row for deletion. If a DIFFERENT failure appeared, `frame=` stops holding and it counts
-# UNEXPECTED — which is the whole reason the frame is here.
+# WHAT WOULD MAKE THIS ROW WRONG. If the hand port's `newInstance()` divergence gets a verdict and
+# a NAMED spelling here (an `AddMembersTransform` member plus a `cloneTask` body, or the row is
+# ruled a hand-port defect and the fixture is adapted), this test passes and `test-failures.tsv`
+# reports the declared row for deletion. If a DIFFERENT failure appeared, `frame=` stops holding
+# and it counts UNEXPECTED — which is the whole reason the frame is here. The frame is the MINTED
+# registry, because that is where java's own refusal is now raised.
 #
 # `test` may be `*` to declare a whole suite.
 #suite	test	reason	[frame=<ported class>]
-sge.ai.btree.TaskSuite	cloneTask creates independent copy	CountingTask declares no nilary constructor, so RegistryTransform's Miss.JvmReflect arm answers null where java raised ReflectionException and cloneTask wrapped it in TaskCloneException; counted as registry(guarded-call) on ai-measure -- ENGINE-LIMITS.md P10	frame=sge.ai.btree.Task
+sge.ai.btree.TaskSuite	cloneTask creates independent copy	CountingTask declares no nilary constructor, so the registry's JvmReflect arm raises the TaskCloneException java's own contract raises there (Task.java:270); the hand suite asserts a successful clone, which it can only get from the reference port's ADDED Task#newInstance() -- a hand-port divergence, not an engine gap. ENGINE-LIMITS.md P10 wave 3	frame=sge.ai.btree.TaskFactories

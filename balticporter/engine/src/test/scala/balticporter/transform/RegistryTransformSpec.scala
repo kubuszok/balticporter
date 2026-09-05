@@ -131,12 +131,51 @@ class RegistryTransformSpec extends munit.FunSuite:
   }
 
   test("miss = JvmReflect falls back to the JVM, and every non-JVM target is COUNTED") {
-    val p = phase(entry(miss = Miss.JvmReflect))
+    val p = phase(entry(miss = Miss.JvmReflect()))
     val r = run(p)
     assert(clue(r.out).contains("componentType.getConstructor().newInstance()"))
     // the default `RunScope` is every platform, so both non-JVM backends are counted.
     val rows = p.findings.filter(_.issue == RegistryCheck.Issue.JvmOnlyMiss)
     assertEquals(clue(rows).size, 2)
+  }
+
+  test("miss = JvmReflect(Throw) restates java's OWN answer where reflection itself fails") {
+    val r = run(phase(entry(miss = Miss.JvmReflect(Miss.OnFailure.Throw("com.demo.Broken", "no ctor for ")))))
+    assert(clue(r.out).contains("componentType.getConstructor().newInstance()"))
+    assert(r.out.contains("""throw new com.demo.Broken("no ctor for " + componentType.getName())"""))
+    // …and NOT the silent null the same arm answers by default.
+    assert(!r.out.contains("java.lang.IllegalAccessException => null"), clue(r.out))
+  }
+
+  test("the default JvmReflect failure is `null`, and renders as the string it always did") {
+    assertEquals(Miss.render(Miss.JvmReflect()), "JvmReflect")
+    assertEquals(Miss.render(Miss.Null), "Null")
+    assert(clue(phase(entry(miss = Miss.JvmReflect())).surfaceFingerprint).contains("/JvmReflect<:"))
+    assert(Miss.render(Miss.JvmReflect(Miss.OnFailure.Throw("com.demo.Broken", "x")))
+      .contains("Throw(com.demo.Broken,x)"))
+    assert(clue(run(phase(entry(miss = Miss.JvmReflect()))).out).contains("null.asInstanceOf[T]"))
+  }
+
+  test("`handles` elides the try over a JvmReflect(Throw) arm, which now throws what java caught") {
+    val p = phase(entry(handles = Set("com.demo.Broken"),
+      miss = Miss.JvmReflect(Miss.OnFailure.Throw("com.demo.Broken", "no ctor for "))))
+    val r = run(p)
+    assert(!clue(r.out).contains("catch { case e"), clue(r.out))
+    assertEquals(p.findings.count(_.issue == RegistryCheck.Issue.GuardedCall), 0)
+  }
+
+  // ---- composed with the NAME table -------------------------------------------------------------
+
+  test("`newInstance(forName(s))` composes: the name table keys the registry (P10)") {
+    val js = java.replace("Object plain(Class<?> c) { return Reflector.newInstance(c); }",
+      "Object plain(Class<?> c) { return Reflector.newInstance(Reflector.forName(\"x\")); }")
+    val reg   = phase(entry())
+    val names = new ClassTableTransform(Map("com.demo.Reflector#forName" -> "com.demo.Names#classFor"))
+    val (after, log) = Pipeline.runTraced(SpoonTir.fromSource(js, "Demo.java"), List(names, reg))
+    val out = new TirEmitter(after, notes = log).emit
+    assert(clue(out).contains("com.demo.ComponentFactories.create(com.demo.Names.classFor("), clue(out))
+    // …and the by-name REFUSAL is gone, because the argument is no longer a run-time name lookup.
+    assertEquals(clue(reg.findings.count(_.issue == RegistryCheck.Issue.ByName)), 0)
   }
 
   // ---- seeds ----------------------------------------------------------------------------------
@@ -196,7 +235,7 @@ class RegistryTransformSpec extends munit.FunSuite:
       Pipeline.runTraced(SpoonTir.fromSource(js, "Demo.java"), List(p))
       p.findings.count(_.issue == RegistryCheck.Issue.SelfClone)
     assert(clue(fire(Miss.Null)) > 0)
-    assertEquals(clue(fire(Miss.JvmReflect)), 0)
+    assertEquals(clue(fire(Miss.JvmReflect())), 0)
   }
 
   test("a facade member is COUNTED at every call and never rewritten") {
@@ -235,7 +274,7 @@ class RegistryTransformSpec extends munit.FunSuite:
     val emitsNothing = new RunScope:
       def emits(unit: SymId): Boolean                     = false
       def contributed(phase: String): Option[Set[String]] = scala.None
-    val p = phase(entry(miss = Miss.JvmReflect))
+    val p = phase(entry(miss = Miss.JvmReflect()))
     val (after, log) = Pipeline.runTraced(before, List(p),
       new PolicyBinder(before, before.members, emitsNothing))
     val out = new TirEmitter(after, notes = log).emit

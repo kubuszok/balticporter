@@ -102,3 +102,12 @@ object RuleScope:
     * whose author meant it. */
   def longestPrefix(fullName: String, prefixes: Set[String]): Option[String] =
     prefixes.filter(covers(fullName, _)).maxByOption(_.length)
+
+  /** Can NO fully-qualified name be inside both scopes? Two `Everywhere`s always overlap, since
+    * each covers the whole program bar a finite set; an `Only` avoids an `Everywhere` exactly when
+    * every entry it names is excluded there. Cut at a separator, as everything here is (§4.56). */
+  def disjoint(a: RuleScope, b: RuleScope): Boolean = (a, b) match
+    case (Everywhere(_), Everywhere(_)) => false
+    case (Everywhere(except), Only(include)) => include.forall(i => longestPrefix(i, except).isDefined)
+    case (Only(include), Everywhere(except)) => include.forall(i => longestPrefix(i, except).isDefined)
+    case (Only(x), Only(y)) => !x.exists(i => y.exists(j => covers(i, j) || covers(j, i)))

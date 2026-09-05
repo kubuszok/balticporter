@@ -190,7 +190,7 @@ object AshleyPolicy:
               balticporter.transform.RegistryTransform.Spelling("factories", "register", "create")),
             scope     = balticporter.tir.RuleScope.Only(Set("com.badlogic.ashley")),
             handles   = Set("com.badlogic.gdx.utils.reflect.ReflectionException"),
-            miss      = balticporter.transform.RegistryTransform.Miss.JvmReflect,
+            miss      = balticporter.transform.RegistryTransform.Miss.JvmReflect(),
             bound     = Some("sge.ecs.Component"),
           ),
         )),

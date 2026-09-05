@@ -247,8 +247,9 @@ object GdxAiPolicy:
         // gdx-ai's ONE keyable reflective instantiation: `Task#cloneTask`'s fallback
         // `ClassReflection.newInstance(this.getClass())`. `miss = JvmReflect` is DECLARED,
         // its non-JVM cost COUNTED, and it is what admits a SELF-CLONE (`ENGINE-LIMITS.md`
-        // P10). `handles` is EMPTY: java's `catch` raises `TaskCloneException` where the miss
-        // arm answers null, so java's handler STAYS and the delta is a counted lane row.
+        // P10). `onFailure` is java's OWN answer where reflection fails -- Task.java:270
+        // `catch (ReflectionException e) { throw new TaskCloneException(e) }` -- so `handles`
+        // names that exception and java's now-dead handler is elided EXACTLY.
         new balticporter.transform.RegistryTransform(List(
           balticporter.transform.RegistryTransform.Registry(
             callee    = "com.badlogic.gdx.utils.reflect.ClassReflection#newInstance",
@@ -256,7 +257,10 @@ object GdxAiPolicy:
               "com.badlogic.gdx.ai.btree.TaskFactories",
               balticporter.transform.RegistryTransform.Spelling("factories", "register", "create")),
             scope     = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx.ai")),
-            miss      = balticporter.transform.RegistryTransform.Miss.JvmReflect,
+            handles   = Set("com.badlogic.gdx.utils.reflect.ReflectionException"),
+            miss      = balticporter.transform.RegistryTransform.Miss.JvmReflect(
+              balticporter.transform.RegistryTransform.Miss.OnFailure.Throw(
+                "sge.ai.btree.TaskCloneException", "cannot clone a task with no no-argument constructor: ")),
           ),
         )),
         // LAST, deliberately (as AshleyPolicy): reads what the BASE actually emitted, must
