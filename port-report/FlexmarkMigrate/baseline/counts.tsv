@@ -26,7 +26,7 @@ class-init-trigger	0
 collection-boundary	20
 collection-closure	0
 collection-internal	0
-collection-retarget	0
+collection-retarget	1
 dependency-coverage	10
 dependency-coverage(all)	10
 dependency-coverage(declared)	0

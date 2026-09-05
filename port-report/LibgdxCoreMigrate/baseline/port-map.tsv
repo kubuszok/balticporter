@@ -1529,7 +1529,7 @@ member	com.badlogic.gdx.Net$HttpResponseListener#handleHttpResponse(HttpResponse
 member	com.badlogic.gdx.Preferences#clear()	sge.Preferences#clear()	Renamed	-	com/badlogic/gdx/Preferences.java	78	717a0052bf89055f	
 member	com.badlogic.gdx.Preferences#contains(String)	sge.Preferences#contains(String)	Renamed	-	com/badlogic/gdx/Preferences.java	76	0c5aae68441c82e4	
 member	com.badlogic.gdx.Preferences#flush()	sge.Preferences#flush()	Renamed	-	com/badlogic/gdx/Preferences.java	83	2ac38b9c953bf915	
-member	com.badlogic.gdx.Preferences#get()	sge.Preferences#get()	Renamed	-	com/badlogic/gdx/Preferences.java	74	381327c185264221	
+member	com.badlogic.gdx.Preferences#get()	sge.Preferences#get()	Renamed	-	com/badlogic/gdx/Preferences.java	74	dbc22eb2525f4a9f	
 member	com.badlogic.gdx.Preferences#getBoolean(String)	sge.Preferences#getBoolean(String)	Renamed	-	com/badlogic/gdx/Preferences.java	53	b5c2fb92521f0476	
 member	com.badlogic.gdx.Preferences#getBoolean(String,boolean)	sge.Preferences#getBoolean(String,boolean)	Renamed	-	com/badlogic/gdx/Preferences.java	63	b20bc088ca394ad2	
 member	com.badlogic.gdx.Preferences#getFloat(String)	sge.Preferences#getFloat(String)	Renamed	-	com/badlogic/gdx/Preferences.java	59	04f5c4ab4a047be8	
@@ -1540,7 +1540,7 @@ member	com.badlogic.gdx.Preferences#getLong(String)	sge.Preferences#getLong(Stri
 member	com.badlogic.gdx.Preferences#getLong(String,long)	sge.Preferences#getLong(String,long)	Renamed	-	com/badlogic/gdx/Preferences.java	67	bc93073883051259	
 member	com.badlogic.gdx.Preferences#getString(String)	sge.Preferences#getString(String)	Renamed	-	com/badlogic/gdx/Preferences.java	61	755a7a49fdf40549	
 member	com.badlogic.gdx.Preferences#getString(String,String)	sge.Preferences#getString(String,String)	Renamed	-	com/badlogic/gdx/Preferences.java	71	7f512fc7c8289f53	
-member	com.badlogic.gdx.Preferences#put(Map)	sge.Preferences#put(Map<String,?>)	Renamed	-	com/badlogic/gdx/Preferences.java	51	8180221f3c680004	
+member	com.badlogic.gdx.Preferences#put(Map)	sge.Preferences#put(Map<String,?>)	Renamed	-	com/badlogic/gdx/Preferences.java	51	20ba834f810ab0b5	
 member	com.badlogic.gdx.Preferences#putBoolean(String,boolean)	sge.Preferences#putBoolean(String,boolean)	Renamed	-	com/badlogic/gdx/Preferences.java	41	6fe6f72180017ba2	
 member	com.badlogic.gdx.Preferences#putFloat(String,float)	sge.Preferences#putFloat(String,float)	Renamed	-	com/badlogic/gdx/Preferences.java	47	74b4c53fd9acf5c6	
 member	com.badlogic.gdx.Preferences#putInteger(String,int)	sge.Preferences#putInteger(String,int)	Renamed	-	com/badlogic/gdx/Preferences.java	43	296468e2ee3493c0	
@@ -16299,8 +16299,8 @@ member	com.badlogic.gdx.utils.CharArray#append(long)	sge.utils.CharArray#append(
 member	com.badlogic.gdx.utils.CharArray#append(long,int)	sge.utils.CharArray#append(long,int)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	639	03c5e1bc7278784c	
 member	com.badlogic.gdx.utils.CharArray#append(long,int,char)	sge.utils.CharArray#append(long,int,char)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	647	ed85f486327da2c7	
 member	com.badlogic.gdx.utils.CharArray#appendAll(Array)	sge.utils.CharArray#appendAll(Array<T>)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	818	83f542c6ba326646	
-member	com.badlogic.gdx.utils.CharArray#appendAll(JavaIterable)	sge.utils.CharArray#appendAll(JavaIterable<?>)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	802	489b9c167cbfa219	
-member	com.badlogic.gdx.utils.CharArray#appendAll(JavaIterator)	sge.utils.CharArray#appendAll(JavaIterator<?>)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	810	0f426eb6f4459ea5	
+member	com.badlogic.gdx.utils.CharArray#appendAll(JavaIterable)	sge.utils.CharArray#appendAll(JavaIterable<?>)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	802	bccaaebf6e0fc7cd	
+member	com.badlogic.gdx.utils.CharArray#appendAll(JavaIterator)	sge.utils.CharArray#appendAll(JavaIterator<?>)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	810	beec99bbdea5bcca	
 member	com.badlogic.gdx.utils.CharArray#appendCodePoint(int)	sge.utils.CharArray#appendCodePoint(int)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	1204	07871c20d28d112e	
 member	com.badlogic.gdx.utils.CharArray#appendFalse(int)	sge.utils.CharArray#appendFalse(int)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	827	e3132db3e17f593a	vis=private
 member	com.badlogic.gdx.utils.CharArray#appendFixedWidthPadLeft(Object,int,char)	sge.utils.CharArray#appendFixedWidthPadLeft(Object,int,char)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	847	f7b43b6fa2533441	
@@ -16320,8 +16320,8 @@ member	com.badlogic.gdx.utils.CharArray#appendSeparator(char,int)	sge.utils.Char
 member	com.badlogic.gdx.utils.CharArray#appendTo(Appendable)	sge.utils.CharArray#appendTo(Appendable)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	1144	8b4260508807b8b6	
 member	com.badlogic.gdx.utils.CharArray#appendTrue(int)	sge.utils.CharArray#appendTrue(int)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	1158	895457ba144df1ff	vis=private
 member	com.badlogic.gdx.utils.CharArray#appendWithSeparators(Array,String)	sge.utils.CharArray#appendWithSeparators(Array<Object>,String)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	1189	65d5bd611eb8e7e2	
-member	com.badlogic.gdx.utils.CharArray#appendWithSeparators(JavaIterable,String)	sge.utils.CharArray#appendWithSeparators(JavaIterable<?>,String)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	1169	211a66a21c8a433f	
-member	com.badlogic.gdx.utils.CharArray#appendWithSeparators(JavaIterator,String)	sge.utils.CharArray#appendWithSeparators(JavaIterator<?>,String)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	1177	c0808507864c800e	
+member	com.badlogic.gdx.utils.CharArray#appendWithSeparators(JavaIterable,String)	sge.utils.CharArray#appendWithSeparators(JavaIterable<?>,String)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	1169	d119b7f52f2d658e	
+member	com.badlogic.gdx.utils.CharArray#appendWithSeparators(JavaIterator,String)	sge.utils.CharArray#appendWithSeparators(JavaIterator<?>,String)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	1177	c0a76076b74c2591	
 member	com.badlogic.gdx.utils.CharArray#appendln()	sge.utils.CharArray#appendln()	Renamed	-	com/badlogic/gdx/utils/CharArray.java	995	da12742855a287f8	
 member	com.badlogic.gdx.utils.CharArray#appendln(Array)	sge.utils.CharArray#appendln(Array<char>)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	904	105edf7cf85adccb	
 member	com.badlogic.gdx.utils.CharArray#appendln(Array,int,int)	sge.utils.CharArray#appendln(Array<char>,int,int)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	910	cacb9bcf12b103a0	
@@ -17071,7 +17071,7 @@ member	com.badlogic.gdx.utils.Json#readField(Object,String,JsonValue)	sge.utils.
 member	com.badlogic.gdx.utils.Json#readField(Object,String,String,Class,JsonValue)	sge.utils.Json#readField(Object,String,String,Class<?>,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	865	92ce6b29c52b9754	
 member	com.badlogic.gdx.utils.Json#readField(Object,String,String,JsonValue)	sge.utils.Json#readField(Object,String,String,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	860	40299e8d0100b969	
 member	com.badlogic.gdx.utils.Json#readFields(Object,JsonValue)	sge.utils.Json#readFields(Object,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	895	6a8b0f1d19535b39	
-member	com.badlogic.gdx.utils.Json#readValue(Class,Class,JsonValue)	sge.utils.Json#readValue(Class<T>,Class<?>,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	987	4530d77ac68449ec	
+member	com.badlogic.gdx.utils.Json#readValue(Class,Class,JsonValue)	sge.utils.Json#readValue(Class<T>,Class<?>,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	987	f6bb397759996faa	
 member	com.badlogic.gdx.utils.Json#readValue(Class,Class,T,JsonValue)	sge.utils.Json#readValue(Class<T>,Class<?>,T,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	973	881173bc82b68708	
 member	com.badlogic.gdx.utils.Json#readValue(Class,JsonValue)	sge.utils.Json#readValue(Class<T>,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	980	9f8eb0357fe9eb7b	
 member	com.badlogic.gdx.utils.Json#readValue(String,Class,Class,JsonValue)	sge.utils.Json#readValue(String,Class<T>,Class<?>,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	958	ea118db4ab50531f	
@@ -17125,7 +17125,7 @@ member	com.badlogic.gdx.utils.Json#writeObjectStart(String,Class,Class)	sge.util
 member	com.badlogic.gdx.utils.Json#writeType(Class)	sge.utils.Json#writeType(Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	768	c4b4d9f0c37aeb2f	
 member	com.badlogic.gdx.utils.Json#writeValue(Object)	sge.utils.Json#writeValue(Object)	Renamed	-	com/badlogic/gdx/utils/Json.java	473	9ecf3cf85a5ec845	
 member	com.badlogic.gdx.utils.Json#writeValue(Object,Class)	sge.utils.Json#writeValue(Object,Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	483	4cc3aee03f6e468a	
-member	com.badlogic.gdx.utils.Json#writeValue(Object,Class,Class)	sge.utils.Json#writeValue(Object,Class<?>,Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	492	73e1c0236dd4e10e	
+member	com.badlogic.gdx.utils.Json#writeValue(Object,Class,Class)	sge.utils.Json#writeValue(Object,Class<?>,Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	492	fcba112f60ca1f3a	
 member	com.badlogic.gdx.utils.Json#writeValue(String,Object)	sge.utils.Json#writeValue(String,Object)	Renamed	-	com/badlogic/gdx/utils/Json.java	431	09e4ed305c996a8f	
 member	com.badlogic.gdx.utils.Json#writeValue(String,Object,Class)	sge.utils.Json#writeValue(String,Object,Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	448	853c448cac6ce658	
 member	com.badlogic.gdx.utils.Json#writeValue(String,Object,Class,Class)	sge.utils.Json#writeValue(String,Object,Class<?>,Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	462	75105a00bc71a8ae	

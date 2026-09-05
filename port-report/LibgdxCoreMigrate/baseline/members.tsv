@@ -581,11 +581,11 @@ sge.Net	sge.Net$HttpResponseListener#cancelled()	def	69759d0eb94d2f9e
 sge.Net	sge.Net$HttpResponseListener#failed(Throwable)	def	c6f4bc333563c24c
 sge.Net	sge.Net$HttpResponseListener#handleHttpResponse(HttpResponse)	def	f242c0ce5ca34d77
 sge.Net	sge.Net$Protocol	class	a75ed11e4d4eaf63
-sge.Preferences	sge.Preferences	class	415da42521463295
+sge.Preferences	sge.Preferences	class	4ea5840086a36d8f
 sge.Preferences	sge.Preferences#clear()	def	717a0052bf89055f
 sge.Preferences	sge.Preferences#contains(String)	def	0c5aae68441c82e4
 sge.Preferences	sge.Preferences#flush()	def	2ac38b9c953bf915
-sge.Preferences	sge.Preferences#get()	def	381327c185264221
+sge.Preferences	sge.Preferences#get()	def	dbc22eb2525f4a9f
 sge.Preferences	sge.Preferences#getBoolean(String)	def	b5c2fb92521f0476
 sge.Preferences	sge.Preferences#getBoolean(String,boolean)	def	b20bc088ca394ad2
 sge.Preferences	sge.Preferences#getFloat(String)	def	04f5c4ab4a047be8
@@ -596,7 +596,7 @@ sge.Preferences	sge.Preferences#getLong(String)	def	2cc1774cfd0d5d23
 sge.Preferences	sge.Preferences#getLong(String,long)	def	bc93073883051259
 sge.Preferences	sge.Preferences#getString(String)	def	755a7a49fdf40549
 sge.Preferences	sge.Preferences#getString(String,String)	def	7f512fc7c8289f53
-sge.Preferences	sge.Preferences#put(Map<String,?>)	def	8180221f3c680004
+sge.Preferences	sge.Preferences#put(Map<String,?>)	def	20ba834f810ab0b5
 sge.Preferences	sge.Preferences#putBoolean(String,boolean)	def	6fe6f72180017ba2
 sge.Preferences	sge.Preferences#putFloat(String,float)	def	74b4c53fd9acf5c6
 sge.Preferences	sge.Preferences#putInteger(String,int)	def	296468e2ee3493c0
