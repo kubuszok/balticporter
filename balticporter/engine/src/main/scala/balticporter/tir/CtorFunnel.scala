@@ -1727,6 +1727,9 @@ object CtorFunnel:
         val uniquePbParams = allPbParams.filter { (p, _) =>
           if seenPb(p.symbol) then false else { seenPb += p.symbol; true }
         }
+        // two parent secondaries each carrying a `skin` parameter are two slots with ONE name — refused, counted
+        val pbNames = uniquePbParams.map((p, _) => program.symbolOf(p.symbol).map(_.name).getOrElse(""))
+        if pbNames.distinct.size != pbNames.size then return scala.None
         val rawPostBody = flat.map(_._2.postBody).find(_.nonEmpty).getOrElse(Nil)
         val needsBoolGuard = rawPostBody.nonEmpty && uniquePbParams.isEmpty
         val boolSym = SymId.None // placeholder for the boolean type ref

@@ -400,3 +400,31 @@ class CtorFunnelInlineDelegationSpec extends munit.FunSuite:
       "the child's parameter names never reach the class header")
     assert(clue(OmissionCheck.droppedSuperArgs(mixedProgram)).nonEmpty, "the refusal is counted")
   }
+
+  // ---- (h4) two parent secondaries with a post-body each, both naming their parameter `skin`:
+  // two slots with one name and two post-bodies for one replay — refused, counted ----
+
+  private val twoPbSrc =
+    """package demo;
+      |public class Skin { public Object get(String n) { return null; } }
+      |public class Btn {
+      |  Object skinRef;
+      |  public Btn(Object text, Object style) {}
+      |  public Btn(Object text, Skin skin) { this(text, skin.get("default")); this.skinRef = skin; }
+      |  public Btn(Object text, Skin skin, String styleName) { this(text, skin.get(styleName)); this.skinRef = skin; }
+      |}
+      |public class TypingBtn extends Btn {
+      |  static Skin skin() { return new Skin(); }
+      |  public TypingBtn(Object text) { super(text, skin()); }
+      |  public TypingBtn(Object text, String styleName) { super(text, skin(), styleName); }
+      |}
+      |""".stripMargin
+
+  private lazy val twoPbProgram = Pipeline.run(SpoonTir.fromSource(twoPbSrc), Nil)
+  private lazy val twoPbOut     = new TirEmitter(twoPbProgram).emit
+
+  test("(h4) colliding post-body slot names are refused and counted") {
+    val header = twoPbOut.linesIterator.find(_.contains("class TypingBtn")).getOrElse("")
+    assert(!clue(header).matches(""".*skin\$.*skin\$.*"""), "no repeated parameter name")
+    assert(clue(OmissionCheck.droppedSuperArgs(twoPbProgram)).nonEmpty, "the refusal is counted")
+  }
