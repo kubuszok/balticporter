@@ -9,7 +9,7 @@ sge.anim8.ConstantDataSuite	TRI_BLUE_NOISE_C is a 64x64 grid with the upstream b
 sge.anim8.ConstantDataSuite	the derived multiplier tables ran their static block — they are not left at zero	pass
 sge.anim8.ConstantDataSuite	the three noise grids hold the SAME multiset of bytes in a different order	pass
 sge.anim8.DitherAlgorithmSuite	ALL is the cached values() array and holds every constant	pass
-sge.anim8.DitherAlgorithmSuite	all 22 algorithms exist	pass
+sge.anim8.DitherAlgorithmSuite	all 24 algorithms exist	pass
 sge.anim8.DitherAlgorithmSuite	every constant's legibleName is non-empty — the enum CONSTRUCTOR BODY ran	pass
 sge.anim8.DitherAlgorithmSuite	the legible names are upstream's, in upstream's order	pass
 sge.anim8.DitherAlgorithmSuite	toString returns legibleName, for every constant	pass
