@@ -526,10 +526,10 @@ c5e6ba8a3b4b	api-parity(mutability)	mutability	ToastManager#toasts	/ToastManager
 91cc64dbd8cc	api-parity(mutability)	mutability	Tooltip$.Builder#content	/Tooltip$/Builder	0	kind differs: emitted var, reference val
 48c20ddee23c	api-parity(mutability)	mutability	VisDialog#ignoreTouchDown	/VisDialog	0	kind differs: emitted var, reference val
 23d501e64e62	api-parity(mutability)	mutability	VisWidgetValue#getter	/VisWidgetValue	0	kind differs: emitted var, reference val
-fd7e6f43ad1a	api-parity(null-model)	null-model	AbstractListAdapter#setItemClickListener	/AbstractListAdapter	0	param 0 type differs: emitted 'sge.visui.widget.ListView.ItemClickListener[ItemT]', reference 'Nullable[ListView.ItemClickListener[ItemT]]'
-343ecd03cb83	api-parity(null-model)	null-model	AbstractListAdapter#view	/AbstractListAdapter	0	result type differs: emitted 'sge.visui.widget.ListView[ItemT]', reference 'Nullable[ListView[ItemT]]'
+6b6febe0ea91	api-parity(null-model)	null-model	AbstractListAdapter#setItemClickListener	/AbstractListAdapter	0	param 0 type differs: emitted 'sge.visui.widget.ListView.ItemClickListener[$0]', reference 'Nullable[ListView.ItemClickListener[$0]]'
+e594a61b8229	api-parity(null-model)	null-model	AbstractListAdapter#view	/AbstractListAdapter	0	result type differs: emitted 'sge.visui.widget.ListView[$0]', reference 'Nullable[ListView[$0]]'
 2057498ed317	api-parity(null-model)	null-model	AbstractSpinnerModel#spinner	/AbstractSpinnerModel	0	result type differs: emitted 'sge.visui.widget.spinner.Spinner', reference 'Nullable[Spinner]'
-5115aa8ab973	api-parity(null-model)	null-model	ArraySpinnerModel#itemToString	/ArraySpinnerModel	0	param 0 type differs: emitted 'T', reference 'Nullable[T]'
+71f82743232d	api-parity(null-model)	null-model	ArraySpinnerModel#itemToString	/ArraySpinnerModel	0	param 0 type differs: emitted '$0', reference 'Nullable[$0]'
 8ea3db7475ac	api-parity(null-model)	null-model	CellWidget#buildCell	/CellWidget	0	param 1 type differs: emitted 'sge.visui.building.utilities.Padding', reference 'Nullable[Padding]'
 728c626762d2	api-parity(null-model)	null-model	ColorPickerStyle#pickerStyle	/ColorPickerStyle	0	result type differs: emitted 'sge.visui.widget.color.ColorPickerWidgetStyle', reference 'Nullable[ColorPickerWidgetStyle]'
 0acff6c706b5	api-parity(null-model)	null-model	ColorPickerWidgetStyle#barSelector	/ColorPickerWidgetStyle	0	result type differs: emitted 'sge.scenes.scene2d.utils.Drawable', reference 'Nullable[Drawable]'
@@ -583,7 +583,7 @@ dd81962255a3	api-parity(null-model)	null-model	FocusManager$#getFocusedWidget	/F
 0aa7372de13f	api-parity(null-model)	null-model	LinkLabel#listener	/LinkLabel	0	result type differs: emitted 'sge.visui.widget.LinkLabel.LinkLabelListener', reference 'Nullable[LinkLabel.LinkLabelListener]'
 9500630aa320	api-parity(null-model)	null-model	LinkLabel#listener_=	/LinkLabel	0	param 0 type differs: emitted 'sge.visui.widget.LinkLabel.LinkLabelListener', reference 'Nullable[LinkLabel.LinkLabelListener]'
 2552ecc37fe1	api-parity(null-model)	null-model	LinkLabel$.LinkLabelStyle#underline	/LinkLabel$/LinkLabelStyle	0	result type differs: emitted 'sge.scenes.scene2d.utils.Drawable', reference 'Nullable[Drawable]'
-316752887c09	api-parity(null-model)	null-model	ListAdapter#setItemClickListener	/ListAdapter	0	param 0 type differs: emitted 'sge.visui.widget.ListView.ItemClickListener[ItemT]', reference 'Nullable[ListView.ItemClickListener[ItemT]]'
+f8129ce4d98a	api-parity(null-model)	null-model	ListAdapter#setItemClickListener	/ListAdapter	0	param 0 type differs: emitted 'sge.visui.widget.ListView.ItemClickListener[$0]', reference 'Nullable[ListView.ItemClickListener[$0]]'
 76f3a6e78a94	api-parity(null-model)	null-model	ListView#footer	/ListView	0	result type differs: emitted 'sge.scenes.scene2d.Actor', reference 'Nullable[Actor]'
 65eacb2f4cd5	api-parity(null-model)	null-model	ListView#header	/ListView	0	result type differs: emitted 'sge.scenes.scene2d.Actor', reference 'Nullable[Actor]'
 6578786f5d41	api-parity(null-model)	null-model	ListViewStyle#scrollPaneStyle	/ListViewStyle	0	result type differs: emitted 'sge.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle', reference 'Nullable[ScrollPane.ScrollPaneStyle]'
@@ -1432,13 +1432,12 @@ d664172ba8a0	api-parity(port-extra)	port-extra	VisValue#getter	/VisValue	0	var g
 67900cc6dc24	api-parity(port-extra)	port-extra	VisWindow#stage_=	/VisWindow	0	def stage_=/1 in emitted port only [rename candidates: fadeIn, fadeOut, setCenterOnAdd, setKeepWithinParent, setStage]
 5748e8b30947	api-parity(port-extra)	port-extra	WordHighlightRule#color	/WordHighlightRule	0	var color/0 in emitted port only
 5c529bb9c42b	api-parity(port-extra)	port-extra	WordHighlightRule#word	/WordHighlightRule	0	var word/0 in emitted port only
-f6fae62e8178	api-parity(signature)	signature	#AbstractListAdapter		0	type params differ: emitted '[ItemT <: java.lang.Object, ViewT <: sge.scenes.scene2d.Actor]', reference '[ItemT, ViewT <: Actor]'
+fee960b2ae30	api-parity(signature)	signature	#AbstractListAdapter		0	type params differ: emitted '[$0, $1 <: sge.scenes.scene2d.Actor]', reference '[$0, $1 <: Actor]'
 aff7aee04c1e	api-parity(signature)	signature	#Alignment		0	parents differ: emitted-only [java.lang.Enum[Alignment]], reference-only []
-a1489916fc7d	api-parity(signature)	signature	#ArrayAdapter		0	type params differ: emitted '[ItemT <: java.lang.Object, ViewT <: sge.scenes.scene2d.Actor]', reference '[ItemT, ViewT <: Actor]'
-372898747655	api-parity(signature)	signature	#ArrayListAdapter		0	type params differ: emitted '[ItemT <: java.lang.Object, ViewT <: sge.scenes.scene2d.Actor]', reference '[ItemT, ViewT <: Actor]'
-cedc066d33ed	api-parity(signature)	signature	#ArraySpinnerModel		0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
-1c3474ce1bd2	api-parity(signature)	signature	#CachedItemAdapter		0	type params differ: emitted '[ItemT <: java.lang.Object, ViewT <: sge.scenes.scene2d.Actor]', reference '[ItemT, ViewT <: Actor]'
-8a8190f1f007	api-parity(signature)	signature	#CellWidget		0	type params differ: emitted '[Widget <: sge.scenes.scene2d.Actor]', reference '[W <: Actor]'
+1c01d288b860	api-parity(signature)	signature	#ArrayAdapter		0	type params differ: emitted '[$0, $1 <: sge.scenes.scene2d.Actor]', reference '[$0, $1 <: Actor]'
+3669a021ed1e	api-parity(signature)	signature	#ArrayListAdapter		0	type params differ: emitted '[$0, $1 <: sge.scenes.scene2d.Actor]', reference '[$0, $1 <: Actor]'
+3c21cb3df169	api-parity(signature)	signature	#CachedItemAdapter		0	type params differ: emitted '[$0, $1 <: sge.scenes.scene2d.Actor]', reference '[$0, $1 <: Actor]'
+7fe319c8fcd2	api-parity(signature)	signature	#CellWidget		0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Actor]', reference '[$0 <: Actor]'
 dd39a589ca90	api-parity(signature)	signature	#ColorPicker		0	parents differ: emitted-only [java.lang.AutoCloseable], reference-only []
 c7ec9188c8fc	api-parity(signature)	signature	#ConstantIfVisibleValue		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Value], reference-only [SceneValue]
 f24f993dde94	api-parity(signature)	signature	#DragPane		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Container[sge.scenes.scene2d.ui.WidgetGroup]], reference-only [Container[WidgetGroup]]
@@ -1446,33 +1445,25 @@ f24f993dde94	api-parity(signature)	signature	#DragPane		0	parents differ: emitte
 33fb86e1bd5c	api-parity(signature)	signature	#FileHandleMetadata		0	modifiers differ: emitted , reference final,case
 5d3bfb16dff2	api-parity(signature)	signature	#FileListAdapter		0	parents differ: emitted-only [sge.visui.util.adapter.ArrayAdapter[sge.files.FileHandle, sge.visui.widget.file.FileChooser#FileItem]], reference-only [ArrayAdapter[FileHandle, FileChooser#FileItem]]
 0e0c216fc658	api-parity(signature)	signature	#Highlight		0	modifiers differ: emitted , reference final,case
-b7982ec63a89	api-parity(signature)	signature	#ItemAdapter		0	type params differ: emitted '[ItemT <: java.lang.Object]', reference '[ItemT]'
-85ca5f7c1e99	api-parity(signature)	signature	#ListAdapter		0	type params differ: emitted '[ItemT <: java.lang.Object]', reference '[ItemT]'
-de05a24956b4	api-parity(signature)	signature	#ListSelectionAdapter		0	type params differ: emitted '[ItemT <: java.lang.Object, ViewT <: java.lang.Object]', reference '[ItemT, ViewT]'
-0433e12e7d21	api-parity(signature)	signature	#ListView		0	type params differ: emitted '[ItemT <: java.lang.Object]', reference '[ItemT]'
 50cc5e89441a	api-parity(signature)	signature	#PrefHeightIfVisibleValue		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Value], reference-only [SceneValue]
 b83d9a8adbc7	api-parity(signature)	signature	#PrefWidthIfVisibleValue		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Value], reference-only [SceneValue]
-653a9e9be2da	api-parity(signature)	signature	#SimpleListAdapter		0	parents differ: emitted-only [sge.visui.util.adapter.ArrayAdapter[ItemT, sge.visui.widget.VisTable]], reference-only [ArrayAdapter[ItemT, VisTable]]
-6308f4234ff5	api-parity(signature)	signature	#SimpleListAdapter		0	type params differ: emitted '[ItemT <: java.lang.Object]', reference '[ItemT]'
-1ebd0c47c367	api-parity(signature)	signature	#VisList		0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
-081e12d93099	api-parity(signature)	signature	#VisSelectBox		0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
+1ec7be2bce7f	api-parity(signature)	signature	#SimpleListAdapter		0	parents differ: emitted-only [sge.visui.util.adapter.ArrayAdapter[$0, sge.visui.widget.VisTable]], reference-only [ArrayAdapter[$0, VisTable]]
 c27442700486	api-parity(signature)	signature	#VisTextField		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Widget, sge.scenes.scene2d.utils.Disableable], reference-only [TextField]
-72229c05549b	api-parity(signature)	signature	#VisTree		0	type params differ: emitted '[N <: sge.scenes.scene2d.ui.Tree.Node[N, V, ?], V <: java.lang.Object]', reference '[N <: Tree.Node[N, V, ? <: Actor], V]'
+61e2cfcfe94c	api-parity(signature)	signature	#VisTree		0	type params differ: emitted '[$0 <: sge.scenes.scene2d.ui.Tree.Node[$0, $1, ?], $1]', reference '[$0 <: Tree.Node[$0, $1, ? <: Actor], $1]'
 a104743542a6	api-parity(signature)	signature	#VisValue		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Value], reference-only [SceneValue]
 1b0f8974cfaf	api-parity(signature)	signature	#VisWidgetValue		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Value], reference-only [SceneValue]
-a623dc85476c	api-parity(signature)	signature	AbstractListAdapter#setListView	/AbstractListAdapter	0	param 1 type differs: emitted 'sge.visui.widget.ListView[?]#ListAdapterListener', reference 'ListView.ListAdapterListener[ItemT]'
-faa8351ae16a	api-parity(signature)	signature	AbstractListAdapter#sort	/AbstractListAdapter	0	param 0 type differs: emitted 'scala.math.Ordering[ItemT]', reference 'Comparator[ItemT]'
-0f0e04978bf1	api-parity(signature)	signature	AbstractListAdapter#viewListener	/AbstractListAdapter	0	result type differs: emitted 'sge.visui.widget.ListView[?]#ListAdapterListener', reference 'Nullable[ListView.ListAdapterListener[ItemT]]'
-4d8ee6ed1cf9	api-parity(signature)	signature	AbstractListAdapter$#ListSelection	/AbstractListAdapter$	0	type params differ: emitted '[ItemT <: java.lang.Object, ViewT <: sge.scenes.scene2d.Actor]', reference '[ItemT, ViewT <: Actor]'
-ee1eb98e4343	api-parity(signature)	signature	AbstractListAdapter$#ListSelectionListener	/AbstractListAdapter$	0	type params differ: emitted '[ItemT <: java.lang.Object, ViewT <: java.lang.Object]', reference '[ItemT, ViewT]'
+5488843d2aa2	api-parity(signature)	signature	AbstractListAdapter#setListView	/AbstractListAdapter	0	param 1 type differs: emitted 'sge.visui.widget.ListView[?]#ListAdapterListener', reference 'ListView.ListAdapterListener[$0]'
+0823db85c643	api-parity(signature)	signature	AbstractListAdapter#sort	/AbstractListAdapter	0	param 0 type differs: emitted 'scala.math.Ordering[$0]', reference 'Comparator[$0]'
+97e968c669c9	api-parity(signature)	signature	AbstractListAdapter#viewListener	/AbstractListAdapter	0	result type differs: emitted 'sge.visui.widget.ListView[?]#ListAdapterListener', reference 'Nullable[ListView.ListAdapterListener[$0]]'
+a3b78c4ec813	api-parity(signature)	signature	AbstractListAdapter$#ListSelection	/AbstractListAdapter$	0	type params differ: emitted '[$0, $1 <: sge.scenes.scene2d.Actor]', reference '[$0, $1 <: Actor]'
 5273964fdf9c	api-parity(signature)	signature	AbstractSuggestionPopup$#MAX_SUGGESTIONS	/AbstractSuggestionPopup$	0	modifiers differ: emitted inline, reference
-1e53d4e9654f	api-parity(signature)	signature	ArrayAdapter#iterable	/ArrayAdapter	0	result type differs: emitted 'balticporter.runtime.JavaIterable[ItemT]', reference 'Iterable[ItemT]'
-541ba3ba6a16	api-parity(signature)	signature	ArrayAdapter#sort	/ArrayAdapter	0	param 0 type differs: emitted 'scala.math.Ordering[ItemT]', reference 'Comparator[ItemT]'
-4a96dac497e6	api-parity(signature)	signature	ArrayListAdapter#addAll	/ArrayListAdapter	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[? <: ItemT]', reference 'util.Collection[? <: ItemT]'
-da22be910406	api-parity(signature)	signature	ArrayListAdapter#addAll	/ArrayListAdapter	0	param 1 type differs: emitted 'balticporter.runtime.JavaCollection[? <: ItemT]', reference 'util.Collection[? <: ItemT]'
-1879f5ae5b31	api-parity(signature)	signature	ArrayListAdapter#iterable	/ArrayListAdapter	0	result type differs: emitted 'balticporter.runtime.JavaIterable[ItemT]', reference 'Iterable[ItemT]'
+6cbba7ba1ea3	api-parity(signature)	signature	ArrayAdapter#iterable	/ArrayAdapter	0	result type differs: emitted 'balticporter.runtime.JavaIterable[$0]', reference 'Iterable[$0]'
+8214be7f6972	api-parity(signature)	signature	ArrayAdapter#sort	/ArrayAdapter	0	param 0 type differs: emitted 'scala.math.Ordering[$0]', reference 'Comparator[$0]'
+d092e896adb6	api-parity(signature)	signature	ArrayListAdapter#addAll	/ArrayListAdapter	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[_ <: $0]', reference 'util.Collection[_ <: $0]'
+0ae9163dcb6d	api-parity(signature)	signature	ArrayListAdapter#addAll	/ArrayListAdapter	0	param 1 type differs: emitted 'balticporter.runtime.JavaCollection[_ <: $0]', reference 'util.Collection[_ <: $0]'
+8aa78cffab8b	api-parity(signature)	signature	ArrayListAdapter#iterable	/ArrayListAdapter	0	result type differs: emitted 'balticporter.runtime.JavaIterable[$0]', reference 'Iterable[$0]'
 6d375bcb0d93	api-parity(signature)	signature	ArrayListAdapter#removeAll	/ArrayListAdapter	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[?]', reference 'util.Collection[?]'
-33e2dbf83463	api-parity(signature)	signature	ArrayListAdapter#sort	/ArrayListAdapter	0	param 0 type differs: emitted 'scala.math.Ordering[ItemT]', reference 'Comparator[ItemT]'
+ed96bf6448da	api-parity(signature)	signature	ArrayListAdapter#sort	/ArrayListAdapter	0	param 0 type differs: emitted 'scala.math.Ordering[$0]', reference 'Comparator[$0]'
 6130ee6b2821	api-parity(signature)	signature	BaseHighlighter#process	/BaseHighlighter	0	param 1 type differs: emitted 'lowlevel.util.DynamicArray[sge.visui.util.highlight.Highlight]', reference 'DynamicArray[Highlight]'
 ed25e8f3458c	api-parity(signature)	signature	BaseHighlighter#word	/BaseHighlighter	0	param 1 type differs: emitted 'scala.Array[java.lang.String]', reference 'String*'
 5179878a3d5f	api-parity(signature)	signature	BasicColorPicker$#BAR_HEIGHT	/BasicColorPicker$	0	modifiers differ: emitted inline, reference
@@ -1485,28 +1476,13 @@ d432e70307d2	api-parity(signature)	signature	BundleText#format	/BundleText	0	par
 f3e12ad0f1dd	api-parity(signature)	signature	ButtonBar$#OSX_ORDER	/ButtonBar$	0	modifiers differ: emitted inline, reference
 e4f6338fe518	api-parity(signature)	signature	ButtonBar$#WINDOWS_ORDER	/ButtonBar$	0	modifiers differ: emitted inline, reference
 a98800fe2e19	api-parity(signature)	signature	ButtonBar$.ButtonType#toString	/ButtonBar$/ButtonType	0	modifiers differ: emitted override,final, reference override
-cf8d1ad6b5f4	api-parity(signature)	signature	CellWidget$#CellWidgetBuilder	/CellWidget$	0	type params differ: emitted '[Widget <: sge.scenes.scene2d.Actor]', reference '[W <: Actor]'
+f026f883d8be	api-parity(signature)	signature	CellWidget$#CellWidgetBuilder	/CellWidget$	0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Actor]', reference '[$0 <: Actor]'
 0ee6bea6ab5c	api-parity(signature)	signature	CellWidget$#EMPTY	/CellWidget$	0	modifiers differ: emitted final, reference
 29dd385b698d	api-parity(signature)	signature	CellWidget$#builder	/CellWidget$	0	result type differs: emitted 'sge.visui.building.utilities.CellWidget.CellWidgetBuilder[sge.scenes.scene2d.Actor]', reference 'CellWidgetBuilder[Actor]'
-813a27fdbbde	api-parity(signature)	signature	CellWidget$#of	/CellWidget$	0	param 0 type differs: emitted 'Widget', reference 'W'
-445e76202162	api-parity(signature)	signature	CellWidget$#of	/CellWidget$	0	result type differs: emitted 'sge.visui.building.utilities.CellWidget.CellWidgetBuilder[Widget]', reference 'CellWidgetBuilder[W]'
-02bd258bfc69	api-parity(signature)	signature	CellWidget$#of	/CellWidget$	0	type params differ: emitted '[Widget <: sge.scenes.scene2d.Actor]', reference '[W <: Actor]'
-b6ea1a8b1d18	api-parity(signature)	signature	CellWidget$#using	/CellWidget$	0	param 0 type differs: emitted 'CellWidget[Widget]', reference 'CellWidget[W]'
-76871b590479	api-parity(signature)	signature	CellWidget$#using	/CellWidget$	0	result type differs: emitted 'sge.visui.building.utilities.CellWidget.CellWidgetBuilder[Widget]', reference 'CellWidgetBuilder[W]'
-b51fba80cd9d	api-parity(signature)	signature	CellWidget$#using	/CellWidget$	0	type params differ: emitted '[Widget <: sge.scenes.scene2d.Actor]', reference '[W <: Actor]'
-085324322a57	api-parity(signature)	signature	CellWidget$#wrap	/CellWidget$	0	param 0 type differs: emitted 'Widget', reference 'W'
+fb7268a8ace0	api-parity(signature)	signature	CellWidget$#of	/CellWidget$	0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Actor]', reference '[$0 <: Actor]'
+5572c69dd391	api-parity(signature)	signature	CellWidget$#using	/CellWidget$	0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Actor]', reference '[$0 <: Actor]'
 b59e4430a5a4	api-parity(signature)	signature	CellWidget$#wrap	/CellWidget$	0	param 0 type differs: emitted 'scala.Array[sge.scenes.scene2d.Actor]', reference 'Actor*'
-c5f1e28accf5	api-parity(signature)	signature	CellWidget$#wrap	/CellWidget$	0	result type differs: emitted 'CellWidget[Widget]', reference 'CellWidget[W]'
-08b263b279fa	api-parity(signature)	signature	CellWidget$#wrap	/CellWidget$	0	type params differ: emitted '[Widget <: sge.scenes.scene2d.Actor]', reference '[W <: Actor]'
-47b746cb92b9	api-parity(signature)	signature	CellWidget$.CellWidgetBuilder#align	/CellWidget$/CellWidgetBuilder	0	result type differs: emitted 'sge.visui.building.utilities.CellWidget.CellWidgetBuilder[Widget]', reference 'CellWidgetBuilder[W]'
-265f04375cc3	api-parity(signature)	signature	CellWidget$.CellWidgetBuilder#height	/CellWidget$/CellWidgetBuilder	0	result type differs: emitted 'sge.visui.building.utilities.CellWidget.CellWidgetBuilder[Widget]', reference 'CellWidgetBuilder[W]'
-cf18793a712c	api-parity(signature)	signature	CellWidget$.CellWidgetBuilder#minHeight	/CellWidget$/CellWidgetBuilder	0	result type differs: emitted 'sge.visui.building.utilities.CellWidget.CellWidgetBuilder[Widget]', reference 'CellWidgetBuilder[W]'
-d3f5626d7f30	api-parity(signature)	signature	CellWidget$.CellWidgetBuilder#minWidth	/CellWidget$/CellWidgetBuilder	0	result type differs: emitted 'sge.visui.building.utilities.CellWidget.CellWidgetBuilder[Widget]', reference 'CellWidgetBuilder[W]'
-85146f992d72	api-parity(signature)	signature	CellWidget$.CellWidgetBuilder#padding	/CellWidget$/CellWidgetBuilder	0	result type differs: emitted 'sge.visui.building.utilities.CellWidget.CellWidgetBuilder[Widget]', reference 'CellWidgetBuilder[W]'
-5b33ddca9b75	api-parity(signature)	signature	CellWidget$.CellWidgetBuilder#widget	/CellWidget$/CellWidgetBuilder	0	param 0 type differs: emitted 'Widget', reference 'W'
-eaeb6948fb49	api-parity(signature)	signature	CellWidget$.CellWidgetBuilder#widget	/CellWidget$/CellWidgetBuilder	0	result type differs: emitted 'sge.visui.building.utilities.CellWidget.CellWidgetBuilder[Widget]', reference 'CellWidgetBuilder[W]'
-781cb3eb2ab5	api-parity(signature)	signature	CellWidget$.CellWidgetBuilder#width	/CellWidget$/CellWidgetBuilder	0	result type differs: emitted 'sge.visui.building.utilities.CellWidget.CellWidgetBuilder[Widget]', reference 'CellWidgetBuilder[W]'
-33bd9996506c	api-parity(signature)	signature	CellWidget$.CellWidgetBuilder#wrap	/CellWidget$/CellWidgetBuilder	0	result type differs: emitted 'CellWidget[Widget]', reference 'CellWidget[W]'
+58263ef46fb5	api-parity(signature)	signature	CellWidget$#wrap	/CellWidget$	0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Actor]', reference '[$0 <: Actor]'
 7991138f49b4	api-parity(signature)	signature	ChannelBar$#MODE_ALPHA	/ChannelBar$	0	modifiers differ: emitted inline, reference
 6771f13517a4	api-parity(signature)	signature	ChannelBar$#MODE_B	/ChannelBar$	0	modifiers differ: emitted inline, reference
 a428f282c96b	api-parity(signature)	signature	ChannelBar$#MODE_G	/ChannelBar$	0	modifiers differ: emitted inline, reference
@@ -1522,14 +1498,12 @@ e98fdcdbe53d/2	api-parity(signature)	signature	ColorPickerText#format	/ColorPick
 9f689655cfdb	api-parity(signature)	signature	ColorUtils$#RGBtoHSV	/ColorUtils$	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
 9f689655cfdb/2	api-parity(signature)	signature	ColorUtils$#RGBtoHSV	/ColorUtils$	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
 b6becb7326db	api-parity(signature)	signature	ConstantIfVisibleValue#get	/ConstantIfVisibleValue	0	param 0 type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.Actor]', reference 'Nullable[Actor]'
-227104250a63	api-parity(signature)	signature	Dialogs$#ConfirmDialog	/Dialogs$	0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
 83d4779a1077	api-parity(signature)	signature	Dialogs$#OptionDialogType	/Dialogs$	0	parents differ: emitted-only [java.lang.Enum[OptionDialogType]], reference-only []
 3c269ed350b4	api-parity(signature)	signature	Dialogs$#showConfirmDialog	/Dialogs$	0	param 3 type differs: emitted 'scala.Array[java.lang.String]', reference 'Array[String]'
-a1d29b91b482	api-parity(signature)	signature	Dialogs$#showConfirmDialog	/Dialogs$	0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
 704985638f7a	api-parity(signature)	signature	Dialogs$.ConfirmDialog#result	/Dialogs$/ConfirmDialog	0	param 0 type differs: emitted 'java.lang.Object', reference 'Nullable[AnyRef]'
 3d93cbd393a6	api-parity(signature)	signature	Dialogs$.DetailsDialog#result	/Dialogs$/DetailsDialog	0	param 0 type differs: emitted 'java.lang.Object', reference 'Nullable[AnyRef]'
 cd79956dc028	api-parity(signature)	signature	DirsSuggestionPopup#showRecentDirectories	/DirsSuggestionPopup	0	param 1 type differs: emitted 'lowlevel.util.DynamicArray[sge.files.FileHandle]', reference 'DynamicArray[FileHandle]'
-209b245271b7	api-parity(signature)	signature	DragPane#findActor	/DragPane	0	type params differ: emitted '[T <: sge.scenes.scene2d.Actor]', reference '[T <: Actor]'
+e056c2cc5f04	api-parity(signature)	signature	DragPane#findActor	/DragPane	0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Actor]', reference '[$0 <: Actor]'
 dad0eaea12c2	api-parity(signature)	signature	DriveCheckerService$#RootMode	/DriveCheckerService$	0	parents differ: emitted-only [java.lang.Enum[RootMode]], reference-only []
 5eff8f302601	api-parity(signature)	signature	FileChooser#highlightFiles	/FileChooser	0	param 0 type differs: emitted 'scala.Array[sge.files.FileHandle]', reference 'FileHandle*'
 794f8c1f2357	api-parity(signature)	signature	FileChooser#setSelectedFiles	/FileChooser	0	param 0 type differs: emitted 'scala.Array[sge.files.FileHandle]', reference 'FileHandle*'
@@ -1568,10 +1542,8 @@ ee3b76344f57/3	api-parity(signature)	signature	FileUtils$#sortFiles	/FileUtils$	
 9502b81c1731	api-parity(signature)	signature	FloatDigitsOnlyFilter#acceptChar	/FloatDigitsOnlyFilter	0	param 0 type differs: emitted 'sge.visui.widget.VisTextField', reference 'TextField'
 e6e63e6a4d57	api-parity(signature)	signature	HighlightRule#process	/HighlightRule	0	param 1 type differs: emitted 'lowlevel.util.DynamicArray[sge.visui.util.highlight.Highlight]', reference 'DynamicArray[Highlight]'
 135303422bd4	api-parity(signature)	signature	IntDigitsOnlyFilter#acceptChar	/IntDigitsOnlyFilter	0	param 0 type differs: emitted 'sge.visui.widget.VisTextField', reference 'TextField'
-6bb80b8ceccc	api-parity(signature)	signature	ListAdapter#iterable	/ListAdapter	0	result type differs: emitted 'balticporter.runtime.JavaIterable[ItemT]', reference 'Iterable[ItemT]'
-8d6ce22b5f55	api-parity(signature)	signature	ListAdapter#setListView	/ListAdapter	0	param 1 type differs: emitted 'sge.visui.widget.ListView[?]#ListAdapterListener', reference 'ListView.ListAdapterListener[ItemT]'
-116cbac9c145	api-parity(signature)	signature	ListView$#ItemClickListener	/ListView$	0	type params differ: emitted '[ItemT <: java.lang.Object]', reference '[ItemT]'
-25e9cacc6ca6	api-parity(signature)	signature	ListView$#ListViewTable	/ListView$	0	type params differ: emitted '[ItemT <: java.lang.Object]', reference '[ItemT]'
+dd8f70c33c00	api-parity(signature)	signature	ListAdapter#iterable	/ListAdapter	0	result type differs: emitted 'balticporter.runtime.JavaIterable[$0]', reference 'Iterable[$0]'
+11ee6e597c47	api-parity(signature)	signature	ListAdapter#setListView	/ListAdapter	0	param 1 type differs: emitted 'sge.visui.widget.ListView[?]#ListAdapterListener', reference 'ListView.ListAdapterListener[$0]'
 6d0e53e6d4a2	api-parity(signature)	signature	Locales$.CommonText#format	/Locales$/CommonText	0	modifiers differ: emitted override,final, reference override
 6d0e53e6d4a2/2	api-parity(signature)	signature	Locales$.CommonText#format	/Locales$/CommonText	0	modifiers differ: emitted override,final, reference override
 d7c4ce012ec0	api-parity(signature)	signature	Locales$.CommonText#format	/Locales$/CommonText	0	param 0 type differs: emitted 'scala.Array[java.lang.Object]', reference 'AnyRef*'
@@ -1586,10 +1558,6 @@ bcfb8e5e5b9f	api-parity(signature)	signature	Nullables$#areAllNull	/Nullables$	0
 3b341b210b9b	api-parity(signature)	signature	Nullables$#areEqual	/Nullables$	0	param 0 type differs: emitted 'java.lang.Object', reference 'AnyRef'
 0d2a011793d4	api-parity(signature)	signature	Nullables$#areEqual	/Nullables$	0	param 1 type differs: emitted 'java.lang.Object', reference 'AnyRef'
 97a1a532c202	api-parity(signature)	signature	Nullables$#executeIfNotNull	/Nullables$	0	param 0 type differs: emitted 'java.lang.Object', reference 'AnyRef'
-414f29e68e1a	api-parity(signature)	signature	Nullables$#getOrElse	/Nullables$	0	param 0 type differs: emitted 'Type', reference 'A'
-beaef15908dd	api-parity(signature)	signature	Nullables$#getOrElse	/Nullables$	0	param 1 type differs: emitted 'Type', reference 'A'
-1c87d60e328a	api-parity(signature)	signature	Nullables$#getOrElse	/Nullables$	0	result type differs: emitted 'Type', reference 'A'
-0232ba0306a7	api-parity(signature)	signature	Nullables$#getOrElse	/Nullables$	0	type params differ: emitted '[Type <: java.lang.Object]', reference '[A]'
 3035330cb575	api-parity(signature)	signature	Nullables$#isAnyNotNull	/Nullables$	0	param 0 type differs: emitted 'scala.Array[java.lang.Object]', reference 'AnyRef*'
 298d50aac727	api-parity(signature)	signature	Nullables$#isAnyNull	/Nullables$	0	param 0 type differs: emitted 'scala.Array[java.lang.Object]', reference 'AnyRef*'
 f17d895a9f37	api-parity(signature)	signature	Nullables$#isNotNull	/Nullables$	0	param 0 type differs: emitted 'java.lang.Object', reference 'AnyRef'
@@ -1599,7 +1567,7 @@ f17d895a9f37	api-parity(signature)	signature	Nullables$#isNotNull	/Nullables$	0	
 503a7acd1890	api-parity(signature)	signature	Padding$#PAD_2	/Padding$	0	modifiers differ: emitted final, reference
 91e785cdc0ac	api-parity(signature)	signature	Padding$#PAD_4	/Padding$	0	modifiers differ: emitted final, reference
 bfd8a0e926c6	api-parity(signature)	signature	Padding$#PAD_8	/Padding$	0	modifiers differ: emitted final, reference
-64a2873b3b90	api-parity(signature)	signature	PopupMenu#add	/PopupMenu	0	type params differ: emitted '[T <: sge.scenes.scene2d.Actor]', reference '[T <: Actor]'
+c69318fc169f	api-parity(signature)	signature	PopupMenu#add	/PopupMenu	0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Actor]', reference '[$0 <: Actor]'
 ae010eaf76e1	api-parity(signature)	signature	PrefHeightIfVisibleValue#get	/PrefHeightIfVisibleValue	0	param 0 type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.Actor]', reference 'Nullable[Actor]'
 4452181db9b4	api-parity(signature)	signature	PrefHeightIfVisibleValue$#INSTANCE	/PrefHeightIfVisibleValue$	0	modifiers differ: emitted final, reference
 fb5b925c693e	api-parity(signature)	signature	PrefWidthIfVisibleValue#get	/PrefWidthIfVisibleValue	0	param 0 type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.Actor]', reference 'Nullable[Actor]'
@@ -1622,8 +1590,8 @@ bec148638c93	api-parity(signature)	signature	TableBuilder#append	/TableBuilder	0
 d74e22f9c6b8	api-parity(signature)	signature	TableBuilder#append	/TableBuilder	0	param 1 type differs: emitted 'scala.Array[sge.scenes.scene2d.Actor]', reference 'Sge'
 3a806cc47982	api-parity(signature)	signature	TableBuilder#append	/TableBuilder	0	param 1 type differs: emitted 'sge.visui.building.utilities.CellWidget.CellWidgetBuilder[sge.scenes.scene2d.Actor]', reference 'Actor*'
 fe2dd823d63c	api-parity(signature)	signature	TableBuilder#append	/TableBuilder	0	param 2 type differs: emitted 'scala.Array[sge.scenes.scene2d.Actor]', reference 'Sge'
-a022bb9afaff	api-parity(signature)	signature	TableBuilder#build	/TableBuilder	0	param 0 type differs: emitted 'T', reference 'Sge'
-e1d6541d750e	api-parity(signature)	signature	TableBuilder#build	/TableBuilder	0	result type differs: emitted 'T', reference 'Table'
+fd2def025925	api-parity(signature)	signature	TableBuilder#build	/TableBuilder	0	param 0 type differs: emitted '$0', reference 'Sge'
+0ed640e2fbe3	api-parity(signature)	signature	TableBuilder#build	/TableBuilder	0	result type differs: emitted '$0', reference 'Table'
 0ba85a292ab2	api-parity(signature)	signature	TableBuilder#getWidget	/TableBuilder	0	result type differs: emitted 'sge.visui.building.utilities.CellWidget[? <: sge.scenes.scene2d.Actor]', reference 'CellWidget[? <: Actor]'
 4273ae87307f	api-parity(signature)	signature	TableBuilder$#getLowestCommonMultiple	/TableBuilder$	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[scala.Int]', reference 'DynamicArray[Int]'
 2f3a09b96c3f	api-parity(signature)	signature	ToastManager#timersTasks	/ToastManager	0	result type differs: emitted 'lowlevel.util.ObjectMap[sge.visui.widget.toast.Toast, sge.utils.Timer.Task]', reference 'HashMap[Toast, Timer.Task]'

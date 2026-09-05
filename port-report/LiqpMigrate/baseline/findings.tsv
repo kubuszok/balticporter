@@ -27,293 +27,42 @@ e69f50f1802f	api-parity(accessor)	accessor	Insertion#getName	/Insertion	0	def ge
 47c750a4ca00	api-parity(factory)	factory	FilterNode$#apply	/FilterNode$	0	def apply/4 in reference port only
 f9cd83c64b03	api-parity(factory)	factory	PlainBigDecimal$#apply	/PlainBigDecimal$	0	def apply/1 in reference port only
 f9cd83c64b03/2	api-parity(factory)	factory	PlainBigDecimal$#apply	/PlainBigDecimal$	0	def apply/1 in reference port only
+68518d1af825	api-parity(hand-original)	hand-original	LiquidLexer	ssg/liquid/parser/LiquidLexer.scala	0	no upstream marker in header
+65626687a14a	api-parity(hand-original)	hand-original	LiquidParser	ssg/liquid/parser/LiquidParser.scala	0	no upstream marker in header
+0f0155dc14c3	api-parity(hand-original)	hand-original	Token	ssg/liquid/parser/Token.scala	0	no upstream marker in header
+efdd0e5a32aa	api-parity(hand-original)	hand-original	TokenType	ssg/liquid/parser/Token.scala	0	no upstream marker in header
+5110844f7cd4	api-parity(hand-original)	hand-original	package	ssg/liquid/package.scala	0	no upstream marker in header; no top-level type
 a20db47640a1	api-parity(hand-port-extra)	hand-port-extra	#DateParser		0	class DateParser/0 in reference port only
 648bcd53ee0b	api-parity(hand-port-extra)	hand-port-extra	#DateParser		0	object DateParser/0 in reference port only
 ae3ecd8f719d	api-parity(hand-port-extra)	hand-port-extra	#FilterNode		0	object FilterNode/0 in reference port only
-d347a5b886da	api-parity(hand-port-extra)	hand-port-extra	#LiquidLexer		0	class LiquidLexer/0 in reference port only
-14180fe184bd	api-parity(hand-port-extra)	hand-port-extra	#LiquidParser		0	class LiquidParser/0 in reference port only
 4e07608ecaa3	api-parity(hand-port-extra)	hand-port-extra	#MapFilter		0	class MapFilter/0 in reference port only
-cbdf30be85cd	api-parity(hand-port-extra)	hand-port-extra	#Token		0	class Token/0 in reference port only
-728a82b1ad4d	api-parity(hand-port-extra)	hand-port-extra	#TokenType		0	enum TokenType/0 in reference port only
-90f58ada2788	api-parity(hand-port-extra)	hand-port-extra	#Version		0	val Version/0 in reference port only
-7206b4d4b3d6	api-parity(hand-port-extra)	hand-port-extra	#delta		0	var delta/0 in reference port only
-e4b13b6e25d1	api-parity(hand-port-extra)	hand-port-extra	#encode		0	def encode/1 in reference port only
-0234599b8dce	api-parity(hand-port-extra)	hand-port-extra	#k		0	var k/0 in reference port only
-e72199107737	api-parity(hand-port-extra)	hand-port-extra	#toAscii		0	def toAscii/1 in reference port only
-e12fcd28dc7d	api-parity(hand-port-extra)	hand-port-extra	Absolute_Url$#atIdx	/Absolute_Url$	0	val atIdx/0 in reference port only [rename candidates: config, url]
-e8a95fa26cb9	api-parity(hand-port-extra)	hand-port-extra	Absolute_Url$#bracketEnd	/Absolute_Url$	0	val bracketEnd/0 in reference port only [rename candidates: config, url]
 dcd7fb9508fc	api-parity(hand-port-extra)	hand-port-extra	Absolute_Url$#collapseSlashes	/Absolute_Url$	0	def collapseSlashes/1 in reference port only [rename candidates: convertUnicodeURLToAscii]
-b6c47b69694f	api-parity(hand-port-extra)	hand-port-extra	Absolute_Url$#colonIdx	/Absolute_Url$	0	val colonIdx/0 in reference port only [rename candidates: config, url]
-2987ef2dc996	api-parity(hand-port-extra)	hand-port-extra	Absolute_Url$#hasPort	/Absolute_Url$	0	val hasPort/0 in reference port only [rename candidates: config, url]
-9ada2758d407	api-parity(hand-port-extra)	hand-port-extra	Absolute_Url$#host	/Absolute_Url$	0	val host/0 in reference port only [rename candidates: config, url]
-1720163ae1c0	api-parity(hand-port-extra)	hand-port-extra	Absolute_Url$#hostPort	/Absolute_Url$	0	val hostPort/0 in reference port only [rename candidates: config, url]
-da8e695df562	api-parity(hand-port-extra)	hand-port-extra	Absolute_Url$#port	/Absolute_Url$	0	val port/0 in reference port only [rename candidates: config, url]
-25bf1b4fa953	api-parity(hand-port-extra)	hand-port-extra	Absolute_Url$#userinfo	/Absolute_Url$	0	val userinfo/0 in reference port only [rename candidates: config, url]
 d879232fa885	api-parity(hand-port-extra)	hand-port-extra	ComparingExpressionNode#doCompare	/ComparingExpressionNode	0	def doCompare/3 in reference port only [rename candidates: relativeCompareCommonRules]
-ea083a10f55c	api-parity(hand-port-extra)	hand-port-extra	ContainsNode#n	/ContainsNode	0	val n/0 in reference port only [rename candidates: res]
-7d9d8752cc4e	api-parity(hand-port-extra)	hand-port-extra	Cycle$#next	/Cycle$	0	def next/1 in reference port only
-a2ee2fa14963	api-parity(hand-port-extra)	hand-port-extra	Date$#c	/Date$	0	val c/0 in reference port only
-e740ec689d61	api-parity(hand-port-extra)	hand-port-extra	Date$#consumed	/Date$	0	val consumed/0 in reference port only
-e740ec689d61/2	api-parity(hand-port-extra)	hand-port-extra	Date$#consumed	/Date$	0	val consumed/0 in reference port only
-9abfceb73c2d	api-parity(hand-port-extra)	hand-port-extra	Date$#dayOfWeekIso	/Date$	0	def dayOfWeekIso/0 in reference port only
-0e25a37cbcd5	api-parity(hand-port-extra)	hand-port-extra	Date$#dayOfYear	/Date$	0	def dayOfYear/0 in reference port only
-cde3bd2653bf	api-parity(hand-port-extra)	hand-port-extra	Date$#emitPadded	/Date$	0	def emitPadded/4 in reference port only
-6a327028412c	api-parity(hand-port-extra)	hand-port-extra	Date$#epochSeconds	/Date$	0	def epochSeconds/0 in reference port only
-00292739f99a	api-parity(hand-port-extra)	hand-port-extra	Date$#flag	/Date$	0	val flag/0 in reference port only
-445b1167808d	api-parity(hand-port-extra)	hand-port-extra	Date$#flushPattern	/Date$	0	def flushPattern/0 in reference port only
-bea2d040dd7a	api-parity(hand-port-extra)	hand-port-extra	Date$#handleDirective	/Date$	0	def handleDirective/2 in reference port only
-3ed6f32be8b6	api-parity(hand-port-extra)	hand-port-extra	Date$#hour12	/Date$	0	def hour12/0 in reference port only
-9df5e483e570	api-parity(hand-port-extra)	hand-port-extra	Date$#i	/Date$	0	var i/0 in reference port only
-c63c2f526697	api-parity(hand-port-extra)	hand-port-extra	Date$#out	/Date$	0	val out/0 in reference port only
-366ba2a9585c	api-parity(hand-port-extra)	hand-port-extra	Date$#patternBuf	/Date$	0	val patternBuf/0 in reference port only
-0d54a948fe2f	api-parity(hand-port-extra)	hand-port-extra	Date$#queryField	/Date$	0	def queryField/2 in reference port only
-b4e2f4282b19	api-parity(hand-port-extra)	hand-port-extra	Date$#spacePad	/Date$	0	def spacePad/2 in reference port only
-c4844ef0b3d1	api-parity(hand-port-extra)	hand-port-extra	Date$#spec	/Date$	0	var spec/0 in reference port only
-130b32c0cc51	api-parity(hand-port-extra)	hand-port-extra	Date$#weekMondayStart	/Date$	0	def weekMondayStart/0 in reference port only
-e75c1d7bdbba	api-parity(hand-port-extra)	hand-port-extra	Date$#weekSundayStart	/Date$	0	def weekSundayStart/0 in reference port only
-3976be23944f	api-parity(hand-port-extra)	hand-port-extra	Date$#zeroPad	/Date$	0	def zeroPad/2 in reference port only
 effd4b606da8	api-parity(hand-port-extra)	hand-port-extra	DateParser#parse	/DateParser	0	def parse/3 in reference port only
 87f157c18143	api-parity(hand-port-extra)	hand-port-extra	DateParser$#addDatePattern	/DateParser$	0	def addDatePattern/1 in reference port only
 cfcb5317dc5e	api-parity(hand-port-extra)	hand-port-extra	DateParser$#datePatterns	/DateParser$	0	val datePatterns/0 in reference port only
 c5cffa3fd693	api-parity(hand-port-extra)	hand-port-extra	DateParser$#removeDatePattern	/DateParser$	0	def removeDatePattern/1 in reference port only
 a683e2dff687	api-parity(hand-port-extra)	hand-port-extra	EqNode#doCompare	/EqNode	0	def doCompare/3 in reference port only
-92f398ca1ab6	api-parity(hand-port-extra)	hand-port-extra	Escape_Once#i	/Escape_Once	0	var i/0 in reference port only
-c4652399c933	api-parity(hand-port-extra)	hand-port-extra	Escape_Once#start	/Escape_Once	0	val start/0 in reference port only
-c4652399c933/2	api-parity(hand-port-extra)	hand-port-extra	Escape_Once#start	/Escape_Once	0	val start/0 in reference port only
-c4652399c933/3	api-parity(hand-port-extra)	hand-port-extra	Escape_Once#start	/Escape_Once	0	val start/0 in reference port only
 d6caf6b62da9	api-parity(hand-port-extra)	hand-port-extra	Filter#checkParams	/Filter	0	def checkParams/2 in reference port only [rename candidates: get]
 e6caf8946728	api-parity(hand-port-extra)	hand-port-extra	Filter#checkParams	/Filter	0	def checkParams/3 in reference port only [rename candidates: apply]
 70ac9ef255ab	api-parity(hand-port-extra)	hand-port-extra	Filters$#COMMON_FILTERS	/Filters$	0	val COMMON_FILTERS/0 in reference port only [rename candidates: EMPTY]
 725f5b0dfed2	api-parity(hand-port-extra)	hand-port-extra	Filters$#JEKYLL_EXTRA_FILTERS	/Filters$	0	val JEKYLL_EXTRA_FILTERS/0 in reference port only [rename candidates: EMPTY]
-a3837739b2ed	api-parity(hand-port-extra)	hand-port-extra	For#effectiveFrom	/For	0	val effectiveFrom/0 in reference port only [rename candidates: arr, array, attribute, attributes, attributes, attributes, block, block, blockIfEmptyOrNull, builder, builder, evaluated, forLoopDrop, forLoopDrop, forLoopDrop, from, isBreak, isBreak, length, length, limit, limit, listCopy, offset, offsets, registry, registry, stack, to, token, value]
-9505ae0b3f57	api-parity(hand-port-extra)	hand-port-extra	For#newArrayDeque	/For	0	val newArrayDeque/0 in reference port only [rename candidates: arr, array, attribute, attributes, attributes, attributes, block, block, blockIfEmptyOrNull, builder, builder, evaluated, forLoopDrop, forLoopDrop, forLoopDrop, from, isBreak, isBreak, length, length, limit, limit, listCopy, offset, offsets, registry, registry, stack, to, token, value]
-91352a0f2afa	api-parity(hand-port-extra)	hand-port-extra	For#node	/For	0	val node/0 in reference port only [rename candidates: arr, array, attribute, attributes, attributes, attributes, block, block, blockIfEmptyOrNull, builder, builder, evaluated, forLoopDrop, forLoopDrop, forLoopDrop, from, isBreak, isBreak, length, length, limit, limit, listCopy, offset, offsets, registry, registry, stack, to, token, value]
 4121577e857e	api-parity(hand-port-extra)	hand-port-extra	For#popLoopDropFromArrayDeque	/For	0	def popLoopDropFromArrayDeque/1 in reference port only [rename candidates: popLoopDropFromStack]
-eb455ea83fcb	api-parity(hand-port-extra)	hand-port-extra	For#v	/For	0	val v/0 in reference port only [rename candidates: arr, array, attribute, attributes, attributes, attributes, block, block, blockIfEmptyOrNull, builder, builder, evaluated, forLoopDrop, forLoopDrop, forLoopDrop, from, isBreak, isBreak, length, length, limit, limit, listCopy, offset, offsets, registry, registry, stack, to, token, value]
-a2b5eef26b5a	api-parity(hand-port-extra)	hand-port-extra	For#vec	/For	0	val vec/0 in reference port only [rename candidates: arr, array, attribute, attributes, attributes, attributes, block, block, blockIfEmptyOrNull, builder, builder, evaluated, forLoopDrop, forLoopDrop, forLoopDrop, from, isBreak, isBreak, length, length, limit, limit, listCopy, offset, offsets, registry, registry, stack, to, token, value]
 2c0d3d3c1e76	api-parity(hand-port-extra)	hand-port-extra	For$#FORLOOP	/For$	0	val FORLOOP/0 in reference port only [rename candidates: NAME]
 a554b96b2b0c	api-parity(hand-port-extra)	hand-port-extra	For$.ForLoopDrop#toDataView	/For$/ForLoopDrop	0	def toDataView/0 in reference port only [rename candidates: increment, toLiquid]
 aa7c82d21a6f	api-parity(hand-port-extra)	hand-port-extra	GtEqNode#doCompare	/GtEqNode	0	def doCompare/3 in reference port only
 38923f0c7490	api-parity(hand-port-extra)	hand-port-extra	GtNode#doCompare	/GtNode	0	def doCompare/3 in reference port only
 2e57683fb07c	api-parity(hand-port-extra)	hand-port-extra	IncludeRelative$#JailViolationException	/IncludeRelative$	0	class JailViolationException/0 in reference port only
-60f93879c681	api-parity(hand-port-extra)	hand-port-extra	IncludeRelative$#resolvedStr	/IncludeRelative$	0	val resolvedStr/0 in reference port only
-3bf77ddf4348	api-parity(hand-port-extra)	hand-port-extra	IncludeRelative$#rootStr	/IncludeRelative$	0	val rootStr/0 in reference port only
 9a32795375ee	api-parity(hand-port-extra)	hand-port-extra	IncludeRelative$.JailViolationException#jailRoot	/IncludeRelative$/JailViolationException	0	val jailRoot/0 in reference port only
 cd2975f85fea	api-parity(hand-port-extra)	hand-port-extra	IncludeRelative$.JailViolationException#resolvedPath	/IncludeRelative$/JailViolationException	0	val resolvedPath/0 in reference port only
 e499baadf2b9	api-parity(hand-port-extra)	hand-port-extra	Insertions#blockNames	/Insertions	0	def blockNames/0 in reference port only [rename candidates: hashCode, toString, values]
-627c03fcf982	api-parity(hand-port-extra)	hand-port-extra	Insertions#entry	/Insertions	0	val entry/0 in reference port only
-627c03fcf982/2	api-parity(hand-port-extra)	hand-port-extra	Insertions#entry	/Insertions	0	val entry/0 in reference port only
-17727abb8551	api-parity(hand-port-extra)	hand-port-extra	Insertions#it	/Insertions	0	val it/0 in reference port only
-17727abb8551/2	api-parity(hand-port-extra)	hand-port-extra	Insertions#it	/Insertions	0	val it/0 in reference port only
-3a39af70d26c	api-parity(hand-port-extra)	hand-port-extra	Insertions#set	/Insertions	0	val set/0 in reference port only
-3a39af70d26c/2	api-parity(hand-port-extra)	hand-port-extra	Insertions#set	/Insertions	0	val set/0 in reference port only
 ee9d1e80479e	api-parity(hand-port-extra)	hand-port-extra	Insertions#tagNames	/Insertions	0	def tagNames/0 in reference port only [rename candidates: hashCode, toString, values]
-b4cf77428aea	api-parity(hand-port-extra)	hand-port-extra	JekyllWhereImpl#i	/JekyllWhereImpl	0	var i/0 in reference port only [rename candidates: objects]
-d099587d11af	api-parity(hand-port-extra)	hand-port-extra	JekyllWhereImpl#items	/JekyllWhereImpl	0	val items/0 in reference port only [rename candidates: adapter, objects, prop, strTarget]
-6f8ee649b1e0	api-parity(hand-port-extra)	hand-port-extra	JekyllWhereImpl#key	/JekyllWhereImpl	0	val key/0 in reference port only [rename candidates: adapter, objects, prop, strTarget]
-a49b43b5dddf	api-parity(hand-port-extra)	hand-port-extra	JekyllWhereImpl#map	/JekyllWhereImpl	0	val map/0 in reference port only [rename candidates: adapter, objects, prop, strTarget]
-a1382b6dc623	api-parity(hand-port-extra)	hand-port-extra	JekyllWhereImpl#res	/JekyllWhereImpl	0	val res/0 in reference port only [rename candidates: adapter, objects, prop, strTarget]
-ecd294cff061	api-parity(hand-port-extra)	hand-port-extra	JekyllWhereImpl#sb	/JekyllWhereImpl	0	val sb/0 in reference port only [rename candidates: adapter, objects, prop, strTarget]
-d549d0c9dfad	api-parity(hand-port-extra)	hand-port-extra	Json$#c	/Json$	0	val c/0 in reference port only
-b0103b025a5b	api-parity(hand-port-extra)	hand-port-extra	Json$#first	/Json$	0	var first/0 in reference port only
-ca21f16a49fb	api-parity(hand-port-extra)	hand-port-extra	Json$#i	/Json$	0	var i/0 in reference port only
-8dadf8cc2db7	api-parity(hand-port-extra)	hand-port-extra	Json$#map	/Json$	0	val map/0 in reference port only
-59c1fdf2c197	api-parity(hand-port-extra)	hand-port-extra	Json$#sb	/Json$	0	val sb/0 in reference port only
-59c1fdf2c197/2	api-parity(hand-port-extra)	hand-port-extra	Json$#sb	/Json$	0	val sb/0 in reference port only
 e60dd2d8b31c	api-parity(hand-port-extra)	hand-port-extra	Json$#toJson	/Json$	0	def toJson/1 in reference port only
 76c007961579	api-parity(hand-port-extra)	hand-port-extra	LValue#mapAsVector	/LValue	0	def mapAsVector/1 in reference port only [rename candidates: asBoolean, asMap, asNumber, asStrictNumber, canBeDouble, canBeInteger, canBeNumber, isArray, isInteger, isMap, isNumber, isString, mapAsArray]
-5b60229d120b	api-parity(hand-port-extra)	hand-port-extra	LValue$#date	/LValue$	0	val date/0 in reference port only [rename candidates: BREAK, CONTINUE]
-ebdf7504ccda	api-parity(hand-port-extra)	hand-port-extra	LValue$#fields	/LValue$	0	val fields/0 in reference port only [rename candidates: BREAK, CONTINUE]
-0f9c57296493	api-parity(hand-port-extra)	hand-port-extra	LValue$#now	/LValue$	0	var now/0 in reference port only [rename candidates: rubyDateTimeFormat]
 7da4b4a88738	api-parity(hand-port-extra)	hand-port-extra	LValue$#temporalAsVector	/LValue$	0	def temporalAsVector/1 in reference port only [rename candidates: asFormattedNumber, isBlank, isTemporal, temporalAsArray]
 7536817bafc1	api-parity(hand-port-extra)	hand-port-extra	LValue$#temporalToString	/LValue$	0	def temporalToString/1 in reference port only [rename candidates: asFormattedNumber, isBlank, isTemporal, temporalAsArray]
-d1fc850e83e3	api-parity(hand-port-extra)	hand-port-extra	LValue$#time	/LValue$	0	val time/0 in reference port only [rename candidates: BREAK, CONTINUE]
-791aebe35c3b	api-parity(hand-port-extra)	hand-port-extra	LValue$#zoneId	/LValue$	0	val zoneId/0 in reference port only [rename candidates: BREAK, CONTINUE]
 78ec290213b3	api-parity(hand-port-extra)	hand-port-extra	LiquidException$#withContext	/LiquidException$	0	def withContext/4 in reference port only
-dd717732b17c	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#bodyStart	/LiquidLexer	0	val bodyStart/0 in reference port only
-0a5327a05422	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#c	/LiquidLexer	0	val c/0 in reference port only
-0a5327a05422/2	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#c	/LiquidLexer	0	val c/0 in reference port only
-0a5327a05422/3	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#c	/LiquidLexer	0	val c/0 in reference port only
-0a5327a05422/4	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#c	/LiquidLexer	0	val c/0 in reference port only
-0a5327a05422/5	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#c	/LiquidLexer	0	val c/0 in reference port only
-87451fcaabc9	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#c0	/LiquidLexer	0	val c0/0 in reference port only
-eb49092a3c68	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#c1	/LiquidLexer	0	val c1/0 in reference port only
-5db5b82bb465	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#content	/LiquidLexer	0	val content/0 in reference port only
-a45955300a10	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#contentStart	/LiquidLexer	0	val contentStart/0 in reference port only
-6d5ac8957acb	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#end	/LiquidLexer	0	var end/0 in reference port only
-b4cce1e2b932	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#i	/LiquidLexer	0	var i/0 in reference port only
-8f49638251de	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#id	/LiquidLexer	0	val id/0 in reference port only
-8f49638251de/2	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#id	/LiquidLexer	0	val id/0 in reference port only
-8f49638251de/3	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#id	/LiquidLexer	0	val id/0 in reference port only
-238a9ae7a76b	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#idStart	/LiquidLexer	0	val idStart/0 in reference port only
-238a9ae7a76b/2	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#idStart	/LiquidLexer	0	val idStart/0 in reference port only
-238a9ae7a76b/3	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#idStart	/LiquidLexer	0	val idStart/0 in reference port only
-c7b29e3168e2	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#last	/LiquidLexer	0	val last/0 in reference port only
-4efc1fa31602	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#lastIdx	/LiquidLexer	0	val lastIdx/0 in reference port only
-5756251ae2de	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#lastToken	/LiquidLexer	0	val lastToken/0 in reference port only
-7d52877e0952	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#numStart	/LiquidLexer	0	val numStart/0 in reference port only
-ba0f4df4a4cc	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#savedCol	/LiquidLexer	0	val savedCol/0 in reference port only
-d9fbe119fda8	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#savedLine	/LiquidLexer	0	val savedLine/0 in reference port only
-d3ccd95d87b1	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#savedPos	/LiquidLexer	0	val savedPos/0 in reference port only
-cec290ee5bc6	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#start	/LiquidLexer	0	val start/0 in reference port only
-e559cf8fd5be	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#startCol	/LiquidLexer	0	val startCol/0 in reference port only
-e559cf8fd5be/2	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#startCol	/LiquidLexer	0	val startCol/0 in reference port only
-e559cf8fd5be/3	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#startCol	/LiquidLexer	0	val startCol/0 in reference port only
-e559cf8fd5be/4	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#startCol	/LiquidLexer	0	val startCol/0 in reference port only
-e559cf8fd5be/5	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#startCol	/LiquidLexer	0	val startCol/0 in reference port only
-e559cf8fd5be/6	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#startCol	/LiquidLexer	0	val startCol/0 in reference port only
-e559cf8fd5be/7	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#startCol	/LiquidLexer	0	val startCol/0 in reference port only
-e559cf8fd5be/8	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#startCol	/LiquidLexer	0	val startCol/0 in reference port only
-b58e22bc031e	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#startLine	/LiquidLexer	0	val startLine/0 in reference port only
-b58e22bc031e/2	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#startLine	/LiquidLexer	0	val startLine/0 in reference port only
-b58e22bc031e/3	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#startLine	/LiquidLexer	0	val startLine/0 in reference port only
-b58e22bc031e/4	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#startLine	/LiquidLexer	0	val startLine/0 in reference port only
-b58e22bc031e/5	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#startLine	/LiquidLexer	0	val startLine/0 in reference port only
-b58e22bc031e/6	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#startLine	/LiquidLexer	0	val startLine/0 in reference port only
-b58e22bc031e/7	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#startLine	/LiquidLexer	0	val startLine/0 in reference port only
-b58e22bc031e/8	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#startLine	/LiquidLexer	0	val startLine/0 in reference port only
-679393eb85f5	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#strip	/LiquidLexer	0	val strip/0 in reference port only
-679393eb85f5/2	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#strip	/LiquidLexer	0	val strip/0 in reference port only
-9aa5ba75fef4	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#tagId	/LiquidLexer	0	val tagId/0 in reference port only
-c5d5cdfe6303	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#text	/LiquidLexer	0	val text/0 in reference port only
-f509ad8a3f00	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#tokenType	/LiquidLexer	0	val tokenType/0 in reference port only
-f509ad8a3f00/2	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#tokenType	/LiquidLexer	0	val tokenType/0 in reference port only
-9d38c9d8312f	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#tokenize	/LiquidLexer	0	def tokenize/0 in reference port only
-b22d42e51907	api-parity(hand-port-extra)	hand-port-extra	LiquidLexer#trimmedEnd	/LiquidLexer	0	var trimmedEnd/0 in reference port only
-73932eac3411	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#after	/LiquidParser	0	val after/0 in reference port only
-640bb9c72c03	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#attrKey	/LiquidParser	0	val attrKey/0 in reference port only
-e93c82876841	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#attrs	/LiquidParser	0	val attrs/0 in reference port only
-e93c82876841/2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#attrs	/LiquidParser	0	val attrs/0 in reference port only
-e93c82876841/3	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#attrs	/LiquidParser	0	val attrs/0 in reference port only
-3dde33016b39	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#before	/LiquidParser	0	val before/0 in reference port only
-040f1d8f5a89	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#block	/LiquidParser	0	val block/0 in reference port only
-040f1d8f5a89/2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#block	/LiquidParser	0	val block/0 in reference port only
-040f1d8f5a89/3	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#block	/LiquidParser	0	val block/0 in reference port only
-040f1d8f5a89/4	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#block	/LiquidParser	0	val block/0 in reference port only
-040f1d8f5a89/5	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#block	/LiquidParser	0	val block/0 in reference port only
-040f1d8f5a89/6	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#block	/LiquidParser	0	val block/0 in reference port only
-c44043e9ce72	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#condition	/LiquidParser	0	val condition/0 in reference port only
-01620b72f51f	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#dotIdx	/LiquidParser	0	val dotIdx/0 in reference port only
-6800f937dd7c	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#elseBlock	/LiquidParser	0	var elseBlock/0 in reference port only
-3d075cc1df96	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#endName	/LiquidParser	0	val endName/0 in reference port only
-3e44d568ac0a	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#endToken	/LiquidParser	0	val endToken/0 in reference port only
-e5b9bd9f51fe	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#ex	/LiquidParser	0	val ex/0 in reference port only
-e5b9bd9f51fe/2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#ex	/LiquidParser	0	val ex/0 in reference port only
-c6e6e23f5dcd	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#expr	/LiquidParser	0	val expr/0 in reference port only
-c6e6e23f5dcd/2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#expr	/LiquidParser	0	val expr/0 in reference port only
-c6e6e23f5dcd/3	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#expr	/LiquidParser	0	val expr/0 in reference port only
-a9e4632ff020	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#fileName	/LiquidParser	0	val fileName/0 in reference port only
-a9e4632ff020/2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#fileName	/LiquidParser	0	val fileName/0 in reference port only
-a9e4632ff020/3	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#fileName	/LiquidParser	0	val fileName/0 in reference port only
-eef08ec2bf5e	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#filter	/LiquidParser	0	val filter/0 in reference port only
-cd1e54e35153	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#filterNode	/LiquidParser	0	val filterNode/0 in reference port only
-bb70f242374d	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#filterNodes	/LiquidParser	0	val filterNodes/0 in reference port only
-831c5c957f33	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#filterToken	/LiquidParser	0	val filterToken/0 in reference port only
-4c55f33bd165	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#firstExpr	/LiquidParser	0	val firstExpr/0 in reference port only
-fca60967a70c	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#from	/LiquidParser	0	val from/0 in reference port only
-871db3f6c1d8	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#gap	/LiquidParser	0	var gap/0 in reference port only
-ea752b5c72e3	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#hasWhitespace	/LiquidParser	0	var hasWhitespace/0 in reference port only
-1ad014818303	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#i	/LiquidParser	0	var i/0 in reference port only
-0e534d3cccb0	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#id	/LiquidParser	0	val id/0 in reference port only
-0e534d3cccb0/2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#id	/LiquidParser	0	val id/0 in reference port only
-0e534d3cccb0/3	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#id	/LiquidParser	0	val id/0 in reference port only
-0e534d3cccb0/4	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#id	/LiquidParser	0	val id/0 in reference port only
-0e534d3cccb0/5	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#id	/LiquidParser	0	val id/0 in reference port only
-1b4d95678239	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#incRelative	/LiquidParser	0	val incRelative/0 in reference port only
-b8520fec612c	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#indexExpr	/LiquidParser	0	val indexExpr/0 in reference port only
-51f92b7c5204	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#indexText	/LiquidParser	0	val indexText/0 in reference port only
-6bed81502d39	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#inner	/LiquidParser	0	val inner/0 in reference port only
-f48489c269b7	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#insertion	/LiquidParser	0	val insertion/0 in reference port only
-f48489c269b7/2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#insertion	/LiquidParser	0	val insertion/0 in reference port only
-f48489c269b7/3	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#insertion	/LiquidParser	0	val insertion/0 in reference port only
-f48489c269b7/4	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#insertion	/LiquidParser	0	val insertion/0 in reference port only
-c4364927265b	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#key	/LiquidParser	0	val key/0 in reference port only
-c4364927265b/2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#key	/LiquidParser	0	val key/0 in reference port only
-c4364927265b/3	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#key	/LiquidParser	0	val key/0 in reference port only
-c4364927265b/4	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#key	/LiquidParser	0	val key/0 in reference port only
-c4364927265b/5	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#key	/LiquidParser	0	val key/0 in reference port only
-aa0cc63b5bef	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#left	/LiquidParser	0	val left/0 in reference port only
-0b0919bddb4d	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#left	/LiquidParser	0	var left/0 in reference port only
-0b0919bddb4d/2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#left	/LiquidParser	0	var left/0 in reference port only
-0b0919bddb4d/3	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#left	/LiquidParser	0	var left/0 in reference port only
-4d5c1b580bc6	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#lookup	/LiquidParser	0	val lookup/0 in reference port only
-4d5c1b580bc6/2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#lookup	/LiquidParser	0	val lookup/0 in reference port only
-4d5c1b580bc6/3	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#lookup	/LiquidParser	0	val lookup/0 in reference port only
-f3f0564dc10d	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#next	/LiquidParser	0	val next/0 in reference port only
-f3f0564dc10d/2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#next	/LiquidParser	0	val next/0 in reference port only
-bce3f7475653	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#node	/LiquidParser	0	val node/0 in reference port only
-0cf17ee31509	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#nodes	/LiquidParser	0	val nodes/0 in reference port only
-0cf17ee31509/2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#nodes	/LiquidParser	0	val nodes/0 in reference port only
-0cf17ee31509/3	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#nodes	/LiquidParser	0	val nodes/0 in reference port only
-0cf17ee31509/4	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#nodes	/LiquidParser	0	val nodes/0 in reference port only
-0cf17ee31509/5	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#nodes	/LiquidParser	0	val nodes/0 in reference port only
-0cf17ee31509/6	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#nodes	/LiquidParser	0	val nodes/0 in reference port only
-0cf17ee31509/7	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#nodes	/LiquidParser	0	val nodes/0 in reference port only
-0cf17ee31509/8	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#nodes	/LiquidParser	0	val nodes/0 in reference port only
-0cf17ee31509/9	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#nodes	/LiquidParser	0	val nodes/0 in reference port only
-ffdf9289b7f2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#outputNode	/LiquidParser	0	val outputNode/0 in reference port only
-d396fdffb965	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#params	/LiquidParser	0	val params/0 in reference port only
-d396fdffb965/2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#params	/LiquidParser	0	val params/0 in reference port only
-d396fdffb965/3	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#params	/LiquidParser	0	val params/0 in reference port only
-71cdc20689c4	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#parse	/LiquidParser	0	def parse/0 in reference port only
-3306702e9abc	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#parseExpr	/LiquidParser	0	def parseExpr/0 in reference port only
-f13f42d43d39	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#prevEndCol	/LiquidParser	0	var prevEndCol/0 in reference port only
-63d804492de1	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#prevLine	/LiquidParser	0	var prevLine/0 in reference port only
-681636107574	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#prop	/LiquidParser	0	val prop/0 in reference port only
-681636107574/2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#prop	/LiquidParser	0	val prop/0 in reference port only
-0dc96b544dde	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#raw	/LiquidParser	0	val raw/0 in reference port only
-a8fbf4f3d779	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#reversed	/LiquidParser	0	val reversed/0 in reference port only
-a8fbf4f3d779/2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#reversed	/LiquidParser	0	val reversed/0 in reference port only
-d3175f056f14	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#right	/LiquidParser	0	val right/0 in reference port only
-d3175f056f14/2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#right	/LiquidParser	0	val right/0 in reference port only
-d3175f056f14/3	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#right	/LiquidParser	0	val right/0 in reference port only
-d3175f056f14/4	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#right	/LiquidParser	0	val right/0 in reference port only
-d3175f056f14/5	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#right	/LiquidParser	0	val right/0 in reference port only
-d3175f056f14/6	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#right	/LiquidParser	0	val right/0 in reference port only
-d3175f056f14/7	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#right	/LiquidParser	0	val right/0 in reference port only
-d3175f056f14/8	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#right	/LiquidParser	0	val right/0 in reference port only
-d3175f056f14/9	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#right	/LiquidParser	0	val right/0 in reference port only
-a931a0584f40	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#sb	/LiquidParser	0	val sb/0 in reference port only
-a931a0584f40/2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#sb	/LiquidParser	0	val sb/0 in reference port only
-a931a0584f40/3	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#sb	/LiquidParser	0	val sb/0 in reference port only
-130b0a446944	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#startToken	/LiquidParser	0	val startToken/0 in reference port only
-ff5f8c5dc02c	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#suffix	/LiquidParser	0	val suffix/0 in reference port only
-f8d651548543	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#t	/LiquidParser	0	val t/0 in reference port only
-f8d651548543/2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#t	/LiquidParser	0	val t/0 in reference port only
-f8d651548543/3	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#t	/LiquidParser	0	val t/0 in reference port only
-f8d651548543/4	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#t	/LiquidParser	0	val t/0 in reference port only
-f8d651548543/5	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#t	/LiquidParser	0	val t/0 in reference port only
-f8d651548543/6	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#t	/LiquidParser	0	val t/0 in reference port only
-f8d651548543/7	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#t	/LiquidParser	0	val t/0 in reference port only
-f8d651548543/8	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#t	/LiquidParser	0	val t/0 in reference port only
-f8d651548543/9	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#t	/LiquidParser	0	val t/0 in reference port only
-f8d651548543/10	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#t	/LiquidParser	0	val t/0 in reference port only
-f8d651548543/11	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#t	/LiquidParser	0	val t/0 in reference port only
-f8d651548543/12	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#t	/LiquidParser	0	val t/0 in reference port only
-f8d651548543/13	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#t	/LiquidParser	0	val t/0 in reference port only
-f8d651548543/14	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#t	/LiquidParser	0	val t/0 in reference port only
-f8d651548543/15	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#t	/LiquidParser	0	val t/0 in reference port only
-f8d651548543/16	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#t	/LiquidParser	0	val t/0 in reference port only
-90a8f0359457	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#tagName	/LiquidParser	0	val tagName/0 in reference port only
-90a8f0359457/2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#tagName	/LiquidParser	0	val tagName/0 in reference port only
-90a8f0359457/3	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#tagName	/LiquidParser	0	val tagName/0 in reference port only
-90a8f0359457/4	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#tagName	/LiquidParser	0	val tagName/0 in reference port only
-e201bb09601b	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#tagToken	/LiquidParser	0	val tagToken/0 in reference port only
-e201bb09601b/2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#tagToken	/LiquidParser	0	val tagToken/0 in reference port only
-b2ceb24d025b	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#to	/LiquidParser	0	val to/0 in reference port only
-911e86c5adf4	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#unexpected	/LiquidParser	0	val unexpected/0 in reference port only
-d9fc05e0043f	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#unparsed	/LiquidParser	0	var unparsed/0 in reference port only
-e627e8c805d2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#unparsedLine	/LiquidParser	0	var unparsedLine/0 in reference port only
-9beb3f835cb8	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#unparsedPos	/LiquidParser	0	var unparsedPos/0 in reference port only
-cb5e427f131e	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#value	/LiquidParser	0	val value/0 in reference port only
-cb5e427f131e/2	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#value	/LiquidParser	0	val value/0 in reference port only
-cb5e427f131e/3	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#value	/LiquidParser	0	val value/0 in reference port only
-91b0df731c92	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#varName	/LiquidParser	0	val varName/0 in reference port only
-a1e8893d990f	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#wsCol	/LiquidParser	0	var wsCol/0 in reference port only
-af79ab3961b8	api-parity(hand-port-extra)	hand-port-extra	LiquidParser#wsLine	/LiquidParser	0	var wsLine/0 in reference port only
 d02a310d2ed9	api-parity(hand-port-extra)	hand-port-extra	LocalFSNameResolver#jailRoot	/LocalFSNameResolver	0	val jailRoot/0 in reference port only
-6fc71c445e6a	api-parity(hand-port-extra)	hand-port-extra	LookupNode#i	/LookupNode	0	var i/0 in reference port only [rename candidates: id, indexes]
-9a439bce9269	api-parity(hand-port-extra)	hand-port-extra	LookupNode#sb	/LookupNode	0	val sb/0 in reference port only [rename candidates: variableFullName]
 b65369bbcd8d	api-parity(hand-port-extra)	hand-port-extra	LtEqNode#doCompare	/LtEqNode	0	def doCompare/3 in reference port only
 1b5aeae33240	api-parity(hand-port-extra)	hand-port-extra	LtNode#doCompare	/LtNode	0	def doCompare/3 in reference port only
 10814426c61e	api-parity(hand-port-extra)	hand-port-extra	MapFilter#apply	/MapFilter	0	def apply/3 in reference port only
@@ -328,148 +77,30 @@ c653f25d966f	api-parity(hand-port-extra)	hand-port-extra	NameResolver$.Default#s
 1a8cc61e4751	api-parity(hand-port-extra)	hand-port-extra	NameResolver$.InMemory#resolve	/NameResolver$/InMemory	0	def resolve/1 in reference port only
 1357afe8443a	api-parity(hand-port-extra)	hand-port-extra	NameResolver$.ResolvedSource#content	/NameResolver$/ResolvedSource	0	val content/0 in reference port only
 7e488fe0efc6	api-parity(hand-port-extra)	hand-port-extra	NameResolver$.ResolvedSource#sourceName	/NameResolver$/ResolvedSource	0	val sourceName/0 in reference port only
-e0824a7528e7	api-parity(hand-port-extra)	hand-port-extra	PlainBigDecimal$#bd	/PlainBigDecimal$	0	val bd/0 in reference port only
-dd7f9267d54e	api-parity(hand-port-extra)	hand-port-extra	PlainBigDecimal$#fracPart	/PlainBigDecimal$	0	val fracPart/0 in reference port only
-90d03fd9f9de	api-parity(hand-port-extra)	hand-port-extra	PlainBigDecimal$#intPart	/PlainBigDecimal$	0	val intPart/0 in reference port only
-3c11f28174e5	api-parity(hand-port-extra)	hand-port-extra	PlainBigDecimal$#scale	/PlainBigDecimal$	0	val scale/0 in reference port only
-109ed60a18e4	api-parity(hand-port-extra)	hand-port-extra	PlainBigDecimal$#unscaled	/PlainBigDecimal$	0	val unscaled/0 in reference port only
 374b1d68d68e	api-parity(hand-port-extra)	hand-port-extra	Relative_Url#dvToMap	/Relative_Url	0	def dvToMap/1 in reference port only [rename candidates: isValidAbsoluteUrl]
-2f4905a9e083	api-parity(hand-port-extra)	hand-port-extra	RenderTransformerDefaultImpl$#append	/RenderTransformerDefaultImpl$	0	def append/1 in reference port only
-a853a104e480	api-parity(hand-port-extra)	hand-port-extra	RenderTransformerDefaultImpl$#getResult	/RenderTransformerDefaultImpl$	0	def getResult/0 in reference port only
-cba48cd82b08	api-parity(hand-port-extra)	hand-port-extra	RenderTransformerDefaultImpl$#maxLen	/RenderTransformerDefaultImpl$	0	val maxLen/0 in reference port only [rename candidates: INSTANCE]
 9893908f0392	api-parity(hand-port-extra)	hand-port-extra	RenderTransformerDefaultImpl$#newObjectAppender	/RenderTransformerDefaultImpl$	0	def newObjectAppender/2 in reference port only
 b0162cbe9872	api-parity(hand-port-extra)	hand-port-extra	RenderTransformerDefaultImpl$#transformObject	/RenderTransformerDefaultImpl$	0	def transformObject/2 in reference port only
-614c5edc4a8a	api-parity(hand-port-extra)	hand-port-extra	Sort#av	/Sort	0	val av/0 in reference port only [rename candidates: evaluated, list]
-4202662911f7	api-parity(hand-port-extra)	hand-port-extra	Sort#bv	/Sort	0	val bv/0 in reference port only [rename candidates: evaluated, list]
-63b61e93ec9a	api-parity(hand-port-extra)	hand-port-extra	Sort#sorted	/Sort	0	val sorted/0 in reference port only [rename candidates: evaluated, list]
-7ae3e8066e38	api-parity(hand-port-extra)	hand-port-extra	Strip_HTML$#closeIdx	/Strip_HTML$	0	val closeIdx/0 in reference port only
-7ae3e8066e38/2	api-parity(hand-port-extra)	hand-port-extra	Strip_HTML$#closeIdx	/Strip_HTML$	0	val closeIdx/0 in reference port only
-7ae3e8066e38/3	api-parity(hand-port-extra)	hand-port-extra	Strip_HTML$#closeIdx	/Strip_HTML$	0	val closeIdx/0 in reference port only
-b8d28a7dab15	api-parity(hand-port-extra)	hand-port-extra	Strip_HTML$#found	/Strip_HTML$	0	var found/0 in reference port only
-53856215c194	api-parity(hand-port-extra)	hand-port-extra	Strip_HTML$#i	/Strip_HTML$	0	var i/0 in reference port only
-53856215c194/2	api-parity(hand-port-extra)	hand-port-extra	Strip_HTML$#i	/Strip_HTML$	0	var i/0 in reference port only
-53856215c194/3	api-parity(hand-port-extra)	hand-port-extra	Strip_HTML$#i	/Strip_HTML$	0	var i/0 in reference port only
-53856215c194/4	api-parity(hand-port-extra)	hand-port-extra	Strip_HTML$#i	/Strip_HTML$	0	var i/0 in reference port only
-2bf87ea5bc7e	api-parity(hand-port-extra)	hand-port-extra	Strip_HTML$#j	/Strip_HTML$	0	var j/0 in reference port only
-93db4b74d69f	api-parity(hand-port-extra)	hand-port-extra	Strip_HTML$#limit	/Strip_HTML$	0	val limit/0 in reference port only
-f0351647216b	api-parity(hand-port-extra)	hand-port-extra	Strip_HTML$#openIdx	/Strip_HTML$	0	val openIdx/0 in reference port only
-f0351647216b/2	api-parity(hand-port-extra)	hand-port-extra	Strip_HTML$#openIdx	/Strip_HTML$	0	val openIdx/0 in reference port only
-f0351647216b/3	api-parity(hand-port-extra)	hand-port-extra	Strip_HTML$#openIdx	/Strip_HTML$	0	val openIdx/0 in reference port only
-310866c7b8ad	api-parity(hand-port-extra)	hand-port-extra	Strip_HTML$#result	/Strip_HTML$	0	var result/0 in reference port only
-49f49f62e337	api-parity(hand-port-extra)	hand-port-extra	Strip_HTML$#sb	/Strip_HTML$	0	val sb/0 in reference port only
-49f49f62e337/2	api-parity(hand-port-extra)	hand-port-extra	Strip_HTML$#sb	/Strip_HTML$	0	val sb/0 in reference port only
-49f49f62e337/3	api-parity(hand-port-extra)	hand-port-extra	Strip_HTML$#sb	/Strip_HTML$	0	val sb/0 in reference port only
-9bae8f701d46	api-parity(hand-port-extra)	hand-port-extra	Strip_HTML$#targetLower	/Strip_HTML$	0	val targetLower/0 in reference port only
 734f51eef6c1	api-parity(hand-port-extra)	hand-port-extra	Tablerow$.TablerowloopDrop#toDataView	/Tablerow$/TablerowloopDrop	0	def toDataView/0 in reference port only [rename candidates: increment, toLiquid]
-0fbbb5d232ae	api-parity(hand-port-extra)	hand-port-extra	Template#jailRegistry	/Template	0	val jailRegistry/0 in reference port only [rename candidates: childListStack, childStack, configurator, context, evaluated, firstStack, future, map, map, maxRenderTimeMillis, maxTemplateSizeBytes, parser, registry, tokenName, tokenText, tokens]
 e5efb2c3268c	api-parity(hand-port-extra)	hand-port-extra	Template#renderResult	/Template	0	def renderResult/1 in reference port only [rename candidates: render, render, render, renderObject, renderToObject, renderToObject, renderToObject, renderToObjectUnguarded, renderUnguarded, renderUnguarded, withContextHolder]
 3067597b1b44	api-parity(hand-port-extra)	hand-port-extra	Template#withJailRoot	/Template	0	def withJailRoot/1 in reference port only [rename candidates: render, render, render, renderObject, renderToObject, renderToObject, renderToObject, renderToObjectUnguarded, renderUnguarded, renderUnguarded, withContextHolder]
 5d996d864d73	api-parity(hand-port-extra)	hand-port-extra	Template$#parse	/Template$	0	def parse/1 in reference port only
 084d269195d8	api-parity(hand-port-extra)	hand-port-extra	TemplateContext#getJailRoot	/TemplateContext	0	def getJailRoot/0 in reference port only [rename candidates: errors, getDateParser, getEnvironmentMap, getErrorMode, getParser, getRootFolder, getVariables, incrementIterations, newChildContext]
 a01625c54686	api-parity(hand-port-extra)	hand-port-extra	TemplateContext$#REGISTRY_JAIL_ROOT	/TemplateContext$	0	val REGISTRY_JAIL_ROOT/0 in reference port only [rename candidates: REGISTRY_CYCLE, REGISTRY_FOR, REGISTRY_FOR_STACK, REGISTRY_IFCHANGED, REGISTRY_ITERATION_PROTECTOR, REGISTRY_ROOT_FOLDER]
-906fe846129f	api-parity(hand-port-extra)	hand-port-extra	TemplateParser#lexer	/TemplateParser	0	val lexer/0 in reference port only
-07c11455721b	api-parity(hand-port-extra)	hand-port-extra	TemplateParser#liquidParser	/TemplateParser	0	val liquidParser/0 in reference port only
 cb17888d6ee8	api-parity(hand-port-extra)	hand-port-extra	TemplateParser#parse	/TemplateParser	0	def parse/2 in reference port only [rename candidates: evaluate]
 6c261a15f0c0	api-parity(hand-port-extra)	hand-port-extra	TemplateParser#parseResult	/TemplateParser	0	def parseResult/1 in reference port only [rename candidates: evaluate, parse, parse, parse, parse, parse, parse]
 bfedc80e78a4	api-parity(hand-port-extra)	hand-port-extra	TemplateParser#parseResult	/TemplateParser	0	def parseResult/2 in reference port only [rename candidates: evaluate]
-fe94e24b16ee	api-parity(hand-port-extra)	hand-port-extra	TemplateParser#root	/TemplateParser	0	val root/0 in reference port only
-3efb7dca1504	api-parity(hand-port-extra)	hand-port-extra	TemplateParser#tokens	/TemplateParser	0	val tokens/0 in reference port only
 593a52622580	api-parity(hand-port-extra)	hand-port-extra	TemplateParser$.Builder#withLiquidStyleWhere	/TemplateParser$/Builder	0	def withLiquidStyleWhere/1 in reference port only [rename candidates: withBlock, withDateParser, withDefaultTimeZone, withEnvironmentMapConfigurator, withErrorMode, withEvaluateInOutputTag, withEvaluateMode, withFilter, withFlavor, withLiquidStyleInclude, withLocale, withMaxIterations, withMaxRenderTimeMillis, withMaxSizeRenderedString, withMaxTemplateSizeBytes, withNameResolver, withObjectMapper, withRenderTransformer, withShowExceptionsFromInclude, withSnippetsFolderName, withStrictTypedExpressions, withStrictVariables, withStripSingleLine, withStripSpaceAroundTags, withTag]
-77a57831f098	api-parity(hand-port-extra)	hand-port-extra	Token#col	/Token	0	val col/0 in reference port only
-70be97d3b281	api-parity(hand-port-extra)	hand-port-extra	Token#line	/Token	0	val line/0 in reference port only
-66f4f8ed15d2	api-parity(hand-port-extra)	hand-port-extra	Token#toString	/Token	0	def toString/0 in reference port only
-df532e0dff22	api-parity(hand-port-extra)	hand-port-extra	Token#tokenType	/Token	0	val tokenType/0 in reference port only
-36235a366cbb	api-parity(hand-port-extra)	hand-port-extra	Token#value	/Token	0	val value/0 in reference port only
-11d91fa9307e	api-parity(hand-port-extra)	hand-port-extra	TokenType#AND	/TokenType	0	case AND/0 in reference port only
-70f893db23db	api-parity(hand-port-extra)	hand-port-extra	TokenType#ASSIGN	/TokenType	0	case ASSIGN/0 in reference port only
-20dd86f5ca73	api-parity(hand-port-extra)	hand-port-extra	TokenType#BLANK	/TokenType	0	case BLANK/0 in reference port only
-b7d06e559f52	api-parity(hand-port-extra)	hand-port-extra	TokenType#BLOCK_ID	/TokenType	0	case BLOCK_ID/0 in reference port only
-24f8bda03e5e	api-parity(hand-port-extra)	hand-port-extra	TokenType#BREAK_TAG	/TokenType	0	case BREAK_TAG/0 in reference port only
-df84a77c37e9	api-parity(hand-port-extra)	hand-port-extra	TokenType#CAPTURE	/TokenType	0	case CAPTURE/0 in reference port only
-414a29f880cc	api-parity(hand-port-extra)	hand-port-extra	TokenType#CASE	/TokenType	0	case CASE/0 in reference port only
-b7f3bde284c2	api-parity(hand-port-extra)	hand-port-extra	TokenType#CBR	/TokenType	0	case CBR/0 in reference port only
-086a9643a01f	api-parity(hand-port-extra)	hand-port-extra	TokenType#COLON	/TokenType	0	case COLON/0 in reference port only
-1abf00a9b154	api-parity(hand-port-extra)	hand-port-extra	TokenType#COMMA	/TokenType	0	case COMMA/0 in reference port only
-4d39accf8cc3	api-parity(hand-port-extra)	hand-port-extra	TokenType#COMMENT	/TokenType	0	case COMMENT/0 in reference port only
-f4bd71cfc3db	api-parity(hand-port-extra)	hand-port-extra	TokenType#CONTAINS	/TokenType	0	case CONTAINS/0 in reference port only
-446905dda5d3	api-parity(hand-port-extra)	hand-port-extra	TokenType#CONTINUE	/TokenType	0	case CONTINUE/0 in reference port only
-6f83b6ff6075	api-parity(hand-port-extra)	hand-port-extra	TokenType#CONTINUE_TAG	/TokenType	0	case CONTINUE_TAG/0 in reference port only
-9b7a5a6479ed	api-parity(hand-port-extra)	hand-port-extra	TokenType#CPAR	/TokenType	0	case CPAR/0 in reference port only
-5369b06b8fc1	api-parity(hand-port-extra)	hand-port-extra	TokenType#CYCLE	/TokenType	0	case CYCLE/0 in reference port only
-3e63cc02156d	api-parity(hand-port-extra)	hand-port-extra	TokenType#DOT	/TokenType	0	case DOT/0 in reference port only
-b2c197680141	api-parity(hand-port-extra)	hand-port-extra	TokenType#DOTDOT	/TokenType	0	case DOTDOT/0 in reference port only
-a66e17b01cb7	api-parity(hand-port-extra)	hand-port-extra	TokenType#DOUBLE_NUM	/TokenType	0	case DOUBLE_NUM/0 in reference port only
-27cddf1c60b3	api-parity(hand-port-extra)	hand-port-extra	TokenType#ELSE	/TokenType	0	case ELSE/0 in reference port only
-d7ff6bc4ed34	api-parity(hand-port-extra)	hand-port-extra	TokenType#ELSIF	/TokenType	0	case ELSIF/0 in reference port only
-cf9f30cf8549	api-parity(hand-port-extra)	hand-port-extra	TokenType#EMPTY	/TokenType	0	case EMPTY/0 in reference port only
-cba1f0b448ad	api-parity(hand-port-extra)	hand-port-extra	TokenType#ENDCAPTURE	/TokenType	0	case ENDCAPTURE/0 in reference port only
-28e0aa57f195	api-parity(hand-port-extra)	hand-port-extra	TokenType#ENDCASE	/TokenType	0	case ENDCASE/0 in reference port only
-5f255a30317d	api-parity(hand-port-extra)	hand-port-extra	TokenType#ENDCOMMENT	/TokenType	0	case ENDCOMMENT/0 in reference port only
-1fc1567d9fa3	api-parity(hand-port-extra)	hand-port-extra	TokenType#ENDFOR	/TokenType	0	case ENDFOR/0 in reference port only
-504727c405b4	api-parity(hand-port-extra)	hand-port-extra	TokenType#ENDIF	/TokenType	0	case ENDIF/0 in reference port only
-682066b3b3b5	api-parity(hand-port-extra)	hand-port-extra	TokenType#ENDTABLEROW	/TokenType	0	case ENDTABLEROW/0 in reference port only
-d33c5a4cb7dd	api-parity(hand-port-extra)	hand-port-extra	TokenType#ENDUNLESS	/TokenType	0	case ENDUNLESS/0 in reference port only
-9dc5c8ff572e	api-parity(hand-port-extra)	hand-port-extra	TokenType#END_BLOCK_ID	/TokenType	0	case END_BLOCK_ID/0 in reference port only
-ea4479d6fbab	api-parity(hand-port-extra)	hand-port-extra	TokenType#EOF	/TokenType	0	case EOF/0 in reference port only
-6e621b7f9afe	api-parity(hand-port-extra)	hand-port-extra	TokenType#EQ	/TokenType	0	case EQ/0 in reference port only
-7ca4ceee8c43	api-parity(hand-port-extra)	hand-port-extra	TokenType#EQ_SIGN	/TokenType	0	case EQ_SIGN/0 in reference port only
-1dc094ad6d42	api-parity(hand-port-extra)	hand-port-extra	TokenType#FALSE	/TokenType	0	case FALSE/0 in reference port only
-9b74edd46e6a	api-parity(hand-port-extra)	hand-port-extra	TokenType#FOR	/TokenType	0	case FOR/0 in reference port only
-d2ee2de0c393	api-parity(hand-port-extra)	hand-port-extra	TokenType#GT	/TokenType	0	case GT/0 in reference port only
-44dfcd7710e1	api-parity(hand-port-extra)	hand-port-extra	TokenType#GTEQ	/TokenType	0	case GTEQ/0 in reference port only
-53f88cc0de21	api-parity(hand-port-extra)	hand-port-extra	TokenType#ID	/TokenType	0	case ID/0 in reference port only
-e93bc337ec7f	api-parity(hand-port-extra)	hand-port-extra	TokenType#IF	/TokenType	0	case IF/0 in reference port only
-512d2323ba8b	api-parity(hand-port-extra)	hand-port-extra	TokenType#IN	/TokenType	0	case IN/0 in reference port only
-333620ec2c02	api-parity(hand-port-extra)	hand-port-extra	TokenType#INCLUDE	/TokenType	0	case INCLUDE/0 in reference port only
-8088c43dc708	api-parity(hand-port-extra)	hand-port-extra	TokenType#INCLUDE_RELATIVE	/TokenType	0	case INCLUDE_RELATIVE/0 in reference port only
-e4afb9ec73a3	api-parity(hand-port-extra)	hand-port-extra	TokenType#INVALID_END_TAG	/TokenType	0	case INVALID_END_TAG/0 in reference port only
-306e9aa28a32	api-parity(hand-port-extra)	hand-port-extra	TokenType#LONG_NUM	/TokenType	0	case LONG_NUM/0 in reference port only
-4b6597faba7b	api-parity(hand-port-extra)	hand-port-extra	TokenType#LT	/TokenType	0	case LT/0 in reference port only
-e5ed338b7d3f	api-parity(hand-port-extra)	hand-port-extra	TokenType#LTEQ	/TokenType	0	case LTEQ/0 in reference port only
-96641db04cfc	api-parity(hand-port-extra)	hand-port-extra	TokenType#MINUS	/TokenType	0	case MINUS/0 in reference port only
-9edfc58202df	api-parity(hand-port-extra)	hand-port-extra	TokenType#NEQ	/TokenType	0	case NEQ/0 in reference port only
-a4ad9b802241	api-parity(hand-port-extra)	hand-port-extra	TokenType#NIL	/TokenType	0	case NIL/0 in reference port only
-57cc7e678495	api-parity(hand-port-extra)	hand-port-extra	TokenType#OBR	/TokenType	0	case OBR/0 in reference port only
-b5909aad3b8c	api-parity(hand-port-extra)	hand-port-extra	TokenType#OFFSET	/TokenType	0	case OFFSET/0 in reference port only
-02cd1fd9405c	api-parity(hand-port-extra)	hand-port-extra	TokenType#OPAR	/TokenType	0	case OPAR/0 in reference port only
-270136ffd789	api-parity(hand-port-extra)	hand-port-extra	TokenType#OR	/TokenType	0	case OR/0 in reference port only
-14bfd5ad966f	api-parity(hand-port-extra)	hand-port-extra	TokenType#OUT_END	/TokenType	0	case OUT_END/0 in reference port only
-c92667fd8cf1	api-parity(hand-port-extra)	hand-port-extra	TokenType#OUT_START	/TokenType	0	case OUT_START/0 in reference port only
-910e5db90138	api-parity(hand-port-extra)	hand-port-extra	TokenType#PATH_SEP	/TokenType	0	case PATH_SEP/0 in reference port only
-50ca2eae188b	api-parity(hand-port-extra)	hand-port-extra	TokenType#PIPE	/TokenType	0	case PIPE/0 in reference port only
-9d8e7cdfbd3d	api-parity(hand-port-extra)	hand-port-extra	TokenType#QMARK	/TokenType	0	case QMARK/0 in reference port only
-2fa5ab124702	api-parity(hand-port-extra)	hand-port-extra	TokenType#RAW	/TokenType	0	case RAW/0 in reference port only
-d387dc07fe5c	api-parity(hand-port-extra)	hand-port-extra	TokenType#REVERSED	/TokenType	0	case REVERSED/0 in reference port only
-5979e175838d	api-parity(hand-port-extra)	hand-port-extra	TokenType#SIMPLE_TAG_ID	/TokenType	0	case SIMPLE_TAG_ID/0 in reference port only
-f5bc6b1d7519	api-parity(hand-port-extra)	hand-port-extra	TokenType#STR	/TokenType	0	case STR/0 in reference port only
-fbcb1fd654f5	api-parity(hand-port-extra)	hand-port-extra	TokenType#TABLEROW	/TokenType	0	case TABLEROW/0 in reference port only
-833af3f1f899	api-parity(hand-port-extra)	hand-port-extra	TokenType#TAG_END	/TokenType	0	case TAG_END/0 in reference port only
-51c63a09a504	api-parity(hand-port-extra)	hand-port-extra	TokenType#TAG_START	/TokenType	0	case TAG_START/0 in reference port only
-53596e872e19	api-parity(hand-port-extra)	hand-port-extra	TokenType#TEXT	/TokenType	0	case TEXT/0 in reference port only
-ecb49ba401b1	api-parity(hand-port-extra)	hand-port-extra	TokenType#TRUE	/TokenType	0	case TRUE/0 in reference port only
-de6636ef5e09	api-parity(hand-port-extra)	hand-port-extra	TokenType#UNLESS	/TokenType	0	case UNLESS/0 in reference port only
-b95359193d93	api-parity(hand-port-extra)	hand-port-extra	TokenType#WHEN	/TokenType	0	case WHEN/0 in reference port only
-1822b6e927a5	api-parity(hand-port-extra)	hand-port-extra	TokenType#WITH	/TokenType	0	case WITH/0 in reference port only
-80e3575153dc	api-parity(hand-port-extra)	hand-port-extra	Where_Exp#vars	/Where_Exp	0	val vars/0 in reference port only [rename candidates: res]
 7c5845d5f78e	api-parity(mutability)	mutability	ComparingExpressionNode#lhs	/ComparingExpressionNode	0	kind differs: emitted var, reference val
 094e8206e56b	api-parity(mutability)	mutability	ComparingExpressionNode#rhs	/ComparingExpressionNode	0	kind differs: emitted var, reference val
 1a2f06114e17	api-parity(mutability)	mutability	Filter#name	/Filter	0	kind differs: emitted var, reference val
 eea8f825d9d7	api-parity(mutability)	mutability	Filters$#DEFAULT_FILTERS	/Filters$	0	kind differs: emitted var, reference val
 a29b281a097a	api-parity(mutability)	mutability	Filters$#JEKYLL_FILTERS	/Filters$	0	kind differs: emitted var, reference val
-4e2641ed6a9d	api-parity(mutability)	mutability	For#effectiveTo	/For	0	kind differs: emitted var, reference val
-ef063be23ee9	api-parity(mutability)	mutability	For#from	/For	0	kind differs: emitted var, reference val
-1fe4a99b8ee0	api-parity(mutability)	mutability	For#parent	/For	0	kind differs: emitted var, reference val
-1c0fc17afafa	api-parity(mutability)	mutability	For#realI	/For	0	kind differs: emitted var, reference val
-90168eee0160	api-parity(mutability)	mutability	For#stack	/For	0	kind differs: emitted var, reference val
-642ba0a08169	api-parity(mutability)	mutability	For#to	/For	0	kind differs: emitted var, reference val
 9c812d5e0d6c	api-parity(mutability)	mutability	Insertion#name	/Insertion	0	kind differs: emitted var, reference val
-4bb59d70aa07	api-parity(mutability)	mutability	JekyllWhereImpl#objects	/JekyllWhereImpl	0	kind differs: emitted var, reference val
 fdd5ca209088	api-parity(mutability)	mutability	KeyValueNode#key	/KeyValueNode	0	kind differs: emitted var, reference val
 d1781ebd6c03	api-parity(mutability)	mutability	KeyValueNode#value	/KeyValueNode	0	kind differs: emitted var, reference val
 77e740ef4e90	api-parity(mutability)	mutability	LValue$#rubyDateTimeFormat	/LValue$	0	kind differs: emitted var, reference val
 2dbbab38f4b9	api-parity(mutability)	mutability	LiquidException#charPositionInLine	/LiquidException	0	kind differs: emitted var, reference val
 3f946ea0db56	api-parity(mutability)	mutability	LiquidException#line	/LiquidException	0	kind differs: emitted var, reference val
-26abe942717d	api-parity(mutability)	mutability	LiquidWhereImpl#node	/LiquidWhereImpl	0	kind differs: emitted var, reference val
 1555d5247d86	api-parity(mutability)	mutability	LocalFSNameResolver$#DEFAULT_EXTENSION	/LocalFSNameResolver$	0	kind differs: emitted var, reference val
 2e91ad2629bb	api-parity(mutability)	mutability	PropertyResolverHelper$#INSTANCE	/PropertyResolverHelper$	0	kind differs: emitted var, reference val
 0da51411d361	api-parity(mutability)	mutability	Template#sourceLocation	/Template	0	kind differs: emitted var, reference val
@@ -627,8 +258,6 @@ c14f02ac6e67	api-parity(port-extra)	port-extra	#Url_Encode		0	object Url_Encode/
 14da57b5144c	api-parity(port-extra)	port-extra	#WhereImpl		0	object WhereImpl/0 in emitted port only
 708c0c4970ba	api-parity(port-extra)	port-extra	#Where_Exp		0	object Where_Exp/0 in emitted port only
 833a27c7aa29	api-parity(port-extra)	port-extra	#Wrapping		0	trait Wrapping/0 in emitted port only
-2c7af431adf3	api-parity(port-extra)	port-extra	#newObjectAppender		0	def newObjectAppender/2 in emitted port only
-00e3922bc47c	api-parity(port-extra)	port-extra	#transformObject		0	def transformObject/2 in emitted port only
 f07e87b0d24e	api-parity(port-extra)	port-extra	AndNode#lhs	/AndNode	0	var lhs/0 in emitted port only
 7268a4646ff7	api-parity(port-extra)	port-extra	AndNode#rhs	/AndNode	0	var rhs/0 in emitted port only
 015d78c9a3dc	api-parity(port-extra)	port-extra	AtomNode#value	/AtomNode	0	var value/0 in emitted port only
@@ -641,7 +270,6 @@ f07e87b0d24e	api-parity(port-extra)	port-extra	AndNode#lhs	/AndNode	0	var lhs/0 
 45bfad568e52	api-parity(port-extra)	port-extra	BasicTypesSupport$#clearReferences	/BasicTypesSupport$	0	def clearReferences/0 in emitted port only
 28bfd11f3852	api-parity(port-extra)	port-extra	BasicTypesSupport$#createReference	/BasicTypesSupport$	0	def createReference/1 in emitted port only
 8110a4fc2792	api-parity(port-extra)	port-extra	BasicTypesSupport$#getByReference	/BasicTypesSupport$	0	def getByReference/1 in emitted port only
-624b62e94cc6	api-parity(port-extra)	port-extra	BasicTypesSupport$#initialValue	/BasicTypesSupport$	0	def initialValue/0 in emitted port only
 6d985214e9d9	api-parity(port-extra)	port-extra	BasicTypesSupport$#restoreObject	/BasicTypesSupport$	0	def restoreObject/1 in emitted port only
 ed3863f97c0e	api-parity(port-extra)	port-extra	BlockNode#children	/BlockNode	0	var children/0 in emitted port only
 91f470f817db	api-parity(port-extra)	port-extra	CharStreamWithLocation#getPath	/CharStreamWithLocation	0	def getPath/0 in emitted port only
@@ -649,36 +277,13 @@ ed3863f97c0e	api-parity(port-extra)	port-extra	BlockNode#children	/BlockNode	0	v
 acc92c9c9b5a	api-parity(port-extra)	port-extra	CharStreamWithLocation$#Funnel	/CharStreamWithLocation$	0	class Funnel/0 in emitted port only
 3e58d54e6a14	api-parity(port-extra)	port-extra	ComparingExpressionNode#relative	/ComparingExpressionNode	0	var relative/0 in emitted port only
 8d1d6ee92f2c	api-parity(port-extra)	port-extra	ContainsNode#lhs	/ContainsNode	0	var lhs/0 in emitted port only
-f1db051383e1	api-parity(port-extra)	port-extra	ContainsNode#needle	/ContainsNode	0	var needle/0 in emitted port only
-833a7a17ea24	api-parity(port-extra)	port-extra	ContainsNode#res	/ContainsNode	0	val res/0 in emitted port only [rename candidates: n]
 ad7780ffd76a	api-parity(port-extra)	port-extra	ContainsNode#rhs	/ContainsNode	0	var rhs/0 in emitted port only
-4b4d784c6b70	api-parity(port-extra)	port-extra	Cycle$#currentIndex	/Cycle$	0	var currentIndex/0 in emitted port only
-75f88e7ce652	api-parity(port-extra)	port-extra	Cycle$#obj	/Cycle$	0	var obj/0 in emitted port only
-142119913088	api-parity(port-extra)	port-extra	Cycle$#sizeFirstCycle	/Cycle$	0	var sizeFirstCycle/0 in emitted port only
 346972bc6858	api-parity(port-extra)	port-extra	Date$#Funnel	/Date$	0	class Funnel/0 in emitted port only
 8bbbc24d176c	api-parity(port-extra)	port-extra	Examples$#customFilter	/Examples$	0	def customFilter/0 in emitted port only
 5df2487b0eeb	api-parity(port-extra)	port-extra	Examples$#customRandomTag	/Examples$	0	def customRandomTag/0 in emitted port only
 26c82dcaa4a0	api-parity(port-extra)	port-extra	Examples$#demoStrictVariables	/Examples$	0	def demoStrictVariables/0 in emitted port only
 4d60b2fdd016	api-parity(port-extra)	port-extra	Examples$#instanceFilter	/Examples$	0	def instanceFilter/0 in emitted port only
 ed260cacc7f0	api-parity(port-extra)	port-extra	Examples$#main	/Examples$	0	def main/1 in emitted port only
-36d786a16ec4	api-parity(port-extra)	port-extra	Examples$#map	/Examples$	0	val map/0 in emitted port only
-a2e51cd3f577	api-parity(port-extra)	port-extra	Examples$#parser	/Examples$	0	val parser/0 in emitted port only
-a2e51cd3f577/2	api-parity(port-extra)	port-extra	Examples$#parser	/Examples$	0	val parser/0 in emitted port only
-a2e51cd3f577/3	api-parity(port-extra)	port-extra	Examples$#parser	/Examples$	0	val parser/0 in emitted port only
-a2e51cd3f577/4	api-parity(port-extra)	port-extra	Examples$#parser	/Examples$	0	val parser/0 in emitted port only
-a2e51cd3f577/5	api-parity(port-extra)	port-extra	Examples$#parser	/Examples$	0	val parser/0 in emitted port only
-2758e540427a	api-parity(port-extra)	port-extra	Examples$#rendered	/Examples$	0	val rendered/0 in emitted port only
-2758e540427a/2	api-parity(port-extra)	port-extra	Examples$#rendered	/Examples$	0	val rendered/0 in emitted port only
-2758e540427a/3	api-parity(port-extra)	port-extra	Examples$#rendered	/Examples$	0	val rendered/0 in emitted port only
-2758e540427a/4	api-parity(port-extra)	port-extra	Examples$#rendered	/Examples$	0	val rendered/0 in emitted port only
-2758e540427a/5	api-parity(port-extra)	port-extra	Examples$#rendered	/Examples$	0	val rendered/0 in emitted port only
-121afde18b6e	api-parity(port-extra)	port-extra	Examples$#rendered	/Examples$	0	var rendered/0 in emitted port only
-b65a1df205bb	api-parity(port-extra)	port-extra	Examples$#source	/Examples$	0	val source/0 in emitted port only
-4ed75ff1bd21	api-parity(port-extra)	port-extra	Examples$#template	/Examples$	0	val template/0 in emitted port only
-4ed75ff1bd21/2	api-parity(port-extra)	port-extra	Examples$#template	/Examples$	0	val template/0 in emitted port only
-4ed75ff1bd21/3	api-parity(port-extra)	port-extra	Examples$#template	/Examples$	0	val template/0 in emitted port only
-4ed75ff1bd21/4	api-parity(port-extra)	port-extra	Examples$#template	/Examples$	0	val template/0 in emitted port only
-529c1272efef	api-parity(port-extra)	port-extra	Examples$#template	/Examples$	0	var template/0 in emitted port only
 b31b1051fb02	api-parity(port-extra)	port-extra	Filter$#Funnel	/Filter$	0	class Funnel/0 in emitted port only
 f3859da68e57	api-parity(port-extra)	port-extra	FilterCharStream#LA	/FilterCharStream	0	def LA/1 in emitted port only
 1d8b187cea53	api-parity(port-extra)	port-extra	FilterCharStream#consume	/FilterCharStream	0	def consume/0 in emitted port only
@@ -694,9 +299,6 @@ c6b6ead7d3c2	api-parity(port-extra)	port-extra	FilterCharStream#size	/FilterChar
 1701cb185bb8	api-parity(port-extra)	port-extra	FilterNode#line	/FilterNode	0	var line/0 in emitted port only
 062434273cf2	api-parity(port-extra)	port-extra	FilterNode#params	/FilterNode	0	var params/0 in emitted port only
 f3a1b012e430	api-parity(port-extra)	port-extra	FilterNode#tokenStartIndex	/FilterNode	0	var tokenStartIndex/0 in emitted port only
-0b18acdaee83	api-parity(port-extra)	port-extra	For#arr	/For	0	val arr/0 in emitted port only [rename candidates: array, attribute, attributes, attributes, attributes, block, block, blockIfEmptyOrNull, builder, builder, effectiveFrom, effectiveTo, forLoopDrop, forLoopDrop, forLoopDrop, from, from, isBreak, isBreak, length, length, limit, limit, newArrayDeque, node, offset, offsets, parent, realI, registry, registry, stack, stack, to, to, token, v, value, vec]
-46296e50a3e4	api-parity(port-extra)	port-extra	For#evaluated	/For	0	val evaluated/0 in emitted port only [rename candidates: array, attribute, attributes, attributes, attributes, block, block, blockIfEmptyOrNull, builder, builder, effectiveFrom, effectiveTo, forLoopDrop, forLoopDrop, forLoopDrop, from, from, isBreak, isBreak, length, length, limit, limit, newArrayDeque, node, offset, offsets, parent, realI, registry, registry, stack, stack, to, to, token, v, value, vec]
-906558a90488	api-parity(port-extra)	port-extra	For#listCopy	/For	0	val listCopy/0 in emitted port only [rename candidates: array, attribute, attributes, attributes, attributes, block, block, blockIfEmptyOrNull, builder, builder, effectiveFrom, effectiveTo, forLoopDrop, forLoopDrop, forLoopDrop, from, from, isBreak, isBreak, length, length, limit, limit, newArrayDeque, node, offset, offsets, parent, realI, registry, registry, stack, stack, to, to, token, v, value, vec]
 cc6c83c61d84	api-parity(port-extra)	port-extra	For#popLoopDropFromStack	/For	0	def popLoopDropFromStack/1 in emitted port only [rename candidates: popLoopDropFromArrayDeque]
 a1e704fd4b7f	api-parity(port-extra)	port-extra	For$#ForLoopDrop	/For$	0	object ForLoopDrop/0 in emitted port only
 8a8a2bc8bd35	api-parity(port-extra)	port-extra	For$#NAME	/For$	0	val NAME/0 in emitted port only [rename candidates: FORLOOP]
@@ -705,10 +307,6 @@ a1e704fd4b7f	api-parity(port-extra)	port-extra	For$#ForLoopDrop	/For$	0	object F
 47a419b6a773	api-parity(port-extra)	port-extra	For$.ForLoopDrop#map	/For$/ForLoopDrop	0	val map/0 in emitted port only
 854c90950caf	api-parity(port-extra)	port-extra	For$.ForLoopDrop#parentloop	/For$/ForLoopDrop	0	var parentloop/0 in emitted port only
 e361e7c4b326	api-parity(port-extra)	port-extra	For$.ForLoopDrop#toLiquid	/For$/ForLoopDrop	0	def toLiquid/0 in emitted port only [rename candidates: increment, toDataView]
-f35094b8171c	api-parity(port-extra)	port-extra	FuzzyDateDateParser$#end	/FuzzyDateDateParser$	0	var end/0 in emitted port only
-f38de9224243	api-parity(port-extra)	port-extra	FuzzyDateDateParser$#kind	/FuzzyDateDateParser$	0	var kind/0 in emitted port only
-020545f7b01b	api-parity(port-extra)	port-extra	FuzzyDateDateParser$#pattern	/FuzzyDateDateParser$	0	var pattern/0 in emitted port only
-45b1dbe797f2	api-parity(port-extra)	port-extra	FuzzyDateDateParser$#start	/FuzzyDateDateParser$	0	var start/0 in emitted port only
 277c1e325390	api-parity(port-extra)	port-extra	Include$#Funnel	/Include$	0	class Funnel/0 in emitted port only
 898ce3bac263	api-parity(port-extra)	port-extra	IncompatibleTypeComparisonException#a	/IncompatibleTypeComparisonException	0	var a/0 in emitted port only
 7a78013c47d9	api-parity(port-extra)	port-extra	IncompatibleTypeComparisonException#b	/IncompatibleTypeComparisonException	0	var b/0 in emitted port only
@@ -740,28 +338,14 @@ e47161fbde74	api-parity(port-extra)	port-extra	JavaCollection$#unmodifiable	/Jav
 e1f9895c3bee	api-parity(port-extra)	port-extra	JavaCollection$#unmodifiableFrom	/JavaCollection$	0	def unmodifiableFrom/1 in emitted port only
 1c910ef88e93	api-parity(port-extra)	port-extra	JavaCollections$#Reified	/JavaCollections$	0	object Reified/0 in emitted port only
 0bdaa79ab61f	api-parity(port-extra)	port-extra	JavaCollections$#addAll	/JavaCollections$	0	def addAll/2 in emitted port only
-90e481234463	api-parity(port-extra)	port-extra	JavaCollections$#addOne	/JavaCollections$	0	def addOne/1 in emitted port only
-90e481234463/2	api-parity(port-extra)	port-extra	JavaCollections$#addOne	/JavaCollections$	0	def addOne/1 in emitted port only
-90e481234463/3	api-parity(port-extra)	port-extra	JavaCollections$#addOne	/JavaCollections$	0	def addOne/1 in emitted port only
-90e481234463/4	api-parity(port-extra)	port-extra	JavaCollections$#addOne	/JavaCollections$	0	def addOne/1 in emitted port only
-90e481234463/5	api-parity(port-extra)	port-extra	JavaCollections$#addOne	/JavaCollections$	0	def addOne/1 in emitted port only
-16e26b28fa52	api-parity(port-extra)	port-extra	JavaCollections$#apply	/JavaCollections$	0	def apply/1 in emitted port only
-16e26b28fa52/2	api-parity(port-extra)	port-extra	JavaCollections$#apply	/JavaCollections$	0	def apply/1 in emitted port only
-16e26b28fa52/3	api-parity(port-extra)	port-extra	JavaCollections$#apply	/JavaCollections$	0	def apply/1 in emitted port only
 03d9ba2351a0	api-parity(port-extra)	port-extra	JavaCollections$#asList	/JavaCollections$	0	def asList/1 in emitted port only
 31764f6a1c81	api-parity(port-extra)	port-extra	JavaCollections$#asListView	/JavaCollections$	0	def asListView/1 in emitted port only
 3672b9cb0fa2	api-parity(port-extra)	port-extra	JavaCollections$#bufferInsertAll	/JavaCollections$	0	def bufferInsertAll/3 in emitted port only
 77faa9c4ca99	api-parity(port-extra)	port-extra	JavaCollections$#bufferPatchInPlace	/JavaCollections$	0	def bufferPatchInPlace/4 in emitted port only
 bbb39ba36640	api-parity(port-extra)	port-extra	JavaCollections$#bufferRemoveRange	/JavaCollections$	0	def bufferRemoveRange/3 in emitted port only
-f37242d9e0de	api-parity(port-extra)	port-extra	JavaCollections$#clear	/JavaCollections$	0	def clear/0 in emitted port only
-f37242d9e0de/2	api-parity(port-extra)	port-extra	JavaCollections$#clear	/JavaCollections$	0	def clear/0 in emitted port only
-f37242d9e0de/3	api-parity(port-extra)	port-extra	JavaCollections$#clear	/JavaCollections$	0	def clear/0 in emitted port only
-f37242d9e0de/4	api-parity(port-extra)	port-extra	JavaCollections$#clear	/JavaCollections$	0	def clear/0 in emitted port only
-f37242d9e0de/5	api-parity(port-extra)	port-extra	JavaCollections$#clear	/JavaCollections$	0	def clear/0 in emitted port only
 c92b408bfaa4	api-parity(port-extra)	port-extra	JavaCollections$#comparingByKey	/JavaCollections$	0	def comparingByKey/1 in emitted port only
 b0772dfc501b	api-parity(port-extra)	port-extra	JavaCollections$#comparingByValue	/JavaCollections$	0	def comparingByValue/1 in emitted port only
 bf9269cc753f	api-parity(port-extra)	port-extra	JavaCollections$#computeIfAbsent	/JavaCollections$	0	def computeIfAbsent/3 in emitted port only
-685d34e63f36	api-parity(port-extra)	port-extra	JavaCollections$#contains	/JavaCollections$	0	def contains/1 in emitted port only
 d5d4f7bbbd43	api-parity(port-extra)	port-extra	JavaCollections$#containsAll	/JavaCollections$	0	def containsAll/2 in emitted port only
 9916b96ecd02	api-parity(port-extra)	port-extra	JavaCollections$#containsValue	/JavaCollections$	0	def containsValue/2 in emitted port only
 18b0fbe3be3a	api-parity(port-extra)	port-extra	JavaCollections$#distinctSpliterator	/JavaCollections$	0	def distinctSpliterator/1 in emitted port only
@@ -776,62 +360,22 @@ a192d6410082	api-parity(port-extra)	port-extra	JavaCollections$#entrySetView	/Ja
 1538a285f012/3	api-parity(port-extra)	port-extra	JavaCollections$#fromJava	/JavaCollections$	0	def fromJava/1 in emitted port only
 1538a285f012/4	api-parity(port-extra)	port-extra	JavaCollections$#fromJava	/JavaCollections$	0	def fromJava/1 in emitted port only
 1538a285f012/5	api-parity(port-extra)	port-extra	JavaCollections$#fromJava	/JavaCollections$	0	def fromJava/1 in emitted port only
-991b12dc980b	api-parity(port-extra)	port-extra	JavaCollections$#get	/JavaCollections$	0	def get/1 in emitted port only
-da20c8ec3151	api-parity(port-extra)	port-extra	JavaCollections$#gone	/JavaCollections$	0	val gone/0 in emitted port only
-a6163640e7fa	api-parity(port-extra)	port-extra	JavaCollections$#hasNext	/JavaCollections$	0	def hasNext/0 in emitted port only
-e58646fbfd80	api-parity(port-extra)	port-extra	JavaCollections$#i	/JavaCollections$	0	var i/0 in emitted port only
-e58646fbfd80/2	api-parity(port-extra)	port-extra	JavaCollections$#i	/JavaCollections$	0	var i/0 in emitted port only
-a1c5f447abe0	api-parity(port-extra)	port-extra	JavaCollections$#insert	/JavaCollections$	0	def insert/2 in emitted port only
-a1c5f447abe0/2	api-parity(port-extra)	port-extra	JavaCollections$#insert	/JavaCollections$	0	def insert/2 in emitted port only
-a1c5f447abe0/3	api-parity(port-extra)	port-extra	JavaCollections$#insert	/JavaCollections$	0	def insert/2 in emitted port only
-4cc38b234987	api-parity(port-extra)	port-extra	JavaCollections$#insertAll	/JavaCollections$	0	def insertAll/2 in emitted port only
-4cc38b234987/2	api-parity(port-extra)	port-extra	JavaCollections$#insertAll	/JavaCollections$	0	def insertAll/2 in emitted port only
-4cc38b234987/3	api-parity(port-extra)	port-extra	JavaCollections$#insertAll	/JavaCollections$	0	def insertAll/2 in emitted port only
 68e0c3976411	api-parity(port-extra)	port-extra	JavaCollections$#insertAll	/JavaCollections$	0	def insertAll/3 in emitted port only
 218ab7a0fd28	api-parity(port-extra)	port-extra	JavaCollections$#intRange	/JavaCollections$	0	def intRange/2 in emitted port only
 474b9341f37e	api-parity(port-extra)	port-extra	JavaCollections$#into	/JavaCollections$	0	def into/2 in emitted port only
-40a83b3e661f	api-parity(port-extra)	port-extra	JavaCollections$#iterator	/JavaCollections$	0	def iterator/0 in emitted port only
-40a83b3e661f/2	api-parity(port-extra)	port-extra	JavaCollections$#iterator	/JavaCollections$	0	def iterator/0 in emitted port only
-40a83b3e661f/3	api-parity(port-extra)	port-extra	JavaCollections$#iterator	/JavaCollections$	0	def iterator/0 in emitted port only
-40a83b3e661f/4	api-parity(port-extra)	port-extra	JavaCollections$#iterator	/JavaCollections$	0	def iterator/0 in emitted port only
-40a83b3e661f/5	api-parity(port-extra)	port-extra	JavaCollections$#iterator	/JavaCollections$	0	def iterator/0 in emitted port only
-40a83b3e661f/6	api-parity(port-extra)	port-extra	JavaCollections$#iterator	/JavaCollections$	0	def iterator/0 in emitted port only
-665042c67638	api-parity(port-extra)	port-extra	JavaCollections$#jit	/JavaCollections$	0	val jit/0 in emitted port only
 a54475791a60	api-parity(port-extra)	port-extra	JavaCollections$#keySetView	/JavaCollections$	0	def keySetView/1 in emitted port only
-9667c008febc	api-parity(port-extra)	port-extra	JavaCollections$#knownSize	/JavaCollections$	0	def knownSize/0 in emitted port only
-9667c008febc/2	api-parity(port-extra)	port-extra	JavaCollections$#knownSize	/JavaCollections$	0	def knownSize/0 in emitted port only
-9667c008febc/3	api-parity(port-extra)	port-extra	JavaCollections$#knownSize	/JavaCollections$	0	def knownSize/0 in emitted port only
-9667c008febc/4	api-parity(port-extra)	port-extra	JavaCollections$#knownSize	/JavaCollections$	0	def knownSize/0 in emitted port only
-db76cb479530	api-parity(port-extra)	port-extra	JavaCollections$#length	/JavaCollections$	0	def length/0 in emitted port only
-db76cb479530/2	api-parity(port-extra)	port-extra	JavaCollections$#length	/JavaCollections$	0	def length/0 in emitted port only
-db76cb479530/3	api-parity(port-extra)	port-extra	JavaCollections$#length	/JavaCollections$	0	def length/0 in emitted port only
 d5285a98618e	api-parity(port-extra)	port-extra	JavaCollections$#mapContainsKey	/JavaCollections$	0	def mapContainsKey/2 in emitted port only
 9b5b6af2e16a	api-parity(port-extra)	port-extra	JavaCollections$#mapGet	/JavaCollections$	0	def mapGet/2 in emitted port only
 ec9db41be471	api-parity(port-extra)	port-extra	JavaCollections$#mapRemove	/JavaCollections$	0	def mapRemove/2 in emitted port only
 a8874f754604	api-parity(port-extra)	port-extra	JavaCollections$#mapToDouble	/JavaCollections$	0	def mapToDouble/2 in emitted port only
-aa7cd48d2477	api-parity(port-extra)	port-extra	JavaCollections$#next	/JavaCollections$	0	def next/0 in emitted port only
 effc1809dc94	api-parity(port-extra)	port-extra	JavaCollections$#noneMatch	/JavaCollections$	0	def noneMatch/2 in emitted port only
 ed0723c5936e	api-parity(port-extra)	port-extra	JavaCollections$#optionalOrElse	/JavaCollections$	0	def optionalOrElse/2 in emitted port only
 51d693e109f2	api-parity(port-extra)	port-extra	JavaCollections$#orderedSpliterator	/JavaCollections$	0	def orderedSpliterator/1 in emitted port only
-e81498d3d9df	api-parity(port-extra)	port-extra	JavaCollections$#patchInPlace	/JavaCollections$	0	def patchInPlace/3 in emitted port only
-e81498d3d9df/2	api-parity(port-extra)	port-extra	JavaCollections$#patchInPlace	/JavaCollections$	0	def patchInPlace/3 in emitted port only
-e81498d3d9df/3	api-parity(port-extra)	port-extra	JavaCollections$#patchInPlace	/JavaCollections$	0	def patchInPlace/3 in emitted port only
-35509b67521d	api-parity(port-extra)	port-extra	JavaCollections$#prepend	/JavaCollections$	0	def prepend/1 in emitted port only
-35509b67521d/2	api-parity(port-extra)	port-extra	JavaCollections$#prepend	/JavaCollections$	0	def prepend/1 in emitted port only
-35509b67521d/3	api-parity(port-extra)	port-extra	JavaCollections$#prepend	/JavaCollections$	0	def prepend/1 in emitted port only
 a6d7018a8d61	api-parity(port-extra)	port-extra	JavaCollections$#putIfAbsent	/JavaCollections$	0	def putIfAbsent/3 in emitted port only
-2a68b5923ccd	api-parity(port-extra)	port-extra	JavaCollections$#r	/JavaCollections$	0	var r/0 in emitted port only
-6879c47d28d8	api-parity(port-extra)	port-extra	JavaCollections$#remove	/JavaCollections$	0	def remove/1 in emitted port only
-6879c47d28d8/2	api-parity(port-extra)	port-extra	JavaCollections$#remove	/JavaCollections$	0	def remove/1 in emitted port only
-6879c47d28d8/3	api-parity(port-extra)	port-extra	JavaCollections$#remove	/JavaCollections$	0	def remove/1 in emitted port only
-4b457fb2e7b3	api-parity(port-extra)	port-extra	JavaCollections$#remove	/JavaCollections$	0	def remove/2 in emitted port only
-4b457fb2e7b3/2	api-parity(port-extra)	port-extra	JavaCollections$#remove	/JavaCollections$	0	def remove/2 in emitted port only
-4b457fb2e7b3/3	api-parity(port-extra)	port-extra	JavaCollections$#remove	/JavaCollections$	0	def remove/2 in emitted port only
 ca27a71b3308	api-parity(port-extra)	port-extra	JavaCollections$#removeAll	/JavaCollections$	0	def removeAll/2 in emitted port only
 35e0c401cc66	api-parity(port-extra)	port-extra	JavaCollections$#removeIf	/JavaCollections$	0	def removeIf/2 in emitted port only
 e9d92e150384	api-parity(port-extra)	port-extra	JavaCollections$#removeIfSet	/JavaCollections$	0	def removeIfSet/2 in emitted port only
 03bc9670d2e6	api-parity(port-extra)	port-extra	JavaCollections$#removeValue	/JavaCollections$	0	def removeValue/2 in emitted port only
-db89944c8afe	api-parity(port-extra)	port-extra	JavaCollections$#removed	/JavaCollections$	0	var removed/0 in emitted port only
 bd6e8f9ef981	api-parity(port-extra)	port-extra	JavaCollections$#retainAll	/JavaCollections$	0	def retainAll/2 in emitted port only
 420e0174597e	api-parity(port-extra)	port-extra	JavaCollections$#reverse	/JavaCollections$	0	def reverse/1 in emitted port only
 b8ccea23f0b0	api-parity(port-extra)	port-extra	JavaCollections$#setContains	/JavaCollections$	0	def setContains/2 in emitted port only
@@ -840,13 +384,10 @@ b8ccea23f0b0	api-parity(port-extra)	port-extra	JavaCollections$#setContains	/Jav
 be425daacca1	api-parity(port-extra)	port-extra	JavaCollections$#singleton	/JavaCollections$	0	def singleton/1 in emitted port only
 19010d4d8184	api-parity(port-extra)	port-extra	JavaCollections$#singletonList	/JavaCollections$	0	def singletonList/1 in emitted port only
 e19b49acca66	api-parity(port-extra)	port-extra	JavaCollections$#singletonMap	/JavaCollections$	0	def singletonMap/2 in emitted port only
-3334ca3a227d	api-parity(port-extra)	port-extra	JavaCollections$#size	/JavaCollections$	0	def size/0 in emitted port only
 e51a34d852b6	api-parity(port-extra)	port-extra	JavaCollections$#sort	/JavaCollections$	0	def sort/2 in emitted port only
 63681390437a	api-parity(port-extra)	port-extra	JavaCollections$#sortNatural	/JavaCollections$	0	def sortNatural/1 in emitted port only
 9bea39b84359	api-parity(port-extra)	port-extra	JavaCollections$#sortedWith	/JavaCollections$	0	def sortedWith/2 in emitted port only
 f3af746e8add	api-parity(port-extra)	port-extra	JavaCollections$#subList	/JavaCollections$	0	def subList/3 in emitted port only
-776a81db595f	api-parity(port-extra)	port-extra	JavaCollections$#subtractOne	/JavaCollections$	0	def subtractOne/1 in emitted port only
-776a81db595f/2	api-parity(port-extra)	port-extra	JavaCollections$#subtractOne	/JavaCollections$	0	def subtractOne/1 in emitted port only
 6ac6fe1d7af4	api-parity(port-extra)	port-extra	JavaCollections$#swap	/JavaCollections$	0	def swap/3 in emitted port only
 19ba71deac2b	api-parity(port-extra)	port-extra	JavaCollections$#toArray	/JavaCollections$	0	def toArray/1 in emitted port only
 92f91e243fa0	api-parity(port-extra)	port-extra	JavaCollections$#toArray	/JavaCollections$	0	def toArray/2 in emitted port only
@@ -860,46 +401,18 @@ aba377092f51	api-parity(port-extra)	port-extra	JavaCollections$#toStream	/JavaCo
 18863ab8b0aa	api-parity(port-extra)	port-extra	JavaCollections$#unmodifiableList	/JavaCollections$	0	def unmodifiableList/1 in emitted port only
 186466ea0fa2	api-parity(port-extra)	port-extra	JavaCollections$#unmodifiableMap	/JavaCollections$	0	def unmodifiableMap/1 in emitted port only
 96917ba20e1f	api-parity(port-extra)	port-extra	JavaCollections$#unmodifiableSet	/JavaCollections$	0	def unmodifiableSet/1 in emitted port only
-1d12ac9e74de	api-parity(port-extra)	port-extra	JavaCollections$#update	/JavaCollections$	0	def update/2 in emitted port only
-1d12ac9e74de/2	api-parity(port-extra)	port-extra	JavaCollections$#update	/JavaCollections$	0	def update/2 in emitted port only
-1d12ac9e74de/3	api-parity(port-extra)	port-extra	JavaCollections$#update	/JavaCollections$	0	def update/2 in emitted port only
 1413a5376ed3	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#asBuffer	/JavaCollections$/Reified$	0	def asBuffer/1 in emitted port only
 512580367da4	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#asCollection	/JavaCollections$/Reified$	0	def asCollection/1 in emitted port only
 59d9c7a2612b	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#asIterable	/JavaCollections$/Reified$	0	def asIterable/1 in emitted port only
 0f8eacae3fee	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#asIterator	/JavaCollections$/Reified$	0	def asIterator/1 in emitted port only
 69c13a7922db	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#asMap	/JavaCollections$/Reified$	0	def asMap/1 in emitted port only
 6f9d2958dfeb	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#asSet	/JavaCollections$/Reified$	0	def asSet/1 in emitted port only
-55518ec68f25	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#entrySet	/JavaCollections$/Reified$	0	def entrySet/0 in emitted port only
-e3fcc0dd5df5	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#equals	/JavaCollections$/Reified$	0	def equals/1 in emitted port only
-23eede5e68ae	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#get	/JavaCollections$/Reified$	0	def get/1 in emitted port only
-a9b1bb2b1b5b	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#getKey	/JavaCollections$/Reified$	0	def getKey/0 in emitted port only
-2d09c904d594	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#getValue	/JavaCollections$/Reified$	0	def getValue/0 in emitted port only
-91aa907929d3	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#hasNext	/JavaCollections$/Reified$	0	def hasNext/0 in emitted port only
-91aa907929d3/2	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#hasNext	/JavaCollections$/Reified$	0	def hasNext/0 in emitted port only
-a6b0a196d64c	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#hashCode	/JavaCollections$/Reified$	0	def hashCode/0 in emitted port only
-ee67414804fb	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#i	/JavaCollections$/Reified$	0	var i/0 in emitted port only
 dc25780ed408	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#isBuffer	/JavaCollections$/Reified$	0	def isBuffer/1 in emitted port only
 a85507a18da8	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#isCollection	/JavaCollections$/Reified$	0	def isCollection/1 in emitted port only
-c009799b1c9a	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#isEmpty	/JavaCollections$/Reified$	0	def isEmpty/0 in emitted port only
 6e40e87a12f8	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#isIterable	/JavaCollections$/Reified$	0	def isIterable/1 in emitted port only
 f6b9d096e3d3	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#isIterator	/JavaCollections$/Reified$	0	def isIterator/1 in emitted port only
 8294c4aca984	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#isMap	/JavaCollections$/Reified$	0	def isMap/1 in emitted port only
 cb6f2177ec03	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#isSet	/JavaCollections$/Reified$	0	def isSet/1 in emitted port only
-7992a6a607a4	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#iterator	/JavaCollections$/Reified$	0	def iterator/0 in emitted port only
-7992a6a607a4/2	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#iterator	/JavaCollections$/Reified$	0	def iterator/0 in emitted port only
-7992a6a607a4/3	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#iterator	/JavaCollections$/Reified$	0	def iterator/0 in emitted port only
-7992a6a607a4/4	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#iterator	/JavaCollections$/Reified$	0	def iterator/0 in emitted port only
-af209383ae6b	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#moved	/JavaCollections$/Reified$	0	var moved/0 in emitted port only
-4391e8538c52	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#next	/JavaCollections$/Reified$	0	def next/0 in emitted port only
-4391e8538c52/2	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#next	/JavaCollections$/Reified$	0	def next/0 in emitted port only
-8a1d2196a3fb	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#out	/JavaCollections$/Reified$	0	val out/0 in emitted port only
-b65457d09a0f	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#setValue	/JavaCollections$/Reified$	0	def setValue/1 in emitted port only
-37bb29c35680	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#size	/JavaCollections$/Reified$	0	def size/0 in emitted port only
-37bb29c35680/2	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#size	/JavaCollections$/Reified$	0	def size/0 in emitted port only
-37bb29c35680/3	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#size	/JavaCollections$/Reified$	0	def size/0 in emitted port only
-37bb29c35680/4	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#size	/JavaCollections$/Reified$	0	def size/0 in emitted port only
-37bb29c35680/5	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#size	/JavaCollections$/Reified$	0	def size/0 in emitted port only
-37bb29c35680/6	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#size	/JavaCollections$/Reified$	0	def size/0 in emitted port only
 cfb31a69992e	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#toJavaValue	/JavaCollections$/Reified$	0	def toJavaValue/1 in emitted port only
 aa076a91e03c	api-parity(port-extra)	port-extra	JavaEnumMap#addOne	/JavaEnumMap	0	def addOne/1 in emitted port only
 6d8ca5a7d9f6	api-parity(port-extra)	port-extra	JavaEnumMap#clear	/JavaEnumMap	0	def clear/0 in emitted port only
@@ -946,22 +459,11 @@ e542a29b08d0	api-parity(port-extra)	port-extra	JavaStack#peek	/JavaStack	0	def p
 56329ff5c6a6	api-parity(port-extra)	port-extra	JavaStack#pop	/JavaStack	0	def pop/0 in emitted port only
 70b8a90f5567	api-parity(port-extra)	port-extra	JavaStack#push	/JavaStack	0	def push/1 in emitted port only
 ce4fa8859809	api-parity(port-extra)	port-extra	JavaStack#search	/JavaStack	0	def search/1 in emitted port only
-10e2e0c32cd9	api-parity(port-extra)	port-extra	JekyllWhereImpl#prop	/JekyllWhereImpl	0	val prop/0 in emitted port only [rename candidates: adapter, items, key, map, objects, objects, res, sb, strTarget]
-64965fd7ae96	api-parity(port-extra)	port-extra	JekyllWhereImpl$#list	/JekyllWhereImpl$	0	val list/0 in emitted port only
 0e1e767acbe3	api-parity(port-extra)	port-extra	LValue#asList	/LValue	0	def asList/2 in emitted port only [rename candidates: asAppendableObject, asArray, asString, isFalsy, isTruthy]
 e3a6e9d48a1c	api-parity(port-extra)	port-extra	LValue#mapAsArray	/LValue	0	def mapAsArray/1 in emitted port only [rename candidates: asBoolean, asMap, asNumber, asStrictNumber, canBeDouble, canBeInteger, canBeNumber, isArray, isInteger, isMap, isNumber, isString, mapAsVector]
-f2ebd65ca930	api-parity(port-extra)	port-extra	LValue$#BREAK	/LValue$	0	val BREAK/0 in emitted port only [rename candidates: date, fields, rubyDateTimeFormat, time, zoneId]
-c3024353ba78	api-parity(port-extra)	port-extra	LValue$#CONTINUE	/LValue$	0	val CONTINUE/0 in emitted port only [rename candidates: date, fields, rubyDateTimeFormat, time, zoneId]
+a390599db513	api-parity(port-extra)	port-extra	LValue$#BREAK	/LValue$	0	val BREAK/0 in emitted port only [rename candidates: rubyDateTimeFormat]
+67e07b4cc824	api-parity(port-extra)	port-extra	LValue$#CONTINUE	/LValue$	0	val CONTINUE/0 in emitted port only [rename candidates: rubyDateTimeFormat]
 705bc3a990bc	api-parity(port-extra)	port-extra	LValue$#temporalAsArray	/LValue$	0	def temporalAsArray/1 in emitted port only [rename candidates: asFormattedNumber, isBlank, isTemporal, temporalAsVector, temporalToString]
-e1b13382d50a	api-parity(port-extra)	port-extra	LiquidException$#errorLine	/LiquidException$	0	val errorLine/0 in emitted port only
-52fdc2882ad3	api-parity(port-extra)	port-extra	LiquidException$#expectedBuilder	/LiquidException$	0	val expectedBuilder/0 in emitted port only
-803ccf0d557a	api-parity(port-extra)	port-extra	LiquidException$#fpe	/LiquidException$	0	val fpe/0 in emitted port only
-1bebd13f4d37	api-parity(port-extra)	port-extra	LiquidException$#i	/LiquidException$	0	var i/0 in emitted port only
-7aa986b5561e	api-parity(port-extra)	port-extra	LiquidException$#ime	/LiquidException$	0	val ime/0 in emitted port only
-148116e8866c	api-parity(port-extra)	port-extra	LiquidException$#inputLines	/LiquidException$	0	val inputLines/0 in emitted port only
-c2fc29014888	api-parity(port-extra)	port-extra	LiquidException$#message	/LiquidException$	0	val message/0 in emitted port only
-3abce6639632	api-parity(port-extra)	port-extra	LiquidException$#offendingToken	/LiquidException$	0	val offendingToken/0 in emitted port only
-2cfc13fadc45	api-parity(port-extra)	port-extra	LiquidException$#typeList	/LiquidException$	0	val typeList/0 in emitted port only
 66b721022a04	api-parity(port-extra)	port-extra	LiquidSupport#toLiquid	/LiquidSupport	0	def toLiquid/0 in emitted port only
 47bd46eba2ec	api-parity(port-extra)	port-extra	LiquidSupport$#LiquidSerializer	/LiquidSupport$	0	class LiquidSerializer/0 in emitted port only
 1046d63d3234	api-parity(port-extra)	port-extra	LiquidSupport$#LiquidSerializer	/LiquidSupport$	0	object LiquidSerializer/0 in emitted port only
@@ -972,22 +474,10 @@ cfcb0bc5bcee	api-parity(port-extra)	port-extra	LiquidSupport$#LiquidSupportFromI
 a24154cb5523	api-parity(port-extra)	port-extra	LiquidSupport$.LiquidSupportFromInspectable#toLiquid	/LiquidSupport$/LiquidSupportFromInspectable	0	def toLiquid/0 in emitted port only
 cdabb4ee1847	api-parity(port-extra)	port-extra	LiquidSupport$.LiquidSupportFromInspectable#variable	/LiquidSupport$/LiquidSupportFromInspectable	0	var variable/0 in emitted port only
 5605fbee9cca	api-parity(port-extra)	port-extra	LiquidSupport$.LiquidSupportFromInspectable$#MAP_TYPE_REF	/LiquidSupport$/LiquidSupportFromInspectable$	0	val MAP_TYPE_REF/0 in emitted port only
-93b98a532110	api-parity(port-extra)	port-extra	LiquidSupport$.LiquidSupportFromInspectable$#i	/LiquidSupport$/LiquidSupportFromInspectable$	0	var i/0 in emitted port only
-b538d91ab44c	api-parity(port-extra)	port-extra	LiquidSupport$.LiquidSupportFromInspectable$#object	/LiquidSupport$/LiquidSupportFromInspectable$	0	val object/0 in emitted port only
 65946d3420e5	api-parity(port-extra)	port-extra	LiquidSupport$.LiquidSupportFromInspectable$#objectToMap	/LiquidSupport$/LiquidSupportFromInspectable$	0	def objectToMap/2 in emitted port only
-c604ed19a9f7	api-parity(port-extra)	port-extra	LiquidSupport$.LiquidSupportFromInspectable$#value	/LiquidSupport$/LiquidSupportFromInspectable$	0	val value/0 in emitted port only
-c604ed19a9f7/2	api-parity(port-extra)	port-extra	LiquidSupport$.LiquidSupportFromInspectable$#value	/LiquidSupport$/LiquidSupportFromInspectable$	0	val value/0 in emitted port only
-46b88bf6b0e9	api-parity(port-extra)	port-extra	LiquidWhereImpl#jsonNode	/LiquidWhereImpl	0	val jsonNode/0 in emitted port only [rename candidates: node, property, rawProperty, resolver, value]
-cbbf05b851a6	api-parity(port-extra)	port-extra	LiquidWhereImpl#jsonProperty	/LiquidWhereImpl	0	val jsonProperty/0 in emitted port only [rename candidates: node, property, rawProperty, resolver, value]
-4335c1587ac8	api-parity(port-extra)	port-extra	LiquidWhereImpl#map	/LiquidWhereImpl	0	val map/0 in emitted port only [rename candidates: node, property, rawProperty, resolver, value]
-64990ebcc949	api-parity(port-extra)	port-extra	LiquidWhereImpl#mapper	/LiquidWhereImpl	0	val mapper/0 in emitted port only [rename candidates: node, property, rawProperty, resolver, value]
-93c8472249e2	api-parity(port-extra)	port-extra	LiquidWhereImpl$#element	/LiquidWhereImpl$	0	val element/0 in emitted port only
-d79bdd3e0884	api-parity(port-extra)	port-extra	LiquidWhereImpl$#i	/LiquidWhereImpl$	0	var i/0 in emitted port only
-7121d84e94d3	api-parity(port-extra)	port-extra	LiquidWhereImpl$#l	/LiquidWhereImpl$	0	val l/0 in emitted port only
 37618bd84f07	api-parity(port-extra)	port-extra	LocalFSNameResolver#root	/LocalFSNameResolver	0	var root/0 in emitted port only
-edd7d68be850	api-parity(port-extra)	port-extra	LookupNode#id	/LookupNode	0	var id/0 in emitted port only [rename candidates: i]
-0c68e570dbdc	api-parity(port-extra)	port-extra	LookupNode#indexes	/LookupNode	0	var indexes/0 in emitted port only [rename candidates: i]
-4870c4f8cc7c	api-parity(port-extra)	port-extra	LookupNode#variableFullName	/LookupNode	0	val variableFullName/0 in emitted port only [rename candidates: sb]
+24d0704abd7c	api-parity(port-extra)	port-extra	LookupNode#id	/LookupNode	0	var id/0 in emitted port only
+fd6905682c24	api-parity(port-extra)	port-extra	LookupNode#indexes	/LookupNode	0	var indexes/0 in emitted port only
 b0349163588a	api-parity(port-extra)	port-extra	LookupNode$.Hash#hash	/LookupNode$/Hash	0	var hash/0 in emitted port only
 2e8754026367	api-parity(port-extra)	port-extra	LookupNode$.Index#expression	/LookupNode$/Index	0	var expression/0 in emitted port only
 72159c3f7fca	api-parity(port-extra)	port-extra	LookupNode$.Index#text	/LookupNode$/Index	0	var text/0 in emitted port only
@@ -996,7 +486,6 @@ b0349163588a	api-parity(port-extra)	port-extra	LookupNode$.Hash#hash	/LookupNode
 045e17a06ef0	api-parity(port-extra)	port-extra	NodeVisitor#filters	/NodeVisitor	0	var filters/0 in emitted port only
 27a740ea4d21	api-parity(port-extra)	port-extra	NodeVisitor#insertions	/NodeVisitor	0	var insertions/0 in emitted port only
 d0564d71b464	api-parity(port-extra)	port-extra	NodeVisitor#liquidStyleInclude	/NodeVisitor	0	var liquidStyleInclude/0 in emitted port only
-1b237c1c0535	api-parity(port-extra)	port-extra	NodeVisitor#stream	/NodeVisitor	0	val stream/0 in emitted port only
 fa97bc4bf5f3	api-parity(port-extra)	port-extra	NodeVisitor#visitAssignment	/NodeVisitor	0	def visitAssignment/1 in emitted port only
 203acf67e003	api-parity(port-extra)	port-extra	NodeVisitor#visitAtom_others	/NodeVisitor	0	def visitAtom_others/1 in emitted port only
 999d932a059a	api-parity(port-extra)	port-extra	NodeVisitor#visitAttribute	/NodeVisitor	0	def visitAttribute/1 in emitted port only
@@ -1055,29 +544,13 @@ f8ed5ff1510f	api-parity(port-extra)	port-extra	OutputNode#unparsed	/OutputNode	0
 08d4ff64b1b0	api-parity(port-extra)	port-extra	OutputNode#unparsedline	/OutputNode	0	var unparsedline/0 in emitted port only
 fb51841402df	api-parity(port-extra)	port-extra	Parser#parse	/Parser	0	def parse/3 in emitted port only
 9fafc880db12	api-parity(port-extra)	port-extra	Parser$#datePatterns	/Parser$	0	var datePatterns/0 in emitted port only
-b53b5b636a20	api-parity(port-extra)	port-extra	PropertyResolverHelper$#getItemProperty	/PropertyResolverHelper$	0	def getItemProperty/3 in emitted port only
-b53b5b636a20/2	api-parity(port-extra)	port-extra	PropertyResolverHelper$#getItemProperty	/PropertyResolverHelper$	0	def getItemProperty/3 in emitted port only
-bd1a1fda0f6e	api-parity(port-extra)	port-extra	PropertyResolverHelper$#support	/PropertyResolverHelper$	0	def support/1 in emitted port only
-bd1a1fda0f6e/2	api-parity(port-extra)	port-extra	PropertyResolverHelper$#support	/PropertyResolverHelper$	0	def support/1 in emitted port only
 adce0277bee8	api-parity(port-extra)	port-extra	Relative_Url#objectToMap	/Relative_Url	0	def objectToMap/2 in emitted port only
 60ed9e69c831	api-parity(port-extra)	port-extra	RenderTransformer$.ObjectAppender$#Controller	/RenderTransformer$/ObjectAppender$	0	object Controller/0 in emitted port only
 167002137a10	api-parity(port-extra)	port-extra	RenderTransformer$.ObjectAppender$.Controller#append	/RenderTransformer$/ObjectAppender$/Controller	0	def append/1 in emitted port only
-72d4a9410d3d	api-parity(port-extra)	port-extra	RenderTransformerDefaultImpl$#INSTANCE	/RenderTransformerDefaultImpl$	0	val INSTANCE/0 in emitted port only [rename candidates: maxLen]
+cd0e687f2d3a	api-parity(port-extra)	port-extra	RenderTransformerDefaultImpl$#INSTANCE	/RenderTransformerDefaultImpl$	0	val INSTANCE/0 in emitted port only
 8abfc6bd8901	api-parity(port-extra)	port-extra	SPIHelper$#applyCustomDateTypes	/SPIHelper$	0	def applyCustomDateTypes/0 in emitted port only
 320c2ded2b1b	api-parity(port-extra)	port-extra	SPIHelper$#applyTypeReferencing	/SPIHelper$	0	def applyTypeReferencing/1 in emitted port only
-202590f2b8f8	api-parity(port-extra)	port-extra	SPIHelper$#copy	/SPIHelper$	0	val copy/0 in emitted port only
-fbd38f8c5213	api-parity(port-extra)	port-extra	SPIHelper$#loader	/SPIHelper$	0	val loader/0 in emitted port only
-07d1c0e564e4	api-parity(port-extra)	port-extra	Sort#evaluated	/Sort	0	val evaluated/0 in emitted port only [rename candidates: av, bv, sorted]
-6c2af8440f7e	api-parity(port-extra)	port-extra	Sort#list	/Sort	0	val list/0 in emitted port only [rename candidates: av, bv, sorted]
-57eccada025c	api-parity(port-extra)	port-extra	Sort#obj	/Sort	0	var obj/0 in emitted port only
 cff002329db1	api-parity(port-extra)	port-extra	Sort$#SortableMap	/Sort$	0	object SortableMap/0 in emitted port only
-84b1df6318f5	api-parity(port-extra)	port-extra	Sort$#compareTo	/Sort$	0	def compareTo/1 in emitted port only
-84b1df6318f5/2	api-parity(port-extra)	port-extra	Sort$#compareTo	/Sort$	0	def compareTo/1 in emitted port only
-8f5c03040d97	api-parity(port-extra)	port-extra	Sort$#getKey	/Sort$	0	def getKey/0 in emitted port only
-0e3e31c2fc3a	api-parity(port-extra)	port-extra	Sort$#getValue	/Sort$	0	def getValue/0 in emitted port only
-862229264118	api-parity(port-extra)	port-extra	Sort$#setValue	/Sort$	0	def setValue/1 in emitted port only
-f479de1c8ef9	api-parity(port-extra)	port-extra	Sort$#toString	/Sort$	0	def toString/0 in emitted port only
-f479de1c8ef9/2	api-parity(port-extra)	port-extra	Sort$#toString	/Sort$	0	def toString/0 in emitted port only
 11f6ffb9084a	api-parity(port-extra)	port-extra	Tablerow$#TablerowloopDrop	/Tablerow$	0	object TablerowloopDrop/0 in emitted port only
 bf13cc94935e	api-parity(port-extra)	port-extra	Tablerow$.TablerowloopDrop#col	/Tablerow$/TablerowloopDrop	0	var col/0 in emitted port only
 e31339ae3c0a	api-parity(port-extra)	port-extra	Tablerow$.TablerowloopDrop#cols	/Tablerow$/TablerowloopDrop	0	var cols/0 in emitted port only
@@ -1085,37 +558,14 @@ dd661a339862	api-parity(port-extra)	port-extra	Tablerow$.TablerowloopDrop#index	
 3a170be873cb	api-parity(port-extra)	port-extra	Tablerow$.TablerowloopDrop#length	/Tablerow$/TablerowloopDrop	0	var length/0 in emitted port only
 e5c3c6838229	api-parity(port-extra)	port-extra	Tablerow$.TablerowloopDrop#row	/Tablerow$/TablerowloopDrop	0	var row/0 in emitted port only
 9bbe2cddf650	api-parity(port-extra)	port-extra	Tablerow$.TablerowloopDrop#toLiquid	/Tablerow$/TablerowloopDrop	0	def toLiquid/0 in emitted port only [rename candidates: increment, toDataView]
-8508f03be472	api-parity(port-extra)	port-extra	Template#childListStack	/Template	0	val childListStack/0 in emitted port only [rename candidates: configurator, context, jailRegistry, registry, sourceLocation, templateParser, templateSize]
-520fad70fcc2	api-parity(port-extra)	port-extra	Template#childStack	/Template	0	val childStack/0 in emitted port only [rename candidates: configurator, context, jailRegistry, registry, sourceLocation, templateParser, templateSize]
-2c2173ac3b12	api-parity(port-extra)	port-extra	Template#evaluated	/Template	0	val evaluated/0 in emitted port only [rename candidates: configurator, context, jailRegistry, registry, sourceLocation, templateParser, templateSize]
-f31500a40c29	api-parity(port-extra)	port-extra	Template#firstStack	/Template	0	val firstStack/0 in emitted port only [rename candidates: configurator, context, jailRegistry, registry, sourceLocation, templateParser, templateSize]
-5293ba9382b8	api-parity(port-extra)	port-extra	Template#future	/Template	0	val future/0 in emitted port only [rename candidates: configurator, context, jailRegistry, registry, sourceLocation, templateParser, templateSize]
 9f83ebb10ded	api-parity(port-extra)	port-extra	Template#getParseTree	/Template	0	def getParseTree/0 in emitted port only [rename candidates: errors, render, renderToObject]
-159237176cb1	api-parity(port-extra)	port-extra	Template#i	/Template	0	var i/0 in emitted port only
-159237176cb1/2	api-parity(port-extra)	port-extra	Template#i	/Template	0	var i/0 in emitted port only
-d47e9ce900b5	api-parity(port-extra)	port-extra	Template#indent	/Template	0	var indent/0 in emitted port only
-42d4e4094d71	api-parity(port-extra)	port-extra	Template#key	/Template	0	var key/0 in emitted port only
-833ae4818382	api-parity(port-extra)	port-extra	Template#map	/Template	0	val map/0 in emitted port only [rename candidates: configurator, context, jailRegistry, registry, sourceLocation, templateParser, templateSize]
-833ae4818382/2	api-parity(port-extra)	port-extra	Template#map	/Template	0	val map/0 in emitted port only [rename candidates: configurator, context, jailRegistry, registry, sourceLocation, templateParser, templateSize]
-1c72ef3a58c5	api-parity(port-extra)	port-extra	Template#maxRenderTimeMillis	/Template	0	val maxRenderTimeMillis/0 in emitted port only [rename candidates: configurator, context, jailRegistry, registry, sourceLocation, templateParser, templateSize]
-33e00ebb0ccf	api-parity(port-extra)	port-extra	Template#maxTemplateSizeBytes	/Template	0	val maxTemplateSizeBytes/0 in emitted port only [rename candidates: configurator, context, jailRegistry, registry, sourceLocation, templateParser, templateSize]
-708f76e9dcd7	api-parity(port-extra)	port-extra	Template#parser	/Template	0	val parser/0 in emitted port only [rename candidates: configurator, context, jailRegistry, registry, sourceLocation, templateParser, templateSize]
 2ccfeb5b6f34	api-parity(port-extra)	port-extra	Template#render	/Template	0	def render/3 in emitted port only [rename candidates: renderToObjectUnguarded]
 2ccfeb5b6f34/2	api-parity(port-extra)	port-extra	Template#render	/Template	0	def render/3 in emitted port only [rename candidates: renderToObjectUnguarded]
 4dabb4407a42	api-parity(port-extra)	port-extra	Template#render	/Template	0	def render/4 in emitted port only
 1c3adf55be6e	api-parity(port-extra)	port-extra	Template#renderObject	/Template	0	def renderObject/1 in emitted port only [rename candidates: render, renderResult, renderToObject, renderToObjectUnguarded, renderUnguarded, withContextHolder, withJailRoot]
 eaae692ef747	api-parity(port-extra)	port-extra	Template#renderUnguarded	/Template	0	def renderUnguarded/3 in emitted port only [rename candidates: renderToObjectUnguarded]
 76e645f5998c	api-parity(port-extra)	port-extra	Template#root	/Template	0	var root/0 in emitted port only
-33d5fea3a436	api-parity(port-extra)	port-extra	Template#syntaxError	/Template	0	def syntaxError/6 in emitted port only
-33d5fea3a436/2	api-parity(port-extra)	port-extra	Template#syntaxError	/Template	0	def syntaxError/6 in emitted port only
 49c3fc569f74	api-parity(port-extra)	port-extra	Template#toStringTree	/Template	0	def toStringTree/0 in emitted port only [rename candidates: errors, render, renderToObject]
-ade27469768b	api-parity(port-extra)	port-extra	Template#tokenName	/Template	0	val tokenName/0 in emitted port only [rename candidates: configurator, context, jailRegistry, registry, sourceLocation, templateParser, templateSize]
-2c8156a887cf	api-parity(port-extra)	port-extra	Template#tokenText	/Template	0	val tokenText/0 in emitted port only [rename candidates: configurator, context, jailRegistry, registry, sourceLocation, templateParser, templateSize]
-69423ff7eca6	api-parity(port-extra)	port-extra	Template#tokens	/Template	0	val tokens/0 in emitted port only [rename candidates: configurator, context, jailRegistry, registry, sourceLocation, templateParser, templateSize]
-e0e6cdbe215e	api-parity(port-extra)	port-extra	Template#tree	/Template	0	var tree/0 in emitted port only
-ea2d180331a7	api-parity(port-extra)	port-extra	Template#value	/Template	0	var value/0 in emitted port only
-74a0e97000a3	api-parity(port-extra)	port-extra	Template$#children	/Template$	0	val children/0 in emitted port only
-14bfc7d9dd8f	api-parity(port-extra)	port-extra	Template$#i	/Template$	0	var i/0 in emitted port only
 8c208e2dc734	api-parity(port-extra)	port-extra	TemplateContext#checkForMaxIterations	/TemplateContext	0	def checkForMaxIterations/1 in emitted port only [rename candidates: addError, containsKey, get, getRegistry, newChildContext, newObjectAppender, remove]
 83db031c7f67	api-parity(port-extra)	port-extra	TemplateContext#template	/TemplateContext	0	var template/0 in emitted port only [rename candidates: parent]
 f76357ecd9d7	api-parity(port-extra)	port-extra	TemplateContext#variables	/TemplateContext	0	var variables/0 in emitted port only [rename candidates: parent]
@@ -1152,9 +602,7 @@ ae37826a089f	api-parity(port-extra)	port-extra	TemplateParser$.Builder#withObjec
 af58c0ecf5c3	api-parity(port-extra)	port-extra	TemplateParser$.Builder$#Funnel	/TemplateParser$/Builder$	0	class Funnel/0 in emitted port only
 6b0da6d65c97	api-parity(port-extra)	port-extra	TypesSupport#configureCustomDateTypes	/TypesSupport	0	def configureCustomDateTypes/0 in emitted port only
 72414ec88c20	api-parity(port-extra)	port-extra	TypesSupport#configureTypesForReferencing	/TypesSupport	0	def configureTypesForReferencing/1 in emitted port only
-9ab2470c32b4	api-parity(port-extra)	port-extra	Where_Exp#res	/Where_Exp	0	val res/0 in emitted port only [rename candidates: vars]
 9fa8855c439b	api-parity(port-extra)	port-extra	Wrapping#wrapped	/Wrapping	0	def wrapped/0 in emitted port only
-e08e540801e8	api-parity(signature)	signature	#CustomDateFormatSupport		0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
 c8a7a2f2233b	api-parity(signature)	signature	#LocalFSNameResolver		0	modifiers differ: emitted , reference final
 93d93a746c82	api-parity(signature)	signature	#Template		0	modifiers differ: emitted , reference final
 769d6429d25f	api-parity(signature)	signature	#TemplateParser		0	modifiers differ: emitted , reference final
@@ -1259,10 +707,6 @@ b24bab402a4d	api-parity(signature)	signature	First#apply	/First	0	param 2 type d
 aaf796691230	api-parity(signature)	signature	Floor#apply	/Floor	0	param 0 type differs: emitted 'java.lang.Object', reference 'DataView'
 af8e8f44da9a	api-parity(signature)	signature	Floor#apply	/Floor	0	param 2 type differs: emitted 'scala.Array[java.lang.Object]', reference 'Array[DataView]'
 350e5fef1714	api-parity(signature)	signature	Floor#apply	/Floor	0	result type differs: emitted 'java.lang.Object', reference 'DataView'
-1a35b103bc1b	api-parity(signature)	signature	For#data	/For	0	result type differs: emitted 'java.lang.Object', reference 'DataView'
-b97722f6c0f4	api-parity(signature)	signature	For#offsets	/For	0	result type differs: emitted 'scala.collection.mutable.Map[java.lang.String, java.lang.Integer]', reference 'JMap[String, Any]'
-edffbc297814	api-parity(signature)	signature	For#registry	/For	0	result type differs: emitted 'scala.collection.mutable.Map[java.lang.String, balticporter.runtime.JavaStack[ssg.liquid.blocks.For.ForLoopDrop]]', reference 'JMap[String, Any]'
-92e305796a48	api-parity(signature)	signature	For#registry	/For	0	result type differs: emitted 'scala.collection.mutable.Map[java.lang.String, java.lang.Integer]', reference 'JMap[String, Any]'
 2d8856f81a31	api-parity(signature)	signature	For#render	/For	0	param 1 type differs: emitted 'scala.Array[ssg.liquid.nodes.LNode]', reference 'Array[LNode]'
 36001b131f45	api-parity(signature)	signature	For#render	/For	0	result type differs: emitted 'java.lang.Object', reference 'DataView'
 5dcc5cfc47c6	api-parity(signature)	signature	For$#ForLoopDrop	/For$	0	parents differ: emitted-only [ssg.liquid.parser.LiquidSupport], reference-only []
@@ -1331,7 +775,6 @@ a213af44f8d9	api-parity(signature)	signature	Last#apply	/Last	0	result type diff
 262e0a7699f6	api-parity(signature)	signature	LiquidWhereImpl#apply	/LiquidWhereImpl	0	param 0 type differs: emitted 'java.lang.Object', reference 'DataView'
 065f6605ddc3	api-parity(signature)	signature	LiquidWhereImpl#apply	/LiquidWhereImpl	0	param 1 type differs: emitted 'scala.Array[java.lang.Object]', reference 'Array[DataView]'
 913e3c85acf6	api-parity(signature)	signature	LiquidWhereImpl#apply	/LiquidWhereImpl	0	result type differs: emitted 'java.lang.Object', reference 'DataView'
-1dc10d3c2c43	api-parity(signature)	signature	LiquidWhereImpl#node	/LiquidWhereImpl	0	result type differs: emitted 'java.lang.Object', reference 'DataView'
 035ccc5a7e0a	api-parity(signature)	signature	LocalFSNameResolver#resolve	/LocalFSNameResolver	0	result type differs: emitted 'ssg.liquid.antlr.CharStreamWithLocation', reference 'NameResolver.ResolvedSource'
 ed7387c87892	api-parity(signature)	signature	LookupNode#render	/LookupNode	0	result type differs: emitted 'java.lang.Object', reference 'DataView'
 a19cb6424b49	api-parity(signature)	signature	LookupNode$.Hash#get	/LookupNode$/Hash	0	param 0 type differs: emitted 'java.lang.Object', reference 'DataView'
@@ -1438,7 +881,6 @@ f9734918597b	api-parity(signature)	signature	Tablerow#render	/Tablerow	0	param 1
 887039d769a3	api-parity(signature)	signature	Tablerow#render	/Tablerow	0	result type differs: emitted 'java.lang.Object', reference 'DataView'
 39cbfafa8d57	api-parity(signature)	signature	Tablerow$#TablerowloopDrop	/Tablerow$	0	parents differ: emitted-only [ssg.liquid.parser.LiquidSupport], reference-only []
 85e5fe749065	api-parity(signature)	signature	Template#errors	/Template	0	result type differs: emitted 'scala.collection.mutable.Buffer[java.lang.Exception]', reference 'JList[Exception]'
-6fcf7c9ecf70	api-parity(signature)	signature	Template#registry	/Template	0	result type differs: emitted 'scala.collection.mutable.Map[java.lang.String, java.lang.Object]', reference 'JMap[String, Any]'
 1f725fbaadfa	api-parity(signature)	signature	Template#render	/Template	0	param 0 type differs: emitted 'java.lang.String', reference 'JMap[String, DataView]'
 03455861c57a	api-parity(signature)	signature	Template#renderToObject	/Template	0	param 0 type differs: emitted 'java.lang.String', reference 'JMap[String, DataView]'
 2299d34571bf	api-parity(signature)	signature	Template#renderToObject	/Template	0	result type differs: emitted 'java.lang.Object', reference 'DataView'
@@ -1452,8 +894,8 @@ c1e94fa35316/2	api-parity(signature)	signature	Template#renderToObjectUnguarded	
 5b18929c088f	api-parity(signature)	signature	TemplateContext#errors	/TemplateContext	0	result type differs: emitted 'scala.collection.mutable.Buffer[java.lang.Exception]', reference 'JList[Exception]'
 07dd9354ec09	api-parity(signature)	signature	TemplateContext#get	/TemplateContext	0	result type differs: emitted 'java.lang.Object', reference 'DataView'
 16cd67a7e220	api-parity(signature)	signature	TemplateContext#getEnvironmentMap	/TemplateContext	0	result type differs: emitted 'scala.collection.mutable.Map[java.lang.String, java.lang.Object]', reference 'JMap[String, DataView]'
-1bba95451fc5	api-parity(signature)	signature	TemplateContext#getRegistry	/TemplateContext	0	result type differs: emitted 'T', reference 'JMap[String, T]'
-2a3f835903f9	api-parity(signature)	signature	TemplateContext#getRegistry	/TemplateContext	0	type params differ: emitted '[T <: scala.collection.mutable.Map[java.lang.String, ? <: java.lang.Object]]', reference '[T]'
+2eb861b4ed66	api-parity(signature)	signature	TemplateContext#getRegistry	/TemplateContext	0	result type differs: emitted '$0', reference 'JMap[String, $0]'
+6a7d0dead35e	api-parity(signature)	signature	TemplateContext#getRegistry	/TemplateContext	0	type params differ: emitted '[$0 <: scala.collection.mutable.Map[java.lang.String, ?]]', reference '[$0]'
 78992f06c6de	api-parity(signature)	signature	TemplateContext#getRootFolder	/TemplateContext	0	result type differs: emitted 'java.nio.file.Path', reference 'ssg.commons.io.FilePath'
 3bd100046dea	api-parity(signature)	signature	TemplateContext#getVariables	/TemplateContext	0	result type differs: emitted 'scala.collection.mutable.Map[java.lang.String, java.lang.Object]', reference 'JMap[String, DataView]'
 4df60ac5d5d5	api-parity(signature)	signature	TemplateContext#newChildContext	/TemplateContext	0	param 0 type differs: emitted 'scala.collection.mutable.Map[java.lang.String, java.lang.Object]', reference 'JMap[String, DataView]'
@@ -1547,7 +989,7 @@ e42946d01a99	catalog(consulted)	reached	JS-C18	-	0	rendering ClassDef — consul
 9e656d98b66c	catalog(consulted)	reached	JS-C22	liqp/Examples.java	35	rendering Apply — consulted 3239, fired 30, declarations 0: Java's THREE-PHASE applicability (strict, then loose, then varargs) has no Scala counterpart
 2e9b7b9af380	catalog(consulted)	reached	JS-C23	-	0	rendering Apply — consulted 3239, fired 0, declarations 0: most-specific tie-break: Scala prefers a NON-GENERIC alternative and Java does not
 3d5c6198e0b4	catalog(consulted)	reached	JS-C25	liqp/Examples.java	54	rendering DefDef — consulted 525, fired 215, declarations 0: `override` is mandatory in Scala and absent in Java
-6e37b13949d2	catalog(consulted)	reached	JS-C29	liqp/Examples.java	19	rendering-type TypeRef — consulted 4254, fired 213, declarations 0: a static NESTED class and an INNER class are different types, and only one is path-dependent
+b593f9a13fd5	catalog(consulted)	reached	JS-C29	liqp/Examples.java	19	rendering-type TypeRef — consulted 4179, fired 213, declarations 0: a static NESTED class and an INNER class are different types, and only one is path-dependent
 35235bc5d678	catalog(consulted)	reached	JS-C31	liqp/Examples.java	52	lowering CtNewClass/Expression — consulted 411, fired 24, declarations 0: anonymous class construction and capture
 5ce9ea496f0e	catalog(consulted)	reached	JS-C33	liqp/filters/Sort.java	75	rendering ClassDef — consulted 157, fired 6, declarations 0: the interface default-method diamond is resolved by JLS's two rules, not by trait linearization
 0568bb91955e	catalog(consulted)	reached	JS-C34	liqp/Insertion.java	13	rendering ClassDef — consulted 157, fired 102, declarations 0: interface statics are not inherited AT ALL, not even by an implementor
@@ -1574,7 +1016,7 @@ b1fce0cbcd67	catalog(consulted)	reached	JS-E03	-	0	lowering CtOperatorAssignment
 96ee7d7a1f47	catalog(consulted)	reached	JS-E14	liqp/exceptions/LiquidException.java	76	lowering CtBinaryOperator/Expression — consulted 686, fired 3, declarations 0: string concatenation with a NON-`String` left operand
 b031511441bc	catalog(consulted)	reached	JS-E17	liqp/Examples.java	106	lowering CtOperatorAssignment/Either — consulted 7, fired 7, declarations 0: a compound assignment and `++`/`--` evaluate the LVALUE ONCE — its array reference, its index, its target
 9156c9a91c6f	catalog(consulted)	reached	JS-E19	-	0	lowering CtConstructorCall/Expression — consulted 411, fired 0, declarations 0: a BOXING CONSTRUCTOR — `new Double(v)` — is deprecated for removal; the JDK names `valueOf`
-33917541bf74	catalog(consulted)	reached	JS-G01	<synthetic>	0	lowering-type CtWildcardReference + rendering-type TypeBounds — consulted 506, fired 183, declarations 0: use-site wildcards, with the matching bound grammar
+18527a43ff95	catalog(consulted)	reached	JS-G01	<synthetic>	0	lowering-type CtWildcardReference + rendering-type TypeBounds — consulted 506, fired 108, declarations 0: use-site wildcards, with the matching bound grammar
 be14c1c5137c	catalog(consulted)	reached	JS-G03	liqp/filters/Push.java	29	lowering-type CtWildcardReference — consulted 393, fired 10, declarations 0: `? super Object` has exactly one inhabitant
 9f6a25125e31	catalog(consulted)	reached	JS-G04	liqp/filters/where/JekyllWhereImpl.java	149	rendering ForEach — consulted 55, fired 3, declarations 0: a captured wildcard on ITERATION has no nameable type
 e4d461aeb125	catalog(consulted)	reached	JS-G05	-	0	rendering ClassDef — consulted 157, fired 0, declarations 0: a wildcard in an `extends` clause takes the parameter's DECLARED bound
@@ -1583,7 +1025,7 @@ e4d461aeb125	catalog(consulted)	reached	JS-G05	-	0	rendering ClassDef — consul
 c08c84b7a98a	catalog(consulted)	reached	JS-G09	liqp/Template.java	165	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 4461, fired 13, declarations 0: UNCHECKED CONVERSION at a raw type is legal in Java and is not in Scala
 5c3807d1babe	catalog(consulted)	reached	JS-G10	-	0	lowering CtNewClass/Expression — consulted 411, fired 0, declarations 0: a RAW anonymous class WITH a body
 cd6a6ac98526	catalog(consulted)	reached	JS-G11	liqp/TemplateParser.java	53	rendering ClassDef — consulted 157, fired 5, declarations 0: a partially-nameable F-BOUNDED raw fill
-5312b44257be	catalog(consulted)	reached	JS-G12	<synthetic>	0	lowering-type CtTypeParameterReference + rendering-type TypeRef — consulted 4460, fired 104, declarations 0: a diamond's inference variable has NO NAMEABLE type
+482248e2e8fe	catalog(consulted)	reached	JS-G12	<synthetic>	0	lowering-type CtTypeParameterReference + rendering-type TypeRef — consulted 4385, fired 104, declarations 0: a diamond's inference variable has NO NAMEABLE type
 49025f516ea5	catalog(consulted)	reached	JS-G13	liqp/Insertions.java	91	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 4461, fired 14, declarations 0: Java arrays are COVARIANT, with a runtime `ArrayStoreException`; Scala's are invariant
 0738c0f7e375	catalog(consulted)	reached	JS-G14	liqp/Examples.java	109	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 4461, fired 134, declarations 0: a primitive at a generic slot boxes to the WRAPPER, not to the formal
 c9b3bb53b137	catalog(consulted)	reached	JS-G15	-	0	lowering CtNewArray/Expression — consulted 27, fired 0, declarations 0: GENERIC ARRAY CREATION is illegal in Java, so only the cast idiom reaches the engine
@@ -1774,7 +1216,7 @@ e81d70943de3	catalog(unreached)	partial	JS-E07	-	0	never reached by this port �
 85131523f811	collection-boundary	ExternalCallee	@3139#get()	liqp/spi/BasicTypesSupport.java	69	external result (unverified pass-through, no signature): Found scala.collection.mutable.Map[java.lang.String, java.lang.Object] / Required a live scala view, IF the value was ever java's
 85131523f811/2	collection-boundary	ExternalCallee	@3139#get()	liqp/spi/BasicTypesSupport.java	74	external result (unverified pass-through, no signature): Found scala.collection.mutable.Map[java.lang.String, java.lang.Object] / Required a live scala view, IF the value was ever java's
 85131523f811/3	collection-boundary	ExternalCallee	@3139#get()	liqp/spi/BasicTypesSupport.java	78	external result (unverified pass-through, no signature): Found scala.collection.mutable.Map[java.lang.String, java.lang.Object] / Required a live scala view, IF the value was ever java's
-29fc607eedb0	collection-boundary	ExternalCallee	@633#readValue(java.lang.String,java.lang.Class)	liqp/Template.java	165	external result: Found scala.collection.mutable.HashMap[? <: java.lang.Object, ? <: java.lang.Object] / Required a live scala view
+9333bca8658b	collection-boundary	ExternalCallee	@633#readValue(java.lang.String,java.lang.Class)	liqp/Template.java	165	external result: Found scala.collection.mutable.HashMap[?, ?] / Required a live scala view
 46392f8a5f14	collection-boundary	ExternalCallee	@717#accept(T)	liqp/Template.java	341	argument (external callee, no signature): Found scala.collection.mutable.Map[java.lang.String, java.lang.Object] / Required unknown — the callee is a class file
 92924750addc	collection-boundary	InexpressibleParent	ssg.liquid.filters.Sort$ComparableMapEntry	liqp/filters/Sort.java	75	parent (implements): Found java.util.Map$Entry[liqp.filters.Sort$ComparableMapEntry$$K, liqp.filters.Sort$ComparableMapEntry$$V] / Required scala.Tuple2[liqp.filters.Sort$ComparableMapEntry$$K, liqp.filters.Sort$ComparableMapEntry$$V]
 b78492157ec7	collection-boundary	InexpressibleParent	ssg.liquid.filters.Sort$ComparableMapEntry#setValue	liqp/filters/Sort.java	94	member (implements) setValue: Found java.lang.UnsupportedOperationException / Required liqp.filters.Sort$ComparableMapEntry$$V

@@ -223,19 +223,18 @@ b620646572d3	api-parity(port-extra)	port-extra	ViewportQuadMesh#dispose	/Viewpor
 2715e3bdc6ac	api-parity(port-extra)	port-extra	ViewportQuadMesh#mesh	/ViewportQuadMesh	0	def mesh/0 in emitted port only [rename candidates: close, getMesh]
 ab089b351fd8	api-parity(port-extra)	port-extra	VignettingEffect#saturationControlEnabled	/VignettingEffect	0	def saturationControlEnabled/0 in emitted port only [rename candidates: centerX, centerY, intensity, rebind, saturation, saturationMul, vignetteX, vignetteY]
 4a907146dc04	api-parity(port-extra)	port-extra	VignettingEffect#saturationEnabled	/VignettingEffect	0	var saturationEnabled/0 in emitted port only
-17ed9897e8ab	api-parity(signature)	signature	#PrioritizedArray		0	parents differ: emitted-only [balticporter.runtime.JavaIterable[T]], reference-only [Iterable[T]]
-c7672d4838a6	api-parity(signature)	signature	#PrioritizedArray		0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
+cc138865855a	api-parity(signature)	signature	#PrioritizedArray		0	parents differ: emitted-only [balticporter.runtime.JavaIterable[$0]], reference-only [Iterable[$0]]
 c613829a01fa	api-parity(signature)	signature	#UniformBatcher		0	parents differ: emitted-only [sge.utils.Pool.Poolable], reference-only []
 c5c25734af33	api-parity(signature)	signature	#VfxPingPongWrapper		0	parents differ: emitted-only [sge.utils.Pool.Poolable], reference-only []
 6736efcc9ba0	api-parity(signature)	signature	#ViewportQuadMesh		0	parents differ: emitted-only [], reference-only [AutoCloseable]
 40f61040e42a	api-parity(signature)	signature	BloomEffect$#Settings	/BloomEffect$	0	modifiers differ: emitted , reference final,case
 a3134af6925b	api-parity(signature)	signature	CompositeVfxEffect#managedEffects	/CompositeVfxEffect	0	modifiers differ: emitted final, reference
 64986d4ea436	api-parity(signature)	signature	CompositeVfxEffect#managedEffects	/CompositeVfxEffect	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.vfx.effects.VfxEffect]', reference 'ArrayBuffer[VfxEffect]'
-78dffc714264	api-parity(signature)	signature	CompositeVfxEffect#register	/CompositeVfxEffect	0	type params differ: emitted '[T <: sge.vfx.effects.VfxEffect]', reference '[T <: VfxEffect]'
-7145bf5a047d	api-parity(signature)	signature	CompositeVfxEffect#unregister	/CompositeVfxEffect	0	type params differ: emitted '[T <: sge.vfx.effects.VfxEffect]', reference '[T <: VfxEffect]'
+123c8f03d36b	api-parity(signature)	signature	CompositeVfxEffect#register	/CompositeVfxEffect	0	type params differ: emitted '[$0 <: sge.vfx.effects.VfxEffect]', reference '[$0 <: VfxEffect]'
+af2177dd020b	api-parity(signature)	signature	CompositeVfxEffect#unregister	/CompositeVfxEffect	0	type params differ: emitted '[$0 <: sge.vfx.effects.VfxEffect]', reference '[$0 <: VfxEffect]'
 0c48f052b38c	api-parity(signature)	signature	GaussianBlurEffect$.Convolve1DEffect#offsets	/GaussianBlurEffect$/Convolve1DEffect	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
 4bebb2d1ebd4	api-parity(signature)	signature	GaussianBlurEffect$.Convolve1DEffect#weights	/GaussianBlurEffect$/Convolve1DEffect	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
-ab8e3113b46f	api-parity(signature)	signature	PrioritizedArray#iterator	/PrioritizedArray	0	result type differs: emitted 'balticporter.runtime.JavaIterator[T]', reference 'Iterator[T]'
+c5f12f5102ec	api-parity(signature)	signature	PrioritizedArray#iterator	/PrioritizedArray	0	result type differs: emitted 'balticporter.runtime.JavaIterator[$0]', reference 'Iterator[$0]'
 4d928783e1dd	api-parity(signature)	signature	PrioritizedArray#size	/PrioritizedArray	0	modifiers differ: emitted , reference override
 a630da2fd07c	api-parity(signature)	signature	ShaderVfxEffect#setUniform	/ShaderVfxEffect	0	param 2 type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
 7f0147dfc3c8	api-parity(signature)	signature	ShaderVfxEffect$#TEXTURE_HANDLE0	/ShaderVfxEffect$	0	modifiers differ: emitted inline, reference

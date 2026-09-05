@@ -88,8 +88,8 @@ f9ba8e36cb4e	api-parity(port-extra)	port-extra	ShaderTransition#progressLoc	/Sha
 e227ac6aa8aa	api-parity(port-extra)	port-extra	TimedTransition#done	/TimedTransition	0	def done/0 in emitted port only [rename candidates: isDone, show]
 8080c8ebf67f	api-parity(port-extra)	port-extra	VerticalSlicingTransition#sliceCount	/VerticalSlicingTransition	0	var sliceCount/0 in emitted port only
 510193023eb7	api-parity(signature)	signature	#ManagedGame		0	parents differ: emitted-only [sge.ApplicationAdapter], reference-only [ApplicationListener]
-5149af1f9466	api-parity(signature)	signature	#ManagedGame		0	type params differ: emitted '[S <: sge.screen.ManagedScreen, T <: sge.screen.transition.ScreenTransition]', reference '[S <: ManagedScreen, T <: ScreenTransition]'
-d7968b9abe15	api-parity(signature)	signature	#ScreenManager		0	type params differ: emitted '[S <: sge.screen.ManagedScreen, T <: sge.screen.transition.ScreenTransition]', reference '[S <: ManagedScreen, T <: ScreenTransition]'
+def76c2c92da	api-parity(signature)	signature	#ManagedGame		0	type params differ: emitted '[$0 <: sge.screen.ManagedScreen, $1 <: sge.screen.transition.ScreenTransition]', reference '[$0 <: ManagedScreen, $1 <: ScreenTransition]'
+88d654546c2c	api-parity(signature)	signature	#ScreenManager		0	type params differ: emitted '[$0 <: sge.screen.ManagedScreen, $1 <: sge.screen.transition.ScreenTransition]', reference '[$0 <: ManagedScreen, $1 <: ScreenTransition]'
 47c463651f6a	api-parity(signature)	signature	#SlidingDirection		0	parents differ: emitted-only [java.lang.Enum[SlidingDirection]], reference-only []
 d1b0130b1e60	api-parity(signature)	signature	ManagedScreen#clearColor	/ManagedScreen	0	result type differs: emitted 'lowlevel.Nullable[sge.graphics.Color]', reference 'Nullable[Color]'
 97bf913c902a	api-parity(signature)	signature	ManagedScreen#inputProcessors	/ManagedScreen	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.InputProcessor]', reference 'ArrayBuffer[InputProcessor]'
@@ -97,10 +97,10 @@ d1b0130b1e60	api-parity(signature)	signature	ManagedScreen#clearColor	/ManagedSc
 fe3e9c48563b	api-parity(signature)	signature	ScreenManager#createFrameBuffer	/ScreenManager	0	result type differs: emitted 'sge.screen.guacamole.NestableFrameBuffer', reference 'FrameBuffer'
 aa68ca7a8062	api-parity(signature)	signature	ScreenManager#currScreen	/ScreenManager	0	result type differs: emitted 'lowlevel.Nullable[sge.screen.ManagedScreen]', reference 'Nullable[ManagedScreen]'
 a235668f5a24	api-parity(signature)	signature	ScreenManager#initialize	/ScreenManager	0	param 0 type differs: emitted 'sge.screen.utils.BasicInputMultiplexer', reference 'InputMultiplexer'
-52176d493e8b	api-parity(signature)	signature	ScreenManager#pushScreen	/ScreenManager	0	param 0 type differs: emitted 'sge.screen.utils.Supplier[S]', reference '() => S'
-a87ebd6d3c15	api-parity(signature)	signature	ScreenManager#pushScreen	/ScreenManager	0	param 1 type differs: emitted 'lowlevel.Nullable[sge.screen.utils.Supplier[T]]', reference '() => Nullable[T]'
+d0ebbeafdd2a	api-parity(signature)	signature	ScreenManager#pushScreen	/ScreenManager	0	param 0 type differs: emitted 'sge.screen.utils.Supplier[$0]', reference '() => $0'
+5ca5ddc0db40	api-parity(signature)	signature	ScreenManager#pushScreen	/ScreenManager	0	param 1 type differs: emitted 'lowlevel.Nullable[sge.screen.utils.Supplier[$1]]', reference '() => Nullable[$1]'
 050826b64219	api-parity(signature)	signature	ScreenManager#transitionQueue	/ScreenManager	0	modifiers differ: emitted final, reference
-177e2b9b01d5	api-parity(signature)	signature	ScreenManager#transitionQueue	/ScreenManager	0	result type differs: emitted 'scala.collection.mutable.ArrayDeque[sge.screen.guacamole.Pair[sge.screen.utils.Supplier[T], sge.screen.utils.Supplier[S]]]', reference 'Queue[(() => Nullable[T], () => S)]'
+4283b58396c9	api-parity(signature)	signature	ScreenManager#transitionQueue	/ScreenManager	0	result type differs: emitted 'scala.collection.mutable.ArrayDeque[sge.screen.guacamole.Pair[sge.screen.utils.Supplier[$1], sge.screen.utils.Supplier[$0]]]', reference 'Queue[(() => Nullable[$1], () => $0)]'
 0f4a39b381d4	api-parity(signature)	signature	ScreenTransition#clearColor	/ScreenTransition	0	result type differs: emitted 'lowlevel.Nullable[sge.graphics.Color]', reference 'Nullable[Color]'
 63a7aba91b9c	api-parity(signature)	signature	TimedTransition#interpolation	/TimedTransition	0	result type differs: emitted 'lowlevel.Nullable[sge.math.Interpolation]', reference 'Nullable[Interpolation]'
 d118d0d2ddea	api-parity(visibility)	visibility	BatchTransition#batch	/BatchTransition	0	access differs: emitted 'protected[transition]', reference 'protected'

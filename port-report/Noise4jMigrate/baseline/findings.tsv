@@ -69,16 +69,7 @@ e56b3fdd9533	api-parity(accessor)	accessor	NoiseGenerator#setAlgorithmProvider	/
 adfa358de850	api-parity(accessor)	accessor	NoiseGenerator#setSeed	/NoiseGenerator	0	def setSeed/1 in emitted port only
 8e8be6762238	api-parity(collection-retarget)	collection-retarget	DungeonGenerator#addConnector	/DungeonGenerator	0	param 1 type differs: emitted 'java.util.Map[sge.noise.generator.room.dungeon.DungeonGenerator.Point, java.util.Set[java.lang.Integer]]', reference 'HashMap[DungeonGenerator.Point, HashSet[Int]]'
 8cf3c06cee3a	api-parity(collection-retarget)	collection-retarget	DungeonGenerator#findConnectors	/DungeonGenerator	0	result type differs: emitted 'java.util.Map[sge.noise.generator.room.dungeon.DungeonGenerator.Point, java.util.Set[java.lang.Integer]]', reference 'HashMap[DungeonGenerator.Point, HashSet[Int]]'
-40eeccef25f8	api-parity(hand-port-extra)	hand-port-extra	#DOWN		0	case DOWN/0 in reference port only
 549fc72ca1b5	api-parity(hand-port-extra)	hand-port-extra	#GenerationMode		0	enum GenerationMode/0 in reference port only
-d86b1f4a5139	api-parity(hand-port-extra)	hand-port-extra	#LEFT		0	case LEFT/0 in reference port only
-7bc53ce9bde6	api-parity(hand-port-extra)	hand-port-extra	#RIGHT		0	case RIGHT/0 in reference port only
-e14942cec53f	api-parity(hand-port-extra)	hand-port-extra	#UP		0	case UP/0 in reference port only
-73935b938dcb	api-parity(hand-port-extra)	hand-port-extra	#next		0	def next/1 in reference port only
-e301b2d3156b	api-parity(hand-port-extra)	hand-port-extra	#nextX		0	def nextX/1 in reference port only
-c59bf531ea41	api-parity(hand-port-extra)	hand-port-extra	#nextX		0	def nextX/2 in reference port only
-f7348e955ae3	api-parity(hand-port-extra)	hand-port-extra	#nextY		0	def nextY/1 in reference port only
-167e595494d1	api-parity(hand-port-extra)	hand-port-extra	#nextY		0	def nextY/2 in reference port only
 e44dcb1b2cbf	api-parity(hand-port-extra)	hand-port-extra	AbstractGenerator#mode	/AbstractGenerator	0	def mode/0 in reference port only [rename candidates: getMode]
 b0a45d1f6443	api-parity(hand-port-extra)	hand-port-extra	AbstractGenerator#mode_=	/AbstractGenerator	0	def mode_=/1 in reference port only [rename candidates: setMode]
 3ffdf65eaade	api-parity(hand-port-extra)	hand-port-extra	AbstractRoomGenerator#maxRoomSize	/AbstractRoomGenerator	0	def maxRoomSize/0 in reference port only [rename candidates: getMaxRoomSize, getMaxRoomsAmount, getMinRoomSize, getRoomTypes, getTolerance, randomSize]
@@ -86,11 +77,6 @@ df5b90149f78	api-parity(hand-port-extra)	hand-port-extra	AbstractRoomGenerator#m
 895a53777d53	api-parity(hand-port-extra)	hand-port-extra	AbstractRoomGenerator#minRoomSize	/AbstractRoomGenerator	0	def minRoomSize/0 in reference port only [rename candidates: getMaxRoomSize, getMaxRoomsAmount, getMinRoomSize, getRoomTypes, getTolerance, randomSize]
 9f59dbe22033	api-parity(hand-port-extra)	hand-port-extra	AbstractRoomGenerator#minRoomSize_=	/AbstractRoomGenerator	0	def minRoomSize_=/1 in reference port only [rename candidates: addRoomType, addRoomTypes, getRandomRoom, normalizePosition, normalizeSize, randomSize, setMaxRoomSize, setMaxRoomsAmount, setMinRoomSize, setTolerance]
 188c40827054	api-parity(hand-port-extra)	hand-port-extra	CellularAutomataGenerator#initiate	/CellularAutomataGenerator	0	var initiate/0 in reference port only
-43b57ead5cd9	api-parity(hand-port-extra)	hand-port-extra	DungeonGenerator#di	/DungeonGenerator	0	var di/0 in reference port only
-634adb4134d6	api-parity(hand-port-extra)	hand-port-extra	DungeonGenerator#dirValues	/DungeonGenerator	0	val dirValues/0 in reference port only [rename candidates: direction]
-1351dcc3f9dd	api-parity(hand-port-extra)	hand-port-extra	DungeonGenerator#found	/DungeonGenerator	0	var found/0 in reference port only
-a2cbe960a2ba	api-parity(hand-port-extra)	hand-port-extra	DungeonGenerator#nx	/DungeonGenerator	0	val nx/0 in reference port only [rename candidates: direction]
-b3feb47f0a2f	api-parity(hand-port-extra)	hand-port-extra	DungeonGenerator#ny	/DungeonGenerator	0	val ny/0 in reference port only [rename candidates: direction]
 ab99d73f2930	api-parity(hand-port-extra)	hand-port-extra	DungeonGenerator$.Point#x	/DungeonGenerator$/Point	0	var x/0 in reference port only
 f208c63c2ac8	api-parity(hand-port-extra)	hand-port-extra	DungeonGenerator$.Point#y	/DungeonGenerator$/Point	0	var y/0 in reference port only
 75b2f96206cc	api-parity(hand-port-extra)	hand-port-extra	GenerationMode#ADD	/GenerationMode	0	case ADD/0 in reference port only
@@ -116,7 +102,6 @@ dcf08c3562c4	api-parity(hand-port-extra)	hand-port-extra	Int2dArray#toIndex	/Int
 e013231d56ac	api-parity(hand-port-extra)	hand-port-extra	Int2dArray#width	/Int2dArray	0	val width/0 in reference port only
 cbbda1d1adf4	api-parity(hand-port-extra)	hand-port-extra	NoiseGenerator#algorithmProvider	/NoiseGenerator	0	def algorithmProvider/0 in reference port only [rename candidates: getModifier, getRadius, getSeed]
 2ad81f0993ad	api-parity(hand-port-extra)	hand-port-extra	NoiseGenerator#algorithmProvider_=	/NoiseGenerator	0	def algorithmProvider_=/1 in reference port only [rename candidates: generate, setAlgorithmProvider, setModifier, setRadius, setSeed]
-9faadb3393f7	api-parity(hand-port-extra)	hand-port-extra	NoiseGenerator$#gen	/NoiseGenerator$	0	val gen/0 in reference port only [rename candidates: generator]
 a37c5881d453	api-parity(hand-port-extra)	hand-port-extra	RoomType$#DefaultRoomType	/RoomType$	0	enum DefaultRoomType/0 in reference port only
 7cc120098c79	api-parity(hand-port-extra)	hand-port-extra	RoomType$.DefaultRoomType#CASTLE	/RoomType$/DefaultRoomType	0	case CASTLE/0 in reference port only
 433d92b7c7c5	api-parity(hand-port-extra)	hand-port-extra	RoomType$.DefaultRoomType#CROSS	/RoomType$/DefaultRoomType	0	case CROSS/0 in reference port only
@@ -204,7 +189,6 @@ c34df6d25e82	api-parity(port-extra)	port-extra	Grid$.CellConsumer$#BREAK	/Grid$/
 e75017e6f4f7	api-parity(port-extra)	port-extra	Grid$.CellConsumer$#CONTINUE	/Grid$/CellConsumer$	0	val CONTINUE/0 in emitted port only [rename candidates: Break, Continue]
 a344424a9a08	api-parity(port-extra)	port-extra	Int2dArray#array	/Int2dArray	0	var array/0 in emitted port only
 7e39ff55ef66	api-parity(port-extra)	port-extra	NoiseGenerator$#DefaultNoiseAlgorithmProvider	/NoiseGenerator$	0	object DefaultNoiseAlgorithmProvider/0 in emitted port only
-2e33d7b88703	api-parity(port-extra)	port-extra	NoiseGenerator$#generator	/NoiseGenerator$	0	val generator/0 in emitted port only [rename candidates: gen]
 a4dd584b84db	api-parity(port-extra)	port-extra	Object2dArray#ArrayIterator	/Object2dArray	0	class ArrayIterator/0 in emitted port only
 9e691b2078f7	api-parity(port-extra)	port-extra	Object2dArray#array	/Object2dArray	0	var array/0 in emitted port only
 daa87c2d8ffc	api-parity(port-extra)	port-extra	Object2dArray#fill	/Object2dArray	0	def fill/1 in emitted port only
@@ -259,13 +243,10 @@ dd31934b6c07	api-parity(signature)	signature	DungeonGenerator#getDestinations	/D
 5d53c7eaa45e	api-parity(signature)	signature	DungeonGenerator#getDestinations	/DungeonGenerator	0	param 1 type differs: emitted 'java.util.Iterator[java.lang.Integer]', reference 'JIterator[Int]'
 e16ca907110f	api-parity(signature)	signature	DungeonGenerator#getDestinations	/DungeonGenerator	0	param 2 type differs: emitted 'scala.Array[java.lang.Integer]', reference 'Array[Int]'
 215f604242e5	api-parity(signature)	signature	DungeonGenerator#getDestinations	/DungeonGenerator	0	result type differs: emitted 'scala.Array[java.lang.Integer]', reference 'Array[Int]'
-7cc9c0dd67a6	api-parity(signature)	signature	Generators$#randomElement	/Generators$	0	param 0 type differs: emitted 'java.util.List[Type]', reference 'JList[A]'
-f5c49eb2b4f3	api-parity(signature)	signature	Generators$#randomElement	/Generators$	0	result type differs: emitted 'Type', reference 'A'
-eb3bdddf120d	api-parity(signature)	signature	Generators$#randomElement	/Generators$	0	type params differ: emitted '[Type <: java.lang.Object]', reference '[A]'
+9b75d0e2f43b	api-parity(signature)	signature	Generators$#randomElement	/Generators$	0	param 0 type differs: emitted 'java.util.List[$0]', reference 'JList[$0]'
 53b76f7c4d7b	api-parity(signature)	signature	Generators$#randomIndex	/Generators$	0	param 0 type differs: emitted 'java.util.List[?]', reference 'JList[?]'
-332ad3781091	api-parity(signature)	signature	Generators$#shuffle	/Generators$	0	param 0 type differs: emitted 'java.util.List[Type]', reference 'JList[A]'
-3b2b3998cd0c	api-parity(signature)	signature	Generators$#shuffle	/Generators$	0	result type differs: emitted 'java.util.List[Type]', reference 'JList[A]'
-0692b75b7fc8	api-parity(signature)	signature	Generators$#shuffle	/Generators$	0	type params differ: emitted '[Type <: java.lang.Object]', reference '[A]'
+02615b931762	api-parity(signature)	signature	Generators$#shuffle	/Generators$	0	param 0 type differs: emitted 'java.util.List[$0]', reference 'JList[$0]'
+473fff263b1d	api-parity(signature)	signature	Generators$#shuffle	/Generators$	0	result type differs: emitted 'java.util.List[$0]', reference 'JList[$0]'
 e477ea7538df	api-parity(signature)	signature	Grid#getArray	/Grid	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
 2417492dc9d1	api-parity(visibility)	visibility	AbstractGenerator#modifyCell	/AbstractGenerator	0	access differs: emitted 'protected[generator]', reference 'protected'
 362f811395fe	api-parity(visibility)	visibility	AbstractRoomGenerator#carveRoom	/AbstractRoomGenerator	0	access differs: emitted 'protected[room]', reference 'protected'

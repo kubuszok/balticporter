@@ -56,38 +56,13 @@ a4f57b3fa811	api-parity(hand-port-extra)	hand-port-extra	#DirectedGraph		0	objec
 377fc69e89ef	api-parity(hand-port-extra)	hand-port-extra	#InternalArray		0	class InternalArray/0 in reference port only
 a70c2a90577c	api-parity(hand-port-extra)	hand-port-extra	#UndirectedConnection		0	class UndirectedConnection/0 in reference port only
 8e65d6c577f1	api-parity(hand-port-extra)	hand-port-extra	#UndirectedGraph		0	object UndirectedGraph/0 in reference port only
-5bad961d8c32	api-parity(hand-port-extra)	hand-port-extra	#apply		0	def apply/1 in reference port only [rename candidates: add, add, addAll, addAll, contains, contains, containsAll, containsAll, equals, equals, remove, remove, removeAll, removeAll, retainAll, retainAll, toArray, toArray]
-f3aa1babb5b5	api-parity(hand-port-extra)	hand-port-extra	#count		0	val count/0 in reference port only [rename candidates: bucketHead, e, hash, hash, hash, i, i, i, iterator, left, middle, middleNext, newHead, newIndex, newLength, newTable, next, nodeCount, oldTable, outEdges, right]
-9deae07a9507	api-parity(hand-port-extra)	hand-port-extra	#edgeIter		0	val edgeIter/0 in reference port only [rename candidates: bucketHead, e, hash, hash, hash, i, i, i, iterator, left, middle, middleNext, newHead, newIndex, newLength, newTable, next, nodeCount, oldTable, outEdges, right]
-01601f7851e0	api-parity(hand-port-extra)	hand-port-extra	#edges		0	val edges/0 in reference port only [rename candidates: bucketHead, e, hash, hash, hash, i, i, i, iterator, left, middle, middleNext, newHead, newIndex, newLength, newTable, next, nodeCount, oldTable, outEdges, right]
-4aff63991057	api-parity(hand-port-extra)	hand-port-extra	#get		0	def get/1 in reference port only [rename candidates: add, add, addAll, addAll, contains, contains, containsAll, containsAll, equals, equals, remove, remove, removeAll, removeAll, retainAll, retainAll, toArray, toArray]
-c94c8cb55dd7	api-parity(hand-port-extra)	hand-port-extra	#getIndex		0	def getIndex/2 in reference port only
-6e1ae888a37f	api-parity(hand-port-extra)	hand-port-extra	#hash		0	def hash/1 in reference port only [rename candidates: add, add, addAll, addAll, contains, contains, containsAll, containsAll, equals, equals, remove, remove, removeAll, removeAll, retainAll, retainAll, toArray, toArray]
-6d42ffb1cb90	api-parity(hand-port-extra)	hand-port-extra	#insertIntoListAfter		0	def insertIntoListAfter/2 in reference port only
-91fa8c1cb59e	api-parity(hand-port-extra)	hand-port-extra	#insertIntoListBefore		0	def insertIntoListBefore/2 in reference port only
-b6ef5469cdad	api-parity(hand-port-extra)	hand-port-extra	#nodeIterator		0	def nodeIterator/0 in reference port only [rename candidates: clear, clear, hashCode, hashCode, isEmpty, iterator, iterator, size, size, toArray, toArray, toString]
-5134c5bdeb47	api-parity(hand-port-extra)	hand-port-extra	#put		0	def put/1 in reference port only [rename candidates: add, add, addAll, addAll, contains, contains, containsAll, containsAll, equals, equals, remove, remove, removeAll, removeAll, retainAll, retainAll, toArray, toArray]
-e58c7b1daa9b	api-parity(hand-port-extra)	hand-port-extra	#removeFromList		0	def removeFromList/1 in reference port only [rename candidates: add, add, addAll, addAll, contains, contains, containsAll, containsAll, equals, equals, remove, remove, removeAll, removeAll, retainAll, retainAll, toArray, toArray]
-540268e961e9	api-parity(hand-port-extra)	hand-port-extra	#size		0	var size/0 in reference port only [rename candidates: bucketHead, current, currentNode, currentNode, currentNode, fast, graph, head, i, newHead, node, nodeCollection, nodeMap, nodeMap, prev, previousNode, previousNode, slow, success, table, tail1, tail2, v, vertexCollection]
-f402f833b37a	api-parity(hand-port-extra)	hand-port-extra	#sort		0	def sort/1 in reference port only [rename candidates: add, add, addAll, addAll, contains, contains, containsAll, containsAll, equals, equals, remove, remove, removeAll, removeAll, retainAll, retainAll, toArray, toArray]
-9c8e90cfbb16	api-parity(hand-port-extra)	hand-port-extra	#tail		0	var tail/0 in reference port only [rename candidates: bucketHead, current, currentNode, currentNode, currentNode, fast, graph, head, i, newHead, node, nodeCollection, nodeMap, nodeMap, prev, previousNode, previousNode, slow, success, table, tail1, tail2, v, vertexCollection]
-e74c32f07bbe	api-parity(hand-port-extra)	hand-port-extra	#topologicalSort		0	def topologicalSort/0 in reference port only [rename candidates: clear, clear, hashCode, hashCode, isEmpty, iterator, iterator, size, size, toArray, toArray, toString]
-c1e116d84d4f	api-parity(hand-port-extra)	hand-port-extra	#vertexIterator		0	def vertexIterator/0 in reference port only [rename candidates: clear, clear, hashCode, hashCode, isEmpty, iterator, iterator, size, size, toArray, toArray, toString]
 4068c62e09de	api-parity(hand-port-extra)	hand-port-extra	Algorithms#newAStarSearch	/Algorithms	0	def newAStarSearch/4 in reference port only [rename candidates: findShortestPath, newAstarSeach]
 d3d48027ab4a	api-parity(hand-port-extra)	hand-port-extra	BinaryHeap#contains	/BinaryHeap	0	def contains/1 in reference port only [rename candidates: add, equals]
-705ac35dca75	api-parity(hand-port-extra)	hand-port-extra	BinaryHeap#continue	/BinaryHeap	0	var continue/0 in reference port only [rename candidates: index, index, nodes, rightNode, rightValue, size]
 a3f413d28b63	api-parity(hand-port-extra)	hand-port-extra	Connection#a	/Connection	0	def a/0 in reference port only [rename candidates: getA, getB, getNodeA, getNodeB, getWeight, getWeightFunction]
 5f071615fc17	api-parity(hand-port-extra)	hand-port-extra	Connection#b	/Connection	0	def b/0 in reference port only [rename candidates: getA, getB, getNodeA, getNodeB, getWeight, getWeightFunction]
 2c75c12abb91	api-parity(hand-port-extra)	hand-port-extra	Connection#weight	/Connection	0	def weight/0 in reference port only [rename candidates: getA, getB, getNodeA, getNodeB, getWeight, getWeightFunction]
 6dbf21a6ac43	api-parity(hand-port-extra)	hand-port-extra	Connection#weightFunction	/Connection	0	def weightFunction/0 in reference port only [rename candidates: getA, getB, getNodeA, getNodeB, getWeight, getWeightFunction]
 7cf7a8f7652a	api-parity(hand-port-extra)	hand-port-extra	Connection#weight_=	/Connection	0	def weight_=/1 in reference port only [rename candidates: setWeight, setWeight]
-1b278fb3e531	api-parity(hand-port-extra)	hand-port-extra	CycleDetector#edgeIter	/CycleDetector	0	val edgeIter/0 in reference port only [rename candidates: e, outEdges, runID, u, v]
-33a05ec62748	api-parity(hand-port-extra)	hand-port-extra	CycleDetector#nodeIter	/CycleDetector	0	val nodeIter/0 in reference port only [rename candidates: e, outEdges, runID, u, v]
-7e2b2df3c758	api-parity(hand-port-extra)	hand-port-extra	DepthFirstSearch$#e	/DepthFirstSearch$	0	val e/0 in reference port only
-8995b07573f9	api-parity(hand-port-extra)	hand-port-extra	DepthFirstSearch$#i	/DepthFirstSearch$	0	var i/0 in reference port only
-a0e51692241e	api-parity(hand-port-extra)	hand-port-extra	DepthFirstSearch$#n	/DepthFirstSearch$	0	val n/0 in reference port only
-87536d028bc7	api-parity(hand-port-extra)	hand-port-extra	DepthFirstSearch$#step	/DepthFirstSearch$	0	val step/0 in reference port only
-c21a09157d4f	api-parity(hand-port-extra)	hand-port-extra	DepthFirstSearch$#w	/DepthFirstSearch$	0	val w/0 in reference port only
 796974adcddf	api-parity(hand-port-extra)	hand-port-extra	DirectedConnection#equals	/DirectedConnection	0	def equals/1 in reference port only
 b912a560e2da	api-parity(hand-port-extra)	hand-port-extra	DirectedConnection#hasEndpoints	/DirectedConnection	0	def hasEndpoints/2 in reference port only
 165c0d379983	api-parity(hand-port-extra)	hand-port-extra	DirectedConnection#hashCode	/DirectedConnection	0	def hashCode/0 in reference port only
@@ -102,9 +77,6 @@ cf38071d063a	api-parity(hand-port-extra)	hand-port-extra	Graph#defaultEdgeWeight
 9143070419c1	api-parity(hand-port-extra)	hand-port-extra	Graph#disconnectNode	/Graph	0	def disconnectNode/1 in reference port only [rename candidates: addEdge, addVertex, addVertices, addVertices, contains, disconnect, disconnect, getEdges, removeEdge, removeEdgeIf, removeEdges, removeVertex, removeVertexIf, removeVertices, setDefaultEdgeWeight, setDefaultEdgeWeight, sortEdges, sortVertices]
 039c58890719	api-parity(hand-port-extra)	hand-port-extra	Graph#edgeCount	/Graph	0	def edgeCount/0 in reference port only [rename candidates: algorithms, createNew, getDefaultEdgeWeightFunction, getEdgeCount, getEdges, getVertices, internals, isConnected, isDirected, numberOfComponents, removeAllEdges, removeAllVertices, size, toString]
 b1c7ff08675f	api-parity(hand-port-extra)	hand-port-extra	Graph#edges	/Graph	0	def edges/0 in reference port only [rename candidates: algorithms, createNew, getDefaultEdgeWeightFunction, getEdgeCount, getEdges, getVertices, internals, isConnected, isDirected, numberOfComponents, removeAllEdges, removeAllVertices, size, toString]
-b896a9276f60	api-parity(hand-port-extra)	hand-port-extra	Graph#getWeight	/Graph	0	def getWeight/2 in reference port only [rename candidates: addEdge, edgeExists, getEdge, removeEdge]
-2e399e259531	api-parity(hand-port-extra)	hand-port-extra	Graph#iterator	/Graph	0	def iterator/0 in reference port only [rename candidates: algorithms, createNew, getDefaultEdgeWeightFunction, getEdgeCount, getEdges, getVertices, internals, isConnected, isDirected, numberOfComponents, removeAllEdges, removeAllVertices, size, toString]
-a2254e22c433	api-parity(hand-port-extra)	hand-port-extra	Graph#knownSize	/Graph	0	def knownSize/0 in reference port only [rename candidates: algorithms, createNew, getDefaultEdgeWeightFunction, getEdgeCount, getEdges, getVertices, internals, isConnected, isDirected, numberOfComponents, removeAllEdges, removeAllVertices, size, toString]
 28e7e49f0765	api-parity(hand-port-extra)	hand-port-extra	Graph#vertices	/Graph	0	def vertices/0 in reference port only [rename candidates: algorithms, createNew, getDefaultEdgeWeightFunction, getEdgeCount, getEdges, getVertices, internals, isConnected, isDirected, numberOfComponents, removeAllEdges, removeAllVertices, size, toString]
 202fd4a29a0d	api-parity(hand-port-extra)	hand-port-extra	InternalArray#add	/InternalArray	0	def add/1 in reference port only
 6e7c726f7d85	api-parity(hand-port-extra)	hand-port-extra	InternalArray#addAll	/InternalArray	0	def addAll/1 in reference port only
@@ -126,8 +98,6 @@ b640c3000521	api-parity(hand-port-extra)	hand-port-extra	InternalArray#set	/Inte
 c9244dee454d	api-parity(hand-port-extra)	hand-port-extra	InternalArray#size	/InternalArray	0	def size/0 in reference port only
 43e05b8c0bcf	api-parity(hand-port-extra)	hand-port-extra	InternalArray#strictResize	/InternalArray	0	def strictResize/1 in reference port only
 8933aef44a18	api-parity(hand-port-extra)	hand-port-extra	InternalArray#toArray	/InternalArray	0	def toArray/0 in reference port only
-cb42074c881d	api-parity(hand-port-extra)	hand-port-extra	MinimumWeightSpanningTree#q	/MinimumWeightSpanningTree	0	val q/0 in reference port only [rename candidates: parentNode, rootU, rootV]
-17649b03d72b	api-parity(hand-port-extra)	hand-port-extra	MinimumWeightSpanningTree#sorted	/MinimumWeightSpanningTree	0	val sorted/0 in reference port only [rename candidates: parentNode, rootU, rootV]
 ee7d9edccf75	api-parity(hand-port-extra)	hand-port-extra	Node#addEdge	/Node	0	def addEdge/1 in reference port only [rename candidates: equals, resetAlgorithmAttribs, setConnection, setDistance, setEstimate, setInEdges, setIndex, setLastRunID, setOutEdges, setPrev, setProcessed, setSeen]
 ff64368ceaf3	api-parity(hand-port-extra)	hand-port-extra	Node#connections	/Node	0	def connections/0 in reference port only [rename candidates: getConnection, getConnections, getDistance, getEstimate, getInDegree, getInEdges, getIndex, getLastRunID, getObject, getOutDegree, getOutEdges, getPrev, hashCode, isProcessed, isSeen, toString]
 330ed9016474	api-parity(hand-port-extra)	hand-port-extra	Node#disconnect	/Node	0	def disconnect/0 in reference port only [rename candidates: getConnection, getConnections, getDistance, getEstimate, getInDegree, getInEdges, getIndex, getLastRunID, getObject, getOutDegree, getOutEdges, getPrev, hashCode, isProcessed, isSeen, toString]
@@ -136,10 +106,10 @@ ff64368ceaf3	api-parity(hand-port-extra)	hand-port-extra	Node#connections	/Node	
 8f7c7bac72cd	api-parity(hand-port-extra)	hand-port-extra	Node#heapValue	/Node	0	var heapValue/0 in reference port only [rename candidates: idHash, object, objectHash]
 db5dae6dd725	api-parity(hand-port-extra)	hand-port-extra	Node#inDegree	/Node	0	def inDegree/0 in reference port only [rename candidates: getConnection, getConnections, getDistance, getEstimate, getInDegree, getInEdges, getIndex, getLastRunID, getObject, getOutDegree, getOutEdges, getPrev, hashCode, isProcessed, isSeen, toString]
 8a224013ea6f	api-parity(hand-port-extra)	hand-port-extra	Node#mapHash	/Node	0	var mapHash/0 in reference port only [rename candidates: idHash, object, objectHash]
-4c23f606cd96	api-parity(hand-port-extra)	hand-port-extra	Node#neighbours	/Node	0	val neighbours/0 in reference port only [rename candidates: edge, to]
+0e9a0640e8ae	api-parity(hand-port-extra)	hand-port-extra	Node#neighbours	/Node	0	val neighbours/0 in reference port only
 cebfaf70d393	api-parity(hand-port-extra)	hand-port-extra	Node#nextInBucket	/Node	0	var nextInBucket/0 in reference port only [rename candidates: idHash, object, objectHash]
 a5621a7b3094	api-parity(hand-port-extra)	hand-port-extra	Node#nextInOrder	/Node	0	var nextInOrder/0 in reference port only [rename candidates: idHash, object, objectHash]
-f26b88b1c0bf	api-parity(hand-port-extra)	hand-port-extra	Node#obj	/Node	0	val obj/0 in reference port only [rename candidates: edge, to]
+097f827aa24d	api-parity(hand-port-extra)	hand-port-extra	Node#obj	/Node	0	val obj/0 in reference port only
 b7cceb697212	api-parity(hand-port-extra)	hand-port-extra	Node#outDegree	/Node	0	def outDegree/0 in reference port only [rename candidates: getConnection, getConnections, getDistance, getEstimate, getInDegree, getInEdges, getIndex, getLastRunID, getObject, getOutDegree, getOutEdges, getPrev, hashCode, isProcessed, isSeen, toString]
 67a972c34e89	api-parity(hand-port-extra)	hand-port-extra	Node#prevInOrder	/Node	0	var prevInOrder/0 in reference port only [rename candidates: idHash, object, objectHash]
 e227b090ab30	api-parity(hand-port-extra)	hand-port-extra	Node#removeEdge	/Node	0	def removeEdge/1 in reference port only [rename candidates: equals, resetAlgorithmAttribs, setConnection, setDistance, setEstimate, setInEdges, setIndex, setLastRunID, setOutEdges, setPrev, setProcessed, setSeen]
@@ -157,19 +127,13 @@ b97ea7609091	api-parity(hand-port-extra)	hand-port-extra	Path#removeItem	/Path	0
 388595b42b84	api-parity(hand-port-extra)	hand-port-extra	UndirectedConnection#link	/UndirectedConnection	0	def link/1 in reference port only
 e78a89c92357	api-parity(hand-port-extra)	hand-port-extra	UndirectedConnection#setWeight	/UndirectedConnection	0	def setWeight/1 in reference port only
 02942a52ab6e	api-parity(hand-port-extra)	hand-port-extra	UndirectedConnection#toString	/UndirectedConnection	0	def toString/0 in reference port only
-85a1447c030e	api-parity(hand-port-extra)	hand-port-extra	UndirectedGraph#existing	/UndirectedGraph	0	val existing/0 in reference port only [rename candidates: e, e, e1, e2, edge]
-b6e89180e9d6	api-parity(mutability)	mutability	#i		0	kind differs: emitted val, reference var
 4db9ae58bd86	api-parity(mutability)	mutability	Algorithm#id	/Algorithm	0	kind differs: emitted var, reference val
 eef0d2f60cc8	api-parity(mutability)	mutability	Algorithms#graph	/Algorithms	0	kind differs: emitted var, reference val
-2f6b92cb9398	api-parity(mutability)	mutability	BinaryHeap#rightNode	/BinaryHeap	0	kind differs: emitted var, reference val
-39d440bdf695	api-parity(mutability)	mutability	BinaryHeap#rightValue	/BinaryHeap	0	kind differs: emitted var, reference val
-afc3a2e15d3e	api-parity(mutability)	mutability	BinaryHeap#size	/BinaryHeap	0	kind differs: emitted val, reference var
 83aceb4f7743	api-parity(mutability)	mutability	Node#idHash	/Node	0	kind differs: emitted var, reference val
 7c757f4b02ff	api-parity(mutability)	mutability	Node#objectHash	/Node	0	kind differs: emitted var, reference val
-3d8220d42abf	api-parity(opaque)	opaque	#remove		0	result type differs: emitted 'scala.Boolean', reference 'Node[V]'
-153f49aa10bc	api-parity(opaque)	opaque	Connection#setWeight	/Connection	0	param 0 type differs: emitted 'scala.Float', reference 'WeightFunction[V]'
-d25a80eb62b4	api-parity(opaque)	opaque	Edge#setWeight	/Edge	0	param 0 type differs: emitted 'scala.Float', reference 'WeightFunction[V]'
-0996e983ecf6	api-parity(opaque)	opaque	Graph#setDefaultEdgeWeight	/Graph	0	param 0 type differs: emitted 'sge.graphs.utils.WeightFunction[V]', reference 'Float'
+166760ac698a	api-parity(opaque)	opaque	Connection#setWeight	/Connection	0	param 0 type differs: emitted 'scala.Float', reference 'WeightFunction[$0]'
+ca98653d075b	api-parity(opaque)	opaque	Edge#setWeight	/Edge	0	param 0 type differs: emitted 'scala.Float', reference 'WeightFunction[$0]'
+b0f938a4719c	api-parity(opaque)	opaque	Graph#setDefaultEdgeWeight	/Graph	0	param 0 type differs: emitted 'sge.graphs.utils.WeightFunction[$0]', reference 'Float'
 4355abf249a4	api-parity(port-extra)	port-extra	#AlgorithmPath		0	object AlgorithmPath/0 in emitted port only
 a3356241077d	api-parity(port-extra)	port-extra	#Array		0	class Array/0 in emitted port only
 4081508e6ed8	api-parity(port-extra)	port-extra	#Connection		0	object Connection/0 in emitted port only
@@ -196,54 +160,6 @@ ec3d779269ca	api-parity(port-extra)	port-extra	#JavaStack		0	class JavaStack/0 i
 08af56264b4d	api-parity(port-extra)	port-extra	#NodeMap		0	object NodeMap/0 in emitted port only
 c69824176383	api-parity(port-extra)	port-extra	#VertexCollection		0	object VertexCollection/0 in emitted port only
 833a27c7aa29	api-parity(port-extra)	port-extra	#Wrapping		0	trait Wrapping/0 in emitted port only
-7d4b77b117d5	api-parity(port-extra)	port-extra	#add		0	def add/1 in emitted port only [rename candidates: apply, contains, get, hash, put, remove, removeFromList, sort]
-7d4b77b117d5/2	api-parity(port-extra)	port-extra	#add		0	def add/1 in emitted port only [rename candidates: apply, contains, get, hash, put, remove, removeFromList, sort]
-7ae58052e6f8	api-parity(port-extra)	port-extra	#addAll		0	def addAll/1 in emitted port only [rename candidates: apply, contains, get, hash, put, remove, removeFromList, sort]
-7ae58052e6f8/2	api-parity(port-extra)	port-extra	#addAll		0	def addAll/1 in emitted port only [rename candidates: apply, contains, get, hash, put, remove, removeFromList, sort]
-a8ca64094d78	api-parity(port-extra)	port-extra	#bucketHead		0	val bucketHead/0 in emitted port only [rename candidates: count, e, edgeIter, edges, left, middle, middleNext, newIndex, newLength, newTable, next, oldTable, right]
-acb238ef91ac	api-parity(port-extra)	port-extra	#bucketHead		0	var bucketHead/0 in emitted port only [rename candidates: current, fast, head, i, size, slow, tail, tail1, tail2, v]
-64c71517d1b3	api-parity(port-extra)	port-extra	#containsAll		0	def containsAll/1 in emitted port only [rename candidates: apply, contains, get, hash, put, remove, removeFromList, sort]
-64c71517d1b3/2	api-parity(port-extra)	port-extra	#containsAll		0	def containsAll/1 in emitted port only [rename candidates: apply, contains, get, hash, put, remove, removeFromList, sort]
-1e426133f0e0	api-parity(port-extra)	port-extra	#currentNode		0	var currentNode/0 in emitted port only [rename candidates: current, fast, head, i, size, slow, tail, tail1, tail2, v]
-1e426133f0e0/2	api-parity(port-extra)	port-extra	#currentNode		0	var currentNode/0 in emitted port only [rename candidates: current, fast, head, i, size, slow, tail, tail1, tail2, v]
-1e426133f0e0/3	api-parity(port-extra)	port-extra	#currentNode		0	var currentNode/0 in emitted port only [rename candidates: current, fast, head, i, size, slow, tail, tail1, tail2, v]
-bc8857d9b25c	api-parity(port-extra)	port-extra	#equals		0	def equals/1 in emitted port only [rename candidates: apply, contains, get, hash, put, remove, removeFromList, sort]
-bc8857d9b25c/2	api-parity(port-extra)	port-extra	#equals		0	def equals/1 in emitted port only [rename candidates: apply, contains, get, hash, put, remove, removeFromList, sort]
-961261374e8b	api-parity(port-extra)	port-extra	#graph		0	var graph/0 in emitted port only [rename candidates: current, fast, head, i, size, slow, tail, tail1, tail2, v]
-fe8a19b5c0a3	api-parity(port-extra)	port-extra	#hash		0	val hash/0 in emitted port only [rename candidates: count, e, edgeIter, edges, left, middle, middleNext, newIndex, newLength, newTable, next, oldTable, right]
-fe8a19b5c0a3/2	api-parity(port-extra)	port-extra	#hash		0	val hash/0 in emitted port only [rename candidates: count, e, edgeIter, edges, left, middle, middleNext, newIndex, newLength, newTable, next, oldTable, right]
-fe8a19b5c0a3/3	api-parity(port-extra)	port-extra	#hash		0	val hash/0 in emitted port only [rename candidates: count, e, edgeIter, edges, left, middle, middleNext, newIndex, newLength, newTable, next, oldTable, right]
-0ca502f79b84	api-parity(port-extra)	port-extra	#hashCode		0	def hashCode/0 in emitted port only [rename candidates: clear, nodeIterator, topologicalSort, vertexIterator]
-0ca502f79b84/2	api-parity(port-extra)	port-extra	#hashCode		0	def hashCode/0 in emitted port only [rename candidates: clear, nodeIterator, topologicalSort, vertexIterator]
-a3aaa1339d46	api-parity(port-extra)	port-extra	#isEmpty		0	def isEmpty/0 in emitted port only [rename candidates: clear, nodeIterator, topologicalSort, vertexIterator]
-12cc8f5b8690	api-parity(port-extra)	port-extra	#iterator		0	def iterator/0 in emitted port only [rename candidates: clear, nodeIterator, topologicalSort, vertexIterator]
-12cc8f5b8690/2	api-parity(port-extra)	port-extra	#iterator		0	def iterator/0 in emitted port only [rename candidates: clear, nodeIterator, topologicalSort, vertexIterator]
-563cbc51b95d	api-parity(port-extra)	port-extra	#iterator		0	val iterator/0 in emitted port only [rename candidates: count, e, edgeIter, edges, left, middle, middleNext, newIndex, newLength, newTable, next, oldTable, right]
-a48dd2e923f7	api-parity(port-extra)	port-extra	#newHead		0	val newHead/0 in emitted port only [rename candidates: count, e, edgeIter, edges, left, middle, middleNext, newIndex, newLength, newTable, next, oldTable, right]
-07af969a3730	api-parity(port-extra)	port-extra	#newHead		0	var newHead/0 in emitted port only [rename candidates: current, fast, head, i, size, slow, tail, tail1, tail2, v]
-3d9cbe64af48	api-parity(port-extra)	port-extra	#node		0	var node/0 in emitted port only [rename candidates: current, fast, head, i, size, slow, tail, tail1, tail2, v]
-d86ed8bb0044	api-parity(port-extra)	port-extra	#nodeCollection		0	var nodeCollection/0 in emitted port only [rename candidates: current, fast, head, i, size, slow, tail, tail1, tail2, v]
-0dd32ee7a8fb	api-parity(port-extra)	port-extra	#nodeCount		0	val nodeCount/0 in emitted port only [rename candidates: count, e, edgeIter, edges, left, middle, middleNext, newIndex, newLength, newTable, next, oldTable, right]
-abbce14e77b6	api-parity(port-extra)	port-extra	#nodeMap		0	var nodeMap/0 in emitted port only [rename candidates: current, fast, head, i, size, slow, tail, tail1, tail2, v]
-abbce14e77b6/2	api-parity(port-extra)	port-extra	#nodeMap		0	var nodeMap/0 in emitted port only [rename candidates: current, fast, head, i, size, slow, tail, tail1, tail2, v]
-2d0c1bec0615	api-parity(port-extra)	port-extra	#outEdges		0	val outEdges/0 in emitted port only [rename candidates: count, e, edgeIter, edges, left, middle, middleNext, newIndex, newLength, newTable, next, oldTable, right]
-e3f3321e6d28	api-parity(port-extra)	port-extra	#prev		0	var prev/0 in emitted port only [rename candidates: current, fast, head, i, size, slow, tail, tail1, tail2, v]
-8f6f42b6292e	api-parity(port-extra)	port-extra	#previousNode		0	var previousNode/0 in emitted port only [rename candidates: current, fast, head, i, size, slow, tail, tail1, tail2, v]
-8f6f42b6292e/2	api-parity(port-extra)	port-extra	#previousNode		0	var previousNode/0 in emitted port only [rename candidates: current, fast, head, i, size, slow, tail, tail1, tail2, v]
-d117f5e945da	api-parity(port-extra)	port-extra	#removeAll		0	def removeAll/1 in emitted port only [rename candidates: apply, contains, get, hash, put, remove, removeFromList, sort]
-d117f5e945da/2	api-parity(port-extra)	port-extra	#removeAll		0	def removeAll/1 in emitted port only [rename candidates: apply, contains, get, hash, put, remove, removeFromList, sort]
-1408d5cb9be7	api-parity(port-extra)	port-extra	#retainAll		0	def retainAll/1 in emitted port only [rename candidates: apply, contains, get, hash, put, remove, removeFromList, sort]
-1408d5cb9be7/2	api-parity(port-extra)	port-extra	#retainAll		0	def retainAll/1 in emitted port only [rename candidates: apply, contains, get, hash, put, remove, removeFromList, sort]
-a476571a880f	api-parity(port-extra)	port-extra	#size		0	def size/0 in emitted port only [rename candidates: clear, nodeIterator, topologicalSort, vertexIterator]
-a476571a880f/2	api-parity(port-extra)	port-extra	#size		0	def size/0 in emitted port only [rename candidates: clear, nodeIterator, topologicalSort, vertexIterator]
-24fb28566dfb	api-parity(port-extra)	port-extra	#success		0	var success/0 in emitted port only [rename candidates: current, fast, head, i, size, slow, tail, tail1, tail2, v]
-771644d0d6a2	api-parity(port-extra)	port-extra	#table		0	var table/0 in emitted port only [rename candidates: current, fast, head, i, size, slow, tail, tail1, tail2, v]
-e3584814813e	api-parity(port-extra)	port-extra	#toArray		0	def toArray/0 in emitted port only [rename candidates: clear, nodeIterator, topologicalSort, vertexIterator]
-e3584814813e/2	api-parity(port-extra)	port-extra	#toArray		0	def toArray/0 in emitted port only [rename candidates: clear, nodeIterator, topologicalSort, vertexIterator]
-fe0b4a5a006c	api-parity(port-extra)	port-extra	#toArray		0	def toArray/1 in emitted port only [rename candidates: apply, contains, get, hash, put, remove, removeFromList, sort]
-fe0b4a5a006c/2	api-parity(port-extra)	port-extra	#toArray		0	def toArray/1 in emitted port only [rename candidates: apply, contains, get, hash, put, remove, removeFromList, sort]
-fef003af6c54	api-parity(port-extra)	port-extra	#toString		0	def toString/0 in emitted port only [rename candidates: clear, nodeIterator, topologicalSort, vertexIterator]
-10293b2e84d4	api-parity(port-extra)	port-extra	#vertexCollection		0	var vertexCollection/0 in emitted port only [rename candidates: current, fast, head, i, size, slow, tail, tail1, tail2, v]
 a914994f5775	api-parity(port-extra)	port-extra	AStarSearch#heap	/AStarSearch	0	var heap/0 in emitted port only
 40a4663f70d2	api-parity(port-extra)	port-extra	AStarSearch#heuristic	/AStarSearch	0	var heuristic/0 in emitted port only
 8201b6b6e639	api-parity(port-extra)	port-extra	AStarSearch#processor	/AStarSearch	0	var processor/0 in emitted port only
@@ -256,13 +172,10 @@ c9a20e8bdb09	api-parity(port-extra)	port-extra	Array#addAll	/Array	0	def addAll/
 6c783845eaa4	api-parity(port-extra)	port-extra	Array#contains	/Array	0	def contains/1 in emitted port only
 5198506115d1	api-parity(port-extra)	port-extra	Array#containsAll	/Array	0	def containsAll/1 in emitted port only
 e79839b755a4	api-parity(port-extra)	port-extra	Array#get	/Array	0	def get/1 in emitted port only
-b88c06fbff24	api-parity(port-extra)	port-extra	Array#hasNext	/Array	0	def hasNext/0 in emitted port only
 7570d98748ff	api-parity(port-extra)	port-extra	Array#indexOf	/Array	0	def indexOf/1 in emitted port only
 86a72579616c	api-parity(port-extra)	port-extra	Array#isEmpty	/Array	0	def isEmpty/0 in emitted port only
 706e5a4bd937	api-parity(port-extra)	port-extra	Array#items	/Array	0	var items/0 in emitted port only
 871a8fac5ad4	api-parity(port-extra)	port-extra	Array#iterator	/Array	0	def iterator/0 in emitted port only
-ffb4c015d890	api-parity(port-extra)	port-extra	Array#next	/Array	0	def next/0 in emitted port only
-da51766e434b	api-parity(port-extra)	port-extra	Array#remove	/Array	0	def remove/0 in emitted port only
 13e263ca85cf	api-parity(port-extra)	port-extra	Array#remove	/Array	0	def remove/1 in emitted port only
 13e263ca85cf/2	api-parity(port-extra)	port-extra	Array#remove	/Array	0	def remove/1 in emitted port only
 2870d2bcc319	api-parity(port-extra)	port-extra	Array#set	/Array	0	def set/2 in emitted port only
@@ -271,23 +184,13 @@ da51766e434b	api-parity(port-extra)	port-extra	Array#remove	/Array	0	def remove/
 d0201e143251	api-parity(port-extra)	port-extra	Array#toArray	/Array	0	def toArray/0 in emitted port only
 347527f6cbc5	api-parity(port-extra)	port-extra	Array#toArray	/Array	0	def toArray/1 in emitted port only
 0898d22bdd71	api-parity(port-extra)	port-extra	BinaryHeap#contains	/BinaryHeap	0	def contains/2 in emitted port only [rename candidates: add, setValue]
-c3ef7c610cfc	api-parity(port-extra)	port-extra	BinaryHeap#nodes	/BinaryHeap	0	val nodes/0 in emitted port only [rename candidates: leftIndex, leftNode, leftValue, node, node, parent, parentIndex, rightIndex, rightNode, rightValue, value, value]
-c3ef7c610cfc/2	api-parity(port-extra)	port-extra	BinaryHeap#nodes	/BinaryHeap	0	val nodes/0 in emitted port only [rename candidates: leftIndex, leftNode, leftValue, node, node, parent, parentIndex, rightIndex, rightNode, rightValue, value, value]
-35074fd410ac	api-parity(port-extra)	port-extra	BinaryHeap#nodes	/BinaryHeap	0	var nodes/0 in emitted port only [rename candidates: continue, index, index, size]
+093598aeee53	api-parity(port-extra)	port-extra	BinaryHeap#nodes	/BinaryHeap	0	var nodes/0 in emitted port only [rename candidates: size]
 b5a386ff9a75	api-parity(port-extra)	port-extra	BreadthFirstSearch#processor	/BreadthFirstSearch	0	var processor/0 in emitted port only
 a599e425852a	api-parity(port-extra)	port-extra	BreadthFirstSearch#queue	/BreadthFirstSearch	0	var queue/0 in emitted port only
 2a750a6e20af	api-parity(port-extra)	port-extra	Connection#getNodeA	/Connection	0	def getNodeA/0 in emitted port only [rename candidates: a, b, weight, weightFunction]
 15bddc16cdff	api-parity(port-extra)	port-extra	Connection#getNodeB	/Connection	0	def getNodeB/0 in emitted port only [rename candidates: a, b, weight, weightFunction]
 b093c4008e58	api-parity(port-extra)	port-extra	Connection$#DirectedConnection	/Connection$	0	object DirectedConnection/0 in emitted port only
 a461581628cd	api-parity(port-extra)	port-extra	Connection$#UndirectedConnection	/Connection$	0	object UndirectedConnection/0 in emitted port only
-7d67c5acb0f8	api-parity(port-extra)	port-extra	Connection$#equals	/Connection$	0	def equals/1 in emitted port only
-7d67c5acb0f8/2	api-parity(port-extra)	port-extra	Connection$#equals	/Connection$	0	def equals/1 in emitted port only
-2ea85a9ea9d2	api-parity(port-extra)	port-extra	Connection$#hasEndpoints	/Connection$	0	def hasEndpoints/2 in emitted port only
-2ea85a9ea9d2/2	api-parity(port-extra)	port-extra	Connection$#hasEndpoints	/Connection$	0	def hasEndpoints/2 in emitted port only
-9ee3ef64db79	api-parity(port-extra)	port-extra	Connection$#hashCode	/Connection$	0	def hashCode/0 in emitted port only
-9ee3ef64db79/2	api-parity(port-extra)	port-extra	Connection$#hashCode	/Connection$	0	def hashCode/0 in emitted port only
-eaef0869d523	api-parity(port-extra)	port-extra	Connection$#toString	/Connection$	0	def toString/0 in emitted port only
-eaef0869d523/2	api-parity(port-extra)	port-extra	Connection$#toString	/Connection$	0	def toString/0 in emitted port only
 14cd94c87e20	api-parity(port-extra)	port-extra	DepthFirstSearch#processor	/DepthFirstSearch	0	var processor/0 in emitted port only
 3ec8a6980f7e	api-parity(port-extra)	port-extra	DepthFirstSearch#queue	/DepthFirstSearch	0	var queue/0 in emitted port only
 93e3fe1310af	api-parity(port-extra)	port-extra	DirectedGraph#obtainEdge	/DirectedGraph	0	def obtainEdge/0 in emitted port only [rename candidates: algorithms, createNew, topologicalSort]
@@ -296,7 +199,7 @@ cbc2da1efae7	api-parity(port-extra)	port-extra	Errors$#throwNullItemException	/E
 029e30ceb8af	api-parity(port-extra)	port-extra	Errors$#throwNullVertexException	/Errors$	0	def throwNullVertexException/0 in emitted port only
 b4449577ff1c	api-parity(port-extra)	port-extra	Errors$#throwSameVertexException	/Errors$	0	def throwSameVertexException/0 in emitted port only
 30823ce59bed	api-parity(port-extra)	port-extra	Errors$#throwVertexNotInGraphVertexException	/Errors$	0	def throwVertexNotInGraphVertexException/1 in emitted port only
-4f4d4ce08fce	api-parity(port-extra)	port-extra	Graph#internals	/Graph	0	def internals/0 in emitted port only [rename candidates: algorithms, createNew, defaultEdgeWeightFunction, edgeCount, edges, isConnected, isDirected, iterator, knownSize, numberOfComponents, removeAllEdges, removeAllVertices, size, toString, vertices]
+7f5c3480210f	api-parity(port-extra)	port-extra	Graph#internals	/Graph	0	def internals/0 in emitted port only [rename candidates: algorithms, createNew, defaultEdgeWeightFunction, edgeCount, edges, isConnected, isDirected, numberOfComponents, removeAllEdges, removeAllVertices, size, toString, vertices]
 2b6c3b44d953	api-parity(port-extra)	port-extra	Graph$#Funnel	/Graph$	0	class Funnel/0 in emitted port only
 5274db68494d	api-parity(port-extra)	port-extra	Internals#addConnection	/Internals	0	def addConnection/3 in emitted port only
 b54f4111bc90	api-parity(port-extra)	port-extra	Internals#getConnections	/Internals	0	def getConnections/0 in emitted port only
@@ -325,28 +228,14 @@ e47161fbde74	api-parity(port-extra)	port-extra	JavaCollection$#unmodifiable	/Jav
 e1f9895c3bee	api-parity(port-extra)	port-extra	JavaCollection$#unmodifiableFrom	/JavaCollection$	0	def unmodifiableFrom/1 in emitted port only
 1c910ef88e93	api-parity(port-extra)	port-extra	JavaCollections$#Reified	/JavaCollections$	0	object Reified/0 in emitted port only
 0bdaa79ab61f	api-parity(port-extra)	port-extra	JavaCollections$#addAll	/JavaCollections$	0	def addAll/2 in emitted port only
-90e481234463	api-parity(port-extra)	port-extra	JavaCollections$#addOne	/JavaCollections$	0	def addOne/1 in emitted port only
-90e481234463/2	api-parity(port-extra)	port-extra	JavaCollections$#addOne	/JavaCollections$	0	def addOne/1 in emitted port only
-90e481234463/3	api-parity(port-extra)	port-extra	JavaCollections$#addOne	/JavaCollections$	0	def addOne/1 in emitted port only
-90e481234463/4	api-parity(port-extra)	port-extra	JavaCollections$#addOne	/JavaCollections$	0	def addOne/1 in emitted port only
-90e481234463/5	api-parity(port-extra)	port-extra	JavaCollections$#addOne	/JavaCollections$	0	def addOne/1 in emitted port only
-16e26b28fa52	api-parity(port-extra)	port-extra	JavaCollections$#apply	/JavaCollections$	0	def apply/1 in emitted port only
-16e26b28fa52/2	api-parity(port-extra)	port-extra	JavaCollections$#apply	/JavaCollections$	0	def apply/1 in emitted port only
-16e26b28fa52/3	api-parity(port-extra)	port-extra	JavaCollections$#apply	/JavaCollections$	0	def apply/1 in emitted port only
 03d9ba2351a0	api-parity(port-extra)	port-extra	JavaCollections$#asList	/JavaCollections$	0	def asList/1 in emitted port only
 31764f6a1c81	api-parity(port-extra)	port-extra	JavaCollections$#asListView	/JavaCollections$	0	def asListView/1 in emitted port only
 3672b9cb0fa2	api-parity(port-extra)	port-extra	JavaCollections$#bufferInsertAll	/JavaCollections$	0	def bufferInsertAll/3 in emitted port only
 77faa9c4ca99	api-parity(port-extra)	port-extra	JavaCollections$#bufferPatchInPlace	/JavaCollections$	0	def bufferPatchInPlace/4 in emitted port only
 bbb39ba36640	api-parity(port-extra)	port-extra	JavaCollections$#bufferRemoveRange	/JavaCollections$	0	def bufferRemoveRange/3 in emitted port only
-f37242d9e0de	api-parity(port-extra)	port-extra	JavaCollections$#clear	/JavaCollections$	0	def clear/0 in emitted port only
-f37242d9e0de/2	api-parity(port-extra)	port-extra	JavaCollections$#clear	/JavaCollections$	0	def clear/0 in emitted port only
-f37242d9e0de/3	api-parity(port-extra)	port-extra	JavaCollections$#clear	/JavaCollections$	0	def clear/0 in emitted port only
-f37242d9e0de/4	api-parity(port-extra)	port-extra	JavaCollections$#clear	/JavaCollections$	0	def clear/0 in emitted port only
-f37242d9e0de/5	api-parity(port-extra)	port-extra	JavaCollections$#clear	/JavaCollections$	0	def clear/0 in emitted port only
 c92b408bfaa4	api-parity(port-extra)	port-extra	JavaCollections$#comparingByKey	/JavaCollections$	0	def comparingByKey/1 in emitted port only
 b0772dfc501b	api-parity(port-extra)	port-extra	JavaCollections$#comparingByValue	/JavaCollections$	0	def comparingByValue/1 in emitted port only
 bf9269cc753f	api-parity(port-extra)	port-extra	JavaCollections$#computeIfAbsent	/JavaCollections$	0	def computeIfAbsent/3 in emitted port only
-685d34e63f36	api-parity(port-extra)	port-extra	JavaCollections$#contains	/JavaCollections$	0	def contains/1 in emitted port only
 d5d4f7bbbd43	api-parity(port-extra)	port-extra	JavaCollections$#containsAll	/JavaCollections$	0	def containsAll/2 in emitted port only
 9916b96ecd02	api-parity(port-extra)	port-extra	JavaCollections$#containsValue	/JavaCollections$	0	def containsValue/2 in emitted port only
 18b0fbe3be3a	api-parity(port-extra)	port-extra	JavaCollections$#distinctSpliterator	/JavaCollections$	0	def distinctSpliterator/1 in emitted port only
@@ -361,62 +250,22 @@ a192d6410082	api-parity(port-extra)	port-extra	JavaCollections$#entrySetView	/Ja
 1538a285f012/3	api-parity(port-extra)	port-extra	JavaCollections$#fromJava	/JavaCollections$	0	def fromJava/1 in emitted port only
 1538a285f012/4	api-parity(port-extra)	port-extra	JavaCollections$#fromJava	/JavaCollections$	0	def fromJava/1 in emitted port only
 1538a285f012/5	api-parity(port-extra)	port-extra	JavaCollections$#fromJava	/JavaCollections$	0	def fromJava/1 in emitted port only
-991b12dc980b	api-parity(port-extra)	port-extra	JavaCollections$#get	/JavaCollections$	0	def get/1 in emitted port only
-da20c8ec3151	api-parity(port-extra)	port-extra	JavaCollections$#gone	/JavaCollections$	0	val gone/0 in emitted port only
-a6163640e7fa	api-parity(port-extra)	port-extra	JavaCollections$#hasNext	/JavaCollections$	0	def hasNext/0 in emitted port only
-e58646fbfd80	api-parity(port-extra)	port-extra	JavaCollections$#i	/JavaCollections$	0	var i/0 in emitted port only
-e58646fbfd80/2	api-parity(port-extra)	port-extra	JavaCollections$#i	/JavaCollections$	0	var i/0 in emitted port only
-a1c5f447abe0	api-parity(port-extra)	port-extra	JavaCollections$#insert	/JavaCollections$	0	def insert/2 in emitted port only
-a1c5f447abe0/2	api-parity(port-extra)	port-extra	JavaCollections$#insert	/JavaCollections$	0	def insert/2 in emitted port only
-a1c5f447abe0/3	api-parity(port-extra)	port-extra	JavaCollections$#insert	/JavaCollections$	0	def insert/2 in emitted port only
-4cc38b234987	api-parity(port-extra)	port-extra	JavaCollections$#insertAll	/JavaCollections$	0	def insertAll/2 in emitted port only
-4cc38b234987/2	api-parity(port-extra)	port-extra	JavaCollections$#insertAll	/JavaCollections$	0	def insertAll/2 in emitted port only
-4cc38b234987/3	api-parity(port-extra)	port-extra	JavaCollections$#insertAll	/JavaCollections$	0	def insertAll/2 in emitted port only
 68e0c3976411	api-parity(port-extra)	port-extra	JavaCollections$#insertAll	/JavaCollections$	0	def insertAll/3 in emitted port only
 218ab7a0fd28	api-parity(port-extra)	port-extra	JavaCollections$#intRange	/JavaCollections$	0	def intRange/2 in emitted port only
 474b9341f37e	api-parity(port-extra)	port-extra	JavaCollections$#into	/JavaCollections$	0	def into/2 in emitted port only
-40a83b3e661f	api-parity(port-extra)	port-extra	JavaCollections$#iterator	/JavaCollections$	0	def iterator/0 in emitted port only
-40a83b3e661f/2	api-parity(port-extra)	port-extra	JavaCollections$#iterator	/JavaCollections$	0	def iterator/0 in emitted port only
-40a83b3e661f/3	api-parity(port-extra)	port-extra	JavaCollections$#iterator	/JavaCollections$	0	def iterator/0 in emitted port only
-40a83b3e661f/4	api-parity(port-extra)	port-extra	JavaCollections$#iterator	/JavaCollections$	0	def iterator/0 in emitted port only
-40a83b3e661f/5	api-parity(port-extra)	port-extra	JavaCollections$#iterator	/JavaCollections$	0	def iterator/0 in emitted port only
-40a83b3e661f/6	api-parity(port-extra)	port-extra	JavaCollections$#iterator	/JavaCollections$	0	def iterator/0 in emitted port only
-665042c67638	api-parity(port-extra)	port-extra	JavaCollections$#jit	/JavaCollections$	0	val jit/0 in emitted port only
 a54475791a60	api-parity(port-extra)	port-extra	JavaCollections$#keySetView	/JavaCollections$	0	def keySetView/1 in emitted port only
-9667c008febc	api-parity(port-extra)	port-extra	JavaCollections$#knownSize	/JavaCollections$	0	def knownSize/0 in emitted port only
-9667c008febc/2	api-parity(port-extra)	port-extra	JavaCollections$#knownSize	/JavaCollections$	0	def knownSize/0 in emitted port only
-9667c008febc/3	api-parity(port-extra)	port-extra	JavaCollections$#knownSize	/JavaCollections$	0	def knownSize/0 in emitted port only
-9667c008febc/4	api-parity(port-extra)	port-extra	JavaCollections$#knownSize	/JavaCollections$	0	def knownSize/0 in emitted port only
-db76cb479530	api-parity(port-extra)	port-extra	JavaCollections$#length	/JavaCollections$	0	def length/0 in emitted port only
-db76cb479530/2	api-parity(port-extra)	port-extra	JavaCollections$#length	/JavaCollections$	0	def length/0 in emitted port only
-db76cb479530/3	api-parity(port-extra)	port-extra	JavaCollections$#length	/JavaCollections$	0	def length/0 in emitted port only
 d5285a98618e	api-parity(port-extra)	port-extra	JavaCollections$#mapContainsKey	/JavaCollections$	0	def mapContainsKey/2 in emitted port only
 9b5b6af2e16a	api-parity(port-extra)	port-extra	JavaCollections$#mapGet	/JavaCollections$	0	def mapGet/2 in emitted port only
 ec9db41be471	api-parity(port-extra)	port-extra	JavaCollections$#mapRemove	/JavaCollections$	0	def mapRemove/2 in emitted port only
 a8874f754604	api-parity(port-extra)	port-extra	JavaCollections$#mapToDouble	/JavaCollections$	0	def mapToDouble/2 in emitted port only
-aa7cd48d2477	api-parity(port-extra)	port-extra	JavaCollections$#next	/JavaCollections$	0	def next/0 in emitted port only
 effc1809dc94	api-parity(port-extra)	port-extra	JavaCollections$#noneMatch	/JavaCollections$	0	def noneMatch/2 in emitted port only
 ed0723c5936e	api-parity(port-extra)	port-extra	JavaCollections$#optionalOrElse	/JavaCollections$	0	def optionalOrElse/2 in emitted port only
 51d693e109f2	api-parity(port-extra)	port-extra	JavaCollections$#orderedSpliterator	/JavaCollections$	0	def orderedSpliterator/1 in emitted port only
-e81498d3d9df	api-parity(port-extra)	port-extra	JavaCollections$#patchInPlace	/JavaCollections$	0	def patchInPlace/3 in emitted port only
-e81498d3d9df/2	api-parity(port-extra)	port-extra	JavaCollections$#patchInPlace	/JavaCollections$	0	def patchInPlace/3 in emitted port only
-e81498d3d9df/3	api-parity(port-extra)	port-extra	JavaCollections$#patchInPlace	/JavaCollections$	0	def patchInPlace/3 in emitted port only
-35509b67521d	api-parity(port-extra)	port-extra	JavaCollections$#prepend	/JavaCollections$	0	def prepend/1 in emitted port only
-35509b67521d/2	api-parity(port-extra)	port-extra	JavaCollections$#prepend	/JavaCollections$	0	def prepend/1 in emitted port only
-35509b67521d/3	api-parity(port-extra)	port-extra	JavaCollections$#prepend	/JavaCollections$	0	def prepend/1 in emitted port only
 a6d7018a8d61	api-parity(port-extra)	port-extra	JavaCollections$#putIfAbsent	/JavaCollections$	0	def putIfAbsent/3 in emitted port only
-2a68b5923ccd	api-parity(port-extra)	port-extra	JavaCollections$#r	/JavaCollections$	0	var r/0 in emitted port only
-6879c47d28d8	api-parity(port-extra)	port-extra	JavaCollections$#remove	/JavaCollections$	0	def remove/1 in emitted port only
-6879c47d28d8/2	api-parity(port-extra)	port-extra	JavaCollections$#remove	/JavaCollections$	0	def remove/1 in emitted port only
-6879c47d28d8/3	api-parity(port-extra)	port-extra	JavaCollections$#remove	/JavaCollections$	0	def remove/1 in emitted port only
-4b457fb2e7b3	api-parity(port-extra)	port-extra	JavaCollections$#remove	/JavaCollections$	0	def remove/2 in emitted port only
-4b457fb2e7b3/2	api-parity(port-extra)	port-extra	JavaCollections$#remove	/JavaCollections$	0	def remove/2 in emitted port only
-4b457fb2e7b3/3	api-parity(port-extra)	port-extra	JavaCollections$#remove	/JavaCollections$	0	def remove/2 in emitted port only
 ca27a71b3308	api-parity(port-extra)	port-extra	JavaCollections$#removeAll	/JavaCollections$	0	def removeAll/2 in emitted port only
 35e0c401cc66	api-parity(port-extra)	port-extra	JavaCollections$#removeIf	/JavaCollections$	0	def removeIf/2 in emitted port only
 e9d92e150384	api-parity(port-extra)	port-extra	JavaCollections$#removeIfSet	/JavaCollections$	0	def removeIfSet/2 in emitted port only
 03bc9670d2e6	api-parity(port-extra)	port-extra	JavaCollections$#removeValue	/JavaCollections$	0	def removeValue/2 in emitted port only
-db89944c8afe	api-parity(port-extra)	port-extra	JavaCollections$#removed	/JavaCollections$	0	var removed/0 in emitted port only
 bd6e8f9ef981	api-parity(port-extra)	port-extra	JavaCollections$#retainAll	/JavaCollections$	0	def retainAll/2 in emitted port only
 420e0174597e	api-parity(port-extra)	port-extra	JavaCollections$#reverse	/JavaCollections$	0	def reverse/1 in emitted port only
 b8ccea23f0b0	api-parity(port-extra)	port-extra	JavaCollections$#setContains	/JavaCollections$	0	def setContains/2 in emitted port only
@@ -425,13 +274,10 @@ b8ccea23f0b0	api-parity(port-extra)	port-extra	JavaCollections$#setContains	/Jav
 be425daacca1	api-parity(port-extra)	port-extra	JavaCollections$#singleton	/JavaCollections$	0	def singleton/1 in emitted port only
 19010d4d8184	api-parity(port-extra)	port-extra	JavaCollections$#singletonList	/JavaCollections$	0	def singletonList/1 in emitted port only
 e19b49acca66	api-parity(port-extra)	port-extra	JavaCollections$#singletonMap	/JavaCollections$	0	def singletonMap/2 in emitted port only
-3334ca3a227d	api-parity(port-extra)	port-extra	JavaCollections$#size	/JavaCollections$	0	def size/0 in emitted port only
 e51a34d852b6	api-parity(port-extra)	port-extra	JavaCollections$#sort	/JavaCollections$	0	def sort/2 in emitted port only
 63681390437a	api-parity(port-extra)	port-extra	JavaCollections$#sortNatural	/JavaCollections$	0	def sortNatural/1 in emitted port only
 9bea39b84359	api-parity(port-extra)	port-extra	JavaCollections$#sortedWith	/JavaCollections$	0	def sortedWith/2 in emitted port only
 f3af746e8add	api-parity(port-extra)	port-extra	JavaCollections$#subList	/JavaCollections$	0	def subList/3 in emitted port only
-776a81db595f	api-parity(port-extra)	port-extra	JavaCollections$#subtractOne	/JavaCollections$	0	def subtractOne/1 in emitted port only
-776a81db595f/2	api-parity(port-extra)	port-extra	JavaCollections$#subtractOne	/JavaCollections$	0	def subtractOne/1 in emitted port only
 6ac6fe1d7af4	api-parity(port-extra)	port-extra	JavaCollections$#swap	/JavaCollections$	0	def swap/3 in emitted port only
 19ba71deac2b	api-parity(port-extra)	port-extra	JavaCollections$#toArray	/JavaCollections$	0	def toArray/1 in emitted port only
 92f91e243fa0	api-parity(port-extra)	port-extra	JavaCollections$#toArray	/JavaCollections$	0	def toArray/2 in emitted port only
@@ -445,46 +291,18 @@ aba377092f51	api-parity(port-extra)	port-extra	JavaCollections$#toStream	/JavaCo
 18863ab8b0aa	api-parity(port-extra)	port-extra	JavaCollections$#unmodifiableList	/JavaCollections$	0	def unmodifiableList/1 in emitted port only
 186466ea0fa2	api-parity(port-extra)	port-extra	JavaCollections$#unmodifiableMap	/JavaCollections$	0	def unmodifiableMap/1 in emitted port only
 96917ba20e1f	api-parity(port-extra)	port-extra	JavaCollections$#unmodifiableSet	/JavaCollections$	0	def unmodifiableSet/1 in emitted port only
-1d12ac9e74de	api-parity(port-extra)	port-extra	JavaCollections$#update	/JavaCollections$	0	def update/2 in emitted port only
-1d12ac9e74de/2	api-parity(port-extra)	port-extra	JavaCollections$#update	/JavaCollections$	0	def update/2 in emitted port only
-1d12ac9e74de/3	api-parity(port-extra)	port-extra	JavaCollections$#update	/JavaCollections$	0	def update/2 in emitted port only
 1413a5376ed3	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#asBuffer	/JavaCollections$/Reified$	0	def asBuffer/1 in emitted port only
 512580367da4	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#asCollection	/JavaCollections$/Reified$	0	def asCollection/1 in emitted port only
 59d9c7a2612b	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#asIterable	/JavaCollections$/Reified$	0	def asIterable/1 in emitted port only
 0f8eacae3fee	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#asIterator	/JavaCollections$/Reified$	0	def asIterator/1 in emitted port only
 69c13a7922db	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#asMap	/JavaCollections$/Reified$	0	def asMap/1 in emitted port only
 6f9d2958dfeb	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#asSet	/JavaCollections$/Reified$	0	def asSet/1 in emitted port only
-55518ec68f25	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#entrySet	/JavaCollections$/Reified$	0	def entrySet/0 in emitted port only
-e3fcc0dd5df5	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#equals	/JavaCollections$/Reified$	0	def equals/1 in emitted port only
-23eede5e68ae	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#get	/JavaCollections$/Reified$	0	def get/1 in emitted port only
-a9b1bb2b1b5b	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#getKey	/JavaCollections$/Reified$	0	def getKey/0 in emitted port only
-2d09c904d594	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#getValue	/JavaCollections$/Reified$	0	def getValue/0 in emitted port only
-91aa907929d3	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#hasNext	/JavaCollections$/Reified$	0	def hasNext/0 in emitted port only
-91aa907929d3/2	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#hasNext	/JavaCollections$/Reified$	0	def hasNext/0 in emitted port only
-a6b0a196d64c	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#hashCode	/JavaCollections$/Reified$	0	def hashCode/0 in emitted port only
-ee67414804fb	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#i	/JavaCollections$/Reified$	0	var i/0 in emitted port only
 dc25780ed408	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#isBuffer	/JavaCollections$/Reified$	0	def isBuffer/1 in emitted port only
 a85507a18da8	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#isCollection	/JavaCollections$/Reified$	0	def isCollection/1 in emitted port only
-c009799b1c9a	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#isEmpty	/JavaCollections$/Reified$	0	def isEmpty/0 in emitted port only
 6e40e87a12f8	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#isIterable	/JavaCollections$/Reified$	0	def isIterable/1 in emitted port only
 f6b9d096e3d3	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#isIterator	/JavaCollections$/Reified$	0	def isIterator/1 in emitted port only
 8294c4aca984	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#isMap	/JavaCollections$/Reified$	0	def isMap/1 in emitted port only
 cb6f2177ec03	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#isSet	/JavaCollections$/Reified$	0	def isSet/1 in emitted port only
-7992a6a607a4	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#iterator	/JavaCollections$/Reified$	0	def iterator/0 in emitted port only
-7992a6a607a4/2	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#iterator	/JavaCollections$/Reified$	0	def iterator/0 in emitted port only
-7992a6a607a4/3	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#iterator	/JavaCollections$/Reified$	0	def iterator/0 in emitted port only
-7992a6a607a4/4	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#iterator	/JavaCollections$/Reified$	0	def iterator/0 in emitted port only
-af209383ae6b	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#moved	/JavaCollections$/Reified$	0	var moved/0 in emitted port only
-4391e8538c52	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#next	/JavaCollections$/Reified$	0	def next/0 in emitted port only
-4391e8538c52/2	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#next	/JavaCollections$/Reified$	0	def next/0 in emitted port only
-8a1d2196a3fb	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#out	/JavaCollections$/Reified$	0	val out/0 in emitted port only
-b65457d09a0f	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#setValue	/JavaCollections$/Reified$	0	def setValue/1 in emitted port only
-37bb29c35680	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#size	/JavaCollections$/Reified$	0	def size/0 in emitted port only
-37bb29c35680/2	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#size	/JavaCollections$/Reified$	0	def size/0 in emitted port only
-37bb29c35680/3	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#size	/JavaCollections$/Reified$	0	def size/0 in emitted port only
-37bb29c35680/4	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#size	/JavaCollections$/Reified$	0	def size/0 in emitted port only
-37bb29c35680/5	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#size	/JavaCollections$/Reified$	0	def size/0 in emitted port only
-37bb29c35680/6	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#size	/JavaCollections$/Reified$	0	def size/0 in emitted port only
 cfb31a69992e	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#toJavaValue	/JavaCollections$/Reified$	0	def toJavaValue/1 in emitted port only
 aa076a91e03c	api-parity(port-extra)	port-extra	JavaEnumMap#addOne	/JavaEnumMap	0	def addOne/1 in emitted port only
 6d8ca5a7d9f6	api-parity(port-extra)	port-extra	JavaEnumMap#clear	/JavaEnumMap	0	def clear/0 in emitted port only
@@ -534,80 +352,42 @@ ce4fa8859809	api-parity(port-extra)	port-extra	JavaStack#search	/JavaStack	0	def
 b78988300afa	api-parity(port-extra)	port-extra	MinimumWeightSpanningTree#edgeQueue	/MinimumWeightSpanningTree	0	var edgeQueue/0 in emitted port only
 6a3567bf9472	api-parity(port-extra)	port-extra	MinimumWeightSpanningTree#finishAt	/MinimumWeightSpanningTree	0	var finishAt/0 in emitted port only
 7081013afcc2	api-parity(port-extra)	port-extra	MinimumWeightSpanningTree#spanningTree	/MinimumWeightSpanningTree	0	var spanningTree/0 in emitted port only
-6f627836d822	api-parity(port-extra)	port-extra	Node#edge	/Node	0	val edge/0 in emitted port only [rename candidates: idHash, neighbours, obj, objectHash]
 dcd272dd76e1	api-parity(port-extra)	port-extra	Node#getLastRunID	/Node	0	def getLastRunID/0 in emitted port only [rename candidates: connections, disconnect, hashCode, inDegree, outDegree, toString]
 e4c17b624c8d	api-parity(port-extra)	port-extra	Node#getObject	/Node	0	def getObject/0 in emitted port only [rename candidates: connections, disconnect, hashCode, inDegree, outDegree, toString]
 5efc8386d92d	api-parity(port-extra)	port-extra	Node#object	/Node	0	var object/0 in emitted port only [rename candidates: connection, distance, estimate, heapIndex, heapValue, inEdges, index, mapHash, nextInBucket, nextInOrder, outEdges, prev, prevInOrder, processed, seen]
 119d61dd400c	api-parity(port-extra)	port-extra	Node#setLastRunID	/Node	0	def setLastRunID/1 in emitted port only [rename candidates: addEdge, equals, getEdge, removeEdge, resetAlgorithmAttribs]
-23e8596978e4	api-parity(port-extra)	port-extra	Node#to	/Node	0	val to/0 in emitted port only [rename candidates: idHash, neighbours, obj, objectHash]
 c1b10a50a2c4	api-parity(port-extra)	port-extra	NodeMap$#MIN_TABLE_LENGTH	/NodeMap$	0	val MIN_TABLE_LENGTH/0 in emitted port only
-b15c0ccaf553	api-parity(port-extra)	port-extra	NodeMap$#current	/NodeMap$	0	var current/0 in emitted port only
-817ed8a97243	api-parity(port-extra)	port-extra	NodeMap$#hasNext	/NodeMap$	0	def hasNext/0 in emitted port only
-13974ebbf696	api-parity(port-extra)	port-extra	NodeMap$#hashcode	/NodeMap$	0	val hashcode/0 in emitted port only
-7bd6fbcd53cd	api-parity(port-extra)	port-extra	NodeMap$#next	/NodeMap$	0	def next/0 in emitted port only
-02f6c2afc8df	api-parity(port-extra)	port-extra	NodeMap$#nodeMap	/NodeMap$	0	var nodeMap/0 in emitted port only
-6e7797512a10	api-parity(port-extra)	port-extra	NodeMap$#remove	/NodeMap$	0	def remove/0 in emitted port only
 bcbc4b5f5c8c	api-parity(port-extra)	port-extra	Path#checkFixed	/Path	0	def checkFixed/0 in emitted port only [rename candidates: clear, first, last, length]
 cc22cd539fdf	api-parity(port-extra)	port-extra	Path#remove	/Path	0	def remove/1 in emitted port only [rename candidates: add, addAll, length_=, removeAll, removeAt, removeIf, removeItem, retainAll, setFixed]
 cc22cd539fdf/2	api-parity(port-extra)	port-extra	Path#remove	/Path	0	def remove/1 in emitted port only [rename candidates: add, addAll, length_=, removeAll, removeAt, removeIf, removeItem, retainAll, setFixed]
 2bbf6570b831	api-parity(port-extra)	port-extra	Path$#EMPTY_PATH	/Path$	0	val EMPTY_PATH/0 in emitted port only
 158c6a90a304	api-parity(port-extra)	port-extra	UndirectedGraph#obtainEdge	/UndirectedGraph	0	def obtainEdge/0 in emitted port only [rename candidates: algorithms, createNew, isDirected]
-8f416c7054de	api-parity(port-extra)	port-extra	VertexCollection$#hasNext	/VertexCollection$	0	def hasNext/0 in emitted port only
-2c745e363ef5	api-parity(port-extra)	port-extra	VertexCollection$#next	/VertexCollection$	0	def next/0 in emitted port only
-b142daac6048	api-parity(port-extra)	port-extra	VertexCollection$#nodeIterator	/VertexCollection$	0	var nodeIterator/0 in emitted port only
-b10021159116	api-parity(port-extra)	port-extra	VertexCollection$#remove	/VertexCollection$	0	def remove/0 in emitted port only
 9fa8855c439b	api-parity(port-extra)	port-extra	Wrapping#wrapped	/Wrapping	0	def wrapped/0 in emitted port only
-648d8e431f04	api-parity(signature)	signature	#AStarSearch		0	type params differ: emitted '[V <: java.lang.Object]', reference '[V]'
-c7d5341e90dc	api-parity(signature)	signature	#Algorithm		0	type params differ: emitted '[V <: java.lang.Object]', reference '[V]'
-dfd1cefbd062	api-parity(signature)	signature	#Algorithms		0	type params differ: emitted '[V <: java.lang.Object]', reference '[V]'
-37bb614b8900	api-parity(signature)	signature	#BreadthFirstSearch		0	type params differ: emitted '[V <: java.lang.Object]', reference '[V]'
-dff4b460d396	api-parity(signature)	signature	#Connection		0	type params differ: emitted '[V <: java.lang.Object]', reference '[V]'
-50466a81da2a	api-parity(signature)	signature	#CycleDetector		0	type params differ: emitted '[V <: java.lang.Object]', reference '[V]'
-434c0b63c34f	api-parity(signature)	signature	#DepthFirstSearch		0	type params differ: emitted '[V <: java.lang.Object]', reference '[V]'
-0a3e32337e1c	api-parity(signature)	signature	#DirectedGraph		0	type params differ: emitted '[V <: java.lang.Object]', reference '[V]'
-75cb4e457786	api-parity(signature)	signature	#DirectedGraphAlgorithms		0	type params differ: emitted '[V <: java.lang.Object]', reference '[V]'
-6081da794d8a	api-parity(signature)	signature	#Edge		0	type params differ: emitted '[V <: java.lang.Object]', reference '[V]'
-55d913635f58	api-parity(signature)	signature	#Graph		0	type params differ: emitted '[V <: java.lang.Object]', reference '[V]'
-0a33894af87d	api-parity(signature)	signature	#Heuristic		0	type params differ: emitted '[V <: java.lang.Object]', reference '[V]'
-ec2511fd2d3e	api-parity(signature)	signature	#MinimumWeightSpanningTree		0	type params differ: emitted '[V <: java.lang.Object]', reference '[V]'
-fd87d2fb9743	api-parity(signature)	signature	#Node		0	type params differ: emitted '[V <: java.lang.Object]', reference '[V]'
-3017d55d27bc	api-parity(signature)	signature	#Path		0	parents differ: emitted-only [sge.graphs.Array[V]], reference-only [InternalArray[V]]
-815bedbdbee4	api-parity(signature)	signature	#Path		0	type params differ: emitted '[V <: java.lang.Object]', reference '[V]'
-500e2fc470c5	api-parity(signature)	signature	#SearchProcessor		0	parents differ: emitted-only [java.util.function.Consumer[sge.graphs.algorithms.SearchStep[V]]], reference-only []
-e6e9a68b5532	api-parity(signature)	signature	#SearchProcessor		0	type params differ: emitted '[V <: java.lang.Object]', reference '[V]'
-f313e5f13d38	api-parity(signature)	signature	#SearchStep		0	type params differ: emitted '[V <: java.lang.Object]', reference '[V]'
-75ee03afe19f	api-parity(signature)	signature	#UndirectedGraph		0	type params differ: emitted '[V <: java.lang.Object]', reference '[V]'
-27e7dc547b72	api-parity(signature)	signature	#UndirectedGraphAlgorithms		0	type params differ: emitted '[V <: java.lang.Object]', reference '[V]'
-7f63266624e3	api-parity(signature)	signature	#WeightFunction		0	type params differ: emitted '[V <: java.lang.Object]', reference '[V]'
-8240d7bc0218	api-parity(signature)	signature	#clear		0	modifiers differ: emitted override, reference
-d5bb0cff3120	api-parity(signature)	signature	#contains		0	modifiers differ: emitted override, reference
-996434103f43	api-parity(signature)	signature	#contains		0	param 0 type differs: emitted 'java.lang.Object', reference 'Any'
-46745d7fdd2d	api-parity(signature)	signature	#remove		0	modifiers differ: emitted override, reference
-10ac629309fa	api-parity(signature)	signature	#remove		0	param 0 type differs: emitted 'java.lang.Object', reference 'V'
-bd1eb532391f	api-parity(signature)	signature	BinaryHeap#add	/BinaryHeap	0	param 0 type differs: emitted 'sge.graphs.Node[?]', reference 'Node[V]'
-bd1eb532391f/2	api-parity(signature)	signature	BinaryHeap#add	/BinaryHeap	0	param 0 type differs: emitted 'sge.graphs.Node[?]', reference 'Node[V]'
-e8decd8627b9	api-parity(signature)	signature	BinaryHeap#add	/BinaryHeap	0	result type differs: emitted 'sge.graphs.Node[?]', reference 'Node[V]'
-e8decd8627b9/2	api-parity(signature)	signature	BinaryHeap#add	/BinaryHeap	0	result type differs: emitted 'sge.graphs.Node[?]', reference 'Node[V]'
-e7b310b55b71	api-parity(signature)	signature	BinaryHeap#peek	/BinaryHeap	0	result type differs: emitted 'sge.graphs.Node[?]', reference 'Node[V]'
-8f9d62b7597b	api-parity(signature)	signature	BinaryHeap#pop	/BinaryHeap	0	result type differs: emitted 'sge.graphs.Node[?]', reference 'Node[V]'
-35391a2ff9cc	api-parity(signature)	signature	BinaryHeap#setValue	/BinaryHeap	0	param 0 type differs: emitted 'sge.graphs.Node[?]', reference 'Node[V]'
-37f9b1842f79	api-parity(signature)	signature	DirectedGraph#getInEdges	/DirectedGraph	0	result type differs: emitted 'balticporter.runtime.JavaCollection[sge.graphs.Edge[V]]', reference 'Iterable[Edge[V]]'
-cee176cbc085	api-parity(signature)	signature	Graph#addVertices	/Graph	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[V]', reference 'Iterable[V]'
-6ddb22164859	api-parity(signature)	signature	Graph#addVertices	/Graph	0	param 0 type differs: emitted 'scala.Array[V]', reference 'V*'
-e421633a4f3f	api-parity(signature)	signature	Graph#getEdges	/Graph	0	result type differs: emitted 'balticporter.runtime.JavaCollection[sge.graphs.Edge[V]]', reference 'Iterable[Edge[V]]'
-06018074de85	api-parity(signature)	signature	Graph#removeEdgeIf	/Graph	0	param 0 type differs: emitted 'java.util.function.Predicate[sge.graphs.Edge[V]]', reference 'Edge[V] => Boolean'
-a9b9042adfc8	api-parity(signature)	signature	Graph#removeEdges	/Graph	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[sge.graphs.Edge[V]]', reference 'Iterable[Edge[V]]'
-4acead1d17e3	api-parity(signature)	signature	Graph#removeVertexIf	/Graph	0	param 0 type differs: emitted 'java.util.function.Predicate[V]', reference 'V => Boolean'
-42643b88610f	api-parity(signature)	signature	Graph#removeVertices	/Graph	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[V]', reference 'Iterable[V]'
-75c6b4b92a6e	api-parity(signature)	signature	Graph#sortEdges	/Graph	0	param 0 type differs: emitted 'java.util.Comparator[sge.graphs.Connection[V]]', reference 'Ordering[Connection[V]]'
-10b4b82c79c3	api-parity(signature)	signature	Graph#sortVertices	/Graph	0	param 0 type differs: emitted 'java.util.Comparator[V]', reference 'Ordering[V]'
-c921d923bb30	api-parity(signature)	signature	GraphBuilder$#buildCompleteGraph	/GraphBuilder$	0	param 0 type differs: emitted 'G', reference 'Graph[V]'
-b350ab85f132	api-parity(signature)	signature	GraphBuilder$#buildCompleteGraph	/GraphBuilder$	0	type params differ: emitted '[V <: java.lang.Object, G <: sge.graphs.Graph[V]]', reference '[V]'
-3a38068e64c1	api-parity(signature)	signature	Path#addAll	/Path	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[? <: V]', reference 'Iterable[V]'
+02b0e25370d0	api-parity(signature)	signature	#Path		0	parents differ: emitted-only [sge.graphs.Array[$0]], reference-only [InternalArray[$0]]
+ecd065b8c604	api-parity(signature)	signature	#SearchProcessor		0	parents differ: emitted-only [java.util.function.Consumer[sge.graphs.algorithms.SearchStep[$0]]], reference-only []
+b0fb02faea70	api-parity(signature)	signature	BinaryHeap#add	/BinaryHeap	0	param 0 type differs: emitted 'sge.graphs.Node[?]', reference 'Node[$0]'
+b0fb02faea70/2	api-parity(signature)	signature	BinaryHeap#add	/BinaryHeap	0	param 0 type differs: emitted 'sge.graphs.Node[?]', reference 'Node[$0]'
+a7fa85fb90f4	api-parity(signature)	signature	BinaryHeap#add	/BinaryHeap	0	result type differs: emitted 'sge.graphs.Node[?]', reference 'Node[$0]'
+a7fa85fb90f4/2	api-parity(signature)	signature	BinaryHeap#add	/BinaryHeap	0	result type differs: emitted 'sge.graphs.Node[?]', reference 'Node[$0]'
+4113ae8a961e	api-parity(signature)	signature	BinaryHeap#peek	/BinaryHeap	0	result type differs: emitted 'sge.graphs.Node[?]', reference 'Node[$0]'
+24f287b8b254	api-parity(signature)	signature	BinaryHeap#pop	/BinaryHeap	0	result type differs: emitted 'sge.graphs.Node[?]', reference 'Node[$0]'
+b8dc14f5e42e	api-parity(signature)	signature	BinaryHeap#setValue	/BinaryHeap	0	param 0 type differs: emitted 'sge.graphs.Node[?]', reference 'Node[$0]'
+1407d00f2647	api-parity(signature)	signature	DirectedGraph#getInEdges	/DirectedGraph	0	result type differs: emitted 'balticporter.runtime.JavaCollection[sge.graphs.Edge[$0]]', reference 'Iterable[Edge[$0]]'
+b1e8cd1a6b1b	api-parity(signature)	signature	Graph#addVertices	/Graph	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[$0]', reference 'Iterable[$0]'
+d3fb97bfd931	api-parity(signature)	signature	Graph#addVertices	/Graph	0	param 0 type differs: emitted 'scala.Array[$0]', reference '$0*'
+0401271cb6bd	api-parity(signature)	signature	Graph#getEdges	/Graph	0	result type differs: emitted 'balticporter.runtime.JavaCollection[sge.graphs.Edge[$0]]', reference 'Iterable[Edge[$0]]'
+50e5abd230ab	api-parity(signature)	signature	Graph#removeEdgeIf	/Graph	0	param 0 type differs: emitted 'java.util.function.Predicate[sge.graphs.Edge[$0]]', reference 'Edge[$0] => Boolean'
+76dc475faaa8	api-parity(signature)	signature	Graph#removeEdges	/Graph	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[sge.graphs.Edge[$0]]', reference 'Iterable[Edge[$0]]'
+c13c2c842152	api-parity(signature)	signature	Graph#removeVertexIf	/Graph	0	param 0 type differs: emitted 'java.util.function.Predicate[$0]', reference '$0 => Boolean'
+a50ac582a475	api-parity(signature)	signature	Graph#removeVertices	/Graph	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[$0]', reference 'Iterable[$0]'
+e1d64e218137	api-parity(signature)	signature	Graph#sortEdges	/Graph	0	param 0 type differs: emitted 'java.util.Comparator[sge.graphs.Connection[$0]]', reference 'Ordering[Connection[$0]]'
+d2531b963ed6	api-parity(signature)	signature	Graph#sortVertices	/Graph	0	param 0 type differs: emitted 'java.util.Comparator[$0]', reference 'Ordering[$0]'
+7ccfba39b8ff	api-parity(signature)	signature	GraphBuilder$#buildCompleteGraph	/GraphBuilder$	0	param 0 type differs: emitted '$1', reference 'Graph[$0]'
+857b3357e300	api-parity(signature)	signature	GraphBuilder$#buildCompleteGraph	/GraphBuilder$	0	type params differ: emitted '[$0, $1 <: sge.graphs.Graph[$0]]', reference '[$0]'
+87b897f00de9	api-parity(signature)	signature	Path#addAll	/Path	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[_ <: $0]', reference 'Iterable[$0]'
 654472a663b4	api-parity(signature)	signature	Path#removeAll	/Path	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[?]', reference 'Iterable[?]'
-67bde4c62884	api-parity(signature)	signature	Path#removeIf	/Path	0	param 0 type differs: emitted 'java.util.function.Predicate[? >: V]', reference 'V => Boolean'
+357b029fac82	api-parity(signature)	signature	Path#removeIf	/Path	0	param 0 type differs: emitted 'java.util.function.Predicate[_ >: $0]', reference '$0 => Boolean'
 e5b0397c388e	api-parity(signature)	signature	Path#retainAll	/Path	0	param 0 type differs: emitted 'balticporter.runtime.JavaCollection[?]', reference 'Iterable[?]'
-44b0998a0aeb	api-parity(static-placement)	static-placement	Connection$#setWeight	/Connection$	0	def setWeight/1 in emitted port only
 4fc72a995225	api-parity(visibility)	visibility	Algorithm#id	/Algorithm	0	access differs: emitted 'protected[algorithms]', reference 'protected'
 9cbe6b384bdd	api-parity(visibility)	visibility	Algorithms#graph	/Algorithms	0	access differs: emitted 'protected[algorithms]', reference 'protected'
 340eef9036da	catalog(consulted)	reached	JS-C01	space/earlygrey/simplegraphs/Array.java	84	lowering CtInvocation/Expression — consulted 674, fired 56, declarations 0: a Java `static` is INHERITED by every subclass; a Scala companion inherits nothing

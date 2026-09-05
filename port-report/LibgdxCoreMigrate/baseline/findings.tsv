@@ -2266,10 +2266,10 @@ ea0941625046	api-parity(null-model)	null-model	AnimationController$.AnimationDes
 576360798818	api-parity(null-model)	null-model	AnimationController$.AnimationDesc#listener	/AnimationController$/AnimationDesc	0	result type differs: emitted 'sge.graphics.g3d.utils.AnimationController.AnimationListener', reference 'Nullable[AnimationListener]'
 f8f4cf54ede1	api-parity(null-model)	null-model	AssetDescriptor#file	/AssetDescriptor	0	result type differs: emitted 'sge.files.FileHandle', reference 'Nullable[FileHandle]'
 998da2d4a629	api-parity(null-model)	null-model	AssetLoaderParameters#loadedCallback	/AssetLoaderParameters	0	result type differs: emitted 'sge.assets.AssetLoaderParameters.LoadedCallback', reference 'Nullable[AssetLoaderParameters.LoadedCallback]'
-50008350a1fd	api-parity(null-model)	null-model	AssetManager#get	/AssetManager	0	result type differs: emitted 'T', reference 'Nullable[T]'
-50008350a1fd/2	api-parity(null-model)	null-model	AssetManager#get	/AssetManager	0	result type differs: emitted 'T', reference 'Nullable[T]'
-50008350a1fd/3	api-parity(null-model)	null-model	AssetManager#get	/AssetManager	0	result type differs: emitted 'T', reference 'Nullable[T]'
-34d3560a320d	api-parity(null-model)	null-model	AssetManager#load	/AssetManager	0	param 2 type differs: emitted 'sge.assets.AssetLoaderParameters[T]', reference 'Nullable[AssetLoaderParameters[T]]'
+c7f9cebfca1e	api-parity(null-model)	null-model	AssetManager#get	/AssetManager	0	result type differs: emitted '$0', reference 'Nullable[$0]'
+c7f9cebfca1e/2	api-parity(null-model)	null-model	AssetManager#get	/AssetManager	0	result type differs: emitted '$0', reference 'Nullable[$0]'
+c7f9cebfca1e/3	api-parity(null-model)	null-model	AssetManager#get	/AssetManager	0	result type differs: emitted '$0', reference 'Nullable[$0]'
+a43a64f47370	api-parity(null-model)	null-model	AssetManager#load	/AssetManager	0	param 2 type differs: emitted 'sge.assets.AssetLoaderParameters[$0]', reference 'Nullable[AssetLoaderParameters[$0]]'
 4d1bc4001927	api-parity(null-model)	null-model	AssetManager#setLoader	/AssetManager	0	param 1 type differs: emitted 'java.lang.String', reference 'Nullable[String]'
 afd096567e6e	api-parity(null-model)	null-model	Attribute$#getAttributeAlias	/Attribute$	0	result type differs: emitted 'java.lang.String', reference 'Nullable[String]'
 84a89427a303	api-parity(null-model)	null-model	Attributes#get	/Attributes	0	result type differs: emitted 'sge.graphics.g3d.Attribute', reference 'Nullable[Attribute]'
@@ -2424,16 +2424,16 @@ c96243e208b7/2	api-parity(null-model)	null-model	ModelInstance#getMaterial	/Mode
 0dc543af721b	api-parity(null-model)	null-model	ModelInstance#getNode	/ModelInstance	0	result type differs: emitted 'sge.graphics.g3d.model.Node', reference 'Nullable[Node]'
 0dc543af721b/2	api-parity(null-model)	null-model	ModelInstance#getNode	/ModelInstance	0	result type differs: emitted 'sge.graphics.g3d.model.Node', reference 'Nullable[Node]'
 0dc543af721b/3	api-parity(null-model)	null-model	ModelInstance#getNode	/ModelInstance	0	result type differs: emitted 'sge.graphics.g3d.model.Node', reference 'Nullable[Node]'
-0de9bfd37f46	api-parity(null-model)	null-model	ModelLoader#loadModel	/ModelLoader	0	param 1 type differs: emitted 'P', reference 'Nullable[P]'
-179527b5616d	api-parity(null-model)	null-model	ModelLoader#loadModel	/ModelLoader	0	param 2 type differs: emitted 'P', reference 'Nullable[P]'
+20ee77512a69	api-parity(null-model)	null-model	ModelLoader#loadModel	/ModelLoader	0	param 1 type differs: emitted '$0', reference 'Nullable[$0]'
+79088f38d912	api-parity(null-model)	null-model	ModelLoader#loadModel	/ModelLoader	0	param 2 type differs: emitted '$0', reference 'Nullable[$0]'
 6b1e5f7fb351	api-parity(null-model)	null-model	ModelLoader#loadModel	/ModelLoader	0	result type differs: emitted 'sge.graphics.g3d.Model', reference 'Nullable[Model]'
 6b1e5f7fb351/2	api-parity(null-model)	null-model	ModelLoader#loadModel	/ModelLoader	0	result type differs: emitted 'sge.graphics.g3d.Model', reference 'Nullable[Model]'
 6b1e5f7fb351/3	api-parity(null-model)	null-model	ModelLoader#loadModel	/ModelLoader	0	result type differs: emitted 'sge.graphics.g3d.Model', reference 'Nullable[Model]'
 6b1e5f7fb351/4	api-parity(null-model)	null-model	ModelLoader#loadModel	/ModelLoader	0	result type differs: emitted 'sge.graphics.g3d.Model', reference 'Nullable[Model]'
-353c27b84e9f	api-parity(null-model)	null-model	ModelLoader#loadModelData	/ModelLoader	0	param 1 type differs: emitted 'P', reference 'Nullable[P]'
+7edacf318069	api-parity(null-model)	null-model	ModelLoader#loadModelData	/ModelLoader	0	param 1 type differs: emitted '$0', reference 'Nullable[$0]'
 db46add6a9b8	api-parity(null-model)	null-model	ModelLoader#loadModelData	/ModelLoader	0	result type differs: emitted 'sge.graphics.g3d.model.data.ModelData', reference 'Nullable[ModelData]'
 db46add6a9b8/2	api-parity(null-model)	null-model	ModelLoader#loadModelData	/ModelLoader	0	result type differs: emitted 'sge.graphics.g3d.model.data.ModelData', reference 'Nullable[ModelData]'
-3044003c6e1e	api-parity(null-model)	null-model	ModelNodeKeyframe#value	/ModelNodeKeyframe	0	result type differs: emitted 'T', reference 'Nullable[T]'
+8298dbbdb798	api-parity(null-model)	null-model	ModelNodeKeyframe#value	/ModelNodeKeyframe	0	result type differs: emitted '$0', reference 'Nullable[$0]'
 4f70bf2589d2	api-parity(null-model)	null-model	MusicLoader#loadedMusic	/MusicLoader	0	result type differs: emitted 'sge.audio.Music', reference 'Nullable[Music]'
 9fc6bb08ef61	api-parity(null-model)	null-model	NativeInputConfiguration#setMaxLength	/NativeInputConfiguration	0	param 0 type differs: emitted 'scala.Int', reference 'Option[Int]'
 1332f5296965	api-parity(null-model)	null-model	Net$.HttpResponse#getHeader	/Net$/HttpResponse	0	result type differs: emitted 'java.lang.String', reference 'Nullable[String]'
@@ -2444,10 +2444,10 @@ cf810c01cffc	api-parity(null-model)	null-model	Node#getChild	/Node	0	result type
 8b71ca5cf990	api-parity(null-model)	null-model	ObjLoader#loadModelData	/ObjLoader	0	param 1 type differs: emitted 'sge.graphics.g3d.loader.ObjLoader.ObjLoaderParameters', reference 'Nullable[ObjLoader.ObjLoaderParameters]'
 2f2f4cfe40f6	api-parity(null-model)	null-model	ObjLoader#loadModelData	/ObjLoader	0	result type differs: emitted 'sge.graphics.g3d.model.data.ModelData', reference 'Nullable[ModelData]'
 2f2f4cfe40f6/2	api-parity(null-model)	null-model	ObjLoader#loadModelData	/ObjLoader	0	result type differs: emitted 'sge.graphics.g3d.model.data.ModelData', reference 'Nullable[ModelData]'
-978b3863bc3b	api-parity(null-model)	null-model	ParallelArray#addChannel	/ParallelArray	0	param 1 type differs: emitted 'sge.graphics.g3d.particles.ParallelArray.ChannelInitializer[T]', reference 'Nullable[ChannelInitializer[T]]'
-7bdae7a28113	api-parity(null-model)	null-model	ParallelArray#getChannel	/ParallelArray	0	result type differs: emitted 'T', reference 'Nullable[T]'
-83d4e63c947c	api-parity(null-model)	null-model	ParticleController#findInfluencer	/ParticleController	0	result type differs: emitted 'K', reference 'Nullable[K]'
-7c325c5b07fe	api-parity(null-model)	null-model	ParticleControllerRenderer#renderData	/ParticleControllerRenderer	0	result type differs: emitted 'D', reference 'Nullable[D]'
+fe1a00ec2fd9	api-parity(null-model)	null-model	ParallelArray#addChannel	/ParallelArray	0	param 1 type differs: emitted 'sge.graphics.g3d.particles.ParallelArray.ChannelInitializer[$0]', reference 'Nullable[ChannelInitializer[$0]]'
+34adb5c3c5bc	api-parity(null-model)	null-model	ParallelArray#getChannel	/ParallelArray	0	result type differs: emitted '$0', reference 'Nullable[$0]'
+33e0aba9da43	api-parity(null-model)	null-model	ParticleController#findInfluencer	/ParticleController	0	result type differs: emitted '$0', reference 'Nullable[$0]'
+9f5babb9e5cf	api-parity(null-model)	null-model	ParticleControllerRenderer#renderData	/ParticleControllerRenderer	0	result type differs: emitted '$0', reference 'Nullable[$0]'
 e66d349e0398	api-parity(null-model)	null-model	ParticleEffect#findController	/ParticleEffect	0	result type differs: emitted 'sge.graphics.g3d.particles.ParticleController', reference 'Nullable[ParticleController]'
 7dce95930475	api-parity(null-model)	null-model	ParticleEffect#findEmitter	/ParticleEffect	0	result type differs: emitted 'sge.graphics.g2d.ParticleEmitter', reference 'Nullable[ParticleEmitter]'
 29810b4547e9	api-parity(null-model)	null-model	ParticleEffect#load	/ParticleEffect	0	param 2 type differs: emitted 'java.lang.String', reference 'Nullable[String]'
@@ -2482,13 +2482,13 @@ e96534d98e18	api-parity(null-model)	null-model	Renderable#environment	/Renderabl
 bda5aefb8051	api-parity(null-model)	null-model	Renderable#shader	/Renderable	0	result type differs: emitted 'sge.graphics.g3d.Shader', reference 'Nullable[Shader]'
 d7ff4f1b4c41	api-parity(null-model)	null-model	RenderableSorter#sort	/RenderableSorter	0	param 0 type differs: emitted 'sge.graphics.Camera', reference 'Nullable[Camera]'
 0790017195ca	api-parity(null-model)	null-model	ResourceData#getSaveData	/ResourceData	0	result type differs: emitted 'sge.graphics.g3d.particles.ResourceData.SaveData', reference 'Nullable[SaveData]'
-c717e67ccfea	api-parity(null-model)	null-model	ResourceData#resource	/ResourceData	0	result type differs: emitted 'T', reference 'Nullable[T]'
-4f278bcaefbd	api-parity(null-model)	null-model	ResourceData$.SaveData#load	/ResourceData$/SaveData	0	result type differs: emitted 'K', reference 'Nullable[K]'
+93678c1dd08e	api-parity(null-model)	null-model	ResourceData#resource	/ResourceData	0	result type differs: emitted '$0', reference 'Nullable[$0]'
+b9ae1042597e	api-parity(null-model)	null-model	ResourceData$.SaveData#load	/ResourceData$/SaveData	0	result type differs: emitted '$0', reference 'Nullable[$0]'
 70b6888a1cc1	api-parity(null-model)	null-model	ResourceData$.SaveData#loadAsset	/ResourceData$/SaveData	0	result type differs: emitted 'sge.assets.AssetDescriptor[?]', reference 'Nullable[AssetDescriptor[?]]'
 96af344b6825	api-parity(null-model)	null-model	ResourceData$.SaveData#resources	/ResourceData$/SaveData	0	result type differs: emitted 'ResourceData[?]', reference 'Nullable[ResourceData[?]]'
 5e1bc6c9e170	api-parity(null-model)	null-model	SgeList#cullingArea	/SgeList	0	result type differs: emitted 'sge.math.Rectangle', reference 'Nullable[Rectangle]'
-cc710a4a4764	api-parity(null-model)	null-model	SgeList#overItem	/SgeList	0	result type differs: emitted 'T', reference 'Nullable[T]'
-3fec9c5f36b4	api-parity(null-model)	null-model	SgeList#pressedItem	/SgeList	0	result type differs: emitted 'T', reference 'Nullable[T]'
+5e38dcc8f1fb	api-parity(null-model)	null-model	SgeList#overItem	/SgeList	0	result type differs: emitted '$0', reference 'Nullable[$0]'
+d0c1e8015aed	api-parity(null-model)	null-model	SgeList#pressedItem	/SgeList	0	result type differs: emitted '$0', reference 'Nullable[$0]'
 c2d7e8dda52d	api-parity(null-model)	null-model	ShaderProgramLoader$.ShaderProgramParameter#fragmentFile	/ShaderProgramLoader$/ShaderProgramParameter	0	result type differs: emitted 'java.lang.String', reference 'Nullable[String]'
 d4c5799a71e8	api-parity(null-model)	null-model	ShaderProgramLoader$.ShaderProgramParameter#prependFragmentCode	/ShaderProgramLoader$/ShaderProgramParameter	0	result type differs: emitted 'java.lang.String', reference 'Nullable[String]'
 427a652996f7	api-parity(null-model)	null-model	ShaderProgramLoader$.ShaderProgramParameter#prependVertexCode	/ShaderProgramLoader$/ShaderProgramParameter	0	result type differs: emitted 'java.lang.String', reference 'Nullable[String]'
@@ -2507,7 +2507,7 @@ be4757d0b5b7	api-parity(null-model)	null-model	SpotLight#set	/SpotLight	0	param 
 30d968a9b4f8	api-parity(null-model)	null-model	SpotLight#set	/SpotLight	0	param 4 type differs: emitted 'sge.math.Vector3', reference 'Nullable[Vector3]'
 cce23af6875b	api-parity(null-model)	null-model	SpriteBatch#shader_=	/SpriteBatch	0	param 0 type differs: emitted 'sge.graphics.glutils.ShaderProgram', reference 'Nullable[ShaderProgram]'
 bea9dc8f8a85	api-parity(null-model)	null-model	SpriteCache#customShader	/SpriteCache	0	result type differs: emitted 'sge.graphics.glutils.ShaderProgram', reference 'Nullable[ShaderProgram]'
-05d4b6f18062	api-parity(null-model)	null-model	Table#add	/Table	0	param 0 type differs: emitted 'T', reference 'Nullable[T]'
+2185d716e12f	api-parity(null-model)	null-model	Table#add	/Table	0	param 0 type differs: emitted '$0', reference 'Nullable[$0]'
 462825c74a17	api-parity(null-model)	null-model	Table#add	/Table	0	param 0 type differs: emitted 'java.lang.CharSequence', reference 'Nullable[CharSequence]'
 8e6c3f7f837e	api-parity(null-model)	null-model	TextButton#newLabel	/TextButton	0	param 0 type differs: emitted 'java.lang.String', reference 'Nullable[String]'
 40b7a01d0d8f	api-parity(null-model)	null-model	TextField#next	/TextField	0	result type differs: emitted 'TextField', reference 'Nullable[TextField]'
@@ -2519,7 +2519,7 @@ f570b69f646e	api-parity(null-model)	null-model	TextureDescriptor#set	/TextureDes
 e6922a77f0b4	api-parity(null-model)	null-model	TextureDescriptor#set	/TextureDescriptor	0	param 2 type differs: emitted 'sge.graphics.Texture.TextureFilter', reference 'Nullable[TextureFilter]'
 b522c3e5add6	api-parity(null-model)	null-model	TextureDescriptor#set	/TextureDescriptor	0	param 3 type differs: emitted 'sge.graphics.Texture.TextureWrap', reference 'Nullable[TextureWrap]'
 b77005ff0ea7	api-parity(null-model)	null-model	TextureDescriptor#set	/TextureDescriptor	0	param 4 type differs: emitted 'sge.graphics.Texture.TextureWrap', reference 'Nullable[TextureWrap]'
-2cf07f7acfce	api-parity(null-model)	null-model	TextureDescriptor#texture	/TextureDescriptor	0	result type differs: emitted 'T', reference 'Nullable[T]'
+f099f71a0cfd	api-parity(null-model)	null-model	TextureDescriptor#texture	/TextureDescriptor	0	result type differs: emitted '$0', reference 'Nullable[$0]'
 794d70376cee	api-parity(null-model)	null-model	TextureDescriptor#uWrap	/TextureDescriptor	0	result type differs: emitted 'sge.graphics.Texture.TextureWrap', reference 'Nullable[TextureWrap]'
 1df2f2abf9c7	api-parity(null-model)	null-model	TextureDescriptor#vWrap	/TextureDescriptor	0	result type differs: emitted 'sge.graphics.Texture.TextureWrap', reference 'Nullable[TextureWrap]'
 07b3fa8d0341	api-parity(null-model)	null-model	TextureLoader$.TextureParameter#format	/TextureLoader$/TextureParameter	0	result type differs: emitted 'sge.graphics.Pixmap.Format', reference 'Nullable[Format]'
@@ -2531,7 +2531,7 @@ df2026b0a88f	api-parity(null-model)	null-model	TiledMapTileLayer#getCell	/TiledM
 9879ff2614be	api-parity(null-model)	null-model	TiledMapTileSet#getTile	/TiledMapTileSet	0	result type differs: emitted 'sge.maps.tiled.TiledMapTile', reference 'Nullable[TiledMapTile]'
 f2a704ac49c2	api-parity(null-model)	null-model	TiledMapTileSets#getTile	/TiledMapTileSets	0	result type differs: emitted 'sge.maps.tiled.TiledMapTile', reference 'Nullable[TiledMapTile]'
 e97be8491b3b	api-parity(null-model)	null-model	TiledMapTileSets#getTileSet	/TiledMapTileSets	0	result type differs: emitted 'sge.maps.tiled.TiledMapTileSet', reference 'Nullable[TiledMapTileSet]'
-2c77f54f14ce	api-parity(null-model)	null-model	Tree#rangeStart	/Tree	0	result type differs: emitted 'N', reference 'Nullable[N]'
+00cf83b0405f	api-parity(null-model)	null-model	Tree#rangeStart	/Tree	0	result type differs: emitted '$0', reference 'Nullable[$0]'
 7e646d632a0b	api-parity(null-model)	null-model	UnweightedMeshSpawnShapeValue#setMesh	/UnweightedMeshSpawnShapeValue	0	param 1 type differs: emitted 'sge.graphics.g3d.Model', reference 'Nullable[Model]'
 b8fe7de2d653	api-parity(null-model)	null-model	VertexAttributes#findByUsage	/VertexAttributes	0	result type differs: emitted 'sge.graphics.VertexAttribute', reference 'Nullable[VertexAttribute]'
 5c03af0054ee	api-parity(null-model)	null-model	Window$.WindowStyle#background	/Window$/WindowStyle	0	result type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.utils.Drawable]', reference 'Drawable'
@@ -6696,14 +6696,11 @@ c09424561a25	api-parity(port-extra)	port-extra	XmlWriter#write	/XmlWriter	0	def 
 a60fe35a4bf3	api-parity(port-extra)	port-extra	XmlWriter#writer	/XmlWriter	0	var writer/0 in emitted port only
 fdc51eb9a317	api-parity(signature)	signature	#Affine2		0	modifiers differ: emitted final, reference
 48d6cf5a3e56	api-parity(signature)	signature	#Affine2		0	parents differ: emitted-only [java.io.Serializable], reference-only []
-2f67e0d69b20	api-parity(signature)	signature	#Animation		0	type params differ: emitted '[T <: java.lang.Object]', reference '[T: ClassTag]'
+e44ee7833e5a	api-parity(signature)	signature	#Animation		0	type params differ: emitted '[$0]', reference '[$0: ClassTag]'
 99f415640c7e	api-parity(signature)	signature	#Application		0	parents differ: emitted-only [], reference-only [FrameHookHost]
-0c4d4e16100d	api-parity(signature)	signature	#ArraySelection		0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
 65df5d229a5c	api-parity(signature)	signature	#AssetDescriptor		0	modifiers differ: emitted , reference final,case
-6a20a5f1d555	api-parity(signature)	signature	#AssetDescriptor		0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
-8f394e8cf446	api-parity(signature)	signature	#AssetLoader		0	type params differ: emitted '[T <: java.lang.Object, P <: sge.assets.AssetLoaderParameters[T]]', reference '[T, P <: AssetLoaderParameters[T]]'
-83576404e918	api-parity(signature)	signature	#AssetLoaderParameters		0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
-dfe33d4e7341	api-parity(signature)	signature	#AsynchronousAssetLoader		0	type params differ: emitted '[T <: java.lang.Object, P <: sge.assets.AssetLoaderParameters[T]]', reference '[T, P <: AssetLoaderParameters[T]]'
+78650f031cb9	api-parity(signature)	signature	#AssetLoader		0	type params differ: emitted '[$0, $1 <: sge.assets.AssetLoaderParameters[$0]]', reference '[$0, $1 <: AssetLoaderParameters[$0]]'
+0ec1ff8818aa	api-parity(signature)	signature	#AsynchronousAssetLoader		0	type params differ: emitted '[$0, $1 <: sge.assets.AssetLoaderParameters[$0]]', reference '[$0, $1 <: AssetLoaderParameters[$0]]'
 65489aef8592	api-parity(signature)	signature	#AtlasTmjMapLoader		0	parents differ: emitted-only [sge.maps.tiled.BaseTmjMapLoader[sge.maps.tiled.BaseTiledMapLoader.Parameters]], reference-only [BaseTmjMapLoader[BaseTiledMapLoader.Parameters]]
 990a09de6144	api-parity(signature)	signature	#AtlasTmxMapLoader		0	parents differ: emitted-only [sge.maps.tiled.BaseTmxMapLoader[sge.maps.tiled.BaseTiledMapLoader.Parameters]], reference-only [BaseTmxMapLoader[BaseTiledMapLoader.Parameters]]
 92284a7cbaa9	api-parity(signature)	signature	#Attribute		0	parents differ: emitted-only [java.lang.Comparable[Attribute]], reference-only [Ordered[Attribute]]
@@ -6711,29 +6708,28 @@ dfe33d4e7341	api-parity(signature)	signature	#AsynchronousAssetLoader		0	type pa
 f65539a95983	api-parity(signature)	signature	#Audio		0	parents differ: emitted-only [java.lang.AutoCloseable], reference-only []
 85267e7e37cb	api-parity(signature)	signature	#AudioDevice		0	parents differ: emitted-only [java.lang.AutoCloseable], reference-only [java.io.Closeable]
 060b5a146aed	api-parity(signature)	signature	#AudioRecorder		0	parents differ: emitted-only [java.lang.AutoCloseable], reference-only [java.io.Closeable]
-9824c7490811	api-parity(signature)	signature	#BSpline		0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]: ClassTag]'
-2e8461d71a5d	api-parity(signature)	signature	#BaseTiledMapLoader		0	parents differ: emitted-only [sge.assets.loaders.AsynchronousAssetLoader[sge.maps.tiled.TiledMap, P]], reference-only [AsynchronousAssetLoader[TiledMap, P]]
-24fe9ad61603	api-parity(signature)	signature	#BaseTiledMapLoader		0	type params differ: emitted '[P <: sge.maps.tiled.BaseTiledMapLoader.Parameters]', reference '[P <: BaseTiledMapLoader.Parameters]'
-0fdd87cbbe7e	api-parity(signature)	signature	#BaseTmjMapLoader		0	type params differ: emitted '[P <: sge.maps.tiled.BaseTiledMapLoader.Parameters]', reference '[P <: BaseTiledMapLoader.Parameters]'
-fe3bac697a48	api-parity(signature)	signature	#BaseTmxMapLoader		0	type params differ: emitted '[P <: sge.maps.tiled.BaseTiledMapLoader.Parameters]', reference '[P <: BaseTiledMapLoader.Parameters]'
-f5493daa9777	api-parity(signature)	signature	#Bezier		0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]: scala.reflect.ClassTag]'
+4e031a7ee253	api-parity(signature)	signature	#BSpline		0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]: ClassTag]'
+543b498330fe	api-parity(signature)	signature	#BaseTiledMapLoader		0	parents differ: emitted-only [sge.assets.loaders.AsynchronousAssetLoader[sge.maps.tiled.TiledMap, $0]], reference-only [AsynchronousAssetLoader[TiledMap, $0]]
+794502430b6c	api-parity(signature)	signature	#BaseTiledMapLoader		0	type params differ: emitted '[$0 <: sge.maps.tiled.BaseTiledMapLoader.Parameters]', reference '[$0 <: BaseTiledMapLoader.Parameters]'
+65e0f4235c70	api-parity(signature)	signature	#BaseTmjMapLoader		0	type params differ: emitted '[$0 <: sge.maps.tiled.BaseTiledMapLoader.Parameters]', reference '[$0 <: BaseTiledMapLoader.Parameters]'
+07fec3b8378c	api-parity(signature)	signature	#BaseTmxMapLoader		0	type params differ: emitted '[$0 <: sge.maps.tiled.BaseTiledMapLoader.Parameters]', reference '[$0 <: BaseTiledMapLoader.Parameters]'
+b06aedeb1fdd	api-parity(signature)	signature	#Bezier		0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]: scala.reflect.ClassTag]'
 f44070140a67	api-parity(signature)	signature	#BillboardParticleBatch		0	parents differ: emitted-only [sge.graphics.g3d.particles.batches.BufferedParticleBatch[sge.graphics.g3d.particles.renderers.BillboardControllerRenderData]], reference-only [BufferedParticleBatch[BillboardControllerRenderData]]
 36cddeba3f90	api-parity(signature)	signature	#BillboardRenderer		0	parents differ: emitted-only [sge.graphics.g3d.particles.renderers.ParticleControllerRenderer[sge.graphics.g3d.particles.renderers.BillboardControllerRenderData, sge.graphics.g3d.particles.batches.BillboardParticleBatch]], reference-only [ParticleControllerRenderer[BillboardControllerRenderData, BillboardParticleBatch]]
 86adf6bbd643	api-parity(signature)	signature	#BinaryHeap		0	modifiers differ: emitted , reference final
-b4bffd967a9e	api-parity(signature)	signature	#BinaryHeap		0	type params differ: emitted '[T <: sge.utils.BinaryHeap.Node]', reference '[T <: BinaryHeap.Node]'
+cd9f47e4ac06	api-parity(signature)	signature	#BinaryHeap		0	type params differ: emitted '[$0 <: sge.utils.BinaryHeap.Node]', reference '[$0 <: BinaryHeap.Node]'
 25d9adfab94d	api-parity(signature)	signature	#BitmapFontLoader		0	parents differ: emitted-only [sge.assets.loaders.AsynchronousAssetLoader[sge.graphics.g2d.BitmapFont, sge.assets.loaders.BitmapFontLoader.BitmapFontParameter]], reference-only [AsynchronousAssetLoader[BitmapFont, BitmapFontLoader.BitmapFontParameter]]
 f10e3ba2678e	api-parity(signature)	signature	#BoundingBox		0	parents differ: emitted-only [java.io.Serializable], reference-only []
 b49b23ae18fe	api-parity(signature)	signature	#Bresenham2		0	modifiers differ: emitted , reference final
-73a6fdeec615	api-parity(signature)	signature	#BufferedParticleBatch		0	type params differ: emitted '[T <: sge.graphics.g3d.particles.renderers.ParticleControllerRenderData]', reference '[T <: ParticleControllerRenderData]'
+54810dab42ee	api-parity(signature)	signature	#BufferedParticleBatch		0	type params differ: emitted '[$0 <: sge.graphics.g3d.particles.renderers.ParticleControllerRenderData]', reference '[$0 <: ParticleControllerRenderData]'
 86cca3cd4577	api-parity(signature)	signature	#Button		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Styleable[sge.scenes.scene2d.ui.Button.ButtonStyle]], reference-only [Styleable[Button.ButtonStyle]]
-f47f3aa35fcd	api-parity(signature)	signature	#ButtonGroup		0	type params differ: emitted '[T <: sge.scenes.scene2d.ui.Button]', reference '[T <: Button]'
-004e70069484	api-parity(signature)	signature	#CatmullRomSpline		0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]]'
-4c345f418fa4	api-parity(signature)	signature	#Cell		0	type params differ: emitted '[T <: sge.scenes.scene2d.Actor]', reference '[T <: Actor]'
+59bc32c7cb8e	api-parity(signature)	signature	#ButtonGroup		0	type params differ: emitted '[$0 <: sge.scenes.scene2d.ui.Button]', reference '[$0 <: Button]'
+81b17f3a457d	api-parity(signature)	signature	#CatmullRomSpline		0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
+049c361c4d19	api-parity(signature)	signature	#Cell		0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Actor]', reference '[$0 <: Actor]'
 f5790d2c7e0d	api-parity(signature)	signature	#Circle		0	parents differ: emitted-only [java.io.Serializable], reference-only []
-ec49a65da3bb	api-parity(signature)	signature	#Container		0	type params differ: emitted '[T <: sge.scenes.scene2d.Actor]', reference '[T <: Actor]'
-7a2ab1683cd2	api-parity(signature)	signature	#CountdownEventAction		0	type params differ: emitted '[T <: sge.scenes.scene2d.Event]', reference '[T <: Event]'
+2858cee2b066	api-parity(signature)	signature	#Container		0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Actor]', reference '[$0 <: Actor]'
+cf7454851c66	api-parity(signature)	signature	#CountdownEventAction		0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Event]', reference '[$0 <: Event]'
 4947e89fdd66	api-parity(signature)	signature	#CubemapLoader		0	parents differ: emitted-only [sge.assets.loaders.AsynchronousAssetLoader[sge.graphics.Cubemap, sge.assets.loaders.CubemapLoader.CubemapParameter]], reference-only [AsynchronousAssetLoader[Cubemap, CubemapLoader.CubemapParameter]]
-2eec1ac0b36c	api-parity(signature)	signature	#CumulativeDistribution		0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
 cdf506da032b	api-parity(signature)	signature	#DataBuffer		0	modifiers differ: emitted , reference abstract
 f01fef37d763	api-parity(signature)	signature	#DataBuffer		0	parents differ: emitted-only [], reference-only [OutputStream]
 8eff13a37139	api-parity(signature)	signature	#DataInput		0	modifiers differ: emitted , reference final
@@ -6741,12 +6737,12 @@ f2e6aaa34d9a	api-parity(signature)	signature	#DataOutput		0	modifiers differ: em
 d2a91ca217df	api-parity(signature)	signature	#DefaultRenderableSorter		0	parents differ: emitted-only [scala.math.Ordering[sge.graphics.g3d.Renderable]], reference-only []
 db328024cc41	api-parity(signature)	signature	#Ellipse		0	parents differ: emitted-only [java.io.Serializable], reference-only []
 be3e806b37a2	api-parity(signature)	signature	#Emitter		0	parents differ: emitted-only [sge.utils.Json.Serializable], reference-only []
-736f48d5a3e2	api-parity(signature)	signature	#EventAction		0	type params differ: emitted '[T <: sge.scenes.scene2d.Event]', reference '[T <: Event]'
+f0758b20f9e5	api-parity(signature)	signature	#EventAction		0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Event]', reference '[$0 <: Event]'
 1e2d47e68235	api-parity(signature)	signature	#FirstPersonCameraController		0	parents differ: emitted-only [sge.InputAdapter], reference-only [InputProcessor]
 2fc9551a6e93	api-parity(signature)	signature	#FrameBuffer		0	parents differ: emitted-only [sge.graphics.glutils.GLFrameBuffer[sge.graphics.Texture]], reference-only [GLFrameBuffer[Texture]]
 a297cec23ced	api-parity(signature)	signature	#FrameBufferCubemap		0	parents differ: emitted-only [sge.graphics.glutils.GLFrameBuffer[sge.graphics.Cubemap]], reference-only [GLFrameBuffer[Cubemap]]
 f155de6a9619	api-parity(signature)	signature	#G3dModelLoader		0	parents differ: emitted-only [sge.assets.loaders.ModelLoader[sge.assets.loaders.ModelLoader.ModelParameters]], reference-only [ModelLoader[ModelLoader.ModelParameters]]
-91048926a54d	api-parity(signature)	signature	#GLFrameBuffer		0	type params differ: emitted '[T <: sge.graphics.GLTexture]', reference '[T <: GLTexture]'
+81ed492b197b	api-parity(signature)	signature	#GLFrameBuffer		0	type params differ: emitted '[$0 <: sge.graphics.GLTexture]', reference '[$0 <: GLTexture]'
 8608cc170600	api-parity(signature)	signature	#GestureDetector		0	parents differ: emitted-only [sge.InputAdapter], reference-only [InputProcessor]
 5039375a585e	api-parity(signature)	signature	#GridPoint2		0	modifiers differ: emitted , reference final,case
 72ef98b3b6f9	api-parity(signature)	signature	#GridPoint2		0	parents differ: emitted-only [java.io.Serializable], reference-only []
@@ -6767,27 +6763,24 @@ e3d8e6911f45	api-parity(signature)	signature	#Matrix3		0	parents differ: emitted
 d03f001cb1b5	api-parity(signature)	signature	#Matrix4		0	parents differ: emitted-only [java.io.Serializable], reference-only []
 a81c91fcedc2	api-parity(signature)	signature	#ModelInstanceParticleBatch		0	parents differ: emitted-only [sge.graphics.g3d.particles.batches.ParticleBatch[sge.graphics.g3d.particles.renderers.ModelInstanceControllerRenderData]], reference-only [ParticleBatch[ModelInstanceControllerRenderData]]
 73ec45e51b9b	api-parity(signature)	signature	#ModelInstanceRenderer		0	parents differ: emitted-only [sge.graphics.g3d.particles.renderers.ParticleControllerRenderer[sge.graphics.g3d.particles.renderers.ModelInstanceControllerRenderData, sge.graphics.g3d.particles.batches.ModelInstanceParticleBatch]], reference-only [ParticleControllerRenderer[ModelInstanceControllerRenderData, ModelInstanceParticleBatch]]
-8dddf2022f5f	api-parity(signature)	signature	#ModelLoader		0	parents differ: emitted-only [sge.assets.loaders.AsynchronousAssetLoader[sge.graphics.g3d.Model, P]], reference-only [AsynchronousAssetLoader[Model, P]]
-81cd788e1905	api-parity(signature)	signature	#ModelLoader		0	type params differ: emitted '[P <: sge.assets.loaders.ModelLoader.ModelParameters]', reference '[P <: ModelLoader.ModelParameters]'
-6e9f5b008803	api-parity(signature)	signature	#ModelNodeKeyframe		0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
+76c63b14f02c	api-parity(signature)	signature	#ModelLoader		0	parents differ: emitted-only [sge.assets.loaders.AsynchronousAssetLoader[sge.graphics.g3d.Model, $0]], reference-only [AsynchronousAssetLoader[Model, $0]]
+cdeb1e1f1903	api-parity(signature)	signature	#ModelLoader		0	type params differ: emitted '[$0 <: sge.assets.loaders.ModelLoader.ModelParameters]', reference '[$0 <: ModelLoader.ModelParameters]'
 903368a169bc	api-parity(signature)	signature	#Music		0	parents differ: emitted-only [java.lang.AutoCloseable], reference-only [java.io.Closeable]
 7d5163b90c84	api-parity(signature)	signature	#MusicLoader		0	parents differ: emitted-only [sge.assets.loaders.AsynchronousAssetLoader[sge.audio.Music, sge.assets.loaders.MusicLoader.MusicParameter]], reference-only [AsynchronousAssetLoader[Music, MusicLoader.MusicParameter]]
-b155b0388726	api-parity(signature)	signature	#NodeKeyframe		0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
 8d992c2d8406	api-parity(signature)	signature	#ObjLoader		0	parents differ: emitted-only [sge.assets.loaders.ModelLoader[sge.graphics.g3d.loader.ObjLoader.ObjLoaderParameters]], reference-only [ModelLoader[ObjLoader.ObjLoaderParameters]]
-158782ab45bf	api-parity(signature)	signature	#Octree		0	type params differ: emitted '[T <: java.lang.Object]', reference '[T <: AnyRef: scala.reflect.ClassTag]'
+29acf425ef35	api-parity(signature)	signature	#Octree		0	type params differ: emitted '[$0]', reference '[$0 <: AnyRef: scala.reflect.ClassTag]'
 2df2702e259a	api-parity(signature)	signature	#OrientedBoundingBox		0	parents differ: emitted-only [java.io.Serializable], reference-only []
 29e17d896f64	api-parity(signature)	signature	#ParticleBatch		0	parents differ: emitted-only [sge.graphics.g3d.particles.ResourceData.Configurable[java.lang.Object]], reference-only [ResourceData.Configurable]
-56bc2bd163dc	api-parity(signature)	signature	#ParticleBatch		0	type params differ: emitted '[T <: sge.graphics.g3d.particles.renderers.ParticleControllerRenderData]', reference '[T <: ParticleControllerRenderData]'
+98ac725b4ab7	api-parity(signature)	signature	#ParticleBatch		0	type params differ: emitted '[$0 <: sge.graphics.g3d.particles.renderers.ParticleControllerRenderData]', reference '[$0 <: ParticleControllerRenderData]'
 eb1e744f3b79	api-parity(signature)	signature	#ParticleController		0	parents differ: emitted-only [sge.utils.Json.Serializable, sge.graphics.g3d.particles.ResourceData.Configurable[java.lang.Object]], reference-only [ResourceData.Configurable]
 17caeaf9748c	api-parity(signature)	signature	#ParticleControllerComponent		0	parents differ: emitted-only [sge.utils.Json.Serializable, sge.graphics.g3d.particles.ResourceData.Configurable[java.lang.Object]], reference-only [ResourceData.Configurable]
 88712af59172	api-parity(signature)	signature	#ParticleControllerControllerRenderer		0	parents differ: emitted-only [sge.graphics.g3d.particles.renderers.ParticleControllerRenderer[sge.graphics.g3d.particles.renderers.ParticleControllerRenderData, sge.graphics.g3d.particles.batches.ParticleBatch[sge.graphics.g3d.particles.renderers.ParticleControllerRenderData]]], reference-only [ParticleControllerRenderer[ParticleControllerRenderData, ParticleBatch[ParticleControllerRenderData]]]
-b9080347e8aa	api-parity(signature)	signature	#ParticleControllerRenderer		0	type params differ: emitted '[D <: sge.graphics.g3d.particles.renderers.ParticleControllerRenderData, T <: sge.graphics.g3d.particles.batches.ParticleBatch[D]]', reference '[D <: ParticleControllerRenderData, T <: ParticleBatch[D]]'
+0ab8bd161c28	api-parity(signature)	signature	#ParticleControllerRenderer		0	type params differ: emitted '[$0 <: sge.graphics.g3d.particles.renderers.ParticleControllerRenderData, $1 <: sge.graphics.g3d.particles.batches.ParticleBatch[$0]]', reference '[$0 <: ParticleControllerRenderData, $1 <: ParticleBatch[$0]]'
 aeadaf97787a	api-parity(signature)	signature	#ParticleEffect		0	parents differ: emitted-only [sge.graphics.g3d.particles.ResourceData.Configurable[java.lang.Object]], reference-only [ResourceData.Configurable]
 7146df4114c1	api-parity(signature)	signature	#ParticleEffectLoader		0	parents differ: emitted-only [sge.assets.loaders.AsynchronousAssetLoader[sge.graphics.g3d.particles.ParticleEffect, sge.graphics.g3d.particles.ParticleEffectLoader.ParticleEffectLoadParameter]], reference-only [AsynchronousAssetLoader[ParticleEffect, ParticleEffectLoader.ParticleEffectLoadParameter]]
 35e96225ec58	api-parity(signature)	signature	#ParticleEffectLoader		0	parents differ: emitted-only [sge.assets.loaders.SynchronousAssetLoader[sge.graphics.g2d.ParticleEffect, sge.assets.loaders.ParticleEffectLoader.ParticleEffectParameter]], reference-only [SynchronousAssetLoader[ParticleEffect, ParticleEffectLoader.ParticleEffectParameter]]
 7b8abc237bdd	api-parity(signature)	signature	#ParticleEffectPool		0	parents differ: emitted-only [sge.utils.Pool[sge.graphics.g2d.ParticleEffectPool#PooledEffect]], reference-only [Pool[ParticleEffectPool.PooledEffect]]
 a48cb62d80ab	api-parity(signature)	signature	#ParticleValue		0	parents differ: emitted-only [sge.utils.Json.Serializable], reference-only []
-f364bedfb44c	api-parity(signature)	signature	#Path		0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
 1bcd8d9ba2b8	api-parity(signature)	signature	#PerformanceCounter		0	modifiers differ: emitted , reference final
 952874bfb490	api-parity(signature)	signature	#PerformanceCounters		0	modifiers differ: emitted , reference final
 ea03f58166f4	api-parity(signature)	signature	#PixmapLoader		0	parents differ: emitted-only [sge.assets.loaders.AsynchronousAssetLoader[sge.graphics.Pixmap, sge.assets.loaders.PixmapLoader.PixmapParameter]], reference-only [AsynchronousAssetLoader[Pixmap, PixmapLoader.PixmapParameter]]
@@ -6801,15 +6794,11 @@ e90a14645ce5	api-parity(signature)	signature	#Ray		0	parents differ: emitted-onl
 d013fe3150b2	api-parity(signature)	signature	#Rectangle		0	parents differ: emitted-only [java.io.Serializable], reference-only []
 cf1244273a06	api-parity(signature)	signature	#RegularEmitter		0	parents differ: emitted-only [sge.utils.Json.Serializable], reference-only []
 bdd341a80d8a	api-parity(signature)	signature	#ResourceData		0	parents differ: emitted-only [sge.utils.Json.Serializable], reference-only []
-fc513378c7d4	api-parity(signature)	signature	#ResourceData		0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
 323d9d575bd0	api-parity(signature)	signature	#ScrollPane		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Styleable[sge.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle]], reference-only [Styleable[ScrollPane.ScrollPaneStyle]]
 2332634dd2dd	api-parity(signature)	signature	#Segment		0	parents differ: emitted-only [java.io.Serializable], reference-only []
 13a3b3f75bf2	api-parity(signature)	signature	#SelectBox		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Styleable[sge.scenes.scene2d.ui.SelectBox.SelectBoxStyle]], reference-only [Styleable[SelectBox.SelectBoxStyle]]
-16a8b284d59e	api-parity(signature)	signature	#SelectBox		0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
-6d484d0b51d9	api-parity(signature)	signature	#Selection		0	parents differ: emitted-only [balticporter.runtime.JavaIterable[T]], reference-only [Iterable[T]]
-41e46c5b0daa	api-parity(signature)	signature	#Selection		0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
+84f22a92cef8	api-parity(signature)	signature	#Selection		0	parents differ: emitted-only [balticporter.runtime.JavaIterable[$0]], reference-only [Iterable[$0]]
 02369543bba1	api-parity(signature)	signature	#SgeList		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Styleable[sge.scenes.scene2d.ui.SgeList.ListStyle]], reference-only [Styleable[SgeList.ListStyle]]
-b8281c58708e	api-parity(signature)	signature	#SgeList		0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
 c43ef3a3e790	api-parity(signature)	signature	#ShaderProgramLoader		0	parents differ: emitted-only [sge.assets.loaders.AsynchronousAssetLoader[sge.graphics.glutils.ShaderProgram, sge.assets.loaders.ShaderProgramLoader.ShaderProgramParameter]], reference-only [AsynchronousAssetLoader[ShaderProgram, ShaderProgramLoader.ShaderProgramParameter]]
 9d93c41f590d	api-parity(signature)	signature	#SkinLoader		0	parents differ: emitted-only [sge.assets.loaders.AsynchronousAssetLoader[sge.scenes.scene2d.ui.Skin, sge.assets.loaders.SkinLoader.SkinParameter]], reference-only [AsynchronousAssetLoader[Skin, SkinLoader.SkinParameter]]
 83d2ff98eb32	api-parity(signature)	signature	#Sound		0	parents differ: emitted-only [java.lang.AutoCloseable], reference-only [java.io.Closeable]
@@ -6819,13 +6808,12 @@ eea9316b9b63	api-parity(signature)	signature	#Sphere		0	parents differ: emitted-
 b30232e60d2a	api-parity(signature)	signature	#SplitPane		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Styleable[sge.scenes.scene2d.ui.SplitPane.SplitPaneStyle]], reference-only [Styleable[SplitPane.SplitPaneStyle]]
 5f0531519cd9	api-parity(signature)	signature	#SpriteBatch		0	parents differ: emitted-only [], reference-only [AutoCloseable]
 83b595fedd59	api-parity(signature)	signature	#Stage		0	parents differ: emitted-only [sge.InputAdapter], reference-only [InputProcessor]
-e36b682ec37b	api-parity(signature)	signature	#Styleable		0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
-e5adfdf128bd	api-parity(signature)	signature	#SynchronousAssetLoader		0	type params differ: emitted '[T <: java.lang.Object, P <: sge.assets.AssetLoaderParameters[T]]', reference '[T, P <: AssetLoaderParameters[T]]'
+8767b8191860	api-parity(signature)	signature	#SynchronousAssetLoader		0	type params differ: emitted '[$0, $1 <: sge.assets.AssetLoaderParameters[$0]]', reference '[$0, $1 <: AssetLoaderParameters[$0]]'
 a90ec76c542c	api-parity(signature)	signature	#TextField		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Styleable[sge.scenes.scene2d.ui.TextField.TextFieldStyle]], reference-only [Styleable[TextField.TextFieldStyle]]
 1a8a0dfe0d48	api-parity(signature)	signature	#TextTooltip		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Tooltip[sge.scenes.scene2d.ui.Label], sge.scenes.scene2d.ui.Styleable[sge.scenes.scene2d.ui.TextTooltip.TextTooltipStyle]], reference-only [Tooltip[Label], Styleable[TextTooltip.TextTooltipStyle]]
 ab64fe11901b	api-parity(signature)	signature	#TextureAtlasLoader		0	parents differ: emitted-only [sge.assets.loaders.SynchronousAssetLoader[sge.graphics.g2d.TextureAtlas, sge.assets.loaders.TextureAtlasLoader.TextureAtlasParameter]], reference-only [SynchronousAssetLoader[TextureAtlas, TextureAtlasLoader.TextureAtlasParameter]]
-89448a297691	api-parity(signature)	signature	#TextureDescriptor		0	parents differ: emitted-only [java.lang.Comparable[TextureDescriptor[T]]], reference-only [Ordered[TextureDescriptor[T]]]
-fa2ece259bb8	api-parity(signature)	signature	#TextureDescriptor		0	type params differ: emitted '[T <: sge.graphics.GLTexture]', reference '[T <: GLTexture]'
+be236ec23e31	api-parity(signature)	signature	#TextureDescriptor		0	parents differ: emitted-only [java.lang.Comparable[TextureDescriptor[$0]]], reference-only [Ordered[TextureDescriptor[$0]]]
+cfd4e5da6a12	api-parity(signature)	signature	#TextureDescriptor		0	type params differ: emitted '[$0 <: sge.graphics.GLTexture]', reference '[$0 <: GLTexture]'
 79ae9a7f6e10	api-parity(signature)	signature	#TextureLoader		0	parents differ: emitted-only [sge.assets.loaders.AsynchronousAssetLoader[sge.graphics.Texture, sge.assets.loaders.TextureLoader.TextureParameter]], reference-only [AsynchronousAssetLoader[Texture, TextureLoader.TextureParameter]]
 4a66c4932bd3	api-parity(signature)	signature	#TideMapLoader		0	parents differ: emitted-only [sge.assets.loaders.SynchronousAssetLoader[sge.maps.tiled.TiledMap, sge.maps.tiled.TideMapLoader.Parameters]], reference-only [SynchronousAssetLoader[TiledMap, TideMapLoader.Parameters]]
 cddb131df8e8	api-parity(signature)	signature	#TiledMapLoader		0	parents differ: emitted-only [sge.assets.loaders.AsynchronousAssetLoader[sge.maps.tiled.TiledMap, sge.maps.tiled.BaseTiledMapLoader.Parameters]], reference-only [AsynchronousAssetLoader[TiledMap, BaseTiledMapLoader.Parameters]]
@@ -6833,11 +6821,11 @@ cddb131df8e8	api-parity(signature)	signature	#TiledMapLoader		0	parents differ: 
 a9f6ca08d629	api-parity(signature)	signature	#TiledMapTileSets		0	parents differ: emitted-only [balticporter.runtime.JavaIterable[sge.maps.tiled.TiledMapTileSet]], reference-only [Iterable[TiledMapTileSet]]
 6f22fa4b2c30	api-parity(signature)	signature	#TmjMapLoader		0	parents differ: emitted-only [sge.maps.tiled.BaseTmjMapLoader[sge.maps.tiled.BaseTiledMapLoader.Parameters]], reference-only [BaseTmjMapLoader[BaseTiledMapLoader.Parameters]]
 3e1502be90ed	api-parity(signature)	signature	#TmxMapLoader		0	parents differ: emitted-only [sge.maps.tiled.BaseTmxMapLoader[sge.maps.tiled.BaseTiledMapLoader.Parameters]], reference-only [BaseTmxMapLoader[BaseTiledMapLoader.Parameters]]
-161308e8e92c	api-parity(signature)	signature	#Tooltip		0	type params differ: emitted '[T <: sge.scenes.scene2d.Actor]', reference '[T <: Actor]'
+d1efca885f5a	api-parity(signature)	signature	#Tooltip		0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Actor]', reference '[$0 <: Actor]'
 31d31d03e22d	api-parity(signature)	signature	#Touchable		0	parents differ: emitted-only [java.lang.Enum[Touchable]], reference-only []
 59b02286007d	api-parity(signature)	signature	#Touchpad		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Styleable[sge.scenes.scene2d.ui.Touchpad.TouchpadStyle]], reference-only [Styleable[Touchpad.TouchpadStyle]]
 a6b7d48c9429	api-parity(signature)	signature	#Tree		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Styleable[sge.scenes.scene2d.ui.Tree.TreeStyle]], reference-only [Styleable[Tree.TreeStyle]]
-94055c0f80dd	api-parity(signature)	signature	#Tree		0	type params differ: emitted '[N <: sge.scenes.scene2d.ui.Tree.Node[N, V, ?], V <: java.lang.Object]', reference '[N <: Tree.Node[N, V, ? <: Actor], V]'
+c07f5f31efcf	api-parity(signature)	signature	#Tree		0	type params differ: emitted '[$0 <: sge.scenes.scene2d.ui.Tree.Node[$0, $1, ?], $1]', reference '[$0 <: Tree.Node[$0, $1, ? <: Actor], $1]'
 8b6c75e5ab65	api-parity(signature)	signature	#Vector		0	modifiers differ: emitted , reference sealed
 0ad417d105c3	api-parity(signature)	signature	#Vector2		0	modifiers differ: emitted , reference final,case
 792342e783e7	api-parity(signature)	signature	#Vector2		0	parents differ: emitted-only [java.io.Serializable], reference-only []
@@ -6867,7 +6855,7 @@ c0d9510c84cb	api-parity(signature)	signature	Actions$#scaleTo	/Actions$	0	param 
 4d75c51e6035	api-parity(signature)	signature	Actions$#sizeTo	/Actions$	0	param 3 type differs: emitted 'lowlevel.Nullable[sge.math.Interpolation]', reference 'Nullable[Interpolation]'
 e6a7ab411346	api-parity(signature)	signature	Actor#actions	/Actor	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.scenes.scene2d.Action]', reference 'DynamicArray[Action]'
 fe4d9ce052e6	api-parity(signature)	signature	Actor#captureListeners	/Actor	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.scenes.scene2d.EventListener]', reference 'DynamicArray[EventListener]'
-d502492318c3	api-parity(signature)	signature	Actor#firstAscendant	/Actor	0	param 0 type differs: emitted 'java.lang.Class[T]', reference 'scala.reflect.ClassTag[T]'
+f23a3c4e9e14	api-parity(signature)	signature	Actor#firstAscendant	/Actor	0	param 0 type differs: emitted 'java.lang.Class[$0]', reference 'scala.reflect.ClassTag[$0]'
 5a4eeb1a512b	api-parity(signature)	signature	Actor#listeners	/Actor	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.scenes.scene2d.EventListener]', reference 'DynamicArray[EventListener]'
 3d5ea013244b	api-parity(signature)	signature	Actor#parent	/Actor	0	result type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.Group]', reference 'Nullable[Group]'
 99b8ffe32291	api-parity(signature)	signature	Actor#removeAction	/Actor	0	param 0 type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.Action]', reference 'Nullable[Action]'
@@ -6885,25 +6873,18 @@ c0c621491f9e	api-parity(signature)	signature	ActorGestureListener#touchDownTarge
 ed3710f581aa	api-parity(signature)	signature	AnimationController#animationPool	/AnimationController	0	modifiers differ: emitted final, reference
 a6ddb227bf2b	api-parity(signature)	signature	AnimationController#animationPool	/AnimationController	0	result type differs: emitted 'sge.utils.Pool[sge.graphics.g3d.utils.AnimationController.AnimationDesc]', reference 'Pool[AnimationDesc]'
 5d7049bea51b	api-parity(signature)	signature	Application$#ApplicationType	/Application$	0	parents differ: emitted-only [java.lang.Enum[ApplicationType]], reference-only []
-88cf13bf152e	api-parity(signature)	signature	AssetDescriptor#params	/AssetDescriptor	0	result type differs: emitted 'sge.assets.AssetLoaderParameters[?]', reference 'Nullable[AssetLoaderParameters[T]]'
-08a654ee0cf5	api-parity(signature)	signature	AssetManager#addAsset	/AssetManager	0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
+fd354a633d21	api-parity(signature)	signature	AssetDescriptor#params	/AssetDescriptor	0	result type differs: emitted 'sge.assets.AssetLoaderParameters[?]', reference 'Nullable[AssetLoaderParameters[$0]]'
 f6434a5ee64b	api-parity(signature)	signature	AssetManager#assetNames	/AssetManager	0	result type differs: emitted 'lowlevel.util.DynamicArray[java.lang.String]', reference 'DynamicArray[String]'
-66ef0a2baebe	api-parity(signature)	signature	AssetManager#containsAsset	/AssetManager	0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
-bf980de8cdf0	api-parity(signature)	signature	AssetManager#finishLoadingAsset	/AssetManager	0	param 0 type differs: emitted 'sge.assets.AssetDescriptor[?]', reference 'AssetDescriptor[T]'
-87b23a31f845	api-parity(signature)	signature	AssetManager#finishLoadingAsset	/AssetManager	0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
-87b23a31f845/2	api-parity(signature)	signature	AssetManager#finishLoadingAsset	/AssetManager	0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
-c10f13f6d4ee	api-parity(signature)	signature	AssetManager#get	/AssetManager	0	type params differ: emitted '[T <: java.lang.Object]', reference '[T: ClassTag]'
-1faa9ceb2e26	api-parity(signature)	signature	AssetManager#get	/AssetManager	0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
-1faa9ceb2e26/2	api-parity(signature)	signature	AssetManager#get	/AssetManager	0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
+061d2f7d5869	api-parity(signature)	signature	AssetManager#finishLoadingAsset	/AssetManager	0	param 0 type differs: emitted 'sge.assets.AssetDescriptor[?]', reference 'AssetDescriptor[$0]'
+115864f06bc3	api-parity(signature)	signature	AssetManager#get	/AssetManager	0	type params differ: emitted '[$0]', reference '[$0: ClassTag]'
 427a0263d2b5	api-parity(signature)	signature	AssetManager#load	/AssetManager	0	param 0 type differs: emitted 'sge.assets.AssetDescriptor[?]', reference 'String'
-16a59e276cf6	api-parity(signature)	signature	AssetManager#load	/AssetManager	0	param 1 type differs: emitted 'java.lang.Class[T]', reference 'AssetLoaderParameters[T]'
-f72235a40e64	api-parity(signature)	signature	AssetManager#load	/AssetManager	0	type params differ: emitted '[T <: java.lang.Object]', reference '[T: ClassTag]'
-2ba32be412b5	api-parity(signature)	signature	AssetManager#load	/AssetManager	0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
-8927952f409c	api-parity(signature)	signature	AssetManager#setLoader	/AssetManager	0	param 0 type differs: emitted 'java.lang.Class[T]', reference 'String'
-e4ed0ac0faaf	api-parity(signature)	signature	AssetManager#setLoader	/AssetManager	0	param 1 type differs: emitted 'sge.assets.loaders.AssetLoader[T, P]', reference 'AssetLoader[?,  ?]'
-733126c9b04e	api-parity(signature)	signature	AssetManager#setLoader	/AssetManager	0	param 2 type differs: emitted 'sge.assets.loaders.AssetLoader[T, P]', reference 'AssetLoader[?,  ?]'
-da8ac5fd104f	api-parity(signature)	signature	AssetManager#setLoader	/AssetManager	0	type params differ: emitted '[T <: java.lang.Object, P <: sge.assets.AssetLoaderParameters[T]]', reference '[T: ClassTag]'
-4782f9402cad	api-parity(signature)	signature	AssetManager#setLoader	/AssetManager	0	type params differ: emitted '[T <: java.lang.Object, P <: sge.assets.AssetLoaderParameters[T]]', reference '[T]'
+a6a6d4237c3e	api-parity(signature)	signature	AssetManager#load	/AssetManager	0	param 1 type differs: emitted 'java.lang.Class[$0]', reference 'AssetLoaderParameters[$0]'
+64f8b5d24b7a	api-parity(signature)	signature	AssetManager#load	/AssetManager	0	type params differ: emitted '[$0]', reference '[$0: ClassTag]'
+95a8ccc19cc8	api-parity(signature)	signature	AssetManager#setLoader	/AssetManager	0	param 0 type differs: emitted 'java.lang.Class[$0]', reference 'String'
+e0cecf4cd5a6	api-parity(signature)	signature	AssetManager#setLoader	/AssetManager	0	param 1 type differs: emitted 'sge.assets.loaders.AssetLoader[$0, $1]', reference 'AssetLoader[?,  ?]'
+1365a21b361f	api-parity(signature)	signature	AssetManager#setLoader	/AssetManager	0	param 2 type differs: emitted 'sge.assets.loaders.AssetLoader[$0, $1]', reference 'AssetLoader[?,  ?]'
+38db1c44a2ec	api-parity(signature)	signature	AssetManager#setLoader	/AssetManager	0	type params differ: emitted '[$0, $1 <: sge.assets.AssetLoaderParameters[$0]]', reference '[$0: ClassTag]'
+61ec23eb3bd8	api-parity(signature)	signature	AssetManager#setLoader	/AssetManager	0	type params differ: emitted '[$0, $1 <: sge.assets.AssetLoaderParameters[$0]]', reference '[$0]'
 f6a3e062f7b7	api-parity(signature)	signature	AtlasTmjMapLoader#getDependencyAssetDescriptors	/AtlasTmjMapLoader	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]', reference 'DynamicArray[AssetDescriptor[?]]'
 51db8080ea17	api-parity(signature)	signature	AtlasTmjMapLoader#trackedTextures	/AtlasTmjMapLoader	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.Texture]', reference 'DynamicArray[Texture]'
 f11308229075	api-parity(signature)	signature	AtlasTmxMapLoader#addStaticTiles	/AtlasTmxMapLoader	0	param 4 type differs: emitted 'lowlevel.util.DynamicArray[sge.utils.XmlReader.Element]', reference 'DynamicArray[XmlReader.Element]'
@@ -6913,8 +6894,8 @@ aa0c4a33174f	api-parity(signature)	signature	AtlasTmxMapLoader#getDependencyAsse
 d9f5d415f5f4	api-parity(signature)	signature	Attribute$#getAttributeType	/Attribute$	0	modifiers differ: emitted final, reference
 9215d6dbba5d	api-parity(signature)	signature	Attributes#attributes	/Attributes	0	modifiers differ: emitted final, reference
 05e140bae92f	api-parity(signature)	signature	Attributes#attributes	/Attributes	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.g3d.Attribute]', reference 'DynamicArray[Attribute]'
-18a937579062	api-parity(signature)	signature	Attributes#get	/Attributes	0	param 0 type differs: emitted 'java.lang.Class[T]', reference 'DynamicArray[Attribute]'
-bc211fd7a4cd	api-parity(signature)	signature	Attributes#get	/Attributes	0	result type differs: emitted 'T', reference 'DynamicArray[Attribute]'
+5954f93c16fe	api-parity(signature)	signature	Attributes#get	/Attributes	0	param 0 type differs: emitted 'java.lang.Class[$0]', reference 'DynamicArray[Attribute]'
+86e85279ec91	api-parity(signature)	signature	Attributes#get	/Attributes	0	result type differs: emitted '$0', reference 'DynamicArray[Attribute]'
 ee6b1bcd95b0	api-parity(signature)	signature	Attributes#iterator	/Attributes	0	result type differs: emitted 'balticporter.runtime.JavaIterator[sge.graphics.g3d.Attribute]', reference 'Iterator[Attribute]'
 e0276901b397	api-parity(signature)	signature	Attributes#set	/Attributes	0	param 0 type differs: emitted 'balticporter.runtime.JavaIterable[sge.graphics.g3d.Attribute]', reference 'Iterable[Attribute]'
 404125edb4bc	api-parity(signature)	signature	Attributes#set	/Attributes	0	param 0 type differs: emitted 'scala.Array[sge.graphics.g3d.Attribute]', reference 'Attribute*'
@@ -6924,16 +6905,16 @@ f3290d28b4f8	api-parity(signature)	signature	Audio#switchOutputDevice	/Audio	0	p
 c1f347878a44	api-parity(signature)	signature	AudioDevice#writeSamples	/AudioDevice	0	param 0 type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
 115b2262acac	api-parity(signature)	signature	AudioDevice#writeSamples	/AudioDevice	0	param 0 type differs: emitted 'scala.Array[scala.Short]', reference 'Array[Short]'
 0ecf970d8137	api-parity(signature)	signature	AudioRecorder#read	/AudioRecorder	0	param 0 type differs: emitted 'scala.Array[scala.Short]', reference 'Array[Short]'
-a68f5576463a	api-parity(signature)	signature	BSpline#knots	/BSpline	0	result type differs: emitted 'lowlevel.util.DynamicArray[T]', reference 'Array[T]'
-086c459760d4	api-parity(signature)	signature	BSpline#set	/BSpline	0	result type differs: emitted 'BSpline[?]', reference 'BSpline[T]'
-4c44a802aa7e	api-parity(signature)	signature	BSpline$#calculate	/BSpline$	0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]]'
-4c44a802aa7e/2	api-parity(signature)	signature	BSpline$#calculate	/BSpline$	0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]]'
-68dca6f247fb	api-parity(signature)	signature	BSpline$#cubic	/BSpline$	0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]]'
-68dca6f247fb/2	api-parity(signature)	signature	BSpline$#cubic	/BSpline$	0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]]'
-e8214af96d0e	api-parity(signature)	signature	BSpline$#cubic_derivative	/BSpline$	0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]]'
-e8214af96d0e/2	api-parity(signature)	signature	BSpline$#cubic_derivative	/BSpline$	0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]]'
-522fb4a0ceca	api-parity(signature)	signature	BSpline$#derivative	/BSpline$	0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]]'
-522fb4a0ceca/2	api-parity(signature)	signature	BSpline$#derivative	/BSpline$	0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]]'
+1f0f912ab42c	api-parity(signature)	signature	BSpline#knots	/BSpline	0	result type differs: emitted 'lowlevel.util.DynamicArray[$0]', reference 'Array[$0]'
+d59b4b484dbc	api-parity(signature)	signature	BSpline#set	/BSpline	0	result type differs: emitted 'BSpline[?]', reference 'BSpline[$0]'
+1126dbed8b03	api-parity(signature)	signature	BSpline$#calculate	/BSpline$	0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
+1126dbed8b03/2	api-parity(signature)	signature	BSpline$#calculate	/BSpline$	0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
+aec76807a1e7	api-parity(signature)	signature	BSpline$#cubic	/BSpline$	0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
+aec76807a1e7/2	api-parity(signature)	signature	BSpline$#cubic	/BSpline$	0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
+71f3b03d1b91	api-parity(signature)	signature	BSpline$#cubic_derivative	/BSpline$	0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
+71f3b03d1b91/2	api-parity(signature)	signature	BSpline$#cubic_derivative	/BSpline$	0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
+15247f2232b9	api-parity(signature)	signature	BSpline$#derivative	/BSpline$	0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
+15247f2232b9/2	api-parity(signature)	signature	BSpline$#derivative	/BSpline$	0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
 df04c65b8cb5	api-parity(signature)	signature	BaseAnimationController$#Transform	/BaseAnimationController$	0	modifiers differ: emitted final, reference
 9435f4a80008	api-parity(signature)	signature	BaseAnimationController$#applyAnimation	/BaseAnimationController$	0	param 0 type differs: emitted 'lowlevel.util.ObjectMap[sge.graphics.g3d.model.Node, sge.graphics.g3d.utils.BaseAnimationController.Transform]', reference 'Nullable[mutable.Map[Node, Transform]]'
 319c77459fbe	api-parity(signature)	signature	BaseAnimationController$#applyAnimation	/BaseAnimationController$	0	param 1 type differs: emitted 'sge.utils.Pool[sge.graphics.g3d.utils.BaseAnimationController.Transform]', reference 'Nullable[Pool[Transform]]'
@@ -7021,16 +7002,16 @@ cb96afca4bcf	api-parity(signature)	signature	Batch$#X2	/Batch$	0	modifiers diffe
 c5f3efa695f9	api-parity(signature)	signature	BatchTiledMapRenderer#render	/BatchTiledMapRenderer	0	param 0 type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
 ac2dd3c3ed3a	api-parity(signature)	signature	BatchTiledMapRenderer#vertices	/BatchTiledMapRenderer	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
 b66906406cb7	api-parity(signature)	signature	BatchTiledMapRenderer$#NUM_VERTICES	/BatchTiledMapRenderer$	0	modifiers differ: emitted inline, reference final
-addd616460df	api-parity(signature)	signature	Bezier#set	/Bezier	0	param 0 type differs: emitted 'scala.Array[T]', reference 'T*'
-5411cb5a3e40	api-parity(signature)	signature	Bezier#set	/Bezier	0	result type differs: emitted 'Bezier[?]', reference 'Bezier[T]'
-5411cb5a3e40/2	api-parity(signature)	signature	Bezier#set	/Bezier	0	result type differs: emitted 'Bezier[?]', reference 'Bezier[T]'
-5411cb5a3e40/3	api-parity(signature)	signature	Bezier#set	/Bezier	0	result type differs: emitted 'Bezier[?]', reference 'Bezier[T]'
-97544608448a	api-parity(signature)	signature	Bezier$#cubic	/Bezier$	0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]]'
-223ba2938589	api-parity(signature)	signature	Bezier$#cubic_derivative	/Bezier$	0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]]'
-23b55cf99f99	api-parity(signature)	signature	Bezier$#linear	/Bezier$	0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]]'
-684944ce4703	api-parity(signature)	signature	Bezier$#linear_derivative	/Bezier$	0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]]'
-4fe9a939fc3e	api-parity(signature)	signature	Bezier$#quadratic	/Bezier$	0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]]'
-39ae11e49e8c	api-parity(signature)	signature	Bezier$#quadratic_derivative	/Bezier$	0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]]'
+c2ef23fcb2fe	api-parity(signature)	signature	Bezier#set	/Bezier	0	param 0 type differs: emitted 'scala.Array[$0]', reference '$0*'
+4bf4744e89fd	api-parity(signature)	signature	Bezier#set	/Bezier	0	result type differs: emitted 'Bezier[?]', reference 'Bezier[$0]'
+4bf4744e89fd/2	api-parity(signature)	signature	Bezier#set	/Bezier	0	result type differs: emitted 'Bezier[?]', reference 'Bezier[$0]'
+4bf4744e89fd/3	api-parity(signature)	signature	Bezier#set	/Bezier	0	result type differs: emitted 'Bezier[?]', reference 'Bezier[$0]'
+2967d84e29b7	api-parity(signature)	signature	Bezier$#cubic	/Bezier$	0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
+65baabba3512	api-parity(signature)	signature	Bezier$#cubic_derivative	/Bezier$	0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
+7a15711b4a31	api-parity(signature)	signature	Bezier$#linear	/Bezier$	0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
+be6620c7a977	api-parity(signature)	signature	Bezier$#linear_derivative	/Bezier$	0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
+7ce735cfc6ed	api-parity(signature)	signature	Bezier$#quadratic	/Bezier$	0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
+987ba10e8893	api-parity(signature)	signature	Bezier$#quadratic_derivative	/Bezier$	0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
 3cc4da95e838	api-parity(signature)	signature	BillboardControllerRenderData#colorChannel	/BillboardControllerRenderData	0	result type differs: emitted 'sge.graphics.g3d.particles.ParallelArray#FloatChannel', reference 'FloatChannel'
 fc0dd1ea9603	api-parity(signature)	signature	BillboardControllerRenderData#regionChannel	/BillboardControllerRenderData	0	result type differs: emitted 'sge.graphics.g3d.particles.ParallelArray#FloatChannel', reference 'FloatChannel'
 0d101fe34237	api-parity(signature)	signature	BillboardControllerRenderData#rotationChannel	/BillboardControllerRenderData	0	result type differs: emitted 'sge.graphics.g3d.particles.ParallelArray#FloatChannel', reference 'FloatChannel'
@@ -7115,13 +7096,13 @@ f42c2c68c0e8	api-parity(signature)	signature	Camera#up	/Camera	0	modifiers diffe
 3f9aafd01313	api-parity(signature)	signature	Camera#view	/Camera	0	modifiers differ: emitted final, reference
 b685cddb5ee7	api-parity(signature)	signature	CameraGroupStrategy#beforeGroup	/CameraGroupStrategy	0	param 1 type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.g3d.decals.Decal]', reference 'DynamicArray[Decal]'
 54fe2f2acdfc	api-parity(signature)	signature	CameraGroupStrategy#close	/CameraGroupStrategy	0	modifiers differ: emitted override, reference
-2b9b7c74d080	api-parity(signature)	signature	CatmullRomSpline#set	/CatmullRomSpline	0	result type differs: emitted 'CatmullRomSpline[?]', reference 'CatmullRomSpline[T]'
-bd03f8e83fff	api-parity(signature)	signature	CatmullRomSpline$#calculate	/CatmullRomSpline$	0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]]'
-bd03f8e83fff/2	api-parity(signature)	signature	CatmullRomSpline$#calculate	/CatmullRomSpline$	0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]]'
-60479a6d6752	api-parity(signature)	signature	CatmullRomSpline$#derivative	/CatmullRomSpline$	0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]]'
-60479a6d6752/2	api-parity(signature)	signature	CatmullRomSpline$#derivative	/CatmullRomSpline$	0	type params differ: emitted '[T <: sge.math.Vector[T]]', reference '[T <: Vector[T]]'
+32568e865339	api-parity(signature)	signature	CatmullRomSpline#set	/CatmullRomSpline	0	result type differs: emitted 'CatmullRomSpline[?]', reference 'CatmullRomSpline[$0]'
+2bd2adaf1fbc	api-parity(signature)	signature	CatmullRomSpline$#calculate	/CatmullRomSpline$	0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
+2bd2adaf1fbc/2	api-parity(signature)	signature	CatmullRomSpline$#calculate	/CatmullRomSpline$	0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
+30cc448c4db9	api-parity(signature)	signature	CatmullRomSpline$#derivative	/CatmullRomSpline$	0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
+30cc448c4db9/2	api-parity(signature)	signature	CatmullRomSpline$#derivative	/CatmullRomSpline$	0	type params differ: emitted '[$0 <: sge.math.Vector[$0]]', reference '[$0 <: Vector[$0]]'
 b5da89d30432	api-parity(signature)	signature	Cell#reset	/Cell	0	modifiers differ: emitted override, reference
-b5db771ffac7	api-parity(signature)	signature	Cell#setActor	/Cell	0	type params differ: emitted '[A <: sge.scenes.scene2d.Actor]', reference '[A <: Actor]'
+77f679dc29e5	api-parity(signature)	signature	Cell#setActor	/Cell	0	type params differ: emitted '[$1 <: sge.scenes.scene2d.Actor]', reference '[$1 <: Actor]'
 b4a761ba6976	api-parity(signature)	signature	CheckBox#imageCell	/CheckBox	0	result type differs: emitted 'sge.scenes.scene2d.ui.Cell[?]', reference 'Cell[Image]'
 15735890f3d4	api-parity(signature)	signature	CheckBox#imageDrawable	/CheckBox	0	result type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.utils.Drawable]', reference 'Nullable[Drawable]'
 0e6b61eca975	api-parity(signature)	signature	CheckBox$.CheckBoxStyle#checkboxOffDisabled	/CheckBox$/CheckBoxStyle	0	result type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.utils.Drawable]', reference 'Nullable[Drawable]'
@@ -8505,7 +8486,7 @@ d6c05a475920	api-parity(signature)	signature	GLFrameBuffer#colorBufferHandles	/G
 8c37cf4afb20	api-parity(signature)	signature	GLFrameBuffer$#FloatFrameBufferBuilder	/GLFrameBuffer$	0	parents differ: emitted-only [sge.graphics.glutils.GLFrameBuffer.GLFrameBufferBuilder[sge.graphics.glutils.FloatFrameBuffer]], reference-only [GLFrameBufferBuilder[FloatFrameBuffer]]
 088b51c37890	api-parity(signature)	signature	GLFrameBuffer$#FrameBufferBuilder	/GLFrameBuffer$	0	parents differ: emitted-only [sge.graphics.glutils.GLFrameBuffer.GLFrameBufferBuilder[sge.graphics.glutils.FrameBuffer]], reference-only [GLFrameBufferBuilder[FrameBuffer]]
 f768a6cd3225	api-parity(signature)	signature	GLFrameBuffer$#FrameBufferCubemapBuilder	/GLFrameBuffer$	0	parents differ: emitted-only [sge.graphics.glutils.GLFrameBuffer.GLFrameBufferBuilder[sge.graphics.glutils.FrameBufferCubemap]], reference-only [GLFrameBufferBuilder[FrameBufferCubemap]]
-75b16b7fb103	api-parity(signature)	signature	GLFrameBuffer$#GLFrameBufferBuilder	/GLFrameBuffer$	0	type params differ: emitted '[U <: GLFrameBuffer[? <: sge.graphics.GLTexture]]', reference '[U <: GLFrameBuffer[? <: GLTexture]]'
+408462c79966	api-parity(signature)	signature	GLFrameBuffer$#GLFrameBufferBuilder	/GLFrameBuffer$	0	type params differ: emitted '[$0 <: GLFrameBuffer[? <: sge.graphics.GLTexture]]', reference '[$0 <: GLFrameBuffer[? <: GLTexture]]'
 9ad96fe2a4d9	api-parity(signature)	signature	GLTexture#textureObjectHandle	/GLTexture	0	result type differs: emitted 'sge.graphics.TextureHandle.T', reference 'TextureHandle'
 6cee02ebe96c	api-parity(signature)	signature	GLVersion$#Type	/GLVersion$	0	parents differ: emitted-only [java.lang.Enum[Type]], reference-only []
 90758a6fd313	api-parity(signature)	signature	Gdx2DPixmap$#GDX2D_BLEND_NONE	/Gdx2DPixmap$	0	modifiers differ: emitted inline, reference
@@ -8541,7 +8522,7 @@ ec8be6b8b3b9	api-parity(signature)	signature	Graphics$#BufferFormat	/Graphics$	0
 219b86358d42	api-parity(signature)	signature	Graphics$#DisplayMode	/Graphics$	0	modifiers differ: emitted , reference final,case
 3fa281df47b3	api-parity(signature)	signature	Graphics$#GraphicsType	/Graphics$	0	parents differ: emitted-only [java.lang.Enum[GraphicsType]], reference-only []
 4426943cce5d	api-parity(signature)	signature	Graphics$#Monitor	/Graphics$	0	modifiers differ: emitted , reference final,case
-6bab46a253e7	api-parity(signature)	signature	Group#findActor	/Group	0	type params differ: emitted '[T <: sge.scenes.scene2d.Actor]', reference '[T <: Actor]'
+288088e8b8fd	api-parity(signature)	signature	Group#findActor	/Group	0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Actor]', reference '[$0 <: Actor]'
 e74f9fa0b349	api-parity(signature)	signature	Group#hit	/Group	0	result type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.Actor]', reference 'Nullable[Actor]'
 7b88bc3aa61a	api-parity(signature)	signature	Group#setCullingArea	/Group	0	modifiers differ: emitted override, reference
 f021fd09c3f4	api-parity(signature)	signature	Group#setCullingArea	/Group	0	param 0 type differs: emitted 'lowlevel.Nullable[sge.math.Rectangle]', reference 'Nullable[Rectangle]'
@@ -9073,14 +9054,14 @@ e1507092ca99	api-parity(signature)	signature	Logger$#DEBUG	/Logger$	0	modifiers 
 2086a9b6a3d7	api-parity(signature)	signature	Logger$#ERROR	/Logger$	0	modifiers differ: emitted inline, reference final
 83cf212682d3	api-parity(signature)	signature	Logger$#INFO	/Logger$	0	modifiers differ: emitted inline, reference final
 680c361b59dc	api-parity(signature)	signature	Logger$#NONE	/Logger$	0	modifiers differ: emitted inline, reference final
-f3519ee13fd1	api-parity(signature)	signature	MapLayers#getByType	/MapLayers	0	param 0 type differs: emitted 'java.lang.Class[T]', reference 'DynamicArray[T]'
-8f60d522a745	api-parity(signature)	signature	MapLayers#getByType	/MapLayers	0	param 1 type differs: emitted 'lowlevel.util.DynamicArray[T]', reference 'ClassTag[T]'
-76c35ba3fffa	api-parity(signature)	signature	MapLayers#getByType	/MapLayers	0	type params differ: emitted '[T <: sge.maps.MapLayer]', reference '[T <: MapLayer]'
+2dbb8a9b5f1e	api-parity(signature)	signature	MapLayers#getByType	/MapLayers	0	param 0 type differs: emitted 'java.lang.Class[$0]', reference 'DynamicArray[$0]'
+aa3c6d0ef1f6	api-parity(signature)	signature	MapLayers#getByType	/MapLayers	0	param 1 type differs: emitted 'lowlevel.util.DynamicArray[$0]', reference 'ClassTag[$0]'
+a5895dde323a	api-parity(signature)	signature	MapLayers#getByType	/MapLayers	0	type params differ: emitted '[$0 <: sge.maps.MapLayer]', reference '[$0 <: MapLayer]'
 033a098777c0	api-parity(signature)	signature	MapLayers#iterator	/MapLayers	0	result type differs: emitted 'balticporter.runtime.JavaIterator[sge.maps.MapLayer]', reference 'Iterator[MapLayer]'
 9c977bbb4f2e	api-parity(signature)	signature	MapLayers#size	/MapLayers	0	modifiers differ: emitted , reference override
-9d7602ba068d	api-parity(signature)	signature	MapObjects#getByType	/MapObjects	0	param 0 type differs: emitted 'java.lang.Class[T]', reference 'DynamicArray[T]'
-81825ed74480	api-parity(signature)	signature	MapObjects#getByType	/MapObjects	0	param 1 type differs: emitted 'lowlevel.util.DynamicArray[T]', reference 'ClassTag[T]'
-f4c95bc9bd40	api-parity(signature)	signature	MapObjects#getByType	/MapObjects	0	type params differ: emitted '[T <: sge.maps.MapObject]', reference '[T <: MapObject]'
+c8813d738711	api-parity(signature)	signature	MapObjects#getByType	/MapObjects	0	param 0 type differs: emitted 'java.lang.Class[$0]', reference 'DynamicArray[$0]'
+3f93c396f0cc	api-parity(signature)	signature	MapObjects#getByType	/MapObjects	0	param 1 type differs: emitted 'lowlevel.util.DynamicArray[$0]', reference 'ClassTag[$0]'
+9ab9bd5d9e3b	api-parity(signature)	signature	MapObjects#getByType	/MapObjects	0	type params differ: emitted '[$0 <: sge.maps.MapObject]', reference '[$0 <: MapObject]'
 e21f16fc7e5c	api-parity(signature)	signature	MapObjects#iterator	/MapObjects	0	result type differs: emitted 'balticporter.runtime.JavaIterator[sge.maps.MapObject]', reference 'Iterator[MapObject]'
 e3f839a0b933	api-parity(signature)	signature	MapProperties#get	/MapProperties	0	result type differs: emitted 'java.lang.Object', reference 'Nullable[Any]'
 114e0ab109e6	api-parity(signature)	signature	MapProperties#keys	/MapProperties	0	result type differs: emitted 'balticporter.runtime.JavaIterator[java.lang.String]', reference 'Iterator[String]'
@@ -9216,21 +9197,21 @@ bd9b89080ff2	api-parity(signature)	signature	Model#meshes	/Model	0	result type d
 d6db177aa7d2	api-parity(signature)	signature	Model#nodes	/Model	0	modifiers differ: emitted final, reference
 c319ae753612	api-parity(signature)	signature	Model#nodes	/Model	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.g3d.model.Node]', reference 'DynamicArray[Node]'
 50fa35cffc97	api-parity(signature)	signature	ModelAnimation#nodeAnimations	/ModelAnimation	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.g3d.model.data.ModelNodeAnimation]', reference 'DynamicArray[ModelNodeAnimation]'
-1b353676cb14	api-parity(signature)	signature	ModelBatch#render	/ModelBatch	0	param 0 type differs: emitted 'balticporter.runtime.JavaIterable[T]', reference 'Iterable[T]'
-1b353676cb14/2	api-parity(signature)	signature	ModelBatch#render	/ModelBatch	0	param 0 type differs: emitted 'balticporter.runtime.JavaIterable[T]', reference 'Iterable[T]'
-1b353676cb14/3	api-parity(signature)	signature	ModelBatch#render	/ModelBatch	0	param 0 type differs: emitted 'balticporter.runtime.JavaIterable[T]', reference 'Iterable[T]'
-1b353676cb14/4	api-parity(signature)	signature	ModelBatch#render	/ModelBatch	0	param 0 type differs: emitted 'balticporter.runtime.JavaIterable[T]', reference 'Iterable[T]'
-6424ef3bd171	api-parity(signature)	signature	ModelBatch#render	/ModelBatch	0	type params differ: emitted '[T <: sge.graphics.g3d.RenderableProvider]', reference '[T <: RenderableProvider]'
-6424ef3bd171/2	api-parity(signature)	signature	ModelBatch#render	/ModelBatch	0	type params differ: emitted '[T <: sge.graphics.g3d.RenderableProvider]', reference '[T <: RenderableProvider]'
-6424ef3bd171/3	api-parity(signature)	signature	ModelBatch#render	/ModelBatch	0	type params differ: emitted '[T <: sge.graphics.g3d.RenderableProvider]', reference '[T <: RenderableProvider]'
-6424ef3bd171/4	api-parity(signature)	signature	ModelBatch#render	/ModelBatch	0	type params differ: emitted '[T <: sge.graphics.g3d.RenderableProvider]', reference '[T <: RenderableProvider]'
+1b9da4fd5764	api-parity(signature)	signature	ModelBatch#render	/ModelBatch	0	param 0 type differs: emitted 'balticporter.runtime.JavaIterable[$0]', reference 'Iterable[$0]'
+1b9da4fd5764/2	api-parity(signature)	signature	ModelBatch#render	/ModelBatch	0	param 0 type differs: emitted 'balticporter.runtime.JavaIterable[$0]', reference 'Iterable[$0]'
+1b9da4fd5764/3	api-parity(signature)	signature	ModelBatch#render	/ModelBatch	0	param 0 type differs: emitted 'balticporter.runtime.JavaIterable[$0]', reference 'Iterable[$0]'
+1b9da4fd5764/4	api-parity(signature)	signature	ModelBatch#render	/ModelBatch	0	param 0 type differs: emitted 'balticporter.runtime.JavaIterable[$0]', reference 'Iterable[$0]'
+0ca303578892	api-parity(signature)	signature	ModelBatch#render	/ModelBatch	0	type params differ: emitted '[$0 <: sge.graphics.g3d.RenderableProvider]', reference '[$0 <: RenderableProvider]'
+0ca303578892/2	api-parity(signature)	signature	ModelBatch#render	/ModelBatch	0	type params differ: emitted '[$0 <: sge.graphics.g3d.RenderableProvider]', reference '[$0 <: RenderableProvider]'
+0ca303578892/3	api-parity(signature)	signature	ModelBatch#render	/ModelBatch	0	type params differ: emitted '[$0 <: sge.graphics.g3d.RenderableProvider]', reference '[$0 <: RenderableProvider]'
+0ca303578892/4	api-parity(signature)	signature	ModelBatch#render	/ModelBatch	0	type params differ: emitted '[$0 <: sge.graphics.g3d.RenderableProvider]', reference '[$0 <: RenderableProvider]'
 2a98d453e483	api-parity(signature)	signature	ModelBatch#renderables	/ModelBatch	0	modifiers differ: emitted final, reference
 3f06a6689fa4	api-parity(signature)	signature	ModelBatch#renderables	/ModelBatch	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.g3d.Renderable]', reference 'DynamicArray[Renderable]'
 fcab1b9207c2	api-parity(signature)	signature	ModelBatch#renderablesPool	/ModelBatch	0	modifiers differ: emitted final, reference
 5c847735d00c	api-parity(signature)	signature	ModelBatch$#RenderablePool	/ModelBatch$	0	parents differ: emitted-only [sge.utils.FlushablePool[sge.graphics.g3d.Renderable]], reference-only [Pool.Default[Renderable], Pool.Flushable[Renderable]]
 f8c55c99bfea	api-parity(signature)	signature	ModelBuilder#builders	/ModelBuilder	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.g3d.utils.MeshBuilder]', reference 'DynamicArray[MeshBuilder]'
-8a2aeaead93c	api-parity(signature)	signature	ModelCache#add	/ModelCache	0	param 0 type differs: emitted 'balticporter.runtime.JavaIterable[T]', reference 'Iterable[T]'
-a531d84c7610	api-parity(signature)	signature	ModelCache#add	/ModelCache	0	type params differ: emitted '[T <: sge.graphics.g3d.RenderableProvider]', reference '[T <: RenderableProvider]'
+34fc45ae9565	api-parity(signature)	signature	ModelCache#add	/ModelCache	0	param 0 type differs: emitted 'balticporter.runtime.JavaIterable[$0]', reference 'Iterable[$0]'
+4cacc7821e2e	api-parity(signature)	signature	ModelCache#add	/ModelCache	0	type params differ: emitted '[$0 <: sge.graphics.g3d.RenderableProvider]', reference '[$0 <: RenderableProvider]'
 d98b2a3db3e1	api-parity(signature)	signature	ModelCache#getRenderables	/ModelCache	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.g3d.Renderable]', reference 'DynamicArray[Renderable]'
 893ec51d7cd7	api-parity(signature)	signature	ModelCache#getRenderables	/ModelCache	0	param 1 type differs: emitted 'sge.utils.Pool[sge.graphics.g3d.Renderable]', reference 'Pool[Renderable]'
 ad027f9f8ef9	api-parity(signature)	signature	ModelCache$#Sorter	/ModelCache$	0	parents differ: emitted-only [scala.math.Ordering[sge.graphics.g3d.Renderable]], reference-only [Ordering[Renderable]]
@@ -9312,9 +9293,9 @@ d810bc00922a	api-parity(signature)	signature	NinePatch$#MIDDLE_RIGHT	/NinePatch$
 3b2d5736d6c3	api-parity(signature)	signature	NinePatch$#TOP_CENTER	/NinePatch$	0	modifiers differ: emitted inline, reference
 fc1ab5d36758	api-parity(signature)	signature	NinePatch$#TOP_LEFT	/NinePatch$	0	modifiers differ: emitted inline, reference
 066d9dc1847e	api-parity(signature)	signature	NinePatch$#TOP_RIGHT	/NinePatch$	0	modifiers differ: emitted inline, reference
-d3794b5cf800	api-parity(signature)	signature	Node#addChildren	/Node	0	param 0 type differs: emitted 'balticporter.runtime.JavaIterable[T]', reference 'DynamicArray[T]'
+369bf9230cc4	api-parity(signature)	signature	Node#addChildren	/Node	0	param 0 type differs: emitted 'balticporter.runtime.JavaIterable[$0]', reference 'DynamicArray[$0]'
 10b56aa00890	api-parity(signature)	signature	Node#globalTransform	/Node	0	modifiers differ: emitted final, reference
-ea7ff336d1bb	api-parity(signature)	signature	Node#insertChildren	/Node	0	param 1 type differs: emitted 'balticporter.runtime.JavaIterable[T]', reference 'DynamicArray[T]'
+13a7d7865356	api-parity(signature)	signature	Node#insertChildren	/Node	0	param 1 type differs: emitted 'balticporter.runtime.JavaIterable[$0]', reference 'DynamicArray[$0]'
 65ed7b204678	api-parity(signature)	signature	Node#localTransform	/Node	0	modifiers differ: emitted final, reference
 67d681e32aae	api-parity(signature)	signature	Node#parts	/Node	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.g3d.model.NodePart]', reference 'DynamicArray[NodePart]'
 68e551e37097	api-parity(signature)	signature	Node#rotation	/Node	0	modifiers differ: emitted final, reference
@@ -9325,16 +9306,14 @@ efd2445683fd	api-parity(signature)	signature	NodeAnimation#rotation	/NodeAnimati
 829da6d50605	api-parity(signature)	signature	NodeAnimation#translation	/NodeAnimation	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.g3d.model.NodeKeyframe[sge.math.Vector3]]', reference 'Nullable[DynamicArray[NodeKeyframe[Vector3]]]'
 1bcadb07e3d8	api-parity(signature)	signature	NodePart#bones	/NodePart	0	result type differs: emitted 'scala.Array[sge.math.Matrix4]', reference 'Nullable[Array[Matrix4]]'
 e42ed5d05260	api-parity(signature)	signature	NodePart#invBoneBindTransforms	/NodePart	0	result type differs: emitted 'lowlevel.util.ArrayMap[sge.graphics.g3d.model.Node, sge.math.Matrix4]', reference 'Nullable[ArrayMap[Node, Matrix4]]'
-155b43e547cc	api-parity(signature)	signature	Octree#getAll	/Octree	0	param 0 type differs: emitted 'lowlevel.util.ObjectSet[T]', reference 'Set[T]'
-44f5cbaee363	api-parity(signature)	signature	Octree#getAll	/Octree	0	result type differs: emitted 'lowlevel.util.ObjectSet[T]', reference 'Set[T]'
+b73385f6de1c	api-parity(signature)	signature	Octree#getAll	/Octree	0	param 0 type differs: emitted 'lowlevel.util.ObjectSet[$0]', reference 'Set[$0]'
+435022fdd4b8	api-parity(signature)	signature	Octree#getAll	/Octree	0	result type differs: emitted 'lowlevel.util.ObjectSet[$0]', reference 'Set[$0]'
 f938e94decdd	api-parity(signature)	signature	Octree#getNodesBoxes	/Octree	0	param 0 type differs: emitted 'lowlevel.util.ObjectSet[sge.math.collision.BoundingBox]', reference 'Set[BoundingBox]'
 b23cbb3aaef3	api-parity(signature)	signature	Octree#getNodesBoxes	/Octree	0	result type differs: emitted 'lowlevel.util.ObjectSet[sge.math.collision.BoundingBox]', reference 'Set[BoundingBox]'
-fa0f04659a4b	api-parity(signature)	signature	Octree#query	/Octree	0	param 1 type differs: emitted 'lowlevel.util.ObjectSet[T]', reference 'Set[T]'
-fa0f04659a4b/2	api-parity(signature)	signature	Octree#query	/Octree	0	param 1 type differs: emitted 'lowlevel.util.ObjectSet[T]', reference 'Set[T]'
-81d707825267	api-parity(signature)	signature	Octree#query	/Octree	0	result type differs: emitted 'lowlevel.util.ObjectSet[T]', reference 'Set[T]'
-81d707825267/2	api-parity(signature)	signature	Octree#query	/Octree	0	result type differs: emitted 'lowlevel.util.ObjectSet[T]', reference 'Set[T]'
-406473923465	api-parity(signature)	signature	Octree$#Collider	/Octree$	0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
-39dc340b84a1	api-parity(signature)	signature	Octree$#RayCastResult	/Octree$	0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
+bd72321bfefc	api-parity(signature)	signature	Octree#query	/Octree	0	param 1 type differs: emitted 'lowlevel.util.ObjectSet[$0]', reference 'Set[$0]'
+bd72321bfefc/2	api-parity(signature)	signature	Octree#query	/Octree	0	param 1 type differs: emitted 'lowlevel.util.ObjectSet[$0]', reference 'Set[$0]'
+aec85b3e1259	api-parity(signature)	signature	Octree#query	/Octree	0	result type differs: emitted 'lowlevel.util.ObjectSet[$0]', reference 'Set[$0]'
+aec85b3e1259/2	api-parity(signature)	signature	Octree#query	/Octree	0	result type differs: emitted 'lowlevel.util.ObjectSet[$0]', reference 'Set[$0]'
 5b6ecff8a139	api-parity(signature)	signature	OrthoCachedTiledMapRenderer#cacheBounds	/OrthoCachedTiledMapRenderer	0	modifiers differ: emitted final, reference
 d34c12584765	api-parity(signature)	signature	OrthoCachedTiledMapRenderer#render	/OrthoCachedTiledMapRenderer	0	param 0 type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
 10c3bf298bbc	api-parity(signature)	signature	OrthoCachedTiledMapRenderer#vertices	/OrthoCachedTiledMapRenderer	0	modifiers differ: emitted final, reference
@@ -9342,12 +9321,12 @@ d34c12584765	api-parity(signature)	signature	OrthoCachedTiledMapRenderer#render	
 bded8a67818a	api-parity(signature)	signature	OrthoCachedTiledMapRenderer#viewBounds	/OrthoCachedTiledMapRenderer	0	modifiers differ: emitted final, reference
 e89f7b195b4a	api-parity(signature)	signature	OrthoCachedTiledMapRenderer$#NUM_VERTICES	/OrthoCachedTiledMapRenderer$	0	modifiers differ: emitted inline, reference final
 2d417d340ed8	api-parity(signature)	signature	ParallelAction#act	/ParallelAction	0	modifiers differ: emitted override, reference
-e757c08e3da3	api-parity(signature)	signature	ParallelArray#addChannel	/ParallelArray	0	type params differ: emitted '[T <: sge.graphics.g3d.particles.ParallelArray#Channel]', reference '[T <: Channel]'
-e757c08e3da3/2	api-parity(signature)	signature	ParallelArray#addChannel	/ParallelArray	0	type params differ: emitted '[T <: sge.graphics.g3d.particles.ParallelArray#Channel]', reference '[T <: Channel]'
+49499a304ba3	api-parity(signature)	signature	ParallelArray#addChannel	/ParallelArray	0	type params differ: emitted '[$0 <: sge.graphics.g3d.particles.ParallelArray#Channel]', reference '[$0 <: Channel]'
+49499a304ba3/2	api-parity(signature)	signature	ParallelArray#addChannel	/ParallelArray	0	type params differ: emitted '[$0 <: sge.graphics.g3d.particles.ParallelArray#Channel]', reference '[$0 <: Channel]'
 8bacc83bdb47	api-parity(signature)	signature	ParallelArray#addElement	/ParallelArray	0	param 0 type differs: emitted 'scala.Array[java.lang.Object]', reference 'Any*'
 7794644d2d22	api-parity(signature)	signature	ParallelArray#arrays	/ParallelArray	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.g3d.particles.ParallelArray#Channel]', reference 'DynamicArray[Channel]'
-13dc9f26ab55	api-parity(signature)	signature	ParallelArray#getChannel	/ParallelArray	0	type params differ: emitted '[T <: sge.graphics.g3d.particles.ParallelArray#Channel]', reference '[T <: Channel]'
-a4d465bfc693	api-parity(signature)	signature	ParallelArray$#ChannelInitializer	/ParallelArray$	0	type params differ: emitted '[T <: sge.graphics.g3d.particles.ParallelArray#Channel]', reference '[T <: Channel]'
+3542f05d2039	api-parity(signature)	signature	ParallelArray#getChannel	/ParallelArray	0	type params differ: emitted '[$0 <: sge.graphics.g3d.particles.ParallelArray#Channel]', reference '[$0 <: Channel]'
+5de1f7f6230e	api-parity(signature)	signature	ParallelArray$#ChannelInitializer	/ParallelArray$	0	type params differ: emitted '[$0 <: sge.graphics.g3d.particles.ParallelArray#Channel]', reference '[$0 <: Channel]'
 e8372aaae890	api-parity(signature)	signature	ParticleChannels$#Acceleration	/ParticleChannels$	0	modifiers differ: emitted final, reference
 e0bd6fa02fa5	api-parity(signature)	signature	ParticleChannels$#AlphaOffset	/ParticleChannels$	0	modifiers differ: emitted inline, reference
 4028694bf959	api-parity(signature)	signature	ParticleChannels$#AngularVelocity2D	/ParticleChannels$	0	modifiers differ: emitted final, reference
@@ -9391,15 +9370,15 @@ f29a598f1ddb	api-parity(signature)	signature	ParticleChannels$#VelocityThetaStar
 c769dc687186	api-parity(signature)	signature	ParticleChannels$#XOffset	/ParticleChannels$	0	modifiers differ: emitted inline, reference
 3f391c1438f0	api-parity(signature)	signature	ParticleChannels$#YOffset	/ParticleChannels$	0	modifiers differ: emitted inline, reference
 b482237dab81	api-parity(signature)	signature	ParticleChannels$#ZOffset	/ParticleChannels$	0	modifiers differ: emitted inline, reference
-9eb6cc34f535	api-parity(signature)	signature	ParticleController#findInfluencer	/ParticleController	0	param 0 type differs: emitted 'java.lang.Class[K]', reference 'scala.reflect.ClassTag[K]'
-1c1d0d272f27	api-parity(signature)	signature	ParticleController#findInfluencer	/ParticleController	0	type params differ: emitted '[K <: sge.graphics.g3d.particles.influencers.Influencer]', reference '[K <: Influencer]'
+5e92e57f8684	api-parity(signature)	signature	ParticleController#findInfluencer	/ParticleController	0	param 0 type differs: emitted 'java.lang.Class[$0]', reference 'scala.reflect.ClassTag[$0]'
+4a909f37656a	api-parity(signature)	signature	ParticleController#findInfluencer	/ParticleController	0	type params differ: emitted '[$0 <: sge.graphics.g3d.particles.influencers.Influencer]', reference '[$0 <: Influencer]'
 df65f53c5915	api-parity(signature)	signature	ParticleController#influencers	/ParticleController	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.g3d.particles.influencers.Influencer]', reference 'DynamicArray[Influencer]'
 95873051938f	api-parity(signature)	signature	ParticleController#load	/ParticleController	0	param 1 type differs: emitted 'sge.graphics.g3d.particles.ResourceData[java.lang.Object]', reference 'ResourceData[?]'
-97f903074afc	api-parity(signature)	signature	ParticleController#removeInfluencer	/ParticleController	0	param 0 type differs: emitted 'java.lang.Class[K]', reference 'scala.reflect.ClassTag[K]'
-0ecf1cf8ced3	api-parity(signature)	signature	ParticleController#removeInfluencer	/ParticleController	0	type params differ: emitted '[K <: sge.graphics.g3d.particles.influencers.Influencer]', reference '[K <: Influencer]'
-778d5f3d3249	api-parity(signature)	signature	ParticleController#replaceInfluencer	/ParticleController	0	param 0 type differs: emitted 'java.lang.Class[K]', reference 'K'
-262383cff277	api-parity(signature)	signature	ParticleController#replaceInfluencer	/ParticleController	0	param 1 type differs: emitted 'K', reference 'scala.reflect.ClassTag[K]'
-78d2b08b564d	api-parity(signature)	signature	ParticleController#replaceInfluencer	/ParticleController	0	type params differ: emitted '[K <: sge.graphics.g3d.particles.influencers.Influencer]', reference '[K <: Influencer]'
+e93826f9b4e8	api-parity(signature)	signature	ParticleController#removeInfluencer	/ParticleController	0	param 0 type differs: emitted 'java.lang.Class[$0]', reference 'scala.reflect.ClassTag[$0]'
+4dc606ede9aa	api-parity(signature)	signature	ParticleController#removeInfluencer	/ParticleController	0	type params differ: emitted '[$0 <: sge.graphics.g3d.particles.influencers.Influencer]', reference '[$0 <: Influencer]'
+35b9b785254b	api-parity(signature)	signature	ParticleController#replaceInfluencer	/ParticleController	0	param 0 type differs: emitted 'java.lang.Class[$0]', reference '$0'
+9c64afeca472	api-parity(signature)	signature	ParticleController#replaceInfluencer	/ParticleController	0	param 1 type differs: emitted '$0', reference 'scala.reflect.ClassTag[$0]'
+19e7d761adb7	api-parity(signature)	signature	ParticleController#replaceInfluencer	/ParticleController	0	type params differ: emitted '[$0 <: sge.graphics.g3d.particles.influencers.Influencer]', reference '[$0 <: Influencer]'
 9a97001a2f75	api-parity(signature)	signature	ParticleController#save	/ParticleController	0	param 1 type differs: emitted 'sge.graphics.g3d.particles.ResourceData[java.lang.Object]', reference 'ResourceData[?]'
 e6cb6122aae8	api-parity(signature)	signature	ParticleController$#DEFAULT_TIME_STEP	/ParticleController$	0	modifiers differ: emitted final, reference
 bf3aefc0d821	api-parity(signature)	signature	ParticleControllerComponent#load	/ParticleControllerComponent	0	param 1 type differs: emitted 'sge.graphics.g3d.particles.ResourceData[java.lang.Object]', reference 'ResourceData[?]'
@@ -9450,13 +9429,13 @@ ce7e08f278d7	api-parity(signature)	signature	ParticleShader$.Setters$#cameraPosi
 1fdf747ade5b	api-parity(signature)	signature	ParticleShader$.Setters$#screenWidth	/ParticleShader$/Setters$	0	modifiers differ: emitted final, reference
 a38a27994818	api-parity(signature)	signature	ParticleShader$.Setters$#worldViewTrans	/ParticleShader$/Setters$	0	modifiers differ: emitted final, reference
 0a39ebe324a1	api-parity(signature)	signature	ParticleSorter#sort	/ParticleSorter	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
-af3c696f2504	api-parity(signature)	signature	ParticleSorter#sort	/ParticleSorter	0	type params differ: emitted '[T <: sge.graphics.g3d.particles.renderers.ParticleControllerRenderData]', reference '[T <: ParticleControllerRenderData]'
+eda6974b96bf	api-parity(signature)	signature	ParticleSorter#sort	/ParticleSorter	0	type params differ: emitted '[$0 <: sge.graphics.g3d.particles.renderers.ParticleControllerRenderData]', reference '[$0 <: ParticleControllerRenderData]'
 60ce4891620a	api-parity(signature)	signature	ParticleSorter$#Distance	/ParticleSorter$	0	modifiers differ: emitted , reference final
 e73c207f8fb5	api-parity(signature)	signature	ParticleSorter$#None	/ParticleSorter$	0	modifiers differ: emitted , reference final
 a1d2a36c108a	api-parity(signature)	signature	ParticleSorter$.Distance#sort	/ParticleSorter$/Distance	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
-02dcef2b7679	api-parity(signature)	signature	ParticleSorter$.Distance#sort	/ParticleSorter$/Distance	0	type params differ: emitted '[T <: sge.graphics.g3d.particles.renderers.ParticleControllerRenderData]', reference '[T <: ParticleControllerRenderData]'
+51d701a268d0	api-parity(signature)	signature	ParticleSorter$.Distance#sort	/ParticleSorter$/Distance	0	type params differ: emitted '[$0 <: sge.graphics.g3d.particles.renderers.ParticleControllerRenderData]', reference '[$0 <: ParticleControllerRenderData]'
 36d7c48f6a25	api-parity(signature)	signature	ParticleSorter$.None#sort	/ParticleSorter$/None	0	result type differs: emitted 'scala.Array[scala.Int]', reference 'Array[Int]'
-29afd8a9214b	api-parity(signature)	signature	ParticleSorter$.None#sort	/ParticleSorter$/None	0	type params differ: emitted '[T <: sge.graphics.g3d.particles.renderers.ParticleControllerRenderData]', reference '[T <: ParticleControllerRenderData]'
+1d67e544a6ee	api-parity(signature)	signature	ParticleSorter$.None#sort	/ParticleSorter$/None	0	type params differ: emitted '[$0 <: sge.graphics.g3d.particles.renderers.ParticleControllerRenderData]', reference '[$0 <: ParticleControllerRenderData]'
 e21c5a10d4db	api-parity(signature)	signature	ParticleSystem#getRenderables	/ParticleSystem	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.g3d.Renderable]', reference 'DynamicArray[Renderable]'
 29ec79c81608	api-parity(signature)	signature	ParticleSystem#getRenderables	/ParticleSystem	0	param 1 type differs: emitted 'sge.utils.Pool[sge.graphics.g3d.Renderable]', reference 'Pool[Renderable]'
 53b6502b342d	api-parity(signature)	signature	PerformanceCounters#counters	/PerformanceCounters	0	modifiers differ: emitted final, reference
@@ -9517,11 +9496,10 @@ b9a677c339ae	api-parity(signature)	signature	PolygonRegionLoader$#PolygonRegionP
 f61416d059cf	api-parity(signature)	signature	PolygonSpriteBatch#draw	/PolygonSpriteBatch	0	param 4 type differs: emitted 'scala.Array[scala.Short]', reference 'Array[Short]'
 424332d08af0	api-parity(signature)	signature	Polyline#transformedVertices	/Polyline	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
 bf0f0ced6bbc	api-parity(signature)	signature	Polyline#vertices	/Polyline	0	result type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
-2d87e602fe71	api-parity(signature)	signature	Pool#freeAll	/Pool	0	param 0 type differs: emitted 'DynamicArray[? <: A]', reference 'Iterable[A]'
-cc453efdc4e5	api-parity(signature)	signature	PoolManager#addPool	/PoolManager	0	param 0 type differs: emitted 'java.lang.Class[T]', reference '() => T'
-1226408a9bd9	api-parity(signature)	signature	PoolManager#addPool	/PoolManager	0	param 1 type differs: emitted 'sge.utils.DefaultPool.PoolSupplier[T]', reference 'Poolable[T]'
-856da4ebd9b7	api-parity(signature)	signature	PoolManager#addPool	/PoolManager	0	type params differ: emitted '[T <: java.lang.Object]', reference '[T: ClassTag]'
-a04f238be852	api-parity(signature)	signature	PoolManager#free	/PoolManager	0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
+508ec24a053d	api-parity(signature)	signature	Pool#freeAll	/Pool	0	param 0 type differs: emitted 'DynamicArray[_ <: $0]', reference 'Iterable[$0]'
+a3de062ac954	api-parity(signature)	signature	PoolManager#addPool	/PoolManager	0	param 0 type differs: emitted 'java.lang.Class[$0]', reference '() => $0'
+5c47835b671a	api-parity(signature)	signature	PoolManager#addPool	/PoolManager	0	param 1 type differs: emitted 'sge.utils.DefaultPool.PoolSupplier[$0]', reference 'Poolable[$0]'
+01a81f830164	api-parity(signature)	signature	PoolManager#addPool	/PoolManager	0	type params differ: emitted '[$0]', reference '[$0: ClassTag]'
 dcb3d5d4b962	api-parity(signature)	signature	Preferences#get	/Preferences	0	result type differs: emitted 'scala.collection.mutable.Map[java.lang.String, ?]', reference 'Map[String, Boolean | Int | Long | Float | String]'
 3347b4b33e3f	api-parity(signature)	signature	Preferences#put	/Preferences	0	param 0 type differs: emitted 'scala.collection.mutable.Map[java.lang.String, ?]', reference 'Map[String, Boolean | Int | Long | Float | String]'
 ea62cd81808c	api-parity(signature)	signature	PrimitiveSpawnShapeValue$#SpawnSide	/PrimitiveSpawnShapeValue$	0	parents differ: emitted-only [java.lang.Enum[SpawnSide]], reference-only []
@@ -9586,17 +9564,14 @@ f097b9a8349e	api-parity(signature)	signature	RepeatAction$#FOREVER	/RepeatAction
 e39f0bcc9d38	api-parity(signature)	signature	RepeatablePolygonSprite#setPolygon	/RepeatablePolygonSprite	0	param 1 type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
 e39f0bcc9d38/2	api-parity(signature)	signature	RepeatablePolygonSprite#setPolygon	/RepeatablePolygonSprite	0	param 1 type differs: emitted 'scala.Array[scala.Float]', reference 'Array[Float]'
 6af042f14b06	api-parity(signature)	signature	ResourceData#assetDescriptors	/ResourceData	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]', reference 'DynamicArray[AssetDescriptor[?]]'
-315e0c2e7984	api-parity(signature)	signature	ResourceData#assets	/ResourceData	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.g3d.particles.ResourceData.AssetData[T]]', reference 'DynamicArray[AssetData[?]]'
+25f1ec906453	api-parity(signature)	signature	ResourceData#assets	/ResourceData	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.graphics.g3d.particles.ResourceData.AssetData[$0]]', reference 'DynamicArray[AssetData[?]]'
 575b0d806d77	api-parity(signature)	signature	ResourceData$#AssetData	/ResourceData$	0	parents differ: emitted-only [sge.utils.Json.Serializable], reference-only []
-dd9f2aa3d26d	api-parity(signature)	signature	ResourceData$#AssetData	/ResourceData$	0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
 fc7036a72620	api-parity(signature)	signature	ResourceData$#SaveData	/ResourceData$	0	parents differ: emitted-only [sge.utils.Json.Serializable], reference-only []
-022064324a28	api-parity(signature)	signature	ResourceData$.Configurable#load	/ResourceData$/Configurable	0	param 1 type differs: emitted 'ResourceData[T]', reference 'ResourceData[?]'
-17db6d54c6c2	api-parity(signature)	signature	ResourceData$.Configurable#save	/ResourceData$/Configurable	0	param 1 type differs: emitted 'ResourceData[T]', reference 'ResourceData[?]'
+41102f9b0607	api-parity(signature)	signature	ResourceData$.Configurable#load	/ResourceData$/Configurable	0	param 1 type differs: emitted 'ResourceData[$0]', reference 'ResourceData[?]'
+2e7578f80020	api-parity(signature)	signature	ResourceData$.Configurable#save	/ResourceData$/Configurable	0	param 1 type differs: emitted 'ResourceData[$0]', reference 'ResourceData[?]'
 8eaa11dac48c	api-parity(signature)	signature	ResourceData$.SaveData#assets	/ResourceData$/SaveData	0	result type differs: emitted 'lowlevel.util.DynamicArray[scala.Int]', reference 'DynamicArray[Int]'
 692ad271afc6	api-parity(signature)	signature	ResourceData$.SaveData#data	/ResourceData$/SaveData	0	result type differs: emitted 'lowlevel.util.ObjectMap[java.lang.String, java.lang.Object]', reference 'ObjectMap[String, AnyRef]'
-a60fca6d2cb3	api-parity(signature)	signature	ResourceData$.SaveData#load	/ResourceData$/SaveData	0	type params differ: emitted '[K <: java.lang.Object]', reference '[K]'
 4be2ad14924b	api-parity(signature)	signature	ResourceData$.SaveData#save	/ResourceData$/SaveData	0	param 1 type differs: emitted 'java.lang.Object', reference 'AnyRef'
-c32fb0686fab	api-parity(signature)	signature	ResourceData$.SaveData#saveAsset	/ResourceData$/SaveData	0	type params differ: emitted '[K <: java.lang.Object]', reference '[K]'
 6e8e02fd7003	api-parity(signature)	signature	RunnableAction#act	/RunnableAction	0	modifiers differ: emitted override, reference
 45669d59c006	api-parity(signature)	signature	Scaling$#contain	/Scaling$	0	modifiers differ: emitted final, reference
 12e77a69c956	api-parity(signature)	signature	Scaling$#fill	/Scaling$	0	modifiers differ: emitted final, reference
@@ -9622,8 +9597,7 @@ b710326e39fd	api-parity(signature)	signature	ScrollPane$.ScrollPaneStyle#vScroll
 35fcf4527248	api-parity(signature)	signature	SelectBox#backgroundDrawable	/SelectBox	0	result type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.utils.Drawable]', reference 'Nullable[Drawable]'
 6d7e5ae87a82	api-parity(signature)	signature	SelectBox#disabled	/SelectBox	0	modifiers differ: emitted override, reference
 fda8a695ab04	api-parity(signature)	signature	SelectBox#disabled_=	/SelectBox	0	modifiers differ: emitted override, reference
-d2be814434ff	api-parity(signature)	signature	SelectBox#setItems	/SelectBox	0	param 0 type differs: emitted 'scala.Array[T]', reference 'T*'
-551f793d3a40	api-parity(signature)	signature	SelectBox$#SelectBoxScrollPane	/SelectBox$	0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
+34fa6e317997	api-parity(signature)	signature	SelectBox#setItems	/SelectBox	0	param 0 type differs: emitted 'scala.Array[$0]', reference '$0*'
 66f5c58947b0	api-parity(signature)	signature	SelectBox$.SelectBoxStyle#background	/SelectBox$/SelectBoxStyle	0	result type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.utils.Drawable]', reference 'Nullable[Drawable]'
 6a65be244320	api-parity(signature)	signature	SelectBox$.SelectBoxStyle#backgroundDisabled	/SelectBox$/SelectBoxStyle	0	result type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.utils.Drawable]', reference 'Nullable[Drawable]'
 c9b49674bc4f	api-parity(signature)	signature	SelectBox$.SelectBoxStyle#backgroundOpen	/SelectBox$/SelectBoxStyle	0	result type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.utils.Drawable]', reference 'Nullable[Drawable]'
@@ -9632,13 +9606,13 @@ a9c02ec05bec	api-parity(signature)	signature	SelectBox$.SelectBoxStyle#backgroun
 d8e9866aa04c	api-parity(signature)	signature	SelectBox$.SelectBoxStyle#overFontColor	/SelectBox$/SelectBoxStyle	0	result type differs: emitted 'lowlevel.Nullable[sge.graphics.Color]', reference 'Nullable[Color]'
 08eeb0c4ecc2	api-parity(signature)	signature	Selection#disabled	/Selection	0	modifiers differ: emitted override, reference
 2f2b1d0c92b5	api-parity(signature)	signature	Selection#disabled_=	/Selection	0	modifiers differ: emitted override, reference
-974b026cf49c	api-parity(signature)	signature	Selection#items	/Selection	0	result type differs: emitted 'lowlevel.util.OrderedSet[T]', reference 'LinkedHashSet[T]'
-466b26eb331a	api-parity(signature)	signature	Selection#iterator	/Selection	0	result type differs: emitted 'balticporter.runtime.JavaIterator[T]', reference 'Iterator[T]'
+b2e621458081	api-parity(signature)	signature	Selection#items	/Selection	0	result type differs: emitted 'lowlevel.util.OrderedSet[$0]', reference 'LinkedHashSet[$0]'
+0a79f67085d0	api-parity(signature)	signature	Selection#iterator	/Selection	0	result type differs: emitted 'balticporter.runtime.JavaIterator[$0]', reference 'Iterator[$0]'
 850731a1a411	api-parity(signature)	signature	Selection#setActor	/Selection	0	param 0 type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.Actor]', reference 'Nullable[Actor]'
 a9825382003a	api-parity(signature)	signature	Selection#size	/Selection	0	modifiers differ: emitted , reference override
 c433e15b113a	api-parity(signature)	signature	SgeList#drawSelection	/SgeList	0	param 1 type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.utils.Drawable]', reference 'Nullable[Drawable]'
 ac3cfbced7fd	api-parity(signature)	signature	SgeList#setCullingArea	/SgeList	0	param 0 type differs: emitted 'lowlevel.Nullable[sge.math.Rectangle]', reference 'Nullable[Rectangle]'
-b8601e1959b6	api-parity(signature)	signature	SgeList#setItems	/SgeList	0	param 0 type differs: emitted 'scala.Array[T]', reference 'DynamicArray[T]'
+fd991f289531	api-parity(signature)	signature	SgeList#setItems	/SgeList	0	param 0 type differs: emitted 'scala.Array[$0]', reference 'DynamicArray[$0]'
 a0b3e5acaf5b	api-parity(signature)	signature	SgeList$.ListStyle#background	/SgeList$/ListStyle	0	result type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.utils.Drawable]', reference 'Nullable[Drawable]'
 e0a38a73b7ed	api-parity(signature)	signature	SgeList$.ListStyle#down	/SgeList$/ListStyle	0	result type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.utils.Drawable]', reference 'Nullable[Drawable]'
 91b1a0b6e647	api-parity(signature)	signature	SgeList$.ListStyle#over	/SgeList$/ListStyle	0	result type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.utils.Drawable]', reference 'Nullable[Drawable]'
@@ -9690,13 +9664,8 @@ cff92d840236	api-parity(signature)	signature	ShapeRenderer$#ShapeType	/ShapeRend
 87663bb9e507	api-parity(signature)	signature	Skin#atlas	/Skin	0	result type differs: emitted 'lowlevel.Nullable[sge.graphics.g2d.TextureAtlas]', reference 'Nullable[TextureAtlas]'
 5cd04403b932	api-parity(signature)	signature	Skin#find	/Skin	0	param 0 type differs: emitted 'java.lang.Object', reference 'Any'
 120b03100a0a	api-parity(signature)	signature	Skin#find	/Skin	0	result type differs: emitted 'lowlevel.Nullable[java.lang.String]', reference 'Nullable[String]'
-d50d677a5586	api-parity(signature)	signature	Skin#get	/Skin	0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
-d50d677a5586/2	api-parity(signature)	signature	Skin#get	/Skin	0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
-b0069f4b4454	api-parity(signature)	signature	Skin#getAll	/Skin	0	result type differs: emitted 'lowlevel.Nullable[lowlevel.util.ObjectMap[java.lang.String, T]]', reference 'Nullable[mutable.Map[String, T]]'
-f771816e2399	api-parity(signature)	signature	Skin#getAll	/Skin	0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
+cd9116d38caa	api-parity(signature)	signature	Skin#getAll	/Skin	0	result type differs: emitted 'lowlevel.Nullable[lowlevel.util.ObjectMap[java.lang.String, $0]]', reference 'Nullable[mutable.Map[String, $0]]'
 d27e458ea15b	api-parity(signature)	signature	Skin#getRegions	/Skin	0	result type differs: emitted 'lowlevel.Nullable[lowlevel.util.DynamicArray[sge.graphics.g2d.TextureRegion]]', reference 'Nullable[DynamicArray[TextureRegion]]'
-f7a4e24be06b	api-parity(signature)	signature	Skin#optional	/Skin	0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
-d8b7ab8933b0	api-parity(signature)	signature	Skin#setEnabled	/Skin	0	type params differ: emitted '[V <: java.lang.Object]', reference '[V]'
 9dd4746e361b	api-parity(signature)	signature	SkinLoader#getDependencies	/SkinLoader	0	result type differs: emitted 'lowlevel.util.DynamicArray[sge.assets.AssetDescriptor[?]]', reference 'DynamicArray[AssetDescriptor[?]]'
 061f7b37ff10	api-parity(signature)	signature	SkinLoader$#SkinParameter	/SkinLoader$	0	parents differ: emitted-only [sge.assets.AssetLoaderParameters[sge.scenes.scene2d.ui.Skin]], reference-only [AssetLoaderParameters[Skin]]
 06755b038f09	api-parity(signature)	signature	SkinLoader$.SkinParameter#resources	/SkinLoader$/SkinParameter	0	result type differs: emitted 'lowlevel.util.ObjectMap[java.lang.String, java.lang.Object]', reference 'Nullable[mutable.Map[String, Any]]'
@@ -9761,12 +9730,12 @@ d9a1655ebc79	api-parity(signature)	signature	StreamUtils$.OptimizedByteArrayOutp
 510e72dfeb35/2	api-parity(signature)	signature	Table#add	/Table	0	result type differs: emitted 'sge.scenes.scene2d.ui.Cell[sge.scenes.scene2d.ui.Label]', reference 'Cell[Label]'
 510e72dfeb35/3	api-parity(signature)	signature	Table#add	/Table	0	result type differs: emitted 'sge.scenes.scene2d.ui.Cell[sge.scenes.scene2d.ui.Label]', reference 'Cell[Label]'
 510e72dfeb35/4	api-parity(signature)	signature	Table#add	/Table	0	result type differs: emitted 'sge.scenes.scene2d.ui.Cell[sge.scenes.scene2d.ui.Label]', reference 'Cell[Label]'
-df0b12ca99cb	api-parity(signature)	signature	Table#add	/Table	0	type params differ: emitted '[T <: sge.scenes.scene2d.Actor]', reference '[T <: Actor]'
+eba095bac354	api-parity(signature)	signature	Table#add	/Table	0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Actor]', reference '[$0 <: Actor]'
 81adf27c2572	api-parity(signature)	signature	Table#background	/Table	0	param 0 type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.utils.Drawable]', reference 'Nullable[Drawable]'
 c6cacefc558a	api-parity(signature)	signature	Table#debug	/Table	0	result type differs: emitted 'Table', reference 'Actor'
 eecb8019667a	api-parity(signature)	signature	Table#debugAll	/Table	0	result type differs: emitted 'Table', reference 'Group'
-30b5c880b3ef	api-parity(signature)	signature	Table#getCell	/Table	0	result type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.ui.Cell[T]]', reference 'Nullable[Cell[T]]'
-a6a107a8c199	api-parity(signature)	signature	Table#getCell	/Table	0	type params differ: emitted '[T <: sge.scenes.scene2d.Actor]', reference '[T <: Actor]'
+08203c5890b8	api-parity(signature)	signature	Table#getCell	/Table	0	result type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.ui.Cell[$0]]', reference 'Nullable[Cell[$0]]'
+895d8b06a987	api-parity(signature)	signature	Table#getCell	/Table	0	type params differ: emitted '[$0 <: sge.scenes.scene2d.Actor]', reference '[$0 <: Actor]'
 a86377b00f82	api-parity(signature)	signature	Table#hit	/Table	0	result type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.Actor]', reference 'Nullable[Actor]'
 15e54b738f45	api-parity(signature)	signature	Table#setBackground	/Table	0	param 0 type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.utils.Drawable]', reference 'Nullable[Drawable]'
 8b1cfe8f8e71	api-parity(signature)	signature	Table#stack	/Table	0	param 0 type differs: emitted 'scala.Array[sge.scenes.scene2d.Actor]', reference 'Actor*'
@@ -9887,10 +9856,10 @@ a7f8e420a597	api-parity(signature)	signature	TouchableAction#act	/TouchableActio
 45d35cf7f6d3	api-parity(signature)	signature	Touchpad$.TouchpadStyle#background	/Touchpad$/TouchpadStyle	0	result type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.utils.Drawable]', reference 'Nullable[Drawable]'
 7300ec3b5e09	api-parity(signature)	signature	Touchpad$.TouchpadStyle#knob	/Touchpad$/TouchpadStyle	0	result type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.utils.Drawable]', reference 'Nullable[Drawable]'
 2f0fd6c6fbd0	api-parity(signature)	signature	Tree#style	/Tree	0	modifiers differ: emitted override, reference
-37174a7bbdf1	api-parity(signature)	signature	Tree$#Node	/Tree$	0	type params differ: emitted '[N <: sge.scenes.scene2d.ui.Tree.Node[N, V, A], V <: java.lang.Object, A <: sge.scenes.scene2d.Actor]', reference '[N <: Node[N, V, A], V, A <: Actor]'
-88434a5480a6	api-parity(signature)	signature	Tree$.Node#addToTree	/Tree$/Node	0	param 0 type differs: emitted 'Tree[N, V]', reference 'Tree[? <: Node[?,  ?,  ?], ?]'
-034b99e027a6	api-parity(signature)	signature	Tree$.Node#removeFromTree	/Tree$/Node	0	param 0 type differs: emitted 'Tree[N, V]', reference 'Tree[? <: Node[?,  ?,  ?], ?]'
-f26ca1825ca2	api-parity(signature)	signature	Tree$.Node#tree	/Tree$/Node	0	result type differs: emitted 'lowlevel.Nullable[Tree[N, V]]', reference 'Nullable[Tree[? <: Node[?,  ?,  ?], ?]]'
+42ce9fe63a3e	api-parity(signature)	signature	Tree$#Node	/Tree$	0	type params differ: emitted '[$0 <: sge.scenes.scene2d.ui.Tree.Node[$0, $1, $2], $1, $2 <: sge.scenes.scene2d.Actor]', reference '[$0 <: Node[$0, $1, $2], $1, $2 <: Actor]'
+2e8b98d6f5a1	api-parity(signature)	signature	Tree$.Node#addToTree	/Tree$/Node	0	param 0 type differs: emitted 'Tree[$0, $1]', reference 'Tree[? <: Node[?,  ?,  ?], ?]'
+031ae1afbd0b	api-parity(signature)	signature	Tree$.Node#removeFromTree	/Tree$/Node	0	param 0 type differs: emitted 'Tree[$0, $1]', reference 'Tree[? <: Node[?,  ?,  ?], ?]'
+9aa3141752b0	api-parity(signature)	signature	Tree$.Node#tree	/Tree$/Node	0	result type differs: emitted 'lowlevel.Nullable[Tree[$0, $1]]', reference 'Nullable[Tree[? <: Node[?,  ?,  ?], ?]]'
 361826acbeef	api-parity(signature)	signature	Tree$.TreeStyle#background	/Tree$/TreeStyle	0	result type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.utils.Drawable]', reference 'Nullable[Drawable]'
 57e45c2d9c46	api-parity(signature)	signature	Tree$.TreeStyle#minusOver	/Tree$/TreeStyle	0	result type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.utils.Drawable]', reference 'Nullable[Drawable]'
 0b412538d90f	api-parity(signature)	signature	Tree$.TreeStyle#over	/Tree$/TreeStyle	0	result type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.utils.Drawable]', reference 'Nullable[Drawable]'
@@ -9900,24 +9869,24 @@ ba37b101d2ab	api-parity(signature)	signature	Tree$.TreeStyle#selection	/Tree$/Tr
 fc3b5fb8ffe7	api-parity(signature)	signature	Value$#zero	/Value$	0	modifiers differ: emitted final, reference
 fa62644b0a11	api-parity(signature)	signature	Value$.Fixed#get	/Value$/Fixed	0	modifiers differ: emitted override, reference
 fa073ed2ee2f	api-parity(signature)	signature	Value$.Fixed#get	/Value$/Fixed	0	param 0 type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.Actor]', reference 'Nullable[Actor]'
-62294fa2a36a	api-parity(signature)	signature	Vector#clamp	/Vector	0	result type differs: emitted 'T', reference 'this.type'
+7731d5ce8ce5	api-parity(signature)	signature	Vector#clamp	/Vector	0	result type differs: emitted '$0', reference 'this.type'
 5624d9976276	api-parity(signature)	signature	Vector#hasOppositeDirection	/Vector	0	modifiers differ: emitted , reference final
 4ebb0c68ad6a	api-parity(signature)	signature	Vector#hasSameDirection	/Vector	0	modifiers differ: emitted , reference final
-b9ecc163f77c	api-parity(signature)	signature	Vector#interpolate	/Vector	0	result type differs: emitted 'T', reference 'this.type'
+1abe7b7a5585	api-parity(signature)	signature	Vector#interpolate	/Vector	0	result type differs: emitted '$0', reference 'this.type'
 19a342032e84	api-parity(signature)	signature	Vector#isCollinear	/Vector	0	modifiers differ: emitted , reference final
 aea543bbc47a	api-parity(signature)	signature	Vector#isCollinearOpposite	/Vector	0	modifiers differ: emitted , reference final
 e1646a63f352	api-parity(signature)	signature	Vector#isPerpendicular	/Vector	0	modifiers differ: emitted , reference final
 a4a059faf11a	api-parity(signature)	signature	Vector#isUnit	/Vector	0	modifiers differ: emitted , reference final
-9d2951d51e2b	api-parity(signature)	signature	Vector#lerp	/Vector	0	result type differs: emitted 'T', reference 'this.type'
+06dfe11b5628	api-parity(signature)	signature	Vector#lerp	/Vector	0	result type differs: emitted '$0', reference 'this.type'
 ca35ee531445	api-parity(signature)	signature	Vector#limit	/Vector	0	modifiers differ: emitted , reference final
-2671a7be754e	api-parity(signature)	signature	Vector#limit	/Vector	0	result type differs: emitted 'T', reference 'this.type'
-bbd59826060f	api-parity(signature)	signature	Vector#mulAdd	/Vector	0	result type differs: emitted 'T', reference 'this.type'
-bbd59826060f/2	api-parity(signature)	signature	Vector#mulAdd	/Vector	0	result type differs: emitted 'T', reference 'this.type'
-b74a5ff39eed	api-parity(signature)	signature	Vector#set	/Vector	0	result type differs: emitted 'T', reference 'this.type'
+55dbe6eb0631	api-parity(signature)	signature	Vector#limit	/Vector	0	result type differs: emitted '$0', reference 'this.type'
+c720899bd686	api-parity(signature)	signature	Vector#mulAdd	/Vector	0	result type differs: emitted '$0', reference 'this.type'
+c720899bd686/2	api-parity(signature)	signature	Vector#mulAdd	/Vector	0	result type differs: emitted '$0', reference 'this.type'
+e8d73f07e6bd	api-parity(signature)	signature	Vector#set	/Vector	0	result type differs: emitted '$0', reference 'this.type'
 04f8ae954e15	api-parity(signature)	signature	Vector#setLength	/Vector	0	modifiers differ: emitted , reference final
-810e09fd41bf	api-parity(signature)	signature	Vector#setLength	/Vector	0	result type differs: emitted 'T', reference 'this.type'
-f537b125b19b	api-parity(signature)	signature	Vector#setToRandomDirection	/Vector	0	result type differs: emitted 'T', reference 'this.type'
-496632acb339	api-parity(signature)	signature	Vector#setZero	/Vector	0	result type differs: emitted 'T', reference 'this.type'
+c1b03df891f7	api-parity(signature)	signature	Vector#setLength	/Vector	0	result type differs: emitted '$0', reference 'this.type'
+fe7e078509c0	api-parity(signature)	signature	Vector#setToRandomDirection	/Vector	0	result type differs: emitted '$0', reference 'this.type'
+916853f7e5e3	api-parity(signature)	signature	Vector#setZero	/Vector	0	result type differs: emitted '$0', reference 'this.type'
 bd2965bfd7f8	api-parity(signature)	signature	Vector2#clamp	/Vector2	0	result type differs: emitted 'Vector2', reference 'this.type'
 c51e62253f36	api-parity(signature)	signature	Vector2#fromString	/Vector2	0	result type differs: emitted 'Vector2', reference 'this.type'
 5116e08a12f2	api-parity(signature)	signature	Vector2#interpolate	/Vector2	0	result type differs: emitted 'Vector2', reference 'this.type'

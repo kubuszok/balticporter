@@ -3,7 +3,6 @@
 9d577f8365c9	api-parity(accessor)	accessor	World#isTileMode	/World	0	def isTileMode/0 in emitted port only
 909e3fdcc5a2	api-parity(accessor)	accessor	World#setTileMode	/World	0	def setTileMode/1 in emitted port only
 cd9966190c48	api-parity(accessor)	accessor	World#tileMode	/World	0	var tileMode/0 in reference port only
-4f6cb9a19e01	api-parity(hand-port-extra)	hand-port-extra	Collisions#reorder	/Collisions	0	def reorder/1 in reference port only [rename candidates: add, get, remove]
 b2ac53a394c4	api-parity(hand-port-extra)	hand-port-extra	MathUtils$#DELTA	/MathUtils$	0	val DELTA/0 in reference port only [rename candidates: E, FLOAT_ROUNDING_ERROR, PI, PI2, degRad, degreesToRadians, nanoToSec, radDeg, radiansToDegrees]
 563426ec757b	api-parity(hand-port-extra)	hand-port-extra	MathUtils$#nearest	/MathUtils$	0	def nearest/3 in reference port only [rename candidates: clamp, clamp, clamp, clamp, clamp, isEqual, lerp, lerpAngle, lerpAngleDeg, randomTriangular]
 a6007cf775b1	api-parity(hand-port-extra)	hand-port-extra	MathUtils$#sign	/MathUtils$	0	def sign/1 in reference port only [rename candidates: ceil, ceilPositive, cos, cosDeg, floor, floorPositive, isPowerOfTwo, isZero, log2, nextPowerOfTwo, random, random, random, randomBoolean, randomTriangular, round, roundPositive, sin, sinDeg]
@@ -30,7 +29,7 @@ b7f6ebfc39e3	api-parity(null-model)	null-model	CollisionFilter#filter	/Collision
 ba0799ae67bd	api-parity(null-model)	null-model	Collisions#add	/Collisions	0	param 17 type differs: emitted 'sge.jbump.Item[?]', reference 'Nullable[Item[?]]'
 478769126bdb	api-parity(null-model)	null-model	Collisions#add	/Collisions	0	param 18 type differs: emitted 'sge.jbump.Response', reference 'Nullable[Response]'
 13a21467c44f	api-parity(null-model)	null-model	Collisions#get	/Collisions	0	result type differs: emitted 'sge.jbump.Collision', reference 'Nullable[Collision]'
-c24f100b6137	api-parity(null-model)	null-model	Item#userData	/Item	0	result type differs: emitted 'E', reference 'Nullable[E]'
+df76a4d7844f	api-parity(null-model)	null-model	Item#userData	/Item	0	result type differs: emitted '$0', reference 'Nullable[$0]'
 a3439a532fa0	api-parity(null-model)	null-model	RectHelper#rect_detectCollision	/RectHelper	0	result type differs: emitted 'sge.jbump.Collision', reference 'Nullable[Collision]'
 1c7cc2286504	api-parity(null-model)	null-model	World#project	/World	0	param 0 type differs: emitted 'sge.jbump.Item[?]', reference 'Nullable[Item[?]]'
 1c7cc2286504/2	api-parity(null-model)	null-model	World#project	/World	0	param 0 type differs: emitted 'sge.jbump.Item[?]', reference 'Nullable[Item[?]]'
@@ -211,60 +210,17 @@ ad1cf6621b2c	api-parity(port-extra)	port-extra	IntIntMap#containsKey	/IntIntMap	
 17d383ca49fb	api-parity(port-extra)	port-extra	IntIntMap#ensureCapacity	/IntIntMap	0	def ensureCapacity/1 in emitted port only
 c2c54d3b4d8e	api-parity(port-extra)	port-extra	IntIntMap#entries	/IntIntMap	0	def entries/0 in emitted port only
 6e938df45b49	api-parity(port-extra)	port-extra	IntIntMap#equals	/IntIntMap	0	def equals/1 in emitted port only
-732f554ea3eb	api-parity(port-extra)	port-extra	IntIntMap#evictedKey	/IntIntMap	0	var evictedKey/0 in emitted port only
-6853363a9d6b	api-parity(port-extra)	port-extra	IntIntMap#evictedValue	/IntIntMap	0	var evictedValue/0 in emitted port only
 066a408a2ad1	api-parity(port-extra)	port-extra	IntIntMap#findKey	/IntIntMap	0	def findKey/2 in emitted port only
 b0a5521aa40b	api-parity(port-extra)	port-extra	IntIntMap#get	/IntIntMap	0	def get/2 in emitted port only
 4c514c0f16b1	api-parity(port-extra)	port-extra	IntIntMap#getAndIncrement	/IntIntMap	0	def getAndIncrement/3 in emitted port only
-c201d7f5ccd2	api-parity(port-extra)	port-extra	IntIntMap#h	/IntIntMap	0	var h/0 in emitted port only
-c201d7f5ccd2/2	api-parity(port-extra)	port-extra	IntIntMap#h	/IntIntMap	0	var h/0 in emitted port only
 b41a5667fb07	api-parity(port-extra)	port-extra	IntIntMap#hasZeroValue	/IntIntMap	0	var hasZeroValue/0 in emitted port only
 37677c1cb607	api-parity(port-extra)	port-extra	IntIntMap#hashCode	/IntIntMap	0	def hashCode/0 in emitted port only
 274495c8c57d	api-parity(port-extra)	port-extra	IntIntMap#hashShift	/IntIntMap	0	var hashShift/0 in emitted port only
-4db1582ffb77	api-parity(port-extra)	port-extra	IntIntMap#i	/IntIntMap	0	var i/0 in emitted port only
-4db1582ffb77/2	api-parity(port-extra)	port-extra	IntIntMap#i	/IntIntMap	0	var i/0 in emitted port only
-4db1582ffb77/3	api-parity(port-extra)	port-extra	IntIntMap#i	/IntIntMap	0	var i/0 in emitted port only
-4db1582ffb77/4	api-parity(port-extra)	port-extra	IntIntMap#i	/IntIntMap	0	var i/0 in emitted port only
-4db1582ffb77/5	api-parity(port-extra)	port-extra	IntIntMap#i	/IntIntMap	0	var i/0 in emitted port only
-4db1582ffb77/6	api-parity(port-extra)	port-extra	IntIntMap#i	/IntIntMap	0	var i/0 in emitted port only
-f2ae4dca593d	api-parity(port-extra)	port-extra	IntIntMap#index	/IntIntMap	0	val index/0 in emitted port only
-6b1a615b7edb	api-parity(port-extra)	port-extra	IntIntMap#index1	/IntIntMap	0	val index1/0 in emitted port only
-a888b410f0e1	api-parity(port-extra)	port-extra	IntIntMap#index1	/IntIntMap	0	var index1/0 in emitted port only
-caa588fad55e	api-parity(port-extra)	port-extra	IntIntMap#index2	/IntIntMap	0	val index2/0 in emitted port only
-57ee26d87464	api-parity(port-extra)	port-extra	IntIntMap#index2	/IntIntMap	0	var index2/0 in emitted port only
-138c5b8b3246	api-parity(port-extra)	port-extra	IntIntMap#index3	/IntIntMap	0	val index3/0 in emitted port only
-49da455ef00b	api-parity(port-extra)	port-extra	IntIntMap#index3	/IntIntMap	0	var index3/0 in emitted port only
-9d8edfc3d024	api-parity(port-extra)	port-extra	IntIntMap#insertKey	/IntIntMap	0	var insertKey/0 in emitted port only
-779c7b33b672	api-parity(port-extra)	port-extra	IntIntMap#insertValue	/IntIntMap	0	var insertValue/0 in emitted port only
 a41857c492b1	api-parity(port-extra)	port-extra	IntIntMap#iterator	/IntIntMap	0	def iterator/0 in emitted port only
-4a4de0264e06	api-parity(port-extra)	port-extra	IntIntMap#key	/IntIntMap	0	val key/0 in emitted port only
-05436c3eae5c	api-parity(port-extra)	port-extra	IntIntMap#key1	/IntIntMap	0	val key1/0 in emitted port only
-680d95210402	api-parity(port-extra)	port-extra	IntIntMap#key1	/IntIntMap	0	var key1/0 in emitted port only
-4dab25f8a4c4	api-parity(port-extra)	port-extra	IntIntMap#key2	/IntIntMap	0	val key2/0 in emitted port only
-c6715333f199	api-parity(port-extra)	port-extra	IntIntMap#key2	/IntIntMap	0	var key2/0 in emitted port only
-6110285efb63	api-parity(port-extra)	port-extra	IntIntMap#key3	/IntIntMap	0	val key3/0 in emitted port only
-50b2cc9a7f69	api-parity(port-extra)	port-extra	IntIntMap#key3	/IntIntMap	0	var key3/0 in emitted port only
-db80fdd91a10	api-parity(port-extra)	port-extra	IntIntMap#keyTable	/IntIntMap	0	val keyTable/0 in emitted port only
-db80fdd91a10/2	api-parity(port-extra)	port-extra	IntIntMap#keyTable	/IntIntMap	0	val keyTable/0 in emitted port only
-db80fdd91a10/3	api-parity(port-extra)	port-extra	IntIntMap#keyTable	/IntIntMap	0	val keyTable/0 in emitted port only
-db80fdd91a10/4	api-parity(port-extra)	port-extra	IntIntMap#keyTable	/IntIntMap	0	val keyTable/0 in emitted port only
-db80fdd91a10/5	api-parity(port-extra)	port-extra	IntIntMap#keyTable	/IntIntMap	0	val keyTable/0 in emitted port only
 eeb80e27a0d8	api-parity(port-extra)	port-extra	IntIntMap#keyTable	/IntIntMap	0	var keyTable/0 in emitted port only
 29bcdd52e31a	api-parity(port-extra)	port-extra	IntIntMap#keys	/IntIntMap	0	def keys/0 in emitted port only
-efe6b180f439	api-parity(port-extra)	port-extra	IntIntMap#lastIndex	/IntIntMap	0	val lastIndex/0 in emitted port only
 bf61ac3bb1b6	api-parity(port-extra)	port-extra	IntIntMap#loadFactor	/IntIntMap	0	var loadFactor/0 in emitted port only
-1552d1625758	api-parity(port-extra)	port-extra	IntIntMap#mask	/IntIntMap	0	val mask/0 in emitted port only
 f3ce69f7de1b	api-parity(port-extra)	port-extra	IntIntMap#mask	/IntIntMap	0	var mask/0 in emitted port only
-7b056217ec1e	api-parity(port-extra)	port-extra	IntIntMap#n	/IntIntMap	0	val n/0 in emitted port only
-7b056217ec1e/2	api-parity(port-extra)	port-extra	IntIntMap#n	/IntIntMap	0	val n/0 in emitted port only
-7b056217ec1e/3	api-parity(port-extra)	port-extra	IntIntMap#n	/IntIntMap	0	val n/0 in emitted port only
-7b056217ec1e/4	api-parity(port-extra)	port-extra	IntIntMap#n	/IntIntMap	0	val n/0 in emitted port only
-bc046d496759	api-parity(port-extra)	port-extra	IntIntMap#oldEndIndex	/IntIntMap	0	val oldEndIndex/0 in emitted port only
-2c377db8914a	api-parity(port-extra)	port-extra	IntIntMap#oldKeyTable	/IntIntMap	0	val oldKeyTable/0 in emitted port only
-99c390387356	api-parity(port-extra)	port-extra	IntIntMap#oldSize	/IntIntMap	0	val oldSize/0 in emitted port only
-7eea2d6046cb	api-parity(port-extra)	port-extra	IntIntMap#oldValue	/IntIntMap	0	val oldValue/0 in emitted port only
-6b347ade3ace	api-parity(port-extra)	port-extra	IntIntMap#oldValueTable	/IntIntMap	0	val oldValueTable/0 in emitted port only
-5830ed532d28	api-parity(port-extra)	port-extra	IntIntMap#pushIterations	/IntIntMap	0	val pushIterations/0 in emitted port only
 9797312b609b	api-parity(port-extra)	port-extra	IntIntMap#pushIterations	/IntIntMap	0	var pushIterations/0 in emitted port only
 8a92ff3976c4	api-parity(port-extra)	port-extra	IntIntMap#put	/IntIntMap	0	def put/2 in emitted port only
 691caf76ed69	api-parity(port-extra)	port-extra	IntIntMap#putAll	/IntIntMap	0	def putAll/1 in emitted port only
@@ -275,8 +231,6 @@ c7bfd7a8fd42	api-parity(port-extra)	port-extra	IntIntMap#shrink	/IntIntMap	0	def
 448e599c4e8e	api-parity(port-extra)	port-extra	IntIntMap#stashSize	/IntIntMap	0	var stashSize/0 in emitted port only
 b2959540b1c8	api-parity(port-extra)	port-extra	IntIntMap#threshold	/IntIntMap	0	var threshold/0 in emitted port only
 b62a4f2831e9	api-parity(port-extra)	port-extra	IntIntMap#toString	/IntIntMap	0	def toString/0 in emitted port only
-9216c3ff3acb	api-parity(port-extra)	port-extra	IntIntMap#value	/IntIntMap	0	val value/0 in emitted port only
-597f46a91641	api-parity(port-extra)	port-extra	IntIntMap#valueTable	/IntIntMap	0	val valueTable/0 in emitted port only
 6e9a06d4a7cd	api-parity(port-extra)	port-extra	IntIntMap#valueTable	/IntIntMap	0	var valueTable/0 in emitted port only
 8cf12e26268e	api-parity(port-extra)	port-extra	IntIntMap#values	/IntIntMap	0	def values/0 in emitted port only
 d71d7664d1e7	api-parity(port-extra)	port-extra	IntIntMap#zeroValue	/IntIntMap	0	var zeroValue/0 in emitted port only
@@ -288,11 +242,6 @@ f7dc11968321	api-parity(port-extra)	port-extra	IntIntMap$#Keys	/IntIntMap$	0	obj
 94ab5694b30f	api-parity(port-extra)	port-extra	IntIntMap$#MapIterator	/IntIntMap$	0	object MapIterator/0 in emitted port only
 4c02f059778d	api-parity(port-extra)	port-extra	IntIntMap$#Values	/IntIntMap$	0	class Values/0 in emitted port only
 e122a1bb9d61	api-parity(port-extra)	port-extra	IntIntMap$#Values	/IntIntMap$	0	object Values/0 in emitted port only
-5ed7fc5f5540	api-parity(port-extra)	port-extra	IntIntMap$#keyTable	/IntIntMap$	0	val keyTable/0 in emitted port only
-0c82dcceae5d	api-parity(port-extra)	port-extra	IntIntMap$#map	/IntIntMap$	0	var map/0 in emitted port only
-9a4cba665ad9	api-parity(port-extra)	port-extra	IntIntMap$#n	/IntIntMap$	0	val n/0 in emitted port only
-3ac880a1212b	api-parity(port-extra)	port-extra	IntIntMap$#remove	/IntIntMap$	0	def remove/0 in emitted port only
-3ebb50d9cd81	api-parity(port-extra)	port-extra	IntIntMap$#reset	/IntIntMap$	0	def reset/0 in emitted port only
 c472482d8f7c	api-parity(port-extra)	port-extra	IntIntMap$.Entries#hasNext	/IntIntMap$/Entries	0	def hasNext/0 in emitted port only
 ed0844d21a36	api-parity(port-extra)	port-extra	IntIntMap$.Entries#iterator	/IntIntMap$/Entries	0	def iterator/0 in emitted port only
 27b6306cbaff	api-parity(port-extra)	port-extra	IntIntMap$.Entries#next	/IntIntMap$/Entries	0	def next/0 in emitted port only
@@ -330,28 +279,14 @@ e47161fbde74	api-parity(port-extra)	port-extra	JavaCollection$#unmodifiable	/Jav
 e1f9895c3bee	api-parity(port-extra)	port-extra	JavaCollection$#unmodifiableFrom	/JavaCollection$	0	def unmodifiableFrom/1 in emitted port only
 1c910ef88e93	api-parity(port-extra)	port-extra	JavaCollections$#Reified	/JavaCollections$	0	object Reified/0 in emitted port only
 0bdaa79ab61f	api-parity(port-extra)	port-extra	JavaCollections$#addAll	/JavaCollections$	0	def addAll/2 in emitted port only
-90e481234463	api-parity(port-extra)	port-extra	JavaCollections$#addOne	/JavaCollections$	0	def addOne/1 in emitted port only
-90e481234463/2	api-parity(port-extra)	port-extra	JavaCollections$#addOne	/JavaCollections$	0	def addOne/1 in emitted port only
-90e481234463/3	api-parity(port-extra)	port-extra	JavaCollections$#addOne	/JavaCollections$	0	def addOne/1 in emitted port only
-90e481234463/4	api-parity(port-extra)	port-extra	JavaCollections$#addOne	/JavaCollections$	0	def addOne/1 in emitted port only
-90e481234463/5	api-parity(port-extra)	port-extra	JavaCollections$#addOne	/JavaCollections$	0	def addOne/1 in emitted port only
-16e26b28fa52	api-parity(port-extra)	port-extra	JavaCollections$#apply	/JavaCollections$	0	def apply/1 in emitted port only
-16e26b28fa52/2	api-parity(port-extra)	port-extra	JavaCollections$#apply	/JavaCollections$	0	def apply/1 in emitted port only
-16e26b28fa52/3	api-parity(port-extra)	port-extra	JavaCollections$#apply	/JavaCollections$	0	def apply/1 in emitted port only
 03d9ba2351a0	api-parity(port-extra)	port-extra	JavaCollections$#asList	/JavaCollections$	0	def asList/1 in emitted port only
 31764f6a1c81	api-parity(port-extra)	port-extra	JavaCollections$#asListView	/JavaCollections$	0	def asListView/1 in emitted port only
 3672b9cb0fa2	api-parity(port-extra)	port-extra	JavaCollections$#bufferInsertAll	/JavaCollections$	0	def bufferInsertAll/3 in emitted port only
 77faa9c4ca99	api-parity(port-extra)	port-extra	JavaCollections$#bufferPatchInPlace	/JavaCollections$	0	def bufferPatchInPlace/4 in emitted port only
 bbb39ba36640	api-parity(port-extra)	port-extra	JavaCollections$#bufferRemoveRange	/JavaCollections$	0	def bufferRemoveRange/3 in emitted port only
-f37242d9e0de	api-parity(port-extra)	port-extra	JavaCollections$#clear	/JavaCollections$	0	def clear/0 in emitted port only
-f37242d9e0de/2	api-parity(port-extra)	port-extra	JavaCollections$#clear	/JavaCollections$	0	def clear/0 in emitted port only
-f37242d9e0de/3	api-parity(port-extra)	port-extra	JavaCollections$#clear	/JavaCollections$	0	def clear/0 in emitted port only
-f37242d9e0de/4	api-parity(port-extra)	port-extra	JavaCollections$#clear	/JavaCollections$	0	def clear/0 in emitted port only
-f37242d9e0de/5	api-parity(port-extra)	port-extra	JavaCollections$#clear	/JavaCollections$	0	def clear/0 in emitted port only
 c92b408bfaa4	api-parity(port-extra)	port-extra	JavaCollections$#comparingByKey	/JavaCollections$	0	def comparingByKey/1 in emitted port only
 b0772dfc501b	api-parity(port-extra)	port-extra	JavaCollections$#comparingByValue	/JavaCollections$	0	def comparingByValue/1 in emitted port only
 bf9269cc753f	api-parity(port-extra)	port-extra	JavaCollections$#computeIfAbsent	/JavaCollections$	0	def computeIfAbsent/3 in emitted port only
-685d34e63f36	api-parity(port-extra)	port-extra	JavaCollections$#contains	/JavaCollections$	0	def contains/1 in emitted port only
 d5d4f7bbbd43	api-parity(port-extra)	port-extra	JavaCollections$#containsAll	/JavaCollections$	0	def containsAll/2 in emitted port only
 9916b96ecd02	api-parity(port-extra)	port-extra	JavaCollections$#containsValue	/JavaCollections$	0	def containsValue/2 in emitted port only
 18b0fbe3be3a	api-parity(port-extra)	port-extra	JavaCollections$#distinctSpliterator	/JavaCollections$	0	def distinctSpliterator/1 in emitted port only
@@ -366,62 +301,22 @@ a192d6410082	api-parity(port-extra)	port-extra	JavaCollections$#entrySetView	/Ja
 1538a285f012/3	api-parity(port-extra)	port-extra	JavaCollections$#fromJava	/JavaCollections$	0	def fromJava/1 in emitted port only
 1538a285f012/4	api-parity(port-extra)	port-extra	JavaCollections$#fromJava	/JavaCollections$	0	def fromJava/1 in emitted port only
 1538a285f012/5	api-parity(port-extra)	port-extra	JavaCollections$#fromJava	/JavaCollections$	0	def fromJava/1 in emitted port only
-991b12dc980b	api-parity(port-extra)	port-extra	JavaCollections$#get	/JavaCollections$	0	def get/1 in emitted port only
-da20c8ec3151	api-parity(port-extra)	port-extra	JavaCollections$#gone	/JavaCollections$	0	val gone/0 in emitted port only
-a6163640e7fa	api-parity(port-extra)	port-extra	JavaCollections$#hasNext	/JavaCollections$	0	def hasNext/0 in emitted port only
-e58646fbfd80	api-parity(port-extra)	port-extra	JavaCollections$#i	/JavaCollections$	0	var i/0 in emitted port only
-e58646fbfd80/2	api-parity(port-extra)	port-extra	JavaCollections$#i	/JavaCollections$	0	var i/0 in emitted port only
-a1c5f447abe0	api-parity(port-extra)	port-extra	JavaCollections$#insert	/JavaCollections$	0	def insert/2 in emitted port only
-a1c5f447abe0/2	api-parity(port-extra)	port-extra	JavaCollections$#insert	/JavaCollections$	0	def insert/2 in emitted port only
-a1c5f447abe0/3	api-parity(port-extra)	port-extra	JavaCollections$#insert	/JavaCollections$	0	def insert/2 in emitted port only
-4cc38b234987	api-parity(port-extra)	port-extra	JavaCollections$#insertAll	/JavaCollections$	0	def insertAll/2 in emitted port only
-4cc38b234987/2	api-parity(port-extra)	port-extra	JavaCollections$#insertAll	/JavaCollections$	0	def insertAll/2 in emitted port only
-4cc38b234987/3	api-parity(port-extra)	port-extra	JavaCollections$#insertAll	/JavaCollections$	0	def insertAll/2 in emitted port only
 68e0c3976411	api-parity(port-extra)	port-extra	JavaCollections$#insertAll	/JavaCollections$	0	def insertAll/3 in emitted port only
 218ab7a0fd28	api-parity(port-extra)	port-extra	JavaCollections$#intRange	/JavaCollections$	0	def intRange/2 in emitted port only
 474b9341f37e	api-parity(port-extra)	port-extra	JavaCollections$#into	/JavaCollections$	0	def into/2 in emitted port only
-40a83b3e661f	api-parity(port-extra)	port-extra	JavaCollections$#iterator	/JavaCollections$	0	def iterator/0 in emitted port only
-40a83b3e661f/2	api-parity(port-extra)	port-extra	JavaCollections$#iterator	/JavaCollections$	0	def iterator/0 in emitted port only
-40a83b3e661f/3	api-parity(port-extra)	port-extra	JavaCollections$#iterator	/JavaCollections$	0	def iterator/0 in emitted port only
-40a83b3e661f/4	api-parity(port-extra)	port-extra	JavaCollections$#iterator	/JavaCollections$	0	def iterator/0 in emitted port only
-40a83b3e661f/5	api-parity(port-extra)	port-extra	JavaCollections$#iterator	/JavaCollections$	0	def iterator/0 in emitted port only
-40a83b3e661f/6	api-parity(port-extra)	port-extra	JavaCollections$#iterator	/JavaCollections$	0	def iterator/0 in emitted port only
-665042c67638	api-parity(port-extra)	port-extra	JavaCollections$#jit	/JavaCollections$	0	val jit/0 in emitted port only
 a54475791a60	api-parity(port-extra)	port-extra	JavaCollections$#keySetView	/JavaCollections$	0	def keySetView/1 in emitted port only
-9667c008febc	api-parity(port-extra)	port-extra	JavaCollections$#knownSize	/JavaCollections$	0	def knownSize/0 in emitted port only
-9667c008febc/2	api-parity(port-extra)	port-extra	JavaCollections$#knownSize	/JavaCollections$	0	def knownSize/0 in emitted port only
-9667c008febc/3	api-parity(port-extra)	port-extra	JavaCollections$#knownSize	/JavaCollections$	0	def knownSize/0 in emitted port only
-9667c008febc/4	api-parity(port-extra)	port-extra	JavaCollections$#knownSize	/JavaCollections$	0	def knownSize/0 in emitted port only
-db76cb479530	api-parity(port-extra)	port-extra	JavaCollections$#length	/JavaCollections$	0	def length/0 in emitted port only
-db76cb479530/2	api-parity(port-extra)	port-extra	JavaCollections$#length	/JavaCollections$	0	def length/0 in emitted port only
-db76cb479530/3	api-parity(port-extra)	port-extra	JavaCollections$#length	/JavaCollections$	0	def length/0 in emitted port only
 d5285a98618e	api-parity(port-extra)	port-extra	JavaCollections$#mapContainsKey	/JavaCollections$	0	def mapContainsKey/2 in emitted port only
 9b5b6af2e16a	api-parity(port-extra)	port-extra	JavaCollections$#mapGet	/JavaCollections$	0	def mapGet/2 in emitted port only
 ec9db41be471	api-parity(port-extra)	port-extra	JavaCollections$#mapRemove	/JavaCollections$	0	def mapRemove/2 in emitted port only
 a8874f754604	api-parity(port-extra)	port-extra	JavaCollections$#mapToDouble	/JavaCollections$	0	def mapToDouble/2 in emitted port only
-aa7cd48d2477	api-parity(port-extra)	port-extra	JavaCollections$#next	/JavaCollections$	0	def next/0 in emitted port only
 effc1809dc94	api-parity(port-extra)	port-extra	JavaCollections$#noneMatch	/JavaCollections$	0	def noneMatch/2 in emitted port only
 ed0723c5936e	api-parity(port-extra)	port-extra	JavaCollections$#optionalOrElse	/JavaCollections$	0	def optionalOrElse/2 in emitted port only
 51d693e109f2	api-parity(port-extra)	port-extra	JavaCollections$#orderedSpliterator	/JavaCollections$	0	def orderedSpliterator/1 in emitted port only
-e81498d3d9df	api-parity(port-extra)	port-extra	JavaCollections$#patchInPlace	/JavaCollections$	0	def patchInPlace/3 in emitted port only
-e81498d3d9df/2	api-parity(port-extra)	port-extra	JavaCollections$#patchInPlace	/JavaCollections$	0	def patchInPlace/3 in emitted port only
-e81498d3d9df/3	api-parity(port-extra)	port-extra	JavaCollections$#patchInPlace	/JavaCollections$	0	def patchInPlace/3 in emitted port only
-35509b67521d	api-parity(port-extra)	port-extra	JavaCollections$#prepend	/JavaCollections$	0	def prepend/1 in emitted port only
-35509b67521d/2	api-parity(port-extra)	port-extra	JavaCollections$#prepend	/JavaCollections$	0	def prepend/1 in emitted port only
-35509b67521d/3	api-parity(port-extra)	port-extra	JavaCollections$#prepend	/JavaCollections$	0	def prepend/1 in emitted port only
 a6d7018a8d61	api-parity(port-extra)	port-extra	JavaCollections$#putIfAbsent	/JavaCollections$	0	def putIfAbsent/3 in emitted port only
-2a68b5923ccd	api-parity(port-extra)	port-extra	JavaCollections$#r	/JavaCollections$	0	var r/0 in emitted port only
-6879c47d28d8	api-parity(port-extra)	port-extra	JavaCollections$#remove	/JavaCollections$	0	def remove/1 in emitted port only
-6879c47d28d8/2	api-parity(port-extra)	port-extra	JavaCollections$#remove	/JavaCollections$	0	def remove/1 in emitted port only
-6879c47d28d8/3	api-parity(port-extra)	port-extra	JavaCollections$#remove	/JavaCollections$	0	def remove/1 in emitted port only
-4b457fb2e7b3	api-parity(port-extra)	port-extra	JavaCollections$#remove	/JavaCollections$	0	def remove/2 in emitted port only
-4b457fb2e7b3/2	api-parity(port-extra)	port-extra	JavaCollections$#remove	/JavaCollections$	0	def remove/2 in emitted port only
-4b457fb2e7b3/3	api-parity(port-extra)	port-extra	JavaCollections$#remove	/JavaCollections$	0	def remove/2 in emitted port only
 ca27a71b3308	api-parity(port-extra)	port-extra	JavaCollections$#removeAll	/JavaCollections$	0	def removeAll/2 in emitted port only
 35e0c401cc66	api-parity(port-extra)	port-extra	JavaCollections$#removeIf	/JavaCollections$	0	def removeIf/2 in emitted port only
 e9d92e150384	api-parity(port-extra)	port-extra	JavaCollections$#removeIfSet	/JavaCollections$	0	def removeIfSet/2 in emitted port only
 03bc9670d2e6	api-parity(port-extra)	port-extra	JavaCollections$#removeValue	/JavaCollections$	0	def removeValue/2 in emitted port only
-db89944c8afe	api-parity(port-extra)	port-extra	JavaCollections$#removed	/JavaCollections$	0	var removed/0 in emitted port only
 bd6e8f9ef981	api-parity(port-extra)	port-extra	JavaCollections$#retainAll	/JavaCollections$	0	def retainAll/2 in emitted port only
 420e0174597e	api-parity(port-extra)	port-extra	JavaCollections$#reverse	/JavaCollections$	0	def reverse/1 in emitted port only
 b8ccea23f0b0	api-parity(port-extra)	port-extra	JavaCollections$#setContains	/JavaCollections$	0	def setContains/2 in emitted port only
@@ -430,13 +325,10 @@ b8ccea23f0b0	api-parity(port-extra)	port-extra	JavaCollections$#setContains	/Jav
 be425daacca1	api-parity(port-extra)	port-extra	JavaCollections$#singleton	/JavaCollections$	0	def singleton/1 in emitted port only
 19010d4d8184	api-parity(port-extra)	port-extra	JavaCollections$#singletonList	/JavaCollections$	0	def singletonList/1 in emitted port only
 e19b49acca66	api-parity(port-extra)	port-extra	JavaCollections$#singletonMap	/JavaCollections$	0	def singletonMap/2 in emitted port only
-3334ca3a227d	api-parity(port-extra)	port-extra	JavaCollections$#size	/JavaCollections$	0	def size/0 in emitted port only
 e51a34d852b6	api-parity(port-extra)	port-extra	JavaCollections$#sort	/JavaCollections$	0	def sort/2 in emitted port only
 63681390437a	api-parity(port-extra)	port-extra	JavaCollections$#sortNatural	/JavaCollections$	0	def sortNatural/1 in emitted port only
 9bea39b84359	api-parity(port-extra)	port-extra	JavaCollections$#sortedWith	/JavaCollections$	0	def sortedWith/2 in emitted port only
 f3af746e8add	api-parity(port-extra)	port-extra	JavaCollections$#subList	/JavaCollections$	0	def subList/3 in emitted port only
-776a81db595f	api-parity(port-extra)	port-extra	JavaCollections$#subtractOne	/JavaCollections$	0	def subtractOne/1 in emitted port only
-776a81db595f/2	api-parity(port-extra)	port-extra	JavaCollections$#subtractOne	/JavaCollections$	0	def subtractOne/1 in emitted port only
 6ac6fe1d7af4	api-parity(port-extra)	port-extra	JavaCollections$#swap	/JavaCollections$	0	def swap/3 in emitted port only
 19ba71deac2b	api-parity(port-extra)	port-extra	JavaCollections$#toArray	/JavaCollections$	0	def toArray/1 in emitted port only
 92f91e243fa0	api-parity(port-extra)	port-extra	JavaCollections$#toArray	/JavaCollections$	0	def toArray/2 in emitted port only
@@ -450,46 +342,18 @@ aba377092f51	api-parity(port-extra)	port-extra	JavaCollections$#toStream	/JavaCo
 18863ab8b0aa	api-parity(port-extra)	port-extra	JavaCollections$#unmodifiableList	/JavaCollections$	0	def unmodifiableList/1 in emitted port only
 186466ea0fa2	api-parity(port-extra)	port-extra	JavaCollections$#unmodifiableMap	/JavaCollections$	0	def unmodifiableMap/1 in emitted port only
 96917ba20e1f	api-parity(port-extra)	port-extra	JavaCollections$#unmodifiableSet	/JavaCollections$	0	def unmodifiableSet/1 in emitted port only
-1d12ac9e74de	api-parity(port-extra)	port-extra	JavaCollections$#update	/JavaCollections$	0	def update/2 in emitted port only
-1d12ac9e74de/2	api-parity(port-extra)	port-extra	JavaCollections$#update	/JavaCollections$	0	def update/2 in emitted port only
-1d12ac9e74de/3	api-parity(port-extra)	port-extra	JavaCollections$#update	/JavaCollections$	0	def update/2 in emitted port only
 1413a5376ed3	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#asBuffer	/JavaCollections$/Reified$	0	def asBuffer/1 in emitted port only
 512580367da4	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#asCollection	/JavaCollections$/Reified$	0	def asCollection/1 in emitted port only
 59d9c7a2612b	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#asIterable	/JavaCollections$/Reified$	0	def asIterable/1 in emitted port only
 0f8eacae3fee	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#asIterator	/JavaCollections$/Reified$	0	def asIterator/1 in emitted port only
 69c13a7922db	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#asMap	/JavaCollections$/Reified$	0	def asMap/1 in emitted port only
 6f9d2958dfeb	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#asSet	/JavaCollections$/Reified$	0	def asSet/1 in emitted port only
-55518ec68f25	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#entrySet	/JavaCollections$/Reified$	0	def entrySet/0 in emitted port only
-e3fcc0dd5df5	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#equals	/JavaCollections$/Reified$	0	def equals/1 in emitted port only
-23eede5e68ae	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#get	/JavaCollections$/Reified$	0	def get/1 in emitted port only
-a9b1bb2b1b5b	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#getKey	/JavaCollections$/Reified$	0	def getKey/0 in emitted port only
-2d09c904d594	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#getValue	/JavaCollections$/Reified$	0	def getValue/0 in emitted port only
-91aa907929d3	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#hasNext	/JavaCollections$/Reified$	0	def hasNext/0 in emitted port only
-91aa907929d3/2	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#hasNext	/JavaCollections$/Reified$	0	def hasNext/0 in emitted port only
-a6b0a196d64c	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#hashCode	/JavaCollections$/Reified$	0	def hashCode/0 in emitted port only
-ee67414804fb	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#i	/JavaCollections$/Reified$	0	var i/0 in emitted port only
 dc25780ed408	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#isBuffer	/JavaCollections$/Reified$	0	def isBuffer/1 in emitted port only
 a85507a18da8	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#isCollection	/JavaCollections$/Reified$	0	def isCollection/1 in emitted port only
-c009799b1c9a	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#isEmpty	/JavaCollections$/Reified$	0	def isEmpty/0 in emitted port only
 6e40e87a12f8	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#isIterable	/JavaCollections$/Reified$	0	def isIterable/1 in emitted port only
 f6b9d096e3d3	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#isIterator	/JavaCollections$/Reified$	0	def isIterator/1 in emitted port only
 8294c4aca984	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#isMap	/JavaCollections$/Reified$	0	def isMap/1 in emitted port only
 cb6f2177ec03	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#isSet	/JavaCollections$/Reified$	0	def isSet/1 in emitted port only
-7992a6a607a4	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#iterator	/JavaCollections$/Reified$	0	def iterator/0 in emitted port only
-7992a6a607a4/2	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#iterator	/JavaCollections$/Reified$	0	def iterator/0 in emitted port only
-7992a6a607a4/3	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#iterator	/JavaCollections$/Reified$	0	def iterator/0 in emitted port only
-7992a6a607a4/4	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#iterator	/JavaCollections$/Reified$	0	def iterator/0 in emitted port only
-af209383ae6b	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#moved	/JavaCollections$/Reified$	0	var moved/0 in emitted port only
-4391e8538c52	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#next	/JavaCollections$/Reified$	0	def next/0 in emitted port only
-4391e8538c52/2	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#next	/JavaCollections$/Reified$	0	def next/0 in emitted port only
-8a1d2196a3fb	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#out	/JavaCollections$/Reified$	0	val out/0 in emitted port only
-b65457d09a0f	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#setValue	/JavaCollections$/Reified$	0	def setValue/1 in emitted port only
-37bb29c35680	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#size	/JavaCollections$/Reified$	0	def size/0 in emitted port only
-37bb29c35680/2	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#size	/JavaCollections$/Reified$	0	def size/0 in emitted port only
-37bb29c35680/3	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#size	/JavaCollections$/Reified$	0	def size/0 in emitted port only
-37bb29c35680/4	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#size	/JavaCollections$/Reified$	0	def size/0 in emitted port only
-37bb29c35680/5	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#size	/JavaCollections$/Reified$	0	def size/0 in emitted port only
-37bb29c35680/6	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#size	/JavaCollections$/Reified$	0	def size/0 in emitted port only
 cfb31a69992e	api-parity(port-extra)	port-extra	JavaCollections$.Reified$#toJavaValue	/JavaCollections$/Reified$	0	def toJavaValue/1 in emitted port only
 aa076a91e03c	api-parity(port-extra)	port-extra	JavaEnumMap#addOne	/JavaEnumMap	0	def addOne/1 in emitted port only
 6d8ca5a7d9f6	api-parity(port-extra)	port-extra	JavaEnumMap#clear	/JavaEnumMap	0	def clear/0 in emitted port only
@@ -554,8 +418,6 @@ f397ee14763e	api-parity(port-extra)	port-extra	MathUtils$#ceilPositive	/MathUtil
 f967cb6e5ff4	api-parity(port-extra)	port-extra	MathUtils$#degreesToRadians	/MathUtils$	0	val degreesToRadians/0 in emitted port only [rename candidates: DELTA]
 696db3c1a86f	api-parity(port-extra)	port-extra	MathUtils$#floor	/MathUtils$	0	def floor/1 in emitted port only [rename candidates: sign]
 9d4b37cb13ba	api-parity(port-extra)	port-extra	MathUtils$#floorPositive	/MathUtils$	0	def floorPositive/1 in emitted port only [rename candidates: sign]
-78ee9ccd90dc	api-parity(port-extra)	port-extra	MathUtils$#i	/MathUtils$	0	var i/0 in emitted port only
-78ee9ccd90dc/2	api-parity(port-extra)	port-extra	MathUtils$#i	/MathUtils$	0	var i/0 in emitted port only
 e2cd710b4a18	api-parity(port-extra)	port-extra	MathUtils$#isEqual	/MathUtils$	0	def isEqual/2 in emitted port only
 f22425f07669	api-parity(port-extra)	port-extra	MathUtils$#isEqual	/MathUtils$	0	def isEqual/3 in emitted port only [rename candidates: nearest]
 ad2b06f2c4e9	api-parity(port-extra)	port-extra	MathUtils$#isPowerOfTwo	/MathUtils$	0	def isPowerOfTwo/1 in emitted port only [rename candidates: sign]
@@ -592,14 +454,12 @@ a1094c08861c	api-parity(port-extra)	port-extra	MathUtils$#sinDeg	/MathUtils$	0	d
 6c11cbed666c	api-parity(port-extra)	port-extra	Rect$#Funnel	/Rect$	0	class Funnel/0 in emitted port only
 9fa8855c439b	api-parity(port-extra)	port-extra	Wrapping#wrapped	/Wrapping	0	def wrapped/0 in emitted port only
 5a17bb38e79d	api-parity(signature)	signature	#Collisions		0	parents differ: emitted-only [java.util.Comparator[java.lang.Integer]], reference-only []
-cc8c2ea7b61d	api-parity(signature)	signature	#Item		0	type params differ: emitted '[E <: java.lang.Object]', reference '[E]'
-fcb20063f715	api-parity(signature)	signature	#World		0	type params differ: emitted '[E <: java.lang.Object]', reference '[E]'
 fb95cdb2f9db	api-parity(signature)	signature	Cell#items	/Cell	0	result type differs: emitted 'scala.collection.mutable.HashSet[sge.jbump.Item[?]]', reference 'mutable.LinkedHashSet[Item[?]]'
 27c43cadeb6c	api-parity(signature)	signature	CollisionFilter$#defaultFilter	/CollisionFilter$	0	modifiers differ: emitted final, reference
 a5825aa94b02	api-parity(signature)	signature	Collisions#items	/Collisions	0	result type differs: emitted 'scala.collection.mutable.ArrayBuffer[sge.jbump.Item[?]]', reference 'ArrayBuffer[Nullable[Item[?]]]'
 d7b04d27310b	api-parity(signature)	signature	Collisions#keySort	/Collisions	0	param 0 type differs: emitted 'scala.collection.mutable.Buffer[java.lang.Integer]', reference 'IndexedSeq[Int]'
-d960df1d2ec0	api-parity(signature)	signature	Collisions#keySort	/Collisions	0	param 1 type differs: emitted 'scala.collection.mutable.Buffer[? <: java.lang.Object]', reference 'ArrayBuffer[A]'
-4674f5cf0891	api-parity(signature)	signature	Collisions#keySort	/Collisions	0	type params differ: emitted '[T <: java.lang.Comparable[T]]', reference '[A]'
+4c50a2723e72	api-parity(signature)	signature	Collisions#keySort	/Collisions	0	param 1 type differs: emitted 'scala.collection.mutable.Buffer[?]', reference 'ArrayBuffer[$0]'
+f61c8c277060	api-parity(signature)	signature	Collisions#keySort	/Collisions	0	type params differ: emitted '[$0 <: java.lang.Comparable[$0]]', reference '[$0]'
 4efec4c31856	api-parity(signature)	signature	Collisions#others	/Collisions	0	result type differs: emitted 'scala.collection.mutable.ArrayBuffer[sge.jbump.Item[?]]', reference 'ArrayBuffer[Nullable[Item[?]]]'
 1dcf03050888	api-parity(signature)	signature	Collisions#types	/Collisions	0	result type differs: emitted 'scala.collection.mutable.ArrayBuffer[sge.jbump.Response]', reference 'ArrayBuffer[Nullable[Response]]'
 5a90ca3bc232	api-parity(signature)	signature	ItemInfo$#weightComparator	/ItemInfo$	0	modifiers differ: emitted final, reference
@@ -608,7 +468,7 @@ a0f4afa95be0	api-parity(signature)	signature	Response$#bounce	/Response$	0	modif
 3547a5eed615	api-parity(signature)	signature	Response$#cross	/Response$	0	modifiers differ: emitted final, reference
 d71438f9b321	api-parity(signature)	signature	Response$#slide	/Response$	0	modifiers differ: emitted final, reference
 3c6a6adc56c1	api-parity(signature)	signature	Response$#touch	/Response$	0	modifiers differ: emitted final, reference
-89172df5da71	api-parity(signature)	signature	World#check	/World	0	param 0 type differs: emitted 'sge.jbump.Item[?]', reference 'Item[E]'
+b35c22637484	api-parity(signature)	signature	World#check	/World	0	param 0 type differs: emitted 'sge.jbump.Item[?]', reference 'Item[$0]'
 44a64d914192	api-parity(signature)	signature	World#getCells	/World	0	result type differs: emitted 'balticporter.runtime.JavaCollection[sge.jbump.Cell]', reference 'Iterable[Cell]'
 a4d27f20e89e	api-parity(signature)	signature	World#getCellsTouchedByRay	/World	0	param 4 type differs: emitted 'scala.collection.mutable.ArrayBuffer[sge.jbump.Cell]', reference 'ArrayBuffer[Cell]'
 e4dddaf404ef	api-parity(signature)	signature	World#getCellsTouchedByRay	/World	0	result type differs: emitted 'scala.collection.mutable.ArrayBuffer[sge.jbump.Cell]', reference 'ArrayBuffer[Cell]'
@@ -616,7 +476,7 @@ e4dddaf404ef	api-parity(signature)	signature	World#getCellsTouchedByRay	/World	0
 0711363bc5cf	api-parity(signature)	signature	World#getCellsTouchedBySegment	/World	0	result type differs: emitted 'scala.collection.mutable.ArrayBuffer[sge.jbump.Cell]', reference 'ArrayBuffer[Cell]'
 c0b0f92517a7	api-parity(signature)	signature	World#getItems	/World	0	result type differs: emitted 'scala.collection.mutable.Set[sge.jbump.Item[?]]', reference 'collection.Set[Item[?]]'
 2d0f26141b99	api-parity(signature)	signature	World#getRects	/World	0	result type differs: emitted 'balticporter.runtime.JavaCollection[sge.jbump.Rect]', reference 'Iterable[Rect]'
-07bc9171d5c9	api-parity(signature)	signature	World#move	/World	0	param 0 type differs: emitted 'sge.jbump.Item[?]', reference 'Item[E]'
+d65d80c464cb	api-parity(signature)	signature	World#move	/World	0	param 0 type differs: emitted 'sge.jbump.Item[?]', reference 'Item[$0]'
 3b948363d443	api-parity(signature)	signature	World#queryPoint	/World	0	param 3 type differs: emitted 'scala.collection.mutable.ArrayBuffer[sge.jbump.Item[?]]', reference 'ArrayBuffer[Item[?]]'
 d6a601f08458	api-parity(signature)	signature	World#queryPoint	/World	0	result type differs: emitted 'scala.collection.mutable.ArrayBuffer[sge.jbump.Item[?]]', reference 'ArrayBuffer[Item[?]]'
 f169abe3e538	api-parity(signature)	signature	World#queryRay	/World	0	param 5 type differs: emitted 'scala.collection.mutable.ArrayBuffer[sge.jbump.Item[?]]', reference 'ArrayBuffer[Item[?]]'
@@ -654,7 +514,7 @@ d4c00c21af0c	catalog(consulted)	reached	JS-C20	com/dongbat/jbump/Collisions.java
 3ebb18d59541	catalog(consulted)	reached	JS-C22	com/dongbat/jbump/Collisions.java	60	rendering Apply — consulted 1810, fired 25, declarations 0: Java's THREE-PHASE applicability (strict, then loose, then varargs) has no Scala counterpart
 cff2a194d0d0	catalog(consulted)	reached	JS-C23	-	0	rendering Apply — consulted 1810, fired 0, declarations 0: most-specific tie-break: Scala prefers a NON-GENERIC alternative and Java does not
 34cb4504a757	catalog(consulted)	reached	JS-C25	com/dongbat/jbump/CollisionFilter.java	28	rendering DefDef — consulted 307, fired 33, declarations 0: `override` is mandatory in Scala and absent in Java
-f3a4e94f861c	catalog(consulted)	reached	JS-C29	com/dongbat/jbump/Collisions.java	184	rendering-type TypeRef — consulted 2186, fired 63, declarations 0: a static NESTED class and an INNER class are different types, and only one is path-dependent
+e587bc72883d	catalog(consulted)	reached	JS-C29	com/dongbat/jbump/Collisions.java	184	rendering-type TypeRef — consulted 2185, fired 63, declarations 0: a static NESTED class and an INNER class are different types, and only one is path-dependent
 7a0549887a14	catalog(consulted)	reached	JS-C31	com/dongbat/jbump/CollisionFilter.java	26	lowering CtNewClass/Expression — consulted 143, fired 9, declarations 0: anonymous class construction and capture
 ee57ef98df0c	catalog(consulted)	reached	JS-C33	com/dongbat/jbump/util/IntIntMap.java	718	rendering ClassDef — consulted 27, fired 1, declarations 0: the interface default-method diamond is resolved by JLS's two rules, not by trait linearization
 24e5066847b0	catalog(consulted)	reached	JS-C34	com/dongbat/jbump/util/IntIntMap.java	718	rendering ClassDef — consulted 27, fired 3, declarations 0: interface statics are not inherited AT ALL, not even by an implementor
@@ -680,7 +540,7 @@ c1575fd8b2ac	catalog(consulted)	reached	JS-E03	-	0	lowering CtOperatorAssignment
 7c93650f861b	catalog(consulted)	reached	JS-E14	com/dongbat/jbump/util/IntIntMap.java	662	lowering CtBinaryOperator/Expression — consulted 983, fired 1, declarations 0: string concatenation with a NON-`String` left operand
 7761e9e7deba	catalog(consulted)	reached	JS-E17	com/dongbat/jbump/util/BooleanArray.java	96	lowering CtOperatorAssignment/Either — consulted 22, fired 22, declarations 0: a compound assignment and `++`/`--` evaluate the LVALUE ONCE — its array reference, its index, its target
 e883a81c32b9	catalog(consulted)	reached	JS-E19	-	0	lowering CtConstructorCall/Expression — consulted 143, fired 0, declarations 0: a BOXING CONSTRUCTOR — `new Double(v)` — is deprecated for removal; the JDK names `valueOf`
-847fe2121f8f	catalog(consulted)	reached	JS-G01	<synthetic>	0	lowering-type CtWildcardReference + rendering-type TypeBounds — consulted 144, fired 10, declarations 0: use-site wildcards, with the matching bound grammar
+4682b8055948	catalog(consulted)	reached	JS-G01	<synthetic>	0	lowering-type CtWildcardReference + rendering-type TypeBounds — consulted 144, fired 9, declarations 0: use-site wildcards, with the matching bound grammar
 18596b727565	catalog(consulted)	reached	JS-G03	-	0	lowering-type CtWildcardReference — consulted 18, fired 0, declarations 0: `? super Object` has exactly one inhabitant
 e5a7e7666195	catalog(consulted)	reached	JS-G04	-	0	rendering ForEach — consulted 16, fired 0, declarations 0: a captured wildcard on ITERATION has no nameable type
 6e0de4a9b06e	catalog(consulted)	reached	JS-G05	-	0	rendering ClassDef — consulted 27, fired 0, declarations 0: a wildcard in an `extends` clause takes the parameter's DECLARED bound
@@ -689,7 +549,7 @@ e5a7e7666195	catalog(consulted)	reached	JS-G04	-	0	rendering ForEach — consult
 74e4e7cb916c	catalog(consulted)	reached	JS-G09	com/dongbat/jbump/Cell.java	28	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 2180, fired 60, declarations 0: UNCHECKED CONVERSION at a raw type is legal in Java and is not in Scala
 fdacfe1f8138	catalog(consulted)	reached	JS-G10	-	0	lowering CtNewClass/Expression — consulted 143, fired 0, declarations 0: a RAW anonymous class WITH a body
 42caed22fe56	catalog(consulted)	reached	JS-G11	-	0	rendering ClassDef — consulted 27, fired 0, declarations 0: a partially-nameable F-BOUNDED raw fill
-6d27d63bf672	catalog(consulted)	reached	JS-G12	<synthetic>	0	lowering-type CtTypeParameterReference + rendering-type TypeRef — consulted 2223, fired 9, declarations 0: a diamond's inference variable has NO NAMEABLE type
+4d57978466dc	catalog(consulted)	reached	JS-G12	<synthetic>	0	lowering-type CtTypeParameterReference + rendering-type TypeRef — consulted 2222, fired 9, declarations 0: a diamond's inference variable has NO NAMEABLE type
 656bf6980e1c	catalog(consulted)	reached	JS-G13	-	0	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 2180, fired 0, declarations 0: Java arrays are COVARIANT, with a runtime `ArrayStoreException`; Scala's are invariant
 1c9d637b5ac0	catalog(consulted)	reached	JS-G14	com/dongbat/jbump/Collisions.java	255	lowering CtInvocation/Expression + lowering CtConstructorCall/Expression + lowering CtNewClass/Expression + lowering CtNewArray/Expression + lowering CtLocalVariable/Statement + lowering CtField/Declaration + lowering CtAssignment/Either + lowering CtReturn/Statement — consulted 2180, fired 3, declarations 0: a primitive at a generic slot boxes to the WRAPPER, not to the formal
 71903506930a	catalog(consulted)	reached	JS-G15	-	0	lowering CtNewArray/Expression — consulted 17, fired 0, declarations 0: GENERIC ARRAY CREATION is illegal in Java, so only the cast idiom reaches the engine

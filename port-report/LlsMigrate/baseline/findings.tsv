@@ -1,5 +1,4 @@
 #id	check	kind	owner	path	line	detail
-c0cf632c1784	api-parity(collection-retarget)	collection-retarget	DynamicArray#select	/DynamicArray	0	result type differs: emitted 'java.lang.Iterable[T]', reference 'Iterable[A]'
 80db672ef203	api-parity(factory)	factory	ArrayMap$#apply	/ArrayMap$	0	def apply/0 in reference port only
 d7286f961ade	api-parity(factory)	factory	ArrayMap$#apply	/ArrayMap$	0	def apply/1 in reference port only
 b0993292016c	api-parity(factory)	factory	ArrayMap$#apply	/ArrayMap$	0	def apply/2 in reference port only
@@ -140,16 +139,18 @@ a168ce7f2011	api-parity(hand-port-extra)	hand-port-extra	TimSort#doSort	/TimSort
 5940053074eb	api-parity(hand-port-extra)	hand-port-extra	TimSort$#sort	/TimSort$	0	def sort/5 in reference port only
 63c47ce71c69	api-parity(mutability)	mutability	ObjectMap#loadFactor	/ObjectMap	0	kind differs: emitted var, reference val
 cb82e4343f26	api-parity(mutability)	mutability	ObjectSet#loadFactor	/ObjectSet	0	kind differs: emitted var, reference val
-80ebc43e200a	api-parity(null-model)	null-model	ArrayMap#get	/ArrayMap	0	result type differs: emitted 'V', reference 'Nullable[V]'
-93c93d4f79db	api-parity(null-model)	null-model	ArrayMap#getKey	/ArrayMap	0	result type differs: emitted 'K', reference 'Nullable[K]'
-b41e873b6aa7	api-parity(null-model)	null-model	ArrayMap#removeKey	/ArrayMap	0	result type differs: emitted 'V', reference 'Nullable[V]'
-287a461f8a73	api-parity(null-model)	null-model	ObjectMap#findKey	/ObjectMap	0	result type differs: emitted 'K', reference 'Nullable[K]'
-205551858c8f	api-parity(null-model)	null-model	ObjectMap#get	/ObjectMap	0	result type differs: emitted 'V', reference 'Nullable[V]'
-c35459c8f5ed	api-parity(null-model)	null-model	ObjectMap#put	/ObjectMap	0	result type differs: emitted 'V', reference 'Nullable[V]'
-2e9e5909fe84	api-parity(null-model)	null-model	ObjectMap#remove	/ObjectMap	0	result type differs: emitted 'V', reference 'Nullable[V]'
-bc9a4debdd80	api-parity(null-model)	null-model	OrderedMap#put	/OrderedMap	0	result type differs: emitted 'V', reference 'Nullable[V]'
-e5cfd142fff4	api-parity(null-model)	null-model	OrderedMap#remove	/OrderedMap	0	result type differs: emitted 'V', reference 'Nullable[V]'
-4fafbf88fedc	api-parity(null-model)	null-model	OrderedMap#removeIndex	/OrderedMap	0	result type differs: emitted 'V', reference 'Nullable[V]'
+f1687db8fb23	api-parity(null-model)	null-model	ArrayMap#get	/ArrayMap	0	result type differs: emitted '$1', reference 'Nullable[$1]'
+26a7d1b1694c	api-parity(null-model)	null-model	ArrayMap#getKey	/ArrayMap	0	result type differs: emitted '$0', reference 'Nullable[$0]'
+f44b14684877	api-parity(null-model)	null-model	ArrayMap#removeKey	/ArrayMap	0	result type differs: emitted '$1', reference 'Nullable[$1]'
+5e8932c6151a	api-parity(null-model)	null-model	DynamicArray#random	/DynamicArray	0	result type differs: emitted '$0', reference 'Nullable[$0]'
+a3f381301dff	api-parity(null-model)	null-model	ObjectMap#findKey	/ObjectMap	0	result type differs: emitted '$0', reference 'Nullable[$0]'
+56bd2276cf7b	api-parity(null-model)	null-model	ObjectMap#get	/ObjectMap	0	result type differs: emitted '$1', reference 'Nullable[$1]'
+eb7c500b1ad2	api-parity(null-model)	null-model	ObjectMap#put	/ObjectMap	0	result type differs: emitted '$1', reference 'Nullable[$1]'
+9d4c7b376631	api-parity(null-model)	null-model	ObjectMap#remove	/ObjectMap	0	result type differs: emitted '$1', reference 'Nullable[$1]'
+7cac3b2593a4	api-parity(null-model)	null-model	ObjectSet#get	/ObjectSet	0	result type differs: emitted '$0', reference 'Nullable[$0]'
+db98220785aa	api-parity(null-model)	null-model	OrderedMap#put	/OrderedMap	0	result type differs: emitted '$1', reference 'Nullable[$1]'
+57c350f951e5	api-parity(null-model)	null-model	OrderedMap#remove	/OrderedMap	0	result type differs: emitted '$1', reference 'Nullable[$1]'
+246432bff2d1	api-parity(null-model)	null-model	OrderedMap#removeIndex	/OrderedMap	0	result type differs: emitted '$1', reference 'Nullable[$1]'
 ffc20a113554	api-parity(opaque)	opaque	ObjectSet#addAll	/ObjectSet	0	result type differs: emitted 'scala.Boolean', reference 'Unit'
 31d18f5dd7ea	api-parity(port-extra)	port-extra	#Select		0	class Select/0 in emitted port only
 0d36135cb959	api-parity(port-extra)	port-extra	#Sort		0	class Sort/0 in emitted port only
@@ -321,55 +322,33 @@ f8446b576c83	api-parity(port-extra)	port-extra	Select#select	/Select	0	def selec
 e488049197d0	api-parity(port-extra)	port-extra	Sort$#instance	/Sort$	0	def instance/0 in emitted port only
 166fba9b701a	api-parity(port-extra)	port-extra	TimSort$#Funnel	/TimSort$	0	class Funnel/0 in emitted port only
 56ada10a2ff1	api-parity(signature)	signature	#ArrayMap		0	modifiers differ: emitted , reference final
-86a4471e6d70	api-parity(signature)	signature	#ArrayMap		0	parents differ: emitted-only [java.lang.Iterable[lowlevel.util.ObjectMap.Entry[K, V]]], reference-only []
-1fb762082136	api-parity(signature)	signature	#ArrayMap		0	type params differ: emitted '[K <: java.lang.Object, V <: java.lang.Object]', reference '[K, V]'
+e15f23bbb31d	api-parity(signature)	signature	#ArrayMap		0	parents differ: emitted-only [java.lang.Iterable[lowlevel.util.ObjectMap.Entry[$0, $1]]], reference-only []
 45773c038de6	api-parity(signature)	signature	#DynamicArray		0	modifiers differ: emitted , reference final
-cb8e0802e941	api-parity(signature)	signature	#DynamicArray		0	parents differ: emitted-only [java.lang.Iterable[T]], reference-only []
-0ab6213e33bf	api-parity(signature)	signature	#DynamicArray		0	type params differ: emitted '[T <: java.lang.Object]', reference '[A]'
+9339d0499e09	api-parity(signature)	signature	#DynamicArray		0	parents differ: emitted-only [java.lang.Iterable[$0]], reference-only []
 c974da79d720	api-parity(signature)	signature	#ObjectMap		0	modifiers differ: emitted , reference final
-90448b0e80ec	api-parity(signature)	signature	#ObjectMap		0	parents differ: emitted-only [java.lang.Iterable[lowlevel.util.ObjectMap.Entry[K, V]]], reference-only []
-2e28caac5ab8	api-parity(signature)	signature	#ObjectMap		0	type params differ: emitted '[K <: java.lang.Object, V <: java.lang.Object]', reference '[K, V]'
+9d4622f8cebc	api-parity(signature)	signature	#ObjectMap		0	parents differ: emitted-only [java.lang.Iterable[lowlevel.util.ObjectMap.Entry[$0, $1]]], reference-only []
 ead4994096cb	api-parity(signature)	signature	#ObjectSet		0	modifiers differ: emitted , reference final
-bc868c009d39	api-parity(signature)	signature	#ObjectSet		0	parents differ: emitted-only [java.lang.Iterable[T]], reference-only []
-b454e53f58e9	api-parity(signature)	signature	#ObjectSet		0	type params differ: emitted '[T <: java.lang.Object]', reference '[A]'
+73278f785dca	api-parity(signature)	signature	#ObjectSet		0	parents differ: emitted-only [java.lang.Iterable[$0]], reference-only []
 71a9b22e7042	api-parity(signature)	signature	#OrderedMap		0	modifiers differ: emitted , reference final
-fc51f26c10d9	api-parity(signature)	signature	#OrderedMap		0	parents differ: emitted-only [lowlevel.util.ObjectMap[K, V]], reference-only []
-60857b9fd591	api-parity(signature)	signature	#OrderedMap		0	type params differ: emitted '[K <: java.lang.Object, V <: java.lang.Object]', reference '[K, V]'
+ecc573e2b787	api-parity(signature)	signature	#OrderedMap		0	parents differ: emitted-only [lowlevel.util.ObjectMap[$0, $1]], reference-only []
 46968bc82f6d	api-parity(signature)	signature	#OrderedSet		0	modifiers differ: emitted , reference final
-0d5b5dc26c9d	api-parity(signature)	signature	#OrderedSet		0	parents differ: emitted-only [lowlevel.util.ObjectSet[T]], reference-only []
-3dd3d1aaebdc	api-parity(signature)	signature	#OrderedSet		0	type params differ: emitted '[T <: java.lang.Object]', reference '[A]'
+7376ba8e2649	api-parity(signature)	signature	#OrderedSet		0	parents differ: emitted-only [lowlevel.util.ObjectSet[$0]], reference-only []
 3688547ea260	api-parity(signature)	signature	#QuickSelect		0	modifiers differ: emitted , reference final
-747856442ece	api-parity(signature)	signature	#QuickSelect		0	type params differ: emitted '[T <: java.lang.Object]', reference '[T]'
 37b95e51ce43	api-parity(signature)	signature	ArrayMap#equalsIdentity	/ArrayMap	0	param 0 type differs: emitted 'java.lang.Object', reference 'Any'
-22d42abee400	api-parity(signature)	signature	ArrayMap#putAll	/ArrayMap	0	param 0 type differs: emitted 'ArrayMap[? <: K, ? <: V]', reference 'ArrayMap[K, V]'
-22d42abee400/2	api-parity(signature)	signature	ArrayMap#putAll	/ArrayMap	0	param 0 type differs: emitted 'ArrayMap[? <: K, ? <: V]', reference 'ArrayMap[K, V]'
-215f3accf5c1	api-parity(signature)	signature	DynamicArray#add	/DynamicArray	0	param 0 type differs: emitted 'T', reference 'A'
-215f3accf5c1/2	api-parity(signature)	signature	DynamicArray#add	/DynamicArray	0	param 0 type differs: emitted 'T', reference 'A'
-215f3accf5c1/3	api-parity(signature)	signature	DynamicArray#add	/DynamicArray	0	param 0 type differs: emitted 'T', reference 'A'
-c4c7d2b7e1b3	api-parity(signature)	signature	DynamicArray#add	/DynamicArray	0	param 1 type differs: emitted 'T', reference 'A'
-c4c7d2b7e1b3/2	api-parity(signature)	signature	DynamicArray#add	/DynamicArray	0	param 1 type differs: emitted 'T', reference 'A'
-cdc7f4f6d76c	api-parity(signature)	signature	DynamicArray#add	/DynamicArray	0	param 2 type differs: emitted 'T', reference 'A'
-53a0d72100bb	api-parity(signature)	signature	DynamicArray#addAll	/DynamicArray	0	param 0 type differs: emitted 'DynamicArray[? <: T]', reference 'Array[A]'
-29e1b8986ddd	api-parity(signature)	signature	DynamicArray#addAll	/DynamicArray	0	param 0 type differs: emitted 'DynamicArray[? <: T]', reference 'DynamicArray[? <: A]'
-83751806739c	api-parity(signature)	signature	DynamicArray#addAll	/DynamicArray	0	param 0 type differs: emitted 'scala.Array[T]', reference 'Iterable[A]'
-c04eabf6446c	api-parity(signature)	signature	DynamicArray#ensureCapacity	/DynamicArray	0	result type differs: emitted 'scala.Array[T]', reference 'Unit'
+703b0b8494b9	api-parity(signature)	signature	ArrayMap#putAll	/ArrayMap	0	param 0 type differs: emitted 'ArrayMap[_ <: $0, _ <: $1]', reference 'ArrayMap[$0, $1]'
+703b0b8494b9/2	api-parity(signature)	signature	ArrayMap#putAll	/ArrayMap	0	param 0 type differs: emitted 'ArrayMap[_ <: $0, _ <: $1]', reference 'ArrayMap[$0, $1]'
+bf59c870629b	api-parity(signature)	signature	DynamicArray#addAll	/DynamicArray	0	param 0 type differs: emitted 'DynamicArray[_ <: $0]', reference 'Array[$0]'
+766898071129	api-parity(signature)	signature	DynamicArray#addAll	/DynamicArray	0	param 0 type differs: emitted 'scala.Array[$0]', reference 'Iterable[$0]'
+1f1febd0d82f	api-parity(signature)	signature	DynamicArray#ensureCapacity	/DynamicArray	0	result type differs: emitted 'scala.Array[$0]', reference 'Unit'
 d17428231ef8	api-parity(signature)	signature	DynamicArray#equalsIdentity	/DynamicArray	0	param 0 type differs: emitted 'java.lang.Object', reference 'Any'
-55862c4cc2d1	api-parity(signature)	signature	DynamicArray#first	/DynamicArray	0	result type differs: emitted 'T', reference 'A'
-ad9bb85ce2e0	api-parity(signature)	signature	DynamicArray#insert	/DynamicArray	0	param 1 type differs: emitted 'T', reference 'A'
 0d355c8b3bf2	api-parity(signature)	signature	DynamicArray#iterator	/DynamicArray	0	modifiers differ: emitted override, reference
-a09e3039ca26	api-parity(signature)	signature	DynamicArray#iterator	/DynamicArray	0	result type differs: emitted 'lowlevel.util.DynamicArray.ArrayIterator[T]', reference 'Iterator[A]'
-eaee455a95dc	api-parity(signature)	signature	DynamicArray#peek	/DynamicArray	0	result type differs: emitted 'T', reference 'A'
-d7772e6cac9e	api-parity(signature)	signature	DynamicArray#pop	/DynamicArray	0	result type differs: emitted 'T', reference 'A'
-452720754e52	api-parity(signature)	signature	DynamicArray#random	/DynamicArray	0	result type differs: emitted 'T', reference 'Nullable[A]'
-80c7d4bcf9ac	api-parity(signature)	signature	DynamicArray#removeIndex	/DynamicArray	0	result type differs: emitted 'T', reference 'A'
-ade44939d66b	api-parity(signature)	signature	DynamicArray#select	/DynamicArray	0	param 0 type differs: emitted 'lowlevel.util.Predicate[T]', reference 'A => Boolean'
-420251b6f526	api-parity(signature)	signature	DynamicArray#selectRanked	/DynamicArray	0	param 0 type differs: emitted 'java.util.Comparator[T]', reference 'Ordering[A]'
-660099ea6d72	api-parity(signature)	signature	DynamicArray#selectRanked	/DynamicArray	0	result type differs: emitted 'T', reference 'A'
-3556e1e7354e	api-parity(signature)	signature	DynamicArray#selectRankedIndex	/DynamicArray	0	param 0 type differs: emitted 'java.util.Comparator[T]', reference 'Ordering[A]'
-2638eeec367f	api-parity(signature)	signature	DynamicArray#setSize	/DynamicArray	0	result type differs: emitted 'scala.Array[T]', reference 'Unit'
-1b538489f07c	api-parity(signature)	signature	DynamicArray#shrink	/DynamicArray	0	result type differs: emitted 'scala.Array[T]', reference 'Unit'
-1839733fff65	api-parity(signature)	signature	DynamicArray#sort	/DynamicArray	0	param 0 type differs: emitted 'java.util.Comparator[? >: T]', reference 'Ordering[A]'
-1ef06ced7788	api-parity(signature)	signature	DynamicArray#toArray	/DynamicArray	0	result type differs: emitted 'scala.Array[T]', reference 'Array[A]'
+f7993a53fb6f	api-parity(signature)	signature	DynamicArray#iterator	/DynamicArray	0	result type differs: emitted 'lowlevel.util.DynamicArray.ArrayIterator[$0]', reference 'Iterator[$0]'
+c75359c114b3	api-parity(signature)	signature	DynamicArray#select	/DynamicArray	0	param 0 type differs: emitted 'lowlevel.util.Predicate[$0]', reference '$0 => Boolean'
+c831961526ec	api-parity(signature)	signature	DynamicArray#selectRanked	/DynamicArray	0	param 0 type differs: emitted 'java.util.Comparator[$0]', reference 'Ordering[$0]'
+0b9db7ccff2f	api-parity(signature)	signature	DynamicArray#selectRankedIndex	/DynamicArray	0	param 0 type differs: emitted 'java.util.Comparator[$0]', reference 'Ordering[$0]'
+ba30f285df65	api-parity(signature)	signature	DynamicArray#setSize	/DynamicArray	0	result type differs: emitted 'scala.Array[$0]', reference 'Unit'
+3403693023fe	api-parity(signature)	signature	DynamicArray#shrink	/DynamicArray	0	result type differs: emitted 'scala.Array[$0]', reference 'Unit'
+5363431ca881	api-parity(signature)	signature	DynamicArray#sort	/DynamicArray	0	param 0 type differs: emitted 'java.util.Comparator[_ >: $0]', reference 'Ordering[$0]'
 6cc14a70677e	api-parity(signature)	signature	MathUtils$#E	/MathUtils$	0	modifiers differ: emitted final, reference
 eaba239cb6db	api-parity(signature)	signature	MathUtils$#FLOAT_ROUNDING_ERROR	/MathUtils$	0	modifiers differ: emitted inline, reference
 a3cf2ce37573	api-parity(signature)	signature	MathUtils$#HALF_PI	/MathUtils$	0	modifiers differ: emitted final, reference
@@ -381,40 +360,24 @@ aa4c2f49bebd	api-parity(signature)	signature	MathUtils$#degreesToRadians	/MathUt
 0662b2c99a64	api-parity(signature)	signature	MathUtils$#nanoToSec	/MathUtils$	0	modifiers differ: emitted final, reference
 4af0bcbbbb1b	api-parity(signature)	signature	MathUtils$#radDeg	/MathUtils$	0	modifiers differ: emitted final, reference
 bc1f8923b177	api-parity(signature)	signature	MathUtils$#radiansToDegrees	/MathUtils$	0	modifiers differ: emitted final, reference
-52abec2248cd	api-parity(signature)	signature	ObjectMap#containsValue	/ObjectMap	0	param 0 type differs: emitted 'java.lang.Object', reference 'V'
+4eac0750c13a	api-parity(signature)	signature	ObjectMap#containsValue	/ObjectMap	0	param 0 type differs: emitted 'java.lang.Object', reference '$1'
 80f372cb0235	api-parity(signature)	signature	ObjectMap#equalsIdentity	/ObjectMap	0	param 0 type differs: emitted 'java.lang.Object', reference 'Any'
-4f82be6ef346	api-parity(signature)	signature	ObjectMap#findKey	/ObjectMap	0	param 0 type differs: emitted 'java.lang.Object', reference 'V'
-c28d9081e186	api-parity(signature)	signature	ObjectMap#get	/ObjectMap	0	param 0 type differs: emitted 'T', reference 'K'
-4b8f69865ce9	api-parity(signature)	signature	ObjectMap#putAll	/ObjectMap	0	param 0 type differs: emitted 'ObjectMap[? <: K, ? <: V]', reference 'ObjectMap[K, V]'
-e12491e0d988	api-parity(signature)	signature	ObjectSet#add	/ObjectSet	0	param 0 type differs: emitted 'T', reference 'A'
-1ad7449b0b28	api-parity(signature)	signature	ObjectSet#addAll	/ObjectSet	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[? <: T]', reference 'ObjectSet[A]'
-f315bc9f7472	api-parity(signature)	signature	ObjectSet#addAll	/ObjectSet	0	param 0 type differs: emitted 'scala.Array[T]', reference 'DynamicArray[? <: A]'
-f53b75b47ec3	api-parity(signature)	signature	ObjectSet#contains	/ObjectSet	0	param 0 type differs: emitted 'T', reference 'A'
-cad66df96d73	api-parity(signature)	signature	ObjectSet#first	/ObjectSet	0	result type differs: emitted 'T', reference 'A'
-0c861f884969	api-parity(signature)	signature	ObjectSet#get	/ObjectSet	0	param 0 type differs: emitted 'T', reference 'A'
-9f3ce0297510	api-parity(signature)	signature	ObjectSet#get	/ObjectSet	0	result type differs: emitted 'T', reference 'Nullable[A]'
-3f9555be5acd	api-parity(signature)	signature	ObjectSet#remove	/ObjectSet	0	param 0 type differs: emitted 'T', reference 'A'
+99e548dfa8a9	api-parity(signature)	signature	ObjectMap#findKey	/ObjectMap	0	param 0 type differs: emitted 'java.lang.Object', reference '$1'
+e7ec41e4fa3d	api-parity(signature)	signature	ObjectMap#get	/ObjectMap	0	param 0 type differs: emitted '$2', reference '$0'
+1483cf8171be	api-parity(signature)	signature	ObjectMap#putAll	/ObjectMap	0	param 0 type differs: emitted 'ObjectMap[_ <: $0, _ <: $1]', reference 'ObjectMap[$0, $1]'
+619013ed8543	api-parity(signature)	signature	ObjectSet#addAll	/ObjectSet	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[_ <: $0]', reference 'ObjectSet[$0]'
+2fc9beb05628	api-parity(signature)	signature	ObjectSet#addAll	/ObjectSet	0	param 0 type differs: emitted 'scala.Array[$0]', reference 'DynamicArray[_ <: $0]'
 07c72cb2dded	api-parity(signature)	signature	OrderedMap#clear	/OrderedMap	0	modifiers differ: emitted override, reference
 07c72cb2dded/2	api-parity(signature)	signature	OrderedMap#clear	/OrderedMap	0	modifiers differ: emitted override, reference
 b0f9ff30d699	api-parity(signature)	signature	OrderedMap#put	/OrderedMap	0	modifiers differ: emitted override, reference
-4b41a7e29e39	api-parity(signature)	signature	OrderedMap#putAll	/OrderedMap	0	param 0 type differs: emitted 'OrderedMap[T, ? <: V]', reference 'OrderedMap[K, V]'
+dfdbee5a6c00	api-parity(signature)	signature	OrderedMap#putAll	/OrderedMap	0	param 0 type differs: emitted 'OrderedMap[$2, _ <: $1]', reference 'OrderedMap[$0, $1]'
 9efcdc12dd45	api-parity(signature)	signature	OrderedMap#remove	/OrderedMap	0	modifiers differ: emitted override, reference
 a6a0ee38c2a5	api-parity(signature)	signature	OrderedSet#add	/OrderedSet	0	modifiers differ: emitted override, reference
-4de166732f91	api-parity(signature)	signature	OrderedSet#add	/OrderedSet	0	param 0 type differs: emitted 'T', reference 'A'
-4de166732f91/2	api-parity(signature)	signature	OrderedSet#add	/OrderedSet	0	param 0 type differs: emitted 'T', reference 'A'
-ebb292c3e4fb	api-parity(signature)	signature	OrderedSet#addAll	/OrderedSet	0	param 0 type differs: emitted 'OrderedSet[T]', reference 'OrderedSet[A]'
-3e186f11ec9d	api-parity(signature)	signature	OrderedSet#alter	/OrderedSet	0	param 0 type differs: emitted 'T', reference 'A'
-25f6eccef6d6	api-parity(signature)	signature	OrderedSet#alter	/OrderedSet	0	param 1 type differs: emitted 'T', reference 'A'
-3d4bdaae3c6f	api-parity(signature)	signature	OrderedSet#alterIndex	/OrderedSet	0	param 1 type differs: emitted 'T', reference 'A'
 041bd3325d0f	api-parity(signature)	signature	OrderedSet#clear	/OrderedSet	0	modifiers differ: emitted override, reference
 041bd3325d0f/2	api-parity(signature)	signature	OrderedSet#clear	/OrderedSet	0	modifiers differ: emitted override, reference
 873b0a9501ce	api-parity(signature)	signature	OrderedSet#ensureCapacity	/OrderedSet	0	modifiers differ: emitted override, reference
 75082c1f8189	api-parity(signature)	signature	OrderedSet#first	/OrderedSet	0	modifiers differ: emitted override, reference
-246932a79d61	api-parity(signature)	signature	OrderedSet#first	/OrderedSet	0	result type differs: emitted 'T', reference 'A'
-d5aa354e7fb5	api-parity(signature)	signature	OrderedSet#orderedItems	/OrderedSet	0	result type differs: emitted 'lowlevel.util.DynamicArray[T]', reference 'DynamicArray[A]'
 e7b3f0095fb6	api-parity(signature)	signature	OrderedSet#remove	/OrderedSet	0	modifiers differ: emitted override, reference
-3479ee5fc9e4	api-parity(signature)	signature	OrderedSet#remove	/OrderedSet	0	param 0 type differs: emitted 'T', reference 'A'
-ccdd58ed4607	api-parity(signature)	signature	OrderedSet#removeIndex	/OrderedSet	0	result type differs: emitted 'T', reference 'A'
 4fe32f639005	api-parity(signature)	signature	OrderedSet#toString	/OrderedSet	0	modifiers differ: emitted override, reference
 24ccde19d889	api-parity(static-placement)	static-placement	Sort#sort	/Sort	0	def sort/1 in emitted port only
 24ccde19d889/2	api-parity(static-placement)	static-placement	Sort#sort	/Sort	0	def sort/1 in emitted port only

@@ -247,7 +247,7 @@ member	liqp.TemplateTest#<stmt6>	ssg.liquid.TemplateTest#<stmt6>	Renamed	-	liqp/
 member	liqp.TemplateTest#<stmt7>	ssg.liquid.TemplateTest#<stmt7>	Renamed	-	liqp/TemplateTest.java	135	c56aa445c2c5b2a0	
 member	liqp.TemplateTest#<stmt8>	ssg.liquid.TemplateTest#<stmt8>	Renamed	-	liqp/TemplateTest.java	142	0bd777d6e2d6e009	
 member	liqp.TemplateTest#<stmt9>	ssg.liquid.TemplateTest#<stmt9>	Renamed	-	liqp/TemplateTest.java	169	988ef9c4efb2faba	
-member	liqp.TemplateTest#getDeepData()	ssg.liquid.TemplateTest#getDeepData()	Renamed	-	liqp/TemplateTest.java	356	dc7c899378506b9c	vis=private
+member	liqp.TemplateTest#getDeepData()	ssg.liquid.TemplateTest#getDeepData()	Renamed	-	liqp/TemplateTest.java	356	0d1e826c97445db0	vis=private
 member	liqp.TemplateTest$1MyInspectable#<initblock>	ssg.liquid.TemplateTest$1MyInspectable#<initblock>	Renamed	-	liqp/TemplateTest.java	147	3ec915628db990ed	
 member	liqp.TemplateTest$1MyInspectable#getSome()	ssg.liquid.TemplateTest$1MyInspectable#getSome()	Renamed	-	liqp/TemplateTest.java	146	384673f9dc8129a3	
 member	liqp.TemplateTest$1MyInspectable#some	ssg.liquid.TemplateTest$1MyInspectable#some	Renamed	-	liqp/TemplateTest.java	146	16108ae47e0f297d	
@@ -323,7 +323,7 @@ member	liqp.blocks.ForTest#<stmt2>	ssg.liquid.blocks.ForTest#<stmt2>	Renamed	-	l
 member	liqp.blocks.ForTest#<stmt30>	ssg.liquid.blocks.ForTest#<stmt30>	Renamed	-	liqp/blocks/ForTest.java	853	ef0d6f74b6d9dc23	
 member	liqp.blocks.ForTest#<stmt31>	ssg.liquid.blocks.ForTest#<stmt31>	Renamed	-	liqp/blocks/ForTest.java	867	b8b3e87298d24af9	
 member	liqp.blocks.ForTest#<stmt32>	ssg.liquid.blocks.ForTest#<stmt32>	Renamed	-	liqp/blocks/ForTest.java	878	5b80374bdd1de4e1	
-member	liqp.blocks.ForTest#<stmt33>	ssg.liquid.blocks.ForTest#<stmt33>	Renamed	-	liqp/blocks/ForTest.java	896	622c0a880846c79c	
+member	liqp.blocks.ForTest#<stmt33>	ssg.liquid.blocks.ForTest#<stmt33>	Renamed	-	liqp/blocks/ForTest.java	896	dfec96efbfd35f92	
 member	liqp.blocks.ForTest#<stmt34>	ssg.liquid.blocks.ForTest#<stmt34>	Renamed	-	liqp/blocks/ForTest.java	928	1c49e0e35a7ee954	
 member	liqp.blocks.ForTest#<stmt3>	ssg.liquid.blocks.ForTest#<stmt3>	Renamed	-	liqp/blocks/ForTest.java	115	421fe788562af0ca	
 member	liqp.blocks.ForTest#<stmt4>	ssg.liquid.blocks.ForTest#<stmt4>	Renamed	-	liqp/blocks/ForTest.java	132	c7fdb0cd5befb671	
@@ -455,7 +455,7 @@ member	liqp.filters.LastTest#<stmt2>	ssg.liquid.filters.LastTest#<stmt2>	Renamed
 member	liqp.filters.LastTest#<stmt3>	ssg.liquid.filters.LastTest#<stmt3>	Renamed	-	liqp/filters/LastTest.java	43	9a7f6e067b70e72d	
 member	liqp.filters.LstripTest#<stmt1>	ssg.liquid.filters.LstripTest#<stmt1>	Renamed	-	liqp/filters/LstripTest.java	21	32dbc8831353df9e	
 member	liqp.filters.MapTest#<stmt1>	ssg.liquid.filters.MapTest#<stmt1>	Renamed	-	liqp/filters/MapTest.java	18	5c333a6a494d7ea3	
-member	liqp.filters.MapTest#<stmt2>	ssg.liquid.filters.MapTest#<stmt2>	Renamed	-	liqp/filters/MapTest.java	51	076f163e8a0ae6d9	
+member	liqp.filters.MapTest#<stmt2>	ssg.liquid.filters.MapTest#<stmt2>	Renamed	-	liqp/filters/MapTest.java	51	415f882e5c558dae	
 member	liqp.filters.MinusTest#<stmt1>	ssg.liquid.filters.MinusTest#<stmt1>	Renamed	-	liqp/filters/MinusTest.java	18	16d04dc73df8dab5	
 member	liqp.filters.MinusTest#<stmt2>	ssg.liquid.filters.MinusTest#<stmt2>	Renamed	-	liqp/filters/MinusTest.java	40	0807bfe48ca96911	
 member	liqp.filters.MinusTest#<stmt3>	ssg.liquid.filters.MinusTest#<stmt3>	Renamed	-	liqp/filters/MinusTest.java	46	82c4573afdc6cd1b	
@@ -531,9 +531,9 @@ member	liqp.filters.SliceTest#<stmt3>	ssg.liquid.filters.SliceTest#<stmt3>	Renam
 member	liqp.filters.SliceTest#<stmt4>	ssg.liquid.filters.SliceTest#<stmt4>	Renamed	-	liqp/filters/SliceTest.java	73	5fbbe723a3a656a0	
 member	liqp.filters.SliceTest#<stmt5>	ssg.liquid.filters.SliceTest#<stmt5>	Renamed	-	liqp/filters/SliceTest.java	78	01afd812b918bad2	
 member	liqp.filters.SortTest#<stmt1>	ssg.liquid.filters.SortTest#<stmt1>	Renamed	-	liqp/filters/SortTest.java	26	92364b0a4ac92d3d	
-member	liqp.filters.SortTest#<stmt2>	ssg.liquid.filters.SortTest#<stmt2>	Renamed	-	liqp/filters/SortTest.java	58	208b4825f31dc200	
-member	liqp.filters.SortTest#<stmt3>	ssg.liquid.filters.SortTest#<stmt3>	Renamed	-	liqp/filters/SortTest.java	100	de059bcda1094422	
-member	liqp.filters.SortTest#<stmt4>	ssg.liquid.filters.SortTest#<stmt4>	Renamed	-	liqp/filters/SortTest.java	132	6885adf87a9fb74a	
+member	liqp.filters.SortTest#<stmt2>	ssg.liquid.filters.SortTest#<stmt2>	Renamed	-	liqp/filters/SortTest.java	58	1e9522f132c280a6	
+member	liqp.filters.SortTest#<stmt3>	ssg.liquid.filters.SortTest#<stmt3>	Renamed	-	liqp/filters/SortTest.java	100	ed727f0a25f71aab	
+member	liqp.filters.SortTest#<stmt4>	ssg.liquid.filters.SortTest#<stmt4>	Renamed	-	liqp/filters/SortTest.java	132	9c2d9a6278a21263	
 member	liqp.filters.SortTest#<stmt5>	ssg.liquid.filters.SortTest#<stmt5>	Renamed	-	liqp/filters/SortTest.java	151	79fa7448fd245879	
 member	liqp.filters.SortTest#context	ssg.liquid.filters.SortTest#context	Renamed	-	liqp/filters/SortTest.java	23	c7f854f199dc3e17	placement=companion
 member	liqp.filters.SortTest$Pojo#<stmt1>	ssg.liquid.filters.SortTest$Pojo#<stmt1>	Renamed	-	liqp/filters/SortTest.java	85	24c0a043b85d437e	
@@ -600,7 +600,7 @@ member	liqp.filters.where.JekyllWhereImplTest#<stmt8>	ssg.liquid.filters.where.J
 member	liqp.filters.where.JekyllWhereImplTest#<stmt9>	ssg.liquid.filters.where.JekyllWhereImplTest#<stmt9>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	407	a2f41431625f7ec9	
 member	liqp.filters.where.JekyllWhereImplTest#array_of_objects1	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects1	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	49	785e709bb652210c	vis=private
 member	liqp.filters.where.JekyllWhereImplTest#array_of_objects2	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects2	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	71	89d9da63e72d39cd	vis=private
-member	liqp.filters.where.JekyllWhereImplTest#array_of_objects3	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects3	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	79	c4e419c24447e01e	vis=private
+member	liqp.filters.where.JekyllWhereImplTest#array_of_objects3	ssg.liquid.filters.where.JekyllWhereImplTest#array_of_objects3	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	79	c7d3c89cd04a7f83	vis=private
 member	liqp.filters.where.JekyllWhereImplTest#bpFreshState()	ssg.liquid.filters.where.JekyllWhereImplTest#bpFreshState()	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	24	3369352ccf5ea100	
 member	liqp.filters.where.JekyllWhereImplTest#parse(String)	ssg.liquid.filters.where.JekyllWhereImplTest#parse(String)	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	25	9fda53205910682e	vis=private
 member	liqp.filters.where.JekyllWhereImplTest$Child#<stmt1>	ssg.liquid.filters.where.JekyllWhereImplTest$Child#<stmt1>	Renamed	-	liqp/filters/where/JekyllWhereImplTest.java	41	1589f61a20dca30b	
@@ -702,11 +702,11 @@ member	liqp.nodes.LookupNodeTest#<stmt14>	ssg.liquid.nodes.LookupNodeTest#<stmt1
 member	liqp.nodes.LookupNodeTest#<stmt1>	ssg.liquid.nodes.LookupNodeTest#<stmt1>	Renamed	-	liqp/nodes/LookupNodeTest.java	24	ba67bd7c3652c695	
 member	liqp.nodes.LookupNodeTest#<stmt2>	ssg.liquid.nodes.LookupNodeTest#<stmt2>	Renamed	-	liqp/nodes/LookupNodeTest.java	61	6058290b4508a602	
 member	liqp.nodes.LookupNodeTest#<stmt3>	ssg.liquid.nodes.LookupNodeTest#<stmt3>	Renamed	-	liqp/nodes/LookupNodeTest.java	105	c6efee4a06a2dcfc	
-member	liqp.nodes.LookupNodeTest#<stmt4>	ssg.liquid.nodes.LookupNodeTest#<stmt4>	Renamed	-	liqp/nodes/LookupNodeTest.java	134	e1151bc25e8c6475	
+member	liqp.nodes.LookupNodeTest#<stmt4>	ssg.liquid.nodes.LookupNodeTest#<stmt4>	Renamed	-	liqp/nodes/LookupNodeTest.java	134	35e020bbab65b048	
 member	liqp.nodes.LookupNodeTest#<stmt5>	ssg.liquid.nodes.LookupNodeTest#<stmt5>	Renamed	-	liqp/nodes/LookupNodeTest.java	169	f473cc52e4a10796	
 member	liqp.nodes.LookupNodeTest#<stmt6>	ssg.liquid.nodes.LookupNodeTest#<stmt6>	Renamed	-	liqp/nodes/LookupNodeTest.java	193	a5b5b2388916ef93	
 member	liqp.nodes.LookupNodeTest#<stmt7>	ssg.liquid.nodes.LookupNodeTest#<stmt7>	Renamed	-	liqp/nodes/LookupNodeTest.java	219	e062f0d9fba507d4	
-member	liqp.nodes.LookupNodeTest#<stmt8>	ssg.liquid.nodes.LookupNodeTest#<stmt8>	Renamed	-	liqp/nodes/LookupNodeTest.java	245	01bd96d5d8b27123	
+member	liqp.nodes.LookupNodeTest#<stmt8>	ssg.liquid.nodes.LookupNodeTest#<stmt8>	Renamed	-	liqp/nodes/LookupNodeTest.java	245	1f3c80ded23ac9c0	
 member	liqp.nodes.LookupNodeTest#<stmt9>	ssg.liquid.nodes.LookupNodeTest#<stmt9>	Renamed	-	liqp/nodes/LookupNodeTest.java	271	a51ea9872e411e6b	
 member	liqp.nodes.LtEqNodeTest#<stmt1>	ssg.liquid.nodes.LtEqNodeTest#<stmt1>	Renamed	-	liqp/nodes/LtEqNodeTest.java	26	405244f06a7eab63	
 member	liqp.nodes.LtEqNodeTest#<stmt2>	ssg.liquid.nodes.LtEqNodeTest#<stmt2>	Renamed	-	liqp/nodes/LtEqNodeTest.java	47	30d4a84dbfab6071	

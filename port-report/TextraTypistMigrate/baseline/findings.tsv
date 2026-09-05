@@ -1147,7 +1147,7 @@ cc964983de4f	api-parity(port-extra)	port-extra	ZipperEffect#extent	/ZipperEffect
 26204be3833d	api-parity(signature)	signature	#TextraSelectBox		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Widget, sge.scenes.scene2d.utils.Disableable], reference-only []
 ae9ad6062b0c	api-parity(signature)	signature	#TextraTooltip		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Tooltip[sge.textra.TextraLabel]], reference-only [Tooltip[TextraLabel]]
 ea2264797500	api-parity(signature)	signature	#TextureArrayPolygonSpriteBatch		0	parents differ: emitted-only [sge.graphics.g2d.PolygonSpriteBatch], reference-only [PolygonBatch]
-c43c6560eff5	api-parity(signature)	signature	#TypingListBox		0	parents differ: emitted-only [sge.textra.TextraListBox[T], sge.scenes.scene2d.utils.Cullable], reference-only [TextraListBox]
+9af5fbac0530	api-parity(signature)	signature	#TypingListBox		0	parents differ: emitted-only [sge.textra.TextraListBox[$0], sge.scenes.scene2d.utils.Cullable], reference-only [TextraListBox]
 3baa0c460993	api-parity(signature)	signature	#TypingTooltip		0	parents differ: emitted-only [sge.scenes.scene2d.ui.Tooltip[sge.textra.TypingLabel]], reference-only [Tooltip[TypingLabel]]
 131fbbb6baa9	api-parity(signature)	signature	BlockUtils$#ALL_BLOCK_CHARS	/BlockUtils$	0	modifiers differ: emitted inline, reference
 e8a29049218c	api-parity(signature)	signature	BlockUtils$#BOX_DRAWING	/BlockUtils$	0	modifiers differ: emitted final, reference
@@ -1540,14 +1540,14 @@ d12ed585fec2	api-parity(signature)	signature	TextraField#keyRepeatTask	/TextraFi
 3d5da7edcb8e	api-parity(signature)	signature	TextraListBox#act	/TextraListBox	0	modifiers differ: emitted override, reference
 8571b62b2574	api-parity(signature)	signature	TextraListBox#draw	/TextraListBox	0	modifiers differ: emitted override, reference
 a9f3acab9f18	api-parity(signature)	signature	TextraListBox#drawSelection	/TextraListBox	0	param 1 type differs: emitted 'lowlevel.Nullable[sge.scenes.scene2d.utils.Drawable]', reference 'Nullable[Drawable]'
-40451956915f	api-parity(signature)	signature	TextraListBox#getItemAt	/TextraListBox	0	result type differs: emitted 'lowlevel.Nullable[T]', reference 'Nullable[TextraLabel]'
+500fbb16bfba	api-parity(signature)	signature	TextraListBox#getItemAt	/TextraListBox	0	result type differs: emitted 'lowlevel.Nullable[$0]', reference 'Nullable[TextraLabel]'
 66c8d76e1b88	api-parity(signature)	signature	TextraListBox#getPrefHeight	/TextraListBox	0	modifiers differ: emitted override, reference
 737f06c3ca4b	api-parity(signature)	signature	TextraListBox#getPrefWidth	/TextraListBox	0	modifiers differ: emitted override, reference
 c48cd4bcc5d8	api-parity(signature)	signature	TextraListBox#layout	/TextraListBox	0	modifiers differ: emitted override, reference
 81775b5c6a90	api-parity(signature)	signature	TextraListBox#setCullingArea	/TextraListBox	0	modifiers differ: emitted override, reference
 2d153596fc66	api-parity(signature)	signature	TextraListBox#setCullingArea	/TextraListBox	0	param 0 type differs: emitted 'lowlevel.Nullable[sge.math.Rectangle]', reference 'Nullable[Rectangle]'
 bd40b8ca1e19	api-parity(signature)	signature	TextraListBox#setItems	/TextraListBox	0	modifiers differ: emitted final, reference
-a06b01b1aa99	api-parity(signature)	signature	TextraListBox#setItems	/TextraListBox	0	param 0 type differs: emitted 'scala.Array[T]', reference 'TextraLabel*'
+a5679602588c	api-parity(signature)	signature	TextraListBox#setItems	/TextraListBox	0	param 0 type differs: emitted 'scala.Array[$0]', reference 'TextraLabel*'
 d1f3af038a43	api-parity(signature)	signature	TextraSelectBox#act	/TextraSelectBox	0	modifiers differ: emitted override, reference
 80c8fc315468	api-parity(signature)	signature	TextraSelectBox#draw	/TextraSelectBox	0	modifiers differ: emitted override, reference
 7cd2d41a43c1	api-parity(signature)	signature	TextraSelectBox#getPrefHeight	/TextraSelectBox	0	modifiers differ: emitted override, reference
