@@ -1368,23 +1368,23 @@ above; this is the corpus-wide summary.
 
 | port | `.ref` errors | dominant family |
 |---|---:|---|
-| `sge` / `sge-test` | 51 / 51 | `-Wunused:locals,privates,patvars`/`imports` — promoted-local/private-forwarder residue, (a) universal, not yet closed corpus-wide |
+| `sge` / `sge-test` | 5 / 5 | 2026-09-05 (was 51): 2 unset private fields under class-to-trait (a correctness defect, card 4g in flight), 1 provably-false type test at a final retarget target (K18, finality unreadable), 2 `@nowarn` inside hand bodies (8b) |
 | `sge-ecs` / `sge-ecs-test` | 0 / 0 | closed |
 | `sge-ecs` drop-in (JVM/JS/Native) | 408 / 408 / 408 | `-no-indent` cascade from the injected `ComponentFactories.scala`, not in `measure-all` |
 | `sge-anim8` | 6 | same `-Wunused` family |
 | `sge-gltf` / `sge-gltf-test` | 3 / 3 | D4 (§8.3) — genuine, tracked at every flag level |
 | `sge-screens` | 29 | guacamole's JVM-only logging surface (c, per-library, §9) |
 | `sge-vfx` | 2 | `-Wunused` family |
-| `sge-ai` / `sge-ai-test` | 9 / 9 | `-Wunused` family |
-| `sge-textra` | 3 | `-Wunused` family / jdk-surface residue (§10.8) |
+| `sge-ai` / `sge-ai-test` | 0 / 0 | closed 2026-09-05 (deprecated boxing ctors -> `valueOf`, JS-E19; class-file `@Deprecated` interned) |
+| `sge-textra` | 2 | two E190 (2026-09-05) |
 | `sge-graphs` / `-test` | 0 / 0 | closed |
 | `sge-noise` | 0 | closed |
 | `sge-jbump` | 0 | closed |
-| `ssg-liquid` / `-test` | 0 / 3 | K18/G24 residue (§10.5) |
-| `ssg-md` / `-test` | 136 / 136 | `-Wunused` family, largest port |
+| `ssg-liquid` / `-test` | 3 / 3 | K18/G24 residue (§10.5) |
+| `ssg-md` / `-test` | 127 / 136 | `-Wunused` family, largest port (main 136 -> 127 on 2026-09-05; test unmeasured since) |
 | `ssg-md-ext` | 187 | `-Wunused` family |
 | USL / USL-test | 3 / 3 | `-Wunused` family |
-| `sge-visui` | 7 | §10.9's attributed floor (C3/upstream-skew/CT11) |
+| `sge-visui` | 3 | three `OnscreenKeyboard.show(Boolean)` sites: gdx 1.14.0 vs vendored 1.14.1 (§3.5's fourth question), counted |
 
 ### 13.23 Wave 4.0 — ports as sbt subprojects: measured cost of a lane
 
