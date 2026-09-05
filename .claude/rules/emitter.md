@@ -173,3 +173,17 @@ KIND; this is one about a MEMBER — a `Lowered` kind can translate three fabric
   rename or header; giving it a `.conf` would be a second assembly path.
 - `balticporter.reportPathRoot` set by the lanes falls back silently when run directly and every
   finding diffs as removed-and-re-added at identical counts; derive it from the port's configuration.
+
+## Lessons of 2026-09-05 (one line each; the numbers are in `PROGRESS.md` §13.26)
+
+- A `Tree.Block`'s `expr` is a STATEMENT position: every body rebuild keeps it in `stats`, or the
+  last statement vanishes at 0 errors (CT13: `this.effect = effect` under class-to-trait).
+- An emitter decision is recorded at CONSTRUCTION, never while rendering: `PortRun` records
+  `ownDecisions` before emission so porter notes can be derived (the constructor `@nowarn` set).
+- One scan owns "deprecated use": `DeprecatedUseScan` (class-file `@Deprecated` interned by the
+  frontend, lls `orNull`, anon bodies belong to their own members); the phase annotates members,
+  the emitter annotates what it renders (secondaries, promoted bodies, super args).
+- A rewrite that keeps a list's SIZE is still a change: compare lists, never sizes
+  (`UnusedSymbolTransform`'s discard was a no-op for 15 locals while its decision was recorded).
+- scalac's `-Wunused` texts: a write-only `var` (local or private) is "not read", an unreferenced
+  private is "unused"; a compound assignment READS; `@nowarn` on the definition suppresses both.
