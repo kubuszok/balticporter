@@ -1439,7 +1439,7 @@ hit only prose). Grouped rows share one classification; every key is listed.
 | `Engine#createComponent(Class)` | ashley | iii | Phase 1.11 / P10 + `divergence-verdicts.tsv:146` (`Engine#componentFactories`, justified) | `ComponentFactories` registry |
 | `ImmutableArrayTests#forbiddenRemoval` | ashley | i | `divergence-verdicts.tsv:141` (`ImmutableArraySuite`, justified) | java `iterator().remove()` throws; Scala's `Iterator` has none — verify read-only instead |
 
-**Reflection census (2026-09-05, read-only, `.balticporter/reflection-census.tsv` 260 rows over every port root)**:
+**Reflection census (2026-09-05, read-only, 260 sites over every port root)**:
 client sites by purpose — instantiate-by-class 10 (3 live outside dropped types: ashley `Engine#createComponent`,
 gltf `GLTFMaterialExporter#ext`, ai `Task#cloneTask`; + parser `openTask` = `newInstance(forName(s))`),
 instantiate-by-name 9, array-create 14 (11 in dropped/lls types; the rest `MkArray`/`ClassTag`), field-r/w 26,
