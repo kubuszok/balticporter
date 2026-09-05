@@ -111,8 +111,11 @@ object ApiParityCheck:
       modifiers: Set[String] = Set.empty,
       accessLevel: String = "public",
       targetName: String = "",
-      constantInit: Boolean = false,
+      constantType: String = "",
   ):
+    /** A CONSTANT initialiser — the rhs is a literal, so the declaration has a constant type. */
+    def constantInit: Boolean = constantType.nonEmpty
+
     /** Structural key: path + kind-class + name + arity. val/var/param grouped together. */
     def matchKey: String =
       val kc = kindClass
@@ -430,7 +433,7 @@ object ApiParityCheck:
               resultType = renderType(d.decltpe, substFor(scope, Nil)),
               modifiers = extractModifiers(d.mods),
               accessLevel = extractAccessLevel(d.mods),
-              constantInit = constantInitialiser(d.rhs),
+              constantType = constantTypeOf(d.rhs),
             )
           case _ => ()
         }
@@ -517,13 +520,44 @@ object ApiParityCheck:
   private def defArity(clauses: List[Term.ParamClause]): Int =
     clauses.map(_.values.length).sum
 
-  /** A CONSTANT initialiser — a value literal, optionally negated. `null` and `()` are neither a
-    * primitive nor a String, so neither is a java constant variable (JLS 4.12.4). */
-  private def constantInitialiser(rhs: Term): Boolean = rhs match
-    case _: Lit.Null | _: Lit.Unit => false
-    case _: Lit                    => true
-    case Term.ApplyUnary(op, arg)  => op.value == "-" && constantInitialiser(arg)
-    case _                         => false
+  /** The type a CONSTANT initialiser gives an unascribed `val` — a value literal, optionally
+    * negated. Empty where the rhs is not one: `null` and `()` are neither a primitive nor a String,
+    * so neither is a java constant variable (JLS 4.12.4). */
+  private def constantTypeOf(rhs: Term): String = rhs match
+    case _: Lit.Null | _: Lit.Unit => ""
+    case _: Lit.Int                => "Int"
+    case _: Lit.Long               => "Long"
+    case _: Lit.Float              => "Float"
+    case _: Lit.Double             => "Double"
+    case _: Lit.Boolean            => "Boolean"
+    case _: Lit.Char               => "Char"
+    case _: Lit.String             => "String"
+    case _: Lit.Byte               => "Byte"
+    case _: Lit.Short              => "Short"
+    case Term.ApplyUnary(op, arg)  => if op.value == "-" then constantTypeOf(arg) else ""
+    case _                         => ""
+
+  /** An INTEGER literal spells three declared types identically: `TirEmitterMembers.constAt`
+    * renders a `byte`/`short` constant as a plain integer literal, and `inline val` takes its type
+    * from the literal, so the ascription that told them apart is gone. Compared as ONE type rather
+    * than fabricating `Int` (the wider `long`/`float`/`double` all keep a suffix). */
+  private val IntegralLiterals = Set("Byte", "Short", "Int")
+
+  /** The result type to compare: a declaration's own ascription, or — for an unascribed `inline
+    * val` — the type its constant initialiser gives it. Restores the comparison the empty
+    * `resultType` skipped (`CLAUDE.md` §3.5): an emitted `inline val K = 57` really does diverge
+    * from a hand port's `final val K: Key = 57`, and the row was hidden. */
+  private def effectiveResultType(d: SurfaceDecl): String =
+    if d.resultType.nonEmpty then d.resultType
+    else if d.kind == "val" && d.modifiers.contains("inline") then d.constantType
+    else ""
+
+  /** Two result types match, reading a DERIVED constant type as the integral family it spells. */
+  private def resultTypesMatch(e: SurfaceDecl, r: SurfaceDecl, et: String, rt: String): Boolean =
+    typesMatch(et, rt) ||
+      ((e.resultType.isEmpty || r.resultType.isEmpty) &&
+        IntegralLiterals.contains(normalizeTypeName(et)) &&
+        IntegralLiterals.contains(normalizeTypeName(rt)))
 
   /** Two rendered types match after normalising FQN-vs-simple-name spelling. */
   private[verify] def typesMatch(a: String, b: String): Boolean =
@@ -656,11 +690,16 @@ object ApiParityCheck:
         detail = fullDetail,
       )
 
-  /** Compare two surfaces and classify every divergence. */
+  /** Compare two surfaces and classify every divergence.
+    *
+    * `javaFields` is the run's own port map, reduced to the members java declared as FIELDS —
+    * `"OwnerSimpleName#member"` for every member row whose upstream key carries no parameter list
+    * (`PortMap.Entry.upstream`'s grammar). Empty makes [[finalFieldRule]] a no-op. */
   def compare(
       emitted: List[SurfaceDecl],
       reference: List[SurfaceDecl],
       renames: Map[String, String],
+      javaFields: Set[String] = Set.empty,
   ): List[Divergence] =
     val inverseRenames = renames.map((k, v) => (v, k))
     val normRef = reference.map(d => d.copy(path = normalisePath(d.path, inverseRenames)))
@@ -677,11 +716,12 @@ object ApiParityCheck:
 
       if es.nonEmpty && rs.nonEmpty then
         es.zip(rs).foreach { (e, r) =>
-          if e.kind != r.kind then
+          val drift = e.kind != r.kind
+          if drift then
             val family = classifyKindDrift(e, r)
             out += Divergence(family, Some(e), Some(r),
               s"kind differs: emitted ${e.kind}, reference ${r.kind}")
-          classifyTypeDifferences(e, r).foreach(out += _)
+          classifyTypeDifferences(e, r, drift, javaFields).foreach(out += _)
         }
       else if es.nonEmpty && rs.isEmpty then
         es.foreach { e =>
@@ -707,8 +747,14 @@ object ApiParityCheck:
     if propKinds.contains(e.kind) && propKinds.contains(r.kind) then "mutability"
     else "unclassified"
 
-  /** Classify type-level divergences between two key-matched declarations. */
-  private def classifyTypeDifferences(e: SurfaceDecl, r: SurfaceDecl): List[Divergence] =
+  /** Classify type-level divergences between two key-matched declarations. `kindDrift` says the
+    * caller already reported one, so the pair's difference is not the modifiers alone. */
+  private def classifyTypeDifferences(
+      e: SurfaceDecl,
+      r: SurfaceDecl,
+      kindDrift: Boolean,
+      javaFields: Set[String],
+  ): List[Divergence] =
     val out = List.newBuilder[Divergence]
 
     if e.paramTypes.nonEmpty || r.paramTypes.nonEmpty then
@@ -722,10 +768,12 @@ object ApiParityCheck:
             s"param $idx type differs: emitted '$et', reference '$rt'")
       }
 
-    if e.resultType.nonEmpty && r.resultType.nonEmpty && !typesMatch(e.resultType, r.resultType) then
-      val family = classifyTypePairDivergence(e.resultType, r.resultType)
+    val eResult = effectiveResultType(e)
+    val rResult = effectiveResultType(r)
+    if eResult.nonEmpty && rResult.nonEmpty && !resultTypesMatch(e, r, eResult, rResult) then
+      val family = classifyTypePairDivergence(eResult, rResult)
       out += Divergence(family, Some(e), Some(r),
-        s"result type differs: emitted '${e.resultType}', reference '${r.resultType}'")
+        s"result type differs: emitted '$eResult', reference '$rResult'")
 
     if e.typeParams.nonEmpty && r.typeParams.nonEmpty && e.typeParams != r.typeParams then
       out += Divergence("signature", Some(e), Some(r),
@@ -748,25 +796,40 @@ object ApiParityCheck:
         out += Divergence("operator", Some(e), Some(r),
           s"@targetName differs: emitted '${e.targetName}', reference '${r.targetName}'")
 
+    // The family means the ONLY difference is the engine's rule, so the rows above are the test:
+    // a pair that also drifted in kind or type is a `signature` question about that other thing.
+    val pre     = out.result()
+    val whole   = !kindDrift && pre.isEmpty
     val modDiff = e.modifiers.diff(r.modifiers) ++ r.modifiers.diff(e.modifiers)
-    if modDiff.nonEmpty then
-      if modDiff.contains("opaque") then
-        out += Divergence("opaque", Some(e), Some(r),
-          s"opaque modifier differs: emitted ${e.modifiers}, reference ${r.modifiers}")
+    val mods =
+      if modDiff.isEmpty then Nil
+      else if modDiff.contains("opaque") then
+        List(Divergence("opaque", Some(e), Some(r),
+          s"opaque modifier differs: emitted ${e.modifiers}, reference ${r.modifiers}"))
       else
-        inlineConstantRule(e, r, modDiff) match
-          case Some(detail) => out += Divergence("rule", Some(e), Some(r), detail)
+        catalogRule(e, r, modDiff, javaFields).filter(_ => whole) match
+          case Some(detail) => List(Divergence("rule", Some(e), Some(r), detail))
           case None =>
-            out += Divergence("signature", Some(e), Some(r),
-              s"modifiers differ: emitted ${e.modifiers.mkString(",")}, reference ${r.modifiers.mkString(",")}")
+            List(Divergence("signature", Some(e), Some(r),
+              s"modifiers differ: emitted ${e.modifiers.mkString(",")}, reference ${r.modifiers.mkString(",")}"))
 
-    out.result()
+    pre ++ mods
+
+  /** The modifier difference the engine made BY A CATALOG RULE, or `None`. Read off the emitted
+    * SHAPE plus the run's own port map — no `Decision` is recorded per declaration for either
+    * rendering; when one is, read that instead (`CLAUDE.md` §3.5). */
+  private def catalogRule(
+      e: SurfaceDecl,
+      r: SurfaceDecl,
+      modDiff: Set[String],
+      javaFields: Set[String],
+  ): Option[String] =
+    inlineConstantRule(e, r, modDiff).orElse(finalFieldRule(e, r, modDiff, javaFields))
 
   /** The engine renders a java CONSTANT VARIABLE `inline val <n> = <literal>` so that reading it
-    * triggers no class initialiser (`CLAUDE.md` §4.4, catalog `JS-C08`, JLS 4.12.4/13.1). Where
-    * `inline` is the WHOLE modifier difference the row is that decided rule, not a hand-port
-    * spelling question. Read off the emitted SHAPE — no `Decision` is recorded per declaration for
-    * this rendering; when one is, read that instead. */
+    * triggers no class initialiser (`CLAUDE.md` §4.4, catalog `JS-C08`, JLS 4.12.4/13.1). That one
+    * rendering both ADDS `inline` and DROPS java's `final` (`TirEmitterMembers.valDef0`), so a
+    * hand port's `final` is the same difference and not a second one. */
   private def inlineConstantRule(
       e: SurfaceDecl,
       r: SurfaceDecl,
@@ -774,10 +837,48 @@ object ApiParityCheck:
   ): Option[String] =
     val refSpelling = (r.modifiers.toList.sorted :+ r.kind).mkString(" ")
     Option.when(
-      modDiff == Set("inline") && e.modifiers.contains("inline") &&
-        e.kind == "val" && e.constantInit
+      (modDiff == Set("inline") || (modDiff == Set("inline", "final") && r.modifiers.contains("final"))) &&
+        e.modifiers.contains("inline") && !e.modifiers.contains("final") &&
+        e.kind == "val" && r.kind == "val" && e.constantInit
     )(s"rule ${balticporter.catalog.JS.C(8)}: emitted inline val (a java constant variable is " +
       s"inlined, JLS 4.12.4/13.1), reference $refSpelling")
+
+  /** A java FIELD is HIDDEN, never overridden (JLS 8.3), so `mods` carries java's `final` onto the
+    * emitted val to restate that static binding (`CLAUDE.md` §4.4, catalog `JS-C53`); the hand port
+    * dropped it. "Came from a java FIELD" is the PORT MAP's answer, not the emitted shape — a `val`
+    * with no member row (an injected file's) is left alone, which the shape could not tell apart. */
+  private def finalFieldRule(
+      e: SurfaceDecl,
+      r: SurfaceDecl,
+      modDiff: Set[String],
+      javaFields: Set[String],
+  ): Option[String] =
+    val refSpelling = (r.modifiers.toList.sorted :+ r.kind).mkString(" ")
+    Option.when(
+      modDiff == Set("final") && e.modifiers.contains("final") &&
+        e.kind == "val" && r.kind == "val" && javaFields.contains(fieldKey(e))
+    )(s"rule ${balticporter.catalog.JS.C(53)}: emitted final val (java's final on a FIELD also " +
+      s"states no subclass may override the read, JLS 8.3), reference $refSpelling")
+
+  /** `"OwnerSimpleName#member"` — the key both a [[SurfaceDecl]] and a port-map member row reduce
+    * to. Paths carry no package (`normalisePath`), so the owner is its last segment. */
+  private def fieldKey(d: SurfaceDecl): String =
+    val owner = d.path.split('/').lastOption.getOrElse("").stripSuffix("$")
+    s"$owner#${d.name}"
+
+  /** The port map, reduced to the members java declared as FIELDS. A member row's `upstream` key
+    * is `owner#name(P1,P2)` for a method and `owner#name` for a field, so the parameter list is the
+    * discriminator; a dropped row emitted nothing to compare. */
+  def javaFieldKeys(members: List[balticporter.core.PortMap.Entry]): Set[String] =
+    members.iterator.collect {
+      case m if !m.upstream.contains('(') && m.emitted.nonEmpty &&
+        m.disposition != balticporter.core.PortMap.Disposition.Dropped =>
+        val cut   = m.emitted.lastIndexOf('#')
+        val owner = m.emitted.take(math.max(cut, 0))
+        val name  = m.emitted.drop(cut + 1)
+        val simple = owner.split(Array('.', '$')).lastOption.getOrElse("")
+        s"$simple#$name"
+    }.filterNot(_.startsWith("#")).toSet
 
   private def classifyTypePairDivergence(emitted: String, reference: String): String =
     val eNull = isNullWrapped(emitted)
@@ -905,11 +1006,13 @@ object ApiParityCheck:
   private def normCompanionPath(path: String): String =
     path.split('/').map(_.stripSuffix("$")).mkString("/")
 
-  /** Run the check. Returns per-family findings. */
+  /** Run the check. Returns per-family findings. `javaFields` is [[javaFieldKeys]] over this run's
+    * own port map; empty makes the field rule a no-op. */
   def check(
       ref: ParityRef,
       emitDir: Path,
       renames: Map[String, String],
+      javaFields: Set[String] = Set.empty,
   ): List[CheckReport.Finding] =
     val emittedResult   = parseSurface(List(emitDir))
     val referenceResult = parseSurface(ref.roots, ref.upstreamMarkers)
@@ -930,7 +1033,7 @@ object ApiParityCheck:
         val emittedTypes = emitted.flatMap(rootType).toSet
         val excluded     = originals.flatMap(_.types).toSet -- reference.flatMap(rootType).toSet
         val compared     = emitted.filterNot(d => rootType(d).exists(excluded.contains))
-        val divergences  = compare(compared, reference, effectiveRenames)
+        val divergences  = compare(compared, reference, effectiveRenames, javaFields)
         originals.flatMap(handOriginal(_, emittedTypes, excluded)) ++
           divergences.map(_.report(effectiveRenames))
 

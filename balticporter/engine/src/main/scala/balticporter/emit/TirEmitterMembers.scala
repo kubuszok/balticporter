@@ -978,6 +978,12 @@ private[emit] trait TirEmitterMembers:
       Option.when(vs.flags.isStatic && ownerCd.exists(c => sym(c.symbol).flags.isTrait))(()))
     // JS-C45 — a final FIELD's safe-publication guarantee, carried by val (a local has no such moment).
     Obligations.consult(JS.C(45), v.origin)(Option.when(!vs.flags.isMutable && ownerCd.isDefined)(()))
+    // JS-C53 — java's FINAL on a field also states that no subclass may override the read; `mods`
+    // carries it onto the val. Fires where that `final` survives: not at a constant (JS-C08's
+    // `inline val` strips it) and not at an uninitialised field (a var placeholder strips it).
+    Obligations.consult(JS.C(53), v.origin)(Option.when(
+      vs.flags.isFinal && !vs.flags.isMutable && ownerCd.isDefined &&
+        v.rhs.isDefined && !isJavaConstant(v, vs))(()))
     declVisibility(vs, v.origin)
     // trivia, then porter note, then annotations, then the val (see defDef). annots renders
     // @nowarn — without it a phase-attached annotation is silently dropped (ENGINE-LIMITS T26.1).

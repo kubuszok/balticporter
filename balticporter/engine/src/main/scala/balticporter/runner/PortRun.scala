@@ -972,7 +972,8 @@ final case class PortRun(
     manifest.flatMap(_.parity).foreach { ref =>
       val parityRenames = if ref.packageMapping.nonEmpty then ref.packageMapping
                           else manifest.map(_.effectivePackageRenames).getOrElse(Map.empty)
-      val parityFindings = ApiParityCheck.check(ref, emitDir, parityRenames)
+      val parityFindings = ApiParityCheck.check(ref, emitDir, parityRenames,
+        ApiParityCheck.javaFieldKeys(portMap.members))
       ApiParityCheck.Families.foreach { family =>
         val l = ApiParityCheck.lane(family)
         CheckReport.record(l, parityFindings.filter(_.check == l))

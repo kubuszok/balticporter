@@ -741,10 +741,14 @@ class ApiParityCheckSpec extends munit.FunSuite:
 
   // ---- a type parameter's NAME is not API (alpha-equivalence, CLAUDE.md §3.5) ----
 
-  private def divergences(emittedSrc: String, referenceSrc: String): List[ApiParityCheck.Divergence] =
+  private def divergences(
+      emittedSrc: String,
+      referenceSrc: String,
+      javaFields: Set[String] = Set.empty,
+  ): List[ApiParityCheck.Divergence] =
     val e = ApiParityCheck.parseSurface(List(writeTempScala("C.scala", emittedSrc))).toOption.get
     val r = ApiParityCheck.parseSurface(List(writeTempScala("C.scala", referenceSrc))).toOption.get
-    ApiParityCheck.compare(e, r, Map.empty)
+    ApiParityCheck.compare(e, r, Map.empty, javaFields)
 
   test("a consistent alpha-renaming of a class type parameter is no divergence") {
     val divs = divergences(
@@ -825,7 +829,7 @@ class ApiParityCheckSpec extends munit.FunSuite:
         "reference val")
   }
 
-  test("a hand-written `final val` is a SECOND difference — the rule owns `inline` alone") {
+  test("a hand-written `final val` is the SAME difference — the rendering drops java's `final`") {
     val divs = divergences(
       """object C:
         |  inline val X = 0
@@ -833,8 +837,121 @@ class ApiParityCheckSpec extends munit.FunSuite:
       """object C:
         |  final val X: Int = 0
         |""".stripMargin)
-    // `final` is the SECOND difference: the rule owns `inline` alone, so this stays `signature`.
+    // `TirEmitterMembers.valDef0`'s constant arm both adds `inline` and strips `final`, so the
+    // hand port's `final` is that one rendering and not a second difference.
+    assertEquals(divs.map(_.family), List("rule"), divs.map(_.detail).toString)
+    assert(divs.head.detail.startsWith("rule JS-C08:"), divs.head.detail)
+  }
+
+  test("a String constant against an unqualified hand `val` is the constant rule") {
+    val divs = divergences(
+      """object C:
+        |  inline val S = "x"
+        |""".stripMargin,
+      """object C:
+        |  val S: String = "x"
+        |""".stripMargin)
+    assertEquals(divs.map(_.family), List("rule"), divs.map(_.detail).toString)
+  }
+
+  // ---- C4: the type comparison an UNASCRIBED `inline val` used to skip ----
+
+  test("an unascribed `inline val` is compared at its CONSTANT type — the opaque row, not `rule`") {
+    val divs = divergences(
+      """object C:
+        |  inline val ALT_LEFT = 57
+        |""".stripMargin,
+      """object C:
+        |  final val ALT_LEFT: Key = 57
+        |""".stripMargin)
+    // The result-type divergence was HIDDEN while `resultType` was empty on the emitted side.
+    assertEquals(divs.map(_.family), List("opaque", "signature"), divs.map(_.detail).toString)
+    assertEquals(divs.head.detail, "result type differs: emitted 'Int', reference 'Key'")
+  }
+
+  test("an integer literal spells Byte/Short/Int alike — a derived type refuses to tell them apart") {
+    val divs = divergences(
+      """object C:
+        |  inline val X = 5
+        |""".stripMargin,
+      """object C:
+        |  final val X: Short = 5
+        |""".stripMargin)
+    assertEquals(divs.map(_.family), List("rule"), divs.map(_.detail).toString)
+  }
+
+  test("a WIDER hand type is a real result-type divergence — the literal carries its own suffix") {
+    val divs = divergences(
+      """object C:
+        |  inline val X = 5
+        |""".stripMargin,
+      """object C:
+        |  val X: Long = 5
+        |""".stripMargin)
+    assertEquals(divs.map(_.detail).head, "result type differs: emitted 'Int', reference 'Long'")
+    assertEquals(divs.map(_.family), List("signature", "signature"), divs.map(_.detail).toString)
+  }
+
+  // ---- C3: `final` carried onto a val from a java FIELD is JS-C53 ----
+
+  test("`final` on a val the port map calls a java FIELD is api-parity(rule), citing JS-C53") {
+    val divs = divergences(
+      """class C:
+        |  final val f: Int = compute()
+        |""".stripMargin,
+      """class C:
+        |  val f: Int = compute()
+        |""".stripMargin,
+      javaFields = Set("C#f"))
+    assertEquals(divs.map(_.family), List("rule"), divs.map(_.detail).toString)
+    assertEquals(divs.head.detail,
+      "rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may " +
+        "override the read, JLS 8.3), reference val")
+  }
+
+  test("`final` on a val with NO port-map field row is left alone — an injected file's own `final`") {
+    val divs = divergences(
+      """class C:
+        |  final val f: Int = compute()
+        |""".stripMargin,
+      """class C:
+        |  val f: Int = compute()
+        |""".stripMargin)
     assertEquals(divs.map(_.family), List("signature"), divs.map(_.detail).toString)
+  }
+
+  test("`final` on a METHOD stays `signature` — java's own final, faithfully carried") {
+    val divs = divergences(
+      """class C:
+        |  final def f: Int = compute()
+        |""".stripMargin,
+      """class C:
+        |  def f: Int = compute()
+        |""".stripMargin,
+      javaFields = Set("C#f"))
+    assertEquals(divs.map(_.family), List("signature"), divs.map(_.detail).toString)
+  }
+
+  test("`final` beside a TYPE difference is not the whole difference — the rule needs both") {
+    val divs = divergences(
+      """class C:
+        |  final val f: Int = compute()
+        |""".stripMargin,
+      """class C:
+        |  val f: Meters = compute()
+        |""".stripMargin,
+      javaFields = Set("C#f"))
+    assertEquals(divs.map(_.family), List("opaque", "signature"), divs.map(_.detail).toString)
+  }
+
+  test("javaFieldKeys reads the PARAMETER LIST off the upstream key, and skips a dropped row") {
+    import balticporter.core.PortMap.{Disposition, Entry}
+    val keys = ApiParityCheck.javaFieldKeys(List(
+      Entry("member", "com.badlogic.gdx.Input$Keys#ALT_LEFT", "sge.Input$Keys#ALT_LEFT", Disposition.Renamed),
+      Entry("member", "com.badlogic.gdx.Input#getX()", "sge.Input#x()", Disposition.Renamed),
+      Entry("member", "com.badlogic.gdx.Input#gone", "", Disposition.Dropped),
+    ))
+    assertEquals(keys, Set("Keys#ALT_LEFT"))
   }
 
   test("`inline` at a NON-literal initialiser is not the constant rule — it stays signature") {

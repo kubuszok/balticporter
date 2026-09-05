@@ -2035,11 +2035,25 @@ destination, not shared surface.
 **`rule` — a divergence the ENGINE makes by a CATALOG rule is not a spelling question.** Where the
 WHOLE difference is one a `JS-…` row already decided, the row is answered and the detail names the
 id; sending it to `divergence-investigator` asks a question this repository has already answered
-against java's behaviour. The first is `JS-C08`: a java CONSTANT VARIABLE is rendered `inline val`
-so reading it triggers no class initialiser (JLS 4.12.4/13.1, `CLAUDE.md` §4.4), where the hand port
-writes `val` — `inline` as the whole modifier difference at a `val` with a literal initialiser.
-Read off the emitted SHAPE, because no `Decision` is recorded per declaration for that rendering;
+against java's behaviour. WHOLE is the whole PAIR: a kind or type row beside it makes the modifier
+row a `signature` question about that other thing, so the family keeps its own definition. Two rows
+today. `JS-C08`: a java CONSTANT VARIABLE is rendered `inline val` so reading it triggers no class
+initialiser (JLS 4.12.4/13.1, `CLAUDE.md` §4.4) — that one rendering both ADDS `inline` and STRIPS
+java's `final` (`TirEmitterMembers.valDef0`), so a hand port's `final` is the same difference, not a
+second one. `JS-C53`: java's `final` on a FIELD also states that no subclass may override the read
+(JLS 8.3 — a field is HIDDEN, never overridden), which a bare `val` would lose. The constant rule is
+read off the emitted SHAPE; the field rule asks the run's own PORT MAP whether java declared a field
+(a member row whose upstream key carries no parameter list), so an injected file's own `final` — a
+`val` with no row — is left alone. No `Decision` is recorded per declaration for either rendering;
 when one is, the classifier reads the decision instead.
+
+**An unascribed `inline val` is compared at its CONSTANT type.** `inline val` takes its type from
+the literal and rejects an ascription, so `resultType` is empty on the emitted side and the type
+comparison was skipped entirely — hiding every hand-port opaque ascription behind the modifier row.
+The type is derived from the literal instead (`Int`/`Long`/`Float`/`Double`/`Boolean`/`Char`/
+`String`, a negated literal likewise). One REFUSAL, stated rather than fabricated: an integer
+literal spells `Byte`, `Short` and `Int` alike, because `TirEmitterMembers.constAt` renders a
+`byte`/`short` constant as a plain integer literal, so a derived integral type matches all three.
 
 **Precision of the two surfaces.** Both are read the same way, and both defects were measured on the
 same run: a hand-port FILE whose header (first 40 lines) names none of `ParityRef.upstreamMarkers` is

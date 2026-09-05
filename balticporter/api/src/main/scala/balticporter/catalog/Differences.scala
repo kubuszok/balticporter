@@ -555,6 +555,15 @@ object Differences:
       Loud, Handled, Predicted, Universal,
       "SpoonFrontend.preservedAnnotations carries @FunctionalInterface; TirEmitter's static MethodRef arm emits an explicit lambda to avoid eta-expansion entirely",
       Rendered("MethodRef")),
+    // The complement of JS-C04, which repairs a shadowing DECLARATION this program contains. Here
+    // nothing shadows and the loss is still real: the emitted `val` is an accessor a CONSUMER may
+    // override, and superclass code would then read the subclass's answer where java read the field.
+    Difference(cId(53), "a java `final` FIELD carries two facts onto a `val`: no reassignment, and no OVERRIDE",
+      "JLS 8.3, 8.3.1.2 — a field is HIDDEN, never overridden, so a field read is never dynamically dispatched",
+      "SLS 5.2 — `final` on a member definition forbids overriding; a bare `val` is an accessor a subclass may override",
+      Silent, Handled, Rule44, Universal,
+      "TirEmitterMembers.valDef's JS-C53 consult; TirEmitterMembers.mods' isFinal branch, which carries java's FINAL modifier onto the emitted val",
+      Rendered("ValDef")),
   )
 
   // -------------------------------------------------------------------------------------------

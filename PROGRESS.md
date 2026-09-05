@@ -1523,13 +1523,14 @@ Errors by upstream file: `Array` 28, `ArrayMap` 23, `TimSort` 22, `ComparableTim
 By kind: `E008` 88 / `E006` 18 at the libGDX types outside the twelve (`ArraySupplier`,
 `GdxRuntimeException`, `Null`, `Collections`, `reflect`, `Predicate`, `RandomXS128`) and `E052` 43
 reassigned java parameters (no `mutable-params` phase configured). `api-parity` after the precision
-fixes: **388 rows, 0 unclassified** — port-extra 169, hand-port-extra 102, signature 57, factory 30,
+fixes: **388 rows, 0 unclassified** — port-extra 169, hand-port-extra 102, signature 48, factory 30,
 null-model 12, static-placement 8, hand-original 6 (lls's own files), mutability 2, opaque 1,
-rule 1 (`JS-C08`'s `inline val` at `MathUtils.FLOAT_ROUNDING_ERROR`), collection-retarget 0.
-`MathUtils.radDeg` stays `signature`: java writes `radDeg = radiansToDegrees`, a constant expression
-by JLS 15.29 that `ClassInitTriggerCheck.constantVariable` reads as non-constant (it requires a
-LITERAL), so the engine emits `final val` where the hand port writes `val` — the `emitted final`
-population, not this rule. Residues: `jdk-surface` 0, no `collection-*` lanes (no `CollectionsTransform`),
+rule 10, collection-retarget 0. All ten rule rows are `MathUtils` statics: one `JS-C08` (`inline val`
+at `FLOAT_ROUNDING_ERROR`) and nine `JS-C53`. `MathUtils.radDeg` is one of the nine — java writes
+`radDeg = radiansToDegrees`, a constant expression by JLS 15.29 that
+`ClassInitTriggerCheck.constantVariable` reads as non-constant (it requires a LITERAL), so the engine
+emits `final val` where the hand port writes `val`: the `emitted final` population, which is the
+field rule and not the constant one. Residues: `jdk-surface` 0, no `collection-*` lanes (no `CollectionsTransform`),
 `portability(all)` 0, omissions 18, `overload-risk` 12, `heap-pollution` 5, `idiom(refused)` 5,
 `manifest` 0, `base-surface` 0, port map 28 types / 556 members.
 

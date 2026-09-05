@@ -133,6 +133,8 @@ map and says so quietly. The `port-report/<main class>/` directory is the MEASUR
   then the declaration's own) on both sides, so an alpha-renaming (`[T]` vs `[A]`) is no
   divergence while BOUNDS and ARITY still are — and a divergence whose WHOLE difference the ENGINE
   makes by a CATALOG rule is `api-parity(rule)` with the `JS-…` id in the row, never `signature`
-  (`JS-C08`: `inline val` at a java constant variable, `DESIGN.md` §8.23).
+  (`JS-C08`: `inline val` at a java constant variable; `JS-C53`: `final` carried onto a val the port
+  map calls a java FIELD. WHOLE is the whole PAIR — a kind or type row beside it makes the modifier
+  row a `signature` question about that other thing. `DESIGN.md` §8.23).
   `ported/<module>/divergence-verdicts.tsv` is joined into `divergence.tsv` and promoted by
   `just baseline-accept` (`DESIGN.md` §8.25).
