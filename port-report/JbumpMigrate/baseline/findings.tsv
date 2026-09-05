@@ -541,6 +541,7 @@ c1575fd8b2ac	catalog(consulted)	reached	JS-E03	-	0	lowering CtOperatorAssignment
 7c93650f861b	catalog(consulted)	reached	JS-E14	com/dongbat/jbump/util/IntIntMap.java	662	lowering CtBinaryOperator/Expression — consulted 983, fired 1, declarations 0: string concatenation with a NON-`String` left operand
 7761e9e7deba	catalog(consulted)	reached	JS-E17	com/dongbat/jbump/util/BooleanArray.java	96	lowering CtOperatorAssignment/Either — consulted 22, fired 22, declarations 0: a compound assignment and `++`/`--` evaluate the LVALUE ONCE — its array reference, its index, its target
 e883a81c32b9	catalog(consulted)	reached	JS-E19	-	0	lowering CtConstructorCall/Expression — consulted 143, fired 0, declarations 0: a BOXING CONSTRUCTOR — `new Double(v)` — is deprecated for removal; the JDK names `valueOf`
+3a98ac2d901d	catalog(consulted)	reached	JS-E20	-	0	rendering Literal — consulted 1034, fired 0, declarations 0: a PRIMITIVE class literal — `int.class` is statically `Class<Integer>`, not `Class<int>`
 4682b8055948	catalog(consulted)	reached	JS-G01	<synthetic>	0	lowering-type CtWildcardReference + rendering-type TypeBounds — consulted 144, fired 9, declarations 0: use-site wildcards, with the matching bound grammar
 18596b727565	catalog(consulted)	reached	JS-G03	-	0	lowering-type CtWildcardReference — consulted 18, fired 0, declarations 0: `? super Object` has exactly one inhabitant
 e5a7e7666195	catalog(consulted)	reached	JS-G04	-	0	rendering ForEach — consulted 16, fired 0, declarations 0: a captured wildcard on ITERATION has no nameable type

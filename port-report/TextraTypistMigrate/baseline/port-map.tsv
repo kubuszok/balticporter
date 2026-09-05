@@ -220,7 +220,7 @@ member	com.github.tommyettinger.textra.EmojiProcessor#instance	sge.textra.EmojiP
 member	com.github.tommyettinger.textra.FWSkin#<init>(FileHandle,Sge)	sge.textra.FWSkin#<init>(FileHandle,Sge)	Renamed	-	com/github/tommyettinger/textra/FWSkin.java	77	930c6ae4d7cbbdcc	
 member	com.github.tommyettinger.textra.FWSkin#<init>(FileHandle,TextureAtlas,Sge)	sge.textra.FWSkin#<init>(FileHandle,TextureAtlas,Sge)	Renamed	-	com/github/tommyettinger/textra/FWSkin.java	87	26918cbe3b6471af	
 member	com.github.tommyettinger.textra.FWSkin#<init>(TextureAtlas,Sge)	sge.textra.FWSkin#<init>(TextureAtlas,Sge)	Renamed	-	com/github/tommyettinger/textra/FWSkin.java	95	3f47b5e2142595a6	
-member	com.github.tommyettinger.textra.FWSkin#getJsonLoader(FileHandle)	sge.textra.FWSkin#getJsonLoader(FileHandle)	Renamed	-	com/github/tommyettinger/textra/FWSkin.java	108	be1d281177cc5153	
+member	com.github.tommyettinger.textra.FWSkin#getJsonLoader(FileHandle)	sge.textra.FWSkin#getJsonLoader(FileHandle)	Renamed	-	com/github/tommyettinger/textra/FWSkin.java	108	bcd33cce697f518b	
 member	com.github.tommyettinger.textra.FWSkin#resizeDistanceFields(float,float)	sge.textra.FWSkin#resizeDistanceFields(float,float)	Renamed	-	com/github/tommyettinger/textra/FWSkin.java	555	bc274335f1bd927d	
 member	com.github.tommyettinger.textra.FWSkin#resizeDistanceFields(float,float,Viewport)	sge.textra.FWSkin#resizeDistanceFields(float,float,Viewport)	Renamed	-	com/github/tommyettinger/textra/FWSkin.java	573	872739497a2a4cf4	
 member	com.github.tommyettinger.textra.FWSkinLoader#newSkin(TextureAtlas)	sge.textra.FWSkinLoader#newSkin(TextureAtlas)	Renamed	-	com/github/tommyettinger/textra/FWSkinLoader.java	49	b6b43ebbecb6b17c	

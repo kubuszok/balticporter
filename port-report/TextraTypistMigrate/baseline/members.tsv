@@ -46,11 +46,11 @@ sge.textra.EmojiProcessor	sge.textra.EmojiProcessor#emojiRegex	val	1d04303f5b82d
 sge.textra.EmojiProcessor	sge.textra.EmojiProcessor#getReplacer(Font)	def	90f0f9e40af9b893
 sge.textra.EmojiProcessor	sge.textra.EmojiProcessor#initialize()	def	bb3f46a940f8287b
 sge.textra.EmojiProcessor	sge.textra.EmojiProcessor#instance	val	4ef6fe4ddcfccda0
-sge.textra.FWSkin	sge.textra.FWSkin	class	08b6e9cbcbb23e5e
+sge.textra.FWSkin	sge.textra.FWSkin	class	29ea0752e7a41426
 sge.textra.FWSkin	sge.textra.FWSkin#<init>(FileHandle,Sge)	ctor	930c6ae4d7cbbdcc
 sge.textra.FWSkin	sge.textra.FWSkin#<init>(FileHandle,TextureAtlas,Sge)	ctor	26918cbe3b6471af
 sge.textra.FWSkin	sge.textra.FWSkin#<init>(TextureAtlas,Sge)	ctor	3f47b5e2142595a6
-sge.textra.FWSkin	sge.textra.FWSkin#getJsonLoader(FileHandle)	def	be1d281177cc5153
+sge.textra.FWSkin	sge.textra.FWSkin#getJsonLoader(FileHandle)	def	bcd33cce697f518b
 sge.textra.FWSkin	sge.textra.FWSkin#resizeDistanceFields(float,float)	def	bc274335f1bd927d
 sge.textra.FWSkin	sge.textra.FWSkin#resizeDistanceFields(float,float,Viewport)	def	872739497a2a4cf4
 sge.textra.FWSkinLoader	sge.textra.FWSkinLoader	class	046dde7ae15a7348

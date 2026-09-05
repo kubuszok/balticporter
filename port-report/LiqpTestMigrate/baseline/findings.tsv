@@ -48,6 +48,7 @@ cfaf0bc154ad	catalog(consulted)	reached	JS-E14	liqp/RenderSettingsTest.java	150	
 ff03b60964f4	catalog(consulted)	reached	JS-E15	liqp/TestUtils.java	50	lowering CtAssignment/Expression — consulted 1, fired 1, declarations 0: an assignment IS an expression, with the assigned value
 e064a2c2cd7d	catalog(consulted)	reached	JS-E17	../../main/java/liqp/Examples.java	106	lowering CtOperatorAssignment/Either — consulted 9, fired 9, declarations 0: a compound assignment and `++`/`--` evaluate the LVALUE ONCE — its array reference, its index, its target
 a96e2edfd3a1	catalog(consulted)	reached	JS-E19	-	0	lowering CtConstructorCall/Expression — consulted 849, fired 0, declarations 0: a BOXING CONSTRUCTOR — `new Double(v)` — is deprecated for removal; the JDK names `valueOf`
+135ae8888ed2	catalog(consulted)	reached	JS-E20	-	0	rendering Literal — consulted 6487, fired 0, declarations 0: a PRIMITIVE class literal — `int.class` is statically `Class<Integer>`, not `Class<int>`
 4df8fc4e2100	catalog(consulted)	reached	JS-G01	<synthetic>	0	lowering-type CtWildcardReference + rendering-type TypeBounds — consulted 1340, fired 869, declarations 0: use-site wildcards, with the matching bound grammar
 18bfe086b34e	catalog(consulted)	reached	JS-G03	../../main/java/liqp/filters/Push.java	29	lowering-type CtWildcardReference — consulted 1259, fired 10, declarations 0: `? super Object` has exactly one inhabitant
 2d2ca177f4ea	catalog(consulted)	reached	JS-G04	-	0	rendering ForEach — consulted 85, fired 0, declarations 0: a captured wildcard on ITERATION has no nameable type
