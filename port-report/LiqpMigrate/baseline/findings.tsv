@@ -1573,6 +1573,7 @@ b1fce0cbcd67	catalog(consulted)	reached	JS-E03	-	0	lowering CtOperatorAssignment
 3587321f6425	catalog(consulted)	reached	JS-E06	-	0	rendering Typed — consulted 381, fired 0, declarations 0: a primitive cast is a CONVERSION in Java and an assertion in Scala once a phase has retyped the value
 96ee7d7a1f47	catalog(consulted)	reached	JS-E14	liqp/exceptions/LiquidException.java	76	lowering CtBinaryOperator/Expression — consulted 686, fired 3, declarations 0: string concatenation with a NON-`String` left operand
 b031511441bc	catalog(consulted)	reached	JS-E17	liqp/Examples.java	106	lowering CtOperatorAssignment/Either — consulted 7, fired 7, declarations 0: a compound assignment and `++`/`--` evaluate the LVALUE ONCE — its array reference, its index, its target
+9156c9a91c6f	catalog(consulted)	reached	JS-E19	-	0	lowering CtConstructorCall/Expression — consulted 411, fired 0, declarations 0: a BOXING CONSTRUCTOR — `new Double(v)` — is deprecated for removal; the JDK names `valueOf`
 18527a43ff95	catalog(consulted)	reached	JS-G01	<synthetic>	0	lowering-type CtWildcardReference + rendering-type TypeBounds — consulted 506, fired 108, declarations 0: use-site wildcards, with the matching bound grammar
 be14c1c5137c	catalog(consulted)	reached	JS-G03	liqp/filters/Push.java	29	lowering-type CtWildcardReference — consulted 393, fired 10, declarations 0: `? super Object` has exactly one inhabitant
 9f6a25125e31	catalog(consulted)	reached	JS-G04	liqp/filters/where/JekyllWhereImpl.java	149	rendering ForEach — consulted 55, fired 3, declarations 0: a captured wildcard on ITERATION has no nameable type
@@ -1657,6 +1658,7 @@ a3ec5cfa1317	catalog(uncited)	handled	JS-C47	-	0	UNCITED — a qualified `privat
 c3a88d5d57d5	catalog(uncited)	handled	JS-E02	-	0	UNCITED — Scala has no increment operator; `x += 1` has type `Unit` (JLS side: JLS 15.14.2, 15.15.1): postfix/prefix `++`/`--` USED AS A VALUE yields the value before the update — the VALUE only; the operand's single evaluation is JS-E17
 35e8bdb7bea4	catalog(uncited)	handled	JS-E05	-	0	UNCITED — an `if` expression types as the lub of its branches (JLS side: JLS 15.25.2): the conditional operator's type is computed, not the syntactic lub of its branches
 4621dd1cc77f	catalog(uncited)	handled	JS-E14	-	0	UNCITED — `+` on a non-`String` left operand is that type's own `+` (JLS side: JLS 15.18.1): string concatenation with a NON-`String` left operand
+0a8469e3664d	catalog(uncited)	handled	JS-E19	-	0	UNCITED — scalac's `-deprecation` under the reference build's `-Werror` makes each site an error (12 in one port) (JLS side: JDK 9 `@Deprecated(since="9", forRemoval=true)` on every `java.lang` wrapper constructor): a BOXING CONSTRUCTOR — `new Double(v)` — is deprecated for removal; the JDK names `valueOf`
 13ea96c7898b	catalog(uncited)	handled	JS-G01	-	0	UNCITED — `?` with `<:`/`>:` bounds (JLS side: JLS 4.5.1): use-site wildcards, with the matching bound grammar
 cc4aa3708886	catalog(uncited)	handled	JS-G03	-	0	UNCITED — the corresponding Scala bound is not the same set (JLS side: JLS 4.5.1): `? super Object` has exactly one inhabitant
 ce54f52fc24d	catalog(uncited)	handled	JS-G04	-	0	UNCITED — the capture cannot be written, so an alias plus a widening cast is the image (JLS side: JLS 5.1.10, 14.14.2): a captured wildcard on ITERATION has no nameable type
@@ -2135,5 +2137,6 @@ ad15ccb4c50b	unused-symbol(handled)	suppressed	liqp.exceptions.IncompatibleTypeC
 f7d411ae150b	unused-symbol(handled)	suppressed	liqp.exceptions.LiquidException#serialVersionUID	liqp/exceptions/LiquidException.java	10	unused private val — suppressed
 e91b13556e4d	unused-symbol(handled)	suppressed	liqp.exceptions.VariableNotExistException#serialVersionUID	liqp/exceptions/VariableNotExistException.java	4	unused private val — suppressed
 54a6925ad981	unused-symbol(handled)	suppressed	liqp.filters.Sort$SortableMap#serialVersionUID	liqp/filters/Sort.java	133	unused private val — suppressed
+8d3e24c750f6	unused-symbol(handled)	suppressed	liqp.filters.date.Parser$14#<initblock>	liqp/filters/date/Parser.java	31	unused local val — suppressed
 53e053628b7f	unused-symbol(handled)	suppressed	liqp.parser.LiquidSupport$LiquidSerializer#serialVersionUID	liqp/parser/LiquidSupport.java	50	unused private val — suppressed
 f3647505a755	unused-symbol(handled)	suppressed	liqp.spi.BasicTypesSupport$22#serialVersionUID	liqp/spi/BasicTypesSupport.java	30	unused private val — suppressed

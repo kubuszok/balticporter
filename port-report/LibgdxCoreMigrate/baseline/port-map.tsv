@@ -15324,7 +15324,7 @@ member	com.badlogic.gdx.scenes.scene2d.ui.Window#<init>(String,Skin,String,Sge)	
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#<stmt10>	sge.scenes.scene2d.ui.Window#<stmt10>	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	83	d9d9190f8876aa5e	
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#<stmt11>	sge.scenes.scene2d.ui.Window#<stmt11>	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	84	0dd3138258a0d860	
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#<stmt12>	sge.scenes.scene2d.ui.Window#<stmt12>	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	86	d06e11d4efe1f3f9	
-member	com.badlogic.gdx.scenes.scene2d.ui.Window#<stmt13>	sge.scenes.scene2d.ui.Window#<stmt13>	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	92	1853f3b64cde266c	
+member	com.badlogic.gdx.scenes.scene2d.ui.Window#<stmt13>	sge.scenes.scene2d.ui.Window#<stmt13>	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	92	2f70162e91c2712d	
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#<stmt1>	sge.scenes.scene2d.ui.Window#<stmt1>	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	67	716316e60f470a2e	
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#<stmt2>	sge.scenes.scene2d.ui.Window#<stmt2>	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	68	780cf0c39886fa85	
 member	com.badlogic.gdx.scenes.scene2d.ui.Window#<stmt3>	sge.scenes.scene2d.ui.Window#<stmt3>	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Window.java	69	3669a0c18557ba26	

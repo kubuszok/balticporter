@@ -15031,13 +15031,13 @@ sge.scenes.scene2d.ui.WidgetGroup	sge.scenes.scene2d.ui.WidgetGroup#setLayoutEna
 sge.scenes.scene2d.ui.WidgetGroup	sge.scenes.scene2d.ui.WidgetGroup#setLayoutEnabled(boolean)	def	2af75f4c58e9f49a
 sge.scenes.scene2d.ui.WidgetGroup	sge.scenes.scene2d.ui.WidgetGroup#sizeChanged()	def	584317cd32ca34e4
 sge.scenes.scene2d.ui.WidgetGroup	sge.scenes.scene2d.ui.WidgetGroup#validate()	def	c0cce4cf5ca1bb75
-sge.scenes.scene2d.ui.Window	sge.scenes.scene2d.ui.Window	class	b73788b436b47b55
+sge.scenes.scene2d.ui.Window	sge.scenes.scene2d.ui.Window	class	78cce1e2bc0bfa18
 sge.scenes.scene2d.ui.Window	sge.scenes.scene2d.ui.Window#<init>(String,Skin,Sge)	ctor	1b19c083a66fe219
 sge.scenes.scene2d.ui.Window	sge.scenes.scene2d.ui.Window#<init>(String,Skin,String,Sge)	ctor	fc6f4a6ba1269a9d
 sge.scenes.scene2d.ui.Window	sge.scenes.scene2d.ui.Window#<stmt10>	stmt	d9d9190f8876aa5e
 sge.scenes.scene2d.ui.Window	sge.scenes.scene2d.ui.Window#<stmt11>	stmt	0dd3138258a0d860
 sge.scenes.scene2d.ui.Window	sge.scenes.scene2d.ui.Window#<stmt12>	stmt	d06e11d4efe1f3f9
-sge.scenes.scene2d.ui.Window	sge.scenes.scene2d.ui.Window#<stmt13>	stmt	1853f3b64cde266c
+sge.scenes.scene2d.ui.Window	sge.scenes.scene2d.ui.Window#<stmt13>	stmt	2f70162e91c2712d
 sge.scenes.scene2d.ui.Window	sge.scenes.scene2d.ui.Window#<stmt1>	stmt	716316e60f470a2e
 sge.scenes.scene2d.ui.Window	sge.scenes.scene2d.ui.Window#<stmt2>	stmt	780cf0c39886fa85
 sge.scenes.scene2d.ui.Window	sge.scenes.scene2d.ui.Window#<stmt3>	stmt	3669a0c18557ba26
