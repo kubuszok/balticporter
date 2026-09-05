@@ -339,7 +339,8 @@ some pairs.
 `BAYER`, `BAYDIENT` dithers, `analyzeBayer`/`reduceBaydient`/`writeBayerDithered` families); the port
 follows (222 digests, 8 new members), the hand-written `DitherAlgorithmSuite` pins 24 constants now
 (java wins). The lanes reported it as a SUITE REGRESSION because no baseline records the vendored
-commit — instrument card: record `upstreamCommit` per port and print `UPSTREAM MOVED a -> b` first.
+commit — instrument DONE 2026-09-05: `counts.tsv` carries an `upstream` row and `upstream_guard`
+prints `UPSTREAM MOVED a -> b` ahead of every other diff.
 
 `com.github.tommyettinger.anim8 → sge.anim8`, Apache-2.0. Dependent of `sge` (`RuntimeMode.Dependency`,
 compiled with libGDX core's emitted Scala on one invocation). 16 files, 19,594 lines, dominated by

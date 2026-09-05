@@ -100,6 +100,10 @@ never a DEFECT (a residue cited as *measured worse*, a LOSS, a WORK ITEM). The a
   `scalacOptions.txt`, under `baseline/dropin/`.
 - `expected-failures.tsv` is the normally-empty escape hatch; deliberate failures are DERIVED from
   `dropped-types.tsv` (`upstream` TAB `emitted`, `expected#derived` vs `#declared`).
+- `counts.tsv`'s `upstream` row (`<upstreamName>@<sha>`, written by `PortRun` from the run's
+  `Provenance`; no provenance, no row): `upstream_guard` prints `!! UPSTREAM MOVED a -> b` and
+  REPORTS ONLY. anim8's submodule moved to `89e0557` and the lane read `suite REGRESSED 0 -> 2`
+  plus 222 digests: no baseline said which java tree it was taken on (2026-09-05).
 
 ## The JDK, the guards, the dry run
 
@@ -117,6 +121,10 @@ never a DEFECT (a residue cited as *measured worse*, a LOSS, a WORK ITEM). The a
   24 classes an ancestor outside the program; CT7's correction).
 - Migrator and correlate steps run `sbt -batch` — `sbt -client` connected to another worktree's
   server (M5.11).
+- GUARD ORDER, every lane: `show_check_report`, `upstream_guard`, then the compile, then
+  `error_baseline_guard`, then `full_compiles` (js/native/ref, `BP_FULL`), THEN the suite and its
+  `test_outcome_guard`. Run after the suite, `errors-count.{js,native,ref}` were left STALE by the
+  first `exit` and a renamed hand test refused the promotion for the wrong reason (2026-09-05).
 
 ## §5.1 — correlation and attribution
 

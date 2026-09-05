@@ -578,6 +578,7 @@ gdx-measure:
     echo
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    upstream_guard "$REPORT"
     findings_baseline_guard "$REPORT"
     port_map_guard "$REPORT"
 
@@ -596,6 +597,7 @@ gdx-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/gdxmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/gdxmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/gdxmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
+    full_compiles "port-sgeJS/compile" "port-sgeNative/compile" "port-sge-ref/compile" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gdxmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/gdxmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
@@ -607,13 +609,6 @@ gdx-measure:
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
     correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/gdxmeasure.txt --srcmap "$REPORT/run-latest/srcmap.tsv"
-
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-sgeJS/compile" "$REPORT"
-      sbt_xplat_compile native "port-sgeNative/compile" "$REPORT"
-      sbt_ref_compile "port-sge-ref/compile" "$REPORT"
-    fi
 
     headline "$ERRORS" "$REPORT"
 
@@ -651,6 +646,7 @@ gdx-test-measure:
     echo
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    upstream_guard "$REPORT"
     findings_baseline_guard "$REPORT"
     port_map_guard "$REPORT"
 
@@ -689,6 +685,7 @@ gdx-test-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/gdxtestmeasure.txt
     echo "TOTAL ERRORS: $ERRORS"
     error_baseline_guard "$ERRORS" "$REPORT"
+    full_compiles "port-sgeJS/Test/compile" "port-sgeNative/Test/compile" "port-sge-ref/Test/compile" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gdxtestmeasure.txt | sort | uniq -c | sort -rn | head
 
     # -------------------------------------------------------------------------------------------
@@ -719,13 +716,6 @@ gdx-test-measure:
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
     fi
 
-
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-sgeJS/Test/compile" "$REPORT"
-      sbt_xplat_compile native "port-sgeNative/Test/compile" "$REPORT"
-      sbt_ref_compile "port-sge-ref/Test/compile" "$REPORT"
-    fi
 
     headline "$ERRORS" "$REPORT"
 
@@ -762,9 +752,11 @@ ashley-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    upstream_guard "$REPORT"
     findings_baseline_guard "$REPORT"
     port_map_guard "$REPORT"
     show_check_report "$TREPORT"
+    upstream_guard "$TREPORT"
     findings_baseline_guard "$TREPORT"
     port_map_guard "$TREPORT"
 
@@ -797,6 +789,7 @@ ashley-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/ashleymeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/ashleymeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/ashleymeasure.txt))"
     error_baseline_guard "$ERRORS" "$TREPORT"
+    full_compiles "port-sge-ecsJS/compile" "port-sge-ecsNative/compile" "port-sge-ecs-ref/compile" "$TREPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/ashleymeasure.txt | sort | uniq -c | sort -rn | head
 
     if [ "$ERRORS" = "0" ]; then
@@ -820,13 +813,6 @@ ashley-measure:
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
     fi
 
-
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-sge-ecsJS/compile" "$TREPORT"
-      sbt_xplat_compile native "port-sge-ecsNative/compile" "$TREPORT"
-      sbt_ref_compile "port-sge-ecs-ref/compile" "$TREPORT"
-    fi
 
     headline "$ERRORS" "$TREPORT" "$REPORT"
 
@@ -870,6 +856,7 @@ anim8-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    upstream_guard "$REPORT"
     findings_baseline_guard "$REPORT"
     port_map_guard "$REPORT"
 
@@ -904,20 +891,10 @@ anim8-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/anim8measure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/anim8measure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/anim8measure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    # BEFORE the suite: a renamed hand test must not leave these three numbers STALE (promote30).
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-sge-anim8JS/compile" "$REPORT"
-      sbt_xplat_compile native "port-sge-anim8Native/compile" "$REPORT"
-      sbt_ref_compile "port-sge-anim8-ref/compile" "$REPORT"
-    fi
+    full_compiles "port-sge-anim8JS/compile" "port-sge-anim8Native/compile" "port-sge-anim8-ref/compile" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/anim8measure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/anim8measure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
-
-    # Cross-platform compile gates — same source dirs and deps as the JVM compile.
-
-    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -991,9 +968,11 @@ gltf-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    upstream_guard "$REPORT"
     findings_baseline_guard "$REPORT"
     port_map_guard "$REPORT"
     show_check_report "$TREPORT"
+    upstream_guard "$TREPORT"
     findings_baseline_guard "$TREPORT"
     port_map_guard "$TREPORT"
 
@@ -1035,13 +1014,10 @@ gltf-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/gltfmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/gltfmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/gltfmeasure.txt))"
     error_baseline_guard "$ERRORS" "$TREPORT"
+    full_compiles "port-sge-gltfJS/compile" "port-sge-gltfNative/compile" "port-sge-gltf-ref/compile" "$TREPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gltfmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/gltfmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
-
-    # Cross-platform compile gates — same source dirs and deps as the JVM compile.
-
-    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -1073,13 +1049,6 @@ gltf-measure:
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
     fi
 
-
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-sge-gltfJS/compile" "$TREPORT"
-      sbt_xplat_compile native "port-sge-gltfNative/compile" "$TREPORT"
-      sbt_ref_compile "port-sge-gltf-ref/compile" "$TREPORT"
-    fi
 
     headline "$ERRORS" "$TREPORT" "$REPORT"
 
@@ -1127,6 +1096,7 @@ screens-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    upstream_guard "$REPORT"
     findings_baseline_guard "$REPORT"
     port_map_guard "$REPORT"
 
@@ -1165,13 +1135,10 @@ screens-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/screensmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/screensmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/screensmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
+    full_compiles "port-sge-screensJS/compile" "port-sge-screensNative/compile" "port-sge-screens-ref/compile" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/screensmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/screensmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
-
-    # Cross-platform compile gates — same source dirs and deps as the JVM compile.
-
-    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -1198,13 +1165,6 @@ screens-measure:
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
     fi
 
-
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-sge-screensJS/compile" "$REPORT"
-      sbt_xplat_compile native "port-sge-screensNative/compile" "$REPORT"
-      sbt_ref_compile "port-sge-screens-ref/compile" "$REPORT"
-    fi
 
     headline "$ERRORS" "$REPORT"
 
@@ -1247,6 +1207,7 @@ vfx-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    upstream_guard "$REPORT"
     findings_baseline_guard "$REPORT"
     port_map_guard "$REPORT"
 
@@ -1276,13 +1237,10 @@ vfx-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/vfxmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/vfxmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/vfxmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
+    full_compiles "port-sge-vfxJS/compile" "port-sge-vfxNative/compile" "port-sge-vfx-ref/compile" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/vfxmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/vfxmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
-
-    # Cross-platform compile gates — same source dirs and deps as the JVM compile.
-
-    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -1310,13 +1268,6 @@ vfx-measure:
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
     fi
 
-
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-sge-vfxJS/compile" "$REPORT"
-      sbt_xplat_compile native "port-sge-vfxNative/compile" "$REPORT"
-      sbt_ref_compile "port-sge-vfx-ref/compile" "$REPORT"
-    fi
 
     headline "$ERRORS" "$REPORT"
 
@@ -1367,6 +1318,7 @@ ai-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    upstream_guard "$REPORT"
     findings_baseline_guard "$REPORT"
     port_map_guard "$REPORT"
 
@@ -1416,13 +1368,10 @@ ai-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/aimeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/aimeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/aimeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
+    full_compiles "port-sge-aiJS/compile" "port-sge-aiNative/compile" "port-sge-ai-ref/compile" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/aimeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/aimeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
-
-    # Cross-platform compile gates — no deps (ai_deps is empty).
-
-    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
@@ -1435,13 +1384,6 @@ ai-measure:
       --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
       --srcmap "$REPORT/run-latest/srcmap.tsv"
 
-
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-sge-aiJS/compile" "$REPORT"
-      sbt_xplat_compile native "port-sge-aiNative/compile" "$REPORT"
-      sbt_ref_compile "port-sge-ai-ref/compile" "$REPORT"
-    fi
 
     headline "$ERRORS" "$REPORT"
 
@@ -1490,6 +1432,7 @@ ai-test-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    upstream_guard "$REPORT"
     findings_baseline_guard "$REPORT"
     port_map_guard "$REPORT"
 
@@ -1526,11 +1469,8 @@ ai-test-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/aitestmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/aitestmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/aitestmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
+    full_compiles "port-sge-aiJS/Test/compile" "port-sge-aiNative/Test/compile" "port-sge-ai-ref/Test/compile" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/aitestmeasure.txt | sort | uniq -c | sort -rn | head
-
-    # Cross-platform compile gates — same source dirs and deps as the JVM compile.
-
-    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -1550,13 +1490,6 @@ ai-test-measure:
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
     fi
 
-
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-sge-aiJS/Test/compile" "$REPORT"
-      sbt_xplat_compile native "port-sge-aiNative/Test/compile" "$REPORT"
-      sbt_ref_compile "port-sge-ai-ref/Test/compile" "$REPORT"
-    fi
 
     headline "$ERRORS" "$REPORT"
 
@@ -1643,6 +1576,7 @@ ai-diff-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/aidiffmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/aidiffmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/aidiffmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
+    full_compiles "" "" "" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/aidiffmeasure.txt | sort | uniq -c | sort -rn | head
 
     if [ "$ERRORS" != "0" ]; then
@@ -1704,9 +1638,11 @@ sg-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    upstream_guard "$REPORT"
     findings_baseline_guard "$REPORT"
     port_map_guard "$REPORT"
     show_check_report "$TREPORT"
+    upstream_guard "$TREPORT"
     findings_baseline_guard "$TREPORT"
     port_map_guard "$TREPORT"
 
@@ -1742,13 +1678,10 @@ sg-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/sgmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/sgmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/sgmeasure.txt))"
     error_baseline_guard "$ERRORS" "$TREPORT"
+    full_compiles "port-sge-graphsJS/compile" "port-sge-graphsNative/compile" "port-sge-graphs-ref/compile" "$TREPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/sgmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/sgmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
-
-    # Cross-platform compile gates — same source dirs and deps as the JVM compile.
-
-    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
 
     # -------------------------------------------------------------------------------------------
     # RUN them. Compiling a suite measures nothing about behaviour: CLAUDE.md §4.4 lists ten java forms
@@ -1778,13 +1711,6 @@ sg-measure:
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
     fi
 
-
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-sge-graphsJS/compile" "$TREPORT"
-      sbt_xplat_compile native "port-sge-graphsNative/compile" "$TREPORT"
-      sbt_ref_compile "port-sge-graphs-ref/compile" "$TREPORT"
-    fi
 
     headline "$ERRORS" "$TREPORT" "$REPORT"
 
@@ -1829,6 +1755,7 @@ noise4j-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    upstream_guard "$REPORT"
     findings_baseline_guard "$REPORT"
     port_map_guard "$REPORT"
 
@@ -1856,13 +1783,10 @@ noise4j-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/n4jmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/n4jmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/n4jmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
+    full_compiles "port-sge-noiseJS/compile" "port-sge-noiseNative/compile" "port-sge-noise-ref/compile" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/n4jmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/n4jmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
-
-    # Cross-platform compile gates — no deps (n4j_deps is empty).
-
-    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
@@ -1871,13 +1795,6 @@ noise4j-measure:
     correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/n4jmeasure.txt \
       --srcmap "$REPORT/run-latest/srcmap.tsv"
 
-
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-sge-noiseJS/compile" "$REPORT"
-      sbt_xplat_compile native "port-sge-noiseNative/compile" "$REPORT"
-      sbt_ref_compile "port-sge-noise-ref/compile" "$REPORT"
-    fi
 
     headline "$ERRORS" "$REPORT"
 
@@ -1931,6 +1848,7 @@ lls-measure:
     echo
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    upstream_guard "$REPORT"
     findings_baseline_guard "$REPORT"
     port_map_guard "$REPORT"
 
@@ -1963,6 +1881,7 @@ lls-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/llsmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/llsmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/llsmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
+    full_compiles "port-llsJS/compile" "port-llsNative/compile" "port-lls-ref/compile" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/llsmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/llsmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
@@ -2021,13 +1940,6 @@ lls-measure:
       echo "(not running lls's suite: it does not compile — a test that cannot run is not a test that passed)"
     fi
 
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-llsJS/compile" "$REPORT"
-      sbt_xplat_compile native "port-llsNative/compile" "$REPORT"
-      sbt_ref_compile "port-lls-ref/compile" "$REPORT"
-    fi
-
     headline "$ERRORS" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
@@ -2073,6 +1985,7 @@ jbump-measure:
     echo
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    upstream_guard "$REPORT"
     findings_baseline_guard "$REPORT"
     port_map_guard "$REPORT"
 
@@ -2105,13 +2018,10 @@ jbump-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/jbumpmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/jbumpmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/jbumpmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
+    full_compiles "port-sge-jbumpJS/compile" "port-sge-jbumpNative/compile" "port-sge-jbump-ref/compile" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/jbumpmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/jbumpmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
-
-    # Cross-platform compile gates — no deps (jbump_deps is empty).
-
-    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
 
     # -------------------------------------------------------------------------------------------
     # RUN it — differentially, against the upstream Java.
@@ -2178,13 +2088,6 @@ jbump-measure:
       --srcmap "$REPORT/run-latest/srcmap.tsv"
 
 
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-sge-jbumpJS/compile" "$REPORT"
-      sbt_xplat_compile native "port-sge-jbumpNative/compile" "$REPORT"
-      sbt_ref_compile "port-sge-jbump-ref/compile" "$REPORT"
-    fi
-
     headline "$ERRORS" "$REPORT"
 
 
@@ -2224,6 +2127,7 @@ usl-measure:
     echo
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    upstream_guard "$REPORT"
     findings_baseline_guard "$REPORT"
     port_map_guard "$REPORT"
 
@@ -2278,13 +2182,10 @@ usl-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/uslmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/uslmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/uslmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
+    full_compiles "port-sge-visui-uslJS/compile" "port-sge-visui-uslNative/compile" "port-sge-visui-usl-ref/compile" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/uslmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/uslmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
-
-    # Cross-platform compile gates — no deps (usl_deps is empty).
-
-    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
@@ -2413,13 +2314,6 @@ usl-measure:
     fi
 
 
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-sge-visui-uslJS/compile" "$REPORT"
-      sbt_xplat_compile native "port-sge-visui-uslNative/compile" "$REPORT"
-      sbt_ref_compile "port-sge-visui-usl-ref/compile" "$REPORT"
-    fi
-
     headline "$ERRORS" "$REPORT"
 
 
@@ -2469,9 +2363,11 @@ usl-test-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    upstream_guard "$REPORT"
     findings_baseline_guard "$REPORT"
     port_map_guard "$REPORT"
     show_check_report "$TREPORT"
+    upstream_guard "$TREPORT"
     findings_baseline_guard "$TREPORT"
     port_map_guard "$TREPORT"
 
@@ -2510,13 +2406,10 @@ usl-test-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/usltmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/usltmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/usltmeasure.txt))"
     error_baseline_guard "$ERRORS" "$TREPORT"
+    full_compiles "port-sge-visui-uslJS/Test/compile" "port-sge-visui-uslNative/Test/compile" "port-sge-visui-usl-ref/Test/compile" "$TREPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/usltmeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/usltmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
-
-    # Cross-platform compile gates — same source dirs and deps as the JVM compile.
-
-    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -2541,13 +2434,6 @@ usl-test-measure:
       echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
     fi
 
-
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-sge-visui-uslJS/Test/compile" "$TREPORT"
-      sbt_xplat_compile native "port-sge-visui-uslNative/Test/compile" "$TREPORT"
-      sbt_ref_compile "port-sge-visui-usl-ref/Test/compile" "$TREPORT"
-    fi
 
     headline "$ERRORS" "$TREPORT" "$REPORT"
 
@@ -2630,9 +2516,11 @@ liqp-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    upstream_guard "$REPORT"
     findings_baseline_guard "$REPORT"
     port_map_guard "$REPORT"
     show_check_report "$TREPORT"
+    upstream_guard "$TREPORT"
     findings_baseline_guard "$TREPORT"
     port_map_guard "$TREPORT"
 
@@ -2709,6 +2597,7 @@ liqp-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/liqpmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/liqpmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/liqpmeasure.txt))"
     error_baseline_guard "$ERRORS" "$TREPORT"
+    full_compiles "port-ssg-liquidJS/compile" "port-ssg-liquidNative/compile" "port-ssg-liquid-ref/compile" "$TREPORT"
     # …and the SPLIT, from the path scalac printed in each error header. The two source sets are one
     # compile and two walls: the main port's figure is what `PROGRESS.md` §10.5 quotes, and a
     # test-set error is often a cascade of a main-set one. `correlate` below attributes every one of
@@ -2719,11 +2608,6 @@ liqp-measure:
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/liqpmeasure.txt | sort | uniq -c | sort -rn | head -20
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/liqpmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -20
-
-    # Cross-platform compile gates — same deps as the JVM compile, including --jar for the
-    # ANTLR parser classes (scalac on JS/Native type-checks against JVM class files fine).
-
-    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
 
     # -------------------------------------------------------------------------------------------
     # RUN them. Compiling a suite measures nothing about behaviour: CLAUDE.md §4.4 lists the java
@@ -2771,13 +2655,6 @@ liqp-measure:
       echo "   Every CLAUDE.md §4.4 form in this port is UNMEASURED until that line stops printing."
     fi
 
-
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-ssg-liquidJS/compile" "$TREPORT"
-      sbt_xplat_compile native "port-ssg-liquidNative/compile" "$TREPORT"
-      sbt_ref_compile "port-ssg-liquid-ref/compile" "$TREPORT"
-    fi
 
     headline "$ERRORS" "$TREPORT" "$REPORT"
 
@@ -2855,6 +2732,7 @@ md-measure:
     echo
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    upstream_guard "$REPORT"
     findings_baseline_guard "$REPORT"
     port_map_guard "$REPORT"
 
@@ -2892,13 +2770,10 @@ md-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/mdmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/mdmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/mdmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
+    full_compiles "port-ssg-mdJS/compile" "port-ssg-mdNative/compile" "port-ssg-md-ref/compile" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/mdmeasure.txt | sort | uniq -c | sort -rn | head -20
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/mdmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -20
-
-    # Cross-platform compile gates — same deps as the JVM compile.
-
-    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
@@ -2907,13 +2782,6 @@ md-measure:
     correlate "$REPORT/run-latest" --scalac "$MEASURE_TMP"/mdmeasure.txt \
       --srcmap "$REPORT/run-latest/srcmap.tsv"
 
-
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-ssg-mdJS/compile" "$REPORT"
-      sbt_xplat_compile native "port-ssg-mdNative/compile" "$REPORT"
-      sbt_ref_compile "port-ssg-md-ref/compile" "$REPORT"
-    fi
 
     headline "$ERRORS" "$REPORT"
 
@@ -2976,6 +2844,7 @@ md-test-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$TREPORT"
+    upstream_guard "$TREPORT"
     findings_baseline_guard "$TREPORT"
     port_map_guard "$TREPORT"
 
@@ -3009,6 +2878,7 @@ md-test-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/mdtestmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/mdtestmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/mdtestmeasure.txt))"
     error_baseline_guard "$ERRORS" "$TREPORT"
+    full_compiles "port-ssg-mdJS/Test/compile" "port-ssg-mdNative/Test/compile" "port-ssg-md-ref/Test/compile" "$TREPORT"
     # …and the SPLIT, from the path scalac printed in each error header. `md-measure`'s figure is
     # what PROGRESS.md §10.6.3 quotes, and a test-set error is often a cascade of a main-set one.
     E_MAIN=$(grep -E '^-- (\[E[0-9]+\] )?.*Error' "$MEASURE_TMP"/mdtestmeasure.txt | grep -c "/src_managed/main/")
@@ -3017,10 +2887,6 @@ md-test-measure:
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/mdtestmeasure.txt | sort | uniq -c | sort -rn | head -20
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/mdtestmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -20
-
-    # Cross-platform compile gates — same deps as the JVM compile, no --resource-dir.
-
-    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -3055,13 +2921,6 @@ md-test-measure:
       echo "   Every CLAUDE.md §4.4 form in this port is UNMEASURED until that line stops printing."
     fi
 
-
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-ssg-mdJS/Test/compile" "$TREPORT"
-      sbt_xplat_compile native "port-ssg-mdNative/Test/compile" "$TREPORT"
-      sbt_ref_compile "port-ssg-md-ref/Test/compile" "$TREPORT"
-    fi
 
     headline "$ERRORS" "$TREPORT"
 
@@ -3206,6 +3065,7 @@ md-ext-measure:
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     for R in "$EREPORT" "$ETREPORT"; do
       show_check_report "$R"
+      upstream_guard "$R"
       findings_baseline_guard "$R"
       port_map_guard "$R"
       echo
@@ -3257,14 +3117,9 @@ md-ext-measure:
     ERRORS=$SBT_ERRORS
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/mdextmeasure.txt
 
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-ssg-md-extJS/compile" "$EREPORT"
-      sbt_xplat_compile native "port-ssg-md-extNative/compile" "$EREPORT"
-      sbt_ref_compile "port-ssg-md-ext-ref/compile" "$EREPORT"
-    fi
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/mdextmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/mdextmeasure.txt))"
     error_baseline_guard "$ERRORS" "$EREPORT"
+    full_compiles "port-ssg-md-extJS/compile" "port-ssg-md-extNative/compile" "port-ssg-md-ext-ref/compile" "$EREPORT"
     # …and the SPLIT, from the path scalac printed in each error header. `md-measure`'s figure is what
     # `PROGRESS.md` §10.6.3 quotes and it must not absorb an extension's error, nor the reverse: an
     # extension error is THIS port's wall and a base error is a regression `md-measure` already failed
@@ -3276,10 +3131,6 @@ md-ext-measure:
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/mdextmeasure.txt | sort | uniq -c | sort -rn | head -20
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/mdextmeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head -20
-
-    # Cross-platform compile gates — same deps as the JVM compile.
-
-    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
 
     if [ "$ERRORS" = "0" ]; then
       echo
@@ -3358,6 +3209,7 @@ textra-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    upstream_guard "$REPORT"
     findings_baseline_guard "$REPORT"
     port_map_guard "$REPORT"
 
@@ -3449,13 +3301,10 @@ textra-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/textrameasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/textrameasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/textrameasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
+    full_compiles "port-sge-textraJS/compile" "port-sge-textraNative/compile" "port-sge-textra-ref/compile" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/textrameasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/textrameasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
-
-    # Cross-platform compile gates — same deps as the JVM compile (textra_deps + declared).
-
-    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
@@ -3468,13 +3317,6 @@ textra-measure:
       --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
       --srcmap "$REPORT/run-latest/srcmap.tsv"
 
-
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-sge-textraJS/compile" "$REPORT"
-      sbt_xplat_compile native "port-sge-textraNative/compile" "$REPORT"
-      sbt_ref_compile "port-sge-textra-ref/compile" "$REPORT"
-    fi
 
     headline "$ERRORS" "$REPORT"
 
@@ -3558,6 +3400,7 @@ textra-diff-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/textradiffmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/textradiffmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/textradiffmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
+    full_compiles "" "" "" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/textradiffmeasure.txt | sort | uniq -c | sort -rn | head
 
     if [ "$ERRORS" != "0" ]; then
@@ -3621,6 +3464,7 @@ visui-measure:
 
     echo "-- checks: persisted, untruncated, diffed against the baseline --"
     show_check_report "$REPORT"
+    upstream_guard "$REPORT"
     findings_baseline_guard "$REPORT"
     port_map_guard "$REPORT"
 
@@ -3764,13 +3608,10 @@ visui-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/visuimeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/visuimeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/visuimeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
+    full_compiles "port-sge-visuiJS/compile" "port-sge-visuiNative/compile" "port-sge-visui-ref/compile" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/visuimeasure.txt | sort | uniq -c | sort -rn | head
     echo "-- bare (uncoded) errors by message --"
     grep -A1 '^-- Error:' "$MEASURE_TMP"/visuimeasure.txt | grep -vE '^-- Error:|^--$' | sed -E 's/^[0-9]+ \|//; s/[0-9]+//g' | sed -E 's/^ +//' | sort | uniq -c | sort -rn | head
-
-    # Cross-platform compile gates — same deps as the JVM compile (visui_deps + declared).
-
-    # Reference-flags compile (DESIGN.md §8.24): the reference build's own scalacOptions.
 
     echo
     echo "-- correlation: every error located to its member and its Java origin --"
@@ -3783,13 +3624,6 @@ visui-measure:
       --srcmap "$ROOT/port-report/LibgdxCoreMigrate/run-latest/srcmap.tsv" \
       --srcmap "$REPORT/run-latest/srcmap.tsv"
 
-
-    # FULL MODE: JS, Native and reference-flags compiles — deferred to `-measure-full` via BP_FULL.
-    if [ "${BP_FULL:-0}" = "1" ]; then
-      sbt_xplat_compile js "port-sge-visuiJS/compile" "$REPORT"
-      sbt_xplat_compile native "port-sge-visuiNative/compile" "$REPORT"
-      sbt_ref_compile "port-sge-visui-ref/compile" "$REPORT"
-    fi
 
     headline "$ERRORS" "$REPORT"
 
@@ -3902,6 +3736,7 @@ visui-diff-measure:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/visuidiffmeasure.txt
     echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/visuidiffmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/visuidiffmeasure.txt))"
     error_baseline_guard "$ERRORS" "$REPORT"
+    full_compiles "" "" "" "$REPORT"
     grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/visuidiffmeasure.txt | sort | uniq -c | sort -rn | head
 
     if [ "$ERRORS" != "0" ]; then
@@ -4818,6 +4653,50 @@ lane-selfcheck:
     port_map_guard "$T/pm" > /dev/null 2>&1
     ( headline 0 "$T/pm" ) > /dev/null 2>&1
     want "a STALE port-map marker is cleared by the next guard" "$?" "0"
+
+    echo "-- upstream_guard --"
+    # `counts.tsv`'s one non-check row. A moved vendored submodule reached the lanes as a suite
+    # regression and 222 moved digests, with no baseline recording which java tree was measured.
+    mkdir -p "$T/up/baseline" "$T/up/run-latest"
+    ucounts() { printf '#check\tcount\nsignature\t0\nupstream\t%s\n' "$1"; }
+    ucounts 'anim8-gdx@aaaa111' > "$T/up/baseline/counts.tsv"
+    ucounts 'anim8-gdx@aaaa111' > "$T/up/run-latest/counts.tsv"
+    out=$(upstream_guard "$T/up" 2>&1); rc=$?
+    want "an UNCHANGED upstream row is exit 0"          "$rc" "0"
+    case "$out" in *"upstream: anim8-gdx@aaaa111"*"unchanged"*) ok "…and prints the pin it held to" ;; *) bad "…prints the pin: $out" ;; esac
+
+    ucounts 'anim8-gdx@bbbb222' > "$T/up/run-latest/counts.tsv"
+    out=$(upstream_guard "$T/up" 2>&1); rc=$?
+    want "a MOVED upstream row still exits 0 — it reports, it does not decide" "$rc" "0"
+    case "$out" in *"!! UPSTREAM MOVED anim8-gdx@aaaa111 -> anim8-gdx@bbbb222"*) ok "…and names both pins" ;; *) bad "…names both pins: $out" ;; esac
+    case "$out" in *"different java tree"*) ok "…and says every number below is against another tree" ;; *) bad "…says so: $out" ;; esac
+    case "$out" in *"commit subject"*) ok "…and says to accept as a whole with the line" ;; *) bad "…says so: $out" ;; esac
+
+    # the FIRST run after the row exists: a baseline with no row is not a move.
+    printf '#check\tcount\nsignature\t0\n' > "$T/up/baseline/counts.tsv"
+    out=$(upstream_guard "$T/up" 2>&1); rc=$?
+    want "a baseline with NO upstream row is not a move" "$rc" "0"
+    case "$out" in *"no baseline row yet"*) ok "…and says the row is new" ;; *) bad "…says so: $out" ;; esac
+
+    # a port whose run records nothing (no provenance) is silent, not a failure.
+    printf '#check\tcount\nsignature\t0\n' > "$T/up/run-latest/counts.tsv"
+    out=$(upstream_guard "$T/up" 2>&1); rc=$?
+    want "a run with NO upstream row is silent"          "$rc" "0"
+    want "…and prints nothing"                          "$out" ""
+
+    echo "-- full_compiles --"
+    # The three platform compiles must run for every lane and only under BP_FULL; an empty task is
+    # a lane with no project for that platform, never a silent skip of one that has one.
+    sbt_xplat_compile() { echo "xplat $1 $2 $3"; }
+    sbt_ref_compile()   { echo "ref $1 $2"; }
+    out=$(BP_FULL=0 full_compiles a b c "$T/fc" 2>&1); rc=$?
+    want "BP_FULL unset runs nothing, exit 0"           "$rc$out" "0"
+    out=$(BP_FULL=1 full_compiles a b c "$T/fc" 2>&1 | tr '\n' '|')
+    want "BP_FULL=1 runs all three, in order"           "$out" "xplat js a $T/fc|xplat native b $T/fc|ref c $T/fc|"
+    out=$(BP_FULL=1 full_compiles "" "" "" "$T/fc" 2>&1); rc=$?
+    want "a lane with no platform projects is a no-op, exit 0" "$rc$out" "0"
+    out=$(BP_FULL=1 full_compiles a "" c "$T/fc" 2>&1 | tr '\n' '|')
+    want "an empty task skips ONLY that platform"       "$out" "xplat js a $T/fc|ref c $T/fc|"
 
     echo
     [ "$fail" = "0" ] && echo "lane-selfcheck: PASS" || { echo "lane-selfcheck: FAILED"; exit 1; }

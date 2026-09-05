@@ -336,6 +336,7 @@ operator. details: `.claude/rules/emitter.md`
   `port-map.tsv`, the drop-in lane. **Fewer errors fails as loudly as more.**
 - **The JDK is an input to the measurement** (`jdk_guard`); read `overrides nothing` as a JDK
   mismatch first; never move `jdk_version` to fix one (M5.10).
+- **So is the JAVA TREE**: `counts.tsv`'s `upstream` row, `upstream_guard` ahead of every diff.
 - **Widening a guard is measured on the ports it was not aimed at**; a narrowing is not exempt (G21).
   **Change one thing, then measure.** A DRY RUN of one phase is not a pipeline measurement. Record
   regressions under "Do NOT retry"; `before->after` in the commit subject.

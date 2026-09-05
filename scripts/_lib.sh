@@ -918,6 +918,34 @@ show_check_report() {
   echo "  full, untruncated findings: $dir/run-latest/findings.tsv"
 }
 
+# upstream_guard <report-dir>
+#
+# WHICH JAVA TREE THIS RUN MEASURED — `counts.tsv`'s one non-check row, written by the run from its
+# own `Provenance` (CLAUDE.md §5). A moved vendored submodule otherwise arrives as a suite
+# regression and 222 moved digests with no artifact naming the cause (anim8, 2026-09-05). REPORTS
+# ONLY: the other guards decide the lane, and this line is what makes their verdict readable.
+# A run that records no row (no provenance) is silent, and so is a port with no baseline row yet.
+upstream_guard() {
+  local dir="$1"
+  local base="$dir/baseline/counts.tsv" run="$dir/run-latest/counts.tsv"
+  local b r
+  [ -f "$run" ] || return 0
+  r=$(grep -m1 $'^upstream\t' "$run" | cut -f2-)
+  [ -n "$r" ] || return 0
+  b=""
+  [ -f "$base" ] && b=$(grep -m1 $'^upstream\t' "$base" | cut -f2-)
+  if [ -z "$b" ]; then
+    echo "  upstream: $r  (no baseline row yet — promoted with the rest by baseline-accept)"
+    return 0
+  fi
+  if [ "$b" = "$r" ]; then
+    echo "  upstream: $r  (unchanged)"
+    return 0
+  fi
+  echo "!! UPSTREAM MOVED $b -> $r — every number below is measured against a different java tree; accept as a whole with this line in the commit subject"
+  return 0
+}
+
 # findings_baseline_guard <report-dir>
 #
 # THE FIFTH BASELINE, and the one `just baseline-accept` promoted while NOTHING compared it.
@@ -1585,4 +1613,19 @@ sbt_ref_compile() {
     echo "!! ref ERRORS FELL — $expected -> $errors. Acknowledge: just baseline-accept <port>"
   fi
   : > "$marker"; return 1
+}
+
+# full_compiles <js-task> <native-task> <ref-task> <report-dir>
+#
+# The BP_FULL platform compiles, in ONE place so every lane calls them immediately after
+# `error_baseline_guard` — ahead of the suite and the findings/port-map guards. Run after the suite
+# they were left STALE by any earlier `exit`, and a renamed hand test then refused the promotion for
+# the wrong reason (2026-09-05). An empty task skips that platform; no-op unless BP_FULL=1.
+full_compiles() {
+  local js="$1" native="$2" ref="$3" dir="$4"
+  [ "${BP_FULL:-0}" = "1" ] || return 0
+  [ -n "$js" ]     && sbt_xplat_compile js "$js" "$dir"
+  [ -n "$native" ] && sbt_xplat_compile native "$native" "$dir"
+  [ -n "$ref" ]    && sbt_ref_compile "$ref" "$dir"
+  return 0
 }

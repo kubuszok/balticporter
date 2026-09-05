@@ -140,7 +140,24 @@ object CheckReport:
   /** what has been recorded so far — for a caller that wants the numbers in-process. */
   def snapshot(): Map[String, List[Finding]] = synchronized(recorded.toMap)
 
-  def reset(): Unit = synchronized(recorded.clear())
+  def reset(): Unit = synchronized { recorded.clear(); upstream = scala.None }
+
+  /** `counts.tsv`'s one NON-CHECK row: which java tree this run measured (CLAUDE.md §5). A moved
+    * vendored submodule otherwise reads as a suite regression with no artifact naming the cause.
+    * Never a check — [[baselineChecks]] skips the key, so the diff can never call it NOT-RUN. */
+  val UpstreamKey = "upstream"
+
+  private var upstream: Option[String] = scala.None
+
+  /** Record this run's upstream pin. A run with no provenance records nothing and writes no row. */
+  def recordUpstream(name: String, commit: String): Unit =
+    synchronized { upstream = Some(upstreamRow(name, commit)) }
+
+  /** `<name>@<sha>` — the sha as `VendoredCommit` spells it, or the whole pin where it has no `@`. */
+  def upstreamRow(name: String, commit: String): String =
+    val at  = commit.indexOf('@')
+    val sha = if at < 0 then commit.trim else commit.substring(at + 1).takeWhile(!_.isWhitespace)
+    s"${clean(name)}@${clean(sha)}"
 
   // ---------------------------------------------------------------------------
   // writing
@@ -157,8 +174,10 @@ object CheckReport:
     Files.writeString(dir.resolve(".gitignore"), "run-latest/\n")
     val all = assignSeq(findings.flatMap(_._2).sortBy(f => (f.check, f.kind, f.owner, f.path, f.line, f.detail)))
     Files.writeString(out.resolve("findings.tsv"), (Header :: all.map(_.tsv)).mkString("", "\n", "\n"))
+    val upstreamRows = synchronized(upstream).map(u => s"$UpstreamKey\t$u").toList
     Files.writeString(out.resolve("counts.tsv"),
-      ("#check\tcount" :: findings.map((c, fs) => s"$c\t${fs.size}").sorted).mkString("", "\n", "\n"))
+      ("#check\tcount" :: findings.map((c, fs) => s"$c\t${fs.size}").sorted ++ upstreamRows)
+        .mkString("", "\n", "\n"))
     Files.writeString(out.resolve("report.md"), reportMd(findings))
     // WHICH JVM THIS RUN RAN ON — the input to the emitted text that no artifact named until a
     // migration on JDK 24 emitted an `override` the JDK-22 compile rejected (`JvmInfo`'s scaladoc
@@ -176,7 +195,8 @@ object CheckReport:
     val c = b.resolve("counts.tsv")
     if !Files.isRegularFile(c) then Set.empty
     else Files.readAllLines(c).toArray(Array.empty[String]).toList
-      .filterNot(_.startsWith("#")).flatMap(_.split('\t').headOption).filter(_.nonEmpty).toSet
+      .filterNot(_.startsWith("#")).flatMap(_.split('\t').headOption)
+      .filter(k => k.nonEmpty && k != UpstreamKey).toSet
 
   /** The operator document. NOT diffed and NOT committed as a baseline — it may contain anything
     * a human finds useful, including the path root the run used, which the tsv deliberately

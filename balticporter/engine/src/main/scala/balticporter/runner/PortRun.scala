@@ -142,6 +142,9 @@ final case class PortRun(
 
     anchorReportPaths()
 
+    // WHICH JAVA TREE this run measured — `counts.tsv`'s one non-check row (CLAUDE.md §5).
+    provenance.foreach(p => CheckReport.recordUpstream(p.upstreamName, p.upstreamCommit))
+
     // ---- Surface gate: unresolvable phase divergence stops the run before the pipeline ----
     // ENGINE-LIMITS CT9
     val surfaceStop = ManifestAgreement.surfaceGate(manifest, basePorts)
