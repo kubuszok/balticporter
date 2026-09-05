@@ -551,6 +551,10 @@ final class ClassToTraitTransform(
       case t: Term      => headSymOf(t.tpe)
     }.collectFirst { case s if resolved.contains(s) => resolved(s) }
 
+  /** Strip a constructor's `super(args)` arguments, preserving the block's `expr`.
+    * `CtorFunnel.stmtsOf` reads only `Block.stats`, so a statement sitting in `expr` is invisible
+    * to every downstream consumer. The block is rebuilt with its ORIGINAL `expr` preserved and all
+    * real statements in `stats`. ENGINE-LIMITS CT13. */
   private def stripSuperArgs(d: Tree.DefDef)(using program: Program): Tree.DefDef =
     val stmts = CtorFunnel.stmtsOf(d)
     CtorFunnel.headStmt(d) match
@@ -563,12 +567,23 @@ final class ClassToTraitTransform(
           case _ => return d
         val newStmts = newHead :: stmts.tail
         val trailing = CtorFunnel.trailingOf(d)
-        val newBody: Term = newStmts match
-          case List(single: Term) if trailing.isEmpty => single
-          case _ =>
-            val last = newStmts.last match { case t: Term => t; case _ => return d }
-            Tree.Block(newStmts.init.collect { case s: Statement => s }, last,
+        // The original block's expr (typically a Unit literal) must remain as the expr so that
+        // statements in newStmts stay in `stats` where `CtorFunnel.stmtsOf` can find them.
+        val origExpr: Option[Term] = d.rhs.map {
+          case c: Tree.Commented => Tree.uncomment(c); case t => t
+        }.collect { case b: Tree.Block => b.expr }
+        val newBody: Term = origExpr match
+          case Some(e) =>
+            Tree.Block(newStmts.collect { case s: Statement => s }, e,
                        d.rhs.map(_.tpe).getOrElse(TypeRepr.NoType), d.origin, trailing)
+          case None =>
+            // Body was not a Block (single-statement constructor): the rewritten head is the body.
+            newStmts match
+              case List(single: Term) if trailing.isEmpty => single
+              case _ =>
+                val last = newStmts.last match { case t: Term => t; case _ => return d }
+                Tree.Block(newStmts.init.collect { case s: Statement => s }, last,
+                           d.rhs.map(_.tpe).getOrElse(TypeRepr.NoType), d.origin, trailing)
         d.copy(rhs = Some(newBody))
       case _ => d
 
