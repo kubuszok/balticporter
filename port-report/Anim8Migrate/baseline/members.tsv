@@ -273,7 +273,7 @@ sge.anim8.OtherMath	sge.anim8.OtherMath$BiasGain#<stmt2>	stmt	39efa5f70536897a
 sge.anim8.OtherMath	sge.anim8.OtherMath$BiasGain#apply(float)	def	b8f9adeed3c9c443
 sge.anim8.OtherMath	sge.anim8.OtherMath$BiasGain#shape	val	54cb9ca8d174b217
 sge.anim8.OtherMath	sge.anim8.OtherMath$BiasGain#turning	val	daaf5503f030e249
-sge.anim8.PNG8	sge.anim8.PNG8	class	47511e3d379874b5
+sge.anim8.PNG8	sge.anim8.PNG8	class	f6cf01975c4b369a
 sge.anim8.PNG8	sge.anim8.PNG8#<init>(Sge)	ctor	f11c075fd722b596
 sge.anim8.PNG8	sge.anim8.PNG8#<stmt1>	stmt	75d72649c1a9f8e4
 sge.anim8.PNG8	sge.anim8.PNG8#<stmt2>	stmt	892718451a90edbd
@@ -313,7 +313,7 @@ sge.anim8.PNG8	sge.anim8.PNG8#hueShift(FileHandle,FileHandle,float)	def	79e3e97d
 sge.anim8.PNG8	sge.anim8.PNG8#palette	val	2867253b35e476ca
 sge.anim8.PNG8	sge.anim8.PNG8#palette()	def	e1a5cda95e1c721e
 sge.anim8.PNG8	sge.anim8.PNG8#palette_=(PaletteReducer)	def	1644998e0d6d9614
-sge.anim8.PNG8	sge.anim8.PNG8#readChunks(InputStream)	def	3416f47c2835b3eb
+sge.anim8.PNG8	sge.anim8.PNG8#readChunks(InputStream)	def	b4ed9360ae07ad37
 sge.anim8.PNG8	sge.anim8.PNG8#setCompression(int)	def	8c44ce81e876691b
 sge.anim8.PNG8	sge.anim8.PNG8#setFlipY(boolean)	def	7cfd5a6a97b9974d
 sge.anim8.PNG8	sge.anim8.PNG8#swapPalette(FileHandle,FileHandle,Array<int>)	def	5efcfb10280aaf3a
@@ -386,7 +386,7 @@ sge.anim8.PNG8	sge.anim8.PNG8#writeWrenDithered(OutputStream,DynamicArray<Pixmap
 sge.anim8.PNG8	sge.anim8.PNG8#writeWrenDithered(OutputStream,Pixmap)	def	700a51a23da87e1a
 sge.anim8.PNG8	sge.anim8.PNG8#writeWrenOriginalDithered(OutputStream,DynamicArray<Pixmap>,int)	def	ec557066de971bda
 sge.anim8.PNG8	sge.anim8.PNG8#writeWrenOriginalDithered(OutputStream,Pixmap)	def	588a7ffb8c15579b
-sge.anim8.PaletteReducer	sge.anim8.PaletteReducer	class	52613221af031a56
+sge.anim8.PaletteReducer	sge.anim8.PaletteReducer	class	02b34192540022a7
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#<clinit>	init	2831a506ec02c547
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#<clinit>	init	1d1b740e808cf3cb
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#<init>(Array<Color>,Sge)	ctor	2e1bfbfa5ed145c3
@@ -431,7 +431,7 @@ sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#analyzeHueWise(DynamicArray<Pi
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#analyzeHueWise(DynamicArray<Pixmap>,double)	def	5d438c87ea830375
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#analyzeHueWise(DynamicArray<Pixmap>,double,int)	def	330bbb0e46730450
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#analyzeHueWise(Pixmap,double,int)	def	37eee94ecfb9e170
-sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#analyzeMC(Pixmap,int)	def	52d3d6659d1987c2
+sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#analyzeMC(Pixmap,int)	def	1ac579df26b378ab
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#analyzeReductive(Array<Pixmap>,int,double,int)	def	0a0614aece077ca6
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#analyzeReductive(DynamicArray<Pixmap>)	def	9ff10eba9c9a13e3
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#analyzeReductive(DynamicArray<Pixmap>,double)	def	71fba3ddf5081b31
@@ -468,7 +468,7 @@ sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#entryComparator	val	c7ce14373b
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#exact(Array<Color>)	def	d92f1251f033dd7a
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#exact(Array<Color>,int)	def	22cbcda7b4cf227b
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#exact(Array<int>)	def	fa7290ac195d1677
-sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#exact(Array<int>,Array<byte>)	def	44784274053784cb
+sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#exact(Array<int>,Array<byte>)	def	4ec64aab2f024f17
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#exact(Array<int>,int)	def	054c7f92a5237b93
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#forwardLight(float)	def	ecf69c6330a59b4b
 sge.anim8.PaletteReducer	sge.anim8.PaletteReducer#fromLinearLUT	val	e074b9c5711a2cc3

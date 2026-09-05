@@ -8,7 +8,7 @@ api-parity(mutability)	372
 api-parity(null-model)	518
 api-parity(opaque)	13
 api-parity(operator)	0
-api-parity(port-extra)	1386
+api-parity(port-extra)	1384
 api-parity(rename)	0
 api-parity(signature)	2131
 api-parity(static-placement)	323
@@ -17,8 +17,8 @@ api-parity(visibility)	204
 base-surface	0
 break-catch	0
 cast-conversion	0
-catalog(consulted)	101
-catalog(uncited)	123
+catalog(consulted)	102
+catalog(uncited)	124
 catalog(undischarged)	5
 catalog(unmechanised)	1
 catalog(unreached)	13
@@ -56,5 +56,5 @@ trivia	0
 trivia(deliberate)	0
 trivia(recovered)	7
 try-resource	0
-unused-symbol(handled)	104
+unused-symbol(handled)	101
 unused-symbol(refused)	0

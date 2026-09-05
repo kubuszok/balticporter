@@ -133,9 +133,9 @@ sge.ecs.EntityManagerTests	sge.ecs.EntityManagerTests$EntityListenerMock#addedCo
 sge.ecs.EntityManagerTests	sge.ecs.EntityManagerTests$EntityListenerMock#entityAdded(Entity)	def	13081dfe40a8e00b
 sge.ecs.EntityManagerTests	sge.ecs.EntityManagerTests$EntityListenerMock#entityRemoved(Entity)	def	1a299647fc4a6254
 sge.ecs.EntityManagerTests	sge.ecs.EntityManagerTests$EntityListenerMock#removedCount	val	e89ea56a812caddd
-sge.ecs.EntityTests	sge.ecs.EntityTests	class	75ac6b2eb6913088
+sge.ecs.EntityTests	sge.ecs.EntityTests	class	61c7880ea0bc43d8
 sge.ecs.EntityTests	sge.ecs.EntityTests#<stmt1>	stmt	66edd21f42c80390
-sge.ecs.EntityTests	sge.ecs.EntityTests#<stmt2>	stmt	65b57848396d1ce3
+sge.ecs.EntityTests	sge.ecs.EntityTests#<stmt2>	stmt	3f816c615919c7de
 sge.ecs.EntityTests	sge.ecs.EntityTests#<stmt3>	stmt	82747df2097645cd
 sge.ecs.EntityTests	sge.ecs.EntityTests#<stmt4>	stmt	407011b1a8bdc823
 sge.ecs.EntityTests	sge.ecs.EntityTests#<stmt5>	stmt	595220d286068043

@@ -8,7 +8,7 @@ api-parity(mutability)	25
 api-parity(null-model)	120
 api-parity(opaque)	56
 api-parity(operator)	0
-api-parity(port-extra)	901
+api-parity(port-extra)	902
 api-parity(rename)	0
 api-parity(signature)	243
 api-parity(static-placement)	58
@@ -17,8 +17,8 @@ api-parity(visibility)	149
 base-surface	20
 break-catch	0
 cast-conversion	0
-catalog(consulted)	103
-catalog(uncited)	123
+catalog(consulted)	104
+catalog(uncited)	124
 catalog(undischarged)	4
 catalog(unmechanised)	1
 catalog(unreached)	11
@@ -40,7 +40,7 @@ jdk-surface	3
 manifest	0
 markers	0
 nullability-boundary	2
-omissions	53
+omissions	47
 opaque-boundary	0
 overload-risk	289
 policy	2

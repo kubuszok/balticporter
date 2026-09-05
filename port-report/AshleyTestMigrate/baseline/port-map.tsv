@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-ecs-test	engine=balticporter/0.1.0-SNAPSHOT	sources=4763fb93c6d8686a	files=18	policy=c1b9c54f0683962f	jdk=22
+# balticporter port map	schema=4	module=sge-ecs-test	engine=balticporter/0.1.0-SNAPSHOT	sources=4763fb93c6d8686a	files=18	policy=b8201b24569b0ab8	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.ashley.core.ComponentOperationHandlerTests	sge.ecs.ComponentOperationHandlerTests	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=BooleanInformerMock,ComponentSpy
 type	sge.ecs.ComponentOperationHandlerTests$BooleanInformerMock	sge.ecs.ComponentOperationHandlerTests$BooleanInformerMock	Ported	-		0		form=class parents=sge.ecs.ComponentOperationHandler$BooleanInformer primary=() primaryKind=unique-root primaryVis=private[ComponentOperationHandlerTests]
@@ -249,7 +249,7 @@ member	com.badlogic.ashley.core.EntityManagerTests$EntityListenerMock#entityAdde
 member	com.badlogic.ashley.core.EntityManagerTests$EntityListenerMock#entityRemoved(Entity)	sge.ecs.EntityManagerTests$EntityListenerMock#entityRemoved(Entity)	Renamed	-	com/badlogic/ashley/core/EntityManagerTests.java	24	1a299647fc4a6254	
 member	com.badlogic.ashley.core.EntityManagerTests$EntityListenerMock#removedCount	sge.ecs.EntityManagerTests$EntityListenerMock#removedCount	Renamed	-	com/badlogic/ashley/core/EntityManagerTests.java	15	e89ea56a812caddd	
 member	com.badlogic.ashley.core.EntityTests#<stmt1>	sge.ecs.EntityTests#<stmt1>	Renamed	-	com/badlogic/ashley/core/EntityTests.java	56	66edd21f42c80390	
-member	com.badlogic.ashley.core.EntityTests#<stmt2>	sge.ecs.EntityTests#<stmt2>	Renamed	-	com/badlogic/ashley/core/EntityTests.java	68	65b57848396d1ce3	
+member	com.badlogic.ashley.core.EntityTests#<stmt2>	sge.ecs.EntityTests#<stmt2>	Renamed	-	com/badlogic/ashley/core/EntityTests.java	68	3f816c615919c7de	
 member	com.badlogic.ashley.core.EntityTests#<stmt3>	sge.ecs.EntityTests#<stmt3>	Renamed	-	com/badlogic/ashley/core/EntityTests.java	74	82747df2097645cd	
 member	com.badlogic.ashley.core.EntityTests#<stmt4>	sge.ecs.EntityTests#<stmt4>	Renamed	-	com/badlogic/ashley/core/EntityTests.java	86	407011b1a8bdc823	
 member	com.badlogic.ashley.core.EntityTests#<stmt5>	sge.ecs.EntityTests#<stmt5>	Renamed	-	com/badlogic/ashley/core/EntityTests.java	120	595220d286068043	

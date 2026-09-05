@@ -1,11 +1,106 @@
 #suite	test	status
+sge.ai.DefaultTimepieceSuite	custom maxDeltaTime via constructor	pass
+sge.ai.DefaultTimepieceSuite	default maxDeltaTime is Float.PositiveInfinity	pass
+sge.ai.DefaultTimepieceSuite	delta time equals maxDeltaTime when exactly at limit	pass
+sge.ai.DefaultTimepieceSuite	delta time is NOT clamped when below maxDeltaTime	pass
+sge.ai.DefaultTimepieceSuite	delta time is clamped when exceeding maxDeltaTime	pass
+sge.ai.DefaultTimepieceSuite	initial time and deltaTime are zero	pass
+sge.ai.DefaultTimepieceSuite	time accumulates normally without clamping	pass
+sge.ai.DefaultTimepieceSuite	time accumulates with clamped delta, not raw delta	pass
+sge.ai.btree.BehaviorTreeRemoveByRefIss842RedSuite	ISS-842: removeListener unregisters the SPECIFIC instance by identity, leaving a value-equal sibling registered	pass
+sge.ai.btree.TaskSuite	LeafTask addChild throws	pass
+sge.ai.btree.TaskSuite	LeafTask getChild throws	pass
+sge.ai.btree.TaskSuite	LeafTask getChildCount is 0	pass
+sge.ai.btree.TaskSuite	Status enum has exactly 5 values	pass
+sge.ai.btree.TaskSuite	Status enum values are FRESH, RUNNING, FAILED, SUCCEEDED, CANCELLED	pass
+sge.ai.btree.TaskSuite	cancel() calls end()	pass
+sge.ai.btree.TaskSuite	cancel() sets status to CANCELLED	pass
+sge.ai.btree.TaskSuite	cloneTask clones guard	fail
+sge.ai.btree.TaskSuite	cloneTask creates independent copy	fail
+sge.ai.btree.TaskSuite	end() is called when task fails	pass
+sge.ai.btree.TaskSuite	end() is called when task succeeds	pass
+sge.ai.btree.TaskSuite	end() is not called when task is running	pass
+sge.ai.btree.TaskSuite	getObject returns blackboard after task has run	pass
+sge.ai.btree.TaskSuite	getObject throws when task has never run	pass
+sge.ai.btree.TaskSuite	new task starts FRESH	pass
+sge.ai.btree.TaskSuite	reset() clears control, guard, status, tree	pass
+sge.ai.btree.TaskSuite	resetTask() cancels running task before resetting	pass
+sge.ai.btree.TaskSuite	resetTask() on FRESH task is a no-op (stays FRESH)	pass
+sge.ai.btree.TaskSuite	resetTask() returns task to FRESH	pass
+sge.ai.btree.TaskSuite	setControl sets the parent task	pass
+sge.ai.btree.TaskSuite	start() is called before run() in behavior tree step	pass
+sge.ai.btree.TaskSuite	task transitions from FRESH to FAILED	pass
+sge.ai.btree.TaskSuite	task transitions from FRESH to RUNNING	pass
+sge.ai.btree.TaskSuite	task transitions from FRESH to SUCCEEDED	pass
+sge.ai.btree.TaskSuite	task transitions from RUNNING to FAILED on subsequent step	pass
+sge.ai.btree.TaskSuite	task transitions from RUNNING to SUCCEEDED on subsequent step	pass
 sge.ai.btree.branch.ParallelTest	testJoinOrchestratorSelectorPolicy	pass
 sge.ai.btree.branch.ParallelTest	testJoinOrchestratorSequencePolicyInverseOrder	pass
 sge.ai.btree.branch.ParallelTest	testJoinOrchestratorSequencePolicySequentialOrder	pass
 sge.ai.btree.branch.ParallelTest	testResumeOrchestratorSelectorPolicy	pass
 sge.ai.btree.branch.ParallelTest	testResumeOrchestratorSequencePolicy	pass
+sge.ai.fsm.StateMachineEmptyProbeIss730RedSuite	ISS-730 c3: DefaultStateMachine.getCurrentState on an empty machine returns null-equivalent, not a crash	pass
+sge.ai.fsm.StateMachineEmptyProbeIss730RedSuite	ISS-730 c3: DefaultStateMachine.getGlobalState on an empty machine returns null-equivalent, not a crash	pass
+sge.ai.fsm.StateMachineEmptyProbeIss730RedSuite	ISS-730 c3: DefaultStateMachine.getPreviousState on an empty machine returns null-equivalent, not a crash	pass
+sge.ai.fsm.StateMachineEmptyProbeIss730RedSuite	ISS-730 c3: StackStateMachine.getCurrentState on an empty machine returns null-equivalent, not a crash	pass
+sge.ai.fsm.StateMachineEmptyProbeIss730RedSuite	ISS-730 c3: StackStateMachine.getPreviousState on an empty stack returns null-equivalent, not a crash	pass
+sge.ai.fsm.StateMachineStateAccessorsIss843CoverageSuite	ISS-843: getCurrentState/getPreviousState/getGlobalState return the EXACT expected instance at each step	pass
+sge.ai.fsm.StateMachineSuite	StackStateMachine: push and pop states	pass
+sge.ai.fsm.StateMachineSuite	StackStateMachine: update delegates to current state	pass
+sge.ai.fsm.StateMachineSuite	changeState calls exit on old and enter on new	pass
+sge.ai.fsm.StateMachineSuite	handleMessage routes to current state then global state	pass
+sge.ai.fsm.StateMachineSuite	handleMessage: current state handles if it returns true	pass
+sge.ai.fsm.StateMachineSuite	initial state enter is called via changeState	pass
+sge.ai.fsm.StateMachineSuite	revertToPreviousState returns false when no previous	pass
+sge.ai.fsm.StateMachineSuite	revertToPreviousState works	pass
+sge.ai.fsm.StateMachineSuite	update delegates to current state	pass
+sge.ai.pfa.AStarSuite	connection path works	pass
+sge.ai.pfa.AStarSuite	dynamic graph: blocking a node changes path	pass
+sge.ai.pfa.AStarSuite	dynamic graph: reopening a node restores shorter path	pass
+sge.ai.pfa.AStarSuite	find shortest path from (0,0) to (4,4) on 5x5 grid	pass
+sge.ai.pfa.AStarSuite	no path exists for isolated nodes	pass
+sge.ai.pfa.AStarSuite	path around obstacle	pass
+sge.ai.pfa.AStarSuite	path from node to itself	pass
 sge.ai.pfa.indexed.IndexedAStarPathFinderTest	searchNodePath_WhenDestinationUnreachable_ExpectedNoOutputPathFound	pass
 sge.ai.pfa.indexed.IndexedAStarPathFinderTest	searchNodePath_WhenGraphIsUpdatedOnTheFly_ExpectedSucceedToFindEndByEquals	pass
 sge.ai.pfa.indexed.IndexedAStarPathFinderTest	searchNodePath_WhenGraphIsUpdatingOnTheFly_ExpectedFailToFindEndByReference	pass
 sge.ai.pfa.indexed.IndexedAStarPathFinderTest	searchNodePath_WhenSearchCanHitDeadEnds_ExpectedOutputPathFound	pass
 sge.ai.pfa.indexed.IndexedAStarPathFinderTest	searchNodePath_WhenSearchingAdjacentTile_ExpectedOutputPathLengthEquals2	pass
+sge.ai.sched.SchedulerSuite	LoadBalancingScheduler implements Schedulable interface	pass
+sge.ai.sched.SchedulerSuite	LoadBalancingScheduler: addWithAutomaticPhasing calculates phase	pass
+sge.ai.sched.SchedulerSuite	LoadBalancingScheduler: high frequency task runs less often	pass
+sge.ai.sched.SchedulerSuite	LoadBalancingScheduler: multiple tasks with same frequency	pass
+sge.ai.sched.SchedulerSuite	LoadBalancingScheduler: no tasks means no work	pass
+sge.ai.sched.SchedulerSuite	LoadBalancingScheduler: phase offsets task execution	pass
+sge.ai.sched.SchedulerSuite	LoadBalancingScheduler: task with frequency 1 runs every frame	pass
+sge.ai.sched.SchedulerSuite	LoadBalancingScheduler: task with frequency 2 runs every other frame	pass
+sge.ai.sched.SchedulerSuite	PriorityScheduler: add with default priority 1	pass
+sge.ai.sched.SchedulerSuite	PriorityScheduler: addWithAutomaticPhasing with priority	pass
+sge.ai.sched.SchedulerSuite	PriorityScheduler: addWithAutomaticPhasing without priority defaults to 1	pass
+sge.ai.sched.SchedulerSuite	PriorityScheduler: task with frequency 1 runs every frame	pass
+sge.ai.sched.SchedulerSuite	PriorityScheduler: task with frequency 3 runs every 3rd frame	pass
+sge.ai.sched.SchedulerSuite	PriorityScheduler: tasks with different priorities both run	pass
+sge.ai.utils.ArithmeticUtilsSuite	gcdPositive: basic cases	pass
+sge.ai.utils.ArithmeticUtilsSuite	gcdPositive: coprime numbers	pass
+sge.ai.utils.ArithmeticUtilsSuite	gcdPositive: gcd(0, 0) = 0	pass
+sge.ai.utils.ArithmeticUtilsSuite	gcdPositive: gcd(0, x) = x	pass
+sge.ai.utils.ArithmeticUtilsSuite	gcdPositive: gcd(x, 0) = x	pass
+sge.ai.utils.ArithmeticUtilsSuite	lcmPositive: basic cases	pass
+sge.ai.utils.ArithmeticUtilsSuite	lcmPositive: lcm(0, x) = 0	pass
+sge.ai.utils.ArithmeticUtilsSuite	lcmPositive: lcm(x, 0) = 0	pass
+sge.ai.utils.ArithmeticUtilsSuite	mulAndCheck: normal multiplication	pass
+sge.ai.utils.ArithmeticUtilsSuite	mulAndCheck: overflow throws ArithmeticException	pass
+sge.ai.utils.ArithmeticUtilsSuite	wrapAngleAroundZero: -2*PI wraps to 0	pass
+sge.ai.utils.ArithmeticUtilsSuite	wrapAngleAroundZero: -PI stays -PI	pass
+sge.ai.utils.ArithmeticUtilsSuite	wrapAngleAroundZero: 0 stays 0	pass
+sge.ai.utils.ArithmeticUtilsSuite	wrapAngleAroundZero: 2*PI wraps to 0	pass
+sge.ai.utils.ArithmeticUtilsSuite	wrapAngleAroundZero: PI stays PI	pass
+sge.ai.utils.ArithmeticUtilsSuite	wrapAngleAroundZero: angle < -PI wraps positive	pass
+sge.ai.utils.ArithmeticUtilsSuite	wrapAngleAroundZero: angle > PI wraps negative	pass
+sge.ai.utils.CircularBufferSuite	FIFO order	pass
+sge.ai.utils.CircularBufferSuite	clear resets	pass
+sge.ai.utils.CircularBufferSuite	fixed-size buffer returns false when full	pass
+sge.ai.utils.CircularBufferSuite	read from empty returns empty Nullable	pass
+sge.ai.utils.CircularBufferSuite	store and read basic	pass
+sge.ai.utils.CircularBufferSuite	wrap-around internal state: read some, store more, read all	pass
+sge.ai.utils.CircularBufferSuite	wrap-around: store more than initial capacity with resize	pass

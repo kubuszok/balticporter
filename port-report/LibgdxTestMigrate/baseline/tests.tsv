@@ -102,10 +102,10 @@ sge.utils.JsonMatcherTests	invalidPattern9	pass
 sge.utils.JsonMatcherTests	keys	pass
 sge.utils.JsonMatcherTests	multiplePatterns	pass
 sge.utils.JsonMatcherTests	parseValue	pass
-sge.utils.JsonMatcherTests	paths	fail
+sge.utils.JsonMatcherTests	paths	pass
 sge.utils.JsonMatcherTests	rejection	pass
-sge.utils.JsonMatcherTests	singlePatterns	fail
-sge.utils.JsonMatcherTests	unescaping	fail
+sge.utils.JsonMatcherTests	singlePatterns	pass
+sge.utils.JsonMatcherTests	unescaping	pass
 sge.utils.JsonMatcherTests	wholeDocument	pass
 sge.utils.JsonTest	testCharFromNumber	fail
 sge.utils.JsonTest	testFromJsonArray	fail

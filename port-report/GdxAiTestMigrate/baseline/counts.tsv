@@ -1,9 +1,9 @@
 #check	count
-base-surface	81
+base-surface	21
 break-catch	0
 cast-conversion	0
-catalog(consulted)	96
-catalog(uncited)	123
+catalog(consulted)	97
+catalog(uncited)	124
 catalog(undischarged)	4
 catalog(unmechanised)	1
 catalog(unreached)	18
@@ -11,7 +11,7 @@ class-init-trigger	0
 collection-boundary	0
 collection-closure	0
 collection-internal	0
-collection-retarget	0
+collection-retarget	4
 context-seam	0
 dependency-coverage	0
 dependency-coverage(all)	37
@@ -35,8 +35,8 @@ portability(emitted)	0
 portability(injected)	0
 porter-notes	0
 remediation	0
-rewrite-callsites	0
-signature	0
+rewrite-callsites	1
+signature	10
 substitution(dangling)	0
 substitution(emitted)	0
 switch-null	0
@@ -45,3 +45,5 @@ trivia	0
 trivia(deliberate)	0
 trivia(recovered)	0
 try-resource	0
+unused-symbol(handled)	0
+unused-symbol(refused)	0

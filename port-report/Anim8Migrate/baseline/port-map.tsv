@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-anim8	engine=balticporter/0.1.0-SNAPSHOT	sources=6b96efbdb888cc69	files=16	policy=01940f604df50cef	jdk=22
+# balticporter port map	schema=4	module=sge-anim8	engine=balticporter/0.1.0-SNAPSHOT	sources=6b96efbdb888cc69	files=16	policy=afa163a000971f00	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.github.tommyettinger.anim8.AnimatedGif	sge.anim8.AnimatedGif	Renamed	-		0		companion=yes form=class parents=sge.anim8.AnimationWriter,sge.anim8.Dithered primary=() primaryKind=unique-root primaryVis=public
 type	com.github.tommyettinger.anim8.AnimatedPNG	sge.anim8.AnimatedPNG	Renamed	-		0		companion=yes form=class parents=sge.anim8.AnimationWriter,java.lang.AutoCloseable primary=(int) primaryKind=unique-root primaryVis=public secondaries=() statics=COLOR_ARGB,COMPRESSION_DEFLATE,FILTER_NONE,IDAT,IEND,IHDR,INTERLACE_NONE,SIGNATURE,acTL,fcTL,fdAT
@@ -368,7 +368,7 @@ member	com.github.tommyettinger.anim8.PNG8#hueShift(FileHandle,FileHandle,float)
 member	com.github.tommyettinger.anim8.PNG8#getPalette	sge.anim8.PNG8#palette	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	120	2867253b35e476ca	name=palette$field
 member	com.github.tommyettinger.anim8.PNG8#getPalette()	sge.anim8.PNG8#palette()	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	125	e1a5cda95e1c721e	
 member	com.github.tommyettinger.anim8.PNG8#setPalette(PaletteReducer)	sge.anim8.PNG8#palette_=(PaletteReducer)	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	129	1644998e0d6d9614	
-member	com.github.tommyettinger.anim8.PNG8#readChunks(InputStream)	sge.anim8.PNG8#readChunks(InputStream)	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	7974	3416f47c2835b3eb	placement=companion
+member	com.github.tommyettinger.anim8.PNG8#readChunks(InputStream)	sge.anim8.PNG8#readChunks(InputStream)	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	7974	b4ed9360ae07ad37	placement=companion
 member	com.github.tommyettinger.anim8.PNG8#setCompression(int)	sge.anim8.PNG8#setCompression(int)	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	192	8c44ce81e876691b	
 member	com.github.tommyettinger.anim8.PNG8#setFlipY(boolean)	sge.anim8.PNG8#setFlipY(boolean)	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	187	7cfd5a6a97b9974d	
 member	com.github.tommyettinger.anim8.PNG8#swapPalette(FileHandle,FileHandle,Array)	sge.anim8.PNG8#swapPalette(FileHandle,FileHandle,Array<int>)	Renamed	-	com/github/tommyettinger/anim8/PNG8.java	8042	5efcfb10280aaf3a	placement=companion
@@ -485,7 +485,7 @@ member	com.github.tommyettinger.anim8.PaletteReducer#analyzeHueWise(DynamicArray
 member	com.github.tommyettinger.anim8.PaletteReducer#analyzeHueWise(DynamicArray,double)	sge.anim8.PaletteReducer#analyzeHueWise(DynamicArray<Pixmap>,double)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	2941	5d438c87ea830375	
 member	com.github.tommyettinger.anim8.PaletteReducer#analyzeHueWise(DynamicArray,double,int)	sge.anim8.PaletteReducer#analyzeHueWise(DynamicArray<Pixmap>,double,int)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	2963	330bbb0e46730450	
 member	com.github.tommyettinger.anim8.PaletteReducer#analyzeHueWise(Pixmap,double,int)	sge.anim8.PaletteReducer#analyzeHueWise(Pixmap,double,int)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1971	37eee94ecfb9e170	
-member	com.github.tommyettinger.anim8.PaletteReducer#analyzeMC(Pixmap,int)	sge.anim8.PaletteReducer#analyzeMC(Pixmap,int)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	2241	52d3d6659d1987c2	
+member	com.github.tommyettinger.anim8.PaletteReducer#analyzeMC(Pixmap,int)	sge.anim8.PaletteReducer#analyzeMC(Pixmap,int)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	2241	1ac579df26b378ab	
 member	com.github.tommyettinger.anim8.PaletteReducer#analyzeReductive(Array,int,double,int)	sge.anim8.PaletteReducer#analyzeReductive(Array<Pixmap>,int,double,int)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	3216	0a0614aece077ca6	
 member	com.github.tommyettinger.anim8.PaletteReducer#analyzeReductive(DynamicArray)	sge.anim8.PaletteReducer#analyzeReductive(DynamicArray<Pixmap>)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	3136	9ff10eba9c9a13e3	
 member	com.github.tommyettinger.anim8.PaletteReducer#analyzeReductive(DynamicArray,double)	sge.anim8.PaletteReducer#analyzeReductive(DynamicArray<Pixmap>,double)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	3162	71fba3ddf5081b31	
@@ -522,7 +522,7 @@ member	com.github.tommyettinger.anim8.PaletteReducer#entryComparator	sge.anim8.P
 member	com.github.tommyettinger.anim8.PaletteReducer#exact(Array)	sge.anim8.PaletteReducer#exact(Array<Color>)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1515	d92f1251f033dd7a	
 member	com.github.tommyettinger.anim8.PaletteReducer#exact(Array,int)	sge.anim8.PaletteReducer#exact(Array<Color>,int)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1530	22cbcda7b4cf227b	
 member	com.github.tommyettinger.anim8.PaletteReducer#exact(Array)	sge.anim8.PaletteReducer#exact(Array<int>)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1424	fa7290ac195d1677	
-member	com.github.tommyettinger.anim8.PaletteReducer#exact(Array,Array)	sge.anim8.PaletteReducer#exact(Array<int>,Array<byte>)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1488	44784274053784cb	
+member	com.github.tommyettinger.anim8.PaletteReducer#exact(Array,Array)	sge.anim8.PaletteReducer#exact(Array<int>,Array<byte>)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1488	4ec64aab2f024f17	
 member	com.github.tommyettinger.anim8.PaletteReducer#exact(Array,int)	sge.anim8.PaletteReducer#exact(Array<int>,int)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	1438	054c7f92a5237b93	
 member	com.github.tommyettinger.anim8.PaletteReducer#forwardLight(float)	sge.anim8.PaletteReducer#forwardLight(float)	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	557	ecf69c6330a59b4b	placement=companion
 member	com.github.tommyettinger.anim8.PaletteReducer#fromLinearLUT	sge.anim8.PaletteReducer#fromLinearLUT	Renamed	-	com/github/tommyettinger/anim8/PaletteReducer.java	3988	e074b9c5711a2cc3	placement=companion

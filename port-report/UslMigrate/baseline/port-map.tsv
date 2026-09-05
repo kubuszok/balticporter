@@ -30,7 +30,7 @@ type		balticporter.runtime.JavaOptionalDouble	Added	-		0
 type		balticporter.runtime.JavaOptionalInt	Added	-		0		
 type		balticporter.runtime.JavaOptionalLong	Added	-		0		
 type		balticporter.runtime.JavaStack	Added	-		0		
-member	com.kotcrab.vis.usl.CollectionUtils#getCardinalityMap(JavaCollection)	sge.visui.usl.CollectionUtils#getCardinalityMap(JavaCollection<?>)	Renamed	-	com/kotcrab/vis/usl/CollectionUtils.java	72	76b87cba5be49b0a	placement=companion
+member	com.kotcrab.vis.usl.CollectionUtils#getCardinalityMap(JavaCollection)	sge.visui.usl.CollectionUtils#getCardinalityMap(JavaCollection<?>)	Renamed	-	com/kotcrab/vis/usl/CollectionUtils.java	72	bf139b44e2057917	placement=companion
 member	com.kotcrab.vis.usl.CollectionUtils#getFreq(Object,Map)	sge.visui.usl.CollectionUtils#getFreq(Object,Map<?,?>)	Renamed	-	com/kotcrab/vis/usl/CollectionUtils.java	53	96c1e8e527b63d33	placement=companion vis=private
 member	com.kotcrab.vis.usl.CollectionUtils#isEqualCollection(JavaCollection,JavaCollection)	sge.visui.usl.CollectionUtils#isEqualCollection(JavaCollection<?>,JavaCollection<?>)	Renamed	-	com/kotcrab/vis/usl/CollectionUtils.java	32	ecc11730428543f3	placement=companion
 member	com.kotcrab.vis.usl.additionalIncludeDir	additionalIncludeDir	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	41	9fb099c257b8dc0b	name=additionalIncludeDir$p
@@ -44,7 +44,7 @@ member	com.kotcrab.vis.usl.IncludeLoader#cacheFolder	sge.visui.usl.IncludeLoader
 member	com.kotcrab.vis.usl.IncludeLoader#fileToString(File)	sge.visui.usl.IncludeLoader#fileToString(File)	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	93	4c85b08b09599e56	vis=private
 member	com.kotcrab.vis.usl.IncludeLoader#includeSources	sge.visui.usl.IncludeLoader#includeSources	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	35	d4baade15715dba1	vis=private
 member	com.kotcrab.vis.usl.IncludeLoader#loadInclude(String)	sge.visui.usl.IncludeLoader#loadInclude(String)	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	47	58dc75f5576a3466	
-member	com.kotcrab.vis.usl.IncludeLoader#loadIncludeFile(String)	sge.visui.usl.IncludeLoader#loadIncludeFile(String)	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	51	dbaae9ed72d3edb1	vis=private
+member	com.kotcrab.vis.usl.IncludeLoader#loadIncludeFile(String)	sge.visui.usl.IncludeLoader#loadIncludeFile(String)	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	51	d290eca853e2f4c1	vis=private
 member	com.kotcrab.vis.usl.IncludeLoader#tmpFolder	sge.visui.usl.IncludeLoader#tmpFolder	Renamed	-	com/kotcrab/vis/usl/IncludeLoader.java	33	456784981eb966cc	vis=private
 member	com.kotcrab.vis.usl.Lexer#EXTENDS	sge.visui.usl.Lexer#EXTENDS	Renamed	-	com/kotcrab/vis/usl/Lexer.java	28	95e74980ae8c2234	placement=companion vis=private
 member	com.kotcrab.vis.usl.Lexer#INCLUDE	sge.visui.usl.Lexer#INCLUDE	Renamed	-	com/kotcrab/vis/usl/Lexer.java	27	967b44a14fa779d7	placement=companion vis=private

@@ -1,28 +1,55 @@
-# balticporter port map	schema=4	module=sge-ai-test	engine=balticporter/0.1.0-SNAPSHOT	sources=430a6fde5872b03a	files=2	policy=ef7dbe444cd68377	jdk=22
+# balticporter port map	schema=4	module=sge-ai-test	engine=balticporter/0.1.0-SNAPSHOT	sources=430a6fde5872b03a	files=2	policy=09042e8883f911e3	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.ai.btree.branch.ParallelTest	sge.ai.btree.branch.ParallelTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.ai.btree.branch.ParallelTest$TestTask	sge.ai.btree.branch.ParallelTest$TestTask	Renamed	-		0		companion=yes form=class parents=sge.ai.btree.LeafTask primary=() primaryKind=unique-root primaryVis=private[ParallelTest]
 type	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest	sge.ai.pfa.indexed.IndexedAStarPathFinderTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=ManhattanDistance,MyDynamicGraph,MyGraph,MyNode,MyNodeWithEquals,MyNodesFactory,createGraphFromTextRepresentation,createStringTilesFromGraphTextRepresentation
 type	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$ManhattanDistance	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$ManhattanDistance	Renamed	-		0		form=class parents=sge.ai.pfa.Heuristic primary=() primaryKind=unique-root primaryVis=private[IndexedAStarPathFinderTest]
 type	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyDynamicGraph	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyDynamicGraph	Renamed	-		0		form=class parents=sge.ai.pfa.indexed.IndexedGraph primary=(MyGraph,MyNodesFactory) primaryKind=unique-root primaryVis=public
-type	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyGraph	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyGraph	Renamed	-		0		form=class parents=sge.ai.pfa.indexed.IndexedGraph primary=(Array) primaryKind=unique-root primaryVis=public
+type	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyGraph	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyGraph	Renamed	-		0		form=class parents=sge.ai.pfa.indexed.IndexedGraph primary=(DynamicArray) primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode	Renamed	-		0		form=class primary=(int,int,int,int) primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNodeWithEquals	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNodeWithEquals	Renamed	-		0		form=class parents=sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode primary=(int,int,int,int) primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNodesFactory	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNodesFactory	Renamed	-		0		form=trait
-type	com.badlogic.gdx.ai.GdxAI		Dropped	-		0		
-type	com.badlogic.gdx.net.NetJavaImpl		Dropped	-		0		
-type	com.badlogic.gdx.utils.Align		Dropped	-		0		
-type	com.badlogic.gdx.utils.Disposable		Dropped	-		0		
-type	com.badlogic.gdx.utils.Json		Dropped	-		0		
-type	com.badlogic.gdx.utils.Pools		Dropped	-		0		
-type	com.badlogic.gdx.utils.ReflectionPool		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.Annotation		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.ArrayReflection		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.ClassReflection		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.Constructor		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.Field		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.Method		Dropped	-		0		
-type	com.badlogic.gdx.utils.reflect.ReflectionException		Dropped	-		0		
+type	com.badlogic.gdx.ai.GdxAI	sge.ai.GdxAI	Dropped	-		0		form=class
+type	com.badlogic.gdx.net.NetJavaImpl	sge.net.NetJavaImpl	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Align	sge.utils.Align	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Array	sge.utils.Array	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ArrayMap	sge.utils.ArrayMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Bits	sge.utils.Bits	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.BooleanArray	sge.utils.BooleanArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ByteArray	sge.utils.ByteArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.CharArray	sge.utils.CharArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.DelayedRemovalArray	sge.utils.DelayedRemovalArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Disposable	sge.utils.Disposable	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.FloatArray	sge.utils.FloatArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IdentityMap	sge.utils.IdentityMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IntArray	sge.utils.IntArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IntFloatMap	sge.utils.IntFloatMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IntIntMap	sge.utils.IntIntMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IntMap	sge.utils.IntMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.IntSet	sge.utils.IntSet	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Json	sge.utils.Json	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.LongArray	sge.utils.LongArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.LongMap	sge.utils.LongMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ObjectFloatMap	sge.utils.ObjectFloatMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ObjectIntMap	sge.utils.ObjectIntMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ObjectLongMap	sge.utils.ObjectLongMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ObjectMap	sge.utils.ObjectMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ObjectSet	sge.utils.ObjectSet	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.OrderedMap	sge.utils.OrderedMap	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.OrderedSet	sge.utils.OrderedSet	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Pool	sge.utils.Pool	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Pools	sge.utils.Pools	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Queue	sge.utils.Queue	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ReflectionPool	sge.utils.ReflectionPool	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.ShortArray	sge.utils.ShortArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.SnapshotArray	sge.utils.SnapshotArray	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.Annotation	sge.utils.reflect.Annotation	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.ArrayReflection	sge.utils.reflect.ArrayReflection	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.ClassReflection	sge.utils.reflect.ClassReflection	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.Constructor	sge.utils.reflect.Constructor	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.Field	sge.utils.reflect.Field	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.Method	sge.utils.reflect.Method	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.reflect.ReflectionException	sge.utils.reflect.ReflectionException	Dropped	-		0		form=class
 type		balticporter.runtime.JavaCollection	Added	-		0		
 type		balticporter.runtime.JavaCollections	Added	-		0		
 type		balticporter.runtime.JavaEnumMap	Added	-		0		
@@ -40,41 +67,41 @@ member	com.badlogic.gdx.ai.btree.branch.ParallelTest#<stmt3>	sge.ai.btree.branch
 member	com.badlogic.gdx.ai.btree.branch.ParallelTest#<stmt4>	sge.ai.btree.branch.ParallelTest#<stmt4>	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	164	04df770c5fa6ebb5	
 member	com.badlogic.gdx.ai.btree.branch.ParallelTest#<stmt5>	sge.ai.btree.branch.ParallelTest#<stmt5>	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	210	153ce78c4094da11	
 member	com.badlogic.gdx.ai.btree.branch.ParallelTest#behaviorTree	sge.ai.btree.branch.ParallelTest#behaviorTree	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	31	7ecdc85456bddd21	vis=private
-member	com.badlogic.gdx.ai.btree.branch.ParallelTest#bpFreshState()	sge.ai.btree.branch.ParallelTest#bpFreshState()	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	30	feff75e017bc46ee	
+member	com.badlogic.gdx.ai.btree.branch.ParallelTest#bpFreshState()	sge.ai.btree.branch.ParallelTest#bpFreshState()	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	30	4a848a65bf6b6531	
 member	com.badlogic.gdx.ai.btree.branch.ParallelTest#setUp()	sge.ai.btree.branch.ParallelTest#setUp()	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	37	55eebdb35cfff70e	
 member	com.badlogic.gdx.ai.btree.branch.ParallelTest#task1	sge.ai.btree.branch.ParallelTest#task1	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	32	964256166ccf7c24	vis=private
 member	com.badlogic.gdx.ai.btree.branch.ParallelTest#task2	sge.ai.btree.branch.ParallelTest#task2	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	33	960886e106fb5d88	vis=private
-member	com.badlogic.gdx.ai.btree.branch.ParallelTest#tasks	sge.ai.btree.branch.ParallelTest#tasks	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	34	4f69748248d29606	vis=private
+member	com.badlogic.gdx.ai.btree.branch.ParallelTest#tasks	sge.ai.btree.branch.ParallelTest#tasks	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	34	1830d4e63d4b6086	vis=private
 member	com.badlogic.gdx.ai.btree.branch.ParallelTest$TestTask#copyTo(Task)	sge.ai.btree.branch.ParallelTest$TestTask#copyTo(Task<String>)	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	253	3b7d8c42e9b50237	
 member	com.badlogic.gdx.ai.btree.branch.ParallelTest$TestTask#execute()	sge.ai.btree.branch.ParallelTest$TestTask#execute()	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	247	9c2e13f114f12afd	
 member	com.badlogic.gdx.ai.btree.branch.ParallelTest$TestTask#executions	sge.ai.btree.branch.ParallelTest$TestTask#executions	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	244	e4dc4049e766bd1b	
 member	com.badlogic.gdx.ai.btree.branch.ParallelTest$TestTask#status	sge.ai.btree.branch.ParallelTest$TestTask#status	Renamed	-	com/badlogic/gdx/ai/btree/branch/ParallelTest.java	243	f006b5169427f7b0	name=status$shadow
-member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt1>	sge.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt1>	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	32	b39835179fd9906b	
-member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt2>	sge.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt2>	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	99	5fa85421e9518fbe	
-member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt3>	sge.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt3>	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	141	8cae32981f358bcc	
-member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt4>	sge.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt4>	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	168	b460d939d3015438	
-member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt5>	sge.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt5>	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	205	a402f68ec3efcb38	
-member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest#createGraphFromTextRepresentation(String)	sge.ai.pfa.indexed.IndexedAStarPathFinderTest#createGraphFromTextRepresentation(String)	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	243	931078a41bfe47c4	placement=companion vis=private
+member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt1>	sge.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt1>	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	32	30d066e76fa40681	
+member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt2>	sge.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt2>	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	99	b65d26521fff2afc	
+member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt3>	sge.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt3>	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	141	267f69cc3e633b49	
+member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt4>	sge.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt4>	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	168	26e613b1b82235f8	
+member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt5>	sge.ai.pfa.indexed.IndexedAStarPathFinderTest#<stmt5>	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	205	a73cfa92f1091096	
+member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest#createGraphFromTextRepresentation(String)	sge.ai.pfa.indexed.IndexedAStarPathFinderTest#createGraphFromTextRepresentation(String)	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	243	d514dbcc359de6b4	placement=companion vis=private
 member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest#createStringTilesFromGraphTextRepresentation(String)	sge.ai.pfa.indexed.IndexedAStarPathFinderTest#createStringTilesFromGraphTextRepresentation(String)	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	288	8f415e4459d6e625	placement=companion vis=private
 member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$ManhattanDistance#estimate(MyNode,MyNode)	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$ManhattanDistance#estimate(MyNode,MyNode)	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	420	5694965f3c53e713	
 member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyDynamicGraph#<stmt1>	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyDynamicGraph#<stmt1>	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	390	23212f88b02e07f3	
 member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyDynamicGraph#<stmt2>	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyDynamicGraph#<stmt2>	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	391	b45e24226d307d16	
 member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyDynamicGraph#factory	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyDynamicGraph#factory	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	387	18da954916f1480f	
-member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyDynamicGraph#getConnections(MyNode)	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyDynamicGraph#getConnections(MyNode)	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	395	c7a8acba4698865e	
+member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyDynamicGraph#getConnections(MyNode)	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyDynamicGraph#getConnections(MyNode)	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	395	838404af8a0bd23f	
 member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyDynamicGraph#getIndex(MyNode)	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyDynamicGraph#getIndex(MyNode)	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	408	f13de031455deb22	
 member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyDynamicGraph#graph	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyDynamicGraph#graph	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	386	4b0ee322618cad66	
 member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyDynamicGraph#getNodeCount()	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyDynamicGraph#nodeCount()	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	413	9170e7cc29fa3cd3	
 member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyGraph#<stmt1>	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyGraph#<stmt1>	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	356	01308a65c96d388f	
-member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyGraph#getConnections(MyNode)	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyGraph#getConnections(MyNode)	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	365	9b064c744a3f1015	
+member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyGraph#getConnections(MyNode)	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyGraph#getConnections(MyNode)	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	365	62596c539a1431cd	
 member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyGraph#getIndex(MyNode)	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyGraph#getIndex(MyNode)	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	360	2fd99986fac0dad0	
 member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyGraph#getNodeCount()	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyGraph#nodeCount()	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	370	b3e2de18cb4adb9f	
-member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyGraph#nodes	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyGraph#nodes	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	353	01418dbbcb0c12e3	
+member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyGraph#nodes	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyGraph#nodes	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	353	d0a3e968699b88d5	
 member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#<stmt1>	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#<stmt1>	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	314	ed84d54914db9b20	
 member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#<stmt2>	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#<stmt2>	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	315	2c6f9558e98e88ba	
 member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#<stmt3>	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#<stmt3>	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	316	f31e0f9cd77a7e56	
-member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#<stmt4>	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#<stmt4>	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	317	a2c94b5abbb41538	
-member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#getConnections	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#connections	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	311	7840c2d674cb97c9	name=connections$field
-member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#getConnections()	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#connections()	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	324	b2bb58a8785f5c4a	
+member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#<stmt4>	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#<stmt4>	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	317	d83e5f80946ce9b3	
+member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#getConnections	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#connections	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	311	baae8e9f67b6bde3	name=connections$field
+member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#getConnections()	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#connections()	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	324	6af5b32724d6a3f4	
 member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#getIndex	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#index	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	308	ed736e99f1cb99af	name=index$field
 member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#getIndex()	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#index()	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	320	10728815ffe3e7c6	
 member	com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#toString()	sge.ai.pfa.indexed.IndexedAStarPathFinderTest$MyNode#toString()	Renamed	-	com/badlogic/gdx/ai/pfa/indexed/IndexedAStarPathFinderTest.java	329	1fda98f45c08121e	

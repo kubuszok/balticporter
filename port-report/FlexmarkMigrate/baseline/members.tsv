@@ -1533,7 +1533,7 @@ ssg.md.formatter.internal.MergeLinkResolver	ssg.md.formatter.internal.MergeLinkR
 ssg.md.formatter.internal.MergeLinkResolver	ssg.md.formatter.internal.MergeLinkResolver$Factory#apply(LinkResolverBasicContext)	def	dc375c630fc2bf25
 ssg.md.formatter.internal.MergeLinkResolver	ssg.md.formatter.internal.MergeLinkResolver$Factory#getAfterDependents()	def	213b28c06aa583d9
 ssg.md.formatter.internal.MergeLinkResolver	ssg.md.formatter.internal.MergeLinkResolver$Factory#getBeforeDependents()	def	5c7dbfddf1d4d275
-ssg.md.formatter.internal.TranslationHandlerImpl	ssg.md.formatter.internal.TranslationHandlerImpl	class	fcfad377d6c4d075
+ssg.md.formatter.internal.TranslationHandlerImpl	ssg.md.formatter.internal.TranslationHandlerImpl	class	5a9f9f55096b01f5
 ssg.md.formatter.internal.TranslationHandlerImpl	ssg.md.formatter.internal.TranslationHandlerImpl#<stmt10>	stmt	7691b64eff931a13
 ssg.md.formatter.internal.TranslationHandlerImpl	ssg.md.formatter.internal.TranslationHandlerImpl#<stmt11>	stmt	234d5419fb5ff189
 ssg.md.formatter.internal.TranslationHandlerImpl	ssg.md.formatter.internal.TranslationHandlerImpl#<stmt12>	stmt	0fcc121e8a7b0302
@@ -1591,7 +1591,7 @@ ssg.md.formatter.internal.TranslationHandlerImpl	ssg.md.formatter.internal.Trans
 ssg.md.formatter.internal.TranslationHandlerImpl	ssg.md.formatter.internal.TranslationHandlerImpl#nonTranslatingSpan(TranslatingSpanRender)	def	ea6c4c4c67c714d7
 ssg.md.formatter.internal.TranslationHandlerImpl	ssg.md.formatter.internal.TranslationHandlerImpl#postProcessNonTranslating(Function<String,CharSequence>,Runnable)	def	2d230eefa791c998
 ssg.md.formatter.internal.TranslationHandlerImpl	ssg.md.formatter.internal.TranslationHandlerImpl#postProcessNonTranslating(Function<String,CharSequence>,Supplier<T>)	def	aa771abf3353cabf
-ssg.md.formatter.internal.TranslationHandlerImpl	ssg.md.formatter.internal.TranslationHandlerImpl#renderInSubContext(TranslatingSpanRender,boolean)	def	bb0943785a8ce3bc
+ssg.md.formatter.internal.TranslationHandlerImpl	ssg.md.formatter.internal.TranslationHandlerImpl#renderInSubContext(TranslatingSpanRender,boolean)	def	14962489f840386c
 ssg.md.formatter.internal.TranslationHandlerImpl	ssg.md.formatter.internal.TranslationHandlerImpl#setMergeContext(MergeContext)	def	fd1c81acc14d8a35
 ssg.md.formatter.internal.TranslationHandlerImpl	ssg.md.formatter.internal.TranslationHandlerImpl#setRenderPurpose(RenderPurpose)	def	5bec04876339c8ea
 ssg.md.formatter.internal.TranslationHandlerImpl	ssg.md.formatter.internal.TranslationHandlerImpl#setTranslatedTexts(Buffer<?>)	def	29f6bf2ef86fd351
@@ -1900,9 +1900,9 @@ ssg.md.html.HtmlRendererOptions	ssg.md.html.HtmlRendererOptions#suppressInlineHt
 ssg.md.html.HtmlRendererOptions	ssg.md.html.HtmlRendererOptions#suppressInlineHtmlComments	val	d135aa6cfcda15f6
 ssg.md.html.HtmlRendererOptions	ssg.md.html.HtmlRendererOptions#suppressedLinks	val	6bfc0620eaee4765
 ssg.md.html.HtmlRendererOptions	ssg.md.html.HtmlRendererOptions#unescapeHtmlEntities	val	ca5aa83068823239
-ssg.md.html.HtmlWriter	ssg.md.html.HtmlWriter	class	8fb70f71f249db36
+ssg.md.html.HtmlWriter	ssg.md.html.HtmlWriter	class	4c1b3415f733889e
 ssg.md.html.HtmlWriter	ssg.md.html.HtmlWriter#<init>(Appendable,int,int,boolean,boolean)	ctor	1db8a050a89dd050
-ssg.md.html.HtmlWriter	ssg.md.html.HtmlWriter#<init>(HtmlWriter,boolean)	ctor	23249967ef732d8a
+ssg.md.html.HtmlWriter	ssg.md.html.HtmlWriter#<init>(HtmlWriter,boolean)	ctor	444c6d98c607deab
 ssg.md.html.HtmlWriter	ssg.md.html.HtmlWriter#<init>(int,int)	ctor	b726cfe1488c4182
 ssg.md.html.HtmlWriter	ssg.md.html.HtmlWriter#<init>(int,int,boolean,boolean)	ctor	6453d69f0675feaa
 ssg.md.html.HtmlWriter	ssg.md.html.HtmlWriter#context	val	bcfe5ef795999f42
@@ -3124,7 +3124,7 @@ ssg.md.parser.core.ListBlockParser	ssg.md.parser.core.ListBlockParser$ListItemLe
 ssg.md.parser.core.ListBlockParser	ssg.md.parser.core.ListBlockParser$ListItemLeadInHandler#escape(BasedSequence,DataHolder,Consumer<CharSequence>)	def	59eecc2e440214bb
 ssg.md.parser.core.ListBlockParser	ssg.md.parser.core.ListBlockParser$ListItemLeadInHandler#orderedDelims	val	47f3425eac99b9c0
 ssg.md.parser.core.ListBlockParser	ssg.md.parser.core.ListBlockParser$ListItemLeadInHandler#unEscape(BasedSequence,DataHolder,Consumer<CharSequence>)	def	d059d30a7876fd08
-ssg.md.parser.core.ListItemParser	ssg.md.parser.core.ListItemParser	class	e0e8409cb245388f
+ssg.md.parser.core.ListItemParser	ssg.md.parser.core.ListItemParser	class	cdd34711c84225c1
 ssg.md.parser.core.ListItemParser	ssg.md.parser.core.ListItemParser#<stmt1>	stmt	325b9e097c11625b
 ssg.md.parser.core.ListItemParser	ssg.md.parser.core.ListItemParser#<stmt2>	stmt	8ae19246184d6a56
 ssg.md.parser.core.ListItemParser	ssg.md.parser.core.ListItemParser#<stmt3>	stmt	d107afb6b7f7f1e1
@@ -3146,7 +3146,7 @@ ssg.md.parser.core.ListItemParser	ssg.md.parser.core.ListItemParser#myIsEmpty	va
 ssg.md.parser.core.ListItemParser	ssg.md.parser.core.ListItemParser#myListData	val	9ed0780eae568fcf
 ssg.md.parser.core.ListItemParser	ssg.md.parser.core.ListItemParser#myOptions	val	f6dfeb96b4ffbd9a
 ssg.md.parser.core.ListItemParser	ssg.md.parser.core.ListItemParser#myParsing	val	3d82e15ec667313b
-ssg.md.parser.core.ListItemParser	ssg.md.parser.core.ListItemParser#tryContinue(ParserState)	def	9c89fc1a5c7bc0a7
+ssg.md.parser.core.ListItemParser	ssg.md.parser.core.ListItemParser#tryContinue(ParserState)	def	32892d927e250459
 ssg.md.parser.core.ParagraphParser	ssg.md.parser.core.ParagraphParser	class	b77aa01bbc69238b
 ssg.md.parser.core.ParagraphParser	ssg.md.parser.core.ParagraphParser#addLine(ParserState,BasedSequence)	def	fc77e9a3d13da71c
 ssg.md.parser.core.ParagraphParser	ssg.md.parser.core.ParagraphParser#block	val	56eade640fa5bb5f
@@ -3943,11 +3943,11 @@ ssg.md.util.ast.NodeCollectingVisitor	ssg.md.util.ast.NodeCollectingVisitor#node
 ssg.md.util.ast.NodeCollectingVisitor	ssg.md.util.ast.NodeCollectingVisitor#subClassMap	val	3b9d1705a0f84bdd
 ssg.md.util.ast.NodeCollectingVisitor	ssg.md.util.ast.NodeCollectingVisitor#visit(Node)	def	af7ea04eb35ce8fa
 ssg.md.util.ast.NodeCollectingVisitor	ssg.md.util.ast.NodeCollectingVisitor#visitChildren(Node)	def	d2b80a2dbed0d565
-ssg.md.util.ast.NodeIterable	ssg.md.util.ast.NodeIterable	class	db9500f58af19a0d
+ssg.md.util.ast.NodeIterable	ssg.md.util.ast.NodeIterable	class	116e448c7cdfb53a
 ssg.md.util.ast.NodeIterable	ssg.md.util.ast.NodeIterable#<stmt1>	stmt	444b8842fe01c3a4
 ssg.md.util.ast.NodeIterable	ssg.md.util.ast.NodeIterable#<stmt2>	stmt	12199e7eb771336c
 ssg.md.util.ast.NodeIterable	ssg.md.util.ast.NodeIterable#<stmt3>	stmt	4589a81e8c2a8168
-ssg.md.util.ast.NodeIterable	ssg.md.util.ast.NodeIterable#EMPTY	val	55422093552b611b
+ssg.md.util.ast.NodeIterable	ssg.md.util.ast.NodeIterable#EMPTY	val	34e720ed0022a97c
 ssg.md.util.ast.NodeIterable	ssg.md.util.ast.NodeIterable#firstNode	val	38b43df25e817439
 ssg.md.util.ast.NodeIterable	ssg.md.util.ast.NodeIterable#forEach(Consumer<?>)	def	cf9cbfcca5b18049
 ssg.md.util.ast.NodeIterable	ssg.md.util.ast.NodeIterable#isReversed()	def	02b78e08d065c1c3
@@ -5078,7 +5078,7 @@ ssg.md.util.format.MarkdownParagraph	ssg.md.util.format.MarkdownParagraph$Token#
 ssg.md.util.format.MarkdownParagraph	ssg.md.util.format.MarkdownParagraph$Token#subSequence(CharSequence)	def	6892246ec1303721
 ssg.md.util.format.MarkdownParagraph	ssg.md.util.format.MarkdownParagraph$Token#toString()	def	d8a14bbd15078865
 ssg.md.util.format.MarkdownParagraph	ssg.md.util.format.MarkdownParagraph$Token#type	val	791af40ca3d87ed5
-ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable	class	dda2fa4a4a3218bf
+ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable	class	17812326d344eb25
 ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable#<init>(CharSequence,DataHolder)	ctor	8835aaadb00ddf29
 ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable#<stmt10>	stmt	3e52857c6c1a2876
 ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable#<stmt11>	stmt	b1dc6fc7f8d647ff
@@ -5117,7 +5117,7 @@ ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable#appendColumnSp
 ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable#appendDashes(LineAppendable,int,BasedSequence,int)	def	762a1bb23b4007e1
 ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable#appendFormattedCaption(LineAppendable,BasedSequence,TableFormatOptions)	def	4412136bc1af5bca
 ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable#appendRows(LineAppendable,Buffer<TableRow>,boolean,CharSequence)	def	d31237832d4ff1bf
-ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable#appendTable(LineAppendable)	def	79a3655f5675c560
+ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable#appendTable(LineAppendable)	def	62c9f923383cdcca
 ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable#body	val	b5d6e245418d1c70
 ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable#caption	val	70ac7987703703ef
 ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable#cellText(Buffer<TableCell>,int,boolean,boolean,int,CellAlignment,Ref<Integer>)	def	48ef83932b1d01b7
@@ -5126,7 +5126,7 @@ ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable#deleteColumns(
 ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable#deleteRows(int,int)	def	94dad023cbf5f66c
 ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable#fillMissingColumns()	def	e284360f55f6079d
 ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable#fillMissingColumns(Integer)	def	b91c806d7f79cdbf
-ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable#finalizeTable()	def	e42bb42f0f61cbc8
+ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable#finalizeTable()	def	75f668310382e3a1
 ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable#findTrackedOffset(int)	def	a0ace493a5126507
 ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable#forAllBodyRows(TableRowManipulator)	def	6d47e95c6566606c
 ssg.md.util.format.MarkdownTable	ssg.md.util.format.MarkdownTable#forAllBodyRows(int,TableRowManipulator)	def	57632e2138e26be1
@@ -6405,7 +6405,7 @@ ssg.md.util.misc.FileUtil	ssg.md.util.misc.FileUtil#getNameOnly(File)	def	ab1795
 ssg.md.util.misc.FileUtil	ssg.md.util.misc.FileUtil#isChildOf(File,File)	def	d6d8b672aae3ade7
 ssg.md.util.misc.FileUtil	ssg.md.util.misc.FileUtil#pathSlash(File)	def	a0f9a81fd8b6ef65
 ssg.md.util.misc.FileUtil	ssg.md.util.misc.FileUtil#plus(File,String)	def	9ee9e099729d8deb
-ssg.md.util.misc.ImageUtils	ssg.md.util.misc.ImageUtils	class	7674f8716fa72d76
+ssg.md.util.misc.ImageUtils	ssg.md.util.misc.ImageUtils	class	7ea0c3314f7329e3
 ssg.md.util.misc.ImageUtils	ssg.md.util.misc.ImageUtils#BASE64_ENCODING_PATTERN	val	99fd17033c91cc1d
 ssg.md.util.misc.ImageUtils	ssg.md.util.misc.ImageUtils#TRANSPARENT	val	34125ba0702bcc7a
 ssg.md.util.misc.ImageUtils	ssg.md.util.misc.ImageUtils#addBorder(BufferedImage,Color,int,int)	def	84bd13e7e3d43669
@@ -6427,7 +6427,7 @@ ssg.md.util.misc.ImageUtils	ssg.md.util.misc.ImageUtils#isPossiblyEncodedImage(S
 ssg.md.util.misc.ImageUtils	ssg.md.util.misc.ImageUtils#loadImageFromContent(Array<byte>,String)	def	5e42bf5beea29564
 ssg.md.util.misc.ImageUtils	ssg.md.util.misc.ImageUtils#loadImageFromFile(File)	def	29a1c65c1e6b02f2
 ssg.md.util.misc.ImageUtils	ssg.md.util.misc.ImageUtils#loadImageFromURL(String)	def	55a75dd6b5f2a73a
-ssg.md.util.misc.ImageUtils	ssg.md.util.misc.ImageUtils#loadImageFromURL(String,boolean)	def	2a1399d8dc19977c
+ssg.md.util.misc.ImageUtils	ssg.md.util.misc.ImageUtils#loadImageFromURL(String,boolean)	def	e0752047b5d71c93
 ssg.md.util.misc.ImageUtils	ssg.md.util.misc.ImageUtils#makeRoundedCorner(BufferedImage,int,int)	def	5ee4b323084dd18a
 ssg.md.util.misc.ImageUtils	ssg.md.util.misc.ImageUtils#punchOuterHighlightOval(BufferedImage,BufferedImage,int,int,int,int,int,Color,int,int,boolean)	def	b26b327ad3f907f4
 ssg.md.util.misc.ImageUtils	ssg.md.util.misc.ImageUtils#punchOuterHighlightRectangle(BufferedImage,BufferedImage,int,int,int,int,int,int,Color,int,int,boolean)	def	8ec65b23ac0f9bee
@@ -6885,8 +6885,8 @@ ssg.md.util.sequence.BasedSequenceImpl	ssg.md.util.sequence.BasedSequenceImpl#un
 ssg.md.util.sequence.BasedUtils	ssg.md.util.sequence.BasedUtils	class	a3ed157c28d1c9b4
 ssg.md.util.sequence.BasedUtils	ssg.md.util.sequence.BasedUtils#asBased(CharSequence)	def	0b7b6606a21f2401
 ssg.md.util.sequence.BasedUtils	ssg.md.util.sequence.BasedUtils#generateSegments(IBasedSegmentBuilder<?>,BasedSequence)	def	68f9bff0a23aa052
-ssg.md.util.sequence.CharSubSequence	ssg.md.util.sequence.CharSubSequence	class	dd2c3d50e56e7b23
-ssg.md.util.sequence.CharSubSequence	ssg.md.util.sequence.CharSubSequence#<init>(Array<char>,int)	ctor	f5d224be221ca49e
+ssg.md.util.sequence.CharSubSequence	ssg.md.util.sequence.CharSubSequence	class	783b5595eb8bb739
+ssg.md.util.sequence.CharSubSequence	ssg.md.util.sequence.CharSubSequence#<init>(Array<char>,int)	ctor	891956e145052b50
 ssg.md.util.sequence.CharSubSequence	ssg.md.util.sequence.CharSubSequence#<init>(CharSubSequence,int,int)	ctor	7145c61c5216d6ea
 ssg.md.util.sequence.CharSubSequence	ssg.md.util.sequence.CharSubSequence#allOptions(int)	def	5d45778065fcb89e
 ssg.md.util.sequence.CharSubSequence	ssg.md.util.sequence.CharSubSequence#anyOptions(int)	def	452486c634e23900
@@ -8680,8 +8680,8 @@ ssg.md.util.sequence.SequenceUtils	ssg.md.util.sequence.SequenceUtils#validateIn
 ssg.md.util.sequence.SequenceUtils	ssg.md.util.sequence.SequenceUtils#validateIndexInclusiveEnd(int,int)	def	b5df1b5293b92705
 ssg.md.util.sequence.SequenceUtils	ssg.md.util.sequence.SequenceUtils#validateStartEnd(int,int,int)	def	5b46096f3e6ca2f7
 ssg.md.util.sequence.SequenceUtils	ssg.md.util.sequence.SequenceUtils#visibleSpacesMap	val	e1e9a6ccb3903b69
-ssg.md.util.sequence.SubSequence	ssg.md.util.sequence.SubSequence	class	01e354cac2bac14d
-ssg.md.util.sequence.SubSequence	ssg.md.util.sequence.SubSequence#<init>(CharSequence)	ctor	7ceb5f6ce689f81d
+ssg.md.util.sequence.SubSequence	ssg.md.util.sequence.SubSequence	class	4294a85734e1325a
+ssg.md.util.sequence.SubSequence	ssg.md.util.sequence.SubSequence#<init>(CharSequence)	ctor	7657b44218932ad8
 ssg.md.util.sequence.SubSequence	ssg.md.util.sequence.SubSequence#<init>(SubSequence,int,int)	ctor	41eb26ad822cb89c
 ssg.md.util.sequence.SubSequence	ssg.md.util.sequence.SubSequence#addSegments(IBasedSegmentBuilder<?>)	def	17202f4de1d8f377
 ssg.md.util.sequence.SubSequence	ssg.md.util.sequence.SubSequence#allOptions(int)	def	d382c9df39b8c108
