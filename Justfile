@@ -115,7 +115,7 @@ md_ext_module := "ported/ssg-md-ext"
 # lls's port root. Its upstream is `{{gdx_src}}/src` — the same vendored libGDX tree `gdx_module`
 # converts, restricted to the twelve sources lls carries `Ported from` headers for
 # (`LlsMigrate.Files` is the authority; `PROGRESS.md` §13.28).
-lls_rungs     := env_var_or_default("LLS_RUNGS", "")   # decision rungs above L0 for an experiment run (PROGRESS 13.29)
+lls_rungs     := env_var_or_default("LLS_RUNGS", "nullable,ordering")   # decision rungs on lls (PROGRESS 13.29); override for an experiment
 lls_module    := "ported/lls"
 
 # The lls CHECKOUT: the HAND-WRITTEN half `port-lls` compiles beside the emitted twelve, and the
