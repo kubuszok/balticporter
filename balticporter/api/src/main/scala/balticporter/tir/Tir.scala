@@ -522,7 +522,12 @@ object Tree:
     * terms). `raw` is closed Scala text; a call-site substitution may carry NUMBERED HOLES
     * ([[Opaque.hole]]) with `holes` supplying one term per index, so later phases and xref still
     * reach the spliced arguments ([[spliced]]). `holes = Nil` is the closed default. */
-  final case class Opaque(raw: String, tpe: TypeRepr, origin: Origin, holes: List[Term] = Nil)
+  final case class Opaque(raw: String, tpe: TypeRepr, origin: Origin, holes: List[Term] = Nil,
+                          /** `Some(name)`: spliced into the COMPANION rather than the class body,
+                            * under this name. A spliced member has no symbol, so its home AND its
+                            * name — which the inherited-statics export must exclude — ride on the
+                            * node (`CLAUDE.md` §1(b)). */
+                          companionMember: Option[String] = None)
       extends Term:
 
     /** `raw` with each hole replaced by `render` of the term it names.

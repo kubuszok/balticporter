@@ -387,7 +387,11 @@ private[emit] trait TirEmitterNotes:
     val m = collection.mutable.Map[SymId, Set[String]]()
     def scan(cd: Tree.ClassDef): Unit =
       m(cd.symbol) = basePublishedStatics(cd.symbol).getOrElse(
-        cd.body.collect { case d: Definition if sym(d.symbol).flags.isStatic => esc(sym(d.symbol).name) }.toSet)
+        cd.body.collect {
+          case d: Definition if sym(d.symbol).flags.isStatic => esc(sym(d.symbol).name)
+          // a SPLICED companion member has no symbol; its name rides on the node (§1(b))
+          case o: Tree.Opaque if o.companionMember.isDefined => esc(o.companionMember.get)
+        }.toSet)
     allDeclaredClasses.foreach(scan); m.toMap
 
   /** Static names delivered by companion re-export of `s`, mapped to declaring type. */

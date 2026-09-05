@@ -18,7 +18,7 @@ final class AddMembersTransform(val members: Map[String, List[AddMembersTransfor
   def surfaceFingerprint: String =
     if members.isEmpty then ""
     else members.toList.sortBy(_._1).map((o, ms) =>
-      s"$o=${ms.map(m => s"${m.name}/${m.arity}").sorted.mkString(",")}").mkString(";")
+      s"$o=${ms.map(m => s"${m.name}/${m.arity}${if m.static then "!" else ""}").sorted.mkString(",")}").mkString(";")
 
   /** Independent owners UNION; same owner+name REFUSES — two different members at the same
     * declaration is a conflict only a human can resolve. */
@@ -28,7 +28,7 @@ final class AddMembersTransform(val members: Map[String, List[AddMembersTransfor
         (owner, specs) <- o.members.toList.sortBy(_._1)
         existing       <- members.get(owner).toList
         s              <- specs
-        if existing.exists(e => e.name == s.name && e.arity == s.arity)
+        if existing.exists(e => e.name == s.name && e.arity == s.arity && e.static == s.static)
       yield s"${MemberKey(owner, s.name).render}/${s.arity}: member already declared"
       if conflicts.nonEmpty then Left(conflicts.mkString("; "))
       else
@@ -81,12 +81,14 @@ final class AddMembersTransform(val members: Map[String, List[AddMembersTransfor
               detail     = Map(
                 "member" -> s.name,
                 "arity"  -> s.arity.toString,
+                "home"   -> (if s.static then "companion" else "class"),
                 "why"    -> s.why.getOrElse("hand-port member not present in upstream java"),
               ),
               reason = s.reason,
               origin = program.definitionOf(cd.symbol).map(_.origin).getOrElse(Origin.synthetic),
             ))
-            Tree.Opaque(s.source, TypeRepr.NoType, Origin.synthetic)
+            Tree.Opaque(s.source, TypeRepr.NoType, Origin.synthetic, Nil,
+                        Option.when(s.static)(s.name))
           }
         case _ => Nil
       val body = cd.body.map {
@@ -109,4 +111,7 @@ object AddMembersTransform:
       source: String,
       reason: Reason = Reason.Configured("add-members", ""),
       why: Option[String] = None,
+      /** splice into the COMPANION object rather than the class body — a java static's home, and
+        * the only shape a FACTORY can take (`CLAUDE.md` §1(b)). */
+      static: Boolean = false,
   )

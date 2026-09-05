@@ -906,6 +906,32 @@ lazy val `port-sge-ai-diff` = (project in file(".ports/sge-ai-diff"))
     ),
   )
 
+// port-lls-diff — lls's differential gate. Test sources are a BUILD PRODUCT: `lls-diff-measure`
+// writes the adapted, comment-masked copies of the lls checkout's suite into
+// ported/lls/src_managed/diff/scala (CLAUDE.md §5.5 — the checkout is never edited).
+lazy val `port-lls-diff` = (project in file(".ports/lls-diff"))
+  .dependsOn(`port-lls`.jvm(scalaV))
+  .settings(
+    name := "balticporter-port-lls-diff",
+    publish / skip := true,
+    scalacOptions := Seq("-nowarn"),
+    // sbt prints at most `maxErrors` diagnostics and this lane COUNTS diagnostics (§5, M5.10's
+    // neighbour): capped at 100 the residue would read as a floor it never reached.
+    maxErrors := 100000,
+    Test / unmanagedSourceDirectories := Seq(
+      (ThisBuild / baseDirectory).value / "ported" / "lls" / "src_managed" / "diff" / "scala"
+    ),
+    // munit 1.2.0, the version EVERY other lane pins — and not lls's own 1.3.5. munit 1.3's sbt
+    // reporter prints no per-test marker for a PASS, and the outcome parser every lane shares
+    // reads those markers (`CLAUDE.md` §5.1): on 1.3.5 this suite reported 189 passes as 186
+    // OUTCOMES LOST. The runner's output format is part of the measurement.
+    libraryDependencies ++= Seq(
+      "org.scalameta"  %% "munit"            % "1.2.0"  % Test,
+      "org.scalameta"  %% "munit-scalacheck" % "1.2.0"  % Test,
+      "org.scalacheck" %% "scalacheck"       % "1.20.0" % Test,
+    ),
+  )
+
 // port-sge-textra-diff — TextraTypist's differential gate. Test sources from ported/sge-textra/src/test/scala.
 lazy val `port-sge-textra-diff` = (project in file(".ports/sge-textra-diff"))
   .dependsOn(`port-sge-textra`.jvm(scalaV))
@@ -1258,7 +1284,7 @@ lazy val ports = project
   .aggregate(
     `port-lls`.projectRefs *
   )
-  .aggregate(`port-sge-ai-diff`, `port-sge-textra-diff`, `port-sge-visui-diff`)
+  .aggregate(`port-sge-ai-diff`, `port-sge-textra-diff`, `port-sge-visui-diff`, `port-lls-diff`)
   .aggregate(
     `port-sge-ref`, `port-sge-ecs-ref`, `port-sge-graphs-ref`, `port-sge-anim8-ref`,
     `port-sge-noise-ref`, `port-sge-jbump-ref`, `port-sge-gltf-ref`, `port-sge-screens-ref`,

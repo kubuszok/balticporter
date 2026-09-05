@@ -18,6 +18,7 @@
 #   just sg-measure                  simple-graphs + its suite
 #   just noise4j-measure             noise4j — emit, checks, break residue, compile, correlate
 #   just lls-measure                 lls — the twelve libGDX sources lls ported, then lls's own suite
+#   just lls-diff-measure            lls's OWN suite, adapted by a NAME/SHIM table, against ported/lls
 #   just jbump-measure               jbump (no suite upstream — the lane re-derives the zero)
 #   just liqp-measure                liqp + its own 105-file suite (emitted and censused; RUN when it compiles)
 #   just md-measure                  flexmark-java core + the eleven util modules (no test set in scope)
@@ -115,7 +116,7 @@ md_ext_module := "ported/ssg-md-ext"
 # lls's port root. Its upstream is `{{gdx_src}}/src` — the same vendored libGDX tree `gdx_module`
 # converts, restricted to the twelve sources lls carries `Ported from` headers for
 # (`LlsMigrate.Files` is the authority; `PROGRESS.md` §13.28).
-lls_rungs     := env_var_or_default("LLS_RUNGS", "nullable,ordering")   # decision rungs on lls (PROGRESS 13.29); override for an experiment
+lls_rungs     := env_var_or_default("LLS_RUNGS", "nullable,ordering,enrich")   # decision rungs on lls (PROGRESS 13.29); override for an experiment
 lls_module    := "ported/lls"
 
 # The lls CHECKOUT: the HAND-WRITTEN half `port-lls` compiles beside the emitted twelve, and the
@@ -123,6 +124,11 @@ lls_module    := "ported/lls"
 # edited — the lane re-derives both populations rather than asserting them (§13.28).
 lls_hand      := "../lls/lls/src/main/scala"
 lls_tests     := "../lls/lls/src/test/scala"
+# The DIFFERENTIAL lane's three paths: the adapted tree (a BUILD PRODUCT, §5.5), and the two
+# POLICY tables beside the port — the enumerated NAME/SHIM rows and the incompatible files.
+lls_diff_tree := "ported/lls/src_managed/diff/scala"
+lls_diff_shims := "ported/lls/diff-shims.tsv"
+lls_diff_skip := "ported/lls/diff-incompatible.tsv"
 
 # upstream Java, relative to the checkout root
 gdx_src       := "../sge/original-src/libgdx/gdx"
@@ -1984,6 +1990,98 @@ lls-measure:
       echo "(not running lls's suite: it does not compile — a test that cannot run is not a test that passed)"
     fi
 
+    headline "$ERRORS" "$REPORT"
+
+# ---------------------------------------------------------------------------------------------
+# lls-diff — the DIFFERENTIAL gate, `textra-diff-measure`'s shape with one stage textra cannot
+# have: the reference suite is ADAPTED BY A TABLE rather than copied by hand.
+#
+# `lls-measure` already compiles lls's suite AS WRITTEN against the emitted port, and that number
+# (`expected-errors.suite`) answers "how far apart are the two APIs". It cannot answer "does the
+# emitted library BEHAVE like the hand port", because a suite that does not compile runs no test.
+# This lane answers the second question and keeps the first honest: it applies an ENUMERATED
+# NAME/SHIM table (`ported/lls/diff-shims.tsv`) to comment-masked COPIES under `src_managed/diff`
+# — the lls checkout is never edited — and DECLARES, per file with a reason, every test whose
+# assertion cannot survive the emitted shape (`ported/lls/diff-incompatible.tsv`).
+#
+# The two tables are the whole adaptation, and both are read out on every run: a shim row that
+# fires nowhere is printed, an incompatible row naming a file that is gone is FATAL. Nothing here
+# may make a failing assertion pass — that is the one edit a differential suite cannot afford.
+# ---------------------------------------------------------------------------------------------
+[doc("lls-diff — lls's OWN suite, adapted by an enumerated NAME/SHIM table, against the emitted port")]
+lls-diff-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+
+    REPORT="$ROOT/port-report/LlsDifferential"
+    mkdir -p "$MEASURE_TMP" "$REPORT/run-latest"
+
+    # NO MIGRATION RUNS HERE: this lane's subject is the emitted code `lls-measure` produced and
+    # already checked, so there is no check report and re-printing its counts would be two
+    # readings of one artifact that can disagree (`textra-diff-measure`'s rule).
+    echo "-- census population: RE-DERIVED from the reference hand port, never asserted --"
+    REF_FILES=$(find {{lls_tests}} -name '*.scala' | wc -l | tr -d ' ')
+    REF_TESTS=$(munit_emitted {{lls_tests}})
+    echo "reference hand port ({{lls_tests}}): $REF_FILES file(s), $REF_TESTS test(…)"
+    if [ "$REF_FILES" != "18" ] || [ "$REF_TESTS" != "423" ]; then
+      echo "!! THE REFERENCE SUITE MOVED — $REF_FILES files / $REF_TESTS tests, not 18 / 423."
+      echo "   PROGRESS.md §13.29's census was taken against 18 / 423 and is now STALE: a file added"
+      echo "   there is a file nobody has classified, and one removed may be one this lane adapts."
+      echo "   Re-run the census before trusting the outcomes below."
+      exit 1
+    fi
+
+    echo
+    echo "-- adapt: the NAME/SHIM table on comment-masked copies (the lls checkout is never edited) --"
+    if ! shim_tree "$ROOT/{{lls_tests}}" "$ROOT/{{lls_diff_tree}}" "$ROOT/{{lls_diff_shims}}" "$ROOT/{{lls_diff_skip}}"; then
+      echo "!! the adaptation FAILED — refusing to compile a half-written tree"
+      exit 1
+    fi
+    echo "-- incompatible, with the reason each was declined --"
+    grep -vE '^\s*(#|$)' "{{lls_diff_skip}}" | sed 's/^/     /'
+
+    echo
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and the
+    # compile below runs on another (ENGINE-LIMITS M5.10). The port's own report carries the pin.
+    jdk_guard "$ROOT/port-report/LlsMigrate"
+    echo "-- compile (sbt port-lls-diff/Test/compile) --"
+    sbt_compile "port-lls-diff/Test/compile" "$MEASURE_TMP"/llsdiffmeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/llsdiffmeasure.txt
+    echo "TOTAL ERRORS: $ERRORS  (coded $(grep -cE '\[E[0-9]+\].*Error' "$MEASURE_TMP"/llsdiffmeasure.txt) + bare $(grep -cE '^-- Error:' "$MEASURE_TMP"/llsdiffmeasure.txt))"
+    error_baseline_guard "$ERRORS" "$REPORT"
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/llsdiffmeasure.txt | sort | uniq -c | sort -rn | head
+    echo "-- errors by adapted file --"
+    grep -oE "diff/scala/[^:]*\.scala" "$MEASURE_TMP"/llsdiffmeasure.txt | sort | uniq -c | sort -rn | head -20
+
+    if [ "$ERRORS" != "0" ]; then
+      echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
+      echo "SUMMARY  adapted $SHIM_FILES file(s)/$SHIM_TESTS test(…) | run 0 | incompatible $SHIM_SKIPPED_FILES file(s)/$SHIM_SKIPPED_TESTS test(…)"
+      headline "$ERRORS" "$REPORT"
+      exit 0
+    fi
+
+    echo
+    echo "-- run --"
+    sbt_test "port-lls-diff/testOnly *" "$MEASURE_TMP"/llsdiffrun.txt
+    reconcile_outcomes "$MEASURE_TMP"/llsdiffrun.txt "$SHIM_TESTS"; RECONCILED=$?
+
+    echo
+    echo "-- correlation: test failures located to members and Java origins --"
+    # ONE map and no `test=` one: the suite is the HAND PORT's, so it has no source map and cannot
+    # have one. A failure anchors on the LIBRARY member that threw, which is the question a
+    # differential suite asks.
+    correlate "$REPORT/run-latest" --tests "$MEASURE_TMP"/llsdiffrun.txt \
+      --srcmap "$ROOT/port-report/LlsMigrate/run-latest/srcmap.tsv"
+    test_outcome_guard "$REPORT/run-latest" "$RECONCILED" || exit 1
+
+    echo
+    PASSED=$(grep -c $'\tpass$' "$REPORT/run-latest/tests.tsv" 2>/dev/null); PASSED=${PASSED:-0}
+    FAILED=$(grep -c $'\tfail$' "$REPORT/run-latest/tests.tsv" 2>/dev/null); FAILED=${FAILED:-0}
+    echo "SUMMARY  adapted $SHIM_FILES file(s)/$SHIM_TESTS test(…) | pass $PASSED | fail $FAILED | incompatible $SHIM_SKIPPED_FILES file(s)/$SHIM_SKIPPED_TESTS test(…)"
     headline "$ERRORS" "$REPORT"
 
 # ---------------------------------------------------------------------------------------------
@@ -3947,7 +4045,7 @@ measure-all:
     # nothing another lane emits is read by it. Last is therefore the position that leaves the
     # twenty-three established lanes' order — and their numbers — untouched by this port's arrival,
     # which is `usl-measure`'s own reason for being appended rather than slotted in.
-    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure ai-measure ai-test-measure ai-diff-measure textra-measure textra-diff-measure visui-measure visui-diff-measure usl-measure usl-test-measure lls-measure; do
+    for lane in gdx-measure gdx-test-measure ashley-measure anim8-measure gltf-measure vfx-measure sg-measure noise4j-measure jbump-measure screens-measure liqp-measure md-measure md-test-measure md-ext-measure ai-measure ai-test-measure ai-diff-measure textra-measure textra-diff-measure visui-measure visui-diff-measure usl-measure usl-test-measure lls-measure lls-diff-measure; do
       echo
       echo "################################################################## just $lane (full)"
       if ! {{just_executable()}} "$lane"; then

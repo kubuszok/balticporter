@@ -124,3 +124,40 @@ class AddMembersTransformSpec extends munit.FunSuite:
     // porter notes are present in emitted output
     assert(ported.out.contains("porter: added-member"))
   }
+
+  // ---- run: a STATIC member reaches the COMPANION ----
+
+  test("a static spec is emitted in the companion object, not the class body") {
+    val java =
+      """package com.demo;
+        |public class Widget {
+        |  public int x = 1;
+        |}""".stripMargin
+
+    val phase = amt("com.demo.Widget" -> List(
+      MemberSpec("apply", 0, "def apply(): Widget = new Widget()",
+        Reason.Configured("add-members", "com.demo.Widget#apply"), Some("factory"), static = true),
+      MemberSpec("twice", 0, "def twice: Int = x * 2",
+        Reason.Configured("add-members", "com.demo.Widget#twice"), Some("instance")),
+    ))
+
+    val ported = run(java, phase)
+    val out    = ported.out
+    // the companion exists BECAUSE of the static member — this java class declares no static
+    assert(clue(out).contains("object Widget"))
+    val objIdx = out.indexOf("object Widget")
+    assert(clue(out.indexOf("def apply(): Widget")) > clue(objIdx))
+    assert(clue(out.indexOf("def twice")) < clue(objIdx))
+    assertEquals(clue(ported.log.all.count(_.kind == Decision.Kind.AddedMember)), 2)
+    assert(ported.log.all.exists(_.detail.get("home").contains("companion")))
+  }
+
+  test("static is part of the fingerprint and of the merge key") {
+    val inst = amt("com.demo.A" -> List(spec("foo", 0, "def foo: Int = 0")))
+    val stat = amt("com.demo.A" -> List(
+      MemberSpec("foo", 0, "def foo: Int = 0", Reason.Configured("add-members", "x"), None, static = true)))
+    assert(clue(inst.surfaceFingerprint) != clue(stat.surfaceFingerprint))
+    // …so the two are INDEPENDENT keys and compose rather than refusing
+    val dep = base(List(inst)).extendedBy(PortManifest("dep", surface = List(stat)))
+    assertEquals(clue(dep.surfaceFold.refusals), Nil)
+  }

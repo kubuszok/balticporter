@@ -432,9 +432,13 @@ private[emit] trait TirEmitterDecls:
     // excluding the class's OWN static names (a subtype may redeclare one). A STATIC INITIALIZER
     // BLOCK (`<clinit>`) has no Scala identifier to spell and lowers into the companion's body, so
     // it is never in the set. Needs BOTH a statics-bearing parent AND an own `static{}` at once.
+    // A SPLICED companion member is one of the class's own static names too. Without it the
+    // parent's `export` delivers a name this companion also declares — and where that name is
+    // `apply`, scala's own CONSTRUCTOR PROXY is the other definition and the clash is `E120`.
     val ownStaticNames = statics.collect {
       case d: Definition if !d.isInstanceOf[Tree.DefDef] || !isInitBlock(d.asInstanceOf[Tree.DefDef]) =>
         esc(sym(d.symbol).name)
+      case o: Tree.Opaque if o.companionMember.isDefined => esc(o.companionMember.get)
     }.distinct
     // Two exports must not both deliver the same name: `GLInterceptor` already re-exports `GL20`'s
     // constants via `extends GLInterceptor with GL20`, so a second `export GL20.*` duplicates.
@@ -847,6 +851,9 @@ private[emit] trait TirEmitterDecls:
   private[emit] def isStatic(s: Statement): Boolean = s match
     case d: Tree.ClassDef => sym(d.symbol).flags.isStatic
     case d: Definition    => sym(d.symbol).flags.isStatic
+    // a spliced member has no symbol and therefore no flags: its home is carried on the node
+    // (`AddMembersTransform` static specs, `CLAUDE.md` §1(b)).
+    case o: Tree.Opaque   => o.companionMember.isDefined
     case _                => false
 
   /** Scala secondaries must delegate to a PRECEDING constructor, so order fields first, then

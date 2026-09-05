@@ -63,7 +63,7 @@ final class UnusedSymbolTransform extends Phase:
       def name = "unused-symbol/opaque-collect"
       override def transformDefDef(d: Tree.DefDef)(using p: Program): Tree.DefDef =
         d.rhs.foreach {
-          case Tree.Opaque(raw, _, _,  _) =>
+          case Tree.Opaque(raw, _, _, _, _) =>
             val masked = raw
               .replaceAll("//[^\n]*", "")
               .replaceAll("/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/", "")

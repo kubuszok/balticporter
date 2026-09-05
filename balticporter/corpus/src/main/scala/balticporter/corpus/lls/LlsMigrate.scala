@@ -118,11 +118,19 @@ object LlsPolicy:
       target      = NullabilityTransform.Target.Named("lowlevel.Nullable"),
       scope       = balticporter.tir.RuleScope.Everywhere(Set.empty))),
     "ordering" -> List(new CollectionsTransform(retarget = Map("java.util.Comparator" -> "scala.math.Ordering"))),
+    "enrich"   -> List(LlsEnrich.transform),
   )
+
+  /** the order the rungs occupy in `surface` — a pipeline position, not the alphabet. */
+  val RungOrder: List[String] = List("nullable", "ordering", "enrich")
 
   def core(repoRoot: Path, rungs: Set[String] = Set.empty): PortManifest =
     val unknown = rungs -- Rungs.keySet
     require(unknown.isEmpty, s"unknown lls rungs: ${unknown.mkString(",")}; known: ${Rungs.keys.toList.sorted.mkString(",")}")
+    require(RungOrder.toSet == Rungs.keySet, s"RungOrder does not cover every rung: ${Rungs.keySet -- RungOrder.toSet}")
+    // `enrich`'s bodies are written against the EMITTED signatures, which `nullable` decides
+    // (`contains(Nullable[T], Boolean)` vs `contains(T, Boolean)`) — a rung, not a free choice.
+    require(!rungs("enrich") || rungs("nullable"), "lls rung `enrich` requires `nullable`")
     PortManifest(
       name    = "lls",
       governs = Set("com.badlogic.gdx.utils", "com.badlogic.gdx.math"),
@@ -138,7 +146,10 @@ object LlsPolicy:
       ),
       // L0 of the lls ladder: the universal phases only (`MutableParamsTransform` is universal but
       // per-port today); the decision rungs are added one at a time (PROGRESS.md §13.29).
-      surface = List(new MutableParamsTransform) ++ Rungs.toList.sortBy(_._1).collect { case (k, ps) if rungs(k) => ps }.flatten,
+      // `enrich` LAST: its members are verbatim text written against what the rungs below it
+      // emit, so it reads the surface rather than contributing one another phase must walk.
+      surface = List(new MutableParamsTransform) ++
+        RungOrder.filter(rungs).flatMap(Rungs(_)),
       // THE REFERENCE HAND PORT for lls. NOT inherited (DESIGN.md §8.23).
       parity = Some(ParityRef(roots = List(
         repoRoot.resolve("../lls/lls/src/main/scala").normalize))),

@@ -869,7 +869,7 @@ object CtorFunnel:
 
   /** True when `t` contains an `Opaque` node whose text is in `names`. // ENGINE-LIMITS C3 */
   private def containsOpaque(t: Any, names: Set[String]): Boolean = t match
-    case Tree.Opaque(txt, _, _, _) => names.exists(n => txt.contains(n))
+    case Tree.Opaque(txt, _, _, _, _) => names.exists(n => txt.contains(n))
     case xs: Iterable[?]        => xs.exists(containsOpaque(_, names))
     case Some(x)                => containsOpaque(x, names)
     case p: Product             => p.productIterator.exists(containsOpaque(_, names))

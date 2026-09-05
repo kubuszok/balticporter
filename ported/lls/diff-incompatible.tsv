@@ -1,0 +1,17 @@
+# lls differential suite — the tests whose ASSERTION cannot survive the emitted shape.
+#
+# One row per FILE (the compile's granularity), `<path under ../lls/lls/src/test/scala><TAB><why>`.
+# A file here is COUNTED with its reason and never edited into passing (CLAUDE.md §3.5). Every
+# reason names the rung that would retire it, so the list shrinks by a MEASUREMENT and not by
+# rewriting a test.
+#
+lowlevel/util/DynamicArrayTest.scala	primitive type arguments (DynamicArray[Int], DynamicArray.wrap): the emitted DynamicArray[T <: java.lang.Object] is java's, and lls's MkArray specialisation is a rung this port does not have
+lowlevel/util/DynamicArrayLongSuite.scala	primitive type arguments, as above (DynamicArray[Long])
+lowlevel/util/DynamicArrayAbstractRefTest.scala	asserts MkArray INTERNALS — `wrapRefUnchecked`, an Object[] backing array, the `castArray` witness — none of which the port represents
+lowlevel/util/ObjectMapTest.scala	primitive type arguments (ObjectMap[String, Int]); java's ObjectMap<K, V> bounds both by Object
+lowlevel/util/ArrayMapTest.scala	primitive type arguments (ArrayMap[String, Int]), as above
+lowlevel/util/OrderedMapTest.scala	primitive type arguments (OrderedMap[String, Int]), as above
+lowlevel/util/SortTest.scala	primitive type arguments plus Sort's MkArray witness argument; the emitted Sort is java's singleton
+lowlevel/util/QuickSelectTest.scala	QuickSelect[A] with an MkArray witness; the emitted QuickSelect is java's — no type parameter, no witness, reached through Select
+lowlevel/util/MkArrayResolutionTest.scala	element types are lls OPAQUE types over primitives (`Pixels`), which are not `<: java.lang.Object`; the test asserts MkArray's own resolution, which the port does not emit
+lowlevel/util/MkArraySpecializedTest.scala	same — asserts MkArray's unboxed specialisation for opaque primitive element types

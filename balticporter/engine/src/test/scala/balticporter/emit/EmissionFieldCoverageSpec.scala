@@ -727,7 +727,11 @@ class EmissionFieldCoverageSpec extends munit.FunSuite:
     probe(Tree.Opaque("f( " + "0" + " )", tInt, O, holes = List(iLit(1))), hostTerm)(
       "raw"   -> Tree.Opaque("g( " + "0" + " )", tInt, O, holes = List(iLit(1))),
       "holes" -> Tree.Opaque("f( " + "0" + " )", tInt, O, holes = List(iLit(2))),
-    )("tpe" -> tpeIsMetadata, "origin" -> originIsMetadata),
+    )("tpe" -> tpeIsMetadata, "origin" -> originIsMetadata,
+      "companionMember" -> Indirect("TirEmitterDecls.isStatic and ownStaticNames, plus " +
+        "TirEmitterNotes.ownStaticsBySym — it names the member's HOME (the companion object) " +
+        "and the static name the inherited-statics export must exclude. The TEXT is the same " +
+        "wherever the node lands, so a TERM position cannot show it")),
 
     // ---- Commented ----------------------------------------------------------------------------
     probe(Tree.Commented(List(triv("note")), Tree.Assign(refA, iLit(1), tUnit, O)),

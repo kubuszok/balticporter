@@ -37,7 +37,7 @@ parameter. **An empty/default parameter must make the phase a no-op.** Current p
 | `BeanPropertyTransform(pairs, targets, scope)` — accessor pair → scala property over the override component, derive java-convention pairs in scope | explicit pairs, derivation scope; `Only(Set.empty)` = no-op; configured key wins |
 | `NullaryArityTransform(scope)` — drop `()` from getter-like nullary methods, whole-or-none per component | `RuleScope`; `Only(Set.empty)` default (it MINTS an arity) |
 | `ClassToTraitTransform(specs)` — abstract class → trait, ctor params → abstract vals, direct subclasses gain `override val` | `Map[fqn, List[ParamMapping]]`; `SurfacePolicy`; differing mappings refuse |
-| `AddMembersTransform(members)` — splice hand-written members at the end of a class body (`Decision.Kind.AddedMember`) | which owners, which members; `Only(Set.empty)` default; same owner+name refuses |
+| `AddMembersTransform(members)` — splice hand-written members at the end of a class body, or of its COMPANION (`MemberSpec.static` — a spliced member has no symbol, so its home rides on the node) | which owners, which members, which home; `Only(Set.empty)` default; same owner+name+home refuses |
 | `RegistryTransform(entries, facadeMembers)` — reflective instantiation becomes a `Class`-keyed registry: rewrite the call, MINT the table/`register`/`create` at the placement, elide the handler the rewrite made dead | which callee, `RuleScope`, `Placement.Member`/`Object` (the three names, `T`'s bound), `seeds`, `handles`, `miss` (`Null`/`Throw`/`JvmReflect(onFailure)`, the non-JVM cost COUNTED); `Only(Set.empty)` default (it MINTS); independent callees union, one placement slot twice refuses (P10) |
 
 **Obligations of every (b) phase** (details: `.claude/rules/phases.md`):

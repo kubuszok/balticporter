@@ -1,0 +1,30 @@
+# lls differential suite — the ENUMERATED NAME/SHIM table (CLAUDE.md §3.5).
+#
+# One row per NAME the reference hand port spells differently from the emitted port. Applied by
+# `scripts/shim-apply.pl` to COMMENT-MASKED code only, per receiver expression; a row that fires
+# nowhere is reported by the lane, because it is a claim about the two APIs that stopped being true.
+# Kinds: `type` (whole-word identifier), `member` (a `.selection`), `text` (a literal call shape).
+#
+# What is NOT here, on purpose: nothing that would make a failing assertion pass. A test whose
+# assertion cannot survive the port's shape is listed in `diff-incompatible.tsv` with its reason.
+#
+# kind	from	to
+#
+# (1) `Select` is a java SINGLETON reached through `instance()`; lls promoted the five-argument
+# member to the companion. The port emits java's shape, so the call moves to the instance.
+text	Select.select(	Select.instance().select(
+text	Select.selectIndex(	Select.instance().selectIndex(
+# …and lls threads an `MkArray` witness the port has no analogue for (its arrays are java's). The
+# argument is dropped, per call shape, by its exact spelling — never by position, and one row per
+# shape the suite actually writes (17 + 1 + 2 sites) rather than one pattern over an argument list.
+text	MkArray.anyRef[java.lang.Integer], intOrd,	intOrd,
+text	MkArray.anyRef[java.lang.Integer], intOrd.reverse,	intOrd.reverse,
+text	MkArray.anyRef[String], Ordering.String,	Ordering.String,
+#
+# (2) NULLARY ARITY. lls drops `()` from java's getter-like nullary methods; that is the L1
+# `NullaryArityTransform` rung, which this port does not run, so the emitted members keep java's
+# arity. Per RECEIVER (`set.`), never as a bare member rename: `Nullable.isEmpty` is genuinely
+# paren-less and a member-wide row would break it.
+text	set.isEmpty	set.isEmpty()
+text	set.first	set.first()
+text	set.orderedItems	set.orderedItems()

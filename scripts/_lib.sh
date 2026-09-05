@@ -1636,3 +1636,55 @@ full_compiles() {
   [ -n "$ref" ]    && sbt_ref_compile "$ref" "$dir"
   return 0
 }
+
+# shim_tree <src-root> <dst-root> <table.tsv> <incompatible.tsv>
+#
+# The DIFFERENTIAL-SUITE preparation (CLAUDE.md §3.5): copy a reference hand port's test tree into
+# a BUILD PRODUCT directory (§5.5 — the checkout is never edited), applying the enumerated
+# NAME/SHIM table to comment-masked code (`scripts/shim-apply.pl`), and LEAVING OUT the files
+# `incompatible.tsv` names. Both tables are policy and live beside the port.
+#
+# `incompatible.tsv` is `<path-relative-to-src-root><TAB><reason>`; a file listed there is a test
+# whose ASSERTION cannot survive the port's shape, counted with its reason and NEVER edited into
+# passing. The function prints the census and exports SHIM_FILES / SHIM_TESTS / SHIM_SKIPPED_FILES /
+# SHIM_SKIPPED_TESTS so the lane reports both halves of the population.
+shim_tree() {
+  local src="$1" dst="$2" table="$3" skiplist="$4"
+  rm -rf "$dst"; mkdir -p "$dst"
+  local tally="$MEASURE_TMP/shim-tally-$$.txt"; : > "$tally"
+  # the skip list WITHOUT its comments: a `#` line is documentation, not a path (and read as one
+  # it fails the does-this-file-exist guard on every run).
+  local skip="$MEASURE_TMP/shim-skip-$$.tsv"; : > "$skip"
+  [ -f "$skiplist" ] && grep -vE '^\s*(#|$)' "$skiplist" > "$skip"
+  SHIM_FILES=0; SHIM_SKIPPED_FILES=0
+  local rel out f
+  while IFS= read -r f; do
+    rel="${f#"$src"/}"
+    if cut -f1 "$skip" | grep -qxF "$rel"; then
+      SHIM_SKIPPED_FILES=$((SHIM_SKIPPED_FILES + 1)); continue
+    fi
+    out="$dst/$rel"; mkdir -p "$(dirname "$out")"
+    perl "$ROOT/scripts/shim-apply.pl" "$table" "$f" > "$out" 2>>"$tally" || {
+      echo "!! shim-apply FAILED on $rel"; return 1; }
+    SHIM_FILES=$((SHIM_FILES + 1))
+  done < <(find "$src" -name '*.scala' | sort)
+  SHIM_TESTS=$(munit_emitted "$dst")
+  SHIM_SKIPPED_TESTS=0
+  while IFS=$'\t' read -r rel _; do
+    [ -n "$rel" ] || continue
+    [ -f "$src/$rel" ] || { echo "!! incompatible.tsv names a file that is not in the tree: $rel"; return 1; }
+    SHIM_SKIPPED_TESTS=$((SHIM_SKIPPED_TESTS + $(munit_emitted "$src/$rel")))
+  done < "$skip"
+  echo "adapted: $SHIM_FILES file(s), $SHIM_TESTS test(…) -> $dst"
+  echo "incompatible (declared, with a reason, never edited): $SHIM_SKIPPED_FILES file(s), $SHIM_SKIPPED_TESTS test(…)"
+  # A table row that fires NOWHERE is a claim about the two APIs that has stopped being true.
+  local dead
+  dead=$(awk -F'\t' '$1=="shim-fired" { n[$2"\t"$3] += $4 } END { for (k in n) if (n[k]==0) print k }' "$tally")
+  if [ -n "$dead" ]; then
+    echo "!! SHIM ROWS THAT NEVER FIRED — the table claims a difference the suite no longer has:"
+    echo "$dead" | sed 's/^/     /'
+  else
+    echo "every shim row fired at least once"
+  fi
+  return 0
+}
