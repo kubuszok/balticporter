@@ -111,7 +111,7 @@ sge.visui.building.StandardTableBuilder	sge.visui.building.StandardTableBuilder#
 sge.visui.building.StandardTableBuilder	sge.visui.building.StandardTableBuilder#<init>(int,int,Padding,Sge)	ctor	a774002d43e21315
 sge.visui.building.StandardTableBuilder	sge.visui.building.StandardTableBuilder#<init>(int,int,Sge)	ctor	6d8e3c598d0e2243
 sge.visui.building.StandardTableBuilder	sge.visui.building.StandardTableBuilder#fillTable(Table)	def	7cf156c333fd0654
-sge.visui.building.TableBuilder	sge.visui.building.TableBuilder	class	180e24ef450f8782
+sge.visui.building.TableBuilder	sge.visui.building.TableBuilder	class	a10a3c7b00f87a27
 sge.visui.building.TableBuilder	sge.visui.building.TableBuilder#<init>(Padding,Sge)	ctor	1017e46f30256dcc
 sge.visui.building.TableBuilder	sge.visui.building.TableBuilder#<init>(int,int,Padding,Sge)	ctor	a774002d43e21315
 sge.visui.building.TableBuilder	sge.visui.building.TableBuilder#<init>(int,int,Sge)	ctor	76960d547f7ef8be
@@ -137,7 +137,7 @@ sge.visui.building.TableBuilder	sge.visui.building.TableBuilder#currentRowSize	v
 sge.visui.building.TableBuilder	sge.visui.building.TableBuilder#defaultWidgetPadding()	def	484b4359752b5244
 sge.visui.building.TableBuilder	sge.visui.building.TableBuilder#fillTable(Table)	def	205cca7fd6b68584
 sge.visui.building.TableBuilder	sge.visui.building.TableBuilder#getGreatestCommonDenominator(int,int)	def	585a51215140b282
-sge.visui.building.TableBuilder	sge.visui.building.TableBuilder#getLowestCommonMultiple(DynamicArray<int>)	def	ef08fcbcd5eaa986
+sge.visui.building.TableBuilder	sge.visui.building.TableBuilder#getLowestCommonMultiple(DynamicArray<int>)	def	d8876e68aba31eb2
 sge.visui.building.TableBuilder	sge.visui.building.TableBuilder#getLowestCommonMultiple(int,int)	def	9302d2e9c646a406
 sge.visui.building.TableBuilder	sge.visui.building.TableBuilder#getWidget(int)	def	17838f3f7eda8b1a
 sge.visui.building.TableBuilder	sge.visui.building.TableBuilder#prepareBuiltTable(T)	def	803034de0d875387
@@ -570,7 +570,7 @@ sge.visui.util.Validators	sge.visui.util.Validators$LesserThanValidator#lesserTh
 sge.visui.util.Validators	sge.visui.util.Validators$LesserThanValidator#setLesserThan(float)	def	408df8e360beada7
 sge.visui.util.Validators	sge.visui.util.Validators$LesserThanValidator#setUseEquals(boolean)	def	d83d08717bfc0b92
 sge.visui.util.Validators	sge.visui.util.Validators$LesserThanValidator#validateInput(String)	def	25220f6a326dee70
-sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter	class	8b138b9cf1643eb3
+sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter	class	366ab0c9be2c930f
 sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter#clickListener	val	066785e1ca142f96
 sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter#deselectView(ViewT)	def	5edbba61b0e046a1
 sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter#fillTable(VisTable)	def	85927db8430e547f
@@ -602,7 +602,7 @@ sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAd
 sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter$ListClickListener#item	val	89a6a4bac48fbc7e
 sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter$ListClickListener#touchDown(InputEvent,float,float,int,int)	def	51b3cc644bee998a
 sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter$ListClickListener#view	val	53e15e04bc712444
-sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter$ListSelection	class	6503fcd5638568be
+sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter$ListSelection	class	47e152d3e2d02fda
 sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter$ListSelection#<stmt1>	stmt	36a8b8e0694ed43c
 sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter$ListSelection#DEFAULT_KEY	val	67497a5a31f352b1
 sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter$ListSelection#adapter	val	2c87e2af09e66189
@@ -627,7 +627,7 @@ sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAd
 sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter$ListSelection#programmaticChangeEvents_=(boolean)	def	57846071ab32db2a
 sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter$ListSelection#select(ItemT)	def	4b2497b6f4f92e90
 sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter$ListSelection#select(ItemT,ViewT,boolean)	def	c9b24260700795fb
-sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter$ListSelection#selectGroup(ItemT)	def	1b13998b11b80685
+sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter$ListSelection#selectGroup(ItemT)	def	55f055798d06ce14
 sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter$ListSelection#selection	val	44fb62e3d480c358
 sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter$ListSelection#selection()	def	7c56addccf806e15
 sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter$ListSelection#touchDown(ViewT,ItemT)	def	3375f7e9a339f2af
@@ -635,7 +635,7 @@ sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAd
 sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter$ListSelectionListener#deselected(ItemT,ViewT)	def	428b7cae1dd4f0bc
 sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter$ListSelectionListener#selected(ItemT,ViewT)	def	4a02338025a1f447
 sge.visui.util.adapter.AbstractListAdapter	sge.visui.util.adapter.AbstractListAdapter$SelectionMode	class	0e5b12b3c3f838be
-sge.visui.util.adapter.ArrayAdapter	sge.visui.util.adapter.ArrayAdapter	class	7f96df7f16aad47b
+sge.visui.util.adapter.ArrayAdapter	sge.visui.util.adapter.ArrayAdapter	class	efeac7f97fa0f612
 sge.visui.util.adapter.ArrayAdapter	sge.visui.util.adapter.ArrayAdapter#<stmt1>	stmt	7806eb1a90208b07
 sge.visui.util.adapter.ArrayAdapter	sge.visui.util.adapter.ArrayAdapter#add(ItemT)	def	92e5d64a3bd035dd
 sge.visui.util.adapter.ArrayAdapter	sge.visui.util.adapter.ArrayAdapter#addAll(Array<ItemT>)	def	597654620742e9c6
@@ -648,11 +648,11 @@ sge.visui.util.adapter.ArrayAdapter	sge.visui.util.adapter.ArrayAdapter#get(int)
 sge.visui.util.adapter.ArrayAdapter	sge.visui.util.adapter.ArrayAdapter#indexOf(ItemT)	def	ef2fe914370379ea
 sge.visui.util.adapter.ArrayAdapter	sge.visui.util.adapter.ArrayAdapter#insert(int,ItemT)	def	3b1b776419fd7c54
 sge.visui.util.adapter.ArrayAdapter	sge.visui.util.adapter.ArrayAdapter#iterable()	def	75f1bd304bc9b7ad
-sge.visui.util.adapter.ArrayAdapter	sge.visui.util.adapter.ArrayAdapter#pop()	def	9b4321fccf799dd2
-sge.visui.util.adapter.ArrayAdapter	sge.visui.util.adapter.ArrayAdapter#removeAll(DynamicArray<?>,boolean)	def	9992872089f60462
+sge.visui.util.adapter.ArrayAdapter	sge.visui.util.adapter.ArrayAdapter#pop()	def	a60ce9056d14da2a
+sge.visui.util.adapter.ArrayAdapter	sge.visui.util.adapter.ArrayAdapter#removeAll(DynamicArray<?>,boolean)	def	f777d5d1ccd7754d
 sge.visui.util.adapter.ArrayAdapter	sge.visui.util.adapter.ArrayAdapter#removeIndex(int)	def	a23bb6674f0b089d
-sge.visui.util.adapter.ArrayAdapter	sge.visui.util.adapter.ArrayAdapter#removeRange(int,int)	def	35a2ffde26a9e150
-sge.visui.util.adapter.ArrayAdapter	sge.visui.util.adapter.ArrayAdapter#removeValue(ItemT,boolean)	def	770ea4b95fa632d7
+sge.visui.util.adapter.ArrayAdapter	sge.visui.util.adapter.ArrayAdapter#removeRange(int,int)	def	63a41bd27c215fc6
+sge.visui.util.adapter.ArrayAdapter	sge.visui.util.adapter.ArrayAdapter#removeValue(ItemT,boolean)	def	41e9fec2f2907a0b
 sge.visui.util.adapter.ArrayAdapter	sge.visui.util.adapter.ArrayAdapter#reverse()	def	c6a1ceb5ed443259
 sge.visui.util.adapter.ArrayAdapter	sge.visui.util.adapter.ArrayAdapter#set(int,ItemT)	def	3d7ec1c9d07302b0
 sge.visui.util.adapter.ArrayAdapter	sge.visui.util.adapter.ArrayAdapter#shuffle()	def	32b12712911d6c3b
@@ -764,12 +764,12 @@ sge.visui.util.dialog.Dialogs	fieldTable	val	adc978d54a101e71
 sge.visui.util.dialog.Dialogs	noBtnListener	val	bda78381c6e6e11d
 sge.visui.util.dialog.Dialogs	sge.Sge#<given-static>	val	5c777f5d4e74fb4b
 sge.visui.util.dialog.Dialogs	sge.Sge#<given>	val	5c777f5d4e74fb4b
-sge.visui.util.dialog.Dialogs	sge.visui.util.dialog.Dialogs	class	2c53c3f0e11a7459
+sge.visui.util.dialog.Dialogs	sge.visui.util.dialog.Dialogs	class	99cd43eee19b146a
 sge.visui.util.dialog.Dialogs	sge.visui.util.dialog.Dialogs#BUTTON_DETAILS	val	98490c16438ebcfc
 sge.visui.util.dialog.Dialogs	sge.visui.util.dialog.Dialogs#BUTTON_OK	val	ce28e11189d611ea
 sge.visui.util.dialog.Dialogs	sge.visui.util.dialog.Dialogs#createScrollPane(Actor,Sge)	def	6667c8ab6c697508
 sge.visui.util.dialog.Dialogs	sge.visui.util.dialog.Dialogs#getStackTrace(Throwable)	def	1318e3136a74a69f
-sge.visui.util.dialog.Dialogs	sge.visui.util.dialog.Dialogs#getStackTrace(Throwable,DynamicArray<char>)	def	d404d46e7fd741b8
+sge.visui.util.dialog.Dialogs	sge.visui.util.dialog.Dialogs#getStackTrace(Throwable,DynamicArray<char>)	def	df23fe230cb13f1d
 sge.visui.util.dialog.Dialogs	sge.visui.util.dialog.Dialogs#showConfirmDialog(Stage,String,String,Array<String>,Array<T>,ConfirmDialogListener<T>,Sge)	def	36fe921c2327778d
 sge.visui.util.dialog.Dialogs	sge.visui.util.dialog.Dialogs#showDetailsDialog(Stage,String,String,String,Sge)	def	0aa7e29bb137b74f
 sge.visui.util.dialog.Dialogs	sge.visui.util.dialog.Dialogs#showDetailsDialog(Stage,String,String,String,boolean,Sge)	def	af1173ed94641fd9
@@ -1213,11 +1213,11 @@ sge.visui.widget.Draggable	sge.visui.widget.Draggable$MimicActor#draw(Batch,floa
 sge.visui.widget.Draggable	sge.visui.widget.Draggable$MimicActor#getHeight()	def	0e821f03f852a867
 sge.visui.widget.Draggable	sge.visui.widget.Draggable$MimicActor#getWidth()	def	97ef5e6e307daf55
 sge.visui.widget.Draggable	sge.visui.widget.Draggable$MimicActor#remove()	def	37e2953a86afbc69
-sge.visui.widget.HighlightTextArea	sge.visui.widget.HighlightTextArea	class	40ae0a56559b1f30
+sge.visui.widget.HighlightTextArea	sge.visui.widget.HighlightTextArea	class	f990ce694c9d082d
 sge.visui.widget.HighlightTextArea	sge.visui.widget.HighlightTextArea#<init>(String,Sge)	ctor	f429088585f2625e
 sge.visui.widget.HighlightTextArea	sge.visui.widget.HighlightTextArea#<init>(String,String,Sge)	ctor	79afbb3831f1458b
 sge.visui.widget.HighlightTextArea	sge.visui.widget.HighlightTextArea#<init>(String,VisTextFieldStyle,Sge)	ctor	48e8f5df1bf7e1bf
-sge.visui.widget.HighlightTextArea	sge.visui.widget.HighlightTextArea#calculateOffsets()	def	ff97a223b39d9cb8
+sge.visui.widget.HighlightTextArea	sge.visui.widget.HighlightTextArea#calculateOffsets()	def	0ea61e7d5e3b626a
 sge.visui.widget.HighlightTextArea	sge.visui.widget.HighlightTextArea#chunkUpdateScheduled	val	1ebfd5d54819c8b0
 sge.visui.widget.HighlightTextArea	sge.visui.widget.HighlightTextArea#createCompatibleScrollPane()	def	b7b6e6818bd31b60
 sge.visui.widget.HighlightTextArea	sge.visui.widget.HighlightTextArea#defaultColor	val	ab38427f27b0a1b9
@@ -1454,7 +1454,7 @@ sge.visui.widget.MenuItem	sge.visui.widget.MenuItem$MenuItemStyle	class	f49b2dfa
 sge.visui.widget.MenuItem	sge.visui.widget.MenuItem$MenuItemStyle#<init>(Drawable)	ctor	645bd84cc6590895
 sge.visui.widget.MenuItem	sge.visui.widget.MenuItem$MenuItemStyle#<init>(MenuItemStyle)	ctor	9c21e94cf0b9704d
 sge.visui.widget.MenuItem	sge.visui.widget.MenuItem$MenuItemStyle#subMenu	val	5f83fc9fc0ff72ef
-sge.visui.widget.MultiSplitPane	sge.visui.widget.MultiSplitPane	class	c0970763a983a7c8
+sge.visui.widget.MultiSplitPane	sge.visui.widget.MultiSplitPane	class	af2dce7dd4dc4b5d
 sge.visui.widget.MultiSplitPane	sge.visui.widget.MultiSplitPane#<init>(boolean,Sge)	ctor	5f3df88b5adedba3
 sge.visui.widget.MultiSplitPane	sge.visui.widget.MultiSplitPane#<init>(boolean,String,Sge)	ctor	66c160623dbbd5e3
 sge.visui.widget.MultiSplitPane	sge.visui.widget.MultiSplitPane#<stmt1>	stmt	b9293bb40e7c975a
@@ -1465,8 +1465,8 @@ sge.visui.widget.MultiSplitPane	sge.visui.widget.MultiSplitPane#addActor(Actor)	
 sge.visui.widget.MultiSplitPane	sge.visui.widget.MultiSplitPane#addActorAfter(Actor,Actor)	def	3afb3a4168160369
 sge.visui.widget.MultiSplitPane	sge.visui.widget.MultiSplitPane#addActorAt(int,Actor)	def	d26113ff841c72e8
 sge.visui.widget.MultiSplitPane	sge.visui.widget.MultiSplitPane#addActorBefore(Actor,Actor)	def	b113ab0b33306f2b
-sge.visui.widget.MultiSplitPane	sge.visui.widget.MultiSplitPane#calculateHorizBoundsAndPositions()	def	fe32d1ca0cc12d52
-sge.visui.widget.MultiSplitPane	sge.visui.widget.MultiSplitPane#calculateVertBoundsAndPositions()	def	8890e9a31b62c7c3
+sge.visui.widget.MultiSplitPane	sge.visui.widget.MultiSplitPane#calculateHorizBoundsAndPositions()	def	3883f0096ecc60e6
+sge.visui.widget.MultiSplitPane	sge.visui.widget.MultiSplitPane#calculateVertBoundsAndPositions()	def	d8fd69000ac0dadd
 sge.visui.widget.MultiSplitPane	sge.visui.widget.MultiSplitPane#draw(Batch,float)	def	2a516ffaa8248569
 sge.visui.widget.MultiSplitPane	sge.visui.widget.MultiSplitPane#getHandleContaining(float,float)	def	631f122d3dd28ba0
 sge.visui.widget.MultiSplitPane	sge.visui.widget.MultiSplitPane#getMinHeight()	def	34157e10c6645a46
@@ -1684,7 +1684,7 @@ sge.visui.widget.VisCheckBox	sge.visui.widget.VisCheckBox$VisCheckBoxStyle#error
 sge.visui.widget.VisCheckBox	sge.visui.widget.VisCheckBox$VisCheckBoxStyle#focusBorder	val	ef636d133b4773c6
 sge.visui.widget.VisCheckBox	sge.visui.widget.VisCheckBox$VisCheckBoxStyle#tick	val	5deb8709c74afdd9
 sge.visui.widget.VisCheckBox	sge.visui.widget.VisCheckBox$VisCheckBoxStyle#tickDisabled	val	ad4dac47aaa29a84
-sge.visui.widget.VisDialog	sge.visui.widget.VisDialog	class	1eb017b865aa6687
+sge.visui.widget.VisDialog	sge.visui.widget.VisDialog	class	6e340b5bd85c7a83
 sge.visui.widget.VisDialog	sge.visui.widget.VisDialog#<init>(String,Sge)	ctor	ff1e834a0db308f3
 sge.visui.widget.VisDialog	sge.visui.widget.VisDialog#<init>(String,String,Sge)	ctor	7dde64f90a9ff015
 sge.visui.widget.VisDialog	sge.visui.widget.VisDialog#<init>(String,WindowStyle,Sge)	ctor	48f27f5074ff2314
@@ -1703,7 +1703,7 @@ sge.visui.widget.VisDialog	sge.visui.widget.VisDialog#focusListener	val	3b19dc8d
 sge.visui.widget.VisDialog	sge.visui.widget.VisDialog#hide()	def	c3301804c8f7cd95
 sge.visui.widget.VisDialog	sge.visui.widget.VisDialog#hide(Action)	def	75c7c005e6d67ad2
 sge.visui.widget.VisDialog	sge.visui.widget.VisDialog#ignoreTouchDown	val	68cdcc044813f2f9
-sge.visui.widget.VisDialog	sge.visui.widget.VisDialog#initialize()	def	8a88f270e0753fae
+sge.visui.widget.VisDialog	sge.visui.widget.VisDialog#initialize()	def	a9278b9a3f1d00b6
 sge.visui.widget.VisDialog	sge.visui.widget.VisDialog#key(int,Object)	def	f37759e4e25fbc46
 sge.visui.widget.VisDialog	sge.visui.widget.VisDialog#previousKeyboardFocus	val	f109f49d2956ac17
 sge.visui.widget.VisDialog	sge.visui.widget.VisDialog#previousScrollFocus	val	4f969fe245c67b61
@@ -1967,7 +1967,7 @@ sge.visui.widget.VisTextButton	sge.visui.widget.VisTextButton$VisTextButtonStyle
 sge.visui.widget.VisTextButton	sge.visui.widget.VisTextButton$VisTextButtonStyle#<init>(Drawable,Drawable,Drawable,BitmapFont)	ctor	a0838f4d203894d9
 sge.visui.widget.VisTextButton	sge.visui.widget.VisTextButton$VisTextButtonStyle#<init>(VisTextButtonStyle)	ctor	919cffea8a1d2958
 sge.visui.widget.VisTextButton	sge.visui.widget.VisTextButton$VisTextButtonStyle#focusBorder	val	ef636d133b4773c6
-sge.visui.widget.VisTextField	sge.visui.widget.VisTextField	class	37be2858f4781643
+sge.visui.widget.VisTextField	sge.visui.widget.VisTextField	class	a8fc99300e2d1ec1
 sge.visui.widget.VisTextField	sge.visui.widget.VisTextField#<init>(String,Sge)	ctor	4ee24faaabaa69bb
 sge.visui.widget.VisTextField	sge.visui.widget.VisTextField#<init>(String,String,Sge)	ctor	ada7cabe0cbe2d33
 sge.visui.widget.VisTextField	sge.visui.widget.VisTextField#<init>(String,VisTextFieldStyle,Sge)	ctor	cf2f550f7f7a2156
@@ -2110,7 +2110,7 @@ sge.visui.widget.VisTextField	sge.visui.widget.VisTextField#tmp3	val	17e0a8c9d84
 sge.visui.widget.VisTextField	sge.visui.widget.VisTextField#toString()	def	5be231f7150e2c56
 sge.visui.widget.VisTextField	sge.visui.widget.VisTextField#undoCursorPos	val	3b27490dced9f18b
 sge.visui.widget.VisTextField	sge.visui.widget.VisTextField#undoText	val	f59786a8c8ee4954
-sge.visui.widget.VisTextField	sge.visui.widget.VisTextField#updateDisplayText()	def	38c8c3defd2a38c8
+sge.visui.widget.VisTextField	sge.visui.widget.VisTextField#updateDisplayText()	def	c1777bc7630dc44a
 sge.visui.widget.VisTextField	sge.visui.widget.VisTextField#visibleTextEnd	val	c18f15dd904a2c24
 sge.visui.widget.VisTextField	sge.visui.widget.VisTextField#visibleTextStart	val	1a98076d428c289b
 sge.visui.widget.VisTextField	sge.visui.widget.VisTextField#withinMaxLength(int)	def	03c05c7102393906
@@ -2531,7 +2531,7 @@ sge.visui.widget.color.internal.VerticalChannelBar	sge.visui.widget.color.intern
 sge.visui.widget.file.FileChooser	icon	val	5f2ec947c215c162
 sge.visui.widget.file.FileChooser	labelCell	val	fc6fe9d97c2c77b0
 sge.visui.widget.file.FileChooser	name	val	3621675d08b1abfe
-sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser	class	2bceea6eed5867c8
+sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser	class	a7d548f7f4a0560e
 sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#<init>(FileHandle,Mode,Sge)	ctor	6e229dd2f472a912
 sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#<init>(Mode,Sge)	ctor	421927ea4571928c
 sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#<init>(String,Mode,Sge)	ctor	1ccd9ee60c78e128
@@ -2542,7 +2542,7 @@ sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#SHORTCUTS_CO
 sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#activeFileTypeFilterRule()	def	463d8598a86ef9f3
 sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#activeFileTypeRule	val	7c536243efefec77
 sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#addFavorite(FileHandle)	def	4e66e8c6ea567c4c
-sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#addRecentDirectory(FileHandle)	def	80f33572c91a5c19
+sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#addRecentDirectory(FileHandle)	def	cb708402f2996497
 sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#buildFileList(DynamicArray<FileHandle>,ArrayMap<FileHandle,FileHandleMetadata>,Array<FileHandle>,boolean)	def	924214ad1219060d
 sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#chooserStage()	def	78f53360fb84de5c
 sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#chooserStyle()	def	d6048102917d3afd
@@ -2583,7 +2583,7 @@ sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#fileFilter()
 sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#fileFilter_=(FileFilter)	def	e60e7aeaf0c56104
 sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#fileListAdapter	val	12fcc76e6c22d3bf
 sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#fileListBusyBar	val	fcb97d8d7fdf3ea4
-sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#fileListFromSelected()	def	f33e4dad373ef1e5
+sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#fileListFromSelected()	def	ee5d1012178e265b
 sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#fileListView	val	4b3496a7ed771a97
 sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#fileMenu	val	20f53c3dfbfecb67
 sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#fileNameSuggestionPopup	val	69e0de1c0a8a4336
@@ -2655,7 +2655,7 @@ sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#setDirectory
 sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#setDirectory(String)	def	65070957f19a9efb
 sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#setFavoritesPrefsName(String)	def	eb93a2b343ffffdc
 sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#setFileDeleter(FileDeleter)	def	6681b5b5a99f1043
-sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#setFileTypeFilter(FileTypeFilter)	def	3ca4f658e7641a34
+sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#setFileTypeFilter(FileTypeFilter)	def	28a1cea83c8fe136
 sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#setListener(FileChooserListener)	def	2deb1ea85f4fdc5e
 sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#setPrefsName(String)	def	e92752b45792eb8e
 sge.visui.widget.file.FileChooser	sge.visui.widget.file.FileChooser#setSaveLastDirectory(boolean)	def	459b733faf270647
@@ -2857,9 +2857,9 @@ sge.visui.widget.file.FileUtils	sge.visui.widget.file.FileUtils#sortFiles(Array<
 sge.visui.widget.file.FileUtils	sge.visui.widget.file.FileUtils#sortFiles(Array<FileHandle>,Ordering<FileHandle>)	def	28544b6bd622fa86
 sge.visui.widget.file.FileUtils	sge.visui.widget.file.FileUtils#sortFiles(Array<FileHandle>,Ordering<FileHandle>,boolean)	def	d71141ba8be3b8fd
 sge.visui.widget.file.FileUtils	sge.visui.widget.file.FileUtils#toFileHandle(File,Sge)	def	63d05cab35f99d32
-sge.visui.widget.file.SingleFileChooserListener	sge.visui.widget.file.SingleFileChooserListener	class	a6e64266a749093b
+sge.visui.widget.file.SingleFileChooserListener	sge.visui.widget.file.SingleFileChooserListener	class	2c61d93bfd3e7b21
 sge.visui.widget.file.SingleFileChooserListener	sge.visui.widget.file.SingleFileChooserListener#canceled()	def	faf314aab1f6af7e
-sge.visui.widget.file.SingleFileChooserListener	sge.visui.widget.file.SingleFileChooserListener#selected(DynamicArray<FileHandle>)	def	653522c98e830183
+sge.visui.widget.file.SingleFileChooserListener	sge.visui.widget.file.SingleFileChooserListener#selected(DynamicArray<FileHandle>)	def	6cd37558e3f06e51
 sge.visui.widget.file.SingleFileChooserListener	sge.visui.widget.file.SingleFileChooserListener#selected(FileHandle)	def	931fb7b0ad53422d
 sge.visui.widget.file.StreamingFileChooserListener	sge.visui.widget.file.StreamingFileChooserListener	class	ec33844bd6ec8bbc
 sge.visui.widget.file.StreamingFileChooserListener	sge.visui.widget.file.StreamingFileChooserListener#begin()	def	fb1abc095e56159e
@@ -2952,7 +2952,7 @@ sge.visui.widget.file.internal.FileHandleMetadata	sge.visui.widget.file.internal
 sge.visui.widget.file.internal.FileHandleMetadata	sge.visui.widget.file.internal.FileHandleMetadata#of(FileHandle)	def	a11b6f304c455704
 sge.visui.widget.file.internal.FileHandleMetadata	sge.visui.widget.file.internal.FileHandleMetadata#readableFileSize	val	b17312d5c68c6c14
 sge.visui.widget.file.internal.FileHandleMetadata	sge.visui.widget.file.internal.FileHandleMetadata#readableFileSize()	def	611309071ed468b2
-sge.visui.widget.file.internal.FileHistoryManager	sge.visui.widget.file.internal.FileHistoryManager	class	17f1aa46e0f61d48
+sge.visui.widget.file.internal.FileHistoryManager	sge.visui.widget.file.internal.FileHistoryManager	class	b875be01cca38f4c
 sge.visui.widget.file.internal.FileHistoryManager	sge.visui.widget.file.internal.FileHistoryManager#<stmt10>	stmt	21d85011543b8166
 sge.visui.widget.file.internal.FileHistoryManager	sge.visui.widget.file.internal.FileHistoryManager#<stmt11>	stmt	c9c1b678f6147f5c
 sge.visui.widget.file.internal.FileHistoryManager	sge.visui.widget.file.internal.FileHistoryManager#<stmt12>	stmt	914132cb1e651023
@@ -2975,10 +2975,10 @@ sge.visui.widget.file.internal.FileHistoryManager	sge.visui.widget.file.internal
 sge.visui.widget.file.internal.FileHistoryManager	sge.visui.widget.file.internal.FileHistoryManager#hasHistoryForward()	def	feb606d4f6fd2e1c
 sge.visui.widget.file.internal.FileHistoryManager	sge.visui.widget.file.internal.FileHistoryManager#history	val	3aa22caa909be9d3
 sge.visui.widget.file.internal.FileHistoryManager	sge.visui.widget.file.internal.FileHistoryManager#historyAdd()	def	f1829552ef8cdeb1
-sge.visui.widget.file.internal.FileHistoryManager	sge.visui.widget.file.internal.FileHistoryManager#historyBack()	def	dfe80030a1b3684c
+sge.visui.widget.file.internal.FileHistoryManager	sge.visui.widget.file.internal.FileHistoryManager#historyBack()	def	499f0d5cf46c54b8
 sge.visui.widget.file.internal.FileHistoryManager	sge.visui.widget.file.internal.FileHistoryManager#historyClear()	def	8158986d50adc314
 sge.visui.widget.file.internal.FileHistoryManager	sge.visui.widget.file.internal.FileHistoryManager#historyForward	val	440ae91ccd16e467
-sge.visui.widget.file.internal.FileHistoryManager	sge.visui.widget.file.internal.FileHistoryManager#historyForward()	def	bd3e6b361ff353e1
+sge.visui.widget.file.internal.FileHistoryManager	sge.visui.widget.file.internal.FileHistoryManager#historyForward()	def	d189d2d4e7d204c2
 sge.visui.widget.file.internal.FileHistoryManager	sge.visui.widget.file.internal.FileHistoryManager#setDirectoryFromHistory(FileHandle)	def	99bfe9d1d0eff942
 sge.visui.widget.file.internal.FileHistoryManager	sge.visui.widget.file.internal.FileHistoryManager$FileHistoryCallback	class	9b5158b35db6b8cc
 sge.visui.widget.file.internal.FileHistoryManager	sge.visui.widget.file.internal.FileHistoryManager$FileHistoryCallback#currentDirectory()	def	d196fb82d68b687e

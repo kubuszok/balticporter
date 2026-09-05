@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-textra	engine=balticporter/0.1.0-SNAPSHOT	sources=9ebd6e69043d4bb1	files=92	policy=d7b0559671d8fa40	jdk=22
+# balticporter port map	schema=4	module=sge-textra	engine=balticporter/0.1.0-SNAPSHOT	sources=9ebd6e69043d4bb1	files=92	policy=50d4dd616decb5b3	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.github.tommyettinger.textra.BitmapFontSupport	sge.textra.BitmapFontSupport	Renamed	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=private
 type	com.github.tommyettinger.textra.BitmapFontSupport$JsonFontData	sge.textra.BitmapFontSupport$JsonFontData	Renamed	-		0		form=class parents=sge.graphics.g2d.BitmapFont$BitmapFontData primary=(String) primaryKind=synthesised-primary primaryVis=protected secondaries=();(FileHandle);(FileHandle,String);(FileHandle,String,boolean)
@@ -220,12 +220,12 @@ member	com.github.tommyettinger.textra.EmojiProcessor#instance	sge.textra.EmojiP
 member	com.github.tommyettinger.textra.FWSkin#<init>(FileHandle,Sge)	sge.textra.FWSkin#<init>(FileHandle,Sge)	Renamed	-	com/github/tommyettinger/textra/FWSkin.java	77	930c6ae4d7cbbdcc	
 member	com.github.tommyettinger.textra.FWSkin#<init>(FileHandle,TextureAtlas,Sge)	sge.textra.FWSkin#<init>(FileHandle,TextureAtlas,Sge)	Renamed	-	com/github/tommyettinger/textra/FWSkin.java	87	26918cbe3b6471af	
 member	com.github.tommyettinger.textra.FWSkin#<init>(TextureAtlas,Sge)	sge.textra.FWSkin#<init>(TextureAtlas,Sge)	Renamed	-	com/github/tommyettinger/textra/FWSkin.java	95	3f47b5e2142595a6	
-member	com.github.tommyettinger.textra.FWSkin#getJsonLoader(FileHandle)	sge.textra.FWSkin#getJsonLoader(FileHandle)	Renamed	-	com/github/tommyettinger/textra/FWSkin.java	108	aa68ca5ba685563b	
+member	com.github.tommyettinger.textra.FWSkin#getJsonLoader(FileHandle)	sge.textra.FWSkin#getJsonLoader(FileHandle)	Renamed	-	com/github/tommyettinger/textra/FWSkin.java	108	be1d281177cc5153	
 member	com.github.tommyettinger.textra.FWSkin#resizeDistanceFields(float,float)	sge.textra.FWSkin#resizeDistanceFields(float,float)	Renamed	-	com/github/tommyettinger/textra/FWSkin.java	555	bc274335f1bd927d	
 member	com.github.tommyettinger.textra.FWSkin#resizeDistanceFields(float,float,Viewport)	sge.textra.FWSkin#resizeDistanceFields(float,float,Viewport)	Renamed	-	com/github/tommyettinger/textra/FWSkin.java	573	872739497a2a4cf4	
 member	com.github.tommyettinger.textra.FWSkinLoader#newSkin(TextureAtlas)	sge.textra.FWSkinLoader#newSkin(TextureAtlas)	Renamed	-	com/github/tommyettinger/textra/FWSkinLoader.java	49	b6b43ebbecb6b17c	
 member	com.github.tommyettinger.textra.Font#<init>(BitmapFont,DistanceFieldType,float,float,float,float,Sge)	sge.textra.Font#<init>(BitmapFont,DistanceFieldType,float,float,float,float,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	2496	3f35b8db976a48a2	
-member	com.github.tommyettinger.textra.Font#<init>(BitmapFont,DistanceFieldType,float,float,float,float,boolean,Sge)	sge.textra.Font#<init>(BitmapFont,DistanceFieldType,float,float,float,float,boolean,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	2520	acda24beef52c023	
+member	com.github.tommyettinger.textra.Font#<init>(BitmapFont,DistanceFieldType,float,float,float,float,boolean,Sge)	sge.textra.Font#<init>(BitmapFont,DistanceFieldType,float,float,float,float,boolean,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	2520	ec72cb0eb19f7582	
 member	com.github.tommyettinger.textra.Font#<init>(BitmapFont,Sge)	sge.textra.Font#<init>(BitmapFont,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	2452	33367f8ac5417815	
 member	com.github.tommyettinger.textra.Font#<init>(BitmapFont,float,float,float,float,Sge)	sge.textra.Font#<init>(BitmapFont,float,float,float,float,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	2473	717ddcc7d30ec061	
 member	com.github.tommyettinger.textra.Font#<init>(FileHandle,DistanceFieldType,float,float,float,float,boolean,Sge)	sge.textra.Font#<init>(FileHandle,DistanceFieldType,float,float,float,float,boolean,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	2122	41448bc945d152b7	
@@ -245,7 +245,7 @@ member	com.github.tommyettinger.textra.Font#<init>(String,DynamicArray,float,flo
 member	com.github.tommyettinger.textra.Font#<init>(String,Sge)	sge.textra.Font#<init>(String,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	1868	cfbe4c0c8f0c4215	
 member	com.github.tommyettinger.textra.Font#<init>(String,String,DistanceFieldType,Sge)	sge.textra.Font#<init>(String,String,DistanceFieldType,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	1900	dedfa77028a3c1ad	
 member	com.github.tommyettinger.textra.Font#<init>(String,String,DistanceFieldType,float,float,float,float,Sge)	sge.textra.Font#<init>(String,String,DistanceFieldType,float,float,float,float,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	2172	8b6321a3c3b39bd5	
-member	com.github.tommyettinger.textra.Font#<init>(String,String,DistanceFieldType,float,float,float,float,boolean,Sge)	sge.textra.Font#<init>(String,String,DistanceFieldType,float,float,float,float,boolean,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	2196	4c6bf78f76bb2be5	
+member	com.github.tommyettinger.textra.Font#<init>(String,String,DistanceFieldType,float,float,float,float,boolean,Sge)	sge.textra.Font#<init>(String,String,DistanceFieldType,float,float,float,float,boolean,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	2196	6d606ef2f109f3fe	
 member	com.github.tommyettinger.textra.Font#<init>(String,String,Sge)	sge.textra.Font#<init>(String,String,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	1889	22599a1273fed314	
 member	com.github.tommyettinger.textra.Font#<init>(String,String,boolean,Sge)	sge.textra.Font#<init>(String,String,boolean,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	2740	db275d8adcd8cb6a	
 member	com.github.tommyettinger.textra.Font#<init>(String,String,float,float,float,float,Sge)	sge.textra.Font#<init>(String,String,float,float,float,float,Sge)	Renamed	-	com/github/tommyettinger/textra/Font.java	2149	58fe56ded85691bf	
@@ -294,7 +294,7 @@ member	com.github.tommyettinger.textra.Font#WHITE_OUTLINE	sge.textra.Font#WHITE_
 member	com.github.tommyettinger.textra.Font#YELLOW_OUTLINE	sge.textra.Font#YELLOW_OUTLINE	Renamed	-	com/github/tommyettinger/textra/Font.java	1186	e07d527b658d76f4	placement=companion
 member	com.github.tommyettinger.textra.Font#actualCrispness	sge.textra.Font#actualCrispness	Renamed	-	com/github/tommyettinger/textra/Font.java	980	16f96ff80559f23a	
 member	com.github.tommyettinger.textra.Font#addAtlas(TextureAtlas)	sge.textra.Font#addAtlas(TextureAtlas)	Renamed	-	com/github/tommyettinger/textra/Font.java	4067	7423a6106a5df1fb	
-member	com.github.tommyettinger.textra.Font#addAtlas(TextureAtlas,String,String,float,float,float)	sge.textra.Font#addAtlas(TextureAtlas,String,String,float,float,float)	Renamed	-	com/github/tommyettinger/textra/Font.java	4129	36658ed0bf994e68	
+member	com.github.tommyettinger.textra.Font#addAtlas(TextureAtlas,String,String,float,float,float)	sge.textra.Font#addAtlas(TextureAtlas,String,String,float,float,float)	Renamed	-	com/github/tommyettinger/textra/Font.java	4129	9ea0f111bf36e202	
 member	com.github.tommyettinger.textra.Font#addAtlas(TextureAtlas,float,float,float)	sge.textra.Font#addAtlas(TextureAtlas,float,float,float)	Renamed	-	com/github/tommyettinger/textra/Font.java	4096	ce5a9bdd45a73b03	
 member	com.github.tommyettinger.textra.Font#addImage(String,TextureRegion)	sge.textra.Font#addImage(String,TextureRegion)	Renamed	-	com/github/tommyettinger/textra/Font.java	4048	f3125e2a956bbe63	
 member	com.github.tommyettinger.textra.Font#addImage(String,TextureRegion,float,float,float)	sge.textra.Font#addImage(String,TextureRegion,float,float,float)	Renamed	-	com/github/tommyettinger/textra/Font.java	4024	1abb2302ac74d76a	
@@ -311,7 +311,7 @@ member	com.github.tommyettinger.textra.Font#boldStrength	sge.textra.Font#boldStr
 member	com.github.tommyettinger.textra.Font#boxDrawingBreadth	sge.textra.Font#boxDrawingBreadth	Renamed	-	com/github/tommyettinger/textra/Font.java	1093	54c072e205e505ff	
 member	com.github.tommyettinger.textra.Font#breakChars	sge.textra.Font#breakChars	Renamed	-	com/github/tommyettinger/textra/Font.java	1552	92b3297e5294f2a6	
 member	com.github.tommyettinger.textra.Font#calculateSize(Layout)	sge.textra.Font#calculateSize(Layout)	Renamed	-	com/github/tommyettinger/textra/Font.java	4984	be0ea814cb062a5a	
-member	com.github.tommyettinger.textra.Font#calculateXAdvances(Layout,DynamicArray)	sge.textra.Font#calculateXAdvances(Layout,DynamicArray<float>)	Renamed	-	com/github/tommyettinger/textra/Font.java	5150	5f6c71589c1329fb	
+member	com.github.tommyettinger.textra.Font#calculateXAdvances(Layout,DynamicArray)	sge.textra.Font#calculateXAdvances(Layout,DynamicArray<float>)	Renamed	-	com/github/tommyettinger/textra/Font.java	5150	af23be0a8178f68c	
 member	com.github.tommyettinger.textra.Font#canUseTextures	sge.textra.Font#canUseTextures	Renamed	-	com/github/tommyettinger/textra/Font.java	799	2d0046d2b3e2f9e7	placement=companion
 member	com.github.tommyettinger.textra.Font#cellHeight	sge.textra.Font#cellHeight	Renamed	-	com/github/tommyettinger/textra/Font.java	1000	a71f5eb82352ba76	
 member	com.github.tommyettinger.textra.Font#cellWidth	sge.textra.Font#cellWidth	Renamed	-	com/github/tommyettinger/textra/Font.java	996	745fec42fd6d6315	
@@ -384,16 +384,16 @@ member	com.github.tommyettinger.textra.Font#getInlineImageXAdvance()	sge.textra.
 member	com.github.tommyettinger.textra.Font#insertZeroWidthSpacesInCJK(String)	sge.textra.Font#insertZeroWidthSpacesInCJK(String)	Renamed	-	com/github/tommyettinger/textra/Font.java	1611	f1ddc0aaf3c0e623	placement=companion
 member	com.github.tommyettinger.textra.Font#integerPosition	sge.textra.Font#integerPosition	Renamed	-	com/github/tommyettinger/textra/Font.java	1058	7c50bcc1033f5a59	
 member	com.github.tommyettinger.textra.Font#isMono	sge.textra.Font#isMono	Renamed	-	com/github/tommyettinger/textra/Font.java	960	e7210bc16077d738	
-member	com.github.tommyettinger.textra.Font#justify(Layout)	sge.textra.Font#justify(Layout)	Renamed	-	com/github/tommyettinger/textra/Font.java	5074	757aff427afaa506	
+member	com.github.tommyettinger.textra.Font#justify(Layout)	sge.textra.Font#justify(Layout)	Renamed	-	com/github/tommyettinger/textra/Font.java	5074	5d6a5a7548690671	
 member	com.github.tommyettinger.textra.Font#kerning	sge.textra.Font#kerning	Renamed	-	com/github/tommyettinger/textra/Font.java	972	88df1b6f7a648b3b	
 member	com.github.tommyettinger.textra.Font#kerningPair(char,char)	sge.textra.Font#kerningPair(char,char)	Renamed	-	com/github/tommyettinger/textra/Font.java	3514	9d55ca75a26ca139	
 member	com.github.tommyettinger.textra.Font#labeledStates	sge.textra.Font#labeledStates	Renamed	-	com/github/tommyettinger/textra/Font.java	1546	9fa087db660064bf	
 member	com.github.tommyettinger.textra.Font#latestTexture	sge.textra.Font#latestTexture	Renamed	-	com/github/tommyettinger/textra/Font.java	872	a459cbbf0192c2f3	placement=companion vis=private
-member	com.github.tommyettinger.textra.Font#loadFNT(FileHandle,float,float,float,float,boolean)	sge.textra.Font#loadFNT(FileHandle,float,float,float,float,boolean)	Renamed	-	com/github/tommyettinger/textra/Font.java	2756	a2df4691b2b9d9b8	
+member	com.github.tommyettinger.textra.Font#loadFNT(FileHandle,float,float,float,float,boolean)	sge.textra.Font#loadFNT(FileHandle,float,float,float,float,boolean)	Renamed	-	com/github/tommyettinger/textra/Font.java	2756	822ed6a4dbe65868	
 member	com.github.tommyettinger.textra.Font#loadJSON(FileHandle,TextureRegion,float,float,float,float,boolean)	sge.textra.Font#loadJSON(FileHandle,TextureRegion,float,float,float,float,boolean)	Renamed	-	com/github/tommyettinger/textra/Font.java	3208	029d80ef7746c941	
-member	com.github.tommyettinger.textra.Font#loadSad(String,String)	sge.textra.Font#loadSad(String,String)	Renamed	-	com/github/tommyettinger/textra/Font.java	2965	015925b7637d225d	
+member	com.github.tommyettinger.textra.Font#loadSad(String,String)	sge.textra.Font#loadSad(String,String)	Renamed	-	com/github/tommyettinger/textra/Font.java	2965	20d6409be195bafa	
 member	com.github.tommyettinger.textra.Font#mapping	sge.textra.Font#mapping	Renamed	-	com/github/tommyettinger/textra/Font.java	822	570648274336a4f7	
-member	com.github.tommyettinger.textra.Font#markup(String,Layout)	sge.textra.Font#markup(String,Layout)	Renamed	-	com/github/tommyettinger/textra/Font.java	6034	c3603f12c1a59e4c	
+member	com.github.tommyettinger.textra.Font#markup(String,Layout)	sge.textra.Font#markup(String,Layout)	Renamed	-	com/github/tommyettinger/textra/Font.java	6034	78564b1ba8877026	
 member	com.github.tommyettinger.textra.Font#markupGlyph(String)	sge.textra.Font#markupGlyph(String)	Renamed	-	com/github/tommyettinger/textra/Font.java	7033	4b55cad59217daa5	
 member	com.github.tommyettinger.textra.Font#markupGlyph(char,String,ColorLookup)	sge.textra.Font#markupGlyph(char,String,ColorLookup)	Renamed	-	com/github/tommyettinger/textra/Font.java	7464	b716b3bca8c79fa4	placement=companion
 member	com.github.tommyettinger.textra.Font#markupGlyph(char,String,ColorLookup,FontFamily)	sge.textra.Font#markupGlyph(char,String,ColorLookup,FontFamily)	Renamed	-	com/github/tommyettinger/textra/Font.java	7537	c173140556f1566e	placement=companion
@@ -411,8 +411,8 @@ member	com.github.tommyettinger.textra.Font#outlineStrength	sge.textra.Font#outl
 member	com.github.tommyettinger.textra.Font#paddingForBitmapFont	sge.textra.Font#paddingForBitmapFont	Renamed	-	com/github/tommyettinger/textra/Font.java	910	833c102cfb2a7df9	placement=companion
 member	com.github.tommyettinger.textra.Font#parents	sge.textra.Font#parents	Renamed	-	com/github/tommyettinger/textra/Font.java	854	c6f3ab0beb77a3b2	
 member	com.github.tommyettinger.textra.Font#pauseDistanceFieldShader(Batch)	sge.textra.Font#pauseDistanceFieldShader(Batch)	Renamed	-	com/github/tommyettinger/textra/Font.java	4338	e013746f4ca963fc	
-member	com.github.tommyettinger.textra.Font#regenerateLayout(Layout)	sge.textra.Font#regenerateLayout(Layout)	Renamed	-	com/github/tommyettinger/textra/Font.java	7774	f2a202cb990de103	
-member	com.github.tommyettinger.textra.Font#removeStoredState(String)	sge.textra.Font#removeStoredState(String)	Renamed	-	com/github/tommyettinger/textra/Font.java	8045	30072ae49002a438	
+member	com.github.tommyettinger.textra.Font#regenerateLayout(Layout)	sge.textra.Font#regenerateLayout(Layout)	Renamed	-	com/github/tommyettinger/textra/Font.java	7774	afed5b08b4b4f39d	
+member	com.github.tommyettinger.textra.Font#removeStoredState(String)	sge.textra.Font#removeStoredState(String)	Renamed	-	com/github/tommyettinger/textra/Font.java	8045	d062654284ab62b8	
 member	com.github.tommyettinger.textra.Font#resizeDistanceField(float,float)	sge.textra.Font#resizeDistanceField(float,float)	Renamed	-	com/github/tommyettinger/textra/Font.java	8075	7ba694fcb04a8de7	
 member	com.github.tommyettinger.textra.Font#resizeDistanceField(float,float,Viewport)	sge.textra.Font#resizeDistanceField(float,float,Viewport)	Renamed	-	com/github/tommyettinger/textra/Font.java	8115	41bf71278e7c1775	
 member	com.github.tommyettinger.textra.Font#resumeDistanceFieldShader(Batch)	sge.textra.Font#resumeDistanceFieldShader(Batch)	Renamed	-	com/github/tommyettinger/textra/Font.java	4287	218311c23f74e18e	
@@ -885,7 +885,7 @@ member	com.github.tommyettinger.textra.Layout#<init>()	sge.textra.Layout#<init>(
 member	com.github.tommyettinger.textra.Layout#<init>(Font)	sge.textra.Layout#<init>(Font)	Renamed	-	com/github/tommyettinger/textra/Layout.java	67	837cdd0db915ae64	
 member	com.github.tommyettinger.textra.Layout#<init>(Layout)	sge.textra.Layout#<init>(Layout)	Renamed	-	com/github/tommyettinger/textra/Layout.java	72	29d8f09357d59d62	
 member	com.github.tommyettinger.textra.Layout#add(long)	sge.textra.Layout#add(long)	Renamed	-	com/github/tommyettinger/textra/Layout.java	124	67d936ed765a821f	
-member	com.github.tommyettinger.textra.Layout#add(long,float,float,float,float,float)	sge.textra.Layout#add(long,float,float,float,float,float)	Renamed	-	com/github/tommyettinger/textra/Layout.java	139	dc56b3c4edf4a882	
+member	com.github.tommyettinger.textra.Layout#add(long,float,float,float,float,float)	sge.textra.Layout#add(long,float,float,float,float,float)	Renamed	-	com/github/tommyettinger/textra/Layout.java	139	3a1516419d197b24	
 member	com.github.tommyettinger.textra.Layout#advances	sge.textra.Layout#advances	Renamed	-	com/github/tommyettinger/textra/Layout.java	61	35cfec2e1b22711e	
 member	com.github.tommyettinger.textra.Layout#appendInto(StringBuilder)	sge.textra.Layout#appendInto(StringBuilder)	Renamed	-	com/github/tommyettinger/textra/Layout.java	470	3229c22cf3b305a5	
 member	com.github.tommyettinger.textra.Layout#appendIntoDirect(StringBuilder)	sge.textra.Layout#appendIntoDirect(StringBuilder)	Renamed	-	com/github/tommyettinger/textra/Layout.java	403	c8dedf992db99779	
@@ -912,8 +912,8 @@ member	com.github.tommyettinger.textra.Layout#lines	sge.textra.Layout#lines	Rena
 member	com.github.tommyettinger.textra.Layout#lines()	sge.textra.Layout#lines	Renamed	-	com/github/tommyettinger/textra/Layout.java	191	2525795d1970342c	form=parenless
 member	com.github.tommyettinger.textra.Layout#maxLines	sge.textra.Layout#maxLines	Renamed	-	com/github/tommyettinger/textra/Layout.java	36	cafdac2d05f11799	
 member	com.github.tommyettinger.textra.Layout#offsets	sge.textra.Layout#offsets	Renamed	-	com/github/tommyettinger/textra/Layout.java	46	b79ce17d94e435e5	
-member	com.github.tommyettinger.textra.Layout#peekLine()	sge.textra.Layout#peekLine	Renamed	-	com/github/tommyettinger/textra/Layout.java	206	984790a5f19cb1ab	form=parenless
-member	com.github.tommyettinger.textra.Layout#pushLine()	sge.textra.Layout#pushLine()	Renamed	-	com/github/tommyettinger/textra/Layout.java	210	bfb7eaee4fd5d25e	
+member	com.github.tommyettinger.textra.Layout#peekLine()	sge.textra.Layout#peekLine	Renamed	-	com/github/tommyettinger/textra/Layout.java	206	ed4160b85fe70134	form=parenless
+member	com.github.tommyettinger.textra.Layout#pushLine()	sge.textra.Layout#pushLine()	Renamed	-	com/github/tommyettinger/textra/Layout.java	210	2c923cc522004331	
 member	com.github.tommyettinger.textra.Layout#pushLineBare()	sge.textra.Layout#pushLineBare()	Renamed	-	com/github/tommyettinger/textra/Layout.java	226	4d156a3dda725e55	
 member	com.github.tommyettinger.textra.Layout#reset()	sge.textra.Layout#reset()	Renamed	-	com/github/tommyettinger/textra/Layout.java	384	19d57dd9fa784629	
 member	com.github.tommyettinger.textra.Layout#rotations	sge.textra.Layout#rotations	Renamed	-	com/github/tommyettinger/textra/Layout.java	56	43a560999f1a385c	
@@ -1155,7 +1155,7 @@ member	com.github.tommyettinger.textra.TextraDialog#hide()	sge.textra.TextraDial
 member	com.github.tommyettinger.textra.TextraDialog#hide(Nullable)	sge.textra.TextraDialog#hide(Nullable<Action>)	Renamed	-	com/github/tommyettinger/textra/TextraDialog.java	347	c595d482c922013e	
 member	com.github.tommyettinger.textra.TextraDialog#hide(float)	sge.textra.TextraDialog#hide(float)	Renamed	-	com/github/tommyettinger/textra/TextraDialog.java	379	d910397ee80c6027	
 member	com.github.tommyettinger.textra.TextraDialog#ignoreTouchDown	sge.textra.TextraDialog#ignoreTouchDown	Renamed	-	com/github/tommyettinger/textra/TextraDialog.java	53	ee5c7092932dc8e3	
-member	com.github.tommyettinger.textra.TextraDialog#initialize()	sge.textra.TextraDialog#initialize()	Renamed	-	com/github/tommyettinger/textra/TextraDialog.java	115	f7413b6ffcba2f33	vis=private
+member	com.github.tommyettinger.textra.TextraDialog#initialize()	sge.textra.TextraDialog#initialize()	Renamed	-	com/github/tommyettinger/textra/TextraDialog.java	115	6340ec12c9bb1904	vis=private
 member	com.github.tommyettinger.textra.TextraDialog#key(int,Nullable)	sge.textra.TextraDialog#key(int,Nullable<Object>)	Renamed	-	com/github/tommyettinger/textra/TextraDialog.java	392	9d18d6453a0b4f0f	
 member	com.github.tommyettinger.textra.TextraDialog#newLabel(String,Font,Color)	sge.textra.TextraDialog#newLabel(String,Font,Color)	Renamed	-	com/github/tommyettinger/textra/TextraDialog.java	102	f3591e840b248931	
 member	com.github.tommyettinger.textra.TextraDialog#newLabel(String,LabelStyle)	sge.textra.TextraDialog#newLabel(String,LabelStyle)	Renamed	-	com/github/tommyettinger/textra/TextraDialog.java	98	514e05b672bb1d37	
@@ -1220,7 +1220,7 @@ member	com.github.tommyettinger.textra.TextraField#setCursorPosition(int)	sge.te
 member	com.github.tommyettinger.textra.TextraField#cut()	sge.textra.TextraField#cut()	Renamed	-	com/github/tommyettinger/textra/TextraField.java	551	5acedf4c641ce52d	
 member	com.github.tommyettinger.textra.TextraField#cut(boolean)	sge.textra.TextraField#cut(boolean)	Renamed	-	com/github/tommyettinger/textra/TextraField.java	555	4b6a78c7c6e8f413	
 member	com.github.tommyettinger.textra.TextraField#getDefaultInputListener()	sge.textra.TextraField#defaultInputListener()	Renamed	-	com/github/tommyettinger/textra/TextraField.java	679	78c77cf83ee2a4dd	
-member	com.github.tommyettinger.textra.TextraField#delete(boolean)	sge.textra.TextraField#delete(boolean)	Renamed	-	com/github/tommyettinger/textra/TextraField.java	609	a47bc03443cd2530	
+member	com.github.tommyettinger.textra.TextraField#delete(boolean)	sge.textra.TextraField#delete(boolean)	Renamed	-	com/github/tommyettinger/textra/TextraField.java	609	b2a97198a8693922	
 member	com.github.tommyettinger.textra.TextraField#isDisabled	sge.textra.TextraField#disabled	Renamed	-	com/github/tommyettinger/textra/TextraField.java	111	a148a1c924a48146	name=disabled$field
 member	com.github.tommyettinger.textra.TextraField#isDisabled()	sge.textra.TextraField#disabled()	Renamed	-	com/github/tommyettinger/textra/TextraField.java	952	e2a727c8caeefcff	
 member	com.github.tommyettinger.textra.TextraField#setDisabled(boolean)	sge.textra.TextraField#disabled_=(boolean)	Renamed	-	com/github/tommyettinger/textra/TextraField.java	948	5403c0c97102e4ae	
@@ -1429,7 +1429,7 @@ member	com.github.tommyettinger.textra.TextraListBox#getPressedItem()	sge.textra
 member	com.github.tommyettinger.textra.TextraListBox#getSelected()	sge.textra.TextraListBox#selected()	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	310	dc2fe2b7bd8f4030	
 member	com.github.tommyettinger.textra.TextraListBox#getSelectedIndex()	sge.textra.TextraListBox#selectedIndex()	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	326	23b5b73f90c5ea27	
 member	com.github.tommyettinger.textra.TextraListBox#setSelectedIndex(int)	sge.textra.TextraListBox#selectedIndex_=(int)	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	333	dbfefcb89b86722e	
-member	com.github.tommyettinger.textra.TextraListBox#setSelected(Nullable)	sge.textra.TextraListBox#selected_=(Nullable<T>)	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	316	2c1fa1e8faab7cb3	
+member	com.github.tommyettinger.textra.TextraListBox#setSelected(Nullable)	sge.textra.TextraListBox#selected_=(Nullable<T>)	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	316	0dd4a84259964aaa	
 member	com.github.tommyettinger.textra.TextraListBox#getSelection	sge.textra.TextraListBox#selection	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	52	28d7ce47288cc1af	name=selection$field
 member	com.github.tommyettinger.textra.TextraListBox#getSelection()	sge.textra.TextraListBox#selection()	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	301	4b2124def3236637	
 member	com.github.tommyettinger.textra.TextraListBox#setSelection(ArraySelection)	sge.textra.TextraListBox#selection_=(ArraySelection<T>)	Renamed	-	com/github/tommyettinger/textra/TextraListBox.java	305	6928c07cdc915c60	
@@ -1488,7 +1488,7 @@ member	com.github.tommyettinger.textra.TextraSelectBox#setSelectedIndex(int)	sge
 member	com.github.tommyettinger.textra.TextraSelectBox#getSelectedPrefWidth	sge.textra.TextraSelectBox#selectedPrefWidth	Renamed	-	com/github/tommyettinger/textra/TextraSelectBox.java	50	a43fb0656785980e	name=selectedPrefWidth$field
 member	com.github.tommyettinger.textra.TextraSelectBox#getSelectedPrefWidth()	sge.textra.TextraSelectBox#selectedPrefWidth()	Renamed	-	com/github/tommyettinger/textra/TextraSelectBox.java	337	2afe58c096aa0fc1	
 member	com.github.tommyettinger.textra.TextraSelectBox#setSelectedPrefWidth(boolean)	sge.textra.TextraSelectBox#selectedPrefWidth_=(boolean)	Renamed	-	com/github/tommyettinger/textra/TextraSelectBox.java	333	2a8ab4ee355ee7aa	
-member	com.github.tommyettinger.textra.TextraSelectBox#setSelected(Nullable)	sge.textra.TextraSelectBox#selected_=(Nullable<TextraLabel>)	Renamed	-	com/github/tommyettinger/textra/TextraSelectBox.java	312	a6a3cbbda6e36883	
+member	com.github.tommyettinger.textra.TextraSelectBox#setSelected(Nullable)	sge.textra.TextraSelectBox#selected_=(Nullable<TextraLabel>)	Renamed	-	com/github/tommyettinger/textra/TextraSelectBox.java	312	922fb1b84c5023c9	
 member	com.github.tommyettinger.textra.TextraSelectBox#getSelection	sge.textra.TextraSelectBox#selection	Renamed	-	com/github/tommyettinger/textra/TextraSelectBox.java	52	20a542904f6565c7	name=selection$field
 member	com.github.tommyettinger.textra.TextraSelectBox#getSelection()	sge.textra.TextraSelectBox#selection()	Renamed	-	com/github/tommyettinger/textra/TextraSelectBox.java	302	ec2ac3fad0ceedb0	
 member	com.github.tommyettinger.textra.TextraSelectBox#setAlignment(Align)	sge.textra.TextraSelectBox#setAlignment(Align)	Renamed	-	com/github/tommyettinger/textra/TextraSelectBox.java	296	1c3bf1bed32018cc	
@@ -1855,7 +1855,7 @@ member	com.github.tommyettinger.textra.TypingDialog#hide()	sge.textra.TypingDial
 member	com.github.tommyettinger.textra.TypingDialog#hide(Nullable)	sge.textra.TypingDialog#hide(Nullable<Action>)	Renamed	-	com/github/tommyettinger/textra/TypingDialog.java	351	c595d482c922013e	
 member	com.github.tommyettinger.textra.TypingDialog#hide(float)	sge.textra.TypingDialog#hide(float)	Renamed	-	com/github/tommyettinger/textra/TypingDialog.java	383	d910397ee80c6027	
 member	com.github.tommyettinger.textra.TypingDialog#ignoreTouchDown	sge.textra.TypingDialog#ignoreTouchDown	Renamed	-	com/github/tommyettinger/textra/TypingDialog.java	57	ee5c7092932dc8e3	
-member	com.github.tommyettinger.textra.TypingDialog#initialize()	sge.textra.TypingDialog#initialize()	Renamed	-	com/github/tommyettinger/textra/TypingDialog.java	119	aa4762935448c2f1	vis=private
+member	com.github.tommyettinger.textra.TypingDialog#initialize()	sge.textra.TypingDialog#initialize()	Renamed	-	com/github/tommyettinger/textra/TypingDialog.java	119	bcae06f46b3d98af	vis=private
 member	com.github.tommyettinger.textra.TypingDialog#key(int,Nullable)	sge.textra.TypingDialog#key(int,Nullable<Object>)	Renamed	-	com/github/tommyettinger/textra/TypingDialog.java	396	244d5d17f1a89858	
 member	com.github.tommyettinger.textra.TypingDialog#newLabel(String,Font,Color)	sge.textra.TypingDialog#newLabel(String,Font,Color)	Renamed	-	com/github/tommyettinger/textra/TypingDialog.java	106	f3591e840b248931	
 member	com.github.tommyettinger.textra.TypingDialog#newLabel(String,LabelStyle)	sge.textra.TypingDialog#newLabel(String,LabelStyle)	Renamed	-	com/github/tommyettinger/textra/TypingDialog.java	102	514e05b672bb1d37	
@@ -1951,7 +1951,7 @@ member	com.github.tommyettinger.textra.TypingLabel#rawCharIndex	sge.textra.Typin
 member	com.github.tommyettinger.textra.TypingLabel#regenerateLayout()	sge.textra.TypingLabel#regenerateLayout()	Renamed	-	com/github/tommyettinger/textra/TypingLabel.java	397	8ef54314becf87a9	
 member	com.github.tommyettinger.textra.TypingLabel#removeVariable(String)	sge.textra.TypingLabel#removeVariable(String)	Renamed	-	com/github/tommyettinger/textra/TypingLabel.java	676	770de4190ecb3c20	
 member	com.github.tommyettinger.textra.TypingLabel#restart()	sge.textra.TypingLabel#restart()	Renamed	-	com/github/tommyettinger/textra/TypingLabel.java	563	3dc5431c7179db66	
-member	com.github.tommyettinger.textra.TypingLabel#restart(CharSequence)	sge.textra.TypingLabel#restart(CharSequence)	Renamed	-	com/github/tommyettinger/textra/TypingLabel.java	575	8c084558eb0e8108	
+member	com.github.tommyettinger.textra.TypingLabel#restart(CharSequence)	sge.textra.TypingLabel#restart(CharSequence)	Renamed	-	com/github/tommyettinger/textra/TypingLabel.java	575	5745de44210b91c3	
 member	com.github.tommyettinger.textra.TypingLabel#restoreOriginalText()	sge.textra.TypingLabel#restoreOriginalText()	Renamed	-	com/github/tommyettinger/textra/TypingLabel.java	391	fda8cf842306f664	
 member	com.github.tommyettinger.textra.TypingLabel#resume()	sge.textra.TypingLabel#resume()	Renamed	-	com/github/tommyettinger/textra/TypingLabel.java	548	98e545438b6fc676	
 member	com.github.tommyettinger.textra.TypingLabel#getRotations()	sge.textra.TypingLabel#rotations()	Renamed	-	com/github/tommyettinger/textra/TypingLabel.java	1927	03dfba0a28878791	
@@ -1979,7 +1979,7 @@ member	com.github.tommyettinger.textra.TypingLabel#skipToTheEnd(boolean)	sge.tex
 member	com.github.tommyettinger.textra.TypingLabel#skipToTheEnd(boolean,boolean)	sge.textra.TypingLabel#skipToTheEnd(boolean,boolean)	Renamed	-	com/github/tommyettinger/textra/TypingLabel.java	503	d8e08bc5efd8fb63	
 member	com.github.tommyettinger.textra.TypingLabel#isSkipping	sge.textra.TypingLabel#skipping	Renamed	-	com/github/tommyettinger/textra/TypingLabel.java	135	b8885ca5c3cc491b	name=skipping$field
 member	com.github.tommyettinger.textra.TypingLabel#isSkipping()	sge.textra.TypingLabel#skipping()	Renamed	-	com/github/tommyettinger/textra/TypingLabel.java	527	cc58d3d855a2636b	
-member	com.github.tommyettinger.textra.TypingLabel#subAct(float)	sge.textra.TypingLabel#subAct(float)	Renamed	-	com/github/tommyettinger/textra/TypingLabel.java	748	9645aa5e44ccc8c6	
+member	com.github.tommyettinger.textra.TypingLabel#subAct(float)	sge.textra.TypingLabel#subAct(float)	Renamed	-	com/github/tommyettinger/textra/TypingLabel.java	748	42ec242d1ece4fa7	
 member	com.github.tommyettinger.textra.TypingLabel#substring(int,int)	sge.textra.TypingLabel#substring(int,int)	Renamed	-	com/github/tommyettinger/textra/TypingLabel.java	1680	cd83307e0af3ad6e	
 member	com.github.tommyettinger.textra.TypingLabel#substring(int,int,boolean)	sge.textra.TypingLabel#substring(int,int,boolean)	Renamed	-	com/github/tommyettinger/textra/TypingLabel.java	1693	1e23161c6cbb85f3	
 member	com.github.tommyettinger.textra.TypingLabel#temp	sge.textra.TypingLabel#temp	Renamed	-	com/github/tommyettinger/textra/TypingLabel.java	123	ad70fd15c68876a7	vis=private
@@ -2047,7 +2047,7 @@ member	com.github.tommyettinger.textra.TypingWindow#newLabel(String,LabelStyle)	
 member	com.github.tommyettinger.textra.effects.AttentionEffect#<stmt1>	sge.textra.effects.AttentionEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/AttentionEffect.java	45	83d15e883aaa3ecd	
 member	com.github.tommyettinger.textra.effects.AttentionEffect#<stmt2>	sge.textra.effects.AttentionEffect#<stmt2>	Renamed	-	com/github/tommyettinger/textra/effects/AttentionEffect.java	48	3058c77f02a65b96	
 member	com.github.tommyettinger.textra.effects.AttentionEffect#<stmt3>	sge.textra.effects.AttentionEffect#<stmt3>	Renamed	-	com/github/tommyettinger/textra/effects/AttentionEffect.java	52	5f5f7f5b0c3742fb	
-member	com.github.tommyettinger.textra.effects.AttentionEffect#onApply(long,int,int,float)	sge.textra.effects.AttentionEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/AttentionEffect.java	58	9888e31a0c1de418	
+member	com.github.tommyettinger.textra.effects.AttentionEffect#onApply(long,int,int,float)	sge.textra.effects.AttentionEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/AttentionEffect.java	58	6e924d971915d24b	
 member	com.github.tommyettinger.textra.effects.AttentionEffect#spread	sge.textra.effects.AttentionEffect#spread	Renamed	-	com/github/tommyettinger/textra/effects/AttentionEffect.java	40	51e3c262562b23c1	
 member	com.github.tommyettinger.textra.effects.AttentionEffect#stretchY	sge.textra.effects.AttentionEffect#stretchY	Renamed	-	com/github/tommyettinger/textra/effects/AttentionEffect.java	41	5f6418cd104dded5	
 member	com.github.tommyettinger.textra.effects.BlinkEffect#<stmt1>	sge.textra.effects.BlinkEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/BlinkEffect.java	57	7a84b9c2484456cc	
@@ -2078,7 +2078,7 @@ member	com.github.tommyettinger.textra.effects.CannonEffect#extent	sge.textra.ef
 member	com.github.tommyettinger.textra.effects.CannonEffect#height	sge.textra.effects.CannonEffect#height	Renamed	-	com/github/tommyettinger/textra/effects/CannonEffect.java	52	e22b0f327b43f5f2	
 member	com.github.tommyettinger.textra.effects.CannonEffect#initialStretch	sge.textra.effects.CannonEffect#initialStretch	Renamed	-	com/github/tommyettinger/textra/effects/CannonEffect.java	50	52042456a4578111	
 member	com.github.tommyettinger.textra.effects.CannonEffect#lastOffsets	sge.textra.effects.CannonEffect#lastOffsets	Renamed	-	com/github/tommyettinger/textra/effects/CannonEffect.java	56	dedaa55a9a98f7f7	vis=private
-member	com.github.tommyettinger.textra.effects.CannonEffect#onApply(long,int,int,float)	sge.textra.effects.CannonEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/CannonEffect.java	91	f4b2592f693e668a	
+member	com.github.tommyettinger.textra.effects.CannonEffect#onApply(long,int,int,float)	sge.textra.effects.CannonEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/CannonEffect.java	91	286cbd579aa7e291	
 member	com.github.tommyettinger.textra.effects.CannonEffect#shakeDuration	sge.textra.effects.CannonEffect#shakeDuration	Renamed	-	com/github/tommyettinger/textra/effects/CannonEffect.java	53	466783d61c32acfd	
 member	com.github.tommyettinger.textra.effects.CannonEffect#shakePower	sge.textra.effects.CannonEffect#shakePower	Renamed	-	com/github/tommyettinger/textra/effects/CannonEffect.java	54	1392510f8b01cc7f	
 member	com.github.tommyettinger.textra.effects.CannonEffect#timePassedByGlyphIndex	sge.textra.effects.CannonEffect#timePassedByGlyphIndex	Renamed	-	com/github/tommyettinger/textra/effects/CannonEffect.java	58	ac4db43f814f7c04	vis=private
@@ -2086,14 +2086,14 @@ member	com.github.tommyettinger.textra.effects.CarouselEffect#<stmt1>	sge.textra
 member	com.github.tommyettinger.textra.effects.CarouselEffect#<stmt2>	sge.textra.effects.CarouselEffect#<stmt2>	Renamed	-	com/github/tommyettinger/textra/effects/CarouselEffect.java	55	f031f409d3b90bb1	
 member	com.github.tommyettinger.textra.effects.CarouselEffect#DEFAULT_FREQUENCY	sge.textra.effects.CarouselEffect#DEFAULT_FREQUENCY	Renamed	-	com/github/tommyettinger/textra/effects/CarouselEffect.java	41	f39aa24e9788b924	placement=companion vis=private
 member	com.github.tommyettinger.textra.effects.CarouselEffect#frequency	sge.textra.effects.CarouselEffect#frequency	Renamed	-	com/github/tommyettinger/textra/effects/CarouselEffect.java	43	59a61a488ceecae1	
-member	com.github.tommyettinger.textra.effects.CarouselEffect#onApply(long,int,int,float)	sge.textra.effects.CarouselEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/CarouselEffect.java	61	1c20bfcfa24b7930	
+member	com.github.tommyettinger.textra.effects.CarouselEffect#onApply(long,int,int,float)	sge.textra.effects.CarouselEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/CarouselEffect.java	61	1ca14fe07a51cec3	
 member	com.github.tommyettinger.textra.effects.CarouselEffect#timePassedByGlyphIndex	sge.textra.effects.CarouselEffect#timePassedByGlyphIndex	Renamed	-	com/github/tommyettinger/textra/effects/CarouselEffect.java	44	ac4db43f814f7c04	vis=private
 member	com.github.tommyettinger.textra.effects.CrowdEffect#<stmt1>	sge.textra.effects.CrowdEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/CrowdEffect.java	52	e6b4194aa6e2f34a	
 member	com.github.tommyettinger.textra.effects.CrowdEffect#<stmt2>	sge.textra.effects.CrowdEffect#<stmt2>	Renamed	-	com/github/tommyettinger/textra/effects/CrowdEffect.java	57	28ae5a21ebcf119b	
 member	com.github.tommyettinger.textra.effects.CrowdEffect#<stmt3>	sge.textra.effects.CrowdEffect#<stmt3>	Renamed	-	com/github/tommyettinger/textra/effects/CrowdEffect.java	62	94fe4934675e18e7	
 member	com.github.tommyettinger.textra.effects.CrowdEffect#DEFAULT_ROTATION_STRENGTH	sge.textra.effects.CrowdEffect#DEFAULT_ROTATION_STRENGTH	Renamed	-	com/github/tommyettinger/textra/effects/CrowdEffect.java	42	0940650e3f71e7f0	placement=companion vis=private
 member	com.github.tommyettinger.textra.effects.CrowdEffect#DEFAULT_SPEED	sge.textra.effects.CrowdEffect#DEFAULT_SPEED	Renamed	-	com/github/tommyettinger/textra/effects/CrowdEffect.java	43	04276a1a4b60bec6	placement=companion vis=private
-member	com.github.tommyettinger.textra.effects.CrowdEffect#onApply(long,int,int,float)	sge.textra.effects.CrowdEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/CrowdEffect.java	68	a1ef4a02dc1506ff	
+member	com.github.tommyettinger.textra.effects.CrowdEffect#onApply(long,int,int,float)	sge.textra.effects.CrowdEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/CrowdEffect.java	68	01b94c3ad40318a5	
 member	com.github.tommyettinger.textra.effects.CrowdEffect#rotationAmount	sge.textra.effects.CrowdEffect#rotationAmount	Renamed	-	com/github/tommyettinger/textra/effects/CrowdEffect.java	45	c17141917fc1ae0f	
 member	com.github.tommyettinger.textra.effects.CrowdEffect#speed	sge.textra.effects.CrowdEffect#speed	Renamed	-	com/github/tommyettinger/textra/effects/CrowdEffect.java	46	bf6136be713c4634	
 member	com.github.tommyettinger.textra.effects.EaseEffect#<stmt1>	sge.textra.effects.EaseEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/EaseEffect.java	55	87792999e1cbd892	
@@ -2104,13 +2104,13 @@ member	com.github.tommyettinger.textra.effects.EaseEffect#DEFAULT_EXTENT	sge.tex
 member	com.github.tommyettinger.textra.effects.EaseEffect#distance	sge.textra.effects.EaseEffect#distance	Renamed	-	com/github/tommyettinger/textra/effects/EaseEffect.java	45	7e8e5e77c4edf2a0	
 member	com.github.tommyettinger.textra.effects.EaseEffect#elastic	sge.textra.effects.EaseEffect#elastic	Renamed	-	com/github/tommyettinger/textra/effects/EaseEffect.java	47	12c8e4ed3038babc	
 member	com.github.tommyettinger.textra.effects.EaseEffect#extent	sge.textra.effects.EaseEffect#extent	Renamed	-	com/github/tommyettinger/textra/effects/EaseEffect.java	46	975bbbb421a35954	
-member	com.github.tommyettinger.textra.effects.EaseEffect#onApply(long,int,int,float)	sge.textra.effects.EaseEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/EaseEffect.java	71	3b8a910ab964fe34	
+member	com.github.tommyettinger.textra.effects.EaseEffect#onApply(long,int,int,float)	sge.textra.effects.EaseEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/EaseEffect.java	71	ed0eea1813ba6d40	
 member	com.github.tommyettinger.textra.effects.EaseEffect#timePassedByGlyphIndex	sge.textra.effects.EaseEffect#timePassedByGlyphIndex	Renamed	-	com/github/tommyettinger/textra/effects/EaseEffect.java	49	ac4db43f814f7c04	vis=private
 member	com.github.tommyettinger.textra.effects.EmergeEffect#<stmt1>	sge.textra.effects.EmergeEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/EmergeEffect.java	51	c52b946d9632ebd8	
 member	com.github.tommyettinger.textra.effects.EmergeEffect#<stmt2>	sge.textra.effects.EmergeEffect#<stmt2>	Renamed	-	com/github/tommyettinger/textra/effects/EmergeEffect.java	56	352a78a30e78bd3a	
 member	com.github.tommyettinger.textra.effects.EmergeEffect#DEFAULT_SPEED	sge.textra.effects.EmergeEffect#DEFAULT_SPEED	Renamed	-	com/github/tommyettinger/textra/effects/EmergeEffect.java	40	1ce496c00525aaa4	placement=companion vis=private
 member	com.github.tommyettinger.textra.effects.EmergeEffect#elastic	sge.textra.effects.EmergeEffect#elastic	Renamed	-	com/github/tommyettinger/textra/effects/EmergeEffect.java	43	12c8e4ed3038babc	
-member	com.github.tommyettinger.textra.effects.EmergeEffect#onApply(long,int,int,float)	sge.textra.effects.EmergeEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/EmergeEffect.java	62	e970c4350b7778fd	
+member	com.github.tommyettinger.textra.effects.EmergeEffect#onApply(long,int,int,float)	sge.textra.effects.EmergeEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/EmergeEffect.java	62	c55898cdf0df4008	
 member	com.github.tommyettinger.textra.effects.EmergeEffect#speed	sge.textra.effects.EmergeEffect#speed	Renamed	-	com/github/tommyettinger/textra/effects/EmergeEffect.java	42	cdfe0388393e471e	
 member	com.github.tommyettinger.textra.effects.EmergeEffect#timePassedByGlyphIndex	sge.textra.effects.EmergeEffect#timePassedByGlyphIndex	Renamed	-	com/github/tommyettinger/textra/effects/EmergeEffect.java	45	ac4db43f814f7c04	vis=private
 member	com.github.tommyettinger.textra.effects.FadeEffect#<stmt1>	sge.textra.effects.FadeEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/FadeEffect.java	57	7a84b9c2484456cc	
@@ -2121,7 +2121,7 @@ member	com.github.tommyettinger.textra.effects.FadeEffect#alpha2	sge.textra.effe
 member	com.github.tommyettinger.textra.effects.FadeEffect#color1	sge.textra.effects.FadeEffect#color1	Renamed	-	com/github/tommyettinger/textra/effects/FadeEffect.java	45	8910c22c13259639	
 member	com.github.tommyettinger.textra.effects.FadeEffect#color2	sge.textra.effects.FadeEffect#color2	Renamed	-	com/github/tommyettinger/textra/effects/FadeEffect.java	46	8f6cf48170dfc38c	
 member	com.github.tommyettinger.textra.effects.FadeEffect#fadeDuration	sge.textra.effects.FadeEffect#fadeDuration	Renamed	-	com/github/tommyettinger/textra/effects/FadeEffect.java	49	cb27128148e673f3	
-member	com.github.tommyettinger.textra.effects.FadeEffect#onApply(long,int,int,float)	sge.textra.effects.FadeEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/FadeEffect.java	79	ece60a2abc87786f	
+member	com.github.tommyettinger.textra.effects.FadeEffect#onApply(long,int,int,float)	sge.textra.effects.FadeEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/FadeEffect.java	79	b4d4e55928bdbcfb	
 member	com.github.tommyettinger.textra.effects.FadeEffect#timePassedByGlyphIndex	sge.textra.effects.FadeEffect#timePassedByGlyphIndex	Renamed	-	com/github/tommyettinger/textra/effects/FadeEffect.java	51	ac4db43f814f7c04	vis=private
 member	com.github.tommyettinger.textra.effects.GradientEffect#<stmt1>	sge.textra.effects.GradientEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/GradientEffect.java	53	3485775dbff1dc2a	
 member	com.github.tommyettinger.textra.effects.GradientEffect#<stmt2>	sge.textra.effects.GradientEffect#<stmt2>	Renamed	-	com/github/tommyettinger/textra/effects/GradientEffect.java	59	fb95429dc01ad72c	
@@ -2140,7 +2140,7 @@ member	com.github.tommyettinger.textra.effects.HangEffect#DEFAULT_DISTANCE	sge.t
 member	com.github.tommyettinger.textra.effects.HangEffect#DEFAULT_EXTENT	sge.textra.effects.HangEffect#DEFAULT_EXTENT	Renamed	-	com/github/tommyettinger/textra/effects/HangEffect.java	42	4caab490d5295f8f	placement=companion vis=private
 member	com.github.tommyettinger.textra.effects.HangEffect#distance	sge.textra.effects.HangEffect#distance	Renamed	-	com/github/tommyettinger/textra/effects/HangEffect.java	44	1ed73146d9b4cd97	
 member	com.github.tommyettinger.textra.effects.HangEffect#extent	sge.textra.effects.HangEffect#extent	Renamed	-	com/github/tommyettinger/textra/effects/HangEffect.java	45	975bbbb421a35954	
-member	com.github.tommyettinger.textra.effects.HangEffect#onApply(long,int,int,float)	sge.textra.effects.HangEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/HangEffect.java	64	60133064000adcfe	
+member	com.github.tommyettinger.textra.effects.HangEffect#onApply(long,int,int,float)	sge.textra.effects.HangEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/HangEffect.java	64	4355c47647e2c898	
 member	com.github.tommyettinger.textra.effects.HangEffect#timePassedByGlyphIndex	sge.textra.effects.HangEffect#timePassedByGlyphIndex	Renamed	-	com/github/tommyettinger/textra/effects/HangEffect.java	47	ac4db43f814f7c04	vis=private
 member	com.github.tommyettinger.textra.effects.HeartbeatEffect#<stmt1>	sge.textra.effects.HeartbeatEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/HeartbeatEffect.java	50	993779f80e696e2e	
 member	com.github.tommyettinger.textra.effects.HeartbeatEffect#<stmt2>	sge.textra.effects.HeartbeatEffect#<stmt2>	Renamed	-	com/github/tommyettinger/textra/effects/HeartbeatEffect.java	55	e5404269c92471f3	
@@ -2149,7 +2149,7 @@ member	com.github.tommyettinger.textra.effects.HeartbeatEffect#DEFAULT_EXPANSION
 member	com.github.tommyettinger.textra.effects.HeartbeatEffect#DEFAULT_FREQUENCY	sge.textra.effects.HeartbeatEffect#DEFAULT_FREQUENCY	Renamed	-	com/github/tommyettinger/textra/effects/HeartbeatEffect.java	40	bd7cf367768ed0b4	placement=companion vis=private
 member	com.github.tommyettinger.textra.effects.HeartbeatEffect#expansion	sge.textra.effects.HeartbeatEffect#expansion	Renamed	-	com/github/tommyettinger/textra/effects/HeartbeatEffect.java	43	a8c0c8feda8a8785	
 member	com.github.tommyettinger.textra.effects.HeartbeatEffect#frequency	sge.textra.effects.HeartbeatEffect#frequency	Renamed	-	com/github/tommyettinger/textra/effects/HeartbeatEffect.java	44	2472f2587dfcbf6d	
-member	com.github.tommyettinger.textra.effects.HeartbeatEffect#onApply(long,int,int,float)	sge.textra.effects.HeartbeatEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/HeartbeatEffect.java	66	431c2e9fd3950f3c	
+member	com.github.tommyettinger.textra.effects.HeartbeatEffect#onApply(long,int,int,float)	sge.textra.effects.HeartbeatEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/HeartbeatEffect.java	66	72539ad4f1d5d5cb	
 member	com.github.tommyettinger.textra.effects.HighlightEffect#<stmt1>	sge.textra.effects.HighlightEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/HighlightEffect.java	60	83d15e883aaa3ecd	
 member	com.github.tommyettinger.textra.effects.HighlightEffect#<stmt2>	sge.textra.effects.HighlightEffect#<stmt2>	Renamed	-	com/github/tommyettinger/textra/effects/HighlightEffect.java	63	d212c1572fc559e8	
 member	com.github.tommyettinger.textra.effects.HighlightEffect#<stmt3>	sge.textra.effects.HighlightEffect#<stmt3>	Renamed	-	com/github/tommyettinger/textra/effects/HighlightEffect.java	69	249f1f8ccc21056b	
@@ -2182,7 +2182,7 @@ member	com.github.tommyettinger.textra.effects.JoltEffect#determineFloat(long)	s
 member	com.github.tommyettinger.textra.effects.JoltEffect#joltColor	sge.textra.effects.JoltEffect#joltColor	Renamed	-	com/github/tommyettinger/textra/effects/JoltEffect.java	59	ffe3a6402a0f887d	
 member	com.github.tommyettinger.textra.effects.JoltEffect#lastOffsets	sge.textra.effects.JoltEffect#lastOffsets	Renamed	-	com/github/tommyettinger/textra/effects/JoltEffect.java	53	dedaa55a9a98f7f7	vis=private
 member	com.github.tommyettinger.textra.effects.JoltEffect#likelihood	sge.textra.effects.JoltEffect#likelihood	Renamed	-	com/github/tommyettinger/textra/effects/JoltEffect.java	57	5797e34d79573323	
-member	com.github.tommyettinger.textra.effects.JoltEffect#onApply(long,int,int,float)	sge.textra.effects.JoltEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/JoltEffect.java	98	f4ad0a24e12b7f99	
+member	com.github.tommyettinger.textra.effects.JoltEffect#onApply(long,int,int,float)	sge.textra.effects.JoltEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/JoltEffect.java	98	cfa962000b7bc174	
 member	com.github.tommyettinger.textra.effects.JoltEffect#shakeDistance	sge.textra.effects.JoltEffect#shakeDistance	Renamed	-	com/github/tommyettinger/textra/effects/JoltEffect.java	55	8e1e042720f902ee	
 member	com.github.tommyettinger.textra.effects.JoltEffect#shakeSpeed	sge.textra.effects.JoltEffect#shakeSpeed	Renamed	-	com/github/tommyettinger/textra/effects/JoltEffect.java	56	cdca2625a01add8e	
 member	com.github.tommyettinger.textra.effects.JumpEffect#<stmt1>	sge.textra.effects.JumpEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/JumpEffect.java	53	068f44836cbcb5ac	
@@ -2194,7 +2194,7 @@ member	com.github.tommyettinger.textra.effects.JumpEffect#DEFAULT_JUMP_HEIGHT	sg
 member	com.github.tommyettinger.textra.effects.JumpEffect#DEFAULT_SPEED	sge.textra.effects.JumpEffect#DEFAULT_SPEED	Renamed	-	com/github/tommyettinger/textra/effects/JumpEffect.java	43	895aa9414c353e20	placement=companion vis=private
 member	com.github.tommyettinger.textra.effects.JumpEffect#frequency	sge.textra.effects.JumpEffect#frequency	Renamed	-	com/github/tommyettinger/textra/effects/JumpEffect.java	46	c56deef5c3c04bbd	
 member	com.github.tommyettinger.textra.effects.JumpEffect#jumpHeight	sge.textra.effects.JumpEffect#jumpHeight	Renamed	-	com/github/tommyettinger/textra/effects/JumpEffect.java	45	dca7350f013fc721	
-member	com.github.tommyettinger.textra.effects.JumpEffect#onApply(long,int,int,float)	sge.textra.effects.JumpEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/JumpEffect.java	74	ec3f7a0129dba511	
+member	com.github.tommyettinger.textra.effects.JumpEffect#onApply(long,int,int,float)	sge.textra.effects.JumpEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/JumpEffect.java	74	d64aacdf2d91118d	
 member	com.github.tommyettinger.textra.effects.JumpEffect#speed	sge.textra.effects.JumpEffect#speed	Renamed	-	com/github/tommyettinger/textra/effects/JumpEffect.java	47	bf6136be713c4634	
 member	com.badlogic.gdx.Sge#<given>	sge.Sge#<given>	Renamed	-	com/github/tommyettinger/textra/effects/LinkEffect.java	41	b059b619aa07dadc	vis=private
 member	com.github.tommyettinger.textra.effects.LinkEffect#<stmt1>	sge.textra.effects.LinkEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/LinkEffect.java	46	83d15e883aaa3ecd	
@@ -2211,7 +2211,7 @@ member	com.github.tommyettinger.textra.effects.MeetEffect#distance	sge.textra.ef
 member	com.github.tommyettinger.textra.effects.MeetEffect#elastic	sge.textra.effects.MeetEffect#elastic	Renamed	-	com/github/tommyettinger/textra/effects/MeetEffect.java	48	12c8e4ed3038babc	
 member	com.github.tommyettinger.textra.effects.MeetEffect#extent	sge.textra.effects.MeetEffect#extent	Renamed	-	com/github/tommyettinger/textra/effects/MeetEffect.java	47	975bbbb421a35954	
 member	com.github.tommyettinger.textra.effects.MeetEffect#inside	sge.textra.effects.MeetEffect#inside	Renamed	-	com/github/tommyettinger/textra/effects/MeetEffect.java	49	9e04cd5a120f1869	
-member	com.github.tommyettinger.textra.effects.MeetEffect#onApply(long,int,int,float)	sge.textra.effects.MeetEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/MeetEffect.java	77	cb99ac30dac61e35	
+member	com.github.tommyettinger.textra.effects.MeetEffect#onApply(long,int,int,float)	sge.textra.effects.MeetEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/MeetEffect.java	77	dfec4a671e727f19	
 member	com.github.tommyettinger.textra.effects.MeetEffect#timePassedByGlyphIndex	sge.textra.effects.MeetEffect#timePassedByGlyphIndex	Renamed	-	com/github/tommyettinger/textra/effects/MeetEffect.java	51	ac4db43f814f7c04	vis=private
 member	com.github.tommyettinger.textra.effects.OceanEffect#<stmt1>	sge.textra.effects.OceanEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/OceanEffect.java	57	2aeaf7d926b4988d	
 member	com.github.tommyettinger.textra.effects.OceanEffect#<stmt2>	sge.textra.effects.OceanEffect#<stmt2>	Renamed	-	com/github/tommyettinger/textra/effects/OceanEffect.java	62	29afea16c7f31837	
@@ -2235,7 +2235,7 @@ member	com.github.tommyettinger.textra.effects.PinchEffect#DEFAULT_STRENGTH	sge.
 member	com.github.tommyettinger.textra.effects.PinchEffect#determineFloat(long)	sge.textra.effects.PinchEffect#determineFloat(long)	Renamed	-	com/github/tommyettinger/textra/effects/PinchEffect.java	104	fae179d261d4635b	placement=companion vis=private
 member	com.github.tommyettinger.textra.effects.PinchEffect#elastic	sge.textra.effects.PinchEffect#elastic	Renamed	-	com/github/tommyettinger/textra/effects/PinchEffect.java	48	12c8e4ed3038babc	
 member	com.github.tommyettinger.textra.effects.PinchEffect#likelihood	sge.textra.effects.PinchEffect#likelihood	Renamed	-	com/github/tommyettinger/textra/effects/PinchEffect.java	47	87ec9be129a5357b	
-member	com.github.tommyettinger.textra.effects.PinchEffect#onApply(long,int,int,float)	sge.textra.effects.PinchEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/PinchEffect.java	75	c4f2c46254468515	
+member	com.github.tommyettinger.textra.effects.PinchEffect#onApply(long,int,int,float)	sge.textra.effects.PinchEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/PinchEffect.java	75	5600517cb36234a7	
 member	com.github.tommyettinger.textra.effects.PinchEffect#strength	sge.textra.effects.PinchEffect#strength	Renamed	-	com/github/tommyettinger/textra/effects/PinchEffect.java	46	e196fdd35735adc2	
 member	com.github.tommyettinger.textra.effects.RainbowEffect#<stmt1>	sge.textra.effects.RainbowEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/RainbowEffect.java	55	2aeaf7d926b4988d	
 member	com.github.tommyettinger.textra.effects.RainbowEffect#<stmt2>	sge.textra.effects.RainbowEffect#<stmt2>	Renamed	-	com/github/tommyettinger/textra/effects/RainbowEffect.java	60	e5404269c92471f3	
@@ -2249,11 +2249,11 @@ member	com.github.tommyettinger.textra.effects.RainbowEffect#lightness	sge.textr
 member	com.github.tommyettinger.textra.effects.RainbowEffect#onApply(long,int,int,float)	sge.textra.effects.RainbowEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/RainbowEffect.java	76	068f89954e1db723	
 member	com.github.tommyettinger.textra.effects.RainbowEffect#saturation	sge.textra.effects.RainbowEffect#saturation	Renamed	-	com/github/tommyettinger/textra/effects/RainbowEffect.java	48	c9156a92a0ac44ef	
 member	com.github.tommyettinger.textra.effects.RotateEffect#<stmt1>	sge.textra.effects.RotateEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/RotateEffect.java	42	63811d1db3139306	
-member	com.github.tommyettinger.textra.effects.RotateEffect#onApply(long,int,int,float)	sge.textra.effects.RotateEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/RotateEffect.java	48	61a7755c957da838	
+member	com.github.tommyettinger.textra.effects.RotateEffect#onApply(long,int,int,float)	sge.textra.effects.RotateEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/RotateEffect.java	48	b4c8f63ce22b4a04	
 member	com.github.tommyettinger.textra.effects.RotateEffect#rotation	sge.textra.effects.RotateEffect#rotation	Renamed	-	com/github/tommyettinger/textra/effects/RotateEffect.java	36	784d4f7b8345d85c	
 member	com.github.tommyettinger.textra.effects.ScaleEffect#<stmt1>	sge.textra.effects.ScaleEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/ScaleEffect.java	48	bab59c37fb080439	
 member	com.github.tommyettinger.textra.effects.ScaleEffect#<stmt2>	sge.textra.effects.ScaleEffect#<stmt2>	Renamed	-	com/github/tommyettinger/textra/effects/ScaleEffect.java	53	f8940d8fb394ae31	
-member	com.github.tommyettinger.textra.effects.ScaleEffect#onApply(long,int,int,float)	sge.textra.effects.ScaleEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/ScaleEffect.java	59	5c640c3b60f947a7	
+member	com.github.tommyettinger.textra.effects.ScaleEffect#onApply(long,int,int,float)	sge.textra.effects.ScaleEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/ScaleEffect.java	59	1330e1966943361c	
 member	com.github.tommyettinger.textra.effects.ScaleEffect#sizeX	sge.textra.effects.ScaleEffect#sizeX	Renamed	-	com/github/tommyettinger/textra/effects/ScaleEffect.java	41	8829d49e5810bbde	
 member	com.github.tommyettinger.textra.effects.ScaleEffect#sizeY	sge.textra.effects.ScaleEffect#sizeY	Renamed	-	com/github/tommyettinger/textra/effects/ScaleEffect.java	42	13d853fe5fdc16b1	
 member	com.github.tommyettinger.textra.effects.ShakeEffect#<stmt1>	sge.textra.effects.ShakeEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/ShakeEffect.java	54	2aeaf7d926b4988d	
@@ -2263,7 +2263,7 @@ member	com.github.tommyettinger.textra.effects.ShakeEffect#DEFAULT_DISTANCE	sge.
 member	com.github.tommyettinger.textra.effects.ShakeEffect#DEFAULT_SPEED	sge.textra.effects.ShakeEffect#DEFAULT_SPEED	Renamed	-	com/github/tommyettinger/textra/effects/ShakeEffect.java	43	0d57ffd22fefbef4	placement=companion vis=private
 member	com.github.tommyettinger.textra.effects.ShakeEffect#distance	sge.textra.effects.ShakeEffect#distance	Renamed	-	com/github/tommyettinger/textra/effects/ShakeEffect.java	47	1f5a060e5d6eb583	
 member	com.github.tommyettinger.textra.effects.ShakeEffect#lastOffsets	sge.textra.effects.ShakeEffect#lastOffsets	Renamed	-	com/github/tommyettinger/textra/effects/ShakeEffect.java	45	dedaa55a9a98f7f7	vis=private
-member	com.github.tommyettinger.textra.effects.ShakeEffect#onApply(long,int,int,float)	sge.textra.effects.ShakeEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/ShakeEffect.java	70	8bf41ef6f08c2f28	
+member	com.github.tommyettinger.textra.effects.ShakeEffect#onApply(long,int,int,float)	sge.textra.effects.ShakeEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/ShakeEffect.java	70	5ecedd50d3bbf41b	
 member	com.github.tommyettinger.textra.effects.ShakeEffect#speed	sge.textra.effects.ShakeEffect#speed	Renamed	-	com/github/tommyettinger/textra/effects/ShakeEffect.java	48	bf6136be713c4634	
 member	com.github.tommyettinger.textra.effects.ShootEffect#<stmt1>	sge.textra.effects.ShootEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/ShootEffect.java	52	58a8b980bab360f1	
 member	com.github.tommyettinger.textra.effects.ShootEffect#<stmt2>	sge.textra.effects.ShootEffect#<stmt2>	Renamed	-	com/github/tommyettinger/textra/effects/ShootEffect.java	57	0c071fe0f61bd747	
@@ -2283,7 +2283,7 @@ member	com.github.tommyettinger.textra.effects.ShrinkEffect#DEFAULT_EXTENT	sge.t
 member	com.github.tommyettinger.textra.effects.ShrinkEffect#elastic	sge.textra.effects.ShrinkEffect#elastic	Renamed	-	com/github/tommyettinger/textra/effects/ShrinkEffect.java	46	12c8e4ed3038babc	
 member	com.github.tommyettinger.textra.effects.ShrinkEffect#expansion	sge.textra.effects.ShrinkEffect#expansion	Renamed	-	com/github/tommyettinger/textra/effects/ShrinkEffect.java	44	2b67c15dfb638efa	
 member	com.github.tommyettinger.textra.effects.ShrinkEffect#extent	sge.textra.effects.ShrinkEffect#extent	Renamed	-	com/github/tommyettinger/textra/effects/ShrinkEffect.java	45	975bbbb421a35954	
-member	com.github.tommyettinger.textra.effects.ShrinkEffect#onApply(long,int,int,float)	sge.textra.effects.ShrinkEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/ShrinkEffect.java	70	f9c55ca47fc72234	
+member	com.github.tommyettinger.textra.effects.ShrinkEffect#onApply(long,int,int,float)	sge.textra.effects.ShrinkEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/ShrinkEffect.java	70	76db0181550e2bd6	
 member	com.github.tommyettinger.textra.effects.ShrinkEffect#timePassedByGlyphIndex	sge.textra.effects.ShrinkEffect#timePassedByGlyphIndex	Renamed	-	com/github/tommyettinger/textra/effects/ShrinkEffect.java	48	ac4db43f814f7c04	vis=private
 member	com.github.tommyettinger.textra.effects.SickEffect#<stmt1>	sge.textra.effects.SickEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/SickEffect.java	55	2aeaf7d926b4988d	
 member	com.github.tommyettinger.textra.effects.SickEffect#<stmt2>	sge.textra.effects.SickEffect#<stmt2>	Renamed	-	com/github/tommyettinger/textra/effects/SickEffect.java	60	28ae5a21ebcf119b	
@@ -2293,7 +2293,7 @@ member	com.github.tommyettinger.textra.effects.SickEffect#DEFAULT_FREQUENCY	sge.
 member	com.github.tommyettinger.textra.effects.SickEffect#DEFAULT_SPEED	sge.textra.effects.SickEffect#DEFAULT_SPEED	Renamed	-	com/github/tommyettinger/textra/effects/SickEffect.java	44	895aa9414c353e20	placement=companion vis=private
 member	com.github.tommyettinger.textra.effects.SickEffect#distance	sge.textra.effects.SickEffect#distance	Renamed	-	com/github/tommyettinger/textra/effects/SickEffect.java	46	cf2467e207f41c6b	
 member	com.github.tommyettinger.textra.effects.SickEffect#indices	sge.textra.effects.SickEffect#indices	Renamed	-	com/github/tommyettinger/textra/effects/SickEffect.java	49	76e04f11b3a986d8	vis=private
-member	com.github.tommyettinger.textra.effects.SickEffect#onApply(long,int,int,float)	sge.textra.effects.SickEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/SickEffect.java	71	7a913779ae1f79c3	
+member	com.github.tommyettinger.textra.effects.SickEffect#onApply(long,int,int,float)	sge.textra.effects.SickEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/SickEffect.java	71	5668a39128c6d319	
 member	com.github.tommyettinger.textra.effects.SickEffect#speed	sge.textra.effects.SickEffect#speed	Renamed	-	com/github/tommyettinger/textra/effects/SickEffect.java	47	e0201fa6b2ad872b	
 member	com.github.tommyettinger.textra.effects.SlamEffect#<stmt1>	sge.textra.effects.SlamEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/SlamEffect.java	64	688d2fc0334e5b2e	
 member	com.github.tommyettinger.textra.effects.SlamEffect#<stmt2>	sge.textra.effects.SlamEffect#<stmt2>	Renamed	-	com/github/tommyettinger/textra/effects/SlamEffect.java	69	c13af7aa9fb826a9	
@@ -2308,7 +2308,7 @@ member	com.github.tommyettinger.textra.effects.SlamEffect#extent	sge.textra.effe
 member	com.github.tommyettinger.textra.effects.SlamEffect#hangTime	sge.textra.effects.SlamEffect#hangTime	Renamed	-	com/github/tommyettinger/textra/effects/SlamEffect.java	50	3803a10caa402d70	
 member	com.github.tommyettinger.textra.effects.SlamEffect#height	sge.textra.effects.SlamEffect#height	Renamed	-	com/github/tommyettinger/textra/effects/SlamEffect.java	52	9de7e9d02f5c6673	
 member	com.github.tommyettinger.textra.effects.SlamEffect#lastOffsets	sge.textra.effects.SlamEffect#lastOffsets	Renamed	-	com/github/tommyettinger/textra/effects/SlamEffect.java	56	dedaa55a9a98f7f7	vis=private
-member	com.github.tommyettinger.textra.effects.SlamEffect#onApply(long,int,int,float)	sge.textra.effects.SlamEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/SlamEffect.java	91	a11bdc4ed66544d8	
+member	com.github.tommyettinger.textra.effects.SlamEffect#onApply(long,int,int,float)	sge.textra.effects.SlamEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/SlamEffect.java	91	ad4e534de5c38048	
 member	com.github.tommyettinger.textra.effects.SlamEffect#shakeDuration	sge.textra.effects.SlamEffect#shakeDuration	Renamed	-	com/github/tommyettinger/textra/effects/SlamEffect.java	53	466783d61c32acfd	
 member	com.github.tommyettinger.textra.effects.SlamEffect#shakePower	sge.textra.effects.SlamEffect#shakePower	Renamed	-	com/github/tommyettinger/textra/effects/SlamEffect.java	54	1392510f8b01cc7f	
 member	com.github.tommyettinger.textra.effects.SlamEffect#timePassedByGlyphIndex	sge.textra.effects.SlamEffect#timePassedByGlyphIndex	Renamed	-	com/github/tommyettinger/textra/effects/SlamEffect.java	58	ac4db43f814f7c04	vis=private
@@ -2320,7 +2320,7 @@ member	com.github.tommyettinger.textra.effects.SlideEffect#DEFAULT_EXTENT	sge.te
 member	com.github.tommyettinger.textra.effects.SlideEffect#distance	sge.textra.effects.SlideEffect#distance	Renamed	-	com/github/tommyettinger/textra/effects/SlideEffect.java	45	1ed73146d9b4cd97	
 member	com.github.tommyettinger.textra.effects.SlideEffect#elastic	sge.textra.effects.SlideEffect#elastic	Renamed	-	com/github/tommyettinger/textra/effects/SlideEffect.java	47	369ec660cca12ff5	
 member	com.github.tommyettinger.textra.effects.SlideEffect#extent	sge.textra.effects.SlideEffect#extent	Renamed	-	com/github/tommyettinger/textra/effects/SlideEffect.java	46	975bbbb421a35954	
-member	com.github.tommyettinger.textra.effects.SlideEffect#onApply(long,int,int,float)	sge.textra.effects.SlideEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/SlideEffect.java	71	08eab2bfa1557589	
+member	com.github.tommyettinger.textra.effects.SlideEffect#onApply(long,int,int,float)	sge.textra.effects.SlideEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/SlideEffect.java	71	bb94262c2717e082	
 member	com.github.tommyettinger.textra.effects.SlideEffect#timePassedByGlyphIndex	sge.textra.effects.SlideEffect#timePassedByGlyphIndex	Renamed	-	com/github/tommyettinger/textra/effects/SlideEffect.java	49	ac4db43f814f7c04	vis=private
 member	com.github.tommyettinger.textra.effects.SlipEffect#<stmt1>	sge.textra.effects.SlipEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/SlipEffect.java	52	331924260aeee3aa	
 member	com.github.tommyettinger.textra.effects.SlipEffect#<stmt2>	sge.textra.effects.SlipEffect#<stmt2>	Renamed	-	com/github/tommyettinger/textra/effects/SlipEffect.java	57	28ae5a21ebcf119b	
@@ -2328,7 +2328,7 @@ member	com.github.tommyettinger.textra.effects.SlipEffect#<stmt3>	sge.textra.eff
 member	com.github.tommyettinger.textra.effects.SlipEffect#DEFAULT_DISTANCE	sge.textra.effects.SlipEffect#DEFAULT_DISTANCE	Renamed	-	com/github/tommyettinger/textra/effects/SlipEffect.java	42	c3dbcaae07f7edd6	placement=companion vis=private
 member	com.github.tommyettinger.textra.effects.SlipEffect#DEFAULT_SPEED	sge.textra.effects.SlipEffect#DEFAULT_SPEED	Renamed	-	com/github/tommyettinger/textra/effects/SlipEffect.java	43	04276a1a4b60bec6	placement=companion vis=private
 member	com.github.tommyettinger.textra.effects.SlipEffect#distance	sge.textra.effects.SlipEffect#distance	Renamed	-	com/github/tommyettinger/textra/effects/SlipEffect.java	45	7b1df9b046e826a8	
-member	com.github.tommyettinger.textra.effects.SlipEffect#onApply(long,int,int,float)	sge.textra.effects.SlipEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/SlipEffect.java	68	47c8e8e0596602bc	
+member	com.github.tommyettinger.textra.effects.SlipEffect#onApply(long,int,int,float)	sge.textra.effects.SlipEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/SlipEffect.java	68	ba92e955533476e1	
 member	com.github.tommyettinger.textra.effects.SlipEffect#speed	sge.textra.effects.SlipEffect#speed	Renamed	-	com/github/tommyettinger/textra/effects/SlipEffect.java	46	bf6136be713c4634	
 member	com.github.tommyettinger.textra.effects.SpinEffect#<stmt1>	sge.textra.effects.SpinEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/SpinEffect.java	53	38a3943065a1de8f	
 member	com.github.tommyettinger.textra.effects.SpinEffect#<stmt2>	sge.textra.effects.SpinEffect#<stmt2>	Renamed	-	com/github/tommyettinger/textra/effects/SpinEffect.java	58	6622fe780dfeabd8	
@@ -2336,7 +2336,7 @@ member	com.github.tommyettinger.textra.effects.SpinEffect#<stmt3>	sge.textra.eff
 member	com.github.tommyettinger.textra.effects.SpinEffect#DEFAULT_EXTENT	sge.textra.effects.SpinEffect#DEFAULT_EXTENT	Renamed	-	com/github/tommyettinger/textra/effects/SpinEffect.java	41	6132caf029e3cab4	placement=companion vis=private
 member	com.github.tommyettinger.textra.effects.SpinEffect#elastic	sge.textra.effects.SpinEffect#elastic	Renamed	-	com/github/tommyettinger/textra/effects/SpinEffect.java	45	12c8e4ed3038babc	
 member	com.github.tommyettinger.textra.effects.SpinEffect#extent	sge.textra.effects.SpinEffect#extent	Renamed	-	com/github/tommyettinger/textra/effects/SpinEffect.java	43	d21ea389e0390f0b	
-member	com.github.tommyettinger.textra.effects.SpinEffect#onApply(long,int,int,float)	sge.textra.effects.SpinEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/SpinEffect.java	69	6b330cd23cc1ed96	
+member	com.github.tommyettinger.textra.effects.SpinEffect#onApply(long,int,int,float)	sge.textra.effects.SpinEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/SpinEffect.java	69	b758c90cc301b595	
 member	com.github.tommyettinger.textra.effects.SpinEffect#rotations	sge.textra.effects.SpinEffect#rotations	Renamed	-	com/github/tommyettinger/textra/effects/SpinEffect.java	44	6aed34aa6b0314d4	
 member	com.github.tommyettinger.textra.effects.SpinEffect#timePassedByGlyphIndex	sge.textra.effects.SpinEffect#timePassedByGlyphIndex	Renamed	-	com/github/tommyettinger/textra/effects/SpinEffect.java	47	ac4db43f814f7c04	vis=private
 member	com.github.tommyettinger.textra.effects.SpiralEffect#<stmt1>	sge.textra.effects.SpiralEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/SpiralEffect.java	53	2aeaf7d926b4988d	
@@ -2345,7 +2345,7 @@ member	com.github.tommyettinger.textra.effects.SpiralEffect#<stmt3>	sge.textra.e
 member	com.github.tommyettinger.textra.effects.SpiralEffect#DEFAULT_DISTANCE	sge.textra.effects.SpiralEffect#DEFAULT_DISTANCE	Renamed	-	com/github/tommyettinger/textra/effects/SpiralEffect.java	40	993b5c6cd8e5253c	placement=companion vis=private
 member	com.github.tommyettinger.textra.effects.SpiralEffect#DEFAULT_SPEED	sge.textra.effects.SpiralEffect#DEFAULT_SPEED	Renamed	-	com/github/tommyettinger/textra/effects/SpiralEffect.java	41	489848eedd2138d7	placement=companion vis=private
 member	com.github.tommyettinger.textra.effects.SpiralEffect#distance	sge.textra.effects.SpiralEffect#distance	Renamed	-	com/github/tommyettinger/textra/effects/SpiralEffect.java	43	1ed73146d9b4cd97	
-member	com.github.tommyettinger.textra.effects.SpiralEffect#onApply(long,int,int,float)	sge.textra.effects.SpiralEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/SpiralEffect.java	69	f4bb1ee848636cbc	
+member	com.github.tommyettinger.textra.effects.SpiralEffect#onApply(long,int,int,float)	sge.textra.effects.SpiralEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/SpiralEffect.java	69	9fd4f0b610faa2cd	
 member	com.github.tommyettinger.textra.effects.SpiralEffect#rotations	sge.textra.effects.SpiralEffect#rotations	Renamed	-	com/github/tommyettinger/textra/effects/SpiralEffect.java	45	5245e5164068fce9	
 member	com.github.tommyettinger.textra.effects.SpiralEffect#speed	sge.textra.effects.SpiralEffect#speed	Renamed	-	com/github/tommyettinger/textra/effects/SpiralEffect.java	44	bf6136be713c4634	
 member	com.github.tommyettinger.textra.effects.SpiralEffect#timePassedByGlyphIndex	sge.textra.effects.SpiralEffect#timePassedByGlyphIndex	Renamed	-	com/github/tommyettinger/textra/effects/SpiralEffect.java	47	ac4db43f814f7c04	vis=private
@@ -2357,14 +2357,14 @@ member	com.github.tommyettinger.textra.effects.SputterEffect#DEFAULT_HEIGHTEN	sg
 member	com.github.tommyettinger.textra.effects.SputterEffect#DEFAULT_SPEED	sge.textra.effects.SputterEffect#DEFAULT_SPEED	Renamed	-	com/github/tommyettinger/textra/effects/SputterEffect.java	44	04276a1a4b60bec6	placement=companion vis=private
 member	com.github.tommyettinger.textra.effects.SputterEffect#DEFAULT_WIDEN	sge.textra.effects.SputterEffect#DEFAULT_WIDEN	Renamed	-	com/github/tommyettinger/textra/effects/SputterEffect.java	42	19bc96589f21d685	placement=companion vis=private
 member	com.github.tommyettinger.textra.effects.SputterEffect#heighten	sge.textra.effects.SputterEffect#heighten	Renamed	-	com/github/tommyettinger/textra/effects/SputterEffect.java	47	dbca814a9204000f	
-member	com.github.tommyettinger.textra.effects.SputterEffect#onApply(long,int,int,float)	sge.textra.effects.SputterEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/SputterEffect.java	75	4e7f218484983244	
+member	com.github.tommyettinger.textra.effects.SputterEffect#onApply(long,int,int,float)	sge.textra.effects.SputterEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/SputterEffect.java	75	4302212354bbe70d	
 member	com.github.tommyettinger.textra.effects.SputterEffect#speed	sge.textra.effects.SputterEffect#speed	Renamed	-	com/github/tommyettinger/textra/effects/SputterEffect.java	48	bf6136be713c4634	
 member	com.github.tommyettinger.textra.effects.SputterEffect#widen	sge.textra.effects.SputterEffect#widen	Renamed	-	com/github/tommyettinger/textra/effects/SputterEffect.java	46	09acfa73fa35ea09	
 member	com.github.tommyettinger.textra.effects.SquashEffect#<stmt1>	sge.textra.effects.SquashEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/SquashEffect.java	53	c52b946d9632ebd8	
 member	com.github.tommyettinger.textra.effects.SquashEffect#<stmt2>	sge.textra.effects.SquashEffect#<stmt2>	Renamed	-	com/github/tommyettinger/textra/effects/SquashEffect.java	58	352a78a30e78bd3a	
 member	com.github.tommyettinger.textra.effects.SquashEffect#DEFAULT_SPEED	sge.textra.effects.SquashEffect#DEFAULT_SPEED	Renamed	-	com/github/tommyettinger/textra/effects/SquashEffect.java	42	1ce496c00525aaa4	placement=companion vis=private
 member	com.github.tommyettinger.textra.effects.SquashEffect#elastic	sge.textra.effects.SquashEffect#elastic	Renamed	-	com/github/tommyettinger/textra/effects/SquashEffect.java	45	12c8e4ed3038babc	
-member	com.github.tommyettinger.textra.effects.SquashEffect#onApply(long,int,int,float)	sge.textra.effects.SquashEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/SquashEffect.java	64	e45ed9d0436627ce	
+member	com.github.tommyettinger.textra.effects.SquashEffect#onApply(long,int,int,float)	sge.textra.effects.SquashEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/SquashEffect.java	64	c9dcd759937a8ba3	
 member	com.github.tommyettinger.textra.effects.SquashEffect#speed	sge.textra.effects.SquashEffect#speed	Renamed	-	com/github/tommyettinger/textra/effects/SquashEffect.java	44	cdfe0388393e471e	
 member	com.github.tommyettinger.textra.effects.SquashEffect#timePassedByGlyphIndex	sge.textra.effects.SquashEffect#timePassedByGlyphIndex	Renamed	-	com/github/tommyettinger/textra/effects/SquashEffect.java	47	ac4db43f814f7c04	vis=private
 member	com.github.tommyettinger.textra.effects.StylistEffect#<stmt1>	sge.textra.effects.StylistEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/StylistEffect.java	90	7d73b45aaf7b89b1	
@@ -2387,7 +2387,7 @@ member	com.github.tommyettinger.textra.effects.ThinkingEffect#distance	sge.textr
 member	com.github.tommyettinger.textra.effects.ThinkingEffect#drift	sge.textra.effects.ThinkingEffect#drift	Renamed	-	com/github/tommyettinger/textra/effects/ThinkingEffect.java	50	cb683ee48a663545	
 member	com.github.tommyettinger.textra.effects.ThinkingEffect#extent	sge.textra.effects.ThinkingEffect#extent	Renamed	-	com/github/tommyettinger/textra/effects/ThinkingEffect.java	49	975bbbb421a35954	
 member	com.github.tommyettinger.textra.effects.ThinkingEffect#inside	sge.textra.effects.ThinkingEffect#inside	Renamed	-	com/github/tommyettinger/textra/effects/ThinkingEffect.java	51	9e04cd5a120f1869	
-member	com.github.tommyettinger.textra.effects.ThinkingEffect#onApply(long,int,int,float)	sge.textra.effects.ThinkingEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/ThinkingEffect.java	79	5804ef4798484aa3	
+member	com.github.tommyettinger.textra.effects.ThinkingEffect#onApply(long,int,int,float)	sge.textra.effects.ThinkingEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/ThinkingEffect.java	79	a7f75b0f459708fa	
 member	com.github.tommyettinger.textra.effects.ThinkingEffect#timePassedByGlyphIndex	sge.textra.effects.ThinkingEffect#timePassedByGlyphIndex	Renamed	-	com/github/tommyettinger/textra/effects/ThinkingEffect.java	53	ac4db43f814f7c04	vis=private
 member	com.github.tommyettinger.textra.effects.ThrobEffect#<stmt1>	sge.textra.effects.ThrobEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/ThrobEffect.java	60	2aeaf7d926b4988d	
 member	com.github.tommyettinger.textra.effects.ThrobEffect#<stmt2>	sge.textra.effects.ThrobEffect#<stmt2>	Renamed	-	com/github/tommyettinger/textra/effects/ThrobEffect.java	65	28ae5a21ebcf119b	
@@ -2399,7 +2399,7 @@ member	com.github.tommyettinger.textra.effects.ThrobEffect#DEFAULT_SPEED	sge.tex
 member	com.github.tommyettinger.textra.effects.ThrobEffect#distance	sge.textra.effects.ThrobEffect#distance	Renamed	-	com/github/tommyettinger/textra/effects/ThrobEffect.java	52	4bd7f15aa4faea51	
 member	com.github.tommyettinger.textra.effects.ThrobEffect#frequency	sge.textra.effects.ThrobEffect#frequency	Renamed	-	com/github/tommyettinger/textra/effects/ThrobEffect.java	54	a4bb2b2be117f371	
 member	com.github.tommyettinger.textra.effects.ThrobEffect#lastOffsets	sge.textra.effects.ThrobEffect#lastOffsets	Renamed	-	com/github/tommyettinger/textra/effects/ThrobEffect.java	50	dedaa55a9a98f7f7	vis=private
-member	com.github.tommyettinger.textra.effects.ThrobEffect#onApply(long,int,int,float)	sge.textra.effects.ThrobEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/ThrobEffect.java	81	ac2bf8a3d90a3f16	
+member	com.github.tommyettinger.textra.effects.ThrobEffect#onApply(long,int,int,float)	sge.textra.effects.ThrobEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/ThrobEffect.java	81	c04ef7b270d01e51	
 member	com.github.tommyettinger.textra.effects.ThrobEffect#speed	sge.textra.effects.ThrobEffect#speed	Renamed	-	com/github/tommyettinger/textra/effects/ThrobEffect.java	53	bf6136be713c4634	
 member	com.github.tommyettinger.textra.effects.TriggerEffect#<stmt1>	sge.textra.effects.TriggerEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/TriggerEffect.java	44	83d15e883aaa3ecd	
 member	com.github.tommyettinger.textra.effects.TriggerEffect#<stmt2>	sge.textra.effects.TriggerEffect#<stmt2>	Renamed	-	com/github/tommyettinger/textra/effects/TriggerEffect.java	47	a02341034aa12b80	
@@ -2414,7 +2414,7 @@ member	com.github.tommyettinger.textra.effects.WaveEffect#DEFAULT_FREQUENCY	sge.
 member	com.github.tommyettinger.textra.effects.WaveEffect#DEFAULT_SPEED	sge.textra.effects.WaveEffect#DEFAULT_SPEED	Renamed	-	com/github/tommyettinger/textra/effects/WaveEffect.java	43	0d57ffd22fefbef4	placement=companion vis=private
 member	com.github.tommyettinger.textra.effects.WaveEffect#distance	sge.textra.effects.WaveEffect#distance	Renamed	-	com/github/tommyettinger/textra/effects/WaveEffect.java	45	1ed73146d9b4cd97	
 member	com.github.tommyettinger.textra.effects.WaveEffect#frequency	sge.textra.effects.WaveEffect#frequency	Renamed	-	com/github/tommyettinger/textra/effects/WaveEffect.java	46	c56deef5c3c04bbd	
-member	com.github.tommyettinger.textra.effects.WaveEffect#onApply(long,int,int,float)	sge.textra.effects.WaveEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/WaveEffect.java	74	a40604d4b25016e5	
+member	com.github.tommyettinger.textra.effects.WaveEffect#onApply(long,int,int,float)	sge.textra.effects.WaveEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/WaveEffect.java	74	48332c20ba569550	
 member	com.github.tommyettinger.textra.effects.WaveEffect#speed	sge.textra.effects.WaveEffect#speed	Renamed	-	com/github/tommyettinger/textra/effects/WaveEffect.java	47	bf6136be713c4634	
 member	com.github.tommyettinger.textra.effects.WindEffect#<stmt1>	sge.textra.effects.WindEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/WindEffect.java	61	fc2ba98c3f1ccd22	
 member	com.github.tommyettinger.textra.effects.WindEffect#<stmt2>	sge.textra.effects.WindEffect#<stmt2>	Renamed	-	com/github/tommyettinger/textra/effects/WindEffect.java	66	a4f323c643fa0c08	
@@ -2432,7 +2432,7 @@ member	com.github.tommyettinger.textra.effects.WindEffect#distanceY	sge.textra.e
 member	com.github.tommyettinger.textra.effects.WindEffect#intensity	sge.textra.effects.WindEffect#intensity	Renamed	-	com/github/tommyettinger/textra/effects/WindEffect.java	55	1be8a242290cd31d	
 member	com.github.tommyettinger.textra.effects.WindEffect#noiseCursorX	sge.textra.effects.WindEffect#noiseCursorX	Renamed	-	com/github/tommyettinger/textra/effects/WindEffect.java	49	d32d83f9050903e5	vis=private
 member	com.github.tommyettinger.textra.effects.WindEffect#noiseCursorY	sge.textra.effects.WindEffect#noiseCursorY	Renamed	-	com/github/tommyettinger/textra/effects/WindEffect.java	50	38d01bae04c8b892	vis=private
-member	com.github.tommyettinger.textra.effects.WindEffect#onApply(long,int,int,float)	sge.textra.effects.WindEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/WindEffect.java	97	9afc0d7f1979a5f1	
+member	com.github.tommyettinger.textra.effects.WindEffect#onApply(long,int,int,float)	sge.textra.effects.WindEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/WindEffect.java	97	a56df4003fcd58f0	
 member	com.github.tommyettinger.textra.effects.WindEffect#spacing	sge.textra.effects.WindEffect#spacing	Renamed	-	com/github/tommyettinger/textra/effects/WindEffect.java	54	afdb1da7e0c205fa	
 member	com.github.tommyettinger.textra.effects.WindEffect#update(float)	sge.textra.effects.WindEffect#update(float)	Renamed	-	com/github/tommyettinger/textra/effects/WindEffect.java	87	2de4791952a435e5	
 member	com.github.tommyettinger.textra.effects.ZipperEffect#<stmt1>	sge.textra.effects.ZipperEffect#<stmt1>	Renamed	-	com/github/tommyettinger/textra/effects/ZipperEffect.java	55	5e832539533b1ebc	
@@ -2443,7 +2443,7 @@ member	com.github.tommyettinger.textra.effects.ZipperEffect#DEFAULT_EXTENT	sge.t
 member	com.github.tommyettinger.textra.effects.ZipperEffect#distance	sge.textra.effects.ZipperEffect#distance	Renamed	-	com/github/tommyettinger/textra/effects/ZipperEffect.java	45	5c25805229abb57d	
 member	com.github.tommyettinger.textra.effects.ZipperEffect#elastic	sge.textra.effects.ZipperEffect#elastic	Renamed	-	com/github/tommyettinger/textra/effects/ZipperEffect.java	47	12c8e4ed3038babc	
 member	com.github.tommyettinger.textra.effects.ZipperEffect#extent	sge.textra.effects.ZipperEffect#extent	Renamed	-	com/github/tommyettinger/textra/effects/ZipperEffect.java	46	975bbbb421a35954	
-member	com.github.tommyettinger.textra.effects.ZipperEffect#onApply(long,int,int,float)	sge.textra.effects.ZipperEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/ZipperEffect.java	71	71527463ee3f0b28	
+member	com.github.tommyettinger.textra.effects.ZipperEffect#onApply(long,int,int,float)	sge.textra.effects.ZipperEffect#onApply(long,int,int,float)	Renamed	-	com/github/tommyettinger/textra/effects/ZipperEffect.java	71	7803c06cbb7a10da	
 member	com.github.tommyettinger.textra.effects.ZipperEffect#timePassedByGlyphIndex	sge.textra.effects.ZipperEffect#timePassedByGlyphIndex	Renamed	-	com/github/tommyettinger/textra/effects/ZipperEffect.java	49	ac4db43f814f7c04	vis=private
 member	com.github.tommyettinger.textra.utils.BlockUtils#ALL_BLOCK_CHARS	sge.textra.utils.BlockUtils#ALL_BLOCK_CHARS	Renamed	-	com/github/tommyettinger/textra/utils/BlockUtils.java	218	e343c3522ab8f1b8	placement=companion
 member	com.github.tommyettinger.textra.utils.BlockUtils#BOX_DRAWING	sge.textra.utils.BlockUtils#BOX_DRAWING	Renamed	-	com/github/tommyettinger/textra/utils/BlockUtils.java	55	6bb0875c6ef5dd94	placement=companion
@@ -2572,7 +2572,7 @@ member	com.github.tommyettinger.textra.utils.ColorUtils#saturation	sge.textra.ut
 member	com.github.tommyettinger.textra.utils.ColorUtils#unevenMix(Array)	sge.textra.utils.ColorUtils#unevenMix(Array<int>)	Renamed	-	com/github/tommyettinger/textra/utils/ColorUtils.java	277	5d4ff301670313e9	placement=companion
 member	com.github.tommyettinger.textra.utils.ColorUtils#unevenMix(Array,int,int)	sge.textra.utils.ColorUtils#unevenMix(Array<int>,int,int)	Renamed	-	com/github/tommyettinger/textra/utils/ColorUtils.java	296	8bb48badc215d4f3	placement=companion
 member	com.github.tommyettinger.textra.utils.LZBCompression#compressToByteArray(String)	sge.textra.utils.LZBCompression#compressToByteArray(String)	Renamed	-	com/github/tommyettinger/textra/utils/LZBCompression.java	55	d72b61fe830ea24e	placement=companion
-member	com.github.tommyettinger.textra.utils.LZBCompression#compressToBytes(String)	sge.textra.utils.LZBCompression#compressToBytes(String)	Renamed	-	com/github/tommyettinger/textra/utils/LZBCompression.java	44	b6f91a47ca99b046	placement=companion
+member	com.github.tommyettinger.textra.utils.LZBCompression#compressToBytes(String)	sge.textra.utils.LZBCompression#compressToBytes(String)	Renamed	-	com/github/tommyettinger/textra/utils/LZBCompression.java	44	55fcdf2f8bd7b44d	placement=companion
 member	com.github.tommyettinger.textra.utils.LZBDecompression#decompressFromByteArray(DynamicArray)	sge.textra.utils.LZBDecompression#decompressFromByteArray(DynamicArray<byte>)	Renamed	-	com/github/tommyettinger/textra/utils/LZBDecompression.java	51	f117c0e0a6634d31	placement=companion
 member	com.github.tommyettinger.textra.utils.LZBDecompression#decompressFromBytes(Array)	sge.textra.utils.LZBDecompression#decompressFromBytes(Array<byte>)	Renamed	-	com/github/tommyettinger/textra/utils/LZBDecompression.java	41	de839121514f5a0a	placement=companion
 member	com.github.tommyettinger.textra.utils.LZBDecompression#decompressFromBytes(Array,int,int)	sge.textra.utils.LZBDecompression#decompressFromBytes(Array<byte>,int,int)	Renamed	-	com/github/tommyettinger/textra/utils/LZBDecompression.java	62	033ea46696b609e6	placement=companion

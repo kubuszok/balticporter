@@ -1,6 +1,6 @@
 package balticporter.corpus.libgdx
 
-import balticporter.core.{FrontendConfig, ParityRef, PortManifest, Provenance, RuntimeMode, Substitutions}
+import balticporter.core.{FrontendConfig, ParityRef, PortManifest, Provenance, ResourceTree, RuntimeMode, Substitutions}
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
 import balticporter.tir.{Descriptor, Param}
 import balticporter.transform.{ClassTableTransform, CollectionsTransform, MutableParamsTransform, PanamaFfiTransform, StaticForwarderTransform, TestFrameworkTransform}
@@ -77,6 +77,17 @@ object LibgdxPolicy:
         "com.badlogic.gdx.scenes.scene2d.ui.List" -> "SgeList", // avoids clash with scala.List (1 sge file)
       ),
       resolutions    = reviewedBoundaries,
+      // What the emitted code READS from the classpath at run time (`PortManifest.resources`):
+      // BitmapFont's default font and DefaultShader's GLSL, at the upstream paths the string
+      // literals still name (the hand port renamed them with the package — not yet a mechanism).
+      resources      = List(ResourceTree(
+        root  = repoRoot.resolve("../sge/original-src/libgdx/gdx/res").normalize,
+        files = List(
+          "com/badlogic/gdx/utils/lsans-15.fnt", "com/badlogic/gdx/utils/lsans-15.png",
+          "com/badlogic/gdx/graphics/g3d/shaders/default.vertex.glsl",
+          "com/badlogic/gdx/graphics/g3d/shaders/default.fragment.glsl",
+          "com/badlogic/gdx/graphics/g3d/shaders/depth.vertex.glsl",
+          "com/badlogic/gdx/graphics/g3d/shaders/depth.fragment.glsl"))),
       // THE ARTIFACT THIS MODULE'S BUILD ADDS (CLAUDE.md §1.5). Locale calls (I18NBundle)
       // need scala-java-locales; not inherited — each dependent declares its own if it needs it.
       dependencies   = List(
