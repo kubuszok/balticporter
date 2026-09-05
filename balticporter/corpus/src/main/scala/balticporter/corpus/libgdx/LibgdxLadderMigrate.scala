@@ -53,6 +53,10 @@ object LibgdxLadder:
       surface        = List(new MutableParamsTransform),
       packageRenames = Map("com.badlogic.gdx" -> "sge"),
       typeRenames    = Map("com.badlogic.gdx.scenes.scene2d.ui.List" -> "SgeList"),
+      // upstream moved `SharedLibraryLoader` to its own artifact (gdx/build.gradle:88); at L0 the
+      // java references it as an external class, so the port declares what the java declares.
+      dependencies   = List(balticporter.catalog.ArtifactDep("com.badlogicgames.gdx", "gdx-jnigen-loader", "2.5.2",
+                                                             balticporter.catalog.CrossKind.Java)),
       resources      = List(ResourceTree(
         root  = repoRoot.resolve("../sge/original-src/libgdx/gdx/res").normalize,
         files = List(

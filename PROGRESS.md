@@ -1558,7 +1558,14 @@ stay so member keys compare across rungs; no drop, inject, resolutions or parity
 files, 310 errors** — foreach 225 (java enhanced-for over libGDX's OWN `java.lang.Iterable` implementors: K9 desugars
 only a KEPT JDK iterable), E067 59 (JNI `native` methods rendered as bodiless declarations: `BufferUtils`,
 `Gdx2DPixmap`, `ETC1`, … — `@native` is the honest L0 spelling), `Json#readValue` overload 16 (T17),
-`SharedLibraryLoader` absent 6, singles 4. Two universal cards close ~284 of 310.
+`SharedLibraryLoader` absent 6, singles 4. **Two universal fixes the same day: 310 -> 26** (enhanced-for uses java's
+iterator protocol for any program type reaching `java.lang.Iterable` without a `foreach`; a JNI `native` method no FFI
+phase rewrote is emitted `@scala.native`); the full port stayed byte-flat (0 errors, 0 members). L0 residue, each a
+universal card: (i) 16 `Json#readValue` sites — java's `int.class` is statically `Class<Integer>` (JLS 15.8.2) and
+must be emitted at that type where a `Class<T extends Object>` slot takes it; (ii) 6 `SharedLibraryLoader` — the
+package rename rewrote an EXTERNAL FQN under the port's prefix (the class moved to `gdx-jnigen-loader` upstream; the
+rename must ask ownership, §4.56); (iii) 4 singles (`Json#newInstance` catch-param reassignment, two array
+`Found:` mismatches, a `Serializer[Object]` variance).
 
 Rungs (decision | footprint in gdx/src | platform | phase today): L1 bean properties + nullary arity (1,422/928;
 none; yes) · L2 collections onto lls + Comparator->Ordering (989 uses, 55; partly unblocks JS/Native; yes) ·

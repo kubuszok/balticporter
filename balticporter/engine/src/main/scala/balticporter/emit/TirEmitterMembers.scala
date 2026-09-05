@@ -588,7 +588,10 @@ private[emit] trait TirEmitterMembers:
     tparamSubst = savedSubst // restore (ctor type-param substitution was local to this def)
     // trivia first, porter note last, member next (§4.575) — the note must not displace the licence.
     val ctorNowarn = if isCtor && orNullCtors(d.symbol) then nowarnDeprecated(i) else ""
-    s"${leading(d.leading, i)}${declNotes(d.symbol, i)}${annots(s, i)}$ctorNowarn${ind(i)}${mods(s, privateQualifier(s.owner))}def $name$tps$pss$ret$rhs"
+    // a JNI `native` method no FFI phase rewrote keeps java's own spelling: `@native`, bodiless
+    // (the ladder's L0; `PanamaFfiTransform` clears the flag where it rewrites, ENGINE-LIMITS P-Panama).
+    val nativeAnn = if !isCtor && s.flags.isNative && d.rhs.isEmpty then s"${ind(i)}@scala.native\n" else ""
+    s"${leading(d.leading, i)}${declNotes(d.symbol, i)}${annots(s, i)}$ctorNowarn$nativeAnn${ind(i)}${mods(s, privateQualifier(s.owner))}def $name$tps$pss$ret$rhs"
 
   /** a secondary's own statements after its delegation head, minus the ones its delegation consumed. */
   private[emit] def ctorRest(plan: CtorFunnel.Plan, cdef: Tree.DefDef, stats: List[Statement],
@@ -700,13 +703,37 @@ private[emit] trait TirEmitterMembers:
     * Decided from the NODE (§4.56): external (not program-owned) AND in `java.*`/`javax.*`. A
     * retyped type is no longer in that namespace by the time the emitter runs, and arrays are
     * excluded by construction (`headSymOf` returns `None` for them). */
+  /** Does an enhanced-for over this type need java's own iterator protocol (K9)? Yes for a JDK
+    * iterable the pipeline KEPT, and for a PROGRAM type that reaches `java.lang.Iterable` through
+    * parents this program declares while neither it nor any of them declares a `foreach` (the
+    * ladder's L0: libGDX's own collections, 225 sites). A retyped or runtime type has `foreach`. */
   private[emit] def isKeptJdkIterable(iterableTpe: TypeRepr): Boolean =
     headSymOf(iterableTpe).flatMap(program.symbolOf).exists { s =>
-      !program.owns(s.id) && {
+      if program.owns(s.id) then ownedJavaIterableWithoutForeach(s.id, Set.empty)
+      else
         val fqn = s.fullName
         fqn.startsWith("java.") || fqn.startsWith("javax.")
-      }
     }
+
+  private def ownedJavaIterableWithoutForeach(id: SymId, seen: Set[SymId]): Boolean =
+    if seen(id) then false
+    else program.definitionOf(id) match
+      case Some(cd: Tree.ClassDef) =>
+        val declaresForeach = cd.body.exists {
+          case d: Tree.DefDef => sym(d.symbol).name == "foreach"
+          case _              => false
+        }
+        if declaresForeach then false
+        else
+          val parentIds = cd.parents.flatMap {
+            case tt: TypeTree => headSymOf(tt.tpe)
+            case t: Term      => headSymOf(t.tpe)
+          }
+          val reachesJavaIterable = parentIds.exists(pid =>
+            program.symbolOf(pid).exists(_.fullName == "java.lang.Iterable"))
+          reachesJavaIterable ||
+            parentIds.exists(pid => program.owns(pid) && ownedJavaIterableWithoutForeach(pid, seen + id))
+      case _ => false
 
   private[emit] def loopWithJumps(body: Tree, label: Option[String], render: (=> String) => String,
                             bodyStr: => String)(using Obligations): String =

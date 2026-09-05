@@ -10,7 +10,7 @@ catalog(unreached)	10
 class-init-trigger	2
 dependency-coverage	37
 dependency-coverage(all)	37
-dependency-coverage(declared)	0
+dependency-coverage(declared)	1
 heap-pollution	17
 idiom(converted)	24
 idiom(refused)	842
@@ -20,7 +20,7 @@ manifest	0
 markers	0
 omissions	58
 overload-risk	574
-policy	0
+policy	1
 port-map	0
 portability(all)	153
 portability(emitted)	153

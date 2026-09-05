@@ -534,7 +534,10 @@ lazy val `port-sge-l0` = (projectMatrix in file("ported/sge-l0"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
   .settings(portSettings("sge-l0") *)
   .settings(portSourceGenerators("sge-l0") *)
-  .settings(name := "balticporter-port-sge-l0")
+  .settings(
+    name := "balticporter-port-sge-l0",
+    libraryDependencies += "com.badlogicgames.gdx" % "gdx-jnigen-loader" % "2.5.2",
+  )
   .jvmPlatform(scalaVersions = Seq(scalaV))
 
 // ---------------------------------------------------------------------------------------------

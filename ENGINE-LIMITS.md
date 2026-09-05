@@ -711,6 +711,7 @@ Triage (2026-09-04): CLOSED-IN-FACT — "Fix: distinguish via Flags.isStatic …
 Tried: emitting `for (x <- xs)` (needs Scala `foreach`) over a JDK iterable a port KEPT (no `CollectionsTransform`) failed with "value foreach is not a member"; fixed by emitting java's own iterator-protocol desugaring whenever the post-pipeline receiver's head symbol is still external/unretyped `java.*`/`javax.*`.
 Numbers: noise4j 2 -> 0 on the construct; RefChecks gate then rose to 7 (E164 `overrides nothing` in enum constant bodies, an unrelated riser per CLAUDE.md §3).
 Rule: decide from what a PHASE did to the type (post-pipeline head symbol), never the type's NAME; `JdkSurfaceCheck` reports a `kept-iterable` finding per receiver left in `java.*`, before any compile.
+Numbers (2026-09-05, ladder L0): the same protocol for a PROGRAM type that reaches `java.lang.Iterable` through owned parents and declares no `foreach` — libGDX core at L0 225 -> 0 on the construct (310 -> 26 total); the full port byte-flat.
 
 ### K10. A TYPE-VARIABLE map key arrives carrying java's `Object` WIDENING — CLOSED
 (a) engine — `CollectionsTransform`. Symptom: `Found: Object / Required: K` calling a retyped `Map`'s `get`/`remove`/`containsKey` with a key whose static type is a type variable.
