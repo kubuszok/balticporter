@@ -1914,6 +1914,10 @@ lls-measure:
 
     # ABORT if the migration itself did not run, or the lane measures the PREVIOUS emit and reports a
     # stale number as a result.
+    # At a triple-digit floor the error count depends on zinc's state (clean 100, warm after a
+    # failed compile 149, 2026-09-05). `clean` also deletes src_managed (§5.5), so it runs BEFORE
+    # the migrator regenerates it, never between the migrator and the compile.
+    _sbt_run "port-llsJVM/clean" >/dev/null 2>&1
     MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.lls.LlsMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$MIGRATE_OUT"; then
       echo "!! LlsMigrate DID NOT RUN — refusing to measure stale output"
@@ -1952,10 +1956,7 @@ lls-measure:
     # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
     # the compile below runs on another (ENGINE-LIMITS M5.10).
     jdk_guard "$REPORT"
-    echo "-- compile (sbt port-llsJVM/compile, from a CLEAN state) --"
-    # At a triple-digit floor the count depends on zinc's state: clean 100, warm after a failed
-    # compile 149 (2026-09-05). Clean first so the number is a fact about the emitted code.
-    _sbt_run "port-llsJVM/clean" >/dev/null 2>&1
+    echo "-- compile (sbt port-llsJVM/compile; zinc state cleaned before the migrator) --"
     sbt_compile "port-llsJVM/compile" "$MEASURE_TMP"/llsmeasure.txt
     ERRORS=$SBT_ERRORS
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/llsmeasure.txt
