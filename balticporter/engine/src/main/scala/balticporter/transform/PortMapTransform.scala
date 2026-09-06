@@ -191,7 +191,17 @@ final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, 
     val byFullNameAll: Map[String, List[Symbol]] = program.symbols.all.toList.groupBy(_.fullName)
     def ofKind(entry: PortMap.Entry, ss: List[Symbol]): Option[Symbol] =
       val wantMethod = entry.upstream.endsWith(")")
-      ss.find(s => PolicyBinder.isExecutable(s.info) == wantMethod).orElse(ss.headOption)
+      // among overloads, the entry's ARITY picks (`dst2(Vector3)` -> `distanceSq`, `dst2(float,float,float)` stays)
+      val wantArity  = Option.when(wantMethod) {
+        val inner = entry.upstream.substring(entry.upstream.lastIndexOf('(') + 1).stripSuffix(")")
+        if inner.trim.isEmpty then 0 else inner.count(_ == ',') + 1
+      }
+      def arityOf(s: Symbol): Option[Int] = s.info match
+        case m: TypeRepr.MethodType                        => Some(m.params.size)
+        case TypeRepr.PolyType(_, m: TypeRepr.MethodType)  => Some(m.params.size)
+        case _                                             => scala.None
+      val kinded = ss.filter(s => PolicyBinder.isExecutable(s.info) == wantMethod)
+      kinded.find(s => wantArity.isDefined && arityOf(s) == wantArity).orElse(kinded.headOption).orElse(ss.headOption)
     def lookup(fqn: String, entry: PortMap.Entry): Option[Symbol] = byFullNameAll.get(fqn).flatMap(ofKind(entry, _))
 
     // find the symbol by its UPSTREAM FQN and request a rename to the emitted name.

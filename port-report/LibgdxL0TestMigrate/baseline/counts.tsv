@@ -1,5 +1,5 @@
 #check	count
-base-surface	651
+base-surface	647
 break-catch	0
 cast-conversion	0
 catalog(consulted)	103
@@ -27,7 +27,7 @@ nullability-boundary	49
 omissions	0
 opaque-boundary	0
 overload-risk	104
-policy	3
+policy	9
 port-map	8
 portability(all)	166
 portability(emitted)	13

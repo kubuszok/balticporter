@@ -145,7 +145,14 @@ object LibgdxLadder:
         memberRenames = Map("com.badlogic.gdx.utils.Disposable" -> Map("dispose" -> "close"))),
       new balticporter.transform.MemberRenameTransform(renames = Map(
         "com.badlogic.gdx.scenes.scene2d.InputEvent#type"       -> "eventType",
-        "com.badlogic.gdx.scenes.scene2d.ui.List#toString(T)"   -> "itemToString"))),
+        "com.badlogic.gdx.scenes.scene2d.ui.List#toString(T)"   -> "itemToString",
+        // sge's vector spellings (`Vectors.scala`): the whole override component moves with `Vector`.
+        "com.badlogic.gdx.math.Vector#len"  -> "length",   "com.badlogic.gdx.math.Vector#len2" -> "lengthSq",
+        "com.badlogic.gdx.math.Vector#dst"  -> "distance", "com.badlogic.gdx.math.Vector#dst2" -> "distanceSq",
+        "com.badlogic.gdx.math.Vector#scl"  -> "scale",    "com.badlogic.gdx.math.Vector#nor"  -> "normalize"))),
+        // (the classes' own overloads — `dst(x, y)`, static `len(x, y)` — keep java's names: a second
+        // key on the same component REFUSES the whole rename, 3 -> 23 policy rows; counted residue)
+
     // the implicit `Sge` context instead of the `Gdx` globals: the full port's holder policy lifted
     // verbatim (attach on the CLASS, read by `summon`, refuse at the boundary, two lazy statics);
     // the context type is the injected `sge.Sge`. Late by design: every constructor moves.

@@ -55,9 +55,9 @@ sge.math.MathUtilsTest	sge.math.MathUtilsTest#<stmt6>	stmt	70281ca2516127c2
 sge.math.MathUtilsTest	sge.math.MathUtilsTest#<stmt7>	stmt	8fb8d2a587043f92
 sge.math.MathUtilsTest	sge.math.MathUtilsTest#<stmt8>	stmt	ddbc12b809b1457b
 sge.math.MathUtilsTest	sge.math.MathUtilsTest#<stmt9>	stmt	1f615af73c8a7f38
-sge.math.OctreeTest	sge.math.OctreeTest	class	4650ee0d438337d3
+sge.math.OctreeTest	sge.math.OctreeTest	class	34b6b5ce56386a73
 sge.math.OctreeTest	sge.math.OctreeTest#<stmt1>	stmt	abca2bbe56b03719
-sge.math.OctreeTest	sge.math.OctreeTest#<stmt2>	stmt	949e75f9135a1f37
+sge.math.OctreeTest	sge.math.OctreeTest#<stmt2>	stmt	26b6fd8394c901c1
 sge.math.PolygonTest	sge.math.PolygonTest	class	9018d46372940592
 sge.math.PolygonTest	sge.math.PolygonTest#<stmt1>	stmt	80f633b04f6baf36
 sge.math.PolygonTest	sge.math.PolygonTest#<stmt2>	stmt	9f277751f4e3098d
