@@ -24,6 +24,9 @@ object ElementWitnessCheck:
     /** an element-typed array presented as `Array[java.lang.Object]` — java's own RAW view of a
       * receiver, which stops being true the moment the element type may be a primitive. */
     case ErasedArrayCast
+    /** java's UNCHECKED CONVERSION (JLS 5.1.9) at a RAW formal this phase filled with `Object`:
+      * the argument is cast to the filled type — erasure-sound, and invisible in the java. */
+    case RawConversion
 
   object Issue:
     /** which of §1's three kinds the fix is (CLAUDE.md §4.45). */
@@ -58,6 +61,13 @@ object ElementWitnessCheck:
           "representation. NOT here, and deliberately: a creation at a METHOD's OWN type " +
           "parameter (`<V> V[] toArray(Class<V>)`) — `V` is nobody's element type, so no policy " +
           "key reaches it and a row naming it would be unactionable."
+      case RawConversion =>
+        "§1(a) ENGINE, and IT COMPILES: java wrote a RAW type at this formal (or assignment target), " +
+          "which this phase filled with `java.lang.Object` once the element parameter lost its bound " +
+          "(a raw wildcard no longer conforms to `Object` unbounded). The filled type is INVARIANT " +
+          "where java's raw type accepted any instantiation, so the phase emits java's own unchecked " +
+          "conversion at the site: `arg.asInstanceOf[C[java.lang.Object]]`. Sound under erasure " +
+          "(the JVM sees one class); a row is a place to give the declaration its type argument."
       case ErasedArrayCast =>
         "§1(b) PER-LIBRARY, and IT COMPILES: java wrote a RAW receiver here, so javac's own erased " +
           "view of the call presents this element-typed array as `Object[]`, and the port emits " +

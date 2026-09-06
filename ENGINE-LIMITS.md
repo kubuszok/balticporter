@@ -1796,3 +1796,20 @@ construction elsewhere: every other base/dependent pair constructs the phase at 
 Rule (CLAUDE.md §1.5 D12): a base's `Only` is the base's ENTRY; the dependent's fragment names its own,
 and the merge is the union — a merge that silently prefers one side is the "two configurations
 fingerprint EQUAL" blind spot one level down.
+
+### K46. The witness phase's raw-wildcard fill owed TWO things it did not pay — CLOSED 2026-09-06 (a class literal's payload; java's unchecked conversion at a filled formal): ladder port 15 -> 10, `RawConversion` 4 counted
+
+`ElementWitnessTransform` fills a raw wildcard with `java.lang.Object` wherever it unbound the element
+parameter (K41's "closed under application"). Measured on the ladder port: (i) `mapClassDef` maps a
+literal's TYPE but never the type a class literal CARRIES, so `Array.class` stayed
+`classOf[DynamicArray[?]]` beside a lambda ascribed `PoolSupplier[DynamicArray[Object]]` — `E134`
+at `PoolManager.addPool`; (ii) a raw formal filled to `C[Object]` is INVARIANT where java's raw `C`
+took any `C<X>` — `Tree.findExpandedValues(Array values)`, `List.setItems(Array)`: 4 `E007`/`E134`.
+Both are obligations the fill created (CLAUDE.md §1(b): an obligation the engine's own translation
+created is the PHASE's). Paid inside the phase, never in the traversal: a class literal is a REIFIED
+position other phases must not retype (K18/K20), so only this phase fills the payload it unbound;
+and the argument gets java's own unchecked conversion (JLS 5.1.9) `arg.asInstanceOf[C[Object]]`,
+erasure-sound, one `witness(RawConversion)` row per site. The fill mints its own `Object` reference,
+absent from the pre-run symbol table — a predicate reading `program.symbolOf` answered `false` for
+it (the first attempt's silent no-op). K40's two "raw receiver" rows are a different face (the
+RECEIVER's erased view) and stay.

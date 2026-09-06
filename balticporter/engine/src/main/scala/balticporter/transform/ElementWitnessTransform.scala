@@ -707,10 +707,58 @@ final class ElementWitnessTransform(
     val symbols2 = StandardTraversal.mapSymbols(wildcardFill,
                      SymbolTable(symbols1.all ++ mint.minted))(using program0)
 
+    // ---- what the fill OWES: a class literal's payload, and java's unchecked conversion ---------
+    // `mapClassDef` maps a literal's TYPE but not the type a class literal CARRIES (a reified
+    // position other phases must not touch, K18/K20 — this phase fills only what it unbound); and a
+    // formal filled to `C[Object]` is INVARIANT where java's raw `C` took any `C<X>` — the argument
+    // gets java's own unchecked conversion (JLS 5.1.9), counted (`Issue.RawConversion`).
+    val filledClasses: Set[SymId] = tparamsOfClass.collect {
+      case (c, tps) if tps.exists(unboundClassTparams) => c }.toSet
+    def fillType(t: TypeRepr): TypeRepr = StandardTraversal.mapType(wildcardFill, t)(using program0)
+    // the fill mints its own `java.lang.Object` reference, absent from `program0`'s table
+    def isFilledObject(t: TypeRepr): Boolean =
+      t == TypeRepr.TypeRef(TypeRepr.NoPrefix, mint.javaObject) || ElementWitnessTransform.isObjectType(program0, t)
+    def rawConvert(a: Term, formal: TypeRepr, o: Origin, owner: SymId, unit: SymId): Term =
+      (a.tpe, formal) match
+        case (TypeRepr.AppliedType(TypeRepr.TypeRef(_, c1), aa), TypeRepr.AppliedType(TypeRepr.TypeRef(_, c2), fa))
+            if c1 == c2 && filledClasses(c1) && aa.sizeIs == fa.size && aa != fa &&
+               fa.zip(aa).forall((f, x) => f == x || isFilledObject(f)) =>
+          refuse(ElementWitnessCheck.Issue.RawConversion, program0.symbolOf(owner).map(_.fullName).getOrElse("?"),
+            "java's raw formal, filled with `java.lang.Object` where the java wrote no type argument, takes an argument " +
+              "whose type argument differs — the unchecked conversion is written out", o, unit)
+          Tree.Typed(a, TypeTree(formal, o), formal, o)
+        case _ => a
+    def formalsOfMethod(m: SymId): List[TypeRepr] =
+      program0.definitionOf(m).collect { case d: Tree.DefDef =>
+        d.paramss.flatten.filterNot(v => program0.symbolOf(v.symbol).exists(_.flags.isGiven)).map(_.tpt.tpe)
+      }.getOrElse(Nil)
+    def owed(unit: SymId) = new Phase:
+      def name: String = "type-class-array/raw-conversion"
+      override def run(p: Program): Program = p
+      private var owner: SymId = unit
+      override def transformClassDef(t: Tree.ClassDef)(using Program): Tree.ClassDef =
+        owner = t.symbol; t
+      override def transformTerm(t: Term)(using Program): Term = t match
+        case l @ Tree.Literal(Constant.ClassOfC(tp), _, _) =>
+          val f = fillType(tp)
+          if f == tp then l else l.copy(const = Constant.ClassOfC(f))
+        case ap: Tree.Apply =>
+          // the callee's formals as DECLARED (pre-fill program), filled the way its own unit was
+          val formals = formalsOfMethod(ap.method).map(fillType)
+          if formals.sizeIs != ap.args.size then ap
+          else
+            val args2 = ap.args.zip(formals).map((a, f) => rawConvert(a, f, ap.origin, owner, unit))
+            if args2 == ap.args then ap else ap.copy(args = args2)
+        case as: Tree.Assign =>
+          val rhs2 = rawConvert(as.rhs, as.lhs.tpe, as.origin, owner, unit)
+          if rhs2 eq as.rhs then as else as.copy(rhs = rhs2)
+        case other => other
+    val units3 = units2.map(u => StandardTraversal.mapClassDef(owed(u.symbol), u)(using program0))
+
     // ---- the two populations the policy did NOT take over -------------------------------------
     census(program0)
 
-    program0.rebuilt(units = units2, symbols = symbols2)
+    program0.rebuilt(units = units3, symbols = symbols2)
 
   /** The policy's COMPLEMENT over every owned generic class (CLAUDE.md §4.56): a class keeping its
     * bound that compares an element-typed value with `null` is an empty-slot sentinel no coercion

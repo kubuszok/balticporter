@@ -45,6 +45,11 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
       |  E[] slots;
       |  Loose (int n) { slots = (E[])new Object[n]; }
       |}
+      |class Raw {
+      |  static void take (Bag raw) {}
+      |  static void call (Bag<String> b) { take(b); }
+      |  static Object literal () { return Bag.class; }
+      |}
       |""".stripMargin
 
   private def parse(): Program = SpoonTir.fromSource(java, "Demo.java")
@@ -64,7 +69,8 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
   ) = new ElementWitnessTransform(
     witness = Witness, subjectTypes = subjects, dropBound = unbound, boxedWitness = boxed)
 
-  private lazy val ported: Ported = run(phase())
+  private val witnessPhase = phase()
+  private lazy val ported: Ported = run(witnessPhase)
 
   // ---- the no-op ------------------------------------------------------------------------------
 
@@ -95,6 +101,19 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
 
   test("the phase names the lane that counts its residue") {
     assertEquals(phase().accountedBy, Set(ElementWitnessCheck.Name))
+  }
+
+  // ---- what the fill owes (a raw formal filled to `Object`, a class literal's payload) ---------
+  test("a raw formal filled to `C[Object]` gets java's unchecked conversion at the call, counted") {
+    assert(ported.out.contains("Raw.take(b.asInstanceOf[com.demo.Bag[java.lang.Object]])"),
+      ported.out.linesIterator.filter(l => l.contains("take") || l.contains("def call")).mkString("\n"))
+    val rows = witnessPhase.refusals(ported.after, ported.after.units)
+    assert(rows.exists(r => r.issue == ElementWitnessCheck.Issue.RawConversion && r.subject == "com.demo.Raw"),
+      rows.map(r => s"${r.issue} ${r.subject}").mkString(", "))
+  }
+
+  test("a class literal's payload is filled like every other position this phase unbound") {
+    assert(clue(ported.out).contains("classOf[com.demo.Bag[java.lang.Object]]"))
   }
 
   // ---- the bound ------------------------------------------------------------------------------
