@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=ssg-md-ext	engine=balticporter/0.1.0-SNAPSHOT	sources=a135cda0a1a592a4	files=321	policy=935a52aab7bc20cd	jdk=22
+# balticporter port map	schema=4	module=ssg-md-ext	engine=balticporter/0.1.0-SNAPSHOT	sources=a135cda0a1a592a4	files=321	policy=3449a35d90f44e46	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.vladsch.flexmark.ext.abbreviation.Abbreviation	ssg.md.ext.abbreviation.Abbreviation	Renamed	-		0		companion=yes form=class parents=ssg.md.util.ast.Node,ssg.md.util.ast.DoNotDecorate,ssg.md.util.ast.DoNotLinkDecorate,ssg.md.util.ast.ReferencingNode primary=(BasedSequence,BasedSequence) primaryKind=unique-root primaryVis=public
 type	com.vladsch.flexmark.ext.abbreviation.AbbreviationBlock	ssg.md.ext.abbreviation.AbbreviationBlock	Renamed	-		0		companion=yes form=class parents=ssg.md.util.ast.Block,ssg.md.util.ast.ReferenceNode primary=() primaryKind=no-arg-root primaryVis=public secondaries=(BasedSequence)

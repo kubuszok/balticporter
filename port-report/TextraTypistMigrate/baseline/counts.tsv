@@ -36,7 +36,7 @@ dependency-coverage(declared)	1
 gdx-shared-iterator	0
 heap-pollution	1
 idiom(converted)	198
-idiom(refused)	348
+idiom(refused)	463
 idiom(residue)	0
 jdk-surface	5
 manifest	0

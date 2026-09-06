@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=ssg-md-ext-test	engine=balticporter/0.1.0-SNAPSHOT	sources=726df4395b31fc1c	files=16	policy=a9366a29e9f1e4ab	jdk=22
+# balticporter port map	schema=4	module=ssg-md-ext-test	engine=balticporter/0.1.0-SNAPSHOT	sources=726df4395b31fc1c	files=16	policy=88a5a4559d572daf	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.vladsch.flexmark.ext.abbreviation.MergeAbbreviationsTest	ssg.md.ext.abbreviation.MergeAbbreviationsTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=FORMATTER,FORMATTER_AS_IS,OPTIONS,OPTIONS_AS_IS,PARSER,assertMerged,assertMergedAsIs
 type	com.vladsch.flexmark.ext.admonition.AdmonitionParserTest	ssg.md.ext.admonition.AdmonitionParserTest	Renamed	-		0		flags=final form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
