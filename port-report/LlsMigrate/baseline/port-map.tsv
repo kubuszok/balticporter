@@ -377,8 +377,8 @@ member	com.badlogic.gdx.utils.Array$ArrayIterator#valid	lowlevel.util.DynamicArr
 member	com.badlogic.gdx.utils.ObjectMap#<init>(ObjectMap)	lowlevel.util.ObjectMap#<init>(ObjectMap<?,?>)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	100	aea8caf547213ab2	
 member	com.badlogic.gdx.utils.ObjectMap#<init>(int)	lowlevel.util.ObjectMap#<init>(int)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	78	9f7cf464df5b20d1	
 member	com.badlogic.gdx.utils.ObjectMap#<init>(int,float)	lowlevel.util.ObjectMap#<init>(int,float)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	85	764e8b78f0af9898	
-member	com.badlogic.gdx.utils.ObjectMap#<stmt10>	lowlevel.util.ObjectMap#<stmt10>	Renamed	-	<synthetic>	0	6436752ebf54fc3c	
-member	com.badlogic.gdx.utils.ObjectMap#<stmt11>	lowlevel.util.ObjectMap#<stmt11>	Renamed	-	<synthetic>	0	9ddc5c24d58cda9b	
+member	com.badlogic.gdx.utils.ObjectMap#<stmt10>	lowlevel.util.ObjectMap#<stmt10>	Renamed	-	<synthetic>	0	89d6909eaa0a07ec	
+member	com.badlogic.gdx.utils.ObjectMap#<stmt11>	lowlevel.util.ObjectMap#<stmt11>	Renamed	-	<synthetic>	0	e651c9754ecc5cb2	
 member	com.badlogic.gdx.utils.ObjectMap#<stmt12>	lowlevel.util.ObjectMap#<stmt12>	Renamed	-	<synthetic>	0	5f389190e15ebc24	
 member	com.badlogic.gdx.utils.ObjectMap#<stmt13>	lowlevel.util.ObjectMap#<stmt13>	Renamed	-	<synthetic>	0	bbbfa890cc4239dc	
 member	com.badlogic.gdx.utils.ObjectMap#<stmt14>	lowlevel.util.ObjectMap#<stmt14>	Renamed	-	<synthetic>	0	8e664614c46abb70	

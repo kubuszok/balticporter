@@ -113,6 +113,8 @@ object LlsEnrich:
     * @param removeOne `remove`/`removeKey` at arity 1, if there is one */
   private[corpus] case class MapKind(owner: String, key: String, value: String, entryValue: String,
                              tparams: String = "", self: String = "", wrap: String => String = identity,
+                             /** the entry's stored value back to `V` (`x.orNull` where storage is `Nullable`). */
+                             unwrap: String => String = identity,
                              getOne: String = "", removeOne: String = "",
                              indexed: Boolean = false, capacityCtor: Boolean = false,
                              /** see [[ArrayKind.mk]]. */
@@ -136,10 +138,11 @@ object LlsEnrich:
       ("nonEmpty", 0, "def nonEmpty: scala.Boolean = this.size != 0"),
       ("foreachKey", 1,
         s"def foreachKey(f: $K => scala.Unit): scala.Unit = ${walk(s"f(${at("Key")})")}"),
+      // the reference hands the RAW value (`vals(i)`, null included), never the `Nullable` storage
       ("foreachValue", 1,
-        s"def foreachValue(f: $EV => scala.Unit): scala.Unit = ${walk(s"f(${at("Value")})")}"),
+        s"def foreachValue(f: $V => scala.Unit): scala.Unit = ${walk(s"f(${k.unwrap(at("Value"))})")}"),
       ("foreachEntry", 1,
-        s"def foreachEntry(f: ($K, $EV) => scala.Unit): scala.Unit = ${walk(s"f(${at("Key")}, ${at("Value")})")}"),
+        s"def foreachEntry(f: ($K, $V) => scala.Unit): scala.Unit = ${walk(s"f(${at("Key")}, ${k.unwrap(at("Value"))})")}"),
       ("update", 2,
         s"def update(key: $K, value: $V): scala.Unit = { this.put(key, ${k.wrap("value")}); () }"),
       ("$plus$eq", 1,
@@ -222,7 +225,7 @@ object LlsEnrich:
   private def maps(w: Boolean): List[MapKind] = List(
     MapKind("ObjectMap", "K", "V", "lowlevel.Nullable[V]",
       tparams = "[K <: java.lang.Object, V <: java.lang.Object]",
-      self = "lowlevel.util.ObjectMap[K, V]", wrap = v => s"lowlevel.Nullable($v)",
+      self = "lowlevel.util.ObjectMap[K, V]", wrap = v => s"lowlevel.Nullable($v)", unwrap = v => s"$v.orNull",
       getOne = "lowlevel.Nullable[V]", removeOne = "remove"),
     MapKind("ArrayMap", "K", "V", "V",
       tparams = if w then "[K, V]" else "[K <: java.lang.Object, V <: java.lang.Object]",

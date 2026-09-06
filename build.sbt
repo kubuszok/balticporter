@@ -1326,7 +1326,8 @@ lazy val root = project
 val DemoCheckAll = "pong,space-shooter,hex-tactics,tile-world,viewer-3d,particle-show,shader-lab,net-chat,game-screens,curve-playground,asset-showcase,viewport-gallery"
 lazy val `demo-check` = (projectMatrix in file("ported/demo-check"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
-  .dependsOn(`port-sge-l0`)
+  // tile-world imports `sge.noise.*`: the (standalone) noise4j port rides on the classpath as-is
+  .dependsOn(`port-sge-l0`, `port-sge-noise`)
   .settings(
     name := "balticporter-demo-check",
     publish / skip := true,

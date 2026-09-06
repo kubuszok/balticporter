@@ -35,10 +35,10 @@ object LibgdxEnrich:
   private val nullableMaps: List[MapKind] = List(
     MapKind("IntMap", "scala.Int", "V", "lowlevel.Nullable[V]",
       tparams = "[V <: java.lang.Object]", self = "sge.utils.IntMap[V]",
-      wrap = v => s"lowlevel.Nullable($v)", getOne = "V", removeOne = "remove"),
+      wrap = v => s"lowlevel.Nullable($v)", unwrap = v => s"$v.orNull", getOne = "V", removeOne = "remove"),
     MapKind("LongMap", "scala.Long", "V", "lowlevel.Nullable[V]",
       tparams = "[V <: java.lang.Object]", self = "sge.utils.LongMap[V]",
-      wrap = v => s"lowlevel.Nullable($v)", getOne = "lowlevel.Nullable[V]", removeOne = "remove"),
+      wrap = v => s"lowlevel.Nullable($v)", unwrap = v => s"$v.orNull", getOne = "lowlevel.Nullable[V]", removeOne = "remove"),
   )
 
   private val maps: List[MapKind] = List(

@@ -16743,8 +16743,8 @@ member	com.badlogic.gdx.utils.tableSize	tableSize	Renamed	-	com/badlogic/gdx/uti
 member	com.badlogic.gdx.utils.IntMap#<init>()	sge.utils.IntMap#<init>()	Renamed	-	com/badlogic/gdx/utils/IntMap.java	73	a6900d1deddd58e2	
 member	com.badlogic.gdx.utils.IntMap#<init>(IntMap)	sge.utils.IntMap#<init>(IntMap<?>)	Renamed	-	com/badlogic/gdx/utils/IntMap.java	102	796d46777a05e01c	
 member	com.badlogic.gdx.utils.IntMap#<init>(int)	sge.utils.IntMap#<init>(int)	Renamed	-	com/badlogic/gdx/utils/IntMap.java	80	dd3bb6b11eb5879f	
-member	com.badlogic.gdx.utils.IntMap#<stmt10>	sge.utils.IntMap#<stmt10>	Renamed	-	<synthetic>	0	6436752ebf54fc3c	
-member	com.badlogic.gdx.utils.IntMap#<stmt11>	sge.utils.IntMap#<stmt11>	Renamed	-	<synthetic>	0	374876f6f48b2d56	
+member	com.badlogic.gdx.utils.IntMap#<stmt10>	sge.utils.IntMap#<stmt10>	Renamed	-	<synthetic>	0	89d6909eaa0a07ec	
+member	com.badlogic.gdx.utils.IntMap#<stmt11>	sge.utils.IntMap#<stmt11>	Renamed	-	<synthetic>	0	679074940ae622c9	
 member	com.badlogic.gdx.utils.IntMap#<stmt12>	sge.utils.IntMap#<stmt12>	Renamed	-	<synthetic>	0	e27d2149f72785ff	
 member	com.badlogic.gdx.utils.IntMap#<stmt13>	sge.utils.IntMap#<stmt13>	Renamed	-	<synthetic>	0	e0599e001cd27e69	
 member	com.badlogic.gdx.utils.IntMap#<stmt14>	sge.utils.IntMap#<stmt14>	Renamed	-	<synthetic>	0	75e0a2cd4bcab272	
@@ -17576,8 +17576,8 @@ member	com.badlogic.gdx.utils.LongArray#with(Array)	sge.utils.LongArray#with(Arr
 member	com.badlogic.gdx.utils.LongMap#<init>()	sge.utils.LongMap#<init>()	Renamed	-	com/badlogic/gdx/utils/LongMap.java	73	a6900d1deddd58e2	
 member	com.badlogic.gdx.utils.LongMap#<init>(LongMap)	sge.utils.LongMap#<init>(LongMap<?>)	Renamed	-	com/badlogic/gdx/utils/LongMap.java	101	a509bb581ce37822	
 member	com.badlogic.gdx.utils.LongMap#<init>(int)	sge.utils.LongMap#<init>(int)	Renamed	-	com/badlogic/gdx/utils/LongMap.java	79	9f7cf464df5b20d1	
-member	com.badlogic.gdx.utils.LongMap#<stmt10>	sge.utils.LongMap#<stmt10>	Renamed	-	<synthetic>	0	6436752ebf54fc3c	
-member	com.badlogic.gdx.utils.LongMap#<stmt11>	sge.utils.LongMap#<stmt11>	Renamed	-	<synthetic>	0	80bb7d2b6f2a877d	
+member	com.badlogic.gdx.utils.LongMap#<stmt10>	sge.utils.LongMap#<stmt10>	Renamed	-	<synthetic>	0	89d6909eaa0a07ec	
+member	com.badlogic.gdx.utils.LongMap#<stmt11>	sge.utils.LongMap#<stmt11>	Renamed	-	<synthetic>	0	07b4091a3792cef6	
 member	com.badlogic.gdx.utils.LongMap#<stmt12>	sge.utils.LongMap#<stmt12>	Renamed	-	<synthetic>	0	354df552c8a15869	
 member	com.badlogic.gdx.utils.LongMap#<stmt13>	sge.utils.LongMap#<stmt13>	Renamed	-	<synthetic>	0	f23664c5de17ddf6	
 member	com.badlogic.gdx.utils.LongMap#<stmt14>	sge.utils.LongMap#<stmt14>	Renamed	-	<synthetic>	0	0ea9fb881a703daa	
