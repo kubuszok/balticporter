@@ -1735,17 +1735,17 @@ witness/supplier ~16 (`SnapshotArray`/`DelayedRemovalArray` constructors, `Queue
 `addPool`, `Tree.findExpandedValues`). Each is the matching core rung's work — the ladder's order.
 `base-surface 2 -> 0`. K37 stays OPEN; K42 stays OPEN (rides the next family re-measure).
 
-**THE LADDER (written 2026-09-06; order fixed where a measurement or an engine edge fixes it, free
-where marked; every rung = a manifest FRAGMENT on `LibgdxLadder`, one lane + baseline per rung).**
+**THE STEPS (written 2026-09-06; order fixed where a measurement or an engine edge fixes it, free
+where marked; every step = a manifest FRAGMENT on `LibgdxLadder`, one lane + baseline per step).**
 Decisions are sge's (`../sge/docs/contributing/type-mappings.md`, `architecture/*.md`); the seam
-column is what L0 on the lls base measures TODAY (57 errors + residue lanes), so the first four rungs
-are dictated by the base, not chosen. Gate per rung: JVM errors at the seam floor the next rung owns,
-the ladder SUITE at or above the previous rung with every expected delta named, `members.tsv` blast
+column is what L0 on the lls base measures TODAY (57 errors + residue lanes), so the first four steps
+are dictated by the base, not chosen. Gate per step: JVM errors at the seam floor the next step owns,
+the ladder SUITE at or above the previous step with every expected delta named, `members.tsv` blast
 classified. **Prerequisite, before R1: the ladder test lane** — `LibgdxTestMigrate`'s tree on the
 ladder port (`ported/sge-l0`, `SourceSet.Test`, base = `sge-l0` + `lls`), lane `gdx-l0-test-measure`,
-outcomes baselined; without it a rung's gate is a compile count (§3).
+outcomes baselined; without it a step's gate is a compile count (§3).
 
-| rung | decision (sge) | mechanism today · §1 kind | seam / footprint | edge |
+| step | decision (sge) | mechanism today · §1 kind | seam / footprint | edge |
 |---|---|---|---|---|
 | L0 | universal translation on the lls base | DONE: 591 units, **57** | — | first |
 | R1 | element arrays through `MkArray` (type classes, not reflection) | `ElementWitnessTransform` + `GlobalsToImplicits.requiredGivens`, subjects = core's element-typed arrays · (b) | ~16 errors (`SnapshotArray`/`DelayedRemovalArray` ctors, `Queue`, `Octree`, `BufferedParticleBatch`); `witness` 147 = 133 `OccupancySentinel` (K41, refused by design: null-as-empty tables keep the bound) + 13 `NonSubject` + 1 | largest seam, first |
@@ -1764,9 +1764,47 @@ outcomes baselined; without it a rung's gate is a compile count (§3).
 | R14 | backends: desktop (Panama/GLFW), browser (DOM), android | per-platform source sets from gdx's backends (71 backend-derived files in sge core) · **GAP** `PortManifest.platformDirs` (b) | — | after R13 |
 | R15 | demo game; Scala 3.9.0 bump (own wave, all lanes move) | — | — | last |
 
-Open beside the rungs: (i) NAMESPACE — core's utilities lls does not carry land in `lowlevel.*`
+Open beside the steps: (i) NAMESPACE — core's utilities lls does not carry land in `lowlevel.*`
 through the inherited rename (`lowlevel.util.Json`, `Queue`, `Pool`); a destination decision
 (`sge.utils`?) before R7's renames; (ii) the old full-policy `sge` port and its nine dependents still
 run in every batch under the retired parity bar — retire or keep as the regression reference, a
 maintainer call; (iii) sge's "a few more decisions" (R7's rename list is what `type-mappings.md`
 records; nothing else found in `docs/architecture` beyond the platform matrix and the WASM note).
+
+**Standing orders for unattended work (maintainer, 2026-09-06).** Written so a loop can run without
+asking; every item below is a decision the maintainer already took.
+
+1. *What done means.* sge's demo applications (`../sge/demos`: pong, space-shooter, hex-tactics,
+   tile-world, viewer-3d, particle-show, shader-lab, net-chat, game-screens, curve-playground,
+   asset-showcase, viewport-gallery, and their `shared` module) compile against the port, adjusted
+   where the port's API differs, on the platforms they target. Nothing else in sge was verified in
+   practice, so the only claims made along the way are: the port follows our conventions, it
+   compiles, and the existing tests pass (adjusted to API changes through an enumerated table, never
+   by editing an assertion in place; java's behaviour wins otherwise). The Scala 3.9.0 bump is part of
+   the goal, done late as its own measured change.
+2. *Namespaces.* May be deferred, but the final code has lls's types under `lowlevel` and sge's own
+   code under `sge`, using `lowlevel`; core utilities lls does not carry end up under `sge`.
+3. *Order of the steps.* Before starting a step, research what it depends on and how much (which
+   declarations, which other steps' output), and pick the least disturbing order from that; the
+   order in the table above is a proposal, the measured dependency is the decision.
+4. *Hand-written injections* are a supported, intended mechanism: sge's own hand-written files
+   (`SgeError`, the Json codec, helpers) may be copied into this repository's injection directories.
+   sge itself is never edited.
+5. *Freeze the old full-policy port and its nine dependents*: their lanes stay, nothing promotes,
+   the loop measures lls, the lls differential, the ladder port and its test lane. A family
+   re-measure is a deliberate milestone action.
+6. *Test scope off the JVM*: every ported test except suites the capability matrix marks
+   Unsupported, excluded by a named list.
+7. *Engine defects met on the way*: fix in place when the fix is universal and local; otherwise work
+   around, record the entry, move on. No engine fix may cost more than one revert.
+8. *Baselines*: the loop is the primary and may run `baseline-accept` under the existing gates
+   (fewer errors refused unless named, every digest move attributed).
+9. *Pace*: no credit ceiling exists; usage is bounded by the Max plan's weekly and 5-hour quotas,
+   which nothing in the session reports. Prefer the primary doing small edits itself, one implementer
+   agent at a time, one measured exit per brief, back off when rate limits appear.
+10. *Audit*: the maintainer launches the auditor; the loop stops and asks for it when a batch fails
+    to improve the numbers significantly or after several reverts in a row — the sign that work
+    spans several steps or needs a bigger-picture review.
+11. *Stop and report* (rather than decide) when a step would need a decision not on this list,
+    when a suite loses tests with no step delta to name it, or when a mechanism gap needs more than
+    one wave.
