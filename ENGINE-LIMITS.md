@@ -1926,3 +1926,9 @@ the parenless roots are looked up in the UPSTREAM package too (package-rename ha
 Residue, counted: `witness` 140 -> 145, `port-map` 102 -> 75, the test port's `signature` 12 -> 47
 (`call arity` rows where a property's overloaded sibling keeps java's arity — compiles), `policy`
 1 -> 3 (`ScrollPane#scrollX/Y` pairs whose name the class already takes). Specs: `PortMapFollowSpec`.
+(xiii) the demos still wrote `shapeRenderer.setColor(Color.GRAY)` and `setProjectionMatrix(m)`: sge
+turns GETTERS into properties but keeps a setter as a METHOD wherever it does more than assign its
+parameter to a field (`setColor` calls `_color.set`; `id_=` is `this._id = id`) — 160 `_=` against
+771 `setX(` in sge. Detection now converts the getter alone and refuses the setter half as
+`SetterHasBehaviour` (161 in core, counted) unless every override's body is one plain assignment.
+Demo check 9 -> 4 (WorldUnits 3, `Pixmap(w, h, format)` 1).

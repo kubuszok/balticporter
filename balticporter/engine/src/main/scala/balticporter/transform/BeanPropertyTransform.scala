@@ -634,6 +634,29 @@ object BeanPropertyTransform:
     "null", "object", "override", "package", "private", "protected", "return", "sealed", "super",
     "then", "this", "throw", "trait", "true", "try", "val", "var", "while", "with", "yield")
 
+  /** is this setter's body ONE assignment of its parameter to a field (`this.f = p;`) — the shape
+    * `x = v` faithfully stands for; an abstract setter (no body) counts as plain. */
+  def isPlainAssignment(d: Tree.DefDef): Boolean =
+    def bare(t: Term): Term = t match
+      case Tree.Commented(_, inner) => bare(inner)
+      case other                    => other
+    val param = d.paramss.flatten.headOption.map(_.symbol)
+    def isParam(t: Term): Boolean = bare(t) match
+      case Tree.Ident(s, _, _) => param.contains(s)
+      case _                   => false
+    def isField(t: Term): Boolean = bare(t) match
+      case Tree.Select(_, _, _, _) | Tree.Ident(_, _, _) => true
+      case _                                             => false
+    def isAssign(st: Statement): Boolean = st match
+      case Tree.Assign(l, r, _, _, _) => isField(l) && isParam(r)
+      case Tree.Commented(_, inner: Statement) => isAssign(inner)
+      case _                          => false
+    d.rhs match
+      case scala.None                          => true
+      case Some(Tree.Block(stats, _, _, _, _)) => stats.size == 1 && isAssign(stats.head)
+      case Some(a: Tree.Assign)                => isAssign(a)
+      case Some(_)                             => false
+
   def propertyNameOf(methodName: String): Option[String] =
     if methodName.startsWith("get") && methodName.length > 3 && methodName.charAt(3).isUpper then
       Some(decapitalize(methodName.substring(3)))
@@ -759,6 +782,15 @@ object BeanPropertyTransform:
                         "the setter is referenced in value position"),
                       key, s"auto-detected `$propName`", Decision.originOf(program, getterSym.id)))
                     setterRefused = true; scala.None
+                  else if !graph.closureOf(s.id).members.forall(m => defOf(m).forall(isPlainAssignment)) then
+                    // `x = v` reads as storage; a setter that VALIDATES, NOTIFIES or CONVERTS stays a
+                    // method under java's name, and the getter converts alone (K51 xiii).
+                    phase.consider(IdiomCandidate(IdiomKind.BeanDetect,
+                      IdiomVerdict.Refused("SetterHasBehaviour",
+                        s"`${s.name}` does more than assign its parameter to a field: it keeps java's " +
+                        "name, the getter alone becomes the property"),
+                      key, s"auto-detected `$propName`", Decision.originOf(program, getterSym.id)))
+                    scala.None
                   else Some(s)
                 case _ => scala.None  // 0 or >1 matching setters: get-only pair
 
