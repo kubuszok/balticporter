@@ -109,7 +109,7 @@ the two ports compile alone and not together. The shared surface is a VALUE — 
 - No dependent key may edit what a base EMITS (`SurfaceIntrusion`), screened over the whole
   `subjects` against the base's PUBLISHED MAP, never its `governs` claim (D10).
 - A dependent's retyping phase scopes on the ENTRY (D12), and so does a BASE'S — an inherited
-  `Everywhere` decides the dependent's own rungs (K43); a DERIVED surface is published and
+  `Everywhere` decides the dependent's own steps (K43); a DERIVED surface is published and
   compared as `base-surface`; a dependent FOLLOWS the base's member renames (D14).
 - **A base's SOURCE SET is decided before its policy**, against the REFERENCE port's own ownership:
   a base may not emit a type the hand port declares in the DEPENDENT's namespace, nor one the

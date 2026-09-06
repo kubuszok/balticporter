@@ -1326,8 +1326,8 @@ gated across all fifteen maps, negative-tested on a real lane.
 **SUPERSEDED 2026-09-05 (maintainer): the drop-in/exact-parity bar below is replaced by the LADDER.** The hand
 ports were LLM-written and mid-rewrite; nobody is downstream. The goal is a libGDX port (core, then desktop /
 browser / android backends) on JVM, Scala.js and Scala Native, usable for a demo at Scala Days 2026 (12–13 Oct),
-correct by TESTS, with sge's ARCHITECTURAL DECISIONS re-applied one rung at a time — each rung a compiling,
-tested manifest variant with its own lane and baseline; JS/Native only after the rungs that unblock them;
+correct by TESTS, with sge's ARCHITECTURAL DECISIONS re-applied one step at a time — each step a compiling,
+tested manifest variant with its own lane and baseline; JS/Native only after the steps that unblock them;
 api-parity, divergence verdicts, the drop-in lane and the `.ref` gate are INFORMATIONAL from here. §13.29 is the
 ladder; the decision table and phases below are kept as history.
 
@@ -1550,11 +1550,11 @@ cannot answer them either — libGDX core publishes `sge.utils.*`, not `lowlevel
 therefore means the rest of libGDX is EXTERNAL and unresolved, which is where the 68 `E006`/`E008`
 above come from; wave 3 answers them by making this manifest libGDX core's base.
 
-### 13.29 The ladder (decided 2026-09-05; rung list derived from sge's architecture docs, order proposed)
+### 13.29 The ladder (decided 2026-09-05; step list derived from sge's architecture docs, order proposed)
 
 **L0 — universal translation only** (`LibgdxL0Migrate` -> `ported/sge-l0`, `just gdx-l0-measure`, JVM): `surface`
 holds only `MutableParamsTransform` (universal, per-port today); `packageRenames` and the `List -> SgeList` rename
-stay so member keys compare across rungs; no drop, inject, resolutions or parity. **First reading 2026-09-05: 611
+stay so member keys compare across steps; no drop, inject, resolutions or parity. **First reading 2026-09-05: 611
 files, 310 errors** — foreach 225 (java enhanced-for over libGDX's OWN `java.lang.Iterable` implementors: K9 desugars
 only a KEPT JDK iterable), E067 59 (JNI `native` methods rendered as bodiless declarations: `BufferUtils`,
 `Gdx2DPixmap`, `ETC1`, … — `@native` is the honest L0 spelling), `Json#readValue` overload 16 (T17),
@@ -1590,7 +1590,7 @@ else moved, and no baseline was promoted here.
 seven libGDX helpers they reference (`RandomXS128`, `ArraySupplier`, `Collections`, `GdxRuntimeException`, `Null`,
 `Predicate`, `reflect.ArrayReflection`), universal phases only — **19 files, 0 JVM errors** (was 149 as a
 twelve-file census); lls's own 52-file suite compiles against that java-shaped API with 536 errors, the gauge the
-rungs must drive down. Rung experiments 2026-09-05 (`LLS_RUNGS=…`, `--rungs=`): `nullable` (22 `@Null` -> `lowlevel.Nullable`)
+steps must drive down. Rung experiments 2026-09-05 (`LLS_RUNGS=…`, `--steps=`): `nullable` (22 `@Null` -> `lowlevel.Nullable`)
 0 errors, gauge 536; `ordering` (`java.util.Comparator` -> `scala.math.Ordering`, 30 sites) 0 errors, gauge 532; both 0 errors,
 gauge 532 — independent and free, so their order is not a question. **With both, lls compiles on JVM 0 / JS 0 / Native 0**
 (`.ref` 72, informational); `java.lang.reflect.Array.newInstance` behind `ArrayReflection` compiles on JS/Native — the
@@ -1607,7 +1607,7 @@ escape (54 java files -> 65 Scala units; excluded on purpose: `Pools`, `Performa
 `ordering`: **JVM 0 / JS 0 / Native 0**, `.ref` 190 (informational). The enrichment (132 members and factories lls added on its
 twelve types, by analogy on the primitive-specialised siblings) is the next lls wave; the differential lane over lls's suite
 is its oracle. **Rung experiments 2026-09-06 (continued):** `arity` (`NullaryArityTransform`, `Everywhere()`) is free on lls
-(0 errors) and is a default rung now. **Census 2026-09-06 (every non-candidate is a counted row):** the population is
+(0 errors) and is a default step now. **Census 2026-09-06 (every non-candidate is a counted row):** the population is
 **392** owned nilary value-returning declarations, **27 converted**, 365 refused — `AnchoredClosure` 173 (57
 `java.lang.Object`, 50 `java.util.Iterator`, 39 `java.lang.Iterable`, all honest §4.5 anchors; 29 on JDK types whose
 surface `ExternalSurface` does not know), `SideEffectingBody` **164**, `ComponentPartial` 10, `StaticMember` 9,
@@ -1618,25 +1618,25 @@ it does the differential holds at **189 / 2 / 235** (the three candidates under 
 25, `DynamicArrayLongSuite` 27, `ArrayMapTest` 3 errors, and each keeps blockers beyond arity, so none is re-admissible
 on the arity fix alone).
 `bean` derivation: 18 diff errors, not adopted yet. K39 (class member vs class-file `default`, 11 `E164`) shows on lls only
-without the `ordering` rung and on L0; its fix is in progress.
+without the `ordering` step and on L0; its fix is in progress.
 
-**The `enrich` rung, and the differential lane that reads it (2026-09-06).** `LLS_RUNGS` defaults to
+**The `enrich` step, and the differential lane that reads it (2026-09-06).** `LLS_RUNGS` defaults to
 `nullable,ordering,enrich`. `enrich` is `AddMembersTransform` carrying **282 members over 24 types** —
 200 in the class body, **82 in the companion** — generated by `LlsEnrich` from ONE template per KIND
 (array 17 each × 7 primitive arrays + 36 on `Array` + 16 on `BooleanArray`, which declares no
 `contains`/`indexOf`/`removeValue` so `-=` is REFUSED rather than invented; map 9–13 each × 9;
 set 10 each × 2; 17 factories on the five subclasses). `Array`'s nine `identity`-flag members become
 eighteen: java's flag-taking pair stays and the flag-free / `…ByRef` names are ADDITIONS. A member
-whose body would need `MkArray` or reflection is not in the rung. **JVM 0 / JS 0 / Native 0**;
+whose body would need `MkArray` or reflection is not in the step. **JVM 0 / JS 0 / Native 0**;
 `.ref` 190 -> 241 (informational: the added bodies name `lowlevel.Nullable`, which the `-ref` project
 deliberately does not have on its classpath). `api-parity`: `factory` 30 -> 10, `hand-port-extra`
 102 -> 59, `static-placement` 8 -> 10, `operator` 0 -> 3, and `signature` 46 -> 92 — a member lls also
-has stops being MISSING and starts being a SPELLING question, which is the kind of divergence a rung
+has stops being MISSING and starts being a SPELLING question, which is the kind of divergence a step
 can answer. The suite-as-written gauge went 532 -> 635 and that is the gauge failing, not the port:
 578 of the 635 are in the ten files the differential lane declares incompatible, where a call site
 that used to fail once (`value apply is not a member`) now resolves far enough to cascade.
 
-**Two engine facts the rung measured.** (i) `AddMembersTransform` could not express a FACTORY at all:
+**Two engine facts the step measured.** (i) `AddMembersTransform` could not express a FACTORY at all:
 a spliced member has no symbol, so `Tree.Opaque` now carries `companionMember: Option[String]` and the
 emitter reads the home — and the NAME — off the node (`MemberSpec.static`). (ii) A companion factory on
 a type the port SUBCLASSES collides with scala's own CONSTRUCTOR PROXY through the `export Parent.*`
@@ -1650,7 +1650,7 @@ run: **18 files / 423 `test(…)`**. Eight files / 188 tests are ADAPTED into `p
 by an **8-row NAME/SHIM table** (`ported/lls/diff-shims.tsv`, applied per RECEIVER to comment-masked
 copies by `scripts/shim-apply.pl`; the lls checkout is never edited): `Select.select` -> `Select.instance().select`,
 three spellings of the dropped `MkArray` witness, and three nullary-arity receivers (`set.isEmpty` ->
-`set.isEmpty()` — the L1 rung, not this one; a member-wide row would break `Nullable.isEmpty`, which is
+`set.isEmpty()` — the L1 step, not this one; a member-wide row would break `Nullable.isEmpty`, which is
 genuinely paren-less). Ten files / 235 tests are **incompatible with a reason each**
 (`ported/lls/diff-incompatible.tsv`), never edited into passing: eight for primitive/opaque type arguments
 at `[T <: java.lang.Object]` and MkArray's witness, two for MkArray internals. **Compile 0; 191 outcomes
@@ -1659,17 +1659,17 @@ finding and the PORT is right: lls's `Select` throws `IllegalArgumentException` 
 `GdxRuntimeException`, and java wins (§3.5). The lane joins `measure-all` after `lls-measure`; its
 `expected-errors` and `tests.tsv` are unseeded, so the first run says so and exits 1 by design.
 
-**The `witness` rung — the TYPE-CLASS ARRAY (2026-09-06).** `LLS_RUNGS` defaults to
+**The `witness` step — the TYPE-CLASS ARRAY (2026-09-06).** `LLS_RUNGS` defaults to
 `nullable,ordering,enrich,witness`. `ElementWitnessTransform` (§1(b), `type-class-array`) moves an array whose
 element is a TYPE PARAMETER onto `lowlevel.MkArray` and drops java's implicit `<: java.lang.Object` bound so a
 primitive element type is admissible. **JVM 0 / JS 0 / Native 0**; the emitted tree carries 33 witness member
 calls (10 `copyOf`, 5 `copyOfRange`, 14 `nullOut`, 4 `nullOutRange`), 8 default-supplier substitutions, 71 `using`
-clause lines and 23 minted boxed givens. **The lls SUITE GAUGE fell 635 -> 273** — the largest single move any rung
+clause lines and 23 minted boxed givens. **The lls SUITE GAUGE fell 635 -> 273** — the largest single move any step
 has made — while `lls-diff` stays 189/2/235: its ten incompatible files are declined by DECLARATION, and the
 bound was only ONE of their blockers. Measured by compiling the three the bound blocked UNEDITED (§3.5):
 `ArrayMapTest` **3** errors (2 nullary arity, 1 `get(key, default)` answering `Nullable[V]`), `DynamicArrayTest`
 **25** and `DynamicArrayLongSuite` **27** (12 nullary arity; `begin`/`end`/`wrap`, members whose body needs
-`MkArray` so `enrich` refuses them; `sort()(using Ordering)`). The L1 rung retires most of that, not this one;
+`MkArray` so `enrich` refuses them; `sort()(using Ordering)`). The L1 step retires most of that, not this one;
 each file's reason in `diff-incompatible.tsv` now carries its number instead of the bound.
 `.ref` 241 -> 427, informational for the same reason `enrich` moved it: the `-ref` project deliberately has no
 `lowlevel.*` on its classpath, and all 420 new rows are `E008 Not Found` on `lowlevel.MkArray`.
@@ -1691,13 +1691,13 @@ tables keep the bound — `null` at an element slot means SLOT EMPTY and no coer
 30 (java wrote a RAW receiver, so its own erased view presents an element array as `Object[]`; this is why
 `TimSort` is NOT a subject — `Sort` holds it raw and hands it `Object[]`), `NonSubject` 19 (the eight tables'
 own `(K[])new Object[]`, left as java wrote them) and `UnhandledCreation` 4 (the deprecated `Class`-taking
-constructors, whose array type java reflects out of a `Class`). Two engine facts the rung measured: a member of
+constructors, whose array type java reflects out of a `Class`). Two engine facts the step measured: a member of
 an unresolved owner has `@<id>` in its own `fullName`, so `java.util.Arrays#copyOf` must be recognised through
 the OWNER SYMBOL (the first attempt rewrote nothing and every count stayed flat); and an `inline` default-supplier
 resolved by INFERENCE needs `this` inside a constructor delegation, which Scala Native's linker refuses — the
 element type is read off the CALLEE'S FORMAL instead and written into the call.
 
-Rungs (decision | footprint in gdx/src | platform | phase today): L1 bean properties + nullary arity (1,422/928;
+Steps (decision | footprint in gdx/src | platform | phase today): L1 bean properties + nullary arity (1,422/928;
 none; yes) · L2 collections onto lls + Comparator->Ordering (989 uses, 55; partly unblocks JS/Native; yes) ·
 L3 no reflection + Json dropped (54 calls/17 files, 23 Json files; UNBLOCKS JS+Native; yes) · L4 JNI->Panama
 (59 natives; prerequisite Native+JS; JVM downcalls only) · L5 Disposable->AutoCloseable + member renames (147;
@@ -1705,9 +1705,9 @@ none; yes) · L6 opaque types (32 in sge, 3 configured; none) · L7 Nullable (65
 implicit `Sge` (267 reads/79 files + 336 `Gdx.gl`; every backend; yes; late — ctor signatures, CT7) · L9
 Pool->trait + adapters collapsed (Pool only) · L10 GdxRuntimeException->SgeError (650; NONE) · L11
 async->Future (Gears/Ox; JS no threads; NONE) · L12+ JS, Native, backends, demo. Fixed edges: L1 first (keys name
-members); L2 before L7 (engine edge); L3 before JS/Native; L8 late. Free: L5/L6/L7; L3 vs L4. Gate per rung: 0
-JVM errors, suite not below the previous rung, expected deltas named. Rungs are manifest FRAGMENTS folded inside
-`LibgdxPolicy` (never `extendedBy`); each rung its own port root, lane and baseline. Exposure: the two core body
+members); L2 before L7 (engine edge); L3 before JS/Native; L8 late. Free: L5/L6/L7; L3 vs L4. Gate per step: 0
+JVM errors, suite not below the previous step, expected deltas named. Steps are manifest FRAGMENTS folded inside
+`LibgdxPolicy` (never `extendedBy`); each step its own port root, lane and baseline. Exposure: the two core body
 substitutions (`getSelectedIndex` x2) and the two test ones are L2 policy; the ten injected files map to
 L3/L4/L6/L8/L9; the `NetJavaImpl` drop conceals K2 (universal).
 
@@ -1723,16 +1723,16 @@ the base ships the type once). Its five outside references resolve from the gdx 
 lls did: `GdxRuntimeException -> java.lang.RuntimeException`, `RandomXS128 -> java.util.Random`,
 `Collections -> lowlevel.util.Collections` (an injected flag holder, the drop inherited by core),
 `ArraySupplier -> scala.Function1[Int, T[]]` with the witness as default supplier, the `Class`-typed
-constructors, `toArray(Class)` and `select(Predicate)` dropped. Every lls rung scopes on the ENTRY
+constructors, `toArray(Class)` and `select(Predicate)` dropped. Every lls step scopes on the ENTRY
 (`Twelve`; nullability over the override closure, K13.8) so the inherited surface stops at lls's
 declarations. Measured: lls **23 files, 0 errors JVM/JS/Native, suite gauge 266 = 266, differential
 189/2 unchanged, `policy` 1** (the `Collections` drop, which fires only in the dependent), witness
-158 -> 70. **L0 13 -> 57**, all of them the seam between rung-applied base and un-rung core, by rung:
+158 -> 70. **L0 13 -> 57**, all of them the seam between step-applied base and un-step core, by step:
 witness/supplier ~16 (`SnapshotArray`/`DelayedRemovalArray` constructors, `Queue`, `Octree`,
 `BufferedParticleBatch`), ordering 8 (`sort(Comparator)` at lls's `Ordering`), collections shims ~22
 (core's `java.lang.Iterable`/`java.util.Iterator` against lls's `JavaIterable`/`ArrayIterator`:
 `MapLayers`, `Model.load`, `Selection`), enrich/arity ~11 (`IdentityMap`'s export clash, `setItems`,
-`addPool`, `Tree.findExpandedValues`). Each is the matching core rung's work — the ladder's order.
+`addPool`, `Tree.findExpandedValues`). Each is the matching core step's work — the ladder's order.
 `base-surface 2 -> 0`. K37 stays OPEN; K42 stays OPEN (rides the next family re-measure).
 
 **THE STEPS (written 2026-09-06; order fixed where a measurement or an engine edge fixes it, free

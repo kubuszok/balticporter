@@ -1148,7 +1148,7 @@ Do NOT retry: the stdlib exclusion is not the lever. Next: read which 218 member
 ### M5.14 sbt 2's action cache REPLAYS a failed compile without its diagnostics, across worktrees — OPEN (2026-09-05)
 (b) instrument, engine untouched. Two faces measured the same day: (1) liqp's `-ref` compile read "no countable error" — `sbt.util.CachedCompileFailure` replayed a previously failed compile of byte-identical inputs with none of its 3 warnings, and `clean` does not bypass the disk action cache (`~/Library/Caches/sbt/v2/ac`); fix 4dcdd7b3: every `-ref` project carries a per-execution `scalacOptions` nonce (`refPortSettings`), `compile_guard` names a replay. (2) an `engine/compile` that failed in ONE agent worktree (a `clean` racing the compile, `NoSuchFileException` on `BuildVersion.class`) was cached with `exitCode 1` and replayed in EVERY worktree with the same inputs, blocking a wave; the poisoned entry is deleted by hand from the primary (an agent's `rm` under `~/Library/Caches` is refused by the harness).
 Numbers: liqp `.ref` 3 read as 0 countable; B2's worktree blocked until the entry (`ac/sha256-9833a1a0…-48`) was removed.
-Note (2026-09-06): a suspected "replayed success" on lls was NOT one — the 11 `E164` rows (K39) appear only in an emission WITHOUT the `ordering` rung (JDK `java.util.Iterator` kept as a parent); a standalone migrator experiment had overwritten `src_managed` between lanes. The ladder ports keep a per-run nonce anyway, so their counts are always real compiles.
+Note (2026-09-06): a suspected "replayed success" on lls was NOT one — the 11 `E164` rows (K39) appear only in an emission WITHOUT the `ordering` step (JDK `java.util.Iterator` kept as a parent); a standalone migrator experiment had overwritten `src_managed` between lanes. The ladder ports keep a per-run nonce anyway, so their counts are always real compiles.
 Rule: a failed compile's number is read only from a run that PRINTED diagnostics; a `CachedCompileFailure` line in a capture is a replay, never a count. Do NOT put the nonce on the JVM port projects (a full recompile per lane); delete the entry instead. Next: an sbt 2 setting that never caches `exitCode != 0` results, if one exists (none found in the 2.0.x docs).
 ### M6. Refuse and COUNT rather than approximate — CLOSED
 (a) engine. Symptom: 4 places the port deliberately carries a NUMBER instead of a guess (49 dropped `super(args)`, 156 construction paths running a promoted constructor's body java never ran, a raw anonymous class refused, a single-primary encoding left as a genuine compile error) — the fourth's own justification ("the compiler is a louder tracker than silence") is FALSE wherever the untranslated construct is ALSO valid scala: a refused java lambda `return` left a scala NON-LOCAL RETURN from the enclosing method, libGDX core carrying 3 of them at 0 compile errors until COUNTED.
@@ -1659,16 +1659,16 @@ Numbers: the dual-backing `ImmutableArray` injection (wave 3.2e) already works f
 Rule: the Pool class-to-trait gap this entry originally described is CLOSED separately by CT12; remaining drop-in residue on Pool is 7 `SystemManager` errors plus K13.6's opaque-sentinel limit, unrelated to this entry.
 Triage (2026-09-04): FAMILY K: per-entry-scoped retarget (dual target per source type) — heading itself "OPEN"; "(b) engine mechanism, unbuilt … only the scope-override extension is missing"
 
-### K39. The DIAMOND FORWARDER sees only INJECTED parents, never a CLASS FILE's DEFAULT method — **11 `E164` rows on the ladder's L0 rung, 0 on every other port. CLOSED 2026-09-06**
+### K39. The DIAMOND FORWARDER sees only INJECTED parents, never a CLASS FILE's DEFAULT method — **11 `E164` rows on the ladder's L0 step, 0 on every other port. CLOSED 2026-09-06**
 
 (a) universal, engine. Symptom: a class whose SUPERCLASS declares a concrete member and whose INTERFACE parent is an EXTERNAL type carrying a JLS 9.4.3 `default` of the same name and arity is legal java (JLS 8.4.8 — the class member implements the interface method) and `E164 inherits conflicting members` in scala. `TirEmitter.diamondOverrides` already mints `override def m() = super[Sup].m()` for exactly this shape, but its `externalOf` reads `externalConcrete`, which `RuntimePlan` derives from the SUPPORT TYPES a run injects as parents — a JDK interface is not one, so `java.util.Iterator#remove`'s default is invisible to it.
 Numbers (2026-09-05): 11 rows on `LibgdxL0Migrate` — `IntIntMap`/`IntMap`/`LongMap`/`ObjectFloatMap`/`ObjectIntMap`/`ObjectLongMap`'s `$Entries`/`$Values`/`$Keys`, each extending its own `MapIterator` and `java.util.Iterator`. They are INVISIBLE while any typer error remains (§3/G30) and appeared the moment L0's typer count reached 0. Zero on the full port and every dependent: their policy retargets those collections away, so the shape never reaches an emit.
-Numbers (2026-09-06, the fix): `SpoonTirBuilder.externalDefaults` records the JLS 9.4.3 `default` methods — declared UNION inherited, arity-only, `CtMethod.isDefaultMethod` or "neither abstract, static nor private" on the class-file shadow — of every EXTERNAL interface a program type (nested types included) names as a parent, published as `Program.internedDefaults`; `diamondOverrides.externalOf` unions it with `externalConcrete`. The guard is the RECORDED default: an abstract interface method contributes nothing, and a parent this program declares is excluded because the emitter already reads its body. lls with `java.util.Iterator` still a parent (`LLS_RUNGS=nullable,enrich,witness` — the default rungs retarget it to the `JavaIterator` shim, whose entry `externalConcrete` already had, which is why the default lane never saw this) **11 -> 0** JVM/JS/native, suite 273 held; default lls 0 held; gdx, gdx-L0 and ashley flat.
+Numbers (2026-09-06, the fix): `SpoonTirBuilder.externalDefaults` records the JLS 9.4.3 `default` methods — declared UNION inherited, arity-only, `CtMethod.isDefaultMethod` or "neither abstract, static nor private" on the class-file shadow — of every EXTERNAL interface a program type (nested types included) names as a parent, published as `Program.internedDefaults`; `diamondOverrides.externalOf` unions it with `externalConcrete`. The guard is the RECORDED default: an abstract interface method contributes nothing, and a parent this program declares is excluded because the emitter already reads its body. lls with `java.util.Iterator` still a parent (`LLS_RUNGS=nullable,enrich,witness` — the default steps retarget it to the `JavaIterator` shim, whose entry `externalConcrete` already had, which is why the default lane never saw this) **11 -> 0** JVM/JS/native, suite 273 held; default lls 0 held; gdx, gdx-L0 and ashley flat.
 Rule: the exit is NOT "add the JDK interfaces to `externalConcrete`" (kept, and it is what the fix obeys) — minting a forwarder wherever an external interface MIGHT carry a default changes emitted text at every class-plus-interface parent pair in the corpus. §1(a) engine.
 
 ### K40. The RAW-RECEIVER erased view cannot be driven by the member's RESULT — **2 L0 rows left counted; the attempt cost 3 refusal specs and 4 errors. Do NOT retry as written**
 
-(a) universal, engine. Symptom: a RAW type erases its members WHOLE (JLS 4.8), the RESULT as much as the formals, so `rawClass.getEnumConstants()` is `Object[]` in java and `Array[c.T]` through the `Class[?]` this engine emits — `ClassReflection#getEnumConstants` and `Json#getFields` on the ladder's L0 rung. `SpoonTir.erasedReceiverView` already interposes java's erased view; its `depends` asks only the PARAMETERS.
+(a) universal, engine. Symptom: a RAW type erases its members WHOLE (JLS 4.8), the RESULT as much as the formals, so `rawClass.getEnumConstants()` is `Object[]` in java and `Array[c.T]` through the `Class[?]` this engine emits — `ClassReflection#getEnumConstants` and `Json#getFields` on the ladder's L0 step. `SpoonTir.erasedReceiverView` already interposes java's erased view; its `depends` asks only the PARAMETERS.
 Numbers (2026-09-05): adding the RESULT to `depends` closed both rows and opened four elsewhere (`ResourceData$SaveData#loadAsset`, `Tree#expandAll`, `OrderedMap`/`OrderedSet`'s `remove()` — an `asInstanceOf[T]` naming a variable the emitted nested class cannot see); narrowed to a receiver with NO actual type arguments it still broke three REFUSAL specs (`UnconstrainedResultPinSpec` x2, `NumericOverloadAscriptionSpec`), because Spoon reports a CAPTURE as raw and the view then erases a receiver java never erased. It also made `mentionsTypeVarFilled` recurse on F-bounds until the `catch` swallowed a `StackOverflowError` (ssg-md 41 s -> 19 min) — that fuel leak is fixed separately and is real.
 Rule: the exit is not `depends`; it is telling a RAW USE from a CAPTURE at `castType` (the G21 shadow, one more time). Until then the two rows are COUNTED residue on L0, and the same reading forbids the sibling attempt: dropping the `Object[]` array-covariance cast at a DECLARED `T[]`/`T...` formal is java-correct and costs `ComparatorOrderingPortSpec`'s control assertion, so it waits for the same distinction.
 
@@ -1704,7 +1704,7 @@ shape — `SpoonTirBodyExprs.binApply` mints `Tree.Apply` on a synthetic `scala.
 emitter can render it infix — so `return size == 0;` reads as a call and every comparison-bodied
 getter is refused. §4.59: what the parser SYNTHESISES is not what java WROTE, and the argument count
 of an operator node is a fact about this engine's translation.
-Numbers (2026-09-06): lls `arity` rung — 392 owned nilary value-returning declarations, 27 converted,
+Numbers (2026-09-06): lls `arity` step — 392 owned nilary value-returning declarations, 27 converted,
 173 `AnchoredClosure` (57 `java.lang.Object`, 50 `java.util.Iterator`, 39 `java.lang.Iterable` — all
 honest §4.5 anchors — plus 29 on unknown-surface JDK types), 164 `SideEffectingBody`, 10
 `ComponentPartial`, 9 `StaticMember`, 9 `Overloaded`. `ObjectSet#isEmpty` (`return size == 0`) is one
@@ -1720,10 +1720,10 @@ Rule: land it with the dependent wave that re-measures all nine, never alone; an
 `hasSideEffects`'s own `case _ => ()` default at the same time — an unenumerated node kind there is an
 UNDER-refusal, the direction this phase promises never to take.
 
-### K43. The FULL-POLICY libGDX port cannot extend `ported/lls` AS SCOPED — CLOSED 2026-09-06 by narrowing the lls port to the 12 files the real lls declares (0 errors held; L0 on it 13 -> 57, each a rung seam); the ladder's L0 is the dependent
+### K43. The FULL-POLICY libGDX port cannot extend `ported/lls` AS SCOPED — CLOSED 2026-09-06 by narrowing the lls port to the 12 files the real lls declares (0 errors held; L0 on it 13 -> 57, each a step seam); the ladder's L0 is the dependent
 
 (b) per-library scope, and the decision is the maintainer's (an lls-repo API decision, not an engine
-change). Symptom: `LibgdxPolicy.core = LlsPolicy.core(repoRoot, <default rungs>).extendedBy(…)`, gdx's
+change). Symptom: `LibgdxPolicy.core = LlsPolicy.core(repoRoot, <default steps>).extendedBy(…)`, gdx's
 `sourceSet` minus `LlsMigrate.Files`, `FrontendConfig(base, files, Nil, resolutionRoots = List(base))`
 (the source root as its own resolution root, so `PortRun.partitionUnits` emits only the declared
 files). `PortRun.execute` stops at `SurfaceFold` — line 164, before the FRONTEND runs, so that
@@ -1760,9 +1760,9 @@ extension ports sit on the full core port at 0 errors. Exit: narrow `LlsMigrate.
 declares and answer the twelve references the way lls did (its own error type, `MkArray` for
 `ArraySupplier`, a function for `Predicate`) as lls-manifest policy; the full port then extends it.
 Until then the ladder's L0 sits on lls because it carries none of the colliding policy: `LibgdxLadder.universal` extends `LlsPolicy.core` with no drop,
-inject or surface of its own, and runs (551 units, 2 -> 13 errors, every one a base rung's seam;
+inject or surface of its own, and runs (551 units, 2 -> 13 errors, every one a base step's seam;
 PROGRESS.md §13.29 A3). The full port's parity decisions are not re-derived on the lls base; the
-ladder re-applies each as a rung. `MutableParamsTransform`'s missing `SurfacePolicy`/`MergeablePolicy`
+ladder re-applies each as a step. `MutableParamsTransform`'s missing `SurfacePolicy`/`MergeablePolicy`
 was the one universal fix — landed with the family re-baseline it moves (`policy=` on every port
 that lists the phase).
 
@@ -1770,6 +1770,6 @@ Outcome (2026-09-06, maintainer's choice): `LlsMigrate.Files` is the twelve (+ `
 are class-file externals off the gdx 1.14.1 JAR (`GdxCoreClasspath`) — NOT a whole-tree resolution
 root, which asked **300** base contracts before any phase ran — and are answered in `LlsPolicy.core`
 (`TypeRedirectTransform` scoped to the entry, `ArraySupplier -> Function1` retarget, drops, one
-injected `Collections`). Two rules it left: a base's rungs SCOPE ON THE BASE'S OWN DECLARATIONS or
+injected `Collections`). Two rules it left: a base's steps SCOPE ON THE BASE'S OWN DECLARATIONS or
 the inherited surface decides the dependent's ladder (CLAUDE.md §1.5), and a refused nullability
 site keeps its annotation, so whoever narrows a port ships the annotation TYPE (K13.8 beside it).
