@@ -269,7 +269,7 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
       val p = applied.find(_.key == e.key).get
       BeanPropertyTransform.Collapsed(e.key, e.value, p.property, p.getter, p.setter, f,
         targetOf(e.key),
-        triviaOf(program, p.getter) ++ p.setter.toList.flatMap(s => triviaOf(program, s)))
+        triviaOf(program, p.getter) ++ p.setter.toList.flatMap(s => triviaOf(program, s)), p.fluent)
     }
 
     if applied.isEmpty then return renamed
@@ -292,8 +292,22 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
     // ---- 5. …and the collapse, applied last, over what the def-pair path has already moved ---
     if collapsed.isEmpty then paired else applyCollapse(paired)
 
-  override def transformDefDef(t: Tree.DefDef)(using Program): Tree.DefDef =
-    if getters.contains(t.symbol) then t.copy(paramss = Nil) else t
+  override def transformDefDef(t: Tree.DefDef)(using p: Program): Tree.DefDef =
+    if getters.contains(t.symbol) then t.copy(paramss = Nil)
+    else if setters.get(t.symbol).exists(_.fluent) then
+      // java's `return this` becomes a bare return; a trailing `this` becomes `()`; the result is Unit.
+      val unitRef = p.symbols.all.find(_.fullName == "scala.Unit").map(u => TypeRepr.TypeRef(TypeRepr.NoPrefix, u.id)).getOrElse(t.returnTpt.tpe)
+      val strip = new Phase:
+        def name = "bean-properties/fluent"
+        override def transformTerm(x: Term)(using Program): Term = x match
+          case Tree.Return(Some(_: Tree.This), tpe, o) => Tree.Return(scala.None, unitRef, o)
+          case other                                   => other
+      val body = t.rhs.map(StandardTraversal.mapTerm(strip, _)).map {
+        case Tree.Block(stats, _: Tree.This, tpe, o, x) => Tree.Block(stats, Tree.Literal(Constant.UnitC, unitRef, o), tpe, o, x)
+        case other                                       => other
+      }
+      t.copy(returnTpt = TypeTree(unitRef, t.returnTpt.origin), rhs = body)
+    else t
 
   /** `o.getX()` -> `o.x`, `o.setX(v)` -> `o.x = v`. Bottom-up, so `o.setX(o.getX() + 1)` needs no
     * special case. The assignment's LHS names the GETTER symbol — scalac desugars `recv.x = v` to
@@ -376,6 +390,7 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
           "to"    -> c.property,
           "field" -> Decision.fqnOf(p, c.field, "?"),
           "was"   -> c.accessors.split('/').map(_.trim + "()").mkString(" "),
+          "chain" -> (if c.fluent then "dropped: java's setter returned `this` for chaining, `x = v` is Unit" else ""),
           "why"   -> ("java's bean pair over a trivial field and a scala property are the same " +
             "value with two spellings, and the port publishes the scala one — but the JVM METHOD " +
             "NAMES move with it, so a framework that discovers `getX`/`setX` reflectively finds " +
@@ -476,13 +491,17 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
                       refuse(e, s"`$sn` has ${rest.size + 1} declarations matching the getter's type")
                     case s :: Nil =>
                       val sd = defOf(s).get
+                      // a FLUENT setter (returns its declaring type) collapses under a CONFIGURED pair —
+                      // the declaration is the port's decision — provided no call uses the result
+                      // (the value-position guard below); the property's setter returns Unit (K51 xix).
+                      val fluent = headOf(sd.returnTpt.tpe).exists(h => ownerTypeOf(p, s).contains(h))
                       if isStatic(s) then
                         refuse(e, s"`$sn` is STATIC; a companion property is out of scope (v1)")
-                      else if headOf(sd.returnTpt.tpe).exists(h => ownerTypeOf(p, s).contains(h)) then
-                        refuse(e, s"`$sn` is FLUENT — it returns its own declaring type for " +
-                          "chaining, and `o.x = v` is Unit, so a chain has no assignment rendering")
-                      else if !isVoid(p, sd.returnTpt.tpe) then
+                      else if !fluent && !isVoid(p, sd.returnTpt.tpe) then
                         refuse(e, s"`$sn` returns a value, and an assignment discards it")
+                      else if fluent && !BeanPropertyTransform.resultsDiscarded(p, graph.closureOf(s).members) then
+                        refuse(e, s"`$sn` is FLUENT and a call USES its result (a chain): `o.x = v` is " +
+                          "Unit, so that call has no assignment rendering")
                       else if !callsAreRewritable(graph.closureOf(s).members, 1) then
                         refuse(e, s"`$sn` is referenced in VALUE position; an eta-expanded `x_=` is " +
                           "not the SAM java saw")
@@ -497,7 +516,7 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
                             s"${setterOnly.mkString(", ")} which declares the setter without a " +
                             "getter — `x.prop = v` needs `prop` in scope on the receiver")
                         else Some(BeanPropertyTransform.Property(e.key, e.property, g, Some(s),
-                          gComp, sComp))
+                          gComp, sComp, fluent))
                       }
 
   private def ownerTypeOf(p: Program, m: SymId): Option[SymId] = p.symbolOf(m).map(_.owner)
@@ -545,7 +564,7 @@ object BeanPropertyTransform:
     * declarations' comments. */
   final case class Collapsed(key: String, accessors: String, property: String,
                              getter: SymId, setter: Option[SymId], field: SymId,
-                             target: Target, trivia: List[Trivia])
+                             target: Target, trivia: List[Trivia], fluent: Boolean = false)
 
   /** The tree edit — one traversal, bottom-up, so every reference has been re-pointed by the time
     * the owning class's body is rebuilt.
@@ -584,7 +603,9 @@ object BeanPropertyTransform:
     * accessor's whole override component, which is what the arity edit and call-site rewrite
     * range over. */
   final case class Property(key: String, property: String, getter: SymId, setter: Option[SymId],
-                            getterMembers: Set[SymId], setterMembers: Set[SymId])
+                            getterMembers: Set[SymId], setterMembers: Set[SymId],
+                            /** the java setter returned `this` for chaining; the property drops it (K51 xix). */
+                            fluent: Boolean = false)
 
   /** One declared entry, parsed. `key` is kept verbatim — the string an agent edits. */
   final case class Entry(key: String, value: String, owner: String, property: String,
@@ -656,6 +677,32 @@ object BeanPropertyTransform:
       case Some(Tree.Block(stats, _, _, _, _)) => stats.size == 1 && isAssign(stats.head)
       case Some(a: Tree.Assign)                => isAssign(a)
       case Some(_)                             => false
+
+  /** is EVERY call of these members in STATEMENT position — a direct element of a block's `stats`
+    * (through `Commented`)? A fluent setter collapses only then: its result is never read (K51 xix). */
+  def resultsDiscarded(p: Program, members: Set[SymId]): Boolean =
+    def bare(t: Tree): Tree = t match
+      case Tree.Commented(_, inner) => bare(inner)
+      case other                    => other
+    def discardedIn(root: Term, call: Tree.Apply): Boolean =
+      var found = false
+      val scan = new Phase:
+        def name = "bean-properties/fluent-scan"
+        override def transformTerm(x: Term)(using Program): Term =
+          x match
+            case Tree.Block(stats, _, _, _, _) if stats.exists(st => bare(st) == call) => found = true
+            case _ => ()
+          x
+      StandardTraversal.mapTerm(scan, root)(using p)
+      found
+    members.forall(m => p.usages(m).forall {
+      case Usage(UsageKind.Call, a: Tree.Apply, encl) =>
+        p.definitionOf(encl) match
+          case Some(d: Tree.DefDef) => d.rhs.exists(discardedIn(_, a))
+          case _                    => false
+      case Usage(UsageKind.Call, _, _) => false
+      case _                           => true
+    })
 
   def propertyNameOf(methodName: String): Option[String] =
     if methodName.startsWith("get") && methodName.length > 3 && methodName.charAt(3).isUpper then

@@ -1964,3 +1964,9 @@ members (every other guard still applies; a surface parameter, fingerprinted, me
 published a type a rename MOVED. A declared entry naming an owned type no rename moves now publishes
 it and its package-private members the same way (one widening each, reader "(declared)").
 Demo check 25 -> 22.
+(xix) `cell.tile = t` — java's `setTile` returns the cell for chaining, and the bean collapse
+refused every FLUENT setter: `o.x = v` is Unit, a chain has no rendering. Under a CONFIGURED pair
+(the port's own declaration) it now collapses when every call of the setter's component stands in
+STATEMENT position — a chain is a value use and still refuses — and the property's setter returns
+Unit, `return this` dropped, the lost chain recorded on the decision (`chain=`). Detection is
+unchanged: an auto-detected fluent setter still refuses. `BeanPropertySpec`.

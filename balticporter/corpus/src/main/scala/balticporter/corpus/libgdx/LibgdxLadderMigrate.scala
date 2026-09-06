@@ -467,12 +467,12 @@ object LibgdxLadder:
     // lifted by reference, on core's entry; the `Only` scope merges with lls's arity instance.
     "properties" -> List(
       // sge's own setter decisions the demos rely on (`game.screen = …`, `batch.projectionMatrix = …`):
-      // configured pairs, which the behaviour-setter guard does not apply to (`Cell.setTile` is FLUENT
-      // and stays a method: a `tile_=` beside it clashes with the private field's own setter, and the
-      // collapse refuses a fluent setter by design — one demo line, counted).
+      // configured pairs, which the behaviour-setter guard does not apply to (`Cell.setTile` is FLUENT:
+      // a configured pair collapses it, the property's setter returns Unit, the chain is counted, K51 xix).
       new balticporter.transform.BeanPropertyTransform(LibgdxPolicy.beanPropertyPairs ++ Map(
           "com.badlogic.gdx.Game#screen"                            -> "getScreen/setScreen",
-          "com.badlogic.gdx.graphics.g2d.Batch#projectionMatrix"    -> "getProjectionMatrix/setProjectionMatrix"),
+          "com.badlogic.gdx.graphics.g2d.Batch#projectionMatrix"    -> "getProjectionMatrix/setProjectionMatrix",
+          "com.badlogic.gdx.maps.tiled.TiledMapTileLayer$Cell#tile" -> "getTile/setTile"),
         LibgdxPolicy.beanPropertyTargets,
         scope = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx"))),
       new balticporter.transform.NullaryArityTransform(scope = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx")),

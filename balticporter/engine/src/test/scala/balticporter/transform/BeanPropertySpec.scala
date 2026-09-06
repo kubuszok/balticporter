@@ -213,7 +213,7 @@ class BeanPropertySpec extends munit.FunSuite:
     assert(clue(r.refusals.mkString("\n")).contains("java.util.Comparator"))
   }
 
-  test("a FLUENT setter refuses — `o.x = v` is Unit and a chain has no assignment rendering") {
+  test("a FLUENT setter whose result a CHAIN uses refuses — `o.x = v` is Unit, the chain has no rendering") {
     val r = run(
       """
       class Builder {
@@ -221,6 +221,7 @@ class BeanPropertySpec extends munit.FunSuite:
         public int getW() { return w; }
         public Builder setW(int v) { this.w = v; return this; }
       }
+      class Use { Builder go(Builder b) { return b.setW(1).setW(2); } }
       """, "Builder#w" -> "getW/setW")
     assertUntouched(r, "Builder#getW", "getW")
     assert(clue(r.refusals.mkString("\n")).contains("FLUENT"))
@@ -613,6 +614,7 @@ class BeanPropertySpec extends munit.FunSuite:
         public int getW() { return w; }
         public Builder setW(int v) { this.w = v; return this; }
       }
+      class Use { Builder go(Builder b) { return b.setW(1).setW(2); } }
       """, BeanPropertyTransform.Target.Var, "Builder#w" -> "getW/setW")
     assertEquals(guards(r), List("PairRefused"))
   }
@@ -640,4 +642,20 @@ class BeanPropertySpec extends munit.FunSuite:
     assertEquals(clue(d).size, 1)
     assertEquals(d.head.detail("was"), "getName() setName()")
     assertEquals(d.head.detail("form"), "var")
+  }
+
+  test("a FLUENT setter collapses under a CONFIGURED pair: `x_=` returns Unit, `return this` goes") {
+    val src = """
+      class Cell {
+        private String tile;
+        public String getTile() { return tile; }
+        public Cell setTile(String tile) { this.tile = tile; return this; }
+      }
+      class Use { void go(Cell c) { c.setTile("grass"); } }
+    """
+    val r = run(src, "Cell#tile" -> "getTile/setTile")
+    assertEquals(r.phase.policyReport.findings, Nil, r.phase.policyReport.render)
+    assert(clue(r.out).contains("def tile_=(tile: java.lang.String): scala.Unit"))
+    assert(!r.out.linesIterator.exists(_.trim == "return this"), r.out)
+    assert(clue(r.out).contains("c.tile = \"grass\""))
   }
