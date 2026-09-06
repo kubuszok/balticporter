@@ -626,6 +626,14 @@ object BeanPropertyTransform:
   /** Derive a property name from a getter method name following the standard JavaBeans convention
     * (`java.beans.Introspector`): `getX` -> `x`, `getURL` -> `URL`, `isReady` -> `ready`. Returns
     * `None` if the name does not match `get[A-Z].*` or `is[A-Z].*`. */
+  /** Scala's HARD keywords: a derived property spelled so would ship backticked (`isNull` -> `null`).
+    * `type` is left out — a backticked `type` member is an established Scala convention (K51 x). */
+  val ReservedName: Set[String] = Set(
+    "abstract", "case", "catch", "class", "def", "do", "else", "enum", "export", "extends", "false",
+    "final", "finally", "for", "forSome", "given", "if", "implicit", "import", "lazy", "match", "new",
+    "null", "object", "override", "package", "private", "protected", "return", "sealed", "super",
+    "then", "this", "throw", "trait", "true", "try", "val", "var", "while", "with", "yield")
+
   def propertyNameOf(methodName: String): Option[String] =
     if methodName.startsWith("get") && methodName.length > 3 && methodName.charAt(3).isUpper then
       Some(decapitalize(methodName.substring(3)))
@@ -702,7 +710,12 @@ object BeanPropertyTransform:
             val getterReturnVoid = isVoid(program, getterDef.returnTpt.tpe)
             val gComp = graph.closureOf(getterSym.id).members
 
-            if isStatic(getterSym.id) then
+            if BeanPropertyTransform.ReservedName(propName) then
+              phase.consider(IdiomCandidate(IdiomKind.BeanDetect,
+                IdiomVerdict.Refused("ReservedName",
+                  s"`$propName` is a Scala keyword: a backticked property is no API, java's accessor is kept"),
+                key, s"auto-detected `$propName`", Decision.originOf(program, getterSym.id)))
+            else if isStatic(getterSym.id) then
               phase.consider(IdiomCandidate(IdiomKind.BeanDetect,
                 IdiomVerdict.Refused("Static", "the getter is static; a companion property is out of scope"),
                 key, s"auto-detected `$propName`", Decision.originOf(program, getterSym.id)))

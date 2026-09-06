@@ -1907,3 +1907,22 @@ Counted, 0 errors beside them; a check reading the base's map owes the dependent
 (viii) `BeanPropertyTransform`/`NullaryArityTransform` derived on the BASE's declarations (`isEmpty`
 -> `empty` on lls's `Array`, 7 errors; `getFree()` on this module's own injected `Pool`, 4): both now
 skip a unit this run does not emit (`NotEmitted`, counted) and the module's OWN substitutions.
+The properties step (`BeanPropertyTransform` + `NullaryArityTransform`, `Only(com.badlogic.gdx)`), 86 -> 0
+main and 35 -> 14 -> 5 -> 0 test, suite 216/4 held, exposed four more faces of the SAME follow:
+(ix) the follow is a NAMESPACE RENAME (it re-spells the base's symbols to their emitted names) and
+ran wherever the fold placed it; placed before `nullability`, the phase's `Only` scope, spelled in
+UPSTREAM names, matched nothing on lls's `get` and 86 `.orNull` coercions vanished. It now declares
+`runsAfter` every named retyping phase and `runsBefore package-rename` (§4.56: a namespace rename
+runs LAST). (x) `isNull()` auto-detected to a property named `null` — emitted backticked, no API:
+`BeanPropertyTransform.ReservedName` refuses Scala's hard keywords (`type` excepted, a convention),
+counted `ReservedName`. A detected getter was PUBLISHED as `leaf()` with no form, so no dependent
+could follow it: the emitter reads the form off the DECLARATION — a `def` with no parameter clause is
+`form=parenless` whatever phase dropped it. (xi) a dependent of a dependent inherits its base's
+follow and adds its own: two `port-map-migration` instances were a fatal `SurfaceDivergence`; the
+phase now carries a `MergeablePolicy` (union of maps, one per module). (xii) a field `parent` and a
+method `parent()` share one `fullName`: the follow indexed a MAP and renamed whichever won; the
+lookup indexes a LIST and picks by the entry's kind (an upstream key ending in `)` is a method), and
+the parenless roots are looked up in the UPSTREAM package too (package-rename has not run yet).
+Residue, counted: `witness` 140 -> 145, `port-map` 102 -> 75, the test port's `signature` 12 -> 47
+(`call arity` rows where a property's overloaded sibling keeps java's arity — compiles), `policy`
+1 -> 3 (`ScrollPane#scrollX/Y` pairs whose name the class already takes). Specs: `PortMapFollowSpec`.

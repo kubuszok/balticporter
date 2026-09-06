@@ -58,7 +58,9 @@ object LibgdxLadder:
   def universalTest(repoRoot: Path, steps: Set[String] = DefaultSteps): PortManifest = universal(repoRoot, steps).extendedBy(PortManifest(
     name        = "sge-l0-test",
     dropMethods = Set(watcherDrop),
-    surface     = List(new balticporter.transform.TestFrameworkTransform(dropFields = Set(watcherDrop))) ++
+    // the test tree calls into sge-l0: it FOLLOWS what sge-l0 PUBLISHED (properties, parenless), D14.
+    surface     = List(new balticporter.transform.TestFrameworkTransform(dropFields = Set(watcherDrop)),
+                       balticporter.transform.PortMapTransform.forBases("sge-l0")) ++
       // CT7: `AnimationControllerTest` is constructed by MUnit, so the threaded context cannot reach
       // it as a parameter — it takes one from the hand-written fixture (`ported/sge-l0/src/test`).
       (if steps("context") then List(new balticporter.transform.GlobalsToImplicitsTransform(extensions = List(
@@ -302,7 +304,7 @@ object LibgdxLadder:
 
   val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "properties", "graphics")
   /** the steps LANDED so far (measured, baselined, PROGRESS.md §13.29). */
-  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "graphics")
+  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "graphics", "properties")
 
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames`
     * for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix
@@ -319,8 +321,8 @@ object LibgdxLadder:
       inject         = StepOrder.filter(steps).flatMap(stepInjects(repoRoot)),
       // a dependent FOLLOWS the base's published member spellings (`first()` -> `first`, D14): the
       // port-map follow reads what lls PUBLISHED, never re-derives it (CLAUDE.md §1.5).
-      surface        = balticporter.transform.PortMapTransform.forBases("lls") ::
-                       StepOrder.filter(steps).flatMap(stepsFor(steps)(_)),
+      surface        = StepOrder.filter(steps).flatMap(stepsFor(steps)(_)) :+
+                       balticporter.transform.PortMapTransform.forBases("lls"),
       packageRenames = Map("com.badlogic.gdx" -> "sge"),
       typeRenames    = Map("com.badlogic.gdx.scenes.scene2d.ui.List" -> "SgeList"),
       resources      = List(ResourceTree(

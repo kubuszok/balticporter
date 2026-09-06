@@ -38,8 +38,11 @@ private[emit] trait TirEmitterNotes:
         vis       = visOf(m, currentOwnerSym),
         // Static members land in the companion.
         placement = if m.flags.isStatic then "companion" else "class",
-        // Whether this member is a collapsed bean pair and into which shape.
-        form      = collapsedForms.getOrElse(id, ""),
+        // Whether this member is a collapsed bean pair and into which shape; a `def` emitted with NO
+        // parameter clause is `parenless` whatever phase dropped it — read off the DECLARATION (K51 x).
+        form      = collapsedForms.getOrElse(id, st match
+          case d: Tree.DefDef if d.paramss.isEmpty && !isInitBlock(d) => "parenless"
+          case _                                                     => ""),
       )
     }
 

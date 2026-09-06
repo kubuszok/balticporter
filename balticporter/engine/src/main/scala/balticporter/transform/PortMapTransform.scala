@@ -1,5 +1,7 @@
 package balticporter.transform
 
+import balticporter.core.MergeablePolicy
+
 import balticporter.core.{PolicyFinding, PolicyIssue, PolicyReport, PolicySource, PortMap, PortManifest, SurfacePolicy}
 import balticporter.tir.*
 
@@ -7,8 +9,24 @@ import balticporter.tir.*
   * type/member to the base's emitted name, and reports a call to a member the base dropped or
   * replaced with a hand-supplied body. `maps` are the base's own published [[PortMap]]s; empty is
   * a no-op. Does not rewrite a dropped call or verify freshness ([[PortMap.freshness]]'s job). */
-final class PortMapTransform(maps: List[PortMap.Map0] = Nil) extends Phase, PolicySource, SurfacePolicy:
+final class PortMapTransform(val maps: List[PortMap.Map0] = Nil) extends Phase, PolicySource, SurfacePolicy, MergeablePolicy, Rewrite:
   def name: String = "port-map-migration"
+  /** the follow RENAMES owned overrides of base members; its residue is the `port-map` lane (K5.10). */
+  def accountedBy: Set[String] = Set("port-map")
+
+  /** the modules FOLLOWED; a dependent of a dependent inherits its base's follow and adds its own,
+    * so two instances compose by UNION of maps (one per module), never refuse (CLAUDE.md §1.5). */
+  def subjects: Set[String] = maps.map(_.module).toSet
+  def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
+    case o: PortMapTransform =>
+      val merged = new PortMapTransform((maps ++ o.maps).distinctBy(_.module))
+      Right(MergeablePolicy.Merged(merged, o.subjects -- subjects))
+    case _ => Left(s"`$name` cannot merge with ${later.getClass.getSimpleName}")
+  /** The follow RENAMES the base's symbols to their emitted names, so it is a namespace rename and
+    * runs after every phase whose scope is spelled in UPSTREAM names (CLAUDE.md §4.56; K51 ix). */
+  override def runsAfter: Set[String]  = Set("nullability", "java-collections->scala", "bean-properties",
+    "nullary-arity", "type-redirect", "member-rename", "class-to-trait", "type-class-array", "globals->implicits")
+  override def runsBefore: Set[String] = Set("package-rename")
 
   /** the map's identity — module, engine, source fingerprint, entry count — so two modules on
     * different base revisions do not fingerprint equal. */
@@ -168,7 +186,13 @@ final class PortMapTransform(maps: List[PortMap.Map0] = Nil) extends Phase, Poli
     if memberRenameEntries.isEmpty then return program
 
     val graph = OverrideGraph.build(program)
-    val byFullName = program.symbols.all.iterator.map(s => s.fullName -> s).toMap
+    // a fullName indexes a LIST (CLAUDE.md §4.55): a field `parent` and a method `parent()` share
+    // one; the entry's own KIND (an upstream key ending in `)` is a method) picks the symbol.
+    val byFullNameAll: Map[String, List[Symbol]] = program.symbols.all.toList.groupBy(_.fullName)
+    def ofKind(entry: PortMap.Entry, ss: List[Symbol]): Option[Symbol] =
+      val wantMethod = entry.upstream.endsWith(")")
+      ss.find(s => PolicyBinder.isExecutable(s.info) == wantMethod).orElse(ss.headOption)
+    def lookup(fqn: String, entry: PortMap.Entry): Option[Symbol] = byFullNameAll.get(fqn).flatMap(ofKind(entry, _))
 
     // find the symbol by its UPSTREAM FQN and request a rename to the emitted name.
     case class FollowEntry(sym: Symbol, newName: String, entry: PortMap.Entry)
@@ -179,7 +203,7 @@ final class PortMapTransform(maps: List[PortMap.Map0] = Nil) extends Phase, Poli
       // try the repointed (emitted-namespace) name first, then the upstream bare name — an owned
       // symbol is in the emitted namespace after `repoint`, an unowned base member is not.
       val inEmitNs = PackageRenameTransform.renamed(upBare, renames.toMap)
-      val sym = byFullName.get(inEmitNs).orElse(byFullName.get(upBare))
+      val sym = lookup(inEmitNs, e).orElse(lookup(upBare, e))
       sym.filter(_.name != newName).map { s =>
         FollowEntry(s, newName, e)
       }
@@ -200,7 +224,7 @@ final class PortMapTransform(maps: List[PortMap.Map0] = Nil) extends Phase, Poli
           val ownerFqn = PortMapTransform.ownerOf(upBare)
           val inEmitNs = PackageRenameTransform.renamed(upBare, renames.toMap)
           // skip entries already found by the fullName lookup
-          if !byFullName.contains(inEmitNs) && !byFullName.contains(upBare) then
+          if !byFullNameAll.contains(inEmitNs) && !byFullNameAll.contains(upBare) then
             val ownerEmit = PackageRenameTransform.renamed(ownerFqn, renames.toMap)
             byName.getOrElse(upName, Nil).foreach { s =>
               if !matched.contains(s.id) && s.name != newName then
@@ -251,8 +275,12 @@ final class PortMapTransform(maps: List[PortMap.Map0] = Nil) extends Phase, Poli
         val upBare   = PortMapTransform.bareKey(e.upstream)
         val inEmitNs = PackageRenameTransform.renamed(upBare, renames.toMap)
         val emitBare = PortMapTransform.bareKey(e.emitted)
+        // a renamed member still sits in the UPSTREAM package here (package-rename runs last):
+        // `com...OctreeNode#leaf`, neither the upstream key (`#isLeaf`) nor the emitted one (`sge...`)
+        val renamedInUpNs = PortMapTransform.ownerOf(upBare) + "#" + PortMapTransform.simpleNameOf(emitBare)
         renamed.symbols.all.iterator.find(s =>
-          s.fullName == inEmitNs || s.fullName == emitBare || s.fullName == upBare).map(_.id)
+          (s.fullName == inEmitNs || s.fullName == emitBare || s.fullName == upBare || s.fullName == renamedInUpNs)
+            && PolicyBinder.isExecutable(s.info)).map(_.id)
       }.toSet
     val parenlessSyms = parenlessRoots.flatMap(r => graph2.closureOf(r).members)
 
