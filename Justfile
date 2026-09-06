@@ -5713,6 +5713,9 @@ demo-check:
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/democheck.txt
     echo "TOTAL ERRORS: $ERRORS"
     error_baseline_guard "$ERRORS" "$REPORT"
+    # a DROP-IN style lane (hand-written code against the port): the count under the convention
+    # `baseline-accept` recognises, beside the plain one the guard above reads.
+    cp "$REPORT/run-latest/errors-count" "$REPORT/run-latest/errors-count.dropin.demos"
     echo "-- by file --"
     grep -E "^-- \[E[0-9]+\]" "$MEASURE_TMP"/democheck.txt | sed -E 's#.*/sge/demos/##; s/:[0-9]+:[0-9]+.*//' | sort | uniq -c | sort -rn | head -20
     echo "-- by kind --"

@@ -1764,6 +1764,16 @@ outcomes baselined; without it a step's gate is a compile count (§3). BUILT 202
 | R14 | backends: desktop (Panama/GLFW), browser (DOM), android | per-platform source sets from gdx's backends (71 backend-derived files in sge core) · **GAP** `PortManifest.platformDirs` (b) | — | after R13 |
 | R15 | demo game; Scala 3.9.0 bump (own wave, all lanes move) | — | — | last |
 
+**The demo check (the goal's instrument, built 2026-09-06):** `just demo-check` compiles sge's demo
+GAME code (`demos/<demo>/src/main/scala` + `demos/shared`, `DEMO_CHECK=pong` by default) against
+`ported/sge-l0`; the launchers are the backends' step. First honest count on pong + shared: **30
+errors**, all API distance and all attributable to steps still to land: `Pixels`/`WorldUnits` not
+found and `input.x`/`input.y` (~12, the two opaque steps), `ShapeRenderer.rectangle`/`.drawing {}`
+(~12, sge's member renames and added helpers — a rename/enrich step for core's graphics API),
+`input.touched`/`graphics.deltaTime` (properties, the property step), `Pixmap(w, h, format)` (a
+companion factory, the factories step), one `No given Sge` at a scene's call site. Every landing
+re-runs it; the number is the distance to the demos.
+
 Open beside the steps: (i) NAMESPACE — DECIDED and applied 2026-09-06 (standing order 2): lls's
 twelve take dotted `typeRenames` (`lowlevel.util.*`, `lowlevel.math.MathUtils`), no package claim,
 three moves declared (`allowPackageSplit`: `Array`, `ObjectMap`, `ObjectSet` — 30 package-private
