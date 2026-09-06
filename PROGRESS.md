@@ -1647,6 +1647,44 @@ finding and the PORT is right: lls's `Select` throws `IllegalArgumentException` 
 `GdxRuntimeException`, and java wins (§3.5). The lane joins `measure-all` after `lls-measure`; its
 `expected-errors` and `tests.tsv` are unseeded, so the first run says so and exits 1 by design.
 
+**The `witness` rung — the TYPE-CLASS ARRAY (2026-09-06).** `LLS_RUNGS` defaults to
+`nullable,ordering,enrich,witness`. `ElementWitnessTransform` (§1(b), `type-class-array`) moves an array whose
+element is a TYPE PARAMETER onto `lowlevel.MkArray` and drops java's implicit `<: java.lang.Object` bound so a
+primitive element type is admissible. **JVM 0 / JS 0 / Native 0**; the emitted tree carries 33 witness member
+calls (10 `copyOf`, 5 `copyOfRange`, 14 `nullOut`, 4 `nullOutRange`), 8 default-supplier substitutions, 71 `using`
+clause lines and 23 minted boxed givens. **The lls SUITE GAUGE fell 635 -> 273** — the largest single move any rung
+has made — while `lls-diff` stays 189/2/235: its ten incompatible files are declined by DECLARATION, and the
+bound was only ONE of their blockers. Measured by compiling the three the bound blocked UNEDITED (§3.5):
+`ArrayMapTest` **3** errors (2 nullary arity, 1 `get(key, default)` answering `Nullable[V]`), `DynamicArrayTest`
+**25** and `DynamicArrayLongSuite` **27** (12 nullary arity; `begin`/`end`/`wrap`, members whose body needs
+`MkArray` so `enrich` refuses them; `sort()(using Ordering)`). The L1 rung retires most of that, not this one;
+each file's reason in `diff-incompatible.tsv` now carries its number instead of the bound.
+`.ref` 241 -> 427, informational for the same reason `enrich` moved it: the `-ref` project deliberately has no
+`lowlevel.*` on its classpath, and all 420 new rows are `E008 Not Found` on `lowlevel.MkArray`.
+
+Subjects (`LlsPolicy.WitnessSubjects`): `Array`, `SnapshotArray`, `DelayedRemovalArray`, `ArrayMap` (both K and V),
+`ArrayMap$Values`, `ArrayMap$Keys`, `Queue`. Bounds also dropped on `Sort`/`Select`/`QuickSelect`, which the family
+calls with its own element type. **Five obligations the drop itself created**, each carried out by the phase and
+none of them a port's key: (i) the drop is CLOSED under application — a parameter handed an already-unbounded
+argument cannot keep a bound the argument does not satisfy, which is what reaches `ObjectMap$Entry`,
+`ArrayMap$Entries`, `Array$ArrayIterator/Iterable`, `Queue$QueueIterable/Iterator` and `Predicate`;
+(ii) an UNBOUNDED WILDCARD at an unbound position becomes `java.lang.Object` — java's raw type, which the bound
+used to make conform; (iii) a RAW `new C(...)` is completed with the arguments its cast already states, or a
+constructor now taking a witness has no way to say which element type it is for; (iv) `eq`/`ne` operands are
+ascribed to `AnyRef`, which the frontend only did where java typed the operand `Object`; (v) a declaration the
+threading cannot reach takes the BOXED witness as a `private given` (CT7's third answer) — 23 of them.
+
+**Four counted refusals, `witness` 158** (`ENGINE-LIMITS.md` K41): `OccupancySentinel` 105 (nine open-addressed
+tables keep the bound — `null` at an element slot means SLOT EMPTY and no coercion closes it), `ErasedArrayCast`
+30 (java wrote a RAW receiver, so its own erased view presents an element array as `Object[]`; this is why
+`TimSort` is NOT a subject — `Sort` holds it raw and hands it `Object[]`), `NonSubject` 19 (the eight tables'
+own `(K[])new Object[]`, left as java wrote them) and `UnhandledCreation` 4 (the deprecated `Class`-taking
+constructors, whose array type java reflects out of a `Class`). Two engine facts the rung measured: a member of
+an unresolved owner has `@<id>` in its own `fullName`, so `java.util.Arrays#copyOf` must be recognised through
+the OWNER SYMBOL (the first attempt rewrote nothing and every count stayed flat); and an `inline` default-supplier
+resolved by INFERENCE needs `this` inside a constructor delegation, which Scala Native's linker refuses — the
+element type is read off the CALLEE'S FORMAL instead and written into the call.
+
 Rungs (decision | footprint in gdx/src | platform | phase today): L1 bean properties + nullary arity (1,422/928;
 none; yes) · L2 collections onto lls + Comparator->Ordering (989 uses, 55; partly unblocks JS/Native; yes) ·
 L3 no reflection + Json dropped (54 calls/17 files, 23 Json files; UNBLOCKS JS+Native; yes) · L4 JNI->Panama

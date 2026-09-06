@@ -19,7 +19,7 @@ object BuiltinFactories:
     new PortMapMigrationFactory,
     new PrimitiveToOpaqueFactory, new GlobalsToImplicitsFactory, new BeanPropertyFactory,
     new NullabilityFactory, new PublicFieldAccessorFactory, new RemediationFactory,
-    new ClassToTraitFactory, new RegistryFactory,
+    new ClassToTraitFactory, new RegistryFactory, new ElementWitnessFactory,
   )
 
 // (a) — no policy; empty config object
@@ -456,3 +456,27 @@ final class RegistryFactory extends TransformFactory:
         bound     = e.string("bound"))
     }
     new RegistryTransform(entries, config.strings("facadeMembers").getOrElse(Nil).toSet)
+
+/** `{ transform = "type-class-array", witness = "lowlevel.MkArray",
+  *    members { create = "create", … }, subjects { "a.B" = [0, 1] }, dropBound = [ "a.B" ],
+  *    scope { only = [ … ] } }` — empty `subjects` is the no-op (CLAUDE.md §1(b)). */
+final class ElementWitnessFactory extends TransformFactory:
+  def name = "type-class-array"
+  def fromConfig(config: ConfigView): Phase =
+    val subjects = config.child("subjects").map { c =>
+      c.keys.map(k => k -> c.strings(k).getOrElse(Nil).map(_.trim.toInt)).toMap
+    }.getOrElse(Map.empty)
+    val m = config.child("members").map { c =>
+      ElementWitnessTransform.Members(
+        create       = c.string("create").getOrElse("create"),
+        copyOf       = c.string("copyOf").getOrElse("copyOf"),
+        copyOfRange  = c.string("copyOfRange").getOrElse("copyOfRange"),
+        nullOut      = c.string("nullOut").getOrElse("nullOut"),
+        nullOutRange = c.string("nullOutRange").getOrElse("nullOutRange"))
+    }.getOrElse(ElementWitnessTransform.Members.Default)
+    new ElementWitnessTransform(
+      witness      = config.string("witness").getOrElse(""),
+      members      = m,
+      subjectTypes = subjects,
+      dropBound    = config.strings("dropBound").getOrElse(Nil).toSet,
+      scope        = TransformFactory.scopeOf(config, default = RuleScope.Only(Set.empty)))

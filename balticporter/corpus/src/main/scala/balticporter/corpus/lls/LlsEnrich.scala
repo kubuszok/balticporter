@@ -26,7 +26,10 @@ object LlsEnrich:
     * @param tparams type-parameter clause of the added members (empty for the primitive arrays)
     * @param removeOne `removeValue` at arity 1 exists @param removeMany `removeAll` at arity 1 */
   private case class ArrayKind(owner: String, self: String, elem: String, tparams: String = "",
-                               removeOne: String = "", removeMany: String = "")
+                               removeOne: String = "", removeMany: String = "",
+                               /** the FACTORY's witness clause when the `witness` rung is on; the
+                                 * emitted constructors take one and a factory must supply it. */
+                               mk: String = "")
 
   private def arrayMembers(k: ArrayKind): List[(String, MemberSpec)] =
     val E = k.elem
@@ -64,13 +67,13 @@ object LlsEnrich:
     // java's shape, so no private constructor and no `MkArray` mint site).
     val factories = List(
       ("apply", 0,
-        s"def apply${k.tparams}(): ${k.self} = new ${k.self}()"),
+        s"def apply${k.tparams}()${k.mk}: ${k.self} = new ${k.self}()"),
       ("apply", 1,
-        s"def apply${k.tparams}(capacity: scala.Int): ${k.self} = new ${k.self}(capacity)"),
+        s"def apply${k.tparams}(capacity: scala.Int)${k.mk}: ${k.self} = new ${k.self}(capacity)"),
       ("apply", 2,
-        s"def apply${k.tparams}(ordered: scala.Boolean, capacity: scala.Int): ${k.self} = new ${k.self}(ordered, capacity)"),
+        s"def apply${k.tparams}(ordered: scala.Boolean, capacity: scala.Int)${k.mk}: ${k.self} = new ${k.self}(ordered, capacity)"),
       ("from", 1,
-        s"def from${k.tparams}(values: scala.Array[$E]): ${k.self} = new ${k.self}(values)"),
+        s"def from${k.tparams}(values: scala.Array[$E])${k.mk}: ${k.self} = new ${k.self}(values)"),
     )
     (common ++ removes).map((n, a, s) => spec(k.owner, n, a, s, why)) ++
       factories.map((n, a, s) => spec(k.owner, n, a, s, why, static = true))
@@ -111,7 +114,9 @@ object LlsEnrich:
   private case class MapKind(owner: String, key: String, value: String, entryValue: String,
                              tparams: String = "", self: String = "", wrap: String => String = identity,
                              getOne: String = "", removeOne: String = "",
-                             indexed: Boolean = false, capacityCtor: Boolean = false)
+                             indexed: Boolean = false, capacityCtor: Boolean = false,
+                             /** see [[ArrayKind.mk]]. */
+                             mk: String = "")
 
   private def mapMembers(k: MapKind): List[(String, MemberSpec)] =
     // three separate vals, not a tuple pattern: an UPPERCASE name on the left of a pattern
@@ -149,14 +154,14 @@ object LlsEnrich:
     val factories =
       if k.self.isEmpty then Nil
       else if k.capacityCtor then List(
-        ("apply", 0, s"def apply${k.tparams}(): ${k.self} = new ${k.self}()"),
-        ("apply", 1, s"def apply${k.tparams}(capacity: scala.Int): ${k.self} = new ${k.self}(capacity)"),
-        ("apply", 2, s"def apply${k.tparams}(ordered: scala.Boolean, capacity: scala.Int): ${k.self} = new ${k.self}(ordered, capacity)"),
+        ("apply", 0, s"def apply${k.tparams}()${k.mk}: ${k.self} = new ${k.self}()"),
+        ("apply", 1, s"def apply${k.tparams}(capacity: scala.Int)${k.mk}: ${k.self} = new ${k.self}(capacity)"),
+        ("apply", 2, s"def apply${k.tparams}(ordered: scala.Boolean, capacity: scala.Int)${k.mk}: ${k.self} = new ${k.self}(ordered, capacity)"),
       )
       else List(
-        ("apply", 0, s"def apply${k.tparams}(): ${k.self} = new ${k.self}()"),
-        ("apply", 1, s"def apply${k.tparams}(initialCapacity: scala.Int): ${k.self} = new ${k.self}(initialCapacity)"),
-        ("apply", 2, s"def apply${k.tparams}(initialCapacity: scala.Int, loadFactor: scala.Float): ${k.self} = new ${k.self}(initialCapacity, loadFactor)"),
+        ("apply", 0, s"def apply${k.tparams}()${k.mk}: ${k.self} = new ${k.self}()"),
+        ("apply", 1, s"def apply${k.tparams}(initialCapacity: scala.Int)${k.mk}: ${k.self} = new ${k.self}(initialCapacity)"),
+        ("apply", 2, s"def apply${k.tparams}(initialCapacity: scala.Int, loadFactor: scala.Float)${k.mk}: ${k.self} = new ${k.self}(initialCapacity, loadFactor)"),
       )
     (core ++ optional).map((n, a, s) => spec(k.owner, n, a, s, why)) ++
       factories.map((n, a, s) => spec(k.owner, n, a, s, why, static = true))
@@ -169,7 +174,7 @@ object LlsEnrich:
   /** @param hasNext `hasNext()` on the object sets, a `hasNext` FIELD on `IntSet` (the emitter
     * renames the field only where a method of the same name exists). */
   private case class SetKind(owner: String, elem: String, self: String, tparams: String = "",
-                             hasNext: String = "hasNext()")
+                             hasNext: String = "hasNext()", mk: String = "")
 
   private def setMembers(k: SetKind): List[(String, MemberSpec)] =
     val E   = k.elem
@@ -191,9 +196,9 @@ object LlsEnrich:
         s"@scala.annotation.targetName(\"minusEquals\") def -=(key: $E): scala.Unit = { this.remove(key); () }"),
     )
     val factories = List(
-      ("apply", 0, s"def apply${k.tparams}(): ${k.self} = new ${k.self}()"),
-      ("apply", 1, s"def apply${k.tparams}(initialCapacity: scala.Int): ${k.self} = new ${k.self}(initialCapacity)"),
-      ("apply", 2, s"def apply${k.tparams}(initialCapacity: scala.Int, loadFactor: scala.Float): ${k.self} = new ${k.self}(initialCapacity, loadFactor)"),
+      ("apply", 0, s"def apply${k.tparams}()${k.mk}: ${k.self} = new ${k.self}()"),
+      ("apply", 1, s"def apply${k.tparams}(initialCapacity: scala.Int)${k.mk}: ${k.self} = new ${k.self}(initialCapacity)"),
+      ("apply", 2, s"def apply${k.tparams}(initialCapacity: scala.Int, loadFactor: scala.Float)${k.mk}: ${k.self} = new ${k.self}(initialCapacity, loadFactor)"),
     )
     core.map((n, a, s) => spec(k.owner, n, a, s, why)) ++
       factories.map((n, a, s) => spec(k.owner, n, a, s, why, static = true))
@@ -204,10 +209,14 @@ object LlsEnrich:
   // (adding them there would owe an `override` the mechanism cannot spell).
   // ---------------------------------------------------------------------------------------------
 
-  private val arrays: List[ArrayKind] = List(
-    ArrayKind("Array", "lowlevel.util.DynamicArray[T]", "T", "[T <: java.lang.Object]",
+  private def arrays(w: Boolean): List[ArrayKind] = List(
+    // `Array` is a WITNESS SUBJECT: with the rung on its element type loses java's implicit
+    // `<: java.lang.Object` bound and its constructors take the type class, so every factory
+    // written here must lose the bound and supply the clause too (PROGRESS.md §13.29).
+    ArrayKind("Array", "lowlevel.util.DynamicArray[T]", "T", if w then "[T]" else "[T <: java.lang.Object]",
       removeOne  = "this.removeValue(lowlevel.Nullable(value), false)",
-      removeMany = "this.removeAll(other, false)"),
+      removeMany = "this.removeAll(other, false)",
+      mk         = if w then "(using lowlevel.MkArray[T])" else ""),
     ArrayKind("IntArray",     "lowlevel.util.IntArray",     "scala.Int",
       removeOne = "this.removeValue(value)", removeMany = "this.removeAll(other)"),
     ArrayKind("FloatArray",   "lowlevel.util.FloatArray",   "scala.Float",
@@ -226,7 +235,7 @@ object LlsEnrich:
       removeMany = "this.removeAll(other)"),
   )
 
-  private val maps: List[MapKind] = List(
+  private def maps(w: Boolean): List[MapKind] = List(
     MapKind("ObjectMap", "K", "V", "lowlevel.Nullable[V]",
       tparams = "[K <: java.lang.Object, V <: java.lang.Object]",
       self = "lowlevel.util.ObjectMap[K, V]", wrap = v => s"lowlevel.Nullable($v)",
@@ -238,9 +247,10 @@ object LlsEnrich:
       tparams = "[V <: java.lang.Object]", self = "lowlevel.util.LongMap[V]",
       wrap = v => s"lowlevel.Nullable($v)", getOne = "lowlevel.Nullable[V]", removeOne = "remove"),
     MapKind("ArrayMap", "K", "V", "V",
-      tparams = "[K <: java.lang.Object, V <: java.lang.Object]",
+      tparams = if w then "[K, V]" else "[K <: java.lang.Object, V <: java.lang.Object]",
       self = "lowlevel.util.ArrayMap[K, V]", getOne = "lowlevel.Nullable[V]",
-      removeOne = "removeKey", indexed = true, capacityCtor = true),
+      removeOne = "removeKey", indexed = true, capacityCtor = true,
+      mk = if w then "(using lowlevel.MkArray[K], lowlevel.MkArray[V])" else ""),
     MapKind("ObjectIntMap", "K", "scala.Int", "scala.Int",
       tparams = "[K <: java.lang.Object]", self = "lowlevel.util.ObjectIntMap[K]"),
     MapKind("ObjectFloatMap", "K", "scala.Float", "scala.Float",
@@ -261,21 +271,24 @@ object LlsEnrich:
     * into the subclass, where scala's own CONSTRUCTOR PROXY `apply` is a second definition with
     * matching parameter types (`E120`). Declaring them here excludes the parent's and suppresses
     * the proxy, and the factory answers with the SUBCLASS's type, which is what a caller wants. */
-  private val subclassFactories: List[(String, MemberSpec)] =
+  private def subclassFactories(w: Boolean): List[(String, MemberSpec)] =
     val why = "lls factory on a subclass; also what keeps the inherited-statics export unambiguous (PROGRESS.md §13.29)"
-    def arrayLike(owner: String, self: String, elem: String, tparams: String) = List(
-      ("apply", 0, s"def apply$tparams(): $self = new $self()"),
-      ("apply", 1, s"def apply$tparams(capacity: scala.Int): $self = new $self(capacity)"),
-      ("apply", 2, s"def apply$tparams(ordered: scala.Boolean, capacity: scala.Int): $self = new $self(ordered, capacity)"),
-      ("from",  1, s"def from$tparams(values: scala.Array[$elem]): $self = new $self(values)"),
-    ).map((n, a, s) => spec(owner, n, a, s, why, static = true))
+    def arrayLike(owner: String, self: String, elem: String, tparams0: String, mk: String) =
+      val tparams = if mk.isEmpty then tparams0 else "[T]"
+      List(
+        ("apply", 0, s"def apply$tparams()$mk: $self = new $self()"),
+        ("apply", 1, s"def apply$tparams(capacity: scala.Int)$mk: $self = new $self(capacity)"),
+        ("apply", 2, s"def apply$tparams(ordered: scala.Boolean, capacity: scala.Int)$mk: $self = new $self(ordered, capacity)"),
+        ("from",  1, s"def from$tparams(values: scala.Array[$elem])$mk: $self = new $self(values)"),
+      ).map((n, a, s) => spec(owner, n, a, s, why, static = true))
     def tableLike(owner: String, self: String, tparams: String) = List(
       ("apply", 0, s"def apply$tparams(): $self = new $self()"),
       ("apply", 1, s"def apply$tparams(initialCapacity: scala.Int): $self = new $self(initialCapacity)"),
       ("apply", 2, s"def apply$tparams(initialCapacity: scala.Int, loadFactor: scala.Float): $self = new $self(initialCapacity, loadFactor)"),
     ).map((n, a, s) => spec(owner, n, a, s, why, static = true))
-    arrayLike("SnapshotArray", "lowlevel.util.SnapshotArray[T]", "T", "[T <: java.lang.Object]") ++
-      arrayLike("DelayedRemovalArray", "lowlevel.util.DelayedRemovalArray[T]", "T", "[T <: java.lang.Object]") ++
+    val amk = if w then "(using lowlevel.MkArray[T])" else ""
+    arrayLike("SnapshotArray", "lowlevel.util.SnapshotArray[T]", "T", "[T <: java.lang.Object]", amk) ++
+      arrayLike("DelayedRemovalArray", "lowlevel.util.DelayedRemovalArray[T]", "T", "[T <: java.lang.Object]", amk) ++
       tableLike("OrderedMap", "lowlevel.util.OrderedMap[K, V]", "[K <: java.lang.Object, V <: java.lang.Object]") ++
       tableLike("IdentityMap", "lowlevel.util.IdentityMap[K, V]", "[K <: java.lang.Object, V <: java.lang.Object]") ++
       tableLike("OrderedSet", "lowlevel.util.OrderedSet[T]", "[T <: java.lang.Object]")
@@ -291,16 +304,16 @@ object LlsEnrich:
       "lls's flag-free spelling of java's identity argument (PROGRESS.md §13.29)"),
   )
 
-  private val all: List[(String, MemberSpec)] =
-    arrays.flatMap(arrayMembers) ++ refArrayExtras ++
-      maps.flatMap(mapMembers) ++ arrayMapExtras ++ sets.flatMap(setMembers) ++
-      subclassFactories
+  private def all(w: Boolean): List[(String, MemberSpec)] =
+    arrays(w).flatMap(arrayMembers) ++ refArrayExtras ++
+      maps(w).flatMap(mapMembers) ++ arrayMapExtras ++ sets.flatMap(setMembers) ++
+      subclassFactories(w)
 
-  /** owner FQN -> specs, the shape `AddMembersTransform` takes. */
-  val members: Map[String, List[MemberSpec]] =
-    all.groupBy(_._1).map((owner, ms) => owner -> ms.map(_._2)).toMap
+  /** owner FQN -> specs, the shape `AddMembersTransform` takes. @param w the `witness` rung is on. */
+  def members(w: Boolean): Map[String, List[MemberSpec]] =
+    all(w).groupBy(_._1).map((owner, ms) => owner -> ms.map(_._2)).toMap
 
   /** how many members this rung adds, for the lane's report. */
-  def count: Int = all.size
+  def count: Int = all(false).size
 
-  def transform: AddMembersTransform = new AddMembersTransform(members)
+  def transform(w: Boolean = false): AddMembersTransform = new AddMembersTransform(members(w))

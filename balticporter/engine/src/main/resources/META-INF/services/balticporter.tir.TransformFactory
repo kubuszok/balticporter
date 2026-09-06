@@ -20,3 +20,4 @@ balticporter.runner.PublicFieldAccessorFactory
 balticporter.runner.RemediationFactory
 balticporter.runner.ClassToTraitFactory
 balticporter.runner.RegistryFactory
+balticporter.runner.ElementWitnessFactory

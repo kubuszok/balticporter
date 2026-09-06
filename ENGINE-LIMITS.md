@@ -1656,3 +1656,27 @@ Rule: the exit is NOT "add the JDK interfaces to `externalConcrete`" — minting
 (a) universal, engine. Symptom: a RAW type erases its members WHOLE (JLS 4.8), the RESULT as much as the formals, so `rawClass.getEnumConstants()` is `Object[]` in java and `Array[c.T]` through the `Class[?]` this engine emits — `ClassReflection#getEnumConstants` and `Json#getFields` on the ladder's L0 rung. `SpoonTir.erasedReceiverView` already interposes java's erased view; its `depends` asks only the PARAMETERS.
 Numbers (2026-09-05): adding the RESULT to `depends` closed both rows and opened four elsewhere (`ResourceData$SaveData#loadAsset`, `Tree#expandAll`, `OrderedMap`/`OrderedSet`'s `remove()` — an `asInstanceOf[T]` naming a variable the emitted nested class cannot see); narrowed to a receiver with NO actual type arguments it still broke three REFUSAL specs (`UnconstrainedResultPinSpec` x2, `NumericOverloadAscriptionSpec`), because Spoon reports a CAPTURE as raw and the view then erases a receiver java never erased. It also made `mentionsTypeVarFilled` recurse on F-bounds until the `catch` swallowed a `StackOverflowError` (ssg-md 41 s -> 19 min) — that fuel leak is fixed separately and is real.
 Rule: the exit is not `depends`; it is telling a RAW USE from a CAPTURE at `castType` (the G21 shadow, one more time). Until then the two rows are COUNTED residue on L0, and the same reading forbids the sibling attempt: dropping the `Object[]` array-covariance cast at a DECLARED `T[]`/`T...` formal is java-correct and costs `ComparatorOrderingPortSpec`'s control assertion, so it waits for the same distinction.
+
+### K41. The OCCUPANCY SENTINEL: an open-addressed table's `null` cannot lose its `Object` bound -- **105 counted sites over 9 declarations, 2 diff files still incompatible. Do NOT drop those bounds**
+
+(b) per-library, and it is a REPRESENTATION question the engine may not answer. Symptom: `ElementWitnessTransform`
+drops java's implicit `<: java.lang.Object` bound on an element type so a primitive or opaque element becomes
+admissible. Where the class reads `null` at an element slot to mean AN EMPTY SLOT — every probe of an
+open-addressed table — the emitted code still COMPILES after the drop (`x == null` is universal equality in
+Scala, `null.asInstanceOf[T]` is legal), and at a primitive element type every empty slot reads `0`/`false`
+and the probe loop finds a key that was never inserted. Nothing else moves: no error, no other count.
+Numbers (2026-09-06, lls): 105 `witness(OccupancySentinel)` rows over `ObjectMap`, `ObjectSet`, `OrderedSet`,
+`IdentityMap`, `Object{Int,Float,Long}Map`, `IntMap`/`LongMap` and `BinaryHeap`; those nine keep the bound and
+are absent from `dropBound`. The two lls suite files that need `ObjectMap[String, Int]`/`OrderedMap[String, Int]`
+(`ObjectMapTest`, `OrderedMapTest`) stay `diff-incompatible` for this reason. Reading them as a
+whole POPULATION is why the count is taken off the TYPE of the compared operand (`keyTable[i] == null`,
+`key != null` on a local and `while ((key = keyTable[next]) != null)` are three spellings of one question),
+never off the node shape.
+Rule: the exit is a PARALLEL OCCUPANCY ARRAY — a different data structure, hand-written, and the library's to
+ship; there is no coercion and no cast that closes it. Until a library ships one, keep the class OUT of
+`dropBound` and let the boxed element type keep java's own null semantics. Two neighbours the same wave
+measured and left counted: `witness(ErasedArrayCast)` 30 — an element-typed array presented as
+`Array[java.lang.Object]` because JAVA wrote a RAW receiver (`Sort`'s `TimSort` field), which type-checks and
+throws `ClassCastException` at a primitive element type, so `TimSort` is not a subject; and
+`witness(UnhandledCreation)` 4 — `<V> V[] toArray(Class<V>)` reflects its array type out of a `Class`
+argument and java's signature carries no clause to put a witness on.

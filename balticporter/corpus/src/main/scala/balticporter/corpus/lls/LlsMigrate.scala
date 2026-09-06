@@ -2,7 +2,8 @@ package balticporter.corpus.lls
 
 import balticporter.core.{FrontendConfig, ParityRef, PortManifest, Provenance, RuntimeMode}
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
-import balticporter.transform.{CollectionsTransform, MutableParamsTransform, NullabilityTransform}
+import balticporter.transform.{AddMembersTransform, CollectionsTransform, ElementWitnessTransform,
+  GlobalsToImplicitsTransform, MutableParamsTransform, NullabilityTransform}
 
 import java.nio.file.Path
 
@@ -111,23 +112,89 @@ object LlsMigrate:
   * run reports is a measurement rather than a policy decision. */
 object LlsPolicy:
 
-  /** The decision rungs a run may switch on above L0, each a manifest fragment (PROGRESS.md §13.29). */
-  val Rungs: Map[String, List[balticporter.tir.Phase]] = Map(
+  /** lls's array type class, and the declarations whose element arrays it allocates: the
+    * ARRAY-LIKE family, upstream FQN -> the element type-parameter indexes. The seven
+    * open-addressed tables are deliberately absent — `keyTable[i] == null` is their occupancy
+    * test, counted as `witness(OccupancySentinel)` (PROGRESS.md §13.29, ENGINE-LIMITS.md K41). */
+  val Witness = "lowlevel.MkArray"
+
+  val WitnessSubjects: Map[String, List[Int]] = Map(
+    "com.badlogic.gdx.utils.Array"               -> List(0),
+    "com.badlogic.gdx.utils.SnapshotArray"       -> List(0),
+    "com.badlogic.gdx.utils.DelayedRemovalArray" -> List(0),
+    "com.badlogic.gdx.utils.ArrayMap"            -> List(0, 1),
+    // the two nested views CONSTRUCT a `DynamicArray` at their own parameter, so they take the
+    // clause even though they allocate nothing themselves.
+    "com.badlogic.gdx.utils.ArrayMap$Values"     -> List(0),
+    "com.badlogic.gdx.utils.ArrayMap$Keys"       -> List(0),
+    "com.badlogic.gdx.utils.Queue"               -> List(0),
+  )
+
+  /** …and the declarations that only LOSE java's implicit `Object` bound: the three sort/select
+    * entry points the array family calls with its own element type. `TimSort` is NOT among them —
+    * `Sort` holds it in a RAW field and hands it `Object[]`, so an unbounded element type there
+    * would type-check and throw (`witness(ErasedArrayCast)`, PROGRESS.md §13.29). */
+  val WitnessUnbound: Set[String] = WitnessSubjects.keySet ++ Set(
+    "com.badlogic.gdx.utils.Sort",
+    "com.badlogic.gdx.utils.Select",
+    "com.badlogic.gdx.utils.QuickSelect",
+  )
+
+  /** The DEFAULT array factory this fork of libGDX threads through its constructors. With the rung
+    * on, the witness IS that factory: one added companion member and one call-site substitution
+    * keep java's `ArraySupplier` API and make its default allocate through the type class. */
+  private val arraySupplierWitness: AddMembersTransform = new AddMembersTransform(Map(
+    "com.badlogic.gdx.utils.ArraySupplier" -> List(AddMembersTransform.MemberSpec(
+      name   = "witness",
+      arity  = 0,
+      // A PLAIN `def` whose every call names its element type (`defaultSuppliers` reads it off the
+      // callee's formal): an `inline` variant inferring `A` needed `this` inside a constructor
+      // delegation, which Scala Native's linker refuses (PROGRESS.md §13.29).
+      source = "def witness[A](using mk: lowlevel.MkArray[A]): lowlevel.util.ArraySupplier[scala.Array[A]] = " +
+        "((size: scala.Int) => mk.create(size))",
+      reason = balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.utils.ArraySupplier#witness"),
+      why    = Some("the witness AS an ArraySupplier, so java's default-supplier constructors " +
+        "allocate through the type class (PROGRESS.md 13.29)"),
+      static = true))))
+
+  /** The decision rungs a run may switch on above L0, each a manifest fragment (PROGRESS.md §13.29).
+    * @param rungs what else is on — `enrich`'s verbatim factories are written against the
+    *              signatures `witness` decides, so they are not independent of it. */
+  def rungPhases(rungs: Set[String]): Map[String, List[balticporter.tir.Phase]] = Map(
     "nullable" -> List(new NullabilityTransform(
       annotations = Set("com.badlogic.gdx.utils.Null"),
       target      = NullabilityTransform.Target.Named("lowlevel.Nullable"),
       scope       = balticporter.tir.RuleScope.Everywhere(Set.empty))),
     "ordering" -> List(new CollectionsTransform(retarget = Map("java.util.Comparator" -> "scala.math.Ordering"))),
-    "enrich"   -> List(LlsEnrich.transform),
+    "enrich"   -> List(LlsEnrich.transform(rungs("witness"))),
+    "witness"  -> List(
+      // the CONSTRUCTOR half of the clause, threaded by the phase that owns that mechanism (CT7)
+      new GlobalsToImplicitsTransform(requiredGivens =
+        ElementWitnessTransform.constructorGivens(WitnessSubjects, Witness)),
+      arraySupplierWitness,
+      new ElementWitnessTransform(
+        witness      = Witness,
+        subjectTypes = WitnessSubjects,
+        dropBound    = WitnessUnbound,
+        // java's own default array factory: with the rung on, the witness IS it.
+        defaultSuppliers = Map(
+          "com.badlogic.gdx.utils.ArraySupplier#object()" ->
+            "lowlevel.util.ArraySupplier.witness[{elem}]"),
+        // the witness for an element type that KEEPS java's `Object` bound: the one lls itself
+        // uses for reference elements, which is the representation java's `Object[]` already had.
+        boxedWitness = Some("lowlevel.MkArray.anyRef[scala.AnyRef].asInstanceOf[lowlevel.MkArray[{elem}]]"))),
   )
 
+  /** the rung NAMES, for validation and for the `--rungs=` error message. */
+  val Rungs: Set[String] = rungPhases(Set.empty).keySet
+
   /** the order the rungs occupy in `surface` — a pipeline position, not the alphabet. */
-  val RungOrder: List[String] = List("nullable", "ordering", "enrich")
+  val RungOrder: List[String] = List("nullable", "ordering", "enrich", "witness")
 
   def core(repoRoot: Path, rungs: Set[String] = Set.empty): PortManifest =
-    val unknown = rungs -- Rungs.keySet
-    require(unknown.isEmpty, s"unknown lls rungs: ${unknown.mkString(",")}; known: ${Rungs.keys.toList.sorted.mkString(",")}")
-    require(RungOrder.toSet == Rungs.keySet, s"RungOrder does not cover every rung: ${Rungs.keySet -- RungOrder.toSet}")
+    val unknown = rungs -- Rungs
+    require(unknown.isEmpty, s"unknown lls rungs: ${unknown.mkString(",")}; known: ${Rungs.toList.sorted.mkString(",")}")
+    require(RungOrder.toSet == Rungs, s"RungOrder does not cover every rung: ${Rungs -- RungOrder.toSet}")
     // `enrich`'s bodies are written against the EMITTED signatures, which `nullable` decides
     // (`contains(Nullable[T], Boolean)` vs `contains(T, Boolean)`) — a rung, not a free choice.
     require(!rungs("enrich") || rungs("nullable"), "lls rung `enrich` requires `nullable`")
@@ -149,7 +216,7 @@ object LlsPolicy:
       // `enrich` LAST: its members are verbatim text written against what the rungs below it
       // emit, so it reads the surface rather than contributing one another phase must walk.
       surface = List(new MutableParamsTransform) ++
-        RungOrder.filter(rungs).flatMap(Rungs(_)),
+        RungOrder.filter(rungs).flatMap(rungPhases(rungs)(_)),
       // THE REFERENCE HAND PORT for lls. NOT inherited (DESIGN.md §8.23).
       parity = Some(ParityRef(roots = List(
         repoRoot.resolve("../lls/lls/src/main/scala").normalize))),

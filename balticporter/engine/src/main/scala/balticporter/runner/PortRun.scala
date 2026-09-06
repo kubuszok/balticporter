@@ -5,7 +5,7 @@ import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
 import balticporter.sbtgen.SbtGen
 import balticporter.tir.{BreakCatchCheck, CastConversionCheck, CatalogCheck, CheckReport, ClassInitTriggerCheck, CommentAnchor, Correlate, CorrelateRun, CtorFunnel, DebugFlags, DependencyCheck, Decision, DecisionLog, Definition, ExternalUsage, HeapPollutionCheck, IdiomCheck, IdiomLog, JdkSurfaceCheck, MarkerCheck, MemberIndex, NoteCoverageCheck, OmissionCheck, Origin, Phase, Pipeline, PolicyBinder, PolicyBound, PortabilityCheck, PorterNote, Program, Reason, RemedySource, RemedyVocabulary, ResolutionPlan, OverloadRiskCheck, Remediator, RewriteCallSitesCheck, RewriteLog, RewriteTrace, RunScope, SrcMap, StandardTraversal, Surface, SymId, SwitchNullCheck, SymbolTable, Tree, TrivialSurface, TriviaCheck, TryResourceCheck, Xref}
-import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionInternalCheck, CollectionsTransform, ContextSeamCheck, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, OpaqueBoundaryCheck, PackageRenameTransform, PortMapTransform, PrimitiveToOpaqueTransform, PublicFieldAccessorTransform, RegistryCheck, RegistryTransform, RetargetBoundaryCheck, SuppressionPhase, UnusedSymbolTransform}
+import balticporter.transform.{BeanExposureCheck, CollectionBoundaryCheck, CollectionClosureCheck, CollectionInternalCheck, CollectionsTransform, ContextSeamCheck, ElementWitnessCheck, ElementWitnessTransform, GlobalsToImplicitsTransform, MethodBodyTransform, NullabilityBoundaryCheck, NullabilityTransform, OpaqueBoundaryCheck, PackageRenameTransform, PortMapTransform, PrimitiveToOpaqueTransform, PublicFieldAccessorTransform, RegistryCheck, RegistryTransform, RetargetBoundaryCheck, SuppressionPhase, UnusedSymbolTransform}
 import balticporter.verify.ApiParityCheck
 
 import java.nio.file.{Files, Path, StandardCopyOption}
@@ -252,6 +252,16 @@ final case class PortRun(
         CheckReport.record(OpaqueBoundaryCheck.Name, bnd.map(_.report))
         say(s"OPAQUE BOUNDARY (seams the primitive-to-opaque retyping could not close): ${bnd.size}")
         println(OpaqueBoundaryCheck.summary(bnd))
+    }
+
+    // ---- element-witness refusals (only when the phase carries a subject) ----
+    locally {
+      val ws = effectivePhases.collect { case w: ElementWitnessTransform if !w.isNoOp => w }
+      if ws.nonEmpty then
+        val fs = ws.flatMap(_.refusals(program, checkedUnits))
+        CheckReport.record(ElementWitnessCheck.Name, fs.map(_.report))
+        say(s"WITNESS (element-typed arrays the type class could not take over): ${fs.size}")
+        println(ElementWitnessCheck.summary(fs))
     }
 
     // ---- registry refusals (one lane per KIND — §4.45; only when the phase carries a spec) ----
@@ -1453,6 +1463,10 @@ final case class PortRun(
       // Opaque boundary (conditional on pipeline).
       (if effectivePhases.exists(_.isInstanceOf[PrimitiveToOpaqueTransform]) then
          Set(OpaqueBoundaryCheck.Name) else Set.empty) ++
+      // Element witness (conditional on a NON-EMPTY subject map — §1(b)'s no-op rule: an empty
+      // instance moves nothing and must not require a lane on every port that merely carries one).
+      (if effectivePhases.exists { case w: ElementWitnessTransform => !w.isNoOp; case _ => false }
+       then Set(ElementWitnessCheck.Name) else Set.empty) ++
       // Registry lanes (conditional on a NON-EMPTY spec: an empty instance is a no-op and must not
       // move a baseline on every port that merely carries one — §1(b)'s fingerprint no-op rule).
       (if effectivePhases.exists {

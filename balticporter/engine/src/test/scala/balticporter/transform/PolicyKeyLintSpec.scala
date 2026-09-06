@@ -86,6 +86,14 @@ class PolicyKeyLintSpec extends munit.FunSuite:
     // each `fullName ==` below is a mint-or-reuse lookup against a WELL-KNOWN external FQN
     // (`java.util.Iterator`, `balticporter.runtime.JavaIterator`, `scala.Array`, `java.lang.Object`,
     // the phase's own `StreamFqn`, `scala.collection`).
+    "ElementWitnessTransform.scala" -> Map(
+      "fullName ==" ->
+        ("every name here is a WELL-KNOWN external the program never declares — `scala.Array`, " +
+          "`java.lang.Object`/`scala.AnyRef`, `java.util.Arrays` and `java.lang.reflect.Array` — " +
+          "read through the OWNER SYMBOL, plus one comparison against the phase's OWN `witness` " +
+          "parameter, which is a policy value and not a program-declared symbol; the declarations " +
+          "this phase SELECTS go through `PolicyBinder` and `RuleScope`"),
+    ),
     "CollectionsCalls.scala" -> Map(
       "fullName ==" ->
         ("the JDK side of this phase is a TYPE MAPPING keyed by FQN — mint-or-reuse against " +
