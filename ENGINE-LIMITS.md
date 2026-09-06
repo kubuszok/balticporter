@@ -1932,3 +1932,9 @@ parameter to a field (`setColor` calls `_color.set`; `id_=` is `this._id = id`) 
 771 `setX(` in sge. Detection now converts the getter alone and refuses the setter half as
 `SetterHasBehaviour` (161 in core, counted) unless every override's body is one plain assignment.
 Demo check 9 -> 4 (WorldUnits 3, `Pixmap(w, h, format)` 1).
+(xiv) `WorldUnits` seeded at four world-size fields reached `Sprite.scaleX` and every `Batch.draw`
+through `Camera.update`'s `setToOrtho` and scene2d's sizes — 237 errors, 85 with the math library
+excepted. The hand port's answer is a POPULATION: world units live in the viewports and the cameras
+(13 files), everything else wraps at the call. An `Only` scope on those four names states it; the
+opaque phase's symmetric flow needs the fence WHERE the reference port drew it, never a wider
+exception list. Demo check 4 -> 1 (`Pixmap(w, h, format)` wants a `given Sge`).

@@ -25,7 +25,7 @@ manifest	0
 markers	0
 nullability-boundary	152
 omissions	37
-opaque-boundary	15
+opaque-boundary	9
 overload-risk	455
 policy	3
 port-map	75

@@ -210,9 +210,25 @@ object LibgdxLadder:
         "com.badlogic.gdx.ApplicationListener#resize#width", "com.badlogic.gdx.ApplicationListener#resize#height",
         "com.badlogic.gdx.Screen#resize#width", "com.badlogic.gdx.Screen#resize#height"),
       underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
-      // core's own declarations, never the base's: a shared int utility (`MathUtils.isPowerOfTwo`)
-      // is a HUB the symmetric propagation would otherwise ride into unrelated ints (a touch bitmask).
-      scope      = balticporter.tir.RuleScope.Everywhere(Set.empty)))),
+      // sge sizes a `Pixmap` in plain `Int` (image dimensions are not screen pixels; the demos write
+      // `Pixmap(w, h, format)`): the flow stops at its declarations, the call sites coerce.
+      scope      = balticporter.tir.RuleScope.Everywhere(Set("com.badlogic.gdx.graphics.Pixmap"))))),
+    // `WorldUnits`: world-space sizes are not bare `Float`s (sge's opaque type, injected from sge's
+    // own file). Seeded at the viewport's and the camera's world-size fields.
+    "worldunits" -> List(new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+      fqn        = "com.badlogic.gdx.WorldUnits",
+      target     = balticporter.tir.OpaqueSpec.Target.Existing(
+        typeFqn = "sge.WorldUnits", wrapName = "apply", unwrapName = "toFloat"),
+      hints      = Set(
+        "com.badlogic.gdx.utils.viewport.Viewport#worldWidth", "com.badlogic.gdx.utils.viewport.Viewport#worldHeight",
+        "com.badlogic.gdx.graphics.Camera#viewportWidth", "com.badlogic.gdx.graphics.Camera#viewportHeight"),
+      underlying = balticporter.tir.OpaqueSpec.Primitive.Float,
+      // sge keeps world units INSIDE the viewports and the cameras (13 files; `Stage`, the shadow
+      // light and the math library wrap at the call): the flow is fenced there, the call sites
+      // coerce — unfenced it reached `Sprite.scaleX` and `Batch.draw`, 237 then 85 errors.
+      scope      = balticporter.tir.RuleScope.Only(Set(
+        "com.badlogic.gdx.utils.viewport", "com.badlogic.gdx.graphics.Camera",
+        "com.badlogic.gdx.graphics.OrthographicCamera", "com.badlogic.gdx.graphics.PerspectiveCamera"))))),
     // properties and parenless getters: the full port's bean pairs and targets (`LibgdxPolicy`),
     // lifted by reference, on core's entry; the `Only` scope merges with lls's arity instance.
     "properties" -> List(
@@ -282,6 +298,7 @@ object LibgdxLadder:
     "seconds"    -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-seconds")),
     "pool"       -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-pool")),
     "pixels"     -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-pixels")),
+    "worldunits" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-worldunits")),
   ).withDefaultValue(Nil)
 
   /** Per step, the members the step makes dead: the reflective `Class`-typed constructors the
@@ -302,9 +319,9 @@ object LibgdxLadder:
     ),
   ).withDefaultValue(Set.empty)
 
-  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "properties", "graphics")
+  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "worldunits", "properties", "graphics")
   /** the steps LANDED so far (measured, baselined, PROGRESS.md §13.29). */
-  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "graphics", "properties")
+  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "graphics", "properties", "worldunits")
 
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames`
     * for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix
