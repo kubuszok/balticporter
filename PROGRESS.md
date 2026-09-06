@@ -1734,3 +1734,39 @@ witness/supplier ~16 (`SnapshotArray`/`DelayedRemovalArray` constructors, `Queue
 `MapLayers`, `Model.load`, `Selection`), enrich/arity ~11 (`IdentityMap`'s export clash, `setItems`,
 `addPool`, `Tree.findExpandedValues`). Each is the matching core rung's work — the ladder's order.
 `base-surface 2 -> 0`. K37 stays OPEN; K42 stays OPEN (rides the next family re-measure).
+
+**THE LADDER (written 2026-09-06; order fixed where a measurement or an engine edge fixes it, free
+where marked; every rung = a manifest FRAGMENT on `LibgdxLadder`, one lane + baseline per rung).**
+Decisions are sge's (`../sge/docs/contributing/type-mappings.md`, `architecture/*.md`); the seam
+column is what L0 on the lls base measures TODAY (57 errors + residue lanes), so the first four rungs
+are dictated by the base, not chosen. Gate per rung: JVM errors at the seam floor the next rung owns,
+the ladder SUITE at or above the previous rung with every expected delta named, `members.tsv` blast
+classified. **Prerequisite, before R1: the ladder test lane** — `LibgdxTestMigrate`'s tree on the
+ladder port (`ported/sge-l0`, `SourceSet.Test`, base = `sge-l0` + `lls`), lane `gdx-l0-test-measure`,
+outcomes baselined; without it a rung's gate is a compile count (§3).
+
+| rung | decision (sge) | mechanism today · §1 kind | seam / footprint | edge |
+|---|---|---|---|---|
+| L0 | universal translation on the lls base | DONE: 591 units, **57** | — | first |
+| R1 | element arrays through `MkArray` (type classes, not reflection) | `ElementWitnessTransform` + `GlobalsToImplicits.requiredGivens`, subjects = core's element-typed arrays · (b) | ~16 errors (`SnapshotArray`/`DelayedRemovalArray` ctors, `Queue`, `Octree`, `BufferedParticleBatch`); `witness` 147 = 133 `OccupancySentinel` (K41, refused by design: null-as-empty tables keep the bound) + 13 `NonSubject` + 1 | largest seam, first |
+| R2 | collections onto lls, `Comparator -> Ordering`, JDK `Iterable`/`Iterator` shims | lls's `CollectionsTransform` policy widened to core's entry · (b) | ~30 errors (`sort(Comparator)` 8, `iterator()`/`Iterable` shims ~22); `jdk-surface` 51 (29 kept-iterable, 22 unhandled), `collection-boundary` 14 | before R4 (engine edge) |
+| R3 | properties, parenless getters, lls's added API on core's own collections | `BeanPropertyTransform`, `NullaryArityTransform`, `LlsEnrich`'s pruned kinds re-added on core's side · (b) | ~11 errors (`setItems`, `addPool`, `IdentityMap` export clash, `Tree`); 1,422 pairs / 928 nullaries; K42 operator allowlist priced 408 members | after R2 |
+| R4 | `@Null -> lowlevel.Nullable` | `NullabilityTransform(Named)` scoped to core; `nullableMembers` (K13.6) as core policy · (b) | `nullability-boundary` 685 = 684 `ScopedOut` (the deferred population) + 1 `UncoercibleSeam`; 650 `@Null`; K13.8 open (scope splits an override component) | after R2 |
+| R5 | no runtime reflection; `Json`/`Xml` dropped (sge skipped them; the demo's codec is a hand-written injection) | `RegistryTransform` (P10), `ClassTableTransform`, `dropTypes reflect.*`+`Json` (23 files), injected codec · (b)+(c) | `portability(emitted)` 153: `reflect.Field` 13, `ClassReflection` 13, `Method` 9, `Modifier` 16, `Constructor` 7, `ArrayReflection` 4; 54 reflective calls / 17 files (§13.27) | before JS/Native; free vs R6 |
+| R6 | JNI -> Panama (JVM), Scala Native `@extern`, Android via sge's PanamaPort | `PanamaFfiTransform` JVM downcalls · (b); **GAP**: Native-side emission, `nativeLibraries` key | 59 natives (`@scala.native` today) | before Native; free vs R5 |
+| R7 | `Disposable -> AutoCloseable`; class renames (`Gdx -> Sge`, `DefaultPool -> Pool.Default`, `FlushablePool -> Pool.Flushable`, `QuadTreeFloat -> Pool.QuadTreeFloat`, `Files.FileType -> sge.files.FileType`); member renames | `MemberRenameTransform`, `typeRenames`, `subPackages` · (b) | 147 sites | free among R7–R9 |
+| R8 | opaque domains (`Align`, `Seconds`, GL handles…) | `PrimitiveToOpaqueTransform` · (b) | 32 opaque types in sge, 3 configured today | free |
+| R9 | `GdxRuntimeException -> SgeError`, `SerializationException -> SgeError.SerializationError`, `SgeError.Unsupported` at every unsupported-capability site | rename + injected `SgeError` · (b)+(c); the convention itself is backend policy | 650 sites; `NetJavaImpl` 14 + `ServerSocket` 4 portability rows are `Unsupported` off-JVM | free |
+| R10 | implicit `Sge` context instead of `Gdx` globals | `GlobalsToImplicitsTransform` · (b); CT7 (framework-instantiated classes) | 267 reads / 79 files + 336 `Gdx.gl` | LATE: constructor signatures move every backend |
+| R11 | `Pool` as a trait, adapters collapsed | `ClassToTraitTransform` (AD-003, CT12) · (b) | `Pool` only | after R7 |
+| R12 | async -> `Future` (Gears/Ox structured; Scala.js WASM later) | **GAP**: no phase; hand-written where the demo needs it | `thread` 13, `AsyncExecutor` 6, `AtomicQueue` 7, `AtomicInteger` 6 portability rows | before JS (no threads) |
+| R13 | JS + Native compile and TEST gates on | lanes exist (`.js`/`.native` counts) · (a) | — | after R5, R6, R12 |
+| R14 | backends: desktop (Panama/GLFW), browser (DOM), android | per-platform source sets from gdx's backends (71 backend-derived files in sge core) · **GAP** `PortManifest.platformDirs` (b) | — | after R13 |
+| R15 | demo game; Scala 3.9.0 bump (own wave, all lanes move) | — | — | last |
+
+Open beside the rungs: (i) NAMESPACE — core's utilities lls does not carry land in `lowlevel.*`
+through the inherited rename (`lowlevel.util.Json`, `Queue`, `Pool`); a destination decision
+(`sge.utils`?) before R7's renames; (ii) the old full-policy `sge` port and its nine dependents still
+run in every batch under the retired parity bar — retire or keep as the regression reference, a
+maintainer call; (iii) sge's "a few more decisions" (R7's rename list is what `type-mappings.md`
+records; nothing else found in `docs/architecture` beyond the platform matrix and the WASM note).
