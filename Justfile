@@ -5710,7 +5710,7 @@ demo-check:
     . scripts/_lib.sh
     REPORT="$ROOT/port-report/DemoCheck"
     mkdir -p "$MEASURE_TMP" "$REPORT/run-latest"
-    echo "-- demos: ${DEMO_CHECK:-pong} (+ shared) against ported/sge-l0 --"
+    echo "-- demos: ${DEMO_CHECK:-all twelve} (+ shared) against ported/sge-l0 --"
     sbt_compile "demo-checkJVM/compile" "$MEASURE_TMP"/democheck.txt
     ERRORS=$SBT_ERRORS
     compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/democheck.txt

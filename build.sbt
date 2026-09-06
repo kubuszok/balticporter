@@ -1322,7 +1322,8 @@ lazy val root = project
 // The GOAL's instrument (PROGRESS.md 13.29, standing order 1): sge's demo GAME code — the
 // platform-agnostic `src/main/scala` of a demo plus `demos/shared` — compiled against the ladder
 // port. Compile only, JVM only; the launchers (`scaladesktop`, `scalajs`, `scala-android`) are the
-// backends' step. `DEMO_CHECK` names the demos (default: pong).
+// backends' step. `DEMO_CHECK` narrows the demos (default: all twelve, PROGRESS.md §13.29).
+val DemoCheckAll = "pong,space-shooter,hex-tactics,tile-world,viewer-3d,particle-show,shader-lab,net-chat,game-screens,curve-playground,asset-showcase,viewport-gallery"
 lazy val `demo-check` = (projectMatrix in file("ported/demo-check"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
   .dependsOn(`port-sge-l0`)
@@ -1332,7 +1333,7 @@ lazy val `demo-check` = (projectMatrix in file("ported/demo-check"))
     maxErrors := 100000,
     Compile / unmanagedSourceDirectories ++= {
       val demos = (ThisBuild / baseDirectory).value / ".." / "sge" / "demos"
-      val picked = sys.env.getOrElse("DEMO_CHECK", "pong").split(',').map(_.trim).filter(_.nonEmpty).toSeq
+      val picked = sys.env.getOrElse("DEMO_CHECK", DemoCheckAll).split(',').map(_.trim).filter(_.nonEmpty).toSeq
       ("shared" +: picked).map(d => demos / d / "src" / "main" / "scala")
     },
     Compile / scalacOptions += s"-Xmacro-settings:balticporter.ladderNonce=${System.nanoTime}",
