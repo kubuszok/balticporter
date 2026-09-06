@@ -53,11 +53,14 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
 
   // ---- policy, bound before the pipeline starts ---------------------------------------------
 
-  /** Types the base SUBSTITUTED — detection skips these owners (D14, §1.5). */
+  /** Types the base or this module SUBSTITUTED — detection skips these owners (D14, §1.5). */
   private var substitutedOwners: Set[String] = Set.empty
+  /** which units this run emits: a base's declaration keeps its arity, read literally (K51). */
+  private var runScope: RunScope             = RunScope.whole
 
   def bindPolicy(binder: PolicyBinder): Unit =
-    substitutedOwners = binder.run.baseSubstitutedOwners
+    runScope          = binder.run
+    substitutedOwners = binder.run.baseSubstitutedOwners ++ binder.run.ownSubstitutedOwners
 
   // ---- the run --------------------------------------------------------------------------
 
@@ -85,6 +88,11 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
             refuse(program, s.id, "StaticMember",
               "a java `static` is emitted onto the companion, where the arity this phase mints is " +
               "not the one the call sites it cannot see were written against")
+          // a declaration in a unit this run does not EMIT — the base's; its arity is published (K51)
+          else if !runScope.emitsSymbol(program, s.id) then
+            refuse(program, s.id, "NotEmitted",
+              "this run emits no declaration for it (a base's unit): its arity is the base's " +
+              "published fact, read literally, and not this module's to move")
           // owners the base SUBSTITUTED — the injected shim's members were never renamed (D14, §1.5)
           else if substitutedOwners.contains(ownerFqn) then
             refuse(program, s.id, "SubstitutedOwner",

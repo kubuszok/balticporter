@@ -559,6 +559,9 @@ gdx-l0-measure:
     . scripts/_lib.sh
     write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{gdx_src}}"
     REPORT="$ROOT/port-report/LibgdxL0Migrate"
+    # a zinc clean BEFORE the migrator (it deletes src_managed): the base's tree moves under this
+    # port, and an incremental compile read six stale sites as 0 errors (PROGRESS.md §13.29)
+    _sbt_run "port-sge-l0JVM/clean" >/dev/null 2>&1
     MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxL0Migrate --steps={{gdx_steps}}" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$MIGRATE_OUT"; then
       echo "!! MIGRATION DID NOT RUN — refusing to measure stale output"

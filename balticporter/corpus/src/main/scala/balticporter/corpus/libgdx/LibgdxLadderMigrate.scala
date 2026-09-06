@@ -317,7 +317,10 @@ object LibgdxLadder:
       dropTypes      = StepOrder.filter(steps).flatMap(stepTypeDrops).toSet,
       dropMethods    = StepOrder.filter(steps).flatMap(stepDrops).toSet,
       inject         = StepOrder.filter(steps).flatMap(stepInjects(repoRoot)),
-      surface        = StepOrder.filter(steps).flatMap(stepsFor(steps)(_)),
+      // a dependent FOLLOWS the base's published member spellings (`first()` -> `first`, D14): the
+      // port-map follow reads what lls PUBLISHED, never re-derives it (CLAUDE.md §1.5).
+      surface        = balticporter.transform.PortMapTransform.forBases("lls") ::
+                       StepOrder.filter(steps).flatMap(stepsFor(steps)(_)),
       packageRenames = Map("com.badlogic.gdx" -> "sge"),
       typeRenames    = Map("com.badlogic.gdx.scenes.scene2d.ui.List" -> "SgeList"),
       resources      = List(ResourceTree(

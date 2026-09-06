@@ -502,3 +502,24 @@ class NullaryArityTransformSpec extends munit.FunSuite:
     val defn = sym.flatMap(s => after.definitionOf(s.id)).collect { case d: Tree.DefDef => d }
     assert(defn.exists(_.paramss.nonEmpty), "the method must keep its empty parameter clause")
   }
+
+  test("a declaration in a unit this run does not EMIT keeps its arity — refused as NotEmitted (K51)") {
+    val base = """package com.base;
+                 |public class Box { public int width () { return 1; } }
+                 |""".stripMargin
+    val demo = """package com.demo;
+                 |class Use { int go (com.base.Box b) { return b.width(); } int size () { return 2; } }
+                 |""".stripMargin
+    val before = SpoonTir.fromSources(List("Box.java" -> base, "Use.java" -> demo))
+    val theirs = before.units.map(_.symbol).filter(u => before.symbolOf(u).exists(_.fullName == "com.base.Box")).toSet
+    val phase  = new NullaryArityTransform(everywhere)
+    val idioms = new IdiomLog
+    val (after, _) = Pipeline.runTraced(before, List(phase),
+      new PolicyBinder(before, before.members, RunScope.of(emitted = before.units.map(_.symbol).toSet -- theirs, own = Map.empty)),
+      balticporter.catalog.CatalogLog.discarding, RewriteLog(), idioms)
+    val out = new TirEmitter(after).emit
+    assert(out.contains("b.width()"), out)
+    assert(out.contains("def size: scala.Int"), out)
+    val guards = idioms.all.collect { case c if c.kind == IdiomKind.NullaryArity => c.verdict }.collect { case IdiomVerdict.Refused(g, _) => g }
+    assert(guards.contains("NotEmitted"), guards.toString)
+  }

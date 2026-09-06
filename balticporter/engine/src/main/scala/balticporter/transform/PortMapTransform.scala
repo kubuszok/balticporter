@@ -213,7 +213,8 @@ final class PortMapTransform(maps: List[PortMap.Map0] = Nil) extends Phase, Poli
         }
         followEntries ++ extra.toList
 
-    if followEntriesWithFallback.isEmpty then return program
+    // no early return here: a FORM-only entry (`first()` -> `first`) has no name to follow and is
+    // handled by the parenless pass below, which was unreachable behind one (K51).
 
     // owned symbols go through MemberRenamer (full override-component handling); unowned base
     // members are renamed directly, since MemberRenamer refuses symbols this program declares.

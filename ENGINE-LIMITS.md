@@ -1889,3 +1889,21 @@ Residue, counted: `opaque-boundary` 1 -> 15 (`Math.abs`/`max`/`min`, `DataOutput
 the test port's `base-surface` 0 -> 10 (`unanswered`: a published primary naming `Pixels`, which
 the dependent's local derivation cannot resolve — it compiles and runs, 216/4 held). All §1(a).
 Specs: `OpaqueExternalCalleeSpec` (the non-emitted hub).
+Three more, found the same evening when the properties step forced a CLEAN compile:
+(v) six calls into `lls` members the base publishes PARENLESS (`ObjectSet.first`, `OrderedSet.orderedItems`)
+were emitted `first()` — `PortMapTransform`'s parenless pass sat behind `if followEntries.isEmpty
+then return program`, and a form-only entry has no name to follow, so the pass never ran on any port
+whose base renamed nothing (dead since it was written; `PortMapFollowSpec`). The ladder port had no
+`PortMapTransform.forBases("lls")` at all — a dependent FOLLOWS the base's spellings through it (D14).
+(vi) those six read as 0 errors for a whole day: the lane compiled INCREMENTALLY and zinc never
+revisited the sites after the base's tree moved under them. `gdx-l0-measure` runs a zinc clean of
+the port BEFORE its migrator (a clean between migrator and compile deletes `src_managed`); the test
+lane must NOT clean — `Test/clean` deleted the main tree, 1148 errors. A dependent's lane without a
+clean measures the last full compile, not the port. (vii) the follow's own check reports what it
+cannot resolve: `port-map` 0 -> 102 (75 `Ambiguous`: `new Array(n)` against a base map holding both
+a `Dropped` `Array(Class)` and a `Renamed` `Array(MkArray)`; 27 `DroppedType`: `Collections`,
+which this module REDIRECTS to `lowlevel.util.Collections`, a replacement the check does not read).
+Counted, 0 errors beside them; a check reading the base's map owes the dependent's redirects.
+(viii) `BeanPropertyTransform`/`NullaryArityTransform` derived on the BASE's declarations (`isEmpty`
+-> `empty` on lls's `Array`, 7 errors; `getFree()` on this module's own injected `Pool`, 4): both now
+skip a unit this run does not emit (`NotEmitted`, counted) and the module's OWN substitutions.

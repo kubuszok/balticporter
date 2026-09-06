@@ -126,11 +126,14 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
   private var bound: Map[String, List[PolicyBinder.Hit]] = Map.empty
   private var records: List[PolicyBinder.Record]         = Nil
   private var ownFindings: List[PolicyFinding]           = Nil
-  /** Types the base SUBSTITUTED — detection skips these owners (D14, §1.5). */
+  /** Types the base or this module SUBSTITUTED — detection skips these owners (D14, §1.5). */
   private var substitutedOwners: Set[String]             = Set.empty
+  /** which units this run emits: a base's declaration is read literally, never derived on (K51). */
+  private var runScope: RunScope                         = RunScope.whole
 
   def bindPolicy(binder: PolicyBinder): Unit =
-    substitutedOwners = binder.run.baseSubstitutedOwners
+    runScope          = binder.run
+    substitutedOwners = binder.run.baseSubstitutedOwners ++ binder.run.ownSubstitutedOwners
     val (entries, malformed) = BeanPropertyTransform.parse(pairs)
     parsed      = entries
     ownFindings = malformed
@@ -203,7 +206,7 @@ final class BeanPropertyTransform(pairs: Map[String, String] = Map.empty,
         val configuredPropertyKeys: Set[String] = pairs.keySet
         val detected = BeanPropertyTransform.detect(program, graph, scope,
           configuredAccessors, configuredPropertyKeys,
-          substitutedOwners,
+          substitutedOwners, emitted = s => runScope.emitsSymbol(program, s),
           isVoid = (p, t) => isVoid(p, t), headOf = t => headOf(t),
           callsAreRewritable = (comp, ar) =>
             comp.forall(s => program.usages(s).forall {
@@ -640,10 +643,11 @@ object BeanPropertyTransform:
     * type). A configured pair at the same key wins; each candidate goes through the same shape
     * checks as the configured path, filing a refusal as `IdiomKind.BeanDetect` with its guard.
     * @param substitutedOwners upstream FQNs of types the base SUBSTITUTED — skipped so a rename
-    *                          the injected file did not perform is not applied (D14). */
+    *                          the injected file did not perform is not applied (D14).
+    * @param emitted does this run emit the owner's unit — a base's is skipped (K51). */
   def detect(program: Program, graph: OverrideGraph, scope: RuleScope,
              configuredAccessors: Set[String], configuredPropertyKeys: Set[String],
-             substitutedOwners: Set[String],
+             substitutedOwners: Set[String], emitted: SymId => Boolean,
              isVoid: (Program, TypeRepr) => Boolean,
              headOf: TypeRepr => Option[SymId],
              callsAreRewritable: (Set[SymId], Int) => Boolean,
@@ -672,7 +676,7 @@ object BeanPropertyTransform:
       val ownerSymObj = program.symbolOf(ownerSym)
       val ownerFqn = ownerSymObj.map(_.fullName).getOrElse("")
       // skip types the base SUBSTITUTED — their members are java's, not the injected Scala (D14, §1.5)
-      if !substitutedOwners.contains(ownerFqn) && ownerSymObj.exists(o => scope.includes(program, o)) then
+      if !substitutedOwners.contains(ownerFqn) && emitted(ownerSym) && ownerSymObj.exists(o => scope.includes(program, o)) then
 
         // nilary methods matching get[A-Z]* or is[A-Z]*
         val getterCandidates = members.flatMap { s =>
