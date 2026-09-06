@@ -163,6 +163,10 @@ object LibgdxLadder:
         attach   = balticporter.transform.ContextAttach.Class,
         reader   = balticporter.transform.ContextReader.Summon,
         boundary = balticporter.transform.ContextBoundary.Refuse,
+        // `Pixmap.dispose` is left OUT of the closure so the class takes no clause (sge's `Pixmap` is
+        // context-free, `Pixmap(w, h, format)` in the demos; its statics still take one); the
+        // `Gdx.app.error` inside stays a counted residual global read.
+        scope    = balticporter.tir.RuleScope.Everywhere(Set("com.badlogic.gdx.graphics.Pixmap#dispose")),
         sites    = Map(
           "com.badlogic.gdx.scenes.scene2d.ui.TextField#DEFAULT_ONSCREEN_KEYBOARD" -> balticporter.transform.ContextSite.LazyInit,
           "com.badlogic.gdx.scenes.scene2d.ui.Table#cellPool" -> balticporter.transform.ContextSite.LazyInit))))),

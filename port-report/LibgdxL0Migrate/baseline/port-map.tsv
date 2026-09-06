@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=d8dd5d3dd337ae2b	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=64e97ab40b9bfe47	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -3611,18 +3611,18 @@ member	com.badlogic.gdx.graphics.PerspectiveCamera#fieldOfView	sge.graphics.Pers
 member	com.badlogic.gdx.graphics.PerspectiveCamera#tmp	sge.graphics.PerspectiveCamera#tmp	Renamed	-	com/badlogic/gdx/graphics/PerspectiveCamera.java	46	5eff5e3d478f49da	
 member	com.badlogic.gdx.graphics.PerspectiveCamera#update()	sge.graphics.PerspectiveCamera#update()	Renamed	-	com/badlogic/gdx/graphics/PerspectiveCamera.java	49	92d2031063d86ebf	
 member	com.badlogic.gdx.graphics.PerspectiveCamera#update(boolean)	sge.graphics.PerspectiveCamera#update(boolean)	Renamed	-	com/badlogic/gdx/graphics/PerspectiveCamera.java	54	e849711fbd1b2afb	
-member	com.badlogic.gdx.graphics.Pixmap#<init>(Array,int,int,Sge)	sge.graphics.Pixmap#<init>(Array<byte>,int,int,Sge)	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	148	adc430fae734c1c6	
-member	com.badlogic.gdx.graphics.Pixmap#<init>(ByteBuffer,Sge)	sge.graphics.Pixmap#<init>(ByteBuffer,Sge)	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	177	eb561c0ab47c90db	
-member	com.badlogic.gdx.graphics.Pixmap#<init>(ByteBuffer,int,int,Sge)	sge.graphics.Pixmap#<init>(ByteBuffer,int,int,Sge)	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	162	ff6522b4f66956be	
-member	com.badlogic.gdx.graphics.Pixmap#<init>(FileHandle,Sge)	sge.graphics.Pixmap#<init>(FileHandle,Sge)	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	185	55f8f26e74833460	
-member	com.badlogic.gdx.graphics.Pixmap#<init>(Gdx2DPixmap,Sge)	sge.graphics.Pixmap#<init>(Gdx2DPixmap,Sge)	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	196	c1f95f39382cef26	
-member	com.badlogic.gdx.graphics.Pixmap#<init>(int,int,Format,Sge)	sge.graphics.Pixmap#<init>(int,int,Format,Sge)	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	136	1f3583f7fcdf0c9e	
+member	com.badlogic.gdx.graphics.Pixmap#<init>(Array,int,int)	sge.graphics.Pixmap#<init>(Array<byte>,int,int)	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	148	e165376d91a84ed4	
+member	com.badlogic.gdx.graphics.Pixmap#<init>(ByteBuffer)	sge.graphics.Pixmap#<init>(ByteBuffer)	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	177	9f53bff75a6879bf	
+member	com.badlogic.gdx.graphics.Pixmap#<init>(ByteBuffer,int,int)	sge.graphics.Pixmap#<init>(ByteBuffer,int,int)	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	162	bbfd2cd911a89e99	
+member	com.badlogic.gdx.graphics.Pixmap#<init>(FileHandle)	sge.graphics.Pixmap#<init>(FileHandle)	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	185	d9048e0a9226cfe1	
+member	com.badlogic.gdx.graphics.Pixmap#<init>(Gdx2DPixmap)	sge.graphics.Pixmap#<init>(Gdx2DPixmap)	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	196	1efd0e5a7412313e	
+member	com.badlogic.gdx.graphics.Pixmap#<init>(int,int,Format)	sge.graphics.Pixmap#<init>(int,int,Format)	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	136	8d7ce0246140ccde	
 member	com.badlogic.gdx.graphics.Pixmap#getGLFormat()	sge.graphics.Pixmap#GLFormat	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	426	37156d1193c8a3f5	form=parenless
 member	com.badlogic.gdx.graphics.Pixmap#getGLInternalFormat()	sge.graphics.Pixmap#GLInternalFormat	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	433	abf85f1f4819e553	form=parenless
 member	com.badlogic.gdx.graphics.Pixmap#getGLType()	sge.graphics.Pixmap#GLType	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	440	047939f1f34a871c	form=parenless
 member	com.badlogic.gdx.graphics.Pixmap#getBlending	sge.graphics.Pixmap#blending	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	109	8c660ec7b44e9eb2	name=blending$field
 member	com.badlogic.gdx.graphics.Pixmap#getBlending()	sge.graphics.Pixmap#blending	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	468	11ce0767c8bd038b	form=parenless
-member	com.badlogic.gdx.graphics.Pixmap#dispose()	sge.graphics.Pixmap#close()	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	393	f6793ebe4dd39dd4	
+member	com.badlogic.gdx.graphics.Pixmap#dispose()	sge.graphics.Pixmap#close()	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	393	3dc1580a37ef3daa	
 member	com.badlogic.gdx.graphics.Pixmap#color	sge.graphics.Pixmap#color	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	113	37b1f1f443551099	
 member	com.badlogic.gdx.graphics.Pixmap#createFromFrameBuffer(int,int,int,int,Sge)	sge.graphics.Pixmap#createFromFrameBuffer(int,int,int,int,Sge)	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	99	7e14f28ff91fde3f	placement=companion
 member	com.badlogic.gdx.graphics.Pixmap#isDisposed	sge.graphics.Pixmap#disposed	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	115	63f4cc51b2dc964d	name=disposed$field
@@ -3660,12 +3660,12 @@ member	com.badlogic.gdx.graphics.Pixmap$Format#fromGdx2DPixmapFormat(int)	sge.gr
 member	com.badlogic.gdx.graphics.Pixmap$Format#toGdx2DPixmapFormat(Format)	sge.graphics.Pixmap$Format#toGdx2DPixmapFormat(Format)	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	50	b2b06662ca66086e	placement=companion
 member	com.badlogic.gdx.graphics.Pixmap$Format#toGlFormat(Format)	sge.graphics.Pixmap$Format#toGlFormat(Format)	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	71	af7eb5f66e5cec16	placement=companion
 member	com.badlogic.gdx.graphics.Pixmap$Format#toGlType(Format)	sge.graphics.Pixmap$Format#toGlType(Format)	Renamed	-	com/badlogic/gdx/graphics/Pixmap.java	75	8c6d1b560d208bbe	placement=companion
-member	com.badlogic.gdx.graphics.PixmapIO#readCIM(FileHandle,Sge)	sge.graphics.PixmapIO#readCIM(FileHandle,Sge)	Renamed	-	com/badlogic/gdx/graphics/PixmapIO.java	55	55bc9431c57cb695	placement=companion
+member	com.badlogic.gdx.graphics.PixmapIO#readCIM(FileHandle)	sge.graphics.PixmapIO#readCIM(FileHandle)	Renamed	-	com/badlogic/gdx/graphics/PixmapIO.java	55	109ffbf3a688fe9a	placement=companion
 member	com.badlogic.gdx.graphics.PixmapIO#writeCIM(FileHandle,Pixmap)	sge.graphics.PixmapIO#writeCIM(FileHandle,Pixmap)	Renamed	-	com/badlogic/gdx/graphics/PixmapIO.java	48	505c3ebc07ccf5cc	placement=companion
 member	com.badlogic.gdx.graphics.PixmapIO#writePNG(FileHandle,Pixmap)	sge.graphics.PixmapIO#writePNG(FileHandle,Pixmap)	Renamed	-	com/badlogic/gdx/graphics/PixmapIO.java	79	112591e9367ec073	placement=companion
 member	com.badlogic.gdx.graphics.PixmapIO#writePNG(FileHandle,Pixmap,int,boolean)	sge.graphics.PixmapIO#writePNG(FileHandle,Pixmap,int,boolean)	Renamed	-	com/badlogic/gdx/graphics/PixmapIO.java	62	d071622a7fe6ab88	placement=companion
 member	com.badlogic.gdx.graphics.PixmapIO$CIM#BUFFER_SIZE	sge.graphics.PixmapIO$CIM#BUFFER_SIZE	Renamed	-	com/badlogic/gdx/graphics/PixmapIO.java	85	5ded527fa7e1b3f8	placement=companion vis=private[PixmapIO]
-member	com.badlogic.gdx.graphics.PixmapIO$CIM#read(FileHandle,Sge)	sge.graphics.PixmapIO$CIM#read(FileHandle,Sge)	Renamed	-	com/badlogic/gdx/graphics/PixmapIO.java	125	a8cd2b5d8e1c6613	placement=companion
+member	com.badlogic.gdx.graphics.PixmapIO$CIM#read(FileHandle)	sge.graphics.PixmapIO$CIM#read(FileHandle)	Renamed	-	com/badlogic/gdx/graphics/PixmapIO.java	125	6def3551077fcbc2	placement=companion
 member	com.badlogic.gdx.graphics.PixmapIO$CIM#readBuffer	sge.graphics.PixmapIO$CIM#readBuffer	Renamed	-	com/badlogic/gdx/graphics/PixmapIO.java	87	fe92c03c0df53cda	placement=companion vis=private[PixmapIO]
 member	com.badlogic.gdx.graphics.PixmapIO$CIM#write(FileHandle,Pixmap)	sge.graphics.PixmapIO$CIM#write(FileHandle,Pixmap)	Renamed	-	com/badlogic/gdx/graphics/PixmapIO.java	89	e911da131430ee5c	placement=companion
 member	com.badlogic.gdx.graphics.PixmapIO$CIM#writeBuffer	sge.graphics.PixmapIO$CIM#writeBuffer	Renamed	-	com/badlogic/gdx/graphics/PixmapIO.java	86	5af9d7e218be8035	placement=companion vis=private[PixmapIO]
@@ -8421,7 +8421,7 @@ member	com.badlogic.gdx.graphics.glutils.CustomTexture3DData#getWidth()	sge.grap
 member	com.badlogic.gdx.graphics.glutils.ETC1#ETC1_RGB8_OES	sge.graphics.glutils.ETC1#ETC1_RGB8_OES	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	41	2e16ad5aab109468	placement=companion
 member	com.badlogic.gdx.graphics.glutils.ETC1#PKM_HEADER_SIZE	sge.graphics.glutils.ETC1#PKM_HEADER_SIZE	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	40	ec9527687453c179	placement=companion
 member	com.badlogic.gdx.graphics.glutils.ETC1#decodeImage(ByteBuffer,int,ByteBuffer,int,Pixels,Pixels,int)	sge.graphics.glutils.ETC1#decodeImage(ByteBuffer,int,ByteBuffer,int,Pixels,Pixels,int)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	248	dc9fbf80c3507a86	placement=companion vis=private
-member	com.badlogic.gdx.graphics.glutils.ETC1#decodeImage(ETC1Data,Format,Sge)	sge.graphics.glutils.ETC1#decodeImage(ETC1Data,Format,Sge)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	174	a6db047a5aafa1ab	placement=companion
+member	com.badlogic.gdx.graphics.glutils.ETC1#decodeImage(ETC1Data,Format)	sge.graphics.glutils.ETC1#decodeImage(ETC1Data,Format)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	174	170e6efb718ab8ba	placement=companion
 member	com.badlogic.gdx.graphics.glutils.ETC1#encodeImage(ByteBuffer,int,int,int,int)	sge.graphics.glutils.ETC1#encodeImage(ByteBuffer,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	260	06b8767cef501d62	placement=companion vis=private
 member	com.badlogic.gdx.graphics.glutils.ETC1#encodeImage(Pixmap)	sge.graphics.glutils.ETC1#encodeImage(Pixmap)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	151	dfc70127e0e674a9	placement=companion
 member	com.badlogic.gdx.graphics.glutils.ETC1#encodeImagePKM(ByteBuffer,int,int,int,int)	sge.graphics.glutils.ETC1#encodeImagePKM(ByteBuffer,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/glutils/ETC1.java	274	c81887d302882b7b	placement=companion vis=private
