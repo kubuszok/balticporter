@@ -1773,3 +1773,14 @@ root, which asked **300** base contracts before any phase ran — and are answer
 injected `Collections`). Two rules it left: a base's steps SCOPE ON THE BASE'S OWN DECLARATIONS or
 the inherited surface decides the dependent's ladder (CLAUDE.md §1.5), and a refused nullability
 site keeps its annotation, so whoever narrows a port ships the annotation TYPE (K13.8 beside it).
+
+### K44. A bounded-given clause threaded onto a METHOD does not reach its OVERRIDE component — OPEN, engine (a); 2 errors on the ladder port, gone when `Json` is dropped
+
+`GlobalsToImplicitsTransform`'s bounded-given threading (the `MkArray` clause a declaration takes
+because it constructs a witness subject at its own type parameter) closes over CONSTRUCTING callers
+but not over the override graph it already builds: `Json#readValue[T]` gained `(using MkArray[T])`
+and the anonymous `new Json() { override def readValue[T](…) }` in `Skin.getJsonLoader` did not —
+**2 errors** (`E134` at the overload set, `E172` at the override's `super` call; 2026-09-06, step
+"witness", 57 -> 44 otherwise). §4.55: a signature moves over the whole override component or the
+phase refuses; an anonymous subclass is a member of that component (G29). Not fixed in place: the
+only site sits in `Json`, which the reflection step drops; re-measure when a second site appears.

@@ -1736,7 +1736,7 @@ witness/supplier ~16 (`SnapshotArray`/`DelayedRemovalArray` constructors, `Queue
 `base-surface 2 -> 0`. K37 stays OPEN; K42 stays OPEN (rides the next family re-measure).
 
 **THE STEPS (written 2026-09-06; order fixed where a measurement or an engine edge fixes it, free
-where marked; every step = a manifest FRAGMENT on `LibgdxLadder`, one lane + baseline per step).**
+where marked; every step = a manifest FRAGMENT on `LibgdxLadder`, cumulative behind `--steps=` / `DefaultSteps`; ONE port and ONE baseline, each landing a commit with before -> after).**
 Decisions are sge's (`../sge/docs/contributing/type-mappings.md`, `architecture/*.md`); the seam
 column is what L0 on the lls base measures TODAY (57 errors + residue lanes), so the first four steps
 are dictated by the base, not chosen. Gate per step: JVM errors at the seam floor the next step owns,
@@ -1748,7 +1748,7 @@ outcomes baselined; without it a step's gate is a compile count (§3). BUILT 202
 | step | decision (sge) | mechanism today · §1 kind | seam / footprint | edge |
 |---|---|---|---|---|
 | L0 | universal translation on the lls base | DONE: 591 units, **57** | — | first |
-| R1 | element arrays through `MkArray` (type classes, not reflection) | `ElementWitnessTransform` + `GlobalsToImplicits.requiredGivens`, subjects = core's element-typed arrays · (b) | ~16 errors (`SnapshotArray`/`DelayedRemovalArray` ctors, `Queue`, `Octree`, `BufferedParticleBatch`); `witness` 147 = 133 `OccupancySentinel` (K41, refused by design: null-as-empty tables keep the bound) + 13 `NonSubject` + 1 | largest seam, first |
+| R1 — **LANDED 2026-09-06, 57 -> 44** (seven subjects, six reflective constructors dropped; `witness` 147 -> 142: 129 `OccupancySentinel` refused by design, 10 `NonSubject` = the null-as-empty tables, 3 `ErasedArrayCast`; K44 opened for the 2 `Json`/`Skin` override rows) | element arrays through `MkArray` (type classes, not reflection) | `ElementWitnessTransform` + `GlobalsToImplicits.requiredGivens`, subjects = core's element-typed arrays · (b) | ~16 errors (`SnapshotArray`/`DelayedRemovalArray` ctors, `Queue`, `Octree`, `BufferedParticleBatch`); `witness` 147 = 133 `OccupancySentinel` (K41, refused by design: null-as-empty tables keep the bound) + 13 `NonSubject` + 1 | largest seam, first |
 | R2 | collections onto lls, `Comparator -> Ordering`, JDK `Iterable`/`Iterator` shims | lls's `CollectionsTransform` policy widened to core's entry · (b) | ~30 errors (`sort(Comparator)` 8, `iterator()`/`Iterable` shims ~22); `jdk-surface` 51 (29 kept-iterable, 22 unhandled), `collection-boundary` 14 | before R4 (engine edge) |
 | R3 | properties, parenless getters, lls's added API on core's own collections | `BeanPropertyTransform`, `NullaryArityTransform`, `LlsEnrich`'s pruned kinds re-added on core's side · (b) | ~11 errors (`setItems`, `addPool`, `IdentityMap` export clash, `Tree`); 1,422 pairs / 928 nullaries; K42 operator allowlist priced 408 members | after R2 |
 | R4 | `@Null -> lowlevel.Nullable` | `NullabilityTransform(Named)` scoped to core; `nullableMembers` (K13.6) as core policy · (b) | `nullability-boundary` 685 = 684 `ScopedOut` (the deferred population) + 1 `UncoercibleSeam`; 650 `@Null`; K13.8 open (scope splits an override component) | after R2 |

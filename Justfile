@@ -85,6 +85,7 @@ core_project  := "engine"                # holds balticporter.tir.CorrelateMain
 
 # ported modules (their emitted Scala lives in <module>/src_managed/{main,test}/scala)
 gdx_module    := "ported/sge"
+gdx_steps     := env_var_or_default("GDX_STEPS", "")   # ladder steps to apply on top of the landed set ("none" = bare); PROGRESS.md 13.29
 gdx_l0_module := "ported/sge-l0"             # rung L0 of the libGDX ladder (PROGRESS 13): universal translation only
 ashley_module := "ported/sge-ecs"
 sg_module     := "ported/sge-graphs"
@@ -558,7 +559,7 @@ gdx-l0-measure:
     . scripts/_lib.sh
     write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{gdx_src}}"
     REPORT="$ROOT/port-report/LibgdxL0Migrate"
-    MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxL0Migrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxL0Migrate --steps={{gdx_steps}}" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala files" <<<"$MIGRATE_OUT"; then
       echo "!! MIGRATION DID NOT RUN — refusing to measure stale output"
       grep -E "^\[error\].*\.scala:[0-9]+|^\[error\] +\|" <<<"$MIGRATE_OUT" | head -20
@@ -791,7 +792,7 @@ gdx-l0-test-measure:
     # ABORT if the migration did not run — the same stale-output defect fixed in `gdx-measure`: piping
     # into grep discards the exit status, so an engine that fails to COMPILE measures the PREVIOUS emit
     # and reports it as a result.
-    MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxL0TestMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxL0TestMigrate --steps={{gdx_steps}}" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
     if ! grep -qE "wrote [0-9]+ Scala test files" <<<"$MIGRATE_OUT"; then
       echo "!! TEST MIGRATION DID NOT RUN — refusing to measure stale output"
       grep -E "^\[error\].*\.scala:[0-9]+" <<<"$MIGRATE_OUT" | head -20

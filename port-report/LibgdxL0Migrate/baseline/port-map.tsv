@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=c37bf422b2b272ae	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=2da0a4089523c377	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.math.Affine2	lowlevel.math.Affine2	Renamed	-		0		companion=yes disambiguator=marker flags=final form=class parents=java.io.Serializable primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(Affine2) statics=serialVersionUID
 type	com.badlogic.gdx.math.BSpline	lowlevel.math.BSpline	Renamed	-		0		companion=yes disambiguator=marker form=class parents=lowlevel.math.Path primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(T[],int,boolean) statics=calculate,cubic,cubic_derivative,d6,derivative tparams="[T <: lowlevel.math.Vector[T]]"
@@ -38,10 +38,10 @@ type	com.badlogic.gdx.math.Intersector$MinimumTranslationVector	lowlevel.math.In
 type	com.badlogic.gdx.math.Intersector$SplitTriangle	lowlevel.math.Intersector$SplitTriangle	Renamed	-		0		form=class primary=(int) primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.math.Matrix3	lowlevel.math.Matrix3	Renamed	-		0		companion=yes disambiguator=marker form=class parents=java.io.Serializable primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(Matrix3);(float[]) statics=M00,M01,M02,M10,M11,M12,M20,M21,M22,mul,serialVersionUID
 type	com.badlogic.gdx.math.Matrix4	lowlevel.math.Matrix4	Renamed	-		0		companion=yes disambiguator=marker form=class parents=java.io.Serializable primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(Matrix4);(float[]);(Quaternion);(Vector3,Quaternion,Vector3) statics=M00,M01,M02,M03,M10,M11,M12,M13,M20,M21,M22,M23,M30,M31,M32,M33,det,inv,l_vex,l_vey,l_vez,mul,mulVec,prj,quat,quat2,right,rot,serialVersionUID,tmpForward,tmpMat,tmpUp,tmpVec
-type	com.badlogic.gdx.math.Octree	lowlevel.math.Octree	Renamed	-		0		companion=yes form=class primary=(Vector3,Vector3,int,int,Collider) primaryKind=unique-root primaryVis=public statics=Collider,RayCastResult,tmp tparams="[T <: java.lang.Object]"
-type	com.badlogic.gdx.math.Octree$Collider	lowlevel.math.Octree$Collider	Renamed	-		0		form=trait tparams="[T <: java.lang.Object]"
+type	com.badlogic.gdx.math.Octree	lowlevel.math.Octree	Renamed	-		0		companion=yes form=class primary=(Vector3,Vector3,int,int,Collider) primaryKind=unique-root primaryVis=public statics=Collider,RayCastResult,tmp tparams=[T]
+type	com.badlogic.gdx.math.Octree$Collider	lowlevel.math.Octree$Collider	Renamed	-		0		form=trait tparams=[T]
 type	com.badlogic.gdx.math.Octree$OctreeNode	lowlevel.math.Octree$OctreeNode	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public
-type	com.badlogic.gdx.math.Octree$RayCastResult	lowlevel.math.Octree$RayCastResult	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public tparams="[T <: java.lang.Object]"
+type	com.badlogic.gdx.math.Octree$RayCastResult	lowlevel.math.Octree$RayCastResult	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public tparams=[T]
 type	com.badlogic.gdx.math.Path	lowlevel.math.Path	Renamed	-		0		form=trait tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.math.Plane	lowlevel.math.Plane	Renamed	-		0		companion=yes disambiguator=marker form=class parents=java.io.Serializable primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(Vector3,float);(Vector3,Vector3);(Vector3,Vector3,Vector3) statics=PlaneSide,serialVersionUID
 type	com.badlogic.gdx.math.Plane$PlaneSide	lowlevel.math.Plane$PlaneSide	Renamed	-		0		companion=yes flags=enum form=enum parents=java.lang.Enum primary=() primaryKind=not-funnelled primaryVis=public
@@ -82,7 +82,7 @@ type	com.badlogic.gdx.utils.DataInput	lowlevel.util.DataInput	Renamed	-		0		form
 type	com.badlogic.gdx.utils.DataOutput	lowlevel.util.DataOutput	Renamed	-		0		form=class parents=java.io.DataOutputStream primary=(OutputStream) primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.DefaultPool	lowlevel.util.DefaultPool	Renamed	-		0		companion=yes form=class parents=lowlevel.util.Pool primary=(PoolSupplier,int,int) primaryKind=unique-root primaryVis=public secondaries=(PoolSupplier);(PoolSupplier,int) statics=PoolSupplier tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.utils.DefaultPool$PoolSupplier	lowlevel.util.DefaultPool$PoolSupplier	Renamed	-		0		form=trait tparams="[T <: java.lang.Object]"
-type	com.badlogic.gdx.utils.DelayedRemovalArray	lowlevel.util.DelayedRemovalArray	Renamed	-		0		companion=yes form=class parents=lowlevel.util.DynamicArray primary=() primaryKind=no-arg-root primaryVis=public secondaries=(DynamicArray);(boolean,int,Function1);(boolean,int,Class);(boolean,int);(boolean,T[],int,int);(Function1);(Class);(int);(T[]) statics=`with` tparams="[T <: java.lang.Object]"
+type	com.badlogic.gdx.utils.DelayedRemovalArray	lowlevel.util.DelayedRemovalArray	Renamed	-		0		companion=yes form=class parents=lowlevel.util.DynamicArray primary=() primaryKind=no-arg-root primaryVis=public secondaries=(DynamicArray);(boolean,int,Function1);(boolean,int);(boolean,T[],int,int);(Function1);(int);(T[]) statics=`with` tparams=[T]
 type	com.badlogic.gdx.utils.Disposable	lowlevel.util.Disposable	Renamed	-		0		form=trait
 type	com.badlogic.gdx.utils.FloatArray	lowlevel.util.FloatArray	Renamed	-		0		companion=yes disambiguator=marker form=class primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(int);(boolean,int);(FloatArray);(float[]);(boolean,float[],int,int) statics=`with`
 type	com.badlogic.gdx.utils.FlushablePool	lowlevel.util.FlushablePool	Renamed	-		0		companion=yes flags=abstract form=class parents=lowlevel.util.Pool primary=() primaryKind=no-arg-root primaryVis=public secondaries=(int);(int,int) tparams="[T <: java.lang.Object]"
@@ -178,15 +178,15 @@ type	com.badlogic.gdx.utils.Predicate$PredicateIterable	lowlevel.util.Predicate$
 type	com.badlogic.gdx.utils.Predicate$PredicateIterator	lowlevel.util.Predicate$PredicateIterator	Renamed	-		0		form=class parents=java.util.Iterator primary=(Iterator,Predicate) primaryKind=unique-root primaryVis=public secondaries=(Iterable,Predicate) tparams=[T]
 type	com.badlogic.gdx.utils.PropertiesUtils	lowlevel.util.PropertiesUtils	Renamed	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=private
 type	com.badlogic.gdx.utils.QuadTreeFloat	lowlevel.util.QuadTreeFloat	Renamed	-		0		companion=yes form=class parents=lowlevel.util.Pool$Poolable primary=(int,int) primaryKind=unique-root primaryVis=public secondaries=() statics=DISTSQR,VALUE,X,Y,pool
-type	com.badlogic.gdx.utils.Queue	lowlevel.util.Queue	Renamed	-		0		companion=yes form=class parents=java.lang.Iterable primary=(int,Function1) primaryKind=unique-root primaryVis=public secondaries=();(int);(int,Class) statics=QueueIterable,QueueIterator tparams="[T <: java.lang.Object]"
-type	com.badlogic.gdx.utils.Queue$QueueIterable	lowlevel.util.Queue$QueueIterable	Renamed	-		0		form=class parents=java.lang.Iterable primary=(Queue,boolean) primaryKind=unique-root primaryVis=public secondaries=(Queue) tparams="[T <: java.lang.Object]"
-type	com.badlogic.gdx.utils.Queue$QueueIterator	lowlevel.util.Queue$QueueIterator	Renamed	-		0		form=class parents=java.util.Iterator,java.lang.Iterable primary=(Queue,boolean) primaryKind=unique-root primaryVis=public secondaries=(Queue) tparams="[T <: java.lang.Object]"
+type	com.badlogic.gdx.utils.Queue	lowlevel.util.Queue	Renamed	-		0		companion=yes form=class parents=java.lang.Iterable primary=(int,Function1) primaryKind=unique-root primaryVis=public secondaries=();(int) statics=QueueIterable,QueueIterator tparams=[T]
+type	com.badlogic.gdx.utils.Queue$QueueIterable	lowlevel.util.Queue$QueueIterable	Renamed	-		0		form=class parents=java.lang.Iterable primary=(Queue,boolean) primaryKind=unique-root primaryVis=public secondaries=(Queue) tparams=[T]
+type	com.badlogic.gdx.utils.Queue$QueueIterator	lowlevel.util.Queue$QueueIterator	Renamed	-		0		form=class parents=java.util.Iterator,java.lang.Iterable primary=(Queue,boolean) primaryKind=unique-root primaryVis=public secondaries=(Queue) tparams=[T]
 type	com.badlogic.gdx.utils.ReflectionPool	lowlevel.util.ReflectionPool	Renamed	-		0		companion=yes form=class parents=lowlevel.util.Pool primary=(Class,int,int) primaryKind=unique-root primaryVis=public secondaries=(Class);(Class,int) tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.utils.Scaling	lowlevel.util.Scaling	Renamed	-		0		companion=yes flags=abstract form=class primary=() primaryKind=unique-root primaryVis=public statics=contain,fill,fillX,fillY,fit,none,stretch,stretchX,stretchY,temp
 type	com.badlogic.gdx.utils.ScreenUtils	lowlevel.util.ScreenUtils	Renamed	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.SerializationException	lowlevel.util.SerializationException	Renamed	-		0		form=class parents=java.lang.RuntimeException primary=(String,Throwable) primaryKind=widest-root primaryVis=public secondaries=();(String);(Throwable)
 type	com.badlogic.gdx.utils.ShortArray	lowlevel.util.ShortArray	Renamed	-		0		companion=yes disambiguator=marker form=class primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(int);(boolean,int);(ShortArray);(short[]);(boolean,short[],int,int) statics=`with`
-type	com.badlogic.gdx.utils.SnapshotArray	lowlevel.util.SnapshotArray	Renamed	-		0		companion=yes form=class parents=lowlevel.util.DynamicArray primary=() primaryKind=no-arg-root primaryVis=public secondaries=(DynamicArray);(boolean,int,Function1);(boolean,int,Class);(boolean,int);(boolean,T[],int,int);(Function1);(Class);(int);(T[]) statics=`with` tparams="[T <: java.lang.Object]"
+type	com.badlogic.gdx.utils.SnapshotArray	lowlevel.util.SnapshotArray	Renamed	-		0		companion=yes form=class parents=lowlevel.util.DynamicArray primary=() primaryKind=no-arg-root primaryVis=public secondaries=(DynamicArray);(boolean,int,Function1);(boolean,int);(boolean,T[],int,int);(Function1);(int);(T[]) statics=`with` tparams=[T]
 type	com.badlogic.gdx.utils.SortedIntList	lowlevel.util.SortedIntList	Renamed	-		0		companion=yes form=class parents=java.lang.Iterable primary=() primaryKind=unique-root primaryVis=public statics=Node,NodePool tparams="[E <: java.lang.Object]"
 type	com.badlogic.gdx.utils.SortedIntList$Iterator	lowlevel.util.SortedIntList$Iterator	Renamed	-		0		form=class parents=java.util.Iterator primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.SortedIntList$Node	lowlevel.util.SortedIntList$Node	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public tparams="[E <: java.lang.Object]"
@@ -382,7 +382,7 @@ type	com.badlogic.gdx.graphics.VertexAttributes	sge.graphics.VertexAttributes	Re
 type	com.badlogic.gdx.graphics.VertexAttributes$ReadonlyIterable	sge.graphics.VertexAttributes$ReadonlyIterable	Renamed	-		0		form=class parents=java.lang.Iterable primary=(T[]) primaryKind=unique-root primaryVis=public tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.graphics.VertexAttributes$ReadonlyIterator	sge.graphics.VertexAttributes$ReadonlyIterator	Renamed	-		0		form=class parents=java.util.Iterator,java.lang.Iterable primary=(T[]) primaryKind=unique-root primaryVis=public tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.graphics.VertexAttributes$Usage	sge.graphics.VertexAttributes$Usage	Renamed	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=public
-type	com.badlogic.gdx.graphics.g2d.Animation	sge.graphics.g2d.Animation	Renamed	-		0		companion=yes form=class primary=(float) primaryKind=synthesised-primary primaryVis=protected secondaries=(float,DynamicArray);(float,DynamicArray,PlayMode);(float,T[]) statics=PlayMode tparams="[T <: java.lang.Object]"
+type	com.badlogic.gdx.graphics.g2d.Animation	sge.graphics.g2d.Animation	Renamed	-		0		companion=yes form=class primary=(float) primaryKind=synthesised-primary primaryVis=protected secondaries=(float,DynamicArray);(float,DynamicArray,PlayMode);(float,T[]) statics=PlayMode tparams=[T]
 type	com.badlogic.gdx.graphics.g2d.Animation$PlayMode	sge.graphics.g2d.Animation$PlayMode	Renamed	-		0		companion=yes flags=enum form=enum parents=java.lang.Enum primary=() primaryKind=not-funnelled primaryVis=public
 type	com.badlogic.gdx.graphics.g2d.Batch	sge.graphics.g2d.Batch	Renamed	-		0		companion=yes form=trait parents=lowlevel.util.Disposable statics=C1,C2,C3,C4,U1,U2,U3,U4,V1,V2,V3,V4,X1,X2,X3,X4,Y1,Y2,Y3,Y4
 type	com.badlogic.gdx.graphics.g2d.BitmapFont	sge.graphics.g2d.BitmapFont	Renamed	-		0		companion=yes form=class parents=lowlevel.util.Disposable primary=(BitmapFontData,DynamicArray,boolean) primaryKind=unique-root primaryVis=public secondaries=();(boolean);(FileHandle,TextureRegion);(FileHandle,TextureRegion,boolean);(FileHandle);(FileHandle,boolean);(FileHandle,FileHandle,boolean);(FileHandle,FileHandle,boolean,boolean);(BitmapFontData,TextureRegion,boolean) statics=BitmapFontData,Glyph,LOG2_PAGE_SIZE,PAGES,PAGE_SIZE,indexOf
@@ -516,7 +516,7 @@ type	com.badlogic.gdx.graphics.g3d.particles.ParallelArray$ChannelDescriptor	sge
 type	com.badlogic.gdx.graphics.g3d.particles.ParallelArray$ChannelInitializer	sge.graphics.g3d.particles.ParallelArray$ChannelInitializer	Renamed	-		0		form=trait tparams="[T <: sge.graphics.g3d.particles.ParallelArray#Channel]"
 type	com.badlogic.gdx.graphics.g3d.particles.ParallelArray$FloatChannel	sge.graphics.g3d.particles.ParallelArray$FloatChannel	Renamed	-		0		form=class parents=sge.graphics.g3d.particles.ParallelArray$Channel primary=(int,int,int) primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.graphics.g3d.particles.ParallelArray$IntChannel	sge.graphics.g3d.particles.ParallelArray$IntChannel	Renamed	-		0		form=class parents=sge.graphics.g3d.particles.ParallelArray$Channel primary=(int,int,int) primaryKind=unique-root primaryVis=public
-type	com.badlogic.gdx.graphics.g3d.particles.ParallelArray$ObjectChannel	sge.graphics.g3d.particles.ParallelArray$ObjectChannel	Renamed	-		0		form=class parents=sge.graphics.g3d.particles.ParallelArray$Channel primary=(int,int,int,ArraySupplier) primaryKind=unique-root primaryVis=public tparams="[T <: java.lang.Object]"
+type	com.badlogic.gdx.graphics.g3d.particles.ParallelArray$ObjectChannel	sge.graphics.g3d.particles.ParallelArray$ObjectChannel	Renamed	-		0		form=class parents=sge.graphics.g3d.particles.ParallelArray$Channel primary=(int,int,int,ArraySupplier) primaryKind=unique-root primaryVis=public tparams=[T]
 type	com.badlogic.gdx.graphics.g3d.particles.ParticleChannels	sge.graphics.g3d.particles.ParticleChannels	Renamed	-		0		companion=yes form=class primary=() primaryKind=unique-root primaryVis=public statics=Acceleration,AlphaOffset,AngularVelocity2D,AngularVelocity3D,BlueOffset,Color,ColorInitializer,CosineOffset,CurrentLifeOffset,GreenOffset,HalfHeightOffset,HalfWidthOffset,Interpolation,Interpolation4,Interpolation6,InterpolationDiffOffset,InterpolationStartOffset,Life,LifePercentOffset,ModelInstance,ParticleController,Position,PreviousPosition,RedOffset,Rotation2D,Rotation2dInitializer,Rotation3D,Rotation3dInitializer,Scale,ScaleInitializer,SineOffset,TextureRegion,TextureRegionInitializer,TotalLifeOffset,U2Offset,UOffset,V2Offset,VOffset,VelocityPhiDiffOffset,VelocityPhiStartOffset,VelocityStrengthDiffOffset,VelocityStrengthStartOffset,VelocityThetaDiffOffset,VelocityThetaStartOffset,WOffset,XOffset,YOffset,ZOffset,currentGlobalId,newGlobalId
 type	com.badlogic.gdx.graphics.g3d.particles.ParticleChannels$ColorInitializer	sge.graphics.g3d.particles.ParticleChannels$ColorInitializer	Renamed	-		0		companion=yes form=class parents=sge.graphics.g3d.particles.ParallelArray$ChannelInitializer primary=() primaryKind=unique-root primaryVis=public statics=get,instance
 type	com.badlogic.gdx.graphics.g3d.particles.ParticleChannels$Rotation2dInitializer	sge.graphics.g3d.particles.ParticleChannels$Rotation2dInitializer	Renamed	-		0		companion=yes form=class parents=sge.graphics.g3d.particles.ParallelArray$ChannelInitializer primary=() primaryKind=unique-root primaryVis=public statics=get,instance
@@ -546,7 +546,7 @@ type	com.badlogic.gdx.graphics.g3d.particles.ResourceData$SaveData	sge.graphics.
 type	com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch	sge.graphics.g3d.particles.batches.BillboardParticleBatch	Renamed	-		0		companion=yes form=class parents=sge.graphics.g3d.particles.batches.BufferedParticleBatch primary=(AlignMode,boolean,int,BlendingAttribute,DepthTestAttribute) primaryKind=unique-root primaryVis=public secondaries=(AlignMode,boolean,int);();(int) statics=CPU_ATTRIBUTES,CPU_COLOR_OFFSET,CPU_POSITION_OFFSET,CPU_UV_OFFSET,CPU_VERTEX_SIZE,Config,GPU_ATTRIBUTES,GPU_COLOR_OFFSET,GPU_POSITION_OFFSET,GPU_SIZE_ROTATION_OFFSET,GPU_UV_OFFSET,GPU_VERTEX_SIZE,MAX_PARTICLES_PER_MESH,MAX_VERTICES_PER_MESH,TMP_M3,TMP_V1,TMP_V2,TMP_V3,TMP_V4,TMP_V5,TMP_V6,directionUsage,putVertex,sizeAndRotationUsage
 type	com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch$Config	sge.graphics.g3d.particles.batches.BillboardParticleBatch$Config	Renamed	-		0		companion=yes disambiguator=marker form=class primary=(boolean,AlignMode,?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(boolean,AlignMode)
 type	com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch$RenderablePool	sge.graphics.g3d.particles.batches.BillboardParticleBatch$RenderablePool	Renamed	-		0		companion=yes form=class parents=lowlevel.util.Pool primary=() primaryKind=unique-root primaryVis=public
-type	com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch	sge.graphics.g3d.particles.batches.BufferedParticleBatch	Renamed	-		0		flags=abstract form=class parents=sge.graphics.g3d.particles.batches.ParticleBatch primary=() primaryKind=not-funnelled primaryVis=public secondaries=(Class);(Function1) tparams="[T <: sge.graphics.g3d.particles.renderers.ParticleControllerRenderData]"
+type	com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch	sge.graphics.g3d.particles.batches.BufferedParticleBatch	Renamed	-		0		flags=abstract form=class parents=sge.graphics.g3d.particles.batches.ParticleBatch primary=(Function1) primaryKind=unique-root primaryVis=public tparams="[T <: sge.graphics.g3d.particles.renderers.ParticleControllerRenderData]"
 type	com.badlogic.gdx.graphics.g3d.particles.batches.ModelInstanceParticleBatch	sge.graphics.g3d.particles.batches.ModelInstanceParticleBatch	Renamed	-		0		form=class parents=sge.graphics.g3d.particles.batches.ParticleBatch primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.graphics.g3d.particles.batches.ParticleBatch	sge.graphics.g3d.particles.batches.ParticleBatch	Renamed	-		0		form=trait parents=sge.graphics.g3d.RenderableProvider,sge.graphics.g3d.particles.ResourceData$Configurable tparams="[T <: sge.graphics.g3d.particles.renderers.ParticleControllerRenderData]"
 type	com.badlogic.gdx.graphics.g3d.particles.batches.PointSpriteParticleBatch	sge.graphics.g3d.particles.batches.PointSpriteParticleBatch	Renamed	-		0		companion=yes form=class parents=sge.graphics.g3d.particles.batches.BufferedParticleBatch primary=(int,Config,BlendingAttribute,DepthTestAttribute) primaryKind=unique-root primaryVis=public secondaries=();(int);(int,Config) statics=CPU_ATTRIBUTES,CPU_COLOR_OFFSET,CPU_POSITION_OFFSET,CPU_REGION_OFFSET,CPU_SIZE_AND_ROTATION_OFFSET,CPU_VERTEX_SIZE,TMP_V1,enablePointSprites,pointSpritesEnabled,sizeAndRotationUsage
@@ -2963,15 +2963,13 @@ member	com.badlogic.gdx.utils.DefaultPool#<stmt1>	lowlevel.util.DefaultPool#<stm
 member	com.badlogic.gdx.utils.DefaultPool#newObject()	lowlevel.util.DefaultPool#newObject()	Renamed	-	com/badlogic/gdx/utils/DefaultPool.java	38	f3904f14f4230df5	
 member	com.badlogic.gdx.utils.DefaultPool#poolTypeSupplier	lowlevel.util.DefaultPool#poolTypeSupplier	Renamed	-	com/badlogic/gdx/utils/DefaultPool.java	22	609907dd057b8f74	
 member	com.badlogic.gdx.utils.DefaultPool$PoolSupplier#get()	lowlevel.util.DefaultPool$PoolSupplier#get()	Renamed	-	com/badlogic/gdx/utils/DefaultPool.java	47	fe370e924718e808	
-member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(Array)	lowlevel.util.DelayedRemovalArray#<init>(Array<T>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	75	c1304937e72a0f9e	
-member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(Class)	lowlevel.util.DelayedRemovalArray#<init>(Class<?>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	67	76deedcfeda7a9f9	
-member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(DynamicArray)	lowlevel.util.DelayedRemovalArray#<init>(DynamicArray<Object>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	41	3fe2333c167fa5d3	
-member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(Function1)	lowlevel.util.DelayedRemovalArray#<init>(Function1<int,Array<T>>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	62	15734f63eb471642	
-member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(boolean,Array,int,int)	lowlevel.util.DelayedRemovalArray#<init>(boolean,Array<T>,int,int)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	58	ead7c2608c0180e8	
-member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(boolean,int)	lowlevel.util.DelayedRemovalArray#<init>(boolean,int)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	54	3333b3d176f01235	
-member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(boolean,int,Class)	lowlevel.util.DelayedRemovalArray#<init>(boolean,int,Class<?>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	50	8c327bd1f3034592	
-member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(boolean,int,Function1)	lowlevel.util.DelayedRemovalArray#<init>(boolean,int,Function1<int,Array<T>>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	45	4c748b510a4ae589	
-member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(int)	lowlevel.util.DelayedRemovalArray#<init>(int)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	71	5ac9129f4f178436	
+member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(Array,MkArray)	lowlevel.util.DelayedRemovalArray#<init>(Array<T>,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	75	1b64f42dddc8a484	
+member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(DynamicArray,MkArray)	lowlevel.util.DelayedRemovalArray#<init>(DynamicArray<Object>,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	41	450601f693de105c	
+member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(Function1,MkArray)	lowlevel.util.DelayedRemovalArray#<init>(Function1<int,Array<T>>,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	62	d32ca6b05db94d1f	
+member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(boolean,Array,int,int,MkArray)	lowlevel.util.DelayedRemovalArray#<init>(boolean,Array<T>,int,int,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	58	0ed245c307363d2a	
+member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(boolean,int,Function1,MkArray)	lowlevel.util.DelayedRemovalArray#<init>(boolean,int,Function1<int,Array<T>>,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	45	b68727bd8d329339	
+member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(boolean,int,MkArray)	lowlevel.util.DelayedRemovalArray#<init>(boolean,int,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	54	9eafe5241e5a4061	
+member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(int,MkArray)	lowlevel.util.DelayedRemovalArray#<init>(int,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	71	b7d4c860b2ba2c46	
 member	com.badlogic.gdx.utils.DelayedRemovalArray#begin()	lowlevel.util.DelayedRemovalArray#begin()	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	79	084edb05fd225a3f	
 member	com.badlogic.gdx.utils.DelayedRemovalArray#clear	lowlevel.util.DelayedRemovalArray#clear	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	35	ba4f0e0a3625d2c8	name=clear$field
 member	com.badlogic.gdx.utils.DelayedRemovalArray#clear()	lowlevel.util.DelayedRemovalArray#clear()	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	141	4e73b76f890ad5a4	
@@ -2995,7 +2993,7 @@ member	com.badlogic.gdx.utils.DelayedRemovalArray#sort()	lowlevel.util.DelayedRe
 member	com.badlogic.gdx.utils.DelayedRemovalArray#sort(Ordering)	lowlevel.util.DelayedRemovalArray#sort(Ordering<T>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	189	3a12c9fd26461afc	
 member	com.badlogic.gdx.utils.DelayedRemovalArray#swap(int,int)	lowlevel.util.DelayedRemovalArray#swap(int,int)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	164	43632b65ff1926d1	
 member	com.badlogic.gdx.utils.DelayedRemovalArray#truncate(int)	lowlevel.util.DelayedRemovalArray#truncate(int)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	204	e3a8bad33e2dcf15	
-member	com.badlogic.gdx.utils.DelayedRemovalArray#with(Array)	lowlevel.util.DelayedRemovalArray#with(Array<T>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	215	e36a41c82addbe6f	placement=companion
+member	com.badlogic.gdx.utils.DelayedRemovalArray#with(Array,MkArray)	lowlevel.util.DelayedRemovalArray#with(Array<T>,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	215	fac80fa37ac7a79a	placement=companion
 member	com.badlogic.gdx.utils.Disposable#dispose()	lowlevel.util.Disposable#dispose()	Renamed	-	com/badlogic/gdx/utils/Disposable.java	23	0946c4b716c00320	
 member	com.badlogic.gdx.utils.FloatArray#<init>()	lowlevel.util.FloatArray#<init>()	Renamed	-	com/badlogic/gdx/utils/FloatArray.java	32	bf85050fa1a35e4a	
 member	com.badlogic.gdx.utils.FloatArray#<init>(Array)	lowlevel.util.FloatArray#<init>(Array<float>)	Renamed	-	com/badlogic/gdx/utils/FloatArray.java	61	22917f3d85164e2a	
@@ -3509,7 +3507,7 @@ member	com.badlogic.gdx.utils.Json#readField(Object,String,JsonValue)	lowlevel.u
 member	com.badlogic.gdx.utils.Json#readField(Object,String,String,Class,JsonValue)	lowlevel.util.Json#readField(Object,String,String,Class<?>,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	865	82d50b33ff5db85b	
 member	com.badlogic.gdx.utils.Json#readField(Object,String,String,JsonValue)	lowlevel.util.Json#readField(Object,String,String,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	860	4423914288e4093a	
 member	com.badlogic.gdx.utils.Json#readFields(Object,JsonValue)	lowlevel.util.Json#readFields(Object,JsonValue)	Renamed	-	com/badlogic/gdx/utils/Json.java	895	b06403270746cdf1	
-member	com.badlogic.gdx.utils.Json#readValue(Class,Class,JsonValue,MkArray)	lowlevel.util.Json#readValue(Class<T>,Class<?>,JsonValue,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/Json.java	987	62bcf4f79b3300ec	
+member	com.badlogic.gdx.utils.Json#readValue(Class,Class,JsonValue,MkArray)	lowlevel.util.Json#readValue(Class<T>,Class<?>,JsonValue,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/Json.java	987	dbbcd33d3652dc91	
 member	com.badlogic.gdx.utils.Json#readValue(Class,Class,T,JsonValue,MkArray)	lowlevel.util.Json#readValue(Class<T>,Class<?>,T,JsonValue,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/Json.java	973	b0c2379c4acbed55	
 member	com.badlogic.gdx.utils.Json#readValue(Class,JsonValue,MkArray)	lowlevel.util.Json#readValue(Class<T>,JsonValue,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/Json.java	980	b7043fede0ada108	
 member	com.badlogic.gdx.utils.Json#readValue(String,Class,Class,JsonValue,MkArray)	lowlevel.util.Json#readValue(String,Class<T>,Class<?>,JsonValue,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/Json.java	958	75885be2c3885bf0	
@@ -3563,7 +3561,7 @@ member	com.badlogic.gdx.utils.Json#writeObjectStart(String,Class,Class)	lowlevel
 member	com.badlogic.gdx.utils.Json#writeType(Class)	lowlevel.util.Json#writeType(Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	768	989d159ced84b987	
 member	com.badlogic.gdx.utils.Json#writeValue(Object)	lowlevel.util.Json#writeValue(Object)	Renamed	-	com/badlogic/gdx/utils/Json.java	473	d096ff5159c4cba4	
 member	com.badlogic.gdx.utils.Json#writeValue(Object,Class)	lowlevel.util.Json#writeValue(Object,Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	483	846a405ecca2484b	
-member	com.badlogic.gdx.utils.Json#writeValue(Object,Class,Class)	lowlevel.util.Json#writeValue(Object,Class<?>,Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	492	faf7b2aaed930f3c	
+member	com.badlogic.gdx.utils.Json#writeValue(Object,Class,Class)	lowlevel.util.Json#writeValue(Object,Class<?>,Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	492	d20041ac2d97b66c	
 member	com.badlogic.gdx.utils.Json#writeValue(String,Object)	lowlevel.util.Json#writeValue(String,Object)	Renamed	-	com/badlogic/gdx/utils/Json.java	431	09a5c130b8eff4f2	
 member	com.badlogic.gdx.utils.Json#writeValue(String,Object,Class)	lowlevel.util.Json#writeValue(String,Object,Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	448	cdae326202da2666	
 member	com.badlogic.gdx.utils.Json#writeValue(String,Object,Class,Class)	lowlevel.util.Json#writeValue(String,Object,Class<?>,Class<?>)	Renamed	-	com/badlogic/gdx/utils/Json.java	462	4fbbbd2701293209	
@@ -4656,31 +4654,30 @@ member	com.badlogic.gdx.utils.QuadTreeFloat#values	lowlevel.util.QuadTreeFloat#v
 member	com.badlogic.gdx.utils.QuadTreeFloat#width	lowlevel.util.QuadTreeFloat#width	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	36	e3add5f388a29b62	
 member	com.badlogic.gdx.utils.QuadTreeFloat#x	lowlevel.util.QuadTreeFloat#x	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	36	076c81b298631b94	
 member	com.badlogic.gdx.utils.QuadTreeFloat#y	lowlevel.util.QuadTreeFloat#y	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	36	add313d36354e026	
-member	com.badlogic.gdx.utils.Queue#<init>()	lowlevel.util.Queue#<init>()	Renamed	-	com/badlogic/gdx/utils/Queue.java	45	37c37b5b6e36467a	
-member	com.badlogic.gdx.utils.Queue#<init>(int)	lowlevel.util.Queue#<init>(int)	Renamed	-	com/badlogic/gdx/utils/Queue.java	50	5bdbef15e2e052d8	
-member	com.badlogic.gdx.utils.Queue#<init>(int,Class)	lowlevel.util.Queue#<init>(int,Class<T>)	Renamed	-	com/badlogic/gdx/utils/Queue.java	58	e267093878f142d0	
+member	com.badlogic.gdx.utils.Queue#<init>(MkArray)	lowlevel.util.Queue#<init>(MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/Queue.java	45	f4b86f32b72f42b6	
+member	com.badlogic.gdx.utils.Queue#<init>(int,MkArray)	lowlevel.util.Queue#<init>(int,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/Queue.java	50	1da63c8248647d9b	
 member	com.badlogic.gdx.utils.Queue#<stmt1>	lowlevel.util.Queue#<stmt1>	Renamed	-	com/badlogic/gdx/utils/Queue.java	65	2d7dce15f4b036c7	
 member	com.badlogic.gdx.utils.Queue#addFirst(T)	lowlevel.util.Queue#addFirst(T)	Renamed	-	com/badlogic/gdx/utils/Queue.java	88	0984363a01666220	
 member	com.badlogic.gdx.utils.Queue#addLast(T)	lowlevel.util.Queue#addLast(T)	Renamed	-	com/badlogic/gdx/utils/Queue.java	70	43f67c6a7b7c70be	
-member	com.badlogic.gdx.utils.Queue#clear()	lowlevel.util.Queue#clear()	Renamed	-	com/badlogic/gdx/utils/Queue.java	312	eb6ecf55dedea163	
+member	com.badlogic.gdx.utils.Queue#clear()	lowlevel.util.Queue#clear()	Renamed	-	com/badlogic/gdx/utils/Queue.java	312	2cb78dffd4ef9d49	
 member	com.badlogic.gdx.utils.Queue#ensureCapacity(int)	lowlevel.util.Queue#ensureCapacity(int)	Renamed	-	com/badlogic/gdx/utils/Queue.java	109	a9efd6739e1c43fe	
-member	com.badlogic.gdx.utils.Queue#equals(Any)	lowlevel.util.Queue#equals(Any)	Renamed	-	com/badlogic/gdx/utils/Queue.java	398	736bb5cc6b9f141a	
-member	com.badlogic.gdx.utils.Queue#equalsIdentity(Object)	lowlevel.util.Queue#equalsIdentity(Object)	Renamed	-	com/badlogic/gdx/utils/Queue.java	428	6957418afe112278	
+member	com.badlogic.gdx.utils.Queue#equals(Any)	lowlevel.util.Queue#equals(Any)	Renamed	-	com/badlogic/gdx/utils/Queue.java	398	54b8934439d77b26	
+member	com.badlogic.gdx.utils.Queue#equalsIdentity(Object)	lowlevel.util.Queue#equalsIdentity(Object)	Renamed	-	com/badlogic/gdx/utils/Queue.java	428	ac0f048bac43eb9e	
 member	com.badlogic.gdx.utils.Queue#first()	lowlevel.util.Queue#first()	Renamed	-	com/badlogic/gdx/utils/Queue.java	269	b19322b6cb805400	
 member	com.badlogic.gdx.utils.Queue#get(int)	lowlevel.util.Queue#get(int)	Renamed	-	com/badlogic/gdx/utils/Queue.java	298	ffb8150711610045	
 member	com.badlogic.gdx.utils.Queue#hashCode()	lowlevel.util.Queue#hashCode()	Renamed	-	com/badlogic/gdx/utils/Queue.java	378	8134f480e0392a26	
 member	com.badlogic.gdx.utils.Queue#head	lowlevel.util.Queue#head	Renamed	-	com/badlogic/gdx/utils/Queue.java	33	50e1f9b52151fae8	
-member	com.badlogic.gdx.utils.Queue#indexOf(T,boolean)	lowlevel.util.Queue#indexOf(T,boolean)	Renamed	-	com/badlogic/gdx/utils/Queue.java	185	08a90591b60bd94a	
+member	com.badlogic.gdx.utils.Queue#indexOf(T,boolean)	lowlevel.util.Queue#indexOf(T,boolean)	Renamed	-	com/badlogic/gdx/utils/Queue.java	185	c9956900876534a5	
 member	com.badlogic.gdx.utils.Queue#isEmpty()	lowlevel.util.Queue#isEmpty()	Renamed	-	com/badlogic/gdx/utils/Queue.java	261	e4f329b82aa99c01	
 member	com.badlogic.gdx.utils.Queue#iterable	lowlevel.util.Queue#iterable	Renamed	-	com/badlogic/gdx/utils/Queue.java	42	5160c103891e05a8	vis=private
 member	com.badlogic.gdx.utils.Queue#iterator()	lowlevel.util.Queue#iterator()	Renamed	-	com/badlogic/gdx/utils/Queue.java	341	af2f1e80c43f4a59	
 member	com.badlogic.gdx.utils.Queue#last()	lowlevel.util.Queue#last()	Renamed	-	com/badlogic/gdx/utils/Queue.java	281	44a1290dbf876cdb	
 member	com.badlogic.gdx.utils.Queue#notEmpty()	lowlevel.util.Queue#notEmpty()	Renamed	-	com/badlogic/gdx/utils/Queue.java	256	233e50bfc6529389	
-member	com.badlogic.gdx.utils.Queue#removeFirst()	lowlevel.util.Queue#removeFirst()	Renamed	-	com/badlogic/gdx/utils/Queue.java	140	84682c77163578ce	
-member	com.badlogic.gdx.utils.Queue#removeIndex(int)	lowlevel.util.Queue#removeIndex(int)	Renamed	-	com/badlogic/gdx/utils/Queue.java	224	8635f996c7238874	
-member	com.badlogic.gdx.utils.Queue#removeLast()	lowlevel.util.Queue#removeLast()	Renamed	-	com/badlogic/gdx/utils/Queue.java	163	2c7e055d0f02e39a	
+member	com.badlogic.gdx.utils.Queue#removeFirst()	lowlevel.util.Queue#removeFirst()	Renamed	-	com/badlogic/gdx/utils/Queue.java	140	ba26c0561c98b442	
+member	com.badlogic.gdx.utils.Queue#removeIndex(int)	lowlevel.util.Queue#removeIndex(int)	Renamed	-	com/badlogic/gdx/utils/Queue.java	224	befc8c09e5175d6a	
+member	com.badlogic.gdx.utils.Queue#removeLast()	lowlevel.util.Queue#removeLast()	Renamed	-	com/badlogic/gdx/utils/Queue.java	163	309e6b94371bfe7c	
 member	com.badlogic.gdx.utils.Queue#removeValue(T,boolean)	lowlevel.util.Queue#removeValue(T,boolean)	Renamed	-	com/badlogic/gdx/utils/Queue.java	216	feee3ba615d5f1f8	
-member	com.badlogic.gdx.utils.Queue#resize(int)	lowlevel.util.Queue#resize(int)	Renamed	-	com/badlogic/gdx/utils/Queue.java	117	6b4fe9c1347f286b	
+member	com.badlogic.gdx.utils.Queue#resize(int)	lowlevel.util.Queue#resize(int)	Renamed	-	com/badlogic/gdx/utils/Queue.java	117	7cdba9aa75545527	
 member	com.badlogic.gdx.utils.Queue#size	lowlevel.util.Queue#size	Renamed	-	com/badlogic/gdx/utils/Queue.java	40	2a7785a4d1c6e9f7	
 member	com.badlogic.gdx.utils.Queue#tail	lowlevel.util.Queue#tail	Renamed	-	com/badlogic/gdx/utils/Queue.java	37	059a71775e45c710	
 member	com.badlogic.gdx.utils.Queue#toString()	lowlevel.util.Queue#toString()	Renamed	-	com/badlogic/gdx/utils/Queue.java	347	22458a2cea75862d	
@@ -4799,18 +4796,16 @@ member	com.badlogic.gdx.utils.ShortArray#toString()	lowlevel.util.ShortArray#toS
 member	com.badlogic.gdx.utils.ShortArray#toString(String)	lowlevel.util.ShortArray#toString(String)	Renamed	-	com/badlogic/gdx/utils/ShortArray.java	456	ece268341c25fcd1	
 member	com.badlogic.gdx.utils.ShortArray#truncate(int)	lowlevel.util.ShortArray#truncate(int)	Renamed	-	com/badlogic/gdx/utils/ShortArray.java	402	e1cdeaf71282d6fa	
 member	com.badlogic.gdx.utils.ShortArray#with(Array)	lowlevel.util.ShortArray#with(Array<short>)	Renamed	-	com/badlogic/gdx/utils/ShortArray.java	469	316a33096f8d327f	placement=companion
-member	com.badlogic.gdx.utils.SnapshotArray#<init>(Array)	lowlevel.util.SnapshotArray#<init>(Array<T>)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	86	c1304937e72a0f9e	
-member	com.badlogic.gdx.utils.SnapshotArray#<init>(Class)	lowlevel.util.SnapshotArray#<init>(Class<?>)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	78	27de34a2140ca608	
-member	com.badlogic.gdx.utils.SnapshotArray#<init>(DynamicArray)	lowlevel.util.SnapshotArray#<init>(DynamicArray<Object>)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	52	3fe2333c167fa5d3	
-member	com.badlogic.gdx.utils.SnapshotArray#<init>(Function1)	lowlevel.util.SnapshotArray#<init>(Function1<int,Array<T>>)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	73	15734f63eb471642	
-member	com.badlogic.gdx.utils.SnapshotArray#<init>(boolean,Array,int,int)	lowlevel.util.SnapshotArray#<init>(boolean,Array<T>,int,int)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	69	ead7c2608c0180e8	
-member	com.badlogic.gdx.utils.SnapshotArray#<init>(boolean,int)	lowlevel.util.SnapshotArray#<init>(boolean,int)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	65	3333b3d176f01235	
-member	com.badlogic.gdx.utils.SnapshotArray#<init>(boolean,int,Class)	lowlevel.util.SnapshotArray#<init>(boolean,int,Class<?>)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	61	fea19b90b6ee3b21	
-member	com.badlogic.gdx.utils.SnapshotArray#<init>(boolean,int,Function1)	lowlevel.util.SnapshotArray#<init>(boolean,int,Function1<int,Array<T>>)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	56	4c748b510a4ae589	
-member	com.badlogic.gdx.utils.SnapshotArray#<init>(int)	lowlevel.util.SnapshotArray#<init>(int)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	82	5ac9129f4f178436	
+member	com.badlogic.gdx.utils.SnapshotArray#<init>(Array,MkArray)	lowlevel.util.SnapshotArray#<init>(Array<T>,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	86	1b64f42dddc8a484	
+member	com.badlogic.gdx.utils.SnapshotArray#<init>(DynamicArray,MkArray)	lowlevel.util.SnapshotArray#<init>(DynamicArray<Object>,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	52	450601f693de105c	
+member	com.badlogic.gdx.utils.SnapshotArray#<init>(Function1,MkArray)	lowlevel.util.SnapshotArray#<init>(Function1<int,Array<T>>,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	73	d32ca6b05db94d1f	
+member	com.badlogic.gdx.utils.SnapshotArray#<init>(boolean,Array,int,int,MkArray)	lowlevel.util.SnapshotArray#<init>(boolean,Array<T>,int,int,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	69	0ed245c307363d2a	
+member	com.badlogic.gdx.utils.SnapshotArray#<init>(boolean,int,Function1,MkArray)	lowlevel.util.SnapshotArray#<init>(boolean,int,Function1<int,Array<T>>,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	56	b68727bd8d329339	
+member	com.badlogic.gdx.utils.SnapshotArray#<init>(boolean,int,MkArray)	lowlevel.util.SnapshotArray#<init>(boolean,int,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	65	9eafe5241e5a4061	
+member	com.badlogic.gdx.utils.SnapshotArray#<init>(int,MkArray)	lowlevel.util.SnapshotArray#<init>(int,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	82	b7d4c860b2ba2c46	
 member	com.badlogic.gdx.utils.SnapshotArray#begin()	lowlevel.util.SnapshotArray#begin()	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	91	659357872faf0843	
 member	com.badlogic.gdx.utils.SnapshotArray#clear()	lowlevel.util.SnapshotArray#clear()	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	176	348edae492d971ee	
-member	com.badlogic.gdx.utils.SnapshotArray#end()	lowlevel.util.SnapshotArray#end()	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	99	08952973074ef90c	
+member	com.badlogic.gdx.utils.SnapshotArray#end()	lowlevel.util.SnapshotArray#end()	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	99	bc4579030668b608	
 member	com.badlogic.gdx.utils.SnapshotArray#insert(int,T)	lowlevel.util.SnapshotArray#insert(int,T)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	126	d8b505c51996451e	
 member	com.badlogic.gdx.utils.SnapshotArray#insertRange(int,int)	lowlevel.util.SnapshotArray#insertRange(int,int)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	131	c038981d80ce6ae0	
 member	com.badlogic.gdx.utils.SnapshotArray#modified()	lowlevel.util.SnapshotArray#modified()	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	110	1a910761ed334da7	vis=private
@@ -4832,7 +4827,7 @@ member	com.badlogic.gdx.utils.SnapshotArray#sort()	lowlevel.util.SnapshotArray#s
 member	com.badlogic.gdx.utils.SnapshotArray#sort(Ordering)	lowlevel.util.SnapshotArray#sort(Ordering<T>)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	186	8e37c5a39a3ea7f6	
 member	com.badlogic.gdx.utils.SnapshotArray#swap(int,int)	lowlevel.util.SnapshotArray#swap(int,int)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	136	0ebf2c3c2a25e240	
 member	com.badlogic.gdx.utils.SnapshotArray#truncate(int)	lowlevel.util.SnapshotArray#truncate(int)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	201	26144a25f109873f	
-member	com.badlogic.gdx.utils.SnapshotArray#with(Array)	lowlevel.util.SnapshotArray#with(Array<T>)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	212	0832ff650d630114	placement=companion
+member	com.badlogic.gdx.utils.SnapshotArray#with(Array,MkArray)	lowlevel.util.SnapshotArray#with(Array<T>,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/SnapshotArray.java	212	88275606564aa496	placement=companion
 member	com.badlogic.gdx.utils.SortedIntList#clear()	lowlevel.util.SortedIntList#clear()	Renamed	-	com/badlogic/gdx/utils/SortedIntList.java	90	efebba43029eb707	
 member	com.badlogic.gdx.utils.SortedIntList#first	lowlevel.util.SortedIntList#first	Renamed	-	com/badlogic/gdx/utils/SortedIntList.java	27	d33c5d838384360d	
 member	com.badlogic.gdx.utils.SortedIntList#get(int)	lowlevel.util.SortedIntList#get(int)	Renamed	-	com/badlogic/gdx/utils/SortedIntList.java	75	32be5914f676ac12	
@@ -6166,7 +6161,7 @@ member	com.badlogic.gdx.InputMultiplexer#keyDown(int)	sge.InputMultiplexer#keyDo
 member	com.badlogic.gdx.InputMultiplexer#keyTyped(char)	sge.InputMultiplexer#keyTyped(char)	Renamed	-	com/badlogic/gdx/InputMultiplexer.java	101	b16cdfd90570697c	
 member	com.badlogic.gdx.InputMultiplexer#keyUp(int)	sge.InputMultiplexer#keyUp(int)	Renamed	-	com/badlogic/gdx/InputMultiplexer.java	90	d76526adda19677e	
 member	com.badlogic.gdx.InputMultiplexer#mouseMoved(int,int)	sge.InputMultiplexer#mouseMoved(int,int)	Renamed	-	com/badlogic/gdx/InputMultiplexer.java	156	7fa130ed19858b45	
-member	com.badlogic.gdx.InputMultiplexer#processors	sge.InputMultiplexer#processors	Renamed	-	com/badlogic/gdx/InputMultiplexer.java	26	74c70944367c212e	
+member	com.badlogic.gdx.InputMultiplexer#processors	sge.InputMultiplexer#processors	Renamed	-	com/badlogic/gdx/InputMultiplexer.java	26	c32b689c6e3388d8	
 member	com.badlogic.gdx.InputMultiplexer#removeProcessor(InputProcessor)	sge.InputMultiplexer#removeProcessor(InputProcessor)	Renamed	-	com/badlogic/gdx/InputMultiplexer.java	52	c6de9f5904481e4a	
 member	com.badlogic.gdx.InputMultiplexer#removeProcessor(int)	sge.InputMultiplexer#removeProcessor(int)	Renamed	-	com/badlogic/gdx/InputMultiplexer.java	41	b824c3ce0970ec00	
 member	com.badlogic.gdx.InputMultiplexer#scrolled(float,float)	sge.InputMultiplexer#scrolled(float,float)	Renamed	-	com/badlogic/gdx/InputMultiplexer.java	167	bc579a395651029b	
@@ -6364,7 +6359,7 @@ member	com.badlogic.gdx.assets.AssetManager#handleTaskError(Throwable)	sge.asset
 member	com.badlogic.gdx.assets.AssetManager#incrementRefCountedDependencies(String)	sge.assets.AssetManager#incrementRefCountedDependencies(String)	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	612	ce54e7589676557f	vis=private
 member	com.badlogic.gdx.assets.AssetManager#injectDependencies(String,DynamicArray)	sge.assets.AssetManager#injectDependencies(String,DynamicArray<AssetDescriptor<?>>)	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	489	d82e6e9b2c00ac2d	
 member	com.badlogic.gdx.assets.AssetManager#injectDependency(String,AssetDescriptor)	sge.assets.AssetManager#injectDependency(String,AssetDescriptor<?>)	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	499	df483d3161d63f40	vis=private
-member	com.badlogic.gdx.assets.AssetManager#injected	sge.assets.AssetManager#injected	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	73	4027509b8aa8b4dc	
+member	com.badlogic.gdx.assets.AssetManager#injected	sge.assets.AssetManager#injected	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	73	61a16cea0cb70026	
 member	com.badlogic.gdx.assets.AssetManager#isFinished()	sge.assets.AssetManager#isFinished()	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	448	6e283fa139059d82	
 member	com.badlogic.gdx.assets.AssetManager#isLoaded(AssetDescriptor)	sge.assets.AssetManager#isLoaded(AssetDescriptor<?>)	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	308	2b422e3108c2f7f7	
 member	com.badlogic.gdx.assets.AssetManager#isLoaded(String)	sge.assets.AssetManager#isLoaded(String)	Renamed	-	com/badlogic/gdx/assets/AssetManager.java	314	c1d010f2c9f0b0f4	
@@ -8634,9 +8629,9 @@ member	com.badlogic.gdx.graphics.VertexAttributes$Usage#Normal	sge.graphics.Vert
 member	com.badlogic.gdx.graphics.VertexAttributes$Usage#Position	sge.graphics.VertexAttributes$Usage#Position	Renamed	-	com/badlogic/gdx/graphics/VertexAttributes.java	34	9eac543065fbd014	placement=companion
 member	com.badlogic.gdx.graphics.VertexAttributes$Usage#Tangent	sge.graphics.VertexAttributes$Usage#Tangent	Renamed	-	com/badlogic/gdx/graphics/VertexAttributes.java	41	7288ffadc6a1219d	placement=companion
 member	com.badlogic.gdx.graphics.VertexAttributes$Usage#TextureCoordinates	sge.graphics.VertexAttributes$Usage#TextureCoordinates	Renamed	-	com/badlogic/gdx/graphics/VertexAttributes.java	38	3ba38c378190d274	placement=companion
-member	com.badlogic.gdx.graphics.g2d.Animation#<init>(float,Array)	sge.graphics.g2d.Animation#<init>(float,Array<T>)	Renamed	-	com/badlogic/gdx/graphics/g2d/Animation.java	76	e603fe3e79e9a093	
-member	com.badlogic.gdx.graphics.g2d.Animation#<init>(float,DynamicArray)	sge.graphics.g2d.Animation#<init>(float,DynamicArray<?>)	Renamed	-	com/badlogic/gdx/graphics/g2d/Animation.java	56	45c5aae2358a18f8	
-member	com.badlogic.gdx.graphics.g2d.Animation#<init>(float,DynamicArray,PlayMode)	sge.graphics.g2d.Animation#<init>(float,DynamicArray<?>,PlayMode)	Renamed	-	com/badlogic/gdx/graphics/g2d/Animation.java	67	83520da1cba71f20	
+member	com.badlogic.gdx.graphics.g2d.Animation#<init>(float,Array,MkArray)	sge.graphics.g2d.Animation#<init>(float,Array<T>,MkArray<T>)	Renamed	-	com/badlogic/gdx/graphics/g2d/Animation.java	76	953dd35d61e750b2	
+member	com.badlogic.gdx.graphics.g2d.Animation#<init>(float,DynamicArray,MkArray)	sge.graphics.g2d.Animation#<init>(float,DynamicArray<?>,MkArray<T>)	Renamed	-	com/badlogic/gdx/graphics/g2d/Animation.java	56	ba11d623d6e86a20	
+member	com.badlogic.gdx.graphics.g2d.Animation#<init>(float,DynamicArray,PlayMode,MkArray)	sge.graphics.g2d.Animation#<init>(float,DynamicArray<?>,PlayMode,MkArray<T>)	Renamed	-	com/badlogic/gdx/graphics/g2d/Animation.java	67	7cbe0ec5e9e8795f	
 member	com.badlogic.gdx.graphics.g2d.Animation#animationDuration	sge.graphics.g2d.Animation#animationDuration	Renamed	-	com/badlogic/gdx/graphics/g2d/Animation.java	45	50de20613f98c884	vis=private
 member	com.badlogic.gdx.graphics.g2d.Animation#frameDuration	sge.graphics.g2d.Animation#frameDuration	Renamed	-	com/badlogic/gdx/graphics/g2d/Animation.java	44	b1b2110be8aa830a	
 member	com.badlogic.gdx.graphics.g2d.Animation#getAnimationDuration()	sge.graphics.g2d.Animation#getAnimationDuration()	Renamed	-	com/badlogic/gdx/graphics/g2d/Animation.java	205	0c2ebd36a891623c	
@@ -9992,7 +9987,7 @@ member	com.badlogic.gdx.graphics.g2d.TextureAtlas#getTextures()	sge.graphics.g2d
 member	com.badlogic.gdx.graphics.g2d.TextureAtlas#load(TextureAtlasData)	sge.graphics.g2d.TextureAtlas#load(TextureAtlasData)	Renamed	-	com/badlogic/gdx/graphics/g2d/TextureAtlas.java	82	c7c40d8a0db19897	
 member	com.badlogic.gdx.graphics.g2d.TextureAtlas#newSprite(AtlasRegion)	sge.graphics.g2d.TextureAtlas#newSprite(AtlasRegion)	Renamed	-	com/badlogic/gdx/graphics/g2d/TextureAtlas.java	212	cf5a7a014b4270c6	vis=private
 member	com.badlogic.gdx.graphics.g2d.TextureAtlas#regions	sge.graphics.g2d.TextureAtlas#regions	Renamed	-	com/badlogic/gdx/graphics/g2d/TextureAtlas.java	45	054f74c27547a9bc	vis=private
-member	com.badlogic.gdx.graphics.g2d.TextureAtlas#textures	sge.graphics.g2d.TextureAtlas#textures	Renamed	-	com/badlogic/gdx/graphics/g2d/TextureAtlas.java	44	acbbc0cc14a26bfe	vis=private
+member	com.badlogic.gdx.graphics.g2d.TextureAtlas#textures	sge.graphics.g2d.TextureAtlas#textures	Renamed	-	com/badlogic/gdx/graphics/g2d/TextureAtlas.java	44	9591b8a354b5ca68	vis=private
 member	com.badlogic.gdx.graphics.g2d.TextureAtlas$AtlasRegion#<init>(AtlasRegion)	sge.graphics.g2d.TextureAtlas$AtlasRegion#<init>(AtlasRegion)	Renamed	-	com/badlogic/gdx/graphics/g2d/TextureAtlas.java	576	9d5519fb820ea836	
 member	com.badlogic.gdx.graphics.g2d.TextureAtlas$AtlasRegion#<init>(Texture,int,int,int,int)	sge.graphics.g2d.TextureAtlas$AtlasRegion#<init>(Texture,int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/TextureAtlas.java	568	2941543ad404870f	
 member	com.badlogic.gdx.graphics.g2d.TextureAtlas$AtlasRegion#<init>(TextureRegion)	sge.graphics.g2d.TextureAtlas$AtlasRegion#<init>(TextureRegion)	Renamed	-	com/badlogic/gdx/graphics/g2d/TextureAtlas.java	592	ea4c76749c8690d3	
@@ -11052,10 +11047,10 @@ member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray#<stmt1>	sge.graphic
 member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray#<stmt2>	sge.graphics.g3d.particles.ParallelArray#<stmt2>	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	192	69f9e31b3c6e6ea5	
 member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray#<stmt3>	sge.graphics.g3d.particles.ParallelArray#<stmt3>	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	193	187a1fa5319fd0ce	
 member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray#<stmt4>	sge.graphics.g3d.particles.ParallelArray#<stmt4>	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	194	d3eb4140bff3bf51	
-member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray#addChannel(ChannelDescriptor)	sge.graphics.g3d.particles.ParallelArray#addChannel(ChannelDescriptor)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	199	5a5a163c06a95646	
-member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray#addChannel(ChannelDescriptor,ChannelInitializer)	sge.graphics.g3d.particles.ParallelArray#addChannel(ChannelDescriptor,ChannelInitializer<T>)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	206	2f8358b24aaa5083	
+member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray#addChannel(ChannelDescriptor,ChannelInitializer,MkArray)	sge.graphics.g3d.particles.ParallelArray#addChannel(ChannelDescriptor,ChannelInitializer<T>,MkArray<T>)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	206	7c24269902dfaf62	
+member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray#addChannel(ChannelDescriptor,MkArray)	sge.graphics.g3d.particles.ParallelArray#addChannel(ChannelDescriptor,MkArray<T>)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	199	9eb5afd32ff41405	
 member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray#addElement(Array)	sge.graphics.g3d.particles.ParallelArray#addElement(Array<Object>)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	242	682debed8a2b705c	
-member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray#allocateChannel(ChannelDescriptor)	sge.graphics.g3d.particles.ParallelArray#allocateChannel(ChannelDescriptor)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	217	b015e1ae7f26abed	vis=private
+member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray#allocateChannel(ChannelDescriptor,MkArray)	sge.graphics.g3d.particles.ParallelArray#allocateChannel(ChannelDescriptor,MkArray<T>)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	217	9d020d1633709d95	vis=private
 member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray#arrays	sge.graphics.g3d.particles.ParallelArray#arrays	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	185	2b24789ca7641cf6	
 member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray#capacity	sge.graphics.g3d.particles.ParallelArray#capacity	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	187	46462a16518c3ef4	
 member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray#clear()	sge.graphics.g3d.particles.ParallelArray#clear()	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	274	db5e70cc4290ce66	
@@ -11094,7 +11089,7 @@ member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray$IntChannel#swap(int
 member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray$ObjectChannel#<stmt1>	sge.graphics.g3d.particles.ParallelArray$ObjectChannel#<stmt1>	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	156	209cb1897a4e67c7	
 member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray$ObjectChannel#add(int,Array)	sge.graphics.g3d.particles.ParallelArray$ObjectChannel#add(int,Array<Object>)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	160	7be662c7822b0815	
 member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray$ObjectChannel#data	sge.graphics.g3d.particles.ParallelArray$ObjectChannel#data	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	152	77a7233321c9f97d	name=data$shadow
-member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray$ObjectChannel#setCapacity(int)	sge.graphics.g3d.particles.ParallelArray$ObjectChannel#setCapacity(int)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	179	7bd15fe075aaeb09	
+member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray$ObjectChannel#setCapacity(int)	sge.graphics.g3d.particles.ParallelArray$ObjectChannel#setCapacity(int)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	179	997e4b357413c073	
 member	com.badlogic.gdx.graphics.g3d.particles.ParallelArray$ObjectChannel#swap(int,int)	sge.graphics.g3d.particles.ParallelArray$ObjectChannel#swap(int,int)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParallelArray.java	167	7d8952270cd6bd64	
 member	com.badlogic.gdx.graphics.g3d.particles.ParticleChannels#<stmt1>	sge.graphics.g3d.particles.ParticleChannels#<stmt1>	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleChannels.java	154	5c60fa1ddb03ac9c	
 member	com.badlogic.gdx.graphics.g3d.particles.ParticleChannels#Acceleration	sge.graphics.g3d.particles.ParticleChannels#Acceleration	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/ParticleChannels.java	133	2e3c514172b47a1a	placement=companion
@@ -11504,8 +11499,8 @@ member	com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch$Co
 member	com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch$Config#mode	sge.graphics.g3d.particles.batches.BillboardParticleBatch$Config#mode	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/batches/BillboardParticleBatch.java	113	15ecaa2fde394193	
 member	com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch$Config#useGPU	sge.graphics.g3d.particles.batches.BillboardParticleBatch$Config#useGPU	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/batches/BillboardParticleBatch.java	112	1e6740bb910e4159	
 member	com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch$RenderablePool#newObject()	sge.graphics.g3d.particles.batches.BillboardParticleBatch$RenderablePool#newObject()	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/batches/BillboardParticleBatch.java	98	c15b5d7f0a0b6639	
-member	com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch#<init>(Class,MkArray)	sge.graphics.g3d.particles.batches.BufferedParticleBatch#<init>(Class<T>,MkArray<T>)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/batches/BufferedParticleBatch.java	34	a0286be57f52b82e	
-member	com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch#<init>(Function1,MkArray)	sge.graphics.g3d.particles.batches.BufferedParticleBatch#<init>(Function1<int,Array<T>>,MkArray<T>)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/batches/BufferedParticleBatch.java	39	adea9ec73c2f4807	
+member	com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch#<stmt1>	sge.graphics.g3d.particles.batches.BufferedParticleBatch#<stmt1>	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/batches/BufferedParticleBatch.java	40	1353b340f903a44c	
+member	com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch#<stmt2>	sge.graphics.g3d.particles.batches.BufferedParticleBatch#<stmt2>	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/batches/BufferedParticleBatch.java	41	c501b0cc08227207	
 member	com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch#allocParticlesData(int)	sge.graphics.g3d.particles.batches.BufferedParticleBatch#allocParticlesData(int)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/batches/BufferedParticleBatch.java	77	07e3e720b846f791	
 member	com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch#begin()	sge.graphics.g3d.particles.batches.BufferedParticleBatch#begin()	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/batches/BufferedParticleBatch.java	44	f0b402c1d74a2190	
 member	com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch#bufferedParticlesCount	sge.graphics.g3d.particles.batches.BufferedParticleBatch#bufferedParticlesCount	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/batches/BufferedParticleBatch.java	29	098e269c2fb537a3	
@@ -15883,7 +15878,7 @@ member	com.badlogic.gdx.scenes.scene2d.Actor#addCaptureListener(EventListener)	s
 member	com.badlogic.gdx.scenes.scene2d.Actor#addListener(EventListener)	sge.scenes.scene2d.Actor#addListener(EventListener)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	236	1610448b0ccf9cf4	
 member	com.badlogic.gdx.scenes.scene2d.Actor#ancestorsVisible()	sge.scenes.scene2d.Actor#ancestorsVisible()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	406	00f6e1b1a96955cc	
 member	com.badlogic.gdx.scenes.scene2d.Actor#ascendantsVisible()	sge.scenes.scene2d.Actor#ascendantsVisible()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	395	9e87b4d3802c1042	
-member	com.badlogic.gdx.scenes.scene2d.Actor#captureListeners	sge.scenes.scene2d.Actor#captureListeners	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	73	f156db624bb3301e	vis=private
+member	com.badlogic.gdx.scenes.scene2d.Actor#captureListeners	sge.scenes.scene2d.Actor#captureListeners	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	73	f4e1752172b1f392	vis=private
 member	com.badlogic.gdx.scenes.scene2d.Actor#clear()	sge.scenes.scene2d.Actor#clear()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	306	1794228573c6ef8a	
 member	com.badlogic.gdx.scenes.scene2d.Actor#clearActions()	sge.scenes.scene2d.Actor#clearActions()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	293	d5b8722f2799bc01	
 member	com.badlogic.gdx.scenes.scene2d.Actor#clearListeners()	sge.scenes.scene2d.Actor#clearListeners()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	300	a3231874a472afe5	
@@ -15934,7 +15929,7 @@ member	com.badlogic.gdx.scenes.scene2d.Actor#isTouchFocusListener()	sge.scenes.s
 member	com.badlogic.gdx.scenes.scene2d.Actor#isTouchFocusTarget()	sge.scenes.scene2d.Actor#isTouchFocusTarget()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	424	1659a9b2483b541d	
 member	com.badlogic.gdx.scenes.scene2d.Actor#isTouchable()	sge.scenes.scene2d.Actor#isTouchable()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	372	610e14c5ec5d7a8c	
 member	com.badlogic.gdx.scenes.scene2d.Actor#isVisible()	sge.scenes.scene2d.Actor#isVisible()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	385	606186a37a19bb1b	
-member	com.badlogic.gdx.scenes.scene2d.Actor#listeners	sge.scenes.scene2d.Actor#listeners	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	72	e7e2cc9061955ede	vis=private
+member	com.badlogic.gdx.scenes.scene2d.Actor#listeners	sge.scenes.scene2d.Actor#listeners	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	72	ac1030865b4eae6a	vis=private
 member	com.badlogic.gdx.scenes.scene2d.Actor#localToActorCoordinates(Actor,Vector2)	sge.scenes.scene2d.Actor#localToActorCoordinates(Actor,Vector2)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	962	c41ae058a957d73a	
 member	com.badlogic.gdx.scenes.scene2d.Actor#localToAscendantCoordinates(Actor,Vector2)	sge.scenes.scene2d.Actor#localToAscendantCoordinates(Actor,Vector2)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	951	fb97c94e7c3afca1	
 member	com.badlogic.gdx.scenes.scene2d.Actor#localToParentCoordinates(Vector2)	sge.scenes.scene2d.Actor#localToParentCoordinates(Vector2)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	920	05833df7024cd795	
@@ -16030,6 +16025,7 @@ member	com.badlogic.gdx.scenes.scene2d.Event#stop()	sge.scenes.scene2d.Event#sto
 member	com.badlogic.gdx.scenes.scene2d.Event#stopped	sge.scenes.scene2d.Event#stopped	Renamed	-	com/badlogic/gdx/scenes/scene2d/Event.java	43	de1c140277c809e9	vis=private
 member	com.badlogic.gdx.scenes.scene2d.Event#targetActor	sge.scenes.scene2d.Event#targetActor	Renamed	-	com/badlogic/gdx/scenes/scene2d/Event.java	38	2a343cc225567336	vis=private
 member	com.badlogic.gdx.scenes.scene2d.EventListener#handle(Event)	sge.scenes.scene2d.EventListener#handle(Event)	Renamed	-	com/badlogic/gdx/scenes/scene2d/EventListener.java	26	7f052b09e0be37f5	
+member	com.badlogic.gdx.scenes.scene2d.Group#<stmt1>	sge.scenes.scene2d.Group#<stmt1>	Renamed	-	<synthetic>	0	abca2bbe56b03719	
 member	com.badlogic.gdx.scenes.scene2d.Group#act(float)	sge.scenes.scene2d.Group#act(float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	46	7ed614366c9cc1df	
 member	com.badlogic.gdx.scenes.scene2d.Group#addActor(Actor)	sge.scenes.scene2d.Group#addActor(Actor)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	262	09461a4409aa4c0f	
 member	com.badlogic.gdx.scenes.scene2d.Group#addActorAfter(Actor,Actor)	sge.scenes.scene2d.Group#addActorAfter(Actor,Actor)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Group.java	307	af89851af47bda39	
@@ -16127,16 +16123,17 @@ member	com.badlogic.gdx.scenes.scene2d.InputListener#touchDragged(InputEvent,flo
 member	com.badlogic.gdx.scenes.scene2d.InputListener#touchUp(InputEvent,float,float,int,int)	sge.scenes.scene2d.InputListener#touchUp(InputEvent,float,float,int,int)	Renamed	-	com/badlogic/gdx/scenes/scene2d/InputListener.java	102	d7c004168a575f2a	
 member	com.badlogic.gdx.scenes.scene2d.Stage#<init>()	sge.scenes.scene2d.Stage#<init>()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	92	6dfbea5e67edc102	
 member	com.badlogic.gdx.scenes.scene2d.Stage#<init>(Viewport)	sge.scenes.scene2d.Stage#<init>(Viewport)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	100	bad07cd1de5ebbf8	
-member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt10>	sge.scenes.scene2d.Stage#<stmt10>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	121	3a2347e0260f8090	
-member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt1>	sge.scenes.scene2d.Stage#<stmt1>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	109	3bad3329100cf978	
-member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt2>	sge.scenes.scene2d.Stage#<stmt2>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	110	9b0eacd64bc8a801	
-member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt3>	sge.scenes.scene2d.Stage#<stmt3>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	111	752cc63bceb33c48	
-member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt4>	sge.scenes.scene2d.Stage#<stmt4>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	112	8c122036d563d03e	
-member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt5>	sge.scenes.scene2d.Stage#<stmt5>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	114	ff6c1c0990472c92	
-member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt6>	sge.scenes.scene2d.Stage#<stmt6>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	115	feea5636655345e5	
-member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt7>	sge.scenes.scene2d.Stage#<stmt7>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	116	6fc02b3ae4baa5d3	
-member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt8>	sge.scenes.scene2d.Stage#<stmt8>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	118	aaefe47728ceac7b	
-member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt9>	sge.scenes.scene2d.Stage#<stmt9>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	119	74c6e3bc21bc7eec	
+member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt10>	sge.scenes.scene2d.Stage#<stmt10>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	119	74c6e3bc21bc7eec	
+member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt11>	sge.scenes.scene2d.Stage#<stmt11>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	121	3a2347e0260f8090	
+member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt1>	sge.scenes.scene2d.Stage#<stmt1>	Renamed	-	<synthetic>	0	abca2bbe56b03719	
+member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt2>	sge.scenes.scene2d.Stage#<stmt2>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	109	3bad3329100cf978	
+member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt3>	sge.scenes.scene2d.Stage#<stmt3>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	110	9b0eacd64bc8a801	
+member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt4>	sge.scenes.scene2d.Stage#<stmt4>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	111	752cc63bceb33c48	
+member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt5>	sge.scenes.scene2d.Stage#<stmt5>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	112	8c122036d563d03e	
+member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt6>	sge.scenes.scene2d.Stage#<stmt6>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	114	ff6c1c0990472c92	
+member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt7>	sge.scenes.scene2d.Stage#<stmt7>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	115	feea5636655345e5	
+member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt8>	sge.scenes.scene2d.Stage#<stmt8>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	116	6fc02b3ae4baa5d3	
+member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt9>	sge.scenes.scene2d.Stage#<stmt9>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	118	aaefe47728ceac7b	
 member	com.badlogic.gdx.scenes.scene2d.Stage#act()	sge.scenes.scene2d.Stage#act()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	190	de51da4e22c56d49	
 member	com.badlogic.gdx.scenes.scene2d.Stage#act(float)	sge.scenes.scene2d.Stage#act(float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	197	2c8f12cef850d9b4	
 member	com.badlogic.gdx.scenes.scene2d.Stage#actionsRequestRendering	sge.scenes.scene2d.Stage#actionsRequestRendering	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	83	19dd864197bb2cf0	vis=private
@@ -19082,6 +19079,7 @@ member	com.badlogic.gdx.scenes.scene2d.utils.UIUtils#right()	sge.scenes.scene2d.
 member	com.badlogic.gdx.scenes.scene2d.utils.UIUtils#right(int)	sge.scenes.scene2d.utils.UIUtils#right(int)	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/UIUtils.java	32	6668607d4bb911cb	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.utils.UIUtils#shift()	sge.scenes.scene2d.utils.UIUtils#shift()	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/UIUtils.java	44	3529b390f5d3baef	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.utils.UIUtils#shift(int)	sge.scenes.scene2d.utils.UIUtils#shift(int)	Renamed	-	com/badlogic/gdx/scenes/scene2d/utils/UIUtils.java	48	4aa656807bf5aebb	placement=companion
+member	com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch#<init>(Class)		Dropped	-		0		
 member	com.badlogic.gdx.utils.Array#<init>(Class)		Dropped	-		0		
 member	com.badlogic.gdx.utils.Array#<init>(boolean,int,Class)		Dropped	-		0		
 member	com.badlogic.gdx.utils.Array#of(Class)		Dropped	-		0		
@@ -19091,3 +19089,8 @@ member	com.badlogic.gdx.utils.Array#select(Predicate)		Dropped	-		0
 member	com.badlogic.gdx.utils.Array#toArray(Class)		Dropped	-		0		
 member	com.badlogic.gdx.utils.ArrayMap#<init>(Class,Class)		Dropped	-		0		
 member	com.badlogic.gdx.utils.ArrayMap#<init>(boolean,int,Class,Class)		Dropped	-		0		
+member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(Class)		Dropped	-		0		
+member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(boolean,int,Class)		Dropped	-		0		
+member	com.badlogic.gdx.utils.Queue#<init>(int,Class)		Dropped	-		0		
+member	com.badlogic.gdx.utils.SnapshotArray#<init>(Class)		Dropped	-		0		
+member	com.badlogic.gdx.utils.SnapshotArray#<init>(boolean,int,Class)		Dropped	-		0		
