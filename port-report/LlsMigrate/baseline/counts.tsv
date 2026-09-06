@@ -1,18 +1,18 @@
 #check	count
 api-parity(accessor)	0
 api-parity(collection-retarget)	0
-api-parity(factory)	10
+api-parity(factory)	19
 api-parity(file-merge)	0
 api-parity(hand-original)	6
 api-parity(hand-port-extra)	59
 api-parity(mutability)	2
 api-parity(null-model)	6
-api-parity(opaque)	1
+api-parity(opaque)	5
 api-parity(operator)	3
-api-parity(port-extra)	1833
+api-parity(port-extra)	1834
 api-parity(rename)	0
 api-parity(rule)	10
-api-parity(signature)	92
+api-parity(signature)	89
 api-parity(static-placement)	10
 api-parity(unclassified)	0
 api-parity(visibility)	0
@@ -29,6 +29,7 @@ collection-boundary	9
 collection-closure	0
 collection-internal	0
 collection-retarget	0
+context-seam	0
 dependency-coverage	0
 dependency-coverage(all)	0
 dependency-coverage(declared)	0
@@ -36,7 +37,7 @@ heap-pollution	8
 idiom(converted)	0
 idiom(refused)	70
 idiom(residue)	0
-jdk-surface	16
+jdk-surface	14
 manifest	0
 markers	0
 nullability-boundary	66
@@ -60,4 +61,5 @@ trivia(recovered)	1
 try-resource	0
 unused-symbol(handled)	3
 unused-symbol(refused)	0
+witness	158
 upstream	libGDX@4b4d2c4fd05786d848c42cb69266dd2dd6839983
