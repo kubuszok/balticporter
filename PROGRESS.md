@@ -1712,24 +1712,25 @@ substitutions (`getSelectedIndex` x2) and the two test ones are L2 policy; the t
 L3/L4/L6/L8/L9; the `NetJavaImpl` drop conceals K2 (universal).
 
 
-**A3 — libGDX core on the lls base: the LADDER's L0 is the dependent, not the full-policy port
-(2026-09-06).** The full port (`LibgdxPolicy.core`) cannot extend `ported/lls` AS SCOPED (`ENGINE-LIMITS.md`
-K43): 12 of the lls port's 54 files are types the real lls does not declare and sge does (`Align`,
-`Pool`, `RandomXS128`, `GdxRuntimeException`, …), so the full port's decisions about them read as
-edits of its base. The scope is this repo's, not the engine's; narrowing it is the pending lls wave. The ladder's L0
-carries none of them, so `LibgdxLadder.universal = LlsPolicy.core(repoRoot, LlsPolicy.DefaultRungs)
-.extendedBy(…)` — core minus `LlsMigrate.Files` (551 units), `gdx/src` as its own resolution root,
-`packageRenames com.badlogic.gdx -> sge` beside the inherited `utils`/`math -> lowlevel.*` (so a core
-utility lls does not carry, `Json`, `reflect.*`, `Octree`, lands in `lowlevel.*` beside lls's — a
-namespace question for the destination rung, not this one). `MutableParamsTransform` gained
-`SurfacePolicy`/`MergeablePolicy` (no parameter, empty fingerprint, two instances merge), the one
-engine change; it moves `policy=` on every port that lists the phase, re-baselined in this wave.
-Measured: **L0 2 -> 13 errors**, every one a seam the BASE's rungs cut through core — witness
-(`new DynamicArray[T]` in a generic class with no `MkArray[T]` in scope: `Octree`, `Skin`, `Json`),
-nullability (`Nullable[Class[T]]` formals: `Json.readValue` conflicting/overload rows, `Skin`), the
-enrich rung's returns (`Tree.findExpandedValues` at `DynamicArray[V]`, `ClassReflection`,
-`TextureAtlas`, `NetJavaImpl`), and arity (`PoolManager.addPool`, `SgeList.setItems`). Each is the
-work of the matching core rung (witness threading, nullability, arity), which is the order the
-ladder wanted. `base-surface 0 -> 2`: lls publishes two `size` rows (`size$field`, `parenless`) for
-`PooledLinkedList`/`SortedIntList` and L0 cannot pick one — a base-map precision defect, engine (a),
-OPEN. K37 stays OPEN; K42 stays OPEN (rides the next family re-measure).
+**A3 — libGDX core on the lls base, the lls port NARROWED to what lls declares (maintainer,
+2026-09-06; `ENGINE-LIMITS.md` K43).** The full-policy port cannot extend a base that emits types its
+parity policy reshapes; the ladder's L0 carries no such policy and is the dependent. The lls port
+now emits the twelve java files the real lls declares (`Array`, `ArrayMap`, `ObjectMap`, `ObjectSet`,
+`OrderedMap`, `OrderedSet`, `Select`, `QuickSelect`, `Sort`, `TimSort`, `ComparableTimSort`,
+`MathUtils`) plus the `@Null` annotation type (a refused nullability site KEEPS its annotation, so
+the base ships the type once). Its five outside references resolve from the gdx 1.14.1 JAR
+(`GdxCoreClasspath`; a whole-tree resolution root asked 300 base contracts) and are answered the way
+lls did: `GdxRuntimeException -> java.lang.RuntimeException`, `RandomXS128 -> java.util.Random`,
+`Collections -> lowlevel.util.Collections` (an injected flag holder, the drop inherited by core),
+`ArraySupplier -> scala.Function1[Int, T[]]` with the witness as default supplier, the `Class`-typed
+constructors, `toArray(Class)` and `select(Predicate)` dropped. Every lls rung scopes on the ENTRY
+(`Twelve`; nullability over the override closure, K13.8) so the inherited surface stops at lls's
+declarations. Measured: lls **23 files, 0 errors JVM/JS/Native, suite gauge 266 = 266, differential
+189/2 unchanged, `policy` 1** (the `Collections` drop, which fires only in the dependent), witness
+158 -> 70. **L0 13 -> 57**, all of them the seam between rung-applied base and un-rung core, by rung:
+witness/supplier ~16 (`SnapshotArray`/`DelayedRemovalArray` constructors, `Queue`, `Octree`,
+`BufferedParticleBatch`), ordering 8 (`sort(Comparator)` at lls's `Ordering`), collections shims ~22
+(core's `java.lang.Iterable`/`java.util.Iterator` against lls's `JavaIterable`/`ArrayIterator`:
+`MapLayers`, `Model.load`, `Selection`), enrich/arity ~11 (`IdentityMap`'s export clash, `setItems`,
+`addPool`, `Tree.findExpandedValues`). Each is the matching core rung's work — the ladder's order.
+`base-surface 2 -> 0`. K37 stays OPEN; K42 stays OPEN (rides the next family re-measure).

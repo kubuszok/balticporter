@@ -301,9 +301,10 @@ EXCLUDES the base's files from its own globs and makes the shared tree its own r
 `PortRun.partitionUnits` emits only what it declares. You never reach that: the run stops at
 `SurfaceFold`, on a base emitting a type the dependent DROPS or reshapes (fatal `ExtraDrop`, fatal
 `SurfaceIntrusion`) or one the hand port declares in the DEPENDENT's namespace (a straight parity
-loss). You cannot shrink out of the overlap afterwards — a base never resolves against its dependent,
-so a helper the base's own sources reference has to be the base's or a deeper module's.
-`ENGINE-LIMITS.md` K43 has the measured run.
+loss). Shrinking the base out of the overlap works only with the right instrument: the helpers its sources
+still reference resolve from the upstream JAR on the frontend classpath (class-file externals) and
+are answered by the base's own policy — never by making the whole tree a resolution root, which
+asks a base contract for every type in it. `ENGINE-LIMITS.md` K43 has both measured runs.
 
 ### 6.1 How MANY confs? — count DESTINATIONS, never upstream modules
 

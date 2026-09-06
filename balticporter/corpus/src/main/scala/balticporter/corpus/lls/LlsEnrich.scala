@@ -205,7 +205,7 @@ object LlsEnrich:
 
   // ---------------------------------------------------------------------------------------------
   // The population. Only the ROOT of each override component is enriched: `OrderedMap`,
-  // `OrderedSet`, `IdentityMap`, `SnapshotArray` and `DelayedRemovalArray` INHERIT the members
+  // `OrderedMap` and `OrderedSet` INHERIT the members
   // (adding them there would owe an `override` the mechanism cannot spell).
   // ---------------------------------------------------------------------------------------------
 
@@ -217,22 +217,6 @@ object LlsEnrich:
       removeOne  = "this.removeValue(lowlevel.Nullable(value), false)",
       removeMany = "this.removeAll(other, false)",
       mk         = if w then "(using lowlevel.MkArray[T])" else ""),
-    ArrayKind("IntArray",     "lowlevel.util.IntArray",     "scala.Int",
-      removeOne = "this.removeValue(value)", removeMany = "this.removeAll(other)"),
-    ArrayKind("FloatArray",   "lowlevel.util.FloatArray",   "scala.Float",
-      removeOne = "this.removeValue(value)", removeMany = "this.removeAll(other)"),
-    ArrayKind("LongArray",    "lowlevel.util.LongArray",    "scala.Long",
-      removeOne = "this.removeValue(value)", removeMany = "this.removeAll(other)"),
-    ArrayKind("ShortArray",   "lowlevel.util.ShortArray",   "scala.Short",
-      removeOne = "this.removeValue(value)", removeMany = "this.removeAll(other)"),
-    ArrayKind("ByteArray",    "lowlevel.util.ByteArray",    "scala.Byte",
-      removeOne = "this.removeValue(value)", removeMany = "this.removeAll(other)"),
-    ArrayKind("CharArray",    "lowlevel.util.CharArray",    "scala.Char",
-      removeOne = "this.removeValue(value)", removeMany = "this.removeAll(other)"),
-    // BooleanArray declares no `contains`/`indexOf`/`removeValue` upstream, so `-=` has nothing
-    // faithful to delegate to and is REFUSED rather than invented.
-    ArrayKind("BooleanArray", "lowlevel.util.BooleanArray", "scala.Boolean",
-      removeMany = "this.removeAll(other)"),
   )
 
   private def maps(w: Boolean): List[MapKind] = List(
@@ -240,57 +224,30 @@ object LlsEnrich:
       tparams = "[K <: java.lang.Object, V <: java.lang.Object]",
       self = "lowlevel.util.ObjectMap[K, V]", wrap = v => s"lowlevel.Nullable($v)",
       getOne = "lowlevel.Nullable[V]", removeOne = "remove"),
-    MapKind("IntMap", "scala.Int", "V", "lowlevel.Nullable[V]",
-      tparams = "[V <: java.lang.Object]", self = "lowlevel.util.IntMap[V]",
-      wrap = v => s"lowlevel.Nullable($v)", getOne = "V", removeOne = "remove"),
-    MapKind("LongMap", "scala.Long", "V", "lowlevel.Nullable[V]",
-      tparams = "[V <: java.lang.Object]", self = "lowlevel.util.LongMap[V]",
-      wrap = v => s"lowlevel.Nullable($v)", getOne = "lowlevel.Nullable[V]", removeOne = "remove"),
     MapKind("ArrayMap", "K", "V", "V",
       tparams = if w then "[K, V]" else "[K <: java.lang.Object, V <: java.lang.Object]",
       self = "lowlevel.util.ArrayMap[K, V]", getOne = "lowlevel.Nullable[V]",
       removeOne = "removeKey", indexed = true, capacityCtor = true,
       mk = if w then "(using lowlevel.MkArray[K], lowlevel.MkArray[V])" else ""),
-    MapKind("ObjectIntMap", "K", "scala.Int", "scala.Int",
-      tparams = "[K <: java.lang.Object]", self = "lowlevel.util.ObjectIntMap[K]"),
-    MapKind("ObjectFloatMap", "K", "scala.Float", "scala.Float",
-      tparams = "[K <: java.lang.Object]", self = "lowlevel.util.ObjectFloatMap[K]"),
-    MapKind("ObjectLongMap", "K", "scala.Long", "scala.Long",
-      tparams = "[K <: java.lang.Object]", self = "lowlevel.util.ObjectLongMap[K]"),
-    MapKind("IntIntMap", "scala.Int", "scala.Int", "scala.Int", self = "lowlevel.util.IntIntMap"),
-    MapKind("IntFloatMap", "scala.Int", "scala.Float", "scala.Float", self = "lowlevel.util.IntFloatMap"),
   )
 
   private val sets: List[SetKind] = List(
     SetKind("ObjectSet", "T", "lowlevel.util.ObjectSet[T]", "[T <: java.lang.Object]"),
-    SetKind("IntSet", "scala.Int", "lowlevel.util.IntSet", hasNext = "hasNext"),
   )
 
-  /** The five SUBCLASSES get the factories too — and must. A companion factory is a static, so the
+  /** The two SUBCLASSES get the factories too — and must. A companion factory is a static, so the
     * `export Parent.*` that reproduces java's static inheritance (`JS-C3`) delivers the parent's
     * into the subclass, where scala's own CONSTRUCTOR PROXY `apply` is a second definition with
     * matching parameter types (`E120`). Declaring them here excludes the parent's and suppresses
     * the proxy, and the factory answers with the SUBCLASS's type, which is what a caller wants. */
-  private def subclassFactories(w: Boolean): List[(String, MemberSpec)] =
+  private def subclassFactories(): List[(String, MemberSpec)] =
     val why = "lls factory on a subclass; also what keeps the inherited-statics export unambiguous (PROGRESS.md §13.29)"
-    def arrayLike(owner: String, self: String, elem: String, tparams0: String, mk: String) =
-      val tparams = if mk.isEmpty then tparams0 else "[T]"
-      List(
-        ("apply", 0, s"def apply$tparams()$mk: $self = new $self()"),
-        ("apply", 1, s"def apply$tparams(capacity: scala.Int)$mk: $self = new $self(capacity)"),
-        ("apply", 2, s"def apply$tparams(ordered: scala.Boolean, capacity: scala.Int)$mk: $self = new $self(ordered, capacity)"),
-        ("from",  1, s"def from$tparams(values: scala.Array[$elem])$mk: $self = new $self(values)"),
-      ).map((n, a, s) => spec(owner, n, a, s, why, static = true))
     def tableLike(owner: String, self: String, tparams: String) = List(
       ("apply", 0, s"def apply$tparams(): $self = new $self()"),
       ("apply", 1, s"def apply$tparams(initialCapacity: scala.Int): $self = new $self(initialCapacity)"),
       ("apply", 2, s"def apply$tparams(initialCapacity: scala.Int, loadFactor: scala.Float): $self = new $self(initialCapacity, loadFactor)"),
     ).map((n, a, s) => spec(owner, n, a, s, why, static = true))
-    val amk = if w then "(using lowlevel.MkArray[T])" else ""
-    arrayLike("SnapshotArray", "lowlevel.util.SnapshotArray[T]", "T", "[T <: java.lang.Object]", amk) ++
-      arrayLike("DelayedRemovalArray", "lowlevel.util.DelayedRemovalArray[T]", "T", "[T <: java.lang.Object]", amk) ++
-      tableLike("OrderedMap", "lowlevel.util.OrderedMap[K, V]", "[K <: java.lang.Object, V <: java.lang.Object]") ++
-      tableLike("IdentityMap", "lowlevel.util.IdentityMap[K, V]", "[K <: java.lang.Object, V <: java.lang.Object]") ++
+    tableLike("OrderedMap", "lowlevel.util.OrderedMap[K, V]", "[K <: java.lang.Object, V <: java.lang.Object]") ++
       tableLike("OrderedSet", "lowlevel.util.OrderedSet[T]", "[T <: java.lang.Object]")
 
   /** ArrayMap's own flag-free overloads — the same shape as `Array`'s, on the two members that
@@ -307,7 +264,7 @@ object LlsEnrich:
   private def all(w: Boolean): List[(String, MemberSpec)] =
     arrays(w).flatMap(arrayMembers) ++ refArrayExtras ++
       maps(w).flatMap(mapMembers) ++ arrayMapExtras ++ sets.flatMap(setMembers) ++
-      subclassFactories(w)
+      subclassFactories()
 
   /** owner FQN -> specs, the shape `AddMembersTransform` takes. @param w the `witness` rung is on. */
   def members(w: Boolean): Map[String, List[MemberSpec]] =

@@ -765,6 +765,19 @@ Known residue: `SystemManager#getSystem` deliberately EXCLUDED — `.orNull` on 
 Do NOT retry: adding `SystemManager#getSystem` without first fixing `slotUnwrap`'s opaque-sentinel vs JVM-null confusion (touches every wrapper coercion in the pipeline).
 Triage (2026-09-04): FAMILY O: opaque-sentinel vs JVM-null unification in slotUnwrap — "Do NOT retry: adding SystemManager#getSystem without first fixing slotUnwrap's opaque-sentinel vs JVM-null confusion (touches every wrapper coercion in the pipeline)"
 
+### K13.8 A `RuleScope` cut THROUGH an override component SPLITS it — OPEN, engine (a); scope the ENTRY over the closure meanwhile
+
+`NullabilityTransform(scope = Only(Array, ArrayMap, ObjectMap, ObjectSet))` on the lls port (the four
+of its twelve types that carry `@Null`) retyped `ObjectMap#remove(K)` to `Nullable[V]` and left
+`OrderedMap#remove(K)` — an OVERRIDE of it, outside the scope — at `V`: **1 error** (`E164`,
+2026-09-06), emitted silently. §4.55's contract is whole-component-or-refuse; a scope boundary is a
+third cut the phase does not ask about. The same run reports each scope entry with no annotated
+declaration of its own (`OrderedMap`, `OrderedSet`) as a `policy` "never matched" row even though the
+entry is what lets the override retype through — the precision defect beside the split. Both are
+§1(a). Until fixed: scope on the ENTRY over the override CLOSURE (`LlsPolicy.Annotated`, six types)
+and carry the two `policy` rows. Do NOT widen back to `Everywhere`: a base's scope is inherited, and
+`Everywhere` decides core's nullability at L0 (PROGRESS.md §13.29).
+
 ### K14. A RETARGET's subtyping licence is ONE-DIRECTIONAL — the producer side is COUNTED, never coerced
 
 (a) engine (counter) built; (b) per-library policy for a coercion when a real producer appears. Symptom: `CollectionsTransform(retarget)` licenses only "the retyped value reaches a slot still declaring the java type"; it says nothing about a java-typed value the JDK HANDS BACK arriving at a retyped slot — silent `ClassCastException` at run time, green compile.
@@ -1707,7 +1720,7 @@ Rule: land it with the dependent wave that re-measures all nine, never alone; an
 `hasSideEffects`'s own `case _ => ()` default at the same time — an unenumerated node kind there is an
 UNDER-refusal, the direction this phase promises never to take.
 
-### K43. The FULL-POLICY libGDX port cannot extend `ported/lls` AS SCOPED — **5 FATAL shared-surface findings; the wall is the lls port's SOURCE SET (12 of its 54 files are types the real lls does not declare and sge does), not the base-chain mechanism. Fix the scope, then retry**
+### K43. The FULL-POLICY libGDX port cannot extend `ported/lls` AS SCOPED — CLOSED 2026-09-06 by narrowing the lls port to the 12 files the real lls declares (0 errors held; L0 on it 13 -> 57, each a rung seam); the ladder's L0 is the dependent
 
 (b) per-library scope, and the decision is the maintainer's (an lls-repo API decision, not an engine
 change). Symptom: `LibgdxPolicy.core = LlsPolicy.core(repoRoot, <default rungs>).extendedBy(…)`, gdx's
@@ -1752,3 +1765,11 @@ PROGRESS.md §13.29 A3). The full port's parity decisions are not re-derived on 
 ladder re-applies each as a rung. `MutableParamsTransform`'s missing `SurfacePolicy`/`MergeablePolicy`
 was the one universal fix — landed with the family re-baseline it moves (`policy=` on every port
 that lists the phase).
+
+Outcome (2026-09-06, maintainer's choice): `LlsMigrate.Files` is the twelve (+ `Null`); the references
+are class-file externals off the gdx 1.14.1 JAR (`GdxCoreClasspath`) — NOT a whole-tree resolution
+root, which asked **300** base contracts before any phase ran — and are answered in `LlsPolicy.core`
+(`TypeRedirectTransform` scoped to the entry, `ArraySupplier -> Function1` retarget, drops, one
+injected `Collections`). Two rules it left: a base's rungs SCOPE ON THE BASE'S OWN DECLARATIONS or
+the inherited surface decides the dependent's ladder (CLAUDE.md §1.5), and a refused nullability
+site keeps its annotation, so whoever narrows a port ships the annotation TYPE (K13.8 beside it).

@@ -2,7 +2,7 @@ package balticporter.corpus.lls
 
 import balticporter.core.{FrontendConfig, ParityRef, PortManifest, Provenance, RuntimeMode}
 import balticporter.runner.{Determinism, PortRun, SourceSet, VendoredCommit}
-import balticporter.transform.{AddMembersTransform, CollectionsTransform, ElementWitnessTransform,
+import balticporter.transform.{CollectionsTransform, ElementWitnessTransform, TypeRedirectTransform,
   GlobalsToImplicitsTransform, MutableParamsTransform, NullabilityTransform}
 
 import java.nio.file.Path
@@ -14,65 +14,29 @@ import java.nio.file.Path
   * rather than a drop or a shim (`PROGRESS.md` §13.28). */
 object LlsMigrate:
 
-  /** The libGDX UTILITIES family (maintainer, 2026-09-06): every platform-free collection, pool and
-    * helper under `utils` plus `math.MathUtils`, closed over their references inside `utils`/`math`
-    * (54 files, no escape into another package) — the base beneath the rest of the port (PROGRESS.md §13.29). */
+  /** The java files the REAL lls declares (maintainer, 2026-09-06: narrowed from 54 to 12, ENGINE-LIMITS.md
+    * K43) plus the `@Null` annotation their sources carry (a refused site KEEPS it, so the base ships
+    * the type once); the five outside references are answered by policy in [[LlsPolicy.core]];
+    * everything else under `utils`/`math` is core's, on this base (PROGRESS.md §13.29). */
   val Files: List[String] = List(
     "com/badlogic/gdx/math/MathUtils.java",
-    "com/badlogic/gdx/math/RandomXS128.java",
-    "com/badlogic/gdx/utils/Align.java",
+    "com/badlogic/gdx/utils/Null.java",
     "com/badlogic/gdx/utils/Array.java",
     "com/badlogic/gdx/utils/ArrayMap.java",
-    "com/badlogic/gdx/utils/ArraySupplier.java",
-    "com/badlogic/gdx/utils/AtomicQueue.java",
-    "com/badlogic/gdx/utils/Base64Coder.java",
-    "com/badlogic/gdx/utils/BinaryHeap.java",
-    "com/badlogic/gdx/utils/Bits.java",
-    "com/badlogic/gdx/utils/BooleanArray.java",
-    "com/badlogic/gdx/utils/ByteArray.java",
-    "com/badlogic/gdx/utils/CharArray.java",
-    "com/badlogic/gdx/utils/Collections.java",
     "com/badlogic/gdx/utils/ComparableTimSort.java",
-    "com/badlogic/gdx/utils/DefaultPool.java",
-    "com/badlogic/gdx/utils/DelayedRemovalArray.java",
-    "com/badlogic/gdx/utils/FloatArray.java",
-    "com/badlogic/gdx/utils/FlushablePool.java",
-    "com/badlogic/gdx/utils/GdxRuntimeException.java",
-    "com/badlogic/gdx/utils/IdentityMap.java",
-    "com/badlogic/gdx/utils/IntArray.java",
-    "com/badlogic/gdx/utils/IntFloatMap.java",
-    "com/badlogic/gdx/utils/IntIntMap.java",
-    "com/badlogic/gdx/utils/IntMap.java",
-    "com/badlogic/gdx/utils/IntSet.java",
-    "com/badlogic/gdx/utils/LongArray.java",
-    "com/badlogic/gdx/utils/LongMap.java",
-    "com/badlogic/gdx/utils/LongQueue.java",
-    "com/badlogic/gdx/utils/NonNull.java",
-    "com/badlogic/gdx/utils/NonNullByDefault.java",
-    "com/badlogic/gdx/utils/Null.java",
-    "com/badlogic/gdx/utils/NumberUtils.java",
-    "com/badlogic/gdx/utils/ObjectFloatMap.java",
-    "com/badlogic/gdx/utils/ObjectIntMap.java",
-    "com/badlogic/gdx/utils/ObjectLongMap.java",
     "com/badlogic/gdx/utils/ObjectMap.java",
     "com/badlogic/gdx/utils/ObjectSet.java",
     "com/badlogic/gdx/utils/OrderedMap.java",
     "com/badlogic/gdx/utils/OrderedSet.java",
-    "com/badlogic/gdx/utils/Pool.java",
-    "com/badlogic/gdx/utils/PoolManager.java",
-    "com/badlogic/gdx/utils/PooledLinkedList.java",
-    "com/badlogic/gdx/utils/Predicate.java",
-    "com/badlogic/gdx/utils/Queue.java",
     "com/badlogic/gdx/utils/QuickSelect.java",
     "com/badlogic/gdx/utils/Select.java",
-    "com/badlogic/gdx/utils/ShortArray.java",
-    "com/badlogic/gdx/utils/SnapshotArray.java",
     "com/badlogic/gdx/utils/Sort.java",
-    "com/badlogic/gdx/utils/SortedIntList.java",
     "com/badlogic/gdx/utils/TimSort.java",
-    "com/badlogic/gdx/utils/TimeUtils.java",
-    "com/badlogic/gdx/utils/reflect/ArrayReflection.java",
   )
+
+  /** the twelve as FQNs (the annotation has no members to scope) — the port's `governs` claim and
+    * every scope in its policy. */
+  val Fqns: Set[String] = Files.map(_.stripSuffix(".java").replace('/', '.')).toSet - "com.badlogic.gdx.utils.Null"
 
   def main(args: Array[String]): Unit =
     val repoRoot = Path.of(sys.props.getOrElse("balticporter.root", ".")).toAbsolutePath.normalize
@@ -89,7 +53,7 @@ object LlsMigrate:
       // not emit into the program, and 300 of the contract questions they raise shape emitted text
       // with no base to answer them (`DESIGN.md` §8.3) — the run refuses. Standalone means the rest
       // of libGDX is EXTERNAL: unresolved, and counted like any other foreign symbol.
-      frontend  = FrontendConfig(base, Files, Nil, resolutionRoots = Nil),
+      frontend  = FrontendConfig(base, Files, balticporter.corpus.GdxCoreClasspath.entries(repoRoot), resolutionRoots = Nil),
       phases    = Nil, // supplied by the manifest — the two sources are mutually exclusive
       manifest  = Some(LlsPolicy.core(repoRoot, rungs)),
       provenance = Some(Provenance(
@@ -120,14 +84,11 @@ object LlsPolicy:
 
   val WitnessSubjects: Map[String, List[Int]] = Map(
     "com.badlogic.gdx.utils.Array"               -> List(0),
-    "com.badlogic.gdx.utils.SnapshotArray"       -> List(0),
-    "com.badlogic.gdx.utils.DelayedRemovalArray" -> List(0),
     "com.badlogic.gdx.utils.ArrayMap"            -> List(0, 1),
     // the two nested views CONSTRUCT a `DynamicArray` at their own parameter, so they take the
     // clause even though they allocate nothing themselves.
     "com.badlogic.gdx.utils.ArrayMap$Values"     -> List(0),
     "com.badlogic.gdx.utils.ArrayMap$Keys"       -> List(0),
-    "com.badlogic.gdx.utils.Queue"               -> List(0),
   )
 
   /** …and the declarations that only LOSE java's implicit `Object` bound: the three sort/select
@@ -143,19 +104,16 @@ object LlsPolicy:
   /** The DEFAULT array factory this fork of libGDX threads through its constructors. With the rung
     * on, the witness IS that factory: one added companion member and one call-site substitution
     * keep java's `ArraySupplier` API and make its default allocate through the type class. */
-  private val arraySupplierWitness: AddMembersTransform = new AddMembersTransform(Map(
-    "com.badlogic.gdx.utils.ArraySupplier" -> List(AddMembersTransform.MemberSpec(
-      name   = "witness",
-      arity  = 0,
-      // A PLAIN `def` whose every call names its element type (`defaultSuppliers` reads it off the
-      // callee's formal): an `inline` variant inferring `A` needed `this` inside a constructor
-      // delegation, which Scala Native's linker refuses (PROGRESS.md §13.29).
-      source = "def witness[A](using mk: lowlevel.MkArray[A]): lowlevel.util.ArraySupplier[scala.Array[A]] = " +
-        "((size: scala.Int) => mk.create(size))",
-      reason = balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.utils.ArraySupplier#witness"),
-      why    = Some("the witness AS an ArraySupplier, so java's default-supplier constructors " +
-        "allocate through the type class (PROGRESS.md 13.29)"),
-      static = true))))
+  /** `ArraySupplier` is not lls's: java's `T[] get(int)` becomes `scala.Function1[Int, T[]]` and the
+    * default supplier is the witness (`MkArray.create`), so no supplier type is emitted (K43). */
+  val ArraySupplier = "com.badlogic.gdx.utils.ArraySupplier"
+  def collections(rungs: Set[String]): CollectionsTransform = new CollectionsTransform(
+    scope = Twelve,
+    retarget = Map(ArraySupplier -> "scala.Function1") ++
+      (if rungs("ordering") then Map("java.util.Comparator" -> "scala.math.Ordering") else Map.empty),
+    retargetTypeArgs = Map(ArraySupplier -> List(
+      CollectionsTransform.RetargetArg.FixedType("scala.Int"), CollectionsTransform.RetargetArg.SourceArg(0))),
+    retargetRewrites = Map(ArraySupplier -> Map(("get", 1) -> CollectionsTransform.RetargetRewrite.Rename("apply"))))
 
   /** The decision rungs a run may switch on above L0, each a manifest fragment (PROGRESS.md §13.29).
     * @param rungs what else is on — `enrich`'s verbatim factories are written against the
@@ -164,18 +122,17 @@ object LlsPolicy:
     "nullable" -> List(new NullabilityTransform(
       annotations = Set("com.badlogic.gdx.utils.Null"),
       target      = NullabilityTransform.Target.Named("lowlevel.Nullable"),
-      scope       = balticporter.tir.RuleScope.Everywhere(Set.empty))),
-    "ordering" -> List(new CollectionsTransform(retarget = Map("java.util.Comparator" -> "scala.math.Ordering"))),
+      scope       = balticporter.tir.RuleScope.Only(Annotated))),
+    "ordering" -> List(collections(rungs)),
     // L1 candidates (PROGRESS.md §13.29): getter-like nullary methods lose `()`; java-convention
     // accessor pairs become properties (empty explicit tables: derivation only).
-    "arity"    -> List(new balticporter.transform.NullaryArityTransform(scope = balticporter.tir.RuleScope.Everywhere())),
-    "bean"     -> List(new balticporter.transform.BeanPropertyTransform(Map.empty, Map.empty, scope = balticporter.tir.RuleScope.Everywhere())),
+    "arity"    -> List(new balticporter.transform.NullaryArityTransform(scope = Twelve)),
+    "bean"     -> List(new balticporter.transform.BeanPropertyTransform(Map.empty, Map.empty, scope = Twelve)),
     "enrich"   -> List(LlsEnrich.transform(rungs("witness"))),
     "witness"  -> List(
       // the CONSTRUCTOR half of the clause, threaded by the phase that owns that mechanism (CT7)
       new GlobalsToImplicitsTransform(requiredGivens =
         ElementWitnessTransform.constructorGivens(WitnessSubjects, Witness)),
-      arraySupplierWitness,
       new ElementWitnessTransform(
         witness      = Witness,
         subjectTypes = WitnessSubjects,
@@ -183,7 +140,7 @@ object LlsPolicy:
         // java's own default array factory: with the rung on, the witness IS it.
         defaultSuppliers = Map(
           "com.badlogic.gdx.utils.ArraySupplier#object()" ->
-            "lowlevel.util.ArraySupplier.witness[{elem}]"),
+            "((size: scala.Int) => scala.Predef.summon[lowlevel.MkArray[{elem}]].create(size))"),
         // the witness for an element type that KEEPS java's `Object` bound: the one lls itself
         // uses for reference elements, which is the representation java's `Object[]` already had.
         boxedWitness = Some("lowlevel.MkArray.anyRef[scala.AnyRef].asInstanceOf[lowlevel.MkArray[{elem}]]"))),
@@ -198,6 +155,30 @@ object LlsPolicy:
   /** the rungs lls carries by default (the lane's `LLS_RUNGS` default spells the same set). */
   val DefaultRungs: Set[String] = Set("arity", "nullable", "ordering", "enrich", "witness")
 
+  /** every lls rung stops at lls's own declarations (D12): the inherited surface must not decide
+    * core's, which takes each decision as a rung of its own (PROGRESS.md §13.29). */
+  val Twelve: balticporter.tir.RuleScope = balticporter.tir.RuleScope.Only(LlsMigrate.Fqns)
+
+  /** the four of the twelve that carry `@Null` plus the two whose OVERRIDES they reach — a scope cut
+    * through an override component splits it instead of refusing (ENGINE-LIMITS.md K13.8), and an
+    * entry holding nothing back is a `policy` row, so neither `Twelve` nor the four alone will do. */
+  val Annotated: Set[String] = Set("Array", "ArrayMap", "ObjectMap", "ObjectSet", "OrderedMap", "OrderedSet")
+    .map("com.badlogic.gdx.utils." + _)
+
+  /** `GdxRuntimeException` and `RandomXS128` are core's: inside the twelve they are the JDK types lls
+    * used (`RuntimeException` where lls chose per site; `java.util.Random`), scoped to the ENTRY
+    * (D12) so the inherited surface leaves core's own uses alone (K43). */
+  val redirects: TypeRedirectTransform = new TypeRedirectTransform(
+    redirects = Map(
+      "com.badlogic.gdx.utils.GdxRuntimeException" -> "java.lang.RuntimeException",
+      "com.badlogic.gdx.utils.Collections"         -> "lowlevel.util.Collections",
+      "com.badlogic.gdx.math.RandomXS128"          -> "java.util.Random"),
+    scopes = Map(
+      "com.badlogic.gdx.utils.GdxRuntimeException" -> Twelve,
+      "com.badlogic.gdx.utils.Collections"         -> Twelve,
+      "com.badlogic.gdx.math.RandomXS128"          -> balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx.math.MathUtils"))))
+
+
   def core(repoRoot: Path, rungs: Set[String] = Set.empty): PortManifest =
     val unknown = rungs -- Rungs
     require(unknown.isEmpty, s"unknown lls rungs: ${unknown.mkString(",")}; known: ${Rungs.toList.sorted.mkString(",")}")
@@ -207,7 +188,24 @@ object LlsPolicy:
     require(!rungs("enrich") || rungs("nullable"), "lls rung `enrich` requires `nullable`")
     PortManifest(
       name    = "lls",
-      governs = Set("com.badlogic.gdx.utils", "com.badlogic.gdx.math"),
+      governs = LlsMigrate.Fqns,
+      // the five references the twelve make outside themselves, answered the way lls did (K43):
+      // `Collections` -> the injected flag holder (dropped for the DEPENDENT, redirected here, where
+      // it is a class-file external); the reflective `Class`-typed constructors and `toArray(Class)`
+      // go with `ArrayReflection`; `select(Predicate)` goes with `Predicate`; `ArraySupplier` retargets.
+      dropTypes = Set("com.badlogic.gdx.utils.Collections"),
+      dropMethods = Set(
+        "com.badlogic.gdx.utils.Array#<init>(boolean,int,Class)",
+        "com.badlogic.gdx.utils.Array#<init>(Class)",
+        "com.badlogic.gdx.utils.Array#toArray(Class)",
+        "com.badlogic.gdx.utils.Array#of(Class)",
+        "com.badlogic.gdx.utils.Array#of(boolean,int,Class)",
+        "com.badlogic.gdx.utils.Array#select(Predicate)",
+        "com.badlogic.gdx.utils.Array#predicateIterable",
+        "com.badlogic.gdx.utils.ArrayMap#<init>(boolean,int,Class,Class)",
+        "com.badlogic.gdx.utils.ArrayMap#<init>(Class,Class)",
+      ),
+      inject = List(repoRoot.resolve("balticporter/corpus/lls-overrides")),
       // The hand port's namespace. `packageRenames` is DATA, not a surface entry: `PortRun`
       // appends it LAST (CLAUDE.md §4.56).
       packageRenames = Map(
@@ -222,8 +220,9 @@ object LlsPolicy:
       // per-port today); the decision rungs are added one at a time (PROGRESS.md §13.29).
       // `enrich` LAST: its members are verbatim text written against what the rungs below it
       // emit, so it reads the surface rather than contributing one another phase must walk.
-      surface = List(new MutableParamsTransform) ++
-        RungOrder.filter(rungs).flatMap(rungPhases(rungs)(_)),
+      surface = List(new MutableParamsTransform, redirects) ++
+        RungOrder.filter(rungs).flatMap(rungPhases(rungs)(_)) ++
+        (if rungs("ordering") then Nil else List(collections(rungs))),
       // THE REFERENCE HAND PORT for lls. NOT inherited (DESIGN.md §8.23).
       parity = Some(ParityRef(roots = List(
         repoRoot.resolve("../lls/lls/src/main/scala").normalize))),
