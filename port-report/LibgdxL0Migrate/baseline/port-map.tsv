@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=bf82485d0a92d608	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=0640fe1717fcf0f0	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -56,7 +56,7 @@ type	com.badlogic.gdx.assets.loaders.BitmapFontLoader$BitmapFontParameter	sge.as
 type	com.badlogic.gdx.assets.loaders.CubemapLoader	sge.assets.loaders.CubemapLoader	Renamed	-		0		companion=yes form=class parents=sge.assets.loaders.AsynchronousAssetLoader primary=(FileHandleResolver) primaryKind=unique-root primaryVis=public statics=CubemapLoaderInfo,CubemapParameter
 type	com.badlogic.gdx.assets.loaders.CubemapLoader$CubemapLoaderInfo	sge.assets.loaders.CubemapLoader$CubemapLoaderInfo	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.assets.loaders.CubemapLoader$CubemapParameter	sge.assets.loaders.CubemapLoader$CubemapParameter	Renamed	-		0		companion=yes form=class parents=sge.assets.AssetLoaderParameters primary=() primaryKind=unique-root primaryVis=public
-type	com.badlogic.gdx.assets.loaders.FileHandleResolver	sge.assets.loaders.FileHandleResolver	Renamed	-		0		form=trait
+type	com.badlogic.gdx.assets.loaders.FileHandleResolver	sge.assets.loaders.FileHandleResolver	Renamed	-		0		companion=yes form=trait statics=Absolute,Classpath,External,Internal,Local
 type	com.badlogic.gdx.assets.loaders.I18NBundleLoader	sge.assets.loaders.I18NBundleLoader	Renamed	-		0		companion=yes form=class parents=sge.assets.loaders.AsynchronousAssetLoader primary=(FileHandleResolver) primaryKind=unique-root primaryVis=public statics=I18NBundleParameter
 type	com.badlogic.gdx.assets.loaders.I18NBundleLoader$I18NBundleParameter	sge.assets.loaders.I18NBundleLoader$I18NBundleParameter	Renamed	-		0		companion=yes form=class parents=sge.assets.AssetLoaderParameters primary=(Locale,String) primaryKind=unique-root primaryVis=public secondaries=();(Locale)
 type	com.badlogic.gdx.assets.loaders.ModelLoader	sge.assets.loaders.ModelLoader	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.assets.loaders.AsynchronousAssetLoader primary=(FileHandleResolver) primaryKind=unique-root primaryVis=public statics=ModelParameters tparams="[P <: sge.assets.loaders.ModelLoader.ModelParameters]"
@@ -1045,8 +1045,8 @@ member	com.badlogic.gdx.Game#render()	sge.Game#render()	Renamed	-	com/badlogic/g
 member	com.badlogic.gdx.Game#resize(Pixels,Pixels)	sge.Game#resize(Pixels,Pixels)	Renamed	-	com/badlogic/gdx/Game.java	52	b5fb923e2869dd75	
 member	com.badlogic.gdx.Game#resume()	sge.Game#resume()	Renamed	-	com/badlogic/gdx/Game.java	42	6869407e6b42fa4b	
 member	com.badlogic.gdx.Game#getScreen	sge.Game#screen	Renamed	-	com/badlogic/gdx/Game.java	29	b11d601965e05b9c	name=screen$field
-member	com.badlogic.gdx.Game#getScreen()	sge.Game#screen	Renamed	-	com/badlogic/gdx/Game.java	69	b185ec165936bce9	form=parenless
-member	com.badlogic.gdx.Game#setScreen(Screen)	sge.Game#setScreen(Screen)	Renamed	-	com/badlogic/gdx/Game.java	59	eb91ffe7000ea4fd	
+member	com.badlogic.gdx.Game#getScreen()	sge.Game#screen	Renamed	-	com/badlogic/gdx/Game.java	69	2ef344b379f8526f	form=parenless
+member	com.badlogic.gdx.Game#setScreen(Screen)	sge.Game#screen_=(Screen)	Renamed	-	com/badlogic/gdx/Game.java	59	4d549460a248949e	
 member	com.badlogic.gdx.Gdx#app	sge.Gdx#app	Renamed	-	com/badlogic/gdx/Gdx.java	31	6fe419dc499c6070	placement=companion
 member	com.badlogic.gdx.Gdx#graphics	sge.Gdx#graphics	Renamed	-	com/badlogic/gdx/Gdx.java	32	3a8b39e90d2e598b	placement=companion
 member	com.badlogic.gdx.Graphics#<stmt1>	sge.Graphics#<stmt1>	Renamed	-	<synthetic>	0	41d5ab3ed0ee32c9	
@@ -1695,6 +1695,11 @@ member	com.badlogic.gdx.assets.loaders.CubemapLoader$CubemapParameter#magFilter	
 member	com.badlogic.gdx.assets.loaders.CubemapLoader$CubemapParameter#minFilter	sge.assets.loaders.CubemapLoader$CubemapParameter#minFilter	Renamed	-	com/badlogic/gdx/assets/loaders/CubemapLoader.java	101	3a52006af2bc2f5e	
 member	com.badlogic.gdx.assets.loaders.CubemapLoader$CubemapParameter#wrapU	sge.assets.loaders.CubemapLoader$CubemapParameter#wrapU	Renamed	-	com/badlogic/gdx/assets/loaders/CubemapLoader.java	103	1351b75a8076575d	
 member	com.badlogic.gdx.assets.loaders.CubemapLoader$CubemapParameter#wrapV	sge.assets.loaders.CubemapLoader$CubemapParameter#wrapV	Renamed	-	com/badlogic/gdx/assets/loaders/CubemapLoader.java	104	8f6ca28346cbdec5	
+member	com.badlogic.gdx.assets.loaders.FileHandleResolver#<stmt1>	sge.assets.loaders.FileHandleResolver#<stmt1>	Renamed	-	<synthetic>	0	7c8afe9cda24cc69	
+member	com.badlogic.gdx.assets.loaders.FileHandleResolver#<stmt2>	sge.assets.loaders.FileHandleResolver#<stmt2>	Renamed	-	<synthetic>	0	4e56405fa0d5b206	
+member	com.badlogic.gdx.assets.loaders.FileHandleResolver#<stmt3>	sge.assets.loaders.FileHandleResolver#<stmt3>	Renamed	-	<synthetic>	0	423cb867404d2f26	
+member	com.badlogic.gdx.assets.loaders.FileHandleResolver#<stmt4>	sge.assets.loaders.FileHandleResolver#<stmt4>	Renamed	-	<synthetic>	0	46060ee624e4d6e9	
+member	com.badlogic.gdx.assets.loaders.FileHandleResolver#<stmt5>	sge.assets.loaders.FileHandleResolver#<stmt5>	Renamed	-	<synthetic>	0	8c092c23c3f126cf	
 member	com.badlogic.gdx.assets.loaders.FileHandleResolver#resolve(String)	sge.assets.loaders.FileHandleResolver#resolve(String)	Renamed	-	com/badlogic/gdx/assets/loaders/FileHandleResolver.java	26	153a447876c27b91	
 member	com.badlogic.gdx.assets.loaders.I18NBundleLoader#bundle	sge.assets.loaders.I18NBundleLoader#bundle	Renamed	-	com/badlogic/gdx/assets/loaders/I18NBundleLoader.java	51	fce02c156404c68c	
 member	com.badlogic.gdx.assets.loaders.I18NBundleLoader#getDependencies(String,FileHandle,I18NBundleParameter)	sge.assets.loaders.I18NBundleLoader#getDependencies(String,FileHandle,I18NBundleParameter)	Renamed	-	com/badlogic/gdx/assets/loaders/I18NBundleLoader.java	80	8d2b3716db9ed7ee	
@@ -3522,7 +3527,7 @@ member	com.badlogic.gdx.graphics.Mesh#<init>(boolean,boolean,int,int,VertexAttri
 member	com.badlogic.gdx.graphics.Mesh#<init>(boolean,int,int,Array,Sge)	sge.graphics.Mesh#<init>(boolean,int,int,Array<VertexAttribute>,Sge)	Renamed	-	com/badlogic/gdx/graphics/Mesh.java	102	d4d0b68a49741e08	
 member	com.badlogic.gdx.graphics.Mesh#<init>(boolean,int,int,VertexAttributes,Sge)	sge.graphics.Mesh#<init>(boolean,int,int,VertexAttributes,Sge)	Renamed	-	com/badlogic/gdx/graphics/Mesh.java	117	9afc9c9a66ab5026	
 member	com.badlogic.gdx.graphics.Mesh#<stmt1>	sge.graphics.Mesh#<stmt1>	Renamed	-	<synthetic>	0	abca2bbe56b03719	
-member	com.badlogic.gdx.graphics.Mesh#<stmt2>	sge.graphics.Mesh#<stmt2>	Renamed	-	<synthetic>	0	71cc469a1e1f967b	
+member	com.badlogic.gdx.graphics.Mesh#<stmt2>	sge.graphics.Mesh#<stmt2>	Renamed	-	<synthetic>	0	d6e85be818b33af4	
 member	com.badlogic.gdx.graphics.Mesh#addManagedMesh(Application,Mesh)	sge.graphics.Mesh#addManagedMesh(Application,Mesh)	Renamed	-	com/badlogic/gdx/graphics/Mesh.java	978	15272a279cc59346	placement=companion vis=private
 member	com.badlogic.gdx.graphics.Mesh#autoBind	sge.graphics.Mesh#autoBind	Renamed	-	com/badlogic/gdx/graphics/Mesh.java	81	10e98d0e0b717eac	
 member	com.badlogic.gdx.graphics.Mesh#bind(ShaderProgram)	sge.graphics.Mesh#bind(ShaderProgram)	Renamed	-	com/badlogic/gdx/graphics/Mesh.java	508	c2903081372a31a0	
@@ -3970,13 +3975,13 @@ member	com.badlogic.gdx.graphics.g2d.Batch#enableBlending()	sge.graphics.g2d.Bat
 member	com.badlogic.gdx.graphics.g2d.Batch#end()	sge.graphics.g2d.Batch#end()	Renamed	-	com/badlogic/gdx/graphics/g2d/Batch.java	57	1a0d9aa40735ed66	
 member	com.badlogic.gdx.graphics.g2d.Batch#flush()	sge.graphics.g2d.Batch#flush()	Renamed	-	com/badlogic/gdx/graphics/g2d/Batch.java	176	8f487f148a0eb8e7	
 member	com.badlogic.gdx.graphics.g2d.Batch#getPackedColor()	sge.graphics.g2d.Batch#packedColor	Renamed	-	com/badlogic/gdx/graphics/g2d/Batch.java	76	ebd186dfe4b61877	form=parenless
-member	com.badlogic.gdx.graphics.g2d.Batch#getProjectionMatrix()	sge.graphics.g2d.Batch#projectionMatrix	Renamed	-	com/badlogic/gdx/graphics/g2d/Batch.java	207	fb6b0476086c149d	form=parenless
+member	com.badlogic.gdx.graphics.g2d.Batch#getProjectionMatrix()	sge.graphics.g2d.Batch#projectionMatrix	Renamed	-	com/badlogic/gdx/graphics/g2d/Batch.java	207	bfb3c05f3305f862	form=parenless
+member	com.badlogic.gdx.graphics.g2d.Batch#setProjectionMatrix(Matrix4)	sge.graphics.g2d.Batch#projectionMatrix_=(Matrix4)	Renamed	-	com/badlogic/gdx/graphics/g2d/Batch.java	215	548a7564a2c6497c	
 member	com.badlogic.gdx.graphics.g2d.Batch#setBlendFunction(int,int)	sge.graphics.g2d.Batch#setBlendFunction(int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Batch.java	187	7e76bf3bc5812902	
 member	com.badlogic.gdx.graphics.g2d.Batch#setBlendFunctionSeparate(int,int,int,int)	sge.graphics.g2d.Batch#setBlendFunctionSeparate(int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/Batch.java	195	cf3c4508c68d8124	
 member	com.badlogic.gdx.graphics.g2d.Batch#setColor(Color)	sge.graphics.g2d.Batch#setColor(Color)	Renamed	-	com/badlogic/gdx/graphics/g2d/Batch.java	60	3a44b9c2cb2f8ec5	
 member	com.badlogic.gdx.graphics.g2d.Batch#setColor(float,float,float,float)	sge.graphics.g2d.Batch#setColor(float,float,float,float)	Renamed	-	com/badlogic/gdx/graphics/g2d/Batch.java	63	59525b78bb34a0c7	
 member	com.badlogic.gdx.graphics.g2d.Batch#setPackedColor(float)	sge.graphics.g2d.Batch#setPackedColor(float)	Renamed	-	com/badlogic/gdx/graphics/g2d/Batch.java	72	c0a69bde9185a163	
-member	com.badlogic.gdx.graphics.g2d.Batch#setProjectionMatrix(Matrix4)	sge.graphics.g2d.Batch#setProjectionMatrix(Matrix4)	Renamed	-	com/badlogic/gdx/graphics/g2d/Batch.java	215	d2926786e2e7067b	
 member	com.badlogic.gdx.graphics.g2d.Batch#setShader(ShaderProgram)	sge.graphics.g2d.Batch#setShader(ShaderProgram)	Renamed	-	com/badlogic/gdx/graphics/g2d/Batch.java	231	7446fa8f781d5eab	
 member	com.badlogic.gdx.graphics.g2d.Batch#setTransformMatrix(Matrix4)	sge.graphics.g2d.Batch#setTransformMatrix(Matrix4)	Renamed	-	com/badlogic/gdx/graphics/g2d/Batch.java	218	1e4557bd2b65e45c	
 member	com.badlogic.gdx.graphics.g2d.Batch#getShader()	sge.graphics.g2d.Batch#shader	Renamed	-	com/badlogic/gdx/graphics/g2d/Batch.java	234	947f6103258048c4	form=parenless
@@ -4979,14 +4984,14 @@ member	com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch#mesh	sge.graphics.g2d.Po
 member	com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch#ownsShader	sge.graphics.g2d.PolygonSpriteBatch#ownsShader	Renamed	-	com/badlogic/gdx/graphics/g2d/PolygonSpriteBatch.java	80	f1bdfb587fd5a908	
 member	com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch#getPackedColor()	sge.graphics.g2d.PolygonSpriteBatch#packedColor	Renamed	-	com/badlogic/gdx/graphics/g2d/PolygonSpriteBatch.java	201	e827e121c59ef75e	form=parenless
 member	com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch#getProjectionMatrix	sge.graphics.g2d.PolygonSpriteBatch#projectionMatrix	Renamed	-	com/badlogic/gdx/graphics/g2d/PolygonSpriteBatch.java	69	0215c7ee3311ae95	name=projectionMatrix$field
-member	com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch#getProjectionMatrix()	sge.graphics.g2d.PolygonSpriteBatch#projectionMatrix	Renamed	-	com/badlogic/gdx/graphics/g2d/PolygonSpriteBatch.java	1279	412dcf79101747fa	form=parenless
+member	com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch#getProjectionMatrix()	sge.graphics.g2d.PolygonSpriteBatch#projectionMatrix	Renamed	-	com/badlogic/gdx/graphics/g2d/PolygonSpriteBatch.java	1279	c17e016adc25517a	form=parenless
+member	com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch#setProjectionMatrix(Matrix4)	sge.graphics.g2d.PolygonSpriteBatch#projectionMatrix_=(Matrix4)	Renamed	-	com/badlogic/gdx/graphics/g2d/PolygonSpriteBatch.java	1289	0e7e3218dfff4e94	
 member	com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch#renderCalls	sge.graphics.g2d.PolygonSpriteBatch#renderCalls	Renamed	-	com/badlogic/gdx/graphics/g2d/PolygonSpriteBatch.java	86	849502fd2e73215d	
 member	com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch#setBlendFunction(int,int)	sge.graphics.g2d.PolygonSpriteBatch#setBlendFunction(int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/PolygonSpriteBatch.java	1237	148149e45acb1d56	
 member	com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch#setBlendFunctionSeparate(int,int,int,int)	sge.graphics.g2d.PolygonSpriteBatch#setBlendFunctionSeparate(int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/PolygonSpriteBatch.java	1242	417b5e84174cce07	
 member	com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch#setColor(Color)	sge.graphics.g2d.PolygonSpriteBatch#setColor(Color)	Renamed	-	com/badlogic/gdx/graphics/g2d/PolygonSpriteBatch.java	178	e2a964b21708d8d3	
 member	com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch#setColor(float,float,float,float)	sge.graphics.g2d.PolygonSpriteBatch#setColor(float,float,float,float)	Renamed	-	com/badlogic/gdx/graphics/g2d/PolygonSpriteBatch.java	184	f7181cb8c0109fc6	
 member	com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch#setPackedColor(float)	sge.graphics.g2d.PolygonSpriteBatch#setPackedColor(float)	Renamed	-	com/badlogic/gdx/graphics/g2d/PolygonSpriteBatch.java	190	c717f84e3c0fd5b9	
-member	com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch#setProjectionMatrix(Matrix4)	sge.graphics.g2d.PolygonSpriteBatch#setProjectionMatrix(Matrix4)	Renamed	-	com/badlogic/gdx/graphics/g2d/PolygonSpriteBatch.java	1289	4e06ec9349c8edf5	
 member	com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch#setShader(ShaderProgram)	sge.graphics.g2d.PolygonSpriteBatch#setShader(ShaderProgram)	Renamed	-	com/badlogic/gdx/graphics/g2d/PolygonSpriteBatch.java	1321	40caccdd55e93188	
 member	com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch#setTransformMatrix(Matrix4)	sge.graphics.g2d.PolygonSpriteBatch#setTransformMatrix(Matrix4)	Renamed	-	com/badlogic/gdx/graphics/g2d/PolygonSpriteBatch.java	1296	c4d7bd0305e7376f	
 member	com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch#setupMatrices()	sge.graphics.g2d.PolygonSpriteBatch#setupMatrices()	Renamed	-	com/badlogic/gdx/graphics/g2d/PolygonSpriteBatch.java	1302	99d6d5d787db46af	
@@ -5157,14 +5162,14 @@ member	com.badlogic.gdx.graphics.g2d.SpriteBatch#overrideVertexType	sge.graphics
 member	com.badlogic.gdx.graphics.g2d.SpriteBatch#ownsShader	sge.graphics.g2d.SpriteBatch#ownsShader	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	71	f1bdfb587fd5a908	
 member	com.badlogic.gdx.graphics.g2d.SpriteBatch#getPackedColor()	sge.graphics.g2d.SpriteBatch#packedColor	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	238	04e4cf6544e2d9b9	form=parenless
 member	com.badlogic.gdx.graphics.g2d.SpriteBatch#getProjectionMatrix	sge.graphics.g2d.SpriteBatch#projectionMatrix	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	60	0ec72213dea9665a	name=projectionMatrix$field
-member	com.badlogic.gdx.graphics.g2d.SpriteBatch#getProjectionMatrix()	sge.graphics.g2d.SpriteBatch#projectionMatrix	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	1055	7a4510d9727e32dd	form=parenless
+member	com.badlogic.gdx.graphics.g2d.SpriteBatch#getProjectionMatrix()	sge.graphics.g2d.SpriteBatch#projectionMatrix	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	1055	516b44fd3b86df02	form=parenless
+member	com.badlogic.gdx.graphics.g2d.SpriteBatch#setProjectionMatrix(Matrix4)	sge.graphics.g2d.SpriteBatch#projectionMatrix_=(Matrix4)	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	1065	f6a160dd9329d197	
 member	com.badlogic.gdx.graphics.g2d.SpriteBatch#renderCalls	sge.graphics.g2d.SpriteBatch#renderCalls	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	77	849502fd2e73215d	
 member	com.badlogic.gdx.graphics.g2d.SpriteBatch#setBlendFunction(int,int)	sge.graphics.g2d.SpriteBatch#setBlendFunction(int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	1013	148149e45acb1d56	
 member	com.badlogic.gdx.graphics.g2d.SpriteBatch#setBlendFunctionSeparate(int,int,int,int)	sge.graphics.g2d.SpriteBatch#setBlendFunctionSeparate(int,int,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	1018	417b5e84174cce07	
 member	com.badlogic.gdx.graphics.g2d.SpriteBatch#setColor(Color)	sge.graphics.g2d.SpriteBatch#setColor(Color)	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	215	e2a964b21708d8d3	
 member	com.badlogic.gdx.graphics.g2d.SpriteBatch#setColor(float,float,float,float)	sge.graphics.g2d.SpriteBatch#setColor(float,float,float,float)	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	221	f7181cb8c0109fc6	
 member	com.badlogic.gdx.graphics.g2d.SpriteBatch#setPackedColor(float)	sge.graphics.g2d.SpriteBatch#setPackedColor(float)	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	232	c717f84e3c0fd5b9	
-member	com.badlogic.gdx.graphics.g2d.SpriteBatch#setProjectionMatrix(Matrix4)	sge.graphics.g2d.SpriteBatch#setProjectionMatrix(Matrix4)	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	1065	4e06ec9349c8edf5	
 member	com.badlogic.gdx.graphics.g2d.SpriteBatch#setShader(ShaderProgram)	sge.graphics.g2d.SpriteBatch#setShader(ShaderProgram)	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	1097	9111a805de60d0a1	
 member	com.badlogic.gdx.graphics.g2d.SpriteBatch#setTransformMatrix(Matrix4)	sge.graphics.g2d.SpriteBatch#setTransformMatrix(Matrix4)	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	1072	c4d7bd0305e7376f	
 member	com.badlogic.gdx.graphics.g2d.SpriteBatch#setupMatrices()	sge.graphics.g2d.SpriteBatch#setupMatrices()	Renamed	-	com/badlogic/gdx/graphics/g2d/SpriteBatch.java	1078	99d6d5d787db46af	
@@ -10709,8 +10714,8 @@ member	com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer#renderMapLaye
 member	com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer#renderObject(MapObject)	sge.maps.tiled.renderers.BatchTiledMapRenderer#renderObject(MapObject)	Renamed	-	com/badlogic/gdx/maps/tiled/renderers/BatchTiledMapRenderer.java	179	fc8d7176da430015	
 member	com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer#renderObjects(MapLayer)	sge.maps.tiled.renderers.BatchTiledMapRenderer#renderObjects(MapLayer)	Renamed	-	com/badlogic/gdx/maps/tiled/renderers/BatchTiledMapRenderer.java	172	e49f9d4df32dbcf6	
 member	com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer#repeatedImageBounds	sge.maps.tiled.renderers.BatchTiledMapRenderer#repeatedImageBounds	Renamed	-	com/badlogic/gdx/maps/tiled/renderers/BatchTiledMapRenderer.java	66	312cedd13303e5de	
-member	com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer#setView(Matrix4,float,float,float,float)	sge.maps.tiled.renderers.BatchTiledMapRenderer#setView(Matrix4,float,float,float,float)	Renamed	-	com/badlogic/gdx/maps/tiled/renderers/BatchTiledMapRenderer.java	127	90fbfa56160d7ee1	
-member	com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer#setView(OrthographicCamera)	sge.maps.tiled.renderers.BatchTiledMapRenderer#setView(OrthographicCamera)	Renamed	-	com/badlogic/gdx/maps/tiled/renderers/BatchTiledMapRenderer.java	117	9139bff68379f8b9	
+member	com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer#setView(Matrix4,float,float,float,float)	sge.maps.tiled.renderers.BatchTiledMapRenderer#setView(Matrix4,float,float,float,float)	Renamed	-	com/badlogic/gdx/maps/tiled/renderers/BatchTiledMapRenderer.java	127	e42c63db3248bad3	
+member	com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer#setView(OrthographicCamera)	sge.maps.tiled.renderers.BatchTiledMapRenderer#setView(OrthographicCamera)	Renamed	-	com/badlogic/gdx/maps/tiled/renderers/BatchTiledMapRenderer.java	117	6154161b01981295	
 member	com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer#getUnitScale	sge.maps.tiled.renderers.BatchTiledMapRenderer#unitScale	Renamed	-	com/badlogic/gdx/maps/tiled/renderers/BatchTiledMapRenderer.java	60	f5b1e67e712d025d	name=unitScale$field
 member	com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer#getUnitScale()	sge.maps.tiled.renderers.BatchTiledMapRenderer#unitScale	Renamed	-	com/badlogic/gdx/maps/tiled/renderers/BatchTiledMapRenderer.java	80	2b10bfdf6dcc552c	form=parenless
 member	com.badlogic.gdx.maps.tiled.renderers.BatchTiledMapRenderer#vertices	sge.maps.tiled.renderers.BatchTiledMapRenderer#vertices	Renamed	-	com/badlogic/gdx/maps/tiled/renderers/BatchTiledMapRenderer.java	70	c2e5d0e4c31cedcd	
@@ -12832,7 +12837,7 @@ member	com.badlogic.gdx.scenes.scene2d.Stage#debugShapes	sge.scenes.scene2d.Stag
 member	com.badlogic.gdx.scenes.scene2d.Stage#debugTableUnderMouse	sge.scenes.scene2d.Stage#debugTableUnderMouse	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	87	f75ffe95a89eaad6	vis=private
 member	com.badlogic.gdx.scenes.scene2d.Stage#debugUnderMouse	sge.scenes.scene2d.Stage#debugUnderMouse	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	86	844c2a920f96c0df	vis=private
 member	com.badlogic.gdx.scenes.scene2d.Stage#disableDebug(Actor,Actor)	sge.scenes.scene2d.Stage#disableDebug(Actor,Actor)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	179	53fa85c493151648	vis=private
-member	com.badlogic.gdx.scenes.scene2d.Stage#draw()	sge.scenes.scene2d.Stage#draw()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	124	bb3007320817efba	
+member	com.badlogic.gdx.scenes.scene2d.Stage#draw()	sge.scenes.scene2d.Stage#draw()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	124	b231cf3dd2c51ed5	
 member	com.badlogic.gdx.scenes.scene2d.Stage#drawDebug()	sge.scenes.scene2d.Stage#drawDebug()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	139	ec8b4f8dcaeec811	vis=private
 member	com.badlogic.gdx.scenes.scene2d.Stage#fireEnterAndExit(Nullable,int,int,int)	sge.scenes.scene2d.Stage#fireEnterAndExit(Nullable<Actor>,int,int,int)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	219	da4ca8a4f426f766	vis=private
 member	com.badlogic.gdx.scenes.scene2d.Stage#fireExit(Actor,int,int,int)	sge.scenes.scene2d.Stage#fireExit(Actor,int,int,int)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	253	bacf0719e7aa2bb4	vis=private

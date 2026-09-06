@@ -262,8 +262,8 @@ object LibgdxLadder:
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.Material#<init>"),
             Some("sge's repeated-parameter spelling of java's `T...` (the port emits `Array[T]`; PROGRESS.md §13.29 card 1)"), false)),
         "com.badlogic.gdx.graphics.Mesh" -> List(
-          balticporter.transform.AddMembersTransform.MemberSpec("this", 4,
-            "def this(isStatic: scala.Boolean, maxVertices: scala.Int, maxIndices: scala.Int, attributes: sge.graphics.VertexAttribute*)(using sge.Sge) = this(isStatic, maxVertices, maxIndices, attributes.toArray)",
+          balticporter.transform.AddMembersTransform.MemberSpec("this", 3,
+            "def this(isStatic: scala.Boolean, maxVertices: scala.Int, maxIndices: scala.Int)(attributes: sge.graphics.VertexAttribute*)(using sge.Sge) = this(isStatic, maxVertices, maxIndices, attributes.toArray)",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.Mesh#<init>"),
             Some("sge's repeated-parameter spelling of java's `T...` (the port emits `Array[T]`; PROGRESS.md §13.29 card 1)"), false)),
         "com.badlogic.gdx.math.Bezier" -> List(
@@ -282,6 +282,29 @@ object LibgdxLadder:
             "def format(pattern: java.lang.String, args: java.lang.Object*): java.lang.String = format(pattern, args.toArray)",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.utils.TextFormatter#format"),
             Some("sge's repeated-parameter spelling of java's `T...` (the port emits `Array[T]`; PROGRESS.md §13.29 card 1)"), false)),
+        // sge nests the five argument-free resolvers in `FileHandleResolver`'s companion
+        // (`AssetManager(FileHandleResolver.Internal())` in the demos); each is the java class under sge's name.
+        "com.badlogic.gdx.assets.loaders.FileHandleResolver" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("Absolute", 0,
+            "class Absolute(using sge.Sge) extends sge.assets.loaders.resolvers.AbsoluteFileHandleResolver",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.loaders.FileHandleResolver#Absolute"),
+            Some("sge nests the resolvers in the companion: `FileHandleResolver.Absolute()` (PROGRESS.md §13.29)"), true),
+          balticporter.transform.AddMembersTransform.MemberSpec("Classpath", 0,
+            "class Classpath(using sge.Sge) extends sge.assets.loaders.resolvers.ClasspathFileHandleResolver",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.loaders.FileHandleResolver#Classpath"),
+            Some("sge nests the resolvers in the companion: `FileHandleResolver.Classpath()` (PROGRESS.md §13.29)"), true),
+          balticporter.transform.AddMembersTransform.MemberSpec("External", 0,
+            "class External(using sge.Sge) extends sge.assets.loaders.resolvers.ExternalFileHandleResolver",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.loaders.FileHandleResolver#External"),
+            Some("sge nests the resolvers in the companion: `FileHandleResolver.External()` (PROGRESS.md §13.29)"), true),
+          balticporter.transform.AddMembersTransform.MemberSpec("Internal", 0,
+            "class Internal(using sge.Sge) extends sge.assets.loaders.resolvers.InternalFileHandleResolver",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.loaders.FileHandleResolver#Internal"),
+            Some("sge nests the resolvers in the companion: `FileHandleResolver.Internal()` (PROGRESS.md §13.29)"), true),
+          balticporter.transform.AddMembersTransform.MemberSpec("Local", 0,
+            "class Local(using sge.Sge) extends sge.assets.loaders.resolvers.LocalFileHandleResolver",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.loaders.FileHandleResolver#Local"),
+            Some("sge nests the resolvers in the companion: `FileHandleResolver.Local()` (PROGRESS.md §13.29)"), true)),
         "com.badlogic.gdx.assets.AssetManager" -> List(
           balticporter.transform.AddMembersTransform.MemberSpec("load", 1,
             "def load[T <: java.lang.Object](fileName: java.lang.String)(using ct: scala.reflect.ClassTag[T]): scala.Unit = load(fileName, ct.runtimeClass.asInstanceOf[java.lang.Class[T]])",
@@ -443,7 +466,14 @@ object LibgdxLadder:
     // properties and parenless getters: the full port's bean pairs and targets (`LibgdxPolicy`),
     // lifted by reference, on core's entry; the `Only` scope merges with lls's arity instance.
     "properties" -> List(
-      new balticporter.transform.BeanPropertyTransform(LibgdxPolicy.beanPropertyPairs, LibgdxPolicy.beanPropertyTargets,
+      // sge's own setter decisions the demos rely on (`game.screen = …`, `batch.projectionMatrix = …`):
+      // configured pairs, which the behaviour-setter guard does not apply to (`Cell.setTile` is FLUENT
+      // and stays a method: a `tile_=` beside it clashes with the private field's own setter, and the
+      // collapse refuses a fluent setter by design — one demo line, counted).
+      new balticporter.transform.BeanPropertyTransform(LibgdxPolicy.beanPropertyPairs ++ Map(
+          "com.badlogic.gdx.Game#screen"                            -> "getScreen/setScreen",
+          "com.badlogic.gdx.graphics.g2d.Batch#projectionMatrix"    -> "getProjectionMatrix/setProjectionMatrix"),
+        LibgdxPolicy.beanPropertyTargets,
         scope = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx"))),
       new balticporter.transform.NullaryArityTransform(scope = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx")),
         // sge's `clip.hasContents` — parenless although the body reads the platform clipboard
