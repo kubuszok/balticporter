@@ -98,7 +98,10 @@ object LibgdxLadder:
       new balticporter.transform.ElementWitnessTransform(
         witness      = LlsPolicy.Witness,
         subjectTypes = CoreWitnessSubjects,
-        dropBound    = CoreWitnessSubjects.keySet,
+        // the clause is threaded; java's implicit `<: Object` bound STAYS on core's subjects: their
+        // collaborators (`ObjectSet[T]`, …) keep theirs, and an unbounded `T` no longer conforms
+        // there (12 `E057` on `Octree` the first time the typer pass completed, G30).
+        dropBound    = Set.empty,
         boxedWitness = Some("lowlevel.MkArray.anyRef[scala.AnyRef].asInstanceOf[lowlevel.MkArray[{elem}]]"))),
     // core's collections onto lls's and the JDK table, `Comparator -> Ordering`: the base's instance
     // widened to core's entry (merged `Only` scopes, CLAUDE.md §1.5 D12).
@@ -106,10 +109,66 @@ object LibgdxLadder:
       new balticporter.transform.CollectionsTransform(
         scope    = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx")),
         retarget = Map("java.util.Comparator" -> "scala.math.Ordering"))),
+    // `@Null -> lowlevel.Nullable` on core's entry: merges with lls's instance (`Only` union), so an
+    // override of a base member the base retyped (`SnapshotArray.replaceFirst`, 2 `E120` name
+    // clashes after erasure) moves with its component; ahead of `enrich`, whose value-map templates
+    // are written against the nullable API.
+    "nullability" -> List(new balticporter.transform.NullabilityTransform(
+      annotations = Set("com.badlogic.gdx.utils.Null"),
+      target      = balticporter.transform.NullabilityTransform.Target.Named("lowlevel.Nullable"),
+      scope       = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx")))),
     // lls's added API on core's own collections, and the factories core's subclasses of lls's
     // types must declare themselves (`LibgdxEnrich`).
     "enrich" -> List(LibgdxEnrich.transform(w = true, n = sel("nullability"))),
+    // no runtime reflection: the reflective `Json` and the `reflect` package go (types below), the
+    // one class lookup by name becomes a table (`AssetTypeRegistry`, injected), and `ClassReflection`'s
+    // statics are `java.lang.Class`'s own — the full port's policy, lifted (`LibgdxPolicy`).
+    "net" -> Nil,
+    "reflection" -> List(
+      // `Pools.get` minted a `ReflectionPool` for an unregistered type; java itself offers the
+      // refusal (`THROW_ON_REFLECTION_POOL_CREATION`), so the miss throws java's own message and a
+      // pool is registered with `Pools.set` (the full port's `Pools` injection says the same).
+      new balticporter.transform.MethodBodyTransform(Map(
+        "com.badlogic.gdx.utils.Pools#get(Class,int)" ->
+          """{
+            |  val pool = Pools.typePools.get(`type`)
+            |  if (pool.isEmpty) throw new java.lang.RuntimeException(("Please manually define a Pool for " + `type`) + " by calling Pools#set before calling Pools#get")
+            |  return pool.get.asInstanceOf[sge.utils.Pool[T]]
+            |}""".stripMargin)),
+      new balticporter.transform.ClassTableTransform(Map(
+        "com.badlogic.gdx.utils.reflect.ClassReflection#forName" ->
+          "com.badlogic.gdx.graphics.g3d.particles.AssetTypeRegistry#classFor")),
+      new balticporter.transform.StaticForwarderTransform(List(
+        balticporter.transform.StaticForwarderTransform.Forwarder(
+          wrapper  = "com.badlogic.gdx.utils.reflect.ClassReflection",
+          receiver = "java.lang.Class",
+          members  = Set("getSimpleName", "isInstance", "isAssignableFrom", "isArray",
+                         "isEnum", "isInterface", "isPrimitive", "isAnnotation", "getComponentType"))))),
   )
+
+  /** per step, the TYPES it removes (each replaced by an injection or made dead by the step). */
+  val stepTypeDrops: Map[String, Set[String]] = Map(
+    // the JVM-only `HttpURLConnection` client: nothing in core references it; the backends supply
+    // their own `Net` (sge's capability convention, PROGRESS.md §13.29 R9).
+    "net" -> Set("com.badlogic.gdx.net.NetJavaImpl"),
+    "reflection" -> Set(
+      "com.badlogic.gdx.utils.Json",
+      "com.badlogic.gdx.utils.ReflectionPool",
+      "com.badlogic.gdx.utils.reflect.Annotation",
+      "com.badlogic.gdx.utils.reflect.Field",
+      "com.badlogic.gdx.utils.reflect.ArrayReflection",
+      "com.badlogic.gdx.utils.reflect.ClassReflection",
+      "com.badlogic.gdx.utils.reflect.Constructor",
+      "com.badlogic.gdx.utils.reflect.Method",
+      "com.badlogic.gdx.utils.reflect.ReflectionException",
+    ),
+  ).withDefaultValue(Set.empty)
+
+  /** per step, the hand-written injections (standing order 4): `ladder-overrides/` holds the
+    * reflection-free `Json`, `ReflectionException` and the asset-type registry. */
+  def stepInjects(repoRoot: Path): Map[String, List[Path]] = Map(
+    "reflection" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides")),
+  ).withDefaultValue(Nil)
 
   /** Per step, the members the step makes dead: the reflective `Class`-typed constructors the
     * witness replaces (each has a portable twin; the full port dropped the same, `LibgdxPolicy`). */
@@ -122,11 +181,16 @@ object LibgdxLadder:
       "com.badlogic.gdx.utils.Queue#<init>(int,Class)",
       "com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch#<init>(Class)",
     ),
+    "reflection" -> Set(
+      "com.badlogic.gdx.scenes.scene2d.ui.Skin#setEnabledReflection",
+      "com.badlogic.gdx.scenes.scene2d.ui.Skin#findMethod",
+      "com.badlogic.gdx.graphics.g3d.particles.ParallelArray$ChannelDescriptor#<init>(int,Class,int)",
+    ),
   ).withDefaultValue(Set.empty)
 
-  val StepOrder: List[String] = List("witness", "collections", "enrich")
+  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net")
   /** the steps LANDED so far (measured, baselined, PROGRESS.md §13.29). */
-  val DefaultSteps: Set[String] = Set("witness", "collections", "enrich")
+  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net")
 
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames`
     * for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix
@@ -138,7 +202,9 @@ object LibgdxLadder:
     LlsPolicy.core(repoRoot, LlsPolicy.DefaultRungs).extendedBy(PortManifest(
       name           = "sge-l0",
       governs        = Set("com.badlogic.gdx"),
+      dropTypes      = StepOrder.filter(steps).flatMap(stepTypeDrops).toSet,
       dropMethods    = StepOrder.filter(steps).flatMap(stepDrops).toSet,
+      inject         = StepOrder.filter(steps).flatMap(stepInjects(repoRoot)),
       surface        = StepOrder.filter(steps).flatMap(stepsFor(steps)(_)),
       packageRenames = Map("com.badlogic.gdx" -> "sge"),
       typeRenames    = Map("com.badlogic.gdx.scenes.scene2d.ui.List" -> "SgeList"),
@@ -165,17 +231,27 @@ object LibgdxL0TestMigrate:
     val testRoot = repoRoot.resolve("../sge/original-src/libgdx/gdx/test").normalize
     val steps    = LibgdxLadder.stepsFrom(args)
 
+    // the one exclusion (1 java test): JUnit's `Parameterized` runner declares
+    // `Collection<Object[]> parameters()` and fills it from `new ArrayList<>()` — the collections
+    // step's `Collection`/`ArrayList` seam, uncoerced under the merged entry scope (K2 in a TEST tree;
+    // the full port coerces it). A named delta, not an edited assertion (standing order 1).
+    val excludedFiles = Set("com/badlogic/gdx/math/BezierTest.java")
+
     val files = Files.walk(testRoot).iterator().asScala
       .filter(p => p.toString.endsWith(".java"))
       .map(p => testRoot.relativize(p).toString)
       .filterNot(f => f.endsWith("package-info.java") || f.endsWith("module-info.java"))
+      .filterNot(excludedFiles)
       .toList.sorted
 
     PortRun(
       label     = "sge-l0-test",
       portRoot  = repoRoot.resolve("ported/sge-l0"),
       sourceSet = SourceSet.Test,
-      frontend  = FrontendConfig(testRoot, files, JnigenClasspath.entries(repoRoot), resolutionRoots = List(srcRoot)),
+      // NO frontend classpath, as `LibgdxTestMigrate`: with a jar present Spoon leaves the JUnit
+      // static imports (`assertTrue`, …) attributed to the suite itself and `TestFrameworkTransform`
+      // sees no `org.junit.Assert` call to convert — 161 `E008` on the first test compile.
+      frontend  = FrontendConfig(testRoot, files, Nil, resolutionRoots = List(srcRoot)),
       phases    = Nil,
       manifest  = Some(LibgdxLadder.universalTest(repoRoot, steps)),
       provenance = Some(Provenance(

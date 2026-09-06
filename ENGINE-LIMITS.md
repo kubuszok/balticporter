@@ -1830,3 +1830,18 @@ reading decision rows: the determinism check's second emission saw the rows WITH
 ownership filter (a base-owned subject) and rendered one `export` exclusion differently —
 `{MapIterator => _, apply => _, *}` against `{…, dummy => _, *}`. A signature fact lives on the
 symbol (CLAUDE.md §4.56).
+
+### K48. `NullabilityTransform` retyped the members of a DROPPED type — CLOSED 2026-09-06: a `Substituted` declaration is read literally, like a class file
+
+The reflection step drops `Json` and injects a hand-written one; the phase, gating on `owns`, still
+retyped the java `Json`'s `@Null` members (parsed, tagged `Substituted`, never emitted) and made every
+caller unwrap: **65 errors** in one step (`value orNull is not a member of …`, 21 `readValue` overload
+misses) against an injection whose signatures the phase cannot see. `retypable` = owned AND not under
+a `Substituted` symbol (CLAUDE.md §4.56, K15). Spec: `NullabilityDroppedTypeSpec`. Two more faces
+closed in the same landing: (i) core's witness subjects keep java's implicit bound — the first time
+the typer pass completed, `RefChecks` reported **12 `E057`** on `Octree`'s `ObjectSet[T]` collaborators
+(G30: the count RISES at 0); (ii) K46's fill reads the element off a supplier LAMBDA body or an
+`E[]::new` METHOD REFERENCE, and off a raw `new C(…)` that carries NO type arguments in the tree (the
+emitter fills `Object` at the print) — `TextureAtlas.createSprites`, the last main-tree error.
+K47's declared move now publishes the package-private TYPE itself (`ComparableTimSort`, read by
+java's own `SortTest`), and an override of a member the plan made public renders public (`E164`).

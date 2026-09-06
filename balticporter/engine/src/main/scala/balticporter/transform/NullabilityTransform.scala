@@ -156,6 +156,17 @@ final class NullabilityTransform(
   // the run
   // -------------------------------------------------------------------------
 
+  /** Owned AND emitted: a declaration under a DROPPED type (`Substituted`, an injection stands at
+    * its name) is a signature this phase cannot see the replacement of — read literally, like a
+    * class file (CLAUDE.md §4.56, K15). 65 errors at the injected `Json`'s seams otherwise. */
+  private def retypable(p: Program, id: SymId, fuel: Int = 16): Boolean =
+    p.owns(id) && {
+      def substituted(x: SymId, f: Int): Boolean =
+        f > 0 && x != SymId.None && p.symbolOf(x).exists(sym =>
+          sym.tags.exists(_.isInstanceOf[balticporter.core.Substituted]) || substituted(sym.owner, f - 1))
+      !substituted(id, fuel)
+    }
+
   override def run(program: Program): Program =
     // reset per-run state: a phase instance is reused across two translations (§5.1).
     issues.clear(); intrusions.clear(); observedEntries.clear(); planned = false
@@ -219,7 +230,7 @@ final class NullabilityTransform(
       // annotation wins over nullableMembers (the fallback for an unannotated hand-wrapped member).
       val memberHit = if hits.nonEmpty then scala.None
                       else nullableMembers.find(_ == s.fullName)
-      if (hits.nonEmpty || memberHit.isDefined) && program.owns(s.id) then
+      if (hits.nonEmpty || memberHit.isDefined) && retypable(program, s.id) then
         val key = if hits.nonEmpty
                   then hits.flatMap(a => headSym(a.tpe)).flatMap(boundAnnots.get).sorted.head
                   else { matchedMembers += memberHit.get; memberHit.get }
@@ -273,7 +284,7 @@ final class NullabilityTransform(
             case d: Tree.DefDef if program.symbolOf(d.symbol).exists(_.name == setterName) =>
               d.paramss.flatten.headOption.foreach { param =>
                 program.symbolOf(param.symbol).foreach { paramSym =>
-                  if !claimed.contains(paramSym.id) && program.owns(paramSym.id) then
+                  if !claimed.contains(paramSym.id) && retypable(program, paramSym.id) then
                     slotOf(program, paramSym) match
                       case Some((Slot.Param, was)) if !alreadyNullable(was) &&
                         !isPrimitive(program, was) &&
@@ -302,7 +313,7 @@ final class NullabilityTransform(
                 dd.paramss.flatten.lift(pos).map(_.symbol)
               }.flatten.flatMap(program.symbolOf)
             tgt.foreach { s =>
-              if !claimed.contains(s.id) && program.owns(s.id) && scope.includes(program, s) then
+              if !claimed.contains(s.id) && retypable(program, s.id) && scope.includes(program, s) then
                 slotOf(program, s) match
                   case Some((slot, was)) if slot == x.slot && !alreadyNullable(was) &&
                                             !isPrimitive(program, was) &&

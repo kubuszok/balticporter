@@ -151,7 +151,7 @@ final class PackageRenameTransform(
       // One widening per member, reader "(declared)"; the emitter renders them public (§8.7).
       val declared: List[Widening] =
         if !allowPackageSplit(mv.key) || packageOf(mv.emitted) == packageOf(renamed(mv.key, renames)) then Nil
-        else under(program, mv.sid).toList.flatMap(program.symbolOf).filter(m => m.id != mv.sid && program.owns(m.id) && m.flags.isPackagePrivate)
+        else under(program, mv.sid).toList.flatMap(program.symbolOf).filter(m => program.owns(m.id) && m.flags.isPackagePrivate) // the TYPE itself included
           .map(m => Widening(mv.key, Cause.PackageSplit, m.id, m.fullName, "(declared)", Decision.originOf(program, m.id)))
           .sortBy(_.subjectFqn)
       if b.isEmpty && declared.isEmpty then Some(mv)

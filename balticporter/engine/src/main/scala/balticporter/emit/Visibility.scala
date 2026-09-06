@@ -247,8 +247,10 @@ object Visibility:
           else
             val pv = visOf(pm)
             val pq = qualifierPkgOf(pm, pv)
-            // parent widened to public: child has nothing narrower to keep
-            if pv == Vis.Public && symOf(pm).exists(x => x.flags.isProtected || x.flags.isPackagePrivate) then ""
+            // parent public — widened by this plan or by a declared package move that already
+            // cleared its flags (K47): the child has nothing narrower to keep. A parent public in
+            // the java never reaches here (java forbids the narrower override).
+            if pv == Vis.Public then ""
             else if pq.isEmpty then acc
             else commonPkg(acc, pq)
         }

@@ -111,7 +111,9 @@ the two ports compile alone and not together. The shared surface is a VALUE — 
 - A dependent's retyping phase scopes on the ENTRY (D12), and so does a BASE'S — an inherited
   `Everywhere` decides the dependent's own steps (K43), except a replacement for an INHERITED drop,
   which is inherited with it; a base names its own types by dotted `typeRenames`, never a package
-  claim, and DECLARES the split (`allowPackageSplit`: package-private members ship public, K47); a DERIVED surface is published and
+  claim, and DECLARES the split (`allowPackageSplit`: the type and its package-private members ship
+  public, K47); a member the base RETYPED that the dependent OVERRIDES forces the same step onto the
+  dependent's entry (2 erasure clashes, K48); a DROPPED type's members are read literally (K48); a DERIVED surface is published and
   compared as `base-surface`; a dependent FOLLOWS the base's member renames (D14).
 - **A base's SOURCE SET is decided before its policy**, against the REFERENCE port's own ownership:
   a base may not emit a type the hand port declares in the DEPENDENT's namespace, nor one the

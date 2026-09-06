@@ -732,6 +732,32 @@ final class ElementWitnessTransform(
       program0.definitionOf(m).collect { case d: Tree.DefDef =>
         d.paramss.flatten.filterNot(v => program0.symbolOf(v.symbol).exists(_.flags.isGiven)).map(_.tpt.tpe)
       }.getOrElse(Nil)
+    /** the (index, element) a raw construction's array-supplier argument states for a slot the fill
+      * set to `Object`: the argument's LAMBDA BODY (`n => new E[n]`, read through a cast) or its
+      * type (`F[Array[E]]`, `F[Int, Array[E]]`), `E` neither `Object` nor a wildcard. */
+    def suppliedElem(nw: Tree.New, args: List[Term]): Option[(Int, TypeRepr)] =
+      def arrayElem(t: TypeRepr): Option[TypeRepr] = t match
+        case TypeRepr.AppliedType(TypeRepr.TypeRef(_, arr), List(e))
+            if program0.symbolOf(arr).exists(_.fullName == "scala.Array") &&
+               !isFilledObject(e) && !e.isInstanceOf[TypeRepr.TypeBounds] => Some(e)
+        case _ => scala.None
+      def elemOf(a: Term): Option[TypeRepr] = Tree.uncomment(a) match
+        case Tree.Typed(inner, _, _, _)   => elemOf(inner)
+        case Tree.Lambda(_, body, _, _, _) => arrayElem(body.tpe)
+        case Tree.MethodRef(Left(tt), _, _, _, _) => arrayElem(tt.tpe) // `E[]::new`
+        case other => other.tpe match
+          case TypeRepr.AppliedType(_, fargs) if fargs.nonEmpty => arrayElem(fargs.last)
+          case _                                                 => scala.None
+      nw.tpt.tpe match
+        case TypeRepr.AppliedType(TypeRepr.TypeRef(_, c), targs) if filledClasses(c) =>
+          val filledAt = targs.indexWhere(isFilledObject)
+          if filledAt < 0 then scala.None
+          else args.iterator.flatMap(elemOf).nextOption().map(e => (filledAt, e))
+        // a raw `new C(…)` carries NO type arguments in the tree (the emitter fills `Object` at the
+        // print); with one element parameter the supplier names it outright.
+        case TypeRepr.TypeRef(_, c) if filledClasses(c) && tparamsOfClass.get(c).exists(_.sizeIs == 1) =>
+          args.iterator.flatMap(elemOf).nextOption().map(e => (0, e))
+        case _ => scala.None
     def owed(unit: SymId) = new Phase:
       def name: String = "type-class-array/raw-conversion"
       override def run(p: Program): Program = p
@@ -742,6 +768,17 @@ final class ElementWitnessTransform(
         case l @ Tree.Literal(Constant.ClassOfC(tp), _, _) =>
           val f = fillType(tp)
           if f == tp then l else l.copy(const = Constant.ClassOfC(f))
+        // a RAW `new C(…, E[]::new)`: the element type the fill could not read off the raw type is
+        // stated by the array-supplier argument java wrote (`Sprite[]::new`); `Object` there is a
+        // guess the argument refutes, so the supplier's element fills the slot instead.
+        case ap @ Tree.Apply(nw: Tree.New, args, _, _, _) if suppliedElem(nw, args).isDefined =>
+          val (i, e) = suppliedElem(nw, args).get
+          def refill(t: TypeRepr): TypeRepr = t match
+            case TypeRepr.AppliedType(tc, targs) if targs.sizeIs > i => TypeRepr.AppliedType(tc, targs.updated(i, e))
+            case tc @ TypeRepr.TypeRef(_, _) if i == 0             => TypeRepr.AppliedType(tc, List(e))
+            case other => other
+          val nw2 = nw.copy(tpt = TypeTree(refill(nw.tpt.tpe), nw.origin), tpe = refill(nw.tpe))
+          ap.copy(fun = nw2, tpe = refill(ap.tpe))
         case ap: Tree.Apply =>
           // the callee's formals as DECLARED (pre-fill program), filled the way its own unit was
           val formals = formalsOfMethod(ap.method).map(fillType)

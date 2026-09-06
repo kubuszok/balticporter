@@ -223,7 +223,7 @@ member	com.badlogic.gdx.utils.ArrayMap$Values#reset()	lowlevel.util.ArrayMap$Val
 member	com.badlogic.gdx.utils.ArrayMap$Values#toArray()	lowlevel.util.ArrayMap$Values#toArray()	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	637	9b5343e6061bd21a	
 member	com.badlogic.gdx.utils.ArrayMap$Values#toArray(DynamicArray)	lowlevel.util.ArrayMap$Values#toArray(DynamicArray<Object>)	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	641	c26baa3133b329f6	
 member	com.badlogic.gdx.utils.ArrayMap$Values#valid	lowlevel.util.ArrayMap$Values#valid	Renamed	-	com/badlogic/gdx/utils/ArrayMap.java	607	2b925089abe5cd76	
-member	com.badlogic.gdx.utils.ComparableTimSort#<init>()	lowlevel.util.ComparableTimSort#<init>()	Renamed	-	com/badlogic/gdx/utils/ComparableTimSort.java	70	21c4463fa201740e	
+member	com.badlogic.gdx.utils.ComparableTimSort#<init>()	lowlevel.util.ComparableTimSort#<init>()	Renamed	-	com/badlogic/gdx/utils/ComparableTimSort.java	70	c55ea868713dc097	
 member	com.badlogic.gdx.utils.ComparableTimSort#<init>(Array)	lowlevel.util.ComparableTimSort#<init>(Array<Object>)	Renamed	-	com/badlogic/gdx/utils/ComparableTimSort.java	129	5638d1d12b355634	vis=private
 member	com.badlogic.gdx.utils.ComparableTimSort#DEBUG	lowlevel.util.ComparableTimSort#DEBUG	Renamed	-	com/badlogic/gdx/utils/ComparableTimSort.java	68	1345a4cd6ac9c463	placement=companion vis=private
 member	com.badlogic.gdx.utils.ComparableTimSort#INITIAL_TMP_STORAGE_LENGTH	lowlevel.util.ComparableTimSort#INITIAL_TMP_STORAGE_LENGTH	Renamed	-	com/badlogic/gdx/utils/ComparableTimSort.java	50	e1fa0c320529a5d2	placement=companion vis=private
@@ -248,8 +248,8 @@ member	com.badlogic.gdx.utils.ComparableTimSort#rangeCheck(int,int,int)	lowlevel
 member	com.badlogic.gdx.utils.ComparableTimSort#reverseRange(Array,int,int)	lowlevel.util.ComparableTimSort#reverseRange(Array<Object>,int,int)	Renamed	-	com/badlogic/gdx/utils/ComparableTimSort.java	296	2fa7954d85299900	placement=companion vis=private
 member	com.badlogic.gdx.utils.ComparableTimSort#runBase	lowlevel.util.ComparableTimSort#runBase	Renamed	-	com/badlogic/gdx/utils/ComparableTimSort.java	63	6d144d74a295fa73	vis=private
 member	com.badlogic.gdx.utils.ComparableTimSort#runLen	lowlevel.util.ComparableTimSort#runLen	Renamed	-	com/badlogic/gdx/utils/ComparableTimSort.java	64	cb47cd41d13818a2	vis=private
-member	com.badlogic.gdx.utils.ComparableTimSort#sort(Array)	lowlevel.util.ComparableTimSort#sort(Array<Object>)	Renamed	-	com/badlogic/gdx/utils/ComparableTimSort.java	154	7559294a4ae5ea5c	placement=companion
-member	com.badlogic.gdx.utils.ComparableTimSort#sort(Array,int,int)	lowlevel.util.ComparableTimSort#sort(Array<Object>,int,int)	Renamed	-	com/badlogic/gdx/utils/ComparableTimSort.java	158	5fd288b9541d3179	placement=companion
+member	com.badlogic.gdx.utils.ComparableTimSort#sort(Array)	lowlevel.util.ComparableTimSort#sort(Array<Object>)	Renamed	-	com/badlogic/gdx/utils/ComparableTimSort.java	154	75cc0f04491d98e6	placement=companion
+member	com.badlogic.gdx.utils.ComparableTimSort#sort(Array,int,int)	lowlevel.util.ComparableTimSort#sort(Array<Object>,int,int)	Renamed	-	com/badlogic/gdx/utils/ComparableTimSort.java	158	35bb8f11a6b3d058	placement=companion
 member	com.badlogic.gdx.utils.ComparableTimSort#stackSize	lowlevel.util.ComparableTimSort#stackSize	Renamed	-	com/badlogic/gdx/utils/ComparableTimSort.java	62	ee740514ff371c3b	vis=private
 member	com.badlogic.gdx.utils.ComparableTimSort#tmp	lowlevel.util.ComparableTimSort#tmp	Renamed	-	com/badlogic/gdx/utils/ComparableTimSort.java	53	8dfca1e1c9ef8790	vis=private
 member	com.badlogic.gdx.utils.ComparableTimSort#tmpCount	lowlevel.util.ComparableTimSort#tmpCount	Renamed	-	com/badlogic/gdx/utils/ComparableTimSort.java	54	e1ea500fa82a3e88	vis=private
@@ -649,7 +649,7 @@ member	com.badlogic.gdx.utils.Sort#sort(Array,Ordering,int,int)	lowlevel.util.So
 member	com.badlogic.gdx.utils.Sort#sort(DynamicArray)	lowlevel.util.Sort#sort(DynamicArray<T>)	Renamed	-	com/badlogic/gdx/utils/Sort.java	30	47f04167b8cbb0e7	
 member	com.badlogic.gdx.utils.Sort#sort(DynamicArray,Ordering)	lowlevel.util.Sort#sort(DynamicArray<T>,Ordering<T>)	Renamed	-	com/badlogic/gdx/utils/Sort.java	47	b203f2d24e6a85a3	
 member	com.badlogic.gdx.utils.Sort#timSort	lowlevel.util.Sort#timSort	Renamed	-	com/badlogic/gdx/utils/Sort.java	27	3092af27c56f8520	vis=private
-member	com.badlogic.gdx.utils.TimSort#<init>()	lowlevel.util.TimSort#<init>()	Renamed	-	com/badlogic/gdx/utils/TimSort.java	90	896f678ed58e401b	
+member	com.badlogic.gdx.utils.TimSort#<init>()	lowlevel.util.TimSort#<init>()	Renamed	-	com/badlogic/gdx/utils/TimSort.java	90	897f9bf43c76cdba	
 member	com.badlogic.gdx.utils.TimSort#<init>(Array,Ordering)	lowlevel.util.TimSort#<init>(Array<T>,Ordering<T>)	Renamed	-	com/badlogic/gdx/utils/TimSort.java	152	71ba049d4482f5fb	vis=private
 member	com.badlogic.gdx.utils.TimSort#DEBUG	lowlevel.util.TimSort#DEBUG	Renamed	-	com/badlogic/gdx/utils/TimSort.java	88	df7357b93bf0544e	placement=companion vis=private
 member	com.badlogic.gdx.utils.TimSort#INITIAL_TMP_STORAGE_LENGTH	lowlevel.util.TimSort#INITIAL_TMP_STORAGE_LENGTH	Renamed	-	com/badlogic/gdx/utils/TimSort.java	70	e1fa0c320529a5d2	placement=companion vis=private
@@ -675,8 +675,8 @@ member	com.badlogic.gdx.utils.TimSort#rangeCheck(int,int,int)	lowlevel.util.TimS
 member	com.badlogic.gdx.utils.TimSort#reverseRange(Array,int,int)	lowlevel.util.TimSort#reverseRange(Array<Object>,int,int)	Renamed	-	com/badlogic/gdx/utils/TimSort.java	325	2fa7954d85299900	placement=companion vis=private
 member	com.badlogic.gdx.utils.TimSort#runBase	lowlevel.util.TimSort#runBase	Renamed	-	com/badlogic/gdx/utils/TimSort.java	83	6d144d74a295fa73	vis=private
 member	com.badlogic.gdx.utils.TimSort#runLen	lowlevel.util.TimSort#runLen	Renamed	-	com/badlogic/gdx/utils/TimSort.java	84	cb47cd41d13818a2	vis=private
-member	com.badlogic.gdx.utils.TimSort#sort(Array,Ordering)	lowlevel.util.TimSort#sort(Array<T>,Ordering<T>)	Renamed	-	com/badlogic/gdx/utils/TimSort.java	178	c1b66d8ccd042d5c	placement=companion
-member	com.badlogic.gdx.utils.TimSort#sort(Array,int,int,Ordering)	lowlevel.util.TimSort#sort(Array<T>,int,int,Ordering<T>)	Renamed	-	com/badlogic/gdx/utils/TimSort.java	182	c14764571eb72a01	placement=companion
+member	com.badlogic.gdx.utils.TimSort#sort(Array,Ordering)	lowlevel.util.TimSort#sort(Array<T>,Ordering<T>)	Renamed	-	com/badlogic/gdx/utils/TimSort.java	178	95e653cd92f21941	placement=companion
+member	com.badlogic.gdx.utils.TimSort#sort(Array,int,int,Ordering)	lowlevel.util.TimSort#sort(Array<T>,int,int,Ordering<T>)	Renamed	-	com/badlogic/gdx/utils/TimSort.java	182	9bd36905b852f97f	placement=companion
 member	com.badlogic.gdx.utils.TimSort#stackSize	lowlevel.util.TimSort#stackSize	Renamed	-	com/badlogic/gdx/utils/TimSort.java	82	ee740514ff371c3b	vis=private
 member	com.badlogic.gdx.utils.TimSort#tmp	lowlevel.util.TimSort#tmp	Renamed	-	com/badlogic/gdx/utils/TimSort.java	73	84c75bbda81c4ce0	vis=private
 member	com.badlogic.gdx.utils.TimSort#tmpCount	lowlevel.util.TimSort#tmpCount	Renamed	-	com/badlogic/gdx/utils/TimSort.java	74	e1ea500fa82a3e88	vis=private

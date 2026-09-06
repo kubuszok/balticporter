@@ -28,6 +28,7 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
       |    return false;
       |  }
       |  Bag (Class<?> type, int n) { items = (T[])java.lang.reflect.Array.newInstance(type, n); }
+      |  Bag (int n, Supplier<T[]> s) { items = s.get(n); }
       |  <V> V[] toArray (Class<V> type) { return (V[])java.lang.reflect.Array.newInstance(type, size); }
       |  static <T> Bag<T> of (int n) { return new Bag<T>(n); }
       |}
@@ -45,7 +46,10 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
       |  E[] slots;
       |  Loose (int n) { slots = (E[])new Object[n]; }
       |}
+      |interface Supplier<A> { A get (int n); }
       |class Raw {
+      |  static Object supplied () { Bag raw = new Bag(3, (int n) -> new String[n]); return raw; }
+      |  static Object referenced () { Bag raw = new Bag(4, String[]::new); return raw; }
       |  static void take (Bag raw) {}
       |  static void call (Bag<String> b) { take(b); }
       |  static Object literal () { return Bag.class; }
@@ -110,6 +114,12 @@ class ElementWitnessTransformSpec extends munit.FunSuite:
     val rows = witnessPhase.refusals(ported.after, ported.after.units)
     assert(rows.exists(r => r.issue == ElementWitnessCheck.Issue.RawConversion && r.subject == "com.demo.Raw"),
       rows.map(r => s"${r.issue} ${r.subject}").mkString(", "))
+  }
+
+  test("a raw construction with an array-supplier argument is filled with the supplier's element, not Object") {
+    assert(clue(ported.out).contains("new com.demo.Bag[java.lang.String](3,"),
+      ported.out.linesIterator.filter(_.contains("new com.demo.Bag")).mkString("\n"))
+    assert(ported.out.contains("new com.demo.Bag[java.lang.String](4,"), "the `E[]::new` method reference")
   }
 
   test("a class literal's payload is filled like every other position this phase unbound") {

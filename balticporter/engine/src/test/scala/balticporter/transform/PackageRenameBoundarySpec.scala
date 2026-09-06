@@ -12,7 +12,11 @@ class PackageRenameBoundarySpec extends munit.FunSuite:
       |class Table {
       |  static int tableSize (int capacity) { return capacity * 2; }
       |  int size;
+      |  int slot (int i) { return i; }
       |  public int get () { return size; }
+      |}
+      |class Sub extends Table {
+      |  int slot (int i) { return i + 1; }
       |}
       |class Other {
       |  int f () { return Table.tableSize(3); }
@@ -31,8 +35,17 @@ class PackageRenameBoundarySpec extends munit.FunSuite:
     assert(!out.contains("private[util] def tableSize"), out.linesIterator.filter(_.contains("tableSize")).mkString("\n"))
     val declared = phase.recordedWidenings.filter(_.readerFqn == "(declared)").map(_.subjectFqn)
     // the package-private default constructor is a member too (JLS 8.8.9 gives it the class's access)
-    assertEquals(declared.sorted, List("com.demo.Table#<init>", "com.demo.Table#size", "com.demo.Table#tableSize"))
+    // the package-private TYPE itself is published with its members: it left the package its readers share
+    assertEquals(declared.sorted, List("com.demo.Table", "com.demo.Table#<init>", "com.demo.Table#size", "com.demo.Table#slot", "com.demo.Table#tableSize"))
+    assert(out.linesIterator.exists(l => l.startsWith("class Table") || l.startsWith("final class Table")), out.linesIterator.filter(_.contains("class Table")).mkString("\n"))
     assert(log.of(Decision.Kind.WidenedVisibility).exists(_.subjectFqn == "com.demo.Table#tableSize"))
+  }
+
+  test("a subclass left behind overrides the widened member public — an override may not be narrower") {
+    val (_, out, _) = run(Set("com.demo.Table"))
+    val sub = out.linesIterator.dropWhile(!_.contains("class Sub")).mkString("\n")
+    assert(sub.contains("override def slot(i: scala.Int)"), sub)
+    assert(!sub.contains("private[demo] override def slot"), sub)
   }
 
   test("an undeclared move keeps java's package qualifier — nothing is widened silently") {

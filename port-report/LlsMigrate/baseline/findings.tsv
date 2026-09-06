@@ -22,15 +22,10 @@ da5b3e51d01f	api-parity(hand-original)	hand-original	ArrayView	lowlevel/ArrayVie
 fedb14a16f2a	api-parity(hand-original)	hand-original	MkArray	lowlevel/MkArray.scala	0	no upstream marker in header
 77d4cfb604d5	api-parity(hand-original)	hand-original	Nullable	lowlevel/Nullable.scala	0	no upstream marker in header; *   SGE-original file, no LibGDX counterpart
 85af42983db4	api-parity(hand-original)	hand-original	Resource	lowlevel/util/Resource.scala	0	no upstream marker in header; *   SGE-original file, no LibGDX counterpart
-a6b1b3403fb3	api-parity(hand-port-extra)	hand-port-extra	#ComparableTimSort		0	class ComparableTimSort/0 in reference port only
-c711f8c76398	api-parity(hand-port-extra)	hand-port-extra	#TimSort		0	class TimSort/0 in reference port only
 1457761389b5	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#preserveOrder	/ArrayMap	0	val preserveOrder/0 in reference port only
 b3e543b42daa	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#setKeyAt	/ArrayMap	0	def setKeyAt/2 in reference port only [rename candidates: containsValue, get, getKey, indexOfValue, put, removeValue, setKey, setValue, update]
 af284a60ff4b	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#setValueAt	/ArrayMap	0	def setValueAt/2 in reference port only [rename candidates: containsValue, get, getKey, indexOfValue, put, removeValue, setKey, setValue, update]
 b29f4da72e43	api-parity(hand-port-extra)	hand-port-extra	ArrayMap#size	/ArrayMap	0	def size/0 in reference port only [rename candidates: clear, entries, firstKey, firstValue, hashCode, isEmpty, iterator, keys, nonEmpty, notEmpty, peekKey, peekValue, reverse, shrink, shuffle, toString, values]
-0b5d0acd3dcf	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort#doSort	/ComparableTimSort	0	def doSort/3 in reference port only
-257da4b833eb	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort$#sort	/ComparableTimSort$	0	def sort/1 in reference port only
-056b89c9d990	api-parity(hand-port-extra)	hand-port-extra	ComparableTimSort$#sort	/ComparableTimSort$	0	def sort/3 in reference port only
 49dee0ebb216	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#begin	/DynamicArray	0	def begin/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, last, nonEmpty, notEmpty, peek, pop, preserveOrder, random, reverse, shrink, shuffle, sort, toArray, toString]
 8e699ae98d85	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#end	/DynamicArray	0	def end/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, last, nonEmpty, notEmpty, peek, pop, preserveOrder, random, reverse, shrink, shuffle, sort, toArray, toString]
 f0163f495d3f	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#items	/DynamicArray	0	def items/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, last, nonEmpty, notEmpty, peek, pop, preserveOrder, random, reverse, shrink, shuffle, sort, toArray, toString]
@@ -458,7 +453,10 @@ f8446b576c83	api-parity(port-extra)	port-extra	Select#select	/Select	0	def selec
 3cc68039cb81/2	api-parity(port-extra)	port-extra	Sort#sort	/Sort	0	def sort/2 in emitted port only
 62210598b2b0	api-parity(port-extra)	port-extra	Sort#sort	/Sort	0	def sort/4 in emitted port only
 e488049197d0	api-parity(port-extra)	port-extra	Sort$#instance	/Sort$	0	def instance/0 in emitted port only
+09194dc8f257	api-parity(port-extra)	port-extra	TimSort#doSort	/TimSort	0	def doSort/4 in emitted port only
 166fba9b701a	api-parity(port-extra)	port-extra	TimSort$#Funnel	/TimSort$	0	class Funnel/0 in emitted port only
+832269b3a5f5	api-parity(port-extra)	port-extra	TimSort$#sort	/TimSort$	0	def sort/2 in emitted port only
+eb8d17ede7fb	api-parity(port-extra)	port-extra	TimSort$#sort	/TimSort$	0	def sort/4 in emitted port only
 9fa8855c439b	api-parity(port-extra)	port-extra	Wrapping#wrapped	/Wrapping	0	def wrapped/0 in emitted port only
 8b2acf778045	api-parity(rule)	rule	MathUtils$#E	/MathUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 eaf0b8fbe886	api-parity(rule)	rule	MathUtils$#FLOAT_ROUNDING_ERROR	/MathUtils$	0	rule JS-C08: emitted inline val (a java constant variable is inlined, JLS 4.12.4/13.1), reference val
@@ -472,6 +470,7 @@ a5e678d856f8	api-parity(rule)	rule	MathUtils$#degreesToRadians	/MathUtils$	0	rul
 253eec0cf8cb	api-parity(rule)	rule	MathUtils$#radiansToDegrees	/MathUtils$	0	rule JS-C53: emitted final val (java's final on a FIELD also states no subclass may override the read, JLS 8.3), reference val
 56ada10a2ff1	api-parity(signature)	signature	#ArrayMap		0	modifiers differ: emitted , reference final
 bfefcc2f38cb	api-parity(signature)	signature	#ArrayMap		0	parents differ: emitted-only [balticporter.runtime.JavaIterable[lowlevel.util.ObjectMap.Entry[$0, $1]]], reference-only []
+68d3a7d08245	api-parity(signature)	signature	#ComparableTimSort		0	modifiers differ: emitted , reference final
 45773c038de6	api-parity(signature)	signature	#DynamicArray		0	modifiers differ: emitted , reference final
 e73e93bbfb92	api-parity(signature)	signature	#DynamicArray		0	parents differ: emitted-only [balticporter.runtime.JavaIterable[$0]], reference-only []
 c974da79d720	api-parity(signature)	signature	#ObjectMap		0	modifiers differ: emitted , reference final
@@ -483,6 +482,7 @@ ecc573e2b787	api-parity(signature)	signature	#OrderedMap		0	parents differ: emit
 46968bc82f6d	api-parity(signature)	signature	#OrderedSet		0	modifiers differ: emitted , reference final
 7376ba8e2649	api-parity(signature)	signature	#OrderedSet		0	parents differ: emitted-only [lowlevel.util.ObjectSet[$0]], reference-only []
 3688547ea260	api-parity(signature)	signature	#QuickSelect		0	modifiers differ: emitted , reference final
+16bd06c75660	api-parity(signature)	signature	#TimSort		0	modifiers differ: emitted , reference final
 37b95e51ce43	api-parity(signature)	signature	ArrayMap#equalsIdentity	/ArrayMap	0	param 0 type differs: emitted 'java.lang.Object', reference 'Any'
 a7a877314e74	api-parity(signature)	signature	ArrayMap#foreachEntry	/ArrayMap	0	modifiers differ: emitted , reference inline
 d37da5c8fc01	api-parity(signature)	signature	ArrayMap#foreachEntry	/ArrayMap	0	param 0 type differs: emitted '($0, $1) => scala.Unit', reference '($0, $1) => Unit'
@@ -493,6 +493,9 @@ dd4756635ea0	api-parity(signature)	signature	ArrayMap#foreachValue	/ArrayMap	0	m
 703b0b8494b9	api-parity(signature)	signature	ArrayMap#putAll	/ArrayMap	0	param 0 type differs: emitted 'ArrayMap[_ <: $0, _ <: $1]', reference 'ArrayMap[$0, $1]'
 703b0b8494b9/2	api-parity(signature)	signature	ArrayMap#putAll	/ArrayMap	0	param 0 type differs: emitted 'ArrayMap[_ <: $0, _ <: $1]', reference 'ArrayMap[$0, $1]'
 6d988904cf17	api-parity(signature)	signature	ArrayMap$#apply	/ArrayMap$	0	modifiers differ: emitted , reference inline
+7763b447e38c	api-parity(signature)	signature	ComparableTimSort#doSort	/ComparableTimSort	0	param 0 type differs: emitted 'scala.Array[java.lang.Object]', reference 'Array[AnyRef]'
+96b15a9a575f	api-parity(signature)	signature	ComparableTimSort$#sort	/ComparableTimSort$	0	param 0 type differs: emitted 'scala.Array[java.lang.Object]', reference 'Array[AnyRef]'
+96b15a9a575f/2	api-parity(signature)	signature	ComparableTimSort$#sort	/ComparableTimSort$	0	param 0 type differs: emitted 'scala.Array[java.lang.Object]', reference 'Array[AnyRef]'
 5667ffdfa193	api-parity(signature)	signature	DynamicArray#--=	/DynamicArray	0	param 0 type differs: emitted 'lowlevel.util.DynamicArray[$0]', reference 'DynamicArray[_ <: $0]'
 bf59c870629b	api-parity(signature)	signature	DynamicArray#addAll	/DynamicArray	0	param 0 type differs: emitted 'DynamicArray[_ <: $0]', reference 'Array[$0]'
 766898071129	api-parity(signature)	signature	DynamicArray#addAll	/DynamicArray	0	param 0 type differs: emitted 'scala.Array[$0]', reference 'Iterable[$0]'
@@ -601,10 +604,10 @@ f04e6fc68f64	catalog(consulted)	reached	JS-C40	-	0	rendering ClassDef — consul
 9f3c7d32c553	catalog(consulted)	reached	JS-C44	-	0	rendering ClassDef — consulted 29, fired 0, declarations 0: `sealed` / `non-sealed` / `permits`
 3c4756e63985	catalog(consulted)	reached	JS-C45	com/badlogic/gdx/math/MathUtils.java	30	rendering ValDef — consulted 704, fired 46, declarations 0: a `final` field's JMM safe-publication guarantee
 14288c772f98	catalog(consulted)	reached	JS-C46	-	0	phase member-clash — consulted 0, fired 0, declarations 8: Java has TWO name namespaces and Scala has one
-1052366fc700	catalog(consulted)	reached	JS-C47	com/badlogic/gdx/math/MathUtils.java	57	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1121, fired 17, declarations 0: package-private becomes `private[pkg]`
+9d2acf1a6b9f	catalog(consulted)	reached	JS-C47	com/badlogic/gdx/math/MathUtils.java	57	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1121, fired 11, declarations 0: package-private becomes `private[pkg]`
 c3e3c8b0b2f1	catalog(consulted)	reached	JS-C48	com/badlogic/gdx/utils/Array.java	486	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1121, fired 10, declarations 0: Java's `protected` also grants SAME-PACKAGE access, and accessibility is an input to overload resolution
 2a3f56e8b1b7	catalog(consulted)	reached	JS-C49	com/badlogic/gdx/utils/Array.java	760	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1121, fired 3, declarations 0: Java's `private` reaches the whole enclosing TOP-LEVEL class; Scala's reaches only the template
-89ff4b95b609	catalog(consulted)	reached	JS-C50	com/badlogic/gdx/math/MathUtils.java	57	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1121, fired 17, declarations 0: Java's default access is package-private and Scala's is public — INVERTED
+50ec8e2bd993	catalog(consulted)	reached	JS-C50	com/badlogic/gdx/math/MathUtils.java	57	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1121, fired 11, declarations 0: Java's default access is package-private and Scala's is public — INVERTED
 a0bd0d662944	catalog(consulted)	reached	JS-C51	-	0	rendering ClassDef — consulted 29, fired 0, declarations 0: a `return` in a CONSTRUCTOR body, whose promotion puts it in the class body
 8b68c4ac537d	catalog(consulted)	reached	JS-C53	com/badlogic/gdx/math/MathUtils.java	30	rendering ValDef — consulted 704, fired 20, declarations 0: a java `final` FIELD carries two facts onto a `val`: no reassignment, and no OVERRIDE
 e2819f7a82c9	catalog(consulted)	reached	JS-E01	com/badlogic/gdx/utils/Array.java	222	lowering CtBinaryOperator/Expression — consulted 1624, fired 34, declarations 0: `==`/`!=` are REFERENCE identity in Java; Scala's `==` calls `equals`

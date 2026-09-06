@@ -214,7 +214,9 @@ object LlsPolicy:
       // the three of the twelve whose package-private members core reads (`ObjectSet.tableSize`,
       // `ObjectMap.dummy`, …): the move is declared, so those members ship public (§8.7 widenings).
       allowPackageSplit = Set("com.badlogic.gdx.utils.Array", "com.badlogic.gdx.utils.ObjectMap",
-                              "com.badlogic.gdx.utils.ObjectSet"),
+                              "com.badlogic.gdx.utils.ObjectSet",
+                              // package-private CLASSES java's own `SortTest` reaches from the split package
+                              "com.badlogic.gdx.utils.TimSort", "com.badlogic.gdx.utils.ComparableTimSort"),
       typeRenames = LlsMigrate.Files.map { f =>
         val fqn    = f.stripSuffix(".java").replace('/', '.')
         val simple = if fqn.endsWith(".Array") then "DynamicArray" else fqn.substring(fqn.lastIndexOf('.') + 1)
