@@ -1713,9 +1713,10 @@ L3/L4/L6/L8/L9; the `NetJavaImpl` drop conceals K2 (universal).
 
 
 **A3 — libGDX core on the lls base: the LADDER's L0 is the dependent, not the full-policy port
-(2026-09-06).** The full port (`LibgdxPolicy.core`) cannot extend `ported/lls` (`ENGINE-LIMITS.md`
-K43): its Align opaque, `Pool` trait, `Bits` retarget and reflection drop are sge-parity decisions
-that collide with what lls publishes, and parity is no longer the bar (§13.29 head). The ladder's L0
+(2026-09-06).** The full port (`LibgdxPolicy.core`) cannot extend `ported/lls` AS SCOPED (`ENGINE-LIMITS.md`
+K43): 12 of the lls port's 54 files are types the real lls does not declare and sge does (`Align`,
+`Pool`, `RandomXS128`, `GdxRuntimeException`, …), so the full port's decisions about them read as
+edits of its base. The scope is this repo's, not the engine's; narrowing it is the pending lls wave. The ladder's L0
 carries none of them, so `LibgdxLadder.universal = LlsPolicy.core(repoRoot, LlsPolicy.DefaultRungs)
 .extendedBy(…)` — core minus `LlsMigrate.Files` (551 units), `gdx/src` as its own resolution root,
 `packageRenames com.badlogic.gdx -> sge` beside the inherited `utils`/`math -> lowlevel.*` (so a core

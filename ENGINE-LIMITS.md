@@ -1707,7 +1707,7 @@ Rule: land it with the dependent wave that re-measures all nine, never alone; an
 `hasSideEffects`'s own `case _ => ()` default at the same time — an unenumerated node kind there is an
 UNDER-refusal, the direction this phase promises never to take.
 
-### K43. The FULL-POLICY libGDX port cannot EXTEND `ported/lls` — **5 FATAL shared-surface findings before any phase runs; the wall is the parity policy, not the engine. The ladder's L0 extends lls instead (PROGRESS.md §13.29 A3); do NOT retry with `LibgdxPolicy.core`**
+### K43. The FULL-POLICY libGDX port cannot extend `ported/lls` AS SCOPED — **5 FATAL shared-surface findings; the wall is the lls port's SOURCE SET (12 of its 54 files are types the real lls does not declare and sge does), not the base-chain mechanism. Fix the scope, then retry**
 
 (b) per-library scope, and the decision is the maintainer's (an lls-repo API decision, not an engine
 change). Symptom: `LibgdxPolicy.core = LlsPolicy.core(repoRoot, <default rungs>).extendedBy(…)`, gdx's
@@ -1738,9 +1738,15 @@ Nor can the scope simply shrink back to the twelve: they reference `GdxRuntimeEx
 `Collections`, `Predicate`, `Null`, `ArraySupplier` and `RandomXS128`, which sge owns, and a BASE
 cannot resolve against its DEPENDENT — which is why the scope was widened to 54 in the first place.
 
-Rule: decide the base's SOURCE SET before its policy. The exits were (i) lls ships those helpers,
-(ii) a third, deeper module, or (iii) a dependent that carries NONE of the colliding policy — and
-(iii) is what the ladder already is: `LibgdxLadder.universal` extends `LlsPolicy.core` with no drop,
+Rule: decide the base's SOURCE SET before its policy — against the REAL base. Checked 2026-09-06:
+`../lls` declares NONE of `Align`, `BinaryHeap`, `NumberUtils`, `Pool`, `PoolManager`, `TimeUtils`,
+`RandomXS128`, `GdxRuntimeException`, `Collections`, `Predicate`, `ArraySupplier`; sge declares them.
+The 54-file set was this repo's "cover all utilities" choice, wider than lls, so the intrusions and
+extra drops are the dependent deciding types that are ITS OWN. The mechanism is not in question: nine
+extension ports sit on the full core port at 0 errors. Exit: narrow `LlsMigrate.Files` to what lls
+declares and answer the twelve references the way lls did (its own error type, `MkArray` for
+`ArraySupplier`, a function for `Predicate`) as lls-manifest policy; the full port then extends it.
+Until then the ladder's L0 sits on lls because it carries none of the colliding policy: `LibgdxLadder.universal` extends `LlsPolicy.core` with no drop,
 inject or surface of its own, and runs (551 units, 2 -> 13 errors, every one a base rung's seam;
 PROGRESS.md §13.29 A3). The full port's parity decisions are not re-derived on the lls base; the
 ladder re-applies each as a rung. `MutableParamsTransform`'s missing `SurfacePolicy`/`MergeablePolicy`
