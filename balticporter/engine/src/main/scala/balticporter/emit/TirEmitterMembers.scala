@@ -506,9 +506,13 @@ private[emit] trait TirEmitterMembers:
     else
       def classOf_(t: TypeRepr): Option[Tree.ClassDef] =
         headOf(t).flatMap(x => program.definitionOf(x)).collect { case c: Tree.ClassDef => c }
-      /** concrete instance methods, name -> the DefDef, walking a parent chain. */
+      /** What an EXTERNAL parent makes concrete: a support type this run injected
+        * (`externalConcrete`) or an interface whose JLS 9.4.3 `default` methods the frontend read
+        * off the class file (`Program.internedDefaults`, `ENGINE-LIMITS.md` K39). Both are
+        * MEASURED sets — an external parent absent from both contributes nothing. */
       def externalOf(t: TypeRepr): Set[(String, List[Int])] =
-        headOf(t).map(x => sym(x).fullName).flatMap(externalConcrete.get).getOrElse(Set.empty)
+        headOf(t).map(x => sym(x).fullName).toSet[String].flatMap(fqn =>
+          externalConcrete.getOrElse(fqn, Set.empty) ++ program.internedDefaults.getOrElse(fqn, Set.empty))
       def concrete(t: TypeRepr, seen: Set[SymId] = Set.empty): Map[(String, List[Int]), Tree.DefDef] =
         classOf_(t) match
           case Some(c) if !seen(c.symbol) =>

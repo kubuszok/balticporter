@@ -90,6 +90,10 @@ Detail for `CLAUDE.md` §4.55, §4.56, §4.57, §4.575, §4.58, §4.59 and §4.6
 - **The survivors are not the DECLARATION.** `sealOf` reconstructed `permits` from visible edges, so
   an excluded or refused subtype made the seal read exact and shipped `sealed`; nothing records a
   decision NOT taken. Carry the interned `permits` set; the unaccountable case takes the conservative arm.
+- **The diamond forwarder ASKS which external parent is concrete, never guesses**: an injected
+  support type (`RuntimePlan.concreteMembers`) or an interface whose JLS 9.4.3 `default` methods the
+  frontend read off the class file (`Program.internedDefaults`); an ABSTRACT interface method mints
+  nothing, and minting at every class-plus-interface pair is what K39 forbids.
 - **A synthesised member carries the parent's scope.** Diamond forwarders, synthesised primaries and
   replayed constructor bodies copy a signature in the PARENT's scope; the `extends` clause makes the
   substitution EXACT (not G8's F-bound). A forwarded member's OWN type parameters come too; one

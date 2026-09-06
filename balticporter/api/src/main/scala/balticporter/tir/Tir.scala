@@ -672,6 +672,11 @@ final class Program(
       * excluded from [[units]]. Carried through [[rebuilt]] and included in every xref rebuild
       * so `definitionOf` and `OverrideGraph` see them. Empty default is the no-op. */
     val internedDefs: List[Tree.ClassDef] = Nil,
+    /** JLS 9.4.3 `default` methods of EXTERNAL interface parents, read off the class file by the
+      * frontend: parent FQN -> `(name, param counts per clause)`. The emitter's diamond forwarder
+      * ASKS this instead of guessing which external parents are concrete (`ENGINE-LIMITS.md` K39).
+      * Empty default is the no-op. */
+    val internedDefaults: Map[String, Set[(String, List[Int])]] = Map.empty,
 ):
   export xref.{definitionOf, usagesOf, usages, referenced}
 
@@ -687,7 +692,7 @@ final class Program(
       symbols: SymbolTable = this.symbols,
       xref: XrefIndex = this.xref,
       members: MemberIndex = this.members,
-  ): Program = new Program(units, symbols, xref, members, internedDefs)
+  ): Program = new Program(units, symbols, xref, members, internedDefs, internedDefaults)
 
   /** Symbols this program declares, vs. externals interned lazily on first reference — CLAUDE.md
     * §4.56's "decide ownership structurally, never by name". Owned iff climbing the `owner` chain

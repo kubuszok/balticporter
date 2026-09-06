@@ -98,7 +98,47 @@ private[spoon] final class Builder(subs: Substitutions = Substitutions.none,
     val interned = if internTypes.isEmpty || types.isEmpty then Nil
                    else internFromClasspath(types.head.getFactory, internTypes)
     new Program(units, minter.table, Xref.build(units ++ interned),
-                MemberIndex(seenMembers.toList, seenTypes.toSet), interned)
+                MemberIndex(seenMembers.toList, seenTypes.toSet), interned,
+                externalDefaults(types))
+
+  /** JLS 9.4.3 `default` methods of the EXTERNAL interfaces this program's types name as parents,
+    * read off the class-file shadow, so the diamond forwarder ASKS instead of guessing which
+    * external parent is concrete (`ENGINE-LIMITS.md` K39). Keyed by parent FQN, arity-only.
+    * A parent this program DECLARES is excluded — the emitter already reads its body. */
+  private def externalDefaults(types: List[CtType[?]]): Map[String, Set[(String, List[Int])]] =
+    val mine = collection.mutable.Set.empty[String]
+    def own(t: CtType[?]): Unit =
+      mine += t.getQualifiedName
+      t.getNestedTypes.asScala.foreach(own)
+    types.foreach(own)
+    val acc  = collection.mutable.Map.empty[String, Set[(String, List[Int])]]
+    /** declared defaults of `fqn` UNION those it inherits — what mixing it in makes concrete. */
+    def visit(ref: CtTypeReference[?], fuel: Int): Set[(String, List[Int])] =
+      val fqn = if ref == null then "" else ref.getQualifiedName
+      if fqn.isEmpty || fuel <= 0 || mine(fqn) then Set.empty
+      else acc.getOrElse(fqn, {
+        acc(fqn) = Set.empty // cycle guard: an interface hierarchy Spoon reports circularly
+        val here = typeDeclarationOf(ref).filter(_.isInterface) match
+          case Some(ct) =>
+            val declared = ct.getMethods.asScala.iterator.filter(isDefaultMethod)
+              .map(m => (m.getSimpleName, List(m.getParameters.size))).toSet
+            declared ++ ct.getSuperInterfaces.asScala.flatMap(visit(_, fuel - 1))
+          case _ => Set.empty
+        acc(fqn) = here
+        here
+      })
+    def walk(t: CtType[?]): Unit =
+      t.getSuperInterfaces.asScala.foreach(visit(_, 16))
+      t.getNestedTypes.asScala.foreach(walk)
+    types.foreach(walk)
+    acc.filter((_, ms) => ms.nonEmpty).toMap
+
+  /** JLS 9.4.3: an interface method that is neither `abstract`, `static` nor `private` has a body.
+    * `getBody` is null on a class-file shadow, so the MODIFIERS decide (`ENGINE-LIMITS.md` K39). */
+  private def isDefaultMethod(m: CtMethod[?]): Boolean =
+    m.isDefaultMethod || !(m.hasModifier(ModifierKind.ABSTRACT) ||
+                           m.hasModifier(ModifierKind.STATIC) ||
+                           m.hasModifier(ModifierKind.PRIVATE))
 
   /** Intern classpath types so downstream phases inherit `isFinal` and parents (K18).
     * Minimal ClassDefs for the xref only — never in `units`, never emitted. An FQN the
