@@ -1606,7 +1606,12 @@ escape (54 java files -> 65 Scala units; excluded on purpose: `Pools`, `Performa
 `ReflectionPool` and the `reflect` wrappers, which reach `Gdx`, scene2d or `java.lang.reflect`). With `nullable` +
 `ordering`: **JVM 0 / JS 0 / Native 0**, `.ref` 190 (informational). The enrichment (132 members and factories lls added on its
 twelve types, by analogy on the primitive-specialised siblings) is the next lls wave; the differential lane over lls's suite
-is its oracle.
+is its oracle. **Rung experiments 2026-09-06 (continued):** `arity` (`NullaryArityTransform`, `Everywhere()`) is free on lls
+(0 errors) and is a default rung now, but it converts only **27 of 479** nilary members and records no refusal for the rest
+(`ObjectSet#isEmpty` among them) — an engine card; until it lands the differential holds at **189 / 2 / 235** (re-census
+of the three candidates under arity: `DynamicArrayTest` 25, `DynamicArrayLongSuite` 27, `ArrayMapTest` 3 errors, unchanged).
+`bean` derivation: 18 diff errors, not adopted yet. K39 (class member vs class-file `default`, 11 `E164`) shows on lls only
+without the `ordering` rung and on L0; its fix is in progress.
 
 **The `enrich` rung, and the differential lane that reads it (2026-09-06).** `LLS_RUNGS` defaults to
 `nullable,ordering,enrich`. `enrich` is `AddMembersTransform` carrying **282 members over 24 types** —
