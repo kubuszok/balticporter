@@ -147,7 +147,9 @@ class NullaryArityTransformSpec extends munit.FunSuite:
     assertEquals(ds.head.reason, Reason.Universal("nullary-arity"))
   }
 
-  test("a type OUTSIDE the scope is not scanned and files no candidate") {
+  /** The scope is a REFUSAL like any other: a member the scope declines is one whose `()` the run
+    * kept, and §3 wants the seam the scope created counted rather than dropped. */
+  test("a type OUTSIDE the scope keeps `()` and files an OutOfScope row") {
     val r = ran(
       """
       class Inside  { private int w; public int w() { return w; } }
@@ -157,7 +159,50 @@ class NullaryArityTransformSpec extends munit.FunSuite:
     assert(clue(r.out).contains("def w:"))
     assert(clue(r.out).contains("def h()"), "the out-of-scope declaration keeps its clause")
     assertEquals(converted(r).map(_.subject), List("Inside#w"))
-    assertEquals(refusedFor(r, "Outside#h"), Nil)
+    val rows = refusedFor(r, "Outside#h")
+    assertEquals(clue(rows).size, 1)
+    assert(clue(rows.head.verdict.render).contains("OutOfScope"))
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // the population: EVERY owned nilary value-returning declaration takes exactly one row (§3)
+  // -------------------------------------------------------------------------------------------
+
+  /** A `static` is emitted onto the companion. The skip predates the lane; it is the same claim
+    * about the emitted surface as every other guard, so it is COUNTED rather than silent. */
+  test("StaticMember: a static nilary getter keeps `()` and files a row") {
+    val r = ran(
+      """
+      class Env { public static int mode() { return 1; } }
+      """,
+      new NullaryArityTransform(everywhere))
+    assert(clue(r.out).contains("def mode()"))
+    assertEquals(clue(converted(r)), Nil)
+    assertEquals(clue(guards(r)), Set("StaticMember"))
+  }
+
+  /** The denominator claim: nothing owned, nilary and value-returning leaves the scan without a
+    * verdict — converted or refused, one row each, no third outcome. */
+  test("every owned nilary value-returning declaration takes exactly one lane row") {
+    val r = ran(
+      """
+      class Mix {
+        private int a;
+        private int[] xs;
+        public int a() { return a; }
+        public int bump() { a = a + 1; return a; }
+        public String toString() { return "m"; }
+        public static int mode() { return 1; }
+        public void run() {}
+        public int at(int i) { return xs[i]; }
+      }
+      """,
+      new NullaryArityTransform(everywhere))
+    val rows = r.idioms.all.filter(_.kind == IdiomKind.NullaryArity)
+    // `run()` is void and `at(int)` takes a parameter: neither is in the population.
+    assertEquals(clue(rows.map(_.subject).sorted),
+      List("Mix#a", "Mix#bump", "Mix#mode", "Mix#toString"))
+    assertEquals(clue(rows.size), clue(rows.map(_.subject).distinct.size))
   }
 
   // -------------------------------------------------------------------------------------------

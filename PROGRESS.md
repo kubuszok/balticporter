@@ -1607,9 +1607,16 @@ escape (54 java files -> 65 Scala units; excluded on purpose: `Pools`, `Performa
 `ordering`: **JVM 0 / JS 0 / Native 0**, `.ref` 190 (informational). The enrichment (132 members and factories lls added on its
 twelve types, by analogy on the primitive-specialised siblings) is the next lls wave; the differential lane over lls's suite
 is its oracle. **Rung experiments 2026-09-06 (continued):** `arity` (`NullaryArityTransform`, `Everywhere()`) is free on lls
-(0 errors) and is a default rung now, but it converts only **27 of 479** nilary members and records no refusal for the rest
-(`ObjectSet#isEmpty` among them) — an engine card; until it lands the differential holds at **189 / 2 / 235** (re-census
-of the three candidates under arity: `DynamicArrayTest` 25, `DynamicArrayLongSuite` 27, `ArrayMapTest` 3 errors, unchanged).
+(0 errors) and is a default rung now. **Census 2026-09-06 (every non-candidate is a counted row):** the population is
+**392** owned nilary value-returning declarations, **27 converted**, 365 refused — `AnchoredClosure` 173 (57
+`java.lang.Object`, 50 `java.util.Iterator`, 39 `java.lang.Iterable`, all honest §4.5 anchors; 29 on JDK types whose
+surface `ExternalSurface` does not know), `SideEffectingBody` **164**, `ComponentPartial` 10, `StaticMember` 9,
+`Overloaded` 9. The 164 are `ENGINE-LIMITS.md` **K42**: the getter-like scan reads the frontend's OPERATOR lowering as a
+call, so `ObjectSet#isEmpty` (`return size == 0`) is refused. Priced there: the fix takes lls 27 -> 93 but moves **408
+emitted gdx members**, and gdx's arity shape is published to nine dependents — it lands with that wave, not alone. Until
+it does the differential holds at **189 / 2 / 235** (the three candidates under arity are unchanged: `DynamicArrayTest`
+25, `DynamicArrayLongSuite` 27, `ArrayMapTest` 3 errors, and each keeps blockers beyond arity, so none is re-admissible
+on the arity fix alone).
 `bean` derivation: 18 diff errors, not adopted yet. K39 (class member vs class-file `default`, 11 `E164`) shows on lls only
 without the `ordering` rung and on L0; its fix is in progress.
 

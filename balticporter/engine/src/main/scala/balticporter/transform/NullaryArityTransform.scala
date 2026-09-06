@@ -4,10 +4,10 @@ import balticporter.core.{MergeablePolicy, SurfacePolicy}
 import balticporter.tir.*
 
 /** Drops `()` from a nullary getter-like method — `def x(): R` becomes `def x: R` — and rewrites
-  * every call site, reproducing sge's empirical convention. Getter-like (conservatively): no
-  * assignments/increments, no calls to non-nullary members; over-refuses, never under-refuses.
-  * Scope default `Only(Set.empty)` (§1(b), opposite of a retyping phase — this ADDS arity). Runs
-  * after `bean-properties`, before `package-rename`. `SurfacePolicy`/`MergeablePolicy`. */
+  * every call site. Getter-like (conservatively): no assignments/increments, no calls to
+  * non-nullary members; over-refuses, never under-refuses, and EVERY owned nilary value-returning
+  * declaration takes one lane row (§3; the operator gap in that scan is `ENGINE-LIMITS.md` K42).
+  * Scope default `Only(Set.empty)` (§1(b) — this ADDS arity). After `bean-properties`. */
 final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
     extends Phase, SurfacePolicy, MergeablePolicy, IdiomPhase, Rewrite, PolicyBound:
 
@@ -70,16 +70,34 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
 
     val graph = OverrideGraph.build(program)
 
-    // ---- 1. find candidates: owned, in scope, nilary, non-void, getter-like ----
+    // ---- 1. find candidates — EVERY member of the population takes a lane row (§3) ----
+    // The population is every OWNED method declaration java wrote `m()` with a value result: that
+    // is the set whose `()` this phase either drops or must say why it kept. Each branch below
+    // ends in `refuse` or in `candidates`, so nothing leaves this loop silently.
     val candidates = collection.mutable.ListBuffer.empty[SymId]
 
     program.symbols.all.foreach { s =>
-      // skip owners the base SUBSTITUTED — the injected shim's members were never renamed (D14, §1.5)
       val ownerFqn = program.symbolOf(s.owner).map(_.fullName).getOrElse("")
-      if program.owned(s.id) && !s.flags.isStatic && !substitutedOwners.contains(ownerFqn) &&
-         PolicyBinder.isExecutable(s.info) && scope.includes(program, s) then
-        program.definitionOf(s.id) match
-          case Some(d: Tree.DefDef) if isNilary(d) && !isVoid(program, d.returnTpt.tpe) =>
+      program.definitionOf(s.id) match
+        case Some(d: Tree.DefDef)
+            if program.owned(s.id) && isNilary(d) && !isVoid(program, d.returnTpt.tpe) =>
+          if s.flags.isStatic then
+            refuse(program, s.id, "StaticMember",
+              "a java `static` is emitted onto the companion, where the arity this phase mints is " +
+              "not the one the call sites it cannot see were written against")
+          // owners the base SUBSTITUTED — the injected shim's members were never renamed (D14, §1.5)
+          else if substitutedOwners.contains(ownerFqn) then
+            refuse(program, s.id, "SubstitutedOwner",
+              s"`$ownerFqn` is substituted by the base: this run emits no declaration for it, so " +
+              "the arity of its members is the base's fact and not this module's to move")
+          else if !PolicyBinder.isExecutable(s.info) then
+            refuse(program, s.id, "NotExecutable",
+              "the symbol's `info` is not a `MethodType`/`PolyType`, so this phase cannot read the " +
+              "parameter clause it would drop")
+          else if !scope.includes(program, s) then
+            refuse(program, s.id, "OutOfScope",
+              s"the phase's `RuleScope` excludes it (entry `${scope.entryFor(program, s).getOrElse("?")}`)")
+          else
             val closure = graph.closureOf(s.id)
             if closure.isAnchored then
               refuse(program, s.id, "AnchoredClosure",
@@ -100,7 +118,16 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
                 "rather than calling the parameterful overload")
             else
               candidates += s.id
-          case _ => () // not a nilary method or no definition
+        // a member of an owned type that the SYMBOL TABLE says is nilary and non-void while the
+        // TREE holds no `DefDef` for it — dropped, or minted by a phase without one. Nothing here
+        // can be converted, and a silent skip would leave the denominator short.
+        case scala.None
+            if program.owned(s.id) && graph.types.contains(s.owner) &&
+               !s.flags.isStatic && isNilaryValueInfo(program, s) =>
+          refuse(program, s.id, "NoDefinition",
+            "the program has no `DefDef` for this member — it was dropped, or minted without a " +
+            "declaration — so there is no parameter clause to strip")
+        case _ => () // not a nilary value-returning method declaration this program owns
     }
 
     // ---- 2. group by override component and convert whole components ----
@@ -173,6 +200,12 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
     d.paramss match
       case List(Nil) => true
       case _         => false
+
+  /** the SYMBOL's own claim that it is a nilary method with a value result — asked only where the
+    * tree holds no `DefDef`, so the declaration's own shape cannot be read. */
+  private def isNilaryValueInfo(p: Program, s: Symbol): Boolean = s.info match
+    case TypeRepr.MethodType(Nil, r, _) => !isVoid(p, r)
+    case _                              => false
 
   /** Java `void`, as the frontend writes it. */
   private def isVoid(p: Program, t: TypeRepr): Boolean = t match

@@ -1682,3 +1682,27 @@ measured and left counted: `witness(ErasedArrayCast)` 30 — an element-typed ar
 throws `ClassCastException` at a primitive element type, so `TimSort` is not a subject; and
 `witness(UnhandledCreation)` 4 — `<V> V[] toArray(Class<V>)` reflects its array type out of a `Class`
 argument and java's signature carries no clause to put a witness on.
+
+### K42. `NullaryArityTransform`'s getter-like scan reads the ENGINE's OPERATOR LOWERING as a call -- **lls 27/392, gdx 133/1547 converted; the fix moves 408 gdx members. Do NOT land it as a base-flat change**
+
+(a) universal, engine, and the population is COUNTED today. Symptom: `hasSideEffects` marks any
+`Tree.Apply` with arguments side-effecting. The frontend lowers every java OPERATOR to exactly that
+shape — `SpoonTirBodyExprs.binApply` mints `Tree.Apply` on a synthetic `scala.<op>#==` symbol so the
+emitter can render it infix — so `return size == 0;` reads as a call and every comparison-bodied
+getter is refused. §4.59: what the parser SYNTHESISES is not what java WROTE, and the argument count
+of an operator node is a fact about this engine's translation.
+Numbers (2026-09-06): lls `arity` rung — 392 owned nilary value-returning declarations, 27 converted,
+173 `AnchoredClosure` (57 `java.lang.Object`, 50 `java.util.Iterator`, 39 `java.lang.Iterable` — all
+honest §4.5 anchors — plus 29 on unknown-surface JDK types), 164 `SideEffectingBody`, 10
+`ComponentPartial`, 9 `StaticMember`, 9 `Overloaded`. `ObjectSet#isEmpty` (`return size == 0`) is one
+of the 164. gdx: 1547 considered, 133 converted, 415 `SideEffectingBody`.
+Priced: admitting java's own operators (a CLOSED list of 19 binary + 4 unary + the `eq`/`ne` the
+frontend substitutes for reference `==`, never a phase-minted `+=`, which is a mutation) takes lls
+27 -> 93 converted and `SideEffectingBody` 164 -> 96, and gdx 133 -> 199 with **408 emitted members
+moved**. gdx's arity shape is PUBLISHED (`form=parenless` in its port map, read by nine dependents,
+`PortMapTransform.followMemberRenames`), so that is a whole-corpus re-baseline and not a base-flat
+fix. ashley already carries the defect as per-library policy — two `BeanPropertyTransform` getter-only
+pairs whose comment names this guard (`Bag#isEmpty`, `ComponentOperationHandler#hasOperationsToProcess`).
+Rule: land it with the dependent wave that re-measures all nine, never alone; and when it lands, close
+`hasSideEffects`'s own `case _ => ()` default at the same time — an unenumerated node kind there is an
+UNDER-refusal, the direction this phase promises never to take.
