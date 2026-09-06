@@ -12,7 +12,7 @@ collection-boundary	4
 collection-closure	0
 collection-internal	0
 collection-retarget	0
-context-seam	0
+context-seam	19
 dependency-coverage	37
 dependency-coverage(all)	37
 dependency-coverage(declared)	1
@@ -25,7 +25,7 @@ manifest	0
 markers	0
 nullability-boundary	147
 omissions	39
-overload-risk	539
+overload-risk	455
 policy	1
 port-map	0
 portability(all)	153

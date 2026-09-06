@@ -12,7 +12,7 @@ collection-boundary	1
 collection-closure	0
 collection-internal	0
 collection-retarget	0
-context-seam	0
+context-seam	1
 dependency-coverage	0
 dependency-coverage(all)	37
 dependency-coverage(declared)	0
@@ -43,7 +43,7 @@ trivia	0
 trivia(deliberate)	0
 trivia(recovered)	0
 try-resource	0
-unused-symbol(handled)	32
+unused-symbol(handled)	34
 unused-symbol(refused)	0
 witness	0
 upstream	libGDX@4b4d2c4fd05786d848c42cb69266dd2dd6839983

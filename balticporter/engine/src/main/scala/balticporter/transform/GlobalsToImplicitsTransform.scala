@@ -506,10 +506,29 @@ final class GlobalsToImplicitsTransform(
         Tree.TypeApply(Tree.Ident(summonSym, ctxRef, o), List(TypeTree(ctxRef, o)), ctxRef, o)
       case ContextReader.Apply => Tree.Apply(Tree.Ident(applySym, ctxRef, o), Nil, applySym, ctxRef, o)
 
+    /** a `seg()` hop is a nullary METHOD on the previous hop (a getter the port has not turned into
+      * a property yet): minted with a method type and applied, so the emitter writes the call. */
+    val methodHops = collection.mutable.Map.empty[SymId, String]
+    def segMethodSym(seg: String, tpe: TypeRepr): SymId =
+      val id = segCache.getOrElseUpdate(seg + "()",
+        mint.member(seg, MemberKey(ctxFqn, seg + "()").render, ctxSym, TypeRepr.MethodType(Nil, tpe), Flags()))
+      methodHops.getOrElseUpdate(id, seg)
+      id
+    /** a WRITE through a getter hop is the bean SETTER's call (`getGL20()` <- `setGL20(v)`): java's
+      * own convention for the pair, which is what a `()` hop stands for until the property step. */
+    def setterFor(getter: String, valueTpe: TypeRepr): SymId =
+      val nm = "set" + getter.stripPrefix("get")
+      segCache.getOrElseUpdate(nm + "(v)",
+        mint.member(nm, MemberKey(ctxFqn, nm + "(v)").render, ctxSym,
+          TypeRepr.MethodType(List(("value", valueTpe)), TypeRepr.NoType), Flags()))
     def pathOn(base: Term, path: String, tpe: TypeRepr, at: Origin): Term =
       val segs = path.split('.').toList.filter(_.nonEmpty)
       segs.zipWithIndex.foldLeft(base) { case (q, (seg, i)) =>
-        Tree.Select(q, segSym(seg), if i == segs.size - 1 then tpe else TypeRepr.NoType, at)
+        val hopTpe = if i == segs.size - 1 then tpe else TypeRepr.NoType
+        if seg.endsWith("()") then
+          val m = segMethodSym(seg.stripSuffix("()"), hopTpe)
+          Tree.Apply(Tree.Select(q, m, TypeRepr.NoType, at), Nil, m, hopTpe, at)
+        else Tree.Select(q, segSym(seg), hopTpe, at)
       }
 
     // ---- the DEFERRED-INIT rewrite, first: it MINTS a threaded method the read pass then visits --
@@ -540,6 +559,13 @@ final class GlobalsToImplicitsTransform(
       def name = "globals->implicits/read"
       override def transformIdent(t: Tree.Ident)(using Program): Term = read(t.sym, t.tpe, t.origin).getOrElse(t)
       override def transformSelect(t: Tree.Select)(using Program): Term = read(t.sym, t.tpe, t.origin).getOrElse(t)
+      override def transformTerm(t: Term)(using Program): Term = t match
+        // the lhs was rewritten (children first) into a getter-hop CALL: an assignment to a call is
+        // the setter's call instead.
+        case Tree.Assign(Tree.Apply(Tree.Select(q, m, _, _), Nil, _, _, _), rhs, _, at, None) if methodHops.contains(m) =>
+          val setter = setterFor(methodHops(m), rhs.tpe)
+          Tree.Apply(Tree.Select(q, setter, TypeRepr.NoType, at), List(rhs), setter, TypeRepr.NoType, at)
+        case other => other
       private def read(s: SymId, tpe: TypeRepr, at: Origin): Option[Term] =
         statics.get(s).flatMap(path => plan.get(s -> at) match
           case Some(ReadPlan.Threaded) => Some(pathOn(contextExpr, path, tpe, at))

@@ -151,25 +151,42 @@ object LibgdxLadder:
         members  = Map(
           "app" -> "application", "graphics" -> "graphics", "audio" -> "audio", "input" -> "input",
           "files" -> "files", "net" -> "net",
-          "gl" -> "graphics.gl20", "gl20" -> "graphics.gl20", "gl30" -> "graphics.gl30",
-          "gl31" -> "graphics.gl31", "gl32" -> "graphics.gl32"),
+          // the GL statics, two hops through the service that owns them — as GETTER CALLS until the
+          // property step renames them (`graphics.gl20` in the full port).
+          "gl" -> "graphics.getGL20()", "gl20" -> "graphics.getGL20()", "gl30" -> "graphics.getGL30()",
+          "gl31" -> "graphics.getGL31()", "gl32" -> "graphics.getGL32()"),
         attach   = balticporter.transform.ContextAttach.Class,
         reader   = balticporter.transform.ContextReader.Summon,
         boundary = balticporter.transform.ContextBoundary.Refuse,
         sites    = Map(
           "com.badlogic.gdx.scenes.scene2d.ui.TextField#DEFAULT_ONSCREEN_KEYBOARD" -> balticporter.transform.ContextSite.LazyInit,
           "com.badlogic.gdx.scenes.scene2d.ui.Table#cellPool" -> balticporter.transform.ContextSite.LazyInit))))),
+    // `Seconds`: a frame delta is not a bare `Float` (sge's opaque type, injected from sge's own
+    // file). Seeded at the two producers on `Graphics`; the phase propagates along pure moves
+    // (`render(delta)`, `act(delta)`) and coerces at the boundary.
+    "seconds" -> List(new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+      fqn        = "com.badlogic.gdx.utils.Seconds",
+      target     = balticporter.tir.OpaqueSpec.Target.Existing(
+        typeFqn = "sge.utils.Seconds", wrapName = "apply", unwrapName = "toFloat"),
+      hints      = Set("com.badlogic.gdx.Graphics#getDeltaTime", "com.badlogic.gdx.Graphics#getRawDeltaTime"),
+      underlying = balticporter.tir.OpaqueSpec.Primitive.Float,
+      scope      = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx"))))),
+    // `Pool` as sge's TRAIT (injected from sge's own files, with `Pool.Default`, `Pool.Flushable`
+    // and the `Poolable` type class the demos use): java's `Pool`/`DefaultPool`/`FlushablePool` go,
+    // their references re-point, and a subclass's constructor arguments become the trait's
+    // abstract vals (the full port's `ClassToTraitTransform` specs).
+    "pool" -> List(
+      new balticporter.transform.TypeRedirectTransform(redirects = Map(
+        "com.badlogic.gdx.utils.DefaultPool"   -> "sge.utils.Pool.Default",
+        "com.badlogic.gdx.utils.FlushablePool" -> "sge.utils.Pool.Flushable")),
+      new balticporter.transform.ClassToTraitTransform(specs = Map(
+        "com.badlogic.gdx.utils.Pool" -> List(
+          balticporter.transform.ClassToTraitTransform.ParamMapping(0, "initialCapacity"),
+          balticporter.transform.ClassToTraitTransform.ParamMapping(1, "max")),
+        "com.badlogic.gdx.utils.FlushablePool" -> List(
+          balticporter.transform.ClassToTraitTransform.ParamMapping(0, "initialCapacity"),
+          balticporter.transform.ClassToTraitTransform.ParamMapping(1, "max"))))),
     "reflection" -> List(
-      // `Pools.get` minted a `ReflectionPool` for an unregistered type; java itself offers the
-      // refusal (`THROW_ON_REFLECTION_POOL_CREATION`), so the miss throws java's own message and a
-      // pool is registered with `Pools.set` (the full port's `Pools` injection says the same).
-      new balticporter.transform.MethodBodyTransform(Map(
-        "com.badlogic.gdx.utils.Pools#get(Class,int)" ->
-          """{
-            |  val pool = Pools.typePools.get(`type`)
-            |  if (pool.isEmpty) throw new java.lang.RuntimeException(("Please manually define a Pool for " + `type`) + " by calling Pools#set before calling Pools#get")
-            |  return pool.get.asInstanceOf[sge.utils.Pool[T]]
-            |}""".stripMargin)),
       new balticporter.transform.ClassTableTransform(Map(
         "com.badlogic.gdx.utils.reflect.ClassReflection#forName" ->
           "com.badlogic.gdx.graphics.g3d.particles.AssetTypeRegistry#classFor")),
@@ -183,11 +200,16 @@ object LibgdxLadder:
 
   /** per step, the TYPES it removes (each replaced by an injection or made dead by the step). */
   val stepTypeDrops: Map[String, Set[String]] = Map(
+    "pool" -> Set("com.badlogic.gdx.utils.Pool", "com.badlogic.gdx.utils.DefaultPool",
+                  "com.badlogic.gdx.utils.FlushablePool"),
     // the JVM-only `HttpURLConnection` client: nothing in core references it; the backends supply
     // their own `Net` (sge's capability convention, PROGRESS.md §13.29 R9).
     "net" -> Set("com.badlogic.gdx.net.NetJavaImpl"),
     "reflection" -> Set(
       "com.badlogic.gdx.utils.Json",
+      // the `Class`-keyed static pool registry minted `ReflectionPool`s and registers, at class
+      // initialisation, constructors that take the context; no core reader; sge has no `Pools`.
+      "com.badlogic.gdx.utils.Pools",
       "com.badlogic.gdx.utils.ReflectionPool",
       "com.badlogic.gdx.utils.reflect.Annotation",
       "com.badlogic.gdx.utils.reflect.Field",
@@ -204,6 +226,8 @@ object LibgdxLadder:
   def stepInjects(repoRoot: Path): Map[String, List[Path]] = Map(
     "reflection" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides")),
     "context"    -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-context")),
+    "seconds"    -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-seconds")),
+    "pool"       -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-pool")),
   ).withDefaultValue(Nil)
 
   /** Per step, the members the step makes dead: the reflective `Class`-typed constructors the
@@ -224,9 +248,9 @@ object LibgdxLadder:
     ),
   ).withDefaultValue(Set.empty)
 
-  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context")
+  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool")
   /** the steps LANDED so far (measured, baselined, PROGRESS.md §13.29). */
-  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames")
+  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context")
 
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames`
     * for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix

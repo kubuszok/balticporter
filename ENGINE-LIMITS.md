@@ -1845,3 +1845,13 @@ the typer pass completed, `RefChecks` reported **12 `E057`** on `Octree`'s `Obje
 emitter fills `Object` at the print) — `TextureAtlas.createSprites`, the last main-tree error.
 K47's declared move now publishes the package-private TYPE itself (`ComparableTimSort`, read by
 java's own `SortTest`), and an override of a member the plan made public renders public (`E164`).
+
+### K49. A context member path could only hop through PROPERTIES — CLOSED 2026-09-06: a `seg()` hop is a getter CALL, and a write through it is the bean setter's call
+
+The full port's `Gdx.gl -> graphics.gl20` path presumes the property step (`getGL20()` renamed); on
+the ladder, where the context lands BEFORE properties, the minted field hop rendered
+`graphics.gl20` — **320 `E008`** on one step. `pathOn` now takes `graphics.getGL20()` (a member minted
+with a method type, emitted as the call) and an ASSIGNMENT through such a hop (`GLProfiler.enable`:
+`Gdx.gl20 = interceptor`, **10 `E100`**) becomes `graphics.setGL20(v)` — java's own bean pair, which
+is what the hop stands for until the property step renames both. Spec: `ContextPathHopSpec`. The
+path spelling is a per-step VALUE: when the property step lands, the policy says `gl20` again.

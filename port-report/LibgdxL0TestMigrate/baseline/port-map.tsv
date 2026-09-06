@@ -1,6 +1,6 @@
-# balticporter port map	schema=4	module=sge-l0-test	engine=balticporter/0.1.0-SNAPSHOT	sources=947965ed3d786d14	files=28	policy=60bcf37ff7a922f3	jdk=22
+# balticporter port map	schema=4	module=sge-l0-test	engine=balticporter/0.1.0-SNAPSHOT	sources=947965ed3d786d14	files=28	policy=1421f957f5287537	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
-type	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest	sge.graphics.g3d.utils.AnimationControllerTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=assertSameAnimation
+type	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest	sge.graphics.g3d.utils.AnimationControllerTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=,assertSameAnimation
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest	sge.graphics.g3d.utils.AnimationDescTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=epsilon
 type	com.badlogic.gdx.math.BSplineTest	sge.math.BSplineTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.math.ConvexHullTest	sge.math.ConvexHullTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
@@ -33,6 +33,7 @@ type	com.badlogic.gdx.utils.SortedIntListTest	sge.utils.SortedIntListTest	Rename
 type	com.badlogic.gdx.net.NetJavaImpl	sge.net.NetJavaImpl	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.Collections	sge.utils.Collections	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.Json	sge.utils.Json	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Pools	sge.utils.Pools	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.ReflectionPool	sge.utils.ReflectionPool	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.reflect.Annotation	sge.utils.reflect.Annotation	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.reflect.ArrayReflection	sge.utils.reflect.ArrayReflection	Dropped	-		0		form=class
@@ -52,6 +53,8 @@ type		balticporter.runtime.JavaOptionalDouble	Added	-		0
 type		balticporter.runtime.JavaOptionalInt	Added	-		0		
 type		balticporter.runtime.JavaOptionalLong	Added	-		0		
 type		balticporter.runtime.JavaStack	Added	-		0		
+member	com.badlogic.gdx.Sge#<given-static>	sge.Sge#<given-static>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationControllerTest.java	14	3407645dc63a595c	placement=companion vis=private
+member	com.badlogic.gdx.Sge#<given>	sge.Sge#<given>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationControllerTest.java	14	3407645dc63a595c	vis=private
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest#<stmt1>	sge.graphics.g3d.utils.AnimationControllerTest#<stmt1>	Renamed	-	<synthetic>	0	abca2bbe56b03719	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest#<stmt2>	sge.graphics.g3d.utils.AnimationControllerTest#<stmt2>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationControllerTest.java	17	819f8bc93be5fa75	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest#<stmt3>	sge.graphics.g3d.utils.AnimationControllerTest#<stmt3>	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationControllerTest.java	36	21a301e773f34939	
