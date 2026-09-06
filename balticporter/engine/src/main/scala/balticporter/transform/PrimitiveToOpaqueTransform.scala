@@ -85,6 +85,8 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
 
   /** boundary findings accumulated during [[run]]; cleared at the head of every run. */
   private val boundaryIssues = collection.mutable.ListBuffer.empty[OpaqueBoundaryCheck.Finding]
+  /** the unit being walked — a finding at an EXTERNAL callee is attributed to the site's unit. */
+  private var currentUnit: SymId = SymId.None
 
   /** every boundary site this phase opened and could not close, restricted to units this run
     * actually emits. ENGINE-LIMITS D2 */
@@ -307,7 +309,7 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     // the mint is one module's (ENGINE-LIMITS §13 O5; class doc explains why the test is on the
     // hints, not the grown seed set). Everything above this line runs in every inheriting module;
     // only the object write is fenced. For the Existing form there is no unit to mint at all.
-    val walked = program.units.map(u => StandardTraversal.mapClassDef(this, u))
+    val walked = program.units.map { u => currentUnit = u.symbol; StandardTraversal.mapClassDef(this, u) }
     val units = synthUnit match
       case Some(su) if mintsHere(program, hints) => walked :+ su
       case _ => walked
@@ -495,22 +497,24 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
             else unwrapIfOpaque(arg)
           })
       case _ =>
-        // external callee — no definition to read the formal from. The scope fence is the
-        // defence; where an argument IS opaque and no coercion was possible, record a boundary finding.
+        // external callee — no definition to read the formal from, so the formal is what java wrote:
+        // the PRIMITIVE (K15, a class-file fact). An opaque argument is UNWRAPPED there, and the
+        // seam counted (`Math.min(delta, 1/30f)`: the one error the seconds step left).
         val calleeFqn = p.symbolOf(t.method).map(_.fullName).getOrElse("?")
-        t.args.foreach { arg =>
-          if carriesOpaque(arg) then
-            val encl = p.symbolOf(t.method).map(_.owner).getOrElse(SymId.None)
+        val args2 = t.args.map { arg =>
+          if !carriesOpaque(arg) then arg
+          else
             boundaryIssues += OpaqueBoundaryCheck.Finding(
               issue   = OpaqueBoundaryCheck.Issue.ExternalCallee,
               subject = calleeFqn,
-              detail  = s"an opaque-typed argument reaches an external callee whose formal this " +
-                s"program does not have — the scope fence is the defence (spec: ${spec.fqn})",
+              detail  = s"an opaque-typed argument reaches an external callee; its formal is java's " +
+                s"primitive, so the value is unwrapped there (spec: ${spec.fqn})",
               origin  = t.origin,
-              unit    = unitOf(p, encl),
+              unit    = currentUnit, // the SITE's unit — an external callee has no owning unit here
             )
+            unwrapIfOpaque(arg)
         }
-        t
+        if args2 == t.args then t else t.copy(args = args2)
 
   // -------------------------------------------------------------------------
   // the boundary, read through the declaration. ENGINE-LIMITS §13 O1

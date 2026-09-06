@@ -1855,3 +1855,15 @@ with a method type, emitted as the call) and an ASSIGNMENT through such a hop (`
 `Gdx.gl20 = interceptor`, **10 `E100`**) becomes `graphics.setGL20(v)` — java's own bean pair, which
 is what the hop stands for until the property step renames both. Spec: `ContextPathHopSpec`. The
 path spelling is a per-step VALUE: when the property step lands, the policy says `gl20` again.
+
+### K50. Two seams the opaque phase left silent — CLOSED 2026-09-06: an opaque argument at an EXTERNAL callee is unwrapped (and the finding lands in the SITE's unit); a retyped signature moves over its OVERRIDE component
+
+`Seconds` on the ladder port (`Graphics.getDeltaTime`/`getRawDeltaTime` seeded, `Target.Existing`):
+(i) `Math.min(delta, 1/30f)` — the external arm only RECORDED a finding, and even that vanished:
+its `unit` was the callee's owner (`java.lang.Math`), which the check's ownership filter drops. The
+formal of a class-file method is the primitive java wrote (K15), so the argument is unwrapped
+there and the finding attributed to the walked unit (`opaque-boundary` 0 -> 1). (ii) `Game.render`
+passes the delta to `Screen.render(float)`, which propagation retyped; `ScreenAdapter.render`,
+its implementer, stayed `float` — `needs to be abstract` (1 error). `FlowPropagation.edges` now
+carries the OVERRIDE edge (method to what it overrides, parameter i to parameter i), the §4.55
+whole-component rule at the propagation itself. Specs: `OpaqueExternalCalleeSpec` (both).

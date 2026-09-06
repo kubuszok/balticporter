@@ -90,4 +90,22 @@ object FlowPropagation:
       case other                      => refSym(other).toList
 
     program.units.foreach(walkStat(_, SymId.None))
+    // the OVERRIDE edge: a method and what it overrides share one signature (§4.55, whole
+    // component or nothing) — its result moves with theirs, its i-th parameter with their i-th.
+    // `Screen.render(delta)` retyped alone left `ScreenAdapter.render(float)` behind (1 error).
+    val graph = balticporter.tir.OverrideGraph.build(program)
+    program.symbols.all.foreach { s =>
+      if s.flags.isOverride && program.owns(s.id) then
+        program.definitionOf(s.id) match
+          case Some(d: Tree.DefDef) =>
+            val mine = d.paramss.flatten.map(_.symbol)
+            graph.overridden(s.id).foreach { o =>
+              out += ((s.id, o))
+              program.definitionOf(o) match
+                case Some(od: Tree.DefDef) =>
+                  mine.zip(od.paramss.flatten.map(_.symbol)).foreach(out += _)
+                case _ => ()
+            }
+          case _ => ()
+    }
     out.toList
