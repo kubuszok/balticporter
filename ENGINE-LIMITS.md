@@ -268,6 +268,13 @@ Do not retry without also fixing: (1) `SpoonTir.referenceIdentity`'s `asRef` to 
 Also: hand-written overrides depending on the emitted bound (e.g. `Json.scala`'s `readValue[T <: Object]`) move with any change here and are not independently choosable.
 Triage (2026-09-04): FAMILY G: F-bound erasure of an unbounded `<T>` — heading itself: "1 error, OPEN. THE FIX WAS BUILT AND MEASURED AT 0 -> 50; DO NOT RETRY BLIND", two named unrepaired families
 
+2026-09-07, a NARROW retry, measured: `ObjectMap`/`OrderedMap` and their five nested views added to
+lls's `WitnessUnbound` (the per-type bound drop the witness phase offers), the enrich factories
+unbounded to match — lls 0 -> 20: 12 `keys()`/`values()` receivers no longer conform to the views'
+constructors, 8 `No given MkArray[K]` where a view's `toArray` builds a `DynamicArray[K]` — an
+unbounded element needs the witness the open-addressed tables deliberately do not carry (K41).
+Reverted. `ObjectMap[Int, Vector2]()` (2 demo lines) stays until the tables take the witness.
+
 ### G25. A member SYNTHESISED INTO A SUBCLASS carries the PARENT'S SCOPE with it — **41 of one port's 42 `Not found: type` errors, 243 → 201. CLOSED**
 
 Three mechanisms (diamond-disambiguating forwarder, synthesised primary ctor, constructor replay) copy a parent-declared signature into a subclass that declares none of its type parameters, giving `Not found: type T`/`N`. Unified into one substitution, `ParentSubst` (previously four separate spellings, two of which didn't have it), completed over `TypeRepr` including non-generic parents in the chain and a forwarded generic method's own type parameters.
