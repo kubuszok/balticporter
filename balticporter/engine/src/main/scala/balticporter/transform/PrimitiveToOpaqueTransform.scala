@@ -158,8 +158,11 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     if hints.isEmpty then return program
     // spanning-hints/mint-ownership only apply when MINTING; an Existing target has no unit to collide on.
     if spec.isMint then refuseSpanningHints(program, hints)
+    // a symbol in a unit this run does not EMIT is not a seed: its type is what the base
+    // published (O8), and the call into it is the counted seam — never a hub the flow crosses.
     seeds = FlowPropagation.grow(program, hints, id => program.symbolOf(id).exists(s =>
-      (taggablePrim(s.info) || foreignOpaque(program, s.info).isDefined) && spec.scope.includes(program, s)))
+      (taggablePrim(s.info) || foreignOpaque(program, s.info).isDefined) && spec.scope.includes(program, s)
+        && runScope.emits(unitOf(program, id))))
     refuseOverlap(program)
     if seeds.isEmpty then return program
 
@@ -475,8 +478,11 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
   private def coerceArgs(t: Tree.Apply)(using p: Program): Term =
     p.definitionOf(t.method) match
       case Some(d: Tree.DefDef) =>
-        val params = d.paramss.flatten
-        if params.length != t.args.length then t
+        // the EXPLICIT formals: a `using` clause a phase threaded is not an argument the call writes.
+        val params = d.paramss.flatten.filterNot(v => p.symbolOf(v.symbol).exists(_.flags.isGiven))
+        // a funnelled or synthesised constructor's parameter list does not line up with the call:
+        // the formals that stayed java are primitives, so an opaque argument is unwrapped there.
+        if params.length != t.args.length then t.copy(args = t.args.map(unwrapIfOpaque))
         else
           // a formal that stays java is read literally (CLAUDE.md §1(b)). Propagation may grow the
           // seed set into a base declaration this run does not emit: if the base's port map says
@@ -633,12 +639,16 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     case _                       => TypeRepr.NoType
 
   // array coercion — wrapArray/unwrapArray calls.
+  /** an EXISTING target declares no array helpers (sge's `Pixels` has none); an array of an opaque
+    * over a primitive IS that primitive's array at run time, so the move is a cast. */
   private def wrapArrayCall(e: Term): Term =
-    Tree.Apply(Tree.Select(Tree.Ident(objSym, TypeRepr.NoType, e.origin), wrapArraySym, TypeRepr.NoType, e.origin),
+    if !spec.isMint then Tree.Typed(e, TypeTree(opaqueArrayRef, e.origin), opaqueArrayRef, e.origin)
+    else Tree.Apply(Tree.Select(Tree.Ident(objSym, TypeRepr.NoType, e.origin), wrapArraySym, TypeRepr.NoType, e.origin),
       List(e), wrapArraySym, opaqueArrayRef, e.origin)
 
   private def unwrapArrayCall(e: Term): Term =
-    Tree.Apply(Tree.Select(Tree.Ident(objSym, TypeRepr.NoType, e.origin), unwrapArraySym, TypeRepr.NoType, e.origin),
+    if !spec.isMint then Tree.Typed(e, TypeTree(primArrayRef, e.origin), primArrayRef, e.origin)
+    else Tree.Apply(Tree.Select(Tree.Ident(objSym, TypeRepr.NoType, e.origin), unwrapArraySym, TypeRepr.NoType, e.origin),
       List(e), unwrapArraySym, primArrayRef, e.origin)
 
 

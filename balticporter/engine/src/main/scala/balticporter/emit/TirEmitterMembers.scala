@@ -932,6 +932,8 @@ private[emit] trait TirEmitterMembers:
     * (often `null`) java initialiser — ambiguous the same way [[markerArg]] is. Declines on a
     * delegation JAVA WROTE (§4.56) and at an ABSTRACT type slot (`Null` does not conform). */
   private[emit] def slotArg(a: Term, slot: Option[TypeRepr], i: Int): String = (a, slot) match
+    // an OPAQUE slot over a primitive has no `null`: the cast erases to the primitive's zero (K51).
+    case (Tree.Literal(Constant.NullC, _, _), Some(t)) if opaqueSlot(t)     => s"null.asInstanceOf[${tpe(t)}]"
     case (Tree.Literal(Constant.NullC, _, _), Some(t)) if !abstractSlot(t) => s"(null: ${tpe(t)})"
     // C3: an `if` with a block body in a synthesised delegation misparsed by Scala 3's
     // `this(...)` grammar -- parenthesise to delimit the expression. // ENGINE-LIMITS C3
@@ -942,6 +944,11 @@ private[emit] trait TirEmitterMembers:
     * one, which is the same fact `CtorFunnel.javaDefault` refuses to mint a `null` for. */
   private[emit] def abstractSlot(t: TypeRepr): Boolean = t match
     case TypeRepr.TypeRef(_, s) => program.definitionOf(s).exists(_.isInstanceOf[Tree.TypeDef])
+    case _                      => false
+
+  /** does this slot's type name an `opaque type` a phase minted or retargeted onto? */
+  private[emit] def opaqueSlot(t: TypeRepr): Boolean = t match
+    case TypeRepr.TypeRef(_, s) => program.symbolOf(s).exists(_.flags.isOpaque)
     case _                      => false
 
   private[emit] def superDelegation(args: List[Term], i: Int): String =

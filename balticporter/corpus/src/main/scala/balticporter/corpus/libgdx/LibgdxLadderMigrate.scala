@@ -97,6 +97,9 @@ object LibgdxLadder:
 
   /** The step fragments, cumulative; each merges with the base's instance of the same phase at
     * the base's position (CLAUDE.md §1.5). */
+  /** the GL statics' two-hop path: the property step renames the getter (`gl20`); before it, the call. */
+  private def glPath(sel: Set[String], n: String): String =
+    if sel("properties") then s"graphics.gl$n" else s"graphics.getGL$n()"
   def Steps: Map[String, List[balticporter.tir.Phase]] = stepsFor(Set.empty)
   def stepsFor(sel: Set[String]): Map[String, List[balticporter.tir.Phase]] = Map(
     "witness" -> List(
@@ -153,8 +156,8 @@ object LibgdxLadder:
           "files" -> "files", "net" -> "net",
           // the GL statics, two hops through the service that owns them — as GETTER CALLS until the
           // property step renames them (`graphics.gl20` in the full port).
-          "gl" -> "graphics.getGL20()", "gl20" -> "graphics.getGL20()", "gl30" -> "graphics.getGL30()",
-          "gl31" -> "graphics.getGL31()", "gl32" -> "graphics.getGL32()"),
+          "gl" -> glPath(sel, "20"), "gl20" -> glPath(sel, "20"), "gl30" -> glPath(sel, "30"),
+          "gl31" -> glPath(sel, "31"), "gl32" -> glPath(sel, "32")),
         attach   = balticporter.transform.ContextAttach.Class,
         reader   = balticporter.transform.ContextReader.Summon,
         boundary = balticporter.transform.ContextBoundary.Refuse,
@@ -170,7 +173,9 @@ object LibgdxLadder:
         typeFqn = "sge.utils.Seconds", wrapName = "apply", unwrapName = "toFloat"),
       hints      = Set("com.badlogic.gdx.Graphics#getDeltaTime", "com.badlogic.gdx.Graphics#getRawDeltaTime"),
       underlying = balticporter.tir.OpaqueSpec.Primitive.Float,
-      scope      = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx"))))),
+      // core's own declarations, never the base's: a shared int utility (`MathUtils.isPowerOfTwo`)
+      // is a HUB the symmetric propagation would otherwise ride into unrelated ints (a touch bitmask).
+      scope      = balticporter.tir.RuleScope.Everywhere(Set.empty)))),
     // `Pool` as sge's TRAIT (injected from sge's own files, with `Pool.Default`, `Pool.Flushable`
     // and the `Poolable` type class the demos use): java's `Pool`/`DefaultPool`/`FlushablePool` go,
     // their references re-point, and a subclass's constructor arguments become the trait's
@@ -203,7 +208,30 @@ object LibgdxLadder:
         "com.badlogic.gdx.ApplicationListener#resize#width", "com.badlogic.gdx.ApplicationListener#resize#height",
         "com.badlogic.gdx.Screen#resize#width", "com.badlogic.gdx.Screen#resize#height"),
       underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
-      scope      = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx"))))),
+      // core's own declarations, never the base's: a shared int utility (`MathUtils.isPowerOfTwo`)
+      // is a HUB the symmetric propagation would otherwise ride into unrelated ints (a touch bitmask).
+      scope      = balticporter.tir.RuleScope.Everywhere(Set.empty)))),
+    // properties and parenless getters: the full port's bean pairs and targets (`LibgdxPolicy`),
+    // lifted by reference, on core's entry; the `Only` scope merges with lls's arity instance.
+    "properties" -> List(
+      new balticporter.transform.BeanPropertyTransform(LibgdxPolicy.beanPropertyPairs, LibgdxPolicy.beanPropertyTargets,
+        scope = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx"))),
+      new balticporter.transform.NullaryArityTransform(scope = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx")))),
+    // sge's graphics API spellings the demos use: `ShapeRenderer.rect -> rectangle` (its four
+    // overloads, one component) and the `drawing(type) { … }` helper around `begin`/`end`.
+    "graphics" -> List(
+      new balticporter.transform.MemberRenameTransform(renames = Map(
+        "com.badlogic.gdx.graphics.glutils.ShapeRenderer#rect" -> "rectangle")),
+      new balticporter.transform.AddMembersTransform(Map(
+        "com.badlogic.gdx.graphics.glutils.ShapeRenderer" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("drawing", 2,
+            "inline def drawing[A](shapeType: ShapeRenderer.ShapeType)(inline body: => A): A = { begin(shapeType); try body finally end() }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.glutils.ShapeRenderer#drawing"),
+            Some("sge's `drawing(type) { … }` around `begin`/`end`, `end` guaranteed (PROGRESS.md §13.29)"), false),
+          balticporter.transform.AddMembersTransform.MemberSpec("drawing", 1,
+            "inline def drawing[A](inline body: => A): A = { begin(); try body finally end() }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.glutils.ShapeRenderer#drawing"),
+            Some("sge's `drawing { … }` around `begin()`/`end` (auto shape type) (PROGRESS.md §13.29)"), false))))),
     "reflection" -> List(
       new balticporter.transform.ClassTableTransform(Map(
         "com.badlogic.gdx.utils.reflect.ClassReflection#forName" ->
@@ -272,9 +300,9 @@ object LibgdxLadder:
     ),
   ).withDefaultValue(Set.empty)
 
-  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels")
+  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "properties", "graphics")
   /** the steps LANDED so far (measured, baselined, PROGRESS.md §13.29). */
-  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool")
+  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels")
 
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames`
     * for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix

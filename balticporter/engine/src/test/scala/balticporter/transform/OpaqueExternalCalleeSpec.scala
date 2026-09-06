@@ -2,7 +2,8 @@ package balticporter.transform
 
 import balticporter.emit.TirEmitter
 import balticporter.frontend.spoon.SpoonTir
-import balticporter.tir.{OpaqueSpec, Pipeline, RuleScope}
+import balticporter.tir.{OpaqueSpec, Pipeline, RuleScope, RunScope}
+import balticporter.tir.PolicyBinder
 
 /** An opaque value reaching an EXTERNAL callee is unwrapped: the class-file formal is java's
   * primitive (CLAUDE.md §4.56, K15), and the seam is counted. */
@@ -38,4 +39,28 @@ class OpaqueExternalCalleeSpec extends munit.FunSuite:
     val out = new TirEmitter(after, notes = log).emit
     val renders = out.linesIterator.filter(_.contains("def render(")).toList
     assert(renders.sizeIs == 2 && renders.forall(_.contains("delta: com.demo.Seconds")), renders.mkString("\n"))
+  }
+
+  test("a formal in a unit this run does not emit is a seam, never a hub the flow crosses") {
+    val hub  = """package com.base;
+                 |public class Hub { public static float clamp (float v) { return v; } }
+                 |""".stripMargin
+    val demo = """package com.demo;
+                 |class Timer { static float delta () { return 0.016f; } }
+                 |class Use {
+                 |  void feed () { com.base.Hub.clamp(Timer.delta()); }
+                 |  void go (float y) { com.base.Hub.clamp(y); }
+                 |}
+                 |""".stripMargin
+    val before = SpoonTir.fromSources(List("Hub.java" -> hub, "Demo.java" -> demo))
+    val phase  = new PrimitiveToOpaqueTransform(OpaqueSpec(
+      fqn = "com.demo.Seconds", hints = Set("com.demo.Timer#delta"),
+      underlying = OpaqueSpec.Primitive.Float, scope = RuleScope.Everywhere(Set.empty)))
+    val theirs = before.units.map(_.symbol).filter(u => before.symbolOf(u).exists(_.fullName == "com.base.Hub")).toSet
+    phase.bindPolicy(new PolicyBinder(before, before.members, RunScope.of(
+      emitted = before.units.map(_.symbol).toSet -- theirs, own = Map.empty)))
+    val after = phase.run(before)
+    val out   = new TirEmitter(after).emit
+    assert(out.contains("go(y: scala.Float)"), out)
+    assert(out.contains("Hub.clamp(com.demo.Seconds.unwrap(com.demo.Timer.delta()))"), out)
   }

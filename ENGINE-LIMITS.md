@@ -1867,3 +1867,25 @@ passes the delta to `Screen.render(float)`, which propagation retyped; `ScreenAd
 its implementer, stayed `float` — `needs to be abstract` (1 error). `FlowPropagation.edges` now
 carries the OVERRIDE edge (method to what it overrides, parameter i to parameter i), the §4.55
 whole-component rule at the propagation itself. Specs: `OpaqueExternalCalleeSpec` (both).
+
+### K51. Four faces of an opaque retyping on a DEPENDENT — CLOSED 2026-09-06: a flow never crosses a symbol this run does not emit; a threaded `using` clause is not a formal; a padded slot at an opaque type is a cast; a funnelled constructor's opaque arguments are unwrapped
+
+`Pixels` on the ladder port (`Graphics.getWidth`/`Input.getX`/`resize(width,height)` seeded,
+`Target.Existing(sge.Pixels)`), 128 declarations retyped, 12 -> 86 -> 0 errors:
+(i) `touched | Pixels(...)` — the flow ran THROUGH `lls`'s `MathUtils.isPowerOfTwo(int)`, a hub
+this run does not emit, and came back out into unrelated `int`s. A scope EXCEPTION on the base's
+types is refused as a `SurfaceIntrusion` BY DESIGN (`SurfaceFoldSpec`: a dependent scoping out a
+base-emitted type re-reads the shared surface), so the fix is O8's rule at the propagation itself:
+a symbol whose unit the run does not emit is never a seed; the call into it is the counted seam.
+(ii) 86 errors from one line: `coerceArgs` compared the call's arity to ALL formals, and the
+`(using Sge)` clause the context step threaded made every context-taking callee an arity
+mismatch, unwrapping every argument. Explicit formals only (`Flags.isGiven` filtered).
+(iii) `this((null: sge.Pixels), …)` — the constructor funnel pads a replayed delegation in the
+EMITTER, after every phase, so a phase arm for it can never fire; an `opaque type` slot (the
+symbol's `isOpaque`) renders `null.asInstanceOf[T]`, which erases to the primitive's zero.
+(iv) `new Pixmap(width, height, format)` against a funnelled primary: an arity mismatch unwraps
+the opaque arguments; `wrapArray`/`unwrapArray` for an `Existing` target are ascribed casts.
+Residue, counted: `opaque-boundary` 1 -> 15 (`Math.abs`/`max`/`min`, `DataOutputStream.writeInt`),
+the test port's `base-surface` 0 -> 10 (`unanswered`: a published primary naming `Pixels`, which
+the dependent's local derivation cannot resolve — it compiles and runs, 216/4 held). All §1(a).
+Specs: `OpaqueExternalCalleeSpec` (the non-emitted hub).
