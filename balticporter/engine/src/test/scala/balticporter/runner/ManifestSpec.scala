@@ -346,8 +346,9 @@ class ManifestSpec extends munit.FunSuite:
       StaticForwarderTransform.Forwarder("com.demo.W", "java.lang.Class", ms)))
     assertEquals(PortManifest.fingerprint(fwd(Set("a", "b"))), PortManifest.fingerprint(fwd(Set("b", "a"))))
     assertNotEquals(PortManifest.fingerprint(fwd(Set("a"))), PortManifest.fingerprint(fwd(Set("a", "b"))))
-    // a phase that does NOT declare its policy is compared by name only — the documented blind spot
-    assertEquals(PortManifest.fingerprint(new MutableParamsTransform), "reassigned-params->var")
+    // a phase with NO parameter declares an EMPTY policy, so two instances in a base chain compare
+    // equal and merge (K43); a phase declaring nothing would render its bare name — the blind spot
+    assertEquals(PortManifest.fingerprint(new MutableParamsTransform), "reassigned-params->var[]")
     // …and one that DOES carries it, even when the policy is the default: the collections phase
     // takes a `RuleScope`, and two modules scoping it differently emit signatures that each compile
     // alone and cannot compile together, which is precisely what `SurfacePolicy` is for (§1.5). The
