@@ -1949,3 +1949,11 @@ which is sge's own shape (its raw constants stay `Int`). `OpaqueExternalCalleeSp
 are a constructor call java never wrote as one (`Tree.EnumCase.ctorArgs`, no `Apply`), so
 `coerceArgs` never saw them; the phase now coerces them against the constructor of matching arity
 (the same defect broke `Cubemap.CubemapSide` under the unfenced WorldUnits flow, 6 bare errors).
+(xvii) `clip.hasContents` — sge dropped the `()` on a member whose body reads the platform
+clipboard; the arity phase's `SideEffectingBody` guard is right in general and the reference port
+decided otherwise here: `NullaryArityTransform(force = Set(fqn))` lifts that one guard for named
+members (every other guard still applies; a surface parameter, fingerprinted, merged by union).
+(xviii) `TextFormatter` is package-private in java and public in sge; `allowPackageSplit` only
+published a type a rename MOVED. A declared entry naming an owned type no rename moves now publishes
+it and its package-private members the same way (one widening each, reader "(declared)").
+Demo check 25 -> 22.

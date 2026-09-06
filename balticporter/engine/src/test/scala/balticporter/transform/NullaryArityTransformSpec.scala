@@ -523,3 +523,18 @@ class NullaryArityTransformSpec extends munit.FunSuite:
     val guards = idioms.all.collect { case c if c.kind == IdiomKind.NullaryArity => c.verdict }.collect { case IdiomVerdict.Refused(g, _) => g }
     assert(guards.contains("NotEmitted"), guards.toString)
   }
+
+  test("`force` drops `()` on a named member the body guard would refuse — every other guard still applies") {
+    val src = """
+      class Clip {
+        private int reads;
+        public boolean hasContents() { reads++; return true; }
+        public boolean hasOther() { reads++; return false; }
+      }
+    """
+    val r = ran(src, new NullaryArityTransform(everywhere, force = Set("Clip#hasContents")))
+    assertEquals(nameOf(r, "Clip#hasContents"), "hasContents")
+    assert(r.out.contains("def hasContents: scala.Boolean"), r.out)
+    assert(r.out.contains("def hasOther(): scala.Boolean"), r.out)
+    assert(refusedFor(r, "Clip#hasOther").nonEmpty)
+  }

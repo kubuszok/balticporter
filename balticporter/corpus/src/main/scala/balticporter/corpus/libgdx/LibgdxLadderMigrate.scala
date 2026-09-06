@@ -243,6 +243,13 @@ object LibgdxLadder:
             "inline def rendering[A](cam: sge.graphics.Camera)(inline body: => A): A = {{ begin(cam); try body finally end() }}",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.ModelBatch#rendering"),
             Some("sge's `rendering(camera) {{ … }}` around `begin(cam)`/`end()` (PROGRESS.md §13.29)"), false)),
+        // sge's `OrthogonalTiledMapRenderer(map, unitScale, batch, ownsBatch)`: java's three-argument
+        // constructor with the ownership flag it fixes at `false` made explicit.
+        "com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("this", 4,
+            "def this(map: sge.maps.tiled.TiledMap, unitScale: scala.Float, batch: sge.graphics.g2d.Batch, ownsBatch: scala.Boolean)(using sge.Sge) = { this(map, unitScale, batch); this.ownsBatch = ownsBatch }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer#<init>"),
+            Some("sge's four-argument constructor: the batch-ownership flag made explicit (PROGRESS.md §13.29)"), false)),
         "com.badlogic.gdx.assets.AssetManager" -> List(
           balticporter.transform.AddMembersTransform.MemberSpec("load", 1,
             "def load[T <: java.lang.Object](fileName: java.lang.String)(using ct: scala.reflect.ClassTag[T]): scala.Unit = load(fileName, ct.runtimeClass.asInstanceOf[java.lang.Class[T]])",
@@ -406,7 +413,9 @@ object LibgdxLadder:
     "properties" -> List(
       new balticporter.transform.BeanPropertyTransform(LibgdxPolicy.beanPropertyPairs, LibgdxPolicy.beanPropertyTargets,
         scope = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx"))),
-      new balticporter.transform.NullaryArityTransform(scope = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx")))),
+      new balticporter.transform.NullaryArityTransform(scope = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx")),
+        // sge's `clip.hasContents` — parenless although the body reads the platform clipboard
+        force = Set("com.badlogic.gdx.utils.Clipboard#hasContents"))),
     // sge's graphics API spellings the demos use: `ShapeRenderer.rect -> rectangle` (its four
     // overloads, one component) and the `drawing(type) { … }` helper around `begin`/`end`.
     "graphics" -> List(
@@ -510,6 +519,8 @@ object LibgdxLadder:
       governs        = Set("com.badlogic.gdx"),
       dropTypes      = StepOrder.filter(steps).flatMap(stepTypeDrops).toSet,
       dropMethods    = StepOrder.filter(steps).flatMap(stepDrops).toSet,
+      // sge ships `TextFormatter` public (java: package-private): declared, the split publishes it (K51 xviii).
+      allowPackageSplit = if steps("helpers") then Set("com.badlogic.gdx.utils.TextFormatter") else Set.empty,
       inject         = StepOrder.filter(steps).flatMap(stepInjects(repoRoot)),
       // a dependent FOLLOWS the base's published member spellings (`first()` -> `first`, D14): the
       // port-map follow reads what lls PUBLISHED, never re-derives it (CLAUDE.md §1.5).

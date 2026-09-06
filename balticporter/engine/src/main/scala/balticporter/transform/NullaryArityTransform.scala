@@ -8,7 +8,10 @@ import balticporter.tir.*
   * non-nullary members; over-refuses, never under-refuses, and EVERY owned nilary value-returning
   * declaration takes one lane row (§3; the operator gap in that scan is `ENGINE-LIMITS.md` K42).
   * Scope default `Only(Set.empty)` (§1(b) — this ADDS arity). After `bean-properties`. */
-final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
+final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty),
+                                  /** members whose `()` goes although the body has behaviour — the reference
+                                    * port's decision, by exact FQN; every other guard still applies (K51 xvii). */
+                                  val force: Set[String] = Set.empty)
     extends Phase, SurfacePolicy, MergeablePolicy, IdiomPhase, Rewrite, PolicyBound:
 
   def name: String = "nullary-arity"
@@ -26,10 +29,11 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
   def arityScope: RuleScope = scope
 
   def surfaceFingerprint: String =
-    if scope == RuleScope.Only(Set.empty) then ""
-    else s"scope=${scope.fingerprint}"
+    val sc = if scope == RuleScope.Only(Set.empty) then "" else s"scope=${scope.fingerprint}"
+    val fc = if force.isEmpty then "" else s"force=${force.toList.sorted.mkString(",")}"
+    List(sc, fc).filter(_.nonEmpty).mkString(";")
 
-  def subjects: Set[String] = scope.entries
+  def subjects: Set[String] = scope.entries ++ force.map(MergeablePolicy.subjectOf)
 
   def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
     case n: NullaryArityTransform =>
@@ -44,7 +48,7 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
         case _ =>
           Left(s"`nullary-arity` scope disagrees: one is `Only` and the other is `Everywhere`")
       merged.map { composedScope =>
-        val phase = new NullaryArityTransform(composedScope)
+        val phase = new NullaryArityTransform(composedScope, force ++ n.force)
         val added = n.subjects -- subjects
         MergeablePolicy.Merged(phase, added)
       }
@@ -111,7 +115,7 @@ final class NullaryArityTransform(scope: RuleScope = RuleScope.Only(Set.empty))
               refuse(program, s.id, "AnchoredClosure",
                 closure.anchorReason(program).getOrElse(
                   "the override component reaches a declaration this program cannot move"))
-            else if !isGetterLike(program, d) then
+            else if !isGetterLike(program, d) && !force(s.fullName) then
               refuse(program, s.id, "SideEffectingBody",
                 "the body contains assignments or calls to non-getter members — dropping `()` " +
                 "would change the call's meaning from 'do something and return' to 'read a value'")

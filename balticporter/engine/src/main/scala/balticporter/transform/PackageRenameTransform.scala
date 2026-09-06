@@ -166,6 +166,16 @@ final class PackageRenameTransform(
             "which records one widening per affected declaration instead of hiding it")
     }
 
+    // a declared entry naming a type this program OWNS and no rename moves: the declaration itself
+    // publishes it (a package-private java type the reference port ships public, K51 xviii).
+    val stayed = (allowPackageSplit -- widenings.map(_.key).toSet).toList.sorted.flatMap { k =>
+      program.symbols.all.find(s => s.fullName == k && program.owns(s.id) && s.flags.isPackagePrivate).map(k -> _)
+    }
+    widenings ++= stayed.flatMap { (k, t) =>
+      (t :: under(program, t.id).toList.flatMap(program.symbolOf)).filter(m => program.owns(m.id) && m.flags.isPackagePrivate)
+        .map(m => Widening(k, Cause.PackageSplit, m.id, m.fullName, "(declared)", Decision.originOf(program, m.id)))
+        .distinctBy(_.subject)
+    }
     val unusedAllow = allowPackageSplit -- widenings.map(_.key).toSet
     if unusedAllow.nonEmpty then
       extraFindings ++= unusedAllow.toList.sorted.map(k =>

@@ -17,8 +17,8 @@ dependency-coverage	37
 dependency-coverage(all)	37
 dependency-coverage(declared)	1
 heap-pollution	12
-idiom(converted)	1667
-idiom(refused)	2919
+idiom(converted)	1668
+idiom(refused)	2918
 idiom(residue)	0
 jdk-surface	19
 manifest	0

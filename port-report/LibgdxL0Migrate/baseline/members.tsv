@@ -10358,11 +10358,12 @@ sge.maps.tiled.renderers.OrthoCachedTiledMapRenderer	sge.maps.tiled.renderers.Or
 sge.maps.tiled.renderers.OrthoCachedTiledMapRenderer	sge.maps.tiled.renderers.OrthoCachedTiledMapRenderer#unitScale	val	dbeb47bff2a45ae6
 sge.maps.tiled.renderers.OrthoCachedTiledMapRenderer	sge.maps.tiled.renderers.OrthoCachedTiledMapRenderer#vertices	val	4f58efe4f745b4d3
 sge.maps.tiled.renderers.OrthoCachedTiledMapRenderer	sge.maps.tiled.renderers.OrthoCachedTiledMapRenderer#viewBounds	val	38a935cfc35df681
-sge.maps.tiled.renderers.OrthogonalTiledMapRenderer	sge.maps.tiled.renderers.OrthogonalTiledMapRenderer	class	e04d12bedb7cfa98
+sge.maps.tiled.renderers.OrthogonalTiledMapRenderer	sge.maps.tiled.renderers.OrthogonalTiledMapRenderer	class	04539e7e40ed9a77
 sge.maps.tiled.renderers.OrthogonalTiledMapRenderer	sge.maps.tiled.renderers.OrthogonalTiledMapRenderer#<init>(TiledMap,Batch,Sge)	ctor	816a2126bdd14362
 sge.maps.tiled.renderers.OrthogonalTiledMapRenderer	sge.maps.tiled.renderers.OrthogonalTiledMapRenderer#<init>(TiledMap,Sge)	ctor	5adbfe4c9de99aaa
 sge.maps.tiled.renderers.OrthogonalTiledMapRenderer	sge.maps.tiled.renderers.OrthogonalTiledMapRenderer#<init>(TiledMap,float,Batch,Sge)	ctor	005b191ffc2776a6
 sge.maps.tiled.renderers.OrthogonalTiledMapRenderer	sge.maps.tiled.renderers.OrthogonalTiledMapRenderer#<init>(TiledMap,float,Sge)	ctor	8cbd23fa87f94e48
+sge.maps.tiled.renderers.OrthogonalTiledMapRenderer	sge.maps.tiled.renderers.OrthogonalTiledMapRenderer#<stmt1>	stmt	87bebfac3e2642b0
 sge.maps.tiled.renderers.OrthogonalTiledMapRenderer	sge.maps.tiled.renderers.OrthogonalTiledMapRenderer#renderTileLayer(TiledMapTileLayer)	def	1666743d21df5a9d
 sge.maps.tiled.tiles.AnimatedTiledMapTile	sge.maps.tiled.tiles.AnimatedTiledMapTile	class	04c8bdad307b6b0c
 sge.maps.tiled.tiles.AnimatedTiledMapTile	sge.maps.tiled.tiles.AnimatedTiledMapTile#<init>(IntArray,DynamicArray<StaticTiledMapTile>)	ctor	63ac3ac8816fd616
@@ -16074,10 +16075,10 @@ sge.utils.CharArray	sge.utils.CharArray$CharArrayWriter#write(Array<char>,int,in
 sge.utils.CharArray	sge.utils.CharArray$CharArrayWriter#write(String)	def	154aeb0ef9173d1e
 sge.utils.CharArray	sge.utils.CharArray$CharArrayWriter#write(String,int,int)	def	97280f0534ebc119
 sge.utils.CharArray	sge.utils.CharArray$CharArrayWriter#write(int)	def	f538628c0741c72a
-sge.utils.Clipboard	sge.utils.Clipboard	class	a82bd09692b63859
+sge.utils.Clipboard	sge.utils.Clipboard	class	02410525ddeaca3c
 sge.utils.Clipboard	sge.utils.Clipboard#contents()	def	de2dd905f08251a5
 sge.utils.Clipboard	sge.utils.Clipboard#contents_=(Nullable<String>)	def	e1e39ef0aecf37e6
-sge.utils.Clipboard	sge.utils.Clipboard#hasContents()	def	b1072534a1122b6f
+sge.utils.Clipboard	sge.utils.Clipboard#hasContents()	def	f455db40a780ce23
 sge.utils.DataBuffer	sge.utils.DataBuffer	class	db0051b0dc320b8b
 sge.utils.DataBuffer	sge.utils.DataBuffer#<init>()	ctor	1207d777480f14c6
 sge.utils.DataBuffer	sge.utils.DataBuffer#<stmt1>	stmt	0127407240165993
@@ -18096,7 +18097,7 @@ sge.utils.StreamUtils	sge.utils.StreamUtils#copyStreamToString(InputStream,int,N
 sge.utils.StreamUtils	sge.utils.StreamUtils$OptimizedByteArrayOutputStream	class	d12d89ce2fdfe4a7
 sge.utils.StreamUtils	sge.utils.StreamUtils$OptimizedByteArrayOutputStream#getBuffer()	def	8c536402fce2cd1d
 sge.utils.StreamUtils	sge.utils.StreamUtils$OptimizedByteArrayOutputStream#toByteArray()	def	49f408e60139e2a7
-sge.utils.TextFormatter	sge.utils.TextFormatter	class	577c7a63f110acc3
+sge.utils.TextFormatter	sge.utils.TextFormatter	class	b7f43efdfc8dad98
 sge.utils.TextFormatter	sge.utils.TextFormatter#<stmt1>	stmt	2db2add005442b74
 sge.utils.TextFormatter	sge.utils.TextFormatter#<stmt2>	stmt	278ea23f825b79dd
 sge.utils.TextFormatter	sge.utils.TextFormatter#buffer	val	5f8ec94fc0d69073

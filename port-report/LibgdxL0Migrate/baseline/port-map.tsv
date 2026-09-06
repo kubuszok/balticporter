@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=29cc33172d49241e	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=46731aeba3ed6c34	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -10788,6 +10788,7 @@ member	com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer#<init>(T
 member	com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer#<init>(TiledMap,Sge)	sge.maps.tiled.renderers.OrthogonalTiledMapRenderer#<init>(TiledMap,Sge)	Renamed	-	com/badlogic/gdx/maps/tiled/renderers/OrthogonalTiledMapRenderer.java	50	5adbfe4c9de99aaa	
 member	com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer#<init>(TiledMap,float,Batch,Sge)	sge.maps.tiled.renderers.OrthogonalTiledMapRenderer#<init>(TiledMap,float,Batch,Sge)	Renamed	-	com/badlogic/gdx/maps/tiled/renderers/OrthogonalTiledMapRenderer.java	62	005b191ffc2776a6	
 member	com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer#<init>(TiledMap,float,Sge)	sge.maps.tiled.renderers.OrthogonalTiledMapRenderer#<init>(TiledMap,float,Sge)	Renamed	-	com/badlogic/gdx/maps/tiled/renderers/OrthogonalTiledMapRenderer.java	58	8cbd23fa87f94e48	
+member	com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer#<stmt1>	sge.maps.tiled.renderers.OrthogonalTiledMapRenderer#<stmt1>	Renamed	-	<synthetic>	0	87bebfac3e2642b0	
 member	com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer#renderTileLayer(TiledMapTileLayer)	sge.maps.tiled.renderers.OrthogonalTiledMapRenderer#renderTileLayer(TiledMapTileLayer)	Renamed	-	com/badlogic/gdx/maps/tiled/renderers/OrthogonalTiledMapRenderer.java	67	1666743d21df5a9d	
 member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#<init>(IntArray,DynamicArray)	sge.maps.tiled.tiles.AnimatedTiledMapTile#<init>(IntArray,DynamicArray<StaticTiledMapTile>)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	174	63ac3ac8816fd616	
 member	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile#<init>(float,DynamicArray)	sge.maps.tiled.tiles.AnimatedTiledMapTile#<init>(float,DynamicArray<StaticTiledMapTile>)	Renamed	-	com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java	159	55cd728bbcd97c55	
@@ -16302,7 +16303,7 @@ member	com.badlogic.gdx.utils.CharArray$CharArrayWriter#write(String,int,int)	sg
 member	com.badlogic.gdx.utils.CharArray$CharArrayWriter#write(int)	sge.utils.CharArray$CharArrayWriter#write(int)	Renamed	-	com/badlogic/gdx/utils/CharArray.java	2265	f538628c0741c72a	
 member	com.badlogic.gdx.utils.Clipboard#getContents()	sge.utils.Clipboard#contents	Renamed	-	com/badlogic/gdx/utils/Clipboard.java	31	de2dd905f08251a5	form=parenless
 member	com.badlogic.gdx.utils.Clipboard#setContents(Nullable)	sge.utils.Clipboard#contents_=(Nullable<String>)	Renamed	-	com/badlogic/gdx/utils/Clipboard.java	36	e1e39ef0aecf37e6	
-member	com.badlogic.gdx.utils.Clipboard#hasContents()	sge.utils.Clipboard#hasContents()	Renamed	-	com/badlogic/gdx/utils/Clipboard.java	26	b1072534a1122b6f	
+member	com.badlogic.gdx.utils.Clipboard#hasContents()	sge.utils.Clipboard#hasContents	Renamed	-	com/badlogic/gdx/utils/Clipboard.java	26	f455db40a780ce23	form=parenless
 member	com.badlogic.gdx.utils.Collections#allocateIterators	sge.utils.Collections#allocateIterators	Renamed	-	com/badlogic/gdx/utils/Collections.java	9	3f828d93ee4c15a1	placement=companion
 member	com.badlogic.gdx.utils.DataBuffer#<init>()	sge.utils.DataBuffer#<init>()	Renamed	-	com/badlogic/gdx/utils/DataBuffer.java	11	1207d777480f14c6	
 member	com.badlogic.gdx.utils.DataBuffer#<stmt1>	sge.utils.DataBuffer#<stmt1>	Renamed	-	com/badlogic/gdx/utils/DataBuffer.java	17	0127407240165993	
