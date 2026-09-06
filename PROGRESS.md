@@ -1743,7 +1743,7 @@ are dictated by the base, not chosen. Gate per step: JVM errors at the seam floo
 the ladder SUITE at or above the previous step with every expected delta named, `members.tsv` blast
 classified. **Prerequisite, before R1: the ladder test lane** — `LibgdxTestMigrate`'s tree on the
 ladder port (`ported/sge-l0`, `SourceSet.Test`, base = `sge-l0` + `lls`), lane `gdx-l0-test-measure`,
-outcomes baselined; without it a step's gate is a compile count (§3).
+outcomes baselined; without it a step's gate is a compile count (§3). BUILT 2026-09-06: `LibgdxL0TestMigrate`, 221 java tests -> 221 discoverable MUnit tests, `policy` 0; the suite cannot RUN until the main tree's 57 close (sbt compiles main first), so the first step's gate is 'suite runs, outcomes baselined'.
 
 | step | decision (sge) | mechanism today · §1 kind | seam / footprint | edge |
 |---|---|---|---|---|

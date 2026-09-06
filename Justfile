@@ -777,6 +777,113 @@ gdx-test-measure:
 # sge, and port-sge-ecsJVM `dependsOn` port-sgeJVM in build.sbt. Compiling sge-ecs
 # alone measures nothing — every one of its 21 files resolves against libGDX.
 # ---------------------------------------------------------------------------------------------
+[doc("libGDX's own suite on the LADDER port (sge-l0 + lls): convert, compile, RUN — the step gate")]
+gdx-l0-test-measure:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+
+    write_run_props "$ROOT" "balticporter.reportPathRoot=$ROOT/{{gdx_src}}"
+    REPORT="$ROOT/port-report/LibgdxL0TestMigrate"
+
+    # ABORT if the migration did not run — the same stale-output defect fixed in `gdx-measure`: piping
+    # into grep discards the exit status, so an engine that fails to COMPILE measures the PREVIOUS emit
+    # and reports it as a result.
+    MIGRATE_OUT=$({{sbt_migrate}} "{{corpus}}/runMain balticporter.corpus.libgdx.LibgdxL0TestMigrate" 2>&1 | sed 's/\x1b\[[0-9;]*m//g')
+    if ! grep -qE "wrote [0-9]+ Scala test files" <<<"$MIGRATE_OUT"; then
+      echo "!! TEST MIGRATION DID NOT RUN — refusing to measure stale output"
+      grep -E "^\[error\].*\.scala:[0-9]+" <<<"$MIGRATE_OUT" | head -20
+      exit 1
+    fi
+
+    echo "-- migration (every line it printed) --"
+    sed -n '/building model over/,/wrote [0-9]* Scala test files/p' <<<"$MIGRATE_OUT"
+
+    echo
+    echo "-- checks: persisted, untruncated, diffed against the baseline --"
+    show_check_report "$REPORT"
+    upstream_guard "$REPORT"
+    findings_baseline_guard "$REPORT"
+    port_map_guard "$REPORT"
+
+    echo
+    echo "-- test discovery --"
+    # Count what each FRAMEWORK would actually discover. A ported suite is MUnit (`test("name") {…}`)
+    # and the residue is still JUnit (`@Test`), so counting only annotations under-reports by every
+    # converted suite — the check must sum both or it lies in the safe-looking direction.
+    JAVA_TESTS=$(java_test_count {{gdx_src}}/test)
+    JUNIT_LEFT=$(junit_residue {{gdx_l0_module}}/src_managed/test/scala)
+    MUNIT_TESTS=$(munit_emitted {{gdx_l0_module}}/src_managed/test/scala)
+    SCALA_TESTS=$((JUNIT_LEFT + MUNIT_TESTS))
+    echo "@Test in Java: $JAVA_TESTS   discoverable in emitted Scala: $SCALA_TESTS (munit $MUNIT_TESTS + junit $JUNIT_LEFT)"
+    # …and the LOSS IS BASELINED (scripts/_lib.sh). Printed and not gated, this was a digit inside a
+    # line an operator reads past; the verdict is deferred to `headline` so the compile still runs.
+    test_discovery_guard "$JAVA_TESTS" "$SCALA_TESTS" "$REPORT"
+
+    echo
+    break_residue {{gdx_l0_module}}/src_managed/test/scala
+
+    # The JDK is an INPUT to this measurement: the frontend read its class files on ONE JVM and
+    # the compile below runs on another. Nothing compared them until an `override` emitted on
+    # JDK 24 failed a JDK-22 compile with every other artifact flat (ENGINE-LIMITS M5.10).
+    jdk_guard "$REPORT"
+    # `{{gdx_l0_module}}/src/test/scala` is the HAND-WRITTEN half of this port's test source set, and it
+    # is on the line for the same reason `ported/sge-screens/src` and `ported/sge-vfx/src` are on theirs: an
+    # emitted suite the globals policy marks `selfSupplied` gets `private given sge.Sge =
+    # sge.SgeTestFixture.testSge()`, and the fixture is a `src/` file a human may write where the
+    # generated one is not (CLAUDE.md §5.5, `ENGINE-LIMITS.md` CT7). Leaving it off compiles the
+    # emitted suite against a fixture that is not there — one error, and it is the port's own.
+    # sbt's port-sgeJVM project has src_managed/{main,test}/scala via sourceGenerators and
+    # src/test/scala as an unmanaged source directory. Dependencies are in build.sbt.
+    echo "-- compile (sbt port-sge-l0JVM/Test/compile) --"
+    sbt_compile "port-sge-l0JVM/Test/compile" "$MEASURE_TMP"/gdxl0testmeasure.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/gdxl0testmeasure.txt
+    echo "TOTAL ERRORS: $ERRORS"
+    error_baseline_guard "$ERRORS" "$REPORT"
+    # JVM only at this step: the JS/Native gates come with the steps that unblock them (PROGRESS.md 13.29).
+    grep -oE "\[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/gdxl0testmeasure.txt | sort | uniq -c | sort -rn | head
+
+    # -------------------------------------------------------------------------------------------
+    # RUN them. Compiling a test suite measures nothing about behaviour, and CLAUDE.md §4.4 lists ten
+    # Java forms that translate to VALID Scala meaning something else — reference `==`, `x++` as a
+    # value, `break`/`continue`, `switch` fall-out, a dropped `super(args)`, `@Before`. Not one of them
+    # moves the error count above. Running the suite is the only gate that sees them.
+    # -------------------------------------------------------------------------------------------
+    if [ "$ERRORS" = "0" ]; then
+      echo
+      echo "-- run (sbt port-sgeJVM/test) --"
+      sbt_test "port-sge-l0JVM/testOnly *" "$MEASURE_TMP"/gdxl0testrun.txt
+      reconcile_outcomes "$MEASURE_TMP"/gdxl0testrun.txt "$MUNIT_TESTS"; RECONCILED=$?
+
+      # Anchor every failure on the first stack frame that lands in PORTED code and resolve it, through
+      # both ports' source maps, to a member and a Java origin — then diff the pass/fail sets against
+      # the baseline. A newly-failing test whose member also changed digest is the highest-value signal
+      # this engine can produce, and it is the only lane that catches a §4.4 regression.
+      echo
+      echo "-- correlation: test failures located to members and Java origins --"
+      correlate "$REPORT/run-latest" --tests "$MEASURE_TMP"/gdxl0testrun.txt \
+        --srcmap "$ROOT/port-report/LibgdxL0Migrate/run-latest/srcmap.tsv" \
+        --srcmap "test=$REPORT/run-latest/srcmap.tsv"
+      # THE GATE for a test that stopped RUNNING — the diff `correlate` just wrote is the only
+      # thing that can tell a NEW skip from one this port has accepted (scripts/_lib.sh).
+      test_outcome_guard "$REPORT/run-latest" "$RECONCILED" || exit 1
+    else
+      echo "(not running the suite: it does not compile — a test that cannot run is not a test that passed)"
+    fi
+
+
+    headline "$ERRORS" "$REPORT"
+
+# ---------------------------------------------------------------------------------------------
+# Ashley (main + its JUnit suite), compiled BOTH together with the ported libGDX core.
+#
+# Ashley is a DEPENDENT port (RuntimeMode.Dependency): the collection shims are vendored by
+# sge, and port-sge-ecsJVM `dependsOn` port-sgeJVM in build.sbt. Compiling sge-ecs
+# alone measures nothing — every one of its 21 files resolves against libGDX.
+# ---------------------------------------------------------------------------------------------
 [doc("Ashley + its suite, compiled WITH libGDX core (a dependent port)")]
 ashley-measure:
     #!/usr/bin/env bash

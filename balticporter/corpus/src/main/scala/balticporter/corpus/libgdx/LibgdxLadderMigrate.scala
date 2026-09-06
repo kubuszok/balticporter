@@ -49,6 +49,22 @@ object LibgdxL0Migrate:
 
 object LibgdxLadder:
 
+  /** JUnit's `@Rule TestWatcher` has no MUnit model; the field is dropped, as on the full port. */
+  private val watcherDrop = "com.badlogic.gdx.utils.JsonMatcherTests#watcher"
+
+  /** The test manifest: JUnit -> MUnit only (`TestFrameworkTransform`), inheriting `universal`;
+    * `externalParenless` is P11 (munit's JS/Native `Description` is parenless). No sge policy. */
+  def universalTest(repoRoot: Path): PortManifest = universal(repoRoot).extendedBy(PortManifest(
+    name        = "sge-l0-test",
+    dropMethods = Set(watcherDrop),
+    surface     = List(new balticporter.transform.TestFrameworkTransform(dropFields = Set(watcherDrop))),
+    externalParenless = Set(
+      "org.junit.runner.Description#getTestClass",
+      "org.junit.runner.Description#getMethodName",
+      "org.junit.runner.Description#getAnnotations",
+    ),
+  ))
+
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames`
     * for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix
     * wins); the `List` rename keeps `scala.List` out; `MutableParamsTransform` is inherited from the
@@ -70,3 +86,38 @@ object LibgdxLadder:
       dependencies   = List(balticporter.catalog.ArtifactDep("com.badlogicgames.gdx", "gdx-jnigen-loader", "2.5.2",
                                                              balticporter.catalog.CrossKind.Java)),
     ))
+
+/** The ladder port's TEST source set: libGDX's own `gdx/test` tree converted to MUnit on the
+  * universal translation, a dependent of `sge-l0` (+ `lls`) — the suite is the step gate the
+  * standing orders require (PROGRESS.md §13.29); one exclusion list, empty at L0. */
+object LibgdxL0TestMigrate:
+
+  def main(args: Array[String]): Unit =
+    val repoRoot = Path.of(sys.props.getOrElse("balticporter.root", ".")).toAbsolutePath.normalize
+    val srcRoot  = repoRoot.resolve("../sge/original-src/libgdx/gdx/src").normalize
+    val testRoot = repoRoot.resolve("../sge/original-src/libgdx/gdx/test").normalize
+
+    val files = Files.walk(testRoot).iterator().asScala
+      .filter(p => p.toString.endsWith(".java"))
+      .map(p => testRoot.relativize(p).toString)
+      .filterNot(f => f.endsWith("package-info.java") || f.endsWith("module-info.java"))
+      .toList.sorted
+
+    PortRun(
+      label     = "sge-l0-test",
+      portRoot  = repoRoot.resolve("ported/sge-l0"),
+      sourceSet = SourceSet.Test,
+      frontend  = FrontendConfig(testRoot, files, JnigenClasspath.entries(repoRoot), resolutionRoots = List(srcRoot)),
+      phases    = Nil,
+      manifest  = Some(LibgdxLadder.universalTest(repoRoot)),
+      provenance = Some(Provenance(
+        upstreamName     = "libGDX",
+        upstreamCommit   = VendoredCommit.of(testRoot),
+        originalLicense  = "Apache-2.0",
+        sourcePathPrefix = "gdx/test",
+        sourceRoot       = testRoot.toString,
+      )),
+      runtimeMode = RuntimeMode.Dependency,
+      determinism = Determinism.fromArgs(args.toSeq),
+      nextStep    = "just gdx-l0-test-measure",
+    ).execute()
