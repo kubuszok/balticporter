@@ -195,6 +195,9 @@ object LlsPolicy:
   /** the order the rungs occupy in `surface` — a pipeline position, not the alphabet. */
   val RungOrder: List[String] = List("bean", "arity", "nullable", "ordering", "enrich", "witness")
 
+  /** the rungs lls carries by default (the lane's `LLS_RUNGS` default spells the same set). */
+  val DefaultRungs: Set[String] = Set("arity", "nullable", "ordering", "enrich", "witness")
+
   def core(repoRoot: Path, rungs: Set[String] = Set.empty): PortManifest =
     val unknown = rungs -- Rungs
     require(unknown.isEmpty, s"unknown lls rungs: ${unknown.mkString(",")}; known: ${Rungs.toList.sorted.mkString(",")}")

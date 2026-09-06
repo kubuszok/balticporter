@@ -545,8 +545,9 @@ _default:
     @{{just_executable()}} --list --unsorted
 
 # ---------------------------------------------------------------------------------------------
-# libGDX core, rung L0 — the UNIVERSAL translation alone (no drop/inject/surface policy), emitted to
-# `ported/sge-l0`. JVM compile + correlation only: the ladder's floor (PROGRESS.md §13).
+# libGDX core, rung L0 — the UNIVERSAL translation alone (no drop/inject/surface policy) ON THE LLS
+# BASE, emitted to `ported/sge-l0`; a DEPENDENT of `ported/lls`, so it runs AFTER `lls-measure`
+# (it reads lls's published port map). JVM compile + correlation only (PROGRESS.md §13.29).
 # ---------------------------------------------------------------------------------------------
 [doc("libGDX core rung L0 — universal translation only: emit, checks, compile, correlate")]
 gdx-l0-measure:

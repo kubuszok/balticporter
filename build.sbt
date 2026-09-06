@@ -532,6 +532,7 @@ lazy val `port-sge-graphs` = (projectMatrix in file("ported/sge-graphs"))
 // ---------------------------------------------------------------------------------------------
 lazy val `port-sge-l0` = (projectMatrix in file("ported/sge-l0"))
   .defaultAxes(VirtualAxis.scalaABIVersion(scalaV))
+  .dependsOn(`port-lls`)
   .settings(portSettings("sge-l0") *)
   .settings(portSourceGenerators("sge-l0") *)
   .settings(

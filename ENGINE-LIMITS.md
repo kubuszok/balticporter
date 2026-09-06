@@ -1707,7 +1707,7 @@ Rule: land it with the dependent wave that re-measures all nine, never alone; an
 `hasSideEffects`'s own `case _ => ()` default at the same time — an unenumerated node kind there is an
 UNDER-refusal, the direction this phase promises never to take.
 
-### K43. libGDX core cannot EXTEND `ported/lls` at the utilities-family scope — **5 FATAL shared-surface findings before any phase runs; the wall is the SOURCE SET, not the engine. Do NOT retry without an lls source-set decision**
+### K43. The FULL-POLICY libGDX port cannot EXTEND `ported/lls` — **5 FATAL shared-surface findings before any phase runs; the wall is the parity policy, not the engine. The ladder's L0 extends lls instead (PROGRESS.md §13.29 A3); do NOT retry with `LibgdxPolicy.core`**
 
 (b) per-library scope, and the decision is the maintainer's (an lls-repo API decision, not an engine
 change). Symptom: `LibgdxPolicy.core = LlsPolicy.core(repoRoot, <default rungs>).extendedBy(…)`, gdx's
@@ -1738,8 +1738,11 @@ Nor can the scope simply shrink back to the twelve: they reference `GdxRuntimeEx
 `Collections`, `Predicate`, `Null`, `ArraySupplier` and `RandomXS128`, which sge owns, and a BASE
 cannot resolve against its DEPENDENT — which is why the scope was widened to 54 in the first place.
 
-Rule: decide the base's SOURCE SET before its policy. The exits are (i) lls ships those helpers, one
-`divergence-verdicts.tsv` row per type sge stops declaring, or (ii) a third, deeper module both
-extend. The one universal fix the attempt surfaced is `MutableParamsTransform`'s missing
-`SurfacePolicy`/`MergeablePolicy` — §1(a), the engine's own prescription in the finding text; it moves
-every port's `policy=` digest, so it lands with the wave that re-baselines them, never alone.
+Rule: decide the base's SOURCE SET before its policy. The exits were (i) lls ships those helpers,
+(ii) a third, deeper module, or (iii) a dependent that carries NONE of the colliding policy — and
+(iii) is what the ladder already is: `LibgdxLadder.universal` extends `LlsPolicy.core` with no drop,
+inject or surface of its own, and runs (551 units, 2 -> 13 errors, every one a base rung's seam;
+PROGRESS.md §13.29 A3). The full port's parity decisions are not re-derived on the lls base; the
+ladder re-applies each as a rung. `MutableParamsTransform`'s missing `SurfacePolicy`/`MergeablePolicy`
+was the one universal fix — landed with the family re-baseline it moves (`policy=` on every port
+that lists the phase).

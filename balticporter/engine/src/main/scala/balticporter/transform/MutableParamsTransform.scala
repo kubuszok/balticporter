@@ -1,5 +1,6 @@
 package balticporter.transform
 
+import balticporter.core.{MergeablePolicy, SurfacePolicy}
 import balticporter.tir.*
 
 /** Java lets a method reassign its parameters, and its EXCEPTION parameters (JLS 14.20 — only a
@@ -7,8 +8,16 @@ import balticporter.tir.*
   * written to in its body, renames it to `name$arg` and prepends a mutable local
   * `var name: T = name$arg`, so every body reference binds to the `var`. KNOWN LIMIT: a LAMBDA's
   * own reassigned parameter is not reached — degrades loudly as a compile error. */
-final class MutableParamsTransform extends Phase:
+final class MutableParamsTransform extends Phase, SurfacePolicy, MergeablePolicy:
   def name = "reassigned-params->var"
+
+  /** No parameter: contributes no `policy=` segment (CLAUDE.md §1(b)); two instances in a base
+    * chain merge into one at the base's position (CLAUDE.md §1.5, ENGINE-LIMITS.md K43). */
+  def surfaceFingerprint: String = ""
+  def subjects: Set[String] = Set.empty
+  def mergedWith(later: Phase): Either[String, MergeablePolicy.Merged] = later match
+    case _: MutableParamsTransform => Right(MergeablePolicy.Merged(this, Set.empty))
+    case other => Left(s"`$name` cannot merge with ${other.getClass.getSimpleName}")
 
   private val minted = collection.mutable.ListBuffer[Symbol]()
   // param SymId → fresh arg SymId, for every parameter reassigned somewhere in its method.
