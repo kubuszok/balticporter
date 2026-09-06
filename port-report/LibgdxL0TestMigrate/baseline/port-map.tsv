@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0-test	engine=balticporter/0.1.0-SNAPSHOT	sources=a7e5379c527be82c	files=29	policy=90110f6f75671f39	jdk=22
+# balticporter port map	schema=4	module=sge-l0-test	engine=balticporter/0.1.0-SNAPSHOT	sources=a7e5379c527be82c	files=29	policy=83e15bcaa80f1669	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.math.BSplineTest	lowlevel.math.BSplineTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.math.BezierTest	lowlevel.math.BezierTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=ImportType,epsilon,epsilonApprimations,parameters
@@ -28,7 +28,7 @@ type	com.badlogic.gdx.utils.MixedPutRemoveTest	lowlevel.util.MixedPutRemoveTest	
 type	com.badlogic.gdx.utils.PooledLinkedListTest	lowlevel.util.PooledLinkedListTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.QueueTest	lowlevel.util.QueueTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.SortTest	lowlevel.util.SortTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
-type	com.badlogic.gdx.utils.SortTest$NullsFirstComparator	lowlevel.util.SortTest$NullsFirstComparator	Renamed	-		0		form=class parents=java.util.Comparator primary=() primaryKind=unique-root primaryVis=public
+type	com.badlogic.gdx.utils.SortTest$NullsFirstComparator	lowlevel.util.SortTest$NullsFirstComparator	Renamed	-		0		form=class parents=scala.math.Ordering primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.SortedIntListTest	lowlevel.util.SortedIntListTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest	sge.graphics.g3d.utils.AnimationControllerTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=assertSameAnimation
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest	sge.graphics.g3d.utils.AnimationDescTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=epsilon
@@ -58,7 +58,7 @@ member	com.badlogic.gdx.math.BezierTest#bpFreshState()	lowlevel.math.BezierTest#
 member	com.badlogic.gdx.math.BezierTest#create(Array)	lowlevel.math.BezierTest#create(Array<Vector2>)	Renamed	-	com/badlogic/gdx/math/BezierTest.java	49	df02210e03c74392	
 member	com.badlogic.gdx.math.BezierTest#epsilon	lowlevel.math.BezierTest#epsilon	Renamed	-	com/badlogic/gdx/math/BezierTest.java	20	cb1c6d5dceb7bd89	placement=companion vis=private
 member	com.badlogic.gdx.math.BezierTest#epsilonApprimations	lowlevel.math.BezierTest#epsilonApprimations	Renamed	-	com/badlogic/gdx/math/BezierTest.java	21	913ef38309382da6	placement=companion vis=private
-member	com.badlogic.gdx.math.BezierTest#parameters()	lowlevel.math.BezierTest#parameters()	Renamed	-	com/badlogic/gdx/math/BezierTest.java	28	211a48cea218a6b3	placement=companion
+member	com.badlogic.gdx.math.BezierTest#parameters()	lowlevel.math.BezierTest#parameters()	Renamed	-	com/badlogic/gdx/math/BezierTest.java	28	d9ee8d6cc6d4f5cb	placement=companion
 member	com.badlogic.gdx.math.BezierTest#setup()	lowlevel.math.BezierTest#setup()	Renamed	-	com/badlogic/gdx/math/BezierTest.java	45	120a62b16fdbd7b3	
 member	com.badlogic.gdx.math.BezierTest#type	lowlevel.math.BezierTest#type	Renamed	-	com/badlogic/gdx/math/BezierTest.java	37	fa32526b26a70ac5	
 member	com.badlogic.gdx.math.BezierTest#useSetter	lowlevel.math.BezierTest#useSetter	Renamed	-	com/badlogic/gdx/math/BezierTest.java	40	1d5f5e30d70dc1ae	
@@ -129,7 +129,7 @@ member	com.badlogic.gdx.utils.CharArrayTest#<stmt18>	lowlevel.util.CharArrayTest
 member	com.badlogic.gdx.utils.CharArrayTest#<stmt19>	lowlevel.util.CharArrayTest#<stmt19>	Renamed	-	com/badlogic/gdx/utils/CharArrayTest.java	686	da72048400768700	
 member	com.badlogic.gdx.utils.CharArrayTest#<stmt1>	lowlevel.util.CharArrayTest#<stmt1>	Renamed	-	com/badlogic/gdx/utils/CharArrayTest.java	16	5c5dc837439e9ade	
 member	com.badlogic.gdx.utils.CharArrayTest#<stmt20>	lowlevel.util.CharArrayTest#<stmt20>	Renamed	-	com/badlogic/gdx/utils/CharArrayTest.java	717	e1bab18d7a983772	
-member	com.badlogic.gdx.utils.CharArrayTest#<stmt21>	lowlevel.util.CharArrayTest#<stmt21>	Renamed	-	com/badlogic/gdx/utils/CharArrayTest.java	744	695d60e732216509	
+member	com.badlogic.gdx.utils.CharArrayTest#<stmt21>	lowlevel.util.CharArrayTest#<stmt21>	Renamed	-	com/badlogic/gdx/utils/CharArrayTest.java	744	46ac5ecf7120e408	
 member	com.badlogic.gdx.utils.CharArrayTest#<stmt22>	lowlevel.util.CharArrayTest#<stmt22>	Renamed	-	com/badlogic/gdx/utils/CharArrayTest.java	775	8a1d5beb1ec2a266	
 member	com.badlogic.gdx.utils.CharArrayTest#<stmt23>	lowlevel.util.CharArrayTest#<stmt23>	Renamed	-	com/badlogic/gdx/utils/CharArrayTest.java	816	6993b4be01efa257	
 member	com.badlogic.gdx.utils.CharArrayTest#<stmt24>	lowlevel.util.CharArrayTest#<stmt24>	Renamed	-	com/badlogic/gdx/utils/CharArrayTest.java	834	ac756efdbf469fc8	
@@ -194,8 +194,8 @@ member	com.badlogic.gdx.utils.JsonMatcherTests#printResults(JsonMatcher,DynamicA
 member	com.badlogic.gdx.utils.JsonMatcherTests#rejectAll(String,String,String,Array)	lowlevel.util.JsonMatcherTests#rejectAll(String,String,String,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1146	2cc6704b1dc210c3	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#test(String,Array,Array)	lowlevel.util.JsonMatcherTests#test(String,Array<String>,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1439	e6c6abea6b367195	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#test(String,String,Array)	lowlevel.util.JsonMatcherTests#test(String,String,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1435	a17e54934e79cf6c	placement=companion
-member	com.badlogic.gdx.utils.JsonMatcherTests#test(String,String,Array,Array)	lowlevel.util.JsonMatcherTests#test(String,String,Array<String>,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1443	e9109250b072a2e8	placement=companion
-member	com.badlogic.gdx.utils.JsonMatcherTests#toString(DynamicArray)	lowlevel.util.JsonMatcherTests#toString(DynamicArray<JsonValue>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1505	8073163ef1e1c2a4	placement=companion
+member	com.badlogic.gdx.utils.JsonMatcherTests#test(String,String,Array,Array)	lowlevel.util.JsonMatcherTests#test(String,String,Array<String>,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1443	3ce984c69f445cec	placement=companion
+member	com.badlogic.gdx.utils.JsonMatcherTests#toString(DynamicArray)	lowlevel.util.JsonMatcherTests#toString(DynamicArray<JsonValue>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1505	917d6fdcb239f8f9	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#toString(JsonMatcher,Array)	lowlevel.util.JsonMatcherTests#toString(JsonMatcher,Array<String>)	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1494	ae2913450e3d789e	placement=companion
 member	com.badlogic.gdx.utils.JsonMatcherTests#watcher	lowlevel.util.JsonMatcherTests#watcher	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1570	e0f89f74a6b6856e	
 member	com.badlogic.gdx.utils.JsonTest#<stmt1>	lowlevel.util.JsonTest#<stmt1>	Renamed	-	com/badlogic/gdx/utils/JsonTest.java	11	9bc70a3483aa0686	
@@ -237,14 +237,14 @@ member	com.badlogic.gdx.utils.LongQueueTest#<stmt8>	lowlevel.util.LongQueueTest#
 member	com.badlogic.gdx.utils.LongQueueTest#<stmt9>	lowlevel.util.LongQueueTest#<stmt9>	Renamed	-	com/badlogic/gdx/utils/LongQueueTest.java	255	44a0877b1f9758e1	
 member	com.badlogic.gdx.utils.LongQueueTest#assertEqualsAndHash(LongQueue,LongQueue)	lowlevel.util.LongQueueTest#assertEqualsAndHash(LongQueue,LongQueue)	Renamed	-	com/badlogic/gdx/utils/LongQueueTest.java	298	c9d41d0c0701151c	vis=private
 member	com.badlogic.gdx.utils.LongQueueTest#assertValues(LongQueue,Array)	lowlevel.util.LongQueueTest#assertValues(LongQueue,Array<long>)	Renamed	-	com/badlogic/gdx/utils/LongQueueTest.java	303	65b18afb17ee9e3f	vis=private
-member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt1>	lowlevel.util.MixedPutRemoveTest#<stmt1>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	12	3f966037f31f7a9e	
-member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt2>	lowlevel.util.MixedPutRemoveTest#<stmt2>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	31	4d22fd4e8bba3c48	
-member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt3>	lowlevel.util.MixedPutRemoveTest#<stmt3>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	56	dce2c91457209b55	
-member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt4>	lowlevel.util.MixedPutRemoveTest#<stmt4>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	90	1773780bd27a304b	
-member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt5>	lowlevel.util.MixedPutRemoveTest#<stmt5>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	110	c9259a1326712b90	
-member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt6>	lowlevel.util.MixedPutRemoveTest#<stmt6>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	136	d0ce0da3e99da01a	
-member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt7>	lowlevel.util.MixedPutRemoveTest#<stmt7>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	171	51f406ced3004490	
-member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt8>	lowlevel.util.MixedPutRemoveTest#<stmt8>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	191	b272deb9e865fed3	
+member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt1>	lowlevel.util.MixedPutRemoveTest#<stmt1>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	12	d46e3c9cbc6f3360	
+member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt2>	lowlevel.util.MixedPutRemoveTest#<stmt2>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	31	5178aaa12c0348e6	
+member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt3>	lowlevel.util.MixedPutRemoveTest#<stmt3>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	56	704d022744dbfb2f	
+member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt4>	lowlevel.util.MixedPutRemoveTest#<stmt4>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	90	e6e0f4d5815a2290	
+member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt5>	lowlevel.util.MixedPutRemoveTest#<stmt5>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	110	d814cff814600787	
+member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt6>	lowlevel.util.MixedPutRemoveTest#<stmt6>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	136	d832d822d1633d0a	
+member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt7>	lowlevel.util.MixedPutRemoveTest#<stmt7>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	171	ae6e701351d598f1	
+member	com.badlogic.gdx.utils.MixedPutRemoveTest#<stmt8>	lowlevel.util.MixedPutRemoveTest#<stmt8>	Renamed	-	com/badlogic/gdx/utils/MixedPutRemoveTest.java	191	8da4aafa95c97bb3	
 member	com.badlogic.gdx.utils.PooledLinkedListTest#<stmt1>	lowlevel.util.PooledLinkedListTest#<stmt1>	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	22	fb9ce54d028a080b	
 member	com.badlogic.gdx.utils.PooledLinkedListTest#<stmt2>	lowlevel.util.PooledLinkedListTest#<stmt2>	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	31	b94da4bc4e7e23e4	
 member	com.badlogic.gdx.utils.PooledLinkedListTest#<stmt3>	lowlevel.util.PooledLinkedListTest#<stmt3>	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	40	666897619c82a4a9	
@@ -254,8 +254,8 @@ member	com.badlogic.gdx.utils.PooledLinkedListTest#<stmt6>	lowlevel.util.PooledL
 member	com.badlogic.gdx.utils.PooledLinkedListTest#bpFreshState()	lowlevel.util.PooledLinkedListTest#bpFreshState()	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	9	5964ad54d97b1532	
 member	com.badlogic.gdx.utils.PooledLinkedListTest#list	lowlevel.util.PooledLinkedListTest#list	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	11	6b000ab08d476505	vis=private
 member	com.badlogic.gdx.utils.PooledLinkedListTest#setUp()	lowlevel.util.PooledLinkedListTest#setUp()	Renamed	-	com/badlogic/gdx/utils/PooledLinkedListTest.java	14	af22974c739f6587	
-member	com.badlogic.gdx.utils.QueueTest#<stmt10>	lowlevel.util.QueueTest#<stmt10>	Renamed	-	com/badlogic/gdx/utils/QueueTest.java	257	91afeed1cf40d12a	
-member	com.badlogic.gdx.utils.QueueTest#<stmt11>	lowlevel.util.QueueTest#<stmt11>	Renamed	-	com/badlogic/gdx/utils/QueueTest.java	311	e37b03c29085f67c	
+member	com.badlogic.gdx.utils.QueueTest#<stmt10>	lowlevel.util.QueueTest#<stmt10>	Renamed	-	com/badlogic/gdx/utils/QueueTest.java	257	fba6b65a2c3079d9	
+member	com.badlogic.gdx.utils.QueueTest#<stmt11>	lowlevel.util.QueueTest#<stmt11>	Renamed	-	com/badlogic/gdx/utils/QueueTest.java	311	5fab336e347ec54c	
 member	com.badlogic.gdx.utils.QueueTest#<stmt12>	lowlevel.util.QueueTest#<stmt12>	Renamed	-	com/badlogic/gdx/utils/QueueTest.java	333	f07e4b90f1065b42	
 member	com.badlogic.gdx.utils.QueueTest#<stmt13>	lowlevel.util.QueueTest#<stmt13>	Renamed	-	com/badlogic/gdx/utils/QueueTest.java	345	0bfda4bd12215655	
 member	com.badlogic.gdx.utils.QueueTest#<stmt1>	lowlevel.util.QueueTest#<stmt1>	Renamed	-	<synthetic>	0	abca2bbe56b03719	

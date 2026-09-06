@@ -129,6 +129,17 @@ private[transform] trait CollectionsPolicy:
             .mkString("; ") +
             " — two answers for one key is a rewrite whose outcome depends on which manifest was read")
       else
+        // the SCOPE composes like `NullaryArityTransform`'s: `Only` unions, `Everywhere` unions its
+        // exceptions, a no-op side yields; `Only` against `Everywhere` is refused below (D12 — a
+        // dependent widening its base's `Only` onto its own entry is the ladder's shape, K43).
+        val noOp = RuleScope.Only(Set.empty)
+        val mergedScope: Either[String, RuleScope] = (scope, o.scope) match
+          case (s, `noOp`)                                        => Right(s)
+          case (`noOp`, s)                                        => Right(s)
+          case (RuleScope.Only(a), RuleScope.Only(b))             => Right(RuleScope.Only(a ++ b))
+          case (RuleScope.Everywhere(a), RuleScope.Everywhere(b)) => Right(RuleScope.Everywhere(a ++ b))
+          case _ => Left(s"`$name` scope disagrees: one is `Only` and the other is `Everywhere`")
+        mergedScope.flatMap { composedScope =>
         val mergedRetarget = retarget ++ o.retarget
         val mergedRewrites = retargetRewrites ++ o.retargetRewrites
         val mergedDescRewrites = retargetRewritesByDesc ++ o.retargetRewritesByDesc
@@ -144,7 +155,7 @@ private[transform] trait CollectionsPolicy:
         val addedFamilySubjects = (o.families.keySet -- families.keySet).map(MergeablePolicy.subjectOf)
         Right(MergeablePolicy.Merged(
           new CollectionsTransform(
-            scope            = scope, // the base's scope — inherited
+            scope            = composedScope,
             retarget         = mergedRetarget,
             retargetRewrites = mergedRewrites,
             retargetRewritesByDesc = mergedDescRewrites,
@@ -156,6 +167,7 @@ private[transform] trait CollectionsPolicy:
             retargetCoercions = mergedCoercions,
             retargetIndexedFields = mergedIndexedFields),
           addedRetargetSubjects ++ addedFamilySubjects))
+        }
     case other =>
       Left(s"`${other.name}` is not a `CollectionsTransform`, so there is no table to compose")
 

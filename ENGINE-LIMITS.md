@@ -1784,3 +1784,15 @@ and the anonymous `new Json() { override def readValue[T](…) }` in `Skin.getJs
 "witness", 57 -> 44 otherwise). §4.55: a signature moves over the whole override component or the
 phase refuses; an anonymous subclass is a member of that component (G29). Not fixed in place: the
 only site sits in `Json`, which the reflection step drops; re-measure when a second site appears.
+
+### K45. `CollectionsTransform`'s merge kept the BASE's `scope` — a dependent could not widen it; CLOSED 2026-09-06 (composes like `NullaryArityTransform`: `Only` unions, `Everywhere` unions its exceptions, mixed refuses)
+
+Measured on the ladder port: a `CollectionsTransform(scope = Only("com.badlogic.gdx"), retarget = Comparator -> Ordering)`
+fragment on top of lls's `Only(twelve)` instance changed NOTHING — **44 -> 44, `policy=` unmoved, 0
+members** — because `mergedWith` built the merged instance with `scope = scope` (the base's) and no
+finding said so. With the composed scope the same fragment measures **44 -> 15**. Flat by
+construction elsewhere: every other base/dependent pair constructs the phase at the default
+`Everywhere(Set.empty)` on both sides (grep over `balticporter/corpus`), whose union is itself.
+Rule (CLAUDE.md §1.5 D12): a base's `Only` is the base's ENTRY; the dependent's fragment names its own,
+and the merge is the union — a merge that silently prefers one side is the "two configurations
+fingerprint EQUAL" blind spot one level down.

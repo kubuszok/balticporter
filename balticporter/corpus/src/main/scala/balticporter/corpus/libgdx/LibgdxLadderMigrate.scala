@@ -99,6 +99,12 @@ object LibgdxLadder:
         subjectTypes = CoreWitnessSubjects,
         dropBound    = CoreWitnessSubjects.keySet,
         boxedWitness = Some("lowlevel.MkArray.anyRef[scala.AnyRef].asInstanceOf[lowlevel.MkArray[{elem}]]"))),
+    // core's collections onto lls's and the JDK table, `Comparator -> Ordering`: the base's instance
+    // widened to core's entry (merged `Only` scopes, CLAUDE.md §1.5 D12).
+    "collections" -> List(
+      new balticporter.transform.CollectionsTransform(
+        scope    = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx")),
+        retarget = Map("java.util.Comparator" -> "scala.math.Ordering"))),
   )
 
   /** Per step, the members the step makes dead: the reflective `Class`-typed constructors the
@@ -114,9 +120,9 @@ object LibgdxLadder:
     ),
   ).withDefaultValue(Set.empty)
 
-  val StepOrder: List[String] = List("witness")
+  val StepOrder: List[String] = List("witness", "collections")
   /** the steps LANDED so far (measured, baselined, PROGRESS.md §13.29). */
-  val DefaultSteps: Set[String] = Set("witness")
+  val DefaultSteps: Set[String] = Set("witness", "collections")
 
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames`
     * for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix
