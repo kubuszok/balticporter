@@ -9,7 +9,7 @@ api-parity(mutability)	2
 api-parity(null-model)	6
 api-parity(opaque)	5
 api-parity(operator)	3
-api-parity(port-extra)	345
+api-parity(port-extra)	362
 api-parity(rename)	0
 api-parity(rule)	10
 api-parity(signature)	87

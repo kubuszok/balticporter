@@ -1764,9 +1764,11 @@ outcomes baselined; without it a step's gate is a compile count (§3). BUILT 202
 | R14 | backends: desktop (Panama/GLFW), browser (DOM), android | per-platform source sets from gdx's backends (71 backend-derived files in sge core) · **GAP** `PortManifest.platformDirs` (b) | — | after R13 |
 | R15 | demo game; Scala 3.9.0 bump (own wave, all lanes move) | — | — | last |
 
-Open beside the steps: (i) NAMESPACE — core's utilities lls does not carry land in `lowlevel.*`
-through the inherited rename (`lowlevel.util.Json`, `Queue`, `Pool`); a destination decision
-(`sge.utils`?) before R7's renames; (ii) the old full-policy `sge` port and its nine dependents still
+Open beside the steps: (i) NAMESPACE — DECIDED and applied 2026-09-06 (standing order 2): lls's
+twelve take dotted `typeRenames` (`lowlevel.util.*`, `lowlevel.math.MathUtils`), no package claim,
+three moves declared (`allowPackageSplit`: `Array`, `ObjectMap`, `ObjectSet` — 30 package-private
+members ship public, K47); core's utilities fall to `sge.utils` through core's own rename. lls
+0 errors held, 39 members moved; ladder 7 = 7 (`sge.utils.Json`, …); (ii) the old full-policy `sge` port and its nine dependents still
 run in every batch under the retired parity bar — retire or keep as the regression reference, a
 maintainer call; (iii) sge's "a few more decisions" (R7's rename list is what `type-mappings.md`
 records; nothing else found in `docs/architecture` beyond the platform matrix and the WASM note).

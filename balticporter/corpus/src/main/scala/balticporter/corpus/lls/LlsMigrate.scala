@@ -175,7 +175,9 @@ object LlsPolicy:
       "com.badlogic.gdx.math.RandomXS128"          -> "java.util.Random"),
     scopes = Map(
       "com.badlogic.gdx.utils.GdxRuntimeException" -> Twelve,
-      "com.badlogic.gdx.utils.Collections"         -> Twelve,
+      // the drop is inherited, so its replacement is too: every dependent's `Collections` read lands
+      // on the one injected flag holder (`Everywhere`, unlike the two java-type answers above).
+      "com.badlogic.gdx.utils.Collections"         -> balticporter.tir.RuleScope.Everywhere(Set.empty),
       "com.badlogic.gdx.math.RandomXS128"          -> balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx.math.MathUtils"))))
 
 
@@ -206,16 +208,19 @@ object LlsPolicy:
         "com.badlogic.gdx.utils.ArrayMap#<init>(Class,Class)",
       ),
       inject = List(repoRoot.resolve("balticporter/corpus/lls-overrides")),
-      // The hand port's namespace. `packageRenames` is DATA, not a surface entry: `PortRun`
-      // appends it LAST (CLAUDE.md §4.56).
-      packageRenames = Map(
-        "com.badlogic.gdx.utils" -> "lowlevel.util",
-        "com.badlogic.gdx.math"  -> "lowlevel.math",
-      ),
-      // lls renamed `Array` to `DynamicArray`; `scala.Array` is not a name a port may shadow.
-      typeRenames = Map(
-        "com.badlogic.gdx.utils.Array" -> "DynamicArray",
-      ),
+      // lls's OWN types live under `lowlevel` (maintainer, 2026-09-06): a per-type move (a dotted
+      // `typeRenames` target), never a package claim — the rest of `utils`/`math` is core's and
+      // follows core's own rename (`sge.*`). lls renamed `Array` to `DynamicArray` (`scala.Array`).
+      // the three of the twelve whose package-private members core reads (`ObjectSet.tableSize`,
+      // `ObjectMap.dummy`, …): the move is declared, so those members ship public (§8.7 widenings).
+      allowPackageSplit = Set("com.badlogic.gdx.utils.Array", "com.badlogic.gdx.utils.ObjectMap",
+                              "com.badlogic.gdx.utils.ObjectSet"),
+      typeRenames = LlsMigrate.Files.map { f =>
+        val fqn    = f.stripSuffix(".java").replace('/', '.')
+        val simple = if fqn.endsWith(".Array") then "DynamicArray" else fqn.substring(fqn.lastIndexOf('.') + 1)
+        val pkg    = if fqn.startsWith("com.badlogic.gdx.math.") then "lowlevel.math" else "lowlevel.util"
+        fqn -> s"$pkg.$simple"
+      }.toMap,
       // L0 of the lls ladder: the universal phases only (`MutableParamsTransform` is universal but
       // per-port today); the decision rungs are added one at a time (PROGRESS.md §13.29).
       // `enrich` LAST: its members are verbatim text written against what the rungs below it

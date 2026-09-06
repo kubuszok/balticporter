@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=lls	engine=balticporter/0.1.0-SNAPSHOT	sources=779e213f6ebe9185	files=12	policy=c37bf422b2b272ae	jdk=22
+# balticporter port map	schema=4	module=lls	engine=balticporter/0.1.0-SNAPSHOT	sources=779e213f6ebe9185	files=12	policy=ece00b89e45be554	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.math.MathUtils	lowlevel.math.MathUtils	Renamed	-		0		flags=final form=object primary=() primaryKind=unique-root primaryVis=private
 type	com.badlogic.gdx.math.MathUtils$Sin	lowlevel.math.MathUtils$Sin	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=private[MathUtils]
@@ -29,7 +29,7 @@ type	com.badlogic.gdx.utils.QuickSelect	lowlevel.util.QuickSelect	Renamed	-		0		
 type	com.badlogic.gdx.utils.Select	lowlevel.util.Select	Renamed	-		0		companion=yes form=class primary=() primaryKind=unique-root primaryVis=public statics=instance,instance$field
 type	com.badlogic.gdx.utils.Sort	lowlevel.util.Sort	Renamed	-		0		companion=yes form=class primary=() primaryKind=unique-root primaryVis=public statics=instance,instance$field
 type	com.badlogic.gdx.utils.TimSort	lowlevel.util.TimSort	Renamed	-		0		companion=yes disambiguator=marker form=class primary=(T[],Ordering,?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(T[],Ordering) statics=DEBUG,INITIAL_TMP_STORAGE_LENGTH,MIN_GALLOP,MIN_MERGE,binarySort,countRunAndMakeAscending,gallopLeft,gallopRight,minRunLength,rangeCheck,reverseRange,sort tparams="[T <: java.lang.Object]"
-type	com.badlogic.gdx.utils.Collections	lowlevel.util.Collections	Substituted	-		0		form=object
+type	com.badlogic.gdx.utils.Collections	com.badlogic.gdx.utils.Collections	Dropped	-		0		form=class
 type		balticporter.runtime.JavaCollection	Added	-		0		
 type		balticporter.runtime.JavaCollections	Added	-		0		
 type		balticporter.runtime.JavaEnumMap	Added	-		0		
@@ -41,6 +41,7 @@ type		balticporter.runtime.JavaOptionalDouble	Added	-		0
 type		balticporter.runtime.JavaOptionalInt	Added	-		0		
 type		balticporter.runtime.JavaOptionalLong	Added	-		0		
 type		balticporter.runtime.JavaStack	Added	-		0		
+type		lowlevel.util.Collections	Added	-		0		
 member	com.badlogic.gdx.math.MathUtils#BIG_ENOUGH_FLOOR	lowlevel.math.MathUtils#BIG_ENOUGH_FLOOR	Renamed	-	com/badlogic/gdx/math/MathUtils.java	601	d717e5a305a4f292	placement=companion vis=private
 member	com.badlogic.gdx.math.MathUtils#BIG_ENOUGH_INT	lowlevel.math.MathUtils#BIG_ENOUGH_INT	Renamed	-	com/badlogic/gdx/math/MathUtils.java	600	001749989e681724	placement=companion vis=private
 member	com.badlogic.gdx.math.MathUtils#BIG_ENOUGH_ROUND	lowlevel.math.MathUtils#BIG_ENOUGH_ROUND	Renamed	-	com/badlogic/gdx/math/MathUtils.java	604	cffa23ea41cf977f	placement=companion vis=private
@@ -367,12 +368,12 @@ member	com.badlogic.gdx.utils.Array$ArrayIterator#<stmt2>	lowlevel.util.DynamicA
 member	com.badlogic.gdx.utils.Array$ArrayIterator#allowRemove	lowlevel.util.DynamicArray$ArrayIterator#allowRemove	Renamed	-	com/badlogic/gdx/utils/Array.java	710	3f3f123914a99ac6	
 member	com.badlogic.gdx.utils.Array$ArrayIterator#array	lowlevel.util.DynamicArray$ArrayIterator#array	Renamed	-	com/badlogic/gdx/utils/Array.java	709	128ca85958bbef7a	
 member	com.badlogic.gdx.utils.Array$ArrayIterator#hasNext()	lowlevel.util.DynamicArray$ArrayIterator#hasNext()	Renamed	-	com/badlogic/gdx/utils/Array.java	725	f6aeb3882511e443	
-member	com.badlogic.gdx.utils.Array$ArrayIterator#index	lowlevel.util.DynamicArray$ArrayIterator#index	Renamed	-	com/badlogic/gdx/utils/Array.java	711	1c0fa1e64dc56429	
+member	com.badlogic.gdx.utils.Array$ArrayIterator#index	lowlevel.util.DynamicArray$ArrayIterator#index	Renamed	-	com/badlogic/gdx/utils/Array.java	711	3e24698c704f4c1a	
 member	com.badlogic.gdx.utils.Array$ArrayIterator#iterator()	lowlevel.util.DynamicArray$ArrayIterator#iterator()	Renamed	-	com/badlogic/gdx/utils/Array.java	752	d9ca520d374aa2b8	
 member	com.badlogic.gdx.utils.Array$ArrayIterator#next()	lowlevel.util.DynamicArray$ArrayIterator#next()	Renamed	-	com/badlogic/gdx/utils/Array.java	733	0ca29c43ffbdff0b	
 member	com.badlogic.gdx.utils.Array$ArrayIterator#remove()	lowlevel.util.DynamicArray$ArrayIterator#remove()	Renamed	-	com/badlogic/gdx/utils/Array.java	742	d8f1af9ce7f91ca5	
 member	com.badlogic.gdx.utils.Array$ArrayIterator#reset()	lowlevel.util.DynamicArray$ArrayIterator#reset()	Renamed	-	com/badlogic/gdx/utils/Array.java	748	4bca3075772a8f6b	
-member	com.badlogic.gdx.utils.Array$ArrayIterator#valid	lowlevel.util.DynamicArray$ArrayIterator#valid	Renamed	-	com/badlogic/gdx/utils/Array.java	712	2b925089abe5cd76	
+member	com.badlogic.gdx.utils.Array$ArrayIterator#valid	lowlevel.util.DynamicArray$ArrayIterator#valid	Renamed	-	com/badlogic/gdx/utils/Array.java	712	8b0edfb7c36bb842	
 member	com.badlogic.gdx.utils.ObjectMap#<init>(ObjectMap)	lowlevel.util.ObjectMap#<init>(ObjectMap<?,?>)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	100	aea8caf547213ab2	
 member	com.badlogic.gdx.utils.ObjectMap#<init>(int)	lowlevel.util.ObjectMap#<init>(int)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	78	9f7cf464df5b20d1	
 member	com.badlogic.gdx.utils.ObjectMap#<init>(int,float)	lowlevel.util.ObjectMap#<init>(int,float)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	85	764e8b78f0af9898	
@@ -398,11 +399,11 @@ member	com.badlogic.gdx.utils.ObjectMap#clear()	lowlevel.util.ObjectMap#clear()	
 member	com.badlogic.gdx.utils.ObjectMap#clear(int)	lowlevel.util.ObjectMap#clear(int)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	230	0cc0fe936c8e6c7b	
 member	com.badlogic.gdx.utils.ObjectMap#containsKey(K)	lowlevel.util.ObjectMap#containsKey(K)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	267	3c5d12e080832ff9	
 member	com.badlogic.gdx.utils.ObjectMap#containsValue(Nullable,boolean)	lowlevel.util.ObjectMap#containsValue(Nullable<Object>,boolean)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	251	7a15b49c99dc0e7c	
-member	com.badlogic.gdx.utils.ObjectMap#dummy	lowlevel.util.ObjectMap#dummy	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	42	61c706e56468bb0b	placement=companion
+member	com.badlogic.gdx.utils.ObjectMap#dummy	lowlevel.util.ObjectMap#dummy	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	42	b4c937d6e2a84423	placement=companion
 member	com.badlogic.gdx.utils.ObjectMap#ensureCapacity(int)	lowlevel.util.ObjectMap#ensureCapacity(int)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	293	82916fefb341a037	
 member	com.badlogic.gdx.utils.ObjectMap#entries()	lowlevel.util.ObjectMap#entries()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	414	344867aa3d15559e	
-member	com.badlogic.gdx.utils.ObjectMap#entries1	lowlevel.util.ObjectMap#entries1	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	67	b4243e4067311369	
-member	com.badlogic.gdx.utils.ObjectMap#entries2	lowlevel.util.ObjectMap#entries2	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	67	c9d41450a954a194	
+member	com.badlogic.gdx.utils.ObjectMap#entries1	lowlevel.util.ObjectMap#entries1	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	67	86f5feea5b1753a3	
+member	com.badlogic.gdx.utils.ObjectMap#entries2	lowlevel.util.ObjectMap#entries2	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	67	0d062f0efa678989	
 member	com.badlogic.gdx.utils.ObjectMap#equals(Any)	lowlevel.util.ObjectMap#equals(Any)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	333	403716e9b65894a8	
 member	com.badlogic.gdx.utils.ObjectMap#equalsIdentity(Nullable)	lowlevel.util.ObjectMap#equalsIdentity(Nullable<Object>)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	355	7b6c9e9954b1f3eb	
 member	com.badlogic.gdx.utils.ObjectMap#findKey(Nullable,boolean)	lowlevel.util.ObjectMap#findKey(Nullable<Object>,boolean)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	275	dbf10a219a0f91d2	
@@ -411,12 +412,12 @@ member	com.badlogic.gdx.utils.ObjectMap#get(T)	lowlevel.util.ObjectMap#get(T)	Re
 member	com.badlogic.gdx.utils.ObjectMap#hashCode()	lowlevel.util.ObjectMap#hashCode()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	318	87f030eb44a73b93	
 member	com.badlogic.gdx.utils.ObjectMap#isEmpty()	lowlevel.util.ObjectMap#isEmpty()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	216	3b4eb03d94d2c9a5	
 member	com.badlogic.gdx.utils.ObjectMap#iterator()	lowlevel.util.ObjectMap#iterator()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	406	549198ce33459909	
-member	com.badlogic.gdx.utils.ObjectMap#keyTable	lowlevel.util.ObjectMap#keyTable	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	46	e682fe697ffcb711	
+member	com.badlogic.gdx.utils.ObjectMap#keyTable	lowlevel.util.ObjectMap#keyTable	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	46	1e97fdb262f924e3	
 member	com.badlogic.gdx.utils.ObjectMap#keys()	lowlevel.util.ObjectMap#keys()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	458	2000af3f8dba9105	
-member	com.badlogic.gdx.utils.ObjectMap#keys1	lowlevel.util.ObjectMap#keys1	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	69	84ef11c6c00f724d	
-member	com.badlogic.gdx.utils.ObjectMap#keys2	lowlevel.util.ObjectMap#keys2	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	69	22f4b6c5e7e92206	
-member	com.badlogic.gdx.utils.ObjectMap#loadFactor	lowlevel.util.ObjectMap#loadFactor	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	49	193bf624aaf6ae95	
-member	com.badlogic.gdx.utils.ObjectMap#locateKey(K)	lowlevel.util.ObjectMap#locateKey(K)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	127	42940c5298a00a8f	
+member	com.badlogic.gdx.utils.ObjectMap#keys1	lowlevel.util.ObjectMap#keys1	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	69	7d995db6af2f02ae	
+member	com.badlogic.gdx.utils.ObjectMap#keys2	lowlevel.util.ObjectMap#keys2	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	69	a352b40a4bb67bda	
+member	com.badlogic.gdx.utils.ObjectMap#loadFactor	lowlevel.util.ObjectMap#loadFactor	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	49	568c4bbb443fe8aa	
+member	com.badlogic.gdx.utils.ObjectMap#locateKey(K)	lowlevel.util.ObjectMap#locateKey(K)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	127	4073ac27f38b058e	
 member	com.badlogic.gdx.utils.ObjectMap#mask	lowlevel.util.ObjectMap#mask	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	65	0d3409f7f3be6fb7	
 member	com.badlogic.gdx.utils.ObjectMap#notEmpty()	lowlevel.util.ObjectMap#notEmpty()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	211	39cd4126337542b3	
 member	com.badlogic.gdx.utils.ObjectMap#place(K)	lowlevel.util.ObjectMap#place(K)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	121	1e2a3b17474ad3bb	
@@ -424,19 +425,19 @@ member	com.badlogic.gdx.utils.ObjectMap#put(K,Nullable)	lowlevel.util.ObjectMap#
 member	com.badlogic.gdx.utils.ObjectMap#putAll(ObjectMap)	lowlevel.util.ObjectMap#putAll(ObjectMap<?,?>)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	152	cd5f124b40cb83dc	
 member	com.badlogic.gdx.utils.ObjectMap#putResize(K,Nullable)	lowlevel.util.ObjectMap#putResize(K,Nullable<V>)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	164	96e685c3a36a58c0	vis=private
 member	com.badlogic.gdx.utils.ObjectMap#remove(K)	lowlevel.util.ObjectMap#remove(K)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	188	4e86115ce85f54ff	
-member	com.badlogic.gdx.utils.ObjectMap#resize(int)	lowlevel.util.ObjectMap#resize(int)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	298	51cea55990f99a72	
+member	com.badlogic.gdx.utils.ObjectMap#resize(int)	lowlevel.util.ObjectMap#resize(int)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	298	c2b1d977822c892d	
 member	com.badlogic.gdx.utils.ObjectMap#shift	lowlevel.util.ObjectMap#shift	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	60	3a15c690785327fe	
 member	com.badlogic.gdx.utils.ObjectMap#shrink(int)	lowlevel.util.ObjectMap#shrink(int)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	223	26672365f561e3b9	
 member	com.badlogic.gdx.utils.ObjectMap#size	lowlevel.util.ObjectMap#size	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	44	184a3d5c6ff54828	
-member	com.badlogic.gdx.utils.ObjectMap#threshold	lowlevel.util.ObjectMap#threshold	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	50	812c7939d93b7a58	
+member	com.badlogic.gdx.utils.ObjectMap#threshold	lowlevel.util.ObjectMap#threshold	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	50	7c94ba699e262ba4	
 member	com.badlogic.gdx.utils.ObjectMap#toString()	lowlevel.util.ObjectMap#toString()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	373	9fcd15579a2f4e03	
 member	com.badlogic.gdx.utils.ObjectMap#toString(String)	lowlevel.util.ObjectMap#toString(String)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	369	7793a1d06add54a1	
 member	com.badlogic.gdx.utils.ObjectMap#toString(String,boolean)	lowlevel.util.ObjectMap#toString(String,boolean)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	377	74840a6c5b8effbc	
-member	com.badlogic.gdx.utils.ObjectMap#valueTable	lowlevel.util.ObjectMap#valueTable	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	47	a522b23babb2134e	
+member	com.badlogic.gdx.utils.ObjectMap#valueTable	lowlevel.util.ObjectMap#valueTable	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	47	7fe3cf85e1c69b9e	
 member	com.badlogic.gdx.utils.ObjectMap#values()	lowlevel.util.ObjectMap#values()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	436	c6e940e030be1992	
-member	com.badlogic.gdx.utils.ObjectMap#values1	lowlevel.util.ObjectMap#values1	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	68	7a4c988f8ad478ad	
-member	com.badlogic.gdx.utils.ObjectMap#values2	lowlevel.util.ObjectMap#values2	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	68	b355f001285309ea	
-member	com.badlogic.gdx.utils.ObjectMap$Entries#entry	lowlevel.util.ObjectMap$Entries#entry	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	539	16b0b2bbc4e71569	
+member	com.badlogic.gdx.utils.ObjectMap#values1	lowlevel.util.ObjectMap#values1	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	68	888f0b80625bd00a	
+member	com.badlogic.gdx.utils.ObjectMap#values2	lowlevel.util.ObjectMap#values2	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	68	ed60c53c6e585b56	
+member	com.badlogic.gdx.utils.ObjectMap$Entries#entry	lowlevel.util.ObjectMap$Entries#entry	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	539	2db222e1a55317fd	
 member	com.badlogic.gdx.utils.ObjectMap$Entries#hasNext()	lowlevel.util.ObjectMap$Entries#hasNext()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	557	9c17e030c75a5eb6	
 member	com.badlogic.gdx.utils.ObjectMap$Entries#iterator()	lowlevel.util.ObjectMap$Entries#iterator()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	562	ec5dcd54bd278705	
 member	com.badlogic.gdx.utils.ObjectMap$Entries#next()	lowlevel.util.ObjectMap$Entries#next()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	546	e069fef13b7052a3	
@@ -451,14 +452,14 @@ member	com.badlogic.gdx.utils.ObjectMap$Keys#toArray()	lowlevel.util.ObjectMap$K
 member	com.badlogic.gdx.utils.ObjectMap$Keys#toArray(DynamicArray)	lowlevel.util.ObjectMap$Keys#toArray(DynamicArray<K>)	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	632	507dfa0b4a8532f9	
 member	com.badlogic.gdx.utils.ObjectMap$MapIterator#<stmt1>	lowlevel.util.ObjectMap$MapIterator#<stmt1>	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	493	0f9b2209291df2a6	
 member	com.badlogic.gdx.utils.ObjectMap$MapIterator#<stmt2>	lowlevel.util.ObjectMap$MapIterator#<stmt2>	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	494	e6133b697ecb2b12	
-member	com.badlogic.gdx.utils.ObjectMap$MapIterator#currentIndex	lowlevel.util.ObjectMap$MapIterator#currentIndex	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	489	23ce969cae78d525	
-member	com.badlogic.gdx.utils.ObjectMap$MapIterator#findNextIndex()	lowlevel.util.ObjectMap$MapIterator#findNextIndex()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	503	5fe53e5aa77bda49	
+member	com.badlogic.gdx.utils.ObjectMap$MapIterator#currentIndex	lowlevel.util.ObjectMap$MapIterator#currentIndex	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	489	f676df645766a328	
+member	com.badlogic.gdx.utils.ObjectMap$MapIterator#findNextIndex()	lowlevel.util.ObjectMap$MapIterator#findNextIndex()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	503	76de9a66632ce8da	
 member	com.badlogic.gdx.utils.ObjectMap$MapIterator#hasNext	lowlevel.util.ObjectMap$MapIterator#hasNext	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	486	624e0dc8442ece8c	name=hasNext$field
-member	com.badlogic.gdx.utils.ObjectMap$MapIterator#map	lowlevel.util.ObjectMap$MapIterator#map	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	488	7a54addffa8471d4	
-member	com.badlogic.gdx.utils.ObjectMap$MapIterator#nextIndex	lowlevel.util.ObjectMap$MapIterator#nextIndex	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	489	2ce34c89019e8250	
+member	com.badlogic.gdx.utils.ObjectMap$MapIterator#map	lowlevel.util.ObjectMap$MapIterator#map	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	488	e561af1053666e5c	
+member	com.badlogic.gdx.utils.ObjectMap$MapIterator#nextIndex	lowlevel.util.ObjectMap$MapIterator#nextIndex	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	489	56a2c1ec79d6de03	
 member	com.badlogic.gdx.utils.ObjectMap$MapIterator#remove()	lowlevel.util.ObjectMap$MapIterator#remove()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	514	1cf21c01e9480def	
 member	com.badlogic.gdx.utils.ObjectMap$MapIterator#reset()	lowlevel.util.ObjectMap$MapIterator#reset()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	497	dd5e85692ab5ac07	
-member	com.badlogic.gdx.utils.ObjectMap$MapIterator#valid	lowlevel.util.ObjectMap$MapIterator#valid	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	490	2b925089abe5cd76	
+member	com.badlogic.gdx.utils.ObjectMap$MapIterator#valid	lowlevel.util.ObjectMap$MapIterator#valid	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	490	4ef9d138f7762fcd	
 member	com.badlogic.gdx.utils.ObjectMap$Values#<stmt1>	lowlevel.util.ObjectMap$Values#<stmt1>	Renamed	-	<synthetic>	0	26599792662dac02	
 member	com.badlogic.gdx.utils.ObjectMap$Values#<stmt2>	lowlevel.util.ObjectMap$Values#<stmt2>	Renamed	-	<synthetic>	0	a47de239b3b8d7cd	
 member	com.badlogic.gdx.utils.ObjectMap$Values#hasNext()	lowlevel.util.ObjectMap$Values#hasNext()	Renamed	-	com/badlogic/gdx/utils/ObjectMap.java	572	9c17e030c75a5eb6	
@@ -505,9 +506,9 @@ member	com.badlogic.gdx.utils.ObjectSet#isEmpty()	lowlevel.util.ObjectSet#isEmpt
 member	com.badlogic.gdx.utils.ObjectSet#iterator()	lowlevel.util.ObjectSet#iterator()	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	330	39f6fc6c9288b1e9	
 member	com.badlogic.gdx.utils.ObjectSet#iterator1	lowlevel.util.ObjectSet#iterator1	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	64	4b58630136c1f435	vis=private
 member	com.badlogic.gdx.utils.ObjectSet#iterator2	lowlevel.util.ObjectSet#iterator2	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	64	544029a6924750af	vis=private
-member	com.badlogic.gdx.utils.ObjectSet#keyTable	lowlevel.util.ObjectSet#keyTable	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	44	f7142dd7ac6c9404	
-member	com.badlogic.gdx.utils.ObjectSet#loadFactor	lowlevel.util.ObjectSet#loadFactor	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	46	193bf624aaf6ae95	
-member	com.badlogic.gdx.utils.ObjectSet#locateKey(T)	lowlevel.util.ObjectSet#locateKey(T)	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	120	fdb709b22512d7b3	
+member	com.badlogic.gdx.utils.ObjectSet#keyTable	lowlevel.util.ObjectSet#keyTable	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	44	85fc482f34e068d2	
+member	com.badlogic.gdx.utils.ObjectSet#loadFactor	lowlevel.util.ObjectSet#loadFactor	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	46	5902f11af57f75a2	
+member	com.badlogic.gdx.utils.ObjectSet#locateKey(T)	lowlevel.util.ObjectSet#locateKey(T)	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	120	a0152823853d8114	
 member	com.badlogic.gdx.utils.ObjectSet#mask	lowlevel.util.ObjectSet#mask	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	62	0d3409f7f3be6fb7	
 member	com.badlogic.gdx.utils.ObjectSet#notEmpty()	lowlevel.util.ObjectSet#notEmpty()	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	203	564d561dafcbc293	
 member	com.badlogic.gdx.utils.ObjectSet#place(T)	lowlevel.util.ObjectSet#place(T)	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	114	095185a44235b48d	
@@ -516,27 +517,27 @@ member	com.badlogic.gdx.utils.ObjectSet#resize(int)	lowlevel.util.ObjectSet#resi
 member	com.badlogic.gdx.utils.ObjectSet#shift	lowlevel.util.ObjectSet#shift	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	57	3a15c690785327fe	
 member	com.badlogic.gdx.utils.ObjectSet#shrink(int)	lowlevel.util.ObjectSet#shrink(int)	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	215	a6e970d46794ff67	
 member	com.badlogic.gdx.utils.ObjectSet#size	lowlevel.util.ObjectSet#size	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	42	184a3d5c6ff54828	
-member	com.badlogic.gdx.utils.ObjectSet#tableSize(int,float)	lowlevel.util.ObjectSet#tableSize(int,float)	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	354	0ac9a03eeecdd4be	placement=companion
-member	com.badlogic.gdx.utils.ObjectSet#threshold	lowlevel.util.ObjectSet#threshold	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	47	812c7939d93b7a58	
+member	com.badlogic.gdx.utils.ObjectSet#tableSize(int,float)	lowlevel.util.ObjectSet#tableSize(int,float)	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	354	51631f8c8d4a2c70	placement=companion
+member	com.badlogic.gdx.utils.ObjectSet#threshold	lowlevel.util.ObjectSet#threshold	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	47	78fc9695c5e0323a	
 member	com.badlogic.gdx.utils.ObjectSet#toString()	lowlevel.util.ObjectSet#toString()	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	302	2ce4210149fc5e67	
 member	com.badlogic.gdx.utils.ObjectSet#toString(String)	lowlevel.util.ObjectSet#toString(String)	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	306	8dd7202d867fd5b5	
 member	com.badlogic.gdx.utils.ObjectSet#with(Array)	lowlevel.util.ObjectSet#with(Array<T>)	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	348	9e6bcdf8aa6f1e76	placement=companion
 member	com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator#<stmt1>	lowlevel.util.ObjectSet$ObjectSetIterator#<stmt1>	Renamed	-	<synthetic>	0	d1de4c79b025a2c1	
 member	com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator#<stmt2>	lowlevel.util.ObjectSet$ObjectSetIterator#<stmt2>	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	369	3d692168967ac9b0	
 member	com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator#<stmt3>	lowlevel.util.ObjectSet$ObjectSetIterator#<stmt3>	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	370	e6133b697ecb2b12	
-member	com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator#currentIndex	lowlevel.util.ObjectSet$ObjectSetIterator#currentIndex	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	365	23ce969cae78d525	
+member	com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator#currentIndex	lowlevel.util.ObjectSet$ObjectSetIterator#currentIndex	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	365	daddae248d321b14	
 member	com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator#findNextIndex()	lowlevel.util.ObjectSet$ObjectSetIterator#findNextIndex()	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	379	2257d6758b32b1b8	vis=private[ObjectSet]
 member	com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator#hasNext	lowlevel.util.ObjectSet$ObjectSetIterator#hasNext	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	362	fd1645c14bce8f1b	name=hasNext$field
 member	com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator#hasNext()	lowlevel.util.ObjectSet$ObjectSetIterator#hasNext()	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	410	bab2855d6561e0b5	
 member	com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator#iterator()	lowlevel.util.ObjectSet$ObjectSetIterator#iterator()	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	424	e6a41a1feffe60ce	
 member	com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator#next()	lowlevel.util.ObjectSet$ObjectSetIterator#next()	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	415	1b8479bd373330e5	
-member	com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator#nextIndex	lowlevel.util.ObjectSet$ObjectSetIterator#nextIndex	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	365	2ce34c89019e8250	
+member	com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator#nextIndex	lowlevel.util.ObjectSet$ObjectSetIterator#nextIndex	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	365	0821478bef90018e	
 member	com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator#remove()	lowlevel.util.ObjectSet$ObjectSetIterator#remove()	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	390	d096dd42dd9470f0	
 member	com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator#reset()	lowlevel.util.ObjectSet$ObjectSetIterator#reset()	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	373	dd5e85692ab5ac07	
-member	com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator#set	lowlevel.util.ObjectSet$ObjectSetIterator#set	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	364	80bacaf4b0dbdb35	
+member	com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator#set	lowlevel.util.ObjectSet$ObjectSetIterator#set	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	364	aba8d82dee91523e	
 member	com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator#toArray()	lowlevel.util.ObjectSet$ObjectSetIterator#toArray()	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	436	33c64e9be52c5ffc	
 member	com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator#toArray(DynamicArray)	lowlevel.util.ObjectSet$ObjectSetIterator#toArray(DynamicArray<K>)	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	429	6f7e19df9931d569	
-member	com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator#valid	lowlevel.util.ObjectSet$ObjectSetIterator#valid	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	366	2b925089abe5cd76	
+member	com.badlogic.gdx.utils.ObjectSet$ObjectSetIterator#valid	lowlevel.util.ObjectSet$ObjectSetIterator#valid	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	366	71d3c397b7a79e43	
 member	com.badlogic.gdx.utils.tableSize	tableSize	Renamed	-	com/badlogic/gdx/utils/ObjectSet.java	85	7ad2d8747f637a38	name=tableSize$p
 member	com.badlogic.gdx.utils.OrderedMap#<init>(OrderedMap)	lowlevel.util.OrderedMap#<init>(OrderedMap<?,?>)	Renamed	-	com/badlogic/gdx/utils/OrderedMap.java	67	1b2efb5e3d4f3e0c	
 member	com.badlogic.gdx.utils.OrderedMap#<init>(int)	lowlevel.util.OrderedMap#<init>(int)	Renamed	-	com/badlogic/gdx/utils/OrderedMap.java	53	d06de81381b30f94	

@@ -1813,3 +1813,20 @@ erasure-sound, one `witness(RawConversion)` row per site. The fill mints its own
 absent from the pre-run symbol table — a predicate reading `program.symbolOf` answered `false` for
 it (the first attempt's silent no-op). K40's two "raw receiver" rows are a different face (the
 RECEIVER's erased view) and stay.
+
+### K47. A per-type move out of a java package split its PACKAGE-PRIVATE members silently — CLOSED 2026-09-06: a DECLARED move (`allowPackageSplit`) publishes them, carried on the SYMBOL
+
+Measured when lls's twelve types took dotted `typeRenames` targets (`lowlevel.util.*`) and core's
+utilities fell to `sge.utils`: **36 `E173`** (`ObjectSet.tableSize`, `ObjectMap.dummy` read by
+`IntMap`, `IntSet`, …) beside 27 `E008` (the inherited `Collections` drop needs its replacement
+redirect inherited too — `Everywhere`, not the base's entry scope). The boundary rule
+(`PackageRenameTransform.boundaryOf`) judged only `protected` and its own comment said package-private
+was unrepresentable; `Flags.isPackagePrivate` exists. Two faces closed: (i) a move the port DECLARES
+publishes every package-private member of the moved type, readers or no readers in this program —
+a base never sees its dependent's readers (K43), and java's package contract is void once the type
+has left the package; one `WidenedVisibility` row per member, reader `(declared)` (lls: 30 rows on
+three types). (ii) The widening is applied to the SYMBOL's flags in `run`, never left to the emitter
+reading decision rows: the determinism check's second emission saw the rows WITHHELD by the module
+ownership filter (a base-owned subject) and rendered one `export` exclusion differently —
+`{MapIterator => _, apply => _, *}` against `{…, dummy => _, *}`. A signature fact lives on the
+symbol (CLAUDE.md §4.56).

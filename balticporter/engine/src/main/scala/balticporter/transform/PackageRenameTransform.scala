@@ -145,9 +145,18 @@ final class PackageRenameTransform(
     // stage 4: the access boundary the move crosses. DESIGN.md §8.7's package-split
     val kept: List[Move] = free.flatMap { mv =>
       val b = boundaryOf(program, mv)
-      if b.isEmpty then Some(mv)
+      // A DECLARED package move also publishes the type's package-private members outright: their
+      // readers may sit in a dependent this program never sees (a base never resolves against its
+      // dependent, K43), and java's package contract is void once the type has left the package.
+      // One widening per member, reader "(declared)"; the emitter renders them public (§8.7).
+      val declared: List[Widening] =
+        if !allowPackageSplit(mv.key) || packageOf(mv.emitted) == packageOf(renamed(mv.key, renames)) then Nil
+        else under(program, mv.sid).toList.flatMap(program.symbolOf).filter(m => m.id != mv.sid && program.owns(m.id) && m.flags.isPackagePrivate)
+          .map(m => Widening(mv.key, Cause.PackageSplit, m.id, m.fullName, "(declared)", Decision.originOf(program, m.id)))
+          .sortBy(_.subjectFqn)
+      if b.isEmpty && declared.isEmpty then Some(mv)
       else if allowPackageSplit(mv.key) then
-        widenings ++= b
+        widenings ++= (b ++ declared.filterNot(d => b.exists(_.subject == d.subject)))
         Some(mv)
       else
         refuse(mv.request, PolicyIssue.Unverifiable,
@@ -289,8 +298,15 @@ final class PackageRenameTransform(
               t.updated(s.copy(name = newName, fullName = newFull))
       }
       recordMoves(hoisted, table)
+      // a recorded widening is a SIGNATURE fact: the symbol ships public, so the emitter's visibility
+      // plan (§8.7) and every dependent's view read it off the symbol, never off a decision row that
+      // a module's ownership filter may withhold (the two emissions disagreed on one `export`).
+      val widened = widenings.map(_.subject).toSet
+      val shipped = widened.foldLeft(table) { (t, id) =>
+        t.get(id).fold(t)(s => t.updated(s.copy(flags = s.flags.copy(isPackagePrivate = false, isProtected = false))))
+      }
       // trees and the xref are keyed by SymId and stay valid verbatim.
-      hoisted.rebuilt(symbols = table)
+      hoisted.rebuilt(symbols = shipped)
 
   /** May a symbol the program does NOT declare, sitting under one of this port's own prefixes,
     * move with the rename? Only where the frontend recorded NO resolution for its TYPE — a name a

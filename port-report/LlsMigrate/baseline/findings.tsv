@@ -39,8 +39,8 @@ f0163f495d3f	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#items	/Dyn
 2f3fc1cd53d5	api-parity(hand-port-extra)	hand-port-extra	DynamicArray#size	/DynamicArray	0	def size/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, last, nonEmpty, notEmpty, peek, pop, preserveOrder, random, reverse, shrink, shuffle, sort, toArray, toString]
 d8113eea9b08	api-parity(hand-port-extra)	hand-port-extra	DynamicArray$#wrapRefUnchecked	/DynamicArray$	0	def wrapRefUnchecked/1 in reference port only [rename candidates: apply]
 9cd0514b65cd	api-parity(hand-port-extra)	hand-port-extra	MathUtils$#randomGenerator	/MathUtils$	0	val randomGenerator/0 in reference port only [rename candidates: E, FLOAT_ROUNDING_ERROR, HALF_PI, PI, PI2, degRad, degreesToRadians, nanoToSec, radDeg, radiansToDegrees]
-f80c14e9ec86	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#containsValue	/ObjectMap	0	def containsValue/1 in reference port only [rename candidates: +=, -=, apply, clear, containsKey, ensureCapacity, equals, equalsIdentity, foreachEntry, foreachKey, foreachValue, get, place, putAll, remove, shrink, toString]
-b0d722b099fd	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#findKey	/ObjectMap	0	def findKey/1 in reference port only [rename candidates: +=, -=, apply, clear, containsKey, ensureCapacity, equals, equalsIdentity, foreachEntry, foreachKey, foreachValue, get, place, putAll, remove, shrink, toString]
+04ec4e84a56a	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#containsValue	/ObjectMap	0	def containsValue/1 in reference port only [rename candidates: +=, -=, apply, clear, containsKey, ensureCapacity, equals, equalsIdentity, foreachEntry, foreachKey, foreachValue, get, locateKey, place, putAll, remove, resize, shrink, toString]
+d4075ee153d0	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#findKey	/ObjectMap	0	def findKey/1 in reference port only [rename candidates: +=, -=, apply, clear, containsKey, ensureCapacity, equals, equalsIdentity, foreachEntry, foreachKey, foreachValue, get, locateKey, place, putAll, remove, resize, shrink, toString]
 57113ab71ce7	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#size	/ObjectMap	0	def size/0 in reference port only [rename candidates: clear, entries, hashCode, isEmpty, iterator, keys, nonEmpty, notEmpty, toString, values]
 18c59a99f147	api-parity(hand-port-extra)	hand-port-extra	ObjectMap#toStringImpl	/ObjectMap	0	def toStringImpl/2 in reference port only [rename candidates: containsValue, findKey, get, put, toString, update]
 bd003748a346	api-parity(hand-port-extra)	hand-port-extra	ObjectSet#size	/ObjectSet	0	def size/0 in reference port only [rename candidates: clear, first, hashCode, isEmpty, iterator, nonEmpty, notEmpty, toString]
@@ -191,10 +191,12 @@ d54d7339abb8	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterable#allow
 4661ce4ad47d	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterator#allowRemove	/DynamicArray$/ArrayIterator	0	var allowRemove/0 in emitted port only
 095626f462e7	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterator#array	/DynamicArray$/ArrayIterator	0	var array/0 in emitted port only
 abbda2524eb0	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterator#hasNext	/DynamicArray$/ArrayIterator	0	def hasNext/0 in emitted port only
+442b7ab74564	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterator#index	/DynamicArray$/ArrayIterator	0	var index/0 in emitted port only
 5e50a100860a	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterator#iterator	/DynamicArray$/ArrayIterator	0	def iterator/0 in emitted port only
 4f1283193dc6	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterator#next	/DynamicArray$/ArrayIterator	0	def next/0 in emitted port only
 d3245efc56da	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterator#remove	/DynamicArray$/ArrayIterator	0	def remove/0 in emitted port only
 b5d865d10df9	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterator#reset	/DynamicArray$/ArrayIterator	0	def reset/0 in emitted port only
+8bbe661003a8	api-parity(port-extra)	port-extra	DynamicArray$.ArrayIterator#valid	/DynamicArray$/ArrayIterator	0	var valid/0 in emitted port only
 e7eccefb314a	api-parity(port-extra)	port-extra	JavaCollection#add	/JavaCollection	0	def add/1 in emitted port only
 297420ddce6c	api-parity(port-extra)	port-extra	JavaCollection#addAll	/JavaCollection	0	def addAll/1 in emitted port only
 312f63bf55f8	api-parity(port-extra)	port-extra	JavaCollection#clear	/JavaCollection	0	def clear/0 in emitted port only
@@ -341,12 +343,18 @@ ce4fa8859809	api-parity(port-extra)	port-extra	JavaStack#search	/JavaStack	0	def
 bef44aba85b0	api-parity(port-extra)	port-extra	ObjectMap#+=	/ObjectMap	0	def +=/1 in emitted port only [rename candidates: clear, containsKey, containsValue, ensureCapacity, equals, equalsIdentity, findKey, foreachEntry, foreachKey, foreachValue, get, putAll, remove, shrink, toString]
 6a7fe189c907	api-parity(port-extra)	port-extra	ObjectMap#-=	/ObjectMap	0	def -=/1 in emitted port only [rename candidates: clear, containsKey, containsValue, ensureCapacity, equals, equalsIdentity, findKey, foreachEntry, foreachKey, foreachValue, get, putAll, remove, shrink, toString]
 0df5159f9612	api-parity(port-extra)	port-extra	ObjectMap#entries	/ObjectMap	0	def entries/0 in emitted port only [rename candidates: clear, hashCode, isEmpty, nonEmpty, size, toString]
+1a3d52e3bd39	api-parity(port-extra)	port-extra	ObjectMap#entries1	/ObjectMap	0	var entries1/0 in emitted port only
+6296698e7476	api-parity(port-extra)	port-extra	ObjectMap#entries2	/ObjectMap	0	var entries2/0 in emitted port only
 f73147722402	api-parity(port-extra)	port-extra	ObjectMap#iterator	/ObjectMap	0	def iterator/0 in emitted port only [rename candidates: clear, hashCode, isEmpty, nonEmpty, size, toString]
 26e2c41d857c	api-parity(port-extra)	port-extra	ObjectMap#keyTable	/ObjectMap	0	var keyTable/0 in emitted port only
 0ebe8d5c6115	api-parity(port-extra)	port-extra	ObjectMap#keys	/ObjectMap	0	def keys/0 in emitted port only [rename candidates: clear, hashCode, isEmpty, nonEmpty, size, toString]
+acc65497d538	api-parity(port-extra)	port-extra	ObjectMap#keys1	/ObjectMap	0	var keys1/0 in emitted port only
+aa7b3e049449	api-parity(port-extra)	port-extra	ObjectMap#keys2	/ObjectMap	0	var keys2/0 in emitted port only
+60935d1df56f	api-parity(port-extra)	port-extra	ObjectMap#locateKey	/ObjectMap	0	def locateKey/1 in emitted port only [rename candidates: clear, containsKey, containsValue, ensureCapacity, equals, equalsIdentity, findKey, foreachEntry, foreachKey, foreachValue, get, putAll, remove, shrink, toString]
 46b6081f48c9	api-parity(port-extra)	port-extra	ObjectMap#mask	/ObjectMap	0	var mask/0 in emitted port only
 d80e753a1de8	api-parity(port-extra)	port-extra	ObjectMap#notEmpty	/ObjectMap	0	def notEmpty/0 in emitted port only [rename candidates: clear, hashCode, isEmpty, nonEmpty, size, toString]
 259644f96b3d	api-parity(port-extra)	port-extra	ObjectMap#place	/ObjectMap	0	def place/1 in emitted port only [rename candidates: clear, containsKey, containsValue, ensureCapacity, equals, equalsIdentity, findKey, foreachEntry, foreachKey, foreachValue, get, putAll, remove, shrink, toString]
+b6f56aefea56	api-parity(port-extra)	port-extra	ObjectMap#resize	/ObjectMap	0	def resize/1 in emitted port only [rename candidates: clear, containsKey, containsValue, ensureCapacity, equals, equalsIdentity, findKey, foreachEntry, foreachKey, foreachValue, get, putAll, remove, shrink, toString]
 f668912c1e39	api-parity(port-extra)	port-extra	ObjectMap#shift	/ObjectMap	0	var shift/0 in emitted port only
 afa042326bc8	api-parity(port-extra)	port-extra	ObjectMap#size	/ObjectMap	0	var size/0 in emitted port only
 43e7dc9486fc	api-parity(port-extra)	port-extra	ObjectMap#threshold	/ObjectMap	0	var threshold/0 in emitted port only
@@ -354,10 +362,14 @@ afa042326bc8	api-parity(port-extra)	port-extra	ObjectMap#size	/ObjectMap	0	var s
 e25bfe1341a1	api-parity(port-extra)	port-extra	ObjectMap#update	/ObjectMap	0	def update/2 in emitted port only [rename candidates: containsValue, findKey, get, put, toStringImpl]
 75af300d500a	api-parity(port-extra)	port-extra	ObjectMap#valueTable	/ObjectMap	0	var valueTable/0 in emitted port only
 2a0a5bcb3fed	api-parity(port-extra)	port-extra	ObjectMap#values	/ObjectMap	0	def values/0 in emitted port only [rename candidates: clear, hashCode, isEmpty, nonEmpty, size, toString]
+b5622d241649	api-parity(port-extra)	port-extra	ObjectMap#values1	/ObjectMap	0	var values1/0 in emitted port only
+ffc822ba994a	api-parity(port-extra)	port-extra	ObjectMap#values2	/ObjectMap	0	var values2/0 in emitted port only
 0350f1544e59	api-parity(port-extra)	port-extra	ObjectMap$#Entries	/ObjectMap$	0	class Entries/0 in emitted port only
 3949dac3b4cb	api-parity(port-extra)	port-extra	ObjectMap$#Entry	/ObjectMap$	0	class Entry/0 in emitted port only
 a5e17c093770	api-parity(port-extra)	port-extra	ObjectMap$#Keys	/ObjectMap$	0	class Keys/0 in emitted port only
 afec212f7937	api-parity(port-extra)	port-extra	ObjectMap$#Values	/ObjectMap$	0	class Values/0 in emitted port only
+c7a05eb54de9	api-parity(port-extra)	port-extra	ObjectMap$#dummy	/ObjectMap$	0	val dummy/0 in emitted port only
+46552f21ade7	api-parity(port-extra)	port-extra	ObjectMap$.Entries#entry	/ObjectMap$/Entries	0	var entry/0 in emitted port only
 b14c76200340	api-parity(port-extra)	port-extra	ObjectMap$.Entries#hasNext	/ObjectMap$/Entries	0	def hasNext/0 in emitted port only
 4d09bc71c32b	api-parity(port-extra)	port-extra	ObjectMap$.Entries#iterator	/ObjectMap$/Entries	0	def iterator/0 in emitted port only
 8dbde312476f	api-parity(port-extra)	port-extra	ObjectMap$.Entries#next	/ObjectMap$/Entries	0	def next/0 in emitted port only
@@ -383,6 +395,7 @@ ef8dcab56cbc	api-parity(port-extra)	port-extra	ObjectSet#exists	/ObjectSet	0	def
 5726b5280a59	api-parity(port-extra)	port-extra	ObjectSet#forall	/ObjectSet	0	def forall/1 in emitted port only [rename candidates: add, addAll, addAll, clear, contains, ensureCapacity, equals, foreach, get, remove, shrink, toString]
 44a27f673c0c	api-parity(port-extra)	port-extra	ObjectSet#iterator	/ObjectSet	0	def iterator/0 in emitted port only [rename candidates: clear, first, hashCode, isEmpty, nonEmpty, size, toArray, toString]
 7f132a9c8665	api-parity(port-extra)	port-extra	ObjectSet#keyTable	/ObjectSet	0	var keyTable/0 in emitted port only
+cbb4e850b082	api-parity(port-extra)	port-extra	ObjectSet#locateKey	/ObjectSet	0	def locateKey/1 in emitted port only [rename candidates: add, addAll, addAll, clear, contains, ensureCapacity, equals, foreach, get, remove, shrink, toString]
 25955b8c584f	api-parity(port-extra)	port-extra	ObjectSet#mask	/ObjectSet	0	var mask/0 in emitted port only
 8f2c8e18da30	api-parity(port-extra)	port-extra	ObjectSet#notEmpty	/ObjectSet	0	def notEmpty/0 in emitted port only [rename candidates: clear, first, hashCode, isEmpty, nonEmpty, size, toArray, toString]
 7c6cc514c5dc	api-parity(port-extra)	port-extra	ObjectSet#place	/ObjectSet	0	def place/1 in emitted port only [rename candidates: add, addAll, addAll, clear, contains, ensureCapacity, equals, foreach, get, remove, shrink, toString]
@@ -390,15 +403,19 @@ ef8dcab56cbc	api-parity(port-extra)	port-extra	ObjectSet#exists	/ObjectSet	0	def
 56a3d785df30	api-parity(port-extra)	port-extra	ObjectSet#size	/ObjectSet	0	var size/0 in emitted port only
 530cebe57b27	api-parity(port-extra)	port-extra	ObjectSet#threshold	/ObjectSet	0	var threshold/0 in emitted port only
 d270d4e653a5	api-parity(port-extra)	port-extra	ObjectSet$#ObjectSetIterator	/ObjectSet$	0	class ObjectSetIterator/0 in emitted port only
+e9aab3ca33fe	api-parity(port-extra)	port-extra	ObjectSet$#tableSize	/ObjectSet$	0	def tableSize/2 in emitted port only [rename candidates: apply]
 a30ec8620a13	api-parity(port-extra)	port-extra	ObjectSet$#with	/ObjectSet$	0	def with/1 in emitted port only [rename candidates: apply, from]
+bf28ec352913	api-parity(port-extra)	port-extra	ObjectSet$.ObjectSetIterator#currentIndex	/ObjectSet$/ObjectSetIterator	0	var currentIndex/0 in emitted port only
 f3bb90088de9	api-parity(port-extra)	port-extra	ObjectSet$.ObjectSetIterator#hasNext	/ObjectSet$/ObjectSetIterator	0	def hasNext/0 in emitted port only
 733fc9d0057f	api-parity(port-extra)	port-extra	ObjectSet$.ObjectSetIterator#iterator	/ObjectSet$/ObjectSetIterator	0	def iterator/0 in emitted port only
 628456b7a6e4	api-parity(port-extra)	port-extra	ObjectSet$.ObjectSetIterator#next	/ObjectSet$/ObjectSetIterator	0	def next/0 in emitted port only
+beebd170bc4d	api-parity(port-extra)	port-extra	ObjectSet$.ObjectSetIterator#nextIndex	/ObjectSet$/ObjectSetIterator	0	var nextIndex/0 in emitted port only
 c392486c078f	api-parity(port-extra)	port-extra	ObjectSet$.ObjectSetIterator#remove	/ObjectSet$/ObjectSetIterator	0	def remove/0 in emitted port only
 ce09945bbad8	api-parity(port-extra)	port-extra	ObjectSet$.ObjectSetIterator#reset	/ObjectSet$/ObjectSetIterator	0	def reset/0 in emitted port only
 93d6f9a0e791	api-parity(port-extra)	port-extra	ObjectSet$.ObjectSetIterator#set	/ObjectSet$/ObjectSetIterator	0	var set/0 in emitted port only
 95cef00d42d8	api-parity(port-extra)	port-extra	ObjectSet$.ObjectSetIterator#toArray	/ObjectSet$/ObjectSetIterator	0	def toArray/0 in emitted port only
 576122c122fb	api-parity(port-extra)	port-extra	ObjectSet$.ObjectSetIterator#toArray	/ObjectSet$/ObjectSetIterator	0	def toArray/1 in emitted port only
+1f544ce16283	api-parity(port-extra)	port-extra	ObjectSet$.ObjectSetIterator#valid	/ObjectSet$/ObjectSetIterator	0	var valid/0 in emitted port only
 130846b83f44	api-parity(port-extra)	port-extra	OrderedMap#entries	/OrderedMap	0	def entries/0 in emitted port only [rename candidates: clear, hashCode, isEmpty, loadFactor, nonEmpty, orderedKeys, size, toString]
 a57519dc04ca	api-parity(port-extra)	port-extra	OrderedMap#iterator	/OrderedMap	0	def iterator/0 in emitted port only [rename candidates: clear, hashCode, isEmpty, loadFactor, nonEmpty, orderedKeys, size, toString]
 56adb006eb5e	api-parity(port-extra)	port-extra	OrderedMap#keys	/OrderedMap	0	def keys/0 in emitted port only [rename candidates: clear, hashCode, isEmpty, loadFactor, nonEmpty, orderedKeys, size, toString]
@@ -584,10 +601,10 @@ f04e6fc68f64	catalog(consulted)	reached	JS-C40	-	0	rendering ClassDef — consul
 9f3c7d32c553	catalog(consulted)	reached	JS-C44	-	0	rendering ClassDef — consulted 29, fired 0, declarations 0: `sealed` / `non-sealed` / `permits`
 3c4756e63985	catalog(consulted)	reached	JS-C45	com/badlogic/gdx/math/MathUtils.java	30	rendering ValDef — consulted 704, fired 46, declarations 0: a `final` field's JMM safe-publication guarantee
 14288c772f98	catalog(consulted)	reached	JS-C46	-	0	phase member-clash — consulted 0, fired 0, declarations 8: Java has TWO name namespaces and Scala has one
-288082ecd462	catalog(consulted)	reached	JS-C47	com/badlogic/gdx/math/MathUtils.java	57	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1121, fired 38, declarations 0: package-private becomes `private[pkg]`
+1052366fc700	catalog(consulted)	reached	JS-C47	com/badlogic/gdx/math/MathUtils.java	57	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1121, fired 17, declarations 0: package-private becomes `private[pkg]`
 c3e3c8b0b2f1	catalog(consulted)	reached	JS-C48	com/badlogic/gdx/utils/Array.java	486	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1121, fired 10, declarations 0: Java's `protected` also grants SAME-PACKAGE access, and accessibility is an input to overload resolution
 2a3f56e8b1b7	catalog(consulted)	reached	JS-C49	com/badlogic/gdx/utils/Array.java	760	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1121, fired 3, declarations 0: Java's `private` reaches the whole enclosing TOP-LEVEL class; Scala's reaches only the template
-2d8335652b23	catalog(consulted)	reached	JS-C50	com/badlogic/gdx/math/MathUtils.java	57	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1121, fired 38, declarations 0: Java's default access is package-private and Scala's is public — INVERTED
+89ff4b95b609	catalog(consulted)	reached	JS-C50	com/badlogic/gdx/math/MathUtils.java	57	rendering ClassDef + rendering DefDef + rendering ValDef — consulted 1121, fired 17, declarations 0: Java's default access is package-private and Scala's is public — INVERTED
 a0bd0d662944	catalog(consulted)	reached	JS-C51	-	0	rendering ClassDef — consulted 29, fired 0, declarations 0: a `return` in a CONSTRUCTOR body, whose promotion puts it in the class body
 8b68c4ac537d	catalog(consulted)	reached	JS-C53	com/badlogic/gdx/math/MathUtils.java	30	rendering ValDef — consulted 704, fired 20, declarations 0: a java `final` FIELD carries two facts onto a `val`: no reassignment, and no OVERRIDE
 e2819f7a82c9	catalog(consulted)	reached	JS-E01	com/badlogic/gdx/utils/Array.java	222	lowering CtBinaryOperator/Expression — consulted 1624, fired 34, declarations 0: `==`/`!=` are REFERENCE identity in Java; Scala's `==` calls `equals`

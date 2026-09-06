@@ -12,20 +12,20 @@ import balticporter.transform.AddMembersTransform.MemberSpec
 object LibgdxEnrich:
 
   private val arrays: List[ArrayKind] = List(
-    ArrayKind("IntArray",     "lowlevel.util.IntArray",     "scala.Int",
+    ArrayKind("IntArray",     "sge.utils.IntArray",     "scala.Int",
       removeOne = "this.removeValue(value)", removeMany = "this.removeAll(other)"),
-    ArrayKind("FloatArray",   "lowlevel.util.FloatArray",   "scala.Float",
+    ArrayKind("FloatArray",   "sge.utils.FloatArray",   "scala.Float",
       removeOne = "this.removeValue(value)", removeMany = "this.removeAll(other)"),
-    ArrayKind("LongArray",    "lowlevel.util.LongArray",    "scala.Long",
+    ArrayKind("LongArray",    "sge.utils.LongArray",    "scala.Long",
       removeOne = "this.removeValue(value)", removeMany = "this.removeAll(other)"),
-    ArrayKind("ShortArray",   "lowlevel.util.ShortArray",   "scala.Short",
+    ArrayKind("ShortArray",   "sge.utils.ShortArray",   "scala.Short",
       removeOne = "this.removeValue(value)", removeMany = "this.removeAll(other)"),
-    ArrayKind("ByteArray",    "lowlevel.util.ByteArray",    "scala.Byte",
+    ArrayKind("ByteArray",    "sge.utils.ByteArray",    "scala.Byte",
       removeOne = "this.removeValue(value)", removeMany = "this.removeAll(other)"),
-    ArrayKind("CharArray",    "lowlevel.util.CharArray",    "scala.Char",
+    ArrayKind("CharArray",    "sge.utils.CharArray",    "scala.Char",
       removeOne = "this.removeValue(value)", removeMany = "this.removeAll(other)"),
     // BooleanArray declares no `contains`/`indexOf`/`removeValue` upstream: `-=` is refused, not invented.
-    ArrayKind("BooleanArray", "lowlevel.util.BooleanArray", "scala.Boolean",
+    ArrayKind("BooleanArray", "sge.utils.BooleanArray", "scala.Boolean",
       removeMany = "this.removeAll(other)"),
   )
 
@@ -34,26 +34,26 @@ object LibgdxEnrich:
     * §13.29 — 2 errors when added ahead of it). */
   private val nullableMaps: List[MapKind] = List(
     MapKind("IntMap", "scala.Int", "V", "lowlevel.Nullable[V]",
-      tparams = "[V <: java.lang.Object]", self = "lowlevel.util.IntMap[V]",
+      tparams = "[V <: java.lang.Object]", self = "sge.utils.IntMap[V]",
       wrap = v => s"lowlevel.Nullable($v)", getOne = "V", removeOne = "remove"),
     MapKind("LongMap", "scala.Long", "V", "lowlevel.Nullable[V]",
-      tparams = "[V <: java.lang.Object]", self = "lowlevel.util.LongMap[V]",
+      tparams = "[V <: java.lang.Object]", self = "sge.utils.LongMap[V]",
       wrap = v => s"lowlevel.Nullable($v)", getOne = "lowlevel.Nullable[V]", removeOne = "remove"),
   )
 
   private val maps: List[MapKind] = List(
     MapKind("ObjectIntMap", "K", "scala.Int", "scala.Int",
-      tparams = "[K <: java.lang.Object]", self = "lowlevel.util.ObjectIntMap[K]"),
+      tparams = "[K <: java.lang.Object]", self = "sge.utils.ObjectIntMap[K]"),
     MapKind("ObjectFloatMap", "K", "scala.Float", "scala.Float",
-      tparams = "[K <: java.lang.Object]", self = "lowlevel.util.ObjectFloatMap[K]"),
+      tparams = "[K <: java.lang.Object]", self = "sge.utils.ObjectFloatMap[K]"),
     MapKind("ObjectLongMap", "K", "scala.Long", "scala.Long",
-      tparams = "[K <: java.lang.Object]", self = "lowlevel.util.ObjectLongMap[K]"),
-    MapKind("IntIntMap", "scala.Int", "scala.Int", "scala.Int", self = "lowlevel.util.IntIntMap"),
-    MapKind("IntFloatMap", "scala.Int", "scala.Float", "scala.Float", self = "lowlevel.util.IntFloatMap"),
+      tparams = "[K <: java.lang.Object]", self = "sge.utils.ObjectLongMap[K]"),
+    MapKind("IntIntMap", "scala.Int", "scala.Int", "scala.Int", self = "sge.utils.IntIntMap"),
+    MapKind("IntFloatMap", "scala.Int", "scala.Float", "scala.Float", self = "sge.utils.IntFloatMap"),
   )
 
   private val sets: List[SetKind] = List(
-    SetKind("IntSet", "scala.Int", "lowlevel.util.IntSet", hasNext = "hasNext"),
+    SetKind("IntSet", "scala.Int", "sge.utils.IntSet", hasNext = "hasNext"),
   )
 
   /** core's subclasses of lls's types take the factories themselves (see the object's doc); with
@@ -74,9 +74,9 @@ object LibgdxEnrich:
       ("apply", 2, s"def apply$tparams(initialCapacity: scala.Int, loadFactor: scala.Float): $self = new $self(initialCapacity, loadFactor)"),
     ).map((n, a, s) => spec(owner, n, a, s, why, static = true))
     val amk = if w then "(using lowlevel.MkArray[T])" else ""
-    arrayLike("SnapshotArray", "lowlevel.util.SnapshotArray[T]", "T", "[T <: java.lang.Object]", amk) ++
-      arrayLike("DelayedRemovalArray", "lowlevel.util.DelayedRemovalArray[T]", "T", "[T <: java.lang.Object]", amk) ++
-      tableLike("IdentityMap", "lowlevel.util.IdentityMap[K, V]", "[K <: java.lang.Object, V <: java.lang.Object]")
+    arrayLike("SnapshotArray", "sge.utils.SnapshotArray[T]", "T", "[T <: java.lang.Object]", amk) ++
+      arrayLike("DelayedRemovalArray", "sge.utils.DelayedRemovalArray[T]", "T", "[T <: java.lang.Object]", amk) ++
+      tableLike("IdentityMap", "sge.utils.IdentityMap[K, V]", "[K <: java.lang.Object, V <: java.lang.Object]")
 
   /** @param w the witness step is on; @param n the nullability step is on (admits [[nullableMaps]]). */
   private def all(w: Boolean, n: Boolean): List[(String, MemberSpec)] =
