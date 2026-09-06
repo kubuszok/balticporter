@@ -1711,3 +1711,25 @@ JVM errors, suite not below the previous rung, expected deltas named. Rungs are 
 substitutions (`getSelectedIndex` x2) and the two test ones are L2 policy; the ten injected files map to
 L3/L4/L6/L8/L9; the `NetJavaImpl` drop conceals K2 (universal).
 
+
+**A3 — libGDX core extends the lls port: BLOCKED on the source set (measured 2026-09-06,
+`ENGINE-LIMITS.md` K43).** `LibgdxPolicy.core = LlsPolicy.core(repoRoot, <default rungs>).extendedBy(…)`
+with gdx's `sourceSet` minus `LlsMigrate.Files` and `gdx/src` as its own resolution root stops at
+`SurfaceFold` with **5 FATAL** findings before a phase runs: `SurfaceDivergence` on
+`reassigned-params->var` (`MutableParamsTransform` in both surfaces, no `SurfacePolicy`, no
+`MergeablePolicy`) and `SurfaceIntrusion` on `java-collections->scala` (**63 subjects**), `nullability`
+(`CharArray`), `globals->implicits` (`FlushablePool`) and `class-to-trait` (`Pool`). The first three
+intrusions are exactly the deletions the wave planned; `Pool` is not, and behind them sit four
+unreached fatal `ManifestAgreement.ExtraDrop` rows (`Align`, `Bits`, `Pool`, `reflect.ArrayReflection`,
+all four in lls's published map). **Seven of the 54 files are types the hand port declares in sge's own
+namespace** (`sge/utils/{Align,BinaryHeap,NumberUtils,Pool,PoolManager,TimeUtils}.scala`,
+`sge/math/RandomXS128.scala`; `GdxRuntimeException` is an eighth by rename to `SgeError`), so the
+switch would delete O6's `Align` opaque type, AD-003/CT12's `Pool` trait, the `Bits -> mutable.BitSet`
+retarget and the reflection drop rather than delete policy. Shrinking the scope back to the twelve is
+not the exit either: they reference `GdxRuntimeException`/`Collections`/`Predicate`/`Null`/
+`ArraySupplier`/`RandomXS128`, which sge owns, and a base cannot resolve against its dependent.
+NEXT: a maintainer decision on lls's source set (lls ships those helpers, with a
+`divergence-verdicts.tsv` row per type sge stops declaring — or a third, deeper module both extend),
+then A3 re-planned against it. K37 stays OPEN (the `getSelectedIndex` bodies stand); K42 stays OPEN
+(it was to ride this wave's re-baseline). No baseline moved; no port map, error count or suite number
+in this section changed.

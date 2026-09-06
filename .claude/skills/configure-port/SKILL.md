@@ -294,6 +294,17 @@ about the BASE's build and is ignored here.
 What it cannot see, so do not trust it further: a parameterised phase's CONFIGURATION unless that
 phase implements `SurfacePolicy`; nested-type drops; anything about the base's emitted output.
 
+**When the base is itself a CORPUS PORT of the same upstream tree** (one java package split across
+two emitted namespaces — `ported/lls` beneath `ported/sge`), decide the base's SOURCE SET before you
+write a line of its policy, and decide it against the REFERENCE port's own ownership. The dependent
+EXCLUDES the base's files from its own globs and makes the shared tree its own resolution root, so
+`PortRun.partitionUnits` emits only what it declares. You never reach that: the run stops at
+`SurfaceFold`, on a base emitting a type the dependent DROPS or reshapes (fatal `ExtraDrop`, fatal
+`SurfaceIntrusion`) or one the hand port declares in the DEPENDENT's namespace (a straight parity
+loss). You cannot shrink out of the overlap afterwards — a base never resolves against its dependent,
+so a helper the base's own sources reference has to be the base's or a deeper module's.
+`ENGINE-LIMITS.md` K43 has the measured run.
+
 ### 6.1 How MANY confs? — count DESTINATIONS, never upstream modules
 
 A run's emission identity is the pair (`portRoot`, `sourceSet`); `sourceSet` is `main | test` and

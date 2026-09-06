@@ -1706,3 +1706,40 @@ pairs whose comment names this guard (`Bag#isEmpty`, `ComponentOperationHandler#
 Rule: land it with the dependent wave that re-measures all nine, never alone; and when it lands, close
 `hasSideEffects`'s own `case _ => ()` default at the same time — an unenumerated node kind there is an
 UNDER-refusal, the direction this phase promises never to take.
+
+### K43. libGDX core cannot EXTEND `ported/lls` at the utilities-family scope — **5 FATAL shared-surface findings before any phase runs; the wall is the SOURCE SET, not the engine. Do NOT retry without an lls source-set decision**
+
+(b) per-library scope, and the decision is the maintainer's (an lls-repo API decision, not an engine
+change). Symptom: `LibgdxPolicy.core = LlsPolicy.core(repoRoot, <default rungs>).extendedBy(…)`, gdx's
+`sourceSet` minus `LlsMigrate.Files`, `FrontendConfig(base, files, Nil, resolutionRoots = List(base))`
+(the source root as its own resolution root, so `PortRun.partitionUnits` emits only the declared
+files). `PortRun.execute` stops at `SurfaceFold` — line 164, before the FRONTEND runs, so that
+source-set arrangement is READ off `partitionUnits` and was never exercised.
+
+Numbers (2026-09-06, one migration run): **5 FATAL**. `SurfaceDivergence: reassigned-params->var` —
+`MutableParamsTransform` is in BOTH surfaces and implements neither `SurfacePolicy` nor
+`MergeablePolicy`, so two instances can be neither composed nor compared. Then four
+`SurfaceIntrusion`, each naming a subject inside lls's `governs` that lls's PUBLISHED MAP emits:
+`java-collections->scala` (**63 subjects**, first `Array -> lowlevel.util.DynamicArray`),
+`nullability` (`CharArray`, from `nullabilityErasureExempt`), `globals->implicits`
+(`FlushablePool`, from `requiredGivens`) — those three ARE the wave's intended deletions — and
+`class-to-trait` (`com.badlogic.gdx.utils.Pool`), which is **not**: lls emits `lowlevel.util.Pool`
+and gdx drops+injects sge's AD-003 TRAIT (CT12). Behind them, unreached because the run stops first:
+four fatal `ManifestAgreement.ExtraDrop` — gdx drops `Align`, `Bits`, `Pool` and
+`reflect.ArrayReflection`, and all four stand in lls's published map.
+
+The wall is the SCOPE. Seven of `LlsMigrate.Files`'s 54 are types the REFERENCE hand port declares in
+the DEPENDENT's namespace — `sge/utils/{Align,BinaryHeap,NumberUtils,Pool,PoolManager,TimeUtils}.scala`
+and `sge/math/RandomXS128.scala`, an eighth by rename (`GdxRuntimeException` -> `sge/utils/SgeError`).
+Emitting them from `ported/lls` into `lowlevel.*` is not deleting policy: it deletes O6's `Align`
+opaque type, AD-003/CT12's `Pool` trait, the `Bits -> scala.collection.mutable.BitSet` retarget and
+the reflection drop, and moves six types out of the namespace §3.5's parity contract puts them in.
+Nor can the scope simply shrink back to the twelve: they reference `GdxRuntimeException`,
+`Collections`, `Predicate`, `Null`, `ArraySupplier` and `RandomXS128`, which sge owns, and a BASE
+cannot resolve against its DEPENDENT — which is why the scope was widened to 54 in the first place.
+
+Rule: decide the base's SOURCE SET before its policy. The exits are (i) lls ships those helpers, one
+`divergence-verdicts.tsv` row per type sge stops declaring, or (ii) a third, deeper module both
+extend. The one universal fix the attempt surfaced is `MutableParamsTransform`'s missing
+`SurfacePolicy`/`MergeablePolicy` — §1(a), the engine's own prescription in the finding text; it moves
+every port's `policy=` digest, so it lands with the wave that re-baselines them, never alone.
