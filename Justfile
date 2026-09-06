@@ -5692,3 +5692,31 @@ metals-status:
 [doc("call one Metals MCP tool from the shell: just metals-call list | just metals-call <tool> '<json args>'")]
 metals-call +ARGS:
     scripts/metals-call.sh {{ARGS}}
+
+# ---------------------------------------------------------------------------------------------
+# The GOAL's instrument: sge's demo game code compiled against the ladder port (PROGRESS.md 13.29,
+# standing order 1). `DEMO_CHECK=pong,space-shooter just demo-check`. Compile only; the error list
+# IS the remaining API distance, by file and by kind.
+# ---------------------------------------------------------------------------------------------
+[doc("sge's demo game code against the ladder port — compile, count, classify (DEMO_CHECK=pong)")]
+demo-check:
+    #!/usr/bin/env bash
+    cd "{{root}}"
+    ROOT="$(pwd)"
+    export CORE_PROJECT="{{core_project}}"
+    . scripts/_lib.sh
+    REPORT="$ROOT/port-report/DemoCheck"
+    mkdir -p "$MEASURE_TMP" "$REPORT/run-latest"
+    echo "-- demos: ${DEMO_CHECK:-pong} (+ shared) against ported/sge-l0 --"
+    sbt_compile "demo-checkJVM/compile" "$MEASURE_TMP"/democheck.txt
+    ERRORS=$SBT_ERRORS
+    compile_guard "$SBT_STATUS" "$ERRORS" "$MEASURE_TMP"/democheck.txt
+    echo "TOTAL ERRORS: $ERRORS"
+    error_baseline_guard "$ERRORS" "$REPORT"
+    echo "-- by file --"
+    grep -E "^-- \[E[0-9]+\]" "$MEASURE_TMP"/democheck.txt | sed -E 's#.*/sge/demos/##; s/:[0-9]+:[0-9]+.*//' | sort | uniq -c | sort -rn | head -20
+    echo "-- by kind --"
+    grep -oE "^-- \[E[0-9]+\][^:]*Error" "$MEASURE_TMP"/democheck.txt | sort | uniq -c | sort -rn | head
+    echo "-- first lines --"
+    grep -A3 -E "^-- \[E" "$MEASURE_TMP"/democheck.txt | grep -E "^\s*\|[A-Za-z]" | sed -E 's/^\s*\|//; s/`[^`]*`/X/g' | cut -c1-90 | sort | uniq -c | sort -rn | head -12
+    headline "$ERRORS" "$REPORT"
