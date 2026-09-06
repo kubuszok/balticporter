@@ -166,6 +166,10 @@ object LlsPolicy:
       target      = NullabilityTransform.Target.Named("lowlevel.Nullable"),
       scope       = balticporter.tir.RuleScope.Everywhere(Set.empty))),
     "ordering" -> List(new CollectionsTransform(retarget = Map("java.util.Comparator" -> "scala.math.Ordering"))),
+    // L1 candidates (PROGRESS.md §13.29): getter-like nullary methods lose `()`; java-convention
+    // accessor pairs become properties (empty explicit tables: derivation only).
+    "arity"    -> List(new balticporter.transform.NullaryArityTransform(scope = balticporter.tir.RuleScope.Everywhere())),
+    "bean"     -> List(new balticporter.transform.BeanPropertyTransform(Map.empty, Map.empty, scope = balticporter.tir.RuleScope.Everywhere())),
     "enrich"   -> List(LlsEnrich.transform(rungs("witness"))),
     "witness"  -> List(
       // the CONSTRUCTOR half of the clause, threaded by the phase that owns that mechanism (CT7)
@@ -189,7 +193,7 @@ object LlsPolicy:
   val Rungs: Set[String] = rungPhases(Set.empty).keySet
 
   /** the order the rungs occupy in `surface` — a pipeline position, not the alphabet. */
-  val RungOrder: List[String] = List("nullable", "ordering", "enrich", "witness")
+  val RungOrder: List[String] = List("bean", "arity", "nullable", "ordering", "enrich", "witness")
 
   def core(repoRoot: Path, rungs: Set[String] = Set.empty): PortManifest =
     val unknown = rungs -- Rungs

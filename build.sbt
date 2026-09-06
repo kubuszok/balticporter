@@ -537,6 +537,8 @@ lazy val `port-sge-l0` = (projectMatrix in file("ported/sge-l0"))
   .settings(
     name := "balticporter-port-sge-l0",
     libraryDependencies += "com.badlogicgames.gdx" % "gdx-jnigen-loader" % "2.5.2",
+    // The ladder ports carry a non-zero floor: a per-run nonce keeps their compile a REAL compile (ENGINE-LIMITS M5.14).
+    Compile / scalacOptions += s"-Xmacro-settings:balticporter.ladderNonce=${System.nanoTime}",
   )
   .jvmPlatform(scalaVersions = Seq(scalaV))
 
@@ -861,6 +863,8 @@ lazy val `port-lls` = (projectMatrix in file("ported/lls"))
   .settings(portSourceGenerators("lls") *)
   .settings(
     name := "balticporter-port-lls",
+    // The ladder ports carry a non-zero floor: a per-run nonce keeps their compile a REAL compile (ENGINE-LIMITS M5.14).
+    Compile / scalacOptions += s"-Xmacro-settings:balticporter.ladderNonce=${System.nanoTime}",
     libraryDependencies ++= Seq(
       "org.scalameta"  %% "munit"            % "1.3.5"  % Test,
       "org.scalameta"  %% "munit-scalacheck" % "1.3.0"  % Test,

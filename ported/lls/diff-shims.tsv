@@ -21,10 +21,9 @@ text	MkArray.anyRef[java.lang.Integer], intOrd,	intOrd,
 text	MkArray.anyRef[java.lang.Integer], intOrd.reverse,	intOrd.reverse,
 text	MkArray.anyRef[String], Ordering.String,	Ordering.String,
 #
-# (2) NULLARY ARITY. lls drops `()` from java's getter-like nullary methods; that is the L1
-# `NullaryArityTransform` rung, which this port does not run, so the emitted members keep java's
-# arity. Per RECEIVER (`set.`), never as a bare member rename: `Nullable.isEmpty` is genuinely
-# paren-less and a member-wide row would break it.
+# (2) NULLARY ARITY — no rows since 2026-09-06: the `arity` rung (`NullaryArityTransform`, L1) is on by
+# default for lls, so java's getter-like nullary methods are emitted paren-less as lls spells them.
+# One row stays: `NullaryArityTransform` converts 27 of lls's 479 nilary members and records no refusal
+# for the rest (`ObjectSet#isEmpty` among them) — an engine question (subplan card 2026-09-06), not a
+# spelling; until it is answered the suite's `set.isEmpty` reads the java arity.
 text	set.isEmpty	set.isEmpty()
-text	set.first	set.first()
-text	set.orderedItems	set.orderedItems()
