@@ -43,7 +43,7 @@ sge.ecs.ComponentType	sge.ecs.ComponentType#hashCode()	def	97aa5eee04341a67
 sge.ecs.ComponentType	sge.ecs.ComponentType#index	val	458720127a3a7395
 sge.ecs.ComponentType	sge.ecs.ComponentType#index()	def	ba955b5453cd3bd6
 sge.ecs.ComponentType	sge.ecs.ComponentType#typeIndex	val	091acd0349b3754b
-sge.ecs.Engine	sge.ecs.Engine	class	3e912263f79b0600
+sge.ecs.Engine	sge.ecs.Engine	class	134c4f4ba21423ef
 sge.ecs.Engine	sge.ecs.Engine#<stmt1>	stmt	035a2eb0d3607ce7
 sge.ecs.Engine	sge.ecs.Engine#<stmt2>	stmt	2ca640536f98276a
 sge.ecs.Engine	sge.ecs.Engine#addEntity(Entity)	def	4c7404fdc04bdd58
