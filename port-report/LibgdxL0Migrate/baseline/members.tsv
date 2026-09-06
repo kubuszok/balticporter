@@ -2662,7 +2662,7 @@ sge.graphics.GLTexture	sge.graphics.GLTexture#uploadImageData(int,TextureData,Sg
 sge.graphics.GLTexture	sge.graphics.GLTexture#uploadImageData(int,TextureData,int,Sge)	def	1c0a4821f29be96a
 sge.graphics.GLTexture	sge.graphics.GLTexture#vWrap	val	1cc62952515f285d
 sge.graphics.GLTexture	sge.graphics.GLTexture#width()	def	41b64e554ab379e7
-sge.graphics.Mesh	sge.graphics.Mesh	class	7dbea8d2f46ba192
+sge.graphics.Mesh	sge.graphics.Mesh	class	dab8c6aa70cd9f8a
 sge.graphics.Mesh	sge.graphics.Mesh#<init>(VertexData,IndexData,boolean,Sge)	ctor	5169f47d837e41b6
 sge.graphics.Mesh	sge.graphics.Mesh#<init>(VertexDataType,boolean,int,int,Array<VertexAttribute>,Sge)	ctor	0420de989ce19885
 sge.graphics.Mesh	sge.graphics.Mesh#<init>(VertexDataType,boolean,int,int,VertexAttributes,Sge)	ctor	807f5bd6aa210807
@@ -2670,6 +2670,7 @@ sge.graphics.Mesh	sge.graphics.Mesh#<init>(boolean,boolean,int,int,VertexAttribu
 sge.graphics.Mesh	sge.graphics.Mesh#<init>(boolean,int,int,Array<VertexAttribute>,Sge)	ctor	d4d0b68a49741e08
 sge.graphics.Mesh	sge.graphics.Mesh#<init>(boolean,int,int,VertexAttributes,Sge)	ctor	9afc9c9a66ab5026
 sge.graphics.Mesh	sge.graphics.Mesh#<stmt1>	stmt	abca2bbe56b03719
+sge.graphics.Mesh	sge.graphics.Mesh#<stmt2>	stmt	71cc469a1e1f967b
 sge.graphics.Mesh	sge.graphics.Mesh#addManagedMesh(Application,Mesh)	def	15272a279cc59346
 sge.graphics.Mesh	sge.graphics.Mesh#autoBind	val	10e98d0e0b717eac
 sge.graphics.Mesh	sge.graphics.Mesh#bind(ShaderProgram)	def	c2903081372a31a0
@@ -4690,7 +4691,7 @@ sge.graphics.g3d.Environment	sge.graphics.g3d.Environment#remove(DynamicArray<Ba
 sge.graphics.g3d.Environment	sge.graphics.g3d.Environment#remove(PointLight)	def	54c7324a2c5a60f9
 sge.graphics.g3d.Environment	sge.graphics.g3d.Environment#remove(SpotLight)	def	6f9ce6e8172c0daf
 sge.graphics.g3d.Environment	sge.graphics.g3d.Environment#shadowMap	val	fc60107e190dcd3b
-sge.graphics.g3d.Material	sge.graphics.g3d.Material	class	5ff32179857c3af5
+sge.graphics.g3d.Material	sge.graphics.g3d.Material	class	c873a29b25afb7cc
 sge.graphics.g3d.Material	sge.graphics.g3d.Material#<init>()	ctor	23ee73ea3eb575fe
 sge.graphics.g3d.Material	sge.graphics.g3d.Material#<init>(Array<Attribute>)	ctor	c14291ea78b97586
 sge.graphics.g3d.Material	sge.graphics.g3d.Material#<init>(DynamicArray<Attribute>)	ctor	0dab56e549f67801
@@ -4699,6 +4700,8 @@ sge.graphics.g3d.Material	sge.graphics.g3d.Material#<init>(String)	ctor	787ff181
 sge.graphics.g3d.Material	sge.graphics.g3d.Material#<init>(String,Array<Attribute>)	ctor	3eaed2f4eccbda39
 sge.graphics.g3d.Material	sge.graphics.g3d.Material#<init>(String,DynamicArray<Attribute>)	ctor	0e3aea9481f7789a
 sge.graphics.g3d.Material	sge.graphics.g3d.Material#<init>(String,Material)	ctor	fbc13baa5af40787
+sge.graphics.g3d.Material	sge.graphics.g3d.Material#<stmt1>	stmt	89fc3bc1e6e445c3
+sge.graphics.g3d.Material	sge.graphics.g3d.Material#<stmt2>	stmt	310bb4068545364e
 sge.graphics.g3d.Material	sge.graphics.g3d.Material#copy()	def	c98c4ddc40f8e40b
 sge.graphics.g3d.Material	sge.graphics.g3d.Material#counter	val	50cb1617f05b7d64
 sge.graphics.g3d.Material	sge.graphics.g3d.Material#equals(Any)	def	9a515d8d95f0ae3a
@@ -10504,11 +10507,13 @@ sge.math.BSpline	sge.math.BSpline#tmp2	val	0c24999b9651b8fd
 sge.math.BSpline	sge.math.BSpline#tmp3	val	8e8683c3d861b928
 sge.math.BSpline	sge.math.BSpline#valueAt(T,float)	def	fc8780449b07d77e
 sge.math.BSpline	sge.math.BSpline#valueAt(T,int,float)	def	a0b324f96b88ec3f
-sge.math.Bezier	sge.math.Bezier	class	f040b44cbaace0b5
+sge.math.Bezier	sge.math.Bezier	class	0909cf9e1dcbf16d
 sge.math.Bezier	sge.math.Bezier#<init>(Array<T>,MkArray<T>)	ctor	1a75b124d2398a19
 sge.math.Bezier	sge.math.Bezier#<init>(Array<T>,int,int,MkArray<T>)	ctor	2b2b3a383c339719
 sge.math.Bezier	sge.math.Bezier#<init>(DynamicArray<T>,int,int,MkArray<T>)	ctor	43b5a31f4fce6789
 sge.math.Bezier	sge.math.Bezier#<init>(MkArray<T>)	ctor	7d587488db7728f5
+sge.math.Bezier	sge.math.Bezier#<stmt1>	stmt	aab42fc794f4bcce
+sge.math.Bezier	sge.math.Bezier#<stmt2>	stmt	8585aecf6ba82f1f
 sge.math.Bezier	sge.math.Bezier#approxLength(int)	def	07fb52edbd853d20
 sge.math.Bezier	sge.math.Bezier#approximate(T)	def	fe44f94319d7652a
 sge.math.Bezier	sge.math.Bezier#cubic(T,float,T,T,T,T,T)	def	f0c633a354d4a88b
@@ -18097,9 +18102,10 @@ sge.utils.StreamUtils	sge.utils.StreamUtils#copyStreamToString(InputStream,int,N
 sge.utils.StreamUtils	sge.utils.StreamUtils$OptimizedByteArrayOutputStream	class	d12d89ce2fdfe4a7
 sge.utils.StreamUtils	sge.utils.StreamUtils$OptimizedByteArrayOutputStream#getBuffer()	def	8c536402fce2cd1d
 sge.utils.StreamUtils	sge.utils.StreamUtils$OptimizedByteArrayOutputStream#toByteArray()	def	49f408e60139e2a7
-sge.utils.TextFormatter	sge.utils.TextFormatter	class	b7f43efdfc8dad98
+sge.utils.TextFormatter	sge.utils.TextFormatter	class	22ed5b4e3c19970c
 sge.utils.TextFormatter	sge.utils.TextFormatter#<stmt1>	stmt	2db2add005442b74
 sge.utils.TextFormatter	sge.utils.TextFormatter#<stmt2>	stmt	278ea23f825b79dd
+sge.utils.TextFormatter	sge.utils.TextFormatter#<stmt3>	stmt	7ebf2b7610fe7c3d
 sge.utils.TextFormatter	sge.utils.TextFormatter#buffer	val	5f8ec94fc0d69073
 sge.utils.TextFormatter	sge.utils.TextFormatter#format(String,Array<Object>)	def	abc13db97530fe87
 sge.utils.TextFormatter	sge.utils.TextFormatter#messageFormat	val	4e7fa575aa65f706

@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=46731aeba3ed6c34	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=bf82485d0a92d608	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -541,7 +541,7 @@ type	com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile	sge.maps.tiled.tiles
 type	com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile	sge.maps.tiled.tiles.StaticTiledMapTile	Renamed	-		0		companion=yes form=class parents=sge.maps.tiled.TiledMapTile primary=() primaryKind=not-funnelled primaryVis=public secondaries=(TextureRegion);(StaticTiledMapTile)
 type	com.badlogic.gdx.math.Affine2	sge.math.Affine2	Renamed	-		0		companion=yes disambiguator=marker flags=final form=class parents=java.io.Serializable primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(Affine2) statics=serialVersionUID
 type	com.badlogic.gdx.math.BSpline	sge.math.BSpline	Renamed	-		0		companion=yes disambiguator=marker form=class parents=sge.math.Path primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(T[],int,boolean) statics=calculate,cubic,cubic_derivative,d6,derivative tparams="[T <: sge.math.Vector[T]]"
-type	com.badlogic.gdx.math.Bezier	sge.math.Bezier	Renamed	-		0		companion=yes disambiguator=marker form=class parents=sge.math.Path primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(T[]);(T[],int,int);(DynamicArray,int,int) statics=cubic,cubic_derivative,linear,linear_derivative,quadratic,quadratic_derivative tparams="[T <: sge.math.Vector[T]]"
+type	com.badlogic.gdx.math.Bezier	sge.math.Bezier	Renamed	-		0		companion=yes disambiguator=marker form=class parents=sge.math.Path primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(T[]);(T[],int,int);(DynamicArray,int,int) statics=apply,cubic,cubic_derivative,linear,linear_derivative,quadratic,quadratic_derivative tparams="[T <: sge.math.Vector[T]]"
 type	com.badlogic.gdx.math.Bresenham2	sge.math.Bresenham2	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.math.CatmullRomSpline	sge.math.CatmullRomSpline	Renamed	-		0		companion=yes disambiguator=marker form=class parents=sge.math.Path primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(T[],boolean) statics=calculate,derivative tparams="[T <: sge.math.Vector[T]]"
 type	com.badlogic.gdx.math.Circle	sge.math.Circle	Renamed	-		0		companion=yes disambiguator=marker form=class parents=java.io.Serializable,sge.math.Shape2D primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(float,float,float);(Vector2,float);(Circle);(Vector2,Vector2)
@@ -3522,6 +3522,7 @@ member	com.badlogic.gdx.graphics.Mesh#<init>(boolean,boolean,int,int,VertexAttri
 member	com.badlogic.gdx.graphics.Mesh#<init>(boolean,int,int,Array,Sge)	sge.graphics.Mesh#<init>(boolean,int,int,Array<VertexAttribute>,Sge)	Renamed	-	com/badlogic/gdx/graphics/Mesh.java	102	d4d0b68a49741e08	
 member	com.badlogic.gdx.graphics.Mesh#<init>(boolean,int,int,VertexAttributes,Sge)	sge.graphics.Mesh#<init>(boolean,int,int,VertexAttributes,Sge)	Renamed	-	com/badlogic/gdx/graphics/Mesh.java	117	9afc9c9a66ab5026	
 member	com.badlogic.gdx.graphics.Mesh#<stmt1>	sge.graphics.Mesh#<stmt1>	Renamed	-	<synthetic>	0	abca2bbe56b03719	
+member	com.badlogic.gdx.graphics.Mesh#<stmt2>	sge.graphics.Mesh#<stmt2>	Renamed	-	<synthetic>	0	71cc469a1e1f967b	
 member	com.badlogic.gdx.graphics.Mesh#addManagedMesh(Application,Mesh)	sge.graphics.Mesh#addManagedMesh(Application,Mesh)	Renamed	-	com/badlogic/gdx/graphics/Mesh.java	978	15272a279cc59346	placement=companion vis=private
 member	com.badlogic.gdx.graphics.Mesh#autoBind	sge.graphics.Mesh#autoBind	Renamed	-	com/badlogic/gdx/graphics/Mesh.java	81	10e98d0e0b717eac	
 member	com.badlogic.gdx.graphics.Mesh#bind(ShaderProgram)	sge.graphics.Mesh#bind(ShaderProgram)	Renamed	-	com/badlogic/gdx/graphics/Mesh.java	508	c2903081372a31a0	
@@ -5457,6 +5458,8 @@ member	com.badlogic.gdx.graphics.g3d.Material#<init>(String)	sge.graphics.g3d.Ma
 member	com.badlogic.gdx.graphics.g3d.Material#<init>(String,Array)	sge.graphics.g3d.Material#<init>(String,Array<Attribute>)	Renamed	-	com/badlogic/gdx/graphics/g3d/Material.java	43	3eaed2f4eccbda39	
 member	com.badlogic.gdx.graphics.g3d.Material#<init>(String,DynamicArray)	sge.graphics.g3d.Material#<init>(String,DynamicArray<Attribute>)	Renamed	-	com/badlogic/gdx/graphics/g3d/Material.java	55	0e3aea9481f7789a	
 member	com.badlogic.gdx.graphics.g3d.Material#<init>(String,Material)	sge.graphics.g3d.Material#<init>(String,Material)	Renamed	-	com/badlogic/gdx/graphics/g3d/Material.java	66	fbc13baa5af40787	
+member	com.badlogic.gdx.graphics.g3d.Material#<stmt1>	sge.graphics.g3d.Material#<stmt1>	Renamed	-	<synthetic>	0	89fc3bc1e6e445c3	
+member	com.badlogic.gdx.graphics.g3d.Material#<stmt2>	sge.graphics.g3d.Material#<stmt2>	Renamed	-	<synthetic>	0	310bb4068545364e	
 member	com.badlogic.gdx.graphics.g3d.Material#copy()	sge.graphics.g3d.Material#copy()	Renamed	-	com/badlogic/gdx/graphics/g3d/Material.java	73	c98c4ddc40f8e40b	
 member	com.badlogic.gdx.graphics.g3d.Material#counter	sge.graphics.g3d.Material#counter	Renamed	-	com/badlogic/gdx/graphics/g3d/Material.java	22	50cb1617f05b7d64	placement=companion vis=private
 member	com.badlogic.gdx.graphics.g3d.Material#equals(Any)	sge.graphics.g3d.Material#equals(Any)	Renamed	-	com/badlogic/gdx/graphics/g3d/Material.java	83	9a515d8d95f0ae3a	
@@ -10929,6 +10932,8 @@ member	com.badlogic.gdx.math.Bezier#<init>(Array,MkArray)	sge.math.Bezier#<init>
 member	com.badlogic.gdx.math.Bezier#<init>(Array,int,int,MkArray)	sge.math.Bezier#<init>(Array<T>,int,int,MkArray<T>)	Renamed	-	com/badlogic/gdx/math/Bezier.java	129	2b2b3a383c339719	
 member	com.badlogic.gdx.math.Bezier#<init>(DynamicArray,int,int,MkArray)	sge.math.Bezier#<init>(DynamicArray<T>,int,int,MkArray<T>)	Renamed	-	com/badlogic/gdx/math/Bezier.java	133	43b5a31f4fce6789	
 member	com.badlogic.gdx.math.Bezier#<init>(MkArray)	sge.math.Bezier#<init>(MkArray<T>)	Renamed	-	com/badlogic/gdx/math/Bezier.java	122	7d587488db7728f5	
+member	com.badlogic.gdx.math.Bezier#<stmt1>	sge.math.Bezier#<stmt1>	Renamed	-	<synthetic>	0	aab42fc794f4bcce	
+member	com.badlogic.gdx.math.Bezier#<stmt2>	sge.math.Bezier#<stmt2>	Renamed	-	<synthetic>	0	8585aecf6ba82f1f	
 member	com.badlogic.gdx.math.Bezier#approxLength(int)	sge.math.Bezier#approxLength(int)	Renamed	-	com/badlogic/gdx/math/Bezier.java	206	07fb52edbd853d20	
 member	com.badlogic.gdx.math.Bezier#approximate(T)	sge.math.Bezier#approximate(T)	Renamed	-	com/badlogic/gdx/math/Bezier.java	186	fe44f94319d7652a	
 member	com.badlogic.gdx.math.Bezier#cubic(T,float,T,T,T,T,T)	sge.math.Bezier#cubic(T,float,T,T,T,T,T)	Renamed	-	com/badlogic/gdx/math/Bezier.java	89	f0c633a354d4a88b	placement=companion
@@ -18391,6 +18396,7 @@ member	com.badlogic.gdx.utils.StreamUtils$OptimizedByteArrayOutputStream#getBuff
 member	com.badlogic.gdx.utils.StreamUtils$OptimizedByteArrayOutputStream#toByteArray()	sge.utils.StreamUtils$OptimizedByteArrayOutputStream#toByteArray()	Renamed	-	com/badlogic/gdx/utils/StreamUtils.java	138	49f408e60139e2a7	
 member	com.badlogic.gdx.utils.TextFormatter#<stmt1>	sge.utils.TextFormatter#<stmt1>	Renamed	-	com/badlogic/gdx/utils/TextFormatter.java	31	2db2add005442b74	
 member	com.badlogic.gdx.utils.TextFormatter#<stmt2>	sge.utils.TextFormatter#<stmt2>	Renamed	-	com/badlogic/gdx/utils/TextFormatter.java	32	278ea23f825b79dd	
+member	com.badlogic.gdx.utils.TextFormatter#<stmt3>	sge.utils.TextFormatter#<stmt3>	Renamed	-	<synthetic>	0	7ebf2b7610fe7c3d	
 member	com.badlogic.gdx.utils.TextFormatter#buffer	sge.utils.TextFormatter#buffer	Renamed	-	com/badlogic/gdx/utils/TextFormatter.java	28	5f8ec94fc0d69073	
 member	com.badlogic.gdx.utils.TextFormatter#format(String,Array)	sge.utils.TextFormatter#format(String,Array<Object>)	Renamed	-	com/badlogic/gdx/utils/TextFormatter.java	59	abc13db97530fe87	
 member	com.badlogic.gdx.utils.TextFormatter#messageFormat	sge.utils.TextFormatter#messageFormat	Renamed	-	com/badlogic/gdx/utils/TextFormatter.java	27	4e7fa575aa65f706	

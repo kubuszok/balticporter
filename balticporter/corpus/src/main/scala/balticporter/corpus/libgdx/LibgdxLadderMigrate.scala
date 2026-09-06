@@ -250,6 +250,38 @@ object LibgdxLadder:
             "def this(map: sge.maps.tiled.TiledMap, unitScale: scala.Float, batch: sge.graphics.g2d.Batch, ownsBatch: scala.Boolean)(using sge.Sge) = { this(map, unitScale, batch); this.ownsBatch = ownsBatch }",
             balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer#<init>"),
             Some("sge's four-argument constructor: the batch-ownership flag made explicit (PROGRESS.md §13.29)"), false)),
+        // java's `T...` is emitted `Array[T]`; sge spells these four as repeated parameters and the
+        // demos call them so — one overload each, until the varargs mechanism lands (PROGRESS.md §13.29).
+        "com.badlogic.gdx.graphics.g3d.Material" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("this", 1,
+            "def this(attributes: sge.graphics.g3d.Attribute*) = this(attributes.toArray)",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.Material#<init>"),
+            Some("sge's repeated-parameter spelling of java's `T...` (the port emits `Array[T]`; PROGRESS.md §13.29 card 1)"), false),
+          balticporter.transform.AddMembersTransform.MemberSpec("this", 2,
+            "def this(id: java.lang.String, attributes: sge.graphics.g3d.Attribute*) = this(id, attributes.toArray)",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.Material#<init>"),
+            Some("sge's repeated-parameter spelling of java's `T...` (the port emits `Array[T]`; PROGRESS.md §13.29 card 1)"), false)),
+        "com.badlogic.gdx.graphics.Mesh" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("this", 4,
+            "def this(isStatic: scala.Boolean, maxVertices: scala.Int, maxIndices: scala.Int, attributes: sge.graphics.VertexAttribute*)(using sge.Sge) = this(isStatic, maxVertices, maxIndices, attributes.toArray)",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.Mesh#<init>"),
+            Some("sge's repeated-parameter spelling of java's `T...` (the port emits `Array[T]`; PROGRESS.md §13.29 card 1)"), false)),
+        "com.badlogic.gdx.math.Bezier" -> List(
+          // a secondary constructor cannot unify the class's F-bounded `T` with its own inside a
+          // self-invocation (scalac 3.8), so the repeated-points constructor is the companion's `apply`
+          balticporter.transform.AddMembersTransform.MemberSpec("apply", 1,
+            "def apply[T <: sge.math.Vector[T]](points: T*)(using lowlevel.MkArray[T]): sge.math.Bezier[T] = { val b = new sge.math.Bezier[T](); b.set(points*); b }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Bezier#apply"),
+            Some("sge's repeated-parameter constructor, as the companion's `apply` (PROGRESS.md §13.29 card 1)"), true),
+          balticporter.transform.AddMembersTransform.MemberSpec("set", 1,
+            "def set(points: T*): Bezier[?] = { val d = new lowlevel.util.DynamicArray[T](); points.foreach(p => d.add(p)); set(d, 0, points.size) }",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.math.Bezier#set"),
+            Some("sge's repeated-parameter spelling of java's `T...` (the port emits `Array[T]`; PROGRESS.md §13.29 card 1)"), false)),
+        "com.badlogic.gdx.utils.TextFormatter" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("format", 2,
+            "def format(pattern: java.lang.String, args: java.lang.Object*): java.lang.String = format(pattern, args.toArray)",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.utils.TextFormatter#format"),
+            Some("sge's repeated-parameter spelling of java's `T...` (the port emits `Array[T]`; PROGRESS.md §13.29 card 1)"), false)),
         "com.badlogic.gdx.assets.AssetManager" -> List(
           balticporter.transform.AddMembersTransform.MemberSpec("load", 1,
             "def load[T <: java.lang.Object](fileName: java.lang.String)(using ct: scala.reflect.ClassTag[T]): scala.Unit = load(fileName, ct.runtimeClass.asInstanceOf[java.lang.Class[T]])",
