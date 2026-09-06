@@ -90,7 +90,8 @@ object LibgdxLadder:
 
   /** The step fragments, cumulative; each merges with the base's instance of the same phase at
     * the base's position (CLAUDE.md §1.5). */
-  val Steps: Map[String, List[balticporter.tir.Phase]] = Map(
+  def Steps: Map[String, List[balticporter.tir.Phase]] = stepsFor(Set.empty)
+  def stepsFor(sel: Set[String]): Map[String, List[balticporter.tir.Phase]] = Map(
     "witness" -> List(
       new balticporter.transform.GlobalsToImplicitsTransform(requiredGivens =
         balticporter.transform.ElementWitnessTransform.constructorGivens(CoreWitnessSubjects, LlsPolicy.Witness)),
@@ -105,6 +106,9 @@ object LibgdxLadder:
       new balticporter.transform.CollectionsTransform(
         scope    = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx")),
         retarget = Map("java.util.Comparator" -> "scala.math.Ordering"))),
+    // lls's added API on core's own collections, and the factories core's subclasses of lls's
+    // types must declare themselves (`LibgdxEnrich`).
+    "enrich" -> List(LibgdxEnrich.transform(w = true, n = sel("nullability"))),
   )
 
   /** Per step, the members the step makes dead: the reflective `Class`-typed constructors the
@@ -120,9 +124,9 @@ object LibgdxLadder:
     ),
   ).withDefaultValue(Set.empty)
 
-  val StepOrder: List[String] = List("witness", "collections")
+  val StepOrder: List[String] = List("witness", "collections", "enrich")
   /** the steps LANDED so far (measured, baselined, PROGRESS.md §13.29). */
-  val DefaultSteps: Set[String] = Set("witness", "collections")
+  val DefaultSteps: Set[String] = Set("witness", "collections", "enrich")
 
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames`
     * for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix
@@ -135,7 +139,7 @@ object LibgdxLadder:
       name           = "sge-l0",
       governs        = Set("com.badlogic.gdx"),
       dropMethods    = StepOrder.filter(steps).flatMap(stepDrops).toSet,
-      surface        = StepOrder.filter(steps).flatMap(Steps(_)),
+      surface        = StepOrder.filter(steps).flatMap(stepsFor(steps)(_)),
       packageRenames = Map("com.badlogic.gdx" -> "sge"),
       typeRenames    = Map("com.badlogic.gdx.scenes.scene2d.ui.List" -> "SgeList"),
       resources      = List(ResourceTree(

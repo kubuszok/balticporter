@@ -12,7 +12,7 @@ object LlsEnrich:
 
   private val Pkg = "com.badlogic.gdx.utils"
 
-  private def spec(owner: String, name: String, arity: Int, src: String, why: String,
+  private[corpus] def spec(owner: String, name: String, arity: Int, src: String, why: String,
                    static: Boolean = false): (String, MemberSpec) =
     s"$Pkg.$owner" -> MemberSpec(name, arity, src,
       Reason.Configured("add-members", s"$Pkg.$owner#$name"), Some(why), static)
@@ -25,13 +25,13 @@ object LlsEnrich:
   /** @param owner upstream simple name @param self emitted type, applied @param elem element type
     * @param tparams type-parameter clause of the added members (empty for the primitive arrays)
     * @param removeOne `removeValue` at arity 1 exists @param removeMany `removeAll` at arity 1 */
-  private case class ArrayKind(owner: String, self: String, elem: String, tparams: String = "",
+  private[corpus] case class ArrayKind(owner: String, self: String, elem: String, tparams: String = "",
                                removeOne: String = "", removeMany: String = "",
                                /** the FACTORY's witness clause when the `witness` rung is on; the
                                  * emitted constructors take one and a factory must supply it. */
                                mk: String = "")
 
-  private def arrayMembers(k: ArrayKind): List[(String, MemberSpec)] =
+  private[corpus] def arrayMembers(k: ArrayKind): List[(String, MemberSpec)] =
     val E = k.elem
     val why = "lls collection API on the emitted array surface (PROGRESS.md §13.29)"
     val common = List(
@@ -111,14 +111,14 @@ object LlsEnrich:
   /** @param entryValue the `Entry.value` type as emitted (`Nullable[V]` on an object-valued map)
     * @param wrap how a plain value reaches `put` @param getOne `get` at arity 1, if there is one
     * @param removeOne `remove`/`removeKey` at arity 1, if there is one */
-  private case class MapKind(owner: String, key: String, value: String, entryValue: String,
+  private[corpus] case class MapKind(owner: String, key: String, value: String, entryValue: String,
                              tparams: String = "", self: String = "", wrap: String => String = identity,
                              getOne: String = "", removeOne: String = "",
                              indexed: Boolean = false, capacityCtor: Boolean = false,
                              /** see [[ArrayKind.mk]]. */
                              mk: String = "")
 
-  private def mapMembers(k: MapKind): List[(String, MemberSpec)] =
+  private[corpus] def mapMembers(k: MapKind): List[(String, MemberSpec)] =
     // three separate vals, not a tuple pattern: an UPPERCASE name on the left of a pattern
     // definition is a constant pattern, and `val (K, V, EV) = …` binds nothing.
     val K   = k.key
@@ -173,10 +173,10 @@ object LlsEnrich:
 
   /** @param hasNext `hasNext()` on the object sets, a `hasNext` FIELD on `IntSet` (the emitter
     * renames the field only where a method of the same name exists). */
-  private case class SetKind(owner: String, elem: String, self: String, tparams: String = "",
+  private[corpus] case class SetKind(owner: String, elem: String, self: String, tparams: String = "",
                              hasNext: String = "hasNext()", mk: String = "")
 
-  private def setMembers(k: SetKind): List[(String, MemberSpec)] =
+  private[corpus] def setMembers(k: SetKind): List[(String, MemberSpec)] =
     val E   = k.elem
     val hn  = k.hasNext
     val why = "lls collection API on the emitted set surface (PROGRESS.md §13.29)"
@@ -266,9 +266,13 @@ object LlsEnrich:
       maps(w).flatMap(mapMembers) ++ arrayMapExtras ++ sets.flatMap(setMembers) ++
       subclassFactories()
 
+  /** owner FQN -> specs, the shape `AddMembersTransform` takes — for any port's table (the
+    * ladder's core collections use the same generators, `LibgdxEnrich`). */
+  def build(pairs: List[(String, MemberSpec)]): Map[String, List[MemberSpec]] =
+    pairs.groupBy(_._1).map((owner, ms) => owner -> ms.map(_._2)).toMap
+
   /** owner FQN -> specs, the shape `AddMembersTransform` takes. @param w the `witness` rung is on. */
-  def members(w: Boolean): Map[String, List[MemberSpec]] =
-    all(w).groupBy(_._1).map((owner, ms) => owner -> ms.map(_._2)).toMap
+  def members(w: Boolean): Map[String, List[MemberSpec]] = build(all(w))
 
   /** how many members this rung adds, for the lane's report. */
   def count: Int = all(false).size

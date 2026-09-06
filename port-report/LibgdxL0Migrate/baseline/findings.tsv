@@ -1,7 +1,7 @@
 #id	check	kind	owner	path	line	detail
 7c41c4e29c79	catalog(consulted)	reached	JS-C01	com/badlogic/gdx/Input.java	634	lowering CtInvocation/Expression — consulted 26720, fired 3525, declarations 0: a Java `static` is INHERITED by every subclass; a Scala companion inherits nothing
 735b6c1b5223	catalog(consulted)	reached	JS-C02	com/badlogic/gdx/graphics/g3d/particles/influencers/DynamicsInfluencer.java	205	lowering CtInvocation/Expression + lowering CtFieldRead/Expression + lowering CtFieldWrite/Expression — consulted 78217, fired 76, declarations 0: interface constants are inherited through `implements`
-081e11628edf	catalog(consulted)	reached	JS-C03	com/badlogic/gdx/graphics/Cubemap.java	38	rendering ClassDef — consulted 936, fired 85, declarations 0: static HIDING is resolved by the STATIC type of the qualifier
+659d1f8a1299	catalog(consulted)	reached	JS-C03	com/badlogic/gdx/graphics/Cubemap.java	38	rendering ClassDef — consulted 936, fired 86, declarations 0: static HIDING is resolved by the STATIC type of the qualifier
 2918335c00e9	catalog(consulted)	reached	JS-C04	-	0	phase field-shadowing — consulted 0, fired 0, declarations 19: a subclass field SHADOWS a superclass field — two storage cells, not one
 15d03cfe2314	catalog(consulted)	reached	JS-C05	com/badlogic/gdx/AbstractGraphics.java	14	lowering CtFieldRead/Expression + lowering CtFieldWrite/Expression — consulted 51497, fired 10029, declarations 0: a static nested constant reached through a SUBCLASS's name, and `import static`
 03dfdf70702f	catalog(consulted)	reached	JS-C06	-	0	rendering Apply — consulted 57508, fired 0, declarations 0: `anInstance.staticMethod()` evaluates the receiver FOR ITS SIDE EFFECTS and discards it
