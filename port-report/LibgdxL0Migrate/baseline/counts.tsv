@@ -23,11 +23,11 @@ idiom(residue)	0
 jdk-surface	19
 manifest	0
 markers	0
-nullability-boundary	152
+nullability-boundary	161
 omissions	37
 opaque-boundary	9
 overload-risk	455
-policy	4
+policy	3
 port-map	75
 portability(all)	153
 portability(emitted)	69

@@ -1938,3 +1938,14 @@ excepted. The hand port's answer is a POPULATION: world units live in the viewpo
 (13 files), everything else wraps at the call. An `Only` scope on those four names states it; the
 opaque phase's symmetric flow needs the fence WHERE the reference port drew it, never a wider
 exception list. Demo check 4 -> 1 (`Pixmap(w, h, format)` wants a `given Sge`).
+(xv) sge's GL enums (`EnableCap`, `PrimitiveMode`, `CompareFunc`, `ClearMask`) seed at `GL20`'s
+parameters, and every caller passes a `GL_*` CONSTANT: seeded through the flow, `inline val
+GL_DEPTH_TEST = 2929` would have to become an opaque — no constant expression (JLS 4.12.4). A
+constant variable is never a seed (`ClassInitTriggerCheck.constantVariable`, the same predicate the
+emitter's `inline val` rests on); the read is wrapped at the call, `glEnable(EnableCap(GL_DEPTH_TEST))`,
+which is sge's own shape (its raw constants stay `Int`). `OpaqueExternalCalleeSpec`.
+(xvi) `ShapeType(int glType)`'s constructor parameter retyped to `PrimitiveMode` through
+`glDrawArrays`, and the enum CASES `Point(GL_POINTS)` kept raw ints — an enum constant's arguments
+are a constructor call java never wrote as one (`Tree.EnumCase.ctorArgs`, no `Apply`), so
+`coerceArgs` never saw them; the phase now coerces them against the constructor of matching arity
+(the same defect broke `Cubemap.CubemapSide` under the unfenced WorldUnits flow, 6 bare errors).

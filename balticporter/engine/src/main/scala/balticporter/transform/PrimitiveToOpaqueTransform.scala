@@ -2,6 +2,7 @@ package balticporter.transform
 
 import balticporter.core.{MergeablePolicy, PolicyFinding, PolicyIssue, PolicyReport, PolicySource, SurfacePolicy}
 import balticporter.tir.*
+import balticporter.tir.CtorFunnel
 
 /** Retypes a semantically-tagged primitive to an `opaque type` (+companion) everywhere it flows,
   * wrapping construction sites and unwrapping consumption sites. Seed from `spec.hints`/
@@ -160,9 +161,14 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
     if spec.isMint then refuseSpanningHints(program, hints)
     // a symbol in a unit this run does not EMIT is not a seed: its type is what the base
     // published (O8), and the call into it is the counted seam — never a hub the flow crosses.
+    // Nor is a CONSTANT VARIABLE (JLS 4.12.4, emitted `inline val`): an opaque is no constant
+    // expression, so `glEnable(GL_DEPTH_TEST)` wraps the read and the constant stays java's (K51 xv).
+    def isConstant(id: SymId): Boolean = program.definitionOf(id) match
+      case Some(v: Tree.ValDef) => program.symbolOf(id).exists(s => ClassInitTriggerCheck.constantVariable(v, s)(using program))
+      case _                    => false
     seeds = FlowPropagation.grow(program, hints, id => program.symbolOf(id).exists(s =>
       (taggablePrim(s.info) || foreignOpaque(program, s.info).isDefined) && spec.scope.includes(program, s)
-        && runScope.emits(unitOf(program, id))))
+        && runScope.emits(unitOf(program, id)) && !isConstant(id)))
     refuseOverlap(program)
     if seeds.isEmpty then return program
 
@@ -447,6 +453,23 @@ final class PrimitiveToOpaqueTransform(val spec: OpaqueSpec)
 
   // retype seed REFERENCES so boundary detection reads a consistent `tpe` (the populator left
   // a seed reference's node `tpe` as `Int`; only the declaration was retyped above).
+  /** an enum CASE's constructor arguments are a call java never wrote as one (`Point(GL_POINTS)`
+    * against `ShapeType(int glType)`): coerce them against the constructor of matching arity, as
+    * [[coerceArgs]] does for an `Apply` — the node's obligation, K51 xvi. */
+  override def transformClassDef(cd: Tree.ClassDef)(using p: Program): Tree.ClassDef =
+    val ctors = CtorFunnel.ctorsOf(p, cd.body)
+    if ctors.isEmpty || cd.enumCases.isEmpty then cd
+    else cd.copy(enumCases = cd.enumCases.map { ec =>
+      val explicit = (d: Tree.DefDef) => d.paramss.flatten.filterNot(v => p.symbolOf(v.symbol).exists(_.flags.isGiven))
+      ctors.find(d => explicit(d).size == ec.ctorArgs.size) match
+        case Some(d) =>
+          val call = Tree.Apply(Tree.Ident(d.symbol, TypeRepr.NoType, ec.origin), ec.ctorArgs, d.symbol, TypeRepr.NoType, ec.origin)
+          coerceArgs(call) match
+            case a: Tree.Apply => ec.copy(ctorArgs = a.args)
+            case _             => ec
+        case scala.None => ec
+    })
+
   override def transformIdent(t: Tree.Ident)(using Program): Term =
     if seeds(t.sym) then t.copy(tpe = seedTypeRef(t.tpe)) else t
   override def transformSelect(t: Tree.Select)(using Program): Term =

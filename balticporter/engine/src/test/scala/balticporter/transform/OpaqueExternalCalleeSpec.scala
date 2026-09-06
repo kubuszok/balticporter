@@ -64,3 +64,39 @@ class OpaqueExternalCalleeSpec extends munit.FunSuite:
     assert(out.contains("go(y: scala.Float)"), out)
     assert(out.contains("Hub.clamp(com.demo.Seconds.unwrap(com.demo.Timer.delta()))"), out)
   }
+
+  test("a constant variable is never a seed: the call wraps the read, the `inline val` stays") {
+    val java = """package com.demo;
+                 |interface GL { int DEPTH = 2929; void enable (int cap); }
+                 |class Use { void go (GL gl) { gl.enable(GL.DEPTH); } }
+                 |""".stripMargin
+    val before = SpoonTir.fromSource(java, "GL.java")
+    val phase  = new PrimitiveToOpaqueTransform(OpaqueSpec(
+      fqn = "com.demo.Cap", hints = Set("com.demo.GL#enable#cap"),
+      underlying = OpaqueSpec.Primitive.Int, scope = RuleScope.Everywhere(Set.empty)))
+    val (after, log) = Pipeline.runTraced(before, List(phase))
+    val out = new TirEmitter(after, notes = log).emit
+    assert(out.contains("inline val DEPTH = 2929"), out)
+    assert(out.contains("enable(cap: com.demo.Cap.T)"), out)
+    assert(out.contains("gl.enable(com.demo.Cap(GL.DEPTH))") || out.contains("gl.enable(com.demo.Cap(com.demo.GL.DEPTH))"), out)
+  }
+
+  test("an enum case's constructor arguments are coerced against the retyped constructor") {
+    val java = """package com.demo;
+                 |interface GL { int POINTS = 0; int LINES = 1; void draw (int mode); }
+                 |enum Shape {
+                 |  Point(GL.POINTS), Line(GL.LINES);
+                 |  final int glType;
+                 |  Shape (int glType) { this.glType = glType; }
+                 |  void go (GL gl) { gl.draw(glType); }
+                 |}
+                 |""".stripMargin
+    val before = SpoonTir.fromSource(java, "GL.java")
+    val phase  = new PrimitiveToOpaqueTransform(OpaqueSpec(
+      fqn = "com.demo.Mode", hints = Set("com.demo.GL#draw#mode"),
+      underlying = OpaqueSpec.Primitive.Int, scope = RuleScope.Everywhere(Set.empty)))
+    val (after, log) = Pipeline.runTraced(before, List(phase))
+    val out = new TirEmitter(after, notes = log).emit
+    assert(out.contains("com.demo.Mode(") && out.contains("POINTS)"), out)
+    assert(!out.contains("Shape(com.demo.GL.POINTS)") && !out.contains("Shape(GL.POINTS)"), out)
+  }
