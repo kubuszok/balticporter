@@ -34,8 +34,8 @@ portability(emitted)	13
 portability(injected)	0
 porter-notes	0
 remediation	2
-rewrite-callsites	0
-signature	0
+rewrite-callsites	1
+signature	12
 substitution(dangling)	0
 substitution(emitted)	0
 switch-null	0

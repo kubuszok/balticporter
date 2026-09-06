@@ -176,16 +176,34 @@ object LibgdxLadder:
     // their references re-point, and a subclass's constructor arguments become the trait's
     // abstract vals (the full port's `ClassToTraitTransform` specs).
     "pool" -> List(
-      new balticporter.transform.TypeRedirectTransform(redirects = Map(
-        "com.badlogic.gdx.utils.DefaultPool"   -> "sge.utils.Pool.Default",
-        "com.badlogic.gdx.utils.FlushablePool" -> "sge.utils.Pool.Flushable")),
+      new balticporter.transform.TypeRedirectTransform(
+        // `FlushablePool` stays java's CLASS over the injected trait (as in the full port): a subclass
+        // with several constructors passing different `super(...)` arguments cannot map onto one val.
+        redirects = Map(
+          "com.badlogic.gdx.utils.DefaultPool"               -> "sge.utils.Pool.Default",
+          "com.badlogic.gdx.utils.DefaultPool$PoolSupplier"  -> "scala.Function0"), // `T get()` is `() => A`
+        memberRenames = Map("com.badlogic.gdx.utils.DefaultPool$PoolSupplier" -> Map("get" -> "apply"))),
       new balticporter.transform.ClassToTraitTransform(specs = Map(
-        "com.badlogic.gdx.utils.Pool" -> List(
-          balticporter.transform.ClassToTraitTransform.ParamMapping(0, "initialCapacity"),
-          balticporter.transform.ClassToTraitTransform.ParamMapping(1, "max")),
-        "com.badlogic.gdx.utils.FlushablePool" -> List(
-          balticporter.transform.ClassToTraitTransform.ParamMapping(0, "initialCapacity"),
-          balticporter.transform.ClassToTraitTransform.ParamMapping(1, "max"))))),
+        "com.badlogic.gdx.utils.Pool" -> PoolMappings))),
+    // `Pixels`: a screen coordinate or size is not a bare `Int` (sge's opaque type, injected).
+    // Seeded at the producers on `Graphics` and `Input` and at the two resize callbacks; the
+    // phase propagates along pure moves and coerces at the boundary.
+    "pixels" -> List(new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+      fqn        = "com.badlogic.gdx.Pixels",
+      target     = balticporter.tir.OpaqueSpec.Target.Existing(
+        typeFqn = "sge.Pixels", wrapName = "apply", unwrapName = "toInt"),
+      hints      = Set(
+        "com.badlogic.gdx.Graphics#getWidth", "com.badlogic.gdx.Graphics#getHeight",
+        "com.badlogic.gdx.Graphics#getBackBufferWidth", "com.badlogic.gdx.Graphics#getBackBufferHeight",
+        "com.badlogic.gdx.Graphics#getSafeInsetLeft", "com.badlogic.gdx.Graphics#getSafeInsetTop",
+        "com.badlogic.gdx.Graphics#getSafeInsetBottom", "com.badlogic.gdx.Graphics#getSafeInsetRight",
+        "com.badlogic.gdx.Input#getX", "com.badlogic.gdx.Input#getY",
+        "com.badlogic.gdx.Input#getDeltaX", "com.badlogic.gdx.Input#getDeltaY",
+        // a PARAMETER seed is `owner#method#param`
+        "com.badlogic.gdx.ApplicationListener#resize#width", "com.badlogic.gdx.ApplicationListener#resize#height",
+        "com.badlogic.gdx.Screen#resize#width", "com.badlogic.gdx.Screen#resize#height"),
+      underlying = balticporter.tir.OpaqueSpec.Primitive.Int,
+      scope      = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx"))))),
     "reflection" -> List(
       new balticporter.transform.ClassTableTransform(Map(
         "com.badlogic.gdx.utils.reflect.ClassReflection#forName" ->
@@ -198,10 +216,15 @@ object LibgdxLadder:
                          "isEnum", "isInterface", "isPrimitive", "isAnnotation", "getComponentType"))))),
   )
 
+  /** `Pool(int initialCapacity, int max)` onto sge's trait: the two vals a subclass site overrides;
+    * a site passing no argument keeps the trait's defaults (java's, carried by the injected file). */
+  val PoolMappings: List[balticporter.transform.ClassToTraitTransform.ParamMapping] = List(
+    balticporter.transform.ClassToTraitTransform.ParamMapping(0, "initialCapacity"),
+    balticporter.transform.ClassToTraitTransform.ParamMapping(1, "max"))
+
   /** per step, the TYPES it removes (each replaced by an injection or made dead by the step). */
   val stepTypeDrops: Map[String, Set[String]] = Map(
-    "pool" -> Set("com.badlogic.gdx.utils.Pool", "com.badlogic.gdx.utils.DefaultPool",
-                  "com.badlogic.gdx.utils.FlushablePool"),
+    "pool" -> Set("com.badlogic.gdx.utils.Pool", "com.badlogic.gdx.utils.DefaultPool"),
     // the JVM-only `HttpURLConnection` client: nothing in core references it; the backends supply
     // their own `Net` (sge's capability convention, PROGRESS.md §13.29 R9).
     "net" -> Set("com.badlogic.gdx.net.NetJavaImpl"),
@@ -228,6 +251,7 @@ object LibgdxLadder:
     "context"    -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-context")),
     "seconds"    -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-seconds")),
     "pool"       -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-pool")),
+    "pixels"     -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-pixels")),
   ).withDefaultValue(Nil)
 
   /** Per step, the members the step makes dead: the reflective `Class`-typed constructors the
@@ -248,9 +272,9 @@ object LibgdxLadder:
     ),
   ).withDefaultValue(Set.empty)
 
-  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool")
+  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels")
   /** the steps LANDED so far (measured, baselined, PROGRESS.md §13.29). */
-  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds")
+  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool")
 
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames`
     * for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix

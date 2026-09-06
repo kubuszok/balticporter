@@ -18,13 +18,13 @@ dependency-coverage(all)	37
 dependency-coverage(declared)	1
 heap-pollution	12
 idiom(converted)	23
-idiom(refused)	3393
+idiom(refused)	3388
 idiom(residue)	0
 jdk-surface	19
 manifest	0
 markers	0
-nullability-boundary	147
-omissions	39
+nullability-boundary	152
+omissions	37
 opaque-boundary	1
 overload-risk	455
 policy	1
@@ -35,9 +35,9 @@ portability(injected)	0
 porter-notes	0
 remediation	15
 resources	8
-rewrite-callsites	0
-signature	0
-substitution(dangling)	0
+rewrite-callsites	1
+signature	10
+substitution(dangling)	1
 substitution(emitted)	0
 switch-null	0
 trivia	0
@@ -46,5 +46,5 @@ trivia(recovered)	8
 try-resource	0
 unused-symbol(handled)	116
 unused-symbol(refused)	0
-witness	142
+witness	140
 upstream	libGDX@4b4d2c4fd05786d848c42cb69266dd2dd6839983

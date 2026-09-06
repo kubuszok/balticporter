@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0-test	engine=balticporter/0.1.0-SNAPSHOT	sources=947965ed3d786d14	files=28	policy=5d853f561a4b982f	jdk=22
+# balticporter port map	schema=4	module=sge-l0-test	engine=balticporter/0.1.0-SNAPSHOT	sources=947965ed3d786d14	files=28	policy=d13657172b06532b	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationControllerTest	sge.graphics.g3d.utils.AnimationControllerTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=,assertSameAnimation
 type	com.badlogic.gdx.graphics.g3d.utils.AnimationDescTest	sge.graphics.g3d.utils.AnimationDescTest	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=epsilon
@@ -18,7 +18,7 @@ type	com.badlogic.gdx.utils.AtomicQueueTest	sge.utils.AtomicQueueTest	Renamed	-	
 type	com.badlogic.gdx.utils.BitsTest	sge.utils.BitsTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.CharArrayTest	sge.utils.CharArrayTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.FlushablePoolTest	sge.utils.FlushablePoolTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
-type	com.badlogic.gdx.utils.FlushablePoolTest$FlushablePoolClass	sge.utils.FlushablePoolTest$FlushablePoolClass	Renamed	-		0		companion=yes form=class parents=sge.utils.FlushablePool primary=() primaryKind=no-arg-root primaryVis=public secondaries=(int);(int,int)
+type	com.badlogic.gdx.utils.FlushablePoolTest$FlushablePoolClass	sge.utils.FlushablePoolTest$FlushablePoolClass	Renamed	-		0		companion=yes form=class parents=sge.utils.FlushablePool primary=(int,int) primaryKind=unique-root primaryVis=public secondaries=();(int)
 type	com.badlogic.gdx.utils.JsonMatcherTests	sge.utils.JsonMatcherTests	Renamed	-		0		companion=yes form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public statics=assertValueCount,copy,json,printResults,rejectAll,test,toString
 type	com.badlogic.gdx.utils.JsonTest	sge.utils.JsonTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.JsonValueTest	sge.utils.JsonValueTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
@@ -32,7 +32,9 @@ type	com.badlogic.gdx.utils.SortTest$NullsFirstComparator	sge.utils.SortTest$Nul
 type	com.badlogic.gdx.utils.SortedIntListTest	sge.utils.SortedIntListTest	Renamed	-		0		form=class parents=munit.FunSuite primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.net.NetJavaImpl	sge.net.NetJavaImpl	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.Collections	sge.utils.Collections	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.DefaultPool	sge.utils.DefaultPool	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.Json	sge.utils.Json	Dropped	-		0		form=class
+type	com.badlogic.gdx.utils.Pool	sge.utils.Pool	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.Pools	sge.utils.Pools	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.ReflectionPool	sge.utils.ReflectionPool	Dropped	-		0		form=class
 type	com.badlogic.gdx.utils.reflect.Annotation	sge.utils.reflect.Annotation	Dropped	-		0		form=class
@@ -174,8 +176,8 @@ member	com.badlogic.gdx.utils.FlushablePoolTest#<stmt5>	sge.utils.FlushablePoolT
 member	com.badlogic.gdx.utils.FlushablePoolTest#<stmt6>	sge.utils.FlushablePoolTest#<stmt6>	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	42	51823b6f805d2d19	
 member	com.badlogic.gdx.utils.FlushablePoolTest#<stmt7>	sge.utils.FlushablePoolTest#<stmt7>	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	52	9219b1cb3726e68b	
 member	com.badlogic.gdx.utils.FlushablePoolTest#<stmt8>	sge.utils.FlushablePoolTest#<stmt8>	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	73	1984c1c0e66496c2	
-member	com.badlogic.gdx.utils.FlushablePoolTest$FlushablePoolClass#<init>(int)	sge.utils.FlushablePoolTest$FlushablePoolClass#<init>(int)	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	105	ad00caff24db1194	
-member	com.badlogic.gdx.utils.FlushablePoolTest$FlushablePoolClass#<init>(int,int)	sge.utils.FlushablePoolTest$FlushablePoolClass#<init>(int,int)	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	109	03e794baeb93f967	
+member	com.badlogic.gdx.utils.FlushablePoolTest$FlushablePoolClass#<init>()	sge.utils.FlushablePoolTest$FlushablePoolClass#<init>()	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	101	6d74b7aedc15fb9a	
+member	com.badlogic.gdx.utils.FlushablePoolTest$FlushablePoolClass#<init>(int)	sge.utils.FlushablePoolTest$FlushablePoolClass#<init>(int)	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	105	7c9654eaa2c0046b	
 member	com.badlogic.gdx.utils.FlushablePoolTest$FlushablePoolClass#newObject()	sge.utils.FlushablePoolTest$FlushablePoolClass#newObject()	Renamed	-	com/badlogic/gdx/utils/FlushablePoolTest.java	114	35b1f977de13a936	
 member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt10>	sge.utils.JsonMatcherTests#<stmt10>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1180	f866a46be96451de	
 member	com.badlogic.gdx.utils.JsonMatcherTests#<stmt11>	sge.utils.JsonMatcherTests#<stmt11>	Renamed	-	com/badlogic/gdx/utils/JsonMatcherTests.java	1193	018d77992ea6201a	

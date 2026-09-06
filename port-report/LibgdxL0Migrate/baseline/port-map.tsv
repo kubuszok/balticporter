@@ -1,4 +1,4 @@
-# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=946ebed7879e458e	jdk=22
+# balticporter port map	schema=4	module=sge-l0	engine=balticporter/0.1.0-SNAPSHOT	sources=ac79ba6faef9aecf	files=585	policy=ae4db6dbac26c6d4	jdk=22
 #kind	upstream	emitted	disposition	body	javaPath	javaLine	digest	shape
 type	com.badlogic.gdx.AbstractGraphics	sge.AbstractGraphics	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Graphics primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.AbstractInput	sge.AbstractInput	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.Input primary=() primaryKind=unique-root primaryVis=public
@@ -770,12 +770,11 @@ type	com.badlogic.gdx.utils.Clipboard	sge.utils.Clipboard	Renamed	-		0		form=tra
 type	com.badlogic.gdx.utils.DataBuffer	sge.utils.DataBuffer	Renamed	-		0		form=class parents=sge.utils.DataOutput primary=(int) primaryKind=unique-root primaryVis=public secondaries=()
 type	com.badlogic.gdx.utils.DataInput	sge.utils.DataInput	Renamed	-		0		form=class parents=java.io.DataInputStream primary=(InputStream) primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.DataOutput	sge.utils.DataOutput	Renamed	-		0		form=class parents=java.io.DataOutputStream primary=(OutputStream) primaryKind=unique-root primaryVis=public
-type	com.badlogic.gdx.utils.DefaultPool	sge.utils.DefaultPool	Renamed	-		0		companion=yes form=class parents=sge.utils.Pool primary=(PoolSupplier,int,int) primaryKind=unique-root primaryVis=public secondaries=(PoolSupplier);(PoolSupplier,int) statics=PoolSupplier tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.utils.DefaultPool$PoolSupplier	sge.utils.DefaultPool$PoolSupplier	Renamed	-		0		form=trait tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.utils.DelayedRemovalArray	sge.utils.DelayedRemovalArray	Renamed	-		0		companion=yes form=class parents=lowlevel.util.DynamicArray primary=() primaryKind=no-arg-root primaryVis=public secondaries=(DynamicArray);(boolean,int,Function1);(boolean,int);(boolean,T[],int,int);(Function1);(int);(T[]) statics=`with`,apply,from tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.utils.Disposable	sge.utils.Disposable	Renamed	-		0		form=trait
 type	com.badlogic.gdx.utils.FloatArray	sge.utils.FloatArray	Renamed	-		0		companion=yes disambiguator=marker form=class primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(int);(boolean,int);(FloatArray);(float[]);(boolean,float[],int,int) statics=`with`,apply,from
-type	com.badlogic.gdx.utils.FlushablePool	sge.utils.FlushablePool	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.utils.Pool primary=() primaryKind=no-arg-root primaryVis=public secondaries=(int);(int,int) tparams="[T <: java.lang.Object]"
+type	com.badlogic.gdx.utils.FlushablePool	sge.utils.FlushablePool	Renamed	-		0		companion=yes flags=abstract form=class parents=sge.utils.Pool primary=(int,int) primaryKind=unique-root primaryVis=public secondaries=();(int) tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.utils.GdxNativesLoader	sge.utils.GdxNativesLoader	Renamed	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.GdxRuntimeException	sge.utils.GdxRuntimeException	Renamed	-		0		companion=yes form=class parents=java.lang.RuntimeException primary=(String,Throwable) primaryKind=widest-root primaryVis=public secondaries=(String);(Throwable) statics=serialVersionUID
 type	com.badlogic.gdx.utils.I18NBundle	sge.utils.I18NBundle	Renamed	-		0		companion=yes form=class primary=() primaryKind=unique-root primaryVis=public statics=DEFAULT_ENCODING,checkFileExistence,createBundle,createBundleImpl,exceptionOnMissingKey,getCandidateLocales,getExceptionOnMissingKey,getFallbackLocale,getSimpleFormatter,loadBundle,loadBundleChain,setExceptionOnMissingKey,setSimpleFormatter,simpleFormatter,toFileHandle
@@ -856,7 +855,6 @@ type	com.badlogic.gdx.utils.PatternParser	sge.utils.PatternParser	Renamed	-		0		
 type	com.badlogic.gdx.utils.PauseableThread	sge.utils.PauseableThread	Renamed	-		0		form=class parents=java.lang.Thread primary=(Runnable) primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.PerformanceCounter	sge.utils.PerformanceCounter	Renamed	-		0		companion=yes form=class primary=(String,int) primaryKind=unique-root primaryVis=public secondaries=(String) statics=nano2seconds
 type	com.badlogic.gdx.utils.PerformanceCounters	sge.utils.PerformanceCounters	Renamed	-		0		companion=yes form=class primary=() primaryKind=unique-root primaryVis=public statics=nano2seconds
-type	com.badlogic.gdx.utils.Pool	sge.utils.Pool	Renamed	-		0		companion=yes flags=abstract form=class primary=() primaryKind=unique-root primaryVis=public secondaries=(int);(int,int) statics=Poolable tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.utils.Pool$Poolable	sge.utils.Pool$Poolable	Renamed	-		0		form=trait
 type	com.badlogic.gdx.utils.PoolManager	sge.utils.PoolManager	Renamed	-		0		form=class primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.utils.PooledLinkedList	sge.utils.PooledLinkedList	Renamed	-		0		companion=yes form=class primary=(int) primaryKind=unique-root primaryVis=public statics=Item tparams="[T <: java.lang.Object]"
@@ -926,7 +924,9 @@ type	com.badlogic.gdx.utils.viewport.StretchViewport	sge.utils.viewport.StretchV
 type	com.badlogic.gdx.utils.viewport.Viewport	sge.utils.viewport.Viewport	Renamed	-		0		flags=abstract form=class primary=() primaryKind=unique-root primaryVis=public
 type	com.badlogic.gdx.net.NetJavaImpl	sge.net.NetJavaImpl	Dropped	-		0		companion=yes form=class primary=(int) primaryKind=unique-root primaryVis=public secondaries=() statics=HttpClientResponse
 type	com.badlogic.gdx.utils.Collections	sge.utils.Collections	Dropped	-		0		form=object primary=() primaryKind=unique-root primaryVis=public
+type	com.badlogic.gdx.utils.DefaultPool	sge.utils.DefaultPool	Dropped	-		0		companion=yes form=class parents=sge.utils.Pool primary=(Function0,int,int) primaryKind=unique-root primaryVis=public secondaries=(Function0);(Function0,int) statics=PoolSupplier tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.utils.Json	sge.utils.Json	Substituted	-		0		companion=yes disambiguator=marker form=class primary=(?) primaryKind=synthesised-primary primaryVis=protected secondaries=();(OutputType) statics=FieldMetadata,ReadOnlySerializer,Serializable,Serializer,debug
+type	com.badlogic.gdx.utils.Pool	sge.utils.Pool	Substituted	-		0		companion=yes form=trait statics=Poolable tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.utils.Pools	sge.utils.Pools	Dropped	-		0		form=object primary=() primaryKind=unique-root primaryVis=private
 type	com.badlogic.gdx.utils.ReflectionPool	sge.utils.ReflectionPool	Dropped	-		0		companion=yes form=class parents=sge.utils.Pool primary=(Class,int,int) primaryKind=unique-root primaryVis=public secondaries=(Class);(Class,int) tparams="[T <: java.lang.Object]"
 type	com.badlogic.gdx.utils.reflect.Annotation	sge.utils.reflect.Annotation	Dropped	-		0		flags=final form=class primary=(Annotation) primaryKind=unique-root primaryVis=public
@@ -949,6 +949,8 @@ type		balticporter.runtime.JavaOptionalLong	Added	-		0
 type		balticporter.runtime.JavaStack	Added	-		0		
 type		sge.Sge	Added	-		0		
 type		sge.graphics.g3d.particles.AssetTypeRegistry	Added	-		0		
+type		sge.utils.DynamicArrayOps	Added	-		0		
+type		sge.utils.Poolable	Added	-		0		
 type		sge.utils.Seconds	Added	-		0		
 member	com.badlogic.gdx.AbstractGraphics#getBackBufferScale()	sge.AbstractGraphics#getBackBufferScale()	Renamed	-	com/badlogic/gdx/AbstractGraphics.java	18	9cabec3d8531a06d	
 member	com.badlogic.gdx.AbstractGraphics#getDensity()	sge.AbstractGraphics#getDensity()	Renamed	-	com/badlogic/gdx/AbstractGraphics.java	12	a8ee067450eced17	
@@ -4281,7 +4283,7 @@ member	com.badlogic.gdx.graphics.g2d.GlyphLayout#epsilon	sge.graphics.g2d.GlyphL
 member	com.badlogic.gdx.graphics.g2d.GlyphLayout#getGlyphWidth(Glyph,BitmapFontData)	sge.graphics.g2d.GlyphLayout#getGlyphWidth(Glyph,BitmapFontData)	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	448	67d75e353c8c1b44	vis=private
 member	com.badlogic.gdx.graphics.g2d.GlyphLayout#getLineOffset(DynamicArray,BitmapFontData)	sge.graphics.g2d.GlyphLayout#getLineOffset(DynamicArray<Glyph>,BitmapFontData)	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	453	a9fc32c905139f21	vis=private
 member	com.badlogic.gdx.graphics.g2d.GlyphLayout#glyphCount	sge.graphics.g2d.GlyphLayout#glyphCount	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	68	d6d912ab205e0acb	
-member	com.badlogic.gdx.graphics.g2d.GlyphLayout#glyphRunPool	sge.graphics.g2d.GlyphLayout#glyphRunPool	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	48	c743a7c5e3ef631a	placement=companion vis=private
+member	com.badlogic.gdx.graphics.g2d.GlyphLayout#glyphRunPool	sge.graphics.g2d.GlyphLayout#glyphRunPool	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	48	d052172373888964	placement=companion vis=private
 member	com.badlogic.gdx.graphics.g2d.GlyphLayout#height	sge.graphics.g2d.GlyphLayout#height	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	70	9dd5f4dc313f31bc	
 member	com.badlogic.gdx.graphics.g2d.GlyphLayout#parseColorMarkup(CharSequence,int,int)	sge.graphics.g2d.GlyphLayout#parseColorMarkup(CharSequence,int,int)	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	458	5730783910caffdb	vis=private
 member	com.badlogic.gdx.graphics.g2d.GlyphLayout#reset()	sge.graphics.g2d.GlyphLayout#reset()	Renamed	-	com/badlogic/gdx/graphics/g2d/GlyphLayout.java	501	13b42595e0da2033	
@@ -4423,6 +4425,8 @@ member	com.badlogic.gdx.graphics.g2d.ParticleEffect#ySizeScale	sge.graphics.g2d.
 member	com.badlogic.gdx.graphics.g2d.ParticleEffectPool#<stmt1>	sge.graphics.g2d.ParticleEffectPool#<stmt1>	Renamed	-	com/badlogic/gdx/graphics/g2d/ParticleEffectPool.java	28	21af2816614a9525	
 member	com.badlogic.gdx.graphics.g2d.ParticleEffectPool#effect	sge.graphics.g2d.ParticleEffectPool#effect	Renamed	-	com/badlogic/gdx/graphics/g2d/ParticleEffectPool.java	24	4a53d756588086c2	
 member	com.badlogic.gdx.graphics.g2d.ParticleEffectPool#free(PooledEffect)	sge.graphics.g2d.ParticleEffectPool#free(PooledEffect)	Renamed	-	com/badlogic/gdx/graphics/g2d/ParticleEffectPool.java	37	e0bf83ccb1ec8cf6	
+member	com.badlogic.gdx.graphics.g2d.ParticleEffectPool#initialCapacity	sge.graphics.g2d.ParticleEffectPool#initialCapacity	Renamed	-	com/badlogic/gdx/graphics/g2d/ParticleEffectPool.java	23	e30dee9af10e3b66	
+member	com.badlogic.gdx.graphics.g2d.ParticleEffectPool#max	sge.graphics.g2d.ParticleEffectPool#max	Renamed	-	com/badlogic/gdx/graphics/g2d/ParticleEffectPool.java	23	2dfff2701f9e66b1	
 member	com.badlogic.gdx.graphics.g2d.ParticleEffectPool#newObject()	sge.graphics.g2d.ParticleEffectPool#newObject()	Renamed	-	com/badlogic/gdx/graphics/g2d/ParticleEffectPool.java	31	2bee07369a487933	
 member	com.badlogic.gdx.graphics.g2d.ParticleEffectPool$PooledEffect#free()	sge.graphics.g2d.ParticleEffectPool$PooledEffect#free()	Renamed	-	com/badlogic/gdx/graphics/g2d/ParticleEffectPool.java	62	f49b9b3297ef4d9e	
 member	com.badlogic.gdx.graphics.g2d.ParticleEmitter#<init>(BufferedReader,Sge)	sge.graphics.g2d.ParticleEmitter#<init>(BufferedReader,Sge)	Renamed	-	com/badlogic/gdx/graphics/g2d/ParticleEmitter.java	101	c2e68c9dddc303cb	
@@ -5826,7 +5830,7 @@ member	com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy#GROUP_BLEND	sge.
 member	com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy#GROUP_OPAQUE	sge.graphics.g3d.decals.CameraGroupStrategy#GROUP_OPAQUE	Renamed	-	com/badlogic/gdx/graphics/g3d/decals/CameraGroupStrategy.java	84	16417a6e4ebcaada	placement=companion vis=private
 member	com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy#afterGroup(int)	sge.graphics.g3d.decals.CameraGroupStrategy#afterGroup(int)	Renamed	-	com/badlogic/gdx/graphics/g3d/decals/CameraGroupStrategy.java	163	bc42fc13dc9aa97b	
 member	com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy#afterGroups()	sge.graphics.g3d.decals.CameraGroupStrategy#afterGroups()	Renamed	-	com/badlogic/gdx/graphics/g3d/decals/CameraGroupStrategy.java	179	fefef85784639080	
-member	com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy#arrayPool	sge.graphics.g3d.decals.CameraGroupStrategy#arrayPool	Renamed	-	com/badlogic/gdx/graphics/g3d/decals/CameraGroupStrategy.java	87	a0a130ffe0d9ef56	
+member	com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy#arrayPool	sge.graphics.g3d.decals.CameraGroupStrategy#arrayPool	Renamed	-	com/badlogic/gdx/graphics/g3d/decals/CameraGroupStrategy.java	87	3cb6a06ab4a386b7	
 member	com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy#beforeGroup(int,DynamicArray)	sge.graphics.g3d.decals.CameraGroupStrategy#beforeGroup(int,DynamicArray<Decal>)	Renamed	-	com/badlogic/gdx/graphics/g3d/decals/CameraGroupStrategy.java	133	e9df4ce1efbc73f0	
 member	com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy#beforeGroups()	sge.graphics.g3d.decals.CameraGroupStrategy#beforeGroups()	Renamed	-	com/badlogic/gdx/graphics/g3d/decals/CameraGroupStrategy.java	171	e766265b475834b0	
 member	com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy#camera	sge.graphics.g3d.decals.CameraGroupStrategy#camera	Renamed	-	com/badlogic/gdx/graphics/g3d/decals/CameraGroupStrategy.java	96	c95c62020fb9ca5c	
@@ -5950,7 +5954,7 @@ member	com.badlogic.gdx.graphics.g3d.decals.DecalBatch#flush()	sge.graphics.g3d.
 member	com.badlogic.gdx.graphics.g3d.decals.DecalBatch#flush(ShaderProgram,int)	sge.graphics.g3d.decals.DecalBatch#flush(ShaderProgram,int)	Renamed	-	com/badlogic/gdx/graphics/g3d/decals/DecalBatch.java	185	09818935c60593f0	
 member	com.badlogic.gdx.graphics.g3d.decals.DecalBatch#getSize()	sge.graphics.g3d.decals.DecalBatch#getSize()	Renamed	-	com/badlogic/gdx/graphics/g3d/decals/DecalBatch.java	114	cdb0ca3cec009346	
 member	com.badlogic.gdx.graphics.g3d.decals.DecalBatch#groupList	sge.graphics.g3d.decals.DecalBatch#groupList	Renamed	-	com/badlogic/gdx/graphics/g3d/decals/DecalBatch.java	57	cdc706bd65151a8f	vis=private
-member	com.badlogic.gdx.graphics.g3d.decals.DecalBatch#groupPool	sge.graphics.g3d.decals.DecalBatch#groupPool	Renamed	-	com/badlogic/gdx/graphics/g3d/decals/DecalBatch.java	59	0806d61f3e37eac5	vis=private
+member	com.badlogic.gdx.graphics.g3d.decals.DecalBatch#groupPool	sge.graphics.g3d.decals.DecalBatch#groupPool	Renamed	-	com/badlogic/gdx/graphics/g3d/decals/DecalBatch.java	59	7b37fac365e8a6ea	vis=private
 member	com.badlogic.gdx.graphics.g3d.decals.DecalBatch#groupStrategy	sge.graphics.g3d.decals.DecalBatch#groupStrategy	Renamed	-	com/badlogic/gdx/graphics/g3d/decals/DecalBatch.java	58	40dfbfe369fbcb14	vis=private
 member	com.badlogic.gdx.graphics.g3d.decals.DecalBatch#initialize(int)	sge.graphics.g3d.decals.DecalBatch#initialize(int)	Renamed	-	com/badlogic/gdx/graphics/g3d/decals/DecalBatch.java	88	f0bab430219e540d	
 member	com.badlogic.gdx.graphics.g3d.decals.DecalBatch#mesh	sge.graphics.g3d.decals.DecalBatch#mesh	Renamed	-	com/badlogic/gdx/graphics/g3d/decals/DecalBatch.java	55	6581d96e89c95692	vis=private
@@ -6760,6 +6764,8 @@ member	com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch$Co
 member	com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch$Config#<init>(boolean,AlignMode)	sge.graphics.g3d.particles.batches.BillboardParticleBatch$Config#<init>(boolean,AlignMode)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/batches/BillboardParticleBatch.java	107	4da0440b233791a7	
 member	com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch$Config#mode	sge.graphics.g3d.particles.batches.BillboardParticleBatch$Config#mode	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/batches/BillboardParticleBatch.java	113	15ecaa2fde394193	
 member	com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch$Config#useGPU	sge.graphics.g3d.particles.batches.BillboardParticleBatch$Config#useGPU	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/batches/BillboardParticleBatch.java	112	1e6740bb910e4159	
+member	com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch$RenderablePool#initialCapacity	sge.graphics.g3d.particles.batches.BillboardParticleBatch$RenderablePool#initialCapacity	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/batches/BillboardParticleBatch.java	93	cfde7d324e930f23	
+member	com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch$RenderablePool#max	sge.graphics.g3d.particles.batches.BillboardParticleBatch$RenderablePool#max	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/batches/BillboardParticleBatch.java	93	992649b26d8fe496	
 member	com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch$RenderablePool#newObject()	sge.graphics.g3d.particles.batches.BillboardParticleBatch$RenderablePool#newObject()	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/batches/BillboardParticleBatch.java	98	c15b5d7f0a0b6639	
 member	com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch#<stmt1>	sge.graphics.g3d.particles.batches.BufferedParticleBatch#<stmt1>	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/batches/BufferedParticleBatch.java	40	1353b340f903a44c	
 member	com.badlogic.gdx.graphics.g3d.particles.batches.BufferedParticleBatch#<stmt2>	sge.graphics.g3d.particles.batches.BufferedParticleBatch#<stmt2>	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/batches/BufferedParticleBatch.java	41	c501b0cc08227207	
@@ -7013,6 +7019,8 @@ member	com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer$Rando
 member	com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer$Random#init()	sge.graphics.g3d.particles.influencers.ModelInfluencer$Random#init()	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/influencers/ModelInfluencer.java	93	a08e4137a581146e	
 member	com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer$Random#killParticles(int,int)	sge.graphics.g3d.particles.influencers.ModelInfluencer$Random#killParticles(int,int)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/influencers/ModelInfluencer.java	105	cff2b30b427f3ea8	
 member	com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer$Random#pool	sge.graphics.g3d.particles.influencers.ModelInfluencer$Random#pool	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/influencers/ModelInfluencer.java	75	e39ec96044e6342a	
+member	com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer$Random$ModelInstancePool#initialCapacity	sge.graphics.g3d.particles.influencers.ModelInfluencer$Random$ModelInstancePool#initialCapacity	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/influencers/ModelInfluencer.java	65	763fb21896571350	
+member	com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer$Random$ModelInstancePool#max	sge.graphics.g3d.particles.influencers.ModelInfluencer$Random$ModelInstancePool#max	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/influencers/ModelInfluencer.java	65	2ad072cdb5b4ce8c	
 member	com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer$Random$ModelInstancePool#newObject()	sge.graphics.g3d.particles.influencers.ModelInfluencer$Random$ModelInstancePool#newObject()	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/influencers/ModelInfluencer.java	70	0da7c2f23a7abc64	
 member	com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer$Single#<init>(Array)	sge.graphics.g3d.particles.influencers.ModelInfluencer$Single#<init>(Array<Model>)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/influencers/ModelInfluencer.java	45	0da74bae10b11c59	
 member	com.badlogic.gdx.graphics.g3d.particles.influencers.ModelInfluencer$Single#<init>(Single)	sge.graphics.g3d.particles.influencers.ModelInfluencer$Single#<init>(Single)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/influencers/ModelInfluencer.java	41	9283caa4c7ca0d38	
@@ -7049,6 +7057,8 @@ member	com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInf
 member	com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer$Random#killParticles(int,int)	sge.graphics.g3d.particles.influencers.ParticleControllerInfluencer$Random#killParticles(int,int)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/influencers/ParticleControllerInfluencer.java	147	c7307b01b55f9a33	
 member	com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer$Random#pool	sge.graphics.g3d.particles.influencers.ParticleControllerInfluencer$Random#pool	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/influencers/ParticleControllerInfluencer.java	105	df80e4a2b053c0d1	
 member	com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer$Random$ParticleControllerPool#clear()	sge.graphics.g3d.particles.influencers.ParticleControllerInfluencer$Random$ParticleControllerPool#clear()	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/influencers/ParticleControllerInfluencer.java	96	c6c987ccf31a3790	
+member	com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer$Random$ParticleControllerPool#initialCapacity	sge.graphics.g3d.particles.influencers.ParticleControllerInfluencer$Random$ParticleControllerPool#initialCapacity	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/influencers/ParticleControllerInfluencer.java	84	763fb21896571350	
+member	com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer$Random$ParticleControllerPool#max	sge.graphics.g3d.particles.influencers.ParticleControllerInfluencer$Random$ParticleControllerPool#max	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/influencers/ParticleControllerInfluencer.java	84	2ad072cdb5b4ce8c	
 member	com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer$Random$ParticleControllerPool#newObject()	sge.graphics.g3d.particles.influencers.ParticleControllerInfluencer$Random$ParticleControllerPool#newObject()	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/influencers/ParticleControllerInfluencer.java	89	e415f41a20af0535	
 member	com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer$Single#<init>(Array)	sge.graphics.g3d.particles.influencers.ParticleControllerInfluencer$Single#<init>(Array<ParticleController>)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/influencers/ParticleControllerInfluencer.java	40	1f19aa141187778a	
 member	com.badlogic.gdx.graphics.g3d.particles.influencers.ParticleControllerInfluencer$Single#<init>(Single)	sge.graphics.g3d.particles.influencers.ParticleControllerInfluencer$Single#<init>(Single)	Renamed	-	com/badlogic/gdx/graphics/g3d/particles/influencers/ParticleControllerInfluencer.java	48	f78ff94b88632922	
@@ -7715,7 +7725,7 @@ member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#animate(String,fl
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#animate(String,float,float,int,float,AnimationListener,float)	sge.graphics.g3d.utils.AnimationController#animate(String,float,float,int,float,AnimationListener,float)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	350	616a1661bb8259aa	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#animate(String,int,AnimationListener,float)	sge.graphics.g3d.utils.AnimationController#animate(String,int,AnimationListener,float)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	317	e0828e08d70c94c5	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#animate(String,int,float,AnimationListener,float)	sge.graphics.g3d.utils.AnimationController#animate(String,int,float,AnimationListener,float)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	332	c39731807fc582ed	
-member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#animationPool	sge.graphics.g3d.utils.AnimationController#animationPool	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	109	2a1c3c03e17290b8	
+member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#animationPool	sge.graphics.g3d.utils.AnimationController#animationPool	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	109	adb1682719ad7f5a	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#current	sge.graphics.g3d.utils.AnimationController#current	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	117	de9c448d880ef6a4	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#inAction	sge.graphics.g3d.utils.AnimationController#inAction	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	129	b1b889b52fcf2362	
 member	com.badlogic.gdx.graphics.g3d.utils.AnimationController#justChangedAnimation	sge.graphics.g3d.utils.AnimationController#justChangedAnimation	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/AnimationController.java	135	759c1b6ba4a40aef	vis=private
@@ -7769,7 +7779,7 @@ member	com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController#getTranslatio
 member	com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController#removeAnimation(Animation)	sge.graphics.g3d.utils.BaseAnimationController#removeAnimation(Animation)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/BaseAnimationController.java	297	a6535723380f457b	
 member	com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController#target	sge.graphics.g3d.utils.BaseAnimationController#target	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/BaseAnimationController.java	101	460583188b28b08d	
 member	com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController#tmpT	sge.graphics.g3d.utils.BaseAnimationController#tmpT	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/BaseAnimationController.java	159	d9a0bf9985cb31b1	placement=companion vis=private
-member	com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController#transformPool	sge.graphics.g3d.utils.BaseAnimationController#transformPool	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/BaseAnimationController.java	92	f2ce4dc49e98f4ce	vis=private
+member	com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController#transformPool	sge.graphics.g3d.utils.BaseAnimationController#transformPool	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/BaseAnimationController.java	92	8b9af8cad93a6d6c	vis=private
 member	com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController#transforms	sge.graphics.g3d.utils.BaseAnimationController#transforms	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/BaseAnimationController.java	98	c411e81a7aea9525	placement=companion vis=private
 member	com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController$Transform#idt()	sge.graphics.g3d.utils.BaseAnimationController$Transform#idt()	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/BaseAnimationController.java	48	a7ea0d350d5481ed	
 member	com.badlogic.gdx.graphics.g3d.utils.BaseAnimationController$Transform#lerp(Transform,float)	sge.graphics.g3d.utils.BaseAnimationController$Transform#lerp(Transform,float)	Renamed	-	com/badlogic/gdx/graphics/g3d/utils/BaseAnimationController.java	66	824f607090134457	
@@ -11016,7 +11026,7 @@ member	com.badlogic.gdx.math.Bresenham2#line(GridPoint2,GridPoint2)	sge.math.Bre
 member	com.badlogic.gdx.math.Bresenham2#line(int,int,int,int)	sge.math.Bresenham2#line(int,int,int,int)	Renamed	-	com/badlogic/gdx/math/Bresenham2.java	51	2a4f0b77a7aef82b	
 member	com.badlogic.gdx.math.Bresenham2#line(int,int,int,int,Pool,DynamicArray)	sge.math.Bresenham2#line(int,int,int,int,Pool<GridPoint2>,DynamicArray<GridPoint2>)	Renamed	-	com/badlogic/gdx/math/Bresenham2.java	65	a88d9091edf6b9df	
 member	com.badlogic.gdx.math.Bresenham2#points	sge.math.Bresenham2#points	Renamed	-	com/badlogic/gdx/math/Bresenham2.java	29	db144c9bcddd9268	vis=private
-member	com.badlogic.gdx.math.Bresenham2#pool	sge.math.Bresenham2#pool	Renamed	-	com/badlogic/gdx/math/Bresenham2.java	30	79c2766949dfc278	vis=private
+member	com.badlogic.gdx.math.Bresenham2#pool	sge.math.Bresenham2#pool	Renamed	-	com/badlogic/gdx/math/Bresenham2.java	30	76d87d4d6ae839f8	vis=private
 member	com.badlogic.gdx.math.CatmullRomSpline#<init>()	sge.math.CatmullRomSpline#<init>()	Renamed	-	com/badlogic/gdx/math/CatmullRomSpline.java	103	81c20be970748237	
 member	com.badlogic.gdx.math.CatmullRomSpline#<init>(Array,boolean)	sge.math.CatmullRomSpline#<init>(Array<T>,boolean)	Renamed	-	com/badlogic/gdx/math/CatmullRomSpline.java	106	9b1794cfb4a80792	
 member	com.badlogic.gdx.math.CatmullRomSpline#approxLength(int)	sge.math.CatmullRomSpline#approxLength(int)	Renamed	-	com/badlogic/gdx/math/CatmullRomSpline.java	212	b8822bcedcb337a5	
@@ -11648,7 +11658,7 @@ member	com.badlogic.gdx.math.Octree#createNode(Vector3,Vector3,int)	sge.math.Oct
 member	com.badlogic.gdx.math.Octree#getAll(ObjectSet)	sge.math.Octree#getAll(ObjectSet<T>)	Renamed	-	com/badlogic/gdx/math/Octree.java	118	4973c1d4f8828bc4	
 member	com.badlogic.gdx.math.Octree#getNodesBoxes(ObjectSet)	sge.math.Octree#getNodesBoxes(ObjectSet<BoundingBox>)	Renamed	-	com/badlogic/gdx/math/Octree.java	148	31cb90d34b91c823	
 member	com.badlogic.gdx.math.Octree#maxItemsPerNode	sge.math.Octree#maxItemsPerNode	Renamed	-	com/badlogic/gdx/math/Octree.java	68	397403715e9472ea	
-member	com.badlogic.gdx.math.Octree#nodePool	sge.math.Octree#nodePool	Renamed	-	com/badlogic/gdx/math/Octree.java	70	d34d0c4816ca52a4	
+member	com.badlogic.gdx.math.Octree#nodePool	sge.math.Octree#nodePool	Renamed	-	com/badlogic/gdx/math/Octree.java	70	ef70819cb9dd9664	
 member	com.badlogic.gdx.math.Octree#query(BoundingBox,ObjectSet)	sge.math.Octree#query(BoundingBox,ObjectSet<T>)	Renamed	-	com/badlogic/gdx/math/Octree.java	126	13e461cfe9681e7a	
 member	com.badlogic.gdx.math.Octree#query(Frustum,ObjectSet)	sge.math.Octree#query(Frustum,ObjectSet<T>)	Renamed	-	com/badlogic/gdx/math/Octree.java	134	11c3832c2c5da7e4	
 member	com.badlogic.gdx.math.Octree#rayCast(Ray,RayCastResult)	sge.math.Octree#rayCast(Ray,RayCastResult<T>)	Renamed	-	com/badlogic/gdx/math/Octree.java	139	1d99fa626ceb5bec	
@@ -12595,7 +12605,7 @@ member	com.badlogic.gdx.scenes.scene2d.Action#setPool(Nullable)	sge.scenes.scene
 member	com.badlogic.gdx.scenes.scene2d.Action#setTarget(Actor)	sge.scenes.scene2d.Action#setTarget(Actor)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Action.java	74	b4620b5bc2a7d8d8	
 member	com.badlogic.gdx.scenes.scene2d.Action#target	sge.scenes.scene2d.Action#target	Renamed	-	com/badlogic/gdx/scenes/scene2d/Action.java	32	3fda0e7121ebfe26	
 member	com.badlogic.gdx.scenes.scene2d.Action#toString()	sge.scenes.scene2d.Action#toString()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Action.java	107	bf0999284c19077b	
-member	com.badlogic.gdx.scenes.scene2d.Actor#<clinit>	sge.scenes.scene2d.Actor#<clinit>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	63	ced44178fc35f0c4	placement=companion
+member	com.badlogic.gdx.scenes.scene2d.Actor#<clinit>	sge.scenes.scene2d.Actor#<clinit>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	63	8bfb2a433adb0c60	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.Actor#<stmt1>	sge.scenes.scene2d.Actor#<stmt1>	Renamed	-	<synthetic>	0	abca2bbe56b03719	
 member	com.badlogic.gdx.scenes.scene2d.Actor#POOLS	sge.scenes.scene2d.Actor#POOLS	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	61	812711f18d77a316	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.Actor#act(float)	sge.scenes.scene2d.Actor#act(float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Actor.java	103	d4b742d2d5ae9c5d	
@@ -12857,9 +12867,9 @@ member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt2>	sge.scenes.scene2d.Stage#<s
 member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt3>	sge.scenes.scene2d.Stage#<stmt3>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	110	9b0eacd64bc8a801	
 member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt4>	sge.scenes.scene2d.Stage#<stmt4>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	111	752cc63bceb33c48	
 member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt5>	sge.scenes.scene2d.Stage#<stmt5>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	112	8c122036d563d03e	
-member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt6>	sge.scenes.scene2d.Stage#<stmt6>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	114	92831f8ee2805bc9	
-member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt7>	sge.scenes.scene2d.Stage#<stmt7>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	115	a4f4342f9578dbfb	
-member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt8>	sge.scenes.scene2d.Stage#<stmt8>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	116	e799228b81a9da4d	
+member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt6>	sge.scenes.scene2d.Stage#<stmt6>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	114	79f44b76e2ddf344	
+member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt7>	sge.scenes.scene2d.Stage#<stmt7>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	115	f38d9aa480917f76	
+member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt8>	sge.scenes.scene2d.Stage#<stmt8>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	116	735890070338e8a5	
 member	com.badlogic.gdx.scenes.scene2d.Stage#<stmt9>	sge.scenes.scene2d.Stage#<stmt9>	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	118	aaefe47728ceac7b	
 member	com.badlogic.gdx.scenes.scene2d.Stage#act()	sge.scenes.scene2d.Stage#act()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	190	82af70c205624cf2	
 member	com.badlogic.gdx.scenes.scene2d.Stage#act(float)	sge.scenes.scene2d.Stage#act(float)	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	197	16ffea91518b835b	
@@ -12953,7 +12963,7 @@ member	com.badlogic.gdx.scenes.scene2d.Stage$TouchFocus#listenerActor	sge.scenes
 member	com.badlogic.gdx.scenes.scene2d.Stage$TouchFocus#pointer	sge.scenes.scene2d.Stage$TouchFocus#pointer	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	888	f3db1186eecf78fa	
 member	com.badlogic.gdx.scenes.scene2d.Stage$TouchFocus#reset()	sge.scenes.scene2d.Stage$TouchFocus#reset()	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	890	8f35e5e95e196481	
 member	com.badlogic.gdx.scenes.scene2d.Stage$TouchFocus#target	sge.scenes.scene2d.Stage$TouchFocus#target	Renamed	-	com/badlogic/gdx/scenes/scene2d/Stage.java	887	d3daa5a541d4f6ff	
-member	com.badlogic.gdx.scenes.scene2d.actions.Actions#<clinit>	sge.scenes.scene2d.actions.Actions#<clinit>	Renamed	-	com/badlogic/gdx/scenes/scene2d/actions/Actions.java	37	e1763c6f14dc1682	placement=companion
+member	com.badlogic.gdx.scenes.scene2d.actions.Actions#<clinit>	sge.scenes.scene2d.actions.Actions#<clinit>	Renamed	-	com/badlogic/gdx/scenes/scene2d/actions/Actions.java	37	396484b094c0d245	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.actions.Actions#ACTION_POOLS	sge.scenes.scene2d.actions.Actions#ACTION_POOLS	Renamed	-	com/badlogic/gdx/scenes/scene2d/actions/Actions.java	35	51f0910ebffae635	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.actions.Actions#action(Class)	sge.scenes.scene2d.actions.Actions#action(Class<T>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/actions/Actions.java	72	4ebebbb5db7edc21	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.actions.Actions#addAction(Action)	sge.scenes.scene2d.actions.Actions#addAction(Action)	Renamed	-	com/badlogic/gdx/scenes/scene2d/actions/Actions.java	83	a0d509e28bb35790	placement=companion
@@ -12992,7 +13002,7 @@ member	com.badlogic.gdx.scenes.scene2d.actions.Actions#parallel(Action,Action,Ac
 member	com.badlogic.gdx.scenes.scene2d.actions.Actions#parallel(Action,Action,Action,Action)	sge.scenes.scene2d.actions.Actions#parallel(Action,Action,Action,Action)	Renamed	-	com/badlogic/gdx/scenes/scene2d/actions/Actions.java	449	625cae8b0de0b1b3	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.actions.Actions#parallel(Action,Action,Action,Action,Action)	sge.scenes.scene2d.actions.Actions#parallel(Action,Action,Action,Action,Action)	Renamed	-	com/badlogic/gdx/scenes/scene2d/actions/Actions.java	458	77101f9c5df9a7d1	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.actions.Actions#parallel(Array)	sge.scenes.scene2d.actions.Actions#parallel(Array<Action>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/actions/Actions.java	468	6f23ca2759401331	placement=companion
-member	com.badlogic.gdx.scenes.scene2d.actions.Actions#registerAction(Class,PoolSupplier)	sge.scenes.scene2d.actions.Actions#registerAction(Class<T>,PoolSupplier<T>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/actions/Actions.java	67	466119e748b492d2	placement=companion
+member	com.badlogic.gdx.scenes.scene2d.actions.Actions#registerAction(Class,Function0)	sge.scenes.scene2d.actions.Actions#registerAction(Class<T>,Function0<T>)	Renamed	-	com/badlogic/gdx/scenes/scene2d/actions/Actions.java	67	531ee918f31b2cc2	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.actions.Actions#removeAction(Action)	sge.scenes.scene2d.actions.Actions#removeAction(Action)	Renamed	-	com/badlogic/gdx/scenes/scene2d/actions/Actions.java	96	1862019a393d7438	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.actions.Actions#removeAction(Action,Actor)	sge.scenes.scene2d.actions.Actions#removeAction(Action,Actor)	Renamed	-	com/badlogic/gdx/scenes/scene2d/actions/Actions.java	102	19ff36bca2822aad	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.actions.Actions#removeActor()	sge.scenes.scene2d.actions.Actions#removeActor()	Renamed	-	com/badlogic/gdx/scenes/scene2d/actions/Actions.java	347	3eb2068598bcba99	placement=companion
@@ -14633,7 +14643,7 @@ member	com.badlogic.gdx.scenes.scene2d.ui.Table#bottom()	sge.scenes.scene2d.ui.T
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#cellDefaults	sge.scenes.scene2d.ui.Table#cellDefaults	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	64	7bc09b939bedb71f	
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#cellPool$set	sge.scenes.scene2d.ui.Table#cellPool$set	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	53	3722ae0f2c797b91	placement=companion vis=private
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#cellPool$value	sge.scenes.scene2d.ui.Table#cellPool$value	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	53	ef0c6b7e4b9e6cc0	placement=companion vis=private
-member	com.badlogic.gdx.scenes.scene2d.ui.Table#cellPool(Sge)	sge.scenes.scene2d.ui.Table#cellPool(Sge)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	53	2784efd5d32372dc	placement=companion
+member	com.badlogic.gdx.scenes.scene2d.ui.Table#cellPool(Sge)	sge.scenes.scene2d.ui.Table#cellPool(Sge)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	53	9ac66e65a61116b6	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#cells	sge.scenes.scene2d.ui.Table#cells	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	63	c20c2ece21d74916	vis=private
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#center()	sge.scenes.scene2d.ui.Table#center()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	567	0cedbe7667316bfd	
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#clearChildren(boolean)	sge.scenes.scene2d.ui.Table#clearChildren(boolean)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	332	37714e98eb87b1c3	
@@ -14750,7 +14760,7 @@ member	com.badlogic.gdx.scenes.scene2d.ui.Table#tablePrefHeight	sge.scenes.scene
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#tablePrefWidth	sge.scenes.scene2d.ui.Table#tablePrefWidth	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	72	39fe6e64831468cf	vis=private
 member	com.badlogic.gdx.scenes.scene2d.ui.Table#top()	sge.scenes.scene2d.ui.Table#top()	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	573	d8fc99a6a1d4ceca	
 member	com.badlogic.gdx.scenes.scene2d.ui.Table$DebugRect#color	sge.scenes.scene2d.ui.Table$DebugRect#color	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	1274	dc0ebfa84ca354ed	
-member	com.badlogic.gdx.scenes.scene2d.ui.Table$DebugRect#pool	sge.scenes.scene2d.ui.Table$DebugRect#pool	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	1273	63f2f99e7d4ee21e	placement=companion
+member	com.badlogic.gdx.scenes.scene2d.ui.Table$DebugRect#pool	sge.scenes.scene2d.ui.Table$DebugRect#pool	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/Table.java	1273	7c5ec1f0f32a9939	placement=companion
 member	com.badlogic.gdx.scenes.scene2d.ui.TextArea#<init>(String,Skin,Sge)	sge.scenes.scene2d.ui.TextArea#<init>(String,Skin,Sge)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/TextArea.java	54	2f53a51e6aa3978b	
 member	com.badlogic.gdx.scenes.scene2d.ui.TextArea#<init>(String,Skin,String,Sge)	sge.scenes.scene2d.ui.TextArea#<init>(String,Skin,String,Sge)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/TextArea.java	58	03943b1a48f3e28f	
 member	com.badlogic.gdx.scenes.scene2d.ui.TextArea#<init>(String,TextFieldStyle,Sge)	sge.scenes.scene2d.ui.TextArea#<init>(String,TextFieldStyle,Sge)	Renamed	-	com/badlogic/gdx/scenes/scene2d/ui/TextArea.java	62	21174d85dbafe6df	
@@ -16403,12 +16413,14 @@ member	com.badlogic.gdx.utils.DataInput#readUtf8_slow(int,int,int)	sge.utils.Dat
 member	com.badlogic.gdx.utils.DataOutput#writeInt(int,boolean)	sge.utils.DataOutput#writeInt(int,boolean)	Renamed	-	com/badlogic/gdx/utils/DataOutput.java	33	88933b0571bbbcee	
 member	com.badlogic.gdx.utils.DataOutput#writeString(Nullable)	sge.utils.DataOutput#writeString(Nullable<String>)	Renamed	-	com/badlogic/gdx/utils/DataOutput.java	61	6369285c54c9464b	
 member	com.badlogic.gdx.utils.DataOutput#writeString_slow(String,int,int)	sge.utils.DataOutput#writeString_slow(String,int,int)	Renamed	-	com/badlogic/gdx/utils/DataOutput.java	82	c9277fca5c8706b8	vis=private
-member	com.badlogic.gdx.utils.DefaultPool#<init>(PoolSupplier)	sge.utils.DefaultPool#<init>(PoolSupplier<T>)	Renamed	-	com/badlogic/gdx/utils/DefaultPool.java	24	ac198c3f4c6a8df9	
-member	com.badlogic.gdx.utils.DefaultPool#<init>(PoolSupplier,int)	sge.utils.DefaultPool#<init>(PoolSupplier<T>,int)	Renamed	-	com/badlogic/gdx/utils/DefaultPool.java	28	2a625422bd1497a0	
+member	com.badlogic.gdx.utils.DefaultPool#<init>(Function0)	sge.utils.DefaultPool#<init>(Function0<T>)	Renamed	-	com/badlogic/gdx/utils/DefaultPool.java	24	bef59acf83d4f0ad	
+member	com.badlogic.gdx.utils.DefaultPool#<init>(Function0,int)	sge.utils.DefaultPool#<init>(Function0<T>,int)	Renamed	-	com/badlogic/gdx/utils/DefaultPool.java	28	b027173a6612d789	
 member	com.badlogic.gdx.utils.DefaultPool#<stmt1>	sge.utils.DefaultPool#<stmt1>	Renamed	-	com/badlogic/gdx/utils/DefaultPool.java	34	688cfcae873b814d	
-member	com.badlogic.gdx.utils.DefaultPool#newObject()	sge.utils.DefaultPool#newObject()	Renamed	-	com/badlogic/gdx/utils/DefaultPool.java	38	aa1036074b8638ed	
-member	com.badlogic.gdx.utils.DefaultPool#poolTypeSupplier	sge.utils.DefaultPool#poolTypeSupplier	Renamed	-	com/badlogic/gdx/utils/DefaultPool.java	22	2c9454ec12ae13e3	
-member	com.badlogic.gdx.utils.DefaultPool$PoolSupplier#get()	sge.utils.DefaultPool$PoolSupplier#get()	Renamed	-	com/badlogic/gdx/utils/DefaultPool.java	47	fe370e924718e808	
+member	com.badlogic.gdx.utils.DefaultPool#initialCapacity	sge.utils.DefaultPool#initialCapacity	Renamed	-	com/badlogic/gdx/utils/DefaultPool.java	20	09697729c96c347b	
+member	com.badlogic.gdx.utils.DefaultPool#max	sge.utils.DefaultPool#max	Renamed	-	com/badlogic/gdx/utils/DefaultPool.java	20	93734068b62fd9aa	
+member	com.badlogic.gdx.utils.DefaultPool#newObject()	sge.utils.DefaultPool#newObject()	Renamed	-	com/badlogic/gdx/utils/DefaultPool.java	38	17bd903eadeba204	
+member	com.badlogic.gdx.utils.DefaultPool#poolTypeSupplier	sge.utils.DefaultPool#poolTypeSupplier	Renamed	-	com/badlogic/gdx/utils/DefaultPool.java	22	7b51c9edc34f4b2f	
+member	com.badlogic.gdx.utils.DefaultPool$PoolSupplier#get()	sge.utils.DefaultPool$PoolSupplier#apply()	Renamed	-	com/badlogic/gdx/utils/DefaultPool.java	47	341a97d3f1fd4f8c	
 member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(Array,MkArray)	sge.utils.DelayedRemovalArray#<init>(Array<T>,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	75	1b64f42dddc8a484	
 member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(DynamicArray,MkArray)	sge.utils.DelayedRemovalArray#<init>(DynamicArray<Object>,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	41	450601f693de105c	
 member	com.badlogic.gdx.utils.DelayedRemovalArray#<init>(Function1,MkArray)	sge.utils.DelayedRemovalArray#<init>(Function1<int,Array<T>>,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/DelayedRemovalArray.java	62	d32ca6b05db94d1f	
@@ -16519,11 +16531,13 @@ member	com.badlogic.gdx.utils.FloatArray#toString()	sge.utils.FloatArray#toStrin
 member	com.badlogic.gdx.utils.FloatArray#toString(String)	sge.utils.FloatArray#toString(String)	Renamed	-	com/badlogic/gdx/utils/FloatArray.java	465	8dc7aab8471bddbd	
 member	com.badlogic.gdx.utils.FloatArray#truncate(int)	sge.utils.FloatArray#truncate(int)	Renamed	-	com/badlogic/gdx/utils/FloatArray.java	395	e1cdeaf71282d6fa	
 member	com.badlogic.gdx.utils.FloatArray#with(Array)	sge.utils.FloatArray#with(Array<float>)	Renamed	-	com/badlogic/gdx/utils/FloatArray.java	478	45cfe611f28e9867	placement=companion
-member	com.badlogic.gdx.utils.FlushablePool#<init>(int,MkArray)	sge.utils.FlushablePool#<init>(int,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/FlushablePool.java	29	c980d735524e05b0	
-member	com.badlogic.gdx.utils.FlushablePool#<init>(int,int,MkArray)	sge.utils.FlushablePool#<init>(int,int,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/FlushablePool.java	33	1ff12eb129eb6483	
+member	com.badlogic.gdx.utils.FlushablePool#<init>(MkArray)	sge.utils.FlushablePool#<init>(MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/FlushablePool.java	25	e7cada39a48437f8	
+member	com.badlogic.gdx.utils.FlushablePool#<init>(int,MkArray)	sge.utils.FlushablePool#<init>(int,MkArray<T>)	Renamed	-	com/badlogic/gdx/utils/FlushablePool.java	29	d95b74043dd5283a	
 member	com.badlogic.gdx.utils.FlushablePool#flush()	sge.utils.FlushablePool#flush()	Renamed	-	com/badlogic/gdx/utils/FlushablePool.java	45	ba849814d3c98c4b	
 member	com.badlogic.gdx.utils.FlushablePool#free(T)	sge.utils.FlushablePool#free(T)	Renamed	-	com/badlogic/gdx/utils/FlushablePool.java	51	310e7052cfcbf024	
 member	com.badlogic.gdx.utils.FlushablePool#freeAll(DynamicArray)	sge.utils.FlushablePool#freeAll(DynamicArray<T>)	Renamed	-	com/badlogic/gdx/utils/FlushablePool.java	57	44764fd88b4e8737	
+member	com.badlogic.gdx.utils.FlushablePool#initialCapacity	sge.utils.FlushablePool#initialCapacity	Renamed	-	com/badlogic/gdx/utils/FlushablePool.java	22	09697729c96c347b	
+member	com.badlogic.gdx.utils.FlushablePool#max	sge.utils.FlushablePool#max	Renamed	-	com/badlogic/gdx/utils/FlushablePool.java	22	93734068b62fd9aa	
 member	com.badlogic.gdx.utils.FlushablePool#obtain()	sge.utils.FlushablePool#obtain()	Renamed	-	com/badlogic/gdx/utils/FlushablePool.java	38	ce8262993da12ad5	
 member	com.badlogic.gdx.utils.FlushablePool#obtained	sge.utils.FlushablePool#obtained	Renamed	-	com/badlogic/gdx/utils/FlushablePool.java	23	862119f226583a0c	
 member	com.badlogic.gdx.utils.GdxNativesLoader#disableNativesLoading	sge.utils.GdxNativesLoader#disableNativesLoading	Renamed	-	com/badlogic/gdx/utils/GdxNativesLoader.java	20	e365955a52aab74f	placement=companion
@@ -18107,27 +18121,24 @@ member	com.badlogic.gdx.utils.PerformanceCounters#nano2seconds	sge.utils.Perform
 member	com.badlogic.gdx.utils.PerformanceCounters#tick()	sge.utils.PerformanceCounters#tick()	Renamed	-	com/badlogic/gdx/utils/PerformanceCounters.java	40	55f9a709a70f2932	
 member	com.badlogic.gdx.utils.PerformanceCounters#tick(float)	sge.utils.PerformanceCounters#tick(float)	Renamed	-	com/badlogic/gdx/utils/PerformanceCounters.java	46	b8c0a3237e660721	
 member	com.badlogic.gdx.utils.PerformanceCounters#toString(StringBuilder)	sge.utils.PerformanceCounters#toString(StringBuilder)	Renamed	-	com/badlogic/gdx/utils/PerformanceCounters.java	51	2ac80837646cf3a9	
-member	com.badlogic.gdx.utils.Pool#<init>(int)	sge.utils.Pool#<init>(int)	Renamed	-	com/badlogic/gdx/utils/Pool.java	36	c7acdb24794a2651	
-member	com.badlogic.gdx.utils.Pool#<init>(int,int)	sge.utils.Pool#<init>(int,int)	Renamed	-	com/badlogic/gdx/utils/Pool.java	43	5b3170f33ac9edd4	
 member	com.badlogic.gdx.utils.Pool#<stmt1>	sge.utils.Pool#<stmt1>	Renamed	-	<synthetic>	0	abca2bbe56b03719	
 member	com.badlogic.gdx.utils.Pool#<stmt2>	sge.utils.Pool#<stmt2>	Renamed	-	<synthetic>	0	1db60130aa95ddd5	
-member	com.badlogic.gdx.utils.Pool#<stmt3>	sge.utils.Pool#<stmt3>	Renamed	-	com/badlogic/gdx/utils/Pool.java	44	0b2378d575bed582	
-member	com.badlogic.gdx.utils.Pool#<stmt4>	sge.utils.Pool#<stmt4>	Renamed	-	com/badlogic/gdx/utils/Pool.java	45	dcf66fdad906b1ea	
 member	com.badlogic.gdx.utils.Pool#clear()	sge.utils.Pool#clear()	Renamed	-	com/badlogic/gdx/utils/Pool.java	115	12dacac3782f1e3e	
 member	com.badlogic.gdx.utils.Pool#discard(T)	sge.utils.Pool#discard(T)	Renamed	-	com/badlogic/gdx/utils/Pool.java	89	a3eb576b6c09e8f8	
 member	com.badlogic.gdx.utils.Pool#fill(int)	sge.utils.Pool#fill(int)	Renamed	-	com/badlogic/gdx/utils/Pool.java	75	b791c369a29b4d91	
 member	com.badlogic.gdx.utils.Pool#free(T)	sge.utils.Pool#free(T)	Renamed	-	com/badlogic/gdx/utils/Pool.java	61	1eed0736a4d63aed	
 member	com.badlogic.gdx.utils.Pool#freeAll(DynamicArray)	sge.utils.Pool#freeAll(DynamicArray<T>)	Renamed	-	com/badlogic/gdx/utils/Pool.java	97	f2e2e016ebaab17f	
-member	com.badlogic.gdx.utils.Pool#freeObjects	sge.utils.Pool#freeObjects	Renamed	-	com/badlogic/gdx/utils/Pool.java	28	c27b553c94fec357	
+member	com.badlogic.gdx.utils.Pool#freeObjects	sge.utils.Pool#freeObjects	Renamed	-	com/badlogic/gdx/utils/Pool.java	28	5bd7bc02e0fb2910	vis=private
 member	com.badlogic.gdx.utils.Pool#getFree()	sge.utils.Pool#getFree()	Renamed	-	com/badlogic/gdx/utils/Pool.java	123	616eb4478aaf52eb	
-member	com.badlogic.gdx.utils.Pool#max	sge.utils.Pool#max	Renamed	-	com/badlogic/gdx/utils/Pool.java	24	fdc62163920cd200	
+member	com.badlogic.gdx.utils.Pool#initialCapacity()	sge.utils.Pool#initialCapacity()	Renamed	-	com/badlogic/gdx/utils/Pool.java	22	5fa4c7690e0de098	
+member	com.badlogic.gdx.utils.Pool#max()	sge.utils.Pool#max()	Renamed	-	com/badlogic/gdx/utils/Pool.java	22	f28bdabe6277c2ae	
 member	com.badlogic.gdx.utils.Pool#newObject()	sge.utils.Pool#newObject()	Renamed	-	com/badlogic/gdx/utils/Pool.java	48	b0a62de868de3101	
 member	com.badlogic.gdx.utils.Pool#obtain()	sge.utils.Pool#obtain()	Renamed	-	com/badlogic/gdx/utils/Pool.java	52	5be409572c7fd295	
 member	com.badlogic.gdx.utils.Pool#peak	sge.utils.Pool#peak	Renamed	-	com/badlogic/gdx/utils/Pool.java	26	b5fa103678296f61	
 member	com.badlogic.gdx.utils.Pool#reset(T)	sge.utils.Pool#reset(T)	Renamed	-	com/badlogic/gdx/utils/Pool.java	83	80c00d8dfb1da449	
 member	com.badlogic.gdx.utils.Pool$Poolable#reset()	sge.utils.Pool$Poolable#reset()	Renamed	-	com/badlogic/gdx/utils/Pool.java	130	bd084f605a883ac1	
+member	com.badlogic.gdx.utils.PoolManager#addPool(Class,Function0)	sge.utils.PoolManager#addPool(Class<T>,Function0<T>)	Renamed	-	com/badlogic/gdx/utils/PoolManager.java	15	d322696d3103e915	
 member	com.badlogic.gdx.utils.PoolManager#addPool(Class,Pool)	sge.utils.PoolManager#addPool(Class<T>,Pool<T>)	Renamed	-	com/badlogic/gdx/utils/PoolManager.java	20	92cdb5fc30a8ba81	
-member	com.badlogic.gdx.utils.PoolManager#addPool(Class,PoolSupplier)	sge.utils.PoolManager#addPool(Class<T>,PoolSupplier<T>)	Renamed	-	com/badlogic/gdx/utils/PoolManager.java	15	97afbd7ba8e6b215	
 member	com.badlogic.gdx.utils.PoolManager#clear()	sge.utils.PoolManager#clear()	Renamed	-	com/badlogic/gdx/utils/PoolManager.java	81	2da7b741c54b7d85	
 member	com.badlogic.gdx.utils.PoolManager#free(T)	sge.utils.PoolManager#free(T)	Renamed	-	com/badlogic/gdx/utils/PoolManager.java	71	5cd87dc8f47ef9f7	
 member	com.badlogic.gdx.utils.PoolManager#getPool(Class)	sge.utils.PoolManager#getPool(Class<T>)	Renamed	-	com/badlogic/gdx/utils/PoolManager.java	29	4b52873861510c2e	
@@ -18136,7 +18147,7 @@ member	com.badlogic.gdx.utils.PoolManager#hasPool(Class)	sge.utils.PoolManager#h
 member	com.badlogic.gdx.utils.PoolManager#obtain(Class)	sge.utils.PoolManager#obtain(Class<T>)	Renamed	-	com/badlogic/gdx/utils/PoolManager.java	50	aac4dcc9b06aa567	
 member	com.badlogic.gdx.utils.PoolManager#obtainOrNull(Class)	sge.utils.PoolManager#obtainOrNull(Class<T>)	Renamed	-	com/badlogic/gdx/utils/PoolManager.java	61	0ab0d855beeb9c2e	
 member	com.badlogic.gdx.utils.PoolManager#typePools	sge.utils.PoolManager#typePools	Renamed	-	com/badlogic/gdx/utils/PoolManager.java	11	d0c89859aea89edd	vis=private
-member	com.badlogic.gdx.utils.PooledLinkedList#<stmt1>	sge.utils.PooledLinkedList#<stmt1>	Renamed	-	com/badlogic/gdx/utils/PooledLinkedList.java	37	c9d217ddf60c4a29	
+member	com.badlogic.gdx.utils.PooledLinkedList#<stmt1>	sge.utils.PooledLinkedList#<stmt1>	Renamed	-	com/badlogic/gdx/utils/PooledLinkedList.java	37	e6838f4c3a8acd87	
 member	com.badlogic.gdx.utils.PooledLinkedList#add(T)	sge.utils.PooledLinkedList#add(T)	Renamed	-	com/badlogic/gdx/utils/PooledLinkedList.java	46	d87d6245922789bd	
 member	com.badlogic.gdx.utils.PooledLinkedList#addFirst(T)	sge.utils.PooledLinkedList#addFirst(T)	Renamed	-	com/badlogic/gdx/utils/PooledLinkedList.java	66	69fa6a29f1ed61c4	
 member	com.badlogic.gdx.utils.PooledLinkedList#clear()	sge.utils.PooledLinkedList#clear()	Renamed	-	com/badlogic/gdx/utils/PooledLinkedList.java	180	0a2c227eb1af9598	
@@ -18156,7 +18167,7 @@ member	com.badlogic.gdx.utils.PooledLinkedList#tail	sge.utils.PooledLinkedList#t
 member	com.badlogic.gdx.utils.PooledLinkedList$Item#next	sge.utils.PooledLinkedList$Item#next	Renamed	-	com/badlogic/gdx/utils/PooledLinkedList.java	24	23b85c14c90b7f37	
 member	com.badlogic.gdx.utils.PooledLinkedList$Item#payload	sge.utils.PooledLinkedList$Item#payload	Renamed	-	com/badlogic/gdx/utils/PooledLinkedList.java	23	f7fde6347a4763f8	
 member	com.badlogic.gdx.utils.PooledLinkedList$Item#prev	sge.utils.PooledLinkedList$Item#prev	Renamed	-	com/badlogic/gdx/utils/PooledLinkedList.java	25	ae2b6a3f0486c765	
-member	com.badlogic.gdx.utils.Pools#<clinit>	sge.utils.Pools#<clinit>	Renamed	-	com/badlogic/gdx/utils/Pools.java	41	2bf9065cc91dc489	placement=companion
+member	com.badlogic.gdx.utils.Pools#<clinit>	sge.utils.Pools#<clinit>	Renamed	-	com/badlogic/gdx/utils/Pools.java	41	47a47101343fa8d3	placement=companion
 member	com.badlogic.gdx.utils.Pools#<stmt1>	sge.utils.Pools#<stmt1>	Renamed	-	<synthetic>	0	abca2bbe56b03719	
 member	com.badlogic.gdx.utils.Pools#THROW_ON_REFLECTION_POOL_CREATION	sge.utils.Pools#THROW_ON_REFLECTION_POOL_CREATION	Renamed	-	com/badlogic/gdx/utils/Pools.java	39	5b4626bc98dd0a90	placement=companion
 member	com.badlogic.gdx.utils.Pools#WARN_ON_REFLECTION_POOL_CREATION	sge.utils.Pools#WARN_ON_REFLECTION_POOL_CREATION	Renamed	-	com/badlogic/gdx/utils/Pools.java	38	9e9a85b96a8ad99a	placement=companion
@@ -18167,8 +18178,8 @@ member	com.badlogic.gdx.utils.Pools#get(Class,Sge)	sge.utils.Pools#get(Class<T>,
 member	com.badlogic.gdx.utils.Pools#get(Class,int,Sge)	sge.utils.Pools#get(Class<T>,int,Sge)	Renamed	-	com/badlogic/gdx/utils/Pools.java	85	b0c6fc7c4c22af6d	placement=companion
 member	com.badlogic.gdx.utils.Pools#obtain(Class,Sge)	sge.utils.Pools#obtain(Class<T>,Sge)	Renamed	-	com/badlogic/gdx/utils/Pools.java	122	6fc17c21943fad58	placement=companion
 member	com.badlogic.gdx.utils.Pools#set(Class,Pool)	sge.utils.Pools#set(Class<T>,Pool<T>)	Renamed	-	com/badlogic/gdx/utils/Pools.java	105	fbb567b64e88af1e	placement=companion
-member	com.badlogic.gdx.utils.Pools#set(PoolSupplier)	sge.utils.Pools#set(PoolSupplier<T>)	Renamed	-	com/badlogic/gdx/utils/Pools.java	117	d5f69d3402adb5fa	placement=companion
-member	com.badlogic.gdx.utils.Pools#set(PoolSupplier,int)	sge.utils.Pools#set(PoolSupplier<T>,int)	Renamed	-	com/badlogic/gdx/utils/Pools.java	111	709efb3d2e18b715	placement=companion
+member	com.badlogic.gdx.utils.Pools#set(Function0)	sge.utils.Pools#set(Function0<T>)	Renamed	-	com/badlogic/gdx/utils/Pools.java	117	75cc3135ec5fbefd	placement=companion
+member	com.badlogic.gdx.utils.Pools#set(Function0,int)	sge.utils.Pools#set(Function0<T>,int)	Renamed	-	com/badlogic/gdx/utils/Pools.java	111	cc2a578cdfaf51ee	placement=companion
 member	com.badlogic.gdx.utils.Pools#typePools	sge.utils.Pools#typePools	Renamed	-	com/badlogic/gdx/utils/Pools.java	37	d0c89859aea89edd	placement=companion vis=private
 member	com.badlogic.gdx.utils.Predicate#evaluate(T)	sge.utils.Predicate#evaluate(T)	Renamed	-	com/badlogic/gdx/utils/Predicate.java	26	cec6e09aed1af582	
 member	com.badlogic.gdx.utils.Predicate$PredicateIterable#<stmt1>	sge.utils.Predicate$PredicateIterable#<stmt1>	Renamed	-	com/badlogic/gdx/utils/Predicate.java	92	4b306c9b70f00175	
@@ -18222,7 +18233,7 @@ member	com.badlogic.gdx.utils.QuadTreeFloat#ne	sge.utils.QuadTreeFloat#ne	Rename
 member	com.badlogic.gdx.utils.QuadTreeFloat#nearest(float,float,FloatArray)	sge.utils.QuadTreeFloat#nearest(float,float,FloatArray)	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	187	ac61481d7761ab51	
 member	com.badlogic.gdx.utils.QuadTreeFloat#nw	sge.utils.QuadTreeFloat#nw	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	38	dae9493757747999	
 member	com.badlogic.gdx.utils.QuadTreeFloat#obtainChild(float,float,float,float,int)	sge.utils.QuadTreeFloat#obtainChild(float,float,float,float,int)	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	113	af4907629c950f93	vis=private
-member	com.badlogic.gdx.utils.QuadTreeFloat#pool	sge.utils.QuadTreeFloat#pool	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	29	d3debf4f91dc16b8	placement=companion vis=private
+member	com.badlogic.gdx.utils.QuadTreeFloat#pool	sge.utils.QuadTreeFloat#pool	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	29	d1b4ad7de559c999	placement=companion vis=private
 member	com.badlogic.gdx.utils.QuadTreeFloat#query(Rectangle,FloatArray)	sge.utils.QuadTreeFloat#query(Rectangle,FloatArray)	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	162	8ea46ef18d0f957d	
 member	com.badlogic.gdx.utils.QuadTreeFloat#query(float,float,float,FloatArray)	sge.utils.QuadTreeFloat#query(float,float,float,FloatArray)	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	131	ea5861424b036ded	
 member	com.badlogic.gdx.utils.QuadTreeFloat#query(float,float,float,float,float,float,FloatArray)	sge.utils.QuadTreeFloat#query(float,float,float,float,float,float,FloatArray)	Renamed	-	com/badlogic/gdx/utils/QuadTreeFloat.java	135	89c253a5c9e2caaa	vis=private
@@ -18290,6 +18301,8 @@ member	com.badlogic.gdx.utils.ReflectionPool#<stmt1>	sge.utils.ReflectionPool#<s
 member	com.badlogic.gdx.utils.ReflectionPool#<stmt2>	sge.utils.ReflectionPool#<stmt2>	Renamed	-	com/badlogic/gdx/utils/ReflectionPool.java	45	9d8835578e752e6a	
 member	com.badlogic.gdx.utils.ReflectionPool#constructor	sge.utils.ReflectionPool#constructor	Renamed	-	com/badlogic/gdx/utils/ReflectionPool.java	32	28593a463b92e506	
 member	com.badlogic.gdx.utils.ReflectionPool#findConstructor(Class)	sge.utils.ReflectionPool#findConstructor(Class<T>)	Renamed	-	com/badlogic/gdx/utils/ReflectionPool.java	49	e1799cda083e9f90	vis=private
+member	com.badlogic.gdx.utils.ReflectionPool#initialCapacity	sge.utils.ReflectionPool#initialCapacity	Renamed	-	com/badlogic/gdx/utils/ReflectionPool.java	31	09697729c96c347b	
+member	com.badlogic.gdx.utils.ReflectionPool#max	sge.utils.ReflectionPool#max	Renamed	-	com/badlogic/gdx/utils/ReflectionPool.java	31	93734068b62fd9aa	
 member	com.badlogic.gdx.utils.ReflectionPool#newObject()	sge.utils.ReflectionPool#newObject()	Renamed	-	com/badlogic/gdx/utils/ReflectionPool.java	63	b172fb6a7e9a16f0	
 member	com.badlogic.gdx.utils.Scaling#apply(float,float,float,float)	sge.utils.Scaling#apply(float,float,float,float)	Renamed	-	com/badlogic/gdx/utils/Scaling.java	28	ee7778a64b8da494	
 member	com.badlogic.gdx.utils.Scaling#contain	sge.utils.Scaling#contain	Renamed	-	com/badlogic/gdx/utils/Scaling.java	45	7f6ceebe5223fd3f	placement=companion
@@ -18452,6 +18465,8 @@ member	com.badlogic.gdx.utils.SortedIntList$Node#index	sge.utils.SortedIntList$N
 member	com.badlogic.gdx.utils.SortedIntList$Node#n	sge.utils.SortedIntList$Node#n	Renamed	-	com/badlogic/gdx/utils/SortedIntList.java	172	1c726ed71b7332e1	
 member	com.badlogic.gdx.utils.SortedIntList$Node#p	sge.utils.SortedIntList$Node#p	Renamed	-	com/badlogic/gdx/utils/SortedIntList.java	170	2efc85b662538155	
 member	com.badlogic.gdx.utils.SortedIntList$Node#value	sge.utils.SortedIntList$Node#value	Renamed	-	com/badlogic/gdx/utils/SortedIntList.java	174	91b14d353a8fc63c	
+member	com.badlogic.gdx.utils.SortedIntList$NodePool#initialCapacity	sge.utils.SortedIntList$NodePool#initialCapacity	Renamed	-	com/badlogic/gdx/utils/SortedIntList.java	179	5632189444503980	
+member	com.badlogic.gdx.utils.SortedIntList$NodePool#max	sge.utils.SortedIntList$NodePool#max	Renamed	-	com/badlogic/gdx/utils/SortedIntList.java	179	3d745479294a2e93	
 member	com.badlogic.gdx.utils.SortedIntList$NodePool#newObject()	sge.utils.SortedIntList$NodePool#newObject()	Renamed	-	com/badlogic/gdx/utils/SortedIntList.java	181	617ad281803456cc	
 member	com.badlogic.gdx.utils.SortedIntList$NodePool#obtain(Node,Node,E,int)	sge.utils.SortedIntList$NodePool#obtain(Node<E>,Node<E>,E,int)	Renamed	-	com/badlogic/gdx/utils/SortedIntList.java	185	95b1fd387ec882fa	
 member	com.badlogic.gdx.utils.StreamUtils#DEFAULT_BUFFER_SIZE	sge.utils.StreamUtils#DEFAULT_BUFFER_SIZE	Renamed	-	com/badlogic/gdx/utils/StreamUtils.java	31	91d828b20a06fc91	placement=companion
