@@ -8675,12 +8675,14 @@ sge.graphics.glutils.ShaderProgram	sge.graphics.glutils.ShaderProgram#uniformTyp
 sge.graphics.glutils.ShaderProgram	sge.graphics.glutils.ShaderProgram#uniforms	val	64fb605c162640bd
 sge.graphics.glutils.ShaderProgram	sge.graphics.glutils.ShaderProgram#vertexShaderHandle	val	eee59f07663bd1d2
 sge.graphics.glutils.ShaderProgram	sge.graphics.glutils.ShaderProgram#vertexShaderSource	val	5145eaab7a5d605a
-sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer	class	667d847ff628fdb6
+sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer	class	e69ed8388f14d881
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#<init>(Sge)	ctor	09a86830c229493f
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#<init>(int,Sge)	ctor	e573e5d66d49639b
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#<stmt1>	stmt	7628d60038080b30
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#<stmt2>	stmt	6d507311b3250be8
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#<stmt3>	stmt	d0874d88247d2416
+sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#<stmt4>	stmt	1339c1e43c712cc4
+sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#<stmt5>	stmt	046abd781282f82a
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#arc(float,float,float,float,float)	def	249b10cb1935a5d6
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#arc(float,float,float,float,float,int)	def	07dcfadb4ef55c40
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#autoShapeType	val	99a35747cd7cecf5
@@ -8723,13 +8725,13 @@ sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#polygon(Ar
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#polyline(Array<float>)	def	474b4294844e923d
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#polyline(Array<float>,int,int)	def	781c6c8b22646c08
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#projectionMatrix	val	30ad3fda41433fe6
-sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#rect(float,float,float,float)	def	24b7209fe5b442f2
-sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#rect(float,float,float,float,Color,Color,Color,Color)	def	a838a7d8e55b4749
-sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#rect(float,float,float,float,float,float,float,float,float)	def	78873cccf59614e5
-sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#rect(float,float,float,float,float,float,float,float,float,Color,Color,Color,Color)	def	821bfa83277095c1
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#rectLine(Vector2,Vector2,float)	def	31e677f8fb9bb01c
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#rectLine(float,float,float,float,float)	def	a53e760c868dc3a1
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#rectLine(float,float,float,float,float,Color,Color)	def	cb3e32eb553ff5da
+sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#rectangle(float,float,float,float)	def	9fbca5487b238fd9
+sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#rectangle(float,float,float,float,Color,Color,Color,Color)	def	d6fea9303d2df655
+sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#rectangle(float,float,float,float,float,float,float,float,float)	def	ef473ec7a1fff7db
+sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#rectangle(float,float,float,float,float,float,float,float,float,Color,Color,Color,Color)	def	490ccabc788a0658
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#renderer	val	713c835dc7066428
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#rotate(float,float,float,float)	def	883e58e26050398d
 sge.graphics.glutils.ShapeRenderer	sge.graphics.glutils.ShapeRenderer#scale(float,float,float)	def	3eccea3f40d1c2fc
@@ -12235,7 +12237,7 @@ sge.scenes.scene2d.Action	sge.scenes.scene2d.Action#setPool(Nullable<Pool<?>>)	d
 sge.scenes.scene2d.Action	sge.scenes.scene2d.Action#setTarget(Actor)	def	b4620b5bc2a7d8d8
 sge.scenes.scene2d.Action	sge.scenes.scene2d.Action#target	val	3fda0e7121ebfe26
 sge.scenes.scene2d.Action	sge.scenes.scene2d.Action#toString()	def	bf0999284c19077b
-sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor	class	97ccbe537bc5bbf1
+sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor	class	8ab4cf02fc84cd8d
 sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor#<clinit>	init	8bfb2a433adb0c60
 sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor#<stmt1>	stmt	abca2bbe56b03719
 sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor#POOLS	val	812711f18d77a316
@@ -12258,7 +12260,7 @@ sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor#debug	val	a294facc592b19f9
 sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor#debug()	def	40634853205524e8
 sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor#draw(Batch,float)	def	1a5d872ca62ea274
 sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor#drawDebug(ShapeRenderer)	def	4ad8535ee2bb73d7
-sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor#drawDebugBounds(ShapeRenderer)	def	750d63711ee4df30
+sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor#drawDebugBounds(ShapeRenderer)	def	64b4a8e2adad5d9e
 sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor#fire(Event)	def	2e170a5b331ef22e
 sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor#firstAscendant(Class<T>)	def	2f09a2edcdaf8c74
 sge.scenes.scene2d.Actor	sge.scenes.scene2d.Actor#getActions()	def	d77114e771ddbdc3
@@ -13483,7 +13485,7 @@ sge.scenes.scene2d.ui.Dialog	sge.scenes.scene2d.ui.Dialog#text(Label)	def	946dbf
 sge.scenes.scene2d.ui.Dialog	sge.scenes.scene2d.ui.Dialog#text(Nullable<String>)	def	e1124e617610fa82
 sge.scenes.scene2d.ui.Dialog	sge.scenes.scene2d.ui.Dialog#text(Nullable<String>,LabelStyle)	def	1dc51628081474c6
 sge.scenes.scene2d.ui.Dialog	sge.scenes.scene2d.ui.Dialog#values	val	6a4b87294e5ca5b3
-sge.scenes.scene2d.ui.HorizontalGroup	sge.scenes.scene2d.ui.HorizontalGroup	class	747946885a2f5f75
+sge.scenes.scene2d.ui.HorizontalGroup	sge.scenes.scene2d.ui.HorizontalGroup	class	cfa3b076a79a2991
 sge.scenes.scene2d.ui.HorizontalGroup	sge.scenes.scene2d.ui.HorizontalGroup#<stmt1>	stmt	2b32faf88ab509ea
 sge.scenes.scene2d.ui.HorizontalGroup	sge.scenes.scene2d.ui.HorizontalGroup#<stmt2>	stmt	38fceb2beb86ad1d
 sge.scenes.scene2d.ui.HorizontalGroup	sge.scenes.scene2d.ui.HorizontalGroup#align	val	237d753a006d4475
@@ -13491,7 +13493,7 @@ sge.scenes.scene2d.ui.HorizontalGroup	sge.scenes.scene2d.ui.HorizontalGroup#alig
 sge.scenes.scene2d.ui.HorizontalGroup	sge.scenes.scene2d.ui.HorizontalGroup#bottom()	def	252a5dbbf1e872bf
 sge.scenes.scene2d.ui.HorizontalGroup	sge.scenes.scene2d.ui.HorizontalGroup#center()	def	1e8567ca8015960a
 sge.scenes.scene2d.ui.HorizontalGroup	sge.scenes.scene2d.ui.HorizontalGroup#computeSize()	def	612b7f815725a72b
-sge.scenes.scene2d.ui.HorizontalGroup	sge.scenes.scene2d.ui.HorizontalGroup#drawDebugBounds(ShapeRenderer)	def	9156c3b2bc588b2c
+sge.scenes.scene2d.ui.HorizontalGroup	sge.scenes.scene2d.ui.HorizontalGroup#drawDebugBounds(ShapeRenderer)	def	31b0369e93fe6140
 sge.scenes.scene2d.ui.HorizontalGroup	sge.scenes.scene2d.ui.HorizontalGroup#expand	val	16198c99403c8906
 sge.scenes.scene2d.ui.HorizontalGroup	sge.scenes.scene2d.ui.HorizontalGroup#expand()	def	7de3a652598afa03
 sge.scenes.scene2d.ui.HorizontalGroup	sge.scenes.scene2d.ui.HorizontalGroup#expand(boolean)	def	baa7eec199f380d1
@@ -14323,7 +14325,7 @@ sge.scenes.scene2d.ui.Stack	sge.scenes.scene2d.ui.Stack#sizeInvalid	val	55eb84a4
 sge.scenes.scene2d.ui.Styleable	sge.scenes.scene2d.ui.Styleable	class	e45c59aca3b23036
 sge.scenes.scene2d.ui.Styleable	sge.scenes.scene2d.ui.Styleable#getStyle()	def	f3b8735c164e4e60
 sge.scenes.scene2d.ui.Styleable	sge.scenes.scene2d.ui.Styleable#setStyle(T)	def	10e1ccf8bff76426
-sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table	class	edf02c7bc85dcd93
+sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table	class	337840575c047b1a
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<init>(Nullable<Skin>,Sge)	ctor	65588e2d61a6f0bf
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<stmt1>	stmt	abca2bbe56b03719
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#<stmt2>	stmt	6af89f041e3a7e12
@@ -14384,7 +14386,7 @@ sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#draw(Batch,float)	def	6b
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#drawBackground(Batch,float,float,float)	def	f7736f9f2f4b087a
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#drawDebug(ShapeRenderer)	def	7ba360c5e470b837
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#drawDebugBounds(ShapeRenderer)	def	edaeca892f83b889
-sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#drawDebugRects(ShapeRenderer)	def	729265164ec30482
+sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#drawDebugRects(ShapeRenderer)	def	cfc7db304e7402ba
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#endRow()	def	b0ef447bf26618b4
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#ensureSize(Array<float>,int)	def	254f6de39f519253
 sge.scenes.scene2d.ui.Table	sge.scenes.scene2d.ui.Table#expandHeight	val	e2e1754064cc0b70
@@ -14999,7 +15001,7 @@ sge.scenes.scene2d.ui.Value	sge.scenes.scene2d.ui.Value$Fixed#get(Nullable<Actor
 sge.scenes.scene2d.ui.Value	sge.scenes.scene2d.ui.Value$Fixed#toString()	def	1509b6d2a4d2b128
 sge.scenes.scene2d.ui.Value	sge.scenes.scene2d.ui.Value$Fixed#value	val	b1077d70016a358c
 sge.scenes.scene2d.ui.Value	sge.scenes.scene2d.ui.Value$Fixed#valueOf(float)	def	cf95fec672dcbf16
-sge.scenes.scene2d.ui.VerticalGroup	sge.scenes.scene2d.ui.VerticalGroup	class	be17e4be0e1c20ac
+sge.scenes.scene2d.ui.VerticalGroup	sge.scenes.scene2d.ui.VerticalGroup	class	4dc3bf3fa69be5cc
 sge.scenes.scene2d.ui.VerticalGroup	sge.scenes.scene2d.ui.VerticalGroup#<stmt1>	stmt	2b32faf88ab509ea
 sge.scenes.scene2d.ui.VerticalGroup	sge.scenes.scene2d.ui.VerticalGroup#<stmt2>	stmt	38fceb2beb86ad1d
 sge.scenes.scene2d.ui.VerticalGroup	sge.scenes.scene2d.ui.VerticalGroup#align	val	d2f1f52f82c86839
@@ -15015,7 +15017,7 @@ sge.scenes.scene2d.ui.VerticalGroup	sge.scenes.scene2d.ui.VerticalGroup#columnRi
 sge.scenes.scene2d.ui.VerticalGroup	sge.scenes.scene2d.ui.VerticalGroup#columnSizes	val	4f0f6fd7f03e8e08
 sge.scenes.scene2d.ui.VerticalGroup	sge.scenes.scene2d.ui.VerticalGroup#columnTop()	def	46b161db37fa0bbb
 sge.scenes.scene2d.ui.VerticalGroup	sge.scenes.scene2d.ui.VerticalGroup#computeSize()	def	c6aeb2212fbb8e76
-sge.scenes.scene2d.ui.VerticalGroup	sge.scenes.scene2d.ui.VerticalGroup#drawDebugBounds(ShapeRenderer)	def	9156c3b2bc588b2c
+sge.scenes.scene2d.ui.VerticalGroup	sge.scenes.scene2d.ui.VerticalGroup#drawDebugBounds(ShapeRenderer)	def	31b0369e93fe6140
 sge.scenes.scene2d.ui.VerticalGroup	sge.scenes.scene2d.ui.VerticalGroup#expand	val	24515953b01a2a17
 sge.scenes.scene2d.ui.VerticalGroup	sge.scenes.scene2d.ui.VerticalGroup#expand()	def	0fb6f20c2dfcf922
 sge.scenes.scene2d.ui.VerticalGroup	sge.scenes.scene2d.ui.VerticalGroup#expand(boolean)	def	7cb4706fad575bb5
