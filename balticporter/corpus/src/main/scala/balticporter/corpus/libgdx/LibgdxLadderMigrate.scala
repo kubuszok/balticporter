@@ -98,9 +98,8 @@ object LibgdxLadder:
       new balticporter.transform.ElementWitnessTransform(
         witness      = LlsPolicy.Witness,
         subjectTypes = CoreWitnessSubjects,
-        // the clause is threaded; java's implicit `<: Object` bound STAYS on core's subjects: their
-        // collaborators (`ObjectSet[T]`, …) keep theirs, and an unbounded `T` no longer conforms
-        // there (12 `E057` on `Octree` the first time the typer pass completed, G30).
+        // the clause is threaded; java's implicit `<: Object` bound STAYS on core's subjects — their
+        // collaborators (`ObjectSet[T]`) keep theirs (ENGINE-LIMITS.md K48).
         dropBound    = Set.empty,
         boxedWitness = Some("lowlevel.MkArray.anyRef[scala.AnyRef].asInstanceOf[lowlevel.MkArray[{elem}]]"))),
     // core's collections onto lls's and the JDK table, `Comparator -> Ordering`: the base's instance
