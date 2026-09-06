@@ -217,6 +217,136 @@ object LibgdxLadder:
       // sge sizes a `Pixmap` in plain `Int` (image dimensions are not screen pixels; the demos write
       // `Pixmap(w, h, format)`): the flow stops at its declarations, the call sites coerce.
       scope      = balticporter.tir.RuleScope.Everywhere(Set("com.badlogic.gdx.graphics.Pixmap"))))),
+    // sge's helper API the demos use: the `gl` alias, `rendering { … }` around `begin`/`end`,
+    // class-tag `load` and a `Nullable` `get` on the asset manager.
+    "helpers" -> List(
+      new balticporter.transform.AddMembersTransform(Map(
+        "com.badlogic.gdx.Graphics" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("gl", 0,
+            "def gl: sge.graphics.GL20 = gl20",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.Graphics#gl"),
+            Some("sge's `graphics.gl` alias of the GL20 property (PROGRESS.md §13.29)"), false)),
+        "com.badlogic.gdx.graphics.g2d.Batch" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("rendering", 1,
+            "inline def rendering[A](inline body: => A): A = {{ begin(); try body finally end() }}",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g2d.Batch#rendering"),
+            Some("sge's `rendering {{ … }}` around `begin()`/`end()` (PROGRESS.md §13.29)"), false)),
+        "com.badlogic.gdx.graphics.g3d.ModelBatch" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("rendering", 2,
+            "inline def rendering[A](cam: sge.graphics.Camera)(inline body: => A): A = {{ begin(cam); try body finally end() }}",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.graphics.g3d.ModelBatch#rendering"),
+            Some("sge's `rendering(camera) {{ … }}` around `begin(cam)`/`end()` (PROGRESS.md §13.29)"), false)),
+        "com.badlogic.gdx.assets.AssetManager" -> List(
+          balticporter.transform.AddMembersTransform.MemberSpec("load", 1,
+            "def load[T <: java.lang.Object](fileName: java.lang.String)(using ct: scala.reflect.ClassTag[T]): scala.Unit = load(fileName, ct.runtimeClass.asInstanceOf[java.lang.Class[T]])",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.AssetManager#load"),
+            Some("sge's class-tag `load[T](fileName)` (PROGRESS.md §13.29)"), false),
+          balticporter.transform.AddMembersTransform.MemberSpec("load", 2,
+            "def load[T <: java.lang.Object](fileName: java.lang.String, parameter: sge.assets.AssetLoaderParameters[T])(using ct: scala.reflect.ClassTag[T]): scala.Unit = load(fileName, ct.runtimeClass.asInstanceOf[java.lang.Class[T]], parameter)",
+            balticporter.tir.Reason.Configured("add-members", "com.badlogic.gdx.assets.AssetManager#load"),
+            Some("sge's class-tag `load[T](fileName, parameter)` (PROGRESS.md §13.29)"), false)))),
+      // `AssetManager.get` answers `Nullable` in sge (the demos write `.get`); java throws on a miss.
+      new balticporter.transform.NullabilityTransform(
+        annotations     = Set.empty,
+        target          = balticporter.transform.NullabilityTransform.Target.Named("lowlevel.Nullable"),
+        scope           = balticporter.tir.RuleScope.Only(Set("com.badlogic.gdx")),
+        nullableMembers = Set("com.badlogic.gdx.assets.AssetManager#get"))),
+    // sge's audio opaques (`Volume`, `Pitch`, `Pan`, `SoundId`), each fenced to the files sge keeps it in.
+    "audio" -> List(
+      new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+        fqn        = "com.badlogic.gdx.audio.Volume",
+        target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.audio.Volume", wrapName = "unsafeMake", unwrapName = "toFloat"),
+        hints      = Set(
+        "com.badlogic.gdx.audio.Sound#play#volume",
+        "com.badlogic.gdx.audio.Sound#loop#volume",
+        "com.badlogic.gdx.audio.Sound#setVolume#volume",
+        "com.badlogic.gdx.audio.Sound#setPan#volume",
+        "com.badlogic.gdx.audio.Music#setVolume#volume",
+        "com.badlogic.gdx.audio.Music#getVolume",
+        "com.badlogic.gdx.audio.Music#setPan#volume",
+        "com.badlogic.gdx.audio.AudioDevice#setVolume#volume"),
+        underlying = balticporter.tir.OpaqueSpec.Primitive.Float,
+        scope      = balticporter.tir.RuleScope.Only(Set(
+        "com.badlogic.gdx.audio.Sound",
+        "com.badlogic.gdx.audio.Music",
+        "com.badlogic.gdx.audio.AudioDevice",
+        "com.badlogic.gdx.Input")))),
+      new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+        fqn        = "com.badlogic.gdx.audio.Pitch",
+        target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.audio.Pitch", wrapName = "unsafeMake", unwrapName = "toFloat"),
+        hints      = Set(
+        "com.badlogic.gdx.audio.Sound#play#pitch",
+        "com.badlogic.gdx.audio.Sound#loop#pitch",
+        "com.badlogic.gdx.audio.Sound#setPitch#pitch"),
+        underlying = balticporter.tir.OpaqueSpec.Primitive.Float,
+        scope      = balticporter.tir.RuleScope.Only(Set(
+        "com.badlogic.gdx.audio.Sound")))),
+      new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+        fqn        = "com.badlogic.gdx.audio.Pan",
+        target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.audio.Pan", wrapName = "unsafeMake", unwrapName = "toFloat"),
+        hints      = Set(
+        "com.badlogic.gdx.audio.Sound#play#pan",
+        "com.badlogic.gdx.audio.Sound#loop#pan",
+        "com.badlogic.gdx.audio.Sound#setPan#pan",
+        "com.badlogic.gdx.audio.Music#setPan#pan"),
+        underlying = balticporter.tir.OpaqueSpec.Primitive.Float,
+        scope      = balticporter.tir.RuleScope.Only(Set(
+        "com.badlogic.gdx.audio.Sound",
+        "com.badlogic.gdx.audio.Music")))),
+      new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+        fqn        = "com.badlogic.gdx.audio.SoundId",
+        target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.audio.SoundId", wrapName = "apply", unwrapName = "toLong"),
+        hints      = Set(
+        "com.badlogic.gdx.audio.Sound#play",
+        "com.badlogic.gdx.audio.Sound#loop",
+        "com.badlogic.gdx.audio.Sound#stop#soundId",
+        "com.badlogic.gdx.audio.Sound#pause#soundId",
+        "com.badlogic.gdx.audio.Sound#resume#soundId",
+        "com.badlogic.gdx.audio.Sound#setLooping#soundId",
+        "com.badlogic.gdx.audio.Sound#setPitch#soundId",
+        "com.badlogic.gdx.audio.Sound#setVolume#soundId",
+        "com.badlogic.gdx.audio.Sound#setPan#soundId"),
+        underlying = balticporter.tir.OpaqueSpec.Primitive.Long,
+        scope      = balticporter.tir.RuleScope.Only(Set(
+        "com.badlogic.gdx.audio.Sound"))))),
+    // sge's time opaques (`Millis`, `Nanos`) over `TimeUtils`, fenced to sge's files.
+    "time" -> List(
+      new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+        fqn        = "com.badlogic.gdx.utils.Millis",
+        target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.utils.Millis", wrapName = "apply", unwrapName = "toLong"),
+        hints      = Set(
+        "com.badlogic.gdx.utils.TimeUtils#millis",
+        "com.badlogic.gdx.utils.TimeUtils#nanosToMillis",
+        "com.badlogic.gdx.utils.TimeUtils#millisToNanos#millis",
+        "com.badlogic.gdx.utils.TimeUtils#timeSinceMillis",
+        "com.badlogic.gdx.utils.TimeUtils#timeSinceMillis#prevTime"),
+        underlying = balticporter.tir.OpaqueSpec.Primitive.Long,
+        scope      = balticporter.tir.RuleScope.Only(Set(
+        "com.badlogic.gdx.utils.TimeUtils",
+        "com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile",
+        "com.badlogic.gdx.scenes.scene2d.utils.ClickListener",
+        "com.badlogic.gdx.assets.AssetManager")))),
+      new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
+        fqn        = "com.badlogic.gdx.utils.Nanos",
+        target     = balticporter.tir.OpaqueSpec.Target.Existing(typeFqn = "sge.utils.Nanos", wrapName = "apply", unwrapName = "toLong"),
+        hints      = Set(
+        "com.badlogic.gdx.utils.TimeUtils#nanoTime",
+        "com.badlogic.gdx.utils.TimeUtils#millisToNanos",
+        "com.badlogic.gdx.utils.TimeUtils#nanosToMillis#nanos",
+        "com.badlogic.gdx.utils.TimeUtils#timeSinceNanos",
+        "com.badlogic.gdx.utils.TimeUtils#timeSinceNanos#prevTime"),
+        underlying = balticporter.tir.OpaqueSpec.Primitive.Long,
+        scope      = balticporter.tir.RuleScope.Only(Set(
+        "com.badlogic.gdx.utils.TimeUtils",
+        "com.badlogic.gdx.scenes.scene2d.utils.ClickListener",
+        "com.badlogic.gdx.input.GestureDetector",
+        "com.badlogic.gdx.input.RemoteInput",
+        "com.badlogic.gdx.utils.PerformanceCounters",
+        "com.badlogic.gdx.utils.PerformanceCounter",
+        "com.badlogic.gdx.InputEventQueue",
+        "com.badlogic.gdx.Input",
+        "com.badlogic.gdx.graphics.FPSLogger",
+        "com.badlogic.gdx.assets.AssetLoadingTask"))))),
     // `WorldUnits`: world-space sizes are not bare `Float`s (sge's opaque type, injected from sge's
     // own file). Seeded at the viewport's and the camera's world-size fields.
     "worldunits" -> List(new balticporter.transform.PrimitiveToOpaqueTransform(balticporter.tir.OpaqueSpec(
@@ -303,6 +433,8 @@ object LibgdxLadder:
     "pool"       -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-pool")),
     "pixels"     -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-pixels")),
     "worldunits" -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-worldunits")),
+    "audio"      -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-audio")),
+    "time"       -> List(repoRoot.resolve("balticporter/corpus/ladder-overrides-time")),
   ).withDefaultValue(Nil)
 
   /** Per step, the members the step makes dead: the reflective `Class`-typed constructors the
@@ -323,9 +455,9 @@ object LibgdxLadder:
     ),
   ).withDefaultValue(Set.empty)
 
-  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "worldunits", "properties", "graphics")
+  val StepOrder: List[String] = List("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "worldunits", "properties", "graphics", "helpers", "audio", "time")
   /** the steps LANDED so far (measured, baselined, PROGRESS.md §13.29). */
-  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "graphics", "properties", "worldunits")
+  val DefaultSteps: Set[String] = Set("witness", "collections", "nullability", "enrich", "reflection", "net", "renames", "context", "seconds", "pool", "pixels", "graphics", "properties", "worldunits", "helpers", "audio", "time")
 
   /** L0's manifest: a dependent of the lls port carrying the universal facts only. `packageRenames`
     * for the rest of core (the base's `utils`/`math -> lowlevel.*` are inherited, longest prefix
